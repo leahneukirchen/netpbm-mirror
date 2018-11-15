@@ -15,311 +15,496 @@
 #include "nstring.h"
 
 typedef enum {
-  BLEND_AVERAGE,     /* Take the average color of all pixels */
-  BLEND_RANDOM,      /* Take each pixel color from a randomly selected image */
-  BLEND_MASK         /* Take each pixel color from the image indicated by a mask */
-} blendType;
+    BLEND_AVERAGE,   /* Take the average color of all pixels */
+    BLEND_RANDOM,    /* Take each pixel color from a randomly selected image */
+    BLEND_MASK   /* Take each pixel color from the image indicated by a mask */
+} BlendType;
 
-static const unsigned int randSamples = 1024;   /* Random samples to draw per file */
+static unsigned int const randSamples = 1024;
+    /* Random samples to draw per file */
 
-struct programState {
-  blendType blend;                /* How to blend the files */
-  unsigned int nFiles;            /* Number of input files */
-  const char ** inFileNames;      /* Name of each input file */
-  struct pam * inPam;             /* List of input-file PAM structures */
-  tuple ** inTupleRows;           /* Current row from each input file */
-  const char * outFileName;       /* Name of the output file */
-  struct pam outPam;              /* Output-file PAM structure */
-  tuple * outTupleRow;            /* Row to write to the output file */
-  const char * maskFileName;      /* Name of the image-mask file */
-  struct pam maskPam;             /* PAM structure for the image mask */
-  tuple * maskTupleRow;           /* Row to read from the mask file */
-  double sigma;                   /* Standard deviation when selecting images via a mask */
-  unsigned long ** imageWeights;  /* Per-image weights as a function of grayscale level */
+struct ProgramState {
+    unsigned int     inFileCt;      /* Number of input files */
+    struct pam *     inPam;         /* List of input-file PAM structures */
+    tuple **         inTupleRows;   /* Current row from each input file */
+    struct pam       outPam;        /* Output-file PAM structure */
+    tuple *          outTupleRow;   /* Row to write to the output file */
+    const char *     maskFileName;  /* Name of the image-mask file */
+    struct pam       maskPam;       /* PAM structure for the image mask */
+    tuple *          maskTupleRow;  /* Row to read from the mask file */
+    double           sigma;
+        /* Standard deviation when selecting images via a mask */
+    unsigned long ** imageWeights;
+        /* Per-image weights as a function of grayscale level */
 };
 
-/* Parse the command line. */
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    BlendType        blend;
+    const char *     maskfile;
+    float            stdev;
+    unsigned int     randomseed;
+    unsigned int     randomseedSpec;
+    unsigned int     inFileNameCt;  /* Number of input files */
+    const char **    inFileName;    /* Name of each input file */
+};
+
+
+
+static void
+freeCmdline(struct CmdlineInfo * const cmdlineP) {
+
+    free(cmdlineP->inFileName);
+}
+
+
+
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct programState * const stateP) {
-  optStruct3 opt;
-  unsigned int option_def_index = 0;
-  optEntry * option_def;
-  const char * blend_string = "average";
-  unsigned int blend_spec = 0;
-  unsigned int outfile_spec = 0;
-  unsigned int maskfile_spec = 0;
-  unsigned int stdev_spec = 0;
-  float sigma;
-  int i;
+                 struct CmdlineInfo * const cmdlineP) {
 
-  /* Define the allowed command-line options. */
-  MALLOCARRAY(option_def, 100);
-  OPTENT3('b', "blend", OPT_STRING, &blend_string, &blend_spec, 0);
-  OPTENT3('o', "outfile", OPT_STRING, &stateP->outFileName, &outfile_spec, 0);
-  OPTENT3('m', "maskfile", OPT_STRING, &stateP->maskFileName, &maskfile_spec, 0);
-  OPTENT3('s', "stdev", OPT_FLOAT, &sigma, &stdev_spec, 0);
-  opt.opt_table = option_def;
-  opt.short_allowed = 1;
-  opt.allowNegNum = 0;
+    optStruct3 opt;
+    unsigned int option_def_index = 0;
+    optEntry * option_def;
+    unsigned int blendSpec, maskfileSpec, stdevSpec;
+    const char * blendOpt;
 
-  /* Parse the command line. */
-  pm_optParseOptions3(&argc, (char **) argv, opt, sizeof(opt), 0);
-  if (!outfile_spec)
-    stateP->outFileName = "-";
-  if (!strcmp(blend_string, "average"))
-    stateP->blend = BLEND_AVERAGE;
-  else if (!strcmp(blend_string, "random"))
-    stateP->blend = BLEND_RANDOM;
-  else if (!strcmp(blend_string, "mask"))
-    stateP->blend = BLEND_MASK;
-  else
-    pm_error("Unrecognized blend type \"%s\"", blend_string);
-  if (stateP->blend == BLEND_MASK) {
-    if (maskfile_spec == 0)
-      pm_error("--maskfile=<filename> must be used with --blend=mask");
-    stateP->sigma = stdev_spec == 1 ? (double)sigma : 0.25;
-  }
-  else {
-    if (maskfile_spec != 0)
-      pm_message("Ignoring the mask file because --blend=mask was not specified");
-    if (stdev_spec != 0)
-      pm_message("Ignoring the image standard deviation because --blend=mask was not specified");
-  }
-  if (argc < 2)
-    pm_error("You must provide the names of the files to blend together");
-  stateP->nFiles = argc - 1;
-  MALLOCARRAY(stateP->inFileNames, stateP->nFiles);
-  for (i = 1; i < argc; i++)
-    stateP->inFileNames[i - 1] = argv[i];
-  free(option_def);
+    /* Define the allowed command-line options. */
+    MALLOCARRAY(option_def, 100);
+    OPTENT3(0, "blend",     OPT_STRING,     &blendOpt,
+            &blendSpec,     0);
+    OPTENT3(0, "maskfile",  OPT_STRING,     &cmdlineP->maskfile,
+            &maskfileSpec,  0);
+    OPTENT3(0, "stdev",      OPT_FLOAT,     &cmdlineP->stdev,
+            &stdevSpec,     0);
+    OPTENT3(0, "randomseed", OPT_UINT,      &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec,     0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = 0;
+    opt.allowNegNum = 0;
+
+    pm_optParseOptions3(&argc, (char **) argv, opt, sizeof(opt), 0);
+    if (blendSpec) {
+        if (streq(blendOpt, "average"))
+            cmdlineP->blend = BLEND_AVERAGE;
+        else if (streq(blendOpt, "random"))
+            cmdlineP->blend = BLEND_RANDOM;
+        else if (streq(blendOpt, "mask"))
+            cmdlineP->blend = BLEND_MASK;
+        else
+            pm_error("Unrecognized -blend value '%s'.  "
+                     "We recognize 'average', 'random', and 'mask'", blendOpt);
+    } else
+        cmdlineP->blend = BLEND_AVERAGE;
+
+    if (cmdlineP->blend == BLEND_MASK) {
+        if (!maskfileSpec)
+            pm_error("Because you specified -blend=mask, "
+                     "you must also specify -maskfile");
+    } else {
+        if (maskfileSpec)
+            pm_message("Ignoring -maskfile because -blend=mask "
+                       "is not specified");
+        if (stdevSpec)
+            pm_message("Ignoring -stdev because -blend=mask "
+                       "is not specified");
+    }
+    if (!stdevSpec)
+        cmdlineP->stdev = 0.25;
+
+    if (argc-1 < 1)
+        pm_error("You must specify the names of the files to blend together "
+                 "as arguments");
+
+    cmdlineP->inFileNameCt = argc-1;
+    MALLOCARRAY(cmdlineP->inFileName, argc-1);
+    if (!cmdlineP->inFileName)
+        pm_error("Unable to allocate space for %u file names", argc-1);
+    {
+        unsigned int i;
+        for (i = 0; i < argc-1; ++i)
+            cmdlineP->inFileName[i] = argv[1+i];
+    }
+    free(option_def);
 }
 
-/* Open all of the input files and the output file.  Abort if the
- * input files don't all have the same size and format. */
 static void
-openFiles(struct programState * const stateP) {
-  struct pam * inPam;
-  unsigned int i;
+openInputFiles(unsigned int          const inFileCt,
+               const char **         const inFileName,
+               struct ProgramState * const stateP) {
+/*----------------------------------------------------------------------------
+  Open all of the input files.
 
-  MALLOCARRAY(stateP->inPam, stateP->nFiles);
-  MALLOCARRAY(stateP->inTupleRows, stateP->nFiles);
+  Abort if the input files don't all have the same size and format.
+-----------------------------------------------------------------------------*/
+    struct pam * inPam;
+    unsigned int i;
 
-  /* Open all of the input files. */
-  inPam = stateP->inPam;
-  for (i = 0; i < stateP->nFiles; i++) {
-    FILE * ifP = pm_openr(stateP->inFileNames[i]);
-    pnm_readpaminit(ifP, &inPam[i], PAM_STRUCT_SIZE(tuple_type));
-    if (inPam[i].width != inPam[0].width || inPam[i].height != inPam[0].height)
-      pm_error("All images must have the same dimensions");
-    if (inPam[i].depth != inPam[0].depth ||
-        inPam[i].maxval != inPam[0].maxval ||
-        strcmp(inPam[i].tuple_type, inPam[0].tuple_type))
-      pm_error("All images must have the same number and range of colors");
-    stateP->inTupleRows[i] = pnm_allocpamrow(&inPam[i]);
-  }
+    MALLOCARRAY(inPam, inFileCt);
+    if (!inPam)
+        pm_error("Failed to allocated memory for PAM structures for %u "
+                 "input files", inFileCt);
+    MALLOCARRAY(stateP->inTupleRows, inFileCt);
+    if (!stateP->inTupleRows)
+        pm_error("Failed to allocated memory for PAM structures for %u "
+                 "input rasters", inFileCt);
 
-  /* Open the mask file for reading. */
-  if (stateP->blend == BLEND_MASK) {
-    struct pam * maskPam = &stateP->maskPam;
-    FILE * mfP = pm_openr(stateP->maskFileName);
-    pnm_readpaminit(mfP, maskPam, PAM_STRUCT_SIZE(tuple_type));
-    if (maskPam->width != inPam[0].width || maskPam->height != inPam[0].height)
-      pm_error("The mask image must have the same dimensions as the input images");
-    if (maskPam->depth > 1)
-      pm_message("Ignoring all but the first channel of the mask image");
-    stateP->maskTupleRow = pnm_allocpamrow(maskPam);
-  }
+    for (i = 0; i < inFileCt; ++i) {
+        FILE * const ifP = pm_openr(inFileName[i]);
+        pnm_readpaminit(ifP, &inPam[i], PAM_STRUCT_SIZE(tuple_type));
+        if (inPam[i].width != inPam[0].width ||
+            inPam[i].height != inPam[0].height)
+            pm_error("Input image %u has different dimensions from "
+                     "earlier input images", i);
+        if (inPam[i].depth != inPam[0].depth)
+            pm_error("Input image %u has different depth from "
+                     "earlier input images", i);
+        if (inPam[i].maxval != inPam[0].maxval)
+            pm_error("Input image %u has different maxval from "
+                     "earlier input images", i);
+        if (!streq(inPam[i].tuple_type, inPam[0].tuple_type))
+            pm_error("Input image %u has different tuple type from "
+                     "earlier input images", i);
+    }
 
-  /* Open the output file for writing. */
-  stateP->outPam = inPam[0];
-  stateP->outPam.file = pm_openw(stateP->outFileName);
-  stateP->outTupleRow = pnm_allocpamrow(&stateP->outPam);
-  pnm_writepaminit(&stateP->outPam);
+    for (i = 0; i < inFileCt; ++i)
+        stateP->inTupleRows[i] = pnm_allocpamrow(&inPam[i]);
+
+    stateP->inPam    = inPam;
+    stateP->inFileCt = inFileCt;
 }
 
-/* Blend one tuple of the input images into a new tuple by selecting a tuple
- * from a random input image. */
-static void
-blendTuplesRandom(struct programState * const stateP, unsigned int col, sample * outSamps) {
-  unsigned int depth = stateP->inPam[0].depth;
-  unsigned int samp;
 
-  unsigned int img = (unsigned int) (random() % stateP->nFiles);
-  for (samp = 0; samp < depth; samp++)
-    outSamps[samp] = ((sample *)stateP->inTupleRows[img][col])[samp];
+static void
+initMask(const char *          const maskFileName,
+         struct ProgramState * const stateP) {
+
+    struct pam * const maskPamP = &stateP->maskPam;
+
+    FILE * const mfP = pm_openr(maskFileName);
+
+    pnm_readpaminit(mfP, maskPamP, PAM_STRUCT_SIZE(tuple_type));
+
+    if (maskPamP->width != stateP->inPam[0].width ||
+        maskPamP->height != stateP->inPam[0].height) {
+
+        pm_error("The mask image does not have have the same dimensions "
+                 "as the input images");
+    }
+    if (maskPamP->depth > 1)
+        pm_message("Ignoring all but the first channel of the mask image");
+
+    stateP->maskTupleRow = pnm_allocpamrow(maskPamP);
 }
 
-/* Blend one tuple of the input images into a new tuple by averaging all input
- * tuples. */
-static void
-blendTuplesAverage(struct programState * const stateP, unsigned int col, sample * outSamps) {
-  unsigned int depth = stateP->inPam[0].depth;
-  unsigned int nFiles = stateP->nFiles;
-  unsigned int samp;
 
-  for (samp = 0; samp < depth; samp++) {
+
+static void
+termMask(struct ProgramState * const stateP) {
+
+    unsigned int i;
+
+    for (i = 0; i <= stateP->maskPam.maxval; ++i)
+        free(stateP->imageWeights[i]);
+
+    free(stateP->imageWeights);
+
+    pnm_freepamrow(stateP->maskTupleRow);
+
+    pm_close(stateP->maskPam.file);
+}
+
+
+
+static void
+initOutput(FILE *                const ofP,
+           struct ProgramState * const stateP) {
+
+    stateP->outPam      = stateP->inPam[0];
+    stateP->outPam.file = ofP;
+    stateP->outTupleRow = pnm_allocpamrow(&stateP->outPam);
+
+    pnm_writepaminit(&stateP->outPam);
+}
+
+
+
+static void
+blendTuplesRandom(struct ProgramState * const stateP,
+                  unsigned int          const col,
+                  sample *              const outSamps) {
+/*----------------------------------------------------------------------------
+  Blend one tuple of the input images into a new tuple by selecting a tuple
+  from a random input image.
+-----------------------------------------------------------------------------*/
+    unsigned int const depth = stateP->inPam[0].depth;
+    unsigned int const img = (unsigned int) (random() % stateP->inFileCt);
+
+    unsigned int samp;
+
+    for (samp = 0; samp < depth; ++samp)
+        outSamps[samp] = ((sample *)stateP->inTupleRows[img][col])[samp];
+}
+
+
+
+static void
+blendTuplesAverage(struct ProgramState * const stateP,
+                   unsigned int          const col,
+                   sample *              const outSamps) {
+/*----------------------------------------------------------------------------
+  Blend one tuple of the input images into a new tuple by averaging all input
+  tuples.
+-----------------------------------------------------------------------------*/
+    unsigned int const depth = stateP->inPam[0].depth;
+
+    unsigned int samp;
+
+    for (samp = 0; samp < depth; ++samp) {
+        unsigned int img;
+
+        for (img = 0, outSamps[samp] = 0; img < stateP->inFileCt; ++img)
+            outSamps[samp] += ((sample *)stateP->inTupleRows[img][col])[samp];
+        outSamps[samp] /= stateP->inFileCt;
+    }
+}
+
+
+
+static void
+randomNormal2(double * const r1P,
+              double * const r2P) {
+/*----------------------------------------------------------------------------
+  Return two normally distributed random numbers.
+-----------------------------------------------------------------------------*/
+    double u1, u2;
+
+    do {
+        u1 = drand48();
+        u2 = drand48();
+    }
+    while (u1 <= DBL_EPSILON);
+
+    *r1P = sqrt(-2.0*log(u1)) * cos(2.0*M_PI*u2);
+    *r2P = sqrt(-2.0*log(u1)) * sin(2.0*M_PI*u2);
+}
+
+
+
+static void
+precomputeImageWeights(struct ProgramState * const stateP,
+                       double                const sigma) {
+/*----------------------------------------------------------------------------
+  Precompute the weight to give to each image as a function of grayscale
+  level.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxGray = (unsigned int) stateP->maskPam.maxval;
+
+    unsigned int i;
+
+    MALLOCARRAY(stateP->imageWeights, maxGray + 1);
+    if (!stateP->imageWeights)
+        pm_error("Unable to allocate memory for image weights for %u "
+                 "gray levels", maxGray);
+
+    for (i = 0; i <= maxGray; ++i) {
+        unsigned int j;
+        MALLOCARRAY(stateP->imageWeights[i], stateP->inFileCt);
+        if (!stateP->imageWeights[i])
+            pm_error("Unable to allocate memory for image weights for %u "
+                     "images for gray level %u", stateP->inFileCt, i);
+        for (j = 0; j < stateP->inFileCt; ++j)
+            stateP->imageWeights[i][j] = 0;
+    }
+
+    /* Populate the image-weight arrays. */
+    for (i = 0; i <= maxGray; ++i) {
+        double const pctGray = i / (double)maxGray;
+
+        unsigned int j;
+
+        for (j = 0; j < stateP->inFileCt * randSamples; ) {
+            double r[2];
+            unsigned int k;
+
+            randomNormal2(&r[0], &r[1]);
+            for (k = 0; k < 2; ++k) {
+                int const img =
+                    r[k] * sigma + pctGray * stateP->inFileCt * 0.999999;
+                    /* Scale [0, 1] to [0, 1) (sort of). */
+                if (img >= 0 && img < (int)stateP->inFileCt) {
+                    ++stateP->imageWeights[i][img];
+                    ++j;
+                }
+            }
+        }
+    }
+}
+
+
+
+static void
+blendTuplesMask(struct ProgramState * const stateP,
+                unsigned int          const col,
+                sample *              const outSamps) {
+/*----------------------------------------------------------------------------
+  Blend one tuple of the input images into a new tuple according to the gray
+  levels specified in a mask file.
+-----------------------------------------------------------------------------*/
+    unsigned int const depth = stateP->inPam[0].depth;
+    sample const grayLevel = ((sample *)stateP->maskTupleRow[col])[0];
+
     unsigned int img;
 
-    outSamps[samp] = 0;
-    for (img = 0; img < nFiles; img++)
-      outSamps[samp] += ((sample *)stateP->inTupleRows[img][col])[samp];
-    outSamps[samp] /= nFiles;
-  }
-}
+    /* Initialize outSamps[] to zeroes */
+    {
+        unsigned int samp;
 
-/* Return two normally distributed random numbers. */
-static void
-random_normal_2(double *r1, double *r2) {
-  double u1, u2;
+        for (samp = 0; samp < depth; ++samp)
+            outSamps[samp] = 0;
+    }
 
-  do {
-    u1 = drand48();
-    u2 = drand48();
-  }
-  while (u1 <= DBL_EPSILON);
-  *r1 = sqrt(-2.0*log(u1))*cos(2.0*M_PI*u2);
-  *r2 = sqrt(-2.0*log(u1))*sin(2.0*M_PI*u2);
-}
+    /* Accumulate to outSamps[] */
+    for (img = 0; img < stateP->inFileCt; ++img) {
+        unsigned long weight = stateP->imageWeights[grayLevel][img];
 
-/* Precompute the weight to give to each image as a function of grayscale level. */
-static void
-precomputeImageWeights(struct programState * const stateP) {
-  unsigned int maxGray = (unsigned int) stateP->maskPam.maxval;
-  unsigned int nFiles = stateP->nFiles;
-  unsigned int i, j, k;
+        if (weight != 0) {
+            unsigned int samp;
 
-  /* Allocate memory for the image weights, */
-  MALLOCARRAY(stateP->imageWeights, maxGray + 1);
-  for (i = 0; i <= maxGray; i++) {
-    MALLOCARRAY(stateP->imageWeights[i], nFiles);
-    memset(stateP->imageWeights[i], 0, nFiles*sizeof(unsigned long));
-  }
-
-  /* Populate the image-weight arrays. */
-  for (i = 0; i <= maxGray; i++) {
-    double pctGray = i / (double)maxGray;
-
-    for (j = 0; j < nFiles*randSamples; ) {
-      double r[2];
-      int img;
-
-      random_normal_2(&r[0], &r[1]);
-      for (k = 0; k < 2; k++) {
-        img = (int) (r[k]*stateP->sigma + pctGray*nFiles*0.999999);  /* Scale [0, 1] to [0, 1) (sort of). */
-        if (img >= 0 && img < (int)nFiles) {
-          stateP->imageWeights[i][img]++;
-          j++;
+            for (samp = 0; samp < depth; ++samp)
+                outSamps[samp] +=
+                    ((sample *)stateP->inTupleRows[img][col])[samp] * weight;
         }
-      }
     }
-  }
-}
+    /* Scale all outSamps[] */
+    {
+        unsigned int samp;
 
-/* Blend one tuple of the input images into a new tuple according to the gray
- * levels specified in a mask file. */
-static void
-blendTuplesMask(struct programState * const stateP, unsigned int col, sample * outSamps) {
-  unsigned int depth = stateP->inPam[0].depth;
-  sample grayLevel = ((sample *)stateP->maskTupleRow[col])[0];
-  unsigned int nFiles = stateP->nFiles;
-  unsigned int samp;
-  unsigned int img;
-
-  for (samp = 0; samp < depth; samp++)
-    outSamps[samp] = 0;
-  for (img = 0; img < nFiles; img++) {
-    unsigned long weight = stateP->imageWeights[grayLevel][img];
-    if (weight != 0)
-      for (samp = 0; samp < depth; samp++)
-        outSamps[samp] += ((sample *)stateP->inTupleRows[img][col])[samp] * weight;
-  }
-  for (samp = 0; samp < depth; samp++)
-    outSamps[samp] /= randSamples*nFiles;
-}
-
-/* Blend one row of input images into a new row. */
-static void
-blendImageRow(struct programState * const stateP) {
-  unsigned int width = stateP->inPam[0].width;
-  unsigned int col;
-
-  for (col = 0; col < width; col++) {
-    sample * outSamps = (sample *)stateP->outTupleRow[col];
-
-    switch (stateP->blend) {
-    case BLEND_RANDOM:
-      /* Take each pixel from a different, randomly selected image. */
-      blendTuplesRandom(stateP, col, outSamps);
-      break;
-
-    case BLEND_AVERAGE:
-      /* Average each sample across all the images. */
-      blendTuplesAverage(stateP, col, outSamps);
-      break;
-
-    case BLEND_MASK:
-      /* Take each pixel from the image specified by the mask image. */
-      blendTuplesMask(stateP, col, outSamps);
-      break;
-
-    default:
-      pm_error("Internal error: Invalid blend type");
-      break;
+        for (samp = 0; samp < depth; ++samp)
+            outSamps[samp] /= randSamples * stateP->inFileCt;
     }
-  }
 }
 
-/* Blend the images row-by-row into a new image. */
+
+
 static void
-blendImages(struct programState * const stateP) {
-  unsigned int nRows = (unsigned int) stateP->inPam[0].height;
-  unsigned int img;
-  unsigned int row;
+blendImageRow(BlendType             const blend,
+              struct ProgramState * const stateP) {
+/*----------------------------------------------------------------------------
+  Blend one row of input images into a new row.
+-----------------------------------------------------------------------------*/
+    unsigned int const width = stateP->inPam[0].width;
 
-  for (row = 0; row < nRows; row++) {
-    for (img = 0; img < stateP->nFiles; img++)
-      pnm_readpamrow(&stateP->inPam[img], stateP->inTupleRows[img]);
-    if (stateP->blend == BLEND_MASK)
-      pnm_readpamrow(&stateP->maskPam, stateP->maskTupleRow);
-    blendImageRow(stateP);
-    pnm_writepamrow(&stateP->outPam, stateP->outTupleRow);
-  }
+    unsigned int col;
+
+    for (col = 0; col < width; ++col) {
+        sample * const outSamps = stateP->outTupleRow[col];
+
+        switch (blend) {
+        case BLEND_RANDOM:
+            /* Take each pixel from a different, randomly selected image. */
+            blendTuplesRandom(stateP, col, outSamps);
+            break;
+
+        case BLEND_AVERAGE:
+            /* Average each sample across all the images. */
+            blendTuplesAverage(stateP, col, outSamps);
+            break;
+
+        case BLEND_MASK:
+            /* Take each pixel from the image specified by the mask image. */
+            blendTuplesMask(stateP, col, outSamps);
+            break;
+        }
+    }
 }
 
-/* Deallocate all of the resources we allocated. */
+
+
 static void
-deallocateResources(struct programState * const stateP) {
-  unsigned int i;
+blendImages(BlendType             const blend,
+            struct ProgramState * const stateP) {
+/*----------------------------------------------------------------------------
+  Blend the images row-by-row into a new image.
+-----------------------------------------------------------------------------*/
+    unsigned int const nRows = stateP->inPam[0].height;
 
-  if (stateP->blend == BLEND_MASK) {
-    for (i = 0; i <= stateP->maskPam.maxval; i++)
-      free(stateP->imageWeights[i]);
-    free(stateP->imageWeights);
-    pnm_freepamrow(stateP->maskTupleRow);
-    pm_close(stateP->maskPam.file);
-  }
-  for (i = 0; i < stateP->nFiles; i++) {
-    pnm_freepamrow(stateP->inTupleRows[i]);
-    pm_close(stateP->inPam[i].file);
-  }
-  free(stateP->outTupleRow);
-  free(stateP->inTupleRows);
-  free(stateP->inPam);
-  free(stateP->inFileNames);
-  pm_close(stateP->outPam.file);
+    unsigned int row;
+
+    for (row = 0; row < nRows; ++row) {
+        unsigned int img;
+
+        for (img = 0; img < stateP->inFileCt; ++img)
+            pnm_readpamrow(&stateP->inPam[img], stateP->inTupleRows[img]);
+
+        if (blend == BLEND_MASK)
+            pnm_readpamrow(&stateP->maskPam, stateP->maskTupleRow);
+
+        blendImageRow(blend, stateP);
+
+        pnm_writepamrow(&stateP->outPam, stateP->outTupleRow);
+    }
 }
+
+
+
+static void
+termState(struct ProgramState * const stateP) {
+/*----------------------------------------------------------------------------
+  Deallocate all of the resources we allocated.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+
+    for (i = 0; i < stateP->inFileCt; ++i) {
+        pnm_freepamrow(stateP->inTupleRows[i]);
+        pm_close(stateP->inPam[i].file);
+    }
+
+    free(stateP->outTupleRow);
+    free(stateP->inTupleRows);
+    free(stateP->inPam);
+    pm_close(stateP->outPam.file);
+}
+
+
 
 int
 main(int argc, const char * argv[]) {
-  struct programState state;
 
-  pm_proginit(&argc, argv);
-  parseCommandLine(argc, argv, &state);
-  openFiles(&state);
-  if (state.blend == BLEND_MASK)
-    precomputeImageWeights(&state);
-  blendImages(&state);
-  deallocateResources(&state);
-  return 0;
+    struct CmdlineInfo cmdline;
+    struct ProgramState state;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
+
+    openInputFiles(cmdline.inFileNameCt, cmdline.inFileName, &state);
+
+    if (cmdline.blend == BLEND_MASK)
+        initMask(cmdline.maskfile, &state);
+
+    initOutput(stdout, &state);
+
+    if (cmdline.blend == BLEND_MASK)
+        precomputeImageWeights(&state, cmdline.stdev);
+
+    blendImages(cmdline.blend, &state);
+
+    if (cmdline.blend == BLEND_MASK)
+        termMask(&state);
+
+    termState(&state);
+
+    freeCmdline(&cmdline);
+
+    return 0;
 }
+
+
