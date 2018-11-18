@@ -41,6 +41,8 @@ OBJECTS = $(BINARIES:%=%.o)
 
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
+HAVE_MERGE_COMPAT=YES
+
 .PHONY: all
 all: $(BINARIES)
 
@@ -55,3 +57,7 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pgmoil$(EXE) ; \
 	$(SYMLINK) pamoil$(EXE) pgmoil$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pgmoil\", main_pamoil);" >>$@

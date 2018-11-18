@@ -38,6 +38,8 @@ OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 MERGEBINARIES = $(BINARIES)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
+HAVE_MERGE_COMPAT=YES
+
 SUBDIRS=pbmtoppa
 
 .PHONY: all
@@ -81,6 +83,10 @@ install.bin.local: $(PKGDIR)/bin
 # In December 2010 (Actually January 2011), pbmtosunicon replaced pbmtoicon
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pbmtosunicon$(EXE) pbmtoicon$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pbmtoicon\",   main_pbmtosunicon);"     >>$@
 
 thisdirclean: localclean
 .PHONY: localclean

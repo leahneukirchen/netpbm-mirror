@@ -45,6 +45,8 @@ OBJECTS = $(BINARIES:%=%.o)
 MERGEBINARIES = $(BINARIES)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
+HAVE_MERGE_COMPAT=YES
+
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
@@ -68,5 +70,11 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	  rm -f pnmdepth$(EXE) ; \
 	  $(SYMLINK) pamdepth$(EXE) pnmdepth$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pnmarith\", main_pamarith);" >>$@
+	echo "TRY(\"pnmsplit\", main_pamsplit);" >>$@
+	echo "TRY(\"pnmdepth\", main_pamdepth);" >>$@
 
 FORCE:

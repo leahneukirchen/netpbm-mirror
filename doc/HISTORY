@@ -23,6 +23,10 @@ not yet  BJH  Release 10.85.00
               pamtotga: Ignore extra planes in black and white or grayscale
               input instead of generating junk output.
 
+              Merge build: make old names for JPEG, TIFF, and PNG converter
+              programs work (function previously omitted by design because it
+              was too hard).
+
               libnetpbm: Fix invalid memory reference in color name processing
               when trivial memory allocation fails.
 

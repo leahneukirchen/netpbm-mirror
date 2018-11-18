@@ -166,6 +166,8 @@ endif
 OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
+HAVE_MERGE_COMPAT=YES
+
 pnmtops.o pnmtops.o2: CFLAGS_TARGET=$(PNMTOPS_NOFLATE_OPT)
 
 SCRIPTS = anytopnm pnmtoplainpnm
@@ -295,4 +297,26 @@ ifeq ($(HAVE_PNGLIB),Y)
 # In June 2015, pamtopng replaced pamrgbapng
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamtopng$(EXE) pamrgbatopng$(EXE)
+endif
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"bmptoppm\",     main_bmptopnm);"     >>$@
+	echo "TRY(\"gemtopbm\",     main_gemtopnm);"     >>$@
+ifneq ($(JPEGLIB),NONE)
+	echo "TRY(\"ppmtojpeg\",    main_pnmtojpeg);"    >>$@
+endif
+	echo "TRY(\"ppmtouil\",     main_pamtouil);"     >>$@
+	echo "TRY(\"ppmtotga\",     main_pamtotga);"     >>$@
+	echo "TRY(\"pnmtopnm\",     main_pamtopnm);"     >>$@
+	echo "TRY(\"pnmtofits\",    main_pamtofits);"    >>$@
+ifneq ($(TIFF_PREREQ_MISSING),Y)
+	echo "TRY(\"pnmtotiff\",    main_pamtotiff);"    >>$@
+endif
+ifeq ($(HAVE_PNGLIB),Y)
+	echo "TRY(\"pngtopnm\",     main_pngtopam);"     >>$@
+endif
+	echo "TRY(\"icontopbm\",    main_sunicontopnm);" >>$@
+ifeq ($(HAVE_PNGLIB),Y)
+	echo "TRY(\"pamrgbatopng\", main_pamtopng);"     >>$@
 endif

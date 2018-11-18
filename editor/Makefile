@@ -51,6 +51,8 @@ OBJECTS = $(BINARIES:%=%.o)
 
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
+HAVE_MERGE_COMPAT=YES
+
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
@@ -98,3 +100,15 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmcomp$(EXE) ; \
 	$(SYMLINK) pamcomp$(EXE) pnmcomp$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pnminterp\",  main_pamstretch);" >>$@
+	echo "TRY(\"pgmnorm\",    main_pnmnorm);"    >>$@
+	echo "TRY(\"ppmnorm\",    main_pnmnorm);"    >>$@
+	echo "TRY(\"pgmedge\",    main_pamedge);"    >>$@
+	echo "TRY(\"pnmenlarge\", main_pamenlarge);" >>$@
+	echo "TRY(\"pnmcut\",     main_pamcut);"     >>$@
+	echo "TRY(\"pnmscale\",   main_pamscale);"   >>$@
+	echo "TRY(\"pnmcomp\",    main_pamcomp);"    >>$@
+

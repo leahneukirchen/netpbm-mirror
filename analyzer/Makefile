@@ -46,6 +46,8 @@ OBJECTS = $(BINARIES:%=%.o)
 MERGEBINARIES = $(BINARIES)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
+HAVE_MERGE_COMPAT=YES
+
 .PHONY: all
 all: $(BINARIES)
 
@@ -59,6 +61,11 @@ install.bin.local: $(PKGDIR)/bin
 	$(SYMLINK) pamslice$(EXE) pgmslice$(EXE)
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamfile$(EXE) pnmfile$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pgmslice\", main_pamslice);" >>$@
+	echo "TRY(\"pnmfile\",  main_pamfile);"  >>$@
 
 FORCE:
 
