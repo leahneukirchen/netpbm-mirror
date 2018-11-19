@@ -6,7 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
-              Add pammixmulti.  Thanks Scott Pakin (scott@pakin.org).
+              Add pammixmulti.  Thanks Scott Pakin (scott+pbm@pakin.org).
 
               pamtotga: Add -cmap16 .
     
@@ -612,10 +612,10 @@ not yet  BJH  Release 10.85.00
               pamstereogram: Add -xbegin.  Change default to render from
               center outwards intead of from right to left, thus making the
               center of the image the crispest part.  Thanks Scott Pakin
-              (scott@pakin.org).
+              (scott+pbm@pakin.org).
 
               pamstereogram: Allow -xshift and -yshift to be negative.  Thanks
-              Scott Pakin (scott@pakin.org).
+              Scott Pakin (scott+pbm@pakin.org).
 
               pnmpsnr: Add -rgb.
 
@@ -1251,7 +1251,7 @@ not yet  BJH  Release 10.85.00
               get down to a compression ratio of 1.
 
               pamstereogram: -smoothing smooths images even without -texfile.
-              Thanks Scott Pakin (scott@pakin.org).
+              Thanks Scott Pakin (scott+pbm@pakin.org).
 
               pnmcat: set don't care bits in packed PBM output to zero so
               they are predictable.
@@ -1343,10 +1343,10 @@ not yet  BJH  Release 10.85.00
               Elijah Griffin <eli@panix.com>.
 
               pamstereogram: Add -planes .  Thanks Scott Pakin
-              (scott@pakin.org).
+              (scott+pbm@pakin.org).
 
               pamstereogram: improve verbose output.  Thanks Scott Pakin
-              (scott@pakin.org).
+              (scott+pbm@pakin.org).
 
               pamstereogram: fix crash introduced in Netpbm 10.54 (March 2011).
 
@@ -2353,7 +2353,7 @@ not yet  BJH  Release 10.85.00
 
 07.06.26 BJH  Release 10.39.00
 
-              Add pamtooctave.  Thanks Scott Pakin (scott@pakin.org).
+              Add pamtooctave.  Thanks Scott Pakin (scott+pbm@pakin.org).
 
               Add pamundice.
 
@@ -2866,7 +2866,7 @@ not yet  BJH  Release 10.85.00
               arguments; fix crash.
 
               pamstereogram: Fix crippling bugs.  Thanks Scott Pakin
-              <scott@pakin.org>.
+              <scott+pbm@pakin.org>.
 
               giftopnm: Handle case of a clear code at the end of a block.
 
@@ -3658,12 +3658,12 @@ not yet  BJH  Release 10.85.00
               Add pamperspective.  Thanks Mark Weyer
               <Mark.Weyer@math.uni-freiburg.de>.
 
-              Add pamstereogram.  Thanks Scott Pakin <scott@pakin.org>.
+              Add pamstereogram.  Thanks Scott Pakin <scott+pbm@pakin.org>.
 
               Add pc1toppm.  Thanks Roine Gustafsson
               <roine@users.sourceforge.net>.
 
-              Add pbmtodjvurle.  Thanks Scott Pakin <scott@pakin.org>.
+              Add pbmtodjvurle.  Thanks Scott Pakin <scott+pbm@pakin.org>.
 
               Add infotopam.  Thanks Rich Griswold <griswold@acm.org>.
 
@@ -3720,7 +3720,7 @@ not yet  BJH  Release 10.85.00
 
               Add pamsharpness, pamsharpmap.
 
-              Add ppmtodjvurle.  Thanks Scott Pakin <scott@pakin.org>.
+              Add ppmtodjvurle.  Thanks Scott Pakin <scott+pbm@pakin.org>.
 
               pstopnm: add -dpi option.
 
