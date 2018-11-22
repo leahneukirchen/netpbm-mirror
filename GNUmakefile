@@ -102,19 +102,27 @@ all: nonmerge
 .PHONY: nonmerge
 nonmerge: $(PRODUCT_SUBDIRS:%=%/all)
 
-# Parallel make (make --jobs) is not smart enough to coordinate builds between
-# submakes, so a naive parallel make would cause certain targets to be seen as
-# existing by one thread while another thread is in the process of creating
-# it.  Also, multiple threads may build a target simultaneously.  So we
-# introduce extra dependencies here just to make sure such targets are already
-# up to date before the submake starts, for the benefit of parallel make.
-# Note that we ensure that parallel make works for 'make all' in the top
-# directory, but it may still fail for the aforementioned reason for other
-# invocations.
+# Completely parallel make (make --jobs) does not work because there are
+# multiple targets somewhere in the Netpbm build that depend upon pm_config.h
+# and similar targets, and the threads building those multiple targets might
+# simultaneously find that pm_config.h needs to be built and proceed to build
+# it.  After one thread has built pm_config.h, it will proceed to use
+# pm_config.h, but the other thread is still building pm_config.h, which is
+# not valid while it is in the middle of being built.
+#
+# But many submakes don't have any such shared dependencies, so build their
+# targets in parallel just fine.  So we declare this make file ineligible for
+# parallel make and have special dependencies to get pm_config.h and like
+# targets built before any submakes begin.  The submakes will thus never find
+# that pm_config.h needs to be built, so we leave them eligible for parallel
+# make.
+
+.NOTPARALLEL:
 
 $(SUBDIRS:%=%/all) lib/util/all: pm_config.h inttypes_netpbm.h version.h
 $(PROG_SUBDIRS:%=%/all): lib/all $(SUPPORT_SUBDIRS:%=%/all)
 lib/all: lib/util/all
+netpbm: lib/all
 
 .PHONY: lib/util/all
 lib/util/all:
