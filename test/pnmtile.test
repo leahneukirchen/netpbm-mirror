@@ -17,6 +17,6 @@ pnmtile 454 298 testimg.ppm > ${testimg4_ppm} &&
 pnmcat -lr testimg.ppm testimg.ppm > ${testimg2_ppm} &&
 pnmcat -tb ${testimg2_ppm} ${testimg2_ppm} | \
 cmp -s - ${testimg4_ppm}
-echo $?
+echo ${PIPESTATUS[@]} ":" $?
 
 rm ${testimg2_ppm} ${testimg4_ppm}

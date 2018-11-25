@@ -54,7 +54,7 @@ pnmquant 256 testimg.ppm > ${test256_ppm} || echo "pnmquant failed"
 for mode in "-rgb" "-rgb -norle" "-cmap" "-cmap -norle" "" "-norle"
   do
   pamtotga ${mode} ${test256_ppm} | tgatoppm | cmp -s - ${test256_ppm}
-  echo $?
+  echo ${PIPESTATUS[@]} ":" $?
 done
 
 
@@ -68,13 +68,13 @@ rm ${test256_ppm}
 
 for mode in "-cmap16" "-cmap16 -norle"
   do pamtotga ${mode} ${test256_31_ppm} | tgatoppm | cmp -s - ${test256_31_ppm}
-  echo $?
+  echo ${PIPESTATUS[@]} ":" $?
   done
 
 for mode in  "-rgb" "-rgb -norle" "-cmap" "-cmap -norle" "" "-norle"
   do pamtotga ${mode} ${test256_31_ppm} | tgatoppm | \
      pamdepth 31 | cmp -s - ${test256_31_ppm}
-  echo $?
+  echo ${PIPESTATUS[@]} ":" $?
   done
 
 rm ${test256_31_ppm}

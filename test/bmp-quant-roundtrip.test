@@ -1,0 +1,36 @@
+#! /bin/bash
+# This script tests: bmptopnm ppmtobmp pnmquant
+# Also requires: ppmhist
+
+tmpdir=${tmpdir:-/tmp}
+quant_ppm=${tmpdir}/quant.ppm
+
+colors=256      # any value between 2 - 256 works
+bpp=8
+echo colors=${colors}, bpp=${bpp} 
+
+pnmquant ${colors} testimg.ppm > ${quant_ppm}
+
+for mode in "-windows" "-os2"
+  do
+  ppmtobmp $mode -bpp=${bpp} ${quant_ppm} | bmptopnm | \
+    cmp -s - ${quant_ppm} > /dev/null
+  echo ${PIPESTATUS[@]} ":" $?
+  done
+
+rm ${quant_ppm}
+
+colors=16      # any value between 2 - 16 works
+bpp=4
+echo colors=${colors}, bpp=${bpp}
+
+pnmquant ${colors} testimg.ppm > ${quant_ppm}
+
+for mode in "-windows" "-os2"
+  do
+  ppmtobmp -bpp=${bpp} ${quant_ppm} | bmptopnm | \
+    cmp -s - ${quant_ppm} > /dev/null
+  echo ${PIPESTATUS[@]} ":" $?
+  done
+
+rm ${quant_ppm}

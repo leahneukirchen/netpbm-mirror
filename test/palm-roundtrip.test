@@ -33,7 +33,7 @@ for flags in "" \
              "-packbits_compression" 
   do pnmtopalm -colormap $flags ${test256color_ppm} | palmtopnm | \
      cmp -s - ${test256color_ppm} > /dev/null
-     echo $?
+     echo ${PIPESTATUS[@]} ":" $?
   done
 
 rm ${test256color_ppm}
