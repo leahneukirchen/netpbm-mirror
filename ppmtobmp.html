@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmtobmp User Manual</TITLE>
 </HEAD><BODY>
 <H1>ppmtobmp</H1>
-Updated: 29 October 2008
+Updated: 28 November 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -90,6 +90,23 @@ must have at most 256 pixels.
 <p>You may find <b>pnmcolormap</b> useful in generating the palette
 file.  <b>pamseq</b> too.
 
+<p>In the case of grayscale image, if you are processing the BMP image, it
+  may be convenient for you to have the actual gray values in the raster
+  part of the image rather than arbitrary indices into a palette.  There is
+  no BMP format specifically for that, but you can achieve it by using a
+  palette in which each index is equal to the indexed gray value, and then
+  ignoring the palette when you process the BMP image.
+  
+<P>Here is an example of doing that:
+
+  <pre>
+    <kbd>
+    $ pamseq 1 255 >mapfile.pgm
+
+    $ ppmtobmp -mapfile=mapfile.pgm input.pgm >output.bmp
+    </kbd>
+  </pre>
+    
 <p>This option was new in Netpbm 10.45 (December 2008).
 
 </DL>
