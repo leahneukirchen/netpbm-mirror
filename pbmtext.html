@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtext</H1>
-Updated: 04 April 2018
+Updated: 01 December 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -20,6 +20,8 @@ pbmtext - render text into a PBM image
 [<B>-lspace</B> <I>pixels</I>]
 [<B>-nomargins</B>]
 [<B>-width</B> <i>pixels</i>]
+[<b>-dry-run</b>]
+[<b>-dump-sheet</b>]
 [<b>-text-dump</b>]
 [<I>text</I>]
 
@@ -162,6 +164,30 @@ the middle of a word and a line may begin or end with white space.
 have line breaks where they make sense, and <b>pbmtext</b> simply
 truncates each line as needed to fit the specified width.
 
+<dt><b>-dry-run</b>
+<dd>
+
+<p>With this option, instead of outputting an image of the text,
+<b>pbmtext</b> just writes to Standard Output a message telling the dimensions
+of the image it would have produced.
+  
+<p>You can specify only one of <b>-dry-run</b>, <b>-dump-sheet</b>,  and
+<b>-text-dump</b>.
+
+<p>This option was new in Netpbm 10.75 (June 2016).
+  
+<dt><b>-dump-sheet</b>
+<dd>
+
+<p>With this option, instead of outputting the image of the text,
+<b>pbmtext</b> outputs a font sheet - an image containing all the characters
+in the font that would have been used.
+  
+<p>You can specify only one of <b>-dry-run</b>, <b>-dump-sheet</b>,  and
+<b>-text-dump</b>.
+
+<p>This option was new in Netpbm 10.75 (June 2016).
+  
 <dt><b>-text-dump</b>
 <dd>
 This option causes <b>pbmtext</b> just to write to Standard Output the text in
@@ -171,6 +197,11 @@ problems.  This option was new in Netpbm 10.82 (March 2018).
 
 <p>When <b>-wchar</b> is in effect, the output text will be in the encoding
 specified by the current locale.
+
+<p>You can specify only one of <b>-dry-run</b>, <b>-dump-sheet</b>,  and
+<b>-text-dump</b>.
+
+<p>This option was new in Netpbm 10.82 (March 2018).
 
 </DL>
 

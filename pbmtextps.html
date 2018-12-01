@@ -14,12 +14,12 @@ pbmtextps - render text into a PBM image using a postscript interpreter
 [<B>-font</B> <I>fontname</I>]
 [<B>-fontsize</B> <I>float</I>]
 [<B>-resolution</B> <I>n</I>]
-[<b>-leftmargin=</b><i>n</i>
-[<b>-rightmargin=</b><i>n</i>
-[<b>-topmargin=</b><i>n</i>
-[<b>-bottommargin=</b><i>n</i>
-[<b>-ascent=</b><i>n</i>
-[<b>-descent=</b><i>n</i>
+[<b>-leftmargin=</b><i>n</i>]
+[<b>-rightmargin=</b><i>n</i>]
+[<b>-topmargin=</b><i>n</i>]
+[<b>-bottommargin=</b><i>n</i>]
+[<b>-ascent=</b><i>n</i>]
+[<b>-descent=</b><i>n</i>]
 [<b>-pad</b>]
 [<b>-crop</b>]
 [<B>-stroke</B> <I>n</I>]
@@ -84,7 +84,7 @@ true of <b>-descent</b> and <b>-bottommargin</b>.
 <p><b>-pad</b> pads the image on the top and bottom to the where the highest
 and lowest characters in the font would reach, even if you don't have those
 characters in your text.  This is useful if you will generate multiple images
-of text (with multiple invocations of <b>pbmtextps</b> and concatenate them
+of text (with multiple invocations of <b>pbmtextps</b>) and concatenate them
 vertically to create a multiline text image.  <b>-pad</b> makes sure the lines
 in this image are equally spaced.
 
@@ -185,7 +185,7 @@ edge of the type.  See <a href="#margins">Margins</a> for details.
 <dt><b>-ascent=</b><i>n</i>
 <dt><b>-descent=</b><i>n</i>
 <dd>
-These options control the the margins added to the image, measured from
+These options control the margins added to the image, measured from
 the text baseline.  See <a href="#margins">Margins</a> for details.
 
 <p>Sizes are in points, as a floating point number.

@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmconvol User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmconvol</H1>
-Updated: 30 April 2017
+Updated: 30 November 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -44,6 +44,9 @@ space in place of the equals sign to separate an option name from its value.
 <p><b>pnmconvol</b> reads a Netpbm image as input, convolves it with
 a specified convolution matrix, and writes a Netpbm image as output.
 
+<p>A command use for convolution is blurring.  See examples in the
+<a href="pamgauss.html"><b>pamgauss</b></a> manual.
+  
 <P>Convolution means replacing each pixel with a weighted average of
 the nearby pixels.  The weights and the area to average are determined
 by the convolution matrix (sometimes called a convolution kernel),
@@ -393,6 +396,7 @@ convolution matrix.  See
 
 </dl>
 
+
 <H2 id="history">HISTORY</H2> <p>The <b>-nooffset</b> option was new in Netpbm
 10.23 (July 2004), making it substantially easier to specify a convolution
 matrix, but still hard.  In Netpbm 10.49 (December 2009), the PNM convolution
@@ -440,6 +444,7 @@ HREF="mailto:burns@chem.psu.edu">burns@chem.psu.edu</A>
     <li><a href="#matrixpnm">PNM File</a>
     </ul>
   </ul>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
 <LI><A HREF="#authors">AUTHORS</A>
