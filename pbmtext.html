@@ -21,7 +21,6 @@ pbmtext - render text into a PBM image
 [<B>-nomargins</B>]
 [<B>-width</B> <i>pixels</i>]
 [<b>-dry-run</b>]
-[<b>-dump-sheet</b>]
 [<b>-text-dump</b>]
 [<I>text</I>]
 
@@ -171,20 +170,7 @@ truncates each line as needed to fit the specified width.
 <b>pbmtext</b> just writes to Standard Output a message telling the dimensions
 of the image it would have produced.
   
-<p>You can specify only one of <b>-dry-run</b>, <b>-dump-sheet</b>,  and
-<b>-text-dump</b>.
-
-<p>This option was new in Netpbm 10.75 (June 2016).
-  
-<dt><b>-dump-sheet</b>
-<dd>
-
-<p>With this option, instead of outputting the image of the text,
-<b>pbmtext</b> outputs a font sheet - an image containing all the characters
-in the font that would have been used.
-  
-<p>You can specify only one of <b>-dry-run</b>, <b>-dump-sheet</b>,  and
-<b>-text-dump</b>.
+<p>You can specify only one of <b>-dry-run</b> and <b>-text-dump</b>.
 
 <p>This option was new in Netpbm 10.75 (June 2016).
   
@@ -198,8 +184,7 @@ problems.  This option was new in Netpbm 10.82 (March 2018).
 <p>When <b>-wchar</b> is in effect, the output text will be in the encoding
 specified by the current locale.
 
-<p>You can specify only one of <b>-dry-run</b>, <b>-dump-sheet</b>,  and
-<b>-text-dump</b>.
+<p>You can specify only one of <b>-dry-run</b> and <b>-text-dump</b>.
 
 <p>This option was new in Netpbm 10.82 (March 2018).
 
