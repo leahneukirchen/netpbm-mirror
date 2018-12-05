@@ -195,7 +195,7 @@ pm_parse_dictionary_name(char    const colorname[],
     pixval r,g,b;
 
     f = pm_openColornameFile(NULL, TRUE);  /* exits if error */
-    canoncolor = pm_strdup(colorname);
+    canoncolor = strdup(colorname);
 
     if (!canoncolor)
         pm_error("Failed to allocate memory for %u-byte color name",
