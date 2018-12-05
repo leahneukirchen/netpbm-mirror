@@ -631,11 +631,11 @@ BMPreadinfoheader(FILE *                 const ifP,
         readWindowsInfoHeader(ifP, cInfoHeaderSize, headerP);
         break;
     case 108:
-        pm_error("%s: this is a Version 4 Windows BMP; "
+        pm_error("This is a Version 4 Windows BMP; "
                  "this program knows only Version 1");
         break;
     case 124:
-        pm_error("%s: this is a Version 5 Windows BMP; "
+        pm_error("This is a Version 5 Windows BMP; "
                  "this program knows only Version 1");
         break;
     default:
@@ -834,6 +834,15 @@ convertRow32(unsigned char      const bmprow[],
 } 
 
 
+static void
+validateIndex(unsigned int const index,
+	      unsigned int const cmapsize ) {
+
+    if (index >= cmapsize)
+        pm_error("Error: invalid index to color palette.");
+}
+
+
 
 static void
 convertRow(unsigned char      const bmprow[], 
@@ -841,7 +850,8 @@ convertRow(unsigned char      const bmprow[],
            int                const cols, 
            unsigned int       const cBitCount, 
            struct pixelformat const pixelformat,
-           xel                const colormap[]
+           xel                const colormap[],
+           unsigned int       const cmapsize
            ) {
 /*----------------------------------------------------------------------------
    Convert a row in raw BMP raster format bmprow[] to a row of xels xelrow[].
@@ -861,9 +871,12 @@ convertRow(unsigned char      const bmprow[],
         convertRow32(bmprow, xelrow, cols, pixelformat);
     else if (cBitCount == 8) {            
         /* It's a whole byte colormap index */
-        unsigned int col;
-        for (col = 0; col < cols; ++col)
-            xelrow[col] = colormap[bmprow[col]];
+        unsigned int col; 
+        for (col = 0; col < cols; ++col) {
+            unsigned int const index = bmprow[col];
+            validateIndex(index, cmapsize);
+            xelrow[col] = colormap[index];
+        }
     } else if (cBitCount < 8) {
         /* It's a bit field color index */
         unsigned char const mask = ( 1 << cBitCount ) - 1;
@@ -875,6 +888,7 @@ convertRow(unsigned char      const bmprow[],
             unsigned int const shift = 8 - ((col*cBitCount) % 8) - cBitCount;
             unsigned int const index = 
                 (bmprow[cursor] & (mask << shift)) >> shift;
+            validateIndex(index, cmapsize);
             xelrow[col] = colormap[index];
         }
     } else
@@ -1351,6 +1365,7 @@ readBmp(FILE *               const ifP,
         unsigned int *       const cBitCountP, 
         struct pixelformat * const pixelformatP,
         xel **               const colormapP,
+        unsigned int *       const cmapsizeP,
         bool                 const verbose) {
 
     xel * colormap;  /* malloc'ed */
@@ -1408,6 +1423,7 @@ readBmp(FILE *               const ifP,
     *cBitCountP   = BMPheader.cBitCount;
     *pixelformatP = BMPheader.pixelformat;
     *colormapP    = colormap;
+    *cmapsizeP    = BMPheader.cmapsize;
 }
 
 
@@ -1419,7 +1435,8 @@ writeRasterGen(unsigned char **   const BMPraster,
                int                const format,
                unsigned int       const cBitCount, 
                struct pixelformat const pixelformat,
-               xel                const colormap[]) {
+               xel                const colormap[],
+               unsigned int       const cmapsize) {
 /*----------------------------------------------------------------------------
   Write the PNM raster to Standard Output, corresponding to the raw BMP
   raster BMPraster.  Write the raster assuming the PNM image has 
@@ -1440,7 +1457,7 @@ writeRasterGen(unsigned char **   const BMPraster,
 
     for (row = 0; row < rows; ++row) {
         convertRow(BMPraster[row], xelrow, cols, cBitCount, pixelformat,
-                   colormap);
+                   colormap, cmapsize);
         pnm_writepnmrow(stdout, xelrow, cols, bmpMaxval, format, FALSE);
     }
     pnm_freerow(xelrow);
@@ -1529,6 +1546,13 @@ main(int argc, char ** argv) {
         /* Malloc'ed colormap (palette) from the BMP.  Contents of map
            undefined if not a colormapped BMP.
          */
+    unsigned int cmapsize;
+        /* Number of colormap entries.  Described in the BMP header.
+           Note that a file may be 8 bits per pixel but have less than
+           256 colors.  In the 1 bit per pixel case, there should be
+           2 entries according to the official specification, but we
+           allow files with just 1.
+	 */
 
     pnm_init(&argc, argv);
 
@@ -1541,7 +1565,7 @@ main(int argc, char ** argv) {
         ifname = cmdline.input_filespec;
 
     readBmp(ifP, &BMPraster, &cols, &rows, &grayPresent, &colorPresent, 
-            &cBitCount, &pixelformat, &colormap,
+            &cBitCount, &pixelformat, &colormap, &cmapsize,
             cmdline.verbose);
     pm_close(ifP);
 
@@ -1562,7 +1586,7 @@ main(int argc, char ** argv) {
     } else {
         pnm_writepnminit(stdout, cols, rows, bmpMaxval, outputType, FALSE);
         writeRasterGen(BMPraster, cols, rows, outputType, cBitCount,
-                       pixelformat, colormap); 
+                       pixelformat, colormap, cmapsize); 
     }
     free(colormap);
     free(BMPraster);

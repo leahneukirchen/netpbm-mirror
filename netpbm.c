@@ -55,6 +55,9 @@ main(int argc, char *argv[]) {
     TRY("gemtopbm", main_gemtopnm);
     TRY("pnminterp", main_pamstretch);
     TRY("pgmoil", main_pamoil);
+    TRY("pnmtopnm", main_pamtopnm);
+    TRY("ppmnorm", main_pnmnorm);
+    TRY("ppmtotga", main_pamtotga);
 
     /* We don't do the ppmtojpeg alias because if user doesn't have a JPEG
        library, there is no main_pnmtojpeg library.  The right way to do
@@ -63,6 +66,7 @@ main(int argc, char *argv[]) {
        or not.  But that's too much work.
 
     TRY("ppmtojpeg", main_pnmtojpeg); 
+    TRY("pamrgbatopng", main_pamtopng);
     */
     TRY("bmptoppm", main_bmptopnm);
     TRY("pgmnorm", main_pnmnorm);

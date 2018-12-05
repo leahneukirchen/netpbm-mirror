@@ -4,6 +4,32 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.12.05 BJH  Release 10.47.71
+
+              picttoppm: accept rectangle specifications in input that have
+              the corners in any order, not just upper left, then lower right.
+
+              bmptopnm: Fix array bounds violation when index value in raster
+              is too big.  Broken after Netpbm 10.10 (October 2002) but before
+              10.19 (November 2003).
+
+              libnetpbm: Fix invalid memory reference in color name processing
+              when trivial memory allocation fails.
+
+              pamtojpeg2k: fix incorrect interpretation of -ilyrrates option
+              when it contains multiple delimiter characters in a row.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              pamtojpeg2k: Fix incorrect metadata in output with GRAYSCALE PAM
+              input.  Always broken (pamtojpeg2k was new in Netpbm 10.12
+              (November 2002)).
+
+              pnmtojbig: fix incorrect handling of -x option.  Always broken
+              (pnmtojbig was new in Netpbm 9.2 (May 2000)).
+
+              Merge build: fix so legacy program names 'pnmtopnm', 'ppmnorm',
+              and 'ppmtotga' work again.
+
 18.09.29 BJH  Release 10.47.70
 
               pstopnm: Fix divide-by-zero crash when Postscript input says
