@@ -6,6 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
+
+              bmptopnm: allow single color colormap with bpp 1.
+
+              bmptopnm: validate plane count = 1.
+
+              bmptopnm: Add RLE4 compression decoding.  This was ostensibly
+              added in Netpbm 10.32 (February 2006), but never worked.
+              
               Add pammixmulti.  Thanks Scott Pakin (scott+pbm@pakin.org).
 
               pamtotga: Add -cmap16 .
@@ -26,6 +34,10 @@ not yet  BJH  Release 10.85.00
               Merge build: make old names for JPEG, TIFF, and PNG converter
               programs work (function previously omitted by design because it
               was too hard).
+
+              bmptopnm: Fix array bounds violation when index value in raster
+              is too big.  Broken after Netpbm 10.10 (October 2002) but before
+              10.19 (November 2003).
 
               libnetpbm: Fix invalid memory reference in color name processing
               when trivial memory allocation fails.

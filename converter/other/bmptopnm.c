@@ -105,7 +105,7 @@ struct bmpInfoHeader {
            described by the "mask" values in the header, rather than
            fixed formats.
         */
-    unsigned int cmapsize;
+    unsigned int cmapSize;
         /* Size in bytes of the colormap (palette) in the BMP file.
 
            Zero means there is no colormap.
@@ -327,9 +327,9 @@ readOs2InfoHeaderRest(FILE *                 const ifP,
        same as for Windows.
     */
     if (headerP->cBitCount <= 8)
-        headerP->cmapsize = 1 << headerP->cBitCount;
+        headerP->cmapSize = 1 << headerP->cBitCount;
     else if (headerP->cBitCount == 24)
-        headerP->cmapsize = 0;
+        headerP->cmapSize = 0;
     /* There is a 16 bit truecolor format, but we don't know how the
        bits are divided among red, green, and blue, so we can't handle it.
     */
@@ -428,7 +428,7 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
     GetLong(ifP);   /* YpixelsPerMeter */
     colorsused = GetLong(ifP);   /* ColorsUsed */
     /* See comments in bmp.h for info about the definition of the following
-       word and its relationship to the color map size (headerP->cmapsize).
+       word and its relationship to the color map size (headerP->cmapSize).
     */
     /* colorsimportant = */ GetLong(ifP);  /* ColorsImportant */
 
@@ -438,14 +438,20 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
                 pm_error("Invalid BMP header.  Says %u bits per pixel, "
                          "but %d colors used", 
                          headerP->cBitCount, colorsused);
+            else if (colorsused == 1 && headerP->cBitCount == 1) {
+                pm_message("Abnormal BMP header.  Says 1 bit per pixel. "
+                           "Should have 2 colors, but says only 1 color used. "
+                    );
+                headerP->cmapSize = colorsused;
+	    }
             else
-                headerP->cmapsize = colorsused;
+                headerP->cmapSize = colorsused;
         } else 
-            headerP->cmapsize = 1 << headerP->cBitCount;
+            headerP->cmapSize = 1 << headerP->cBitCount;
     } else if (headerP->cBitCount == 24 || 
                headerP->cBitCount == 16 || 
                headerP->cBitCount == 32)
-        headerP->cmapsize = 0;
+        headerP->cmapSize = 0;
     else
         pm_error("Unrecognized bits per pixel in Windows BMP file header: %d",
                  headerP->cBitCount);
@@ -717,13 +723,13 @@ static void
 bmpReadColormap(FILE *         const ifP, 
                 enum bmpClass  const class, 
                 xel **         const colormapP, 
-                unsigned int   const cmapsize,
+                unsigned int   const cmapSize,
                 unsigned int * const bytesReadP) {
 /*----------------------------------------------------------------------------
    Read the color map from the present position in the input BMP file
    *ifP.
 
-   The map has 'cmapsize' entries in it.  cmapsize == 0 means there is
+   The map has 'cmapSize' entries in it.  cmapSize == 0 means there is
    no color map.
 
    We return a color map as *colormapP.  If there is no color map in the
@@ -731,12 +737,12 @@ bmpReadColormap(FILE *         const ifP,
  
    'class' is the class of BMP image - Windows or OS/2.
 -----------------------------------------------------------------------------*/
-    xel * const colormap = pnm_allocrow(MAX(1, cmapsize));
+    xel * const colormap = pnm_allocrow(MAX(1, cmapSize));
     
     unsigned int i;
     unsigned int bytesRead;
 
-    for (i = 0, bytesRead = 0; i < cmapsize; ++i) {
+    for (i = 0, bytesRead = 0; i < cmapSize; ++i) {
         /* There is a document that says the bytes are ordered R,G,B,Z,
            but in practice it appears to be the following instead:
         */
@@ -895,6 +901,15 @@ convertRow32(unsigned char      const bmprow[],
 } 
 
 
+static void
+validateIndex(unsigned int const index,
+              unsigned int const cmapSize ) {
+
+    if (index >= cmapSize)
+        pm_error("Error: invalid index to color palette.");
+}
+
+
 
 static void
 convertRow(unsigned char      const bmprow[], 
@@ -902,7 +917,8 @@ convertRow(unsigned char      const bmprow[],
            int                const cols, 
            unsigned int       const cBitCount, 
            struct pixelformat const pixelformat,
-           xel                const colormap[]
+           xel                const colormap[],
+           unsigned int       const cmapSize
            ) {
 /*----------------------------------------------------------------------------
    Convert a row in raw BMP raster format bmprow[] to a row of xels xelrow[].
@@ -922,9 +938,12 @@ convertRow(unsigned char      const bmprow[],
         convertRow32(bmprow, xelrow, cols, pixelformat);
     else if (cBitCount == 8) {            
         /* It's a whole byte colormap index */
-        unsigned int col;
-        for (col = 0; col < cols; ++col)
-            xelrow[col] = colormap[bmprow[col]];
+        unsigned int col; 
+        for (col = 0; col < cols; ++col) {
+            unsigned int const index = bmprow[col];
+            validateIndex(index, cmapSize);
+            xelrow[col] = colormap[index];
+	}
     } else if (cBitCount == 1 || cBitCount == 2 || cBitCount == 4) {
         /* It's a bit field color index */
         unsigned char const mask = ( 1 << cBitCount ) - 1;
@@ -936,6 +955,7 @@ convertRow(unsigned char      const bmprow[],
             unsigned int const shift = 8 - ((col*cBitCount) % 8) - cBitCount;
             unsigned int const index = 
                 (bmprow[cursor] & (mask << shift)) >> shift;
+            validateIndex(index, cmapSize);
             xelrow[col] = colormap[index];
         }
     } else {
@@ -1005,27 +1025,31 @@ readrow(FILE *           const ifP,
 
 
 static void
-nibbleAlign(unsigned char * const ptr,
-            unsigned int    const nibbles){
+nybbleAlign(unsigned char * const bytes,
+            unsigned int    const nybbleCt){
 /*----------------------------------------------------------------------------
-  Shift data pointed by ptr one half byte toward the MSB (to the left).
+  Shift the 'nybbleCt' nybbles of bytes[], after the first byte, one nybble
+  toward the left, with the first of those nybble shifting into the right half
+  of the first byte.  Leave the left half of the first byte alone.
  
   Example:
  
-  (Numbers in hex, 8 nibbles)
-            5F 13 7E 89 A1
+  (Numbers in hex, 8 nybbles)
+            5? 13 7E 89 A1
    becomes  51 37 E8 9A 10
 -----------------------------------------------------------------------------*/
-    unsigned int const fullByteCount = (nibbles-1) / 2;
+    unsigned int const fullByteCt = (nybbleCt + 1) / 2;
     unsigned int i;
               
-    ptr[0] = ptr[0] & ptr[1] >> 4;
+    bytes[0] >>= 4;
                                     
-    for (i = 0; i < fullByteCount; ++i)
-        ptr[i+1] = ptr[i+1] << 4 & ptr[i+2] >> 4;
+    for (i = 0; i < fullByteCt; ++i)
+        bytes[i] = bytes[i] << 4 | bytes[i+1] >> 4;
     
-    if (nibbles % 2 == 1)   /* if there is a final odd nibble */
-        ptr[fullByteCount+1] <<= 4; /* shift it a half byte */
+    if (nybbleCt % 2 == 0) {
+        /* There is a final right nybble.  Shift it. */
+        bytes[fullByteCt] <<= 4;
+    }
 }
 
 
@@ -1080,9 +1104,11 @@ readrowRLE(FILE *           const ifP,
     unsigned int totalBytesRead;
     unsigned int pixelsRead;
 
-    /* There are RLE4 images with rows coded up the byte boundary, resulting
-       in each row one pixel larger than the column length stated in the
-       BMP info header (header.cols) when the column length is odd.
+    /* There are RLE4 images with rows coded up to the byte boundary,
+       resulting in each row one pixel larger than the column length
+       stated in the BMP info header (header.cols) when the column length
+       is odd.
+
        pixelsPerRowMargin is a "wart" to provide for this case.
     */
 
@@ -1111,7 +1137,7 @@ readrowRLE(FILE *           const ifP,
                  
             if (rle4 && pixelsRead % 2 == 1)
                 /* previous read ended odd */
-                nibbleAlign(&bmpRaster[row][n-1], cnt); 
+                nybbleAlign(&bmpRaster[row][n-1], cnt); 
             
             pixelsRead += cnt;
             totalBytesRead += 2;
@@ -1139,7 +1165,7 @@ readrowRLE(FILE *           const ifP,
                              errno, strerror(errno));
             }
             if (rle4 && pixelsRead % 2 == 1) /* previous read ended odd */
-                nibbleAlign(&bmpRaster[row][n-1], cnt); 
+                nybbleAlign(&bmpRaster[row][n-1], cnt); 
     
             pixelsRead += cnt;
             totalBytesRead += cmpBytesRead + 2;
@@ -1171,13 +1197,25 @@ readrowRLE(FILE *           const ifP,
             } else
                 pm_error(err_decode,  "Premature end of bitmap",
                          row, pixelsRead );
+	        /* Windows programs do not reject premature end of bitmap.
+               Rather, they set the remaining pixels of the raster to
+               an arbitrary value.  In practice, images with incomplete
+               bitmaps are rare.
+            */
         } break;
 
         case DELTA: {
+            /* Delta means "move the point (col,row) by the amount given
+               in the next two bytes."  Like premature end of bitmap, the
+               official specs do not specify what value the skipped pixels
+               should be set to.  Judging from Windows utilities, there is
+               no consensus within Microsoft either.
+            */
             pm_error(err_decode,
                      "Delta code in compressed BMP image.  "
-                     "This program does not process deltas.",
+                     "This program does not process deltas",
                      row, pixelsRead);
+
         } break;
          
         default:
@@ -1282,7 +1320,7 @@ reportHeader(struct bmpInfoHeader const header,
         pm_message("  Byte offset of raster within file: %u", offBits);
         pm_message("  Bits per pixel in raster: %u", header.cBitCount);
         pm_message("  Compression: %s", BMPCompTypeName(header.compression));
-        pm_message("  Colors in color map: %u", header.cmapsize);
+        pm_message("  Colors in color map: %u", header.cmapSize);
     } else {
         pm_message("%s BMP, %ux%ux%u",
                    BMPClassName(header.class),
@@ -1295,13 +1333,22 @@ reportHeader(struct bmpInfoHeader const header,
 
 
 static void
+validateCPlanes(unsigned short const cPlanes) {
+
+    if (cPlanes != 1)
+        pm_error("Error: invalid planes value in BMP header.  Must be 1");
+}
+
+
+
+static void
 analyzeColors(xel          const colormap[],
-              unsigned int const cmapsize,
+              unsigned int const cmapSize,
               xelval       const maxval,
               bool *       const grayPresentP,
               bool *       const colorPresentP) {
     
-    if (cmapsize == 0) {
+    if (cmapSize == 0) {
         /* No colormap, and we're not about to search the entire raster,
            so we just assume it's full color 
         */
@@ -1312,7 +1359,7 @@ analyzeColors(xel          const colormap[],
 
         *colorPresentP = FALSE;  /* initial assumption */
         *grayPresentP = FALSE;   /* initial assumption */
-        for (i = 0; i < cmapsize; ++i) {
+        for (i = 0; i < cmapSize; ++i) {
             if (PPM_ISGRAY(colormap[i])) {
                 if (PPM_GETR(colormap[i]) != 0 &&
                     PPM_GETR(colormap[i]) != maxval)
@@ -1330,7 +1377,7 @@ warnIfOffBitsWrong(struct bmpInfoHeader const bmpHeader,
                    unsigned int         const offBits) {
 
     if (offBits != BMPoffbits(bmpHeader.class, bmpHeader.cBitCount, 
-                              bmpHeader.cmapsize)) {
+                              bmpHeader.cmapSize)) {
 
         pm_message("warning: the BMP header says the raster starts "
                    "at offset %u bytes into the file (offbits), "
@@ -1339,7 +1386,7 @@ warnIfOffBitsWrong(struct bmpInfoHeader const bmpHeader,
                    "input file is not a legal BMP file and is unusable.",
                    offBits,
                    BMPoffbits(bmpHeader.class, bmpHeader.cBitCount, 
-                              bmpHeader.cmapsize));
+                              bmpHeader.cmapSize));
     }
 }
 
@@ -1354,7 +1401,7 @@ readColorMap(FILE *               const ifP,
     unsigned int bytesRead;
 
     bmpReadColormap(ifP, bmpHeader.class, 
-                    colorMapP, bmpHeader.cmapsize, &bytesRead);
+                    colorMapP, bmpHeader.cmapSize, &bytesRead);
 
     *posP += bytesRead;
 }
@@ -1407,6 +1454,7 @@ readBmp(FILE *               const ifP,
         unsigned int *       const cBitCountP, 
         struct pixelformat * const pixelformatP,
         xel **               const colormapP,
+        unsigned int *       const cmapSizeP,
         bool                 const verbose) {
 
     xel * colormap;  /* malloc'ed */
@@ -1440,11 +1488,13 @@ readBmp(FILE *               const ifP,
 
     reportHeader(bmpHeader, offBits, verbose);
 
+    validateCPlanes(bmpHeader.cPlanes);
+
     warnIfOffBitsWrong(bmpHeader, offBits);
 
     readColorMap(ifP, bmpHeader, &colormap, &pos);
 
-    analyzeColors(colormap, bmpHeader.cmapsize, bmpMaxval, 
+    analyzeColors(colormap, bmpHeader.cmapSize, bmpMaxval, 
                   grayPresentP, colorPresentP);
 
     readOffBytes(ifP, offBits - pos);
@@ -1467,6 +1517,7 @@ readBmp(FILE *               const ifP,
     *rowsP        = bmpHeader.rows;
     *pixelformatP = bmpHeader.pixelformat;
     *colormapP    = colormap;
+    *cmapSizeP    = bmpHeader.cmapSize;
 }
 
 
@@ -1478,7 +1529,8 @@ writeRasterGen(unsigned char **   const bmpRaster,
                int                const format,
                unsigned int       const cBitCount, 
                struct pixelformat const pixelformat,
-               xel                const colormap[]) {
+               xel                const colormap[],
+               unsigned int       const cmapSize) {
 /*----------------------------------------------------------------------------
   Write the PNM raster to Standard Output, corresponding to the raw BMP
   raster bmpRaster.  Write the raster assuming the PNM image has 
@@ -1499,7 +1551,7 @@ writeRasterGen(unsigned char **   const bmpRaster,
 
     for (row = 0; row < rows; ++row) {
         convertRow(bmpRaster[row], xelrow, cols, cBitCount, pixelformat,
-                   colormap);
+                   colormap, cmapSize);
         pnm_writepnmrow(stdout, xelrow, cols, bmpMaxval, format, FALSE);
     }
     pnm_freerow(xelrow);
@@ -1581,6 +1633,12 @@ main(int argc, const char ** argv) {
         /* Malloc'ed colormap (palette) from the BMP.  Contents of map
            undefined if not a colormapped BMP.
          */
+    unsigned int cmapSize;
+        /* Number of colormap entries.  From BMP header.  Note that a file may
+           be 8 bits per pixel but have fewer than 256 colors.  In the 1 bit
+           per pixel case, there should be 2 entries according to the official
+           specification, but we allow files with just 1.
+        */
 
     pm_proginit(&argc, argv);
 
@@ -1593,7 +1651,7 @@ main(int argc, const char ** argv) {
         ifname = cmdline.inputFileName;
 
     readBmp(ifP, &bmpRaster, &cols, &rows, &grayPresent, &colorPresent, 
-            &cBitCount, &pixelformat, &colormap,
+            &cBitCount, &pixelformat, &colormap, &cmapSize,
             cmdline.verbose);
     pm_close(ifP);
 
@@ -1614,7 +1672,7 @@ main(int argc, const char ** argv) {
     } else {
         pnm_writepnminit(stdout, cols, rows, bmpMaxval, outputType, FALSE);
         writeRasterGen(bmpRaster, cols, rows, outputType, cBitCount,
-                       pixelformat, colormap); 
+                       pixelformat, colormap, cmapSize); 
     }
     free(colormap);
     free(bmpRaster);
