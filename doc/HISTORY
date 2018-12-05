@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.11.05 BJH  Release 10.84.04
+
+              bmptopnm: Fix array bounds violation when index value in raster
+              is too big.  Broken after Netpbm 10.10 (October 2002) but before
+              10.19 (November 2003).
+
 18.11.11 BJH  Release 10.84.03
 
               picttoppm: accept rectangle specifications in input that have
