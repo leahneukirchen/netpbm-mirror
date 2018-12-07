@@ -1,9 +1,9 @@
-/*============================================================================ 
+/*============================================================================
                                 pamcut
 ==============================================================================
   Cut a rectangle out of a Netpbm image
 
-  This is inspired by and intended as a replacement for Pnmcut by 
+  This is inspired by and intended as a replacement for Pnmcut by
   Jef Poskanzer, 1989.
 
   By Bryan Henderson, San Jose CA.  Contributed to the public domain
@@ -30,10 +30,10 @@ struct CmdlineInfo {
     */
     const char * inputFileName;  /* File name of input file */
 
-    /* The following describe the rectangle the user wants to cut out. 
+    /* The following describe the rectangle the user wants to cut out.
        the value UNSPEC for any of them indicates that value was not
        specified.  A negative value means relative to the far edge.
-       'width' and 'height' are not negative.  These specifications 
+       'width' and 'height' are not negative.  These specifications
        do not necessarily describe a valid rectangle; they are just
        what the user said.
        */
@@ -149,7 +149,7 @@ parseCommandLine(int argc, const char ** const argv,
 
 static void
 computeCutBounds(const int cols, const int rows,
-                 const int leftarg, const int rightarg, 
+                 const int leftarg, const int rightarg,
                  const int toparg, const int bottomarg,
                  const int widtharg, const int heightarg,
                  int * const leftcolP, int * const rightcolP,
@@ -164,7 +164,7 @@ computeCutBounds(const int cols, const int rows,
    relative to the far edge.  'widtharg' and 'heightarg' are positive.
 
    Return the location of the rectangle as *leftcolP, *rightcolP,
-   *toprowP, and *bottomrowP.  
+   *toprowP, and *bottomrowP.
 -----------------------------------------------------------------------------*/
 
     int leftcol, rightcol, toprow, bottomrow;
@@ -324,7 +324,7 @@ rejectOutOfBounds(unsigned int const cols,
 
 
 static void
-writeBlackRows(const struct pam * const outpamP, 
+writeBlackRows(const struct pam * const outpamP,
                int                const rows) {
 /*----------------------------------------------------------------------------
    Write out 'rows' rows of black tuples of the image described by *outpamP.
@@ -336,11 +336,11 @@ writeBlackRows(const struct pam * const outpamP,
     tuple blackTuple;
     tuple * blackRow;
     int col;
-    
+
     pnm_createBlackTuple(outpamP, &blackTuple);
 
     MALLOCARRAY_NOFAIL(blackRow, outpamP->width);
-    
+
     for (col = 0; col < outpamP->width; ++col)
         blackRow[col] = blackTuple;
 
@@ -360,14 +360,14 @@ struct rowCutter {
    pnm_readpamrow() and one pnm_writepamrow().  It works like this:
 
    The array inputPointers[] contains an element for each pixel in an input
-   row.  If it's a pixel that gets discarded in the cutting process, 
+   row.  If it's a pixel that gets discarded in the cutting process,
    inputPointers[] points to a special "discard" tuple.  All thrown away
    pixels have the same discard tuple to save CPU cache space.  If it's
    a pixel that gets copied to the output, inputPointers[] points to some
    tuple to which outputPointers[] also points.
 
    The array outputPointers[] contains an element for each pixel in an
-   output row.  If the pixel is one that gets copied from the input, 
+   output row.  If the pixel is one that gets copied from the input,
    outputPointers[] points to some tuple to which inputPointers[] also
    points.  If it's a pixel that gets padded with black, outputPointers[]
    points to a constant black tuple.  All padded pixels have the same
@@ -489,7 +489,7 @@ destroyRowCutter(struct rowCutter * const rowCutterP) {
     pnm_freepamtuple(rowCutterP->discardTuple);
     free(rowCutterP->inputPointers);
     free(rowCutterP->outputPointers);
-    
+
     free(rowCutterP);
 }
 
@@ -519,7 +519,7 @@ extractRowsGen(const struct pam * const inpamP,
             pnm_writepamrow(outpamP, rowCutterP->outputPointers);
         } else  /* row < toprow || row > bottomrow */
             pnm_readpamrow(inpamP, NULL);
-        
+
         /* Note that we may be tempted just to quit after reaching the bottom
            of the extracted image, but that would cause a broken pipe problem
            for the process that's feeding us the image.
@@ -527,7 +527,7 @@ extractRowsGen(const struct pam * const inpamP,
     }
 
     destroyRowCutter(rowCutterP);
-    
+
     /* Write out bottom padding */
     if ((bottomrow - (inpamP->height-1)) > 0)
         writeBlackRows(outpamP, bottomrow - (inpamP->height-1));
@@ -574,7 +574,7 @@ extractRowsPBM(const struct pam * const inpamP,
             /* Prevent overflows in pbm_allocrow_packed() */
             pm_error("Specified right edge is too far "
                      "from the right end of input image");
-        
+
         readOffset  = 0;
         writeOffset = leftcol;
     } else {
@@ -582,7 +582,7 @@ extractRowsPBM(const struct pam * const inpamP,
         if (totalWidth > INT_MAX)
             pm_error("Specified left/right edge is too far "
                      "from the left/right end of input image");
-        
+
         readOffset = -leftcol;
         writeOffset = 0;
     }
@@ -606,7 +606,7 @@ extractRowsPBM(const struct pam * const inpamP,
 
             pbm_writepbmrow_bitoffset(outpamP->file, bitrow, outpamP->width,
                                       0, writeOffset);
-  
+
             if (rightcol >= inpamP->width)
                 /* repair right padding */
                 bitrow[writeOffset/8 + pbm_packed_bytes(outpamP->width) - 1] =
@@ -636,14 +636,14 @@ cutOneImage(FILE *             const ifP,
     struct pam outpam;  /* Output PAM image */
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
-    
-    computeCutBounds(inpam.width, inpam.height, 
-                     cmdline.left, cmdline.right, 
-                     cmdline.top, cmdline.bottom, 
-                     cmdline.width, cmdline.height, 
+
+    computeCutBounds(inpam.width, inpam.height,
+                     cmdline.left, cmdline.right,
+                     cmdline.top, cmdline.bottom,
+                     cmdline.width, cmdline.height,
                      &leftcol, &rightcol, &toprow, &bottomrow);
 
-    rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol, 
+    rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol,
                       toprow, bottomrow, cmdline.pad);
 
     if (cmdline.verbose) {
@@ -691,6 +691,6 @@ main(int argc, const char *argv[]) {
 
     pm_close(ifP);
     pm_close(ofP);
-    
+
     return 0;
 }
