@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Bmptopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>bmptopnm</H1>
-Updated: 20 September 2010
+Updated: 5 December 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -35,10 +35,12 @@ error message.
 <p>Before Netpbm 10.75 (June 2016), <b>bmptopnm</b> could not convert
 Version 4 or Version 5 Windows BMP images.
 
-<p><b>bmptopnm</b> cannot convert BMP files compressed with JPEG or
-PNG encoding.  It recognizes the compression and issues an error
-message.  Before Netpbm 10.32 (February 2006), <b>bmptopnm</b>
-couldn't convert RLE BMP files either.
+<p><b>bmptopnm</b> cannot convert BMP files compressed with JPEG or PNG
+encoding.  It recognizes the compression and issues an error message.  Before
+Netpbm 10.32 (February 2006), <b>bmptopnm</b> couldn't convert RLE8 BMP files
+either, and before Netpbm 10.85 (December 2018), it couldn't convert RLE4
+(between 10.32 and 10.85, it would act like it recognized the format, but
+produce garbage output).
 
 <P>Before Netpbm 10.18 (September 2003), this program could not convert
 BMP images with the BI_BITFIELDS format ("compression type").  It would
