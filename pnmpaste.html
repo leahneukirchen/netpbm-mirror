@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmpaste User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpaste</H1>
-Updated: 05 July 2017
+Updated: 16 December 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -67,17 +67,22 @@ The default is <B>-replace</B>, which means to do the obvious paste:
 replace pixels of the "into" image with those of the
 "from" image.
 
-<p><b>-and</b>, <b>-or</b>, and <b>-xor</b> are allowed only if both
-input images are PBM images.  They say to combine the "from" and
-"into" images by performing boolean operations:  Each pixel of
-the output image is the result of the boolean operation on the corresponding
-pixels of the two input image, where white is TRUE and black is FALSE.
+<p><b>-and</b>, <b>-nand</b>, <b>-or</b>, <b>-nor</b>, <b>-xor</b>,
+and <b>nxor</b> are allowed only if both input images are PBM images.  They
+say to combine the "from" and "into" images by performing boolean operations:
+Each pixel of the output image is the result of the boolean operation on the
+corresponding pixels of the two input image, where white is TRUE and black is
+FALSE.
 
 <p>Note that this is different from what you would get by doing a bit
 arithmetic on the bits in the PBM images, because in PBM, white is
 represented by a 0 bit, and 0 in bit arithmetic corresponds to FALSE
 in boolean arithmetic.
 
+<p><b>-nand</b>, <b>-nor</b>, and <b>-nxor</b> were new in Netpbm 10.85
+(December 2018).
+  
+  
 <H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pamcomp.html">pamcomp</A></B>,
