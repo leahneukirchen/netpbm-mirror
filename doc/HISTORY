@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
+              pnmpaste: Add -nand, -nor, and -nxor.
+
               pamcut: add -cropleft, -cropright, -croptop, -cropbottom.
 
               bmptopnm: allow single color colormap with bpp 1.
