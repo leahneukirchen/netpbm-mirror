@@ -38,8 +38,11 @@ not yet  BJH  Release 10.85.00
               programs work (function previously omitted by design because it
               was too hard).
 
+              bmptopnm: Fix wrong output for non-colormapped OS2 BMP.  Broken
+              in Netpbm 10.18 (September 2003).
+
               bmptopnm: Fix array bounds violation when index value in raster
-              is too big.  Broken after Netpbm 10.10 (October 2002) but before
+              is too big.  Broken after Netpbm 10.11 (October 2002) but before
               10.19 (November 2003).
 
               libnetpbm: Fix invalid memory reference in color name processing

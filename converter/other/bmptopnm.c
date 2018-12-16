@@ -250,6 +250,49 @@ GetCieXyzTriple(FILE *         const ifP) {
 
 
 
+static struct pixelformat
+defaultPixelformat(unsigned int const bitCount) {
+
+    struct pixelformat retval;
+
+    switch (bitCount) {
+    case 16:
+        /* This layout is sometimes called "RGB555".  A document from
+           Microsoft says this is the default (when the "compression"
+           field of the header says COMP_BITFIELDS).
+        */
+        retval.conventionalBgr = FALSE;
+        retval.red.shift = 10;
+        retval.grn.shift = 5;
+        retval.blu.shift = 0;
+        retval.trn.shift = 0;
+        retval.red.mask = 0x1f;  /* 5 bits */
+        retval.grn.mask = 0x1f;  /* 5 bits */
+        retval.blu.mask = 0x1f;  /* 5 bits */
+        retval.trn.mask = 0;
+        break;
+    case 24:
+    case 32:
+        retval.conventionalBgr = TRUE;
+        retval.red.shift = 16;
+        retval.grn.shift = 8;
+        retval.blu.shift = 0;
+        retval.trn.shift = 0;
+        retval.red.mask = 0xff;  /* 8 bits */
+        retval.grn.mask = 0xff;  /* 8 bits */
+        retval.blu.mask = 0xff;  /* 8 bits */
+        retval.trn.mask = 0;
+        break;
+    default:
+        /* colormapped - masks are undefined */
+        break;
+    }
+
+    return retval;
+}
+
+
+
 static void
 readOffBytes(FILE * const fp, unsigned int const nbytes) {
 /*----------------------------------------------------------------------------
@@ -299,7 +342,21 @@ bmpReadfileheader(FILE *         const ifP,
 static void
 readOs2InfoHeaderRest(FILE *                 const ifP,
                       struct bmpInfoHeader * const headerP) {
+/*----------------------------------------------------------------------------
+   Read the rest of the info header, after its size field, of an OS2 BMP from
+   *ifP.
 
+   Add the information from it to *headerP, in particular these members:
+
+     cols
+     rows
+     rowOrder
+     cPlanes
+     cBitCount
+     cmapSize
+     pixelformat
+     compression
+-----------------------------------------------------------------------------*/
     unsigned short colsField, rowsField;
     unsigned short planesField, bitCountField;
 
@@ -336,6 +393,8 @@ readOs2InfoHeaderRest(FILE *                 const ifP,
     else
         pm_error("Unrecognized bits per pixel in OS/2 BMP file header: %d",
                  headerP->cBitCount);
+
+    headerP->pixelformat = defaultPixelformat(headerP->cBitCount);
 
     headerP->compression = BMPCOMP_RGB;
 }
@@ -525,49 +584,6 @@ computeConventionalBgr(struct pixelformat * const fP,
 
 
 
-static struct pixelformat
-defaultPixelformat(unsigned int const bitCount) {
-
-    struct pixelformat retval;
-
-    switch (bitCount) {
-    case 16:
-        /* This layout is sometimes called "RGB555".  A document from
-           Microsoft says this is the default (when the "compression"
-           field of the header says COMP_BITFIELDS).
-        */
-        retval.conventionalBgr = FALSE;
-        retval.red.shift = 10;
-        retval.grn.shift = 5;
-        retval.blu.shift = 0;
-        retval.trn.shift = 0;
-        retval.red.mask = 0x1f;  /* 5 bits */
-        retval.grn.mask = 0x1f;  /* 5 bits */
-        retval.blu.mask = 0x1f;  /* 5 bits */
-        retval.trn.mask = 0;
-        break;
-    case 24:
-    case 32:
-        retval.conventionalBgr = TRUE;
-        retval.red.shift = 16;
-        retval.grn.shift = 8;
-        retval.blu.shift = 0;
-        retval.trn.shift = 0;
-        retval.red.mask = 0xff;  /* 8 bits */
-        retval.grn.mask = 0xff;  /* 8 bits */
-        retval.blu.mask = 0xff;  /* 8 bits */
-        retval.trn.mask = 0;
-        break;
-    default:
-        /* colormapped - masks are undefined */
-        break;
-    }
-
-    return retval;
-}
-
-
-
 static void
 readV4InfoHeaderExtension(FILE *                 const ifP,
                           struct bmpInfoHeader * const headerP,
@@ -636,7 +652,28 @@ static void
 readWindowsInfoHeaderRest(FILE *                 const ifP,
                           unsigned int           const cInfoHeaderSize,
                           struct bmpInfoHeader * const headerP) {
+/*----------------------------------------------------------------------------
+   Read the rest of the info header, after the length field, of a Windows BMP
+   from *ifP.
 
+   'cInfoHeaderSize' is the size of the info header, not counting its size
+   field.  Note that besides telling us how much data to read, this also
+   implies which of the three major formats the data is in.
+
+   Add the information from it to *headerP, in particular these members:
+
+     cols
+     rows
+     rowOrder
+     cPlanes
+     cBitCount
+     bitFields
+     compression
+     imageSize
+     cmapSize
+     pixelformat
+     endPoints
+-----------------------------------------------------------------------------*/
     /* There are 3 major formats of Windows
        BMP, identified by the 3 info header lengths.  The original
        one is 40 bytes.  The "V4 header" is 108 bytes and was
