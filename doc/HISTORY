@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.12.17 BJH  Release 10.73.24
+
+              bmptopnm: Fix wrong output for non-colormapped OS2 BMP.  Broken
+              in Netpbm 10.18 (September 2003).
+
 18.11.05 BJH  Release 10.73.23
 
               bmptopnm: Fix array bounds violation when index value in raster
