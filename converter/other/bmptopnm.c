@@ -250,6 +250,11 @@ GetCieXyzTriple(FILE *         const ifP) {
 
 
 
+static struct pixelformat
+defaultPixelformat(unsigned int const bitCount);
+
+
+
 static void
 readOffBytes(FILE * const fp, unsigned int const nbytes) {
 /*----------------------------------------------------------------------------
@@ -337,6 +342,8 @@ readOs2InfoHeaderRest(FILE *                 const ifP,
         pm_error("Unrecognized bits per pixel in OS/2 BMP file header: %d",
                  headerP->cBitCount);
                  
+    headerP->pixelformat = defaultPixelformat(headerP->cBitCount);
+
     headerP->compression = BMPCOMP_RGB;
 }
 
