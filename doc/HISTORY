@@ -10,6 +10,8 @@ not yet  BJH  Release 10.85.00
 
               pamcut: add -cropleft, -cropright, -croptop, -cropbottom.
 
+              ppmtobmp: respect -bpp with PBM input.
+
               bmptopnm: allow single color colormap with bpp 1.
 
               bmptopnm: validate plane count = 1.

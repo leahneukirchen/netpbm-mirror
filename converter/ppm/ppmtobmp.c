@@ -967,7 +967,8 @@ main(int           argc,
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &ppmFormat);
 
-    if (PPM_FORMAT_TYPE(ppmFormat) == PBM_TYPE)
+    if ((PPM_FORMAT_TYPE(ppmFormat) == PBM_TYPE) &&
+        (!cmdline.bppSpec || cmdline.bpp == 1))
         doPbm(ifP, cols, rows, ppmFormat, cmdline.class, stdout);
     else
         doPgmPpm(ifP, cols, rows, maxval, ppmFormat,
