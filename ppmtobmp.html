@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmtobmp User Manual</TITLE>
 </HEAD><BODY>
 <H1>ppmtobmp</H1>
-Updated: 28 November 2018
+Updated: 20 December 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -58,6 +58,11 @@ represent all the colors in the input image.  If you specify a number
 too small to represent all the colors in the input image,
 <B>ppmtobmp</B> tells you and terminates.  You can use <B>pnmquant</B>
 or <B>ppmdither</B> to reduce the number of colors in the image.
+
+<p>Before Netpbm 10.85 (December 2018), <b>ppmtobmp</b> ignores this option if
+the input is PBM and produces a BMP with 1 bit per pixel.  With these
+versions, if you want more than that, use <b>pbmtopgm</b> to convert the PBM
+to PGM first.
 
 <dt><b>-mapfile=</b><i>filename</i>
 
