@@ -1,0 +1,47 @@
+#! /bin/bash
+# This script tests: pnmpaste
+# Also requires: pbmmake
+
+tmpdir=${tmpdir:-/tmp}
+base_pbm=${tmpdir}/font.pbm
+insert_pbm=${tmpdir}/insert.pbm
+
+cat > ${base_pbm} << EOF
+P1
+18 1
+000111000111000111
+EOF
+
+pbmmake -g 15 1 > ${insert_pbm}
+
+# Test 1.
+echo "Test 1."
+
+for operation in "-replace" "-and" "-or" "-xor" "-nand" "-nor" "-nxor"
+  do
+  echo ${operation} 
+  pnmpaste ${operation} -plain ${insert_pbm} 1 0 ${base_pbm} | tr '\n' ' '
+  echo
+  done
+
+
+# Test 2.
+# Perform an operation and its negative counterpart, combine the
+# resulting images with "-xor".
+# The untouched area of the base image should be 1; inserted area 0.
+
+echo "Test 2."
+
+positive_pbm=${tmpdir}/positive.pbm
+negative_pbm=${tmpdir}/negative.pbm
+
+for operation in "and" "or" "xor"
+  do
+  echo "-"$operation " -n"$operation 
+  pnmpaste "-"${operation} ${insert_pbm} 2 0 ${base_pbm} > ${positive_pbm}
+  pnmpaste "-n"${operation} ${insert_pbm} 2 0 ${base_pbm} > ${negative_pbm}
+  pnmpaste -xor -plain ${positive_pbm} 0 0 ${negative_pbm} | tr '\n ' ' '
+  echo
+  done
+
+rm ${base_pbm} ${insert_pbm} ${positive_pbm} ${negative_pbm}

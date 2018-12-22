@@ -1,4 +1,4 @@
-# General test
+# General tests
 
 all-in-place.test
 legacy-names.test
@@ -63,6 +63,7 @@ pnminvert.test
 pamchannel.test
 ppmchange.test
 pambackground.test
+pnmpaste-pbm.test
 
 pbmpscale.test
 pnmremap1.test
@@ -78,6 +79,7 @@ pnmshear.test
 pgmbentley.test
 
 ppmmix.test
+pammixmulti-identity.test
 
 # Symmetry test
 
@@ -111,6 +113,7 @@ pamdice-roundtrip.test
 pamslice-roundtrip.test
 lookup-roundtrip.test
 enlarge-reduce-roundtrip.test
+cut-cat-roundtrip.test
 
 # Round-trip tests : lossless converters
 
