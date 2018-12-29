@@ -400,14 +400,29 @@ $(PORTBINARIES) $(MATHBINARIES): %: %.o \
 	  "-Dmain=main_$*" \
           $(CFLAGS_MERGE) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
-# The "merge try list" is a file full of TRY macro invocations, one for
-# each Netpbm program in this directory or any subdirectory that can be
-# invoked via the merged Netpbm program.  You will find it #included in
-# netpbm.c.
+# The "merge try list" is a file full of TRY macro invocations, one for each
+# Netpbm program in this directory or any subdirectory that can be invoked via
+# the merged Netpbm program.  There are additional TRYs for backward
+# compatility program names (e.g. 'pnmcomp' for 'pamcomp').  You will find the
+# merge try list #included in netpbm.c.
+
+# The file 'mergecomptrylist' contains the backward compatibility TRYs for the
+# current directory.  Just the current directory itself - not subdirectories.
+# Only directories that contain programs with backward compatibility names
+# have a 'mergecomptrylist'.  The make file for a directory that has
+# 'mergecomptrylist' sets make variable HAVE_MERGE_COMPAT to "YES".
+
+ifeq ($(HAVE_MERGE_COMPAT),YES)
+mergetrylist: mergecomptrylist
+endif
 
 mergetrylist: $(SUBDIRS:%=%/mergetrylist) 
 	cat /dev/null $(SUBDIRS:%=%/mergetrylist) >$@
 	$(SRCDIR)/buildtools/make_merge.sh $(MERGEBINARIES) >>$@
+ifeq ($(HAVE_MERGE_COMPAT),YES)
+	echo "/* Backward compatibility names from mergecomptrylist: */" >>$@
+	cat mergecomptrylist >>$@
+endif
 
 # The "merge list" is a list of all the object files from this directory and
 # any subdirectories that have to be linked into the merged Netpbm program.

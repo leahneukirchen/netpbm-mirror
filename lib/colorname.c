@@ -206,9 +206,10 @@ pm_parse_dictionary_namen(char   const colorname[],
                  (unsigned)strlen(colorname));
 
     pm_canonstr(canoncolor);
-    gotit = FALSE;
-    colorfileExhausted = FALSE;
-    while (!gotit && !colorfileExhausted) {
+
+    for(gotit = FALSE, colorfileExhausted = FALSE;
+        !gotit && !colorfileExhausted; ) {
+
         colorfileEntry = pm_colorget(fP);
         if (colorfileEntry.colorname) {
             pm_canonstr(colorfileEntry.colorname);

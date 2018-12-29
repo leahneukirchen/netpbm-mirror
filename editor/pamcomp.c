@@ -64,7 +64,7 @@ enum alphaMix {AM_KEEPUNDER, AM_OVERLAY};
        its contribution to the composition.
     */
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -86,7 +86,7 @@ struct cmdlineInfo {
 static void
 parseCommandLine(int                        argc,
                  const char **              argv,
-                 struct cmdlineInfo * const cmdlineP ) {
+                 struct CmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -385,7 +385,7 @@ computeOverlayPosition(int                const underCols,
                        int                const underRows,
                        int                const overCols,
                        int                const overRows,
-                       struct cmdlineInfo const cmdline,
+                       struct CmdlineInfo const cmdline,
                        int *              const originLeftP,
                        int *              const originTopP) {
 /*----------------------------------------------------------------------------
@@ -899,7 +899,7 @@ composite(int          const originleft,
 
 
 static void
-initAlphaFile(struct cmdlineInfo const cmdline,
+initAlphaFile(struct CmdlineInfo const cmdline,
               struct pam *       const overlayPamP,
               FILE **            const filePP,
               struct pam *       const pamP) {
@@ -925,7 +925,7 @@ initAlphaFile(struct cmdlineInfo const cmdline,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * underlayFileP;
     FILE * overlayFileP;
     FILE * alphaFileP;

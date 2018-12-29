@@ -9,7 +9,6 @@
 **************************************************************************/
 
 #define _DEFAULT_SOURCE      /* New name for SVID & BSD source defines */
-#define _BSD_SOURCE          /* Make sure strdup is in string.h */
 #define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
 
 #include "netpbm/pm_config.h"
@@ -439,7 +438,8 @@ pm_maxvaltobits(int const maxval) {
         return 16;
     else
         pm_error( "maxval of %d is too large!", maxval );
-        return -1;  /* Should never come here */
+
+    assert(false);
 }
 
 int

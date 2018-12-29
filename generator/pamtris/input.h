@@ -6,26 +6,22 @@
 struct boundary_info;
 struct framebuffer_info;
 
-typedef struct input_info {
-/*----------------------------------------------------------------------------
-  Information necessary for the "process_next_command" function.  It must be
-  initialized through "init_input_processor" and freed by
-  "free_input_processor".
------------------------------------------------------------------------------*/
+typedef struct {
     char *   buffer;
     size_t   length;
     uint64_t number;
-} input_info;
+} Input;
 
 void
-init_input_processor(input_info * const ii);
+input_init(Input * const inputP);
 
 void
-free_input_processor(input_info * const ii);
+input_term(Input * const inputP);
 
-int
-process_next_command(input_info *              const ii,
-                     struct boundary_info *    const bdi,
-                     struct framebuffer_info * const fbi);
+void
+input_process_next_command(Input *                   const inputP,
+                           struct boundary_info *    const bdiP,
+                           struct framebuffer_info * const fbiP,
+                           bool *                    const noMoreCommandsP);
 
 #endif

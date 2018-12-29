@@ -37,9 +37,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "utils.h"
-#include "fract.h"
+#include "varying.h"
 #include "limits_pamtris.h"
 
 #include "framebuffer.h"
@@ -60,8 +61,6 @@ set_tupletype(const char * const str,
 -----------------------------------------------------------------------------*/
     if (str == NULL) {
         memset(tupletype, 0, 256);
-
-        return 1;
     } else {
         size_t len;
 
@@ -80,9 +79,9 @@ set_tupletype(const char * const str,
         while(len > 0 && isspace(tupletype[len])) {
             tupletype[len--] = '\0';
         }
-
-        return 1;
     }
+
+    return 1;
 }
 
 
@@ -279,9 +278,7 @@ clear_framebuffer(bool               const clear_image_buffer,
 void
 draw_span(uint32_t           const base,
           uint16_t           const length,
-          fract *            const attribs_start,
-          const fract *      const attribs_steps,
-          int32_t            const div,
+          varying *          const attribs,
           framebuffer_info * const fbi) {
 /*----------------------------------------------------------------------------
   Draw a horizontal span of "length" pixels into the frame buffer, performing
@@ -291,42 +288,50 @@ draw_span(uint32_t           const base,
 
   This function does not perform any kind of bounds checking.
 -----------------------------------------------------------------------------*/
-    uint8_t const num_planes = fbi->num_attribs + 1;
+    static double const depth_range = MAX_Z;
+
+    uint16_t const maxval = fbi->maxval;
+    uint8_t  const z      = fbi->num_attribs;
+    uint8_t  const w      = z + 1;
+    uint8_t  const n      = w + 1;
+
+    uint8_t  const num_planes = w;
 
     unsigned int i;
 
     /* Process each pixel in the span: */
 
     for (i = 0; i < length; i++) {
-        int32_t  const z        = MAX_Z - attribs_start[fbi->num_attribs].q;
-        uint32_t const z_mask   = -(~(z - fbi->z.buffer[base + i]) >> 31);
-        uint32_t const n_z_mask = ~z_mask;
+        int32_t  const d      = round(depth_range * attribs[z].v);
+        uint32_t const d_mask = geq_mask64(d, fbi->z.buffer[base + i]);
 
         uint32_t const j = base + i;
         uint32_t const k = j * num_planes;
+
+        varying const inverse_w = inverse_varying(attribs[w]);
 
         unsigned int l;
 
         /* The following statements will only have any effect if the depth
            test, performed above, has suceeded. I. e. if the depth test fails,
-           no changes will be made on the framebuffer; otherwise, the
-           framebuffer will be updated with the new values.
+           no changes will be made on the frame buffer; otherwise, the
+           frame buffer will be updated with the new values.
         */
-        fbi->z.buffer[j] = (fbi->z.buffer[j] & n_z_mask) | (z & z_mask);
+        fbi->z.buffer[j] = (fbi->z.buffer[j] & ~d_mask) | (d & d_mask);
 
-        for (l = 0; l < fbi->num_attribs; l++) {
+        for (l = 0; l < z; l++) {
+	    varying const newval = multiply_varyings(attribs[l], inverse_w);
+
             fbi->img.buffer[k + l] =
-                (fbi->img.buffer[k + l] & n_z_mask) |
-                (attribs_start[l].q & z_mask);
+                (fbi->img.buffer[k + l] & ~d_mask) |
+                (round_varying(newval) &  d_mask);
         }
 
-        fbi->img.buffer[k + fbi->num_attribs] =
-            (fbi->img.buffer[k + fbi->num_attribs] & n_z_mask) |
-            (fbi->maxval & z_mask);
+        fbi->img.buffer[k + z] |= (maxval & d_mask);
 
         /* Compute the attribute values for the next pixel: */
 
-        step_up(attribs_start, attribs_steps, num_planes, div);
+        step_up(attribs, n);
     }
 }
 

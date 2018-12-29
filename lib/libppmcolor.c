@@ -9,10 +9,6 @@
 ** implied warranty.
 */
 
-#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
-#define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
-#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -194,9 +190,9 @@ processColorfileEntry(struct colorfile_entry const ce,
             *errorP = NULL;
         } else {
             ppm_addtocolorhash(cht, &color, *colornameIndexP);
-            colornames[*colornameIndexP] = strdup(ce.colorname);
+            colornames[*colornameIndexP] = pm_strdup(ce.colorname);
             colors[*colornameIndexP] = color;
-            if (colornames[*colornameIndexP] == NULL)
+            if (colornames[*colornameIndexP] == pm_strsol)
                 pm_asprintf(errorP, "Unable to allocate space for color name");
             else {
                 *errorP = NULL;

@@ -124,10 +124,10 @@ for size in 4030 4031 4097
     cmp - ${test_pgm}
   # pamdepth ${maxval} is necessary because
   # giftopnm output is maxval 255
-  echo -n ${size} $? ", "
+  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
   pamtogif -nolzw ${test_pgm} | giftopnm | pamdepth ${maxval} | \
     cmp - ${test_pgm}
-  echo ${size} $?
+  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
   rm ${test_pgm}
   done 
 
@@ -153,10 +153,10 @@ for size in 238 239 240 241 255 256 257
   pamcut -height=${size} ${test257_pgm} > ${test_pgm} &&
   pamtogif -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
     cmp - ${test_pgm}
-  echo -n ${size} $? ", "
+  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
   pamtogif -nolzw -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
     cmp - ${test_pgm}
-  echo ${size} $?
+  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
   rm ${test_pgm}
   done 
 

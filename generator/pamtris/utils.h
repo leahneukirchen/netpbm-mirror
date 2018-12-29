@@ -1,37 +1,54 @@
 #ifndef UTIL_H_INCLUDED
 #define UTIL_H_INCLUDED
 
-#include "fract.h"
+#include "varying.h"
 
 void
-gen_steps(const int32_t * const begin,
-          const int32_t * const end,
-          fract *         const out,
-          uint8_t         const elements,
-          int32_t         const divisor);
+prepare_for_interpolation(const varying * const begin,
+                          const varying * const end,
+                          varying *       const out,
+                          int32_t               num_steps,
+                          uint8_t         const elements);
+
+varying
+compute_varying_z(int32_t const input_z);
 
 void
-step_up(fract *       const vars,
-        const fract * const steps,
-        uint8_t       const elements,
-        int32_t       const divisor);
+multiply_varying_array_by_varying(varying * const vars,
+                                  varying   const divisor,
+                                  uint8_t   const elements);
 
 void
-multi_step_up(fract *       const vars,
-              const fract * const steps,
-              uint8_t       const elements,
-              int32_t       const times,
-              int32_t       const divisor);
+divide_varying_array_by_varying(varying * const vars,
+                                varying   const divisor,
+                                uint8_t   const elements);
+
+varying
+inverse_varying(varying const var);
+
+varying
+multiply_varyings(varying const a,
+                  varying const b);
 
 void
-fract_to_int32_array(const fract * const in,
-                     int32_t     * const out,
-                     uint8_t       const elements);
+step_up(varying * const vars,
+       uint8_t    const elements);
 
 void
-int32_to_fract_array(const int32_t * const in,
-                     fract *         const out,
-                     uint8_t         const elements);
+multi_step_up(varying * const vars,
+             int32_t    const times,
+             uint8_t    const elements);
+
+void
+int32_to_varying_array(const int32_t * const in,
+                       varying *       const out,
+                       uint8_t         const elements);
+
+int32_t
+round_varying(varying const var);
+
+int64_t
+geq_mask64(int64_t a, int64_t b);
 
 void
 sort3(uint8_t *       const index_array,

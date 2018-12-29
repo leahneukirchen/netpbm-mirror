@@ -347,9 +347,9 @@ pbm_loadpbmfont2(const char * const filename) {
     retval->load_fn = LOAD_PBMSHEET;
     retval->default_char = (PM_WCHAR) ' ';
     retval->default_char_defined = TRUE;
-    retval->name = strdup("(PBM sheet font has no name)");
+    retval->name = pm_strdup("(PBM sheet font has no name)");
     retval->charset = ISO646_1991_IRV;
-    retval->charset_string = strdup("ASCII");
+    retval->charset_string = pm_strdup("ASCII");
     retval->total_chars = retval->chars = nCharsInFont;
 
     return(retval);

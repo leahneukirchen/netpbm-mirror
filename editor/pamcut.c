@@ -1,9 +1,9 @@
-/*============================================================================ 
+/*============================================================================
                                 pamcut
 ==============================================================================
   Cut a rectangle out of a Netpbm image
 
-  This is inspired by and intended as a replacement for Pnmcut by 
+  This is inspired by and intended as a replacement for Pnmcut by
   Jef Poskanzer, 1989.
 
   By Bryan Henderson, San Jose CA.  Contributed to the public domain
@@ -24,27 +24,55 @@
        but we hope not.
        */
 
+typedef struct {
+/*----------------------------------------------------------------------------
+   A location in one dimension (row or column) in the image.
+-----------------------------------------------------------------------------*/
+    enum { LOCTYPE_NONE, LOCTYPE_FROMNEAR, LOCTYPE_FROMFAR } locType;
+
+    unsigned int n;
+        /* Row or column count.
+
+           If LOCTYPE_NONE: Meaningless
+
+           If LOCTYPE_FROMFAR: Number of colums from the far edge of the image
+           (right or bottom).  Last column/row is 1.
+
+           If LOCTYPE_FROMNEAR: Number of colums from the near edge of the
+           image (left or top).  First column/row is 0.
+        */
+} Location;
+
+
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* File name of input file */
 
-    /* The following describe the rectangle the user wants to cut out. 
+    /* The following describe the rectangle the user wants to cut out.
        the value UNSPEC for any of them indicates that value was not
        specified.  A negative value means relative to the far edge.
-       'width' and 'height' are not negative.  These specifications 
+       'width' and 'height' are not negative.  These specifications
        do not necessarily describe a valid rectangle; they are just
        what the user said.
-       */
-    int left;
-    int right;
-    int top;
-    int bottom;
-    int width;
-    int height;
-    unsigned int pad;
 
+       These do not follow the Netpbm convention of having members of this
+       structure that are identical to the name of an option class being
+       the value of that option.  'left', for example, is not the value of
+       the -left option; it could reflect the value of a -cropleft option
+       instead.
+    */
+    Location leftLoc;
+    Location rghtLoc;
+    Location topLoc;
+    Location botLoc;
+    unsigned int widthSpec;
+    unsigned int width;
+    unsigned int heightSpec;
+    unsigned int height;
+    unsigned int pad;
     unsigned int verbose;
 };
 
@@ -63,25 +91,33 @@ parseCommandLine(int argc, const char ** const argv,
     optStruct3 opt;
     unsigned int option_def_index;
 
+    int left, right, top, bottom;
+    unsigned int cropleftSpec, croprightSpec, croptopSpec, cropbottomSpec;
+    unsigned int cropleft, cropright, croptop, cropbottom;
+    unsigned int leftSpec, rightSpec, topSpec, bottomSpec;
+
+    bool haveLegacyLocationArgs;
+        /* The user specified location with top, left, height, and width
+           arguments like in original Pnmcut instead of with named options.
+        */
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "left",       OPT_INT,    &cmdlineP->left,     NULL,      0);
-    OPTENT3(0,   "right",      OPT_INT,    &cmdlineP->right,    NULL,      0);
-    OPTENT3(0,   "top",        OPT_INT,    &cmdlineP->top,      NULL,      0);
-    OPTENT3(0,   "bottom",     OPT_INT,    &cmdlineP->bottom,   NULL,      0);
-    OPTENT3(0,   "width",      OPT_INT,    &cmdlineP->width,    NULL,      0);
-    OPTENT3(0,   "height",     OPT_INT,    &cmdlineP->height,   NULL,      0);
+    OPTENT3(0,   "left",       OPT_INT,    &left,       &leftSpec,          0);
+    OPTENT3(0,   "right",      OPT_INT,    &right,      &rightSpec,         0);
+    OPTENT3(0,   "top",        OPT_INT,    &top,        &topSpec,           0);
+    OPTENT3(0,   "bottom",     OPT_INT,    &bottom,     &bottomSpec,        0);
+    OPTENT3(0,   "cropleft",   OPT_UINT,   &cropleft,   &cropleftSpec,      0);
+    OPTENT3(0,   "cropright",  OPT_UINT,   &cropright,  &croprightSpec,     0);
+    OPTENT3(0,   "croptop",    OPT_UINT,   &croptop,    &croptopSpec,       0);
+    OPTENT3(0,   "cropbottom", OPT_UINT,   &cropbottom, &cropbottomSpec,    0);
+    OPTENT3(0,   "width",      OPT_UINT,   &cmdlineP->width,
+            &cmdlineP->widthSpec,       0);
+    OPTENT3(0,   "height",     OPT_UINT,   &cmdlineP->height,
+            &cmdlineP->heightSpec,      0);
     OPTENT3(0,   "pad",        OPT_FLAG,   NULL, &cmdlineP->pad,           0);
     OPTENT3(0,   "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,       0);
-
-    /* Set the defaults */
-    cmdlineP->left = UNSPEC;
-    cmdlineP->right = UNSPEC;
-    cmdlineP->top = UNSPEC;
-    cmdlineP->bottom = UNSPEC;
-    cmdlineP->width = UNSPEC;
-    cmdlineP->height = UNSPEC;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -90,10 +126,10 @@ parseCommandLine(int argc, const char ** const argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (cmdlineP->width < 0)
-        pm_error("-width may not be negative.");
-    if (cmdlineP->height < 0)
-        pm_error("-height may not be negative.");
+    if (cmdlineP->widthSpec && cmdlineP->width == 0)
+        pm_error("-width may not be zero.");
+    if (cmdlineP->heightSpec && cmdlineP->height == 0)
+        pm_error("-height may not be zero.");
 
     if ((argc-1) != 0 && (argc-1) != 1 && (argc-1) != 4 && (argc-1) != 5)
         pm_error("Wrong number of arguments: %u.  The only argument in "
@@ -104,170 +140,250 @@ parseCommandLine(int argc, const char ** const argv,
     switch (argc-1) {
     case 0:
         cmdlineP->inputFileName = "-";
+        haveLegacyLocationArgs = false;
         break;
     case 1:
         cmdlineP->inputFileName = argv[1];
+        haveLegacyLocationArgs = false;
         break;
     case 4:
-    case 5: {
-        int warg, harg;  /* The "width" and "height" command line arguments */
-
-        if (sscanf(argv[1], "%d", &cmdlineP->left) != 1)
-            pm_error("Invalid number for left column argument");
-        if (sscanf(argv[2], "%d", &cmdlineP->top) != 1)
-            pm_error("Invalid number for right column argument");
-        if (sscanf(argv[3], "%d", &warg) != 1)
-            pm_error("Invalid number for width argument");
-        if (sscanf(argv[4], "%d", &harg) != 1)
-            pm_error("Invalid number for height argument");
-
-        if (warg > 0) {
-            cmdlineP->width = warg;
-            cmdlineP->right = UNSPEC;
-        } else {
-            cmdlineP->width = UNSPEC;
-            cmdlineP->right = warg -1;
-        }
-        if (harg > 0) {
-            cmdlineP->height = harg;
-            cmdlineP->bottom = UNSPEC;
-        } else {
-            cmdlineP->height = UNSPEC;
-            cmdlineP->bottom = harg - 1;
-        }
-
-        if (argc-1 == 4)
-            cmdlineP->inputFileName = "-";
-        else
-            cmdlineP->inputFileName = argv[5];
+        cmdlineP->inputFileName = "-";
+        haveLegacyLocationArgs = true;
+        break;
+    case 5:
+        cmdlineP->inputFileName = argv[5];
+        haveLegacyLocationArgs = true;
         break;
     }
+
+    if (haveLegacyLocationArgs) {
+        int leftArg, topArg, widthArg, heightArg;
+
+        if (sscanf(argv[1], "%d", &leftArg) != 1)
+            pm_error("Invalid number for left column argument");
+        if (sscanf(argv[2], "%d", &topArg) != 1)
+            pm_error("Invalid number for right column argument");
+        if (sscanf(argv[3], "%d", &widthArg) != 1)
+            pm_error("Invalid number for width argument");
+        if (sscanf(argv[4], "%d", &heightArg) != 1)
+            pm_error("Invalid number for height argument");
+
+        if (leftArg < 0) {
+            cmdlineP->leftLoc.locType = LOCTYPE_FROMFAR;
+            cmdlineP->leftLoc.n       = -leftArg;
+        } else {
+            cmdlineP->leftLoc.locType = LOCTYPE_FROMNEAR;
+            cmdlineP->leftLoc.n       = leftArg;
+        }
+        if (topArg < 0) {
+            cmdlineP->topLoc.locType = LOCTYPE_FROMFAR;
+            cmdlineP->topLoc.n       = -topArg;
+        } else {
+            cmdlineP->topLoc.locType = LOCTYPE_FROMNEAR;
+            cmdlineP->topLoc.n       = topArg;
+        }
+        if (widthArg > 0) {
+            cmdlineP->width = widthArg;
+            cmdlineP->widthSpec = 1;
+            cmdlineP->rghtLoc.locType = LOCTYPE_NONE;
+        } else {
+            cmdlineP->widthSpec = 0;
+            cmdlineP->rghtLoc.locType = LOCTYPE_FROMFAR;
+            cmdlineP->rghtLoc.n = -(widthArg - 1);
+        }
+        if (heightArg > 0) {
+            cmdlineP->height = heightArg;
+            cmdlineP->heightSpec = 1;
+            cmdlineP->botLoc.locType = LOCTYPE_NONE;
+        } else {
+            cmdlineP->heightSpec = 0;
+            cmdlineP->botLoc.locType = LOCTYPE_FROMFAR;
+            cmdlineP->botLoc.n = -(heightArg - 1);
+        }
+    } else {
+        if (leftSpec && cropleftSpec)
+            pm_error("You cannot specify both -left and -cropleft");
+        if (leftSpec) {
+            if (left >= 0) {
+                cmdlineP->leftLoc.locType = LOCTYPE_FROMNEAR;
+                cmdlineP->leftLoc.n       = left;
+            } else {
+                cmdlineP->leftLoc.locType = LOCTYPE_FROMFAR;
+                cmdlineP->leftLoc.n       = -left;
+            }
+        } else if (cropleftSpec) {
+            cmdlineP->leftLoc.locType = LOCTYPE_FROMNEAR;
+            cmdlineP->leftLoc.n       = cropleft;
+        } else
+            cmdlineP->leftLoc.locType = LOCTYPE_NONE;
+
+        if (rightSpec && croprightSpec)
+            pm_error("You cannot specify both -right and -cropright");
+        if (rightSpec) {
+            if (right >= 0) {
+                cmdlineP->rghtLoc.locType = LOCTYPE_FROMNEAR;
+                cmdlineP->rghtLoc.n       = right;
+            } else {
+                cmdlineP->rghtLoc.locType = LOCTYPE_FROMFAR;
+                cmdlineP->rghtLoc.n       = -right;
+            }
+        } else if (croprightSpec) {
+            cmdlineP->rghtLoc.locType = LOCTYPE_FROMFAR;
+            cmdlineP->rghtLoc.n       = 1 + cropright;
+        } else
+            cmdlineP->rghtLoc.locType = LOCTYPE_NONE;
+
+        if (topSpec && croptopSpec)
+            pm_error("You cannot specify both -top and -croptop");
+        if (topSpec) {
+            if (top >= 0) {
+                cmdlineP->topLoc.locType = LOCTYPE_FROMNEAR;
+                cmdlineP->topLoc.n       = top;
+            } else {
+                cmdlineP->topLoc.locType = LOCTYPE_FROMFAR;
+                cmdlineP->topLoc.n       = -top;
+            }
+        } else if (croptopSpec) {
+            cmdlineP->topLoc.locType = LOCTYPE_FROMNEAR;
+            cmdlineP->topLoc.n       = croptop;
+        } else
+            cmdlineP->topLoc.locType = LOCTYPE_NONE;
+
+        if (bottomSpec && cropbottomSpec)
+            pm_error("You cannot specify both -bottom and -cropbottom");
+        if (bottomSpec) {
+            if (bottom >= 0) {
+                cmdlineP->botLoc.locType = LOCTYPE_FROMNEAR;
+                cmdlineP->botLoc.n       = bottom;
+            } else {
+                cmdlineP->botLoc.locType = LOCTYPE_FROMFAR;
+                cmdlineP->botLoc.n       = -bottom;
+            }
+        } else if (cropbottomSpec) {
+            cmdlineP->botLoc.locType = LOCTYPE_FROMFAR;
+            cmdlineP->botLoc.n       = 1 + cropbottom;
+        } else
+            cmdlineP->botLoc.locType = LOCTYPE_NONE;
     }
+}
+
+
+static int
+near(Location     const loc,
+     unsigned int const edge) {
+
+    int retval;
+
+    switch (loc.locType) {
+    case LOCTYPE_NONE:
+        assert(false);
+        retval = 0;
+        break;
+    case LOCTYPE_FROMNEAR:
+        retval = loc.n;
+        break;
+    case LOCTYPE_FROMFAR:
+        retval = (int)edge - (int)loc.n;
+    }
+
+    return retval;
 }
 
 
 
 static void
-computeCutBounds(const int cols, const int rows,
-                 const int leftarg, const int rightarg, 
-                 const int toparg, const int bottomarg,
-                 const int widtharg, const int heightarg,
-                 int * const leftcolP, int * const rightcolP,
-                 int * const toprowP, int * const bottomrowP) {
+computeCutBounds(unsigned int const cols,
+                 unsigned int const rows,
+                 Location     const leftArg,
+                 Location     const rghtArg,
+                 Location     const topArg,
+                 Location     const botArg,
+                 bool         const widthSpec,
+                 unsigned int const widthArg,
+                 bool         const heightSpec,
+                 unsigned int const heightArg,
+                 int *        const leftColP,
+                 int *        const rghtColP,
+                 int *        const topRowP,
+                 int *        const botRowP) {
 /*----------------------------------------------------------------------------
-   From the values given on the command line 'leftarg', 'rightarg',
-   'toparg', 'bottomarg', 'widtharg', and 'heightarg', determine what
-   rectangle the user wants cut out.
+   From the values given on the command line 'leftArg', 'rghtArg', 'topArg',
+   'botArg', 'widthArg', and 'heightArg', determine what rectangle the user
+   wants cut out.
 
-   Any of these arguments may be UNSPEC to indicate "not specified".
-   Any except 'widtharg' and 'heightarg' may be negative to indicate
-   relative to the far edge.  'widtharg' and 'heightarg' are positive.
-
-   Return the location of the rectangle as *leftcolP, *rightcolP,
-   *toprowP, and *bottomrowP.  
+   Return the location of the rectangle as *leftcolP, *rghtcolP, *toprowP, and
+   *botrowP.  Any of these can be outside the image, including by being
+   negative.
 -----------------------------------------------------------------------------*/
+    /* Find left and right bounds */
 
-    int leftcol, rightcol, toprow, bottomrow;
-        /* The left and right column numbers and top and bottom row numbers
-           specified by the user, except with negative values translated
-           into the actual values.
+    if (widthSpec)
+        assert(widthArg > 0);
 
-           Note that these may very well be negative themselves, such
-           as when the user says "column -10" and there are only 5 columns
-           in the image.
-           */
-
-    /* Translate negative column and row into real column and row */
-    /* Exploit the fact that UNSPEC is a positive number */
-
-    if (leftarg >= 0)
-        leftcol = leftarg;
-    else
-        leftcol = cols + leftarg;
-    if (rightarg >= 0)
-        rightcol = rightarg;
-    else
-        rightcol = cols + rightarg;
-    if (toparg >= 0)
-        toprow = toparg;
-    else
-        toprow = rows + toparg;
-    if (bottomarg >= 0)
-        bottomrow = bottomarg;
-    else
-        bottomrow = rows + bottomarg;
-
-    /* Sort out left, right, and width specifications */
-
-    if (leftcol == UNSPEC && rightcol == UNSPEC && widtharg == UNSPEC) {
-        *leftcolP = 0;
-        *rightcolP = cols - 1;
-    }
-    if (leftcol == UNSPEC && rightcol == UNSPEC && widtharg != UNSPEC) {
-        *leftcolP = 0;
-        *rightcolP = 0 + widtharg - 1;
-    }
-    if (leftcol == UNSPEC && rightcol != UNSPEC && widtharg == UNSPEC) {
-        *leftcolP = 0;
-        *rightcolP = rightcol;
-    }
-    if (leftcol == UNSPEC && rightcol != UNSPEC && widtharg != UNSPEC) {
-        *leftcolP = rightcol - widtharg + 1;
-        *rightcolP = rightcol;
-    }
-    if (leftcol != UNSPEC && rightcol == UNSPEC && widtharg == UNSPEC) {
-        *leftcolP = leftcol;
-        *rightcolP = cols - 1;
-    }
-    if (leftcol != UNSPEC && rightcol == UNSPEC && widtharg != UNSPEC) {
-        *leftcolP = leftcol;
-        *rightcolP = leftcol + widtharg - 1;
-    }
-    if (leftcol != UNSPEC && rightcol != UNSPEC && widtharg == UNSPEC) {
-        *leftcolP = leftcol;
-        *rightcolP = rightcol;
-    }
-    if (leftcol != UNSPEC && rightcol != UNSPEC && widtharg != UNSPEC) {
-        pm_error("You may not specify left, right, and width.\n"
-                 "Choose at most two of these.");
+    if (leftArg.locType == LOCTYPE_NONE) {
+        if (rghtArg.locType == LOCTYPE_NONE) {
+            *leftColP = 0;
+            if (widthSpec)
+                *rghtColP = 0 + (int)widthArg - 1;
+            else
+                *rghtColP = (int)cols - 1;
+        } else {
+            *rghtColP = near(rghtArg, cols);
+            if (widthSpec)
+                *leftColP = near(rghtArg, cols) - (int)widthArg + 1;
+            else
+                *leftColP = 0;
+        }
+    } else {
+        *leftColP = near(leftArg, cols);
+        if (rghtArg.locType == LOCTYPE_NONE) {
+            if (widthSpec)
+                *rghtColP = near(leftArg, cols) + (int)widthArg - 1;
+            else
+                *rghtColP = (int)cols - 1;
+        } else {
+            if (widthSpec) {
+                pm_error("You may not specify left, right, and width.  "
+                         "Choose at most two of these.");
+            } else
+                *rghtColP = near(rghtArg, cols);
+        }
     }
 
+    /* Find top and bottom bounds */
 
-    /* Sort out top, bottom, and height specifications */
+    if (heightSpec)
+        assert(heightArg > 0);
 
-    if (toprow == UNSPEC && bottomrow == UNSPEC && heightarg == UNSPEC) {
-        *toprowP = 0;
-        *bottomrowP = rows - 1;
+    if (topArg.locType == LOCTYPE_NONE) {
+        if (botArg.locType == LOCTYPE_NONE) {
+            *topRowP = 0;
+            if (heightSpec)
+                *botRowP = 0 + (int)heightArg - 1;
+            else
+                *botRowP = (int)rows - 1;
+        } else {
+            *botRowP = near(botArg, rows);
+            if (heightSpec)
+                *topRowP = near(botArg, rows) - (int)heightArg + 1;
+            else
+                *topRowP = 0;
+        }
+    } else {
+        *topRowP = near(topArg, rows);
+        if (botArg.locType == LOCTYPE_NONE) {
+            if (heightSpec)
+                *botRowP = near(topArg, rows) + (int)heightArg - 1;
+            else
+                *botRowP = (int)rows - 1;
+        } else {
+            if (heightSpec) {
+                pm_error("You may not specify top, bottom, and height.  "
+                         "Choose at most two of these.");
+            } else
+                *botRowP = near(botArg, rows);
+        }
     }
-    if (toprow == UNSPEC && bottomrow == UNSPEC && heightarg != UNSPEC) {
-        *toprowP = 0;
-        *bottomrowP = 0 + heightarg - 1;
-    }
-    if (toprow == UNSPEC && bottomrow != UNSPEC && heightarg == UNSPEC) {
-        *toprowP = 0;
-        *bottomrowP = bottomrow;
-    }
-    if (toprow == UNSPEC && bottomrow != UNSPEC && heightarg != UNSPEC) {
-        *toprowP = bottomrow - heightarg + 1;
-        *bottomrowP = bottomrow;
-    }
-    if (toprow != UNSPEC && bottomrow == UNSPEC && heightarg == UNSPEC) {
-        *toprowP = toprow;
-        *bottomrowP = rows - 1;
-    }
-    if (toprow != UNSPEC && bottomrow == UNSPEC && heightarg != UNSPEC) {
-        *toprowP = toprow;
-        *bottomrowP = toprow + heightarg - 1;
-    }
-    if (toprow != UNSPEC && bottomrow != UNSPEC && heightarg == UNSPEC) {
-        *toprowP = toprow;
-        *bottomrowP = bottomrow;
-    }
-    if (toprow != UNSPEC && bottomrow != UNSPEC && heightarg != UNSPEC) {
-        pm_error("You may not specify top, bottom, and height.\n"
-                 "Choose at most two of these.");
-    }
-
 }
 
 
@@ -324,7 +440,7 @@ rejectOutOfBounds(unsigned int const cols,
 
 
 static void
-writeBlackRows(const struct pam * const outpamP, 
+writeBlackRows(const struct pam * const outpamP,
                int                const rows) {
 /*----------------------------------------------------------------------------
    Write out 'rows' rows of black tuples of the image described by *outpamP.
@@ -336,11 +452,11 @@ writeBlackRows(const struct pam * const outpamP,
     tuple blackTuple;
     tuple * blackRow;
     int col;
-    
+
     pnm_createBlackTuple(outpamP, &blackTuple);
 
     MALLOCARRAY_NOFAIL(blackRow, outpamP->width);
-    
+
     for (col = 0; col < outpamP->width; ++col)
         blackRow[col] = blackTuple;
 
@@ -360,14 +476,14 @@ struct rowCutter {
    pnm_readpamrow() and one pnm_writepamrow().  It works like this:
 
    The array inputPointers[] contains an element for each pixel in an input
-   row.  If it's a pixel that gets discarded in the cutting process, 
+   row.  If it's a pixel that gets discarded in the cutting process,
    inputPointers[] points to a special "discard" tuple.  All thrown away
    pixels have the same discard tuple to save CPU cache space.  If it's
    a pixel that gets copied to the output, inputPointers[] points to some
    tuple to which outputPointers[] also points.
 
    The array outputPointers[] contains an element for each pixel in an
-   output row.  If the pixel is one that gets copied from the input, 
+   output row.  If the pixel is one that gets copied from the input,
    outputPointers[] points to some tuple to which inputPointers[] also
    points.  If it's a pixel that gets padded with black, outputPointers[]
    points to a constant black tuple.  All padded pixels have the same
@@ -489,7 +605,7 @@ destroyRowCutter(struct rowCutter * const rowCutterP) {
     pnm_freepamtuple(rowCutterP->discardTuple);
     free(rowCutterP->inputPointers);
     free(rowCutterP->outputPointers);
-    
+
     free(rowCutterP);
 }
 
@@ -519,7 +635,7 @@ extractRowsGen(const struct pam * const inpamP,
             pnm_writepamrow(outpamP, rowCutterP->outputPointers);
         } else  /* row < toprow || row > bottomrow */
             pnm_readpamrow(inpamP, NULL);
-        
+
         /* Note that we may be tempted just to quit after reaching the bottom
            of the extracted image, but that would cause a broken pipe problem
            for the process that's feeding us the image.
@@ -527,7 +643,7 @@ extractRowsGen(const struct pam * const inpamP,
     }
 
     destroyRowCutter(rowCutterP);
-    
+
     /* Write out bottom padding */
     if ((bottomrow - (inpamP->height-1)) > 0)
         writeBlackRows(outpamP, bottomrow - (inpamP->height-1));
@@ -574,7 +690,7 @@ extractRowsPBM(const struct pam * const inpamP,
             /* Prevent overflows in pbm_allocrow_packed() */
             pm_error("Specified right edge is too far "
                      "from the right end of input image");
-        
+
         readOffset  = 0;
         writeOffset = leftcol;
     } else {
@@ -582,7 +698,7 @@ extractRowsPBM(const struct pam * const inpamP,
         if (totalWidth > INT_MAX)
             pm_error("Specified left/right edge is too far "
                      "from the left/right end of input image");
-        
+
         readOffset = -leftcol;
         writeOffset = 0;
     }
@@ -606,7 +722,7 @@ extractRowsPBM(const struct pam * const inpamP,
 
             pbm_writepbmrow_bitoffset(outpamP->file, bitrow, outpamP->width,
                                       0, writeOffset);
-  
+
             if (rightcol >= inpamP->width)
                 /* repair right padding */
                 bitrow[writeOffset/8 + pbm_packed_bytes(outpamP->width) - 1] =
@@ -632,18 +748,20 @@ cutOneImage(FILE *             const ifP,
             FILE *             const ofP) {
 
     int leftcol, rightcol, toprow, bottomrow;
+        /* Could be out of bounds, even negative */
     struct pam inpam;   /* Input PAM image */
     struct pam outpam;  /* Output PAM image */
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
-    
-    computeCutBounds(inpam.width, inpam.height, 
-                     cmdline.left, cmdline.right, 
-                     cmdline.top, cmdline.bottom, 
-                     cmdline.width, cmdline.height, 
+
+    computeCutBounds(inpam.width, inpam.height,
+                     cmdline.leftLoc, cmdline.rghtLoc,
+                     cmdline.topLoc, cmdline.botLoc,
+                     cmdline.widthSpec, cmdline.width,
+                     cmdline.heightSpec, cmdline.height,
                      &leftcol, &rightcol, &toprow, &bottomrow);
 
-    rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol, 
+    rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol,
                       toprow, bottomrow, cmdline.pad);
 
     if (cmdline.verbose) {
@@ -691,6 +809,6 @@ main(int argc, const char *argv[]) {
 
     pm_close(ifP);
     pm_close(ofP);
-    
+
     return 0;
 }

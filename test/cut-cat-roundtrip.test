@@ -1,0 +1,128 @@
+#! /bin/bash
+# This script tests: pamcut
+# Also requires: pnmcat pnmpad
+
+tmpdir=${tmpdir:-/tmp}
+quant_ppm=${tmpdir}/quant.ppm
+
+right_pbm=${tmpdir}/right.pbm
+left_pbm=${tmpdir}/left.pbm
+right_ppm=${tmpdir}/right.ppm
+left_ppm=${tmpdir}/left.ppm
+bottom_pbm=${tmpdir}/bottom.pbm
+top_pbm=${tmpdir}/top.pbm
+bottom_ppm=${tmpdir}/bottom.ppm
+top_ppm=${tmpdir}/top.ppm
+
+
+# Test 1.  Should print 1926073387 101484 six times
+echo Test 1.
+
+cat testimg.ppm | cksum
+for i in 0 1 128 224 225
+  do
+  pamcut -left=$((i+1)) testimg.ppm > ${right_ppm}
+  pamcut -right=$i      testimg.ppm > ${left_ppm}
+  pnmcat -lr ${left_ppm} ${right_ppm} | \
+    pamcut -left=0 -width=227| cksum
+  rm ${left_ppm} ${right_ppm}
+  done
+
+
+# Test 2.  Should print 3891261972 202953 six times
+# Not roundtrip.  Padding added to right.
+echo Test 2.
+
+pnmpad -right=227 -black testimg.ppm | cksum
+for i in  0 1 128 224 225
+  do
+  pamcut -left=$((i+1)) -width=227 -pad testimg.ppm > ${right_ppm}
+  pamcut -right=$i      -width=227 -pad testimg.ppm > ${left_ppm}
+  pnmcat -lr ${left_ppm} ${right_ppm} ${left_ppm} | \
+    pamcut -left=$((227-i-1))  -width=$((227*2)) | cksum
+  rm ${left_ppm} ${right_ppm}
+  done
+
+
+# Test 3.  Should print 1926073387 101484 five times
+echo Test 3.
+
+cat testimg.ppm | cksum
+for i in 0 1 70 147
+  do
+  pamcut -top=$((i+1)) testimg.ppm > ${bottom_ppm}
+  pamcut -bottom=$i    testimg.ppm > ${top_ppm}
+  pnmcat -tb ${top_ppm} ${bottom_ppm} | \
+    pamcut -top=0 -height=149 | cksum
+  rm ${top_ppm} ${bottom_ppm}
+  done
+
+# Test 4.  Should print 26789469 202953 five times
+# Not roundtrip.  Padding added to bottom.
+echo Test 4.
+
+pnmpad -bottom=149 -black testimg.ppm | cksum
+for i in 0 1 70 147
+  do
+  pamcut -top=$((i+1)) -height=149 -pad testimg.ppm > ${bottom_ppm}
+  pamcut -bottom=$i    -height=149 -pad testimg.ppm > ${top_ppm}
+  pnmcat -tb ${top_ppm} ${bottom_ppm} ${top_ppm} | \
+    pamcut -top=$((149-i-1))  -height=$((149*2)) | cksum
+  rm ${top_ppm} ${bottom_ppm}
+  done
+
+# Test 5.  Should print 2425386270 41 fourteen times
+echo Test 5.
+
+cat testgrid.pbm | cksum
+for i in `seq 0 12`
+  do
+  pamcut -left=$((i+1)) testgrid.pbm > ${right_pbm}
+  pamcut -right=$i      testgrid.pbm > ${left_pbm}
+  pnmcat -lr ${left_pbm} ${right_pbm} | \
+    pamcut -left=0 -width=14 | cksum
+  rm ${left_pbm} ${right_pbm}
+  done
+
+
+# Test 6.  Should print 1887700557 73 fifteen times
+# Not roundtrip.  Padding added to right.
+echo Test 6.
+
+pnmpad -right=14 -black testgrid.pbm | cksum
+for i in `seq 0 13`
+  do
+  pamcut -left=$((i+1)) -width=14 -pad testgrid.pbm > ${right_pbm}
+  pamcut -right=$i      -width=14 -pad testgrid.pbm > ${left_pbm}
+  pnmcat -lr ${left_pbm} ${right_pbm} ${left_pbm} | \
+    pamcut -left=$((14-i-1)) -width=28 | cksum
+  rm ${left_pbm} ${right_pbm}
+  done
+
+# Test 7.  Should print 2425386270 41 sixteen times
+echo Test 7.
+
+cat testgrid.pbm | cksum
+for i in `seq 0 14`
+  do
+  pamcut -top=$((i+1)) testgrid.pbm > ${bottom_pbm}
+  pamcut -bottom=$i    testgrid.pbm > ${top_pbm}
+  pnmcat -tb ${top_pbm} ${bottom_pbm} | \
+    pamcut -top=0 -height=16 | cksum
+  rm ${top_pbm} ${bottom_pbm}
+  done
+
+# Test 8.  Should print 3221289196 73 seventeen times
+# Not roundtrip.  Padding added to bottom.
+echo Test 8.
+
+pnmpad -bottom=16 -black testgrid.pbm | cksum
+for i in `seq 0 15`
+  do
+  pamcut -top=$((i+1)) -height=16 -pad testgrid.pbm > ${bottom_pbm}
+  pamcut -bottom=$i    -height=16 -pad testgrid.pbm > ${top_pbm}
+  pnmcat -tb ${top_pbm} ${bottom_pbm} ${top_pbm} | \
+    pamcut -top=$((16-i-1)) -height=32 | cksum
+  rm ${top_pbm} ${bottom_pbm}
+  done
+

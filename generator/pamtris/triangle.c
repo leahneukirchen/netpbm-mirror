@@ -9,7 +9,7 @@
 #include "netpbm/mallocvar.h"
 
 #include "utils.h"
-#include "fract.h"
+#include "varying.h"
 #include "boundaries.h"
 #include "framebuffer.h"
 
@@ -17,29 +17,30 @@
 
 static void
 draw_partial_triangle(
-    const fract *         const left_attribs_input,
-    const fract *         const left_attribs_steps,
-    const fract *         const rght_attribs_input,
-    const fract *         const rght_attribs_steps,
-    int32_t               const left_div,
-    int32_t               const rght_div,
+    const varying *       const left_attribs_input,
+    const varying *       const rght_attribs_input,
     bool                  const upper_part,
     const boundary_info * const bi,
     framebuffer_info *    const fbi) {
 
-    uint8_t const num_planes = fbi->num_attribs + 1;
+    uint8_t const z = fbi->num_attribs;
+    uint8_t const w = z + 1;
+    uint8_t const n = w + 1;
 
-    fract * left_attribs;
-    fract * rght_attribs;
+    varying * left_attribs;
+    varying * rght_attribs;
+
+    varying * attribs;
 
     int32_t first_row_index;
     int32_t last_row_index;
 
-    MALLOCARRAY_NOFAIL(left_attribs, num_planes);
-    MALLOCARRAY_NOFAIL(rght_attribs, num_planes);
+    MALLOCARRAY_NOFAIL(left_attribs, n);
+    MALLOCARRAY_NOFAIL(rght_attribs, n);
+    MALLOCARRAY_NOFAIL(attribs, n);
 
-    memcpy(left_attribs, left_attribs_input, num_planes * sizeof(fract));
-    memcpy(rght_attribs, rght_attribs_input, num_planes * sizeof(fract));
+    memcpy(left_attribs, left_attribs_input, n * sizeof(varying));
+    memcpy(rght_attribs, rght_attribs_input, n * sizeof(varying));
 
     if (upper_part) {
         first_row_index = 0;
@@ -57,41 +58,26 @@ draw_partial_triangle(
         int32_t left_boundary;
         int32_t rght_boundary;
 
-        for (row = first_row_index; row <= last_row_index; ) {
+        for (row = first_row_index; row <= last_row_index; row++) {
             get_triangle_boundaries(row, &left_boundary, &rght_boundary, bi);
             {
                 int32_t const column_delta = rght_boundary - left_boundary;
                 int32_t start_column;
                 int32_t span_length;
 
-                fract   * attribs_start;
-                int32_t * attribs_begin;
-                int32_t * attribs_end;
-                fract   * attribs_steps;
-
-                MALLOCARRAY_NOFAIL(attribs_start, num_planes);
-                MALLOCARRAY_NOFAIL(attribs_begin, num_planes);
-                MALLOCARRAY_NOFAIL(attribs_end,   num_planes);
-                MALLOCARRAY_NOFAIL(attribs_steps, num_planes);
-
                 start_column = left_boundary;  /* initial value */
                 span_length = column_delta;    /* initial value */
 
-                fract_to_int32_array(left_attribs, attribs_begin, num_planes);
-                fract_to_int32_array(rght_attribs, attribs_end, num_planes);
-
-                int32_to_fract_array(attribs_begin, attribs_start, num_planes);
-
-                gen_steps(attribs_begin, attribs_end, attribs_steps,
-                          num_planes, column_delta);
+                prepare_for_interpolation(left_attribs, rght_attribs,
+                                          attribs, column_delta,
+                                          n);
 
                 if (left_boundary < 0) {
                     start_column = 0;
 
                     span_length += left_boundary;
 
-                    multi_step_up(attribs_start, attribs_steps, num_planes,
-                                  -left_boundary, column_delta);
+                    multi_step_up(attribs, -left_boundary, n);
                 }
 
                 if (rght_boundary >= fbi->width) {
@@ -101,24 +87,17 @@ draw_partial_triangle(
                 }
 
                 draw_span(
-                    ((bi->start_scanline + row) * fbi->width) + start_column,
-                    span_length, attribs_start, attribs_steps, column_delta,
-                    fbi);
+                    (bi->start_scanline + row) * fbi->width + start_column,
+                    span_length, attribs, fbi);
 
                 if (row_delta > 0) {
-                    step_up(left_attribs, left_attribs_steps, num_planes,
-                            left_div);
-                    step_up(rght_attribs, rght_attribs_steps, num_planes,
-                            rght_div);
+                    step_up(left_attribs, n);
+                    step_up(rght_attribs, n);
                 }
-                row++;
-                free(attribs_steps);
-                free(attribs_end);
-                free(attribs_begin);
-                free(attribs_start);
             }
         }
     }
+    free(attribs);
     free(rght_attribs);
     free(left_attribs);
 }
@@ -127,31 +106,19 @@ draw_partial_triangle(
 
 static void
 draw_degenerate_horizontal(Xy                 const xy,
-                           fract *            const attribs_left,
-                           fract *            const attribs_mid,
-                           const fract *      const top2mid_steps,
-                           const fract *      const top2bot_steps,
-                           const fract *      const mid2bot_steps,
-                           int32_t            const top2mid_delta,
-                           int32_t            const top2bot_delta,
-                           int32_t            const mid2bot_delta,
+                           varying *          const top2mid,
+                           varying *          const top2bot,
+                           varying *          const mid2bot,
                            framebuffer_info * const fbi) {
 
-    uint8_t const num_planes = fbi->num_attribs + 1;
-
-    fract * attribs_left_bkup;
-
-    MALLOCARRAY_NOFAIL(attribs_left_bkup, num_planes);
-
-    memcpy(attribs_left_bkup, attribs_left, num_planes * sizeof(fract));
+    uint8_t const n = fbi->num_attribs + 2;
 
     {
         int16_t const y = xy._[0][1];
 
         int16_t x[3];
         int16_t x_start[3];
-        fract * attribs[3];
-        const fract * steps[3];
+        varying * attribs[3];
         int32_t span_length[3];
         unsigned int i;
 
@@ -163,28 +130,21 @@ draw_degenerate_horizontal(Xy                 const xy,
         x_start[1] = x[0];
         x_start[2] = x[1];
 
-        attribs[0] = attribs_left;
-        attribs[1] = attribs_left_bkup;
-        attribs[2] = attribs_mid;
-
-        steps[0] = top2bot_steps;
-        steps[1] = top2mid_steps;
-        steps[2] = mid2bot_steps;
+        attribs[0] = top2bot;
+        attribs[1] = top2mid;
+        attribs[2] = mid2bot;
 
         span_length[0] = x[2] - x[0];
         span_length[1] = x[1] - x[0];
         span_length[2] = x[2] - x[1];
 
         for (i = 0; i < 3; i++) {
-            int32_t const column_delta = span_length[i];
-
             if (x_start[i] >= fbi->width || x_start[i] + span_length[i] < 0) {
                 continue;
             }
 
             if (x_start[i] < 0) {
-                multi_step_up(attribs[i], steps[i], num_planes, -x_start[i],
-                              column_delta);
+                multi_step_up(attribs[i], -x_start[i], n);
 
                 span_length[i] += x_start[i];
 
@@ -197,11 +157,10 @@ draw_degenerate_horizontal(Xy                 const xy,
                 span_length[i]++;
             }
 
-            draw_span((y * fbi->width) + x_start[i], span_length[i],
-                      attribs[i], steps[i], column_delta, fbi);
+            draw_span(y * fbi->width + x_start[i], span_length[i],
+                      attribs[i], fbi);
         }
     }
-    free(attribs_left_bkup);
 }
 
 
@@ -212,23 +171,28 @@ draw_triangle(Xy                 const xy_input,
               boundary_info *    const bi,
               framebuffer_info * const fbi) {
 
-    uint8_t const num_planes = fbi->num_attribs + 1;
+    uint8_t const z = fbi->num_attribs;
+    uint8_t const w = z + 1;
+    uint8_t const n = w + 1;
 
     Xy xy;
-    int32_t * attribs[3];
+    varying * attribs[3];
     unsigned int i;
     uint8_t index_array[3];
     int32_t y_array[3];
     int32_t x_array[3];
 
-    MALLOCARRAY_NOFAIL(attribs[0], num_planes);
-    MALLOCARRAY_NOFAIL(attribs[1], num_planes);
-    MALLOCARRAY_NOFAIL(attribs[2], num_planes);
+    MALLOCARRAY_NOFAIL(attribs[0], n);
+    MALLOCARRAY_NOFAIL(attribs[1], n);
+    MALLOCARRAY_NOFAIL(attribs[2], n);
 
     xy = xy_input;
 
     for (i = 0; i < 3; i++) {
-        memcpy(attribs[i], attribs_input._[i], num_planes * sizeof(int32_t));
+        int32_to_varying_array(attribs_input._[i], attribs[i], n);
+	attribs[i][z] = compute_varying_z(attribs_input._[i][z]);
+	attribs[i][w] = inverse_varying(attribs[i][w]);
+        multiply_varying_array_by_varying(attribs[i], attribs[i][w], z);
     }
 
     /* Argument preparations for sort3: */
@@ -259,122 +223,65 @@ draw_triangle(Xy                 const xy_input,
             gen_triangle_boundaries(xy_sorted, bi, fbi->width, fbi->height);
 
         if (bi->start_scanline == -1) {
-            /* Triangle is completely out of the bounds of the framebuffer. */
+            /* Triangle is completely out of the bounds of the frame buffer. */
         } else {
             bool const no_upper_part =
                 (xy_sorted._[1][1] == xy_sorted._[0][1]);
 
             bool const horizontal =
                 (xy._[0][1] == xy._[1][1] && xy._[1][1] == xy._[2][1]);
-                /* We are dealing with a degenerate horizontal triangle */
+                /* Tells whether we are dealing with a degenerate
+                 * horizontal triangle */
 
-            uint8_t t = ~horizontal & 1;
+            uint8_t const t = horizontal ^ 1;
 
             int32_t top2mid_delta = xy._[mid][t] - xy._[top][t];
             int32_t top2bot_delta = xy._[bot][t] - xy._[top][t];
             int32_t mid2bot_delta = xy._[bot][t] - xy._[mid][t];
 
-            fract * top2mid_steps;
-            fract * top2bot_steps;
-            fract * mid2bot_steps;
+            varying * top2mid;
+            varying * top2bot;
+            varying * mid2bot;
 
-            fract * upper_left_attribs_steps;
-            fract * lower_left_attribs_steps;
-            fract * upper_rght_attribs_steps;
-            fract * lower_rght_attribs_steps;
+            varying * upper_left_attribs;
+            varying * lower_left_attribs;
+            varying * upper_rght_attribs;
+            varying * lower_rght_attribs;
 
-            int32_t upper_left_delta;
-            int32_t lower_left_delta;
-            int32_t upper_rght_delta;
-            int32_t lower_rght_delta;
+            MALLOCARRAY_NOFAIL(top2mid, n);
+            MALLOCARRAY_NOFAIL(top2bot, n);
+            MALLOCARRAY_NOFAIL(mid2bot, n);
 
-            fract * left_attribs;
-            fract * rght_attribs;
-
-            bool degenerate_horizontal;
-
-            MALLOCARRAY_NOFAIL(top2mid_steps, num_planes);
-            MALLOCARRAY_NOFAIL(top2bot_steps, num_planes);
-            MALLOCARRAY_NOFAIL(mid2bot_steps, num_planes);
-            MALLOCARRAY_NOFAIL(left_attribs, num_planes);
-            MALLOCARRAY_NOFAIL(rght_attribs, num_planes);
-
-            if (!horizontal) {
-                top2mid_delta += !no_upper_part;
-                top2bot_delta += 1;
-                mid2bot_delta += no_upper_part;
-            }
-
-            gen_steps(attribs[top], attribs[mid], top2mid_steps, num_planes,
-                      top2mid_delta);
-            gen_steps(attribs[top], attribs[bot], top2bot_steps, num_planes,
-                      top2bot_delta);
-            gen_steps(attribs[mid], attribs[bot], mid2bot_steps, num_planes,
-                      mid2bot_delta);
-
-            int32_to_fract_array(attribs[top], left_attribs, num_planes);
-            int32_to_fract_array(attribs[top], rght_attribs, num_planes);
+            prepare_for_interpolation(attribs[top], attribs[mid], top2mid, top2mid_delta, n);
+            prepare_for_interpolation(attribs[top], attribs[bot], top2bot, top2bot_delta, n);
+            prepare_for_interpolation(attribs[mid], attribs[bot], mid2bot, mid2bot_delta, n);
 
             if (mid_is_to_the_left) {
-                upper_left_attribs_steps = top2mid_steps;
-                lower_left_attribs_steps = mid2bot_steps;
-                upper_rght_attribs_steps = top2bot_steps;
-                lower_rght_attribs_steps = upper_rght_attribs_steps;
-
-                upper_left_delta = top2mid_delta;
-                lower_left_delta = mid2bot_delta;
-                upper_rght_delta = top2bot_delta;
-                lower_rght_delta = upper_rght_delta;
+                upper_left_attribs = top2mid;
+                lower_left_attribs = mid2bot;
+                upper_rght_attribs = top2bot;
+                lower_rght_attribs = upper_rght_attribs;
             } else {
-                upper_rght_attribs_steps = top2mid_steps;
-                lower_rght_attribs_steps = mid2bot_steps;
-                upper_left_attribs_steps = top2bot_steps;
-                lower_left_attribs_steps = upper_left_attribs_steps;
-
-                upper_rght_delta = top2mid_delta;
-                lower_rght_delta = mid2bot_delta;
-                upper_left_delta = top2bot_delta;
-                lower_left_delta = upper_left_delta;
+                upper_rght_attribs = top2mid;
+                lower_rght_attribs = mid2bot;
+                upper_left_attribs = top2bot;
+                lower_left_attribs = upper_left_attribs;
             }
 
-            if (no_upper_part) {
-                int32_to_fract_array(attribs[mid], rght_attribs, num_planes);
-
-                if (horizontal) {
-                    degenerate_horizontal = true;
-                } else {
-                    degenerate_horizontal = false;
-
-                    step_up(left_attribs, lower_left_attribs_steps, num_planes,
-                            lower_left_delta);
-                    step_up(rght_attribs, lower_rght_attribs_steps, num_planes,
-                            lower_rght_delta);
-                }
-            } else {
+            if (!(horizontal || no_upper_part)) {
                 int32_t delta;
 
-                degenerate_horizontal = false;
-
-                step_up(left_attribs, upper_left_attribs_steps, num_planes,
-                        upper_left_delta);
-                step_up(rght_attribs, upper_rght_attribs_steps, num_planes,
-                        upper_rght_delta);
-
                 if (bi->num_upper_rows > 0) {
-
                     if (bi->start_scanline > xy._[top][1]) {
                         delta = bi->start_scanline - xy._[top][1];
 
-                        multi_step_up(left_attribs, upper_left_attribs_steps,
-                                      num_planes, delta, upper_left_delta);
-                        multi_step_up(rght_attribs, upper_rght_attribs_steps,
-                                      num_planes, delta, upper_rght_delta);
+                        multi_step_up(upper_left_attribs, delta, n);
+                        multi_step_up(upper_rght_attribs, delta, n);
                     }
 
                     draw_partial_triangle(
-                        left_attribs, upper_left_attribs_steps,
-                        rght_attribs, upper_rght_attribs_steps,
-                        upper_left_delta, upper_rght_delta,
+                        upper_left_attribs,
+                        upper_rght_attribs,
                         true,
                         bi,
                         fbi
@@ -385,40 +292,33 @@ draw_triangle(Xy                 const xy_input,
                     delta = top2mid_delta;
                 }
 
-                multi_step_up(left_attribs, upper_left_attribs_steps,
-                              num_planes, delta, upper_left_delta);
-                multi_step_up(rght_attribs, upper_rght_attribs_steps,
-                              num_planes, delta, upper_rght_delta);
+                multi_step_up(upper_left_attribs, delta, n);
+                multi_step_up(upper_rght_attribs, delta, n);
             }
-            if (degenerate_horizontal) {
+
+            if (horizontal) {
                 draw_degenerate_horizontal(
                     xy_sorted,
-                    left_attribs, rght_attribs,
-                    top2mid_steps, top2bot_steps, mid2bot_steps,
-                    top2mid_delta, top2bot_delta, mid2bot_delta,
+                    top2mid, top2bot, mid2bot,
                     fbi
                     );
             } else {
                 if (bi->start_scanline > xy._[mid][1]) {
                     int32_t const delta = bi->start_scanline - xy._[mid][1];
 
-                    multi_step_up(left_attribs, lower_left_attribs_steps,
-                                  num_planes, delta, lower_left_delta);
-                    multi_step_up(rght_attribs, lower_rght_attribs_steps,
-                                  num_planes, delta, lower_rght_delta);
+                    multi_step_up(lower_left_attribs, delta, n);
+                    multi_step_up(lower_rght_attribs, delta, n);
                 }
 
                 draw_partial_triangle(
-                    left_attribs, lower_left_attribs_steps,
-                    rght_attribs, lower_rght_attribs_steps,
-                    lower_left_delta, lower_rght_delta,
+                    lower_left_attribs,
+                    lower_rght_attribs,
                     false,
                     bi,
                     fbi
                     );
             }
-            free(rght_attribs); free(left_attribs);
-            free(mid2bot_steps); free(top2bot_steps); free(top2mid_steps);
+            free(mid2bot); free(top2bot); free(top2mid);
         }
     }
     free(attribs[2]); free(attribs[1]); free(attribs[0]);

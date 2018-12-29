@@ -38,6 +38,8 @@ OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 MERGEBINARIES = $(BINARIES)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
+HAVE_MERGE_COMPAT=YES
+
 SUBDIRS=pbmtoppa
 
 .PHONY: all
@@ -74,13 +76,17 @@ thinkjettopbm.c:%.c:%.c1 $(SRCDIR)/lib/util/lexheader
 	  grep -v "^[[:space:]]*int yywrap(void);" \
 	  >$@
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 # In December 2010 (Actually January 2011), pbmtosunicon replaced pbmtoicon
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pbmtosunicon$(EXE) pbmtoicon$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pbmtoicon\",   main_pbmtosunicon);"     >>$@
 
 thisdirclean: localclean
 .PHONY: localclean

@@ -1,7 +1,42 @@
 #! /bin/bash
 # This script tests: bmptopnm ppmtobmp
-# Also requires:
+# Also requires: pamchannel pamtopnm pamseq
 
+tmpdir=${tmpdir:-/tmp}
 
-ppmtobmp testimg.ppm | bmptopnm | cksum
-ppmtobmp testgrid.pbm | bmptopnm | cksum
+# Test 1.  Should print 2425386270 41 four times
+
+echo PBM
+
+for mode in "" "-bpp=1" "-windows" "-os2"
+  do
+  ppmtobmp ${mode} testgrid.pbm | bmptopnm | cksum
+  done
+
+# Test 2.  Should print 1926073387 101484 four times
+
+echo PPM
+
+for mode in "" "-bpp=24" "-windows" "-os2"
+  do
+  ppmtobmp ${mode} testimg.ppm | bmptopnm | cksum
+  done
+
+# Test 3.  Should print 1571496937 33838 nine times
+
+echo PGM
+
+red_pgm=${tmpdir}/red.pgm
+mapfile_pgm=${tmpdir}/mapfile.pgm
+pamseq -tupletype="GRAYSCALE" 1 255 > ${mapfile_pgm}
+
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | \
+    pamtopnm | tee ${red_pgm} | cksum
+
+for mode in "" "-bpp=8" "-windows" "-os2"
+  do
+  ppmtobmp ${mode} ${red_pgm} | bmptopnm | cksum
+  ppmtobmp ${mode} -mapfile=${mapfile_pgm} ${red_pgm} | bmptopnm | cksum
+  done
+
+rm ${mapfile_pgm} ${red_pgm}

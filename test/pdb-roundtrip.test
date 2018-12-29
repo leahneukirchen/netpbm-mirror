@@ -24,7 +24,7 @@ for flag in "" "-compressed" "-maybecompressed" "-uncompressed"
   do
   pamtopdbimg ${flag} ${tiled_pbm} | pdbimgtopam | pamtopnm | \
     cmp -s - ${tiled_pbm}
-  echo ${PIPESTATUS[0]} ${PIPESTATUS[1]} $?
+  echo ${PIPESTATUS[@]} ":" $?
   done
 rm ${tiled_pbm}
 
@@ -37,7 +37,7 @@ for flag in "" "-compressed" "-maybecompressed" "-uncompressed"
     do
     pamtopdbimg ${flag} ${ellipse_pgm} | pdbimgtopam | \
       pamtopnm | pamdepth 3 | cmp -s - ${ellipse_pgm}
-    echo ${PIPESTATUS[0]} ${PIPESTATUS[1]} $?
+    echo ${PIPESTATUS[@]} ":" $?
     done
 rm ${ellipse_pgm}
 
@@ -50,6 +50,6 @@ for flag in "-compressed" "-maybecompressed" "-uncompressed"
     do
     pamtopdbimg -4depth ${flag} ${ellipse_pgm} | pdbimgtopam | \
       pamtopnm | pamdepth 15 | cmp -s - ${ellipse_pgm}
-    echo ${PIPESTATUS[0]} ${PIPESTATUS[1]} $?
+    echo ${PIPESTATUS[@]} ":" $?
     done
 rm ${ellipse_pgm}

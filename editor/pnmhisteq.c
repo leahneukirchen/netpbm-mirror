@@ -51,9 +51,9 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "rmap",     OPT_STRING, &cmdlineP->rmap, 
+    OPTENT3(0, "rmap",     OPT_STRING, &cmdlineP->rmap,
             &rmapSpec,          0);
-    OPTENT3(0, "wmap",     OPT_STRING, &cmdlineP->wmap, 
+    OPTENT3(0, "wmap",     OPT_STRING, &cmdlineP->wmap,
             &wmapSpec,          0);
     OPTENT3(0, "gray",     OPT_FLAG,   NULL,
             &cmdlineP->gray,    0);
@@ -175,27 +175,27 @@ readMapFile(const char * const rmapFileName,
             xelval       const maxval,
             gray *       const lumamap) {
 
-    int rmcols, rmrows; 
+    int rmcols, rmrows;
     gray rmmaxv;
     int rmformat;
     FILE * rmapfP;
-        
+
     rmapfP = pm_openr(rmapFileName);
     pgm_readpgminit(rmapfP, &rmcols, &rmrows, &rmmaxv, &rmformat);
-    
+
     if (rmmaxv != maxval)
         pm_error("maxval in map file (%u) different from input (%u)",
                  rmmaxv, maxval);
-    
+
     if (rmrows != 1)
         pm_error("Map must have 1 row.  Yours has %u", rmrows);
-    
+
     if (rmcols != maxval + 1)
         pm_error("Map must have maxval + 1 (%u) columns.  Yours has %u",
                  maxval + 1, rmcols);
-    
+
     pgm_readpgmrow(rmapfP, lumamap, maxval+1, rmmaxv, rmformat);
-    
+
     pm_close(rmapfP);
 }
 
@@ -245,7 +245,7 @@ equalize(const unsigned int * const lumahist,
         maxLumaPresent(lumahist, darkestRemap, brightestRemap);
 
     unsigned int const range = brightestRemap - darkestRemap;
-    
+
     {
         xelval origLum;
         unsigned int pixsum;
@@ -253,7 +253,7 @@ equalize(const unsigned int * const lumahist,
         for (origLum = darkestRemap, pixsum = 0;
              origLum <= brightestRemap;
              ++origLum) {
-            
+
             /* With 16 bit grays, the following calculation can overflow a 32
                bit long.  So, we do it in floating point.
             */
@@ -261,7 +261,7 @@ equalize(const unsigned int * const lumahist,
             lumamap[origLum] =
                 darkestRemap +
                 ROUNDU((((double) pixsum * range)) / remapPixelCount);
-            
+
             pixsum += lumahist[origLum];
         }
 
@@ -277,7 +277,7 @@ equalize(const unsigned int * const lumahist,
 
         for (origLum = darkestRemap; origLum <= brightestRemap; ++origLum)
             lumamap[origLum] =
-                MIN(brightestRemap, 
+                MIN(brightestRemap,
                     darkestRemap + ROUNDU(lumamap[origLum] * lscale));
     }
 }
@@ -301,7 +301,7 @@ computeMap(const unsigned int * const lumahist,
 
   'pixelCount' is the number of pixels in the image, which is redundant
   with 'lumahist' but provided for computational convenience.
-   
+
   'noblack' means don't include the black pixels in the equalization and
   make the black pixels in the output the same ones as in the input.
 
@@ -407,7 +407,7 @@ scaleXel(xel    const thisXel,
                ((xelval)(PNM_GETR(thisXel) * scaler + 0.5)),
                ((xelval)(PNM_GETG(thisXel) * scaler + 0.5)),
                ((xelval)(PNM_GETB(thisXel) * scaler + 0.5)));
-    
+
     return retval;
 }
 
@@ -429,7 +429,7 @@ remapRgbValue(xel          const thisXel,
         MIN(maxval, ROUNDU(hsv.v * maxval));
     xelval const newValue =
         lumamap[oldValue];
-    
+
     return scaleXel(thisXel, (double)newValue/oldValue);
 }
 

@@ -14,10 +14,6 @@
 #define _FILE_OFFSET_BITS 64
 #define _LARGE_FILES
 
-#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
-#define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
-#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
-
 #include <string.h>
 #include <limits.h>
 #include <math.h>
@@ -415,8 +411,8 @@ pnm_colorname(struct pam * const pamP,
 
     colorname = ppm_colorname(&colorp, pamP->maxval, hexok);
 
-    retval = strdup(colorname);
-    if (retval == NULL)
+    retval = pm_strdup(colorname);
+    if (retval == pm_strsol)
         pm_error("Couldn't get memory for color name string");
 
     return retval;

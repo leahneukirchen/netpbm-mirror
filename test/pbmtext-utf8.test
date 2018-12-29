@@ -66,7 +66,7 @@ awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
     LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump | \
     cmp --quiet - ${output}
 
-echo $?
+echo ${PIPESTATUS[@]} ":" $?
 rm ${output}
 
 
@@ -92,4 +92,4 @@ echo "-----------------------------------------------------------" 1>&2
 LC_ALL=C \
 awk 'BEGIN { for (i=128; i<=129;++i) printf("%c",i);  print ""}' | \
         LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump
-echo $?
+echo ${PIPESTATUS[@]} ":" $?

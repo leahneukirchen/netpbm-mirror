@@ -653,39 +653,49 @@ static void
 processBdfFontNameLine(Readline     * const readlineP,
                        struct font2 * const font2P) {
 
-    if (font2P->name != NULL)
+    if (font2P->name)  /* We've already processed a FONT line */
         pm_error("Multiple FONT lines in BDF font file");
-
-    font2P->name = malloc (MAXBDFLINE+1);
-    if (font2P->name == NULL)
-        pm_error("No memory for font name");
-
-    if (readlineP->wordCt == 1)
-        strcpy(font2P->name, "(no name)");
-
     else {
-        unsigned int tokenCt;
+        char * buffer;
 
-        font2P->name[0] ='\0';
+        MALLOCARRAY(buffer, MAXBDFLINE+1);
 
-        for (tokenCt=1;
-             tokenCt < ARRAY_SIZE(readlineP->arg) &&
-                 readlineP->arg[tokenCt] != NULL; ++tokenCt) {
-          strcat(font2P->name, " ");
-          strcat(font2P->name, readlineP->arg[tokenCt]);
+        if (!buffer)
+            pm_error("Failed to get memory for %u-character font name buffer",
+                     MAXBDFLINE+1);
+
+        if (readlineP->wordCt == 1)
+            strcpy(buffer, "(no name)");
+
+        else {
+            unsigned int tokenCt;
+
+            buffer[0] ='\0';
+
+            for (tokenCt=1;
+                 tokenCt < ARRAY_SIZE(readlineP->arg) &&
+                     readlineP->arg[tokenCt] != NULL; ++tokenCt) {
+                strcat(buffer, " ");
+                strcat(buffer, readlineP->arg[tokenCt]);
+            }
         }
+        font2P->name = buffer;
     }
 }
 
 
-static void
-loadCharsetString(const char * const registry,
-                  const char * const encoding,
-                  char **      const string) {
 
+static void
+loadCharsetString(const char *  const registry,
+                  const char *  const encoding,
+                  const char ** const charsetStringP) {
+
+    char * dest;
     unsigned int inCt, outCt;
-    char * const dest = malloc (strlen(registry) + strlen(encoding) + 1);
-    if (dest == NULL)
+
+    dest = malloc(strlen(registry) + strlen(encoding) + 1);
+
+    if (!dest)
         pm_error("no memory to load CHARSET_REGISTRY and CHARSET_ENCODING "
                "from BDF file");
 
@@ -703,7 +713,7 @@ loadCharsetString(const char * const registry,
     }
 
     dest[outCt] = '\0';
-    *string = dest;
+    *charsetStringP = dest;
 }
 
 

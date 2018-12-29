@@ -46,12 +46,14 @@ OBJECTS = $(BINARIES:%=%.o)
 MERGEBINARIES = $(BINARIES)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
+HAVE_MERGE_COMPAT=YES
+
 .PHONY: all
 all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
@@ -59,6 +61,11 @@ install.bin.local: $(PKGDIR)/bin
 	$(SYMLINK) pamslice$(EXE) pgmslice$(EXE)
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamfile$(EXE) pnmfile$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pgmslice\", main_pamslice);" >>$@
+	echo "TRY(\"pnmfile\",  main_pamfile);"  >>$@
 
 FORCE:
 
