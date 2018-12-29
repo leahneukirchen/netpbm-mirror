@@ -4,6 +4,9 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.86.00
+
+
 18.12.29 BJH  Release 10.85.00
 
               pnmpaste: Add -nand, -nor, and -nxor.
