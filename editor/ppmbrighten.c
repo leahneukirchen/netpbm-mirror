@@ -128,6 +128,7 @@ getMinMax(FILE *       const ifP,
 int
 main(int argc, const char ** argv) {
 
+    double const EPSILON = 1.0e-5;
     struct CmdlineInfo cmdline;
     FILE * ifP;
     pixel * pixelrow;
@@ -151,12 +152,17 @@ main(int argc, const char ** argv) {
         pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
         getMinMax(ifP, cols, rows, maxval, format, &minValue, &maxValue);
         pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
-        pm_message("Minimum value %.0f%% of full intensity "
-                   "being remapped to zero.",
-                   (minValue * 100.0));
-        pm_message("Maximum value %.0f%% of full intensity "
-                   "being remapped to full.",
-                   (maxValue * 100.0));
+        if (maxValue - minValue > EPSILON) {
+            pm_message("Minimum value %.0f%% of full intensity "
+                       "being remapped to zero.",
+                       (minValue * 100.0));
+            pm_message("Maximum value %.0f%% of full intensity "
+                       "being remapped to full.",
+                       (maxValue * 100.0));
+        } else
+            pm_message("Sole value of %.0f%% of full intensity "
+                       "not being remapped",
+                       (maxValue * 100.0));
     }
 
     pixelrow = ppm_allocrow(cols);
@@ -175,8 +181,8 @@ main(int argc, const char ** argv) {
                 /* initial value */
 
             if (cmdline.normalize) {
-                pixhsv.v -= minValue;
-                pixhsv.v = pixhsv.v / (1.0 - (minValue + 1.0 - maxValue));
+                if (maxValue - minValue > EPSILON)
+                    pixhsv.v = (pixhsv.v - minValue) / (maxValue - minValue);
             }
             pixhsv.s = pixhsv.s * cmdline.saturation;
             pixhsv.s = MAX(0.0, MIN(1.0, pixhsv.s));
