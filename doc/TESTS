@@ -12,7 +12,7 @@ Contents
   1.6 Testing package in designated directory
   1.7 Pre-packaging check
   1.8 Post-install check
-  1.9 Skipping test items
+  1.9 Testing less than everything
   1.10 Valgrind
   
 2. Troubleshooting
@@ -166,18 +166,22 @@ a non-standard location.  This must be an absolute path.
 
 
 
-1.9 Skipping test items
-=======================
+1.9 Testing less than everything
+================================
 
 The file test/Test-Order is a list of tests which are run.  If you want to
-skip any test, remove the line or comment it out with a "#".
+skip a test, remove the line or comment it out with a "#".
 
-The variable "target", a comma-separated list of Netpbm programs
-provides another way to run only select tests.  For example to run
-only the test scripts which examine giftopnm and pamtogif, do:
+If you want to run just a few of the tests, use the make variable "target", a
+comma-separated list of Netpbm programs.
 
   make check target=giftopnm,pamtogif
 
+    This runs only the tests of 'giftopnm' and 'pamtogif', as installed.
+
+  make check-tree target=ppmbrighten
+
+    This runs only the tests of 'ppmbrighten', from the build tree.
 
 
 1.10 Valgrind
