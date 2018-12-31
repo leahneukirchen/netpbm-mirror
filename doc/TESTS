@@ -177,7 +177,8 @@ comma-separated list of Netpbm programs.
 
   make check target=giftopnm,pamtogif
 
-    This runs only the tests of 'giftopnm' and 'pamtogif', as installed.
+    This runs only the tests of 'giftopnm' and 'pamtogif', in the package
+    (staging) directory.
 
   make check-tree target=ppmbrighten
 
