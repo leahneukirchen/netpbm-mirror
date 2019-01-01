@@ -27,8 +27,9 @@
 #include <limits.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
+#include "nstring.h"
 #include "shhopt.h"
+#include "pam.h"
 
 enum an_edge_mode {
     EDGE_DROP,
@@ -118,22 +119,23 @@ parse_command_line(int argc, char ** argv,
                      "optional file specification", argc-1);
         
         {
-            char *endptr;   /* ptr to 1st invalid character in scale arg */
+            const char * error;   /* error message of pm_string_to_uint */
             unsigned int scale;
-            
-            scale = strtol(argv[1], &endptr, 10);
-            if (*argv[1] == '\0') 
-                pm_error("Scale argument is a null string.  "
-                         "Must be a number.");
-            else if (*endptr != '\0')
-                pm_error("Scale argument contains non-numeric character '%c'.",
-                         *endptr);
-            else if (scale < 2)
-                pm_error("Scale argument must be at least 2.  "
-                         "You specified %d", scale);
-            cmdline_p->xscale = scale;
-            cmdline_p->yscale = scale;
+
+            pm_string_to_uint(argv[1], &scale, &error);
+
+            if (error == NULL) {
+                if (scale < 2)
+                    pm_error("Scale argument must be at least 2.  "
+                             "You specified %d", scale);
+                cmdline_p->xscale = scale;
+                cmdline_p->yscale = scale;
+	    }
+            else
+                pm_error("Invalid scale factor: %s", error);
+
         }
+
         if (argc-1 > 1) 
             cmdline_p->input_filespec = argv[2];
         else
