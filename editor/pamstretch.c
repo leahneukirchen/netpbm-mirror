@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "pam.h"
@@ -389,9 +390,18 @@ main(int argc,char *argv[]) {
     }
     {
         unsigned int const dropped = cmdline.edge_mode == EDGE_DROP ? 1 : 0;
+        double const width  = (inpam.width  - dropped) * cmdline.xscale;
+        double const height = (inpam.height - dropped) * cmdline.yscale;
 
-        outpam.width = (inpam.width - dropped) * cmdline.xscale;
-        outpam.height = (inpam.height - dropped) * cmdline.yscale;
+        if (width > INT_MAX - 2)
+            pm_error("output image width (%f) too large for computations",
+                     width);
+        if (height > INT_MAX - 2)
+            pm_error("output image height (%f) too large for computation",
+                     height);
+ 
+        outpam.width  = width;
+        outpam.height = height;
 
         pnm_writepaminit(&outpam);
     }
