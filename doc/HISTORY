@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.86.00
 
+              pamstretch: Reject very large scale factors instead of producing
+              incorrect output.
+
               ppmbrighten: Fix crash with -normalize when there is only one
               intensity in the image.  Always broken - Ppmbrighten was new in
               the first Netpbm release in 1991.
