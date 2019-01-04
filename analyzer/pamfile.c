@@ -229,7 +229,7 @@ readToNextImage(const struct pam * const pamP,
 
 static void
 doOneImage(const char *      const name,
-           unsigned int      const imageDoneCount,
+           unsigned int      const imageDoneCt,
            FILE *            const fileP,
            enum ReportFormat const reportFormat,
            bool              const allimages,
@@ -256,7 +256,7 @@ doOneImage(const char *      const name,
         break;
     case RF_HUMAN:
         if (allimages)
-            printf("%s:\tImage %d:\t", name, imageDoneCount);
+            printf("%s:\tImage %d:\t", name, imageDoneCt);
         else
             printf("%s:\t", name);
 
@@ -294,21 +294,20 @@ describeOneFile(const char *      const name,
    'wantComments' means to show the comments from the image header.
    Meaningful only when 'reportFormat' is RF_HUMAN.
 -----------------------------------------------------------------------------*/
-    unsigned int imageDoneCount;
+    unsigned int imageDoneCt;
         /* Number of images we've processed so far */
     bool eof;
 
-    eof = false;
-    imageDoneCount = 0;
-
-    while (!eof && (imageDoneCount < 1 || allimages)) {
-        doOneImage(name, imageDoneCount, fileP,
+    for (eof = false, imageDoneCt = 0;
+         !eof && (imageDoneCt < 1 || allimages);
+        ++imageDoneCt
+        ) {
+        doOneImage(name, imageDoneCt, fileP,
                    reportFormat, allimages, wantComments,
                    &eof);
-        ++imageDoneCount;
     }
     if (reportFormat == RF_COUNT)
-        printf("%s:\t%u images\n", name, imageDoneCount);
+        printf("%s:\t%u images\n", name, imageDoneCt);
 }
 
 
