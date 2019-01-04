@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamfile User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamfile</H1>
-Updated: 11 July 2006;
+Updated: 04 January 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -15,8 +15,10 @@ pamfile - describe a Netpbm (PAM or PNM) file
 <B>pamfile</B>
 
 [<B>-allimages</B>]
-[<B>-count</B>]
 [<B>-comments</B>]
+[<B>-count</B>]
+[<B>-machine</B>]
+[<B>-size</B>]
 
 [<I>file</i> ...]
 
@@ -77,7 +79,58 @@ images are in each input file.
 <p>As with <b>-allimages</b>, this causes <b>pamfile</b> to read all the
 images.
 
+<p>You may specify at most one of <b>-count</b>, <b>-machine</b>,
+and <b>-size</b>.
+
 <p>This option was new with Netpbm 10.31 (December 2005).
+
+<dt><b>-machine</b>
+
+<dd>This makes the output more convenient for a machine to use, while
+  less convenient for a human.  <b>pamfile</b> reports the same information
+  as with no options.
+
+  <p>The output is one line of ASCII text per image.  Each line consists of
+    the file name, followed by a colon, followed by a tab, then the following
+    blank-delimited tokens:
+
+    <ol>
+      <li>Format: &quot;PAM&quot;, &quot;PBM&quot;, &quot;PGM&quot;, or
+        &quot;PPM&quot;,
+      <li>Subformat: &quot;PLAIN&quot; or &quot;RAW&quot;
+      <li>Width: in pixels, in decimal
+      <li>Height: in pixels, in decimal
+      <li>Depth: in decimal
+      <li>Maxval: in decimal (1 if image is PBM)
+      <li>Tuple type (emulated if the image is not PAM)
+    </ol>
+
+<p>You may specify at most one of <b>-count</b>, <b>-machine</b>,
+and <b>-size</b>.
+
+<p>This option was new in Netpbm 10.86 (March 2019).
+
+<dt><b>-size</b>
+
+<dd>This makes the output contain only the height and width of the image,
+in a form convenient for machine processing.
+
+<p>There is one line of output per image, consising of two blank-delimited
+tokens:
+
+<ol>
+  <li>Width: in pixels, in decimal
+  <li>Height: in pixels, in decimal
+  </ol>
+    
+<p>Note that there is no way to tell which image is in which file, if you have
+multiple input files with multiple images.  If that is your case,
+use <b>-machine</b> instead.
+  
+<p>You may specify at most one of <b>-count</b>, <b>-machine</b>, and
+<b>-size</b>.
+
+<p>This option was new in Netpbm 10.86 (March 2019).
 
 </DL>
 
