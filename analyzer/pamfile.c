@@ -48,7 +48,7 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int countSpec, machineSpec, sizeSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "allimages", OPT_FLAG,  NULL, &cmdlineP->allimages,   0);
     OPTENT3(0,   "count",     OPT_FLAG,  NULL, &countSpec,             0);
@@ -59,7 +59,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.opt_table     = option_def;
     opt.short_allowed = false; /* We have no short (old-fashioned) options */
     opt.allowNegNum   = false; /* We have no parms that are negative numbers */
-    
+
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others */
 
@@ -87,7 +87,7 @@ dumpHeaderHuman(struct pam const pam) {
 
     switch (pam.format) {
     case PAM_FORMAT:
-        printf("PAM, %d by %d by %d maxval %ld\n", 
+        printf("PAM, %d by %d by %d maxval %ld\n",
                pam.width, pam.height, pam.depth, pam.maxval);
         printf("    Tuple type: %s\n", pam.tuple_type);
         break;
@@ -101,22 +101,22 @@ dumpHeaderHuman(struct pam const pam) {
         break;
 
 	case PGM_FORMAT:
-        printf("PGM plain, %d by %d  maxval %ld\n", 
+        printf("PGM plain, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
 
 	case RPGM_FORMAT:
-        printf("PGM raw, %d by %d  maxval %ld\n", 
+        printf("PGM raw, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
 
 	case PPM_FORMAT:
-        printf("PPM plain, %d by %d  maxval %ld\n", 
+        printf("PPM plain, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
 
 	case RPPM_FORMAT:
-        printf("PPM raw, %d by %d  maxval %ld\n", 
+        printf("PPM raw, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
     }
@@ -185,15 +185,15 @@ dumpComments(const char * const comments) {
 
     const char * p;
     bool startOfLine;
-    
+
     printf("Comments:\n");
 
     for (p = &comments[0], startOfLine = TRUE; *p; ++p) {
         if (startOfLine)
             printf("  #");
-        
+
         fputc(*p, stdout);
-        
+
         if (*p == '\n')
             startOfLine = TRUE;
         else
@@ -235,7 +235,7 @@ doOneImage(const char *      const name,
            bool              const allimages,
            bool              const wantComments,
            bool *            const eofP) {
-                    
+
     struct pam pam;
     const char * comments;
     enum pm_check_code checkRetval;
@@ -243,7 +243,7 @@ doOneImage(const char *      const name,
     pam.comment_p = &comments;
 
     pnm_readpaminit(fileP, &pam, PAM_STRUCT_SIZE(comment_p));
-        
+
     switch (reportFormat) {
     case RF_COUNT:
         break;
@@ -257,7 +257,7 @@ doOneImage(const char *      const name,
     case RF_HUMAN:
         if (allimages)
             printf("%s:\tImage %d:\t", name, imageDoneCount);
-        else 
+        else
             printf("%s:\t", name);
 
         dumpHeaderHuman(pam);
@@ -297,7 +297,7 @@ describeOneFile(const char *      const name,
     unsigned int imageDoneCount;
         /* Number of images we've processed so far */
     bool eof;
-    
+
     eof = false;
     imageDoneCount = 0;
 
@@ -331,15 +331,21 @@ main(int argc, const char *argv[]) {
         unsigned int i;
         for (i = 0; i < cmdline.inputFileCount; ++i) {
             FILE * ifP;
+
             ifP = pm_openr(cmdline.inputFilespec[i]);
+
             describeOneFile(cmdline.inputFilespec[i], ifP,
                             cmdline.reportFormat,
                             cmdline.allimages ||
                                 cmdline.reportFormat == RF_COUNT,
                             cmdline.comments);
+
             pm_close(ifP);
 	    }
 	}
-    
+
     return 0;
 }
+
+
+
