@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.86.00
 
+              pamfile: Add -machine and -size .
+
               pamstretch: Reject very large scale factors instead of producing
               incorrect output.
 
