@@ -417,6 +417,7 @@ struct CmdlineInfo {
      * in a form easy for the program to use.
      */
     const char * inputFileName;  /* Filespec of input file */
+    unsigned int reportonly;
     unsigned int nomix;
     basicFunction_t filterFunction; /* NULL if not using resample method */
     basicFunction_t windowFunction;
@@ -667,6 +668,8 @@ parseCommandLine(int argc,
     OPTENT3(0, "window",    OPT_STRING,  &window,    &windowSpec,          0);
     OPTENT3(0, "nomix",     OPT_FLAG,    NULL,       &cmdlineP->nomix,     0);
     OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,    0);
+    OPTENT3(0, "reportonly",        OPT_FLAG,    NULL,
+            &cmdlineP->reportonly,    0);
 
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
@@ -2137,6 +2140,52 @@ scaleWithoutMixing(const struct pam * const inpamP,
 }
 
 
+static void
+skipImage(struct pam * const pamP) {
+
+        tuple * tuplerow;
+        unsigned int row;
+
+        tuplerow = pnm_allocpamrow(pamP);
+
+        for (row = 0; row < pamP->height; ++row)
+            pnm_readpamrow(pamP, tuplerow);
+
+        pnm_freepamrow(tuplerow);
+}
+
+
+
+static void
+scale(FILE *             const ifP,
+      struct pam *       const inpamP,
+      struct pam *       const outpamP,
+      float              const xscale,
+      float              const yscale,
+      struct CmdlineInfo const cmdline) {
+
+    pnm_writepaminit(outpamP);
+
+    if (cmdline.nomix) {
+        if (cmdline.verbose)
+            pm_message("Using nomix method");
+        scaleWithoutMixing(inpamP, outpamP, xscale, yscale);
+    } else if (!cmdline.filterFunction) {
+        if (cmdline.verbose)
+            pm_message("Using simple pixel mixing rescaling method");
+        scaleWithMixing(inpamP, outpamP, xscale, yscale,
+                        cmdline.linear, cmdline.verbose);
+    } else {
+        if (cmdline.verbose)
+            pm_message("Using general filter method");
+        resample(inpamP, outpamP,
+                 cmdline.filterFunction, cmdline.filterRadius,
+                 cmdline.windowFunction, cmdline.verbose,
+                 cmdline.linear);
+    }
+}
+
+
 
 static void
 pamscale(FILE *             const ifP,
@@ -2179,25 +2228,12 @@ pamscale(FILE *             const ifP,
                  "do the specified scaling.  Use a smaller input image "
                  "or a slightly different scale factor.");
 
-    pnm_writepaminit(&outpam);
-
-    if (cmdline.nomix) {
-        if (cmdline.verbose)
-            pm_message("Using nomix method");
-        scaleWithoutMixing(&inpam, &outpam, xscale, yscale);
-    } else if (!cmdline.filterFunction) {
-        if (cmdline.verbose)
-            pm_message("Using simple pixel mixing rescaling method");
-        scaleWithMixing(&inpam, &outpam, xscale, yscale,
-                        cmdline.linear, cmdline.verbose);
-    } else {
-        if (cmdline.verbose)
-            pm_message("Using general filter method");
-        resample(&inpam, &outpam,
-                 cmdline.filterFunction, cmdline.filterRadius,
-                 cmdline.windowFunction, cmdline.verbose,
-                 cmdline.linear);
-    }
+    if (cmdline.reportonly) {
+        printf("%d %d %f %f %d %d\n", inpam.width, inpam.height,
+               xscale, yscale, outpam.width, outpam.height);
+        skipImage(&inpam);
+    } else
+        scale(ifP, &inpam, &outpam, xscale, yscale, cmdline);
 }
 
 
