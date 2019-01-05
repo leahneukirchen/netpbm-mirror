@@ -17,7 +17,8 @@ pamscale - scale a Netpbm image
       [ 
          <I>scale_factor</I> 
          |
-         {<B>-xyfit</B> | <B>-xyfill</b> | <b>-xysize</b>} <I>cols</i> <i>rows</I> 
+         {<B>-xyfit</B> | <B>-xyfill</b> | <b>-xysize</b>}
+           <I>cols</i> <i>rows</I> 
          |
          <B>-reduce</B> <I>reduction_factor</I> 
          |
@@ -35,6 +36,7 @@ pamscale - scale a Netpbm image
          ]
          [<b>-linear</b>]
       }
+      [<b>-reportonly</b>]
       [<I>pnmfile</I>]
 
 </pre>
@@ -120,6 +122,39 @@ scale up with <B>-pixels</B>.
 <P>If you enlarge by a factor of 3 or more, you should probably add a
 <I>pnmsmooth</I> step; otherwise, you can see the original pixels in
 the resulting image.
+
+<h4 id="reportonly"><b>-reportonly</b></h4>
+
+<p>The option <b>-reportonly</b> causes <b>pamscale</b> not to scale the
+image, but instead to report to Standard Output what scaling the options and
+the input image dimensions indicate.  For example, if you specify
+<pre>
+<kbd>    -xyfill 100 100 -reportonly </kbd>
+</pre>
+and the input image is 500 x 400, <b>pamscale</b> tells you that this means
+scaling by .25 to end up with a 125 x 100 image.
+
+<p>The output is intended to be convenient for machine processing.  In the
+example above, it would be
+
+<pre>
+<xmp>
+    500 400 0.250000 0.250000 125 100
+</xmp>
+</pre>
+
+<p>The output is a single line of text, with blank-separated tokens as follows.
+
+<ol>
+<li>input width in pixels, decimal unsigned integer
+<li>input height in pixels, decimal unsigned integer
+<li>horizontal scale factor, floating point decimal, unsigned
+<li>vertical scale factor, floating point decimal, unsigned
+<li>output width in pixels, decimal unsigned integer
+<li>output height in pixels, decimal unsigned integer
+</ol>
+
+<p><b>-reportonly</b> was new in Netpbm 10.86 (March 2019).
 
 
 <h3 id="usage">Usage Notes</h3>
@@ -580,6 +615,9 @@ original code remains.
   <LI><A HREF="#description">DESCRIPTION</A>
   <UL>
     <LI><A HREF="#scalefactor">The Scale Factors</a>
+    <UL>
+      <LI><A HREF="#reportonly"><b>-reportonly</b></a>
+      </UL>
     <LI><A HREF="#usage">Usage Notes</a>
     <LI><A HREF="#transparency">Transparency</a>
     <LI><A HREF="#imagetype">Input And Output Image Types</a>
