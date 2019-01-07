@@ -13,8 +13,8 @@ ppmbrighten - change a PPM image's Saturation and Value
 
 <b>ppmbrighten</b>
 [<b>-normalize</b>]
-[<b>-saturation </b>[<b>+</b>|<b>-</b><i>saturation_percent</i>]]
-[<b>-value </b>[<b>+</b>|<b>-</b><i>value_percent</i>]]
+[<b>-saturation=</b>[<b>+</b>|<b>-</b><i>saturation_percent</i>]]
+[<b>-value=</b>[<b>+</b>|<b>-</b><i>value_percent</i>]]
 <i>ppmfile</i>
 
 <P>Minimum unique abbreviation of option is acceptable.  You may use
@@ -78,26 +78,29 @@ For <em>decreasing</em> brightness, <b>pamfunc</b> should do the same thing as
 color of each pixel to bring it a specified per centage closer to white.
 This increases the value and saturation.
 
+<p>If you want to modify the Hues in the image, use <b>pamhue</b>.
+
+  
 <H2 id="examples">EXAMPLES</H2>
 <p>To double the Value of each pixel:
 <pre>
-ppmbrighten -v 100
+ppmbrighten -value=100
 </pre>
 
 <p>To double the Saturation and halve the Value of each pixel:
 <pre>
-ppmbrighten -s 100 -v -50
+ppmbrighten -saturation=+100 -value=-50
 </pre>
 
 <H2 id="options">OPTIONS</H2>
 
 <DL>
-<DT><b>-value </b><i>value_percent</i>
+<DT><b>-value=</b><i>value_percent</i>
 
 <DD>This option specifies the amount, as a per centage, by which you want
 to change the Value of each pixel.  It may be negative.
 
-<DT><b>-saturation </b><i>value_percent</i>
+<DT><b>-saturation=</b><i>value_percent</i>
 
 <DD>This option specifies the amount, as a per centage, by which you want
 to change the Saturation of each pixel.  It may be negative.
@@ -128,6 +131,7 @@ with a bogus error message.
 <A HREF="pamaltsat.html">pamaltsat</A>, 
 <A HREF="pamdepth.html">pamdepth</A>, 
 <A HREF="pnmgamma.html">pnmgamma</A>, 
+<A HREF="pamhue.html">pamhue</A>, 
 <A HREF="ppmhist.html">ppmhist</A>, 
 <A HREF="ppm.html">ppm</A>
 
