@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.86.00
 
+              Add 'pamhue'.
+
               pamfile: Add -machine and -size .
 
               pamscale: Add -reportonly
