@@ -8,6 +8,8 @@ not yet  BJH  Release 10.86.00
 
               Add 'pamhue'.
 
+              pamenlarge: Add -scale, -xscale, -yscale .
+
               pamfile: Add -machine and -size .
 
               pamscale: Add -reportonly

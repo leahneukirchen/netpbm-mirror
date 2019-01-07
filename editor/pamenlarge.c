@@ -5,44 +5,127 @@
   author.
 =============================================================================*/
 
+#include <stdbool.h>
+#include <assert.h>
+
 #include "netpbm/mallocvar.h"
 #include "netpbm/pm_c_util.h"
 #include "netpbm/pam.h"
 #include "netpbm/pbm.h"
+#include "netpbm/shhopt.h"
+#include "netpbm/nstring.h"
+
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  
-    unsigned int scaleFactor;
+    const char * inputFilespec;
+    unsigned int xScaleFactor;
+    unsigned int yScaleFactor;
 };
 
 
 
 static void
-parseCommandLine(int                  const argc,
-                 const char **        const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int                  argc,
+                 const char        ** argv,
+                 struct cmdlineInfo * cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    if (argc-1 < 1)
-        pm_error("You must specify at least one argument:  The scale factor");
-    else {
-        cmdlineP->scaleFactor = atoi(argv[1]);
-        
-        if (cmdlineP->scaleFactor < 1)
-            pm_error("Scale factor must be an integer at least 1.  "
-                     "You specified '%s'", argv[1]);
+    optStruct3 opt;  /* set by OPTENT3 */
+    optEntry * option_def;
+    unsigned int option_def_index;
 
-        if (argc-1 >= 2)
+    unsigned int scale;
+    unsigned int xscaleSpec;
+    unsigned int yscaleSpec;
+    unsigned int scaleSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0, "xscale", OPT_UINT, &cmdlineP->xScaleFactor,  &xscaleSpec, 0);
+    OPTENT3(0, "yscale", OPT_UINT, &cmdlineP->yScaleFactor,  &yscaleSpec, 0);
+    OPTENT3(0, "scale",  OPT_UINT, &scale,                   &scaleSpec, 0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = false; /* We have some short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (scaleSpec && scale == 0)
+        pm_error("-scale must be positive.  You specified zero");
+
+    if (xscaleSpec && cmdlineP->xScaleFactor == 0)
+        pm_error("-xscale must be positive.  You specified zero");
+
+    if (yscaleSpec && cmdlineP->yScaleFactor == 0)
+        pm_error("-yscale must be positive.  You specified zero");
+
+    if (scaleSpec && xscaleSpec)
+        pm_error("You cannot specify both -scale and -xscale");
+
+    if (scaleSpec && yscaleSpec)
+        pm_error("You cannot specify both -scale and -yscale");
+
+    if (scaleSpec) {
+        cmdlineP->xScaleFactor = scale;
+        cmdlineP->yScaleFactor = scale;
+    }
+
+    if (xscaleSpec && !yscaleSpec)
+        cmdlineP->yScaleFactor = 1;
+
+    if (yscaleSpec && !xscaleSpec)
+        cmdlineP->xScaleFactor = 1;
+
+    if (scaleSpec || xscaleSpec || yscaleSpec) {
+        /* Scale options specified.  Naked scale argument not allowed */
+
+        if ((argc-1) > 1)
+            pm_error("Too many arguments (%u).  With a scale option, "
+                     "the only argument is the "
+                     "optional file specification", argc-1);
+
+        if (argc-1 > 0)
+            cmdlineP->inputFilespec = argv[1];
+        else
+            cmdlineP->inputFilespec = "-";
+    } else {
+        /* scale must be specified in an argument */
+        if ((argc-1) != 1 && (argc-1) != 2)
+            pm_error("Wrong number of arguments (%d).  Without scale options, "
+                     "you must supply 1 or 2 arguments:  scale and "
+                     "optional file specification", argc-1);
+
+        {
+            const char * error;   /* error message of pm_string_to_uint */
+            unsigned int scale;
+
+            pm_string_to_uint(argv[1], &scale, &error);
+
+            if (error == NULL) {
+                if (scale == 0)
+                    pm_error("Scale argument must be positive.  "
+                             "You specified zero");
+                else
+                    cmdlineP->xScaleFactor = cmdlineP->yScaleFactor = scale;
+            } else
+                pm_error("Invalid scale factor: %s", error);
+
+        }
+        if (argc-1 > 1)
             cmdlineP->inputFilespec = argv[2];
         else
             cmdlineP->inputFilespec = "-";
     }
-}        
+    free(option_def);
+}
 
 
 
@@ -75,20 +158,23 @@ makeOutputRowMap(tuple **     const outTupleRowP,
 static void
 validateComputableDimensions(unsigned int const width,
                              unsigned int const height,
-                             unsigned int const scaleFactor) {
+                             unsigned int const xScaleFactor,
+                             unsigned int const yScaleFactor) {
 /*----------------------------------------------------------------------------
    Make sure that multiplication for output image width and height do not
    overflow.
-   See validateComputetableSize() in libpam.c
-   and pbm_readpbminitrest() in libpbm2.c
+
+   See validateComputetableSize() in libpam.c and pbm_readpbminitrest() in
+   libpbm2.c
 -----------------------------------------------------------------------------*/
     unsigned int const maxWidthHeight = INT_MAX - 2;
     unsigned int const maxScaleFactor = maxWidthHeight / MAX(height, width);
+    unsigned int const greaterScaleFactor = MAX(xScaleFactor, yScaleFactor);
 
-    if (scaleFactor > maxScaleFactor)
-       pm_error("Scale factor '%u' too large.  "
-                "The maximum for this %u x %u input image is %u.",
-                scaleFactor, width, height, maxScaleFactor);
+    if (greaterScaleFactor > maxScaleFactor)
+        pm_error("Scale factor '%u' too large.  "
+                 "The maximum for this %u x %u input image is %u.",
+                 greaterScaleFactor, width, height, maxScaleFactor);
 }
 
 
@@ -278,7 +364,8 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
 
 static void
 enlargePbm(struct pam * const inpamP,
-           unsigned int const scaleFactor,
+           unsigned int const xScaleFactor,
+           unsigned int const yScaleFactor,
            FILE *       const ofP) {
 
     unsigned char * inrow;
@@ -286,42 +373,42 @@ enlargePbm(struct pam * const inpamP,
 
     unsigned int row;
 
-    unsigned int const outcols = inpamP->width * scaleFactor;
-    unsigned int const outrows = inpamP->height * scaleFactor;
+    unsigned int const outcols = inpamP->width * xScaleFactor;
+    unsigned int const outrows = inpamP->height * yScaleFactor;
     unsigned int const inColChars  = pbm_packed_bytes(inpamP->width);
     unsigned int const outColChars = pbm_packed_bytes(outcols);
 
     inrow  = pbm_allocrow_packed(inpamP->width);
-    
-    if (scaleFactor == 1)
+
+    if (xScaleFactor == 1)
         outrow = inrow;
     else  {
-        /* Allow writes beyond outrow data end when scaleFactor is
+        /* Allow writes beyond outrow data end when xScaleFactor is
            one of the special fast cases: 2, 3, 4, 5, 6, 7, 8, 9, 10.
         */
-        unsigned int const rightPadding = 
-            scaleFactor > 10 ? 0 : (scaleFactor - 1) * 8;  
+        unsigned int const rightPadding =
+            xScaleFactor > 10 ? 0 : (xScaleFactor - 1) * 8;
         outrow = pbm_allocrow_packed(outcols + rightPadding);
     }
 
     pbm_writepbminit(ofP, outcols, outrows, 0);
-    
+
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int i;
 
         pbm_readpbmrow_packed(inpamP->file, inrow, inpamP->width,
                               inpamP->format);
 
-        if (outcols % 8 > 0)           /* clean final partial byte */ 
+        if (outcols % 8 > 0)           /* clean final partial byte */
             pbm_cleanrowend_packed(inrow, inpamP->width);
 
         enlargePbmRowHorizontally(inpamP, inrow, inColChars, outColChars,
-                                  scaleFactor, outrow);
+                                  xScaleFactor, outrow);
 
-        for (i = 0; i < scaleFactor; ++i)  
+        for (i = 0; i < yScaleFactor; ++i)
             pbm_writepbmrow_packed(ofP, outrow, outcols, 0);
     }
-    
+
     if (outrow != inrow)
         pbm_freerow(outrow);
 
@@ -332,7 +419,8 @@ enlargePbm(struct pam * const inpamP,
 
 static void
 enlargeGeneral(struct pam * const inpamP,
-               unsigned int const scaleFactor,
+               unsigned int const xScaleFactor,
+               unsigned int const yScaleFactor,
                FILE *       const ofP) {
 /*----------------------------------------------------------------------------
    Enlarge the input image described by *pamP.
@@ -342,15 +430,15 @@ enlargeGeneral(struct pam * const inpamP,
    This works on all kinds of images, but is slower than enlargePbm on
    PBM.
 -----------------------------------------------------------------------------*/
-    struct pam outpam; 
+    struct pam outpam;
     tuple * tuplerow;
     tuple * newtuplerow;
     unsigned int row;
 
-    outpam = *inpamP; 
+    outpam = *inpamP;
     outpam.file   = ofP;
-    outpam.width  = inpamP->width  * scaleFactor;
-    outpam.height = inpamP->height * scaleFactor; 
+    outpam.width  = inpamP->width  * xScaleFactor;
+    outpam.height = inpamP->height * yScaleFactor;
 
     pnm_writepaminit(&outpam);
 
@@ -360,7 +448,7 @@ enlargeGeneral(struct pam * const inpamP,
 
     for (row = 0; row < inpamP->height; ++row) {
         pnm_readpamrow(inpamP, tuplerow);
-        pnm_writepamrowmult(&outpam, newtuplerow, scaleFactor);
+        pnm_writepamrowmult(&outpam, newtuplerow, yScaleFactor);
     }
 
     free(newtuplerow);
@@ -371,8 +459,8 @@ enlargeGeneral(struct pam * const inpamP,
 
 
 int
-main(int           argc, 
-     const char ** argv) {
+main(int           argc,
+     const char ** const argv) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -383,20 +471,26 @@ main(int           argc,
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
- 
+
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
-    
+
+    assert(cmdline.xScaleFactor > 0);
+    assert(cmdline.yScaleFactor > 0);
+
     validateComputableDimensions(inpam.width, inpam.height,
-                                 cmdline.scaleFactor); 
-    
+                                 cmdline.xScaleFactor, cmdline.yScaleFactor);
+
     if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE)
-        enlargePbm(&inpam, cmdline.scaleFactor, stdout);
+        enlargePbm(&inpam, cmdline.xScaleFactor, cmdline.yScaleFactor,
+                   stdout);
     else
-        enlargeGeneral(&inpam, cmdline.scaleFactor, stdout);
+        enlargeGeneral(&inpam, cmdline.xScaleFactor, cmdline.yScaleFactor,
+                       stdout);
 
     pm_close(ifP);
     pm_close(stdout);
 
     return 0;
 }
+
 
