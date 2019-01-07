@@ -570,7 +570,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 const char * const typeArg = commandTokens.token[1];
                 if (streq(typeArg, "normal"))
                     drawCommandP->u.setlinetypeArg.type = PPMD_LINETYPE_NORMAL;
-                else if (streq(typeArg, "normal"))
+                else if (streq(typeArg, "nodiag"))
                     drawCommandP->u.setlinetypeArg.type =
                         PPMD_LINETYPE_NODIAGS;
                 else
