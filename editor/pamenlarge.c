@@ -16,7 +16,7 @@
 #include "netpbm/nstring.h"
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -30,7 +30,7 @@ struct cmdlineInfo {
 static void
 parseCommandLine(int                  argc,
                  const char        ** argv,
-                 struct cmdlineInfo * cmdlineP) {
+                 struct CmdlineInfo * cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -462,7 +462,7 @@ int
 main(int           argc,
      const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam;
 
