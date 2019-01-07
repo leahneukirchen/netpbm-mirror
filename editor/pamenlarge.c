@@ -187,18 +187,18 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
                           unsigned int          const scaleFactor,
                           unsigned char *       const outrow) {
 
-    static unsigned char const dbl[16] = { 
-        0x00, 0x03, 0x0C, 0x0F, 0x30, 0x33, 0x3C, 0x3F, 
+    static unsigned char const dbl[16] = {
+        0x00, 0x03, 0x0C, 0x0F, 0x30, 0x33, 0x3C, 0x3F,
         0xC0, 0xC3, 0xCC, 0xCF, 0xF0, 0xF3, 0xFC, 0xFF };
 
-    static unsigned char const trp1[8] = { 
+    static unsigned char const trp1[8] = {
         0x00, 0x03, 0x1C, 0x1F, 0xE0, 0xE3, 0xFC, 0xFF };
-        
-    static unsigned char const trp2[16] = { 
+
+    static unsigned char const trp2[16] = {
         0x00, 0x01, 0x0E, 0x0F, 0x70, 0x71, 0x7E, 0x7F,
         0x80, 0x81, 0x8E, 0x8F, 0xF0, 0xF1, 0xFE, 0xFF };
 
-    static unsigned char const trp3[8] = { 
+    static unsigned char const trp3[8] = {
         0x00, 0x07, 0x38, 0x3F, 0xC0, 0xC7, 0xF8, 0xFF };
 
     static unsigned char const quad[4] = { 0x00, 0x0F, 0xF0, 0xFF };
@@ -215,8 +215,8 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
 
     switch (scaleFactor) {
     case 1:  break; /* outrow set to inrow */
-    case 2:  /* Make outrow using prefabricated parts (same for 3, 5). */ 
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
+    case 2:  /* Make outrow using prefabricated parts (same for 3, 5). */
+        for (colChar = 0; colChar < inColChars; ++colChar) {
             outrow[colChar*2]   = dbl[(inrow[colChar] & 0xF0) >> 4];
             outrow[colChar*2+1] = dbl[(inrow[colChar] & 0x0F) >> 0];
             /* Possible outrow overrun by one byte. */
@@ -224,34 +224,34 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
         break;
 
     case 3:
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
+        for (colChar = 0; colChar < inColChars; ++colChar) {
             outrow[colChar*3]   = trp1[(inrow[colChar] & 0xF0) >> 5];
             outrow[colChar*3+1] = trp2[(inrow[colChar] >> 2) & 0x0F];
             outrow[colChar*3+2] = trp3[(inrow[colChar] >> 0) & 0x07];
         }
-        break;  
+        break;
 
     case 4:
         for (colChar = 0; colChar < inColChars; ++colChar) {
             unsigned int i;
-            for (i = 0; i < 4; ++i) 
+            for (i = 0; i < 4; ++i)
                 outrow[colChar*4+i]=
-                    quad[(inrow[colChar] >> (6 - 2 * i)) & 0x03]; 
+                    quad[(inrow[colChar] >> (6 - 2 * i)) & 0x03];
         }
         break;
 
     case 5:
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
-            outrow[colChar*5]   = pair [(inrow[colChar] >> 6) & 0x03] >> 5; 
-            outrow[colChar*5+1] = quin2[(inrow[colChar] >> 4) & 0x07] >> 0; 
-            outrow[colChar*5+2] = quad [(inrow[colChar] >> 3) & 0x03] >> 0; 
+        for (colChar = 0; colChar < inColChars; ++colChar) {
+            outrow[colChar*5]   = pair [(inrow[colChar] >> 6) & 0x03] >> 5;
+            outrow[colChar*5+1] = quin2[(inrow[colChar] >> 4) & 0x07] >> 0;
+            outrow[colChar*5+2] = quad [(inrow[colChar] >> 3) & 0x03] >> 0;
             outrow[colChar*5+3] = quin4[(inrow[colChar] >> 1) & 0x07] >> 0;
-            outrow[colChar*5+4] = pair [(inrow[colChar] >> 0) & 0x03] >> 3; 
+            outrow[colChar*5+4] = pair [(inrow[colChar] >> 0) & 0x03] >> 3;
         }
         break;
 
-    case 6:  /* Compound of 2 and 3 */ 
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
+    case 6:  /* Compound of 2 and 3 */
+        for (colChar = 0; colChar < inColChars; ++colChar) {
             unsigned char const hi = dbl[(inrow[colChar] & 0xF0) >> 4];
             unsigned char const lo = dbl[(inrow[colChar] & 0x0F) >> 0];
 
@@ -263,10 +263,10 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
             outrow[colChar*6+4] = trp2[(lo >> 2) & 0x0F];
             outrow[colChar*6+5] = trp3[lo & 0x07];
         }
-        break;  
+        break;
 
     case 7:
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
+        for (colChar = 0; colChar < inColChars; ++colChar) {
             uint32_t hi, lo;
 
             hi = inrow[colChar] >> 4;
@@ -279,14 +279,14 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
             lo = inrow[colChar] & 0x001F;
             lo = ((((lo>>1) * 0x02082080) | (0x01 & lo)) & 0x10204081 ) * 0x7F;
             outrow[colChar*7+3] =  (unsigned char) ((lo >> 24) & 0xFF);
-            outrow[colChar*7+4] =  (unsigned char) ((lo >> 16) & 0xFF); 
+            outrow[colChar*7+4] =  (unsigned char) ((lo >> 16) & 0xFF);
             outrow[colChar*7+5] =  (unsigned char) ((lo >>  8) & 0xFF);
             outrow[colChar*7+6] =  (unsigned char) ((lo >>  0) & 0xFF);
         }
         break;
 
     case 8:
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
+        for (colChar = 0; colChar < inColChars; ++colChar) {
             unsigned int i;
             for (i = 0; i < 8; ++i) {
                 outrow[colChar*8+i] =
@@ -296,34 +296,34 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
         break;
 
     case 9:
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
+        for (colChar = 0; colChar < inColChars; ++colChar) {
             outrow[colChar*9]   =  ((inrow[colChar] >> 7) & 0x01) * 0xFF;
-            outrow[colChar*9+1] =  pair[(inrow[colChar] >> 6) & 0x03] >> 1; 
-            outrow[colChar*9+2] =  pair[(inrow[colChar] >> 5) & 0x03] >> 2; 
-            outrow[colChar*9+3] =  pair[(inrow[colChar] >> 4) & 0x03] >> 3; 
-            outrow[colChar*9+4] =  pair[(inrow[colChar] >> 3) & 0x03] >> 4; 
-            outrow[colChar*9+5] =  pair[(inrow[colChar] >> 2) & 0x03] >> 5; 
-            outrow[colChar*9+6] =  pair[(inrow[colChar] >> 1) & 0x03] >> 6; 
-            outrow[colChar*9+7] =  pair[(inrow[colChar] >> 0) & 0x03] >> 7; 
+            outrow[colChar*9+1] =  pair[(inrow[colChar] >> 6) & 0x03] >> 1;
+            outrow[colChar*9+2] =  pair[(inrow[colChar] >> 5) & 0x03] >> 2;
+            outrow[colChar*9+3] =  pair[(inrow[colChar] >> 4) & 0x03] >> 3;
+            outrow[colChar*9+4] =  pair[(inrow[colChar] >> 3) & 0x03] >> 4;
+            outrow[colChar*9+5] =  pair[(inrow[colChar] >> 2) & 0x03] >> 5;
+            outrow[colChar*9+6] =  pair[(inrow[colChar] >> 1) & 0x03] >> 6;
+            outrow[colChar*9+7] =  pair[(inrow[colChar] >> 0) & 0x03] >> 7;
             outrow[colChar*9+8] =  (inrow[colChar] & 0x01) * 0xFF;
         }
         break;
 
     case 10:
-        for (colChar = 0; colChar < inColChars; ++colChar) { 
+        for (colChar = 0; colChar < inColChars; ++colChar) {
             outrow[colChar*10]   = ((inrow[colChar] >> 7) & 0x01 ) * 0xFF;
-            outrow[colChar*10+1] = pair[(inrow[colChar] >> 6) & 0x03] >> 2; 
-            outrow[colChar*10+2] = pair[(inrow[colChar] >> 5) & 0x03] >> 4; 
+            outrow[colChar*10+1] = pair[(inrow[colChar] >> 6) & 0x03] >> 2;
+            outrow[colChar*10+2] = pair[(inrow[colChar] >> 5) & 0x03] >> 4;
             outrow[colChar*10+3] = pair[(inrow[colChar] >> 4) & 0x03] >> 6;
             outrow[colChar*10+4] = ((inrow[colChar] >> 4) & 0x01) * 0xFF;
-            outrow[colChar*10+5] = ((inrow[colChar] >> 3) & 0x01) * 0xFF; 
-            outrow[colChar*10+6] = pair[(inrow[colChar] >> 2) & 0x03] >> 2; 
-            outrow[colChar*10+7] = pair[(inrow[colChar] >> 1) & 0x03] >> 4; 
-            outrow[colChar*10+8] = pair[(inrow[colChar] >> 0) & 0x03] >> 6; 
+            outrow[colChar*10+5] = ((inrow[colChar] >> 3) & 0x01) * 0xFF;
+            outrow[colChar*10+6] = pair[(inrow[colChar] >> 2) & 0x03] >> 2;
+            outrow[colChar*10+7] = pair[(inrow[colChar] >> 1) & 0x03] >> 4;
+            outrow[colChar*10+8] = pair[(inrow[colChar] >> 0) & 0x03] >> 6;
             outrow[colChar*10+9] = ((inrow[colChar] >> 0) & 0x01) * 0xFF;
         }
         break;
- 
+
 
     default:
         /*  Unlike the above cases, we iterate through outrow.  To compute the
@@ -352,7 +352,7 @@ enlargePbmRowHorizontally(struct pam *          const inpamP,
             if (offset >= 8)  /* Bits in outrow byte are all 1 or 0 */
                 outrow[colChar] =
                     (inrow[colChar/mult] >> (7-bit) & 0x01) * 0xFF;
-            else           /* Two inrow bits influence this outrow byte */ 
+            else           /* Two inrow bits influence this outrow byte */
                 outrow[colChar] = (unsigned char)
                     (pair[inrow[colChar/mult] >> (6-bit) & 0x03] >> offset)
                     & 0xFF;
