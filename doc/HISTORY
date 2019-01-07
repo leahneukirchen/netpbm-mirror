@@ -22,6 +22,7 @@ not yet  BJH  Release 10.86.00
               the first Netpbm release in 1991.
 
               ppmdraw: Fix bug: 'setlinetype nodiag' says invalid type.
+              Always broken.  (Ppmdraw was new in Netpbm 10.29 (August 2005)).
 
 18.12.29 BJH  Release 10.85.00
 
