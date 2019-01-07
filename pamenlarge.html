@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamenlarge User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamenlarge</H1>
-Updated: 17 March 2010
+Updated: 07 January 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -12,7 +12,14 @@ pamenlarge - Enlarge a Netpbm image N times
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
+<B>pamenlarge</B>
+[<b>-scale=</b><i>integer</i>]
+[<b>-xscale=</b><i>integer</i>]
+[<b>-yscale=</b><i>integer</i>]
+[<I>filename</I>]
+
 <B>pamenlarge</B> <I>N</I> [<I>pnmfile</I>]
+
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -38,9 +45,9 @@ but with at different spees, each being faster than the one before.
 
 <pre>
 <kbd>
-     $ pamenlarge 15 test.pbm
-     $ pamenlarge 5 test.pbm | pamenlarge 3
-     $ pamenlarge 3 test.pbm | pamenlarge 5
+     $ pamenlarge -scale=15 test.pbm
+     $ pamenlarge -scale=5 test.pbm | pamenlarge -scale=3
+     $ pamenlarge -scale=3 test.pbm | pamenlarge -scale=5
 </kbd>
 </pre>
 
@@ -61,6 +68,47 @@ smoothed enlargement with less computational cost.
 <p><b>pbmreduce</b> can reduce by integer factors, but only for PBM
 images.
 
+<h2 id="arguments">ARGUMENTS</h2>
+
+<p>As with most Netpbm programs, you can give the input file name as an
+argument or omit that argument and have it come from Standard Input (and
+you can specify &quot;-&quot; for the argument to specify Standard Input
+explicitly).
+
+<p>You can also specify the scale factor as an argument, for backward
+compatibility, but the preferred way to do that is with a <b>-scale</b>
+option, because it is easier to remember and read that way.  The scale factor
+argument goes before the file name argument.
+
+
+
+  
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<dt><b>-scale=</b><i>integer</i>
+<dt><b>-xscale=</b><i>integer</i>
+<dt><b>-yscale=</b><i>integer</i>
+
+<dd>These specify the scale factor.  <b>-xscale</b> specifies the horizontal
+scale factor; <b>-yscale</b> specifies the vertical scale factor
+and <b>-scale</b> specifies both.
+
+<p>If you specify <b>-xscale</b> but not <b>-yscale</b>, <b>pamenlarge</b>
+does not scale vertically (i.e. the vertical scale factor is 1).  The converse
+applies if you specify <b>-yscale</b> and not <b>-xscale</b>.
+
+<p>You cannot specify <b>-scale</b> and also <b>-xscale</b> or <b>yscale</b>.
+
+<p>You must specify at least one of these options, unless you use the
+deprecaated method of specifying the scale factor via argument.
+
+<p>These options were all new in Netpbm 10.86 (March 2019).  Before that, use
+the scale argument.
+  
+</dl>
+
+  
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamenlarge</b> was new in Netpbm 10.25 (October 2004).  It is
@@ -87,6 +135,8 @@ Copyright (C) 1989 by Jef Poskanzer.
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#arguments">ARGUMENTS</A>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#history">HISTORY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
