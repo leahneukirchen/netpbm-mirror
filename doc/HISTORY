@@ -21,6 +21,8 @@ not yet  BJH  Release 10.86.00
               intensity in the image.  Always broken - Ppmbrighten was new in
               the first Netpbm release in 1991.
 
+              ppmdraw: Fix bug: 'setlinetype nodiag' says invalid type.
+
 18.12.29 BJH  Release 10.85.00
 
               pnmpaste: Add -nand, -nor, and -nxor.
