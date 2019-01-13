@@ -168,7 +168,7 @@ make up one second of a movie, keeping the images in the same files:
 <pre>
 ls *.yuv
    | perl -ne 'chomp;
-   print yuvtoppm $_ | ppmbrighten -v 100 | ppmtoyuv &gt;tmp$$.yuv;
+   print yuvtoppm $_ | pambrighten -value +100 | ppmtoyuv &gt;tmp$$.yuv;
    mv tmp$$.yuv $_ 
    '
    | sh

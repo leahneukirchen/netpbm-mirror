@@ -132,7 +132,7 @@ outPamtuples.tuplesP = &amp;outTuples;
 
 pm_system(&amp;pm_feed_from_pamtuples, &amp;inPamtuples,
           &amp;pm_accept_to_pamtuples, &amp;outPamtuples,
-          "ppmbrighten -v 100");
+          "pambrighten -value +100");
 
 outpam.file = stdout;
 pnm_writepam(&amp;outpam, outTuples);
@@ -195,7 +195,7 @@ Standard Input and Output.  Example:
 
 <pre>
 <kbd>
-    ppmbrighten -v 100 | pamdepth 255 | pamscale .5
+    pambrighten -vale +100 | pamdepth 255 | pamscale .5
 </kbd>
 </pre>
 
