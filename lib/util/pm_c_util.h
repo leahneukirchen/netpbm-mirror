@@ -19,7 +19,12 @@
 #undef ROUND
 #define ROUND(X) (((X) >= 0) ? (int)((X)+0.5) : (int)((X)-0.5))
 #undef ROUNDU
-#define ROUNDU(X) ((unsigned int)((X)+0.5))
+#define ROUNDU(X) ((unsigned int)((X)+0.5+1e-15))
+    /* We add the 1e-15 epsilon because for repeatability we want exactly half
+       to round up.  But the imprecision of the floating point arithmetic can
+       cause a number that is supposed to be exactly half to be slightly less
+       than half in reality.  Without this adjustment, it would round down.
+    */
 
 /* ROUNDUP rounds up to a specified multiple.  E.g. ROUNDUP(22, 8) == 24 */
 
