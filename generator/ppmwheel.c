@@ -16,15 +16,14 @@
 #include <string.h>
 #include <math.h>
 
+#include "pm_c_util.h"
 #include "ppm.h"
 
 #ifndef PI
 #define PI  3.14159265358979323846
 #endif
 
-#ifndef ABS
-#define ABS(a) ((a) < 0 ? -(a) : (a))
-#endif
+
 
 static void
 hsv_rgb(double const in_h, double const in_s, double const in_v,
@@ -87,8 +86,9 @@ hsv_rgb(double const in_h, double const in_s, double const in_v,
 
 
 int
-main(int argc, char *argv[]) {
-    pixel *orow;
+main(int argc, const char ** argv) {
+
+    pixel * orow;
     int rows, cols;
     pixval maxval;
     unsigned int row;
@@ -96,7 +96,7 @@ main(int argc, char *argv[]) {
     long diameter;
     char * tailptr;
 
-    ppm_init( &argc, argv );
+    pm_proginit( &argc, argv );
 
     if (argc-1 != 1)
         pm_error("Program takes one argument:  diameter of color wheel");
@@ -153,5 +153,5 @@ main(int argc, char *argv[]) {
         ppm_writeppmrow(stdout, orow, cols, maxval, 0);
     }
     pm_close(stdout);
-    exit(0);
+    return 0;
 }
