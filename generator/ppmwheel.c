@@ -26,8 +26,8 @@
 #define ABS(a) ((a) < 0 ? -(a) : (a))
 #endif
 
-static void 
-hsv_rgb(double const in_h, double const in_s, double const in_v, 
+static void
+hsv_rgb(double const in_h, double const in_s, double const in_v,
         double * const r, double * const g, double * const b) {
 /*----------------------------------------------------------------------------
    This is a stripped down hsv->rgb converter that works only for
@@ -110,7 +110,7 @@ main(int argc, char *argv[]) {
         pm_error("Diameter must be at least 4.  You specified %ld", diameter);
 
     cols = rows = diameter;
-    
+
     orow = ppm_allocrow(cols);
 
     maxval = PPM_MAXMAXVAL;
@@ -137,7 +137,7 @@ main(int argc, char *argv[]) {
                 double dr, dg, db;
 
                 hue = atan2(dx, dy) / PI * 180.0;
-                if (hue < 0.0) 
+                if (hue < 0.0)
                     hue = 360.0 + hue;
                 sat = 0.0;
                 val = dist / radius;
