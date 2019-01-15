@@ -130,10 +130,7 @@ changeGrayPix(tuple  const tupleval,
               sample const maxval) {
 
     double const oldGray = (double) tupleval[0] / maxval;
-
-    double newGray;
-
-    newGray = MIN(1.0, MAX(0.0, oldGray * valchange));
+    double const newGray = MIN(1.0, MAX(0.0, oldGray * valchange));
 
     tupleval[0] = ROUNDU(newGray * maxval);
 }
@@ -256,7 +253,7 @@ main(int argc, const char *argv[]) {
 
 
 /*
-   This was derived from ppmbrighten code written by Jef Poskanzer and 
+   This was derived from ppmbrighten code written by Jef Poskanzer and
    Brian Moffet. Updated by Willem van Schaik to support PAM.
 
    Copyright (C) 1989 by Jef Poskanzer.
