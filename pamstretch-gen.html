@@ -18,13 +18,16 @@ pamstretch-gen - use pamstretch and pamscale to scale by non-integer values
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>pamstretch-gen</B> is a program which uses <B><A
-HREF="pamstretch.html">pamstretch</A></B>, <B><A
-HREF="pnmfile.html">pnmfile</A></B>, and <B><A
-HREF="pamscale.html">pamscale</A></B> to smoothly scale up a PNM file
-by any ratio; it's like a more general version of pamstretch (hence
-the name). But other than the `any ratio' bit, it's much the same as
-pamstretch. :-)
+<B>pamstretch-gen</B> is a program which
+uses <B><A HREF="pamstretch.html">pamstretch</A></B>
+and <B><A HREF="pamscale.html">pamscale</A></B> to smoothly scale up a Netpbm
+image by any factor; it's like a more general version of <b>pamstretch</b>
+(hence the name).
+
+<b>pamstretch-gen</b> uses the <b>-dropedge</b> option on <b>pamstretch</b>.
+
+<p>The Netpbm global options <b>-quiet</b> and <b>-plain</b> do not exist
+on <b>pamstretch-gen</b>.
 
 
 <H2 id="seealso">SEE ALSO</H2>
