@@ -1,32 +1,21 @@
 #!/bin/sh
+###############################################################################
+#                              pamstretch-gen
+###############################################################################
+# A generalized version of pamstretch that can do non-integer scale factors.
 #
-# pamstretch-gen - a shell script which acts a little like a general
-# form of pamstretch, by scaling up with pamstretch then scaling
-# down with pamscale.
+# It works by scaling up with pamstretch then scaling down with pamscale.
 #
 # it also copes with N<1, but then it just uses pamscale. :-)
 #
 # Formerly named 'pnminterp-gen' and 'pnmstretch-gen'.
 #
-# Copyright (C) 1998,2000 Russell Marks.
-# 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or (at
-# your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-# 
+# Netpbm global options -quiet and -plain don't work (this should be fixed).
+#
+###############################################################################
 
 if [ "$1" = "--version" -o "$1" = "-version" ]; then
-        pamstretch --version; exit $?;
+  pamstretch --version; exit $?;
 fi
 
 if [ "$1" = "" ]; then
@@ -34,49 +23,67 @@ if [ "$1" = "" ]; then
   exit 1
 fi
 
-tempdir=$(mktemp -d "${TMPDIR:-/tmp}/netpbm.XXXXXXXX") ||
-    ( echo "Could not create temporary file. Exiting." 1>&2; exit 1; ) 
-trap 'rm -rf $tempdir' 0 1 3 15
+tempfile=$(mktemp "${TMPDIR:-/tmp}/netpbm.XXXXXXXX.pam")
+if [ $? -ne 0 -o ! -e $tempfile ]; then
+  echo "Could not create temporary file. Exiting." 1>&2
+  exit 1
+fi
+trap 'rm -rf $tempfile' 0 1 3 15
 
-tempfile=$tempdir/pnmig
-
-if ! cat $2 >$tempfile 2>/dev/null; then
+if ! cat $2 | pampick -quiet 0 > $tempfile; then
   echo 'pamstretch-gen: error reading file' 1>&2
   exit 1
 fi
 
-if ! pnmfile $tempfile 1>/dev/null 2>/dev/null; then
-  echo 'Not valid pnm input'
+# Calculate pamstretch scale factor (="iscale") and output width and
+# height.  Usually "int(scale) + 1" is sufficient for iscale but
+# in some exceptional cases adjustment is necessary because of
+# "-dropedge".
+
+report=$(pamscale -reportonly $1 $tempfile)
+if [ $? -ne 0 ]; then
+  echo "pamstretch-gen: pamscale does not support -reportonly" 1>&2
   exit 1
 fi
 
-# we use the width as indication of how much to scale; width and
-# height are being scaled equally, so this should be ok.
-width=`pnmfile $tempfile 2>/dev/null|cut -d " " -f 3`
+iscale_width_height=$(echo $report |\
+  awk 'NF!=6 || $1<=0 || $2<=0 || $3<=0 || $5<=0 || $6<=0  { exit 1 }
+       $3 > 1.0  { iscale = int($3) + 1;
+                   if (iscale * ($1-1) < $5 || iscale * ($2-1) < $6 )
+                      ++iscale; }
+                 { iscale = 1 }  # $3 <= 1.0
+                 { print iscale, "-width="$5, "-height="$6}' )
 
-if [ "$width" = "" ]; then
-  echo 'pamstretch-gen: not a PNM file' 1>&2
-  exit 1
-fi
+# Note that $1, $2, ..., $6 here are fields of the input line fed to awk,
+# not shell positional parameters.
 
-# should really use dc for maths, but awk is less painful :-)
-target_width=`awk 'BEGIN{printf("%d",'0.5+"$width"*"$1"')}'`
+iscale=$(echo $iscale_width_height | cut -d " " -f 1)
 
-# work out how far we have to scale it up with pamstretch so that the
-# new width is >= the target width.
-int_scale=`awk '
-BEGIN {
-int_scale=1;int_width='"$width"'
-while(int_width<'"$target_width"')
-  {
-  int_scale++
-  int_width+='"$width"'
-  }
-print int_scale
-}'`
-
-if [ "$int_scale" -eq 1 ]; then
+if [ "$iscale" -eq 1 ]; then
   pamscale "$1" $tempfile
 else
-  pamstretch "$int_scale" $tempfile | pnmscale -xsi "$target_width"
+  width_height=$(echo $iscale_width_height | cut -d " " -f 2,3)
+  pamstretch -dropedge "$iscale" $tempfile |\
+  pamscale $width_height
 fi
+
+
+
+# Copyright (C) 1998,2000 Russell Marks.
+# Modifications for "pamscale -reportonly" "pamstretch -dropedge" by
+# Akira Urushibata (Jan. 2019)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+

@@ -16,6 +16,9 @@ not yet  BJH  Release 10.86.00
 
               pamscale: Add -reportonly
 
+              pamstretch-gen: Use -dropedge on the 'pamstretch' piece for
+              better looking output.
+
               libnetpbm: Fix ROUNDU so it properly rounds up fractions of
               exactly half.  Affects many programs.
 
