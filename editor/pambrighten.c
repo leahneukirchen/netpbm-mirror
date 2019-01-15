@@ -186,41 +186,47 @@ colorTypeOfImage(struct pam * const pamP) {
 
 static void
 pambrighten(struct CmdlineInfo const cmdline,
-            FILE *             const ifP,
-            struct pam *       const inpamP,
-            struct pam *       const outpamP) {
+            FILE *             const ifP) {
 
-    ColorType const colorType = colorTypeOfImage(inpamP);
-
+    struct pam inpam, outpam;
     tuple * tuplerow;
+    ColorType colorType;
     unsigned int row;
 
-    pnm_writepaminit(outpamP);
+    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    tuplerow = pnm_allocpamrow(inpamP);
+    colorType = colorTypeOfImage(&inpam);
 
-    for (row = 0; row < inpamP->height; ++row) {
+    outpam = inpam;
+    outpam.file = stdout;
+
+    pnm_writepaminit(&outpam);
+
+    tuplerow = pnm_allocpamrow(&inpam);
+
+    for (row = 0; row < inpam.height; ++row) {
         unsigned int col;
 
-        pnm_readpamrow(inpamP, tuplerow);
+        pnm_readpamrow(&inpam, tuplerow);
 
-        for (col = 0; col < inpamP->width; ++col)  {
+        for (col = 0; col < inpam.width; ++col)  {
             switch (colorType) {
             case COLORTYPE_COLOR:
                 changeColorPix(tuplerow[col],
                                cmdline.valchange, cmdline.satchange,
-                               inpamP->maxval);
+                               inpam.maxval);
                 break;
             case COLORTYPE_GRAY:
                 changeGrayPix(tuplerow[col],
                               cmdline.valchange,
-                              inpamP->maxval);
+                              inpam.maxval);
+                break;
             case COLORTYPE_BW:
                 /* Nothing to change. */
                 break;
             }
         }
-        pnm_writepamrow(outpamP, tuplerow);
+        pnm_writepamrow(&outpam, tuplerow);
     }
     pnm_freepamrow(tuplerow);
 }
@@ -232,19 +238,14 @@ main(int argc, const char *argv[]) {
 
     struct CmdlineInfo cmdline;
     FILE * ifP;
-    struct pam inpam, outpam;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
-    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    outpam = inpam;
-    outpam.file = stdout;
-
-    pambrighten(cmdline, ifP, &inpam, &outpam);
+    pambrighten(cmdline, ifP);
 
     pm_close(ifP);
     pm_close(stdout);
