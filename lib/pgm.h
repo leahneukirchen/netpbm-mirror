@@ -42,6 +42,8 @@ typedef unsigned int gray;
 #define PGM_OVERALLMAXVAL 65535
 #define PGM_MAXMAXVAL 255
 
+#define pgm_unnormalize(value, maxval) \
+  ((gray)((value + 1e-6) * (maxval) + 0.5))
 
 /* Magic constants. */
 

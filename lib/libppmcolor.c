@@ -553,9 +553,9 @@ ppm_color_from_hsv(struct hsv const hsv,
         }
     }
     PPM_ASSIGN(retval,
-               ROUNDU(R * maxval),
-               ROUNDU(G * maxval),
-               ROUNDU(B * maxval));
+               ppm_unnormalize(R, maxval),
+               ppm_unnormalize(G, maxval),
+               ppm_unnormalize(B, maxval));
 
     return retval;
 }

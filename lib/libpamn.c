@@ -414,6 +414,19 @@ pnm_writepamn(struct pam * const pamP,
 
 
 
+samplen
+pnm_normalized_sample(struct pam * const pamP,
+                      sample       const sample) {
+    return (samplen)sample/pamP->maxval;
+}
+
+sample
+pnm_unnormalized_sample(struct pam * const pamP,
+                        samplen      const sampleVal) {
+    double const epsilon = 1e-6;
+    return (sample)((sampleVal + epsilon) * pamP->maxval + 0.5);
+}
+
 void
 pnm_normalizetuple(struct pam * const pamP,
                    tuple        const tuple,
@@ -422,7 +435,7 @@ pnm_normalizetuple(struct pam * const pamP,
     unsigned int plane;
 
     for (plane = 0; plane < pamP->depth; ++plane)
-        tuplen[plane] = (samplen)tuple[plane] / pamP->maxval;
+        tuplen[plane] = pnm_normalized_sample(pamP, tuple[plane]);
 }
 
 
@@ -435,7 +448,7 @@ pnm_unnormalizetuple(struct pam * const pamP,
     unsigned int plane;
 
     for (plane = 0; plane < pamP->depth; ++plane)
-        tuple[plane] = tuplen[plane] * pamP->maxval + 0.5;
+        tuple[plane] = pnm_unnormalized_sample(pamP, tuplen[plane]);
 }
 
 

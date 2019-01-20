@@ -19,8 +19,8 @@ not yet  BJH  Release 10.86.00
               pamstretch-gen: Use -dropedge on the 'pamstretch' piece for
               better looking output.
 
-              libnetpbm: Fix ROUNDU so it properly rounds up fractions of
-              exactly half.  Affects many programs.
+              various: Fix unnormalizing code so a value exactly between two
+              sample values rounds consistently up.  Affects many programs.
 
               pamstretch: Reject very large scale factors instead of producing
               incorrect output.

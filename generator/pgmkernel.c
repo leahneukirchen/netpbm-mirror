@@ -223,11 +223,13 @@ main(int argc, const char * argv[]) {
 
         unsigned int col;
         for (col = 0; col < (cmdline.cols +1) / 2; ++col) {
+            double const epsilon = 1e-15;
             double const dx2 = SQR(col - xcenter);
 
             double const normalized = t(dx2, dy2, cmdline.weight) / 2 / tMax;
 
-            gray const grayval = ROUNDU(cmdline.maxval * (0.5 + normalized));
+            gray const grayval =
+                ROUNDU(cmdline.maxval * (0.5 + normalized + epsilon));
 
             halfKernel[arow][col                   ] = grayval;
             halfKernel[arow][cmdline.cols - col - 1] = grayval;

@@ -19,11 +19,13 @@
 #undef ROUND
 #define ROUND(X) (((X) >= 0) ? (int)((X)+0.5) : (int)((X)-0.5))
 #undef ROUNDU
-#define ROUNDU(X) ((unsigned int)((X)+0.5+1e-15))
-    /* We add the 1e-15 epsilon because for repeatability we want exactly half
-       to round up.  But the imprecision of the floating point arithmetic can
-       cause a number that is supposed to be exactly half to be slightly less
-       than half in reality.  Without this adjustment, it would round down.
+#define ROUNDU(X) ((unsigned int)((X)+0.5))
+    /* Note that imprecision in floating point arithmetic can make an exact
+       half fractional part round down instead of up.  What should be
+       1000.5 might actually be 1000.49999999999.
+
+       Use 'pnm_unnormalized_sample' instead of ROUNDU(samplen*maxval) to get
+       consistent rounding up when you are unnormalizing sample values.
     */
 
 /* ROUNDUP rounds up to a specified multiple.  E.g. ROUNDUP(22, 8) == 24 */

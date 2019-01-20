@@ -438,6 +438,13 @@ void
 pnm_writepamn(struct pam * const pamP,
               tuplen **    const tuplenarray);
 
+samplen
+pnm_normalized_sample(struct pam * const pamP,
+                      sample       const sample);
+
+sample
+pnm_unnormalized_sample(struct pam * const pamP,
+                        samplen      const sampleVal);
 
 void
 pnm_normalizetuple(struct pam * const pamP,

@@ -247,9 +247,9 @@ pm_parse_dictionary_name(char    const colorname[],
 
     pm_parse_dictionary_namen(colorname, color);
 
-    r = ROUNDU(color[PAM_RED_PLANE] * maxval);
-    g = ROUNDU(color[PAM_GRN_PLANE] * maxval);
-    b = ROUNDU(color[PAM_BLU_PLANE] * maxval);
+    r = ppm_unnormalize(color[PAM_RED_PLANE], maxval);
+    g = ppm_unnormalize(color[PAM_GRN_PLANE], maxval);
+    b = ppm_unnormalize(color[PAM_BLU_PLANE], maxval);
 
     if (!closeOk) {
         if (maxval != PAM_COLORFILE_MAXVAL) {

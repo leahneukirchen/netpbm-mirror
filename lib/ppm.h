@@ -23,6 +23,9 @@ typedef gray pixval;
 
 #define PPM_OVERALLMAXVAL PGM_OVERALLMAXVAL
 #define PPM_MAXMAXVAL PGM_MAXMAXVAL
+
+#define ppm_unnormalize pgm_unnormalize
+
 typedef struct {
     pixval r, g, b;
 } pixel;
