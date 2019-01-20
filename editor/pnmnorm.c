@@ -714,7 +714,7 @@ computeQuadraticTransfer(xelval   const bvalue,
 
    Set this mapping in newBrightness[].
 -----------------------------------------------------------------------------*/
-    xelval const middle = ROUNDU(middleNorm * maxval);
+    xelval const middle = pnm_unnormalize(middleNorm, maxval);
 
     /* Computing this function is just the task of finding a parabola that
        passes through 3 given points:
@@ -924,7 +924,7 @@ reportTransferParm(bool   const quadratic,
     if (quadratic)
         pm_message("remapping %u..%u..%u to %u..%u..%u",
                    bvalue, midvalue, wvalue,
-                   0, ROUNDU(maxval*middle), maxval);
+                   0, pnm_unnormalize(middle, maxval), maxval);
     else
         pm_message("remapping %u..%u to %u..%u",
                    bvalue, wvalue, 0, maxval);

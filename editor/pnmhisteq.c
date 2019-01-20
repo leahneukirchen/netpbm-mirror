@@ -426,7 +426,7 @@ remapRgbValue(xel          const thisXel,
     struct hsv const hsv =
         ppm_hsv_from_color(thisXel, maxval);
     xelval const oldValue =
-        MIN(maxval, ROUNDU(hsv.v * maxval));
+        MIN(maxval, pnm_unnormalize(hsv.v, maxval));
     xelval const newValue =
         lumamap[oldValue];
 

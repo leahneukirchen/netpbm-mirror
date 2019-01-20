@@ -96,10 +96,10 @@ parseCommandLine(int                        argc,
 
 
 static void
-changeColorPix(tuple  const tupleval,
-               float  const valchange,
-               float  const satchange,
-               sample const maxval) {
+changeColorPix(tuple              const tupleval,
+               float              const valchange,
+               float              const satchange,
+               const struct pam * const pamP) {
 
     pixel oldRgb, newRgb;
     struct hsv oldHsv, newHsv;
@@ -107,7 +107,7 @@ changeColorPix(tuple  const tupleval,
     PPM_PUTR(oldRgb, tupleval[PAM_RED_PLANE]);
     PPM_PUTG(oldRgb, tupleval[PAM_GRN_PLANE]);
     PPM_PUTB(oldRgb, tupleval[PAM_BLU_PLANE]);
-    oldHsv = ppm_hsv_from_color(oldRgb, maxval);
+    oldHsv = ppm_hsv_from_color(oldRgb, pamP->maxval);
 
     newHsv.h = oldHsv.h;
 
@@ -115,7 +115,7 @@ changeColorPix(tuple  const tupleval,
 
     newHsv.v = MIN(1.0, MAX(0.0, oldHsv.v * valchange));
 
-    newRgb = ppm_color_from_hsv(newHsv, maxval);
+    newRgb = ppm_color_from_hsv(newHsv, pamP->maxval);
 
     tupleval[PAM_RED_PLANE] = PPM_GETR(newRgb);
     tupleval[PAM_GRN_PLANE] = PPM_GETG(newRgb);
@@ -125,14 +125,14 @@ changeColorPix(tuple  const tupleval,
 
 
 static void
-changeGrayPix(tuple  const tupleval,
-              float  const valchange,
-              sample const maxval) {
+changeGrayPix(tuple        const tupleval,
+              float        const valchange,
+              struct pam * const pamP) {
 
-    double const oldGray = (double) tupleval[0] / maxval;
-    double const newGray = MIN(1.0, MAX(0.0, oldGray * valchange));
+    samplen const oldGray = pnm_normalized_sample(pamP, tupleval[0]);
+    samplen const newGray = MIN(1.0, MAX(0.0, oldGray * valchange));
 
-    tupleval[0] = ROUNDU(newGray * maxval);
+    tupleval[0] = pnm_unnormalized_sample(pamP, newGray);
 }
 
 
@@ -211,12 +211,12 @@ pambrighten(struct CmdlineInfo const cmdline,
             case COLORTYPE_COLOR:
                 changeColorPix(tuplerow[col],
                                cmdline.valchange, cmdline.satchange,
-                               inpam.maxval);
+                               &inpam);
                 break;
             case COLORTYPE_GRAY:
                 changeGrayPix(tuplerow[col],
                               cmdline.valchange,
-                              inpam.maxval);
+                              &inpam);
                 break;
             case COLORTYPE_BW:
                 /* Nothing to change. */
