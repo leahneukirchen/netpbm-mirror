@@ -9,20 +9,20 @@
 
   Ppmnorm is by Wilson H. Bent, Jr. (whb@usc.edu)
   Extensively hacked from pgmnorm.c, which carries the following note:
-  
+
   Copyright (C) 1989, 1991 by Jef Poskanzer.
-  
+
   Permission to use, copy, modify, and distribute this software and its
   documentation for any purpose and without fee is hereby granted, provided
   that the above copyright notice appear in all copies and that both that
   copyright notice and this permission notice appear in supporting
   documentation.  This software is provided "as is" without express or
   implied warranty.
-  
+
   (End of note from pgmnorm.c)
 
   Pgmnorm's man page also said:
-  
+
   Partially based on the fbnorm filter in Michael Mauldin's "Fuzzy Pixmap"
   package.
 *****************************************************************************/
@@ -73,7 +73,7 @@ parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -89,41 +89,41 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int luminosity, colorvalue, saturation;
     unsigned int middleSpec, maxexpandSpec;
     float maxexpand;
-    
+
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "bpercent",      OPT_FLOAT,   
+    OPTENT3(0,   "bpercent",      OPT_FLOAT,
             &cmdlineP->bpercent,   &cmdlineP->bpercentSpec, 0);
-    OPTENT3(0,   "wpercent",      OPT_FLOAT,   
+    OPTENT3(0,   "wpercent",      OPT_FLOAT,
             &cmdlineP->wpercent,   &cmdlineP->wpercentSpec, 0);
-    OPTENT3(0,   "bvalue",        OPT_UINT,   
+    OPTENT3(0,   "bvalue",        OPT_UINT,
             &cmdlineP->bvalue,     &cmdlineP->bvalueSpec, 0);
-    OPTENT3(0,   "wvalue",        OPT_UINT,   
+    OPTENT3(0,   "wvalue",        OPT_UINT,
             &cmdlineP->wvalue,     &cmdlineP->wvalueSpec, 0);
-    OPTENT3(0,   "bsingle",       OPT_FLAG,   
+    OPTENT3(0,   "bsingle",       OPT_FLAG,
             NULL,                 &cmdlineP->bsingle, 0);
-    OPTENT3(0,   "wsingle",       OPT_FLAG,   
+    OPTENT3(0,   "wsingle",       OPT_FLAG,
             NULL,                 &cmdlineP->wsingle, 0);
-    OPTENT3(0,   "middle",        OPT_FLOAT,   
+    OPTENT3(0,   "middle",        OPT_FLOAT,
             &cmdlineP->middle,     &middleSpec, 0);
-    OPTENT3(0,   "midvalue",      OPT_UINT,   
+    OPTENT3(0,   "midvalue",      OPT_UINT,
             &cmdlineP->midvalue,   &cmdlineP->midvalueSpec, 0);
-    OPTENT3(0,   "maxexpand",     OPT_FLOAT,   
+    OPTENT3(0,   "maxexpand",     OPT_FLOAT,
             &maxexpand,            &maxexpandSpec, 0);
-    OPTENT3(0,   "keephues",      OPT_FLAG,   
+    OPTENT3(0,   "keephues",      OPT_FLAG,
             NULL,                  &cmdlineP->keephues, 0);
-    OPTENT3(0,   "luminosity",    OPT_FLAG,   
+    OPTENT3(0,   "luminosity",    OPT_FLAG,
             NULL,                  &luminosity, 0);
-    OPTENT3(0,   "colorvalue",    OPT_FLAG,   
+    OPTENT3(0,   "colorvalue",    OPT_FLAG,
             NULL,                  &colorvalue, 0);
-    OPTENT3(0,   "saturation",    OPT_FLAG,   
+    OPTENT3(0,   "saturation",    OPT_FLAG,
             NULL,                  &saturation, 0);
-    OPTENT3(0,   "brightmax",     OPT_FLAG,   
+    OPTENT3(0,   "brightmax",     OPT_FLAG,
             NULL,                  &colorvalue, 0);
-    OPTENT3(0,   "verbose",       OPT_FLAG,   
+    OPTENT3(0,   "verbose",       OPT_FLAG,
             NULL,                  &cmdlineP->verbose, 0);
 
     /* Note: -brightmax was documented and accepted long before it was
@@ -203,7 +203,7 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-buildHistogram(FILE *   const ifp, 
+buildHistogram(FILE *   const ifp,
                int      const cols,
                int      const rows,
                xelval   const maxval,
@@ -226,7 +226,7 @@ buildHistogram(FILE *   const ifp,
 -----------------------------------------------------------------------------*/
     int row;
     xel * xelrow;
-    
+
     xelrow = pnm_allocrow(cols);
 
     {
@@ -307,10 +307,10 @@ maximumValue(const unsigned int * const hist,
 
 
 static void
-computeBottomPercentile(unsigned int         hist[], 
+computeBottomPercentile(unsigned int         hist[],
                         unsigned int   const highest,
                         unsigned int   const total,
-                        float          const percent, 
+                        float          const percent,
                         unsigned int * const percentileP) {
 /*----------------------------------------------------------------------------
    Compute the lowest index of hist[] such that the sum of the hist[]
@@ -332,17 +332,17 @@ computeBottomPercentile(unsigned int         hist[],
                      "values");
         ++percentile;
         count += hist[percentile];
-    }        
+    }
     *percentileP = percentile;
 }
 
 
 
 static void
-computeTopPercentile(unsigned int         hist[], 
-                     unsigned int   const highest, 
+computeTopPercentile(unsigned int         hist[],
+                     unsigned int   const highest,
                      unsigned int   const total,
-                     float          const percent, 
+                     float          const percent,
                      unsigned int * const percentileP) {
 /*----------------------------------------------------------------------------
    Compute the highest index of hist[] such that the sum of the hist[]
@@ -400,7 +400,7 @@ computeAdjustmentForExpansionLimit(xelval   const maxval,
            to 0 .. maxval, if we used the unlimited bvalue and wvalue
         */
     float const unlExpansion = (float)newRange/oldRange;
-    
+
     if (unlExpansion <= maxExpansion) {
         /* No capping is necessary.  Unlimited values are already within
            range.
@@ -527,7 +527,7 @@ resolvePercentParams(FILE *             const ifP,
             *bvalueP = cmdline.bvalue;
         } else {
             xelval percentBvalue;
-            computeBottomPercentile(hist, maxval, cols*rows, cmdline.bpercent, 
+            computeBottomPercentile(hist, maxval, cols*rows, cmdline.bpercent,
                                     &percentBvalue);
             if (cmdline.bvalueSpec)
                 *bvalueP = MIN(percentBvalue, cmdline.bvalue);
@@ -541,7 +541,7 @@ resolvePercentParams(FILE *             const ifP,
             *wvalueP = cmdline.wvalue;
         } else {
             xelval percentWvalue;
-            computeTopPercentile(hist, maxval, cols*rows, cmdline.wpercent, 
+            computeTopPercentile(hist, maxval, cols*rows, cmdline.wpercent,
                                  &percentWvalue);
             if (cmdline.wvalueSpec)
                 *wvalueP = MAX(percentWvalue, cmdline.wvalue);
@@ -630,8 +630,8 @@ computeLinearTransfer(xelval   const bvalue,
        newBrightness[i] = (i-bvalue)*maxval/range);
        (with proper rounding)
     */
-    for (i = bvalue, val = range/2; 
-         i <= wvalue; 
+    for (i = bvalue, val = range/2;
+         i <= wvalue;
          ++i, val += maxval)
         newBrightness[i] = MIN(val / range, maxval);
 
@@ -674,11 +674,11 @@ computeQuadraticFunction(xelval   const bvalue,
     a[0][0] = SQR(bvalue);   a[0][1] = bvalue;   a[0][2] = 1.0;
     a[1][0] = SQR(midvalue); a[1][1] = midvalue; a[1][2] = 1.0;
     a[2][0] = SQR(wvalue);   a[2][1] = wvalue;   a[2][2] = 1.0;
-        
+
     c[0] = 0.0;
     c[1] = middle;
     c[2] = maxval;
-    
+
     pm_solvelineareq(a, x, c, 3, &error);
 
     if (error) {
@@ -718,7 +718,7 @@ computeQuadraticTransfer(xelval   const bvalue,
 
     /* Computing this function is just the task of finding a parabola that
        passes through 3 given points:
-        
+
            (bvalue, 0)
            (midvalue, middle)
            (wvalue, maxval)
@@ -772,8 +772,8 @@ computeQuadraticTransfer(xelval   const bvalue,
 
 static void
 computeTransferFunction(bool      const quadratic,
-                        xelval    const bvalue, 
-                        xelval    const midvalue, 
+                        xelval    const bvalue,
+                        xelval    const midvalue,
                         xelval    const wvalue,
                         float     const middle,
                         xelval    const maxval,
@@ -809,12 +809,12 @@ computeTransferFunction(bool      const quadratic,
         pm_error("Unable to allocate memory for transfer function.");
 
     /* Clip the lowest brightnesses to zero */
-    if (bvalue > 0) 
+    if (bvalue > 0)
         for (i = 0; i < bvalue; ++i)
             newBrightness[i] = 0;
 
     /* Map the middle brightnesses onto 0..maxval */
-    
+
     if (quadratic)
         computeQuadraticTransfer(bvalue, midvalue, wvalue, middle, maxval,
                                  verbose, newBrightness);
@@ -827,7 +827,7 @@ computeTransferFunction(bool      const quadratic,
 
     *newBrightnessP = newBrightness;
 }
-            
+
 
 
 static float
@@ -846,7 +846,7 @@ brightScaler(xel               const p,
 -----------------------------------------------------------------------------*/
     xelval oldBrightness;
     float scaler;
-             
+
     switch (brightMethod) {
     case BRIGHT_LUMINOSITY:
         oldBrightness = ppm_luminosity(p);
@@ -867,7 +867,7 @@ brightScaler(xel               const p,
 
     return scaler;
 }
-            
+
 
 
 static void
@@ -880,13 +880,13 @@ writeRowNormalized(xel *             const xelrow,
                    xelval            const newBrightness[],
                    xel *             const rowbuf) {
 /*----------------------------------------------------------------------------
-   Write to Standard Output a normalized version of the xel row 
+   Write to Standard Output a normalized version of the xel row
    'xelrow'.  Normalize it via the transfer function newBrightness[].
 
    Use 'rowbuf' as a work buffer.  It is at least 'cols' columns wide.
 -----------------------------------------------------------------------------*/
     xel * const outrow = rowbuf;
-                
+
     unsigned int col;
     for (col = 0; col < cols; ++col) {
         xel const p = xelrow[col];
@@ -900,12 +900,12 @@ writeRowNormalized(xel *             const xelrow,
                 xelval const g = MIN(ROUNDU(PPM_GETG(p)*scaler), maxval);
                 xelval const b = MIN(ROUNDU(PPM_GETB(p)*scaler), maxval);
                 PNM_ASSIGN(outrow[col], r, g, b);
-            } else 
-                PNM_ASSIGN(outrow[col], 
-                           newBrightness[PPM_GETR(p)], 
-                           newBrightness[PPM_GETG(p)], 
+            } else
+                PNM_ASSIGN(outrow[col],
+                           newBrightness[PPM_GETR(p)],
+                           newBrightness[PPM_GETG(p)],
                            newBrightness[PPM_GETB(p)]);
-        } else 
+        } else
             PNM_ASSIGN1(outrow[col], newBrightness[PNM_GET1(p)]);
     }
     pnm_writepnmrow(stdout, outrow, cols, maxval, format, 0);
@@ -942,7 +942,7 @@ main(int argc, const char *argv[]) {
     int rows, cols, format;
     bool quadratic;
     xelval bvalue, midvalue, wvalue;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -953,14 +953,14 @@ main(int argc, const char *argv[]) {
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
     pm_tell2(ifP, &imagePos, sizeof(imagePos));
 
-    computeEndValues(ifP, cols, rows, maxval, format, cmdline, 
+    computeEndValues(ifP, cols, rows, maxval, format, cmdline,
                      &bvalue, &wvalue, &quadratic, &midvalue);
     {
         xelval * newBrightness;
         int row;
         xel * xelrow;
         xel * rowbuf;
-        
+
         assert(wvalue > bvalue);
 
         xelrow = pnm_allocrow(cols);
@@ -968,7 +968,7 @@ main(int argc, const char *argv[]) {
         reportTransferParm(quadratic, bvalue, midvalue, wvalue, maxval,
                            cmdline.middle);
 
-        
+
         computeTransferFunction(quadratic, bvalue, midvalue, wvalue,
                                 cmdline.middle, maxval, cmdline.verbose,
                                 &newBrightness);
@@ -987,7 +987,7 @@ main(int argc, const char *argv[]) {
         free(newBrightness);
         pnm_freerow(rowbuf);
         pnm_freerow(xelrow);
-    } 
+    }
     pm_close(ifP);
     return 0;
 }
