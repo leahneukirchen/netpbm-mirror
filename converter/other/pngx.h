@@ -53,7 +53,7 @@ struct pngx {
     pngx_rw      rw;
     png_uint_16  maxval;
     unsigned int numPassesRequired;
-        /* The number of times we have write the complete image to the
+        /* The number of times we have to write the complete image to the
            compressor.  This is more than one when the compressor is set
            up to do an interlaced format.
         */
