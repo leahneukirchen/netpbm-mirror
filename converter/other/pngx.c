@@ -467,6 +467,15 @@ pngx_setIhdr(struct pngx * const pngxP,
 void
 pngx_setInterlaceHandling(struct pngx * const pngxP) {
 
+    /* It isn't clear what this does.  The documentation is contradictory,
+       saying in some places that it gets the number of passes required.  and
+       in others that it sets the interlacing scheme.  In practice, whether
+       the compressor generates an interlaced image or not appears to be
+       controlled by png_set_IHDR and unaffected by this.
+
+       Also, documentation says this returns 7 if the compressor is
+       interlacing, but it always returns 1 in practice.
+    */
     pngxP->numPassesRequired = png_set_interlace_handling(pngxP->png_ptr);
 }
 
