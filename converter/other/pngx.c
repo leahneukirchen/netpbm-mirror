@@ -466,15 +466,32 @@ pngx_setIhdr(struct pngx * const pngxP,
 
 void
 pngx_setInterlaceHandling(struct pngx * const pngxP) {
+    /* The documentation is vague and contradictory on what this does, but
+       what it appears from reasoning and experimentation to do is the
+       following.
 
-    /* It isn't clear what this does.  The documentation is contradictory,
-       saying in some places that it gets the number of passes required.  and
-       in others that it sets the interlacing scheme.  In practice, whether
-       the compressor generates an interlaced image or not appears to be
-       controlled by png_set_IHDR and unaffected by this.
+       It applies to reading and writing by rows (png_write_row, png_read_row)
+       as opposed to whole image (png_write_image, png_read_image).  It has
+       no effect on whole image read and write.
 
-       Also, documentation says this returns 7 if the compressor is
-       interlacing, but it always returns 1 in practice.
+       This is not what makes an image interlaced or tells the decompressor
+       that it is interlaced.  All it does is control how you you read and
+       write the raster when the image is interlaced.  It has no effect if the
+       image is not interlaced.  (You make an image interlaced by setting the
+       IHDR; the decompressor finds out from the IHDR that it is interlaced).
+
+       In the write case, it controls whether you construct the subimages
+       yourself and feed them to libpng in sequence or you feed libpng the
+       entire image multiple times and libpng picks out the pixels appropriate
+       for each subimage in each pass.
+
+       In the read case, it controls whether you get the raw subimages and you
+       assemble them into the full image or you read the whole image multiple
+       times into the same buffer, with the pixels that belong to each
+       subimage being filled in on each pass.
+
+       But there's a problem: Dcumentation says this returns 7 if the
+       compressor is interlacing, but it always returns 1 in practice.
 
        If the program does 1 pass as directed by libpng, the image won't
        decompress - libpng says "Not enough image data".  If the program does
