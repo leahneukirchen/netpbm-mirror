@@ -475,6 +475,11 @@ pngx_setInterlaceHandling(struct pngx * const pngxP) {
 
        Also, documentation says this returns 7 if the compressor is
        interlacing, but it always returns 1 in practice.
+
+       If the program does 1 pass as directed by libpng, the image won't
+       decompress - libpng says "Not enough image data".  If the program does
+       7 passes as makes sense, the image won't decompress because "too many
+       IDAT's found."
     */
     pngxP->numPassesRequired = png_set_interlace_handling(pngxP->png_ptr);
 }
