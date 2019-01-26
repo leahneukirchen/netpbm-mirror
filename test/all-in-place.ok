@@ -40,6 +40,7 @@ pamaltsat: ok
 pamarith: ok
 pambackground: ok
 pambayer: ok
+pambrighten: ok
 pamchannel: ok
 pamcomp: ok
 pamcrater: ok
@@ -59,10 +60,12 @@ pamfunc: ok
 pamgauss: ok
 pamgetcolor: ok
 pamgradient: ok
+pamhue: ok
 pamlevels: ok
 pamlookup: ok
 pammasksharpen: ok
 pammixinterlace: ok
+pammixmulti: ok
 pammosaicknit: ok
 pamoil: ok
 pampaintspill: ok
