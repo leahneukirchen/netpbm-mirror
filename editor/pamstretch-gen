@@ -23,7 +23,7 @@ if [ "$1" = "" ]; then
   exit 1
 fi
 
-tempfile=$(mktemp "${TMPDIR:-/tmp}/netpbm.XXXXXXXX.pam")
+tempfile=$(mktemp "${TMPDIR:-/tmp}/netpbm.XXXXXXXX")
 if [ $? -ne 0 -o ! -e $tempfile ]; then
   echo "Could not create temporary file. Exiting." 1>&2
   exit 1
