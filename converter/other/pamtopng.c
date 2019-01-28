@@ -31,7 +31,7 @@
 
   - In 1995 bandwith was limited and therefore filesize had to be kept
     small. The original program tried to optimize for that by applying
-    many "clever tricks". Today that isn't an issue anymore, so gone 
+    many "clever tricks". Today that isn't an issue anymore, so gone
     are filters, palettes, etc. Also, image conversions were removed,
     because those should be done with other NetPBM tools.
 
@@ -89,7 +89,7 @@ parseChromaOpt(const char *         const chromaOpt,
                struct pngx_chroma * const chromaP) {
 
     int count;
-    
+
     count = sscanf(chromaOpt, "%f %f %f %f %f %f %f %f",
                    &chromaP->wx, &chromaP->wy,
                    &chromaP->rx, &chromaP->ry,
@@ -108,7 +108,7 @@ parseChromaOpt(const char *         const chromaOpt,
 static void
 parseSrgbintentOpt(const char *      const srgbintentOpt,
                    pngx_srgbIntent * const srgbintentP) {
-    
+
     if (streq(srgbintentOpt, "perceptual"))
         *srgbintentP = PNGX_PERCEPTUAL;
     else if (streq(srgbintentOpt, "relativecolorimetric"))
@@ -146,7 +146,7 @@ parseTimeOpt(const char * const timeOpt,
     if (count != 6)
         pm_error("Invalid value for -time '%s'.   It should have "
                  "the form [yy]yy-mm-dd hh:mm:ss.", timeOpt);
-    
+
     if (year < 0)
         pm_error("Year is negative in -time value '%s'", timeOpt);
     if (year > 9999)
@@ -193,7 +193,7 @@ static void
 parseCommandLine (int                  argc,
                   const char **        argv,
                   struct CmdlineInfo * const cmdlineP) {
-    
+
     optEntry * option_def;
     optStruct3 opt;
     unsigned int option_def_index = 0;  /* incremented by OPTENT3 */
@@ -240,7 +240,7 @@ parseCommandLine (int                  argc,
 
     if (cmdlineP->timeSpec)
         parseTimeOpt(time, &cmdlineP->time);
-    
+
     /* get the input-file or stdin pipe */
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
@@ -351,7 +351,7 @@ doTrnsChunk(const struct pam * const pamP,
             struct pngx *      const pngxP,
             const char *       const trans) {
 
-    if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA || 
+    if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA ||
         pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA)
         pm_error("Both alpha channel and transparency chunk not allowed.");
     else {
@@ -381,13 +381,13 @@ doTrnsChunk(const struct pam * const pamP,
 static void
 doChrmChunk(struct pngx *      const pngxP,
             struct pngx_chroma const chroma) {
-    
+
     pngx_setChrm(pngxP, chroma);
 
     if (verbose) {
         pm_message("writing cHRM chunk { wx, wy, rx, ry, gx, gy, bx, by } = "
                    "{ %4.2f, %4.2f, %4.2f, %4.2f, "
-                   "%4.2f, %4.2f, %4.2f, %4.2f }", 
+                   "%4.2f, %4.2f, %4.2f, %4.2f }",
                    chroma.wx, chroma.wy,
                    chroma.rx, chroma.ry,
                    chroma.gx, chroma.gy,
@@ -397,7 +397,7 @@ doChrmChunk(struct pngx *      const pngxP,
 
 
 
-static void 
+static void
 doGamaChunk(struct pngx *  const pngxP,
             float          const gamma) {
 
@@ -417,18 +417,18 @@ doSbitChunk(const struct pam * const pamP,
     unsigned int const pnmBitDepth = pm_maxvaltobits(pamP->maxval);
 
     /* create SBIT chunk in case of 1,2,4 bit deep images stored in 8 bit
-       format PNG files 
+       format PNG files
     */
     if (pngx_colorType(pngxP) != PNG_COLOR_TYPE_GRAY && pnmBitDepth < 8) {
         png_color_8 sBit;
 
-        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB || 
+        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB ||
             pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA) {
             sBit.red = sBit.green = sBit.blue = pnmBitDepth;
         } else {
             sBit.gray = pnmBitDepth;
         }
-        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA || 
+        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA ||
             pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA) {
             sBit.alpha = pnmBitDepth;
         }
@@ -462,9 +462,9 @@ doTextChunkSet(struct pngx * const pngxP,
     FILE * tfP;
 
     tfP = pm_openr(textFileName);
-    
+
     pngtxt_addChunk(pngxP, tfP, ztxt, itxt, verbose);
-    
+
     pm_close(tfP);
 }
 
@@ -480,9 +480,9 @@ doZtxtChunkSet(struct pngx * const pngxP,
     FILE * tfP;
 
     tfP = pm_openr(textFileName);
-    
+
     pngtxt_addChunk(pngxP, tfP, ztxt, itxt, verbose);
-    
+
     pm_close(tfP);
 }
 
@@ -518,11 +518,11 @@ doBkgdChunk (const struct pam * const pamP,
     pngx_setBkgdRgb(pngxP, pngColor);
 
     if (verbose) {
-        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY || 
+        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY ||
             pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA) {
             pm_message("writing bKGD chunk with gray level = %u",
                        pngColor.gray);
-        } else if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB || 
+        } else if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB ||
                    pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA) {
             pm_message("writing bKGD chunk with color {red, green, blue} = "
                        "{%u, %u, %u}",
