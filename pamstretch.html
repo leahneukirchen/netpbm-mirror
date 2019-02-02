@@ -58,7 +58,9 @@ selected by the <B>-blackedge</B> and <B>-dropedge</B> options.
 
 <p>In the special case that the stretch factor is 1, there is no issue with
 the right and bottom edges, the edges of the output are identical to the edges
-of the input regardless of <b>-blackedge</b> and <b>-dropedge</b>.
+of the input regardless of <b>-blackedge</b> and <b>-dropedge</b>.  However,
+before Netpbm 10.86 (March 2019), <b>-dropedge</b> would cause the edge to be
+dropped even where the stretch factor was 1.
   
   
 <H2 id="parameters">PARAMETERS</H2>
