@@ -130,8 +130,8 @@ parseCommandLine(int argc, const char ** argv,
             if (error)
                 pm_error("Invalid scale factor: %s", error);
             else {
-                if (scale < 2)
-                    pm_error("Scale argument must be at least 2.  "
+                if (scale < 1)
+                    pm_error("Scale argument must be at least 1.  "
                              "You specified %d", scale);
                 cmdlineP->xscale = scale;
                 cmdlineP->yscale = scale;
@@ -169,6 +169,9 @@ stretchLine(struct pam *  const inpamP,
    Stretch the line of tuples 'line' into the output buffer 'line_stretched',
    by factor 'scale'.
 -----------------------------------------------------------------------------*/
+    enum EdgeMode const horizontalEdgeMode =
+        (scale == 1) ? EDGE_NON_INTERP : edgeMode;
+
     int scaleincr;
     int sisize;
         /* normalizing factor to make fractions representable as integers.
@@ -193,7 +196,7 @@ stretchLine(struct pam *  const inpamP,
             /* We're at the edge.  There is no column to the right with which
                to interpolate.
             */
-            switch(edgeMode) {
+            switch(horizontalEdgeMode) {
             case EDGE_DROP:
                 /* No output column needed for this input column */
                 break;
@@ -291,6 +294,9 @@ stretch(struct pam *  const inpamP,
         unsigned int  const yscale,
         enum EdgeMode const edgeMode) {
 
+    enum EdgeMode const verticalEdgeMode =
+        (yscale == 1) ? EDGE_NON_INTERP : edgeMode;
+
     tuple *linebuf1, *linebuf2;  /* Input buffers for two rows at a time */
     tuple *curline, *nextline;   /* Pointers to one of the two above buffers */
     /* And the stretched versions: */
@@ -315,7 +321,7 @@ stretch(struct pam *  const inpamP,
     pnm_readpamrow(inpamP, curline);
     stretchLine(inpamP, curline, curlineStretched, xscale, edgeMode);
 
-    if (edgeMode == EDGE_DROP)
+    if (verticalEdgeMode == EDGE_DROP)
         nRowsToStretch = inpamP->height - 1;
     else
         nRowsToStretch = inpamP->height;
@@ -328,7 +334,7 @@ stretch(struct pam *  const inpamP,
              * line black.  if EDGE_NON_INTERP (default) we make it a
              * copy of the current line.
              */
-            switch (edgeMode) {
+            switch (verticalEdgeMode) {
             case EDGE_INTERP_TO_BLACK: {
                 unsigned int col;
                 for (col = 0; col < outpamP->width; ++col)
@@ -366,6 +372,34 @@ stretch(struct pam *  const inpamP,
 }
 
 
+static void
+computeOutputWidthHeight(int           const inWidth,
+                         int           const inHeight,
+                         unsigned int  const xScale,
+                         unsigned int  const yScale,
+                         enum EdgeMode const edgeMode,
+                         int *         const outWidthP,
+                         int *         const outHeightP) {
+
+    unsigned int const xDropped =
+        (edgeMode == EDGE_DROP && xScale != 1) ? 1 : 0;
+    unsigned int const yDropped =
+        (edgeMode == EDGE_DROP && yScale != 1) ? 1 : 0;
+    double const width  = (inWidth  - xDropped) * xScale;
+    double const height = (inHeight - yDropped) * yScale;
+
+    if (width > INT_MAX - 2)
+        pm_error("output image width (%f) too large for computations",
+                 width);
+    if (height > INT_MAX - 2)
+        pm_error("output image height (%f) too large for computation",
+                 height);
+
+    *outWidthP  = (unsigned int)width;
+    *outHeightP = (unsigned int)height;
+}
+
+
 
 int
 main(int argc, const char ** argv) {
@@ -388,7 +422,6 @@ main(int argc, const char ** argv) {
     if (inpam.height < 2)
         pm_error("Image is too short.  Must be at least 2 lines.");
 
-
     outpam = inpam;  /* initial value */
     outpam.file = stdout;
 
@@ -399,23 +432,11 @@ main(int argc, const char ** argv) {
     } else {
         outpam.format = inpam.format;
     }
-    {
-        unsigned int const dropped = cmdline.edgeMode == EDGE_DROP ? 1 : 0;
-        double const width  = (inpam.width  - dropped) * cmdline.xscale;
-        double const height = (inpam.height - dropped) * cmdline.yscale;
+    computeOutputWidthHeight(inpam.width, inpam.height,
+                             cmdline.xscale, cmdline.yscale, cmdline.edgeMode,
+                             &outpam.width, &outpam.height);
 
-        if (width > INT_MAX - 2)
-            pm_error("output image width (%f) too large for computations",
-                     width);
-        if (height > INT_MAX - 2)
-            pm_error("output image height (%f) too large for computation",
-                     height);
-
-        outpam.width  = width;
-        outpam.height = height;
-
-        pnm_writepaminit(&outpam);
-    }
+    pnm_writepaminit(&outpam);
 
     pnm_createBlackTuple(&outpam, &blackTuple);
 

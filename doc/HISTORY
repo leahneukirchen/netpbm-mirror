@@ -19,6 +19,12 @@ not yet  BJH  Release 10.86.00
               pamstretch-gen: Use -dropedge on the 'pamstretch' piece for
               better looking output.
 
+              pamstretch: Accept scale factor of 1 as a parameter (already
+              was accepted with -xscale and -yscale options).
+
+              pamstretch: Don't mess with edge when scale factor is 1,
+              regardless of -dropedge and -blackedge.
+
               various: Fix unnormalizing code so a value exactly between two
               sample values rounds consistently up.  Affects many programs.
 
