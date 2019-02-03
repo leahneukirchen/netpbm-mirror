@@ -47,7 +47,7 @@
 ** (sinc, bessel) are IIR (infinite impulse respone).
 ** They should be windowed with hanning, hamming, blackman or
 ** kaiser window.
-** For sinc and bessel the blackman window will be used per default.
+** For sinc and bessel the blackman window will be used by default.
 */
 
 #define EPSILON 1e-7
@@ -70,7 +70,7 @@ pow3(double const x) {
 
 
 /* box, pulse, Fourier window, */
-/* box function also know as rectangle function */
+/* box function also known as rectangle function */
 /* 1st order (constant) b-spline */
 
 #define radius_point (0.0)
