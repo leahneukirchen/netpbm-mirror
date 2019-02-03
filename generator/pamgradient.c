@@ -21,11 +21,11 @@ static void
 parseCommandLine(int argc, const char **argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-  Convert program invocation arguments (argc,argv) into a format the 
+  Convert program invocation arguments (argc,argv) into a format the
   program can use easily, struct cmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
-  Note that some string information we return as *cmdlineP is in the storage 
+  Note that some string information we return as *cmdlineP is in the storage
   argv[] points to.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
@@ -55,14 +55,14 @@ parseCommandLine(int argc, const char **argv,
             pm_error("The value you specified for -maxval (%u) is too big.  "
                      "Max allowed is %u", cmdlineP->maxval,
                      PAM_OVERALL_MAXVAL);
-        
+
         if (cmdlineP->maxval < 1)
             pm_error("You cannot specify 0 for -maxval");
-    }    
+    }
 
     if (argc-1 != 6) {
         pm_error("Need 6 arguments: colorTopLeft, colorTopRight, "
-                 "colorBottomLeft, colorBottomRight, width, height"); 
+                 "colorBottomLeft, colorBottomRight, width, height");
     } else {
         cmdlineP->colorTopLeft     = pnm_parsecolor(argv[1], cmdlineP->maxval);
         cmdlineP->colorTopRight    = pnm_parsecolor(argv[2], cmdlineP->maxval);
@@ -100,7 +100,7 @@ interpolate(struct pam * const pamP,
             tuple        const last) {
 
     unsigned int plane;
-    
+
     for (plane = 0; plane < pamP->depth; ++plane) {
         int const spread = last[plane] - first[plane];
 
@@ -162,7 +162,7 @@ main(int argc, const char *argv[]) {
     tuple * leftEdge;
     tuple * rightEdge;
     unsigned int row;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -188,7 +188,7 @@ main(int argc, const char *argv[]) {
     }
 
     pnm_writepaminit(&pam);
-    
+
     tupleRow = pnm_allocpamrow(&pam);
 
     leftEdge  = createEdge(&pam,
@@ -199,7 +199,7 @@ main(int argc, const char *argv[]) {
     /* interpolate each row between the left edge and the right edge */
     for (row = 0; row < pam.height; ++row) {
         interpolate(&pam, tupleRow, leftEdge[row], rightEdge[row]);
-        pnm_writepamrow(&pam, tupleRow); 
+        pnm_writepamrow(&pam, tupleRow);
     }
 
     pm_close(stdout);
