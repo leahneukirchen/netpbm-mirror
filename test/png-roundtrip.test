@@ -6,8 +6,8 @@
 ## If this test fails and pnm-roundtrip2.test succeeds, it indicates
 ## some problem with pnmtopng.
 
-# Test 1.  Should print 1926073387 101484 18 times
-for flags in "" -interlace \
+# Test 1.  Should print 1926073387 101484 17 times
+for flags in "" \
   -gamma=.45 \
   -hist \
   -nofilter \
@@ -28,8 +28,8 @@ for flags in "" -interlace \
 pnmtopng testimg.ppm $flags | pngtopam | cksum
 done
 
-# Test 2.  Should print 2425386270 41 18 times
-for flags in "" -interlace \
+# Test 2.  Should print 2425386270 41 17 times
+for flags in "" \
   -gamma=.45 \
   -hist \
   -nofilter \
