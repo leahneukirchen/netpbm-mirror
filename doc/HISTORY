@@ -25,6 +25,8 @@ not yet  BJH  Release 10.86.00
               pamstretch: Don't mess with edge when scale factor is 1,
               regardless of -dropedge and -blackedge.
 
+              ppmwheel: Add -huevalue, -huesaturation, -maxval .
+
               various: Fix unnormalizing code so a value exactly between two
               sample values rounds consistently up.  Affects many programs.
 
