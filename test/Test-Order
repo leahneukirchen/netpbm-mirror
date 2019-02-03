@@ -58,7 +58,6 @@ pamcut.test
 pnmcat.test
 pamflip1.test
 pamflip2.test
-pamenlarge.test
 pnminvert.test
 pamchannel.test
 ppmchange.test
@@ -77,6 +76,17 @@ pamedge.test
 ppmdim.test
 pnmshear.test
 pgmbentley.test
+
+pamenlarge.test
+pamenlarge-pbm.test
+
+pamscale-reportonly.test
+pamscale-filters1.test
+pamscale-filters2.test
+pamscale-filters3.test
+pamenlarge-pamscale-point.test
+
+pamstretch.test
 
 ppmmix.test
 pammixmulti-identity.test

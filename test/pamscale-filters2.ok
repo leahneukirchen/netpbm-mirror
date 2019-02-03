@@ -1,0 +1,24 @@
+-xscale=4 -yscale=3 mitchell:
+match
+match
+-xscale=3 -yscale=4 gauss:
+match
+match
+-xscale=2 -yscale=2 sinc:
+match
+match
+-xscale=2 -yscale=4 bessel:
+match
+match
+-xscale=3 -yscale=3 hanning:
+match
+match
+-xscale=5 -yscale=5 hamming:
+match
+match
+5.85 blackman:
+match
+match
+5.10 kaiser:
+match
+match
