@@ -7,7 +7,7 @@
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     tuple colorTopLeft;
     tuple colorTopRight;
     tuple colorBottomLeft;
@@ -19,10 +19,10 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char **argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
   Convert program invocation arguments (argc,argv) into a format the
-  program can use easily, struct cmdlineInfo.  Validate arguments along
+  program can use easily, struct CmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
   Note that some string information we return as *cmdlineP is in the storage
@@ -83,7 +83,7 @@ parseCommandLine(int argc, const char **argv,
 
 
 static void
-freeCmdline(struct cmdlineInfo const cmdline) {
+freeCmdline(struct CmdlineInfo const cmdline) {
 
     pnm_freepamtuple(cmdline.colorTopLeft);
     pnm_freepamtuple(cmdline.colorTopRight);
@@ -156,7 +156,7 @@ createEdge(const struct pam * const pamP,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam pam;
     tuple * tupleRow;
     tuple * leftEdge;
