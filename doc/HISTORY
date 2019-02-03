@@ -30,9 +30,8 @@ not yet  BJH  Release 10.86.00
               various: Fix unnormalizing code so a value exactly between two
               sample values rounds consistently up.  Affects many programs.
 
-              pnmtopng: fix -interlace, sort of.  Previously, it was ignored.
-              Now it produces an image that is ostensibly interlaced, but
-              seems to be invalid.
+              pnmtopng: fix bug: -interlace ignored.  Broken in 10.55
+              (June 2011).
 
               pamstretch: Reject very large scale factors instead of producing
               incorrect output.
