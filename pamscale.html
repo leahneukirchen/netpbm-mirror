@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamscale User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamscale</H1>
-Updated: 29 December 2009
+Updated: 03 January 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -138,9 +138,9 @@ scaling by .25 to end up with a 125 x 100 image.
 example above, it would be
 
 <pre>
-<xmp>
+<tt>
     500 400 0.250000 0.250000 125 100
-</xmp>
+</tt>
 </pre>
 
 <p>The output is a single line of text per input image, with blank-separated
@@ -434,10 +434,10 @@ has nonzero values on out to infinity and minus infinity.  That makes
 it hard to compute a convolution with it.  So instead, there are
 filter functions that approximate sinc but are nonzero only within a
 manageable range.  To get those, you multiply the sinc function by a
-<i>window function</i>, which you select with the <b>-window</b>
-option.  The same holds for other filter functions that go on forever
-like sinc.  By default, for a filter that needs a window function,
-the window function is the Blackman function.
+<i>window function</i>, which you select with the <b>-window</b> option.  The
+same holds for other filter functions that go on forever like sinc.  By
+default, for a filter that needs a window function, the window function is the
+Blackman function.  Hanning, Hamming, and Kaiser are alternatives.
 
 <h4>Filter Functions Besides Sinc</h4>
 
@@ -476,12 +476,13 @@ to justify the implementation effort.
 
 <p>Resampling (<b>-filter</b>) was new in Netpbm 10.20 (January 2004).
 
-<h4>The filter functions</h4>
+<h4>The filter and window functions</h4>
 
 <p>Here is a list of the function names you can specify for the
-<b>-filter</b> option.  For most of them, you're on your own to figure
-out just what the function is and what kind of scaling it does.  These
-are common functions from mathematics.
+<b>-filter</b> or <b>-window</b>option.  For most of them, you're on your own
+to figure out just what the function is and what kind of scaling it does.
+These are common functions from mathematics.  Note that some of these make
+sense only as filter functions and some make sense only as window funcions.
 
 <dl>
 <dt>point
