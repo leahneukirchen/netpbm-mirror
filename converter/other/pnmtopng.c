@@ -2828,8 +2828,6 @@ convertpnm(struct cmdlineInfo const cmdline,
     doIhdrChunk(pngxP, cols, rows, depth, colorMapped, colorPng, alpha,
                 cmdline.interlace);
 
-    pngx_setInterlaceHandling(pngxP);
-
     doGamaChunk(cmdline, pngxP);
 
     doChrmChunk(cmdline, pngxP);
@@ -2879,6 +2877,8 @@ convertpnm(struct cmdlineInfo const cmdline,
 
     /* let libpng take care of, e.g., bit-depth conversions */
     pngx_setPacking(pngxP);
+
+    pngx_setInterlaceHandling(pngxP);
 
     writeRaster(pngxP, ifP, rasterPos,
                 cols, rows, maxval, format,
