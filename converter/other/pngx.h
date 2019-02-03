@@ -1,6 +1,7 @@
 #ifndef PNGX_H_INCLUDED
 #define PNGX_H_INCLUDED
 
+#include <stdbool.h>
 #include <png.h>
     /* This includes the Zlib interface header file zlib.h because libpng uses
        libz and some of the Zlib interface, e.g. the Z_DEFLATED constant,
@@ -56,6 +57,12 @@ struct pngx {
         /* The number of times we have to write the complete image to the
            compressor.  This is more than one when the compressor is set
            up to do an interlaced format.
+        */
+    bool         infoPrepared;
+        /* png_write_info or png_read_info has been called, so libpng is in a
+           state in which things such as png_set_interlace_handling will work.
+           These functions use information in *png_ptr that is set by
+           png_XXX_info.
         */
 };
 

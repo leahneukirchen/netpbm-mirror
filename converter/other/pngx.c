@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <assert.h>
 #include <png.h>
 #include "pm_c_util.h"
@@ -59,6 +60,7 @@ pngx_create(struct pngx ** const pngxPP,
     if (!pngxP)
         pm_error("Failed to allocate memory for PNG object");
     else {
+        pngxP->infoPrepared = false;
         pngxP->numPassesRequired = 1;
 
         switch(rw) {
@@ -490,14 +492,14 @@ pngx_setInterlaceHandling(struct pngx * const pngxP) {
        times into the same buffer, with the pixels that belong to each
        subimage being filled in on each pass.
 
-       But there's a problem: Dcumentation says this returns 7 if the
-       compressor is interlacing, but it always returns 1 in practice.
-
-       If the program does 1 pass as directed by libpng, the image won't
-       decompress - libpng says "Not enough image data".  If the program does
-       7 passes as makes sense, the image won't decompress because "too many
-       IDAT's found."
+       Note that the only kind of interlacing that exists today is ADAM7 and
+       consequently, the number of passes is always 1 (for no interlacing) or
+       7 (for interlacing).
     */
+    if (!pngxP->infoPrepared)
+        pm_error("pngx_setInterlaceHandling must not be called before "
+                 "pngx_writeInfo or pngx_readInfo");
+
     pngxP->numPassesRequired = png_set_interlace_handling(pngxP->png_ptr);
 }
 
@@ -505,6 +507,10 @@ pngx_setInterlaceHandling(struct pngx * const pngxP) {
 
 void
 pngx_setPacking(struct pngx * const pngxP) {
+
+    if (!pngxP->infoPrepared)
+        pm_error("pngx_setPacking must not be called before "
+                 "pngx_writeInfo or pngx_readInfo");
 
     png_set_packing(pngxP->png_ptr);
 }
@@ -682,6 +688,8 @@ void
 pngx_readInfo(struct pngx * const pngxP) {
 
     png_read_info(pngxP->png_ptr, pngxP->info_ptr);
+
+    pngxP->infoPrepared = true;
 }
 
 
@@ -690,6 +698,8 @@ void
 pngx_writeInfo(struct pngx * const pngxP) {
 
     png_write_info(pngxP->png_ptr, pngxP->info_ptr);
+
+    pngxP->infoPrepared = true;
 }
 
 
