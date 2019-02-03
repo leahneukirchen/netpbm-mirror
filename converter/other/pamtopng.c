@@ -1,21 +1,8 @@
-/*
-** read a PNM/PAM image and produce a Portable Network Graphics (PNG) file
-**
-** derived from pnmtorast.c by Jef Poskanzer and pamrgbatopng.c by Bryan
-** Henderson <bryanh@giraffe-data.com> and probably some other sources
-**
-** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
-**                        and Willem van Schaik <willem@schaik.com>
-** Copyright (C) 1999,2001 by Greg Roelofs <newt@pobox.com>
-** Copyright (C) 2015 by Willem van Schaik <willem@schaik.com>
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
+/*=============================================================================
+                                  pamtopng
+===============================================================================
+  Read a Netpbm image and produce a PNG (Portable Network Graphics) image.
+=============================================================================*/
 
 /*
   This Netpbm program pamtopng was derived in 2015 from the Netpbm program
@@ -38,7 +25,7 @@
   - Add ability to create iTXt (international language) chunks.
 */
 
-
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -257,7 +244,7 @@ parseCommandLine (int                  argc,
 static png_byte
 colorTypeFromInputType(const struct pam * const pamP) {
 /*----------------------------------------------------------------------------
-  Analyse the Netpbm image for color-type and bit-depth
+  Analyze the Netpbm image for color-type and bit-depth
 -----------------------------------------------------------------------------*/
     png_byte retval;
 
@@ -415,6 +402,9 @@ doSbitChunk(const struct pam * const pamP,
             struct pngx *      const pngxP) {
 
     unsigned int const pnmBitDepth = pm_maxvaltobits(pamP->maxval);
+
+    /* A restriction on the PAM input: must power of 2 minus 1 maxval: */
+    assert(pm_bitstomaxval(pnmBitDepth) == pamP->maxval);
 
     /* create SBIT chunk in case of 1,2,4 bit deep images stored in 8 bit
        format PNG files
@@ -632,8 +622,6 @@ writePng(const struct pam * const pamP,
 
     pngx_create(&pngxP, PNGX_WRITE, NULL);
 
-
-
     if ((pngColorType == PNG_COLOR_TYPE_RGB ||
          pngColorType == PNG_COLOR_TYPE_RGB_ALPHA) &&
         pnmBitDepth < 8) {
@@ -767,3 +755,18 @@ main(int           argc,
 
 
 
+/* Derived from pnmtorast.c by Jef Poskanzer and pamrgbatopng.c by Bryan
+** Henderson <bryanh@giraffe-data.com> and probably some other sources
+**
+** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+**                        and Willem van Schaik <willem@schaik.com>
+** Copyright (C) 1999,2001 by Greg Roelofs <newt@pobox.com>
+** Copyright (C) 2015 by Willem van Schaik <willem@schaik.com>
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+*/
