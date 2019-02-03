@@ -274,7 +274,7 @@ colorTypeFromInputType(const struct pam * const pamP) {
         if (pamP->depth == 2)
             retval = PNG_COLOR_TYPE_GRAY_ALPHA;
         else
-            pm_error("Input tupel type is GRAYSCALE_ALPHA, "
+            pm_error("Input tuple type is GRAYSCALE_ALPHA, "
                      "but number of planes is %u instread of 2",
                      pamP->depth);
     } else if (strneq(pamP->tuple_type, "GRAYSCALE", 9)) {
