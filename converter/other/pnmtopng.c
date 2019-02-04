@@ -2591,20 +2591,19 @@ doSbitChunk(struct pngx * const pngxP,
     if (pngx_colorType(pngxP) != PNG_COLOR_TYPE_PALETTE &&
         (pngMaxval > maxval || (alpha && pngMaxval > alphaMaxval))) {
 
-        /* We're writing in a bit depth that doesn't match the maxval
-           of the input image and the alpha mask.  So we write an sBIT
-           chunk to tell what the original image's maxval was.  The
-           sBit chunk doesn't let us specify any maxval -- only powers
-           of two minus one.  So we pick the power of two minus one
-           which is greater than or equal to the actual input maxval.
+        /* We're writing in a bit depth that doesn't match the maxval of the
+           input image and the alpha mask.  So we write an sBIT chunk to tell
+           what the original image's maxval was.  The sBit chunk doesn't let
+           us specify any maxval -- only powers of two minus one.  So we pick
+           the power of two minus one which is greater than or equal to the
+           actual input maxval.
 
-           PNG also doesn't let an sBIT chunk indicate a maxval
-           _greater_ than the the PNG maxval.  The designers probably
-           did not conceive of the case where that would happen.  The
-           case is this: We detected redundancy in the bits so were
-           able to store fewer bits than the user provided.  But since
-           PNG doesn't allow it, we don't attempt to create such an
-           sBIT chunk.
+           PNG also doesn't let an sBIT chunk indicate a maxval _greater_ than
+           the PNG maxval.  The designers probably did not conceive of the
+           case where that would happen.  The case is this: We detected
+           redundancy in the bits so were able to store fewer bits than the
+           user provided.  But since PNG doesn't allow it, we don't attempt to
+           create such an sBIT chunk.
         */
 
         {
