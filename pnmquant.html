@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmquant User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmquant</H1>
-Updated: 09 April 2013
+Updated: 09 February 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -40,6 +40,26 @@ to the new ones, and writes a PNM image as output.
 color map which is generated from the colors in that same input.  The
 options have the same meaning as in those programs.  See their
 documentation to understand <B>pnmquant</B>.
+
+<p>You may actually get fewer than <b>ncolors</b> colors in the output because
+  the method <b>pnmcolormap</b> uses to choose the best set of colors for the
+  image is not the same as the method <b>pnmremap</b> uses to determine the
+  best color from the set to represent an individual color.  For example,
+  <b>pnmcolormap</b> may include salmon in the color map as the best
+  representative of a pink pixel in the input and include coral in the color
+  map as the best representative of an actual coral pixel in the input.  But
+  <b>pnmremap</b> is free to use any color in the color map to represent that
+  pink pixel and would find coral is a closer match for pink than salmon and
+  therefore use coral for pink.  <b>pnmremap</b> might not use salmon
+  for <em>any</em> pixel.
+
+<p>This waste of a slot in the color map is a consequence of the approximate
+  method <b>pnmcolormap</b> uses in order to compute the color map with a
+  practical amount of computation.
+
+
+<h3 id="separate">Running <b>pnmcolormap</b> and <b>pnmremap</b> Separately
+</h3>
 
 <P>It is much faster to call <B>pnmcolormap</B> and <B>pnmremap</B>
 directly than to run <B>pnmquant</B>.  You save the overhead of the

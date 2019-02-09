@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcolormap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcolormap</H1>
-Updated: 28 October 2017
+Updated: 09 February 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -150,8 +150,8 @@ largest spread of brightness; 2) largest spread of contribution to the
 luminosity of the color.  E.g. red is weighted much more than blue.  Select
 among these with the <B>-spreadbrightness</B> and <B>-spreadluminosity</B>
 options.  The default is <B>-spreadbrightness</B>.  Where there are multiple
-colors of the mediam magnitude, they are distributed arbitrarily among between
-the suboxes.  This arbitrary distribution depends upon what the system's
+colors of the median magnitude, they are distributed arbitrarily among between
+the subboxes.  This arbitrary distribution depends upon what the system's
 <b>qsort</b> function does with multiple equal values, so <b>pnmcolormap</b>
 may produce slightly different results on different systems.
 
@@ -161,11 +161,22 @@ colors in the box, using the above definition of "greater"; 2) the mean of the
 colors (each component averaged separately by brightness) in the box; 3) the
 mean weighted by the number of pixels of a color in the image.
 
+<P>Select among these with the <B>-center</B>, <B>-meancolor</B>, and
+<B>-meanpixel</B> options.  The default is <B>-center</B>.
+
 <P>Note that in all three methods, there may be colors in the output
 which do not appear in the input at all.
 
-<P>Select among these with the <B>-center</B>, <B>-meancolor</B>, and
-<B>-meanpixel</B> options.  The default is <B>-center</B>.
+<p>Also note that the color chosen to represent the colors in Box A the best
+may also represent a color in Box B better than the color chosen to represent
+the colors in Box B the best.  This is true for various measures of goodness
+of representation of one color by another.  In particular, if you
+use <b>pnmremap</b> to map the colors in the very image that you used to
+create the color map to the colors in that colormap, the colors in Box B will
+often map to the color <b>pnmcolormap</b> chose to represent some other box
+and in fact the color <b>pnmcolormap</b> chose to represent Box B may not
+appear in the <b>pnmremap</b> output at all.
+  
 
 <H2 id="references">REFERENCES</H2>
 
