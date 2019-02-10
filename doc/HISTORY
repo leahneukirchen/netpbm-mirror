@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.02.10 BJH  Release 10.85.02
+
+              pnmtopng: fix bug: -interlace ignored.  Broken in 10.55
+              (June 2011).
+
 19.01.07 BJH  Release 10.85.01
 
               pamstretch: Reject very large scale factors instead of producing

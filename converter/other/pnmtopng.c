@@ -2436,7 +2436,11 @@ doIhdrChunk(struct pngx * const pngxP,
             unsigned int  const depth,
             bool          const colorMapped,
             bool          const colorPng,
-            bool          const alpha) {
+            bool          const alpha,
+            bool          const interlace) {
+
+    int const interlaceMethod =
+        interlace ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
 
     int colorType;
 
@@ -2450,7 +2454,8 @@ doIhdrChunk(struct pngx * const pngxP,
     if (alpha && colorType != PNG_COLOR_TYPE_PALETTE)
         colorType |= PNG_COLOR_MASK_ALPHA;
 
-    pngx_setIhdr(pngxP, width, height, depth, colorType, 0, 0, 0);
+    pngx_setIhdr(pngxP, width, height, depth, colorType,
+                 interlaceMethod, 0, 0);
 }
 
 
@@ -2820,10 +2825,8 @@ convertpnm(struct cmdlineInfo const cmdline,
         pm_error ("setjmp returns error condition (2)");
     }
 
-    doIhdrChunk(pngxP, cols, rows, depth, colorMapped, colorPng, alpha);
-
-    if (cmdline.interlace)
-        pngx_setInterlaceHandling(pngxP);
+    doIhdrChunk(pngxP, cols, rows, depth, colorMapped, colorPng, alpha,
+                cmdline.interlace);
 
     doGamaChunk(cmdline, pngxP);
 
@@ -2874,6 +2877,8 @@ convertpnm(struct cmdlineInfo const cmdline,
 
     /* let libpng take care of, e.g., bit-depth conversions */
     pngx_setPacking(pngxP);
+
+    pngx_setInterlaceHandling(pngxP);
 
     writeRaster(pngxP, ifP, rasterPos,
                 cols, rows, maxval, format,
