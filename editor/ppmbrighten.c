@@ -292,12 +292,17 @@ main(int argc, char * argv[]) {
         pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
         getMinMax(ifP, cols, rows, maxval, format, &minValue, &maxValue);
         pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
-        pm_message("Minimum value %u%% of full intensity "
-                   "being remapped to zero.",
-                   (minValue*100+MULTI/2)/MULTI);
-        pm_message("Maximum value %u%% of full intensity "
-                   "being remapped to full.",
-                   (maxValue*100+MULTI/2)/MULTI);
+        if (maxValue > minValue) {
+            pm_message("Minimum value %u%% of full intensity "
+                       "being remapped to zero.",
+                       (minValue*100+MULTI/2)/MULTI);
+            pm_message("Maximum value %u%% of full intensity "
+                       "being remapped to full.",
+                       (maxValue*100+MULTI/2)/MULTI);
+        } else
+            pm_message("Sole intensity value %u%% of full intensity "
+                       "not being remapped",
+                       (minValue*100+MULTI/2)/MULTI);
     }
 
     pixelrow = ppm_allocrow(cols);
@@ -313,9 +318,11 @@ main(int argc, char * argv[]) {
             RGBtoHSV(pixelrow[col], maxval, &H, &S, &V);
             
             if (cmdline.normalize) {
-                V -= minValue;
-                V = (V * MULTI) /
-                    (MULTI - (minValue+MULTI-maxValue));
+                if (maxValue > minValue) {
+                    V -= minValue;
+                    V = (V * MULTI) /
+                        (MULTI - (minValue+MULTI-maxValue));
+                }
             }
 
             S = MIN(MULTI, (unsigned int) (S * cmdline.saturation + 0.5));

@@ -4,6 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.02.09 BJH  Release 10.73.25
+
+              pnmtopng: fix bug: -interlace ignored.  Broken in 10.55
+              (June 2011).
+
+              pamstretch: Reject very large scale factors instead of producing
+              incorrect output.
+
+              ppmbrighten: Fix crash with -normalize when there is only one
+              intensity in the image.  Always broken - Ppmbrighten was new in
+              the first Netpbm release in 1991.
+
+              ppmdraw: Fix bug: 'setlinetype nodiag' says invalid type.
+              Always broken.  (Ppmdraw was new in Netpbm 10.29 (August 2005)).
+
 18.12.17 BJH  Release 10.73.24
 
               bmptopnm: Fix wrong output for non-colormapped OS2 BMP.  Broken
