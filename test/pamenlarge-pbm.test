@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pamenlarge
-# Also requires:
+# Also requires: pbmmake pnmpad
 
 tmpdir=${tmpdir:-/tmp}
 complete256_pbm=${tmpdir}/complete256.pbm
@@ -21,7 +21,9 @@ for xs in `seq 23`
   pamenlarge -xscale=$xs ${complete256_pbm} | cksum
   done
 
+# Test 2.
 echo "test 2"
+
 for xs1 in `seq 20`
   do
   xs2=$((21-$xs1))
@@ -29,3 +31,27 @@ for xs1 in `seq 20`
   pamenlarge -xscale=$xs2 ${complete256_pbm} | pamenlarge -xscale=$xs1 | cksum
   pamenlarge -xscale=$(($xs1 * $xs2)) ${complete256_pbm} | cksum
   done
+
+rm ${complete256_pbm}
+
+# Test 3.
+echo "test 3"
+
+test3_pbm=${tmpdir}/test3.pbm
+
+for width in `seq 16`
+  do
+  pbmmake ${width} 1 | pnmpad -top=1 -white | \
+      pnmpad -bottom=1 -black > ${test3_pbm}.${width}
+  done
+ 
+  for xscale in `seq 16`
+    do echo -n ${xscale} " "
+    for width in `seq 16`
+      do pamenlarge -xscale=${xscale} ${test3_pbm}.${width} ; done | cksum
+      #
+      # unlike most other tests we take the cksum of a composite PBM file
+      #
+    done
+
+rm ${test3_pbm}.[1-9]  ${test3_pbm}.1[1-6]

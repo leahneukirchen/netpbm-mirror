@@ -1,5 +1,5 @@
 #! /bin/bash
-# This script tests: pamscale pamstretch
+# This script tests: pamscale pamstretch pamstretch-gen
 # Also requires: pamvalidate pnmpsnr
 
 tmpdir=${tmpdir:-/tmp}
@@ -77,21 +77,21 @@ rm ${stretch_ppm}
 pamstretch-gen 5.85 testimg.ppm | pamvalidate > ${stretch_ppm}
 echo 5.85 blackman:  
 pamscale 5.85 -filter=blackman testimg.ppm | \
-  pnmpsnr -target1=40 -target2=53.19 -target3=47.67 - ${stretch_ppm} || \
+  pnmpsnr -target1=34.29 -target2=48.78 -target3=42.75 - ${stretch_ppm} || \
   echo failure ${PIPESTATUS[@]} ":" $?
 
 pamscale ${width_height} -filter=blackman ${stretch_ppm} | \
-  pnmpsnr -target1=47.07 -target2=61.04 -target3=57.59 testimg.ppm - || \
+  pnmpsnr -target1=33.69 -target2=48.83 -target3=42.72 testimg.ppm - || \
   echo failure ${PIPESTATUS[@]} ":" $?
 rm ${stretch_ppm}
 
 pamstretch-gen 5.10 testimg.ppm | pamvalidate > ${stretch_ppm}
 echo 5.10 kaiser:  
 pamscale 5.10 -filter=kaiser testimg.ppm | \
-  pnmpsnr -target1=38.72 -target2=52.11 -target3=46.58 - ${stretch_ppm} || \
+  pnmpsnr -target1=34.58 -target2=49.03 -target3=43.01 - ${stretch_ppm} || \
   echo failure ${PIPESTATUS[@]} ":" $?
 
 pamscale ${width_height} -filter=blackman ${stretch_ppm} | \
-  pnmpsnr -target1=47.07 -target2=61.04 -target3=57.59 testimg.ppm - || \
+  pnmpsnr -target1=33.69 -target2=48.83 -target3=42.72 testimg.ppm - || \
   echo failure ${PIPESTATUS[@]} ":" $?
 rm ${stretch_ppm}
