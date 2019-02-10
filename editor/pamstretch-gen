@@ -10,19 +10,41 @@
 #
 # Formerly named 'pnminterp-gen' and 'pnmstretch-gen'.
 #
-# Netpbm global options -quiet and -plain don't work (this should be fixed).
-#
 ###############################################################################
 
-if [ "$1" = "--version" -o "$1" = "-version" ]; then
-  pamstretch --version; exit $?;
-fi
+# Scan command line arguments
 
-if [ "$1" = "" ]; then
-  echo 'usage: pamstretch-gen N [pnmfile]'
-  exit 1
-fi
-
+while true ; do
+    case "$1" in
+        -version|--version )
+        pamstretch --version; exit $?;
+        ;;
+        -p|-pl|-pla|-plai|-plain|--p|--pl|--pla|--plai|--plain )
+        plainopt="-plain"
+        shift
+        ;;
+        -q|-qu|-qui|-quie|-quiet|--q|--qu|--qui|--quie|--quiet )
+        quietopt="-plain"
+        shift
+        ;;
+        -q|-qu|-qui|-quie|-quiet|--q|--qu|--qui|--quie|--quiet )
+        quietopt="-quiet"
+        shift
+        ;;
+        -verb|-verbo|-verbos|-verbose|--verb|--verbo|--verbos|--verbose )
+        verboseopt="-verbose"
+        shift
+        ;;
+        -* )
+        echo 'usage: pamstretch-gen N [pnmfile]' 1>&2
+        exit 1
+        ;;
+        * )
+        break
+        ;;
+    esac
+done
+ 
 tempfile=$(mktemp "${TMPDIR:-/tmp}/netpbm.XXXXXXXX")
 if [ $? -ne 0 -o ! -e $tempfile ]; then
   echo "Could not create temporary file. Exiting." 1>&2
@@ -30,10 +52,28 @@ if [ $? -ne 0 -o ! -e $tempfile ]; then
 fi
 trap 'rm -rf $tempfile' 0 1 3 15
 
-if ! cat $2 | pampick -quiet 0 > $tempfile; then
-  echo 'pamstretch-gen: error reading file' 1>&2
-  exit 1
-fi
+case "$#" in
+    0)
+    echo "pamstretch-gen: too few arguments" 1>&2
+    exit 1
+    ;;   
+    1 )
+    if ! cat > $tempfile; then
+    echo "pamstretch-gen: error reading input" 1>&2
+    exit 1
+    fi
+    ;;
+    2 )
+    if ! cat $2 > $tempfile; then
+    echo "pamstretch-gen: error reading file "$2 1>&2
+    exit 1
+    fi
+    ;;
+    * )
+    echo "pamstretch-gen: misaligned arguments or too many arguments" 1>&2
+    exit 1
+    ;;
+esac
 
 # Calculate pamstretch scale factor (="iscale") and output width and
 # height.  Usually "int(scale) + 1" is sufficient for iscale but
@@ -42,31 +82,31 @@ fi
 
 report=$(pamscale -reportonly $1 $tempfile)
 if [ $? -ne 0 ]; then
-  echo "pamstretch-gen: pamscale does not support -reportonly" 1>&2
+  echo "pamstretch-gen: pamscale -reportonly $1 (file) failed" 1>&2
   exit 1
 fi
 
 iscale_width_height=$(echo $report |\
   awk 'NF!=6 || $1<=0 || $2<=0 || $3<=0 || $5<=0 || $6<=0  { exit 1 }
-       $3 > 1.0  { iscale = int($3) + 1;
-                   if (iscale * ($1-1) < $5 || iscale * ($2-1) < $6 )
-                      ++iscale; }
-                 { iscale = 1 }  # $3 <= 1.0
-                 { print iscale, "-width="$5, "-height="$6}' )
+           { if ($3 > 1.0)  { iscale = int($3) + 1;
+                              if (iscale * ($1-1) < $5 ||
+                                  iscale * ($2-1) < $6 )
+                                     ++iscale;            }
+             else { iscale = 1 }  # $3 <= 1.0
+       }
+       { print iscale, "-width="$5, "-height="$6}' )
 
 # Note that $1, $2, ..., $6 here are fields of the input line fed to awk,
 # not shell positional parameters.
 
-iscale=$(echo $iscale_width_height | cut -d " " -f 1)
+iscale=${iscale_width_height% -width=* -height=*}
+width_height=${iscale_width_height#* }
+if [ -n "$verboseopt" ]; then
+    echo "pamstretch-gen: rounded scale factor=$iscale $width_height" 1>&2
+fi 
 
-if [ "$iscale" -eq 1 ]; then
-  pamscale "$1" $tempfile
-else
-  width_height=$(echo $iscale_width_height | cut -d " " -f 2,3)
-  pamstretch -dropedge "$iscale" $tempfile |\
-  pamscale $width_height
-fi
-
+pamstretch -dropedge $quietopt $iscale $tempfile |\
+  pamscale $verboseopt $quietopt $plainopt $width_height
 
 
 # Copyright (C) 1998,2000 Russell Marks.

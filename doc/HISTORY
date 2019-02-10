@@ -16,6 +16,8 @@ not yet  BJH  Release 10.86.00
 
               pamscale: Add -reportonly
 
+              pamstretch-gen: Add -quiet, -plain.
+
               pamstretch-gen: Use -dropedge on the 'pamstretch' piece for
               better looking output.
 
