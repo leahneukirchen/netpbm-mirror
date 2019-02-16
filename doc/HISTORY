@@ -48,6 +48,13 @@ not yet  BJH  Release 10.86.00
               ppmdraw: Fix bug: 'setlinetype nodiag' says invalid type.
               Always broken.  (Ppmdraw was new in Netpbm 10.29 (August 2005)).
 
+              Build: split link/ directory in package tree into staticlink/
+              and sharedlink/ .  Make 'installnetpbm' do separate prompts to
+              install static libraries and shared library stubs.  Make
+              'installnetpbm' install clean symlink in the usual case that the
+              shared library stub and shared library are in the same
+              directory.
+
 18.12.29 BJH  Release 10.85.00
 
               pnmpaste: Add -nand, -nor, and -nxor.

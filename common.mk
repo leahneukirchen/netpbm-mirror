@@ -482,7 +482,7 @@ endif
 
 PKGMANSUBDIRS = man1 man3 man5 web
 
-PKGSUBDIRS = bin include include/netpbm lib link misc \
+PKGSUBDIRS = bin include include/netpbm lib sharedlink staticlink misc \
   $(PKGMANSUBDIRS:%=$(PKGMANDIR)/%)
 
 $(PKGSUBDIRS:%=$(PKGDIR)/%):
