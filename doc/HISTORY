@@ -12,6 +12,9 @@ not yet  BJH  Release 10.86.00
 
               pamenlarge: Add -scale, -xscale, -yscale .
 
+              pamenlarge: Much faster for PBM with xscale factor above 10;
+              slightly faster for xscale factor 2-10.
+
               pamfile: Add -machine and -size .
 
               pamscale: Add -reportonly
