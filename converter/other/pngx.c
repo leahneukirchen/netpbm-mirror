@@ -553,7 +553,19 @@ pngx_setSbit(struct pngx * const pngxP,
 void
 pngx_setShift(struct pngx * const pngxP,
               png_color_8   const sigBitArg) {
+/*----------------------------------------------------------------------------
+   Tell the number of significant bits in the row buffers that will be given
+   to the compressor.  Those bits are the least significant of the 8 bits of
+   space in the row buffer for each sample.  For example, if red sample values
+   are in the range 0-7, only the lower 3 bits of the 8-bit byte for each
+   red sample will be used, so one would call this with sigBitArg.red == 3.
 
+   The name alludes to the fact that to normalize the sample to 8 bits, one
+   shifts it left, and this function tells how much shift has to happen.  In
+   the example above, each red sample has to be shifted left 5 bits (so that
+   the upper 3 bits are significant and the lower 5 bits are always zero) to
+   create an 8 bit sample out of the 3 bit samples.
+-----------------------------------------------------------------------------*/
     png_color_8 sigBit;
 
     sigBit = sigBitArg;
