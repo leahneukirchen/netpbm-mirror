@@ -419,7 +419,8 @@ enlargePbmRowHorizontallySmall(const unsigned char * const inrow,
         break;
 
     default:
-        pm_error("Internal error");
+        pm_error("Internal error.  Invalid scale factor for "
+                 "enlargePbmRowHorizontallySmall: %u", xScaleFactor);
     }
 }
 
@@ -666,9 +667,8 @@ enlargePbm(struct pam * const inpamP,
 
     enum ScaleMethod {METHOD_USEINPUT, METHOD_SMALL, METHOD_GENERAL};
     enum ScaleMethod const scaleMethod =
-        xScaleFactor == 1 ? METHOD_USEINPUT :
-        scaleMethod <= 13 ? METHOD_SMALL :
-        METHOD_GENERAL;
+        xScaleFactor == 1  ? METHOD_USEINPUT :
+        xScaleFactor <= 13 ? METHOD_SMALL : METHOD_GENERAL;
 
     unsigned int const outcols = inpamP->width * xScaleFactor;
     unsigned int const outrows = inpamP->height * yScaleFactor;
