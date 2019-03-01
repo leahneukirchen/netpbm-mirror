@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.03.01 BJH  Release 10.85.03
+
+              pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
+              (-textalphabits was new in Netpbm 10.53 (December 2010).
+
 19.02.10 BJH  Release 10.85.02
 
               pnmtopng: fix bug: -interlace ignored.  Broken in 10.55
