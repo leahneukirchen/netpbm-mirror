@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.86.00
 
+              pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
+              (-textalphabits was new in Netpbm 10.53 (December 2010).
+
               Add pambrighten.
 
               Add pamhue.
