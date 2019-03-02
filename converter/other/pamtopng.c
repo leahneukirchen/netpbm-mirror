@@ -611,35 +611,60 @@ writeRasterRowByRow(const struct pam * const pamP,
 
 
 static void
-writePng(const struct pam * const pamP,
-         FILE *             const ofP,
-         struct CmdlineInfo const cmdline) {
+reportInputFormat(const struct pam * const pamP) {
 
-    unsigned int const pnmBitDepth = pm_maxvaltobits(pamP->maxval);
-    int const pngColorType = colorTypeFromInputType(pamP);
+    const char * formatDesc;
 
-    struct pngx * pngxP;
-    unsigned int pngBitDepth;
-    png_color_8 sBit;
+    if (pamP->format == PBM_FORMAT || pamP->format == RPBM_FORMAT)
+        formatDesc = "PBM";
+    else if (pamP->format == PGM_FORMAT || pamP->format == RPGM_FORMAT)
+        formatDesc = "PGM";
+    else if (pamP->format == PPM_FORMAT || pamP->format == RPPM_FORMAT)
+        formatDesc = "PPM";
+    else if (pamP->format == PAM_FORMAT)
+        formatDesc = "PAM";
+    else
+        formatDesc = NULL;
 
-    pngx_create(&pngxP, PNGX_WRITE, NULL);
+    if (formatDesc)
+        pm_message("Input format = %s", formatDesc);
+    else
+        pm_message("Unrecognized input format, format code = 0x%x",
+                   pamP->format);
+
+    pm_message("Input tuple type = '%s'", pamP->tuple_type);
+    pm_message("Input depth = %u", pamP->depth);
+    pm_message("Input maxval = %u", (unsigned int) pamP->maxval);
+}
+
+
+
+static unsigned int
+pngBitDepth(unsigned int const pnmBitDepth,
+            int          const pngColorType) {
+
+    unsigned int retval;
 
     if ((pngColorType == PNG_COLOR_TYPE_RGB ||
          pngColorType == PNG_COLOR_TYPE_RGB_ALPHA) &&
         pnmBitDepth < 8) {
 
-        pngBitDepth = 8;
+        retval = 8;
     } else
-        pngBitDepth = pnmBitDepth;
+        retval = pnmBitDepth;
 
-    png_init_io(pngxP->png_ptr, ofP);
+    return retval;
+}
 
-    pngx_setIhdr(pngxP, pamP->width, pamP->height,
-                 pngBitDepth, pngColorType,
-                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
-                 PNG_FILTER_TYPE_BASE);
 
-    /* Where requested, add ancillary chunks */
+
+static void
+addAncillaryChunks(struct pam *       const pamP,
+                   struct pngx *      const pngxP,
+                   struct CmdlineInfo const cmdline) {
+/*----------------------------------------------------------------------------
+  Where requested, add ancillary chunks.
+-----------------------------------------------------------------------------*/
     if (cmdline.transparencySpec)
         doTrnsChunk(pamP, pngxP,cmdline.transparency);
 
@@ -677,8 +702,42 @@ writePng(const struct pam * const pamP,
     if (cmdline.timeSpec)
         doTimeChunk(pngxP, cmdline.time);
 
-    /* Write the ancillary chunks to PNG file */
+    /* Write the ancillary chunks to PNG image */
     pngx_writeInfo(pngxP);
+}
+
+
+
+static void
+pamtopng(FILE *             const ifP,
+         FILE *             const ofP,
+         struct CmdlineInfo const cmdline) {
+
+    unsigned int pnmBitDepth;
+    int          pngColorType;
+    struct pngx * pngxP;
+    png_color_8 sBit;
+    struct pam pam;
+
+    pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
+
+    if (verbose)
+        reportInputFormat(&pam);
+
+    pnmBitDepth = pm_maxvaltobits(pam.maxval);
+
+    pngColorType = colorTypeFromInputType(&pam);
+
+    pngx_create(&pngxP, PNGX_WRITE, NULL);
+
+    png_init_io(pngxP->png_ptr, ofP);
+
+    pngx_setIhdr(pngxP, pam.width, pam.height,
+                 pngBitDepth(pnmBitDepth, pngColorType), pngColorType,
+                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
+                 PNG_FILTER_TYPE_BASE);
+
+    addAncillaryChunks(&pam, pngxP, cmdline);
 
     if (pngColorType != PNG_COLOR_TYPE_GRAY && pnmBitDepth < 8) {
         /* Move the 1, 2, 4 bits to most significant bits */
@@ -689,40 +748,10 @@ writePng(const struct pam * const pamP,
         pngx_setPacking(pngxP);
     }
 
-    writeRasterRowByRow(pamP, pngxP, pnmBitDepth);
+    writeRasterRowByRow(&pam, pngxP, pnmBitDepth);
 
     pngx_writeEnd(pngxP);
     pngx_destroy(pngxP);
-}
-
-
-
-
-static void
-reportInputFormat(const struct pam * const pamP) {
-
-    const char * formatDesc;
-
-    if (pamP->format == PBM_FORMAT || pamP->format == RPBM_FORMAT)
-        formatDesc = "PBM";
-    else if (pamP->format == PGM_FORMAT || pamP->format == RPGM_FORMAT)
-        formatDesc = "PGM";
-    else if (pamP->format == PPM_FORMAT || pamP->format == RPPM_FORMAT)
-        formatDesc = "PPM";
-    else if (pamP->format == PAM_FORMAT)
-        formatDesc = "PAM";
-    else
-        formatDesc = NULL;
-
-    if (formatDesc)
-        pm_message("Input format = %s", formatDesc);
-    else
-        pm_message("Unrecognized input format, format code = 0x%x",
-                   pamP->format);
-
-    pm_message("Input tuple type = '%s'", pamP->tuple_type);
-    pm_message("Input depth = %u", pamP->depth);
-    pm_message("Input maxval = %u", (unsigned int) pamP->maxval);
 }
 
 
@@ -733,7 +762,6 @@ main(int           argc,
 
     FILE * ifP;
     struct CmdlineInfo cmdline;
-    struct pam pam;
 
     pm_proginit(&argc, argv);
 
@@ -743,12 +771,7 @@ main(int           argc,
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
-
-    if (verbose)
-        reportInputFormat(&pam);
-
-    writePng(&pam, stdout, cmdline);
+    pamtopng(ifP, stdout, cmdline);
 
     pm_close(ifP);
 
