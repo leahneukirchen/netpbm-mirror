@@ -786,6 +786,15 @@ pngx_writeRow(struct pngx *    const pngxP,
 
 
 void
+pngx_writeImage(struct pngx * const pngxP,
+                png_byte **   const raster) {
+
+    png_write_image(pngxP->png_ptr, (png_byte **)raster);
+}
+
+
+
+void
 pngx_readEnd(struct pngx * const pngxP) {
 
     /* Note that some of info_ptr is not defined until png_read_end()

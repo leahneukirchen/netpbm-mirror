@@ -277,6 +277,10 @@ pngx_writeRow(struct pngx *    const pngxP,
               const png_byte * const line);
 
 void
+pngx_writeImage(struct pngx * const pngxP,
+                png_byte **   const raster);
+
+void
 pngx_readEnd(struct pngx * const pngxP);
 
 void
