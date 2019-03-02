@@ -13,6 +13,8 @@ LC_ALL=C awk 'BEGIN { print "P4";         # header
                       for (i=0;i<256;++i) # raster
                            printf("%c",i) }' > ${complete256_pbm}
 
+# xscale factor should be tested to at least 21 (=13+8)
+
 # Test 1.
 echo "test 1"
  
@@ -24,11 +26,13 @@ for xs in `seq 23`
 # Test 2.
 echo "test 2"
 
-for xs1 in `seq 20`
+for xs1 in `seq 15`
   do
-  xs2=$((21-$xs1))
+  xs2=$((30-$xs1))
   pamenlarge -xscale=$xs1 ${complete256_pbm} | pamenlarge -xscale=$xs2 | cksum
+  if [ $xs1 != $xs2 ]; then
   pamenlarge -xscale=$xs2 ${complete256_pbm} | pamenlarge -xscale=$xs1 | cksum
+  fi
   pamenlarge -xscale=$(($xs1 * $xs2)) ${complete256_pbm} | cksum
   done
 
@@ -41,7 +45,7 @@ test3_pbm=${tmpdir}/test3.pbm
 
 for width in `seq 16`
   do
-  pbmmake ${width} 1 | pnmpad -top=1 -white | \
+  pbmmake -g ${width} 1 | pnmpad -top=1 -white | \
       pnmpad -bottom=1 -black > ${test3_pbm}.${width}
   done
  
