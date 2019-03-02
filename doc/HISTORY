@@ -6,9 +6,6 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.86.00
 
-              pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
-              (-textalphabits was new in Netpbm 10.53 (December 2010).
-
               Add pambrighten.
 
               Add pamhue.
@@ -38,8 +35,11 @@ not yet  BJH  Release 10.86.00
               various: Fix unnormalizing code so a value exactly between two
               sample values rounds consistently up.  Affects many programs.
 
+              pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
+              (-textalphabits was new in Netpbm 10.53 (December 2010)).
+
               pamtopng: Fix buffer overrun.  Always broken (Pamtopng was new
-              in Netpbm 10.71 (June 2015).
+              in Netpbm 10.71 (June 2015)).
 
               pnmtopng: fix bug: -interlace ignored.  Broken in 10.55
               (June 2011).
