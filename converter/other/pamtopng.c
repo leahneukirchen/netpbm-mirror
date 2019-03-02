@@ -543,10 +543,10 @@ doTimeChunk(struct pngx * const pngxP,
 
 
 static void
-convertRaster(const struct pam * const pamP,
-              const tuple *      const tuplerow,
-              png_byte *         const pngRow,
-              unsigned int       const bitDepth) {
+convertRow(const struct pam * const pamP,
+           const tuple *      const tuplerow,
+           png_byte *         const pngRow,
+           unsigned int       const bitDepth) {
 
     unsigned int col;
 
@@ -575,9 +575,9 @@ convertRaster(const struct pam * const pamP,
 
 
 static void
-writeRaster(const struct pam * const pamP,
-            struct pngx *      const pngxP,
-            int                const bitDepth) {
+writeRasterRowByRow(const struct pam * const pamP,
+                    struct pngx *      const pngxP,
+                    int                const bitDepth) {
 
     unsigned int const rowSz =
         pamP->width * pamP->depth * (MAX(1, bitDepth/8));
@@ -599,9 +599,9 @@ writeRaster(const struct pam * const pamP,
         for (row = 0; row < pamP->height; ++row) {
             pnm_readpamrow(pamP, tupleRow);
 
-            convertRaster(pamP, tupleRow, pngRow, bitDepth);
+            convertRow(pamP, tupleRow, pngRow, bitDepth);
 
-            png_write_row(pngxP->png_ptr, pngRow);
+            pngx_writeRow(pngxP, pngRow);
         }
         free(pngRow);
     }
@@ -689,7 +689,7 @@ writePng(const struct pam * const pamP,
         pngx_setPacking(pngxP);
     }
 
-    writeRaster(pamP, pngxP, pnmBitDepth);
+    writeRasterRowByRow(pamP, pngxP, pnmBitDepth);
 
     pngx_writeEnd(pngxP);
     pngx_destroy(pngxP);
