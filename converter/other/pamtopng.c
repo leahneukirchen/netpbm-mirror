@@ -579,6 +579,9 @@ writeRaster(const struct pam * const pamP,
             struct pngx *      const pngxP,
             int                const bitDepth) {
 
+    unsigned int const rowSz =
+        pamP->width * pamP->depth * (MAX(1, bitDepth/8));
+
     tuple * tupleRow;
     png_byte * pngRow;
     unsigned int row;
@@ -587,8 +590,7 @@ writeRaster(const struct pam * const pamP,
 
     tupleRow = pnm_allocpamrow(pamP);
 
-    MALLOCARRAY(pngRow, pamP->width * 8);
-        /* sufficient to store a 16-bit RGB+A row */
+    MALLOCARRAY(pngRow, rowSz);
 
     if (pngRow == NULL)
         pm_error("Unable to allocate space for PNG pixel row for "
