@@ -88,7 +88,7 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int blackOpt, whiteOpt, sidesOpt;
     unsigned int marginSpec, borderfileSpec, closenessSpec;
     unsigned int leftOpt, rightOpt, topOpt, bottomOpt;
-    
+
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -102,7 +102,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "top",        OPT_FLAG, NULL, &topOpt,              0);
     OPTENT3(0, "bottom",     OPT_FLAG, NULL, &bottomOpt,           0);
     OPTENT3(0, "verbose",    OPT_FLAG, NULL, &cmdlineP->verbose,   0);
-    OPTENT3(0, "margin",     OPT_UINT,   &cmdlineP->margin,    
+    OPTENT3(0, "margin",     OPT_UINT,   &cmdlineP->margin,
             &marginSpec,     0);
     OPTENT3(0, "borderfile", OPT_STRING, &cmdlineP->borderfile,
             &borderfileSpec, 0);
@@ -115,14 +115,14 @@ parseCommandLine(int argc, const char ** argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-        
+
     free(option_def);
 
     if (argc-1 == 0)
         cmdlineP->inputFilespec = "-";  /* stdin */
     else if (argc-1 == 1)
         cmdlineP->inputFilespec = argv[1];
-    else 
+    else
         pm_error("Too many arguments (%d).  "
                  "Only need one: the input filespec", argc-1);
 
@@ -236,7 +236,7 @@ background2Corners(FILE * const ifP,
 ----------------------------------------------------------------------------*/
     xel * xelrow;
     xel background;   /* our return value */
-    
+
     xelrow = pnm_allocrow(cols);
 
     pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
@@ -263,12 +263,12 @@ computeBackground(FILE *         const ifP,
 
    'backgroundChoice' is the method we are to use in determining the
    background color.
-   
+
    Expect the file to be positioned to the start of the raster, and leave
    it positioned arbitrarily.
 -----------------------------------------------------------------------------*/
     xel background;  /* Our return value */
-    
+
     switch (backgroundChoice) {
     case BG_WHITE:
         background = pnm_whitexel(maxval, format);
@@ -276,12 +276,12 @@ computeBackground(FILE *         const ifP,
     case BG_BLACK:
         background = pnm_blackxel(maxval, format);
         break;
-    case BG_SIDES: 
-        background = 
+    case BG_SIDES:
+        background =
             background3Corners(ifP, rows, cols, maxval, format);
         break;
-    case BG_DEFAULT: 
-        background = 
+    case BG_DEFAULT:
+        background =
             background2Corners(ifP, cols, maxval, format);
         break;
     }
@@ -292,8 +292,8 @@ computeBackground(FILE *         const ifP,
 
 
 static bool
-colorMatches(pixel        const comparand, 
-             pixel        const comparator, 
+colorMatches(pixel        const comparand,
+             pixel        const comparator,
              unsigned int const allowableDiff) {
 /*----------------------------------------------------------------------------
    The colors 'comparand' and 'comparator' are within 'allowableDiff'
@@ -321,7 +321,7 @@ findBordersInImage(FILE *         const ifP,
 /*----------------------------------------------------------------------------
    Find the left, right, top, and bottom borders in the image 'ifP'.
    Return their sizes in pixels as borderSize[n].
-   
+
    Iff the image is all background, *hasBordersP == FALSE.
 
    Expect the input file to be positioned to the beginning of the
@@ -336,7 +336,7 @@ findBordersInImage(FILE *         const ifP,
         /* leftmost, etc. nonbackground pixel found so far; -1 for none */
 
     xelrow = pnm_allocrow(cols);
-    
+
     left   = cols;  /* initial value */
     right  = -1;    /* initial value */
     top    = rows;  /* initial value */
@@ -348,7 +348,7 @@ findBordersInImage(FILE *         const ifP,
         int thisRowRight;
 
         pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
-        
+
         col = 0;
         while (col < cols &&
                colorMatches(xelrow[col], backgroundColor, allowableDiff))
@@ -363,7 +363,7 @@ findBordersInImage(FILE *         const ifP,
 
         if (thisRowLeft < cols) {
             /* This row is not entirely background */
-            
+
             left  = MIN(thisRowLeft,  left);
             right = MAX(thisRowRight, right);
 
@@ -374,7 +374,7 @@ findBordersInImage(FILE *         const ifP,
             bottom = row + 1;   /* New candidate */
         }
     }
-    
+
     free(xelrow);
 
     if (right == -1)
@@ -427,7 +427,7 @@ analyzeImage(FILE *         const ifP,
 
     pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
 
-    findBordersInImage(ifP, cols, rows, maxval, format, 
+    findBordersInImage(ifP, cols, rows, maxval, format,
                        background, closeness, hasBordersP, borderSizeP);
 
     if (newFilePos == FILEPOS_BEG)
@@ -524,7 +524,7 @@ outputNewBorderNonPbm(unsigned int const height,
 
     for (i = 0; i < height; ++i)
         pnm_writepnmrow(ofP, xelrow, width, maxval, format, 0);
-    
+
     pnm_freerow(xelrow);
 }
 
@@ -568,7 +568,7 @@ writeCroppedNonPbm(FILE *       const ifP,
        the buffer that lines up the first foreground pixel at
        'foregroundLeft'.
 
-       When we output the row, we pick a starting location in the 
+       When we output the row, we pick a starting location in the
        buffer that includes the proper number of left border pixels
        before 'foregroundLeft'.
 
@@ -581,7 +581,7 @@ writeCroppedNonPbm(FILE *       const ifP,
 
     unsigned int const foregroundCols =
         cols - crop.op[LEFT].removeSize - crop.op[RIGHT].removeSize;
-    unsigned int const outputCols     = 
+    unsigned int const outputCols     =
         foregroundCols + crop.op[LEFT].padSize + crop.op[RIGHT].padSize;
     unsigned int const foregroundRows =
         rows - crop.op[TOP].removeSize - crop.op[BOTTOM].removeSize;
@@ -620,19 +620,19 @@ writeCroppedNonPbm(FILE *       const ifP,
 
     /* Read and output foreground rows */
     for (i = 0; i < foregroundRows; ++i) {
- 
+
         /* Read foreground pixels */
         pnm_readpnmrow(ifP,
                        &(xelrow[foregroundLeft - crop.op[LEFT].removeSize]),
                        cols, maxval, format);
-        
+
         pnm_writepnmrow(ofP,
                         &(xelrow[foregroundLeft - crop.op[LEFT].padSize]),
                         outputCols, maxval, format, 0);
     }
 
     readOffBorderNonPbm(crop.op[BOTTOM].removeSize, ifP, cols, maxval, format);
-    
+
     outputNewBorderNonPbm(crop.op[BOTTOM].padSize, outputCols,
                           backgroundColor,
                           ofP, maxval, format);
@@ -655,10 +655,10 @@ fillRowPBM(unsigned char * const bitrow,
     unsigned int i;
 
     assert(blackWhite == 0 || blackWhite == 1);
-    
+
     for (i = 0; i < colChars; ++i)
         bitrow[i] = blackWhite * 0xff;
-        
+
     if (cols % 8 > 0)
         bitrow[colChars-1] <<= 8 - cols % 8;
 }
@@ -703,7 +703,7 @@ outputNewBorderPbm(unsigned int const height,
 
     for (i = 0; i < height; ++i)
         pbm_writepbmrow_packed(ofP, bitrow, width, 0);
-    
+
     pbm_freerow_packed(bitrow);
 }
 
@@ -717,14 +717,14 @@ writeCroppedPBM(FILE *       const ifP,
                 cropSet      const crop,
                 xel          const backgroundColor,
                 FILE *       const ofP) {
-    
-    /* See comments for writeCroppedNonPBM(), which uses identical logic flow. 
+
+    /* See comments for writeCroppedNonPBM(), which uses identical logic flow.
        Uses pbm functions instead of general pnm functions.
     */
 
     unsigned int const foregroundCols =
         cols - crop.op[LEFT].removeSize - crop.op[RIGHT].removeSize;
-    unsigned int const outputCols     = 
+    unsigned int const outputCols     =
         foregroundCols + crop.op[LEFT].padSize + crop.op[RIGHT].padSize;
     unsigned int const foregroundRows =
         rows - crop.op[TOP].removeSize - crop.op[BOTTOM].removeSize;
@@ -736,7 +736,7 @@ writeCroppedPBM(FILE *       const ifP,
     unsigned int const foregroundRight = foregroundLeft + foregroundCols;
 
     unsigned int const allocCols =
-        foregroundRight + 
+        foregroundRight +
         MAX(crop.op[RIGHT].removeSize, crop.op[RIGHT].padSize);
 
     unsigned int const backgroundBlackWhite =
@@ -748,7 +748,7 @@ writeCroppedPBM(FILE *       const ifP,
     unsigned int const lastWriteChar = writeOffset/8 + (outputCols-1)/8;
     unsigned char * bitrow;
     unsigned int i;
-    
+
     pbm_writepbminit(ofP, outputCols, outputRows, 0);
 
     bitrow = pbm_allocrow_packed(allocCols);
@@ -765,15 +765,15 @@ writeCroppedPBM(FILE *       const ifP,
     for (i = 0; i < foregroundRows; ++i) {
         /* Read foreground pixels */
         pbm_readpbmrow_bitoffset(ifP, bitrow, cols, format, readOffset);
-  
+
         pbm_writepbmrow_bitoffset(ofP,
                                   bitrow, outputCols, format, writeOffset);
-                              
+
         /* If there is right-side padding, repair the write buffer
-           distorted by pbm_writepbmrow_bitoffset() 
+           distorted by pbm_writepbmrow_bitoffset()
            (No need to mend any left-side padding)
         */
-        if (crop.op[RIGHT].padSize > 0)    
+        if (crop.op[RIGHT].padSize > 0)
             bitrow[lastWriteChar] = backgroundBlackWhite * 0xff;
     }
 
@@ -876,7 +876,7 @@ cropOneImage(struct CmdlineInfo const cmdline,
 
     if (cmdline.verbose) {
         pixel const backgroundPixel = pnm_xeltopixel(background, format);
-        pm_message("Background color is %s", 
+        pm_message("Background color is %s",
                    ppm_colorname(&backgroundPixel, maxval, TRUE /*hexok*/));
     }
     if (!hasBorders)
@@ -887,7 +887,7 @@ cropOneImage(struct CmdlineInfo const cmdline,
 
     validateComputableSize(cols, rows, crop);
 
-    if (cmdline.verbose) 
+    if (cmdline.verbose)
         reportCroppingParameters(crop);
 
     if (PNM_FORMAT_TYPE(format) == PBM_TYPE)
@@ -903,7 +903,7 @@ int
 main(int argc, const char *argv[]) {
 
     struct CmdlineInfo cmdline;
-    FILE * ifP;   
+    FILE * ifP;
         /* The program's regular input file.  Could be a seekable copy of
            it in a temporary file.
         */
@@ -931,10 +931,10 @@ main(int argc, const char *argv[]) {
 
         if (bdfP) {
             pnm_nextimage(bdfP, &beof);
-            
+
             if (eof != beof) {
                 if (!eof)
-                    pm_error("Input file has more images than border file."); 
+                    pm_error("Input file has more images than border file.");
                 else
                     pm_error("Border file has more images than image file.");
             }
