@@ -66,8 +66,8 @@ rows or columns to discard.
 leftmost 50 and rightmost 200 columns.
 
 <p>To specify the rectangle to keep, use <b>-left</b>, <b>-right</b>,
-<b>-top</b>, <b>-bottom</b>, <b>-width</b>, <b>-height</b>, and
-<b>-pad</b> options.
+<b>-top</b>, <b>-bottom</b>, <b>-width</b>, <b>-height</b>, and <b>-pad</b>
+options.
 
 <p>For example, <b>-left=50 -right=200</b> means to keep the 150 columns
 between Columns 50 and 200 inclusive.
@@ -154,8 +154,6 @@ numbered the same as for <B>-top</B>.  Rows below this get cut out.
 
 <DD>The number of rows to be in the output.  Must be positive.
 
-<DT><B>-pad</B>
-
 <DT><B>-cropleft</B>
 <DT><B>-cropright</B>
 <DT><B>-croptop</B>
@@ -171,6 +169,8 @@ can achieve the same thing with a negative value for <b>-left</b>, etc.
 Remember to subtract one; e.g. the equivalent of <b>-cropright=1</b> is
 <b>-right=-2</b>.
   
+<DT><B>-pad</B>
+
 <DD>If the rectangle you specify is not entirely within the input
 image, <B>pamcut</B> fails unless you also specify <B>-pad</B>.  In
 that case, it pads the output with black up to the edges you specify.
