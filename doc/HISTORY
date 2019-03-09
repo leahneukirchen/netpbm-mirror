@@ -38,6 +38,10 @@ not yet  BJH  Release 10.86.00
               pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
               (-textalphabits was new in Netpbm 10.53 (December 2010)).
 
+              pamtopng: Fix sBit chunk, bit shift value for 1-, 2-, and 4-bit-
+              per-sample images.  Always broken (Pamtopng was new in Netpbm
+              10.71 (June 2015)).
+
               pamtopng: Fix buffer overrun.  Always broken (Pamtopng was new
               in Netpbm 10.71 (June 2015)).
 
