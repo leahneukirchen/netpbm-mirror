@@ -821,8 +821,8 @@ execGhostscript(int               const inputPipeFd,
                    "-dSAFER", "-");
     }
 
-    execl(ghostscriptProg, arg0, deviceopt, outfileopt, gopt, ropt, "-q",
-          "-dNOPAUSE", "-dSAFER", "-", NULL);
+    execl(ghostscriptProg, arg0, deviceopt, outfileopt, gopt, ropt, 
+	  textalphabitsopt, "-q", "-dNOPAUSE", "-dSAFER", "-", NULL);
     
     pm_error("execl() of Ghostscript ('%s') failed, errno=%d (%s)",
              ghostscriptProg, errno, strerror(errno));

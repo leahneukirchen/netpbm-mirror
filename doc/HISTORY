@@ -4,7 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-18.02.09 BJH  Release 10.73.25
+19.03.10 BJH  Release 10.73.26
+
+              pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
+              (-textalphabits was new in Netpbm 10.53 (December 2010)).
+
+              pamtopng: Fix sBit chunk, bit shift value for 1-, 2-, and 4-bit-
+              per-sample images.  Always broken (Pamtopng was new in Netpbm
+              10.71 (June 2015)).
+
+              pamtopng: Fix buffer overrun.  Always broken (Pamtopng was new
+              in Netpbm 10.71 (June 2015)).
+
+19.02.09 BJH  Release 10.73.25
 
               pnmtopng: fix bug: -interlace ignored.  Broken in 10.55
               (June 2011).

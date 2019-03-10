@@ -345,6 +345,60 @@ parseAndScaleColor(const char * const colorString,
 
 
 
+static png_color_8
+sigBitsFmImgType(unsigned int const pnmBitDepth,
+                 int          const pngColorType) {
+/*----------------------------------------------------------------------------
+   A representation used in PNG of color resolutions in an original image.
+-----------------------------------------------------------------------------*/
+    png_color_8 retval;
+
+    /* Initial values */
+    if (pnmBitDepth < 8) {
+        switch (pngColorType) {
+        case PNG_COLOR_TYPE_RGB:
+            retval.red   = pnmBitDepth;
+            retval.green = pnmBitDepth;
+            retval.blue  = pnmBitDepth;
+            retval.gray  = 0;
+            retval.alpha = 0;
+            break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+            retval.red   = pnmBitDepth;
+            retval.green = pnmBitDepth;
+            retval.blue  = pnmBitDepth;
+            retval.gray  = 0;
+            retval.alpha = pnmBitDepth;
+            break;
+        case PNG_COLOR_TYPE_GRAY:
+            /* PNG can (so presumably will) use original bit depth */
+            retval.red   = 0;
+            retval.green = 0;
+            retval.blue  = 0;
+            retval.gray  = 0;
+            retval.alpha = 0;
+            break;
+        case PNG_COLOR_TYPE_GRAY_ALPHA:
+            retval.red   = 0;
+            retval.green = 0;
+            retval.blue  = 0;
+            retval.gray  = pnmBitDepth;
+            retval.alpha = pnmBitDepth;
+            break;
+        }
+    } else {
+        /* PNG can (so presumably will) use original bit depth */
+        retval.red   = 0;
+        retval.green = 0;
+        retval.blue  = 0;
+        retval.gray  = 0;
+        retval.alpha = 0;
+    }
+    return retval;
+}
+
+
+
 static void
 doTrnsChunk(const struct pam * const pamP,
             struct pngx *      const pngxP,
@@ -411,27 +465,12 @@ doGamaChunk(struct pngx *  const pngxP,
 
 static void
 doSbitChunk(const struct pam * const pamP,
-            struct pngx *      const pngxP) {
+            struct pngx *      const pngxP,
+            png_color_8        const sigBits) {
 
-    unsigned int const pnmBitDepth = pm_maxvaltobits(pamP->maxval);
-
-    /* create SBIT chunk in case of 1,2,4 bit deep images stored in 8 bit
-       format PNG files 
-    */
-    if (pngx_colorType(pngxP) != PNG_COLOR_TYPE_GRAY && pnmBitDepth < 8) {
-        png_color_8 sBit;
-
-        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB || 
-            pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA) {
-            sBit.red = sBit.green = sBit.blue = pnmBitDepth;
-        } else {
-            sBit.gray = pnmBitDepth;
-        }
-        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA || 
-            pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA) {
-            sBit.alpha = pnmBitDepth;
-        }
-        pngx_setSbit(pngxP, sBit);
+    if (sigBits.red + sigBits.green + sigBits.blue +
+        sigBits.gray + sigBits.alpha > 0) {
+        pngx_setSbit(pngxP, sigBits);
     }
 }
 
@@ -552,6 +591,20 @@ doTimeChunk(struct pngx * const pngxP,
 
 
 static void
+setShift(struct pngx * const pngxP,
+         png_color_8   const sigBits) {
+
+    if (sigBits.red + sigBits.green + sigBits.blue +
+        sigBits.gray + sigBits.alpha > 0) {
+
+        /* Move the 1, 2, 4 bits to most significant bits */
+        pngx_setShift(pngxP, sigBits);
+    }
+}
+
+
+
+static void
 convertRaster(const struct pam * const pamP,
               const tuple *      const tuplerow,
               png_byte *         const pngRow,
@@ -648,6 +701,8 @@ writePng(const struct pam * const pamP,
                  PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
                  PNG_FILTER_TYPE_BASE);
 
+    sBit = sigBitsFmImgType(pnmBitDepth, pngColorType);
+
     /* Where requested, add ancillary chunks */
     if (cmdline.transparencySpec)
         doTrnsChunk(pamP, pngxP,cmdline.transparency);
@@ -660,7 +715,7 @@ writePng(const struct pam * const pamP,
 
     /* no iccp */
 
-    doSbitChunk(pamP, pngxP);
+    doSbitChunk(pamP, pngxP, sBit);
 
     if (cmdline.srgbintentSpec)
         doSrgbChunk(pngxP, cmdline.srgbintent);
@@ -685,6 +740,8 @@ writePng(const struct pam * const pamP,
 
     if (cmdline.timeSpec)
         doTimeChunk(pngxP, cmdline.time);
+
+    setShift(pngxP, sBit);
 
     /* Write the ancillary chunks to PNG file */
     pngx_writeInfo(pngxP);
