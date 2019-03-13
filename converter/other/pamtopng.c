@@ -16,7 +16,7 @@
     had become rather complex.  This program is roughly 1/3 the size of
     pnmtopng.c that it replaces.
 
-  - In 1995 bandwith was limited and therefore filesize had to be kept
+  - In 1995, bandwith was limited and therefore filesize had to be kept
     small. The original program tried to optimize for that by applying
     many "clever tricks". Today that isn't an issue anymore, so gone
     are filters, palettes, etc. Also, image conversions were removed,
@@ -49,6 +49,7 @@ static bool verbose;
 struct CmdlineInfo {
     const char * inputFileName;
     unsigned int verbose;
+    unsigned int interlace;
     unsigned int transparencySpec;
     const char * transparency;
     unsigned int chromaSpec;
@@ -193,6 +194,8 @@ parseCommandLine (int                  argc,
 
     OPTENT3(0,  "verbose",      OPT_FLAG,       NULL,
             &cmdlineP->verbose,        0);
+    OPTENT3(0,  "interlace",    OPT_FLAG,       NULL,
+            &cmdlineP->interlace,      0);
     OPTENT3(0,  "transparency", OPT_STRING,     &cmdlineP->transparency,
             &cmdlineP->transparencySpec, 0);
     OPTENT3(0,  "chroma",       OPT_STRING,     &chroma,
@@ -648,6 +651,104 @@ writeRasterRowByRow(const struct pam * const pamP,
 
 
 
+static png_bytep
+mallocPngImage(unsigned int const rowSize,
+               unsigned int const height) {
+
+    png_bytep pngImage;
+
+    if (UINT_MAX / rowSize < height)
+        pm_error("Image is uncomputably large at %u rows of %u bytes",
+                 height, rowSize);
+
+    MALLOCARRAY(pngImage, height * rowSize);
+
+    if (!pngImage)
+        pm_error("could not allocate %u bytes for a PNG image buffer",
+                 height * rowSize);
+
+    return pngImage;
+}
+
+
+
+static unsigned int
+pngLineSize(struct pngx * const pngxP) {
+
+    unsigned int const bytesPerSample = pngx_bitDepth(pngxP) == 16 ? 2 : 1;
+
+    unsigned int samplesPerPixel;
+
+    switch (pngx_colorType(pngxP)) {
+        case PNG_COLOR_TYPE_GRAY:
+            samplesPerPixel = 1;
+            break;
+        case PNG_COLOR_TYPE_GRAY_ALPHA:
+            samplesPerPixel = 2;
+            break;
+        case PNG_COLOR_TYPE_RGB:
+            samplesPerPixel = 3;
+            break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+            samplesPerPixel = 4;
+            break;
+        default:
+            assert(false);
+    }
+
+    if (UINT_MAX / bytesPerSample / samplesPerPixel < pngx_imageWidth(pngxP)) {
+        pm_error("pngcopy: width %u of PNG is uncomputably large\n",
+                  pngx_imageWidth(pngxP));
+    }
+
+    return pngx_imageWidth(pngxP) * bytesPerSample * samplesPerPixel;
+}
+
+
+
+static void
+writeRasterWholeImg(struct pam *  const pamP,
+                    struct pngx * const pngxP,
+                    unsigned int  const bitDepth) {
+
+    unsigned int const pngRowSize = pngLineSize(pngxP);
+
+    tuple * tupleRow;
+    png_bytep pngImage;
+        /* A one-dimensional malloc'ed array of all pixels in image */
+    png_bytep * pngRowP;
+        /* A malloc'ed array of row pointers into pngImage[] */
+    unsigned int row;
+
+    tupleRow = pnm_allocpamrow(pamP);
+
+    pngImage = mallocPngImage(pngRowSize, pamP->height);
+
+    MALLOCARRAY(pngRowP, pamP->height);
+
+    if (!pngRowP)
+        pm_error("Failed to allocate an array for %u PNG row pointers",
+                 pamP->height);
+
+    for (row = 0; row < pamP->height; ++row) {
+        png_bytep const thisPngRowP = &pngImage[row * pngRowSize];
+
+        pnm_readpamrow(pamP, tupleRow);
+
+        convertRow(pamP, tupleRow, thisPngRowP, bitDepth);
+
+        pngRowP[row] = thisPngRowP;
+    }
+
+    pngx_writeImage(pngxP, pngRowP);
+
+    free(pngRowP);
+    free(pngImage);
+    pnm_freepamrow(tupleRow);
+}
+
+
+
 static void
 reportInputFormat(const struct pam * const pamP) {
 
@@ -762,6 +863,25 @@ setShift(struct pngx * const pngxP,
 
 
 static void
+doIhdrChunk(struct pngx * const pngxP,
+            unsigned int  const width,
+            unsigned int  const height,
+            unsigned int  const pnmBitDepth,
+            int           const pngColorType,
+            bool          const interlace) {
+
+    int const interlaceMethod =
+        interlace ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
+
+    pngx_setIhdr(pngxP, width, height,
+                 pngBitDepth(pnmBitDepth, pngColorType), pngColorType,
+                 interlaceMethod, PNG_COMPRESSION_TYPE_BASE,
+                 PNG_FILTER_TYPE_BASE);
+}
+
+
+
+static void
 pamtopng(FILE *             const ifP,
          FILE *             const ofP,
          struct CmdlineInfo const cmdline) {
@@ -785,10 +905,8 @@ pamtopng(FILE *             const ifP,
 
     png_init_io(pngxP->png_ptr, ofP);
 
-    pngx_setIhdr(pngxP, pam.width, pam.height,
-                 pngBitDepth(pnmBitDepth, pngColorType), pngColorType,
-                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
-                 PNG_FILTER_TYPE_BASE);
+    doIhdrChunk(pngxP, pam.width, pam.height,
+                pnmBitDepth, pngColorType, cmdline.interlace > 0);
 
     sigBits = sigBitsFmImgType(pnmBitDepth, pngColorType);
 
@@ -801,7 +919,16 @@ pamtopng(FILE *             const ifP,
         pngx_setPacking(pngxP);
     }
 
-    writeRasterRowByRow(&pam, pngxP, pnmBitDepth);
+    if (cmdline.interlace) {
+        /* Libpng will expect us to provide pixels in interlaced sequence
+           if we write row-by-row, and that is much to difficult, so we
+           do whole-image-at-once and let Libpng do the work.
+        */
+        writeRasterWholeImg(&pam, pngxP, pnmBitDepth);
+    } else {
+        /* We save memory by going row-by-row */
+        writeRasterRowByRow(&pam, pngxP, pnmBitDepth);
+    }
 
     pngx_writeEnd(pngxP);
     pngx_destroy(pngxP);

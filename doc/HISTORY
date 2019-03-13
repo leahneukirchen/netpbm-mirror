@@ -10,6 +10,8 @@ not yet  BJH  Release 10.86.00
 
               Add pamhue.
 
+              pamtopng: Add -interlace .
+
               pamenlarge: Add -scale, -xscale, -yscale .
 
               pamenlarge: Much faster for PBM with xscale factor above 10;
