@@ -271,8 +271,10 @@ gradually improve the display as more data arrives.
 <p>When you specify this option, <b>pamtopng</b> must hold the entire image in
 memory at once, whereas without it, the program holds only one raster row at a
 time.  If you don't have enough memory for that, you might suffer extreme
-slowdowns or failure.  <b>pnmtopng</b> does not have this limitation (it holds
-only one row at a time in memory even when generating an interlaced PNG).
+slowdowns or failure - not just in the process running <b>pamtopng</b>, but
+potentially throughout the system that shares memory with it.  <b>pnmtopng</b>
+does not have this limitation (it holds only one row at a time in memory even
+when generating an interlaced PNG).
 
 <p>This option was new in Netpbm 10.86 (March 2019).
   
