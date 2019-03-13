@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pnmtopng User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtopng</H1>
-Updated: 09 October 2016
+Updated: 13 March 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -135,18 +135,35 @@ with "unrecognized option," fall back to the old syntax.
 <DL COMPACT>
 <DT><B>-verbose</B>
 <DD>
-     Display the format of the output file.
+This causes <b>pnmtopng</b> to display information about the format of the
+output file.
+
 <DT><B>-downscale</B>
 <DD>
-     Enables scaling of maxvalues of more then 65535 to 16 bit. Since
-     this means loss of image data, <b>pnmtopng</b> does not do it by
-     default.
+This enables <b>pnmtopng</b> to scale maxvalues of more then 65535 to 16
+bits. Since this means loss of image data, <b>pnmtopng</b> does not do it by
+default.
+
 <DT><B>-interlace</B>
 <DD>
-     Creates an interlaced PNG file (Adam7).
+This causes the PNG file to be interlaced, in Adam7 format.  The interlaced
+format is one in which the raster data starts with a low-resolution
+representation of the entire image, then continues with additional information
+for the entire image, then even more information, etc.  In Adam7 in
+particular, there are seven such passes of the whole image.  This is useful
+when you are receiving the image over a slow communication line as someone is
+waiting to see it.  The simplest thing to do in that case is wait for the
+entire image to arrive and then display it instantly, but then the user is
+wasting time staring at a blank space until the whole image arrives.  With the
+standard non-interlaced format, the data arrives row-by-row starting at the
+top, so the displayer could display each row of the image as it arrives and
+gradually paint down to the bottom.  But with an interlaced image, the
+displayer can start by showing a low-resolution version of the image, then
+gradually improve the display as more data arrives.
+     
 <DT><B>-alpha=</b><i>filename</i>
 
-<DD> This specifies the transparency (alpha) channel of the image.  You supply
+<DD>This specifies the transparency (alpha) channel of the image.  You supply
 the transparency channel as a standard PGM transparency mask (see
 the <a href="pgm.html">PGM</a> specification.  <b>pnmtopng</b> does not
 necessarily represents the transparency information as a transparency channel

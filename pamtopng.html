@@ -3,7 +3,7 @@
 <head><title>Pamtopng User Manual</title></head>
 <body>
 <h1>pamtopng</h1>
-Updated: 12 March 2017
+Updated: 13 March 2019
 <BR>
 <a href="#index">Table Of Contents</a>
 
@@ -25,6 +25,7 @@ pamtopng - convert a Netpbm image to PNG
 [<b>-text=</b><i>file</i>]
 [<b>-ztxt=</b><i>file</i>]
 [<b>-itxt=</b><i>file</i>]
+[<b>-interlace</b>]
 [<I>pnmfile</i>]
 
 <?makeman .SH OPTION USAGE ?>
@@ -250,6 +251,31 @@ The format is either a two character "nl" or an extended code like "en-US".
 in the PNG output.  You can specify the year parameter either as a two or four
 digit value.
 
+<dt><b>-interlace</b>
+<dd>
+This causes the PNG file to be interlaced, in Adam7 format.  The interlaced
+format is one in which the raster data starts with a low-resolution
+representation of the entire image, then continues with additional information
+for the entire image, then even more information, etc.  In Adam7 in
+particular, there are seven such passes of the whole image.  This is useful
+when you are receiving the image over a slow communication line as someone is
+waiting to see it.  The simplest thing to do in that case is wait for the
+entire image to arrive and then display it instantly, but then the user is
+wasting time staring at a blank space until the whole image arrives.  With the
+standard non-interlaced format, the data arrives row-by-row starting at the
+top, so the displayer could display each row of the image as it arrives and
+gradually paint down to the bottom.  But with an interlaced image, the
+displayer can start by showing a low-resolution version of the image, then
+gradually improve the display as more data arrives.
+
+<p>When you specify this option, <b>pamtopng</b> must hold the entire image in
+memory at once, whereas without it, the program holds only one raster row at a
+time.  If you don't have enough memory for that, you might suffer extreme
+slowdowns or failure.  <b>pnmtopng</b> does not have this limitation (it holds
+only one row at a time in memory even when generating an interlaced PNG).
+
+<p>This option was new in Netpbm 10.86 (March 2019).
+  
 <dt><b>-verbose</b>
 <dd>
 This causes the program to display various facts about the conversion.

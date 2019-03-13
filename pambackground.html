@@ -60,15 +60,14 @@ building, you could use <b>ppmchange</b> to change all pixels within
 on it.
 
 <p>You might even extract the argument for <b>ppmchange</b> from the image in
-question, using <b>ppmtoarbtxt</b>.  In the foregoing example, we knew the
+question, using <b>pamgetcolor</b>.  In the foregoing example, we knew the
 background was approximately SkyBlue, but if we didn't we could just get the
 color of the top left pixel, in a form suitable for the color arguments
 of <b>ppmchange</b> like this:
 
 <pre>
 <kbd>
-    $ echo "#(fred)/#(fgreen)/#(fblue)" &gt;/tmp/bodyskl
-    $ color=$(pamcut 0 0 1 1 myimage.ppm | ppmtoarbtxt /tmp/bodyskl)
+    $ color=$(pamgetcolor 0,0 -infile=/tmp/bodyskl|cut --fields=2 -delim=' ')
 </kbd>
 </pre>
 
@@ -76,22 +75,20 @@ of <b>ppmchange</b> like this:
 to use <b>pnmquant</b> to produce a version of the image with a very small
 number of colors.  The background would likely then be all one color.
 
-<p>If the <b>pnmquant</b> and <b>ppmchange</b> methods above do not
-adequately distinguish foreground colors from background colors, you can
-try a more elaborate method using <b>pnmremap</b>.
-If you can manually create a palette with
-one color to which all the background pixels are similar, and other colors
-to which the foreground pixels are similar, you can use it as input to
+<p>If the <b>pnmquant</b> and <b>ppmchange</b> methods above do not adequately
+distinguish foreground colors from background colors, you can try a more
+elaborate method using <b>pnmremap</b>.  If you can manually create a palette
+with one color to which all the background pixels are similar, and other
+colors to which the foreground pixels are similar, you can use it as input to
 <b>pnmremap</b> to create a smarter version of what you get with the
 <b>pnmquant</b> or <b>ppmchange</b> methods, so that <b>pambackground</b> is
 more likely to separate background from foreground as your eye does.
 
-<p>The PAM that <b>pambackground</b> creates has a single plane, with
-a maxval of 1.  The sample value 1 means background; 0 means
-foreground.  There is no tuple type.  Some older programs (but none
-that are part of Netpbm) don't know what a PAM is and expect a mask to
-be in the form of a PGM or PBM image.  To convert
-<b>pambackground</b>'s output to PBM, use <b>pamtopnm -assume</b>.  To
+<p>The PAM that <b>pambackground</b> creates has a single plane, with a maxval
+of 1.  The sample value 1 means background; 0 means foreground.  There is no
+tuple type.  Some older programs (but none that are part of Netpbm) don't know
+what a PAM is and expect a mask to be in the form of a PGM or PBM image.  To
+convert <b>pambackground</b>'s output to PBM, use <b>pamtopnm -assume</b>.  To
 convert to PGM, use <b>pgmtopgm</b>.
 
 <P><I>netpbmfile</I> is the file specification of the input file, or
@@ -150,6 +147,7 @@ are see-through holes in the foreground image.
 <B><A HREF="pamtopnm.html">pamtopnm</A></B>,
 <B><A HREF="pgmtopgm.html">pgmtopgm</A></B>,
 <B><A HREF="pamstack.html">pamstack</A></B>,
+<B><A HREF="pamstack.html">pamgetcolor</A></B>,
 <B><A HREF="pnm.html">pnm</A></B>,
 <B><A HREF="pam.html">pam</A></B>,
 

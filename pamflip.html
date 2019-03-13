@@ -38,8 +38,8 @@ its value.
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamflip</b> flips a PAM or PNM image top for bottom or left for right,
-or transposes it horizontal for vertical, or rotates it 1, 2, or 3
-quarter turns.
+or transposes it horizontal for vertical, or rotates it 1, 2, or 3 quarter
+turns.
 
 <p>To rotate at other angles, use <b>pnmrotate</b>.  It is much slower,
 though.
@@ -150,10 +150,15 @@ a major factor in your estimate.
 memory you specify, it does the transformation in chunks, using temporary
 files for intermediate results.
 
-<p>Strict horizontal transformations (either left for right or null),
-<b>pamflip</b> never keeps more than one row in memory, so the memory
-size is irrelevant and <b>pamflip</b> doesn't use temporary files.
+<p>In strict horizontal transformations (left for right) or the null
+transformation, <b>pamflip</b> never keeps more than one row in memory, so the
+memory size is irrelevant and <b>pamflip</b> doesn't use temporary files.
 
+<p>In strict vertical transformations (top for bottom), even when you
+allow <b>pamflip</b> enough memory to keep the entire image in virtual memory,
+it accesses it in a single pass, which does not cause any thrashing; the
+chunks in temporary files thus don't help.
+  
 <p>The real memory is important when you do a column for row type of
 transformation (e.g. <b>-rotate90</b>).  In that case, even if
 <b>pamflip</b> can fit the entire image in virtual memory at once, if

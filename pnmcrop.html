@@ -181,6 +181,10 @@ image as the <b>-borderfile</b> image, but the original speckled version as
 the input image.  That way, you crop the borders, but retain the true
 foreground image, speckles and all.
 
+<p>The border file must have the same number of images in it as the input
+file; the background color determination for image N of the input is based on
+the image N of the border file.
+
 <p>This option was new in Netpbm 10.29 (August 2005).
 
 <p>Before Netpbm 10.46 (March 2009), the original image and not the
