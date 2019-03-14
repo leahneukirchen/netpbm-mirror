@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamfind User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamfind</H1>
+Updated: 13 March 2019
+<BR>
+
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+pamfind - Print the locations of all tuples of a certain value in an image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+<B>pamfind</B>
+{
+<b>-target=</b><i>sample0</i><b>,</b><i>sample1</i><b>,</b> ... |
+<b>-color=</b><i>color</i>
+}
+[<I>imagefile</I>]
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one.  You may separate an option
+name and its value with white space instead of an equals sign.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamfind</b> reads a Netpbm image (PNM or PAM) and prints a list of all
+the locations (row and column) of the tuples that have a value you specify.
+For example, you can list all the places that a visual image is red.
+
+<p>You can specify the value in actual decimal sample values with
+a <b>-target</b> option or as a color with <b>-color</b>.  If you
+specify <b>-color</b>, the program fails if the input image does not have
+depth 3.  If it has depth 3 but the tuples aren't actually colors, you get
+results as if they are.
+
+<p>To do the opposite, see what tuple is at a given location, use
+<b>pamcut</b> and <b>pamtable</b>:
+
+  <PRE>
+    <TT>
+      $ pamcut -left=5 -top=7 -width=1 -height=1 | pamtable
+    </TT>
+  </PRE>
+
+<p><b>ppmcolormask</b> also finds all the tuples of a certain value, at least
+in visual images, but instead of printing their coordinates, it generates a
+mask image, which you can use to visualize where those tuples are or as input
+to another program.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<dl>
+
+<dt><b>-target=</b><i>sample0</i><b>,</b><i>sample1</i><b>,</b> ... |
+
+<dd>
+This specifies the tuple value to find.  You specify the sample values in
+order, and must specify the proper number of sample values for the depth of
+the image (e.g. 3 if it is a color image).
+  
+<p>You must specify exactly one of <b>-target</b> and <b>-color</b>.
+
+<dt><b>-color=</b><i>color</i>
+
+<dd>
+This is the color to find, assuming the image is a color visual image.    
+<P><i>color</i> is as described for the <a
+href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
+library routine</a>.
+
+<p>You must specify exactly one of <b>-target</b> and <b>-color</b>.
+
+</DL>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamdepth.html">pamdepth</A></B>,
+<B><A HREF="pamgetcolor.html">pamgetcolor</A></B>,
+<B><A HREF="ppmhist.html">ppmhist</A></B>,
+<B><A HREF="ppmcolormask.html">ppmcolormask</A></B>,
+<B><A HREF="pamcut.html">pamcut</A></B>,
+<B><A HREF="pamtable.html">pamtable</A></B>,
+<B><A HREF="pam.html">pam</A></B>,
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamfind</b> was added to Netpbm in Release 10.86 (March 2019).
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF=#history>HISTORY</A>
+</UL>
+</BODY>
+</HTML>
