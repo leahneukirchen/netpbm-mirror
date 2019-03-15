@@ -199,22 +199,22 @@ pnm_blackxel(xelval const maxval,
     default:
         pm_error("Invalid format %d passed to pnm_blackxel()", format);
     }
-    
+
     return retval;
 }
 
 
 
 void
-pnm_invertxel(xel*   const xP, 
-              xelval const maxval, 
+pnm_invertxel(xel*   const xP,
+              xelval const maxval,
               int    const format) {
 
     switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE:
-        PPM_ASSIGN(*xP, 
+        PPM_ASSIGN(*xP,
                    maxval - PPM_GETR(*xP),
-                   maxval - PPM_GETG(*xP), 
+                   maxval - PPM_GETG(*xP),
                    maxval - PPM_GETB(*xP));
         break;
 
@@ -348,31 +348,31 @@ pnm_promoteformatrow( xel* xelrow, int cols, xelval maxval, int format, xelval n
 
 
 pixel
-pnm_xeltopixel(xel const inputxel,
+pnm_xeltopixel(xel const inputXel,
                int const format) {
-    
-    pixel outputpixel;
+
+    pixel outputPixel;
 
     switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE:
-        PPM_ASSIGN(outputpixel,
-                   PPM_GETR(inputxel),
-                   PPM_GETG(inputxel),
-                   PPM_GETB(inputxel));
+        PPM_ASSIGN(outputPixel,
+                   PNM_GETR(inputXel),
+                   PNM_GETG(inputXel),
+                   PNM_GETB(inputXel));
         break;
     case PGM_TYPE:
     case PBM_TYPE:
-        PPM_ASSIGN(outputpixel,
-                   PNM_GET1(inputxel),
-                   PNM_GET1(inputxel),
-                   PNM_GET1(inputxel));
+        PPM_ASSIGN(outputPixel,
+                   PNM_GET1(inputXel),
+                   PNM_GET1(inputXel),
+                   PNM_GET1(inputXel));
         break;
     default:
         pm_error("Invalid format code %d passed to pnm_xeltopixel()",
                  format);
     }
 
-    return outputpixel;
+    return outputPixel;
 }
 
 
@@ -413,6 +413,6 @@ pnm_parsecolorxel(const char * const colorName,
         pm_error("Invalid format code %d passed to pnm_parsecolorxel()",
                  format);
     }
-    
+
     return retval;
 }
