@@ -73,7 +73,7 @@ pnm_readpnm(FILE *   const fileP,
 
 void
 pnm_check(FILE *               const fileP,
-          enum pm_check_type   const check_type, 
+          enum pm_check_type   const check_type,
           int                  const format,
           int                  const cols,
           int                  const rows,
@@ -82,19 +82,19 @@ pnm_check(FILE *               const fileP,
 
 
 void
-pnm_writepnminit(FILE * const fileP, 
-                 int    const cols, 
-                 int    const rows, 
-                 xelval const maxval, 
-                 int    const format, 
+pnm_writepnminit(FILE * const fileP,
+                 int    const cols,
+                 int    const rows,
+                 xelval const maxval,
+                 int    const format,
                  int    const forceplain);
 
 void
-pnm_writepnmrow(FILE *      const fileP, 
-                const xel * const xelrow, 
-                int         const cols, 
-                xelval      const maxval, 
-                int         const format, 
+pnm_writepnmrow(FILE *      const fileP,
+                const xel * const xelrow,
+                int         const cols,
+                xelval      const maxval,
+                int         const format,
                 int         const forceplain);
 
 void
@@ -106,28 +106,28 @@ pnm_writepnm(FILE * const fileP,
              int    const format,
              int    const forceplain);
 
-xel 
+xel
 pnm_backgroundxel(xel** xels, int cols, int rows, xelval maxval, int format);
 
-xel 
+xel
 pnm_backgroundxelrow(xel* xelrow, int cols, xelval maxval, int format);
 
-xel 
+xel
 pnm_whitexel(xelval maxval, int format);
 
-xel 
+xel
 pnm_blackxel(xelval maxval, int format);
 
-void 
+void
 pnm_invertxel(xel *  const x,
               xelval const maxval,
               int    const format);
 
-void 
-pnm_promoteformat(xel** xels, int cols, int rows, xelval maxval, int format, 
+void
+pnm_promoteformat(xel** xels, int cols, int rows, xelval maxval, int format,
                   xelval newmaxval, int newformat);
-void 
-pnm_promoteformatrow(xel* xelrow, int cols, xelval maxval, int format, 
+void
+pnm_promoteformatrow(xel* xelrow, int cols, xelval maxval, int format,
                      xelval newmaxval, int newformat);
 
 pixel
