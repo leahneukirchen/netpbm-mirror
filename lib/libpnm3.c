@@ -10,6 +10,9 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
+#include <assert.h>
+
 #include "pnm.h"
 #include "ppm.h"
 #include "pgm.h"
@@ -234,117 +237,138 @@ pnm_invertxel(xel*   const xP,
 
 
 void
-pnm_promoteformat( xel** xels, int cols, int rows, xelval maxval, int format, xelval newmaxval, int newformat )
-    {
-    int row;
+pnm_promoteformat(xel ** const xels,
+                  int    const cols,
+                  int    const rows,
+                  xelval const maxval,
+                  int    const format,
+                  xelval const newmaxval,
+                  int    const newformat) {
 
-    for ( row = 0; row < rows; ++row )
-    pnm_promoteformatrow(
-        xels[row], cols, maxval, format, newmaxval, newformat );
-    }
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row)
+        pnm_promoteformatrow(
+            xels[row], cols, maxval, format, newmaxval, newformat);
+}
+
+
 
 void
-pnm_promoteformatrow( xel* xelrow, int cols, xelval maxval, int format, xelval newmaxval, int newformat )
-    {
-    register int col;
-    register xel* xP;
+pnm_promoteformatrow(xel *  const xelrow,
+                     int    const cols,
+                     xelval const maxval,
+                     int    const format,
+                     xelval const newmaxval,
+                     int    const newformat) {
 
-    if ( ( PNM_FORMAT_TYPE(format) == PPM_TYPE &&
-       ( PNM_FORMAT_TYPE(newformat) == PGM_TYPE ||
-         PNM_FORMAT_TYPE(newformat) == PBM_TYPE ) ) ||
-     ( PNM_FORMAT_TYPE(format) == PGM_TYPE &&
-       PNM_FORMAT_TYPE(newformat) == PBM_TYPE ) )
-    pm_error( "pnm_promoteformatrow: can't promote downwards!" );
+    if ((PNM_FORMAT_TYPE(format) == PPM_TYPE &&
+         (PNM_FORMAT_TYPE(newformat) == PGM_TYPE ||
+          PNM_FORMAT_TYPE(newformat) == PBM_TYPE)) ||
+        (PNM_FORMAT_TYPE(format) == PGM_TYPE &&
+         PNM_FORMAT_TYPE(newformat) == PBM_TYPE)) {
 
-    /* Are we promoting to the same type? */
-    if ( PNM_FORMAT_TYPE(format) == PNM_FORMAT_TYPE(newformat) )
-    {
-    if ( PNM_FORMAT_TYPE(format) == PBM_TYPE )
-        return;
-    if ( newmaxval < maxval )
-        pm_error(
-       "pnm_promoteformatrow: can't decrease maxval - try using pnmdepth" );
-    if ( newmaxval == maxval )
-        return;
-    /* Increase maxval. */
-    switch ( PNM_FORMAT_TYPE(format) )
-        {
+        pm_error( "pnm_promoteformatrow: can't promote downwards!" );
+    } else if (PNM_FORMAT_TYPE(format) == PNM_FORMAT_TYPE(newformat)) {
+        /* We're promoting to the same type - but not necessarily maxval */
+        if (PNM_FORMAT_TYPE(format) == PBM_TYPE) {
+            /* PBM doesn't have maxval, so this is idempotent */
+        } else if (newmaxval < maxval)
+            pm_error("pnm_promoteformatrow: can't decrease maxval - "
+                     "try using pamdepth");
+        else if (newmaxval == maxval) {
+            /* Same type, same maxval => idempotent function */
+        } else {
+            /* Increase maxval. */
+            switch (PNM_FORMAT_TYPE(format)) {
+            case PGM_TYPE: {
+                unsigned int col;
+                for (col = 0; col < cols; ++col)
+                    PNM_ASSIGN1(xelrow[col],
+                                PNM_GET1(xelrow[col]) * newmaxval / maxval);
+            } break;
+
+            case PPM_TYPE: {
+                unsigned int col;
+                for (col = 0; col < cols; ++col)
+                    PPM_DEPTH(xelrow[col], xelrow[col], maxval, newmaxval);
+            } break;
+
+            default:
+                pm_error("Invalid old format passed to "
+                         "pnm_promoteformatrow()");
+            }
+        }
+    } else {
+        /* Promote to a higher type. */
+        switch (PNM_FORMAT_TYPE(format)) {
+        case PBM_TYPE:
+            switch (PNM_FORMAT_TYPE(newformat)) {
+            case PGM_TYPE: {
+                unsigned int col;
+                for (col = 0; col < cols; ++col) {
+                    if (PNM_GET1(xelrow[col]) == 0)
+                        PNM_ASSIGN1(xelrow[col], 0);
+                    else
+                        PNM_ASSIGN1(xelrow[col], newmaxval);
+                }
+            } break;
+
+            case PPM_TYPE: {
+                unsigned int col;
+                for (col = 0; col < cols; ++col) {
+                    if (PNM_GET1(xelrow[col]) == 0)
+                        PPM_ASSIGN(xelrow[col], 0, 0, 0);
+                    else
+                        PPM_ASSIGN(xelrow[col],
+                                   newmaxval, newmaxval, newmaxval );
+                }
+            } break;
+
+            default:
+                pm_error("Invalid new format passed to "
+                         "pnm_promoteformatrow()");
+            }
+            break;
+
         case PGM_TYPE:
-        for ( col = 0, xP = xelrow; col < cols; ++col, ++xP )
-        PNM_ASSIGN1(
-            *xP, (int) PNM_GET1(*xP) * newmaxval / maxval );
-        break;
+            switch (PNM_FORMAT_TYPE(newformat)) {
+            case PPM_TYPE:
+                if (newmaxval < maxval)
+                    pm_error("pnm_promoteformatrow: can't decrease maxval - "
+                             "try using pamdepth");
+                else if (newmaxval == maxval) {
+                    unsigned int col;
+                    for (col = 0; col < cols; ++col) {
+                        PPM_ASSIGN(xelrow[col],
+                                   PNM_GET1(xelrow[col]),
+                                   PNM_GET1(xelrow[col]),
+                                   PNM_GET1(xelrow[col]));
+                    }
+                } else {
+                    /* Increase maxval. */
+                    unsigned int col;
+                    for (col = 0; col < cols; ++col) {
+                        PPM_ASSIGN(xelrow[col],
+                                   PNM_GET1(xelrow[col]) * newmaxval / maxval,
+                                   PNM_GET1(xelrow[col]) * newmaxval / maxval,
+                                   PNM_GET1(xelrow[col]) * newmaxval / maxval);
+                    }
+                }
+                break;
 
-        case PPM_TYPE:
-        for ( col = 0, xP = xelrow; col < cols; ++col, ++xP )
-        PPM_DEPTH( *xP, *xP, maxval, newmaxval );
-        break;
-
-        default:
-        pm_error( "Invalid old format passed to pnm_promoteformatrow()" );
-        }
-    return;
-    }
-
-    /* We must be promoting to a higher type. */
-    switch ( PNM_FORMAT_TYPE(format) )
-    {
-    case PBM_TYPE:
-    switch ( PNM_FORMAT_TYPE(newformat) )
-        {
-        case PGM_TYPE:
-        for ( col = 0, xP = xelrow; col < cols; ++col, ++xP )
-        if ( PNM_GET1(*xP) == 0 )
-            PNM_ASSIGN1( *xP, 0 );
-        else
-            PNM_ASSIGN1( *xP, newmaxval );
-        break;
-
-        case PPM_TYPE:
-        for ( col = 0, xP = xelrow; col < cols; ++col, ++xP )
-        if ( PNM_GET1(*xP) == 0 )
-            PPM_ASSIGN( *xP, 0, 0, 0 );
-        else
-            PPM_ASSIGN( *xP, newmaxval, newmaxval, newmaxval );
-        break;
+            default:
+                pm_error("Invalid new format passed to "
+                         "pnm_promoteformatrow()");
+            }
+            break;
 
         default:
-        pm_error( "Invalid new format passed to pnm_promoteformatrow()" );
+            pm_error("Invalid old format passed to pnm_promoteformatrow()");
         }
-    break;
-
-    case PGM_TYPE:
-    switch ( PNM_FORMAT_TYPE(newformat) )
-        {
-        case PPM_TYPE:
-        if ( newmaxval < maxval )
-        pm_error(
-       "pnm_promoteformatrow: can't decrease maxval - try using pnmdepth" );
-        if ( newmaxval == maxval )
-        {
-        for ( col = 0, xP = xelrow; col < cols; ++col, ++xP )
-            PPM_ASSIGN(
-            *xP, PNM_GET1(*xP), PNM_GET1(*xP), PNM_GET1(*xP) );
-        }
-        else
-        { /* Increase maxval. */
-        for ( col = 0, xP = xelrow; col < cols; ++col, ++xP )
-            PPM_ASSIGN(
-            *xP, (int) PNM_GET1(*xP) * newmaxval / maxval,
-            (int) PNM_GET1(*xP) * newmaxval / maxval,
-            (int) PNM_GET1(*xP) * newmaxval / maxval );
-        }
-        break;
-
-        default:
-        pm_error( "Invalid new format passed to pnm_promoteformatrow()" );
-        }
-    break;
-
-    default:
-        pm_error( "Invalid old format passed to pnm_promoteformatrow()" );
     }
-    }
+}
+
 
 
 pixel
@@ -373,6 +397,39 @@ pnm_xeltopixel(xel const inputXel,
     }
 
     return outputPixel;
+}
+
+
+
+xel
+pnm_pixeltoxel(pixel const inputPixel) {
+
+    return inputPixel;
+}
+
+
+
+xel
+pnm_graytoxel(gray const inputGray) {
+
+    xel outputXel;
+
+    PNM_ASSIGN1(outputXel, inputGray);
+
+    return outputXel;
+}
+
+
+xel
+pnm_bittoxel(bit    const inputBit,
+             xelval const maxval) {
+
+    switch (inputBit) {
+    case PBM_BLACK: return pnm_blackxel(maxval, PBM_TYPE); break;
+    case PBM_WHITE: return pnm_whitexel(maxval, PBM_TYPE); break;
+    default:
+        assert(false);
+    }
 }
 
 

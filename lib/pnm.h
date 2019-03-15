@@ -5,6 +5,8 @@
 #define _PNM_H_
 
 #include <netpbm/pm.h>
+#include <netpbm/pbm.h>
+#include <netpbm/pgm.h>
 #include <netpbm/ppm.h>
 
 #ifdef __cplusplus
@@ -133,6 +135,16 @@ pnm_promoteformatrow(xel* xelrow, int cols, xelval maxval, int format,
 pixel
 pnm_xeltopixel(xel const inputxel,
                int const format);
+
+xel
+pnm_pixeltoxel(pixel const inputPixel);
+
+xel
+pnm_graytoxel(gray const inputGray);
+
+xel
+pnm_bittoxel(bit    const inputBit,
+             xelval const maxval);
 
 xel
 pnm_parsecolorxel(const char * const colorName,
