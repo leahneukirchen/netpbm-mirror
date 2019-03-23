@@ -3,6 +3,10 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
+19.03.23 BJH  Release 10.85.05
+
+              Build: update 'mkdeb' so it works on Debian 9 (in addition to
+              Debian 8).  Thanks Neil R Ormos <ormos@ormos.org>.
 
 19.03.08 BJH  Release 10.85.04
 
