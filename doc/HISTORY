@@ -69,6 +69,9 @@ not yet  BJH  Release 10.86.00
               shared library stub and shared library are in the same
               directory.
 
+              Build: update 'mkdeb' so it works on Debian 9 (in addition to
+              Debian 8).  Thanks Neil R Ormos <ormos@ormos.org>.
+
 18.12.29 BJH  Release 10.85.00
 
               pnmpaste: Add -nand, -nor, and -nxor.

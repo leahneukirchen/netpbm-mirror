@@ -11,9 +11,9 @@
 #  2002).
 #
 #  The dependencies this package declares are those that can be satisfied by
-#  Debian 8 (Jessie).  Netpbm works fine on other versions of Debian, but you
-#  may have to change the dependencies in this program or ignore dependencies
-#  at install time.
+#  Debian 8 (Jessie) and Debian 9 (Stretch).  Netpbm works fine on other
+#  versions of Debian, but you may have to change the dependencies in this
+#  program or ignore dependencies at install time.
 ###############################################################################
 
 use strict;
@@ -138,7 +138,7 @@ sub control($$) {
     $control{'Depends'} =
         'libc6, ' .
         'libjpeg62, ' .
-        'libpng12-0, ' .
+        'libpng12-0 | libpng16-16, ' .
         'libtiff5, ' .
         'libx11-6, ' .
         'libxml2, ' .
