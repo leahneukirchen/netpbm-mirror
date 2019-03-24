@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamhue User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamhue</H1>
+Updated: 07 January 2018
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+pamhue - change a Netpbm image's Hues
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<b>pamhue</b>
+[<b>-huechange=</b>[<i>degrees</i>]]
+<i>filename</i>
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamhue</b> shifts the hue of every pixel in an image by the same amount.
+
+<p>If the image is in a black and white or grayscale format, the image is
+fully desaturated, so the hue is meaningless and <b>pamhue</b> leaves the
+image unchanged.
+
+<p>Hue-Saturation-Value, or HSV, is one way to represent a color, like the
+more well-known RGB.  Hue is an indication of the secondary color with the
+same brightness that most closely approximates the color.  A secondary color
+is made of a combination of at most two of the primary colors.
+
+<p>In the HSV model, hue is an angular position on the color wheel.
+
+<p>With <b>pamhue</b>, you indicate an angle by which to change all the hues,
+in the image; for example you can say move it 60 degrees clockwises.  That
+would change all red pixels to yellow and all yellow pixels to green, etc.
+  
+<p>To modify the saturation and value components of the colors, use
+<b>pambrighten</b>.
+
+
+<H2 id="examples">EXAMPLES</H2>
+
+<p>To shift the color of each pixel 120 degrees clockwise:
+<pre>
+pamhue -huechange=120
+</pre>
+
+<p>To shift the color of each pixel 120 degrees counterclockwise:
+<pre>
+pamhue -huechange=-120
+</pre>
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL>
+<DT><b>-huechange=</b><i>degrees</i>
+
+<DD>This option specifies the amount to shift each color.  It is in degrees,
+with positive meaning clockwise and negative meaning counterclockwise.  It may
+be fractional and may be more than a full revolution.
+
+<p>This option is mandatory.
+
+</DL>  
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamhue</b> was new in Netpbm 10.86 (March 2019).
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pambrighten.html">pambrighten</A>, 
+<A HREF="ppmflash.html">ppmflash</A>, 
+<A HREF="ppmhist.html">ppmhist</A>, 
+<A HREF="ppm.html">ppm</A>
+
+<H2 id="author">AUTHOR</H2>
+
+<p>Copyright (C) 2018 by Willem van Schaik.
+Copyright (C) 1990 by Brian Moffet.
+Copyright (C) 1989 by Jef Poskanzer.
+
+<P>
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted, provided
+that the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.  This software is provided "as is" without express or
+implied warranty.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#examples">EXAMPLES</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>
