@@ -1,0 +1,32 @@
+#! /bin/bash
+# This script tests: pamfind
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+sorted0_res=${tmpdir}/pamfind_sorted0.res
+sorted1_res=${tmpdir}/pamfind_sorted1.res
+
+# Test 1
+echo Test 1
+pamfind -color=grey17     testimg.ppm 
+pamfind -target=210,57,41 testimg.ppm
+
+# Test 2
+echo Test 2
+pamfind -target=1 testgrid.pbm
+
+# Test 3
+# The two outputs should be disjoint
+echo Test 3
+pamfind -target=0 testgrid.pbm | sort > ${sorted0_res}
+pamfind -target=1 testgrid.pbm | sort > ${sorted1_res}
+comm -3 ${sorted0_res}  ${sorted1_res}  |
+  awk 'END {if (NR==226) print  "okay";
+            else printf("failure (line count=%d)\n", NR)}'
+comm -12 ${sorted0_res}  ${sorted1_res} | 
+  awk '{print}; END { if(NR == 0) print  "okay";
+            else printf("failure (line count=%d)\n", NR)}'
+
+rm ${sorted0_res} ${sorted1_res}
+
+

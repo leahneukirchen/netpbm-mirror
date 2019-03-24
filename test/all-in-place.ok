@@ -54,6 +54,7 @@ pamendian: ok
 pamenlarge: ok
 pamexec: ok
 pamfile: ok
+pamfind: ok
 pamfix: ok
 pamflip: ok
 pamfunc: ok

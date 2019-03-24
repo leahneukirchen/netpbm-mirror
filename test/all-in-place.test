@@ -96,6 +96,7 @@ ordinary_testprogs="\
   pamenlarge \
   pamexec \
   pamfile \
+  pamfind \
   pamfix \
   pamflip \
   pamfunc \

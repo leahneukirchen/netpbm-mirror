@@ -33,6 +33,7 @@ ppmrough.test
 # Analyzer tests
 
 pamfile.test
+pamfind.test
 pamtable.test
 pgmhist.test
 ppmhist.test
