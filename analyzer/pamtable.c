@@ -55,7 +55,7 @@ parseCommandLine(int argc, const char ** const argv,
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
-    else 
+    else
         cmdlineP->inputFileName = argv[1];
 
     free(option_def);
@@ -90,7 +90,7 @@ sampleFormat(const struct pam * const pamP) {
     unsigned int const decimalWidth = ROUNDU(ceil(log10(pamP->maxval + 1)));
 
     const char * retval;
-    
+
     pm_asprintf(&retval, "%%%uu", decimalWidth);
 
     return retval;
@@ -192,6 +192,9 @@ main(int argc, const char *argv[]) {
     printRaster(ifP, &inpam, stdout);
 
     pm_close(inpam.file);
-    
+
     return 0;
 }
+
+
+

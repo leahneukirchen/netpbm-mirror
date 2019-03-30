@@ -23,7 +23,7 @@ typedef struct {
   Represents a single color measurement over a "region"
 -----------------------------------------------------------------------------*/
     uint         area;     /* area in pixels over which to average the color */
-    /* cumulative normalised intensity-proportiunal value of the region:     */
+    /* cumulative normalized intensity-proportiunal value of the region:     */
     double       color[3];
 } RegData;
 
@@ -136,7 +136,7 @@ parsedRegSpec(const char * const s) {
   's' is of the format x,y[:label].
 -----------------------------------------------------------------------------*/
     char * end;
-    char *start;
+    char * start;
     RegSpec res;
 
     start = (char *)s;
@@ -184,25 +184,26 @@ parseColorFmt(const char * const formatStr,
 
   A format specification string is of format format[:arg].
 -----------------------------------------------------------------------------*/
-    int           const FmtNotFound = -1;
     const char *  const errSpec = "Wrong color format specification: ";
 
     const char *  colonLoc; /* location of the colon in the specification */
     uint          n, f;
     const ColorFormat * formatP;
     uint formatId;
+    bool found;
 
     colonLoc  = strchr(formatStr, ':');
     if (colonLoc != NULL) n = colonLoc - formatStr;
     else                  n = strlen(formatStr);
 
-    for (f = 0, formatId = FmtNotFound;
-         f < ARRAY_SIZE(formats) && formatId == FmtNotFound; ++f) {
-        if (strncmp(formatStr, formats[f].id, n) == 0)
+    for (f = 0, found = false; f < ARRAY_SIZE(formats) && !found; ++f) {
+        if (strncmp(formatStr, formats[f].id, n) == 0) {
+            found = true;
             formatId = f;
+        }
     }
-    if (formatId == FmtNotFound)
-        pm_error("Color format not recognised.");
+    if (!found)
+        pm_error("Color format not recognized.");
 
     *formatIdP = formatId;
 
@@ -326,20 +327,22 @@ freeCommandLine(CmdLineInfo const cmdLine) {
 
 
 
-static RegData * allocRegSamples(uint n) {
+static RegData *
+allocRegSamples(uint n) {
 /*----------------------------------------------------------------------------
-  Allocate an array of <n> initialised region samles.  The array should be
+  Allocate an array of <n> initialized region samples.  The array should be
   freed after use.
 -----------------------------------------------------------------------------*/
     uint r;
     RegData * regSamples;
     regSamples = calloc(n, sizeof(RegData));
-    for (r = 0; r < n; r++) {
+
+    for (r = 0; r < n; ++r) {
         uint l;
 
         regSamples[r].area = 0;
 
-        for (l = 0; l < 3; l++)
+        for (l = 0; l < 3; ++l)
             regSamples[r].color[l] = 0.0;
     }
     return regSamples;
@@ -347,14 +350,16 @@ static RegData * allocRegSamples(uint n) {
 
 
 
-static uint getYmax(struct pam * const pamP,
-                    CmdLineInfo  const cmdLine) {
+static uint
+getYmax(struct pam * const pamP,
+        CmdLineInfo  const cmdLine) {
 /*----------------------------------------------------------------------------
   Find the maximum row in the image that contains a pixel from a region.
 -----------------------------------------------------------------------------*/
     uint ymax, r, ycmax;
     ycmax = 0;
-    for (r = 0; r < cmdLine.regN; r++) {
+
+    for (r = 0; r < cmdLine.regN; ++r) {
         RegSpec spec = cmdLine.regSpecs[r];
         if (spec.y >= pamP->height || spec.x >= pamP->width)
             pm_error("Region at %i,%i is outside the image boundaries.",
@@ -363,9 +368,8 @@ static uint getYmax(struct pam * const pamP,
         if (spec.y > ycmax)
             ycmax = spec.y;
     }
-    ymax = ycmax + cmdLine.radius;
-    if (ymax > pamP->height - 1)
-        ymax = pamP->height - 1;
+    ymax = MIN(pamP->height - 1, ycmax + cmdLine.radius);
+
     return ymax;
 }
 
@@ -405,11 +409,11 @@ readChord(RegData *    const dataP,
 
 
 static void
-processRow(tuple *      const   row,
-           uint         const   y,
-           struct pam * const   pamP,
-           CmdLineInfo  const * cmdLineP,
-           RegData *    const   regSamples) {
+processRow(tuple *             const row,
+           uint                const y,
+           struct pam *        const pamP,
+           const CmdLineInfo * const cmdLineP,
+           RegData *           const regSamples) {
 /*----------------------------------------------------------------------------
   Read a row from image described by *pamP into 'row', and update region
   samples regSamples[] from it.  'y' is the position of the row.
@@ -512,7 +516,7 @@ printColors(struct pam *    const pamP,
             const RegData * const regSamples) {
 /*----------------------------------------------------------------------------
   Print the colors regSamples[] to *ofP in the format
-  requested by 'cmdLine'. 
+  requested by 'cmdLine'.
 
   *pamP tells how to interpret regSamples[]
 -----------------------------------------------------------------------------*/

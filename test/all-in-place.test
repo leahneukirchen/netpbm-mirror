@@ -82,6 +82,7 @@ ordinary_testprogs="\
   pamarith \
   pambackground \
   pambayer \
+  pambrighten \
   pamchannel \
   pamcomp \
   pamcrater \
@@ -95,16 +96,19 @@ ordinary_testprogs="\
   pamenlarge \
   pamexec \
   pamfile \
+  pamfind \
   pamfix \
   pamflip \
   pamfunc \
   pamgauss \
   pamgetcolor \
   pamgradient \
+  pamhue \
   pamlevels \
   pamlookup \
   pammasksharpen \
   pammixinterlace \
+  pammixmulti \
   pammosaicknit \
   pamoil \
   pampaintspill \

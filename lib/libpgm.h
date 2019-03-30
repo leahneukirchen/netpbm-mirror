@@ -7,9 +7,9 @@
 #include "pgm.h"
 
 void
-pgm_readpgminitrest(FILE * const file, 
-                    int *  const colsP, 
-                    int *  const rowsP, 
+pgm_readpgminitrest(FILE * const file,
+                    int *  const colsP,
+                    int *  const rowsP,
                     gray * const maxvalP);
 
 #endif

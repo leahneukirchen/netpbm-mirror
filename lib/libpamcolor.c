@@ -366,9 +366,7 @@ pnm_parsecolor2(const char * const colorname,
 
     color = pnm_parsecolorn(colorname);
 
-    retval[PAM_RED_PLANE] = ROUNDU(color[PAM_RED_PLANE] * maxval);
-    retval[PAM_GRN_PLANE] = ROUNDU(color[PAM_GRN_PLANE] * maxval);
-    retval[PAM_BLU_PLANE] = ROUNDU(color[PAM_BLU_PLANE] * maxval);
+    pnm_unnormalizetuple(&pam, color, retval);
 
     if (!closeOk) {
         warnIfNotExact(colorname, retval, color, maxval, PAM_RED_PLANE);

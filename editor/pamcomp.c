@@ -532,7 +532,8 @@ composeComponents(sample           const compA,
             float const mix =
                 compALinear * distrib + compBLinearAdj * (1.0 - distrib)
                 * composedFactor;
-            sample const sampleValue = ROUNDU(pm_gamma709(mix) * maxval);
+            sample const sampleValue =
+                pnm_unnormalize(pm_gamma709(mix), maxval);
             retval = MIN(maxval, MAX(0, sampleValue));
         }
     }

@@ -117,7 +117,7 @@ main(int argc, const char ** const argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    grayLevel = ROUNDU(cmdline.grayLevel * cmdline.maxval);
+    grayLevel = pgm_unnormalize(cmdline.grayLevel, cmdline.maxval);
 
     pgm_writepgminit(stdout, cmdline.cols, cmdline.rows, cmdline.maxval, 0);
 

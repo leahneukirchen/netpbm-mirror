@@ -1,0 +1,64 @@
+#! /bin/bash
+# This script tests: pamscale pamenlarge
+# Also requires: pamvalidate pnmpsnr
+
+tmpdir=${tmpdir:-/tmp}
+enlarge_ppm=${tmpdir}/enlarge.ppm
+
+width_height=`pamfile -size testimg.ppm | \
+                awk '{print "-width="$1, "-height="$2}'`
+
+# The target values here were determined by running the test on a
+# 32-bit GNU/Linux system and subtracting 2.5 (dB) from observed
+# values.
+
+pamenlarge  4 testimg.ppm | pamvalidate > ${enlarge_ppm}
+echo  4 box:  
+pamscale  4 -filter=box testimg.ppm | \
+  pnmpsnr -target1=35.67 -target2=49.25 -target3=43.28 - ${enlarge_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+ 
+pamscale ${width_height} -filter=point ${enlarge_ppm} | \
+  pnmpsnr -target1=1000 -target2=1000 -target3=1000 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${enlarge_ppm}
+
+pamenlarge  9 testimg.ppm | pamvalidate > ${enlarge_ppm}
+echo  9 triangle:  
+pamscale  9 -filter=triangle testimg.ppm | \
+  pnmpsnr -target1=35.27 -target2=49.06 -target3=43.11 - ${enlarge_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+pamscale ${width_height} -filter=triangle ${enlarge_ppm} | \
+  pnmpsnr -target1=41.52 -target2=56.96 -target3=52.68 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${enlarge_ppm}
+
+pamenlarge  4 testimg.ppm | pamvalidate > ${enlarge_ppm}
+echo  4 quadratic:  
+pamscale  4 -filter=quadratic testimg.ppm | \
+  pnmpsnr -target1=35.39 -target2=49.36 -target3=43.46 - ${enlarge_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+pamscale ${width_height} -filter=quadratic ${enlarge_ppm} | \
+  pnmpsnr -target1=39.34 -target2=55.24 -target3=50.65 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${enlarge_ppm}
+
+pamenlarge 10 testimg.ppm | pamvalidate > ${enlarge_ppm}
+echo 10 cubic:  
+pamscale 10 -filter=cubic testimg.ppm | \
+  pnmpsnr -target1=34.39 -target2=48.45 -target3=42.52 - ${enlarge_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+pamscale ${width_height} -filter=cubic ${enlarge_ppm} | \
+  pnmpsnr -target1=37.7 -target2=53.84 -target3=48.96 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${enlarge_ppm}
+
+pamenlarge  4 testimg.ppm | pamvalidate > ${enlarge_ppm}
+echo  4 catrom:  
+pamscale  4 -filter=catrom testimg.ppm | \
+  pnmpsnr -target1=36.05 -target2=49.51 -target3=43.49 - ${enlarge_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+pamscale ${width_height} -filter=catrom ${enlarge_ppm} | \
+  pnmpsnr -target1=46.5 -target2=60.68 -target3=57.8 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${enlarge_ppm}

@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <assert.h>
 #include <png.h>
 #include "pm_c_util.h"
@@ -59,6 +60,7 @@ pngx_create(struct pngx ** const pngxPP,
     if (!pngxP)
         pm_error("Failed to allocate memory for PNG object");
     else {
+        pngxP->infoPrepared = false;
         pngxP->numPassesRequired = 1;
 
         switch(rw) {
@@ -466,6 +468,37 @@ pngx_setIhdr(struct pngx * const pngxP,
 
 void
 pngx_setInterlaceHandling(struct pngx * const pngxP) {
+    /* The documentation is vague and contradictory on what this does, but
+       what it appears from reasoning and experimentation to do is the
+       following.
+
+       It applies to reading and writing by rows (png_write_row, png_read_row)
+       as opposed to whole image (png_write_image, png_read_image).  It has
+       no effect on whole image read and write.
+
+       This is not what makes an image interlaced or tells the decompressor
+       that it is interlaced.  All it does is control how you you read and
+       write the raster when the image is interlaced.  It has no effect if the
+       image is not interlaced.  (You make an image interlaced by setting the
+       IHDR; the decompressor finds out from the IHDR that it is interlaced).
+
+       In the write case, it controls whether you construct the subimages
+       yourself and feed them to libpng in sequence or you feed libpng the
+       entire image multiple times and libpng picks out the pixels appropriate
+       for each subimage in each pass.
+
+       In the read case, it controls whether you get the raw subimages and you
+       assemble them into the full image or you read the whole image multiple
+       times into the same buffer, with the pixels that belong to each
+       subimage being filled in on each pass.
+
+       Note that the only kind of interlacing that exists today is ADAM7 and
+       consequently, the number of passes is always 1 (for no interlacing) or
+       7 (for interlacing).
+    */
+    if (!pngxP->infoPrepared)
+        pm_error("pngx_setInterlaceHandling must not be called before "
+                 "pngx_writeInfo or pngx_readInfo");
 
     pngxP->numPassesRequired = png_set_interlace_handling(pngxP->png_ptr);
 }
@@ -474,6 +507,10 @@ pngx_setInterlaceHandling(struct pngx * const pngxP) {
 
 void
 pngx_setPacking(struct pngx * const pngxP) {
+
+    if (!pngxP->infoPrepared)
+        pm_error("pngx_setPacking must not be called before "
+                 "pngx_writeInfo or pngx_readInfo");
 
     png_set_packing(pngxP->png_ptr);
 }
@@ -516,7 +553,19 @@ pngx_setSbit(struct pngx * const pngxP,
 void
 pngx_setShift(struct pngx * const pngxP,
               png_color_8   const sigBitArg) {
+/*----------------------------------------------------------------------------
+   Tell the number of significant bits in the row buffers that will be given
+   to the compressor.  Those bits are the least significant of the 8 bits of
+   space in the row buffer for each sample.  For example, if red sample values
+   are in the range 0-7, only the lower 3 bits of the 8-bit byte for each
+   red sample will be used, so one would call this with sigBitArg.red == 3.
 
+   The name alludes to the fact that to normalize the sample to 8 bits, one
+   shifts it left, and this function tells how much shift has to happen.  In
+   the example above, each red sample has to be shifted left 5 bits (so that
+   the upper 3 bits are significant and the lower 5 bits are always zero) to
+   create an 8 bit sample out of the 3 bit samples.
+-----------------------------------------------------------------------------*/
     png_color_8 sigBit;
 
     sigBit = sigBitArg;
@@ -651,6 +700,8 @@ void
 pngx_readInfo(struct pngx * const pngxP) {
 
     png_read_info(pngxP->png_ptr, pngxP->info_ptr);
+
+    pngxP->infoPrepared = true;
 }
 
 
@@ -659,6 +710,8 @@ void
 pngx_writeInfo(struct pngx * const pngxP) {
 
     png_write_info(pngxP->png_ptr, pngxP->info_ptr);
+
+    pngxP->infoPrepared = true;
 }
 
 
@@ -728,6 +781,15 @@ pngx_writeRow(struct pngx *    const pngxP,
               const png_byte * const line) {
 
     png_write_row(pngxP->png_ptr, (png_byte *)line);
+}
+
+
+
+void
+pngx_writeImage(struct pngx * const pngxP,
+                png_byte **   const raster) {
+
+    png_write_image(pngxP->png_ptr, (png_byte **)raster);
 }
 
 

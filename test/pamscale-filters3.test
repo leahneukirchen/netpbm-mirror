@@ -1,0 +1,32 @@
+#! /bin/bash
+# This script tests: pamscale pamstretch pamstretch-gen 
+ # Also requires: pamvalidate pnmpsnr || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+tmpdir=${tmpdir:-/tmp}
+stretch_ppm=${tmpdir}/stretch.ppm
+
+width_height=`pamfile -size testimg.ppm | \
+                awk '{print "-width="$1, "-height="$2}'`
+
+pamstretch-gen 3.96 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo 3.96 hermite:  
+pamscale 3.96 -filter=hermite testimg.ppm | \
+  pnmpsnr -target1=34.13 -target2=48.95 -target3=42.73 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=hermite ${stretch_ppm} | \
+  pnmpsnr -target1=33.12 -target2=48.59 -target3=42.3 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch-gen 2.75 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo 2.75 lanczos:  
+pamscale 2.75 -filter=lanczos testimg.ppm | \
+  pnmpsnr -target1=32.93 -target2=48.28 -target3=41.89 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=lanczos ${stretch_ppm} | \
+  pnmpsnr -target1=32.81 -target2=48.43 -target3=41.94 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}

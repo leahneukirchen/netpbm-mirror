@@ -8,6 +8,7 @@ use strict;
 use English;
 use Fcntl;
 use File::Basename;
+use Cwd qw(getcwd);
 
 my ($TRUE, $FALSE) = (1,0);
 
@@ -621,9 +622,194 @@ sub installSharedLib($$$) {
 
 
 
-sub getLinkDir($) {
+sub getSharedLinkDir($) {
 #-----------------------------------------------------------------------------
-#  Find out from the user where he wants the link-edit libraries installed and
+#  Find out from the user where he wants the shared library stubs installed
+#  and return that.
+#-----------------------------------------------------------------------------
+    my ($prefix) = @_;
+
+    print("Where do you want the shared library stub (used to link-edit\n" .
+          "programs to use the shared lirary) installed?\n");
+    print("\n");
+
+    my $linkDir;
+
+    while (!$linkDir) {
+        my $default = "$prefix/lib";
+
+        my $response = fsObjPrompt("shared library stub directory", $default);
+        
+        if (-d($response)) {
+            $linkDir = $response;
+        } else {
+            my $succeeded = mkdir($response, 0777);
+            
+            if (!$succeeded) {
+                print("Unable to create directory '$response'.  " .
+                      "Error=$ERRNO\n");
+            } else {
+                $linkDir = $response;
+            }
+        }
+    }
+    print("\n");
+
+    return $linkDir;
+}
+
+
+
+sub removeDotDirs($) {
+
+    my ($readDirResultR) = @_;
+
+    my @dirContents;
+
+    foreach (@{$readDirResultR}) {
+        if ($_ ne '.' && $_ ne '..') {
+            push(@dirContents, $_);
+        }
+    }
+
+    return \@dirContents;
+}
+
+
+
+sub readDirContents($$$) {
+    my ($dirName, $contentsRR, $errorR) = @_;
+#-----------------------------------------------------------------------------
+#  Return the contents of the directory named $dirName, excluding the
+#  fake . and .. entries.
+#-----------------------------------------------------------------------------
+    my $dirContentsR;
+    my $error;
+
+    my $success = opendir(DIR, $dirName);
+
+    if (!$success) {
+        $error = "Unable to open directory '$dirName' with opendir()";
+    } else {
+        my @readDirResult = readdir(DIR);
+
+        $dirContentsR = removeDotDirs(\@readDirResult);
+
+        closedir(DIR);
+    }
+
+    $$contentsRR = $dirContentsR;
+
+    if ($errorR) {
+        $$errorR = $error;
+    }
+}
+
+
+
+sub dirContents($) {
+    my ($dirName) = @_;
+#-----------------------------------------------------------------------------
+#  Return the contents of the directory named $dirName, excluding the
+#  fake . and .. entries.
+#-----------------------------------------------------------------------------
+
+    readDirContents($dirName, \my $contentsR, \my $error);
+
+    if ($error) {
+        die($error);
+    }
+    return @{$contentsR};
+}
+
+
+
+sub fixSharedStubSymlink($$) {
+#-----------------------------------------------------------------------------
+#  This is a hack to install a shared library link on a GNU system.
+#
+# On systems that use the GNU dynamic linker, the shared library stub (the
+# file one uses at link-edit time to tell the linker what it needs to know
+# about the shared library that the code will use at run time) is just a
+# symbolic link to a copy of the actual shared library.  In the Netpbm
+# package, this is a relative symbolic link to the shared library in the
+# package.
+
+# Assuming Caller just copied the contents of the 'sharedlink' directory
+# straight from the package to the install target system, that symbolic link
+# isn't necessarily correct, and even if it is, it's probably messy.  (In the
+# normal case, the link value is ../lib/libnetpbm.so.<MAJ>).
+
+# So what we do is just detect and patch up that case.  If the stub is a
+# symbolic link to something in the shared library directory of the package,
+# we replace it with a symbolic link to the same thing in the shared library
+# directory of the install target system.
+# -----------------------------------------------------------------------------
+    my ($linkDir, $shlibDir) = @_;
+
+    my $oldCwd = getcwd();
+    chdir($linkDir);
+
+    foreach my $fsObjNm (dirContents('.')) {
+        if (-l("$fsObjNm")) {
+            if (readlink($fsObjNm) =~ m{^\.\./lib/(.*)$}) {
+                my $shlibNm = $1;
+
+                unlink($fsObjNm) or
+                    die("Failed to delete symlink copied from package " .
+                        "in order to replace it with a proper symlink " .
+                        "for this installation");
+
+                if ($linkDir eq $shlibDir) {
+                    symlink($shlibNm, $fsObjNm) or
+                        die("Failed to create symlink as shared library stub");
+                } else {
+                    symlink("$shlibDir/$shlibNm", $fsObjNm) or
+                        die("Failed to create symlink as shared library stub");
+                }
+                    
+                print("Linked $shlibDir/$shlibNm from $linkDir/$fsObjNm");
+            }
+        }
+    }
+    chdir($oldCwd);
+}
+
+
+
+sub installSharedStub($$$$) {
+
+    my ($pkgdir, $prefix, $shlibDir, $linkdirR) = @_;
+
+    if (-d("$pkgdir/sharedlink")) {
+        my $linkDir = getSharedLinkDir($prefix);
+
+        print("Installing shared library stubs.\n");
+
+        my $rc = system("$cpCommand $pkgdir/sharedlink/* $linkDir/");
+
+        if ($rc != 0) {
+            print("Copy of files from $pkgdir/sharedlink " .
+                  "to $linkDir failed.\n");
+            print("cp return code is $rc\n");
+        } else {
+            fixSharedStubSymlink($linkDir, $shlibDir);
+
+            print("done.\n");
+        }
+        $$linkdirR = $linkDir;
+    } else {
+        print("You did not build a shared library, so I will not " .
+              "install a stub \n");
+        $$linkdirR = undef;
+    }
+}
+
+
+
+sub getStaticLinkDir($) {
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the static  libraries installed and
 #  return that.
 #-----------------------------------------------------------------------------
     my ($prefix) = @_;
@@ -662,15 +848,16 @@ sub installStaticLib($$$) {
 
     my ($pkgdir, $prefix, $linkdirR) = @_;
 
-    if (-d("$pkgdir/link")) {
-        my $linkDir = getLinkDir($prefix);
+    if (-d("$pkgdir/staticlink")) {
+        my $linkDir = getStaticLinkDir($prefix);
 
-        print("Installing link libraries.\n");
+        print("Installing static link libraries.\n");
 
-        my $rc = system("$cpCommand $pkgdir/link/* $linkDir/");
+        my $rc = system("$cpCommand $pkgdir/staticlink/* $linkDir/");
 
         if ($rc != 0) {
-            print("Copy of files from $pkgdir/link to $linkDir failed.\n");
+            print("Copy of files from $pkgdir/staticlink " .
+                  "to $linkDir failed.\n");
             print("cp return code is $rc\n");
         } else {
             print("done.\n");
@@ -679,6 +866,7 @@ sub installStaticLib($$$) {
     } else {
         print("You did not build a static library, so I will not " .
               "install one \n");
+        $$linkdirR = undef;
     }
 }
 
@@ -1037,7 +1225,10 @@ print("\n");
 installSharedLib($pkgdir, $prefix, \my $libdir);
 print("\n");
 
-installStaticLib($pkgdir, $prefix, \my $linkdir);
+installSharedStub($pkgdir, $prefix, $libdir, \my $sharedlinkdir);
+print("\n");
+
+installStaticLib($pkgdir, $prefix, \my $staticlinkdir);
 print("\n");
 
 installDataFile($pkgdir, $prefix, \my $datadir);
@@ -1045,6 +1236,8 @@ print("\n");
 
 installHeader($pkgdir, $prefix, \my $includedir);
 print("\n");
+
+my $linkdir = defined($sharedlinkdir) ? $sharedlinkdir : $staticlinkdir;
 
 my $templateSubsR =
     {VERSION    => netpbmVersion($pkgdir),

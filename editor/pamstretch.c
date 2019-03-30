@@ -1,5 +1,5 @@
 /* pamstretch - scale up portable anymap by interpolating between pixels.
- * 
+ *
  * This program is based on 'pnminterp' by Russell Marks, rename
  * pnmstretch for inclusion in Netpbm, then rewritten and renamed to
  * pamstretch by Bryan Henderson in December 2001.
@@ -10,12 +10,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
@@ -27,33 +27,35 @@
 #include <limits.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
+#include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
+#include "pam.h"
 
-enum an_edge_mode {
+enum EdgeMode {
     EDGE_DROP,
         /* drop one (source) pixel at right/bottom edges. */
     EDGE_INTERP_TO_BLACK,
         /* interpolate right/bottom edge pixels to black. */
     EDGE_NON_INTERP
-        /* don't interpolate right/bottom edge pixels 
+        /* don't interpolate right/bottom edge pixels
            (default, and what zgv does). */
 };
 
 
-struct cmdline_info {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
-    enum an_edge_mode edge_mode;
+    const char * inputFileName;  /* Filespecs of input files */
+    enum EdgeMode edgeMode;
     unsigned int xscale;
     unsigned int yscale;
 };
 
 
 
-tuple blackTuple;  
+tuple blackTuple;
    /* A "black" tuple.  Unless our input image is PBM, PGM, or PPM, we
       don't really know what "black" means, so this is just something
       arbitrary in that case.
@@ -61,116 +63,125 @@ tuple blackTuple;
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-   Note that the file spec array we return is stored in the storage that
+   Note that the file name array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optStruct3 opt;  /* set by OPTENT3 */
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
     unsigned int option_def_index;
 
     unsigned int blackedge;
     unsigned int dropedge;
-    unsigned int xscale_spec;
-    unsigned int yscale_spec;
+    unsigned int xscaleSpec;
+    unsigned int yscaleSpec;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3('b', "blackedge",    OPT_FLAG, NULL, &blackedge,            0);
     OPTENT3('d', "dropedge",     OPT_FLAG, NULL, &dropedge,             0);
-    OPTENT3(0,   "xscale",       OPT_UINT, 
-            &cmdline_p->xscale, &xscale_spec, 0);
-    OPTENT3(0,   "yscale",       OPT_UINT, 
-            &cmdline_p->yscale, &yscale_spec, 0);
+    OPTENT3(0,   "xscale",       OPT_UINT,
+            &cmdlineP->xscale, &xscaleSpec, 0);
+    OPTENT3(0,   "yscale",       OPT_UINT,
+            &cmdlineP->yscale, &yscaleSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE; /* We have some short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (blackedge && dropedge) 
+    if (blackedge && dropedge)
         pm_error("Can't specify both -blackedge and -dropedge options.");
     else if (blackedge)
-        cmdline_p->edge_mode = EDGE_INTERP_TO_BLACK;
+        cmdlineP->edgeMode = EDGE_INTERP_TO_BLACK;
     else if (dropedge)
-        cmdline_p->edge_mode = EDGE_DROP;
+        cmdlineP->edgeMode = EDGE_DROP;
     else
-        cmdline_p->edge_mode = EDGE_NON_INTERP;
+        cmdlineP->edgeMode = EDGE_NON_INTERP;
 
-    if (xscale_spec && cmdline_p->xscale == 0)
+    if (xscaleSpec && cmdlineP->xscale == 0)
         pm_error("You specified zero for the X scale factor.");
-    if (yscale_spec && cmdline_p->yscale == 0)
+    if (yscaleSpec && cmdlineP->yscale == 0)
         pm_error("You specified zero for the Y scale factor.");
 
-    if (xscale_spec && !yscale_spec)
-        cmdline_p->yscale = 1;
-    if (yscale_spec && !xscale_spec)
-        cmdline_p->xscale = 1;
+    if (xscaleSpec && !yscaleSpec)
+        cmdlineP->yscale = 1;
+    if (yscaleSpec && !xscaleSpec)
+        cmdlineP->xscale = 1;
 
-    if (!(xscale_spec || yscale_spec)) {
+    if (!(xscaleSpec || yscaleSpec)) {
         /* scale must be specified in an argument */
-        if ((argc-1) != 1 && (argc-1) != 2)
+        if (argc-1 != 1 && argc-1 != 2)
             pm_error("Wrong number of arguments (%d).  Without scale options, "
                      "you must supply 1 or 2 arguments:  scale and "
                      "optional file specification", argc-1);
-        
+
         {
-            char *endptr;   /* ptr to 1st invalid character in scale arg */
+            const char * error;   /* error message of pm_string_to_uint */
             unsigned int scale;
-            
-            scale = strtol(argv[1], &endptr, 10);
-            if (*argv[1] == '\0') 
-                pm_error("Scale argument is a null string.  "
-                         "Must be a number.");
-            else if (*endptr != '\0')
-                pm_error("Scale argument contains non-numeric character '%c'.",
-                         *endptr);
-            else if (scale < 2)
-                pm_error("Scale argument must be at least 2.  "
-                         "You specified %d", scale);
-            cmdline_p->xscale = scale;
-            cmdline_p->yscale = scale;
+
+            pm_string_to_uint(argv[1], &scale, &error);
+
+            if (error)
+                pm_error("Invalid scale factor: %s", error);
+            else {
+                if (scale < 1)
+                    pm_error("Scale argument must be at least 1.  "
+                             "You specified %d", scale);
+                cmdlineP->xscale = scale;
+                cmdlineP->yscale = scale;
+            }
         }
-        if (argc-1 > 1) 
-            cmdline_p->input_filespec = argv[2];
+
+        if (argc-1 > 1)
+            cmdlineP->inputFileName = argv[2];
         else
-            cmdline_p->input_filespec = "-";
+            cmdlineP->inputFileName = "-";
     } else {
         /* No scale argument allowed */
-        if ((argc-1) > 1)
+        if (argc-1 > 1)
             pm_error("Too many arguments (%d).  With a scale option, "
                      "the only argument is the "
                      "optional file specification", argc-1);
-        if (argc-1 > 0) 
-            cmdline_p->input_filespec = argv[1];
-        else
-            cmdline_p->input_filespec = "-";
+        else {
+            if (argc-1 > 0)
+                cmdlineP->inputFileName = argv[1];
+            else
+                cmdlineP->inputFileName = "-";
+        }
     }
 }
 
 
 
 static void
-stretch_line(struct pam * const inpamP, 
-             const tuple * const line, const tuple * const line_stretched, 
-             unsigned int const scale, enum an_edge_mode const edge_mode) {
+stretchLine(struct pam *  const inpamP,
+            const tuple * const line,
+            const tuple * const lineStretched,
+            unsigned int  const scale,
+            enum EdgeMode const edgeMode) {
 /*----------------------------------------------------------------------------
    Stretch the line of tuples 'line' into the output buffer 'line_stretched',
    by factor 'scale'.
 -----------------------------------------------------------------------------*/
+    enum EdgeMode const horizontalEdgeMode =
+        (scale == 1) ? EDGE_NON_INTERP : edgeMode;
+
     int scaleincr;
-    int sisize;   
+    int sisize;
         /* normalizing factor to make fractions representable as integers.
            E.g. if sisize = 100, one half is represented as 50.
         */
     unsigned int col;
     unsigned int outcol;
-    
+
     sisize=0;
-    while (sisize<256) 
+    while (sisize<256)
         sisize += scale;
     scaleincr = sisize/scale;  /* (1/scale, normalized) */
 
@@ -185,7 +196,7 @@ stretch_line(struct pam * const inpamP,
             /* We're at the edge.  There is no column to the right with which
                to interpolate.
             */
-            switch(edge_mode) {
+            switch(horizontalEdgeMode) {
             case EDGE_DROP:
                 /* No output column needed for this input column */
                 break;
@@ -194,32 +205,30 @@ stretch_line(struct pam * const inpamP,
                 for (pos = 0; pos < sisize; pos += scaleincr) {
                     unsigned int plane;
                     for (plane = 0; plane < inpamP->depth; ++plane)
-                        line_stretched[outcol][plane] = 
+                        lineStretched[outcol][plane] =
                             (line[col][plane] * (sisize-pos)) / sisize;
                     ++outcol;
                 }
-            }
-            break;
+            } break;
             case EDGE_NON_INTERP: {
                 unsigned int pos;
                 for (pos = 0; pos < sisize; pos += scaleincr) {
                     unsigned int plane;
                     for (plane = 0; plane < inpamP->depth; ++plane)
-                        line_stretched[outcol][plane] = line[col][plane];
+                        lineStretched[outcol][plane] = line[col][plane];
                     ++outcol;
                 }
-            }
-            break;
-            default: 
-                pm_error("INTERNAL ERROR: invalid value for edge_mode");
+            } break;
+            default:
+                pm_error("INTERNAL ERROR: invalid value for edgeMode");
             }
         } else {
             /* Interpolate with the next input column to the right */
             for (pos = 0; pos < sisize; pos += scaleincr) {
                 unsigned int plane;
                 for (plane = 0; plane < inpamP->depth; ++plane)
-                    line_stretched[outcol][plane] = 
-                        (line[col][plane] * (sisize-pos) 
+                    lineStretched[outcol][plane] =
+                        (line[col][plane] * (sisize-pos)
                          +  line[col+1][plane] * pos) / sisize;
                 ++outcol;
             }
@@ -229,31 +238,33 @@ stretch_line(struct pam * const inpamP,
 
 
 
-static void 
-write_interp_rows(struct pam *      const outpamP,
-                  const tuple *     const curline,
-                  const tuple *     const nextline, 
-                  tuple *           const outbuf,
-                  int               const scale) {
+static void
+writeInterpRows(struct pam *      const outpamP,
+                const tuple *     const curline,
+                const tuple *     const nextline,
+                tuple *           const outbuf,
+                int               const scale) {
 /*----------------------------------------------------------------------------
-   Write out 'scale' rows, being 'curline' followed by rows that are 
+   Write out 'scale' rows, being 'curline' followed by rows that are
    interpolated between 'curline' and 'nextline'.
 -----------------------------------------------------------------------------*/
-    unsigned int scaleincr;
-    unsigned int sisize;
+    unsigned int scaleIncr;
+    unsigned int siSize;
     unsigned int pos;
 
-    sisize=0;
-    while(sisize<256) sisize+=scale;
-    scaleincr=sisize/scale;
+    for (siSize = 0; siSize < 256; siSize += scale);
 
-    for (pos = 0; pos < sisize; pos += scaleincr) {
+    scaleIncr = siSize / scale;
+
+    for (pos = 0; pos < siSize; pos += scaleIncr) {
         unsigned int col;
+
         for (col = 0; col < outpamP->width; ++col) {
             unsigned int plane;
-            for (plane = 0; plane < outpamP->depth; ++plane) 
-                outbuf[col][plane] = (curline[col][plane] * (sisize-pos)
-                    + nextline[col][plane] * pos) / sisize;
+
+            for (plane = 0; plane < outpamP->depth; ++plane)
+                outbuf[col][plane] = (curline[col][plane] * (siSize - pos)
+                    + nextline[col][plane] * pos) / siSize;
         }
         pnm_writepamrow(outpamP, outbuf);
     }
@@ -262,10 +273,11 @@ write_interp_rows(struct pam *      const outpamP,
 
 
 static void
-swap_buffers(tuple ** const buffer1P, tuple ** const buffer2P) {
-    /* Advance "next" line to "current" line by switching
-       line buffers 
-    */
+swapBuffers(tuple ** const buffer1P,
+            tuple ** const buffer2P) {
+/*----------------------------------------------------------------------------
+  Advance "next" line to "current" line by switching line buffers.
+-----------------------------------------------------------------------------*/
     tuple *tmp;
 
     tmp = *buffer1P;
@@ -274,109 +286,141 @@ swap_buffers(tuple ** const buffer1P, tuple ** const buffer2P) {
 }
 
 
-static void 
-stretch(struct pam * const inpamP, struct pam * const outpamP,
-        int const xscale, int const yscale,
-        enum an_edge_mode const edge_mode) {
+
+static void
+stretch(struct pam *  const inpamP,
+        struct pam *  const outpamP,
+        unsigned int  const xscale,
+        unsigned int  const yscale,
+        enum EdgeMode const edgeMode) {
+
+    enum EdgeMode const verticalEdgeMode =
+        (yscale == 1) ? EDGE_NON_INTERP : edgeMode;
 
     tuple *linebuf1, *linebuf2;  /* Input buffers for two rows at a time */
     tuple *curline, *nextline;   /* Pointers to one of the two above buffers */
     /* And the stretched versions: */
-    tuple *stretched_linebuf1, *stretched_linebuf2;
-    tuple *curline_stretched, *nextline_stretched;
+    tuple *stretchedLinebuf1, *stretchedLinebuf2;
+    tuple *curlineStretched, *nextlineStretched;
 
     tuple *outbuf;   /* One-row output buffer */
     unsigned int row;
-    unsigned int rowsToStretch;
-    
-    linebuf1 =           pnm_allocpamrow(inpamP);
-    linebuf2 =           pnm_allocpamrow(inpamP);
-    stretched_linebuf1 = pnm_allocpamrow(outpamP);
-    stretched_linebuf2 = pnm_allocpamrow(outpamP);
-    outbuf =             pnm_allocpamrow(outpamP);
+    unsigned int nRowsToStretch;
+
+    linebuf1          = pnm_allocpamrow(inpamP);
+    linebuf2          = pnm_allocpamrow(inpamP);
+    stretchedLinebuf1 = pnm_allocpamrow(outpamP);
+    stretchedLinebuf2 = pnm_allocpamrow(outpamP);
+    outbuf            = pnm_allocpamrow(outpamP);
 
     curline = linebuf1;
-    curline_stretched = stretched_linebuf1;
+    curlineStretched = stretchedLinebuf1;
     nextline = linebuf2;
-    nextline_stretched = stretched_linebuf2;
+    nextlineStretched = stretchedLinebuf2;
 
     pnm_readpamrow(inpamP, curline);
-    stretch_line(inpamP, curline, curline_stretched, xscale, edge_mode);
+    stretchLine(inpamP, curline, curlineStretched, xscale, edgeMode);
 
-    if (edge_mode == EDGE_DROP) 
-        rowsToStretch = inpamP->height - 1;
+    if (verticalEdgeMode == EDGE_DROP)
+        nRowsToStretch = inpamP->height - 1;
     else
-        rowsToStretch = inpamP->height;
-    
-    for (row = 0; row < rowsToStretch; row++) {
-        if (row == inpamP->height-1) {
+        nRowsToStretch = inpamP->height;
+
+    for (row = 0; row < nRowsToStretch; ++row) {
+        if (row == inpamP->height - 1) {
             /* last line is about to be output. there is no further
              * `next line'.  if EDGE_DROP, we stop here, with output
              * of rows-1 rows.  if EDGE_INTERP_TO_BLACK we make next
              * line black.  if EDGE_NON_INTERP (default) we make it a
-             * copy of the current line.  
+             * copy of the current line.
              */
-            switch (edge_mode) {
+            switch (verticalEdgeMode) {
             case EDGE_INTERP_TO_BLACK: {
-                int col;
-                for (col = 0; col < outpamP->width; col++)
-                    nextline_stretched[col] = blackTuple;
-            } 
+                unsigned int col;
+                for (col = 0; col < outpamP->width; ++col)
+                    nextlineStretched[col] = blackTuple;
+            }
             break;
             case EDGE_NON_INTERP: {
                 /* EDGE_NON_INTERP */
-                int col;
-                for (col = 0; col < outpamP->width; col++)
-                    nextline_stretched[col] = curline_stretched[col];
+                unsigned int col;
+                for (col = 0; col < outpamP->width; ++col)
+                    nextlineStretched[col] = curlineStretched[col];
             }
             break;
-            case EDGE_DROP: 
+            case EDGE_DROP:
                 pm_error("INTERNAL ERROR: processing last row, but "
-                         "edge_mode is EDGE_DROP.");
+                         "edgeMode is EDGE_DROP.");
             }
         } else {
             pnm_readpamrow(inpamP, nextline);
-            stretch_line(inpamP, nextline, nextline_stretched, xscale,
-                         edge_mode);
+            stretchLine(inpamP, nextline, nextlineStretched, xscale, edgeMode);
         }
-        
-        /* interpolate curline towards nextline into outbuf */
-        write_interp_rows(outpamP, curline_stretched, nextline_stretched,
-                          outbuf, yscale);
 
-        swap_buffers(&curline, &nextline);
-        swap_buffers(&curline_stretched, &nextline_stretched);
+        /* interpolate curline towards nextline into outbuf */
+        writeInterpRows(outpamP, curlineStretched, nextlineStretched,
+                        outbuf, yscale);
+
+        swapBuffers(&curline, &nextline);
+        swapBuffers(&curlineStretched, &nextlineStretched);
     }
     pnm_freerow(outbuf);
-    pnm_freerow(stretched_linebuf2);
-    pnm_freerow(stretched_linebuf1);
+    pnm_freerow(stretchedLinebuf2);
+    pnm_freerow(stretchedLinebuf1);
     pnm_freerow(linebuf2);
     pnm_freerow(linebuf1);
 }
 
 
+static void
+computeOutputWidthHeight(int           const inWidth,
+                         int           const inHeight,
+                         unsigned int  const xScale,
+                         unsigned int  const yScale,
+                         enum EdgeMode const edgeMode,
+                         int *         const outWidthP,
+                         int *         const outHeightP) {
 
-int 
-main(int argc,char *argv[]) {
+    unsigned int const xDropped =
+        (edgeMode == EDGE_DROP && xScale != 1) ? 1 : 0;
+    unsigned int const yDropped =
+        (edgeMode == EDGE_DROP && yScale != 1) ? 1 : 0;
+    double const width  = (inWidth  - xDropped) * xScale;
+    double const height = (inHeight - yDropped) * yScale;
 
-    FILE *ifp;
+    if (width > INT_MAX - 2)
+        pm_error("output image width (%f) too large for computations",
+                 width);
+    if (height > INT_MAX - 2)
+        pm_error("output image height (%f) too large for computation",
+                 height);
 
-    struct cmdline_info cmdline; 
+    *outWidthP  = (unsigned int)width;
+    *outHeightP = (unsigned int)height;
+}
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+
+    struct CmdlineInfo cmdline;
     struct pam inpam, outpam;
-    
-    pnm_init(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    pm_proginit(&argc, argv);
 
-    ifp = pm_openr(cmdline.input_filespec);
+    parseCommandLine(argc, argv, &cmdline);
 
-    pnm_readpaminit(ifp, &inpam, PAM_STRUCT_SIZE(tuple_type));
+    ifP = pm_openr(cmdline.inputFileName);
+
+    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     if (inpam.width < 2)
         pm_error("Image is too narrow.  Must be at least 2 columns.");
     if (inpam.height < 2)
         pm_error("Image is too short.  Must be at least 2 lines.");
-
 
     outpam = inpam;  /* initial value */
     outpam.file = stdout;
@@ -388,30 +432,18 @@ main(int argc,char *argv[]) {
     } else {
         outpam.format = inpam.format;
     }
-    {
-        unsigned int const dropped = cmdline.edge_mode == EDGE_DROP ? 1 : 0;
-        double const width  = (inpam.width  - dropped) * cmdline.xscale;
-        double const height = (inpam.height - dropped) * cmdline.yscale;
+    computeOutputWidthHeight(inpam.width, inpam.height,
+                             cmdline.xscale, cmdline.yscale, cmdline.edgeMode,
+                             &outpam.width, &outpam.height);
 
-        if (width > INT_MAX - 2)
-            pm_error("output image width (%f) too large for computations",
-                     width);
-        if (height > INT_MAX - 2)
-            pm_error("output image height (%f) too large for computation",
-                     height);
- 
-        outpam.width  = width;
-        outpam.height = height;
-
-        pnm_writepaminit(&outpam);
-    }
+    pnm_writepaminit(&outpam);
 
     pnm_createBlackTuple(&outpam, &blackTuple);
 
-    stretch(&inpam, &outpam, 
-            cmdline.xscale, cmdline.yscale, cmdline.edge_mode);
+    stretch(&inpam, &outpam,
+            cmdline.xscale, cmdline.yscale, cmdline.edgeMode);
 
-    pm_close(ifp);
+    pm_close(ifP);
 
     exit(0);
 }

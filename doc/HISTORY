@@ -3,12 +3,47 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
-19.03.23 BJH  Release 10.85.05
 
-              Build: update 'mkdeb' so it works on Debian 9 (in addition to
-              Debian 8).  Thanks Neil R Ormos <ormos@ormos.org>.
+19.03.30 BJH  Release 10.86.00
 
-19.03.08 BJH  Release 10.85.04
+              Add pamfind.
+
+              Add pambrighten.
+
+              Add pamhue.
+
+              pnmcrop: Add -bg-color, bg-corner, -reportfull, -reportsize,
+              -blank-image .
+
+              pamtopng: Add -interlace .
+
+              pamenlarge: Add -scale, -xscale, -yscale .
+
+              pamenlarge: Much faster for PBM with xscale factor above 10;
+              slightly faster for xscale factor 2-10.
+
+              pamfile: Add -machine and -size .
+
+              pamscale: Add -reportonly
+
+              pamstretch-gen: Add -quiet, -plain.
+
+              pamstretch-gen: Use -dropedge on the 'pamstretch' piece for
+              better looking output.
+
+              pamstretch: Accept scale factor of 1 as a parameter (already
+              was accepted with -xscale and -yscale options).
+
+              pamstretch: Don't mess with edge when scale factor is 1,
+              regardless of -dropedge and -blackedge.
+
+              ppmwheel: Add -huevalue, -huesaturation, -maxval .
+
+              various: Fix unnormalizing code so a value exactly between two
+              sample values rounds consistently up.  Affects many programs.
+
+              pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
+              (-textalphabits was new in Netpbm 10.53 (December 2010)).
 
               pamtopng: Fix sBit chunk, bit shift value for 1-, 2-, and 4-bit-
               per-sample images.  Always broken (Pamtopng was new in Netpbm
@@ -17,17 +52,8 @@ CHANGE HISTORY
               pamtopng: Fix buffer overrun.  Always broken (Pamtopng was new
               in Netpbm 10.71 (June 2015)).
 
-19.03.01 BJH  Release 10.85.03
-
-              pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
-              (-textalphabits was new in Netpbm 10.53 (December 2010)).
-
-19.02.10 BJH  Release 10.85.02
-
               pnmtopng: fix bug: -interlace ignored.  Broken in 10.55
               (June 2011).
-
-19.01.07 BJH  Release 10.85.01
 
               pamstretch: Reject very large scale factors instead of producing
               incorrect output.
@@ -38,6 +64,16 @@ CHANGE HISTORY
 
               ppmdraw: Fix bug: 'setlinetype nodiag' says invalid type.
               Always broken.  (Ppmdraw was new in Netpbm 10.29 (August 2005)).
+
+              Build: split link/ directory in package tree into staticlink/
+              and sharedlink/ .  Make 'installnetpbm' do separate prompts to
+              install static libraries and shared library stubs.  Make
+              'installnetpbm' install clean symlink in the usual case that the
+              shared library stub and shared library are in the same
+              directory.
+
+              Build: update 'mkdeb' so it works on Debian 9 (in addition to
+              Debian 8).  Thanks Neil R Ormos <ormos@ormos.org>.
 
 18.12.29 BJH  Release 10.85.00
 
