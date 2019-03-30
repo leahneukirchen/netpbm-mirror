@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcrop User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcrop</H1>
-Updated: 31 December 2016
+Updated: 29 March 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,7 +14,13 @@ pnmcrop - crop a Netpbm image
 
 <B>pnmcrop</B>
 
-[<B>-white</B>|<B>-black</B>|<B>-sides</B>]
+[<B>-white</B>
+|<B>-black</B>
+|<B>-sides</B>
+|<b>-bg-color=</b><i>color</i>
+|<b>-bg-corner=</b>{
+<b>topleft</b>|<b>topright</b>|<b>bottomleft</b>|<b>bottomright</b>}
+]
 
 [<B>-left</B>]
 
@@ -24,13 +30,17 @@ pnmcrop - crop a Netpbm image
 
 [<B>-bottom</B>]
 
-[<b>-verbose</b>]
-
 [<B>-margin=</B><i>pixels</i>]
 
 [<B>-closeness=</B><I>closeness_percent</I>]
 
 [<B>-borderfile=</B><i>filename</i>]
+
+[<b>-blank-image=</b>{<b>abort</b>|<b>pass</b>|<b>minimize</b>|<b>maxcrop</b>}]
+
+{[<b>-reportfull</b>]|[<b>-reportsize</b>]}
+
+[<b>-verbose</b>]
 
 [<I>pnmfile</I>]
 
@@ -87,10 +97,28 @@ ones, use <B>pnmcat</B> or <B>pamcomp</B>.
 <DD>Take white to be the background color.  <B>pnmcrop</B> removes
 borders which are white.
 
+<p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
+<b>-bg-color</b>, and <b>-bg-corner</b>.
+
 <DT><B>-black</B>
 
 <DD>Take black to be the background color.  <B>pnmcrop </B> removes
 borders which are black.
+
+<p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
+<b>-bg-color</b>, and <b>-bg-corner</b>.
+
+<dt><b>-bg-color=</b><i>color</i>
+
+<dd>This tells <b>pnmcrop</b> what color is the background - it will crop
+areas of this color.  <i>color</i> is a value that would be used as the
+<a href="libnetpbm_image.html#colorname">argument of the
+<b>pnm_parsecolor()</b> library routine</a>.
+
+<p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
+<b>-bg-color</b>, and <b>-bg-corner</b>.
+
+<p>This option was new in Netpbm 10.86 (March 2019).
 
 <DT><B>-sides</B>
 
@@ -109,6 +137,20 @@ color.
 <P>The <B>-sides</B> option slows <B>pnmcrop</B> down, as it reads the
 entire image to determine the background color in addition to the up
 to three times that it would read it without <B>-sides</B>.
+
+<p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
+<b>-bg-color</b>, and <b>-bg-corner</b>.
+
+<dt><b>-bg-corner=</b>{<b>topleft</b>|<b>topright</b>|<b>bottomleft</b>|<b>bottomright</b>
+
+<dd>This option indicates a corner which is background.  <b>pnmcrop</b> will
+use the color of this corner as the background color and crop edges of that
+color.
+    
+<p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
+<b>-bg-color</b>, and <b>-bg-corner</b>.
+
+<p>This option was new in Netpbm 10.86 (March 2019).
 
 <DT><B>-left</B>
 
@@ -191,6 +233,99 @@ the image N of the border file.
 border file determines the background color.  <b>pnmcrop</b>
 fails if there is no apparent background color in the original image
 (i.e. the corners of the image don't have a common color).
+
+<dt><b>-blank-image=</b>{<b>abort</b>|<b>pass</b>|<b>minimize</b>|<b>maxcrop</b>}
+
+<dd>This determines how <b>pnmcrop</b> handles an image which is entirely
+  background (blank), a case where cropping doesn't make much sense.
+
+  <dl>
+  <dt>abort
+  <dd>program fails, with explanatory message (default)
+
+  <dt>pass
+  <dd>no modification to image
+
+  <dt>minimize
+  <dd>output is a single pixel (of the background color)
+
+  <dt>maxcrop
+    <dd>This odd function selects a hypothetical cropping which is not even
+      possible, and therefore is valid only with <b>-reportfull</b> or
+      <b>-reportsize</b>.  The cropping that this selects is a crop of the
+      entire image on every side on which you request cropping.  So if you
+      request cropping only on the left, of a 600 pixel wide image, this
+      selects a cropping of 600 pixels from the left and none from the other
+      three sides.  Note that were this cropping actually applied, this would
+      produce an image with no pixels, which is not a valid Netpbm image.  But
+      it gets stranger still if you request cropping on both the right and the
+      left.  In that case, the cropping selected is a cropping of 600 pixels
+      from both the right and left sides, which would leave a negative-width
+      image.
+      <p>
+      This is actually useful if you are trying to find a single set of
+      cropping parameters to crop a stream of images.  To do this, you could
+      do a pass with <b>-reportsize</b> and <b>-blank-image=maxcrop</b> and
+      compute the maximum crop for each edge, and then use that in a second
+      pass without <b>-reportsize</b> to do the crop.  In this scenario, any
+      all-background (blank) images would have no effect on the cropping
+      parameters you compute.  If you do this, you must make special
+      consideration of a stream with nothing but blank images.
+
+  </dl>
+    
+<p><b>-margin</b> is always ignored when the image is all background.
+
+<p>This option was new in Netpbm 10.86 (March 2019).
+
+<dt><b>-reportfull</b>
+
+<dd>
+With this option, <b>pnmcrop</b> does not actually crop anything.  Instead, it
+just prints to Standard Output parameters of the cropping it would have done.
+The output is a single line per image, like in this example:
+
+<pre>
+  <tt>
+     0 +7 -20 -10 200 300 rgb-255:10/0/255 0.0
+  </tt>
+</pre>
+
+<p>The line is composed of the following blank-delimited tokens:
+
+<ol>
+  <li>how many pixels would be cropped or padded on the left.  This is
+    a signed decimal number, where + means pad and - means crop.  If there
+    would be no change, this is unsigned zero.
+
+  <li>same, but for the right side.
+
+  <li>same, but for the top.
+
+  <li>same, but for the bottom.
+
+  <li>the resulting image width in pixels, in decimal.
+
+  <li>the resulting image height in pixels, in decimal.
+
+  <li>The color <b>pnmcrop</b> took to be the background color, like
+   &quot;rgb-255:10/0/255&quot; (This is a format recognized by
+   the <a href="libnetpbm_image.html#colorname"><b>pnm_parsecolor()</b>
+   library routine).  The maxval in the color specification is the maxval of
+   the image.
+
+   <li>The closeness value (see <b>-closeness</b> option) <b>pnmcrop</b>
+   used, in floating point decimal.
+</ol>
+
+<p>This option was new in Netpbm 10.86 (March 2019).
+
+<dt><b>-reportsize</b>
+<dd>
+This is like <b>-reportfull</b>, but reports only the left, right, top,
+bottom, width, and height.
+
+<p>This option was new in Netpbm 10.86 (March 2019).
 
 <DT><B>-verbose</B>
 
