@@ -12,6 +12,9 @@ not yet  BJH  Release 10.86.00
 
               Add pamhue.
 
+              pnmcrop: Add -bg-color, bg-corner, -reportfull, -reportsize,
+              -blank-image .
+
               pamtopng: Add -interlace .
 
               pamenlarge: Add -scale, -xscale, -yscale .
