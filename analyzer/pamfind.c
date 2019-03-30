@@ -154,7 +154,7 @@ printHeader(FILE *       const ofP,
 
     fprintf(ofP, ")");
 
-    fprintf(ofP, "/%u", inpamP->maxval);
+    fprintf(ofP, "/%u", (unsigned)inpamP->maxval);
 
     fprintf(ofP, ":\n");
 }
