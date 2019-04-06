@@ -3,6 +3,11 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
+19.04.06 BJH  Release 10.86.01
+
+              pnmcrop: fix bug: incorrect identification of background with
+              -bgcolor and PBM or PGM image.  Always present (-bgcolor was
+              introduced in Netpbm 10.86 (March 2019).
 
 19.03.30 BJH  Release 10.86.00
 

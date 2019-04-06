@@ -387,17 +387,15 @@ backgroundColorFmName(const char * const colorName,
 /*----------------------------------------------------------------------------
    The color indicated by 'colorName'.
 
-   If the image is PGM we allow only shades of gray.  If it is PBM, we allow
-   only pure black and pure white.
+   The return value is based on maxval 'maxval' and format 'format'.
+
+   Abort the program if 'colorName' names a color that cannot be represented
+   in format 'format'.
 
    Development note: It would be logical to relax the above restriction when
    -closeness is specified.  Implementation is harder than it seems because of
    the -margin option.  It is unlikely that there is demand for this feature.
    If really necessary, the user can convert the input image to PPM.
-
-   Adjust xel for maxval and image type (PPM, PGM, PBM) of the image to
-   examine.  For PGM and PBM, only the blue plane is given a value.  So set
-   the other two to zero.  (This is necessary for making comparisons).
 -----------------------------------------------------------------------------*/
     pixel const backgroundColor    =
         ppm_parsecolor(colorName, maxval);
@@ -416,18 +414,22 @@ backgroundColorFmName(const char * const colorName,
 
     xel backgroundXel;
 
-    backgroundXel = pnm_pixeltoxel(backgroundColor);  /* initial value */
-
-    /* Adjust backgroundXel to match input image format, if necessary */
-
-    if (PBM_FORMAT_TYPE(format) == PBM_TYPE && hasGray)
-        pm_error("Invalid color specified: '%s'.  "
-                 "Image has no intermediate levels of gray.",
-                 colorName);
-
-    if (PPM_FORMAT_TYPE(format) != PPM_TYPE && hasColor)
-        pm_error("Invalid color specified: '%s'.  "
-                 "Image does not have color.", colorName);
+    if (PPM_FORMAT_TYPE(format)) {
+        backgroundXel = pnm_pixeltoxel(backgroundColor);
+    } else {
+        /* Derive PBM or PGM xel from pixel 'backgroundColor' */
+        if (hasColor)
+            pm_error("Invalid color specified: '%s'. "
+                     "Image does not have color.", colorName);
+        else {
+            if (PBM_FORMAT_TYPE(format) == PBM_TYPE && hasGray)
+                pm_error("Invalid color specified: '%s'. "
+                         "Image has no intermediate levels of gray.",
+                         colorName);
+            else
+                PNM_ASSIGN1(backgroundXel, backgroundColor.r);
+        }
+    }
 
     return backgroundXel;
 }
