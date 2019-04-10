@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.87.00
 
+              pnmcrop: Don't allow -borderfile with -reportXXX.  It doesn't
+              work.
+
               pnmcrop: fix bug: -bgcolor doesn't work.  Always present
               (-bgcolor was introduced in Netpbm 10.86 (March 2019)).
 
