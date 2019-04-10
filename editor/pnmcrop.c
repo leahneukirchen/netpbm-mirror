@@ -450,7 +450,9 @@ backgroundColor(FILE *         const ifP,
    *ifP, which is described by 'cols', 'rows', 'maxval', and 'format'.
 
    'backgroundChoice' is the method we are to use in determining the
-   background color.
+   background color.  'colorName' is the color we are to assume is
+   background in the case that 'backgroundChoice' says to use a particular
+   color and meangingless otherwise.
 
    Expect the file to be positioned to the start of the raster, and leave
    it positioned arbitrarily.
@@ -465,7 +467,8 @@ backgroundColor(FILE *         const ifP,
         background = pnm_blackxel(maxval, format);
         break;
     case BG_COLOR:
-        backgroundColorFmName(colorName, maxval, format);
+        background =
+            backgroundColorFmName(colorName, maxval, format);
         break;
     case BG_SIDES:
         background =
@@ -479,9 +482,6 @@ backgroundColor(FILE *         const ifP,
         background =
             background1Corner(ifP, rows, cols, maxval, format, corner);
         break;
-
-    default:
-        pm_error("internal error");
     }
 
     return background;
