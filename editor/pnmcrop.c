@@ -465,7 +465,8 @@ backgroundColor(FILE *         const ifP,
         background = pnm_blackxel(maxval, format);
         break;
     case BG_COLOR:
-        backgroundColorFmName(colorName, maxval, format);
+        background =
+            backgroundColorFmName(colorName, maxval, format);
         break;
     case BG_SIDES:
         background =
