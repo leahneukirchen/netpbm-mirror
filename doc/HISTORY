@@ -7,7 +7,7 @@ CHANGE HISTORY
 not yet  BJH  Release 10.87.00
 
               pnmcrop: fix bug: -bgcolor doesn't work.  Always present
-              (-bgcolor was introduced in Netpbm 10.86 (March 2019).
+              (-bgcolor was introduced in Netpbm 10.86 (March 2019)).
 
 19.03.30 BJH  Release 10.86.00
 
