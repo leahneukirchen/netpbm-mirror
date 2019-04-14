@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcrop User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcrop</H1>
-Updated: 29 March 2019
+Updated: 14 April 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -68,8 +68,18 @@ with <B>-sides</B>.
 <P>By default, <B>pnmcrop</B> chops off any stripe of background color
 it finds, on all four sides.  You can tell <B>pnmcrop</B> to remove
 only specific borders with the <B>-left</B>, <B>-right</B>,
-<B>-top</B>, and <B>-bottom</B> options.
+  <B>-top</B>, and <B>-bottom</B> options.
 
+<p>But note that <b>pnmcrop</b>'s determination of the background color is
+independent of which edges you crop, which may not be intuitive.  For example,
+imagine an image with a blue border at the top and a black border at the
+bottom and you say to crop the bottom (<b>-bottom</b>).  You may have expected
+to crop the black border, but you actually won't crop anything,
+because <b>pnmcrop</b> considers the background color to be whatever color the
+top two corners are, which is blue, and there is no blue at the bottom of the
+image.  If you do want <b>pnmcrop</b> to take the background color from the
+edges being cropped, use <B>-bg-corner</B>.
+  
 <p>If you want to leave some border, use the <b>-margin</b> option.  It
 will not only spare some of the border from cropping, but will fill in
 (with what <b>pnmcrop</b> considers the background color) if necessary
@@ -310,7 +320,7 @@ The output is a single line per image, like in this example:
 
   <li>The color <b>pnmcrop</b> took to be the background color, like
    &quot;rgb-255:10/0/255&quot; (This is a format recognized by
-   the <a href="libnetpbm_image.html#colorname"><b>pnm_parsecolor()</b>
+   the <a href="libnetpbm_image.html#colorname"><b>pnm_parsecolor()</b></a>
    library routine).  The maxval in the color specification is the maxval of
    the image.
 
@@ -318,12 +328,16 @@ The output is a single line per image, like in this example:
    used, in floating point decimal.
 </ol>
 
+<p>You cannot use <b>-borderfile</b> together with this option.
+
 <p>This option was new in Netpbm 10.86 (March 2019).
 
 <dt><b>-reportsize</b>
 <dd>
 This is like <b>-reportfull</b>, but reports only the left, right, top,
 bottom, width, and height.
+
+<p>You cannot use <b>-borderfile</b> together with this option.
 
 <p>This option was new in Netpbm 10.86 (March 2019).
 
