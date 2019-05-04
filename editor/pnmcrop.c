@@ -162,6 +162,10 @@ parseCommandLine(int argc, const char ** argv,
     if (reportFullOpt && reportSizeOpt)
         pm_error("You cannot specify both -reportfull and -reportsize");
 
+    if ((reportFullOpt || reportSizeOpt) && borderfileSpec)
+        pm_error("You cannot specify -reportfull or -reportsize "
+                 "with -borderfile");
+
     if (reportFullOpt)
         cmdlineP->baseOperation = OP_REPORT_FULL;
     else if (reportSizeOpt)

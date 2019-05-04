@@ -4,9 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.05.04 BJH  Release 10.86.03
+
+              pnmtopng: Fix bug: Defaults to no filters.  Should be all
+              filters.  Effect is larger PNG output.  Broken after Netpbm
+              10.26 (January 2005) but no later than Netpbm 10.35 (August
+              2006).
+
+              pnmtopng: Fix bug: Doesn't allow multiple filter options.
+              Broken after Netpbm 10.26 (January 2005) but no later than
+              Netpbm 10.35 (August 2006).
+
+              pnmcrop: Don't allow -borderfile with -reportXXX.  It doesn't
+              work.
+
 19.04.10 BJH  Release 10.86.02
 
-              pnmcrop: fix bug: -bgcolor never works.  Always present
+              pnmcrop: fix bug: -bgcolor doesn't work.  Always present
               (-bgcolor was introduced in Netpbm 10.86 (March 2019)).
 
 19.04.06 BJH  Release 10.86.01
