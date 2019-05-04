@@ -127,6 +127,7 @@ struct cmdlineInfo {
     unsigned int  modtimeSpec;
     time_t        modtime;      /* Meaningless if !modtimeSpec */
     const char *  palette;      /* NULL if none */
+    bool          filterSetSpec;
     int           filterSet;
     unsigned int  force;
     unsigned int  libversion;
@@ -422,15 +423,17 @@ parseCommandLine(int argc, const char ** argv,
     if (!paletteSpec)
         cmdlineP->palette = NULL;
     
-    if (filterSpec + nofilter + sub + up + avg + paeth > 1)
-        pm_error("You may specify at most one of "
-                 "-nofilter, -sub, -up, -avg, -paeth, and -filter");
+    if (filterSpec && (nofilter + sub + up + avg + paeth > 0))
+        pm_error("You may mot specify -filter with "
+                 "-nofilter, -sub, -up, -avg, or -paeth");
     
     if (filterSpec) {
         if (filter < 0 || filter > 4)
             pm_error("-filter is obsolete.  Use -nofilter, -sub, -up, -avg, "
                      "and -paeth options instead.");
-        else
+        else {
+            cmdlineP->filterSetSpec = true;
+
             switch (filter) {
             case 0: cmdlineP->filterSet = PNG_FILTER_NONE;  break;
             case 1: cmdlineP->filterSet = PNG_FILTER_SUB;   break;
@@ -438,21 +441,26 @@ parseCommandLine(int argc, const char ** argv,
             case 3: cmdlineP->filterSet = PNG_FILTER_AVG;   break;
             case 4: cmdlineP->filterSet = PNG_FILTER_PAETH; break;
             }
+        }
     } else {
-        if (nofilter)
-            cmdlineP->filterSet = PNG_FILTER_NONE;
-        else if (sub)
-            cmdlineP->filterSet = PNG_FILTER_SUB;
-        else if (up)
-            cmdlineP->filterSet = PNG_FILTER_UP;
-        else if (avg)
-            cmdlineP->filterSet = PNG_FILTER_AVG;
-        else if (paeth)
-            cmdlineP->filterSet = PNG_FILTER_PAETH;
-        else
-            cmdlineP->filterSet = PNG_FILTER_NONE;
+        if (nofilter + sub + up + avg + paeth == 0)
+            cmdlineP->filterSetSpec = false;
+        else {
+            cmdlineP->filterSetSpec = true;
+            cmdlineP->filterSet = PNG_NO_FILTERS;  /* initial value */
+            if (nofilter)
+                cmdlineP->filterSet |= PNG_FILTER_NONE;
+            if (sub)
+                cmdlineP->filterSet |= PNG_FILTER_SUB;
+            if (up)
+                cmdlineP->filterSet |= PNG_FILTER_UP;
+            if (avg)
+                cmdlineP->filterSet |= PNG_FILTER_AVG;
+            if (paeth)
+                cmdlineP->filterSet |= PNG_FILTER_PAETH;
+        }
     }
-    
+
     if (cmdlineP->sizeSpec)
         parseSizeOpt(size, &cmdlineP->size);
 
@@ -2501,6 +2509,32 @@ doTimeChunk(struct cmdlineInfo const cmdline,
 
 
 static void
+reportFilterSet(int const filterSet) {
+
+    pm_message("Limiting filter to: %s%s%s%s%s",
+               (filterSet & PNG_FILTER_NONE)  ? "NONE "  : "",
+               (filterSet & PNG_FILTER_SUB)   ? "SUB "   : "",
+               (filterSet & PNG_FILTER_UP)    ? "UP "    : "",
+               (filterSet & PNG_FILTER_AVG)   ? "AVG "   : "",
+               (filterSet & PNG_FILTER_PAETH) ? "PAETH " : "");
+}
+
+
+
+static void
+doFilters(struct cmdlineInfo const cmdline,
+          struct pngx *      const pngxP) {
+
+    if (cmdline.filterSetSpec) {
+        if (verbose)
+            reportFilterSet(cmdline.filterSet);
+        pngx_setFilter(pngxP, cmdline.filterSet);
+    }
+}
+
+
+
+static void
 reportTrans(struct pngx * const pngxP) {
 
     if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
@@ -2865,8 +2899,7 @@ convertpnm(struct cmdlineInfo const cmdline,
 
     doTimeChunk(cmdline, pngxP);
 
-    if (cmdline.filterSet != 0)
-        pngx_setFilter(pngxP, cmdline.filterSet);
+    doFilters(cmdline, pngxP);
 
     setZlibCompression(pngxP, cmdline.zlibCompression);
 

@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.05.04 BJH  Release 10.73.27
+
+              pnmtopng: Fix bug: Defaults to no filters.  Should be all
+              filters.  Effect is larger PNG output.  Broken after Netpbm
+              10.26 (January 2005) but no later than Netpbm 10.35 (August
+              2006).
+
+              pnmtopng: Fix bug: Doesn't allow multiple filter options.
+              Broken after Netpbm 10.26 (January 2005) but no later than
+              Netpbm 10.35 (August 2006).
+
 19.03.10 BJH  Release 10.73.26
 
               pstopnm: Fix bug: -textalphabits has no effect.  Always broken.
