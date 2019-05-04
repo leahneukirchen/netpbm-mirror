@@ -6,6 +6,15 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.87.00
 
+              pnmtopng: Fix bug: Defaults to no filters.  Should be all
+              filters.  Effect is larger PNG output.  Broken after Netpbm
+              10.26 (January 2005) but no later than Netpbm 10.35 (August
+              2006).
+
+              pnmtopng: Fix bug: Doesn't allow multiple filter options.
+              Broken after Netpbm 10.26 (January 2005) but no later than
+              Netpbm 10.35 (August 2006).
+
               pnmcrop: Don't allow -borderfile with -reportXXX.  It doesn't
               work.
 
