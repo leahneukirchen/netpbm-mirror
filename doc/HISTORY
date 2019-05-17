@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.87.00
 
+              pamfind: Add -machine .
+
               pnmtopng: Fix bug: Defaults to no filters.  Should be all
               filters.  Effect is larger PNG output.  Broken after Netpbm
               10.26 (January 2005) but no later than Netpbm 10.35 (August

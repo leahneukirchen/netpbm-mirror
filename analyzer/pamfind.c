@@ -1,4 +1,6 @@
+#include <assert.h>
 #include <nstring.h>
+
 #include <pam.h>
 
 #include "pm_c_util.h"
@@ -9,9 +11,11 @@
 typedef struct {
     unsigned int * target;
     unsigned int   targetDepth;
+    unsigned int   machine;
     const char *   color;  /* NULL means not specified */
     const char *   inputFileName;
 } CmdLineInfo;
+
 
 
 static CmdLineInfo
@@ -33,9 +37,10 @@ parsedCommandLine(int                 argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "target",  OPT_STRINGLIST, &target,         &targetSpec, 0);
-    OPTENT3(0,   "color",   OPT_STRING,     &cmdLine.color,  &colorSpec,  0);
-    OPTENT3(0,  0,          OPT_END,        NULL,            NULL,        0);
+    OPTENT3(0,   "target",  OPT_STRINGLIST, &target,          &targetSpec, 0);
+    OPTENT3(0,   "color",   OPT_STRING,     &cmdLine.color,   &colorSpec,  0);
+    OPTENT3(0,   "machine", OPT_FLAG,       NULL,       &cmdLine.machine,  0);
+    OPTENT3(0,  0,          OPT_END,        NULL,             NULL,        0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -161,6 +166,29 @@ printHeader(FILE *       const ofP,
 
 
 
+static unsigned int
+decimalDigitCt(unsigned int const n) {
+/*----------------------------------------------------------------------------
+   Minimum number of digits needed to display 'n' in decimal.
+-----------------------------------------------------------------------------*/
+    unsigned int digitCt;
+
+    if (n == 0)
+        digitCt = 1;
+    else {
+        unsigned int x;
+
+        for (digitCt = 0, x = n; x > 0;) {
+            ++digitCt;
+            x /= 10;
+        }
+        assert(digitCt > 0);
+    }
+    return digitCt;
+}
+
+
+
 static void
 pamfind(FILE *       const ifP,
         struct pam * const inpamP,
@@ -174,8 +202,16 @@ pamfind(FILE *       const ifP,
         tuple   const target   = targetValue(cmdLine, inpamP);
 
         unsigned int row;
+        const char * fmt;
 
-        printHeader(ofP, inpamP, target);
+        if (cmdLine.machine) {
+            pm_asprintf(&fmt, "%%0%uu %%0%uu\n",
+                        decimalDigitCt(inpamP->height-1),
+                        decimalDigitCt(inpamP->width-1));
+        } else {
+            printHeader(ofP, inpamP, target);
+            fmt = pm_strdup("(%u, %u)\n");
+        }
 
         for (row = 0; row < inpamP->height; ++row) {
             unsigned int col;
@@ -185,10 +221,11 @@ pamfind(FILE *       const ifP,
             for (col = 0; col < inpamP->width; ++col) {
 
                 if (pnm_tupleequal(inpamP, target, inputRow[col])) {
-                    fprintf(ofP, "(%u, %u)\n", row, col);
+                    fprintf(ofP, fmt, row, col);
                 }
             }
         }
+        pm_strfree(fmt);
         pnm_freepamtuple(target);
         pnm_freepamrow(inputRow);
     }
