@@ -16,6 +16,7 @@ pamfind - Print the locations of all tuples of a certain value in an image
 <b>-target=</b><i>sample0</i><b>,</b><i>sample1</i><b>,</b> ... |
 <b>-color=</b><i>color</i>
 }
+[<B>-machine</B>]
 [<I>imagefile</I>]
 
 <P>All options can be abbreviated to their shortest unique prefix.
@@ -73,6 +74,14 @@ href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
 <p>You must specify exactly one of <b>-target</b> and <b>-color</b>.
+
+<dt><b>-machine</b>
+
+<dd>This makes the output more convenient for a machine to use, while
+  less convenient for a human.  <b>pamfind</b> reports the same information
+  as with no options.
+
+<p>This option was new in Netpbm 10.87 (March 2020).
 
 </DL>
 
