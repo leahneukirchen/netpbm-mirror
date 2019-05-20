@@ -22,6 +22,13 @@ applied to things you implement in computer programs.  This is one of
 the Free Software Foundation's causes.  See 
 <http://www.gnu.org/philosophy.html#laws>.
 
+All the patents mentioned in this file have probably expired.  The maintainer
+is unaware of any recent patented inventions used in Netpbm.
+
+
+JBIG patents
+------------
+
 The Jbigtopnm and Pnmtojbig programs use arithmetic coding patents and
 other patents covering various aspects of the "front end."
 
@@ -37,7 +44,7 @@ Forgent owns a patent it believes covers JPEG compression.  This
 patent was virtually unknown before July 2002, when Forgent began to
 enforce it.  It has successfully enforced it against two companies
 (Sony and an unnamed Japanese digital camera maker), but without court
-ruling.  This patent, U.S. Patent No. 4,698,672, expires in 2006.
+ruling.  This patent, U.S. Patent No. 4,698,672, expired in 2006.
 
 Philips and Lucent Technologies also own patents they claim cover
 JPEG.
