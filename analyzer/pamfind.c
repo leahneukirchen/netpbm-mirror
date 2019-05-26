@@ -48,35 +48,37 @@ parsedCommandLine(int                 argc,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
-    if (targetSpec) {
-        if (colorSpec)
-            pm_error("You cannot specify both -target and -color");
-        else {
-            unsigned int i;
+    if (targetSpec + colorSpec > 1)
+        pm_error("You cannot specify both -target and -color");
 
-            cmdLine.color = NULL;
+    else if (targetSpec + colorSpec == 0)
+        pm_error("You must specify either -target or -color");
 
-            cmdLine.target = NULL;  /* initial value */
+    else if (targetSpec) {
+        unsigned int i;
 
-            for (i = 0, cmdLine.targetDepth = 0; target[i]; ++i) {
-                unsigned int sampleVal;
-                const char * error;
+        cmdLine.color = NULL;
 
-                pm_string_to_uint(target[i], &sampleVal, &error);
-                if (error) {
-                    pm_error("Invalid sample value in -target option: '%s'.  "
-                             "%s", target[i], error);
-                }
+        cmdLine.target = NULL;  /* initial value */
 
-                REALLOCARRAY(cmdLine.target, i+1);
+        for (i = 0, cmdLine.targetDepth = 0; target[i]; ++i) {
+            unsigned int sampleVal;
+            const char * error;
 
-                cmdLine.target[cmdLine.targetDepth++] = sampleVal;
+            pm_string_to_uint(target[i], &sampleVal, &error);
+            if (error) {
+                pm_error("Invalid sample value in -target option: '%s'.  "
+                         "%s", target[i], error);
             }
 
-            free(target);
+            REALLOCARRAY(cmdLine.target, i+1);
+
+            cmdLine.target[cmdLine.targetDepth++] = sampleVal;
         }
-    } else if (!colorSpec)
-        pm_error("You must specify either -target or -color");
+
+        free(target);
+    } else
+        assert (colorSpec == 1);
 
     if (argc-1 < 1)
         cmdLine.inputFileName = "-";
