@@ -35,7 +35,7 @@ static int pointcount = 2;
 static int run = 1;
 #endif
 
-static char 
+static char
 morepoints(char cmd, int howmany_pbmtolps) {
     pointcount += 2;
     if (pointcount > 1000) {
@@ -47,8 +47,8 @@ morepoints(char cmd, int howmany_pbmtolps) {
 
 
 
-static void 
-addstrip(int const white, 
+static void
+addstrip(int const white,
          int const black) {
 
     if (cmd) {
@@ -58,7 +58,7 @@ addstrip(int const white,
         else {
             if (run == 1)
 #endif
-                printf("%d %d %c ", 
+                printf("%d %d %c ",
                        prev_black, prev_white, morepoints(cmd, 2));
 #ifdef RUN
             else
@@ -78,7 +78,7 @@ addstrip(int const white,
 
 
 
-static void 
+static void
 nextline(void) {
     /* need to check run, should have an outcommand */
     if (cmd)
