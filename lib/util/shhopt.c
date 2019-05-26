@@ -394,7 +394,7 @@ static void
 optExecute(optEntry  const opt, char *arg, int lng)
 {
     if (opt.specified)
-        (*(opt.specified))++;
+        *opt.specified = 1;
 
     switch (opt.type) {
     case OPT_FLAG:
