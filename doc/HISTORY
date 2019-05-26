@@ -24,7 +24,7 @@ not yet  BJH  Release 10.87.00
               (-bgcolor was introduced in Netpbm 10.86 (March 2019)).
 
               pbmtozinc: fix wrong output on big-endian machines.  Broken in
-              primordial Netpbm, ca 1991.
+              Netpbm 10.71 (June 2015).
 
 19.03.30 BJH  Release 10.86.00
 
