@@ -816,20 +816,20 @@ computeRawRowNonDirect(const xel *     const xelrow,
 }
 
 
-struct seqBuffer {
+typedef struct {
 /*----------------------------------------------------------------------------
    A buffer to which one can write bytes sequentially.
 -----------------------------------------------------------------------------*/
     char * buffer;
     unsigned int allocatedSize;
     unsigned int occupiedSize;
-};
+} SeqBuffer;
 
 
 static void
-createBuffer(struct seqBuffer ** const bufferPP) {
+seqBuffer_create(SeqBuffer ** const bufferPP) {
 
-    struct seqBuffer * bufferP;
+    SeqBuffer * bufferP;
 
     MALLOCVAR_NOFAIL(bufferP);
 
@@ -846,7 +846,7 @@ createBuffer(struct seqBuffer ** const bufferPP) {
 
 
 static void
-destroyBuffer(struct seqBuffer * const bufferP) {
+seqBuffer_destroy(SeqBuffer * const bufferP) {
 
     free(bufferP->buffer);
     free(bufferP);
@@ -855,8 +855,8 @@ destroyBuffer(struct seqBuffer * const bufferP) {
 
 
 static void
-addByteToBuffer(struct seqBuffer * const bufferP,
-                unsigned char      const newByte) {
+seqBuffer_addByte(SeqBuffer *   const bufferP,
+                  unsigned char const newByte) {
 /*-----------------------------------------------------------------------------
   Append one byte to buffer, expanding with realloc() whenever necessary.
 
@@ -866,7 +866,6 @@ addByteToBuffer(struct seqBuffer * const bufferP,
   compression can lead to an arithmetic overflow.
   Abort with error if an arithmetic overflow is detected during doubling.
 -----------------------------------------------------------------------------*/
-
     assert(bufferP->allocatedSize >= bufferP->occupiedSize);
 
     if (bufferP->allocatedSize == bufferP->occupiedSize) {
@@ -890,15 +889,15 @@ addByteToBuffer(struct seqBuffer * const bufferP,
 
 
 static unsigned int
-bufferLength(struct seqBuffer * const bufferP) {
+seqBuffer_length(SeqBuffer * const bufferP) {
     return bufferP->occupiedSize;
 }
 
 
 
 static void
-writeOutBuffer(struct seqBuffer * const bufferP,
-               FILE *             const fileP) {
+seqBuffer_writeOut(SeqBuffer * const bufferP,
+                   FILE *      const fileP) {
 
     size_t bytesWritten;
 
@@ -914,11 +913,11 @@ writeOutBuffer(struct seqBuffer * const bufferP,
 static void
 copyRowToBuffer(const unsigned char * const rowdata,
                 unsigned int          const rowbytes,
-                struct seqBuffer *    const rasterBufferP) {
+                SeqBuffer *           const rasterBufferP) {
 
     unsigned int pos;
     for (pos = 0; pos < rowbytes; ++pos)
-        addByteToBuffer(rasterBufferP, rowdata[pos]);
+        seqBuffer_addByte(rasterBufferP, rowdata[pos]);
 }
 
 
@@ -926,7 +925,7 @@ copyRowToBuffer(const unsigned char * const rowdata,
 static void
 scanlineCompressAndBufferRow(const unsigned char * const rowdata,
                              unsigned int          const rowbytes,
-                             struct seqBuffer *    const rasterBufferP,
+                             SeqBuffer *           const rasterBufferP,
                              const unsigned char * const lastrow) {
 /*----------------------------------------------------------------------------
    Take the raw Palm Bitmap row 'rowdata', which is 'rowbytes'
@@ -961,11 +960,11 @@ scanlineCompressAndBufferRow(const unsigned char * const rowdata,
             }
         }
 
-        addByteToBuffer(rasterBufferP, map);
+        seqBuffer_addByte(rasterBufferP, map);
         {
             unsigned int j;
             for (j = 0; j < (outptr - differentPixels); ++j)
-                addByteToBuffer(rasterBufferP, differentPixels[j]);
+                seqBuffer_addByte(rasterBufferP, differentPixels[j]);
         }
     }
 }
@@ -975,7 +974,7 @@ scanlineCompressAndBufferRow(const unsigned char * const rowdata,
 static void
 rleCompressAndBufferRow(const unsigned char * const rowdata,
                         unsigned int          const rowbytes,
-                        struct seqBuffer *    const rasterBufferP) {
+                        SeqBuffer *           const rasterBufferP) {
 /*----------------------------------------------------------------------------
    Take the raw Palm Bitmap row 'rowdata', which is 'rowbytes' bytes,
    and add the rle-compressed representation of it to the buffer with
@@ -995,8 +994,8 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
             if (rowdata[pos + repeatcount] != rowdata[pos])
                 break;
 
-        addByteToBuffer(rasterBufferP, repeatcount);
-        addByteToBuffer(rasterBufferP, rowdata[pos]);
+        seqBuffer_addByte(rasterBufferP, repeatcount);
+        seqBuffer_addByte(rasterBufferP, rowdata[pos]);
         pos += repeatcount;
     }
 }
@@ -1006,7 +1005,7 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
 static void
 packbitsCompressAndBufferRow(const unsigned char * const rowdata,
                              unsigned int          const rowbytes,
-                             struct seqBuffer *    const rasterBufferP) {
+                             SeqBuffer *           const rasterBufferP) {
 /*----------------------------------------------------------------------------
    Take the raw Palm Bitmap row 'rowdata', which is 'rowbytes' bytes, and
    add the packbits-compressed representation of it to the buffer
@@ -1021,7 +1020,7 @@ packbitsCompressAndBufferRow(const unsigned char * const rowdata,
                           rowbytes, &compressedDataCt);
 
     for (byteCt = 0; byteCt < compressedDataCt; ++byteCt)
-        addByteToBuffer(rasterBufferP, compressedData[byteCt]);
+        seqBuffer_addByte(rasterBufferP, compressedData[byteCt]);
 
     free(compressedData);
 }
@@ -1033,7 +1032,7 @@ bufferRowFromRawRowdata(const unsigned char *  const rowdata,
                         unsigned int           const rowbytes,
                         enum CompressionType   const compression,
                         const unsigned char *  const lastrow,
-                        struct seqBuffer *     const rasterBufferP) {
+                        SeqBuffer *            const rasterBufferP) {
 /*----------------------------------------------------------------------------
    Starting with a raw (uncompressed) Palm raster line, do the
    compression identified by 'compression' and add the compressed row
@@ -1075,7 +1074,7 @@ bufferRow(const xel *          const xelrow,
           Colormap *           const colormapP,
           unsigned char *      const rowdata,
           unsigned char *      const lastrow,
-          struct seqBuffer *   const rasterBufferP) {
+          SeqBuffer *          const rasterBufferP) {
 /*----------------------------------------------------------------------------
    Add a row of the Palm Bitmap raster to buffer 'rasterBufferP'.
 
@@ -1112,13 +1111,13 @@ bufferRaster(xel **               const xels,
              enum CompressionType const compression,
              bool                 const directColor,
              Colormap *           const colormapP,
-             struct seqBuffer **  const rasterBufferPP) {
+             SeqBuffer **         const rasterBufferPP) {
 
     unsigned char * rowdata;
     unsigned char * lastrow;
     unsigned int row;
 
-    createBuffer(rasterBufferPP);
+    seqBuffer_create(rasterBufferPP);
 
     MALLOCARRAY_NOFAIL(rowdata, rowbytes);
     if (compression == COMP_SCANLINE)
@@ -1246,7 +1245,7 @@ writeBitmap(xel **               const xels,
            order to align properly for User to add the next image to the
            stream.
         */
-    struct seqBuffer * rasterBufferP;
+    SeqBuffer * rasterBufferP;
 
     writeCommonHeader(cols, rows, rowbytes, compression, colormapped,
                       transparent, directColor, bpp, version);
@@ -1256,9 +1255,9 @@ writeBitmap(xel **               const xels,
 
     /* rasterSize itself takes 2 or 4 bytes */
     if (version < 3)
-        sizePlusRasterSize = 2 + bufferLength(rasterBufferP);
+        sizePlusRasterSize = 2 + seqBuffer_length(rasterBufferP);
     else
-        sizePlusRasterSize = 4 + bufferLength(rasterBufferP);
+        sizePlusRasterSize = 4 + seqBuffer_length(rasterBufferP);
 
     computeOffsetStuff(offsetWanted, version, directColor, compression,
                        colormapped, colormapped ? colormapP->ncolors : 0,
@@ -1279,9 +1278,9 @@ writeBitmap(xel **               const xels,
     if (compression != COMP_NONE)
         writeRasterSize(sizePlusRasterSize, version, stdout);
 
-    writeOutBuffer(rasterBufferP, stdout);
+    seqBuffer_writeOut(rasterBufferP, stdout);
 
-    destroyBuffer(rasterBufferP);
+    seqBuffer_destroy(rasterBufferP);
 
     {
         unsigned int i;
