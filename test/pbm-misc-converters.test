@@ -3,7 +3,7 @@
 # This script tests: pbmtodjvurle pbmtoepson pbmtogo pbmtoibm23xx
 # This script tests: pbmtolj pbmtoln03 pbmtomatrixorbital pbmtonokia
 # This script tests: pbmtoplot pbmtoptx pbmtozinc
-# Also requires: pbmpage
+# Also requires: pbmpage pbmtoppa
 
 # Note: one-way test.
 # These converters do not have counterparts that work in the opposite

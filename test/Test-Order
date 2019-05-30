@@ -53,6 +53,7 @@ pnmtopnm-plain.test
 # Editor tests
 
 pamditherbw.test
+pamhue.test
 
 pbmclean.test
 pamcut.test
@@ -88,6 +89,11 @@ pamscale-filters3.test
 pamenlarge-pamscale-point.test
 
 pamstretch.test
+
+pnmcrop1.test
+pnmcrop2.test
+pnmcrop3.test
+pnmcrop-blank.test
 
 ppmmix.test
 pammixmulti-identity.test
@@ -125,6 +131,7 @@ pamslice-roundtrip.test
 lookup-roundtrip.test
 enlarge-reduce-roundtrip.test
 cut-cat-roundtrip.test
+pamhue-roundtrip.test
 
 # Round-trip tests : lossless converters
 

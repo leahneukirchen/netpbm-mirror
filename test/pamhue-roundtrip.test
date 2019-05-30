@@ -1,0 +1,19 @@
+#! /bin/bash
+# This script tests: pamhue
+# Also requires:
+
+echo input image
+cat testimg.ppm | cksum
+
+echo 360
+pamhue -huechange=360 testimg.ppm | cksum
+echo 180
+pamhue -huechange=180 testimg.ppm | pamhue -huechange=180 | cksum
+echo 120
+pamhue -huechange=120 testimg.ppm | pamhue -huechange=120 | \
+  pamhue -huechange=120 | cksum
+echo 60
+pamhue -huechange=60 testimg.ppm | pamhue -huechange=60 | \
+  pamhue -huechange=60 | pamhue -huechange=60 | \
+  pamhue -huechange=60 | pamhue -huechange=60 | cksum
+

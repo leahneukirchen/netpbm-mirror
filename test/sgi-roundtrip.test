@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pnmtosgi sgitopnm
-# Also requires: rgb3toppm
+# Also requires: rgb3toppm pamdepth pamtopnm
 
 
 a_sgi=${tmpdir}/a.sgi

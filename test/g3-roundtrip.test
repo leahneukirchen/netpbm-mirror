@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: g3topbm pbmtog3
-# Also requires: pnmcrop
+# Also requires: pnmcrop pbmmake
 
 tmpdir=${tmpdir:-/tmp}
 complete256_pbm=${tmpdir}/complete256.pbm

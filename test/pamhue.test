@@ -1,0 +1,10 @@
+#! /bin/bash
+# This script tests: pamhue
+# Also requires: pamseq ppmhist pamdepth
+
+pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=60 | cksum
+
+pamseq -tupletype=RGB 3 1 | pamdepth 255 | ppmhist
+pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=60 | ppmhist
+
+
