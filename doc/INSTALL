@@ -126,7 +126,7 @@ Furthermore, as version information, the modification datetime of the source
 code is often more useful than the build datetime.
 
 For these reasons, it is possible to change this timestamping behavior by
-setting the environment variable 'SOURCE_DATA_EPOCH'.  That is supposed to be
+setting the environment variable 'SOURCE_DATE_EPOCH'.  That is supposed to be
 the POSIX datetime value (decimal number of seconds since 1969, excluding leap
 seconds) for when the source code was last modified.  When you set this,
 before doing 'make' for the first time in a clean build tree, the resulting
