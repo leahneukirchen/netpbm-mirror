@@ -37,17 +37,23 @@ To install Netpbm as a Debian package:
 PREREQUSISITES
 --------------
 
-The following information was taken from the Jessie version (Version 8) of
-Debian, in March 2017.
-
-You don't actually need the current version of any of these.  For example,
-while we list package libjpeg62-dev, the package libjpeg8-dev works fine.
+The following information was taken from the Stretch version (Version 9) of
+Debian, in June 2019.
 
 
 Building
 --------
 
-You need the following Debian packages to build all of Netpbm.
+You need the following Debian packages to build all of Netpbm.  These
+are in addition to what is in the base system.
+
+Build tools:
+
+  gcc
+  make
+  flex
+
+Libraries to link with Netpbm:
 
 You could omit some of these and, in the Netpbm build configuration dialog,
 indicate you don't have them, and the build will simply omit some parts.
@@ -56,20 +62,14 @@ will not build the 'pamx' program.
 
   libjpeg-dev
   libpng-dev
-  libtiff5-dev
+  libtiff-dev
   libx11-dev
   libxml2-dev
   zlib1g-dev
 
+Example:
 
-In addition, you need the following build tools:
-
-  make
-  gcc
-  flex
-  perl
-  pkg-config
-
+  $ apt-get install gcc
 
 
 Running
