@@ -31,6 +31,8 @@ not yet  BJH  Release 10.87.00
               pbmtozinc: fix wrong output on big-endian machines.  Broken in
               Netpbm 10.71 (June 2015).
 
+              pbmpage: Fix error message for invalid syntax.
+
 19.03.30 BJH  Release 10.86.00
 
               Add pamfind.
