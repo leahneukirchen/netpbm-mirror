@@ -1,6 +1,6 @@
-/***************************************************************************
+/*=============================================================================
                                 pbmpage
-
+===============================================================================
   This program produces a printed page test pattern in PBM format.
 
   This was adapted from Tim Norman's 'pbmtpg' program, part of his
@@ -10,7 +10,7 @@
 
   For copyright and licensing information, see the pbmtoppa program,
   which was also derived from the same package.
-****************************************************************************/
+=============================================================================*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -61,12 +61,12 @@ setpixel(unsigned int const x,
 
 
 
-static void 
+static void
 setplus(unsigned int const x,
         unsigned int const y,
         unsigned int const s) {
 /*----------------------------------------------------------------------------
-   Draw a black plus sign centered at (x,y) with arms 's' pixels long.  
+   Draw a black plus sign centered at (x,y) with arms 's' pixels long.
    Leave the exact center of the plus white.
 -----------------------------------------------------------------------------*/
     unsigned int i;
@@ -81,7 +81,7 @@ setplus(unsigned int const x,
 
 
 
-static void 
+static void
 setblock(unsigned int const x,
          unsigned int const y,
          unsigned int const s) {
@@ -98,7 +98,7 @@ setblock(unsigned int const x,
 
 
 
-static void 
+static void
 setchar(unsigned int const x,
         unsigned int const y,
         char         const c) {
@@ -113,7 +113,7 @@ setchar(unsigned int const x,
                                         { 0x01, 0x01, 0x61, 0x19, 0x07 },
                                         { 0x36, 0x49, 0x49, 0x49, 0x36 },
                                         { 0x26, 0x49, 0x49, 0x49, 0x3e } };
-    
+
     if (c <= '9' && c >= '0') {
         unsigned int xo;
 
@@ -130,7 +130,7 @@ setchar(unsigned int const x,
 
 
 
-static void 
+static void
 setstring(unsigned int const x,
           unsigned int const y,
           const char * const s) {
@@ -144,7 +144,7 @@ setstring(unsigned int const x,
 
 
 
-static void 
+static void
 setCG(unsigned int const x,
       unsigned int const y) {
 
@@ -180,19 +180,19 @@ outputPbm(FILE *        const ofP,
     int const forceplain = 0;
 
     unsigned int row;
-    
+
     pbm_writepbminit(ofP, bitmap.Width, bitmap.Height, forceplain);
-    
+
     for (row = 0; row < bitmap.Height; ++row) {
         pbm_writepbmrow_packed(ofP, bitmap.bitmap[row],
-                               bitmap.Width, forceplain); 
+                               bitmap.Width, forceplain);
     }
 }
 
 
 
 static void
-framePerimeter(unsigned int const Width, 
+framePerimeter(unsigned int const Width,
                unsigned int const Height) {
 
     unsigned int x, y;
@@ -216,7 +216,7 @@ framePerimeter(unsigned int const Width,
 
 
 
-int 
+int
 main(int argc, const char** argv) {
 
     int TP;
@@ -249,8 +249,8 @@ main(int argc, const char** argv) {
 
     for (y = 0; y < bitmap.Height; ++y) {
         unsigned int x;
-        for (x = 0; x < pbm_packed_bytes(bitmap.Width); ++x) 
-            bitmap.bitmap[y][x] = 0x00; 
+        for (x = 0; x < pbm_packed_bytes(bitmap.Width); ++x)
+            bitmap.bitmap[y][x] = 0x00;
     }
 
     switch (TP) {
