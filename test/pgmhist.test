@@ -5,8 +5,33 @@
 
 # Ignore differences in spaces.
 
+echo "Test 1"
+
 pgmramp -maxval=8 -lr 8 2 | pgmhist | \
   sed -e 's/  */ /g' -e 's/ *$//'
 
 pgmhist testgrid.pbm | \
   sed -e 's/  */ /g' -e 's/ *$//'
+
+echo "Test 2"
+
+pgmramp -lr 256 1 | pgmhist -machine -median   | \
+  sed -e 's/  */ /g' -e 's/ *$//'
+
+pgmramp -lr 256 1 | pgmhist -machine -quartile | \
+  sed -e 's/  */ /g' -e 's/ *$//'
+
+pgmramp -lr 256 1 | pgmhist -machine -decile   | \
+  sed -e 's/  */ /g' -e 's/ *$//'
+
+echo "Test 3"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pgmhist -median   -quartile testgrid.pbm || echo "Expected failure 1"
+pgmhist -median   -decile   testgrid.pbm || echo "Expected failure 2"
+pgmhist -quartile -decile   testgrid.pbm || echo "Expected failure 3"
+pgmhist testimg.ppm || echo "Expected failure 4"

@@ -66,10 +66,7 @@ for option in "-reportfull -reportsize" \
               "-white -bg-color=red" \
               "-white -bg-corner=topleft" \
               "-white -bg-corner=top" \
-              "-bg-color=black -bg-color=white" \
-              "-bg-corner=topleft -bg-corner=bottomright" \
-              "-blank-image=maxcrop" \
-              "-blank-image=past" \
+              "-blank-image=pasturize" \
               "-bg-color=black -closeness=-1" \
               "-bg-color=black -closeness=101"
     do

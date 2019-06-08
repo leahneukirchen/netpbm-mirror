@@ -95,13 +95,7 @@ expected failure
 expected failure
 -white -bg-corner=top
 expected failure
--bg-color=black -bg-color=white
-expected failure
--bg-corner=topleft -bg-corner=bottomright
-expected failure
--blank-image=maxcrop
--1 0 0 -1 13 15 rgb-1:0/0/0 0.000000
--blank-image=past
+-blank-image=pasturize
 expected failure
 -bg-color=black -closeness=-1
 expected failure

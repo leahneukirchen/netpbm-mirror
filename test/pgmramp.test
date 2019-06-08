@@ -2,14 +2,33 @@
 # This script tests: pgmramp
 # Also requires:
 
+echo "Test 1"
 
 for type in -lr -tb -rectangle -ellipse -diagonal
 do
 pgmramp -maxval=6 $type 4 4 -plain
 done
 
+echo "Test 2"
+
 for type in -lr -tb -rectangle -ellipse
 do pgmramp $type 256 256 | cksum
 done
 
+echo "Test 3"
+
 pgmramp -diagonal -maxval=510 256 256 | cksum
+
+echo "Test 4"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+for combination in "-lr -tb" "-lr -rectangle" "-rectangle -ellipse"
+do pgmramp $combination 10 10 || echo "Expected error: $combination"
+done
+
+pgmramp -lr     1 || echo "Expected error: insufficient parameters"
+pgmramp -tb 1 1 1 || echo "Expected error: excessive parameters"

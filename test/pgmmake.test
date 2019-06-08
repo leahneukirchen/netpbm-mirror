@@ -2,6 +2,25 @@
 # This script tests: pgmmake
 # Also requires:
 
+echo "Test 1."
 
 pgmmake 1 50 50 | cksum
 pgmmake .2 50 100 -maxval=5 | cksum
+
+
+echo "Test 2."
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pgmmake 100  5 5 || echo "Expected error 1"
+pgmmake 1.01 5 5 || echo "Expected error 2"
+pgmmake .5   5   || echo "Expected error 3"
+pgmmake .5       || echo "Expected error 4"
+pgmmake -maxval=5        5 5 || echo "Expected error 5"
+pgmmake -maxval=0     .5 5 5 || echo "Expected error 6"
+pgmmake -maxval=-1    .5 5 5 || echo "Expected error 7"
+pgmmake -maxval=65536 .5 5 5 || echo "Expected error 8"
+

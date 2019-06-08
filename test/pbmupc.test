@@ -2,8 +2,26 @@
 # This script tests: pbmupc
 # Also requires:
 
+echo "Test 1"
 
 for type in -s1 -s2
 do
 pbmupc $type 0 72890 00011
 done | cksum
+
+echo "Test 2"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pbmupc -s3 0 72890 00011     || echo "Exptected error 1"
+pbmupc -s1   72890 00011     || echo "Exptected error 2"
+pbmupc -s1 0 72890           || echo "Exptected error 3"
+pbmupc -s1 10 72890 00011    || echo "Exptected error 4"
+pbmupc -s1 0 172890 00011    || echo "Exptected error 5"
+pbmupc -s1 0   2890 00011    || echo "Exptected error 6"
+pbmupc -s1 0 72890 100011    || echo "Exptected error 7"
+pbmupc -s1 0 72890   0011    || echo "Exptected error 8"
+pbmupc -s1 0 72890 100011 1  || echo "Exptected error 9"

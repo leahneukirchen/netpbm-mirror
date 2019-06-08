@@ -22,6 +22,7 @@ ppmcie.test
 ppmwheel.test
 pamcrater.test
 ppmpat.test
+ppmforge-parameters.test
 
 # Generators with random components
 

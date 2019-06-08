@@ -2,13 +2,17 @@
 # This script tests: pbmmake
 # Also requires:
 
+echo "Test 1."
 
 for i in `seq 1 8`
 do
-for color in -w -b -g
+for color in -white -black -gray
 do
 pbmmake -plain $color $i $i | tr -d '\n'; echo
 done
+
+echo "Test 2."
+
 done
 for i in `seq 8 5 98`
 do
@@ -16,3 +20,20 @@ do
   pbmmake -b $i $i ;
   pbmmake  -g $i $i ) | cksum
 done
+
+echo "Test 3."
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pbmmake -b -w -plain 1 1 || echo "Expected error 1"
+pbmmake -b -g -plain 1 1 || echo "Expected error 2"
+pbmmake -white -gray -plain 1 1 || echo "Expected error 3"
+pbmmake -white -plain   || echo "Expected error 4"
+pbmmake -white -plain 1 || echo "Expected error 5"
+pbmmake -white -plain 1 0 || echo "Expected error 6"
+pbmmake -white -plain 0 1 || echo "Expected error 7"
+pbmmake -white -plain 1 1 1 || echo "Expected error 8"
+pbmmake -plain 1 1 ||  echo "Expected error 9"

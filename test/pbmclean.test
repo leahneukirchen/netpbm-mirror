@@ -1,19 +1,36 @@
 #! /bin/bash
 # This script tests: pbmclean
-# Also requires: pbmmake pbmpage pnmmargin pnmpad
+# Also requires: pbmmake pbmpage pbmtext pnmmargin pnmpad
 
 
 tmpdir=${tmpdir:-/tmp}
 test_pbm=${tmpdir}/test.pbm
+sheet_pbm=${tmpdir}/sheet.pbm
+
+echo "Test 1"
 
 pbmmake -g 3 3 | pnmmargin -black 2 > ${test_pbm}
 
 for n in 1 2 3 4 5 6 7 8
-do
-pbmclean -min=$n -black -plain ${test_pbm}
-done
+  do
+  pbmclean -min=${n} -black -plain ${test_pbm}
+  done
 
 rm ${test_pbm}
 
+
+echo "Test 2"
+
 # Should print 760076056 4210813
 pbmpage 1 | pbmclean -black | cksum
+
+
+echo "Test 3"
+
+pbmtext -dump-sheet > ${sheet_pbm}
+for n in 1 2 3 4 5 6 7 8 9 10
+  do
+  pbmclean -min=${n} -extended  ${sheet_pbm} | cksum
+  done
+
+rm ${sheet_pbm}

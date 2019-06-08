@@ -2,6 +2,26 @@
 # This script tests: ppmmake
 # Also requires:
 
+echo "Test 1."
 
 ppmmake rgb:ff/80/80 50 100 -maxval=5 | cksum
+ppmmake rgbi:0.5/1.0/0 2   | cksum
 ppmmake red 50 50  | cksum
+
+echo "Test 2."
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+ppmmake rgb:gg/00/00  2 2  || echo "Expected error 1"
+ppmmake rgb:ff/ff/00  2    || echo "Expected error 2"
+ppmmake rgbi:1.1/0/0  2 2  || echo "Expected error 3"
+ppmmake rgbi:1.0/.5   2 2  || echo "Expected error 4"
+ppmmake rainbow       2 2  || echo "Expected error 5"
+ppmmake               2 2  || echo "Expected error 6"
+ppmmake blue -maxval=0 2 2  || echo "Expected error 7"
+ppmmake blue -maxval=-1 2 2  || echo "Expected error 8"
+ppmmake blue -maxval=65536 2 2  || echo "Expected error 9"
+RGBDEF=/dev/null ppmmake red 2 2 || echo "Expected error 10"

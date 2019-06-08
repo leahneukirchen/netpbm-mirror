@@ -1,7 +1,14 @@
+Test 1
 0.00
 inf
 1000.00
 match
+Test 2
 300.00 300.00 300.00
 match
 match
+Test 3
+Expected failure 1
+Expected failure 2
+Expected failure 3
+Expected failure 4

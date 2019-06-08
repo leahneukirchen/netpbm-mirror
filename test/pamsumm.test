@@ -2,13 +2,29 @@
 # This script tests: pamsumm
 # Also requires:
 
+echo "Test 1"
 
 for type in -sum -min -max -mean
   do
   pamsumm -brief $type testgrid.pbm
   done
 
+echo "Test 2"
+
 for type in -sum -min -max -mean
   do
   pamsumm -brief $type testimg.ppm
   done
+
+
+echo "Test 3"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamsumm -sum -min  testimg.ppm || echo "Expected failure 1"
+pamsumm -sum -max  testimg.ppm || echo "Expected failure 2"
+pamsumm -mean -max testimg.ppm || echo "Expected failure 3"
+pamsumm            testimg.ppm || echo "Expected failure 4"
