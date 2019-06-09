@@ -153,6 +153,9 @@ parseCommandLine(int argc, const char ** argv,
     else if (cmdlineP->lspace < -pbm_maxfontheight())
         pm_error("negative -lspace value too large");
 
+    if (cmdlineP->font != NULL && cmdlineP->builtin != NULL)
+        pm_error("You cannot specify both -font and -builtin");
+
     if (cmdlineP->textdump) {
         if (cmdlineP->dryrun)
             pm_error("You cannot specify both -dry-run and -text-dump");
@@ -170,9 +173,8 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("-wchar is not valid when text is from command line");
 
         cmdlineP->text = textFmCmdLine(argc, argv);
-
-
     }
+
     free(option_def);
 }
 
