@@ -635,7 +635,6 @@ input_process_next_command(Input *                const inputP,
 
     noMoreCommands = false;  /* initial assumption */
 
-    pm_message("command '%s'", nt.begin);
     switch (nt.begin[0]) {
     case 'm':
         processM(&nt, &state, &unrecognizedCmd, &error);
