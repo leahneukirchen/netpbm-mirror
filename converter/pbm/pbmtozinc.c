@@ -92,7 +92,9 @@ packer_init(Packer * const packerP) {
 
 
 static void
-packer_putitem(Packer * const packerP) {
+packer_putitem(Packer *      const packerP,
+               unsigned char const hi,
+               unsigned char const lo) {
 
     if (packerP->firstitem)
         packerP->firstitem = 0;
@@ -107,7 +109,8 @@ packer_putitem(Packer * const packerP) {
         putchar(' ');
 
     ++packerP->itemsperline;
-    printf ("0x%02x%02x", packerP->item & 255, packerP->item >> 8);
+
+    printf ("0x%02x%02x", hi, lo);
 
 }
 
@@ -119,7 +122,7 @@ writeRaster(FILE *       const ifP,
             unsigned int const cols,
             int          const format) {
 
-    bit * const bitrow = pbm_allocrow_packed(cols + 8);
+    unsigned char * const bitrow = pbm_allocrow_packed(cols + 8);
 
     Packer packer;
     unsigned int row;
@@ -129,7 +132,6 @@ writeRaster(FILE *       const ifP,
     bitrow[pbm_packed_bytes(cols+8) -1 ] = 0x00;
 
     for (row = 0; row < rows; ++row) {
-        uint16_t * const itemrow = (uint16_t *) bitrow;
         unsigned int const itemCt = (cols + 15 ) / 16;
 
         unsigned int i;
@@ -139,8 +141,7 @@ writeRaster(FILE *       const ifP,
         pbm_cleanrowend_packed(bitrow, cols);
 
         for (i = 0; i < itemCt; ++i) {
-            packer.item = itemrow[i];
-            packer_putitem(&packer);
+            packer_putitem(&packer, bitrow[2*i+0], bitrow[2*i+1]);
         }
     }
     pbm_freerow_packed(bitrow);
