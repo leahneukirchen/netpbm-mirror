@@ -4,7 +4,7 @@
 <body>
 
 <h1>pamtris</h1>
-Updated: 02 October 2018
+Updated: 15 June 2019
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -256,14 +256,14 @@ to produce a picture of NAMCO's Pac-Man.  It generates dozens of
 #define WIDTH   256
 #define HEIGHT  WIDTH
 
-int main()
+int main(void)
 {
         int const center_x = 0.5 * WIDTH;
         int const center_y = 0.5 * HEIGHT;
 
         double const radius = 0.48 * WIDTH;
         
-        int const sectors = round(0.125 * PI * radius) + 1;
+        int const sectors = round(0.125 * PI * radius + 1);
 
         puts("mode triangles");
 
@@ -277,13 +277,13 @@ int main()
         printf("vertex %d %d 1\n", center_x, center_y);
         puts("attribs 255 128 0");
 
-        double const angle_factor = PI2 / (sectors - 1);
+        double const angle_step = PI2 / (sectors - 1);
 
         unsigned int i;
 
         for (i = 0; i &lt; sectors; i++)
         {
-                double const angle = angle_factor * i;
+                double const angle = angle_step * i;
                 int const x = round(cos(angle) * radius + center_x);
                 int const y = round(sin(angle) * radius + center_y);
 
@@ -301,7 +301,7 @@ int main()
 what else can be feasibly obtained through this meta-programming approach,
 especially when combining <b>pamtris</b> with other Netpbm programs (Earth
 texture from
-<a href="https://visibleearth.nasa.gov/view.php?id=73580">nasa.gov</a>):
+<a href="https://visibleearth.nasa.gov/view.php?id=73580">nasa.gov</a>):</p>
 
 <img alt="Isometric Rainbow Waves" src="pamtris_isowaves.gif">
 <img alt="Rotating Earth" src="pamtris_earth.gif">
@@ -538,11 +538,11 @@ X-axis goes from left to right, and the Y-axis from top to bottom. A
 negative value for <i>x</i> indicates a column that many tuples to the
 left of the leftmost column of the frame buffer.  Likewise, a negative
 value for <i>y</i> indicates a row that many tuples above the uppermost
-row of the frame buffer. <u>Observe that those coordinates correspond
+row of the frame buffer. Observe that those coordinates correspond
 directly to a particular point in the coordinate system delineated
 above, regardless of whether you are trying to draw an image which is
 supposed to look as if viewed "in perspective" or not; <b>pamtris</b>
-does <i>not</i> "warp" the coordinates you give in any way.</u>
+does <em>not</em> "warp" the coordinates you give in any way.
 Therefore, if you want to draw images in perspective, you must compute
 values for <i>x</i> and <i>y</i> already projected into <b>pamtris</b>'
 coordinate system yourself, using an external perspective projection
@@ -573,13 +573,13 @@ intended to look as in perspective is as follows. First, consider the
 <a href="https://en.wikipedia.org/wiki/Viewing_frustum">typical model</a>
 of the so-colled "viewing frustum" used to project vertices in 3D
 "world space" onto a planar "image space." The value of <i>w</i> for a
-vertex is simply the dot product<a href="#vertex_note">*</a> between the
-3D vector <b>r</b> and the 3D unit vector <b>n</b> (i. e. the length of
-the orthogonal projection of <b>r</b> on the line determined by <b>n</b>),
-in world units (such as pixels, centimeters, inches, etc.); where
-<b>r</b> is the vector which goes from the projection reference point
-(PRP, or "eye") to the vertex, and <b>n</b> is just the view-plane
-normal (VPN) of unit length which points away from the PRP.</p>
+vertex is simply the
+<a id="vertex_note_link" href="#vertex_note">dot product*</a> between the 3D
+vector <b>r</b> and the 3D unit vector <b>n</b> (i.e. the length of the
+orthogonal projection of <b>r</b> on the line determined by <b>n</b>) in
+pixels; where <b>r</b> is the vector which goes from the projection reference
+point (PRP, or "eye") to the vertex, and <b>n</b> is a view-plane normal
+(VPN) of unit length which points away from the PRP.</p>
 
 <p>In case you are performing a mere multiplication of a 4D vector with
 x, y, z and w components by a so-called perspective projection 4x4 matrix
@@ -587,7 +587,7 @@ in order to compute the projection of a vertex onto the image plane,
 then you may supply for <i>w</i> a value which is directly proportional
 to the absolute value of the w component of the resulting vector.</p>
 
-<p><a id="vertex_note" href="#vertex_note">*</a>
+<p>[<a id="vertex_note" href="#vertex_note_link">*</a>]:
 For any two 3D vectors <b>a</b> and <b>b</b>, with respective
 real scalar components a<sub>x</sub>, a<sub>y</sub>, a<sub>z</sub> and
 b<sub>x</sub>, b<sub>y</sub>, b<sub>z</sub>, the dot product between
@@ -681,9 +681,8 @@ successfully. If that happens, no lines of input will be read anymore and
 <b>pamtris</b> will be terminated as if the <b>quit</b> command was given.</p>
 <dt><b>quit</b></dt>
 <dd>
-<p>This terminates <b>pamtris</b>. The program will not read any more lines of
-input after this command, and ignores any further tokens on the
-same line as it.</p>
+<p>This terminates <b>pamtris</b>. It will not read any more lines of input
+after this command.</p>
 </dd>
 
 </dl>
@@ -700,16 +699,12 @@ processing the result through <a href="pamlookup.html"><b>pamlookup</b></a>,
 providing the desired texture file as a "lookup table."  If you are drawing
 pictures in perspective, make sure to provide adequate values for the
 <i>w</i> parameter to your vertex commands
-(<a href="#cmd_vertex">see above</a>) so the resulting samples in
+(<a href="#cmd_vertex">see above</a>) so that the resulting samples in
 the images produced by <b>pamtris</b> are perspective-correct.</p>
 
 <p>You might want to consider using
 <a href="pnmtile.html"><b>pnmtile</b></a> to make textures which are
 inteded to be "repeated" along triangle meshes.</p>
-
-<p>Since the <i>w</i> parameter to the <b>vertex</b> command was new in Netpbm
-10.85 (December 2018), it is not really possible to achieve
-perspective-correct texturing before that.
 
 
 <h3>Anti-aliased edges</h3>
@@ -719,9 +714,9 @@ However, it is possible to obtain anti-aliased images through a
 "super-sampling" approach: draw your image(s) at a size larger than
 the desired final size, and then, when all post-processing is done,
 down-scale the final image(s) to the desired size. Drawing images with
-twice the desired width and height, then down-scaling them to the
-desired size using a quadratic filter, might produce results which are
-often good enough.</p>
+twice the desired width and height, then down-scaling them to the intended
+size while disregarding gamma (i.e. what <b>pamscale&nbsp;-linear</b> does)
+often produces good enough results.</p>
 
 
 <h2 id="seealso">SEE ALSO</h2>
