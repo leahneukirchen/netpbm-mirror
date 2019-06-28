@@ -10,6 +10,7 @@
      - Pamtogif requires a user-specififed map file (-mapfile) to
        match the input in depth.
 */
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 

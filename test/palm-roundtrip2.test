@@ -1,0 +1,31 @@
+#! /bin/bash
+# This script tests: pnmtopalm palmtopnm
+# Also requires: pnmremap
+
+tmpdir=${tmpdir:-/tmp}
+test256color_ppm=${tmpdir}/test256color.ppm
+
+if [ ${CHECK_TYPE} = install ]
+  then mapfile=$(netpbm-config --datadir)/palmcolor8.map
+  else mapfile=${PALMMAPDIR}/palmcolor8.map
+fi
+
+if [ ! -f ${mapfile} ]
+  then
+  echo "Cannot find palmcolor8.map.  Skipping." 1>&2
+  exit 80;
+fi
+
+
+# Test. Should print 438301914 101484
+# 5 times
+
+pnmremap -mapfile=${mapfile} testimg.ppm | tee ${test256color_ppm} | cksum
+
+for flags in "" \
+             "-scanline_compression" \
+             "-rle_compression" \
+             "-packbits_compression" 
+  do pnmtopalm -colormap $flags ${test256color_ppm} | palmtopnm | cksum; done
+
+rm ${test256color_ppm}

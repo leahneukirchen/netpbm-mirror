@@ -1,0 +1,77 @@
+#! /bin/bash
+# This script tests: pammixmulti
+# Also requires: pgmnoise pnminvert pamsumm
+
+tmpdir=${tmpdir:-/tmp}
+
+# Test 1.  Should print 1926073387 101484 six times
+echo Test 1.
+
+pammixmulti testimg.ppm | cksum
+pammixmulti testimg.ppm testimg.ppm | cksum
+pammixmulti testimg.ppm testimg.ppm testimg.ppm | cksum
+pammixmulti -blend=average testimg.ppm testimg.ppm | cksum
+pammixmulti -blend=average testimg.ppm testimg.ppm testimg.ppm | cksum
+pammixmulti -blend=random -randomseed=1 \
+    testimg.ppm testimg.ppm testimg.ppm | cksum
+
+
+# Test 2.  Should print 1926073387 101484 three times
+echo Test 2.
+
+mask_pgm=${tmpdir}/mask.pgm
+pgmnoise -maxval=2 -randomseed=1 227 149 > ${mask_pgm}
+
+for sd in 0.5 1.2 3.0 
+  do
+  pammixmulti -blend=mask -maskfile=${mask_pgm} -stdev=${sd} \
+      testimg.ppm testimg.ppm testimg.ppm | cksum
+  done
+rm ${mask_pgm}
+
+# Test 3.  Should print
+echo Test 3.
+
+noise_pgm=${tmpdir}/noise.pgm
+pgmnoise --randomseed=1 227 149 > ${noise_pgm}
+
+pammixmulti -blend=mask -maskfile=${noise_pgm} \
+    testimg.ppm testimg.ppm | cksum
+pammixmulti -blend=mask -maskfile=${noise_pgm} \
+    testimg.ppm testimg.ppm testimg.ppm | cksum
+pammixmulti -blend=mask -maskfile=${noise_pgm} \
+    testimg.ppm testimg.ppm testimg.ppm testimg.ppm | cksum
+rm ${noise_pgm}
+
+
+# Test 4.
+
+# Mix image with its own inverse.
+# Output should be a monotone gray sheet.
+#  Should print 127 six times
+echo Test 4.
+
+invert_ppm=${tmpdir}/invert.ppm
+monotone_ppm=${tmpdir}/monotone.ppm
+
+pnminvert testimg.ppm > ${invert_ppm}
+
+pammixmulti -blend=average testimg.ppm ${invert_ppm} | tee ${monotone_ppm} | \
+  pamsumm -brief -max &&
+  pamsumm -brief -min ${monotone_ppm}
+rm ${monotone_ppm}
+
+pammixmulti -blend=average \
+    testimg.ppm ${invert_ppm} testimg.ppm ${invert_ppm} | \
+  tee ${monotone_ppm} | \
+  pamsumm -brief -max &&
+  pamsumm -brief -min ${monotone_ppm}
+rm ${monotone_ppm}
+
+pammixmulti -blend=average \
+    testimg.ppm testimg.ppm ${invert_ppm} ${invert_ppm} | \
+  tee ${monotone_ppm} | \
+  pamsumm -brief -max &&
+  pamsumm -brief -min ${monotone_ppm}
+
+rm ${monotone_ppm} ${invert_ppm}

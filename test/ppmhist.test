@@ -1,7 +1,22 @@
 #! /bin/bash
 # This script tests: ppmhist
-# Also requires: pgmramp
+# Also requires: pgmramp pamtopnm pbmmake pamseq ppmpat
 
+pgmramp -maxval=8 -lr 8 2 | ppmhist -sort=rgb -noheader
+ppmhist -map -sort=rgb -noheader testimg.ppm | pamtopnm | cksum
 
-pgmramp -maxval=8 -lr 8 2 | ppmhist -sort=rgb
-ppmhist -map -sort=rgb testimg.ppm | cksum
+# Test summary header
+
+pbmmake -b 2 1 | ppmhist   | head -n1
+pbmmake -w 2 1 | ppmhist   | head -n1
+pbmmake -g 2 1 | ppmhist   | head -n1
+pgmramp -lr 16 1 | ppmhist | head -n1
+pgmramp -lr -maxval=7 16 1 | ppmhist | head -n1
+pamseq  3 1 | ppmhist | head -n1
+pamseq  3 2 | ppmhist | head -n1
+ppmpat -madras --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 25 25 | \
+  ppmhist | head -n1
+ppmpat -madras --color=rgb:00/00/00,rgb:31/58/a3,rgb:e9/5e/d4 25 25 | \
+  ppmhist | head -n1
+ppmpat -madras --color=rgb:00/00/00,rgb:31/58/a3,rgb:ff/ff/ff 25 25 | \
+  ppmhist | head -n1

@@ -1,0 +1,23 @@
+#! /bin/bash
+# This script tests: pnmtofiasco fiascotopnm
+# Also requires: pnmpad pnmpsnr
+
+# Pnmtofiasco: number of rows, cols in input file must be even
+# Pnmpsnr output: 15.11 22.71 30.09
+# TODO: As in jpeg-rountrip.test the threshold has been determined
+# without much thought.
+
+# Should print 3 1000.00 1000.00 1000.00
+
+tmpdir=${tmpdir:-/tmp}
+padded_ppm=${tmpdir}/padded.ppm
+
+pnmpad --black --bottom 1 --left 1 testimg.ppm > ${padded_ppm} &&
+pnmtofiasco --progress-meter 0 ${padded_ppm} | fiascotopnm | \
+    pnmpsnr -machine - ${padded_ppm} | \
+    awk '{printf("%3d %.2f %.2f %.2f", NF,
+                  $1>14.0 ? 1000.00 : $1,
+                  $2>21.0 ? 1000.00 : $2,
+                  $3>29.0 ? 1000.00 : $3) }'
+
+rm ${padded_ppm}

@@ -36,7 +36,7 @@
  * read 4-plane color IMG files.  Therefore changed from PBM to PPM.
  * Bryan changed it further to use the PNM facilities so it outputs
  * both PBM and PPM in the Netpbm tradition.  Name changed from
- * gemtopbm to gemtopnm.  
+ * gemtopbm to gemtopnm.
  */
 
 #include <assert.h>
@@ -50,106 +50,106 @@
 char pattern[8];
 
 static void getinit ARGS ((FILE *file, int *colsP, int *rowsP, int *padrightP,
-			   int *patlenP, int *planesP));
+               int *patlenP, int *planesP));
 
 int
 main(argc, argv)
-	int             argc;
-	char           *argv[];
+    int             argc;
+    char           *argv[];
 {
-	int     debug = 0;
-	FILE    *f;
+    int     debug = 0;
+    FILE    *f;
     int     row;
-	int     rows, cols, padright, patlen, planes;
+    int     rows, cols, padright, patlen, planes;
       /* attributes of input image */
     int type;  /* The format type (PBM/PPM) of the output image */
-	bit	*bitrow[4];
+    bit *bitrow[4];
       /* One row of input, one or four planes.  (If one, only [0] is defined)*/
     xel * xelrow;  /* One row of output */
-	const char * const usage = "[-debug] [gem IMG file]";
-	int argn;
+    const char * const usage = "[-debug] [gem IMG file]";
+    int argn;
 
 /* Process multiple planes by maintaining a separate row of bits for each
- * plane. In a single-plane image, all we have to do is write out the 
+ * plane. In a single-plane image, all we have to do is write out the
  * first plane; in a multiple-plane image, we combine them just before writing
  * out the row.
  */
-	pnm_init( &argc, argv );
-    
+    pnm_init( &argc, argv );
+
     argn = 1;
 
-	while (argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0')
-	  {
-	    if (pm_keymatch(argv[1], "-debug", 2))
-	      debug = 1;
-	    else
-	      pm_usage (usage);
-	    ++argn;
-	  }
+    while (argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0')
+      {
+        if (pm_keymatch(argv[1], "-debug", 2))
+          debug = 1;
+        else
+          pm_usage (usage);
+        ++argn;
+      }
 
-	if (argc == argn)
-		f = stdin;
-	else {
-		f = pm_openr (argv[argn]);
-		++argn;
-	}
+    if (argc == argn)
+        f = stdin;
+    else {
+        f = pm_openr (argv[argn]);
+        ++argn;
+    }
 
-	if (argn != argc)
-	  pm_usage (usage);
+    if (argn != argc)
+      pm_usage (usage);
 
-	getinit (f, &cols, &rows, &padright, &patlen, &planes);
+    getinit (f, &cols, &rows, &padright, &patlen, &planes);
 
-    if (planes == 1) 
+    if (planes == 1)
         type = PBM_TYPE;
-    else 
+    else
         type = PPM_TYPE;
 
-	pnm_writepnminit( stdout, cols, rows, MAXVAL, type, 0 );
+    pnm_writepnminit( stdout, cols, rows, MAXVAL, type, 0 );
 
-    { 
+    {
         /* allocate input row data structure */
         int plane;
-        for (plane = 0; plane < planes; plane++) 
+        for (plane = 0; plane < planes; plane++)
             bitrow[plane] = malloc (cols + padright);
     }
     xelrow = pnm_allocrow(cols+padright);   /* Output row */
 
-	for (row = 0; row < rows; ) {
+    for (row = 0; row < rows; ) {
       int linerep;
       int plane;
 
-	  linerep = 1;
-	  for (plane = 0; plane < planes; plane++) {
+      linerep = 1;
+      for (plane = 0; plane < planes; plane++) {
         int col;
-		col = 0;
-		while (col < cols) {
+        col = 0;
+        while (col < cols) {
             int c;
-			switch (c = getc(f)) {
-			case 0x80:	/* Bit String */
+            switch (c = getc(f)) {
+            case 0x80:  /* Bit String */
             {
                 int j;
-				c = getc(f);	/* Byte count */
-				if (debug)
+                c = getc(f);    /* Byte count */
+                if (debug)
                   pm_message("bit string of %d bytes", c);
-				
-				if (col + c * 8 > cols + padright)
-				  pm_error ("bad byte count");
-				for (j = 0; j < c; ++j) {
+
+                if (col + c * 8 > cols + padright)
+                  pm_error ("bad byte count");
+                for (j = 0; j < c; ++j) {
                     int cc, k;
-					cc = getc(f);
-					for (k = 0x80; k; k >>= 1) {
-						bitrow[plane][col] = (k & cc) ? 0 : 1;
-						++col;
-					}
-				}
+                    cc = getc(f);
+                    for (k = 0x80; k; k >>= 1) {
+                        bitrow[plane][col] = (k & cc) ? 0 : 1;
+                        ++col;
+                    }
+                }
             }
             break;
-			case 0:		/* Pattern run */
+            case 0:     /* Pattern run */
             {
                 int j, l;
-				c = getc(f);	/* Repeat count */
-				if (debug)
-					pm_message("pattern run of %d repetitions",	c);
+                c = getc(f);    /* Repeat count */
+                if (debug)
+                    pm_message("pattern run of %d repetitions", c);
                 /* line repeat */
                 if (c == 0) {
                     c = getc(f);
@@ -158,25 +158,25 @@ main(argc, argv)
                     linerep = getc(f);
                     break;
                 }
-				fread (pattern, 1, patlen, f);
-				if (col + c * patlen * 8 > cols + padright)
-				  pm_error ("bad pattern repeat count");
-				for (j = 0; j < c; ++j)
-					for (l = 0; l < patlen; ++l) {
+                fread (pattern, 1, patlen, f);
+                if (col + c * patlen * 8 > cols + padright)
+                  pm_error ("bad pattern repeat count");
+                for (j = 0; j < c; ++j)
+                    for (l = 0; l < patlen; ++l) {
                         int k;
-						for (k = 0x80; k; k >>= 1) {
-							bitrow[plane][col] = (k & pattern[l]) ? 0 : 1;
-							++col;
-						}
+                        for (k = 0x80; k; k >>= 1) {
+                            bitrow[plane][col] = (k & pattern[l]) ? 0 : 1;
+                            ++col;
+                        }
                     }
             }
             break;
 
-			default:	/* Solid run */
+            default:    /* Solid run */
             {
                 int l, j;
-				if (debug)
-					pm_message("solid run of %d bytes %s", c & 0x7f,
+                if (debug)
+                    pm_message("solid run of %d bytes %s", c & 0x7f,
                                c & 0x80 ? "on" : "off" );
                 /* each byte had eight bits DSB */
                 l = (c & 0x80) ? 0: 1;
@@ -185,23 +185,23 @@ main(argc, argv)
                     pm_error ("bad solid run repeat count");
                 for (j = 0; j < c; ++j) {
                     bitrow[plane][col] = l;
-					++col;
+                    ++col;
                 }
             }
-				break;
+                break;
 
-			case EOF:	/* End of file */
-				pm_error( "end of file reached" );
+            case EOF:   /* End of file */
+                pm_error( "end of file reached" );
 
-			}
-		}
+            }
+        }
                 if ( debug )
                         pm_message( "EOL plane %d row %d", plane, row );
                 if (col != cols + padright)
                         pm_error( "EOL beyond edge" );
-	  }
+      }
 
-	  if (planes == 4) {
+      if (planes == 4) {
           /* Construct a pixel from the 4 planes of bits for this row */
           int col;
           for (col = 0; col < cols; col++) {
@@ -212,21 +212,21 @@ main(argc, argv)
             const int b_bit = !bitrow[2][col];
             i = bitrow[3][col];
 
-			/* Deal with weird GEM palette - white/black/gray are
-               encoded oddly 
+            /* Deal with weird GEM palette - white/black/gray are
+               encoded oddly
             */
-			if (r_bit == g_bit && g_bit == b_bit) {
+            if (r_bit == g_bit && g_bit == b_bit) {
                 /* It's black, white, or gray */
-				if (r_bit && i) r = LIGHT;
-				else if (r_bit) r = BLACK;
-				else if (i) r = MAXVAL;
-				else r = DARK;
-				g = b = r;	
-			} else {
+                if (r_bit && i) r = LIGHT;
+                else if (r_bit) r = BLACK;
+                else if (i) r = MAXVAL;
+                else r = DARK;
+                g = b = r;
+            } else {
                 /* It's one of the twelve colored colors */
                 if (!i) {
                     /* Low intensity */
-                    r = r_bit * LIGHT; 
+                    r = r_bit * LIGHT;
                     g = g_bit * LIGHT;
                     b = b_bit * LIGHT;
                 } else {
@@ -237,21 +237,21 @@ main(argc, argv)
                 }
             }
             PPM_ASSIGN(xelrow[col], r, g, b);
-		}
-	  } else {
+        }
+      } else {
           int col;
-          for (col = 0; col < cols; col++) 
+          for (col = 0; col < cols; col++)
               PNM_ASSIGN1(xelrow[col], bitrow[0][col]);
       }
-	  while (linerep--) {
-		pnm_writepnmrow( stdout, xelrow, cols, MAXVAL, type, 0 );
-		++row;
-	  }
-	}
+      while (linerep--) {
+        pnm_writepnmrow( stdout, xelrow, cols, MAXVAL, type, 0 );
+        ++row;
+      }
+    }
     pnm_freerow(xelrow);
-	pm_close( f );
-	pm_close( stdout );
-	exit(0);
+    pm_close( f );
+    pm_close( stdout );
+    exit(0);
 }
 
 
@@ -302,4 +302,6 @@ getinit (file, colsP, rowsP, padrightP, patlenP, planesP)
       (void) getc (file);
     }
 }
+
+
 

@@ -26,7 +26,7 @@
    it's easy to see that an ordinary fax could deplete your virtual
    memory and even if it didn't, it might deplete your real memory and
    iterating through the array would cause thrashing.  This program
-   iterates through the image multiple times.  
+   iterates through the image multiple times.
 
    So instead, we read the image into memory one row at a time, into a
    single row buffer.  We use Netpbm's pm_openr_seekable() facility to
@@ -38,19 +38,19 @@
    in the system's I/O cache (remember that the file is a lot smaller than
    the xel array you'd get by doing a pnm_readpnm() of it).
 
-   However, it does introduce some delay because of all the system calls 
+   However, it does introduce some delay because of all the system calls
    required to read the file.  A future enhancement might read the entire
-   file into an xel array in some cases, and read one row at a time in 
+   file into an xel array in some cases, and read one row at a time in
    others, depending on the needs of the particular use.
 
    We do still read the entire alpha mask (if there is one) into a
-   'gray' array, rather than access it one row at a time.  
+   'gray' array, rather than access it one row at a time.
 
    Before May 2001, we did in fact read the whole image into an xel array,
    and we got complaints.  Before April 2000, it wasn't as big a problem
    because xels were only 24 bits.  Now they're 96.
 */
-   
+
 #ifndef PNMTOPNG_WARNING_LEVEL
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
@@ -62,7 +62,7 @@
 /* Because of a design error in png.h, you must not #include <setjmp.h> before
    <png.h>.  If you do, png.h won't compile.
 */
-#include <setjmp.h> 
+#include <setjmp.h>
 #include <zlib.h>
 
 #include "pm_c_util.h"
@@ -170,7 +170,7 @@ parseSizeOpt(const char *       const sizeOpt,
              struct pngx_phys * const sizeP) {
 
     int count;
-    
+
     count = sscanf(sizeOpt, "%d %d %d", &sizeP->x, &sizeP->y, &sizeP->unit);
 
     if (count != 3)
@@ -185,7 +185,7 @@ parseRgbOpt(const char *         const rgbOpt,
             struct pngx_chroma * const rgbP) {
 
     int count;
-    
+
     count = sscanf(rgbOpt, "%f %f %f %f %f %f %f %f",
                    &rgbP->wx, &rgbP->wy,
                    &rgbP->rx, &rgbP->ry,
@@ -204,7 +204,7 @@ parseRgbOpt(const char *         const rgbOpt,
 static void
 parseSrgbintentOpt(const char *      const srgbintentOpt,
                    pngx_srgbIntent * const srgbintentP) {
-    
+
     if (streq(srgbintentOpt, "perceptual"))
         *srgbintentP = PNGX_PERCEPTUAL;
     else if (streq(srgbintentOpt, "relativecolorimetric"))
@@ -242,7 +242,7 @@ parseModtimeOpt(const char * const modtimeOpt,
     if (count != 6)
         pm_error("Invalid value for -modtime '%s'.   It should have "
                  "the form [yy]yy-mm-dd hh:mm:ss.", modtimeOpt);
-    
+
     if (year < 0)
         pm_error("Year is negative in -modtime value '%s'", modtimeOpt);
     if (year > 9999)
@@ -290,7 +290,7 @@ parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -422,11 +422,11 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->ztxt = NULL;
     if (!paletteSpec)
         cmdlineP->palette = NULL;
-    
+
     if (filterSpec && (nofilter + sub + up + avg + paeth > 0))
         pm_error("You may mot specify -filter with "
                  "-nofilter, -sub, -up, -avg, or -paeth");
-    
+
     if (filterSpec) {
         if (filter < 0 || filter > 4)
             pm_error("-filter is obsolete.  Use -nofilter, -sub, -up, -avg, "
@@ -460,13 +460,12 @@ parseCommandLine(int argc, const char ** argv,
                 cmdlineP->filterSet |= PNG_FILTER_PAETH;
         }
     }
-
     if (cmdlineP->sizeSpec)
         parseSizeOpt(size, &cmdlineP->size);
 
     if (cmdlineP->rgbSpec)
         parseRgbOpt(rgb, &cmdlineP->rgb);
-    
+
     if (cmdlineP->srgbintentSpec)
         parseSrgbintentOpt(srgbintent, &cmdlineP->srgbintent);
 
@@ -538,14 +537,14 @@ reportInputType(int    const format,
 
 
 static png_color_16
-xelToPngColor_16(xel    const input, 
-                 xelval const maxval, 
+xelToPngColor_16(xel    const input,
+                 xelval const maxval,
                  xelval const pngMaxval) {
 
     png_color_16 retval;
 
     xel scaled;
-    
+
     PPM_DEPTH(scaled, input, maxval, pngMaxval);
 
     retval.red   = PPM_GETR(scaled);
@@ -559,12 +558,12 @@ xelToPngColor_16(xel    const input,
 
 
 static void
-closestColorInPalette(pixel          const targetColor, 
+closestColorInPalette(pixel          const targetColor,
                       pixel                palette_pnm[],
                       unsigned int   const paletteSize,
                       unsigned int * const bestIndexP,
                       unsigned int * const bestMatchP) {
-    
+
     unsigned int paletteIndex;
     unsigned int bestIndex;
     unsigned int bestMatch;
@@ -573,7 +572,7 @@ closestColorInPalette(pixel          const targetColor,
 
     bestMatch = UINT_MAX;
     for (paletteIndex = 0; paletteIndex < paletteSize; ++paletteIndex) {
-        unsigned int const dist = 
+        unsigned int const dist =
             PPM_DISTANCE(palette_pnm[paletteIndex], targetColor);
 
         if (dist < bestMatch) {
@@ -678,13 +677,13 @@ static colorhist_vector getChv_chv;
 
 
 static void
-getChv(FILE *             const ifP, 
+getChv(FILE *             const ifP,
        pm_filepos         const rasterPos,
-       int                const cols, 
-       int                const rows, 
+       int                const cols,
+       int                const rows,
        xelval             const maxval,
-       int                const format, 
-       int                const maxColors, 
+       int                const format,
+       int                const maxColors,
        colorhist_vector * const chvP,
        unsigned int *     const colorsP) {
 /*----------------------------------------------------------------------------
@@ -693,7 +692,7 @@ getChv(FILE *             const ifP,
    raster starts at position 'rasterPos' of the file.  The image's properties
    are 'cols', 'rows', 'maxval', and 'format'.
 
-   Return the number of colors as *colorsP.  Return the details of the 
+   Return the number of colors as *colorsP.  Return the details of the
    colors in newly malloc'ed storage, and its address as *chvP.  If
    there are more than 'maxColors' colors, though, just return NULL as
    *chvP and leave *colorsP undefined.
@@ -708,13 +707,13 @@ getChv(FILE *             const ifP,
 
     if (!getChv_computed) {
         int colorCount;
-        if (verbose) 
+        if (verbose)
             pm_message ("Finding colors in input image...");
 
         pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
-        getChv_chv = ppm_computecolorhist2(ifP, cols, rows, maxval, format, 
+        getChv_chv = ppm_computecolorhist2(ifP, cols, rows, maxval, format,
                                            maxColors, &colorCount);
-        
+
         getChv_colors = colorCount;
 
         if (verbose) {
@@ -745,7 +744,7 @@ static void freeChv(void) {
 static bool
 pgmBitsAreRepeated(unsigned int const repeatedSize,
                    FILE *       const ifP,
-                   pm_filepos   const rasterPos, 
+                   pm_filepos   const rasterPos,
                    int          const cols,
                    int          const rows,
                    xelval       const maxval,
@@ -772,7 +771,7 @@ pgmBitsAreRepeated(unsigned int const repeatedSize,
     xel * xelrow;
 
     xelrow = pnm_allocrow(cols);
-    
+
     pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
     mayscale = TRUE;  /* initial assumption */
@@ -797,8 +796,8 @@ pgmBitsAreRepeated(unsigned int const repeatedSize,
 
 
 static void
-meaningful_bits_pgm(FILE *         const ifP, 
-                    pm_filepos     const rasterPos, 
+meaningful_bits_pgm(FILE *         const ifP,
+                    pm_filepos     const rasterPos,
                     int            const cols,
                     int            const rows,
                     xelval         const maxval,
@@ -849,8 +848,8 @@ meaningful_bits_pgm(FILE *         const ifP,
 
 
 static void
-meaningful_bits_ppm(FILE *         const ifp, 
-                    pm_filepos     const rasterPos, 
+meaningful_bits_ppm(FILE *         const ifp,
+                    pm_filepos     const rasterPos,
                     int            const cols,
                     int            const rows,
                     xelval         const maxval,
@@ -903,12 +902,12 @@ meaningful_bits_ppm(FILE *         const ifp,
 
 
 static void
-tryTransparentColor(FILE *     const ifp, 
-                    pm_filepos const rasterPos, 
-                    int        const cols, 
-                    int        const rows, 
+tryTransparentColor(FILE *     const ifp,
+                    pm_filepos const rasterPos,
+                    int        const cols,
+                    int        const rows,
                     xelval     const maxval,
-                    int        const format, 
+                    int        const format,
                     gray **    const alphaMask,
                     gray       const alphaMaxval,
                     pixel      const transcolor,
@@ -926,7 +925,7 @@ tryTransparentColor(FILE *     const ifp,
     pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
 
     singleColorIsTrans = TRUE;  /* initial assumption */
-        
+
     for (row = 0; row < rows && singleColorIsTrans; ++row) {
         int col;
         pnm_readpnmrow(ifp, xelrow, cols, maxval, format);
@@ -961,7 +960,7 @@ tryTransparentColor(FILE *     const ifp,
                 }
             }
         }
-    }  
+    }
     pnm_freerow(xelrow);
 }
 
@@ -969,15 +968,15 @@ tryTransparentColor(FILE *     const ifp,
 
 static void
 analyzeAlpha(FILE *       const ifP,
-             pm_filepos   const rasterPos, 
-             unsigned int const cols, 
-             unsigned int const rows, 
+             pm_filepos   const rasterPos,
+             unsigned int const cols,
+             unsigned int const rows,
              xelval       const maxval,
-             int          const format, 
+             int          const format,
              gray **      const alphaMask,
              gray         const alphaMaxval,
              bool *       const allOpaqueP,
-             bool *       const singleColorIsTransP, 
+             bool *       const singleColorIsTransP,
              pixel *      const alphaTranscolorP) {
 /*----------------------------------------------------------------------------
   Get information about the alpha mask, in combination with the masked
@@ -1003,7 +1002,7 @@ analyzeAlpha(FILE *       const ifP,
         /* We found a pixel in the image where the alpha mask says it is
            not fully opaque.
         */
-    
+
     xelrow = pnm_allocrow(cols);
 
     {
@@ -1083,7 +1082,7 @@ determineTransparency(struct cmdlineInfo const cmdline,
    or identify a transparent color.
 
    We return as *transparentP:
-   
+
      -1 PNG is not to have single-color transparency
       1 PNG is to have single-color transparency as directed by user
       2 PNG is to have single-color transparency that effects an alpha
@@ -1107,7 +1106,7 @@ determineTransparency(struct cmdlineInfo const cmdline,
         if (alphaCols != cols || alphaRows != rows) {
             pm_error("dimensions for image and alpha mask do not agree");
         }
-        analyzeAlpha(ifP, rasterPos, cols, rows, maxval, format, 
+        analyzeAlpha(ifP, rasterPos, cols, rows, maxval, format,
                      alphaMask, alphaMaxval, &allOpaque,
                      &alphaCanBeTransparencyIndex, &alphaTranscolor);
 
@@ -1137,7 +1136,7 @@ determineTransparency(struct cmdlineInfo const cmdline,
         *alphaMaxvalP = 255;
 
         if (cmdline.transparent) {
-            const char * transstring2;  
+            const char * transstring2;
             /* The -transparent value, but with possible leading '=' removed */
             if (cmdline.transparent[0] == '=') {
                 *transExactP = TRUE;
@@ -1145,12 +1144,12 @@ determineTransparency(struct cmdlineInfo const cmdline,
             } else {
                 *transExactP = FALSE;
                 transstring2 = cmdline.transparent;
-            }  
+            }
             /* We do this funny PPM_DEPTH thing instead of just passing 'maxval'
                to ppm_parsecolor() because ppm_parsecolor() does a cheap maxval
                scaling, and this is more precise.
             */
-            PPM_DEPTH(*transColorP, 
+            PPM_DEPTH(*transColorP,
                       ppm_parsecolor(transstring2, PNM_OVERALLMAXVAL),
                       PNM_OVERALLMAXVAL, maxval);
 
@@ -1167,9 +1166,9 @@ determineBackground(struct cmdlineInfo const cmdline,
                     xelval             const maxval,
                     xel *              const backColorP) {
 
-  if (cmdline.background) 
+  if (cmdline.background)
       PPM_DEPTH(*backColorP,
-                ppm_parsecolor(cmdline.background, PNM_OVERALLMAXVAL), 
+                ppm_parsecolor(cmdline.background, PNM_OVERALLMAXVAL),
                 PNM_OVERALLMAXVAL, maxval);;
 }
 
@@ -1221,8 +1220,8 @@ hasColor(FILE *       const ifP,
 
 
 static void
-findRedundantBits(FILE *         const ifp, 
-                  int            const rasterPos, 
+findRedundantBits(FILE *         const ifp,
+                  int            const rasterPos,
                   int            const cols,
                   int            const rows,
                   xelval         const maxval,
@@ -1239,13 +1238,13 @@ findRedundantBits(FILE *         const ifp,
    of bits, starting from the least significant end, that contain
    original information.
 -----------------------------------------------------------------------------*/
-  if (!alpha && PNM_FORMAT_TYPE(format) == PGM_TYPE && !force) 
+  if (!alpha && PNM_FORMAT_TYPE(format) == PGM_TYPE && !force)
       meaningful_bits_pgm(ifp, rasterPos, cols, rows, maxval, format,
                           meaningfulBitsP);
   else if (PNM_FORMAT_TYPE(format) == PPM_TYPE && !force)
       meaningful_bits_ppm(ifp, rasterPos, cols, rows, maxval, format,
                           meaningfulBitsP);
-  else 
+  else
       *meaningfulBitsP = pm_maxvaltobits(maxval);
 
   if (verbose && *meaningfulBitsP != pm_maxvaltobits(maxval))
@@ -1257,24 +1256,24 @@ findRedundantBits(FILE *         const ifp,
 
 static void
 readOrderedPalette(FILE *         const pfp,
-                   xel                  ordered_palette[], 
+                   xel                  ordered_palette[],
                    unsigned int * const ordered_palette_size_p) {
 
     xel ** xels;
     int cols, rows;
     xelval maxval;
     int format;
-    
+
     if (verbose)
         pm_message("reading ordered palette (colormap)...");
 
     xels = pnm_readpnm(pfp, &cols, &rows, &maxval, &format);
-    
-    if (PNM_FORMAT_TYPE(format) != PPM_TYPE) 
+
+    if (PNM_FORMAT_TYPE(format) != PPM_TYPE)
         pm_error("ordered palette must be a PPM file, not type %d", format);
 
     *ordered_palette_size_p = rows * cols;
-    if (*ordered_palette_size_p > MAXCOLORS) 
+    if (*ordered_palette_size_p > MAXCOLORS)
         pm_error("ordered-palette image contains %d pixels.  Maximum is %d",
                  *ordered_palette_size_p, MAXCOLORS);
     if (verbose)
@@ -1286,12 +1285,12 @@ readOrderedPalette(FILE *         const pfp,
         j = 0;  /* initial value */
         for (row = 0; row < rows; ++row) {
             int col;
-            for (col = 0; col < cols; ++col) 
+            for (col = 0; col < cols; ++col)
                 ordered_palette[j++] = xels[row][col];
         }
     }
     pnm_freearray(xels, rows);
-}        
+}
 
 
 
@@ -1315,31 +1314,31 @@ compute_nonalpha_palette(colorhist_vector const chv,
    wants the colors in a particular order in the palette.
 -----------------------------------------------------------------------------*/
     unsigned int colorIndex;
-    
+
     xel ordered_palette[MAXCOLORS];
     unsigned int ordered_palette_size;
 
     if (pfp) {
         readOrderedPalette(pfp, ordered_palette, &ordered_palette_size);
 
-        if (colors != ordered_palette_size) 
+        if (colors != ordered_palette_size)
             pm_error("sizes of ordered palette (%d) "
                      "and existing palette (%d) differ",
                      ordered_palette_size, colors);
-        
+
         /* Make sure the ordered palette contains all the colors in
-           the image 
+           the image
         */
         for (colorIndex = 0; colorIndex < colors; colorIndex++) {
             int j;
             bool found;
-            
+
             found = FALSE;
             for (j = 0; j < ordered_palette_size && !found; ++j) {
-                if (PNM_EQUAL(ordered_palette[j], chv[colorIndex].color)) 
+                if (PNM_EQUAL(ordered_palette[j], chv[colorIndex].color))
                     found = TRUE;
             }
-            if (!found) 
+            if (!found)
                 pm_error("failed to find color (%d, %d, %d), which is in the "
                          "input image, in the ordered palette",
                          PPM_GETR(chv[colorIndex].color),
@@ -1352,7 +1351,7 @@ compute_nonalpha_palette(colorhist_vector const chv,
         for (colorIndex = 0; colorIndex < colors; ++colorIndex)
             palette_pnm[colorIndex] = ordered_palette[colorIndex];
     } else {
-        for (colorIndex = 0; colorIndex < colors; ++colorIndex) 
+        for (colorIndex = 0; colorIndex < colors; ++colorIndex)
             palette_pnm[colorIndex] = chv[colorIndex].color;
     }
     *paletteSizeP = colors;
@@ -1442,7 +1441,7 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
    described by 'cols', 'rows', 'maxval', and 'format'.
 
    Using the alpha mask 'alpha_mask' and color map 'chv' (of size 'colors')
-   for the image, construct a palette of (color index, alpha) ordered pairs 
+   for the image, construct a palette of (color index, alpha) ordered pairs
    for the image, as follows.
 
    The alpha/color palette is the set of all ordered pairs of
@@ -1476,7 +1475,7 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
         alphasOfColor[colorIndex] = NULL;
         alphasOfColorCnt[colorIndex] = 0;
     }
- 
+
     pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
     xelrow = pnm_allocrow(cols);
@@ -1562,22 +1561,22 @@ sortAlphaPalette(gray *         const alphasOfColor[],
         unsigned int bot_idx;
         unsigned int top_idx;
         unsigned int colorIndex;
-    
+
         /* We start one index at the bottom of the palette index range
            and another at the top.  We run through the unsorted palette,
            and when we see an opaque entry, we map it to the current top
-           cursor and bump it down.  When we see a non-opaque entry, we map 
+           cursor and bump it down.  When we see a non-opaque entry, we map
            it to the current bottom cursor and bump it up.  Because the input
            and output palettes are the same size, the two cursors should meet
            right when we process the last entry of the unsorted palette.
-        */    
+        */
         bot_idx = 0;
         top_idx = alphasFirstIndex[colors-1] + alphasOfColorCnt[colors-1] - 1;
-    
+
         for (colorIndex = 0;  colorIndex < colors;  ++colorIndex) {
             unsigned int j;
             for (j = 0; j < alphasOfColorCnt[colorIndex]; ++j) {
-                unsigned int const paletteIndex = 
+                unsigned int const paletteIndex =
                     alphasFirstIndex[colorIndex] + j;
                 if (alphasOfColor[colorIndex][j] == alphaMaxval)
                     mapping[paletteIndex] = top_idx--;
@@ -1598,7 +1597,7 @@ sortAlphaPalette(gray *         const alphasOfColor[],
 
 
 static void
-compute_alpha_palette(FILE *         const ifP, 
+compute_alpha_palette(FILE *         const ifP,
                       int            const cols,
                       int            const rows,
                       xelval         const maxval,
@@ -1626,10 +1625,10 @@ compute_alpha_palette(FILE *         const ifP,
    The palette is sorted so that the opaque entries are last, and we return
    *transSizeP as the number of non-opaque entries.
 
-   palette[] and trans[] are allocated by the caller to at least 
+   palette[] and trans[] are allocated by the caller to at least
    MAXPALETTEENTRIES elements.
 
-   If there are more than MAXPALETTEENTRIES color/alpha pairs in the image, 
+   If there are more than MAXPALETTEENTRIES color/alpha pairs in the image,
    don't return any palette information -- just return *tooBigP == TRUE.
 -----------------------------------------------------------------------------*/
     colorhist_vector chv;
@@ -1638,8 +1637,8 @@ compute_alpha_palette(FILE *         const ifP,
     gray * alphas_of_color[MAXPALETTEENTRIES];
     unsigned int alphas_first_index[MAXPALETTEENTRIES];
     unsigned int alphas_of_color_cnt[MAXPALETTEENTRIES];
- 
-    getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS, 
+
+    getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS,
            &chv, &colors);
 
     assert(colors <= ARRAY_SIZE(alphas_of_color));
@@ -1658,7 +1657,7 @@ compute_alpha_palette(FILE *         const ifP,
                index into the sorted PNG palette of the alpha/color
                pair whose index is x in the unsorted PNG palette.
                This mapping sorts the palette so that opaque entries
-               are last.  
+               are last.
             */
 
         *paletteSizeP = colors == 0 ?
@@ -1677,22 +1676,22 @@ compute_alpha_palette(FILE *         const ifP,
             for (colorIndex = 0; colorIndex < colors; ++colorIndex) {
                 unsigned int j;
                 for (j = 0; j < alphas_of_color_cnt[colorIndex]; ++j) {
-                    unsigned int const paletteIndex = 
+                    unsigned int const paletteIndex =
                         alphas_first_index[colorIndex] + j;
                     palette_pnm[mapping[paletteIndex]] = chv[colorIndex].color;
-                    trans_pnm[mapping[paletteIndex]] = 
+                    trans_pnm[mapping[paletteIndex]] =
                     alphas_of_color[colorIndex][j];
                 }
             }
         }
         freeAlphasOfColor(alphas_of_color, colors);
     }
-} 
+}
 
 
 
 static void
-makeOneColorTransparentInPalette(xel            const transColor, 
+makeOneColorTransparentInPalette(xel            const transColor,
                                  bool           const exact,
                                  pixel                palette_pnm[],
                                  unsigned int   const paletteSize,
@@ -1700,12 +1699,12 @@ makeOneColorTransparentInPalette(xel            const transColor,
                                  unsigned int * const transSizeP) {
 /*----------------------------------------------------------------------------
    Find the color 'transColor' in the color/alpha palette defined by
-   palette_pnm[], paletteSize, trans_pnm[] and *transSizeP.  
+   palette_pnm[], paletteSize, trans_pnm[] and *transSizeP.
 
    Make that entry fully transparent.
 
    Rearrange the palette so that that entry is first.  (The PNG compressor
-   can do a better job when the opaque entries are all last in the 
+   can do a better job when the opaque entries are all last in the
    color/alpha palette).
 
    If the specified color is not there and exact == TRUE, return
@@ -1720,26 +1719,26 @@ makeOneColorTransparentInPalette(xel            const transColor,
     unsigned int distance;
 
     assert(paletteSize > 0);
-    
+
     if (*transSizeP != 0)
         pm_error("Internal error: trying to make a color in the palette "
                  "transparent where there already is one.");
 
-    closestColorInPalette(transColor, palette_pnm, paletteSize, 
+    closestColorInPalette(transColor, palette_pnm, paletteSize,
                           &transparentIndex, &distance);
 
     if (distance != 0 && exact) {
         pm_message("specified transparent color not present in palette; "
                    "ignoring -transparent");
         errorlevel = PNMTOPNG_WARNING_LEVEL;
-    } else {        
+    } else {
         /* Swap this with the first entry in the palette */
         pixel tmp;
-    
+
         tmp = palette_pnm[transparentIndex];
         palette_pnm[transparentIndex] = palette_pnm[0];
         palette_pnm[0] = tmp;
-        
+
         /* Make it transparent */
         trans_pnm[0] = PGM_TRANSPARENT;
         *transSizeP = 1;
@@ -1755,8 +1754,8 @@ makeOneColorTransparentInPalette(xel            const transColor,
 
 
 static void
-findOrAddBackgroundInPalette(pixel          const backColor, 
-                             pixel                palette_pnm[], 
+findOrAddBackgroundInPalette(pixel          const backColor,
+                             pixel                palette_pnm[],
                              unsigned int * const paletteSizeP,
                              unsigned int * const backgroundIndexP) {
 /*----------------------------------------------------------------------------
@@ -1765,11 +1764,11 @@ findOrAddBackgroundInPalette(pixel          const backColor,
   add it, choose a background color that's already in the palette,
   as close to 'backColor' as possible.
 
-  If we add an entry to the palette, make it opaque.  But in searching the 
+  If we add an entry to the palette, make it opaque.  But in searching the
   existing palette, ignore transparency.
 
   Note that PNG specs say that transparency of the background is meaningless;
-  i.e. a viewer must ignore the transparency of the palette entry when 
+  i.e. a viewer must ignore the transparency of the palette entry when
   using the background color.
 
   Return the palette index of the background color as *backgroundIndexP.
@@ -1778,9 +1777,9 @@ findOrAddBackgroundInPalette(pixel          const backColor,
     unsigned int paletteIndex;
 
     backgroundIndex = -1;
-    for (paletteIndex = 0; 
-         paletteIndex < *paletteSizeP; 
-         ++paletteIndex) 
+    for (paletteIndex = 0;
+         paletteIndex < *paletteSizeP;
+         ++paletteIndex)
         if (PPM_EQUAL(palette_pnm[paletteIndex], backColor))
             backgroundIndex = paletteIndex;
 
@@ -1823,8 +1822,8 @@ findOrAddBackgroundInPalette(pixel          const backColor,
 
 
 
-static void 
-buildColorLookup(pixel                   palette_pnm[], 
+static void
+buildColorLookup(pixel                   palette_pnm[],
                  unsigned int      const paletteSize,
                  colorhash_table * const chtP) {
 /*----------------------------------------------------------------------------
@@ -1849,14 +1848,14 @@ buildColorLookup(pixel                   palette_pnm[],
 
 
 
-static void 
-buildColorAlphaLookup(pixel              palette_pnm[], 
+static void
+buildColorAlphaLookup(pixel              palettePnm[],
                       unsigned int const paletteSize,
-                      gray               trans_pnm[], 
+                      gray               transPnm[],
                       unsigned int const transSize,
                       gray         const alphaMaxval,
                       coloralphahash_table * const cahtP) {
-    
+
     coloralphahash_table const caht = alloccoloralphahash();
 
     unsigned int paletteIndex;
@@ -1865,12 +1864,12 @@ buildColorAlphaLookup(pixel              palette_pnm[],
         gray paletteTrans;
 
         if (paletteIndex < transSize)
-            paletteTrans = alphaMaxval;
+            paletteTrans = transPnm[paletteIndex];
         else
-            paletteTrans = trans_pnm[paletteIndex];
+            paletteTrans = alphaMaxval;
 
-        addtocoloralphahash(caht, &palette_pnm[paletteIndex],
-                            &trans_pnm[paletteIndex], paletteIndex);
+        addtocoloralphahash(caht, &palettePnm[paletteIndex],
+                            &paletteTrans, paletteIndex);
     }
     *cahtP = caht;
 }
@@ -1905,18 +1904,18 @@ tryAlphaPalette(FILE *         const ifP,
                  "a PNG with transparency when you specify "
                  "the palette with -palette.");
 
-    compute_alpha_palette(ifP, cols, rows, maxval, format, 
+    compute_alpha_palette(ifP, cols, rows, maxval, format,
                           rasterPos,  alpha_mask, alphaMaxval,
-                          palette_pnm, trans_pnm, 
+                          palette_pnm, trans_pnm,
                           paletteSizeP, transSizeP, &tooBig);
     if (tooBig) {
         pm_asprintf(impossibleReasonP,
                     "too many color/transparency pairs "
-                    "(more than the PNG maximum of %u", 
+                    "(more than the PNG maximum of %u",
                     MAXPALETTEENTRIES);
     } else
         *impossibleReasonP = NULL;
-} 
+}
 
 
 
@@ -1930,15 +1929,15 @@ computePixelWidth(bool           const colorPng,
     unsigned int bitsPerSample, bitsPerPixel;
 
     if (colorPng || alpha) {
-        /* PNG allows only depths of 8 and 16 for a truecolor image 
+        /* PNG allows only depths of 8 and 16 for a truecolor image
            and for a grayscale image with an alpha channel.
           */
         if (pnmMeaningfulBitCt > 8)
             bitsPerSample = 16;
-        else 
+        else
             bitsPerSample = 8;
     } else {
-        /* A grayscale, non-colormapped, no-alpha PNG may have any 
+        /* A grayscale, non-colormapped, no-alpha PNG may have any
              bit depth from 1 to 16
           */
         if (pnmMeaningfulBitCt > 8)
@@ -1977,7 +1976,7 @@ paletteIndexBits(unsigned int const nColors) {
   Return the number of bits that a palette index in the PNG will
   occupy given that the palette has 'nColors' colors in it.  It is 1,
   2, 4, or 8 bits.
-  
+
   If 'nColors' is not a valid PNG palette size, return 0.
 -----------------------------------------------------------------------------*/
     unsigned int retval;
@@ -2056,7 +2055,7 @@ computeColorMap(FILE *         const ifP,
         pm_asprintf(noColormapReasonP, "You requested no color map");
     else if (maxval > PALETTEMAXVAL)
         pm_asprintf(noColormapReasonP, "The maxval of the input image (%u) "
-                    "exceeds the PNG palette maxval (%u)", 
+                    "exceeds the PNG palette maxval (%u)",
                     maxval, PALETTEMAXVAL);
     else {
         unsigned int bitsPerPixel;
@@ -2076,20 +2075,20 @@ computeColorMap(FILE *         const ifP,
             */
             colorhist_vector chv;
             unsigned int colors;
-            
-            getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS, 
+
+            getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS,
                    &chv, &colors);
 
             if (chv == NULL) {
-                pm_asprintf(noColormapReasonP, 
+                pm_asprintf(noColormapReasonP,
                             "More than %u colors found -- too many for a "
                             "colormapped PNG", MAXCOLORS);
             } else {
                 /* There are few enough colors that a palette is possible */
                 if (bitsPerPixel <= paletteIndexBits(colors) && !pfP)
-                    pm_asprintf(noColormapReasonP, 
+                    pm_asprintf(noColormapReasonP,
                                 "palette index for %u colors would be "
-                                "no smaller than the indexed value (%u bits)", 
+                                "no smaller than the indexed value (%u bits)",
                                 colors, bitsPerPixel);
                 else {
                     unsigned int paletteSize;
@@ -2098,7 +2097,7 @@ computeColorMap(FILE *         const ifP,
                         tryAlphaPalette(ifP, cols, rows, maxval, format,
                                         rasterPos, alpha_mask, alphaMaxval,
                                         pfP,
-                                        palette_pnm, &paletteSize, 
+                                        palette_pnm, &paletteSize,
                                         trans_pnm, &transSize,
                                         noColormapReasonP);
 
@@ -2106,13 +2105,13 @@ computeColorMap(FILE *         const ifP,
                         *noColormapReasonP = NULL;
 
                         compute_nonalpha_palette(chv, colors, maxval, pfP,
-                                                 palette_pnm, &paletteSize, 
+                                                 palette_pnm, &paletteSize,
                                                  trans_pnm, &transSize);
-    
+
                         if (transparent)
                             makeOneColorTransparentInPalette(
-                                transcolor, transexact, 
-                                palette_pnm, paletteSize, trans_pnm, 
+                                transcolor, transexact,
+                                palette_pnm, paletteSize, trans_pnm,
                                 &transSize);
                     }
                     if (!*noColormapReasonP) {
@@ -2145,7 +2144,7 @@ static void computeColorMapLookupTable(
 /*----------------------------------------------------------------------------
    Compute applicable lookup tables for the palette index.  If there's no
    alpha mask, this is just a standard Netpbm colorhash_table.  If there's
-   an alpha mask, it is the slower Pnmtopng-specific 
+   an alpha mask, it is the slower Pnmtopng-specific
    coloralphahash_table.
 
    If a lookup table is not applicable to the image, return NULL as
@@ -2153,10 +2152,10 @@ static void computeColorMapLookupTable(
 -----------------------------------------------------------------------------*/
     if (colorMapped) {
         if (alpha) {
-            buildColorAlphaLookup(palette_pnm, palette_size, 
+            buildColorAlphaLookup(palette_pnm, palette_size,
                                   trans_pnm, trans_size, alpha_maxval, cahtP);
             *chtP = NULL;
-        } else { 
+        } else {
             buildColorLookup(palette_pnm, palette_size, chtP);
             *cahtP = NULL;
         }
@@ -2203,15 +2202,15 @@ computeRasterWidth(bool           const colorMapped,
                           bitsPerSampleP, bitsPerPixelP);
 
         if (verbose)
-            pm_message("Writing %u bits per component per pixel", 
+            pm_message("Writing %u bits per component per pixel",
                        *bitsPerSampleP);
     }
 }
 
 
 static void
-createPngPalette(pixel              palette_pnm[], 
-                 unsigned int const paletteSize, 
+createPngPalette(pixel              palette_pnm[],
+                 unsigned int const paletteSize,
                  pixval       const maxval,
                  gray               trans_pnm[],
                  unsigned int const transSize,
@@ -2269,7 +2268,7 @@ setZlibCompression(struct pngx *          const pngxP,
         pngx_setCompressionSize(pngxP, zlibCompression.buffer_size);
     }
 }
-                  
+
 
 
 static void
@@ -2284,7 +2283,7 @@ makePngLine(png_byte *           const line,
             struct pngx *        const pngxP,
             xelval               const png_maxval,
             unsigned int         const depth) {
-            
+
     unsigned int col;
     png_byte *pp;
 
@@ -2318,7 +2317,7 @@ makePngLine(png_byte *           const line,
             *pp++ = PPM_GETB(p_png) & 0xff;
         } else
             pm_error("INTERNAL ERROR: undefined color_type");
-                
+
         if (pngx_colorType(pngxP) & PNG_COLOR_MASK_ALPHA) {
             int const png_alphaval = (int)
                 alpha_mask[col] * (float) png_maxval / maxval + 0.5;
@@ -2372,7 +2371,7 @@ writeRaster(struct pngx *        const pngxP,
             pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
             pnm_promoteformatrow(xelrow, cols, maxval, format, maxval,
                                  PPM_TYPE);
-            
+
             makePngLine(line, xelrow, cols, maxval,
                         alpha, alpha ? alpha_mask[row] : NULL,
                         cht, caht, pngxP, png_maxval, depth);
@@ -2401,15 +2400,15 @@ doHistChunk(struct pngx * const pngxP,
         colorhist_vector chv;
         unsigned int colorCt;
         colorhash_table cht;
-        
-        getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS, 
+
+        getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS,
                &chv, &colorCt);
 
         cht = ppm_colorhisttocolorhash(chv, colorCt);
-                
-        { 
+
+        {
             png_uint_16 * histogram;  /* malloc'ed */
-        
+
             MALLOCARRAY(histogram, MAXCOLORS);
 
             if (!histogram)
@@ -2424,7 +2423,7 @@ doHistChunk(struct pngx * const pngxP,
                     else
                         histogram[i] = chv[chvIndex].value;
                 }
-            
+
                 pngx_setHist(pngxP, histogram);
 
                 if (verbose)
@@ -2471,7 +2470,7 @@ doIhdrChunk(struct pngx * const pngxP,
 static void
 doGamaChunk(struct cmdlineInfo const cmdline,
             struct pngx *      const pngxP) {
-            
+
     if (cmdline.gammaSpec)
         pngx_setGama(pngxP, cmdline.gamma);
 }
@@ -2541,7 +2540,7 @@ reportTrans(struct pngx * const pngxP) {
         struct pngx_trns const transInfo = pngx_trns(pngxP);
 
         pm_message("%u transparency values", transInfo.numTrans);
-        
+
         pm_message("Transparent color {gray, red, green, blue} = "
                    "{%d, %d, %d, %d}",
                    transInfo.transColor.gray,
@@ -2594,21 +2593,21 @@ doBkgdChunk(struct pngx * const pngxP,
             xelval        const maxval,
             xelval        const pngMaxval,
             bool          const verbose) {
-    
+
     if (bkgdRequested) {
         if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_PALETTE)
             pngx_setBkgdPalette(pngxP, backgroundIndex);
         else {
-            png_color_16 const pngBackground = 
+            png_color_16 const pngBackground =
                 xelToPngColor_16(backColor, maxval, pngMaxval);
             pngx_setBkgdRgb(pngxP, pngBackground);
             if (verbose)
                 pm_message("Writing bKGD chunk with background color "
                            " {gray, red, green, blue} = {%d, %d, %d, %d}",
-                           pngBackground.gray, 
-                           pngBackground.red, 
-                           pngBackground.green, 
-                           pngBackground.blue ); 
+                           pngBackground.gray,
+                           pngBackground.red,
+                           pngBackground.green,
+                           pngBackground.blue );
         }
     }
 }
@@ -2625,20 +2624,19 @@ doSbitChunk(struct pngx * const pngxP,
     if (pngx_colorType(pngxP) != PNG_COLOR_TYPE_PALETTE &&
         (pngMaxval > maxval || (alpha && pngMaxval > alphaMaxval))) {
 
-        /* We're writing in a bit depth that doesn't match the maxval
-           of the input image and the alpha mask.  So we write an sBIT
-           chunk to tell what the original image's maxval was.  The
-           sBit chunk doesn't let us specify any maxval -- only powers
-           of two minus one.  So we pick the power of two minus one
-           which is greater than or equal to the actual input maxval.
-           
-           PNG also doesn't let an sBIT chunk indicate a maxval
-           _greater_ than the the PNG maxval.  The designers probably
-           did not conceive of the case where that would happen.  The
-           case is this: We detected redundancy in the bits so were
-           able to store fewer bits than the user provided.  But since
-           PNG doesn't allow it, we don't attempt to create such an
-           sBIT chunk.
+        /* We're writing in a bit depth that doesn't match the maxval of the
+           input image and the alpha mask.  So we write an sBIT chunk to tell
+           what the original image's maxval was.  The sBit chunk doesn't let
+           us specify any maxval -- only powers of two minus one.  So we pick
+           the power of two minus one which is greater than or equal to the
+           actual input maxval.
+
+           PNG also doesn't let an sBIT chunk indicate a maxval _greater_ than
+           the PNG maxval.  The designers probably did not conceive of the
+           case where that would happen.  The case is this: We detected
+           redundancy in the bits so were able to store fewer bits than the
+           user provided.  But since PNG doesn't allow it, we don't attempt to
+           create such an sBIT chunk.
         */
 
         {
@@ -2652,7 +2650,7 @@ doSbitChunk(struct pngx * const pngxP,
                 sbit.blue  = sbitval;
             } else
                 sbit.gray  = sbitval;
-            
+
             if (verbose)
                 pm_message("Writing sBIT chunk with bits = %d", sbitval);
 
@@ -2683,7 +2681,7 @@ addSrgbChunk(struct pngx *   const pngxP,
 
 
 
-static void 
+static void
 convertpnm(struct cmdlineInfo const cmdline,
            FILE *             const ifP,
            FILE *             const ofP,
@@ -2702,14 +2700,14 @@ convertpnm(struct cmdlineInfo const cmdline,
     xelval maxval;
     /* The maxval of the input image */
     xelval pngMaxval;
-        /* The maxval of the samples in the PNG output 
+        /* The maxval of the samples in the PNG output
            (must be 1, 3, 7, 15, 255, or 65535)
         */
     pixel transcolor;
         /* The color that is to be transparent, with maxval equal to that
            of the input image.
         */
-    bool transExact;  
+    bool transExact;
         /* boolean: the user wants only the exact color he specified to be
            transparent; not just something close to it.
         */
@@ -2728,14 +2726,14 @@ convertpnm(struct cmdlineInfo const cmdline,
     pixel palettePnm[MAXCOLORS];
     png_color palette[MAXCOLORS];
         /* The color part of the color/alpha palette passed to the PNG
-           compressor 
+           compressor
         */
     unsigned int paletteSize;
 
     gray transPnm[MAXCOLORS];
     png_byte  trans[MAXCOLORS];
         /* The alpha part of the color/alpha palette passed to the PNG
-           compressor 
+           compressor
         */
     unsigned int transSize;
 
@@ -2751,7 +2749,7 @@ convertpnm(struct cmdlineInfo const cmdline,
            we should.  malloc'ed null-terminated string.
         */
     unsigned int depth;
-        /* The number of bits per sample in the (uncompressed) png 
+        /* The number of bits per sample in the (uncompressed) png
            raster -- if the raster contains palette indices, this is the
            number of bits in the index.
         */
@@ -2759,7 +2757,7 @@ convertpnm(struct cmdlineInfo const cmdline,
         /* The total number of bits per pixel in the (uncompressed) png
            raster, including all channels.
         */
-    pm_filepos rasterPos;  
+    pm_filepos rasterPos;
         /* file position in input image file of start of image (i.e. after
            the header)
         */
@@ -2800,7 +2798,7 @@ convertpnm(struct cmdlineInfo const cmdline,
         colorPng = (PNM_FORMAT_TYPE(format) == PPM_TYPE);
     else {
         if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
-            colorPng = hasColor(ifP, cols, rows, maxval, format, rasterPos); 
+            colorPng = hasColor(ifP, cols, rows, maxval, format, rasterPos);
         } else
             colorPng = false;
     }
@@ -2815,10 +2813,10 @@ convertpnm(struct cmdlineInfo const cmdline,
 
     findRedundantBits(ifP, rasterPos, cols, rows, maxval, format, alpha,
                       cmdline.force, &pnmMeaningfulBitCt);
-  
+
     computeColorMap(ifP, rasterPos, cols, rows, maxval, colorPng, format,
                     cmdline.force, pfP,
-                    alpha, transparent >= 0, transcolor, transExact, 
+                    alpha, transparent >= 0, transcolor, transExact,
                     !!cmdline.background, backColor,
                     alpha_mask, alphaMaxval, pnmMeaningfulBitCt,
                     palettePnm, &paletteSize, transPnm, &transSize,
@@ -2835,7 +2833,7 @@ convertpnm(struct cmdlineInfo const cmdline,
         colorMapped = FALSE;
     } else
         colorMapped = TRUE;
-  
+
     computeColorMapLookupTable(colorMapped, palettePnm, paletteSize,
                                transPnm, transSize, alpha, alphaMaxval,
                                &cht, &caht);
@@ -2846,7 +2844,7 @@ convertpnm(struct cmdlineInfo const cmdline,
     if (verbose)
         pm_message ("writing a%s %d-bit %s%s file%s",
                     fulldepth == 8 ? "n" : "", fulldepth,
-                    colorMapped ? "palette": 
+                    colorMapped ? "palette":
                     colorPng ? "RGB" : "gray",
                     alpha ? (colorMapped ? "+transparency" : "+alpha") : "",
                     cmdline.interlace ? " (interlaced)" : "");
@@ -2873,7 +2871,7 @@ convertpnm(struct cmdlineInfo const cmdline,
         /* creating PNG palette (Not counting the transparency palette) */
 
         createPngPalette(palettePnm, paletteSize, maxval,
-                         transPnm, transSize, alphaMaxval, 
+                         transPnm, transSize, alphaMaxval,
                          palette, trans);
         pngx_setPlte(pngxP, palette, paletteSize);
 
@@ -2973,7 +2971,7 @@ displayVersion() {
 
 
 
-int 
+int
 main(int argc, const char * argv[]) {
 
     struct cmdlineInfo cmdline;
@@ -2983,29 +2981,29 @@ main(int argc, const char * argv[]) {
     FILE * tfP;
 
     int errorlevel;
-    
+
     pm_proginit(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
-    
+
     if (cmdline.libversion) {
         displayVersion();
         return 0;
     }
     verbose = cmdline.verbose;
-    
+
     ifP = pm_openr_seekable(cmdline.inputFileName);
-    
+
     if (cmdline.alpha)
         afP = pm_openr(cmdline.alpha);
     else
         afP = NULL;
-    
+
     if (cmdline.palette)
         pfP = pm_openr(cmdline.palette);
     else
         pfP = NULL;
-    
+
     if (cmdline.text)
         tfP = pm_openr(cmdline.text);
     else if (cmdline.ztxt)
@@ -3014,7 +3012,7 @@ main(int argc, const char * argv[]) {
         tfP = NULL;
 
     convertpnm(cmdline, ifP, stdout, afP, pfP, tfP, &errorlevel);
-    
+
     if (afP)
         pm_close(afP);
     if (pfP)

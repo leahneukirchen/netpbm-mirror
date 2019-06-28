@@ -132,13 +132,12 @@ select489(gray * const a,
 
     gray t;
     int i, j, l, r;
-    int ptmp, ttmp;
+    int ptmp;
 
     l = 0;
     r = n - 1;
     while ( r > l ) {
         t = a[parray[k]];
-        ttmp = parray[k];
         i = l;
         j = r;
         ptmp = parray[l];

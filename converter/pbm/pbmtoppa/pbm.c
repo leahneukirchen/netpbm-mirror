@@ -11,126 +11,185 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
+#include "pm.h"
+#include "nstring.h"
 #include "ppapbm.h"
 
-int make_pbm_stat(pbm_stat* pbm,FILE* fptr)
-{
-  char line[1024];
+int
+make_pbm_stat(pbm_stat * const pbmStatP,
+              FILE *     const ifP) {
 
-  pbm->fptr=fptr;
-  pbm->version=none;
-  pbm->current_line=0;
-  pbm->unread = 0;
+    char line[1024];
+    char * rc;
+    int retval;
 
-  if (fgets (line, 1024, fptr) == NULL)
-    return 0;
-  line[strlen(line)-1] = 0;
+    pbmStatP->fptr         = ifP;
+    pbmStatP->version      = none;
+    pbmStatP->current_line = 0;
+    pbmStatP->unread       = 0;
 
-  if(!strcmp(line,"P1")) pbm->version=P1;
-  if(!strcmp(line,"P4")) pbm->version=P4;
-  if(pbm->version == none)
-  {
-    fprintf(stderr,"pbm_readheader(): unknown PBM magic '%s'\n",line);
-    return 0;
-  }
+    rc = fgets(line, 1024, ifP);
+    if (rc == NULL)
+        retval = 0;
+    else {
+        line[strlen(line)-1] = 0;
 
-  do
-    if (fgets (line, 1024, fptr) == NULL)
-      return 0;
-  while (line[0] == '#');
+        if (streq(line,"P1"))
+            pbmStatP->version=P1;
+        if (streq(line,"P4"))
+            pbmStatP->version=P4;
 
-  if (2 != sscanf (line, "%d %d", &pbm->width, &pbm->height))
-    return 0;
-
-  return 1;
+        if (pbmStatP->version == none) {
+            pm_message("unknown PBM magic '%s'", line);
+            retval = 0;
+        } else {
+            do {
+                char * rc;
+                rc = fgets(line, 1024, ifP);
+                if (rc == NULL)
+                    return 0;
+            } while (line[0] == '#');
+            {
+                int rc;
+                rc = sscanf(line, "%d %d",
+                            &pbmStatP->width, &pbmStatP->height);
+                if (rc != 2)
+                    retval = 0;
+                else {
+                    if (pbmStatP->width < 0) {
+                        pm_message("Image has negative width");
+                        retval = 0;
+                    } else if (pbmStatP->width > INT_MAX/2) {
+                        pm_message("Uncomputeably large width: %d",
+                                   pbmStatP->width);
+                        retval = 0;
+                    } else if (pbmStatP->height < 0) {
+                        pm_message("Image has negative height");
+                        retval = 0;
+                    } else if (pbmStatP->height > INT_MAX/2) {
+                        pm_message("Uncomputeably large height: %d",
+                                   pbmStatP->height);
+                        retval = 0;
+                    } else
+                        retval = 1;
+                }
+            }
+        }
+    }
+    return retval;
 }
 
-static int getbytes(FILE *fptr,int width,unsigned char* data)
-{
-  unsigned char mask,acc,*place;
-  int num;
 
-  if(!width) return 0;
-  for(mask=0x80, acc=0, num=0, place=data; num<width; )
-  {
-    switch(getc(fptr))
-    {
-    case EOF:      
-      return 0;
-    case '1':
-      acc|=mask;
-      /* fall through */
-    case '0':
-      mask>>=1;
-      num++;
-      if(!mask) /* if(num%8 == 0) */
-      {
-	*place++ = acc;
-	acc=0;
-	mask=0x80;
-      }
+
+static int
+getbytes(FILE *          const ifP,
+         unsigned int    const width,
+         unsigned char * const data) {
+
+    unsigned char mask;
+    unsigned char acc;
+    unsigned char * place;
+    unsigned int num;
+    int retval;
+
+    if (width == 0)
+        retval = 0;
+    else {
+        for (mask = 0x80, acc = 0, num = 0, place = data; num < width; ) {
+            switch (getc(ifP)) {
+            case EOF:
+                return 0;
+            case '1':
+                acc |= mask;
+                /* fall through */
+            case '0':
+                mask >>= 1;
+                ++num;
+                if (mask == 0x00) { /* if (num % 8 == 0) */
+                    *place++ = acc;
+                    acc = 0;
+                    mask = 0x80;
+                }
+            }
+        }
+        if (width % 8 != 0)
+            *place = acc;
+
+        retval = 1;
     }
-  }
-  if(width%8)
-    *place=acc;
-  return 1;
+    return retval;
 }
 
-/* Reads a single line into data which must be at least (pbm->width+7)/8
-   bytes of storage */
-int pbm_readline(pbm_stat* pbm,unsigned char* data)
-{
-  int tmp,tmp2;
 
-  if(pbm->current_line >= pbm->height) return 0;
 
-  if (pbm->unread)
-    {
-      memcpy (data, pbm->revdata, (pbm->width+7)/8);
-      pbm->current_line++;
-      pbm->unread = 0;
-      free (pbm->revdata);
-      pbm->revdata = NULL;
-      return 1;
+int
+pbm_readline(pbm_stat *      const pbmStatP,
+             unsigned char * const data) {
+/*----------------------------------------------------------------------------
+  Read a single line into data which must be at least (pbmStatP->width+7)/8
+  bytes of storage.
+-----------------------------------------------------------------------------*/
+    int retval;
+
+    if (pbmStatP->current_line >= pbmStatP->height)
+        retval = 0;
+    else {
+        if (pbmStatP->unread) {
+            memcpy(data, pbmStatP->revdata, (pbmStatP->width+7)/8);
+            ++pbmStatP->current_line;
+            pbmStatP->unread = 0;
+            free(pbmStatP->revdata);
+            pbmStatP->revdata = NULL;
+            retval = 1;
+        } else {
+            switch (pbmStatP->version) {
+            case P1:
+                if (getbytes(pbmStatP->fptr, pbmStatP->width, data)) {
+                    pbmStatP->current_line++;
+                    retval = 1;
+                } else
+                    retval = 0;
+                break;
+            case P4: {
+                int tmp, tmp2;
+                tmp = (pbmStatP->width+7)/8;
+                tmp2 = fread(data,1,tmp,pbmStatP->fptr);
+                if (tmp2 == tmp) {
+                    ++pbmStatP->current_line;
+                    retval = 1;
+                } else {
+                    pm_message("error reading line data (%d)", tmp2);
+                    retval = 0;
+                }
+            } break;
+
+            default:
+                pm_message("unknown PBM version");
+                retval = 0;
+            }
+        }
     }
-
-  switch(pbm->version)
-  {
-  case P1:
-    if(getbytes(pbm->fptr,pbm->width,data))
-    {
-      pbm->current_line++;
-      return 1;
-    }
-    return 0;
-
-  case P4:
-    tmp=(pbm->width+7)/8;
-    tmp2=fread(data,1,tmp,pbm->fptr);
-    if(tmp2 == tmp)
-    {
-      pbm->current_line++;
-      return 1;
-    }
-    fprintf(stderr,"pbm_readline(): error reading line data (%d)\n",tmp2);
-    return 0;
-
-  default:
-    fprintf(stderr,"pbm_readline(): unknown PBM version\n");
-    return 0;
-  }
+    return retval;
 }
 
-/* push a line back into the buffer; we read too much! */
-void pbm_unreadline (pbm_stat *pbm, void *data)
-{
-  /* can only store one line in the unread buffer */
-  if (pbm->unread)
-    return;
 
-  pbm->unread = 1;
-  pbm->revdata = malloc ((pbm->width+7)/8);
-  memcpy (pbm->revdata, data, (pbm->width+7)/8);
-  pbm->current_line--;
+
+void
+pbm_unreadline(pbm_stat * const pbmStatP,
+               void *     const data) {
+/*----------------------------------------------------------------------------
+  Push a line back into the buffer; we read too much!
+-----------------------------------------------------------------------------*/
+    /* can store only one line in the unread buffer */
+
+    if (!pbmStatP->unread) {
+        pbmStatP->unread = 1;
+        pbmStatP->revdata = malloc ((pbmStatP->width+7)/8);
+        memcpy(pbmStatP->revdata, data, (pbmStatP->width+7)/8);
+        --pbmStatP->current_line;
+    }
 }
+
+

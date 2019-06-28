@@ -19,6 +19,7 @@
  *   Authors:  Eric A. Howe (mu@trends.net)
  *             Bryan Henderson, 2010
  */
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE   /* Ensure strdup() is in <string.h> */
 #include <assert.h>
@@ -282,8 +283,8 @@ ipdb_image_alloc(const char * const name,
             if (w != 0 && h != 0) {
                 MALLOCARRAY(imgP->data, w * h);
 
-                if (imgP->data) {
-                    memset(imgP->data, 0, sizeof(*(imgP->data)) * w * h);
+                if (imgP->data != NULL) {
+                  memset(imgP->data, 0, sizeof(*(imgP->data)) * w * h);
                 } else
                     failed = true;
             }

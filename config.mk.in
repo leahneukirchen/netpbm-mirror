@@ -161,6 +161,12 @@ LEX = flex
 # 
 # LEX = lex
 
+# PKG_CONFIG is the beginning of a shell command that tells things about how
+# some package (e.g. the PNG library) is installed on the build system.  For
+# example, it can tell what link options you need to link the PNG library to a
+# program.
+PKG_CONFIG = pkg-config
+
 # C compiler options 
 
 # gcc:
@@ -662,5 +668,5 @@ NETPBM_DOCURL = http://netpbm.sourceforge.net/doc/
 #NETPBM_DOCURL = file:/usr/doc/netpbm/
 
 # RGB_DB_PATH is where Netpbm looks for the color database when the RGBDEF
-# environment variable is not set.  See pm_config_in.h for details.
-RGB_DB_PATH = /usr/share/netpbm/rgb.txt:/usr/lib/X11/rgb.txt:/usr/share/X11/rgb.txt:/usr/X11R6/lib/X11/rgb.txt
+# environment variable is not set.  See pm_config.in.h for details.
+RGB_DB_PATH = /usr/local/netpbm/rgb.txt:/usr/share/netpbm/rgb.txt:/etc/X11/rgb.txt:/usr/lib/X11/rgb.txt:/usr/share/X11/rgb.txt:/usr/X11R6/lib/X11/rgb.txt

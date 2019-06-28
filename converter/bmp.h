@@ -83,7 +83,37 @@
 
 #include "pm.h"  /* For pm_error() */
 
-enum bmpClass {C_WIN=1, C_OS2=2};
+enum bmpClass {
+    BMP_C_OS2_1x,
+    BMP_C_OS2_2x,
+    BMP_C_WIN_V1,
+    BMP_C_WIN_V2,
+    BMP_C_WIN_V3,
+    BMP_C_WIN_V4,
+    BMP_C_WIN_V5
+};
+
+
+
+static __inline__ const char *
+BMPClassName(enum bmpClass const class) {
+
+    const char * name;
+
+    switch (class) {
+    case BMP_C_OS2_1x: name = "OS/2 (v1)";    break;
+    case BMP_C_OS2_2x: name = "OS/2 (v2)";    break;
+    case BMP_C_WIN_V1: name = "Windows (v1)"; break;
+    case BMP_C_WIN_V2: name = "Windows (v2)"; break;
+    case BMP_C_WIN_V3: name = "Windows (v3)"; break;
+    case BMP_C_WIN_V4: name = "Windows (v4)"; break;
+    case BMP_C_WIN_V5: name = "Windows (v5)"; break;
+    }
+
+  return name;
+}
+
+
 
 static char const er_internal[] = "%s: internal error!";
 
@@ -114,16 +144,35 @@ BMPCompTypeName(BMPCompType const compression) {
 
 
 static __inline__ unsigned int
-BMPlenfileheader(enum bmpClass const class) {
+BMPlenfileheader(void) {
 
-    unsigned int retval;
-
-    switch (class) {
-    case C_WIN: retval = 14; break;
-    case C_OS2: retval = 14; break;
-    }
-    return retval;
+    return 14;
 }
+
+
+
+enum BMPinfoHeaderLen {
+/*----------------------------------------------------------------------------
+   BMPs come in various kinds, distinguished by the length of their
+   info header, which is the first field in that header.
+
+   These are those lengths.
+-----------------------------------------------------------------------------*/
+    BMP_HDRLEN_OS2_1x =  12,
+        /* BITMAPCOREHEADER; since Windows 2.0, OS/2 1.x */
+    BMP_HDRLEN_OS2_2x =  64,
+        /* not documented by Microsoft; since OS/2 2.x */
+    BMP_HDRLEN_WIN_V1 =  40,
+        /* BITMAPINFOHEADER; since Windows NT 3, Windows 3.x */
+    BMP_HDRLEN_WIN_V2 =  52,
+        /* not documented by Microsoft */
+    BMP_HDRLEN_WIN_V3 =  56,
+        /* not documented by Microsoft */
+    BMP_HDRLEN_WIN_V4 = 108,
+        /* BITMAPV4HEADER; since Windows NT 4, Windows 95 */
+    BMP_HDRLEN_WIN_V5 = 124
+        /* BITMAPV5HEADER; since Windows 2000, Windows 98 */
+};
 
 
 
@@ -133,10 +182,62 @@ BMPleninfoheader(enum bmpClass const class) {
     unsigned int retval;
 
     switch (class) {
-    case C_WIN: retval = 40; break;
-    case C_OS2: retval = 12; break;
+    case BMP_C_WIN_V1: retval = BMP_HDRLEN_WIN_V1; break;
+    case BMP_C_WIN_V2: retval = BMP_HDRLEN_WIN_V2; break;
+    case BMP_C_WIN_V3: retval = BMP_HDRLEN_WIN_V3; break;
+    case BMP_C_WIN_V4: retval = BMP_HDRLEN_WIN_V4; break;
+    case BMP_C_WIN_V5: retval = BMP_HDRLEN_WIN_V5; break;
+    case BMP_C_OS2_1x: retval = BMP_HDRLEN_OS2_1x; break;
+    case BMP_C_OS2_2x: retval = BMP_HDRLEN_OS2_2x; break;
     }
     return retval;
+}
+
+
+
+static __inline__ void
+BMPdetermineclass(unsigned int    const infoHdrLen,
+                  enum bmpClass * const classP,
+                  const char **   const errorP) {
+/*----------------------------------------------------------------------------
+   Determine the class of BMP, based on the fact that the info header is
+   'infoHdrLen' bytes long.
+-----------------------------------------------------------------------------*/
+    switch (infoHdrLen) {
+    case BMP_HDRLEN_OS2_1x: *errorP = NULL; *classP = BMP_C_OS2_1x; break;
+    case BMP_HDRLEN_OS2_2x: *errorP = NULL; *classP = BMP_C_OS2_2x; break;
+    case BMP_HDRLEN_WIN_V1: *errorP = NULL; *classP = BMP_C_WIN_V1; break;
+    case BMP_HDRLEN_WIN_V2: *errorP = NULL; *classP = BMP_C_WIN_V2; break;
+    case BMP_HDRLEN_WIN_V3: *errorP = NULL; *classP = BMP_C_WIN_V3; break;
+    case BMP_HDRLEN_WIN_V4: *errorP = NULL; *classP = BMP_C_WIN_V4; break;
+    case BMP_HDRLEN_WIN_V5: *errorP = NULL; *classP = BMP_C_WIN_V5; break;
+
+    default:
+        pm_asprintf(errorP, "Not one of the 7 lengths we recognize");
+    }
+}
+
+
+
+static __inline__ unsigned int
+BMPlenrgb(enum bmpClass const class) {
+
+    unsigned int lenrgb;
+
+    switch (class) {
+    case BMP_C_OS2_1x:
+    case BMP_C_OS2_2x:
+        lenrgb = 3;
+        break;
+    case BMP_C_WIN_V1:
+    case BMP_C_WIN_V2:
+    case BMP_C_WIN_V3:
+    case BMP_C_WIN_V4:
+    case BMP_C_WIN_V5:
+        lenrgb = 4;
+        break;
+    }
+    return lenrgb;
 }
 
 
@@ -152,7 +253,6 @@ BMPlencolormap(enum bmpClass const class,
 
    'cmapsize' == 0 means there is no palette.
 -----------------------------------------------------------------------------*/
-    unsigned int lenrgb;
     unsigned int lencolormap;
 
     if (bitcount < 1)
@@ -160,15 +260,10 @@ BMPlencolormap(enum bmpClass const class,
     else if (bitcount > 8) 
         lencolormap = 0;
     else {
-        switch (class) {
-        case C_WIN: lenrgb = 4; break;
-        case C_OS2: lenrgb = 3; break;
-        }
-
-        if (!cmapsize) 
-            lencolormap = (1 << bitcount) * lenrgb;
+        if (cmapsize) 
+            lencolormap = cmapsize * BMPlenrgb(class);
         else 
-            lencolormap = cmapsize * lenrgb;
+            lencolormap = (1 << bitcount) * BMPlenrgb(class);
     }
     return lencolormap;
 }
@@ -231,7 +326,7 @@ BMPoffbits(enum bmpClass const class,
 /*----------------------------------------------------------------------------
   return the offset to the BMP image bits.
 -----------------------------------------------------------------------------*/
-    return BMPlenfileheader(class)
+    return BMPlenfileheader()
         + BMPleninfoheader(class)
         + BMPlencolormap(class, bitcount, cmapsize);
 }

@@ -10,6 +10,10 @@
 #  package (what Debian contains is derived from Sourceforge Netpbm ca.
 #  2002).
 #
+#  The dependencies this package declares are those that can be satisfied by
+#  Debian 8 (Jessie) and Debian 9 (Stretch).  Netpbm works fine on other
+#  versions of Debian, but you may have to change the dependencies in this
+#  program or ignore dependencies at install time.
 ###############################################################################
 
 use strict;
@@ -111,8 +115,8 @@ sub control($$) {
 
 # The Debian packaging system doesn't provide a way to express Netpbm's actual
 # prerequisites.  For example, Netpbm needs Version 6.2 or better of Libjpeg,
-# but there is no way to state that here.  Instead, we state Libjpeg 8.
-# This makes the Netpbm package less useful.
+# but there is no way to state that here.  Instead, we state Libjpeg 6.2
+# exactly.  This makes the Netpbm package less useful.
 
     my %control;
 
@@ -134,9 +138,8 @@ sub control($$) {
     $control{'Depends'} =
         'libc6, ' .
         'libjpeg62, ' .
-        'libpng12-0, ' .
-        'libsvga1, ' .
-        'libtiff4, ' .
+        'libpng12-0 | libpng16-16, ' .
+        'libtiff5, ' .
         'libx11-6, ' .
         'libxml2, ' .
         'zlib1g, ' .
@@ -425,7 +428,9 @@ sub buildDpkgBuildTree($$$$$) {
     makePkgConfig("$dpkgDirName/usr/lib/pkgconfig/netpbm.pc", $templateSubsR,
                   $netpbmPkgDir);
 
-    makeManweb($dpkgDirName, $netpbmPkgDir);
+    # Beginning in Netpbm 10.78 (March 2017_, 'make package' doesn't package
+    # the manweb stuff, so we no longer put it in the Debian package.
+    #makeManweb($dpkgDirName, $netpbmPkgDir);
 }
 
 

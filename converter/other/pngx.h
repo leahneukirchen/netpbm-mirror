@@ -1,7 +1,12 @@
 #ifndef PNGX_H_INCLUDED
 #define PNGX_H_INCLUDED
 
+#include <stdbool.h>
 #include <png.h>
+    /* This includes the Zlib interface header file zlib.h because libpng uses
+       libz and some of the Zlib interface, e.g. the Z_DEFLATED constant,
+       is part of the libpng interface.
+    */
 #include "pm_c_util.h"
 
 /* pngx is designed to be an extension of the PNG library to make using
@@ -49,9 +54,15 @@ struct pngx {
     pngx_rw      rw;
     png_uint_16  maxval;
     unsigned int numPassesRequired;
-        /* The number of times we have write the complete image to the
+        /* The number of times we have to write the complete image to the
            compressor.  This is more than one when the compressor is set
            up to do an interlaced format.
+        */
+    bool         infoPrepared;
+        /* png_write_info or png_read_info has been called, so libpng is in a
+           state in which things such as png_set_interlace_handling will work.
+           These functions use information in *png_ptr that is set by
+           png_XXX_info.
         */
 };
 
@@ -264,6 +275,10 @@ pngx_readImage(struct pngx * const pngxP,
 void
 pngx_writeRow(struct pngx *    const pngxP,
               const png_byte * const line);
+
+void
+pngx_writeImage(struct pngx * const pngxP,
+                png_byte **   const raster);
 
 void
 pngx_readEnd(struct pngx * const pngxP);

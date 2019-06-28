@@ -13,9 +13,9 @@
 /*
    transformNonPbmChunk() is the general transformation function.
    It can transform anything, albeit slowly and expensively.
-   
+
    The following are enhancements for specific cases:
-   
+
      transformRowByRowPbm():
        PBM image with left-right or null transformation
      transformRowsBottomTopPbm()
@@ -58,6 +58,7 @@
    the source image, reading the input image through multiple times.
 */
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
@@ -76,12 +77,12 @@
 #include "flip.h"
 #include "pamflip_sse.h"
 
-enum xformType {LEFTRIGHT, TOPBOTTOM, TRANSPOSE};
+enum XformType {LEFTRIGHT, TOPBOTTOM, TRANSPOSE};
 
 static void
 parseXformOpt(const char *     const xformOpt,
               unsigned int  *  const xformCountP,
-              enum xformType * const xformList) {
+              enum XformType * const xformList) {
 /*----------------------------------------------------------------------------
    Translate the -xform option string into an array of transform types.
 
@@ -92,10 +93,10 @@ parseXformOpt(const char *     const xformOpt,
     char * xformOptWork;
     char * cursor;
     bool eol;
-    
+
     xformOptWork = strdup(xformOpt);
     cursor = &xformOptWork[0];
-    
+
     eol = FALSE;    /* initial value */
     xformCount = 0; /* initial value */
     while (!eol && xformCount < 10) {
@@ -124,13 +125,13 @@ parseXformOpt(const char *     const xformOpt,
 
 
 /* See transformPoint() for an explanation of the transform matrix types.  The
-   difference between xformCore and xformMatrix is that 'xformCore' is
+   difference between XformCore and XformMatrix is that 'XformCore' is
    particular to the source image dimensions and can be used to do the
-   transformation, while 'xformCore' is independent of the source image and
+   transformation, while 'XformCore' is independent of the source image and
    just tells what kind of transformation.
 */
 
-struct xformMatrix {
+struct XformMatrix {
     /* a b 0
        c d 0
        e f 1
@@ -146,7 +147,7 @@ struct xformMatrix {
 
 
 static void
-leftright(struct xformCore * const xformP) {
+leftright(struct XformCore * const xformP) {
     xformP->a = - xformP->a;
     xformP->c = - xformP->c;
 }
@@ -154,7 +155,7 @@ leftright(struct xformCore * const xformP) {
 
 
 static void
-topbottom(struct xformCore * const xformP) {
+topbottom(struct XformCore * const xformP) {
     xformP->b = - xformP->b;
     xformP->d = - xformP->d;
 }
@@ -173,7 +174,7 @@ swap(int * const xP, int * const yP) {
 
 
 static void
-transpose(struct xformCore * const xformP) {
+transpose(struct XformCore * const xformP) {
     swap(&xformP->a, &xformP->b);
     swap(&xformP->c, &xformP->d);
 }
@@ -182,18 +183,18 @@ transpose(struct xformCore * const xformP) {
 
 static void
 computeXformCore(unsigned int       const xformCount,
-                 enum xformType     const xformType[],
-                 struct xformCore * const xformP) {
-    
-    struct xformCore const nullTransform = {1, 0, 0, 1};
+                 enum XformType     const XformType[],
+                 struct XformCore * const xformP) {
+
+    struct XformCore const nullTransform = {1, 0, 0, 1};
 
     unsigned int i;
 
     *xformP = nullTransform;   /* initial value */
 
     for (i = 0; i < xformCount; ++i) {
-        switch (xformType[i]) {
-        case LEFTRIGHT: 
+        switch (XformType[i]) {
+        case LEFTRIGHT:
             leftright(xformP);
             break;
         case TOPBOTTOM:
@@ -209,7 +210,7 @@ computeXformCore(unsigned int       const xformCount,
 
 
 static void
-xformDimensions(struct xformCore const xform,
+xformDimensions(struct XformCore const xform,
                 unsigned int     const inCols,
                 unsigned int     const inRows,
                 unsigned int *   const outColsP,
@@ -221,25 +222,25 @@ xformDimensions(struct xformCore const xform,
    E.g. if it's a 90 degree rotation of a 10 x 20 image, the output is
    a 20 x 10 image.
 -----------------------------------------------------------------------------*/
-    *outColsP = abs(xform.a * inCols + xform.c * inRows);
-    *outRowsP = abs(xform.b * inCols + xform.d * inRows);
+    *outColsP = abs(xform.a * (int)inCols + xform.c * (int)inRows);
+    *outRowsP = abs(xform.b * (int)inCols + xform.d * (int)inRows);
 }
 
 
 
 static void
-computeXformMatrix(struct xformMatrix * const xformP, 
+computeXformMatrix(struct XformMatrix * const xformP,
                    unsigned int         const sourceCols,
                    unsigned int         const sourceRows,
-                   struct xformCore     const xformCore) {
+                   struct XformCore     const XformCore) {
 
-    int colMax = xformCore.a * (sourceCols-1) + xformCore.c * (sourceRows-1);
-    int rowMax = xformCore.b * (sourceCols-1) + xformCore.d * (sourceRows-1);
+    int colMax = XformCore.a * (sourceCols-1) + XformCore.c * (sourceRows-1);
+    int rowMax = XformCore.b * (sourceCols-1) + XformCore.d * (sourceRows-1);
 
-    xformP->a = xformCore.a;
-    xformP->b = xformCore.b;
-    xformP->c = xformCore.c;
-    xformP->d = xformCore.d;
+    xformP->a = XformCore.a;
+    xformP->b = XformCore.b;
+    xformP->c = XformCore.c;
+    xformP->d = XformCore.d;
     xformP->e = colMax < 0 ? -colMax : 0;
     xformP->f = rowMax < 0 ? -rowMax : 0;
 }
@@ -251,7 +252,7 @@ struct cmdlineInfo {
        in a form easy for the program to use.
     */
     const char * inputFilespec;  /* Filespec of input file */
-    struct xformCore xform;
+    struct XformCore xform;
         /* Handy mathematical representation of all of transform options */
     size_t availableMemory;
     unsigned int pageSize;
@@ -271,7 +272,7 @@ interpretMemorySize(unsigned int const memsizeSpec,
     if (memsizeSpec) {
         if (memsizeOpt > sizeMax / Meg)
             pm_error("-memsize value too large: %u MiB.  Maximum this program "
-                     "can handle is %u MiB", 
+                     "can handle is %u MiB",
                      memsizeOpt, (unsigned)sizeMax / Meg);
         *availableMemoryP = memsizeOpt * Meg;
     } else
@@ -299,8 +300,8 @@ parseCommandLine(int argc, char ** const argv,
     unsigned int memsizeOpt;
     const char * xformOpt;
     unsigned int xformCount;
-        /* Number of transforms in the 'xformType' array */
-    enum xformType xformList[10];
+        /* Number of transforms in the 'XformType' array */
+    enum XformType xformList[10];
         /* Array of transforms to be applied, in order */
 
     MALLOCARRAY(option_def, 100);
@@ -322,11 +323,11 @@ parseCommandLine(int argc, char ** const argv,
     OPTENT3(0, "cw",        OPT_FLAG,    NULL, &r270,    0);
     OPTENT3(0, "null",      OPT_FLAG,    NULL, &null,    0);
     OPTENT3(0, "verbose",   OPT_FLAG,    NULL, &cmdlineP->verbose,       0);
-    OPTENT3(0, "memsize",   OPT_UINT,    &memsizeOpt, 
+    OPTENT3(0, "memsize",   OPT_UINT,    &memsizeOpt,
             &memsizeSpec,       0);
     OPTENT3(0, "pagesize",  OPT_UINT,    &cmdlineP->pageSize,
             &pagesizeSpec,      0);
-    OPTENT3(0, "xform",     OPT_STRING,  &xformOpt, 
+    OPTENT3(0, "xform",     OPT_STRING,  &xformOpt,
             &xformSpec, 0);
 
     opt.opt_table = option_def;
@@ -363,20 +364,20 @@ parseCommandLine(int argc, char ** const argv,
         } else if (null) {
             xformCount = 0;
         }
-    } else if (xformSpec) 
+    } else if (xformSpec)
         parseXformOpt(xformOpt, &xformCount, xformList);
     else
         pm_error("You must specify an option such as -topbottom to indicate "
                  "what kind of flip you want.");
 
     computeXformCore(xformCount, xformList, &cmdlineP->xform);
-    
+
     interpretMemorySize(memsizeSpec, memsizeOpt, &cmdlineP->availableMemory);
 
     if (!pagesizeSpec)
-        cmdlineP->pageSize = 4*1024;         
+        cmdlineP->pageSize = 4*1024;
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFilespec = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -390,7 +391,7 @@ parseCommandLine(int argc, char ** const argv,
 
 
 static void
-bitOrderReverse(unsigned char * const bitrow, 
+bitOrderReverse(unsigned char * const bitrow,
                 unsigned int    const cols) {
 /*----------------------------------------------------------------------------
   Reverse the bits in a packed pbm row (1 bit per pixel).  I.e. the leftmost
@@ -412,12 +413,12 @@ bitOrderReverse(unsigned char * const bitrow,
             if ((bitrow[j] | bitrow[i]) == 0) {
                 /* Both are 0x00 - skip */
             } else {
-                unsigned char const t = bitreverse[bitrow[j]]; 
+                unsigned char const t = bitreverse[bitrow[j]];
                 bitrow[j] = bitreverse[bitrow[i]];
                 bitrow[i] = t;
             }
     } else {
-        unsigned int const m = cols % 8; 
+        unsigned int const m = cols % 8;
 
         unsigned int i, j;
             /* Cursors into bitrow[].  i moves from left to center;
@@ -430,7 +431,7 @@ bitOrderReverse(unsigned char * const bitrow,
                 /* Skip if both are 0x00 */
                 th = bitreverse[bitrow[i]];
                 bitrow[i] =
-                    bitreverse[0xff & ((bitrow[j-1] << 8 
+                    bitreverse[0xff & ((bitrow[j-1] << 8
                                         | bitrow[j]) >> (8-m))];
                 bitrow[j] = 0xff & ((th << 8 | tl) >> m);
                 tl = th;
@@ -449,7 +450,7 @@ bitOrderReverse(unsigned char * const bitrow,
 
 
 static void
-transformRowByRowPbm(struct pam * const inpamP, 
+transformRowByRowPbm(struct pam * const inpamP,
                      struct pam * const outpamP,
                      bool         const reverse) {
 /*----------------------------------------------------------------------------
@@ -463,7 +464,7 @@ transformRowByRowPbm(struct pam * const inpamP,
     unsigned char * bitrow;
     unsigned int row;
 
-    bitrow = pbm_allocrow_packed(outpamP->width); 
+    bitrow = pbm_allocrow_packed(outpamP->width);
 
     for (row = 0; row < inpamP->height; ++row) {
         pbm_readpbmrow_packed(inpamP->file,  bitrow, inpamP->width,
@@ -480,7 +481,7 @@ transformRowByRowPbm(struct pam * const inpamP,
 
 
 static void
-transformRowByRowNonPbm(struct pam * const inpamP, 
+transformRowByRowNonPbm(struct pam * const inpamP,
                         struct pam * const outpamP,
                         bool         const reverse) {
 /*----------------------------------------------------------------------------
@@ -499,20 +500,20 @@ transformRowByRowNonPbm(struct pam * const inpamP,
            itself.
         */
     tuple * scratchTuplerow;
-    
+
     unsigned int row;
-    
+
     tuplerow = pnm_allocpamrow(inpamP);
-    
+
     if (reverse) {
         /* Set up newtuplerow[] to point to the tuples of tuplerow[] in
            reverse order.
         */
         unsigned int col;
-        
+
         MALLOCARRAY_NOFAIL(scratchTuplerow, inpamP->width);
 
-        for (col = 0; col < inpamP->width; ++col) 
+        for (col = 0; col < inpamP->width; ++col)
             scratchTuplerow[col] = tuplerow[inpamP->width - col - 1];
         newtuplerow = scratchTuplerow;
     } else {
@@ -523,7 +524,7 @@ transformRowByRowNonPbm(struct pam * const inpamP,
         pnm_readpamrow(inpamP, tuplerow);
         pnm_writepamrow(outpamP, newtuplerow);
     }
-    
+
     if (scratchTuplerow)
         free(scratchTuplerow);
     pnm_freepamrow(tuplerow);
@@ -534,7 +535,7 @@ transformRowByRowNonPbm(struct pam * const inpamP,
 static void
 transformRowsBottomTopPbm(struct pam * const inpamP,
                           struct pam * const outpamP,
-                          bool         const reverse) { 
+                          bool         const reverse) {
 /*----------------------------------------------------------------------------
   Flip a PBM raster top for bottom; read the raster from *inpamP;
   write the flipped raster to *outpamP.
@@ -546,15 +547,15 @@ transformRowsBottomTopPbm(struct pam * const inpamP,
 
     unsigned char ** bitrow;
     unsigned int row;
-        
+
     bitrow = pbm_allocarray_packed(outpamP->width, outpamP->height);
-        
+
     for (row = 0; row < rows; ++row)
-        pbm_readpbmrow_packed(inpamP->file, bitrow[row], 
+        pbm_readpbmrow_packed(inpamP->file, bitrow[row],
                               inpamP->width, inpamP->format);
 
     for (row = 0; row < rows; ++row) {
-        if (reverse) 
+        if (reverse)
             bitOrderReverse(bitrow[rows-row-1], inpamP->width);
 
         pbm_writepbmrow_packed(outpamP->file, bitrow[rows - row - 1],
@@ -566,7 +567,7 @@ transformRowsBottomTopPbm(struct pam * const inpamP,
 
 
 static void
-transformRowsBottomTopNonPbm(struct pam * const inpamP, 
+transformRowsBottomTopNonPbm(struct pam * const inpamP,
                              struct pam * const outpamP) {
 /*----------------------------------------------------------------------------
   Do a simple vertical flip.  Read the raster from *inpamP; write the
@@ -592,17 +593,17 @@ transformRowsBottomTopNonPbm(struct pam * const inpamP,
 
         pnm_writepamrow(outpamP, tuplerow);
     }
-    
+
     pnm_freepamarray(tuplerows, outpamP);
 }
 
 
 
 static void __inline__
-transformPoint(int                const col, 
-               int                const row, 
-               struct xformMatrix const xform, 
-               unsigned int *     const newcolP, 
+transformPoint(int                const col,
+               int                const row,
+               struct XformMatrix const xform,
+               unsigned int *     const newcolP,
                unsigned int *     const newrowP ) {
 /*----------------------------------------------------------------------------
    Compute the location in the output of a pixel that is at row 'row',
@@ -612,7 +613,7 @@ transformPoint(int                const col,
    Return the output image location of the pixel as *newcolP and *newrowP.
 -----------------------------------------------------------------------------*/
     /* The transformation is:
-     
+
                  [ a b 0 ]
        [ x y 1 ] [ c d 0 ] = [ x2 y2 1 ]
                  [ e f 1 ]
@@ -652,9 +653,9 @@ writeRaster(struct pam *    const pamP,
 static void
 transformPbmGen(struct pam *     const inpamP,
                 struct pam *     const outpamP,
-                struct xformCore const xformCore) { 
+                struct XformCore const XformCore) {
 /*----------------------------------------------------------------------------
-   This is the same as transformGen, except that it uses less 
+   This is the same as transformGen, except that it uses less
    memory, since the PBM buffer format uses one bit per pixel instead
    of twelve bytes + pointer space
 
@@ -664,28 +665,28 @@ transformPbmGen(struct pam *     const inpamP,
 -----------------------------------------------------------------------------*/
     bit * bitrow;
     bit ** newbits;
-    struct xformMatrix xform;
+    struct XformMatrix xform;
     unsigned int row;
-            
-    computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
-    
+
+    computeXformMatrix(&xform, inpamP->width, inpamP->height, XformCore);
+
     bitrow = pbm_allocrow_packed(inpamP->width);
     newbits = pbm_allocarray_packed( outpamP->width, outpamP->height );
-            
+
     /* Initialize entire array to zeroes.  One bits will be or'ed in later */
     for (row = 0; row < outpamP->height; ++row) {
         unsigned int col;
-        for (col = 0; col < pbm_packed_bytes(outpamP->width); ++col) 
-            newbits[row][col] = 0; 
+        for (col = 0; col < pbm_packed_bytes(outpamP->width); ++col)
+            newbits[row][col] = 0;
     }
-    
+
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
 
         pbm_readpbmrow_packed(inpamP->file, bitrow,
                               inpamP->width, inpamP->format);
         for (col = 0; col < inpamP->width; ) {
-            if (bitrow[col/8] == 0x00) 
+            if (bitrow[col/8] == 0x00)
                 col += 8;  /* Blank.   Skip to next byte. */
             else {      /* Examine each pixel. */
                 unsigned int const colLimit = MIN(col+8, inpamP->width);
@@ -694,7 +695,7 @@ transformPbmGen(struct pam *     const inpamP,
                 for (i = 0; col < colLimit; ++i, ++col) {
                     bool const bitIsOne = (bitrow[col/8] >> (7-i)) & 0x01;
                     if (bitIsOne) {
-                        /* Write in only the one bits. */  
+                        /* Write in only the one bits. */
                         unsigned int newcol, newrow;
                         transformPoint(col, row, xform, &newcol, &newrow);
                         newbits[newrow][newcol/8] |= 0x01 << (7 - newcol % 8);
@@ -709,7 +710,7 @@ transformPbmGen(struct pam *     const inpamP,
 
     for (row = 0; row < outpamP->height; ++row)
         pbm_writepbmrow_packed(outpamP->file, newbits[row], outpamP->width, 0);
-    
+
     pbm_freearray(newbits, outpamP->height);
     pbm_freerow(bitrow);
 }
@@ -719,7 +720,7 @@ transformPbmGen(struct pam *     const inpamP,
 static void
 transformNonPbmWhole(struct pam *     const inpamP,
                      struct pam *     const outpamP,
-                     struct xformCore const xformCore,
+                     struct XformCore const XformCore,
                      bool             const verbose) {
 /*----------------------------------------------------------------------------
   Do the transform using "pam" library functions, as opposed to "pbm"
@@ -737,18 +738,18 @@ transformNonPbmWhole(struct pam *     const inpamP,
 -----------------------------------------------------------------------------*/
     tuple * tuplerow;
     tuple ** newtuples;
-    struct xformMatrix xform;
+    struct XformMatrix xform;
     unsigned int row;
 
-    computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
-    
+    computeXformMatrix(&xform, inpamP->width, inpamP->height, XformCore);
+
     tuplerow = pnm_allocpamrow(inpamP);
     newtuples = pnm_allocpamarray(outpamP);
-    
+
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
         pnm_readpamrow(inpamP, tuplerow);
-        
+
         for (col = 0; col < inpamP->width; ++col) {
             unsigned int newcol, newrow;
 
@@ -761,9 +762,9 @@ transformNonPbmWhole(struct pam *     const inpamP,
                             tuplerow[col]);
         }
     }
-    
+
     writeRaster(outpamP, newtuples);
-    
+
     pnm_freepamarray(newtuples, outpamP);
     pnm_freepamrow(tuplerow);
 }
@@ -797,7 +798,7 @@ initOutCell(struct pam *     const outCellPamP,
             unsigned int     const inCellWidth,
             unsigned int     const inCellHeight,
             struct pam *     const inpamP,
-            struct xformCore const xformCore) {
+            struct XformCore const XformCore) {
 /*----------------------------------------------------------------------------
    Set up an output cell.  Create and open a temporary file to hold its
    raster.  Figure out the dimensions of the cell.  Return a PAM structure
@@ -811,7 +812,7 @@ initOutCell(struct pam *     const outCellPamP,
 
     outCellPamP->file = pm_tmpfile();
 
-    xformDimensions(xformCore, inCellWidth, inCellHeight,
+    xformDimensions(XformCore, inCellWidth, inCellHeight,
                     &outCellFileCt, &outCellRankCt);
 
     outCellPamP->width = outCellFileCt;
@@ -823,8 +824,8 @@ initOutCell(struct pam *     const outCellPamP,
 static outputMap *
 createOutputMap(struct pam *       const inpamP,
                 unsigned int       const maxRows,
-                struct xformMatrix const cellXform,
-                struct xformCore   const xformCore) {
+                struct XformMatrix const cellXform,
+                struct XformCore   const XformCore) {
 /*----------------------------------------------------------------------------
    Create and return the output map.  That's a map of all the output cells
    (from which the output image can be assembled, once those cells are filled
@@ -852,7 +853,7 @@ createOutputMap(struct pam *       const inpamP,
 
     MALLOCVAR_NOFAIL(mapP);
 
-    xformDimensions(xformCore, inCellFileCt, inCellRankCt,
+    xformDimensions(XformCore, inCellFileCt, inCellRankCt,
                     &mapP->fileCt, &mapP->rankCt);
 
     MALLOCARRAY(mapP->pam, mapP->rankCt);
@@ -878,14 +879,14 @@ createOutputMap(struct pam *       const inpamP,
         unsigned int outCellFile, outCellRank;
         transformPoint(inCellFile, inCellRank, cellXform,
                        &outCellFile, &outCellRank);
-    
+
         initOutCell(&mapP->pam[outCellRank][outCellFile],
                     inpamP->width, inCellRowCt,
-                    inpamP, xformCore);
+                    inpamP, XformCore);
     }
     return mapP;
 }
-                
+
 
 
 static void
@@ -934,14 +935,14 @@ closeCellFiles(outputMap * const outputMapP) {
 static void
 transformCell(struct pam *     const inpamP,
               struct pam *     const outpamP,
-              struct xformCore const xformCore) {
+              struct XformCore const XformCore) {
 
-    struct xformMatrix xform;
+    struct XformMatrix xform;
     tuple * inTupleRow;
     tuple ** outTuples;
     unsigned int inRow;
 
-    computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
+    computeXformMatrix(&xform, inpamP->width, inpamP->height, XformCore);
 
     inTupleRow = pnm_allocpamrow(inpamP);
 
@@ -951,7 +952,7 @@ transformCell(struct pam *     const inpamP,
         unsigned int inCol;
 
         pnm_readpamrow(inpamP, inTupleRow);
-        
+
         for (inCol = 0; inCol < inpamP->width; ++inCol) {
             unsigned int outCol, outRow;
 
@@ -995,7 +996,7 @@ stitchCellsToOutput(outputMap *  const outputMapP,
             outCol = 0;
 
             for (outFile = 0; outFile < outputMapP->fileCt; ++outFile) {
-                struct pam * const outCellPamP = 
+                struct pam * const outCellPamP =
                     &outputMapP->pam[outRank][outFile];
 
                 assert(outCellPamP->height == cellRows);
@@ -1019,7 +1020,7 @@ stitchCellsToOutput(outputMap *  const outputMapP,
 static void
 transformNonPbmChunk(struct pam *     const inpamP,
                      struct pam *     const outpamP,
-                     struct xformCore const xformCore,
+                     struct XformCore const XformCore,
                      unsigned int     const maxRows,
                      bool             const verbose) {
 /*----------------------------------------------------------------------------
@@ -1031,11 +1032,11 @@ transformNonPbmChunk(struct pam *     const inpamP,
   header).
 
   We call the strip of 'maxRows' rows that we read a source cell.  We
-  transform that cell according to 'xformCore' to create a
+  transform that cell according to 'XformCore' to create a
   target cell.  We store all the target cells in temporary files.
   We consider the target cells to be arranged in a column matrix the
   same as the source cells within the source image; we transform that
-  matrix according to 'xformCore'.  The resulting cell matrix is the
+  matrix according to 'XformCore'.  The resulting cell matrix is the
   target image.
 -----------------------------------------------------------------------------*/
     /* The cells of the source image ("inCell") are in a 1-column matrix.
@@ -1045,7 +1046,7 @@ transformNonPbmChunk(struct pam *     const inpamP,
     unsigned int const inCellFileCt = 1;
     unsigned int const inCellRankCt = (inpamP->height + maxRows - 1) / maxRows;
 
-    struct xformMatrix cellXform;
+    struct XformMatrix cellXform;
     unsigned int inCellRank;
     outputMap * outputMapP;
 
@@ -1053,9 +1054,9 @@ transformNonPbmChunk(struct pam *     const inpamP,
         pm_message("Transforming in %u chunks, using temp files",
                    inCellRankCt);
 
-    computeXformMatrix(&cellXform, inCellFileCt, inCellRankCt, xformCore);
+    computeXformMatrix(&cellXform, inCellFileCt, inCellRankCt, XformCore);
 
-    outputMapP = createOutputMap(inpamP, maxRows, cellXform, xformCore);
+    outputMapP = createOutputMap(inpamP, maxRows, cellXform, XformCore);
 
     for (inCellRank = 0; inCellRank < inCellRankCt; ++inCellRank) {
         unsigned int const inCellFile = 0;
@@ -1069,15 +1070,15 @@ transformNonPbmChunk(struct pam *     const inpamP,
 
         transformPoint(inCellFile, inCellRank, cellXform,
                        &outCellFile, &outCellRank);
-    
+
         outCellPamP = &outputMapP->pam[outCellRank][outCellFile];
 
         /* Input cell is just the next 'inCellRows' rows of input image */
         inCellPam = *inpamP;
         inCellPam.height = inCellRows;
 
-        transformCell(&inCellPam, outCellPamP, xformCore);
-    }    
+        transformCell(&inCellPam, outCellPamP, XformCore);
+    }
 
     rewindCellFiles(outputMapP);
 
@@ -1121,7 +1122,7 @@ maxRowsThatFit(struct pam * const pamP,
 static void
 transformPbm(struct pam *     const inpamP,
              struct pam *     const outpamP,
-             struct xformCore const xform,
+             struct XformCore const xform,
              bool             const verbose) {
 
     if (xform.b == 0 && xform.c == 0) {
@@ -1154,7 +1155,7 @@ transformPbm(struct pam *     const inpamP,
 static void
 transformNonPbm(struct pam *     const inpamP,
                 struct pam *     const outpamP,
-                struct xformCore const xform,
+                struct XformCore const xform,
                 unsigned int     const availableMemory,
                 bool             const verbose) {
 
@@ -1211,7 +1212,7 @@ main(int argc, char * argv[]) {
         ifP = pm_openr_seekable(cmdline.inputFilespec);
     else
         ifP = pm_openr(cmdline.inputFilespec);
-    
+
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     outpam = inpam;  /* initial value */
@@ -1232,6 +1233,6 @@ main(int argc, char * argv[]) {
     }
     pm_close(inpam.file);
     pm_close(outpam.file);
-    
+
     return 0;
 }

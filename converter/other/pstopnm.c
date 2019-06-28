@@ -14,8 +14,9 @@
 
 -----------------------------------------------------------------------------*/
 
+#define _DEFAULT_SOURCE 1 /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1   /* Make sure strdup() is in string.h */
-#define _XOPEN_SOURCE 500  
+#define _XOPEN_SOURCE 500
     /* Make sure fdopen() is in stdio.h and strdup() is in string.h */
 
 #include <assert.h>
@@ -24,7 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
-#include <sys/wait.h>  
+#include <sys/wait.h>
 #include <sys/stat.h>
 
 #include "pm_c_util.h"
@@ -37,16 +38,31 @@ static bool verbose;
 
 enum Orientation {PORTRAIT, LANDSCAPE, UNSPECIFIED};
 struct Box {
-    /* Description of a rectangle within an image; all coordinates 
-       measured in points (1/72") with lower left corner of page being the 
-       origin.
+    /* Description of a rectangle within an image; all coordinates
+       measured in points (1/72") with lower left corner of page being the
+       origin.  Negative values are OK.
     */
+    bool isDefined;
+
+    /* Nothing below is meaningful unless 'isDefined' is true */
     int llx;  /* lower left X coord */
-        /* -1 for llx means whole box is undefined. */
     int lly;  /* lower left Y coord */
     int urx;  /* upper right X coord */
     int ury;  /* upper right Y coord */
 };
+
+
+
+static void
+assertValidBox(struct Box const box) {
+
+    if (box.isDefined) {
+        assert(box.urx >= box.llx);
+        assert(box.ury >= box.lly);
+    }
+}
+
+
 
 struct Dimensions {
 /*----------------------------------------------------------------------------
@@ -106,7 +122,7 @@ parseCommandLine(int argc, char ** argv,
     unsigned int textalphabitsSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "forceplain", OPT_FLAG,  NULL, &cmdlineP->forceplain,     0);
     OPTENT3(0, "llx",        OPT_FLOAT, &llx, &llxSpec,                  0);
@@ -150,7 +166,7 @@ parseCommandLine(int argc, char ** argv,
     if (ymaxSpec) {
         if (cmdlineP->ymax == 0)
             pm_error("zero is not a valid value for -ymax");
-    } else 
+    } else
         cmdlineP->ymax = 792;
 
     if (xsizeSpec) {
@@ -162,7 +178,7 @@ parseCommandLine(int argc, char ** argv,
     if (ysizeSpec) {
         if (cmdlineP->ysize == 0)
             pm_error("zero is not a valid value for -ysize");
-    } else 
+    } else
         cmdlineP->ysize = 0;
 
     if (portraitOpt && !landscapeOpt)
@@ -184,9 +200,11 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->formatType = PPM_TYPE;
 
     /* If any one of the 4 bounding box coordinates is given on the
-       command line, we default any of the 4 that aren't.  
+       command line, we default any of the 4 that aren't.
     */
     if (llxSpec || llySpec || urxSpec || urySpec) {
+        cmdlineP->extractBox.isDefined = true;
+
         if (!llxSpec) cmdlineP->extractBox.llx = 72;
         else cmdlineP->extractBox.llx = llx * 72;
         if (!llySpec) cmdlineP->extractBox.lly = 72;
@@ -196,7 +214,7 @@ parseCommandLine(int argc, char ** argv,
         if (!urySpec) cmdlineP->extractBox.ury = 720;
         else cmdlineP->extractBox.ury = ury * 72;
     } else {
-        cmdlineP->extractBox.llx = -1;
+        cmdlineP->extractBox.isDefined = false;
     }
 
     if (dpiSpec) {
@@ -224,7 +242,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFileName = "-";  /* stdin */
     else if (argc-1 == 1)
         cmdlineP->inputFileName = argv[1];
-    else 
+    else
         pm_error("Too many arguments (%d).  "
                  "Only need one: the Postscript file name", argc-1);
 
@@ -248,7 +266,7 @@ addPsToFileName(char          const origFileName[],
     int statRc;
 
     statRc = lstat(origFileName, &statbuf);
-    
+
     if (statRc == 0)
         *newFileNameP = strdup(origFileName);
     else {
@@ -269,34 +287,62 @@ addPsToFileName(char          const origFileName[],
 
 
 
+static unsigned int
+resolution(unsigned int const dotCt,
+           unsigned int const pointCt) {
+/*----------------------------------------------------------------------------
+   The resolution in dots per inch when 'dotCt' dots print 'pointCt' points
+   long.
+
+   When this would round to zero, we return 1 dot per inch instead so it
+   doesn't play havoc with arithmetic - it's never going to happen unless
+   something is broken anyway.
+-----------------------------------------------------------------------------*/
+    return MAX(1, (unsigned int)((float)dotCt * 72 / pointCt + 0.5));
+}
+
+
+
 static void
 computeSizeResFromSizeSpec(unsigned int        const requestedXsize,
                            unsigned int        const requestedYsize,
                            unsigned int        const imageWidth,
                            unsigned int        const imageHeight,
                            struct Dimensions * const imageDimP) {
+/*----------------------------------------------------------------------------
+   Compute output image size and assumed Postscript input resolution, assuming
+   user requested a specific size for at least one of the dimensions and the
+   input is 'imageWidth' x 'imageHeight' points.
+
+   'requestedXsize' is what the user requested for output image width in
+   pixels, or zero if he made no request.  'requestedYsize' is analogous
+   for the height.
+-----------------------------------------------------------------------------*/
+    assert(requestedXsize || requestedYsize);
+
+    assert(imageWidth > 0);
 
     if (requestedXsize) {
         imageDimP->xsize = requestedXsize;
-        imageDimP->xres = (unsigned int)
-            (requestedXsize * 72 / imageWidth + 0.5);
+        imageDimP->xres = resolution(requestedXsize, imageWidth);
         if (!requestedYsize) {
             imageDimP->yres = imageDimP->xres;
             imageDimP->ysize = (unsigned int)
                 (imageHeight * (float)imageDimP->yres/72 + 0.5);
-            }
         }
+    }
+
+    assert(imageHeight > 0);
 
     if (requestedYsize) {
         imageDimP->ysize = requestedYsize;
-        imageDimP->yres = (unsigned int)
-            (requestedYsize * 72 / imageHeight + 0.5);
+        imageDimP->yres = resolution(requestedYsize, imageHeight);
         if (!requestedXsize) {
             imageDimP->xres = imageDimP->yres;
             imageDimP->xsize = (unsigned int)
                 (imageWidth * (float)imageDimP->xres/72 + 0.5);
         }
-    } 
+    }
 }
 
 
@@ -312,8 +358,9 @@ computeSizeResBlind(unsigned int        const xmax,
     if (imageWidth == 0 || imageHeight == 0) {
         imageDimP->xres = imageDimP->yres = 72;
     } else {
-        imageDimP->xres = imageDimP->yres = MIN(xmax * 72 / imageWidth,
-                                                ymax * 72 / imageHeight);
+        imageDimP->xres = imageDimP->yres =
+            MIN(resolution(xmax, imageWidth),
+                resolution(ymax, imageHeight));
     }
 
     if (nocrop) {
@@ -330,17 +377,17 @@ computeSizeResBlind(unsigned int        const xmax,
 
 
 static void
-computeSizeRes(struct CmdlineInfo  const cmdline, 
+computeSizeRes(struct CmdlineInfo  const cmdline,
                struct Box          const borderedBox,
                struct Dimensions * const imageDimP) {
 /*----------------------------------------------------------------------------
   Figure out how big the output image should be and what output device
   resolution Ghostscript should assume (return as *imageDimP).
 
-  A resolution number is the number of pixels per inch that the a
+  A resolution number is the number of pixels per inch that the
   printer prints.  Since we're emulating a printed page with a PNM
   image, and a PNM image has no spatial dimension (you can't say how
-  many inches wide a PNM image is), it's kind of confusing.  
+  many inches wide a PNM image is), it's kind of confusing.
 
   If the user doesn't select a resolution, we choose the resolution
   that causes the image to be a certain number of pixels, knowing how
@@ -349,8 +396,8 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
   inches wide.  We want the PNM image to be 1000 pixels wide.  So we
   tell Ghostscript that our horizontal output device resolution is 500
   pixels per inch.
-  
-  X and Y in all returned values is with respect to the image, not the
+
+  X and Y in all returned values are with respect to the image, not the
   page.  Note that the image might be placed sideways on the page, so that
   page X and Y would be reversed from image X and Y.
 -----------------------------------------------------------------------------*/
@@ -359,6 +406,8 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
     */
     unsigned int const sx = borderedBox.urx - borderedBox.llx;
     unsigned int const sy = borderedBox.ury - borderedBox.lly;
+
+    assertValidBox(borderedBox); assert(borderedBox.isDefined);
 
     if (cmdline.dpi) {
         /* User gave resolution; we figure out output image size */
@@ -369,6 +418,7 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
         if (sx == 0 || sy == 0)
             pm_error("Input image is zero size; we cannot satisfy your "
                      "produce your requested output dimensions");
+
         computeSizeResFromSizeSpec(cmdline.xsize, cmdline.ysize, sx, sy,
                                    imageDimP);
     } else
@@ -397,7 +447,7 @@ languageDeclaration(char const inputFileName[]) {
     enum PostscriptLanguage language;
 
     if (streq(inputFileName, "-"))
-        /* Can't read stdin, because we need it to remain positioned for the 
+        /* Can't read stdin, because we need it to remain positioned for the
            Ghostscript interpreter to read it.
         */
         language = COMMON_POSTSCRIPT;
@@ -430,12 +480,57 @@ languageDeclaration(char const inputFileName[]) {
 
 
 static struct Box
+boundingBoxFmPostscriptFile(FILE * const ifP) {
+
+    struct Box retval;
+    bool eof;
+
+    for (retval.isDefined = false, eof = false; !retval.isDefined && !eof; ) {
+        char line[200];
+        char * fgetsRc;
+
+        fgetsRc = fgets(line, sizeof(line), ifP);
+
+        if (fgetsRc == NULL)
+            eof = true;
+        else {
+            int rc;
+            int llx, lly, urx, ury;
+
+            rc = sscanf(line, "%%%%BoundingBox: %d %d %d %d",
+                        &llx, &lly, &urx, &ury);
+            if (rc == 4) {
+                /* We found a BoundingBox statement */
+
+                if (llx > urx)
+                    pm_error("%%%%BoundingBox statement in input file has "
+                             "lower left corner to the right of the "
+                             "upper right corner");
+                if (lly > ury)
+                    pm_error("%%%%BoundingBox statement in input file has "
+                             "lower left corner above the "
+                             "upper right corner");
+
+                retval.llx = llx; retval.lly = lly;
+                retval.urx = urx; retval.ury = ury;
+                retval.isDefined = true;
+            }
+        }
+    }
+    fclose(ifP);
+
+    return retval;
+}
+
+
+
+static struct Box
 computeBoxToExtract(struct Box const cmdlineExtractBox,
                     char       const inputFileName[]) {
 
     struct Box retval;
 
-    if (cmdlineExtractBox.llx != -1)
+    if (cmdlineExtractBox.isDefined)
         /* User told us what box to extract, so that's what we'll do */
         retval = cmdlineExtractBox;
     else {
@@ -446,54 +541,37 @@ computeBoxToExtract(struct Box const cmdlineExtractBox,
 
         if (streq(inputFileName, "-"))
             /* Can't read stdin, because we need it to remain
-               positioned for the Ghostscript interpreter to read it.  
+               positioned for the Ghostscript interpreter to read it.
             */
-            psBb.llx = -1;
+            psBb.isDefined = false;
         else {
             FILE * ifP;
-            bool foundBb;
-            bool eof;
 
             ifP = pm_openr(inputFileName);
-            
-            for (foundBb = FALSE, eof = FALSE; !foundBb && !eof; ) {
-                char line[200];
-                char * fgetsRc;
 
-                fgetsRc = fgets(line, sizeof(line), ifP);
+            psBb = boundingBoxFmPostscriptFile(ifP);
 
-                if (fgetsRc == NULL)
-                    eof = TRUE;
-                else {
-                    int rc;
-                    rc = sscanf(line, "%%%%BoundingBox: %d %d %d %d",
-                                &psBb.llx, &psBb.lly, 
-                                &psBb.urx, &psBb.ury);
-                    if (rc == 4) 
-                        foundBb = TRUE;
-                }
-            }
-            fclose(ifP);
-
-            if (!foundBb) {
-                psBb.llx = -1;
+            if (!psBb.isDefined)
                 pm_message("Warning: no %%%%BoundingBox statement "
                            "in the input or command line.  "
                            "Will use defaults");
-            }
         }
-        if (psBb.llx != -1) {
+        if (psBb.isDefined) {
             if (verbose)
                 pm_message("Using %%%%BoundingBox statement from input.");
             retval = psBb;
-        } else { 
+        } else {
             /* Use the center of an 8.5" x 11" page with 1" border all around*/
+            retval.isDefined = true;
             retval.llx = 72;
             retval.lly = 72;
             retval.urx = 540;
             retval.ury = 720;
         }
     }
+
+    assert(retval.isDefined);
+
     if (verbose)
         pm_message("Extracting the box ((%d,%d),(%d,%d))",
                    retval.llx, retval.lly, retval.urx, retval.ury);
@@ -503,7 +581,7 @@ computeBoxToExtract(struct Box const cmdlineExtractBox,
 
 
 static enum Orientation
-computeOrientation(struct CmdlineInfo const cmdline, 
+computeOrientation(struct CmdlineInfo const cmdline,
                    struct Box         const extractBox) {
 /*----------------------------------------------------------------------------
    The proper orientation of the image on the page, given the user's
@@ -531,7 +609,7 @@ computeOrientation(struct CmdlineInfo const cmdline,
         /* Dimensions of image to print, in points */
         unsigned int const imageWidPt = extractBox.urx - extractBox.llx;
         unsigned int const imageHgtPt = extractBox.ury - extractBox.lly;
-        
+
         /* Dimensions of image to print, in pixels (possibly of assumed
            resolution)
         */
@@ -579,31 +657,30 @@ computeOrientation(struct CmdlineInfo const cmdline,
 
 
 static struct Box
-addBorders(struct Box const inputBox, 
+addBorders(struct Box const inputBox,
            float      const xborderScale,
            float      const yborderScale) {
 /*----------------------------------------------------------------------------
    Return a box which is 'inputBox' plus some borders.
 
    Add left and right borders that are the fraction 'xborderScale' of the
-   width of the input box; likewise for top and bottom borders with 
+   width of the input box; likewise for top and bottom borders with
    'yborderScale'.
 -----------------------------------------------------------------------------*/
-    unsigned int const leftRightBorderSize = 
+    unsigned int const leftRightBorderSize =
         ROUNDU((inputBox.urx - inputBox.llx) * xborderScale);
-    unsigned int const topBottomBorderSize = 
+    unsigned int const topBottomBorderSize =
         ROUNDU((inputBox.ury - inputBox.lly) * yborderScale);
 
     struct Box retval;
 
-
-    assert(inputBox.urx >= inputBox.llx);
-    assert(inputBox.ury >= inputBox.lly);
+    assertValidBox(inputBox); assert(inputBox.isDefined);
 
     retval.llx = inputBox.llx - (int)leftRightBorderSize;
     retval.lly = inputBox.lly - (int)topBottomBorderSize;
     retval.urx = inputBox.urx + (int)leftRightBorderSize;
     retval.ury = inputBox.ury + (int)topBottomBorderSize;
+    retval.isDefined = true;
 
     if (verbose)
         pm_message("With borders, extracted box is ((%d,%d),(%d,%d))",
@@ -627,6 +704,8 @@ writePstrans(struct Box        const box,
 
     const char * pstrans;
 
+    assert(xres > 0); assert(yres > 0);
+
     switch (orientation) {
     case PORTRAIT: {
         int llx, lly;
@@ -647,7 +726,7 @@ writePstrans(struct Box        const box,
     if (pstrans == pm_strsol)
         pm_error("Unable to allocate memory for pstrans");
 
-    if (verbose) 
+    if (verbose)
         pm_message("Postscript prefix command: '%s'", pstrans);
 
     fprintf(pipeToGsP, "%s\n", pstrans);
@@ -678,10 +757,10 @@ computeOutfileArg(struct CmdlineInfo const cmdline) {
     else {
         char * basename;
         const char * suffix;
-        
+
         basename  = strdup(cmdline.inputFileName);
-        if (strlen(basename) > 3 && 
-            streq(basename+strlen(basename)-3, ".ps")) 
+        if (strlen(basename) > 3 &&
+            streq(basename+strlen(basename)-3, ".ps"))
             /* The input file name ends in ".ps".  Chop it off. */
             basename[strlen(basename)-3] = '\0';
 
@@ -729,7 +808,7 @@ computeGsDevice(int  const formatType,
 
 static void
 findGhostscriptProg(const char ** const retvalP) {
-    
+
     *retvalP = NULL;  /* initial assumption */
     if (getenv("GHOSTSCRIPT"))
         *retvalP = strdup(getenv("GHOSTSCRIPT"));
@@ -739,7 +818,7 @@ findGhostscriptProg(const char ** const retvalP) {
             const char * candidate;
 
             pathwork = strdup(getenv("PATH"));
-            
+
             candidate = strtok(pathwork, ":");
 
             *retvalP = NULL;
@@ -773,7 +852,7 @@ findGhostscriptProg(const char ** const retvalP) {
 static void
 execGhostscript(int               const inputPipeFd,
                 char              const ghostscriptDevice[],
-                char              const outfileArg[], 
+                char              const outfileArg[],
                 struct Dimensions const pageDim,
                 unsigned int      const textalphabits) {
 /*----------------------------------------------------------------------------
@@ -791,12 +870,11 @@ execGhostscript(int               const inputPipeFd,
     const char * gopt;
     const char * ropt;
     const char * textalphabitsopt;
-    int rc;
 
     findGhostscriptProg(&ghostscriptProg);
 
     /* Put the input pipe on Standard Input */
-    rc = dup2(inputPipeFd, STDIN_FILENO);
+    dup2(inputPipeFd, STDIN_FILENO);
     close(inputPipeFd);
 
     pm_asprintf(&arg0, "gs");
@@ -817,13 +895,13 @@ execGhostscript(int               const inputPipeFd,
                    "'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'",
                    ghostscriptProg, arg0,
                    deviceopt, outfileopt, gopt, ropt, textalphabitsopt,
-                   "-q", "-dNOPAUSE", 
+                   "-q", "-dNOPAUSE",
                    "-dSAFER", "-");
     }
 
     execl(ghostscriptProg, arg0, deviceopt, outfileopt, gopt, ropt, 
 	  textalphabitsopt, "-q", "-dNOPAUSE", "-dSAFER", "-", NULL);
-    
+
     pm_error("execl() of Ghostscript ('%s') failed, errno=%d (%s)",
              ghostscriptProg, errno, strerror(errno));
 }
@@ -852,26 +930,26 @@ feedPsToGhostScript(const char *            const inputFileName,
     bool eof;  /* End of file on input */
 
     pipeToGsP = fdopen(pipeToGhostscriptFd, "w");
-    if (pipeToGsP == NULL) 
+    if (pipeToGsP == NULL)
         pm_error("Unable to open stream on pipe to Ghostscript process.");
-    
+
     ifP = pm_openr(inputFileName);
     /*
       In encapsulated Postscript, we the encapsulator are supposed to
       handle showing the page (which we do by passing a showpage
-      statement to Ghostscript).  Any showpage statement in the 
+      statement to Ghostscript).  Any showpage statement in the
       input must be defined to have no effect.
-          
+
       See "Enscapsulated PostScript Format File Specification",
       v. 3.0, 1 May 1992, in particular Example 2, p. 21.  I found
-      it at 
+      it at
       http://partners.adobe.com/asn/developer/pdfs/tn/5002.EPSF_Spec.pdf
       The example given is a much fancier solution than we need
-      here, I think, so I boiled it down a bit.  JM 
+      here, I think, so I boiled it down a bit.  JM
     */
     if (language == ENCAPSULATED_POSTSCRIPT)
         fprintf(pipeToGsP, "\n/b4_Inc_state save def /showpage { } def\n");
- 
+
     writePstrans(borderedBox, imageDim, orientation, pipeToGsP);
 
     /* If our child dies, it closes the pipe and when we next write to it,
@@ -884,11 +962,11 @@ feedPsToGhostScript(const char *            const inputFileName,
     while (!eof) {
         char buffer[4096];
         size_t readCt;
-            
+
         readCt = fread(buffer, 1, sizeof(buffer), ifP);
-        if (readCt == 0) 
+        if (readCt == 0)
             eof = TRUE;
-        else 
+        else
             fwrite(buffer, 1, readCt, pipeToGsP);
     }
     pm_close(ifP);
@@ -897,7 +975,7 @@ feedPsToGhostScript(const char *            const inputFileName,
         fprintf(pipeToGsP, "\nb4_Inc_state restore showpage\n");
 
     fclose(pipeToGsP);
-}        
+}
 
 
 
@@ -940,7 +1018,7 @@ executeGhostscript(char                    const inputFileName[],
                    struct Dimensions       const imageDim,
                    enum Orientation        const orientation,
                    char                    const ghostscriptDevice[],
-                   char                    const outfileArg[], 
+                   char                    const outfileArg[],
                    unsigned int            const textalphabits,
                    enum PostscriptLanguage const language) {
 
@@ -949,12 +1027,12 @@ executeGhostscript(char                    const inputFileName[],
 
     if (strlen(outfileArg) > 80)
         pm_error("output file spec too long.");
-    
+
     rc = pm_pipe(pipefd);
     if (rc < 0)
         pm_error("Unable to create pipe to talk to Ghostscript process.  "
                  "errno = %d (%s)", errno, strerror(errno));
-    
+
     rc = fork();
     if (rc < 0)
         pm_error("Unable to fork a Ghostscript process.  errno=%d (%s)",
@@ -986,13 +1064,13 @@ executeGhostscript(char                    const inputFileName[],
 
         if (gsTermStatus != 0) {
             if (WIFEXITED(gsTermStatus))
-                pm_error("Ghostscript failed.  Exit code=%d\n", 
+                pm_error("Ghostscript failed.  Exit code=%d\n",
                          WEXITSTATUS(gsTermStatus));
             else if (WIFSIGNALED(gsTermStatus))
                 pm_error("Ghostscript process died because of a signal %d.",
                          WTERMSIG(gsTermStatus));
-            else 
-                pm_error("Ghostscript process died with exit code %d", 
+            else
+                pm_error("Ghostscript process died with exit code %d",
                          gsTermStatus);
         }
     }
@@ -1010,7 +1088,7 @@ main(int argc, char ** argv) {
         /* Size and resolution of the input image */
     struct Box extractBox;
         /* coordinates of the box within the input we are to extract; i.e.
-           that will become the output. 
+           that will become the output.
            */
     struct Box borderedBox;
         /* Same as above, but expanded to include borders */
@@ -1031,32 +1109,31 @@ main(int argc, char ** argv) {
     extractBox = computeBoxToExtract(cmdline.extractBox, inputFileName);
 
     language = languageDeclaration(inputFileName);
-    
+
     orientation = computeOrientation(cmdline, extractBox);
 
     borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder);
 
+    assertValidBox(borderedBox); assert(borderedBox.isDefined);
+
     computeSizeRes(cmdline, borderedBox, &imageDim);
 
-    if (imageDim.xres == 0)
-        imageDim.xres = 1;
-    if (imageDim.yres == 0)
-        imageDim.yres = 1;
-    
+    assert(imageDim.xres > 0); assert(imageDim.yres > 0);
+
     outfileArg = computeOutfileArg(cmdline);
 
-    ghostscriptDevice = 
+    ghostscriptDevice =
         computeGsDevice(cmdline.formatType, cmdline.forceplain);
-    
+
     pm_message("Writing %s format", ghostscriptDevice);
-    
+
     executeGhostscript(inputFileName, borderedBox, imageDim, orientation,
                        ghostscriptDevice, outfileArg, cmdline.textalphabits,
                        language);
 
     pm_strfree(ghostscriptDevice);
     pm_strfree(outfileArg);
-    
+
     return 0;
 }
 

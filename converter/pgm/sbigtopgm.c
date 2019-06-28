@@ -54,7 +54,6 @@ parseCommandLine(int argc, const char ** argv,
 
     MALLOCARRAY_NOFAIL(option_def, 100);
     
-    option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENTINIT;
 
     opt.opt_table     = option_def;

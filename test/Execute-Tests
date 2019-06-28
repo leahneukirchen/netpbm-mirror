@@ -180,7 +180,8 @@ elif [ $VALGRIND_TESTS = "on" ]
   vg_command_base="valgrind --trace-children=yes";
 
   for i in awk cat cksum cmp cp cut date dirname egrep fgrep file grep gs \
-    head mkdir mktemp perl rm sed seq sh tee testrandom tr uniq
+    head iconv mkdir mktemp perl rm sed seq sh tee testrandom tr uniq \
+    Available-Testprog
 
     # Tell valgrind not to probe execution of the above programs.
 
@@ -236,19 +237,38 @@ if [ $VALGRIND_TESTS = "on" ]
 fi
 
 # Execute a single test and test its result.
+# But first check if the .ok file exists.  (Some .ok files are
+# dynamically created.)  Then see if target programs and requirements
+# are in place.  If either of these conditions are not met, do
+# not execute the test and report "Not Testable".
 
-PATH=${testpath} $vg_command ${srcdir}/$tname > ${tname%.test}.out;
-let result=$?
-case $result in
-0)   cmp -s ${tname%.test}.out ${srcdir}/${tname%.test}.ok ;
-     if [ $? -eq 0 ]
-        then let result=0;  rm  ${tname%.test}.out ;
-        else let result=1;
-             grep "^##" ${srcdir}/$tname  # Print failure message.
-     fi ;;
-80) let result=4 ;;
-*)  let result=1 ;;
-esac
+if [ ! -s ${srcdir}/${tname%.test}.ok ]
+then
+  let result=4;
+else
+  ${srcdir}/Available-Testprog \
+    `sed -n -e '/^# This script tests: /s/# This script tests: //p' \
+            -e '/^# Also requires: /s/^# Also requires: //p' \
+            -e '/^$/q' ${srcdir}/$tname | tr '\n' ' '`
+  case $? in
+  0)
+    PATH=${testpath} $vg_command ${srcdir}/$tname > ${tname%.test}.out;
+    let retval=$?
+    case $retval in
+    0)   cmp -s ${tname%.test}.out ${srcdir}/${tname%.test}.ok ;
+         if [ $? -eq 0 ]
+            then let result=0;  rm  ${tname%.test}.out ;
+            else let result=1;
+                 grep "^##" ${srcdir}/$tname  # Print failure message.
+         fi ;;
+    80) let result=4 ;;
+    *)  let result=1 ;;
+    esac ;;
+  
+  1)   let result=4 ;;
+  *)   let result=1 ;;
+  esac
+fi
 
 # Report whether a single test succeeded or failed.
 # Increment counters.

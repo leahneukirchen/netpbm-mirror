@@ -23,6 +23,9 @@ typedef gray pixval;
 
 #define PPM_OVERALLMAXVAL PGM_OVERALLMAXVAL
 #define PPM_MAXMAXVAL PGM_MAXMAXVAL
+
+#define ppm_unnormalize pgm_unnormalize
+
 typedef struct {
     pixval r, g, b;
 } pixel;
@@ -90,61 +93,61 @@ ppm_allocrow(unsigned int const cols);
 #define ppm_freerow(pixelrow) pm_freerow(pixelrow);
 
 pixel**
-ppm_readppm(FILE *   const fileP, 
-            int *    const colsP, 
-            int *    const rowsP, 
+ppm_readppm(FILE *   const fileP,
+            int *    const colsP,
+            int *    const rowsP,
             pixval * const maxvalP);
 
 void
-ppm_readppminit(FILE *   const fileP, 
-                int *    const colsP, 
-                int *    const rowsP, 
-                pixval * const maxvalP, 
+ppm_readppminit(FILE *   const fileP,
+                int *    const colsP,
+                int *    const rowsP,
+                pixval * const maxvalP,
                 int *    const formatP);
 
 void
-ppm_readppmrow(FILE*  const fileP, 
-               pixel* const pixelrow, 
-               int    const cols, 
-               pixval const maxval, 
+ppm_readppmrow(FILE*  const fileP,
+               pixel* const pixelrow,
+               int    const cols,
+               pixval const maxval,
                int    const format);
 
 void
-ppm_writeppm(FILE *  const fileP, 
-             pixel** const pixels, 
-             int     const cols, 
-             int     const rows, 
-             pixval  const maxval, 
+ppm_writeppm(FILE *  const fileP,
+             pixel** const pixels,
+             int     const cols,
+             int     const rows,
+             pixval  const maxval,
              int     const forceplain);
 
 void
-ppm_writeppminit(FILE*  const fileP, 
-                 int    const cols, 
-                 int    const rows, 
-                 pixval const maxval, 
+ppm_writeppminit(FILE*  const fileP,
+                 int    const cols,
+                 int    const rows,
+                 pixval const maxval,
                  int    const forceplain);
 
 void
-ppm_writeppmrow(FILE *        const fileP, 
-                const pixel * const pixelrow, 
-                int           const cols, 
-                pixval        const maxval, 
+ppm_writeppmrow(FILE *        const fileP,
+                const pixel * const pixelrow,
+                int           const cols,
+                pixval        const maxval,
                 int           const forceplain);
 
 void
-ppm_check(FILE *               const fileP, 
-          enum pm_check_type   const check_type, 
-          int                  const format, 
-          int                  const cols, 
-          int                  const rows, 
+ppm_check(FILE *               const fileP,
+          enum pm_check_type   const check_type,
+          int                  const format,
+          int                  const cols,
+          int                  const rows,
           pixval               const maxval,
           enum pm_check_code * const retval_p);
 
 void
-ppm_nextimage(FILE * const fileP, 
+ppm_nextimage(FILE * const fileP,
               int *  const eofP);
 
-pixel 
+pixel
 ppm_parsecolor(const char * const colorname,
                pixval       const maxval);
 
@@ -154,8 +157,8 @@ ppm_parsecolor2(const char * const colorname,
                 int          const closeOk);
 
 char*
-ppm_colorname(const pixel* const colorP, 
-              pixval       const maxval, 
+ppm_colorname(const pixel* const colorP,
+              pixval       const maxval,
               int          const hexok);
 
 void
@@ -167,9 +170,9 @@ ppm_readcolordict(const char *      const fileName,
                   colorhash_table * const chtP);
 
 void
-ppm_readcolornamefile(const char *      const fileName, 
+ppm_readcolornamefile(const char *      const fileName,
                       int               const mustOpen,
-                      colorhash_table * const chtP, 
+                      colorhash_table * const chtP,
                       const char ***    const colornamesP);
 
 void
@@ -211,9 +214,7 @@ PPM_DISTANCE(pixel const p1,
    combination of intensities, whereas luma is a linear combination of
    gamma-adjusted intensities, as you would find in a Netpbm image.
 
-   These are from ITU-R BT.601.5.  That means they probably aren't technically
-   right for use with PPM images, because the PPM spec says ITU-R BT.709.
-   The two are similar, though.
+   These are from ITU-R BT.601.5.
 */
 #define PPM_LUMINR (0.2989)
 #define PPM_LUMING (0.5866)
@@ -222,16 +223,20 @@ PPM_DISTANCE(pixel const p1,
 #define PPM_LUMIN(p) ( PPM_LUMINR * PPM_GETR(p) \
                        + PPM_LUMING * PPM_GETG(p) \
                        + PPM_LUMINB * PPM_GETB(p) )
-#define PPM_CHROM_B(p) ( -0.16874 * PPM_GETR(p) \
-                         - 0.33126 * PPM_GETG(p) \
+
+/* The coefficients in the following formulae are functions of
+   PPM_LUMIN{R,G,B} and nothing else.
+*/
+#define PPM_CHROM_B(p) ( -0.168736 * PPM_GETR(p) \
+                         - 0.331264 * PPM_GETG(p) \
                          + 0.5 * PPM_GETB(p) )
 #define PPM_CHROM_R(p) ( 0.5 * PPM_GETR(p) \
-                         - 0.41869 * PPM_GETG(p) \
-                         - 0.08131 * PPM_GETB(p) )
+                         - 0.418688 * PPM_GETG(p) \
+                         - 0.081312 * PPM_GETB(p) )
 
 pixel
-ppm_color_from_ycbcr(unsigned int const y, 
-                     int          const cb, 
+ppm_color_from_ycbcr(unsigned int const y,
+                     int          const cb,
                      int          const cr);
 
 /* Hue/Saturation/Value calculations */

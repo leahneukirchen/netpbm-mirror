@@ -3,7 +3,7 @@
  *
 
    THIS MODULE WAS ADAPTED FOR NETPBM BY BRYAN HENDERSON ON 2002.03.24.
-   Bryan got the base from 
+   Bryan got the base from
    http://www.ijs.si/software/snprintf/snprintf-2.2.tar.gz, but made
    a lot of changes and additions.
 
@@ -113,6 +113,7 @@
  */
 
 
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE  /* Make sure strdup() is in string.h */
 #define _GNU_SOURCE
@@ -194,6 +195,19 @@ static char credits[] = "\n\
 @(#)snprintf.c, v2.2: http://www.ijs.si/software/snprintf/\n";
 
 
+/* MacOS X before 10.7, for one, does not have strnlen */
+size_t
+pm_strnlen(const char * const s,
+           size_t       const maxlen) {
+
+    unsigned int i;
+
+    for (i = 0; i < maxlen && s[i]; ++i) {}
+
+    return i;
+}
+
+
 
 void
 pm_vsnprintf(char *       const str,
@@ -201,7 +215,7 @@ pm_vsnprintf(char *       const str,
              const char * const fmt,
              va_list            ap,
              size_t *     const sizeP) {
-    
+
     size_t str_l = 0;
     const char *p = fmt;
 
@@ -226,7 +240,6 @@ pm_vsnprintf(char *       const str,
             }
             p += n; str_l += n;
         } else {
-            const char *starting_p;
             size_t min_field_width;
             size_t precision = 0;
             bool precision_specified;
@@ -268,7 +281,6 @@ pm_vsnprintf(char *       const str,
             str_arg = credits;
                 /* just to make compiler happy (defined but not used) */
             str_arg = NULL;
-            starting_p = p;
             ++p;  /* skip '%' */
 
             /* parse flags */
@@ -405,7 +417,7 @@ pm_vsnprintf(char *       const str,
                         str_arg_l = 0;
                     else if (!precision_specified)
                         /* truncate string if necessary as requested by
-                           precision 
+                           precision
                         */
                         str_arg_l = strlen(str_arg);
                     else if (precision == 0)
@@ -457,7 +469,7 @@ pm_vsnprintf(char *       const str,
                       undefined. (Actually %hp converts only 16-bits
                       of address and %llp treats address as 64-bit
                       data which is incompatible with (void *)
-                      argument on a 32-bit system). 
+                      argument on a 32-bit system).
                     */
 
                     length_modifier = '\0';
@@ -590,7 +602,7 @@ pm_vsnprintf(char *       const str,
                         && !(zero_padding_insertion_ind < str_arg_l
                              && tmp[zero_padding_insertion_ind] == '0')) {
                         /* assure leading zero for alternate-form
-                           octal numbers 
+                           octal numbers
                         */
                         if (!precision_specified ||
                             precision < num_of_digits+1) {
@@ -604,7 +616,7 @@ pm_vsnprintf(char *       const str,
                         }
                     }
                     /* zero padding to specified precision? */
-                    if (num_of_digits < precision) 
+                    if (num_of_digits < precision)
                         number_of_zeros_to_pad = precision - num_of_digits;
                 }
                 /* zero padding to specified minimal field width? */
@@ -756,7 +768,7 @@ pm_snprintf(char *       const dest,
     va_list ap;
 
     va_start(ap, fmt);
-    
+
     pm_vsnprintf(dest, str_m, fmt, ap, &size);
 
     va_end(ap);
@@ -795,12 +807,12 @@ pm_strdup(const char * const arg) {
 
 void PM_GNU_PRINTF_ATTR(2,3)
 pm_asprintf(const char ** const resultP,
-            const char *  const fmt, 
+            const char *  const fmt,
             ...) {
 
     const char * result;
     va_list varargs;
-    
+
 #if HAVE_VASPRINTF
     int rc;
     va_start(varargs, fmt);
@@ -810,7 +822,7 @@ pm_asprintf(const char ** const resultP,
         result = pm_strsol;
 #else
     size_t dryRunLen;
-    
+
     va_start(varargs, fmt);
 
     pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
@@ -831,7 +843,7 @@ pm_asprintf(const char ** const resultP,
             va_start(varargs, fmt);
 
             pm_vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
-                
+
             assert(realLen == dryRunLen);
             va_end(varargs);
 
@@ -859,7 +871,7 @@ pm_strfree(const char * const string) {
 
 const char *
 pm_strsep(char ** const stringP, const char * const delim) {
-    const char * retval;   
+    const char * retval;
 
     if (stringP == NULL || *stringP == NULL)
         retval = NULL;
@@ -869,16 +881,16 @@ pm_strsep(char ** const stringP, const char * const delim) {
         retval = *stringP;
 
         for (p = *stringP; *p && strchr(delim, *p) == NULL; ++p);
- 
+
         if (*p) {
-            /* We hit a delimiter, not end-of-string.  So null out the 
+            /* We hit a delimiter, not end-of-string.  So null out the
                delimiter and advance user's pointer to the next token
             */
             *p++ = '\0';
             *stringP = p;
         } else {
-            /* We ran out of string.  So the end-of-string delimiter is 
-               already there, and we set the user's pointer to NULL to 
+            /* We ran out of string.  So the end-of-string delimiter is
+               already there, and we set the user's pointer to NULL to
                indicate there are no more tokens.
             */
             *stringP = NULL;
@@ -902,7 +914,7 @@ pm_stripeq(const char * const comparand,
     const char * px;
     const char * qx;
     bool equal;
-  
+
     /* Make p and q point to the first non-blank character in each string.
        If there are no non-blank characters, make them point to the terminating
        NUL.
@@ -995,39 +1007,50 @@ pm_strishex(const char * const subject) {
 
 
 void
-pm_interpret_uint(const char *   const string,
-                  unsigned int * const valueP,
+pm_string_to_uint(const char *   const string,
+                  unsigned int * const uintP,
                   const char **  const errorP) {
 
-    if (string[0] == '\0')
-        pm_asprintf(errorP, "Null string.");
+    if (strlen(string) == 0)
+        pm_asprintf(errorP, "Value is a null string");
     else {
-        /* strtoul() does a bizarre thing where if the number is out
+        char * tailptr;
+        long longValue;
+
+        /* We can't use 'strtoul'.  Contrary to expectations, though as
+           designed, it returns junk if there is a minus sign.
+        */
+
+        /* strtol() does a bizarre thing where if the number is out
            of range, it returns a clamped value but tells you about it
            by setting errno = ERANGE.  If it is not out of range,
-           strtoul() leaves errno alone.
+           strtol() leaves errno alone.
         */
-        char * tail;
-        unsigned long ulongValue;
-        
         errno = 0;  /* So we can tell if strtoul() overflowed */
 
-        ulongValue = strtoul(string, &tail, 10);
+        longValue = strtol(string, &tailptr, 10);
 
-        if (tail[0] != '\0')
-            pm_asprintf(errorP, "Non-digit stuff in string: %s", tail);
-        else if (errno == ERANGE)
-            pm_asprintf(errorP, "Number too large");
-        else if (ulongValue > UINT_MAX)
-            pm_asprintf(errorP, "Number too large");
-        else if (string[0] == '-')
-            pm_asprintf(errorP, "Negative number");
-            /* Sleazy code; string may have leading spaces. */
+        if (*tailptr != '\0')
+            pm_asprintf(errorP, "Non-numeric crap in string: '%s'", tailptr);
         else {
-            *valueP = ulongValue;
-            *errorP = NULL;
+             if (errno == ERANGE)
+                 pm_asprintf(errorP, "Number is too large for computation");
+             else {
+                 if (longValue < 0)
+                     pm_asprintf(errorP, "Number is negative");
+                 else {
+                     if ((unsigned int)longValue != longValue)
+                         pm_asprintf(errorP,
+                                     "Number is too large for computation");
+                     else {
+                         *uintP = (unsigned int)longValue;
+                         *errorP = NULL;
+                     }
+                 }
+             }
         }
     }
 }
+
 
 

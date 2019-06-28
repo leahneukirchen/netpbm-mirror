@@ -42,6 +42,21 @@ my ($TRUE, $FALSE) = (1,0);
 
 my ($SEEK_SET, $SEEK_CUR, $SEEK_END) = (0, 1, 2);
 
+
+
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('pnmcolormap', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
+
+
 sub tempFile($) {
 
     # We trust Perl's File::Temp to do a better job of creating the temp
@@ -81,6 +96,8 @@ sub parseCommandLine(@) {
                                   "spreadbrightness",
                                   "spreadluminosity",
                                   "floyd|fs!",
+                                  "norandom",
+                                  "randomseed=i",
                                   "quiet",
                                   "plain");
 
@@ -93,7 +110,7 @@ sub parseCommandLine(@) {
               scalar(@ARGV), "\n");
         exit(1);
     } 
-    if (@ARGV < 1) {
+    elsif (@ARGV < 1) {
         print(STDERR 
               "You must specify the number of colors as an argument.\n");
         exit(1);
@@ -233,9 +250,10 @@ sub makeColormap($$$$$) {
 
 
 
-sub remap($$$$) {
+sub remap($$$$$$) {
 
-    my ($mapfileSpec, $opt_floyd, $opt_plain, $opt_quiet) = @_;
+    my ($mapfileSpec, $opt_floyd, $opt_norandom, $opt_randomseed,
+        $opt_plain, $opt_quiet) = @_;
 
     # Remap the image on Standard Input to Standard Output, using the colors
     # from the colormap file named $mapfileSpec.
@@ -245,6 +263,17 @@ sub remap($$$$) {
 
     if ($opt_floyd) {
         push(@options, "-floyd");
+    }
+    if ($opt_norandom) {
+        push(@options, "-norandom");
+    }
+    if (defined($opt_randomseed)) {
+        if ($opt_randomseed < 0) {
+             print(STDERR "-randomseed value must not be negative.  " .
+                   "You specified $opt_randomseed\n");
+             exit(10);
+        }
+        push(@options, "-randomseed=$opt_randomseed");
     }
     if ($opt_plain) {
         push(@options, "-plain");
@@ -266,6 +295,8 @@ sub remap($$$$) {
 ##############################################################################
 #                              MAIN PROGRAM
 ##############################################################################
+
+doVersionHack(\@ARGV);
 
 my $cmdlineR = parseCommandLine(@ARGV);
 
@@ -294,6 +325,8 @@ open(STDOUT, ">&OLDOUT");
 
 remap($mapfileSpec, 
       $cmdlineR->{floyd}, 
+      $cmdlineR->{norandom}, 
+      $cmdlineR->{randomseed}, 
       $cmdlineR->{plain},
       $cmdlineR->{quiet});
 

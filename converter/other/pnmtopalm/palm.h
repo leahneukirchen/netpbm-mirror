@@ -28,9 +28,18 @@
 #define PALM_FORMAT_565LE       0x02    /* Palm says internal use only */
 #define PALM_FORMAT_INDEXEDLE   0x03    /* Palm says internal use only */
 
-typedef unsigned long Color_s;
+typedef unsigned long ColormapEntry;
+    /* A entry in a Colormap.  It is an encoding of 4 bytes as the integer
+       that those 4 bytes would represent in pure binary:
 
-typedef Color_s * Color;
+          MSB 0: the color index
+              1: red intensity
+              2: green intensity
+          LSB 3: blue intensity
+
+       The intensities are on a scale with a certain maxval (that must be
+       specified to interpret a ColormapEntry).
+    */
 
 typedef struct {
     unsigned int nentries;
@@ -39,24 +48,11 @@ typedef struct {
         /* number of colors actually in 'color_entries' -- entries are
            filled from 0 consecutively, one color per entry.
         */
-    Color_s * color_entries;  /* Array of colors */
-} Colormap_s;
-
-typedef Colormap_s * Colormap;
+    ColormapEntry * color_entries;  /* Array of colors */
+} Colormap;
 
 qsort_comparison_fn palmcolor_compare_indices;
 
 qsort_comparison_fn palmcolor_compare_colors;
-
-Colormap
-palmcolor_build_custom_8bit_colormap(unsigned int const rows,
-                                     unsigned int const cols,
-                                     pixel **     const pixels);
-
-Colormap
-palmcolor_build_default_8bit_colormap(void);
-
-Colormap
-palmcolor_read_colormap (FILE * const ifP);
 
 #endif

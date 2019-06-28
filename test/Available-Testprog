@@ -1,0 +1,75 @@
+#! /bin/bash
+
+# If make target is "check-install" assume that all programs are available
+if [ "${CHECK_TYPE}" = "install" ]; then
+  exit 0
+fi
+
+# Special case: no arguments were passed to this program
+# For all-in-place.test and legacy-names.test
+
+if [ $# = 0 ]; then
+  exit 0
+fi
+
+# Normal operation: Walk through the argument list and exit if an
+# unavailable program is encountered.
+
+# See http://netpbm.sourceforge.net/prereq.html and the makefiles in
+# each directory (for example converter/other/Makefile) for library
+# requirements and relevant variables.
+
+for i in $@
+    do
+    case $i in
+      fiascotopnm|\
+      pnmtofiasco)
+        [ "${BUILD_FIASCO}" = "N" ] && exit 1 ;;
+
+      jpeg2ktopam|\
+      pamtojpeg2k)
+        [ "${JASPERLIB}" = "NONE" ] && exit 1 ;;
+
+      jbigtopnm|\
+      pnmtojbig)
+        [ "${JBIGLIB}" = "NONE" ] && exit 1 ;;
+
+      jpegtopnm|\
+      pnmtojpeg|\
+      ppmtojpeg)
+        [ "${JPEGLIB}" = "NONE" ] && exit 1 ;;
+
+      pamtotiff|\
+      pnmtotiff|\
+      pnmtotiffcmyk|\
+      tifftopnm)
+        [ "${TIFFLIB}" = "NONE" -o \
+          "${JPEGLIB}" = "NONE" -o \
+          "${ZLIB}" = "NONE" ] && exit 1 ;;
+
+      pnmtorle|\
+      rletopnm)
+        [ "${URTLIB}" = "NONE" ] && exit 1 ;;
+
+      pamx)
+        [ "${X11LIB}" = "NONE" ] && exit 1 ;;
+
+      svgtopam)
+        [ "${XML2_LIBS}" = "NONE" ] && exit 1 ;;
+
+      thinkjettopbm)
+        [ -z "${LEX}" ] && exit 1 ;;
+
+      zlib)
+        [ "${ZLIB}" = "NONE" ] && exit 1 ;;
+
+    esac
+done
+
+# All checks passed.  Exit with success status.
+exit 0
+
+
+# TODO: We don't have a good method for testing whether PNGLIB is
+# available for linking.
+# Affected programs: pamtopng, pngtopam, pngtopnm, pnmtopng

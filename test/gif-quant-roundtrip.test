@@ -13,6 +13,6 @@ quant_ppm=${tmpdir}/quant.ppm
 pnmquant ${colors} testimg.ppm > ${quant_ppm} &&
 pamtogif ${quant_ppm} | giftopnm | \
    cmp -s - ${quant_ppm} > /dev/null
-echo $?
+echo ${PIPESTATUS[@]} ":" $?
 
 rm ${quant_ppm}

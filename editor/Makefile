@@ -16,10 +16,10 @@ SUBDIRS = pamflip specialty
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
+PORTBINARIES = pamaddnoise pamaltsat pambackground pambrighten pamcomp pamcut \
 	       pamdice pamditherbw pamedge \
 	       pamenlarge \
-	       pamfunc pammasksharpen \
+	       pamfunc pamhue pamlevels pammasksharpen pammixmulti \
 	       pamperspective pamrecolor pamrubber \
 	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
 	       pamwipeout \
@@ -51,12 +51,14 @@ OBJECTS = $(BINARIES:%=%.o)
 
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
+HAVE_MERGE_COMPAT=YES
+
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 include $(SRCDIR)/common.mk
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
@@ -98,3 +100,15 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmcomp$(EXE) ; \
 	$(SYMLINK) pamcomp$(EXE) pnmcomp$(EXE)
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pnminterp\",  main_pamstretch);" >>$@
+	echo "TRY(\"pgmnorm\",    main_pnmnorm);"    >>$@
+	echo "TRY(\"ppmnorm\",    main_pnmnorm);"    >>$@
+	echo "TRY(\"pgmedge\",    main_pamedge);"    >>$@
+	echo "TRY(\"pnmenlarge\", main_pamenlarge);" >>$@
+	echo "TRY(\"pnmcut\",     main_pamcut);"     >>$@
+	echo "TRY(\"pnmscale\",   main_pamscale);"   >>$@
+	echo "TRY(\"pnmcomp\",    main_pamcomp);"    >>$@
+

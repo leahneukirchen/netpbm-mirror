@@ -1,0 +1,34 @@
+#! /bin/bash
+# This script tests: pamtotiff tifftopnm
+# Also requires: ppmpat
+
+# Failure message
+## If tiff-rountrip.test succeeds and this test fails, the likely
+## cause is an old TIFF library which lacks certain compression
+## features.
+
+tmpdir=${tmpdir:-/tmp}
+
+tartan_ppm=${tmpdir}/testimg40.ppm
+
+# Make a test image with reduced colors which compresses better
+# cksum is 1079668603 10237
+
+ppmpat -tartan --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 71 48 | \
+  tee ${tartan_ppm} | cksum
+pamtotiff ${tartan_ppm} | tifftopnm | cksum
+
+# test flate compression
+pamtotiff -flate ${tartan_ppm} | tifftopnm | cksum
+
+# test adobeflate compression
+pamtotiff -adobeflate ${tartan_ppm} | tifftopnm | cksum
+
+# test LZW compression
+pamtotiff -lzw ${tartan_ppm} | tifftopnm | cksum
+pamtotiff -lzw -predictor=1 ${tartan_ppm} | tifftopnm | cksum
+
+# PBM image: test flate compression
+pamtotiff -flate testgrid.pbm | tifftopnm | cksum
+
+rm ${tartan_ppm}

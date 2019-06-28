@@ -38,6 +38,7 @@
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
+#include "runlength.h"
 #include "pam.h"
 
 #include "ipdb.h"
@@ -128,6 +129,8 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFileName = argv[1];
     else
         pm_error("Program takes at most one argument:  input file name");
+
+    free(option_def);
 }
 
 
@@ -238,91 +241,6 @@ textWrite(TEXT * const textP,
 
 
 
-typedef struct {
-    unsigned int match;
-    uint8_t      buf[128];
-    int          mode;
-    size_t       len;
-    size_t       used;
-    uint8_t *    p;
-} RLE;
-#define MODE_MATCH  0
-#define MODE_LIT    1
-#define MODE_NONE   2
-
-#define reset(r) {                              \
-        (r)->match = 0xffff;                    \
-        (r)->mode  = MODE_NONE;                 \
-        (r)->len   = 0;                         \
-    }
-
-
-
-static void
-putMatch(RLE *  const rleP,
-          size_t const n) {
-
-    *rleP->p++ = 0x80 + n - 1;
-    *rleP->p++ = rleP->match;
-    rleP->used += 2;
-    reset(rleP);
-}
-
-
-
-static void
-putLit(RLE *  const rleP,
-       size_t const n) {
-
-    *rleP->p++ = n - 1;
-    rleP->p = (uint8_t *)memcpy(rleP->p, rleP->buf, n) + n;
-    rleP->used += n + 1;
-    reset(rleP);
-}
-
-
-
-static size_t
-compress(const uint8_t * const inData,
-         size_t          const n_in,
-         uint8_t *       const out) {
-
-    static void (*put[])(RLE *, size_t) = {putMatch, putLit};
-    RLE rle;
-    size_t  i;
-    const uint8_t * p;
-
-    MEMSZERO(&rle);
-    rle.p = out;
-    reset(&rle);
-
-    for (i = 0, p = &inData[0]; i < n_in; ++i, ++p) {
-        if (*p == rle.match) {
-            if (rle.mode == MODE_LIT && rle.len > 1) {
-                putLit(&rle, rle.len - 1);
-                ++rle.len;
-                rle.match = *p;
-            }
-            rle.mode = MODE_MATCH;
-            ++rle.len;
-        } else {
-            if (rle.mode == MODE_MATCH)
-                putMatch(&rle, rle.len);
-            rle.mode         = MODE_LIT;
-            rle.match        = *p;
-            rle.buf[rle.len++] = *p;
-        }
-        if (rle.len == 128)
-            put[rle.mode](&rle, rle.len);
-    }
-    if (rle.len != 0)
-        put[rle.mode](&rle, rle.len);
-
-    return rle.used;
-}
-
-
-
 static void
 compressIfRequired(IPDB *     const pdbP,
                    int        const comp,
@@ -334,38 +252,29 @@ compressIfRequired(IPDB *     const pdbP,
         *compressedSizeP = ipdb_img_size(pdbP->i);
     } else {
         int const uncompressedSz = ipdb_img_size(pdbP->i);
-        
-        /* Allocate for the worst case. */
-        size_t const allocSz = (3 * uncompressedSz + 2)/2;
 
-        uint8_t * data;
-            
-        data = pdbP->i->data;
+        unsigned char * outbuf;
+        size_t          compressedSz;
 
-        MALLOCARRAY(data, allocSz);
-            
-        if (data == NULL)
-            pm_error("Could not get %lu bytes of memory to decompress",
-                     (unsigned long)allocSz);
-        else {
-            size_t compressedSz;
-            compressedSz = compress(pdbP->i->data, uncompressedSz, data);
-            if (comp == IPDB_COMPMAYBE && compressedSz >= uncompressedSz) {
-                /* Return the uncompressed data */
-                free(data);
-                *compressedDataP = pdbP->i->data;
-                *compressedSizeP = uncompressedSz;
-            } else {
-                pdbP->i->compressed = TRUE;
-                if (pdbP->i->type == IMG_GRAY16)
-                    pdbP->i->version = 9;
-                else
-                    pdbP->i->version = 1;
-                if (pdbP->t != NULL)
-                    pdbP->t->r->offset -= uncompressedSz - compressedSz;
-                *compressedDataP = data;
-                *compressedSizeP = compressedSz;
-            }
+        pm_rlenc_allocoutbuf(&outbuf, uncompressedSz, PM_RLE_PALMPDB);
+
+        pm_rlenc_compressbyte(pdbP->i->data, outbuf, PM_RLE_PALMPDB,
+                              uncompressedSz, &compressedSz);
+        if (comp == IPDB_COMPMAYBE && compressedSz >= uncompressedSz) {
+            /* Return the uncompressed data */
+            free(outbuf);
+            *compressedDataP = pdbP->i->data;
+            *compressedSizeP = uncompressedSz;
+        } else {
+            pdbP->i->compressed = TRUE;
+            if (pdbP->i->type == IMG_GRAY16)
+                pdbP->i->version = 9;
+            else
+                pdbP->i->version = 1;
+            if (pdbP->t != NULL)
+                pdbP->t->r->offset -= uncompressedSz - compressedSz;
+            *compressedDataP = outbuf;
+            *compressedSizeP = compressedSz;
         }
     }
 }
@@ -742,6 +651,14 @@ readtxt(IPDB *       const pdbP,
         pm_error("stat of '%s' failed, errno = %d (%s)",
                  noteFileName, errno, strerror(errno));
 
+    /* The maximum size of a memory block that a Palm can allocate is 64K.
+       Abort with error if specified note file is any larger.
+    */
+
+    if (st.st_size + 1 >= 65535)
+        pm_error("Note file is too large: %lu bytes",
+                  (unsigned long) st.st_size);
+
     fP = pm_openr(noteFileName);
 
     MALLOCARRAY(fileContent, st.st_size + 1);
@@ -757,6 +674,8 @@ readtxt(IPDB *       const pdbP,
                  noteFileName, errno, strerror(errno));
 
     pm_close(fP);
+
+    fileContent[st.st_size] = 0x00;  /* add terminating NUL char */
 
     /* Chop of trailing newlines */
     for (n = strlen(fileContent) - 1; n >= 0 && fileContent[n] == '\n'; --n)
@@ -786,6 +705,9 @@ main(int argc, const char **argv) {
     case UNCOMPRESSED: comp = IPDB_NOCOMPRESS; break;
     case MAYBE:        comp = IPDB_COMPMAYBE;  break;
     }
+
+    if (strlen(cmdline.title) > 31)
+        pm_error("Title too long.  Max length is 31 characters.");
 
     pdbP = ipdb_alloc(cmdline.title);
 

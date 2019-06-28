@@ -338,7 +338,7 @@ matchBk(pixel     const color,
              );
 
     (*bkMatchP)[BKCOLOR_BROWN]  =
-	fzOr(
+        fzOr(
              fzAnd(fzOr(hueAround015, hueAround360),
                    fzAnd(fzNot(satVeryLow), fzOr(valLow, valMedium))),
              fzAnd(hueAround015, satLow)

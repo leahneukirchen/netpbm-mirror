@@ -62,6 +62,19 @@ my $TRUE=1; my $FALSE = 0;
 
 
 
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('pnmcolormap', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
+
+
 sub parseArgs($$$$) {
     my ($argvR, $extR, $newColorCtR, $fileNamesR) = @_;
 
@@ -157,7 +170,7 @@ sub remapFiles($$$$) {
             my $pnmremapTermStatus = system($pnmremapCmd);
 
             if ($pnmremapTermStatus != 0) {
-                $errorR =
+                $$errorR =
                     "Shell command to quantize '$inFileName'  failed:  " .
                     "'$pnmremapCmd'";
             } else {
@@ -165,7 +178,7 @@ sub remapFiles($$$$) {
 
                 unlink($newFileName);
                 File::Copy::move($outputFileName, $newFileName)
-                    or $errorR = "Rename to '$newFileName' failed.";
+                    or $$errorR = "Rename to '$newFileName' failed.";
             }
         }
         unlink($outputFileName);  # In case something failed
@@ -179,6 +192,8 @@ sub remapFiles($$$$) {
 ###############################################################################
 
 my $progError;
+
+doVersionHack(\@ARGV);
 
 parseArgs(\@ARGV, \my $ext, \my $newColorCt, \my @fileNames);
 

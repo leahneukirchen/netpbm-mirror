@@ -22,9 +22,10 @@
 #include "send.h"
 
 #define TRUE_TO_15BIT(PIXEL)     \
+    ((unsigned short) \
     ((((PIXEL) & 0xf80000) >> 9) | \
     (((PIXEL) & 0x00f800) >> 6) | \
-    (((PIXEL) & 0x0000f8) >> 3))
+     (((PIXEL) & 0x0000f8) >> 3)))
 
 #define RED_INTENSITY(P)   (((P) & 0x7c00) >> 10)
 #define GREEN_INTENSITY(P) (((P) & 0x03e0) >> 5)
@@ -116,63 +117,97 @@ bitsPerPixelAtDepth(Display *    const disp,
      
 
 
-static Image *
-itrueToRGB(Image *      const imageP,
-           unsigned int const ddepth) {
-
-    int y, x, num_pixels, colors;
-    unsigned long pixel_counts[32786];
-    unsigned long pixel_array[32786];
-    Pixel pixval;
+static void
+findColors(const Image *   const imageP,
+           unsigned int *  const pixelCt) {
+/*----------------------------------------------------------------------------
+   Find the colors in the Itrue raster 'raster'; return the histogram of
+   those colors as 'pixelCt'.
+-----------------------------------------------------------------------------*/
+    unsigned short color;
     unsigned char * pixel;
-    unsigned char * dpixel;
-    Image * newImageP;
-    
-    newImageP = newRGBImage(imageP->width, imageP->height, ddepth);
+    unsigned int y;
 
-    colors = 1 << ddepth;
+    for (color = 0; color < 32768; ++color)
+        pixelCt[color] = 0;  /* initial value */
   
-    memset(pixel_counts, 0, 32768 * sizeof(unsigned long));
-  
-    pixel= imageP->data;
-    for (y= 0; y < imageP->height; y++) {
+    for (y = 0, pixel = imageP->data; y < imageP->height; ++y) {
         unsigned int x;
-        for (x= 0; x < imageP->width; x++) {
-            unsigned int const z = TRUE_TO_15BIT(memToVal(pixel, 3));
-            pixel_counts[z]++;
+        for (x = 0; x < imageP->width; ++x) {
+            unsigned int const color = TRUE_TO_15BIT(memToVal(pixel, 3));
+            ++pixelCt[color];
             pixel += 3;
         }
     }
-    num_pixels = 0;
-    for (x = 0; x < 32768; ++x) {
-        if (pixel_counts[x] > 0) {
-            unsigned long const red = RED_INTENSITY(x);
-            unsigned long const grn = GREEN_INTENSITY(x);
-            unsigned long const blu = BLUE_INTENSITY(x);
-            pixel_counts[x] = num_pixels;
-            *(newImageP->rgb.red + num_pixels) = red<<11;
-            *(newImageP->rgb.grn + num_pixels) = grn<<11; 
-            *(newImageP->rgb.blu + num_pixels) =  blu<<11;
-            pixel_array[num_pixels++] = (short)x;
-            if (num_pixels > colors)
-                break;
+}
+
+
+
+static Image *
+pseudoColorImageFromItrue(Image *      const imageP,
+                          unsigned int const ddepth) {
+/*----------------------------------------------------------------------------
+  A pseudoColor image from the RGB image *imageP.
+
+  We compute the index -- i.e. assign each color in *imageP a number.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxColorCt = (1 << ddepth);
+
+    unsigned int y;
+    unsigned int colorCt;
+        /* Number of colors we've indexed so far */
+    unsigned int pixelCt[32768];
+        /* colorCt[x] is the number of pixels of color 'x' in the image,
+           where 'x' is the 15 bit RGB representation of the color.
+        */
+    unsigned int colorIndex[32768];
+        /* colorIndex[x] is the color index we assigned to the color 'x',
+           where 'x' is the 15 bit RGB representation of the color.
+        */
+    Pixel pixval;
+    unsigned char * dpixel;
+    Image * newImageP;
+    unsigned short color;  /* A color, in 15 bit RGB */
+    unsigned char * pixel;
+
+    newImageP = newRGBImage(imageP->width, imageP->height, ddepth);
+
+    findColors(imageP, pixelCt);
+
+    for (color = 0, colorCt = 0;
+         color < 32768 && colorCt <= maxColorCt;
+         ++color) {
+        if (pixelCt[color] > 0) {
+            unsigned long const red = RED_INTENSITY(color);
+            unsigned long const grn = GREEN_INTENSITY(color);
+            unsigned long const blu = BLUE_INTENSITY(color);
+
+            /* Put the color in the color map */
+            newImageP->rgb.red[colorCt] = red<<11;
+            newImageP->rgb.grn[colorCt] = grn<<11; 
+            newImageP->rgb.blu[colorCt] = blu<<11;
+
+            /* Reverse-index it */
+            colorIndex[color] = colorCt;
+
+            ++colorCt;
         }
     }    
-
-    pixel = imageP->data;
-    dpixel = newImageP->data;
+    newImageP->rgb.used = colorCt;
     
-    for (y = 0; y < imageP->height; ++y) {
+    for (y = 0, pixel  = imageP->data, dpixel = newImageP->data;
+         y < imageP->height;
+         ++y) {
+
         unsigned int x;
         for (x = 0; x < imageP->width; ++x) {
-            unsigned int const z = TRUE_TO_15BIT(memToVal(pixel, 3));
-            pixval = pixel_counts[z];
+            unsigned short const color = TRUE_TO_15BIT(memToVal(pixel, 3));
+            pixval = colorIndex[color];
             valToMem(pixval, dpixel, newImageP->pixlen);
             pixel += 3;
             dpixel += newImageP->pixlen;
         }
     }
-    newImageP->rgb.used = num_pixels;
     newImageP->rgb.compressed = 1;
 
     return newImageP;
@@ -197,7 +232,7 @@ makeUsableVisual(Image *      const origImageP,
             *newImagePP = origImageP;
             break;
         case PseudoColor:
-            *newImagePP = itrueToRGB(origImageP, ddepth);
+            *newImagePP = pseudoColorImageFromItrue(origImageP, ddepth);
             if (*newImagePP == NULL)
                 pm_error("Unable to convert for Pseudocolor.");
             break;

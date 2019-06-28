@@ -48,9 +48,11 @@ pgmramp -ell 63 63 > ${circle_pgm}
 
 rm ${circle_pgm}
 
-# Test 3.
+# Test 3.  Should print "ok" 7 times
 gauss_pgm=${tmpdir}/gauss.pgm
-pamgauss -sigma=0.1 -tupletype=GRAYSCALE 25 25 > ${gauss_pgm}
+for size in 3 4 5 8 13 21 25
+do
+pamgauss -sigma=0.1 -tupletype=GRAYSCALE $size $size > ${gauss_pgm}
 
 ( for op in -null -tb -lr -r90
     do pamflip $op ${gauss_pgm} | cksum
@@ -58,6 +60,8 @@ pamgauss -sigma=0.1 -tupletype=GRAYSCALE 25 25 > ${gauss_pgm}
   awk '$1==4 && $3>0 { print "ok"; exit }; { print }'
 
 rm ${gauss_pgm}
+done
+
 
 # Test 4.
 kernel_pgm=${tmpdir}/kernel.pgm

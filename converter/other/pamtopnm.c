@@ -96,7 +96,7 @@ validateTupleType(struct pam const inpam,
             /* It's a PPMable image */
         } else 
             pm_error("PAM image does not have a depth and tuple_type "
-                     "consistent with a PNM image."
+                     "consistent with a PNM image.  "
                      "According to its "
                      "header, depth is %d and tuple_type is '%s'.  "
                      "Use the -assume option to convert anyway.",

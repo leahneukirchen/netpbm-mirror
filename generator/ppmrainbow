@@ -25,31 +25,57 @@ exec perl -w -x -S -- "$0" "$@"
 #!/usr/bin/perl
 use strict;
 use Getopt::Long;
+use File::Temp;
 
 my ($FALSE, $TRUE) = (0,1);
 
 (my $myname = $0) =~ s#\A.*/##;
 
+
+
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('pgmramp', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
+
+
 sub fatal($) {
     my ($msg) = @_;
 
-    print(STDERR "$msg\n");
+    print(STDERR "ppmrainbow: $msg\n");
     exit(1);
 }
 
-my ($Twid, $Thgt, $tmpdir, $norepeat, $verbose);
+
+
+##############################################################################
+#
+#                                 MAINLINE
+#
+##############################################################################
+
+doVersionHack(\@ARGV);
+
+my ($Twid, $Thgt, $tmpdir, $repeat, $verbose);
 
 # set defaults
 $Twid = 600;
 $Thgt = 8;
 $tmpdir = $ENV{"TMPDIR"} || "/tmp";
-$norepeat = $FALSE;
+$repeat = $TRUE;
 $verbose = $FALSE;
 
 GetOptions("width=i"   => \$Twid,
            "height=i"  => \$Thgt,
            "tmpdir=s"  => \$tmpdir,
-           "norepeat!" => \$norepeat,
+           "repeat!"   => \$repeat,
            "verbose!"  => \$verbose);
 
 if ($Twid < 1 || $Thgt < 1) {
@@ -59,7 +85,7 @@ my $verboseCommand = $verbose ? "set -x;" : "";
 
 if (@ARGV < 1) {
     fatal("You must specify at least one color as an argument");
-} elsif (@ARGV < 2 && $norepeat) {
+} elsif (@ARGV < 2 && ! $repeat) {
     fatal("With the -norepeat option, you must specify at least two colors " .
           "as arguments.");
 }
@@ -67,14 +93,11 @@ if (@ARGV < 1) {
 my @colorlist;
 
 @colorlist = @ARGV;
-if (!$norepeat) {
+if ($repeat) {
     push @colorlist, $ARGV[0];
 }
 
-my $ourtmp = "$tmpdir/ppmrainbow$$";
-mkdir($ourtmp, 0777) or
-    die("Unable to create directory for temporary files '$ourtmp");
-
+my $ourtmp = File::Temp::tempdir("$tmpdir/ppmrainbowXXXX", UNLINK=>1);
 
 my $widthRemaining;
 my $n;
@@ -92,7 +115,7 @@ while (@colorlist >= 2) {
     my $rc = system("$verboseCommand pgmramp -lr $w $Thgt | " .
                     "pgmtoppm \"$colorlist[0]-$colorlist[1]\" >$outfile");
     if ($rc != 0) {
-        fatal("pgmramp|pgmtoppm failed.");
+        fatal("pgmramp|pgmtoppm pipe failed.");
     }
     $widthRemaining -= $w;
     $n++;

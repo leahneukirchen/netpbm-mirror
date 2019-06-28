@@ -39,6 +39,7 @@
 
  */
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
@@ -392,14 +393,11 @@ convertOneImage(FILE *             const ifP,
         pixel * const inputRow = ppm_allocrow(cols);
         pixel * const outputRow = ppm_allocrow(cols);
 
-        pixel lastIllegalPixel;
-            /* Value of the illegal pixel we most recently processed */
         pixel black;
             /* A constant - black pixel */
 
         PPM_ASSIGN(black, 0, 0, 0);
 
-        PPM_ASSIGN(lastIllegalPixel, 0, 0, 0);  /* initial value */
         {
             unsigned int row;
 

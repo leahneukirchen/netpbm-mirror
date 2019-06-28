@@ -2,15 +2,60 @@
 # This script tests: g3topbm pbmtog3
 # Also requires: pnmcrop
 
+tmpdir=${tmpdir:-/tmp}
+complete256_pbm=${tmpdir}/complete256.pbm
+widew_pbm=${tmpdir}/widew.pbm
+wideb_pbm=${tmpdir}/wideb.pbm
 
 pbmtog3 -nofixedwidth testgrid.pbm | \
 g3topbm -width=14 | cmp -s - testgrid.pbm
-echo $?
+echo ${PIPESTATUS[@]} ":" $?
 
 pbmtog3 -nofixedwidth -reversebits testgrid.pbm | \
 g3topbm -width=14 -reversebits | cmp -s - testgrid.pbm
-echo $?
+echo ${PIPESTATUS[@]} ":" $?
 
 pbmtog3 testgrid.pbm | \
 g3topbm  | pnmcrop -white -right -bottom | \
- cmp -s - testgrid.pbm ; echo $?
+ cmp -s - testgrid.pbm ; echo ${PIPESTATUS[@]} ":" $?
+
+# works with gawk and mawk
+# produce all possible 8-bit patterns
+
+LC_ALL=C awk 'BEGIN { print "P4";         # header
+                      print "8 256";
+                      for (i=0;i<256;++i) # raster
+                           printf("%c",i) }' > ${complete256_pbm}
+
+pbmtog3 -nofixedwidth  ${complete256_pbm} |  g3topbm -width=8 | \
+ cmp -s - ${complete256_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+pbmtog3 -reverse -nofixedwidth ${complete256_pbm} | \
+g3topbm -reversebits -width=8 | \
+ cmp -s - ${complete256_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+pbmtog3 -align8 ${complete256_pbm} | \
+g3topbm -width=1728 | pnmcrop -white -right | \
+ cmp -s - ${complete256_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+pbmtog3 -align16 ${complete256_pbm} | \
+g3topbm -width=1728 | pnmcrop -white -right | \
+ cmp -s - ${complete256_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+pbmmake -w 5000 5 > ${widew_pbm}
+pbmtog3 -nofixedwidth ${widew_pbm} | g3topbm | \
+ cmp -s - ${widew_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+pbmtog3 -nofixedwidth ${widew_pbm} | \
+g3topbm -width=5000 | \
+ cmp -s - ${widew_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+pbmmake -b 5000 5 > ${wideb_pbm}
+pbmtog3 -nofixedwidth ${wideb_pbm} | g3topbm | \
+ cmp -s - ${wideb_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+cat ${complete256_pbm} | cksum
+cat ${wideb_pbm} | cksum
+cat ${widew_pbm} | cksum
+
+rm ${complete256_pbm} ${wideb_pbm} ${widew_pbm}

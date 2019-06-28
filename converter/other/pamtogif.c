@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -23,7 +24,7 @@ static unsigned int const gifMaxval = 255;
 static bool verbose;
 
 
-typedef int stringCode;
+typedef unsigned int StringCode;
     /* A code to be place in the GIF raster.  It represents
        a string of one or more pixels.  You interpret this in the context
        of a current code size.  The lower half of the values representable
@@ -34,15 +35,11 @@ typedef int stringCode;
        strings.  The mapping between value and the sequence of pixels
        changes throughout the image.
 
-       A variable of this type sometimes has the value -1 instead of
-       a string code because of cheesy programming.
-
-       Ergo, this data structure must be signed and at least BITS bits
-       wide plus sign bit.
+       Ergo, this data structure must be at least BITS bits wide.
     */
 
 
-struct cmap {
+struct Cmap {
     /* This is the information for the GIF colormap (aka palette). */
 
     struct pam pam;
@@ -67,7 +64,7 @@ struct cmap {
         /* A hash table to translate color to GIF colormap index. */
 };
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -79,6 +76,7 @@ struct cmdlineInfo {
     const char *transparent;    /* -transparent option value.  NULL if none. */
     const char *comment;        /* -comment option value; NULL if none */
     unsigned int nolzw;         /* -nolzw option */
+    unsigned int noclear;       /* -noclear option */
     float aspect;               /* -aspect option value (the ratio).  */
     unsigned int verbose;
 };
@@ -100,7 +98,7 @@ pamAlphaPlane(struct pam * const pamP) {
         alphaPlane = 2;
     else
         alphaPlane = 0;
-    
+
     if (alphaPlane >= pamP->depth)
         pm_error("Tuple type is '%s', but depth (%u) is less than %u",
                  pamP->tuple_type, pamP->depth, alphaPlane + 1);
@@ -112,7 +110,7 @@ pamAlphaPlane(struct pam * const pamP) {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Parse the program arguments (given by argc and argv) into a form
    the program can deal with more easily -- a cmdline_info structure.
@@ -131,30 +129,32 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "interlace",   OPT_FLAG,   
+    OPTENT3(0,   "interlace",   OPT_FLAG,
             NULL,                       &cmdlineP->interlace, 0);
-    OPTENT3(0,   "sort",        OPT_FLAG,   
+    OPTENT3(0,   "sort",        OPT_FLAG,
             NULL,                       &cmdlineP->sort, 0);
-    OPTENT3(0,   "nolzw",       OPT_FLAG,   
+    OPTENT3(0,   "nolzw",       OPT_FLAG,
             NULL,                       &cmdlineP->nolzw, 0);
-    OPTENT3(0,   "mapfile",     OPT_STRING, 
+    OPTENT3(0,   "noclear",     OPT_FLAG,
+            NULL,                       &cmdlineP->noclear, 0);
+    OPTENT3(0,   "mapfile",     OPT_STRING,
             &cmdlineP->mapfile,        NULL, 0);
-    OPTENT3(0,   "transparent", OPT_STRING, 
+    OPTENT3(0,   "transparent", OPT_STRING,
             &cmdlineP->transparent,    NULL, 0);
-    OPTENT3(0,   "comment",     OPT_STRING, 
+    OPTENT3(0,   "comment",     OPT_STRING,
             &cmdlineP->comment,        NULL, 0);
-    OPTENT3(0,   "alphacolor",  OPT_STRING, 
+    OPTENT3(0,   "alphacolor",  OPT_STRING,
             &cmdlineP->alphacolor,     NULL, 0);
-    OPTENT3(0,   "aspect",      OPT_FLOAT, 
+    OPTENT3(0,   "aspect",      OPT_FLOAT,
             &cmdlineP->aspect,         &aspectSpec, 0);
-    OPTENT3(0,   "verbose",     OPT_FLAG, 
+    OPTENT3(0,   "verbose",     OPT_FLAG,
             NULL,                      &cmdlineP->verbose, 0);
-    
+
     /* Set the defaults */
     cmdlineP->mapfile = NULL;
     cmdlineP->transparent = NULL;  /* no transparency */
     cmdlineP->comment = NULL;      /* no comment */
-    cmdlineP->alphacolor = "rgb:0/0/0";      
+    cmdlineP->alphacolor = "rgb:0/0/0";
         /* We could say "black" here, but then we depend on the color names
            database existing.
         */
@@ -166,15 +166,15 @@ parseCommandLine(int argc, char ** argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->input_filespec = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
         cmdlineP->input_filespec = argv[1];
-        
-    if (aspectSpec) { 
+
+    if (aspectSpec) {
         if (cmdlineP->aspect < 0.25  || cmdlineP->aspect > 4.21875)
             pm_error("Invalid -aspect value: %f.  "
                      "GIF allows only the range 0.25-4.0 .",
@@ -205,10 +205,10 @@ Putword(int const w, FILE * const fp) {
 static int
 closestColor(tuple         const color,
              struct pam *  const pamP,
-             struct cmap * const cmapP) {
+             struct Cmap * const cmapP) {
 /*----------------------------------------------------------------------------
    Return the colormap index of the color in the colormap *cmapP
-   that is closest to the color 'color', whose format is specified by 
+   that is closest to the color 'color', whose format is specified by
    *pamP.
 
    Also add 'color' to the colormap hash, with the colormap index we
@@ -217,7 +217,7 @@ closestColor(tuple         const color,
 -----------------------------------------------------------------------------*/
     unsigned int const nComp = pamP->depth >= 3 ? 3 : 1;
         /* Number of color components (not alpha) in 'color' */
-    
+
     unsigned int i;
     unsigned int imin, dmin;
     int fits;
@@ -234,8 +234,8 @@ closestColor(tuple         const color,
 
         if (distance < dmin) {
             dmin = distance;
-            imin = i; 
-        } 
+            imin = i;
+        }
     }
     pnm_addtotuplehash(pamP, cmapP->tuplehash, color, imin, &fits);
 
@@ -268,16 +268,16 @@ typedef struct {
         /* A bitbucket for rows we read in order to advance the file
            position.
         */
-} rowReader;
+} RowReader;
 
 
 
-static rowReader *
+static RowReader *
 rowReader_create(struct pam * const pamP,
                  pm_filepos   const rasterPos,
                  bool         const interlace) {
 
-    rowReader * rdrP;
+    RowReader * rdrP;
 
     MALLOCVAR_NOFAIL(rdrP);
 
@@ -298,7 +298,7 @@ rowReader_create(struct pam * const pamP,
 
 
 static void
-rowReader_destroy(rowReader * const rdrP) {
+rowReader_destroy(RowReader * const rdrP) {
 
     pnm_freepamrow(rdrP->discardBuffer);
     free(rdrP);
@@ -307,7 +307,7 @@ rowReader_destroy(rowReader * const rdrP) {
 
 
 static void
-rowReaderSkipRows(rowReader *  const rdrP,
+rowReaderSkipRows(RowReader *  const rdrP,
                   unsigned int const rowCount,
                   bool *       const eofP) {
 /*----------------------------------------------------------------------------
@@ -338,7 +338,7 @@ rowReaderSkipRows(rowReader *  const rdrP,
 
 
 static void
-rowReaderGotoNextInterlaceRow(rowReader * const rdrP) {
+rowReaderGotoNextInterlaceRow(RowReader * const rdrP) {
 /*----------------------------------------------------------------------------
   Position reader to the next row in the interlace pattern, assuming it
   is now positioned immediately after the current row.
@@ -351,7 +351,7 @@ rowReaderGotoNextInterlaceRow(rowReader * const rdrP) {
        MULT4PLUS2: Rows 2, 6, 10, 14, etc.
        MULT2PLUS1: Rows 1, 3, 5, 7, 9, etc.
     */
-    
+
     switch (rdrP->pass) {
     case MULT8PLUS0:
         rowReaderSkipRows(rdrP, 7, &endOfPass);
@@ -399,7 +399,7 @@ rowReaderGotoNextInterlaceRow(rowReader * const rdrP) {
 
 
 static void
-rowReaderGotoNextStraightRow(rowReader * const rdrP) {
+rowReaderGotoNextStraightRow(RowReader * const rdrP) {
 /*----------------------------------------------------------------------------
   Position reader to the next row in a straight, non-interlace
   pattern, assuming the file is now positioned immediately after the
@@ -415,7 +415,7 @@ rowReaderGotoNextStraightRow(rowReader * const rdrP) {
 
 
 static void
-rowReader_read(rowReader * const rdrP,
+rowReader_read(RowReader * const rdrP,
                tuple *     const tuplerow) {
 
     if (rdrP->eof)
@@ -424,7 +424,7 @@ rowReader_read(rowReader * const rdrP,
 
     pnm_readpamrow(&rdrP->pam, tuplerow);
     ++rdrP->nextRow;
-    
+
     if (rdrP->interlace)
         rowReaderGotoNextInterlaceRow(rdrP);
     else
@@ -437,8 +437,8 @@ static unsigned int
 gifPixel(struct pam *   const pamP,
          tuple          const tuple,
          unsigned int   const alphaPlane,
-         sample         const alphaThreshold, 
-         struct cmap *  const cmapP) {
+         sample         const alphaThreshold,
+         struct Cmap *  const cmapP) {
 /*----------------------------------------------------------------------------
    Return as *colorIndexP the colormap index of the tuple 'tuple',
    whose format is described by *pamP, using colormap *cmapP.
@@ -456,7 +456,7 @@ gifPixel(struct pam *   const pamP,
 
         pnm_lookuptuple(pamP, cmapP->tuplehash, tuple,
                         &found, &colorIndex);
-        
+
         if (!found)
             colorIndex = closestColor(tuple, pamP, cmapP);
     }
@@ -493,13 +493,13 @@ writeCommentExtension(FILE * const ofP,
     unsigned int const maxSegmentSize = 255;
 
     const char * segment;
-    
+
     fputc('!',  ofP);   /* Identifies an extension */
     fputc(0xfe, ofP);   /* Identifies a comment */
 
     /* Write it out in segments no longer than 255 characters */
-    for (segment = &comment[0]; 
-         segment < comment + strlen(comment); 
+    for (segment = &comment[0];
+         segment < comment + strlen(comment);
          segment += maxSegmentSize) {
 
         unsigned int const lengthThisSegment =
@@ -546,20 +546,30 @@ writeCommentExtension(FILE * const ofP,
  */
 
 
-static stringCode const maxCodeLimitLzw = (stringCode)1 << BITS;
-       /* One beyond the largest string code that can exist in GIF */ 
+static StringCode const maxCodeLimitLzw = (StringCode)1 << BITS;
+       /* One beyond the largest string code that can exist in GIF */
        /* Used only in assertions  */
 
 
-struct hashTableEntry {
-    stringCode fcode;   /* -1 means unused slot */
-    unsigned int ent;
-};    
+struct HashTableEntry {
+    /* This is an entry in the string table, which is a hash table.  It says
+       that the string code 'combinedString' represents the string which is
+       the single pixel 'additionalPixel' appended to 'baseString', where
+       'baseString' may represent a multi-pixel string.
+    */
+    bool present;
+        /* There is an entry here.  Following members are meaningless if
+           not.
+        */
+    StringCode baseString;
+    StringCode additionalPixel;
+    StringCode combinedString;
+};
 
 
 
 /***************************************************************************
-*                          BYTE OUTPUTTER                 
+*                          BYTE OUTPUTTER
 ***************************************************************************/
 
 typedef struct {
@@ -568,14 +578,14 @@ typedef struct {
         /* Number of bytes so far in the current data block */
     unsigned char buffer[256];
         /* The current data block, under construction */
-} byteBuffer;
+} ByteBuffer;
 
 
 
-static byteBuffer *
+static ByteBuffer *
 byteBuffer_create(FILE * const fileP) {
 
-    byteBuffer * byteBufferP;
+    ByteBuffer * byteBufferP;
 
     MALLOCVAR_NOFAIL(byteBufferP);
 
@@ -588,7 +598,7 @@ byteBuffer_create(FILE * const fileP) {
 
 
 static void
-byteBuffer_destroy(byteBuffer * const byteBufferP) {
+byteBuffer_destroy(ByteBuffer * const byteBufferP) {
 
     free(byteBufferP);
 }
@@ -596,9 +606,9 @@ byteBuffer_destroy(byteBuffer * const byteBufferP) {
 
 
 static void
-byteBuffer_flush(byteBuffer * const byteBufferP) {
+byteBuffer_flush(ByteBuffer * const byteBufferP) {
 /*----------------------------------------------------------------------------
-   Write the current data block to the output file, then reset the current 
+   Write the current data block to the output file, then reset the current
    data block to empty.
 -----------------------------------------------------------------------------*/
     if (byteBufferP->count > 0 ) {
@@ -613,10 +623,10 @@ byteBuffer_flush(byteBuffer * const byteBufferP) {
 
 
 static void
-byteBuffer_flushFile(byteBuffer * const byteBufferP) {
-    
+byteBuffer_flushFile(ByteBuffer * const byteBufferP) {
+
     fflush(byteBufferP->fileP);
-    
+
     if (ferror(byteBufferP->fileP))
         pm_error("error writing output file");
 }
@@ -624,7 +634,7 @@ byteBuffer_flushFile(byteBuffer * const byteBufferP) {
 
 
 static void
-byteBuffer_out(byteBuffer *  const byteBufferP,
+byteBuffer_out(ByteBuffer *  const byteBufferP,
                unsigned char const c) {
 /*----------------------------------------------------------------------------
   Add a byte to the end of the current data block, and if it is now 255
@@ -638,39 +648,40 @@ byteBuffer_out(byteBuffer *  const byteBufferP,
 
 
 /***************************************************************************
-*                          GIF CODE OUTPUTTER                 
+*                          GIF CODE OUTPUTTER
 ***************************************************************************/
 
 typedef struct {
-    byteBuffer * byteBufferP;
+    ByteBuffer * byteBufferP;
     unsigned int initBits;
     unsigned int nBits;
         /* Number of bits to put in output for each code */
-    stringCode maxCode;                  /* maximum code, given n_bits */
-    stringCode maxCodeLimit;
+    StringCode maxCode;                  /* maximum code, given n_bits */
+    StringCode maxCodeLimit;
         /* LZW: One beyond the largest string code that can exist in GIF.
            Uncompressed: a ceiling to prevent code size from ratcheting up.
            In either case, output code never reaches this value.
-        */  
-    unsigned long curAccum;
-    int curBits;
-    unsigned int codeCount;
-        /* Number of codes that have been output to this buffer (doesn't
-           matter if they have gone out the other side yet or not) since
-           the last flush (or ever, if no last flush).  The main use of this
-           is debugging -- when something fails, you can see in a debugger
-           where in the image it was, then set a trap for there.
         */
-} codeBuffer;
+    unsigned long curAccum;
+    unsigned int curBits;
+    unsigned int stringCount;
+        /* Number of strings that have been output to this buffer (by writing
+           a string code) since the last flush (or ever, if no last flush).
+           Note that this counts only strings that go into the buffer; it
+           doesn't matter if they have gone out the other side yet.  The main
+           use of this is debugging -- when something fails, you can see in a
+           debugger where in the image it was, then set a trap for there.
+        */
+} CodeBuffer;
 
 
 
-static codeBuffer *
+static CodeBuffer *
 codeBuffer_create(FILE *       const ofP,
                   unsigned int const initBits,
                   bool         const lzw) {
 
-    codeBuffer * codeBufferP;
+    CodeBuffer * codeBufferP;
 
     MALLOCVAR_NOFAIL(codeBufferP);
 
@@ -678,11 +689,11 @@ codeBuffer_create(FILE *       const ofP,
     codeBufferP->nBits       = codeBufferP->initBits;
     codeBufferP->maxCode     = (1 << codeBufferP->nBits) - 1;
     codeBufferP->maxCodeLimit = lzw ?
-        (stringCode)1 << BITS : (stringCode) (1 << codeBufferP->nBits) - 1; 
+        (StringCode)1 << BITS : (StringCode) (1 << codeBufferP->nBits) - 1;
     codeBufferP->byteBufferP = byteBuffer_create(ofP);
     codeBufferP->curAccum    = 0;
     codeBufferP->curBits     = 0;
-    codeBufferP->codeCount   = 0;
+    codeBufferP->stringCount = 0;
 
     return codeBufferP;
 }
@@ -690,7 +701,7 @@ codeBuffer_create(FILE *       const ofP,
 
 
 static void
-codeBuffer_destroy(codeBuffer * const codeBufferP) {
+codeBuffer_destroy(CodeBuffer * const codeBufferP) {
 
     byteBuffer_destroy(codeBufferP->byteBufferP);
 
@@ -700,7 +711,7 @@ codeBuffer_destroy(codeBuffer * const codeBufferP) {
 
 
 static void
-codeBuffer_resetCodeSize(codeBuffer * const codeBufferP) {
+codeBuffer_resetCodeSize(CodeBuffer * const codeBufferP) {
 
     codeBufferP->nBits = codeBufferP->initBits;
 
@@ -712,7 +723,7 @@ codeBuffer_resetCodeSize(codeBuffer * const codeBufferP) {
 
 
 static void
-codeBuffer_increaseCodeSize(codeBuffer * const codeBufferP) {
+codeBuffer_increaseCodeSize(CodeBuffer * const codeBufferP) {
 
     ++codeBufferP->nBits;
 
@@ -721,18 +732,16 @@ codeBuffer_increaseCodeSize(codeBuffer * const codeBufferP) {
     codeBufferP->maxCode = (1 << codeBufferP->nBits) - 1;
 }
 
+
+
 static void
-codeBuffer_output(codeBuffer * const codeBufferP,
-                  stringCode   const code) {
+codeBuffer_output(CodeBuffer * const codeBufferP,
+                  StringCode   const code) {
 /*----------------------------------------------------------------------------
    Output one GIF code to the file, through the code buffer.
 
    The code is represented as N bits in the file -- the lower
    N bits of 'code'.  N is a the current code size of *codeBufferP.
-   
-   Id 'code' is the maximum possible code for the current code size
-   for *codeBufferP, increase that code size (unless it's already 
-   maxed out).
 -----------------------------------------------------------------------------*/
     assert (code <= codeBufferP->maxCode);
 
@@ -752,13 +761,13 @@ codeBuffer_output(codeBuffer * const codeBufferP,
         codeBufferP->curBits -= 8;
     }
 
-    ++codeBufferP->codeCount;
+    ++codeBufferP->stringCount;
 }
 
 
 
 static void
-codeBuffer_flush(codeBuffer * const codeBufferP) {
+codeBuffer_flush(CodeBuffer * const codeBufferP) {
 
     /* Output the possible partial byte in the buffer */
 
@@ -768,19 +777,19 @@ codeBuffer_flush(codeBuffer * const codeBufferP) {
         codeBufferP->curBits = 0;
     }
     byteBuffer_flush(codeBufferP->byteBufferP);
-    
+
     byteBuffer_flushFile(codeBufferP->byteBufferP);
 
     if (verbose)
         pm_message("%u strings of pixels written to file",
-                   codeBufferP->codeCount);
-    codeBufferP->codeCount = 0;
+                   codeBufferP->stringCount);
+    codeBufferP->stringCount = 0;
 }
 
 
 
 typedef struct {
-    codeBuffer * codeBufferP;
+    CodeBuffer * codeBufferP;
         /* The place to which we write our string codes.
 
            Constant.
@@ -791,12 +800,16 @@ typedef struct {
            proper data, but always using one code per pixel, and therefore
            not effecting any compression and not using the LZW patent.
         */
+    bool noclear;
+        /* Never put a clear code in the output.  Ergo don't recompute the
+           string table from current input.  When the string table fills up,
+           continue using that table for the rest of the image.
+        */
     unsigned int hsize;
         /* The number of slots in the hash table.  This variable to
            enhance overall performance by reducing memory use when
-           encoding smaller gifs. 
+           encoding smaller gifs.
          */
-        
     unsigned int hshift;
         /* This is how many bits we shift left a string code in forming the
            primary hash of the concatenation of that string with another.
@@ -810,37 +823,32 @@ typedef struct {
        represents a string of pixels that is defined by the preceding
        stream.
     */
-    stringCode clearCode;
+    StringCode clearCode;
         /* The code in an LZW stream that means to clear the string
            dictionary and start fresh.
 
            Constant.
         */
-    stringCode eofCode;
+    StringCode eofCode;
         /* The code in an LZW stream that means there's no more coming
 
            Constant.
         */
-    stringCode initCodeLimit;
+    StringCode initCodeLimit;
         /* The value of 'codeLimit' at the start of a block.
 
            Constant.
         */
-
-    stringCode codeLimit;
+    StringCode codeLimit;
         /* One beyond the maximum code possible with the current code
            size.
         */
-
-    struct hashTableEntry * hashTable;
-    stringCode nextUnusedCode;
-        /* Numerically next code available to assign to a a multi-pixel
-           string.  Note that codes for multi-pixel strings are in the
-           upper half of the range of codes, always greater than
-           'clearCode'.
+    struct HashTableEntry * hashTable;
+    StringCode nextCodeToDefine;
+        /* The next string code the GIF protocol will define.  It will do this
+           the next time we emit a string code.
         */
-
-    stringCode stringSoFar;
+    StringCode stringSoFar;
         /* The code for the string we have built so far.  This code indicates
            one or more pixels that we have encoded but not yet output
            because we're hoping to match an even longer string.
@@ -853,16 +861,20 @@ typedef struct {
         /* We are in the middle of building a string; 'stringSoFar' describes
            the pixels in it so far.  The only time this is false is at the
            very beginning of the stream.
- 
-           Ignored in the non-lzw case. 
+
+           Ignored in the non-lzw case.
         */
-} lzwCompressor;
+    bool reportedNoclear;
+        /* We have reported to Standard Error that the string table filled up
+           and we elected not to clear it.
+        */
+} LzwCompressor;
 
 
 
 
 static unsigned int
-nSignificantBits( unsigned int const arg ){
+nSignificantBits(unsigned int const arg){
 
 #if HAVE_GCC_BITCOUNT
 
@@ -880,37 +892,39 @@ nSignificantBits( unsigned int const arg ){
 
 
 
-static lzwCompressor *
+static LzwCompressor *
 lzw_create(FILE *       const ofP,
            unsigned int const initBits,
            bool         const lzw,
+           bool         const noclear,
            unsigned int const pixelCount) {
 
     unsigned int const hsizeTable[] = {257, 521, 1031, 2053, 4099, 5003};
     /* If the image has 4096 or fewer pixels we use prime numbers slightly
        above powers of two between 8 and 12.  In this case the hash table
        never fills up; clear code is never emitted.
-    
+
        Above that we use a table with 4096 slots plus 20% extra.
        When this is not enough the clear code is emitted.
        Because of the extra 20% the table itself never fills up.
-       
+
        lzw.hsize and lzw.hshift stay constant through the image.
 
        Variable hsize is a performance enhancement based on the fact that
        the encoder never needs more codes than the number of pixels in
        the image.  Typically, the ratio of pixels to codes is around
        10:1 to 20:1.
-   
+
        Logic works with fixed values lzw.hsize=5003 and t=13.
     */
 
-    lzwCompressor * lzwP;
-       
+    LzwCompressor * lzwP;
+
     MALLOCVAR_NOFAIL(lzwP);
 
     /* Constants */
-    lzwP->lzw = lzw;
+    lzwP->lzw     = lzw;
+    lzwP->noclear = noclear;
 
     lzwP->clearCode     = 1 << (initBits - 1);
     lzwP->eofCode       = lzwP->clearCode + 1;
@@ -920,18 +934,18 @@ lzw_create(FILE *       const ofP,
         unsigned int const t =
             MIN(13, MAX(8, nSignificantBits(pixelCount +lzwP->eofCode - 2)));
             /* Index into hsizeTable */
-    
+
         lzwP->hsize = hsizeTable[t-8];
 
         lzwP->hshift = (t == 13 ? 12 : t) - nSignificantBits(MAXCMAPSIZE-1);
 
         MALLOCARRAY(lzwP->hashTable, lzwP->hsize);
-        
+
         if (lzwP->hashTable == NULL)
             pm_error("Couldn't get memory for %u-entry hash table.",
                      lzwP->hsize);
     } else {
-        /* No LZW compression.  We don't need a stringcode hash table */  
+        /* No LZW compression.  We don't need a stringcode hash table */
         lzwP->hashTable = NULL;
         lzwP->hsize     = 0;
     }
@@ -940,13 +954,15 @@ lzw_create(FILE *       const ofP,
 
     lzwP->codeBufferP = codeBuffer_create(ofP, initBits, lzw);
 
+    lzwP->reportedNoclear = false;
+
     return lzwP;
 }
 
 
 
 static void
-lzw_destroy(lzwCompressor * const lzwP) {
+lzw_destroy(LzwCompressor * const lzwP) {
 
     codeBuffer_destroy(lzwP->codeBufferP);
 
@@ -958,24 +974,38 @@ lzw_destroy(lzwCompressor * const lzwP) {
 
 
 static void
-lzwHashClear(lzwCompressor * const lzwP) {
+lzwHashClear(LzwCompressor * const lzwP) {
 
     /* Empty the code table */
 
     unsigned int i;
 
     for (i = 0; i < lzwP->hsize; ++i)
-        lzwP->hashTable[i].fcode = -1;
+        lzwP->hashTable[i].present = false;
 
-    lzwP->nextUnusedCode = lzwP->clearCode + 2;
+    lzwP->nextCodeToDefine = lzwP->clearCode + 2;
 }
 
 
 
 static void
-lzw_clearBlock(lzwCompressor * const lzwP) {
+lzw_reportNoclear(LzwCompressor * const lzwP) {
+
+    if (verbose && !lzwP->reportedNoclear) {
+        pm_message("String table filled up.  Not starting a new one "
+                   "because of noclear mode");
+        lzwP->reportedNoclear = true;
+    }
+}
+
+
+
+static void
+lzw_clearBlock(LzwCompressor * const lzwP) {
 /*----------------------------------------------------------------------------
-  
+  Insert a string table clear in the stream.  Clear our table and set it up to
+  start building again, and emit the code to tell the decoder we're doing it
+  so he can do the same.
 -----------------------------------------------------------------------------*/
     lzwHashClear(lzwP);
 
@@ -989,8 +1019,8 @@ lzw_clearBlock(lzwCompressor * const lzwP) {
 
 
 static void
-lzwAdjustCodeSize(lzwCompressor * const lzwP,
-                  stringCode      const newCode) {
+lzwAdjustCodeSize(LzwCompressor * const lzwP,
+                  StringCode      const newCode) {
 /*----------------------------------------------------------------------------
    Assuming we just defined code 'newCode', increase the code size as
    required so that this code fits.
@@ -1011,64 +1041,67 @@ lzwAdjustCodeSize(lzwCompressor * const lzwP,
 
 
 static void
-lzwOutputCurrentString(lzwCompressor * const lzwP) {
+lzwOutputCurrentString(LzwCompressor * const lzwP) {
 /*----------------------------------------------------------------------------
    Put a code for the currently built-up string in the output stream.
 
-   Doing this causes a new string code to be defined (code is
-   lzwP->nextUnusedCode), so Caller must add that to the hash.  If
-   that code's size is beyond the overall limit, we reset the hash
-   (which means future codes will start back at the minimum size) and
-   put a clear code in the stream to tell the decompressor to do the
-   same.  So Caller must add it to the hash _before_ calling us.
+   Doing this causes the protocol to define a new string code, defined as the
+   string we put plus the first pixel of the next string we put.  (It almost
+   seems to violate causality, especially since the next string we put can
+   legally be the very string code that gets defined here, but it actually
+   works).
 
-   Note that in the non-compressing case, the overall limit is small
-   enough to prevent us from ever defining string codes; we'll always
-   reset the hash.
+   The code that gets defined is lzwP->nextCodeToDefine.  Caller is
+   responsible for figuring out the value for the code (i.e. what we just said
+   above) so it can use the code in the future.
 
-   There's an odd case that always screws up any attempt to make this
-   code cleaner: At the end of the LZW stream, you have to output the
-   code for the final string even though you don't have a following
-   pixel that would make a longer string.  So there's nothing to add
-   to the hash table and no point in allocating a new string code.
-   But the decompressor doesn't know that we're done, so he allocates
-   the next string code and may therefore increase his code length.
-   If we don't do the same, we will write our one last code -- the EOF
-   code -- in a code length smaller than what the decompressor is
-   expecting, and he will have a premature end of stream.
+   BUT: if the string table has reached its maximum size, issue a clear code
+   instead to cause the protocol to forget all the defined string coes and
+   start its table over (so Caller must start its own table over too).
+   EXCEPT: if we're running in no-clear mode; then we skip the clear code (so
+   the protocol maintains all the string code definitions and caller will have
+   to do so as well).
 
-   So this subroutine does run for that final code flush and does some
-   of the motions of defining a new string code, but this subroutine
-   can't update the hash because in that particular case, there's
-   nothing to add.
+   Note that in the non-compressing case, the overall limit is small enough to
+   prevent us from ever defining string codes; we'll always issue the clear
+   code.
+
+   Note that there is a case where Caller can just ignore the fact that we
+   cause the protocol to define a new string code: where the string we're
+   outputting is the last one in the stream.  In that case, the new string
+   code we define is irrelevant; it will never be used.
 -----------------------------------------------------------------------------*/
     codeBuffer_output(lzwP->codeBufferP, lzwP->stringSoFar);
-    if (lzwP->nextUnusedCode < lzwP->codeBufferP->maxCodeLimit) {
-        /* Allocate the code for the extended string, which Caller
-           should have already put in the hash so he can use it in the
-           future.  Decompressor knows when it sees the code output
-           above to define a string on its end too, using the same
-           string code we do.
-        */
-        stringCode const newCode = lzwP->nextUnusedCode++;
 
-        /* This code may be too big to fit in the current code size, in
-           which case we have to increase the code size (and decompressor
-           will do the same).
+    if (lzwP->nextCodeToDefine < lzwP->codeBufferP->maxCodeLimit) {
+        /* Record that the protocol defined a new string code, to wit
+           the numerically next one, when we did the output to the stream
+           above, and adjust the code size if this code is too wide to
+           fit in the current size.
         */
+        StringCode const newCode = lzwP->nextCodeToDefine++;
+
         lzwAdjustCodeSize(lzwP, newCode);
     } else {
-        /* Forget all the strings so far; start building again; tell
-           decompressor to do the same.
-        */
-        lzw_clearBlock(lzwP);
+        if (lzwP->noclear)
+            lzw_reportNoclear(lzwP);
+        else {
+            /* Forget all the strings so far; start building again; tell
+               decompressor to do the same.
+            */
+            lzw_clearBlock(lzwP);
+
+            if (verbose)
+                pm_message("String table filled up.  "
+                           "Clearing and starting over");
+        }
     }
 }
 
 
 
 static void
-lzw_flush(lzwCompressor * const lzwP) {
+lzw_flush(LzwCompressor * const lzwP) {
 
     if (lzwP->lzw)
         lzwOutputCurrentString(lzwP);
@@ -1082,8 +1115,8 @@ lzw_flush(lzwCompressor * const lzwP) {
 
 
 static unsigned int
-primaryHash(stringCode   const baseString,
-            stringCode   const additionalPixel,
+primaryHash(StringCode   const baseString,
+            StringCode   const additionalPixel,
             unsigned int const hshift) {
 
     unsigned int hash;
@@ -1092,71 +1125,76 @@ primaryHash(stringCode   const baseString,
     assert(additionalPixel < MAXCMAPSIZE);
 
     hash = (additionalPixel << hshift) ^ baseString;
-    
+
     return hash;
 }
 
-    
+
 
 static void
-lookupInHash(lzwCompressor *  const lzwP,
+lookupInHash(LzwCompressor *  const lzwP,
              unsigned int     const gifPixel,
-             stringCode       const fcode,
              bool *           const foundP,
-             unsigned short * const codeP,
+             StringCode *     const codeP,
              unsigned int *   const hashP) {
 
-    int disp;
+    unsigned int disp;
         /* secondary hash stride (after G. Knott) */
-    int i;
+    unsigned int hash;
         /* Index into hash table */
 
-    i = primaryHash(lzwP->stringSoFar, gifPixel, lzwP->hshift);
-    disp = (i == 0) ? 1 : lzwP->hsize - i;
+    hash = primaryHash(lzwP->stringSoFar, gifPixel, lzwP->hshift);
+    assert(hash < lzwP->hsize);
+    disp = (hash == 0) ? 1 : lzwP->hsize - hash;
 
-    while (lzwP->hashTable[i].fcode != fcode &&
-           lzwP->hashTable[i].fcode >= 0) {
-        i -= disp;
-        if (i < 0)
-            i += lzwP->hsize;
+    while (lzwP->hashTable[hash].present &&
+           (lzwP->hashTable[hash].baseString != lzwP->stringSoFar ||
+            lzwP->hashTable[hash].additionalPixel != gifPixel)) {
+        if (hash < disp)
+            hash += lzwP->hsize;
+        assert(hash >= disp);
+        hash -= disp;
+        assert(hash < lzwP->hsize);
     }
 
-    if (lzwP->hashTable[i].fcode == fcode) {
+    if (lzwP->hashTable[hash].present) {
         /* Found fcode in hash table */
-        *foundP = TRUE;
-        *codeP = lzwP->hashTable[i].ent;
+        *foundP = true;
+        *codeP  = lzwP->hashTable[hash].combinedString;
     } else {
         /* Found where it _should_ be (but it's not) with primary hash */
-        *foundP = FALSE;
-        *hashP = i;
+        *foundP = false;
+        *hashP  = hash;
     }
 }
 
 
 
 static void
-lzw_encodePixel(lzwCompressor * const lzwP,
+lzw_encodePixel(LzwCompressor * const lzwP,
                 unsigned int    const gifPixel) {
 
-    bool found;
-    unsigned short code;
-    unsigned int hash;
-        /* Index into hash table where the value should go */
-    
     assert(gifPixel < 256);
 
     if (!lzwP->buildingString) {
         /* Start a new string with just this pixel */
         lzwP->stringSoFar = gifPixel;
-        lzwP->buildingString = TRUE;
+        lzwP->buildingString = true;
     } else {
-        stringCode const fcode =
-            ((stringCode) gifPixel << BITS) + lzwP->stringSoFar;
-            /* The encoding of the string we've already recognized plus the
-               instant pixel, to be looked up in the hash of known strings.
+        bool found;
+            /* There's a code for the current string in the string table */
+        StringCode code;
+            /* Existing code for the current string in the string table, if
+               any
             */
-    
-        lookupInHash(lzwP, gifPixel, fcode, &found, &code, &hash);
+        unsigned int hash;
+            /* Index into hash table where the entry for the new string code
+               should go; meaningless if we don't need a new string code
+               (because there's already one in the hash table for the
+               current string)
+            */
+
+        lookupInHash(lzwP, gifPixel, &found, &code, &hash);
 
         if (found)
             /* With this new pixel, it is still a known string; 'code' is
@@ -1164,14 +1202,22 @@ lzw_encodePixel(lzwCompressor * const lzwP,
             */
             lzwP->stringSoFar = code;
         else {
-            /* It's no longer a known string.  Output the code for the
-               known prefix of the string, thus defining a new string
-               code for possible later use.  Warning:
-               lzwOutputCurrentString() does more than you think. 
+            /* We've found the longest prefix of the rest of the image for
+               which we have a string code defined.  Output the code for that
+               prefix, thus defining a new string code in the protocol for
+               possible later use.  The new code is defined as this string
+               plus the first pixel of the next string.
+
+               But if there aren't any unused string codes left, outputting
+               our string doesn't define any new string code.
             */
 
-            lzwP->hashTable[hash].ent   = lzwP->nextUnusedCode;
-            lzwP->hashTable[hash].fcode = fcode;
+            if (lzwP->nextCodeToDefine < lzwP->codeBufferP->maxCodeLimit) {
+                lzwP->hashTable[hash].present         = true;
+                lzwP->hashTable[hash].baseString      = lzwP->stringSoFar;
+                lzwP->hashTable[hash].additionalPixel = gifPixel;
+                lzwP->hashTable[hash].combinedString  = lzwP->nextCodeToDefine;
+            }
 
             lzwOutputCurrentString(lzwP);
 
@@ -1184,8 +1230,6 @@ lzw_encodePixel(lzwCompressor * const lzwP,
 
 
 /*
- * compress stdin to stdout
- *
  * Algorithm:  use open addressing double hashing (no chaining) on the
  * prefix code / next character combination.  We do a variant of Knuth's
  * algorithm D (vol. 3, sec. 6.4) along with G. Knott's relatively-prime
@@ -1200,23 +1244,25 @@ lzw_encodePixel(lzwCompressor * const lzwP,
  */
 
 static void
-writePixelUncompressed(lzwCompressor * const lzwP,
+writePixelUncompressed(LzwCompressor * const lzwP,
                        unsigned int    const gifPixel) {
-                      
+
     lzwP->stringSoFar = gifPixel;
     lzwOutputCurrentString(lzwP);
 
-}    
+}
+
 
 static void
 writeRaster(struct pam *  const pamP,
-            rowReader *   const rowReaderP,
+            RowReader *   const rowReaderP,
             unsigned int  const alphaPlane,
             unsigned int  const alphaThreshold,
-            struct cmap * const cmapP, 
+            struct Cmap * const cmapP,
             unsigned int  const initBits,
             FILE *        const ofP,
-            bool          const lzw) {
+            bool          const lzw,
+            bool          const noclear) {
 /*----------------------------------------------------------------------------
    Write the raster to file 'ofP'.
 
@@ -1228,8 +1274,12 @@ writeRaster(struct pam *  const pamP,
 
    Write the raster using LZW compression, or uncompressed depending
    on 'lzw'.
+
+   If 'noclear', don't use any GIF clear codes in the output; i.e. don't
+   recompute the string table from current input.  Once the string table gets
+   to maximum size, just keep using that table for the rest of the image.
 -----------------------------------------------------------------------------*/
-    lzwCompressor * lzwP;
+    LzwCompressor * lzwP;
     tuple * tuplerow;
     unsigned int nRowsDone;
         /* Number of rows we have read so far from the the input (the
@@ -1237,15 +1287,15 @@ writeRaster(struct pam *  const pamP,
            in case of interlace, this is not the same thing as the row
            number of the current row.
         */
-    
-    lzwP = lzw_create(ofP, initBits, lzw, pamP->height * pamP->width);
+
+    lzwP = lzw_create(ofP, initBits, lzw, noclear, pamP->height * pamP->width);
 
     tuplerow = pnm_allocpamrow(pamP);
 
     lzw_clearBlock(lzwP);
 
     nRowsDone = 0;
-    
+
     while (nRowsDone < pamP->height) {
         unsigned int col;
 
@@ -1255,14 +1305,14 @@ writeRaster(struct pam *  const pamP,
             unsigned int const colorIndex =
                 gifPixel(pamP, tuplerow[col], alphaPlane, alphaThreshold,
                          cmapP);
-            
+
                 /* The value for the pixel in the GIF image.  I.e. the colormap
                    index.
                 */
             if (lzw)
                 lzw_encodePixel(lzwP, colorIndex);
             else
-                writePixelUncompressed(lzwP, colorIndex);    
+                writePixelUncompressed(lzwP, colorIndex);
         }
         ++nRowsDone;
     }
@@ -1272,7 +1322,7 @@ writeRaster(struct pam *  const pamP,
     lzw_flush(lzwP);
 
     pnm_freepamrow(tuplerow);
-    
+
     lzw_destroy(lzwP);
 }
 
@@ -1280,7 +1330,7 @@ writeRaster(struct pam *  const pamP,
 
 static void
 writeGlobalColorMap(FILE *              const ofP,
-                    const struct cmap * const cmapP,
+                    const struct Cmap * const cmapP,
                     unsigned int        const bitsPerPixel) {
 /*----------------------------------------------------------------------------
   Write out the Global Color Map
@@ -1326,16 +1376,16 @@ writeGlobalColorMap(FILE *              const ofP,
     }
     pnm_freepamtuple(tupleRgb255);
 }
-        
+
 
 
 static void
 writeGifHeader(FILE *              const ofP,
                unsigned int        const width,
-               unsigned int        const height, 
-               unsigned int        const background, 
+               unsigned int        const height,
+               unsigned int        const background,
                unsigned int        const bitsPerPixel,
-               const struct cmap * const cmapP,
+               const struct Cmap * const cmapP,
                char                const comment[],
                float               const aspect) {
 
@@ -1371,12 +1421,12 @@ writeGifHeader(FILE *              const ofP,
 
     {
         int const aspectValue = aspect == 1.0 ? 0 : ROUND(aspect * 64) - 15;
-        assert(0 <= aspectValue && aspectValue <= 255); 
+        assert(0 <= aspectValue && aspectValue <= 255);
         fputc(aspectValue, ofP);
     }
     writeGlobalColorMap(ofP, cmapP, bitsPerPixel);
 
-    if (cmapP->haveTransparent) 
+    if (cmapP->haveTransparent)
         writeTransparentColorIndexExtension(ofP, cmapP->transparent);
 
     if (comment)
@@ -1430,15 +1480,16 @@ reportImageInfo(bool         const interlace,
 
 static void
 gifEncode(struct pam *  const pamP,
-          FILE *        const ofP, 
+          FILE *        const ofP,
           pm_filepos    const rasterPos,
           bool          const gInterlace,
-          int           const background, 
+          int           const background,
           unsigned int  const bitsPerPixel,
-          struct cmap * const cmapP,
+          struct Cmap * const cmapP,
           char          const comment[],
           float         const aspect,
-          bool          const lzw) {
+          bool          const lzw,
+          bool          const noclear) {
 
     unsigned int const leftOffset = 0;
     unsigned int const topOffset  = 0;
@@ -1453,14 +1504,14 @@ gifEncode(struct pam *  const pamP,
 
     unsigned int const alphaPlane = pamAlphaPlane(pamP);
 
-    rowReader * rowReaderP;
+    RowReader * rowReaderP;
 
     reportImageInfo(gInterlace, background, bitsPerPixel);
 
     if (pamP->width > 65535)
         pm_error("Image width %u too large for GIF format.  (Max 65535)",
                  pamP->width);
-     
+
     if (pamP->height > 65535)
         pm_error("Image height %u too large for GIF format.  (Max 65535)",
                  pamP->height);
@@ -1479,7 +1530,7 @@ gifEncode(struct pam *  const pamP,
     /* Write the actual raster */
 
     writeRaster(pamP, rowReaderP, alphaPlane, alphaThreshold,
-                cmapP, initCodeSize + 1, ofP, lzw);
+                cmapP, initCodeSize + 1, ofP, lzw, noclear);
 
     rowReader_destroy(rowReaderP);
 
@@ -1493,7 +1544,7 @@ gifEncode(struct pam *  const pamP,
 
 
 static void
-reportTransparent(struct cmap * const cmapP) {
+reportTransparent(struct Cmap * const cmapP) {
 
     if (verbose) {
         if (cmapP->haveTransparent) {
@@ -1511,10 +1562,10 @@ reportTransparent(struct cmap * const cmapP) {
 
 
 static void
-computeTransparent(char          const colorarg[], 
+computeTransparent(char          const colorarg[],
                    bool          const usingFakeTrans,
                    unsigned int  const fakeTransparent,
-                   struct cmap * const cmapP) {
+                   struct Cmap * const cmapP) {
 /*----------------------------------------------------------------------------
    Figure out the color index (index into the colormap) of the color
    that is to be transparent in the GIF.
@@ -1546,7 +1597,7 @@ computeTransparent(char          const colorarg[],
         tuple transcolor;
         int found;
         int colorindex;
-        
+
         if (colorarg[0] == '=') {
             colorspec = &colorarg[1];
             exact = TRUE;
@@ -1558,7 +1609,7 @@ computeTransparent(char          const colorarg[],
         transcolor = pnm_parsecolor(colorspec, cmapP->pam.maxval);
         pnm_lookuptuple(&cmapP->pam, cmapP->tuplehash, transcolor, &found,
                         &colorindex);
-        
+
         if (found) {
             cmapP->haveTransparent = TRUE;
             cmapP->transparent = colorindex;
@@ -1602,7 +1653,7 @@ sortCompareColor(const void * const entry1P,
     struct tupleint * const * const tupleint1PP = entry1P;
     struct tupleint * const * const tupleint2PP = entry2P;
 
-    return (sortOrderColor((*tupleint1PP)->tuple) 
+    return (sortOrderColor((*tupleint1PP)->tuple)
             - sortOrderColor((*tupleint2PP)->tuple));
 }
 
@@ -1640,15 +1691,15 @@ sortTupletable(struct pam * const mapPamP,
     if (mapPamP->depth < 3)
         qsort(tuplefreq, colors, sizeof(tuplefreq[0]), sortCompareGray);
     else
-        qsort(tuplefreq, colors, sizeof(tuplefreq[0]), sortCompareColor); 
+        qsort(tuplefreq, colors, sizeof(tuplefreq[0]), sortCompareColor);
 
 }
 
 
 
 static void
-addToColormap(struct cmap *  const cmapP, 
-              const char *   const colorspec, 
+addToColormap(struct Cmap *  const cmapP,
+              const char *   const colorspec,
               unsigned int * const newIndexP) {
 /*----------------------------------------------------------------------------
   Add a new entry to the colormap.  Make the color that specified by
@@ -1685,7 +1736,7 @@ addToColormap(struct cmap *  const cmapP,
 static void
 colormapFromFile(char               const filespec[],
                  unsigned int       const maxcolors,
-                 tupletable *       const tupletableP, 
+                 tupletable *       const tupletableP,
                  struct pam *       const mapPamP,
                  unsigned int *     const colorCountP) {
 /*----------------------------------------------------------------------------
@@ -1703,13 +1754,13 @@ colormapFromFile(char               const filespec[],
     pm_close(mapfileP);
 
     pm_message("computing other colormap ...");
-    
-    *tupletableP = 
+
+    *tupletableP =
         pnm_computetuplefreqtable(mapPamP, colors, maxcolors, &colorCount);
 
     *colorCountP = colorCount;
 
-    pnm_freepamarray(colors, mapPamP); 
+    pnm_freepamarray(colors, mapPamP);
 }
 
 
@@ -1717,7 +1768,7 @@ colormapFromFile(char               const filespec[],
 static void
 readAndValidateColormapFromFile(char           const filename[],
                                 unsigned int   const maxcolors,
-                                tupletable *   const tuplefreqP, 
+                                tupletable *   const tuplefreqP,
                                 struct pam *   const mapPamP,
                                 unsigned int * const colorCountP,
                                 unsigned int   const nInputComp,
@@ -1753,7 +1804,7 @@ computeColormapBw(struct pam *   const pamP,
    $ pbmmake -w 600 400 | pamtogif -sort > canvas.gif
 -----------------------------------------------------------------------------*/
     tupletable const colormap = pnm_alloctupletable(pamP, 2);
-    
+
     *mapPamP = *pamP;
     mapPamP->depth = 1;
 
@@ -1761,12 +1812,12 @@ computeColormapBw(struct pam *   const pamP,
     colormap[0]->tuple[0] = PAM_BLACK;
     colormap[1]->value = 1;
     colormap[1]->tuple[0] = PAM_BW_WHITE;
-    
+
     *tuplefreqP  = colormap;
     *colorCountP = 2;
 }
-  
-    
+
+
 
 static void
 computeColormapFromInput(struct pam *   const pamP,
@@ -1775,7 +1826,7 @@ computeColormapFromInput(struct pam *   const pamP,
                          struct pam *   const mapPamP,
                          unsigned int * const colorCountP,
                          tupletable *   const tuplefreqP) {
-    
+
     tupletable tuplefreq;
 
     pm_message("computing colormap...");
@@ -1842,9 +1893,9 @@ computeLibnetpbmColormap(struct pam *   const pamP,
              pamP->height * pamP->width > 1)
         computeColormapBw(pamP, mapPamP, &colorCount, &tuplefreq);
     else
-        computeColormapFromInput(pamP, maxcolors, nInputComp, 
+        computeColormapFromInput(pamP, maxcolors, nInputComp,
                                  mapPamP, &colorCount, &tuplefreq);
-    
+
     if (tuplefreq == NULL)
         pm_error("too many colors - try doing a 'pnmquant %u'", maxcolors);
 
@@ -1870,10 +1921,10 @@ computeLibnetpbmColormap(struct pam *   const pamP,
 
 
 static void
-destroyCmap(struct cmap * const cmapP) {
+destroyCmap(struct Cmap * const cmapP) {
 
     unsigned int colorIndex;
-    
+
     for (colorIndex = 0; colorIndex < cmapP->cmapSize; ++colorIndex)
         pnm_freepamtuple(cmapP->color[colorIndex]);
 
@@ -1884,41 +1935,41 @@ destroyCmap(struct cmap * const cmapP) {
 
 int
 main(int argc, char *argv[]) {
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam pam;
     unsigned int bitsPerPixel;
     pm_filepos rasterPos;
 
-    struct cmap cmap;
+    struct Cmap cmap;
         /* The colormap, with all its accessories */
     unsigned int fakeTransparent;
         /* colormap index of the fake transparency color we're using to
            implement the alpha mask.  Undefined if we're not doing an alpha
            mask.
         */
-    
+
     pnm_init(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
-    
+
     verbose = cmdline.verbose;
-    
+
     ifP = pm_openr_seekable(cmdline.input_filespec);
-    
+
     pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
-    
+
     pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
-    
-    computeLibnetpbmColormap(&pam, !!pamAlphaPlane(&pam), cmdline.mapfile, 
+
+    computeLibnetpbmColormap(&pam, !!pamAlphaPlane(&pam), cmdline.mapfile,
                              cmap.color, &cmap.tuplehash,
                              &cmap.pam, &cmap.cmapSize, cmdline.sort);
-    
+
     assert(cmap.pam.maxval == pam.maxval);
 
     if (pamAlphaPlane(&pam)) {
-        /* Add a fake entry to the end of the colormap for transparency.  
-           Make its color black. 
+        /* Add a fake entry to the end of the colormap for transparency.
+           Make its color black.
         */
         addToColormap(&cmap, cmdline.alphacolor, &fakeTransparent);
     }
@@ -1931,13 +1982,13 @@ main(int argc, char *argv[]) {
     /* All set, let's do it. */
     gifEncode(&pam, stdout, rasterPos,
               cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-              cmdline.aspect, !cmdline.nolzw);
-    
+              cmdline.aspect, !cmdline.nolzw, cmdline.noclear);
+
     destroyCmap(&cmap);
 
     pm_close(ifP);
     pm_close(stdout);
-    
+
     return 0;
 }
 
@@ -1955,21 +2006,21 @@ main(int argc, char *argv[]) {
   JPEG Group's djpeg on 2001.09.29.  In 2006.12 the output subroutines
   were rewritten; now no uncompressed output subroutines are derived from
   the Independent JPEG Group's source code.
-  
+
   2007.01  Changed sort routine to qsort.  (afu)
   2007.03  Implemented variable hash table size, PBM color table
            shortcut and "-aspect" command line option.   (afu)
 
- 
+
   Copyright (C) 1989 by Jef Poskanzer.
- 
+
   Permission to use, copy, modify, and distribute this software and its
   documentation for any purpose and without fee is hereby granted, provided
   that the above copyright notice appear in all copies and that both that
   copyright notice and this permission notice appear in supporting
   documentation.  This software is provided "as is" without express or
   implied warranty.
- 
+
   The Graphics Interchange Format(c) is the Copyright property of
   CompuServe Incorporated.  GIF(sm) is a Service Mark property of
   CompuServe Incorporated.

@@ -46,12 +46,14 @@
    give the user the -byrow option to order (2) only.
 */
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/wait.h>  /* WIFSIGNALED, etc. */
 
 #include "pm_c_util.h"
 #include "shhopt.h"
@@ -182,14 +184,14 @@ getBps(TIFF *           const tif,
 
     unsigned short tiffBps;
     unsigned short bps;
-    int rc;
+    int fldPresent;
 
-    rc = TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &tiffBps);
-    bps = (rc == 0) ? 1 : tiffBps;
+    fldPresent = TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &tiffBps);
+    bps = fldPresent ? tiffBps : 1;
 
     if (bps < 1 || (bps > 8 && bps != 16 && bps != 32))
         pm_error("This program can process Tiff images with only "
-                 "1-8 or 16 bits per sample.  The input Tiff image "
+                 "1-8 or 16 or 32 bits per sample.  The input Tiff image "
                  "has %hu bits per sample.", bps);
     else
         *bpsP = bps;
@@ -217,26 +219,30 @@ struct tiffDirInfo {
 
 
 static void
-tiffToImageDim(unsigned int   const tiffCols,
-               unsigned int   const tiffRows,
+tiffToImageDim(unsigned int   const tiffWidth,
+               unsigned int   const tiffHeight,
                unsigned short const orientation,
                unsigned int * const imageColsP,
                unsigned int * const imageRowsP) {
-
+/*----------------------------------------------------------------------------
+   Determine the image dimensions (as *imageColsP and *imageRowsP) from the
+   width, height, and orientation of the TIFF raster ('tiffWidth',
+   'tiffHeight', and 'orientation', respectively.
+-----------------------------------------------------------------------------*/
     switch (orientation) {
     case ORIENTATION_TOPLEFT:
     case ORIENTATION_TOPRIGHT:
     case ORIENTATION_BOTRIGHT:
     case ORIENTATION_BOTLEFT:
-        *imageColsP = tiffCols;
-        *imageRowsP = tiffRows;
+        *imageColsP = tiffWidth;
+        *imageRowsP = tiffHeight;
         break;
     case ORIENTATION_LEFTTOP:
     case ORIENTATION_RIGHTTOP:
     case ORIENTATION_RIGHTBOT:
     case ORIENTATION_LEFTBOT:
-        *imageColsP = tiffRows;
-        *imageRowsP = tiffCols;
+        *imageColsP = tiffHeight;
+        *imageRowsP = tiffWidth;
         break;
     default:
         pm_error("Invalid value for orientation tag in TIFF directory: %u",
@@ -255,24 +261,92 @@ getTiffDimensions(TIFF *         const tiffP,
    dimensions of the internal raster matrix -- the dimensions of the
    actual visual image.
 -----------------------------------------------------------------------------*/
-    int ok;
+    int fldPresent;
 
     unsigned int width, length;
     unsigned short tiffOrientation;
     unsigned short orientation;
-    int present;
 
-    ok = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &width);
-    if (!ok)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &width);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
-    ok = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &length);
-    if (!ok)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &length);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
-    present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
-    orientation = present ? tiffOrientation : ORIENTATION_TOPLEFT;
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+    orientation = fldPresent ? tiffOrientation : ORIENTATION_TOPLEFT;
 
     tiffToImageDim(width, length, orientation, colsP, rowsP);
+}
+
+
+
+static unsigned short
+planarConfigFmTiff(TIFF * const tiffP) {
+
+    int fldPresent;
+    unsigned short retval;
+
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_PLANARCONFIG, &retval);
+
+    if (!fldPresent)
+        pm_error("PLANARCONFIG tag is not in Tiff file, though it "
+                 "has more than one sample per pixel.  "
+                 "TIFFGetField() of it failed.  This means the input "
+                 "is not valid Tiff.");
+
+    return retval;
+}
+
+
+
+static void
+validatePlanarConfig(unsigned short const planarconfig,
+                     unsigned short const photomet) {
+
+    switch (planarconfig) {
+    case PLANARCONFIG_CONTIG:
+        break;
+    case PLANARCONFIG_SEPARATE:
+        if (photomet != PHOTOMETRIC_RGB && 
+            photomet != PHOTOMETRIC_SEPARATED)
+            pm_error("This program can handle separate planes only "
+                     "with RGB (PHOTOMETRIC tag = %u) or SEPARATED "
+                     "(PHOTOMETRIC tag = %u) data.  The input Tiff file " 
+                     "has PHOTOMETRIC tag = %hu.",
+                     PHOTOMETRIC_RGB, PHOTOMETRIC_SEPARATED,
+                     photomet);
+        break;
+    default:
+        pm_error("Unrecognized PLANARCONFIG tag value in Tiff input: %u",
+                 planarconfig);
+    }
+}
+
+
+
+static unsigned short
+orientationFmTiff(TIFF * const tiffP) {
+
+    unsigned short tiffOrientation;
+    int fldPresent;
+
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+
+    return fldPresent ? tiffOrientation : ORIENTATION_TOPLEFT;
+}
+
+
+
+static void
+dumpHeader(const struct tiffDirInfo * const headerP) {
+
+    pm_message("%ux%ux%u raster matrix, oriented %u",
+               headerP->width, headerP->height,
+               headerP->bps * headerP->spp, headerP->orientation);
+    pm_message("%hu bits/sample, %hu samples/pixel",
+               headerP->bps, headerP->spp);
 }
 
 
@@ -285,7 +359,7 @@ readDirectory(TIFF *               const tiffP,
    Read various values of TIFF tags from the TIFF directory, and
    default them if not in there and make guesses where values are
    invalid.  Exit program with error message if required tags aren't
-   there or values are inconsistent or beyond our capabilities.  if
+   there or values are inconsistent or beyond our capabilities.  If
    'headerdump' is true, issue informational messages about what we
    find.
 
@@ -293,7 +367,7 @@ readDirectory(TIFF *               const tiffP,
    input file contains invalid values).  We generally return those
    invalid values to our caller.
 -----------------------------------------------------------------------------*/
-    int rc;
+    int fldPresent;
     unsigned short tiffSpp;
 
     if (headerdump)
@@ -301,65 +375,35 @@ readDirectory(TIFF *               const tiffP,
 
     getBps(tiffP, &headerP->bps);
 
-    rc = TIFFGetFieldDefaulted(tiffP, TIFFTAG_FILLORDER, &headerP->fillorder);
-    rc = TIFFGetField(tiffP, TIFFTAG_SAMPLESPERPIXEL, &tiffSpp);
-    headerP->spp = (rc == 0) ? 1 : tiffSpp;
+    fldPresent =
+        TIFFGetFieldDefaulted(tiffP, TIFFTAG_FILLORDER, &headerP->fillorder);
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_SAMPLESPERPIXEL, &tiffSpp);
+    headerP->spp = fldPresent ? tiffSpp: 1;
 
-    rc = TIFFGetField(tiffP, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
-    if (rc == 0)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
+    if (!fldPresent)
         pm_error("PHOTOMETRIC tag is not in Tiff file.  "
                  "TIFFGetField() of it failed.\n"
                  "This means the input is not valid Tiff.");
 
-    if (headerP->spp > 1) {
-        rc = TIFFGetField(tiffP, TIFFTAG_PLANARCONFIG, &headerP->planarconfig);
-        if (rc == 0)
-            pm_error("PLANARCONFIG tag is not in Tiff file, though it "
-                     "has more than one sample per pixel.  "
-                     "TIFFGetField() of it failed.  This means the input "
-                     "is not valid Tiff.");
-    } else
+    if (headerP->spp > 1)
+        headerP->planarconfig = planarConfigFmTiff(tiffP);
+    else
         headerP->planarconfig = PLANARCONFIG_CONTIG;
 
-    switch (headerP->planarconfig) {
-    case PLANARCONFIG_CONTIG:
-        break;
-    case PLANARCONFIG_SEPARATE:
-        if (headerP->photomet != PHOTOMETRIC_RGB && 
-            headerP->photomet != PHOTOMETRIC_SEPARATED)
-            pm_error("This program can handle separate planes only "
-                     "with RGB (PHOTOMETRIC tag = %u) or SEPARATED "
-                     "(PHOTOMETRIC tag = %u) data.  The input Tiff file " 
-                     "has PHOTOMETRIC tag = %hu.",
-                     PHOTOMETRIC_RGB, PHOTOMETRIC_SEPARATED,
-                     headerP->photomet);
-        break;
-    default:
-        pm_error("Unrecognized PLANARCONFIG tag value in Tiff input: %u.\n",
-                 headerP->planarconfig);
-    }
+    validatePlanarConfig(headerP->planarconfig, headerP->photomet);
 
-    rc = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &headerP->width);
-    if (rc == 0)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &headerP->width);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
-    rc = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &headerP->height);
-    if (rc == 0)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &headerP->height);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
-    {
-        unsigned short tiffOrientation;
-        int present;
-        present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
-        headerP->orientation =
-            present ? tiffOrientation : ORIENTATION_TOPLEFT;
-    }
-    if (headerdump) {
-        pm_message("%ux%ux%u raster matrix, oriented %u",
-                   headerP->width, headerP->height,
-                   headerP->bps * headerP->spp, headerP->orientation);
-        pm_message("%hu bits/sample, %hu samples/pixel",
-                   headerP->bps, headerP->spp);
-    }
+    headerP->orientation = orientationFmTiff(tiffP);
+
+    if (headerdump)
+        dumpHeader(headerP);
 }
 
 
@@ -533,7 +577,7 @@ computeFillorder(unsigned short   const fillorderTag,
 
 
 static void
-analyzeImageType(TIFF *             const tif, 
+analyzeImageType(TIFF *             const tiffP, 
                  unsigned short     const bps, 
                  unsigned short     const spp, 
                  unsigned short     const photomet,
@@ -542,129 +586,147 @@ analyzeImageType(TIFF *             const tif,
                  xel *              const colormap,
                  bool               const headerdump,
                  struct CmdlineInfo const cmdline) {
+/*----------------------------------------------------------------------------
+   Determine from the TIFF header in *tif certain properties of the image
+   as well as the proper format of PNM image for the conversion.
 
-    bool grayscale; 
+   *formatP and *maxvalP are the basic PNM parameters.
+-----------------------------------------------------------------------------*/
+    switch (photomet) {
+    case PHOTOMETRIC_MINISBLACK:
+    case PHOTOMETRIC_MINISWHITE:
+        if (spp != 1)
+            pm_error("This grayscale image has %d samples per pixel.  "
+                     "We understand only 1.", spp);
 
-        /* How come we don't deal with the photometric for the monochrome 
-           case (make sure it's one we know)?  -Bryan 00.03.04
-        */
-        switch (photomet) {
-        case PHOTOMETRIC_MINISBLACK:
-        case PHOTOMETRIC_MINISWHITE:
-            if (spp != 1)
-                pm_error("This grayscale image has %d samples per pixel.  "
-                         "We understand only 1.", spp);
-            grayscale = TRUE;
-            *maxvalP = pm_bitstomaxval(MIN(bps,16));
-            if (headerdump)
-                pm_message("grayscale image, (min=%s) output maxval %u ", 
-                           photomet == PHOTOMETRIC_MINISBLACK ? 
-                           "black" : "white",
-                           *maxvalP
-                           );
-            break;
-            
-        case PHOTOMETRIC_PALETTE: {
-            int i;
-            int numcolors;
-            unsigned short* redcolormap;
-            unsigned short* greencolormap;
-            unsigned short* bluecolormap;
+        *formatP = bps == 1 ? PBM_TYPE : PGM_TYPE;
 
-            if (headerdump)
-                pm_message("colormapped");
+        *maxvalP = pm_bitstomaxval(MIN(bps, 16));
 
-            if (spp != 1)
-                pm_error("This paletted image has %d samples per pixel.  "
-                         "We understand only 1.", spp);
-
-            if (!TIFFGetField(tif, TIFFTAG_COLORMAP, 
-                              &redcolormap, &greencolormap, &bluecolormap))
-                pm_error("error getting colormaps");
-
-            numcolors = 1 << bps;
-            if (numcolors > MAXCOLORS)
-                pm_error("too many colors");
-            *maxvalP = PNM_MAXMAXVAL;
-            grayscale = FALSE;
-            for (i = 0; i < numcolors; ++i) {
-                xelval r, g, b;
-                r = (long) redcolormap[i] * PNM_MAXMAXVAL / 65535L;
-                g = (long) greencolormap[i] * PNM_MAXMAXVAL / 65535L;
-                b = (long) bluecolormap[i] * PNM_MAXMAXVAL / 65535L;
-                PPM_ASSIGN(colormap[i], r, g, b);
-            }
-        }
-        break;
-
-        case PHOTOMETRIC_SEPARATED: {
-            unsigned short inkset;
-
-            if (headerdump)
-                pm_message("color separation");
-            if (TIFFGetField(tif, TIFFTAG_INKNAMES, &inkset) == 1
-                && inkset != INKSET_CMYK)
-            if (inkset != INKSET_CMYK) 
-                pm_error("This color separation file uses an inkset (%d) "
-                         "we can't handle.  We handle only CMYK.", inkset);
-            if (spp != 4) 
-                pm_error("This CMYK color separation file is %d samples per "
-                         "pixel.  "
-                         "We need 4 samples, though: C, M, Y, and K.  ",
-                         spp);
-            grayscale = FALSE;
-            *maxvalP = (1 << bps) - 1;
-        }
+        if (headerdump)
+            pm_message("grayscale image, (min=%s) output maxval %u ", 
+                       photomet == PHOTOMETRIC_MINISBLACK ? 
+                       "black" : "white",
+                       *maxvalP
+                );
         break;
             
-        case PHOTOMETRIC_RGB:
-            if (headerdump)
-                pm_message("RGB truecolor");
-            grayscale = FALSE;
+    case PHOTOMETRIC_PALETTE: {
+        int fldPresent;
+        int i;
+        int numcolors;
+        unsigned short* redcolormap;
+        unsigned short* greencolormap;
+        unsigned short* bluecolormap;
 
-            if (spp != 3 && spp != 4)
-                pm_error("This RGB image has %d samples per pixel.  "
-                         "We understand only 3 or 4.", spp);
+        if (headerdump)
+            pm_message("colormapped");
 
-            *maxvalP = (1 << bps) - 1;
-            break;
+        if (spp != 1)
+            pm_error("This paletted image has %d samples per pixel.  "
+                     "We understand only 1.", spp);
 
-        case PHOTOMETRIC_MASK:
-            pm_error("don't know how to handle PHOTOMETRIC_MASK");
+        fldPresent = TIFFGetField(
+            tiffP, TIFFTAG_COLORMAP, 
+            &redcolormap, &greencolormap, &bluecolormap);
 
-        case PHOTOMETRIC_DEPTH:
-            pm_error("don't know how to handle PHOTOMETRIC_DEPTH");
+        if (!fldPresent)
+            pm_error("error getting colormaps");
 
-        case PHOTOMETRIC_YCBCR:
-            pm_error("don't know how to handle PHOTOMETRIC_YCBCR");
+        numcolors = 1 << bps;
+        if (numcolors > MAXCOLORS)
+            pm_error("too many colors");
 
-        case PHOTOMETRIC_CIELAB:
-            pm_error("don't know how to handle PHOTOMETRIC_CIELAB");
-
-        case PHOTOMETRIC_LOGL:
-            pm_error("don't know how to handle PHOTOMETRIC_LOGL");
-
-        case PHOTOMETRIC_LOGLUV:
-            pm_error("don't know how to handle PHOTOMETRIC_LOGLUV");
-            
-        default:
-            pm_error("unknown photometric: %d", photomet);
-        }
-    if (*maxvalP > PNM_OVERALLMAXVAL)
-        pm_error("bits/sample (%d) in the input image is too large.",
-                 bps);
-    if (grayscale) {
-        if (*maxvalP == 1) {
-            *formatP = PBM_TYPE;
-            pm_message("writing PBM file");
-        } else {
-            *formatP = PGM_TYPE;
-            pm_message("writing PGM file");
-        }
-    } else {
         *formatP = PPM_TYPE;
-        pm_message("writing PPM file");
+
+        *maxvalP = PNM_MAXMAXVAL;
+
+        for (i = 0; i < numcolors; ++i) {
+            xelval r, g, b;
+            r = (long) redcolormap[i] * PNM_MAXMAXVAL / 65535L;
+            g = (long) greencolormap[i] * PNM_MAXMAXVAL / 65535L;
+            b = (long) bluecolormap[i] * PNM_MAXMAXVAL / 65535L;
+            PPM_ASSIGN(colormap[i], r, g, b);
+        }
     }
+        break;
+
+    case PHOTOMETRIC_SEPARATED: {
+        unsigned short inkset;
+        int fldPresent;
+
+        if (headerdump)
+            pm_message("color separation");
+
+        fldPresent = TIFFGetField(tiffP, TIFFTAG_INKNAMES, &inkset);
+        if (fldPresent && inkset != INKSET_CMYK)
+            pm_error("This color separation file uses an inkset (%d) "
+                     "we can't handle.  We handle only CMYK.", inkset);
+        if (spp != 4) 
+            pm_error("This CMYK color separation file is %d samples per "
+                     "pixel.  "
+                     "We need 4 samples, though: C, M, Y, and K.  ",
+                     spp);
+
+        *formatP = PPM_TYPE;
+
+        *maxvalP = (1 << bps) - 1;
+    }
+        break;
+            
+    case PHOTOMETRIC_RGB:
+        if (headerdump)
+            pm_message("RGB truecolor");
+
+        if (spp != 3 && spp != 4)
+            pm_error("This RGB image has %d samples per pixel.  "
+                     "We understand only 3 or 4.", spp);
+
+        *formatP = PPM_TYPE;
+
+        *maxvalP = (1 << bps) - 1;
+        break;
+
+    case PHOTOMETRIC_MASK:
+        pm_error("don't know how to handle PHOTOMETRIC_MASK");
+
+    case PHOTOMETRIC_DEPTH:
+        pm_error("don't know how to handle PHOTOMETRIC_DEPTH");
+
+    case PHOTOMETRIC_YCBCR:
+        pm_error("don't know how to handle PHOTOMETRIC_YCBCR");
+
+    case PHOTOMETRIC_CIELAB:
+        pm_error("don't know how to handle PHOTOMETRIC_CIELAB");
+
+    case PHOTOMETRIC_LOGL:
+        pm_error("don't know how to handle PHOTOMETRIC_LOGL");
+
+    case PHOTOMETRIC_LOGLUV:
+        pm_error("don't know how to handle PHOTOMETRIC_LOGLUV");
+            
+    default:
+        pm_error("unknown photometric: %d", photomet);
+    }
+    if (*maxvalP > PNM_OVERALLMAXVAL)
+        pm_error("bits/sample (%u) in the input image is too large.", bps);
+}
+
+
+
+static void
+reportOutputFormat(int const format) {
+
+    const char * formatDesc;
+
+    switch (format) {
+    case PBM_TYPE: formatDesc = "PBM"; break;
+    case PGM_TYPE: formatDesc = "PGM"; break;
+    case PPM_TYPE: formatDesc = "PPM"; break;
+    default: assert(false);
+    }
+
+    pm_message("writing %s file", formatDesc);
 }
 
 
@@ -775,14 +837,22 @@ spawnWithInputPipe(const char *  const shellCmd,
                 else
                     *errorP = NULL;
             } else {
-                int rc;
+                int terminationStatus;
                 close(fd[PIPE_WRITE]);
                 close(STDIN_FILENO);
                 dup2(fd[PIPE_READ], STDIN_FILENO);
 
-                rc = system(shellCmd);
+                terminationStatus = system(shellCmd);
 
-                exit(rc);
+                if (WIFSIGNALED(terminationStatus))
+                    pm_error("Shell process was killed "
+                             "by a Class %u signal.",
+                             WTERMSIG(terminationStatus));
+                else if (!WIFEXITED(terminationStatus))
+                    pm_error("Shell process died, but its termination status "
+                             "0x%x doesn't make sense", terminationStatus);
+                else
+                    exit(WEXITSTATUS(terminationStatus));
             }
         }
     }
@@ -1364,9 +1434,9 @@ warnBrokenTiffLibrary(TIFF * const tiffP) {
 */
 
     unsigned short tiffOrientation;
-    int present;
-    present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
-    if (present) {
+    int fldPresent;
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+    if (fldPresent) {
         switch (tiffOrientation) {
         case ORIENTATION_LEFTTOP:
         case ORIENTATION_RIGHTTOP:
@@ -1438,16 +1508,47 @@ enum convertDisp {CONV_DONE,
                   CONV_FAILED, 
                   CONV_NOTATTEMPTED};
 
+
+static void
+convertRasterIntoProvidedMemory(pnmOut *           const pnmOutP,
+                                unsigned int       const cols,
+                                unsigned int       const rows,
+                                xelval             const maxval,
+                                TIFF *             const tif,
+                                bool               const verbose,
+                                uint32 *           const raster,
+                                enum convertDisp * const statusP) {
+
+    int const stopOnErrorFalse = false;
+
+    TIFFRGBAImage img;
+    char emsg[1024];
+    int ok;
+                
+    ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
+    if (!ok) {
+        pm_message("%s", emsg);
+        *statusP = CONV_FAILED;
+    } else {
+        int ok;
+        ok = TIFFRGBAImageGet(&img, raster, cols, rows);
+        TIFFRGBAImageEnd(&img) ;
+        if (!ok) {
+            pm_message("%s", emsg);
+            *statusP = CONV_FAILED;
+        } else {
+            *statusP = CONV_DONE;
+            convertTiffRaster(raster, cols, rows, maxval, pnmOutP);
+        }
+    } 
+}
+
+
+
 static void
 convertRasterInMemory(pnmOut *           const pnmOutP,
                       xelval             const maxval,
                       TIFF *             const tif,
-                      unsigned short     const photomet, 
-                      unsigned short     const planarconfig,
-                      unsigned short     const bps,
-                      unsigned short     const spp,
-                      unsigned short     const fillorder,
-                      xel                const colormap[],
                       bool               const verbose,
                       enum convertDisp * const statusP) {
 /*----------------------------------------------------------------------------
@@ -1467,64 +1568,49 @@ convertRasterInMemory(pnmOut *           const pnmOutP,
    programs, we simply abort the program if we are unable to allocate
    memory for other things.
 -----------------------------------------------------------------------------*/
-    unsigned int cols, rows;  /* Dimensions of output image */
+    char emsg[1024];
+    int ok;
 
     if (verbose)
         pm_message("Converting in memory ...");
 
     warnBrokenTiffLibrary(tif);
 
-    getTiffDimensions(tif, &cols, &rows);
+    ok = TIFFRGBAImageOK(tif, emsg);
+    if (!ok) {
+        pm_message("%s", emsg);
+        *statusP = CONV_UNABLE;
+    } else {
+        unsigned int cols, rows;  /* Dimensions of output image */
+        getTiffDimensions(tif, &cols, &rows);
 
-    if (rows == 0 || cols == 0) 
-        *statusP = CONV_DONE;
-    else {
-        char emsg[1024];
-        int ok;
-        ok = TIFFRGBAImageOK(tif, emsg);
-        if (!ok) {
-            pm_message("%s", emsg);
-            *statusP = CONV_UNABLE;
-        } else {
-            uint32 * raster;
-
-            /* Note that TIFFRGBAImageGet() converts any bits per sample
-               to 8.  Maxval of the raster it returns is always 255.
-            */
+        if (rows == 0 || cols == 0) 
+            *statusP = CONV_DONE;
+        else {
             if (cols > UINT_MAX/rows) {
                 pm_message("%u rows of %u columns is too large to compute",
                            rows, cols);
                 *statusP = CONV_OOM;
-                return;
-            }
-
-            MALLOCARRAY(raster, cols * rows);
-            if (raster == NULL) {
-                pm_message("Unable to allocate space for a raster of %u "
-                           "pixels.", cols * rows);
-                *statusP = CONV_OOM;
             } else {
-                int const stopOnErrorFalse = FALSE;
-                TIFFRGBAImage img;
-                int ok;
-                
-                ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
-                if (!ok) {
-                    pm_message("%s", emsg);
-                    *statusP = CONV_FAILED;
+                unsigned int const pixelCt = rows * cols;
+
+                uint32 * raster;
+
+                /* Note that TIFFRGBAImageGet() converts any bits per sample
+                   to 8.  Maxval of the raster it returns is always 255.
+                */
+                MALLOCARRAY(raster, pixelCt);
+                if (raster == NULL) {
+                    pm_message("Unable to allocate space for a raster of %u "
+                               "pixels.", pixelCt);
+                    *statusP = CONV_OOM;
                 } else {
-                    int ok;
-                    ok = TIFFRGBAImageGet(&img, raster, cols, rows);
-                    TIFFRGBAImageEnd(&img) ;
-                    if (!ok) {
-                        pm_message("%s", emsg);
-                        *statusP = CONV_FAILED;
-                    } else {
-                        *statusP = CONV_DONE;
-                        convertTiffRaster(raster, cols, rows, maxval, pnmOutP);
-                    }
-                } 
-                free(raster);
+                    convertRasterIntoProvidedMemory(
+                        pnmOutP, cols, rows, maxval, tif, verbose,
+                        raster, statusP);
+                    
+                    free(raster);
+                }
             }
         }
     }
@@ -1549,11 +1635,7 @@ convertRaster(pnmOut *           const pnmOutP,
     if (byrow || !flipOk)
         status = CONV_NOTATTEMPTED;
     else {
-        convertRasterInMemory(
-            pnmOutP, maxval,
-            tifP, tiffDir.photomet, tiffDir.planarconfig, 
-            tiffDir.bps, tiffDir.spp, fillorder,
-            colormap, verbose, &status);
+        convertRasterInMemory(pnmOutP, maxval, tifP, verbose, &status);
     }
     if (status == CONV_DONE) {
         if (tiffDir.bps > 8)
@@ -1601,6 +1683,8 @@ convertImage(TIFF *             const tifP,
 
     analyzeImageType(tifP, tiffDir.bps, tiffDir.spp, tiffDir.photomet, 
                      &maxval, &format, colormap, cmdline.headerdump, cmdline);
+
+    reportOutputFormat(format);
 
     pnmOut_init(imageoutFileP, alphaFileP, tiffDir.width, tiffDir.height,
                 tiffDir.orientation, maxval, format, maxval,

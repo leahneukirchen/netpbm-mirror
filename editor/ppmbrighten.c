@@ -1,28 +1,19 @@
-/* ppmbrighten.c - allow user control over Value and Saturation of PPM file
-**
-** Copyright (C) 1989 by Jef Poskanzer.
-** Copyright (C) 1990 by Brian Moffet.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
+/*=============================================================================
+                              ppmbrighten
+===============================================================================
+  Change Value and Saturation of PPM image.
+=============================================================================*/
 
 #include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 
-#define MULTI   1000
-
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFilespec;  /* '-' if stdin */
+    const char * inputFileName;  /* '-' if stdin */
     float saturation;
     float value;
     unsigned int normalize;
@@ -31,11 +22,11 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -63,14 +54,13 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "normalize",   OPT_FLAG,   NULL,
             &cmdlineP->normalize, 0 );
 
-
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-    
+
     if (saturationSpec) {
         if (saturationOpt < -100)
             pm_error("Saturation reduction cannot be more than 100%%.  "
@@ -90,172 +80,41 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->value = 1.0;
 
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else
         pm_error("Program takes at most one argument:  file specification");
 }
 
 
 
-static __inline__ unsigned int
-mod(int const dividend, unsigned int const divisor) {
-
-    int remainder = dividend % (int)divisor;
-
-    if (remainder < 0)
-        return divisor + remainder;
-    else 
-        return (unsigned int) remainder;
-}
-
-
-
-static void 
-RGBtoHSV(pixel          const color,
-         pixval         const maxval,
-         unsigned int * const hP, 
-         unsigned int * const sP, 
-         unsigned int * const vP) {
-
-    unsigned int const R = (MULTI * PPM_GETR(color) + maxval - 1) / maxval;
-    unsigned int const G = (MULTI * PPM_GETG(color) + maxval - 1) / maxval;
-    unsigned int const B = (MULTI * PPM_GETB(color) + maxval - 1) / maxval;
-
-    unsigned int s, v;
-    unsigned int t;
-    unsigned int sector;
-
-    v = MAX(R, MAX(G, B));
-
-    t = MIN(R, MIN(G, B));
-
-    if (v == 0)
-        s = 0;
-    else
-        s = ((v - t)*MULTI)/v;
-
-    if (s == 0)
-        sector = 0;
-    else {
-        unsigned int const cr = (MULTI * (v - R))/(v - t);
-        unsigned int const cg = (MULTI * (v - G))/(v - t);
-        unsigned int const cb = (MULTI * (v - B))/(v - t);
-
-        if (R == v)
-            sector = mod((int)(cb - cg), 6*MULTI);
-        else if (G == v)
-            sector = mod((int)((2*MULTI) + cr - cb), 6*MULTI);
-        else if (B == v)
-            sector = mod((int)((4*MULTI) + cg - cr), 6*MULTI);
-        else
-            pm_error("Internal error: neither r, g, nor b is maximum");
-    }
-
-    *hP = sector * 60;
-    *sP = s;
-    *vP = v;
-}
-
-
-
 static void
-HSVtoRGB(unsigned int   const h, 
-         unsigned int   const s, 
-         unsigned int   const v, 
-         pixval         const maxval,
-         pixel *        const colorP) {
-    
-    unsigned int R, G, B;
-
-    if (s == 0) {
-        R = v;
-        G = v;
-        B = v;
-    } else {
-        unsigned int const sectorSize = 60 * MULTI;
-            /* Color wheel is divided into six 60 degree sectors. */
-        unsigned int const sector = (h/sectorSize);
-            /* The sector in which our color resides.  Value is in 0..5 */
-        unsigned int const f = (h - sector*sectorSize)/60;
-            /* The fraction of the way the color is from one side of
-               our sector to the other side, going clockwise.  Value is
-               in [0, MULTI).
-            */
-        unsigned int const m = (v * (MULTI - s)) / MULTI;
-        unsigned int const n = (v * (MULTI - (s * f)/MULTI)) / MULTI;
-        unsigned int const k = (v * (MULTI - (s * (MULTI - f))/MULTI)) / MULTI;
-
-        switch (sector) {
-        case 0:
-            R = v;
-            G = k;
-            B = m;
-            break;
-        case 1:
-            R = n;
-            G = v;
-            B = m;
-            break;
-        case 2:
-            R = m;
-            G = v;
-            B = k;
-            break;
-        case 3:
-            R = m;
-            G = n;
-            B = v;
-            break;
-        case 4:
-            R = k;
-            G = m;
-            B = v;
-            break;
-        case 5:
-            R = v;
-            G = m;
-            B = n;
-            break;
-        default:
-            pm_error("Invalid H value passed to HSVtoRGB: %u/%u", h, MULTI);
-        }
-    }
-    PPM_ASSIGN(*colorP, 
-               (R * maxval) / MULTI,
-               (G * maxval) / MULTI,
-               (B * maxval) / MULTI);
-}
-
-
-
-static void
-getMinMax(FILE *         const ifP,
-          int            const cols,
-          int            const rows,
-          pixval         const maxval,
-          int            const format,
-          unsigned int * const minValueP,
-          unsigned int * const maxValueP) {
+getMinMax(FILE *       const ifP,
+          unsigned int const cols,
+          unsigned int const rows,
+          pixval       const maxval,
+          int          const format,
+          double *     const minValueP,
+          double *     const maxValueP) {
 
     pixel * pixelrow;
-    unsigned int minValue, maxValue;
-    int row;
+    double minValue, maxValue;
+    unsigned int row;
 
     pixelrow = ppm_allocrow(cols);
 
-    maxValue = 0;
-    minValue = MULTI;
-    for (row = 0; row < rows; ++row) {
+    for (row = 0, minValue = 65536.0, maxValue = 0.0; row < rows; ++row) {
         unsigned int col;
-        ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
-        for (col = 0; col < cols; ++col) {
-            unsigned int H, S, V;
 
-            RGBtoHSV(pixelrow[col], maxval, &H, &S, &V);
-            maxValue = MAX(maxValue, V);
-            minValue = MIN(minValue, V);
+        ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
+
+        for (col = 0; col < cols; ++col) {
+            struct hsv const pixhsv =
+                ppm_hsv_from_color(pixelrow[col], maxval);
+
+            maxValue = MAX(maxValue, pixhsv.v);
+            minValue = MIN(minValue, pixhsv.v);
         }
     }
     ppm_freerow(pixelrow);
@@ -267,23 +126,24 @@ getMinMax(FILE *         const ifP,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    double const EPSILON = 1.0e-5;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
-    pixval minValue, maxValue;
     pixel * pixelrow;
     pixval maxval;
     int rows, cols, format, row;
+    double minValue, maxValue;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     if (cmdline.normalize)
-        ifP = pm_openr_seekable(cmdline.inputFilespec);
+        ifP = pm_openr_seekable(cmdline.inputFileName);
     else
-        ifP = pm_openr(cmdline.inputFilespec);
+        ifP = pm_openr(cmdline.inputFileName);
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
 
@@ -292,17 +152,17 @@ main(int argc, char * argv[]) {
         pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
         getMinMax(ifP, cols, rows, maxval, format, &minValue, &maxValue);
         pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
-        if (maxValue > minValue) {
-            pm_message("Minimum value %u%% of full intensity "
+        if (maxValue - minValue > EPSILON) {
+            pm_message("Minimum value %.0f%% of full intensity "
                        "being remapped to zero.",
-                       (minValue*100+MULTI/2)/MULTI);
-            pm_message("Maximum value %u%% of full intensity "
+                       (minValue * 100.0));
+            pm_message("Maximum value %.0f%% of full intensity "
                        "being remapped to full.",
-                       (maxValue*100+MULTI/2)/MULTI);
+                       (maxValue * 100.0));
         } else
-            pm_message("Sole intensity value %u%% of full intensity "
+            pm_message("Sole value of %.0f%% of full intensity "
                        "not being remapped",
-                       (minValue*100+MULTI/2)/MULTI);
+                       (maxValue * 100.0));
     }
 
     pixelrow = ppm_allocrow(cols);
@@ -311,34 +171,48 @@ main(int argc, char * argv[]) {
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
+
         ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
+
         for (col = 0; col < cols; ++col) {
-            unsigned int H, S, V;
+            struct hsv pixhsv;
 
-            RGBtoHSV(pixelrow[col], maxval, &H, &S, &V);
-            
+            pixhsv = ppm_hsv_from_color(pixelrow[col], maxval);
+                /* initial value */
+
             if (cmdline.normalize) {
-                if (maxValue > minValue) {
-                    V -= minValue;
-                    V = (V * MULTI) /
-                        (MULTI - (minValue+MULTI-maxValue));
-                }
+                if (maxValue - minValue > EPSILON)
+                    pixhsv.v = (pixhsv.v - minValue) / (maxValue - minValue);
             }
-
-            S = MIN(MULTI, (unsigned int) (S * cmdline.saturation + 0.5));
-            V = MIN(MULTI, (unsigned int) (V * cmdline.value + 0.5));
-
-            HSVtoRGB(H, S, V, maxval, &pixelrow[col]);
+            pixhsv.s = pixhsv.s * cmdline.saturation;
+            pixhsv.s = MAX(0.0, MIN(1.0, pixhsv.s));
+            pixhsv.v = pixhsv.v * cmdline.value;
+            pixhsv.v = MAX(0.0, MIN(1.0, pixhsv.v));
+            pixelrow[col] = ppm_color_from_hsv(pixhsv, maxval);
         }
-
         ppm_writeppmrow(stdout, pixelrow, cols, maxval, 0);
     }
     ppm_freerow(pixelrow);
 
     pm_close(ifP);
 
-    /* If the program failed, it previously aborted with nonzero completion
-       code, via various function calls.
+    /* If the program failed, it previously aborted with nonzero exit status
+       via various function calls.
     */
     return 0;
 }
+
+
+
+/**
+** Copyright (C) 1989 by Jef Poskanzer.
+** Copyright (C) 1990 by Brian Moffet.
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+*/
+

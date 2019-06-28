@@ -1156,9 +1156,9 @@ convertPng(const unsigned char * const image,
     imageBuffer.buffer = (unsigned char *)image;
 
     fflush (stdout);
-    pm_system(pm_feed_from_memory, &imageBuffer,
-              NULL /* stdout accepter */, NULL,
-              "pngtopam -alphapam");
+    pm_system_lp("pngtopam", pm_feed_from_memory, &imageBuffer,
+                 NULL /* stdout accepter */, NULL,
+                 "pngtopam", "-alphapam", NULL);
 }
 
 

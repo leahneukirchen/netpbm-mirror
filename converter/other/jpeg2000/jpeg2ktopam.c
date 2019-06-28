@@ -8,6 +8,7 @@
 
 *****************************************************************************/
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500 /* Make sure strdup() is in string.h */
     /* In 2014.09, this was _XOPEN_SOURCE 600, with a comment saying it was
@@ -61,7 +62,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "verbose",      OPT_FLAG,   NULL, 
+    OPTENT3(0, "verbose",      OPT_FLAG,   NULL,
             &cmdlineP->verbose,   0);
     OPTENT3(0, "debuglevel",   OPT_UINT,   &cmdlineP->debuglevel,
             &debuglevelSpec,      0);
@@ -79,7 +80,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->inputFilename = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted\n"
                  "is the input file specification");
 
@@ -106,11 +107,11 @@ validateJ2k(jas_stream_t * const instreamP) {
     }
 }
 
-        
+
 
 
 static void
-readJ2k(const char *   const inputFilename, 
+readJ2k(const char *   const inputFilename,
         jas_image_t ** const jasperPP) {
 
     jas_image_t * jasperP;
@@ -126,7 +127,7 @@ readJ2k(const char *   const inputFilename,
         instreamP = jas_stream_fopen(inputFilename, "rb");
         if (instreamP == NULL )
             pm_error("cannot open input image file '%s'", inputFilename);
-    } 
+    }
 
     validateJ2k(instreamP);
 
@@ -138,7 +139,7 @@ readJ2k(const char *   const inputFilename,
         pm_error("Unable to interpret JPEG-2000 input.  "
                  "The Jasper library jas_image_decode() subroutine failed.");
 
-	jas_stream_close(instreamP);
+    jas_stream_close(instreamP);
 
     *jasperPP = jasperP;
 }
@@ -149,7 +150,7 @@ static void
 getRgbComponents(int jasperCmpnt[], jas_image_t * const jasperP) {
 
     {
-        int const rc = 
+        int const rc =
             jas_image_getcmptbytype(jasperP,
                                     JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_R));
         if (rc < 0)
@@ -158,12 +159,12 @@ getRgbComponents(int jasperCmpnt[], jas_image_t * const jasperP) {
         else
             jasperCmpnt[PAM_RED_PLANE] = rc;
 
-        if (jas_image_cmptsgnd(jasperP, rc)) 
+        if (jas_image_cmptsgnd(jasperP, rc))
             pm_error("Input image says it is RGB, but has signed values "
                      "for what should be the red intensities.");
     }
     {
-        int const rc = 
+        int const rc =
             jas_image_getcmptbytype(jasperP,
                                     JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_G));
         if (rc < 0)
@@ -172,12 +173,12 @@ getRgbComponents(int jasperCmpnt[], jas_image_t * const jasperP) {
         else
             jasperCmpnt[PAM_GRN_PLANE] = rc;
 
-        if (jas_image_cmptsgnd(jasperP, rc)) 
+        if (jas_image_cmptsgnd(jasperP, rc))
             pm_error("Input image says it is RGB, but has signed values "
                      "for what should be the green intensities.");
     }
     {
-        int const rc = 
+        int const rc =
             jas_image_getcmptbytype(jasperP,
                                     JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B));
         if (rc < 0)
@@ -186,18 +187,18 @@ getRgbComponents(int jasperCmpnt[], jas_image_t * const jasperP) {
         else
             jasperCmpnt[PAM_BLU_PLANE] = rc;
 
-        if (jas_image_cmptsgnd(jasperP, rc)) 
+        if (jas_image_cmptsgnd(jasperP, rc))
             pm_error("Input image says it is RGB, but has signed values "
                      "for what should be the blue intensities.");
     }
-}            
+}
 
 
 
 static void
 getGrayComponent(int * jasperCmptP, jas_image_t * const jasperP) {
 
-    int const rc = 
+    int const rc =
         jas_image_getcmptbytype(jasperP,
                                 JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_GRAY_Y));
     if (rc < 0)
@@ -205,7 +206,7 @@ getGrayComponent(int * jasperCmptP, jas_image_t * const jasperP) {
                  "no gray intensity component");
     else
         *jasperCmptP = rc;
-    if (jas_image_cmptsgnd(jasperP, 0)) 
+    if (jas_image_cmptsgnd(jasperP, 0))
         pm_error("Input image says it is grayscale, but has signed values "
                  "for what should be the gray levels.");
 }
@@ -220,13 +221,13 @@ validateComponentsAlike(jas_image_t * const jasperP) {
    all the channels are the same, and abort the program if not.
 -----------------------------------------------------------------------------*/
     int cmptNo;
-    
+
     for (cmptNo = 0; cmptNo < jas_image_numcmpts(jasperP); ++cmptNo) {
-        if (jas_image_cmptwidth(jasperP, cmptNo) != 
+        if (jas_image_cmptwidth(jasperP, cmptNo) !=
             jas_image_cmptwidth(jasperP, 0))
             pm_message("Input image does not have components all the same "
                        "width.");
-        if (jas_image_cmptheight(jasperP, cmptNo) != 
+        if (jas_image_cmptheight(jasperP, cmptNo) !=
             jas_image_cmptheight(jasperP, 0))
             pm_message("Input image does not have components all the same "
                        "height.");
@@ -240,7 +241,7 @@ maxJasperComponentPrecision(jas_image_t * const jasperP) {
 
     int cmptNo;
     unsigned int max;
-    
+
     max = 1;
 
     for (cmptNo = 0; cmptNo < jas_image_numcmpts(jasperP); ++cmptNo)
@@ -261,8 +262,8 @@ computeOutputParm(jas_image_t * const jasperP,
           with the Jasper library that corresponds to Plane P of the PAM.
        */
 
-	switch (jas_clrspc_fam(jas_image_clrspc(jasperP))) {
-	case JAS_CLRSPC_FAM_GRAY:
+    switch (jas_clrspc_fam(jas_image_clrspc(jasperP))) {
+    case JAS_CLRSPC_FAM_GRAY:
         outpamP->depth = 1;
         MALLOCARRAY_NOFAIL(jasperCmptNo, 1);
         getGrayComponent(&jasperCmptNo[0], jasperP);
@@ -274,7 +275,7 @@ computeOutputParm(jas_image_t * const jasperP,
             strcpy(outpamP->tuple_type, PAM_PGM_TUPLETYPE);
         }
         break;
-	case JAS_CLRSPC_FAM_RGB:
+    case JAS_CLRSPC_FAM_RGB:
         outpamP->depth = 3;
         MALLOCARRAY_NOFAIL(jasperCmptNo, 3);
         getRgbComponents(jasperCmptNo, jasperP);
@@ -292,15 +293,15 @@ computeOutputParm(jas_image_t * const jasperP,
                 jasperCmptNo[plane] = plane;
         }
         strcpy(outpamP->tuple_type, "");
-        if (jas_image_cmptsgnd(jasperP, 0)) 
+        if (jas_image_cmptsgnd(jasperP, 0))
             pm_message("Warning: Input image has signed sample values.  "
                        "They will be represented in the PAM output in "
                        "two's complement.");
     }
     outpamP->plainformat = FALSE;
 
-	outpamP->width = jas_image_cmptwidth(jasperP, 0);
-	outpamP->height = jas_image_cmptheight(jasperP, 0);
+    outpamP->width = jas_image_cmptwidth(jasperP, 0);
+    outpamP->height = jas_image_cmptheight(jasperP, 0);
 
     validateComponentsAlike(jasperP);
 
@@ -308,7 +309,7 @@ computeOutputParm(jas_image_t * const jasperP,
         unsigned int const maxPrecision = maxJasperComponentPrecision(jasperP);
 
         outpamP->maxval = pm_bitstomaxval(maxPrecision);
-        
+
         outpamP->bytes_per_sample = (maxPrecision + 7)/8;
     }
     *jasperCmptNoP = jasperCmptNo;
@@ -319,7 +320,7 @@ computeOutputParm(jas_image_t * const jasperP,
 static void
 createMatrices(struct pam * const outpamP, jas_matrix_t *** matrixP) {
 
-    jas_matrix_t ** matrix; 
+    jas_matrix_t ** matrix;
     unsigned int plane;
 
     MALLOCARRAY_NOFAIL(matrix, outpamP->depth);
@@ -330,14 +331,14 @@ createMatrices(struct pam * const outpamP, jas_matrix_t *** matrixP) {
         if (matrix[plane] == NULL)
             pm_error("Unable to create matrix for plane %u.  "
                      "jas_matrix_create() failed.", plane);
-    }   
+    }
     *matrixP = matrix;
 }
 
 
 
 static void
-destroyMatrices(struct pam *    const outpamP, 
+destroyMatrices(struct pam *    const outpamP,
                 jas_matrix_t ** const matrix ) {
 
     unsigned int plane;
@@ -345,7 +346,7 @@ destroyMatrices(struct pam *    const outpamP,
     for (plane = 0; plane < outpamP->depth; ++plane)
         jas_matrix_destroy(matrix[plane]);
     free(matrix);
-}    
+}
 
 
 
@@ -355,7 +356,7 @@ computeComponentMaxval(struct pam *  const outpamP,
                        int           const jasperCmpt[],
                        sample **     const jasperMaxvalP,
                        bool *        const singleMaxvalP) {
-    
+
     sample * jasperMaxval;
     unsigned int plane;
 
@@ -363,7 +364,7 @@ computeComponentMaxval(struct pam *  const outpamP,
 
     *singleMaxvalP = TRUE;  /* initial assumption */
     for (plane = 0; plane < outpamP->depth; ++plane) {
-        jasperMaxval[plane] = 
+        jasperMaxval[plane] =
             pm_bitstomaxval(jas_image_cmptprec(jasperP, jasperCmpt[plane]));
         if (jasperMaxval[plane] != jasperMaxval[0])
             *singleMaxvalP = FALSE;
@@ -371,7 +372,7 @@ computeComponentMaxval(struct pam *  const outpamP,
     *jasperMaxvalP = jasperMaxval;
 }
 
-                       
+
 
 static void
 copyRowSingleMaxval(jas_seqent_t ** const jasperRow,
@@ -386,10 +387,10 @@ copyRowSingleMaxval(jas_seqent_t ** const jasperRow,
    This is significantly faster than copyRowAnyMaxval().
 -----------------------------------------------------------------------------*/
     unsigned int col;
-    
+
     for (col = 0; col < outpamP->width; ++col) {
         unsigned int plane;
-        for (plane = 0; plane < outpamP->depth; ++plane) 
+        for (plane = 0; plane < outpamP->depth; ++plane)
             tuplerow[col][plane] = jasperRow[plane][col];
     }
 }
@@ -410,12 +411,12 @@ copyRowAnyMaxval(jas_seqent_t ** const jasperRow,
    This is significantly slower than copyRowSingleMaxval().
 -----------------------------------------------------------------------------*/
     unsigned int col;
-            
+
     for (col = 0; col < outpamP->width; ++col) {
         unsigned int plane;
-        for (plane = 0; plane < outpamP->depth; ++plane) 
-            tuplerow[col][plane] = 
-                jasperRow[plane][col] * 
+        for (plane = 0; plane < outpamP->depth; ++plane)
+            tuplerow[col][plane] =
+                jasperRow[plane][col] *
                 outpamP->maxval / jasperMaxval[plane];
     }
 }
@@ -460,11 +461,11 @@ convertToPamPnm(struct pam *  const outpamP,
                                     matrix[plane]);
             if (rc != 0)
                 pm_error("jas_image_readcmpt() of row %u plane %u "
-                         "failed.", 
+                         "failed.",
                          row, plane);
             jasperRow[plane] = jas_matrix_getref(matrix[plane], 0, 0);
         }
-        if (singleMaxval) 
+        if (singleMaxval)
             copyRowSingleMaxval(jasperRow, tuplerow, outpamP);
         else
             copyRowAnyMaxval(jasperRow, tuplerow, outpamP, jasperMaxval);
@@ -488,25 +489,25 @@ main(int argc, char **argv)
     struct pam outpam;
     int * jasperCmpt;  /* malloc'ed */
        /* jaspercmpt[P] is the component number for use with the
-          Jasper library that corresponds to Plane P of the PAM.  
+          Jasper library that corresponds to Plane P of the PAM.
        */
     jas_image_t * jasperP;
 
     pnm_init(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
-    
-    { 
+
+    {
         int rc;
-        
+
         rc = jas_init();
         if ( rc != 0 )
             pm_error("Failed to initialize Jasper library.  "
                      "jas_init() returns rc %d", rc );
     }
-    
+
     jas_setdbglevel(cmdline.debuglevel);
-    
+
     readJ2k(cmdline.inputFilename, &jasperP);
 
     outpam.file = stdout;
@@ -516,13 +517,16 @@ main(int argc, char **argv)
     computeOutputParm(jasperP, &outpam, &jasperCmpt);
 
     pnm_writepaminit(&outpam);
-    
+
     convertToPamPnm(&outpam, jasperP, jasperCmpt);
-    
+
     free(jasperCmpt);
-	jas_image_destroy(jasperP);
+    jas_image_destroy(jasperP);
 
     pm_close(stdout);
-    
+
     return 0;
 }
+
+
+

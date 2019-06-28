@@ -56,7 +56,7 @@ parseCommandLine(int argc, const char ** const argv,
 
     if (maxvalSpec) {
         if (cmdlineP->maxval > PGM_OVERALLMAXVAL)
-            pm_error("Maxval too large: %u.  Maximu is %u", 
+            pm_error("Maxval too large: %u.  Maximu is %u",
                      cmdlineP->maxval, PGM_OVERALLMAXVAL);
         else if (cmdlineP->maxval == 0)
             pm_error("Maxval must not be zero");
@@ -70,7 +70,7 @@ parseCommandLine(int argc, const char ** const argv,
     else {
         int const width  = atoi(argv[1]);
         int const height = atoi(argv[2]);
-        
+
         if (width <= 0)
             pm_error("Width must be positive, not %d", width);
         else
@@ -90,12 +90,12 @@ randPool(unsigned int const digits) {
 /*----------------------------------------------------------------------------
   Draw 'digits' bits from pool of random bits.  If the number of random bits
   in pool is insufficient, call rand() and add 31 bits to it.
-  
+
   'digits' must be at most 16.
 
   We assume that each call to rand() generates 31 bits, or RAND_MAX ==
   2147483647.
-  
+
   The underlying logic is flexible and endian-free.  The above conditions
   can be relaxed.
 -----------------------------------------------------------------------------*/
@@ -114,7 +114,7 @@ randPool(unsigned int const digits) {
         hold >>= digits;
         len   -= digits;
     } else {              /* Load another 31 bits into hold */
-        hold    = rand(); 
+        hold    = rand();
         retval |= (hold << len);
         hold >>=  (digits - len);
         len = 31 - digits + len;
@@ -164,11 +164,11 @@ pgmnoise(FILE *       const ofP,
             unsigned int col;
             for (col = 0; col < cols; ++col)
                 destrow[col] = randPool(bitLen);
-        } 
-        else { 
+        }
+        else {
             unsigned int col;
             for (col = 0; col < cols; ++col)
-                destrow[col] = rand() % (maxval + 1); 
+                destrow[col] = rand() % (maxval + 1);
         }
         pgm_writepgmrow(ofP, destrow, cols, maxval, 0);
     }
@@ -181,7 +181,7 @@ pgmnoise(FILE *       const ofP,
 int
 main(int          argc,
      const char * argv[]) {
-    
+
     struct cmdlineInfo cmdline;
 
     pm_proginit(&argc, argv);
@@ -194,3 +194,6 @@ main(int          argc,
 
     return 0;
 }
+
+
+

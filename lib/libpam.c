@@ -12,7 +12,8 @@
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
-#define _LARGE_FILES  
+#define _LARGE_FILES
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
@@ -107,7 +108,7 @@ validateComputableSize(struct pam * const pamP) {
                  INT_MAX - depth * sizeof(tuple *))
             pm_error("image width and depth (%u, %u) too large "
                      "to be processed.", pamP->width, depth);
-        
+
         if (depth > INT_MAX - 2)
             pm_error("image depth (%u) too large to be processed", depth);
         if (pamP->width > INT_MAX - 2)
@@ -129,7 +130,7 @@ pnm_allocpamtuple(const struct pam * const pamP) {
     retval = malloc(allocationDepth(pamP) * sizeof(retval[0]));
 
     if (retval == NULL)
-        pm_error("Out of memory allocating %u-plane tuple", 
+        pm_error("Out of memory allocating %u-plane tuple",
                  allocationDepth(pamP));
 
     return retval;
@@ -138,15 +139,15 @@ pnm_allocpamtuple(const struct pam * const pamP) {
 
 
 int
-pnm_tupleequal(const struct pam * const pamP, 
-               tuple              const comparand, 
+pnm_tupleequal(const struct pam * const pamP,
+               tuple              const comparand,
                tuple              const comparator) {
 
     unsigned int plane;
     bool equal;
 
     equal = TRUE;  /* initial value */
-    for (plane = 0; plane < pamP->depth; ++plane) 
+    for (plane = 0; plane < pamP->depth; ++plane)
         if (comparand[plane] != comparator[plane])
             equal = FALSE;
 
@@ -172,11 +173,11 @@ pnm_assigntuple(const struct pam * const pamP,
 static void
 scaleTuple(const struct pam * const pamP,
            tuple              const dest,
-           tuple              const source, 
+           tuple              const source,
            sample             const newmaxval) {
 
     unsigned int plane;
-    for (plane = 0; plane < pamP->depth; ++plane) 
+    for (plane = 0; plane < pamP->depth; ++plane)
         dest[plane] = pnm_scalesample(source[plane], pamP->maxval, newmaxval);
 }
 
@@ -185,7 +186,7 @@ scaleTuple(const struct pam * const pamP,
 void
 pnm_scaletuple(const struct pam * const pamP,
                tuple              const dest,
-               tuple              const source, 
+               tuple              const source,
                sample             const newmaxval) {
 
     scaleTuple(pamP, dest, source, newmaxval);
@@ -194,7 +195,7 @@ pnm_scaletuple(const struct pam * const pamP,
 
 
 void
-pnm_createBlackTuple(const struct pam * const pamP, 
+pnm_createBlackTuple(const struct pam * const pamP,
                      tuple *            const blackTupleP) {
 /*----------------------------------------------------------------------------
    Create a "black" tuple.  By that we mean a tuple all of whose elements
@@ -204,7 +205,7 @@ pnm_createBlackTuple(const struct pam * const pamP,
 
     *blackTupleP = pnm_allocpamtuple(pamP);
 
-    for (i = 0; i < pamP->depth; ++i) 
+    for (i = 0; i < pamP->depth; ++i)
         (*blackTupleP)[i] = 0;
 }
 
@@ -225,14 +226,14 @@ allocPamRow(const struct pam * const pamP) {
     tuple * tuplerow;
 
     tuplerow = malloc(pamP->width * (sizeof(tuple *) + bytesPerTuple));
-                      
+
     if (tuplerow != NULL) {
         /* Now we initialize the pointers to the individual tuples
-           to make this a regulation C two dimensional array.  
+           to make this a regulation C two dimensional array.
         */
         char * p;
         unsigned int col;
-        
+
         p = (char*) (tuplerow + pamP->width);  /* location of Tuple 0 */
         for (col = 0; col < pamP->width; ++col) {
                 tuplerow[col] = (tuple) p;
@@ -260,7 +261,7 @@ pnm_allocpamrow(const struct pam * const pamP) {
 
 
 
-static unsigned int 
+static unsigned int
 rowimagesize(const struct pam * const pamP) {
 
     /* If repeatedly calculating this turns out to be a significant
@@ -270,7 +271,7 @@ rowimagesize(const struct pam * const pamP) {
 
     if (PAM_FORMAT_TYPE(pamP->format) == PBM_TYPE)
         return pbm_packed_bytes(pamP->width);
-    else 
+    else
         return (pamP->width * pamP->bytes_per_sample * pamP->depth);
 }
 
@@ -306,7 +307,7 @@ pnm_freerowimage(unsigned char * const rowimage) {
 
 
 
-void 
+void
 pnm_scaletuplerow(const struct pam * const pamP,
                   tuple *            const destRow,
                   tuple *            const sourceRow,
@@ -320,26 +321,26 @@ pnm_scaletuplerow(const struct pam * const pamP,
             for (col = 0; col < pamP->width; ++col)
                 pnm_assigntuple(pamP, destRow[col], sourceRow[col]);
         }
-    } else {        
+    } else {
         unsigned int col;
-        for (col = 0; col < pamP->width; ++col) 
+        for (col = 0; col < pamP->width; ++col)
             scaleTuple(pamP, destRow[col], sourceRow[col], newMaxval);
     }
 }
 
- 
+
 
 tuple **
 pnm_allocpamarray(const struct pam * const pamP) {
-    
+
     tuple **tuplearray;
 
     /* If the speed of this is ever an issue, it might be sped up a little
        by allocating one large chunk.
     */
-    
+
     MALLOCARRAY(tuplearray, pamP->height);
-    if (tuplearray == NULL) 
+    if (tuplearray == NULL)
         pm_error("Out of memory allocating the row pointer section of "
                  "a %u row array", pamP->height);
     else {
@@ -352,14 +353,14 @@ pnm_allocpamarray(const struct pam * const pamP) {
             if (tuplearray[row] == NULL) {
                 unsigned int freerow;
                 outOfMemory = TRUE;
-                
+
                 for (freerow = 0; freerow < row; ++freerow)
                     pnm_freepamrow(tuplearray[row]);
             }
         }
         if (outOfMemory) {
             free(tuplearray);
-            
+
             pm_error("Out of memory allocating the %u rows %u columns wide by "
                      "%u planes deep", pamP->height, pamP->width,
                      allocationDepth(pamP));
@@ -382,7 +383,7 @@ pnm_freepamarray(tuple ** const tuplearray, const struct pam * const pamP) {
 
 
 
-void 
+void
 pnm_setminallocationdepth(struct pam * const pamP,
                           unsigned int const allocationDepth) {
 
@@ -393,7 +394,7 @@ pnm_setminallocationdepth(struct pam * const pamP,
                  pamP->len, (unsigned)PAM_STRUCT_SIZE(allocation_depth));
 
     pamP->allocation_depth = MAX(allocationDepth, pamP->depth);
-        
+
     validateComputableSize(pamP);
 }
 
@@ -401,13 +402,13 @@ pnm_setminallocationdepth(struct pam * const pamP,
 
 void
 pnm_setpamrow(const struct pam * const pamP,
-              tuple *            const tuplerow, 
+              tuple *            const tuplerow,
               sample             const value) {
 
     int col;
     for (col = 0; col < pamP->width; ++col) {
         int plane;
-        for (plane = 0; plane < pamP->depth; ++plane) 
+        for (plane = 0; plane < pamP->depth; ++plane)
             tuplerow[col][plane] = value;
     }
 }
@@ -420,9 +421,9 @@ pnm_setpamrow(const struct pam * const pamP,
 
 static void
 parseHeaderLine(const char buffer[],
-                char label[MAX_LABEL_LENGTH+1], 
+                char label[MAX_LABEL_LENGTH+1],
                 char value[MAX_VALUE_LENGTH+1]) {
-    
+
     int buffer_curs;
 
     buffer_curs = 0;
@@ -434,12 +435,12 @@ parseHeaderLine(const char buffer[],
         int label_curs;
         label_curs = 0;
         while (!ISSPACE(buffer[buffer_curs]) && buffer[buffer_curs] != '\0') {
-            if (label_curs < MAX_LABEL_LENGTH) 
+            if (label_curs < MAX_LABEL_LENGTH)
                 label[label_curs++] = buffer[buffer_curs];
             buffer_curs++;
         }
         label[label_curs] = '\0';  /* null terminate it */
-    }    
+    }
 
     /* Skip white space between label and value */
     while (ISSPACE(buffer[buffer_curs])) buffer_curs++;
@@ -451,7 +452,7 @@ parseHeaderLine(const char buffer[],
         /* Remove trailing white space from value[] */
         int value_curs;
         value_curs = strlen(value)-1;
-        while (value_curs >= 0 && ISSPACE(value[value_curs])) 
+        while (value_curs >= 0 && ISSPACE(value[value_curs]))
             value[value_curs--] = '\0';
     }
 }
@@ -493,10 +494,10 @@ parseHeaderUint(const char *   const valueString,
         if (errno != 0)
             pm_error("Too-large value for %s in "
                      "PAM file header: '%s'", name, valueString);
-        else if (*endptr != '\0') 
+        else if (*endptr != '\0')
             pm_error("Non-numeric value for %s in "
                      "PAM file header: '%s'", name, valueString);
-        else if (valueNum < 0) 
+        else if (valueNum < 0)
             pm_error("Negative value for %s in "
                      "PAM file header: '%s'", name, valueString);
         else if ((unsigned int)valueNum != valueNum)
@@ -582,7 +583,7 @@ processHeaderLine(char                const buffer[],
             }
             pamP->tuple_type[sizeof(pamP->tuple_type)-1] = '\0';
         }
-    } else 
+    } else
         pm_error("Unrecognized header line type: '%s'.  "
                  "Possible missing ENDHDR line?", label);
 }
@@ -643,13 +644,13 @@ readpaminitrest(struct pam * const pamP) {
 
     comments = strdup("");
 
-    { 
+    {
         int c;
-        /* Read off rest of 1st line -- probably just the newline after the 
-           magic number 
+        /* Read off rest of 1st line -- probably just the newline after the
+           magic number
         */
         while ((c = getc(pamP->file)) != -1 && c != '\n');
-    }    
+    }
 
     while (!headerSeen.endhdr) {
         char buffer[256];
@@ -664,7 +665,7 @@ readpaminitrest(struct pam * const pamP) {
                 appendComment(&comments, buffer);
             else if (pm_stripeq(buffer, ""));
                 /* Ignore it; it's a blank line */
-            else 
+            else
                 processHeaderLine(buffer, pamP, &headerSeen);
         }
     }
@@ -680,13 +681,13 @@ readpaminitrest(struct pam * const pamP) {
     if (!headerSeen.maxval)
         pm_error("No MAXVAL header line in PAM header");
 
-    if (pamP->height == 0) 
+    if (pamP->height == 0)
         pm_error("HEIGHT value is zero in PAM header");
-    if (pamP->width == 0) 
+    if (pamP->width == 0)
         pm_error("WIDTH value is zero in PAM header");
-    if (pamP->depth == 0) 
+    if (pamP->depth == 0)
         pm_error("DEPTH value is zero in PAM header");
-    if (pamP->maxval == 0) 
+    if (pamP->maxval == 0)
         pm_error("MAXVAL value is zero in PAM header");
     if (pamP->maxval > PAM_OVERALL_MAXVAL)
         pm_error("MAXVAL value (%lu) in PAM header is greater than %u",
@@ -696,9 +697,9 @@ readpaminitrest(struct pam * const pamP) {
 
 
 void
-pnm_readpaminitrestaspnm(FILE * const fileP, 
-                         int *  const colsP, 
-                         int *  const rowsP, 
+pnm_readpaminitrestaspnm(FILE * const fileP,
+                         int *  const colsP,
+                         int *  const rowsP,
                          gray * const maxvalP,
                          int *  const formatP) {
 /*----------------------------------------------------------------------------
@@ -742,7 +743,7 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
 }
 
 
-                
+
 unsigned int
 pnm_bytespersample(sample const maxval) {
 /*----------------------------------------------------------------------------
@@ -870,17 +871,17 @@ interpretTupleType(struct pam * const pamP) {
 
 
 
-void 
-pnm_readpaminit(FILE *       const file, 
-                struct pam * const pamP, 
+void
+pnm_readpaminit(FILE *       const file,
+                struct pam * const pamP,
                 int          const size) {
 
-    if (size < PAM_STRUCT_SIZE(tuple_type)) 
+    if (size < PAM_STRUCT_SIZE(tuple_type))
         pm_error("pam object passed to pnm_readpaminit() is too small.  "
                  "It must be large "
                  "enough to hold at least up to the "
                  "'tuple_type' member, but according "
-                 "to the 'size' argument, it is only %d bytes long.", 
+                 "to the 'size' argument, it is only %d bytes long.",
                  size);
 
     pamP->size = size;
@@ -894,7 +895,7 @@ pnm_readpaminit(FILE *       const file,
     pamP->format = pm_readmagicnumber(file);
 
     switch (PAM_FORMAT_TYPE(pamP->format)) {
-    case PAM_TYPE: 
+    case PAM_TYPE:
         readpaminitrest(pamP);
         break;
     case PPM_TYPE: {
@@ -925,12 +926,12 @@ pnm_readpaminit(FILE *       const file,
         if (pamCommentP(pamP))
             *pamP->comment_p = strdup("");
         break;
-        
+
     default:
         pm_error("bad magic number 0x%x - not a PAM, PPM, PGM, or PBM file",
                  pamP->format);
     }
-    
+
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
     pamP->plainformat = FALSE;
         /* See below for complex explanation of why this is FALSE. */
@@ -958,7 +959,7 @@ writeComments(const struct pam * const pamP) {
         for (p = &comment[0], startOfLine = TRUE; *p; ++p) {
             if (startOfLine)
                 fputc('#', pamP->file);
-                
+
             fputc(*p, pamP->file);
 
             if (*p == '\n')
@@ -985,7 +986,7 @@ writeComments(const struct pam * const pamP) {
    pam structure is what determines whether it is raw or plain.  So we
    set it false here so that it is false in the copied output pam
    structure.
-   
+
    Before 10.32, we set 'plainformat' according to the
    plainness of the input image, and thought it was a good
    idea for a program that reads a plain format input image to
@@ -996,7 +997,7 @@ writeComments(const struct pam * const pamP) {
    facilities to pam.
 */
 
-void 
+void
 pnm_writepaminit(struct pam * const pamP) {
 
     const char * tupleType;
@@ -1013,7 +1014,7 @@ pnm_writepaminit(struct pam * const pamP) {
                  "It must be large "
                  "enough to hold at least up through the "
                  "'bytes_per_sample' member, but according "
-                 "to its 'size' member, it is only %u bytes long.", 
+                 "to its 'size' member, it is only %u bytes long.",
                  pamP->size);
     if (pamP->len < PAM_STRUCT_SIZE(maxval))
         pm_error("pam object must contain members at least through 'maxval', "
@@ -1044,7 +1045,7 @@ pnm_writepaminit(struct pam * const pamP) {
     interpretTupleType(pamP);
 
     pamP->len = MIN(pamP->size, PAM_STRUCT_SIZE(opacity_plane));
-    
+
     switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE:
         /* See explanation below of why we ignore 'pm_plain_output' here. */
@@ -1064,13 +1065,13 @@ pnm_writepaminit(struct pam * const pamP) {
         */
         if (pamP->depth != 3)
             pm_error("pnm_writepaminit() got PPM format, but depth = %d "
-                     "instead of 3, as required for PPM.", 
+                     "instead of 3, as required for PPM.",
                      pamP->depth);
-        if (pamP->maxval > PPM_OVERALLMAXVAL) 
+        if (pamP->maxval > PPM_OVERALLMAXVAL)
             pm_error("pnm_writepaminit() got PPM format, but maxval = %ld, "
-                     "which exceeds the maximum allowed for PPM: %d", 
+                     "which exceeds the maximum allowed for PPM: %d",
                      pamP->maxval, PPM_OVERALLMAXVAL);
-        ppm_writeppminit(pamP->file, pamP->width, pamP->height, 
+        ppm_writeppminit(pamP->file, pamP->width, pamP->height,
                          (pixval) pamP->maxval, pamP->plainformat);
         break;
 
@@ -1081,9 +1082,9 @@ pnm_writepaminit(struct pam * const pamP) {
                      pamP->depth);
         if (pamP->maxval > PGM_OVERALLMAXVAL)
             pm_error("pnm_writepaminit() got PGM format, but maxval = %ld, "
-                     "which exceeds the maximum allowed for PGM: %d", 
+                     "which exceeds the maximum allowed for PGM: %d",
                      pamP->maxval, PGM_OVERALLMAXVAL);
-        pgm_writepgminit(pamP->file, pamP->width, pamP->height, 
+        pgm_writepgminit(pamP->file, pamP->width, pamP->height,
                          (gray) pamP->maxval, pamP->plainformat);
         break;
 
@@ -1092,10 +1093,10 @@ pnm_writepaminit(struct pam * const pamP) {
             pm_error("pnm_writepaminit() got PBM format, but depth = %d "
                      "instead of 1, as required for PBM.",
                      pamP->depth);
-        if (pamP->maxval != 1) 
+        if (pamP->maxval != 1)
             pm_error("pnm_writepaminit() got PBM format, but maxval = %ld "
                      "instead of 1, as required for PBM.", pamP->maxval);
-        pbm_writepbminit(pamP->file, pamP->width, pamP->height, 
+        pbm_writepbminit(pamP->file, pamP->width, pamP->height,
                          pamP->plainformat);
         break;
 
@@ -1125,29 +1126,29 @@ pnm_writepaminit(struct pam * const pamP) {
 
 
 void
-pnm_checkpam(const struct pam *   const pamP, 
-             enum pm_check_type   const checkType, 
+pnm_checkpam(const struct pam *   const pamP,
+             enum pm_check_type   const checkType,
              enum pm_check_code * const retvalP) {
 
     if (checkType != PM_CHECK_BASIC) {
         if (retvalP) *retvalP = PM_CHECK_UNKNOWN_TYPE;
     } else switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE: {
-        pm_filepos const need_raster_size = 
+        pm_filepos const need_raster_size =
             pamP->width * pamP->height * pamP->depth * pamP->bytes_per_sample;
         pm_check(pamP->file, checkType, need_raster_size, retvalP);
     }
         break;
     case PPM_TYPE:
-        pgm_check(pamP->file, checkType, pamP->format, 
+        pgm_check(pamP->file, checkType, pamP->format,
                   pamP->width, pamP->height, pamP->maxval, retvalP);
         break;
     case PGM_TYPE:
-        pgm_check(pamP->file, checkType, pamP->format, 
+        pgm_check(pamP->file, checkType, pamP->format,
                   pamP->width, pamP->height, pamP->maxval, retvalP);
         break;
     case PBM_TYPE:
-        pbm_check(pamP->file, checkType, pamP->format, 
+        pbm_check(pamP->file, checkType, pamP->format,
                   pamP->width, pamP->height, retvalP);
         break;
     default:
@@ -1157,7 +1158,7 @@ pnm_checkpam(const struct pam *   const pamP,
 
 
 
-void 
+void
 pnm_maketuplergb(const struct pam * const pamP,
                  tuple              const tuple) {
 
@@ -1171,29 +1172,27 @@ pnm_maketuplergb(const struct pam * const pamP,
 
 
 
-void 
+void
 pnm_makerowrgb(const struct pam * const pamP,
                tuple *            const tuplerow) {
-    
+
     if (pamP->depth < 3) {
         unsigned int col;
 
         if (allocationDepth(pamP) < 3)
             pm_error("allocation depth %u passed to pnm_makerowrgb().  "
                      "Must be at least 3.", allocationDepth(pamP));
-        
-        if (strncmp(pamP->tuple_type, "RGB", 3) != 0) {
-            for (col = 0; col < pamP->width; ++col) {
-                tuple const thisTuple = tuplerow[col];
-                thisTuple[2] = thisTuple[1] = thisTuple[0];
-            }
+
+        for (col = 0; col < pamP->width; ++col) {
+            tuple const thisTuple = tuplerow[col];
+            thisTuple[2] = thisTuple[1] = thisTuple[0];
         }
     }
 }
 
 
 
-void 
+void
 pnm_makearrayrgb(const struct pam * const pamP,
                  tuple **           const tuples) {
 
@@ -1202,7 +1201,7 @@ pnm_makearrayrgb(const struct pam * const pamP,
         if (allocationDepth(pamP) < 3)
             pm_error("allocation depth %u passed to pnm_makearrayrgb().  "
                      "Must be at least 3.", allocationDepth(pamP));
-        
+
         for (row = 0; row < pamP->height; ++row) {
             tuple * const tuplerow = tuples[row];
             unsigned int col;
@@ -1216,7 +1215,7 @@ pnm_makearrayrgb(const struct pam * const pamP,
 
 
 
-void 
+void
 pnm_makerowrgba(const struct pam * const pamP,
                 tuple *            const tuplerow) {
 /*----------------------------------------------------------------------------
@@ -1237,7 +1236,7 @@ pnm_makerowrgba(const struct pam * const pamP,
     } else {
         if (!pamP->visual)
             pm_error("Non-visual tuples given to pnm_addopacityrow()");
-        
+
         if (pamP->color_depth >= 3 && pamP->have_opacity) {
             /* It's already in RGBA format.  Leave it alone. */
         } else {
@@ -1246,10 +1245,10 @@ pnm_makerowrgba(const struct pam * const pamP,
             if (allocationDepth(pamP) < 4)
                 pm_error("allocation depth %u passed to pnm_makerowrgba().  "
                          "Must be at least 4.", allocationDepth(pamP));
-        
+
             for (col = 0; col < pamP->width; ++col) {
                 tuple const thisTuple = tuplerow[col];
-                thisTuple[PAM_TRN_PLANE] = 
+                thisTuple[PAM_TRN_PLANE] =
                     pamP->have_opacity ? thisTuple[pamP->opacity_plane] :
                     pamP->maxval;
 
@@ -1263,7 +1262,7 @@ pnm_makerowrgba(const struct pam * const pamP,
 
 
 
-void 
+void
 pnm_addopacityrow(const struct pam * const pamP,
                   tuple *            const tuplerow) {
 /*----------------------------------------------------------------------------
@@ -1284,7 +1283,7 @@ pnm_addopacityrow(const struct pam * const pamP,
     } else {
         if (!pamP->visual)
             pm_error("Non-visual tuples given to pnm_addopacityrow()");
-        
+
         if (pamP->have_opacity) {
             /* It already has opacity.  Leave it alone. */
         } else {
@@ -1296,7 +1295,7 @@ pnm_addopacityrow(const struct pam * const pamP,
                 pm_error("allocation depth %u passed to pnm_addopacityrow().  "
                          "Must be at least %u.",
                          allocationDepth(pamP), opacityPlane + 1);
-        
+
             for (col = 0; col < pamP->width; ++col)
                 tuplerow[col][opacityPlane] = pamP->maxval;
         }
@@ -1387,7 +1386,7 @@ pnm_backgroundtuple(struct pam *  const pamP,
 
 
 /*=============================================================================
-   pm_system() Standard Input feeder and Standard Output accepter functions.   
+   pm_system() Standard Input feeder and Standard Output accepter functions.
 =============================================================================*/
 
 void

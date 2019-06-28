@@ -169,7 +169,7 @@ getMatrixOptDimensions(const char *   const matrixOptString,
                 if (colCt != *widthP)
                 pm_error("-matrix option value contains rows of different "
                          "widths: %u and %u", *widthP, colCt);
-            }            
+            }
             pm_strfree(rowString);
             cursor = next;
 
@@ -211,7 +211,7 @@ parseMatrixRow(const char * const matrixOptRowString,
                 char * trailingJunk;
                 weight[col] = strtod(colString, &trailingJunk);
 
-                if (*trailingJunk != '\0') 
+                if (*trailingJunk != '\0')
                     pm_error("The Column %u element of the row '%s' in the "
                              "-matrix value is not a valid floating point "
                              "number", col, matrixOptRowString);
@@ -235,7 +235,7 @@ parseMatrixOptWithDimensions(const char * const matrixOptString,
                              unsigned int const width,
                              unsigned int const height,
                              float **     const weight) {
-    
+
     unsigned int row;
     const char * cursor;
 
@@ -262,7 +262,7 @@ parseMatrixOptWithDimensions(const char * const matrixOptString,
             }
         }
     }
-}    
+}
 
 
 
@@ -311,7 +311,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -336,9 +336,9 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->matrixSpec,     0)
     OPTENT3(0, "matrixfile",   OPT_STRINGLIST, &cmdlineP->matrixfile,
             &matrixfileSpec,           0)
-    OPTENT3(0, "nooffset",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "nooffset",     OPT_FLAG,   NULL,
             &cmdlineP->nooffset,       0);
-    OPTENT3(0, "normalize",    OPT_FLAG,   NULL,                  
+    OPTENT3(0, "normalize",    OPT_FLAG,   NULL,
             &cmdlineP->normalize,      0);
     OPTENT3(0, "bias",         OPT_UINT,   &cmdlineP->bias,
             &biasSpec,                 0);
@@ -382,7 +382,7 @@ parseCommandLine(int argc, char ** argv,
                      "argument is the input file name");
     } else {
         /* It's an old style invocation we accept for backward compatibility */
-        
+
         if (argc-1 < 1)
             pm_error("You must specify either -matrix or -matrixfile "
                      "at least one argument which names an old-style PGM "
@@ -394,7 +394,7 @@ parseCommandLine(int argc, char ** argv,
                 cmdlineP->inputFileName = argv[2];
             else
                 cmdlineP->inputFileName = "-";
-            
+
             if (argc-1 > 2)
                 pm_error("Too many arguments.  Only acceptable arguments are: "
                          "convolution matrix file name and input file name");
@@ -416,11 +416,11 @@ struct ConvKernel {
     float ** weight[3];
         /* weight[PLANE][ROW][COL] is the weight to give to Plane PLANE
            of the pixel at row ROW, column COL within the convolution window.
-           
+
            One means full weight.
 
            It can have magnitude greater than or less than one.  It can be
-           positive or negative.  
+           positive or negative.
         */
     unsigned int bias;
         /* The amount to be added to the linear combination of sample values.
@@ -441,7 +441,7 @@ warnBadKernel(struct ConvKernel * const convKernelP) {
 
     for (plane = 0; plane < convKernelP->planes; ++plane)
         sum[plane] = 0.0; /* initial value */
-    
+
     for (row = 0; row < convKernelP->rows; ++row) {
         unsigned int col;
         for (col = 0; col < convKernelP->cols; ++col) {
@@ -462,9 +462,9 @@ warnBadKernel(struct ConvKernel * const convKernelP) {
             if (sum[plane] < 0.0)
                 negative = true;
         }
-    
+
         if (biased) {
-            pm_message("WARNING - this convolution matrix is biased.  " 
+            pm_message("WARNING - this convolution matrix is biased.  "
                        "red, green, and blue average weights: %f, %f, %f "
                        "(unbiased would be 1).",
                        sum[PAM_RED_PLANE],
@@ -488,15 +488,14 @@ warnBadKernel(struct ConvKernel * const convKernelP) {
 
 static void
 convKernelCreatePnm(struct pam *         const cpamP,
-                    tuple * const *      const ctuples, 
+                    tuple * const *      const ctuples,
                     unsigned int         const depth,
                     bool                 const offsetPnm,
                     struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
-   Compute the convolution matrix in normalized form from the PGM form
-   'ctuples'/'cpamP'.  Each element of the output matrix is the actual weight
-   we give an input pixel -- i.e. the thing by which we multiple a value from
-   the input image.
+   Compute the convolution matrix from the PGM form 'ctuples'/'cpamP'.  Each
+   element of the output matrix is the actual weight we give an input pixel --
+   i.e. the thing by which we multiple a value from the input image.
 
    'depth' is the required number of planes in the kernel.  If 'ctuples' has
    fewer planes than that, we duplicate as necessary.  E.g. if 'ctuples' is
@@ -527,7 +526,7 @@ convKernelCreatePnm(struct pam *         const cpamP,
         unsigned int row;
 
         MALLOCARRAY_NOFAIL(convKernelP->weight[plane], cpamP->height);
-    
+
         for (row = 0; row < cpamP->height; ++row) {
             unsigned int col;
 
@@ -570,15 +569,18 @@ convKernelDestroy(struct ConvKernel * const convKernelP) {
 static void
 normalizeKernelPlane(struct ConvKernel * const convKernelP,
                      unsigned int        const plane) {
-
+/*----------------------------------------------------------------------------
+   Modify *convKernelP by scaling every weight in plane 'plane' by the same
+   factor such that the weights in the plane all add up to 1.
+-----------------------------------------------------------------------------*/
     unsigned int row;
     float sum;
 
     for (row = 0, sum = 0.0; row < convKernelP->rows; ++row) {
         unsigned int col;
-            
+
         for (col = 0; col < convKernelP->cols; ++col) {
-                
+
             sum += convKernelP->weight[plane][row][col];
         }
     }
@@ -590,7 +592,7 @@ normalizeKernelPlane(struct ConvKernel * const convKernelP,
 
         for (row = 0; row < convKernelP->rows; ++row) {
             unsigned int col;
-                
+
             for (col = 0; col < convKernelP->cols; ++col)
                 convKernelP->weight[plane][row][col] *= scaler;
         }
@@ -602,8 +604,9 @@ normalizeKernelPlane(struct ConvKernel * const convKernelP,
 static void
 normalizeKernel(struct ConvKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
-   Modify *convKernelP by scaling every weight in a plane by the same factor
-   such that the weights in the plane all add up to 1.
+   Modify *convKernelP by scaling each plane as follows: Scale every weight in
+   the plane by the same factor such that the weights in the plane all add up
+   to 1.
 -----------------------------------------------------------------------------*/
     unsigned int plane;
 
@@ -638,7 +641,7 @@ getKernelPnm(const char *         const fileName,
     /* Read in the convolution matrix. */
     ctuples = pnm_readpam(cifP, &cpam, PAM_STRUCT_SIZE(tuple_type));
     pm_close(cifP);
-    
+
     validateKernelDimensions(cpam.width, cpam.height);
 
     convKernelCreatePnm(&cpam, ctuples, depth, offset, convKernelPP);
@@ -648,20 +651,14 @@ getKernelPnm(const char *         const fileName,
 
 static void
 convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
-                          bool                 const normalize,
                           unsigned int         const depth,
                           unsigned int         const bias,
                           struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
    Create a convolution kernel as described by a -matrix command line
    option.
-   
-   The option value is 'matrixOpt'.
 
-   If 'normalize' is true, we normalize whatever numbers the option specifies
-   so that they add up to one; otherwise, we take the numbers as we find them,
-   so they may form a biased matrix -- i.e. one which brightens or dims the
-   image overall.
+   The option value is 'matrixOpt'.
 -----------------------------------------------------------------------------*/
     struct ConvKernel * convKernelP;
     unsigned int plane;
@@ -681,17 +678,14 @@ convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
 
             MALLOCARRAY_NOFAIL(convKernelP->weight[plane][row],
                                matrixOpt.width);
-    
+
             for (col = 0; col < matrixOpt.width; ++col)
                 convKernelP->weight[plane][row][col] =
                     matrixOpt.weight[row][col];
         }
     }
-    if (normalize)
-        normalizeKernel(convKernelP);
 
     convKernelP->bias = bias;
-
     *convKernelPP = convKernelP;
 }
 
@@ -734,12 +728,12 @@ parsePlaneFileLine(const char *   const line,
         else {
             char * trailingJunk;
             weight[colCt] = strtod(token, &trailingJunk);
-            if (*trailingJunk != '\0') 
+            if (*trailingJunk != '\0')
                 pm_error("The Column %u element of the row '%s' in the "
                          "-matrix value is not a valid floating point "
                          "number", colCt, line);
 
-                ++colCt;
+            ++colCt;
         }
         pm_strfree(token);
     }
@@ -750,7 +744,7 @@ parsePlaneFileLine(const char *   const line,
 
 
 static void
-readPlaneFile(FILE *         const ifP, 
+readPlaneFile(FILE *         const ifP,
               float ***      const weightP,
               unsigned int * const widthP,
               unsigned int * const heightP) {
@@ -789,7 +783,7 @@ readPlaneFile(FILE *         const ifP,
                 eof = true;
             else {
                 REALLOCARRAY(weight, rowCt + 1);
-            
+
                 if (weight == NULL)
                     pm_error("Unable to allocate memory for "
                              "convolution matrix");
@@ -805,7 +799,7 @@ readPlaneFile(FILE *         const ifP,
                             pm_error("Multiple row widths in the convolution "
                                      "matrix file: %u columns and %u columns.",
                                      width, thisWidth);
-                    }                    
+                    }
                     ++rowCt;
                 }
                 pm_strfree(line);
@@ -824,7 +818,7 @@ readPlaneFile(FILE *         const ifP,
 static void
 copyWeight(float **       const srcWeight,
            unsigned int   const width,
-           unsigned int   const height, 
+           unsigned int   const height,
            float ***      const dstWeightP) {
 /*----------------------------------------------------------------------------
    Make a copy, in dynamically allocated memory, of the weight matrix
@@ -838,7 +832,7 @@ copyWeight(float **       const srcWeight,
 
     if (dstWeight == NULL)
         pm_error("Could not allocate memory for convolution matrix");
-   
+
     for (row = 0; row < height; ++row) {
         unsigned int col;
 
@@ -859,7 +853,6 @@ copyWeight(float **       const srcWeight,
 
 static void
 convKernelCreateSimpleFile(const char **        const fileNameList,
-                           bool                 const normalize,
                            unsigned int         const depth,
                            unsigned int         const bias,
                            struct ConvKernel ** const convKernelPP) {
@@ -869,11 +862,6 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
    legacy pseudo-PNM thing.
 
    The name of the file is 'fileNameList'.
-
-   If 'normalize' is true, we normalize whatever numbers we find in the file
-   so that they add up to one; otherwise, we take the numbers as we find them,
-   so they may form a biased matrix -- i.e. one which brightens or dims the
-   image overall.
 -----------------------------------------------------------------------------*/
     struct ConvKernel * convKernelP;
     unsigned int fileCt;
@@ -923,9 +911,6 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
         }
     }
 
-    if (normalize)
-        normalizeKernel(convKernelP);
-
     convKernelP->cols = width;
     convKernelP->rows = height;
     convKernelP->bias = bias;
@@ -953,11 +938,14 @@ getKernel(struct cmdlineInfo   const cmdline,
         getKernelPnm(cmdline.pnmMatrixFileName, depth, !cmdline.nooffset,
                      &convKernelP);
     else if (cmdline.matrixfile)
-        convKernelCreateSimpleFile(cmdline.matrixfile, cmdline.normalize,
-                                   depth, cmdline.bias, &convKernelP);
+        convKernelCreateSimpleFile(cmdline.matrixfile, depth, cmdline.bias,
+            &convKernelP);
     else if (cmdline.matrixSpec)
-        convKernelCreateMatrixOpt(cmdline.matrix, cmdline.normalize,
-                                  depth, cmdline.bias, &convKernelP);
+        convKernelCreateMatrixOpt(cmdline.matrix, depth, cmdline.bias,
+            &convKernelP);
+
+    if (cmdline.normalize)
+        normalizeKernel(convKernelP);
 
     warnBadKernel(convKernelP);
 
@@ -985,7 +973,7 @@ validateEnoughImageToConvolve(const struct pam *        const inpamP,
         pm_error("Image is too short (%u rows) to convolve with this "
                  "%u-row convolution kernel.",
                  inpamP->height, convKernelP->rows);
-    
+
     if (inpamP->width < convKernelP->cols + 1)
         pm_error("Image is too narrow (%u columns) to convolve with this "
                  "%u-column convolution kernel.",
@@ -1006,7 +994,7 @@ allocRowbuf(struct pam * const pamP,
         pm_error("Failed to allocate %u-row buffer", height);
     else {
         unsigned int row;
-    
+
         for (row = 0; row < height; ++row)
             rowbuf[row] = pnm_allocpamrow(pamP);
     }
@@ -1055,7 +1043,7 @@ readAndScaleRows(struct pam *              const inpamP,
                  unsigned int              const outputDepth) {
 /*----------------------------------------------------------------------------
   Read in 'count' rows into rowbuf[].
-  
+
   Scale the contents to maxval 'outputMaxval' and expand to depth
   'outputDepth'.
 -----------------------------------------------------------------------------*/
@@ -1185,7 +1173,7 @@ convolveGeneralRowPlane(struct pam *              const pamP,
     unsigned int const ccolso2 = convKernelP->cols / 2;
 
     unsigned int col;
-    
+
     for (col = 0; col < pamP->width; ++col) {
         if (col < ccolso2 || col >= pamP->width - ccolso2)
             /* The unconvolved left or right edge */
@@ -1295,7 +1283,7 @@ allocSum(unsigned int const depth,
 
         for (plane = 0; plane < depth; ++plane) {
             MALLOCARRAY(sum[plane], size);
-            
+
             if (!sum[plane])
                 pm_error("Could not allocate memory for %u sums", size);
         }
@@ -1342,7 +1330,7 @@ computeInitialColumnSums(struct pam *              const pamP,
                  row < convKernelP->rows;
                  ++row)
                 convColumnSum[plane][col] += window[row][col][plane];
-        }            
+        }
     }
 }
 
@@ -1370,7 +1358,7 @@ convolveRowWithColumnSumsMean(const struct ConvKernel * const convKernelP,
   be convolved because the convolution window runs off the edge).
 -----------------------------------------------------------------------------*/
     unsigned int plane;
-    
+
     for (plane = 0; plane < pamP->depth; ++plane) {
         unsigned int const crowso2 = convKernelP->rows / 2;
         unsigned int const ccolso2 = convKernelP->cols / 2;
@@ -1397,7 +1385,7 @@ convolveRowWithColumnSumsMean(const struct ConvKernel * const convKernelP,
                 } else {
                     /* Column numbers to subtract or add to isum */
                     unsigned int const subcol = col - ccolso2 - 1;
-                    unsigned int const addcol = col + ccolso2;  
+                    unsigned int const addcol = col + ccolso2;
 
                     gisum -= convColumnSum[plane][subcol];
                     gisum += convColumnSum[plane][addcol];
@@ -1441,7 +1429,7 @@ convolveRowWithColumnSumsVertical(
 
     for (plane = 0; plane < pamP->depth; ++plane) {
         unsigned int col;
-    
+
         for (col = 0; col < pamP->width; ++col) {
             if (col < ccolso2 || col >= pamP->width - ccolso2) {
                 /* The unconvolved left or right edge */
@@ -1525,12 +1513,12 @@ convolveMeanRowPlane(struct pam *              const pamP,
             } else {
                 /* Column numbers to subtract or add to isum */
                 unsigned int const subcol = col - ccolso2 - 1;
-                unsigned int const addcol = col + ccolso2;  
-                
+                unsigned int const addcol = col + ccolso2;
+
                 convColumnSum[addcol] = convColumnSum[addcol]
                     - window[subrow][addcol][plane]
                     + window[addrow][addcol][plane];
-                
+
                 gisum = gisum - convColumnSum[subcol] + convColumnSum[addcol];
             }
             outputrow[col][plane] =
@@ -1686,7 +1674,7 @@ allocRowSum(unsigned int const depth,
 
         for (plane = 0; plane < depth; ++plane) {
             MALLOCARRAY(sum[plane], height);
-            
+
             if (!sum[plane])
                 pm_error("Could not allocate memory for %u rows of sums",
                          height);
@@ -1695,7 +1683,7 @@ allocRowSum(unsigned int const depth,
 
                 for (row = 0; row < height; ++row) {
                     MALLOCARRAY(sum[plane][row], width);
-                    
+
                     if (!sum[plane][row])
                         pm_error("Could not allocate memory "
                                  "for a row of sums");
@@ -1759,7 +1747,7 @@ convolveHorizontalRowPlane0(struct pam *              const outpamP,
                    starts at the left edge of the image.
                 */
                 unsigned int const leftcol = 0;
-            
+
                 unsigned int crow;
 
                 for (crow = 0, matrixSum = 0.0;
@@ -1768,7 +1756,7 @@ convolveHorizontalRowPlane0(struct pam *              const outpamP,
                     tuple * const tuplesInWindow = &window[crow][leftcol];
 
                     unsigned int ccol;
-                
+
                     sumWindow[crow][col] = 0;
                     for (ccol = 0; ccol < convKernelP->cols; ++ccol)
                         sumWindow[crow][col] += tuplesInWindow[ccol][plane];
@@ -1781,7 +1769,7 @@ convolveHorizontalRowPlane0(struct pam *              const outpamP,
                 unsigned int const addcol  = col + ccolso2;
 
                 unsigned int crow;
-                
+
                 for (crow = 0, matrixSum = 0.0;
                      crow < convKernelP->rows;
                      ++crow) {
@@ -1810,7 +1798,7 @@ setupCircMap2(tuple **     const rowbuf,
               unsigned int const windowHeight) {
 
     unsigned int const toprow = windowTopRow % windowHeight;
-    
+
     unsigned int crow;
     unsigned int i;
 
@@ -1886,7 +1874,7 @@ convolveHorizontalRowPlane(struct pam *              const pamP,
             }
         } else {
             unsigned int const subcol  = col - ccolso2 - 1;
-            unsigned int const addcol  = col + ccolso2;  
+            unsigned int const addcol  = col + ccolso2;
 
             unsigned int crow;
 
@@ -1959,7 +1947,7 @@ convolveHorizontal(struct pam *              const inpamP,
 
         for (crow = 0; crow < convKernelP->rows; ++crow)
             sumCircMap[crow] = convRowSum[plane][crow];
- 
+
         convolveHorizontalRowPlane0(outpamP, circMap, convKernelP, plane,
                                     outputrow, sumCircMap);
     }
@@ -1981,13 +1969,13 @@ convolveHorizontal(struct pam *              const inpamP,
 
             readAndScaleRow(inpamP, rowbuf[windowBotRow % windowHeight],
                             outpamP->maxval, outpamP->depth);
-            
+
             setupCircMap2(rowbuf, convRowSum[plane], circMap, sumCircMap,
                           windowTopRow, windowHeight);
 
             convolveHorizontalRowPlane(outpamP, circMap, convKernelP, plane,
                                        outputrow, sumCircMap);
-            
+
             pnm_writepamrow(outpamP, outputrow);
         }
     }
@@ -2017,7 +2005,7 @@ convolveVerticalRowPlane(struct pam *              const pamP,
         */
     unsigned int const addrow = 1 + (convKernelP->rows - 1);
         /* Bottom row of convolution window: What we add to running sum */
-    
+
     unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
@@ -2316,7 +2304,7 @@ main(int argc, char * argv[]) {
  original) in January 1995.
 
  Reduce run time by general optimizations and handling special cases of
- convolution matrices.  Program automatically determines if convolution 
+ convolution matrices.  Program automatically determines if convolution
  matrix is one of the types it can make use of so no extra command line
  arguments are necessary.
 
@@ -2334,7 +2322,7 @@ main(int argc, char * argv[]) {
  -------------------------------------------
  Created separate functions as code was getting too large to put keep both
  PGM and PPM cases in same function and also because SWITCH statement in
- inner loop can take progressively more time the larger the size of the 
+ inner loop can take progressively more time the larger the size of the
  convolution matrix.  GCC is affected this way.
 
  Removed use of MOD (%) operator from innermost loop by modifying manner in
@@ -2343,50 +2331,50 @@ main(int argc, char * argv[]) {
  This is from the file pnmconvol.README, dated August 1995, extracted in
  April 2000, which was in the March 1994 Netpbm release:
 
- ----------------------------------------------------------------------------- 
+ -----------------------------------------------------------------------------
  This is a faster version of the pnmconvol.c program that comes with netpbm.
  There are no changes to the command line arguments, so this program can be
  dropped in without affecting the way you currently run it.  An updated man
  page is also included.
- 
+
  My original intention was to improve the running time of applying a
  neighborhood averaging convolution matrix to an image by using a different
  algorithm, but I also improved the run time of performing the general
  convolution by optimizing that code.  The general convolution runs in 1/4 to
  1/2 of the original time and neighborhood averaging runs in near constant
  time for the convolution masks I tested (3x3, 5x5, 7x7, 9x9).
- 
+
  Sample times for two computers are below.  Times are in seconds as reported
  by /bin/time for a 512x512 pgm image.
- 
+
  Matrix                  IBM RS6000      SUN IPC
  Size & Type                220
- 
+
  3x3
  original pnmconvol         6.3            18.4
  new general case           3.1             6.0
  new average case           1.8             2.6
- 
+
  5x5
  original pnmconvol        11.9            44.4
  new general case           5.6            11.9
  new average case           1.8             2.6
- 
+
  7x7
  original pnmconvol        20.3            82.9
  new general case           9.4            20.7
  new average case           1.8             2.6
- 
+
  9x9
  original pnmconvol        30.9           132.4
  new general case          14.4            31.8
  new average case           1.8             2.6
- 
- 
+
+
  Send all questions/comments/bugs to me at burns@chem.psu.edu.
- 
+
  - Mike
- 
+
  ----------------------------------------------------------------------------
  Mike Burns                                              System Administrator
  burns@chem.psu.edu                                   Department of Chemistry

@@ -1,0 +1,35 @@
+#! /bin/bash
+# This script tests: pamscale
+# Also requires:
+
+pamscale -reportonly 3 testimg.ppm
+pamscale -reportonly 5 testimg.ppm
+pamscale -reportonly -xysize 640 400 testimg.ppm
+pamscale -reportonly -xyfill 640 400 testimg.ppm
+pamscale -reportonly -xyfit  100 100 testimg.ppm
+pamscale -reportonly -reduce 6 testimg.ppm
+pamscale -reportonly -reduce 10 testimg.ppm
+pamscale -reportonly -xsize=640 -ysize=400 testimg.ppm
+pamscale -reportonly -width=640 -height=400 testimg.ppm
+pamscale -reportonly -width=640 -yscale=2 testimg.ppm
+pamscale -reportonly -xscale=1.4 -height=400 testimg.ppm
+pamscale -reportonly -pixels=45000 testimg.ppm
+
+# expected error cases
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+pamscale -reportonly -xsize=640 -ysize=400 -xscale=2 testimg.ppm || \
+  echo expected error
+pamscale -reportonly -xsize=640 -xscale=2 -yscale=3 testimg.ppm || \
+  echo expected error
+pamscale -reportonly -xsize=640 -ysize=400 -pixels=200000 testimg.ppm || \
+  echo expected error
+pamscale -reportonly -xsize=640 -ysize=400 -xysize 640 400 testimg.ppm || \
+  echo expected error
+pamscale -reportonly -xsize=640 -ysize=400 -xyfit  640 400 testimg.ppm || \
+  echo expected error
+pamscale -reportonly -xsize=640 -ysize=400 -xyfill 640 400 testimg.ppm || \
+  echo expected error
+

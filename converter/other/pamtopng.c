@@ -1,21 +1,8 @@
-/*
-** read a PNM/PAM image and produce a Portable Network Graphics (PNG) file
-**
-** derived from pnmtorast.c by Jef Poskanzer and pamrgbatopng.c by Bryan
-** Henderson <bryanh@giraffe-data.com> and probably some other sources
-**
-** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
-**                        and Willem van Schaik <willem@schaik.com>
-** Copyright (C) 1999,2001 by Greg Roelofs <newt@pobox.com>
-** Copyright (C) 2015 by Willem van Schaik <willem@schaik.com>
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
+/*=============================================================================
+                                  pamtopng
+===============================================================================
+  Read a Netpbm image and produce a PNG (Portable Network Graphics) image.
+=============================================================================*/
 
 /*
   This Netpbm program pamtopng was derived in 2015 from the Netpbm program
@@ -29,18 +16,19 @@
     had become rather complex.  This program is roughly 1/3 the size of
     pnmtopng.c that it replaces.
 
-  - In 1995 bandwith was limited and therefore filesize had to be kept
+  - In 1995, bandwith was limited and therefore filesize had to be kept
     small. The original program tried to optimize for that by applying
-    many "clever tricks". Today that isn't an issue anymore, so gone 
+    many "clever tricks". Today that isn't an issue anymore, so gone
     are filters, palettes, etc. Also, image conversions were removed,
     because those should be done with other NetPBM tools.
 
   - Add ability to create iTXt (international language) chunks.
 */
 
-
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <png.h>
 /* setjmp.h needs to be included after png.h */
 #include <setjmp.h>
@@ -61,6 +49,7 @@ static bool verbose;
 struct CmdlineInfo {
     const char * inputFileName;
     unsigned int verbose;
+    unsigned int interlace;
     unsigned int transparencySpec;
     const char * transparency;
     unsigned int chromaSpec;
@@ -88,7 +77,7 @@ parseChromaOpt(const char *         const chromaOpt,
                struct pngx_chroma * const chromaP) {
 
     int count;
-    
+
     count = sscanf(chromaOpt, "%f %f %f %f %f %f %f %f",
                    &chromaP->wx, &chromaP->wy,
                    &chromaP->rx, &chromaP->ry,
@@ -107,7 +96,7 @@ parseChromaOpt(const char *         const chromaOpt,
 static void
 parseSrgbintentOpt(const char *      const srgbintentOpt,
                    pngx_srgbIntent * const srgbintentP) {
-    
+
     if (streq(srgbintentOpt, "perceptual"))
         *srgbintentP = PNGX_PERCEPTUAL;
     else if (streq(srgbintentOpt, "relativecolorimetric"))
@@ -145,7 +134,7 @@ parseTimeOpt(const char * const timeOpt,
     if (count != 6)
         pm_error("Invalid value for -time '%s'.   It should have "
                  "the form [yy]yy-mm-dd hh:mm:ss.", timeOpt);
-    
+
     if (year < 0)
         pm_error("Year is negative in -time value '%s'", timeOpt);
     if (year > 9999)
@@ -192,7 +181,7 @@ static void
 parseCommandLine (int                  argc,
                   const char **        argv,
                   struct CmdlineInfo * const cmdlineP) {
-    
+
     optEntry * option_def;
     optStruct3 opt;
     unsigned int option_def_index = 0;  /* incremented by OPTENT3 */
@@ -205,6 +194,8 @@ parseCommandLine (int                  argc,
 
     OPTENT3(0,  "verbose",      OPT_FLAG,       NULL,
             &cmdlineP->verbose,        0);
+    OPTENT3(0,  "interlace",    OPT_FLAG,       NULL,
+            &cmdlineP->interlace,      0);
     OPTENT3(0,  "transparency", OPT_STRING,     &cmdlineP->transparency,
             &cmdlineP->transparencySpec, 0);
     OPTENT3(0,  "chroma",       OPT_STRING,     &chroma,
@@ -239,7 +230,7 @@ parseCommandLine (int                  argc,
 
     if (cmdlineP->timeSpec)
         parseTimeOpt(time, &cmdlineP->time);
-    
+
     /* get the input-file or stdin pipe */
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
@@ -256,7 +247,7 @@ parseCommandLine (int                  argc,
 static png_byte
 colorTypeFromInputType(const struct pam * const pamP) {
 /*----------------------------------------------------------------------------
-  Analyse the Netpbm image for color-type and bit-depth
+  Analyze the Netpbm image for color-type and bit-depth
 -----------------------------------------------------------------------------*/
     png_byte retval;
 
@@ -286,7 +277,7 @@ colorTypeFromInputType(const struct pam * const pamP) {
         if (pamP->depth == 2)
             retval = PNG_COLOR_TYPE_GRAY_ALPHA;
         else
-            pm_error("Input tupel type is GRAYSCALE_ALPHA, "
+            pm_error("Input tuple type is GRAYSCALE_ALPHA, "
                      "but number of planes is %u instread of 2",
                      pamP->depth);
     } else if (strneq(pamP->tuple_type, "GRAYSCALE", 9)) {
@@ -385,6 +376,8 @@ sigBitsFmImgType(unsigned int const pnmBitDepth,
             retval.gray  = pnmBitDepth;
             retval.alpha = pnmBitDepth;
             break;
+        default:
+            assert(false);
         }
     } else {
         /* PNG can (so presumably will) use original bit depth */
@@ -404,7 +397,7 @@ doTrnsChunk(const struct pam * const pamP,
             struct pngx *      const pngxP,
             const char *       const trans) {
 
-    if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA || 
+    if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA ||
         pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA)
         pm_error("Both alpha channel and transparency chunk not allowed.");
     else {
@@ -434,13 +427,13 @@ doTrnsChunk(const struct pam * const pamP,
 static void
 doChrmChunk(struct pngx *      const pngxP,
             struct pngx_chroma const chroma) {
-    
+
     pngx_setChrm(pngxP, chroma);
 
     if (verbose) {
         pm_message("writing cHRM chunk { wx, wy, rx, ry, gx, gy, bx, by } = "
                    "{ %4.2f, %4.2f, %4.2f, %4.2f, "
-                   "%4.2f, %4.2f, %4.2f, %4.2f }", 
+                   "%4.2f, %4.2f, %4.2f, %4.2f }",
                    chroma.wx, chroma.wy,
                    chroma.rx, chroma.ry,
                    chroma.gx, chroma.gy,
@@ -450,7 +443,7 @@ doChrmChunk(struct pngx *      const pngxP,
 
 
 
-static void 
+static void
 doGamaChunk(struct pngx *  const pngxP,
             float          const gamma) {
 
@@ -500,9 +493,9 @@ doTextChunkSet(struct pngx * const pngxP,
     FILE * tfP;
 
     tfP = pm_openr(textFileName);
-    
+
     pngtxt_addChunk(pngxP, tfP, ztxt, itxt, verbose);
-    
+
     pm_close(tfP);
 }
 
@@ -518,9 +511,9 @@ doZtxtChunkSet(struct pngx * const pngxP,
     FILE * tfP;
 
     tfP = pm_openr(textFileName);
-    
+
     pngtxt_addChunk(pngxP, tfP, ztxt, itxt, verbose);
-    
+
     pm_close(tfP);
 }
 
@@ -556,11 +549,11 @@ doBkgdChunk (const struct pam * const pamP,
     pngx_setBkgdRgb(pngxP, pngColor);
 
     if (verbose) {
-        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY || 
+        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY ||
             pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA) {
             pm_message("writing bKGD chunk with gray level = %u",
                        pngColor.gray);
-        } else if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB || 
+        } else if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB ||
                    pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA) {
             pm_message("writing bKGD chunk with color {red, green, blue} = "
                        "{%u, %u, %u}",
@@ -591,24 +584,10 @@ doTimeChunk(struct pngx * const pngxP,
 
 
 static void
-setShift(struct pngx * const pngxP,
-         png_color_8   const sigBits) {
-
-    if (sigBits.red + sigBits.green + sigBits.blue +
-        sigBits.gray + sigBits.alpha > 0) {
-
-        /* Move the 1, 2, 4 bits to most significant bits */
-        pngx_setShift(pngxP, sigBits);
-    }
-}
-
-
-
-static void
-convertRaster(const struct pam * const pamP,
-              const tuple *      const tuplerow,
-              png_byte *         const pngRow,
-              unsigned int       const bitDepth) {
+convertRow(const struct pam * const pamP,
+           const tuple *      const tuplerow,
+           png_byte *         const pngRow,
+           unsigned int       const bitDepth) {
 
     unsigned int col;
 
@@ -637,9 +616,12 @@ convertRaster(const struct pam * const pamP,
 
 
 static void
-writeRaster(const struct pam * const pamP,
-            struct pngx *      const pngxP,
-            int                const bitDepth) {
+writeRasterRowByRow(const struct pam * const pamP,
+                    struct pngx *      const pngxP,
+                    int                const bitDepth) {
+
+    unsigned int const rowSz =
+        pamP->width * pamP->depth * (MAX(1, bitDepth/8));
 
     tuple * tupleRow;
     png_byte * pngRow;
@@ -649,8 +631,7 @@ writeRaster(const struct pam * const pamP,
 
     tupleRow = pnm_allocpamrow(pamP);
 
-    MALLOCARRAY(pngRow, pamP->width * 8);
-        /* sufficient to store a 16-bit RGB+A row */
+    MALLOCARRAY(pngRow, rowSz);
 
     if (pngRow == NULL)
         pm_error("Unable to allocate space for PNG pixel row for "
@@ -659,9 +640,9 @@ writeRaster(const struct pam * const pamP,
         for (row = 0; row < pamP->height; ++row) {
             pnm_readpamrow(pamP, tupleRow);
 
-            convertRaster(pamP, tupleRow, pngRow, bitDepth);
+            convertRow(pamP, tupleRow, pngRow, bitDepth);
 
-            png_write_row(pngxP->png_ptr, pngRow);
+            pngx_writeRow(pngxP, pngRow);
         }
         free(pngRow);
     }
@@ -670,97 +651,101 @@ writeRaster(const struct pam * const pamP,
 
 
 
-static void
-writePng(const struct pam * const pamP,
-         FILE *             const ofP,
-         struct CmdlineInfo const cmdline) {
+static png_bytep
+mallocPngImage(unsigned int const rowSize,
+               unsigned int const height) {
 
-    unsigned int const pnmBitDepth = pm_maxvaltobits(pamP->maxval);
-    int const pngColorType = colorTypeFromInputType(pamP);
+    png_bytep pngImage;
 
-    struct pngx * pngxP;
-    unsigned int pngBitDepth;
-    png_color_8 sBit;
+    if (UINT_MAX / rowSize < height)
+        pm_error("Image is uncomputably large at %u rows of %u bytes",
+                 height, rowSize);
 
-    pngx_create(&pngxP, PNGX_WRITE, NULL);
+    MALLOCARRAY(pngImage, height * rowSize);
 
+    if (!pngImage)
+        pm_error("could not allocate %u bytes for a PNG image buffer",
+                 height * rowSize);
 
-
-    if ((pngColorType == PNG_COLOR_TYPE_RGB ||
-         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA) &&
-        pnmBitDepth < 8) {
-
-        pngBitDepth = 8;
-    } else
-        pngBitDepth = pnmBitDepth;
-
-    png_init_io(pngxP->png_ptr, ofP);
-
-    pngx_setIhdr(pngxP, pamP->width, pamP->height,
-                 pngBitDepth, pngColorType,
-                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
-                 PNG_FILTER_TYPE_BASE);
-
-    sBit = sigBitsFmImgType(pnmBitDepth, pngColorType);
-
-    /* Where requested, add ancillary chunks */
-    if (cmdline.transparencySpec)
-        doTrnsChunk(pamP, pngxP,cmdline.transparency);
-
-    if (cmdline.chromaSpec)
-        doChrmChunk(pngxP, cmdline.chroma);
-
-    if (cmdline.gammaSpec)
-        doGamaChunk(pngxP, cmdline.gamma);
-
-    /* no iccp */
-
-    doSbitChunk(pamP, pngxP, sBit);
-
-    if (cmdline.srgbintentSpec)
-        doSrgbChunk(pngxP, cmdline.srgbintent);
-
-    if (cmdline.textSpec)
-        doTextChunkSet(pngxP, cmdline.text);
-
-    if (cmdline.ztxtSpec)
-        doZtxtChunkSet(pngxP, cmdline.ztxt);
-
-    if (cmdline.itxtSpec)
-        doItxtChunkSet(pngxP, cmdline.itxt);
-
-    if (cmdline.backgroundSpec)
-        doBkgdChunk(pamP, pngxP, cmdline.background);
-
-    /* no hist */
-
-    /* no phys */
-
-    /* no splt */
-
-    if (cmdline.timeSpec)
-        doTimeChunk(pngxP, cmdline.time);
-
-    setShift(pngxP, sBit);
-
-    /* Write the ancillary chunks to PNG file */
-    pngx_writeInfo(pngxP);
-
-    if (pngColorType != PNG_COLOR_TYPE_GRAY && pnmBitDepth < 8) {
-        /* Move the 1, 2, 4 bits to most significant bits */
-        pngx_setShift(pngxP, sBit);
-    }
-    if ((pngColorType == PNG_COLOR_TYPE_GRAY) && (pnmBitDepth < 8)) {
-        /* Pack multiple pixels in a byte */
-        pngx_setPacking(pngxP);
-    }
-
-    writeRaster(pamP, pngxP, pnmBitDepth);
-
-    pngx_writeEnd(pngxP);
-    pngx_destroy(pngxP);
+    return pngImage;
 }
 
+
+
+static unsigned int
+pngLineSize(struct pngx * const pngxP) {
+
+    unsigned int const bytesPerSample = pngx_bitDepth(pngxP) == 16 ? 2 : 1;
+
+    unsigned int samplesPerPixel;
+
+    switch (pngx_colorType(pngxP)) {
+        case PNG_COLOR_TYPE_GRAY:
+            samplesPerPixel = 1;
+            break;
+        case PNG_COLOR_TYPE_GRAY_ALPHA:
+            samplesPerPixel = 2;
+            break;
+        case PNG_COLOR_TYPE_RGB:
+            samplesPerPixel = 3;
+            break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+            samplesPerPixel = 4;
+            break;
+        default:
+            assert(false);
+    }
+
+    if (UINT_MAX / bytesPerSample / samplesPerPixel < pngx_imageWidth(pngxP)) {
+        pm_error("pngcopy: width %u of PNG is uncomputably large\n",
+                  pngx_imageWidth(pngxP));
+    }
+
+    return pngx_imageWidth(pngxP) * bytesPerSample * samplesPerPixel;
+}
+
+
+
+static void
+writeRasterWholeImg(struct pam *  const pamP,
+                    struct pngx * const pngxP,
+                    unsigned int  const bitDepth) {
+
+    unsigned int const pngRowSize = pngLineSize(pngxP);
+
+    tuple * tupleRow;
+    png_bytep pngImage;
+        /* A one-dimensional malloc'ed array of all pixels in image */
+    png_bytep * pngRowP;
+        /* A malloc'ed array of row pointers into pngImage[] */
+    unsigned int row;
+
+    tupleRow = pnm_allocpamrow(pamP);
+
+    pngImage = mallocPngImage(pngRowSize, pamP->height);
+
+    MALLOCARRAY(pngRowP, pamP->height);
+
+    if (!pngRowP)
+        pm_error("Failed to allocate an array for %u PNG row pointers",
+                 pamP->height);
+
+    for (row = 0; row < pamP->height; ++row) {
+        png_bytep const thisPngRowP = &pngImage[row * pngRowSize];
+
+        pnm_readpamrow(pamP, tupleRow);
+
+        convertRow(pamP, tupleRow, thisPngRowP, bitDepth);
+
+        pngRowP[row] = thisPngRowP;
+    }
+
+    pngx_writeImage(pngxP, pngRowP);
+
+    free(pngRowP);
+    free(pngImage);
+    pnm_freepamrow(tupleRow);
+}
 
 
 
@@ -793,13 +778,170 @@ reportInputFormat(const struct pam * const pamP) {
 
 
 
+static unsigned int
+pngBitDepth(unsigned int const pnmBitDepth,
+            int          const pngColorType) {
+
+    unsigned int retval;
+
+    if ((pngColorType == PNG_COLOR_TYPE_RGB ||
+         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA) &&
+        pnmBitDepth < 8) {
+
+        retval = 8;
+    } else
+        retval = pnmBitDepth;
+
+    return retval;
+}
+
+
+
+static void
+addAncillaryChunks(struct pam *       const pamP,
+                   struct pngx *      const pngxP,
+                   struct CmdlineInfo const cmdline,
+                   png_color_8        const sigBits) {
+/*----------------------------------------------------------------------------
+  Where requested, add ancillary chunks.
+-----------------------------------------------------------------------------*/
+    if (cmdline.transparencySpec)
+        doTrnsChunk(pamP, pngxP,cmdline.transparency);
+
+    if (cmdline.chromaSpec)
+        doChrmChunk(pngxP, cmdline.chroma);
+
+    if (cmdline.gammaSpec)
+        doGamaChunk(pngxP, cmdline.gamma);
+
+    /* no iccp */
+
+    doSbitChunk(pamP, pngxP, sigBits);
+
+    if (cmdline.srgbintentSpec)
+        doSrgbChunk(pngxP, cmdline.srgbintent);
+
+    if (cmdline.textSpec)
+        doTextChunkSet(pngxP, cmdline.text);
+
+    if (cmdline.ztxtSpec)
+        doZtxtChunkSet(pngxP, cmdline.ztxt);
+
+    if (cmdline.itxtSpec)
+        doItxtChunkSet(pngxP, cmdline.itxt);
+
+    if (cmdline.backgroundSpec)
+        doBkgdChunk(pamP, pngxP, cmdline.background);
+
+    /* no hist */
+
+    /* no phys */
+
+    /* no splt */
+
+    if (cmdline.timeSpec)
+        doTimeChunk(pngxP, cmdline.time);
+
+    /* Write the ancillary chunks to PNG image */
+    pngx_writeInfo(pngxP);
+}
+
+
+
+static void
+setShift(struct pngx * const pngxP,
+         png_color_8   const sigBits) {
+
+    if (sigBits.red + sigBits.green + sigBits.blue +
+        sigBits.gray + sigBits.alpha > 0) {
+
+        /* Move the 1, 2, 4 bits to most significant bits */
+        pngx_setShift(pngxP, sigBits);
+    }
+}
+
+
+
+static void
+doIhdrChunk(struct pngx * const pngxP,
+            unsigned int  const width,
+            unsigned int  const height,
+            unsigned int  const pnmBitDepth,
+            int           const pngColorType,
+            bool          const interlace) {
+
+    int const interlaceMethod =
+        interlace ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
+
+    pngx_setIhdr(pngxP, width, height,
+                 pngBitDepth(pnmBitDepth, pngColorType), pngColorType,
+                 interlaceMethod, PNG_COMPRESSION_TYPE_BASE,
+                 PNG_FILTER_TYPE_BASE);
+}
+
+
+
+static void
+pamtopng(FILE *             const ifP,
+         FILE *             const ofP,
+         struct CmdlineInfo const cmdline) {
+
+    unsigned int  pnmBitDepth;
+    int           pngColorType;
+    struct pngx * pngxP;
+    png_color_8   sigBits;
+    struct pam    pam;
+
+    pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
+
+    if (verbose)
+        reportInputFormat(&pam);
+
+    pnmBitDepth = pm_maxvaltobits(pam.maxval);
+
+    pngColorType = colorTypeFromInputType(&pam);
+
+    pngx_create(&pngxP, PNGX_WRITE, NULL);
+
+    png_init_io(pngxP->png_ptr, ofP);
+
+    doIhdrChunk(pngxP, pam.width, pam.height,
+                pnmBitDepth, pngColorType, cmdline.interlace > 0);
+
+    sigBits = sigBitsFmImgType(pnmBitDepth, pngColorType);
+
+    addAncillaryChunks(&pam, pngxP, cmdline, sigBits);
+
+    setShift(pngxP, sigBits);
+
+    if ((pngColorType == PNG_COLOR_TYPE_GRAY) && (pnmBitDepth < 8)) {
+        /* Pack multiple pixels in a byte */
+        pngx_setPacking(pngxP);
+    }
+
+    if (cmdline.interlace) {
+        /* Libpng will expect us to provide pixels in interlaced sequence
+           if we write row-by-row, and that is much to difficult, so we
+           do whole-image-at-once and let Libpng do the work.
+        */
+        writeRasterWholeImg(&pam, pngxP, pnmBitDepth);
+    } else {
+        /* We save memory by going row-by-row */
+        writeRasterRowByRow(&pam, pngxP, pnmBitDepth);
+    }
+
+    pngx_writeEnd(pngxP);
+    pngx_destroy(pngxP);
+}
+
+
+
 int
 main(int           argc,
      const char ** argv) {
 
     FILE * ifP;
     struct CmdlineInfo cmdline;
-    struct pam pam;
 
     pm_proginit(&argc, argv);
 
@@ -809,12 +951,7 @@ main(int           argc,
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
-
-    if (verbose)
-        reportInputFormat(&pam);
-
-    writePng(&pam, stdout, cmdline);
+    pamtopng(ifP, stdout, cmdline);
 
     pm_close(ifP);
 
@@ -823,3 +960,18 @@ main(int           argc,
 
 
 
+/* Derived from pnmtorast.c by Jef Poskanzer and pamrgbatopng.c by Bryan
+** Henderson <bryanh@giraffe-data.com> and probably some other sources
+**
+** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+**                        and Willem van Schaik <willem@schaik.com>
+** Copyright (C) 1999,2001 by Greg Roelofs <newt@pobox.com>
+** Copyright (C) 2015 by Willem van Schaik <willem@schaik.com>
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+*/

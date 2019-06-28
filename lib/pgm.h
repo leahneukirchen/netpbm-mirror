@@ -24,7 +24,7 @@ typedef unsigned int gray;
    (because then old Netpbm programs can process them, and they're
    only half as big).
 
-   So we keep PGM_MAXMAXVAL = 255, even though it's kind of a misnomer.  
+   So we keep PGM_MAXMAXVAL = 255, even though it's kind of a misnomer.
 
    Note that one could always write a file with maxval > PGM_MAXMAXVAL and
    it would just go into plain (text) format instead of raw (binary) format.
@@ -42,6 +42,8 @@ typedef unsigned int gray;
 #define PGM_OVERALLMAXVAL 65535
 #define PGM_MAXMAXVAL 255
 
+#define pgm_unnormalize(value, maxval) \
+  ((gray)((value + 1e-6) * (maxval) + 0.5))
 
 /* Magic constants. */
 
@@ -62,7 +64,7 @@ typedef unsigned int gray;
 
 /* Declarations of routines. */
 
-void 
+void
 pgm_init(int *   const argcP,
          char ** const argv);
 
@@ -78,35 +80,35 @@ pgm_allocrow(unsigned int const cols);
 gray **
 pgm_readpgm(FILE * const file,
             int *  const colsP,
-            int *  const rowsP, 
+            int *  const rowsP,
             gray * const maxvalP);
 
 void
 pgm_readpgminit(FILE * const file,
-                int *  const colsP, 
+                int *  const colsP,
                 int *  const rowsP,
                 gray * const maxvalP,
                 int *  const formatP);
 
 void
 pgm_readpgmrow(FILE * const file,
-               gray * const grayrow, 
+               gray * const grayrow,
                int    const cols,
                gray   const maxval,
                int    const format);
 
 void
-pgm_writepgminit(FILE * const fileP, 
-                 int    const cols, 
-                 int    const rows, 
-                 gray   const maxval, 
+pgm_writepgminit(FILE * const fileP,
+                 int    const cols,
+                 int    const rows,
+                 gray   const maxval,
                  int    const forceplain);
 
 void
-pgm_writepgmrow(FILE *       const fileP, 
-                const gray * const grayrow, 
-                int          const cols, 
-                gray         const maxval, 
+pgm_writepgmrow(FILE *       const fileP,
+                const gray * const grayrow,
+                int          const cols,
+                gray         const maxval,
                 int          const forceplain);
 
 void
@@ -121,11 +123,11 @@ void
 pgm_nextimage(FILE * const file, int * const eofP);
 
 void
-pgm_check(FILE *               const file, 
-          enum pm_check_type   const check_type, 
-          int                  const format, 
-          int                  const cols, 
-          int                  const rows, 
+pgm_check(FILE *               const file,
+          enum pm_check_type   const check_type,
+          int                  const format,
+          int                  const cols,
+          int                  const rows,
           gray                 const maxval,
           enum pm_check_code * const retval_p);
 

@@ -10,6 +10,12 @@
 ##
 ## Important: This test checks obsoleted names.
 ## Programs here do not appear in other tests.
+##
+## Programs here are wrapper scripts provided for backward compatibility.
+## The newer replacement program may be the cause of any failure reported.
+##
+## If you run the "make test-install" on an older version, some executables
+## may be reported as missing because of missing features.
 
 
 # Skip this test if CHECK_TYPE = tree
@@ -55,6 +61,8 @@ ordinary_testprogs="\
   pamfixtrunc \
   pamrgbatopng \
   pbmtoicon \
+  pbmtox10bm \
+  pgmcrater \
   pgmedge \
   pgmnorm \
   pgmoil \
@@ -68,65 +76,59 @@ ordinary_testprogs="\
   pnmfile \
   pnmflip \
   pnminterp \
+  pnmnoraw \
   pnmscale \
   pnmsplit \
   pnmtofits \
+  pnmtoplainpnm \
   pnmtopnm \
   pnmtotiff \
   ppmnorm \
+  ppmquant \
+  ppmquantall \
   ppmtogif \
   ppmtojpeg \
+  ppmtomap \
   ppmtompeg \
   ppmtotga \
   ppmtouil \
 "
 
+# Switch to control output from "program --version"
+# See comments in all-in-place.test
+
+if [ ${CHECK_TYPE} = "install" ]
+  then grepOption[1]="" ;   # Output --version message
+  else grepOption[0]="-v" ; # Suppress output
+fi
+
 for i in $ordinary_testprogs
   do
-    $i --version  2>&1 | \
-    egrep -v \
-    "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \
-      1>&2;
-    testExitStatus $i 0 ${PIPESTATUS[0]}
+    # Stub out programs that aren't built.
+    Available-Testprog "$i"
+      if [ $? = 1 ]; then
+      echo "$i: program was not built" 1>&2
+      echo "$i: ok"
+      continue
+      fi
+
+    $i --version < /dev/null 2>&1 | \
+    egrep -v -e "fiascotopnm" -e \
+    ": ((BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" | \
+    egrep ${grepOption[$grepSwitch]} -e \
+    ": (Using lib(net)?pbm|(Built (by|at)|Compiled ))" 1>&2;
+    # See showVersion() in lib/libpm.c for the above regular expressions.
+  
+    exitStatus=${PIPESTATUS[0]}
+    testExitStatus $i 0 ${exitStatus}
   done
 
 
-# Test pgmcrater
 
-pgmcrater -number 1 -xsize 15 -ysize 15 -randomseed 1 > /dev/null
-testExitStatus pgmcrater 0 $?
-
-
-# Test pbmtox10bm, pnmnoraw, pnmtoplainpnm, ppmquantall, ppmrainbow
-# with trivial input.
-
-$i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-tmpdir=${tmpdir:-/tmp}
-test_pbm=${tmpdir}/test.pbm
-
-cat > ${test_pbm} <<EOF
-P1
-1 1
-1
-EOF
-
-for i in pbmtox10bm pnmnoraw pnmtoplainpnm
-  do
-    $i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-    testExitStatus $i 0 $?
-  done
-
-for i in ppmquant ppmquantall
-  do
-    $i 2 ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-    testExitStatus $i 0 $?
-  done
-
-
-rm ${test_pbm}
-
-
-# Test hpcdtoppm.  Simply confirm its existence.
+# Test hpcdtoppm and pcdovtoppm.  Simply confirm their existence.
 
 type -p hpcdtoppm > /dev/null
 testExitStatus hpcdtoppm 0 $?
+
+type -p pcdovtoppm > /dev/null
+testExitStatus pcdovtoppm 0 $?

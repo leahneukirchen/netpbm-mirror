@@ -10,7 +10,7 @@
 
   Wherever possible, Netpbm handles customization via the make files
   instead of via this file.  However, Netpbm's make file philosophy
-  discourages lining up a bunch of -D options on every compile, so a 
+  discourages lining up a bunch of -D options on every compile, so a
   #define here would be preferable to a -D compile option.
 
 **************************************************************************/
@@ -38,12 +38,12 @@
    what feature sets his program relies.
 
    But some C library developers have misunderstood this and think of these
-   macros like the old __ansi__ macro, which tells the C library, "Don't 
+   macros like the old __ansi__ macro, which tells the C library, "Don't
    have any features that aren't in the ANSI standard."  I.e. it's just
    the opposite -- the macro subtracts features instead of adding them.
 
    This means that on some platforms, Netpbm programs must define
-   _POSIX_SOURCE, and on others, it must not.  Netpbm's POSIX_IS_IMPLIED 
+   _POSIX_SOURCE, and on others, it must not.  Netpbm's POSIX_IS_IMPLIED
    macro indicates that we're on a platform where we need not define
    _POSIX_SOURCE (and probably must not).
 
@@ -63,7 +63,7 @@
 
 /* CONFIGURE: There should be an environment variable telling where the color
 ** names database (color dictionary) is for Netpbm to use, e.g. to determine
-** what colord name "Salmon" is.  The name of that environment variable is
+** what color "Salmon" is.  The name of that environment variable is
 ** above.  But as some people prefer hardcoded file paths to environment
 ** variables, if such environment variable is not set, Netpbm looks for the
 ** first existing file in the list which is the value of 'RGB_DB_PATH'.  And
@@ -123,7 +123,7 @@
 #endif
 
 /* WIN32 is a macro that some older compilers predefine (compilers aren't
-   supposed to because it doesn't start with an underscore, hence the change.
+   supposed to because it doesn't start with an underscore, hence the change).
    Many build systems (project files, etc.) set WIN32 explicitly for
    backward compatibility.  Netpbm doesn't use it.
 */
@@ -176,7 +176,7 @@
   #if (!defined(__inline__))
     #if (defined(__sgi) || defined(_AIX))
       #define __inline__ __inline
-    #else   
+    #else
       #define __inline__
     #endif
   #endif
@@ -195,7 +195,7 @@
 #else
   #if (defined(__sgi))
     #define LITERAL_FN_DEF_MATCH 1
-  #else   
+  #else
     #define LITERAL_FN_DEF_MATCH 0
   #endif
 #endif
@@ -333,7 +333,7 @@ typedef int qsort_comparison_fn(const void *, const void *);
 #if MSVCRT
   #define pm_mkdir(dir, perm) _mkdir(dir)
 #else
-  #define pm_mkdir(dir, perm) mkdir(dir, perm) 
+  #define pm_mkdir(dir, perm) mkdir(dir, perm)
 #endif
 
 #if MSVCRT

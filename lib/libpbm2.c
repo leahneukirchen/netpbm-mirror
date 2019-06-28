@@ -18,7 +18,7 @@
 #include "fileio.h"
 #include "pam.h"
 
-static bit 
+static bit
 getbit (FILE * const file) {
     char ch;
 
@@ -28,7 +28,7 @@ getbit (FILE * const file) {
 
     if ( ch != '0' && ch != '1' )
         pm_error( "junk in file where bits should be" );
-    
+
     return ( ch == '1' ) ? 1 : 0;
 }
 
@@ -157,9 +157,9 @@ pbm_readpbmrow( FILE * const file,
 
 
 void
-pbm_readpbmrow_packed(FILE *          const fileP, 
+pbm_readpbmrow_packed(FILE *          const fileP,
                       unsigned char * const packedBits,
-                      int             const cols, 
+                      int             const cols,
                       int             const format) {
 
     switch(format) {
@@ -182,20 +182,20 @@ pbm_readpbmrow_packed(FILE *          const fileP,
     case RPBM_FORMAT: {
         unsigned int bytesReadCt;
         bytesReadCt = fread(packedBits, 1, pbm_packed_bytes(cols), fileP);
-             
+
         if (bytesReadCt < pbm_packed_bytes(cols)) {
-            if (feof(fileP)) 
-                if (bytesReadCt == 0) 
+            if (feof(fileP))
+                if (bytesReadCt == 0)
                     pm_error("Attempt to read a raw PBM image row, but "
                              "no more rows left in file.");
                 else
                     pm_error("EOF in the middle of a raw PBM row.");
-            else 
+            else
                 pm_error("I/O error reading raw PBM row");
         }
     }
     break;
-    
+
     default:
         pm_error("Internal error in pbm_readpbmrow_packed.");
     }
@@ -205,7 +205,7 @@ pbm_readpbmrow_packed(FILE *          const fileP,
 
 void
 pbm_readpbmrow_bitoffset(FILE *          const ifP,
-                         unsigned char * const packedBits, 
+                         unsigned char * const packedBits,
                          int             const cols,
                          int             const format,
                          unsigned int    const offset) {
@@ -237,7 +237,7 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
         /* Target slot doesn't start on byte boundary; right-shift. */
         unsigned char carryover;
         unsigned int i;
-  
+
         carryover = (origHead >> lsh) << lsh;
 
         for (i = 0; i <= last; ++i) {
@@ -246,7 +246,7 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
             carryover = t;
         }
     }
-  
+
     if ((cols + rsh) % 8 > 0) {
         /* Adjust rightmost char */
         unsigned int  const trs = (cols + rsh) % 8;

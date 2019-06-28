@@ -41,6 +41,6 @@ rgb3toppm ${testgrid_red} ${testgrid_grn} ${testgrid_blu} | \
 cmp -s ${testgrid_red} ${testgrid_grn} ; echo $?
 cmp -s ${testgrid_grn} ${testgrid_blu} ; echo $?
 pgmtopgm < testgrid.pbm | cmp -s - ${testgrid_red}
-  echo $?
+  echo ${PIPESTATUS[@]} ":" $?
 
 rm ${testgrid_pbm} ${testgrid_red} ${testgrid_grn} ${testgrid_blu}

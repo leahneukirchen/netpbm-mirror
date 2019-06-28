@@ -7,6 +7,8 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
+SUBDIRS = pamtris
+
 # We tend to separate out the build targets so that we don't have
 # any more dependencies for a given target than it really needs.
 # That way, if there is a problem with a dependency, we can still
@@ -16,10 +18,13 @@ include $(BUILDDIR)/config.mk
 
 PORTBINARIES = pamcrater pamgauss pamgradient \
 	       pamseq pamshadedrelief pamstereogram \
-	       pbmpage pbmmake pbmtext pbmtextps pbmupc \
+	       pbmpage pbmmake pbmtext pbmupc \
 	       pgmkernel pgmmake pgmnoise pgmramp \
 	       ppmcie ppmcolors ppmforge ppmmake ppmpat ppmrough ppmwheel \
 
+ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
+PORTBINARIES += pbmtextps 
+endif
 # We don't include programs that have special library dependencies in the
 # merge scheme, because we don't want those dependencies to prevent us
 # from building all the other programs.
@@ -36,6 +41,6 @@ OBJECTS = $(BINARIES:%=%.o)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
 .PHONY: all
-all: $(BINARIES)
+all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 include $(SRCDIR)/common.mk

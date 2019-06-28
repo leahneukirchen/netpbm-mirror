@@ -1,7 +1,6 @@
 #! /bin/bash
 # This script tests: giftopnm pamtogif
-# Also requires: ppmtorgb3 rgb3toppm pbmmake pnminvert
-
+# Also requires: ppmtorgb3 rgb3toppm pbmmake pnminvert pamcut pamdepth
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -33,12 +32,13 @@ rm ${test_ppm} ${test_grn} ${test_blu} ${out_red} ${out_grn}
 
 # Test 2. Should produce 1571496937 33838
 # which is the result of cksum testimg.red
-# four times
+# five times
 
 test_gif=${tmpdir}/testimg.gif
 
 pamtogif ${test_red} | giftopnm | cksum
 pamtogif -interlace ${test_red} | giftopnm | cksum
+pamtogif -noclear ${test_red} | giftopnm | cksum
 pamtogif -sort ${test_red} | tee ${test_gif} | \
   giftopnm | cksum
 echo "junk" >> ${test_gif} && \
@@ -48,6 +48,7 @@ rm  ${test_gif} ${test_red}
 
 
 # Test 3. Should produce 2425386270 41 five times.
+# testgrid.pbm is too small for -noclear to take effect 
 
 pamtogif testgrid.pbm | giftopnm | cksum
 pamtogif -nolzw testgrid.pbm | giftopnm | cksum
@@ -56,11 +57,107 @@ pamtogif -alpha=testgrid.pbm testgrid.pbm | giftopnm | cksum
 pamtogif -transparent=white testgrid.pbm | giftopnm -alpha=- | \
   pnminvert | cksum
 
+
 # Test 4.
 # In this gif file the code length changes after the last image data.
 # Image data: 3 bits, end code 4 bits.
 # Should produce P1 4 1 0 1 0 1
 
 pbmmake -g 4 1 | \
-  pamtogif | giftopnm -plain | \
+  pamtogif -verbose | giftopnm -plain | \
   tr '\n' ' '
+echo ""
+
+
+# Test 5.
+# Test whether saturated code tables are handled correctly.
+# Test input images which most use up the string code table or
+# come close to doing so.
+
+# Should produce:
+# 4030 0 , 4030 0
+# 4031 0 , 4031 0
+# 4097 0 , 4097 0
+# 238 0 , 238 0
+# 239 0 , 239 0
+# 240 0 , 240 0
+# 241 0 , 241 0
+# 255 0 , 255 0
+# 256 0 , 256 0
+# 257 0 , 257 0
+
+test4097_pgm=${tmpdir}/testimg4097.pgm
+test_pgm=${tmpdir}/testimg.pgm
+
+# The following awk script produces a PGM file with no repeated sequences.
+# Here is a smaller example with the same property:
+# P2
+# 8 8
+# 7
+# 0 0 1 1 0 2 2 0
+# 3 3 0 4 4 0 5 5
+# 0 6 6 0 7 7 1 2
+# 1 3 1 4 1 5 1 6
+# 1 7 2 3 2 4 2 5
+# 2 6 2 7 3 4 3 5
+# 3 6 3 7 4 5 4 6
+# 4 7 5 6 5 7 6 7
+
+maxval=63
+awk -v maxval=${maxval} 'BEGIN \
+{ print "P2"
+         print "1 "(maxval+1) * (maxval+1) +1
+         print maxval
+         print 0 
+         for (j=i+1; j<=maxval; ++j)
+	    {print 0; print j; print j }
+         for (i=1; i<=maxval; ++i)
+             for (j=i+1; j<=maxval; ++j)
+                 {print i; print j }
+         print 0
+}' > ${test4097_pgm}
+
+for size in 4030 4031 4097
+  do
+  pamcut -height ${size} ${test4097_pgm} > ${test_pgm} &&
+  pamtogif -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  # pamdepth ${maxval} is necessary because
+  # giftopnm output is maxval 255
+  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
+  pamtogif -nolzw ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
+  rm ${test_pgm}
+  done 
+
+rm ${test4097_pgm}
+test257_pgm=${tmpdir}/testimg257.pgm
+
+maxval=15
+awk -v maxval=${maxval} 'BEGIN \
+{ print "P2"
+         print "1 "(maxval+1) * (maxval+1) +1
+         print maxval
+         print 0 
+         for (j=i+1; j<=maxval; ++j)
+	    {print 0; print j; print j }
+         for (i=1; i<=maxval; ++i)
+             for (j=i+1; j<=maxval; ++j)
+                 {print i; print j }
+         print 0
+}' >  ${test257_pgm}
+
+for size in 238 239 240 241 255 256 257
+  do
+  pamcut -height=${size} ${test257_pgm} > ${test_pgm} &&
+  pamtogif -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
+  pamtogif -nolzw -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
+  rm ${test_pgm}
+  done 
+
+rm ${test257_pgm}

@@ -4,21 +4,17 @@
 
 
 # Failure message
-## This test fails when:
-## (1) zlib was not linked.
-## (2) ghostscript is not available.
+## This test fails when ghostscript is not available.
 
 tmpdir=${tmpdir:-/tmp}
 
 # pstopnm does not use libnetpbm functions for output.
 # Output is filtered through pamtopnm.
 
-# Test 1.  Should print: 1926073387 101484 five times
-# *NOTE* Fifth iteration fails if pnmtops was compiled without zlib
-# (flate compression) support.
+# Test 1.  Should print: 1926073387 101484 four times
 test1_ps=${tmpdir}/testimg1.ps
 
-for flag in "" "-ps" "-rle" "-ps -ascii" "-ps -flate"
+for flag in "" "-ps" "-rle" "-ps -ascii"
   do
   pnmtops -nocenter -equalpixels -dpi 72 -noturn ${flag} testimg.ppm \
     > ${test1_ps} && \
@@ -57,8 +53,6 @@ for flag in "" "-rle" "-ps -rle -ascii" \
 rm ${grid_ps} ${g_pbm} ${t_pbm}
 
 #Test 3. Should print: 1386192571 507420 three times
-# *NOTE* Second iteration fails if pnmtops was compiled without zlib
-# (flate compression) support.
 #
 # Special care is needed when conducting round-trips with multiple-image
 # files as input.
@@ -72,7 +66,7 @@ rm ${grid_ps} ${g_pbm} ${t_pbm}
 test3_ps=${tmpdir}/testimg3.ps
 
 for flag in "" "-ps" \
-            "-ps -bitspersample=12 -flate -rle -vmreclaim"
+            "-ps -bitspersample=12 -rle -vmreclaim"
   do
 cat testimg.ppm testimg.ppm testimg.ppm testgrid.pbm testgrid.pbm | \
 pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage ${flag} \

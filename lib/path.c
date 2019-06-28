@@ -58,11 +58,154 @@
 /* NOTE NOTE NOTE
 
    In all the path logic below, we call the direction of increasing row
-   number "up" because we think of the raster as standard Cartesian
+   number "up" because we think of the raster as a standard Cartesian
    plane.  So visualize the image as upside down in the first quadrant
    of the Cartesian plane -- the real top left corner of the image is at
    the origin.
 */
+
+
+ppmd_pathleg
+ppmd_makeLineLeg(ppmd_point const point) {
+
+    ppmd_pathleg retval;
+
+    retval. type = PPMD_PATHLEG_LINE;
+
+    retval.u.linelegparms.end = point;
+
+    return retval;
+}
+
+
+
+ppmd_pathbuilder *
+ppmd_pathbuilder_create() {
+
+    ppmd_pathbuilder * retval;
+
+    MALLOCVAR(retval);
+
+    if (!retval)
+        pm_error("Failed to allocate memory "
+                 "for a ppmd_pathuilder structure");
+
+    retval->path.version = 0;
+    retval->path.legCount = 0;
+    retval->path.legSize = sizeof(ppmd_pathleg);
+    retval->path.legs = NULL;
+
+    retval->begIsSet = false;
+    retval->legsAreAutoAllocated = true;
+    retval->legsAllocSize = 0;
+
+    return retval;
+}
+
+
+
+void
+ppmd_pathbuilder_destroy(ppmd_pathbuilder * const pathBuilderP) {
+
+    if (pathBuilderP->legsAreAutoAllocated) {
+        if (pathBuilderP->path.legs)
+            free(pathBuilderP->path.legs);
+    }
+    free(pathBuilderP);
+}
+
+
+
+void
+ppmd_pathbuilder_setLegArray(ppmd_pathbuilder * const pathBuilderP,
+                             ppmd_pathleg *     const legs,
+                             unsigned int       const legCount) {
+
+    if (pathBuilderP->path.legs)
+        pm_error("Legs array is already set up");
+
+    if (legCount < 1)
+        pm_error("Leg array size must be at least one leg in size");
+
+    if (legs == NULL)
+        pm_error("Leg array pointer is null");
+
+    pathBuilderP->legsAreAutoAllocated = false;
+    
+    pathBuilderP->legsAllocSize = legCount;
+
+    pathBuilderP->path.legs = legs;
+}
+
+
+
+void
+ppmd_pathbuilder_preallocLegArray(ppmd_pathbuilder * const pathBuilderP,
+                                  unsigned int       const legCount) {
+
+    if (pathBuilderP->path.legs)
+        pm_error("Legs array is already set up");
+
+    if (legCount < 1)
+        pm_error("Leg array size must be at least one leg in size");
+
+    MALLOCARRAY(pathBuilderP->path.legs, legCount);
+
+    if (!pathBuilderP->path.legs)
+        pm_error("Unable to allocate memory for %u legs", legCount);
+
+    pathBuilderP->legsAllocSize = legCount;
+}
+
+
+
+void
+ppmd_pathbuilder_setBegPoint(ppmd_pathbuilder * const pathBuilderP,
+                             ppmd_point         const begPoint) {
+
+    pathBuilderP->path.begPoint = begPoint;
+    
+    pathBuilderP->begIsSet = true;
+}
+
+
+
+void
+ppmd_pathbuilder_addLineLeg(ppmd_pathbuilder * const pathBuilderP,
+                            ppmd_pathleg       const leg) {
+
+    if (!pathBuilderP->begIsSet)
+        pm_error("Attempt to add a leg to a path when the "
+                 "beginning point of the path has not been set");
+
+    if (pathBuilderP->path.legCount + 1 > pathBuilderP->legsAllocSize) {
+        if (pathBuilderP->legsAreAutoAllocated) {
+            pathBuilderP->legsAllocSize =
+                MAX(16, pathBuilderP->legsAllocSize * 2);
+
+            REALLOCARRAY(pathBuilderP->path.legs, 
+                         pathBuilderP->legsAllocSize);
+
+            if (pathBuilderP->path.legs == NULL)
+                pm_error("Unable to allocate memory for %u legs", 
+                         pathBuilderP->legsAllocSize);
+        } else
+            pm_error("Out of space in user-supplied legs array "
+                     "(has space for %u legs)", pathBuilderP->legsAllocSize);
+    }
+
+    assert(pathBuilderP->path.legCount + 1 <= pathBuilderP->legsAllocSize);
+
+    pathBuilderP->path.legs[pathBuilderP->path.legCount++] = leg;
+}
+
+
+
+const ppmd_path *
+ppmd_pathbuilder_pathP(ppmd_pathbuilder * const pathBuilderP) {
+
+    return &pathBuilderP->path;
+}
 
 
 
@@ -411,12 +554,12 @@ fillLeg(ppmd_point  const begPoint,
 
 
 void
-ppmd_fill_path(pixel **      const pixels, 
-               int           const cols, 
-               int           const rows, 
-               pixval        const maxval,
-               ppmd_path *   const pathP,
-               pixel         const color) {
+ppmd_fill_path(pixel **          const pixels, 
+               int               const cols, 
+               int               const rows, 
+               pixval            const maxval,
+               const ppmd_path * const pathP,
+               pixel             const color) {
 /*----------------------------------------------------------------------------
    Draw a path which defines a closed figure (or multiple closed figures)
    and fill it in.

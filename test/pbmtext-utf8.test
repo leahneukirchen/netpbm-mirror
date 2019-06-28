@@ -1,0 +1,95 @@
+#! /bin/bash
+# This script tests: pbmtext
+# Also requires:
+
+# This test requires the en_US.utf8 locale
+# Skip this test if it is not available
+
+iconv /dev/null
+if [ $? -ne 0  ]
+  then echo "iconv command not available." 1>&2
+       echo "Skipping." 1>&2
+  exit 80;
+fi
+
+echo "A" | LC_ALL=en_US.utf8 pbmtext -wchar > /dev/null
+if [ $? -ne 0  ]
+  then echo "LC_ALL could not be set to en_US.utf8." 1>&2
+       echo "Skipping." 1>&2
+  exit 80;
+fi
+
+# Test 1.
+# Two rows
+# Should print 2066913605 5110 twice
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=255;++i) printf("%c",i); }' | \
+    pbmtext -builtin bdf | cksum
+
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=255;++i) printf("%c",i);  }' | \
+    iconv -f iso8859-1 -t utf-8 | \
+    LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar | cksum
+
+
+# Test 2.
+# One row
+# Should print 2920616515 2301 twice
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print "" }' | \
+    pbmtext -builtin bdf | cksum
+
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i);  print ""}' | \
+    LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar | cksum
+
+
+tmpdir=${tmpdir:-/tmp}
+output=${tmpdir}/output
+
+
+# Test 3.
+# Two rows
+# Output may be affected by locale.  Compare with cmp.
+# Should print 0
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
+    iconv -f iso8859-1 -t utf-8 > ${output}
+
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
+    iconv -f iso8859-1 -t utf-8 | \
+    LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump | \
+    cmp --quiet - ${output}
+
+echo ${PIPESTATUS[@]} ":" $?
+rm ${output}
+
+
+# Test 4.
+# One row
+# Should print the following twice:
+# !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print "" } '
+
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""}' | \
+        LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump
+
+
+echo "Invalid utf-8 sequence as input." 1>&2
+echo "An error message should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+# Test 5.
+# Invalid utf-8 sequence
+# Should print 1
+LC_ALL=C \
+awk 'BEGIN { for (i=128; i<=129;++i) printf("%c",i);  print ""}' | \
+        LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump
+echo ${PIPESTATUS[@]} ":" $?

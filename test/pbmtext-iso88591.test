@@ -1,0 +1,46 @@
+#! /bin/bash
+# This script tests: pbmtext
+# Also requires:
+
+# This test requires the following locale:
+#   LC_ALL en_US.iso88591
+# Skip this test if it is not available
+
+iconv /dev/null
+if [ $? -ne 0  ]
+  then echo "iconv command not available." 1>&2
+       echo "Skipping." 1>&2
+  exit 80;
+fi
+
+echo "A" | LC_ALL=en_US.iso88591 pbmtext -wchar > /dev/null
+if [ $? -ne 0  ]
+  then echo "LC_ALL could not be set to en_US.iso88591" 1>&2
+       echo "Skipping." 1>&2
+  exit 80;
+fi
+
+# Two rows
+# Should print 3806607098 5110 twice
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=160;i<=255;++i) printf("%c",i); }' | \
+    pbmtext -builtin bdf | cksum
+
+
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=160;i<=255;++i) printf("%c",i); }' | \
+    LC_ALL=en_US.iso88591 pbmtext -builtin bdf -wchar | cksum
+
+
+# Two rows
+# Should print 2858870527 192 twice
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=255;++i) printf("%c",i); print "" }' | cksum
+
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=255;++i) printf("%c",i); print ""}' | \
+    LC_ALL=en_US.iso88591 pbmtext -builtin bdf -wchar -text-dump | cksum
