@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.06.28 BJH  Release 10.73.28
+
+              pbmtozinc: fix wrong output on big-endian machines.  Broken in
+              Netpbm 10.71 (June 2015).
+
 19.05.04 BJH  Release 10.73.27
 
               pnmtopng: Fix bug: Defaults to no filters.  Should be all
