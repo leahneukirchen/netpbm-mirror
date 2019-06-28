@@ -95,6 +95,10 @@ be pretty obvious what the problem is when you need the prerequisite package
 and don't have it, so if you don't want to install a prerequisite, it would
 probably be fine to force install Netpbm, ignoring the prerequisites.
 
+There is one part you cannot build with current Debian: 'ppmsvgalib'.  That is
+because Debian does not include the required libsvga library (the last version
+that did was 7).
+
 
 CONFLICTS WITH DEBIAN'S NETPBM
 ------------------------------
