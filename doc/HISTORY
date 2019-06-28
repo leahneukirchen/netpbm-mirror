@@ -36,6 +36,8 @@ not yet  BJH  Release 10.87.00
 
               pbmpage: Fix error message for invalid syntax.
 
+              pamtris: Fix bug: debug trace left in
+
 19.03.30 BJH  Release 10.86.00
 
               Add pamfind.
