@@ -106,7 +106,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
         
     free(option_def);
@@ -870,8 +870,8 @@ main(int argc, const char *argv[]) {
         */
     FILE * bdfP;
         /* The border file.  NULL if none. */
-    bool eof;    /* no more images in input stream */
-    bool beof;   /* no more images in borderfile stream */
+    int eof;    /* no more images in input stream */
+    int beof;   /* no more images in borderfile stream */
 
     pm_proginit(&argc, argv);
 

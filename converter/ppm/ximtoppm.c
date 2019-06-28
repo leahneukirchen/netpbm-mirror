@@ -56,7 +56,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 
     if (!alphaoutSpec)
@@ -208,7 +208,7 @@ ReadImageChannel(FILE *         const infp,
             }
             marker += i;
         }
-        /* return to the begining of the next image's bufffer */
+        /* return to the beginning of the next image's bufffer */
         if (fseek(infp, marker, 0) == -1) {
             pm_message("ReadImageChannel: can't fseek to location in image buffer" );
             return(0);

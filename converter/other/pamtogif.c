@@ -35,7 +35,7 @@ typedef int stringCode;
        changes throughout the image.
 
        A variable of this type sometimes has the value -1 instead of
-       a string code due to cheesy programming.
+       a string code because of cheesy programming.
 
        Ergo, this data structure must be signed and at least BITS bits
        wide plus sign bit.
@@ -163,7 +163,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
@@ -220,7 +220,7 @@ closestColor(tuple         const color,
     
     unsigned int i;
     unsigned int imin, dmin;
-    bool fits;
+    int fits;
 
     dmin = UINT_MAX;
     imin = 0;
@@ -627,11 +627,11 @@ static void
 byteBuffer_out(byteBuffer *  const byteBufferP,
                unsigned char const c) {
 /*----------------------------------------------------------------------------
-  Add a byte to the end of the current data block, and if it is now 254
+  Add a byte to the end of the current data block, and if it is now 255
   characters, flush the data block to the output file.
 -----------------------------------------------------------------------------*/
     byteBufferP->buffer[byteBufferP->count++] = c;
-    if (byteBufferP->count >= 254)
+    if (byteBufferP->count >= 255)
         byteBuffer_flush(byteBufferP);
 }
 
@@ -893,7 +893,7 @@ lzw_create(FILE *       const ofP,
     
        Above that we use a table with 4096 slots plus 20% extra.
        When this is not enough the clear code is emitted.
-       Due to the extra 20% the table itself never fills up.
+       Because of the extra 20% the table itself never fills up.
        
        lzw.hsize and lzw.hshift stay constant through the image.
 
@@ -1544,7 +1544,7 @@ computeTransparent(char          const colorarg[],
         const char * colorspec;
         bool exact;
         tuple transcolor;
-        bool found;
+        int found;
         int colorindex;
         
         if (colorarg[0] == '=') {

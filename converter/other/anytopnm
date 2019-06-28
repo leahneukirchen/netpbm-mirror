@@ -150,7 +150,8 @@ computeTypeFromTypeDescription () {
             filetype=tiff
             ;;
     
-        *PC*bitmap*data* )
+        # We have seen "PC bitmap" and "PC bitmap data"
+        *PC*bitmap* )
             filetype=bmp
             ;;
         
@@ -399,7 +400,7 @@ case "$2" in
         ;;
 
     gif )
-        giftopnm "$file"
+        giftopnm -image=all "$file"
         ;;
 
     tiff )
@@ -437,7 +438,7 @@ case "$2" in
         ;;
 
     png )
-        pngtopnm "$file"
+        pngtopam "$file"
         ;;
 
     mda )

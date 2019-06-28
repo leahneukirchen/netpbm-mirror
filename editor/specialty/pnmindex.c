@@ -14,6 +14,7 @@
 
 ============================================================================*/
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE   /* Make sure strdup is in string.h */
 
 #include <assert.h>
@@ -59,7 +60,7 @@ systemf(const char * const fmt,
     
     va_start(varargs, fmt);
     
-    vsnprintfN(NULL, 0, fmt, varargs, &dryRunLen);
+    pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
 
     va_end(varargs);
 
@@ -72,7 +73,7 @@ systemf(const char * const fmt,
         shellCommand = malloc(allocSize);
         if (shellCommand == NULL)
             pm_error("Can't get storage for %u-character command",
-                     allocSize);
+                     (unsigned)allocSize);
         else {
             va_list varargs;
             size_t realLen;
@@ -80,7 +81,7 @@ systemf(const char * const fmt,
 
             va_start(varargs, fmt);
 
-            vsnprintfN(shellCommand, allocSize, fmt, varargs, &realLen);
+            pm_vsnprintf(shellCommand, allocSize, fmt, varargs, &realLen);
                 
             assert(realLen == dryRunLen);
             va_end(varargs);
@@ -93,7 +94,7 @@ systemf(const char * const fmt,
                 pm_error("shell command '%s' failed.  rc %d",
                          shellCommand, rc);
             
-            strfree(shellCommand);
+            pm_strfree(shellCommand);
         }
     }
 }
@@ -106,7 +107,7 @@ parseCommandLine(int argc, char ** argv,
 
     unsigned int option_def_index;
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -137,7 +138,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE; 
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (quant && cmdlineP->noquant)
@@ -184,7 +185,7 @@ freeCmdline(struct cmdlineInfo const cmdline) {
     unsigned int i;
 
     for (i = 0; i < cmdline.inputFileCount; ++i)
-        strfree(cmdline.inputFileName[i]);
+        pm_strfree(cmdline.inputFileName[i]);
 
     free(cmdline.inputFileName);
 
@@ -200,7 +201,7 @@ makeTempDir(const char ** const tempDirP) {
     const char * mytmpdir;
     int rc;
 
-    asprintfN(&mytmpdir, "%s/pnmindex_%d", tmpdir, getpid());
+    pm_asprintf(&mytmpdir, "%s/pnmindex_%d", tmpdir, getpid());
 
     rc = pm_mkdir(mytmpdir, 0700);
     if (rc != 0)
@@ -232,7 +233,7 @@ rowFileName(const char * const dirName,
 
     const char * fileName;
     
-    asprintfN(&fileName, "%s/pi.%u", dirName, row);
+    pm_asprintf(&fileName, "%s/pi.%u", dirName, row);
     
     return fileName;
 }
@@ -259,7 +260,7 @@ makeTitle(const char * const title,
             "> %s", 
             title, invertStage, fileName);
 
-    strfree(fileName);
+    pm_strfree(fileName);
 }
 
 
@@ -285,28 +286,28 @@ copyScaleQuantImage(const char * const inputFileName,
 
     switch (PNM_FORMAT_TYPE(format)) {
     case PBM_TYPE:
-        asprintfN(&scaleCommand, 
-                  "pamscale -quiet -xysize %u %u %s "
-                  "| pgmtopbm > %s",
-                  size, size, inputFileName, outputFileName);
+        pm_asprintf(&scaleCommand, 
+                    "pamscale -quiet -xysize %u %u %s "
+                    "| pgmtopbm > %s",
+                    size, size, inputFileName, outputFileName);
         break;
         
     case PGM_TYPE:
-        asprintfN(&scaleCommand, 
-                  "pamscale -quiet -xysize %u %u %s >%s",
-                  size, size, inputFileName, outputFileName);
+        pm_asprintf(&scaleCommand, 
+                    "pamscale -quiet -xysize %u %u %s >%s",
+                    size, size, inputFileName, outputFileName);
         break;
         
     case PPM_TYPE:
         if (quant)
-            asprintfN(&scaleCommand, 
-                      "pamscale -quiet -xysize %u %u %s "
-                      "| pnmquant -quiet %u > %s",
-                      size, size, inputFileName, colors, outputFileName);
+            pm_asprintf(&scaleCommand, 
+                        "pamscale -quiet -xysize %u %u %s "
+                        "| pnmquant -quiet %u > %s",
+                        size, size, inputFileName, colors, outputFileName);
         else
-            asprintfN(&scaleCommand, 
-                      "pamscale -quiet -xysize %u %u %s >%s",
-                      size, size, inputFileName, outputFileName);
+            pm_asprintf(&scaleCommand, 
+                        "pamscale -quiet -xysize %u %u %s >%s",
+                        size, size, inputFileName, outputFileName);
         break;
     default:
         pm_error("Unrecognized Netpbm format: %d", format);
@@ -314,7 +315,7 @@ copyScaleQuantImage(const char * const inputFileName,
 
     systemf("%s", scaleCommand);
 
-    strfree(scaleCommand);
+    pm_strfree(scaleCommand);
 }
 
 
@@ -340,7 +341,7 @@ thumbnailFileName(const char * const dirName,
 
     const char * fileName;
     
-    asprintfN(&fileName, "%s/pi.%u.%u", dirName, row, col);
+    pm_asprintf(&fileName, "%s/pi.%u.%u", dirName, row, col);
     
     return fileName;
 }
@@ -372,7 +373,7 @@ thumbnailFileList(const char * const dirName,
             strcat(list, " ");
             strcat(list, fileName);
         }
-        strfree(fileName);
+        pm_strfree(fileName);
     }
 
     return list;
@@ -420,7 +421,7 @@ makeThumbnail(const char *  const inputFileName,
     pnm_readpnminit(ifP, &imageCols, &imageRows, &maxval, &format);
     pm_close(ifP);
     
-    asprintfN(&tmpfile, "%s/pi.tmp", tempDir);
+    pm_asprintf(&tmpfile, "%s/pi.tmp", tempDir);
 
     if (imageCols < size && imageRows < size)
         copyImage(inputFileName, tmpfile);
@@ -434,8 +435,8 @@ makeThumbnail(const char *  const inputFileName,
 
     unlink(tmpfile);
 
-    strfree(fileName);
-    strfree(tmpfile);
+    pm_strfree(fileName);
+    pm_strfree(tmpfile);
 
     *formatP = format;
 }
@@ -454,7 +455,7 @@ unlinkThumbnailFiles(const char * const dirName,
 
         unlink(fileName);
 
-        strfree(fileName);
+        pm_strfree(fileName);
     }
 }
 
@@ -471,7 +472,7 @@ unlinkRowFiles(const char * const dirName,
 
         unlink(fileName);
 
-        strfree(fileName);
+        pm_strfree(fileName);
     }
 }
 
@@ -497,7 +498,7 @@ combineIntoRowAndDelete(unsigned int const row,
     unlink(fileName);
 
     if (maxFormatType == PPM_TYPE && quant)
-        asprintfN(&quantStage, "| pnmquant -quiet %u ", colors);
+        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colors);
     else
         quantStage = strdup("");
 
@@ -508,9 +509,9 @@ combineIntoRowAndDelete(unsigned int const row,
             ">%s",
             blackWhiteOpt, fileList, quantStage, fileName);
 
-    strfree(fileList);
-    strfree(quantStage);
-    strfree(fileName);
+    pm_strfree(fileList);
+    pm_strfree(quantStage);
+    pm_strfree(fileName);
 
     unlinkThumbnailFiles(tempDir, row, cols);
 }
@@ -542,7 +543,7 @@ rowFileList(const char * const dirName,
             strcat(list, " ");
             strcat(list, fileName);
         }
-        strfree(fileName);
+        pm_strfree(fileName);
     }
 
     return list;
@@ -564,7 +565,7 @@ writeRowsAndDelete(unsigned int const rows,
     const char * fileList;
     
     if (maxFormatType == PPM_TYPE && quant)
-        asprintfN(&quantStage, "| pnmquant -quiet %u ", colors);
+        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colors);
     else
         quantStage = strdup("");
 
@@ -573,8 +574,8 @@ writeRowsAndDelete(unsigned int const rows,
     systemf("pnmcat %s -topbottom %s %s",
             blackWhiteOpt, fileList, quantStage);
 
-    strfree(fileList);
-    strfree(quantStage);
+    pm_strfree(fileList);
+    pm_strfree(quantStage);
 
     unlinkRowFiles(tempDir, rows);
 }

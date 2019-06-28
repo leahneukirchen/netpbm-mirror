@@ -1,4 +1,4 @@
-/* pnmshear.c - read a portable anymap and shear it by some angle
+ /* pnmshear.c - read a portable anymap and shear it by some angle
 **
 ** Copyright (C) 1989, 1991 by Jef Poskanzer.
 **
@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "ppm.h"
 #include "pnm.h"
 #include "shhopt.h"
@@ -24,11 +25,13 @@
 #define SCALE 4096
 #define HALFSCALE 2048
 
-struct cmdline_info {
+
+
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *       input_filespec;  /* Filespec of input file */
+    const char * inputFileName;   /* Name of input file */
     double       angle;           /* requested shear angle, in radians */
     unsigned int noantialias;     /* -noantialias option */
     const char * background;      /* NULL if none */
@@ -37,14 +40,16 @@ struct cmdline_info {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdline_info *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 
     optStruct3 opt;
     unsigned int option_def_index = 0;
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
 
     unsigned int backgroundSpec;
+
+    MALLOCARRAY(option_def, 100);
 
     OPTENT3(0, "noantialias",      OPT_FLAG,  NULL, &cmdlineP->noantialias, 0);
     OPTENT3(0, "background",       OPT_STRING, &cmdlineP->background,
@@ -54,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;
     opt.allowNegNum = TRUE;
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (!backgroundSpec)
         cmdlineP->background = NULL;
@@ -68,15 +73,16 @@ parseCommandLine(int argc, char ** argv,
             pm_error("Angle argument is not a valid floating point number: "
                      "'%s'", argv[1]);
         if (argc-1 < 2)
-            cmdlineP->input_filespec = "-";
+            cmdlineP->inputFileName = "-";
         else {
-            cmdlineP->input_filespec = argv[2];
+            cmdlineP->inputFileName = argv[2];
             if (argc-1 > 2)
                 pm_error("too many arguments (%d).  "
                          "The only arguments are shear angle and filespec.",
                          argc-1);
         }
     }
+    free(option_def);
 }
 
 
@@ -200,7 +206,7 @@ backgroundColor(const char * const backgroundColorName,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char * argv[]) {
 
     FILE * ifP;
     xel * xelrow;
@@ -212,13 +218,13 @@ main(int argc, char * argv[]) {
     xelval maxval, newmaxval;
     double shearfac;
 
-    struct cmdline_info cmdline;
+    struct CmdlineInfo cmdline;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
     xelrow = pnm_allocrow(cols);
@@ -256,7 +262,7 @@ main(int argc, char * argv[]) {
             shearCols = (rows - row) * shearfac;
 
         shearRow(xelrow, cols, newxelrow, newcols, 
-                  shearCols, format, bgxel, !cmdline.noantialias);
+                 shearCols, format, bgxel, !cmdline.noantialias);
 
         pnm_writepnmrow(stdout, newxelrow, newcols, newmaxval, newformat, 0);
     }
@@ -266,3 +272,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+

@@ -10,6 +10,7 @@
  * implied warranty.
  */
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
 #include <assert.h>
 #include <limits.h>
@@ -23,7 +24,7 @@
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     const char * header;
     const char * data;
     const char * prefix;
@@ -37,7 +38,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -78,7 +79,9 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
 
-    optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
+
+    free(option_def);
 
     if (!dataSpec)
         cmdlineP->data = NULL;
@@ -116,24 +119,27 @@ parseCommandLine(int argc, const char ** argv,
 
 typedef struct {
     int f[sizeof(int) * 8 + 1];
-} factorset;
+} Factorset;
 
 typedef struct {
-    int x; int y;
-} coord;
+    int x;
+    int y;
+} Coord;
 
 typedef struct {
-    coord ul;
-    coord size;
-} rectangle;
+    Coord ul;
+    Coord size;
+} Rectangle;
 
-static coord
-lr(rectangle const r) {
+
+
+static Coord
+lr(Rectangle const r) {
 /*----------------------------------------------------------------------------
-   Return the coordinates of the lower right corner of 'r'
-   (i.e. the pixel just beyond the lowest rightmost one).
+  The coordinates of the lower right corner of 'r' (i.e. the pixel just beyond
+  the lowest rightmost one).
 -----------------------------------------------------------------------------*/
-    coord retval;
+    Coord retval;
 
     retval.x = r.ul.x + r.size.x;
     retval.y = r.ul.y + r.size.y;
@@ -141,50 +147,67 @@ lr(rectangle const r) {
     return retval;
 }
 
-static factorset 
-factor(int n)
-{
-  int i, j;
-  factorset f;
-  for (i = 0; i < sizeof(int) * 8 + 1; ++i)
-    f.f[i] = 0;
-  for (i = 2, j = 0; n > 1; ++i)
-  {
-    if (n % i == 0)
-      f.f[j++] = i, n /= i, --i;
-  }
-  return (f);
+
+
+static Factorset 
+factor(unsigned int const arg) {
+/*----------------------------------------------------------------------------
+   The prime factors of 'arg'.
+-----------------------------------------------------------------------------*/
+    unsigned int n;
+    unsigned int i, j;
+    Factorset retval;
+
+    /* Initialize array element to zero */
+    for (i = 0; i < ARRAY_SIZE(retval.f); ++i)
+        retval.f[i] = 0;
+
+    /* Set array elements starting with the first to the factors */
+
+    for (i = 2, j = 0, n = arg; n > 1; ) {
+        if (n % i == 0) {
+            retval.f[j++] = i;
+            n /= i;
+        } else
+            ++i;
+    }
+    return retval;
 }
 
+
+
 static int 
-gcd(int n, int m)
-{
-  factorset nf, mf;
-  int i, j;
-  int g;
+gcf(unsigned int const n,
+    unsigned int const m) {
+/*----------------------------------------------------------------------------
+   Greatest common factor of 'n' and 'm'
+-----------------------------------------------------------------------------*/
+    Factorset const nFactors = factor(n);
+    Factorset const mFactors = factor(m);
 
-  nf = factor(n);
-  mf = factor(m);
+    unsigned int i, j;
+    unsigned int g;
 
-  i = j = 0;
-  g = 1;
-  while (nf.f[i] && mf.f[j])
-  {
-    if (nf.f[i] == mf.f[j])
-      g *= nf.f[i], ++i, ++j;
-    else if (nf.f[i] < mf.f[j])
-      ++i;
-    else
-      ++j;
-  }
-  return (g);
+    i = j = 0;
+    g = 1;
+    while (nFactors.f[i] && mFactors.f[j]) {
+        if (nFactors.f[i] == mFactors.f[j]) {
+            g *= nFactors.f[i];
+            ++i;
+            ++j;
+        } else if (nFactors.f[i] < mFactors.f[j])
+            ++i;
+        else
+            ++j;
+    }
+    return g;
 }
 
 
 
 static bool
-overlaps(rectangle const a,
-         rectangle const b) {
+overlaps(Rectangle const a,
+         Rectangle const b) {
 
     return
         (a.ul.x < lr(b).x && a.ul.y < lr(b).y) &&
@@ -194,8 +217,8 @@ overlaps(rectangle const a,
 
 
 static bool
-collides(rectangle         const test,
-         const rectangle * const fieldList,
+collides(Rectangle         const test,
+         const Rectangle * const fieldList,
          unsigned int      const n) {
 /*----------------------------------------------------------------------------
    Return true iff the rectangle 'test' overlaps any of the 'n' rectangles
@@ -203,19 +226,19 @@ collides(rectangle         const test,
 -----------------------------------------------------------------------------*/
     unsigned int i;
 
-    for (i = 0; i < n; ++i)
+    for (i = 0; i < n; ++i) {
         if (overlaps(fieldList[i], test))
             return true;
-
+    }
     return false;
 }
 
 
 
 static void 
-recursefindpack(rectangle *    const current,
-                coord          const currentsz,
-                coord *        const best,
+recursefindpack(Rectangle *    const current,
+                Coord          const currentsz,
+                Coord *        const best,
                 unsigned int   const minarea,
                 unsigned int * const maxareaP, 
                 unsigned int   const depth,
@@ -235,13 +258,13 @@ recursefindpack(rectangle *    const current,
     } else {
         unsigned int i;
 
-        rectangle * const newP = &current[depth];
+        Rectangle * const newP = &current[depth];
 
         for (i = 0; ; ++i) {
             for (newP->ul.x = 0, newP->ul.y = i * yinc;
                  newP->ul.y <= i * yinc;) {
 
-                coord c;
+                Coord c;
 
                 c.x = MAX(lr(*newP).x, currentsz.x);
                 c.y = MAX(lr(*newP).y, currentsz.y);
@@ -273,36 +296,35 @@ recursefindpack(rectangle *    const current,
 
 static void 
 findpack(struct pam * const imgs,
-         unsigned int const n,
-         coord *      const coords,
+         unsigned int const imgCt,
+         Coord **     const coordsP,
          unsigned int const quality,
          unsigned int const qfactor) {
 
-    int minarea;
-    int i;
-    int rdiv;
-    int cdiv;
-    int minx;
-    int miny;
-    rectangle * current;
+    Coord * coords;  /* malloc'ed array */
+    unsigned int minarea;
+    unsigned int i;
+    unsigned int rdiv;
+    unsigned int cdiv;
+    Rectangle * current;  /* malloc'ed array */
     unsigned int z;
-    coord c;
+    Coord c;
 
-    minx = -1; miny = -1;  /* initial value */
+    MALLOCARRAY(coords, imgCt);
+  
+    if (!coords)
+        pm_error("Out of memory allocating %u-element coords array", imgCt);
+
     z = UINT_MAX;  /* initial value */
     c.x = 0; c.y = 0;  /* initial value */
 
     if (quality > 1) {
         unsigned int realMinarea;
-        for (realMinarea = i = 0; i < n; ++i)
-            realMinarea += imgs[i].height * imgs[i].width,
-                minx = MAX(minx, imgs[i].width),
-                miny = MAX(miny, imgs[i].height);
-
+        for (realMinarea = i = 0; i < imgCt; ++i)
+            realMinarea += imgs[i].height * imgs[i].width;
         minarea = realMinarea * qfactor / 100;
-    } else {
-        minarea = INT_MAX - 1;
-    }
+    } else
+        minarea = UINT_MAX - 1;
 
     /* It's relatively easy to show that, if all the images
      * are multiples of a particular size, then a best
@@ -311,20 +333,24 @@ findpack(struct pam * const imgs,
      *
      * This speeds computation immensely.
      */
-    for (rdiv = imgs[0].height, i = 1; i < n; ++i)
-        rdiv = gcd(imgs[i].height, rdiv);
+    for (rdiv = imgs[0].height, i = 1; i < imgCt; ++i)
+        rdiv = gcf(imgs[i].height, rdiv);
 
-    for (cdiv = imgs[0].width, i = 1; i < n; ++i)
-        cdiv = gcd(imgs[i].width, cdiv);
+    for (cdiv = imgs[0].width, i = 1; i < imgCt; ++i)
+        cdiv = gcf(imgs[i].width, cdiv);
 
-    MALLOCARRAY(current, n);
+    MALLOCARRAY(current, imgCt);
 
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < imgCt; ++i) {
         current[i].size.x = imgs[i].width;
         current[i].size.y = imgs[i].height;
     }
-    recursefindpack(current, c, coords, minarea, &z, 0, n, cdiv, rdiv,
+    recursefindpack(current, c, coords, minarea, &z, 0, imgCt, cdiv, rdiv,
                     quality, qfactor);
+
+    free(current);
+
+    *coordsP = coords;
 }
 
 
@@ -333,8 +359,8 @@ static void
 adjustDepth(tuple *            const tuplerow,
             const struct pam * const inpamP,
             const struct pam * const outpamP,
-            coord              const coord) {
-
+            Coord              const coord) {
+    
     if (inpamP->depth < outpamP->depth) {
         unsigned int i;
         for (i = coord.x; i < coord.x + inpamP->width; ++i) {
@@ -351,12 +377,12 @@ static void
 adjustMaxval(tuple *            const tuplerow,
              const struct pam * const inpamP,
              const struct pam * const outpamP,
-             coord              const coord) {
+             Coord              const coord) {
 
     if (inpamP->maxval < outpamP->maxval) {
-        int i;
+        unsigned int i;
         for (i = coord.x; i < coord.x + inpamP->width; ++i) {
-            int j;
+            unsigned int j;
             for (j = 0; j < outpamP->depth; ++j)
                 tuplerow[i][j] *= outpamP->maxval / inpamP->maxval;
         }
@@ -382,29 +408,37 @@ makeRowBlack(struct pam * const pamP,
 
 static void
 writePam(struct pam *       const outpamP,
-         unsigned int       const nfiles,
-         const coord *      const coords,
+         unsigned int       const imgCt,
+         const Coord *      const coords,
          const struct pam * const imgs) {
-
-    tuple *tuplerow;
-    int i;
+/*----------------------------------------------------------------------------
+   Write the entire composite image.  There are 'imgCt' source images,
+   described by imgs[].  Their placement in the output is coords[].
+   Properties of the output image, including where to write it
+   and its dimensions are *outpamP.
+-----------------------------------------------------------------------------*/
+    tuple * tuplerow;
+    unsigned int row;  /* Row number in the output image */
   
     pnm_writepaminit(outpamP);
 
     tuplerow = pnm_allocpamrow(outpamP);
 
-    for (i = 0; i < outpamP->height; ++i) {
-        int j;
-
+    for (row = 0; row < outpamP->height; ++row) {
+        unsigned int imgIdx;
+        
         makeRowBlack(outpamP, tuplerow);  /* initial value */
 
-        for (j = 0; j < nfiles; ++j) {
-            if (coords[j].y <= i && i < coords[j].y + imgs[j].height) {
-                pnm_readpamrow(&imgs[j], &tuplerow[coords[j].x]);
-                adjustDepth(tuplerow, &imgs[j], outpamP, coords[j]);
+        for (imgIdx = 0; imgIdx < imgCt; ++imgIdx) {
+            const Coord *      const imgCoordP = &coords[imgIdx];
+            const struct pam * const imgPamP   = &imgs[imgIdx];
 
-                adjustMaxval(tuplerow, &imgs[j], outpamP, coords[j]);
+            if (imgCoordP->y <= row && row < imgCoordP->y + imgPamP->height) {
+                pnm_readpamrow(imgPamP, &tuplerow[imgCoordP->x]);
 
+                adjustDepth(tuplerow, imgPamP, outpamP, *imgCoordP);
+
+                adjustMaxval(tuplerow, imgPamP, outpamP, *imgCoordP);
             }
         }
         pnm_writepamrow(outpamP, tuplerow);
@@ -418,18 +452,18 @@ static void
 writeData(FILE *             const dataFileP,
           unsigned int       const width,
           unsigned int       const height,
-          unsigned int       const nfiles,
+          unsigned int       const imgCt,
           const char **      const names,
-          const coord *      const coords,
+          const Coord *      const coords,
           const struct pam * const imgs) {
 
-    unsigned int i;
+    unsigned int imgIdx;
 
     fprintf(dataFileP, ":0:0:%u:%u\n", width, height);
 
-    for (i = 0; i < nfiles; ++i) {
-        fprintf(dataFileP, "%s:%u:%u:%u:%u\n", names[i], coords[i].x,
-                coords[i].y, imgs[i].width, imgs[i].height);
+    for (imgIdx = 0; imgIdx < imgCt; ++imgIdx) {
+        fprintf(dataFileP, "%s:%u:%u:%u:%u\n", names[imgIdx], coords[imgIdx].x,
+                coords[imgIdx].y, imgs[imgIdx].width, imgs[imgIdx].height);
     }
 }
 
@@ -442,7 +476,7 @@ writeHeader(FILE * const headerFileP,
             unsigned int const height,
             unsigned int const nfiles,
             const char ** const names,
-            const coord * const coords,
+            const Coord * const coords,
             const struct pam * imgs) {
 
     unsigned int i;
@@ -455,7 +489,7 @@ writeHeader(FILE * const headerFileP,
 
     for (i = 0; i < nfiles; ++i) {
         char * const buffer = strdup(names[i]);
-        coord const coord = coords[i];
+        Coord const coord = coords[i];
         struct pam const img = imgs[i];
 
         unsigned int j;
@@ -554,11 +588,11 @@ computeOutputType(sample *           const maxvalP,
 
 
 static void
-computeOutputDimensions(int * const widthP,
-                        int * const heightP,
-                        unsigned int const nfiles,
+computeOutputDimensions(int *              const widthP,
+                        int *              const heightP,
+                        unsigned int       const nfiles,
                         const struct pam * const imgs,
-                        const coord * const coords) {
+                        const Coord *      const coords) {
 
     unsigned int widthGuess, heightGuess;
     unsigned int i;
@@ -577,100 +611,162 @@ computeOutputDimensions(int * const widthP,
 
 
 
-int 
-main(int argc, const char **argv) {
+static unsigned int
+qfactorFromQuality(unsigned int const quality,
+                   unsigned int const quality2) {
 
-    struct cmdlineInfo cmdline;
-    struct pam * imgs;
-    struct pam outimg;
-    unsigned int nfiles;
-    coord * coords;
-    FILE * header;
-    FILE * data;
-    const char ** names;
-    unsigned int i;
-    unsigned int qfactor;  /* In per cent */
+    unsigned int qfactor;
 
-    pm_proginit(&argc, argv);
-
-    parseCommandLine(argc, argv, &cmdline);
-
-    header = cmdline.header ? pm_openw(cmdline.header) : NULL;
-    data = cmdline.data ? pm_openw(cmdline.data) : NULL;
-
-    switch (cmdline.quality2) {
+    switch (quality2) {
     case 0: case 1:
-        qfactor = cmdline.quality;
+        qfactor = quality;
         break;
     case 2: case 3: case 4: case 5: case 6: 
-        qfactor = 100 * (8 - cmdline.quality2); 
+        qfactor = 100 * (8 - quality2); 
         break;
     case 7: qfactor = 150; break;
     case 8: qfactor = 125; break;
     case 9: qfactor = 100; break;
     default: pm_error("Internal error - impossible value of 'quality2': %u",
-                      cmdline.quality2);
+                      quality2);
     }
 
-    nfiles = cmdline.nFiles > 0 ? cmdline.nFiles : 1;
+    return qfactor;
+}
 
-    MALLOCARRAY(imgs, nfiles);
-    MALLOCARRAY(coords, nfiles);
-    MALLOCARRAY(names, nfiles);
-  
-    if (!imgs || !coords || !names)
+
+
+static void
+openFiles(struct CmdlineInfo const cmdline,
+          unsigned int *     const fileCtP,
+          struct pam **      const imgPamP,
+          const char ***     const namesP) {
+
+    unsigned int fileCt;
+    struct pam * imgPam;
+    const char ** names;
+
+    fileCt = cmdline.nFiles > 0 ? cmdline.nFiles : 1;
+
+    MALLOCARRAY(imgPam, fileCt);
+    MALLOCARRAY(names, fileCt);
+
+    if (!imgPam || !names)
         pm_error("out of memory");
 
     if (cmdline.nFiles > 0) {
         unsigned int i;
 
         for (i = 0; i < cmdline.nFiles; ++i) {
-            imgs[i].file = pm_openr(cmdline.inFileName[i]);
+            imgPam[i].file = pm_openr(cmdline.inFileName[i]);
             names[i] = strdup(cmdline.inFileName[i]);
         }
     } else {
-        imgs[0].file = stdin;
+        imgPam[0].file = stdin;
         names[0] = strdup("stdin");
     }
 
-    for (i = 0; i < nfiles; ++i)
-        pnm_readpaminit(imgs[i].file, &imgs[i], PAM_STRUCT_SIZE(tuple_type));
+    *fileCtP = fileCt;
+    *imgPamP = imgPam;
+    *namesP  = names;
+}
 
-    sortImagesByArea(nfiles, imgs, names);
 
-    findpack(imgs, nfiles, coords, cmdline.quality2, qfactor);
+
+static void
+readFileHeaders(struct pam * const imgPam,
+                unsigned int const fileCt) {
+
+    unsigned int i;
+
+    for (i = 0; i < fileCt; ++i)
+        pnm_readpaminit(imgPam[i].file, &imgPam[i],
+                        PAM_STRUCT_SIZE(tuple_type));
+}
+
+
+
+static void
+closeFiles(const struct pam * const imgPam,
+           unsigned int       const fileCt,
+           FILE *             const headerFileP,
+           FILE *             const dataFileP) {
+
+    unsigned int i;
+
+    for (i = 0; i < fileCt; ++i)
+        pm_close(imgPam[i].file);
+
+    pm_close(stdout);
+
+    if (headerFileP)
+        pm_close(headerFileP);
+
+    if (dataFileP)
+        pm_close(dataFileP);
+}
+
+
+
+int 
+main(int argc, const char **argv) {
+
+    struct CmdlineInfo cmdline;
+    struct pam * imgPam;  /* malloced */
+    struct pam outimg;
+    unsigned int fileCt;
+    Coord * coords;  /* malloced */
+    FILE * headerFileP;
+    FILE * dataFileP;
+    const char ** names; /* malloced */
+    unsigned int qfactor;  /* In per cent */
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    headerFileP = cmdline.header ? pm_openw(cmdline.header) : NULL;
+    dataFileP = cmdline.data ? pm_openw(cmdline.data) : NULL;
+
+    qfactor = qfactorFromQuality(cmdline.quality, cmdline.quality2);
+
+    openFiles(cmdline, &fileCt, &imgPam, &names);
+
+    readFileHeaders(imgPam, fileCt);
+
+    sortImagesByArea(fileCt, imgPam, names);
+
+    findpack(imgPam, fileCt, &coords, cmdline.quality2, qfactor);
 
     computeOutputType(&outimg.maxval, &outimg.format, outimg.tuple_type,
-                      &outimg.depth, nfiles, imgs);
+                      &outimg.depth, fileCt, imgPam);
 
-    computeOutputDimensions(&outimg.width, &outimg.height, nfiles,
-                            imgs, coords);
-
-    pnm_setminallocationdepth(&outimg, outimg.depth);
-
+    computeOutputDimensions(&outimg.width, &outimg.height, fileCt,
+                            imgPam, coords);
     outimg.size = sizeof(outimg);
     outimg.len = PAM_STRUCT_SIZE(allocation_depth);
     pnm_setminallocationdepth(&outimg, outimg.depth);
     outimg.plainformat = false;
     outimg.file = stdout;
  
-    writePam(&outimg, nfiles, coords, imgs);
+    writePam(&outimg, fileCt, coords, imgPam);
 
-    if (data)
-        writeData(data, outimg.width, outimg.height,
-                  nfiles, names, coords, imgs);
+    if (dataFileP)
+        writeData(dataFileP, outimg.width, outimg.height,
+                  fileCt, names, coords, imgPam);
 
-    if (header)
-        writeHeader(header, cmdline.prefix, outimg.width, outimg.height,
-                    nfiles, names, coords, imgs);
+    if (headerFileP)
+        writeHeader(headerFileP, cmdline.prefix, outimg.width, outimg.height,
+                    fileCt, names, coords, imgPam);
 
-    for (i = 0; i < nfiles; ++i)
-        pm_close(imgs[i].file);
-    pm_close(stdout);
-    if (header)
-        pm_close(header);
-    if (data)
-        pm_close(data);
+    closeFiles(imgPam, fileCt, headerFileP, dataFileP);
+
+    free(coords);
+    free(imgPam);
+    free(names);
 
     return 0;
 }
+
+
+

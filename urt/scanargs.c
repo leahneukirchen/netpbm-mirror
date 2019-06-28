@@ -40,17 +40,14 @@
  *  to have all "void" functions so declared.
  */
 
-#include "rle.h"
 #include <stdio.h>
 #include <ctype.h>
-#ifndef USE_STDARG
-#include <varargs.h>
-#else
 #include <stdarg.h>
-#endif
 
-#include "pm_c_util.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/nstring.h"
+#include "rle_config.h"
+#include "rle.h"
 
 /* 
  * An explicit assumption is made in this code that all pointers look
@@ -68,48 +65,21 @@ typedef int *ptr;
 #define NEW( type, cnt )	(type *) malloc( (cnt) * sizeof( type ) )
 #define RENEW( type, ptr, cnt )	(type *) realloc( ptr, (cnt) * sizeof( type ) )
 
-#if defined(c_plusplus) && !defined(USE_PROTOTYPES)
-#define USE_PROTOTYPES
-#endif
-
-#ifndef USE_PROTOTYPES
-static char * prformat();
-static int isnum();
-static int	_do_scanargs();
-void		scan_usage();
-#else
 static CONST_DECL char * prformat( CONST_DECL char *, int );
 static int isnum( CONST_DECL char *, int, int );
 static int	_do_scanargs( int argc, char **argv, CONST_DECL char *format,
 			      va_list argl );
 void		scan_usage( char **, CONST_DECL char * );
-#endif
 
 /* 
  * Argument list is (argc, argv, format, ... )
  */
 int
-#ifndef USE_STDARG
-scanargs ( va_alist )
-va_dcl
-#else
 scanargs ( int argc, char **argv, CONST_DECL char *format, ... )
-#endif /* !USE_STDARG */
 {
     va_list argl;
     int retval;
-#ifndef USE_STDARG
-    int argc;
-    char ** argv;
-    CONST_DECL char *format;
-
-    va_start( argl );
-    argc = va_arg( argl, int );
-    argv = va_arg( argl, char ** );
-    format = va_arg( argl, CONST_DECL char * );
-#else
     va_start( argl, format );
-#endif
     retval = _do_scanargs( argc, argv, format, argl );
     va_end( argl );
     return retval;

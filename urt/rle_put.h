@@ -28,6 +28,7 @@
  */
 
 #include "rle.h"
+#include "rle_config.h"
 
 /* ****************************************************************
  * Dispatch table for different output types.

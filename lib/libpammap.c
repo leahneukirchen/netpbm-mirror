@@ -1,6 +1,6 @@
-/******************************************************************************
+/*=============================================================================
                                   libpammap.c
-*******************************************************************************
+===============================================================================
 
   These are functions that deal with tuple hashes and tuple tables.
 
@@ -11,13 +11,16 @@
   A tuple table lets you scan all the values, being a table of elements
   that consist of an ordered pair of a tuple value and integer.
 
-******************************************************************************/
+  This file was originally written by Bryan Henderson and is contributed
+  to the public domain by him and subsequent authors.
+=============================================================================*/
 
 #include <assert.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+
 #include "pam.h"
 #include "pammap.h"
 
@@ -31,13 +34,14 @@ pnm_hashtuple(struct pam * const pamP,
    Return the hash value of the tuple 'tuple' -- i.e. an index into a hash
    table.
 -----------------------------------------------------------------------------*/
+    unsigned int const hash_factor[] = {1, 33, 33*33};
+
     unsigned int i;
     unsigned int hash;
-    const unsigned int hash_factor[] = {33023, 30013, 27011};
 
     hash = 0;  /* initial value */
     for (i = 0; i < MIN(pamP->depth, 3); ++i) {
-        hash += tuple[i] * hash_factor[i];  /* May overflow */
+        hash += tuple[i] * hash_factor[i];
     }
     hash %= HASH_SIZE;
     return hash;
@@ -71,7 +75,7 @@ pnm_createtuplehash(void) {
 void
 pnm_destroytuplehash(tuplehash const tuplehash) {
 
-    int i;
+    unsigned int i;
 
     /* Free the chains */
 
@@ -152,7 +156,13 @@ pnm_lookuptuple(struct pam *    const pamP,
                 const tuple           searchval, 
                 int *           const foundP, 
                 int *           const retvalP) {
-    
+/*----------------------------------------------------------------------------
+   Return as *revtvalP the index of the tuple value 'searchval' in the
+   tuple hash 'tuplehash'.
+
+   But iff the tuple value isn't in the hash, return *foundP == false
+   and nothing as *retvalP.
+-----------------------------------------------------------------------------*/
     unsigned int const hashvalue = pnm_hashtuple(pamP, searchval);
     struct tupleint_list_item * p;
     struct tupleint_list_item * found;
@@ -189,7 +199,7 @@ addColorOccurrenceToHash(tuple          const color,
          p = p->next);
 
     if (p) {
-        /* It's in the hash; just tally one more occurence */
+        /* It's in the hash; just tally one more occurrence */
         ++p->tupleint.value;
         *fullP = FALSE;
     } else {
@@ -217,7 +227,16 @@ pnm_addtuplefreqoccurrence(struct pam *   const pamP,
                            tuple          const value,
                            tuplehash      const tuplefreqhash,
                            int *          const firstOccurrenceP) {
+/*----------------------------------------------------------------------------
+  Tally one more occurence of the tuple value 'value' to the tuple frequencey
+  hash 'tuplefreqhash', adding the tuple to the hash if it isn't there
+  already.
 
+  Allocate new space for the tuple value and the hash chain element.
+
+  If we can't allocate space for the new hash chain element, abort the
+  program.
+-----------------------------------------------------------------------------*/
     unsigned int const hashvalue = pnm_hashtuple(pamP, value);
             
     struct tupleint_list_item * p;
@@ -227,7 +246,7 @@ pnm_addtuplefreqoccurrence(struct pam *   const pamP,
          p = p->next);
 
     if (p) {
-        /* It's in the hash; just tally one more occurence */
+        /* It's in the hash; just tally one more occurrence */
         ++p->tupleint.value;
         *firstOccurrenceP = FALSE;
     } else {
@@ -407,7 +426,7 @@ alloctupletable(const struct pam * const pamP,
                 const char **      const errorP) {
     
     if (UINT_MAX / sizeof(struct tupleint) < size)
-        asprintfN(errorP, "size %u is too big for arithmetic", size);
+        pm_asprintf(errorP, "size %u is too big for arithmetic", size);
     else {
         unsigned int const mainTableSize = size * sizeof(struct tupleint *);
         unsigned int const tupleIntSize = 
@@ -419,7 +438,7 @@ alloctupletable(const struct pam * const pamP,
            as a single malloc block and suballocate internally.
         */
         if ((UINT_MAX - mainTableSize) / tupleIntSize < size)
-            asprintfN(errorP, "size %u is too big for arithmetic", size);
+            pm_asprintf(errorP, "size %u is too big for arithmetic", size);
         else {
             unsigned int const allocSize = mainTableSize + size * tupleIntSize;
             void * pool;
@@ -427,8 +446,9 @@ alloctupletable(const struct pam * const pamP,
             pool = malloc(allocSize);
 
             if (!pool)
-                asprintfN(errorP, "Unable to allocate %u bytes for a %u-entry "
-                          "tuple table", allocSize, size);
+                pm_asprintf(errorP,
+                            "Unable to allocate %u bytes for a %u-entry "
+                            "tuple table", allocSize, size);
             else {
                 tupletable const tbl = (tupletable) pool;
 
@@ -459,7 +479,7 @@ pnm_alloctupletable(const struct pam * const pamP,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
     return retval;
@@ -514,7 +534,7 @@ tuplehashtotable(const struct pam * const pamP,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     } else {
         unsigned int i, j;
@@ -570,7 +590,7 @@ pnm_computetupletablehash(struct pam * const pamP,
 -----------------------------------------------------------------------------*/
     tuplehash tupletablehash;
     unsigned int i;
-    bool fits;
+    int fits;
     
     tupletablehash = pnm_createtuplehash();
 
@@ -730,3 +750,5 @@ pam_colorname(struct pam *         const pamP,
     sprintf(colorname, "#%02x%02x%02x", r, g, b);
     return colorname;
 }
+
+

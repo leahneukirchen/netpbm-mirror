@@ -50,7 +50,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
     
@@ -76,7 +76,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (!acrossSpec)
@@ -232,12 +232,12 @@ doSubstitution(const char *    const pattern,
 
             switch (pattern[inCursor]) {
             case 'a':
-                asprintfN(&substString, "%0*u", precision, file);
-                asprintfN(&desc, "file (across)");
+                pm_asprintf(&substString, "%0*u", precision, file);
+                pm_asprintf(&desc, "file (across)");
                 break;
             case 'd':
-                asprintfN(&substString, "%0*u", precision, rank);
-                asprintfN(&desc, "rank (down)");
+                pm_asprintf(&substString, "%0*u", precision, rank);
+                pm_asprintf(&desc, "rank (down)");
                 break;
             default:
                 pm_error("Unknown format specifier '%c' in input file "
@@ -249,12 +249,12 @@ doSubstitution(const char *    const pattern,
                 pm_error("%s number %u is wider than "
                          "the %u characters specified in the "
                          "input file pattern",
-                         desc, strlen(substString), precision);
+                         desc, (unsigned)strlen(substString), precision);
             else
                 buffer_addString(bufferP, substString);
             
-            strfree(desc);
-            strfree(substString);
+            pm_strfree(desc);
+            pm_strfree(substString);
 
             ++inCursor;
         }
@@ -288,7 +288,7 @@ computeInputFileName(const char *  const pattern,
             buffer_addChar(&buffer, pattern[inCursor++]);
     }
 
-    asprintfN(fileNameP, "%s", buffer.string);
+    pm_asprintf(fileNameP, "%s", buffer.string);
 
     buffer_term(&buffer);
 }
@@ -327,7 +327,7 @@ getCommonInfo(const char *   const inputFilePattern,
 
     pm_close(ifP);
 
-    strfree(fileName);
+    pm_strfree(fileName);
 }
 
 
@@ -344,7 +344,7 @@ openInputImage(const char * const inputFilePattern,
 
     retval = pm_openr(fileName);
     
-    strfree(fileName);
+    pm_strfree(fileName);
 
     return retval;
 }
@@ -491,7 +491,12 @@ openInStreams(struct pam         inpam[],
 /*----------------------------------------------------------------------------
    Open the input files for a single horizontal slice (there's one file
    for each vertical slice) and read the Netpbm headers from them.  Return
-   the pam structures to describe each.
+   the pam structures to describe each as inpam[].
+
+   Open the files for horizontal slice number 'rank', assuming there are
+   'fileCount' vertical slices (so open 'fileCount' files).  Use
+   inputFilePattern[] with each rank and file number to compute the name of
+   each file.
 -----------------------------------------------------------------------------*/
     unsigned int file;
 
@@ -507,7 +512,9 @@ openInStreams(struct pam         inpam[],
 static void
 closeInFiles(struct pam         pam[],
              unsigned int const fileCount) {
-
+/*----------------------------------------------------------------------------
+   Close the 'fileCount' input file streams represented by pam[].
+-----------------------------------------------------------------------------*/
     unsigned int file;
     
     for (file = 0; file < fileCount; ++file)

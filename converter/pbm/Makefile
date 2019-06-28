@@ -7,12 +7,13 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-PORTBINARIES =	atktopbm brushtopbm cmuwmtopbm ddbugtopbm g3topbm escp2topbm \
-		icontopbm macptopbm mdatopbm mgrtopbm mrftopbm \
+PORTBINARIES =	atktopbm brushtopbm cistopbm cmuwmtopbm \
+		ddbugtopbm g3topbm escp2topbm \
+		macptopbm mdatopbm mgrtopbm mrftopbm \
 		pbmto10x pbmto4425 pbmtoascii pbmtoatk \
-		pbmtobbnbg pbmtocmuwm pbmtodjvurle \
+		pbmtobbnbg pbmtocis pbmtocmuwm pbmtodjvurle \
 		pbmtoepsi pbmtoepson pbmtoescp2 \
-		pbmtog3 pbmtogem pbmtogo pbmtoibm23xx pbmtoicon pbmtolj \
+		pbmtog3 pbmtogem pbmtogo pbmtoibm23xx pbmtosunicon pbmtolj \
 		pbmtoln03 pbmtolps \
 		pbmtomacp pbmtomatrixorbital pbmtomda pbmtomgr pbmtomrf \
 		pbmtonokia \
@@ -71,6 +72,14 @@ thinkjettopbm.c:%.c:%.c1 $(SRCDIR)/lib/util/lexheader
 	  grep -v "^[[:space:]]*int yylex(void);" | \
 	  grep -v "^[[:space:]]*int yywrap(void);" \
 	  >$@
+
+install.bin: install.bin.local
+.PHONY: install.bin.local
+install.bin.local: $(PKGDIR)/bin
+# Remember that $(SYMLINK) might just be a copy command.
+# In December 2010 (Actually January 2011), pbmtosunicon replaced pbmtoicon
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pbmtosunicon$(EXE) pbmtoicon$(EXE)
 
 thisdirclean: localclean
 .PHONY: localclean

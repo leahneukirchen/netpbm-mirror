@@ -7,7 +7,7 @@ FType_Type(unsigned int const frameNum);
 unsigned int
 FType_FutureRef(unsigned int const currFrameNum);
 
-int	FType_PastRef _ANSI_ARGS_((int currFrameNum));
+int	FType_PastRef (int currFrameNum);
 
 void SetFramePattern(const char * const pattern);
 

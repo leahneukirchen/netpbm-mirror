@@ -204,13 +204,13 @@ extern int framePatternLen;
  * INTERNAL PROCEDURE prototypes *
  *===============================*/
 
-int initGOPRateControl _ANSI_ARGS_((void));
-int determineMBCount _ANSI_ARGS_((void));
-void checkBufferFullness _ANSI_ARGS_((int count));
-void checkSpatialActivity _ANSI_ARGS_((Block blk0, Block blk1, Block blk2, Block blk3));
-void incNumBlocks _ANSI_ARGS_((int num));
-void calculateVBVDelay _ANSI_ARGS_((int num));
-int BlockExperiments  _ANSI_ARGS_((int16 *OrigBlock, int16 *NewBlock, int control));
+int initGOPRateControl (void);
+int determineMBCount (void);
+void checkBufferFullness (int count);
+void checkSpatialActivity (Block blk0, Block blk1, Block blk2, Block blk3);
+void incNumBlocks (int num);
+void calculateVBVDelay (int num);
+int BlockExperiments  (int16 *OrigBlock, int16 *NewBlock, int control);
      
      
 
@@ -236,7 +236,7 @@ analyzePattern(const char *  const framePattern,
         case 'p': ++*gop_pP; break;
         case 'b': ++*gop_bP; break;
         default:
-            asprintfN(errorP, "Bad pattern - not composed of i, p, and b");
+            pm_asprintf(errorP, "Bad pattern - not composed of i, p, and b");
         }
     }
     assert(*gop_xP == *gop_iP + *gop_pP + *gop_bP);
@@ -285,7 +285,7 @@ initRateControl(bool const wantUnderflowWarning,
     if (error) {
         pm_message("Unable to set up rate control.  Switching to variable.  "
                    "%s", error);
-        strfree(error);
+        pm_strfree(error);
         RateControlMode = VARIABLE_RATE;
         return -1;
     }
@@ -595,7 +595,7 @@ updateRateControl(int const type) {
  * MB_RateOut
  *
  *      Prints out sampling of MB rate control data.  Every "nth" block
- *	stats are printed, with "n" controled by global RC_MB_SAMPLE_RATE
+ *	stats are printed, with "n" controlled by global RC_MB_SAMPLE_RATE
  *	(NB. "skipped" blocks do not go through this function and thus do not
  *		show up in the sample )
  *

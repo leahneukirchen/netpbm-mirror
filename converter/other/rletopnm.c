@@ -61,19 +61,19 @@
 /*
  * Utah type declarations.
  */
-rle_hdr     hdr;
-rle_map     *colormap;
+static rle_hdr hdr;
+static rle_map * colormap;
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    char *input_filename;
+    char *       inputFilename;
     unsigned int headerdump;
     unsigned int verbose;
-    char *alpha_filename;
-    bool alpha_stdout;
+    char *       alphaout;
+    bool         alphaStdout;
 };
 
 
@@ -81,15 +81,14 @@ struct cmdlineInfo {
 /*
  * Other declarations.
  */
-int     visual, maplen;
-int     width, height;
-
+static int visual, maplen;
+static int width, height;
 
 
 
 static void
 parseCommandLine(int argc, char ** argv,
-                   struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -110,34 +109,34 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3('v', "verbose",    OPT_FLAG,   
             NULL,                      &cmdlineP->verbose,        0);
     OPTENT3(0,   "alphaout",   OPT_STRING, 
-            &cmdlineP->alpha_filename, &alphaoutSpec,             0);
+            &cmdlineP->alphaout, &alphaoutSpec,                   0);
 
     opt.opt_table = option_def;
     opt.short_allowed = TRUE;  /* We have short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 
     if (!alphaoutSpec)
-        cmdlineP->alpha_filename = NULL;
+        cmdlineP->alphaout = NULL;
 
     if (argc - 1 == 0)
-        cmdlineP->input_filename = NULL;  /* he wants stdin */
+        cmdlineP->inputFilename = NULL;  /* he wants stdin */
     else if (argc - 1 == 1) {
         if (streq(argv[1], "-"))
-            cmdlineP->input_filename = NULL;  /* he wants stdin */
+            cmdlineP->inputFilename = NULL;  /* he wants stdin */
         else 
-            cmdlineP->input_filename = strdup(argv[1]);
+            cmdlineP->inputFilename = strdup(argv[1]);
     } else 
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
-    if (cmdlineP->alpha_filename && 
-        streq(cmdlineP->alpha_filename, "-"))
-        cmdlineP->alpha_stdout = TRUE;
+    if (cmdlineP->alphaout && 
+        streq(cmdlineP->alphaout, "-"))
+        cmdlineP->alphaStdout = TRUE;
     else 
-        cmdlineP->alpha_stdout = FALSE;
+        cmdlineP->alphaStdout = FALSE;
 }
 
 
@@ -167,15 +166,14 @@ reportRleGetSetupError(int const rleGetSetupRc) {
 }
 
 
-/*-----------------------------------------------------------------------------
- *                                                         Read the rle header.
- */
+
 static void 
-read_rle_header(FILE * const ifp,
-                bool   const headerDump) {
+readRleHeader(FILE * const ifP,
+              bool   const headerDump) {
+
     int rc;
     int  i;
-    hdr.rle_file = ifp;
+    hdr.rle_file = ifP;
     rc = rle_get_setup(&hdr);
     if (rc != 0)
         reportRleGetSetupError(rc);
@@ -254,12 +252,12 @@ read_rle_header(FILE * const ifp,
         for (i = 0; hdr.comments[i] != NULL; i++)
             HMSG("%s", hdr.comments[i]);
 }
-/*-----------------------------------------------------------------------------
- *                                                    Write the ppm image data.
- */
+
+
+
 static void 
-write_ppm_data(FILE * const imageout_file,
-               FILE * const alpha_file) {
+writePpmRaster(FILE * const imageoutFileP,
+               FILE * const alphaFileP) {
 
     rle_pixel ***scanlines, **scanline;
     pixval r, g, b;
@@ -341,17 +339,17 @@ write_ppm_data(FILE * const imageout_file,
         /*
          * Write the scan line.
          */
-        if (imageout_file ) 
-            ppm_writeppmrow(imageout_file, pixelrow, width, RLE_MAXVAL, 0);
-        if (alpha_file)
-            pgm_writepgmrow(alpha_file, alpharow, width, RLE_MAXVAL, 0);
+        if (imageoutFileP) 
+            ppm_writeppmrow(imageoutFileP, pixelrow, width, RLE_MAXVAL, 0);
+        if (alphaFileP)
+            pgm_writepgmrow(alphaFileP, alpharow, width, RLE_MAXVAL, 0);
 
     } /* end of for scan = 0 to height */
 
     /* Free scanline memory. */
-    for ( scan = 0; scan < height; scan++ )
-        rle_row_free( &hdr, scanlines[scan] );
-    free( scanlines );
+    for (scan = 0; scan < height; ++scan)
+        rle_row_free(&hdr, scanlines[scan]);
+    free (scanlines);
     ppm_freerow(pixelrow);
     pgm_freerow(alpharow);
 }
@@ -359,8 +357,8 @@ write_ppm_data(FILE * const imageout_file,
 
 
 static void 
-write_pgm_data(FILE * const imageout_file,
-               FILE * const alpha_file) {
+writePgmRaster(FILE * const imageoutFileP,
+               FILE * const alphaFileP) {
 /*----------------------------------------------------------------------------
    Write the PGM image data
 -----------------------------------------------------------------------------*/
@@ -397,10 +395,10 @@ write_pgm_data(FILE * const imageout_file,
             else
                 alpharow[x] = 0;
         }
-        if (imageout_file) 
-            pgm_writepgmrow(imageout_file, pixelrow, width, RLE_MAXVAL, 0);
-        if (alpha_file)
-            pgm_writepgmrow(alpha_file, alpharow, width, RLE_MAXVAL, 0);
+        if (imageoutFileP) 
+            pgm_writepgmrow(imageoutFileP, pixelrow, width, RLE_MAXVAL, 0);
+        if (alphaFileP)
+            pgm_writepgmrow(alphaFileP, alpharow, width, RLE_MAXVAL, 0);
 
         }   /* end of for scan = 0 to height */
 
@@ -414,59 +412,59 @@ write_pgm_data(FILE * const imageout_file,
 
 
 
-/*-----------------------------------------------------------------------------
- *                               Convert a Utah rle file to a pbmplus pnm file.
- */
 int
 main(int argc, char ** argv) {
 
-    struct cmdlineInfo cmdline;
-    FILE        *ifp;
-    FILE *imageout_file, *alpha_file;
-    char *fname = NULL;
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    FILE * imageoutFileP;
+    FILE * alphaFileP;
+    char * fname;
 
     pnm_init( &argc, argv );
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if ( cmdline.input_filename != NULL ) 
-        ifp = pm_openr( cmdline.input_filename );
-    else
-        ifp = stdin;
+    fname = NULL;  /* initial value */
 
-    if (cmdline.alpha_stdout)
-        alpha_file = stdout;
-    else if (cmdline.alpha_filename == NULL) 
-        alpha_file = NULL;
+    if (cmdline.inputFilename != NULL ) 
+        ifP = pm_openr(cmdline.inputFilename);
+    else
+        ifP = stdin;
+
+    if (cmdline.alphaStdout)
+        alphaFileP = stdout;
+    else if (cmdline.alphaout == NULL) 
+        alphaFileP = NULL;
     else {
-        alpha_file = pm_openw(cmdline.alpha_filename);
+        alphaFileP = pm_openw(cmdline.alphaout);
     }
 
-    if (cmdline.alpha_stdout) 
-        imageout_file = NULL;
+    if (cmdline.alphaStdout) 
+        imageoutFileP = NULL;
     else
-        imageout_file = stdout;
+        imageoutFileP = stdout;
 
 
     /*
      * Open the file.
      */
     /* Initialize header. */
-    hdr = *rle_hdr_init( (rle_hdr *)NULL );
-    rle_names( &hdr, cmd_name( argv ), fname, 0 );
+    hdr = *rle_hdr_init(NULL);
+    rle_names(&hdr, cmd_name( argv ), fname, 0);
 
     /*
      * Read the rle file header.
      */
-    read_rle_header(ifp, cmdline.headerdump || cmdline.verbose);
+    readRleHeader(ifP, cmdline.headerdump || cmdline.verbose);
     if (cmdline.headerdump)
         exit(0);
 
     /* 
      * Write the alpha file header
      */
-    if (alpha_file)
-        pgm_writepgminit(alpha_file, width, height, RLE_MAXVAL, 0);
+    if (alphaFileP)
+        pgm_writepgminit(alphaFileP, width, height, RLE_MAXVAL, 0);
 
     /*
      * Write the pnm file header.
@@ -475,24 +473,24 @@ main(int argc, char ** argv) {
     case GRAYSCALE:   /* 8 bits without colormap -> pgm */
         if (cmdline.verbose)
             pm_message("Writing pgm file.");
-        if (imageout_file)
-            pgm_writepgminit(imageout_file, width, height, RLE_MAXVAL, 0);
-        write_pgm_data(imageout_file, alpha_file);
+        if (imageoutFileP)
+            pgm_writepgminit(imageoutFileP, width, height, RLE_MAXVAL, 0);
+        writePgmRaster(imageoutFileP, alphaFileP);
         break;
     default:      /* anything else -> ppm */
         if (cmdline.verbose)
             pm_message("Writing ppm file.");
-        if (imageout_file)
-            ppm_writeppminit(imageout_file, width, height, RLE_MAXVAL, 0);
-        write_ppm_data(imageout_file, alpha_file);
+        if (imageoutFileP)
+            ppm_writeppminit(imageoutFileP, width, height, RLE_MAXVAL, 0);
+        writePpmRaster(imageoutFileP, alphaFileP);
         break;
     }
    
-    pm_close(ifp);
-    if (imageout_file) 
-        pm_close( imageout_file );
-    if (alpha_file)
-        pm_close( alpha_file );
+    pm_close(ifP);
+    if (imageoutFileP) 
+        pm_close(imageoutFileP);
+    if (alphaFileP)
+        pm_close(alphaFileP);
 
     return 0;
 }

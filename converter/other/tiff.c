@@ -10,12 +10,6 @@
 
 #include <string.h>
 
-#ifdef VMS
-#ifdef SYSV
-#undef SYSV
-#endif
-#include <tiffioP.h>
-#endif
 #include <tiffio.h>
 
 #include "pm_c_util.h"

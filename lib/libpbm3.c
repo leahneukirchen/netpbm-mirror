@@ -12,20 +12,32 @@
 
 #include <assert.h>
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
+
 #include "pbm.h"
 
-#if HAVE_GCC_MMXSSE
-#include "bitreverse.h"
+#ifndef PACKBITS_SSE
+#if WANT_SSE && defined(__SSE2__) && HAVE_GCC_BSWAP
+  #define PACKBITS_SSE 2
+#else
+  #define PACKBITS_SSE 0
+#endif
 #endif
 
-/* HAVE_GCC_MMXSSE means we have the means to use MMX and SSE CPU facilities
-   to make PBM raster processing faster.  GCC only.
+/* WANT_SSE means we want to use SSE CPU facilities to make PBM raster
+   processing faster.  This implies it's actually possible - i.e. the
+   build environment has <emmintrin.h>.
 
-   The GNU Compiler -msse option makes SSE available.
-   For x86-32 with MMX/SSE, "-msse" must be explicitly given.
-   For x86-64 and AMD64, "-msse" is on by default.
+   The GNU Compiler -msse2 option makes SSE/SSE2 available, and is
+   evidenced by __SSE2__.
+   For x86-32 with SSE, "-msse2" must be explicitly given.
+   For x86-64 and AMD64, "-msse2" is the default (from Gcc v.4.)
 */
+
+#if PACKBITS_SSE == 2
+  #include <emmintrin.h>
+#endif
+
 
 void
 pbm_writepbminit(FILE * const fileP, 
@@ -35,9 +47,6 @@ pbm_writepbminit(FILE * const fileP,
 
     if (!forceplain && !pm_plain_output) {
         fprintf(fileP, "%c%c\n%d %d\n", PBM_MAGIC1, RPBM_MAGIC2, cols, rows);
-#ifdef VMS
-        set_outfile_binary();
-#endif
     } else
         fprintf(fileP, "%c%c\n%d %d\n", PBM_MAGIC1, PBM_MAGIC2, cols, rows);
 }
@@ -56,77 +65,104 @@ writePackedRawRow(FILE *                const fileP,
 } 
 
 
-#if HAVE_GCC_MMXSSE
+
+#if PACKBITS_SSE == 2
 static void
-packBitsWithMmxSse(FILE *          const fileP,
+packBitsWithSse2(  FILE *          const fileP,
                    const bit *     const bitrow,
                    unsigned char * const packedBits,
-                   unsigned int    const cols,
-                   unsigned int *  const nextColP) {
+                   unsigned int    const cols) {
 /*----------------------------------------------------------------------------
-   Pack the bits of bitrow[] into bytes at 'packedBits'.  Going left to right,
-   stop when there aren't enough bits left to fill a whole byte.  Return
-   as *nextColP the number of the next column after the rightmost one we
-   packed.
+    Pack the bits of bitrow[] into bytes at 'packedBits'.
 
-   Use the Pentium MMX and SSE facilities to pack the bits quickly, but
-   perform the exact same function as the simpler packBitsGeneric().
+    Use the SSE2 facilities to pack the bits quickly, but
+    perform the exact same function as the simpler
+    packBitsGeneric() + packPartialBytes()
+
+    Unlike packBitsGeneric(), the whole row is converted.
 -----------------------------------------------------------------------------*/
     /*
-      We use MMX/SSE facilities that operate on 8 bytes at once to pack
-      the bits quickly.
-    
-      We use 2 MMX registers (no SSE registers).
+      We use 2 SSE registers.
     
       The key machine instructions are:
-    
-    
-      PCMPGTB  Packed CoMPare Greater Than Byte
-    
-        Compares 8 bytes in parallel
-        Result is x00 if greater than, xFF if not for each byte       
-    
-      PMOVMSKB Packed MOVe MaSK Byte 
-    
-        Result is a byte of the MSBs of 8 bytes
-        x00 xFF x00 xFF xFF xFF x00 x00 --> 01011100B = 0x5C
         
-        The result is actually a 32 bit int, but the higher bits are
-        always 0.  (0x0000005C in the above case)
+      PCMPGTB128  Packed CoMPare Greater Than Byte
     
-      EMMS     Empty MMx State
+        Compares 16 bytes in parallel
+        Result is x00 if greater than, xFF if not for each byte
+
     
-        Free MMX registers  
+      PMOVMSKB128 Packed MOVe MaSK Byte 
     
+        Result is 16 bits, the MSBs of 16 bytes
+        x00 xFF x00 xFF xFF xFF x00 x00 xFF xFF xFF xFF x00 x00 x00 x00 
+        --> 0101110011110000B = 0x5CF0
+        
+        The result is actually a 64 bit int, but the higher bits are
+        always 0.
+
+      We use SSE instructions in "_mm_" form in favor of "__builtin_".
+      In GCC the "__builtin_" form is documented but "_mm_" is not.
+      Former versions of this source file used "__builtin_".  This was
+      changed to make possible compilation with clang, which does not
+      implement some "__builtin_" forms.
+
+      __builtin_ia32_pcmpgtb128 :  _mm_cmpgt_epi8
+      __builtin_ia32_pmovmskb128 : _mm_movemask_epi8
+
+      The conversion requires <emmintrin.h> .
     */
 
-
-    typedef char v8qi __attribute__ ((vector_size(8)));
-    typedef int di __attribute__ ((mode(DI)));
+    typedef char v16qi __attribute__ ((vector_size(16)));
 
     unsigned int col;
-    v8qi const zero64 =(v8qi)((di)0);  /* clear to zero */
+    union {
+        v16qi    v16;
+        uint64_t i64[2];
+        unsigned char byte[16];
+    } bit128;
 
-    for (col = 0; col + 7 < cols; col += 8) {
+    v16qi zero128;
+    zero128 = zero128 ^ zero128;   /* clear to zero */
 
-        v8qi const compare =
-            __builtin_ia32_pcmpgtb(*(v8qi*) (&bitrow[col]), (v8qi) zero64);
-        uint32_t const backwardBlackMask =  __builtin_ia32_pmovmskb(compare);
-        unsigned char const blackMask = bitreverse[backwardBlackMask];
+    for (col = 0; col + 15 < cols; col += 16) {
+        bit128.i64[0]=__builtin_bswap64( *(uint64_t*) &bitrow[col]);
+        bit128.i64[1]=__builtin_bswap64( *(uint64_t*) &bitrow[col+8]);
 
-        packedBits[col/8] = blackMask;
+        {
+            v16qi const compare = (v16qi)
+                _mm_cmpgt_epi8((__m128i)bit128.v16, (__m128i) zero128);
+            uint16_t const blackMask = _mm_movemask_epi8 ((__m128i)compare);
+            
+            *(uint16_t *) & packedBits[col/8] = blackMask;
+        }
     }
-    *nextColP = col;
 
-    __builtin_ia32_emms();
+    if (cols % 16 > 0) {
+        unsigned int i, j;
 
+        bit128.v16 = bit128.v16 ^ bit128.v16;
+    
+        for (i = 0, j = col ; j < cols; ++i, ++j) 
+            bit128.byte[ (i&8) + 7-(i&7) ] = bitrow[j];
+      
+        {
+            v16qi const compare = (v16qi)
+                _mm_cmpgt_epi8((__m128i)bit128.v16, (__m128i) zero128);
+            uint16_t const blackMask = _mm_movemask_epi8 ((__m128i)compare);
+
+            if ( cols%16 >8 )  /* Two partial bytes */
+                *(uint16_t *) & packedBits[col/8] = blackMask;
+            else              /* One partial byte */
+                packedBits[col/8] = (unsigned char) blackMask ;
+        }
+    }
 }
 #else
 /* Avoid undefined function warning; never actually called */
 
-#define packBitsWithMmxSse(a,b,c,d,e) packBitsGeneric(a,b,c,d,e)
+#define packBitsWithSse2(a,b,c,d) packBitsGeneric((a),(b),(c),(d),NULL)
 #endif
-
 
 
 
@@ -212,18 +248,20 @@ writePbmRowRaw(FILE *      const fileP,
         pm_setjmpbuf(origJmpbufP);
         pm_longjmp();
     } else {
-        unsigned int nextCol;
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        if (HAVE_GCC_MMXSSE)
-            packBitsWithMmxSse(fileP, bitrow, packedBits, cols, &nextCol);
-        else 
+        switch (PACKBITS_SSE) {
+        case 2: 
+            packBitsWithSse2(fileP, bitrow, packedBits, cols);
+            break;
+        default: {
+            unsigned int nextCol;
             packBitsGeneric(fileP, bitrow, packedBits, cols, &nextCol);
-
-        if (cols % 8 > 0)
-            packPartialBytes(bitrow, cols, nextCol, packedBits);
-        
+            if (cols % 8 > 0)
+                packPartialBytes(bitrow, cols, nextCol, packedBits);
+        }
+        }
         writePackedRawRow(fileP, packedBits, cols);
 
         pm_setjmpbuf(origJmpbufP);

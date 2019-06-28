@@ -21,8 +21,9 @@
 #include <math.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
+#include "mallocvar.h"
 #include "shhopt.h"
+#include "pam.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -35,8 +36,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine ( int argc, char ** argv,
-                   struct cmdlineInfo *cmdlineP ) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -47,14 +48,16 @@ parseCommandLine ( int argc, char ** argv,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
-        /* Instructions to optParseOptions3 on how to parse our options.
+    optEntry * option_def;
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
     unsigned int option_def_index;
 
     unsigned int contextSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "context",       OPT_UINT,   &cmdlineP->context,       
@@ -64,7 +67,7 @@ parseCommandLine ( int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!contextSpec)
@@ -80,6 +83,8 @@ parseCommandLine ( int argc, char ** argv,
         cmdlineP->inputFilespec = "-";
     else
         cmdlineP->inputFilespec = argv[1];
+
+    free(option_def);
 }
 
 
@@ -89,13 +94,13 @@ computeSharpness(struct pam * const inpamP,
                  tuplen **    const tuplenarray,
                  double *     const sharpnessP) {
 
-    int row;
+    unsigned int row;
     double totsharp;
     
     totsharp = 0.0;
 
     for (row = 1; row < inpamP->height-1; ++row) {
-        int col;
+        unsigned int col;
         for (col = 1; col < inpamP->width-1; ++col) {
             int dy;
             for (dy = -1; dy <= 1; ++dy) {
@@ -150,5 +155,6 @@ main(int argc, char **argv) {
 
 	pnm_freepamarrayn(tuplenarray, &inpam);
     pm_close(ifP);
+
 	return 0;
 }

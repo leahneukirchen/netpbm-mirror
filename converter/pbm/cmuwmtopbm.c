@@ -20,9 +20,17 @@
 
 
 #include "pbm.h"
-#include "cmuwm.h"
 
+/*--------------------------
+  CMUWN Header format:
 
+  32 bit const magic = 0xf10040bb ;
+  32 bit int   width;
+  32 bit int   height;
+  16 bit int   depth;
+
+  values are big-endian.
+--------------------------*/
 
 static void
 readCmuwmHeader(FILE *         const ifP,
@@ -32,6 +40,7 @@ readCmuwmHeader(FILE *         const ifP,
 
     const char * const initReadError =
         "CMU window manager header EOF / read error";
+    uint32_t const cmuwmMagic = 0xf10040bb;
 
     long l;
     short s;
@@ -39,20 +48,20 @@ readCmuwmHeader(FILE *         const ifP,
 
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1 )
-        pm_error(initReadError);
-    if ((uint32_t)l != CMUWM_MAGIC)
+        pm_error("%s", initReadError);
+    if ((uint32_t)l != cmuwmMagic)
         pm_error("bad magic number in CMU window manager file");
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1)
-        pm_error(initReadError);
+        pm_error("%s", initReadError);
     *colsP = l;
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1 )
-        pm_error(initReadError);
+        pm_error("%s", initReadError);
     *rowsP = l;
     rc = pm_readbigshort(ifP, &s);
     if (rc == -1)
-        pm_error(initReadError);
+        pm_error("%s", initReadError);
     *depthP = s;
 }
 

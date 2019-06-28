@@ -38,15 +38,15 @@ static const char* const version="$VER: pgmabel 1.009 (24 Jan 2002)";
 
 #include <math.h>
 #include <stdlib.h>   /* for calloc */
-#include "pgm.h"
+
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "pgm.h"
 
 #ifndef PID2          /*  PI/2 (on AMIGA always defined) */
 #define PID2    1.57079632679489661923  
 #endif
 
-#define TRUE 1
-#define FALSE 0
 
 /* some global variables */
 static double *aldl, *ardl;                /* pointer for weighting factors */

@@ -122,33 +122,68 @@
 #define OSIN_5_16 OCOS_3_16
 #define OCOS_5_16 OSIN_3_16
 
-/* Prototypes */
-void reference_fwd_dct _ANSI_ARGS_((Block block, Block dest));
-void mp_fwd_dct_fast _ANSI_ARGS_((Block data2d, Block dest2d));
-void init_fdct _ANSI_ARGS_((void));
 
-/*
- * --------------------------------------------------------------
- *
- * mp_fwd_dct_block2 --
- *
- * Select the appropriate mp_fwd_dct routine
- *
- * Results: None
- *
- * Side effects: None
- *
- * --------------------------------------------------------------
- */
-extern boolean pureDCT;
-void
-mp_fwd_dct_block2(data, dest)
-    Block data, dest;
+static double trans_coef[8][8]; /* transform coefficients */
+
+
+
+static void reference_fwd_dct(block, dest)
+Block block, dest;
 {
-  if (pureDCT) reference_fwd_dct(data, dest);
-  else mp_fwd_dct_fast(data, dest);
+  int i, j, k;
+  double s;
+  double tmp[64];
+
+  if (DoLaplace) {
+    LaplaceNum++;
+  }
+
+  for (i=0; i<8; i++)
+    for (j=0; j<8; j++)
+    {
+      s = 0.0;
+
+      for (k=0; k<8; k++)
+        s += trans_coef[j][k] * block[i][k];
+
+      tmp[8*i+j] = s;
+    }
+
+  for (i=0; i<8; i++)
+    for (j=0; j<8; j++)
+    {
+      s = 0.0;
+
+      for (k=0; k<8; k++)
+        s += trans_coef[i][k] * tmp[8*k+j];
+
+      if (collect_quant) {
+	fprintf(collect_quant_fp, "%d %f\n", 8*i+j, s);
+      } 
+      if (DoLaplace) {
+	L1[LaplaceCnum][i*8+j] += s*s;
+	L2[LaplaceCnum][i*8+j] += s;
+      }
+
+
+      dest[i][j] = (int)floor(s+0.499999);
+      /*
+       * reason for adding 0.499999 instead of 0.5:
+       * s is quite often x.5 (at least for i and/or j = 0 or 4)
+       * and setting the rounding threshold exactly to 0.5 leads to an
+       * extremely high arithmetic implementation dependency of the result;
+       * s being between x.5 and x.500001 (which is now incorrectly rounded
+       * downwards instead of upwards) is assumed to occur less often
+       * (if at all)
+       */
+    }
 }
 
+
+
+static void
+mp_fwd_dct_fast(data2d, dest2d)
+    Block data2d, dest2d;
 /*
  * --------------------------------------------------------------
  *
@@ -166,9 +201,6 @@ mp_fwd_dct_block2(data, dest)
  * --------------------------------------------------------------
  */
 
-void
-mp_fwd_dct_fast(data2d, dest2d)
-    Block data2d, dest2d;
 {
     int16 *data = (int16 *) data2d;	/* this algorithm wants
 					 * a 1-d array */
@@ -236,10 +268,12 @@ mp_fwd_dct_fast(data2d, dest2d)
 	    tmp13 = tmp0 - tmp3;
 
 	    outptr[0] = (int16) UNFIXH((tmp10 + tmp11) * SIN_1_4);
-	    outptr[DCTSIZE * 4] = (int16) UNFIXH((tmp10 - tmp11) * COS_1_4);
-
-	    outptr[DCTSIZE * 2] = (int16) UNFIXH(tmp13 * COS_1_8 + tmp12 * SIN_1_8);
-	    outptr[DCTSIZE * 6] = (int16) UNFIXH(tmp13 * SIN_1_8 - tmp12 * COS_1_8);
+	    outptr[DCTSIZE * 4] =
+            (int16) UNFIXH((tmp10 - tmp11) * COS_1_4);
+	    outptr[DCTSIZE * 2] =
+            (int16) UNFIXH(tmp13 * COS_1_8 + tmp12 * SIN_1_8);
+	    outptr[DCTSIZE * 6] =
+            (int16) UNFIXH(tmp13 * SIN_1_8 - tmp12 * COS_1_8);
 
 	    tmp16 = UNFIXO((tmp6 + tmp5) * SIN_1_4);
 	    tmp15 = UNFIXO((tmp6 - tmp5) * COS_1_4);
@@ -257,10 +291,14 @@ mp_fwd_dct_fast(data2d, dest2d)
 	    tmp26 = tmp7 - tmp16;
 	    tmp17 = tmp7 + tmp16;
 
-	    outptr[DCTSIZE] = (int16) UNFIXH(tmp17 * OCOS_1_16 + tmp14 * OSIN_1_16);
-	    outptr[DCTSIZE * 7] = (int16) UNFIXH(tmp17 * OCOS_7_16 - tmp14 * OSIN_7_16);
-	    outptr[DCTSIZE * 5] = (int16) UNFIXH(tmp26 * OCOS_5_16 + tmp25 * OSIN_5_16);
-	    outptr[DCTSIZE * 3] = (int16) UNFIXH(tmp26 * OCOS_3_16 - tmp25 * OSIN_3_16);
+	    outptr[DCTSIZE] =
+            (int16) UNFIXH(tmp17 * OCOS_1_16 + tmp14 * OSIN_1_16);
+	    outptr[DCTSIZE * 7] =
+            (int16) UNFIXH(tmp17 * OCOS_7_16 - tmp14 * OSIN_7_16);
+	    outptr[DCTSIZE * 5] =
+            (int16) UNFIXH(tmp26 * OCOS_5_16 + tmp25 * OSIN_5_16);
+	    outptr[DCTSIZE * 3] =
+            (int16) UNFIXH(tmp26 * OCOS_3_16 - tmp25 * OSIN_3_16);
 
 	    inptr += DCTSIZE;	/* advance inptr to next row */
 	    outptr++;		/* advance outptr to next column */
@@ -284,6 +322,28 @@ mp_fwd_dct_fast(data2d, dest2d)
 #endif
 }
 
+
+extern boolean pureDCT;
+void
+mp_fwd_dct_block2(data, dest)
+    DCTBLOCK_2D data, dest;
+/*
+ * --------------------------------------------------------------
+ *
+ * mp_fwd_dct_block2 --
+ *
+ * Select the appropriate mp_fwd_dct routine
+ *
+ * Results: None
+ *
+ * Side effects: None
+ *
+ * --------------------------------------------------------------
+ */
+{
+  if (pureDCT) reference_fwd_dct(data, dest);
+  else mp_fwd_dct_fast(data, dest);
+}
 
 /* Modifies from the MPEG2 verification coder */
 /* fdctref.c, forward discrete cosine transform, double precision           */
@@ -323,9 +383,6 @@ mp_fwd_dct_fast(data2d, dest2d)
 #endif
 #endif
 
-/* private data */
-static double trans_coef[8][8]; /* transform coefficients */
-
 void init_fdct()
 {
   int i, j;
@@ -340,54 +397,5 @@ void init_fdct()
   }
 }
 
-void reference_fwd_dct(block, dest)
-Block block, dest;
-{
-  int i, j, k;
-  double s;
-  double tmp[64];
-
-  if (DoLaplace) {
-    LaplaceNum++;
-  }
-
-  for (i=0; i<8; i++)
-    for (j=0; j<8; j++)
-    {
-      s = 0.0;
-
-      for (k=0; k<8; k++)
-        s += trans_coef[j][k] * block[i][k];
-
-      tmp[8*i+j] = s;
-    }
-
-  for (i=0; i<8; i++)
-    for (j=0; j<8; j++)
-    {
-      s = 0.0;
-
-      for (k=0; k<8; k++)
-        s += trans_coef[i][k] * tmp[8*k+j];
-
-      if (collect_quant) {
-	fprintf(collect_quant_fp, "%d %f\n", 8*i+j, s);
-      } 
-      if (DoLaplace) {
-	L1[LaplaceCnum][i*8+j] += s*s;
-	L2[LaplaceCnum][i*8+j] += s;
-      }
 
 
-      dest[i][j] = (int)floor(s+0.499999);
-      /*
-       * reason for adding 0.499999 instead of 0.5:
-       * s is quite often x.5 (at least for i and/or j = 0 or 4)
-       * and setting the rounding threshold exactly to 0.5 leads to an
-       * extremely high arithmetic implementation dependency of the result;
-       * s being between x.5 and x.500001 (which is now incorrectly rounded
-       * downwards instead of upwards) is assumed to occur less often
-       * (if at all)
-       */
-    }
-}

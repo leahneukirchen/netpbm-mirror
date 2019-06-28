@@ -94,7 +94,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
@@ -162,7 +162,7 @@ putinit(struct cmdlineInfo const cmdline) {
     /* Set raster graphics resolution */
     printf("\033*t%dR", cmdline.dpi);
 
-    /* Start raster graphics, relative adressing */
+    /* Start raster graphics, relative addressing */
     printf("\033*r1A");
 
     bitsperitem = 1;
@@ -545,7 +545,7 @@ main(int argc, char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
-    bool eof;
+    int eof;
 
     pbm_init(&argc, argv);
 

@@ -134,8 +134,8 @@ parseCommandLine(int argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
-    optEntry *option_def;
-    /* Instructions to optParseOptions3 on how to parse our options. */
+    optEntry * option_def;
+    /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 
     const char * background_colorOpt;
@@ -197,7 +197,7 @@ parseCommandLine(int argc,
     cmdlineP->tangent_surround         = 3;
     cmdlineP->width_weight_factor      = 6.0;
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (cmdlineP->backgroundSpec)
@@ -334,7 +334,7 @@ openLogFile(FILE **      const logFileP,
     const char * logfileName;
 
     if (streq(inputFileArg, "-"))
-        asprintfN(&logfileName, "pamtosvg.log");
+        pm_asprintf(&logfileName, "pamtosvg.log");
     else {
         const char * inputRootName;
 
@@ -343,14 +343,14 @@ openLogFile(FILE **      const logFileP,
             pm_error("Can't find the root portion of file name '%s'",
                      inputFileArg);
     
-        asprintfN(&logfileName, "%s.log", inputRootName);
+        pm_asprintf(&logfileName, "%s.log", inputRootName);
 
-        strfree(inputRootName);
+        pm_strfree(inputRootName);
     }
 
     *logFileP = pm_openw(logfileName);
 
-    strfree(logfileName);
+    pm_strfree(logfileName);
 }
     
 

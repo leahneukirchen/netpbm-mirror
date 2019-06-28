@@ -126,7 +126,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
@@ -317,7 +317,7 @@ genCmap(colorhist_vector const chv,
     MALLOCARRAY(cmap, cmapSize);
     if (cmapP == NULL)
         pm_error("Out of memory allocating %u bytes for a color map.",
-                 sizeof(cixel_map) * (ncolors+1));
+                 (unsigned)sizeof(cixel_map) * (ncolors+1));
 
     xpmMaxval = xpmMaxvalFromMaxval(maxval);
 
@@ -363,13 +363,13 @@ genCmap(colorhist_vector const chv,
 
             PPM_DEPTH(scaledColor, color, maxval, xpmMaxval);
 
-            asprintfN(&hexString, xpmMaxval == 0x000F ? "#%X%X%X" :
-                      xpmMaxval == 0x00FF ? "#%02X%02X%02X" :
-                      xpmMaxval == 0x0FFF ? "#%03X%03X%03X" :
-                      "#%04X%04X%04X", 
-                      PPM_GETR(scaledColor),
-                      PPM_GETG(scaledColor),
-                      PPM_GETB(scaledColor)
+            pm_asprintf(&hexString, xpmMaxval == 0x000F ? "#%X%X%X" :
+                        xpmMaxval == 0x00FF ? "#%02X%02X%02X" :
+                        xpmMaxval == 0x0FFF ? "#%03X%03X%03X" :
+                        "#%04X%04X%04X", 
+                        PPM_GETR(scaledColor),
+                        PPM_GETG(scaledColor),
+                        PPM_GETB(scaledColor)
                 );
 
             if (hexString == NULL)
@@ -399,7 +399,7 @@ destroyCmap(cixel_map *  const cmap,
     int i;
     /* Free the real color entries */
     for (i = 0; i < cmapSize; i++) {
-        strfree(cmap[i].rgbname);
+        pm_strfree(cmap[i].rgbname);
         free(cmap[i].cixel);
     }
     free(cmap);

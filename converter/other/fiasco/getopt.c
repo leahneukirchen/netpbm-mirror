@@ -73,15 +73,7 @@
 #include <unistd.h>
 #endif	/* GNU C library.  */
 
-#ifdef VMS
-#include <unixlib.h>
-#if HAVE_STRING_H - 0
-#include <string.h>
-#endif
-#endif
-
-#if defined (WIN32) && !defined (__CYGWIN32__)
-/* It's not Unix, really.  See?  Capital letters.  */
+#if MSVCRT
 #include <windows.h>
 #define getpid() GetCurrentProcessId()
 #endif

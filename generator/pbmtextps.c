@@ -181,7 +181,7 @@ buildTextFromArgs(int           const argc,
         asciiHexEncode(text, asciiHexText);
         *asciiHexTextP = asciiHexText;
     }
-    strfree(text);
+    pm_strfree(text);
 }
 
 
@@ -219,7 +219,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     validateFontName(cmdlineP->font);
 
@@ -231,7 +231,7 @@ parseCommandLine(int argc, char ** argv,
 static void
 termCmdline(struct cmdlineInfo const cmdline) {
 
-    strfree(cmdline.text);
+    pm_strfree(cmdline.text);
 }
 
 
@@ -263,11 +263,11 @@ construct_postscript(struct cmdlineInfo const cmdline) {
             "showpage\n";
 
     if (cmdline.stroke < 0)
-        asprintfN(&retval, template, cmdline.font, cmdline.fontsize, 
-                  cmdline.text);
+        pm_asprintf(&retval, template, cmdline.font, cmdline.fontsize, 
+                    cmdline.text);
     else
-        asprintfN(&retval, template, cmdline.font, cmdline.fontsize, 
-                  cmdline.stroke, cmdline.text);
+        pm_asprintf(&retval, template, cmdline.font, cmdline.fontsize, 
+                    cmdline.stroke, cmdline.text);
 
     return retval;
 }
@@ -362,10 +362,11 @@ gsCommand(const char *       const psFname,
          pm_error("Absurdly fine resolution (%u) and/or huge font size (%u). "
                   "Output height too large.", cmdline.res, cmdline.fontsize);
          
-    asprintfN(&retval, "%s -g%dx%d -r%d -sDEVICE=pbm "
-              "-sOutputFile=%s -q -dBATCH -dNOPAUSE %s </dev/null >/dev/null", 
-              gsExecutableName(), (int) x, (int) y, cmdline.res, 
-              outputFilename, psFname);
+    pm_asprintf(&retval, "%s -g%dx%d -r%d -sDEVICE=pbm "
+                "-sOutputFile=%s -q -dBATCH -dNOPAUSE %s "
+                "</dev/null >/dev/null", 
+                gsExecutableName(), (int) x, (int) y, cmdline.res, 
+                outputFilename, psFname);
 
     return retval;
 }
@@ -379,9 +380,9 @@ cropCommand(const char * const inputFileName) {
     const char * plainOpt = pm_plain_output ? "-plain" : "" ;
     
     if (cropExecutableName()) {
-        asprintfN(&retval, "%s -top -right %s %s", 
-                  cropExecutableName(), plainOpt, inputFileName);
-        if (retval == strsol)
+        pm_asprintf(&retval, "%s -top -right %s %s", 
+                    cropExecutableName(), plainOpt, inputFileName);
+        if (retval == pm_strsol)
             pm_error("Unable to allocate memory");
     } else
         retval = NULL;
@@ -413,7 +414,7 @@ writeProgram(const char *       const psFname,
 
     fclose(psfile);
 
-    strfree(ps);
+    pm_strfree(ps);
 }
 
 
@@ -437,7 +438,7 @@ executeProgram(const char *       const psFname,
     if (rc != 0)
         pm_error("Failed to run Ghostscript process.  rc=%d", rc);
 
-    strfree(com);
+    pm_strfree(com);
 }
 
 
@@ -486,7 +487,7 @@ cropToStdout(const char * const inputFileName,
             }
             fclose(pnmcrop);
         }
-        strfree(com);
+        pm_strfree(com);
     }
 }
 
@@ -500,25 +501,25 @@ createOutputFile(struct cmdlineInfo const cmdline) {
     const char * psFname;
     const char * uncroppedPbmFname;
 
-    asprintfN(&psFname, template, getpid(), "ps");
+    pm_asprintf(&psFname, template, getpid(), "ps");
     if (psFname == NULL)
         pm_error("Unable to allocate memory");
  
     writeProgram(psFname, cmdline);
 
-    asprintfN(&uncroppedPbmFname, template, getpid(), "pbm");
+    pm_asprintf(&uncroppedPbmFname, template, getpid(), "pbm");
     if (uncroppedPbmFname == NULL)
         pm_error("Unable to allocate memory");
  
     executeProgram(psFname, uncroppedPbmFname, cmdline);
 
     unlink(psFname);
-    strfree(psFname);
+    pm_strfree(psFname);
 
     cropToStdout(uncroppedPbmFname, cmdline.verbose);
 
     unlink(uncroppedPbmFname);
-    strfree(uncroppedPbmFname);
+    pm_strfree(uncroppedPbmFname);
 }
 
 

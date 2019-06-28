@@ -46,28 +46,26 @@
 #include <stdio.h>
 #include <string.h>
 #include "prototypes.h"
+#include "param.h"
 
 /*==================*
  * GLOBAL VARIABLES *
  *==================*/
 
-extern boolean specificsOn;
-extern char specificsFile[];
-extern char specificsDefines[];
 FrameSpecList *fsl;
 
 /*=====================*
  * Internal procedures *
  *=====================*/
 
-void Parse_Specifics_File _ANSI_ARGS_((FILE *fp));
-void Parse_Specifics_File_v1 _ANSI_ARGS_((FILE *fp));
-void Parse_Specifics_File_v2 _ANSI_ARGS_((FILE *fp));
-FrameSpecList *MakeFslEntry _ANSI_ARGS_((void));
-void AddSlc _ANSI_ARGS_((FrameSpecList *c,int snum, int qs));
-Block_Specifics *AddBs _ANSI_ARGS_((FrameSpecList *c,int bnum, 
-				    boolean rel, int qs));
-FrameSpecList *MakeFslEntry _ANSI_ARGS_((void));
+void Parse_Specifics_File (FILE *fp);
+void Parse_Specifics_File_v1 (FILE *fp);
+void Parse_Specifics_File_v2 (FILE *fp);
+FrameSpecList *MakeFslEntry (void);
+void AddSlc (FrameSpecList *c,int snum, int qs);
+Block_Specifics *AddBs (FrameSpecList *c,int bnum, 
+				    boolean rel, int qs);
+FrameSpecList *MakeFslEntry (void);
 #define my_upper(c) (((c>='a') && (c<='z')) ? (c-'a'+'A') : c)
 #define CvtType(x) ReallyCvt(my_upper(x))
 #define ReallyCvt(x) (x=='I' ? 1 : (x=='P')?2: ((x=='B')?3:-1))
@@ -91,7 +89,7 @@ version N
   Specify the version of the specifics file format (this is 1)
 frame N T M
   Sets frame number N to type T and Qscale M
-  (type T is I,B,P,other, other means unspec.  I recomend - )
+  (type T is I,B,P,other, other means unspec.  I recommend - )
 slice M Q
   Sets slice M (in frame N as defined by a previous frame command)
   to qscale Q
@@ -559,7 +557,7 @@ int start_qs;
       } else {
 	/* if not next, check from the start.
 	   (this allows people to put frames out of order,even
-	   though the spec doesnt allow it.) */
+	   though the spec doesn't allow it.) */
 	tmp = fsl;
 	found_it = FALSE;
 	while (tmp != (FrameSpecList *) NULL) {

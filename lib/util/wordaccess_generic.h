@@ -1,11 +1,11 @@
 /*=============================================================================
 
-  This file is the part of wordaccess.h for use under these
+  This file is the part of wordaccess.h for use under any of these
   conditions:
 
-  * Compilers other than GCC
+  * Compiler other than GCC
   * GCC before version 3.4
-  * Specified by the user with WORDACCESS_GENERIC
+  * Requested by the user with WORDACCESS_GENERIC
 =============================================================================*/
 
 #include "intcode.h"

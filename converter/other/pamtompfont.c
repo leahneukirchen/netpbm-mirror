@@ -42,7 +42,7 @@ parseCommandLine(int argc, char ** argv,
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -59,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
@@ -69,6 +69,8 @@ parseCommandLine(int argc, char ** argv,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFilename = argv[1];
+
+    free(option_def);
 }
 
 

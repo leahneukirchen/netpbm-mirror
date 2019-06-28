@@ -97,7 +97,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (widthSpec && paper_sizeSpec)
@@ -169,7 +169,7 @@ readBit(struct bitStream * const bitStreamP,
     if ((bitStreamP->shbit & 0xff) == 0) {
         bitStreamP->shdata = getc(bitStreamP->fileP);
         if (bitStreamP->shdata == EOF)
-            asprintfN(errorP, "EOF or error reading file");
+            pm_asprintf(errorP, "EOF or error reading file");
         else {
             bitStreamP->shbit = 0x80;
             if ( bitStreamP->reversebits )
@@ -195,6 +195,8 @@ readBitAndDetectEol(struct bitStream * const bitStreamP,
 /*----------------------------------------------------------------------------
    Same as readBit(), but iff the bit read is the final bit of an EOL
    mark, return *eolP == TRUE.
+
+   An EOL mark is 11 zero bits followed by a one.
 -----------------------------------------------------------------------------*/
     readBit(bitStreamP, bitP, errorP);
     if (!*errorP) {
@@ -265,19 +267,19 @@ addtohash(g3TableEntry *     hash[],
 
 
 
-static g3TableEntry*
+static g3TableEntry *
 hashfind(g3TableEntry *       hash[], 
-         int          const length, 
-         int          const code, 
-         int          const a, 
-         int          const b) {
+         int            const length, 
+         int            const code, 
+         int            const a, 
+         int            const b) {
 
     unsigned int pos;
     g3TableEntry * te;
 
     pos = ((length + a) * (code + b)) % HASHSIZE;
     te = hash[pos];
-    return ((te && te->length == length && te->code == code) ? te : 0);
+    return ((te && te->length == length && te->code == code) ? te : NULL);
 }
 
 
@@ -316,7 +318,13 @@ static g3TableEntry *
 g3code(unsigned int const curcode,
        unsigned int const curlen,
        bit          const color) {
+/*----------------------------------------------------------------------------
+   Return the position in the code tables mtable and ttable of the
+   G3 code which is the 'curlen' bits long with value 'curcode'.
 
+   Note that it is the _position_ in the table that determines the meaning
+   of the code.  The contents of the table entry do not.
+-----------------------------------------------------------------------------*/
     g3TableEntry * retval;
 
     switch (color) {
@@ -379,7 +387,11 @@ processG3Code(const g3TableEntry * const teP,
               unsigned int *       const colP,
               bit *                const colorP,
               unsigned int *       const countP) {
-              
+/*----------------------------------------------------------------------------
+   'teP' is a pointer into the mtable/ttable.  Note that the thing it points
+   to is irrelevant to us; it is only the position in the table that
+   matters.
+-----------------------------------------------------------------------------*/
     enum g3tableId const teId =
         (teP > mtable ? 2 : 0) + (teP - ttable) % 2;
 
@@ -395,17 +407,17 @@ processG3Code(const g3TableEntry * const teP,
     switch (teId) {
     case TERMWHITE:
     case TERMBLACK: {
-        unsigned int runLengthSoFar;
+        unsigned int totalRunLength;
         unsigned int col;
         
         col = *colP;
-        runLengthSoFar = MIN(*countP + teCount, MAXCOLS - col);
+        totalRunLength = MIN(*countP + teCount, MAXCOLS - col);
 
-        if (runLengthSoFar > 0) {
+        if (totalRunLength > 0) {
             if (*colorP == PBM_BLACK)
-                writeBlackBitSpan(packedBitrow, runLengthSoFar, col);
+                writeBlackBitSpan(packedBitrow, totalRunLength, col);
             /* else : Row was initialized to white, so we just skip */
-            col += runLengthSoFar;
+            col += totalRunLength;
         }
         *colorP = !*colorP;
         *countP = 0;
@@ -428,12 +440,12 @@ formatBadCodeException(const char ** const exceptionP,
                        unsigned int  const curlen,
                        unsigned int  const curcode) {
 
-    asprintfN(exceptionP,
-        "bad code word at Column %u.  "
-        "No prefix of the %u bits 0x%x matches any recognized "
-        "code word and no code words longer than 13 bits are "
-        "defined.  ",
-        col, curlen, curcode);
+    pm_asprintf(exceptionP,
+                "bad code word at Column %u.  "
+                "No prefix of the %u bits 0x%x matches any recognized "
+                "code word and no code words longer than 13 bits are "
+                "defined.  ",
+                col, curlen, curcode);
 }
 
 
@@ -485,8 +497,8 @@ readFaxRow(struct bitStream * const bitStreamP,
 
     while (!done) {
         if (col >= MAXCOLS) {
-            asprintfN(exceptionP, "Line is too long for this program to "
-                      "handle -- longer than %u columns", MAXCOLS);
+            pm_asprintf(exceptionP, "Line is too long for this program to "
+                        "handle -- longer than %u columns", MAXCOLS);
             done = TRUE;
         } else {
             unsigned int bit;
@@ -507,7 +519,7 @@ readFaxRow(struct bitStream * const bitStreamP,
                 done = TRUE;
             else {
                 curcode = (curcode << 1) | bit;
-                curlen++;
+                ++curlen;
             
                 if (curlen > 13) {
                     formatBadCodeException(exceptionP, col, curlen, curcode);
@@ -516,7 +528,8 @@ readFaxRow(struct bitStream * const bitStreamP,
                     const g3TableEntry * const teP =
                         g3code(curcode, curlen, currentColor);
                         /* Address of structure that describes the 
-                           current G3 code
+                           current G3 code.  Null means 'curcode' isn't
+                           a G3 code yet (probably just the beginning of one)
                         */
                     if (teP) {
                         processG3Code(teP, packedBitrow,
@@ -570,7 +583,7 @@ handleRowException(const char * const exception,
                        row, exception);
         else
             pm_error("Problem reading Row %u.  Aborting.  %s", row, exception);
-        strfree(exception);
+        pm_strfree(exception);
     }
 
     if (error) {
@@ -579,7 +592,7 @@ handleRowException(const char * const exception,
                        row, error);
         else
             pm_error("Unable to read Row %u.  Aborting.  %s", row, error);
-        strfree(error);
+        pm_strfree(error);
     }
 }
 
@@ -626,16 +639,16 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
 
     if (analyzerP->expectedLineSize &&
         thisLineSize != analyzerP->expectedLineSize)
-        asprintfN(&error, "Image contains a line of %u pixels.  "
-                  "You specified lines should be %u pixels.",
-                  thisLineSize, analyzerP->expectedLineSize);
+        pm_asprintf(&error, "Image contains a line of %u pixels.  "
+                    "You specified lines should be %u pixels.",
+                    thisLineSize, analyzerP->expectedLineSize);
     else {
         if (analyzerP->maxLineSize && thisLineSize != analyzerP->maxLineSize)
-            asprintfN(&error, "There are at least two different "
-                      "line lengths in this image, "
-                      "%u pixels and %u pixels.  "
-                      "This is a violation of the G3 standard.  ",
-                      thisLineSize, analyzerP->maxLineSize);
+            pm_asprintf(&error, "There are at least two different "
+                        "line lengths in this image, "
+                        "%u pixels and %u pixels.  "
+                        "This is a violation of the G3 standard.  ",
+                        thisLineSize, analyzerP->maxLineSize);
         else
             error = NULL;
     }
@@ -649,7 +662,7 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
         } else
             pm_error("%s", error);
 
-        strfree(error);
+        pm_strfree(error);
     }
     analyzerP->maxLineSize = MAX(thisLineSize, analyzerP->maxLineSize);
 }
@@ -693,8 +706,8 @@ readFax(struct bitStream * const bitStreamP,
         unsigned int lineSize;
 
         if (row >= MAXROWS)
-            asprintfN(&error, "Image is too tall.  This program can "
-                      "handle at most %u rows", MAXROWS);
+            pm_asprintf(&error, "Image is too tall.  This program can "
+                        "handle at most %u rows", MAXROWS);
         else {
             const char * exception;
 
@@ -714,9 +727,9 @@ readFax(struct bitStream * const bitStreamP,
                     if (stretch) {
                         ++row;
                         if (row >= MAXROWS)
-                            asprintfN(&error, "Image is too tall.  This "
-                                      "program can handle at most %u rows "
-                                      "after stretching", MAXROWS);
+                            pm_asprintf(&error, "Image is too tall.  This "
+                                        "program can handle at most %u rows "
+                                        "after stretching", MAXROWS);
                         else
                             packedBits[row] = packedBits[row-1];
                     }

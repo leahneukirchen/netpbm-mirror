@@ -5,6 +5,8 @@ endif
 SUBDIR = urt
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
+default: all
+
 include $(BUILDDIR)/config.mk
 
 LIBOBJECTS = Runput.o cmd_name.o \
@@ -15,6 +17,9 @@ LIBOBJECTS = Runput.o cmd_name.o \
 
 MERGE_OBJECTS =
 
+OMIT_URT_RULE = 1
+include $(SRCDIR)/common.mk
+
 all: librle.a
 
 librle.a: $(LIBOBJECTS)
@@ -24,11 +29,8 @@ librle.a: $(LIBOBJECTS)
 
 # Rule for objects.
 $(LIBOBJECTS): %.o: %.c importinc
-	$(CC) -c -I importinc -o $@ \
-	  $< $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD)
+	$(CC) -c $(INCLUDES) -o $@ $< $(CFLAGS_ALL)
 
 BINARIES =
 SCRIPTS =
 
-OMIT_URT_RULE = 1
-include $(SRCDIR)/common.mk

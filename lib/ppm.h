@@ -3,6 +3,7 @@
 #ifndef _PPM_H_
 #define _PPM_H_
 
+#include <netpbm/pm_config.h>
 #include <netpbm/pm.h>
 #include <netpbm/pgm.h>
 
@@ -76,7 +77,7 @@ ppm_blackpixel(void) {
     return retval;
 }
 
-void ppm_init(int * argcP, char* argv[]);
+void ppm_init(int * const argcP, char ** const argv);
 
 #define ppm_allocarray(cols, rows) \
   ((pixel**) pm_allocarray(cols, rows, sizeof(pixel)))
@@ -248,6 +249,12 @@ ppm_color_from_hsv(struct hsv const hsv,
 struct hsv
 ppm_hsv_from_color(pixel  const color,
                    pixval const maxval);
+
+static __inline__ pixval
+ppm_luminosity(pixel const p) {
+
+    return (pixval)(PPM_LUMIN(p) + 0.5);
+}
 
 static __inline__ pixval
 ppm_colorvalue(pixel const p) {

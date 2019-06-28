@@ -414,7 +414,8 @@ int jas_matrix_output(jas_matrix_t *matrix, FILE *out)
 	int j;
 	jas_seqent_t x;
 
-	fprintf(out, "%d %d\n", jas_matrix_numrows(matrix), jas_matrix_numcols(matrix));
+	fprintf(out, "%d %d\n",
+            (int)jas_matrix_numrows(matrix), (int)jas_matrix_numcols(matrix));
 	for (i = 0; i < jas_matrix_numrows(matrix); ++i) {
 		for (j = 0; j < jas_matrix_numcols(matrix); ++j) {
 			x = jas_matrix_get(matrix, i, j);

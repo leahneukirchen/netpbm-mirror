@@ -12,18 +12,26 @@
 ** implied warranty.
 */
 
-#include "pm_c_util.h"
-#include "nstring.h"
-#include "mallocvar.h"
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/nstring.h"
+#include "netpbm/mallocvar.h"
 #include "ppm.h"
 #include "ppmcmap.h"
 
 #define HASH_SIZE 20023
 
-#define ppm_hashpixel(p) ( ( ( (long) PPM_GETR(p) * 33023 + \
-                               (long) PPM_GETG(p) * 30013 + \
-                               (long) PPM_GETB(p) * 27011 ) \
-                             & 0x7fffffff ) % HASH_SIZE )
+
+
+static __inline__ unsigned int
+ppm_hashpixel(pixel const p) {
+
+    return (unsigned int) (PPM_GETR(p) * 33 * 33
+                           + PPM_GETG(p) * 33
+                           + PPM_GETB(p)) % HASH_SIZE;
+}
+
+
 
 colorhist_vector
 ppm_computecolorhist( pixel ** const pixels, 
@@ -153,7 +161,7 @@ readppmrow(FILE *        const fileP,
     
     if (setjmp(jmpbuf) != 0) {
         pm_setjmpbuf(origJmpbufP);
-        asprintfN(errorP, "Failed to read row of image.");
+        pm_asprintf(errorP, "Failed to read row of image.");
     } else {
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
@@ -227,8 +235,8 @@ buildHashTable(FILE *          const ifP,
                 else {
                     MALLOCVAR(chl);
                     if (chl == NULL)
-                        asprintfN(errorP,
-                                  "out of memory computing hash table");
+                        pm_asprintf(errorP,
+                                    "out of memory computing hash table");
                     chl->ch.color = apixel;
                     chl->ch.value = 1;
                     chl->next = cht[hash];
@@ -282,7 +290,7 @@ computecolorhash(pixel **          const pixels,
     MALLOCARRAY(rowbuffer, cols);
         
     if (rowbuffer == NULL)
-        asprintfN(errorP, "Unable to allocate %u-column row buffer.", cols);
+        pm_asprintf(errorP, "Unable to allocate %u-column row buffer.", cols);
     else {
         colorhash_table cht;
         bool tooManyColors;
@@ -290,7 +298,7 @@ computecolorhash(pixel **          const pixels,
         cht = alloccolorhash();
 
         if (cht == NULL)
-            asprintfN(errorP, "Unable to allocate color hash.");
+            pm_asprintf(errorP, "Unable to allocate color hash.");
         else {
             buildHashTable(ifP, pixels, cols, rows, maxval, format, maxcolors,
                            cht, rowbuffer,
@@ -326,7 +334,7 @@ ppm_computecolorhash(pixel ** const pixels,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
     return cht;
@@ -351,7 +359,7 @@ ppm_computecolorhash2(FILE * const ifP,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
     return cht;
@@ -484,7 +492,7 @@ ppm_colorhisttocolorhash(colorhist_vector const chv,
 
     cht = alloccolorhash( );  /* Initializes to NULLs */
     if (cht == NULL)
-        asprintfN(&error, "Unable to allocate color hash");
+        pm_asprintf(&error, "Unable to allocate color hash");
     else {
         unsigned int i;
 
@@ -496,13 +504,13 @@ ppm_colorhisttocolorhash(colorhist_vector const chv,
 
             for (chl = cht[hash]; chl && !error; chl = chl->next)
                 if (PPM_EQUAL(chl->ch.color, color))
-                    asprintfN(&error, "same color found twice: (%u %u %u)",
-                              PPM_GETR(color),
-                              PPM_GETG(color),
-                              PPM_GETB(color));
+                    pm_asprintf(&error, "same color found twice: (%u %u %u)",
+                                PPM_GETR(color),
+                                PPM_GETG(color),
+                                PPM_GETB(color));
             MALLOCVAR(chl);
             if (chl == NULL)
-                asprintfN(&error, "out of memory");
+                pm_asprintf(&error, "out of memory");
             else {
                 chl->ch.color = color;
                 chl->ch.value = i;
@@ -515,7 +523,7 @@ ppm_colorhisttocolorhash(colorhist_vector const chv,
     }
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     } else
         retval = cht;
@@ -681,9 +689,33 @@ fail:
 }
 
 
+
+static int (*customCmp)(pixel *, pixel *);
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn customStub;
+#endif
+
 static int
-pixel_cmp(const void * const a, const void * const b) {
-    const pixel *p1 = (const pixel *)a, *p2 = (const pixel *)b;
+customStub(const void * const a,
+           const void * const b) {
+
+    return (*customCmp)((pixel *)a, (pixel *)b);
+}
+
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn pixelCmp;
+#endif
+
+static int
+pixelCmp(const void * const a,
+         const void * const b) {
+
+    const pixel * const p1 = (const pixel *)a;
+    const pixel * const p2 = (const pixel *)b;
+
     int diff;
 
     diff = PPM_GETR(*p1) - PPM_GETR(*p2);
@@ -695,23 +727,18 @@ pixel_cmp(const void * const a, const void * const b) {
     return diff;
 }
 
-static int (*custom_cmp)(pixel *, pixel *);
-
-static int
-custom_stub(const void * const a, const void * const b) {
-    return (*custom_cmp)((pixel *)a, (pixel *)b);
-}
 
 
 void
-ppm_sortcolorrow(pixel * const colorrow, const int ncolors, 
+ppm_sortcolorrow(pixel * const colorrow,
+                 int     const ncolors, 
                  int (*cmpfunc)(pixel *, pixel *)) {
 
-    if( cmpfunc ) {
-        custom_cmp = cmpfunc;
-        qsort((void *)colorrow, ncolors, sizeof(pixel), custom_stub);
+    if (cmpfunc) {
+        customCmp = cmpfunc;
+        qsort((void *)colorrow, ncolors, sizeof(pixel), customStub);
     } else
-        qsort((void *)colorrow, ncolors, sizeof(pixel), pixel_cmp);
+        qsort((void *)colorrow, ncolors, sizeof(pixel), pixelCmp);
 }
 
 

@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
 #include "ppm.h"
 #include "libppm.h"
 #include "pgm.h"
@@ -29,8 +31,6 @@
 #include "pam.h"
 #include "libpam.h"
 #include "fileio.h"
-#include "mallocvar.h"
-#include "nstring.h"
 
 
 pixel *
@@ -49,12 +49,11 @@ ppm_allocrow(unsigned int const cols) {
 
 
 void
-ppm_init( argcP, argv )
-    int* argcP;
-    char* argv[];
-    {
+ppm_init(int * const argcP, char ** const argv) {
     pgm_init( argcP, argv );
-    }
+}
+
+
 
 void
 ppm_nextimage(FILE * const fileP, 
@@ -79,7 +78,7 @@ ppm_readppminitrest(FILE *   const fileP,
     maxval = pm_getuint(fileP);
     if (maxval > PPM_OVERALLMAXVAL)
         pm_error("maxval of input image (%u) is too large.  "
-                 "The maximum allowed by the PPM is %u.",
+                 "The maximum allowed by the PPM format is %u.",
                  maxval, PPM_OVERALLMAXVAL); 
     if (maxval == 0)
         pm_error("maxval of input image is zero.");
@@ -100,10 +99,13 @@ validateComputableSize(unsigned int const cols,
    you expect.  That failed expectation can be disastrous if you use
    it to allocate memory.
 
+   It is very normal to allocate space for a pixel row, so we make sure
+   the size of a pixel row, in bytes, can be represented by an 'int'.
+
    A common operation is adding 1 or 2 to the highest row or
    column number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 2)
+    if (cols > INT_MAX/(sizeof(pixval) * 3) || cols > INT_MAX - 2)
         pm_error("image width (%u) too large to be processed", cols);
     if (rows > INT_MAX - 2)
         pm_error("image height (%u) too large to be processed", rows);
@@ -184,6 +186,92 @@ readPpmRow(FILE *       const fileP,
 
 
 static void
+interpRasterRowRaw(const unsigned char * const rowBuffer,
+                   pixel *               const pixelrow,
+                   unsigned int          const cols,
+                   unsigned int          const bytesPerSample) {
+
+    unsigned int bufferCursor;
+
+    bufferCursor = 0;  /* start at beginning of rowBuffer[] */
+        
+    if (bytesPerSample == 1) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            pixval const r = rowBuffer[bufferCursor++];
+            pixval const g = rowBuffer[bufferCursor++];
+            pixval const b = rowBuffer[bufferCursor++];
+            PPM_ASSIGN(pixelrow[col], r, g, b);
+        }
+    } else  {
+        /* two byte samples */
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            pixval r, g, b;
+                    
+            r = rowBuffer[bufferCursor++] << 8;
+            r |= rowBuffer[bufferCursor++];
+                    
+            g = rowBuffer[bufferCursor++] << 8;
+            g |= rowBuffer[bufferCursor++];
+                    
+            b = rowBuffer[bufferCursor++] << 8;
+            b |= rowBuffer[bufferCursor++];
+                    
+            PPM_ASSIGN(pixelrow[col], r, g, b);
+        }
+    }
+}
+
+
+
+static void
+validateRppmRow(pixel *       const pixelrow,
+                unsigned int  const cols,
+                pixval        const maxval,
+                const char ** const errorP) {
+/*----------------------------------------------------------------------------
+  Check for sample values above maxval in input.  
+
+  Note: a program that wants to deal with invalid sample values itself can
+  simply make sure it uses a sufficiently high maxval on the read function
+  call, so this validation never fails.
+-----------------------------------------------------------------------------*/
+    if (maxval == 255 || maxval == 65535) {
+        /* There's no way a sample can be invalid, so we don't need to look at
+           the samples individually.
+        */
+        *errorP = NULL;
+    } else {
+        unsigned int col;
+
+        for (col = 0, *errorP = NULL; col < cols && !*errorP; ++col) {
+            pixval const r = PPM_GETR(pixelrow[col]);
+            pixval const g = PPM_GETG(pixelrow[col]);
+            pixval const b = PPM_GETB(pixelrow[col]);
+
+            if (r > maxval)
+                pm_asprintf(
+                    errorP,
+                    "Red sample value %u is greater than maxval (%u)",
+                    r, maxval);
+            else if (g > maxval)
+                pm_asprintf(
+                    errorP,
+                    "Green sample value %u is greater than maxval (%u)",
+                    g, maxval);
+            else if (b > maxval)
+                pm_asprintf(
+                    errorP,
+                    "Blue sample value %u is greater than maxval (%u)",
+                    b, maxval);
+        }
+    }
+}
+
+
+
+static void
 readRppmRow(FILE *       const fileP, 
             pixel *      const pixelrow, 
             unsigned int const cols, 
@@ -199,60 +287,35 @@ readRppmRow(FILE *       const fileP,
     MALLOCARRAY(rowBuffer, bytesPerRow);
         
     if (rowBuffer == NULL)
-        asprintfN(&error, "Unable to allocate memory for row buffer "
-                  "for %u columns", cols);
+        pm_asprintf(&error, "Unable to allocate memory for row buffer "
+                    "for %u columns", cols);
     else {
         ssize_t rc;
 
         rc = fread(rowBuffer, 1, bytesPerRow, fileP);
     
         if (feof(fileP))
-            asprintfN(&error, "Unexpected EOF reading row of PPM image.");
+            pm_asprintf(&error, "Unexpected EOF reading row of PPM image.");
         else if (ferror(fileP))
-            asprintfN(&error, "Error reading row.  fread() errno=%d (%s)",
-                      errno, strerror(errno));
-        else if (rc != bytesPerRow)
-            asprintfN(&error, "Error reading row.  Short read of %u bytes "
-                      "instead of %u", rc, bytesPerRow);
+            pm_asprintf(&error, "Error reading row.  fread() errno=%d (%s)",
+                        errno, strerror(errno));
         else {
-            unsigned int bufferCursor;
+            size_t const bytesRead = rc;
+            if (bytesRead != bytesPerRow)
+                pm_asprintf(&error,
+                            "Error reading row.  Short read of %u bytes "
+                            "instead of %u", (unsigned)bytesRead, bytesPerRow);
+            else {
+                interpRasterRowRaw(rowBuffer, pixelrow, cols, bytesPerSample);
 
-            error = NULL;
-
-            bufferCursor = 0;  /* start at beginning of rowBuffer[] */
-        
-            if (bytesPerSample == 1) {
-                unsigned int col;
-                for (col = 0; col < cols; ++col) {
-                    pixval const r = rowBuffer[bufferCursor++];
-                    pixval const g = rowBuffer[bufferCursor++];
-                    pixval const b = rowBuffer[bufferCursor++];
-                    PPM_ASSIGN(pixelrow[col], r, g, b);
-                }
-            } else  {
-                /* two byte samples */
-                unsigned int col;
-                for (col = 0; col < cols; ++col) {
-                    pixval r, g, b;
-                    
-                    r = rowBuffer[bufferCursor++] << 8;
-                    r |= rowBuffer[bufferCursor++];
-                    
-                    g = rowBuffer[bufferCursor++] << 8;
-                    g |= rowBuffer[bufferCursor++];
-                    
-                    b = rowBuffer[bufferCursor++] << 8;
-                    b |= rowBuffer[bufferCursor++];
-                    
-                    PPM_ASSIGN(pixelrow[col], r, g, b);
-                }
+                validateRppmRow(pixelrow, cols, maxval, &error);
             }
         }
         free(rowBuffer);
     }
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 }
@@ -305,10 +368,10 @@ readPbmRow(FILE *       const fileP,
     jmp_buf * origJmpbufP;
     bit * bitrow;
 
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols);
 
     if (setjmp(jmpbuf) != 0) {
-        pbm_freerow(bitrow);
+        pbm_freerow_packed(bitrow);
         pm_setjmpbuf(origJmpbufP);
         pm_longjmp();
     } else {
@@ -316,10 +379,12 @@ readPbmRow(FILE *       const fileP,
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        pbm_readpbmrow(fileP, bitrow, cols, format);
+        pbm_readpbmrow_packed(fileP, bitrow, cols, format);
 
         for (col = 0; col < cols; ++col) {
-            pixval const g = (bitrow[col] == PBM_WHITE) ? maxval : 0;
+            pixval const g =
+                ((bitrow[col/8] >> (7 - col%8)) & 0x1) == PBM_WHITE ?
+                maxval : 0;
             PPM_ASSIGN(pixelrow[col], g, g, g);
         }
         pm_setjmpbuf(origJmpbufP);
@@ -408,30 +473,32 @@ ppm_readppm(FILE *   const fileP,
 
 void
 ppm_check(FILE *               const fileP, 
-          enum pm_check_type   const check_type, 
+          enum pm_check_type   const checkType, 
           int                  const format, 
           int                  const cols, 
           int                  const rows, 
           pixval               const maxval,
-          enum pm_check_code * const retval_p) {
+          enum pm_check_code * const retvalP) {
 
     if (rows < 0)
         pm_error("Invalid number of rows passed to ppm_check(): %d", rows);
     if (cols < 0)
         pm_error("Invalid number of columns passed to ppm_check(): %d", cols);
     
-    if (check_type != PM_CHECK_BASIC) {
-        if (retval_p) *retval_p = PM_CHECK_UNKNOWN_TYPE;
+    if (checkType != PM_CHECK_BASIC) {
+        if (retvalP)
+            *retvalP = PM_CHECK_UNKNOWN_TYPE;
     } else if (PPM_FORMAT_TYPE(format) == PBM_TYPE) {
-        pbm_check(fileP, check_type, format, cols, rows, retval_p);
+        pbm_check(fileP, checkType, format, cols, rows, retvalP);
     } else if (PPM_FORMAT_TYPE(format) == PGM_TYPE) {
-        pgm_check(fileP, check_type, format, cols, rows, maxval, retval_p);
+        pgm_check(fileP, checkType, format, cols, rows, maxval, retvalP);
     } else if (format != RPPM_FORMAT) {
-        if (retval_p) *retval_p = PM_CHECK_UNCHECKABLE;
+        if (retvalP)
+            *retvalP = PM_CHECK_UNCHECKABLE;
     } else {        
-        pm_filepos const bytes_per_row = cols * 3 * (maxval > 255 ? 2 : 1);
-        pm_filepos const need_raster_size = rows * bytes_per_row;
+        pm_filepos const bytesPerRow    = cols * 3 * (maxval > 255 ? 2 : 1);
+        pm_filepos const needRasterSize = rows * bytesPerRow;
         
-        pm_check(fileP, check_type, need_raster_size, retval_p);
+        pm_check(fileP, checkType, needRasterSize, retvalP);
     }
 }

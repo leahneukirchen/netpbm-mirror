@@ -68,7 +68,7 @@ handleLatex2htmlHack(void) {
   This program used to put out a "usage" message when it saw an option
   it didn't understand.  Latex2html's configure program does a
   ppmtogif -h (-h was never a valid option) to elicit that message and
-  then parses the message to see if it included the strings
+  then parses the message to see if it includes the strings
   "-interlace" and "-transparent".  That way it knows if the
   'ppmtogif' program it found has those options or not.  I don't think
   any 'ppmtogif' you're likely to find today lacks those options, but
@@ -91,7 +91,7 @@ handleLatex2htmlHack(void) {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Parse the program arguments (given by argc and argv) into a form
@@ -146,7 +146,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (latex2htmlhack) 
@@ -183,8 +183,8 @@ openPnmremapStream(const char * const inputFileName,
     assert(inputFileName != NULL);
     assert(mapFileName != NULL);
 
-    asprintfN(&pnmremapCommand, "pnmremap -mapfile='%s' %s",
-              mapFileName, inputFileName);
+    pm_asprintf(&pnmremapCommand, "pnmremap -mapfile='%s' %s",
+                mapFileName, inputFileName);
 
     if (verbose)
         pm_message("Preprocessing Pamtogif input with shell command '%s'",
@@ -198,7 +198,7 @@ openPnmremapStream(const char * const inputFileName,
     else
         *pnmremapPipeP = pnmremapPipe;
 
-    strfree(pnmremapCommand);
+    pm_strfree(pnmremapCommand);
 }
 
 
@@ -221,39 +221,39 @@ pamtogifCommand(const char *       const arg0,
 
         struct stat statbuf;
 
-        asprintfN(&progName, "%s/%s", arg0DirName, pamtogifName);
+        pm_asprintf(&progName, "%s/%s", arg0DirName, pamtogifName);
 
         if (stat(progName, &statbuf) == 0)
             commandVerb = progName;
         else
             commandVerb = strdup(pamtogifName);
 
-        strfree(arg0DirName);
+        pm_strfree(arg0DirName);
     } else
         commandVerb = strdup(pamtogifName);
 
     if (cmdline.transparent)
-        asprintfN(&transparentOpt, "-transparent=%s", cmdline.transparent);
+        pm_asprintf(&transparentOpt, "-transparent=%s", cmdline.transparent);
     else
         transparentOpt = strdup("");
 
     if (cmdline.comment)
-        asprintfN(&commentOpt, "-comment=%s", cmdline.comment);
+        pm_asprintf(&commentOpt, "-comment=%s", cmdline.comment);
     else
         commentOpt = strdup("");
 
-    asprintfN(&retval, "%s - -alphacolor=%s %s %s %s %s %s %s",
-              commandVerb,
-              cmdline.alphacolor,
-              cmdline.interlace ? "-interlace" : "",
-              cmdline.sort ? "-sort" : "",
-              transparentOpt,
-              commentOpt,
-              cmdline.nolzw ? "-nolzw" : "",
-              cmdline.verbose ? "-verbose" : "");
+    pm_asprintf(&retval, "%s - -alphacolor=%s %s %s %s %s %s %s",
+                commandVerb,
+                cmdline.alphacolor,
+                cmdline.interlace ? "-interlace" : "",
+                cmdline.sort ? "-sort" : "",
+                transparentOpt,
+                commentOpt,
+                cmdline.nolzw ? "-nolzw" : "",
+                cmdline.verbose ? "-verbose" : "");
     
-    strfree(transparentOpt);
-    strfree(commentOpt);
+    pm_strfree(transparentOpt);
+    pm_strfree(commentOpt);
 
     return retval;
 }
@@ -374,8 +374,8 @@ feedPamtogif(struct pam * const inPamP,
 
 
 int
-main(int    argc,
-     char * argv[]) {
+main(int           argc,
+     const char ** argv) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -384,7 +384,7 @@ main(int    argc,
     FILE * pipeToPamtogif;
     int rc;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -413,7 +413,7 @@ main(int    argc,
     if (rc != 0)
         pm_error("Pamtogif process failed.  pclose() failed.");
 
-    strfree(command);
+    pm_strfree(command);
 
     pm_close(ifP);
     pm_close(stdout);

@@ -31,6 +31,7 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "token.h"
 #include "shhopt.h"
 
 /*-----------------------------------------------------------------------+
@@ -76,7 +77,7 @@ optFatalFunc(const char *format, ...)
  |
  |  RETURNS       Number of options in the given array.
  |
- |  DESCRIPTION   Count elements in an optStruct-array. The strcture must
+ |  DESCRIPTION   Count elements in an optStruct-array. The structure must
  |                be ended using an element of type OPT_END.
  */
 static int
@@ -237,6 +238,7 @@ optNeedsArgument(const optEntry opt)
 	|| opt.type == OPT_ULONG
     || opt.type == OPT_FLOAT
     || opt.type == OPT_NAMELIST
+    || opt.type == OPT_STRINGLIST
         ;
 }
 
@@ -281,46 +283,12 @@ getToken(const char *  const tokenStart,
    we return an empty string and *nextP == tokenStart, i.e. *nextP
    doesn't necessarily advance.
 -----------------------------------------------------------------------------*/
-    char * token;
-    const char * cursor;
-    unsigned int charCount;
-
-    /* Run through the token, counting characters */
-
-    charCount = 0;
-    cursor = tokenStart;
-
-    while (*cursor != delimiter && *cursor != '\0') {
-        if (*cursor == '\\') {
-            ++cursor;
-            if (*cursor == '\0')
-                optFatal("string ends with an escape character (\\)");
-        }
-        ++cursor;
-        ++charCount;
-    }
+    const char * error;
     
-    token = malloc(charCount + 1);
-    if (token == NULL)
-        optFatal("Could not allocate %u bytes of memory to parse a string",
-                 charCount + 1);
+    pm_gettoken(tokenStart, delimiter, tokenP, nextP, &error);
 
-    /* Go back and do it again, this time copying the characters */
-    charCount = 0;
-    cursor = tokenStart;
-
-    while (*cursor != delimiter && *cursor != '\0') {
-        if (*cursor == '\\')
-            ++cursor;
-
-        assert(*cursor != '\0');
-
-        token[charCount++] = *cursor++;
-    }
-    token[charCount] = '\0';
-
-    *tokenP = token;
-    *nextP = cursor;
+    if (error)
+        optFatal("error parsing a token: %s", error);
 }
 
 
@@ -369,6 +337,41 @@ parseNameList(const char *           const listText,
     }
     list[optionCount].name  = NULL;
     list[optionCount].value = NULL;
+
+    *listP = list;
+}
+
+
+
+static void
+parseStringList(const char *   const listText,
+                const char *** const listP) {
+
+    unsigned int const maxStringCount = 100;
+
+    const char * cursor;
+    unsigned int stringCount;
+    const char ** list;
+
+    MALLOCARRAY_NOFAIL(list, maxStringCount+1);
+
+    cursor = &listText[0];  /* initial value */
+
+    stringCount = 0;  /* initial value */
+
+    while (stringCount < maxStringCount && *cursor != '\0') {
+        const char * next;
+
+        getToken(cursor, ',', &list[stringCount++], &next);
+
+        cursor = next;
+
+        if (*cursor != '\0') {
+            assert(*cursor == ',');
+            ++cursor;
+        }
+    }
+    list[stringCount] = NULL;
 
     *listP = list;
 }
@@ -479,6 +482,15 @@ optExecute(optEntry  const opt, char *arg, int lng)
             parseNameList(arg, (struct optNameValue **)opt.arg);
 
     } break;
+    case OPT_STRINGLIST: {
+        if (arg == NULL)
+            optFatal("internal error: optExecute() called with NULL argument "
+                     "'%s'", optString(opt, lng));
+
+        if (opt.arg)
+            parseStringList(arg, (const char ***)opt.arg);
+
+    } break;
     default:
         break;
     }
@@ -502,19 +514,20 @@ optExecute(optEntry  const opt, char *arg, int lng)
  |                        that _must_ abort the program.
  */
 void
-optSetFatalFunc(void (*f)(const char *, ...))
-{
+pm_optSetFatalFunc(void (*f)(const char *, ...)) {
+
     optFatal = f;
 }
 
 
+
 /*------------------------------------------------------------------------
- |  NAME          optParseOptions
+ |  NAME          pm_optParseOptions
  |
  |  FUNCTION      Parse commandline options.
  |
  |  SYNOPSIS      #include "shhopt.h"
- |                void optParseOptions(int *argc, char *argv[],
+ |                void pm_optParseOptions(int *argc, char *argv[],
  |                                     optStruct opt[], int allowNegNum);
  |
  |  INPUT         argc    Pointer to number of options.
@@ -541,7 +554,7 @@ optSetFatalFunc(void (*f)(const char *, ...))
  |                Any error leads to program abortion.
  */
 void
-optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
+pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
 {
     int  ai,        /* argv index. */
          optarg,    /* argv index of option argument, or -1 if none. */
@@ -724,13 +737,13 @@ fatalUnrecognizedLongOption(const char * const optionName,
         const char * entry;
 
         if (optEntryP->longName)
-            asprintfN(&entry, "-%s ", optEntryP->longName);
+            pm_asprintf(&entry, "-%s ", optEntryP->longName);
         else
-            asprintfN(&entry, "-%c ", optEntryP->shortName);
+            pm_asprintf(&entry, "-%c ", optEntryP->shortName);
 
         strncat(optList, entry, sizeof(optList) - strlen(optList) - 1);
 
-        strfree(entry);
+        pm_strfree(entry);
 
         if (strlen(optList) + 1 == sizeof(optList)) {
             /* Buffer is full.  Overwrite end of list with ellipsis */
@@ -809,12 +822,12 @@ parse_long_option(char *   const argv[],
 
 
 /*------------------------------------------------------------------------
- |  NAME          optParseOptions2
+ |  NAME          pm_optParseOptions2
  |
  |  FUNCTION      Parse commandline options.
  |
  |  SYNOPSIS      #include "shhopt.h"
- |                void optParseOptions2(int *argc, char *argv[],
+ |                void pm_optParseOptions2(int *argc, char *argv[],
  |                                      optStruct2 opt, unsigned long flags);
  |
  |  INPUT         argc    Pointer to number of options.
@@ -834,9 +847,9 @@ parse_long_option(char *   const argv[],
  |                extracted and stored in the variables or passed to
  |                functions pointed to by entries in opt.
  |
- |                This differs from optParseOptions in that it accepts
+ |                This differs from pm_optParseOptions in that it accepts
  |                long options with just one hyphen and doesn't accept
- |                any short options.  It also has accomodations for 
+ |                any short options.  It also has accommodations for 
  |                future expansion.
  |
  |                Options and arguments used are removed from the argv-
@@ -845,10 +858,10 @@ parse_long_option(char *   const argv[],
  |                Any error leads to program abortion.
  */
 void
-optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
+pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
                  const unsigned long flags)
 /*----------------------------------------------------------------------------
-   This does the same thing as optParseOptions3(), except that there is no
+   This does the same thing as pm_optParseOptions3(), except that there is no
    "specified" return value.  
 
    This function exists for backward compatibility.
@@ -865,7 +878,7 @@ optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt,
         optFatal("Memory allocation failed (trying to allocate space for "
                  "new-format option table)");
     
-    optParseOptions3(argc_p, argv, opt3, sizeof(opt3), flags);
+    pm_optParseOptions3(argc_p, argv, opt3, sizeof(opt3), flags);
 
     free(opt3.opt_table);
 }
@@ -890,7 +903,7 @@ zero_specified(optEntry opt_table[]) {
 
 
 /*------------------------------------------------------------------------
- |  NAME          optParseOptions3
+ |  NAME          pm_optParseOptions3
  |
  |  FUNCTION      Parse commandline options.
  |
@@ -919,9 +932,9 @@ zero_specified(optEntry opt_table[]) {
  |                extracted and stored in the variables or passed to
  |                functions pointed to by entries in opt.
  |
- |                This differs from optParseOptions in that it accepts
+ |                This differs from pm_optParseOptions in that it accepts
  |                long options with just one hyphen and doesn't accept
- |                any short options.  It also has accomodations for 
+ |                any short options.  It also has accommodations for 
  |                future expansion.
  |
  |                Options and arguments used are removed from the argv-
@@ -930,7 +943,7 @@ zero_specified(optEntry opt_table[]) {
  |                Any error leads to program abortion.
  */
 void
-optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
+pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
                  const unsigned int optStructSize, const unsigned long flags)
 {
     int  ai;        /* argv index. */
@@ -996,13 +1009,13 @@ optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
 
 
 void
-optDestroyNameValueList(struct optNameValue * const list) {
+pm_optDestroyNameValueList(struct optNameValue * const list) {
 
     unsigned int i;
 
     for (i = 0; list[i].name; ++i) {
-        strfree(list[i].name);
-        strfree(list[i].value);
+        pm_strfree(list[i].name);
+        pm_strfree(list[i].value);
     }
 
     free(list);

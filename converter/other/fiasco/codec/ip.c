@@ -282,7 +282,7 @@ standard_ip_image_state (unsigned address, unsigned level, unsigned domain,
    real_t   ip = 0, *imageptr, *stateptr;
 
    if (level > c->options.images_level)
-      error ("Level %d not supported.", level);
+      error ("We cannot interpret a Level %d image.", level);
    
    imageptr = &c->pixels [address * size_of_level (level)];
 
@@ -311,7 +311,7 @@ standard_ip_state_state (unsigned domain1, unsigned domain2, unsigned level,
    real_t   ip = 0, *state1ptr, *state2ptr;
 
    if (level > c->options.images_level)
-      error ("Level %d not supported.", level);
+      error ("We cannot interpret and image with Level %d.", level);
 
    state1ptr = c->images_of_state [domain1] + address_of_level (level);
    state2ptr = c->images_of_state [domain2] + address_of_level (level);

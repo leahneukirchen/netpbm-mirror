@@ -1,10 +1,13 @@
-/*----------------------------------------------------------------------------
+/*============================================================================
                                   libpamwrite.c
-------------------------------------------------------------------------------
+==============================================================================
    These are the library functions, which belong in the libnetpbm library,
    that deal with writing the PAM (Portable Arbitrary Format) image format
    raster (not the header).
------------------------------------------------------------------------------*/
+
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 
 /* See pmfileio.c for the complicated explanation of this 32/64 bit file
    offset stuff.
@@ -16,8 +19,10 @@
 #include <stdio.h>
 #include <limits.h>
 #include <assert.h>
-
 #include <math.h>
+
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
 
 #include "pam.h"
 
@@ -351,7 +356,9 @@ pnm_writepamrow(const struct pam * const pamP,
        pnm_writepaminit().
     */
     
-    if (pm_plain_output || pamP->plainformat) {
+    if (pamP->format == PAM_FORMAT || !(pm_plain_output || pamP->plainformat))
+        writePamRawRow(pamP, tuplerow, 1);
+    else {
         switch (PAM_FORMAT_TYPE(pamP->format)) {
         case PBM_TYPE:
             writePamPlainPbmRow(pamP, tuplerow);
@@ -361,18 +368,13 @@ pnm_writepamrow(const struct pam * const pamP,
             writePamPlainRow(pamP, tuplerow);
             break;
         case PAM_TYPE:
-            /* pm_plain_output is impossible here due to assumption stated
-               above about pnm_writepaminit() having checked it.  The
-               pamP->plainformat is meaningless for PAM.
-            */
-            writePamRawRow(pamP, tuplerow, 1);
+            assert(false);
             break;
         default:
             pm_error("Invalid 'format' value %u in pam structure", 
                      pamP->format);
         }
-    } else
-        writePamRawRow(pamP, tuplerow, 1);
+    }
 }
 
 

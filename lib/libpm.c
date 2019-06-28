@@ -8,8 +8,12 @@
   Netpbm library subroutines.
 **************************************************************************/
 
+#define _BSD_SOURCE          /* Make sure strdup is in string.h */
 #define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
 
+#include "netpbm/pm_config.h"
+
+#include <assert.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -18,13 +22,17 @@
 #include <setjmp.h>
 #include <time.h>
 #include <limits.h>
+#if HAVE_FORK
+#include <sys/wait.h>
+#endif
+#include <sys/types.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "version.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/version.h"
+#include "netpbm/nstring.h"
+#include "netpbm/shhopt.h"
 #include "compile.h"
-#include "nstring.h"
-#include "shhopt.h"
 
 #include "pm.h"
 
@@ -95,6 +103,86 @@ pm_longjmp(void) {
 
 
 void
+pm_fork(int *         const iAmParentP,
+        pid_t *       const childPidP,
+        const char ** const errorP) {
+/*----------------------------------------------------------------------------
+   Same as POSIX fork, except with a nicer interface and works
+   (fails cleanly) on systems that don't have POSIX fork().
+-----------------------------------------------------------------------------*/
+#if HAVE_FORK
+    int rc;
+
+    rc = fork();
+
+    if (rc < 0) {
+        pm_asprintf(errorP, "Failed to fork a process.  errno=%d (%s)",
+                    errno, strerror(errno));
+    } else {
+        *errorP = NULL;
+
+        if (rc == 0) {
+            *iAmParentP = FALSE;
+        } else {
+            *iAmParentP = TRUE;
+            *childPidP = rc;
+        }
+    }
+#else
+    pm_asprintf(errorP, "Cannot fork a process, because this system does "
+                "not have POSIX fork()");
+#endif
+}
+
+
+
+void
+pm_waitpid(pid_t         const pid,
+           int *         const statusP,
+           int           const options,
+           pid_t *       const exitedPidP,
+           const char ** const errorP) {
+
+#if HAVE_FORK
+    pid_t rc;
+    rc = waitpid(pid, statusP, options);
+    if (rc == (pid_t)-1) {
+        pm_asprintf(errorP, "Failed to wait for process exit.  "
+                    "waitpid() errno = %d (%s)",
+                    errno, strerror(errno));
+    } else {
+        *exitedPidP = rc;
+        *errorP = NULL;
+    }
+#else
+    pm_error("INTERNAL ERROR: Attempt to wait for a process we created on "
+             "a system on which we can't create processes");
+#endif
+}
+
+
+
+void
+pm_waitpidSimple(pid_t const pid) {
+
+    int status;
+    pid_t exitedPid;
+    const char * error;
+
+    pm_waitpid(pid, &status, 0, &exitedPid, &error);
+
+    if (error) {
+        pm_errormsg("%s", error);
+        pm_strfree(error);
+        pm_longjmp();
+    } else {
+        assert(exitedPid != 0);
+    }
+}
+
+
+
+void
 pm_setusererrormsgfn(pm_usererrormsgfn * fn) {
 
     userErrorMsgFn = fn;
@@ -126,14 +214,14 @@ pm_message(const char format[], ...) {
 
     if (pm_showmessages) {
         const char * msg;
-        vasprintfN(&msg, format, args);
+        pm_vasprintf(&msg, format, args);
 
         if (userMessageFn)
             userMessageFn(msg);
         else
             fprintf(stderr, "%s: %s\n", pm_progname, msg);
 
-        strfree(msg);
+        pm_strfree(msg);
     }
     va_end(args);
 }
@@ -159,11 +247,11 @@ pm_errormsg(const char format[], ...) {
 
     va_start(args, format);
 
-    vasprintfN(&msg, format, args);
+    pm_vasprintf(&msg, format, args);
     
     errormsg(msg);
 
-    strfree(msg);
+    pm_strfree(msg);
 
     va_end(args);
 }
@@ -177,15 +265,29 @@ pm_error(const char format[], ...) {
 
     va_start(args, format);
 
-    vasprintfN(&msg, format, args);
+    pm_vasprintf(&msg, format, args);
     
     errormsg(msg);
 
-    strfree(msg);
+    pm_strfree(msg);
 
     va_end(args);
 
     pm_longjmp();
+}
+
+
+
+int
+pm_have_float_format(void) {
+/*----------------------------------------------------------------------------
+  Return 1 if %f, %e, and %g work in format strings for pm_message, etc.;
+  0 otherwise.
+
+  Where they don't "work," that means the specifier just appears itself in
+  the formatted strings, e.g. "the number is g".
+-----------------------------------------------------------------------------*/
+    return pm_vasprintf_knows_float();
 }
 
 
@@ -224,122 +326,30 @@ pm_freerow(void * const itrow) {
 
 
 
-static void
-allocarrayNoHeap(unsigned char ** const rowIndex,
-                 unsigned int     const cols,
-                 unsigned int     const rows,
-                 unsigned int     const size,
-                 const char **    const errorP) {
-
-    if (cols != 0 && UINT_MAX / cols < size)
-        asprintfN(errorP,
-                  "Arithmetic overflow multiplying %u by %u to get the "
-                  "size of a row to allocate.", cols, size);
-    else {
-        unsigned int rowsDone;
-
-        rowsDone = 0;
-        *errorP = NULL;
-
-        while (rowsDone < rows && !*errorP) {
-            unsigned char * const rowSpace = mallocz(cols * size);
-            if (rowSpace == NULL)
-                asprintfN(errorP,
-                          "Unable to allocate a %u-column by %u byte row",
-                          cols, size);
-            else
-                rowIndex[rowsDone++] = rowSpace;
-        }
-        if (*errorP) {
-            unsigned int row;
-            for (row = 0; row < rowsDone; ++row)
-                free(rowIndex[row]);
-        }
-    }
-}
-
-
-
-static unsigned char *
-allocRowHeap(unsigned int const cols,
-             unsigned int const rows,
-             unsigned int const size) {
-
-    unsigned char * retval;
-
-    if (cols != 0 && rows != 0 && UINT_MAX / cols / rows < size)
-        /* Too big even to request the memory ! */
-        retval = NULL;
-    else
-        retval = mallocz(rows * cols * size);
-
-    return retval;
-}
-
-
-
 char **
 pm_allocarray(int const cols,
               int const rows,
-              int const size )  {
+              int const elementSize ) {
 /*----------------------------------------------------------------------------
-   Allocate an array of 'rows' rows of 'cols' columns each, with each
-   element 'size' bytes.
+   This is for backward compatibility.  MALLOCARRAY2 is usually better.
 
-   We use a special format where we tack on an extra element to the row
-   index to indicate the format of the array.
-
-   We have two ways of allocating the space: fragmented and
-   unfragmented.  In both, the row index (plus the extra element) is
-   in one block of memory.  In the fragmented format, each row is
-   also in an independent memory block, and the extra row pointer is
-   NULL.  In the unfragmented format, all the rows are in a single
-   block of memory called the row heap and the extra row pointer is
-   the address of that block.
-
-   We use unfragmented format if possible, but if the allocation of the
-   row heap fails, we fall back to fragmented.
+   A problem with pm_allocarray() is that its return type is char **
+   even though 'elementSize' can be other than 1.  So users have
+   traditionally type cast the result.  In the old days, that was just
+   messy; modern compilers can produce the wrong code if you do that.
 -----------------------------------------------------------------------------*/
-    unsigned char ** rowIndex;
-    const char * error;
+    char ** retval;
+    void * result;
 
-    MALLOCARRAY(rowIndex, rows + 1);
-    if (rowIndex == NULL)
-        asprintfN(&error,
-                  "out of memory allocating row index (%u rows) for an array",
-                  rows);
-    else {
-        unsigned char * rowheap;
+    pm_mallocarray2(&result, rows, cols, elementSize);
 
-        rowheap = allocRowHeap(cols, rows, size);
+    if (result == NULL)
+        pm_error("Failed to allocate a raster array of %u columns x %u rows",
+                 cols, rows);
 
-        if (rowheap) {
-            /* It's unfragmented format */
+    retval = result;
 
-            rowIndex[rows] = rowheap;  /* Declare it unfragmented format */
-
-            if (rowheap) {
-                unsigned int row;
-                
-                for (row = 0; row < rows; ++row)
-                    rowIndex[row] = &(rowheap[row * cols * size]);
-            }
-            error = NULL;
-        } else {
-            /* We couldn't get the whole heap in one block, so try fragmented
-               format.
-            */
-            rowIndex[rows] = NULL;   /* Declare it fragmented format */
-            
-            allocarrayNoHeap(rowIndex, cols, rows, size, &error);
-        }
-    }
-    if (error) {
-        pm_errormsg("Couldn't allocate %u-row array.  %s", rows, error);
-        strfree(error);
-        pm_longjmp();
-    }
-    return (char **)rowIndex;
+    return retval;
 }
 
 
@@ -348,16 +358,9 @@ void
 pm_freearray(char ** const rowIndex, 
              int     const rows) {
 
-    void * const rowheap = rowIndex[rows];
+    void * const rowIndexVoid = rowIndex;
 
-    if (rowheap != NULL)
-        free(rowheap);
-    else {
-        unsigned int row;
-        for (row = 0; row < rows; ++row)
-            pm_freerow(rowIndex[row]);
-    }
-    free(rowIndex);
+    pm_freearray2(rowIndexVoid);
 }
 
 
@@ -475,37 +478,6 @@ pm_lcm(unsigned int const x,
 }
 
 
-/* Initialization. */
-
-
-#ifdef VMS
-static const char *
-vmsProgname(int * const argcP, char * argv[]) {   
-    char **temp_argv = argv;
-    int old_argc = *argcP;
-    int i;
-    const char * retval;
-    
-    getredirection( argcP, &temp_argv );
-    if (*argcP > old_argc) {
-        /* Number of command line arguments has increased */
-        fprintf( stderr, "Sorry!! getredirection() for VMS has "
-                 "changed the argument list!!!\n");
-        fprintf( stderr, "This is intolerable at the present time, "
-                 "so we must stop!!!\n");
-        exit(1);
-    }
-    for (i=0; i<*argcP; i++)
-        argv[i] = temp_argv[i];
-    retval = strrchr( argv[0], '/');
-    if ( retval == NULL ) retval = rindex( argv[0], ']');
-    if ( retval == NULL ) retval = rindex( argv[0], '>');
-
-    return retval;
-}
-#endif
-
-
 
 void
 pm_init(const char * const progname,
@@ -555,11 +527,7 @@ showVersion(void) {
     pm_message( "BSD defined" );
 #endif /*BSD*/
 #ifdef SYSV
-#ifdef VMS
-    pm_message( "VMS & SYSV defined" );
-#else
     pm_message( "SYSV defined" );
-#endif
 #endif /*SYSV*/
 #ifdef MSDOS
     pm_message( "MSDOS defined" );
@@ -626,6 +594,8 @@ showNetpbmHelp(const char progname[]) {
         if (docurl == NULL)
             pm_message("No 'docurl=' line in Netpbm configuration file '%s'.",
                        netpbmConfigFileName);
+
+        fclose(netpbmConfigFile);
     }
     if (docurl == NULL)
         pm_message("We have no reliable indication of where the Netpbm "
@@ -639,71 +609,85 @@ showNetpbmHelp(const char progname[]) {
 
 
 
+static void
+parseCommonOptions(int *         const argcP,
+                   const char ** const argv,
+                   bool *        const showMessagesP,
+                   bool *        const showVersionP,
+                   bool *        const showHelpP,
+                   bool *        const plainOutputP) {
+
+    unsigned int inCursor;
+    unsigned int outCursor;
+
+    *showMessagesP = true;   /* initial assumption */
+    *showVersionP  = false;  /* initial assumption */
+    *showHelpP     = false;  /* initial assumption */
+    *plainOutputP  = false;  /* initial assumption */
+
+    for (inCursor = 1, outCursor = 1; inCursor < *argcP; ++inCursor) {
+            if (strcaseeq(argv[inCursor], "-quiet") ||
+                strcaseeq(argv[inCursor], "--quiet")) 
+                *showMessagesP = false;
+            else if (strcaseeq(argv[inCursor], "-version") ||
+                     strcaseeq(argv[inCursor], "--version")) 
+                *showVersionP = true;
+            else if (strcaseeq(argv[inCursor], "-help") ||
+                     strcaseeq(argv[inCursor], "--help") ||
+                     strcaseeq(argv[inCursor], "-?")) 
+                *showHelpP = true;
+            else if (strcaseeq(argv[inCursor], "-plain") ||
+                     strcaseeq(argv[inCursor], "--plain"))
+                *plainOutputP = true;
+            else
+                argv[outCursor++] = argv[inCursor];
+        }
+    *argcP = outCursor;
+}
+
+
+
 void
-pm_proginit(int * const argcP, const char * argv[]) {
+pm_proginit(int *         const argcP,
+            const char ** const argv) {
 /*----------------------------------------------------------------------------
    Do various initialization things that all programs in the Netpbm package,
    and programs that emulate such programs, should do.
 
-   This includes processing global options.
+   This includes processing global options.  We scan argv[], which has *argcP
+   elements, for common options and execute the functions for the ones we
+   find.  We remove the common options from argv[], updating *argcP
+   accordingly.
 
    This includes calling pm_init() to initialize the Netpbm libraries.
 -----------------------------------------------------------------------------*/
-    int argn, i;
-    const char * progname;
-    bool showmessages;
-    bool show_version;
+    const char * const progname = pm_arg0toprogname(argv[0]);
+        /* points to static memory in this library */
+    bool showMessages;
+    bool plain;
+    bool justShowVersion;
         /* We're supposed to just show the version information, then exit the
            program.
         */
-    bool show_help;
+    bool justShowHelp;
         /* We're supposed to just tell user where to get help, then exit the
            program.
         */
-    
-    /* Extract program name. */
-#ifdef VMS
-    progname = vmsProgname(argcP, argv);
-#else
-    progname = strrchr( argv[0], '/');
-#endif
-    if (progname == NULL)
-        progname = argv[0];
-    else
-        ++progname;
 
     pm_init(progname, 0);
 
-    /* Check for any global args. */
-    showmessages = TRUE;
-    show_version = FALSE;
-    show_help = FALSE;
-    pm_plain_output = FALSE;
-    for (argn = i = 1; argn < *argcP; ++argn) {
-        if (pm_keymatch(argv[argn], "-quiet", 6) ||
-            pm_keymatch(argv[argn], "--quiet", 7)) 
-            showmessages = FALSE;
-        else if (pm_keymatch(argv[argn], "-version", 8) ||
-                   pm_keymatch(argv[argn], "--version", 9)) 
-            show_version = TRUE;
-        else if (pm_keymatch(argv[argn], "-help", 5) ||
-                 pm_keymatch(argv[argn], "--help", 6) ||
-                 pm_keymatch(argv[argn], "-?", 2)) 
-            show_help = TRUE;
-        else if (pm_keymatch(argv[argn], "-plain", 6) ||
-                 pm_keymatch(argv[argn], "--plain", 7))
-            pm_plain_output = TRUE;
-        else
-            argv[i++] = argv[argn];
-    }
-    *argcP=i;
+    parseCommonOptions(argcP, argv,
+                       &showMessages, &justShowVersion, &justShowHelp,
+                       &plain);
 
-    pm_setMessage((unsigned int) showmessages, NULL);
+    pm_plain_output = plain ? 1 : 0;
 
-    if (show_version) {
+    pm_setMessage(showMessages ? 1 : 0, NULL);
+
+    if (justShowVersion) {
         showVersion();
-        exit( 0 );
-    } else if (show_help) {
+        exit(0);
+    } else if (justShowHelp) {
         pm_error("Use 'man %s' for help.", progname);
         /* If we can figure out a way to distinguish Netpbm programs from 
            other programs using the Netpbm libraries, we can do better here.
@@ -715,13 +699,48 @@ pm_proginit(int * const argcP, const char * argv[]) {
 }
 
 
+
 void
-pm_setMessage(int const newState, int * const oldStateP) {
+pm_setMessage(int   const newState,
+              int * const oldStateP) {
     
     if (oldStateP)
         *oldStateP = pm_showmessages;
 
     pm_showmessages = !!newState;
+}
+
+
+
+int
+pm_getMessage(void) {
+
+    return pm_showmessages;
+}
+
+
+
+static void
+extractAfterLastSlash(const char * const fullPath,
+                      char *       const retval,
+                      size_t       const retvalSize) {
+    
+    char * slashPos;
+
+    /* Chop any directories off the left end */
+    slashPos = strrchr(fullPath, '/');
+
+    if (slashPos == NULL) {
+        strncpy(retval, fullPath, retvalSize);
+        retval[retvalSize-1] = '\0';
+    } else {
+        strncpy(retval, slashPos +1, retvalSize);
+        retval[retvalSize-1] = '\0';
+    }
+
+    /* Chop any .exe off the right end */
+    if (strlen(retval) >= 4 && strcmp(retval+strlen(retval)-4, ".exe") == 0)
+        retval[strlen(retval)-4] = 0;
 }
 
 
@@ -742,25 +761,23 @@ pm_arg0toprogname(const char arg0[]) {
    The return value is in static storage within.  It is NUL-terminated,
    but truncated at 64 characters.
 -----------------------------------------------------------------------------*/
-    static char retval[64+1];
-    char *slash_pos;
+#define MAX_RETVAL_SIZE 64
+#if MSVCRT
+    /* Note that there exists _splitpath_s, which takes a size argument,
+       but it is only in "secure" extensions of MSVCRT that come only with
+       MSVC; but _splitpath() comes with Windows.  MinGW has a header file
+       for it.
+    */
+    static char retval[_MAX_FNAME];
+    _splitpath(arg0, 0, 0,  retval, 0);
+    if (MAX_RETVAL_SIZE < _MAX_FNAME)
+        retval[MAX_RETVAL_SIZE] = '\0';
+#else
+    static char retval[MAX_RETVAL_SIZE+1];
+    extractAfterLastSlash(arg0, retval, sizeof(retval));
+#endif
 
-    /* Chop any directories off the left end */
-    slash_pos = strrchr(arg0, '/');
-
-    if (slash_pos == NULL) {
-        strncpy(retval, arg0, sizeof(retval));
-        retval[sizeof(retval)-1] = '\0';
-    } else {
-        strncpy(retval, slash_pos +1, sizeof(retval));
-        retval[sizeof(retval)-1] = '\0';
-    }
-
-    /* Chop any .exe off the right end */
-    if (strlen(retval) >= 4 && strcmp(retval+strlen(retval)-4, ".exe") == 0)
-        retval[strlen(retval)-4] = 0;
-
-    return(retval);
+    return retval;
 }
 
 
@@ -784,11 +801,11 @@ pm_parse_width(const char * const arg) {
     unsigned int width;
     const char * error;
 
-    interpret_uint(arg, &width, &error);
+    pm_interpret_uint(arg, &width, &error);
 
     if (error) {
         pm_error("'%s' is invalid as an image width.  %s", arg, error);
-        strfree(error);
+        pm_strfree(error);
     } else {
         if (width > INT_MAX-10)
             pm_error("Width %u is too large for computations.", width);
@@ -809,11 +826,11 @@ pm_parse_height(const char * const arg) {
     unsigned int height;
     const char * error;
 
-    interpret_uint(arg, &height, &error);
+    pm_interpret_uint(arg, &height, &error);
 
     if (error) {
         pm_error("'%s' is invalid as an image height.  %s", arg, error);
-        strfree(error);
+        pm_strfree(error);
     } else {
         if (height > INT_MAX-10)
             pm_error("Height %u is too large for computations.", height);

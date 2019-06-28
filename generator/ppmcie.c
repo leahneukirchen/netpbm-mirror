@@ -26,6 +26,7 @@
   Introduced option to plot 1976 u' v' chromaticities.
 */
 
+#include <assert.h>
 #include <math.h>
 
 #include "pm_c_util.h"
@@ -34,10 +35,8 @@
 #include "nstring.h"
 
 #define CLAMP(v, l, h)  ((v) < (l) ? (l) : (v) > (h) ? (h) : (v))
-#define TRUE    1
-#define FALSE   0
 
-#define Maxval  255                   /* Maxval to use in generated pixmaps */
+pixval const cieMaxval = 255;  /* Maxval to use in generated pixmaps */
 
 /* A  color  system is defined by the CIE x and y  coordinates of its
    three primary illuminants and the x and y coordinates of the  white
@@ -462,8 +461,18 @@ gamma_correct_rgb(const struct colorSystem * const cs,
 
 
 
-#define Sz(x) (((x) * MIN(pixcols, pixrows)) / 512)
+/* Sz(X) is the displacement in pixels of a displacement of X normalized
+   distance units.  (A normalized distance unit is 1/512 of the smaller
+   dimension of the canvas)
+*/
+#define Sz(x) (((x) * (int)MIN(pixcols, pixrows)) / 512)
+
+/* B(X, Y) is a pair of function arguments (for a libppmd function) that
+   give a pixel position on the canvas.  That position is (X, Y), biased
+   horizontally 'xBias' pixels.
+*/
 #define B(x, y) ((x) + xBias), (y)
+
 #define Bixels(y, x) pixels[y][x + xBias]
 
 
@@ -511,12 +520,12 @@ makeAllBlack(pixel **     const pixels,
 
 static void
 drawTongueOutline(pixel ** const pixels,
-                  int    const pixcols,
-                  int    const pixrows,
-                  pixval const maxval,
-                  bool   const upvp,
-                  int    const xBias,
-                  int    const yBias) {
+                  int      const pixcols,
+                  int      const pixrows,
+                  pixval   const maxval,
+                  bool     const upvp,
+                  int      const xBias,
+                  int      const yBias) {
 
     int const pxcols = pixcols - xBias;
     int const pxrows = pixrows - yBias;
@@ -535,7 +544,7 @@ drawTongueOutline(pixel ** const pixels,
                                        &icx, &icy);
         
         if (wavelength > 380)
-            ppmd_line(pixels, pixcols, pixrows, Maxval,
+            ppmd_line(pixels, pixcols, pixrows, maxval,
                       B(lx, ly), B(icx, icy),
                       PPMD_NULLDRAWPROC, (char *) &rgbcolor);
         else {
@@ -574,12 +583,12 @@ findTongue(pixel ** const pixels,
          ++i);
 
     if (i >= pxcols)
-        *presentP = FALSE;
+        *presentP = false;
     else {
         int j;
         int const leftEdge = i;
 
-        *presentP = TRUE;
+        *presentP = true;
         
         for (j = pxcols - 1;
              j >= leftEdge && PPM_GETR(Bixels(row, j)) == 0;
@@ -641,16 +650,16 @@ fillInTongue(pixel **                   const pixels,
 
                 xyz_to_rgb(cs, cx, cy, cz, &jr, &jg, &jb);
 
-                mx = Maxval;
+                mx = maxval;
         
                 /* Check whether the requested color  is  within  the
                    gamut  achievable with the given color system.  If
                    not, draw it in a reduced  intensity,  interpolated
                    by desaturation to the closest within-gamut color. */
         
-                if (constrain_rgb(&jr, &jg, &jb)) {
-                    mx = highlightGamut ? Maxval : ((Maxval + 1) * 3) / 4;
-                }
+                if (constrain_rgb(&jr, &jg, &jb))
+                    mx = highlightGamut ? maxval : ((maxval + 1) * 3) / 4;
+
                 /* Scale to max(rgb) = 1. */
                 jmax = MAX(jr, MAX(jg, jb));
                 if (jmax > 0) {
@@ -672,67 +681,175 @@ fillInTongue(pixel **                   const pixels,
 
 
 static void
-drawAxes(pixel ** const pixels,
-         int    const pixcols,
-         int    const pixrows,
-         pixval const maxval,
-         bool   const upvp,
-         int    const xBias,
-         int    const yBias) {
+drawYAxis(pixel **     const pixels,
+          unsigned int const pixcols,
+          unsigned int const pixrows,
+          pixval       const maxval,
+          unsigned int const xBias,
+          unsigned int const yBias,
+          pixel        const axisColor) {
+              
+    unsigned int const pxrows = pixrows - yBias;
 
-    int const pxcols = pixcols - xBias;
-    int const pxrows = pixrows - yBias;
-
-    pixel rgbcolor;  /* Color of axes */
-    int i;
-
-    PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
     ppmd_line(pixels, pixcols, pixrows, maxval,
               B(0, 0), B(0, pxrows - 1), PPMD_NULLDRAWPROC,
-              (char *) &rgbcolor);
+              (char *) &axisColor);
+}
+
+
+
+static void
+drawXAxis(pixel **     const pixels,
+          unsigned int const pixcols,
+          unsigned int const pixrows,
+          pixval       const maxval,
+          unsigned int const xBias,
+          unsigned int const yBias,
+          pixel        const axisColor) {
+              
+    unsigned int const pxcols = pixcols - xBias;
+    unsigned int const pxrows = pixrows - yBias;
+
     ppmd_line(pixels, pixcols, pixrows, maxval,
               B(0, pxrows - 1), B(pxcols - 1, pxrows - 1),
-              PPMD_NULLDRAWPROC, (char *) &rgbcolor);
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
+
+
+
+static void
+tickX(pixel **     const pixels,
+      unsigned int const pixcols,
+      unsigned int const pixrows,
+      pixval       const maxval,
+      unsigned int const xBias,
+      unsigned int const yBias,
+      pixel        const axisColor,
+      unsigned int const tenth) {
+/*----------------------------------------------------------------------------
+   Put a tick mark 'tenth' tenths of the way along the X axis
+   and label it.
+
+   'pixels' is the canvas on which to draw it; its dimensions are
+   'pixcols' by 'pixrows' and has maxval 'maxval'.
+-----------------------------------------------------------------------------*/
+    unsigned int const pxcols = pixcols - xBias;
+    unsigned int const pxrows = pixrows - yBias;
+    unsigned int const tickCol = (tenth * (pxcols - 1)) / 10;
+        /* Pixel column where the left edge of the tick goes */
+    unsigned int const tickThickness = Sz(3);
+        /* Thickness of the tick in pixels */
+    unsigned int const tickBottom = pxrows - Sz(1);
+        /* Pixel row of the bottom of the tick */
+
+    char s[20];
+
+    assert(tenth < 10);
+
+    sprintf(s, "0.%u", tenth);
+    ppmd_line(pixels, pixcols, pixrows, maxval,
+              B(tickCol, tickBottom),
+              B(tickCol, tickBottom - tickThickness),
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+    ppmd_text(pixels, pixcols, pixrows, maxval,
+              B(tickCol - Sz(11), pxrows + Sz(12)),
+              Sz(10), 0, s, PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
+
+
+
+static void
+tickY(pixel **     const pixels,
+      unsigned int const pixcols,
+      unsigned int const pixrows,
+      pixval       const maxval,
+      unsigned int const xBias,
+      unsigned int const yBias,
+      pixel        const axisColor,
+      unsigned int const tenth) {
+/*----------------------------------------------------------------------------
+   Put a tick mark 'tenth' tenths of the way along the Y axis and label it.
+
+   'pixels' is the canvas on which to draw it; its dimensions are
+   'pixcols' by 'pixrows' and has maxval 'maxval'.
+-----------------------------------------------------------------------------*/
+    unsigned int const pxrows = pixrows - yBias;
+    unsigned int const tickRow = (tenth * (pxrows - 1)) / 10;
+        /* Pixel row where the top of the tick goes */
+    unsigned int const tickThickness = Sz(3);
+        /* Thickness of the tick in pixels */
     
-    /* Draw tick marks on X and Y axes every 0.1 units.  Also
-       label axes.
-    */
-    
-    for (i = 1; i <= 9; i += 1) {
-        char s[20];
+    char s[20];
 
-        /* X axis tick */
+    assert(tenth < 10);
 
-        sprintf(s, "0.%d", i);
-        ppmd_line(pixels, pixcols, pixrows, maxval,
-                  B((i * (pxcols - 1)) / 10, pxrows - Sz(1)),
-                  B((i * (pxcols - 1)) / 10, pxrows - Sz(4)),
-                  PPMD_NULLDRAWPROC, (char *) &rgbcolor);
-        ppmd_text(pixels, pixcols, pixrows, maxval,
-                  B((i * (pxcols - 1)) / 10 - Sz(11), pxrows + Sz(12)),
-                  Sz(10), 0, s, PPMD_NULLDRAWPROC, (char *) &rgbcolor);
+    sprintf(s, "0.%d", 10 - tenth);
+    ppmd_line(pixels, pixcols, pixrows, maxval,
+              B(0, tickRow), B(tickThickness, tickRow),
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
 
-        /* Y axis tick */
+    ppmd_text(pixels, pixcols, pixrows, maxval,
+              B(Sz(-30), tickRow + Sz(5)),
+              Sz(10), 0, s,
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
 
-        sprintf(s, "0.%d", 10 - i);
-        ppmd_line(pixels, pixcols, pixrows, maxval,
-                  B(0, (i * (pxrows - 1)) / 10),
-                  B(Sz(3), (i * (pxrows - 1)) / 10),
-                  PPMD_NULLDRAWPROC, (char *) &rgbcolor);
 
-        ppmd_text(pixels, pixcols, pixrows, maxval,
-                  B(Sz(-30), (i * (pxrows - 1)) / 10 + Sz(5)),
-                  Sz(10), 0, s,
-                  PPMD_NULLDRAWPROC, (char *) &rgbcolor);
-    }
+
+static void
+labelAxes(pixel **     const pixels,
+          unsigned int const pixcols,
+          unsigned int const pixrows,
+          pixval       const maxval,
+          unsigned int const xBias,
+          unsigned int const yBias,
+          pixel        const axisColor,
+          bool         const upvp) {
+/*----------------------------------------------------------------------------
+   Label the axes "x" and "y" or "u" and "v".
+-----------------------------------------------------------------------------*/
+    unsigned int const pxcols = pixcols - xBias;
+    unsigned int const pxrows = pixrows - yBias;
+
     ppmd_text(pixels, pixcols, pixrows, maxval,
               B((98 * (pxcols - 1)) / 100 - Sz(11), pxrows + Sz(12)),
               Sz(10), 0, (upvp ? "u'" : "x"),
-              PPMD_NULLDRAWPROC, (char *) &rgbcolor);
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
     ppmd_text(pixels,  pixcols, pixrows, maxval,
               B(Sz(-22), (2 * (pxrows - 1)) / 100 + Sz(5)),
               Sz(10), 0, (upvp ? "v'" : "y"),
-              PPMD_NULLDRAWPROC, (char *) &rgbcolor);
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
+
+
+
+static void
+drawAxes(pixel **     const pixels,
+         unsigned int const pixcols,
+         unsigned int const pixrows,
+         pixval       const maxval,
+         bool         const upvp,
+         unsigned int const xBias,
+         unsigned int const yBias) {
+/*----------------------------------------------------------------------------
+   Draw the axes, with tick marks every .1 units and labels.
+-----------------------------------------------------------------------------*/
+    pixel axisColor;  /* Color of axes and labels */
+    unsigned int i;
+
+    PPM_ASSIGN(axisColor, maxval, maxval, maxval);
+
+    drawYAxis(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor);
+    drawXAxis(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor);
+
+    for (i = 1; i <= 9; i += 1) {
+        tickX(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor, i);
+
+        tickY(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor, i);
+    }
+
+    labelAxes(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor,
+              upvp);
 }
 
 
@@ -840,14 +957,14 @@ plotBlackBodyCurve(pixel **                   const pixels,
         }
 
         if (t > 1000) {
-            ppmd_line(pixels, pixcols, pixrows, Maxval,
+            ppmd_line(pixels, pixcols, pixrows, maxval,
                       B(lx, ly), B(xb, yb), PPMD_NULLDRAWPROC,
                       (char *) &rgbcolor);
 
             /* Draw tick mark every 1000 kelvins */
 
             if ((((int) t) % 1000) == 0) {
-                ppmd_line(pixels, pixcols, pixrows, Maxval,
+                ppmd_line(pixels, pixcols, pixrows, maxval,
                           B(lx, ly - Sz(2)), B(lx, ly + Sz(2)),
                           PPMD_NULLDRAWPROC, (char *) &rgbcolor);
 
@@ -859,7 +976,7 @@ plotBlackBodyCurve(pixel **                   const pixels,
                     char bb[20];
 
                     sprintf(bb, "%g", t);
-                    ppmd_text(pixels, pixcols, pixrows, Maxval,
+                    ppmd_text(pixels, pixcols, pixrows, maxval,
                               B(lx - Sz(12), ly - Sz(4)), Sz(6), 0, bb,
                               PPMD_NULLDRAWPROC, (char *) &rgbcolor);
                 }
@@ -938,7 +1055,7 @@ plotMonochromeWavelengths(
             PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
             tx = icx + ((x < 520) ? Sz(-2) : ((x >= 535) ? Sz(2) : 0));
             ty = icy + ((x < 520) ? 0 : ((x >= 535) ? Sz(-1) : Sz(-2))); 
-            ppmd_line(pixels, pixcols, pixrows, Maxval,
+            ppmd_line(pixels, pixcols, pixrows, maxval,
                       B(icx, icy), B(tx, ty),
                       PPMD_NULLDRAWPROC, (char *) &rgbcolor);
 
@@ -970,13 +1087,13 @@ plotMonochromeWavelengths(
             }
             /* gamma correct from linear rgb to nonlinear rgb. */
             gamma_correct_rgb(cs, &jr, &jg, &jb);
-            r = Maxval * jr;
-            g = Maxval * jg;
-            b = Maxval * jb;
+            r = maxval * jr;
+            g = maxval * jg;
+            b = maxval * jb;
             PPM_ASSIGN(rgbcolor, (pixval) r, (pixval) g, (pixval) b);
 
             sprintf(wl, "%d", x);
-            ppmd_text(pixels, pixcols, pixrows, Maxval,
+            ppmd_text(pixels, pixcols, pixrows, maxval,
                       B(icx + bx, icy + by), Sz(6), 0, wl,
                       PPMD_NULLDRAWPROC, (char *) &rgbcolor);
         }
@@ -997,18 +1114,18 @@ writeLabel(pixel **                   const pixels,
 
     PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
     
-    snprintfN(sysdesc, sizeof(sysdesc),
-              "System: %s\n"
-              "Primary illuminants (X, Y)\n"
-              "     Red:  %0.4f, %0.4f\n"
-              "     Green: %0.4f, %0.4f\n"
-              "     Blue:  %0.4f, %0.4f\n"
-              "White point (X, Y): %0.4f, %0.4f",
-              cs->name, cs->xRed, cs->yRed, cs->xGreen, cs->yGreen,
-              cs->xBlue, cs->yBlue, cs->xWhite, cs->yWhite);
+    pm_snprintf(sysdesc, sizeof(sysdesc),
+                "System: %s\n"
+                "Primary illuminants (X, Y)\n"
+                "     Red:  %0.4f, %0.4f\n"
+                "     Green: %0.4f, %0.4f\n"
+                "     Blue:  %0.4f, %0.4f\n"
+                "White point (X, Y): %0.4f, %0.4f",
+                cs->name, cs->xRed, cs->yRed, cs->xGreen, cs->yGreen,
+                cs->xBlue, cs->yBlue, cs->xWhite, cs->yWhite);
     sysdesc[sizeof(sysdesc)-1] = '\0';  /* for robustness */
 
-    ppmd_text(pixels, pixcols, pixrows, Maxval,
+    ppmd_text(pixels, pixcols, pixrows, maxval,
               pixcols / 3, Sz(24), Sz(12), 0, sysdesc,
               PPMD_NULLDRAWPROC, (char *) &rgbcolor);
 }
@@ -1016,8 +1133,8 @@ writeLabel(pixel **                   const pixels,
 
 
 int
-main(int argc,
-     char * argv[]) {
+main(int          argc,
+     const char * argv[]) {
 
     int argn;
     const char * const usage = "[-[no]black] [-[no]wpoint] [-[no]label] [-no[axes]] [-full]\n\
@@ -1027,24 +1144,24 @@ main(int argc,
 [-size <s>] [-xsize|-width <x>] [-ysize|-height <y>]";
     const struct colorSystem *cs;
 
-    int widspec = FALSE, hgtspec = FALSE;
-    int xBias, yBias;
-    int upvp = FALSE;             /* xy or u'v' color coordinates? */
-    int showWhite = TRUE;             /* Show white point ? */
-    int showBlack = TRUE;             /* Show black body curve ? */
-    int fullChart = FALSE;            /* Fill entire tongue ? */
-    int showLabel = TRUE;             /* Show labels ? */
-    int showAxes = TRUE;              /* Plot axes ? */
+    bool widspec = false, hgtspec = false;
+    unsigned int xBias, yBias;
+    bool upvp = false;             /* xy or u'v' color coordinates? */
+    bool showWhite = true;         /* Show white point ? */
+    bool showBlack = true;         /* Show black body curve ? */
+    bool fullChart = false;        /* Fill entire tongue ? */
+    bool showLabel = true;         /* Show labels ? */
+    bool showAxes = true;          /* Plot axes ? */
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
     argn = 1;
 
     cs = &Rec709system;  /* default */
     while (argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0') {
         if (pm_keymatch(argv[argn], "-xy", 2)) {
-            upvp = FALSE;
+            upvp = false;
         } else if (pm_keymatch(argv[argn], "-upvp", 1)) {
-            upvp = TRUE;
+            upvp = true;
         } else if (pm_keymatch(argv[argn], "-xsize", 1) ||
                    pm_keymatch(argv[argn], "-width", 2)) {
             if (widspec) {
@@ -1053,7 +1170,7 @@ main(int argc,
             argn++;
             if ((argn == argc) || (sscanf(argv[argn], "%d", &sxsize) != 1))
                 pm_usage(usage);
-            widspec = TRUE;
+            widspec = true;
         } else if (pm_keymatch(argv[argn], "-ysize", 1) ||
                    pm_keymatch(argv[argn], "-height", 2)) {
             if (hgtspec) {
@@ -1062,7 +1179,7 @@ main(int argc,
             argn++;
             if ((argn == argc) || (sscanf(argv[argn], "%d", &sysize) != 1))
                 pm_usage(usage);
-            hgtspec = TRUE;
+            hgtspec = true;
         } else if (pm_keymatch(argv[argn], "-size", 2)) {
             if (hgtspec || widspec) {
                 pm_error("already specified a size/height/ysize");
@@ -1071,7 +1188,7 @@ main(int argc,
             if ((argn == argc) || (sscanf(argv[argn], "%d", &sysize) != 1))
                 pm_usage(usage);
             sxsize = sysize;
-            hgtspec = widspec = TRUE;
+            hgtspec = widspec = true;
         } else if (pm_keymatch(argv[argn], "-rec709", 1)) {
             cs = &Rec709system;
         } else if (pm_keymatch(argv[argn], "-ntsc", 1)) {
@@ -1085,23 +1202,23 @@ main(int argc,
         } else if (pm_keymatch(argv[argn], "-cie", 1)) {
             cs = &CIEsystem;                 
         } else if (pm_keymatch(argv[argn], "-black", 3)) {
-            showBlack = TRUE;         /* Show black body curve */
+            showBlack = true;         /* Show black body curve */
         } else if (pm_keymatch(argv[argn], "-wpoint", 2)) {
-            showWhite = TRUE;         /* Show white point of color system */
+            showWhite = true;         /* Show white point of color system */
         } else if (pm_keymatch(argv[argn], "-noblack", 3)) {
-            showBlack = FALSE;        /* Don't show black body curve */
+            showBlack = false;        /* Don't show black body curve */
         } else if (pm_keymatch(argv[argn], "-nowpoint", 3)) {
-            showWhite = FALSE;        /* Don't show white point of system */
+            showWhite = false;        /* Don't show white point of system */
         } else if (pm_keymatch(argv[argn], "-label", 1)) {
-            showLabel = TRUE;         /* Show labels. */
+            showLabel = true;         /* Show labels. */
         } else if (pm_keymatch(argv[argn], "-nolabel", 3)) {
-            showLabel = FALSE;        /* Don't show labels */
+            showLabel = false;        /* Don't show labels */
         } else if (pm_keymatch(argv[argn], "-axes", 1)) {
-            showAxes = TRUE;          /* Show axes. */
+            showAxes = true;          /* Show axes. */
         } else if (pm_keymatch(argv[argn], "-noaxes", 3)) {
-            showAxes = FALSE;         /* Don't show axes */
+            showAxes = false;         /* Don't show axes */
         } else if (pm_keymatch(argv[argn], "-full", 1)) {
-            fullChart = TRUE;         /* Fill whole tongue full-intensity */
+            fullChart = true;         /* Fill whole tongue full-intensity */
         } else if (pm_keymatch(argv[argn], "-gamma", 2)) {
             cs = &Customsystem;
             argn++;
@@ -1170,32 +1287,32 @@ main(int argc,
 
     makeAllBlack(pixels, pixcols, pixrows);
 
-    drawTongueOutline(pixels, pixcols, pixrows, Maxval, upvp, xBias, yBias);
+    drawTongueOutline(pixels, pixcols, pixrows, cieMaxval, upvp, xBias, yBias);
 
-    fillInTongue(pixels, pixcols, pixrows, Maxval, cs, upvp, xBias, yBias,
+    fillInTongue(pixels, pixcols, pixrows, cieMaxval, cs, upvp, xBias, yBias,
                  fullChart);
 
     if (showAxes)
-        drawAxes(pixels, pixcols, pixrows, Maxval, upvp, xBias, yBias);
+        drawAxes(pixels, pixcols, pixrows, cieMaxval, upvp, xBias, yBias);
 
     if (showWhite)
-        plotWhitePoint(pixels, pixcols, pixrows, Maxval,
+        plotWhitePoint(pixels, pixcols, pixrows, cieMaxval,
                        cs, upvp, xBias, yBias);
 
     if (showBlack)
-        plotBlackBodyCurve(pixels, pixcols, pixrows, Maxval,
+        plotBlackBodyCurve(pixels, pixcols, pixrows, cieMaxval,
                            upvp, xBias, yBias);
 
     /* Plot wavelengths around periphery of the tongue. */
 
     if (showAxes)
-        plotMonochromeWavelengths(pixels, pixcols, pixrows, Maxval,
+        plotMonochromeWavelengths(pixels, pixcols, pixrows, cieMaxval,
                                   cs, upvp, xBias, yBias);
 
     if (showLabel)
-        writeLabel(pixels, pixcols, pixrows, Maxval, cs);
+        writeLabel(pixels, pixcols, pixrows, cieMaxval, cs);
 
-    ppm_writeppm(stdout, pixels, pixcols, pixrows, Maxval, FALSE);
+    ppm_writeppm(stdout, pixels, pixcols, pixrows, cieMaxval, 0);
 
     return 0;
 }

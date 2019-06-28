@@ -1,4 +1,6 @@
-#ifdef WIN32
+#include "pm_config.h"
+
+#if MSVCRT
   #include <windows.h>
   #include <process.h>
 #else
@@ -10,9 +12,9 @@
 
 
 void
-sleepN(unsigned int const milliseconds) {
+pm_sleep(unsigned int const milliseconds) {
 
-#ifdef WIN32
+#if MSVCRT
     SleepEx(milliseconds, TRUE);
 #else
 

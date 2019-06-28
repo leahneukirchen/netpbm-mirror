@@ -111,15 +111,26 @@ The parts to be installed are:
 
 
     One of the Netpbm programs is Manweb, which is designed to be a
-    replacement for the classic Man program that can access both
-    traditional man pages and worldwide web documentation in the
-    Netpbm style with the familiar 'man jpegtopnm' kind of command.
-    To set up your system for this, you will have to be sure to create
-    the /usr/man/web directory, with 'netpbm.url' in it.  Also, If you
-    install Manweb as 'man', there is no point to installing the
-    pointer man pages -- they will never be used.
-    
+    replacement for the classic Man program that can access both traditional
+    man pages and worldwide web documentation in the Netpbm style with the
+    familiar 'man jpegtopnm' kind of command.  The package contains the files
+    necessary to use Manweb to access Netpbm documention on the web (on
+    netpbm.sourceforge.net).  These files are the contents of the man/web
+    directory and the file 'bin/doc.url'.  You should install the
+    'bin/doc.url' file if you are installing the Netpbm executables in a
+    directory all their own.  You should install the 'man/web' files if you
+    are installing the Netpbm executables in some global directory such as
+    'usr/bin'.  You should install neither of these if you don't intend to use
+    Manweb.
 
+    If you install Manweb as 'man', there is no point to installing the
+    pointer man pages -- they will never be used.
+
+    If you want to use Manweb to view the Netpbm manual but use a local
+    copy of the manual instead of accessing it on the web, you can get the
+    HTML files from the Sourceforge Subversion repository and install those
+    instead of the .url files that appear in the 'man/web' directory of the
+    package.
 
 The instructions above suggest putting the Netpbm parts in common
 directories such as /usr/bin, mingled with other packages.  This is
@@ -134,21 +145,34 @@ entire installation when you don't want it anymore, and to keep
 multiple versions around.
 
 
-netpbm.config
+netpbm.pc
+---------
+
+You should create a file named 'netpbm.pc' out of the template file
+'pkgconfig_template' in the package directory, and install netpbm.pc in
+your pkg-config directory (typically /usr/lib/pkgconfig).  Programs that want
+to find out where you installed some part of Netpbm can use a 'pkg-config
+netpbm ...' command to find out.  For example, a make file for a program that
+uses the Netpbm programming library might use this facility to generate the
+necessary compiler and linker options to access that library.
+
+The pkg-config facility is fairly widely used, especially with things related
+to the X Window System.
+
+
+netpbm-config
 -------------
 
-You should create a shell script named 'netpbm.config' out of the
-template file 'config_template' in the package directory, and install
-netpbm.config in your executable search path.  Programs that want to
-find out where you installed some part of Netpbm can invoke
-netpbm.config and it will tell them.  For example, a make file for a
-program that uses the Netpbm programming library might use
-netpbm.config to generate the necessary compiler and linker options to
-access that library.
+You should create a shell script named 'netpbm-config' out of the template
+file 'config_template' in the package directory, and install netpbm-config in
+your executable search path.  Programs that want to find out where you
+installed some part of Netpbm can invoke netpbm-config and it will tell them.
+For example, a make file for a program that uses the Netpbm programming
+library might use netpbm-config to generate the necessary compiler and linker
+options to access that library.
 
-Using netpbm.config, it's possible to have a viable Netpbm
-installation where netpbm.config is the only file in any default
-search path.
+Using netpbm-config, it's possible to have a viable Netpbm installation where
+netpbm-config is the only file in any default search path.
 
-The xxx.config file concept is a relatively new but growing convention,
-seen mostly in software related to the X Window System.
+The xxx-config concept (in general, not just Netpbm) has largely been replaced
+by the pkg-config concept (see netpbm.pc above).

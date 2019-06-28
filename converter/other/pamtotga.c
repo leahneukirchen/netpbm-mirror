@@ -74,7 +74,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmap + mono + rgb > 1)
@@ -463,7 +463,7 @@ static void
 releaseTgaHeader(struct ImageHeader const tgaHeader) {
 
     if (tgaHeader.IdLength > 0)
-        strfree(tgaHeader.Id);
+        pm_strfree(tgaHeader.Id);
 }
 
 
@@ -567,7 +567,7 @@ main(int argc, char *argv[]) {
         pnm_freetupletable(&pam, chv);
 
     releaseTgaHeader(tgaHeader);
-    strfree(outName);
+    pm_strfree(outName);
     pnm_freepamarray(tuples, &pam);
 
     return 0;

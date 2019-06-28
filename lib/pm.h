@@ -23,10 +23,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef VMS
-#include <perror.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -90,7 +86,7 @@ extern "C" {
    We're ignoring S_IREAD now to see if anyone misses it.  If there are still
    users that need it, we can handle it here.
 */
-#ifdef WIN32
+#if MSVCRT
   #define PM_S_IWUSR _S_IWRITE
   #define PM_S_IRUSR _S_IREAD
 #else
@@ -122,6 +118,9 @@ pm_proginit(int * const argcP, const char * argv[]);
 
 void
 pm_setMessage(int const newState, int * const oldStateP);
+
+int
+pm_getMessage(void);
 
 FILE * 
 pm_tmpfile(void);
@@ -185,6 +184,21 @@ pm_setjmpbufsave(jmp_buf *  const jmpbufP,
 void
 pm_longjmp(void);
 
+void
+pm_fork(int *         const iAmParentP,
+        pid_t *       const childPidP,
+        const char ** const errorP);
+
+void
+pm_waitpid(pid_t         const pid,
+           int *         const statusP,
+           int           const options,
+           pid_t *       const exitedPidP,
+           const char ** const errorP);
+
+
+void
+pm_waitpidSimple(pid_t const pid);
 
 typedef void pm_usermessagefn(const char * msg);
 
@@ -204,6 +218,9 @@ pm_errormsg(const char format[], ...);
 
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_error (const char reason[], ...);       
+
+int
+pm_have_float_format(void);
 
 /* Obsolete - use shhopt and user's manual instead */
 void 
@@ -280,6 +297,16 @@ pm_readbiglongu(FILE *          const ifP,
 }
 
 int
+pm_readbiglong2(FILE * const ifP, 
+                int32_t * const lP);
+
+static __inline__ int
+pm_readbiglongu2(FILE *     const ifP,
+                 uint32_t * const lP) {
+    return pm_readbiglong2(ifP, (int32_t *) lP);
+}
+
+int
 pm_writebiglong(FILE * const ofP,
                 long   const l);
 
@@ -317,6 +344,16 @@ static __inline__ int
 pm_readlittlelongu(FILE *          const ifP,
                    unsigned long * const lP) {
     return pm_readlittlelong(ifP, (long *) lP);
+}
+
+int
+pm_readlittlelong2(FILE *    const ifP,
+                   int32_t * const lP);
+
+static __inline__ int
+pm_readlittlelong2u(FILE *     const ifP,
+                    uint32_t * const lP) {
+    return pm_readlittlelong2(ifP, (int32_t *) lP);
 }
 
 int

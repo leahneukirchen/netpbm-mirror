@@ -375,9 +375,9 @@ static void jas_image_cmpt_destroy(jas_image_cmpt_t *cmpt)
 	jas_free(cmpt);
 }
 
-/******************************************************************************\
+/*****************************************************************************\
 * Load and save operations.
-\******************************************************************************/
+\*****************************************************************************/
 
 jas_image_t *jas_image_decode(jas_stream_t *in, int fmt, char *optstr)
 {
@@ -623,7 +623,7 @@ int jas_image_getfmt(jas_stream_t *in)
 	int found;
 	int i;
 
-	/* Check for data in each of the supported formats. */
+	/* Check for data in each of the formats we know. */
 	found = 0;
 	for (i = 0, fmtinfo = jas_image_fmtinfos; i < jas_image_numfmts; ++i,
 	  ++fmtinfo) {
@@ -857,7 +857,7 @@ void jas_image_dump(jas_image_t *image, FILE *out)
 	}
 	for (cmptno = 0; cmptno < image->numcmpts_; ++cmptno) {
 		cmpt = image->cmpts_[cmptno];
-		fprintf(out, "prec=%d sgnd=%d\n", cmpt->prec_, cmpt->sgnd_);
+		fprintf(out, "prec=%d sgnd=%d\n", (int)cmpt->prec_, cmpt->sgnd_);
 		if (jas_image_readcmpt(image, cmptno, 0, 0, 1, 1, data)) {
 			abort();
 		}

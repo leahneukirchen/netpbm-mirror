@@ -20,6 +20,9 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+
 #include "pgm.h"
 #include "libpgm.h"
 #include "pbm.h"
@@ -27,8 +30,6 @@
 #include "pam.h"
 #include "libpam.h"
 #include "fileio.h"
-#include "mallocvar.h"
-#include "nstring.h"
 
 
 gray *
@@ -100,10 +101,13 @@ validateComputableSize(unsigned int const cols,
    you expect.  That failed expectation can be disastrous if you use
    it to allocate memory.
 
+   It is very normal to allocate space for a pixel row, so we make sure
+   the size of a pixel row, in bytes, can be represented by an 'int'.
+
    A common operation is adding 1 or 2 to the highest row or
    column number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 2)
+    if (cols > INT_MAX / (sizeof(gray)) || cols > INT_MAX - 2)
         pm_error("image width (%u) too large to be processed", cols);
     if (rows > INT_MAX - 2)
         pm_error("image height (%u) too large to be processed", rows);
@@ -164,7 +168,8 @@ pgm_readpgminit(FILE * const fileP,
         break;
 
     default:
-        pm_error("bad magic number - not a Netpbm file");
+        pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
+                 realFormat);
     }
     validateComputableSize(*colsP, *rowsP);
 }
@@ -172,11 +177,44 @@ pgm_readpgminit(FILE * const fileP,
 
 
 static void
+validateRpgmRow(gray *         const grayrow, 
+                unsigned int   const cols,
+                gray           const maxval,
+                const char **  const errorP) {
+/*----------------------------------------------------------------------------
+  Check for sample values above maxval in input.  
+
+  Note: a program that wants to deal with invalid sample values itself can
+  simply make sure it uses a sufficiently high maxval on the read function
+  call, so this validation never fails.
+-----------------------------------------------------------------------------*/
+    if (maxval == 255 || maxval == 65535) {
+        /* There's no way a sample can be invalid, so we don't need to look at
+           the samples individually.
+        */
+        *errorP = NULL;
+    } else {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            if (grayrow[col] > maxval) {
+                pm_asprintf(errorP,
+                            "gray value %u is greater than maxval (%u)",
+                            grayrow[col], maxval);
+                return;
+            }
+        }
+        *errorP = NULL;
+    }
+}  
+
+
+
+static void
 readRpgmRow(FILE * const fileP,
-               gray * const grayrow, 
-               int    const cols,
-               gray   const maxval,
-               int    const format) {
+            gray * const grayrow, 
+            int    const cols,
+            gray   const maxval,
+            int    const format) {
 
     unsigned int const bytesPerSample = maxval < 256 ? 1 : 2;
     int          const bytesPerRow    = cols * bytesPerSample;
@@ -186,19 +224,18 @@ readRpgmRow(FILE * const fileP,
     
     MALLOCARRAY(rowBuffer, bytesPerRow);
     if (rowBuffer == NULL)
-        asprintfN(&error, "Unable to allocate memory for row buffer "
-                  "for %u columns", cols);
+        pm_asprintf(&error, "Unable to allocate memory for row buffer "
+                    "for %u columns", cols);
     else {
-        ssize_t rc;
+        size_t rc;
         rc = fread(rowBuffer, 1, bytesPerRow, fileP);
         if (rc == 0)
-            asprintfN(&error, "Error reading row.  fread() errno=%d (%s)",
-                      errno, strerror(errno));
+            pm_asprintf(&error, "Error reading row.  fread() errno=%d (%s)",
+                        errno, strerror(errno));
         else if (rc != bytesPerRow)
-            asprintfN(&error, "Error reading row.  Short read of %u bytes "
-                      "instead of %u", rc, bytesPerRow);
+            pm_asprintf(&error, "Error reading row.  Short read of %u bytes "
+                        "instead of %u", (unsigned)rc, bytesPerRow);
         else {
-            error = NULL;
             if (maxval < 256) {
                 unsigned int col;
                 for (col = 0; col < cols; ++col)
@@ -218,12 +255,13 @@ readRpgmRow(FILE * const fileP,
                     grayrow[col] = g;
                 }
             }
+            validateRpgmRow(grayrow, cols, maxval, &error); 
         }
         free(rowBuffer);
     }
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 } 
@@ -241,7 +279,7 @@ readPbmRow(FILE * const fileP,
     jmp_buf * origJmpbufP;
     bit * bitrow;
     
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols);
     if (setjmp(jmpbuf) != 0) {
         pbm_freerow(bitrow);
         pm_setjmpbuf(origJmpbufP);
@@ -251,10 +289,14 @@ readPbmRow(FILE * const fileP,
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        pbm_readpbmrow(fileP, bitrow, cols, format);
-        for (col = 0; col < cols; ++col)
-            grayrow[col] = (bitrow[col] == PBM_WHITE ) ? maxval : 0;
+        pbm_readpbmrow_packed(fileP, bitrow, cols, format);
 
+        for (col = 0; col < cols; ++col) {
+            grayrow[col] =
+                ((bitrow[col/8] >> (7 - col%8)) & 0x1) == PBM_WHITE ?
+                maxval : 0
+                ;
+        }
         pm_setjmpbuf(origJmpbufP);
     }
     pbm_freerow(bitrow);
@@ -338,28 +380,30 @@ pgm_readpgm(FILE * const fileP,
 
 void
 pgm_check(FILE *               const file, 
-          enum pm_check_type   const check_type, 
+          enum pm_check_type   const checkType, 
           int                  const format, 
           int                  const cols, 
           int                  const rows, 
           gray                 const maxval,
-          enum pm_check_code * const retval_p) {
+          enum pm_check_code * const retvalP) {
 
     if (rows < 0)
         pm_error("Invalid number of rows passed to pgm_check(): %d", rows);
     if (cols < 0)
         pm_error("Invalid number of columns passed to pgm_check(): %d", cols);
     
-    if (check_type != PM_CHECK_BASIC) {
-        if (retval_p) *retval_p = PM_CHECK_UNKNOWN_TYPE;
+    if (checkType != PM_CHECK_BASIC) {
+        if (retvalP)
+            *retvalP = PM_CHECK_UNKNOWN_TYPE;
     } else if (PGM_FORMAT_TYPE(format) == PBM_TYPE) {
-        pbm_check(file, check_type, format, cols, rows, retval_p);
+        pbm_check(file, checkType, format, cols, rows, retvalP);
     } else if (format != RPGM_FORMAT) {
-        if (retval_p) *retval_p = PM_CHECK_UNCHECKABLE;
+        if (retvalP)
+            *retvalP = PM_CHECK_UNCHECKABLE;
     } else {        
-        pm_filepos const bytes_per_row = cols * (maxval > 255 ? 2 : 1);
-        pm_filepos const need_raster_size = rows * bytes_per_row;
+        pm_filepos const bytesPerRow    = cols * (maxval > 255 ? 2 : 1);
+        pm_filepos const needRasterSize = rows * bytesPerRow;
         
-        pm_check(file, check_type, need_raster_size, retval_p);
+        pm_check(file, checkType, needRasterSize, retvalP);
     }
 }

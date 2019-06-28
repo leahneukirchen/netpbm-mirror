@@ -27,12 +27,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#ifdef VMS
-#ifdef SYSV
-#undef SYSV
-#endif
-#include <tiffioP.h>
-#endif
 /* tiffio.h has a weird problem on AIX.  tiffio.h wrongly typedefs
    "int32".  That's wrong because such a name is likely to be used in
    other parts of the program that includes tiffio.h.  And in fact, on
@@ -59,16 +53,19 @@
 #define COMPRESSION_ADOBE_DEFLATE 8
 #endif
 
-struct sizeset {
+typedef struct {
     bool b1, b2, b4, b8;
-};
+} SizeSet;
 
+typedef enum { TMPFILE, DIRECT_CREATE, DIRECT_APPEND } WriteMethod;
 
-struct cmdlineInfo {
+typedef enum { MUST_EXIST, MAY_CREATE } CreatePolicy;
+
+typedef struct {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
+    const char * inputFileName;
     int compression;
         /* COMPRESSION Tiff tag value, that corresponds to the compression
            option the user specified, or -1 if he didn't specify any.
@@ -84,14 +81,15 @@ struct cmdlineInfo {
     unsigned int color;        /* logical: assume not grayscale */
     float xresolution; /* XRESOLUTION Tiff tag value or -1 for none */
     float yresolution; /* YRESOLUTION Tiff tag value or -1 for none */
-    int resolutionUnit;  /* RESOLUTIONUNIT Tiff tag value */
-    struct sizeset indexsizeAllowed;
+    int resolutionunit;  /* RESOLUTIONUNIT Tiff tag value */
+    SizeSet indexsizeAllowed;
     /* Which bit widths are allowable in a raster of palette indices */
     unsigned int verbose;
-    unsigned int append;
+    WriteMethod writeMethod;  /* Output mode */
+    const char * output; /* -output option value.  NULL if none. */
     float resolution;  /* X and Y resolution */
     struct optNameValue * taglist;
-};
+} CmdlineInfo;
 
 
 
@@ -102,7 +100,7 @@ validateTagList(struct optNameValue const taglist[]) {
     for (i = 0; taglist[i].name; ++i) {
         const char * const tagName = taglist[i].name;
         const tagDefinition * tagDefP = tagDefFind(tagName);
-        
+
         if (!tagDefP)
             pm_error("Unknown tag name '%s'", tagName);
         else {
@@ -137,9 +135,9 @@ validateTagList(struct optNameValue const taglist[]) {
 
 
 static void
-parseCommandLine(int                        argc,
-                 char **              const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int                 argc,
+                 const char ** const argv,
+                 CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -151,10 +149,11 @@ parseCommandLine(int                        argc,
     unsigned int none, packbits, lzw, g3, g4, msb2lsb, lsb2msb, opt_2d, fill;
     unsigned int flate, adobeflate;
     char * indexbits;
-    char * resolutionUnit;
+    char * resolutionunit;
 
-    unsigned int predictorSpec, rowsperstripSpec, xresolutionSpec,
-        yresolutionSpec, indexbitsSpec, resolutionUnitSpec, tagSpec;
+    unsigned int appendSpec, outputSpec, predictorSpec, rowsperstripSpec,
+                 xresolutionSpec, yresolutionSpec, indexbitsSpec,
+      resolutionunitSpec, tagSpec;
 
     unsigned int option_def_index;
 
@@ -162,7 +161,6 @@ parseCommandLine(int                        argc,
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "verbose",      OPT_FLAG,   NULL, &cmdlineP->verbose,       0);
-    OPTENT3(0, "append",       OPT_FLAG,   NULL, &cmdlineP->append,        0);
     OPTENT3(0, "none",         OPT_FLAG,   NULL, &none,                    0);
     OPTENT3(0, "packbits",     OPT_FLAG,   NULL, &packbits,                0);
     OPTENT3(0, "lzw",          OPT_FLAG,   NULL, &lzw,                     0);
@@ -180,17 +178,20 @@ parseCommandLine(int                        argc,
     OPTENT3(0, "mw",           OPT_FLAG,   NULL, &cmdlineP->miniswhite,    0);
     OPTENT3(0, "truecolor",    OPT_FLAG,   NULL, &cmdlineP->truecolor,     0);
     OPTENT3(0, "color",        OPT_FLAG,   NULL, &cmdlineP->color,         0);
-    OPTENT3(0, "predictor",    OPT_UINT,   &cmdlineP->predictor,    
+    OPTENT3(0, "append",       OPT_FLAG,   NULL, &appendSpec,       0);
+    OPTENT3(0, "output",       OPT_STRING, &cmdlineP->output,
+            &outputSpec,       0);
+    OPTENT3(0, "predictor",    OPT_UINT,   &cmdlineP->predictor,
             &predictorSpec,    0);
-    OPTENT3(0, "rowsperstrip", OPT_UINT,   &cmdlineP->rowsperstrip, 
+    OPTENT3(0, "rowsperstrip", OPT_UINT,   &cmdlineP->rowsperstrip,
             &rowsperstripSpec, 0);
-    OPTENT3(0, "xresolution",  OPT_FLOAT,  &cmdlineP->xresolution,  
+    OPTENT3(0, "xresolution",  OPT_FLOAT,  &cmdlineP->xresolution,
             &xresolutionSpec,  0);
-    OPTENT3(0, "yresolution",  OPT_FLOAT,  &cmdlineP->yresolution,  
+    OPTENT3(0, "yresolution",  OPT_FLOAT,  &cmdlineP->yresolution,
             &yresolutionSpec,  0);
-    OPTENT3(0, "resolutionunit", OPT_STRING, &resolutionUnit,
-            &resolutionUnitSpec,    0);
-    OPTENT3(0, "indexbits",    OPT_STRING,   &indexbits, 
+    OPTENT3(0, "resolutionunit", OPT_STRING, &resolutionunit,
+            &resolutionunitSpec,    0);
+    OPTENT3(0, "indexbits",    OPT_STRING,   &indexbits,
             &indexbitsSpec,    0);
     OPTENT3(0, "tag",          OPT_NAMELIST, &cmdlineP->taglist, &tagSpec, 0);
 
@@ -198,14 +199,14 @@ parseCommandLine(int                        argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (none + packbits + lzw + g3 + g4 + flate + adobeflate > 1)
         pm_error("You specified more than one compression option.  "
                  "Only one of -none, -packbits, -lze, -g3, and -g4 "
                  "is allowed.");
-    
+
     if (none)
         cmdlineP->compression = COMPRESSION_NONE;
     else if (packbits)
@@ -222,7 +223,7 @@ parseCommandLine(int                        argc,
         cmdlineP->compression = COMPRESSION_DEFLATE;
     else
         cmdlineP->compression = COMPRESSION_NONE;
-    
+
     if (msb2lsb + lsb2msb > 1)
         pm_error("You specified both -msb2lsb and -lsb2msb.  "
                  "These are conflicting options.");
@@ -231,9 +232,9 @@ parseCommandLine(int                        argc,
         cmdlineP->fillorder = FILLORDER_MSB2LSB;
     else if (lsb2msb)
         cmdlineP->fillorder = FILLORDER_LSB2MSB;
-    else 
+    else
         cmdlineP->fillorder = FILLORDER_MSB2LSB;
-    
+
 
     if (cmdlineP->miniswhite && cmdlineP->minisblack)
         pm_error("You cannot specify both -miniswhite and -minisblack");
@@ -244,9 +245,17 @@ parseCommandLine(int                        argc,
     if (fill)
         cmdlineP->g3options |= GROUP3OPT_FILLBITS;
 
+    if (outputSpec) {
+        if (appendSpec)
+            cmdlineP->writeMethod = DIRECT_APPEND;
+        else
+            cmdlineP->writeMethod = DIRECT_CREATE;
+    } else
+        cmdlineP->writeMethod = TMPFILE;
+
     if (predictorSpec) {
         if (cmdlineP->predictor != 1 && cmdlineP->predictor != 2)
-            pm_error("-predictor may be only 1 or 2.  You specified %d.", 
+            pm_error("-predictor may be only 1 or 2.  You specified %d.",
                      cmdlineP->predictor);
     } else
         cmdlineP->predictor = -1;
@@ -272,25 +281,25 @@ parseCommandLine(int                        argc,
     } else
         cmdlineP->yresolution = -1;
 
-    if (resolutionUnitSpec) {
-        if (streq(resolutionUnit, "inch"))
-            cmdlineP->resolutionUnit = RESUNIT_INCH;
-        else if (streq(resolutionUnit, "in"))
-            cmdlineP->resolutionUnit = RESUNIT_INCH;
-        else if (streq(resolutionUnit, "centimeter"))
-            cmdlineP->resolutionUnit = RESUNIT_CENTIMETER;
-        else if (streq(resolutionUnit, "cm"))
-            cmdlineP->resolutionUnit = RESUNIT_CENTIMETER;
-        else if (streq(resolutionUnit, "none"))
-            cmdlineP->resolutionUnit = RESUNIT_NONE;
-        else if (streq(resolutionUnit, "no"))
-            cmdlineP->resolutionUnit = RESUNIT_NONE;
+    if (resolutionunitSpec) {
+        if (streq(resolutionunit, "inch"))
+            cmdlineP->resolutionunit = RESUNIT_INCH;
+        else if (streq(resolutionunit, "in"))
+            cmdlineP->resolutionunit = RESUNIT_INCH;
+        else if (streq(resolutionunit, "centimeter"))
+            cmdlineP->resolutionunit = RESUNIT_CENTIMETER;
+        else if (streq(resolutionunit, "cm"))
+            cmdlineP->resolutionunit = RESUNIT_CENTIMETER;
+        else if (streq(resolutionunit, "none"))
+            cmdlineP->resolutionunit = RESUNIT_NONE;
+        else if (streq(resolutionunit, "no"))
+            cmdlineP->resolutionunit = RESUNIT_NONE;
         else
             pm_error("The only acceptable values for -resolutionunit are "
                      "inch, centimeter, none, in, cm, and no.  "
-                     "You specified '%s'.", resolutionUnit);
+                     "You specified '%s'.", resolutionunit);
     } else
-        cmdlineP->resolutionUnit = RESUNIT_INCH;
+        cmdlineP->resolutionunit = RESUNIT_INCH;
 
     if (indexbitsSpec) {
         if (strstr(indexbits, "1"))
@@ -324,42 +333,14 @@ parseCommandLine(int                        argc,
         cmdlineP->taglist[0].value = NULL;
     }
 
-    if (argc-1 == 0) 
-        cmdlineP->input_filespec = "-";
+    if (argc-1 == 0)
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 }
-
-
-
-static void
-putSample(sample           const s,
-          sample           const maxval,
-          sample           const tiff_maxval,
-          unsigned int     const bitspersample,
-          unsigned char ** const tPP) {
-
-    xelval s2;
-
-    s2 = s;
-    if (maxval != tiff_maxval)
-        s2 = s * tiff_maxval / maxval;
-    if (bitspersample > 8) {
-        *((unsigned short *)(*tPP)) = s2;
-        (*tPP) += sizeof(short);
-    } else
-        *(*tPP)++ = s2 & 0xff;
-}
-
-
-
-
-/* Note: PUTSAMPLE doesn't work if bitspersample is 1-4. */
-
-#define PUTSAMPLE putSample(s, maxval, tiff_maxval, bitspersample, &tP);
 
 
 
@@ -380,9 +361,9 @@ fillRowOfSubBytePixels(struct pam *    const pamP,
     int bitshift;
         /* The number of bits we have to shift a pixel value left to line
            it up with where the current pixel goes in the current byte of
-           the output buffer.  
+           the output buffer.
         */
-    int const firstbitshift = 
+    int const firstbitshift =
         (fillorder == FILLORDER_MSB2LSB) ? 8 - bitspersample : 0;
         /* The value of 'bitshift' for the first pixel into a
            byte of the output buffer.  (MSB2LSB is normal).
@@ -397,7 +378,7 @@ fillRowOfSubBytePixels(struct pam *    const pamP,
         /* The under-construction value of the byte pointed to by
            tP, above.
         */
-                
+
     bitshift = firstbitshift;
     byte = 0;
     for (col = 0, tP = buf; col < pamP->width; ++col) {
@@ -406,7 +387,7 @@ fillRowOfSubBytePixels(struct pam *    const pamP,
             s = tuplerow[col][0];
             if (pamP->maxval != tiff_maxval )
                 s = (long) s * tiff_maxval / pamP->maxval;
- 
+
             if (photometric == PHOTOMETRIC_MINISWHITE)
                 s = tiff_maxval - s;
         } else {
@@ -440,6 +421,36 @@ fillRowOfSubBytePixels(struct pam *    const pamP,
 
 
 static void
+putSample(sample           const s,
+          sample           const maxval,
+          sample           const tiffMaxval,
+          unsigned int     const bitspersample,
+          bool             const minIsWhite,
+          unsigned char ** const tPP) {
+
+    /* Until release 10.48 (September 2009), we ignored the min-is-white
+       photometric (i.e. treated it like min-is-black).  Nobody has ever
+       complained, but it seems clear to me that that was wrong, so I
+       changed it.  We have always respected it for sub-byte samples,
+       and have always respected it going the other direction, in
+       Tifftopnm.
+       - Bryan.
+    */
+
+    xelval const s2 = maxval == tiffMaxval ? s : s * tiffMaxval / maxval;
+
+    xelval const s3 = minIsWhite ? tiffMaxval - s2 : s2;
+
+    if (bitspersample > 8) {
+        *((unsigned short *)(*tPP)) = s3;
+        (*tPP) += sizeof(short);
+    } else
+        *(*tPP)++ = s3 & 0xff;
+}
+
+
+
+static void
 fillRowOfWholeBytePixels(struct pam *    const pamP,
                          tuple *         const tuplerow,
                          unsigned char * const buf,
@@ -447,10 +458,12 @@ fillRowOfWholeBytePixels(struct pam *    const pamP,
                          unsigned short  const tiffMaxval,
                          unsigned int    const bitsPerSample) {
 
+    bool const minIsWhite = (photometric == PHOTOMETRIC_MINISWHITE);
+
     unsigned int col;
     unsigned char * tP;
     unsigned int planes;
-    
+
     if (photometric == PHOTOMETRIC_RGB)
         planes = pamP->depth;
     else
@@ -463,22 +476,22 @@ fillRowOfWholeBytePixels(struct pam *    const pamP,
         unsigned int plane;
         for (plane = 0; plane < planes; ++plane) {
             putSample(tuplerow[col][plane], pamP->maxval,
-                      tiffMaxval, bitsPerSample, &tP);
+                      tiffMaxval, bitsPerSample, minIsWhite, &tP);
             /* Advances tP */
         }
     }
-} 
+}
 
 
 
 static void
 writeScanLines(struct pam *   const pamP,
-               TIFF *         const tif, 
+               TIFF *         const tif,
                tuplehash      const cht,
                unsigned short const tiffMaxval,
-               unsigned short const bitspersample, 
+               unsigned short const bitspersample,
                unsigned short const photometric,
-               int            const bytesperrow, 
+               int            const bytesperrow,
                int            const fillorder) {
 /*----------------------------------------------------------------------------
    Write out the raster for the input image described by 'pamP', whose
@@ -492,15 +505,19 @@ writeScanLines(struct pam *   const pamP,
        it's 'buf' parameter, but here it is: Its format depends on the
        bits per pixel of the TIFF image.  If it's 16, 'buf' is an
        array of short (16 bit) integers, one per raster column.  If
-       it's 8, 'buf' is an array of characters (8 bit integers), one
-       per image column.  If it's less than 8, it's an array of characters,
-       each of which represents 1-8 raster columns, packed
+       it's 8, 'buf' is an array of 8 bit unsigned integers, one
+       per pixel sample.  If it's less than 8, it's an array of bytes,
+       each of which represents 1-8 pixel samples, packed
        into it in the order specified by the TIFF image's fill order,
        with don't-care bits on the right such that each byte contains only
-       whole pixels.
+       whole samples.
 
        In all cases, the array elements are in order left to right going
        from low array indices to high array indices.
+
+       The samples form pixel values according to the pixel format indicated
+       by the TIFF photometric.  E.g. if it is MINISWHITE, then a pixel is
+       one sample and a value of 0 for that sample means white.
     */
     MALLOCARRAY(buf, bytesperrow);
 
@@ -508,7 +525,7 @@ writeScanLines(struct pam *   const pamP,
         pm_error("can't allocate memory for row buffer");
 
     tuplerow = pnm_allocpamrow(pamP);
-    
+
     for (row = 0; row < pamP->height; ++row) {
         int col;
 
@@ -530,9 +547,9 @@ writeScanLines(struct pam *   const pamP,
                 for (col = 0; col < pamP->width; ++col) {
                     int si;
                     int found;
-                    
+
                     pnm_lookuptuple(pamP, cht, tuplerow[col], &found, &si);
-                    
+
                     if (!found)
                         pm_error("INTERNAL ERROR.  We made a color map, and a "
                                  "color map we need is not in it!  "
@@ -556,12 +573,12 @@ writeScanLines(struct pam *   const pamP,
 
 
 static void
-analyzeColorsInRgbInput(struct pam *        const pamP,
-                        struct cmdlineInfo  const cmdline,
-                        int                 const maxcolors, 
-                        tupletable *        const chvP, 
-                        unsigned int *      const colorsP, 
-                        bool *              const grayscaleP) {
+analyzeColorsInRgbInput(struct pam *   const pamP,
+                        CmdlineInfo    const cmdline,
+                        int            const maxcolors,
+                        tupletable *   const chvP,
+                        unsigned int * const colorsP,
+                        bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Same as analyzeColors(), except assuming input image has R/G/B tuples.
 -----------------------------------------------------------------------------*/
@@ -580,7 +597,7 @@ analyzeColorsInRgbInput(struct pam *        const pamP,
             grayscale = FALSE;
         } else {
             unsigned int i;
-            pm_message("%u color%s found", 
+            pm_message("%u color%s found",
                        *colorsP, *colorsP == 1 ? "" : "s");
             grayscale = TRUE;  /* initial assumption */
             for (i = 0; i < *colorsP && grayscale; ++i) {
@@ -613,15 +630,15 @@ analyzeColorsInRgbInput(struct pam *        const pamP,
 
 
 static void
-analyzeColors(struct pam *        const pamP,
-              struct cmdlineInfo  const cmdline,
-              int                 const maxcolors, 
-              tupletable *        const chvP, 
-              unsigned int *      const colorsP, 
-              bool *              const grayscaleP) {
+analyzeColors(struct pam *   const pamP,
+              CmdlineInfo    const cmdline,
+              int            const maxcolors,
+              tupletable *   const chvP,
+              unsigned int * const colorsP,
+              bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Analyze the colors in the input image described by 'pamP', whose file
-   is positioned to the raster. 
+   is positioned to the raster.
 
    If the colors, combined with command line options 'cmdline', indicate
    a colormapped TIFF should be generated, return as *chvP the address
@@ -650,13 +667,13 @@ analyzeColors(struct pam *        const pamP,
 
 static void
 computeRasterParm(struct pam *     const pamP,
-                  tupletable       const chv, 
-                  int              const colors, 
+                  tupletable       const chv,
+                  int              const colors,
                   bool             const grayscale,
                   int              const compression,
                   bool             const minisblack,
                   bool             const miniswhite,
-                  struct sizeset   const indexsizeAllowed,
+                  SizeSet          const indexsizeAllowed,
                   unsigned short * const samplesperpixelP,
                   unsigned short * const bitspersampleP,
                   unsigned short * const photometricP,
@@ -677,7 +694,7 @@ computeRasterParm(struct pam *     const pamP,
        option.  It is not clear why we don't use bits per pixel < 8
        for RGB images.  Note that code to handle maxvals <= 255 was
        written long before maxval > 255 was possible and there are
-       backward compatibility requirements.  
+       backward compatibility requirements.
     */
 
     if (pamP->depth == 1 && pamP->maxval == 1) {
@@ -691,7 +708,7 @@ computeRasterParm(struct pam *     const pamP,
     } else {
         if (chv) {
             *samplesperpixelP = 1;  /* Pixel is just the one index value */
-            *bitspersampleP = 
+            *bitspersampleP =
                 colors <=   2 && indexsizeAllowed.b1 ? 1 :
                 colors <=   4 && indexsizeAllowed.b2 ? 2 :
                 colors <=  16 && indexsizeAllowed.b4 ? 4 :
@@ -744,18 +761,53 @@ computeRasterParm(struct pam *     const pamP,
 
 
 
-static void
-validateSeekableOutputFile(int          const ofd,
-                           const char * const outFileName) {
 /*----------------------------------------------------------------------------
-   Validate that the file attached to file descriptor 'ofd' is capable
-   of seeking.  If not, fail the program.
+  WRITE MODES
+  -----------
+  
+  The Tiff library does all output.  There are several issues:
+  
+    1) The manner of output is opaque to the library client.  I.e.  we cannot
+       see or control it.
 
-   This is useful because the TIFF library requires seekable output and
-   fails with an unhelpful error message about a file I/O error if it is
-   not.  We, on the other hand, give a helpful error message.
+    2) The output file must be random-access.
 
-   We leave the file positioned to the beginning.
+    3) The output file must be writable and readable for multiple-image
+       streams.  (This includes append operations.)
+
+    4) The Tiff library produces unhelpful error messages when the above
+       conditions are not met.
+  
+  We provide two modes for output:
+  
+  1. Tmpfile mode (default)
+  
+     We have the Tiff library direct output to an unnamed temporary file we
+     create which is seekable and readable.  When output is complete, we copy
+     the file's contents to Standard Output.
+  
+  2. Direct mode (specified with -output)
+  
+     We have the Tiff library write output to the specified file.  As the Tiff
+     library requires taht it be be seekable and readable, we fail the program
+     rather than ask the Tiff library to use the file if it does not meet
+     these requirements.
+  
+     Direct mode is further divided into append and create.  They are the same
+     except that in append mode, we insist that the file already exist,
+     whereas with create mode, we create it if necessary.  In either case, if
+     the file already exists, he Tiff library appends the output to it.
+-----------------------------------------------------------------------------*/
+
+
+
+static bool
+fileIsSeekable(int          const ofd,
+               const char * const outFileName) {
+/*----------------------------------------------------------------------------
+  The file represented by 'ofd' iscapable of seeking.
+
+  As a side effect, we position the file to the beginning.
 -----------------------------------------------------------------------------*/
     int rc;
 
@@ -769,44 +821,170 @@ validateSeekableOutputFile(int          const ofd,
     */
     lseek(ofd, 1, SEEK_SET);
     rc = lseek(ofd, 0, SEEK_SET);
-            
-    if (rc < 0)
-        pm_error("Output file (%s) is not seekable.  lseek() returned "
-                 "errno %d (%s).  "
-                 "The TIFF library can write only to "
-                 "a seekable file.", 
-                 outFileName, errno, strerror(errno));
+
+    return rc >= 0;
+
 }
 
 
 
 static void
-createTiffGenerator(int          const ofd, 
-                    const char * const outFileName,
-                    bool         const append,
-                    TIFF **      const tifPP) {
+validateReadableOutputFile(int const ofd) {
+/*----------------------------------------------------------------------------
+  Validate that file 'ofd' is readable and fail the program if it isn't.
 
-    const char * option;
+  This is useful because there are situations in which the TIFF library must
+  read the output file and if it can't, it fails with an unhelpful error
+  message about a file I/O error.  We, on the other hand, produce a helpful
+  error message.
+-----------------------------------------------------------------------------*/
+#if !MSVCRT
 
-    validateSeekableOutputFile(ofd, outFileName);
+    int flags;
 
-    if (append)
-        option = "a";
+    flags = fcntl(ofd, F_GETFL);
+
+    if (flags < 0) {
+        /* We couldn't get the flags.  So just assume the file's OK */
+    } else {
+        if ((flags & O_RDONLY) || (flags & O_RDWR)) {
+            /* File is readable.  All is well. */
+        } else
+            pm_error("Output is not opened for reading.  "
+                     "In order to create a multi-image TIFF stream, "
+                     "output must be both readable and writable.");
+    }
+#endif
+}
+
+
+
+static void
+createTiffGeneratorDirect(const char * const outputFileName,
+                          CreatePolicy const createPolicy,
+                          TIFF **      const tifPP,
+                          int  *       const ofdP) {
+/*----------------------------------------------------------------------------
+  Create a TIFF generator that writes its output to the specified file.
+
+  If the file doesn't already exist and 'createPolicy' is MayCreate,
+  create the file; otherwise fail the program.
+
+  Fail the program if the specified file is not seekable and readable.
+
+  Return the handle of the TIFF generator as *tifPP.  Also return the
+  file descriptor for the output file as *ofdP.
+-----------------------------------------------------------------------------*/
+    int fd;
+
+    if (createPolicy == MUST_EXIST)
+        fd = open(outputFileName, O_RDWR);
     else
-        option = "w";
+        fd = open(outputFileName, (O_RDWR | O_CREAT), 00644);
 
-    *tifPP = TIFFFdOpen(ofd, outFileName, option);
+    if (fd == -1) {
+        if (errno == ENOENT) /* Possible only if MustExist */
+            pm_error ("Cannot open file : '%s'.  File does not exist.",
+                      outputFileName);
+        else
+            pm_error ("Cannot open file : '%s'.  open() failed with "
+                      "errno %d (%s).  ",
+                      outputFileName, errno, strerror(errno));
+    }
+
+    if (!fileIsSeekable(fd, outputFileName))
+        pm_error("Output file (%s) is not seekable.  "
+                 "lseek() returned errno %d (%s).  "
+                 "The TIFF library can write only to "
+                 "a seekable file.",
+                 outputFileName, errno, strerror(errno));
+
+    *tifPP = TIFFFdOpen(fd, outputFileName, "a");
     if (*tifPP == NULL)
-        pm_error("error opening standard output as TIFF file.  "
-                 "TIFFFdOpen() failed.");
+        pm_error("error opening file %s as TIFF file.  "
+                 "TIFFFdOpen() failed.", outputFileName);
+
+    *ofdP = fd;
 }
 
 
 
 static void
-destroyTiffGenerator(TIFF * const tifP) {
+createTiffGeneratorTmpfile(TIFF ** const tifPP,
+                            int  * const ofdP) {
+/*----------------------------------------------------------------------------
+  Create a TIFF generator that writes its output to an unnnamed temporary file
+  we create.
+
+  Return the handle of the TIFF generator as *tifPP.  Also return the file
+  descriptor for the temporary file as *ofdP.
+
+  The TIFF generator has a file name attribute, but it is just for messages;
+  it is not the name of a file.  We use "Internal Temporary File".
+-----------------------------------------------------------------------------*/
+    int fd;
+
+    fd = pm_tmpfile_fd();
+
+    *tifPP = TIFFFdOpen(fd, "Internal Temporary File", "w");
+
+    if (*tifPP == NULL)
+        pm_error("error opening temporary file as TIFF file.  "
+                 "TIFFFdOpen() failed.");
+
+    *ofdP = fd;
+}
+
+
+
+static void
+copyBufferToStdout(int const tmpfileFd) {
+
+    FILE * tmpfileP;
+
+    tmpfileP = fdopen(tmpfileFd, "rb");
+
+    fseek(tmpfileP, 0, SEEK_SET);
+
+    while (!feof(tmpfileP) && !ferror(tmpfileP) && !ferror(stdout)) {
+        char buffer[4096];
+        size_t bytesReadCt;
+
+        bytesReadCt = fread(buffer, 1, sizeof(buffer), tmpfileP);
+
+        if (ferror(tmpfileP))
+            pm_error("Error reading from temporary file.  "
+                     "Incomplete output.  "
+                     "Errno = %s (%d)", strerror(errno), errno);
+        else
+            fwrite(buffer, 1, bytesReadCt, stdout);
+    }
+
+    /* POSIX lets us create a FILE from an existing file descriptor, but
+       does not provide a way to destroy the FILE and keep the file
+       descriptor.  The following fclose() closes the file.  Caller
+       must not access the file again, and if he attempts to close it,
+       must ignore the failure of close
+    */
+    fclose(tmpfileP);
+}
+
+
+
+static void
+destroyTiffGenerator(WriteMethod const writeMethod,
+                     TIFF *      const tifP,
+                     int         const ofd) {
 
     TIFFFlushData(tifP);
+
+    if (writeMethod == TMPFILE)
+        copyBufferToStdout(ofd);
+
+    /* If we copied the buffer above, the buffer file is already closed
+       (copyBufferToStdout closes it), TIFFClose appears to tolerate that -
+       all it does is a close() and doesn't mind that it fails.
+    */
     TIFFClose(tifP);
 }
 
@@ -823,11 +1001,11 @@ createTiffColorMap(struct pam *       const pamP,
     unsigned short ** tiffColorMap;
     unsigned int plane;
     unsigned int i;
-    
+
     MALLOCARRAY_NOFAIL(tiffColorMap, pamP->depth);
     for (plane = 0; plane < pamP->depth; ++plane)
         MALLOCARRAY_NOFAIL(tiffColorMap[plane], colorMapSize);
-    
+
     for (i = 0; i < colorMapSize; ++i) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
@@ -840,7 +1018,7 @@ createTiffColorMap(struct pam *       const pamP,
     }
     *tiffColorMapP = tiffColorMap;
 }
-        
+
 
 
 static void
@@ -865,7 +1043,7 @@ setTagListFields(const struct optNameValue * const taglist,
 
     for (i = 0; taglist[i].name; ++i) {
         const tagDefinition * const tagDefP = tagDefFind(taglist[i].name);
-        
+
         if (tagDefP->put)
             tagDefP->put(tifP, tagDefP->tagnum, taglist[i].value,
                          tagDefP->choices);
@@ -876,7 +1054,7 @@ setTagListFields(const struct optNameValue * const taglist,
 
 static void
 setTiffFields(TIFF *              const tifP,
-              struct cmdlineInfo  const cmdline,
+              CmdlineInfo         const cmdline,
               struct pam *        const pamP,
               unsigned short      const bitspersample,
               unsigned short      const photometric,
@@ -911,12 +1089,17 @@ setTiffFields(TIFF *              const tifP,
     else
         TIFFSetField(tifP, TIFFTAG_ROWSPERSTRIP,
                      TIFFDefaultStripSize(tifP, 0));
+    /* Since Netpbm 10.31, we prefer that the user use -tags to specify
+       RESOLUTIONUNIT, XRESOLUTION, and YRESOLUTION, but retain
+       -xresolution, -yresolution, and -resolutionunit for backward
+       compatibility
+    */
     if (cmdline.xresolution != -1 ||
         cmdline.yresolution != -1 ||
-        cmdline.resolutionUnit != -1) {
+        cmdline.resolutionunit != -1) {
         TIFFSetField(tifP, TIFFTAG_RESOLUTIONUNIT,
-                     cmdline.resolutionUnit != -1 ?
-                     cmdline.resolutionUnit : RESUNIT_NONE);
+                     cmdline.resolutionunit != -1 ?
+                     cmdline.resolutionunit : RESUNIT_NONE);
     }
     if (cmdline.xresolution > 0)
         TIFFSetField(tifP, TIFFTAG_XRESOLUTION, cmdline.xresolution);
@@ -933,7 +1116,7 @@ setTiffFields(TIFF *              const tifP,
 
     TIFFSetField(tifP, TIFFTAG_DOCUMENTNAME,     inputFileDescription);
     TIFFSetField(tifP, TIFFTAG_IMAGEDESCRIPTION, "converted PNM file");
- 
+
     /* Some of taglist[] overrides defaults we set above.  But taglist[]
        is defined not to specify any tag types that are not purely user
        choice.
@@ -944,10 +1127,10 @@ setTiffFields(TIFF *              const tifP,
 
 
 static void
-convertImage(FILE *             const ifP,
-             TIFF *             const tifP,
-             const char *       const inputFileDescription,
-             struct cmdlineInfo const cmdline) {
+convertImage(FILE *       const ifP,
+             TIFF *       const tifP,
+             const char * const inputFileDescription,
+             CmdlineInfo  const cmdline) {
 
     tupletable chv;
     tuplehash cht;
@@ -959,7 +1142,7 @@ convertImage(FILE *             const ifP,
     unsigned short samplesperpixel;
     unsigned short bitspersample;
     unsigned short tiff_maxval;
-    /* This is the maxval of the samples in the tiff file.  It is 
+    /* This is the maxval of the samples in the tiff file.  It is
        determined solely by the bits per sample ('bitspersample').
        */
     int bytesperrow;
@@ -972,11 +1155,11 @@ convertImage(FILE *             const ifP,
     analyzeColors(&pam, cmdline, MAXCOLORS, &chv, &colors, &grayscale);
 
     /* Go back to beginning of raster */
-    pm_seek2(ifP, &rasterPos, sizeof(rasterPos));  
+    pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
     /* Figure out TIFF parameters. */
 
-    computeRasterParm(&pam, chv, colors, grayscale, 
+    computeRasterParm(&pam, chv, colors, grayscale,
                       cmdline.compression,
                       cmdline.minisblack, cmdline.miniswhite,
                       cmdline.indexsizeAllowed,
@@ -1001,7 +1184,7 @@ convertImage(FILE *             const ifP,
                   cmdline.taglist);
 
     writeScanLines(&pam, tifP, cht,
-                   tiff_maxval, bitspersample, photometric, bytesperrow, 
+                   tiff_maxval, bitspersample, photometric, bytesperrow,
                    cmdline.fillorder);
 
     if (tiffColorMap)
@@ -1010,63 +1193,41 @@ convertImage(FILE *             const ifP,
 
 
 
-static void
-validateReadableStdout(void) {
-/*----------------------------------------------------------------------------
-  We validate that Standard Output is readable and fail the program if
-  it isn't.
-
-  This is useful because there are situations in which the TIFF library
-  must read the output file and if it can't, it fails with an unhelpful
-  error message about a file I/O error.  We, on the other hand, produce
-  a helpful error message.
------------------------------------------------------------------------------*/
-#if !defined(WIN32) || defined(__CYGWIN__)
-
-    int flags;
-
-    flags = fcntl(STDOUT_FILENO, F_GETFL);
-
-    if (flags < 0) {
-        /* We couldn't get the flags.  So just assume the file's OK */
-    } else {
-        if ((flags & O_RDONLY) || (flags & O_RDWR)) {
-            /* File is readable.  All is well. */
-        } else
-            pm_error("Standard Output is not opened for reading.  "
-                     "In order to create a multi-image TIFF stream, "
-                     "Standard Output must be both readable and writable.");
-    }
-#endif
-}
 
 
 
 int
-main(int argc, char *argv[]) {
-    struct cmdlineInfo cmdline;
+main(int argc, const char *argv[]) {
+    CmdlineInfo cmdline;
     const char * inputFileDescription;
-    FILE* ifP;
-    TIFF* tifP;
-    bool eof;
+    FILE * ifP;
+    TIFF * tifP;
+    int ofd;
+    int eof;
     unsigned int imageSeq;
-
-    pnm_init(&argc, argv);
+    
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
-    ifP = pm_openr_seekable(cmdline.input_filespec);
 
-    if (streq(cmdline.input_filespec, "-"))
+    ifP = pm_openr_seekable(cmdline.inputFileName);
+
+    if (streq(cmdline.inputFileName, "-"))
         inputFileDescription = "Standard Input";
-    else 
-        inputFileDescription = cmdline.input_filespec;
+    else
+        inputFileDescription = cmdline.inputFileName;
 
-    if (cmdline.append)
-        validateReadableStdout();
-
-    createTiffGenerator(STDOUT_FILENO, "Standard Output", cmdline.append,
-                        &tifP);
+    switch (cmdline.writeMethod) {
+    case DIRECT_APPEND:
+        createTiffGeneratorDirect(cmdline.output, MUST_EXIST,  &tifP, &ofd);
+        break;
+    case DIRECT_CREATE:
+        createTiffGeneratorDirect(cmdline.output, MAY_CREATE,  &tifP, &ofd);
+        break;
+    case TMPFILE:
+        createTiffGeneratorTmpfile(&tifP, &ofd);
+        break;
+    }
 
     eof = FALSE;  /* initial assumption */
     imageSeq = 0;
@@ -1074,17 +1235,17 @@ main(int argc, char *argv[]) {
     while (!eof) {
         bool success;
 
-        if (cmdline.verbose)
-            pm_message("Converting Image %u", imageSeq);
-
         pnm_nextimage(ifP, &eof);
 
         if (!eof) {
             if (imageSeq > 0)
-                validateReadableStdout();
+                validateReadableOutputFile(ofd);
+
+            if (cmdline.verbose)
+                pm_message("Converting Image %u", imageSeq);
 
             convertImage(ifP, tifP, inputFileDescription, cmdline);
-            
+
             success = TIFFWriteDirectory(tifP);
             if (!success)
                 pm_error("Unable to write TIFF image %u to file.  "
@@ -1093,8 +1254,10 @@ main(int argc, char *argv[]) {
         }
     }
 
-    destroyTiffGenerator(tifP);
+    destroyTiffGenerator(cmdline.writeMethod, tifP, ofd);
     pm_close(ifP);
 
     return 0;
 }
+
+

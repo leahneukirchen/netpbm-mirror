@@ -28,7 +28,7 @@ Changes chronology
 	- non-integer frame rates now work for all machines
 	- fixed parsing of -mv_histogram
 	- fixed numPadding bug (file name problem)
-	- fixed full pixel assertation bug
+	- fixed full pixel assertion bug
         - corrected ASPECT_RATIO bug (was forced to 1)
 	- buffer size is now set correctly
         - complains when file is too small

@@ -9,7 +9,6 @@
  * HEADER FILES *
  *==============*/
 
-#include "ansi.h"
 
 
 /*===========*
@@ -140,7 +139,7 @@ extern int psearchAlg;
  *  Changed copyrights
  *
  * Revision 1.4  1994/12/07  00:42:01  smoot
- * Added seperate P and B search ranges
+ * Added separate P and B search ranges
  *
  * Revision 1.3  1994/11/12  02:12:58  keving
  * nothing

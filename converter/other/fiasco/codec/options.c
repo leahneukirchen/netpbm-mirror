@@ -20,11 +20,10 @@
 #include "config.h"
 
 #include <string.h>
-#if STDC_HEADERS
-#	include <stdlib.h>
-#endif /* not STDC_HEADERS */
-
+#include <stdlib.h>
 #include <stdio.h>
+
+#include "nstring.h"
 
 #include "types.h"
 #include "macros.h"

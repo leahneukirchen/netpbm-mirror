@@ -1,4 +1,4 @@
-/* pbmtopi3.c - read a portable bitmap and produce a Atari Degas .pi3 file
+/* pbmtopi3.c - read a PBM image and produce a Atari Degas .pi3 file
 **
 ** Module created from other pbmplus tools by David Beckemeyer.
 **
@@ -12,107 +12,87 @@
 ** implied warranty.
 */
 
-#include <stdio.h>
-#include "pbm.h"
-#include "pm_c_util.h"
+/* Output file should always be 32034 bytes. */
 
-static void putinit ARGS(( void ));
-static void putbit ARGS(( bit b ));
-static void putrest ARGS(( void ));
-static void putitem ARGS(( void ));
+#include <stdio.h>
+#include "pm_c_util.h"
+#include "pbm.h"
+
+
+
+static void
+putinit(FILE * const ofP)  {
+
+    unsigned int i;
+
+    pm_writebigshort(ofP, (short) 2);
+    pm_writebigshort(ofP, (short) 0x777);
+
+    for (i = 1; i < 16; ++i) {
+        pm_writebigshort (ofP, (short) 0);
+    }
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int inrows, incols, format, padright, row, col;
-    int const outcols = 640;
-    int const outrows = 400;
+main(int argc, const char ** argv) {
 
-    pbm_init( &argc, argv );
+    unsigned int const outRows = 400;
+    unsigned int const outCols = 640;
+    unsigned int const outColByteCt = pbm_packed_bytes(outCols);
 
-    if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
+    FILE * ifP;
 
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
+    int inRows, inCols, format;
+    unsigned int row;
+    unsigned int inColByteCt;
+    unsigned int i;
+    bit * bitrow;
 
-    pbm_readpbminit( ifp, &incols, &inrows, &format );
-    bitrow = pbm_allocrow( MAX(incols, outcols) );
+    pm_proginit(&argc, argv);
 
-    /* Compute padding to round cols up to 640 */
-    if(incols < outcols)
-        padright = outcols - incols;
-    else 
-        padright = 0;
+    if (argc-1 < 1)
+        ifP = stdin;
+    else  {
+        ifP = pm_openr(argv[1]);
 
-    putinit( );
-    for ( row = 0; row < MIN(inrows, outrows); ++row )
-	{
-	pbm_readpbmrow( ifp, bitrow, incols, format );
-        for ( col = 0, bP = bitrow; col < MIN(incols, outcols); ++col, ++bP )
-	    putbit( *bP );
-	for ( col = 0; col < padright; ++col )
-	    putbit( 0 );
-        }
-    while (row++ < outrows)
-	for ( col = 0; col < outcols; ++col)
-	    putbit( 0 );
-
-    pm_close( ifp );
-
-    putrest( );
-
-    exit( 0 );
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  The only possible argument "
+                     "is the input file name");
     }
 
-static char item;
-static short bitsperitem, bitshift;
+    pbm_readpbminit(ifP, &inCols, &inRows, &format);
 
-static void
-putinit( )
-    {
-    int i;
-    if (pm_writebigshort (stdout, (short) 2) == -1
-	|| pm_writebigshort (stdout, (short) 0x777) == -1)
-      pm_error ("write error");
-    for (i = 1; i < 16; i++)
-      if (pm_writebigshort (stdout, (short) 0) == -1)
-	pm_error ("write error");
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 7;
+    inColByteCt = pbm_packed_bytes(inCols);
+
+    bitrow = pbm_allocrow_packed(MAX(outCols, inCols));
+    
+    /* Add padding to round cols up to 640 */
+    for (i = inColByteCt; i < outColByteCt; ++i)
+        bitrow[i] = 0x00;
+
+    putinit(stdout);
+
+    for (row = 0; row < MIN(inRows, outRows); ++row) {
+        pbm_readpbmrow_packed(ifP, bitrow, inCols, format);
+        pbm_cleanrowend_packed(bitrow, inCols);
+        fwrite (bitrow, outColByteCt, 1, stdout);
+    }
+    pm_close(ifP);
+
+    if (row < outRows)  {
+        unsigned int i;
+
+        /* Clear entire row */
+        for (i = 0; i < outColByteCt; ++i)
+            bitrow[i] = 0x00;
+
+        while (row++ < outRows)
+            fwrite(bitrow, outColByteCt, 1, stdout);
     }
 
-static void
-putbit( bit b )
-    {
-    if (bitsperitem == 8)
-	putitem( );
-    ++bitsperitem;
-    if ( b == PBM_BLACK )
-	item += 1 << bitshift;
-    --bitshift;
-    }
+    pbm_freerow_packed(bitrow);
 
-static void
-putrest( )
-    {
-    if ( bitsperitem > 0 )
-	putitem( );
-    }
-
-static void
-putitem( )
-    {
-    putc (item, stdout);
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 7;
-    }
+    return 0;
+}

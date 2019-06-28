@@ -10,12 +10,7 @@
 #ifndef MTYPES_INCLUDED
 #define MTYPES_INCLUDED
 
-
-/*==============*
- * HEADER FILES *
- *==============*/
-
-#include "general.h"
+#include "netpbm/pm_config.h"
 #include "dct.h"
 
 
@@ -48,12 +43,12 @@ typedef struct motion {
 /*  
  *  your basic Block type
  */
-typedef int16 Block[DCTSIZE][DCTSIZE];
-typedef int16 FlatBlock[DCTSIZE_SQ];
+typedef int16_t Block[DCTSIZE][DCTSIZE];
+typedef int16_t FlatBlock[DCTSIZE_SQ];
 typedef	struct {
-    int32 l[2*DCTSIZE][2*DCTSIZE];
+    int32_t l[2*DCTSIZE][2*DCTSIZE];
 } LumBlock;
-typedef	int32 ChromBlock[DCTSIZE][DCTSIZE];
+typedef	int32_t ChromBlock[DCTSIZE][DCTSIZE];
 
 /*========*
  * MACROS *

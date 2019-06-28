@@ -24,8 +24,11 @@
  */
 
 /*  
- *  THIS FILE IS MACHINE GENERATED!  DO NOT EDIT!
+ *  THIS FILE WAS ORIGINALLY MACHINE GENERATED
  */
+
+#include "general.h"
+
 #define HUFF_MAXRUN	32
 #define HUFF_MAXLEVEL	41
 

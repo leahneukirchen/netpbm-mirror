@@ -10,7 +10,7 @@
 ** implied warranty.
 */
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
 
 #include "pnm.h"
 
@@ -19,6 +19,8 @@
 #include "pgm.h"
 
 #include "pbm.h"
+
+
 
 void
 pnm_writepnminit(FILE * const fileP, 

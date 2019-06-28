@@ -20,11 +20,11 @@
 #include "x11wd.h"
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input file */
+    const char * inputFilename;  /* Filename of input file */
     unsigned int pseudodepth;
     unsigned int directcolor;
 };
@@ -34,7 +34,7 @@ struct cmdlineInfo {
 static void 
 parseCommandLine(int argc, 
                  char ** argv, 
-                 struct cmdlineInfo  * const cmdlineP) {
+                 struct CmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -46,7 +46,7 @@ parseCommandLine(int argc,
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
     optEntry *option_def;
-    /* Instructions to optParseOptions3 on how to parse our options. */
+    /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 
     unsigned int option_def_index;
@@ -63,7 +63,7 @@ parseCommandLine(int argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!depthSpec)
@@ -78,12 +78,12 @@ parseCommandLine(int argc,
     }
 
     if (argc-1 == 0) 
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFilename = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFilename = argv[1];
 }
 
 
@@ -410,7 +410,7 @@ writeRaster(FILE *           const ofP,
 int
 main(int argc, char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE* ifP;
     xel ** xels;
     int rows, cols, format, colors;
@@ -426,7 +426,7 @@ main(int argc, char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFilename);
 
     xels = pnm_readpnm(ifP, &cols, &rows, &maxval, &format);
     xmaxval = (1 << cmdline.pseudodepth) - 1;
@@ -473,13 +473,13 @@ main(int argc, char * argv[]) {
         }
     }
 
-    if (streq(cmdline.inputFilespec, "-"))
+    if (streq(cmdline.inputFilename, "-"))
         dumpname = "stdin";
     else {
-        if (strlen(cmdline.inputFilespec) > XWDVAL_MAX - sizeof(h11) - 1)
+        if (strlen(cmdline.inputFilename) > XWDVAL_MAX - sizeof(h11) - 1)
             pm_error("Input file name is ridiculously long.");
         else
-            dumpname = cmdline.inputFilespec;
+            dumpname = cmdline.inputFilename;
     }
 
     setupX11Header(&h11, dumpname, cols, rows, format, 

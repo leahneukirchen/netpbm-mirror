@@ -7,8 +7,6 @@
 #include "pam.h"
 #include "shhopt.h"
 
-#define true (1)
-#define false (0)
 
 
 struct cmdlineInfo {
@@ -50,7 +48,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!tupletypeSpec)
@@ -59,7 +57,8 @@ parseCommandLine(int argc, char ** argv,
         struct pam pam;
         if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
             pm_error("The tuple type you specified is too long.  "
-                     "Maximum %d characters.", sizeof(pam.tuple_type)-1);
+                     "Maximum %u characters.", 
+                     (unsigned)sizeof(pam.tuple_type)-1);
     }        
 
     if (argc-1 < 2)

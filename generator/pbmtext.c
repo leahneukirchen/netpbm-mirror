@@ -79,7 +79,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)
@@ -236,7 +236,8 @@ fixControlChars(const char *  const input,
     MALLOCARRAY(output, outputSize);
 
     if (output == NULL)
-        pm_error("Couldn't allocate %u bytes for a line of text.", outputSize);
+        pm_error("Couldn't allocate %u bytes for a line of text.",
+                 (unsigned)outputSize);
 
     for (inCursor = 0, outCursor = 0; input[inCursor] != '\0'; ++inCursor) {
         if (outCursor + 1 + tabSize > outputSize) {
@@ -244,7 +245,7 @@ fixControlChars(const char *  const input,
             REALLOCARRAY(output, outputSize);
             if (output == NULL)
                 pm_error("Couldn't allocate %u bytes for a line of text.",
-                         outputSize);
+                         (unsigned)outputSize);
         }
         if (input[inCursor] == '\n' && input[inCursor+1] == '\0') {
             /* This is a terminating newline.  We don't do those. */
@@ -709,7 +710,7 @@ getText(const char          cmdline_text[],
         while (fgets(buf, sizeof(buf), stdin) != NULL) {
             if (strlen(buf) + 1 >= sizeof(buf))
                 pm_error("A line of input text is longer than %u characters."
-                         "Cannot process.", sizeof(buf)-1);
+                         "Cannot process.", (unsigned)sizeof(buf)-1);
             if (lineCount >= maxlines) {
                 maxlines *= 2;
                 REALLOCARRAY(text_array, maxlines);

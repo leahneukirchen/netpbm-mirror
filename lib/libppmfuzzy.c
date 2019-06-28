@@ -5,8 +5,8 @@
   <kenan@unix.ba> in 2006.
 =============================================================================*/
 
-#include "pm_c_util.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/nstring.h"
 #include "ppm.h"
 
 typedef double fzLog;

@@ -11,13 +11,12 @@
 ** implied warranty.
 */
 
-#define _BSD_SOURCE    /* Make sure strcasecmp() is in string.h */
-
+#define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 #include <stdio.h>
-#include <string.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 
 #include "pbm.h"
@@ -29,22 +28,22 @@ enum epsonProtocol {ESCP9, ESCP};
 
 enum adjacence {ADJACENT_ANY, ADJACENT_YES, ADJACENT_NO};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* '-' if stdin */
-    unsigned int dpi;  /* zero means "any" */
-    enum adjacence adjacence;
+    const char *       inputFileName;  /* '-' if stdin */
+    unsigned int       dpi;  /* zero means "any" */
+    enum adjacence     adjacence;
     enum epsonProtocol protocol;
 };
 
 
 
 static void
-parseCommandLine(int                 argc, 
-                 char **             argv,
-                 struct cmdlineInfo *cmdlineP ) {
+parseCommandLine(int                  argc, 
+                 const char **        argv,
+                 struct CmdlineInfo * cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -56,7 +55,7 @@ parseCommandLine(int                 argc,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -69,20 +68,20 @@ parseCommandLine(int                 argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "protocol",   OPT_STRING,   &protocol,
+    OPTENT3(0, "protocol",     OPT_STRING,   &protocol,
             &protocolSpec,                    0);
-    OPTENT3(0, "dpi",        OPT_UINT,   &cmdlineP->dpi,
-            &dpiSpec,                    0);
-    OPTENT3(0, "adjacent",   OPT_FLAG,   NULL,
+    OPTENT3(0, "dpi",          OPT_UINT,     &cmdlineP->dpi,
+            &dpiSpec,                         0);
+    OPTENT3(0, "adjacent",     OPT_FLAG,     NULL,
             &adjacentSpec,                    0);
-    OPTENT3(0, "nonadjacent",   OPT_FLAG,   NULL,
-            &nonadjacentSpec,                    0);
+    OPTENT3(0, "nonadjacent",  OPT_FLAG,     NULL,
+            &nonadjacentSpec,                 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -96,11 +95,11 @@ parseCommandLine(int                 argc,
     if (!protocolSpec)
         cmdlineP->protocol = ESCP9;
     else {
-        if (strcasecmp(protocol, "escp9") == 0)
+        if (strcaseeq(protocol, "escp9"))
             cmdlineP->protocol = ESCP9;
-        else if (strcasecmp(protocol, "escp") == 0)
+        else if (strcaseeq(protocol, "escp"))
             cmdlineP->protocol = ESCP;
-        else if (strcasecmp(protocol, "escp2") == 0)
+        else if (strcaseeq(protocol, "escp2"))
             pm_error("This program cannot do ESC/P2.  Try Pbmtoescp2.");
         else
             pm_error("Unrecognized value '%s' for -protocol.  "
@@ -118,13 +117,15 @@ parseCommandLine(int                 argc,
         cmdlineP->adjacence = ADJACENT_ANY;
 
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else {
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
         if (argc-1 > 1)
             pm_error("Too many arguments (%d).  The only non-option argument "
                      "is the file name", argc-1);
     }
+
+    free(option_def);
 }
 
 
@@ -273,7 +274,7 @@ convertToEpson(const bit **       const bits,
                enum adjacence     const adjacence) {
     
     unsigned int const rowsPerStripe = 8;
-    unsigned int const stripes = (rows + rowsPerStripe-1) / rowsPerStripe;
+    unsigned int const stripeCt = (rows + rowsPerStripe-1) / rowsPerStripe;
 
     unsigned int stripe;
     char m;
@@ -288,7 +289,7 @@ convertToEpson(const bit **       const bits,
        stripe can be fewer than 8 rows.
     */
 
-    for (stripe = 0; stripe < stripes; ++stripe) {
+    for (stripe = 0; stripe < stripeCt; ++stripe) {
         const bit ** const stripeBits = &bits[stripe*rowsPerStripe];
         unsigned int const stripeRows = 
             MIN(rowsPerStripe, rows - stripe * rowsPerStripe);
@@ -313,18 +314,18 @@ convertToEpson(const bit **       const bits,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
-    FILE* ifP;
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
     const bit** bits;
     int rows, cols;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     bits = (const bit **)pbm_readpbm(ifP, &cols, &rows);
 

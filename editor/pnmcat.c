@@ -16,6 +16,7 @@
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "bitarith.h"
+#include "nstring.h"
 #include "pnm.h"
 
 #define LEFTBITS pm_byteLeftBits
@@ -89,8 +90,10 @@ parseCommandLine(int argc, const char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    free(option_def);
 
     if (leftright + topbottom > 1)
         pm_error("You may specify only one of -topbottom (-tb) and "
@@ -153,12 +156,20 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->nfiles = 1;
     } else {
         unsigned int i;
+        unsigned int stdinCt;
+            /* Number of input files user specified as Standard Input */
 
         MALLOCARRAY_NOFAIL(cmdlineP->inputFilespec, argc-1);
 
-        for (i = 0; i < argc-1; ++i)
+        for (i = 0, stdinCt = 0; i < argc-1; ++i) {
             cmdlineP->inputFilespec[i] = argv[1+i];
+            if (streq(argv[1+i], "-"))
+                ++stdinCt;
+        }
         cmdlineP->nfiles = argc-1;
+        if (stdinCt > 1)
+            pm_error("At most one input image can come from Standard Input.  "
+                     "You specified %u", stdinCt);
     }
 }
 
@@ -418,6 +429,8 @@ concatenateLeftRightPbm(FILE *             const ofP,
 
     getPbmImageInfo(img, nfiles, newrows, justification, backcolor, &img2);
 
+    outrow[pbm_packed_bytes(newcols)-1] = 0x00;
+
     for (row = 0; row < newrows; ++row) {
         unsigned int i;
 
@@ -556,7 +569,7 @@ concatenateTopBottomPbm(FILE *             const ofP,
 
         backgroundPrev = background;
     }
-    free(outrow);
+    pbm_freerow_packed(outrow);
 }
 
 
@@ -851,6 +864,7 @@ main(int           argc,
     for (i = 0; i < cmdline.nfiles; ++i)
         pm_close(img[i].ifP);
     free(cmdline.inputFilespec);
+    free(img);
     pm_close(stdout);
 
     return 0;

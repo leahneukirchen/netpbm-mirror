@@ -5,7 +5,7 @@
 
 typedef struct {
     short           magic;
-    char            storage;
+    unsigned char   storage;
     char            bpc;            /* pixel size: 1 = bytes, 2 = shorts */
     unsigned short  dimension;      /* 1 = single row, 2 = B/W, 3 = RGB */
     unsigned short  xsize,          /* width in pixels */
@@ -25,9 +25,9 @@ typedef struct {
 #define STORAGE_RLE         1
 
 #define CMAP_NORMAL         0
-#define CMAP_DITHERED       1   /* not supported */
-#define CMAP_SCREEN         2   /* not supported */
-#define CMAP_COLORMAP       3   /* not supported */
+#define CMAP_DITHERED       1   /* can't handle this */
+#define CMAP_SCREEN         2   /* can't handle this */
+#define CMAP_COLORMAP       3   /* can't handle this */
 
 #endif
 

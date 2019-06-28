@@ -5,23 +5,35 @@ endif
 SUBDIR = lib/util
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
+default:all
+
 include $(BUILDDIR)/config.mk
 
 # nstring is required for asprintf(), etc.  Also some systems don't have
 # snprintf(), e.g. Solaris 2.5.1.  2002.03.29.
-UTILOBJECTS = shhopt.o nstring.o vasprintf.o filename.o nsleep.o
+UTILOBJECTS = \
+  bitio.o \
+  filename.o \
+  io.o \
+  mallocvar.o \
+  matrix.o \
+  nsleep.o \
+  nstring.o \
+  runlength.o \
+  shhopt.o \
+  token.o \
+  vasprintf.o \
 
 MERGE_OBJECTS =
 
-all: $(UTILOBJECTS)
-
 include $(SRCDIR)/common.mk
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
+all: $(UTILOBJECTS)
+
+$(UTILOBJECTS): CFLAGS_TARGET=$(CFLAGS_SHLIB)
 
 $(UTILOBJECTS):%.o:%.c importinc
-	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
-	  $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
+	$(CC) -c $(INCLUDES) $(CFLAGS_ALL) -o $@ $<
 
 testnstring: test.c nstring.h nstring.o
-	$(CC) $(CFLAGS) $(CADD) -o $@ nstring.o $<
+	$(CC) $(CFLAGS_ALL) -o $@ nstring.o $<

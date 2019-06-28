@@ -6,6 +6,7 @@
    See COPYRIGHT file for copyright information.
 */
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 
 #include <assert.h>
@@ -112,11 +113,11 @@ getInitialViewerGeometry(const char *   const geometryString,
         *userChoseP = TRUE;
     } else if (geometryString) {
         const char * defGeom;
-        asprintfN(&defGeom, "%ux%u+0+0", defaultWidth, defaultHeight);
+        pm_asprintf(&defGeom, "%ux%u+0+0", defaultWidth, defaultHeight);
         XGeometry(dispP, scrn, geometryString, defGeom, 0, 1, 1, 0, 0,
                   (int *)xposP, (int *)yposP,
                   (int *)widthP, (int *)heightP);
-        strfree(defGeom);
+        pm_strfree(defGeom);
         *userChoseP = TRUE;
     } else {
         *widthP     = defaultWidth;
@@ -193,7 +194,7 @@ determineRepaintStrategy(viewer  *    const viewerP,
                         
     /* Decide how we're going to handle repaints.  We have three modes:
        use backing-store, use background pixmap, and use exposures.
-       If the server supports backing-store, we enable it and use it.
+       If the server allows backing-store, we enable it and use it.
        This really helps servers which are memory constrained.  If the
        server does not have backing-store, we try to send the image to
        a pixmap and use that as backing-store.  If that fails, we use
@@ -499,10 +500,10 @@ iconName(const char * const s) {
         char * t;
 
         STRSCPY(buf, s);
-        /* strip off stuff following 1st word.  This strips
+        /* chop off stuff following 1st word.  This strips
            info added by processing functions too.
         */
-        t = index(buf, ' ');
+        t = strchr(buf, ' ');
         if (t)
             *t = '\0';
     
@@ -510,15 +511,15 @@ iconName(const char * const s) {
            You might want to change this.
         */
     
-        t= rindex(buf, '/');
+        t= strrchr(buf, '/');
         if (t) {
             char * p;
             for (p = buf, ++t; *t; ++p, ++t)
                 *p = *t;
             *p = '\0';
         }
-        /* look for an extension and strip it off */
-        t = index(buf, '.');
+        /* Chop off any filename extension */
+        t = strchr(buf, '.');
         if (t)
             *t = '\0';
     }
@@ -652,9 +653,9 @@ bestVisual(Display *      const disp,
     Visual * visualP;
     Visual * default_visualP;
 
-    /* Figure out the best depth the server supports.  note that some servers
-       (such as the HP 11.3 server) actually say they support some depths but
-       have no visuals that support that depth.  Seems silly to me ...
+    /* Figure out the best depth the server allows.  note that some servers
+       (such as the HP 11.3 server) actually say they allow some depths but
+       have no visuals that allow that depth.  Seems silly to me ...
     */
 
     depth = 0;
@@ -1079,7 +1080,7 @@ retvalueFromExitReason(exitReason const exitReason) {
     switch (exitReason) {
     case EXIT_NONE:      assert(false); break;
     case EXIT_QUIT:      retval =  0;     break;
-    case EXIT_WM_KILL:   retval = 10;     break;
+    case EXIT_WM_KILL:   retval =  0;     break;
     case EXIT_DESTROYED: retval = 20;     break;
     }
     return retval;
@@ -1175,7 +1176,7 @@ displayInViewer(viewer *       const viewerP,
     {
         const char * const name = iconName(title);
         XSetIconName(viewerP->dispP, viewerP->viewportWin, name);
-        strfree(name);
+        pm_strfree(name);
     }
     setNormalSizeHints(viewerP, imageP);
 

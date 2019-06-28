@@ -117,6 +117,7 @@
     */
 #define _XOPEN_SOURCE 500    /* Make sure P_tmpdir is defined */
 
+#include "pm_config.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -126,11 +127,11 @@
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
-#if defined(WIN32) || defined(HAVE_IO_H)
+#if HAVE_IO_H
 #include <io.h>
 #endif
 
-#include "pm.h"
+#include "netpbm/pm.h"
 
 #include "jasper/jas_types.h"
 #include "jasper/jas_stream.h"
@@ -440,7 +441,7 @@ jas_stream_t *jas_stream_fdopen(int fd, const char *mode)
 	/* Parse the mode string. */
 	stream->openmode_ = jas_strtoopenmode(mode);
 
-#if defined(WIN32)
+#if defined(HAVE_SETMODE) && defined(O_BINARY)
 	/* Argh!!!  Someone ought to banish text mode (i.e., O_TEXT) to the
 	  greatest depths of purgatory! */
 	/* Ensure that the file descriptor is in binary mode, if the caller
@@ -902,7 +903,7 @@ int jas_stream_copy(jas_stream_t *out, jas_stream_t *in, int n)
 	while (all || m > 0) {
 		if ((c = jas_stream_getc_macro(in)) == EOF) {
 			/* The next character of input could not be read. */
-			/* Return with an error if an I/O error occured
+			/* Return with an error if an I/O error occurred
 			  (not including EOF) or if an explicit copy count
 			  was specified. */
 			return (!all || jas_stream_error(in)) ? (-1) : 0;

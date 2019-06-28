@@ -170,7 +170,7 @@ writePpm(FILE *         const ofP,
            is represented by 4 shorts (16 bit integers).  The
            first is for Plane 0, the second for Plane 1, etc.  Each short
            contains the bits for that plane for each of the 16 columns,
-           arranged from most signficant bit to least in increasing column
+           arranged from most significant bit to least in increasing column
            number.
         */
         unsigned int col0ScreenIndex = cols/16*planes * row;

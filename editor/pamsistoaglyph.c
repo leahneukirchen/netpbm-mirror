@@ -83,7 +83,7 @@ parseCommandLine( int argc, const char ** const argv,
     opt.short_allowed = 1;
     opt.allowNegNum = 0;
 
-    optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
 
     if (argc-1 < 1)
         cmdlineP->inputFilename = "-";
@@ -247,12 +247,19 @@ findRegionEyeSeparation( gray ** const grayArray,
 
 
 
-static int
-compare_ints( const void * const firstP,
-              const void * const secondP ) {
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn compareInts;
+#endif
 
-    int const first  = *(int *)firstP;
-    int const second = *(int *)secondP;
+static int
+compareInts(const void * const a,
+            const void * const b) {
+
+    const int * const firstP = a;
+    const int * const secondP = b;
+
+    int const first  = *firstP;
+    int const second = *secondP;
 
     int retval;
 
@@ -311,7 +318,7 @@ findEyeSeparation( struct pam *  const pamP,
                 rowSeparation[numValidRows++] = sep;
         }
         if (numValidRows > 0) {
-            qsort( rowSeparation, numValidRows, sizeof(int), compare_ints );
+            qsort(rowSeparation, numValidRows, sizeof(int), compareInts);
             bestSeparation = rowSeparation[numValidRows/2];
         }
         free( rowSeparation );

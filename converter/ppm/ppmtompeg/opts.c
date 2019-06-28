@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "opts.h"
+#include "dct.h"
 
 /*==============*
  * EXTERNALS    *
@@ -51,8 +52,7 @@ extern int32   qtable[], niqtable[];
 extern int     ZAG[];
 extern boolean printSNR, decodeRefFrames;
 
-void init_idctref _ANSI_ARGS_((void));
-void init_fdct _ANSI_ARGS_((void));
+void init_idctref (void);
 
 
 /*===================*
@@ -255,7 +255,7 @@ SetupLocalDCT(const char * const charPtr)
  *
  * SetupLaplace
  *
- *     Setup encoder to find distrubution for I-frames, and use for -snr
+ *     Setup encoder to find distribution for I-frames, and use for -snr
  *
  * RETURNS:	nothing
  *

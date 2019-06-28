@@ -1,122 +1,251 @@
+#define HAVE_PNGLIB_WITH_ITXT 0
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
 #include <png.h>
 
+#include "mallocvar.h"
 #include "nstring.h"
+#include "pngx.h"
 #include "pngtxt.h"
 #include "pm.h"
-#include "mallocvar.h"
-
-#define MAXCOMMENTS 256
 
 
 
 static void
-readOffKey(char           const textline[],
-           unsigned int   const lineLength,
-           unsigned int * const cursorP,
-           char **        const keyP) {
+readToken(char           const textline[],
+          unsigned int   const lineLength,
+          unsigned int * const cursorP,
+          const char **  const tokenP) {
+/*----------------------------------------------------------------------------
+   Read a token from 'textline' (whose length is 'lineLength'), assuming the
+   cursor is positioned to it now, leaving the cursor positioned after it.
 
-    /* Get the comment key */
+   Tokens are delimited by white space.  We don't skip any white space before
+   or after the token.  Ergo, if we are positioned to white space right now,
+   the token we read is a null string.
+-----------------------------------------------------------------------------*/
+    char * tokenBuffer;
     char * cp;
     unsigned int cursor;
 
     cursor = *cursorP;
     
-    MALLOCARRAY(cp, lineLength + 1);  /* leave room for terminating NUL */
-    if (cp == NULL) 
-        pm_error("Unable to allocate memory for text chunks");
-    
-    *keyP = cp;
+    MALLOCARRAY(tokenBuffer, lineLength + 1);
+    /* leave room for terminating NUL */
+    if (tokenBuffer == NULL) 
+        pm_error("Unable to allocate memory for a %u-character "
+                 "text string file line", lineLength);
+
+    cp = &tokenBuffer[0];  /* initial value */
     
     if (textline[0] == '"') {
-        ++cursor;  /* skip past opening " */
+        ++cursor;  /* skip past opening quotation mark */
         while (textline[cursor] != '"') {
-            if (textline[cursor] == '\0') {
-                *cp = '\0';
-                pm_error("Invalid comment file format:  keyword contains "
+            if (cursor >= lineLength)
+                pm_error("Invalid text string file format.  Line ends in "
+                         "the middle of a quoted token.  Text at the end of "
+                         "the line is '%s'", tokenBuffer);
+            if (textline[cursor] == '\0')
+                pm_error("Invalid text string file format:  Token contains "
                          "a NUL character.  Text leading up to the NUL "
-                         "character is '%s'", *keyP);
-            }
+                         "character is '%s'", tokenBuffer);
             *(cp++) = textline[cursor++];
         }
-        ++cursor;  /* skip past closing " */
+        ++cursor;  /* skip past closing quotation mark */
     } else {
-        while (cursor < lineLength && 
-               textline[cursor] != ' '  && textline[cursor] != '\t' &&
-               textline[cursor] != '\0')
+        while ((cursor < lineLength) && 
+               (textline[cursor] != ' ') && (textline[cursor] != '\t')) {
+            
+            if (textline[cursor] == '\0')
+                pm_error("Invalid text string file format:  Token contains "
+                         "a NUL character.  Text leading up to the NUL "
+                         "character is '%s'", tokenBuffer);
             *(cp++) = textline[cursor++];
+        }
     }
     *cp++ = '\0';
+
+    *cursorP = cursor;
+
+    *tokenP = tokenBuffer;
+}
+
+
+
+
+static void
+skipWhiteSpace(char           const textline[],
+               unsigned int   const lineLength,
+               unsigned int * const cursorP) {
+/*----------------------------------------------------------------------------
+   Move *cursorP past white space (or, for some reason, NUL characters),
+   in 'textline', which is 'lineLength' long.
+-----------------------------------------------------------------------------*/
+    unsigned int cursor;
+
+    cursor = *cursorP;  /* initial value */
+
+    while (cursor < lineLength && 
+           (textline[cursor] == ' ' || textline[cursor] == '\t' ||
+            textline[cursor] == '\0'))
+        ++cursor;
 
     *cursorP = cursor;
 }
 
 
 
-
 static void
-startComment(struct png_text_struct * const commentP, 
-             char                     const textline[],
-             unsigned int             const lineLength,
-             bool                     const compressed) {
+readTextString(char          const textline[],
+               unsigned int  const lineLength,
+               unsigned int  const startPos,
+               png_charp *   const textStringP,
+               png_size_t *  const textStringLengthP) {
 /*----------------------------------------------------------------------------
-   Assuming 'textline' is the first line of a comment in a comment file,
-   put the information from it in the comment record *commentP.
-   Use the text on this line as the comment text, even though the true
-   comment text may include text from subsequent continuation lines as
-   well.
-
-   'textline' is not NUL-terminated.  Its length is 'lineLength', and
-   it is at least one character long.  'textline' does not contain a
-   newline character.
-
-   'compressed' means the comment text is compressed.
+  Extract the text string at 'startPos' in the buffer 'textline', whose
+  length is 'lineLength'.  Return it in newly malloced storage with a
+  pointer to that storage as 'textString' and the size of the text as
+  *textStringLengthP.
 -----------------------------------------------------------------------------*/
-    unsigned int cursor;
+    char * cp;
 
-    /* the following is a not that accurate check on Author or Title */
-    if ((!compressed) || (textline[0] == 'A') || (textline[0] == 'T'))
-        commentP->compression = -1;
-    else
-        commentP->compression = 0;
+    MALLOCARRAY(cp, lineLength + 1);  /* incl '\0' */
+    if (!cp) 
+        pm_error("Unable to allocate memory for text chunks");
 
-    cursor = 0;
-
-    readOffKey(textline, lineLength, &cursor, &commentP->key);
-
-    /* skip over delimiters between key and comment text */
-    while (cursor < lineLength && 
-           (textline[cursor] == ' ' || textline[cursor] == '\t' ||
-           textline[cursor] == '\0'))
-        ++cursor;
-    
-    {
-        /* Get the first line of the comment text */
-        unsigned int const startPos = cursor;
-        char *cp;
-
-        MALLOCARRAY(cp, lineLength+1);  /* leave room for safety NUL */
-        if (!cp) 
-            pm_error("Unable to allocate memory for text chunks");
-
-        memcpy(cp, textline + startPos, lineLength - startPos);
-        cp[lineLength - startPos] = '\0';  /* for safety - not part of text */
-        commentP->text = cp;
-        commentP->text_length = lineLength - startPos;
-    }
+    memcpy(cp, textline + startPos, lineLength - startPos);
+    cp[lineLength - startPos] = '\0';  /* for safety - not part of text */
+    *textStringP = cp;
+    *textStringLengthP = lineLength - startPos;
 }
 
 
 
 static void
-continueComment(struct png_text_struct * const commentP, 
-                char                     const textline[],
-                unsigned int             const lineLength) {
+startTextChunkEngl(png_text *   const textChunkP, 
+                   char         const textline[],
+                   unsigned int const lineLength,
+                   bool         const isCompressed,
+                   bool         const verbose) {
 /*----------------------------------------------------------------------------
-   Update the comment record *commentP by adding to it the text
-   from textline[], which is a continuation line from a comment file.
+   Assuming 'textline' is the first line of an entry in an English text
+   string file, put the information from it in the comment record *textChunkP.
+   Use the text on this line as the comment text, even though the true text
+   string may include text from subsequent continuation lines as well.
+
+   'textline' is not NUL-terminated.  Its length is 'lineLength', and it is at
+   least one character long.  'textline' does not contain a newline character.
+
+   'isCompressed' means it is a compressed text chunk.
+-----------------------------------------------------------------------------*/
+    unsigned int cursor;
+
+    cursor = 0;
+
+    {
+        const char * key;
+
+        readToken(textline, lineLength, &cursor, &key);
+
+        pngx_setTextKey(textChunkP, key);
+
+        pm_strfree(key);
+    }
+
+    skipWhiteSpace(textline, lineLength, &cursor);
+
+    pngx_setTextLang(textChunkP, NULL);
+
+    readTextString(textline, lineLength, cursor, &textChunkP->text,
+                   &textChunkP->text_length);
+
+    textChunkP->compression =
+        isCompressed ? PNG_TEXT_COMPRESSION_zTXt : PNG_TEXT_COMPRESSION_NONE;
+}
+
+
+
+static void
+startTextChunkIntl(png_text *   const textChunkP, 
+                   char         const textline[],
+                   unsigned int const lineLength,
+                   bool         const isCompressed,
+                   bool         const verbose) {
+/*----------------------------------------------------------------------------
+  Assuming 'textline' is the first line of an entry in an international (not
+  English) text string file, put the information from it in the text chunk
+  *textChunkP.  Use the text on this line as the text string, even though the
+  true text string may include text from subsequent continuation lines as
+  well.
+
+  'textline' is not NUL-terminated.  Its length is 'lineLength', and it is at
+  least one character long.  'textline' does not contain a newline character.
+
+  'isInternational' means it is an international (i.e. non-English) text
+  chunk.
+
+  Leave the language attribute (textChunkP->lang) unset.
+-----------------------------------------------------------------------------*/
+    unsigned int cursor;
+
+    cursor = 0;  /* Initial value */
+
+    {
+        const char * key;
+
+        readToken(textline, lineLength, &cursor, &key);
+
+        pngx_setTextKey(textChunkP, key);
+
+        pm_strfree(key);
+    }
+
+    skipWhiteSpace(textline, lineLength, &cursor);
+
+    {
+        const char * isoLang;
+
+        readToken(textline, lineLength, &cursor, &isoLang);
+
+        pngx_setTextLang(textChunkP, isoLang);
+
+        pm_strfree(isoLang);
+    }
+
+    skipWhiteSpace(textline, lineLength, &cursor);
+
+    {
+        const char * langKey;
+    
+        readToken(textline, lineLength, &cursor, &langKey);
+
+        pngx_setTextLangKey(textChunkP, langKey);
+
+        pm_strfree(langKey);
+    }
+
+    skipWhiteSpace(textline, lineLength, &cursor);
+
+    /* Beginning of text string (continuation lines may follow) */
+    readTextString(textline, lineLength, cursor, &textChunkP->text,
+                   &textChunkP->text_length);
+
+    textChunkP->compression = 
+        isCompressed ? PNG_ITXT_COMPRESSION_zTXt :PNG_ITXT_COMPRESSION_NONE;
+}
+
+
+
+static void
+continueTextString(png_text *   const textChunkP, 
+                   char         const textline[],
+                   unsigned int const lineLength) {
+/*----------------------------------------------------------------------------
+   Update the text chunk *textChunkP by adding to it the text from
+   textline[], which is a continuation line from a text string file.
 
    'textline' is not NUL-terminated.  Its length is 'lineLength', and
    it is at least one character long.  'textline' does not contain a
@@ -125,29 +254,27 @@ continueComment(struct png_text_struct * const commentP,
     unsigned int cursor;  /* cursor into textline[] */
 
     unsigned int const newTextLength =
-        commentP->text_length + lineLength + 1 + 1;
+        textChunkP->text_length + lineLength + 1 + 1;
 
-    REALLOCARRAY(commentP->text, newTextLength);
+    REALLOCARRAY(textChunkP->text, newTextLength);
 
-    if (commentP->text == NULL)
-        pm_error("Unable to allocate %u bytes of memory for comment chunk",
+    if (textChunkP->text == NULL)
+        pm_error("Unable to allocate %u bytes of memory for text string",
                  newTextLength);
 
-    commentP->text[commentP->text_length++] = '\n';
+    textChunkP->text[textChunkP->text_length++] = '\n';
 
-    /* Skip past leading delimiter characters in file line */
-    cursor = 0;
-    while (textline[cursor] == ' ' || textline[cursor] == '\t' ||
-           textline[cursor] == '\0')
-        ++cursor;
+    cursor = 0; 
 
-    memcpy(commentP->text + commentP->text_length,
+    skipWhiteSpace(textline, lineLength, &cursor);
+
+    memcpy(textChunkP->text + textChunkP->text_length,
            textline + cursor,
            lineLength - cursor);
 
-    commentP->text_length += lineLength - cursor;
+    textChunkP->text_length += lineLength - cursor;
 
-    commentP->text[commentP->text_length] = '\0';  /* for safety */
+    textChunkP->text[textChunkP->text_length] = '\0';  /* for safety */
 }
 
 
@@ -171,16 +298,16 @@ getFileLine(FILE *         const fileP,
 -----------------------------------------------------------------------------*/
     char * textline;  /* malloc'ed */
     unsigned int cursor;  /* cursor into textline[] */
-    unsigned int allocated;
+    unsigned int allocatedSz;
         /* The number of characters of space that are allocated for
            'textline' 
         */
     bool eol;
     bool gotSomething;
 
-    allocated = 128;  /* initial value */
+    allocatedSz = 128;  /* initial value */
 
-    MALLOCARRAY(textline, allocated);
+    MALLOCARRAY(textline, allocatedSz);
     if (textline == NULL)
         pm_error("Unable to allocate buffer to read a line of a file.");
     
@@ -197,9 +324,10 @@ getFileLine(FILE *         const fileP,
         if (c == '\n' || c == EOF)
             eol = TRUE;
         else {
-            if (cursor > allocated - 1 - 1) { /* leave space for safety NUL */
-                allocated *= 2;
-                REALLOCARRAY(textline, allocated);
+            /* leave space for safety NUL */
+            if (cursor > allocatedSz - 1 - 1) {
+                allocatedSz *= 2;
+                REALLOCARRAY(textline, allocatedSz);
                 if (textline == NULL)
                     pm_error("Unable to allocate buffer to read a line of "
                              "a file.");
@@ -222,16 +350,53 @@ getFileLine(FILE *         const fileP,
 
 static void
 handleArrayAllocation(png_text **    const arrayP,
-                      unsigned int * const allocatedCommentsP,
-                      unsigned int   const commentIdx) {
+                      unsigned int * const allocatedChunkCtP,
+                      unsigned int   const chunkIdx) {
 
-    if (commentIdx >= *allocatedCommentsP) {
-        *allocatedCommentsP *= 2;
-        REALLOCARRAY(*arrayP, *allocatedCommentsP);
+    if (chunkIdx >= *allocatedChunkCtP) {
+        *allocatedChunkCtP *= 2;
+        REALLOCARRAY(*arrayP, *allocatedChunkCtP);
         if (*arrayP == NULL) 
-            pm_error("unable to allocate memory for comment array");
+            pm_error("unable to allocate memory for %u text chunks",
+                *allocatedChunkCtP);
     }
 }
+
+
+
+static bool
+isContinuationLine(const char * const line) {
+/*----------------------------------------------------------------------------
+   Text line 'line', if it is from a text string file, is a continuation of a
+   text string started in an earlier line.
+
+   What identifies a line as a continuation line is that it starts with
+   a space or tab.
+-----------------------------------------------------------------------------*/
+    return line[0] == ' ' || line[0] == '\t';
+}
+
+
+
+static void
+reportChunkCt(bool         const ztxt,
+              bool         const itxt,
+              unsigned int const chunkCt) {
+
+    const char * chunkType;
+
+    if (itxt)
+        chunkType = "iTXt";
+    else {
+        if (ztxt)
+            chunkType = "zTXt";
+        else
+            chunkType = "tEXt";
+    }
+
+    pm_message("Writing %u %s chunks", chunkCt, chunkType);
+}
+
 
 
 /******************************************************************************
@@ -240,75 +405,98 @@ handleArrayAllocation(png_text **    const arrayP,
 
 
 void 
-pnmpng_read_text (png_info * const info_ptr, 
-                  FILE *     const tfp, 
-                  bool       const ztxt,
-                  bool       const verbose) {
+pngtxt_addChunk(struct pngx * const pngxP,
+                FILE *        const tfP, 
+                bool          const ztxt,
+                bool          const itxt,
+                bool          const verbose) {
+/*----------------------------------------------------------------------------
+   Add text chunks (tEXt, zTXt, or iTXt) to the PNG image represented by
+   *pngxP as directed by file *tfP.
 
-    const char * textline;
-    unsigned int lineLength;
-    unsigned int commentIdx;
-    bool noCommentsYet;
+   'itxt' means to make them international language (iTXt) chunks.  Otherwise
+   they are either tEXt or zTXt chunks, depending upon 'ztxt'.
+
+   'ztxt' means to make the text compressed.  If the chunks are not
+   international (i.e. 'itxt' is false), this means the chunks are zTXt chunks
+   instead of 'tEXt' chunks.
+-----------------------------------------------------------------------------*/
+    bool noChunksYet;
     bool eof;
-    unsigned int allocatedComments;
-        /* Number of entries currently allocated for the info_ptr->text
-           array 
-        */
+    png_textp text;  /* An array; one chunk per element */
+    unsigned int chunkCt;
+        /* Number of chunks we have completed in the 'text' array */
+    unsigned int allocatedChunkCt;
+        /* Number of entries currently allocated for the PNG text array */
 
-    allocatedComments = 256;  /* initial value */
+    /* In an international text string file, the first entry tells the
+       language of all of the chunks, by having key 'Language'.
+    */
 
-    MALLOCARRAY(info_ptr->text, allocatedComments);
-    if (info_ptr->text == NULL) 
-        pm_error("unable to allocate memory for comment array");
+    allocatedChunkCt = 256;  /* initial value */
 
-    commentIdx = 0;
-    noCommentsYet = TRUE;
-   
-    eof = FALSE;
-    while (!eof) {
-        getFileLine(tfp, &textline, &lineLength);
+    MALLOCARRAY(text, allocatedChunkCt);
+    if (text == NULL) 
+        pm_error("unable to allocate memory for text chunk array");
+
+    for (chunkCt = 0, noChunksYet = true, eof = false; !eof; ) {
+        const char * textline;
+        unsigned int lineLength;
+
+        getFileLine(tfP, &textline, &lineLength);
         if (textline == NULL)
-            eof = TRUE;
+            eof = true;
         else {
             if (lineLength == 0) {
                 /* skip this empty line */
             } else {
-                handleArrayAllocation(&info_ptr->text, &allocatedComments,
-                                      commentIdx);
-                if ((textline[0] != ' ') && (textline[0] != '\t')) {
-                    /* Line doesn't start with white space, which
-                       means it starts a new comment.  
-                    */
-                    if (noCommentsYet) {
-                        /* No previous comment to move past */
-                    } else
-                        ++commentIdx;
-                    noCommentsYet = FALSE;
+                handleArrayAllocation(&text, &allocatedChunkCt, chunkCt);
 
-                    startComment(&info_ptr->text[commentIdx], 
-                                 textline, lineLength, ztxt);
+                if (!isContinuationLine(textline)) {
+                    png_text * textChunkP;
+
+                    if (noChunksYet) {
+                        /* No previous chunk to move past */
+                    } else
+                        ++chunkCt;
+                    noChunksYet = false;
+                    
+                    textChunkP = &text[chunkCt];
+                
+                    if (itxt)
+                        startTextChunkIntl(textChunkP, 
+                                           textline, lineLength, ztxt,
+                                           verbose);
+                    else
+                        startTextChunkEngl(textChunkP, 
+                                           textline, lineLength, ztxt,
+                                           verbose);
                 } else {
+                    png_text * const textChunkP = &text[chunkCt];
+
                     /* Line starts with whitespace, which means it is
-                       a continuation of the current comment.
+                       a continuation of the current text string.
                     */
-                    if (noCommentsYet)
-                        pm_error("Invalid comment file format: "
+                    if (noChunksYet)
+                        pm_error("Invalid text string file format: "
                                  "first line is a continuation line! "
                                  "(It starts with whitespace)");
-                    continueComment(&info_ptr->text[commentIdx], 
-                                    textline, lineLength);
+                    continueTextString(textChunkP, textline, lineLength);
                 }
             }
-            strfree(textline);
+            pm_strfree(textline);
         }
-    } 
-    if (noCommentsYet)
-        info_ptr->num_text = 0;
-    else
-        info_ptr->num_text = commentIdx + 1;
+    }
+    if (!noChunksYet)
+        ++chunkCt;
 
     if (verbose)
-        pm_message("%d comments placed in text chunk", info_ptr->num_text);
+        reportChunkCt(ztxt, itxt, chunkCt);
+
+    if (chunkCt > 0)
+        pngx_setText(pngxP, text, chunkCt);
+
+    free(text);
 }
 
 

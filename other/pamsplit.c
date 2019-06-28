@@ -16,10 +16,10 @@
 #include <stdio.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
 #include "shhopt.h"
 #include "nstring.h"
 #include "mallocvar.h"
+#include "pam.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -34,7 +34,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the pointers we place into *cmdlineP are sometimes to storage
@@ -59,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!padnameSpec)
@@ -138,11 +138,11 @@ computeOutputName(char          const outputFilePattern[],
     afterSub = strstr(outputFilePattern, "%d") + 2;
 
     /* Make filenameFormat something like "%s%04u%s" */
-    asprintfN(&filenameFormat, "%%s%%0%ud%%s", padCount);
+    pm_asprintf(&filenameFormat, "%%s%%0%ud%%s", padCount);
 
-    asprintfN(outputNameP, filenameFormat, beforeSub, imageSeq, afterSub);
+    pm_asprintf(outputNameP, filenameFormat, beforeSub, imageSeq, afterSub);
 
-    strfree(filenameFormat);
+    pm_strfree(filenameFormat);
 
     free(beforeSub);
 }
@@ -150,16 +150,16 @@ computeOutputName(char          const outputFilePattern[],
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
 
     FILE * ifP;
-    bool eof;  /* No more images in input */
+    int eof;  /* No more images in input */
     unsigned int imageSeq;  
         /* Sequence of current image in input file.  First = 0 */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
     
@@ -179,7 +179,7 @@ main(int argc, char *argv[]) {
         extractOneImage(ifP, ofP);
 
         pm_close(ofP);
-        strfree(outputFileName);
+        pm_strfree(outputFileName);
 
         pnm_nextimage(ifP, &eof);
     }
@@ -187,3 +187,6 @@ main(int argc, char *argv[]) {
     
     return 0;
 }
+
+
+

@@ -73,14 +73,14 @@ generateCommandTables(const struct ppmd_font * const fontP,
         if (fontP->glyphTable[relativeCodePoint].header.commandCount > 0) {
             const char * commandTableVariableName;
 
-            asprintfN(&commandTableVariableName, "%s_cmd_%u",
-                      glyphTableVariableName,
-                      fontP->header.firstCodePoint + relativeCodePoint);
+            pm_asprintf(&commandTableVariableName, "%s_cmd_%u",
+                        glyphTableVariableName,
+                        fontP->header.firstCodePoint + relativeCodePoint);
             
             generateCommandTable(fontP->glyphTable[relativeCodePoint],
                                  commandTableVariableName);
 
-            strfree(commandTableVariableName);
+            pm_strfree(commandTableVariableName);
 
             fprintf(stdout, "};\n");
             fprintf(stdout, "\n");
@@ -130,14 +130,14 @@ generateGlyphTable(const struct ppmd_font * const fontP,
 
         const char * commandTableVariableName;
 
-        asprintfN(&commandTableVariableName, "%s_cmd_%u",
-                  variableName,
-                  fontP->header.firstCodePoint + relativeCodePoint);
+        pm_asprintf(&commandTableVariableName, "%s_cmd_%u",
+                    variableName,
+                    fontP->header.firstCodePoint + relativeCodePoint);
         
         generateGlyph(fontP->glyphTable[relativeCodePoint],
                       commandTableVariableName);
 
-        strfree(commandTableVariableName);
+        pm_strfree(commandTableVariableName);
 
         if (relativeCodePoint < fontP->header.characterCount - 1)
             fprintf(stdout, "  ,\n");
@@ -184,7 +184,7 @@ main(int argc, char **argv) {
 
     fprintf(stdout, "#include \"ppmdfont.h\"\n\n");
 
-    asprintfN(&glyphTableVariableName, "%s_glyphTable", fontVariableName);
+    pm_asprintf(&glyphTableVariableName, "%s_glyphTable", fontVariableName);
 
     generateGlyphTable(fontP, glyphTableVariableName);
 
@@ -192,7 +192,7 @@ main(int argc, char **argv) {
         
     generateFont(fontP, fontVariableName, glyphTableVariableName);
 
-    strfree(glyphTableVariableName);
+    pm_strfree(glyphTableVariableName);
 
     ppmd_free_font(fontP);
     

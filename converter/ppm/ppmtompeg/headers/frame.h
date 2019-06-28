@@ -34,8 +34,7 @@
  * HEADER FILES *
  *==============*/
 
-#include "general.h"
-#include "ansi.h"
+#include "netpbm/pm_c_util.h"
 #include "mtypes.h"
 
 /*===========*
@@ -54,8 +53,10 @@ typedef struct mpegFrame {
     int type;
     char    inputFileName[256];
     int id;           /* the frame number -- starts at 0 */
-    boolean inUse;	/* TRUE iff this frame is currently being used */
-			/* FALSE means any data here can be thrashed */
+    bool inUse;
+	   /* this frame is currently being used (if not, any data here can be
+          thrashed)
+       */
 
     /*  
      *  now, the YCrCb data.  All pixel information is stored in unsigned
@@ -64,17 +65,17 @@ typedef struct mpegFrame {
      *
      *  if orig_y is NULL, then orig_cr, orig_cb are undefined
      */
-    uint8 **orig_y, **orig_cr, **orig_cb;
+    uint8_t **orig_y, **orig_cr, **orig_cb;
 
     /* now, the decoded data -- relevant only if
      *	    referenceFrame == DECODED_FRAME
      *
      * if decoded_y is NULL, then decoded_cr, decoded_cb are undefined 
      */
-    uint8 **decoded_y, **decoded_cr, **decoded_cb;
+    uint8_t **decoded_y, **decoded_cr, **decoded_cb;
 
     /* reference data */
-    uint8 **ref_y, **ref_cr, **ref_cb;
+    uint8_t **ref_y, **ref_cr, **ref_cb;
 
     /*  
      *  these are the Blocks which will ultimately compose MacroBlocks.
@@ -86,9 +87,9 @@ typedef struct mpegFrame {
     /*
      *  this is the half-pixel luminance data (for reference frames)
      */
-    uint8 **halfX, **halfY, **halfBoth;
+    uint8_t **halfX, **halfY, **halfBoth;
 
-    boolean   halfComputed;        /* TRUE iff half-pixels already computed */
+    bool   halfComputed;        /* TRUE iff half-pixels already computed */
 
     struct mpegFrame *next;  /* points to the next B-frame to be encoded, if
 		       * stdin is used as the input. 
@@ -120,7 +121,7 @@ Frame_AllocHalf(MpegFrame * const frameP);
 
 void
 Frame_AllocDecoded(MpegFrame * const frameP,
-                   boolean     const makeReference);
+                   bool        const makeReference);
 
 void
 Frame_Resize(MpegFrame * const omf,

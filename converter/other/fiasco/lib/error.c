@@ -29,18 +29,9 @@
 #include <stdio.h>
 #include <errno.h>
 
-#if STDC_HEADERS
-#	include <stdarg.h>
-#	define VA_START(args, lastarg) va_start(args, lastarg)
-#else  /* not STDC_HEADERS */
-#	include <varargs.h>
-#	define VA_START(args, lastarg) va_start(args)
-#endif /* not STDC_HEADERS */
-#if HAVE_STRING_H
-#	include <string.h>
-#else /* not HAVE_STRING_H */
-#	include <strings.h>
-#endif /* not HAVE_STRING_H */
+#include <stdarg.h>
+#define VA_START(args, lastarg) va_start(args, lastarg)
+#include <string.h>
 
 #if HAVE_SETJMP_H
 #	include <setjmp.h>
@@ -117,11 +108,7 @@ set_error (const char *format, ...)
       Free (error_message);
    error_message = Calloc (len, sizeof (char));
    
-#if HAVE_VPRINTF
    vsprintf (error_message, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
 
    va_end (args);
 }
@@ -178,11 +165,7 @@ error (const char *format, ...)
       Free (error_message);
    error_message = Calloc (len, sizeof (char));
    
-#if HAVE_VPRINTF
    vsprintf (error_message, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
 
    va_end (args);
    
@@ -236,11 +219,7 @@ warning (const char *format, ...)
       return;
 	
    fprintf (stderr, "Warning: ");
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
 
    va_end (args);
@@ -259,11 +238,7 @@ message (const char *format, ...)
    if (verboselevel == FIASCO_NO_VERBOSITY)
       return;
 
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
    va_end (args);
 }
@@ -282,11 +257,7 @@ debug_message (const char *format, ...)
       return;
 
    fprintf (stderr, "*** ");
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
    va_end (args);
 }
@@ -304,11 +275,7 @@ info (const char *format, ...)
    if (verboselevel == FIASCO_NO_VERBOSITY)
       return;
 
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fflush (stderr);
    va_end (args);
 }

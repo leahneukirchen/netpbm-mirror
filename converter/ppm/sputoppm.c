@@ -1,4 +1,4 @@
-/* sputoppm.c - read an uncompressed Spectrum file and produce a portable pixmap
+/* sputoppm.c - read an uncompressed Spectrum file and produce a PPM
 **
 ** Copyright (C) 1991 by Steve Belczyk and Jef Poskanzer
 **
@@ -16,93 +16,114 @@
 #define COLS 320
 #define MAXVAL 7
 
-static pixel pal[ROWS][48];                /* Spectrum palettes, three per row */
-static short screen[ROWS*COLS/4];          /* simulates the Atari's video RAM */
+
+typedef struct {
+    pixel pal[ROWS][48];  /* Spectrum palettes, three per row */
+} Pal;
+
+
+
+static void
+readPalettes(FILE * const ifP,
+             Pal *  const palP) {
+
+    unsigned int row;
+
+    /* Clear the first palette line. */
+    {
+        unsigned int j;
+        for (j = 0; j < 48; ++j)
+            PPM_ASSIGN(palP->pal[0][j], 0, 0, 0);
+    }
+    /* Read the palettes. */
+    for (row = 1; row < ROWS; ++row) {
+        unsigned int j;
+        for (j = 0; j < 48; ++j) {
+            short k;
+            pm_readbigshort(ifP, &k);
+            PPM_ASSIGN(palP->pal[row][j],
+                       (k & 0x700) >> 8,
+                       (k & 0x070) >> 4,
+                       (k & 0x007) >> 0);
+        }
+    }
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    int i, j;
-    pixel* pixelrow;
-    register pixel* pP;
-    int row, col;
+main(int argc, const char ** argv) {
 
+    FILE * ifP;
+    unsigned int i;
+    pixel * pixelrow;
+    unsigned int row;
+    Pal pal;
+    short screen[ROWS*COLS/4];      /* simulates the Atari's video RAM */
 
-    ppm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     /* Check args. */
     if ( argc > 2 )
         pm_usage( "[spufile]" );
 
     if ( argc == 2 )
-        ifp = pm_openr( argv[1] );
+        ifP = pm_openr( argv[1] );
     else
-        ifp = stdin;
+        ifP = stdin;
 
     /* Read the SPU file */
 
     /* Read the screen data. */
-    for ( i = 0; i < ROWS*COLS/4; ++i )
-        (void) pm_readbigshort( ifp, &screen[i] );
+    for (i = 0; i < ROWS*COLS/4; ++i)
+        pm_readbigshort(ifP, &screen[i]);
 
-    /* Clear the first palette line. */
-    for ( j = 0; j < 48; ++j )
-        PPM_ASSIGN( pal[0][j], 0, 0, 0 );
+    readPalettes(ifP, &pal);
 
-    /* Read the palettes. */
-    for ( i = 1; i < ROWS; ++i )
-        for ( j = 0; j < 48; ++j )
-            {
-            short k;
-            (void) pm_readbigshort( ifp, &k );
-            PPM_ASSIGN( pal[i][j],
-                ( k & 0x700 ) >> 8,
-                ( k & 0x070 ) >> 4,
-                ( k & 0x007 ) );
-            }
-
-    pm_close( ifp );
+    pm_close(ifP);
 
     /* Ok, get set for writing PPM. */
-    ppm_writeppminit( stdout, COLS, ROWS, (pixval) MAXVAL, 0 );
-    pixelrow = ppm_allocrow( COLS );
+    ppm_writeppminit(stdout, COLS, ROWS, MAXVAL, 0);
+    pixelrow = ppm_allocrow(COLS);
 
     /* Now do the conversion. */
-    for ( row = 0; row < ROWS; ++row )
-        {
-        for ( col = 0, pP = pixelrow; col < COLS; ++col, ++pP )
-            {
-            int c, ind, b, plane, x1;
-
+    for (row = 0; row < ROWS; ++row) {
+        unsigned int col;
+        for (col = 0; col < COLS; ++col) {
             /* Compute pixel value. */
-            ind = 80 * row + ( ( col >> 4 ) << 2 );
-            b = 0x8000 >> (col & 0xf);
-            c = 0;
-            for ( plane = 0; plane < 4; ++plane )
-                if ( b & screen[ind+plane] )
-                    c |= (1 << plane);
+            unsigned int const ind = 80 * row + ((col >> 4) << 2);
+            unsigned int const b = 0x8000 >> (col & 0xf);
+            unsigned int c;
+            unsigned int plane;
+            unsigned int x1;
 
+            c = 0;  /* initial value */
+            for (plane = 0; plane < 4; ++plane) {
+                if (b & screen[ind + plane])
+                    c |= (1 << plane);
+            }
             /* Compute palette index. */
             x1 = 10 * c;
-            if ( c & 1 )
+            if ((c & 1) != 0)
                 x1 -= 5;
             else
                 ++x1;
-            if ( ( col >= x1 ) && ( col < ( x1 + 160 ) ) )
+            if ((col >= x1 ) && (col < (x1 + 160)))
                 c += 16;
-            if ( col >= ( x1 + 160 ) )
+            if (col >= (x1 + 160))
                 c += 32;
 
-            /* Store the proper color. */
-            *pP = pal[row][c];
-            }
-        ppm_writeppmrow( stdout, pixelrow, COLS, (pixval) MAXVAL, 0 );
+            /* Set the proper color. */
+            pixelrow[col] = pal.pal[row][c];
         }
-
-    pm_close( stdout );
-
-    exit( 0 );
+        ppm_writeppmrow(stdout, pixelrow, COLS, MAXVAL, 0);
     }
+
+    ppm_freerow(pixelrow);
+    pm_close(stdout);
+
+    return 0;
+}
+
+
+

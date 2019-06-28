@@ -58,7 +58,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (sumSpec + minSpec + maxSpec > 1)
@@ -73,7 +73,7 @@ parseCommandLine(int argc, char ** const argv,
     } else if (maxSpec) {
         cmdlineP->function = FN_MAX;
     } else 
-        pm_error("You must specify one of -sum, -min, or -max");
+        pm_error("You must specify one of -sum, -min, -max, or -mean");
         
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  File spec is the only argument.",

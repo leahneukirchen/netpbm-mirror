@@ -13,32 +13,36 @@
 
 ============================================================================*/
 
+#include <assert.h>
+
 #include "pm_c_util.h"
-#include "pam.h"
+#include "mallocvar.h"
 #include "shhopt.h"
 #include "pm_system.h"
 #include "nstring.h"
+#include "pam.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *indexFilespec;  
-    char *lookupFilespec;
-    char *missingcolor;  /* -missingcolor value.  null if not specified */
-    unsigned int fit;  /* -fit option */
+    const char * indexFilespec;  
+    char *       lookupFilespec;
+    char *       missingcolor;  /* null if not specified */
+    unsigned int fit;
+    unsigned int byplane;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
     optStruct3 opt;
@@ -47,6 +51,8 @@ parseCommandLine(int argc, char ** const argv,
     
     unsigned int lookupfileSpec, missingcolorSpec;
 
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "lookupfile",     OPT_STRING, &cmdlineP->lookupFilespec,  
             &lookupfileSpec, 0);
@@ -54,12 +60,14 @@ parseCommandLine(int argc, char ** const argv,
             &cmdlineP->missingcolor,   &missingcolorSpec, 0);
     OPTENT3(0,   "fit", OPT_FLAG, 
             NULL,   &cmdlineP->fit, 0);
+    OPTENT3(0,   "byplane", OPT_FLAG, 
+            NULL,   &cmdlineP->byplane, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!lookupfileSpec)
@@ -68,10 +76,15 @@ parseCommandLine(int argc, char ** const argv,
     if (!missingcolorSpec)
         cmdlineP->missingcolor = NULL;
 
+    if (cmdlineP->byplane && cmdlineP->missingcolor)
+        pm_error("You cannot specify -missingcolor with -byplane");
+
     if (argc-1 < 1)
         cmdlineP->indexFilespec = "-";
     else
         cmdlineP->indexFilespec = argv[1];
+
+    free(option_def);
 }        
 
 
@@ -94,7 +107,7 @@ fitLookup(tuple **     const inputLookup,
     fitLookuppamP->width = cols;
     fitLookuppamP->height = rows;
 
-    asprintfN(&pamscaleCommand, "pamscale -width=%u -height=%u", cols, rows);
+    pm_asprintf(&pamscaleCommand, "pamscale -width=%u -height=%u", cols, rows);
 
     inPamtuples.pamP = (struct pam *) &inputLookuppam;
     inPamtuples.tuplesP = (tuple ***) &inputLookup;
@@ -105,25 +118,38 @@ fitLookup(tuple **     const inputLookup,
               &pm_accept_to_pamtuples, &outPamtuples,
               pamscaleCommand);
 
-    strfree(pamscaleCommand);
+    pm_strfree(pamscaleCommand);
 }
 
 
 
 static void
-getLookup(const char * const lookupFilespec, 
+getLookup(const char * const lookupFileName, 
           unsigned int const indexDegree,
           unsigned int const indexMaxval,
           tuple ***    const lookupP,
           struct pam * const lookuppamP,
           bool         const fit) {
+/*----------------------------------------------------------------------------
+   Get the lookup image (the one that maps integers to tuples, e.g. a
+   color index / color map / palette) from the file named 
+   'lookupFileName'.
 
-    FILE*  lookupfileP;
+   Interpret the lookup image for use with indices that are ntuples of size
+   'indexDegree' (normally 1, could be 2) whose elements range from 0 through
+   'indexMaxval'
+
+   Iff 'fit' is true, stretch or compress the image in the file to fit
+   exactly the range identified by 'indexMaxval'.
+
+   Return the image as *lookupP and *lookuppamP.
+-----------------------------------------------------------------------------*/
+    FILE *  lookupfileP;
 
     struct pam inputLookuppam;
-    tuple** inputLookup;
+    tuple ** inputLookup;
 
-    lookupfileP = pm_openr(lookupFilespec);
+    lookupfileP = pm_openr(lookupFileName);
     inputLookup = pnm_readpam(lookupfileP, 
                               &inputLookuppam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -153,14 +179,14 @@ getLookup(const char * const lookupFilespec,
     if (indexDegree == 2 && lookuppamP->height - 1 > indexMaxval)
         pm_message("Warning: your lookup table image is taller than "
                    "the maxval of "
-                   "your index message, so the bottom end of the lookup "
+                   "your index image, so the bottom end of the lookup "
                    "table image has no effect on the output.");
 }
 
 
 
 static void
-computeDefaultTuple(struct cmdlineInfo const cmdline, 
+computeDefaultTuple(struct CmdlineInfo const cmdline, 
                     tuple **           const lookup,
                     struct pam *       const lookuppamP, 
                     tuple *            const defaultTupleP) {
@@ -203,20 +229,94 @@ computeDefaultTuple(struct cmdlineInfo const cmdline,
 
 
 static void
-doLookup(struct pam const indexpam,
-         struct pam const outpamarg,
-         tuple      const defaultTuple,
-         tuple **   const lookup,
-         struct pam const lookuppam) {
+doLookupByPlane(struct pam const indexpam,
+                tuple **   const lookup,
+                struct pam const lookuppam,
+                FILE *     const ofP) {
+/*----------------------------------------------------------------------------
+   Write an output image to *ofP derived from the input image read per
+   'indexpam' (now positioned to its raster).
 
+   Base each tuple of the output on the tuple in the same place in the input.
+   Look up each sample of the input tuple in the lookupt image given by
+   'lookup' and 'lookuppam' to get the corresponding sample of the output
+   image.
+
+   Our output image has the same width, height, depth, image type, and tuple
+   type as the input image and the same maxval as the lookup image.
+
+   We ignore any plane or row after the first in the lookup image.  We expect
+   its width to match the maxval of the input image.
+-----------------------------------------------------------------------------*/
     struct pam outpam;
     unsigned int row;
 
     tuple* tuplerowIndex;
     tuple* tuplerowOut;
 
-    outpam = outpamarg;
+    outpam = indexpam;  /* initial value */
+    outpam.maxval = lookuppam.maxval;
+    outpam.file = ofP;
+    
+    tuplerowIndex = pnm_allocpamrow(&indexpam);
+    tuplerowOut = pnm_allocpamrow(&outpam);
 
+    pnm_writepaminit(&outpam);
+
+    assert(lookuppam.width == indexpam.maxval + 1);
+        /* Calling condition */
+
+    for (row = 0; row < indexpam.height; ++row) {
+        unsigned int col;
+        pnm_readpamrow(&indexpam, tuplerowIndex);
+        
+        for (col = 0; col < indexpam.width; ++col) {
+            unsigned int plane;
+
+            for (plane = 0; plane < indexpam.depth; ++plane) {
+                unsigned int const index = tuplerowIndex[col][plane];
+
+                if (index > lookuppam.maxval)
+                    pm_error("Sample value %u in the lookup image exceeds "
+                             "the lookup image's maxval (%u)",
+                             index, (unsigned)lookuppam.maxval);
+
+                tuplerowOut[col][plane] = lookup[0][index][0];
+            }
+        }
+        pnm_writepamrow(&outpam, tuplerowOut);
+    }
+    pnm_freepamrow(tuplerowIndex);
+    pnm_freepamrow(tuplerowOut);
+}
+
+
+
+static void
+doLookupWholeTuple(struct pam const indexpam,
+                   tuple      const defaultTuple,
+                   tuple **   const lookup,
+                   struct pam const lookuppam,
+                   FILE *     const ofP) {
+/*----------------------------------------------------------------------------
+   Write an output image to *ofP derived from the input image read per
+   'indexpam' (now positioned to its raster).
+
+   For each tuple of the output, use the corresponding tuple of the input as
+   an index into the lookup image given by 'lookup' and 'lookuppam'.  If that
+   index is not present in the lookup image, put 'defaultTuple' in the output.
+-----------------------------------------------------------------------------*/
+    struct pam outpam;
+    unsigned int row;
+
+    tuple* tuplerowIndex;
+    tuple* tuplerowOut;
+
+    outpam = lookuppam;  /* initial value */
+    outpam.height = indexpam.height;
+    outpam.width = indexpam.width;
+    outpam.file = ofP;
+    
     tuplerowIndex = pnm_allocpamrow(&indexpam);
     tuplerowOut = pnm_allocpamrow(&outpam);
 
@@ -254,18 +354,18 @@ doLookup(struct pam const indexpam,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam indexpam;
-    struct pam outpam;
-    FILE*  ifP;
+    FILE * ifP;
+    unsigned int indexDegree;
     struct pam lookuppam;
-    tuple** lookup;
+    tuple ** lookup;
 
     tuple defaultTuple;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -273,28 +373,30 @@ main(int argc, char *argv[]) {
 
     pnm_readpaminit(ifP, &indexpam, PAM_STRUCT_SIZE(tuple_type));
 
-    if (indexpam.depth != 1 && indexpam.depth != 2)
-        pm_error("The input (index) file must have depth 1 or 2.  "
-                 "Yours has depth %d",
+    if (!cmdline.byplane && (indexpam.depth != 1 && indexpam.depth != 2))
+        pm_error("Unless you specify -byplane, "
+                 "the input (index) file must have depth 1 or 2.  "
+                 "Yours has depth %u",
                  indexpam.depth);
 
-    getLookup(cmdline.lookupFilespec, indexpam.depth, indexpam.maxval, 
-              &lookup, &lookuppam, cmdline.fit);
+    indexDegree = cmdline.byplane ? 1 : indexpam.depth;
+
+    getLookup(cmdline.lookupFilespec, indexDegree, indexpam.maxval, 
+              &lookup, &lookuppam, cmdline.fit || cmdline.byplane);
 
     computeDefaultTuple(cmdline, lookup, &lookuppam, &defaultTuple);
 
-    outpam = lookuppam;
-    outpam.height = indexpam.height;
-    outpam.width = indexpam.width;
-    outpam.file = stdout;
-    
-    doLookup(indexpam, outpam, defaultTuple, lookup, lookuppam);
+    if (cmdline.byplane)
+        doLookupByPlane(indexpam, lookup, lookuppam, stdout);
+    else
+        doLookupWholeTuple(indexpam, defaultTuple, lookup, lookuppam, stdout);
 
     pm_close(ifP);
 
     pnm_freepamtuple(defaultTuple);
     pnm_freepamarray(lookup, &lookuppam);
     
-    exit(0);
+    return 0;
 }
+
 

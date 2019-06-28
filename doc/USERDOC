@@ -39,6 +39,7 @@ requests (with an Internal Server Error indication and a message saying there
 had been too many requests) before all the files could be fetched.
 
 
+
 GETTING COMMAND HELP WITH A "MAN" COMMAND
 -----------------------------------------
 
@@ -119,9 +120,11 @@ Also, these methods require manual effort, and technical
 understanding, on your part to set up.  Setting it up is too complex
 for an automated process to do it for you with any significant
 integrity.  The examples are guidelines and you shouldn't expect them
-to work literally in your situtation.
+to work literally in your situation.
 
-Here is an example of making troff pages:
+Here is an old example of making troff pages, which doesn't actually
+work anymore, but might be helpful.  You'll probably want to use a Subversion
+export of the manual instead of a Wget download (see above).
 
   mkdir netpbmdoc
   cd netpbmdoc
@@ -129,7 +132,6 @@ Here is an example of making troff pages:
   cd netpbm.sourceforge.net/doc
   make MAKEMAN=/usr/src/netpbm/buildtools/makeman \
     -f /usr/src/netpbm/buildtools/manpage.mk manpages
-  make -f /usr/src/netpbm/buildtools/manpage.mk manpages
   make -f /usr/src/netpbm/buildtools/manpage.mk installman
   cd ../../..
   rm -r netpbmdoc

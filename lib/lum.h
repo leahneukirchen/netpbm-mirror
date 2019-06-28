@@ -1,3 +1,5 @@
+#include <netpbm/pm_config.h>
+
     /* Lookup tables for fast RGB -> luminance calculation. */
     static int times77[256] = {
 	    0,    77,   154,   231,   308,   385,   462,   539,

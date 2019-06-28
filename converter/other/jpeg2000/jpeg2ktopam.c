@@ -9,9 +9,16 @@
 *****************************************************************************/
 
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
-/* Make sure strdup() is in string.h and int_fast32_t is in inttypes.h */
-#define _XOPEN_SOURCE 600
+#define _XOPEN_SOURCE 500 /* Make sure strdup() is in string.h */
+    /* In 2014.09, this was _XOPEN_SOURCE 600, with a comment saying it was
+       necessary to make <inttypes.h> define int_fast32_t, etc. on AIX.
+       <jasper/jasper.h> does use int_fast32_t and does include <inttypes.h>,
+       but plenty of source files of libjasper do to0, and they did not have
+       _XOPEN_SOURCE 600, so it would seem to be superfluous here too.
+    */
 #include <string.h>
+
+#include <jasper/jasper.h>
 
 #include "pm_c_util.h"
 #include "pam.h"
@@ -19,7 +26,6 @@
 #include "nstring.h"
 #include "mallocvar.h"
 
-#include <jasper/jasper.h>
 #include "libjasper_compat.h"
 
 enum compmode {COMPMODE_INTEGER, COMPMODE_REAL};
@@ -41,7 +47,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
-   *cmdline_p structure are actually in the supplied argv array.  And
+   *cmdlineP structure are actually in the supplied argv array.  And
    sometimes, one of these strings is actually just a suffix of an entry
    in argv!
 -----------------------------------------------------------------------------*/
@@ -64,7 +70,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (!debuglevelSpec)
         cmdlineP->debuglevel = 0;
@@ -82,36 +88,57 @@ parseCommandLine(int argc, char ** argv,
 
 
 static void
-readJpc(const char *   const inputFilename, 
+validateJ2k(jas_stream_t * const instreamP) {
+/*----------------------------------------------------------------------------
+   Abort program with error message if *instreamP is not a JPEG-2000 code
+   stream (JPC) or image file (JP2).
+-----------------------------------------------------------------------------*/
+    assert(jas_image_lookupfmtbyname("jpc"));
+    assert(jas_image_lookupfmtbyname("jp2"));
+
+    if (jas_image_lookupfmtbyname("jpc")->ops.validate(instreamP) != 0 &&
+        jas_image_lookupfmtbyname("jp2")->ops.validate(instreamP) != 0) {
+
+        pm_error("Input is not JPEG-2000 image file (JP2) "
+                 "or code stream (JPC).  "
+                 "(the first few bytes of the file are not the required "
+                 "signature)");
+    }
+}
+
+        
+
+
+static void
+readJ2k(const char *   const inputFilename, 
         jas_image_t ** const jasperPP) {
 
     jas_image_t * jasperP;
-    jas_stream_t *instream;
+    jas_stream_t * instreamP;
     const char * options;
 
-    if ( strcmp(inputFilename, "-") == 0) {
+    if (streq(inputFilename, "-")) {
         /* The input image is to be read from standard input. */
-        instream = jas_stream_fdopen(fileno(stdin), "rb");
-        if (instream == NULL)
+        instreamP = jas_stream_fdopen(fileno(stdin), "rb");
+        if (instreamP == NULL)
             pm_error("error: cannot reopen standard input");
     } else {
-        instream = jas_stream_fopen(inputFilename, "rb");
-        if (instream == NULL )
+        instreamP = jas_stream_fopen(inputFilename, "rb");
+        if (instreamP == NULL )
             pm_error("cannot open input image file '%s'", inputFilename);
     } 
 
-    if (jas_image_getfmt(instream) != jas_image_strtofmt((char*)"jpc"))
-        pm_error("Input is not JPEG-2000 code stream");
+    validateJ2k(instreamP);
 
     options = "";
 
-    jasperP = jas_image_decode(instream, jas_image_strtofmt((char*)"jpc"), 
+    jasperP = jas_image_decode(instreamP, jas_image_getfmt(instreamP),
                                (char*)options);
     if (jasperP == NULL)
         pm_error("Unable to interpret JPEG-2000 input.  "
                  "The Jasper library jas_image_decode() subroutine failed.");
 
-	jas_stream_close(instream);
+	jas_stream_close(instreamP);
 
     *jasperPP = jasperP;
 }
@@ -189,7 +216,7 @@ static void
 validateComponentsAlike(jas_image_t * const jasperP) {
 /*----------------------------------------------------------------------------
    JPC allows each component to have its own width and height.  But
-   PAM requires all planes to the same shape.  So we validate now that
+   PAM requires all planes to have the same shape.  So we validate now that
    all the channels are the same, and abort the program if not.
 -----------------------------------------------------------------------------*/
     int cmptNo;
@@ -406,8 +433,9 @@ convertToPamPnm(struct pam *  const outpamP,
     unsigned int row;
     tuple * tuplerow;
     jas_seqent_t ** jasperRow;   /* malloc'ed */
-       /* A row of a plane of the raster from the Jasper library 
-          This is an array of pointers into the 'matrix' data structures.
+       /* A row of the raster from the Jasper library This is an array of
+          pointers into the 'matrix' data structures, one for each plane in
+          the row.
        */
     bool singleMaxval;
 
@@ -479,7 +507,7 @@ main(int argc, char **argv)
     
     jas_setdbglevel(cmdline.debuglevel);
     
-    readJpc(cmdline.inputFilename, &jasperP);
+    readJ2k(cmdline.inputFilename, &jasperP);
 
     outpam.file = stdout;
     outpam.size = sizeof(outpam);

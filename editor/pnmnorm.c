@@ -31,7 +31,9 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
+#include "matrix.h"
 #include "pnm.h"
 
 enum brightMethod {BRIGHT_LUMINOSITY, BRIGHT_COLORVALUE, BRIGHT_SATURATION};
@@ -40,7 +42,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
+    const char * inputFileName;  /* Name of input file */
     unsigned int bvalueSpec;
     xelval bvalue;
     unsigned int bpercentSpec;
@@ -49,6 +51,11 @@ struct cmdlineInfo {
     xelval wvalue;
     unsigned int wpercentSpec;
     float wpercent;
+    unsigned int bsingle;
+    unsigned int wsingle;
+    float middle;
+    unsigned int midvalueSpec;
+    xelval midvalue;
     enum brightMethod brightMethod;
     unsigned int keephues;
     float maxExpansion;
@@ -56,6 +63,7 @@ struct cmdlineInfo {
            by per centile.  This is a factor, not a per cent increase.
            E.g. 50% increase means a factor of 1.50.
         */
+    unsigned int verbose;
 };
 
 
@@ -74,12 +82,12 @@ parseCommandLine(int argc, const char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
     unsigned int luminosity, colorvalue, saturation;
-    unsigned int maxexpandSpec;
+    unsigned int middleSpec, maxexpandSpec;
     float maxexpand;
     
     unsigned int option_def_index;
@@ -95,6 +103,14 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->bvalue,     &cmdlineP->bvalueSpec, 0);
     OPTENT3(0,   "wvalue",        OPT_UINT,   
             &cmdlineP->wvalue,     &cmdlineP->wvalueSpec, 0);
+    OPTENT3(0,   "bsingle",       OPT_FLAG,   
+            NULL,                 &cmdlineP->bsingle, 0);
+    OPTENT3(0,   "wsingle",       OPT_FLAG,   
+            NULL,                 &cmdlineP->wsingle, 0);
+    OPTENT3(0,   "middle",        OPT_FLOAT,   
+            &cmdlineP->middle,     &middleSpec, 0);
+    OPTENT3(0,   "midvalue",      OPT_UINT,   
+            &cmdlineP->midvalue,   &cmdlineP->midvalueSpec, 0);
     OPTENT3(0,   "maxexpand",     OPT_FLOAT,   
             &maxexpand,            &maxexpandSpec, 0);
     OPTENT3(0,   "keephues",      OPT_FLAG,   
@@ -107,6 +123,8 @@ parseCommandLine(int argc, const char ** argv,
             NULL,                  &saturation, 0);
     OPTENT3(0,   "brightmax",     OPT_FLAG,   
             NULL,                  &colorvalue, 0);
+    OPTENT3(0,   "verbose",       OPT_FLAG,   
+            NULL,                  &cmdlineP->verbose, 0);
 
     /* Note: -brightmax was documented and accepted long before it was
        actually implemented.  By the time we implemented it, we
@@ -117,7 +135,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (!cmdlineP->wpercentSpec)
@@ -137,6 +155,20 @@ parseCommandLine(int argc, const char ** argv,
     if (cmdlineP->bpercent > 100.0)
         pm_error("You specified a per centage > 100 for bpercent: %f",
                  cmdlineP->bpercent);
+
+    if (cmdlineP->bsingle && (cmdlineP->bpercentSpec || cmdlineP->bvalueSpec))
+        pm_error("You cannot specify both -bsingle and -bpercent or -bvalue");
+
+    if (cmdlineP->wsingle && (cmdlineP->wpercentSpec || cmdlineP->wvalueSpec))
+        pm_error("You cannot specify both -wsingle and -wpercent or -wvalue");
+
+    if (middleSpec) {
+        if (cmdlineP->middle < 0.0 || cmdlineP->middle > 1.0)
+            pm_error("-middle is a normalized brightness value; it "
+                     "must be in the range 0..1.  You specified %f",
+                     cmdlineP->middle);
+    } else
+        cmdlineP->middle = 0.5;
 
     if (luminosity + colorvalue + saturation > 1)
         pm_error("You can specify only one of "
@@ -163,9 +195,9 @@ parseCommandLine(int argc, const char ** argv,
                  "specification.  "
                  "You specified %d arguments.", argc-1);
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 }
 
 
@@ -211,7 +243,7 @@ buildHistogram(FILE *   const ifp,
             if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
                 switch(brightMethod) {
                 case BRIGHT_LUMINOSITY:
-                    brightness = PPM_LUMIN(p);
+                    brightness = ppm_luminosity(p);
                     break;
                 case BRIGHT_COLORVALUE:
                     brightness = ppm_colorvalue(p);
@@ -230,6 +262,50 @@ buildHistogram(FILE *   const ifp,
 
 
 
+static xelval
+minimumValue(const unsigned int * const hist,
+             unsigned int         const highest) {
+
+    xelval i;
+    bool foundOne;
+
+    for (i = 0, foundOne = false; !foundOne; ) {
+        if (hist[i] > 0)
+            foundOne = true;
+        else {
+            if (i == highest)
+                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+            else
+                ++i;
+        }
+    }
+    return i;
+}
+
+
+
+static xelval
+maximumValue(const unsigned int * const hist,
+             unsigned int         const highest) {
+
+    xelval i;
+    bool foundOne;
+
+    for (i = highest, foundOne = false; !foundOne; ) {
+        if (hist[i] > 0)
+            foundOne = true;
+        else {
+            if (i == 0)
+                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+            else
+                --i;
+        }
+    }
+    return i;
+}
+
+
+
 static void
 computeBottomPercentile(unsigned int         hist[], 
                         unsigned int   const highest,
@@ -239,7 +315,7 @@ computeBottomPercentile(unsigned int         hist[],
 /*----------------------------------------------------------------------------
    Compute the lowest index of hist[] such that the sum of the hist[]
    values with that index and lower represent at least 'percent' per cent of
-   'n' (which is assumed to be the sum of all the values in hist[],
+   'total' (which is assumed to be the sum of all the values in hist[],
    given to us to save us the time of computing it).
 -----------------------------------------------------------------------------*/
     unsigned int cutoff = total * percent / 100.0;
@@ -271,7 +347,7 @@ computeTopPercentile(unsigned int         hist[],
 /*----------------------------------------------------------------------------
    Compute the highest index of hist[] such that the sum of the hist[]
    values with that index and higher represent 'percent' per cent of
-   'n' (which is assumed to be the sum of all the values in hist[],
+   'total' (which is assumed to be the sum of all the values in hist[],
    given to us to save us the time of computing it).
 -----------------------------------------------------------------------------*/
     unsigned int cutoff = total * percent / 100.0;
@@ -430,9 +506,9 @@ resolvePercentParams(FILE *             const ifP,
 /*----------------------------------------------------------------------------
    Figure out the endpoint of the stretch (the value that is to be stretched
    to black and the one that is to be stretched to white) as requested
-   by the -bvalue, -bpercent, -wvalue, and -wpercent options.
+   by the -{b,w}{value,percent,single} options.
 
-   These values may be invalid due to overlapping, and they may exceed
+   These values may be invalid because of overlapping, and they may exceed
    the maximum allowed stretch; Caller must deal with that.
 -----------------------------------------------------------------------------*/
     unsigned int * hist;  /* malloc'ed */
@@ -445,7 +521,9 @@ resolvePercentParams(FILE *             const ifP,
         buildHistogram(ifP, cols, rows, maxval, format, hist,
                        cmdline.brightMethod);
 
-        if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
+        if (cmdline.bsingle)
+            *bvalueP = minimumValue(hist, maxval);
+        else if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
             *bvalueP = cmdline.bvalue;
         } else {
             xelval percentBvalue;
@@ -457,7 +535,9 @@ resolvePercentParams(FILE *             const ifP,
                 *bvalueP = percentBvalue;
         }
 
-        if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
+        if (cmdline.wsingle)
+            *wvalueP = maximumValue(hist, maxval);
+        else if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
             *wvalueP = cmdline.wvalue;
         } else {
             xelval percentWvalue;
@@ -482,14 +562,25 @@ computeEndValues(FILE *             const ifP,
                  int                const format,
                  struct cmdlineInfo const cmdline,
                  xelval *           const bvalueP,
-                 xelval *           const wvalueP) {
+                 xelval *           const wvalueP,
+                 bool *             const quadraticP,
+                 xelval *           const midvalueP) {
 /*----------------------------------------------------------------------------
-   Figure out what original values will be translated to full white and
-   full black -- thus defining to what all the other values get translated.
+   Figure out what original values will be translated to full bright and full
+   dark and, if user requested, a middle brightness -- thus defining to what
+   all the other values get translated.
 
-   This may involve looking at the image.  The image is in the file
-   'ifp', which is positioned just past the header (at the raster).
-   Leave it positioned arbitrarily.
+   This may involve looking at the image.  The image is in the file 'ifP',
+   which is positioned just past the header (at the raster).  Leave it
+   positioned arbitrarily.
+
+   We return *quadraticP == true iff the normalization is to be via a
+   quadratic transfer function fixed at 3 points - full bright, full dark, and
+   something in between.  In that case, the original brightnesses of those
+   three points are *bvalueP, *midvalueP, and *wvalueP.  We return *quadraticP
+   == false iff the normalization is to be via a linear function fixed at 2
+   points - full bright and full dark.  In that case, *midvalueP is
+   meaningless.
 -----------------------------------------------------------------------------*/
     xelval reqBvalue, reqWvalue, nonOlapBvalue, nonOlapWvalue;
     unsigned int bLower, wRaise;
@@ -507,15 +598,187 @@ computeEndValues(FILE *             const ifP,
 
     *bvalueP = nonOlapBvalue - bLower;
     *wvalueP = nonOlapWvalue + wRaise;
+
+    if (cmdline.midvalueSpec) {
+        if (cmdline.midvalue > *bvalueP && cmdline.midvalue < *wvalueP) {
+            *quadraticP = true;
+            *midvalueP = cmdline.midvalue;
+        } else
+            *quadraticP = false;
+    } else
+        *quadraticP = false;
 }
 
 
 
 static void
-computeTransferFunction(xelval            const bvalue, 
-                        xelval            const wvalue,
-                        xelval            const maxval,
-                        xelval **         const newBrightnessP) {
+computeLinearTransfer(xelval   const bvalue,
+                      xelval   const wvalue,
+                      xelval   const maxval,
+                      xelval * const newBrightness) {
+/*----------------------------------------------------------------------------
+   Map the middle brightnesses (the ones that don't get clipped to full dark
+   or full bright, i.e. from 'bvalue' to 'wvalue') linearly onto 0..maxval.
+   Set this mapping in newBrightness[].
+-----------------------------------------------------------------------------*/
+    unsigned int const range = wvalue - bvalue;
+
+    xelval i;
+    unsigned int val;
+    /* The following for structure is a hand optimization of this one:
+       for (i = bvalue; i <= wvalue; ++i)
+       newBrightness[i] = (i-bvalue)*maxval/range);
+       (with proper rounding)
+    */
+    for (i = bvalue, val = range/2; 
+         i <= wvalue; 
+         ++i, val += maxval)
+        newBrightness[i] = MIN(val / range, maxval);
+
+    assert(newBrightness[bvalue] == 0);
+    assert(newBrightness[wvalue] == maxval);
+}
+
+
+
+typedef struct {
+/*----------------------------------------------------------------------------
+   A quadratic polynomial function
+-----------------------------------------------------------------------------*/
+    double a;  /* x^2 coefficient */
+    double b;  /* x^1 coefficient */
+    double c;  /* x^0 coefficient */
+} Quadfn;
+
+
+
+static void
+computeQuadraticFunction(xelval   const bvalue,
+                         xelval   const midvalue,
+                         xelval   const wvalue,
+                         xelval   const middle,
+                         xelval   const maxval,
+                         Quadfn * const functionP) {
+
+    /* The matrix equation we solve (for varMatrix) is
+
+       a * x = c
+    */
+    double ** a;
+    double c[3];
+    double x[3];
+    const char * error;
+
+    MALLOCARRAY2_NOFAIL(a, 3, 3);
+
+    a[0][0] = SQR(bvalue);   a[0][1] = bvalue;   a[0][2] = 1.0;
+    a[1][0] = SQR(midvalue); a[1][1] = midvalue; a[1][2] = 1.0;
+    a[2][0] = SQR(wvalue);   a[2][1] = wvalue;   a[2][2] = 1.0;
+        
+    c[0] = 0.0;
+    c[1] = middle;
+    c[2] = maxval;
+    
+    pm_solvelineareq(a, x, c, 3, &error);
+
+    if (error) {
+        pm_error("Cannot fit a quadratic function to the points "
+                 "(%u, %u), (%u, %u), and (%u, %u).  %s",
+                 bvalue, 0, midvalue, middle, wvalue, maxval, error);
+        pm_strfree(error);
+    } else {
+        functionP->a = x[0];
+        functionP->b = x[1];
+        functionP->c = x[2];
+    }
+
+    pm_freearray2((void **)a);
+}
+
+
+
+static void
+computeQuadraticTransfer(xelval   const bvalue,
+                         xelval   const midvalue,
+                         xelval   const wvalue,
+                         float    const middleNorm,
+                         xelval   const maxval,
+                         bool     const verbose,
+                         xelval * const newBrightness) {
+/*----------------------------------------------------------------------------
+   Map the middle brightnesses (the ones that don't get clipped to full dark
+   or full bright, i.e. from 'bvalue' to 'wvalue') quadratically onto
+   0..maxval, such that 'bvalue' maps to 0, 'wvalue' maps to 'maxval, and
+   'midvalue' maps to the normalized value 'middleNorm' (i.e. the actual
+   xelval middleNorm * maxval).
+
+   Set this mapping in newBrightness[].
+-----------------------------------------------------------------------------*/
+    xelval const middle = ROUNDU(middleNorm * maxval);
+
+    /* Computing this function is just the task of finding a parabola that
+       passes through 3 given points:
+        
+           (bvalue, 0)
+           (midvalue, middle)
+           (wvalue, maxval)
+
+       We do that by solving the system of three linear equations in
+       in 3 variables.  The 3 variables are the coefficients of the
+       quadratic function we're looking for -- A, B, and C in this:
+
+           NEWVAL = A * OLDVAL^2 + B * OLDVAL + C
+
+       The three equations of the system are:
+
+           0      = A * bvalue^2   + B * bvalue   + C
+           middle = A * midvalue^2 + B * midvalue + C
+           maxval = A * wvalue^2   + B * wvalue   + C
+
+       Expressed in matrix form:
+
+          [ bvalue^2   bvalue   1 ]   [ A ]   [ 0      ]
+          [ midvalue^2 midvalue 1 ] * [ B ] = [ middle ]
+          [ wvalue^2   wvalue   1 ]   [ C ]   [ maxval ]
+
+       So we solve that for A, B, and C.
+
+       With those coefficients, we have the quadratic function, and we
+       simple apply it to every old sample value I in the range to get the
+       new:
+
+           newBrightness[I] = A * I^2 + B * I + C
+    */
+
+    Quadfn xfer;
+
+    computeQuadraticFunction(bvalue, midvalue, wvalue, middle, maxval,
+                             &xfer);
+
+
+    if (verbose)
+        pm_message("Transfer function is %f * s^2 + %f * s + %f",
+                   xfer.a, xfer.b, xfer.c);
+
+    {
+        xelval i;
+        for (i = bvalue; i <= wvalue; ++i)
+            newBrightness[i] =
+                MIN(ROUNDU(xfer.a * SQR(i) + xfer.b * i + xfer.c), maxval);
+    }
+}
+
+
+
+static void
+computeTransferFunction(bool      const quadratic,
+                        xelval    const bvalue, 
+                        xelval    const midvalue, 
+                        xelval    const wvalue,
+                        float     const middle,
+                        xelval    const maxval,
+                        bool      const verbose,
+                        xelval ** const newBrightnessP) {
 /*----------------------------------------------------------------------------
    Compute the transfer function, i.e. the array *newBrightnessP such that
    (*newBrightnessP)[x] is the brightness of the xel that should replace a
@@ -524,9 +787,16 @@ computeTransferFunction(xelval            const bvalue,
 
    'bvalue' is the highest brightness that should map to zero brightness;
    'wvalue' is the lowest brightness that should map to full brightness.
-   brightnesses in between should be stretched linearly.  (That stretching
-   could conceivably result in more brightnesses mapping to zero and full
-   brightness, due to rounding).
+
+   If 'quadratic' is false, brightnesses in between should be stretched
+   linearly.  Otherwise, brightness 'midvalue' should map to brightness
+   'middle' (which is expressed on a 0..1 normalized scale) and brightnesses
+   should be stretched according to a quadratic polynomial that includes those
+   3 points.
+
+   This stretching could conceivably result in more brightnesses mapping to
+   zero and full brightness that 'bvalue' and 'wvalue' demand, because of
+   rounding.
 
    Define function only for values 0..maxval.
 -----------------------------------------------------------------------------*/
@@ -543,23 +813,13 @@ computeTransferFunction(xelval            const bvalue,
         for (i = 0; i < bvalue; ++i)
             newBrightness[i] = 0;
 
-    /* Map the middle brightnesses linearly onto 0..maxval */
-    {
-        unsigned int const range = wvalue - bvalue;
-        unsigned int val;
-        /* The following for loop is a hand optimization of this one:
-           for (i = bvalue; i <= wvalue; ++i)
-             newBrightness[i] = (i-bvalue)*maxval/range);
-           (with proper rounding)
-        */
-        for (i = bvalue, val = range/2; 
-             i <= wvalue; 
-             ++i, val += maxval)
-            newBrightness[i] = MIN(val / range, maxval);
-
-        assert(newBrightness[bvalue] == 0);
-        assert(newBrightness[wvalue] == maxval);
-    }
+    /* Map the middle brightnesses onto 0..maxval */
+    
+    if (quadratic)
+        computeQuadraticTransfer(bvalue, midvalue, wvalue, middle, maxval,
+                                 verbose, newBrightness);
+    else
+        computeLinearTransfer(bvalue, wvalue, maxval, newBrightness);
 
     /* Clip the highest brightnesses to maxval */
     for (i = wvalue+1; i <= maxval; ++i)
@@ -589,7 +849,7 @@ brightScaler(xel               const p,
              
     switch (brightMethod) {
     case BRIGHT_LUMINOSITY:
-        oldBrightness = PPM_LUMIN(p);
+        oldBrightness = ppm_luminosity(p);
         break;
     case BRIGHT_COLORVALUE:
         oldBrightness = ppm_colorvalue(p);
@@ -653,6 +913,25 @@ writeRowNormalized(xel *             const xelrow,
 
 
 
+static void
+reportTransferParm(bool   const quadratic,
+                   xelval const bvalue,
+                   xelval const midvalue,
+                   xelval const wvalue,
+                   xelval const maxval,
+                   float  const middle) {
+
+    if (quadratic)
+        pm_message("remapping %u..%u..%u to %u..%u..%u",
+                   bvalue, midvalue, wvalue,
+                   0, ROUNDU(maxval*middle), maxval);
+    else
+        pm_message("remapping %u..%u to %u..%u",
+                   bvalue, wvalue, 0, maxval);
+}
+
+
+
 int
 main(int argc, const char *argv[]) {
 
@@ -661,20 +940,21 @@ main(int argc, const char *argv[]) {
     pm_filepos imagePos;
     xelval maxval;
     int rows, cols, format;
-    xelval bvalue, wvalue;
+    bool quadratic;
+    xelval bvalue, midvalue, wvalue;
     
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr_seekable(cmdline.inputFilespec);
+    ifP = pm_openr_seekable(cmdline.inputFileName);
 
     /* Rescale so that bvalue maps to 0, wvalue maps to maxval. */
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
     pm_tell2(ifP, &imagePos, sizeof(imagePos));
 
     computeEndValues(ifP, cols, rows, maxval, format, cmdline, 
-                     &bvalue, &wvalue);
+                     &bvalue, &wvalue, &quadratic, &midvalue);
     {
         xelval * newBrightness;
         int row;
@@ -685,9 +965,13 @@ main(int argc, const char *argv[]) {
 
         xelrow = pnm_allocrow(cols);
 
-        pm_message("remapping %u..%u to %u..%u", bvalue, wvalue, 0, maxval);
+        reportTransferParm(quadratic, bvalue, midvalue, wvalue, maxval,
+                           cmdline.middle);
 
-        computeTransferFunction(bvalue, wvalue, maxval, &newBrightness);
+        
+        computeTransferFunction(quadratic, bvalue, midvalue, wvalue,
+                                cmdline.middle, maxval, cmdline.verbose,
+                                &newBrightness);
 
         pm_seek2(ifP, &imagePos, sizeof(imagePos));
         pnm_writepnminit(stdout, cols, rows, maxval, format, 0);
@@ -704,6 +988,9 @@ main(int argc, const char *argv[]) {
         pnm_freerow(rowbuf);
         pnm_freerow(xelrow);
     } 
-   pm_close(ifP);
+    pm_close(ifP);
     return 0;
 }
+
+
+

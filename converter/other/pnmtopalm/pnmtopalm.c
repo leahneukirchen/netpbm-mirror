@@ -13,7 +13,13 @@
  *
  * See LICENSE file for licensing information.
  *
- *  
+ * References for the Palm Bitmap format:
+ *
+ * https://web.archive.org/web/20030621112139/http://www.palmos.com:80/dev/support/docs/
+ * https://web.archive.org/web/20030413080018/http://www.palmos.com:80/dev/support/docs/palmos/ReferenceTOC.html
+ *
+ * http://www.trantor.de/kawt/doc/palmimages.html
+ * (above retrieved August 2017)
  */
 
 #include <string.h>
@@ -26,6 +32,7 @@
 #include "palm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
+#include "runlength.h"
 
 enum compressionType {COMP_NONE, COMP_SCANLINE, COMP_RLE, COMP_PACKBITS};
 
@@ -33,8 +40,8 @@ struct cmdline_info {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input files */
-    char *transparent;          /* -transparent value.  Null if unspec */
+    const char * inputFilespec;  /* Filespecs of input files */
+    const char * transparent;    /* -transparent value.  Null if unspec */
     unsigned int depth;         /* -depth value.  0 if unspec */
     unsigned int maxdepth;      /* -maxdepth value.  0 if unspec */
     enum compressionType compression;
@@ -90,7 +97,7 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     opt.short_allowed = FALSE; /* We have some short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (depthSpec) {
@@ -289,7 +296,7 @@ formatName(int const format) {
         
 
 static void
-findTransparentColor(char *         const colorSpec, 
+findTransparentColor(const char *   const colorSpec, 
                      pixval         const newMaxval,
                      bool           const directColor, 
                      pixval         const maxval, 
@@ -497,7 +504,7 @@ writeDummy() {
    Write a dummy Palm Bitmap header.  This is a 16 byte header, of
    type version 1 and with (only) pixelSize set to 0xFF.
 
-   An old viewer will see this as invalid due to the pixelSize, and stop
+   An old viewer will see this as invalid because of the pixelSize, and stop
    reading the stream.  A new viewer will recognize this for what it is
    (a dummy header designed to stop old viewers from reading further in
    the stream) and continue reading the stream.  Presumably, what follows
@@ -836,101 +843,26 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
 
 
 static void
-computeNextPackbitsRun(const unsigned char * const rowdata,
-                       unsigned int          const rowbytes,
-                       unsigned int          const startPos,
-                       unsigned int *        const nextPosP,
-                       unsigned char *       const output,
-                       int *                 const countP) {
-
-    unsigned int pos;
-    int count;
-    
-    pos = startPos;
-    count = 0;
-    
-    if (rowdata[pos] == rowdata[pos + 1]) {
-        ++pos;
-        --count;
-        while ((count > -127) && (pos < (rowbytes - 1)) &&
-               (rowdata[pos] == rowdata[pos + 1])) {
-            ++pos;
-            --count;
-        }
-        ++pos;  /* push pos past end of this run */
-    } else {
-        output[count] = rowdata[pos];
-        ++pos;
-        while ((count < 127) && (pos < (rowbytes - 1)) && 
-               (rowdata[pos] != rowdata[pos + 1])) {
-            ++count;
-            output[count] = rowdata[pos];
-            ++pos;
-        }
-        /* trailing literal */
-        if ((count < 127) && (pos == (rowbytes - 1)) &&
-            (rowdata[pos - 1] != rowdata[pos])) {
-            ++count;
-            output[count] = rowdata[pos];
-            ++pos;
-        }
-    }
-    *nextPosP = pos;
-    *countP = count;
-}
-
-
-
-static void
-addPackbitsRunToBuffer(const unsigned char * const rowdata,
-                       unsigned int          const rowbytes,
-                       unsigned int          const pos,
-                       unsigned char *       const output,
-                       int                   const count,
-                       struct seqBuffer *    const rasterBufferP) {
-
-    addByteToBuffer(rasterBufferP, (unsigned char)(signed char)count);
-    if (count < 0) {
-        addByteToBuffer(rasterBufferP, rowdata[pos - 1]);
-    } else {
-        unsigned int j;
-        for (j = 0; j <= count; j++)
-            addByteToBuffer(rasterBufferP, output[j]);
-    }
-    
-    if (pos == (rowbytes - 1) && (rowdata[pos - 1] != rowdata[pos])) {
-        /* orphaned byte, treat as literal */
-        addByteToBuffer(rasterBufferP, 0);
-        addByteToBuffer(rasterBufferP, rowdata[pos]);
-    }
-}
-
-
-
-static void
 packbitsCompressAndBufferRow(const unsigned char * const rowdata,
                              unsigned int          const rowbytes,
                              struct seqBuffer *    const rasterBufferP) {
 /*----------------------------------------------------------------------------
-   Take the raw Palm Bitmap row 'rowdata', which is 'rowbytess' bytes, and
+   Take the raw Palm Bitmap row 'rowdata', which is 'rowbytes' bytes, and
    add the packbits-compressed representation of it to the buffer 
    with handle 'rasterBufferP'.
 -----------------------------------------------------------------------------*/
-    unsigned int position;
-        /* byte position within the row */
+    unsigned char * compressedData;
+    size_t          compressedDataCt;
+    unsigned int    byteCt;
 
-    position = 0;  /* Start at beginning of row */
+    pm_rlenc_allocoutbuf(&compressedData, rowbytes, PM_RLE_PACKBITS);
+    pm_rlenc_compressbyte(rowdata, compressedData, PM_RLE_PACKBITS,
+                          rowbytes, &compressedDataCt);
 
-    while (position < rowbytes - 1) {
-        unsigned char output[128];
-        int count;
+    for (byteCt = 0; byteCt < compressedDataCt; ++byteCt)
+        addByteToBuffer(rasterBufferP, compressedData[byteCt]);
 
-        computeNextPackbitsRun(rowdata, rowbytes, position, 
-                               &position, output, &count);
-
-        addPackbitsRunToBuffer(rowdata, rowbytes, position, output, count,
-                               rasterBufferP);
-    }
+    free(compressedData);
 }
 
 
@@ -1027,7 +959,13 @@ bufferRaster(xel **               const xels,
     createBuffer(rasterBufferPP);
     
     MALLOCARRAY_NOFAIL(rowdata, rowbytes);
-    MALLOCARRAY_NOFAIL(lastrow, rowbytes);
+    if (compression == COMP_SCANLINE)
+        MALLOCARRAY_NOFAIL(lastrow, rowbytes);
+    else
+        lastrow = NULL;
+
+    /* clear pad bytes to suppress valgrind error */
+    rowdata[rowbytes - 1] = rowdata[rowbytes - 2] = 0x00;
 
     /* And write out the data. */
     for (row = 0; row < rows; ++row) {
@@ -1039,8 +977,9 @@ bufferRaster(xel **               const xels,
         if (compression == COMP_SCANLINE)
             memcpy(lastrow, rowdata, rowbytes);
     }
-    free(lastrow);
     free(rowdata);
+    if (compression == COMP_SCANLINE)
+        free(lastrow);
 }
 
 

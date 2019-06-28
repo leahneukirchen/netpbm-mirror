@@ -25,19 +25,13 @@
  * Copyright (c) 1988, Curtin University of Technology
  */
 
-#include "rle.h"
-
 #include <string.h>
 #include <stdio.h>
-
-#ifdef  USE_TIME_H
 #include <time.h>
-#else
-#include <sys/types.h>
-#include <sys/time.h>
-#endif
 
-#include "mallocvar.h"
+#include "netpbm/mallocvar.h"
+#include "rle.h"
+
 
 /*****************************************************************
  * TAG( rle_addhist )

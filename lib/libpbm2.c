@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <limits.h>
 
 #include "pbm.h"
@@ -34,11 +35,9 @@ getbit (FILE * const file) {
 
 
 void
-pbm_readpbminitrest( file, colsP, rowsP )
-    FILE* file;
-    int* colsP;
-    int* rowsP;
-    {
+pbm_readpbminitrest( FILE * const file,
+                     int  * const colsP,
+                     int  * const rowsP ) {
     /* Read size. */
     *colsP = (int)pm_getuint( file );
     *rowsP = (int)pm_getuint( file );
@@ -55,7 +54,7 @@ pbm_readpbminitrest( file, colsP, rowsP )
         pm_error("Number of columns in header is too large.");
     if (*rowsP < 0)
         pm_error("Number of columns in header is too large.");
-    }
+}
 
 
 
@@ -87,10 +86,13 @@ pbm_readpbminit(FILE * const ifP,
                 int *  const rowsP,
                 int *  const formatP) {
 
-    *formatP = pm_readmagicnumber(ifP);
+    int realFormat;
 
-    switch (PAM_FORMAT_TYPE(*formatP)) {
+    realFormat = pm_readmagicnumber(ifP);
+
+    switch (PAM_FORMAT_TYPE(realFormat)) {
     case PBM_TYPE:
+        *formatP = realFormat;
         pbm_readpbminitrest(ifP, colsP, rowsP);
         break;
 
@@ -110,7 +112,8 @@ pbm_readpbminit(FILE * const ifP,
                  "to PBM with 'pamtopnm'");
         break;
     default:
-        pm_error("bad magic number - not a Netpbm file");
+        pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
+                 realFormat);
     }
     validateComputableSize(*colsP, *rowsP);
 }
@@ -118,32 +121,29 @@ pbm_readpbminit(FILE * const ifP,
 
 
 void
-pbm_readpbmrow( file, bitrow, cols, format )
-    FILE* file;
-    bit* bitrow;
-    int cols, format;
-    {
-    register int col, bitshift;
-    register bit* bP;
+pbm_readpbmrow( FILE * const file,
+                bit * const bitrow,
+                int const cols,
+                int const format) {
+
+    int col, bitshift;
 
     switch ( format )
     {
     case PBM_FORMAT:
-    for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-        *bP = getbit( file );
+    for ( col = 0; col < cols; ++col )
+        bitrow[col] = getbit( file );
     break;
 
     case RPBM_FORMAT: {
-        register unsigned char item;
+        unsigned char item;
         bitshift = -1;  item = 0;  /* item's value is meaningless here */
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-          {
-              if ( bitshift == -1 )
-                {
+        for ( col = 0; col < cols; ++col ) {
+              if ( bitshift == -1 ) {
                     item = pm_getrawbyte( file );
                     bitshift = 7;
                 }
-              *bP = ( item >> bitshift ) & 1;
+              bitrow[col] = ( item >> bitshift ) & 1;
               --bitshift;
           }
     }
@@ -152,7 +152,7 @@ pbm_readpbmrow( file, bitrow, cols, format )
     default:
     pm_error( "can't happen" );
     }
-    }
+}
 
 
 
@@ -180,12 +180,12 @@ pbm_readpbmrow_packed(FILE *          const fileP,
     break;
 
     case RPBM_FORMAT: {
-        int bytes_read;
-        bytes_read = fread(packedBits, 1, pbm_packed_bytes(cols), fileP);
+        unsigned int bytesReadCt;
+        bytesReadCt = fread(packedBits, 1, pbm_packed_bytes(cols), fileP);
              
-        if (bytes_read < pbm_packed_bytes(cols)) {
+        if (bytesReadCt < pbm_packed_bytes(cols)) {
             if (feof(fileP)) 
-                if (bytes_read == 0) 
+                if (bytesReadCt == 0) 
                     pm_error("Attempt to read a raw PBM image row, but "
                              "no more rows left in file.");
                 else
@@ -197,7 +197,7 @@ pbm_readpbmrow_packed(FILE *          const fileP,
     break;
     
     default:
-        pm_error( "Internal error in pbm_readpbmrow_packed." );
+        pm_error("Internal error in pbm_readpbmrow_packed.");
     }
 }
 
@@ -258,17 +258,36 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
 
         window[last] =  leftBits | rightBits;
     }
-} 
+}
+
+
+
+void
+pbm_cleanrowend_packed(unsigned char * const packedBits,
+                       unsigned int    const cols) {
+/*----------------------------------------------------------------------------
+  Set fractional "don't care" bits at end of row to zero.
+----------------------------------------------------------------------------*/
+    unsigned int const bitsPerChar = 8;
+
+    if (cols % bitsPerChar > 0) {
+        unsigned int const last = pbm_packed_bytes(cols) - 1;
+
+        assert(pbm_packed_bytes(cols) > 0);
+
+        packedBits[last] >>= bitsPerChar - cols % bitsPerChar;
+        packedBits[last] <<= bitsPerChar - cols % bitsPerChar;
+    }
+}
 
 
 
 bit**
-pbm_readpbm( file, colsP, rowsP )
-    FILE* file;
-    int* colsP;
-    int* rowsP;
-    {
-    register bit** bits;
+pbm_readpbm( FILE * const file,
+             int  * const colsP,
+             int  * const rowsP) {
+
+    bit ** bits;
     int format, row;
 
     pbm_readpbminit( file, colsP, rowsP, &format );
@@ -279,4 +298,4 @@ pbm_readpbm( file, colsP, rowsP )
         pbm_readpbmrow( file, bits[row], *colsP, format );
 
     return bits;
-    }
+}

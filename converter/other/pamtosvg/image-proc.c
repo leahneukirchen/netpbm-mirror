@@ -52,7 +52,7 @@ new_distance_map(bitmap_type bitmap, unsigned char target_value, bool padded, at
         MALLOCARRAY(dist.d[y], w);
         if (dist.d[y] == NULL)
             pm_error("Unable to get memory for distance map");
-        bzero(dist.d[y], w * sizeof(float));
+        memset(dist.d[y], 0, w * sizeof(float));
         
         MALLOCARRAY(dist.weight[y], w);
         if (dist.weight[y] == NULL)
@@ -330,7 +330,7 @@ binarize(bitmap_type *bitmap)
     }
     else
     {
-	    WARNING1("binarize: %u-plane images are not supported", spp);
+	    WARNING1("binarize: don't know how to interpret %u-plane images", spp);
     }
 }
 

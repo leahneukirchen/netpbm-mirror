@@ -18,6 +18,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE   /* Make sure strdup is int string.h */
 
 #include <assert.h>
@@ -486,7 +487,7 @@ parseCommandLine(int argc, const char * argv[],
   opt.opt_table = option_def;
   opt.short_allowed = FALSE;
   opt.allowNegNum = TRUE;
-  optParseOptions3 (&argc, (char **)argv, opt, sizeof(opt), 0);
+  pm_optParseOptions3 (&argc, (char **)argv, opt, sizeof(opt), 0);
 
   /* The non-option arguments are optionally all eight coordinates
      and optionally the input filename
@@ -536,7 +537,7 @@ parseCommandLine(int argc, const char * argv[],
                            parse_enum (bool_text[i], bool_token,
                                        bool_option_name[i]));
 
-  /* Propagate values where neccessary */
+  /* Propagate values where necessary */
 
   if (float_spec[10])           /* --margin */
     for (i=11; i<15; i++)       /* --top_margin through --right_margin */

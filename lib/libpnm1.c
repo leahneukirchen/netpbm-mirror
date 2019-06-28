@@ -13,6 +13,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "netpbm/mallocvar.h"
+
 #include "pnm.h"
 
 #include "ppm.h"
@@ -26,8 +28,6 @@
 
 #include "pam.h"
 #include "libpam.h"
-
-#include "mallocvar.h"
 
 
 
@@ -47,15 +47,12 @@ pnm_allocrow(unsigned int const cols) {
 
 
 void
-pnm_init( argcP, argv )
-    int* argcP;
-    char* argv[];
-    {
+pnm_init(int * const argcP, char ** const argv) {
     ppm_init( argcP, argv );
-    }
+}
 
 void
-pnm_nextimage(FILE *file, int * const eofP) {
+pnm_nextimage(FILE * const file, int * const eofP) {
     pm_nextimage(file, eofP);
 }
 
@@ -72,10 +69,13 @@ validateComputableSize(unsigned int const cols,
    you expect.  That failed expectation can be disastrous if you use
    it to allocate memory.
 
+   It is very normal to allocate space for a pixel row, so we make sure
+   the size of a pixel row, in bytes, can be represented by an 'int'.
+
    A common operation is adding 1 or 2 to the highest row or
    column number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 2)
+    if (cols > INT_MAX/(sizeof(pixval) * 3) || cols > INT_MAX - 2)
         pm_error("image width (%u) too large to be processed", cols);
     if (rows > INT_MAX - 2)
         pm_error("image height (%u) too large to be processed", rows);
@@ -126,7 +126,8 @@ pnm_readpnminit(FILE *   const fileP,
     break;
 
     default:
-        pm_error("bad magic number - not a ppm, pgm, or pbm file");
+        pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
+                 realFormat);
     }
     validateComputableSize(*colsP, *rowsP);
 }
@@ -178,10 +179,10 @@ readpbmrow(FILE * const fileP,
     jmp_buf * origJmpbufP;
     bit * bitrow;
 
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols);
 
     if (setjmp(jmpbuf) != 0) {
-        pbm_freerow(bitrow);
+        pbm_freerow_packed(bitrow);
         pm_setjmpbuf(origJmpbufP);
         pm_longjmp();
     } else {
@@ -189,11 +190,14 @@ readpbmrow(FILE * const fileP,
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        pbm_readpbmrow(fileP, bitrow, cols, format);
+        pbm_readpbmrow_packed(fileP, bitrow, cols, format);
 
-        for (col = 0; col < cols; ++col)
-            PNM_ASSIGN1(xelrow[col], bitrow[col] == PBM_BLACK ? 0 : maxval);
-
+        for (col = 0; col < cols; ++col) {
+            pixval const g =
+                ((bitrow[col/8] >> (7 - col%8)) & 0x1) == PBM_WHITE ?
+                maxval : 0;
+            PNM_ASSIGN1(xelrow[col], g);
+        }
         pm_setjmpbuf(origJmpbufP);
     }
     pbm_freerow(bitrow);

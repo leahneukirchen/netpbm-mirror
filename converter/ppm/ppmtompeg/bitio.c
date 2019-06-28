@@ -244,8 +244,8 @@ Bitio_Write(BitBucket * const bbPtr,
     assert(nbits <= 32 && nbits >= 0);
 
     /*
-     * Clear top bits if not part of data, necessary due to down and
-     * dirty calls of Bitio_Write with unecessary top bits set.
+     * Clear top bits if not part of data, necessary because of down and
+     * dirty calls of Bitio_Write with unnecessary top bits set.
      */
 
     bits &= lower_mask[nbits];

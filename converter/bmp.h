@@ -88,12 +88,30 @@ enum bmpClass {C_WIN=1, C_OS2=2};
 static char const er_internal[] = "%s: internal error!";
 
 /* Values of the "compression" field of the BMP info header */
-#define COMP_RGB       0
-#define COMP_RLE8      1
-#define COMP_RLE4      2
-#define COMP_BITFIELDS 3
-#define COMP_JPEG      4
-#define COMP_PNG       5
+typedef enum BMPCompType {
+    BMPCOMP_RGB       = 0,
+    BMPCOMP_RLE8      = 1,
+    BMPCOMP_RLE4      = 2,
+    BMPCOMP_BITFIELDS = 3,
+    BMPCOMP_JPEG      = 4,
+    BMPCOMP_PNG       = 5
+} BMPCompType;
+
+static __inline__ const char *
+BMPCompTypeName(BMPCompType const compression) {
+
+    switch (compression) {
+    case BMPCOMP_RGB:       return "none (RBG)";
+    case BMPCOMP_RLE4:      return "4 bit run-length coding";
+    case BMPCOMP_RLE8:      return "8 bit run-length coding";
+    case BMPCOMP_BITFIELDS: return "none (bitfields)";
+    case BMPCOMP_JPEG:      return "JPEG";
+    case BMPCOMP_PNG:       return "PNG";   
+    }
+    return 0;  /* Default compiler warning */
+}
+
+
 
 static __inline__ unsigned int
 BMPlenfileheader(enum bmpClass const class) {
@@ -127,7 +145,13 @@ static __inline__ unsigned int
 BMPlencolormap(enum bmpClass const class,
                unsigned int  const bitcount, 
                unsigned int  const cmapsize) {
+/*----------------------------------------------------------------------------
+   The number of bytes of the BMP stream occupied by the colormap in a
+   BMP of class 'class' with 'bitcount' bits per pixel and 'cmapsize'
+   entries in the palette.
 
+   'cmapsize' == 0 means there is no palette.
+-----------------------------------------------------------------------------*/
     unsigned int lenrgb;
     unsigned int lencolormap;
 
@@ -214,21 +238,21 @@ BMPoffbits(enum bmpClass const class,
 
 
 static __inline__ unsigned int
-BMPlenfileGen(enum bmpClass     const class,
-              unsigned int      const bitcount, 
-              unsigned int      const cmapsize,
-              unsigned int      const x,
-              unsigned int      const y,
-              unsigned int      const imageSize,
-              unsigned long int const compression) {
+BMPlenfileGen(enum bmpClass const class,
+              unsigned int  const bitcount, 
+              unsigned int  const cmapsize,
+              unsigned int  const x,
+              unsigned int  const y,
+              unsigned int  const imageSize,
+              BMPCompType   const compression) {
 /*----------------------------------------------------------------------------
   Return the size of the BMP file in bytes.
 -----------------------------------------------------------------------------*/
     unsigned int retval;
 
     switch (compression) {
-    case COMP_RGB:
-    case COMP_BITFIELDS:
+    case BMPCOMP_RGB:
+    case BMPCOMP_BITFIELDS:
         retval =
             BMPoffbits(class, bitcount, cmapsize) +
             BMPlenbits(class, bitcount, x, y);
@@ -250,7 +274,7 @@ BMPlenfile(enum bmpClass const class,
 /*----------------------------------------------------------------------------
   return the size of the BMP file in bytes; no compression
 -----------------------------------------------------------------------------*/
-    return BMPlenfileGen(class, bitcount, cmapsize, x, y, 0, COMP_RGB);
+    return BMPlenfileGen(class, bitcount, cmapsize, x, y, 0, BMPCOMP_RGB);
 }
 
 #endif
