@@ -3,19 +3,74 @@
 # Also requires:
 
 # Test 1. Should print: 4008533639 781
+echo "Test 1"
 ppmpat -g2 --color=rgb:32/0d/b7,rgb:31/58/a3 16 16 | cksum
 
 # Test 2. Should print: 3805937800 9613
+echo "Test 2"
 ppmpat -g3 --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 64 50 | cksum
 
 # Test 3. Should print: 2698433077 1549
+echo "Test 3"
 ppmpat -madras --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 32 16 | cksum
 
 # Test 4. Should print: 3705929501 781
+echo "Test 4"
 ppmpat -tartan --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 16 16 | cksum
 
 # Test 5. Should print: 3057513592 661
+echo "Test 5"
 ppmpat -argyle1 --color=rgb:ff/ff/ff,rgb:ff/0/0 12 18 | cksum
 
 # Test 6. Should print: 1861389287 661
+echo "Test 6"
 ppmpat -argyle2 --color=rgb:00/00/00,rgb:ff/80/80,rgb:e0/e0/e0 12 18 | cksum
+
+# Test 7.
+echo "Test 7"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+ppmpat -g2 -g3 10 10 || echo "Expected failure 1"
+ppmpat -madras -tartan 10 10 || echo "Expected failure 2"
+ppmpat -poles -squig 10 10 || echo "Expected failure 3"
+ppmpat -camo -anticamo 10 10 || echo "Expected failure 4"
+ppmpat -argyle1 -argyle2 10 10 || echo "Expected failure 5"
+
+ppmpat 10 10 || echo "Expected failure 6"
+ppmpat -g2 10 || echo "Expected failure 7"
+ppmpat -g2 10 10 10 || echo "Expected failure 8"
+ppmpat -g2 10 || echo "Expected failure 9"
+
+clist1="-color=rgb:00/00/00"
+clist2="-color=rgb:00/00/00,rgb:00/00/ff"
+clist3="-color=rgb:00/00/00,rgb:00/00/ff,rgb:00/ff/ff"
+clist4="-color=rgb:00/00/00,rgb:00/00/ff,rgb:00/ff/ff,rgb:ff/ff/ff"
+
+# These patterns require exactly 2 colors 
+ppmpat -gingham2 ${clist1} 10 10 || echo "Expected failure 10"
+ppmpat -argyle1  ${clist1} 10 10 || echo "Expected failure 11"
+ppmpat -gingham2 ${clist3} 10 10 || echo "Expected failure 12"
+ppmpat -argyle1  ${clist3} 10 10 || echo "Expected failure 13"
+
+# These require exactly 3 colors 
+ppmpat -gingham3 ${clist2} 10 10 || echo "Expected failure 14"
+ppmpat -argyle2  ${clist2} 10 10 || echo "Expected failure 15"
+ppmpat -madras   ${clist2} 10 10 || echo "Expected failure 16"
+ppmpat -tartan   ${clist2} 10 10 || echo "Expected failure 17"
+ppmpat -gingham3 ${clist4} 10 10 || echo "Expected failure 18"
+ppmpat -argyle2  ${clist4} 10 10 || echo "Expected failure 19"
+ppmpat -madras   ${clist4} 10 10 || echo "Expected failure 20"
+ppmpat -tartan   ${clist4} 10 10 || echo "Expected failure 21"
+
+# These require at least 3 colors 
+ppmpat -squig    ${clist2} 10 10 || echo "Expected failure 22"
+ppmpat -camo     ${clist2} 10 10 || echo "Expected failure 23"
+ppmpat -anticamo ${clist2} 10 10 || echo "Expected failure 24"
+
+# The squig pattern has an aspect ratio restriction 
+ppmpat -squig ${clist3} 10 250  || echo "Expected failure 25"
+ppmpat -squig ${clist3} 500 20  || echo "Expected failure 26"

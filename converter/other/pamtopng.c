@@ -921,7 +921,7 @@ pamtopng(FILE *             const ifP,
 
     if (cmdline.interlace) {
         /* Libpng will expect us to provide pixels in interlaced sequence
-           if we write row-by-row, and that is much to difficult, so we
+           if we write row-by-row, and that is much too difficult, so we
            do whole-image-at-once and let Libpng do the work.
         */
         writeRasterWholeImg(&pam, pngxP, pnmBitDepth);

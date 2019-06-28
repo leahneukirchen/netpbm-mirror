@@ -442,7 +442,7 @@ languageDeclaration(char const inputFileName[]) {
 /*----------------------------------------------------------------------------
   Return the Postscript language in which the file declares it is written.
   (Except that if the file is on Standard Input or doesn't validly declare
-  a languages, just say it is Common Postscript).
+  a language, just say it is Common Postscript).
 -----------------------------------------------------------------------------*/
     enum PostscriptLanguage language;
 
@@ -909,6 +909,27 @@ execGhostscript(int               const inputPipeFd,
 
 
 static void
+copyFileStream(FILE * const ifP,
+               FILE * const ofP) {
+
+    bool eof;
+
+    for (eof = false; !eof; ) {
+        char buffer[4096];
+        size_t readCt;
+
+        readCt = fread(buffer, 1, sizeof(buffer), ifP);
+
+        if (readCt == 0)
+            eof = true;
+        else
+            fwrite(buffer, 1, readCt, ofP);
+    }
+}
+
+
+
+static void
 feedPsToGhostScript(const char *            const inputFileName,
                     struct Box              const borderedBox,
                     struct Dimensions       const imageDim,
@@ -927,7 +948,6 @@ feedPsToGhostScript(const char *            const inputFileName,
 -----------------------------------------------------------------------------*/
     FILE * pipeToGsP;  /* Pipe to Ghostscript's standard input */
     FILE * ifP;
-    bool eof;  /* End of file on input */
 
     pipeToGsP = fdopen(pipeToGhostscriptFd, "w");
     if (pipeToGsP == NULL)
@@ -947,8 +967,14 @@ feedPsToGhostScript(const char *            const inputFileName,
       The example given is a much fancier solution than we need
       here, I think, so I boiled it down a bit.  JM
     */
-    if (language == ENCAPSULATED_POSTSCRIPT)
-        fprintf(pipeToGsP, "\n/b4_Inc_state save def /showpage { } def\n");
+    if (language == ENCAPSULATED_POSTSCRIPT) {
+        const char * const defShowpageCmd =
+            "/b4_Inc_state save def /showpage { } def";
+        if (verbose)
+            pm_message("Defining showpage with '%s'", defShowpageCmd);
+
+        fprintf(pipeToGsP, "\n%s\n", defShowpageCmd);
+    }
 
     writePstrans(borderedBox, imageDim, orientation, pipeToGsP);
 
@@ -958,22 +984,19 @@ feedPsToGhostScript(const char *            const inputFileName,
     */
     signal(SIGPIPE, SIG_IGN);
 
-    eof = FALSE;
-    while (!eof) {
-        char buffer[4096];
-        size_t readCt;
+    copyFileStream(ifP, pipeToGsP);
 
-        readCt = fread(buffer, 1, sizeof(buffer), ifP);
-        if (readCt == 0)
-            eof = TRUE;
-        else
-            fwrite(buffer, 1, readCt, pipeToGsP);
-    }
     pm_close(ifP);
 
-    if (language == ENCAPSULATED_POSTSCRIPT)
-        fprintf(pipeToGsP, "\nb4_Inc_state restore showpage\n");
+    if (language == ENCAPSULATED_POSTSCRIPT) {
+        const char * const restoreShowpageCmd =
+            "b4_Inc_state restore showpage";
 
+        if (verbose)
+            pm_message("Restoring showpage with '%s'", restoreShowpageCmd);
+
+        fprintf(pipeToGsP, "\n%s\n", restoreShowpageCmd);
+    }
     fclose(pipeToGsP);
 }
 

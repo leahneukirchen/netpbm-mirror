@@ -75,14 +75,14 @@ pbm_readpbmrow(FILE * const file,
                int    const format);
 
 void
-pbm_readpbmrow_packed(FILE *          const file, 
+pbm_readpbmrow_packed(FILE *          const file,
                       unsigned char * const packedBits,
-                      int             const cols, 
+                      int             const cols,
                       int             const format);
 
 void
 pbm_readpbmrow_bitoffset(FILE *          const fileP,
-                         unsigned char * const packedBits, 
+                         unsigned char * const packedBits,
                          int             const cols,
                          int             const format,
                          unsigned int    const offset);
@@ -92,28 +92,28 @@ pbm_cleanrowend_packed(unsigned char * const packedBits,
                        unsigned int    const cols);
 
 void
-pbm_writepbminit(FILE * const fileP, 
-                 int    const cols, 
-                 int    const rows, 
+pbm_writepbminit(FILE * const fileP,
+                 int    const cols,
+                 int    const rows,
                  int    const forceplain);
 
 void
-pbm_writepbm(FILE * const fileP, 
-             bit ** const bits, 
-             int    const cols, 
-             int    const rows, 
+pbm_writepbm(FILE * const fileP,
+             bit ** const bits,
+             int    const cols,
+             int    const rows,
              int    const forceplain);
 
 void
-pbm_writepbmrow(FILE *      const fileP, 
-                const bit * const bitrow, 
-                int         const cols, 
+pbm_writepbmrow(FILE *      const fileP,
+                const bit * const bitrow,
+                int         const cols,
                 int         const forceplain);
 
 void
-pbm_writepbmrow_packed(FILE *                const fileP, 
+pbm_writepbmrow_packed(FILE *                const fileP,
                        const unsigned char * const packed_bits,
-                       int                   const cols, 
+                       int                   const cols,
                        int                   const forceplain);
 
 void
@@ -124,7 +124,7 @@ pbm_writepbmrow_bitoffset(FILE *          const ifP,
                           unsigned int    const offset);
 
 void
-pbm_check(FILE * file, const enum pm_check_type check_type, 
+pbm_check(FILE * file, const enum pm_check_type check_type,
           const int format, const int cols, const int rows,
           enum pm_check_code * const retval_p);
 

@@ -1,0 +1,71 @@
+#! /bin/bash
+# This script tests: pnmcrop
+# Also requires: pnmpad pamfile pgmmake
+
+tmpdir=${tmpdir:-/tmp}
+
+test_pbm=${tmpdir}/test.pbm
+test_ppm=${tmpdir}/test.ppm
+border_pbm=${tmpdir}/border.pbm
+border_ppm=${tmpdir}/border.ppm
+gray_pgm=${tmpdir}/gray.pgm
+
+pnmpad -top=3 -bottom=5 -left=11 -right=2 testgrid.pbm > ${test_pbm}
+pnmpad -top=11 -bottom=1 -left=21 -right=9 testimg.ppm > ${test_ppm}
+
+pnmpad -top=4 -bottom=4 -left=8 -right=5 testgrid.pbm > ${border_pbm}
+pnmpad -top=7 -bottom=5 -left=30 -right=0 testimg.ppm > ${border_ppm}
+
+pgmmake 0.5 `pamfile -size ${test_pbm}` > ${gray_pgm}
+
+# Test 1
+echo Test 1
+
+for input_file in ${test_pbm} ${test_ppm}
+  do
+  echo `basename ${input_file}`
+  for option in "-left" "-right" "-top" "-bottom" \
+            "-left -right" "-left -bottom" "-right -bottom"
+    do
+    echo ${option}
+    pnmcrop -reportsize ${option} ${input_file} || echo fail1
+    done
+  done
+
+# Test 2
+echo Test 2
+
+for input_file in ${test_pbm} ${test_ppm}
+  do
+  echo `basename ${input_file}`
+  for margin in `seq 0 5`
+    do
+    pnmcrop -reportsize -margin=${margin} ${input_file} || echo fail2
+    done
+  done
+
+# Test 3
+echo Test 3
+
+pnmcrop -borderfile=${border_pbm} ${gray_pgm} | pamfile -size
+pnmcrop -borderfile=${border_pbm} ${gray_pgm} -plain 
+
+pnmcrop -borderfile=${test_pbm} ${test_pbm}   | pamfile -size
+pnmcrop -borderfile=${test_pbm} ${test_pbm}   | pnmcrop -black -reportsize
+
+pnmcrop -borderfile=${border_pbm} ${test_pbm} | pamfile -size
+pnmcrop -borderfile=${border_pbm} ${test_pbm} -plain
+pnmcrop -borderfile=${border_pbm} ${test_pbm} | pnmcrop -black -reportsize
+
+pnmcrop -borderfile=${border_ppm} ${test_ppm} | cksum 
+
+# The following two cases are expected to fai
+
+echo "Error messages should appear below the line." 1>&2
+echo "--------------------------------------------" 1>&2
+
+pnmcrop -borderfile=${border_ppm} ${test_pbm} | cksum 
+pnmcrop -borderfile=${border_pbm} ${test_ppm} | cksum 
+
+
+rm ${test_pbm} ${test_ppm} ${border_pbm} ${border_ppm} ${gray_pgm}

@@ -2,7 +2,20 @@
 # This script tests: pbmpage
 # Also requires:
 
+echo "Test 1"
 
-pbmpage 1 | cksum
-pbmpage 2 | cksum
-pbmpage 3 | cksum
+pbmpage 1     | cksum
+pbmpage 2     | cksum
+pbmpage 3     | cksum
+pbmpage -a4 2 | cksum
+
+echo "Test 2"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pbmpage -a3 1 || echo "Expected error 1"
+pbmpage 0 || echo "Expected error 2"
+pbmpage 4 || echo "Expected error 3"

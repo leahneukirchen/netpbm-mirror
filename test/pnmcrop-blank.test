@@ -1,0 +1,55 @@
+#! /bin/bash
+# This script tests: pnmcrop
+# Also requires: pbmmake ppmmake
+
+tmpdir=${tmpdir:-/tmp}
+
+test_pbm=${tmpdir}/test.pbm
+test_ppm=${tmpdir}/test.ppm
+
+echo "Error messages should appear below the line." 1>&2
+echo "--------------------------------------------" 1>&2
+
+#Test 1
+echo Test 1
+
+( pbmmake -white 15 14; pbmmake -gray 15 14; pbmmake -black 15 14 ) > \
+  ${test_pbm}
+for type in    "-blank-image=pass" \
+               "-blank-image=minimize" \
+               "-blank-image=minimize -top" \
+               "-blank-image=minimize -bottom" \
+               "-blank-image=minimize -left" \
+               "-blank-image=minimize -right" \
+               "-blank-image=minimize -left -right" \
+               "-blank-image=maxcrop" \
+               "-blank-image=abort" ""
+  do
+  echo ${type}
+  pnmcrop -reportsize ${type} ${test_pbm} || echo "fail1"
+  pnmcrop -reportsize ${type} -white ${test_pbm} || echo "fail2"
+  pnmcrop -reportsize ${type} -black ${test_pbm} || echo "fail3"
+  done
+
+rm ${test_pbm}
+
+
+#Test 2
+
+ppmmake rgb:ff/ff/ff 100 99 > ${test_ppm}
+echo Test 2
+for type in    "-blank-image=maxcrop -top" \
+               "-blank-image=minimize" "-blank-image=maxcrop" \
+               "-blank-image=maxcrop -top" \
+               "-blank-image=maxcrop -bottom" \
+               "-blank-image=maxcrop -left" \
+               "-blank-image=maxcrop -right" \
+               "-blank-image=maxcrop -top -bottom -right" ""
+  do
+  echo ${type}
+  pnmcrop -reportsize ${type} ${test_ppm} || echo "fail4"
+  pnmcrop -reportsize ${type} -white ${test_ppm} || echo "fail5"
+  pnmcrop -reportsize ${type} -black ${test_ppm} || echo "fail6"
+  done
+
+rm ${test_ppm}

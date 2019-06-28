@@ -5,19 +5,36 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-
 w_pbm=${tmpdir}/w.pbm
 b_pbm=${tmpdir}/b.pbm
 
 pbmmake -w 10 10 > ${w_pbm}
 pbmmake -b 10 10 > ${b_pbm}
 
+echo "Test 1"
+
 pnmpsnr  ${w_pbm}  ${b_pbm} -machine
 pnmpsnr  ${w_pbm}  ${w_pbm} -machine
 pnmpsnr  ${w_pbm}  ${w_pbm} -machine -max=1000
 pnmpsnr  ${w_pbm}  ${w_pbm} -target=1000
+
+echo "Test 2"
+
 pnmpsnr  testimg.ppm  testimg.ppm -machine -max=300
 pnmpsnr  testimg.ppm  testimg.ppm -target=1000
 pnmpsnr  testimg.ppm  testimg.ppm -target1=1000 -target2=1000 -target3=1000
+
+
+echo "Test 3"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pnmpsnr ${b_pbm} ${w_pbm} ${b_pbm}     || echo "Expected failure 1"
+pnmpsnr ${b_pbm}                       || echo "Expected failure 2"
+pnmpsnr ${b_pbm} ${w_pbm} -target1=100 || echo "Expected failure 3"
+pnmpsnr                   -machine     || echo "Expected failure 4"
 
 rm ${b_pbm} ${w_pbm}

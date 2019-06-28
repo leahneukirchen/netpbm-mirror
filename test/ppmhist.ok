@@ -1,3 +1,4 @@
+Test 1
      0     0     0	    0	      2 
      1     1     1	    1	      2 
      2     2     2	    2	      2 
@@ -7,6 +8,7 @@
      6     6     6	    6	      2 
      8     8     8	    8	      2 
 3081591280 60957
+Test 2
  Summary: 1 colors: 1 black, 0 white, 0 gray, 0 color
  Summary: 1 colors: 0 black, 1 white, 0 gray, 0 color
  Summary: 2 colors: 1 black, 1 white, 0 gray, 0 color
@@ -17,3 +19,7 @@
  Summary: 6 colors: 0 black, 0 white, 0 gray, 6 color
  Summary: 6 colors: 1 black, 0 white, 0 gray, 5 color
  Summary: 6 colors: 1 black, 1 white, 1 gray, 3 color
+Test 3
+Expected failure 1
+Expected failure 2
+Expected failure 3

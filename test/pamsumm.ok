@@ -1,8 +1,15 @@
+Test 1
 56
 0
 1
 0.250000
+Test 2
 10772432
 15
 255
 106.164760
+Test 3
+Expected failure 1
+Expected failure 2
+the mean of all samples is 106.164760
+Expected failure 4

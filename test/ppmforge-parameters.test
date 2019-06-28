@@ -1,0 +1,29 @@
+#! /bin/bash
+# This script tests: ppmforge
+# Also requires: pamfile
+
+echo "Test 1"
+
+# Should print 256 256
+ppmforge -night | pamfile -size
+
+# Width is adjusted if not even
+# becomes 100 in this case
+ppmforge -night -width=99 -height=90 | pamfile -size
+
+# Width is adjusted if smaller than height
+# brought up to 100 in this case
+ppmforge -night -width=80 -height=90 | pamfile -size
+
+echo "Test 2"
+
+echo 1>&2
+echo "Invalid command-line arguments." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+ppmforge -night  -dimension=0  || echo "Expected failure 1"
+ppmforge -clouds -mesh=1.99    || echo "Expected failure 2"
+ppmforge -clouds -power=0      || echo "Expected failure 3"
+ppmforge         -ice=0        || echo "Expected failure 4"
+ppmforge         -glaciers=0   || echo "Expected failure 5"

@@ -1,9 +1,18 @@
 #! /bin/bash
-# This script tests: pnmcrop pnmmargin
-# Also requires: pnmpad
-
+# This script tests: pnmcrop pnmmargin pnmpad
+# Also requires:
 
 pnmmargin -white 10 testimg.ppm | \
   pnmcrop | cksum
+
+pnmpad -white -left 10 -top 10 testimg.ppm | \
+  pnmpad -white -right 10 -bottom 10 | \
+  pnmcrop -right -bottom | pnmcrop -left -top | cksum
+
 pnmmargin -white 10 testgrid.pbm | \
   pnmcrop | cksum
+
+pnmpad -white -left 10 -top 10 testgrid.pbm | \
+  pnmpad -white -right 10 -bottom 10 | \
+  pnmcrop -left -right | pnmcrop -top -bottom | cksum
+
