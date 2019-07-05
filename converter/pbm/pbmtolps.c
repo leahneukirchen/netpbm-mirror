@@ -116,11 +116,11 @@ parseCommandLine(int                        argc,
 
 
 static void
-validateLineWidth(float const sc_cols,
-                  float const sc_rows,
+validateLineWidth(float const scCols,
+                  float const scRows,
                   float const lineWidth) {
 
-    if (lineWidth >= sc_cols || lineWidth >= sc_rows)
+    if (lineWidth >= scCols || lineWidth >= scRows)
         pm_error("Absurdly large -linewidth value (%f)", lineWidth);
 }
 
