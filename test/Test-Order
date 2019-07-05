@@ -191,5 +191,6 @@ xwd-roundtrip.test
 
 fiasco-roundtrip.test
 jpeg-roundtrip.test
+lps-roundtrip.test
 tiffcmyk-roundtrip.test
 yuv-roundtrip.test
