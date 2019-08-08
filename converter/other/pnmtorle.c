@@ -1,7 +1,7 @@
 /*
  * This is derived from the file of the same name dated June 5, 1995,
  * copied from the Army High Performance Computing Research Center's
- * media-tools.tar.gz package, received from 
+ * media-tools.tar.gz package, received from
  * http://www.arc.umn.edu/gvl-software/media-tools.tar.gz on 2000.04.13.
  *
  * This software is copyrighted as noted below.  It may be freely copied,
@@ -29,8 +29,8 @@
  *              Minnesota Supercomputer Center, Inc.
  * Date:        March 30, 1994
  * Copyright (c) Minnesota Supercomputer Center, Inc.
- * 
- * 2000.04.13 adapted for Netpbm by Bryan Henderson.  Quieted compiler 
+ *
+ * 2000.04.13 adapted for Netpbm by Bryan Henderson.  Quieted compiler
  *            warnings.
  *
  */
@@ -58,7 +58,7 @@ static gray    maxval;
 /*-----------------------------------------------------------------------------
  *                                        Read the pnm image file header.
  */
-static void 
+static void
 read_pnm_header(void) {
 
     pnm_readpnminit(fp, &width, &height, &maxval, &format);
@@ -90,7 +90,7 @@ read_pnm_header(void) {
 
 
 
-static void 
+static void
 write_rle_header(void) {
 
     hdr.xmin    = 0;
@@ -123,7 +123,7 @@ write_rle_header(void) {
 
 
 
-static void 
+static void
 write_rle_data(void) {
 
     unsigned int scan;
@@ -254,7 +254,7 @@ main(int argc, char **  argv) {
             rle_addhist(argv, NULL, &hdr);
             write_rle_header();
             write_rle_data();
-            
+
             pnm_nextimage(fp, &eof);
         }
     }
