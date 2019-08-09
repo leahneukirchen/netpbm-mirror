@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.08.09 BJH  Release 10.86.05
+
+              pnmtorle, rletopnm: fix wild pointer dereference when a memory
+              allocation fails.
+
 19.06.15 BJH  Release 10.86.04
 
               pamtris: Fix bug: debug trace left in
