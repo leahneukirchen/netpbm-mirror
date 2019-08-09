@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.88.00
 
+              pnmtorle, rletopnm: fix wild pointer dereference when memory
+              allocation fails.
+
 19.06.28 BJH  Release 10.87.00
 
               pamfind: Add -machine .

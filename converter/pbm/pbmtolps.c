@@ -182,8 +182,8 @@ doRaster(FILE *       const ifP,
 
 
 static void
-pbmtolps(FILE * const ifP,
-         FILE * const ofP,
+pbmtolps(FILE *             const ifP,
+         FILE *             const ofP,
          struct CmdlineInfo const cmdline) {
 
     const char * const psName =
@@ -192,13 +192,13 @@ pbmtolps(FILE * const ifP,
     int          rows;
     int          cols;
     int          format;
-    float        scRows;
-    float        scCols;
+    float        scRows, scCols;
+        /* Dimensions of the printed image in points */
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
-    scRows = (float) rows / cmdline.dpi * 72.0;
-    scCols = (float) cols / cmdline.dpi * 72.0;
+    scRows = (float) rows / (cmdline.dpi / 72.0);
+    scCols = (float) cols / (cmdline.dpi / 72.0);
 
     if (cmdline.lineWidthSpec)
         validateLineWidth(scCols, scRows, cmdline.lineWidth);

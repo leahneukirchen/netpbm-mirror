@@ -69,14 +69,6 @@ typedef unsigned short rle_map;
  */
 #define RLE_INIT_MAGIC  0x6487ED51L
 
-/*****************************************************************
- * TAG( RLE_CHECK_ALLOC )
- *
- * Test for allocation failure, scream and die if so.
- */
-#define RLE_CHECK_ALLOC( pgm, ptr, name )               \
-    ( !(ptr) ?  rle_alloc_error( pgm, name ) : 0 )
-
 /*
  * TAG( rle_hdr )
  *
@@ -162,15 +154,6 @@ extern rle_hdr rle_dflt_hdr;
 
 
 /* Declare RLE library routines. */
-
-/* From rle_error.c. */
-/*****************************************************************
- * TAG( rle_alloc_error )
- *
- * Print memory allocation error message and exit.
- */
-extern int rle_alloc_error( const char *pgm,
-                            const char *name );
 
 /*****************************************************************
  * TAG( rle_get_error )

@@ -133,12 +133,14 @@ write_rle_data(void) {
     MALLOCARRAY(xelrow, width);
     MALLOCARRAY(scanlines, height);
 
-    RLE_CHECK_ALLOC(hdr.cmd, scanlines, "scanline pointers");
+    if (!scanlines)
+        pm_error("Failed to allocate memory for %u scanline pointers", height);
 
     for (scan = 0; scan < height; ++scan) {
         int rc;
         rc = rle_row_alloc(&hdr, &scanlines[scan]);
-        RLE_CHECK_ALLOC(hdr.cmd, rc >= 0, "pixel memory");
+        if (rc < 0)
+            pm_error("Failed to allocate memory for a scanline");
     }
     /* Loop through the pnm files image window, read data and flip vertically.
      */

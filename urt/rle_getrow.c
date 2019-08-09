@@ -102,9 +102,13 @@ rle_get_setup(rle_hdr * const the_hdr) {
         rle_pixel * bg_color;
 
         MALLOCARRAY(the_hdr->bg_color, setup.h_ncolors);
+        if (!the_hdr->bg_color)
+            pm_error("Failed to allocation array for %u background colors",
+                     setup.h_ncolors);
         MALLOCARRAY(bg_color, 1 + (setup.h_ncolors / 2) * 2);
-        RLE_CHECK_ALLOC(the_hdr->cmd, the_hdr->bg_color && bg_color,
-                        "background color" );
+        if (!bg_color)
+            pm_error("Failed to allocation array for %u background colors",
+                     1+(setup.h_ncolors / 2) * 2);
         fread((char *)bg_color, 1, 1 + (setup.h_ncolors / 2) * 2, infile);
         for (i = 0; i < setup.h_ncolors; ++i)
             the_hdr->bg_color[i] = bg_color[i];

@@ -274,11 +274,15 @@ writePpmRaster(FILE * const imageoutFileP,
     alpharow = pgm_allocrow(width);
 
     MALLOCARRAY(scanlines, height);
-    RLE_CHECK_ALLOC( hdr.cmd, scanlines, "scanline pointers" );
+    if (!scanlines)
+        pm_error("Failed to allocate memory for %u scanline pointers", height);
 
-    for ( scan = 0; scan < height; scan++ )
-        RLE_CHECK_ALLOC( hdr.cmd, (rle_row_alloc(&hdr, &scanlines[scan]) >= 0),
-                         "pixel memory" );
+    for (scan = 0; scan < height; ++scan) {
+        int rc;
+        rc = rle_row_alloc(&hdr, &scanlines[scan]);
+        if (rc < 0)
+            pm_error("Failed to allocate memory for a scanline");
+    }
     /*
      * Loop through those scan lines.
      */
@@ -375,11 +379,15 @@ writePgmRaster(FILE * const imageoutFileP,
     alpharow = pgm_allocrow(width);
 
     MALLOCARRAY(scanlines, height);
-    RLE_CHECK_ALLOC( hdr.cmd, scanlines, "scanline pointers" );
+    if (!scanlines)
+        pm_error("Failed to allocate memory for %u scanline pointers", height);
 
-    for (scan = 0; scan < height; ++scan)
-        RLE_CHECK_ALLOC(hdr.cmd, (rle_row_alloc(&hdr, &scanlines[scan]) >= 0),
-                        "pixel memory" );
+    for (scan = 0; scan < height; ++scan) {
+        int rc;
+        rc = rle_row_alloc(&hdr, &scanlines[scan]);
+        if (rc < 0)
+            pm_error("Failed to allocate memory for a scanline");
+    }
     /*
      * Loop through those scan lines.
      */

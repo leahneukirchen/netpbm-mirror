@@ -31,36 +31,6 @@
 #include "rle.h"
 
 /*****************************************************************
- * TAG( rle_alloc_error )
- *
- * Print memory allocation error message and exit.
- * Inputs:
- * 	pgm:		Name of this program.
- * 	name:		Name of memory trying to be allocated.
- * Outputs:
- * 	Prints message and exits.
- *
- * Returns int because it's used in a conditional expression.
- */
-int
-rle_alloc_error( pgm, name )
-CONST_DECL char *pgm, *name;
-{
-    if ( name )
-	fprintf( stderr, "%s: memory allocation failed.\n", pgm );
-    else
-	fprintf( stderr, "%s: memory allocation failed (no space for %s).\n",
-		 pgm, name );
-
-    exit( RLE_NO_SPACE );
-
-    /* Will some compilers bitch about this because they know exit
-     * doesn't return??
-     */
-    return 0;
-}
-
-/*****************************************************************
  * TAG( rle_get_error )
  *
  * Print an error message for the return code from rle_get_setup
@@ -74,44 +44,44 @@ CONST_DECL char *pgm, *name;
  */
 int
 rle_get_error( code, pgmname, fname )
-int code;
-CONST_DECL char *pgmname;
-CONST_DECL char *fname;
+    int code;
+    CONST_DECL char *pgmname;
+    CONST_DECL char *fname;
 {
     if (! fname || strcmp( fname, "-" ) == 0 )
-	fname = "Standard Input";
+        fname = "Standard Input";
 
     switch( code )
     {
     case RLE_SUCCESS:		/* success */
-	break;
+        break;
 
     case RLE_NOT_RLE:		/* Not an RLE file */
-	fprintf( stderr, "%s: %s is not an RLE file\n",
-		 pgmname, fname );
-	break;
+        fprintf( stderr, "%s: %s is not an RLE file\n",
+                 pgmname, fname );
+        break;
 
     case RLE_NO_SPACE:			/* malloc failed */
-	fprintf( stderr,
-		 "%s: Malloc failed reading header of file %s\n",
-		 pgmname, fname );
-	break;
+        fprintf( stderr,
+                 "%s: Malloc failed reading header of file %s\n",
+                 pgmname, fname );
+        break;
 
     case RLE_EMPTY:
-	fprintf( stderr, "%s: %s is an empty file\n",
-		 pgmname, fname );
-	break;
+        fprintf( stderr, "%s: %s is an empty file\n",
+                 pgmname, fname );
+        break;
 
     case RLE_EOF:
-	fprintf( stderr,
-		 "%s: RLE header of %s is incomplete (premature EOF)\n",
-		 pgmname, fname );
-	break;
+        fprintf( stderr,
+                 "%s: RLE header of %s is incomplete (premature EOF)\n",
+                 pgmname, fname );
+        break;
 
     default:
-	fprintf( stderr, "%s: Error encountered reading header of %s\n",
-		 pgmname, fname );
-	break;
+        fprintf( stderr, "%s: Error encountered reading header of %s\n",
+                 pgmname, fname );
+        break;
     }
     return code;
 }
