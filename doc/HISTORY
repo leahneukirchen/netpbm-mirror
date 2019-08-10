@@ -7,7 +7,8 @@ CHANGE HISTORY
 not yet  BJH  Release 10.88.00
 
               pnmtorle, rletopnm: fix wild pointer dereference when memory
-              allocation fails.
+              allocation fails.  Always broken (programs were added to
+              Netpbm in Release 9.0 (April 2000).
 
 19.06.28 BJH  Release 10.87.00
 
