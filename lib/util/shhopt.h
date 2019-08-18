@@ -26,7 +26,6 @@ main ( int argc, char **argv ) {
     optEntry * option_def;
     MALLOCARRAY(option_def, 100);
 
-    OPTENT3(0,   "help",     OPT_FLAG,       &help_flag,    &help_spec,   0);
     OPTENT3(0,   "height",   OPT_INT,        &height,       &height_spec, 0);
     OPTENT3('n', "name",     OPT_STRING,     &name,         &name_spec,   0);
     OPTENT3('v', "verbose",  OPT_FLAG,       &verbose_flag, NULL,         0);
@@ -43,8 +42,6 @@ main ( int argc, char **argv ) {
 
 
     printf("argc=%d\n", argc);
-    printf("help_flag=%d\n", help_flag);
-    printf("help_spec=%d\n", help_spec);
     printf("height=%d\n", height);
     printf("height_spec=%d\n", height_spec);
     printf("name='%s'\n", name);
@@ -76,7 +73,7 @@ main ( int argc, char **argv ) {
 
 Now run this program with something like
 
-  myprog -vg --name=Bryan --hei 4 "My first argument" --help
+  myprog -vg --name=Bryan --hei 4 "My first argument" --verbose
 
   or do it with opt.short_allowed=0 and
 
@@ -184,7 +181,7 @@ typedef struct {
 
        unsigned int option_def_index = 0;
        optStruct *option_def = malloc(100*sizeof(optStruct));
-       OPTENTRY('h', "help",     OPT_FLAG, &help_flag, 0);
+       OPTENTRY('h', "verbose",  OPT_FLAG, &verbose_flag, 0);
        OPTENTRY(0,   "alphaout", OPT_STRING, &alpha_filename, 0);
 */
 
@@ -224,11 +221,11 @@ typedef struct {
    Here is an example:
 
        unsigned int option_def_index = 0;
-       unsigned int help_flag;
+       unsigned int verbose_flag;
        const char * alpha_filename
        unsigned int alpha_spec;
        MALLOCARRAY_NOFAIL(option_def, 100);
-       OPTENT3('h', "help",     OPT_FLAG,   &help_flag,      NULL);
+       OPTENT3('h', "verbose",  OPT_FLAG,   &verbose_flag    NULL);
        OPTENT3(0,   "alphaout", OPT_STRING, &alpha_filename, &alpha_spec);
 */
 
