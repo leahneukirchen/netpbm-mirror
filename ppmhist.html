@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmhist User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmhist</H1>
-Updated: 15 August 2015
+Updated: 24 August 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -84,15 +84,19 @@ column for each distinct color in the image.
 
 <DT><B>-sort=</B>{<B>frequency</B>,<B>rgb</B>}
 
-<DD>The <B>-sort</B> option determines the order in which the colors
-are listed in the output.  <B>frequency</B> means to list them in
-order of how pixels in the input image have the color, with the most
-represented colors first.  <B>rgb</B> means to sort them first by the
-intensity of the red component of the color, then of the green, then of
-the blue, with the least intense first.  
+<DD>The <B>-sort</B> option determines the order in which the colors are
+listed in the output.  <B>rgb</B> means to sort them first by the intensity of
+the red component of the color, then of the green, then of the blue, with the
+least intense first.  <B>frequency</B> means to list them in order of how many
+pixels in the input image have the color, with the most represented colors
+first.  Among colors with the same frequency, the order is the same as with
+<b>rgb</b>.
 
 <P>The default is <B>frequency</B>.
 
+<p>Before Netpbm 10.88 (September 2019), with <b>-sort=frequency</b>, the
+order of colors that have the same frequency is arbitrary.
+  
 <DT><B>-hexcolor</B>
 
 <DD>Print the color components in hexadecimal.  See <a href="#output">output

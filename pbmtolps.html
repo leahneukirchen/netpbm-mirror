@@ -3,7 +3,7 @@
 <BODY>
 
 <H1>pbmtolps</H1>
-Updated: 12 March 2017
+Updated: 06 July 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -13,25 +13,42 @@ pbmtolps - convert PBM image to PostScript
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <b>pbmtolps</b>
-[<b>-dpi</b> <i>n</i>]
+[<b>-dpi</b>=<i>n</i>]
 [<i>pbmfile</i>]
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
 
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pbmtolps</b> reads a PBM image as input and outputs PostScript.
-The output Postscript uses lines instead of the image operator to
-generate a (device dependent) picture which will be imaged much
-faster.
+<p><b>pbmtolps</b> reads a PBM image as input and outputs PostScript.  The
+output Postscript uses lines instead of the image operator to generate a
+(device dependent) picture which will be imaged much faster.
 
 <p><b>pnmtops</b> is a more general program for converting from the Netpbm
 formats to Postscript, though it cannot produce the particular arcane
 subformat that <b>pbmtolps</b> does.
 
-<P>The Postscript path length is constrained to be less that 1000
-points so that no limits are overrun on the Apple Laserwriter and
-(presumably) no other printers.
+<p>One pixel of the input image corresponds to one printed pixel
+(&quot;dot&quot;).  For this to work, you must use a <b>-dpi</b> option to
+tell <b>pmtolps</b> the resolution of the target printer, in dots per inch.
+  
+<P>The Postscript program <b>pbmtolps</b> generates draws paths of less than
+1000 segments so as not to overrun limits on the Apple Laserwriter and
+possibly other printers.
+
+<h2 id="options">Options</h2>
+
+<dl>
+<dt><b>-dpi=</b><i>n</i>
+<dd>The resolution of the target printer, in dots per inch.
+</dl>
+
 
 <H2 id="seealso">SEE ALSO</H2>
 
