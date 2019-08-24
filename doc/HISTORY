@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.88.00
 
+              ppmhist: sort secondarily by RGB with -sort=frequency, so
+              output is repeatable.
+
               pnmtorle, rletopnm: fix wild pointer dereference when memory
               allocation fails.  Always broken (programs were added to
               Netpbm in Release 9.0 (April 2000).
