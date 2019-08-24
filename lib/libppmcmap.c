@@ -34,8 +34,8 @@ ppm_hashpixel(pixel const p) {
 
 
 colorhist_vector
-ppm_computecolorhist( pixel ** const pixels, 
-                      const int cols, const int rows, const int maxcolors, 
+ppm_computecolorhist( pixel ** const pixels,
+                      const int cols, const int rows, const int maxcolors,
                       int * const colorsP ) {
 /*----------------------------------------------------------------------------
    Compute a color histogram for the image described by 'pixels',
@@ -45,7 +45,7 @@ ppm_computecolorhist( pixel ** const pixels,
 
    If 'maxcolors' is zero, make the output have 5 spare slots at the end
    for expansion.
-   
+
    If 'maxcolors' is nonzero, make the output have 'maxcolors' slots in
    it, and if there are more colors than that in the image, don't return
    anything except a NULL pointer.
@@ -66,29 +66,36 @@ ppm_computecolorhist( pixel ** const pixels,
 
 
 colorhist_vector
-ppm_computecolorhist2(FILE * const ifp,
-                      const int cols, const int rows, 
-                      const pixval maxval, const int format, 
-                      const int maxcolors, int * const colorsP ) {
+ppm_computecolorhist2(FILE * const ifP,
+                      int    const cols,
+                      int    const rows,
+                      pixval const maxval,
+                      int    const format,
+                      int    const maxcolorCt,
+                      int *  const colorCtP ) {
 
-    colorhash_table cht;
-    colorhist_vector chv;
+    colorhist_vector retval;
+    colorhash_table  cht;
 
-    cht = ppm_computecolorhash2(ifp, cols, rows, maxval, format, 
-                                maxcolors, colorsP);
+    cht = ppm_computecolorhash2(ifP, cols, rows, maxval, format,
+                                maxcolorCt, colorCtP);
     if (cht ==NULL)
-        return NULL;
-    chv = ppm_colorhashtocolorhist(cht, maxcolors);
-    ppm_freecolorhash(cht);
-    return chv;
+        retval = NULL;
+    else {
+        retval = ppm_colorhashtocolorhist(cht, maxcolorCt);
+
+        ppm_freecolorhash(cht);
+    }
+
+    return retval;
 }
 
 
 
 void
-ppm_addtocolorhist( colorhist_vector chv, 
-                    int * const colorsP, const int maxcolors, 
-                    const pixel * const colorP, 
+ppm_addtocolorhist( colorhist_vector chv,
+                    int * const colorsP, const int maxcolors,
+                    const pixel * const colorP,
                     const int value, const int position ) {
     int i, j;
 
@@ -149,16 +156,16 @@ ppm_alloccolorhash(void)  {
 
 
 static void
-readppmrow(FILE *        const fileP, 
-           pixel *       const pixelrow, 
-           int           const cols, 
-           pixval        const maxval, 
+readppmrow(FILE *        const fileP,
+           pixel *       const pixelrow,
+           int           const cols,
+           pixval        const maxval,
            int           const format,
            const char ** const errorP) {
 
     jmp_buf jmpbuf;
     jmp_buf * origJmpbufP;
-    
+
     if (setjmp(jmpbuf) != 0) {
         pm_setjmpbuf(origJmpbufP);
         pm_asprintf(errorP, "Failed to read row of image.");
@@ -168,7 +175,7 @@ readppmrow(FILE *        const fileP,
         ppm_readppmrow(fileP, pixelrow, cols, maxval, format);
 
         *errorP = NULL; /* Would have longjmped if anything went wrong */
-                
+
         pm_setjmpbuf(origJmpbufP);
     }
 }
@@ -213,15 +220,15 @@ buildHashTable(FILE *          const ifP,
         if (ifP) {
             readppmrow(ifP, rowbuffer, cols, maxval, format, errorP);
             pixelrow = rowbuffer;
-        } else 
+        } else
             pixelrow = pixels[row];
 
         for (col = 0; col < cols && !*tooManyColorsP && !*errorP; ++col) {
             const pixel apixel = pixelrow[col];
             const int hash = ppm_hashpixel(apixel);
-            colorhist_list chl; 
+            colorhist_list chl;
 
-            for (chl = cht[hash]; 
+            for (chl = cht[hash];
                  chl && !PPM_EQUAL(chl->ch.color, apixel);
                  chl = chl->next);
 
@@ -251,9 +258,9 @@ buildHashTable(FILE *          const ifP,
 
 
 static void
-computecolorhash(pixel **          const pixels, 
+computecolorhash(pixel **          const pixels,
                  unsigned int      const cols,
-                 unsigned int      const rows, 
+                 unsigned int      const rows,
                  unsigned int      const maxcolors,
                  int *             const nColorsP,
                  FILE *            const ifP,
@@ -271,8 +278,8 @@ computecolorhash(pixel **          const pixels,
       'pixels' is NULL and 'ifP' is non-NULL.  ifP is the stream
       descriptor for the input file, and 'maxval' and 'format' are
       parameters of the image data in it.
-      
-      We return with the file still open and its position undefined.  
+
+      We return with the file still open and its position undefined.
 
    In either case, the image is 'cols' by 'rows'.
 
@@ -288,7 +295,7 @@ computecolorhash(pixel **          const pixels,
         */
 
     MALLOCARRAY(rowbuffer, cols);
-        
+
     if (rowbuffer == NULL)
         pm_asprintf(errorP, "Unable to allocate %u-column row buffer.", cols);
     else {
@@ -303,7 +310,7 @@ computecolorhash(pixel **          const pixels,
             buildHashTable(ifP, pixels, cols, rows, maxval, format, maxcolors,
                            cht, rowbuffer,
                            nColorsP, &tooManyColors, errorP);
-                
+
             if (tooManyColors) {
                 ppm_freecolorhash(cht);
                 *chtP = NULL;
@@ -320,16 +327,16 @@ computecolorhash(pixel **          const pixels,
 
 
 colorhash_table
-ppm_computecolorhash(pixel ** const pixels, 
+ppm_computecolorhash(pixel ** const pixels,
                      int      const cols,
-                     int      const rows, 
+                     int      const rows,
                      int      const maxcolors,
                      int *    const colorsP) {
 
     colorhash_table cht;
     const char * error;
 
-    computecolorhash(pixels, cols, rows, maxcolors, colorsP, 
+    computecolorhash(pixels, cols, rows, maxcolors, colorsP,
                      NULL, 0, 0, &cht, &error);
 
     if (error) {
@@ -345,9 +352,9 @@ ppm_computecolorhash(pixel ** const pixels,
 colorhash_table
 ppm_computecolorhash2(FILE * const ifP,
                       int    const cols,
-                      int    const rows, 
+                      int    const rows,
                       pixval const maxval,
-                      int    const format, 
+                      int    const format,
                       int    const maxcolors,
                       int *  const colorsP ) {
 
@@ -368,8 +375,8 @@ ppm_computecolorhash2(FILE * const ifP,
 
 
 int
-ppm_addtocolorhash(colorhash_table const cht, 
-                   const pixel *   const colorP, 
+ppm_addtocolorhash(colorhash_table const cht,
+                   const pixel *   const colorP,
                    int             const value) {
 /*----------------------------------------------------------------------------
    Add color *colorP to the color hash 'cht' with associated value 'value'.
@@ -397,7 +404,7 @@ ppm_addtocolorhash(colorhash_table const cht,
 
 
 void
-ppm_delfromcolorhash(colorhash_table const cht, 
+ppm_delfromcolorhash(colorhash_table const cht,
                      const pixel *   const colorP) {
 /*----------------------------------------------------------------------------
    Delete the color *colorP from the colorhahs 'cht', if it's there.
@@ -433,7 +440,7 @@ colorHashSize(colorhash_table const cht) {
     nColors = 0;
     for (i = 0; i < HASH_SIZE; ++i) {
         colorhist_list chl;
-        for (chl = cht[i]; chl; chl = chl->next) 
+        for (chl = cht[i]; chl; chl = chl->next)
             ++nColors;
     }
     return nColors;
@@ -445,8 +452,8 @@ colorhist_vector
 ppm_colorhashtocolorhist(colorhash_table const cht, int const maxcolors) {
 
     colorhist_vector chv;
-    colorhist_list chl;
-    unsigned int chvSize;
+    colorhist_list   chl;
+    unsigned int     chvSize;
 
     if (maxcolors == 0)
         /* We leave space for 5 more colors so caller can add in special
@@ -457,7 +464,7 @@ ppm_colorhashtocolorhist(colorhash_table const cht, int const maxcolors) {
         /* Caller is responsible for making sure there are no more
            than 'maxcolors' colors in the colorhash table.  NOTE:
            Before March 2002, the maxcolors == 0 invocation didn't
-           exist.  
+           exist.
         */
         chvSize = maxcolors;
 
@@ -483,7 +490,7 @@ ppm_colorhashtocolorhist(colorhash_table const cht, int const maxcolors) {
 
 
 colorhash_table
-ppm_colorhisttocolorhash(colorhist_vector const chv, 
+ppm_colorhisttocolorhash(colorhist_vector const chv,
                          int              const colors) {
 
     colorhash_table retval;
@@ -499,7 +506,7 @@ ppm_colorhisttocolorhash(colorhist_vector const chv,
         for (i = 0, error = NULL; i < colors && !error; ++i) {
             pixel const color = chv[i].color;
             int const hash = ppm_hashpixel(color);
-            
+
             colorhist_list chl;
 
             for (chl = cht[hash]; chl && !error; chl = chl->next)
@@ -534,7 +541,7 @@ ppm_colorhisttocolorhash(colorhist_vector const chv,
 
 
 int
-ppm_lookupcolor(colorhash_table const cht, 
+ppm_lookupcolor(colorhash_table const cht,
                 const pixel *   const colorP) {
     int hash;
     colorhist_list chl;
@@ -731,7 +738,7 @@ pixelCmp(const void * const a,
 
 void
 ppm_sortcolorrow(pixel * const colorrow,
-                 int     const ncolors, 
+                 int     const ncolors,
                  int (*cmpfunc)(pixel *, pixel *)) {
 
     if (cmpfunc) {
@@ -774,10 +781,10 @@ ppm_addtocolorrow(colorrow, ncolorsP, maxcolors, pixelP)
 
 
 int
-ppm_findclosestcolor(const pixel * const colormap, 
-                     int           const ncolors, 
+ppm_findclosestcolor(const pixel * const colormap,
+                     int           const ncolors,
                      const pixel * const pP) {
-    
+
     /* Search colormap for closest match.       */
 
     int i;
@@ -789,7 +796,7 @@ ppm_findclosestcolor(const pixel * const colormap,
 
     for(i = 0; i < ncolors && bestDist > 0; ++i) {
         unsigned int const dist = PPM_DISTANCE(*pP, colormap[i]);
-        
+
         if (dist < bestDist ) {
             ind = i;
             bestDist = dist;
