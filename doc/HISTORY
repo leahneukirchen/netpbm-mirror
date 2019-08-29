@@ -6,7 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.88.00
 
-              jpeg2ktopam: fix null pointer dereference.
+              jpeg2ktopam, pamtojpeg2k: fix negative array index.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              jpeg2ktopam: fix null pointer dereference.  Always broken
+              (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
 
               ppmhist: sort secondarily by RGB with -sort=frequency, so
               output is repeatable.
