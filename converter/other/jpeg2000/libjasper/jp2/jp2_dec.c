@@ -563,6 +563,9 @@ jp2_decode(jas_stream_t *in, char *optstr) {
                                   channo + 1));
                 }
 #endif
+            } else {
+                jas_eprintf("error: invalid MTYP in CMAP box\n");
+                goto error;
             }
         }
     }
