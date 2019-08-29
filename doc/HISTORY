@@ -6,10 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.88.00
 
-              jpeg2ktopam: Fix memory leak after decoder failure.  Always
+              jpeg2ktopam, pamtojpeg2k: fix negative array index.  Always
               broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
 
-              jpeg2ktopam, pamtojpeg2k: fix negative array index.  Always
+              jpeg2ktopam, pamtojpeg2k: fix assertion failure.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              jpeg2ktopam: Fix memory leak after decoder failure.  Always
               broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
 
               jpeg2ktopam: fix null pointer dereference.  Always broken
