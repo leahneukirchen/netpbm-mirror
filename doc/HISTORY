@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.09.01 BJH  Release 10.87.02
+
+              jpeg2ktopam, pamtojpeg2k: fix negative array index.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              jpeg2ktopam, pamtojpeg2k: fix assertion failure.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              jpeg2ktopam: Fix memory leak after decoder failure.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              jpeg2ktopam: fix null pointer dereference.  Always broken
+              (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
 19.08.09 BJH  Release 10.87.01
 
               pnmtorle, rletopnm: fix wild pointer dereference when a memory

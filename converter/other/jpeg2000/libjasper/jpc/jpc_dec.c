@@ -597,7 +597,9 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
         if (!jpc_dec_cp_isvalid(tile->cp)) {
             return -1;
         }
-        jpc_dec_cp_prepare(tile->cp);
+        if (jpc_dec_cp_prepare(tile->cp)) {
+            return -1;
+        }
         if (jpc_dec_tileinit(dec, tile)) {
             return -1;
         }
@@ -1247,6 +1249,15 @@ static int jpc_dec_process_siz(jpc_dec_t *dec, jpc_ms_t *ms)
     dec->numtiles = dec->numhtiles * dec->numvtiles;
     if (!(dec->tiles = jas_malloc(dec->numtiles * sizeof(jpc_dec_tile_t)))) {
         return -1;
+    }
+
+    for (tileno = 0, tile = dec->tiles;
+         tileno < dec->numtiles;
+         ++tileno, ++tile) {
+        /* initialize all tiles with JPC_TILE_DONE so jpc_dec_destroy() knows
+           which ones need a jpc_dec_tilefini() call; they are not actually
+           "done", of course */
+        tile->state = JPC_TILE_DONE;
     }
 
     for (tileno = 0, tile = dec->tiles; tileno < dec->numtiles; ++tileno,
@@ -1929,6 +1940,16 @@ static void jpc_dec_destroy(jpc_dec_t *dec)
     }
 
     if (dec->tiles) {
+        int tileno;
+        jpc_dec_tile_t *tile;
+
+        for (tileno = 0, tile = dec->tiles;
+             tileno < dec->numtiles;
+             ++tileno, ++tile) {
+            if (tile->state != JPC_TILE_DONE) {
+                jpc_dec_tilefini(dec, tile);
+            }
+        }
         jas_free(dec->tiles);
     }
 
