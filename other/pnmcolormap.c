@@ -38,7 +38,7 @@ enum methodForLargest {LARGE_NORM, LARGE_LUM};
 
 enum methodForRep {REP_CENTER_BOX, REP_AVERAGE_COLORS, REP_AVERAGE_PIXELS};
 
-enum methodForSplit {SPLIT_MAX_PIXELS, SPLIT_MAX_COLORS, SPLIT_MAX_DIM};
+enum methodForSplit {SPLIT_MAX_PIXELS, SPLIT_MAX_COLORS, SPLIT_MAX_SPREAD};
 
 typedef struct box* boxVector;
 struct box {
@@ -64,7 +64,7 @@ struct cmdlineInfo {
     enum methodForRep methodForRep;
         /* -center/-meancolor/-meanpixel options */
     enum methodForSplit methodForSplit;
-        /* -splitpix/-splitcol/-splitdim options */
+        /* -splitpixelct/-splitcolorct/-splitspread options */
     unsigned int sort;
     unsigned int square;
     unsigned int verbose;
@@ -94,7 +94,7 @@ parseCommandLine (int argc, char ** argv,
 
     unsigned int spreadbrightness, spreadluminosity;
     unsigned int center, meancolor, meanpixel;
-    unsigned int splitpix, splitcol, splitdim;
+    unsigned int splitpixelct, splitcolorct, splitspread;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -109,12 +109,12 @@ parseCommandLine (int argc, char ** argv,
             NULL,                       &meancolor,        0);
     OPTENT3(0,   "meanpixel",        OPT_FLAG,
             NULL,                       &meanpixel,        0);
-    OPTENT3(0,   "splitpix",         OPT_FLAG,
-            NULL,                       &splitpix,         0);
-    OPTENT3(0,   "splitcol",         OPT_FLAG,
-            NULL,                       &splitcol,         0);
-    OPTENT3(0,   "splitdim",         OPT_FLAG,
-            NULL,                       &splitdim,         0);
+    OPTENT3(0,   "splitpixelct",     OPT_FLAG,
+            NULL,                       &splitpixelct,     0);
+    OPTENT3(0,   "splitcolorct",     OPT_FLAG,
+            NULL,                       &splitcolorct,     0);
+    OPTENT3(0,   "splitspread",      OPT_FLAG,
+            NULL,                       &splitspread,      0);
     OPTENT3(0, "sort",     OPT_FLAG,   NULL,
             &cmdlineP->sort,       0 );
     OPTENT3(0, "square",   OPT_FLAG,   NULL,
@@ -148,12 +148,12 @@ parseCommandLine (int argc, char ** argv,
     else
         cmdlineP->methodForRep = REP_CENTER_BOX;
 
-    if (splitpix)
+    if (splitpixelct)
         cmdlineP->methodForSplit = SPLIT_MAX_PIXELS;
-    else if (splitcol)
+    else if (splitcolorct)
         cmdlineP->methodForSplit = SPLIT_MAX_COLORS;
-    else if (splitdim)
-        cmdlineP->methodForSplit = SPLIT_MAX_DIM;
+    else if (splitspread)
+        cmdlineP->methodForSplit = SPLIT_MAX_SPREAD;
     else
         cmdlineP->methodForSplit = SPLIT_MAX_PIXELS;
 
@@ -239,11 +239,11 @@ colcompare(const void * const b1, const void * const b2) {
 
 
 #ifndef LITERAL_FN_DEF_MATCH
-static qsort_comparison_fn dimcompare;
+static qsort_comparison_fn spreadcompare;
 #endif
 
 static int
-dimcompare(const void * const b1, const void * const b2) {
+spreadcompare(const void * const b1, const void * const b2) {
 
     boxVector const box1P = (boxVector)(b1);
     boxVector const box2P = (boxVector)(b2);
@@ -268,8 +268,8 @@ sortBoxes(boxVector           const bv,
       case SPLIT_MAX_COLORS:
         qsort((char*) bv, boxCt, sizeof(struct box), colcompare);
         break;
-      case SPLIT_MAX_DIM:
-        qsort((char*) bv, boxCt, sizeof(struct box), dimcompare);
+      case SPLIT_MAX_SPREAD:
+        qsort((char*) bv, boxCt, sizeof(struct box), spreadcompare);
         break;
     }
 }
