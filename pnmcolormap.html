@@ -18,6 +18,8 @@ pnmcolormap - create quantization color map for a Netpbm image
 
 [<B>-spreadbrightness</B>|<B>-spreadluminosity</B>]
 
+[<B>-splitpixelct</B>|<B>-splitcolorct</B>|<b>-splitspread</b>]
+
 [<B>-sort</B>]
 
 [<B>-square</B>] 
@@ -121,6 +123,12 @@ Standard Error about the quantization.  <DT><B>-center</B>
 
 <DT><B>-spreadluminosity</B>
 
+<DT><B>-splitpixelct</B>
+
+<DT><B>-splitcolorct</B>
+
+<DT><B>-splitspread</B>
+
 <DD>These options control the quantization algorithm.  See <a
 href="#quant">QUANTIZATION METHOD</a>.
 
@@ -140,6 +148,21 @@ number of pixels.  You start with one box and split boxes in two until
 the number of boxes is the same as the number of colors you want in
 the output, and choose one color to represent each box.
 
+<p>There are three ways <b>pnmcolormap</b> can choose the box to split in
+  each step:
+  <ul>
+    <li>Split the box containing the most pixels.  This is the default,
+      and you can select it explicitly with option <b>-splitpixelct</b>.
+    <li>Split the box containing the most colors.  Select this with option
+      <b>-splitcolorct</b>.
+    <li>Split the box containing the largest color spread.  Select this
+      with option <b>-splitspread</b>.
+  </ul>
+
+<p><b>-splitpixelct</b>, <b>splitcolorct</b>, and <b>splitspread</b> were new
+  in Netpbm 10.88 (September 2019).  Before that, <b>pnmcolormap</b> always
+  splits the box containing the most pixels.
+  
 <P>When you split a box, you do it so each sub-box has the same number of
 pixels (except one sub-box has more if the full box has an odd number), with
 the &quot;greatest&quot; pixels in one sub-box and the &quot;least&quot;
