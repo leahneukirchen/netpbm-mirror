@@ -153,10 +153,12 @@ the output, and choose one color to represent each box.
   <ul>
     <li>Split the box containing the most pixels.  This is the default,
       and you can select it explicitly with option <b>-splitpixelct</b>.
-    <li>Split the box containing the most colors.  Select this with option
+    <li>Split the box containing the most colors.  This appears to be useful
+      for academic purposes only.  Select this with option
       <b>-splitcolorct</b>.
     <li>Split the box containing the largest color spread.  Select this
-      with option <b>-splitspread</b>.
+      with option <b>-splitspread</b>.  This can produce a better result for
+      small details with colors not found elsewhere in the image.
   </ul>
 
 <p><b>-splitpixelct</b>, <b>splitcolorct</b>, and <b>splitspread</b> were new
