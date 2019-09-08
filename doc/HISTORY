@@ -12,6 +12,8 @@ not yet  BJH  Release 10.88.00
               pnmcolormap: Add -splitpix, -splitcol, -splitdim.
               Thanks Vladislav Zavjalov.
 
+              pbmtext: fix erroneous failure message with long input text.
+
               jpeg2ktopam, pamtojpeg2k: fix negative array index.  Always
               broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
 
