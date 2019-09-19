@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.88.00
 
+              pnmremap: Don't output any part of the image if program fails
+              because the maxval of input and map file do not match, in a
+              case where matching maxval is required, i.e. the user specified
+              -firstisdefault or -missingcolor.
+
               ppmhist: sort secondarily by RGB with -sort=frequency, so
               output is repeatable.
 
