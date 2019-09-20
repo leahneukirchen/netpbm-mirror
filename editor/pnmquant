@@ -199,10 +199,10 @@ sub openSeekableAsStdin($) {
 
 
 
-sub makeColormap($$$$$) {
+sub makeColormap($$$$$$) {
 
-    my ($ncolors, $opt_meanpixel, $opt_meancolor, $opt_spreadluminosity,
-        $opt_quiet) = @_;
+    my ($ncolors, $opt_center, $opt_meanpixel, $opt_meancolor,
+        $opt_spreadluminosity, $opt_quiet) = @_;
 
     # Make a colormap of $ncolors colors from the image on Standard Input.
     # Put it in a temporary file and return its name.
@@ -214,8 +214,19 @@ sub makeColormap($$$$$) {
               "errno = $ERRNO\n");
         exit(1);
     }
-
+       
     my $averageOpt;
+
+    my $colorSummaryOptCt =
+        (defined($opt_meanpixel) ? 1 : 0) +
+        (defined($opt_meancolor) ? 1 : 0) +
+        (defined($opt_center)    ? 1 : 0);
+
+    if ($colorSummaryOptCt > 1) {
+        print(STDERR "You can specify only one of " .
+              "-meanpixel, -meancolor, and -center\n");
+        exit(1);
+    }
     if (defined($opt_meanpixel)) {
         $averageOpt = "-meanpixel";
     } elsif (defined($opt_meancolor)) {
@@ -308,6 +319,7 @@ select(OLDOUT);  # avoids Perl bug where it says we never use OLDOUT
 
 
 my $mapfileSpec = makeColormap($cmdlineR->{ncolors}, 
+                               $cmdlineR->{center}, 
                                $cmdlineR->{meanpixel}, 
                                $cmdlineR->{meancolor}, 
                                $cmdlineR->{spreadluminosity},

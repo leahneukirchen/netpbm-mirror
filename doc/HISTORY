@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.88.00
 
+              pnmquant: Fail if user specifies more than one of -meanpixel,
+              -meancolor, and -center, rather than just pick one.
+
               pnmremap: Don't output any part of the image if program fails
               because the maxval of input and map file do not match, in a
               case where matching maxval is required, i.e. the user specified
