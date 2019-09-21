@@ -38,6 +38,9 @@ not yet  BJH  Release 10.88.00
               allocation fails.  Always broken (programs were added to
               Netpbm in Release 9.0 (April 2000).
 
+              pamsumm: Fix bug: with -mean and a conflicting option such as
+              -sum, the program ignores one of the options.  It should fail.
+
               Build: fix for Cygwin, "no rule to make pm_config.h".
 
 19.06.28 BJH  Release 10.87.00
