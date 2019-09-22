@@ -17,15 +17,25 @@ echo "Test 2"
 pamgauss 3 3 -sigma=0.5 -tupletype="GRAYSCALE" | pamfile
 
 
-echo "Test 3."
+echo "Test Invalid"
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pamgauss 3 3               | echo "Expected error 1"
-pamgauss 3 3   -sigma=0    | echo "Expected error 2"
-pamgauss 3 3   -sigma=-1.5 | echo "Expected error 3"
-pamgauss 3     -sigma=0.5  | echo "Expected error 4"
-pamgauss 3 3 3 -sigma=0.5  | echo "Expected error 5"
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+pamgauss 3 3               > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+pamgauss 3 3   -sigma=0    > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+pamgauss 3 3   -sigma=-1.5 > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+pamgauss 3     -sigma=0.5  > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+pamgauss 3 3 3 -sigma=0.5  > ${test_out} || \
+   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

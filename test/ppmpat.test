@@ -27,23 +27,35 @@ echo "Test 6"
 ppmpat -argyle2 --color=rgb:00/00/00,rgb:ff/80/80,rgb:e0/e0/e0 12 18 | cksum
 
 # Test 7.
-echo "Test 7"
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-ppmpat -g2 -g3 10 10 || echo "Expected failure 1"
-ppmpat -madras -tartan 10 10 || echo "Expected failure 2"
-ppmpat -poles -squig 10 10 || echo "Expected failure 3"
-ppmpat -camo -anticamo 10 10 || echo "Expected failure 4"
-ppmpat -argyle1 -argyle2 10 10 || echo "Expected failure 5"
+ppmpat -g2 -g3 10 10 > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+ppmpat -madras -tartan 10 10 > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+ppmpat -poles -squig 10 10 > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+ppmpat -camo -anticamo 10 10 > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+ppmpat -argyle1 -argyle2 10 10 > ${test_out} || \
+   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
 
-ppmpat 10 10 || echo "Expected failure 6"
-ppmpat -g2 10 || echo "Expected failure 7"
-ppmpat -g2 10 10 10 || echo "Expected failure 8"
-ppmpat -g2 10 || echo "Expected failure 9"
+ppmpat 10 10 > ${test_out} || \
+   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+ppmpat -g2 10 > ${test_out} || \
+   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+ppmpat -g2 10 10 10 > ${test_out} || \
+   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+ppmpat -g2 10 > ${test_out} || \
+   echo -n "Expected failure 9"; test -s ${test_out}; echo " "$?
 
 clist1="-color=rgb:00/00/00"
 clist2="-color=rgb:00/00/00,rgb:00/00/ff"
@@ -51,26 +63,45 @@ clist3="-color=rgb:00/00/00,rgb:00/00/ff,rgb:00/ff/ff"
 clist4="-color=rgb:00/00/00,rgb:00/00/ff,rgb:00/ff/ff,rgb:ff/ff/ff"
 
 # These patterns require exactly 2 colors 
-ppmpat -gingham2 ${clist1} 10 10 || echo "Expected failure 10"
-ppmpat -argyle1  ${clist1} 10 10 || echo "Expected failure 11"
-ppmpat -gingham2 ${clist3} 10 10 || echo "Expected failure 12"
-ppmpat -argyle1  ${clist3} 10 10 || echo "Expected failure 13"
+ppmpat -gingham2 ${clist1} 10 10 > ${test_out} || \
+   echo -n "Expected failure 10"; test -s ${test_out}; echo " "$?
+ppmpat -argyle1  ${clist1} 10 10 > ${test_out} || \
+   echo -n "Expected failure 11"; test -s ${test_out}; echo " "$?
+ppmpat -gingham2 ${clist3} 10 10 > ${test_out} || \
+   echo -n "Expected failure 12"; test -s ${test_out}; echo " "$?
+ppmpat -argyle1  ${clist3} 10 10 > ${test_out} || \
+   echo -n "Expected failure 13"; test -s ${test_out}; echo " "$?
 
 # These require exactly 3 colors 
-ppmpat -gingham3 ${clist2} 10 10 || echo "Expected failure 14"
-ppmpat -argyle2  ${clist2} 10 10 || echo "Expected failure 15"
-ppmpat -madras   ${clist2} 10 10 || echo "Expected failure 16"
-ppmpat -tartan   ${clist2} 10 10 || echo "Expected failure 17"
-ppmpat -gingham3 ${clist4} 10 10 || echo "Expected failure 18"
-ppmpat -argyle2  ${clist4} 10 10 || echo "Expected failure 19"
-ppmpat -madras   ${clist4} 10 10 || echo "Expected failure 20"
-ppmpat -tartan   ${clist4} 10 10 || echo "Expected failure 21"
+ppmpat -gingham3 ${clist2} 10 10 > ${test_out} || \
+   echo -n "Expected failure 14"; test -s ${test_out}; echo " "$?
+ppmpat -argyle2  ${clist2} 10 10 > ${test_out} || \
+   echo -n "Expected failure 15"; test -s ${test_out}; echo " "$?
+ppmpat -madras   ${clist2} 10 10 > ${test_out} || \
+   echo -n "Expected failure 16"; test -s ${test_out}; echo " "$?
+ppmpat -tartan   ${clist2} 10 10 > ${test_out} || \
+   echo -n "Expected failure 17"; test -s ${test_out}; echo " "$?
+ppmpat -gingham3 ${clist4} 10 10 > ${test_out} || \
+   echo -n "Expected failure 18"; test -s ${test_out}; echo " "$?
+ppmpat -argyle2  ${clist4} 10 10 > ${test_out} || \
+   echo -n "Expected failure 19"; test -s ${test_out}; echo " "$?
+ppmpat -madras   ${clist4} 10 10 > ${test_out} || \
+   echo -n "Expected failure 20"; test -s ${test_out}; echo " "$?
+ppmpat -tartan   ${clist4} 10 10 > ${test_out} || \
+   echo -n "Expected failure 21"; test -s ${test_out}; echo " "$?
 
 # These require at least 3 colors 
-ppmpat -squig    ${clist2} 10 10 || echo "Expected failure 22"
-ppmpat -camo     ${clist2} 10 10 || echo "Expected failure 23"
-ppmpat -anticamo ${clist2} 10 10 || echo "Expected failure 24"
+ppmpat -squig    ${clist2} 10 10 > ${test_out} || \
+   echo -n "Expected failure 22"; test -s ${test_out}; echo " "$?
+ppmpat -camo     ${clist2} 10 10 > ${test_out} || \
+   echo -n "Expected failure 23"; test -s ${test_out}; echo " "$?
+ppmpat -anticamo ${clist2} 10 10 > ${test_out} || \
+   echo -n "Expected failure 24"; test -s ${test_out}; echo " "$?
 
 # The squig pattern has an aspect ratio restriction 
-ppmpat -squig ${clist3} 10 250  || echo "Expected failure 25"
-ppmpat -squig ${clist3} 500 20  || echo "Expected failure 26"
+ppmpat -squig ${clist3} 10 250  > ${test_out} || \
+   echo -n "Expected failure 25"; test -s ${test_out}; echo " "$?
+ppmpat -squig ${clist3} 500 20  > ${test_out} || \
+   echo -n "Expected failure 26"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

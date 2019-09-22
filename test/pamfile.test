@@ -20,13 +20,21 @@ pamfile -size testimg.ppm
 pamfile -machine testimg.ppm
 cat testgrid.pbm testimg.ppm testgrid.pbm | pamfile -machine
 
-echo "Test 4"
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pamfile -size -machine  testimg.ppm || echo "Expected failure 1"
-pamfile -count -machine testimg.ppm || echo "Expected failure 2"
-head -n1 testimg.ppm | pamfile || echo "Expected failure 3"
+pamfile -size -machine  testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+pamfile -count -machine testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+head -n1 testimg.ppm | pamfile > ${test_out} || \
+  echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

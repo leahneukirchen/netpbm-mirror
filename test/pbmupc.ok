@@ -1,12 +1,12 @@
 Test 1
 2619309127 10172
-Test 2
-Exptected error 1
-Exptected error 2
-Exptected error 3
-Exptected error 4
-Exptected error 5
-Exptected error 6
-Exptected error 7
-Exptected error 8
-Exptected error 9
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1

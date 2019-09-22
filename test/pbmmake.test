@@ -2,7 +2,7 @@
 # This script tests: pbmmake
 # Also requires:
 
-echo "Test 1."
+echo "Test 1"
 
 for i in `seq 1 8`
 do
@@ -10,10 +10,10 @@ for color in -white -black -gray
 do
 pbmmake -plain $color $i $i | tr -d '\n'; echo
 done
-
-echo "Test 2."
-
 done
+
+echo "Test 2"
+
 for i in `seq 8 5 98`
 do
  ( pbmmake -w $i $i ;
@@ -21,19 +21,31 @@ do
   pbmmake  -g $i $i ) | cksum
 done
 
-echo "Test 3."
+echo "Test Invalid"
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pbmmake -b -w -plain 1 1 || echo "Expected error 1"
-pbmmake -b -g -plain 1 1 || echo "Expected error 2"
-pbmmake -white -gray -plain 1 1 || echo "Expected error 3"
-pbmmake -white -plain   || echo "Expected error 4"
-pbmmake -white -plain 1 || echo "Expected error 5"
-pbmmake -white -plain 1 0 || echo "Expected error 6"
-pbmmake -white -plain 0 1 || echo "Expected error 7"
-pbmmake -white -plain 1 1 1 || echo "Expected error 8"
-pbmmake -plain 1 1 ||  echo "Expected error 9"
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+pbmmake -b -w -plain 1 1 > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+pbmmake -b -g -plain 1 1 > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+pbmmake -white -gray -plain 1 1 > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+pbmmake -white -plain   > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+pbmmake -white -plain 1 > ${test_out} || \
+   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+pbmmake -white -plain 1 0 > ${test_out} || \
+   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+pbmmake -white -plain 0 1 > ${test_out} || \
+   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+pbmmake -white -plain 1 1 1 > ${test_out} || \
+   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

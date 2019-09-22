@@ -1,12 +1,12 @@
-Test 1.
+Test 1
 3662611538 2513
 3109612402 5012
-Test 2.
-Expected error 1
-Expected error 2
-Expected error 3
-Expected error 4
-Expected error 5
-Expected error 6
-Expected error 7
-Expected error 8
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1

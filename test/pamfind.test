@@ -7,19 +7,19 @@ sorted0_res=${tmpdir}/pamfind_sorted0.res
 sorted1_res=${tmpdir}/pamfind_sorted1.res
 
 # Test 1
-echo Test 1
+echo "Test 1"
 pamfind -color=grey17     testimg.ppm 
 pamfind -target=210,57,41 testimg.ppm
 pamfind -target=50,55,49 -machine testimg.ppm
 
 # Test 2
-echo Test 2
+echo "Test 2"
 pamfind -target=1 testgrid.pbm
 pamfind -target=0 -machine testgrid.pbm
 
 # Test 3
 # The two outputs should be disjoint
-echo Test 3
+echo "Test 3"
 pamfind -target=0 testgrid.pbm | sort > ${sorted0_res}
 pamfind -target=1 testgrid.pbm | sort > ${sorted1_res}
 comm -3 ${sorted0_res}  ${sorted1_res}  |
@@ -33,11 +33,23 @@ rm ${sorted0_res} ${sorted1_res}
 
 # Test 4
 
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
 echo 1>&2
 echo "Invalid command-line argument combination." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-echo Test 4
-pamfind -color=black -target=1 testimg.ppm || \
-  echo expected error
+echo "Test Invalid"
+
+pamfind -color=black -target=1,1,1 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+pamfind -target=0,0 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+pamfind -target=0,0,0,0 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+pamfind testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

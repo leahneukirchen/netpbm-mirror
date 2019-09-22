@@ -24,14 +24,23 @@ pgmramp -lr 256 1 | pgmhist -machine -quartile | \
 pgmramp -lr 256 1 | pgmhist -machine -decile   | \
   sed -e 's/  */ /g' -e 's/ *$//'
 
-echo "Test 3"
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pgmhist -median   -quartile testgrid.pbm || echo "Expected failure 1"
-pgmhist -median   -decile   testgrid.pbm || echo "Expected failure 2"
-pgmhist -quartile -decile   testgrid.pbm || echo "Expected failure 3"
-pgmhist testimg.ppm || echo "Expected failure 4"
+pgmhist -median   -quartile testgrid.pbm > ${test_out} || \ 
+  echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+pgmhist -median   -decile   testgrid.pbm > ${test_out} || \
+  echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+pgmhist -quartile -decile   testgrid.pbm > ${test_out} || \
+  echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+pgmhist testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

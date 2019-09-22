@@ -2,25 +2,37 @@
 # This script tests: pgmmake
 # Also requires:
 
-echo "Test 1."
+echo "Test 1"
 
 pgmmake 1 50 50 | cksum
 pgmmake .2 50 100 -maxval=5 | cksum
 
 
-echo "Test 2."
+echo "Test Invalid"
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pgmmake 100  5 5 || echo "Expected error 1"
-pgmmake 1.01 5 5 || echo "Expected error 2"
-pgmmake .5   5   || echo "Expected error 3"
-pgmmake .5       || echo "Expected error 4"
-pgmmake -maxval=5        5 5 || echo "Expected error 5"
-pgmmake -maxval=0     .5 5 5 || echo "Expected error 6"
-pgmmake -maxval=-1    .5 5 5 || echo "Expected error 7"
-pgmmake -maxval=65536 .5 5 5 || echo "Expected error 8"
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
 
+pgmmake 100  5 5 > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+pgmmake 1.01 5 5 > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+pgmmake .5   5   > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+pgmmake .5       > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+pgmmake -maxval=5        5 5 > ${test_out} || \
+   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+pgmmake -maxval=0     .5 5 5 > ${test_out} || \
+   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+pgmmake -maxval=-1    .5 5 5 > ${test_out} || \
+   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+pgmmake -maxval=65536 .5 5 5 > ${test_out} || \
+   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

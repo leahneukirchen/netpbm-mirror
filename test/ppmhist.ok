@@ -19,7 +19,7 @@ Test 2
  Summary: 6 colors: 0 black, 0 white, 0 gray, 6 color
  Summary: 6 colors: 1 black, 0 white, 0 gray, 5 color
  Summary: 6 colors: 1 black, 1 white, 1 gray, 3 color
-Test 3
-Expected failure 1
-Expected failure 2
-Expected failure 3
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1

@@ -42,6 +42,8 @@ pamsumm.test
 pnmpsnr.test
 pbmminkowski.test
 
+pnmcolormap.test
+
 # Basic (internal) converter tests
 
 pamtopam.test
@@ -70,6 +72,7 @@ pnmpaste-pbm.test
 pbmpscale.test
 pnmremap1.test
 pnmremap2.test
+pnmquant.test
 pnmquantall.test
 pnmtile.test
 ppmbrighten.test

@@ -78,26 +78,26 @@ test.ppm
 -top
 1435955776 120765
 1435955776 120765
-Test 3
+Test Invalid
 -reportfull -reportsize
-expected failure
+Expected failure:  -reportfull -reportsize 1
 -reportfull -borderfile=testgrid.pbm
-expected failure
+Expected failure:  -reportfull -borderfile=testgrid.pbm 1
 -reportsize -borderfile=testgrid.pbm
-expected failure
+Expected failure:  -reportsize -borderfile=testgrid.pbm 1
 -black -white
-expected failure
+Expected failure:  -black -white 1
 -black -sides
-expected failure
+Expected failure:  -black -sides 1
 -white -bg-color=red
-expected failure
+Expected failure:  -white -bg-color=red 1
 -white -bg-corner=topleft
-expected failure
+Expected failure:  -white -bg-corner=topleft 1
 -white -bg-corner=top
-expected failure
+Expected failure:  -white -bg-corner=top 1
 -blank-image=pasturize
-expected failure
+Expected failure:  -blank-image=pasturize 1
 -bg-color=black -closeness=-1
-expected failure
+Expected failure:  -bg-color=black -closeness=-1 1
 -bg-color=black -closeness=101
-expected failure
+Expected failure:  -bg-color=black -closeness=101 1
