@@ -120,25 +120,6 @@ cmpUint(unsigned int const a,
 
 
 #ifndef LITERAL_FN_DEF_MATCH
-static qsort_comparison_fn countcompare;
-#endif
-
-
-static int
-countcompare(const void * const a,
-             const void * const b) {
-/*----------------------------------------------------------------------------
-   This is a 'qsort' collation function.
------------------------------------------------------------------------------*/
-    const struct colorhist_item * const histItem1P = a;
-    const struct colorhist_item * const histItem2P = b;
-
-    return cmpUint(histItem2P->value, histItem1P->value);
-}
-
-
-
-#ifndef LITERAL_FN_DEF_MATCH
 static qsort_comparison_fn rgbcompare;
 #endif
 
@@ -163,6 +144,31 @@ rgbcompare(const void * const a,
                              PPM_GETB(histItem2P->color));
     }
     return retval;
+}
+
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn countcompare;
+#endif
+
+
+static int
+countcompare(const void * const a,
+             const void * const b) {
+/*----------------------------------------------------------------------------
+   This is a 'qsort' collation function.
+-----------------------------------------------------------------------------*/
+    const struct colorhist_item * const histItem1P = a;
+    const struct colorhist_item * const histItem2P = b;
+
+    int const countComparison = cmpUint(histItem2P->value, histItem1P->value);
+
+    if (countComparison == 0) {
+        /* Counts are the same; use RGB secondary sort */
+        return rgbcompare(a, b);
+    } else
+        return countComparison;
 }
 
 

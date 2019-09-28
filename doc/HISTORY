@@ -4,14 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-19.09.28 BJH  Release 10.87.03
+not yet  BJH  Release 10.88.00
 
               pnmquant: Fail if user specifies more than one of -meanpixel,
               -meancolor, and -center, rather than just pick one.
 
-              Build: fix for Cygwin, "no rule to make pm_config.h".
+              pnmremap: Don't output any part of the image if program fails
+              because the maxval of input and map file do not match, in a
+              case where matching maxval is required, i.e. the user specified
+              -firstisdefault or -missingcolor.
 
-19.09.01 BJH  Release 10.87.02
+              ppmhist: sort secondarily by RGB with -sort=frequency, so
+              output is repeatable.
+
+              pnmcolormap: Add -splitpix, -splitcol, -splitdim.
+              Thanks Vladislav Zavjalov.
+
+              pbmtext: fix erroneous failure message with long input text.
 
               jpeg2ktopam, pamtojpeg2k: fix negative array index.  Always
               broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
@@ -25,10 +34,15 @@ CHANGE HISTORY
               jpeg2ktopam: fix null pointer dereference.  Always broken
               (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
 
-19.08.09 BJH  Release 10.87.01
+              pnmtorle, rletopnm: fix wild pointer dereference when memory
+              allocation fails.  Always broken (programs were added to
+              Netpbm in Release 9.0 (April 2000).
 
-              pnmtorle, rletopnm: fix wild pointer dereference when a memory
-              allocation fails.
+              pamsumm: Fix bug: with -mean and a conflicting option such as
+              -sum, the program ignores one of the options.  It should fail.
+              Always broken (pamsumm was new in Netpbm 10.21 (March 2004).
+
+              Build: fix for Cygwin, "no rule to make pm_config.h".
 
 19.06.28 BJH  Release 10.87.00
 

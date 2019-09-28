@@ -1,0 +1,61 @@
+#! /bin/bash
+# This script tests: pnmquant
+# Also requires: ppmhist
+
+echo "Test 1"
+
+# Count colors in output image.
+
+pnmquant 256 testimg.ppm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 256) , ($2 > 256 * 0.95)}' 
+
+pnmquant -center 256 testimg.ppm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 256) , ($2 > 256 * 0.95)}' 
+
+pnmquant -spreadbrightness 256 testimg.ppm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 256) , ($2 > 256 * 0.95)}' 
+
+pnmquant -spreadluminosity 128 testimg.ppm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 128) , ($2 > 128 * 0.95)}' 
+
+pnmquant -floyd -randomseed=0 128 testimg.ppm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 128) , ($2 > 128 * 0.95)}' 
+
+pnmquant 64 -meanpixel testimg.ppm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 64) , ($2 > 64 * 0.9)}' 
+
+pnmquant 16 -meancolor testimg.ppm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 16) , ($2 > 16 * 0.9)}' 
+
+
+pnmquant 2 testgrid.pbm | ppmhist | \
+  awk 'NR==1 {print ($2 <= 2) , ($2 == 2) }' 
+ 
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line arguments." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+pnmquant 0 testimg.ppm   > ${test_out} || \
+  echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+pnmquant testimg.ppm  > ${test_out} || \
+  echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+pnmquant 10.5 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+pnmquant -center -meancolor 16 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+pnmquant -center -meanpixel 16 testimg.ppm    > ${test_out} || \
+  echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+pnmquant -meancolor -meanpixel 16 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+pnmquant -spreadbrightness -spreadluminosity 16 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+pnmquant -floyd -nofloyd 16 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

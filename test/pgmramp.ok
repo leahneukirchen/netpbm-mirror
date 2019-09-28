@@ -41,9 +41,9 @@ Test 2
 807973067 65551
 Test 3
 886972785 131087
-Test 4
-Expected error: -lr -tb
-Expected error: -lr -rectangle
-Expected error: -rectangle -ellipse
-Expected error: insufficient parameters
-Expected error: excessive parameters
+Test Invalid
+Expected failure: -lr -tb 1
+Expected failure: -lr -rectangle 1
+Expected failure: -rectangle -ellipse 1
+Expected failure: insufficient parameters 1
+Expected failure: excessive parameters 1

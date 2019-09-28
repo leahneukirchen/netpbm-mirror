@@ -83,9 +83,9 @@ Test 1
 Test 2
 stdin:	PAM, 3 by 3 by 1 maxval 255
     Tuple type: GRAYSCALE
-Test 3.
-Expected error 1
-Expected error 2
-Expected error 3
-Expected error 4
-Expected error 5
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1

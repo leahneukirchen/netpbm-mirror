@@ -15,15 +15,25 @@ ppmforge -night -width=99 -height=90 | pamfile -size
 # brought up to 100 in this case
 ppmforge -night -width=80 -height=90 | pamfile -size
 
-echo "Test 2"
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
 
 echo 1>&2
 echo "Invalid command-line arguments." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-ppmforge -night  -dimension=0  || echo "Expected failure 1"
-ppmforge -clouds -mesh=1.99    || echo "Expected failure 2"
-ppmforge -clouds -power=0      || echo "Expected failure 3"
-ppmforge         -ice=0        || echo "Expected failure 4"
-ppmforge         -glaciers=0   || echo "Expected failure 5"
+ppmforge -night  -dimension=0  > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+ppmforge -clouds -mesh=1.99    > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+ppmforge -clouds -power=0      > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+ppmforge         -ice=0        > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+ppmforge         -glaciers=0   > ${test_out} || \
+   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+
+rm ${test_out}

@@ -7,10 +7,26 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-TEST_PKGCONFIG_LIBXML2 = if $(PKG_CONFIG) libxml-2.0; then echo exists; fi
+# The pkg-config test used to be just 'pkg-config libxml-2.0', without the
+# --exists, and on at least one system, it does the same thing as --exists:
+# exit code 0 if the package exists; 1 if it does not, with no Standard
+# Output.  But we have evidence that on one system, it issues the whole
+# package not found try a different path, blah, blah, blah message that
+# looks like a failure in the build.  We're hoping --exists does not do that.
+# But maybe we didn't do --exists in the first place because it doesn't exist
+# on older pkg-config.  19.09.20.
+#
+# Note that --exists is better for another reason - it fails when the named
+# package exists, but it is unusable because its prerequisite packages don't.
+#
+# Also note that in both cases, the shell command fails if pkg-config
+# doesn't even exist.
+
+TEST_PKGCONFIG_LIBXML2 := \
+  if $(PKG_CONFIG) libxml-2.0 --exists; then echo exists; fi
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBXML2)),)
-  # pkg-config libxml2 works on this system
+  # pkg-config works and says libxml2 exists on this system
   XML2_LIBS = $(shell $(PKG_CONFIG) libxml-2.0 --libs)
   XML2_CFLAGS = $(shell $(PKG_CONFIG) libxml-2.0 --cflags)
 else
@@ -34,10 +50,11 @@ ifneq ($(TIFFLIB),NONE)
   endif
 endif
 
-TEST_PKGCONFIG_LIBPNG = if $(PKG_CONFIG) libpng$(PNGVER); then echo exists; fi
+TEST_PKGCONFIG_LIBPNG := \
+  if $(PKG_CONFIG) libpng$(PNGVER) --exists; then echo exists; fi
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
-  # pkg-config libpng works on this system
+  # pkg-config works and says libpng exists on this system
   HAVE_PNGLIB = Y
   EXTERN_INCLUDES += $(shell $(PKG_CONFIG) libpng$(PNGVER) --cflags)
 else
@@ -193,7 +210,7 @@ tifftopnm pamtotiff pnmtotiffcmyk: \
  $(shell $(LIBOPT)  $(LIBOPTR) $(TIFFLIB) $(TIFFLIB_EXTRALIBS))
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
-  # pkg-config libpng works on this system
+  # pkg-config works and says libpng exists on this system
   PNGLIB_LIBOPTS = $(shell $(PKG_CONFIG) libpng$(PNGVER) --libs)
 else
   ifneq ($(shell libpng$(PNGVER)-config --version),)

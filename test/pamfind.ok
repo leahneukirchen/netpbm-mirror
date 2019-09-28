@@ -257,5 +257,8 @@ Locations containing tuple (1)/1:
 Test 3
 okay
 okay
-Test 4
-expected error
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1

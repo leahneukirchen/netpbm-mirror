@@ -13,7 +13,7 @@ Test 3
 227 149
 testimg.ppm: PPM RAW 227 149 3 255 RGB
 stdin: PBM RAW 14 16 1 1 BLACKANDWHITE
-Test 4
-Expected failure 1
-Expected failure 2
-Expected failure 3
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1

@@ -9,7 +9,10 @@ include $(BUILDDIR)/config.mk
 
 EXTERN_INCLUDE =
 
-ifeq ($(shell $(PKG_CONFIG) x11 --modversion --silence-errors),)
+TEST_PKGCONFIG_X11 := \
+  if $(PKG_CONFIG) x11 --exists; then echo exists; fi
+
+ifeq ($(shell $(TEST_PKGCONFIG_X11)),)
   # Pkg-config has never heard of X11, or doesn't even exist
 
   ifneq ($(X11LIB),NONE)
@@ -46,7 +49,8 @@ all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-ifeq ($(shell $(PKG_CONFIG) x11 --libs),)
+ifeq ($(shell $(TEST_PKGCONFIG_X11)),)
+  # Pkg-config has never heard of X11, or doesn't even exist
   X11_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(X11LIB))
 else
   X11_LIBOPTS = $(shell $(PKG_CONFIG) x11 --libs)

@@ -30,7 +30,16 @@
 #include "pbm.h"
 #include "pbmfont.h"
 
-#define  MAXLINECHARS 5000
+/* Max length of input text.  Valid for text which is part of the
+   command line and also for text fed from standard input.
+   Note that newline is counted as a character.
+*/
+#define  MAXLINECHARS 4999
+
+/* We add one slot for the terminating NULL charter
+   and another slot as a margin to detect overruns.
+*/
+#define  LINEBUFSIZE  (MAXLINECHARS + 2)
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -61,7 +70,7 @@ textFmCmdLine(int argc, const char ** argv) {
     unsigned int i;
     unsigned int totaltextsize;
 
-    MALLOCARRAY(text, MAXLINECHARS+1);
+    MALLOCARRAY(text, LINEBUFSIZE);
 
     if (!text)
         pm_error("Unable to allocate memory for a buffer of up to %u "
@@ -69,13 +78,15 @@ textFmCmdLine(int argc, const char ** argv) {
 
     text[0] = '\0';
 
-    for (i = 1, totaltextsize = 1; i < argc; ++i) {
+    for (i = 1, totaltextsize = 0; i < argc; ++i) {
         if (i > 1) {
             strcat(text, " ");
         }
-        totaltextsize += strlen(argv[i]) + 1;
+        totaltextsize += strlen(argv[i]) + (i > 1 ? 1 : 0);
         if (totaltextsize > MAXLINECHARS)
-            pm_error("input text too long");
+           pm_error("Input text is %u characters.  "
+                    "Cannot process longer than %u",
+                    totaltextsize, (unsigned int) MAXLINECHARS);
         strcat(text, argv[i]);
     }
     MALLOCARRAY(wtext, totaltextsize * sizeof(PM_WCHAR));
@@ -84,7 +95,7 @@ textFmCmdLine(int argc, const char ** argv) {
         pm_error("Unable to allocate memory for a buffer of up to %u "
                  "wide characters of text", totaltextsize);
 
-    for (i = 0; i < totaltextsize; ++i)
+    for (i = 0; i < totaltextsize + 1; ++i)
         wtext[i] = (PM_WCHAR) text[i];
 
     free(text);
@@ -800,7 +811,7 @@ fgetWideString(PM_WCHAR *    const widestring,
     wchar_t * rc;
 
     assert(widestring);
-    assert(size > 0);
+    assert(size > 1);
 
     rc = fgetws(widestring, size, ifP);
 
@@ -838,7 +849,7 @@ fgetNarrowString(PM_WCHAR *    const widestring,
     assert(widestring);
     assert(size > 0);
 
-    MALLOCARRAY_NOFAIL(bufNarrow, MAXLINECHARS+1);
+    MALLOCARRAY_NOFAIL(bufNarrow, LINEBUFSIZE);
 
     rc = fgets(bufNarrow, size, ifP);
 
@@ -871,7 +882,8 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
                      bool *        const eofP,
                      const char ** const errorP) {
 /*----------------------------------------------------------------------------
-  Return the next line from file *ifP, as *widestring.
+  Return the next line from file *ifP, as *widestring, a buffer 'size'
+  characters long.
 
   Lines are delimited by newline characters and EOF.
 
@@ -963,6 +975,8 @@ getText(PM_WCHAR       const cmdlineText[],
     } else {
         /* Read text from stdin. */
 
+        unsigned int const lineBufTerm = LINEBUFSIZE - 1;
+
         unsigned int maxlines;
             /* Maximum number of lines for which we presently have space in
                the text array
@@ -972,11 +986,13 @@ getText(PM_WCHAR       const cmdlineText[],
         unsigned int lineCount;
         bool         eof;
 
-        MALLOCARRAY(buf, MAXLINECHARS+1);
+        MALLOCARRAY(buf, LINEBUFSIZE);
 
         if (!buf)
             pm_error("Unable to allocate memory for up to %u characters of "
                      "text", MAXLINECHARS);
+        buf[lineBufTerm] = L'\1';  /* Initalize to non-zero value */
+                                   /* to detect input overrun */
 
         maxlines = 50;  /* initial value */
         MALLOCARRAY(textArray, maxlines);
@@ -987,18 +1003,18 @@ getText(PM_WCHAR       const cmdlineText[],
 
         for (lineCount = 0, eof = false; !eof; ) {
             const char * error;
-            fgetNarrowWideString(buf, MAXLINECHARS, stdin, &eof, &error);
+            fgetNarrowWideString(buf, LINEBUFSIZE, stdin, &eof, &error);
             if (error)
                 pm_error("Unable to read line %u from file.  %s",
                          lineCount, error);
             else {
                 if (!eof) {
-                    if (wcslen(buf) + 1 >= MAXLINECHARS)
+                    if (buf[lineBufTerm] == L'\0') /* overrun */
                         pm_error(
                             "Line %u (starting at zero) of input text "
-                            "is longer than %u characters."
+                            "is longer than %u characters. "
                             "Cannot process",
-                            lineCount, (unsigned int) MAXLINECHARS-1);
+                            lineCount, (unsigned int) MAXLINECHARS);
                     if (lineCount >= maxlines) {
                         maxlines *= 2;
                         REALLOCARRAY(textArray, maxlines);

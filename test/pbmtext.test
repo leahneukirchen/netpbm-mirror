@@ -5,6 +5,7 @@
 tmpdir=${tmpdir:-/tmp}
 
 # Test 1:
+echo "Test 1"
 
 # Should print 3898818212 967 twice
 
@@ -22,6 +23,7 @@ echo -n "For truth is always strange. Stranger than fiction. Lord Byron" | \
 text="The quick brown fog jumps over the lazy docs."
 
 # Test 2:
+echo "Test 2"
 
 for flags in "" "-nomargins" "-builtin fixed"
 do
@@ -33,6 +35,7 @@ temp_pbm=${tmpdir}/temp.pbm
 
 # Test 3: Check if image is produced unaltered when -width is specified
 # Should print 1028079028 967 twice, then 1305436978 1018 twice
+echo "Test 3"
 
 for flags in "" "-builtin fixed"
 do
@@ -71,13 +74,16 @@ _ PQRSTUVWXYZ[ _
 M ",/^_[\`jpqy| M
 EOF
 
+echo "Test 4"
+
 pbmtext -dump-sheet -builtin fixed | tee ${font_pbm}      | cksum
 cat ${fontRectangle_txt} | pbmtext -nom -builtin fixed    | cksum
 cat ${fontRectangle_txt} | pbmtext -nom -font ${font_pbm} | cksum
-rm ${fontRectangle_txt} ${font_pbm}
+rm ${fontRectangle_txt}
 
 
 # Test 5: Print all characters defined in the built-in bdf font
+echo "Test 5"
 
 # One long row
 # Should print 3233136020 4535
@@ -92,3 +98,78 @@ LC_ALL=C \
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c\n",i);
              for (i=160;i<=255;++i) printf("%c\n",i); }' | \
     pbmtext -nomargins -builtin bdf | cksum
+
+
+# Test 6
+
+echo 1>&2
+echo "Invalid font file specifications & command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test 6 Invalid"
+
+test_out=${tmpdir}/test_out
+
+pbmtext -font=testgrid.pbm foo > ${test_out} || \
+  echo -n "Expected failure 1";
+  test -s ${test_out}; echo " "$?
+pbmtext -font=testimg.ppm  foo > ${test_out} || \
+  echo -n "Expected failure 2";
+  test -s ${test_out}; echo " "$?
+pbmtext -builtin=void      foo > ${test_out} || \
+  echo -n "Expected failure 3";  
+  test -s ${test_out}; echo " "$?
+pbmtext -font=${font_pbm} -builtin=fixed foo > ${test_out}  || \
+  echo -n "Expected failure 4";
+  test -s ${test_out}; echo " "$?  
+pbmtext -dry-run    -text-dump  foo > ${test_out} || \
+  echo -n "Expected failure 5";
+  test -s ${test_out}; echo " "$?
+pbmtext -dump-sheet -text-dump  foo > ${test_out} || \
+  echo -n "Expected failure 6";
+  test -s ${test_out}; echo " "$?
+pbmtext -dry-run    -dump-sheet foo > ${test_out} || \
+  echo -n "Expected failure 7";
+  test -s ${test_out}; echo " "$?
+pbmtext -wchar foo > ${test_out} || \
+  echo -n "Expected failure 8";
+  test -s ${test_out}; echo " "$?
+
+rm ${font_pbm}
+
+# Test 7
+# Text to render in very long single line
+
+echo "Test 7"
+
+long_txt=${tmpdir}/long.txt
+
+head -c 4999 /dev/zero | tr '\0' 'A' > ${long_txt}
+awk '{print "text length:", length($0)}' ${long_txt}
+
+pbmtext -nomargins -builtin fixed `cat ${long_txt}`  | cksum
+cat ${long_txt} | pbmtext -nomargins -builtin fixed  | cksum
+
+echo "Test 8 Invalid"
+
+echo -n "z" >> ${long_txt}
+awk '{print "text length:", length($0)}' ${long_txt}
+
+echo 1>&2
+echo "Test input text which exceeds length limit" 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pbmtext -nomargins -builtin fixed `cat ${long_txt}` > ${test_out}  || \
+  echo -n "Expected failure 1";
+  test -s ${test_out}; echo " "$?
+cat ${long_txt} | pbmtext -nomargins -builtin fixed > ${test_out}  || \
+  echo -n "Expected failure 2";
+  test -s ${test_out}; echo " "$?
+cat ${long_txt} | \
+  LC_ALL=C pbmtext -nomargins -builtin fixed -wchar > ${test_out}  || \
+  echo -n "Expected failure 3";
+  test -s ${test_out}; echo " "$?
+
+rm ${long_txt} ${test_out}

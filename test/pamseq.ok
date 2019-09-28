@@ -1,7 +1,7 @@
 Test 1
 3929266994 304
-Test 2
-Expected error 1
-Expected error 2
-Expected error 3
-Expected error 4
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1

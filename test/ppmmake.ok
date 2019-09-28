@@ -1,15 +1,15 @@
-Test 1.
+Test 1
 2477651508 15012
 4294967295 0
 2378991101 7513
-Test 2.
-Expected error 1
-Expected error 2
-Expected error 3
-Expected error 4
-Expected error 5
-Expected error 6
-Expected error 7
-Expected error 8
-Expected error 9
-Expected error 10
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1
+Expected failure 10 1

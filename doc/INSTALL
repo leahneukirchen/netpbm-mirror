@@ -34,7 +34,7 @@ buildtools/debian/README in the source tree.
 The 'configure' program is not GNU Autoconf -- it is a simple program
 specific to Netpbm that prompts you for information about your system.
 If your system is not typical enough, you'll have to do a little more
-work, as described below under "custom installation."
+work, as described below under "custom building."
 
 You need to use GNU Make even if nothing else on your system is GNU,
 because the Netpbm make files exploit many advanced features of GNU
@@ -171,8 +171,8 @@ You do, however, have to tell Configure accurately whether you have the
 library installed and if so, where.
 
 
-INSTALLATION - WINDOWS
-----------------------
+WINDOWS
+-------
 
 For notes on building Netpbm on Windows using Cygwin, see the file
 README.CYGWIN.  With Cygwin, you can build Netpbm programs that use
@@ -223,8 +223,8 @@ and change them to
   #define _XOPEN_SOURCE 0
 
 
-INSTALLATION - MAKING ONLY THE PARTS YOU NEED
----------------------------------------------
+MAKING ONLY THE PARTS YOU NEED
+------------------------------
 
 If you don't need the whole package, but just want one tool in it that you
 heard about, you can make just that one.  For example, to make Pnmtojpeg,
@@ -293,15 +293,20 @@ preprocessor options) are similar.
   $ make CFLAGS=-O0
 
 
-CUSTOM INSTALLATION
--------------------
+AUTOMATED AND CUSTOM INSTALLATION
+---------------------------------
 
-If the Installnetpbm program doesn't install the way you want, it is
-easy to install it manually using the package that 'make package'
-generates.  That package is just a directory full of files, and you
-should be able to tell by inspection what to do with those files (copy
-to /bin, etc).  If not, there will be a README file in the package to
-explain everything.
+If you want to have a program install Netpbm, don't use 'installnetpbm'.  Just
+write your own program to install from the package that 'make package'
+generates.  That package is just a directory full of files, and you should be
+able to tell by inspection what to do with those files (copy to /bin, etc).
+If not, there is a README file in the package that explains everything.  Your
+install program will probably just be shell script that issues about five
+commands.
+
+Likewise, even if you're installing interactively, if the Installnetpbm
+program doesn't install the way you want, just install manually from the
+package, using a few commands such as 'cp'.
 
 
 INSTALLATION - SHARED LIBRARIES

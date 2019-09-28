@@ -3,7 +3,7 @@ Test 1
 4142746975 4210813
 2347597649 4210813
 3453559794 4349933
-Test 2
-Expected error 1
-Expected error 2
-Expected error 3
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
