@@ -46,7 +46,7 @@ int
 rle_alloc_error( pgm, name )
 CONST_DECL char *pgm, *name;
 {
-    if ( name )
+    if ( !name )
 	fprintf( stderr, "%s: memory allocation failed.\n", pgm );
     else
 	fprintf( stderr, "%s: memory allocation failed (no space for %s).\n",

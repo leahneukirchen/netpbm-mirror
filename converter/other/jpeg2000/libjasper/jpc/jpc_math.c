@@ -12,7 +12,7 @@
 /* Calculate the integer quantity floor(log2(x)), where x is a positive
   integer. */
 int
-jpc_floorlog2(int const arg) {
+jpc_floorlog2(int_fast32_t const arg) {
 
 	int y;
     int x;
@@ -46,7 +46,7 @@ jpc_firstone(n)    :-1 0  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4
 
 
 int
-jpc_firstone(int const arg) {
+jpc_firstone(int_fast32_t const arg) {
 /*---------------------------------------------------------------------------- 
   Calculate the bit position of the first leading one in a nonnegative
   integer.
