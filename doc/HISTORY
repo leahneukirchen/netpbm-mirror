@@ -4,7 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.88.00
+
+
+not yet   BJH  Release 10.89.00
+
+19.09.28  BJH  Release 10.88.00
 
               pnmquant: Fail if user specifies more than one of -meanpixel,
               -meancolor, and -center, rather than just pick one.
