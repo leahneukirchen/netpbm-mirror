@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcrop User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcrop</H1>
-Updated: 14 April 2019
+Updated: 04 October 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -275,12 +275,12 @@ fails if there is no apparent background color in the original image
       <p>
       This is actually useful if you are trying to find a single set of
       cropping parameters to crop a stream of images.  To do this, you could
-      do a pass with <b>-reportsize</b> and <b>-blank-image=maxcrop</b> and
-      compute the maximum crop for each edge, and then use that in a second
-      pass without <b>-reportsize</b> to do the crop.  In this scenario, any
-      all-background (blank) images would have no effect on the cropping
-      parameters you compute.  If you do this, you must make special
-      consideration of a stream with nothing but blank images.
+      do a pass with <b>-reportsize</b> and <b>-blank-image=maxcrop</b> to
+      compute the maximum crop for each edge, and then use those numbers in
+      <b>-crop<i>xxx</i></b> options on a <b>pamcut</b> pass to do the crop.
+      In this scenario, any all-background (blank) images would have no effect
+      on the cropping parameters you compute.  If you do this, you must give
+      special consideration to a stream with nothing but blank images.
 
   </dl>
     
