@@ -125,7 +125,7 @@ targetValue(CmdLineInfo  const cmdLine,
     } else {
         if (cmdLine.targetDepth != inpamP->depth)
             pm_error("You specified a %u-tuple for -target, "
-                     "but the input image of of depth %u",
+                     "but the input image is of depth %u",
                      cmdLine.targetDepth, inpamP->depth);
         else {
             unsigned int i;
