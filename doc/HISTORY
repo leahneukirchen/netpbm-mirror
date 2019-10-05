@@ -8,7 +8,9 @@ CHANGE HISTORY
 
 not yet   BJH  Release 10.89.00
 
-               pamfind: fix typo in message.
+               pnmpad: Add -reportonly.
+
+               pamfind: Fix typo in message.
 
 19.09.28  BJH  Release 10.88.00
 
