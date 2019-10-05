@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmpad User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpad</H1>
-Updated: 18 October 2018
+Updated: 05 October 2019
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -13,7 +13,6 @@ pnmpad - add borders to a PNM image
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmpad </B>
-[<B>-verbose</B>]
 [<B>-white</B>|<B>-black</B>]
 <BR>
 [<B>-width=</B><I>pixels</I>]
@@ -29,6 +28,9 @@ pnmpad - add borders to a PNM image
 <BR>
 [<B>-top=</B><I>pixels</I>]
 [<B>-bottom=</B><I>pixels</I>]
+<BR>
+[<b>-reportonly</b>]
+[<B>-verbose</B>]
 <BR>
 [<I>pnmfile</I>]
 
@@ -64,16 +66,10 @@ use either white space or an equals sign between an option name and
 its value.
 
 <DL>
-<DT><B>-verbose</B>
-
-<DD>
-Verbose output.
-
 <dt><B>-white</B>
 <dt><B>-black</B>
 
 <dd>Set pad color.  Default is <b>-black</b>.
-
 
 <dt><B>-left=</B><I>pixels</I>
 <dt><B>-right=</B><I>pixels</I>
@@ -136,11 +132,67 @@ on the left and 25 on the right.
 <dt><B>-mheight=</B><I>pixels</I>
 
 <dd>
-These options determine the vertical padding.  They are analogous
-to the horizontal padding options above.
+These options determine the vertical padding.  They are analogous to the
+horizontal padding options above.
+
+<dt><b>-reportonly</b>
+<dd>
+  This causes <b>pnmpad</b> to write to Standard Output a description of the
+  padding it would have done instead of producing an output image.  See
+  <a href="#reportonly">below</a> for a description of this output and ways
+  to use it.
+
+<p>This option was new in Netpbm 10.89 (December 2019).
+
+<DT><B>-verbose</B>
+
+<DD>
+This causes verbose messages.
 
 </dl>
 
+<h2 id="reportonly">REPORT ONLY</h2>
+
+<p>When you specify <b>-reportonly</b>, <B>pnmpad</B> does not produce an
+  output image.  Instead, it writes to Standard Output a description of the
+  padding it would have done without <b>-reportonly</b>.
+
+<P>That description is one line of text, containing 6 decimal numbers of
+  pixels, separated by spaces:
+
+<ol>
+  <li>left padding
+  <li>right padding
+  <li>top padding
+  <li>bottom padding
+  <li>output width
+  <li>output height
+</ol>
+
+<p>Example:
+  <pre>
+    <tt>
+      4 3 0 2 100 100
+    </tt>
+  </pre>
+
+<P>One use for this is to make padding which is fancier than the black and
+  white that <b>pnmpad</b> can do.
+
+<p>In the following example, we pad an image with 10 pixels of gray all
+  around, without knowing the original image dimensions beforehand.  We do
+  this by generating a gray image with <b>pbmmake</b> and then pasting the
+  subject image into the middle of it.
+
+<p>The example uses shell arrays, such as exist in Bash, but not Dash.
+  
+  <pre>
+    <xmp>
+      pad=($(pnmpad -reportonly -left=10 -right=10 -top=10 -bottom=10))
+      pbmmake -gray 10 10 | pnmpaste input.ppm ${pad[0]} ${pad[2]} -
+    </xmp>
+  </pre>
+    
 
 <H2 id="history">HISTORY</H2>
 
@@ -182,6 +234,7 @@ without express or implied warranty.
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#reportonly">REPORT ONLY</A>
 <LI><A HREF="#history">HISTORY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
