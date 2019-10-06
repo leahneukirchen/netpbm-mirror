@@ -89,7 +89,7 @@ sub parseCommandLine(@) {
 
     my %cmdline;
 
-    my $validOptions = GetOptions(\%cmdline,
+    my $optsAreValid = GetOptions(\%cmdline,
                                   "center",
                                   "meancolor",
                                   "meanpixel",
@@ -101,7 +101,7 @@ sub parseCommandLine(@) {
                                   "quiet",
                                   "plain");
 
-    if (!$validOptions) {
+    if (!$optsAreValid) {
         print(STDERR "Invalid option syntax.\n");
         exit(1);
     }
