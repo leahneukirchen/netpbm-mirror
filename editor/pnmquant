@@ -199,10 +199,10 @@ sub openSeekableAsStdin($) {
 
 
 
-sub makeColormap($$$$$$) {
+sub makeColormap($$$$$$$) {
 
     my ($ncolors, $opt_center, $opt_meanpixel, $opt_meancolor,
-        $opt_spreadluminosity, $opt_quiet) = @_;
+        $opt_spreadbrightness, $opt_spreadluminosity, $opt_quiet) = @_;
 
     # Make a colormap of $ncolors colors from the image on Standard Input.
     # Put it in a temporary file and return its name.
@@ -233,6 +233,16 @@ sub makeColormap($$$$$$) {
         $averageOpt = "-meancolor";
     } else {
         $averageOpt = "-center";
+    }
+
+    my $spreadOptCt =
+        (defined($opt_spreadluminosity) ? 1 : 0) +
+        (defined($opt_spreadbrightness) ? 1 : 0);
+
+    if ($spreadOptCt > 1) {
+        print(STDERR "You can specify only one of " .
+              "-spreadluminosity and -spreadbrightness\n");
+        exit(1);
     }
 
     my $spreadOpt;
@@ -276,6 +286,10 @@ sub remap($$$$$$) {
         push(@options, "-floyd");
     }
     if ($opt_norandom) {
+        if (defined($opt_randomseed)) {
+             print(STDERR "You cannot specify -randomseed with -norandom\n");
+             exit(1);
+        }
         push(@options, "-norandom");
     }
     if (defined($opt_randomseed)) {
@@ -322,6 +336,7 @@ my $mapfileSpec = makeColormap($cmdlineR->{ncolors},
                                $cmdlineR->{center}, 
                                $cmdlineR->{meanpixel}, 
                                $cmdlineR->{meancolor}, 
+                               $cmdlineR->{spreadbrightness},
                                $cmdlineR->{spreadluminosity},
                                $cmdlineR->{quiet});
 

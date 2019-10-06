@@ -12,6 +12,10 @@ not yet   BJH  Release 10.89.00
 
                pamfind: Fix typo in message.
 
+               pnmquant: Fail if user specifies both -spreadbrightness and
+               -spreadluminosity or both -randomseed and -norandom, rather
+               than just pick one.
+
 19.09.28  BJH  Release 10.88.00
 
               pnmquant: Fail if user specifies more than one of -meanpixel,
