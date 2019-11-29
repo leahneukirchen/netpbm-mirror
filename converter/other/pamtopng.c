@@ -251,7 +251,7 @@ colorTypeFromInputType(const struct pam * const pamP) {
 -----------------------------------------------------------------------------*/
     png_byte retval;
 
-    if (pamP->depth < 1 && pamP->depth > 4)
+    if (pamP->depth < 1 || pamP->depth > 4)
         pm_error ("Number of color planes must be between 1 and 4 inclusive");
 
     if (pamP->maxval != 1 && pamP->maxval != 3 && pamP->maxval != 15 &&
