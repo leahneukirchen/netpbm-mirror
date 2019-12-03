@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.12.03 BJH  Release 10.86.07
+
+              anytopnm: Fix unpredictable behavior when file name contains
+              spaces.
+
 19.09.28 BJH  Release 10.86.06
 
               jpeg2ktopam, pamtojpeg2k: fix negative array index.  Always
