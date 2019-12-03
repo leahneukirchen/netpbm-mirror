@@ -6,17 +6,20 @@ CHANGE HISTORY
 
 
 
-not yet   BJH  Release 10.89.00
+not yet  BJH  Release 10.89.00
 
-               pnmpad: Add -reportonly.
+              pnmpad: Add -reportonly.
 
-               pamfind: Fix typo in message.
+              anytopnm: Fix unpredictable behavior when file name contains
+              spaces.
 
-               pnmquant: Fail if user specifies both -spreadbrightness and
-               -spreadluminosity or both -randomseed and -norandom, rather
-               than just pick one.
+              pamfind: Fix typo in message.
 
-19.09.28  BJH  Release 10.88.00
+              pnmquant: Fail if user specifies both -spreadbrightness and
+              -spreadluminosity or both -randomseed and -norandom, rather
+              than just pick one.
+
+19.09.28 BJH  Release 10.88.00
 
               pnmquant: Fail if user specifies more than one of -meanpixel,
               -meancolor, and -center, rather than just pick one.
