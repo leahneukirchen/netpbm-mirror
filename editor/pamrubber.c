@@ -83,7 +83,7 @@ parseCmdline(int argc, const char ** argv,
     /* instructions to optParseOptions3 on how to parse our options. */
     optEntry * option_def;
     optStruct3 opt;
-    
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
@@ -268,7 +268,7 @@ maketriangle(point const p1,
     retval.p1 = p1;
     retval.p2 = p2;
     retval.p3 = p3;
-    
+
     return retval;
 }
 
@@ -382,11 +382,11 @@ sideTriangleVerticalEdge(unsigned int const n,
                          point        const p24,
                          point        const r21,
                          point        const r22) {
-                                   
+
     if (((n >= 4) && (r11.x < p11.x)
          && (p14.x < p13.x) && (p14.x < p12.x)
          && (p14.x < p11.x)) /* left edge */
-        || 
+        ||
         ((n >= 4) && (r11.x > p11.x)
          && (p14.x > p13.x) && (p14.x > p12.x)
          && (p14.x > p11.x))) /* right edge */ {
@@ -394,7 +394,7 @@ sideTriangleVerticalEdge(unsigned int const n,
         *trig2P = maketriangle(r21, r22, p24);
     } else if (((n >= 3) && (r11.x < p11.x) && (p13.x < p12.x)
                 && (p13.x < p11.x)) /* left edge */
-               || 
+               ||
                ((n >= 3) && (r11.x > p11.x) && (p13.x > p12.x)
                 && (p13.x > p11.x))) /* right edge */ {
         *trig1P = maketriangle(r11, r12, p13);
@@ -403,7 +403,7 @@ sideTriangleVerticalEdge(unsigned int const n,
                 && (p12.x < p11.x)) /* left edge */
                ||
                ((n >= 2) && (r11.x > p11.x)
-                && (p12.x > p11.x))) /* right edge */ { 
+                && (p12.x > p11.x))) /* right edge */ {
         *trig1P = maketriangle(r11, r12, p12);
         *trig2P = maketriangle(r21, r22, p22);
     } else if (n >= 1) {
@@ -430,24 +430,24 @@ sideTriangleHorizontalEdge(unsigned int const n,
                            point        const p24,
                            point        const r21,
                            point        const r22) {
-                                   
+
     if (((n >= 4) && (r11.y < p11.y) && (p14.y < p13.y)
          && (p14.y < p12.y) && (p14.y < p11.y)) /* top edge */
-        || 
+        ||
         ((n >= 4) && (r11.y > p11.y) && (p14.y > p13.y)
          && (p14.y > p12.y) && (p14.y > p11.y))) /* bottom edge */ {
         *trig1P = maketriangle(r11, r12, p14);
         *trig2P = maketriangle(r21, r22, p24);
     } else if (((n >= 3) && (r11.y < p11.y) && (p13.y < p12.y)
                 && (p13.y < p11.y)) /* top edge */
-               || 
+               ||
                ((n >= 3) && (r11.y > p11.y) && (p13.y > p12.y)
                 && (p13.y > p11.y))) /* bottom edge */ {
         *trig1P = maketriangle(r11, r12, p13);
         *trig2P = maketriangle(r21, r22, p23);
     } else if (((n >= 2) && (r11.y < p11.y)
                 && (p12.y < p11.y)) /* top edge */
-               || 
+               ||
                ((n >= 2) && (r11.y > p11.y)
                 && (p12.y > p11.y))) /* bottom edge */ {
         *trig1P = maketriangle(r11, r12, p12);
@@ -505,7 +505,7 @@ edgeTriangle(triangle * const trig1P,
              point      const tr2,
              point      const bl2,
              point      const br2) {
-             
+
     if ((p11.x < p12.x) && (p11.y < p12.y)) {
         /* up/left to down/right */
         *trig1P = maketriangle(tr1, p12, p11);
@@ -633,7 +633,7 @@ frameDrawproc (tuple **     const tuples,
                sample       const maxval,
                pamd_point   const p,
                const void * const clientdata) {
-    
+
     int yy;
 
     for (yy = p.y - 1; yy <= p.y + 1; ++yy) {
@@ -688,14 +688,14 @@ clippedPoint(const struct pam * const pamP,
         clippedX = pamP->width - 2;
     else
         clippedX = roundedX;
-        
+
     if (roundedY <= 0)
         clippedY = 1;
     else if (roundedY > pamP->width - 1)
         clippedY = pamP->width - 2;
     else
         clippedY = roundedY;
-        
+
     return pamd_makePoint(clippedX, clippedY);
 }
 
@@ -749,19 +749,19 @@ prepTrig(int const wd,
         /* connect control point to all corners to get 4 triangles */
         /* left side triangle */
         sideTriangle(nCP,
-                     &tri1s[0], c1p1, p0, p0, p0, rbl1, rtl1, 
+                     &tri1s[0], c1p1, p0, p0, p0, rbl1, rtl1,
                      &tri2s[0], c2p1, p0, p0, p0, rbl2, rtl2);
         /* top side triangle */
         sideTriangle(nCP,
-                     &tri1s[1], c1p1, p0, p0, p0, rtl1, rtr1, 
+                     &tri1s[1], c1p1, p0, p0, p0, rtl1, rtr1,
                      &tri2s[1], c2p1, p0, p0, p0, rtl2, rtr2);
         /* right side triangle */
         sideTriangle(nCP,
-                     &tri1s[2], c1p1, p0, p0, p0, rtr1, rbr1, 
+                     &tri1s[2], c1p1, p0, p0, p0, rtr1, rbr1,
                      &tri2s[2], c2p1, p0, p0, p0, rtr2, rbr2);
         /* bottom side triangle */
         sideTriangle(nCP,
-                     &tri1s[3], c1p1, p0, p0, p0, rbr1, rbl1, 
+                     &tri1s[3], c1p1, p0, p0, p0, rbr1, rbl1,
                      &tri2s[3], c2p1, p0, p0, p0, rbr2, rbl2);
 
         nTri = 4;
@@ -778,19 +778,19 @@ prepTrig(int const wd,
         /* connect two control points to corners to get 6 triangles */
         /* left side */
         sideTriangle(nCP,
-                     &tri1s[0], c1p1, c1p2, p0, p0, rbl1, rtl1, 
+                     &tri1s[0], c1p1, c1p2, p0, p0, rbl1, rtl1,
                      &tri2s[0], c2p1, c2p2, p0, p0, rbl2, rtl2);
         /* top side */
-        sideTriangle(nCP, 
-                     &tri1s[1], c1p1, c1p2, p0, p0, rtl1, rtr1, 
+        sideTriangle(nCP,
+                     &tri1s[1], c1p1, c1p2, p0, p0, rtl1, rtr1,
                      &tri2s[1], c2p1, c2p2, p0, p0, rtl2, rtr2);
         /* right side */
-        sideTriangle(nCP, 
-                     &tri1s[2], c1p1, c1p2, p0, p0, rtr1, rbr1, 
+        sideTriangle(nCP,
+                     &tri1s[2], c1p1, c1p2, p0, p0, rtr1, rbr1,
                      &tri2s[2], c2p1, c2p2, p0, p0, rtr2, rbr2);
         /* bottom side */
-        sideTriangle(nCP, 
-                     &tri1s[3], c1p1, c1p2, p0, p0, rbr1, rbl1, 
+        sideTriangle(nCP,
+                     &tri1s[3], c1p1, c1p2, p0, p0, rbr1, rbl1,
                      &tri2s[3], c2p1, c2p2, p0, p0, rbr2, rbl2);
 
         /* edge to corner triangles */
@@ -803,7 +803,7 @@ prepTrig(int const wd,
         c1p1 = oldCP[0];
         c1p2 = oldCP[1];
         c1p3 = oldCP[2];
-         
+
         c2p1 = newCP[0];
         c2p2 = newCP[1];
         c2p3 = newCP[2];
@@ -828,7 +828,7 @@ prepTrig(int const wd,
         c1p1 = tri1s[0].p1;
         c1p2 = tri1s[0].p2;
         c1p3 = tri1s[0].p3;
-         
+
         c2p1 = tri2s[0].p1;
         c2p2 = tri2s[0].p2;
         c2p3 = tri2s[0].p3;
@@ -836,19 +836,19 @@ prepTrig(int const wd,
         /* point to side triangles */
         /* left side */
         sideTriangle(nCP,
-                     &tri1s[1], c1p1, c1p2, c1p3, p0, rbl1, rtl1, 
+                     &tri1s[1], c1p1, c1p2, c1p3, p0, rbl1, rtl1,
                      &tri2s[1], c2p1, c2p2, c2p3, p0, rbl2, rtl2);
         /* top side */
-        sideTriangle(nCP, 
-                     &tri1s[2], c1p1, c1p2, c1p3, p0, rtl1, rtr1, 
+        sideTriangle(nCP,
+                     &tri1s[2], c1p1, c1p2, c1p3, p0, rtl1, rtr1,
                      &tri2s[2], c2p1, c2p2, c2p3, p0, rtl2, rtr2);
         /* right side */
-        sideTriangle(nCP, 
-                     &tri1s[3], c1p1, c1p2, c1p3, p0, rtr1, rbr1, 
+        sideTriangle(nCP,
+                     &tri1s[3], c1p1, c1p2, c1p3, p0, rtr1, rbr1,
                      &tri2s[3], c2p1, c2p2, c2p3, p0, rtr2, rbr2);
         /* bottom side */
-        sideTriangle(nCP, 
-                     &tri1s[4], c1p1, c1p2, c1p3, p0, rbr1, rbl1, 
+        sideTriangle(nCP,
+                     &tri1s[4], c1p1, c1p2, c1p3, p0, rbr1, rbl1,
                      &tri2s[4], c2p1, c2p2, c2p3, p0, rbr2, rbl2);
 
         /* edge to corner triangles */
@@ -864,7 +864,7 @@ prepTrig(int const wd,
         c1p2 = oldCP[1];
         c1p3 = oldCP[2];
         c1p4 = oldCP[3];
-         
+
         c2p1 = newCP[0];
         c2p2 = newCP[1];
         c2p3 = newCP[2];
@@ -945,20 +945,20 @@ prepTrig(int const wd,
 
         /* triangle from triangle point to side of image */
         /* left side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[2], c1p1, c1p2, c1p3, c1p4, rbl1, rtl1, 
+        sideTriangle(nCP,
+                     &tri1s[2], c1p1, c1p2, c1p3, c1p4, rbl1, rtl1,
                      &tri2s[2], c2p1, c2p2, c2p3, c2p4, rbl2, rtl2);
         /* top side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[3], c1p1, c1p2, c1p3, c1p4, rtl1, rtr1, 
+        sideTriangle(nCP,
+                     &tri1s[3], c1p1, c1p2, c1p3, c1p4, rtl1, rtr1,
                      &tri2s[3], c2p1, c2p2, c2p3, c2p4, rtl2, rtr2);
         /* right side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[4], c1p1, c1p2, c1p3, c1p4, rtr1, rbr1, 
+        sideTriangle(nCP,
+                     &tri1s[4], c1p1, c1p2, c1p3, c1p4, rtr1, rbr1,
                      &tri2s[4], c2p1, c2p2, c2p3, c2p4, rtr2, rbr2);
         /* bottom side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[5], c1p1, c1p2, c1p3, c1p4, rbr1, rbl1, 
+        sideTriangle(nCP,
+                     &tri1s[5], c1p1, c1p2, c1p3, c1p4, rbr1, rbl1,
                      &tri2s[5], c2p1, c2p2, c2p3, c2p4, rbr2, rbl2);
 
         /*-------------------------------------------------------------------*/
@@ -1014,7 +1014,7 @@ prepQuad(void) {
             /* bottom-right and top-left */
             quad1 = quadRect(oldCP[1].x, oldCP[0].x, oldCP[1].y, oldCP[0].y);
         }
-        
+
         if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* top-left and bottom-right */
             quad2 = quadRect(newCP[0].x, newCP[1].x, newCP[0].y, newCP[1].y);
@@ -1034,7 +1034,7 @@ prepQuad(void) {
             /* diagonal of the parallelogram is the two control points
                furthest apart
             */
-            
+
             d01 = distance(newCP[0], newCP[1]);
             d12 = distance(newCP[1], newCP[2]);
             d20 = distance(newCP[2], newCP[0]);
@@ -1163,7 +1163,7 @@ warpTrig(point   const p2,
 
         /* map target control points to source control points */
         e1p1.x = tri1s[i].p2.x
-            + (e2p1.x - tri2s[i].p2.x)/(tri2s[i].p3.x - tri2s[i].p2.x) 
+            + (e2p1.x - tri2s[i].p2.x)/(tri2s[i].p3.x - tri2s[i].p2.x)
             * (tri1s[i].p3.x - tri1s[i].p2.x);
         e1p1.y = tri1s[i].p2.y
             + (e2p1.y - tri2s[i].p2.y)/(tri2s[i].p3.y - tri2s[i].p2.y)
@@ -1215,7 +1215,7 @@ warpQuad(point   const p2,
     c1tr = quad1.tr;
     c1bl = quad1.bl;
     c1br = quad1.br;
-       
+
     c2tl = quad2.tl;
     c2tr = quad2.tr;
     c2bl = quad2.bl;
@@ -1364,22 +1364,22 @@ pix(tuple **     const tuples,
         pix = 0.0;
         if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
             ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
-            pix += (1.0 - rx) * (1.0 - ry) 
+            pix += (1.0 - rx) * (1.0 - ry)
                 * tuples[(int) floor(p.y)][(int) floor(p.x)][plane];
         }
         if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
             ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
-            pix += rx * (1.0 - ry) 
+            pix += rx * (1.0 - ry)
                 * tuples[(int) floor(p.y)][(int) floor(p.x) + 1][plane];
         }
         if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
             ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
-            pix += (1.0 - rx) * ry 
+            pix += (1.0 - rx) * ry
                 * tuples[(int) floor(p.y) + 1][(int) floor(p.x)][plane];
         }
         if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
             ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
-            pix += rx * ry 
+            pix += rx * ry
                 * tuples[(int) floor(p.y) + 1][(int) floor(p.x) + 1][plane];
         }
     }
@@ -1398,7 +1398,7 @@ main(int argc, const char ** const argv) {
     tuple ** inTuples;
     tuple ** outTuples;
     unsigned int p2y;
-  
+
     pm_proginit(&argc, argv);
 
     parseCmdline(argc, argv, &cmdline);
