@@ -19,6 +19,9 @@ not yet  BJH  Release 10.89.00
               -spreadluminosity or both -randomseed and -norandom, rather
               than just pick one.
 
+              pamrubber: Fix bug: -frame doesn't work.  Always broken.
+              (Pamrubber was new in Netpbm 10.54 (March 2011).
+
 19.09.28 BJH  Release 10.88.00
 
               pnmquant: Fail if user specifies more than one of -meanpixel,
