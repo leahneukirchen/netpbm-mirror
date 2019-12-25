@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+19.12.25 BJH  Release 10.88.02
+
+              pamrubber: Fix bug: -frame doesn't work.  Always broken.
+              (Pamrubber was new in Netpbm 10.54 (March 2011).
+
 19.12.03 BJH  Release 10.88.01
 
               anytopnm: Fix unpredictable behavior when file name contains
