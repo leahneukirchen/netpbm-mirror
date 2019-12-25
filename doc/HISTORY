@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.73.30
+19.12.25 BJH  Release 10.73.30
 
               pamrubber: Fix bug: -frame doesn't work.  Always broken.
               (Pamrubber was new in Netpbm 10.54 (March 2011).
