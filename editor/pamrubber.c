@@ -675,7 +675,7 @@ clippedPoint(const struct pam * const pamP,
              point              const p) {
 
     int const roundedX = ROUND(p.x);
-    int const roundedY = ROUND(p.x);
+    int const roundedY = ROUND(p.y);
 
     int clippedX, clippedY;
 
@@ -691,8 +691,8 @@ clippedPoint(const struct pam * const pamP,
         
     if (roundedY <= 0)
         clippedY = 1;
-    else if (roundedY > pamP->width - 1)
-        clippedY = pamP->width - 2;
+    else if (roundedY > pamP->height - 1)
+        clippedY = pamP->height - 2;
     else
         clippedY = roundedY;
         
