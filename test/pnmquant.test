@@ -55,7 +55,7 @@ pnmquant -meancolor -meanpixel 16 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
 pnmquant -spreadbrightness -spreadluminosity 16 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
-pnmquant -floyd -nofloyd 16 testimg.ppm > ${test_out} || \
+pnmquant -randomseed 1 -norandom 10 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
 
 rm ${test_out}

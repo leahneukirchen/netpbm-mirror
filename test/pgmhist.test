@@ -34,7 +34,7 @@ echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pgmhist -median   -quartile testgrid.pbm > ${test_out} || \ 
+pgmhist -median   -quartile testgrid.pbm > ${test_out} || \
   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
 pgmhist -median   -decile   testgrid.pbm > ${test_out} || \
   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?

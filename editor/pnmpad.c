@@ -38,6 +38,7 @@ struct cmdlineInfo {
     unsigned int mwidth;
     unsigned int mheight;
     unsigned int white;     /* >0: pad white; 0: pad black */
+    unsigned int reportonly;
     unsigned int verbose;
 };
 
@@ -86,14 +87,16 @@ parseCommandLine(int argc, const char ** argv,
             &yalignSpec,           0);
     OPTENT3(0,   "valign",    OPT_FLOAT,   &cmdlineP->yalign,
             &yalignSpec,           0);
-    OPTENT3(0,   "black",     OPT_FLAG,    NULL,
-            &blackOpt,           0);
     OPTENT3(0,   "mwidth",    OPT_UINT,    &cmdlineP->mwidth,
             &mwidthSpec,         0);
     OPTENT3(0,   "mheight",   OPT_UINT,    &cmdlineP->mheight,
             &mheightSpec,        0);
+    OPTENT3(0,   "black",     OPT_FLAG,    NULL,
+            &blackOpt,           0);
     OPTENT3(0,   "white",     OPT_FLAG,    NULL,
             &cmdlineP->white,    0);
+    OPTENT3(0,   "reportonly", OPT_FLAG,   NULL,
+            &cmdlineP->reportonly,   0);
     OPTENT3(0,   "verbose",   OPT_FLAG,    NULL,
             &cmdlineP->verbose,  0);
 
@@ -489,6 +492,23 @@ computePadSizes(struct cmdlineInfo const cmdline,
 
 
 static void
+reportPadSizes(int          const inCols,
+               int          const inRows,
+               unsigned int const lpad,
+               unsigned int const rpad,
+               unsigned int const tpad,
+               unsigned int const bpad) {
+
+    unsigned int const outCols = inCols + lpad + rpad;
+    unsigned int const outRows = inRows + tpad + bpad;
+ 
+    printf("%u %u %u %u %u %u\n", lpad, rpad, tpad, bpad, outCols, outRows);
+
+}
+
+
+
+static void
 padPbm(FILE *       const ifP,
        unsigned int const cols,
        unsigned int const rows,
@@ -636,12 +656,16 @@ main(int argc, const char ** argv) {
 
     newcols = cols + lpad + rpad;
 
-    if (PNM_FORMAT_TYPE(format) == PBM_TYPE)
-        padPbm(ifP, cols, rows, format, newcols, lpad, rpad, tpad, bpad,
-               !!cmdline.white);
-    else
-        padGeneral(ifP, cols, rows, maxval, format, 
-                   newcols, lpad, rpad, tpad, bpad, !!cmdline.white);
+    if (cmdline.reportonly)
+        reportPadSizes(cols, rows, lpad, rpad, tpad, bpad);
+    else {
+        if (PNM_FORMAT_TYPE(format) == PBM_TYPE)
+            padPbm(ifP, cols, rows, format, newcols, lpad, rpad, tpad, bpad,
+                   !!cmdline.white);
+        else
+            padGeneral(ifP, cols, rows, maxval, format,
+                       newcols, lpad, rpad, tpad, bpad, !!cmdline.white);
+    }
 
     pm_close(ifP);
 
