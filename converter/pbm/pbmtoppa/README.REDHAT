@@ -17,7 +17,7 @@ StartEntry: DeskJet720C
            It does does not support color printing. \
            IMPORTANT! Insert \
                 "- | pbm2ppa -" \
-           in the "Extra GS Otions" field.\
+           in the "Extra GS Options" field.\
          }
   Resolution: {600} {600} {}
 EndEntry

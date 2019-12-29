@@ -292,7 +292,7 @@ computePalette(struct PixelType * const pixelType) {
 
     /* Uses popularity algorithm */
 
-    /* Count the occurences of each color */
+    /* Count the occurrences of each color */
 
     for (i = 0; i < 512; ++i)
         hist[i] = 0;

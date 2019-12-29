@@ -25,15 +25,15 @@ struct cmdlineInfo {
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* '-' if stdin */
-    const char * outstem; 
+    const char * outstem;
         /* null-terminated string, max MAXFILENAMELEN-10 characters */
     unsigned int sliceVertically;    /* boolean */
     unsigned int sliceHorizontally;  /* boolean */
     unsigned int width;    /* Meaningless if !sliceVertically */
     unsigned int height;   /* Meaningless if !sliceHorizontally */
-    unsigned int hoverlap; 
+    unsigned int hoverlap;
         /* Meaningless if !sliceVertically.  Guaranteed < width */
-    unsigned int voverlap; 
+    unsigned int voverlap;
         /* Meaningless if !sliceHorizontally.  Guaranteed < height */
     unsigned int verbose;
 };
@@ -44,7 +44,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -56,14 +56,14 @@ parseCommandLine(int argc, char ** argv,
         /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
-    
+
     unsigned int outstemSpec, hoverlapSpec, voverlapSpec;
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "width",       OPT_UINT,    &cmdlineP->width,       
+    OPTENT3(0, "width",       OPT_UINT,    &cmdlineP->width,
             &cmdlineP->sliceVertically,       0);
     OPTENT3(0, "height",      OPT_UINT,    &cmdlineP->height,
             &cmdlineP->sliceHorizontally,     0);
@@ -110,8 +110,8 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
         cmdlineP->inputFileName = argv[1];
-    else 
-        pm_error("Progam takes at most 1 parameter: the file specification.  "
+    else
+        pm_error("Program takes at most 1 parameter: the file specification.  "
                  "You specified %u", argc-1);
 }
 
@@ -147,7 +147,7 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
         if (cmdline.height >= inpam.height)
             *nHorizSliceP = 1;
         else
-            *nHorizSliceP = 1 + divup(inpam.height - cmdline.height, 
+            *nHorizSliceP = 1 + divup(inpam.height - cmdline.height,
                                       cmdline.height - cmdline.voverlap);
         *sliceHeightP = cmdline.height;
     } else {
@@ -155,14 +155,14 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
         *sliceHeightP = inpam.height;
     }
 
-    *bottomSliceHeightP = 
+    *bottomSliceHeightP =
         inpam.height - (*nHorizSliceP-1) * (cmdline.height - cmdline.voverlap);
 
     if (cmdline.sliceVertically) {
         if (cmdline.width >= inpam.width)
             *nVertSliceP = 1;
         else
-            *nVertSliceP = 1 + divup(inpam.width - cmdline.width, 
+            *nVertSliceP = 1 + divup(inpam.width - cmdline.width,
                                      cmdline.width - cmdline.hoverlap);
         *sliceWidthP = cmdline.width;
     } else {
@@ -170,7 +170,7 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
         *sliceWidthP = inpam.width;
     }
 
-    *rightSliceWidthP = 
+    *rightSliceWidthP =
         inpam.width - (*nVertSliceP-1) * (cmdline.width - cmdline.hoverlap);
 
     if (verbose) {
@@ -180,7 +180,7 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
                    *nVertSliceP, *nHorizSliceP,
                    *sliceWidthP, *sliceHeightP);
         if (*rightSliceWidthP != *sliceWidthP)
-            pm_message("Right vertical slice is only %u wide", 
+            pm_message("Right vertical slice is only %u wide",
                        *rightSliceWidthP);
         if (*bottomSliceHeightP != *sliceHeightP)
             pm_message("Bottom horizontal slice is only %u high",
@@ -207,7 +207,7 @@ ndigits(unsigned int const arg) {
 
 
 static void
-computeOutputFilenameFormat(int           const format, 
+computeOutputFilenameFormat(int           const format,
                             char          const outstem[],
                             unsigned int  const nHorizSlice,
                             unsigned int  const nVertSlice,
@@ -222,7 +222,7 @@ computeOutputFilenameFormat(int           const format,
     case PAM_TYPE: filenameSuffix = "pam"; break;
     default:       filenameSuffix = "";    break;
     }
-    
+
     pm_asprintf(filenameFormatP, "%s_%%0%uu_%%0%uu.%s",
                 outstem, ndigits(nHorizSlice), ndigits(nVertSlice),
                 filenameSuffix);
@@ -234,12 +234,12 @@ computeOutputFilenameFormat(int           const format,
 
 
 static void
-openOutStreams(struct pam   const inpam, 
+openOutStreams(struct pam   const inpam,
                struct pam         outpam[],
-               unsigned int const horizSlice, 
+               unsigned int const horizSlice,
                unsigned int const nHorizSlice,
                unsigned int const nVertSlice,
-               unsigned int const sliceHeight, 
+               unsigned int const sliceHeight,
                unsigned int const sliceWidth,
                unsigned int const rightSliceWidth,
                unsigned int const hOverlap,
@@ -265,17 +265,17 @@ openOutStreams(struct pam   const inpam,
         else {
             outpam[vertSlice] = inpam;
             outpam[vertSlice].file = pm_openw(filename);
-            
-            outpam[vertSlice].width = 
+
+            outpam[vertSlice].width =
                 vertSlice < nVertSlice-1 ? sliceWidth : rightSliceWidth;
-            
+
             outpam[vertSlice].height = sliceHeight;
-            
+
             pnm_writepaminit(&outpam[vertSlice]);
 
             pm_strfree(filename);
         }
-    }        
+    }
     pm_strfree(filenameFormat);
 }
 
@@ -285,14 +285,14 @@ static void
 closeOutFiles(struct pam pam[], unsigned int const nVertSlice) {
 
     unsigned int vertSlice;
-    
+
     for (vertSlice = 0; vertSlice < nVertSlice; ++vertSlice)
         pm_close(pam[vertSlice].file);
 }
 
 static void
-sliceRow(tuple              inputRow[], 
-         struct pam         outpam[], 
+sliceRow(tuple              inputRow[],
+         struct pam         outpam[],
          unsigned int const nVertSlice,
          unsigned int const hOverlap) {
 /*----------------------------------------------------------------------------
@@ -306,11 +306,11 @@ sliceRow(tuple              inputRow[],
     tuple * outputRow;
     unsigned int vertSlice;
     unsigned int const sliceWidth = outpam[0].width;
-    unsigned int const stride = 
+    unsigned int const stride =
         nVertSlice > 1 ? sliceWidth - hOverlap : sliceWidth;
 
-    for (vertSlice = 0, outputRow = inputRow; 
-         vertSlice < nVertSlice; 
+    for (vertSlice = 0, outputRow = inputRow;
+         vertSlice < nVertSlice;
          outputRow += stride, ++vertSlice) {
         pnm_writepamrow(&outpam[vertSlice], outputRow);
     }
@@ -336,7 +336,7 @@ static void
 initInput(struct inputWindow * const inputWindowP,
           struct pam *         const pamP,
           unsigned int         const windowSize) {
-    
+
     struct pam allocPam;  /* Just for allocating the window array */
     unsigned int i;
 
@@ -345,7 +345,7 @@ initInput(struct inputWindow * const inputWindowP,
 
     allocPam = *pamP;
     allocPam.height = windowSize;
-    
+
     inputWindowP->rows = pnm_allocpamarray(&allocPam);
 
     inputWindowP->firstRowInWindow = 0;
@@ -388,7 +388,7 @@ getInputRow(struct inputWindow * const inputWindowP,
         /* Read in the new last row in the window */
         inputWindowP->rows[i] = oldRow0;  /* Reuse the memory */
         pnm_readpamrow(&inputWindowP->pam, inputWindowP->rows[i]);
-    }        
+    }
 
     return inputWindowP->rows[row - inputWindowP->firstRowInWindow];
 }
@@ -428,7 +428,7 @@ main(int argc, char ** argv) {
         /* Width in pam columns of each vertical slice, except
            the rightmost slice, which may be narrower.  If we aren't slicing
            vertically, that means one slice, i.e. the slice width
-           is the image width.  
+           is the image width.
         */
     unsigned int rightSliceWidth;
         /* Width in pam columns of the rightmost vertical slice. */
@@ -436,23 +436,23 @@ main(int argc, char ** argv) {
         /* Height in pam rows of each horizontal slice, except
            the bottom slice, which may be shorter.  If we aren't slicing
            horizontally, that means one slice, i.e. the slice height
-           is the image height.  
+           is the image height.
         */
     unsigned int bottomSliceHeight;
         /* Height in pam rows of the bottom horizontal slice. */
     unsigned int nHorizSlice;
     unsigned int nVertSlice;
     struct inputWindow inputWindow;
-    
+
     struct pam * outpam;
         /* malloc'ed.  outpam[x] is the pam structure that controls
            the current horizontal slice of vertical slice x.
         */
 
     pnm_init(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
-        
+
     ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
@@ -462,19 +462,19 @@ main(int argc, char ** argv) {
                          &nVertSlice, &sliceWidth, &rightSliceWidth);
 
     allocOutpam(nVertSlice, &outpam);
-    
-    initInput(&inputWindow, &inpam, 
+
+    initInput(&inputWindow, &inpam,
               nHorizSlice > 1 ? cmdline.voverlap + 1 : 1);
 
     for (horizSlice = 0; horizSlice < nHorizSlice; ++horizSlice) {
-        unsigned int const thisSliceFirstRow = 
+        unsigned int const thisSliceFirstRow =
             horizSlice * (sliceHeight - cmdline.voverlap);
-        unsigned int const thisSliceHeight = 
+        unsigned int const thisSliceHeight =
             horizSlice < nHorizSlice-1 ? sliceHeight : bottomSliceHeight;
 
         unsigned int row;
 
-        openOutStreams(inpam, outpam, horizSlice, nHorizSlice, nVertSlice, 
+        openOutStreams(inpam, outpam, horizSlice, nHorizSlice, nVertSlice,
                        thisSliceHeight, sliceWidth, rightSliceWidth,
                        cmdline.hoverlap, cmdline.outstem);
 
@@ -494,3 +494,6 @@ main(int argc, char ** argv) {
 
     return 0;
 }
+
+
+

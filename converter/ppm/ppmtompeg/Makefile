@@ -124,7 +124,7 @@ profile: LDFLAGS_TARGET = \
 PERL = perl
 
 # The following stuff is for the Huffman encoding tables.  It's commented-out
-# because you probably don't want to change this.  If you do, then uncommment
+# because you probably don't want to change this.  If you do, then uncomment
 # it.
 #
 # huff.h: huff.c

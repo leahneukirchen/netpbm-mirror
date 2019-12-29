@@ -107,7 +107,7 @@ parse_command_line(int argc, char ** argv,
         pm_error("Program takes zero, one, two, or three arguments.  You "
                  "specified %d", argc-1);
 
-    if (cmdlineP->bpp != 1 && cmdlineP->bpp != 2) 
+    if (cmdlineP->bpp != 1 && cmdlineP->bpp != 2)
         pm_error("Bytes per pixel (-bpp) must be 1 or 2.  You specified %d.",
                  cmdlineP->bpp);
 
@@ -125,7 +125,7 @@ parse_command_line(int argc, char ** argv,
         pm_error("If you specify -rowskip, you must also give the image "
                  "dimensions.");
     if (cmdlineP->rowskip && cmdlineP->bottomfirst)
-        pm_error("You canot specify both -rowskip and -bottomfirst.  This is "
+        pm_error("You cannot specify both -rowskip and -bottomfirst.  This is "
                  "a limitation of this program.");
 
 }
@@ -137,9 +137,9 @@ compute_image_size(const struct cmdline_info cmdline, const long nread,
                    int * const rows_p, int * const cols_p) {
 
     if (cmdline.autosize) {
-        int sqrt_trunc = 
+        int sqrt_trunc =
             (int) sqrt((double) (nread-cmdline.headerskip));
-        if (sqrt_trunc*sqrt_trunc+cmdline.headerskip != nread) 
+        if (sqrt_trunc*sqrt_trunc+cmdline.headerskip != nread)
             pm_error( "You must specify the dimensions of the image unless "
                       "it is a quadratic image.  This one is not quadratic: "
                       "The number of "
@@ -178,7 +178,7 @@ read_from_file(FILE *ifp, const int bpp, const int row, const int col,
    input stream is 'bpp' bytes per pixel (1 or 2).  In the case of two
    bytes, if 'littleendian', assume least significant byte is first.
    Otherwise, assume MSB first.
-   
+
    In error messages, say this is Column 'col', Row 'row'.  Exit program if
    error.
 -----------------------------------------------------------------------------*/
@@ -194,7 +194,7 @@ read_from_file(FILE *ifp, const int bpp, const int row, const int col,
     } else {
         short val;
         int rc;
-        rc = littleendian ? 
+        rc = littleendian ?
             pm_readlittleshort(ifp, &val) : pm_readbigshort(ifp, &val);
         if (rc != 0)
             pm_error( "EOF / read error at Row %d Column %d",
@@ -220,7 +220,7 @@ main(int argc, char *argv[] ) {
        as if the pixels are one byte each.  pixels_2 is the array as if
        they are two bytes each.
        */
-    unsigned char *pixels_1;  
+    unsigned char *pixels_1;
     unsigned short *pixels_2;
     long nread;
     int row;
@@ -269,7 +269,7 @@ main(int argc, char *argv[] ) {
                 else
                     grayrow[col] = pixels_2[rowpos+col];
             } else {
-                grayrow[col] = read_from_file(ifp, cmdline.bpp, 
+                grayrow[col] = read_from_file(ifp, cmdline.bpp,
                                               row, col,
                                               cmdline.littleendian);
             }
@@ -283,7 +283,7 @@ main(int argc, char *argv[] ) {
         }
         pgm_writepgmrow( stdout, grayrow, cols, maxval, 0 );
     }
-    
+
     if (buf)
         free(buf);
     pm_close( ifp );
@@ -291,3 +291,6 @@ main(int argc, char *argv[] ) {
 
     exit( 0 );
 }
+
+
+

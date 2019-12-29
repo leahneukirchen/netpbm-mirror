@@ -29,8 +29,8 @@ struct cmdlineInfo {
         /* null-terminated string, max MAXFILENAMELEN-10 characters */
     unsigned int across;
     unsigned int down;
-    unsigned int hoverlap; 
-    unsigned int voverlap; 
+    unsigned int hoverlap;
+    unsigned int voverlap;
     unsigned int verbose;
 };
 
@@ -41,7 +41,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -53,7 +53,7 @@ parseCommandLine(int argc, char ** argv,
         /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
-    
+
     unsigned int acrossSpec, downSpec;
     unsigned int hoverlapSpec, voverlapSpec;
     unsigned int option_def_index;
@@ -81,7 +81,7 @@ parseCommandLine(int argc, char ** argv,
 
     if (!acrossSpec)
         cmdlineP->across = 1;
-    
+
     if (!downSpec)
         cmdlineP->down = 1;
 
@@ -98,7 +98,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFilePattern = argv[1];
 
         if (argc-1 > 1)
-            pm_error("Progam takes at most one parameter: input file name.  "
+            pm_error("Program takes at most one parameter: input file name.  "
                      "You specified %u", argc-1);
     }
 }
@@ -128,7 +128,7 @@ buffer_init(struct buffer * const bufferP) {
 
 static void
 buffer_term(struct buffer * const bufferP) {
-    
+
     free(bufferP->string);
 }
 
@@ -184,7 +184,7 @@ getPrecision(const char *   const pattern,
     inCursor = startInCursor;  /* Start right after the '%' */
 
     precision = 0;
-                
+
     while (isdigit(pattern[inCursor])) {
         precision = 10 * precision + digitValue(pattern[inCursor]);
         ++inCursor;
@@ -219,7 +219,7 @@ doSubstitution(const char *    const pattern,
         ++inCursor;
     } else {
         unsigned int precision;
-        
+
         getPrecision(pattern, inCursor, &precision, &inCursor);
 
         if (pattern[inCursor] == '\0')
@@ -252,7 +252,7 @@ doSubstitution(const char *    const pattern,
                          desc, (unsigned)strlen(substString), precision);
             else
                 buffer_addString(bufferP, substString);
-            
+
             pm_strfree(desc);
             pm_strfree(substString);
 
@@ -338,17 +338,17 @@ openInputImage(const char * const inputFilePattern,
 
     FILE * retval;
     const char * fileName;
-        
+
     computeInputFileName(inputFilePattern, rank, file, &fileName);
 
     retval = pm_openr(fileName);
-    
+
     pm_strfree(fileName);
 
     return retval;
 }
 
-               
+
 
 static void
 getImageInfo(const char * const inputFilePattern,
@@ -422,9 +422,9 @@ getOutputHeight(const char *  const inputFilePattern,
             pm_error("Rank %u, file 0 image has height %u, "
                      "which is less than the vertical overlap of %u pixels",
                      rank, inpam.height, voverlap);
-        
+
         totalHeight += inpam.height;
-        
+
         if (rank < nRank-1)
             totalHeight -= voverlap;
     }
@@ -466,7 +466,7 @@ initOutpam(const char * const inputFilePattern,
     outpamP->len         = PAM_STRUCT_SIZE(tuple_type);
     outpamP->file        = ofP;
     outpamP->plainformat = 0;
-    
+
     getCommonInfo(inputFilePattern, &outpamP->format, &outpamP->depth,
                   &outpamP->maxval, outpamP->tuple_type);
 
@@ -503,7 +503,7 @@ openInStreams(struct pam         inpam[],
         FILE * const ifP = openInputImage(inputFilePattern, rank, file);
 
         pnm_readpaminit(ifP, &inpam[file], PAM_STRUCT_SIZE(tuple_type));
-    }        
+    }
 }
 
 
@@ -515,7 +515,7 @@ closeInFiles(struct pam         pam[],
    Close the 'fileCount' input file streams represented by pam[].
 -----------------------------------------------------------------------------*/
     unsigned int file;
-    
+
     for (file = 0; file < fileCount; ++file)
         pm_close(pam[file].file);
 }
@@ -523,8 +523,8 @@ closeInFiles(struct pam         pam[],
 
 
 static void
-assembleRow(tuple              outputRow[], 
-            struct pam         inpam[], 
+assembleRow(tuple              outputRow[],
+            struct pam         inpam[],
             unsigned int const fileCount,
             unsigned int const hOverlap) {
 /*----------------------------------------------------------------------------
@@ -541,8 +541,8 @@ assembleRow(tuple              outputRow[],
     tuple * inputRow;
     unsigned int file;
 
-    for (file = 0, inputRow = &outputRow[0]; 
-         file < fileCount; 
+    for (file = 0, inputRow = &outputRow[0];
+         file < fileCount;
          ++file) {
 
         unsigned int const overlap = file == fileCount - 1 ? 0 : hOverlap;
@@ -622,7 +622,7 @@ verifyRankFileAttributes(struct pam *       const inpam,
                      rank, file, inpamP->height, inpam[0].height);
         else {
             totalWidth += inpamP->width;
-        
+
             if (file < nFile-1)
                 totalWidth -= hoverlap;
         }
@@ -649,7 +649,7 @@ assembleTiles(struct pam * const outpamP,
         /* Number of the current rank (horizontal slice).  Ranks are numbered
            sequentially starting at 0.
         */
-    
+
     for (rank = 0; rank < nRank; ++rank) {
         unsigned int row;
         unsigned int rankHeight;
@@ -678,20 +678,20 @@ main(int argc, char ** argv) {
     struct pam outpam;
     struct pam * inpam;
         /* malloc'ed.  inpam[x] is the pam structure that controls the
-           current rank of file x. 
+           current rank of file x.
         */
     tuple * tuplerow;
 
     pnm_init(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
-        
+
     allocInpam(cmdline.across, &inpam);
 
     initOutpam(cmdline.inputFilePattern, cmdline.across, cmdline.down,
                cmdline.hoverlap, cmdline.voverlap, stdout, cmdline.verbose,
                &outpam);
-    
+
     tuplerow = pnm_allocpamrow(&outpam);
 
     pnm_writepaminit(&outpam);
@@ -706,3 +706,6 @@ main(int argc, char ** argv) {
 
     return 0;
 }
+
+
+

@@ -50,7 +50,7 @@ parseCommandLine(int argc, char ** argv,
     unsigned int alphaoutSpec;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "alphaout",   OPT_STRING, 
+    OPTENT3(0,   "alphaout",   OPT_STRING,
             &cmdlineP->alpha_filename, &alphaoutSpec, 0);
 
     opt.opt_table = option_def;
@@ -67,21 +67,21 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->input_filename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->input_filename = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
-    if (cmdlineP->alpha_filename && 
+    if (cmdlineP->alpha_filename &&
         streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = TRUE;
-    else 
+    else
         cmdlineP->alpha_stdout = FALSE;
 }
 
 
 
 /* The subroutines are excerpted and slightly modified from the
-   X.V11R4 version of xim_io.c. 
+   X.V11R4 version of xim_io.c.
 */
 
 static int
@@ -143,7 +143,7 @@ ReadXimHeader(FILE *     const in_fp,
     header->width = atoi(a_head.image_width);
         strncpy(header->program, a_head.program,strlen(a_head.program));
     }
-    /* Do double checking for bakwards compatibility */
+    /* Do double checking for backwards compatibility */
     if (header->npics == 0)
         header->npics = 1;
     if (header->bits_channel == 0)
@@ -153,7 +153,7 @@ ReadXimHeader(FILE *     const in_fp,
         header->bits_channel = 8;
     }
     if ((int)header->bytes_per_line == 0)
-        header->bytes_per_line = 
+        header->bytes_per_line =
             (header->bits_channel == 1 && header->nchannels == 1) ?
                 (header->width + 7) / 8 :
                 header->width;
@@ -209,7 +209,7 @@ ReadImageChannel(FILE *         const infp,
             }
             marker += i;
         }
-        /* return to the beginning of the next image's bufffer */
+        /* return to the beginning of the next image's buffer */
         if (fseek(infp, marker, 0) == -1) {
             pm_message("ReadImageChannel: can't fseek to location in image buffer" );
             return(0);
@@ -294,7 +294,7 @@ ReadXimImage(FILE *     const in_fp,
 *  Author: Philip Thompson
 *  $Date: 89/11/01 10:14:23 $
 *  $Revision: 1.14 $
-*  Purpose: General xim libray of utililities
+*  Purpose: General xim library of utililities
 *  Copyright (c) 1988  Philip R. Thompson
 *                Computer Resource Laboratory (CRL)
 *                Dept. of Architecture and Planning
@@ -356,21 +356,21 @@ main(int argc,
     ppm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.input_filename);
-    
+
     if (cmdline.alpha_stdout)
         alpha_file = stdout;
-    else if (cmdline.alpha_filename == NULL) 
+    else if (cmdline.alpha_filename == NULL)
         alpha_file = NULL;
     else
         alpha_file = pm_openw(cmdline.alpha_filename);
-    
-    if (cmdline.alpha_stdout) 
+
+    if (cmdline.alpha_stdout)
         imageout_file = NULL;
     else
         imageout_file = stdout;
-    
+
     success = ReadXim(ifP, &xim);
     if (!success)
         pm_error("can't read Xim file");
@@ -397,7 +397,7 @@ main(int argc,
             "unknown Xim file type, nchannels == %d, bits_channel == %d",
             xim.nchannels, xim.bits_channel);
 
-    if (imageout_file) 
+    if (imageout_file)
         ppm_writeppminit(imageout_file, cols, rows, maxval, 0);
     if (alpha_file)
         pgm_writepgminit(alpha_file, cols, rows, maxval, 0);
@@ -409,8 +409,8 @@ main(int argc,
         if (mapped) {
             byte * const ximrow = xim.data + row * xim.bytes_per_line;
             unsigned int col;
-            
-            for (col = 0; col < cols; ++col) 
+
+            for (col = 0; col < cols; ++col)
                 pixelrow[col] = colormap[ximrow[col]];
             alpharow[col] = 0;
         } else {
@@ -426,11 +426,11 @@ main(int argc,
                            redrow[col], grnrow[col], blurow[col]);
                 if (xim.nchannels > 3)
                     alpharow[col] = othrow[col];
-                else 
+                else
                     alpharow[col] = 0;
             }
         }
-        if (imageout_file) 
+        if (imageout_file)
             ppm_writeppmrow(imageout_file, pixelrow, cols, maxval, 0);
         if (alpha_file)
             pgm_writepgmrow(alpha_file, alpharow, cols, maxval, 0);
@@ -443,3 +443,6 @@ main(int argc,
 
     return 0;
 }
+
+
+

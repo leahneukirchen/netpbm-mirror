@@ -58,7 +58,7 @@ int psearchAlg;
  *
  * PRECONDITIONS:   The relevant block in 'current' is valid (it has not
  *          been dct'd).  Thus, the data in 'current' can be
- *          accesed through y_blocks, cr_blocks, and cb_blocks.
+ *          accessed through y_blocks, cr_blocks, and cb_blocks.
  *          This is not the case for the blocks in 'prev.'
  *          Therefore, references into 'prev' should be done
  *          through the struct items ref_y, ref_cr, ref_cb

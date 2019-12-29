@@ -424,7 +424,7 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->palette = NULL;
 
     if (filterSpec && (nofilter + sub + up + avg + paeth > 0))
-        pm_error("You may mot specify -filter with "
+        pm_error("You may not specify -filter with "
                  "-nofilter, -sub, -up, -avg, or -paeth");
 
     if (filterSpec) {

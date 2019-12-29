@@ -1,8 +1,8 @@
 /*
   pbmtopk, adapted from "pxtopk.c by tomas rokicki" by AJCD 1/8/90
-  
+
   References (retrieved May 31 2015):
-  Packed (PK) Font File Format 
+  Packed (PK) Font File Format
   https://www.tug.org/TUGboat/tb06-3/tb13pk.pdf
 
   Tex Font Metric Files (TFM)
@@ -148,7 +148,7 @@ compute_checksum()
             temp_width:=memory[char_wd[c]];
             if design_units<>unity then
                temp_width:=round((temp_width/design_units)*1048576.0);
-            temp_width:=temp_width + (c+4)*@'20000000; 
+            temp_width:=temp_width + (c+4)*@'20000000;
                 {this should be positive}
             c0:=(c0+c0+temp_width) mod 255;
             c1:=(c1+c1+temp_width) mod 253;
@@ -173,12 +173,12 @@ compute_checksum()
 
 
 static byte
-add_tfmtable(int *        const table, 
-             int *        const count, 
-             int          const value, 
-             int          const max_count, 
+add_tfmtable(int *        const table,
+             int *        const count,
+             int          const value,
+             int          const max_count,
              const char * const name) {
-    
+
     integer i;
     for (i = 0; i < *count; i++) /* search for value in tfm table */
         if (table[i] == value) return (byte)i;
@@ -194,8 +194,8 @@ add_tfmtable(int *        const table,
 
 
 /* add a suffix to a filename in an allocated space */
-static void 
-pbmtopk_add_suffix(char * const name, 
+static void
+pbmtopk_add_suffix(char * const name,
                    const char * const suffix) {
 
     char *slash = strrchr(name, '/');
@@ -208,7 +208,7 @@ pbmtopk_add_suffix(char * const name,
 
 
 /* initialize the PK parameters */
-static void 
+static void
 initialize_pk(void) {
     integer i ;
     pm_message("This is PBMtoPK, version 2.4") ;
@@ -225,13 +225,13 @@ initialize_pk(void) {
 
 
 /* write a single byte to the PK file */
-static void 
+static void
 pbmtopk_pkbyte(integer const b_in) {
     integer b;
 
     b = b_in;  /* initial value */
 
-    if (b < 0) 
+    if (b < 0)
         b += 256 ;
     putc(b, pkfile) ;
     pbmtopk_pkloc++ ;
@@ -240,13 +240,13 @@ pbmtopk_pkbyte(integer const b_in) {
 
 
 /* write two bytes to the PK file */
-static void 
+static void
 pkhalfword(integer const a_in) {
     integer a;
 
     a = a_in;
 
-    if (a < 0) 
+    if (a < 0)
         a += 65536 ;
     pbmtopk_pkbyte(a >> 8) ;
     pbmtopk_pkbyte(a & 255) ;
@@ -255,7 +255,7 @@ pkhalfword(integer const a_in) {
 
 
 /* write three bytes to the PK file */
-static void 
+static void
 pkthreebytes(integer const a) {
 
     pbmtopk_pkbyte((a>>16) & 255) ;
@@ -266,7 +266,7 @@ pkthreebytes(integer const a) {
 
 
 /* write four bytes to the PK file */
-static void 
+static void
 pkword(integer const a) {
     pbmtopk_pkbyte((a>>24) & 255) ;
     pbmtopk_pkbyte((a>>16) & 255) ;
@@ -277,7 +277,7 @@ pkword(integer const a) {
 
 
 /* write a nibble to the PK file */
-static void 
+static void
 pknyb(integer const a) {
 
     if (bitweight == 16) {
@@ -292,15 +292,15 @@ pknyb(integer const a) {
 
 
 /* write preamble to PK file */
-static void 
+static void
 writepreamble(void) {
     integer i ;
     const char * const comment = "PBMtoPK 2.4 output" ;
-   
+
     pbmtopk_pkbyte(247) ;                /* PRE command */
     pbmtopk_pkbyte(89) ;             /* PK file type */
     pbmtopk_pkbyte(strlen(comment)) ;            /* output comment */
-    for (i = 0 ; i < strlen(comment); i++) 
+    for (i = 0 ; i < strlen(comment); i++)
         pbmtopk_pkbyte(xord[(int)comment[i]]) ;
     pkword(designsize) ;             /* write designsize */
     pkword(checksum) ;       /* write checksum; calculate if possible */
@@ -311,7 +311,7 @@ writepreamble(void) {
 
 
 /* write postamble to PK file, padded to word length */
-static void 
+static void
 writepostamble(void) {
     pbmtopk_pkbyte(245) ;                /* POST command */
     while (pbmtopk_pkloc % 4)
@@ -322,7 +322,7 @@ writepostamble(void) {
 
 
 /* write a byte to the TFM file */
-static void 
+static void
 tfmbyte(integer const b_in) {
     integer b;
 
@@ -335,9 +335,9 @@ tfmbyte(integer const b_in) {
 
 
 /* write a half word to the TFM file */
-static void 
+static void
 tfmhalfword(integer const a_in) {
-    
+
     integer a;
 
     a = a_in;
@@ -350,7 +350,7 @@ tfmhalfword(integer const a_in) {
 
 
 /* write a word to the TFM file */
-static void 
+static void
 tfmword(integer const a) {
     tfmbyte((a>>24) & 255) ;
     tfmbyte((a>>16) & 255) ;
@@ -361,12 +361,12 @@ tfmword(integer const a) {
 
 
 /* write the whole TFM file for the font */
-static void 
+static void
 writetfmfile(void) {
     integer totallength ;
     integer headersize = 17;
     integer i ;
-   
+
     if (largestch - smallestch < 0) {
         largestch = 0;
         smallestch = 1;
@@ -406,23 +406,23 @@ writetfmfile(void) {
     /* header */
     tfmword(checksum) ;              /* write checksum */
     tfmword(designsize) ;            /* write designsize */
-    if (strlen(codingscheme) > 39) 
+    if (strlen(codingscheme) > 39)
         tfmbyte(39) ; /* write coding scheme len */
-    else 
+    else
         tfmbyte(strlen(codingscheme)) ;
     for (i = 0; i < 39; i++)         /* write coding scheme */
-        if 
+        if
             (*codingscheme) tfmbyte(xord[(int)(*codingscheme++)]) ;
         else
             tfmbyte(0) ;
-    if (strlen(familyname) > 19) 
+    if (strlen(familyname) > 19)
         tfmbyte(19) ;   /* write family length */
-    else 
+    else
         tfmbyte(strlen(familyname)) ;
     for (i = 0; i < 19; i++)         /* write family */
-        if (*familyname) 
+        if (*familyname)
             tfmbyte(xord[(int)(*familyname++)]) ;
-        else 
+        else
             tfmbyte(0) ;
     /* char_info */
     for (car = smallestch; car <= largestch; car++)
@@ -441,7 +441,7 @@ writetfmfile(void) {
     for (i = 0; i < numdepth; i++) tfmword(depthtab[i]) ;
     /* italic correction table */
     for (i = 0; i < numitalic; i++) tfmword(italictab[i]) ;
-    /* no lig_kern, kern, or exten tables */
+    /* no lig_kern, kern, or extent tables */
     /* fontdimen table */
     for (i = 0; i < numparam; i++)
         if (i && !fixrange(parameters[i]))
@@ -456,11 +456,11 @@ writetfmfile(void) {
 /* read a character from a PBM file */
 static void readcharacter(void) {
     FILE *fp;
-   
+
     fp = pm_openr(filename[car]);
     bitmap = pbm_readpbm(fp, &width, &height) ;
     pm_close(fp) ;
-   
+
     if ((charflags[car] & HORZESC) == 0) horzesc[car] = width ;
     if ((charflags[car] & VERTESC) == 0) vertesc[car] = 0;
     if ((charflags[car] & XOFFSET) == 0) xoffset[car] = 0;
@@ -470,10 +470,10 @@ static void readcharacter(void) {
     if ((charflags[car] & TFMHEIGHT) == 0)
         hgtindex[car] = add_tfmheight(fixword(designunits(yoffset[car]+1)));
     if ((charflags[car] & TFMDEPTH) == 0)
-        depindex[car] = 
+        depindex[car] =
             add_tfmdepth(fixword(designunits(height-1-yoffset[car])));
     if ((charflags[car] & TFMITALIC) == 0) italindex[car] = 0;
-   
+
     if (car < smallestch) smallestch = car;
     if (car > largestch) largestch = car;
     if (width > emwidth) emwidth = width ;
@@ -482,14 +482,14 @@ static void readcharacter(void) {
 
 
 /* test if two rows of the PBM are the same */
-static int 
-equal(const bit * const row1, 
+static int
+equal(const bit * const row1,
       const bit * const row2) {
 
     integer i ;
-   
+
     for (i = 0; i < width; i++)
-        if (row1[i] != row2[i]) 
+        if (row1[i] != row2[i])
             return (0) ;
 
     return(1) ;
@@ -497,7 +497,7 @@ equal(const bit * const row1,
 
 
 
-static void 
+static void
 shipcharacter(void) {
 
     integer compsize ;
@@ -526,13 +526,13 @@ shipcharacter(void) {
     integer max2 ;
     integer predpkloc ;
     integer buff ;
-   
+
     integer tfwid = widthtab[tfmindex[car]] ;
     integer hesc = horzesc[car] ;
     integer vesc = vertesc[car] ;
     integer xoff = xoffset[car] ;
     integer yoff = yoffset[car] ;
-   
+
     MALLOCARRAY(repeatptr, height + 1);
     MALLOCARRAY(bitcounts, height * width);
     if (repeatptr == NULL || bitcounts == NULL)
@@ -781,8 +781,8 @@ shipcharacter(void) {
     }
     if (predpkloc != pbmtopk_pkloc)
         pm_error("bad predicted character length: character %d", car);
-    pbm_freerow(zerorow); 
-    pbm_freerow(onesrow); 
+    pbm_freerow(zerorow);
+    pbm_freerow(onesrow);
     free((char *)repeatptr);
     free((char *)bitcounts);
 }
@@ -790,7 +790,7 @@ shipcharacter(void) {
 
 
 /* check that character is in valid range */
-static void 
+static void
 checkchar(void) {
     if (car < 0 || car >= MAXPKCHAR)
         pm_error("character must be in range 0 to %d", MAXPKCHAR-1) ;
@@ -799,16 +799,16 @@ checkchar(void) {
 
 
 /* read character information from an option file */
-static void 
+static void
 optionfile(const char * const name) {
 
     FILE *fp ;
     char buffer[MAXOPTLINE] ;
-   
+
     fp = pm_openr(name);
     while (!feof(fp)) {
         char *here = buffer;
-      
+
         if (fgets(buffer, MAXOPTLINE, fp) == NULL) break ;
         while (ISSPACE(*here)) here++ ;
         if (*here && *here == '=') {
@@ -817,7 +817,7 @@ optionfile(const char * const name) {
         } else if (*here && *here != '%' && *here != '#') {
             char str[NAMELENGTH] ;
             integer i, n;
-     
+
             checkchar() ;
             if (sscanf(here, "%s%n", str, &n) != 1)
                 pm_error("bad option file line %s", buffer) ;
@@ -881,26 +881,26 @@ main(int argc, char *argv[]) {
 
     pbm_init(&argc, argv);
     initialize_pk() ;
-   
+
     if (--argc < 1) pm_usage(usage) ;
     ++argv;
     if(strlen(*argv) + 4 > NAMELENGTH)
         pm_error("pkname is too long");
     strcpy(pkname, *argv) ;
     pbmtopk_add_suffix(pkname, ".pk") ;
-   
+
     if (--argc < 1) pm_usage(usage);
     ++argv;
     if(strlen(*argv) + 4 > NAMELENGTH)
         pm_error("tfmname is too long");
     strcpy(tfmname, *argv) ;
     pbmtopk_add_suffix(tfmname, ".tfm") ;
-   
+
     if (--argc < 1) pm_usage(usage) ;
     resolution = atoi(*++argv) ;
     if (resolution < 1 || resolution > 32767)
         pm_error("unlikely resolution %d dpi", resolution);
-   
+
     car = flags = hesc = vesc = xoff = yoff = tfwid = 0;
     while (++argv, --argc) {
         if (argv[0][0] == '-' && argv[0][1]) {
@@ -922,7 +922,7 @@ main(int argc, char *argv[]) {
             case 's':
                 designsize = fixword(atof(p));
                 if (designsize < 1048576)
-                    pm_error("design size %f out of range", 
+                    pm_error("design size %f out of range",
                              unfixword(designsize));
             case 'h':
                 hesc = atoi(p) ;
@@ -1008,4 +1008,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
 

@@ -9,7 +9,7 @@
   This program is by Bryan Henderson on 2000.03.06, but is derived
   with permission from the program cjpeg, which is in the Independent
   Jpeg Group's JPEG library package.  Under the terms of that permission,
-  redistribution of this software is restricted as described in the 
+  redistribution of this software is restricted as described in the
   file README.JPEG.
 
   Copyright (C) 1991-1998, Thomas G. Lane.
@@ -84,12 +84,12 @@ struct cmdlineInfo {
     struct density density;
 };
 
-static void 
-interpret_maxmemory (const char * const maxmemory, 
-                     long int * const max_memory_to_use_p) { 
+static void
+interpret_maxmemory (const char * const maxmemory,
+                     long int * const max_memory_to_use_p) {
     long int lval;
     char ch;
-    
+
     if (maxmemory == NULL) {
         *max_memory_to_use_p = -1;  /* unspecified */
     } else if (sscanf(maxmemory, "%ld%c", &lval, &ch) < 1) {
@@ -119,9 +119,9 @@ interpret_restart(const char * const restart,
         long lval;
         char ch;
         unsigned int matches;
-        
+
         matches= sscanf(restart, "%ld%c", &lval, &ch);
-        if (matches == 0) 
+        if (matches == 0)
             pm_error("Invalid value for the --restart option : '%s'.",
                      restart);
         else {
@@ -160,7 +160,7 @@ interpret_density(const char *        const densityString,
         int horiz, vert;
 
         unitName = malloc(strlen(densityString)+1);
-    
+
         matched = sscanf(densityString, "%dx%d%s", &horiz, &vert, unitName);
 
         if (matched < 2)
@@ -178,7 +178,7 @@ interpret_density(const char *        const densityString,
                 densityP->horiz = horiz;
                 densityP->vert  = vert;
 
-                if (matched < 3) 
+                if (matched < 3)
                     densityP->unit = DEN_UNSPECIFIED;
                 else {
                     if (streq(unitName, "dpi") || streq(unitName, "DPI"))
@@ -235,7 +235,7 @@ parseCommandLine(const int argc, char ** argv,
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "verbose",     OPT_FLAG,   NULL, &cmdlineP->verbose,        0);
-    OPTENT3(0, "quality",     OPT_UINT,   &cmdlineP->quality, 
+    OPTENT3(0, "quality",     OPT_UINT,   &cmdlineP->quality,
             &qualitySpec,        0);
     OPTENT3(0, "baseline",    OPT_FLAG,   NULL, &cmdlineP->force_baseline, 0);
     OPTENT3(0, "progressive", OPT_FLAG,   NULL, &cmdlineP->progressive,    0);
@@ -250,14 +250,14 @@ parseCommandLine(const int argc, char ** argv,
     OPTENT3(0, "qtables",     OPT_STRING, &cmdlineP->qtablefile,  NULL,    0);
     OPTENT3(0, "sample",      OPT_STRING, &cmdlineP->sample,      NULL,    0);
     OPTENT3(0, "scans",       OPT_STRING, &cmdlineP->scans,       NULL,    0);
-    OPTENT3(0, "smooth",      OPT_UINT,   &cmdlineP->smoothing_factor, 
+    OPTENT3(0, "smooth",      OPT_UINT,   &cmdlineP->smoothing_factor,
             &smoothSpec,  0);
     OPTENT3(0, "optimize",    OPT_FLAG,   NULL, &cmdlineP->optimize,       0);
     OPTENT3(0, "optimise",    OPT_FLAG,   NULL, &cmdlineP->optimize,       0);
     OPTENT3(0, "restart",     OPT_STRING, &restart, NULL,                   0);
     OPTENT3(0, "comment",     OPT_STRING, &cmdlineP->comment, NULL,        0);
     OPTENT3(0, "exif",        OPT_STRING, &cmdlineP->exif_filespec, NULL,  0);
-    OPTENT3(0, "density",     OPT_STRING, &density, 
+    OPTENT3(0, "density",     OPT_STRING, &density,
             &cmdlineP->density_spec, 0);
 
     /* Set the defaults */
@@ -295,7 +295,7 @@ parseCommandLine(const int argc, char ** argv,
         cmdlineP->input_filespec = strdup("-");  /* he wants stdin */
     else if (argc_parse - 1 == 1)
         cmdlineP->input_filespec = strdup(argv_parse[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification.");
     if (dctval == NULL)
@@ -314,15 +314,15 @@ parseCommandLine(const int argc, char ** argv,
     interpret_maxmemory(maxmemory, &cmdlineP->max_memory_to_use);
     interpret_restart(restart, &cmdlineP->restart_value,
                       &cmdlineP->restart_unit);
-    if (cmdlineP->density_spec) 
+    if (cmdlineP->density_spec)
         interpret_density(density, &cmdlineP->density);
-    
+
     if (cmdlineP->smoothing_factor > 100)
         pm_error("Smoothing factor %d is greater than 100 (%%).",
                  cmdlineP->smoothing_factor);
 
     if (streq(cmdlineP->input_filespec, "=") &&
-        cmdlineP->exif_filespec && 
+        cmdlineP->exif_filespec &&
         streq(cmdlineP->exif_filespec, "-"))
 
         pm_error("Cannot have both input image and exif header be from "
@@ -336,7 +336,7 @@ parseCommandLine(const int argc, char ** argv,
 
 static void
 report_compressor(const struct jpeg_compress_struct cinfo) {
-    
+
     if (cinfo.scan_info == NULL)
         pm_message("No scan script is being used");
     else {
@@ -346,7 +346,7 @@ report_compressor(const struct jpeg_compress_struct cinfo) {
         for (i = 0; i < cinfo.num_scans; i++) {
             int j;
             pm_message("    Scan %2d: Ss=%2d Se=%2d Ah=%2d Al=%2d  "
-                       "%d components", 
+                       "%d components",
                        i,
                        cinfo.scan_info[i].Ss,
                        cinfo.scan_info[i].Se,
@@ -364,11 +364,11 @@ report_compressor(const struct jpeg_compress_struct cinfo) {
 
 
 static void
-setup_jpeg_source_parameters(struct jpeg_compress_struct * const cinfoP, 
-                             int const width, int const height, 
+setup_jpeg_source_parameters(struct jpeg_compress_struct * const cinfoP,
+                             int const width, int const height,
                              int const format) {
 /*----------------------------------------------------------------------------
-   Set up in the compressor descriptor *cinfoP the description of the 
+   Set up in the compressor descriptor *cinfoP the description of the
    source image as required by the compressor.
 -----------------------------------------------------------------------------*/
 
@@ -379,7 +379,7 @@ setup_jpeg_source_parameters(struct jpeg_compress_struct * const cinfoP,
         cinfoP->input_components = 1;
         break;
     case PPM_TYPE:
-        cinfoP->in_color_space = JCS_RGB; 
+        cinfoP->in_color_space = JCS_RGB;
         cinfoP->input_components = 3;
         break;
     default:
@@ -391,7 +391,7 @@ setup_jpeg_source_parameters(struct jpeg_compress_struct * const cinfoP,
 
 
 static void
-setup_jpeg_density(struct jpeg_compress_struct * const cinfoP, 
+setup_jpeg_density(struct jpeg_compress_struct * const cinfoP,
                    struct density                const density) {
 /*----------------------------------------------------------------------------
    Set up in the compressor descriptor *cinfoP the density information
@@ -402,7 +402,7 @@ setup_jpeg_density(struct jpeg_compress_struct * const cinfoP,
     case DEN_DOTS_PER_INCH: cinfoP->density_unit = 1; break;
     case DEN_DOTS_PER_CM:   cinfoP->density_unit = 2; break;
     }
-    
+
     cinfoP->X_density = density.horiz;
     cinfoP->Y_density = density.vert;
 }
@@ -411,7 +411,7 @@ setup_jpeg_density(struct jpeg_compress_struct * const cinfoP,
 
 /*----------------------------------------------------------------------------
    The functions below here are essentially the file rdswitch.c from
-   the JPEG library.  They perform the functions specifed by the following
+   the JPEG library.  They perform the functions specified by the following
    pnmtojpeg options:
 
    -qtables file          Read quantization tables from text file
@@ -426,7 +426,7 @@ text_getc (FILE * file)
 /* A comment/newline sequence is returned as a newline */
 {
     register int ch;
-  
+
     ch = getc(file);
     if (ch == '#') {
         do {
@@ -454,12 +454,12 @@ readTextInteger(FILE * const fileP,
 -----------------------------------------------------------------------------*/
     int ch;
     boolean retval;
-  
+
     /* Skip any leading whitespace, detect EOF */
     do {
         ch = text_getc(fileP);
     } while (isspace(ch));
-  
+
     if (!isdigit(ch))
         retval = FALSE;
     else {
@@ -554,7 +554,7 @@ read_scan_script(j_compress_ptr const cinfo,
         ncomps = 1;
         while (termchar == ' ') {
             if (ncomps >= MAX_COMPS_IN_SCAN) {
-                pm_message("Too many components in one scan in file %s", 
+                pm_message("Too many components in one scan in file %s",
                            filename);
                 fclose(fp);
                 return FALSE;
@@ -603,10 +603,10 @@ read_scan_script(j_compress_ptr const cinfo,
         /* Stash completed scan list in cinfo structure.  NOTE: in
            this program, JPOOL_IMAGE is the right lifetime for this
            data, but if you want to compress multiple images you'd
-           want JPOOL_PERMANENT.  
+           want JPOOL_PERMANENT.
         */
         const unsigned int scan_info_size = nscans * sizeof(jpeg_scan_info);
-        jpeg_scan_info * const scan_info = 
+        jpeg_scan_info * const scan_info =
             (jpeg_scan_info *)
             (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                                         scan_info_size);
@@ -656,7 +656,7 @@ read_quant_tables (j_compress_ptr cinfo, char * filename,
                 if (tblno >= NUM_QUANT_TBLS) {
                     pm_message("Too many tables in file %s", filename);
                     error = TRUE;
-                } else { 
+                } else {
                     unsigned int table[DCTSIZE2];
                     unsigned int i;
 
@@ -686,7 +686,7 @@ read_quant_tables (j_compress_ptr cinfo, char * filename,
         fclose(fp);
         retval = !error;
     }
-        
+
     return retval;
 }
 
@@ -717,7 +717,7 @@ set_quant_slots (j_compress_ptr cinfo, char *arg)
                 return FALSE;
             }
             cinfo->comp_info[ci].quant_tbl_no = val;
-            while (*arg && *arg++ != ',') 
+            while (*arg && *arg++ != ',')
                 /* advance to next segment of arg string */
                 ;
         } else {
@@ -747,7 +747,7 @@ set_sample_factors (j_compress_ptr cinfo, char *arg)
             if ((ch1 != 'x' && ch1 != 'X') || ch2 != ',') /* syntax check */
                 return FALSE;
             if (val1 <= 0 || val1 > 4) {
-                pm_message("Invalid sampling factor: %d.  " 
+                pm_message("Invalid sampling factor: %d.  "
                            "JPEG sampling factors must be 1..4", val1);
                 return FALSE;
             }
@@ -758,11 +758,11 @@ set_sample_factors (j_compress_ptr cinfo, char *arg)
             }
             cinfo->comp_info[ci].h_samp_factor = val1;
             cinfo->comp_info[ci].v_samp_factor = val2;
-            while (*arg && *arg++ != ',') 
+            while (*arg && *arg++ != ',')
                 /* advance to next segment of arg string */
                 ;
         } else {
-            /* reached end of parameter, set remaining components 
+            /* reached end of parameter, set remaining components
                to 1x1 sampling */
             cinfo->comp_info[ci].h_samp_factor = 1;
             cinfo->comp_info[ci].v_samp_factor = 1;
@@ -776,13 +776,13 @@ set_sample_factors (j_compress_ptr cinfo, char *arg)
 static void
 setup_jpeg(struct jpeg_compress_struct * const cinfoP,
            struct jpeg_error_mgr       * const jerrP,
-           struct cmdlineInfo            const cmdline, 
+           struct cmdlineInfo            const cmdline,
            int                           const width,
            int                           const height,
            pixval                        const maxval,
            int                           const input_fmt,
            FILE *                        const output_file) {
-  
+
     int quality;
     int q_scale_factor;
 
@@ -794,14 +794,14 @@ setup_jpeg(struct jpeg_compress_struct * const cinfoP,
 
     jpeg_set_defaults(cinfoP);
 
-    cinfoP->data_precision = BITS_IN_JSAMPLE; 
+    cinfoP->data_precision = BITS_IN_JSAMPLE;
         /* we always rescale data to this */
     cinfoP->image_width = (unsigned int) width;
     cinfoP->image_height = (unsigned int) height;
 
     cinfoP->arith_code = cmdline.arith_code;
     cinfoP->dct_method = cmdline.dct_method;
-    if (cmdline.trace_level == 0 && cmdline.verbose) 
+    if (cmdline.trace_level == 0 && cmdline.verbose)
         cinfoP->err->trace_level = 1;
     else cinfoP->err->trace_level = cmdline.trace_level;
     if (cmdline.grayscale)
@@ -822,26 +822,26 @@ setup_jpeg(struct jpeg_compress_struct * const cinfoP,
         quality = cmdline.quality;
         q_scale_factor = jpeg_quality_scaling(cmdline.quality);
     }
-    if (cmdline.smoothing_factor != -1) 
+    if (cmdline.smoothing_factor != -1)
         cinfoP->smoothing_factor = cmdline.smoothing_factor;
 
     /* Set quantization tables for selected quality. */
     /* Some or all may be overridden if user specified --qtables. */
     jpeg_set_quality(cinfoP, quality, cmdline.force_baseline);
-                   
+
     if (cmdline.qtablefile != NULL) {
         if (! read_quant_tables(cinfoP, cmdline.qtablefile,
-                                q_scale_factor, cmdline.force_baseline)) 
+                                q_scale_factor, cmdline.force_baseline))
             pm_error("Can't use quantization table file '%s'.",
                      cmdline.qtablefile);
     }
-   
+
     if (cmdline.qslots != NULL) {
         if (! set_quant_slots(cinfoP, cmdline.qslots))
-            pm_error("Bad quantization-table-selectors parameter string '%s'.", 
+            pm_error("Bad quantization-table-selectors parameter string '%s'.",
                      cmdline.qslots);
     }
-          
+
     if (cmdline.sample != NULL) {
         if (! set_sample_factors(cinfoP, cmdline.sample))
             pm_error("Bad sample-factors parameters string '%s'.",
@@ -878,7 +878,7 @@ write_exif_header(struct jpeg_compress_struct * const cinfoP,
 /*----------------------------------------------------------------------------
    Generate an APP1 marker in the JFIF output that is an Exif header.
 
-   The contents of the Exif header are in the file with filespec 
+   The contents of the Exif header are in the file with filespec
    'exif_filespec' (file spec and contents are not validated).
 
    exif_filespec = "-" means Standard Input.
@@ -888,7 +888,7 @@ write_exif_header(struct jpeg_compress_struct * const cinfoP,
 -----------------------------------------------------------------------------*/
     FILE * exif_file;
     unsigned short length;
-    
+
     exif_file = pm_openr(exif_filespec);
 
     pm_readbigshort(exif_file, (short*)&length);
@@ -900,7 +900,7 @@ write_exif_header(struct jpeg_compress_struct * const cinfoP,
     else {
         unsigned char * exif_data;
         size_t rc;
-        size_t const data_length = length - 2;  
+        size_t const data_length = length - 2;
             /* Subtract 2 byte length field*/
 
         assert(data_length > 0);
@@ -917,16 +917,16 @@ write_exif_header(struct jpeg_compress_struct * const cinfoP,
                      "%u bytes of data, read only %u",
                      (unsigned)data_length, (unsigned)rc);
 
-        jpeg_write_marker(cinfoP, JPEG_APP0+1, 
+        jpeg_write_marker(cinfoP, JPEG_APP0+1,
                           (const JOCTET *) exif_data, data_length);
 
         free(exif_data);
     }
-    
+
     pm_close(exif_file);
 }
 
-                  
+
 
 static void
 compute_rescaling_array(JSAMPLE ** const rescale_p, const pixval maxval,
@@ -940,7 +940,7 @@ compute_rescaling_array(JSAMPLE ** const rescale_p, const pixval maxval,
 
   *rescale_p = (JSAMPLE *)
     (cinfo.mem->alloc_small) ((j_common_ptr) &cinfo, JPOOL_IMAGE,
-                              (size_t) (((long) maxval + 1L) * 
+                              (size_t) (((long) maxval + 1L) *
                                         sizeof(JSAMPLE)));
   for (val = 0; val <= maxval; val++) {
     /* The multiplication here must be done in 32 bits to avoid overflow */
@@ -951,9 +951,9 @@ compute_rescaling_array(JSAMPLE ** const rescale_p, const pixval maxval,
 
 
 static void
-translate_row(const pixel pnm_buffer[], 
-              JSAMPLE jpeg_buffer[], 
-              int const width, 
+translate_row(const pixel pnm_buffer[],
+              JSAMPLE jpeg_buffer[],
+              int const width,
               int const input_components,
               const JSAMPLE translate[]) {
 /*----------------------------------------------------------------------------
@@ -971,16 +971,16 @@ translate_row(const pixel pnm_buffer[],
 
   switch (input_components) {
   case 1:
-      for (column = 0; column < width; column++) 
+      for (column = 0; column < width; column++)
           jpeg_buffer[column] = translate[(int)PNM_GET1(pnm_buffer[column])];
       break;
   case 3:
       for (column = 0; column < width; column++) {
-          jpeg_buffer[column*3+0] = 
+          jpeg_buffer[column*3+0] =
               translate[(int)PPM_GETR(pnm_buffer[column])];
-          jpeg_buffer[column*3+1] = 
+          jpeg_buffer[column*3+1] =
               translate[(int)PPM_GETG(pnm_buffer[column])];
-          jpeg_buffer[column*3+2] = 
+          jpeg_buffer[column*3+2] =
               translate[(int)PPM_GETB(pnm_buffer[column])];
       }
       break;
@@ -1000,17 +1000,17 @@ convert_scanlines(struct jpeg_compress_struct * const cinfo_p,
                   int                           const input_fmt,
                   JSAMPLE                             xlate_table[]){
 /*----------------------------------------------------------------------------
-   Read scan lines from the input file, which is already opened in the 
-   netpbm library sense and ready for reading, and write them to the 
+   Read scan lines from the input file, which is already opened in the
+   netpbm library sense and ready for reading, and write them to the
    output JPEG object.  Translate the pnm sample values to JPEG sample
    values through the thable xlate_table[].
 -----------------------------------------------------------------------------*/
-  xel * pnm_buffer;  
+  xel * pnm_buffer;
     /* contains the row of the input image currently being processed,
        in pnm_readpnmrow format
     */
   JSAMPARRAY buffer;
-    /* Row 0 of this array contains the row of the output image currently 
+    /* Row 0 of this array contains the row of the output image currently
        being processed, in JPEG compressor input format.  The array only
        has that one row.
     */
@@ -1018,26 +1018,26 @@ convert_scanlines(struct jpeg_compress_struct * const cinfo_p,
   /* Allocate the libpnm output and compressor input buffers */
   buffer = (*cinfo_p->mem->alloc_sarray)
     ((j_common_ptr) cinfo_p, JPOOL_IMAGE,
-     (unsigned int) cinfo_p->image_width * cinfo_p->input_components, 
+     (unsigned int) cinfo_p->image_width * cinfo_p->input_components,
      (unsigned int) 1);
-  
+
   pnm_buffer = pnm_allocrow(cinfo_p->image_width);
 
   while (cinfo_p->next_scanline < cinfo_p->image_height) {
-    if (cinfo_p->err->trace_level > 1) 
+    if (cinfo_p->err->trace_level > 1)
         pm_message("Converting Row %d...", cinfo_p->next_scanline);
-    pnm_readpnmrow(input_file, pnm_buffer, cinfo_p->image_width, 
+    pnm_readpnmrow(input_file, pnm_buffer, cinfo_p->image_width,
                    maxval, input_fmt);
-    translate_row(pnm_buffer, buffer[0], 
+    translate_row(pnm_buffer, buffer[0],
                   cinfo_p->image_width, cinfo_p->input_components,
                   xlate_table);
     jpeg_write_scanlines(cinfo_p, buffer, 1);
-    if (cinfo_p->err->trace_level > 1) 
+    if (cinfo_p->err->trace_level > 1)
         pm_message("Done.");
   }
 
   pnm_freerow(pnm_buffer);
-  /* Don't worry about the compressor input buffer; it gets freed 
+  /* Don't worry about the compressor input buffer; it gets freed
      automatically
   */
 }
@@ -1053,11 +1053,11 @@ main(int     argc,
     struct jpeg_error_mgr jerr;
     FILE * input_file;
     FILE * output_file;
-    int height;  
+    int height;
         /* height of the input image in rows, as specified by its header */
-    int width;   
+    int width;
         /* width of the input image in columns, as specified by its header */
-    pixval maxval;  
+    pixval maxval;
         /* maximum value of an input pixel component, as specified by header */
     int input_fmt;
         /* The input format, as determined by its header.  */
@@ -1081,7 +1081,7 @@ main(int     argc,
     if (cmdline.verbose) {
         pm_message("Input file has format %c%c.\n"
                    "It has %d rows of %d columns of pixels "
-                   "with max sample value of %d.", 
+                   "with max sample value of %d.",
                    (char) (input_fmt/256), (char) (input_fmt % 256),
                    height, width, maxval);
     }
@@ -1091,13 +1091,13 @@ main(int     argc,
 
     compute_rescaling_array(&rescale, maxval, cinfo);
 
-    if (cmdline.comment) 
-        jpeg_write_marker(&cinfo, JPEG_COM, (const JOCTET *) cmdline.comment, 
+    if (cmdline.comment)
+        jpeg_write_marker(&cinfo, JPEG_COM, (const JOCTET *) cmdline.comment,
                           strlen(cmdline.comment));
 
     if (cmdline.exif_filespec)
         write_exif_header(&cinfo, cmdline.exif_filespec);
-    
+
     /* Translate and copy over the actual scanlines */
     convert_scanlines(&cinfo, input_file, maxval, input_fmt, rescale);
 
@@ -1110,7 +1110,10 @@ main(int     argc,
         pm_close(input_file);
 
     /* Program may have exited with non-zero completion code via
-       various function calls above. 
+       various function calls above.
     */
     return jerr.num_warnings > 0 ? EXIT_WARNING : EXIT_SUCCESS;
 }
+
+
+

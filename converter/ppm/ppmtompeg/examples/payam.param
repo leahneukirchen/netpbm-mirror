@@ -16,7 +16,7 @@ kh*.pnm	[1-3]
 END_INPUT
 
 
-# motion vector search paramters
+# motion vector search parameters
 
 # MAD or MSE -- must be upper case
 ERROR		MAD

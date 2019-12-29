@@ -146,7 +146,7 @@ strncaseeq(const char * const comparand,
 
      - If the function can't get the memory, it returns 'pm_strsol',
        which is a string that is in static memory that contains text
-       indicating an out of memory failure has occurred, intead of
+       indicating an out of memory failure has occurred, instead of
        NULL.  This makes it much easier for programs to ignore this
        possibility.
 

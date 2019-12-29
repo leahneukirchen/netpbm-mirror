@@ -25,7 +25,7 @@
  *
  * 92/07/11 Johann Haider
  * Changed to read from stdin if file is omitted
- * Changed to handle line length not a multipe of 8
+ * Changed to handle line length not a multiple of 8
  *
  * 94/01/31 Andreas Schwab (schwab@ls5.informatik.uni-dortmund.de)
  * Changed to remove architecture dependency and conform to

@@ -139,7 +139,7 @@ pgmnoise(FILE *       const ofP,
     /* If maxval is 2^n-1, we draw exactly n bits from the pool.
        Otherwise call rand() and determine gray value by modulo.
 
-       In the latter case, there is a miniscule skew toward 0 (=black)
+       In the latter case, there is a minuscule skew toward 0 (=black)
        because smaller numbers are produced more frequently by modulo.
        Thus we employ the pool method only when it is certain that no
        skew will ensue.

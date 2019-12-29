@@ -16,7 +16,7 @@
     had become rather complex.  This program is roughly 1/3 the size of
     pnmtopng.c that it replaces.
 
-  - In 1995, bandwith was limited and therefore filesize had to be kept
+  - In 1995, bandwid was limited and therefore filesize had to be kept
     small. The original program tried to optimize for that by applying
     many "clever tricks". Today that isn't an issue anymore, so gone
     are filters, palettes, etc. Also, image conversions were removed,
@@ -278,7 +278,7 @@ colorTypeFromInputType(const struct pam * const pamP) {
             retval = PNG_COLOR_TYPE_GRAY_ALPHA;
         else
             pm_error("Input tuple type is GRAYSCALE_ALPHA, "
-                     "but number of planes is %u instread of 2",
+                     "but number of planes is %u instead of 2",
                      pamP->depth);
     } else if (strneq(pamP->tuple_type, "GRAYSCALE", 9)) {
         if (pamP->depth == 1)

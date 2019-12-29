@@ -246,7 +246,7 @@ readIconDir(struct File * const fP,
     MALLOCVAR(dirP);
 
     if (dirP == NULL)
-        pm_error("Could't allocate memory for Icon directory");
+        pm_error("Couldn't allocate memory for Icon directory");
 
     MALLOCARRAY(dirP->entries, head.count);
 

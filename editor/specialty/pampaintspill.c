@@ -281,7 +281,7 @@ euclideanDistanceSqr(const struct coords * const p0,
                      unsigned int          const width,
                      unsigned int          const height) {
 /*----------------------------------------------------------------------------
-   Return the square of the Euclidian distance between p0 and p1.
+   Return the square of the Euclidean distance between p0 and p1.
 -----------------------------------------------------------------------------*/
     double const deltax = (double) (int) (p1->x - p0->x);
     double const deltay = (double) (int) (p1->y - p0->y);
@@ -299,7 +299,7 @@ euclideanDistanceTorusSqr(const struct coords * const p0,
                           unsigned int          const width,
                           unsigned int          const height) {
 /*----------------------------------------------------------------------------
-   Return the square of the Euclidian distance between p0 and p1, assuming
+   Return the square of the Euclidean distance between p0 and p1, assuming
    it's a toroidal surface on which the top row curves around to meet the
    bottom and the left column to the right.
 -----------------------------------------------------------------------------*/

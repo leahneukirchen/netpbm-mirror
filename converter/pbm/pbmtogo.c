@@ -1,29 +1,29 @@
 /* pbmtogo.c - read a PBM image and produce a GraphOn terminal raster file
-**      
+**
 **      Rev 1.1 was based on pbmtolj.c
 **
 **      Bo Thide', Swedish Institute of Space Physics, bt@irfu.se
-**                                 
+**
 **
 ** $Log:        pbmtogo.c,v $
  * Revision 1.5  89/11/25  00:24:12  00:24:12  root (Bo Thide)
  * Bug found: The byte after 64 repeated bytes sometimes lost. Fixed.
- * 
+ *
  * Revision 1.4  89/11/24  14:56:04  14:56:04  root (Bo Thide)
  * Fixed the command line parsing since pbmtogo now always uses 2D
  * compression.  Added a few comments to the source.
- * 
+ *
  * Revision 1.3  89/11/24  13:43:43  13:43:43  root (Bo Thide)
  * Added capability for > 63 repeated bytes and > 62 repeated lines in
  * the 2D compression scheme.
- * 
+ *
  * Revision 1.2  89/11/15  01:04:47  01:04:47  root (Bo Thide)
  * First version that works reasonably well with GraphOn 2D runlength
  * encoding/compression.
- * 
+ *
  * Revision 1.1  89/11/02  23:25:25  23:25:25  root (Bo Thide)
  * Initial revision
- * 
+ *
 **
 ** Copyright (C) 1988, 1989 by Jef Poskanzer, Michael Haberler, and Bo Thide'.
 **
@@ -44,10 +44,10 @@
 
 #define GRAPHON_WIDTH 1056 /* GraphOn has 1056 bit wide raster lines */
 #define GRAPHON_WIDTH_BYTES (GRAPHON_WIDTH / 8)
-#define REPEAT_CURRENT_LINE_MASK        0x00 
-#define SKIP_AND_PLOT_MASK              0x40 
-#define REPEAT_PLOT_MASK                0x80 
-#define PLOT_ARBITRARY_DATA_MASK        0xc0 
+#define REPEAT_CURRENT_LINE_MASK        0x00
+#define SKIP_AND_PLOT_MASK              0x40
+#define REPEAT_PLOT_MASK                0x80
+#define PLOT_ARBITRARY_DATA_MASK        0xc0
 #define MAX_REPEAT 64
 
 static unsigned char * scanlineptr;
@@ -167,7 +167,7 @@ main(int           argc,
       buffer[i] = oldscanline[i] = 0;
     putinit();
 
-    /* Start donwloading screen raster */
+    /* Start downloading screen raster */
     printf("\033P0;1;0;4;1;%d;%d;1!R1/", rows, rucols);
 
     linerepeat = 63; /*  63 means "Start new picture" */
@@ -183,32 +183,32 @@ main(int           argc,
           putbit(0);
 
         assert(bytesperrow <= GRAPHON_WIDTH_BYTES);
-        
+
         /* XOR data from the new scan line with data from old scan line */
         for (i = 0; i < bytesperrow; i++)
           diff[i] = oldscanline[i]^newscanline[i];
-        
+
         /*
          ** If the difference map is different from current internal buffer,
-         ** encode the difference and put it in the output buffer. 
+         ** encode the difference and put it in the output buffer.
          ** Else, increase the counter for the current buffer by one.
          */
-        
+
         if ((memcmp(buffer, diff, bytesperrow) != 0) || (row == 0)) {
-            /*    
+            /*
              **Since the data in the buffer has changed, send the
              **scan line repeat count to cause the old line(s) to
              **be plotted on the screen, copy the new data into
-             **the internal buffer, and reset the counters.  
+             **the internal buffer, and reset the counters.
              */
-              
+
             putchar(linerepeat);
             for (i = 0; i < bytesperrow; ++i)
               buffer[i] = diff[i];
             nbyte = 0;          /* Internal buffer byte counter */
             nout = 0;           /* Output buffer byte counter */
-              
-            /* Run length encode the new internal buffr (= difference map) */
+
+            /* Run length encode the new internal buffer (= difference map) */
             while (TRUE) {
                 ucount = 0;     /* Unique items counter */
                 do              /* Find unique patterns */
@@ -217,16 +217,16 @@ main(int           argc,
                       ucount++;
                   } while (nbyte < bytesperrow && (olditem != buffer[nbyte])
                            && (ucount < MIN(bytesperrow, MAX_REPEAT)));
-                  
+
                 if ((ucount != MAX_REPEAT) && (nbyte != bytesperrow)) {
                     /* Back up to the last truly unique pattern */
                     ucount--;
                     nbyte--;
                 }
 
-                if (ucount > 0) { 
+                if (ucount > 0) {
                     /* Output the unique patterns */
-                    outbuffer[nout++] = 
+                    outbuffer[nout++] =
                       (ucount-1) | PLOT_ARBITRARY_DATA_MASK;
                     for (i = nbyte-ucount; i < nbyte; i++)
                       outbuffer[nout++] = buffer[i];
@@ -235,12 +235,12 @@ main(int           argc,
                 /*
                  ** If we already are at the end of the current scan
                  ** line, skip the rest of the encoding and start
-                 ** with a new scan line.  
+                 ** with a new scan line.
                  */
 
                 if (nbyte >= bytesperrow)
                   goto nextrow;
-                  
+
                 ecount = 0;     /* Equal items counter */
                 do              /* Find equal patterns */
                   {
@@ -248,25 +248,25 @@ main(int           argc,
                       ecount++;
                   } while (nbyte < bytesperrow && (olditem == buffer[nbyte])
                            && (ecount < MIN(bytesperrow, MAX_REPEAT)));
-                  
+
                 if (ecount > 1) {
                     /* More than 1 equal pattern */
                     if (olditem == '\0') {
                         /* White patterns */
                         if (nbyte >= bytesperrow-1) {
                             /* No more valid data ahead */
-                            outbuffer[nout++] = 
+                            outbuffer[nout++] =
                               (ecount-2) | SKIP_AND_PLOT_MASK;
                             outbuffer[nout++] = buffer[nbyte-1];
-                        } 
-                        else { 
+                        }
+                        else {
                             /* More valid data ahead */
-                            outbuffer[nout++] = 
+                            outbuffer[nout++] =
                               (ecount-1) | SKIP_AND_PLOT_MASK;
                             outbuffer[nout++] = buffer[nbyte++];
-                        } 
+                        }
                     }
-                    else { 
+                    else {
                         /* Non-white patterns */
                         outbuffer[nout++] = (ecount-1) | REPEAT_PLOT_MASK;
                         outbuffer[nout++] = olditem;
@@ -274,11 +274,11 @@ main(int           argc,
                 } /* if (ecount > 1) */
                 else
                   nbyte--;      /* No equal items found */
-                  
+
                 if (nbyte >= bytesperrow)
                   goto nextrow;
             } /* while (TRUE) */
-              
+
           nextrow: printf("%d/", nout+1); /* Total bytes to xfer = nout+1 */
             fflush(stdout);
 
@@ -298,7 +298,7 @@ main(int           argc,
                   linerepeat = 0;
               }
         }
-        
+
         /* Now we are ready for a new scan line */
         for (i = 0; i < bytesperrow; ++i)
           oldscanline[i] = newscanline[i];

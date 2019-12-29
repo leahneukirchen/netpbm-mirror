@@ -91,7 +91,7 @@ static boolean  frameCountsUnknown;
 
 
 /*==================*
- * GLOBAL VARIABLES *   
+ * GLOBAL VARIABLES *
  *==================*/
 
 /* important -- don't initialize anything here */
@@ -142,14 +142,14 @@ ShowRemainingTime(boolean const childProcess) {
         /* nothing */;
     } else if ( numI + numP + numB == 0 ) {
         /* no time left */
-    } else if ( timeMask != 0 ) {   
+    } else if ( timeMask != 0 ) {
         /* haven't encoded all types yet */
     } else {
         static int  lastTime = 0;
         float   total;
         time_t  nowTime;
         float   secondsPerFrame;
-        
+
         time(&nowTime);
         secondsPerFrame = (nowTime-timeStart)/(float)framesOutput;
         total = secondsPerFrame*(float)(numI+numP+numB);
@@ -174,7 +174,7 @@ static void
 initTCTime(unsigned int const firstFrameNumber) {
 
     unsigned int frameNumber;
-    
+
     tc_hrs = 0; tc_min = 0; tc_sec = 0; tc_pict = 0; tc_extra = 0;
     for (frameNumber = 0; frameNumber < firstFrameNumber; ++frameNumber)
         IncrementTCTime();
@@ -201,13 +201,13 @@ IncrementTCTime() {
        otherwise, it is the number of extra 1/1001 frames we've passed by
 
        so far; for example, if fps = 24000/1001, then 24 frames = 24024/24000
-       seconds = 1 second + 24/24000 seconds = 1 + 1/1000 seconds; similary,
+       seconds = 1 second + 24/24000 seconds = 1 + 1/1000 seconds; similarly,
        if fps = 30000/1001, then 30 frames = 30030/30000 = 1 + 1/1000 seconds
        and if fps = 60000/1001, then 60 frames = 1 + 1/1000 seconds
 
        if fps = 24000/1001, then 1/1000 seconds = 24/1001 frames
        if fps = 30000/1001, then 1/1000 seconds = 30/1001 frames
-       if fps = 60000/1001, then 1/1000 seconds = 60/1001 frames     
+       if fps = 60000/1001, then 1/1000 seconds = 60/1001 frames
      */
 
     totalFramesSent++;
@@ -250,7 +250,7 @@ initializeRateControl(bool const wantUnderflowWarning,
         */
     }
 }
-    
+
 
 
 /*===========================================================================*
@@ -294,16 +294,16 @@ finishFrameOutput(MpegFrame * const frameP,
                   boolean     const childProcess,
                   boolean     const remoteIO) {
 
-    if ((referenceFrame == DECODED_FRAME) && 
+    if ((referenceFrame == DECODED_FRAME) &&
         childProcess && NonLocalRefFrame(frameP->id)) {
         if (remoteIO)
             SendDecodedFrame(frameP);
         else
             WriteDecodedFrame(frameP);
-            
+
         NotifyDecodeServerReady(frameP->id);
     }
-    
+
     if (separateFiles) {
         if (remoteIO)
             SendRemoteFrame(frameP->id, bbP);
@@ -314,7 +314,7 @@ finishFrameOutput(MpegFrame * const frameP,
     }
 }
 
-    
+
 
 
 static void
@@ -324,41 +324,41 @@ outputIFrame(MpegFrame * const frameP,
              int         const realEnd,
              MpegFrame * const pastRefFrameP,
              boolean     const separateFiles) {
-      
+
     /* only start a new GOP with I */
     /* don't start GOP if only doing frames */
     if (!separateFiles && currentGOP >= gopSize) {
-        boolean const closed = 
+        boolean const closed =
             (totalFramesSent == frameP->id || pastRefFrameP == NULL);
 
         static int num_gop = 0;
-    
+
         /* first, check to see if closed GOP */
-    
+
         /* new GOP */
-        if (num_gop != 0 && mult_seq_headers && 
+        if (num_gop != 0 && mult_seq_headers &&
             num_gop % mult_seq_headers == 0) {
             if (!realQuiet) {
-                fprintf(stdout, 
+                fprintf(stdout,
                         "Creating new Sequence before GOP %d\n", num_gop);
                 fflush(stdout);
             }
-      
+
             Mhead_GenSequenceHeader(
                 bbP, Fsize_x, Fsize_y,
                 /* pratio */    aspectRatio,
                 /* pict_rate */ frameRate, /* bit_rate */ bit_rate,
                 /* buf_size */  buf_size,  /* c_param_flag */ 1,
-                /* iq_matrix */ customQtable, 
+                /* iq_matrix */ customQtable,
                 /* niq_matrix */ customNIQtable,
                 /* ext_data */ NULL,  /* ext_data_size */ 0,
                 /* user_data */ NULL, /* user_data_size */ 0);
         }
-    
+
         if (!realQuiet)
             pm_message("Creating new GOP (closed = %s) before frame %d\n",
                        closed ? "YES" : "NO", frameP->id);
-    
+
         ++num_gop;
         Mhead_GenGOPHeader(bbP,  /* drop_frame_flag */ 0,
                            tc_hrs, tc_min, tc_sec, tc_pict,
@@ -371,13 +371,13 @@ outputIFrame(MpegFrame * const frameP,
         else
             SetGOPStartTime(pastRefFrameP->id + 1);
     }
-      
+
     if (frameP->id >= realStart && frameP->id <= realEnd)
         GenIFrame(bbP, frameP);
-      
+
     --numI;
     timeMask &= 0x6;
-      
+
     ++currentGOP;
     IncrementTCTime();
 }
@@ -396,7 +396,7 @@ outputPFrame(MpegFrame * const frameP,
 
     --numP;
     timeMask &= 0x5;
-    
+
     ++currentGOP;
     IncrementTCTime();
 }
@@ -464,7 +464,7 @@ getBFrame(int                  const frameNum,
         *bFramePP = bFrameP;
     } else {
         /* As the frame input is serial, we can't read the B frame now.
-           Rather, Caller has already read it and chained it to 
+           Rather, Caller has already read it and chained it to
            the previous reference frame.  So we get that copy now.
         */
         *bFramePP = pastRefFrameP->next;
@@ -510,15 +510,15 @@ processBFrames(MpegFrame *          const pastRefFrameP,
 
     assert(pastRefFrameP != NULL);
     assert(futureRefFrameP != NULL);
-    
-    for (frameNum = MAX(realStart, firstBFrameNum); 
-         frameNum < MIN(realEnd, futureRefFrameP->id); 
+
+    for (frameNum = MAX(realStart, firstBFrameNum);
+         frameNum < MIN(realEnd, futureRefFrameP->id);
          ++frameNum) {
 
         MpegFrame * bFrame;
         BitBucket * bbP;
 
-        getBFrame(frameNum, inputSourceP, pastRefFrameP, childProcess, 
+        getBFrame(frameNum, inputSourceP, pastRefFrameP, childProcess,
                   remoteIO,
                   &bFrame, IOtimeP, framesReadP);
 
@@ -554,7 +554,7 @@ processBFrames(MpegFrame *          const pastRefFrameP,
 
 
 static void
-processRefFrame(MpegFrame *    const frameP, 
+processRefFrame(MpegFrame *    const frameP,
                 BitBucket *    const wholeStreamBbP,
                 int            const realStart,
                 int            const realEnd,
@@ -574,18 +574,18 @@ processRefFrame(MpegFrame *    const frameP,
 -----------------------------------------------------------------------------*/
     if (frameP->id >= realStart && frameP->id <= realEnd) {
         bool const separateFiles = (wholeStreamBbP == NULL);
-  
+
         BitBucket * bbP;
-  
+
         if (separateFiles)
             bbP = bitioNew(outputFileName, frameP->id, remoteIO);
         else
             bbP = wholeStreamBbP;
-  
+
         /* first, output this reference frame */
         switch (frameP->type) {
         case TYPE_IFRAME:
-            outputIFrame(frameP, bbP, realStart, realEnd, pastRefFrameP, 
+            outputIFrame(frameP, bbP, realStart, realEnd, pastRefFrameP,
                          separateFiles);
             break;
         case TYPE_PFRAME:
@@ -595,10 +595,10 @@ processRefFrame(MpegFrame *    const frameP,
         default:
             pm_error("INTERNAL ERROR: non-reference frame passed to "
                      "ProcessRefFrame()");
-        }  
-        
+        }
+
         ++(*framesOutputP);
-        
+
         finishFrameOutput(frameP, bbP, separateFiles, referenceFrame,
                           childProcess, remoteIO);
     }
@@ -620,7 +620,7 @@ countFrames(unsigned int const firstFrame,
 -----------------------------------------------------------------------------*/
     unsigned int numI, numP, numB;
     unsigned int timeMask;
-            
+
     numI = 0; numP = 0; numB = 0;
     timeMask = 0;
     if (stdinUsed) {
@@ -663,7 +663,7 @@ readAndSaveFrame(struct inputSource * const inputSourceP,
    type 'frameType'.
 
    Increment *framesReadP.
-   
+
    Add the time it took to read it, in seconds, to *iotimeP.
 
    Iff we can't read because we hit end of file, return
@@ -672,11 +672,11 @@ readAndSaveFrame(struct inputSource * const inputSourceP,
     /* This really should be part of ReadNthFrame.  The frame should be chained
        to the input object, not the past reference frame.
     */
-       
+
     MpegFrame * p;
     MpegFrame * frameP;
     time_t ioTimeStart, ioTimeEnd;
-    
+
     time(&ioTimeStart);
 
     frameP = Frame_New(frameNumber, frameType);
@@ -687,15 +687,15 @@ readAndSaveFrame(struct inputSource * const inputSourceP,
         Frame_Free(frameP);
     else {
         ++(*framesReadP);
-    
+
         time(&ioTimeEnd);
         *ioTimeP += (ioTimeEnd - ioTimeStart);
 
-        /* Add the B frame to the end of the queue of B-frames 
+        /* Add the B frame to the end of the queue of B-frames
            for later encoding.
         */
         assert(pastRefFrameP != NULL);
-        
+
         p = pastRefFrameP;
         while (p->next != NULL)
             p = p->next;
@@ -726,7 +726,7 @@ doFirstFrameStuff(enum frameContext const context,
 -----------------------------------------------------------------------------*/
     *inputFrameBitsP = 24 * Fsize_x * Fsize_y;
     SetBlocksPerSlice();
-          
+
     if (context == CONTEXT_WHOLESTREAM) {
         int32 const bitstreamMode = getRateMode();
         char * userData;
@@ -742,11 +742,11 @@ doFirstFrameStuff(enum frameContext const context,
             bit_rate = -1;
             buf_size = -1;
         }
-        
+
         if (strlen(userDataFileName) != 0) {
             struct stat statbuf;
             FILE *fp;
-          
+
             stat(userDataFileName,&statbuf);
             userDataSize = statbuf.st_size;
             userData = malloc(userDataSize);
@@ -771,7 +771,7 @@ doFirstFrameStuff(enum frameContext const context,
         } else { /* Put in our UserData Header */
             const char * userDataString;
             time_t now;
-                    
+
             time(&now);
             pm_asprintf(&userDataString,"MPEG stream encoded by UCB Encoder "
                         "(mpeg_encode) v%s on %s.",
@@ -782,11 +782,11 @@ doFirstFrameStuff(enum frameContext const context,
         }
         Mhead_GenSequenceHeader(bbP, Fsize_x, Fsize_y,
                                 /* pratio */ aspectRatio,
-                                /* pict_rate */ frameRate, 
+                                /* pict_rate */ frameRate,
                                 /* bit_rate */ bit_rate,
                                 /* buf_size */ buf_size,
                                 /*c_param_flag */ 1,
-                                /* iq_matrix */ qtable, 
+                                /* iq_matrix */ qtable,
                                 /* niq_matrix */ niqtable,
                                 /* ext_data */ NULL,
                                 /* ext_data_size */ 0,
@@ -844,9 +844,9 @@ getPreviousFrame(unsigned int         const frameStart,
                      separateConversion, slaveConversion, inputConversion,
                      frameP, &endOfStream);
         assert(!endOfStream);  /* Because Stdin causes failure above */
-    }            
+    }
     ++(*framesReadP);
-    
+
     time(&ioTimeEnd);
     *ioTimeP += (ioTimeEnd-ioTimeStart);
 
@@ -858,7 +858,7 @@ getPreviousFrame(unsigned int         const frameStart,
 static void
 computeFrameRange(unsigned int         const frameStart,
                   unsigned int         const frameEnd,
-                  enum frameContext    const context, 
+                  enum frameContext    const context,
                   struct inputSource * const inputSourceP,
                   unsigned int *       const firstFrameP,
                   unsigned int *       const lastFrameP) {
@@ -881,13 +881,13 @@ computeFrameRange(unsigned int         const frameStart,
             *firstFrameP = frameStart;
 
         /* if last frame is B, need to read in P or I frame after it */
-        if ((FType_Type(frameEnd) == 'b') && 
+        if ((FType_Type(frameEnd) == 'b') &&
             (frameEnd != inputSourceP->numInputFiles-1)) {
             /* can't find the next reference frame interactively */
             if (inputSourceP->stdinUsed)
                 pm_error("Cannot encode frames from Standard Input "
                          "when last frame is a B-frame.");
-            
+
             *lastFrameP = FType_FutureRef(frameEnd);
         } else
             *lastFrameP = frameEnd;
@@ -930,11 +930,11 @@ getFrame(MpegFrame **         const framePP,
     time_t ioTimeStart, ioTimeEnd;
     MpegFrame * frameP;
     bool endOfStream;
-    
+
     time(&ioTimeStart);
 
     frameP = Frame_New(frameNumber, frameType);
-            
+
     if ((referenceFrame == DECODED_FRAME) &&
         ((frameNumber < realStart) || (frameNumber > realEnd)) ) {
         WaitForDecodedFrame(frameNumber);
@@ -952,13 +952,13 @@ getFrame(MpegFrame **         const framePP,
         ReadNthFrame(inputSourceP, frameNumber, remoteIO, childProcess,
                      separateConversion, slaveConversion, inputConversion,
                      frameP, &endOfStream);
-    
+
     if (endOfStream) {
         Frame_Free(frameP);
         *framePP = NULL;
     } else {
         ++(*framesReadP);
-            
+
         time(&ioTimeEnd);
         *ioTimeP += (ioTimeEnd - ioTimeStart);
 
@@ -988,9 +988,9 @@ handleBitRate(unsigned int const realEnd,
 static void
 doAFrame(unsigned int         const frameNumber,
          struct inputSource * const inputSourceP,
-         enum frameContext    const context, 
-         unsigned int         const frameStart, 
-         unsigned int         const frameEnd, 
+         enum frameContext    const context,
+         unsigned int         const frameStart,
+         unsigned int         const frameEnd,
          unsigned int         const realStart,
          unsigned int         const realEnd,
          bool                 const childProcess,
@@ -1017,7 +1017,7 @@ doAFrame(unsigned int         const frameNumber,
    output each frame to its own individual file instead.
 -----------------------------------------------------------------------------*/
     char const frameType = FType_Type(frameNumber);
-    
+
     *endOfStreamP = FALSE;  /* initial assumption */
 
     if (frameType == 'b') {
@@ -1026,44 +1026,44 @@ doAFrame(unsigned int         const frameNumber,
            just read it later.
         */
         *newPastRefFramePP = pastRefFrameP;
-        if (inputSourceP->stdinUsed) 
+        if (inputSourceP->stdinUsed)
             readAndSaveFrame(inputSourceP,
                              frameNumber, frameType, inputConversion,
                              pastRefFrameP, framesReadP, &IOtime,
                              endOfStreamP);
     } else {
         MpegFrame * frameP;
-        
+
         getFrame(&frameP, inputSourceP, frameNumber, frameType,
                  realStart, realEnd, referenceFrame, childProcess,
                  remoteIO,
                  separateConversion, slaveConversion, inputConversion,
                  framesReadP, &IOtime);
-        
+
         if (frameP) {
             *endOfStreamP = FALSE;
 
             if (!*firstFrameDoneP) {
                 doFirstFrameStuff(context, userDataFileName, wholeStreamBbP,
                                   Fsize_x, Fsize_y, aspectRatio,
-                                  frameRate, qtable, niqtable, 
+                                  frameRate, qtable, niqtable,
                                   inputFrameBitsP);
-            
+
                 *firstFrameDoneP = TRUE;
             }
             processRefFrame(frameP, wholeStreamBbP, frameStart, frameEnd,
-                            pastRefFrameP, childProcess, outputFileName, 
+                            pastRefFrameP, childProcess, outputFileName,
                             framesReadP, framesOutputP);
-                
+
             if (pastRefFrameP) {
                 processBFrames(pastRefFrameP, frameP, realStart, realEnd,
-                               inputSourceP, remoteIO, childProcess, 
+                               inputSourceP, remoteIO, childProcess,
                                &IOtime, wholeStreamBbP, outputFileName,
                                framesReadP, framesOutputP, &currentGOP);
             }
             if (pastRefFrameP != NULL)
                 Frame_Free(pastRefFrameP);
-        
+
             *newPastRefFramePP = frameP;
         } else
             *endOfStreamP = TRUE;
@@ -1074,13 +1074,13 @@ doAFrame(unsigned int         const frameNumber,
 
 void
 GenMPEGStream(struct inputSource * const inputSourceP,
-              enum frameContext    const context, 
-              unsigned int         const frameStart, 
-              unsigned int         const frameEnd, 
-              int32                const qtable[], 
-              int32                const niqtable[], 
+              enum frameContext    const context,
+              unsigned int         const frameStart,
+              unsigned int         const frameEnd,
+              int32                const qtable[],
+              int32                const niqtable[],
               bool                 const childProcess,
-              FILE *               const ofP, 
+              FILE *               const ofP,
               const char *         const outputFileName,
               bool                 const wantVbvUnderflowWarning,
               bool                 const wantVbvOverflowWarning,
@@ -1129,7 +1129,7 @@ GenMPEGStream(struct inputSource * const inputSourceP,
                  "(%u frames)", frameEnd, inputSourceP->numInputFiles);
 
     if (context == CONTEXT_WHOLESTREAM &&
-        !inputSourceP->stdinUsed && 
+        !inputSourceP->stdinUsed &&
         FType_Type(inputSourceP->numInputFiles-1) == 'b')
         pm_message("WARNING:  "
                    "One or more B-frames at end will not be encoded.  "
@@ -1188,27 +1188,27 @@ GenMPEGStream(struct inputSource * const inputSourceP,
          frameNumber <= lastFrame && !endOfStream;
          ++frameNumber) {
 
-        doAFrame(frameNumber, inputSourceP, context, 
+        doAFrame(frameNumber, inputSourceP, context,
                  frameStart, frameEnd, realStart, realEnd,
                  childProcess, outputFileName,
                  pastRefFrameP, &pastRefFrameP,
                  &framesRead, &framesOutput, &firstFrameDone, streamBbP,
                  inputFrameBitsP, &endOfStream);
     }
-    
+
     if (pastRefFrameP != NULL)
         Frame_Free(pastRefFrameP);
-    
+
     /* SEQUENCE END CODE */
     if (context == CONTEXT_WHOLESTREAM)
         Mhead_GenSequenceEnder(streamBbP);
-    
+
     if (streamBbP)
         numBits = streamBbP->cumulativeBits;
     else {
         /* What should the correct value be?  Most likely 1.  "numBits" is
-           used below, so we need to make sure it's properly initialized 
-           to somthing (anything).  
+           used below, so we need to make sure it's properly initialized
+           to something (anything).
         */
         numBits = 1;
     }
@@ -1272,9 +1272,9 @@ SetGOPSize(size)
  *
  *===========================================================================*/
 void
-PrintStartStats(time_t               const startTime, 
+PrintStartStats(time_t               const startTime,
                 bool                 const specificFrames,
-                unsigned int         const firstFrame, 
+                unsigned int         const firstFrame,
                 unsigned int         const lastFrame,
                 struct inputSource * const inputSourceP) {
 
@@ -1296,7 +1296,7 @@ PrintStartStats(time_t               const startTime,
             fprintf(stdout, "\n\n");
         }
     }
-    
+
     for (i = 0; i < 2; ++i) {
         if ( ( i == 0 ) && (! realQuiet) ) {
             fpointer = stdout;
@@ -1322,15 +1322,15 @@ PrintStartStats(time_t               const startTime,
             fprintf(fpointer, "INPUT FROM FILES:\n");
 
             GetNthInputFileName(inputSourceP, 0, &inputFileName);
-            fprintf(fpointer, "FIRST FILE:  %s/%s\n", 
+            fprintf(fpointer, "FIRST FILE:  %s/%s\n",
                     currentPath, inputFileName);
             pm_strfree(inputFileName);
-            GetNthInputFileName(inputSourceP, inputSourceP->numInputFiles-1, 
+            GetNthInputFileName(inputSourceP, inputSourceP->numInputFiles-1,
                                 &inputFileName);
-            fprintf(fpointer, "LAST FILE:  %s/%s\n", 
+            fprintf(fpointer, "LAST FILE:  %s/%s\n",
                     currentPath, inputFileName);
             pm_strfree(inputFileName);
-        }    
+        }
         fprintf(fpointer, "OUTPUT:  %s\n", outputFileName);
 
         if (resizeFrame)
@@ -1341,15 +1341,15 @@ PrintStartStats(time_t               const startTime,
         fprintf(fpointer, "SLICES PER FRAME:  %d\n", slicesPerFrame);
         if (searchRangeP==searchRangeB)
             fprintf(fpointer, "RANGE:  +/-%d\n", searchRangeP/2);
-        else fprintf(fpointer, "RANGES:  +/-%d %d\n", 
+        else fprintf(fpointer, "RANGES:  +/-%d %d\n",
                      searchRangeP/2,searchRangeB/2);
-        fprintf(fpointer, "PIXEL SEARCH:  %s\n", 
+        fprintf(fpointer, "PIXEL SEARCH:  %s\n",
                 pixelFullSearch ? "FULL" : "HALF");
         fprintf(fpointer, "PSEARCH:  %s\n", PSearchName());
         fprintf(fpointer, "BSEARCH:  %s\n", BSearchName());
-        fprintf(fpointer, "QSCALE:  %d %d %d\n", qscaleI, 
+        fprintf(fpointer, "QSCALE:  %d %d %d\n", qscaleI,
                 GetPQScale(), GetBQScale());
-        if (specificsOn) 
+        if (specificsOn)
             fprintf(fpointer, "(Except as modified by Specifics file)\n");
         if ( referenceFrame == DECODED_FRAME ) {
             fprintf(fpointer, "REFERENCE FRAME:  DECODED\n");
@@ -1386,22 +1386,22 @@ NonLocalRefFrame(int const id) {
     boolean retval;
 
     int const lastIPid = FType_PastRef(id);
-    
+
     /* might be accessed by B-frame */
-    
+
     if (lastIPid+1 < realStart)
         retval = TRUE;
     else {
         unsigned int const nextIPid = FType_FutureRef(id);
-        
+
         /* if B-frame is out of range, then current frame can be
-           ref'd by it 
+           ref'd by it
         */
-        
+
         /* might be accessed by B-frame */
         if (nextIPid > realEnd+1)
             retval = TRUE;
-        
+
         /* might be accessed by P-frame */
         if ((nextIPid > realEnd) && (FType_Type(nextIPid) == 'p'))
             retval = TRUE;
@@ -1410,7 +1410,7 @@ NonLocalRefFrame(int const id) {
 }
 
 
- 
+
 /*===========================================================================*
  *
  * SetFrameRate
@@ -1508,9 +1508,9 @@ ComputeDHMSTime(someTime, timeText)
 
 
 void
-ComputeGOPFrames(int            const whichGOP, 
-                 unsigned int * const firstFrameP, 
-                 unsigned int * const lastFrameP, 
+ComputeGOPFrames(int            const whichGOP,
+                 unsigned int * const firstFrameP,
+                 unsigned int * const lastFrameP,
                  unsigned int   const numFrames) {
 /*----------------------------------------------------------------------------
    Figure out which frames are in GOP number 'whichGOP'.
@@ -1537,7 +1537,7 @@ ComputeGOPFrames(int            const whichGOP,
         if (gopNum == whichGOP) {
             foundGop = TRUE;
             firstFrame = frameNum;
-        }           
+        }
 
         /* go past one gop */
         /* must go past at least one frame */
@@ -1551,7 +1551,7 @@ ComputeGOPFrames(int            const whichGOP,
                 ++frameNum;
                 ++passedB;
             }
-        } while ((frameNum < numFrames) && 
+        } while ((frameNum < numFrames) &&
                  ((FType_Type(frameNum) != 'i') || (currGOP < gopSize)));
 
         currGOP -= gopSize;
@@ -1583,7 +1583,7 @@ doEndStats(FILE *       const fpointer,
 
     fprintf(fpointer, "TIME COMPLETED:  %s", ctime(&endTime));
     fprintf(fpointer, "%s\n\n", timeText);
-        
+
     ShowIFrameSummary(inputFrameBits, totalBits, fpointer);
     ShowPFrameSummary(inputFrameBits, totalBits, fpointer);
     ShowBFrameSummary(inputFrameBits, totalBits, fpointer);
@@ -1595,7 +1595,7 @@ doEndStats(FILE *       const fpointer,
     if (diffTime > 0) {
         fprintf(fpointer, "Total Frames Per Sec Elapsed:  %f (%ld mps)\n",
                 (float)framesOutput/(float)diffTime,
-                (long)((float)framesOutput * 
+                (long)((float)framesOutput *
                        (float)inputFrameBits /
                        (256.0*24.0*(float)diffTime)));
     } else {
@@ -1613,7 +1613,7 @@ doEndStats(FILE *       const fpointer,
             frameRateRounded, frameRateRounded*totalBits/framesOutput);
     fprintf(fpointer, "MPEG file created in :  %s\n", outputFileName);
     fprintf(fpointer, "\n\n");
-        
+
     if ( computeMVHist ) {
         ShowPMVHistogram(fpointer);
         ShowBBMVHistogram(fpointer);
@@ -1637,7 +1637,7 @@ doEndStats(FILE *       const fpointer,
 void
 PrintEndStats(time_t       const startTime,
               time_t       const endTime,
-              unsigned int const inputFrameBits, 
+              unsigned int const inputFrameBits,
               unsigned int const totalBits) {
 
     float   totalCPU;
@@ -1652,7 +1652,7 @@ PrintEndStats(time_t       const startTime,
         doEndStats(stdout, startTime, endTime, inputFrameBits,
                    totalBits, totalCPU);
     }
-    
+
     if (statFile) {
         doEndStats(statFile, startTime, endTime, inputFrameBits,
                    totalBits, totalCPU);
@@ -1664,7 +1664,7 @@ PrintEndStats(time_t       const startTime,
 
 
 void
-ReadDecodedRefFrame(MpegFrame *  const frameP, 
+ReadDecodedRefFrame(MpegFrame *  const frameP,
                     unsigned int const frameNumber) {
 
     FILE    *fpointer;
@@ -1689,7 +1689,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
         }}
 
     Frame_AllocDecoded(frameP, TRUE);
-    
+
     for ( y = 0; y < height; y++ ) {
         size_t bytesRead;
 
@@ -1697,7 +1697,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
         if (bytesRead != width)
             pm_error("Could not read enough bytes from '%s;", fileName);
     }
-    
+
     for (y = 0; y < (height >> 1); y++) {           /* U */
         size_t const bytesToRead = width/2;
         size_t bytesRead;
@@ -1706,7 +1706,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
         if (bytesRead != bytesToRead)
             pm_message("Could not read enough bytes from '%s'", fileName);
     }
-    
+
     for (y = 0; y < (height >> 1); y++) {           /* V */
         size_t const bytesToRead = width/2;
         size_t bytesRead;
@@ -1723,7 +1723,7 @@ static void
 OpenBitRateFile() {
     bitRateFile = fopen(bitRateFileName, "w");
     if ( bitRateFile == NULL ) {
-        pm_message("ERROR:  Could not open bit rate file:  '%s'", 
+        pm_message("ERROR:  Could not open bit rate file:  '%s'",
                    bitRateFileName);
         showBitRatePerFrame = FALSE;
     }
@@ -1735,3 +1735,6 @@ static void
 CloseBitRateFile() {
     fclose(bitRateFile);
 }
+
+
+

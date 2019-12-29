@@ -240,7 +240,7 @@ typedef float * pnm_transformMap;
 
        Each transform map is an array indexed by a PAM sample
        value, containing 'float' values.  So it must have 'maxval'
-       entries.  The sample -> samplen tranformation is just the
+       entries.  The sample -> samplen transformation is just the
        obvious table lookup.  The samplen -> sample transformation is
        more complicated -- if the samplen value is between map[N]
        and map[N+1], then the sample value is N.  And only transforms

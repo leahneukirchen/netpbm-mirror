@@ -389,7 +389,7 @@ pbm_writepbmrow_bitoffset(FILE *          const fileP,
     unsigned char * const window = &packedBits[offset/8];
         /* Area of packed row buffer from which we take the image data.
            Aligned to nearest byte boundary to the left, so the first
-           few bits might be irrelvant.
+           few bits might be irrelevant.
 
            Also our work buffer, in which we shift bits and from which we
            ultimately write the bits to the file.

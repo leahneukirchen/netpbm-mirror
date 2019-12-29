@@ -349,7 +349,7 @@ endif
 #   1) Each directory produces an object file merge.o containing all the code
 #      in that directory and its descendants that needs to go into the 'netpbm'
 #      program.  The make files do this recursively, via a link command that
-#      combines multiple relocateable object files into one.  All we do here
+#      combines multiple relocatable object files into one.  All we do here
 #      at the top level is make merge.o and link it with netpbm.o and the
 #      libraries.
 #

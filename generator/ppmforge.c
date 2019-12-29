@@ -49,7 +49,7 @@ static double const hugeVal = 1e50;
 #define Real(v, x, y)  v[1 + (((x) * meshsize) + (y)) * 2]
 #define Imag(v, x, y)  v[2 + (((x) * meshsize) + (y)) * 2]
 
-/* Co-ordinate indices within arrays. */
+/* Coordinate indices within arrays. */
 
 typedef struct {
     double x;
@@ -71,7 +71,7 @@ static int meshsize = 256;        /* FFT mesh size */
 static double inclangle, hourangle;   /* Star position relative to planet */
 static bool inclspec = FALSE;      /* No inclination specified yet */
 static bool hourspec = FALSE;      /* No hour specified yet */
-static double icelevel;           /* Ice cap theshold */
+static double icelevel;           /* Ice cap threshold */
 static double glaciers;           /* Glacier level */
 static int starfraction;          /* Star fraction */
 static int starcolor;            /* Star color saturation */

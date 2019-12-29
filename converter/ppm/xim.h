@@ -24,7 +24,7 @@ typedef struct ImageHeader {
     char file_version[8];   /* header version */
     char header_size[8];    /* Size of file header in bytes  */
     char image_width[8];    /* Width of the raster image */
-    char image_height[8];   /* Height of the raster imgage */
+    char image_height[8];   /* Height of the raster image */
     char num_colors[8];     /* Actual number of entries in c_map */
     char num_channels[3];   /* 0 or 1 = pixmap, 3 = RG&B buffers */
     char bytes_per_line[5]; /* bytes per scanline */
@@ -111,7 +111,7 @@ typedef struct XimAsciiHeader {
 
 /* Note:
 * - All data is in char's in order to maintain easily portability
-*   across machines, and some human readibility.
+*   across machines, and some human readability.
 * - Images may be stored as pixmaps (8 bits/pixel) or as separate
 *   red, green, blue channel data (24+ bits/pixel).
 * - An alpha channel is optional and is found after every num_channels

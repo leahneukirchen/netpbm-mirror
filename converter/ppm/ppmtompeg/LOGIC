@@ -45,7 +45,7 @@ is ready.
 
 When an encoder server finishes an assignment, it connects to the master
 server TCP listen port and tells the master it is done, and receives over
-the same connetion its next assignment.  If there is no more work to do,
+the same connection its next assignment.  If there is no more work to do,
 the master server instead tells the encoder server just to terminate.
 
 When the master server has told every encoder server to terminate, it

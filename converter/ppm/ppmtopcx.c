@@ -12,7 +12,7 @@
 **
 ** 11/Dec/94: first version
 ** 12/Dec/94: added handling of "packed" format (16 colors or less)
-** 
+**
 ** ZSoft PCX File Format Technical Reference Manual
 ** http://bespin.org/~qz/pc-gpe/pcx.txt
 ** http://web.archive.org/web/20100206055706/http://www.qzx.com/pc-gpe/pcx.txt
@@ -74,7 +74,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -94,15 +94,15 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "24bit",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "24bit",     OPT_FLAG,   NULL,
             &cmdlineP->truecolor,    0);
-    OPTENT3(0, "8bit",      OPT_FLAG,   NULL,    
+    OPTENT3(0, "8bit",      OPT_FLAG,   NULL,
             &cmdlineP->use_8_bit,    0);
-    OPTENT3(0, "planes",    OPT_UINT,   &cmdlineP->planes, 
+    OPTENT3(0, "planes",    OPT_UINT,   &cmdlineP->planes,
             &planesSpec,             0);
-    OPTENT3(0, "packed",    OPT_FLAG,   NULL,                  
+    OPTENT3(0, "packed",    OPT_FLAG,   NULL,
             &cmdlineP->packed,       0);
-    OPTENT3(0, "verbose",   OPT_FLAG,   NULL,                  
+    OPTENT3(0, "verbose",   OPT_FLAG,   NULL,
             &cmdlineP->verbose,      0);
     OPTENT3(0, "stdpalette", OPT_FLAG,  NULL,
             &cmdlineP->stdpalette,   0);
@@ -144,14 +144,14 @@ parseCommandLine(int argc, char ** argv,
         if (cmdlineP->use_8_bit)
             pm_error("-planes is meaningless with -8bit");
     }
-    
+
     if (paletteSpec && cmdlineP->stdpalette)
         pm_error("You can't specify both -palette and -stdpalette");
 
     if (!paletteSpec)
         cmdlineP->palette = NULL;
 
-    if (cmdlineP->use_8_bit && cmdlineP->truecolor) 
+    if (cmdlineP->use_8_bit && cmdlineP->truecolor)
         pm_error("You cannot specify both -8bit and -truecolor");
 
     if (argc-1 < 1)
@@ -172,11 +172,11 @@ parseCommandLine(int argc, char ** argv,
  * Write out a two-byte little-endian word to the PCX file
  */
 static void
-Putword(int    const w, 
+Putword(int    const w,
         FILE * const fp) {
 
     int rc;
-    
+
     rc = pm_writelittleshort(fp, w);
 
     if (rc != 0)
@@ -189,7 +189,7 @@ Putword(int    const w,
  * Write out a byte to the PCX file
  */
 static void
-Putbyte(int    const b, 
+Putbyte(int    const b,
         FILE * const fp) {
 
     int rc;
@@ -205,9 +205,9 @@ static const unsigned char bitmask[] = {1, 2, 4, 8, 16, 32, 64, 128};
 
 
 static void
-extractPlane(unsigned char * const rawrow, 
-             int             const cols, 
-             unsigned char * const buf, 
+extractPlane(unsigned char * const rawrow,
+             int             const cols,
+             unsigned char * const buf,
              int             const plane) {
 /*----------------------------------------------------------------------------
    From the image row 'rawrow', which is an array of 'cols' palette indices
@@ -223,7 +223,7 @@ extractPlane(unsigned char * const rawrow,
     int cbit;  /* Significance of bit representing current column in output */
     unsigned char *cp;  /* Ptr to next output byte to fill */
     unsigned char byteUnderConstruction;
-    
+
     cp = buf;  /* initial value */
 
     cbit = 7;
@@ -250,9 +250,9 @@ extractPlane(unsigned char * const rawrow,
 
 
 static void
-PackBits(unsigned char * const rawrow, 
-         int             const width, 
-         unsigned char * const buf, 
+PackBits(unsigned char * const rawrow,
+         int             const width,
+         unsigned char * const buf,
          int             const bits) {
 
     int x, i, shift;
@@ -273,13 +273,13 @@ PackBits(unsigned char * const rawrow,
 
 
 static void
-write_header(FILE *              const fp, 
-             int                 const cols, 
-             int                 const rows, 
-             int                 const BitsPerPixel, 
-             int                 const Planes, 
+write_header(FILE *              const fp,
+             int                 const cols,
+             int                 const rows,
+             int                 const BitsPerPixel,
+             int                 const Planes,
              struct pcxCmapEntry const cmap16[],
-             unsigned int        const xPos, 
+             unsigned int        const xPos,
              unsigned int        const yPos) {
 
     int i, BytesPerLine;
@@ -288,7 +288,7 @@ write_header(FILE *              const fp,
     Putbyte(0x05, fp);             /* PC Paintbrush version        */
     Putbyte(0x01, fp);             /* .PCX run length encoding     */
     Putbyte(BitsPerPixel, fp);     /* bits per pixel               */
-    
+
     Putword(xPos, fp);             /* x1   - image left            */
     Putword(yPos, fp);             /* y1   - image top             */
     Putword(xPos+cols-1, fp);      /* x2   - image right           */
@@ -330,8 +330,8 @@ write_header(FILE *              const fp,
 
 
 static void
-PCXEncode(FILE *                const fp, 
-          const unsigned char * const buf, 
+PCXEncode(FILE *                const fp,
+          const unsigned char * const buf,
           int                   const Size) {
 
     const unsigned char * const end = buf + Size;
@@ -377,10 +377,10 @@ indexOfColor(colorhash_table const cht,
 -----------------------------------------------------------------------------*/
 
     int const rc = ppm_lookupcolor(cht, &color);
-            
+
     if (rc < 0)
         pm_error("Image contains color which is not "
-                 "in the palette: %u/%u/%u", 
+                 "in the palette: %u/%u/%u",
                  PPM_GETR(color), PPM_GETG(color), PPM_GETB(color));
 
     return rc;
@@ -389,12 +389,12 @@ indexOfColor(colorhash_table const cht,
 
 
 static void
-ppmTo16ColorPcx(pixel **            const pixels, 
-                int                 const cols, 
-                int                 const rows, 
-                struct pcxCmapEntry const pcxcmap[], 
-                int                 const colors, 
-                colorhash_table     const cht, 
+ppmTo16ColorPcx(pixel **            const pixels,
+                int                 const cols,
+                int                 const rows,
+                struct pcxCmapEntry const pcxcmap[],
+                int                 const colors,
+                colorhash_table     const cht,
                 bool                const packbits,
                 unsigned int        const planesRequested,
                 unsigned int        const xPos,
@@ -429,7 +429,7 @@ ppmTo16ColorPcx(pixel **            const pixels,
     MALLOCARRAY_NOFAIL(indexRow, cols);
     MALLOCARRAY_NOFAIL(planesrow, BytesPerLine);
 
-    write_header(stdout, cols, rows, BitsPerPixel, Planes, pcxcmap, 
+    write_header(stdout, cols, rows, BitsPerPixel, Planes, pcxcmap,
                  xPos, yPos);
     for (row = 0; row < rows; ++row) {
         int col;
@@ -454,13 +454,13 @@ ppmTo16ColorPcx(pixel **            const pixels,
 
 
 static void
-ppmTo256ColorPcx(pixel **            const pixels, 
-                 int                 const cols, 
-                 int                 const rows, 
-                 struct pcxCmapEntry const pcxcmap[], 
-                 int                 const colors, 
+ppmTo256ColorPcx(pixel **            const pixels,
+                 int                 const cols,
+                 int                 const rows,
+                 struct pcxCmapEntry const pcxcmap[],
+                 int                 const colors,
                  colorhash_table     const cht,
-                 unsigned int        const xPos, 
+                 unsigned int        const xPos,
                  unsigned int        const yPos) {
 
     int row;
@@ -489,11 +489,11 @@ ppmTo256ColorPcx(pixel **            const pixels,
 
 
 static void
-ppmToTruecolorPcx(pixel **     const pixels, 
-                  int          const cols, 
-                  int          const rows, 
+ppmToTruecolorPcx(pixel **     const pixels,
+                  int          const cols,
+                  int          const rows,
                   pixval       const maxval,
-                  unsigned int const xPos, 
+                  unsigned int const xPos,
                   unsigned int const yPos) {
 
     unsigned char *redrow, *greenrow, *bluerow;
@@ -530,7 +530,7 @@ ppmToTruecolorPcx(pixel **     const pixels,
 
 
 
-static const struct pcxCmapEntry 
+static const struct pcxCmapEntry
 stdPalette[] = {
     {   0,   0,   0 },
     {   0,   0, 170 },
@@ -565,7 +565,7 @@ putPcxColorInHash(colorhash_table const cht,
     int rc;
 
     PPM_DEPTH(ppmColor, newPcxColor, PCX_MAXVAL, maxval);
-        
+
     rc = ppm_lookupcolor(cht, &ppmColor);
 
     if (rc == -1)
@@ -577,8 +577,8 @@ putPcxColorInHash(colorhash_table const cht,
            'maxval' is less than PCX_MAXVAL), and two distinct
            colors in the standard palette are indistinguishable at
            subject image color resolution.
-           
-           So we have to figure out wether color 'newPcxColor' or
+
+           So we have to figure out whether color 'newPcxColor' or
            'existingPcxColor' is a better match for 'ppmColor'.
         */
 
@@ -588,8 +588,8 @@ putPcxColorInHash(colorhash_table const cht,
         pixel existingPcxColor;
 
         PPM_DEPTH(idealPcxColor, ppmColor, maxval, PCX_MAXVAL);
-        
-        PPM_ASSIGN(existingPcxColor, 
+
+        PPM_ASSIGN(existingPcxColor,
                    stdPalette[existingColorIndex].r,
                    stdPalette[existingColorIndex].g,
                    stdPalette[existingColorIndex].b);
@@ -619,7 +619,7 @@ generateStandardPalette(struct pcxCmapEntry ** const pcxcmapP,
     colorhash_table cht;
 
     MALLOCARRAY_NOFAIL(pcxcmap, MAXCOLORS);
-    
+
     *pcxcmapP = pcxcmap;
 
     cht = ppm_alloccolorhash();
@@ -629,8 +629,8 @@ generateStandardPalette(struct pcxCmapEntry ** const pcxcmapP,
             /* The color of this colormap entry, in PCX resolution */
 
         pcxcmap[colorIndex] = stdPalette[colorIndex];
-        
-        PPM_ASSIGN(pcxColor, 
+
+        PPM_ASSIGN(pcxColor,
                    stdPalette[colorIndex].r,
                    stdPalette[colorIndex].g,
                    stdPalette[colorIndex].b);
@@ -651,27 +651,27 @@ generateStandardPalette(struct pcxCmapEntry ** const pcxcmapP,
     *chtP = cht;
     *colorsP = stdPaletteSize;
 }
-    
+
 
 
 static void
 readPpmPalette(const char *   const paletteFileName,
-               pixel       (* const ppmPaletteP)[], 
+               pixel       (* const ppmPaletteP)[],
                unsigned int * const paletteSizeP) {
 
     FILE * pfP;
     pixel ** pixels;
     int cols, rows;
     pixval maxval;
-    
+
     pfP = pm_openr(paletteFileName);
 
     pixels = ppm_readppm(pfP, &cols, &rows, &maxval);
 
     pm_close(pfP);
-    
+
     *paletteSizeP = rows * cols;
-    if (*paletteSizeP > MAXCOLORS) 
+    if (*paletteSizeP > MAXCOLORS)
         pm_error("ordered palette image contains %d pixels.  Maximum is %d",
                  *paletteSizeP, MAXCOLORS);
 
@@ -681,12 +681,12 @@ readPpmPalette(const char *   const paletteFileName,
         j = 0;  /* initial value */
         for (row = 0; row < rows; ++row) {
             int col;
-            for (col = 0; col < cols; ++col) 
+            for (col = 0; col < cols; ++col)
                 (*ppmPaletteP)[j++] = pixels[row][col];
         }
     }
     ppm_freearray(pixels, rows);
-}        
+}
 
 
 
@@ -706,7 +706,7 @@ readPaletteFromFile(struct pcxCmapEntry ** const pcxcmapP,
     readPpmPalette(paletteFileName, &ppmPalette, &paletteSize);
 
     MALLOCARRAY_NOFAIL(pcxcmap, MAXCOLORS);
-    
+
     *pcxcmapP = pcxcmap;
 
     cht = ppm_alloccolorhash();
@@ -716,8 +716,8 @@ readPaletteFromFile(struct pcxCmapEntry ** const pcxcmapP,
             /* The color of this colormap entry, in PCX resolution */
 
         pcxcmap[colorIndex] = pcxCmapEntryFromPixel(ppmPalette[colorIndex]);
-        
-        PPM_ASSIGN(pcxColor, 
+
+        PPM_ASSIGN(pcxColor,
                    ppmPalette[colorIndex].r,
                    ppmPalette[colorIndex].g,
                    ppmPalette[colorIndex].b);
@@ -728,7 +728,7 @@ readPaletteFromFile(struct pcxCmapEntry ** const pcxcmapP,
     *chtP = cht;
     *colorsP = paletteSize;
 }
-    
+
 
 
 static void
@@ -748,7 +748,7 @@ moveBlackToIndex0(colorhist_vector const chv,
     for (i = 0; i < colors; ++i)
         if (PPM_EQUAL(chv[i].color, blackPixel))
             blackPresent = TRUE;
-            
+
     if (blackPresent) {
         /* We use a trick here.  ppm_addtocolorhist() always adds to the
            beginning of the table and if the color is already elsewhere in
@@ -780,10 +780,10 @@ makePcxColormapFromImage(pixel **               const pixels,
    *pcxcmapP.
 
    Also return a lookup hash to relate a color in the image to the
-   appropriate index in *pcxcmapP.  Return that in newly malloc'ed 
+   appropriate index in *pcxcmapP.  Return that in newly malloc'ed
    storage as *chtP.
 
-   Iff there are too many colors to do that (i.e. more than 256), 
+   Iff there are too many colors to do that (i.e. more than 256),
    return *tooManyColorsP == TRUE.
 -----------------------------------------------------------------------------*/
     int colors;
@@ -801,7 +801,7 @@ makePcxColormapFromImage(pixel **               const pixels,
         *tooManyColorsP = FALSE;
 
         pm_message("%d colors found", colors);
-        
+
         moveBlackToIndex0(chv, colors);
 
         MALLOCARRAY_NOFAIL(pcxcmap, MAXCOLORS);
@@ -835,12 +835,12 @@ makePcxColormapFromImage(pixel **               const pixels,
 
 
 
-static void 
-ppmToPalettePcx(pixel **            const pixels, 
-                int                 const cols, 
+static void
+ppmToPalettePcx(pixel **            const pixels,
+                int                 const cols,
                 int                 const rows,
                 pixval              const maxval,
-                unsigned int        const xPos, 
+                unsigned int        const xPos,
                 unsigned int        const yPos,
                 struct pcxCmapEntry const pcxcmap[],
                 colorhash_table     const cht,
@@ -848,10 +848,10 @@ ppmToPalettePcx(pixel **            const pixels,
                 bool                const packbits,
                 unsigned int        const planes,
                 bool                const use_8_bit) {
-    
+
     /* convert image */
     if( colors <= 16 && !use_8_bit )
-        ppmTo16ColorPcx(pixels, cols, rows, pcxcmap, colors, cht, 
+        ppmTo16ColorPcx(pixels, cols, rows, pcxcmap, colors, cht,
                         packbits, planes, xPos, yPos);
     else
         ppmTo256ColorPcx(pixels, cols, rows, pcxcmap, colors, cht,
@@ -889,14 +889,14 @@ main(int argc, char *argv[]) {
             generateStandardPalette(&pcxcmap, maxval, &cht, &colors);
         } else if (cmdline.palette) {
             truecolor = FALSE;
-            readPaletteFromFile(&pcxcmap, cmdline.palette, maxval, 
+            readPaletteFromFile(&pcxcmap, cmdline.palette, maxval,
                                 &cht, &colors);
         } else {
             bool tooManyColors;
             makePcxColormapFromImage(pixels, cols, rows, maxval,
                                      &pcxcmap, &cht, &colors,
                                      &tooManyColors);
-            
+
             if (tooManyColors) {
                 pm_message("too many colors - writing a 24bit PCX file");
                 pm_message("if you want a non-24bit file, "
@@ -908,16 +908,19 @@ main(int argc, char *argv[]) {
     }
 
     if (truecolor)
-        ppmToTruecolorPcx(pixels, cols, rows, maxval, 
+        ppmToTruecolorPcx(pixels, cols, rows, maxval,
                           cmdline.xpos, cmdline.ypos);
     else {
-        ppmToPalettePcx(pixels, cols, rows, maxval, 
+        ppmToPalettePcx(pixels, cols, rows, maxval,
                         cmdline.xpos, cmdline.ypos,
-                        pcxcmap, cht, colors, cmdline.packed, 
+                        pcxcmap, cht, colors, cmdline.packed,
                         cmdline.planes, cmdline.use_8_bit);
-        
+
         ppm_freecolorhash(cht);
         free(pcxcmap);
     }
     return 0;
 }
+
+
+

@@ -36,7 +36,7 @@ static bit **data;          /* PBM image */
 static mdbyte *mdrow;           /* MDA row after decompression (MD3 only) */
 static int bInvert = 0;     /* Invert image? */
 static int bScale  = 0;     /* Scale image? */
-static int bAscii  = 0;     /* Ouput ASCII PBM? */
+static int bAscii  = 0;     /* Output ASCII PBM? */
 static int nInRows, nInCols;        /* Height, width of input (rows x bytes) */
 static int nOutCols, nOutRows;      /* Height, width of output (rows x bytes) */
 

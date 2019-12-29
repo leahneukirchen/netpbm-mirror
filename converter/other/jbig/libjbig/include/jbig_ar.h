@@ -14,7 +14,7 @@
 
 struct jbg_arenc_state {
   unsigned char st[4096];    /* probability status for contexts, MSB = MPS */
-  unsigned long c;                /* register C: base of coding intervall, *
+  unsigned long c;                /* register C: base of coding interval,  *
                                    * layout as in Table 23                 */
   unsigned long a;       /* register A: normalized size of coding interval */
   long sc;     /* number of buffered 0xff values that might still overflow */
@@ -30,7 +30,7 @@ struct jbg_arenc_state {
 
 struct jbg_ardec_state {
   unsigned char st[4096];    /* probability status for contexts, MSB = MPS */
-  unsigned long c;                /* register C: base of coding intervall, *
+  unsigned long c;                /* register C: base of coding interval,  *
                                    * layout as in Table 25                 */
   unsigned long a;       /* register A: normalized size of coding interval */
   unsigned char *pscd_ptr;               /* pointer to next PSCD data byte */

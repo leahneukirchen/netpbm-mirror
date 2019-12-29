@@ -1,6 +1,6 @@
 /*============================================================================*
  * rate.c								      *
- *									      * 
+ *									      *
  *	Procedures concerned with rate control                                *
  *									      *
  * EXPORTED PROCEDURES:							      *
@@ -75,7 +75,7 @@
 
 #define MAX_BIT_RATE 104857600		/* 18 digit number in units of 400 */
 #define MAX_BUFFER_SIZE 16760832        /* 10 digit number in units of 16k */
-#define DEFAULT_BUFFER_SIZE 327680      /* maximun for "constrained" bitstream */
+#define DEFAULT_BUFFER_SIZE 327680      /* maximum for "constrained" bitstream */
 #define DEFAULT_VBV_FULLNESS 3          /* wait till 1/3 full */
 #define DEFAULT_PICT_RATE_CODE 5        /* code for 30 Frames/sec */
 #define DEFAULT_PICT_RATE 30            /* 30 frames per second */
@@ -92,7 +92,7 @@ static bool wantVbvUnderflowWarning;
 static bool wantVbvOverflowWarning;
 
 /*   Variables for the VBV buffer defined in MPEG specs */
-static unsigned int VBV_remainingDelay; 
+static unsigned int VBV_remainingDelay;
     /* delay in units of 1/90000 seconds */
 static int32 VBV_buffer = 0;	  /* fullness of the theoretical VBV buffer */
 static int32 bufferFillRate = 0;    /* constant rate at which buffer filled */
@@ -104,7 +104,7 @@ static int Xi, Xp, Xb;  /*  Global complexity measure  */
 static int Si, Sp, Sb;  /*  Total # bits for last pict of type (Overhead?) */
 
 static float Qi, Qp, Qb; /* avg quantizaton for last picture of type  */
-     
+
 /*  Target bit allocations for each type of picture*/
 int Ti, Tp, Tb;
 
@@ -175,22 +175,22 @@ static int Qscale;	       /* Clipped, truncated quantization value */
 static FILE *RC_FILE;
 #endif
 
-static const char * const Frame_header1 = 
+static const char * const Frame_header1 =
 "  Fm         #     Bit      GOP                    V                ";
-static const char * const Frame_header2 = 
+static const char * const Frame_header2 =
 "   #  type   MBs   Alloc    left  Ni Np Nb  N_act  buff   Q_rc Qscale";
-static const char * const Frame_header3 = 
+static const char * const Frame_header3 =
 "----     -  ----  ------ -------  -- -- --  -----  ------ ----   ----";
-static const char * const Frame_trailer1 = 
+static const char * const Frame_trailer1 =
 "                      avg          virt     %    GOP      %     VBV";
-static const char * const Frame_trailer2 = 
+static const char * const Frame_trailer2 =
 "    Sx    Qx      Xx  act N_act  buffer alloc    left  left     buf  delay";
-static const char * const Frame_trailer3 = 
+static const char * const Frame_trailer3 =
 "------ --.-- -------  --- --.-- -------   --- -------   --- ------- ------";
 
-static const char * const MB_header1 = 
+static const char * const MB_header1 =
 "MB#  #bits  Q mqt     Dj  Q_j   actj  N_act  totbits b/MB %alloc %done";
-static const char * const MB_header2 = 
+static const char * const MB_header2 =
 "---  ----- -- --- ------  ---  -----  --.--   ------ ----    ---   ---";
 
 static char rc_buffer[101];
@@ -211,8 +211,8 @@ void checkSpatialActivity (Block blk0, Block blk1, Block blk2, Block blk3);
 void incNumBlocks (int num);
 void calculateVBVDelay (int num);
 int BlockExperiments  (int16 *OrigBlock, int16 *NewBlock, int control);
-     
-     
+
+
 
 static void
 analyzePattern(const char *  const framePattern,
@@ -226,10 +226,10 @@ analyzePattern(const char *  const framePattern,
     unsigned int i;
 
     /*  Initialize Pattern info */
-    *gop_xP = framePatternLen;    
+    *gop_xP = framePatternLen;
 
     for (i = 0, *gop_iP = 0, *gop_pP = 0, *gop_bP = 0, *errorP = NULL;
-         i < framePatternLen && !*errorP; 
+         i < framePatternLen && !*errorP;
          ++i) {
         switch(framePattern[i]) {
         case 'i': ++*gop_iP; break;
@@ -241,7 +241,7 @@ analyzePattern(const char *  const framePattern,
     }
     assert(*gop_xP == *gop_iP + *gop_pP + *gop_bP);
 }
-  
+
 
 
 /*===========================================================================*
@@ -252,7 +252,7 @@ analyzePattern(const char *  const framePattern,
  *
  * RETURNS:	nothing
  *
- * SIDE EFFECTS:   many global variables 
+ * SIDE EFFECTS:   many global variables
  *
  * NOTES:  Get rid of the redundant pattern stuff!!
  *===========================================================================*/
@@ -266,7 +266,7 @@ initRateControl(bool const wantUnderflowWarning,
     wantVbvOverflowWarning  = wantOverflowWarning;
 
     DBG_PRINT(("Initializing Allocation Data\n"));
-  
+
 #ifdef RC_STATS_FILE
     RC_FILE = fopen("RC_STATS_FILE", "w");
     if ( RC_FILE  == NULL) {
@@ -278,7 +278,7 @@ initRateControl(bool const wantUnderflowWarning,
 #endif
 
     VBV_remainingDelay = 0;
-  
+
     analyzePattern(framePattern, framePatternLen,
                    &GOP_X, &GOP_I, &GOP_P, &GOP_B, &error);
 
@@ -291,46 +291,46 @@ initRateControl(bool const wantUnderflowWarning,
     }
 
 
-    /* Initializing GOP bit allocation */	
+    /* Initializing GOP bit allocation */
     rc_R = 0;
     rc_G = (bit_rate * GOP_X/frameRateRounded);
-  
+
     /*   Initialize the "global complexity measures" */
     Xi = (160 * bit_rate/115);
     Xp = (60 * bit_rate/115);
     Xb = (42 * bit_rate/115);
-  
+
     /*   Initialize MB counters */
     rc_totalMBBits= rc_bitsThisMB= rc_totalFrameBits=rc_totalOverheadBits = 0;
     rc_numBlocks = rc_totalQuant = 0;
-  
+
     /*   init virtual buffers  */
     reactionParameter = (2 * bit_rate / frameRateRounded);
     d0_i = (10 * reactionParameter / 31);
     d0_p = (Kp * d0_i);
     d0_b = (Kb * d0_i);
-  
+
     lastFrameVirtBuf = d0_i;	/*  start with I Frame */
     rc_Q = lastFrameVirtBuf  * 31 / reactionParameter;
-  
+
     /*   init spatial activity measures */
     avg_act = 400;		/* Suggested initial value */
     N_act = 1;
-  
+
     mquant = rc_Q * N_act;
-  
+
     frameDelayIncrement = (90000 / frameRateRounded);
         /* num of "delay" units per frame */
-    bufferFillRate = bit_rate / frameRateRounded; 
+    bufferFillRate = bit_rate / frameRateRounded;
         /* VBV buf fills at constant rate */
     VBV_buffer = buffer_size;
     DBG_PRINT(("VBV- delay: %d, fill rate: %d, delay/Frame: %d units, "
                "buffer size: %d\n",
-               VBV_remainginDelay, bufferFillRate, frameDelayIncrement, 
+               VBV_remainginDelay, bufferFillRate, frameDelayIncrement,
                buffer_size));
-  
+
     result = initGOPRateControl();
-  
+
     return result;
 }
 
@@ -343,21 +343,21 @@ initRateControl(bool const wantUnderflowWarning,
  *
  * RETURNS:	nothing
  *
- * SIDE EFFECTS:   many global variables 
+ * SIDE EFFECTS:   many global variables
  *
  *===========================================================================*/
 int
 initGOPRateControl()
 {
     DBG_PRINT(("Initializing new GOP\n"));
-  
+
     Nx = GOP_X;
     Ni = GOP_I;
     Np = GOP_P;
     Nb = GOP_B;
-  
+
     rc_R += rc_G;
-  
+
     DBG_PRINT(("bufsize: %d, bitrate: %d, pictrate: %d, GOP bits: %d\n",
                buffer_size, bit_rate, frameRateRounded, rc_R));
     DBG_PRINT(("Xi: %d, Xp: %d, Xb: %d Nx: %d, Ni: %d, Np: %d, Nb: %d\n",
@@ -389,20 +389,20 @@ targetRateControl(MpegFrame * const frame) {
     float tempX, tempY, tempZ;
     int result;
     int frameType;
-  
+
     minimumBits = (bit_rate / (8 * frameRateRounded));
-  
+
     /*   Check if new GOP */
     if (Nx == 0) {
         initGOPRateControl();
     }
-  
+
     if (MB_cnt < 0) {MB_cnt = determineMBCount();}
-  
+
     switch (frame->type) {
     case TYPE_IFRAME:
         frameType = 'I';
-    
+
         tempX = ( (Np * Ki * Xp) / (Xi * Kp) );
         tempY = ( (Nb * Ki * Xb) / (Xi*Kb) );
         tempZ = Ni + tempX + tempY;
@@ -411,7 +411,7 @@ targetRateControl(MpegFrame * const frame) {
         current_Tx = Ti = result;
         lastFrameVirtBuf = d0_i;
         break;
-    
+
     case TYPE_PFRAME:
         frameType = 'P';
         tempX =  ( (Ni * Kp * Xi) / (Ki * Xp) );
@@ -422,7 +422,7 @@ targetRateControl(MpegFrame * const frame) {
         current_Tx = Tp = result;
         lastFrameVirtBuf = d0_p;
         break;
-    
+
     case TYPE_BFRAME:
         frameType = 'B';
         tempX =  ( (Ni * Kb * Xi) / (Ki * Xb) );
@@ -433,17 +433,17 @@ targetRateControl(MpegFrame * const frame) {
         current_Tx = Tb = result;
         lastFrameVirtBuf = d0_b;
         break;
-    
+
     default:
         frameType = 'X';
     }
-  
+
     N_act = 1;
     rc_Q = lastFrameVirtBuf  * 31 / reactionParameter;
     mquant = rc_Q * N_act;
     Qscale = (mquant > 31 ? 31 : mquant);
     Qscale = (Qscale < 1 ? 1 : Qscale);
-  
+
 #ifdef HEINOUS_DEBUG_MODE
     {
         const char * strPtr;
@@ -459,15 +459,15 @@ targetRateControl(MpegFrame * const frame) {
     /*   Print Frame info */
     sprintf(rc_buffer, "%4d     %1c  %4d  %6d %7d  "
             "%2d %2d %2d   %2.2f  %6d %4d    %3d",
-            frame->id,frameType,MB_cnt,current_Tx,rc_R,Ni,Np,Nb, 
+            frame->id,frameType,MB_cnt,current_Tx,rc_R,Ni,Np,Nb,
             N_act, lastFrameVirtBuf, rc_Q, Qscale);
-  
+
 #ifdef RC_STATS_FILE
     fprintf(RC_FILE,"%s\n", rc_buffer);
     fflush(RC_FILE);
 #endif
     DBG_PRINT(("%s\n",rc_buffer));
-  
+
     /*  Print headers for Macroblock info */
     if (RC_MB_SAMPLE_RATE) {
 #ifdef HEINOUS_DEBUG_MODE
@@ -483,7 +483,7 @@ targetRateControl(MpegFrame * const frame) {
 
 
 
-static void 
+static void
 updateVBVBuffer(int const frameBits) {
 /*----------------------------------------------------------------------------
   Update the VBV buffer after each frame.  This theoretical buffer is
@@ -532,11 +532,11 @@ updateRateControl(int const type) {
     pctAllocUsed = (totalBits *100 / current_Tx);
     rc_R -= totalBits;
     pctGOPUsed = (rc_R *100/ rc_G);
-  
+
     avg_act = (total_act_j / MB_cnt);
-  
+
     updateVBVBuffer(totalBits);
-  
+
     switch (type) {
     case TYPE_IFRAME:
         Ti = current_Tx;
@@ -563,9 +563,9 @@ updateRateControl(int const type) {
         Xb = frameComplexity;
         break;
     }
-  
+
 #ifdef HEINOUS_DEBUG_MODE
-    {  
+    {
         /*  Print Frame info */
         const char * strPtr;
         strPtr = Frame_trailer1;
@@ -575,26 +575,26 @@ updateRateControl(int const type) {
         strPtr = Frame_trailer3;
         DBG_PRINT(("%s\n",strPtr));
     }
-#endif  
+#endif
     sprintf(rc_buffer, "%6d  %2.2f  %6d  %3d  %2.2f %7d   "
             "%3d %7d   %3d  %6d %6d",
-            totalBits, avgQuant, frameComplexity, avg_act, N_act, 
-            currentVirtBuf, pctAllocUsed, rc_R, pctGOPUsed, 
+            totalBits, avgQuant, frameComplexity, avg_act, N_act,
+            currentVirtBuf, pctAllocUsed, rc_R, pctGOPUsed,
             VBV_buffer, VBV_remainingDelay);
 #ifdef RC_STATS_FILE
     fprintf(RC_FILE,"%s\n", rc_buffer);
     fflush(RC_FILE);
 #endif
     DBG_PRINT(("%s\n",rc_buffer));
-  
+
     Nx--;
     rc_totalMBBits= rc_bitsThisMB= rc_totalFrameBits=rc_totalOverheadBits = 0;
     rc_numBlocks = rc_totalQuant = total_act_j = currentVirtBuf = 0;
-  
+
     DBG_PRINT(("GOP now has %d bits remaining (%3d%%) for %d frames .. , "
-               "Ni= %d, Np= %d, Nb= %d\n", 
+               "Ni= %d, Np= %d, Nb= %d\n",
                rc_R, (rc_R*100/rc_G), (Ni+Np+Nb), Ni, Np, Nb));
-  
+
 }
 
 
@@ -622,21 +622,21 @@ int type;
   int pctUsed, pctDone;
   int bitsThisMB;
   int bitsPerMB;
-  
+
   bitsThisMB = rc_bitsThisMB;
   totalBits = rc_totalFrameBits;
-  bitsPerMB = (totalBits / rc_numBlocks); 
-  pctDone = (rc_numBlocks * 100/ MB_cnt); 
+  bitsPerMB = (totalBits / rc_numBlocks);
+  pctDone = (rc_numBlocks * 100/ MB_cnt);
   pctUsed = (totalBits *100/current_Tx);
-  
+
   sprintf(rc_buffer, "%3d  %5d %2d %3d %6d  %3d %6d   %2.2f   %6d %4d    %3d   %3d\n",
-	  (rc_numBlocks - 1), bitsThisMB, Qscale, mquant, currentVirtBuf, 
+	  (rc_numBlocks - 1), bitsThisMB, Qscale, mquant, currentVirtBuf,
 	  rc_Q, act_j, N_act, totalBits, bitsPerMB, pctUsed, pctDone);
 #ifdef RC_STATS_FILE
   fprintf(RC_FILE, "%s", rc_buffer);
   fflush(RC_FILE);
 #endif
-  
+
   if ( (RC_MB_SAMPLE_RATE) && ((rc_numBlocks -1) % RC_MB_SAMPLE_RATE)) {
     DBG_PRINT(("%s\n", rc_buffer));
   } else {
@@ -695,7 +695,7 @@ void incMacroBlockBits(num)
  *
  * RETURNS:     new Qscale
  *
- * SIDE EFFECTS:   
+ * SIDE EFFECTS:
  *
  *===========================================================================*/
 int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
@@ -705,19 +705,19 @@ int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
      Block blk2;
      Block blk3;
 {
-  
+
   /*   One more MacroBlock seen */
   rc_numBlocks++;		/* this notes each block num in MB */
-  
+
   checkBufferFullness(oldQScale);
-  
+
   checkSpatialActivity(blk0, blk1, blk2, blk3);
-  
+
   mquant = rc_Q * N_act;
   Qscale = (mquant > 31 ? 31 : mquant);
   Qscale = (Qscale < 1 ? 1 : Qscale);
   rc_totalQuant += Qscale;
-  
+
   if (oldQScale == Qscale)
     return -1;
   else
@@ -727,7 +727,7 @@ int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
 
 /*===========================================================================*
  *
- * determineMBCount() 
+ * determineMBCount()
  *
  *      Determines number of Macro Blocks in frame from the frame sizes
  *	passed.
@@ -741,7 +741,7 @@ int
   determineMBCount ()
 {
   int y,x;
-  
+
   x = (Fsize_x +15)/16;
   y = (Fsize_y +15)/16;
   return  (x * y);
@@ -769,11 +769,11 @@ void checkBufferFullness (oldQScale)
      int oldQScale;
 {
   int temp;
-  
+
   temp = lastFrameVirtBuf + rc_totalFrameBits;
   temp -=  (current_Tx * rc_numBlocks / MB_cnt);
   currentVirtBuf = temp;
-  
+
   rc_Q = (currentVirtBuf * 31 / reactionParameter);
   return;
 }
@@ -783,8 +783,8 @@ void checkBufferFullness (oldQScale)
  *
  * void checkSpatialActivity()
  *
- *      Calcualtes the spatial activity for the four luminance blocks of the
- *	macroblock.  Along with the normalized reference quantization parameter 
+ *      Calculates the spatial activity for the four luminance blocks of the
+ *	macroblock.  Along with the normalized reference quantization parameter
  *  (rc_Q) , it determines the quantization factor for the next macroblock.
  *
  * RETURNS:     nothing
@@ -801,19 +801,19 @@ void checkSpatialActivity(blk0, blk1, blk2, blk3)
      Block blk3;
 {
   int temp;
-  int16 *blkArray[4]; 
+  int16 *blkArray[4];
   int16 *curBlock;
   int16 *blk_ptr;
   int var[4];
   int i, j;
-  
-  
+
+
   blkArray[0] = (int16 *) blk0;
   blkArray[1] = (int16 *) blk1;
   blkArray[2] = (int16 *) blk2;
   blkArray[3] = (int16 *) blk3;
-  
-  
+
+
   for (i =0; i < 4; i++) {	/* Compute the activity in each block */
     curBlock = blkArray[i];
     blk_ptr = curBlock;
@@ -821,14 +821,14 @@ void checkSpatialActivity(blk0, blk1, blk2, blk3)
     /*  Find the mean pixel value */
     for (j=0; j < DCTSIZE_SQ; j ++) {
       P_mean += *(blk_ptr++);
-      /*			P_mean += curBlock[j]; 
+      /*			P_mean += curBlock[j];
 				if (curBlock[j] != *(blk_ptr++)) {
 				printf("ARRAY ERROR: block %d\n", j);
 				}
 				*/
     }
     P_mean /= DCTSIZE_SQ;
-    
+
     /*  Now find the variance  */
     curBlock = blkArray[i];
     blk_ptr = curBlock;
@@ -839,25 +839,25 @@ void checkSpatialActivity(blk0, blk1, blk2, blk3)
 	printf("ARRAY ERROR: block %d\n", j);
       }
       temp = curBlock[j] - P_mean;
-#endif      
+#endif
       temp = *(blk_ptr++) - P_mean;
       var[i] += (temp * temp);
     }
     var[i] /= DCTSIZE_SQ;
   }
-  
+
   /*  Choose the minimum variance from the 4 blocks and use as the activity */
   var_sblk  = var[0];
   for (i=1; i < 4; i++) {
     var_sblk = (var_sblk < var[i] ? var_sblk : var[i]);
   }
-  
-  
+
+
   act_j = 1 + var_sblk;
   total_act_j += act_j;
   temp = (2 * act_j + avg_act);
   N_act = ( (float) temp / (float) (act_j + 2*avg_act) );
-  
+
   return;
 }
 
@@ -900,7 +900,7 @@ int getRateMode()
 void setBitRate (const char * const charPtr)
 {
   int rate, rnd;
-  
+
   rate = atoi(charPtr);
   if (rate > 0) {
     RateControlMode = FIXED_RATE;
@@ -915,7 +915,7 @@ void setBitRate (const char * const charPtr)
   rate = (rate > MAX_BIT_RATE ? MAX_BIT_RATE : rate);
   bit_rate = rate;
   DBG_PRINT(("Bit rate is: %d\n", bit_rate));
-} 
+}
 
 
 
@@ -957,7 +957,7 @@ int getBitRate ()
 void setBufferSize (const char * const charPtr)
 {
   int size;
-  
+
   size = atoi(charPtr);
   size = (size > MAX_BUFFER_SIZE ? MAX_BUFFER_SIZE : size);
   if (size > 0) {

@@ -18,7 +18,7 @@
 
 /*
 
-  Implemention notes
+  Implementation notes
 
   Header size is 512 bytes.  There is no MacBinary header.
 

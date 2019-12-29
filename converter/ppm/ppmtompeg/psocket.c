@@ -10,15 +10,15 @@
 ============================================================================*/
 
 #define _XOPEN_SOURCE 500 /* Make sure stdio.h contains pclose() */
-/* _ALL_SOURCE is needed on AIX to make the C library include the 
-   socket services (e.g. define struct sockaddr) 
+/* _ALL_SOURCE is needed on AIX to make the C library include the
+   socket services (e.g. define struct sockaddr)
 
    Note that AIX standards.h actually sets feature declaration macros such
    as _XOPEN_SOURCE, unless they are already set.
 */
 #define _ALL_SOURCE
 #define __EXTENSIONS__
-  /* __EXTENSIONS__ is for a broken Sun C library (uname SunOS kosh 5.8 
+  /* __EXTENSIONS__ is for a broken Sun C library (uname SunOS kosh 5.8
      generic_108528-16 sun4u sparc).  When you define _XOPEN_SOURCE,
      it's vnode.h and resource.h fail to define some data types that they
      need (e.g. timestruct_t).  But with __EXTENSIONS__, they declare the
@@ -126,8 +126,8 @@ unmarshallInt(unsigned char const buffer[],
 
 
 static void
-safeRead(int             const fd, 
-         unsigned char * const buf, 
+safeRead(int             const fd,
+         unsigned char * const buf,
          unsigned int    const nbyte) {
 /*----------------------------------------------------------------------------
     Safely read from file 'fd'.  Keep reading until we get
@@ -144,7 +144,7 @@ safeRead(int             const fd,
             errorExit("read (of %u bytes (total %u) ) returned "
                       "errno %d (%s)",
                       nbyte-numRead, nbyte, errno, strerror(errno));
-        else 
+        else
             numRead += result;
     }
 }
@@ -203,8 +203,8 @@ marshallInt(int              const value,
 
 
 static void
-safeWrite(int             const fd, 
-          unsigned char * const buf, 
+safeWrite(int             const fd,
+          unsigned char * const buf,
           unsigned int    const nbyte) {
 /*----------------------------------------------------------------------------
   Safely write to file 'fd'.  Keep writing until we write 'nbyte'
@@ -217,7 +217,7 @@ safeWrite(int             const fd,
     while (numWritten < nbyte) {
         int const result = write(fd, &buf[numWritten], nbyte-numWritten);
 
-        if (result == -1) 
+        if (result == -1)
             errorExit("write (of %u bytes (total %u) ) returned "
                       "errno %d (%s)",
                       nbyte-numWritten, nbyte, errno, strerror(errno));
@@ -251,8 +251,8 @@ WriteInt(int const socketFd,
 
 
 void
-ConnectToSocket(const char *      const machineName, 
-                int               const portNum, 
+ConnectToSocket(const char *      const machineName,
+                int               const portNum,
                 struct hostent ** const hostEnt,
                 int *             const socketFdP,
                 const char **     const errorP) {
@@ -266,7 +266,7 @@ ConnectToSocket(const char *      const machineName,
    **hostEnt.
 -----------------------------------------------------------------------------*/
     int rc;
-    
+
     *errorP = NULL;  /* initial value */
 
     if ((*hostEnt) == NULL) {
@@ -277,15 +277,15 @@ ConnectToSocket(const char *      const machineName,
     if (!*errorP) {
         rc = socket(AF_INET, SOCK_STREAM, 0);
         if (rc < 0)
-            pm_asprintf(errorP, "socket() failed with errno %d (%s)", 
+            pm_asprintf(errorP, "socket() failed with errno %d (%s)",
                         errno, strerror(errno));
         else {
             int const socketFd = rc;
-            
+
             int rc;
             unsigned short tempShort;
             struct sockaddr_in  nameEntry;
-            
+
             nameEntry.sin_family = AF_INET;
             memset((void *) nameEntry.sin_zero, 0, 8);
             memcpy((void *) &(nameEntry.sin_addr.s_addr),
@@ -293,12 +293,12 @@ ConnectToSocket(const char *      const machineName,
                    (size_t) (*hostEnt)->h_length);
             tempShort = portNum;
             nameEntry.sin_port = htons(tempShort);
-            
+
             rc = connect(socketFd, (struct sockaddr *) &nameEntry,
                          sizeof(struct sockaddr));
-            
+
             if (rc != 0)
-                pm_asprintf(errorP, 
+                pm_asprintf(errorP,
                             "connect() to host '%s', port %d failed with "
                             "errno %d (%s)",
                             machineName, portNum, errno, strerror(errno));
@@ -317,7 +317,7 @@ ConnectToSocket(const char *      const machineName,
 static bool
 portInUseErrno(int const testErrno) {
 /*----------------------------------------------------------------------------
-   Return TRUE iff 'testErrno' is what a bind() would return if one requestd
+   Return TRUE iff 'testErrno' is what a bind() would return if one requested
    a port number that is unavailable (but other port numbers might be).
 -----------------------------------------------------------------------------*/
     bool retval;
@@ -340,19 +340,19 @@ static void
 bindToUnusedPort(int              const socketFd,
                  unsigned short * const portNumP,
                  const char **    const errorP) {
-    
+
     bool foundPort;
     unsigned short trialPortNum;
 
     *errorP = NULL;  /* initial value */
 
-    for (foundPort = FALSE, trialPortNum = 2048; 
-         !foundPort && trialPortNum < 16384 && !*errorP; 
+    for (foundPort = FALSE, trialPortNum = 2048;
+         !foundPort && trialPortNum < 16384 && !*errorP;
          ++trialPortNum) {
-        
+
         struct sockaddr_in nameEntry;
         int rc;
-        
+
         memset((char *) &nameEntry, 0, sizeof(nameEntry));
         nameEntry.sin_family = AF_INET;
         nameEntry.sin_port   = htons(trialPortNum);
@@ -365,10 +365,10 @@ bindToUnusedPort(int              const socketFd,
             *portNumP = trialPortNum;
         } else if (!portInUseErrno(errno))
             pm_asprintf(errorP, "bind() of TCP port number %hu failed "
-                        "with errno %d (%s)", 
+                        "with errno %d (%s)",
                         trialPortNum, errno, strerror(errno));
     }
-    
+
     if (!*errorP && !foundPort)
         pm_asprintf(errorP, "Unable to find a free port.  Every TCP port "
                     "in the range 2048-16383 is in use");
@@ -389,7 +389,7 @@ CreateListeningSocket(int *         const socketP,
    partner can connect).
 -----------------------------------------------------------------------------*/
     int rc;
-    
+
     rc = socket(AF_INET, SOCK_STREAM, 0);
     if (rc < 0)
         pm_asprintf(errorP,
@@ -415,7 +415,7 @@ CreateListeningSocket(int *         const socketP,
             rc = listen(socketFd, SOMAXCONN);
             if (rc != 0)
                 pm_asprintf(errorP, "Unable to listen on TCP socket.  "
-                            "listen() fails with errno %d (%s)", 
+                            "listen() fails with errno %d (%s)",
                             errno, strerror(errno));
         }
         if (*errorP)
@@ -433,11 +433,11 @@ AcceptConnection(int           const listenSocketFd,
     struct sockaddr otherSocket;
     socklenx_t      otherSize;
         /* This is an ugly dual-meaning variable.  As input to accept(),
-           it is the storage size of 'otherSocket'.  As output, it is the 
+           it is the storage size of 'otherSocket'.  As output, it is the
            data length of 'otherSocket'.
         */
     int             rc;
-    
+
     otherSize = sizeof(otherSocket);
 
     rc = accept(listenSocketFd, &otherSocket, &otherSize);
@@ -450,3 +450,6 @@ AcceptConnection(int           const listenSocketFd,
         *errorP = NULL;
     }
 }
+
+
+

@@ -149,7 +149,7 @@ readFooter(FILE *             const ifP,
        109  10 Calibration factor
        119  73 Reserved
 
-       Note tha the footer is the same length as a raster row.
+       Note that the footer is the same length as a raster row.
     */
 
     bytesReadCt = fread(buffer, 1, sizeof(buffer), ifP);

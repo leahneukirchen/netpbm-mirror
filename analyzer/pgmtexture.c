@@ -1,49 +1,5 @@
-/* pgmtexture.c - calculate textural features of a PGM image
+``/* pgmtexture.c - calculate textural features of a PGM image
 **
-** Author: James Darrell McCauley
-**         Texas Agricultural Experiment Station
-**         Department of Agricultural Engineering
-**         Texas A&M University
-**         College Station, Texas 77843-2117 USA
-**
-** Code written partially taken from pgmtofs.c in the PBMPLUS package
-** by Jef Poskanzer.
-**
-** Algorithms for calculating features (and some explanatory comments) are
-** taken from:
-**
-**   Haralick, R.M., K. Shanmugam, and I. Dinstein. 1973. Textural features
-**   for image classification.  IEEE Transactions on Systems, Man, and
-**   Cybertinetics, SMC-3(6):610-621.
-**
-** Copyright (C) 1991 Texas Agricultural Experiment Station, employer for
-** hire of James Darrell McCauley
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-**
-** THE TEXAS AGRICULTURAL EXPERIMENT STATION (TAES) AND THE TEXAS A&M
-** UNIVERSITY SYSTEM (TAMUS) MAKE NO EXPRESS OR IMPLIED WARRANTIES
-** (INCLUDING BY WAY OF EXAMPLE, MERCHANTABILITY) WITH RESPECT TO ANY
-** ITEM, AND SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL
-** OR CONSEQUENTAL DAMAGES ARISING OUT OF THE POSESSION OR USE OF
-** ANY SUCH ITEM. LICENSEE AND/OR USER AGREES TO INDEMNIFY AND HOLD
-** TAES AND TAMUS HARMLESS FROM ANY CLAIMS ARISING OUT OF THE USE OR
-** POSSESSION OF SUCH ITEMS.
-**
-** Modification History:
-** 24 Jun 91 - J. Michael Carstensen <jmc@imsor.dth.dk> supplied fix for
-**             correlation function.
-**
-** 05 Oct 05 - Marc Breithecker <Marc.Breithecker@informatik.uni-erlangen.de>
-**             Fix calculation or normalizing constants for d > 1.
-** 9 Jul 11  - Francois P. S. Luus <fpsluus@gmail.com> supplied fix for sum
-**             variance calculation (use F6:savg instead of F8:sentropy in
-**             F7:svar equation).
 
 
 */
@@ -1172,3 +1128,51 @@ main (int argc, const char ** argv) {
 
     return 0;
 }
+
+
+/*
+** Author: James Darrell McCauley
+**         Texas Agricultural Experiment Station
+**         Department of Agricultural Engineering
+**         Texas A&M University
+**         College Station, Texas 77843-2117 USA
+**
+** Code written partially taken from pgmtofs.c in the PBMPLUS package
+** by Jef Poskanzer.
+**
+** Algorithms for calculating features (and some explanatory comments) are
+** taken from:
+**
+**   Haralick, R.M., K. Shanmugam, and I. Dinstein. 1973. Textural features
+**   for image classification.  IEEE Transactions on Systems, Man, and
+**   Cybertinetics, SMC-3(6):610-621.
+**
+** Copyright (C) 1991 Texas Agricultural Experiment Station, employer for
+** hire of James Darrell McCauley
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+**
+** THE TEXAS AGRICULTURAL EXPERIMENT STATION (TAES) AND THE TEXAS A&M
+** UNIVERSITY SYSTEM (TAMUS) MAKE NO EXPRESS OR IMPLIED WARRANTIES
+** (INCLUDING BY WAY OF EXAMPLE, MERCHANTABILITY) WITH RESPECT TO ANY
+** ITEM, AND SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL
+** OR CONSEQUENTAL DAMAGES ARISING OUT OF THE POSSESSION OR USE OF
+** ANY SUCH ITEM. LICENSEE AND/OR USER AGREES TO INDEMNIFY AND HOLD
+** TAES AND TAMUS HARMLESS FROM ANY CLAIMS ARISING OUT OF THE USE OR
+** POSSESSION OF SUCH ITEMS.
+**
+** Modification History:
+** 24 Jun 91 - J. Michael Carstensen <jmc@imsor.dth.dk> supplied fix for
+**             correlation function.
+**
+** 05 Oct 05 - Marc Breithecker <Marc.Breithecker@informatik.uni-erlangen.de>
+**             Fix calculation or normalizing constants for d > 1.
+** 9 Jul 11  - Francois P. S. Luus <fpsluus@gmail.com> supplied fix for sum
+**             variance calculation (use F6:savg instead of F8:sentropy in
+**             F7:svar equation).
+*/

@@ -8,14 +8,14 @@
  *
  *  Author -
  *	Michael John Muuss
- *  
+ *
  *  Source -
  *	SECAD/VLD Computing Consortium, Bldg 394
  *	The U. S. Army Ballistic Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5066
- *  
+ *
  *  Distribution Status -
- *	Public Domain, Distribution Unlimitied.
+ *	Public Domain, Distribution Unlimited.
  */
 
 #include "vaxshort.h"
@@ -48,3 +48,6 @@ vax_pshort(char *msgp, unsigned short s)
 	msgp[1] = s >> 8;
 	return(msgp+2);
 }
+
+
+
