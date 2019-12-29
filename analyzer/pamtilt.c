@@ -143,7 +143,7 @@ load(const struct pam * const pamP,
     sample ** pixels;
 
     tuplerow = pnm_allocpamrow(pamP);
-    
+
     MALLOCARRAY(pixels, pamP->height);
 
     if (pixels == NULL)
@@ -221,7 +221,7 @@ totalBrightness(sample **    const pixels,
 /*----------------------------------------------------------------------------
    Total brightness of samples in the line that goes from the left edge
    of Row 'startRow' of 'pixels' down to the right at 'dy' rows per column.
-   
+
    Note that 'dy' can be negative.
 
    Assume that whatever 'dy' is, the sloping line thus described remains
@@ -319,7 +319,7 @@ scoreAngle(const struct pam * const pamP,
   If 'angle' is so great that not a single line goes all the way across the
   page without running off the top or bottom, we call the score -1.  In
   every other case, it is nonnegative.
-  
+
   'pixels' is NOT all the pixels in the image; it is just a sampling.
   In each row, it contains only 'hsampleCt' pixels, sampled from the
   image at intervals of 'hstep' pixels.  E.g if the image is 1000
@@ -468,7 +468,7 @@ readSampledPixels(const char *   const inputFilename,
 
     *hstepP = hstep;
     *vstepP = vstep;
-    
+
     pm_close(ifP);
 }
 
@@ -490,7 +490,7 @@ getAngle(const struct pam * const pamP,
     float a;
     float da;
     float lastq;        /* quality (s/n ratio) of last measurement */
-    
+
     getBestAngleLocal(pamP, pixels, hstep, vstep, hsampleCt,
                       -maxangle, maxangle, astep, verbose,
                       &a, &lastq);
@@ -551,3 +551,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
+
