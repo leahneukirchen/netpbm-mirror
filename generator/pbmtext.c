@@ -610,7 +610,7 @@ getCharsWithinWidth(PM_WCHAR             const line[],
         if (currentWidth > targetWidth) {
             if (cursor == 1)
                 pm_error("-width value too small "
-                         "to accomodate single character");
+                         "to accommodate single character");
             else
                 *charCountP = cursor - 1;
         } else

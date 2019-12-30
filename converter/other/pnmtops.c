@@ -2121,7 +2121,7 @@ main(int argc, const char * argv[]) {
 **  wrzl@gup.uni-linz.ac.at.
 **
 ** July 2011 afu
-** row converters rewritten, fast PBM-only row convertor added,
+** row converters rewritten, fast PBM-only row converter added,
 ** rle compression slightly modified, flate compression added
 ** ascii85 output end added.
 **

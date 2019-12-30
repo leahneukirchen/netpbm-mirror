@@ -2,7 +2,7 @@
  *  arith.c:		Adaptive arithmetic coding and decoding
  *
  *  Written by:		Ullrich Hafner
- *  
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -27,7 +27,7 @@
 /******************************************************************************
 
 				public code
-  
+
 ******************************************************************************/
 
 arith_t *
@@ -35,7 +35,7 @@ alloc_encoder (bitfile_t *output)
 /*
  *  Arithmetic coder constructor:
  *  Initialize the arithmetic coder.
- *  
+ *
  *  Return value:
  *	A pointer to the new coder structure
  */
@@ -43,7 +43,7 @@ alloc_encoder (bitfile_t *output)
    arith_t *arith = Calloc (1, sizeof (arith_t));
 
    assert (output);
-   
+
    arith->low       = LOW;
    arith->high      = HIGH;
    arith->underflow = 0;
@@ -58,7 +58,7 @@ free_encoder (arith_t *arith)
  *  Arithmetic encoder destructor.
  *  Flush the arithmetic coder. Append all remaining bits to the
  *  output stream. Append zero bits to get the output file byte aligned.
- *  
+ *
  *  No return value.
  */
 {
@@ -66,14 +66,14 @@ free_encoder (arith_t *arith)
    u_word_t   high;			/* end of the current code range    */
    u_word_t   underflow;		/* number of underflow bits pending */
    bitfile_t *output;
-   
+
    assert (arith);
 
    low       = arith->low;
    high      = arith->high;
    underflow = arith->underflow;
    output    = arith->file;
-   
+
    low = high;
 
    RESCALE_OUTPUT_INTERVAL;
@@ -92,7 +92,7 @@ encode_symbol (unsigned symbol, arith_t *arith, model_t *model)
  *
  *  The model is updated after encoding the symbol (if necessary the
  *  symbol counts are rescaled).
- *  
+ *
  *  Return value:
  *	information content of the encoded symbol.
  *
@@ -110,7 +110,7 @@ encode_symbol (unsigned symbol, arith_t *arith, model_t *model)
    u_word_t   high;			/* end of the current code range    */
    u_word_t   underflow;		/* number of underflow bits pending */
    bitfile_t *output;			/* output file */
-   
+
    assert (model && arith);
 
    /*
@@ -122,7 +122,7 @@ encode_symbol (unsigned symbol, arith_t *arith, model_t *model)
    output    = arith->file;
 
    assert (high > low);
-   
+
    if (model->order > 0)		/* order-'n' model*/
    {
       unsigned power;			/* multiplicator */
@@ -134,10 +134,10 @@ encode_symbol (unsigned symbol, arith_t *arith, model_t *model)
        */
       power = 1;			/* multiplicator */
       index = 0;			/* address of prob. model */
-	 
-      for (i = 0; i < model->order; i++) /* genarate a M-nary number */
+
+      for (i = 0; i < model->order; i++) /* generate a M-nary number */
       {
-	 index += model->context [i] * power;	
+	 index += model->context [i] * power;
 	 power *= model->symbols;
       }
 
@@ -160,9 +160,9 @@ encode_symbol (unsigned symbol, arith_t *arith, model_t *model)
    range = (high - low) + 1;
    high  = low + (u_word_t) ((range * high_count) / scale - 1);
    low   = low + (u_word_t) ((range * low_count) / scale);
-   
+
    RESCALE_OUTPUT_INTERVAL;
-   
+
    if (model->scale > 0)		/* adaptive model */
    {
       unsigned i;
@@ -189,7 +189,7 @@ encode_symbol (unsigned symbol, arith_t *arith, model_t *model)
    arith->low  	    = low;
    arith->high 	    = high;
    arith->underflow = underflow;
-   
+
    return - log2 ((high_count - low_count) / (real_t) scale);
 }
 
@@ -214,21 +214,21 @@ encode_array (bitfile_t *output, const unsigned *data, const unsigned *context,
 
    assert (output && c_symbols && data);
    assert (n_context == 1 || context);
-   
+
    /*
     *  Allocate probability models, start with uniform distribution
     */
    totals = Calloc (n_context, sizeof (u_word_t *));
    {
       unsigned c;
-      
+
       for (c = 0; c < n_context; c++)
       {
 	 unsigned i;
-      
+
 	 totals [c]    = Calloc (c_symbols [c] + 1, sizeof (u_word_t));
 	 totals [c][0] = 0;
-      
+
 	 for (i = 0; i < c_symbols [c]; i++)
 	    totals [c][i + 1] = totals [c][i] + 1;
       }
@@ -242,7 +242,7 @@ encode_array (bitfile_t *output, const unsigned *data, const unsigned *context,
       u_word_t high 	 = 0xffff;	/* End of the current code range */
       u_word_t underflow = 0;		/* Number of underflow bits pending */
       unsigned n;
-      
+
       for (n = 0; n < n_data; n++)
       {
 	 u_word_t low_count;		/* lower bound of 'symbol' interval */
@@ -253,8 +253,8 @@ encode_array (bitfile_t *output, const unsigned *data, const unsigned *context,
 	 int	  c;			/* context of current data symbol */
 
 	 d = data [n];
-	 c = n_context > 1 ? context [n] : 0; 
-      
+	 c = n_context > 1 ? context [n] : 0;
+
 	 scale	    = totals [c][c_symbols [c]];
 	 low_count  = totals [c][d];
 	 high_count = totals [c][d + 1];
@@ -266,7 +266,7 @@ encode_array (bitfile_t *output, const unsigned *data, const unsigned *context,
 	 high  = low + (u_word_t) ((range * high_count) / scale - 1);
 	 low   = low + (u_word_t) ((range * low_count) / scale);
 	 RESCALE_OUTPUT_INTERVAL;
-      
+
 	 /*
 	  *  Update probability models
 	  */
@@ -275,7 +275,7 @@ encode_array (bitfile_t *output, const unsigned *data, const unsigned *context,
 
 	    for (i = d + 1; i < c_symbols [c] + 1; i++)
 	       totals [c][i]++;
-	 
+
 	    if (totals [c][c_symbols [c]] > scaling) /* scaling */
 	       for (i = 1; i < c_symbols [c] + 1; i++)
 	       {
@@ -292,7 +292,7 @@ encode_array (bitfile_t *output, const unsigned *data, const unsigned *context,
       RESCALE_OUTPUT_INTERVAL;
       OUTPUT_BYTE_ALIGN (output);
    }
-   
+
    /*
     *  Cleanup ...
     */
@@ -310,16 +310,16 @@ alloc_decoder (bitfile_t *input)
  *  Arithmetic decoder constructor:
  *  Initialize the arithmetic decoder with the first
  *  16 input bits from the stream 'input'.
- *  
+ *
  *  Return value:
  *	A pointer to the new decoder structure
  */
 
 {
    arith_t *arith = Calloc (1, sizeof (arith_t));
-   
+
    assert (input);
-   
+
    arith->low  = LOW;
    arith->high = HIGH;
    arith->code = get_bits (input, 16);
@@ -333,8 +333,8 @@ free_decoder (arith_t *arith)
 /*
  *  Arithmetic decoder destructor:
  *  Flush the arithmetic decoder, i.e., read bits to get the input
- *  file byte aligned. 
- *  
+ *  file byte aligned.
+ *
  *  No return value.
  *
  *  Side effects:
@@ -355,7 +355,7 @@ decode_symbol (arith_t *arith, model_t *model)
  *  is given in 'arith'. Read refinement bits from the stream 'input'
  *  and use the given probability 'model'. Update the probability model after
  *  deconding the symbol (if necessary also rescale the symbol counts).
- *  
+ *
  *  Return value:
  *	decoded symbol
  *
@@ -375,7 +375,7 @@ decode_symbol (arith_t *arith, model_t *model)
    bitfile_t *input;			/* input file */
 
    assert (arith && model);
-   
+
    /*
     * Get interval values
     */
@@ -385,22 +385,22 @@ decode_symbol (arith_t *arith, model_t *model)
    input = arith->file;
 
    assert (high > low);
-   
+
    if (model->order > 0)		/* order-'n' model */
    {
       unsigned power;			/* multiplicator */
       unsigned i;
-      
+
       /*
        *  Compute index of the probability model to use.
        *  See init_model() for more details.
        */
       power = 1;			/* multiplicator */
       index = 0;			/* address of prob. model */
-	 
+
       for (i = 0; i < model->order; i++) /* genarate a m-nary number */
       {
-	 index += model->context[i] * power;	
+	 index += model->context[i] * power;
 	 power *= model->symbols;
       }
 
@@ -420,7 +420,7 @@ decode_symbol (arith_t *arith, model_t *model)
    if (model->order > 0)		/* order-'n' model */
    {
       unsigned i;
-      
+
       for (i = 0; i < model->order - 1; i++)
 	 model->context [i] = model->context [i + 1];
       model->context [i] = symbol;
@@ -432,15 +432,15 @@ decode_symbol (arith_t *arith, model_t *model)
    {
       u_word_t low_count;		/* lower bound of 'symbol' interval */
       u_word_t high_count;		/* upper bound of 'symbol' interval */
-      
+
       low_count  = model->totals [index + symbol];
       high_count = model->totals [index + symbol + 1];
       high       = low + (u_word_t) ((range * high_count) / scale - 1 );
       low        = low + (u_word_t) ((range * low_count) / scale );
    }
-   
+
    RESCALE_INPUT_INTERVAL;
-   
+
    if (model->scale > 0)		/* adaptive model */
    {
       unsigned i;
@@ -460,7 +460,7 @@ decode_symbol (arith_t *arith, model_t *model)
 	 }
       }
    }
-   
+
    /*
     *  Store interval values
     */
@@ -488,28 +488,28 @@ decode_array (bitfile_t *input, const unsigned *context,
 {
    unsigned  *data;			/* array to store decoded symbols */
    u_word_t **totals;			/* probability model */
-   
+
    if (n_context < 1)
       n_context = 1;			/* always use one context */
    assert (input && c_symbols);
    assert (n_context == 1 || context);
 
    data = Calloc (n_data, sizeof (unsigned));
-   
+
    /*
     *  Allocate probability models, start with uniform distribution
     */
    totals = Calloc (n_context, sizeof (u_word_t *));
    {
       unsigned c;
-      
+
       for (c = 0; c < n_context; c++)
       {
 	 unsigned i;
-      
+
 	 totals [c]    = Calloc (c_symbols [c] + 1, sizeof (u_word_t));
 	 totals [c][0] = 0;
-      
+
 	 for (i = 0; i < c_symbols [c]; i++)
 	    totals [c][i + 1] = totals [c][i] + 1;
       }
@@ -523,8 +523,8 @@ decode_array (bitfile_t *input, const unsigned *context,
       u_word_t low  = 0;		/* Start of the current code range */
       u_word_t high = 0xffff;		/* End of the current code range */
       unsigned n;
-      
-      for (n = 0; n < n_data; n++) 
+
+      for (n = 0; n < n_data; n++)
       {
 	 u_word_t scale;		/* range of all 'm' symbol intervals */
 	 u_word_t low_count;		/* lower bound of 'symbol' interval */
@@ -534,13 +534,13 @@ decode_array (bitfile_t *input, const unsigned *context,
 	 unsigned d;			/* current data symbol */
 	 unsigned c;			/* context of current data symbol */
 
-	 c = n_context > 1 ? context [n] : 0; 
+	 c = n_context > 1 ? context [n] : 0;
 
 	 assert (high > low);
 	 scale = totals [c][c_symbols [c]];
 	 range = (high - low) + 1;
 	 count = (((code - low) + 1 ) * scale - 1) / range;
-      
+
 	 for (d = c_symbols [c]; count < totals [c][d]; d--) /* next symbol */
 	    ;
 	 low_count  = totals [c][d];
@@ -558,7 +558,7 @@ decode_array (bitfile_t *input, const unsigned *context,
 
 	    for (i = d + 1; i < c_symbols [c] + 1; i++)
 	       totals [c][i]++;
-	 
+
 	    if (totals [c][c_symbols [c]] > scaling) /* scaling */
 	       for (i = 1; i < c_symbols [c] + 1; i++)
 	       {
@@ -577,12 +577,12 @@ decode_array (bitfile_t *input, const unsigned *context,
     */
    {
       unsigned c;
-      
+
       for (c = 0; c < n_context; c++)
 	 Free (totals [c]);
       Free (totals);
    }
-   
+
    return data;
 }
 
@@ -600,10 +600,10 @@ alloc_model (unsigned m, unsigned scale, unsigned n, unsigned *totals)
  *
  *  Return value:
  *	a pointer to the new probability model structure.
- *  
+ *
  *  Note: We recommend a small size of the alphabet because no escape codes
  *  are used to encode/decode previously unseen symbols.
- *  
+ *
  */
 {
    model_t  *model;			/* new probability model */
@@ -621,7 +621,7 @@ alloc_model (unsigned m, unsigned scale, unsigned n, unsigned *totals)
    model->order   = n;
    model->context = n > 0 ? Calloc (n, sizeof (unsigned)) : NULL;
    /*
-    *  Allocate memory for the probabilty model.
+    *  Allocate memory for the probability model.
     *  Each of the m^n different contexts requires its own probability model.
     */
    for (num = 1, i = 0; i < model->order; i++)
@@ -644,17 +644,17 @@ alloc_model (unsigned m, unsigned scale, unsigned n, unsigned *totals)
        */
       power = 1;			/* multiplicator */
       index = 0;			/* address of prob. model */
-	 
-      for (i = 0; i < model->order; i++)	/* genarate a m-nary number */
+
+      for (i = 0; i < model->order; i++)	/* generate a m-nary number */
       {
-	 index += model->context[i] * power;	
+	 index += model->context[i] * power;
 	 power *= model->symbols;
       }
 
       index *= model->symbols + 1;	/* size of each model is m + 1 */
 
       model->totals [index + 0] = 0;	/* always zero */
-	 
+
       for (i = 1; i <= model->symbols; i++) /* prob of each symbol is 1/m or
 					       as given in totals */
 	 model->totals[index + i] = model->totals [index + i - 1]
@@ -667,14 +667,14 @@ alloc_model (unsigned m, unsigned scale, unsigned n, unsigned *totals)
 	 {
 	    dec = NO;
 	    model->context[i]++;
-	    if (model->context[i] >= model->symbols) 
+	    if (model->context[i] >= model->symbols)
 	    {
 	       /* change previous context */
 	       model->context[i] = 0;
 	       if (i > 0)		/* there's still a context remaining */
 		  dec = YES;
 	       else
-		  cont = NO;		/* all context models initilized */
+		  cont = NO;		/* all context models initialized */
 	    }
 	 }
    }

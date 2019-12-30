@@ -2,7 +2,7 @@
  *  matrices.c:		Input of transition matrices
  *
  *  Written by:		Ullrich Hafner
- *  
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -34,7 +34,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static unsigned
@@ -49,19 +49,19 @@ compute_y_state (int state, int y_state, wfa_t *wfa);
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 unsigned
 read_matrices (wfa_t *wfa, bitfile_t *input)
-/* 
+/*
  *  Read transitions of WFA given from the stream 'input'.
  *
  *  Return value:
  *	number of edges
  *
  *  Side effects:
- *	'wfa->into' is filled with decoded values 
+ *	'wfa->into' is filled with decoded values
  */
 {
    unsigned total;			/* total number of edges in the WFA */
@@ -73,14 +73,14 @@ read_matrices (wfa_t *wfa, bitfile_t *input)
    total += delta_decoding (wfa, root_state, input);
    if (wfa->wfainfo->color)
       total += chroma_decoding (wfa, input);
-       
+
    return total;
 }
 
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static unsigned
@@ -94,7 +94,7 @@ delta_decoding (wfa_t *wfa, unsigned last_domain, bitfile_t *input)
  *	number of non-zero matrix elements (WFA edges)
  *
  *  Side effects:
- *	'wfa->into' is filled with decoded values 
+ *	'wfa->into' is filled with decoded values
  */
 {
    range_sort_t	 rs;			/* ranges are sorted as in the coder */
@@ -128,26 +128,26 @@ delta_decoding (wfa_t *wfa, unsigned last_domain, bitfile_t *input)
       arith_t  *decoder;
       model_t  *elements;
       unsigned 	max_edges = read_rice_code (3, input);
-      
+
       /*
        *  Get the probability array of the number of edges distribution
        *  and allocate the corresponding model.
        */
       {
 	 unsigned edge;
-	 
+
 	 for (edge = 0; edge <= max_edges; edge++)
 	    count [edge] = read_rice_code ((int) log2 (last_domain) - 2,
 					   input);
 	 elements = alloc_model (max_edges + 1, 0, 0, count);
       }
-      
+
       /*
        *  Get number of elements per matrix row
        */
       {
 	 unsigned row;
-      
+
 	 n_edges = Calloc (wfa->states, sizeof (unsigned));
 	 decoder = alloc_decoder (input);
 	 for (row = range = 0; range < rs.range_no; range++)
@@ -155,17 +155,17 @@ delta_decoding (wfa_t *wfa, unsigned last_domain, bitfile_t *input)
 	    {
 	       state = rs.range_state [range];
 	       label = rs.range_label [range];
-	       
+
 	       n_edges [row++]
 		  = decode_symbol (decoder, elements)
 		  - (isedge (wfa->into [state][label][0]) ? 1 : 0);
 	    }
-	 
+
 	 free_decoder (decoder);
 	 free_model (elements);
       }
    }
-   
+
    /*
     *  Get matrix elements
     */
@@ -177,18 +177,18 @@ delta_decoding (wfa_t *wfa, unsigned last_domain, bitfile_t *input)
       u_word_t *mapping_coder2     = Calloc (wfa->states, sizeof (word_t));
       bool_t	use_normal_domains = get_bit (input);
       bool_t	use_delta_domains  = get_bit (input);
-	  
+
       /*
        *  Generate array of states which are admitted domains.
        *  When coding intra frames 'mapping1' == 'mapping2' otherwise
-       *  'mapping1' is a list of 'normal' domains which are admitted for 
+       *  'mapping1' is a list of 'normal' domains which are admitted for
        *             coding intra blocks
        *  'mapping2' is a list of 'delta' domains which are admitted for
-       *             coding the motion compensated prediction error 
+       *             coding the motion compensated prediction error
        */
       {
 	 unsigned n1, n2, state;
-	    
+
 	 for (n1 = n2 = state = 0; state < wfa->states; state++)
 	 {
 	    mapping1 [n1] = state;
@@ -197,7 +197,7 @@ delta_decoding (wfa_t *wfa, unsigned last_domain, bitfile_t *input)
 		&& (state < wfa->basis_states
 		    || use_delta_domains || !wfa->delta_state [state]))
 	       n1++;
-	    
+
 	    mapping2 [n2] = state;
 	    mapping_coder2 [state] = n2;
 	    if (usedomain (state, wfa)
@@ -206,7 +206,7 @@ delta_decoding (wfa_t *wfa, unsigned last_domain, bitfile_t *input)
 	       n2++;
 	 }
       }
-	 
+
       for (row = 0, range = 0; range < rs.range_no; range++)
 	 if (!rs.range_subdivided [range])
 	 {
@@ -249,7 +249,7 @@ delta_decoding (wfa_t *wfa, unsigned last_domain, bitfile_t *input)
       Free (mapping2);
       Free (mapping_coder2);
    }
-      
+
    Free (n_edges);
    Free (rs.range_state);
    Free (rs.range_label);
@@ -265,12 +265,12 @@ column_0_decoding (wfa_t *wfa, unsigned last_row, bitfile_t *input)
  *  Read column 0 of the transition matrices of the 'wfa' which are coded
  *  with quasi arithmetic coding from stream 'input'.
  *  All rows from 'wfa->basis_states' up to 'last_row' are decoded.
- * 
+ *
  *  Return value:
  *	number of non-zero matrix elements (WFA edges)
  *
  *  Side effects:
- *	'wfa->into' is filled with decoded values 
+ *	'wfa->into' is filled with decoded values
  */
 {
    unsigned  row;			/* current matrix row */
@@ -294,9 +294,9 @@ column_0_decoding (wfa_t *wfa, unsigned last_row, bitfile_t *input)
       unsigned n;
       unsigned index;			/* probability index */
       unsigned exp;			/* current exponent */
-      
+
       prob = Calloc (1 << (MAX_PROB + 1), sizeof (unsigned));
-   
+
       for (index = 0, n = MIN_PROB; n <= MAX_PROB; n++)
 	 for (exp = 0; exp < 1U << n; exp++, index++)
 	    prob [index] = n;
@@ -304,12 +304,12 @@ column_0_decoding (wfa_t *wfa, unsigned last_row, bitfile_t *input)
 
    first = prob_ptr = new_prob_ptr = prob;
    last  = first + 1020;
-   
+
    is_leaf = wfa->tree [wfa->basis_states]; /* use pointer arithmetics ... */
 
    high = HIGH;				/* 1.0 */
    low  = LOW;				/* 0.0 */
-   code = get_bits (input, 16);		
+   code = get_bits (input, 16);
 
    /*
     *  Decode column 0 with a quasi arithmetic coder (QAC).
@@ -325,7 +325,7 @@ column_0_decoding (wfa_t *wfa, unsigned last_row, bitfile_t *input)
    for (row = wfa->basis_states; row <= last_row; row++)
    {
       unsigned count;			/* value in the current interval */
-      
+
       /*
        *  Read label 0 element
        */
@@ -397,7 +397,7 @@ column_0_decoding (wfa_t *wfa, unsigned last_row, bitfile_t *input)
    INPUT_BYTE_ALIGN (input);
 
    Free (prob);
-   
+
    return total;
 }
 
@@ -411,7 +411,7 @@ chroma_decoding (wfa_t *wfa, bitfile_t *input)
  *	number of non-zero matrix elements (WFA edges)
  *
  *  Side effects:
- *	'wfa->into' is filled with decoded values 
+ *	'wfa->into' is filled with decoded values
  */
 {
    unsigned  domain;			/* current domain, counter */
@@ -425,7 +425,7 @@ chroma_decoding (wfa_t *wfa, bitfile_t *input)
    u_word_t  low;			/* End of the current code range */
    u_word_t  code;			/* The present input code value */
    word_t   *y_domains;			/* domain images corresponding to Y */
-   int	     save_index;		/* YES: store current probabilty */
+   int	     save_index;		/* YES: store current probability */
 
    /*
     *  Compute the asymmetric probability array
@@ -436,9 +436,9 @@ chroma_decoding (wfa_t *wfa, bitfile_t *input)
       unsigned n;
       unsigned index;			/* probability index */
       unsigned exp;			/* current exponent */
-      
+
       prob = Calloc (1 << (MAX_PROB + 1), sizeof (unsigned));
-   
+
       for (index = 0, n = MIN_PROB; n <= MAX_PROB; n++)
 	 for (exp = 0; exp < 1U << n; exp++, index++)
 	    prob [index] = n;
@@ -454,7 +454,7 @@ chroma_decoding (wfa_t *wfa, bitfile_t *input)
    y_domains = compute_hits (wfa->basis_states,
 			     wfa->tree [wfa->tree [wfa->root_state][0]][0],
 			     wfa->wfainfo->chroma_max_states, wfa);
-   
+
    first = prob_ptr = new_prob_ptr = prob;
    last  = first + 1020;
 
@@ -554,7 +554,7 @@ chroma_decoding (wfa_t *wfa, bitfile_t *input)
 		    wfa->tree [wfa->tree [wfa->root_state][0]][0], wfa);
    compute_y_state (wfa->tree [wfa->tree [wfa->root_state][1]][0],
 		    wfa->tree [wfa->tree [wfa->root_state][0]][0], wfa);
-   
+
    first = prob_ptr = new_prob_ptr = prob;
 
    /*
@@ -566,7 +566,7 @@ chroma_decoding (wfa_t *wfa, bitfile_t *input)
     */
    {
       unsigned 	row;
-      
+
       for (row = wfa->tree [wfa->tree [wfa->root_state][0]][0] + 1;
 	   row < wfa->states; row++)
       {
@@ -629,7 +629,7 @@ compute_y_state (int state, int y_state, wfa_t *wfa)
  */
 {
    unsigned label;
-   
+
    for (label = 0; label < MAXLABELS; label++)
       if (isrange (y_state))
 	 wfa->y_state [state][label] = RANGE;
@@ -640,5 +640,7 @@ compute_y_state (int state, int y_state, wfa_t *wfa)
 	    compute_y_state (wfa->tree [state][label],
 			     wfa->y_state [state][label], wfa);
       }
-      
+
 }
+
+

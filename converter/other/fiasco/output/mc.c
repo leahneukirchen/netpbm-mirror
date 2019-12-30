@@ -1,9 +1,9 @@
 /*
- *  mc.c:		Output of motion compensation	
+ *  mc.c:		Output of motion compensation
  *
  *  Written by:		Michael Unger
  *			Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -30,7 +30,7 @@
 /*****************************************************************************
 
 			     local variables
-  
+
 *****************************************************************************/
 
 static unsigned p_frame_codes [4][2] =
@@ -39,7 +39,7 @@ static unsigned p_frame_codes [4][2] =
  *  NONE,  FORWARD
  */
 {
-   {1, 1}, {0, 1}, {0, 0}, {0, 0} 
+   {1, 1}, {0, 1}, {0, 0}, {0, 0}
 };
 
 static unsigned b_frame_codes [4][2] =
@@ -48,7 +48,7 @@ static unsigned b_frame_codes [4][2] =
  *  NONE,  FORWARD,  BACKWARD, INTERPOLATED
  */
 {
-   {1, 1}, {000, 3}, {001, 3}, {01, 2} 
+   {1, 1}, {000, 3}, {001, 3}, {01, 2}
 };
 
 enum vlc_e {CODE = 0, BITS = 1};
@@ -56,7 +56,7 @@ enum vlc_e {CODE = 0, BITS = 1};
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static void
@@ -68,7 +68,7 @@ encode_mc_coords (unsigned max_state, const wfa_t *wfa, bitfile_t *output);
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 void
@@ -85,7 +85,7 @@ write_mc (frame_type_e frame_type, const wfa_t *wfa, bitfile_t *output)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static void
@@ -108,22 +108,22 @@ encode_mc_tree (unsigned max_state, frame_type_e frame_type, const wfa_t *wfa,
    mc_type_e type;			/* type of motion compensation */
    unsigned	     (*mc_tree_codes)[2]; /* pointer to VLC table */
    unsigned  bits  = bits_processed (output); /* number of bits used */
-   
+
    if (frame_type == P_FRAME)
       mc_tree_codes = p_frame_codes;	/* binary code */
-   else 
+   else
       mc_tree_codes = b_frame_codes;	/* variable length code */
-   
+
    /*
     *  Traverse tree in breadth first order (starting at
-    *  level 'wfa->p_max_level'). Use a queue to store the childs
-    *  of each node ('last' is the next free queue element).  
+    *  level 'wfa->p_max_level'). Use a queue to store the children
+    *  of each node ('last' is the next free queue element).
     */
 
    for (last = 0, state = wfa->basis_states; state < max_state; state++)
       if (wfa->level_of_state [state] - 1 == (int) wfa->wfainfo->p_max_level)
 	 queue [last++] = state;	/* init level = 'mc_max_level' */
-   
+
    for (current = 0; current < last; current++)
       for (label = 0; label < MAXLABELS; label++)
       {
@@ -145,7 +145,7 @@ encode_mc_tree (unsigned max_state, frame_type_e frame_type, const wfa_t *wfa,
 	     wfa->level_of_state [state] - 1 >=
 	     (int) wfa->wfainfo->p_min_level)
 	    queue [last++] = wfa->tree [state][label]; /* append child */
-	 
+
       }
 
    OUTPUT_BYTE_ALIGN (output);
@@ -174,16 +174,16 @@ encode_mc_coords (unsigned max_state, const wfa_t *wfa, bitfile_t *output)
    unsigned  itotal = 0;		/* #interpolated decisions */
    unsigned  bits   = bits_processed (output); /* number of bits used */
    unsigned  sr     = wfa->wfainfo->search_range; /* search range */
-   
+
    for (level = wfa->wfainfo->p_max_level;
 	level >= wfa->wfainfo->p_min_level; level--)
       level_count [level] = 0;
-   
+
    for (state = wfa->basis_states; state < max_state; state++)
       for (label = 0; label < MAXLABELS; label++)
       {
 	 mv_t *mv = &wfa->mv_tree[state][label]; /* motion vector info */
-	 
+
 	 if (mv->type != NONE)
 	 {
 	    level_count [wfa->level_of_state [state] - 1]++;
@@ -229,14 +229,14 @@ encode_mc_coords (unsigned max_state, const wfa_t *wfa, bitfile_t *output)
       }
 
    OUTPUT_BYTE_ALIGN (output);
-   
+
    debug_message ("Motion compensation: %d forward, %d backward, "
 		  "%d interpolated", ftotal, btotal, itotal);
 
    for (level = wfa->wfainfo->p_max_level;
 	level >= wfa->wfainfo->p_min_level; level--)
       debug_message ("Level %d: %d motion vectors", level, level_count[level]);
-   
+
    {
       unsigned  total = ftotal * 2 + btotal * 2 + itotal * 4;
 

@@ -35,10 +35,10 @@ typedef struct {
 
            If LOCTYPE_NONE: Meaningless
 
-           If LOCTYPE_FROMFAR: Number of colums from the far edge of the image
+           If LOCTYPE_FROMFAR: Number of columns from the far edge of the image
            (right or bottom).  Last column/row is 1.
 
-           If LOCTYPE_FROMNEAR: Number of colums from the near edge of the
+           If LOCTYPE_FROMNEAR: Number of columns from the near edge of the
            image (left or top).  First column/row is 0.
         */
 } Location;

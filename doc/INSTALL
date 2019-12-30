@@ -210,7 +210,7 @@ to
 in _mingw.h.  This is the trick other C libraries use.
 
 (A user proposed that this change be distributed in _mingw.h, in April 2017 on
-the mingw-users mailing list, but the maintainer was opposed to accomodating
+the mingw-users mailing list, but the maintainer was opposed to accommodating
 programs written for the older standards).
 
 If you cannot change _mingw.h, you can alternatively change Netpbm.  Find all

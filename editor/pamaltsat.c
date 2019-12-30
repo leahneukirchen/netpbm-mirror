@@ -160,7 +160,7 @@ typedef double (binsearchFunc)(double       const x,
 
 /* The binary-search function. Returns such <x> from [<min>, <max>] that
    monotonically increasing function func(x, data) equals <value> within
-   precision <prec>. <dataP> is an arbitary parameter to <func>. */
+   precision <prec>. <dataP> is an arbitrary parameter to <func>. */
 static double
 binsearch(binsearchFunc       func,
           const void  * const dataP,
@@ -299,7 +299,7 @@ typedef struct {
     TupleD *        tupsatP;
         /* saturated color                            */
     double *        intRatioP;
-        /* ratio of orignal and saturated intensities */
+        /* ratio of original and saturated intensities */
 } MaxLogSatInfo;
 
 
@@ -346,7 +346,7 @@ getMaxLogSat(LinSampleInfo * const siP,
 /*  Discarding return value (maximum saturation) because upon completion of
     binsearch() info.tupsatP will contain the saturated color. The target value
     of maximum channel intensity is decreased by PREC in order to avoid
-    overlow. */
+    overflow. */
     binsearch(binsearchMaxLogSat, &info, PREC, 1.0, upperLimit, 1.0 - PREC);
 }
 
@@ -399,11 +399,11 @@ saturateSpectrum(LinSampleInfo * const siP,
     else {
         double const km1 =
             (1.0 - siP->intensity)/(siP->maxval - siP->intensity);
-            /* Maximum saturation factor that keeps maximum layer intesity
+            /* Maximum saturation factor that keeps maximum layer intensity
                within range
             */
         double const km2 = siP->intensity/(siP->intensity - sample[siP->minl]);
-            /* Maximum saturation factor  that keeps minimum layer intesity
+            /* Maximum saturation factor  that keeps minimum layer intensity
                within range
             */
 

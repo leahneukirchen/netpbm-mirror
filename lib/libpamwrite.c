@@ -384,7 +384,7 @@ pnm_writepamrowmult(const struct pam * const pamP,
                     const tuple *      const tuplerow,
                     unsigned int       const count) {
 /*----------------------------------------------------------------------------
-   Write mutiple ('count') copies of the same row ('tuplerow') to the file.
+   Write multiple ('count') copies of the same row ('tuplerow') to the file.
 -----------------------------------------------------------------------------*/
    if (pm_plain_output || pamP->plainformat) {
        unsigned int i;

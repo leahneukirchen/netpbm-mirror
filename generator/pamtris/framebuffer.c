@@ -164,7 +164,7 @@ realloc_image_buffer(int32_t            const new_maxval,
   function "process_next_command", which is the only function that calls this
   one.
 
-  If the function suceeds, the image buffer is left in cleared state. The
+  If the function succeeds, the image buffer is left in cleared state. The
   Z-Buffer, however, is not touched at all.
 
   If the new depth is equal to the previous one, no actual reallocation is
@@ -313,7 +313,7 @@ draw_span(uint32_t           const base,
         unsigned int l;
 
         /* The following statements will only have any effect if the depth
-           test, performed above, has suceeded. I. e. if the depth test fails,
+           test, performed above, has succeeded. I. e. if the depth test fails,
            no changes will be made on the frame buffer; otherwise, the
            frame buffer will be updated with the new values.
         */

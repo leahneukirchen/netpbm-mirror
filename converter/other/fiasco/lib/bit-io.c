@@ -1,12 +1,12 @@
 /*
- *  bit-io.c:       Buffered and bit oriented file I/O 
+ *  bit-io.c:       Buffered and bit oriented file I/O
  *
  *  Written by:     Ullrich Hafner
- *  
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
- 
+
 /*
  *  $Date: 2000/06/14 20:49:37 $
  *  $Author: hafner $
@@ -35,7 +35,7 @@
 /*****************************************************************************
 
                  local constants
-  
+
 *****************************************************************************/
 
 static const unsigned BUFFER_SIZE = 16350;
@@ -48,7 +48,7 @@ static const unsigned mask[] = {0x0001, 0x0002, 0x0004, 0x0008,
 /*****************************************************************************
 
                 public code
-  
+
 *****************************************************************************/
 
 FILE *
@@ -57,7 +57,7 @@ open_file (const char *filename, const char *env_var, openmode_e mode)
  *  Try to open file 'filename' with mode 'mode' (READ_ACCESS, WRITE_ACCESS).
  *  Scan the current directory first and then cycle through the
  *  path given in the environment variable 'env_var', if set.
- * 
+ *
  *  Return value:
  *  Pointer to open file on success, else NULL.
  */
@@ -81,42 +81,42 @@ open_file (const char *filename, const char *env_var, openmode_e mode)
     {
         if (mode == READ_ACCESS)
             return stdin;
-        else 
+        else
             return stdout;
     }
-   
+
     /*
      *  Try to open 'readonly' file in the current directory
      */
     if (mode == READ_ACCESS && (fp = fopen (filename, read_mode)))
-        return fp; 
+        return fp;
 
     if (mode == WRITE_ACCESS && strchr (filename, '/')) /* contains path */
         return fopen (filename, write_mode);
-   
+
     /*
      *  Get value of environment variable 'env_var', if set
      *  else use DEFAULT_PATH ("./")
      */
     if (env_var != NULL)
         env_path = getenv (env_var);
-    if (env_path == NULL) 
+    if (env_path == NULL)
         env_path = strdup (DEFAULT_PATH);
     else
         env_path = strdup (env_path);
-   
+
     /*
      *  Try to open file in the directory given by the environment
-     *  variable env_var - individual path components are separated by PATH_SEP 
+     *  variable env_var - individual path components are separated by PATH_SEP
      */
     path = strtok (env_path, PATH_SEP);
-    do 
+    do
     {
-        if (ext_filename) 
+        if (ext_filename)
             Free (ext_filename);
         ext_filename =  Calloc (strlen (path) + strlen (filename) + 2,
                                 sizeof (char));
-        strcpy (ext_filename, path); 
+        strcpy (ext_filename, path);
         if (*(ext_filename + strlen (ext_filename) - 1) != '/')
             strcat (ext_filename, "/");
         strcat (ext_filename, filename);
@@ -125,7 +125,7 @@ open_file (const char *filename, const char *env_var, openmode_e mode)
     while (fp == NULL && (path = strtok (NULL, PATH_SEP)) != NULL);
 
     Free (env_path);
-   
+
     return fp;
 }
 
@@ -143,7 +143,7 @@ open_bitfile (const char *filename, const char *env_var, openmode_e mode)
  */
 {
     bitfile_t *bitfile = Calloc (1, sizeof (bitfile_t));
-   
+
     bitfile->file = open_file (filename, env_var, mode);
 
     if (bitfile->file == NULL)
@@ -164,8 +164,8 @@ open_bitfile (const char *filename, const char *env_var, openmode_e mode)
         bitfile->filename = filename ? strdup (filename) : strdup ("(stdout)");
     }
     else
-        error ("Unknow file access mode '%d'.", mode);
-   
+        error ("Unknown file access mode '%d'.", mode);
+
     bitfile->bits_processed = 0;
     bitfile->buffer         = Calloc (BUFFER_SIZE, sizeof (byte_t));
     bitfile->ptr            = bitfile->buffer;
@@ -187,7 +187,7 @@ get_bit (bitfile_t *bitfile)
  */
 {
     assert (bitfile);
-   
+
     if (!bitfile->bitpos--)      /* use next byte ? */
     {
         bitfile->ptr++;
@@ -226,7 +226,7 @@ get_bits (bitfile_t *bitfile, unsigned bits)
  */
 {
     unsigned value = 0;          /* input value */
-   
+
     while (bits--)
         value = (unsigned) (value << 1) | get_bit (bitfile);
 
@@ -235,7 +235,7 @@ get_bits (bitfile_t *bitfile, unsigned bits)
 
 void
 put_bit (bitfile_t *bitfile, unsigned value)
-/*     
+/*
  *  Put the bit 'value' to the bitfile buffer.
  *  The buffer is written to the file 'bitfile->file' if the number of
  *  buffer bytes exceeds 'BUFFER_SIZE'.
@@ -247,7 +247,7 @@ put_bit (bitfile_t *bitfile, unsigned value)
  */
 {
     assert (bitfile);
-   
+
     if (!bitfile->bitpos--)      /* use next byte ? */
     {
         bitfile->ptr++;
@@ -265,7 +265,7 @@ put_bit (bitfile_t *bitfile, unsigned value)
         }
         bitfile->bitpos = 7;
     }
-   
+
     if (value)
         *bitfile->ptr |= mask [bitfile->bitpos];
 
@@ -274,7 +274,7 @@ put_bit (bitfile_t *bitfile, unsigned value)
 
 void
 put_bits (bitfile_t *bitfile, unsigned value, unsigned bits)
-/*     
+/*
  *  Put #'bits' bits of integer 'value' to the bitfile buffer 'bitfile'.
  *
  *  No return value.
@@ -292,7 +292,7 @@ close_bitfile (bitfile_t *bitfile)
 /*
  *  Bitfile destructor:
  *  Close 'bitfile', if 'bitfile->mode' == WRITE_ACCESS write bit buffer
- *  to disk. 
+ *  to disk.
  *
  *  No return value.
  *
@@ -301,7 +301,7 @@ close_bitfile (bitfile_t *bitfile)
  */
 {
     assert (bitfile);
-   
+
     if (bitfile->mode == WRITE_ACCESS)
     {
         unsigned bytes = fwrite (bitfile->buffer, sizeof (byte_t),

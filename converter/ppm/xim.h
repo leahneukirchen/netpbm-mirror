@@ -6,7 +6,7 @@
 ** Taken from the X.V11R4 version of XimHeader.h:
 **
 ** Author: Philip R. Thompson
-** Address:  phils@athena.mit.edu, 9-526 
+** Address:  phils@athena.mit.edu, 9-526
 ** Note:  size of header should be 1024 (1K) bytes.
 ** $Header: /mit/phils/X/RCS/XimHeader.h,v 1.7 89/11/09 17:26:54 phils Exp Locker: phils $
 ** $Date: 89/11/09 17:26:54 $
@@ -81,7 +81,7 @@ typedef struct XimImage {
 typedef struct XimAsciiHeader {
     char file_version[4];   /* header version */
     char header_size[8];    /* Size of file header (fixed part only) */
-    char image_height[8];   /* Height of the raster imgage in pixels */
+    char image_height[8];   /* Height of the raster image in pixels */
     char image_width[8];    /* Width of the raster image in pixels */
     char bytes_line[8];     /* Actual # of bytes separating scanlines */
     char bits_channel[4];   /* Bits per channel (usually 1 or 8) */

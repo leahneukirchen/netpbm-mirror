@@ -3,7 +3,7 @@
 #                                mkdeb
 ###############################################################################
 #
-#  This generates a Debian packge file (.deb) to install Sourceforge
+#  This generates a Debian package file (.deb) to install Sourceforge
 #  Netpbm on a Debian system.
 #
 #  This is especially useful because Debian does not have a good Debian

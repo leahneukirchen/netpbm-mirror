@@ -2,7 +2,7 @@
  *  read.c:		Input of WFA files
  *
  *  Written by:		Ullrich Hafner
- *  
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -47,7 +47,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static void
@@ -57,7 +57,7 @@ read_tiling (tiling_t *tiling, unsigned image_width, unsigned image_height,
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 bitfile_t *
@@ -69,14 +69,14 @@ open_wfa (const char *filename, wfa_info_t *wi)
  *	Pointer to input stream (fileposition: first WFA frame)
  *
  *  Side effects:
- *	The values of the header of 'filename' are copied to 'wfainfo'. 
+ *	The values of the header of 'filename' are copied to 'wfainfo'.
  *
  */
 {
    bitfile_t *input;			/* pointer to WFA bitfile */
-   
+
    assert (filename && wi);
-   
+
    wi->wfa_name = strdup (filename);
 
    /*
@@ -85,16 +85,16 @@ open_wfa (const char *filename, wfa_info_t *wi)
    {
       unsigned 	n;
       const char     *str;
-      
+
       if (!(input = open_bitfile (filename, "FIASCO_DATA", READ_ACCESS)))
           file_error (filename);
-   
+
       for (str = FIASCO_MAGIC, n = strlen (FIASCO_MAGIC); n; n--)
           if (get_bits (input, 8) != (unsigned) *str++)
               error ("Input file %s is not a valid FIASCO file!", filename);
       get_bits (input, 8);		/* fetch newline */
    }
-   
+
    /*
     *  Read WFA header information
     */
@@ -102,13 +102,13 @@ open_wfa (const char *filename, wfa_info_t *wi)
       char	      basis_name [MAXSTRLEN]; /* temp. buffer */
       const unsigned  rice_k = 8; 	/* parameter of Rice Code */
       char     	     *str    = basis_name;
-      
+
       while ((*str++ = get_bits (input, 8)) != 0
 	     && str < basis_name + MAXSTRLEN)
 	 ;
       if (str == basis_name + MAXSTRLEN)
 	 error ("Input file %s is not a valid FIASCO file!", filename);
-      
+
       {
 	 wi->release = read_rice_code (rice_k, input);
 
@@ -121,12 +121,12 @@ open_wfa (const char *filename, wfa_info_t *wi)
       if (wi->release > 1)
       {
 	 header_type_e type;
-	 
+
 	 while ((type = read_rice_code (rice_k, input)) != HEADER_END)
 	 {
 	    char     buffer [MAXSTRLEN];
 	    unsigned n = 0;
-	    
+
 	    switch (type)
 	    {
 	       case HEADER_TITLE:
@@ -157,7 +157,7 @@ open_wfa (const char *filename, wfa_info_t *wi)
       {
 	 unsigned lx = log2 (wi->width - 1) + 1;
 	 unsigned ly = log2 (wi->height - 1) + 1;
-      
+
 	 wi->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
       }
       wi->chroma_max_states = wi->color ? read_rice_code (rice_k, input) : -1;
@@ -176,14 +176,14 @@ open_wfa (const char *filename, wfa_info_t *wi)
 	 mantissa = get_bits (input, 3) + 2;
 	 range    = get_bits (input, 2);
 	 wi->rpf  = alloc_rpf (mantissa, range);
-	 
+
 	 if (get_bit (input))		/* different DC model */
 	 {
 	    mantissa   = get_bits (input, 3) + 2;
 	    range      = get_bits (input, 2);
 	    wi->dc_rpf = alloc_rpf (mantissa, range);
 	 }
-	 else				/* use same model for DC coefficents */
+	 else				/* use same model for DC coefficients */
 	    wi->dc_rpf = alloc_rpf (wi->rpf->mantissa_bits,
 				    wi->rpf->range_e);
 
@@ -196,7 +196,7 @@ open_wfa (const char *filename, wfa_info_t *wi)
 	 else
 	    wi->d_rpf = alloc_rpf (wi->rpf->mantissa_bits,
 				   wi->rpf->range_e);
-	 
+
 	 if (get_bit (input))		/* different DC delta model */
 	 {
 	    mantissa  	 = get_bits (input, 3) + 2;
@@ -216,7 +216,7 @@ open_wfa (const char *filename, wfa_info_t *wi)
 	 wi->B_as_past_ref = get_bit (input) ? YES : NO;
       }
    }
-   
+
    INPUT_BYTE_ALIGN (input);
 
    return input;
@@ -246,10 +246,10 @@ read_basis (const char *filename, wfa_t *wfa)
 	 Free (wfa->wfainfo->basis_name);
       wfa->wfainfo->basis_name = strdup (filename);
    }
-   
+
    if (get_linked_basis (filename, wfa))
-      return;				/* basis is linked with excecutable */
-   
+      return;				/* basis is linked with executable */
+
    /*
     *  Check whether 'wfa_name' is a regular ASCII WFA initial basis file
     */
@@ -258,19 +258,19 @@ read_basis (const char *filename, wfa_t *wfa)
 
       if (!(input = open_file (filename, "FIASCO_DATA", READ_ACCESS)))
 	 file_error(filename);
-      
+
       if (fscanf (input, MAXSTRLEN_SCANF, magic) != 1)
 	 error ("Format error: ASCII FIASCO initial basis file %s", filename);
       else if (strneq (FIASCO_BASIS_MAGIC, magic))
 	 error ("Input file %s is not an ASCII FIASCO initial basis!",
 		filename);
    }
-   
+
    /*
     *  WFA ASCII format:
     *
     *  Note: State 0 is assumed to be the constant function f(x, y) = 128.
-    *        Don't define any transitions of state 0 in an initial basis. 
+    *        Don't define any transitions of state 0 in an initial basis.
     *
     *  Header:
     *   type		|description
@@ -307,14 +307,14 @@ read_basis (const char *filename, wfa_t *wfa)
       /*
        *  State 0 is assumed to be the constant function f(x, y) = 128.
        */
-      wfa->domain_type [0]        = USE_DOMAIN_MASK; 
+      wfa->domain_type [0]        = USE_DOMAIN_MASK;
       wfa->final_distribution [0] = 128;
       wfa->states 		  = wfa->basis_states;
       wfa->basis_states++;
 
       append_edge (0, 0, 1.0, 0, wfa);
       append_edge (0, 0, 1.0, 1, wfa);
-   
+
       for (state = 1; state < wfa->basis_states; state++)
 	 wfa->domain_type [state]
 	    = read_int (input) ? USE_DOMAIN_MASK : AUXILIARY_MASK;
@@ -343,7 +343,7 @@ read_basis (const char *filename, wfa_t *wfa)
 	 }
       }
    }
-   
+
    fclose (input);
 }
 
@@ -353,7 +353,7 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
  *  Read next WFA frame of the WFA stream 'input'.
  *  WFA header information has to be already present in the 'wfainfo' struct.
  *  (i.e. open_wfa must be called first!)
- *  
+ *
  *  No return value.
  *
  *  Side effects:
@@ -364,9 +364,9 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
 {
    tiling_t tiling;			/* tiling information */
    unsigned frame_number;		/* current frame number */
-   
+
    assert (wfa && input);
-   
+
    /*
     *  Frame header information
     */
@@ -382,16 +382,16 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
    {
       INPUT_BYTE_ALIGN (input);
    }
-   
+
    /*
-    *  Read image tiling info 
+    *  Read image tiling info
     */
    if (get_bit (input))			/* tiling performed ? */
       read_tiling (&tiling, wfa->wfainfo->width, wfa->wfainfo->height,
 		   wfa->wfainfo->level, input);
    else
       tiling.exponent = 0;
-   
+
    INPUT_BYTE_ALIGN (input);
 
    read_tree (wfa, &tiling, input);
@@ -402,7 +402,7 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
     */
    {
       unsigned state;
-   
+
       for (state = wfa->basis_states; state < wfa->states; state++)
 	 if ((!wfa->wfainfo->color
 	      || (int) state <= wfa->tree [wfa->tree [wfa->root_state][0]][0])
@@ -420,7 +420,7 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
 	 else
 	    wfa->domain_type [state] = 0;
    }
-   
+
    if (tiling.exponent)
       Free (tiling.vorder);
 
@@ -431,12 +431,12 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
       read_mc (wfa->frame_type, wfa, input);
 
    locate_delta_images (wfa);
-   
+
    /*
     *  Read linear combinations (coefficients and indices)
     */
    {
-      unsigned edges = read_matrices (wfa, input); 
+      unsigned edges = read_matrices (wfa, input);
 
       if (edges)
 	 read_weights (edges, wfa, input);
@@ -447,7 +447,7 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
     */
    {
       unsigned state;
-   
+
       for (state = wfa->basis_states; state <= wfa->states; state++)
 	 wfa->final_distribution[state]
 	    = compute_final_distribution (state, wfa);
@@ -459,7 +459,7 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static void
@@ -468,14 +468,14 @@ read_tiling (tiling_t *tiling, unsigned image_width, unsigned image_height,
 /*
  *  Read image tiling information from the given file 'input'
  *  and store parameters in struct 'tiling'.
- *  
+ *
  *  No return value.
  */
 {
    const unsigned rice_k = 8;		/* parameter of Rice Code */
-   
+
    tiling->exponent = read_rice_code (rice_k, input);
-   
+
    if (get_bit (input))			/* variance order */
    {
       unsigned tile;			/* current image tile */
@@ -487,7 +487,7 @@ read_tiling (tiling_t *tiling, unsigned image_width, unsigned image_height,
       {
 	 locate_subimage (image_level, image_level - tiling->exponent, tile,
 			  &x0, &y0, &width, &height);
-	 if (x0 < image_width && y0 < image_height) 
+	 if (x0 < image_width && y0 < image_height)
 	    tiling->vorder [tile] = get_bits (input, tiling->exponent);
 	 else
 	    tiling->vorder [tile] = -1;
@@ -500,3 +500,6 @@ read_tiling (tiling_t *tiling, unsigned image_width, unsigned image_height,
 		      tiling->exponent, get_bit (input) ? YES : NO);
    }
 }
+
+
+

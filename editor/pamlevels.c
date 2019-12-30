@@ -482,7 +482,7 @@ pamlevels(CmdlineInfo const cmdline) {
 static void
 freeCmdLineInfo(CmdlineInfo cmdline) {
 /*----------------------------------------------------------------------------
-  Free any memory that has been dynamically allcoated in <cmdline>.
+  Free any memory that has been dynamically allocated in <cmdline>.
 -----------------------------------------------------------------------------*/
     TransSet * const xxP = &cmdline.xlats;
 

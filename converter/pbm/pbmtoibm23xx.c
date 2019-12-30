@@ -131,7 +131,7 @@ process_handle(FILE *        const fh,
         int cols, rows, format;
         /* iteration variables */
         unsigned int x, y;
-        unsigned int bitline; /* pixel line within a sigle printing line */
+        unsigned int bitline; /* pixel line within a single printing line */
         unsigned int pass;
         /* here we build the to-be-printed data */
         unsigned char *output;  /* for reading one row from the file */

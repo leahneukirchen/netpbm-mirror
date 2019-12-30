@@ -53,7 +53,7 @@ done
 
 
 # Test 4: Should print 1647614653 2027 three times
-# Note: backslashes inserted in 3 locations in the rectange to make
+# Note: backslashes inserted in 3 locations in the rectangle to make
 # possible input as a here document.
 
 fontRectangle_txt=${tmpdir}/fontRectangle.txt
