@@ -186,9 +186,9 @@ allocateRaster(struct raster * const rasterP,
    multiple of 16, because we've seen many images in which the PICT raster
    does contain that much padding on the right.  I don't know why; I could
    understand a multiple of 8, since in 1 bpp image, the smallest unit
-   expressable in PICT is 8 pixels.  But why 16?  The images we saw came
+   expressible in PICT is 8 pixels.  But why 16?  The images we saw came
    from Adobe Illustrator 10 in March 2007, supplied by
-   Guillermo Gómez Valcárcel.
+   Guillermo Gomez Valcarcel.
 -----------------------------------------------------------------------------*/
     unsigned int const allocWidth = ROUNDUP(width, 16);
 

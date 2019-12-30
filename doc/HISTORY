@@ -795,7 +795,7 @@ not yet  BJH  Release 10.90.00
               pnmtopng: Add -srgbintent.
 
               pamstereogram: Add -xbegin.  Change default to render from
-              center outwards intead of from right to left, thus making the
+              center outwards instead of from right to left, thus making the
               center of the image the crispest part.  Thanks Scott Pakin
               (scott+pbm@pakin.org).
 
@@ -947,7 +947,7 @@ not yet  BJH  Release 10.90.00
               color map nor a local one.
 
               pgmmorphconv: fix bug: always produces PGM Plain format.  Always
-              present (progam was added to Netpbm in Release 10.0 (June 2002)).
+              present (program was added to Netpbm in Release 10.0 (June 2002)).
 
               pamtilt: fix bug: unconditional crash.  Broken in Netpbm 10.63
               (June 2013).
@@ -1443,7 +1443,7 @@ not yet  BJH  Release 10.90.00
 
               libpam, pamcomp: fix bug: treats tuple type GRAYSCALE_ALPHA like
               GRAYSCALE on 32-bit machine.  Actually, looks only at first 4
-              characters (8 characters on machine with 64 bit addressess) of
+              characters (8 characters on machine with 64 bit addresses) of
               the tuple type.  Broken since Netpbm 10.56 (September 2011).
 
               pngtopam -alphapam with grayscale input: fix bug: generates
@@ -1858,7 +1858,7 @@ not yet  BJH  Release 10.90.00
               anytopnm: recognize "PC bitmap" in 'file' response as BMP.
               (in addition to existing "PC bitmap data").
 
-              libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
+              libnetpbm, various PBM programs: Use SSE instead of MMX.  Thanks
               Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pbmtext/libpbmfont: Fix wild pointer; probably asymptomatic.
@@ -5502,7 +5502,7 @@ not yet  BJH  Release 10.90.00
               ppmdither: fix bug with input maxval != 255.  Make output
               maxval the LCM of the requested numbers of primary levels.
 
-              xwdtopnm: works with files where there aren't an integeral
+              xwdtopnm: works with files where there aren't an integral
               number of pixels per storage unit (e.g. 24 bits per pixel)
               
               Add some missing pXm_init()

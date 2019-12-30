@@ -991,7 +991,7 @@ getText(PM_WCHAR       const cmdlineText[],
         if (!buf)
             pm_error("Unable to allocate memory for up to %u characters of "
                      "text", MAXLINECHARS);
-        buf[lineBufTerm] = L'\1';  /* Initalize to non-zero value */
+        buf[lineBufTerm] = L'\1';  /* Initialize to non-zero value */
                                    /* to detect input overrun */
 
         maxlines = 50;  /* initial value */

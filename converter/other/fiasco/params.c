@@ -651,7 +651,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
        const char *usr_file_name)
 /*
  *  Generates and prints command line description from param_t struct 'params'.
- *  'progname' is the name of the excecutable, 'synopsis' a short program
+ *  'progname' is the name of the executable, 'synopsis' a short program
  *  description, and 'comment' some more advice.
  *  If flag 'show_all_options' is set then print also options that are not
  *  associated with a short option character.

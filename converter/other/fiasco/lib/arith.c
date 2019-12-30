@@ -354,7 +354,7 @@ decode_symbol (arith_t *arith, model_t *model)
  *  Decode the next symbol - the state of the arithmetic decoder
  *  is given in 'arith'. Read refinement bits from the stream 'input'
  *  and use the given probability 'model'. Update the probability model after
- *  deconding the symbol (if necessary also rescale the symbol counts).
+ *  decoding the symbol (if necessary also rescale the symbol counts).
  *
  *  Return value:
  *	decoded symbol
@@ -398,7 +398,7 @@ decode_symbol (arith_t *arith, model_t *model)
       power = 1;			/* multiplicator */
       index = 0;			/* address of prob. model */
 
-      for (i = 0; i < model->order; i++) /* genarate a m-nary number */
+      for (i = 0; i < model->order; i++) /* generate a m-nary number */
       {
 	 index += model->context[i] * power;
 	 power *= model->symbols;
