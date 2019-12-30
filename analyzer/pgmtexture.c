@@ -1,4 +1,4 @@
-``/* pgmtexture.c - calculate textural features of a PGM image
+/* pgmtexture.c - calculate textural features of a PGM image
 **
 
 
