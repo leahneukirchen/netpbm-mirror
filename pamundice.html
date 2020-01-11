@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamundice User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamundice</H1>
-Updated: 1 April 2007
+Updated: 11 January 2020
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -66,17 +66,21 @@ have the same height or every file have the same width.
 <p><b>pamdice</b> is the inverse of <b>pamundice</b>.  You can use
 <b>pamundice</b> to reassemble an image sliced up by <b>pamdice</b>.
 You can use <b>pamdice</b> to recreate the tiles of an image created
-by <b>pamundice</b>, but to do this the original ranks must all have
+by <b>pamundice</b>, but to do this, the original ranks must all have
 been the same height except for the bottom one and the original files
 must all have been the same width except the right one.
 
-<p>One use for this is to make pieces that take less computer
-resources than the whole image to process.  For example, you might
-have an image so large that an image editor can't read it all into
-memory or processes it very slowly.  You can split it into smaller
-pieces with <b>pamdice</b>, edit one at a time, and then reassemble them
-with <b>pamundice</b>.
+<p>One use for this is to process an image in pieces when the whole image is
+too large to process.  For example, you might have an image so large that an
+image editor can't read it all into memory or processes it very slowly.  You
+can split it into smaller pieces with <b>pamdice</b>, edit one at a time, and
+then reassemble them with <b>pamundice</b>.
 
+<p>Of course, you can also use <b>pamundice</b> to compose various kinds of
+checkerboard images, for example, you could write a program to render a
+chessboard by computing an image of each square, then using <b>pamundice</b>
+to assemble them into a board.
+  
 <p>An alternative to join images in a single direction (i.e. a single
 rank or a single file) is <b>pnmcat</b>.  <b>pnmcat</b> gives you more
 flexibility than <b>pamundice</b> in identifying the input images: you
