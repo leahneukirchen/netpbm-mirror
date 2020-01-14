@@ -6,6 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.90.00
 
+              libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
+              when reading empty line.
+
+              libnetpbm: pm_read_unknown_size, rawtopgm, zeisstopnm: crash
+              when out of memory
+
 19.12.29 BJH  Release 10.89.00
 
               pnmpad: Add -reportonly.
