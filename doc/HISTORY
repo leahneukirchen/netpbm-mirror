@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.90.00
 
+              pamdice: Fix junk output when -width or -height not specified.
+
               libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
               when reading empty line.
 

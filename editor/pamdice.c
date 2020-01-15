@@ -109,6 +109,8 @@ parseCommandLine(int argc, const char ** argv,
     else
         pm_error("Program takes at most 1 parameter: the file specification.  "
                  "You specified %u", argc-1);
+
+    free(option_def);
 }
 
 
@@ -138,6 +140,16 @@ computeSliceGeometry(struct CmdlineInfo const cmdline,
 /*----------------------------------------------------------------------------
    Compute the geometry of the slices, both common slices and possibly
    smaller remainder slices at the top and right.
+
+   We return the following.
+
+   *nHorizSliceP is the number of horizontal slices.  *sliceHeightP is the
+   height of every slice except possibly the bottom one.  *bottomSliceHeightP
+   is the height of the bottom slice.
+
+   *nVertSliceP is the number of vertical slices.  *sliceWidthP is the width
+   of every slice except possibly the rightmost one.  *rightSliceWidthP is the
+   width of the rightmost slice.
 -----------------------------------------------------------------------------*/
     if (cmdline.sliceHorizontally) {
         if (cmdline.height >= inpam.height)
@@ -146,13 +158,14 @@ computeSliceGeometry(struct CmdlineInfo const cmdline,
             *nHorizSliceP = 1 + divup(inpam.height - cmdline.height,
                                       cmdline.height - cmdline.voverlap);
         *sliceHeightP = cmdline.height;
-    } else {
-        *nHorizSliceP = 1;
-        *sliceHeightP = inpam.height;
-    }
 
-    *bottomSliceHeightP =
-        inpam.height - (*nHorizSliceP-1) * (cmdline.height - cmdline.voverlap);
+        *bottomSliceHeightP = inpam.height -
+            (*nHorizSliceP-1) * (cmdline.height - cmdline.voverlap);
+    } else {
+        *nHorizSliceP       = 1;
+        *sliceHeightP       = inpam.height;
+        *bottomSliceHeightP = inpam.height;
+    }
 
     if (cmdline.sliceVertically) {
         if (cmdline.width >= inpam.width)
@@ -161,13 +174,13 @@ computeSliceGeometry(struct CmdlineInfo const cmdline,
             *nVertSliceP = 1 + divup(inpam.width - cmdline.width,
                                      cmdline.width - cmdline.hoverlap);
         *sliceWidthP = cmdline.width;
+        *rightSliceWidthP = inpam.width -
+            (*nVertSliceP-1) * (cmdline.width - cmdline.hoverlap);
     } else {
-        *nVertSliceP = 1;
-        *sliceWidthP = inpam.width;
+        *nVertSliceP      = 1;
+        *sliceWidthP      = inpam.width;
+        *rightSliceWidthP = inpam.width;
     }
-
-    *rightSliceWidthP =
-        inpam.width - (*nVertSliceP-1) * (cmdline.width - cmdline.hoverlap);
 
     if (verbose) {
         pm_message("Creating %u images, %u across by %u down; "
@@ -302,11 +315,12 @@ sliceRow(tuple *      const inputRow,
    'hOverlap', which is meaningful only when nVertSlice is greater than 1,
    is the amount by which slices overlap each other.
 -----------------------------------------------------------------------------*/
-    tuple * outputRow;
-    unsigned int vertSlice;
     unsigned int const sliceWidth = outpam[0].width;
     unsigned int const stride =
         nVertSlice > 1 ? sliceWidth - hOverlap : sliceWidth;
+
+    tuple *      outputRow;
+    unsigned int vertSlice;
 
     for (vertSlice = 0, outputRow = inputRow;
          vertSlice < nVertSlice;
@@ -327,8 +341,8 @@ sliceRow(tuple *      const inputRow,
 struct inputWindow {
     unsigned int windowSize;
     unsigned int firstRowInWindow;
-    struct pam pam;
-    tuple ** rows;
+    struct pam   pam;
+    tuple **     rows;
 };
 
 static void
@@ -364,6 +378,8 @@ termInputWindow(struct inputWindow * const inputWindowP) {
 
     pnm_freepamarray(inputWindowP->rows, &freePam);
 }
+
+
 
 static tuple *
 getInputRow(struct inputWindow * const inputWindowP,
@@ -467,7 +483,10 @@ main(int argc, const char ** argv) {
 
     for (horizSlice = 0; horizSlice < nHorizSlice; ++horizSlice) {
         unsigned int const thisSliceFirstRow =
-            horizSlice * (sliceHeight - cmdline.voverlap);
+            horizSlice > 0 ? horizSlice * (sliceHeight - cmdline.voverlap) : 0;
+            /* Note that 'cmdline.voverlap' is not defined when there is only
+               one horizontal slice
+            */
         unsigned int const thisSliceHeight =
             horizSlice < nHorizSlice-1 ? sliceHeight : bottomSliceHeight;
 
@@ -480,6 +499,7 @@ main(int argc, const char ** argv) {
         for (row = 0; row < thisSliceHeight; ++row) {
             tuple * const inputRow =
                 getInputRow(&inputWindow, thisSliceFirstRow + row);
+
             sliceRow(inputRow, outpam, nVertSlice, cmdline.hoverlap);
         }
         closeOutFiles(outpam, nVertSlice);
