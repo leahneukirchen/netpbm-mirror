@@ -5,6 +5,15 @@ CHANGE HISTORY
 --------------
 
 
+20.01.15 BJH  Release 10.89.01
+
+              pamdice: Fix junk output when -width or -height not specified.
+
+              libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
+              when reading empty line.
+
+              libnetpbm: pm_read_unknown_size, rawtopgm, zeisstopnm: crash
+              when out of memory
 
 19.12.29 BJH  Release 10.89.00
 
