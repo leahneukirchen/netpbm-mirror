@@ -17,16 +17,12 @@
 #include "nstring.h"
 #include "mallocvar.h"
 
-#define MAXFILENAMELEN 80
-    /* Maximum number of characters we accept in filenames */
-
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* '-' if stdin */
     const char * outstem;
-        /* null-terminated string, max MAXFILENAMELEN-10 characters */
     unsigned int sliceVertically;    /* boolean */
     unsigned int sliceHorizontally;  /* boolean */
     unsigned int width;    /* Meaningless if !sliceVertically */
@@ -40,8 +36,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP ) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -52,7 +48,7 @@ parseCommandLine(int argc, char ** argv,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
         /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -80,7 +76,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmdlineP->sliceVertically) {
@@ -129,7 +125,7 @@ divup(unsigned int const dividend,
 
 
 static void
-computeSliceGeometry(struct cmdlineInfo const cmdline,
+computeSliceGeometry(struct CmdlineInfo const cmdline,
                      struct pam         const inpam,
                      bool               const verbose,
                      unsigned int *     const nHorizSliceP,
@@ -415,10 +411,10 @@ allocOutpam(unsigned int  const nVertSlice,
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
-    FILE    *ifP;
+    struct CmdlineInfo cmdline;
+    FILE    * ifP;
     struct pam inpam;
     unsigned int horizSlice;
         /* Number of the current horizontal slice.  Slices are numbered
@@ -445,11 +441,11 @@ main(int argc, char ** argv) {
     struct inputWindow inputWindow;
 
     struct pam * outpam;
-        /* malloc'ed.  outpam[x] is the pam structure that controls
+        /* malloc'ed array.  outpam[x] is the pam structure that controls
            the current horizontal slice of vertical slice x.
         */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
