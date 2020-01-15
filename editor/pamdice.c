@@ -231,7 +231,7 @@ computeOutputFilenameFormat(int           const format,
 
 static void
 openOutStreams(struct pam   const inpam,
-               struct pam         outpam[],
+               struct pam * const outpam,
                unsigned int const horizSlice,
                unsigned int const nHorizSlice,
                unsigned int const nVertSlice,
@@ -239,7 +239,7 @@ openOutStreams(struct pam   const inpam,
                unsigned int const sliceWidth,
                unsigned int const rightSliceWidth,
                unsigned int const hOverlap,
-               char         const outstem[]) {
+               const char * const outstem) {
 /*----------------------------------------------------------------------------
    Open the output files for a single horizontal slice (there's one file
    for each vertical slice) and write the Netpbm headers to them.  Also
@@ -278,7 +278,8 @@ openOutStreams(struct pam   const inpam,
 
 
 static void
-closeOutFiles(struct pam pam[], unsigned int const nVertSlice) {
+closeOutFiles(struct pam * const pam,
+              unsigned int const nVertSlice) {
 
     unsigned int vertSlice;
 
@@ -286,9 +287,11 @@ closeOutFiles(struct pam pam[], unsigned int const nVertSlice) {
         pm_close(pam[vertSlice].file);
 }
 
+
+
 static void
-sliceRow(tuple              inputRow[],
-         struct pam         outpam[],
+sliceRow(tuple *      const inputRow,
+         struct pam * const outpam,
          unsigned int const nVertSlice,
          unsigned int const hOverlap) {
 /*----------------------------------------------------------------------------
