@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.90.00
 
+              Install: Use e.g. "10.90.00" for version in pkg-config and
+              config file, intead of e.g. "Netpbm 10.90.00".
+
               pamdice: Fix junk output when -width or -height not specified.
 
               libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
