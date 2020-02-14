@@ -815,6 +815,10 @@ pm_read_unknown_size(FILE * const file,
     nalloc = PM_BUF_SIZE;
     MALLOCARRAY(buf, nalloc);
 
+    if (!buf)
+        pm_error("Failed to allocate %lu bytes for read buffer",
+                 (unsigned long) nalloc);
+
     eof = FALSE;  /* initial value */
 
     while(!eof) {
@@ -825,7 +829,10 @@ pm_read_unknown_size(FILE * const file,
                 nalloc += PM_MAX_BUF_INC;
             else
                 nalloc += nalloc;
-            REALLOCARRAY_NOFAIL(buf, nalloc);
+            REALLOCARRAY(buf, nalloc);
+            if (!buf)
+                pm_error("Failed to allocate %lu bytes for read buffer",
+                         (unsigned long) nalloc);
         }
 
         val = getc(file);
@@ -889,14 +896,27 @@ pm_getline(FILE *   const ifP,
                     /* + 2 = 1 for 'c', one for terminating NUL */
                     bufferSz += 128;
                     REALLOCARRAY(buffer, bufferSz);
+                    if (!buffer) {
+                        pm_error("Failed to allocate %lu bytes for buffer "
+                                 "to assemble a line of input",
+                                 (unsigned long) bufferSz);
+                    }
                 }
                 buffer[nReadSoFar++] = c;
             }
         }
     }
 
-    if (gotLine)
+    if (gotLine) {
+        bufferSz = nReadSoFar + 1;
+        REALLOCARRAY(buffer, bufferSz);
+        if (!buffer) {
+            pm_error("Failed to allocate %lu bytes for buffer "
+                     "to assemble a line of input",
+                     (unsigned long) bufferSz);
+        }
         buffer[nReadSoFar] = '\0';
+    }
 
     *eofP      = eof;
     *bufferP   = buffer;

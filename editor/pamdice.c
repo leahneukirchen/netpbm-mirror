@@ -150,13 +150,14 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
             *nHorizSliceP = 1 + divup(inpam.height - cmdline.height, 
                                       cmdline.height - cmdline.voverlap);
         *sliceHeightP = cmdline.height;
+
+        *bottomSliceHeightP = 
+            inpam.height - (*nHorizSliceP-1) * (cmdline.height - cmdline.voverlap);
     } else {
         *nHorizSliceP = 1;
         *sliceHeightP = inpam.height;
+        *bottomSliceHeightP = inpam.height;
     }
-
-    *bottomSliceHeightP = 
-        inpam.height - (*nHorizSliceP-1) * (cmdline.height - cmdline.voverlap);
 
     if (cmdline.sliceVertically) {
         if (cmdline.width >= inpam.width)
@@ -165,13 +166,13 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
             *nVertSliceP = 1 + divup(inpam.width - cmdline.width, 
                                      cmdline.width - cmdline.hoverlap);
         *sliceWidthP = cmdline.width;
+        *rightSliceWidthP = 
+            inpam.width - (*nVertSliceP-1) * (cmdline.width - cmdline.hoverlap);
     } else {
         *nVertSliceP = 1;
         *sliceWidthP = inpam.width;
+        *rightSliceWidthP = inpam.width;
     }
-
-    *rightSliceWidthP = 
-        inpam.width - (*nVertSliceP-1) * (cmdline.width - cmdline.hoverlap);
 
     if (verbose) {
         pm_message("Creating %u images, %u across by %u down; "
@@ -468,7 +469,10 @@ main(int argc, char ** argv) {
 
     for (horizSlice = 0; horizSlice < nHorizSlice; ++horizSlice) {
         unsigned int const thisSliceFirstRow = 
-            horizSlice * (sliceHeight - cmdline.voverlap);
+            horizSlice > 0 ? horizSlice * (sliceHeight - cmdline.voverlap) : 0;
+            /* Note that 'cmdline.voverlap' is not defined when there is only
+               one horizontal slice
+            */
         unsigned int const thisSliceHeight = 
             horizSlice < nHorizSlice-1 ? sliceHeight : bottomSliceHeight;
 

@@ -4,7 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-12.12.25 BJH  Release 10.86.08
+20.02.14 BJH  Release 10.86.09
+
+              pamdice: Fix junk output when -width or -height not specified.
+
+              libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
+              when reading empty line.
+
+              libnetpbm: pm_read_unknown_size, rawtopgm, zeisstopnm: crash
+              when out of memory
+
+19.12.25 BJH  Release 10.86.08
 
               pamrubber: Fix bug: -frame doesn't work.  Always broken.
               (Pamrubber was new in Netpbm 10.54 (March 2011).
