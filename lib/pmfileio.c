@@ -908,11 +908,12 @@ pm_getline(FILE *   const ifP,
     }
 
     if (gotLine) {
-        REALLOCARRAY(buffer, nReadSoFar+1);
+        bufferSz = nReadSoFar + 1;
+        REALLOCARRAY(buffer, bufferSz);
         if (!buffer) {
             pm_error("Failed to allocate %lu bytes for buffer "
                      "to assemble a line of input",
-                     (unsigned long) nReadSoFar+1);
+                     (unsigned long) bufferSz);
         }
         buffer[nReadSoFar] = '\0';
     }
