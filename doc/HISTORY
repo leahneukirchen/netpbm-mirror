@@ -6,8 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.90.00
 
-              Install: Use e.g. "10.90.00" for version in pkg-config and
-              config file, intead of e.g. "Netpbm 10.90.00".
+              pamundice: Add -listfile.
+
+              pamundice: Add error and warning messages for insane file name
+              pattern.
 
               pamdice: Fix junk output when -width or -height not specified.
 
@@ -16,6 +18,9 @@ not yet  BJH  Release 10.90.00
 
               libnetpbm: pm_read_unknown_size, rawtopgm, zeisstopnm: crash
               when out of memory
+
+              Install: Use e.g. "10.90.00" for version in pkg-config and
+              config file, intead of e.g. "Netpbm 10.90.00".
 
 19.12.29 BJH  Release 10.89.00
 
