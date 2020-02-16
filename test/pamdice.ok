@@ -1,0 +1,21 @@
+Test 1.
+     10 P1@1 1@0@
+Test 2.
+P1@1 1@0@
+P1@1 1@1@
+P1@1 1@1@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@1@
+P1@1 1@1@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@1@
+Test Invalid
+Expected failure 1
+Expected failure 2
+Expected failure 3
+Expected failure 4
+Expected failure 5
+Expected failure 6
+Expected failure (output files)
