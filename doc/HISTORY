@@ -13,6 +13,11 @@ not yet  BJH  Release 10.90.00
 
               pamdice: Fix junk output when -width or -height not specified.
 
+              pamdice: Fix crash when -width or -height is zero.
+
+              pamdice: Fix incorrect file names when -outstem contains "%s",
+              etc.
+
               libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
               when reading empty line.
 
