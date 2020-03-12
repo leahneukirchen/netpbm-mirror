@@ -42,7 +42,7 @@ struct cmdlineInfo {
     enum halftone halftone;
     unsigned int  clumpSize;
         /* Defined only for halftone == QT_HILBERT */
-    unsigned int  clusterRadius;  
+    unsigned int  clusterRadius;
         /* Defined only for halftone == QT_CLUSTER */
     float         threshval;
     unsigned int  randomseed;
@@ -85,9 +85,9 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "c4",        OPT_FLAG,  NULL, &cluster4Opt,  0);
     OPTENT3(0, "cluster8",  OPT_FLAG,  NULL, &cluster8Opt,  0);
     OPTENT3(0, "c8",        OPT_FLAG,  NULL, &cluster8Opt,  0);
-    OPTENT3(0, "value",     OPT_FLOAT, &cmdlineP->threshval, 
+    OPTENT3(0, "value",     OPT_FLOAT, &cmdlineP->threshval,
             &valueSpec, 0);
-    OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize, 
+    OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize,
             &clumpSpec, 0);
     OPTENT3(0,   "randomseed",   OPT_UINT,    &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec,      0);
@@ -101,10 +101,10 @@ parseCommandLine(int argc, char ** argv,
 
     free(option_def);
 
-    if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt + 
+    if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt == 0)
         cmdlineP->halftone = QT_FS;
-    else if (floydOpt + atkinsonOpt + thresholdOpt + dither8Opt + 
+    else if (floydOpt + atkinsonOpt + thresholdOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt > 1)
         pm_error("Cannot specify more than one halftoning type");
     else {
@@ -135,7 +135,7 @@ parseCommandLine(int argc, char ** argv,
         } else if (cluster8Opt) {
             cmdlineP->halftone = QT_CLUSTER;
             cmdlineP->clusterRadius = 8;
-        } else 
+        } else
             pm_error("INTERNAL ERROR.  No halftone option");
     }
 
@@ -205,12 +205,12 @@ struct Hil {
     int height;
 };
 
-static void 
-initHilbert(int          const w, 
+static void
+initHilbert(int          const w,
             int          const h,
             struct Hil * const hilP) {
 /*----------------------------------------------------------------------------
-  Initialize the Hilbert curve tracer 
+  Initialize the Hilbert curve tracer
 -----------------------------------------------------------------------------*/
     int big, ber;
     hilP->width = w;
@@ -273,7 +273,7 @@ hilbert(int *        const px,
             temp = hilP->dy;
             hilP->dy = -hilP->turn * hilP->dx;
             hilP->dx = hilP->turn * temp;
-            if (hilP->ord > 0) { 
+            if (hilP->ord > 0) {
                 /* recurse */
 
                 hilP->stage[hilP->ord] = 3;
@@ -335,7 +335,7 @@ hilbert(int *        const px,
 
 
 
-static void 
+static void
 doHilbert(FILE *       const ifP,
           unsigned int const clumpSize) {
 /*----------------------------------------------------------------------------
@@ -400,7 +400,7 @@ doHilbert(FILE *       const ifP,
                 bits[row][col][0] = 0;
         }
     }
-    free(x);    free(y); 
+    free(x);    free(y);
     pnm_writepam(&bitpam, bits);
 
     pnm_freepamarray(bits, &bitpam);
@@ -412,7 +412,7 @@ doHilbert(FILE *       const ifP,
 struct converter {
     void (*convertRow)(struct converter * const converterP,
                        unsigned int       const row,
-                       tuplen                   grayrow[], 
+                       tuplen                   grayrow[],
                        tuple                    bitrow[]);
     void (*destroy)(struct converter * const converterP);
     unsigned int cols;
@@ -423,11 +423,11 @@ struct converter {
 
 struct fsState {
     float * thiserr;
-        /* thiserr[N] is the power from previous pixels to include in 
+        /* thiserr[N] is the power from previous pixels to include in
            future column N of the current row.
         */
     float * nexterr;
-        /* nexterr[N] is the power from previous pixels to include in 
+        /* nexterr[N] is the power from previous pixels to include in
            future column N of the next row.
         */
     bool fs_forward;
@@ -455,7 +455,7 @@ fsConvertRow(struct converter * const converterP,
 
     unsigned int limitcol;
     unsigned int col;
-    
+
     for (col = 0; col < converterP->cols + 2; ++col)
         nexterr[col] = 0.0;
 
@@ -494,18 +494,18 @@ fsConvertRow(struct converter * const converterP,
             nexterr[col    ] += (accum * 3) / 16;
             nexterr[col + 1] += (accum * 5) / 16;
             nexterr[col + 2] += (accum * 1) / 16;
-            
+
             ++col;
         } else {
             thiserr[col    ] += (accum * 7) / 16;
             nexterr[col + 2] += (accum * 3) / 16;
             nexterr[col + 1] += (accum * 5) / 16;
             nexterr[col    ] += (accum * 1) / 16;
-            
+
             --col;
         }
     } while (col != limitcol);
-    
+
     stateP->thiserr = nexterr;
     stateP->nexterr = thiserr;
     stateP->fs_forward = ! stateP->fs_forward;
@@ -584,7 +584,7 @@ struct atkinsonState {
 
 static void
 moveAtkinsonErrorWindowDown(struct converter * const converterP) {
-                            
+
     struct atkinsonState * const stateP = converterP->stateP;
 
     float * const oldError0 = stateP->error[0];
@@ -628,7 +628,7 @@ atkinsonConvertRow(struct converter * const converterP,
             accum -= stateP->white;
         } else
             bitrow[col] = blackTuple;
-        
+
         /* Forward to future output pixels 3/4 of the power from current
            input pixel and the power forwarded from previous input
            pixels to the current pixel, less any power we put into the
@@ -642,7 +642,7 @@ atkinsonConvertRow(struct converter * const converterP,
         error[1][col+1] += accum/8;
         error[2][col  ] += accum/8;
     }
-    
+
     moveAtkinsonErrorWindowDown(converterP);
 }
 
@@ -670,7 +670,7 @@ createAtkinsonConverter(struct pam * const graypamP,
     struct atkinsonState * stateP;
     struct converter converter;
     unsigned int relRow;
-    
+
     converter.cols       = graypamP->width;
     converter.convertRow = &atkinsonConvertRow;
     converter.destroy    = &atkinsonDestroy;
@@ -710,7 +710,7 @@ threshConvertRow(struct converter * const converterP,
                  unsigned int       const row,
                  tuplen                   grayrow[],
                  tuple                    bitrow[]) {
-    
+
     struct threshState * const stateP = converterP->stateP;
 
     unsigned int col;
@@ -740,7 +740,7 @@ createThreshConverter(struct pam * const graypamP,
     converter.cols       = graypamP->width;
     converter.convertRow = &threshConvertRow;
     converter.destroy    = &threshDestroy;
-    
+
     stateP->threshval    = threshFraction;
     converter.stateP     = stateP;
 
@@ -768,7 +768,7 @@ clusterConvertRow(struct converter * const converterP,
     unsigned int col;
 
     for (col = 0; col < converterP->cols; ++col) {
-        float const threshold = 
+        float const threshold =
             stateP->clusterMatrix[row % diameter][col % diameter];
         bitrow[col] =
             grayrow[col][0] > threshold ? whiteTuple : blackTuple;
@@ -789,7 +789,7 @@ clusterDestroy(struct converter * const converterP) {
         free(stateP->clusterMatrix[row]);
 
     free(stateP->clusterMatrix);
-    
+
     free(stateP);
 }
 
@@ -799,14 +799,14 @@ static struct converter
 createClusterConverter(struct pam *    const graypamP,
                        enum ditherType const ditherType,
                        unsigned int    const radius) {
-    
+
     /* TODO: We create a floating point normalized, gamma-adjusted
-       dither matrix from the old integer dither matrices that were 
+       dither matrix from the old integer dither matrices that were
        developed for use with integer arithmetic.  We really should
        just change the literal values in dither.h instead of computing
        the matrix from the integer literal values here.
     */
-    
+
     int const clusterNormalizer = radius * radius * 2;
     unsigned int const diameter = 2 * radius;
 
@@ -827,16 +827,16 @@ createClusterConverter(struct pam *    const graypamP,
         unsigned int col;
 
         MALLOCARRAY_NOFAIL(stateP->clusterMatrix[row], diameter);
-        
+
         for (col = 0; col < diameter; ++col) {
             switch (ditherType) {
-            case DT_REGULAR: 
+            case DT_REGULAR:
                 switch (radius) {
-                case 8: 
-                    stateP->clusterMatrix[row][col] = 
+                case 8:
+                    stateP->clusterMatrix[row][col] =
                         pm_gamma709((float)dither8[row][col] / 256);
                     break;
-                default: 
+                default:
                     pm_error("INTERNAL ERROR: invalid radius");
                 }
                 break;
@@ -849,13 +849,13 @@ createClusterConverter(struct pam *    const graypamP,
                 default:
                     pm_error("INTERNAL ERROR: invalid radius");
                 }
-                stateP->clusterMatrix[row][col] = 
+                stateP->clusterMatrix[row][col] =
                     pm_gamma709((float)val / clusterNormalizer);
             }
             break;
             }
         }
-    }            
+    }
 
     converter.stateP = stateP;
 
@@ -891,7 +891,7 @@ main(int argc, char *argv[]) {
         pnm_readpaminit(ifP, &graypam, PAM_STRUCT_SIZE(tuple_type));
 
         bitpam = makeOutputPam(graypam.width, graypam.height);
-        
+
         pnm_writepaminit(&bitpam);
 
         switch (cmdline.halftone) {
@@ -904,15 +904,15 @@ main(int argc, char *argv[]) {
         case QT_THRESH:
             converter = createThreshConverter(&graypam, cmdline.threshval);
             break;
-        case QT_DITHER8: 
-            converter = createClusterConverter(&graypam, DT_REGULAR, 8); 
+        case QT_DITHER8:
+            converter = createClusterConverter(&graypam, DT_REGULAR, 8);
             break;
-        case QT_CLUSTER: 
-            converter = createClusterConverter(&graypam, 
-                                               DT_CLUSTER, 
+        case QT_CLUSTER:
+            converter = createClusterConverter(&graypam,
+                                               DT_CLUSTER,
                                                cmdline.clusterRadius);
             break;
-        case QT_HILBERT: 
+        case QT_HILBERT:
                 pm_error("INTERNAL ERROR: halftone is QT_HILBERT where it "
                          "shouldn't be.");
                 break;
@@ -925,7 +925,7 @@ main(int argc, char *argv[]) {
             pnm_readpamrown(&graypam, grayrow);
 
             converter.convertRow(&converter, row, grayrow, bitrow);
-            
+
             pnm_writepamrow(&bitpam, bitrow);
         }
         free(bitrow);
