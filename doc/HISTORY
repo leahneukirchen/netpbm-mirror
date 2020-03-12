@@ -22,6 +22,9 @@ not yet  BJH  Release 10.90.00
               pamdice: Fix incorrect file names when -outstem contains "%s",
               etc.
 
+              pgmnoise: Correct error messages for invalid height, width
+              arguments.
+
               libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
               when reading empty line.
 

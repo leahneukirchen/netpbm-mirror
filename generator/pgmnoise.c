@@ -3,11 +3,12 @@
    Frank Neumann, October 1993
 *********************************************************************/
 
+#include <assert.h>
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 #include "pgm.h"
-#include <assert.h>
 
 
 
@@ -68,16 +69,24 @@ parseCommandLine(int argc, const char ** const argv,
                  "Arguments are width and height of image, in pixels",
                  argc-1);
     else {
-        int const width  = atoi(argv[1]);
-        int const height = atoi(argv[2]);
+        const char * error; /* error message of pm_string_to_uint */
+        unsigned int width, height;
 
-        if (width <= 0)
-            pm_error("Width must be positive, not %d", width);
+        pm_string_to_uint(argv[1], &width, &error);
+        if (error)
+            pm_error("Width argument is not an unsigned integer.  %s",
+                     error);
+        else if (width == 0)
+            pm_error("Width argument is zero; must be positive");
         else
             cmdlineP->width = width;
 
-        if (height <= 0)
-            pm_error("Height must be positive, not %d", width);
+        pm_string_to_uint(argv[2], &height, &error);
+        if (error)
+            pm_error("Height argument is not an unsigned integer.  %s ",
+                     error);
+        else if (height == 0)
+            pm_error("Height argument is zero; must be positive");
         else
             cmdlineP->height = height;
     }
