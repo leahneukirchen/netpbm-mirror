@@ -11,6 +11,10 @@ not yet  BJH  Release 10.90.00
               pamundice: Add error and warning messages for insane file name
               pattern.
 
+              pamditherbw: Fix bug: issue error message instead of just
+              ignoring one of the options when you specify -hilbert and
+              another halftone option.
+
               pamdice: Fix junk output when -width or -height not specified.
 
               pamdice: Fix crash when -width or -height is zero.

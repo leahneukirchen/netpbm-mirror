@@ -104,7 +104,7 @@ parseCommandLine(int argc, char ** argv,
     if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt == 0)
         cmdlineP->halftone = QT_FS;
-    else if (floydOpt + atkinsonOpt + thresholdOpt + dither8Opt +
+    else if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt > 1)
         pm_error("Cannot specify more than one halftoning type");
     else {
