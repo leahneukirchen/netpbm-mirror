@@ -1007,47 +1007,83 @@ pm_strishex(const char * const subject) {
 
 
 void
-pm_string_to_uint(const char *   const string,
-                  unsigned int * const uintP,
+pm_string_to_long(const char *   const string,
+                  long *         const longP,
                   const char **  const errorP) {
 
     if (strlen(string) == 0)
         pm_asprintf(errorP, "Value is a null string");
     else {
         char * tailptr;
-        long longValue;
-
-        /* We can't use 'strtoul'.  Contrary to expectations, though as
-           designed, it returns junk if there is a minus sign.
-        */
 
         /* strtol() does a bizarre thing where if the number is out
            of range, it returns a clamped value but tells you about it
            by setting errno = ERANGE.  If it is not out of range,
            strtol() leaves errno alone.
         */
-        errno = 0;  /* So we can tell if strtoul() overflowed */
+        errno = 0;  /* So we can tell if strtol() overflowed */
 
-        longValue = strtol(string, &tailptr, 10);
+        *longP = strtol(string, &tailptr, 10);
 
         if (*tailptr != '\0')
             pm_asprintf(errorP, "Non-numeric crap in string: '%s'", tailptr);
         else {
              if (errno == ERANGE)
                  pm_asprintf(errorP, "Number is too large for computation");
-             else {
-                 if (longValue < 0)
-                     pm_asprintf(errorP, "Number is negative");
-                 else {
-                     if ((unsigned int)longValue != longValue)
-                         pm_asprintf(errorP,
-                                     "Number is too large for computation");
-                     else {
-                         *uintP = (unsigned int)longValue;
-                         *errorP = NULL;
-                     }
-                 }
-             }
+             else
+                 *errorP = NULL;
+        }
+    }
+}
+
+
+
+void
+pm_string_to_int(const char *   const string,
+                 int *          const intP,
+                 const char **  const errorP) {
+
+    long longValue;
+
+    pm_string_to_long(string, &longValue, errorP);
+
+    if (!*errorP) {
+        if ((int)longValue != longValue)
+            pm_asprintf(errorP,
+                        "Number is too large for computation");
+        else {
+            *intP = (int)longValue;
+            *errorP = NULL;
+        }
+    }
+}
+
+
+
+void
+pm_string_to_uint(const char *   const string,
+                  unsigned int * const uintP,
+                  const char **  const errorP) {
+
+    /* We can't use 'strtoul'.  Contrary to expectations, though as
+       designed, it returns junk if there is a minus sign.
+    */
+
+    long longValue;
+
+    pm_string_to_long(string, &longValue, errorP);
+
+    if (!*errorP) {
+        if (longValue < 0)
+            pm_asprintf(errorP, "Number is negative");
+        else {
+            if ((unsigned int)longValue != longValue)
+                pm_asprintf(errorP,
+                            "Number is too large for computation");
+            else {
+                *uintP = (unsigned int)longValue;
+                *errorP = NULL;
+            }
         }
     }
 }

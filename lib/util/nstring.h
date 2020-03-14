@@ -209,6 +209,16 @@ bool
 pm_strishex(const char * const subject);
 
 void
+pm_string_to_long(const char *   const string,
+                  long *         const longP,
+                  const char **  const errorP);
+
+void
+pm_string_to_int(const char *   const string,
+                 int *          const intP,
+                 const char **  const errorP);
+
+void
 pm_string_to_uint(const char *   const string,
                   unsigned int * const uintP,
                   const char **  const errorP);
