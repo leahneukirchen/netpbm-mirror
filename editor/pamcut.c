@@ -17,6 +17,7 @@
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
+#include "nstring.h"
 
 #define UNSPEC INT_MAX
     /* UNSPEC is the value we use for an argument that is not specified
@@ -75,6 +76,73 @@ struct CmdlineInfo {
     unsigned int pad;
     unsigned int verbose;
 };
+
+
+
+static void
+parseLegacyLocationArgs(const char **        const argv,
+                        struct CmdlineInfo * const cmdlineP) {
+
+    int leftArg, topArg, widthArg, heightArg;
+
+    {
+        const char * error;
+        pm_string_to_int(argv[1], &leftArg,   &error);
+        if (error)
+            pm_error("Invalid number for left column argument.  %s", error);
+    }
+    {
+        const char * error;
+        pm_string_to_int(argv[2], &topArg,    &error);
+        if (error)
+            pm_error("Invalid number for top row argument.  %s",     error);
+    }
+    {
+        const char * error;
+        pm_string_to_int(argv[3], &widthArg,  &error);
+        if (error)
+            pm_error("Invalid number for width argument.  %s",       error);
+    }
+    {
+        const char * error;
+        pm_string_to_int(argv[4], &heightArg, &error);
+        if (error)
+            pm_error("Invalid number for height argument.  %s",      error);
+    }
+
+    if (leftArg < 0) {
+        cmdlineP->leftLoc.locType = LOCTYPE_FROMFAR;
+        cmdlineP->leftLoc.n       = -leftArg;
+    } else {
+        cmdlineP->leftLoc.locType = LOCTYPE_FROMNEAR;
+        cmdlineP->leftLoc.n       = leftArg;
+    }
+    if (topArg < 0) {
+        cmdlineP->topLoc.locType = LOCTYPE_FROMFAR;
+        cmdlineP->topLoc.n       = -topArg;
+    } else {
+        cmdlineP->topLoc.locType = LOCTYPE_FROMNEAR;
+        cmdlineP->topLoc.n       = topArg;
+    }
+    if (widthArg > 0) {
+        cmdlineP->width = widthArg;
+        cmdlineP->widthSpec = 1;
+        cmdlineP->rghtLoc.locType = LOCTYPE_NONE;
+    } else {
+        cmdlineP->widthSpec = 0;
+        cmdlineP->rghtLoc.locType = LOCTYPE_FROMFAR;
+        cmdlineP->rghtLoc.n = -(widthArg - 1);
+    }
+    if (heightArg > 0) {
+        cmdlineP->height = heightArg;
+        cmdlineP->heightSpec = 1;
+        cmdlineP->botLoc.locType = LOCTYPE_NONE;
+    } else {
+        cmdlineP->heightSpec = 0;
+        cmdlineP->botLoc.locType = LOCTYPE_FROMFAR;
+        cmdlineP->botLoc.n = -(heightArg - 1);
+    }
+}
 
 
 
@@ -156,51 +224,9 @@ parseCommandLine(int argc, const char ** const argv,
         break;
     }
 
-    if (haveLegacyLocationArgs) {
-        int leftArg, topArg, widthArg, heightArg;
-
-        if (sscanf(argv[1], "%d", &leftArg) != 1)
-            pm_error("Invalid number for left column argument");
-        if (sscanf(argv[2], "%d", &topArg) != 1)
-            pm_error("Invalid number for right column argument");
-        if (sscanf(argv[3], "%d", &widthArg) != 1)
-            pm_error("Invalid number for width argument");
-        if (sscanf(argv[4], "%d", &heightArg) != 1)
-            pm_error("Invalid number for height argument");
-
-        if (leftArg < 0) {
-            cmdlineP->leftLoc.locType = LOCTYPE_FROMFAR;
-            cmdlineP->leftLoc.n       = -leftArg;
-        } else {
-            cmdlineP->leftLoc.locType = LOCTYPE_FROMNEAR;
-            cmdlineP->leftLoc.n       = leftArg;
-        }
-        if (topArg < 0) {
-            cmdlineP->topLoc.locType = LOCTYPE_FROMFAR;
-            cmdlineP->topLoc.n       = -topArg;
-        } else {
-            cmdlineP->topLoc.locType = LOCTYPE_FROMNEAR;
-            cmdlineP->topLoc.n       = topArg;
-        }
-        if (widthArg > 0) {
-            cmdlineP->width = widthArg;
-            cmdlineP->widthSpec = 1;
-            cmdlineP->rghtLoc.locType = LOCTYPE_NONE;
-        } else {
-            cmdlineP->widthSpec = 0;
-            cmdlineP->rghtLoc.locType = LOCTYPE_FROMFAR;
-            cmdlineP->rghtLoc.n = -(widthArg - 1);
-        }
-        if (heightArg > 0) {
-            cmdlineP->height = heightArg;
-            cmdlineP->heightSpec = 1;
-            cmdlineP->botLoc.locType = LOCTYPE_NONE;
-        } else {
-            cmdlineP->heightSpec = 0;
-            cmdlineP->botLoc.locType = LOCTYPE_FROMFAR;
-            cmdlineP->botLoc.n = -(heightArg - 1);
-        }
-    } else {
+    if (haveLegacyLocationArgs)
+        parseLegacyLocationArgs(argv, cmdlineP);
+    else {
         if (leftSpec && cropleftSpec)
             pm_error("You cannot specify both -left and -cropleft");
         if (leftSpec) {

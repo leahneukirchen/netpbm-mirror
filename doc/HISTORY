@@ -25,6 +25,9 @@ not yet  BJH  Release 10.90.00
               pgmnoise: Correct error messages for invalid height, width
               arguments.
 
+              pamcut: Improve error messages for legacy command line
+              arguments.
+
               libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
               when reading empty line.
 
