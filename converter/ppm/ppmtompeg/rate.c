@@ -175,24 +175,6 @@ static int Qscale;	       /* Clipped, truncated quantization value */
 static FILE *RC_FILE;
 #endif
 
-static const char * const Frame_header1 =
-"  Fm         #     Bit      GOP                    V                ";
-static const char * const Frame_header2 =
-"   #  type   MBs   Alloc    left  Ni Np Nb  N_act  buff   Q_rc Qscale";
-static const char * const Frame_header3 =
-"----     -  ----  ------ -------  -- -- --  -----  ------ ----   ----";
-static const char * const Frame_trailer1 =
-"                      avg          virt     %    GOP      %     VBV";
-static const char * const Frame_trailer2 =
-"    Sx    Qx      Xx  act N_act  buffer alloc    left  left     buf  delay";
-static const char * const Frame_trailer3 =
-"------ --.-- -------  --- --.-- -------   --- -------   --- ------- ------";
-
-static const char * const MB_header1 =
-"MB#  #bits  Q mqt     Dj  Q_j   actj  N_act  totbits b/MB %alloc %done";
-static const char * const MB_header2 =
-"---  ----- -- --- ------  ---  -----  --.--   ------ ----    ---   ---";
-
 static char rc_buffer[101];
 
 /*	EXTERNAL Variables  */
