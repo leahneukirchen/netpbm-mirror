@@ -205,7 +205,6 @@ if (!defined($colorMapFh)) {
 if (!$progError) {
     makeColorMap(\@fileNames, $newColorCt, $colorMapFileName, \$progError);
 }
-print ("got color map\n");
 if (!$progError) {
     remapFiles(\@fileNames, $colorMapFileName, $ext, \$progError);
 }

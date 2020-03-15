@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.03.15 BJH  Release 10.86.10
+
+              pamdice: Fix crash when -width or -height is zero.
+
+              pamdice: Fix incorrect file names when -outstem contains "%s",
+              etc.
+
+              pnmquantall: remove accidentally published debugging trace.
+
 20.02.14 BJH  Release 10.86.09
 
               pamdice: Fix junk output when -width or -height not specified.
