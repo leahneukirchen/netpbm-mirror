@@ -34,3 +34,20 @@ for n in 1 2 3 4 5 6 7 8 9 10
   done
 
 rm ${sheet_pbm}
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combination." 1>&2
+echo "An error message should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+# overspecification
+pbmclean -black -white -min=1 -extended testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+
+# note that without -extended the above is valid.
+
+rm -f ${test_out}

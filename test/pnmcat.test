@@ -2,9 +2,70 @@
 # This script tests: pnmcat
 # Also requires:
 
+echo "Test 1."
 
 pnmcat -lr testgrid.pbm testgrid.pbm | cksum
 pnmcat -tb testgrid.pbm testgrid.pbm | cksum
 
 pnmcat -lr testimg.ppm testimg.ppm | cksum
 pnmcat -tb testimg.ppm testimg.ppm | cksum
+
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+# direction not specified
+pnmcat testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+
+# both directions specified
+pnmcat -topbottom -leftright testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+
+# both pad colors specified
+pnmcat -topbottom -white -black testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+
+# justification parameters overspecified
+pnmcat -lr -jtop -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+
+pnmcat -lr -jtop -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+
+pnmcat -lr -jcenter -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+
+pnmcat -tb -jleft -jright testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+
+pnmcat -tb -jleft -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+
+pnmcat -tb -jcenter -jright testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 9"; test -s ${test_out}; echo " "$?
+
+# justification parameter in the wrong direction
+pnmcat -lr -jleft    testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 10"; test -s ${test_out}; echo " "$?
+
+pnmcat -lr -jright   testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 11"; test -s ${test_out}; echo " "$?
+
+pnmcat -tb -jtop     testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 12"; test -s ${test_out}; echo " "$?
+
+pnmcat -tb -jbottom  testgrid.pbm testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 13"; test -s ${test_out}; echo " "$?
+
+# more than one input image from standard input
+cat testgrid.pbm | pnmcat -lr - - testimg.ppm > ${test_out} || \
+   echo -n "Expected failure 14"; test -s ${test_out}; echo " "$?
+
+rm -f ${test_out}

@@ -1,6 +1,13 @@
+Test 1.
 4
 4
 4
+Test 2.
 2
 2
 2
+Test Invalid.
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1

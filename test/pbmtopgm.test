@@ -1,16 +1,15 @@
 #! /bin/bash
-# This script tests: pbmpscale
-# Also requires: pamenlarge pbmtext
+# This script tests: pbmtopgm
+# Also requires:
 
+#Test 1
+echo "Test 1"
 
-pbmtext -nomargin "F" | pbmpscale 3 -plain
+pbmtopgm -plain 1 1 testgrid.pbm
 
-for i in 2 3 4
-do
-pamenlarge 2 testgrid.pbm | \
-  pbmpscale $i | cksum
-done
+echo "Test Invalid"
 
+tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
 echo 1>&2
@@ -18,13 +17,16 @@ echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pbmpscale testgrid.pbm > ${test_out} || \
+pbmtopgm 5 0 testgrid.pbm > ${test_out} || \
    echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
 
-pbmpscale 0 testgrid.pbm > ${test_out} || \
+pbmtopgm 0 9 testgrid.pbm > ${test_out} || \
    echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
 
-pbmpscale 2 3 testgrid.pbm > ${test_out} || \
+pbmtopgm 15 5 testgrid.pbm > ${test_out} || \
    echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+
+pbmtopgm 5 17 testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
 
 rm -f ${test_out}

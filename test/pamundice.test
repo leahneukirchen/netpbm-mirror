@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pamundice
-# Also requires: pbmmake pgmmake pnmtile pnmcat pnmpad
+# Also requires: pgmmake pnmtile pnmcat pnmpad
 
 tmpdir=${tmpdir:-/tmp}
 fname_stem=${tmpdir}/part

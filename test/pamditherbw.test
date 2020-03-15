@@ -17,7 +17,6 @@ pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
 echo "Test: Hilbert"
 pamditherbw -hilbert ${test_red} | cksum
 pamditherbw -hilbert -clump=4   ${test_red} | cksum
-pamditherbw -hilbert -clump=4 -threshold -value=0.5  ${test_red} | cksum
 pamditherbw -hilbert -clump=16  ${test_red} | cksum
 pamditherbw -hilbert -clump=100 ${test_red} | cksum
 
@@ -59,15 +58,17 @@ pamditherbw -cluster3 -cluster8 ${test_red} > ${test_out} || \
  echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
 pamditherbw -cluster4 -cluster8 ${test_red} > ${test_out} || \
  echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
-pamditherbw -clump=8            ${test_red} > ${test_out} || \
+pamditherbw -hilbert -threshold ${test_red} > ${test_out} || \
  echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
-pamditherbw -fs -clump=8        ${test_red} > ${test_out} || \
+pamditherbw -clump=8            ${test_red} > ${test_out} || \
  echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
-pamditherbw -hilbert -clump=1   ${test_red} > ${test_out} || \
+pamditherbw -fs -clump=8        ${test_red} > ${test_out} || \
  echo -n "Expected failure 9"; test -s ${test_out}; echo " "$?
-pamditherbw -th -value=-1       ${test_red} > ${test_out} || \
+pamditherbw -hilbert -clump=1   ${test_red} > ${test_out} || \
  echo -n "Expected failure 10"; test -s ${test_out}; echo " "$?
-pamditherbw -th -value=1.1      ${test_red} > ${test_out} || \
+pamditherbw -th -value=-1       ${test_red} > ${test_out} || \
  echo -n "Expected failure 11"; test -s ${test_out}; echo " "$?
+pamditherbw -th -value=1.1      ${test_red} > ${test_out} || \
+ echo -n "Expected failure 12"; test -s ${test_out}; echo " "$?
 
 rm ${test_red} ${test_out}

@@ -27,6 +27,7 @@ ppmforge-parameters.test
 # Generators with random components
 
 pgmnoise.test
+pgmnoise-parameters.test
 ppmpat-random.test
 ppmforge.test
 ppmrough.test
@@ -41,12 +42,14 @@ ppmhist.test
 pamsumm.test
 pnmpsnr.test
 pbmminkowski.test
+pgmminkowski.test
 
 pnmcolormap.test
 
 # Basic (internal) converter tests
 
 pamtopam.test
+pbmtopgm.test
 pgmtopgm.test
 ppmtoppm.test
 pgmtoppm.test
@@ -54,6 +57,8 @@ ppmtopgm.test
 pnmtopnm-plain.test
 
 # Editor tests
+
+pamdepth.test
 
 pamditherbw.test
 pamhue.test

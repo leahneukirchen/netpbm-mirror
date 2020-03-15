@@ -1,0 +1,14 @@
+Test 1
+538848130 235
+stdin: PGM RAW 14 16 1 1 GRAYSCALE
+538848130 235
+stdin: PGM RAW 14 16 1 1 GRAYSCALE
+831461512 289
+stdin: PAM RAW 14 16 1 1 GRAYSCALE
+831461512 289
+stdin: PAM RAW 14 16 1 1 GRAYSCALE
+Test 2
+0 0 : 0
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
