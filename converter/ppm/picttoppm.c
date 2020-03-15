@@ -2473,10 +2473,6 @@ interpretOneRasterBlock(unsigned char * const block,
 
 
 
-static unsigned int const maxPixelBytesPerBlock = 1024;
-
-
-
 static void
 interpretCompressedLine(unsigned char * const linebuf,
                         unsigned int    const linelen,
