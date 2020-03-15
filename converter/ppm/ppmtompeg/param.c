@@ -125,11 +125,6 @@ int mult_seq_headers = 0;  /* 0 for none, N for header/N GOPs */
 
 extern char currentPath[MAXPATHLEN];
 
-static const char * const optionText[LAST_OPTION+1] = { 
-    "GOP_SIZE", "PATTERN", "PIXEL", "PQSCALE",
-    "OUTPUT", "RANGE", "PSEARCH_ALG", "IQSCALE", "INPUT_DIR",
-    "INPUT_CONVERT", "INPUT", "BQSCALE", "BASE_FILE_FORMAT",
-    "SLICES_PER_FRAME", "BSEARCH_ALG", "REFERENCE_FRAME"};
 static bool optionSeen[NUM_OPTIONS+1];
     /* optionSeen[x] means we have seen option x in the parameter file we've
        been reading.
