@@ -201,9 +201,6 @@ Putbyte(int    const b,
 
 
 
-static const unsigned char bitmask[] = {1, 2, 4, 8, 16, 32, 64, 128};
-
-
 static void
 extractPlane(unsigned char * const rawrow,
              int             const cols,
