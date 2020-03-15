@@ -11,6 +11,9 @@ not yet  BJH  Release 10.90.00
               pamundice: Add error and warning messages for insane file name
               pattern.
 
+              pamcut: Improve error messages for legacy command line
+              arguments.
+
               pamditherbw: Fix bug: issue error message instead of just
               ignoring one of the options when you specify -hilbert and
               another halftone option.
@@ -25,8 +28,7 @@ not yet  BJH  Release 10.90.00
               pgmnoise: Correct error messages for invalid height, width
               arguments.
 
-              pamcut: Improve error messages for legacy command line
-              arguments.
+              pnmquantall: remove accidentally published debugging trace.
 
               libnetpbm: pm_getline, xvminitoppm, pamtris : Fix bug: crash
               when reading empty line.
