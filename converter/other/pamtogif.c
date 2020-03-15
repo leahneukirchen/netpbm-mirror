@@ -19,8 +19,6 @@
 
 #define MAXCMAPSIZE 256
 
-static unsigned int const gifMaxval = 255;
-
 static bool verbose;
 
 
