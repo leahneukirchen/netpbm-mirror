@@ -110,6 +110,7 @@
  * __END_OF_JASPER_LICENSE__
  */
 
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _SVID_SOURCE
     /* Make sure P_tmpdir is defined in GNU libc 2.0.7 (_XOPEN_SOURCE 500
        does it in other libc's).  pm_config.h defines TMPDIR as P_tmpdir
