@@ -1106,7 +1106,7 @@ static void encode_sde(struct jbg_enc_state *s,
 	    if (!at_determined && j >= s->mx && j < hx-2) {
 	      p = (line_h1 & 0x100) != 0; /* current pixel value */
 	      c[0] += ((line_h2 & 0x4000) != 0) == p; /* default position */
-	      assert(!(((line_h2 >> 6) ^ line_h1) & 0x100) ==
+	      assert((!(((line_h2 >> 6) ^ line_h1) & 0x100)) ==
 		     (((line_h2 & 0x4000) != 0) == p));
 	      for (t = 5; t <= s->mx && t <= j; t++) {
 		o = (j - t) - (j & ~7L);
@@ -1151,7 +1151,7 @@ static void encode_sde(struct jbg_enc_state *s,
 	    if (!at_determined && j >= s->mx && j < hx-2) {
 	      p = (line_h1 & 0x100) != 0; /* current pixel value */
 	      c[0] += ((line_h2 & 0x4000) != 0) == p; /* default position */
-	      assert(!(((line_h2 >> 6) ^ line_h1) & 0x100) ==
+	      assert((!(((line_h2 >> 6) ^ line_h1) & 0x100)) ==
 		     (((line_h2 & 0x4000) != 0) == p));
 	      for (t = 3; t <= s->mx && t <= j; t++) {
 		o = (j - t) - (j & ~7L);
