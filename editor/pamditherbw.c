@@ -190,8 +190,6 @@ makeOutputPam(unsigned int const width,
 
 /* Hilbert curve tracer */
 
-#define MAXORD 18
-
 struct Hil {
     int order;
     int ord;
@@ -200,7 +198,10 @@ struct Hil {
     int dy;
     int x;
     int y;
-    int stage[MAXORD];
+    int stage[sizeof(unsigned int)*8];
+        /* One entry for every bit in the height or width, each of which
+           is an unsigned int
+        */
     int width;
     int height;
 };
@@ -217,8 +218,7 @@ initHilbert(int          const w,
     hilP->height = h;
     big = w > h ? w : h;
     for (ber = 2, hilP->order = 1; ber < big; ber <<= 1, hilP->order++);
-    if (hilP->order > MAXORD)
-        pm_error("Sorry, hilbert order is too large");
+    assert(hilP->order <= ARRAY_SIZE(hilP->stage));
     hilP->ord = hilP->order;
     hilP->order--;
 }

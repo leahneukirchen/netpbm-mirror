@@ -8,6 +8,9 @@ not yet  BJH  Release 10.90.00
 
               pamundice: Add -listfile.
 
+              pamditherbw: Remove restriction to 2^18 pixels width and height
+              for -hilbert .
+
               pamundice: Add error and warning messages for insane file name
               pattern.
 
