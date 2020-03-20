@@ -198,8 +198,10 @@ typedef struct {
 
 
 typedef struct {
+    bool firstPointDone;
     unsigned int order;
     unsigned int ord;
+        /* Meaningful only when 'firstPointDone' is true */
     int turn;
     int dx;
     int dy;
@@ -220,18 +222,19 @@ hilbert_init(Hilbert *    const hilP,
 /*----------------------------------------------------------------------------
   Initialize the Hilbert curve tracer
 -----------------------------------------------------------------------------*/
-    unsigned int maxDim;
+    unsigned int const maxDim = MAX(width, height);
 
-    hilP->width = width;
+    unsigned int order;
+
+    hilP->width  = width;
     hilP->height = height;
-    maxDim = MAX(width, height);
     {
         unsigned int ber;
-        for (ber = 2, hilP->order = 1; ber < maxDim; ber <<= 1, ++hilP->order);
+        for (ber = 2, order = 0; ber < maxDim; ber <<= 1, ++order);
     }
-    assert(hilP->order <= ARRAY_SIZE(hilP->stage));
-    hilP->ord = hilP->order;
-    --hilP->order;
+    assert(order + 1 <= ARRAY_SIZE(hilP->stage));
+    hilP->order = order;
+    hilP->firstPointDone = false;
 }
 
 
@@ -241,14 +244,14 @@ hilbert_doFirstPoint(Hilbert * const hilbertP,
                      bool *    const gotPointP,
                      Point *   const pointP) {
 
-    --hilbertP->ord;
+    hilbertP->ord = hilbertP->order;
     hilbertP->stage[hilbertP->ord] = 0;
     hilbertP->turn = -1;
     hilbertP->dy = 1;
     hilbertP->dx = hilbertP->x = hilbertP->y = 0;
+    hilbertP->firstPointDone = true;
 
     pointP->x = 0; pointP->y = 0;
-
     *gotPointP = true;
 }
 
@@ -382,7 +385,7 @@ hilbert_trace(Hilbert * const hilbertP,
   ...
   Return *gotPointP true iff we got another point
 -----------------------------------------------------------------------------*/
-    if (hilbertP->ord > hilbertP->order) {
+    if (!hilbertP->firstPointDone) {
         hilbert_doFirstPoint(hilbertP, gotPointP, pointP);
     } else {
         hilbert_advanceStateMachine(hilbertP, gotPointP, pointP);
