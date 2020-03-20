@@ -190,9 +190,16 @@ makeOutputPam(unsigned int const width,
 
 /* Hilbert curve tracer */
 
-struct Hil {
-    int order;
-    int ord;
+typedef struct {
+    unsigned int x;
+    unsigned int y;
+} Point;
+
+
+
+typedef struct {
+    unsigned int order;
+    unsigned int ord;
     int turn;
     int dx;
     int dy;
@@ -202,134 +209,183 @@ struct Hil {
         /* One entry for every bit in the height or width, each of which
            is an unsigned int
         */
-    int width;
-    int height;
-};
+    unsigned int width;
+    unsigned int height;
+} Hilbert;
 
 static void
-initHilbert(int          const w,
-            int          const h,
-            struct Hil * const hilP) {
+hilbert_init(Hilbert *    const hilP,
+             unsigned int const width,
+             unsigned int const height) {
 /*----------------------------------------------------------------------------
   Initialize the Hilbert curve tracer
 -----------------------------------------------------------------------------*/
-    int big, ber;
-    hilP->width = w;
-    hilP->height = h;
-    big = w > h ? w : h;
-    for (ber = 2, hilP->order = 1; ber < big; ber <<= 1, hilP->order++);
+    unsigned int maxDim;
+
+    hilP->width = width;
+    hilP->height = height;
+    maxDim = MAX(width, height);
+    {
+        unsigned int ber;
+        for (ber = 2, hilP->order = 1; ber < maxDim; ber <<= 1, ++hilP->order);
+    }
     assert(hilP->order <= ARRAY_SIZE(hilP->stage));
     hilP->ord = hilP->order;
-    hilP->order--;
+    --hilP->order;
 }
 
 
 
-static bool
-hilbert(int *        const px,
-        int *        const py,
-        struct Hil * const hilP) {
-/*----------------------------------------------------------------------------
-  Return non-zero if got another point
------------------------------------------------------------------------------*/
-    int temp;
-    if (hilP->ord > hilP->order) {
-        /* have to do first point */
+static void
+hilbert_doFirstPoint(Hilbert * const hilbertP,
+                     bool *    const gotPointP,
+                     Point *   const pointP) {
 
-        hilP->ord--;
-        hilP->stage[hilP->ord] = 0;
-        hilP->turn = -1;
-        hilP->dy = 1;
-        hilP->dx = hilP->x = hilP->y = 0;
-        *px = *py = 0;
-        return true;
-    }
+    --hilbertP->ord;
+    hilbertP->stage[hilbertP->ord] = 0;
+    hilbertP->turn = -1;
+    hilbertP->dy = 1;
+    hilbertP->dx = hilbertP->x = hilbertP->y = 0;
 
-    /* Operate the state machine */
+    pointP->x = 0; pointP->y = 0;
+
+    *gotPointP = true;
+}
+
+
+
+static void
+hilbert_advanceStateMachine(Hilbert * const hilbertP,
+                            bool *    const gotPointP,
+                            Point *   const pointP) {
+
     for(;;)  {
-        switch (hilP->stage[hilP->ord]) {
-        case 0:
-            hilP->turn = -hilP->turn;
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            if (hilP->ord > 0) {
-                hilP->stage[hilP->ord] = 1;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
+        switch (hilbertP->stage[hilbertP->ord]) {
+        case 0: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->turn = -hilbertP->turn;
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            if (hilbertP->ord > 0) {
+                hilbertP->stage[hilbertP->ord] = 1;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
                 continue;
             }
-        case 1:
-            hilP->x += hilP->dx;
-            hilP->y += hilP->dy;
-            if (hilP->x < hilP->width && hilP->y < hilP->height) {
-                hilP->stage[hilP->ord] = 2;
-                *px = hilP->x;
-                *py = hilP->y;
-                return true;
+        }
+        case 1: {
+            hilbertP->x += hilbertP->dx;
+            hilbertP->y += hilbertP->dy;
+            if (hilbertP->x < hilbertP->width &&
+                hilbertP->y < hilbertP->height) {
+
+                hilbertP->stage[hilbertP->ord] = 2;
+
+                pointP->x = hilbertP->x;
+                pointP->y = hilbertP->y;
+                *gotPointP = true;
+                return;
             }
-        case 2:
-            hilP->turn = -hilP->turn;
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            if (hilP->ord > 0) {
+        }
+        case 2: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->turn = -hilbertP->turn;
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            if (hilbertP->ord > 0) {
                 /* recurse */
 
-                hilP->stage[hilP->ord] = 3;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
+                hilbertP->stage[hilbertP->ord] = 3;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
                 continue;
             }
-        case 3:
-            hilP->x += hilP->dx;
-            hilP->y += hilP->dy;
-            if (hilP->x < hilP->width && hilP->y < hilP->height) {
-                hilP->stage[hilP->ord] = 4;
-                *px = hilP->x;
-                *py = hilP->y;
-                return true;
-            }
-        case 4:
-            if (hilP->ord > 0) {
-                /* recurse */
-                hilP->stage[hilP->ord] = 5;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
-                continue;
-            }
-        case 5:
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            hilP->turn = -hilP->turn;
-            hilP->x += hilP->dx;
-            hilP->y += hilP->dy;
-            if (hilP->x < hilP->width && hilP->y < hilP->height) {
-                hilP->stage[hilP->ord] = 6;
-                *px = hilP->x;
-                *py = hilP->y;
-                return true;
-            }
-        case 6:
-            if (hilP->ord > 0) {
-                /* recurse */
-                hilP->stage[hilP->ord] = 7;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
-                continue;
-            }
-        case 7:
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            hilP->turn = -hilP->turn;
-            /* Return from a recursion */
-            if (hilP->ord < hilP->order)
-                hilP->ord++;
-            else
-                return false;
         }
+        case 3: {
+            hilbertP->x += hilbertP->dx;
+            hilbertP->y += hilbertP->dy;
+            if (hilbertP->x < hilbertP->width &&
+                hilbertP->y < hilbertP->height) {
+
+                hilbertP->stage[hilbertP->ord] = 4;
+
+                pointP->x = hilbertP->x;
+                pointP->y = hilbertP->y;
+                *gotPointP = true;
+                return;
+            }
+        }
+        case 4: {
+            if (hilbertP->ord > 0) {
+                /* recurse */
+                hilbertP->stage[hilbertP->ord] = 5;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
+                continue;
+            }
+        }
+        case 5: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            hilbertP->turn = -hilbertP->turn;
+            hilbertP->x += hilbertP->dx;
+            hilbertP->y += hilbertP->dy;
+            if (hilbertP->x < hilbertP->width &&
+                hilbertP->y < hilbertP->height) {
+
+                hilbertP->stage[hilbertP->ord] = 6;
+
+                pointP->x = hilbertP->x;
+                pointP->y = hilbertP->y;
+                *gotPointP = true;
+                return;
+            }
+        }
+        case 6: {
+            if (hilbertP->ord > 0) {
+                /* recurse */
+                hilbertP->stage[hilbertP->ord] = 7;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
+                continue;
+            }
+        }
+        case 7: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            hilbertP->turn = -hilbertP->turn;
+            /* Return from a recursion */
+            if (hilbertP->ord < hilbertP->order)
+                ++hilbertP->ord;
+            else {
+                *gotPointP = false;
+                return;
+            }
+        }
+        }
+    }
+}
+
+
+
+static void
+hilbert_trace(Hilbert * const hilbertP,
+              bool *    const gotPointP,
+              Point *   const pointP) {
+/*----------------------------------------------------------------------------
+  ...
+  Return *gotPointP true iff we got another point
+-----------------------------------------------------------------------------*/
+    if (hilbertP->ord > hilbertP->order) {
+        hilbert_doFirstPoint(hilbertP, gotPointP, pointP);
+    } else {
+        hilbert_advanceStateMachine(hilbertP, gotPointP, pointP);
     }
 }
 
@@ -356,10 +412,10 @@ doHilbert(FILE *       const ifP,
     tuple ** grays;
     tuple ** bits;
 
-    struct Hil hil;
+    Hilbert hilbert;
 
     int end;
-    int *x,*y;
+    Point * point;
     int sum;
 
     grays = pnm_readpam(ifP, &graypam, PAM_STRUCT_SIZE(tuple_type));
@@ -368,11 +424,11 @@ doHilbert(FILE *       const ifP,
 
     bits = pnm_allocpamarray(&bitpam);
 
-    MALLOCARRAY(x, clumpSize);
-    MALLOCARRAY(y, clumpSize);
-    if (x == NULL  || y == NULL)
-        pm_error("out of memory");
-    initHilbert(graypam.width, graypam.height, &hil);
+    MALLOCARRAY(point, clumpSize);
+    if (!point)
+        pm_error("Unable to get memory for clump of %u points", clumpSize);
+
+    hilbert_init(&hilbert, graypam.width, graypam.height);
 
     sum = 0;
     end = clumpSize;
@@ -380,19 +436,20 @@ doHilbert(FILE *       const ifP,
     while (end == clumpSize) {
         unsigned int i;
         /* compute the next cluster co-ordinates along hilbert path */
-        for (i = 0; i < end; i++) {
+        for (i = 0; i < end; ++i) {
             bool gotPoint;
-            gotPoint = hilbert(&x[i], &y[i], &hil);
+            hilbert_trace(&hilbert, &gotPoint, &point[i]);
             if (!gotPoint)
                 end = i;    /* we reached the end */
         }
         /* sum levels */
-        for (i = 0; i < end; i++)
-            sum += grays[y[i]][x[i]][0];
+        for (i = 0; i < end; ++i)
+            sum += grays[point[i].y][point[i].x][0];
         /* dither half and half along path */
-        for (i = 0; i < end; i++) {
-            unsigned int const row = y[i];
-            unsigned int const col = x[i];
+        for (i = 0; i < end; ++i) {
+            unsigned int const row = point[i].y;
+            unsigned int const col = point[i].x;
+
             if (sum >= graypam.maxval) {
                 bits[row][col][0] = 1;
                 sum -= graypam.maxval;
@@ -400,7 +457,7 @@ doHilbert(FILE *       const ifP,
                 bits[row][col][0] = 0;
         }
     }
-    free(x);    free(y);
+    free(point);
     pnm_writepam(&bitpam, bits);
 
     pnm_freepamarray(bits, &bitpam);
