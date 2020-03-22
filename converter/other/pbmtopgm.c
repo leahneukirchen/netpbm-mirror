@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "pgm.h"
@@ -16,21 +17,23 @@ main(int argc, char *argv[]) {
     int rows, cols;
     FILE *ifd;
     int row;
-    int width, height;
+    unsigned int width, height;
     const char * const usage = "<w> <h> [pbmfile]";
-   
+    const char * error; /* error message of pm_string_to_uint */      
 
     pgm_init( &argc, argv );
 
     if (argc > 4 || argc < 3)
         pm_usage(usage);
 
-    width = atoi(argv[1]);
-    height = atoi(argv[2]);
+    pm_string_to_uint(argv[1], &width, &error);
+    if (error)
+        pm_error("Invalid width argument: ", error);
+    pm_string_to_uint(argv[2], &height, &error);
+    if (error)
+        pm_error("Invalid height argument: ", error);
     if (width < 1 || height < 1)
         pm_error("width and height must be > 0");
-    left=width/2; right=width-left;
-    up=width/2; down=height-up;
 
     if (argc == 4)
         ifd = pm_openr(argv[3]);
@@ -45,6 +48,15 @@ main(int argc, char *argv[]) {
     if (height > rows)
         pm_error("You specified a sample height (%u rows) which is greater "
                  "than the image height (%u rows)", height, rows);
+    if (width > INT_MAX / height)
+        /* prevent overflow of "value" below */
+        pm_error("sample area (%u columns %u rows) too large",
+                 width, height);
+
+    left = width  / 2;  right = width  - left;
+    up   = height / 2;  down  = height - up;
+
+
 
     outrow = pgm_allocrow(cols) ;
     maxval = MIN(PGM_OVERALLMAXVAL, width*height);
@@ -59,7 +71,7 @@ main(int argc, char *argv[]) {
             int const l = (col > left) ? (col-left) : 0;
             int const r = (col+right < cols) ? (col+right) : cols;
             int const onh = width - (l-col+left) - (col+right-r);
-            int value;
+            int value;  /* See above */
             int x;
 
             value = 0;  /* initial value */
@@ -70,7 +82,7 @@ main(int argc, char *argv[]) {
                     if (inbits[y][x] == PBM_WHITE) 
                         ++value;
             }
-            outrow[col] = maxval*value/(onh*onv);
+            outrow[col] = (gray) ((double) maxval*value/(onh*onv));
         }
         pgm_writepgmrow(stdout, outrow, cols, maxval, 0) ;
     }

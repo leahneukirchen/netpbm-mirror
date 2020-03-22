@@ -17,8 +17,17 @@ not yet  BJH  Release 10.90.00
               pamcut: Improve error messages for legacy command line
               arguments.
 
+              pbmtopgm: Fix incorrect output when convolution area is not
+              square.  Always broken.  pbmtopgm was in primordial Netpbm,
+              ca 1991.
+
+              pbmtopgm: Fix crash when convolution matrix too large for word
+              size.  Always broken.  pbmtopgm was in primordial Netpbm, ca
+              1991.
+
               pnmshear: Fix arithmetic overflow with shear angle near +/- 90
-              degrees.
+              degrees.  Always broken; pnmshear was in primordial Netpbm,
+              ca. 1989.
 
               pamditherbw: Fix bug: issue error message instead of just
               ignoring one of the options when you specify -hilbert and
