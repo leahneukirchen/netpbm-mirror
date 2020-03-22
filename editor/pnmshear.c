@@ -217,6 +217,7 @@ main(int argc, const char * argv[]) {
     int row;
     xelval maxval, newmaxval;
     double shearfac;
+    double newcolsD;
 
     struct CmdlineInfo cmdline;
 
@@ -242,7 +243,12 @@ main(int argc, const char * argv[]) {
 
     shearfac = fabs(tan(cmdline.angle));
 
-    newcols = rows * shearfac + cols + 0.999999;
+    newcolsD = (double) rows * shearfac + cols + 0.999999;
+    if (newcolsD > INT_MAX-2)
+        pm_error("angle is too close to +/-90 degrees; "
+                 "output image too wide for computation");
+    else
+        newcols = (int) newcolsD;
 
     pnm_writepnminit(stdout, newcols, rows, newmaxval, newformat, 0);
     newxelrow = pnm_allocrow(newcols);
