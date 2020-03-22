@@ -4,6 +4,27 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.03.22 BJH  Release 10.89.03
+
+              pbmtopgm: Fix incorrect output when convolution area is not
+              square.  Always broken.  pbmtopgm was in primordial Netpbm,
+              ca 1991.
+
+              pbmtopgm: Fix crash when convolution matrix too large for word
+              size.  Always broken.  pbmtopgm was in primordial Netpbm, ca
+              1991.
+
+              pnmshear: Fix arithmetic overflow with shear angle near +/- 90
+              degrees.
+
+              pamdice: Fix crash when -width or -height is zero.
+
+              pamdice: Fix incorrect file names when -outstem contains "%s",
+              etc.
+
+20.02.14 BJH  Release 10.89.02
+
+              libnetpbm: pm_getline: ?
 
 20.01.15 BJH  Release 10.89.01
 
