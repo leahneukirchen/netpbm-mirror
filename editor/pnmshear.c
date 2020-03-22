@@ -212,10 +212,13 @@ main(int argc, const char * argv[]) {
     xel * xelrow;
     xel * newxelrow;
     xel bgxel;
-    int rows, cols, format;
-    int newformat, newcols;
-    int row;
-    xelval maxval, newmaxval;
+    int rows, cols;
+    int format;
+    unsigned int newcols;
+    int newformat;
+    unsigned int row;
+    xelval maxval;
+    xelval newmaxval;
     double shearfac;
     double newcolsD;
 
@@ -248,7 +251,7 @@ main(int argc, const char * argv[]) {
         pm_error("angle is too close to +/-90 degrees; "
                  "output image too wide for computation");
     else
-        newcols = (int) newcolsD;
+        newcols = (unsigned int) newcolsD;
 
     pnm_writepnminit(stdout, newcols, rows, newmaxval, newformat, 0);
     newxelrow = pnm_allocrow(newcols);
