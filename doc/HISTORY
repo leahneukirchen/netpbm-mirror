@@ -17,6 +17,9 @@ not yet  BJH  Release 10.90.00
               pamcut: Improve error messages for legacy command line
               arguments.
 
+              pnmshear: Fix arithmetic overflow with shear angle near +/- 90
+              degrees.
+
               pamditherbw: Fix bug: issue error message instead of just
               ignoring one of the options when you specify -hilbert and
               another halftone option.
