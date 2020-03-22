@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmshear User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmshear</H1>
-Updated: 27 November 2006
+Updated: 22 March 2020
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -48,8 +48,10 @@ If the angle is negative, it shears the other way:
     +-------+  +-------+
 </PRE>
 
-The angle should not get too close to 90 or -90, or the resulting
-image will be unreasonably wide.
+The angle should not get too close to 90 or -90, or the resulting image will
+be unreasonably wide.  In fact, if it gets too close, the width will be so
+large that <b>pnmshear</b> cannot do computations in the word sizes it uses,
+and the program detects this and fails.
 
 <P><b>pnmshear</b> does the shearing by looping over the source pixels
 and distributing fractions to each of the destination pixels.  This
