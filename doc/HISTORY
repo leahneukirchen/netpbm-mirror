@@ -55,6 +55,9 @@ not yet  BJH  Release 10.90.00
               libnetpbm: pm_read_unknown_size, rawtopgm, zeisstopnm: crash
               when out of memory
 
+              Build: make deb: don't include empty Recommends; newer dpkg-deb
+              won't accept it.
+
               Install: Use e.g. "10.90.00" for version in pkg-config and
               config file, intead of e.g. "Netpbm 10.90.00".
 
