@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.03.26 BJH  Release 10.86.12
+
+              Build: make deb: don't include empty Recommends; newer dpkg-deb
+              won't accept it.
+
 20.03.26 BJH  Release 10.86.11
 
               pbmtopgm: Fix incorrect output when convolution area is not

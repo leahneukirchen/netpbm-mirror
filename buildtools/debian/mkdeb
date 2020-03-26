@@ -148,8 +148,6 @@ sub control($$) {
         'perl-base, ' .
         'bash'
         ;
-    $control{'Recommends'} = '';
-    $control{'Recommends'} = '';
     $control{'Conflicts'} = $debianNativeNetpbm;
     $control{'Replaces'} = $debianNativeNetpbm;
     $control{'Provides'} = 
