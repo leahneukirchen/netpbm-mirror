@@ -6,6 +6,7 @@
 #include <limits.h>
 
 #include "pm_c_util.h"
+#include "nstring.h"
 #include "pgm.h"
 
 int
@@ -28,10 +29,10 @@ main(int argc, char *argv[]) {
 
     pm_string_to_uint(argv[1], &width, &error);
     if (error)
-        pm_error("Invalid width argument: ", error);
+        pm_error("Invalid width argument: %s", error);
     pm_string_to_uint(argv[2], &height, &error);
     if (error)
-        pm_error("Invalid height argument: ", error);
+        pm_error("Invalid height argument: %s", error);
     if (width < 1 || height < 1)
         pm_error("width and height must be > 0");
 
