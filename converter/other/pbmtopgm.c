@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "pgm.h"
@@ -29,8 +30,13 @@ main(int argc, char *argv[]) {
     height = atoi(argv[2]);
     if (width < 1 || height < 1)
         pm_error("width and height must be > 0");
+    if (width > INT_MAX / height)
+        /* prevent overflow of "value" below */
+        pm_error("sample area (%u columns %u rows) too large",
+                 width, height);
+
     left=width/2; right=width-left;
-    up=width/2; down=height-up;
+    up=height/2; down=height-up;
 
     if (argc == 4)
         ifd = pm_openr(argv[3]);
