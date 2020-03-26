@@ -27,6 +27,9 @@ CHANGE HISTORY
               libnetpbm: pm_read_unknown_size, rawtopgm, zeisstopnm: crash
               when out of memory
 
+              Build: make deb: don't include empty Recommends; newer dpkg-deb
+              won't accept it.
+
 19.12.25 BJH  Release 10.73.30
 
               pamrubber: Fix bug: -frame doesn't work.  Always broken.
