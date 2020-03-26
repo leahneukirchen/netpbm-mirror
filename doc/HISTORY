@@ -29,6 +29,10 @@ not yet  BJH  Release 10.90.00
               degrees.  Always broken; pnmshear was in primordial Netpbm,
               ca. 1989.
 
+              pnmshear: Fix shearing direction for angles larger than 90
+              degrees.  Always broken; pnmshear was in primordial Netpbm,
+              ca. 1989.
+
               pamditherbw: Fix bug: issue error message instead of just
               ignoring one of the options when you specify -hilbert and
               another halftone option.

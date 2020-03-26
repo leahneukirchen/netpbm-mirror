@@ -233,6 +233,16 @@ main(int argc, const char * argv[]) {
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
     xelrow = pnm_allocrow(cols);
 
+    shearfac = tan(cmdline.angle);
+
+    newcolsD = (double) rows * fabs(shearfac) + cols + 0.999999;
+    if (newcolsD > INT_MAX-2)
+        pm_error("angle is too close to +/-90 degrees; "
+                 "output image too wide for computation");
+    else
+        newcols = (unsigned int) newcolsD;
+
+
     /* Promote PBM files to PGM. */
     if (!cmdline.noantialias && PNM_FORMAT_TYPE(format) == PBM_TYPE) {
         newformat = PGM_TYPE;
@@ -243,15 +253,6 @@ main(int argc, const char * argv[]) {
         newformat = format;
         newmaxval = maxval;
     }
-
-    shearfac = fabs(tan(cmdline.angle));
-
-    newcolsD = (double) rows * shearfac + cols + 0.999999;
-    if (newcolsD > INT_MAX-2)
-        pm_error("angle is too close to +/-90 degrees; "
-                 "output image too wide for computation");
-    else
-        newcols = (unsigned int) newcolsD;
 
     pnm_writepnminit(stdout, newcols, rows, newmaxval, newformat, 0);
     newxelrow = pnm_allocrow(newcols);
@@ -265,10 +266,10 @@ main(int argc, const char * argv[]) {
             bgxel = backgroundColor(cmdline.background,
                                     xelrow, cols, newmaxval, format);
 
-        if (cmdline.angle > 0.0)
+        if (shearfac > 0.0)
             shearCols = row * shearfac;
         else
-            shearCols = (rows - row) * shearfac;
+            shearCols = (rows - row) * -shearfac;
 
         shearRow(xelrow, cols, newxelrow, newcols,
                  shearCols, format, bgxel, !cmdline.noantialias);
