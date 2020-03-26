@@ -20,7 +20,7 @@ main(int argc, char *argv[]) {
     int row;
     unsigned int width, height;
     const char * const usage = "<w> <h> [pbmfile]";
-    const char * error; /* error message of pm_string_to_uint */      
+    const char * error; /* error message of pm_string_to_uint */
 
     pgm_init( &argc, argv );
 
@@ -42,7 +42,7 @@ main(int argc, char *argv[]) {
         ifd = stdin ;
 
     inbits = pbm_readpbm(ifd, &cols, &rows) ;
-    
+
     if (width > cols)
         pm_error("You specified a sample width (%u columns) which is greater "
                  "than the image width (%u columns)", height, rows);
@@ -80,7 +80,7 @@ main(int argc, char *argv[]) {
             for (x = l; x < r; ++x) {
                 int y;
                 for (y = t; y < b; ++y)
-                    if (inbits[y][x] == PBM_WHITE) 
+                    if (inbits[y][x] == PBM_WHITE)
                         ++value;
             }
             outrow[col] = (gray) ((double) maxval*value/(onh*onv));
