@@ -807,6 +807,10 @@ pm_read_unknown_size(FILE * const file,
     nalloc = PM_BUF_SIZE;
     MALLOCARRAY(buf, nalloc);
 
+    if (!buf)
+        pm_error("Failed to allocate %lu bytes for read buffer",
+                 (unsigned long) nalloc);
+
     eof = FALSE;  /* initial value */
 
     while(!eof) {
@@ -817,7 +821,10 @@ pm_read_unknown_size(FILE * const file,
                 nalloc += PM_MAX_BUF_INC;
             else
                 nalloc += nalloc;
-            REALLOCARRAY_NOFAIL(buf, nalloc);
+            REALLOCARRAY(buf, nalloc);
+            if (!buf)
+                pm_error("Failed to allocate %lu bytes for read buffer",
+                         (unsigned long) nalloc);
         }
 
         val = getc(file);

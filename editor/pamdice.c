@@ -84,7 +84,9 @@ parseCommandLine(int argc, char ** argv,
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmdlineP->sliceVertically) {
-        if (hoverlapSpec) {
+        if (cmdlineP->width < 1)
+            pm_error("-width value must not be zero");
+        else if (hoverlapSpec) {
             if (cmdlineP->hoverlap > cmdlineP->width - 1)
                 pm_error("-hoverlap value must be less than -width (%u).  "
                          "You specified %u.",
@@ -93,7 +95,9 @@ parseCommandLine(int argc, char ** argv,
             cmdlineP->hoverlap = 0;
     }
     if (cmdlineP->sliceHorizontally) {
-        if (voverlapSpec) {
+        if (cmdlineP->height < 1)
+            pm_error("-height value must not be zero");
+        else if (voverlapSpec) {
             if (cmdlineP->voverlap > cmdlineP->height - 1)
                 pm_error("-voverlap value must be less than -height (%u).  "
                          "You specified %u.",
@@ -150,13 +154,14 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
             *nHorizSliceP = 1 + divup(inpam.height - cmdline.height, 
                                       cmdline.height - cmdline.voverlap);
         *sliceHeightP = cmdline.height;
+
+        *bottomSliceHeightP = 
+            inpam.height - (*nHorizSliceP-1) * (cmdline.height - cmdline.voverlap);
     } else {
         *nHorizSliceP = 1;
         *sliceHeightP = inpam.height;
+        *bottomSliceHeightP = inpam.height;
     }
-
-    *bottomSliceHeightP = 
-        inpam.height - (*nHorizSliceP-1) * (cmdline.height - cmdline.voverlap);
 
     if (cmdline.sliceVertically) {
         if (cmdline.width >= inpam.width)
@@ -165,13 +170,13 @@ computeSliceGeometry(struct cmdlineInfo const cmdline,
             *nVertSliceP = 1 + divup(inpam.width - cmdline.width, 
                                      cmdline.width - cmdline.hoverlap);
         *sliceWidthP = cmdline.width;
+        *rightSliceWidthP = 
+            inpam.width - (*nVertSliceP-1) * (cmdline.width - cmdline.hoverlap);
     } else {
         *nVertSliceP = 1;
         *sliceWidthP = inpam.width;
+        *rightSliceWidthP = inpam.width;
     }
-
-    *rightSliceWidthP = 
-        inpam.width - (*nVertSliceP-1) * (cmdline.width - cmdline.hoverlap);
 
     if (verbose) {
         pm_message("Creating %u images, %u across by %u down; "
@@ -208,7 +213,6 @@ ndigits(unsigned int const arg) {
 
 static void
 computeOutputFilenameFormat(int           const format, 
-                            char          const outstem[],
                             unsigned int  const nHorizSlice,
                             unsigned int  const nVertSlice,
                             const char ** const filenameFormatP) {
@@ -223,9 +227,8 @@ computeOutputFilenameFormat(int           const format,
     default:       filenameSuffix = "";    break;
     }
     
-    pm_asprintf(filenameFormatP, "%s_%%0%uu_%%0%uu.%s",
-                outstem, ndigits(nHorizSlice), ndigits(nVertSlice),
-                filenameSuffix);
+    pm_asprintf(filenameFormatP, "%%s_%%0%uu_%%0%uu.%s",
+                ndigits(nHorizSlice), ndigits(nVertSlice), filenameSuffix);
 
     if (*filenameFormatP == NULL)
         pm_error("Unable to allocate memory for filename format string");
@@ -252,13 +255,13 @@ openOutStreams(struct pam   const inpam,
     const char * filenameFormat;
     unsigned int vertSlice;
 
-    computeOutputFilenameFormat(inpam.format, outstem, nHorizSlice, nVertSlice,
+    computeOutputFilenameFormat(inpam.format, nHorizSlice, nVertSlice,
                                 &filenameFormat);
 
     for (vertSlice = 0; vertSlice < nVertSlice; ++vertSlice) {
         const char * filename;
 
-        pm_asprintf(&filename, filenameFormat, horizSlice, vertSlice);
+        pm_asprintf(&filename, filenameFormat, outstem, horizSlice, vertSlice);
 
         if (filename == NULL)
             pm_error("Unable to allocate memory for output filename");
@@ -468,7 +471,10 @@ main(int argc, char ** argv) {
 
     for (horizSlice = 0; horizSlice < nHorizSlice; ++horizSlice) {
         unsigned int const thisSliceFirstRow = 
-            horizSlice * (sliceHeight - cmdline.voverlap);
+            horizSlice > 0 ? horizSlice * (sliceHeight - cmdline.voverlap) : 0;
+            /* Note that 'cmdline.voverlap' is not defined when there is only
+               one horizontal slice
+            */
         unsigned int const thisSliceHeight = 
             horizSlice < nHorizSlice-1 ? sliceHeight : bottomSliceHeight;
 
