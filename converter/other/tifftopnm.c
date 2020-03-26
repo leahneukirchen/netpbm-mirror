@@ -24,16 +24,16 @@
 /* Design note:
 
    We have two different ways of converting from Tiff, as provided by the
-   Tiff library:  
+   Tiff library:
 
    1) decode the entire image into memory at once, using
       TIFFRGBAImageGet(), then convert to PNM and output row by row.
-   
+
    2) read, convert, and output one row at a time using TIFFReadScanline().
 
    (1) is preferable because the Tiff library does more of the work, which
-   means it understands more of the Tiff format possibilities now and in 
-   the future.  Also, some compressed TIFF formats don't allow you to 
+   means it understands more of the Tiff format possibilities now and in
+   the future.  Also, some compressed TIFF formats don't allow you to
    extract an individual row.
 
    (2) uses far less memory, and because our code does more of the work,
@@ -117,17 +117,17 @@ parseCommandLine(int argc, const char ** const argv,
     opt.allowNegNum = FALSE;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "verbose", 
+    OPTENT3(0, "verbose",
             OPT_FLAG,   NULL, &cmdlineP->verbose,              0);
-    OPTENT3(0, "respectfillorder", 
+    OPTENT3(0, "respectfillorder",
             OPT_FLAG,   NULL, &cmdlineP->respectfillorder,     0);
-    OPTENT3(0,   "byrow",   
+    OPTENT3(0,   "byrow",
             OPT_FLAG,   NULL, &cmdlineP->byrow,                0);
-    OPTENT3(0,   "orientraw",   
+    OPTENT3(0,   "orientraw",
             OPT_FLAG,   NULL, &cmdlineP->orientraw,            0);
-    OPTENT3('h', "headerdump", 
+    OPTENT3('h', "headerdump",
             OPT_FLAG,   NULL, &cmdlineP->headerdump,           0);
-    OPTENT3(0,   "alphaout",   
+    OPTENT3(0,   "alphaout",
             OPT_STRING, &cmdlineP->alphaFilename, &alphaSpec,  0);
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
@@ -136,7 +136,7 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->inputFilename = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file name");
 
@@ -309,11 +309,11 @@ validatePlanarConfig(unsigned short const planarconfig,
     case PLANARCONFIG_CONTIG:
         break;
     case PLANARCONFIG_SEPARATE:
-        if (photomet != PHOTOMETRIC_RGB && 
+        if (photomet != PHOTOMETRIC_RGB &&
             photomet != PHOTOMETRIC_SEPARATED)
             pm_error("This program can handle separate planes only "
                      "with RGB (PHOTOMETRIC tag = %u) or SEPARATED "
-                     "(PHOTOMETRIC tag = %u) data.  The input Tiff file " 
+                     "(PHOTOMETRIC tag = %u) data.  The input Tiff file "
                      "has PHOTOMETRIC tag = %hu.",
                      PHOTOMETRIC_RGB, PHOTOMETRIC_SEPARATED,
                      photomet);
@@ -351,7 +351,7 @@ dumpHeader(const struct tiffDirInfo * const headerP) {
 
 
 
-static void 
+static void
 readDirectory(TIFF *               const tiffP,
               bool                 const headerdump,
               struct tiffDirInfo * const headerP) {
@@ -409,11 +409,11 @@ readDirectory(TIFF *               const tiffP,
 
 
 static void
-readscanline(TIFF *          const tif, 
+readscanline(TIFF *          const tif,
              unsigned char * const scanbuf,
-             int             const row, 
+             int             const row,
              int             const plane,
-             unsigned int    const cols, 
+             unsigned int    const cols,
              unsigned short  const bps,
              unsigned short  const spp,
              unsigned short  const fillorder,
@@ -433,7 +433,7 @@ readscanline(TIFF *          const tif,
 
     /* The TIFFReadScanline man page doesn't tell the format of its
        'buf' return value, but it is exactly the same format as the 'buf'
-       input to TIFFWriteScanline.  The man page for that doesn't say 
+       input to TIFFWriteScanline.  The man page for that doesn't say
        anything either, but the source code for Pamtotiff contains a
        specification.
     */
@@ -446,7 +446,7 @@ readscanline(TIFF *          const tif,
                   row, plane);
     else if (bps == 8) {
         unsigned int sample;
-        for (sample = 0; sample < cols * spp; ++sample) 
+        for (sample = 0; sample < cols * spp; ++sample)
             samplebuf[sample] = scanbuf[sample];
     } else if (bps < 8) {
         /* Note that in this format, samples do not span bytes.  Rather,
@@ -458,26 +458,26 @@ readscanline(TIFF *          const tif,
         unsigned int bitsleft;
         unsigned char * inP;
 
-        for (sample = 0, bitsleft = 8, inP = scanbuf; 
-             sample < cols * spp; 
+        for (sample = 0, bitsleft = 8, inP = scanbuf;
+             sample < cols * spp;
              ++sample) {
             if (bitsleft == 0) {
-                ++inP; 
+                ++inP;
                 bitsleft = 8;
-            } 
+            }
             switch (fillorder) {
             case FILLORDER_MSB2LSB:
-                samplebuf[sample] = (*inP >> (bitsleft-bps)) & bpsmask; 
+                samplebuf[sample] = (*inP >> (bitsleft-bps)) & bpsmask;
                 break;
             case FILLORDER_LSB2MSB:
                 samplebuf[sample] = (*inP >> (8-bitsleft)) & bpsmask;
                 break;
             default:
-                pm_error("Internal error: invalid value for fillorder: %u", 
+                pm_error("Internal error: invalid value for fillorder: %u",
                          fillorder);
             }
             assert(bitsleft >= bps);
-            bitsleft -= bps; 
+            bitsleft -= bps;
             if (bitsleft < bps)
                 /* Don't count dregs at end of byte */
                 bitsleft = 0;
@@ -490,7 +490,7 @@ readscanline(TIFF *          const tif,
            none of our concern).  The pre-9.17 code also presumed that
            the TIFF "FILLORDER" tag determined the order in which the
            bytes of each sample appear in a TIFF file, which is
-           contrary to the TIFF spec.  
+           contrary to the TIFF spec.
         */
         const uint16 * const scanbuf16 = (const uint16 *) scanbuf;
         unsigned int sample;
@@ -500,10 +500,10 @@ readscanline(TIFF *          const tif,
     } else if (bps == 32) {
         const uint32 * const scanbuf32 = (const uint32 *) scanbuf;
         unsigned int sample;
-        
+
         for (sample = 0; sample < cols * spp; ++sample)
             samplebuf[sample] = scanbuf32[sample];
-    } else 
+    } else
         pm_error("Internal error: invalid bits per sample passed to "
                  "readscanline()");
 }
@@ -528,7 +528,7 @@ pick_cmyk_pixel(unsigned int const samplebuf[],
     unsigned int const y = samplebuf[sampleCursor + 2];
     unsigned int const k = samplebuf[sampleCursor + 3];
 
-    /* The CMYK->RGB formula used by TIFFRGBAImageGet() in the TIFF 
+    /* The CMYK->RGB formula used by TIFFRGBAImageGet() in the TIFF
        library is the following, (with some apparent confusion with
        the names of the yellow and magenta pigments being reversed).
 
@@ -539,9 +539,9 @@ pick_cmyk_pixel(unsigned int const samplebuf[],
        We used that too before Netpbm 10.21 (March 2004).
 
        Now we use the inverse of what Pnmtotiffcmyk has always used, which
-       makes sense as follows:  A microliter of black ink is simply a 
+       makes sense as follows:  A microliter of black ink is simply a
        substitute for a microliter each of cyan, magenta, and yellow ink.
-       Yellow ink removes blue light from what the white paper reflects.  
+       Yellow ink removes blue light from what the white paper reflects.
     */
 
     *redP = 255 - MIN(255, c + k);
@@ -552,16 +552,16 @@ pick_cmyk_pixel(unsigned int const samplebuf[],
 
 
 static void
-computeFillorder(unsigned short   const fillorderTag, 
-                 unsigned short * const fillorderP, 
+computeFillorder(unsigned short   const fillorderTag,
+                 unsigned short * const fillorderP,
                  bool             const respectfillorder) {
 
     if (respectfillorder) {
-        if (fillorderTag != FILLORDER_MSB2LSB && 
+        if (fillorderTag != FILLORDER_MSB2LSB &&
             fillorderTag != FILLORDER_LSB2MSB)
             pm_error("Invalid value in Tiff input for the FILLORDER tag: %u.  "
                      "Valid values are %u and %u.  Try omitting the "
-                     "-respectfillorder option.", 
+                     "-respectfillorder option.",
                      fillorderTag, FILLORDER_MSB2LSB, FILLORDER_LSB2MSB);
         else
             *fillorderP = fillorderTag;
@@ -577,12 +577,12 @@ computeFillorder(unsigned short   const fillorderTag,
 
 
 static void
-analyzeImageType(TIFF *             const tiffP, 
-                 unsigned short     const bps, 
-                 unsigned short     const spp, 
+analyzeImageType(TIFF *             const tiffP,
+                 unsigned short     const bps,
+                 unsigned short     const spp,
                  unsigned short     const photomet,
-                 xelval *           const maxvalP, 
-                 int *              const formatP, 
+                 xelval *           const maxvalP,
+                 int *              const formatP,
                  xel *              const colormap,
                  bool               const headerdump,
                  struct CmdlineInfo const cmdline) {
@@ -604,13 +604,13 @@ analyzeImageType(TIFF *             const tiffP,
         *maxvalP = pm_bitstomaxval(MIN(bps, 16));
 
         if (headerdump)
-            pm_message("grayscale image, (min=%s) output maxval %u ", 
-                       photomet == PHOTOMETRIC_MINISBLACK ? 
+            pm_message("grayscale image, (min=%s) output maxval %u ",
+                       photomet == PHOTOMETRIC_MINISBLACK ?
                        "black" : "white",
                        *maxvalP
                 );
         break;
-            
+
     case PHOTOMETRIC_PALETTE: {
         int fldPresent;
         int i;
@@ -627,7 +627,7 @@ analyzeImageType(TIFF *             const tiffP,
                      "We understand only 1.", spp);
 
         fldPresent = TIFFGetField(
-            tiffP, TIFFTAG_COLORMAP, 
+            tiffP, TIFFTAG_COLORMAP,
             &redcolormap, &greencolormap, &bluecolormap);
 
         if (!fldPresent)
@@ -662,7 +662,7 @@ analyzeImageType(TIFF *             const tiffP,
         if (fldPresent && inkset != INKSET_CMYK)
             pm_error("This color separation file uses an inkset (%d) "
                      "we can't handle.  We handle only CMYK.", inkset);
-        if (spp != 4) 
+        if (spp != 4)
             pm_error("This CMYK color separation file is %d samples per "
                      "pixel.  "
                      "We need 4 samples, though: C, M, Y, and K.  ",
@@ -673,7 +673,7 @@ analyzeImageType(TIFF *             const tiffP,
         *maxvalP = (1 << bps) - 1;
     }
         break;
-            
+
     case PHOTOMETRIC_RGB:
         if (headerdump)
             pm_message("RGB truecolor");
@@ -704,7 +704,7 @@ analyzeImageType(TIFF *             const tiffP,
 
     case PHOTOMETRIC_LOGLUV:
         pm_error("don't know how to handle PHOTOMETRIC_LOGLUV");
-            
+
     default:
         pm_error("unknown photometric: %d", photomet);
     }
@@ -778,7 +778,7 @@ static const char *
 xformNeeded(unsigned short const tiffOrientation) {
 /*----------------------------------------------------------------------------
    Return the value of the Pamflip -xform option that causes Pamflip
-   to change a raster from orienation 'tiffOrientation' to Row 0 top,
+   to change a raster from orientation 'tiffOrientation' to Row 0 top,
    Column 0 left.
 -----------------------------------------------------------------------------*/
     switch (tiffOrientation) {
@@ -829,7 +829,7 @@ spawnWithInputPipe(const char *  const shellCmd,
 
                 *pidP   = childPid;
                 *pipePP = fdopen(fd[PIPE_WRITE], "w");
-                
+
                 if (*pipePP == NULL)
                     pm_asprintf(errorP,"Unable to create stream from pipe.  "
                                 "fdopen() fails with errno=%d (%s)",
@@ -858,7 +858,7 @@ spawnWithInputPipe(const char *  const shellCmd,
     }
 }
 
-                  
+
 
 static void
 createFlipProcess(FILE *         const outFileP,
@@ -964,7 +964,7 @@ setupFlipper(pnmOut *       const pnmOutP,
             pnmOutP->flipping = FALSE;
             *flipOkP   = FALSE;
             *noflipOkP = TRUE;
-        } else {            
+        } else {
             if (flipIfNeeded) {
                 if (verbose)
                     pm_message("Transforming raster with Pamflip");
@@ -979,7 +979,7 @@ setupFlipper(pnmOut *       const pnmOutP,
                                       verbose,
                                       &pnmOutP->imagePipeP,
                                       &pnmOutP->imageFlipPid);
-                
+
                 /* The stream will flip it, so Caller must not: */
                 pnmOutP->flipping = TRUE;
                 *flipOkP   = FALSE;
@@ -1081,22 +1081,22 @@ pnmOut_init(FILE *         const imageoutFileP,
     } else {
         pnmOutP->inCols = pnmOutP->outCols;  /* Caller will flip */
         pnmOutP->inRows = pnmOutP->outRows;
-    }    
+    }
     if (pnmOutP->flipping) {
-        if (pnmOutP->imagePipeP != NULL) 
+        if (pnmOutP->imagePipeP != NULL)
             pnm_writepnminit(pnmOutP->imagePipeP,
                              pnmOutP->inCols, pnmOutP->inRows,
                              pnmOutP->maxval, pnmOutP->format, 0);
-        if (pnmOutP->alphaPipeP != NULL) 
+        if (pnmOutP->alphaPipeP != NULL)
             pgm_writepgminit(pnmOutP->alphaPipeP,
                              pnmOutP->inCols, pnmOutP->inRows,
                              pnmOutP->alphaMaxval, 0);
     } else {
-        if (imageoutFileP != NULL) 
+        if (imageoutFileP != NULL)
             pnm_writepnminit(pnmOutP->imageoutFileP,
                              pnmOutP->outCols, pnmOutP->outRows,
                              pnmOutP->maxval, pnmOutP->format, 0);
-        if (alphaFileP != NULL) 
+        if (alphaFileP != NULL)
             pgm_writepgminit(pnmOutP->alphaFileP,
                              pnmOutP->outCols, pnmOutP->outRows,
                              pnmOutP->alphaMaxval, 0);
@@ -1149,19 +1149,19 @@ pnmOut_writeRow(pnmOut *     const pnmOutP,
     assert(cols == pnmOutP->inCols);
 
     if (pnmOutP->flipping) {
-        if (pnmOutP->imagePipeP != NULL) 
+        if (pnmOutP->imagePipeP != NULL)
             pnm_writepnmrow(pnmOutP->imagePipeP, (xel *)imageRow,
                             pnmOutP->inCols, pnmOutP->maxval,
                             pnmOutP->format, 0);
-        if (pnmOutP->alphaPipeP != NULL) 
+        if (pnmOutP->alphaPipeP != NULL)
             pgm_writepgmrow(pnmOutP->alphaPipeP, alphaRow,
                             pnmOutP->inCols, pnmOutP->alphaMaxval, 0);
     } else {
-        if (pnmOutP->imageoutFileP != NULL) 
+        if (pnmOutP->imageoutFileP != NULL)
             pnm_writepnmrow(pnmOutP->imageoutFileP, (xel *)imageRow,
                             pnmOutP->outCols, pnmOutP->maxval,
                             pnmOutP->format, 0);
-        if (pnmOutP->alphaFileP != NULL) 
+        if (pnmOutP->alphaFileP != NULL)
             pgm_writepgmrow(pnmOutP->alphaFileP, alphaRow,
                             pnmOutP->outCols, pnmOutP->alphaMaxval, 0);
     }
@@ -1170,12 +1170,12 @@ pnmOut_writeRow(pnmOut *     const pnmOutP,
 
 
 static void
-convertRow(unsigned int   const samplebuf[], 
-           xel *          const xelrow, 
+convertRow(unsigned int   const samplebuf[],
+           xel *          const xelrow,
            gray *         const alpharow,
-           int            const cols, 
-           xelval         const maxval, 
-           unsigned short const photomet, 
+           int            const cols,
+           xelval         const maxval,
+           unsigned short const photomet,
            unsigned short const spp,
            xel            const colormap[]) {
 /*----------------------------------------------------------------------------
@@ -1191,7 +1191,7 @@ convertRow(unsigned int   const samplebuf[],
         }
     }
     break;
-    
+
     case PHOTOMETRIC_MINISWHITE: {
         int col;
         for (col = 0; col < cols; ++col) {
@@ -1220,7 +1220,7 @@ convertRow(unsigned int   const samplebuf[],
         for (col = 0, sample = 0; col < cols; ++col, sample+=spp) {
             xelval r, g, b;
             pick_cmyk_pixel(samplebuf, sample, &r, &b, &g);
-            
+
             PPM_ASSIGN(xelrow[col], r, g, b);
             alpharow[col] = 0;
         }
@@ -1238,7 +1238,7 @@ convertRow(unsigned int   const samplebuf[],
                 alpharow[col] = 0;
         }
         break;
-    }       
+    }
     default:
         pm_error("internal error:  unknown photometric in the picking "
                  "routine: %d", photomet);
@@ -1257,7 +1257,7 @@ scale32to16(unsigned int * const samplebuf,
 -----------------------------------------------------------------------------*/
     unsigned int i;
     for (i = 0; i < cols * spp; ++i)
-        samplebuf[i] >>= 16; 
+        samplebuf[i] >>= 16;
 }
 
 
@@ -1288,39 +1288,39 @@ convertMultiPlaneRow(TIFF *          const tif,
         unsigned int col;
 
         /* First, clear the buffer so we can add red, green,
-           and blue one at a time.  
+           and blue one at a time.
         */
-        for (col = 0; col < cols; ++col) 
+        for (col = 0; col < cols; ++col)
             PPM_ASSIGN(xelrow[col], 0, 0, 0);
 
         /* Read the reds */
-        readscanline(tif, scanbuf, row, 0, cols, bps, spp, fillorder, 
+        readscanline(tif, scanbuf, row, 0, cols, bps, spp, fillorder,
                      samplebuf);
         if (bps == 32)
             scale32to16(samplebuf, cols, spp);
-        for (col = 0; col < cols; ++col) 
+        for (col = 0; col < cols; ++col)
             PPM_PUTR(xelrow[col], samplebuf[col]);
-                
+
         /* Next the greens */
         readscanline(tif, scanbuf, row, 1, cols, bps, spp, fillorder,
                      samplebuf);
         if (bps == 32)
             scale32to16(samplebuf, cols, spp);
-        for (col = 0; col < cols; ++col) 
+        for (col = 0; col < cols; ++col)
             PPM_PUTG( xelrow[col], samplebuf[col] );
-            
+
         /* And finally the blues */
         readscanline(tif, scanbuf, row, 2, cols, bps, spp, fillorder,
                      samplebuf);
         if (bps == 32)
             scale32to16(samplebuf, cols, spp);
-        for (col = 0; col < cols; ++col) 
+        for (col = 0; col < cols; ++col)
             PPM_PUTB(xelrow[col], samplebuf[col]);
 
         /* Could there be an alpha plane?  (We assume no.  But if so,
-           here is where to read it) 
+           here is where to read it)
         */
-        for (col = 0; col < cols; ++col) 
+        for (col = 0; col < cols; ++col)
             alpharow[col] = 0;
     }
 }
@@ -1329,11 +1329,11 @@ convertMultiPlaneRow(TIFF *          const tif,
 
 static void
 convertRasterByRows(pnmOut *       const pnmOutP,
-                    unsigned int   const cols, 
+                    unsigned int   const cols,
                     unsigned int   const rows,
                     xelval         const maxval,
                     TIFF *         const tif,
-                    unsigned short const photomet, 
+                    unsigned short const photomet,
                     unsigned short const planarconfig,
                     unsigned short const bps,
                     unsigned short const spp,
@@ -1341,7 +1341,7 @@ convertRasterByRows(pnmOut *       const pnmOutP,
                     xel            const colormap[],
                     bool           const verbose) {
 /*----------------------------------------------------------------------------
-   With the TIFF header all processed (and relevant information from it in 
+   With the TIFF header all processed (and relevant information from it in
    our arguments), write out the TIFF raster to the Netpbm output files
    as described by *pnmOutP.
 
@@ -1359,7 +1359,7 @@ convertRasterByRows(pnmOut *       const pnmOutP,
     xel * xelrow;
         /* The ppm-format row of the image row we are presently converting */
     gray * alpharow;
-        /* The pgm-format row representing the alpha values for the image 
+        /* The pgm-format row representing the alpha values for the image
            row we are presently converting.
         */
 
@@ -1383,13 +1383,13 @@ convertRasterByRows(pnmOut *       const pnmOutP,
         /* Read one row of samples into samplebuf[] */
 
         if (planarconfig == PLANARCONFIG_CONTIG) {
-            readscanline(tif, scanbuf, row, 0, cols, bps, spp, fillorder, 
+            readscanline(tif, scanbuf, row, 0, cols, bps, spp, fillorder,
                          samplebuf);
             if (bps == 32)
                 scale32to16(samplebuf, cols, spp);
-            convertRow(samplebuf, xelrow, alpharow, cols, maxval, 
+            convertRow(samplebuf, xelrow, alpharow, cols, maxval,
                        photomet, spp, colormap);
-        } else 
+        } else
             convertMultiPlaneRow(tif, xelrow, alpharow, cols, maxval, row,
                                  photomet, bps, spp, fillorder,
                                  scanbuf, samplebuf);
@@ -1401,7 +1401,7 @@ convertRasterByRows(pnmOut *       const pnmOutP,
 
     free(samplebuf);
     free(scanbuf);
-}    
+}
 
 
 
@@ -1416,7 +1416,7 @@ warnBrokenTiffLibrary(TIFF * const tiffP) {
    the transposition part, so e.g. it treats ORIENTATION_LEFTBOT as
    ORIENTATION_BOTLEFT.  And because we provide a raster buffer dimensioned
    for the properly transposed image, the result is somewhat of a mess.
-   
+
    We have found no documentation of the TIFF library that suggests
    this behavior is as designed, so it's probably not a good idea to
    work around it; it might be fixed somewhere.
@@ -1452,8 +1452,8 @@ warnBrokenTiffLibrary(TIFF * const tiffP) {
 
 
 
-static void 
-convertTiffRaster(uint32 *        const raster, 
+static void
+convertTiffRaster(uint32 *        const raster,
                   unsigned int    const cols,
                   unsigned int    const rows,
                   xelval          const maxval,
@@ -1465,11 +1465,11 @@ convertTiffRaster(uint32 *        const raster,
 -----------------------------------------------------------------------------*/
     xel * xelrow;
         /* The ppm-format row of the image row we are
-           presently converting 
+           presently converting
         */
     gray * alpharow;
         /* The pgm-format row representing the alpha values
-           for the image row we are presently converting.  
+           for the image row we are presently converting.
         */
     unsigned int row;
 
@@ -1477,35 +1477,35 @@ convertTiffRaster(uint32 *        const raster,
     alpharow = pgm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        uint32 * rp;  
+        uint32 * rp;
             /* Address of pixel in 'raster' we are presently converting */
         unsigned int col;
 
         /* Start at beginning of row: */
         rp = raster + (rows - row - 1) * cols;
-    
+
         for (col = 0; col < cols; ++col) {
             uint32 const tiffPixel = *rp++;
-                    
-            PPM_ASSIGN(xelrow[col], 
-                       TIFFGetR(tiffPixel) * maxval / 255, 
-                       TIFFGetG(tiffPixel) * maxval / 255, 
+
+            PPM_ASSIGN(xelrow[col],
+                       TIFFGetR(tiffPixel) * maxval / 255,
+                       TIFFGetG(tiffPixel) * maxval / 255,
                        TIFFGetB(tiffPixel) * maxval / 255);
             alpharow[col] = TIFFGetA(tiffPixel) * maxval / 255 ;
         }
         pnmOut_writeRow(pnmOutP, cols, xelrow, alpharow);
     }
-    
+
     pgm_freerow(alpharow);
     pnm_freerow(xelrow);
-}    
+}
 
 
 
 enum convertDisp {CONV_DONE,
                   CONV_OOM,
                   CONV_UNABLE,
-                  CONV_FAILED, 
+                  CONV_FAILED,
                   CONV_NOTATTEMPTED};
 
 
@@ -1524,7 +1524,7 @@ convertRasterIntoProvidedMemory(pnmOut *           const pnmOutP,
     TIFFRGBAImage img;
     char emsg[1024];
     int ok;
-                
+
     ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
     if (!ok) {
         pm_message("%s", emsg);
@@ -1540,7 +1540,7 @@ convertRasterIntoProvidedMemory(pnmOut *           const pnmOutP,
             *statusP = CONV_DONE;
             convertTiffRaster(raster, cols, rows, maxval, pnmOutP);
         }
-    } 
+    }
 }
 
 
@@ -1584,7 +1584,7 @@ convertRasterInMemory(pnmOut *           const pnmOutP,
         unsigned int cols, rows;  /* Dimensions of output image */
         getTiffDimensions(tif, &cols, &rows);
 
-        if (rows == 0 || cols == 0) 
+        if (rows == 0 || cols == 0)
             *statusP = CONV_DONE;
         else {
             if (cols > UINT_MAX/rows) {
@@ -1608,7 +1608,7 @@ convertRasterInMemory(pnmOut *           const pnmOutP,
                     convertRasterIntoProvidedMemory(
                         pnmOutP, cols, rows, maxval, tif, verbose,
                         raster, statusP);
-                    
+
                     free(raster);
                 }
             }
@@ -1653,7 +1653,7 @@ convertRaster(pnmOut *           const pnmOutP,
                          "and we already committed to in-memory "
                          "conversion.  To avoid this failure, "
                          "use -byrow .");
-        }            
+        }
         convertRasterByRows(
             pnmOutP, tiffDir.width, tiffDir.height, maxval,
             tifP, tiffDir.photomet, tiffDir.planarconfig,
@@ -1681,7 +1681,7 @@ convertImage(TIFF *             const tifP,
 
     computeFillorder(tiffDir.fillorder, &fillorder, cmdline.respectfillorder);
 
-    analyzeImageType(tifP, tiffDir.bps, tiffDir.spp, tiffDir.photomet, 
+    analyzeImageType(tifP, tiffDir.bps, tiffDir.spp, tiffDir.photomet,
                      &maxval, &format, colormap, cmdline.headerdump, cmdline);
 
     reportOutputFormat(format);
@@ -1704,7 +1704,7 @@ convertImage(TIFF *             const tifP,
 
 static void
 convertIt(TIFF *             const tifP,
-          FILE *             const alphaFile, 
+          FILE *             const alphaFile,
           FILE *             const imageoutFile,
           struct CmdlineInfo const cmdline) {
 
@@ -1744,19 +1744,19 @@ main(int argc, const char * argv[]) {
 
     if (cmdline.alphaStdout)
         alphaFile = stdout;
-    else if (cmdline.alphaFilename == NULL) 
+    else if (cmdline.alphaFilename == NULL)
         alphaFile = NULL;
     else
         alphaFile = pm_openw(cmdline.alphaFilename);
 
-    if (cmdline.alphaStdout) 
+    if (cmdline.alphaStdout)
         imageoutFile = NULL;
     else
         imageoutFile = stdout;
 
     convertIt(tiffP, alphaFile, imageoutFile, cmdline);
 
-    if (imageoutFile != NULL) 
+    if (imageoutFile != NULL)
         pm_close( imageoutFile );
     if (alphaFile != NULL)
         pm_close( alphaFile );
@@ -1770,3 +1770,6 @@ main(int argc, const char * argv[]) {
     */
     return 0;
 }
+
+
+

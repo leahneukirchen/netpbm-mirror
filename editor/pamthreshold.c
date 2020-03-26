@@ -73,7 +73,7 @@ initRange(struct range * const rangeP) {
     rangeP->max = 0.0;
 }
 
-          
+
 
 static void
 addToRange(struct range * const rangeP,
@@ -89,7 +89,7 @@ static float
 spread(struct range const range) {
 
     assert(range.max >= range.min);
-    
+
     return range.max - range.min;
 }
 
@@ -120,12 +120,12 @@ parseGeometry(const char *   const wxl,
 
 
 static void
-parseCommandLine(int                 argc, 
+parseCommandLine(int                 argc,
                  char **             argv,
                  struct cmdlineInfo *cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -145,7 +145,7 @@ parseCommandLine(int                 argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     /* define the options */
-    OPTENT3(0, "simple",    OPT_FLAG,   NULL,               
+    OPTENT3(0, "simple",    OPT_FLAG,   NULL,
             &cmdlineP->simple,      0);
     OPTENT3(0, "local",     OPT_STRING, &localOpt,
             &localSpec,             0);
@@ -155,7 +155,7 @@ parseCommandLine(int                 argc,
             &thresholdSpec,         0);
     OPTENT3(0, "contrast",  OPT_FLOAT,  &cmdlineP->contrast,
             &contrastSpec,          0);
-    OPTENT3(0, "verbose",    OPT_FLAG,   NULL,               
+    OPTENT3(0, "verbose",    OPT_FLAG,   NULL,
             &cmdlineP->verbose,     0);
 
     /* set the defaults */
@@ -216,8 +216,8 @@ parseCommandLine(int                 argc,
         cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
         cmdlineP->inputFileName = argv[1];
-    else 
-        pm_error("Progam takes at most 1 parameter: the file name.  "
+    else
+        pm_error("Program takes at most 1 parameter: the file name.  "
                  "You specified %d", argc-1);
 }
 
@@ -389,7 +389,7 @@ computeGlobalThreshold(struct pam *         const inpamP,
        of the "k-means clustering algorithm."
 
        The article claims it's proven to converge, by the way.
-       We have an interation limit just as a safety net.
+       We have an iteration limit just as a safety net.
 
        This code originally implemented a rather different algorithm,
        while nonetheless carrying the comment that it implemented the
@@ -524,7 +524,7 @@ thresholdLocalRow(struct pam *       const inpamP,
         getLocalThreshold(inrows, inpamP->width, col, localWidth, windowHeight,
                           cmdline.threshold, minSpread, globalThreshold,
                           &threshold);
-        
+
         thresholdPixel(outpamP, inrow[col], outrow[col], threshold);
     }
 }
@@ -569,12 +569,12 @@ thresholdLocal(struct pam *       const inpamP,
     unsigned int oddLocalWidth;
     unsigned int oddLocalHeight;
     unsigned int i;
-    
+
     /* use a subimage with odd width and height to have a middle pixel */
 
     if (cmdline.width % 2 == 0)
         oddLocalWidth = cmdline.width + 1;
-    else 
+    else
         oddLocalWidth = cmdline.width;
     if (cmdline.height % 2 == 0)
         oddLocalHeight = cmdline.height + 1;
@@ -616,7 +616,7 @@ thresholdLocal(struct pam *       const inpamP,
                           outpamP, outrow);
 
         pnm_writepamrow(outpamP, outrow);
-        
+
         /* read next image line if available and necessary */
         if (row + windowHeight / 2 >= nextRowToRead &&
             nextRowToRead < inpamP->height)
@@ -655,7 +655,7 @@ thresholdIterative(struct pam * const inpamP,
 int
 main(int argc, char **argv) {
 
-    FILE * ifP; 
+    FILE * ifP;
     struct cmdlineInfo cmdline;
     struct pam inpam, outpam;
     int eof;  /* No more images in input stream */
@@ -711,3 +711,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
+
+
+

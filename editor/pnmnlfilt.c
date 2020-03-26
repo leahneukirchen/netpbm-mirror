@@ -59,9 +59,9 @@ struct cmdlineInfo {
 };
 
 
-static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
+static void
+parseCommandLine(int argc,
+                 char ** argv,
                  struct cmdlineInfo  * const cmdlineP) {
 
     if (argc-1 < 2)
@@ -75,9 +75,9 @@ parseCommandLine(int argc,
 
     if (sscanf( argv[2], "%lf", &cmdlineP->radius ) != 1)
         pm_error("Invalid radius (2nd) argument '%s'.  "
-                 "Must be a decimal number", 
+                 "Must be a decimal number",
                  argv[2]);
-    
+
     if ((cmdlineP->alpha > -0.1 && cmdlineP->alpha < 0.0) ||
         (cmdlineP->alpha > 0.5 && cmdlineP->alpha < 1.0))
         pm_error( "Alpha must be in range 0.0 <= alpha <= 0.5 "
@@ -118,11 +118,11 @@ parseCommandLine(int argc,
    this value.
 */
 
-#define MXIVAL PPM_MAXMAXVAL   
+#define MXIVAL PPM_MAXMAXVAL
 
-xelval omaxval; 
+xelval omaxval;
     /* global so that pixel processing code can get at it quickly */
-int noisevariance;      
+int noisevariance;
     /* global so that pixel processing code can get at it quickly */
 
 /*
@@ -157,7 +157,7 @@ static  xelval maxval;
 /* round and scale floating point to scaled integer */
 #define ROUNDSCALE(x) ((int)(((x) * (double)SCALE) + 0.5))
 /* round and un-scale scaled integer value */
-#define RUNSCALE(x) (((x) + (1 << (SCALEB-1))) >> SCALEB) 
+#define RUNSCALE(x) (((x) + (1 << (SCALEB-1))) >> SCALEB)
 /* rounded un-scale */
 #define UNSCALE(x) ((x) >> SCALEB)
 
@@ -194,9 +194,9 @@ int AVEDIV[7 * NOCSVAL];                /* divide by 7 to give average value */
 int SQUARE[2 * NOCSVAL];                /* scaled square lookup table */
 
 /* ************************************************** *
-   Hexagon intersecting square area functions 
-   Compute the area of the intersection of a triangle 
-   and a rectangle 
+   Hexagon intersecting square area functions
+   Compute the area of the intersection of a triangle
+   and a rectangle
    ************************************************** */
 
 /* Triangle orientation is per geometric axes (not graphical axies) */
@@ -210,7 +210,7 @@ int SQUARE[2 * NOCSVAL];                /* scaled square lookup table */
 
 #define SWAPI(a,b) (t = a, a = -b, b = -t)
 
-static double 
+static double
 triang_area(double rx0, double ry0, double rx1, double ry1,
             double tx0, double ty0, double tx1, double ty1,
             int tt) {
@@ -250,7 +250,7 @@ triang_area(double rx0, double ry0, double rx1, double ry1,
     a = tx0 - b * ty0;
     d = (ty1 - ty0)/(tx1 - tx0);
     c = ty0 - d * tx0;
-    
+
     /* compute top or right intersection */
     tt = 0;
     ly1 = ry1;
@@ -278,7 +278,7 @@ triang_area(double rx0, double ry0, double rx1, double ry1,
             return (rx1 - rx0) * (ry1 - ry0);
         tt |= 2;        /* bottom intersection */
     }
-    
+
     if (tt == 0) {
         /* top and left intersection */
         /* rectangle minus triangle */
@@ -293,7 +293,7 @@ triang_area(double rx0, double ry0, double rx1, double ry1,
         return ((rx1 - lx1) * (ry1 - ry0))
             + (0.5 * (lx1 - lx0) * (ry1 - ry0));
     } else {
-        /* tt == 3 */ 
+        /* tt == 3 */
         /* right and bottom intersection */
         /* triangle */
         return (0.5 * (rx1 - lx0) * (ly1 - ry0));
@@ -303,7 +303,7 @@ triang_area(double rx0, double ry0, double rx1, double ry1,
 
 
 static double
-rectang_area(double rx0, double ry0, double rx1, double ry1, 
+rectang_area(double rx0, double ry0, double rx1, double ry1,
              double tx0, double ty0, double tx1, double ty1) {
 /* Compute rectangle area */
 /* rx0,ry0,rx1,ry1:  rectangle boundaries */
@@ -326,7 +326,7 @@ rectang_area(double rx0, double ry0, double rx1, double ry1,
 
 
 
-static double 
+static double
 hex_area(double sx, double sy, double hx, double hy, double d) {
 /* compute the area of overlap of a hexagon diameter d, */
 /* centered at hx,hy, with a unit square of center sx,sy. */
@@ -384,7 +384,7 @@ setupSquare(void) {
 
     for (i=0; i < (2 * NOCSVAL); ++i) {
         /* compute square and rescale by (val >> (2 * SCALEB + 2)) table */
-        int const val = CSCTOSC(i - NOCSVAL); 
+        int const val = CSCTOSC(i - NOCSVAL);
         /* NOCSVAL offset to cope with -ve input values */
         SQUARE[i] = (val * val) >> (2 * SCALEB + 2);
     }
@@ -414,7 +414,7 @@ setup1(double   const alpha,
 
         *mmeanscaleP = *meanscaleP = maxscale/noinmean;
         if (alpha == 0.0) {
-            /* mean filter */ 
+            /* mean filter */
             *alpharangeP = 0;
             *alphafractionP = 0.0;            /* not used */
         } else if (alpha < (1.0/6.0)) {
@@ -438,9 +438,9 @@ setup1(double   const alpha,
         double const noinmean = 7.0;
         *alpharangeP = 5;                 /* edge enhancement function */
         *mmeanscaleP = *meanscaleP = maxscale;  /* compute scaled hex values */
-        *alphafractionP = 1.0/noinmean;   
+        *alphafractionP = 1.0/noinmean;
             /* Set up 1:1 division lookup - not used */
-        *noisevarianceP = sqr(alphaNormalized * omaxval) / 8.0;    
+        *noisevarianceP = sqr(alphaNormalized * omaxval) / 8.0;
             /* estimate of noise variance */
     } else if (alpha >= -0.9 && alpha <= -0.1) {
         /* edge enhancement function */
@@ -449,7 +449,7 @@ setup1(double   const alpha,
         *alpharangeP = 4;                 /* edge enhancement function */
         *meanscaleP = maxscale * (-posAlpha/((1.0 - posAlpha) * 7.0));
             /* mean of 7 and scaled by -posAlpha/(1-posAlpha) */
-        *mmeanscaleP = maxscale * (1.0/(1.0 - posAlpha) + *meanscaleP);    
+        *mmeanscaleP = maxscale * (1.0/(1.0 - posAlpha) + *meanscaleP);
             /* middle pixel has 1/(1-posAlpha) as well */
         *alphafractionP = 0.0;    /* not used */
     } else {
@@ -481,18 +481,18 @@ setupPixelWeightingTables(double const radius,
                           double const mmeanscale) {
 
     /* Setup pixel weighting tables - note we pre-compute mean
-       division here too. 
+       division here too.
     */
-    double const hexhoff = radius/2;      
+    double const hexhoff = radius/2;
         /* horizontal offset of vertical hex centers */
-    double const hexvoff = 3.0 * radius/sqrt(12.0); 
+    double const hexvoff = 3.0 * radius/sqrt(12.0);
         /* vertical offset of vertical hex centers */
 
     double const tabscale  = meanscale  / (radius * hexvoff);
     double const mtabscale = mmeanscale / (radius * hexvoff);
 
     /* scale tables to normalize by hexagon area, and number of
-       hexes used in mean 
+       hexes used in mean
     */
     double const v0 =
         hex_area(0.0,  0.0, hexhoff, hexvoff, radius) * tabscale;
@@ -538,7 +538,7 @@ setupPixelWeightingTables(double const radius,
 
 
 /* Table initialization function - return alpha range */
-static int 
+static int
 atfilt_setup(double const alpha,
              double const radius,
              double const maxscale) {
@@ -546,7 +546,7 @@ atfilt_setup(double const alpha,
     int alpharange;                 /* alpha range value 0 - 5 */
     double meanscale;               /* scale for finding mean */
     double mmeanscale;              /* scale for finding mean - midle hex */
-    double alphafraction;   
+    double alphafraction;
         /* fraction of next largest/smallest to subtract from sum */
 
     setup1(alpha, radius, maxscale,
@@ -562,7 +562,7 @@ atfilt_setup(double const alpha,
 
 
 
-static int 
+static int
 atfilt0(int * p) {
 /* Core pixel processing function - hand it 3x3 pixels and return result. */
 /* Mean filter */
@@ -586,7 +586,7 @@ atfilt0(int * p) {
         else if (xx < small) \
             small = xx; }
 
-static int 
+static int
 atfilt1(int * p) {
 /* Mean of 5 - 7 middle values */
 /* 'p' is 9 pixel values from 3x3 neighbors */
@@ -635,7 +635,7 @@ atfilt1(int * p) {
     }
 
 
-static int 
+static int
 atfilt2(int *p) {
 /* Mean of 3 - 5 middle values */
 /* 'p' is 9 pixel values from 3x3 neighbors */
@@ -708,10 +708,10 @@ atfilt2(int *p) {
                         small2 = xx; \
                                          }}
 
-static int 
+static int
 atfilt3(int *p) {
 /* Mean of 1 - 3 middle values. If only 1 value, then this is a median
-   filter. 
+   filter.
 */
 /* 'p' is pixel values from 3x3 neighbors */
     int h0,h1,h2,h3,h4,h5,h6;       /* hexagon values    2 3   */
@@ -737,12 +737,12 @@ atfilt3(int *p) {
     CHECK(h5);
     CHECK(h6);
     /* Compute mean of middle 1-3 values */
-    return  UNSCALE(h0 -big0 -big1 -small0 -small1 
+    return  UNSCALE(h0 -big0 -big1 -small0 -small1
                     -ALFRAC[(big2 + small2)>>SCALEB]);
 }
 #undef CHECK
 
-static int 
+static int
 atfilt4(int *p) {
 /* Edge enhancement */
 /* notice we use the global omaxval */
@@ -765,7 +765,7 @@ atfilt4(int *p) {
     return hav;
 }
 
-static int 
+static int
 atfilt5(int *p) {
 /* Optimal estimation - do smoothing in inverse proportion */
 /* to the local variance. */
@@ -786,19 +786,19 @@ atfilt5(int *p) {
     h6 = V0[p[0]] + V1[p[7]] + V2[p[8]] + V3[p[1]];
     mean = h0 + h1 + h2 + h3 + h4 + h5 + h6;
     mean = AVEDIV[SCTOCSC(mean)];   /* compute scaled mean by dividing by 7 */
-    temp = (h1 - mean); variance = SQUARE[NOCSVAL + SCTOCSC(temp)];  
+    temp = (h1 - mean); variance = SQUARE[NOCSVAL + SCTOCSC(temp)];
         /* compute scaled variance */
-    temp = (h2 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)]; 
+    temp = (h2 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)];
         /* and rescale to keep */
-    temp = (h3 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)]; 
+    temp = (h3 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)];
         /* within 32 bit limits */
     temp = (h4 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)];
     temp = (h5 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)];
     temp = (h6 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)];
-    temp = (h0 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)];   
+    temp = (h0 - mean); variance += SQUARE[NOCSVAL + SCTOCSC(temp)];
     /* (temp = h0 - mean) */
     if (variance != 0)      /* avoid possible divide by 0 */
-        temp = mean + (variance * temp) / (variance + noisevariance);   
+        temp = mean + (variance * temp) / (variance + noisevariance);
             /* optimal estimate */
     else temp = h0;
     if (temp < 0)
@@ -811,17 +811,17 @@ atfilt5(int *p) {
 
 
 
-static void 
+static void
 do_one_frame(FILE * const ifP) {
 
     pnm_writepnminit( stdout, cols, rows, omaxval, oformat, 0 );
-    
+
     if ( PNM_FORMAT_TYPE(oformat) == PPM_TYPE ) {
         int pr[9],pg[9],pb[9];          /* 3x3 neighbor pixel values */
         int r,g,b;
 
         for ( row = 0; row < rows; row++ ) {
-            int po,no;           /* offsets for left and right colums in 3x3 */
+            int po,no;          /* offsets for left and right columns in 3x3 */
             xel *ip0, *ip1, *ip2, *op;
 
             if (row == 0) {
@@ -897,14 +897,14 @@ do_one_frame(FILE * const ifP) {
         promote = ( PNM_FORMAT_TYPE(format) != PNM_FORMAT_TYPE(oformat) );
 
         for ( row = 0; row < rows; row++ ) {
-            int po,no;          /* offsets for left and right colums in 3x3 */
+            int po,no;          /* offsets for left and right columns in 3x3 */
             xel *ip0, *ip1, *ip2, *op;
 
             if (row == 0) {
                 irow0 = irow1;
                 pnm_readpnmrow( ifP, irow1, cols, maxval, format );
                 if ( promote )
-                    pnm_promoteformatrow( irow1, cols, maxval, 
+                    pnm_promoteformatrow( irow1, cols, maxval,
                                           format, maxval, oformat );
             }
             if (row == (rows-1))
@@ -912,7 +912,7 @@ do_one_frame(FILE * const ifP) {
             else {
                 pnm_readpnmrow( ifP, irow2, cols, maxval, format );
                 if ( promote )
-                    pnm_promoteformatrow( irow2, cols, maxval, 
+                    pnm_promoteformatrow( irow2, cols, maxval,
                                           format, maxval, oformat );
             }
 
@@ -955,7 +955,7 @@ do_one_frame(FILE * const ifP) {
 
 
 static void
-verifySame(unsigned int const imageSeq, 
+verifySame(unsigned int const imageSeq,
            int const imageCols, int const imageRows,
            xelval const imageMaxval, int const imageFormat,
            int const cols, int const rows,
@@ -1000,16 +1000,16 @@ main(int argc, char *argv[]) {
     ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
-        
-    if (maxval > MXIVAL) 
+
+    if (maxval > MXIVAL)
         pm_error("The maxval of the input image (%d) is too large.\n"
-                 "This program's limit is %d.", 
+                 "This program's limit is %d.",
                  maxval, MXIVAL);
-        
+
     oformat = PNM_FORMAT_TYPE(format);
     /* force output to max precision without forcing new 2-byte format */
     omaxval = MIN(maxval, PPM_MAXMAXVAL);
-        
+
     atfunc = atfuncs[atfilt_setup(cmdline.alpha, cmdline.radius,
                                   (double)omaxval/(double)maxval)];
 
@@ -1038,7 +1038,7 @@ main(int argc, char *argv[]) {
             int imageFormat;
 
             ++imageSeq;
-            pnm_readpnminit(ifP, &imageCols, &imageRows, 
+            pnm_readpnminit(ifP, &imageCols, &imageRows,
                             &imageMaxval, &imageFormat);
             verifySame(imageSeq,
                        imageCols, imageRows, imageMaxval, imageFormat,
@@ -1054,3 +1054,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

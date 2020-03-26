@@ -109,7 +109,7 @@ static const char *errmsg[] = {
  * The following three functions are the only places in this code, were
  * C library memory management functions are called. The whole JBIG
  * library has been designed in order to allow multi-threaded
- * execution. No static or global variables are used, so all fuctions
+ * execution. No static or global variables are used, so all functions
  * are fully reentrant. However if you want to use this multi-thread
  * capability and your malloc, realloc and free are not reentrant,
  * then simply add the necessary semaphores or mutex primitives below.
@@ -776,7 +776,7 @@ void jbg_enc_init(struct jbg_enc_state *s, unsigned long x, unsigned long y,
   assert(x > 0 && y > 0 && planes > 0 && planes < 256);
   s->xd = x;
   s->yd = y;
-  s->yd1 = y; /* This is the hight initially announced in BIH. To provoke
+  s->yd1 = y; /* This is the height initially announced in BIH. To provoke
                  generation of NEWLEN for T.85 compatibility tests,
                  overwrite with new value s->yd1 > s->yd  */
   s->planes = planes;
@@ -1106,7 +1106,7 @@ static void encode_sde(struct jbg_enc_state *s,
 	    if (!at_determined && j >= s->mx && j < hx-2) {
 	      p = (line_h1 & 0x100) != 0; /* current pixel value */
 	      c[0] += ((line_h2 & 0x4000) != 0) == p; /* default position */
-	      assert(!(((line_h2 >> 6) ^ line_h1) & 0x100) ==
+	      assert((!(((line_h2 >> 6) ^ line_h1) & 0x100)) ==
 		     (((line_h2 & 0x4000) != 0) == p));
 	      for (t = 5; t <= s->mx && t <= j; t++) {
 		o = (j - t) - (j & ~7L);
@@ -1151,7 +1151,7 @@ static void encode_sde(struct jbg_enc_state *s,
 	    if (!at_determined && j >= s->mx && j < hx-2) {
 	      p = (line_h1 & 0x100) != 0; /* current pixel value */
 	      c[0] += ((line_h2 & 0x4000) != 0) == p; /* default position */
-	      assert(!(((line_h2 >> 6) ^ line_h1) & 0x100) ==
+	      assert((!(((line_h2 >> 6) ^ line_h1) & 0x100)) ==
 		     (((line_h2 & 0x4000) != 0) == p));
 	      for (t = 3; t <= s->mx && t <= j; t++) {
 		o = (j - t) - (j & ~7L);
@@ -3240,7 +3240,7 @@ static unsigned char *jbg_next_pscdms(unsigned char *p, size_t len)
  * depends on the fact that section 6.2.6.2 of ITU-T T.82 says that a
  * NEWLEN marker segment "could refer to a line in the immediately
  * preceding stripe due to an unexpected termination of the image or
- * the use of only such stripe". ITU-T.85 explicitely suggests the
+ * the use of only such stripe". ITU-T.85 explicitly suggests the
  * use of this for fax machines that start transmission before having
  * encountered the end of the page. None of this is necessary for
  * BIEs produced by JBIG-KIT, which normally does not use NEWLEN.

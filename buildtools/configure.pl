@@ -125,7 +125,7 @@ sub flow($) {
     my ($unflowed) = @_;
 #-----------------------------------------------------------------------------
 #  Return the text $unflowed, split with newlines into 72 character lines.
-#  We assum $unflowed is pure text, without any kind of formatting characters
+#  We assume $unflowed is pure text, without any kind of formatting characters
 #  such as newlines.
 #-----------------------------------------------------------------------------
     my $retval;

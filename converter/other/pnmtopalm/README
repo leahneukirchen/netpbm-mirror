@@ -40,7 +40,7 @@ Usage: ppmtoTbmp [-2bit] [file.ppm]
 If the ppm file is not specified, one is read from stdin.  The -2bit option
 produces a 2-bit bitmap instead of the normal 1-bit bitmap.  The ppm must
 have at most 4 colors in it (for 2-bit) or at most 2 colors (for 1-bit).
-Common invokations might be:
+Common invocations might be:
 
 xbmtopbm icon.xbm | ppmquant -fs -map q2.map | ppmtoTbmp > tAIB03e8.bin
 giftopnm image.gif | ppmquant -fs -map q4.map | ppmtoTbmp -2bit > Tbmp0bb8.bin

@@ -1597,8 +1597,8 @@ rgbn_to_ppm(FILE *         const ifP,
  Multipalette chunk reader
 
     Currently there are three multipalette formats:
-        SHAM - sliced HAM (obselete)
-        CTBL - dynamic HAM/Hires (obselete)
+        SHAM - sliced HAM (obsolete)
+        CTBL - dynamic HAM/Hires (obsolete)
         PCHG - palette change
     There is no official documentation available for SHAM and CTBL, so
    this is mostly guesswork from other sources and hexdumps of pictures...

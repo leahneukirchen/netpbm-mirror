@@ -85,9 +85,9 @@ read_header(FILE *   const ifP,
 
     rlahdr hdr;
     size_t bytesRead;
-    
+
     fseek (ifP, 0, SEEK_SET);
-    
+
     /* Here we have a hack.  The bytes in the file are almost in the
        same format as the compiler stores 'hdr' in memory.  The only
        difference is that the compiler may store the integer values
@@ -185,7 +185,7 @@ decode(unsigned char * const input,
     x = xFile;
     bytes = 0;
     useX = 0;
-    
+
     while (x > 0) {
         int count;
 
@@ -246,7 +246,7 @@ decode_row(FILE *          const ifP,
     for (chan = 0; chan < outpam.depth; ++chan) {
         unsigned short length;
         size_t bytesRead;
-        
+
         pm_readbigshortu(ifP, &length);
         if (length > width * 4)
             pm_error("Line too long - row %u, channel %u", row, chan);
@@ -266,7 +266,7 @@ decode_row(FILE *          const ifP,
             decode(newpos, rb + chan * 2 + 1, width, width,
                    outpam.depth * 2);
         } else
-            decode(read_buffer, rb + chan, width, width, outpam.depth); 
+            decode(read_buffer, rb + chan, width, width, outpam.depth);
     }
 }
 
@@ -280,7 +280,7 @@ getHeaderInfo(FILE *         const ifP,
               bool *         const hasMatteP,
               unsigned int * const chanBitsP,
               short *        const storageType) {
-    
+
     rlahdr hdr;
     int width, height;
 
@@ -350,7 +350,7 @@ readAndWriteRaster(FILE *             const ifP,
     /* Hold one row of all image planes */
     rowBuffer = calloc(1, width * outpamP->depth * 4);
     if (rowBuffer == NULL)
-        pm_error("Unable to allocate memor for row buffer.");
+        pm_error("Unable to allocate memory for row buffer.");
 
     tuplerow = pnm_allocpamrow(outpamP);
 
@@ -403,7 +403,7 @@ main(int    argc,
     outpam.height = height;
     outpam.width  = width;
     outpam.depth  = numChan + (has_matte ? 1 : 0);
-    outpam.maxval = (1 << (chanBits > 16 ? 
+    outpam.maxval = (1 << (chanBits > 16 ?
                            (9 + (chanBits - 1) % 8)
                                 /* Take top 2 of 3 or 4 bytes */
                            : chanBits)) - 1;
@@ -427,8 +427,11 @@ main(int    argc,
     readAndWriteRaster(ifP, &outpam);
 
     destroyOffsetArray(offsets);
-    
+
     pm_close(ifP);
 
-    return 0; 
+    return 0;
 }
+
+
+

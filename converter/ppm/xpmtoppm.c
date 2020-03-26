@@ -544,7 +544,7 @@ interpretXpm3ColorTableLine(char               const line[],
                     addToColorMap(hashP, colorName, curbuf, isTransparent);
                     highkey = curkey;
                 }
-                /* intialize state to process this new key */
+                /* initialize state to process this new key */
                 curkey = key;
                 curbuf[0] = '\0';
                 isTransparent = FALSE;
@@ -1074,7 +1074,7 @@ main(int argc, char *argv[]) {
 **  - Now understands multiword X11 color names
 **
 **  - Now reads multiple color keys. Takes the color
-**    of the hightest available key. Lines no longer need
+**    of the highest available key. Lines no longer need
 **    to begin with key 'c'.
 **
 **  - expanded line buffer to from 500 to 2048 for bigger files

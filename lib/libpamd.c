@@ -1,4 +1,4 @@
-/* 
+/*
 **
 ** This library module contains the pamdraw routines.
 **
@@ -12,7 +12,7 @@
 ** copyright notice and this permission notice appear in supporting
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
-** 
+**
 ** The character drawing routines are by John Walker
 ** Copyright (C) 1994 by John Walker, kelvin@fourmilab.ch
 */
@@ -89,7 +89,7 @@ pointIsWithinBounds(pamd_point   const p,
     return (p.x >= 0 && p.x < cols && p.y >= 0 && p.y < rows);
 }
 
-        
+
 
 static pamd_point
 vectorSum(pamd_point const a,
@@ -106,7 +106,7 @@ static long int const DDA_SCALE = 8192;
 /*
   Several factors govern the limit of x, y coordination values.
 
-  The limit must be representable as (signed) int for coordinates to 
+  The limit must be representable as (signed) int for coordinates to
   be carried in struct penpos (immediately above).
 
   The following calculation, done with long ints, must not overflow:
@@ -116,7 +116,7 @@ static long int const DDA_SCALE = 8192;
   dy = (y1 - y0) * DDA_SCALE / abs(x1 - x0);
 
   Overflow conditions for pamd_text are rather complicated, for commands
-  come from an external PPMD font file.  See comments below.  
+  come from an external PPMD font file.  See comments below.
 */
 
 
@@ -145,11 +145,11 @@ pamd_validatePoint(pamd_point const p) {
 static void
 drawPoint(pamd_drawproc       drawproc,
           const void *  const clientdata,
-          tuple **      const tuples, 
-          int           const cols, 
-          int           const rows, 
-          int           const depth, 
-          sample        const maxval, 
+          tuple **      const tuples,
+          int           const cols,
+          int           const rows,
+          int           const depth,
+          sample        const maxval,
           pamd_point    const p) {
 /*----------------------------------------------------------------------------
    Draw a single point, assuming that it is within the bounds of the
@@ -171,16 +171,16 @@ drawPoint(pamd_drawproc       drawproc,
 
 
 void
-pamd_point_drawproc(tuple **     const tuples, 
-                    unsigned int const cols, 
-                    unsigned int const rows, 
-                    unsigned int const depth, 
-                    sample       const maxval, 
+pamd_point_drawproc(tuple **     const tuples,
+                    unsigned int const cols,
+                    unsigned int const rows,
+                    unsigned int const depth,
+                    sample       const maxval,
                     pamd_point   const p,
                     const void * const clientdata) {
 
     unsigned int i;
-    
+
     if ((p.x >= 0) && (p.x < cols) && (p.y >= 0) && (p.y < rows))
         for (i = 0; i < depth; ++i)
             tuples[p.y][p.x][i] = (sample) *((tuple *) clientdata + i);
@@ -216,15 +216,15 @@ findRectangleIntersection(struct rectangle   const rect1,
 
 
 void
-pamd_filledrectangle(tuple **      const tuples, 
-                     int           const cols, 
-                     int           const rows, 
-                     int           const depth, 
-                     sample        const maxval, 
-                     int           const left, 
-                     int           const top, 
-                     int           const width, 
-                     int           const height, 
+pamd_filledrectangle(tuple **      const tuples,
+                     int           const cols,
+                     int           const rows,
+                     int           const depth,
+                     sample        const maxval,
+                     int           const left,
+                     int           const top,
+                     int           const width,
+                     int           const height,
                      pamd_drawproc       drawProc,
                      const void *  const clientdata) {
 
@@ -390,16 +390,16 @@ clipEnd1(pamd_point   const p0,
    at 0.
 -----------------------------------------------------------------------------*/
     pamd_point c1;
-        /* The current clipped location of p1; we clip it multile times
+        /* The current clipped location of p1; we clip it multiple times
            to get the final location.
         */
     /* p0 is in the frame: */
     assert(p0.x >= 0 && p0.x < cols);
     assert(p0.y >= 0 && p0.y < rows);
-    
+
     /* Clip End 1 of the line horizontally */
     c1 = p1;  /* initial value */
-    
+
     if (c1.x < 0) {
         /* We know the line isn't vertical, since End 0 is in the frame
            and End 1 is left of frame.
@@ -413,7 +413,7 @@ clipEnd1(pamd_point   const p0,
         c1.y = c1.y + (p0.y - c1.y) * (cols - 1 - c1.x) / (p0.x - c1.x);
         c1.x = cols - 1;
     }
-    
+
     /* Clip End 1 of the line vertically */
     if (c1.y < 0) {
         /* We know the line isn't horizontal, since End 0 is in the frame
@@ -477,11 +477,11 @@ clipLine(pamd_point   const p0,
 static void
 drawShallowLine(pamd_drawproc       drawProc,
                 const void *  const clientdata,
-                tuple **      const tuples, 
-                int           const cols, 
-                int           const rows, 
-                int           const depth, 
-                sample        const maxval, 
+                tuple **      const tuples,
+                int           const cols,
+                int           const rows,
+                int           const depth,
+                sample        const maxval,
                 pamd_point    const p0,
                 pamd_point    const p1) {
 /*----------------------------------------------------------------------------
@@ -526,11 +526,11 @@ drawShallowLine(pamd_drawproc       drawProc,
 static void
 drawSteepLine(pamd_drawproc       drawProc,
               const void *  const clientdata,
-              tuple **      const tuples, 
-              int           const cols, 
-              int           const rows, 
+              tuple **      const tuples,
+              int           const cols,
+              int           const rows,
               int           const depth,
-              sample        const maxval, 
+              sample        const maxval,
               pamd_point    const p0,
               pamd_point    const p1) {
 /*----------------------------------------------------------------------------
@@ -574,11 +574,11 @@ drawSteepLine(pamd_drawproc       drawProc,
 
 
 void
-pamd_line(tuple **      const tuples, 
-          int           const cols, 
-          int           const rows, 
-          int           const depth, 
-          sample        const maxval, 
+pamd_line(tuple **      const tuples,
+          int           const cols,
+          int           const rows,
+          int           const depth,
+          sample        const maxval,
           pamd_point    const p0,
           pamd_point    const p1,
           pamd_drawproc       drawProc,
@@ -639,11 +639,11 @@ distanceFromLine(pamd_point const p,
 
 
 void
-pamd_spline3(tuple **      const tuples, 
-             int           const cols, 
-             int           const rows, 
-             int           const depth, 
-             sample        const maxval, 
+pamd_spline3(tuple **      const tuples,
+             int           const cols,
+             int           const rows,
+             int           const depth,
+             sample        const maxval,
              pamd_point    const p0,
              pamd_point    const ctl,
              pamd_point    const p1,
@@ -679,11 +679,11 @@ pamd_spline3(tuple **      const tuples,
 
 
 void
-pamd_polyspline(tuple **      const tuples, 
-                unsigned int  const cols, 
-                unsigned int  const rows, 
-                unsigned int  const depth, 
-                sample        const maxval, 
+pamd_polyspline(tuple **      const tuples,
+                unsigned int  const cols,
+                unsigned int  const rows,
+                unsigned int  const depth,
+                sample        const maxval,
                 pamd_point    const p0,
                 unsigned int  const nc,
                 pamd_point *  const c,
@@ -692,7 +692,7 @@ pamd_polyspline(tuple **      const tuples,
                 const void *  const clientdata) {
 
     pamd_point p;
-    
+
     unsigned int i;
 
     assert(nc > 0);
@@ -713,11 +713,11 @@ pamd_polyspline(tuple **      const tuples,
 
 
 void
-pamd_spline4(tuple **      const tuples, 
-             unsigned int  const cols, 
-             unsigned int  const rows, 
-             unsigned int  const depth, 
-             sample        const maxval, 
+pamd_spline4(tuple **      const tuples,
+             unsigned int  const cols,
+             unsigned int  const rows,
+             unsigned int  const depth,
+             sample        const maxval,
              pamd_point    const endPt0,
              pamd_point    const endPt1,
              pamd_point    const ctlPt0,
@@ -739,13 +739,13 @@ pamd_spline4(tuple **      const tuples,
 
 
 void
-pamd_circle(tuple **      const tuples, 
-            unsigned int  const cols, 
-            unsigned int  const rows, 
-            unsigned int  const depth, 
-            sample        const maxval, 
+pamd_circle(tuple **      const tuples,
+            unsigned int  const cols,
+            unsigned int  const rows,
+            unsigned int  const depth,
+            sample        const maxval,
             pamd_point    const center,
-            unsigned int  const radius, 
+            unsigned int  const radius,
             pamd_drawproc       drawProc,
             const void *  const clientData) {
 /*----------------------------------------------------------------------------
@@ -755,7 +755,7 @@ pamd_circle(tuple **      const tuples,
   it might maintain state that is affected by imaginary points outside
   the image.
 
-  Initial point is 3 o'clock. 
+  Initial point is 3 o'clock.
 -----------------------------------------------------------------------------*/
     if (radius >= DDA_SCALE)
         pm_error("Error drawing circle.  Radius %d is too large.", radius);
@@ -869,11 +869,11 @@ pamd_fill_create(void) {
     stateP->curedge = 0;
 
     fillObjP->stateP = stateP;
-    
+
     /* Turn off line clipping. */
     /* UGGH! We must eliminate this global variable */
     oldclip = pamd_setlineclip(0);
-    
+
     return fillObjP;
 }
 
@@ -969,11 +969,11 @@ continueSegment(struct fillState * const stateP,
 */
 
 void
-pamd_fill_drawproc(tuple **     const tuples, 
-                   unsigned int const cols, 
-                   unsigned int const rows, 
-                   unsigned int const depth, 
-                   sample       const maxval, 
+pamd_fill_drawproc(tuple **     const tuples,
+                   unsigned int const cols,
+                   unsigned int const rows,
+                   unsigned int const depth,
+                   sample       const maxval,
                    pamd_point   const p,
                    const void * const clientdata) {
 
@@ -1029,7 +1029,7 @@ yxCompare(const void * const c1Arg,
     pamd_point const p2 = c2P->point;
 
     int retval;
-    
+
     if (p1.y > p2.y)
         retval = 1;
     else if (p1.y < p2.y)
@@ -1047,15 +1047,15 @@ yxCompare(const void * const c1Arg,
 
 
 void
-pamd_fill(tuple **         const tuples, 
-          int              const cols, 
-          int              const rows, 
-          int              const depth, 
-          sample           const maxval, 
+pamd_fill(tuple **         const tuples,
+          int              const cols,
+          int              const rows,
+          int              const depth,
+          sample           const maxval,
           struct fillobj * const fillObjP,
           pamd_drawproc          drawProc,
           const void *     const clientdata) {
-    
+
     struct fillState * const fh = fillObjP->stateP;
 
     int pedge;
@@ -1222,7 +1222,7 @@ icos(int const deg) {
   times the cosine
 -----------------------------------------------------------------------------*/
     return isin(deg + 90);
-}  
+}
 
 
 
@@ -1294,7 +1294,7 @@ textPosFromFontPos(pamd_point   const fontPos,
         /* Position relative to the top left of the whole text box,
            assuming the text box is horizontal and has font scale.
         */
-    
+
     pamd_point const ps = makePoint((pl.x * (int)height) / Scalef,
                                     (pl.y * (int)height) / Scalef);
          /* Same as above, but with the text box its actual size */
@@ -1344,7 +1344,7 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
   text box, in the coordinate system of the canvas.  'rotcos' and 'rotsin'
   tell how that text box is rotated with respect to the horizontal on the
   canvas.
-  
+
   'height' is the height in canvas tuples of a glyph.  This is a scale factor
   to convert font coordinates to canvas coordinates.
 -----------------------------------------------------------------------------*/
@@ -1384,7 +1384,7 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
                                                     glyphOrigin,
                                                     height,
                                                     rotcos, rotsin);
-                                                    
+
             pamd_line(tuples, cols, rows, depth, maxval, p, n,
                       drawProc, clientdata);
 
@@ -1407,15 +1407,15 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
 
 
 void
-pamd_text(tuple**       const tuples, 
-          int           const cols, 
-          int           const rows, 
-          int           const depth, 
-          sample        const maxval, 
+pamd_text(tuple**       const tuples,
+          int           const cols,
+          int           const rows,
+          int           const depth,
+          sample        const maxval,
           pamd_point    const pos,
-          int           const height, 
-          int           const angle, 
-          const char *  const sArg, 
+          int           const height,
+          int           const angle,
+          const char *  const sArg,
           pamd_drawproc       drawProc,
           const void *  const clientdata) {
 /*----------------------------------------------------------------------------
@@ -1451,7 +1451,7 @@ pamd_text(tuple**       const tuples,
 
             unsigned int cursorAdvance;
 
-            pamd_validatePoint(p); 
+            pamd_validatePoint(p);
 
             drawGlyph(glyphP, p, tuples, cols, rows, depth, maxval,
                       height, pos, rotcos, rotsin,
@@ -1471,12 +1471,12 @@ pamd_text(tuple**       const tuples,
 static pamd_drawproc extetnsDrawproc;
 #endif
 
-static void 
-extentsDrawproc(tuple**      const tuples, 
-                unsigned int const cols, 
+static void
+extentsDrawproc(tuple**      const tuples,
+                unsigned int const cols,
                 unsigned int const rows,
                 unsigned int const depth,
-                sample       const maxval, 
+                sample       const maxval,
                 pamd_point   const p,
                 const void * const clientdata) {
 /*----------------------------------------------------------------------------
@@ -1492,12 +1492,12 @@ extentsDrawproc(tuple**      const tuples,
 
 
 void
-pamd_text_box(int          const height, 
-              int          const angle, 
-              const char * const s, 
-              int *        const leftP, 
-              int *        const topP, 
-              int *        const rightP, 
+pamd_text_box(int          const height,
+              int          const angle,
+              const char * const s,
+              int *        const leftP,
+              int *        const topP,
+              int *        const rightP,
               int *        const bottomP) {
 /*----------------------------------------------------------------------------
   Calculate extents rectangle for a given piece of text.  For most
@@ -1511,10 +1511,10 @@ pamd_text_box(int          const height,
     extbottom = -32767;
 
     pamd_text(NULL, 32767, 32767, 255, 255, makePoint(1000, 1000),
-              height, angle, s, 
+              height, angle, s,
               extentsDrawproc, NULL);
 
-    *leftP   = extleft   - 1000; 
+    *leftP   = extleft   - 1000;
     *topP    = exttop    - 1000;
     *rightP  = extright  - 1000;
     *bottomP = extbottom - 1000;

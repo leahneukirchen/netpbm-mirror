@@ -146,7 +146,7 @@ strncaseeq(const char * const comparand,
 
      - If the function can't get the memory, it returns 'pm_strsol',
        which is a string that is in static memory that contains text
-       indicating an out of memory failure has occurred, intead of
+       indicating an out of memory failure has occurred, instead of
        NULL.  This makes it much easier for programs to ignore this
        possibility.
 
@@ -207,6 +207,16 @@ pm_memmem(const void * const haystackArg,
 
 bool
 pm_strishex(const char * const subject);
+
+void
+pm_string_to_long(const char *   const string,
+                  long *         const longP,
+                  const char **  const errorP);
+
+void
+pm_string_to_int(const char *   const string,
+                 int *          const intP,
+                 const char **  const errorP);
 
 void
 pm_string_to_uint(const char *   const string,

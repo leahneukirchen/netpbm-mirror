@@ -600,7 +600,7 @@ slider(slvecfn   slvec,
             curcolor = cw & 0xFF;
             break;
 
-        default:              /*  Co-ordinates  */
+        default:              /*  Coordinates  */
             lx = vec.f.x = cw;
             ly = vec.f.y = sli();
             vec.t.x = sli();

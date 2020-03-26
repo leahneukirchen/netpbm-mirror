@@ -13,17 +13,17 @@
 /*
  * Copyright (c) 1995 The Regents of the University of California.
  * All rights reserved.
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice and the following
  * two paragraphs appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
  * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -122,7 +122,7 @@ SkipSpacesTabs(const char * const start) {
  * SIDE EFFECTS:    sets collect_quant and collect_quant_fp
  *
  *===========================================================================*/
-static void 
+static void
 SetupCollectQuantStats(const char * const charPtr)
 {
   char fname[256];
@@ -166,17 +166,17 @@ SetupCollectQuantStats(const char * const charPtr)
  * SIDE EFFECTS:    sets kill_dim, kill_dim_break, kill_dim_end
  *
  *===========================================================================*/
-static void 
+static void
 SetupKillDimAreas(const char * const charPtr)
 {
   int items_scanned;
 
   kill_dim = TRUE;
-  items_scanned = sscanf(charPtr, "%d %d %f", 
+  items_scanned = sscanf(charPtr, "%d %d %f",
 			 &kill_dim_break, &kill_dim_end, &kill_dim_slope);
   if (items_scanned != 3) {
     kill_dim_slope = 0.25;
-    items_scanned = sscanf(charPtr, "%d %d", 
+    items_scanned = sscanf(charPtr, "%d %d",
 			   &kill_dim_break, &kill_dim_end);
     if (items_scanned != 2) {
       /* Use defaults */
@@ -205,10 +205,10 @@ SetupKillDimAreas(const char * const charPtr)
  *
  * RETURNS:	nothing
  *
- * SIDE EFFECTS:    sets squash_max_differences SquashMaxLum SquashMaxChr 
+ * SIDE EFFECTS:    sets squash_max_differences SquashMaxLum SquashMaxChr
  *
  *===========================================================================*/
-static void 
+static void
 SetupSquashSmall(const char * const charPtr)
 {
   squash_small_differences = TRUE;
@@ -232,7 +232,7 @@ SetupSquashSmall(const char * const charPtr)
  *                        can change LocalDCTRateScale, LocalDCTDistortScale
  *
  *===========================================================================*/
-static void 
+static void
 SetupLocalDCT(const char * const charPtr)
 {
   int num_scales=0;
@@ -262,7 +262,7 @@ SetupLocalDCT(const char * const charPtr)
  * SIDE EFFECTS:    sets DoLaplace, L1, L2, and Lambdas
  *
  *===========================================================================*/
-static void 
+static void
 SetupLaplace()
 {
   int i;
@@ -328,18 +328,18 @@ SetupWriteDistortions(const char * const charPtr)
     default:
       fprintf(stderr, "Unknown TUNE parameter setting format %s\n", cp);
     }}
-}  
+}
 
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
 
-void 
+void
 CalcLambdas(void) {
 
   int i,j,n;
   double var;
-  
+
   n = LaplaceNum;
   for (i = 0;   i < 3;  i++) {
     for (j = 0;  j < 64;  j++) {
@@ -378,11 +378,11 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
 
     /* qtable[0] must be 8 */
     out[0][0] = (int16)(in[0] * 8);
-    
+
     for ( index = 1;  index < DCTSIZE_SQ;  index++ ) {
       position = ZAG[index];
       level = in[index];
-      
+
       if (level == 0) {
 	((int16 *)out)[position] = 0;
 	continue;
@@ -413,7 +413,7 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
     }
 }
 
-int 
+int
 mse(Block blk1, Block blk2)
 {
   register int index, error, tmp;
@@ -447,7 +447,7 @@ void Tune_Init()
 {
   int i;
 
-  /* Just check for each, and do whats needed */
+  /* Just check for each, and do what's needed */
   if (collect_quant) {
     if (!pureDCT) {
       pureDCT = TRUE;
@@ -456,14 +456,14 @@ void Tune_Init()
     }
     fprintf(collect_quant_fp, "# %s\n", outputFileName);
     fprintf(collect_quant_fp, "#");
-    for (i=0; i<64; i++) 
+    for (i=0; i<64; i++)
       fprintf(collect_quant_fp, " %d", qtable[i]);
     fprintf(collect_quant_fp, "\n#");
-    for (i=0; i<64; i++) 
+    for (i=0; i<64; i++)
       fprintf(collect_quant_fp, " %d", niqtable[i]);
-    fprintf(collect_quant_fp, "\n# %d %d %d\n\n", 
+    fprintf(collect_quant_fp, "\n# %d %d %d\n\n",
 	    GetIQScale(), GetPQScale(), GetBQScale());
-    
+
   }
 
   if (DoLaplace) {
@@ -475,7 +475,7 @@ void Tune_Init()
     decodeRefFrames = TRUE;
     printSNR = TRUE;
   }
-    
+
 }
 
 /*===========================================================================*
@@ -492,7 +492,7 @@ void Tune_Init()
 void ParseTuneParam(const char * const charPtr)
 {
   switch (ASCII_TOUPPER(*charPtr)) {
-  case 'B': 
+  case 'B':
     if (1 != sscanf(charPtr+2, "%d", &block_bound)) {
       fprintf(stderr, "Invalid tuning parameter (b) in parameter file.\n");
     }

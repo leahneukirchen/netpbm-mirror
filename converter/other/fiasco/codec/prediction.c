@@ -1,9 +1,9 @@
 /*
- *  prediction.c:	Range image prediction with MC or ND	
+ *  prediction.c:	Range image prediction with MC or ND
  *
  *  Written by:		Ullrich Hafner
  *			Michael Unger
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -41,7 +41,7 @@
 /*****************************************************************************
 
 			     local variables
-  
+
 *****************************************************************************/
 
 typedef struct state_data
@@ -71,7 +71,7 @@ typedef struct state_data
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static real_t
@@ -90,9 +90,9 @@ restore_state_data (unsigned from, unsigned to, unsigned max_level,
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
- 
+
 real_t
 predict_range (real_t max_costs, real_t price, range_t *range, wfa_t *wfa,
 	       coding_t *c, unsigned band, int y_state, unsigned states,
@@ -124,11 +124,11 @@ predict_range (real_t max_costs, real_t price, range_t *range, wfa_t *wfa,
    rec_d_coeff_model  = c->d_coeff->model;
    rec_tree_model     = c->tree;
    rec_p_tree_model   = c->p_tree;
-   rec_states         = wfa->states;	
+   rec_states         = wfa->states;
    rec_pixels         = c->pixels;
    rec_state_data     = store_state_data (states, rec_states - 1,
 					  c->options.lc_max_level, wfa, c);
-   
+
    /*
     *  Restore probability models to the state before the recursive subdivision
     *  has been started.
@@ -141,14 +141,14 @@ predict_range (real_t max_costs, real_t price, range_t *range, wfa_t *wfa,
    c->coeff->model   	   = c->coeff->model_duplicate (c->coeff, coeff_model);
    c->d_coeff->model   	   = c->d_coeff->model_duplicate (c->d_coeff,
 							  d_coeff_model);
-   
+
    if (c->mt->frame_type == I_FRAME)
-      costs = nd_prediction (max_costs, price, band, y_state, range, wfa, c); 
+      costs = nd_prediction (max_costs, price, band, y_state, range, wfa, c);
    else
       costs = mc_prediction (max_costs, price, band, y_state, range, wfa, c);
-   
+
    c->pixels = rec_pixels;
-   
+
    if (costs < MAXCOSTS)
    {
       /*
@@ -187,25 +187,25 @@ predict_range (real_t max_costs, real_t price, range_t *range, wfa_t *wfa,
       c->d_domain_pool->model_free (c->d_domain_pool->model);
       c->coeff->model_free (c->coeff->model);
       c->d_coeff->model_free (c->d_coeff->model);
-      
+
       c->domain_pool->model   = rec_domain_model;
       c->d_domain_pool->model = rec_d_domain_model;
       c->coeff->model         = rec_coeff_model;
       c->d_coeff->model       = rec_d_coeff_model;
       c->tree                 = rec_tree_model;
       c->p_tree               = rec_p_tree_model;
-      
+
       range->prediction = NO;
-      
+
       if (wfa->states != states)
 	 remove_states (states, wfa);
       restore_state_data (states, rec_states - 1, c->options.lc_max_level,
 			  rec_state_data, wfa, c);
       costs = MAXCOSTS;
    }
- 
+
    return costs;
-} 
+}
 
 void
 clear_norms_table (unsigned level, const wfa_info_t *wi, motion_t *mt)
@@ -238,11 +238,11 @@ update_norms_table (unsigned level, const wfa_info_t *wi, motion_t *mt)
    unsigned  range_size = wi->half_pixel
 			  ? square (wi->search_range)
 			  : square (2 * wi->search_range);
-   
+
    if (level > wi->p_min_level)
    {
       unsigned index;			/* index of motion vector */
-      
+
       for (index = 0; index < range_size; index++)
 	 mt->mc_forward_norms [level][index]
 	    += mt->mc_forward_norms [level - 1][index];
@@ -256,7 +256,7 @@ update_norms_table (unsigned level, const wfa_info_t *wi, motion_t *mt)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static real_t
@@ -273,7 +273,7 @@ mc_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
     *  If we are at the bottom level of the mc tree:
     *  Fill in the norms table
     */
-   if (prange.level == wfa->wfainfo->p_min_level) 
+   if (prange.level == wfa->wfainfo->p_min_level)
       fill_norms_table (prange.x, prange.y, prange.level, wfa->wfainfo, c->mt);
    /*
     *  Predict 'range' with motion compensation according to frame type.
@@ -283,19 +283,19 @@ mc_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
       find_P_frame_mc (mcpe, price, &prange, wfa->wfainfo, c->mt);
    else
       find_B_frame_mc (mcpe, price, &prange, wfa->wfainfo, c->mt);
-   
+
    costs = (prange.mv_tree_bits + prange.mv_coord_bits) * price;
-   
+
    if (costs < max_costs)		/* motion vector not too expensive */
    {
       unsigned  last_state;		/* last WFA state before recursion */
       real_t   *ipi [MAXSTATES];	/* inner products pointers */
       unsigned  state;
       real_t  	mvt, mvc;
-      
+
       c->pixels = Calloc (width * height, sizeof (real_t));
       cut_to_bintree (c->pixels, mcpe, width, height, 0, 0, width, height);
-   
+
       /*
        *  Approximate MCPE recursively.
        */
@@ -310,7 +310,7 @@ mc_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
 
       mvc = prange.mv_coord_bits;
       mvt = prange.mv_tree_bits;
-      
+
       prange.image           = 0;
       prange.address         = 0;
       prange.tree_bits       = 0;
@@ -329,7 +329,7 @@ mc_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
       if (costs < max_costs)		/* use motion compensation */
       {
 	 unsigned img, adr;		/* temp. values */
-	 
+
 	 img                  = range->image;
 	 adr                  = range->address;
 	 *range               = prange;
@@ -362,7 +362,7 @@ mc_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
    }
    else
       costs = MAXCOSTS;
-   
+
    Free (mcpe);
 
    return costs;
@@ -374,7 +374,7 @@ nd_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
 {
    real_t  costs;			/* current approximation costs */
    range_t lrange = *range;
-   
+
    /*
     *  Predict 'range' with DC component approximation
     */
@@ -397,11 +397,11 @@ nd_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
       lrange.weights_bits    = c->coeff->bits (&w, s, range->level, c->coeff);
    }
    costs = price * (lrange.weights_bits + lrange.nd_tree_bits);
-   
+
    /*
-    *  Recursive aproximation of difference image
+    *  Recursive approximation of difference image
     */
-   if (costs < max_costs)		
+   if (costs < max_costs)
    {
       unsigned  state;
       range_t  	rrange;			/* range: recursive subdivision */
@@ -418,14 +418,14 @@ nd_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
 	 unsigned  n;
 	 real_t *src, *dst;		/* pointers to image data */
 	 real_t w = - lrange.weight [0] * c->images_of_state [0][0];
-		     
-	 src = c->pixels + range->address * size_of_level (range->level); 
+
+	 src = c->pixels + range->address * size_of_level (range->level);
 	 dst = c->pixels = pixels = Calloc (width * height, sizeof (real_t));
 
 	 for (n = width * height; n; n--)
 	    *dst++ = *src++ + w;
       }
-      
+
       /*
        *  Approximate difference recursively.
        */
@@ -448,13 +448,13 @@ nd_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
 	    c->ip_images_state[state]
 	       = Calloc (size_of_tree (c->products_level), sizeof (real_t));
 	 }
-      
+
       compute_ip_images_state (rrange.image, rrange.address, rrange.level,
 			       1, 0, wfa, c);
-      
+
       costs += subdivide (max_costs - costs, band, y_state, &rrange, wfa, c,
 			  NO, YES);
-      
+
       Free (pixels);
 
       if (costs < max_costs && ischild (rrange.tree)) /* use prediction */
@@ -469,7 +469,7 @@ nd_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
 	 range->address          = adr;
 	 range->nd_tree_bits    += lrange.nd_tree_bits;
 	 range->nd_weights_bits += lrange.weights_bits;
-	 
+
 	 for (edge = 0; isedge (lrange.into [edge]); edge++)
 	 {
 	    range->into [edge]   = lrange.into [edge];
@@ -485,7 +485,7 @@ nd_prediction (real_t max_costs, real_t price, unsigned band, int y_state,
       }
       else
 	 costs = MAXCOSTS;
-      
+
       for (state = 0; state <= last_state; state++)
 	 if (need_image (state, wfa))
 	 {
@@ -515,9 +515,9 @@ store_state_data (unsigned from, unsigned to, unsigned max_level,
 
    if (to < from)
       return NULL;			/* nothing to do */
-   
+
    data = Calloc (to - from + 1, sizeof (state_data_t));
-   
+
    for (state = from; state <= to; state++)
    {
       sd = &data [state - from];
@@ -527,12 +527,12 @@ store_state_data (unsigned from, unsigned to, unsigned max_level,
       sd->domain_type        = wfa->domain_type [state];
       sd->images_of_state    = c->images_of_state [state];
       sd->inner_products     = c->ip_images_state [state];
-      
+
       wfa->domain_type [state]   = 0;
       c->images_of_state [state] = NULL;
       c->ip_images_state [state] = NULL;
-				   
-      for (label = 0; label < MAXLABELS; label++) 
+
+      for (label = 0; label < MAXLABELS; label++)
       {
 	 sd->tree [label]     	= wfa->tree [state][label];
 	 sd->y_state [label]  	= wfa->y_state [state][label];
@@ -542,11 +542,11 @@ store_state_data (unsigned from, unsigned to, unsigned max_level,
 	 sd->y [label]        	= wfa->y [state][label];
 	 sd->prediction [label] = wfa->prediction [state][label];
 
-	 memcpy (sd->weight [label], wfa->weight [state][label], 
+	 memcpy (sd->weight [label], wfa->weight [state][label],
 		 sizeof (real_t) * (MAXEDGES + 1));
-	 memcpy (sd->int_weight [label], wfa->int_weight [state][label], 
+	 memcpy (sd->int_weight [label], wfa->int_weight [state][label],
 		 sizeof (word_t) * (MAXEDGES + 1));
-	 memcpy (sd->into [label], wfa->into [state][label], 
+	 memcpy (sd->into [label], wfa->into [state][label],
 		 sizeof (word_t) * (MAXEDGES + 1));
 
 	 wfa->into [state][label][0] = NO_EDGE;
@@ -569,7 +569,7 @@ restore_state_data (unsigned from, unsigned to, unsigned max_level,
 		    state_data_t *data, wfa_t *wfa, coding_t *c)
 /*
  *  Restore all state data starting from state 'from'.
- *  
+ *
  *  No return value.
  */
 {
@@ -578,15 +578,15 @@ restore_state_data (unsigned from, unsigned to, unsigned max_level,
 
    if (to < from)
       return;				/* nothing to do */
-   
+
    for (state = from; state <= to; state++)
    {
       sd = &data [state - from];
-      
+
       wfa->final_distribution [state] = sd->final_distribution;
       wfa->level_of_state [state]     = sd->level_of_state;
       wfa->domain_type [state]        = sd->domain_type;
-      
+
       if (c->images_of_state [state] != NULL)
 	 Free (c->images_of_state [state]);
       c->images_of_state [state] = sd->images_of_state;
@@ -603,14 +603,14 @@ restore_state_data (unsigned from, unsigned to, unsigned max_level,
 	 wfa->x [state][label]        	= sd->x [label];
 	 wfa->y [state][label]        	= sd->y [label];
 	 wfa->prediction [state][label] = sd->prediction [label];
-	 
-	 memcpy (wfa->weight [state][label], sd->weight [label], 
+
+	 memcpy (wfa->weight [state][label], sd->weight [label],
 		 sizeof(real_t) * (MAXEDGES + 1));
-	 memcpy (wfa->int_weight [state][label], sd->int_weight [label], 
+	 memcpy (wfa->int_weight [state][label], sd->int_weight [label],
 		 sizeof(word_t) * (MAXEDGES + 1));
-	 memcpy (wfa->into [state][label], sd->into [label],  
+	 memcpy (wfa->into [state][label], sd->into [label],
 		 sizeof(word_t) * (MAXEDGES + 1));
-      }	 
+      }
       for (level = c->options.images_level + 1; level <= max_level;
 	   level++)
       {

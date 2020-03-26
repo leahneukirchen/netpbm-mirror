@@ -1,8 +1,8 @@
 /*
- *  nd.c:		Input of prediction tree	
+ *  nd.c:		Input of prediction tree
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -31,7 +31,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static void
@@ -42,7 +42,7 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input);
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 void
@@ -56,7 +56,7 @@ read_nd (wfa_t *wfa, bitfile_t *input)
  */
 {
    unsigned total = decode_nd_tree (wfa, input);
-   
+
    if (total > 0)
       decode_nd_coefficients (total, wfa, input);
 }
@@ -64,7 +64,7 @@ read_nd (wfa_t *wfa, bitfile_t *input)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static unsigned
@@ -106,7 +106,7 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input)
    {
       unsigned label;
 
-      if (wfa->level_of_state [next] > wfa->wfainfo->p_max_level + 1) 
+      if (wfa->level_of_state [next] > wfa->wfainfo->p_max_level + 1)
       {
 	 /*
 	  *  Nondetermismn is not allowed at levels larger than
@@ -114,7 +114,7 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input)
 	  */
 	 for (label = 0; label < MAXLABELS; label++)
 	    if (ischild (state = wfa->tree [next][label]))
-	       queue_append (queue, &state); /* continue with childs */
+	       queue_append (queue, &state); /* continue with children */
       }
       else if (wfa->level_of_state [next] > wfa->wfainfo->p_min_level)
       {
@@ -123,7 +123,7 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input)
 	    {
 	       unsigned count;		/* Current interval count */
 	       unsigned range;		/* Current interval range */
-	       
+
 	       count = (((code - low) + 1) * sum1 - 1) / ((high - low) + 1);
 	       if (count < sum0)
 	       {
@@ -192,7 +192,7 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input)
 static void
 decode_nd_coefficients (unsigned total, wfa_t *wfa, bitfile_t *input)
 /*
- *  Read #'total' weights of nondeterministic part of 'wfa'  
+ *  Read #'total' weights of nondeterministic part of 'wfa'
  *  of given 'input' stream.
  *  'frame' gives the current frame number.
  *
@@ -204,24 +204,24 @@ decode_nd_coefficients (unsigned total, wfa_t *wfa, bitfile_t *input)
 {
    unsigned *coefficients;		/* array of factors to encode */
    unsigned *ptr;			/* pointer to current factor */
-   
+
    /*
     *  Decode array of coefficients stored with arithmetic coding
     */
    {
       const int	scaling  = 50;		/* scaling factor of prob. model */
       unsigned  c_symbols = 1 << (wfa->wfainfo->dc_rpf->mantissa_bits + 1);
-      
+
       ptr = coefficients = decode_array (input, NULL, &c_symbols, 1,
 					 total, scaling);
    }
-   
+
    /*
     *  Fill 'wfa->weights' with decoded coefficients
     */
    {
       unsigned state, label;
-      
+
       for (state = wfa->basis_states; state < wfa->states; state++)
 	 for (label = 0; label < MAXLABELS; label++)
 	    if (ischild (wfa->tree [state][label])
@@ -235,3 +235,6 @@ decode_nd_coefficients (unsigned total, wfa_t *wfa, bitfile_t *input)
    }
    Free (coefficients);
 }
+
+
+

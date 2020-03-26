@@ -19,8 +19,6 @@
 
 #define MAXCMAPSIZE 256
 
-static unsigned int const gifMaxval = 255;
-
 static bool verbose;
 
 
@@ -796,7 +794,7 @@ typedef struct {
         */
     bool lzw;
         /* We're actually doing LZW compression.  False means we follow
-           the algorithm enough tht an LZW decompressor will recover the
+           the algorithm enough that an LZW decompressor will recover the
            proper data, but always using one code per pixel, and therefore
            not effecting any compression and not using the LZW patent.
         */

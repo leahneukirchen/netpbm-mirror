@@ -20,3 +20,24 @@ cmp -s - ${testimg4_ppm}
 echo ${PIPESTATUS[@]} ":" $?
 
 rm ${testimg2_ppm} ${testimg4_ppm}
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pnmtile 100 testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+
+pnmtile 100 0 testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+
+pnmtile 0 100 testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+
+pnmtile 100 100 100 testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+
+rm -f ${test_out}

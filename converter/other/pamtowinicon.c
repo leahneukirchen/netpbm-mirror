@@ -71,8 +71,6 @@ parseCommandLine(int argc, const char **argv,
 
 static bool verbose;
 
-static unsigned char const pngHeader[] = PNG_HEADER;
-
 
 
 struct Palette {

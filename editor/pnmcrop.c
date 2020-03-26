@@ -1136,7 +1136,7 @@ extremeCrops(struct CmdlineInfo const cmdline,
         pm_message("Input image has no distinction between "
                    "border and content");
 
-    /* We can't just pick a representive pixel, say top-left corner.
+    /* We can't just pick a representative pixel, say top-left corner.
        If -top and/or -bottom was specified but not -left and -right,
        the output should be one row, not a single pixel.
 

@@ -152,7 +152,7 @@ def makeman(name, file, indoc):
     indoc = re.sub(r"\s*\.sp", "\n.sp", indoc)
     # Format email addresses as italic
     indoc = re.sub('(?i)<A[ \n]+HREF="mailto:[^>]+">([^<]+)</A>', r'\\fI\1\\fP', indoc)    
-    # Format manual crossreferences
+    # Format manual cross-references
     def xrefmatch(match):
         xrefto = match.group(2)
         xrefurl = match.group(1)
@@ -279,7 +279,7 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
         elif switch == '-v':	# Enable verbose error reporting
             verbosity += 1
     try:
-        # First pass: gather locations for crossreferences:
+        # First pass: gather locations for cross-references:
         sectmap = {}
         for file in arguments:
             try: 

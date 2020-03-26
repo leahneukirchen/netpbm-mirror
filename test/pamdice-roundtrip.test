@@ -4,9 +4,35 @@
 
 
 tmpdir=${tmpdir:-/tmp}
-fname_stem=${tmpdir}/a
+fname_stem=${tmpdir}/pamdice_part
 
-pamdice testimg.ppm -outstem=${fname_stem} -width=50 -height=40
-pamundice ${fname_stem}_%1d_%1a.ppm -down=4 -across=5 | cksum
+echo test 1
 
-rm ${fname_stem}_?_?.ppm
+pamdice testgrid.pbm -outstem=${fname_stem}
+pamundice ${fname_stem}_%1d_%1a.pbm -down=1 -across=1 | cksum
+rm ${fname_stem}_0_0.pbm
+
+echo test 2
+
+pamdice testgrid.pbm -outstem=${fname_stem} -width=3
+pamundice ${fname_stem}_%1d_%1a.pbm -across=5 | cksum
+rm ${fname_stem}_0_?.pbm
+
+echo test 3
+
+pamdice testgrid.pbm -outstem=${fname_stem} -height=4
+pamundice ${fname_stem}_%1d_%1a.pbm -down=4 | cksum
+rm ${fname_stem}_?_0.pbm
+
+for flags in "" "-hoverlap=0" "-hoverlap=2" "-voverlap=0" "-voverlap=2"
+  do
+  echo test 4.${flags}
+  pamdice testimg.ppm -outstem=${fname_stem} -width=50 -height=40
+  pamundice ${fname_stem}_%1d_%1a.ppm -down=4 -across=5 | cksum
+  rm ${fname_stem}_?_?.ppm
+  done
+
+echo test 5
+pamdice testimg.ppm -outstem=${fname_stem} -width=20 -height=10
+ls ${fname_stem}*.ppm | pamundice -listfile=- -across=12 -down=15 | cksum
+rm ${fname_stem}_??_??.ppm

@@ -13,7 +13,7 @@
  *	FType_FutureRef	returns the number of the future reference frame     *
  *	FType_PastRef	returns the number of the past reference frame	     *
  *									     *
- * 00.12.07 change malloc from frameTable to calloc to fix bug 
+ * 00.12.07 change malloc from frameTable to calloc to fix bug
  *===========================================================================*/
 
 /*
@@ -86,24 +86,24 @@ FType_Type(unsigned int const frameNum) {
 
     char retval;
 
-    if (use_cache) 
+    if (use_cache)
         return frameTable[frameNum].typ;
-  
+
     if (frameNum+1 == numFrames) {
         /* It's the last frame in the sequence.  If the pattern says it's
            a B, we convert it to I because a B frame makes no sense as the
            last frame of a sequence.
         */
-        if (patternedType == 'b') 
+        if (patternedType == 'b')
             retval = 'i';
-        else 
+        else
             retval = patternedType;
     } else {
         if (specificsOn) {
             static int lastI = -1;
             int newtype;
-      
-            if (lastI > frameNum) 
+
+            if (lastI > frameNum)
                 lastI = -1;
             newtype = SpecTypeLookup(frameNum);
             switch (newtype) {
@@ -119,13 +119,13 @@ FType_Type(unsigned int const frameNum) {
                 break;
             default:
                 if (lastI != -1) {
-                    unsigned int const pretendFrameNumber = 
+                    unsigned int const pretendFrameNumber =
                         (frameNum - lastI + firstI) % framePatternLen;
                     retval = framePattern[pretendFrameNumber];
-                } else 
+                } else
                     retval = patternedType;
             }
-        } else 
+        } else
             retval = patternedType;
     }
     return retval;
@@ -180,7 +180,7 @@ FType_PastRef(currFrameNum)
     } else {
       index = currFrameNum % framePatternLen;
       pastIndex = frameTable[index].prev->number;
-      
+
       return currFrameNum -
 	(((index-pastIndex)+framePatternLen) % framePatternLen);
     }
@@ -227,14 +227,14 @@ SetFramePattern(const char * const pattern) {
     firstI = -1;
     for (index = 0; index < len; index++) {
         switch( SIMPLE_ASCII_UPPER(pattern[index]) ) {
-        case 'I':	
+        case 'I':
             buf[index] = 'i';
             if (firstI == -1) firstI = index;
             break;
-        case 'P':	
-            buf[index] = 'p'; 
+        case 'P':
+            buf[index] = 'p';
             break;
-        case 'B':	
+        case 'B':
             buf[index] = 'b';
             break;
         default:
@@ -248,7 +248,7 @@ SetFramePattern(const char * const pattern) {
 
     framePattern = buf;
     framePatternLen = len;
-    
+
     /* Used to ComputeFrameTable(), but now must wait until param
        parsed. (STDIN or not)
     */
@@ -259,7 +259,7 @@ SetFramePattern(const char * const pattern) {
 void
 ComputeFrameTable(unsigned int const numFramesArg) {
 /*----------------------------------------------------------------------------
-  Compute a table of I, P, B frames to help in determining dependencie
+  Compute a table of I, P, B frames to help in determining dependency
 
   'numFrames' == 0 means number of frames is not known at this time.
 -----------------------------------------------------------------------------*/
@@ -339,7 +339,7 @@ ComputeFrameTable(unsigned int const numFramesArg) {
 	        break;
         }
     }
-    
+
     /* why? SRS */
     frameTable[table_size].number = framePatternLen;
     ptr = firstB;
@@ -362,3 +362,6 @@ ComputeFrameTable(unsigned int const numFramesArg) {
     if (numFrames)
         use_cache = TRUE;
 }
+
+
+

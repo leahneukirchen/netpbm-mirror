@@ -1,8 +1,8 @@
 /*
- *  nd.c:		Output of prediction tree	
+ *  nd.c:		Output of prediction tree
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -32,7 +32,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static unsigned
@@ -43,7 +43,7 @@ encode_nd_coefficients (unsigned total, const wfa_t *wfa, bitfile_t *output);
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 void
@@ -56,7 +56,7 @@ write_nd (const wfa_t *wfa, bitfile_t *output)
  */
 {
    unsigned total = encode_nd_tree (wfa, output);
-   
+
    if (total > 0)
       encode_nd_coefficients (total, wfa, output);
 }
@@ -64,13 +64,13 @@ write_nd (const wfa_t *wfa, bitfile_t *output)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static unsigned
 encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
 /*
- *  Write prediction tree of 'wfa' to given stream 'output'. 
+ *  Write prediction tree of 'wfa' to given stream 'output'.
  *
  *  No return value.
  */
@@ -85,7 +85,7 @@ encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
    unsigned  bits = bits_processed (output);
 
    used = not_used = 0;
-   
+
    /*
     *  Initialize arithmetic coder
     */
@@ -94,18 +94,18 @@ encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
    underflow = 0;
    sum0      = 1;
    sum1      = 11;
-   
+
    queue = alloc_queue (sizeof (int));
    state = wfa->root_state;
    queue_append (queue, &state);
-   
+
    /*
     *  Traverse the WFA tree in breadth first order (using a queue).
     */
    while (queue_remove (queue, &next))
    {
       unsigned label;
-      
+
       if (wfa->level_of_state [next] > wfa->wfainfo->p_max_level + 1)
       {
 	 /*
@@ -114,7 +114,7 @@ encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
 	  */
 	 for (label = 0; label < MAXLABELS; label++)
 	    if (ischild (state = wfa->tree [next][label]))
-	       queue_append (queue, &state); /* continue with childs */
+	       queue_append (queue, &state); /* continue with children */
       }
       else if (wfa->level_of_state [next] > wfa->wfainfo->p_min_level)
       {
@@ -126,7 +126,7 @@ encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
 	       if (isedge (wfa->into [next][label][0])) /* prediction used */
 	       {
 		  used++;
-		  
+
 		  /*
 		   *  Encode a '1' symbol
 		   */
@@ -134,12 +134,12 @@ encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
 		  low   = low + (u_word_t) ((range * sum0) / sum1);
 		  RESCALE_OUTPUT_INTERVAL;
 	       }
-	       else			/* no predict., continue with childs */
+	       else			/* no predict., continue with children */
 	       {
 		  not_used++;
 		  if (wfa->level_of_state [state] > wfa->wfainfo->p_min_level)
 		     queue_append (queue, &state);
-		  
+
 		  /*
 		   *  Encode a '0' symbol
 		   */
@@ -162,7 +162,7 @@ encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
 		     sum1 = sum0 + 1;
 	       }
 	    }
-	 
+
       }
    }
    free_queue (queue);
@@ -178,7 +178,7 @@ encode_nd_tree (const wfa_t *wfa, bitfile_t *output)
 		  used, not_used);
    {
       unsigned total = used + not_used;
-      
+
       debug_message ("nd-tree:      %5d bits. (%5d symbols => %5.2f bps)",
 		     bits_processed (output) - bits, total,
 		     total > 0 ? ((bits_processed (output) - bits) /
@@ -205,7 +205,7 @@ encode_nd_coefficients (unsigned total, const wfa_t *wfa, bitfile_t *output)
       unsigned *ptr;			/* pointer to current factor */
       unsigned	state, label, edge;
       word_t	domain;
-      
+
       ptr = coefficients  = Calloc (total, sizeof (unsigned));
 
       for (state = wfa->basis_states; state < wfa->states; state++)
@@ -232,7 +232,7 @@ encode_nd_coefficients (unsigned total, const wfa_t *wfa, bitfile_t *output)
 	 encode_array (output, coefficients, NULL, &c_symbols, 1,
 		       total, scaling);
       }
-      
+
       debug_message ("nd-factors:   %5d bits. (%5d symbols => %5.2f bps)",
 		     bits_processed (output) - bits, total,
 		     total ? ((bits_processed (output) - bits)

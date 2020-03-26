@@ -838,7 +838,7 @@ computeRasterParm(struct pam *     const pamP,
   2. Direct mode (specified with -output)
 
      We have the Tiff library write output to the specified file.  As the Tiff
-     library requires taht it be be seekable and readable, we fail the program
+     library requires that it be be seekable and readable, we fail the program
      rather than ask the Tiff library to use the file if it does not meet
      these requirements.
 

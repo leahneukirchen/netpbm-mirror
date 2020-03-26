@@ -1,8 +1,8 @@
 /*
- *  basis.c:		WFA initial basis files	
+ *  basis.c:		WFA initial basis files
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -44,29 +44,29 @@ typedef struct
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static void
 small_init (basis_values_t *bv);
 
-static basis_file_t const basis_files[] = { 
+static basis_file_t const basis_files[] = {
     {"small.fco", small_init},
     {"small.wfa", small_init},
-    {NULL, NULL} 
+    {NULL, NULL}
 };
 
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 bool_t
 get_linked_basis (const char *basis_name, wfa_t *wfa)
 /*
- *  Check wether given WFA initial basis 'basis_name' is already linked
- *  with the excecutable. If the basis is available then fill the 'wfa' struct
+ *  Check whether given WFA initial basis 'basis_name' is already linked
+ *  with the executable. If the basis is available then fill the 'wfa' struct
  *  according to the stored data, otherwise print a warning message.
  *
  *  Return value:
@@ -79,18 +79,18 @@ get_linked_basis (const char *basis_name, wfa_t *wfa)
    bool_t	  success = NO;		/* indicates if basis is found */
    unsigned	  n;			/* counter */
    basis_values_t bv;			/* basis values */
-   
+
    for (n = 0; basis_files [n].filename != NULL; n++)
       if (streq (basis_files [n].filename, basis_name))	/* basis is stored */
       {
-	 unsigned state, edge;		
-	 
+	 unsigned state, edge;
+
 	 (*basis_files [n].function) (&bv); /* initialize local variables */
 	 /*
 	  *  Generate WFA
 	  */
 	 wfa->basis_states = wfa->states = bv.states + 1;
-	 wfa->domain_type[0]             = USE_DOMAIN_MASK; 
+	 wfa->domain_type[0]             = USE_DOMAIN_MASK;
 	 wfa->final_distribution[0]      = 128;
 	 append_edge (0, 0, 1.0, 0, wfa);
 	 append_edge (0, 0, 1.0, 1, wfa);
@@ -105,13 +105,13 @@ get_linked_basis (const char *basis_name, wfa_t *wfa)
 	    append_edge (bv.transitions [edge][0], bv.transitions [edge][1],
 			 bv.transitions [edge][2], bv.transitions [edge][3],
 			 wfa);
-	 
+
 	 success = YES;
 	 break;
       }
 
    if (!success)
-      warning ("WFA initial basis '%s' isn't linked with the excecutable yet."
+      warning ("WFA initial basis '%s' isn't linked with the executable yet."
 	       "\nLoading basis from disk instead.", basis_name);
 
    return success;
@@ -120,7 +120,7 @@ get_linked_basis (const char *basis_name, wfa_t *wfa)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 /*****************************************************************************
@@ -141,3 +141,6 @@ small_init (basis_values_t *bv)
    bv->use_domain  = use_domain_small;
    bv->transitions = transitions_small;
 }
+
+
+

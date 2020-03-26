@@ -1,4 +1,4 @@
-/* 
+/*
 **
 ** This library module contains the ppmdraw routines.
 **
@@ -10,7 +10,7 @@
 ** copyright notice and this permission notice appear in supporting
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
-** 
+**
 ** The character drawing routines are by John Walker
 ** Copyright (C) 1994 by John Walker, kelvin@fourmilab.ch
 */
@@ -85,7 +85,7 @@ pointIsWithinBounds(ppmd_point   const p,
     return (p.x >= 0 && p.x < cols && p.y >= 0 && p.y < rows);
 }
 
-        
+
 
 static ppmd_point
 vectorSum(ppmd_point const a,
@@ -102,7 +102,7 @@ static long int const DDA_SCALE = 8192;
 /*
   Several factors govern the limit of x, y coordination values.
 
-  The limit must be representable as (signed) int for coordinates to 
+  The limit must be representable as (signed) int for coordinates to
   be carried in struct penpos (immediately above).
 
   The following calculation, done with long ints, must not overflow:
@@ -112,7 +112,7 @@ static long int const DDA_SCALE = 8192;
   dy = (y1 - y0) * DDA_SCALE / abs(x1 - x0);
 
   Overflow conditions for ppmd_text are rather complicated, for commands
-  come from an external PPMD font file.  See comments below.  
+  come from an external PPMD font file.  See comments below.
 */
 
 
@@ -141,10 +141,10 @@ ppmd_validatePoint(ppmd_point const p) {
 static void
 drawPoint(ppmd_drawprocp       drawproc,
           const void *   const clientdata,
-          pixel **       const pixels, 
-          int            const cols, 
-          int            const rows, 
-          pixval         const maxval, 
+          pixel **       const pixels,
+          int            const cols,
+          int            const rows,
+          pixval         const maxval,
           ppmd_point     const p) {
 /*----------------------------------------------------------------------------
    Draw a single point, assuming that it is within the bounds of the
@@ -152,7 +152,7 @@ drawPoint(ppmd_drawprocp       drawproc,
 -----------------------------------------------------------------------------*/
     if (drawproc == PPMD_NULLDRAWPROC) {
         const pixel * const pixelP = clientdata;
-        
+
         assert(p.x >= 0); assert(p.x < cols);
         assert(p.y >= 0); assert(p.y < rows);
 
@@ -176,7 +176,7 @@ makeDrawProcXY(ppmd_drawproc * const drawProc,
 
     retval.drawProc   = drawProc;
     retval.clientData = clientData;
-    
+
     return retval;
 }
 
@@ -204,10 +204,10 @@ drawProcPointXY(pixel **     const pixels,
 
 
 void
-ppmd_point_drawprocp(pixel **     const pixels, 
-                     unsigned int const cols, 
-                     unsigned int const rows, 
-                     pixval       const maxval, 
+ppmd_point_drawprocp(pixel **     const pixels,
+                     unsigned int const cols,
+                     unsigned int const rows,
+                     pixval       const maxval,
                      ppmd_point   const p,
                      const void * const clientdata) {
 
@@ -218,16 +218,16 @@ ppmd_point_drawprocp(pixel **     const pixels,
 
 
 void
-ppmd_point_drawproc(pixel**     const pixels, 
-                    int         const cols, 
-                    int         const rows, 
-                    pixval      const maxval, 
-                    int         const x, 
-                    int         const y, 
+ppmd_point_drawproc(pixel**     const pixels,
+                    int         const cols,
+                    int         const rows,
+                    pixval      const maxval,
+                    int         const x,
+                    int         const y,
                     const void* const clientdata) {
 
     ppmd_point p;
-    
+
     p.x = x;
     p.y = y;
 
@@ -264,14 +264,14 @@ findRectangleIntersection(struct rectangle   const rect1,
 
 
 void
-ppmd_filledrectangle(pixel **      const pixels, 
-                     int           const cols, 
-                     int           const rows, 
-                     pixval        const maxval, 
-                     int           const x, 
-                     int           const y, 
-                     int           const width, 
-                     int           const height, 
+ppmd_filledrectangle(pixel **      const pixels,
+                     int           const cols,
+                     int           const rows,
+                     pixval        const maxval,
+                     int           const x,
+                     int           const y,
+                     int           const width,
+                     int           const height,
                      ppmd_drawproc       drawProc,
                      const void *  const clientdata) {
 
@@ -437,16 +437,16 @@ clipEnd1(ppmd_point   const p0,
    at 0.
 -----------------------------------------------------------------------------*/
     ppmd_point c1;
-        /* The current clipped location of p1; we clip it multile times
+        /* The current clipped location of p1; we clip it multiple times
            to get the final location.
         */
     /* p0 is in the frame: */
     assert(p0.x >= 0 && p0.x < cols);
     assert(p0.y >= 0 && p0.y < rows);
-    
+
     /* Clip End 1 of the line horizontally */
     c1 = p1;  /* initial value */
-    
+
     if (c1.x < 0) {
         /* We know the line isn't vertical, since End 0 is in the frame
            and End 1 is left of frame.
@@ -460,7 +460,7 @@ clipEnd1(ppmd_point   const p0,
         c1.y = c1.y + (p0.y - c1.y) * (cols - 1 - c1.x) / (p0.x - c1.x);
         c1.x = cols - 1;
     }
-    
+
     /* Clip End 1 of the line vertically */
     if (c1.y < 0) {
         /* We know the line isn't horizontal, since End 0 is in the frame
@@ -524,10 +524,10 @@ clipLine(ppmd_point   const p0,
 static void
 drawShallowLine(ppmd_drawprocp       drawProc,
                 const void *   const clientdata,
-                pixel **       const pixels, 
-                int            const cols, 
-                int            const rows, 
-                pixval         const maxval, 
+                pixel **       const pixels,
+                int            const cols,
+                int            const rows,
+                pixval         const maxval,
                 ppmd_point     const p0,
                 ppmd_point     const p1) {
 /*----------------------------------------------------------------------------
@@ -571,10 +571,10 @@ drawShallowLine(ppmd_drawprocp       drawProc,
 static void
 drawSteepLine(ppmd_drawprocp       drawProc,
               const void *   const clientdata,
-              pixel **       const pixels, 
-              int            const cols, 
-              int            const rows, 
-              pixval         const maxval, 
+              pixel **       const pixels,
+              int            const cols,
+              int            const rows,
+              pixval         const maxval,
               ppmd_point     const p0,
               ppmd_point     const p1) {
 /*----------------------------------------------------------------------------
@@ -617,10 +617,10 @@ drawSteepLine(ppmd_drawprocp       drawProc,
 
 
 void
-ppmd_linep(pixel **       const pixels, 
-           int            const cols, 
-           int            const rows, 
-           pixval         const maxval, 
+ppmd_linep(pixel **       const pixels,
+           int            const cols,
+           int            const rows,
+           pixval         const maxval,
            ppmd_point     const p0,
            ppmd_point     const p1,
            ppmd_drawprocp       drawProc,
@@ -662,14 +662,14 @@ ppmd_linep(pixel **       const pixels,
 
 
 void
-ppmd_line(pixel **      const pixels, 
-          int           const cols, 
-          int           const rows, 
-          pixval        const maxval, 
-          int           const x0, 
-          int           const y0, 
-          int           const x1, 
-          int           const y1, 
+ppmd_line(pixel **      const pixels,
+          int           const cols,
+          int           const rows,
+          pixval        const maxval,
+          int           const x0,
+          int           const y0,
+          int           const x1,
+          int           const y1,
           ppmd_drawproc       drawProc,
           const void *  const clientData) {
 
@@ -701,10 +701,10 @@ static unsigned int
 
 
 void
-ppmd_spline3p(pixel **       const pixels, 
-              int            const cols, 
-              int            const rows, 
-              pixval         const maxval, 
+ppmd_spline3p(pixel **       const pixels,
+              int            const cols,
+              int            const rows,
+              pixval         const maxval,
               ppmd_point     const p0,
               ppmd_point     const ctl,
               ppmd_point     const p1,
@@ -740,16 +740,16 @@ ppmd_spline3p(pixel **       const pixels,
 
 
 void
-ppmd_spline3(pixel **      const pixels, 
-             int           const cols, 
-             int           const rows, 
-             pixval        const maxval, 
-             int           const x0, 
-             int           const y0, 
-             int           const x1, 
-             int           const y1, 
-             int           const x2, 
-             int           const y2, 
+ppmd_spline3(pixel **      const pixels,
+             int           const cols,
+             int           const rows,
+             pixval        const maxval,
+             int           const x0,
+             int           const y0,
+             int           const x1,
+             int           const y1,
+             int           const x2,
+             int           const y2,
              ppmd_drawproc       drawProc,
              const void *  const clientdata) {
 
@@ -765,10 +765,10 @@ ppmd_spline3(pixel **      const pixels,
 
 
 void
-ppmd_polysplinep(pixel **       const pixels, 
-                 unsigned int   const cols, 
-                 unsigned int   const rows, 
-                 pixval         const maxval, 
+ppmd_polysplinep(pixel **       const pixels,
+                 unsigned int   const cols,
+                 unsigned int   const rows,
+                 pixval         const maxval,
                  ppmd_point     const p0,
                  unsigned int   const nc,
                  ppmd_point *   const c,
@@ -777,7 +777,7 @@ ppmd_polysplinep(pixel **       const pixels,
                  const void *   const clientdata) {
 
     ppmd_point p;
-    
+
     unsigned int i;
 
     assert(nc > 0);
@@ -796,17 +796,17 @@ ppmd_polysplinep(pixel **       const pixels,
 
 
 void
-ppmd_polyspline(pixel **      const pixels, 
-                int           const cols, 
-                int           const rows, 
-                pixval        const maxval, 
-                int           const x0, 
-                int           const y0, 
-                int           const nc, 
-                int *         const xc, 
-                int *         const yc, 
-                int           const x1, 
-                int           const y1, 
+ppmd_polyspline(pixel **      const pixels,
+                int           const cols,
+                int           const rows,
+                pixval        const maxval,
+                int           const x0,
+                int           const y0,
+                int           const nc,
+                int *         const xc,
+                int *         const yc,
+                int           const x1,
+                int           const y1,
                 ppmd_drawproc       drawProc,
                 const void *  const clientdata) {
 
@@ -837,10 +837,10 @@ ppmd_polyspline(pixel **      const pixels,
 
 
 void
-ppmd_spline4p(pixel **       const pixels, 
-              unsigned int   const cols, 
-              unsigned int   const rows, 
-              pixval         const maxval, 
+ppmd_spline4p(pixel **       const pixels,
+              unsigned int   const cols,
+              unsigned int   const rows,
+              pixval         const maxval,
               ppmd_point     const endPt0,
               ppmd_point     const endPt1,
               ppmd_point     const ctlPt0,
@@ -862,12 +862,12 @@ ppmd_spline4p(pixel **       const pixels,
 
 
 void
-ppmd_circlep(pixel **       const pixels, 
-             unsigned int   const cols, 
-             unsigned int   const rows, 
-             pixval         const maxval, 
+ppmd_circlep(pixel **       const pixels,
+             unsigned int   const cols,
+             unsigned int   const rows,
+             pixval         const maxval,
              ppmd_point     const center,
-             unsigned int   const radius, 
+             unsigned int   const radius,
              ppmd_drawprocp       drawProc,
              const void *   const clientData) {
 /*----------------------------------------------------------------------------
@@ -877,7 +877,7 @@ ppmd_circlep(pixel **       const pixels,
   it might maintain state that is affected by imaginary points outside
   the image.
 
-  Initial point is 3 o'clock. 
+  Initial point is 3 o'clock.
 -----------------------------------------------------------------------------*/
     if (radius >= DDA_SCALE)
         pm_error("Error drawing circle.  Radius %d is too large.", radius);
@@ -936,13 +936,13 @@ ppmd_circlep(pixel **       const pixels,
 
 
 void
-ppmd_circle(pixel **      const pixels, 
-            int           const cols, 
-            int           const rows, 
-            pixval        const maxval, 
-            int           const cx, 
-            int           const cy, 
-            int           const radius, 
+ppmd_circle(pixel **      const pixels,
+            int           const cols,
+            int           const rows,
+            pixval        const maxval,
+            int           const cx,
+            int           const cy,
+            int           const radius,
             ppmd_drawproc       drawProc,
             const void *  const clientData) {
 
@@ -1013,11 +1013,11 @@ ppmd_fill_create(void) {
     stateP->curedge = 0;
 
     fillObjP->stateP = stateP;
-    
+
     /* Turn off line clipping. */
     /* UGGH! We must eliminate this global variable */
     oldclip = ppmd_setlineclip(0);
-    
+
     return fillObjP;
 }
 
@@ -1129,10 +1129,10 @@ continueSegment(struct fillState * const stateP,
 */
 
 void
-ppmd_fill_drawprocp(pixel **     const pixels, 
-                    unsigned int const cols, 
-                    unsigned int const rows, 
-                    pixval       const maxval, 
+ppmd_fill_drawprocp(pixel **     const pixels,
+                    unsigned int const cols,
+                    unsigned int const rows,
+                    pixval       const maxval,
                     ppmd_point   const p,
                     const void * const clientdata) {
 
@@ -1174,12 +1174,12 @@ ppmd_fill_drawprocp(pixel **     const pixels,
 
 
 void
-ppmd_fill_drawproc(pixel**      const pixels, 
-                   int          const cols, 
-                   int          const rows, 
-                   pixval       const maxval, 
-                   int          const x, 
-                   int          const y, 
+ppmd_fill_drawproc(pixel**      const pixels,
+                   int          const cols,
+                   int          const rows,
+                   pixval       const maxval,
+                   int          const x,
+                   int          const y,
                    const void * const clientData) {
 
     ppmd_fill_drawprocp(pixels, cols, rows, maxval, makePoint(x, y),
@@ -1204,7 +1204,7 @@ yxCompare(const void * const c1Arg,
     ppmd_point const p2 = c2P->point;
 
     int retval;
-    
+
     if (p1.y > p2.y)
         retval = 1;
     else if (p1.y < p2.y)
@@ -1222,10 +1222,10 @@ yxCompare(const void * const c1Arg,
 
 
 void
-ppmd_fill(pixel **         const pixels, 
-          int              const cols, 
-          int              const rows, 
-          pixval           const maxval, 
+ppmd_fill(pixel **         const pixels,
+          int              const cols,
+          int              const rows,
+          pixval           const maxval,
           struct fillobj * const fillObjP,
           ppmd_drawproc          drawProc,
           const void *     const clientdata) {
@@ -1387,7 +1387,7 @@ static long isin(int deg)
 static long icos(int deg)
 {
     return isin(deg + 90);
-}  
+}
 
 static int
 twosCompByteValue(unsigned char const c) {
@@ -1453,7 +1453,7 @@ textPosFromFontPos(ppmd_point   const fontPos,
         /* Position relative to the top left of the whole text box,
            assuming the text box is horizontal and has font scale.
         */
-    
+
     ppmd_point const ps = makePoint((pl.x * (int)height) / Scalef,
                                     (pl.y * (int)height) / Scalef);
          /* Same as above, but with the text box its actual size */
@@ -1502,7 +1502,7 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
   text box, in the coordinate system of the canvas.  'rotcos' and 'rotsin'
   tell how that text box is rotated with respect to the horizontal on the
   canvas.
-  
+
   'height' is the height in canvas pixels of a glyph.  This is a scale factor
   to convert font coordinates to canvas coordinates.
 -----------------------------------------------------------------------------*/
@@ -1542,7 +1542,7 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
                                                     glyphOrigin,
                                                     height,
                                                     rotcos, rotsin);
-                                                    
+
             ppmd_linep(pixels, cols, rows, maxval, p, n,
                        drawProc, clientdata);
 
@@ -1565,14 +1565,14 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
 
 
 void
-ppmd_textp(pixel**        const pixels, 
-           int            const cols, 
-           int            const rows, 
-           pixval         const maxval, 
+ppmd_textp(pixel**        const pixels,
+           int            const cols,
+           int            const rows,
+           pixval         const maxval,
            ppmd_point     const pos,
-           int            const height, 
-           int            const angle, 
-           const char *   const sArg, 
+           int            const height,
+           int            const angle,
+           const char *   const sArg,
            ppmd_drawprocp       drawProc,
            const void *   const clientdata) {
 /*----------------------------------------------------------------------------
@@ -1608,7 +1608,7 @@ ppmd_textp(pixel**        const pixels,
 
             unsigned int cursorAdvance;
 
-            ppmd_validatePoint(p); 
+            ppmd_validatePoint(p);
 
             drawGlyph(glyphP, p, pixels, cols, rows, maxval,
                       height, pos, rotcos, rotsin,
@@ -1625,15 +1625,15 @@ ppmd_textp(pixel**        const pixels,
 
 
 void
-ppmd_text(pixel**       const pixels, 
-          int           const cols, 
-          int           const rows, 
-          pixval        const maxval, 
-          int           const xpos, 
-          int           const ypos, 
-          int           const height, 
-          int           const angle, 
-          const char *  const sArg, 
+ppmd_text(pixel**       const pixels,
+          int           const cols,
+          int           const rows,
+          pixval        const maxval,
+          int           const xpos,
+          int           const ypos,
+          int           const height,
+          int           const angle,
+          const char *  const sArg,
           ppmd_drawproc       drawProc,
           const void *  const clientData) {
 
@@ -1648,13 +1648,13 @@ ppmd_text(pixel**       const pixels,
 /* EXTENTS_DRAWPROC  --  Drawproc which just accumulates the extents
              rectangle bounding the text. */
 
-static void 
-extents_drawproc (pixel**      const pixels, 
-                  int          const cols, 
+static void
+extents_drawproc (pixel**      const pixels,
+                  int          const cols,
                   int          const rows,
-                  pixval       const maxval, 
-                  int          const x, 
-                  int          const y, 
+                  pixval       const maxval,
+                  int          const x,
+                  int          const y,
                   const void * const clientdata)
 {
     extleft = MIN(extleft, x);
@@ -1673,22 +1673,25 @@ extents_drawproc (pixel**      const pixels,
 */
 
 void
-ppmd_text_box(int const height, 
-              int const angle, 
-              const char * const s, 
-              int * const left, 
-              int * const top, 
-              int * const right, 
+ppmd_text_box(int const height,
+              int const angle,
+              const char * const s,
+              int * const left,
+              int * const top,
+              int * const right,
               int * const bottom)
 {
     extleft = 32767;
     exttop = 32767;
     extright = -32767;
     extbottom = -32767;
-    ppmd_text(NULL, 32767, 32767, 255, 1000, 1000, height, angle, s, 
+    ppmd_text(NULL, 32767, 32767, 255, 1000, 1000, height, angle, s,
               extents_drawproc, NULL);
-    *left = extleft - 1000; 
+    *left = extleft - 1000;
     *top = exttop - 1000;
     *right = extright - 1000;
     *bottom = extbottom - 1000;
 }
+
+
+

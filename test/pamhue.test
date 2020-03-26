@@ -2,9 +2,47 @@
 # This script tests: pamhue
 # Also requires: pamseq ppmhist pamdepth
 
+echo "Test 1"
+# Should print 1213482165 83 twice
+
 pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=60 | cksum
+pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=-300 | cksum
+
+echo "Test 2"
 
 pamseq -tupletype=RGB 3 1 | pamdepth 255 | ppmhist -sort=rgb
-pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=60 | ppmhist -sort=rgb
+pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=60 | \
+  ppmhist -sort=rgb
 
+echo "Test 3"
+# pamhue has no effect on monotone images
+# Should print 2425386270 41 twice
 
+pamhue -huechange=45  testgrid.pbm | cmp -s - testgrid.pbm
+  echo ${PIPESTATUS[@]} ":" $?
+pamhue -huechange=180 testgrid.pbm | cmp -s - testgrid.pbm
+  echo ${PIPESTATUS[@]} ":" $?
+
+echo "Test 4"
+# spinning the color wheel by multiples of 360 leaves the image unchanged
+# Should print 1926073387 101484 twice
+
+pamhue -huechange=0 testimg.ppm   | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+pamhue -huechange=360 testimg.ppm | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Omission of mandatory argument." 1>&2
+echo "An error message should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamhue testimg.ppm  > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+
+rm -f ${test_out}

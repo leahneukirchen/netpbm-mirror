@@ -114,7 +114,7 @@ The parts to be installed are:
     replacement for the classic Man program that can access both traditional
     man pages and worldwide web documentation in the Netpbm style with the
     familiar 'man jpegtopnm' kind of command.  The package contains the files
-    necessary to use Manweb to access Netpbm documention on the web (on
+    necessary to use Manweb to access Netpbm documentation on the web (on
     netpbm.sourceforge.net).  These files are the contents of the man/web
     directory and the file 'bin/doc.url'.  You should install the
     'bin/doc.url' file if you are installing the Netpbm executables in a

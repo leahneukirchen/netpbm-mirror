@@ -2,11 +2,11 @@
  *  dfiasco.c:		Decoder public interface
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
- 
+
 /*
  *  $Date: 2000/10/28 17:39:30 $
  *  $Author: hafner $
@@ -38,7 +38,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static dfiasco_t *
@@ -52,7 +52,7 @@ alloc_dfiasco (wfa_t *wfa, video_t *video, bitfile_t *input,
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 fiasco_decoder_t *
@@ -79,7 +79,7 @@ fiasco_decoder_new (const char *filename, const fiasco_d_options_t *options)
 	 default_options = fiasco_d_options_new ();
 	 dop 		 = cast_d_options (default_options);
       }
-      
+
       wfa   = alloc_wfa (NO);
       video = alloc_video (NO);
       input = open_wfa (filename, wfa->wfainfo);
@@ -102,7 +102,7 @@ fiasco_decoder_new (const char *filename, const fiasco_d_options_t *options)
 					dop->magnification,
 					dop->smoothing,
 					dop->image_format);
-   
+
       if (default_options)
 	 fiasco_d_options_delete (default_options);
       if (dfiasco->enlarge_factor >= 0)
@@ -115,7 +115,7 @@ fiasco_decoder_new (const char *filename, const fiasco_d_options_t *options)
 	    if (pixels << (n << 1) > 2048 * 2048)
 	    {
 	       set_error (_("Magnifaction factor `%d' is too large. "
-			    "Maximium value is %d."),
+			    "Maximum value is %d."),
 			  dfiasco->enlarge_factor, MAX(0, n - 1));
 	       fiasco_decoder_delete (decoder);
 	       return NULL;
@@ -152,7 +152,7 @@ fiasco_decoder_write_frame (fiasco_decoder_t *decoder,
 			    const char *filename)
 {
    dfiasco_t *dfiasco = cast_dfiasco (decoder);
-   
+
    if (!dfiasco)
       return 0;
    else
@@ -177,7 +177,7 @@ fiasco_image_t *
 fiasco_decoder_get_frame (fiasco_decoder_t *decoder)
 {
    dfiasco_t *dfiasco = cast_dfiasco (decoder);
-   
+
    if (!dfiasco)
       return NULL;
    else
@@ -197,7 +197,7 @@ fiasco_decoder_get_frame (fiasco_decoder_t *decoder)
 	 image->get_width  = fiasco_image_get_width;
 	 image->get_height = fiasco_image_get_height;
 	 image->is_color   = fiasco_image_is_color;
-	 
+
 	 return image;
       }
       catch
@@ -211,7 +211,7 @@ unsigned
 fiasco_decoder_get_length (fiasco_decoder_t *decoder)
 {
    dfiasco_t *dfiasco = cast_dfiasco (decoder);
-   
+
    if (!dfiasco)
       return 0;
    else
@@ -222,7 +222,7 @@ unsigned
 fiasco_decoder_get_rate (fiasco_decoder_t *decoder)
 {
    dfiasco_t *dfiasco = cast_dfiasco (decoder);
-   
+
    if (!dfiasco)
       return 0;
    else
@@ -239,12 +239,12 @@ fiasco_decoder_get_width (fiasco_decoder_t *decoder)
    else
    {
       unsigned width;
-      
+
       if (dfiasco->enlarge_factor >= 0)
 	 width = dfiasco->wfa->wfainfo->width << dfiasco->enlarge_factor;
       else
 	 width = dfiasco->wfa->wfainfo->width >> - dfiasco->enlarge_factor;
-      
+
       return width & 1 ? width + 1 : width;
    }
 }
@@ -259,7 +259,7 @@ fiasco_decoder_get_height (fiasco_decoder_t *decoder)
    else
    {
       unsigned height;
-      
+
       if (dfiasco->enlarge_factor >= 0)
 	 height = dfiasco->wfa->wfainfo->height << dfiasco->enlarge_factor;
       else
@@ -306,10 +306,10 @@ int
 fiasco_decoder_delete (fiasco_decoder_t *decoder)
 {
    dfiasco_t *dfiasco = cast_dfiasco (decoder);
-   
+
    if (!dfiasco)
       return 1;
-   
+
    try
    {
       free_wfa (dfiasco->wfa);
@@ -330,7 +330,7 @@ fiasco_decoder_delete (fiasco_decoder_t *decoder)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static dfiasco_t *
@@ -347,14 +347,14 @@ alloc_dfiasco (wfa_t *wfa, video_t *video, bitfile_t *input,
    dfiasco_t *dfiasco = Calloc (1, sizeof (dfiasco_t));
 
    strcpy (dfiasco->id, "DFIASCO");
-   
+
    dfiasco->wfa 	   = wfa;
    dfiasco->video 	   = video;
    dfiasco->input 	   = input;
    dfiasco->enlarge_factor = enlarge_factor;
    dfiasco->smoothing  	   = smoothing;
    dfiasco->image_format   = image_format;
-   
+
    return dfiasco;
 }
 

@@ -358,9 +358,9 @@ getPbmImageInfo(struct imgInfo        const img[],
         case JUST_MAX:    img2[i].padtop = newrows - img[i].rows;       break;
         case JUST_CENTER: img2[i].padtop = (newrows - img[i].rows) / 2; break;
         }
-        
+
         img2[i].offset = (i == 0) ? 0 : img2[i-1].offset + img[i-1].cols;
-        
+
         if (img[i].rows == newrows)  /* no padding */
             img2[i].proberow = NULL;
         else {                   /* determine pad color for image i */
@@ -414,13 +414,13 @@ concatenateLeftRightPbm(FILE *             const ofP,
                         unsigned int       const newcols,
                         unsigned int       const newrows,
                         enum justification const justification,
-                        struct imgInfo     const img[],   
+                        struct imgInfo     const img[],
                         enum backcolor     const backcolor) {
 
     unsigned char * const outrow = pbm_allocrow_packed(newcols);
         /* We use just one outrow.  All padding and image data (with the
-           exeption of following img2.proberow) goes directly into this
-           packed PBM row. 
+           exception of following img2.proberow) goes directly into this
+           packed PBM row.
         */
 
     struct imgInfoPbm2 * img2;
@@ -496,7 +496,7 @@ concatenateTopBottomPbm(FILE *             const ofP,
 
     unsigned int i;
     unsigned int row, startRow;
-    
+
     outrow[pbm_packed_bytes(newcols)-1] = 0x00;
 
     switch (backcolor){
@@ -525,7 +525,7 @@ concatenateTopBottomPbm(FILE *             const ofP,
                 bit bgBit;
 
                 startRow = 1;
-                
+
                 pbm_readpbmrow_bitoffset(img[i].ifP,
                                          outrow, img[i].cols, img[i].format,
                                          padleft);
@@ -544,23 +544,23 @@ concatenateTopBottomPbm(FILE *             const ofP,
 
             if (backChange || (i > 0 && img[i-1].cols > img[i].cols)) {
                 unsigned int const padright = newcols - padleft - img[i].cols;
-                
+
                 if (padleft > 0)
                     padFillBitrow(outrow, background, padleft, 0);
-                
-                if (padright > 0)            
+
+                if (padright > 0)
                     padFillBitrow(outrow, background, padright,
                                   padleft + img[i].cols);
-                
+
             }
         }
-            
+
         if (startRow == 1)
             /* Top row already read for auto background color
                determination.  Write it out.
             */
             pbm_writepbmrow_packed(ofP, outrow, newcols, 0);
-        
+
         for (row = startRow; row < img[i].rows; ++row) {
             pbm_readpbmrow_bitoffset(img[i].ifP, outrow, img[i].cols,
                                      img[i].format, padleft);
@@ -685,7 +685,7 @@ concatenateLeftRightGen(FILE *             const ofP,
                 unsigned int col;
                 for (col = 0; col < img[i].cols; ++col)
                     img2[i].inrow[col] = img2[i].xelrow[col];
-                
+
                 free(img2[i].xelrow);
             } else if (row >= img2[i].padtop &&
                        row < img2[i].padtop + img[i].rows) {
@@ -745,7 +745,7 @@ concatenateTopBottomGen(FILE *             const ofP,
             startRow = 0;
             backChange = FALSE;
             inrow = newxelrow;
-        } else { /* Calculate left padding amount */ 
+        } else { /* Calculate left padding amount */
             switch (justification) {
             case JUST_MIN:    padleft = 0;                            break;
             case JUST_MAX:    padleft = newcols - img[i].cols;        break;
@@ -869,3 +869,6 @@ main(int           argc,
 
     return 0;
 }
+
+
+

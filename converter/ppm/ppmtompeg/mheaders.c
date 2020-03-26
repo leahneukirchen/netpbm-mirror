@@ -39,7 +39,7 @@
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/RCS/mheaders.c,v 1.15 1995/08/07 21:45:19 smoot Exp $
  *  $Log: mheaders.c,v $
  *  Revision 1.15  1995/08/07 21:45:19  smoot
- *  check for illegal MVs (shouldnt ever be called, but....)
+ *  check for illegal MVs (shouldn't ever be called, but....)
  *  fix bug which made us not weite Iframe Qscale changes
  *  warns if writing a size=0 mpeg
  *
@@ -746,7 +746,7 @@ Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
     }
     Bitio_Write(bbPtr, pratio, 4);
 
-    /* Wrtie picture rate, negative values default to 30 fps. */
+    /* Write picture rate, negative values default to 30 fps. */
 
     if (pict_rate < 0) {
         fprintf(stderr, "PROGRAMMER ERROR:  pict_rate = %d\n", pict_rate);

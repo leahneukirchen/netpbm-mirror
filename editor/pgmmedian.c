@@ -1,4 +1,4 @@
-/* 
+/*
 ** Version 1.0  September 28, 1996
 **
 ** Copyright (C) 1996 by Mike Burns <burns@cac.psu.edu>
@@ -15,11 +15,11 @@
 
 /* References
 ** ----------
-** The select k'th value implementation is based on Algorithm 489 by 
+** The select k'th value implementation is based on Algorithm 489 by
 ** Robert W. Floyd from the "Collected Algorithms from ACM" Volume II.
 **
 ** The histogram sort is based is described in the paper "A Fast Two-
-** Dimensional Median Filtering Algorithm" in "IEEE Transactions on 
+** Dimensional Median Filtering Algorithm" in "IEEE Transactions on
 ** Acoustics, Speech, and Signal Processing" Vol. ASSP-27, No. 1, February
 ** 1979.  The algorithm I more closely followed is found in "Digital
 ** Image Processing Algorithms" by Ioannis Pitas.
@@ -189,12 +189,11 @@ selectMedian(FILE *       const ifP,
     unsigned int const numValues = crows * ccols;
 
     unsigned int col;
-    gray * garray;
-        /* Array of the currenty gray values */
+    gray * garray;  /* Array of the currently gray values */
     int * parray;
     int * subcol;
     gray ** rowptr;
-    
+
     garray = pgm_allocrow(numValues);
 
     MALLOCARRAY(rowptr, crows);
@@ -212,7 +211,7 @@ selectMedian(FILE *       const ifP,
         int crow;
         int rownum, irow, temprow;
         unsigned int col;
-    
+
         pgm_readpgmrow(ifP, grays[row % crows], cols, maxval, format);
 
         /* Rotate pointers to rows, so rows can be accessed in order. */
@@ -334,7 +333,7 @@ histogramSortMedian(FILE *       const ifP,
                 for (mdn = 0; ltmdn <= median; ++mdn)
                     ltmdn += hist[mdn];
                 --mdn;
-                if (ltmdn > median) 
+                if (ltmdn > median)
                     ltmdn -= hist[mdn];
 
                 grayrow[col] = mdn;
@@ -374,7 +373,7 @@ histogramSortMedian(FILE *       const ifP,
                         ++mdn;
                     }
                     --mdn;
-                    if (ltmdn > median) 
+                    if (ltmdn > median)
                         ltmdn -= hist[mdn];
                 }
                 grayrow[col] = mdn;
@@ -410,7 +409,7 @@ main(int    argc,
     pgm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.inputFileName);
 
     ccolso2 = cmdline.width / 2;
@@ -446,7 +445,7 @@ main(int    argc,
     case SELECT_MEDIAN:
         selectMedian(ifP, cmdline.width, cmdline.height, cols, rows, median);
         break;
-        
+
     case HISTOGRAM_SORT_MEDIAN:
         histogramSortMedian(ifP, cmdline.width, cmdline.height,
                             cols, rows, median);
@@ -454,7 +453,7 @@ main(int    argc,
     case MEDIAN_UNSPECIFIED:
         pm_error("INTERNAL ERROR: median unspecified");
     }
-    
+
     pm_close(ifP);
     pm_close(stdout);
 
@@ -463,3 +462,6 @@ main(int    argc,
 
     return 0;
 }
+
+
+

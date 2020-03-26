@@ -189,8 +189,8 @@ pbm_dissectfont(const bit ** const fontsheet,
                 unsigned int const frows,
                 unsigned int const fcols) {
 /*----------------------------------------------------------------------------
-  Dissect PBM sheet font data, create a font structre,
-  load bitmap data into it.
+  Dissect PBM sheet font data, create a font structure, load bitmap data into
+  it.
 
   Return value is a pointer to the newly created font structure
 
@@ -205,7 +205,7 @@ pbm_dissectfont(const bit ** const fontsheet,
   just a matter of filling in all the coordinates.
 
   Struct font has fields 'oldfont', 'fcols', 'frows' for backward
-  compability.  If there is any need to load data stored in this format
+  compatibility.  If there is any need to load data stored in this format
   feed the above three, in order, as arguments to this function:
 
     pbm_dissectfont(oldfont, fcols, frows);

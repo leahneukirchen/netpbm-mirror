@@ -15,7 +15,7 @@ kh*.pnm	[1-39]
 END_INPUT
 
 
-# motion vector search paramters
+# motion vector search parameters
 
 # FULL or HALF -- must be upper case
 PIXEL		HALF

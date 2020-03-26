@@ -24,4 +24,24 @@ done
 pnmcat ${test_red} ${test_grn} ${test_blu} -tb | \
     pgmhist -m | awk '$2>0 {s++}; END { print (s<=20) }'
 
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pnmquantall -ext xx 0 ${test_red} ${test_grn} ${test_blu} || \
+   echo "Expected failure 1"
+rm ${test_red}xx ${test_grn}xx ${test_blu}xx || \
+   echo "Expected failure 1.rm"
+pnmquantall -ext xx 1 ${test_red} ${test_grn} ${test_blu} || \
+   echo "Expected failure 2"
+rm ${test_red}xx ${test_grn}xx ${test_blu}xx || \
+   echo "Expected failure 2.rm"
+pnmquantall -ext xx 2 || \
+   echo "Expected failure 3"
+
 rm ${test_red} ${test_grn} ${test_blu} ${test_ppm}

@@ -602,7 +602,7 @@ createGammaTables(enum transferFunction const transferFunction,
     if (*rtableP == NULL || *gtableP == NULL || *btableP == NULL)
         pm_error("Can't get memory to make gamma transfer tables");
 
-    /* Build the gamma corection tables. */
+    /* Build the gamma correction tables. */
     switch (transferFunction) {
     case XF_BT709RAMP: {
         buildBt709Gamma(*rtableP, maxval, newMaxval, rgamma);

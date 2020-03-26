@@ -5,7 +5,7 @@
 # This script tests the optional flate (zlib) compression feature of
 # pstopnm.
 # Flate compression allows you to make smaller output (.ps) files:
-# it is useful, but not essential.  Flate compression is not neccessary for
+# it is useful, but not essential.  Flate compression is not necessary for
 # printing pages with postscript printers - which is why many people need
 # pnmtops on their systems.
 

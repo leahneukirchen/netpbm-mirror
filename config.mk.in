@@ -282,7 +282,7 @@ LDSHLIB = -shared -Wl,-soname,$(SONAME)
 #LDSHLIB=-dynamiclib
 #LDSHLIB=-dynamiclib -install_name $(NETPBMLIB_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib
 
-# LDRELOC is the command to combine two .o files (relocateable object files)
+# LDRELOC is the command to combine two .o files (relocatable object files)
 # into a single .o file that can later be linked into something else.  NONE
 # means no such command is available.
 

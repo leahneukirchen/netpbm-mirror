@@ -33,7 +33,7 @@ extern const real_t MAXCOSTS;
 typedef struct motion
 {
    image_t	 *original;		/* Current image */
-   image_t	 *past;			/* Preceeding image */
+   image_t	 *past;			/* Preceding image */
    image_t	 *future;		/* Succeeding image */
    frame_type_e	  frame_type;		/* frame type: B_, P_ I_FRAME */
    unsigned	  number;		/* display number of frame */

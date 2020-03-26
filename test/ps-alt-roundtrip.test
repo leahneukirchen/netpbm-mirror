@@ -5,7 +5,7 @@
 
 # This script is for testing alternative (or minor) utilities that
 # read/write Postscript and encapsulated Postscript:
-# pbmtoepsi, pbmtopsg3, pbmtolps and psidtopgm.
+# pbmtoepsi, pbmtopsg3 and psidtopgm.
 #
 # We keep these tests separate from those for pnmtops and pstopnm
 # which are far more popular.

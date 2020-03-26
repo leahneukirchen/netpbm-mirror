@@ -5,7 +5,7 @@
 #	pstopnm will create as many files as the number of pages in 
 #	the Postscript document.  The name of the files will be 
 #	psfile001.ppm, psfile002.ppm, etc.
-#	The ouput files will contain the area inside the BoundingBox.
+#	The output files will contain the area inside the BoundingBox.
 #	If BoundingBox parameters are not found in the PostScript
 #	document, default values are used.
 #

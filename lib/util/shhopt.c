@@ -6,7 +6,7 @@
  |                  or passed to functions as specified.
  |
  |  REQUIREMENTS    Some systems lack the ANSI C -function strtoul. If your
- |                  system is one of those, you'll ned to write one yourself,
+ |                  system is one of those, you'll need to write one yourself,
  |                  or get the GNU liberty-library (from prep.ai.mit.edu).
  |
  |  WRITTEN BY      Sverre H. Huseby <sverrehu@online.no>

@@ -12,10 +12,10 @@
 
 #include "pbm.h"
 
-/* Follwing is obtained by reversing bit order (MFS-LFS) and adding 64. */
+/* Following is obtained by reversing bit order (MFS-LFS) and adding 64. */
 /* Note the two escape sequences: \\ and \x7f . */
 
-static unsigned char const ptxchar[64] = 
+static unsigned char const ptxchar[64] =
   "@`PpHhXxDdTtLl\\|BbRrJjZzFfVvNn^~AaQqIiYyEeUuMm]}CcSsKk[{GgWwOo_\x7f";
 
 
@@ -32,7 +32,7 @@ putBitrow(const bit *  const bitrow,
         unsigned int const byteCnt = (itemCnt * 6) / 8;
         bit const byteCur  = bitrow[byteCnt];
         bit const byteNext = bitrow[byteCnt + 1];
-        
+
         unsigned int item;
 
         switch (itemCnt % 4) {
@@ -62,7 +62,7 @@ main(int argc, const char ** argv)  {
         ifP = stdin;
     else {
         ifP = pm_openr(argv[1]);
-        
+
         if (argc-1 > 1)
             pm_error("Too many arguments.  The only possible argument is "
                      "the input fil name");
@@ -82,9 +82,8 @@ main(int argc, const char ** argv)  {
 
     pbm_freerow_packed(bitrow);
     pm_close(ifP);
-    
+
     return 0;
 }
-
 
 

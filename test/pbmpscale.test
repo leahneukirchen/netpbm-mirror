@@ -10,3 +10,21 @@ do
 pamenlarge 2 testgrid.pbm | \
   pbmpscale $i | cksum
 done
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pbmpscale testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+
+pbmpscale 0 testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+
+pbmpscale 2 3 testgrid.pbm > ${test_out} || \
+   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+
+rm -f ${test_out}

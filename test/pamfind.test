@@ -37,7 +37,7 @@ tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
 echo 1>&2
-echo "Invalid command-line argument combination." 1>&2
+echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 

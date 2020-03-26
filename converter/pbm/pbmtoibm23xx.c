@@ -18,7 +18,7 @@
  */
 
 /*
- * This prgram is primarily based on the description of Brothers PPDS
+ * This program is primarily based on the description of Brothers PPDS
  * emulation (see
  * http://www.brother.de/download/send_file.cfm?file_name=guide_ibmpro.pdf).
  * However, there are some differences.  Their document states that
@@ -39,7 +39,7 @@
  * normally achieve in y.  But the printer is able to do line feeds in
  * terms of 1/240", so the trick to print in higher resolutions is to
  * print in several interleaved passes, and do a line feed of 1/240"
- * or 1/120" inbetween.
+ * or 1/120" in between.
  */
 
 #include <stdio.h>
@@ -131,7 +131,7 @@ process_handle(FILE *        const fh,
         int cols, rows, format;
         /* iteration variables */
         unsigned int x, y;
-        unsigned int bitline; /* pixel line within a sigle printing line */
+        unsigned int bitline; /* pixel line within a single printing line */
         unsigned int pass;
         /* here we build the to-be-printed data */
         unsigned char *output;  /* for reading one row from the file */

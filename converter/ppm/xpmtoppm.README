@@ -49,7 +49,7 @@ xpmtoppm.c:
   - Now understands multword X11 color names
   
   - Now reads multiple color keys. Takes the color
-    of the hightest available key. Lines no longer need
+    of the highest available key. Lines no longer need
     to begin with key 'c'.
     
   - expanded line buffer to from 500 to 2048 for bigger files

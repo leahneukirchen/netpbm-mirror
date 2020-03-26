@@ -3,7 +3,7 @@
  *
  *  Written by:		Stefan Frank
  *			Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -28,7 +28,7 @@
 
 #include <stdlib.h>
 #include <string.h>
- 
+
 #include <getopt.h>			/* system or ../lib */
 
 #include "pm_c_util.h"
@@ -47,7 +47,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static void
@@ -56,7 +56,7 @@ static int
 get_parameter_index (const param_t *params, const char *search_string);
 static void
 set_parameter (param_t *parameter, const char *value);
-static void 
+static void
 usage (const param_t *params, const char *progname, const char *synopsis,
        const char *comment, const char *non_opt_string,
        bool_t show_all_options, const char *sys_file_name,
@@ -65,17 +65,17 @@ usage (const param_t *params, const char *progname, const char *synopsis,
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 int
-parseargs (param_t *usr_params, 
-           int argc, char **argv, 
+parseargs (param_t *usr_params,
+           int argc, char **argv,
            const char *synopsis,
-           const char *comment, 
-           const char *non_opt_string, 
+           const char *comment,
+           const char *non_opt_string,
            const char *path,
-           const char *sys_file_name, 
+           const char *sys_file_name,
            const char *usr_file_name)
 /*
  *  Perform the command line parsing.
@@ -95,7 +95,7 @@ parseargs (param_t *usr_params,
  *
  *  Side effects:
  *	the elements of ARGV are permuted
- *      usr_params [].value is modified 
+ *      usr_params [].value is modified
  */
 {
    extern int optind;			/* index in ARGV of the 1st element
@@ -146,7 +146,7 @@ parseargs (param_t *usr_params,
     */
    {
        param_t *p;
-      
+
        for (p = usr_params; p->name != NULL; p++)
        {
            set_parameter (p, p->default_value);
@@ -155,7 +155,7 @@ parseargs (param_t *usr_params,
        }
 
       sys_params = detailed_help ? detailed_sys_params : short_sys_params;
-      
+
       for (p = sys_params; p->name != NULL; p++)
           set_parameter (p, p->default_value);
    }
@@ -210,12 +210,12 @@ parseargs (param_t *usr_params,
       int	     optchar;		/* found option character */
 
       /*
-       *  Build short option string for getopt_long (). 
+       *  Build short option string for getopt_long ().
        */
       {
 	 param_t *p;			/* counter */
 	 char	 *ptr_optstr;		/* pointer to position in string */
-	 
+
 	 ptr_optstr = optstr;
 	 for (p = params; p->name != NULL; p++)
 	    if (p->optchar != '\0')
@@ -231,13 +231,13 @@ parseargs (param_t *usr_params,
 	    }
 	 *ptr_optstr = '\0';
       }
-      
+
       /*
-       *  Build long option string for getopt_long (). 
+       *  Build long option string for getopt_long ().
        */
       {
 	 int i;
-	 
+
 	 long_options = calloc (n1 + n2 + 1, sizeof (struct option));
 	 if (!long_options)
 	    error ("Out of memory.");
@@ -264,15 +264,15 @@ parseargs (param_t *usr_params,
 	    long_options [i].val     = 0;
 	 }
       }
-      
+
       /*
-       *  Parse comand line
+       *  Parse command line
        */
       while ((optchar = getopt_long (argc, argv, optstr, long_options,
 				     &option_index)) != EOF)
       {
 	 int param_index = -1;
-	 
+
 	 switch (optchar)
 	 {
 	    case 0:
@@ -303,7 +303,7 @@ parseargs (param_t *usr_params,
 	    default:
 	       {
 		  int i;
-		  
+
 		  for (i = 0; params [i].name != NULL; i++)
 		     if (params [i].optchar == optchar)
 		     {
@@ -350,7 +350,7 @@ parseargs (param_t *usr_params,
 
       free (long_options);
    }
-   
+
    /*
     *  Read config-file if specified by option -f
     */
@@ -361,7 +361,7 @@ parseargs (param_t *usr_params,
       if ((filename = (char *) parameter_value (params, "config")) != NULL)
       {
 	 FILE *parameter_file;		/* input file */
-	 
+
 	 warning ("Options set in file `%s' will override"
 		  " command line options.", filename);
 	 parameter_file = open_file (filename, NULL, READ_ACCESS);
@@ -379,10 +379,10 @@ parseargs (param_t *usr_params,
 
    memcpy (usr_params, params, n1 * sizeof (param_t)); /* fill user struct */
    free (sys_path);
-   
+
    return optind;
 }
- 
+
 void *
 parameter_value (const param_t *params, const char *name)
 /*
@@ -399,7 +399,7 @@ parameter_value (const param_t *params, const char *name)
 
    if (params [pind].type == PSTR || params [pind].type == POSTR)
       return (void *) params [pind].value.s;
-      
+
    return (void *) &(params [pind].value);
 }
 
@@ -414,7 +414,7 @@ ask_and_set (param_t *params, const char *name, const char *msg)
  *  Side effects:
  *	'params ['name'].value' is changed
  */
-{ 
+{
    char answer [MAXSTRLEN];
    int  index = get_parameter_index (params, name);
 
@@ -423,7 +423,7 @@ ask_and_set (param_t *params, const char *name, const char *msg)
 
    if (msg)
       fprintf (stderr, "%s\n", msg);
-  
+
    switch (params [index].type)
    {
       case PFLAG:			/* Unusual, at least. */
@@ -439,7 +439,7 @@ ask_and_set (param_t *params, const char *name, const char *msg)
       default:
 	 error ("Invalid parameter type for %s", name);
    }
-} 
+}
 
 void
 write_parameters (const param_t *params, FILE *output)
@@ -483,7 +483,7 @@ write_parameters (const param_t *params, FILE *output)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static void
@@ -498,7 +498,7 @@ set_parameter (param_t *parameter, const char *value)
  */
 {
    assert (parameter);
-   
+
    switch (parameter->type)
    {
       case PFLAG:
@@ -516,7 +516,7 @@ set_parameter (param_t *parameter, const char *value)
 	    {
 	       long int	data;
 	       char	*endptr;
-	    
+
 	       data = strtol (value, &endptr, 0);
 	       if (*endptr != '\0' || endptr == value)
 		  warning ("Invalid value `%s' converted to %d",
@@ -531,7 +531,7 @@ set_parameter (param_t *parameter, const char *value)
 	 {
 	    long int  data;
 	    char     *endptr;
-	    
+
 	    data = strtol (value, &endptr, 0);
 	    if (*endptr != '\0' || endptr == value)
 	       warning ("Invalid value `%s' converted to %d",
@@ -543,7 +543,7 @@ set_parameter (param_t *parameter, const char *value)
 	 {
 	    double	data;
 	    char	*endptr;
-	    
+
 	    data = strtod (value, &endptr);
 	    if (*endptr != '\0' || endptr == value)
 	       warning ("Invalid value `%s' converted to %f",
@@ -555,7 +555,7 @@ set_parameter (param_t *parameter, const char *value)
       case POSTR:
 	 parameter->value.s = value ? strdup (value) : NULL;
 	 break;
-      default:				
+      default:
 	 error ("Invalid parameter type for %s", parameter->name);
    }
 }
@@ -606,7 +606,7 @@ read_parameter_file (param_t *params, FILE *file)
       char *name;			/* parameter name */
       char *value;			/* parameter value */
       int   pind;			/* current argument number */
-      
+
       b = strchr (buffer, '#');
       if (b != NULL)			/* Strip comments. */
 	 *b = '\0';
@@ -619,7 +619,7 @@ read_parameter_file (param_t *params, FILE *file)
       /*
        *  Extract value of parameter
        */
-      for (value = b + 1; ISSPACE (*value); value++) 
+      for (value = b + 1; ISSPACE (*value); value++)
 	 ;				/* Delete leading spaces */
 
       for (b = value + strlen (value) - 1; b >= value && ISSPACE (*b); b--)
@@ -628,7 +628,7 @@ read_parameter_file (param_t *params, FILE *file)
       /*
        *  Extract parameter name
        */
-      for (name = buffer; ISSPACE (*name); name++) 
+      for (name = buffer; ISSPACE (*name); name++)
 	 ;				/* Delete leading spaces */
 
       for (b = name + strlen (name) - 1; b >= name && ISSPACE (*b); b--)
@@ -637,21 +637,21 @@ read_parameter_file (param_t *params, FILE *file)
       pind = get_parameter_index (params, name);
       if (pind >= 0)
 	 set_parameter (&params [pind], value);
-      
+
       n++;
    }
-}   
+}
 
 
 
-static void 
+static void
 usage (const param_t *params, const char *progname, const char *synopsis,
        const char *comment, const char *non_opt_string,
        bool_t show_all_options, const char *sys_file_name,
        const char *usr_file_name)
 /*
  *  Generates and prints command line description from param_t struct 'params'.
- *  'progname' is the name of the excecutable, 'synopsis' a short program
+ *  'progname' is the name of the executable, 'synopsis' a short program
  *  description, and 'comment' some more advice.
  *  If flag 'show_all_options' is set then print also options that are not
  *  associated with a short option character.
@@ -662,7 +662,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
 {
     int	  i;
     size_t width = 0;
-   
+
     fprintf (stderr, "Usage: %s [OPTION]...%s\n", progname,
              non_opt_string ? non_opt_string : " ");
     if (synopsis != NULL)
@@ -683,7 +683,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
             else
                 width = MAX(width, (strlen (params [i].name)) - 1);
         }
-   
+
     for (i = 0; params [i].name != NULL; i++)
         if (params [i].optchar != '\0' || show_all_options)
         {
@@ -691,7 +691,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
                 fprintf (stderr, "  -%c, --", params [i].optchar);
             else
                 fprintf (stderr, "      --");
-	 
+
             if (params [i].type == POSTR)
                 fprintf (stderr, "%s=[%s]%-*s  ", params [i].name,
                          params [i].argument_name,
@@ -707,7 +707,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
                          (unsigned)(width + 1), params [i].name);
 
             fprintf (stderr, params [i].use, params [i].argument_name);
-	 
+
             switch (params [i].type)
             {
             case PFLAG:

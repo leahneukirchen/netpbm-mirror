@@ -128,8 +128,8 @@ execProgram(const char *  const progName,
 
 
 static void
-createPipeFeeder(void          pipeFeederRtn(int, void *), 
-                 void *  const feederParm, 
+createPipeFeeder(void          pipeFeederRtn(int, void *),
+                 void *  const feederParm,
                  int *   const fdP,
                  pid_t * const pidP) {
 /*----------------------------------------------------------------------------
@@ -143,7 +143,7 @@ createPipeFeeder(void          pipeFeederRtn(int, void *),
     pm_pipe(pipeToFeed);
     rc = fork();
     if (rc < 0) {
-        pm_error("fork() of stdin feeder failed.  errno=%d (%s)", 
+        pm_error("fork() of stdin feeder failed.  errno=%d (%s)",
                  errno, strerror(errno));
     } else if (rc == 0) {
         /* This is the child -- the stdin feeder process */
@@ -190,13 +190,13 @@ spawnProcessor(const char *  const progName,
 
     rc = fork();
     if (rc < 0) {
-        pm_error("fork() of processor process failed.  errno=%d (%s)", 
+        pm_error("fork() of processor process failed.  errno=%d (%s)",
                  errno, strerror(errno));
     } else if (rc == 0) {
         /* The program child */
 
         int stdoutFd;
-        
+
         if (pipeStdout) {
             close(stdoutpipe[0]);
             stdoutFd = stdoutpipe[1];
@@ -230,7 +230,7 @@ signalName(unsigned int const signalClass) {
 /* There are various signal classes that are not universally defined,
    so we make a half-hearted attempt to determine whether they are and
    not try to recognize the ones that aren't.  We do this by testing
-   whether a macro is defind with the signal class name.  That could give
+   whether a macro is defined with the signal class name.  That could give
    a false negative, because the signal class name isn't necessarily
    defined as a macro, but it's a really, really small problem to miss
    one of these signal classes here, so we don't bother with all the work
@@ -332,7 +332,7 @@ pm_termStatusDesc(int const termStatusArg) {
        for a BSD 'union wait' (instead of int) argument to WIFEXITED.  The
        magic involves defining a variable with 'typeof' the argument and
        assigning to that variable.
-       
+
        To work around this, we make sure the argument is not constant.
     */
 
@@ -426,14 +426,14 @@ pm_system2_vp(const char *    const progName,
        program process and the current process and have the program
        write its Standard Output to that pipe.  The current process
        runs 'stdoutAccepter' to read the data from that pipe.
-       
+
        But if 'stdoutFeeder' is NULL, we just tell the program process
        to write to the current process' Standard Output.
 
        So there are two processes when stdinFeeder is NULL and three when
        stdinFeeder is non-null.
     */
-    
+
     int progStdinFd;
         /* File descriptor that the processor program will get as Standard
            Input
@@ -459,9 +459,9 @@ pm_system2_vp(const char *    const progName,
         int progStdoutFd;
 
         /* Make a child process to run the program and pipe back to us its
-           Standard Output 
+           Standard Output
         */
-        spawnProcessor(progName, argArray, progStdinFd, 
+        spawnProcessor(progName, argArray, progStdinFd,
                        &progStdoutFd, &processorPid);
 
         /* Dispose of the stdout from that child */
@@ -483,7 +483,7 @@ pm_system2_vp(const char *    const progName,
 
     waitpid(processorPid, &termStatus, 0);
 
-    if (feederPid) 
+    if (feederPid)
         cleanupFeederProcess(feederPid);
 
     *termStatusP = termStatus;
@@ -520,7 +520,7 @@ pm_system2_lp(const char *    const progName,
          !endOfArgs;
         ) {
         const char * const arg = va_arg(args, const char *);
-        
+
         REALLOCARRAY(argArray, n+1);
 
         argArray[n++] = arg;
@@ -560,7 +560,7 @@ pm_system2(void stdinFeeder(int, void *),
    Return as *termStatusP the termination status of the processor process
    (the one running the program named 'progName').
 -----------------------------------------------------------------------------*/
-    pm_system2_lp("/bin/sh", 
+    pm_system2_lp("/bin/sh",
                   stdinFeeder, feederParm, stdoutAccepter, accepterParm,
                   termStatusP,
                   "sh", "-c", shellCommand, NULL);
@@ -625,7 +625,7 @@ pm_system_lp(const char *    const progName,
          !endOfArgs;
         ) {
         const char * const arg = va_arg(args, const char *);
-        
+
         REALLOCARRAY(argArray, n+1);
 
         argArray[n++] = arg;
@@ -716,15 +716,15 @@ pm_feed_from_memory(int    const pipeToFeedFd,
                     void * const feederParm) {
 
     pm_bufferDesc * const inputBufferP = feederParm;
-    
+
     FILE * const outFileP = fdopen(pipeToFeedFd, "w");
-    
+
     size_t bytesTransferred;
 
     /* The following signals (and normally kills) the process with
        SIGPIPE if the pipe does not take all 'size' bytes.
     */
-    bytesTransferred = 
+    bytesTransferred =
         fwrite(inputBufferP->buffer, 1, inputBufferP->size, outFileP);
 
     if (inputBufferP->bytesTransferredP)
@@ -740,7 +740,7 @@ pm_accept_to_memory(int             const pipetosuckFd,
                     void *          const accepterParm ) {
 
     pm_bufferDesc * const outputBufferP = accepterParm;
-    
+
     FILE * const inFileP = fdopen(pipetosuckFd, "r");
 
     size_t bytesTransferred;

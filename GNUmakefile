@@ -266,7 +266,14 @@ init_package:
 	echo "Netpbm install package made by 'make package'" \
 	    >$(PKGDIR)/pkginfo
 	date >>$(PKGDIR)/pkginfo
-	echo Netpbm $(MAJOR).$(MINOR).$(POINT) >$(PKGDIR)/VERSION
+# For many years, the version string was "Netpbm x.y.z" instead of just
+# "x.y.z".  This was probably related to the fact that when you ask a Netpbm
+# program its version, it says "Netpbm x.y.z" to let you know it's the version
+# of the whole package, not just that program.  And also to distinguish from
+# the Pbmplus version of the program.  But this is highly unconventional in
+# pkg-config or config files, so we removed the "Netpbm" in Netpbm 10.90
+# (March 2020).
+	echo $(MAJOR).$(MINOR).$(POINT) >$(PKGDIR)/VERSION
 	$(INSTALL) -c -m 664 $(SRCDIR)/buildtools/README.pkg $(PKGDIR)/README
 	$(INSTALL) -c -m 664 $(SRCDIR)/buildtools/config_template \
 	  $(PKGDIR)/config_template
@@ -349,7 +356,7 @@ endif
 #   1) Each directory produces an object file merge.o containing all the code
 #      in that directory and its descendants that needs to go into the 'netpbm'
 #      program.  The make files do this recursively, via a link command that
-#      combines multiple relocateable object files into one.  All we do here
+#      combines multiple relocatable object files into one.  All we do here
 #      at the top level is make merge.o and link it with netpbm.o and the
 #      libraries.
 #

@@ -274,7 +274,8 @@ minimumValue(const unsigned int * const hist,
             foundOne = true;
         else {
             if (i == highest)
-                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+                pm_error("INTERNAL ERROR in function 'minimumValue'.  "
+                         "No pixels");
             else
                 ++i;
         }
@@ -296,7 +297,8 @@ maximumValue(const unsigned int * const hist,
             foundOne = true;
         else {
             if (i == 0)
-                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+                pm_error("INTERNAL ERROR in function 'maximumValue'.  "
+                         "No pixels");
             else
                 --i;
         }

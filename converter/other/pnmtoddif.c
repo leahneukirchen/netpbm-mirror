@@ -53,7 +53,7 @@ typedef struct {
 #define CONS 1
 
 /* "tag": Emit an ASN tag of the specified class and tag number.    */
-/* This is used in conjuntion with the                  */
+/* This is used in conjunction with the                  */
 /* wr_xxx routines that follow to construct the various ASN.1 entities. */
 /* Writing each entity is a two-step process, where first the tag is    */
 /* written and then the length and value.               */
@@ -263,7 +263,7 @@ write_header(FILE *file, imageparams *ip)
     tag(&p,CONTEXT,CONS, 0); ind(&p);        /* Document Descriptor */
     tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1);  /* Major Version */
     tag(&p,CONTEXT,PRIM, 1); wr_int(&p,3);  /* Minor Version */
-    tag(&p,CONTEXT,PRIM, 2); wr_string(&p,"PBM+"); /* Product Indentifier */
+    tag(&p,CONTEXT,PRIM, 2); wr_string(&p,"PBM+"); /* Product Identifier */
     tag(&p,CONTEXT,CONS, 3); ind(&p);       /* Product Name */
     tag(&p,PRIVATE,PRIM, 9); emit_isolatin1(&p,"PBMPLUS Writer V1.0");
     eoc(&p);

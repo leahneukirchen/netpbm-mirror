@@ -26,7 +26,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/RCS/bsearch.c,v 1.10 1995/08/07 21:49:01 smoot Exp $
  *  $Log: bsearch.c,v $
  *  Revision 1.10  1995/08/07 21:49:01  smoot
@@ -37,7 +37,7 @@
  *  (B frames which are backward P's at the start of a sequence)
  *
  *  Revision 1.8  1995/03/27 19:17:43  smoot
- *  killed useless type error messge (int32 defiend as int)
+ *  killed useless type error message (int32 defined as int)
  *
  * Revision 1.7  1995/01/19  23:07:20  eyhung
  * Changed copyrights
@@ -194,7 +194,7 @@ FindBestMatchExhaust(const LumBlock * const blockP,
 
     /* maybe should try spiral pattern centered around  prev motion vector? */
 
-    /* try a spiral pattern */    
+    /* try a spiral pattern */
     for (distance = stepSize;
          distance <= searchRange;
          distance += stepSize) {
@@ -212,7 +212,7 @@ FindBestMatchExhaust(const LumBlock * const blockP,
                         m.y = my; m.x = mx;
                         diff = LumAddMotionError(currentBlockP, blockP, prev,
                                                  by, bx, m, bestDiff);
-                        
+
                         if (diff < bestDiff) {
                             *motionP = m;
                             bestDiff = diff;
@@ -237,7 +237,7 @@ FindBestMatchExhaust(const LumBlock * const blockP,
                         diff = LumAddMotionError(currentBlockP, blockP, prev,
                                                  by, bx,
                                                  m, bestDiff);
-                        
+
                         if (diff < bestDiff) {
                             *motionP = m;
                             bestDiff = diff;
@@ -310,7 +310,7 @@ FindBestMatchTwoLevel(const LumBlock * const blockP,
     if (VALID_MOTION(*motionP)) {
         bestDiff = LumAddMotionError(currentBlockP, blockP, prev, by, bx,
                                      *motionP, bestSoFar);
-        
+
         if (bestSoFar < bestDiff)
             bestDiff = bestSoFar;
     } else {
@@ -323,7 +323,7 @@ FindBestMatchTwoLevel(const LumBlock * const blockP,
 
     /* maybe should try spiral pattern centered around  prev motion vector? */
 
-    /* try a spiral pattern */    
+    /* try a spiral pattern */
     for ( distance = 2; distance <= searchRange; distance += 2 ) {
         tempRightMY = MIN(distance, rightMY);
         tempRightMX = MIN(distance, rightMX);
@@ -339,7 +339,7 @@ FindBestMatchTwoLevel(const LumBlock * const blockP,
                         m.y = my; m.x = mx;
                         diff = LumAddMotionError(currentBlockP, blockP, prev,
                                                  by, bx, m, bestDiff);
-                        
+
                         if (diff < bestDiff) {
                             *motionP = m;
                             bestDiff = diff;
@@ -361,7 +361,7 @@ FindBestMatchTwoLevel(const LumBlock * const blockP,
                         m.y = my; m.x = mx;
                         diff = LumAddMotionError(currentBlockP, blockP, prev,
                                                  by, bx, m, bestDiff);
-                        
+
                         if (diff < bestDiff) {
                             *motionP = m;
                             bestDiff = diff;
@@ -423,7 +423,7 @@ trySpacing(int              const spacing,
            MpegFrame *      const prev,
            int              const by,
            int              const bx) {
-           
+
     int tempRightMY, tempRightMX;
     int my;
     int bestDiff;
@@ -435,7 +435,7 @@ trySpacing(int              const spacing,
 
     tempRightMY = MIN(rightMY, center.y + spacing + 1);
     tempRightMX = MIN(rightMX, center.x + spacing + 1);
-    
+
     for (my = center.y - spacing; my < tempRightMY; my += spacing) {
         if (my >= leftMY) {
             int mx;
@@ -446,7 +446,7 @@ trySpacing(int              const spacing,
                     m.y = my; m.x = mx;
                     diff = LumAddMotionError(currentBlockP, blockP, prev,
                                              by, bx, m, bestDiff);
-                    
+
                     if (diff < bestDiff) {
                         /* We have a new best */
                         newCenter = m;
@@ -466,7 +466,7 @@ static void
 chooseNewSpacing(int   const oldSpacing,
                  int   const stepSize,
                  int * const newSpacingP) {
-        
+
     if (stepSize == 2) {  /* make sure spacing is even */
         if (oldSpacing == 2)
             *newSpacingP = 0;
@@ -530,7 +530,7 @@ FindBestMatchLogarithmic(const LumBlock * const blockP,
 
     /* Start at (0,0) */
     center.y = center.x = 0;
-    
+
     while (spacing >= stepSize) {
         trySpacing(spacing, center, bestDiff,
                    &center, &bestDiff,
@@ -580,7 +580,7 @@ FindBestMatchSubSample(const LumBlock * const blockP,
                        int              const searchRange) {
 
     /* too lazy to write the code for this... */
-    
+
     return FindBestMatchExhaust(blockP, currentBlockP, prev,
                                 by, bx, motionP, bestSoFar,
                                 searchRange);
@@ -671,9 +671,9 @@ BMotionSearchNoInterp(const LumBlock * const currentBlockP,
     /* CALL SEARCH PROCEDURE */
     switch(psearchAlg) {
     case PSEARCH_SUBSAMPLE:
-        *forwardErrP = PSubSampleSearch(currentBlockP, prev, by, bx, 
+        *forwardErrP = PSubSampleSearch(currentBlockP, prev, by, bx,
                                         &motionP->fwd,searchRangeB);
-        *backErrP = PSubSampleSearch(currentBlockP, next, by, bx, 
+        *backErrP = PSubSampleSearch(currentBlockP, next, by, bx,
                                      &motionP->bwd, searchRangeB);
         break;
     case PSEARCH_EXHAUSTIVE:
@@ -690,9 +690,9 @@ BMotionSearchNoInterp(const LumBlock * const currentBlockP,
                                      *forwardErrP, searchRangeB);
         break;
     case PSEARCH_LOGARITHMIC:
-        *forwardErrP = PLogarithmicSearch(currentBlockP, prev, by, bx, 
+        *forwardErrP = PLogarithmicSearch(currentBlockP, prev, by, bx,
                                           &motionP->fwd, searchRangeB);
-        *backErrP = PLogarithmicSearch(currentBlockP, next, by, bx, 
+        *backErrP = PLogarithmicSearch(currentBlockP, next, by, bx,
                                        &motionP->bwd, searchRangeB);
         break;
     case PSEARCH_TWOLEVEL:
@@ -731,7 +731,7 @@ BMotionSearchNoInterp(const LumBlock * const currentBlockP,
  * *fmyP,fmxP,bmyP,bmxP are inputs as well as outputs.  We do not update
  * them if it would make the error worse than the existing values.  Otherwise,
  * we update them to the vectors we find to be best.
- * 
+ *
  *===========================================================================*/
 static int
 BMotionSearchSimple(const LumBlock * const currentBlockP,
@@ -750,7 +750,7 @@ BMotionSearchSimple(const LumBlock * const currentBlockP,
     /* STEP 1 */
     BMotionSearchNoInterp(currentBlockP, prev, next, by, bx, motionP,
                           &forwardErr, &backErr, TRUE);
-              
+
     /* STEP 2 */
 
     ComputeBMotionLumBlock(prev, next, by, bx, MOTION_INTERPOLATE,
@@ -799,7 +799,7 @@ BMotionSearchCross2(const LumBlock * const currentBlockP,
                     int              const bx,
                     motion *         const motionP,
                     int              const oldMode) {
-    
+
     int retval;
     LumBlock forwardBlock, backBlock;
     int32   forwardErr, backErr;
@@ -816,19 +816,19 @@ BMotionSearchCross2(const LumBlock * const currentBlockP,
 
     {
         /* STEP 2 */
-        
+
         struct motion motion;
         motion.fwd = motionP->fwd;
         motion.bwd.y = motion.bwd.x = 0;
         ComputeBMotionLumBlock(prev, next, by, bx, MOTION_FORWARD, motion,
                                &forwardBlock);
-        
+
         motion.fwd.y = motion.fwd.x = 0;
         motion.bwd = motionP->bwd;
         ComputeBMotionLumBlock(prev, next, by, bx, MOTION_BACKWARD, motion,
                                &backBlock);
     }
-    /* try a cross-search; total of 4 local searches */    
+    /* try a cross-search; total of 4 local searches */
     newMotion = *motionP;
 
     interpErrF = FindBestMatch(&forwardBlock, currentBlockP,
@@ -934,11 +934,11 @@ BMotionSearchExhaust(const LumBlock * const currentBlockP,
                                            motion, &forwardBlock);
 
                     newMotion = motion.fwd;
-                    
+
                     diff = FindBestMatch(&forwardBlock,
                                          currentBlockP, next, by, bx,
                                          &newMotion, bestDiff, searchRangeB);
-                    
+
                     if (diff < bestDiff) {
                         motionP->fwd = motion.fwd;
                         motionP->bwd = newMotion;
@@ -968,7 +968,7 @@ BMotionSearchExhaust(const LumBlock * const currentBlockP,
  *
  * PRECONDITIONS:   The relevant block in 'current' is valid (it has not
  *          been dct'd).  Thus, the data in 'current' can be
- *          accesed through y_blocks, cr_blocks, and cb_blocks.
+ *          accessed through y_blocks, cr_blocks, and cb_blocks.
  *          This is not the case for the blocks in 'prev' and
  *          'next.'  Therefore, references into 'prev' and 'next'
  *          should be done
@@ -1001,7 +1001,7 @@ BMotionSearch(const LumBlock * const currentBlockP,
         PMotionSearch(currentBlockP, next, by, bx, &motionP->bwd);
         return MOTION_BACKWARD;
     }
-  
+
     /* otherwise simply call the appropriate algorithm, based on user
        preference
     */

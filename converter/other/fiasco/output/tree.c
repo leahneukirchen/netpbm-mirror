@@ -2,7 +2,7 @@
  *  tree.c:		Output of bintree partitioning
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -30,7 +30,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static void
@@ -40,7 +40,7 @@ encode_tree (bitfile_t *output, const byte_t *data, unsigned n_data,
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 void
@@ -64,9 +64,9 @@ write_tree (const wfa_t *wfa, bitfile_t *output)
 
    /*
     *  Traverse tree in breadth first order. Use a queue to store
-    *  the childs of each node ('last' is the next free queue element).
+    *  the children of each node ('last' is the next free queue element).
     *  The first element ('current') of this queue will get the new parent
-    *  node. 
+    *  node.
     */
    tree_string = Calloc (MAXSTATES * MAXLABELS, sizeof (byte_t));
    queue [0] = wfa->root_state;
@@ -83,7 +83,7 @@ write_tree (const wfa_t *wfa, bitfile_t *output)
    if (total != (wfa->states - wfa->basis_states) * MAXLABELS)
       error ("total [%d] != (states - basis_states) * 2 [%d]", total,
 	     (wfa->states - wfa->basis_states) * MAXLABELS);
-   
+
    {
       unsigned scale = total / 20 ;
 
@@ -91,7 +91,7 @@ write_tree (const wfa_t *wfa, bitfile_t *output)
    }
 
    Free (tree_string);
-   
+
    debug_message ("tree:         %5d bits. (%5d symbols => %5.2f bps)",
 		  bits_processed (output) - bits, total,
 		  total > 0 ? ((bits_processed (output) - bits)
@@ -101,7 +101,7 @@ write_tree (const wfa_t *wfa, bitfile_t *output)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static void
@@ -128,7 +128,7 @@ encode_tree (bitfile_t *output, const byte_t *data, unsigned n_data,
    for (n = n_data; n; n--)
    {
       unsigned range;			/* Current interval range */
-      
+
       if (!*data++)
       {
 	 /*

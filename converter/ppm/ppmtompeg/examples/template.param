@@ -138,7 +138,7 @@ BQSCALE		25
 # this must be ORIGINAL or DECODED
 REFERENCE_FRAME	ORIGINAL
 
-# for parallel parameters see parallel.param in the exmaples subdirectory
+# for parallel parameters see parallel.param in the examples subdirectory
 
 # if you want constant bit-rate mode, specify it as follows (number is bits/sec):
 BIT_RATE  1000000
