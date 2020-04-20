@@ -78,7 +78,7 @@ rle_names(rle_hdr *    const hdrP,
         hdrP->cmd = pm_strdup(newPgmname);
 
     if (hdrP->file_name != newFname)
-        hdrP->cmd = pm_strdup(newFname);
+        hdrP->file_name = pm_strdup(newFname);
 
     hdrP->img_num = imgNum;
 }
