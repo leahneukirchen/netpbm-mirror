@@ -112,6 +112,12 @@ sub netpbmVersion($) {
 
 sub control($$) {
     my ($release, $architecture) = @_;
+#-----------------------------------------------------------------------------
+#  The contents for the package control file, as a hash reference.  In the
+#  referenced hash, there is one key for each line of the control file.  The
+#  key and value in the hash are the key and value for the line of the control
+#  file.
+#-----------------------------------------------------------------------------
 
 # The Debian packaging system doesn't provide a way to express Netpbm's actual
 # prerequisites.  For example, Netpbm needs Version 6.2 or better of Libjpeg,
