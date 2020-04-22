@@ -631,7 +631,7 @@ createPlanetStuff(bool             const clouds,
     MALLOCARRAY(bxc, cols);
 
     if (u == NULL || u1 == NULL || bxf == NULL || bxc == NULL)
-        pm_error("Cannot allocate %d element interpolation tables.", cols);
+        pm_error("Cannot allocate %u element interpolation tables.", cols);
     {
         unsigned int j;
         for (j = 0; j < cols; j++) {
