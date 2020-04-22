@@ -28,26 +28,37 @@ mallocProduct(void **      const resultP,
               unsigned int const factor2) {
 /*----------------------------------------------------------------------------
    malloc a space whose size in bytes is the product of 'factor1' and
-   'factor2'.  But if that size cannot be represented as an unsigned int,
-   return NULL without allocating anything.  Also return NULL if the malloc
-   fails.
+   'factor2'.  But if the malloc fails, or that size is too large even to
+   request from malloc, return NULL without allocating anything.
 
    If either factor is zero, malloc a single byte.
-
-   Note that malloc() actually takes a size_t size argument, so the
-   proper test would be whether the size can be represented by size_t,
-   not unsigned int.  But there is no reliable indication available to
-   us, like UINT_MAX, of what the limitations of size_t are.  We
-   assume size_t is at least as expressive as unsigned int and that
-   nobody really needs to allocate more than 4GB of memory.
 -----------------------------------------------------------------------------*/
+    /* C99 introduces SIZE_MAX, the maximum size_t value.
+
+       Pre-C99, we just use UINT_MAX, because in practice size_t is always at
+       least as wide as unsigned int and nobody with such an old compiler
+       could possibly need memory sizes larger than UINT_MAX.
+    */
+    size_t const sizeMax =
+#if defined(SIZE_MAX)
+        SIZE_MAX
+#else
+        UINT_MAX
+#endif
+        ;
+
     if (factor1 == 0 || factor2 == 0)
         *resultP = malloc(1);
     else {
-        if (UINT_MAX / factor2 < factor1)
+        /* N.B. The type of malloc's argument is size_t */
+        if ((size_t)factor1 != factor1 || (size_t)factor2 != factor2)
             *resultP = NULL;
-        else
-            *resultP = malloc(factor1 * factor2);
+        else {
+            if (sizeMax / factor2 < factor1)
+                *resultP = NULL;
+            else
+                *resultP = malloc((size_t)factor1 * factor2);
+        }
     }
 }
 
