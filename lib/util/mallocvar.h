@@ -24,7 +24,7 @@ extern "C" {
 
 static __inline__ void
 mallocProduct(void **      const resultP,
-              unsigned int const factor1,
+              size_t       const factor1,
               unsigned int const factor2) {
 /*----------------------------------------------------------------------------
    malloc a space whose size in bytes is the product of 'factor1' and
@@ -35,15 +35,14 @@ mallocProduct(void **      const resultP,
 -----------------------------------------------------------------------------*/
     /* C99 introduces SIZE_MAX, the maximum size_t value.
 
-       Pre-C99, we just use UINT_MAX, because in practice size_t is always at
-       least as wide as unsigned int and nobody with such an old compiler
-       could possibly need memory sizes larger than UINT_MAX.
+       Pre-C99, we do the best we can, assuming conventional encoding of
+       numbers and that size_t is unsigned.
     */
     size_t const sizeMax =
 #if defined(SIZE_MAX)
         SIZE_MAX
 #else
-        UINT_MAX
+        ~((size_t)0)
 #endif
         ;
 
@@ -51,13 +50,13 @@ mallocProduct(void **      const resultP,
         *resultP = malloc(1);
     else {
         /* N.B. The type of malloc's argument is size_t */
-        if ((size_t)factor1 != factor1 || (size_t)factor2 != factor2)
+        if ((size_t)factor2 != factor2)
             *resultP = NULL;
         else {
             if (sizeMax / factor2 < factor1)
                 *resultP = NULL;
             else
-                *resultP = malloc((size_t)factor1 * factor2);
+                *resultP = malloc(factor1 * factor2);
         }
     }
 }
@@ -66,18 +65,30 @@ mallocProduct(void **      const resultP,
 
 static __inline__ void
 reallocProduct(void **      const blockP,
-               unsigned int const factor1,
+               size_t       const factor1,
                unsigned int const factor2) {
+
+    size_t const sizeMax =
+#if defined(SIZE_MAX)
+        SIZE_MAX
+#else
+        ~((size_t)0)
+#endif
+        ;
 
     void * const oldBlockP = *blockP;
 
     void * newBlockP;
 
-    if (UINT_MAX / factor2 < factor1)
+    /* N.B. The type of realloc's argument is size_t */
+    if ((size_t)factor2 != factor2)
         newBlockP = NULL;
-    else
-        newBlockP = realloc(oldBlockP, factor1 * factor2);
-
+    else {
+        if (sizeMax / factor2 < factor1)
+            newBlockP = NULL;
+        else
+            newBlockP = realloc(oldBlockP, factor1 * factor2);
+    }
     if (newBlockP)
         *blockP = newBlockP;
     else {
