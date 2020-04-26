@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamundice User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamundice</H1>
-Updated: 11 January 2020
+Updated: 26 April 2020
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -36,7 +36,8 @@ pamundice - combine grid of images (tiles) into one
 
 [<B>-verbose</B>]
 
-<i>input_filename_pattern</i>
+{<i>input_filename_pattern</i>,
+<b>-listfile=</b><i>filename</i>}
 
 
 <P>You can use the minimum unique abbreviation of the options.  You can use
@@ -53,8 +54,10 @@ Output.
 
 <p>You can optionally make the pieces overlap.
 
-<P>See the <i>input_filename_pattern</i> argument for information on
-naming of the input files.
+<p>The images can either be in files whose names indicate where they go in the
+  output (e.g. &quot;myimage_part_03_04&quot; could be the image for Row 3,
+  Column 4 - see the <i>input_filename_pattern</i> argument) or listed in a
+  file, with a <b>-listfile</b> option.
 
 <p>The input images must all have the same format (PAM, PPM, etc.)
 and maxval and for PAM must have the same depth and tuple type.
@@ -99,11 +102,12 @@ combines a bunch of small images in a grid into a big one.  But its
 purpose is to produce a an index image of the input images.  So it
 leaves space between them and has labels for them, for example.
 
+
 <h2 id="arguments">ARGUMENTS</h2>
 
-<p>There is one non-option argument, and it is mandatory:
-<i>input_filename_pattern</i>.  This tells <b>pamundice</b> what files
-contain the input tiles.
+<p>Unless you use a <b>-listfile</b> option,, there is one non-option
+argument, and it is mandatory: <i>input_filename_pattern</i>.  This
+tells <b>pamundice</b> what files contain the input tiles.
 
 <p><b>pamundice</b> reads the input images from files which are named
 with a pattern that indicates their positions in the combined image.
@@ -192,6 +196,22 @@ option of <b>pamdice</b>.
 
 <DD>This is analogous to <b>-hoverlap</b>, but <b>pamundice</b>
 clips the bottom edge of each image before joining it to the one below.
+
+<dt><b>-listfile=</b><i>filename</i>
+<dd>This option names a file that contains the names of all the input files.
+This is an alternative to specifying a file name pattern as an argument.
+
+<p>The named file contains file name, one per line.  Each file contains the
+  image for one tile, in row-major order, top to bottom, left to right.  So
+  the first file is the upper left tile, the second is the one to right of
+  that, etc.  The number of lines in the file must be equal to the number of
+  tiles in the output, the product of the <b>-across</b> and <b>-down</b>
+  values.
+  
+<p>The file names have no meaning to <b>pamundice</b>.  You can use the same
+  file multiple times to have identical tiles in the output.
+
+<p>This option was new in Netpbm 10.90 (March 2020).
 
 <DT><B>-verbose</B>
 
