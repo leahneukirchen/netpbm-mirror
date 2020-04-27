@@ -116,18 +116,28 @@ parseDeclaration(const char * const line,
         *isDeclarationP = TRUE;
     } else {
         int rc;
-        rc = sscanf(line, "static char %s = {", nameAndType);
+        rc = sscanf(line, "static unsigned short %s = {", nameAndType);
         if (rc == 1) {
-            *version10P     = FALSE;
+            /* This is apparently not legal X10 XBM; we recognize it as an
+               extension.  Many non-Netpbm programs won't.
+            */
+            *version10P     = TRUE;
             *isDeclarationP = TRUE;
         } else {
             int rc;
-            rc = sscanf(line, "static unsigned char %s = {", nameAndType);
+            rc = sscanf(line, "static char %s = {", nameAndType);
             if (rc == 1) {
                 *version10P     = FALSE;
                 *isDeclarationP = TRUE;
-            } else
-                *isDeclarationP = FALSE;
+            } else {
+                int rc;
+                rc = sscanf(line, "static unsigned char %s = {", nameAndType);
+                if (rc == 1) {
+                    *version10P     = FALSE;
+                    *isDeclarationP = TRUE;
+                } else
+                    *isDeclarationP = FALSE;
+            }
         }
     }
 }

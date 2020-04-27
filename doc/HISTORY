@@ -9,6 +9,9 @@ not yet  BJH  Release 10.91.00
               pnmtorle: Fix incorrect command and filename in header.
               Brokne in Netpbm 10.88 (September 2019).
 
+              xbmtopbm: Recognize "unsigned short" as an extension of
+              XBM X10 format.
+
 20.03.26 BJH  Release 10.90.00
 
               pamundice: Add -listfile.
