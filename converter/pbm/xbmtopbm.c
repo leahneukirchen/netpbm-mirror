@@ -109,7 +109,7 @@ parseDeclaration(const char * const line,
 -----------------------------------------------------------------------------*/
     char nameAndType[MAX_LINE];
     int rc;
-        
+
     rc = sscanf(line, "static short %s = {", nameAndType);
     if (rc == 1) {
         *version10P     = TRUE;
@@ -178,7 +178,7 @@ getXbmHeader(FILE *         const ifP,
         }
     }
 
-    if (!foundDeclaration) 
+    if (!foundDeclaration)
         pm_error("Unable to find a line in the file containing the start "
                  "of C array declaration (\"static char\" or whatever)");
 
@@ -208,7 +208,7 @@ getHexByte(FILE *         const ifP,
 
     assert(c1 >= 0); assert(c1 < 256);
     assert(c2 >= 0); assert(c2 < 256);
-    
+
     value = (hexTable[c1] << 4) + hexTable[c2];
     if (value >= 256)
         pm_error("Invalid XBM input.  What should be a two digit "
@@ -218,7 +218,7 @@ getHexByte(FILE *         const ifP,
 }
 
 
-                     
+
 static void
 readX10Raster(FILE *          const ifP,
               unsigned int    const rasterLength,
@@ -301,7 +301,7 @@ readBitmapFile(FILE *           const ifP,
     mustPad = (width % 16 >= 1 && width % 16 <= 8 && version10);
 
     bytesPerLine = (width + 7) / 8 + (mustPad ? 1 : 0);
-    
+
     rasterLength = bytesPerLine * height;
 
     MALLOCARRAY(data, rasterLength);
@@ -331,7 +331,7 @@ main(int    argc,
     const char * inputFileName;
     unsigned char * p;
         /* Cursor in raster data data[] */
-    
+
     initHexTable();
 
     pbm_init(&argc, argv);
@@ -339,7 +339,7 @@ main(int    argc,
     if (argc-1 > 1)
         pm_error("The only possible argument is the input file name.  "
                  "You specified %u arguments", argc-1);
-    
+
     if (argc-1 > 0)
         inputFileName = argv[1];
     else
@@ -359,7 +359,7 @@ main(int    argc,
     for (row = 0; row < rows; ++row) {
         unsigned int const bytesPerRow = pbm_packed_bytes(cols);
         unsigned int i;
-        
+
         for (i = 0; i < bytesPerRow; ++i)
             bitrow[i] = bitreverse[*p++];
 
