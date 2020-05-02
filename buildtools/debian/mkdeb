@@ -119,11 +119,23 @@ sub control($$) {
 #  file.
 #-----------------------------------------------------------------------------
 
-# The Debian packaging system doesn't provide a way to express Netpbm's actual
-# prerequisites.  For example, Netpbm needs Version 6.2 or better of Libjpeg,
-# but there is no way to state that here.  Instead, we state Libjpeg 6.2
-# exactly.  This makes the Netpbm package less useful.
+    # Because developers of some of the dependent libraries frequently switch
+    # to distributing versions not backward compatible with what they
+    # previously distributed, and Debian always packages the currently
+    # distributed version, it is virtually impossible to produce a Netpbm
+    # package that works in multiple Debian versions.  This program is coded
+    # to create a package that works on the Debian system the Netpbm
+    # maintainer currently uses to build the Debian packages he distributes.
+    # If you are building for any other version of Debian, you'll have to
+    # modify this code.
 
+    # Note that the backward incompatibility is usually only at a binary
+    # level, not source level.  And sometimes the only incompatibility for
+    # Netpbm purposes is that the soname has changed so that Linux will refuse
+    # to run a Netpbm program built for Debian N on Debian N-1.
+
+    # The following is for Debian 9.
+    
     my %control;
 
     my $debianNativeNetpbm = 
@@ -144,7 +156,7 @@ sub control($$) {
     $control{'Depends'} =
         'libc6, ' .
         'libjpeg62, ' .
-        'libpng12-0 | libpng16-16, ' .
+        'libpng16-16, ' .
         'libtiff5, ' .
         'libx11-6, ' .
         'libxml2, ' .
