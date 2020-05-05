@@ -83,7 +83,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "fmt",     OPT_STRING, &fmtOpt, 
+    OPTENT3(0, "fmt",     OPT_STRING, &fmtOpt,
             &fmtSpec, 0);
     OPTENT3(0, "net",     OPT_STRING, &netOpt,
             &netSpec, 0);
@@ -135,7 +135,7 @@ parseCommandLine(int argc, char ** argv,
                  "the 120 characters allowed by the format.",
                  (unsigned)strlen(cmdlineP->txt));
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -180,7 +180,7 @@ convertToHexNol(bit **       const image,
 
     /* header */
     fprintf(ofP, "06050415820000%s00%02X%02X01", networkCode, cols, rows);
-    
+
     /* image */
     for (row = 0; row < rows; ++row) {
         unsigned int col;
@@ -245,7 +245,7 @@ convertToHexNpm(bit **       const image,
                 FILE *       const ofP) {
 
     unsigned int row;
-    
+
     /* header */
     fprintf(ofP, "060504158A0000");
 
@@ -293,7 +293,7 @@ convertToNol(bit **       const image,
     unsigned int row;
     char header[32];
     unsigned int it;
-    
+
     /* header - this is a hack */
 
     header[ 0] = 'N';
@@ -318,7 +318,7 @@ convertToNol(bit **       const image,
     header[19] = 0;
 
     fwrite(header, 20, 1, ofP);
-    
+
     /* image */
     for (row = 0; row < rows; ++row) {
         unsigned int col;
@@ -368,7 +368,7 @@ convertToNgg(bit **       const image,
     header[15] = 0;
 
     fwrite(header, 16, 1, ofP);
-    
+
     /* image */
 
     for (row = 0; row < rows; ++row) {
@@ -399,7 +399,7 @@ convertToNpm(bit **       const image,
     char header[132];
     size_t len;
 
-    if (text) 
+    if (text)
         len = strlen(text);
     else
         len = 0;
@@ -422,7 +422,7 @@ convertToNpm(bit **       const image,
     assert(10 + len < sizeof(header));
 
     fwrite(header, 11 + len, 1, ofP);
-    
+
     /* image: stream of bits, each row padded to a byte boundary
        inspired by gnokii/common/gsm-filesystems.c
      */
@@ -452,7 +452,7 @@ convertToNpm(bit **       const image,
 
 
 
-int 
+int
 main(int    argc,
      char * argv[]) {
 
@@ -520,6 +520,6 @@ Testing:
   The data was send with EMI/UCP protocol over TCP/IP.
 
   - 7.6.2001: tested with Nokia 3210: 72x14 Operator Logo
-  - 7.6.2001: tested with Nokia 6210: 72x14 Operator Logo and 
+  - 7.6.2001: tested with Nokia 6210: 72x14 Operator Logo and
               72x14 Group Graphic
 */
