@@ -395,33 +395,42 @@ convertToNpm(bit **       const image,
              const char * const text,
              FILE *       const ofP) {
 
+    size_t const textLen = text ? strlen(text) : 0;
+
     unsigned int row;
     char header[132];
-    size_t len;
-
-    if (text)
-        len = strlen(text);
-    else
-        len = 0;
 
     /* header and optional text */
 
-    header[       0] = 'N';
-    header[       1] = 'P';
-    header[       2] = 'M';
-    header[       3] = 0;
-    header[       4] = len;
-    header[       5] = 0;
-    memcpy(&header[5], text, len);
-    header[ 6 + len] = cols;
-    header[ 7 + len] = rows;
-    header[ 8 + len] = 1;
-    header[ 9 + len] = 1;
-    header[10 + len] = 0; /* unknown */
+    /* Our entry condition is that 'text' be a legal text field, which means
+       no more than 120 characters:
+    */
+    assert(textLen <= 120);
 
-    assert(10 + len < sizeof(header));
+    /* We don't have any specification of this format, but in May 2020, we
+       found what looks like a bug: the memcpy of the text field started at
+       &header[5] (overwriting the previous setting of header[5] and leaving
+       header[6+len-1] not set to anything).  Nobody ever complained about
+       this, so maybe somehow it worked better than the sensible code we have
+       now, where the text field starts in the 7th byte.
+    */
 
-    fwrite(header, 11 + len, 1, ofP);
+    header[           0] = 'N';
+    header[           1] = 'P';
+    header[           2] = 'M';
+    header[           3] = 0;
+    header[           4] = textLen;
+    header[           5] = 0;
+    memcpy(&header[6], text, textLen);
+    header[ 6 + textLen] = cols;
+    header[ 7 + textLen] = rows;
+    header[ 8 + textLen] = 1;
+    header[ 9 + textLen] = 1;
+    header[10 + textLen] = 0; /* unknown */
+
+    assert(10 + textLen < sizeof(header));
+
+    fwrite(header, 11 + textLen, 1, ofP);
 
     /* image: stream of bits, each row padded to a byte boundary
        inspired by gnokii/common/gsm-filesystems.c

@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.91.00
 
+              pbmtonokia: Fix incorrect output with -txt option.
+
               pnmtorle: Fix incorrect command and filename in header.
               Broken in Netpbm 10.88 (September 2019).
 
