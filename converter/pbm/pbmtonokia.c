@@ -412,7 +412,8 @@ convertToNpm(bit **       const image,
     header[       3] = 0;
     header[       4] = len;
     header[       5] = 0;
-    memcpy(&header[5], text, len);
+    if (text)
+        memcpy(&header[6], text, len);
     header[ 6 + len] = cols;
     header[ 7 + len] = rows;
     header[ 8 + len] = 1;

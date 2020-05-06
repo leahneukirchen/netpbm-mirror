@@ -3,6 +3,13 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
+
+20.05.06 BJH  Release 10.90.02
+
+              pbmtonokia: Fix incorrect output with -txt option.
+
+              pbmtonokia: Fix incorrect output with newer compiler.
+
 20.04.20 BJH  Release 10.90.01
 
               pnmtorle: Fix incorrect command and filename in header.
