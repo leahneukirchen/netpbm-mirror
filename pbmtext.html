@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtext</H1>
-Updated: 01 December 2018
+Updated: 06 May 2020
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -41,10 +41,19 @@ into a PBM graphical image.
 by spaces, except that if there are no non-option command line arguments, it
 is Standard Input.
   
-<P>In the image, each line of input is a line of output.  Formatting
-characters such as newline have no effect on the formatting; like any
-unprintable character, they turn into spaces.
+<P>In the image, each line of input is a line of output.  Lines are
+  delimited by newline characters.
 
+<p>The program renders any character in an input line that is not in the font
+  as a space.  Note that control characters usually aren't in the font, but
+  some fonts have glyphs for them.  The newline characters that delimit lines
+  in of Standard Input are not in any line.
+
+<p>Tab characters are rendered as a number of spaces; any entry in the font
+  for the tab code point is irrelevant.  The number of spaces is such as to
+  create tab stops every 8 characters.  Note that this is not useful if the
+  font is proportional.
+  
 <P>The image is just wide enough for the longest line of text, plus
 margins, and just high enough to contain the lines of text, plus
 margins.
