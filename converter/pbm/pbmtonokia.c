@@ -415,13 +415,26 @@ convertToNpm(bit **       const image,
        now, where the text field starts in the 7th byte.
     */
 
+    /* The code below that deliberately avoids using 'text' as an argument to
+       memcpy when 'text' is null looks like it should have no practical
+       effect, because with a zero length memcpy, it shouldn't matter what the
+       from and to arguments are.  But it's logically correct - a null pointer
+       just doesn't point anywhere.  And believe it or not, it has a practical
+       effect - a truly bizarre one.  This code used to be simpler and just
+       pass that null pointer to memcpy, with length 0, and as reported in May
+       2020, a new optimizing compiler caused header[3] to contain random
+       values.  That's right: 3.  Skipping that presumed no-op memcpy stopped
+       the behavior.
+    */
+
     header[           0] = 'N';
     header[           1] = 'P';
     header[           2] = 'M';
     header[           3] = 0;
     header[           4] = textLen;
     header[           5] = 0;
-    memcpy(&header[6], text, textLen);
+    if (text)  /* see above */
+        memcpy(&header[6], text, textLen);
     header[ 6 + textLen] = cols;
     header[ 7 + textLen] = rows;
     header[ 8 + textLen] = 1;
