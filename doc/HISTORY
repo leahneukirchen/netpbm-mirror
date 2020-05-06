@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.05.06 BJH  Release 10.86.13
+
+              pbmtonokia: Fix incorrect output with -txt option.
+
+              pbmtonokia: Fix incorrect output with newer compiler.
+
 20.03.26 BJH  Release 10.86.12
 
               Build: make deb: don't include empty Recommends; newer dpkg-deb
