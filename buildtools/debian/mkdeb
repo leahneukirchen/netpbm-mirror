@@ -166,6 +166,8 @@ sub control($$) {
         'perl-base, ' .
         'bash'
         ;
+    # Note: Instead of libjpeg62, Debian 10 has libjpeg62-turbo and Ubuntu 18
+    # has libjpeg-turbo8.
     $control{'Conflicts'} = $debianNativeNetpbm;
     $control{'Replaces'} = $debianNativeNetpbm;
     $control{'Provides'} = 
