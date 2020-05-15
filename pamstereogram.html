@@ -8,7 +8,7 @@
 
 <h1>pamstereogram</h1>
 
-<p>Updated: 19 June 2015</p>
+<p>Updated: 10 May 2020</p>
 
 <p><a href="#contents">Table Of Contents</a></p>
 
@@ -44,6 +44,7 @@ depth map</p>
 [<b>-depth=</b><i>fraction</i>]
 [<b>-planes=</b><i>near_pixels</i>,<i>far_pixels</i>]
 [<b>-randomseed=</b><i>integer</i>]
+[<b>-tileable</b>]
 [<i>infile</i>]
 </p>
 
@@ -309,13 +310,23 @@ granularity.
 
 <p>It is useful to specify the seed if you want to create reproducible
 results.  With the same random seed, you should get identical results
-every time you run <b>pamstereogram</b>.
+every time you run <b>pamstereogram</b>.</p>
 
 <p>This is irrelevant if you use a pattern file (<b>-patfile</b>
 option), because there is no random element to <b>pamstereogram</b>'s
 behavior.</p>
 
 <p>This option was new in Netpbm 10.32 (February 2006).</p>
+</dd>
+
+<dt><b>-tileable</b></dt>
+
+<dd>Make the generated image horizontally tileable.  This works by
+blending a left-to-right rendering (the equivalent
+of <b>-xbegin</b>=0) with a right-to-left rendering (the equivalent
+of <b>-xbegin</b>=<i>width&minus;1</i>).
+
+<p>This option was new in Netpbm 10.91 (June 2020).
 </dd>
 
 </dl>
@@ -449,7 +460,7 @@ Netpbm 10.61 (December 2012).
 
 
 <h2><a id="author">AUTHOR</a></h2>
-<p>Copyright &copy; 2006-2015 Scott Pakin, <a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a>.</p>
+<p>Copyright &copy; 2006-2020 Scott Pakin, <a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a>.</p>
 
 <h2><a id="contents">Table Of Contents</a></h2>
 <ul>
