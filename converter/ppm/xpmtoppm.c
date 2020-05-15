@@ -606,7 +606,7 @@ readXpm3Header(FILE *             const ifP,
                ColorNameHash **   const colorNameHashPP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream *ifP.  Assume the
-  getLine() stream is presently positioned to the beginning of the
+  getLine() stream is currently positioned to the beginning of the
   file and it is a Version 3 XPM file.  Leave the stream positioned
   after the header.
 
@@ -721,7 +721,7 @@ readXpm1Header(FILE *           const ifP,
                ColorNameHash ** const colorNameHashPP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream *ifP.  Assume the
-  getLine() stream is presently positioned to the beginning of the
+  getLine() stream is currently positioned to the beginning of the
   file and it is a Version 1 XPM file.  Leave the stream positioned
   after the header.
 

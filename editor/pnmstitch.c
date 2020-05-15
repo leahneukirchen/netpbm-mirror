@@ -1322,10 +1322,10 @@ Output OutputMethods[] = {
 /* Stitcher Methods */
 
 /* These names are for the 8 parameters of a stitch, in any of the 3
-   methods this program presently implements.  Each is a subscript in
+   methods this program currently implements.  Each is a subscript in
    the parms[] array for the Stitcher object that represents a linear
-   stitching method.  
-   
+   stitching method.
+
    There are also other sets of names for the 8 parameters, such as
    Rotate_a.  I don't know why.  Maybe historical.
 */

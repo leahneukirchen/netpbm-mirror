@@ -355,7 +355,7 @@ static void
 skipCharacter(Readline * const readlineP) {
 /*----------------------------------------------------------------------------
   In the BDF font file being read by readline object *readlineP, skip through
-  the end of the character we are presently in.
+  the end of the character we are currently in.
 -----------------------------------------------------------------------------*/
     bool endChar;
 

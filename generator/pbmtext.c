@@ -978,7 +978,7 @@ getText(PM_WCHAR       const cmdlineText[],
         unsigned int const lineBufTerm = LINEBUFSIZE - 1;
 
         unsigned int maxlines;
-            /* Maximum number of lines for which we presently have space in
+            /* Maximum number of lines for which we currently have space in
                the text array
             */
         PM_WCHAR *   buf;
