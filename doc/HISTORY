@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.91.00
 
+              pamstereogram: Add -tileable.  Thanks Scott Pakin.
+
               pbmtonokia: Fix incorrect output with -txt option.
 
               pbmtonokia: Fix incorrect output with newer compiler.
