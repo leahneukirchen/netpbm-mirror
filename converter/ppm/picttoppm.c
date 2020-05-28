@@ -1297,8 +1297,7 @@ doDiffSize(struct Rect       const srcRect,
            struct RGBColor * const color_map,
            unsigned char *   const src,
            unsigned int      const srcwid,
-           struct RgbPlanes  const dst,
-           unsigned int      const dstwid) {
+           struct RgbPlanes  const dst) {
 /*----------------------------------------------------------------------------
    Generate the raster in the plane buffers indicated by 'dst'.
 
@@ -1379,7 +1378,7 @@ doDiffSize(struct Rect       const srcRect,
 
     closeValidatePamscalePipe(pamscalePipeP);
 
-    convertScaledPpm(tempFilename, trf, dst, dstwid-rectwidth(&srcRect));
+    convertScaledPpm(tempFilename, trf, dst, dst.width-rectwidth(&dstRect));
 
     pm_strfree(tempFilename);
     unlink(tempFilename);
@@ -1645,8 +1644,15 @@ doBlit(struct Rect       const srcRect,
         src = srcplane.bytes + srcRowNumber * srcplane.rowSize + srcRowOffset;
     }
 
+    /* This 'dstoff'/'dstadd' abomination has to be fixed.  We need to pass to
+       'doDiffSize' the whole actual canvas, 'canvasPlanes', and tell it to
+       what part of the canvas to write.  It can compute the location of each
+       destination row as it comes to it.
+     */
     dstoff = (dstRect.top - dstBounds.top) * dstwid +
         (dstRect.left - dstBounds.left);
+    dst.height = canvasPlanes.height - (dstRect.top - dstBounds.top);
+    dst.width  = canvasPlanes.width;
     dst.red = canvasPlanes.red + dstoff;
     dst.grn = canvasPlanes.grn + dstoff;
     dst.blu = canvasPlanes.blu + dstoff;
@@ -1659,7 +1665,7 @@ doBlit(struct Rect       const srcRect,
 
     if (!rectsamesize(srcRect, dstRect))
         doDiffSize(srcRect, dstRect, pixSize,
-                   trf, color_map, src, srcplane.rowSize, dst, dstwid);
+                   trf, color_map, src, srcplane.rowSize, dst);
     else {
         if (trf == NULL)
             blitIdempotent(pixSize, srcRect, src, srcplane.rowSize,
