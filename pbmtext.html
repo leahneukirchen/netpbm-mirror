@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtext</H1>
-Updated: 06 May 2020
+Updated: 28 May 2020
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -20,6 +20,7 @@ pbmtext - render text into a PBM image
 [<B>-lspace</B> <I>pixels</I>]
 [<B>-nomargins</B>]
 [<B>-width</B> <i>pixels</i>]
+[<b>-load-entire-font</b>]
 [<b>-dry-run</b>]
 [<b>-text-dump</b>]
 [<I>text</I>]
@@ -171,6 +172,16 @@ the middle of a word and a line may begin or end with white space.
 <p>If the input is multiple lines, <b>pbmtext</b> assumes you already
 have line breaks where they make sense, and <b>pbmtext</b> simply
 truncates each line as needed to fit the specified width.
+
+<dt><b>-load-entire-font</b>
+  <dd>When you use a BDF font, <b>pbmtext</b> will normally load from the font
+    only the characters needed for your text, not wasting time loading other
+    characters.  With this option, <b>pbmtext</b> will instead read the entire
+    font.  It won't make any difference in the rendered output, but it lets
+    you check the integrity of the font file.
+
+<p>This option was new in Netpbm 10.91 (June 2020).  Before that,
+<b>pbmtext</b> always reads the entire font.
 
 <dt><b>-dry-run</b>
 <dd>
