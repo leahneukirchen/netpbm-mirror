@@ -2946,8 +2946,8 @@ draw_pixel(struct canvas *   const canvasP,
 
 
 static void
-draw_pen_rect(struct canvas * const canvasP,
-              struct Rect *   const r) {
+drawPenRect(struct canvas * const canvasP,
+            struct Rect *   const r) {
 
     int const rowadd = rowlen - (r->right - r->left);
 
@@ -2981,9 +2981,9 @@ draw_pen_rect(struct canvas * const canvasP,
 
 
 static void
-draw_pen(struct canvas * const canvasP,
-         int             const x,
-         int             const y) {
+drawPen(struct canvas * const canvasP,
+        int             const x,
+        int             const y) {
 
     struct Rect penrect;
 
@@ -2994,7 +2994,7 @@ draw_pen(struct canvas * const canvasP,
 
     rectinter(penrect, clip_rect, &penrect);
 
-    draw_pen_rect(canvasP, &penrect);
+    drawPenRect(canvasP, &penrect);
 }
 
 /*
@@ -3011,11 +3011,11 @@ draw_pen(struct canvas * const canvasP,
  * Paul Heckbert    3 Sep 85
  */
 static void
-scan_line(struct canvas * const canvasP,
-          short           const x1,
-          short           const y1,
-          short           const x2,
-          short           const y2) {
+scanLine(struct canvas * const canvasP,
+         short           const x1,
+         short           const y1,
+         short           const x2,
+         short           const y2) {
 
     int d, x, y, ax, ay, sx, sy, dx, dy;
 
@@ -3029,7 +3029,7 @@ scan_line(struct canvas * const canvasP,
         if (ax>ay) {        /* x dominant */
             d = ay-(ax>>1);
             for (;;) {
-                draw_pen(canvasP, x, y);
+                drawPen(canvasP, x, y);
                 if (x==x2) return;
                 if ((x > rowlen) && (sx > 0)) return;
                 if (d>=0) {
@@ -3043,7 +3043,7 @@ scan_line(struct canvas * const canvasP,
         else {          /* y dominant */
             d = ax-(ay>>1);
             for (;;) {
-                draw_pen(canvasP, x, y);
+                drawPen(canvasP, x, y);
                 if (y==y2) return;
                 if ((y > collen) && (sy > 0)) return;
                 if (d>=0) {
@@ -3072,7 +3072,7 @@ Line(struct canvas * const canvasP,
   if (verbose)
     pm_message("(%d,%d) to (%d, %d)",
            p1.x,p1.y,current.x,current.y);
-  scan_line(canvasP, p1.x,p1.y,current.x,current.y);
+  scanLine(canvasP, p1.x,p1.y,current.x,current.y);
 }
 
 
@@ -3090,7 +3090,7 @@ LineFrom(struct canvas * const canvasP,
         pm_message("(%d,%d) to (%d, %d)", current.x, current.y, p1.x, p1.y);
 
     if (!blitListP)
-        scan_line(canvasP, current.x, current.y, p1.x, p1.y);
+        scanLine(canvasP, current.x, current.y, p1.x, p1.y);
 
     current.x = p1.x;
     current.y = p1.y;
@@ -3114,7 +3114,7 @@ ShortLine(struct canvas * const canvasP,
     current.y += p1.y;
 
     if (!blitListP)
-        scan_line(canvasP, p1.x, p1.y, current.x, current.y);
+        scanLine(canvasP, p1.x, p1.y, current.x, current.y);
 }
 
 
@@ -3134,7 +3134,7 @@ ShortLineFrom(struct canvas * const canvasP,
     p1.x += current.x;
     p1.y += current.y;
     if (!blitListP)
-        scan_line(canvasP, current.x, current.y, p1.x, p1.y);
+        scanLine(canvasP, current.x, current.y, p1.x, p1.y);
     current.x = p1.x;
     current.y = p1.y;
 }
@@ -3142,8 +3142,8 @@ ShortLineFrom(struct canvas * const canvasP,
 
 
 static void
-do_paintRect(struct canvas * const canvasP,
-             struct Rect     const prect) {
+doPaintRect(struct canvas * const canvasP,
+            struct Rect     const prect) {
 
     struct Rect rect;
 
@@ -3152,7 +3152,7 @@ do_paintRect(struct canvas * const canvasP,
 
     rectinter(clip_rect, prect, &rect);
 
-    draw_pen_rect(canvasP, &rect);
+    drawPenRect(canvasP, &rect);
 }
 
 
@@ -3166,7 +3166,7 @@ paintRect(struct canvas * const canvasP,
 
     readRect(&cur_rect);
     if (!blitListP)
-        do_paintRect(canvasP, cur_rect);
+        doPaintRect(canvasP, cur_rect);
 }
 
 
@@ -3179,13 +3179,13 @@ paintSameRect(struct canvas * const canvasP,
               int             const version) {
 
     if (!blitListP)
-        do_paintRect(canvasP, cur_rect);
+        doPaintRect(canvasP, cur_rect);
 }
 
 
 
 static void
-do_frameRect(struct canvas * const canvasP,
+doFrameRect(struct canvas * const canvasP,
              struct Rect     const rect) {
 
     if (verbose)
@@ -3195,13 +3195,13 @@ do_frameRect(struct canvas * const canvasP,
         unsigned int x, y;
 
         for (x = rect.left; x <= rect.right - pen_width; x += pen_width) {
-            draw_pen(canvasP, x, rect.top);
-            draw_pen(canvasP, x, rect.bottom - pen_height);
+            drawPen(canvasP, x, rect.top);
+            drawPen(canvasP, x, rect.bottom - pen_height);
         }
 
         for (y = rect.top; y <= rect.bottom - pen_height ; y += pen_height) {
-            draw_pen(canvasP, rect.left, y);
-            draw_pen(canvasP, rect.right - pen_width, y);
+            drawPen(canvasP, rect.left, y);
+            drawPen(canvasP, rect.right - pen_width, y);
         }
     }
 }
@@ -3217,7 +3217,7 @@ frameRect(struct canvas * const canvasP,
 
     readRect(&cur_rect);
     if (!blitListP)
-        do_frameRect(canvasP, cur_rect);
+        doFrameRect(canvasP, cur_rect);
 }
 
 
@@ -3230,7 +3230,7 @@ frameSameRect(struct canvas * const canvasP,
               int             const version) {
 
     if (!blitListP)
-        do_frameRect(canvasP, cur_rect);
+        doFrameRect(canvasP, cur_rect);
 }
 
 
@@ -3238,7 +3238,7 @@ frameSameRect(struct canvas * const canvasP,
 /* a stupid shell sort - I'm so embarrassed  */
 
 static void
-poly_sort(int const sort_index, struct Point points[]) {
+polySort(int const sort_index, struct Point points[]) {
   int d, i, j, temp;
 
   /* initialize and set up sort interval */
@@ -3271,9 +3271,9 @@ poly_sort(int const sort_index, struct Point points[]) {
 /* Watch out for the lack of error checking in the next two functions ... */
 
 static void
-scan_poly(struct canvas * const canvasP,
-          int             const np,
-          struct Point          pts[]) {
+scanPoly(struct canvas * const canvasP,
+         int             const np,
+         struct Point          pts[]) {
 
   int dx,dy,dxabs,dyabs,i,scan_index,j,k,px,py;
   int sdx,sdy,x,y,toggle,old_sdy,sy0;
@@ -3327,7 +3327,7 @@ scan_poly(struct canvas * const canvasP,
         scan_index++;
       }
       px += sdx;
-      draw_pen(canvasP, px, py);
+      drawPen(canvasP, px, py);
     }
       }
     else
@@ -3343,7 +3343,7 @@ scan_poly(struct canvas * const canvasP,
         old_sdy = sdy;
         if (sdy != 0) scan_index--;
       }
-      draw_pen(canvasP, px,py);
+      drawPen(canvasP, px,py);
       coord[scan_index].x = px;
       coord[scan_index].y = py;
       scan_index++;
@@ -3356,14 +3356,14 @@ scan_poly(struct canvas * const canvasP,
   scan_index--;
   if (sy0 + sdy == 0) scan_index--;
 
-  poly_sort(scan_index, coord);
+  polySort(scan_index, coord);
 
   toggle = 0;
   for (i = 0; i < scan_index; i++) {
     if ((coord[i].y == coord[i+1].y) && (toggle == 0))
       {
     for (j = coord[i].x; j <= coord[i+1].x; j++)
-      draw_pen(canvasP, j, coord[i].y);
+      drawPen(canvasP, j, coord[i].y);
     toggle = 1;
       }
     else
@@ -3390,7 +3390,7 @@ paintPoly(struct canvas * const canvasP,
 
   /* scan convert poly ... */
   if (!blitListP)
-      scan_poly(canvasP, np, pts);
+      scanPoly(canvasP, np, pts);
 }
 
 
@@ -3474,7 +3474,7 @@ TxSize(struct canvas * const canvasP,
 
 
 static void
-skip_text(blitList * const blitListP) {
+skipText(blitList * const blitListP) {
 
     skip(readByte());
 
@@ -3484,7 +3484,7 @@ skip_text(blitList * const blitListP) {
 
 
 static int
-abs_value(int const x) {
+absValue(int const x) {
     if (x < 0)
         return -x;
     else
@@ -3494,18 +3494,18 @@ abs_value(int const x) {
 
 
 static struct font*
-get_font(int const font,
-         int const size,
-         int const style) {
+getFont(int const font,
+        int const size,
+        int const style) {
 
     int closeness, bestcloseness;
     struct fontinfo* fi, *best;
 
     best = 0;
     for (fi = fontlist; fi; fi = fi->next) {
-        closeness = abs_value(fi->font - font) * 10000 +
-            abs_value(fi->size - size) * 100 +
-            abs_value(fi->style - style);
+        closeness = absValue(fi->font - font) * 10000 +
+            absValue(fi->size - size) * 100 +
+            absValue(fi->style - style);
         if (!best || closeness < bestcloseness) {
             best = fi;
             bestcloseness = closeness;
@@ -3559,9 +3559,9 @@ rotate(int * const x,
 
 
 static void
-do_ps_text(struct canvas * const canvasP,
-           Word            const tx,
-           Word            const ty) {
+doPsText(struct canvas * const canvasP,
+         Word            const tx,
+         Word            const ty) {
 
     int len, width, i, w, h, x, y, rx, ry, o;
     Byte str[256], ch;
@@ -3628,19 +3628,19 @@ do_ps_text(struct canvas * const canvasP,
 
 
 static void
-do_text(struct canvas *  const canvasP,
-        blitList *       const blitListP,
-        Word             const startx,
-        Word             const starty) {
+doText(struct canvas *  const canvasP,
+       blitList *       const blitListP,
+       Word             const startx,
+       Word             const starty) {
 
     if (blitListP)
-        skip_text(blitListP);
+        skipText(blitListP);
     else {
-        if (!(tfont = get_font(text_font, text_size, text_face)))
+        if (!(tfont = getFont(text_font, text_size, text_face)))
             tfont = pbm_defaultfont("bdf");
 
         if (ps_text)
-            do_ps_text(canvasP, startx, starty);
+            doPsText(canvasP, startx, starty);
         else {
             int len;
             Word x, y;
@@ -3686,7 +3686,7 @@ LongText(struct canvas * const canvasP,
 
     readPoint(&p);
 
-    do_text(canvasP, blitListP, p.x, p.y);
+    doText(canvasP, blitListP, p.x, p.y);
 }
 
 
@@ -3700,7 +3700,7 @@ DHText(struct canvas * const canvasP,
 
     current.x += readByte();
 
-    do_text(canvasP, blitListP, current.x, current.y);
+    doText(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3714,7 +3714,7 @@ DVText(struct canvas * const canvasP,
 
     current.y += readByte();
 
-    do_text(canvasP, blitListP, current.x, current.y);
+    doText(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3736,7 +3736,7 @@ DHDVText(struct canvas * const canvasP,
     current.x += dh;
     current.y += dv;
 
-    do_text(canvasP, blitListP, current.x, current.y);
+    doText(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3827,11 +3827,11 @@ DirectBitsRgn(struct canvas * const canvasP,
 
 
 static void
-do_pixmap(struct canvas * const canvasP,
-          blitList *      const blitListP,
-          int             const version,
-          Word            const rowBytes,
-          int             const is_region) {
+doPixmap(struct canvas * const canvasP,
+         blitList *      const blitListP,
+         int             const version,
+         Word            const rowBytes,
+         int             const is_region) {
 /*----------------------------------------------------------------------------
    Do a paletted image.
 -----------------------------------------------------------------------------*/
@@ -3883,12 +3883,12 @@ do_pixmap(struct canvas * const canvasP,
 
 
 static void
-do_bitmap(FILE *          const ifP,
-          struct canvas * const canvasP,
-          blitList *      const blitListP,
-          int             const version,
-          int             const rowBytes,
-          int             const is_region) {
+doBitmap(FILE *          const ifP,
+         struct canvas * const canvasP,
+         blitList *      const blitListP,
+         int             const version,
+         int             const rowBytes,
+         int             const is_region) {
 /*----------------------------------------------------------------------------
    Do a bitmap.  That's one bit per pixel, 0 is white, 1 is black.
 
@@ -3944,9 +3944,9 @@ BitsRect(struct canvas * const canvasP,
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
     if (pixMap)
-        do_pixmap(canvasP, blitListP, version, rowBytes, 0);
+        doPixmap(canvasP, blitListP, version, rowBytes, 0);
     else
-        do_bitmap(ifp, canvasP, blitListP, version, rowBytes, 0);
+        doBitmap(ifp, canvasP, blitListP, version, rowBytes, 0);
 }
 
 
@@ -3968,9 +3968,9 @@ BitsRegion(struct canvas * const canvasP,
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
     if (pixMap)
-        do_pixmap(canvasP, blitListP, version, rowBytes, 1);
+        doPixmap(canvasP, blitListP, version, rowBytes, 1);
     else
-        do_bitmap(ifp, canvasP, blitListP, version, rowBytes, 1);
+        doBitmap(ifp, canvasP, blitListP, version, rowBytes, 1);
 }
 
 
