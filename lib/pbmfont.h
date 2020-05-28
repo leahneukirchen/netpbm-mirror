@@ -115,12 +115,12 @@ struct glyph {
 
 struct font {
     /* This describes a combination of font and character set.  Given
-       an code point in the range 0..255, this structure describes the
+       a code point in the range 0..255, this structure describes the
        glyph for that character.
     */
     unsigned int maxwidth, maxheight;
     int x;
-        /* The minimum value of glyph.font.  The left edge of the glyph
+        /* The minimum value of glyph.x .  The left edge of the glyph
            in the glyph set which advances furthest to the left. */
     int y;
         /* Amount of white space that should be added between lines of
@@ -137,10 +137,29 @@ struct font {
 };
 
 
+
+struct pm_selector {
+    unsigned int min;     /* smallest index requested */
+    unsigned int max;     /* largest index requested  */
+    unsigned int maxmax;  /* largest index possible  */
+    unsigned int count;   /* number bits set to 1 in 'record' */
+    const unsigned char * record;
+        /* Bit array 0: absent 1: existent size calculated from maxmax
+           This is for reading only; not updating.
+           Might be 'localRecord'; might be fixed object elsewhere.
+        */
+    unsigned char * localRecord;
+        /* Updateable record optionally pointed to by 'record'.
+           Null if none.  Malloc'ed storage we own otherwise.
+        */
+};
+
+
+
 struct font2 {
     /* Font structure for expanded character set.
-       Code points in the range 0...maxmaxglyph are loaded.
-       Loaded code point is in the range 0..maxglyph .
+       Code points in the range 0...maxmaxglyph may be loaded.
+       Actually loaded code point is in the range 0..maxglyph .
      */
 
     /* 'size' and 'len' are necessary in order to provide forward and
@@ -159,7 +178,7 @@ struct font2 {
     int maxwidth, maxheight;
 
     int x;
-         /* The minimum value of glyph.font.  The left edge of the glyph in
+         /* The minimum value of glyph.x .  The left edge of the glyph in
             the glyph set which advances furthest to the left.
          */
     int y;
@@ -177,14 +196,12 @@ struct font2 {
          */
 
     PM_WCHAR maxglyph;
-        /* max code point for glyphs, including vacant slots max value of
-           above i
+        /* max code point for glyphs, including vacant slots
+           max value of above i
         */
 
-    void * selector;
-        /* Reserved
-
-           Bit array or structure indicating which code points to load.
+    struct pm_selector * selectorP;
+        /* Structure with bit array indicating which code points to load.
 
            When NULL, all available code points up to maxmaxglyph, inclusive
            are loaded.
@@ -206,14 +223,15 @@ struct font2 {
         */
 
     unsigned int bit_format;
-        /* PBM_FORMAT:   glyph data: 1 byte per pixel (like P1, but not ASCII)
-           RPBM_FORMAT:  glyph data: 1 bit per pixel
+        /* PBM_FORMAT:  glyph data: 1 byte per pixel (like P1, but not ASCII)
+           RPBM_FORMAT: glyph data: 1 bit per pixel
            Currently only PBM_FORMAT is possible
         */
 
     unsigned int total_chars;
-        /* Number of glyphs defined in font file, as stated in the CHARS line
-           of the BDF file PBM sheet font.  Always 96
+        /* Number of glyphs defined in font file.
+           BDF file: as stated in the CHARS line.
+           PBM sheet font: always 96.
         */
 
     unsigned int chars;
@@ -237,7 +255,7 @@ struct font2 {
 
     PM_WCHAR default_char;
         /* Code index of what to show when there is no glyph for a requested
-           code Available in many BDF fonts between STARPROPERTIES -
+           code.  Available in many BDF fonts between STARPROPERTIES -
            ENDPROPERTIES.
 
            Set to value read from BDF font file.
@@ -306,6 +324,11 @@ struct font2 *
 pbm_loadfont2(const    char * const filename,
               PM_WCHAR        const maxmaxglyph);
 
+struct font2 *
+pbm_loadfont2select(const    char *            const filename,
+                    PM_WCHAR                   const maxmaxglyph,
+                    const struct pm_selector * const selectorP);
+
 struct font *
 pbm_loadpbmfont(const char * const filename);
 
@@ -320,9 +343,9 @@ pbm_loadbdffont2(const char * const filename,
                  PM_WCHAR     const maxmaxglyph);
 
 struct font2 *
-pbm_loadbdffont2_select(const char * const filename,
-                        PM_WCHAR     const maxmaxglyph,
-                        const void * const selector);
+pbm_loadbdffont2select(const char *               const filename,
+                       PM_WCHAR                   const maxmaxglyph,
+                       const struct pm_selector * const selectorP);
 
 void
 pbm_createbdffont2_base(struct font2 ** const font2P,
@@ -343,6 +366,38 @@ pbm_expandbdffont(const struct font * const font);
 void
 pbm_dumpfont(struct font * const fontP,
              FILE *        const ofP);
+
+/* selector functions */
+
+void
+pm_selector_create(unsigned int          const max,
+                   struct pm_selector ** const selectorPP);
+
+void
+pm_selector_create_fixed(const unsigned char * const record,
+                         unsigned int          const min,
+                         unsigned int          const max,
+                         unsigned int          const count,
+                         struct pm_selector ** const selectorPP);
+
+void
+pm_selector_destroy(struct pm_selector * const selectorP);
+
+void
+pm_selector_copy(unsigned int               const max,
+                 const struct pm_selector * const srcSelectorP,
+                 struct pm_selector **      const destSelectorPP);
+
+void
+pm_selector_mark(struct pm_selector * const selectorP,
+                 unsigned int         const index);
+
+int  /* boolean */
+pm_selector_is_marked(const struct pm_selector * const selectorP,
+                      unsigned int               const index);
+
+unsigned int
+pm_selector_marked_ct(const struct pm_selector * const selectorP);
 
 #ifdef __cplusplus
 }
