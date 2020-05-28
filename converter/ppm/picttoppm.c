@@ -1971,8 +1971,9 @@ outputPpm(FILE *           const ofP,
  * is padded with a null.
  */
 static Word
-get_op(int const version) {
-    if ((align & 1) && version == 2) {
+nextOp(int const version) {
+
+    if ((align & 0x1) && version == 2) {
         stage = "aligning for opcode";
         readByte();
     }
@@ -2915,19 +2916,32 @@ RGBBkCol(struct canvas * const canvasP,
 
 
 
-#define PIXEL_INDEX(x,y) ((y) - picFrame.top) * rowlen + (x) - picFrame.left
+static unsigned int
+pixelIndex(struct Rect  const picFrame,
+           unsigned int const x,
+           unsigned int const y) {
+
+    unsigned int const rowLen = picFrame.right - picFrame.left;
+
+    assert(y >= picFrame.top  && y < picFrame.bottom);
+    assert(x >= picFrame.left && x < picFrame.right);
+
+    return (y - picFrame.top) * rowLen + (x - picFrame.left);
+}
+
+
 
 static void
-draw_pixel(struct canvas *   const canvasP,
-           int               const x,
-           int               const y,
-           struct RGBColor * const clr,
-           transfer_func           trf) {
+drawPixel(struct canvas *   const canvasP,
+          int               const x,
+          int               const y,
+          struct RGBColor * const clr,
+          transfer_func           trf) {
 
     if (x < clip_rect.left || x >= clip_rect.right ||
         y < clip_rect.top  || y >= clip_rect.bottom) {
     } else {
-        unsigned int const i = PIXEL_INDEX(x, y);
+        unsigned int const i = pixelIndex(picFrame, x, y);
 
         struct RGBColor dst;
 
@@ -2949,16 +2963,23 @@ static void
 drawPenRect(struct canvas * const canvasP,
             struct Rect *   const r) {
 
-    int const rowadd = rowlen - (r->right - r->left);
+    unsigned int const rowadd = rowlen - (r->right - r->left);
 
-    int i;
-    int x, y;
-    struct RGBColor dst;
+    unsigned int i;
+    unsigned int y;
 
-    i = PIXEL_INDEX(r->left, r->top);  /* initial value */
+    i = pixelIndex(picFrame, r->left, r->top);  /* initial value */
 
-    for (y = r->top; y < r->bottom; y++) {
-        for (x = r->left; x < r->right; x++) {
+    for (y = r->top; y < r->bottom; ++y) {
+
+        unsigned int x;
+
+        for (x = r->left; x < r->right; ++x) {
+
+            struct RGBColor dst;
+
+            assert(i < canvasP->planes.height * canvasP->planes.width);
+
             dst.red = canvasP->planes.red[i];
             dst.grn = canvasP->planes.grn[i];
             dst.blu = canvasP->planes.blu[i];
@@ -2972,7 +2993,7 @@ drawPenRect(struct canvas * const canvasP,
             canvasP->planes.grn[i] = dst.grn;
             canvasP->planes.blu[i] = dst.blu;
 
-            i++;
+            ++i;
         }
         i += rowadd;
     }
@@ -2985,16 +3006,17 @@ drawPen(struct canvas * const canvasP,
         int             const x,
         int             const y) {
 
-    struct Rect penrect;
+    struct Rect unclippedPenrect;
+    struct Rect clippedPenrect;
 
-    penrect.left = x;
-    penrect.right = x + pen_width;
-    penrect.top = y;
-    penrect.bottom = y + pen_height;
+    unclippedPenrect.left = x;
+    unclippedPenrect.right = x + pen_width;
+    unclippedPenrect.top = y;
+    unclippedPenrect.bottom = y + pen_height;
 
-    rectinter(penrect, clip_rect, &penrect);
+    rectinter(unclippedPenrect, clip_rect, &clippedPenrect);
 
-    drawPenRect(canvasP, &penrect);
+    drawPenRect(canvasP, &clippedPenrect);
 }
 
 /*
@@ -3186,7 +3208,7 @@ paintSameRect(struct canvas * const canvasP,
 
 static void
 doFrameRect(struct canvas * const canvasP,
-             struct Rect     const rect) {
+            struct Rect     const rect) {
 
     if (verbose)
         dumpRect("framing", rect);
@@ -3611,7 +3633,7 @@ doPsText(struct canvas * const canvasP,
                 if ((rx >= picFrame.left) && (rx < picFrame.right) &&
                     (ry >= picFrame.top) && (ry < picFrame.bottom))
                 {
-                    o = PIXEL_INDEX(rx, ry);
+                    o = pixelIndex(picFrame, rx, ry);
                     if (glyph->bmap[h * glyph->width + w]) {
                         canvasP->planes.red[o] = foreground.red;
                         canvasP->planes.grn[o] = foreground.grn;
@@ -3660,8 +3682,8 @@ doText(struct canvas *  const canvasP,
                             struct RGBColor * const colorP =
                                 glyph->bmap[h * glyph->width + w] ?
                                 &black : &white;
-                            draw_pixel(canvasP,
-                                       x + w + glyph->x, dy, colorP, text_trf);
+                            drawPixel(canvasP,
+                                      x + w + glyph->x, dy, colorP, text_trf);
                         }
                     }
                     x += glyph->xadd;
@@ -4291,7 +4313,7 @@ interpretPict(FILE * const ofP) {
     if (verbose)
         pm_message("PICT version %u", version);
 
-    while((opcode = get_op(version)) != 0xff)
+    while((opcode = nextOp(version)) != 0xff)
         processOpcode(opcode, &canvas, fullres ? &blitList : NULL, version);
 
     if (fullres) {
