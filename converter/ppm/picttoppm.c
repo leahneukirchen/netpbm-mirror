@@ -88,14 +88,21 @@ struct Pattern {
     Byte pix[64];
 };
 
-struct rgbPlanes {
+struct RgbPlanes {
+/*----------------------------------------------------------------------------
+   A raster, as three planes: red, green, blue.
+
+   Each plane is an array in row-major order.
+-----------------------------------------------------------------------------*/
+    unsigned int width;
+    unsigned int height;
     Word * red;
     Word * grn;
     Word * blu;
 };
 
 struct canvas {
-    struct rgbPlanes planes;
+    struct RgbPlanes planes;
 };
 
 typedef void (*transfer_func) (struct RGBColor* src, struct RGBColor* dst);
@@ -1192,43 +1199,123 @@ decode16(unsigned char * const sixteen) {
 
 
 static void
-doDiffSize(struct Rect       const clipsrc,
-           struct Rect       const clipdst,
-           int               const pixSize,
-           int               const xsize,
-           int               const ysize,
-           transfer_func     const trf,
-           struct RGBColor * const color_map,
-           unsigned char *   const src,
-           int               const srcwid,
-           struct rgbPlanes  const dst,
-           unsigned int      const dstwid) {
+closeValidatePamscalePipe(FILE * const pipeP) {
 
-    unsigned int const dstadd = dstwid - xsize;
+    int rc;
 
-    FILE * pamscalePipeP;
-    const char * command;
-    FILE * scaled;
-    int cols, rows, format;
-    pixval maxval;
-    pixel * row;
-    pixel * rowp;
-    FILE * tempFileP;
-    const char * tempFilename;
+    rc = pclose(pipeP);
+
+    if (rc != 0)
+        pm_error("pamscale failed.  pclose() returned Errno %s (%d)",
+                 strerror(errno), errno);
+}
+
+
+
+static void
+convertScaledPpm(const char *      const scaledFilename,
+                 transfer_func     const trf,
+                 struct RgbPlanes  const dst,
+                 unsigned int      const dstadd) {
+
     Word * reddst;
     Word * grndst;
     Word * bludst;
+    FILE * scaledP;
+    int cols, rows, format;
+    pixval maxval;
+    pixel * pixrow;
 
-    reddst = dst.red;  /* initial value */
-    grndst = dst.grn;  /* initial value */
-    bludst = dst.blu;  /* initial value */
+    reddst = &dst.red[0];  /* initial value */
+    grndst = &dst.grn[0];  /* initial value */
+    bludst = &dst.blu[0];  /* initial value */
+
+    scaledP = pm_openr(scaledFilename);
+
+    ppm_readppminit(scaledP, &cols, &rows, &maxval, &format);
+
+    pixrow = ppm_allocrow(cols);
+
+    if (trf) {
+        unsigned int row;
+
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+
+            ppm_readppmrow(scaledP, pixrow, cols, maxval, format);
+
+            for (col = 0; col < cols; ++col) {
+                struct RGBColor dst_c, src_c;
+                dst_c.red = *reddst;
+                dst_c.grn = *grndst;
+                dst_c.blu = *bludst;
+                src_c.red = PPM_GETR(pixrow[col]) * 65536L / (maxval + 1);
+                src_c.grn = PPM_GETG(pixrow[col]) * 65536L / (maxval + 1);
+                src_c.blu = PPM_GETB(pixrow[col]) * 65536L / (maxval + 1);
+                (*trf)(&src_c, &dst_c);
+                *reddst++ = dst_c.red;
+                *grndst++ = dst_c.grn;
+                *bludst++ = dst_c.blu;
+            }
+            reddst += dstadd;
+            grndst += dstadd;
+            bludst += dstadd;
+        }
+    } else {
+        unsigned int row;
+
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+
+            ppm_readppmrow(scaledP, pixrow, cols, maxval, format);
+
+            for (col = 0; col < cols; ++col) {
+                *reddst++ = PPM_GETR(pixrow[col]) * 65536L / (maxval + 1);
+                *grndst++ = PPM_GETG(pixrow[col]) * 65536L / (maxval + 1);
+                *bludst++ = PPM_GETB(pixrow[col]) * 65536L / (maxval + 1);
+            }
+            reddst += dstadd;
+            grndst += dstadd;
+            bludst += dstadd;
+        }
+    }
+    assert(reddst == &dst.red[dst.height * dst.width]);
+    assert(grndst == &dst.grn[dst.height * dst.width]);
+    assert(bludst == &dst.blu[dst.height * dst.width]);
+
+    ppm_freerow(pixrow);
+    pm_close(scaledP);
+}
+
+
+
+static void
+doDiffSize(struct Rect       const srcRect,
+           struct Rect       const dstRect,
+           unsigned int      const pixSize,
+           transfer_func     const trf,
+           struct RGBColor * const color_map,
+           unsigned char *   const src,
+           unsigned int      const srcwid,
+           struct RgbPlanes  const dst,
+           unsigned int      const dstwid) {
+/*----------------------------------------------------------------------------
+   Generate the raster in the plane buffers indicated by 'dst'.
+
+   'src' is the source pixels as a row-major array with rows 'srcwid' bytes
+   long.
+-----------------------------------------------------------------------------*/
+    FILE * pamscalePipeP;
+    const char * command;
+    FILE * tempFileP;
+    const char * tempFilename;
 
     pm_make_tmpfile(&tempFileP, &tempFilename);
 
     pm_close(tempFileP);
 
-    pm_asprintf(&command, "pamscale -xsize %d -ysize %d > %s",
-                rectwidth(&clipdst), rectheight(&clipdst), tempFilename);
+    pm_asprintf(&command, "pamscale -xsize %u -ysize %u > %s",
+                rectwidth(&dstRect), rectheight(&dstRect), tempFilename);
 
     pm_message("running command '%s'", command);
 
@@ -1239,108 +1326,61 @@ doDiffSize(struct Rect       const clipsrc,
 
     pm_strfree(command);
 
-    fprintf(pamscalePipeP, "P6\n%d %d\n%d\n",
-            rectwidth(&clipsrc), rectheight(&clipsrc), PPM_MAXMAXVAL);
+    fprintf(pamscalePipeP, "P6\n%u %u\n%u\n",
+            rectwidth(&srcRect), rectheight(&srcRect), PPM_MAXMAXVAL);
 
     switch (pixSize) {
     case 8: {
-        unsigned int rowNumber;
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const colorIndex = row[colNumber];
+        unsigned int row;
+        for (row = 0; row < rectheight(&srcRect); ++row) {
+            unsigned char * const rowBytes = &src[row * srcwid];
+            unsigned int col;
+            for (col = 0; col < rectwidth(&srcRect); ++col) {
+                unsigned int const colorIndex = rowBytes[col];
                 struct RGBColor * const ct = &color_map[colorIndex];
                 fputc(redepth(ct->red, 65535L), pamscalePipeP);
                 fputc(redepth(ct->grn, 65535L), pamscalePipeP);
                 fputc(redepth(ct->blu, 65535L), pamscalePipeP);
             }
         }
-    }
-    break;
+    } break;
     case 16: {
-        unsigned int rowNumber;
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                struct RGBColor const color = decode16(&row[colNumber * 2]);
+        unsigned int row;
+        for (row = 0; row < rectheight(&srcRect); ++row) {
+            unsigned char * const rowBytes = &src[row * srcwid];
+            unsigned int col;
+            for (col = 0; col < rectwidth(&srcRect); ++col) {
+                struct RGBColor const color = decode16(&rowBytes[col * 2]);
                 fputc(redepth(color.red, 32), pamscalePipeP);
                 fputc(redepth(color.grn, 32), pamscalePipeP);
                 fputc(redepth(color.blu, 32), pamscalePipeP);
             }
         }
-    }
-    break;
+    } break;
     case 32: {
         unsigned int const planeSize = srcwid / 4;
-        unsigned int rowNumber;
+        unsigned int row;
 
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned char * const redPlane = &row[planeSize * 0];
-            unsigned char * const grnPlane = &row[planeSize * 1];
-            unsigned char * const bluPlane = &row[planeSize * 2];
+        for (row = 0; row < rectheight(&srcRect); ++row) {
+            unsigned char * const rowBytes = &src[row * srcwid];
+            unsigned char * const redPlane = &rowBytes[planeSize * 0];
+            unsigned char * const grnPlane = &rowBytes[planeSize * 1];
+            unsigned char * const bluPlane = &rowBytes[planeSize * 2];
 
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                fputc(redepth(redPlane[colNumber], 256), pamscalePipeP);
-                fputc(redepth(grnPlane[colNumber], 256), pamscalePipeP);
-                fputc(redepth(bluPlane[colNumber], 256), pamscalePipeP);
+            unsigned int col;
+            for (col = 0; col < rectwidth(&srcRect); ++col) {
+                fputc(redepth(redPlane[col], 256), pamscalePipeP);
+                fputc(redepth(grnPlane[col], 256), pamscalePipeP);
+                fputc(redepth(bluPlane[col], 256), pamscalePipeP);
             }
         }
-    }
-    break;
-    }
+    } break;
+    } /* switch */
 
-    if (pclose(pamscalePipeP))
-        pm_error("pamscale failed.  pclose() returned Errno %s (%d)",
-                 strerror(errno), errno);
+    closeValidatePamscalePipe(pamscalePipeP);
 
-    ppm_readppminit(scaled = pm_openr(tempFilename), &cols, &rows,
-                    &maxval, &format);
-    row = ppm_allocrow(cols);
-    /* couldn't hurt to assert cols, rows and maxval... */
+    convertScaledPpm(tempFilename, trf, dst, dstwid-rectwidth(&srcRect));
 
-    if (trf == NULL) {
-        while (rows-- > 0) {
-            unsigned int i;
-            ppm_readppmrow(scaled, row, cols, maxval, format);
-            for (i = 0, rowp = row; i < cols; ++i, ++rowp) {
-                *reddst++ = PPM_GETR(*rowp) * 65536L / (maxval + 1);
-                *grndst++ = PPM_GETG(*rowp) * 65536L / (maxval + 1);
-                *bludst++ = PPM_GETB(*rowp) * 65536L / (maxval + 1);
-            }
-            reddst += dstadd;
-            grndst += dstadd;
-            bludst += dstadd;
-        }
-    }
-    else {
-        while (rows-- > 0) {
-            unsigned int i;
-            ppm_readppmrow(scaled, row, cols, maxval, format);
-            for (i = 0, rowp = row; i < cols; i++, rowp++) {
-                struct RGBColor dst_c, src_c;
-                dst_c.red = *reddst;
-                dst_c.grn = *grndst;
-                dst_c.blu = *bludst;
-                src_c.red = PPM_GETR(*rowp) * 65536L / (maxval + 1);
-                src_c.grn = PPM_GETG(*rowp) * 65536L / (maxval + 1);
-                src_c.blu = PPM_GETB(*rowp) * 65536L / (maxval + 1);
-                (*trf)(&src_c, &dst_c);
-                *reddst++ = dst_c.red;
-                *grndst++ = dst_c.grn;
-                *bludst++ = dst_c.blu;
-            }
-            reddst += dstadd;
-            grndst += dstadd;
-            bludst += dstadd;
-        }
-    }
-
-    pm_close(scaled);
-    ppm_freerow(row);
     pm_strfree(tempFilename);
     unlink(tempFilename);
 }
@@ -1348,7 +1388,7 @@ doDiffSize(struct Rect       const clipsrc,
 
 
 static void
-getRgb(struct rgbPlanes  const planes,
+getRgb(struct RgbPlanes  const planes,
        unsigned int      const index,
        struct RGBColor * const rgbP) {
 
@@ -1362,7 +1402,7 @@ getRgb(struct rgbPlanes  const planes,
 static void
 putRgb(struct RGBColor  const rgb,
        unsigned int     const index,
-       struct rgbPlanes const planes) {
+       struct RgbPlanes const planes) {
 
     planes.red[index] = rgb.red;
     planes.grn[index] = rgb.grn;
@@ -1374,12 +1414,11 @@ putRgb(struct RGBColor  const rgb,
 static void
 doSameSize(transfer_func           trf,
            int               const pixSize,
-           int               const xsize,
-           int               const ysize,
+           struct Rect       const srcRect,
            unsigned char *   const src,
            unsigned int      const srcwid,
            struct RGBColor * const color_map,
-           struct rgbPlanes  const dst,
+           struct RgbPlanes  const dst,
            unsigned int      const dstwid) {
 /*----------------------------------------------------------------------------
    Transfer pixels from 'src' to 'dst', applying the transfer function
@@ -1401,6 +1440,9 @@ doSameSize(transfer_func           trf,
    colors, never a palette index.  It is an array in row-major order
    with 'dstwid' words per row.
 -----------------------------------------------------------------------------*/
+    unsigned int const xsize = rectwidth(&srcRect);
+    unsigned int const ysize = rectheight(&srcRect);
+
     switch (pixSize) {
     case 8: {
         unsigned int rowNumber;
@@ -1476,12 +1518,11 @@ doSameSize(transfer_func           trf,
 
 static void
 blitIdempotent(unsigned int          const pixSize,
-               unsigned int          const xsize,
-               unsigned int          const ysize,
+               struct Rect           const srcRect,
                unsigned char *       const src,
                unsigned int          const srcwid,
                struct RGBColor *     const colorMap,
-               struct rgbPlanes      const dst,
+               struct RgbPlanes      const dst,
                unsigned int          const dstwid) {
 /*----------------------------------------------------------------------------
   This is the same as doSameSize(), except optimized for the case that
@@ -1491,6 +1532,9 @@ blitIdempotent(unsigned int          const pixSize,
   expanding it to handle arbitrary transfer functions, added functions
   for that.
 -----------------------------------------------------------------------------*/
+    unsigned int const xsize = rectwidth(&srcRect);
+    unsigned int const ysize = rectheight(&srcRect);
+
     switch (pixSize) {
     case 8: {
         unsigned int rowNumber;
@@ -1559,7 +1603,7 @@ doBlit(struct Rect       const srcRect,
        struct Rect       const srcBounds,
        struct raster     const srcplane,
        struct Rect       const dstBounds,
-       struct rgbPlanes  const canvasPlanes,
+       struct RgbPlanes  const canvasPlanes,
        int               const pixSize,
        int               const dstwid,
        struct RGBColor * const color_map,
@@ -1579,10 +1623,8 @@ doBlit(struct Rect       const srcRect,
    with 'dstwid' words per row.
 -----------------------------------------------------------------------------*/
     unsigned char * src;
-    struct rgbPlanes dst;
+    struct RgbPlanes dst;
     int dstoff;
-    int xsize;
-    int ysize;
     transfer_func trf;
 
     if (verbose) {
@@ -1601,8 +1643,6 @@ doBlit(struct Rect       const srcRect,
         assert(srcRowNumber < srcplane.rowCount);
         assert(srcRowOffset < srcplane.rowSize);
         src = srcplane.bytes + srcRowNumber * srcplane.rowSize + srcRowOffset;
-        xsize = rectwidth(&srcRect);
-        ysize = rectheight(&srcRect);
     }
 
     dstoff = (dstRect.top - dstBounds.top) * dstwid +
@@ -1618,14 +1658,14 @@ doBlit(struct Rect       const srcRect,
         trf = transfer(mode & ~64);
 
     if (!rectsamesize(srcRect, dstRect))
-        doDiffSize(srcRect, dstRect, pixSize, xsize, ysize,
+        doDiffSize(srcRect, dstRect, pixSize,
                    trf, color_map, src, srcplane.rowSize, dst, dstwid);
     else {
         if (trf == NULL)
-            blitIdempotent(pixSize, xsize, ysize, src, srcplane.rowSize,
+            blitIdempotent(pixSize, srcRect, src, srcplane.rowSize,
                            color_map, dst, dstwid);
         else
-            doSameSize(trf, pixSize, xsize, ysize, src, srcplane.rowSize,
+            doSameSize(trf, pixSize, srcRect, src, srcplane.rowSize,
                        color_map, dst, dstwid);
     }
 }
@@ -1702,11 +1742,14 @@ blit(struct Rect       const srcRect,
 static void
 allocPlanes(unsigned int       const width,
             unsigned int       const height,
-            struct rgbPlanes * const planesP) {
+            struct RgbPlanes * const planesP) {
 
     unsigned int const planelen = width * height;
 
-    struct rgbPlanes planes;
+    struct RgbPlanes planes;
+
+    planes.width  = width;
+    planes.height = height;
 
     MALLOCARRAY(planes.red, planelen);
     MALLOCARRAY(planes.grn, planelen);
@@ -1725,7 +1768,7 @@ allocPlanes(unsigned int       const width,
 
 
 static void
-freePlanes(struct rgbPlanes const planes) {
+freePlanes(struct RgbPlanes const planes) {
 
     free(planes.red);
     free(planes.grn);
@@ -1882,7 +1925,7 @@ doBlitList(struct canvas * const canvasP,
 
 static void
 outputPpm(FILE *           const ofP,
-          struct rgbPlanes const planes) {
+          struct RgbPlanes const planes) {
 
     unsigned int width;
     unsigned int height;
@@ -4334,3 +4377,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+
