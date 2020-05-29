@@ -332,7 +332,7 @@ reportAbsentGlyphs(bool                       const wchar,
         }
     }
     if (missingCharCt > 0)
-        pm_message("total %u chararcters absent in font", missingCharCt);
+        pm_message("total %u characters absent in font", missingCharCt);
 
     *missingCharCtP = missingCharCt;
 }
