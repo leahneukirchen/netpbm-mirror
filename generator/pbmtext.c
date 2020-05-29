@@ -321,9 +321,8 @@ reportAbsentGlyphs(bool                       const wchar,
             !codepointIsValid(fontP, codepoint)) {
             ++missingCharCt;
             if (missingCharCt == 1)  { /* initial */
-                pm_message ("%u characters found in text",
-                            textSelectorP->count);;
-                pm_message ("failed to load glyph data for:");
+                pm_message("failed to load glyph data for these code points "
+                           "in input:");
             }
 
             pm_message(wchar ? "+%05X %s" : "%02X %s",
@@ -331,8 +330,6 @@ reportAbsentGlyphs(bool                       const wchar,
                        charDescription(codepoint));
         }
     }
-    if (missingCharCt > 0)
-        pm_message("total %u characters absent in font", missingCharCt);
 
     *missingCharCtP = missingCharCt;
 }
@@ -344,6 +341,7 @@ validateFont(bool                       const wchar,
              struct font2 *             const fontP,
              const struct pm_selector * const textSelectorP,
              enum   FixMode             const fixmode,
+             bool                       const verbose,
              bool *                     const hasAllCharsP) {
 /*----------------------------------------------------------------------------
    If any glyphs required by the text indicated by *textSelectorP are missing
@@ -358,11 +356,13 @@ validateFont(bool                       const wchar,
     unsigned int missingCharCt;
 
     assert (textSelectorP != NULL);
-    assert (textSelectorP->count >= 0);
+    assert(pm_selector_marked_ct(textSelectorP) >= 0);
 
     reportAbsentGlyphs(wchar, fontP, textSelectorP, &missingCharCt);
 
     if (missingCharCt > 0) {
+        if (verbose)
+            pm_message("%u characters absent in font", missingCharCt);
 
         if (fixmode == QUIT)
             pm_error("aborting");
@@ -405,10 +405,14 @@ computeFont(struct CmdlineInfo         const cmdline,
     else
         font2P = pbm_defaultfont2(cmdline.wchar ? "bdf" : "bdf");
 
-    if (cmdline.verbose)
+    if (cmdline.verbose) {
         reportFont(font2P);
+        pm_message("%u code points found in text",
+                   pm_selector_marked_ct(textSelectorP));
+    }
 
     validateFont(cmdline.wchar, font2P, textSelectorP, fixmode,
+                 cmdline.verbose,
                  fontHasAllCharsP);
 
     *fontPP = font2P;
