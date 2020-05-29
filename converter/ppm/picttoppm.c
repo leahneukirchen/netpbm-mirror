@@ -51,10 +51,18 @@ typedef unsigned long Longword;
  */
 
 struct Rect {
-    Word top;
-    Word left;
-    Word bottom;
-    Word right;
+/*----------------------------------------------------------------------------
+   A rectangle - description of a region of an image raster.
+
+   If last row or column is before first, it is a null rectangle - it
+   describes no pixels.
+-----------------------------------------------------------------------------*/
+    Word top;     /* Start row */
+    Word left;    /* Start column */
+    Word bottom;  /* End row */
+    Word right;   /* End column */
+
+    /* "End" means last plus one */
 };
 
 struct pixMap {
@@ -825,14 +833,36 @@ readRect(struct Rect * const r) {
 
 
 static int
-rectwidth(const struct Rect * const r) {
-    return r->right - r->left;
+rectisnull(struct Rect * const r) {
+
+    return r->top >= r->bottom || r->left >= r->right;
 }
 
 
 
 static int
+rectwidth(const struct Rect * const r) {
+
+    return r->right - r->left;
+}
+
+
+
+static bool
+rectequal(const struct Rect * const comparand,
+          const struct Rect * const comparator) {
+
+    return
+        comparand->top    == comparator->top &&
+        comparand->bottom == comparator->bottom &&
+        comparand->left   == comparator->left &&
+        comparand->right  == comparator->right;
+}
+
+
+static int
 rectheight(const struct Rect * const r) {
+
     return r->bottom - r->top;
 }
 
@@ -841,6 +871,7 @@ rectheight(const struct Rect * const r) {
 static bool
 rectsamesize(struct Rect const r1,
              struct Rect const r2) {
+
     return r1.right - r1.left == r2.right - r2.left &&
            r1.bottom - r1.top == r2.bottom - r2.top ;
 }
@@ -848,14 +879,18 @@ rectsamesize(struct Rect const r1,
 
 
 static void
-rectinter(struct Rect   const r1,
-          struct Rect   const r2,
-          struct Rect * const intersectionP) {
+rectintersect(const struct Rect * const r1P,
+              const struct Rect * const r2P,
+              struct Rect *       const intersectionP) {
+/*----------------------------------------------------------------------------
+   Compute the intersection of two rectangles.
 
-    intersectionP->left   = MAX(r1.left,   r2.left);
-    intersectionP->top    = MAX(r1.top,    r2.top);
-    intersectionP->right  = MIN(r1.right,  r2.right);
-    intersectionP->bottom = MIN(r1.bottom, r2.bottom);
+   Note that if the rectangles are disjoint, the result is a null rectangle.
+-----------------------------------------------------------------------------*/
+    intersectionP->left   = MAX(r1P->left,   r2P->left);
+    intersectionP->top    = MAX(r1P->top,    r2P->top);
+    intersectionP->right  = MIN(r1P->right,  r2P->right);
+    intersectionP->bottom = MIN(r1P->bottom, r2P->bottom);
 }
 
 
@@ -864,16 +899,17 @@ static void
 rectscale(struct Rect * const r,
           double        const xscale,
           double        const yscale) {
-    r->left *= xscale;
-    r->right *= xscale;
-    r->top *= yscale;
+
+    r->left   *= xscale;
+    r->right  *= xscale;
+    r->top    *= yscale;
     r->bottom *= yscale;
 }
 
 
 
 static void
-    initBlitList(blitList * const blitListP) {
+initBlitList(blitList * const blitListP) {
 
     blitListP->firstP          = NULL;
     blitListP->connectorP      = &blitListP->firstP;
@@ -1679,8 +1715,8 @@ doBlit(struct Rect       const srcRect,
 
 
 static int
-blit(struct Rect       const srcRect,
-     struct Rect       const srcBounds,
+blit(const struct Rect const srcRect,
+     const struct Rect const srcBounds,
      struct raster     const srcplane,
      struct canvas *   const canvasP,
      blitList *        const blitListP,
@@ -1717,8 +1753,8 @@ blit(struct Rect       const srcRect,
         struct Rect clipsrc;
         struct Rect clipdst;
 
-        rectinter(srcBounds, srcRect, &clipsrc);
-        rectinter(dstBounds, dstRect, &clipdst);
+        rectintersect(&srcBounds, &srcRect, &clipsrc);
+        rectintersect(&dstBounds, &dstRect, &clipdst);
 
         if (blitListP) {
             addBlitList(blitListP,
@@ -2008,9 +2044,19 @@ ClipRgn(struct canvas * const canvasP,
            it to accept this clip rectangle, this program found the image to
            have an invalid raster.
         */
+        struct Rect clipRgnParm;
 
-        readRect(&clip_rect);
-        /* XXX should clip this by picFrame */
+        readRect(&clipRgnParm);
+
+        rectintersect(&clipRgnParm, &picFrame, &clip_rect);
+
+        if (!rectequal(&clipRgnParm, &clip_rect)) {
+            pm_message("ClipRgn opcode says to clip to a region which "
+                       "is not contained within the picture frame.  "
+                       "Ignoring the part outside the picture frame.");
+            dumpRect("ClipRgn:", clipRgnParm);
+            dumpRect("Picture frame:", picFrame);
+        }
         if (verbose)
             dumpRect("clipping to", clip_rect);
     } else
@@ -2961,41 +3007,44 @@ drawPixel(struct canvas *   const canvasP,
 
 static void
 drawPenRect(struct canvas * const canvasP,
-            struct Rect *   const r) {
+            struct Rect *   const rP) {
 
-    unsigned int const rowadd = rowlen - (r->right - r->left);
+    if (!rectisnull(rP)) {
+        unsigned int const rowadd = rowlen - (rP->right - rP->left);
 
-    unsigned int i;
-    unsigned int y;
+        unsigned int i;
+        unsigned int y;
 
-    i = pixelIndex(picFrame, r->left, r->top);  /* initial value */
+        dumpRect("BRYAN: drawing rectangle ", *rP);
+        i = pixelIndex(picFrame, rP->left, rP->top);  /* initial value */
 
-    for (y = r->top; y < r->bottom; ++y) {
+        for (y = rP->top; y < rP->bottom; ++y) {
 
-        unsigned int x;
+            unsigned int x;
 
-        for (x = r->left; x < r->right; ++x) {
+            for (x = rP->left; x < rP->right; ++x) {
 
-            struct RGBColor dst;
+                struct RGBColor dst;
 
-            assert(i < canvasP->planes.height * canvasP->planes.width);
+                assert(i < canvasP->planes.height * canvasP->planes.width);
 
-            dst.red = canvasP->planes.red[i];
-            dst.grn = canvasP->planes.grn[i];
-            dst.blu = canvasP->planes.blu[i];
+                dst.red = canvasP->planes.red[i];
+                dst.grn = canvasP->planes.grn[i];
+                dst.blu = canvasP->planes.blu[i];
 
-            if (pen_pat.pix[(x & 7) + (y & 7) * 8])
-                (*pen_trf)(&black, &dst);
-            else
-                (*pen_trf)(&white, &dst);
+                if (pen_pat.pix[(x & 7) + (y & 7) * 8])
+                    (*pen_trf)(&black, &dst);
+                else
+                    (*pen_trf)(&white, &dst);
 
-            canvasP->planes.red[i] = dst.red;
-            canvasP->planes.grn[i] = dst.grn;
-            canvasP->planes.blu[i] = dst.blu;
+                canvasP->planes.red[i] = dst.red;
+                canvasP->planes.grn[i] = dst.grn;
+                canvasP->planes.blu[i] = dst.blu;
 
-            ++i;
+                ++i;
+            }
+            i += rowadd;
         }
-        i += rowadd;
     }
 }
 
@@ -3014,7 +3063,7 @@ drawPen(struct canvas * const canvasP,
     unclippedPenrect.top = y;
     unclippedPenrect.bottom = y + pen_height;
 
-    rectinter(unclippedPenrect, clip_rect, &clippedPenrect);
+    rectintersect(&unclippedPenrect, &clip_rect, &clippedPenrect);
 
     drawPenRect(canvasP, &clippedPenrect);
 }
@@ -3172,7 +3221,7 @@ doPaintRect(struct canvas * const canvasP,
     if (verbose)
         dumpRect("painting", prect);
 
-    rectinter(clip_rect, prect, &rect);
+    rectintersect(&clip_rect, &prect, &rect);
 
     drawPenRect(canvasP, &rect);
 }
@@ -3238,6 +3287,7 @@ frameRect(struct canvas * const canvasP,
           int             const version) {
 
     readRect(&cur_rect);
+
     if (!blitListP)
         doFrameRect(canvasP, cur_rect);
 }
