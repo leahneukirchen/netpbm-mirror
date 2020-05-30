@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <math.h>
 #include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,7 +47,6 @@
 #include "bayer.h"
 #include "foveon.h"
 #include "dng.h"
-#include "stdio_nofail.h"
 
 /*
    All global variables are defined here, and all functions that
@@ -233,7 +233,7 @@ fixBadPixels(Image const image) {
         }
         free (fname);
         if (fp) {
-            while (fgets_nofail (line, 128, fp)) {
+            while (fgets (line, 128, fp)) {
                 char * cp;
                 cp = strchr (line, '#');
                 if (cp) *cp = 0;
