@@ -1276,7 +1276,7 @@ parse_rollei(FILE * const ifp)
 
   fseek_nofail (ifp, 0, SEEK_SET);
   do {
-    fgets (line, 128, ifp);
+    fgets_nofail (line, 128, ifp);
     if ((val = strchr(line,'=')))
       *val++ = 0;
     else
@@ -1581,10 +1581,10 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     kodak_data_compression = get2(ifp);
     break;
       case 0x10f:           /* Make */
-    fgets (make, 64, ifp);
+    fgets_nofail (make, 64, ifp);
     break;
       case 0x110:           /* Model */
-    fgets (model, 64, ifp);
+    fgets_nofail (model, 64, ifp);
     break;
       case 0x111:           /* StripOffset */
     data_offset = get4(ifp);
@@ -1596,7 +1596,7 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     tiff_samples = get2(ifp);
     break;
       case 0x131:           /* Software tag */
-    fgets (software, 64, ifp);
+    fgets_nofail (software, 64, ifp);
     if (!strncmp(software,"Adobe",5))
       make[0] = 0;
     break;
@@ -1622,7 +1622,7 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     }
     break;
       case 33405:           /* Model2 */
-    fgets (model2, 64, ifp);
+    fgets_nofail (model2, 64, ifp);
     break;
       case 33422:           /* CFAPattern */
     if ((plen=len) > 16) plen = 16;

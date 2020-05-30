@@ -51,7 +51,7 @@ fseek_nofail(FILE * const streamP,
     rc = fseek(streamP, offset, whence);
 
     if (rc < 0)
-        pm_error("File read failed.  Errno=%d (%s)", errno, strerror(errno));
+        pm_error("File seek failed.  Errno=%d (%s)", errno, strerror(errno));
 
     return rc;
 }
@@ -66,6 +66,24 @@ ftell_nofail(FILE * const streamP) {
     rc = ftell(streamP);
 
     if (rc < 0)
+        pm_error("File position query failed.  Errno=%d (%s)",
+                 errno, strerror(errno));
+
+    return rc;
+}
+
+
+
+char *
+fgets_nofail(char * const s,
+             int    const size,
+             FILE * const streamP) {
+
+    char * rc;
+
+    rc = fgets(s, size, streamP);
+
+    if (ferror(streamP))
         pm_error("File read failed.  Errno=%d (%s)", errno, strerror(errno));
 
     return rc;

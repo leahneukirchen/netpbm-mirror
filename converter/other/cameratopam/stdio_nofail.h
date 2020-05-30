@@ -16,3 +16,8 @@ fseek_nofail(FILE * const streamP,
 
 long
 ftell_nofail(FILE * const streamP);
+
+char *
+fgets_nofail(char * const s,
+             int    const size,
+             FILE * const streamP);
