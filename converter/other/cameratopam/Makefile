@@ -20,7 +20,7 @@ include $(BUILDDIR)/config.mk
 all: cameratopam
 
 ADDL_OBJECTS = util.o identify.o camera.o foveon.o decode.o \
-	canon.o ljpeg.o dng.o
+	canon.o ljpeg.o dng.o stdio_nofail.o
 
 OBJECTS = cameratopam.o $(ADDL_OBJECTS)
 

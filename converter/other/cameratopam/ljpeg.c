@@ -2,7 +2,6 @@
 #define _BSD_SOURCE    /* Make sure string.h containst strcasecmp() */
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <limits.h>
 
 #include "pm.h"
@@ -11,6 +10,7 @@
 #include "util.h"
 #include "decode.h"
 #include "bayer.h"
+#include "stdio_nofail.h"
 
 #include "ljpeg.h"
 
@@ -20,7 +20,7 @@
    enough to decode Canon, Kodak and Adobe DNG images.
  */
 
-int  
+int
 ljpeg_start(FILE *         const ifP,
             struct jhead * const jhP) {
 
@@ -30,12 +30,12 @@ ljpeg_start(FILE *         const ifP,
     init_decoder();
     for (i=0; i < 4; i++)
         jhP->huff[i] = free_decode;
-    fread (data, 2, 1, ifP);
+    fread_nofail (data, 2, 1, ifP);
     if (data[0] != 0xff || data[1] != 0xd8) return 0;
     do {
         unsigned int len;
 
-        fread (data, 2, 2, ifP);
+        fread_nofail (data, 2, 2, ifP);
         tag =  data[0] << 8 | data[1];
         len = data[2] << 8 | data[3];
 
@@ -45,7 +45,7 @@ ljpeg_start(FILE *         const ifP,
             unsigned int const dataLen = len - 2;
 
             if (tag <= 0xff00 || dataLen > 255) return 0;
-            fread (data, 1, dataLen, ifP);
+            fread_nofail (data, 1, dataLen, ifP);
             switch (tag) {
             case 0xffc3:
                 jhP->bits = data[0];
@@ -73,7 +73,7 @@ ljpeg_start(FILE *         const ifP,
 
 
 
-int 
+int
 ljpeg_diff(FILE *          const ifP,
            struct decode * const dindexHeadP) {
 
@@ -111,7 +111,7 @@ ljpeg_row(FILE *         const ifP,
 
 
 
-void  
+void
 lossless_jpeg_load_raw(Image  const image) {
 
     int jwide, jrow, jcol, val, jidx, i, row, col;
@@ -161,5 +161,3 @@ lossless_jpeg_load_raw(Image  const image) {
     if (!strcasecmp(make,"KODAK"))
         black = min;
 }
-
-

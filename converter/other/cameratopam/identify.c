@@ -13,6 +13,7 @@
 #include "dng.h"
 #include "ljpeg.h"
 #include "camera.h"
+#include "stdio_nofail.h"
 
 #include "identify.h"
 
@@ -38,7 +39,7 @@ static const char *memmem_internal (const char *haystack, size_t haystacklen,
 
 
 
-static void 
+static void
 adobeCoeff(const char * const make,
            const char * const model) {
     /*
@@ -47,7 +48,7 @@ adobeCoeff(const char * const make,
     struct CoeffTableEntry {
         const char * prefix;
         short trans[12];
-    }; 
+    };
 
     static struct CoeffTableEntry const table[] = {
         { "Canon EOS D2000C",
@@ -330,17 +331,17 @@ identify(FILE *       const ifp,
 
     order = get2(ifp);
     hlen = get4(ifp);
-    fseek (ifp, 0, SEEK_SET);
-    fread (head, 1, 32, ifp);
-    fseek (ifp, 0, SEEK_END);
-    fsize = ftell(ifp);
+    fseek_nofail (ifp, 0, SEEK_SET);
+    fread_nofail (head, 1, 32, ifp);
+    fseek_nofail (ifp, 0, SEEK_END);
+    fsize = ftell_nofail(ifp);
     if ((c = (char*)memmem_internal(head, 32, "MMMMRawT", 8))) {
         strcpy (make, "Phase One");
         data_offset = c - head;
-        fseek (ifp, data_offset + 8, SEEK_SET);
-        fseek (ifp, get4(ifp) + 136, SEEK_CUR);
+        fseek_nofail (ifp, data_offset + 8, SEEK_SET);
+        fseek_nofail (ifp, get4(ifp) + 136, SEEK_CUR);
         raw_width = get4(ifp);
-        fseek (ifp, 12, SEEK_CUR);
+        fseek_nofail (ifp, 12, SEEK_CUR);
         raw_height = get4(ifp);
     } else if (order == 0x4949 || order == 0x4d4d) {
         if (!memcmp (head+6, "HEAPCCDR", 8)) {
@@ -355,14 +356,14 @@ identify(FILE *       const ifp,
         parse_minolta(ifp);
     else if (!memcmp (head, "\xff\xd8\xff\xe1", 4) &&
              !memcmp (head+6, "Exif", 4)) {
-        fseek (ifp, 4, SEEK_SET);
-        fseek (ifp, 4 + get2(ifp), SEEK_SET);
-        if (fgetc(ifp) != 0xff)
+        fseek_nofail (ifp, 4, SEEK_SET);
+        fseek_nofail (ifp, 4 + get2(ifp), SEEK_SET);
+        if (fgetc_nofail(ifp) != 0xff)
             parse_tiff(ifp, 12);
     } else if (!memcmp (head, "BM", 2)) {
         data_offset = 0x1000;
         order = 0x4949;
-        fseek (ifp, 38, SEEK_SET);
+        fseek_nofail (ifp, 38, SEEK_SET);
         if (get4(ifp) == 2834 && get4(ifp) == 2834) {
             strcpy (model, "BMQ");
             flip = 3;
@@ -373,7 +374,7 @@ identify(FILE *       const ifp,
     nucore:
         strcpy (make, "Nucore");
         order = 0x4949;
-        fseek (ifp, 10, SEEK_SET);
+        fseek_nofail (ifp, 10, SEEK_SET);
         data_offset += get4(ifp);
         get4(ifp);
         raw_width  = get4(ifp);
@@ -385,16 +386,16 @@ identify(FILE *       const ifp,
     } else if (!memcmp (head+25, "ARECOYK", 7)) {
         strcpy (make, "Contax");
         strcpy (model,"N Digital");
-        fseek (ifp, 60, SEEK_SET);
+        fseek_nofail (ifp, 60, SEEK_SET);
         camera_red  = get4(ifp);
         camera_red /= get4(ifp);
         camera_blue = get4(ifp);
         camera_blue = get4(ifp) / camera_blue;
     } else if (!memcmp (head, "FUJIFILM", 8)) {
         long data_offset_long;
-        fseek (ifp, 84, SEEK_SET);
+        fseek_nofail (ifp, 84, SEEK_SET);
         parse_tiff(ifp, get4(ifp)+12);
-        fseek (ifp, 100, SEEK_SET);
+        fseek_nofail (ifp, 100, SEEK_SET);
         pm_readbiglong(ifp, &data_offset_long);
         data_offset = data_offset_long;
     } else if (!memcmp (head, "DSC-Image", 9))
@@ -736,13 +737,13 @@ identify(FILE *       const ifp,
         width  = 2312;
         raw_width = 2336;
         data_offset = 4034;
-        fseek (ifp, 2032, SEEK_SET);
+        fseek_nofail (ifp, 2032, SEEK_SET);
         goto konica_400z;
     } else if (!strcmp(model,"Digital Camera KD-510Z")) {
         data_offset = 4032;
         pre_mul[0] = 1.297;
         pre_mul[2] = 1.438;
-        fseek (ifp, 2032, SEEK_SET);
+        fseek_nofail (ifp, 2032, SEEK_SET);
         goto konica_510z;
     } else if (!strcasecmp(make,"MINOLTA")) {
         load_raw = unpacked_load_raw;
@@ -766,19 +767,19 @@ identify(FILE *       const ifp,
                 data_offset = 5056;
                 pre_mul[0] = 1.602;
                 pre_mul[2] = 1.441;
-                fseek (ifp, 2078, SEEK_SET);
+                fseek_nofail (ifp, 2078, SEEK_SET);
                 height = 1716;
                 width  = 2304;
             } else if (model[8] == '5') {
                 data_offset = 4016;
-                fseek (ifp, 1936, SEEK_SET);
+                fseek_nofail (ifp, 1936, SEEK_SET);
             konica_510z:
                 height = 1956;
                 width  = 2607;
                 raw_width = 2624;
             } else if (model[8] == '6') {
                 data_offset = 4032;
-                fseek (ifp, 2030, SEEK_SET);
+                fseek_nofail (ifp, 2030, SEEK_SET);
                 height = 2136;
                 width  = 2848;
             }
@@ -884,7 +885,7 @@ identify(FILE *       const ifp,
         pre_mul[0] = 1.963;
         pre_mul[2] = 1.430;
     } else if (!strcmp(make,"Sinar") && !memcmp(head,"8BPS",4)) {
-        fseek (ifp, 14, SEEK_SET);
+        fseek_nofail (ifp, 14, SEEK_SET);
         height = get4(ifp);
         width  = get4(ifp);
         filters = 0x61616161;
@@ -1198,7 +1199,7 @@ dng_skip:
             for (i=0; i < 3; i++)
                 coeff[i][3] = coeff[i][1] /= 2;
     }
-    fseek (ifp, data_offset, SEEK_SET);
+    fseek_nofail (ifp, data_offset, SEEK_SET);
 
     *loadRawFnP = load_raw;
 

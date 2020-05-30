@@ -6,9 +6,10 @@
 #include "decode.h"
 #include "bayer.h"
 #include "canon.h"
+#include "stdio_nofail.h"
 
 
-void 
+void
 canon_600_load_raw(Image const image) {
     unsigned char  data[1120], *dp;
     unsigned short pixel[896], *pix;
@@ -16,7 +17,7 @@ canon_600_load_raw(Image const image) {
 
     for (irow=orow=0; irow < height; irow++)
     {
-        fread (data, 1120, 1, ifp);
+        fread_nofail (data, 1120, 1, ifp);
         for (dp=data, pix=pixel; dp < data+1120; dp+=10, pix+=8)
         {
             pix[0] = (dp[0] << 2) + (dp[1] >> 6    );
@@ -48,7 +49,7 @@ canon_a5_load_raw(Image const image) {
     int row, col;
 
     for (row=0; row < height; row++) {
-        fread (data, raw_width * 10 / 8, 1, ifp);
+        fread_nofail (data, raw_width * 10 / 8, 1, ifp);
         for (dp=data, pix=pixel; pix < pixel+raw_width; dp+=10, pix+=8)
         {
             pix[0] = (dp[1] << 2) + (dp[0] >> 6);
@@ -84,8 +85,8 @@ canon_has_lowbits()
     unsigned char test[0x4000];
     int ret=1, i;
 
-    fseek (ifp, 0, SEEK_SET);
-    fread (test, 1, sizeof test, ifp);
+    fseek_nofail (ifp, 0, SEEK_SET);
+    fread_nofail (test, 1, sizeof test, ifp);
     for (i=540; i < sizeof test - 1; i++)
         if (test[i] == 0xff) {
             if (test[i+1]) return 1;
@@ -96,7 +97,7 @@ canon_has_lowbits()
 
 
 
-void 
+void
 canon_compressed_load_raw(Image const image) {
     unsigned short *pixel, *prow;
     int lowbits, i, row, r, col, save, val;
@@ -110,7 +111,7 @@ canon_compressed_load_raw(Image const image) {
         pm_error("Unable to allocate space for %u pixels", raw_width*8);
     lowbits = canon_has_lowbits();
     if (!lowbits) maximum = 0x3ff;
-    fseek (ifp, 540 + lowbits*raw_height*raw_width/4, SEEK_SET);
+    fseek_nofail (ifp, 540 + lowbits*raw_height*raw_width/4, SEEK_SET);
     zero_after_ff = 1;
     getbits(ifp, -1);
     for (row = 0; row < raw_height; row += 8) {
@@ -141,17 +142,17 @@ canon_compressed_load_raw(Image const image) {
             }
         }
         if (lowbits) {
-            save = ftell(ifp);
-            fseek (ifp, 26 + row*raw_width/4, SEEK_SET);
+            save = ftell_nofail(ifp);
+            fseek_nofail (ifp, 26 + row*raw_width/4, SEEK_SET);
             for (prow=pixel, i=0; i < raw_width*2; i++) {
-                c = fgetc(ifp);
+                c = fgetc_nofail(ifp);
                 for (r=0; r < 8; r+=2, prow++) {
                     val = (*prow << 2) + ((c >> r) & 3);
                     if (raw_width == 2672 && val < 512) val += 2;
                     *prow = val;
                 }
             }
-            fseek (ifp, save, SEEK_SET);
+            fseek_nofail (ifp, save, SEEK_SET);
         }
         for (r=0; r < 8; r++) {
             irow = row - top_margin + r;
@@ -169,4 +170,3 @@ canon_compressed_load_raw(Image const image) {
     if (raw_width > width)
         black /= (raw_width - width) * height;
 }
-

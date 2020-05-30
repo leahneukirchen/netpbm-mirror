@@ -1,10 +1,10 @@
 #define _XOPEN_SOURCE   /* Make sure unistd.h contains swab() */
 #include <unistd.h>
-#include <stdio.h>
 
 #include "pm.h"
 #include "global_variables.h"
 #include "util.h"
+#include "stdio_nofail.h"
 
 #ifndef LONG_BITS
 #define LONG_BITS (8 * sizeof(long))
@@ -18,7 +18,7 @@ get2(FILE * const ifp)
 {
     unsigned char a, b;
 
-    a = fgetc(ifp);  b = fgetc(ifp);
+    a = fgetc_nofail(ifp);  b = fgetc_nofail(ifp);
 
     if (order == 0x4949)      /* "II" means little-endian */
         return a | b << 8;
@@ -34,8 +34,8 @@ get4(FILE * const ifp)
 {
     unsigned char a, b, c, d;
 
-    a = fgetc(ifp);  b = fgetc(ifp);
-    c = fgetc(ifp);  d = fgetc(ifp);
+    a = fgetc_nofail(ifp);  b = fgetc_nofail(ifp);
+    c = fgetc_nofail(ifp);  d = fgetc_nofail(ifp);
 
     if (order == 0x4949)
         return a | b << 8 | c << 16 | d << 24;
@@ -49,7 +49,7 @@ get4(FILE * const ifp)
 void
 read_shorts (FILE * const ifp, unsigned short *pixel, int count)
 {
-    fread (pixel, 2, count, ifp);
+    fread_nofail (pixel, 2, count, ifp);
     if ((order == 0x4949) == (BYTE_ORDER == BIG_ENDIAN))
         swab (pixel, pixel, count*2);
 }
@@ -73,10 +73,10 @@ getbits (FILE * const ifp, int nbits)
         vbits -= nbits;
     }
     while (vbits < LONG_BITS - 7) {
-        c = fgetc(ifp);
+        c = fgetc_nofail(ifp);
         bitbuf = (bitbuf << 8) + c;
         if (c == 0xff && zero_after_ff)
-            fgetc(ifp);
+            fgetc_nofail(ifp);
         vbits += 8;
     }
     return ret;
