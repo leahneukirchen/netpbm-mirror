@@ -8,6 +8,12 @@ not yet  BJH  Release 10.91.00
 
               pamstereogram: Add -tileable.  Thanks Scott Pakin.
 
+              pjtoppm: Handle input stream with no transmission mode command.
+              Always broken.  Pjtoppm was in primordial Netpbm (1991).
+
+              cameratopam: Handle I/O error on input file.  Always broken.
+              Cameratopam was new to Netpbm in Netpbm 10.25 (June 2005).
+
               picttoppm: Fix bug with an input file that specifies a clip
               region (ClipRgn opcode) that is not contained within the
               picture frame.  Result is invalid memory access.  Broken
