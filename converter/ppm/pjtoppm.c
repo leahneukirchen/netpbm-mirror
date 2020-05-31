@@ -10,6 +10,8 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
+
 #include "ppm.h"
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -54,6 +56,7 @@ main(int argc, const char ** argv) {
     int *imlen;
     FILE * ifP;
     int mode;
+    bool modeIsSet;
     int argn;
     unsigned char bf[3];
     pixel * pixrow;
@@ -74,6 +77,7 @@ main(int argc, const char ** argv) {
 
     row = 0;  /* initial value */
     plane = 0;  /* initial value */
+    modeIsSet = false;  /* initial value */
 
     while ((c = fgetc(ifP)) != -1) {
         if (c != '\033')
@@ -145,6 +149,7 @@ main(int argc, const char ** argv) {
                     if (val != 0 && val != 1)
                         pm_error("unimplemented transmission mode %d", val);
                     mode = val;
+                    modeIsSet = true;
                     break;
                 case 'V':   /* send plane */
                 case 'W':   /* send last plane */
@@ -214,6 +219,10 @@ main(int argc, const char ** argv) {
         } /* switch */
     }
     pm_close(ifP);
+
+    if (!modeIsSet)
+        pm_error("Input does not contain a 'bM' transmission mode order");
+
     rows = row;
     if (mode == 1) {
         int const newcols = 10240;  /* It could not be larger that that! */
