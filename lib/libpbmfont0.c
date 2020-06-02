@@ -248,15 +248,18 @@ pbm_destroybdffont2_base(struct font2 * const font2P) {
 ---------------------------------------------------------------------------- */
 
     pm_strfree(font2P->name);
-    pm_strfree(font2P->charset_string);
-    free(font2P->glyph);
-    pm_selector_destroy(font2P->selectorP);
 
-    if (font2P->oldfont !=NULL)
+    pm_strfree(font2P->charset_string);
+
+    free(font2P->glyph);
+
+    if (font2P->selectorP)
+        pm_selector_destroy(font2P->selectorP);
+
+    if (font2P->oldfont)
        pbm_freearray(font2P->oldfont, font2P->frows);
 
-    free((void *)font2P);
-
+    free(font2P);
 }
 
 
