@@ -1389,11 +1389,10 @@ renderSheet(struct CmdlineInfo const cmdline,
          0xff, 0xff, 0xff, 0xff,  0xff, 0xff, 0xff, 0xfe};
 
     struct pm_selector * selectorP;
+    struct font2 *       fontP;
+    bool                 fontIsComplete;
 
     pm_selector_create_fixed(sheetRequestArray, 32, 126,95, &selectorP);
-
-    struct font2 * fontP;
-    bool fontIsComplete;
 
     computeFont(cmdline, &fontP, selectorP, QUIT, &fontIsComplete);
 
