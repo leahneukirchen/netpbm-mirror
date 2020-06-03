@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtext</H1>
-Updated: 28 May 2020
+Updated: 29 May 2020
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -21,6 +21,7 @@ pbmtext - render text into a PBM image
 [<B>-nomargins</B>]
 [<B>-width</B> <i>pixels</i>]
 [<b>-load-entire-font</b>]
+[<b>-verbose</b>]
 [<b>-dry-run</b>]
 [<b>-text-dump</b>]
 [<I>text</I>]
@@ -182,6 +183,10 @@ truncates each line as needed to fit the specified width.
 
 <p>This option was new in Netpbm 10.91 (June 2020).  Before that,
 <b>pbmtext</b> always reads the entire font.
+
+<dt><b>-verbose</b>
+<dd>
+This makes <b>pbmtext</b> issue informtional messages about its processing.
 
 <dt><b>-dry-run</b>
 <dd>
