@@ -1,6 +1,12 @@
 #include <stdio.h>
 
 size_t
+fread_or_eof_nofail(void * const ptr,
+                    size_t const size,
+                    size_t const nmemb,
+                    FILE * const streamP);
+
+void
 fread_nofail(void * const ptr,
              size_t const size,
              size_t const nmemb,

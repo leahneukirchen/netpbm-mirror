@@ -9,6 +9,26 @@
 
 
 size_t
+fread_or_eof_nofail(void * const ptr,
+                    size_t const size,
+                    size_t const nmemb,
+                    FILE * const streamP) {
+
+    size_t rc;
+
+    rc = fread(ptr, size, nmemb, streamP);
+
+    if (rc < nmemb) {
+        if (!feof(streamP))
+            pm_error("File read failed.  Errno=%d (%s)",
+                     errno, strerror(errno));
+    }
+    return rc;
+}
+
+
+
+void
 fread_nofail(void * const ptr,
              size_t const size,
              size_t const nmemb,
@@ -18,10 +38,13 @@ fread_nofail(void * const ptr,
 
     rc = fread(ptr, size, nmemb, streamP);
 
-    if (rc < 0)
-        pm_error("File read failed.  Errno=%d (%s)", errno, strerror(errno));
-
-    return rc;
+    if (rc < nmemb) {
+        if (feof(streamP))
+            pm_error("File read failed.  Premature end of file");
+        else
+            pm_error("File read failed.  Errno=%d (%s)",
+                     errno, strerror(errno));
+    }
 }
 
 
@@ -33,9 +56,13 @@ fgetc_nofail(FILE * streamP) {
 
     rc = fgetc(streamP);
 
-    if (rc < 0)
-        pm_error("File read failed.  Errno=%d (%s)", errno, strerror(errno));
-
+    if (rc == EOF) {
+        if (feof(streamP))
+            pm_error("File read failed.  Premature end of file");
+        else
+            pm_error("File read failed.  Errno=%d (%s)",
+                     errno, strerror(errno));
+    }
     return rc;
 }
 

@@ -450,7 +450,7 @@ rollei_load_raw(Image const image) {
   unsigned iten=0, isix, i, buffer=0, row, col, todo[16];
 
   isix = raw_width * raw_height * 5 / 8;
-  while (fread_nofail (pixel, 1, 10, ifp) == 10) {
+  while (fread_or_eof_nofail (pixel, 1, 10, ifp) == 10) {
     for (i=0; i < 10; i+=2) {
       todo[i]   = iten++;
       todo[i+1] = pixel[i] << 8 | pixel[i+1];
@@ -784,7 +784,7 @@ fill_input_buffer (j_decompress_ptr cinfo)
   static char jpeg_buffer[4096];
   size_t nbytes;
 
-  nbytes = fread_nofail (jpeg_buffer, 1, 4096, ifp);
+  nbytes = fread_or_eof_nofail (jpeg_buffer, 1, 4096, ifp);
   swab (jpeg_buffer, jpeg_buffer, nbytes);
   cinfo->src->next_input_byte = jpeg_buffer;
   cinfo->src->bytes_in_buffer = nbytes;
