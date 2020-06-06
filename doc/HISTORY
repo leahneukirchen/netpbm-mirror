@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.06.06 BJH  Release 10.86.14
+
+              pjtoppm: Handle input stream with no transmission mode command.
+              Always broken.  Pjtoppm was in primordial Netpbm (1991).
+
+              picttoppm: Fix bug with an input file that specifies a clip
+              region (ClipRgn opcode) that is not contained within the
+              picture frame.  Result is invalid memory access.  Broken
+              some time 1994-2002.
+
+              picttoppm: Fix incorrect output (sheared) when a blit must be
+              scaled.  Broken in Netpbm 10.34 (June 2006) or 10.35 (August
+              2006).
+
 20.05.06 BJH  Release 10.86.13
 
               pbmtonokia: Fix incorrect output with -txt option.

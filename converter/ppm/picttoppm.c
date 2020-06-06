@@ -1204,7 +1204,7 @@ doDiffSize(struct Rect       const clipsrc,
            struct rgbPlanes  const dst,
            unsigned int      const dstwid) {
 
-    unsigned int const dstadd = dstwid - xsize;
+    unsigned int const dstadd = dstwid - rectwidth(&clipdst);
 
     FILE * pamscalePipeP;
     const char * command;
@@ -1960,6 +1960,7 @@ ClipRgn(struct canvas * const canvasP,
         */
 
         readRect(&clip_rect);
+        rectinter(clip_rect, picFrame, &clip_rect);
         /* XXX should clip this by picFrame */
         if (verbose)
             dumpRect("clipping to", clip_rect);
