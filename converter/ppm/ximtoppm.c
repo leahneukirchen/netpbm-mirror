@@ -22,6 +22,8 @@
 #include "shhopt.h"
 #include "nstring.h"
 
+
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -113,8 +115,7 @@ ReadXimHeader(FILE *     const in_fp,
     header->ncolors = atoi(a_head.num_colors);
     header->nchannels = atoi(a_head.num_channels);
     header->bytes_per_line = atoi(a_head.bytes_per_line);
-/*    header->npics = atoi(a_head.num_pictures);
-*/
+/*    header->npics = atoi(a_head.num_pictures); */
     header->bits_channel = atoi(a_head.bits_per_channel);
     header->alpha_flag = atoi(a_head.alpha_channel);
     if (strlen(a_head.author)) {
@@ -321,19 +322,17 @@ ReadXimImage(FILE *     const in_fp,
 ***********************************************************************/
 
 static int
-ReadXim(in_fp, xim)
-    FILE *in_fp;
-    XimImage *xim;
-{
+ReadXim(FILE *     const in_fp,
+        XimImage * const xim) {
+
     if (!ReadXimHeader(in_fp, xim)) {
         pm_message("can't read xim header" );
-    return(0);
-    }
-    if (!ReadXimImage(in_fp, xim)) {
+        return 0;
+    } else if (!ReadXimImage(in_fp, xim)) {
         pm_message("can't read xim data" );
-    return(0);
-    }
-    return(1);
+        return 0;
+    } else
+        return 1;
 }
 
 
