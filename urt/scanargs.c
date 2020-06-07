@@ -114,7 +114,7 @@ va_list argl;
 
     bool    required;
     int     excnt;                      /* which flag is set */
-    bool    exflag;                     /* when set, one of a set of exclusive
+    unsigned int exflag;                /* How many of a set of exclusive
                                            flags is set */
 
     bool    list_of;                    /* set if parsing off a list of args */
@@ -770,7 +770,7 @@ reswitch:
                 switch (*++cp)
                 {
                     case ',':
-                        comma_list++;
+                        comma_list = YES;
                     case '*':
                         list_of++;
                         goto reswitch;
