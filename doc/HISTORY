@@ -14,6 +14,9 @@ not yet  BJH  Release 10.91.00
               cameratopam: Handle I/O error on input file.  Always broken.
               Cameratopam was new to Netpbm in Netpbm 10.25 (June 2005).
 
+              xbmtopbm: Recognize "unsigned short" as an extension of
+              XBM X10 format.
+
               picttoppm: Fix bug with an input file that specifies a clip
               region (ClipRgn opcode) that is not contained within the
               picture frame.  Result is invalid memory access.  Broken
@@ -30,8 +33,8 @@ not yet  BJH  Release 10.91.00
               pnmtorle: Fix incorrect command and filename in header.
               Broken in Netpbm 10.88 (September 2019).
 
-              xbmtopbm: Recognize "unsigned short" as an extension of
-              XBM X10 format.
+              ximtoppm: Fix possible program crash due to invalid memory
+              reference.
 
 20.03.26 BJH  Release 10.90.00
 
