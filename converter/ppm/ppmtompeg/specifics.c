@@ -36,7 +36,12 @@
  * HEADER FILES *
  *==============*/
 
+#include <stdio.h>
+#include <string.h>
+
 #include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+
 #include "all.h"
 #include "mtypes.h"
 #include "frames.h"
@@ -44,8 +49,6 @@
 #include "fsize.h"
 #include "dct.h"
 #include "specifics.h"
-#include <stdio.h>
-#include <string.h>
 #include "prototypes.h"
 #include "param.h"
 
@@ -149,14 +152,21 @@ static char version = -1;
 void
 Specifics_Init() {
 
-    char command[1100];
     FILE *specificsFP;
 
-    sprintf(command, "rm -f %s.cpp", specificsFile);
-    system(command);
-    sprintf(command, "cpp -P %s %s %s.cpp",
-            specificsDefines, specificsFile, specificsFile);
-    system(command);
+    {
+        const char * command;
+        pm_asprintf(&command, "rm -f %s.cpp", specificsFile);
+        system(command);
+        pm_strfree(command);
+    }
+    {
+        const char * command;
+        pm_asprintf(&command, "cpp -P %s %s %s.cpp",
+                    specificsDefines, specificsFile, specificsFile);
+        system(command);
+        pm_strfree(command);
+    }
     strcat(specificsFile, ".cpp");
     if ((specificsFP = fopen(specificsFile, "r")) == NULL) {
         fprintf(stderr, "Error with specifics file, cannot open %s\n",
@@ -164,9 +174,14 @@ Specifics_Init() {
         exit(1);
     }
     printf("Specifics file: %s\n", specificsFile);
+
     Parse_Specifics_File(specificsFP);
-    sprintf(command, "rm -f %s.cpp", specificsFile);
-    system(command);
+    {
+        const char * command;
+        pm_asprintf(&command, "rm -f %s.cpp", specificsFile);
+        system(command);
+        pm_strfree(command);
+    }
 }
 
 
