@@ -1,7 +1,9 @@
 #define _XOPEN_SOURCE   /* Make sure unistd.h contains swab() */
 #include <unistd.h>
 
-#include "pm.h"
+#include "netpbm/pm.h"
+#include "netpbm/mallocvar.h"
+
 #include "global_variables.h"
 #include "util.h"
 #include "stdio_nofail.h"
@@ -49,9 +51,21 @@ get4(FILE * const ifp)
 void
 read_shorts (FILE * const ifp, unsigned short *pixel, int count)
 {
-    fread_nofail (pixel, 2, count, ifp);
-    if ((order == 0x4949) == (BYTE_ORDER == BIG_ENDIAN))
-        swab (pixel, pixel, count*2);
+    unsigned short * buffer;
+
+    MALLOCARRAY(buffer, count);
+
+    if (!buffer)
+        pm_error("Failed to allocate a buffer for reading %u short "
+                 "integers from file", count);
+    else {
+        fread_nofail(buffer, 2, count, ifp);
+
+        if ((order == 0x4949) == (BYTE_ORDER == BIG_ENDIAN))
+            swab(buffer, pixel, count*2);
+
+        free(buffer);
+    }
 }
 
 /*

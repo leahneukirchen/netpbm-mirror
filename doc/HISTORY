@@ -33,6 +33,9 @@ not yet  BJH  Release 10.91.00
               pnmtorle: Fix incorrect command and filename in header.
               Broken in Netpbm 10.88 (September 2019).
 
+              cameratopam: Fix undefined behavior using 'swab' to swap bytes
+              in place.
+
               ppmtompeg: Fix buffer overruns with very long names in input
               parameter files.  Always broken.  Ppmtompeg was new in
               Netpbm 8.4 (April 2000).
