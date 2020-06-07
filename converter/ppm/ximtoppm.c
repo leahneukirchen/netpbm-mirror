@@ -34,7 +34,7 @@ struct CmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
@@ -57,7 +57,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 
     if (!alphaoutSpec)
@@ -339,8 +339,8 @@ ReadXim(in_fp, xim)
 
 
 int
-main(int argc,
-     char *argv[]) {
+main(int          argc,
+     const char **argv) {
 
     struct CmdlineInfo cmdline;
     FILE *ifP, *imageout_file, *alpha_file;
@@ -354,7 +354,7 @@ main(int argc,
     pixval maxval;
     bool success;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
