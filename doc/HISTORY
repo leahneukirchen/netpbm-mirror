@@ -34,7 +34,8 @@ not yet  BJH  Release 10.91.00
               Broken in Netpbm 10.88 (September 2019).
 
               ximtoppm: Fix possible program crash due to invalid memory
-              reference.
+              reference.  Always broken.  ximtoppm was in primordial Netpbm,
+              ca 1989.
 
 20.03.26 BJH  Release 10.90.00
 
