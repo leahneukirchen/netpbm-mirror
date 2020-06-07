@@ -261,7 +261,7 @@ read_basis (const char *filename, wfa_t *wfa)
 
       if (fscanf (input, MAXSTRLEN_SCANF, magic) != 1)
 	 error ("Format error: ASCII FIASCO initial basis file %s", filename);
-      else if (strneq (FIASCO_BASIS_MAGIC, magic))
+      else if (!streq (FIASCO_BASIS_MAGIC, magic))
 	 error ("Input file %s is not an ASCII FIASCO initial basis!",
 		filename);
    }

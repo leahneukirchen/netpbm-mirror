@@ -197,7 +197,7 @@ cast_image (fiasco_image_t *image)
    image_t *this = (image_t *) image->private;
    if (this)
    {
-      if (!streq (this->id, "IFIASCO"))
+      if (!STRSEQ(this->id, "IFIASCO"))
       {
      set_error (_("Parameter `image' doesn't match required type."));
      return NULL;
