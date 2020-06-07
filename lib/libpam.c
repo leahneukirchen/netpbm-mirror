@@ -420,40 +420,49 @@ pnm_setpamrow(const struct pam * const pamP,
 #define MAX_VALUE_LENGTH 255
 
 static void
-parseHeaderLine(const char buffer[],
-                char label[MAX_LABEL_LENGTH+1],
-                char value[MAX_VALUE_LENGTH+1]) {
+parseHeaderLine(const char * const buffer,
+                char *       const label,
+                char *       const value) {
+/*----------------------------------------------------------------------------
+   We truncate the labe to MAX_LABEL_LENGTH and the value to
+   MAX_VALUE_LENGTH.  There must be at least that much space (plus space
+   for a terminating NUL) at 'label' and 'value', respectively.
+-----------------------------------------------------------------------------*/
+    unsigned int bufferCurs;
 
-    int buffer_curs;
-
-    buffer_curs = 0;
     /* Skip initial white space */
-    while (ISSPACE(buffer[buffer_curs])) buffer_curs++;
+    for (bufferCurs = 0; ISSPACE(buffer[bufferCurs]); ++bufferCurs) {}
 
     {
         /* Read off label, put as much as will fit into label[] */
-        int label_curs;
-        label_curs = 0;
-        while (!ISSPACE(buffer[buffer_curs]) && buffer[buffer_curs] != '\0') {
-            if (label_curs < MAX_LABEL_LENGTH)
-                label[label_curs++] = buffer[buffer_curs];
-            buffer_curs++;
+        unsigned int labelCurs;
+
+        for (labelCurs = 0;
+             !ISSPACE(buffer[bufferCurs]) && buffer[bufferCurs] != '\0';
+             ++bufferCurs) {
+            if (labelCurs < MAX_LABEL_LENGTH)
+                label[labelCurs++] = buffer[bufferCurs];
         }
-        label[label_curs] = '\0';  /* null terminate it */
+        label[labelCurs] = '\0';  /* null terminate it */
     }
 
     /* Skip white space between label and value */
-    while (ISSPACE(buffer[buffer_curs])) buffer_curs++;
+    while (ISSPACE(buffer[bufferCurs]))
+        ++bufferCurs;
 
-    /* copy value into value[] */
-    strncpy(value, buffer+buffer_curs, MAX_VALUE_LENGTH+1);
+    /* copy value into value[], truncating as necessary */
+    strncpy(value, buffer+bufferCurs, MAX_VALUE_LENGTH);
+    value[MAX_VALUE_LENGTH] = '\0';
 
     {
         /* Remove trailing white space from value[] */
-        int value_curs;
-        value_curs = strlen(value)-1;
-        while (value_curs >= 0 && ISSPACE(value[value_curs]))
-            value[value_curs--] = '\0';
+        unsigned int valueCurs;
+
+        for (valueCurs = strlen(value);
+             valueCurs > 0 && ISSPACE(value[valueCurs-1]);
+             --valueCurs);
+
+        value[valueCurs] = '\0';
     }
 }
 
