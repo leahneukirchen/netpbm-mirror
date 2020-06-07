@@ -2,7 +2,7 @@
  *  image.c:        Input and output of PNM images.
  *
  *  Written by:     Ullrich Hafner
- *      
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -31,7 +31,7 @@
 /*****************************************************************************
 
                 prototypes
-  
+
 *****************************************************************************/
 
 static void
@@ -40,7 +40,7 @@ init_chroma_tables (void);
 /*****************************************************************************
 
                 local variables
-  
+
 *****************************************************************************/
 static int *Cr_r_tab = NULL;
 static int *Cr_g_tab = NULL;
@@ -50,7 +50,7 @@ static int *Cb_b_tab = NULL;
 /*****************************************************************************
 
                 public code
-  
+
 *****************************************************************************/
 
 static fiasco_image_t *
@@ -240,7 +240,7 @@ alloc_image (unsigned width, unsigned height, bool_t color, format_e format)
    image->color       = color;
    image->format      = format;
    image->reference_count = 1;
-   
+
    STRSCPY(image->id, "IFIASCO");
 
    for (band = first_band (color); band <= last_band (color); band++)
@@ -249,7 +249,7 @@ alloc_image (unsigned width, unsigned height, bool_t color, format_e format)
                     sizeof (word_t));
       else
      image->pixels [band] = Calloc (width * height, sizeof (word_t));
-   
+
    return image;
 }
 
@@ -266,7 +266,7 @@ clone_image (image_t *image)
    image_t *new = alloc_image (image->width, image->height, image->color,
                    image->format);
    color_e band;
-   
+
    for (band = first_band (new->color); band <= last_band (new->color); band++)
       if (new->format == FORMAT_4_2_0 && band != Y)
       {
@@ -314,7 +314,7 @@ free_image (image_t *image)
 }
 
 
-static void 
+static void
 read_image_data(image_t * const image, FILE *input, const bool_t color,
                 const int width, const int height, const xelval maxval,
                 const int format) {
@@ -336,27 +336,27 @@ read_image_data(image_t * const image, FILE *input, const bool_t color,
 
    xelrow = pnm_allocrow(width);
 
-   i = 0; 
+   i = 0;
    for (row = 0; row < height; row++) {
        int col;
        pnm_readpnmrow(input, xelrow, width, maxval, format);
        for (col = 0; col < width; col++) {
            if (color) {
-               image->pixels[Y][i] = 
-                   coeff_lu_r * PPM_GETR(xelrow[col]) 
+               image->pixels[Y][i] =
+                   coeff_lu_r * PPM_GETR(xelrow[col])
                    + coeff_lu_g * PPM_GETG(xelrow[col])
                    + coeff_lu_b * PPM_GETB(xelrow[col]) - 2048;
-               image->pixels[Cb][i] = 
-                   coeff_cb_r * PPM_GETR(xelrow[col]) 
+               image->pixels[Cb][i] =
+                   coeff_cb_r * PPM_GETR(xelrow[col])
                    + coeff_cb_g * PPM_GETG(xelrow[col])
                    + coeff_cb_b * PPM_GETB(xelrow[col]);
-               image->pixels[Cr][i] = 
-                   coeff_cr_r * PPM_GETR(xelrow[col]) 
+               image->pixels[Cr][i] =
+                   coeff_cr_r * PPM_GETR(xelrow[col])
                    + coeff_cr_g * PPM_GETG(xelrow[col])
                    + coeff_cr_b * PPM_GETB(xelrow[col]);
 
                i++;
-           } else 
+           } else
                image->pixels[GRAY][i++] =
                    PNM_GET1(xelrow[col]) * 4095 / maxval - 2048;
        }
@@ -434,7 +434,7 @@ void
 write_image (const char *image_name, const image_t *image)
 /*
  *  Write given 'image' data to the file 'image_name'.
- *  
+ *
  *  No return value.
  */
 {
@@ -446,13 +446,13 @@ write_image (const char *image_name, const image_t *image)
    unsigned *gray_clip;         /* clipping table */
 
    assert (image && image_name);
-   
+
    if (image->format == FORMAT_4_2_0)
    {
       warning ("We cannot write images in 4:2:0 format.");
       return;
    }
-   
+
    if (image_name == NULL)
        output = stdout;
    else if (streq(image_name, "-"))
@@ -466,7 +466,7 @@ write_image (const char *image_name, const image_t *image)
    init_chroma_tables ();
 
    format = image->color ? PPM_TYPE : PGM_TYPE;
-   
+
    pnm_writepnminit(output, image->width, image->height, 255, format, 0);
 
    xelrow = pnm_allocrow(image->width);
@@ -481,18 +481,18 @@ write_image (const char *image_name, const image_t *image)
                cbval = image->pixels[Cb][i] / 16;
                crval = image->pixels[Cr][i] / 16;
 
-               PPM_ASSIGN(xelrow[col], 
+               PPM_ASSIGN(xelrow[col],
                           gray_clip[yval + Cr_r_tab[crval]],
                           gray_clip[yval + Cr_g_tab[crval] + Cb_g_tab [cbval]],
                           gray_clip[yval + Cb_b_tab[cbval]]);
 
            } else
                /* The 16 below should be 4095/255 = 16.0588 */
-               PNM_ASSIGN1(xelrow[col], 
+               PNM_ASSIGN1(xelrow[col],
                            gray_clip[image->pixels[GRAY][i]/16+128]);
            i++;
        }
-       pnm_writepnmrow(output, xelrow, 
+       pnm_writepnmrow(output, xelrow,
                        image->width, 255, format, 0);
    }
    pnm_freerow(xelrow);
@@ -511,7 +511,7 @@ same_image_type (const image_t *img1, const image_t *img2)
  */
 {
    assert (img1 && img2);
-   
+
    return ((img1->width == img2->width)
        && (img1->height == img2->height)
        && (img1->color == img2->color)
@@ -521,7 +521,7 @@ same_image_type (const image_t *img1, const image_t *img2)
 /*****************************************************************************
 
                 private code
-  
+
 *****************************************************************************/
 
 static void
@@ -547,21 +547,21 @@ init_chroma_tables (void)
 
       Cr_r_tab[i] =  1.4022 * crval + 0.5;
       Cr_g_tab[i] = -0.7145 * crval + 0.5;
-      Cb_g_tab[i] = -0.3456 * cbval + 0.5; 
+      Cb_g_tab[i] = -0.3456 * cbval + 0.5;
       Cb_b_tab[i] =  1.7710 * cbval + 0.5;
    }
    for (i = 0; i < 256; i++)
    {
       Cr_r_tab[i] = Cr_r_tab[256];
       Cr_g_tab[i] = Cr_g_tab[256];
-      Cb_g_tab[i] = Cb_g_tab[256]; 
+      Cb_g_tab[i] = Cb_g_tab[256];
       Cb_b_tab[i] = Cb_b_tab[256];
    }
    for (i = 512; i < 768; i++)
    {
       Cr_r_tab[i] = Cr_r_tab[511];
       Cr_g_tab[i] = Cr_g_tab[511];
-      Cb_g_tab[i] = Cb_g_tab[511]; 
+      Cb_g_tab[i] = Cb_g_tab[511];
       Cb_b_tab[i] = Cb_b_tab[511];
    }
 
