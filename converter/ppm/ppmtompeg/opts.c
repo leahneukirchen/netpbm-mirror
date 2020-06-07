@@ -1,12 +1,12 @@
 /*===========================================================================*
- * opts.c								     *
- *									     *
+ * opts.c                                                                    *
+ *                                                                           *
  *      Special C code to handle TUNEing options                             *
- *									     *
- * EXPORTED PROCEDURES:							     *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
  *      Tune_Init                                                            *
  *      CollectQuantStats                                                    *
- *									     *
+ *                                                                           *
  *===========================================================================*/
 
 
@@ -92,9 +92,9 @@ boolean BSkipBlocks = TRUE;
  *
  * SkipSpacesTabs
  *
- *	skip all spaces and tabs
+ *      skip all spaces and tabs
  *
- * RETURNS:	point to next character not a space or tab
+ * RETURNS:     point to next character not a space or tab
  *
  * SIDE EFFECTS:    none
  *
@@ -117,7 +117,7 @@ SkipSpacesTabs(const char * const start) {
  *
  *     Setup variables to collect statistics on quantization values
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets collect_quant and collect_quant_fp
  *
@@ -161,7 +161,7 @@ SetupCollectQuantStats(const char * const charPtr)
  *
  *     Do a transform on small lum values
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets kill_dim, kill_dim_break, kill_dim_end
  *
@@ -173,11 +173,11 @@ SetupKillDimAreas(const char * const charPtr)
 
   kill_dim = TRUE;
   items_scanned = sscanf(charPtr, "%d %d %f",
-			 &kill_dim_break, &kill_dim_end, &kill_dim_slope);
+                         &kill_dim_break, &kill_dim_end, &kill_dim_slope);
   if (items_scanned != 3) {
     kill_dim_slope = 0.25;
     items_scanned = sscanf(charPtr, "%d %d",
-			   &kill_dim_break, &kill_dim_end);
+                           &kill_dim_break, &kill_dim_end);
     if (items_scanned != 2) {
       /* Use defaults */
       kill_dim_break = 20;
@@ -203,7 +203,7 @@ SetupKillDimAreas(const char * const charPtr)
  *
  *     Setup encoder to squash small changes in Y or Cr/Cb values
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets squash_max_differences SquashMaxLum SquashMaxChr
  *
@@ -226,7 +226,7 @@ SetupSquashSmall(const char * const charPtr)
  *
  *     Setup encoder to use DCT for rate-distortion estimat ein Psearches
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets SearchCompareMode and
  *                        can change LocalDCTRateScale, LocalDCTDistortScale
@@ -257,7 +257,7 @@ SetupLocalDCT(const char * const charPtr)
  *
  *     Setup encoder to find distribution for I-frames, and use for -snr
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets DoLaplace, L1, L2, and Lambdas
  *
@@ -319,11 +319,11 @@ SetupWriteDistortions(const char * const charPtr)
       char scratch[256];
       collect_distortion_detailed = 2;
       for (i = 1;  i < 32;  i++) {
-	sprintf(scratch, "%srate%d", fname, i);
-	fp_table_rate[i-1] = fopen(scratch, "w");
-	sprintf(scratch, "%sdist%d", fname, i);
-	fp_table_dist[i-1] = fopen(scratch, "w");
-	}}
+        sprintf(scratch, "%srate%d", fname, i);
+        fp_table_rate[i-1] = fopen(scratch, "w");
+        sprintf(scratch, "%sdist%d", fname, i);
+        fp_table_dist[i-1] = fopen(scratch, "w");
+        }}
       break;
     default:
       fprintf(stderr, "Unknown TUNE parameter setting format %s\n", cp);
@@ -354,10 +354,10 @@ CalcLambdas(void) {
  *
  * Mpost_UnQuantZigBlockLaplace
  *
- *	unquantize and zig-zag (decode) a single block, using the distrib to get vals
+ *      unquantize and zig-zag (decode) a single block, using the distrib to get vals
  *      Iblocks only now
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -370,9 +370,9 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
     boolean iblock;
 {
     register int index;
-    int	    position;
-    register int	    qentry;
-    int	    level, coeff;
+    int     position;
+    register int            qentry;
+    int     level, coeff;
     double low, high;
     double mid,lam;
 
@@ -384,8 +384,8 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
       level = in[index];
 
       if (level == 0) {
-	((int16 *)out)[position] = 0;
-	continue;
+        ((int16 *)out)[position] = 0;
+        continue;
       }
       qentry = qtable[position] * qscale;
       coeff = (level*qentry)/8;
@@ -395,19 +395,19 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
       mid = (1.0/lam) * log(0.5*(exp(-lam*low)+exp(-lam*high)));
       mid = ABS(mid);
       if (mid - floor(mid) > .4999) {
-	mid = ceil(mid);
+        mid = ceil(mid);
       } else {
-	mid = floor(mid);
+        mid = floor(mid);
       }
       if (level<0) {mid = -mid;}
 /*printf("(%2.1lf-%2.1lf): old: %d vs %d\n",low,high,coeff,(int) mid);*/
       coeff = mid;
       if ( (coeff & 1) == 0 ) {
-	if ( coeff < 0 ) {
-	  coeff++;
-	} else if ( coeff > 0 ) {
-	  coeff--;
-	}
+        if ( coeff < 0 ) {
+          coeff++;
+        } else if ( coeff > 0 ) {
+          coeff--;
+        }
       }
       ((int16 *)out)[position] = coeff;
     }
@@ -438,7 +438,7 @@ mse(Block blk1, Block blk2)
  *
  *     Do any setup needed before coding stream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:  varies
  *
@@ -462,7 +462,7 @@ void Tune_Init()
     for (i=0; i<64; i++)
       fprintf(collect_quant_fp, " %d", niqtable[i]);
     fprintf(collect_quant_fp, "\n# %d %d %d\n\n",
-	    GetIQScale(), GetPQScale(), GetBQScale());
+            GetIQScale(), GetPQScale(), GetBQScale());
 
   }
 
@@ -484,7 +484,7 @@ void Tune_Init()
  *
  *     Handle the strings following TUNE
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:  varies
  *
