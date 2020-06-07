@@ -22,7 +22,7 @@
 #include "shhopt.h"
 #include "nstring.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -35,7 +35,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -211,7 +211,8 @@ ReadImageChannel(FILE *         const infp,
         }
         /* return to the beginning of the next image's buffer */
         if (fseek(infp, marker, 0) == -1) {
-            pm_message("ReadImageChannel: can't fseek to location in image buffer" );
+            pm_message("ReadImageChannel: can't fseek to location "
+                       "in image buffer");
             return(0);
         }
         free((char *)line);
@@ -341,7 +342,7 @@ int
 main(int argc,
      char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE *ifP, *imageout_file, *alpha_file;
     XimImage xim;
     pixel *pixelrow, colormap[256];
