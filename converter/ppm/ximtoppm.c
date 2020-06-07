@@ -124,7 +124,7 @@ ReadXimHeader(FILE *     const in_fp,
             pm_message("ReadXimHeader: can't calloc author string" );
             return(0);
         }
-    header->width = atoi(a_head.image_width);
+        header->width = atoi(a_head.image_width);
         strncpy(header->author, a_head.author, strlen(a_head.author));
     }
     if (strlen(a_head.date)) {
@@ -132,7 +132,7 @@ ReadXimHeader(FILE *     const in_fp,
             pm_message("ReadXimHeader: can't calloc date string" );
             return(0);
         }
-    header->width = atoi(a_head.image_width);
+        header->width = atoi(a_head.image_width);
         strncpy(header->date, a_head.date, strlen(a_head.date));
     }
     if (strlen(a_head.program)) {
@@ -141,7 +141,7 @@ ReadXimHeader(FILE *     const in_fp,
             pm_message("ReadXimHeader: can't calloc program string" );
             return(0);
         }
-    header->width = atoi(a_head.image_width);
+        header->width = atoi(a_head.image_width);
         strncpy(header->program, a_head.program,strlen(a_head.program));
     }
     /* Do double checking for backwards compatibility */
