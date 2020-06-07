@@ -1715,8 +1715,8 @@ doBlit(struct Rect       const srcRect,
 
 
 static int
-blit(const struct Rect const srcRect,
-     const struct Rect const srcBounds,
+blit(struct Rect       const srcRect,
+     struct Rect       const srcBounds,
      struct raster     const srcplane,
      struct canvas *   const canvasP,
      blitList *        const blitListP,
