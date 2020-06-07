@@ -770,10 +770,10 @@ extractAfterLastSlash(const char * const fullPath,
     slashPos = strrchr(fullPath, '/');
 
     if (slashPos == NULL) {
-        strncpy(retval, fullPath, retvalSize);
+        strncpy(retval, fullPath, retvalSize-1);
         retval[retvalSize-1] = '\0';
     } else {
-        strncpy(retval, slashPos +1, retvalSize);
+        strncpy(retval, slashPos + 1, retvalSize-1);
         retval[retvalSize-1] = '\0';
     }
 }
