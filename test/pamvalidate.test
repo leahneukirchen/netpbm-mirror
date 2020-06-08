@@ -1,0 +1,17 @@
+#! /bin/bash
+# This script tests: pamvalidate
+# Also requires:
+
+echo "valid"
+echo -e "P1\n5 5\n01010\n10101\n01010\n00000\n11111\n" | pamvalidate -plain
+
+echo "not valid: Should print 0 four times"
+echo -e "P1\n5 5\n01010\n10101\n01010\n00000\n1111\n"  | pamvalidate | wc -c
+
+echo -e "P1\n5 5\n01010\n10102\n01010\n00001\n11111\n" | pamvalidate | wc -c
+
+echo -e "P1\n5\n01010\n10101\n01010\n00000\n11111\n" | pamvalidate | wc -c
+
+echo -e "P1\n5 5" | pamvalidate | wc -c
+
+

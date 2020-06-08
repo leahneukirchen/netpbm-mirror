@@ -120,12 +120,16 @@ pamtopdbimg.test
 pbmtog3.test
 411toppm.test
 eyuvtoppm.test
+rawtoppm.test
 
 pbm-misc-converters.test
 
 # Miscellaneous utility tests
 
 ppmdfont.test
+pamfix.test
+pamvalidate.test
+pamexec.test
 
 # Round-trip tests : editors
 
@@ -144,6 +148,10 @@ lookup-roundtrip.test
 enlarge-reduce-roundtrip.test
 cut-cat-roundtrip.test
 pamhue-roundtrip.test
+
+# Round-trip tests: miscellaneous utility
+
+pamexec-roundtrip.test
 
 # Round-trip tests : lossless converters
 
@@ -179,6 +187,7 @@ pi3-roundtrip.test
 pict-roundtrip.test
 png-roundtrip.test
 png-roundtrip2.test
+pj-roundtrip.test
 ps-roundtrip.test
 ps-flate-roundtrip.test
 ps-alt-roundtrip.test

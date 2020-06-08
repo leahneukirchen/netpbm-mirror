@@ -1,0 +1,10 @@
+Test 1: should print stdin: PPM RAW 17 22 3 255 RGB six times
+stdin: PPM RAW 17 22 3 255 RGB
+stdin: PPM RAW 17 22 3 255 RGB
+stdin: PPM RAW 17 22 3 255 RGB
+stdin: PPM RAW 17 22 3 255 RGB
+stdin: PPM RAW 17 22 3 255 RGB
+stdin: PPM RAW 17 22 3 255 RGB
+Test 2: should print '0 0 : 0' twice
+0 0 : 0
+0 0 : 0

@@ -7,8 +7,8 @@ LC_ALL=C
 export LANG LC_ALL
 
 
-# This test requires the iconv command and a working UTF-8 locale 
-# Skip this test if they are not available
+# This test requires a working UTF-8 locale 
+# Skip this test if it is are not available
 
 iconv /dev/null
 if [ $? -ne 0  ]
@@ -61,8 +61,8 @@ awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
     pbmtext -builtin bdf | cksum
 
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=161;i<=255;++i) printf("%c",i);  }' | \
-    iconv -f iso8859-1 -t utf-8 | \
+             for (i=161;i<=191;++i) printf("%c%c",194,i);     \
+             for (i=128;i<=191;++i) printf("%c%c",195,i); }' | \
     LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
 
 
@@ -84,17 +84,18 @@ output=${tmpdir}/output
 # Test 3.
 # Two rows
 # Compare with cmp.
-# Should print 0
+# Should print 0 0 0 : 0
 
 echo "Test 3"
 
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
-    iconv -f iso8859-1 -t utf-8 > ${output}
+             for (i=161;i<=191;++i) printf("%c%c",194,i);      \
+             for (i=128;i<=191;++i) printf("%c%c",195,i); print ""}' \
+    > ${output}
 
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
-    iconv -f iso8859-1 -t utf-8 | \
+             for (i=161;i<=191;++i) printf("%c%c",194,i);      \
+             for (i=128;i<=191;++i) printf("%c%c",195,i); print ""}' | \
     LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar -text-dump | \
     cmp --quiet - ${output}
 
@@ -123,8 +124,7 @@ echo "Test 5 Invalid"
 long_txt=${tmpdir}/long.txt
 test_out=${tmpdir}/test_out
 
-head -c 4999 /dev/zero | tr '\0' '\276' | \
-  iconv -f iso-8859-1 -t utf-8 > ${long_txt}
+head -c 4999 /dev/zero | sed 's@\x00@\xc2\xbe@g' > ${long_txt}
 cat ${long_txt} | wc -c
 
 cat ${long_txt} | \

@@ -1,0 +1,25 @@
+#! /bin/bash
+# This script tests: pamexec
+# Also requires: ppmpat ppmmake pamfile
+
+tmpdir=${tmpdir:-/tmp}
+test_ppm=${tmpdir}/test_ppm
+
+echo "Test 1: should print stdin: PPM RAW 17 22 3 255 RGB six times"
+
+( ppmmake rgb:0/255/127 17 22
+  ppmpat -g2 --color=rgb:143/188/143,rgb:161/161/161 17 22
+  ppmpat -g3 --color=rgb:224/255/255,rgb:255/130/171,rgb:255/48/48 17 22
+  ppmpat -madras --color=rgb:181/181/181,rgb:51/62/99,rgb:205/193/197 17 22
+  ppmpat -tartan --color=rgb:238/233/191,rgb:84/84/84,rgb:255/160/122 17 22
+  ppmpat -argyle2 --color=rgb:205/104/57,rgb:119/136/153,rgb:255/255/255 17 22
+) | tee ${test_ppm} | pamfile -all -machine
+
+echo "Test 2: should print '0 0 : 0' twice"
+
+pamexec "ppmtoppm " ${test_ppm} | cmp -s ${test_ppm} -  
+  echo ${PIPESTATUS[@]} ":" $?
+pamexec "cat " ${test_ppm} | cmp -s ${test_ppm} -  
+  echo ${PIPESTATUS[@]} ":" $?
+
+rm ${test_ppm}
