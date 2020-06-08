@@ -76,8 +76,15 @@ pm_accept_null(int    const pipetosuckFd,
 struct bufferDesc {
     /* This is just a parameter for the routines below */
     unsigned int    size;
+       /* For a read operation, number amount of space available to store
+          data read.  For a write operation, number of bytes of data available.
+       */
     unsigned char * buffer;
     unsigned int *  bytesTransferredP;
+        /* The function returns the number of bytes placed in the buffer or
+           extracted from the buffer here.  NULL if you don't want that
+           information.
+        */
 };
 
 
