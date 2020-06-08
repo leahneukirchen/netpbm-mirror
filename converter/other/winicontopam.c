@@ -25,7 +25,7 @@ static bool verbose;
 
 
 struct CmdlineInfo {
-    
+
     const char * inputFileName;
     unsigned int allimages;
     unsigned int imageSpec;
@@ -78,7 +78,7 @@ parseCommandLine(int argc, const char **argv,
             pm_error("Too many arguments.  The only possible "
                      "non-option argument is the input file name");
     }
-        
+
     free(option_def);
 }
 
@@ -93,7 +93,7 @@ struct File {
     FILE *       fileP;
     const char * name;
     pm_filepos   pos;
-    
+
 };
 
 
@@ -122,7 +122,7 @@ static uint32_t
 u32_le(const unsigned char * const buf,
        size_t                const offset) {
 
-    return 
+    return
         ((uint32_t)buf[offset + 0] <<  0) +
         ((uint32_t)buf[offset + 1] <<  8) +
         ((uint32_t)buf[offset + 2] << 16) +
@@ -135,7 +135,7 @@ static uint32_t
 s32_le(const unsigned char * const buf,
        size_t                const offset) {
 
-    return 
+    return
         ((uint32_t)buf[offset + 0] <<  0) +
         ((uint32_t)buf[offset + 1] <<  8) +
         ((uint32_t)buf[offset + 2] << 16) +
@@ -156,8 +156,8 @@ u8_be(const unsigned char * const buf,
 static uint32_t
 u32_be(const unsigned char * const buf,
        size_t                const offset) {
-    
-    return 
+
+    return
         ((uint32_t)buf[offset + 0] << 24) +
         ((uint32_t)buf[offset + 1] << 16) +
         ((uint32_t)buf[offset + 2] <<  8) +
@@ -225,7 +225,7 @@ dumpIconDir(const struct IconDir * const dirP) {
     }
 }
 
-            
+
 
 static struct IconDir *
 readIconDir(struct File * const fP,
@@ -271,7 +271,7 @@ readIconDir(struct File * const fP,
 
         pm_readcharu(fP->fileP, &heightField);
         dirEntryP->height = (heightField == 0 ? 256 : heightField);
-        
+
         pm_readcharu(fP->fileP, &dirEntryP->color_count);
 
         pm_readcharu(fP->fileP, &dirEntryP->zero);
@@ -290,7 +290,7 @@ readIconDir(struct File * const fP,
     }
 
     /* The following is paranoia code only:
-     
+
        I've never seen a windows icon file in the wild with having the entries
        in the directory stored in a different order than the images
        themselves.  However, the file format allows for it ...
@@ -301,7 +301,7 @@ readIconDir(struct File * const fP,
         pm_message("%s icon directory (%u image%s):",
                    fP->name,
                    dirP->count, dirP->count == 1 ? "" : "s");
-        
+
         for (imageIndex = 0; imageIndex < dirP->count; ++imageIndex) {
             const struct IconDirEntry * const dirEntryP =
                 &dirP->entries[imageIndex];
@@ -355,7 +355,7 @@ readImage(struct File *         const fP,
 
     /*  Don't try to read an image that is smaller than the
         BITMAPINFOHEADER of BMP images (40 bytes).
-     
+
         PNG compressed images can't be smaller than that either, as the
         PNG header plus the mandantory IHDR and IEND chunks already take
         8 + 25 + 12 = 35 bytes, and there is to be a IDAT chunk too.
@@ -369,7 +369,7 @@ readImage(struct File *         const fP,
                  dirEntryP->index);
 
     /* The following is paranoia code only:
-     
+
        I've never seen a windows icon file in the wild with gaps between
        the images, but the file format allows for it, and Microsoft
        expects the user to fseek() to the start of each image.
@@ -472,11 +472,11 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
     uint32_t    bytesPerRow;
     const unsigned char * bitmapCursor;
     uint32_t sizeRemaining;
-  
+
     uint8_t (*getIdx) (const unsigned char * bitmap,
                        uint32_t rowOffset,
                        int16_t col);
-  
+
     if (hdrP->compression_method != BI_RGB)
         pm_error("image %2u: invalid compression method %u.",
                  index, hdrP->compression_method);
@@ -518,7 +518,7 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
     if (sizeRemaining < paletteSize)
         pm_error("image %2u: "
                  "reading palette: image truncated.", index);
-    
+
     palette = (const PaletteEntry *) bitmapCursor;
 
     if (needHeaderDump)
@@ -562,7 +562,7 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
 
                 /*  The palette is an array of little-endian 32-bit values,
                     where the RGB value is encoded as follows:
-                 
+
                     red:   bits 2^16..2^23
                     green: bits 2^8 ..2^15
                     blue:  bits 2^0 ..2^7
@@ -823,7 +823,7 @@ readAnd(struct BitmapInfoHeader * const hdrP,
 
         if (offset + bytesPerRow <= sizeRemaining) {
             unsigned int col;
-            
+
             for (col = 0; col < hdrP->bm_width; ++col) {
                 tuples[row][col][plane] =
                     ((u8_le(bitmap, offset + col/8)
@@ -952,7 +952,7 @@ reportImage(unsigned int            const imageIndex,
             struct BitmapInfoHeader const hdr,
             bool                    const haveAlpha) {
 
-    const char * const style = 
+    const char * const style =
         haveAlpha ? "RGB +alpha" :
         hdr.bits_per_pixel < 16 ? "RGB/palette" :
         "RGB"
@@ -973,7 +973,7 @@ convertBmp(const unsigned char * const image,
            struct IconDirEntry * const dirEntryP,
            bool                  const needHeaderDump,
            bool                  const wantAndMaskPlane) {
-    
+
     struct BitmapInfoHeader hdr;
     uint32_t                offset;
     bool                    haveAlpha;
@@ -1024,7 +1024,7 @@ convertBmp(const unsigned char * const image,
 
     tuples = pnm_allocpamarray(&outpam);
 
-    readXorMask(&hdr, &image[offset], 
+    readXorMask(&hdr, &image[offset],
                 dirEntryP->size - offset,
                 tuples, dirEntryP->index, needHeaderDump,
                 &haveAlpha, &xorByteCt);
@@ -1070,7 +1070,7 @@ convertBmp(const unsigned char * const image,
 static void
 reportPngInfo(const unsigned char * const image,
               struct IconDirEntry * const dirEntryP) {
-    
+
     struct PngIhdr ihdr;
 
     ihdr.length      = u32_be (image, sizeof(pngHeader)  +0);
@@ -1174,7 +1174,7 @@ bestImage(struct IconDir * const dirP) {
     bestPixelCt = 0;  /* initial value */
     bestColorCt = 0;  /* initial value */
     best        = 0;  /* initial value */
-    
+
     for (imageIndex = 0; dirP->count > imageIndex; ++imageIndex) {
         struct IconDirEntry * const dirEntryP = &dirP->entries[imageIndex];
 
@@ -1183,7 +1183,7 @@ bestImage(struct IconDir * const dirP) {
         uint32_t colorCt;
 
         /*  32-bit icons have 24 bit color information only.
-         
+
             Since NT 5.1 (aka WinXP), it is allowed to place 8-bit
             transparency information in the remaining bits (to check,
             you have to read all these bits in the image!), so I prefer
@@ -1273,7 +1273,7 @@ main (int argc, const char *argv []) {
         convertImage(&ico, &dirP->entries[bestImage(dirP)], stdout,
                      cmdline.headerdump, cmdline.andmasks);
     }
-    
+
     freeIconDir(dirP);
 
     if (ico.fileP != stdin)
