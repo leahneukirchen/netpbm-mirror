@@ -1148,14 +1148,16 @@ convertPng(const unsigned char * const image,
            FILE *                const ofP,
            struct IconDirEntry * const dirEntryP) {
 
-    struct bufferDesc imageBuffer;
+    pm_bufferDesc imageBuffer;
 
     reportPngInfo(image, dirEntryP);
 
-    imageBuffer.size = dirEntryP->size;
-    imageBuffer.buffer = (unsigned char *)image;
+    imageBuffer.size              = dirEntryP->size;
+    imageBuffer.buffer            = (unsigned char *)image;
+    imageBuffer.bytesTransferredP = NULL;
 
-    fflush (stdout);
+    fflush(stdout);
+
     pm_system_lp("pngtopam", pm_feed_from_memory, &imageBuffer,
                  NULL /* stdout accepter */, NULL,
                  "pngtopam", "-alphapam", NULL);
