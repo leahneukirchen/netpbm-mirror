@@ -4,6 +4,26 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.06.10 BJH  Release 10.90.04
+
+              pjtoppm: Handle input stream with no transmission mode command.
+              Always broken.  Pjtoppm was in primordial Netpbm (1991).
+
+              cameratopam: Fix buffer overrun.  Always present. (cameratopam
+              was new in Netpbm 10.28 (June 2005)).
+
+              ppmtompeg: Fix buffer overruns with very long names in input
+              parameter files.  Always broken.  Ppmtompeg was new in
+              Netpbm 8.4 (April 2000).
+
+              ximtoppm: Fix possible program crash due to invalid memory
+              reference.  Always broken.  ximtoppm was in primordial Netpbm,
+              ca 1989.
+
+              pjtoppm: Fix handling of input with width unspecified or not
+              positive.  Always broken.  (Pjtoppm was in primordial Netpbm, ca
+              1991).
+
 20.05.29 BJH  Release 10.90.03
 
               picttoppm: Fix bug with an input file that specifies a clip

@@ -63,9 +63,9 @@ typedef struct XimImage {
     short tpics, npics;    /* number of images, total & left in file */
     short ncolors;         /*   "    "  colors in the color table */
     Color* colors;         /* colortable, one byte per r/g/b & pixel */
-    char* author;         /* author credit, copyright, etc */
-    char* date;           /* date image was made, grabbed, etc. */
-    char* program;        /* program used to make this */
+    const char* author;    /* author credit, copyright, etc */
+    const char* date;      /* date image was made, grabbed, etc. */
+    const char* program;   /* program used to make this */
     short ncomments;       /* number of comments strings */
     char** comments;      /* pointers to null terminated strings */
     char* offset;         /* original offset in machine memory */

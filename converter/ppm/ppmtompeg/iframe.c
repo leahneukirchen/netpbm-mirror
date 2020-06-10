@@ -51,6 +51,9 @@
 
 #include <sys/types.h>
 #include <sys/param.h>
+
+#include "netpbm/nstring.h"
+
 #include "all.h"
 #include "mtypes.h"
 #include "frames.h"
@@ -899,7 +902,7 @@ void
 WriteDecodedFrame(MpegFrame * const frame) {
 
     FILE * fpointer;
-    char   fileName[256];
+    const char * fileName;
     int    width, height;
     int    y;
 
@@ -909,7 +912,7 @@ WriteDecodedFrame(MpegFrame * const frame) {
     width = Fsize_x;
     height = Fsize_y;
 
-    sprintf(fileName, "%s.decoded.%d", outputFileName, frame->id);
+    pm_asprintf(&fileName, "%s.decoded.%d", outputFileName, frame->id);
 
     if (!realQuiet) {
         fprintf(stdout, "Outputting to %s\n", fileName);
@@ -931,6 +934,7 @@ WriteDecodedFrame(MpegFrame * const frame) {
     }
     fflush(fpointer);
     fclose(fpointer);
+    pm_strfree(fileName);
 }
 
 

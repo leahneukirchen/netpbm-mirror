@@ -10,6 +10,8 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
+
 #include "ppm.h"
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -49,11 +51,16 @@ main(int argc, const char ** argv) {
 
     int cmd, val;
     char buffer[BUFSIZ];
-    int planes = 3, rows = -1, cols = -1;
+    int planes = 3;
+    unsigned int rows;
+    unsigned int rowsX;
+    unsigned int cols;
+    bool colsIsSet;
     unsigned char **image = NULL;
     int *imlen;
     FILE * ifP;
     int mode;
+    bool modeIsSet;
     int argn;
     unsigned char bf[3];
     pixel * pixrow;
@@ -74,6 +81,9 @@ main(int argc, const char ** argv) {
 
     row = 0;  /* initial value */
     plane = 0;  /* initial value */
+    modeIsSet = false;  /* initial value */
+    colsIsSet = false;  /* initial value */
+    rowsX = 0;  /* initial value */
 
     while ((c = fgetc(ifP)) != -1) {
         if (c != '\033')
@@ -115,10 +125,18 @@ main(int argc, const char ** argv) {
             case 'r':
                 switch (c) {
                 case 'S':   /* width */
-                    cols = val;
+                    if (val < 0)
+                        pm_error("invalid width value");
+                    else {
+                        cols = val;
+                        colsIsSet = true;
+                    }
                     break;
                 case 'T':   /* height */
-                    rows = val;
+                    if (val < 0)
+                        pm_error ("invalid height value");
+                    else
+                        rowsX = val;
                     break;
                 case 'U':   /* planes */
                     planes = val;
@@ -145,24 +163,28 @@ main(int argc, const char ** argv) {
                     if (val != 0 && val != 1)
                         pm_error("unimplemented transmission mode %d", val);
                     mode = val;
+                    modeIsSet = true;
                     break;
                 case 'V':   /* send plane */
                 case 'W':   /* send last plane */
-                    if (rows == -1 || row >= rows || image == NULL) {
-                        if (rows == -1 || row >= rows)
-                            rows += 100;
+                    if (row >= rowsX || image == NULL) {
+                        if (row >= rowsX)
+                            rowsX += 100;
                         if (image == NULL) {
-                            MALLOCARRAY(image, uintProduct(rows, planes));
-                            MALLOCARRAY(imlen, uintProduct(rows, planes));
+                            MALLOCARRAY(image, uintProduct(rowsX, planes));
+                            MALLOCARRAY(imlen, uintProduct(rowsX, planes));
                         } else {
-                            REALLOCARRAY(image, uintProduct(rows, planes));
-                            REALLOCARRAY(imlen, uintProduct(rows, planes));
+                            REALLOCARRAY(image, uintProduct(rowsX, planes));
+                            REALLOCARRAY(imlen, uintProduct(rowsX, planes));
                         }
                     }
                     if (image == NULL || imlen == NULL)
                         pm_error("out of memory");
                     if (plane >= planes)
                         pm_error("too many planes");
+                    if (!colsIsSet)
+                        pm_error("missing width value");
+
                     cols = MAX(cols, val);
                     imlen[row * planes + plane] = val;
                     MALLOCARRAY(image[row * planes + plane], val);
@@ -214,9 +236,15 @@ main(int argc, const char ** argv) {
         } /* switch */
     }
     pm_close(ifP);
+
+    if (!modeIsSet)
+        pm_error("Input does not contain a 'bM' transmission mode order");
+
     rows = row;
     if (mode == 1) {
-        int const newcols = 10240;  /* It could not be larger that that! */
+        unsigned int const newcols = 10240;
+            /* It could not be larger than that! */
+
         unsigned char * buf;
         unsigned int row;
 

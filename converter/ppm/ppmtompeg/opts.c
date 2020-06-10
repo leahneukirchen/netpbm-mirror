@@ -39,6 +39,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include "netpbm/nstring.h"
+
 #include "opts.h"
 #include "dct.h"
 
@@ -316,14 +319,22 @@ SetupWriteDistortions(const char * const charPtr)
       collect_distortion_detailed = TRUE;
       break;
     case 't': {
-      char scratch[256];
       collect_distortion_detailed = 2;
       for (i = 1;  i < 32;  i++) {
-	sprintf(scratch, "%srate%d", fname, i);
-	fp_table_rate[i-1] = fopen(scratch, "w");
-	sprintf(scratch, "%sdist%d", fname, i);
-	fp_table_dist[i-1] = fopen(scratch, "w");
-	}}
+        {
+          const char * scratch;
+          pm_asprintf(&scratch, "%srate%d", fname, i);
+          fp_table_rate[i-1] = fopen(scratch, "w");
+          pm_strfree(scratch);
+        }
+        {
+          const char * scratch;
+          pm_asprintf(&scratch, "%sdist%d", fname, i);
+          fp_table_dist[i-1] = fopen(scratch, "w");
+          pm_strfree(scratch);
+        }
+      }
+    }
       break;
     default:
       fprintf(stderr, "Unknown TUNE parameter setting format %s\n", cp);
