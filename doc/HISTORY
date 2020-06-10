@@ -17,6 +17,10 @@ not yet  BJH  Release 10.91.00
               xbmtopbm: Recognize "unsigned short" as an extension of
               XBM X10 format.
 
+              pjtoppm: Fix handling of input with width unspecified or not
+              positive.  Always broken.  (Pjtoppm was in primordial Netpbm, ca
+              1991).
+
               winicontopam: Fix crash with PNG icon.  Always broken.
               Winicontopam was new in Netpbm 10.63 (June 2013).
 
