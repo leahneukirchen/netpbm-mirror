@@ -1,3 +1,25 @@
+/*=============================================================================
+                             winicontopam
+===============================================================================
+  Convert from Windows icon format to PAM
+=============================================================================*/
+
+/*
+  Here are some references for the Windows icon format:
+
+  ICO (file format) - Wikipedia
+  https://en.wikipedia.org/wiki/ICO_(file_format)
+
+  ICO - Just Solve the File Format Problem
+  http://fileformats.archiveteam.org/wiki/ICO
+  (Has links to example icon file collections)
+
+  GFF Format Summary: Microsoft Windows Cursor and Icon
+  https://web.archive.org/web/20050421161512/http:/www.oreilly.com/www/centers/gff/formats/miccur/index.htm
+
+
+*/
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
