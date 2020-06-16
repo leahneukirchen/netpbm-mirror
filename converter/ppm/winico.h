@@ -28,21 +28,22 @@ struct MS_Ico_ {
 
 
 struct IC_Entry_ {
-   u1 width;
-   u1 height;
    /*
-    * color_count is actually a byte (u1)... but 0 = 256, so I've used a short (u2).
+    * width, height, color_count are a byte in the format, but 0 = 256,
+    * so it takes a short (u2) to represent the value normally.
     */
+   u2 width;
+   u2 height;
    u2 color_count;
    u1 reserved;
    u2 planes;
-   u2 bitcount;
+   u2 bitcount;    /* 0, 1, 4, or 8 */
    u4 size_in_bytes;
    u4 file_offset;
    IC_InfoHeader ih;
    IC_Color * colors;
    /*
-    * Below here, I have useful fields which aren't in the spec, but 
+    * Below here, I have useful fields which aren't in the spec, but
     * save having to keep stoopid amounts of global data.
     */
    u1 * andBitmap;        /* Used in reader. */

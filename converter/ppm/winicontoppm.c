@@ -173,12 +173,21 @@ readU1String (FILE *       const ifP,
               unsigned int const length) {
 
     u1 * string;
+    size_t rc;
 
     MALLOCARRAY(string, length + 1);
     if (string == NULL)
         pm_error("out of memory");
 
-    fread(string, sizeof(u1), length, ifP);
+    rc = fread(string, sizeof(u1), length, ifP);
+    if (rc < length) {
+        if (feof(ifP))
+            pm_error("File read failed.  Premature end of file");
+        else
+            pm_error("File read failed.  Errno=%d (%s)",
+                     errno, strerror(errno));
+    }
+
     string[length] = 0;
     fileOffset += length * sizeof(u1);
 
@@ -211,24 +220,35 @@ static IC_Entry
 readICEntry(FILE * const ifP) {
 
     IC_Entry entryP;
+    u1 widthFld;   /* 0 means 256 */
+    u1 heightFld;  /* 0 means 256 */
+    u1 colorCtFld; /* 0 means 256 */
 
     MALLOCVAR(entryP);
 
     if (entryP == NULL)
-        pm_error("Unable to allcoate memory for IC entry");
+        pm_error("Unable to allocate memory for IC entry");
 
-    entryP->width         = readU1(ifP);
-    entryP->height        = readU1(ifP);
+    widthFld              = readU1(ifP);
+    heightFld             = readU1(ifP);
     entryP->color_count   = readU1(ifP);
-    entryP->reserved      = readU1(ifP);
-    entryP->planes        = readU2(ifP);
-    entryP->bitcount      = readU2(ifP);
-    entryP->size_in_bytes = readU4(ifP);
-    entryP->file_offset   = readU4(ifP);
+    entryP->reserved      = readU1(ifP);  /* never referenced (should be 0) */
+    entryP->planes        = readU2(ifP);  /* never referenced */
+    entryP->bitcount      = readU2(ifP);  /* must be 0, 1, 4, or 8 */
+    entryP->size_in_bytes = readU4(ifP);  /* never referenced */
+    entryP->file_offset   = readU4(ifP);  /* never referenced */
     entryP->colors        = NULL;
     entryP->ih            = NULL;
     entryP->xorBitmap     = NULL;
     entryP->andBitmap     = NULL;
+
+    entryP->width       = widthFld   == 0 ? 256 : widthFld;
+    entryP->height      = heightFld  == 0 ? 256 : heightFld;
+    entryP->color_count = colorCtFld == 0 ? 256 : colorCtFld;
+
+    if (entryP->width != entryP->height)
+        pm_message("warning: icon is not square: %u x %u",
+                   entryP->width, entryP->height);
 
     return entryP;
 }
@@ -246,23 +266,46 @@ readInfoHeader (FILE *   const ifP,
     if (ihP == NULL)
         pm_error("Unable to allocate memory for info header");
 
-    ihP->size             = readU4(ifP);
-    ihP->width            = readU4(ifP);
-    ihP->height           = readU4(ifP);
-    ihP->planes           = readU2(ifP);
+    ihP->size             = readU4(ifP);  /* never referenced */
+    ihP->width            = readU4(ifP);  /* must equal entryP->width */
+    ihP->height           = readU4(ifP);  /* must be 2 * entryP->height */
+    ihP->planes           = readU2(ifP);  /* never referenced */
     ihP->bitcount         = readU2(ifP);
     ihP->compression      = readU4(ifP);
-    ihP->imagesize        = readU4(ifP);
-    ihP->x_pixels_per_m   = readU4(ifP);
-    ihP->y_pixels_per_m   = readU4(ifP);
+    ihP->imagesize        = readU4(ifP);  /* never referenced */
+    ihP->x_pixels_per_m   = readU4(ifP);  /* never referenced */
+    ihP->y_pixels_per_m   = readU4(ifP);  /* never referenced */
     ihP->colors_used      = readU4(ifP);
+        /* checked below, otherwise never referenced */
     ihP->colors_important = readU4(ifP);
+        /* checked below, otherwise never referenced */
 
-    if (!entryP->bitcount)
-        entryP->bitcount = ihP->bitcount;
+    if ((entryP->width != ihP->width)
+        || (entryP->height != ihP->height / 2)) {
+        pm_error("mismatch in header and image dimensions "
+                 "(%u x %u vs. %u x %u)",
+                 entryP->width, entryP->height,
+                 ihP->width, ihP->height / 2);
+    } else if (ihP->height % 2 != 0)
+        pm_error("invalid image height value %u (cannot be an odd number)",
+                  ihP->height);
 
-    if (entryP->color_count == 0 && entryP->bitcount <= 8)
-        entryP->color_count = 256;
+    if (ihP->bitcount > 8)
+        pm_error("abnormal bit per pixel value %u", ihP->bitcount);
+
+    if ((entryP->bitcount != 0) && (entryP->bitcount != ihP->bitcount)) {
+        pm_error("mismatch in header and image bpp value"
+                 "(%u vs. %u)",
+                 entryP->bitcount, ihP->bitcount);
+    }
+
+    if (ihP->colors_used > entryP->color_count)
+        pm_error("'colors used' value %u exceeds total colors %u",
+                 ihP->colors_used, entryP->color_count);
+
+    if (ihP->colors_important > entryP->color_count)
+        pm_error("'important colors' value %u exceeds total colors %u",
+                 ihP->colors_important, entryP->color_count);
 
     if (ihP->compression) {
         pm_error("Can't handle compressed icons");
@@ -482,11 +525,21 @@ readIconFile(FILE * const ifP,
     MALLOCVAR(MSIconData);
 
     MSIconData->reserved = readU2(ifP);  /* should be 0 */
-    MSIconData->type     = readU2(ifP);  /* should be 1 */
+    MSIconData->type     = readU2(ifP);  /* should be 1 (ICO) or 2 (CUR) */
     MSIconData->count    = readU2(ifP);  /* # icons in file */
 
-    if (verbose)
-        pm_message("Icon file contains %d icons.", MSIconData->count);
+    if (MSIconData->reserved != 0)
+       pm_message("Signature 'reserved' field is %u (should be 0)",
+                  MSIconData->reserved);
+
+    if (MSIconData->type != 1 && MSIconData->type != 2)
+        pm_error("Type %u file.  Can handle only type 1 or 2.",
+                 MSIconData->type);
+
+    if (MSIconData->count == 0)
+        pm_error("Invalid image count: 0");
+    else if (verbose)
+        pm_message("File contains %u images", MSIconData->count);
 
     MALLOCARRAY(MSIconData->entries, MSIconData->count);
     if (MSIconData->entries == NULL)
@@ -503,12 +556,13 @@ readIconFile(FILE * const ifP,
         pm_message("#\tColors\tBPP\tWidth\tHeight\n");
 
     for (i = 0; i < MSIconData->count; ++i) {
+        IC_Entry const entryP = MSIconData->entries[i];
+
         unsigned int bpp;  /* bits per pixel */
 
-        MSIconData->entries[i]->ih =
-            readInfoHeader(ifP, MSIconData->entries[i]);
+        entryP->ih = readInfoHeader(ifP, MSIconData->entries[i]);
 
-        bpp = MSIconData->entries[i]->bitcount;
+        bpp  = entryP->bitcount ? entryP->bitcount : entryP->ih->bitcount;
 
         /* Read the palette, if appropriate */
         switch (bpp) {
@@ -519,23 +573,21 @@ readIconFile(FILE * const ifP,
         default: {
             unsigned int j;
 
-            MALLOCARRAY(MSIconData->entries[i]->colors,
-                        MSIconData->entries[i]->color_count);
-            if (MSIconData->entries[i]->colors == NULL)
-                pm_error("out of memory");
+            MALLOCARRAY(entryP->colors, entryP->color_count);
+            if (!entryP->colors)
+                pm_error("Could get memory for %u colors",
+                         entryP->color_count);
 
-            for (j = 0; j < MSIconData->entries[i]->color_count; ++j)
-                MSIconData->entries[i]->colors[j] = readICColor(ifP);
+            for (j = 0; j < entryP->color_count; ++j)
+                entryP->colors[j] = readICColor(ifP);
         }
         }
         if (verbose) {
             char colsText[10];
-            sprintf (colsText, "%d", MSIconData->entries[i]->color_count);
+            sprintf (colsText, "%d", entryP->color_count);
             pm_message("%d\t%s\t%d\t%d\t%d\n", i,
-                       MSIconData->entries[i]->color_count ?
-                       colsText : "TRUE",
-                       bpp, MSIconData->entries[i]->width,
-                       MSIconData->entries[i]->height);
+                       entryP->color_count ? colsText : "TRUE",
+                       bpp, entryP->width, entryP->height);
         }
         /* Pixels are stored bottom-up, left-to-right. Pixel lines are
          * padded with zeros to end on a 32bit (4byte) boundary. Every
@@ -554,29 +606,21 @@ readIconFile(FILE * const ifP,
              */
             switch (bpp) {
             case 1:
-                MSIconData->entries[i]->xorBitmap =
-                    read1Bitmap(ifP,
-                                MSIconData->entries[i]->width,
-                                MSIconData->entries[i]->height);
+                entryP->xorBitmap =
+                    read1Bitmap(ifP, entryP->width, entryP->height);
                 break;
             case 4:
-                MSIconData->entries[i]->xorBitmap =
-                    read4Bitmap(ifP,
-                                MSIconData->entries[i]->width,
-                                MSIconData->entries[i]->height);
+                entryP->xorBitmap =
+                    read4Bitmap(ifP, entryP->width, entryP->height);
                 break;
             case 8:
-                MSIconData->entries[i]->xorBitmap =
-                    read8Bitmap(ifP,
-                                MSIconData->entries[i]->width,
-                                MSIconData->entries[i]->height);
+                entryP->xorBitmap =
+                    read8Bitmap(ifP, entryP->width, entryP->height);
                 break;
             case 24:
             case 32:
-                MSIconData->entries[i]->xorBitmap =
-                    readXBitmap(ifP,
-                                MSIconData->entries[i]->width,
-                                MSIconData->entries[i]->height,bpp);
+                entryP->xorBitmap =
+                    readXBitmap(ifP, entryP->width, entryP->height,bpp);
                 break;
             default:
                 pm_error("Uncatered bit depth %u", bpp);
@@ -584,10 +628,8 @@ readIconFile(FILE * const ifP,
             /*
              * Read AND Bitmap
              */
-            MSIconData->entries[i]->andBitmap =
-                read1Bitmap(ifP,
-                            MSIconData->entries[i]->width,
-                            MSIconData->entries[i]->height);
+            entryP->andBitmap =
+                read1Bitmap(ifP, entryP->width, entryP->height);
         }
 
     }
@@ -705,9 +747,14 @@ writeXors(FILE *   const multiOutF,
             unsigned int col;
             for (col = 0; col < entryP->width; ++col) {
                 unsigned int const colorIndex = xorRow[col];
-                IC_Color const colorP = entryP->colors[colorIndex];
-                PPM_ASSIGN(pixArray[row][col],
-                           colorP->red, colorP->green, colorP->blue);
+                if (colorIndex >= entryP->color_count) {
+                    pm_error("Invalid color index %u (max is %u)",
+                              colorIndex, entryP->color_count - 1);
+                } else {
+                    IC_Color const colorP = entryP->colors[colorIndex];
+                    PPM_ASSIGN(pixArray[row][col],
+                               colorP->red, colorP->green, colorP->blue);
+                }
             }
         } break;
         }

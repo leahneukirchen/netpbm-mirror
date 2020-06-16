@@ -8,6 +8,13 @@ not yet  BJH  Release 10.91.00
 
               pamstereogram: Add -tileable.  Thanks Scott Pakin.
 
+              winicontoppm: Fix undefined behavior for various invalid input.
+              Always broken.  Winicontoppm was new in Netpbm 9.3 (June 2000).
+
+              winicontoppm: Fix incorrect output with 256 pixel wide or high
+              image.  Always broken.  Winicontoppm was new in Netpbm 9.3 (June
+              2000).
+
               pjtoppm: Handle input stream with no transmission mode command.
               Always broken.  Pjtoppm was in primordial Netpbm (1991).
 
