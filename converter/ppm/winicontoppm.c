@@ -10,7 +10,7 @@
 ** implied warranty.
 **
 ** Changes:
-** 
+**
 ** 03/2003 - Added 24+32 bpp capability.
 */
 
@@ -57,7 +57,7 @@ parseCommandLine (int argc, const char ** argv,
                   struct cmdlineInfo *cmdlineP ) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -75,15 +75,15 @@ parseCommandLine (int argc, const char ** argv,
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "allicons",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "allicons",     OPT_FLAG,   NULL,
             &cmdlineP->allicons,       0 );
-    OPTENT3(0, "bestqual",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "bestqual",     OPT_FLAG,   NULL,
             &cmdlineP->bestqual,       0 );
-    OPTENT3(0, "writeands",    OPT_FLAG,   NULL,                  
+    OPTENT3(0, "writeands",    OPT_FLAG,   NULL,
             &cmdlineP->writeands,      0 );
-    OPTENT3(0, "multippm",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "multippm",     OPT_FLAG,   NULL,
             &cmdlineP->multippm,       0 );
-    OPTENT3(0, "verbose",      OPT_FLAG,   NULL,                  
+    OPTENT3(0, "verbose",      OPT_FLAG,   NULL,
             &cmdlineP->verbose,        0 );
 
     opt.opt_table = option_def;
@@ -93,14 +93,14 @@ parseCommandLine (int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 < 1) 
+    if (argc-1 < 1)
         cmdlineP->inputFilespec = "-";
     else
         cmdlineP->inputFilespec = argv[1];
 
     if (argc-1 < 2) {
         cmdlineP->outputFilespec = "-";
-        
+
         if (cmdlineP->writeands || cmdlineP->allicons)
             pm_error("If you specify the -writeands or -allicons option, "
                      "you must also specify an output file name argument.");
@@ -116,49 +116,49 @@ parseCommandLine (int argc, const char ** argv,
 
 
 
-static int 
+static int
 GetByte(FILE * const ifP) {
 
     int v;
-   
+
     v = getc(ifP);
     if (v == EOF)
         pm_error(er_read, infname);
-   
+
     return v;
 }
 
 
-   
-static short 
+
+static short
 GetShort(FILE * const ifP) {
 
     short v;
-   
+
     pm_readlittleshort(ifP, &v);
 
     return v;
 }
 
 
-   
-static long 
+
+static long
 GetLong(FILE * const ifP) {
 
     long v;
-   
+
     pm_readlittlelong(ifP, &v);
-   
+
     return v;
 }
-   
+
 
 
 /*
- * These have no purpose but to wrapper the Byte, Short & Long 
+ * These have no purpose but to wrapper the Byte, Short & Long
  * functions.
  */
-static u1 
+static u1
 readU1(FILE * const ifP) {
 
     ++fileOffset;
@@ -168,12 +168,12 @@ readU1(FILE * const ifP) {
 
 
 
-static u1 * 
+static u1 *
 readU1String (FILE *       const ifP,
               unsigned int const length) {
-   
+
     u1 * string;
-    
+
     MALLOCARRAY(string, length + 1);
     if (string == NULL)
         pm_error("out of memory");
@@ -187,7 +187,7 @@ readU1String (FILE *       const ifP,
 
 
 
-static u2 
+static u2
 readU2 (FILE * const ifP) {
 
     fileOffset +=2;
@@ -197,7 +197,7 @@ readU2 (FILE * const ifP) {
 
 
 
-static u4 
+static u4
 readU4 (FILE * const ifP) {
 
     fileOffset += 4;
@@ -207,7 +207,7 @@ readU4 (FILE * const ifP) {
 
 
 
-static IC_Entry 
+static IC_Entry
 readICEntry(FILE * const ifP) {
 
     IC_Entry entryP;
@@ -229,20 +229,20 @@ readICEntry(FILE * const ifP) {
     entryP->ih            = NULL;
     entryP->xorBitmap     = NULL;
     entryP->andBitmap     = NULL;
-    
+
     return entryP;
 }
 
 
 
-static IC_InfoHeader 
+static IC_InfoHeader
 readInfoHeader (FILE *   const ifP,
                 IC_Entry const entryP) {
 
     IC_InfoHeader ihP;
 
     MALLOCVAR(ihP);
-    
+
     if (ihP == NULL)
         pm_error("Unable to allocate memory for info header");
 
@@ -257,10 +257,10 @@ readInfoHeader (FILE *   const ifP,
     ihP->y_pixels_per_m   = readU4(ifP);
     ihP->colors_used      = readU4(ifP);
     ihP->colors_important = readU4(ifP);
-    
+
     if (!entryP->bitcount)
         entryP->bitcount = ihP->bitcount;
-    
+
     if (entryP->color_count == 0 && entryP->bitcount <= 8)
         entryP->color_count = 256;
 
@@ -272,7 +272,7 @@ readInfoHeader (FILE *   const ifP,
 
 
 
-static IC_Color 
+static IC_Color
 readICColor(FILE * const ifP)  {
 
     IC_Color colorP;
@@ -284,7 +284,7 @@ readICColor(FILE * const ifP)  {
 
     /* I don't know why this isn't the same as the spec, it just isn't.
        The colors honestly seem to be stored BGR.  Bizarre.
-      
+
        I've checked this in the BMP code for bmptoppm and the gimp.  Guess the
        spec I have is just plain wrong.
     */
@@ -296,10 +296,10 @@ readICColor(FILE * const ifP)  {
 
     return colorP;
 }
-   
 
 
-static u1 * 
+
+static u1 *
 read1Bitmap (FILE *       const ifP,
              unsigned int const width,
              unsigned int const height) {
@@ -313,9 +313,9 @@ read1Bitmap (FILE *       const ifP,
     if (bitmap == NULL)
         pm_error("out of memory");
 
-    /* Depending on if the image is stored as 1bpp, 4bpp or 8bpp, the 
+    /* Depending on if the image is stored as 1bpp, 4bpp or 8bpp, the
        encoding mechanism is different.
-  
+
        8bpp => 1 byte/palette index.
        4bpp => High Nibble, Low Nibble
        1bpp => 1 palette value per bit, high bit 1st.
@@ -334,9 +334,9 @@ read1Bitmap (FILE *       const ifP,
         unsigned int col;
         unsigned int rowByte;
         unsigned int xOrVal;
-        
+
         for (col = 0, rowByte = 0, xOrVal = 0x80; col < width; ++col) {
-            *(bitmap+((height - row - 1) * width) + col) = 
+            *(bitmap+((height - row - 1) * width) + col) =
                 (imgRow[rowByte] & xOrVal) / xOrVal;
             if (xOrVal == 0x01) {
                 xOrVal = 0x80;
@@ -350,8 +350,8 @@ read1Bitmap (FILE *       const ifP,
 }
 
 
-   
-static u1 * 
+
+static u1 *
 read4Bitmap (FILE *       const ifP,
              unsigned int const width,
              unsigned int const height) {
@@ -382,7 +382,7 @@ read4Bitmap (FILE *       const ifP,
         for (col = 0, rowByte = 0, bottom = true; col < width; ++col) {
             /* 2 nibbles, 2 values */
             if (bottom) {
-                *(bitmap + ((height - row - 1) * width) + col) = 
+                *(bitmap + ((height - row - 1) * width) + col) =
                     (imgRow[rowByte] & 0xF0) >> 4;
             } else {
                 *(bitmap + ((height - row -1) * width) + col) =
@@ -397,8 +397,8 @@ read4Bitmap (FILE *       const ifP,
 }
 
 
-   
-static u1 * 
+
+static u1 *
 read8Bitmap (FILE *       const ifP,
              unsigned int const width,
              unsigned int const height) {
@@ -407,7 +407,7 @@ read8Bitmap (FILE *       const ifP,
     unsigned int xByteCt;
     unsigned int wt;
     u1 * bitmap;
-   
+
     MALLOCARRAY(bitmap, width * height);
     if (bitmap == NULL)
         pm_error("out of memory");
@@ -435,12 +435,12 @@ read8Bitmap (FILE *       const ifP,
 
 static u1 *
 readXBitmap (FILE *       const ifP,
-             unsigned int const width, 
-             unsigned int const height, 
+             unsigned int const width,
+             unsigned int const height,
              unsigned int const bpp) {
 /*----------------------------------------------------------------------------
   Read a true color bitmap. (24/32 bits)
-  
+
   The output routine deplanarizes it for us, we keep it flat here.
 -----------------------------------------------------------------------------*/
     unsigned int const byteCt = bpp >> 3;
@@ -458,7 +458,7 @@ readXBitmap (FILE *       const ifP,
         u1 * bitcurptr;
 
         for (i = 0, bitcurptr = &bitmap[byteCt * width * (height-1)];
-             i < height; 
+             i < height;
              ++i, bitcurptr -= xByteCt) {
 
             u1 * const row = readU1String(ifP, xByteCt);
@@ -471,7 +471,7 @@ readXBitmap (FILE *       const ifP,
 
 
 
-static MS_Ico 
+static MS_Ico
 readIconFile(FILE * const ifP,
              bool   const verbose) {
 
@@ -480,12 +480,12 @@ readIconFile(FILE * const ifP,
     MS_Ico MSIconData;
 
     MALLOCVAR(MSIconData);
-   
+
     MSIconData->reserved = readU2(ifP);  /* should be 0 */
     MSIconData->type     = readU2(ifP);  /* should be 1 */
     MSIconData->count    = readU2(ifP);  /* # icons in file */
 
-    if (verbose) 
+    if (verbose)
         pm_message("Icon file contains %d icons.", MSIconData->count);
 
     MALLOCARRAY(MSIconData->entries, MSIconData->count);
@@ -499,7 +499,7 @@ readIconFile(FILE * const ifP,
     /* Read in the infoheader, color map (if any) and the actual bit/pix maps
        for the icons.
     */
-    if (verbose) 
+    if (verbose)
         pm_message("#\tColors\tBPP\tWidth\tHeight\n");
 
     for (i = 0; i < MSIconData->count; ++i) {
@@ -507,8 +507,8 @@ readIconFile(FILE * const ifP,
 
         MSIconData->entries[i]->ih =
             readInfoHeader(ifP, MSIconData->entries[i]);
-       
-        bpp = MSIconData->entries[i]->bitcount; 
+
+        bpp = MSIconData->entries[i]->bitcount;
 
         /* Read the palette, if appropriate */
         switch (bpp) {
@@ -519,7 +519,7 @@ readIconFile(FILE * const ifP,
         default: {
             unsigned int j;
 
-            MALLOCARRAY(MSIconData->entries[i]->colors, 
+            MALLOCARRAY(MSIconData->entries[i]->colors,
                         MSIconData->entries[i]->color_count);
             if (MSIconData->entries[i]->colors == NULL)
                 pm_error("out of memory");
@@ -532,9 +532,9 @@ readIconFile(FILE * const ifP,
             char colsText[10];
             sprintf (colsText, "%d", MSIconData->entries[i]->color_count);
             pm_message("%d\t%s\t%d\t%d\t%d\n", i,
-                       MSIconData->entries[i]->color_count ? 
+                       MSIconData->entries[i]->color_count ?
                        colsText : "TRUE",
-                       bpp, MSIconData->entries[i]->width, 
+                       bpp, MSIconData->entries[i]->width,
                        MSIconData->entries[i]->height);
         }
         /* Pixels are stored bottom-up, left-to-right. Pixel lines are
@@ -542,8 +542,8 @@ readIconFile(FILE * const ifP,
          * line will have the same number of bytes. Color indices are
          * zero based, meaning a pixel color of 0 represents the first
          * color table entry, a pixel color of 255 (if there are that
-         * many) represents the 256th entry.  
-         * 
+         * many) represents the 256th entry.
+         *
          * 24+32 bit (16 is an abomination, which I'll avoid, and expect
          * no-one to mind) are stored 1byte/plane with a spare (alpha?)
          * byte for 32 bit.
@@ -554,26 +554,26 @@ readIconFile(FILE * const ifP,
              */
             switch (bpp) {
             case 1:
-                MSIconData->entries[i]->xorBitmap = 
+                MSIconData->entries[i]->xorBitmap =
                     read1Bitmap(ifP,
                                 MSIconData->entries[i]->width,
                                 MSIconData->entries[i]->height);
                 break;
             case 4:
-                MSIconData->entries[i]->xorBitmap = 
+                MSIconData->entries[i]->xorBitmap =
                     read4Bitmap(ifP,
                                 MSIconData->entries[i]->width,
                                 MSIconData->entries[i]->height);
                 break;
             case 8:
-                MSIconData->entries[i]->xorBitmap = 
+                MSIconData->entries[i]->xorBitmap =
                     read8Bitmap(ifP,
                                 MSIconData->entries[i]->width,
                                 MSIconData->entries[i]->height);
                 break;
             case 24:
             case 32:
-                MSIconData->entries[i]->xorBitmap = 
+                MSIconData->entries[i]->xorBitmap =
                     readXBitmap(ifP,
                                 MSIconData->entries[i]->width,
                                 MSIconData->entries[i]->height,bpp);
@@ -584,19 +584,19 @@ readIconFile(FILE * const ifP,
             /*
              * Read AND Bitmap
              */
-            MSIconData->entries[i]->andBitmap = 
+            MSIconData->entries[i]->andBitmap =
                 read1Bitmap(ifP,
                             MSIconData->entries[i]->width,
                             MSIconData->entries[i]->height);
         }
-      
+
     }
     return MSIconData;
 }
 
 
 
-static char * 
+static char *
 trimmedOutputName(const char inputName[]) {
     /*
      * Just trim off the final ".ppm", if there is one, else return as is.
@@ -612,7 +612,7 @@ trimmedOutputName(const char inputName[]) {
 
 
 
-static int 
+static int
 getBestQualityIcon(MS_Ico MSIconData)
 {
     unsigned int i;
@@ -644,7 +644,7 @@ writeXors(FILE *   const multiOutF,
           char *   const outputFileBase,
           IC_Entry const entryP,
           int      const entryNum,
-          bool     const multiple, 
+          bool     const multiple,
           bool     const xor) {
 /*----------------------------------------------------------------------------
    Write an "xor" image (i.e. the main image) out.
@@ -656,7 +656,7 @@ writeXors(FILE *   const multiOutF,
    'xor' means to include "xor" in the output file name.
 
    if 'multiOutF' is non-null, it is the stream descriptor of an open
-   stream to which we are to write the image.  If it is null, 
+   stream to which we are to write the image.  If it is null,
    we are to open a file using outputFileBase[] and 'entryNum' and 'xor'
    to derive its name, and close it afterward.
 -----------------------------------------------------------------------------*/
@@ -673,16 +673,16 @@ writeXors(FILE *   const multiOutF,
             if (multiple) {
                 pm_asprintf(&outputFileName, "%s%s_%d.ppm",
                             outputFileBase,(xor ? "_xor" : ""), entryNum);
-            } else { 
+            } else {
                 pm_asprintf(&outputFileName, "%s%s.ppm",
                             outputFileBase,(xor ? "_xor" : ""));
             }
         } else
             outputFileName = strdup("-");
-        
+
         ofP = pm_openw(outputFileName);
     }
-    /* 
+    /*
        Allocate an array to save the bmp data into.
        note that entry->height will be 1/2 entry->ih->height,
        as the latter adds "and" and "xor" height.
@@ -711,25 +711,25 @@ writeXors(FILE *   const multiOutF,
             }
         } break;
         }
-    }    
-    
-    ppm_writeppm(ofP, pixArray, entryP->width, entryP->height, 
+    }
+
+    ppm_writeppm(ofP, pixArray, entryP->width, entryP->height,
                  255 /* maxval */, false /* text */);
     ppm_freearray(pixArray, entryP->height);
 
     pm_strfree(outputFileName);
-    
-    if (!multiOutF) 
+
+    if (!multiOutF)
         pm_close(ofP);
 }
-            
+
 
 
 static void
-writeAnds(FILE *       const multiOutF, 
+writeAnds(FILE *       const multiOutF,
           char         const outputFileBase[],
           IC_Entry     const entryP,
-          unsigned int const entryNum, 
+          unsigned int const entryNum,
           bool         const multiple) {
 /*----------------------------------------------------------------------------
    Write the "and" image (i.e. the alpha mask) of the image *entryP out.
@@ -739,7 +739,7 @@ writeAnds(FILE *       const multiOutF,
    we are writing.
 
    if 'multiOutF' is non-null, it is the stream descriptor of an open
-   stream to which we are to write the image.  If it is null, 
+   stream to which we are to write the image.  If it is null,
    we are to open a file using outputFileBase[] and 'entryNum' and 'xor'
    to derive its name, and close it afterward.
 -----------------------------------------------------------------------------*/
@@ -754,10 +754,10 @@ writeAnds(FILE *       const multiOutF,
 
         assert(outputFileBase);
 
-        if (multiple) 
+        if (multiple)
             pm_asprintf(&outputFileName, "%s_and_%u.pbm",
                         outputFileBase, entryNum);
-        else 
+        else
             pm_asprintf(&outputFileName, "%s_and.pbm", outputFileBase);
         ofP = pm_openw(outputFileName);
         pm_strfree(outputFileName);
@@ -782,7 +782,7 @@ writeAnds(FILE *       const multiOutF,
 
 
 static void
-openMultiXor(char    const outputFileBase[], 
+openMultiXor(char    const outputFileBase[],
              bool    const writeands,
              FILE ** const multiOutFP) {
 
@@ -810,7 +810,7 @@ openMultiAnd(char    const outputFileBase[],
     assert(outputFileBase);
 
     pm_asprintf(&outputFileName, "%s_and.pbm", outputFileBase);
-    
+
     *multiAndOutFP = pm_openw(outputFileName);
 
     pm_strfree(outputFileName);
@@ -847,7 +847,7 @@ freeIcondata(MS_Ico const MSIconDataP) {
 
 
 
-int 
+int
 main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
@@ -857,7 +857,7 @@ main(int argc, const char *argv[]) {
     char * outputFileBase;
     FILE * multiOutF;
     FILE * multiAndOutF;
-   
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -865,7 +865,7 @@ main(int argc, const char *argv[]) {
     if (cmdline.bestqual && cmdline.allicons)
         pm_message("-bestqual doesn't make sense with -allicons.  "
                    "Ignoring -bestqual.");
-   
+
     if (streq(cmdline.outputFilespec, "-"))
         outputFileBase = NULL;
     else
@@ -880,10 +880,10 @@ main(int argc, const char *argv[]) {
      * Now we've read the icon file in (Hopefully! :)
      * Go through each of the entries, and write out files of the
      * form
-     * 
+     *
      * fname_0_xor.ppm
      * fname_0_and.ppm
-     * 
+     *
      * (or to stdout, depending on args parsing above).
      */
     /*
@@ -899,13 +899,13 @@ main(int argc, const char *argv[]) {
         else
             endEntry = 1;
     }
-   
-    if (cmdline.multippm) 
+
+    if (cmdline.multippm)
         openMultiXor(outputFileBase, cmdline.writeands, &multiOutF);
     else
         multiOutF = NULL;
 
-    if (cmdline.writeands && cmdline.multippm) 
+    if (cmdline.writeands && cmdline.multippm)
         openMultiAnd(outputFileBase, &multiAndOutF);
     else
         multiAndOutF = NULL;
@@ -916,18 +916,18 @@ main(int argc, const char *argv[]) {
         for (entryNum = startEntry; entryNum < endEntry; ++entryNum) {
             IC_Entry const entryP = MSIconDataP->entries[entryNum];
 
-            writeXors(multiOutF, outputFileBase, entryP, entryNum, 
+            writeXors(multiOutF, outputFileBase, entryP, entryNum,
                       cmdline.allicons, cmdline.writeands);
             if (cmdline.writeands)
-                writeAnds(multiAndOutF, outputFileBase, 
+                writeAnds(multiAndOutF, outputFileBase,
                           entryP, entryNum, cmdline.allicons);
         }
     }
     if (multiOutF)
-        pm_close(multiOutF);    
+        pm_close(multiOutF);
     if (multiAndOutF)
         pm_close(multiAndOutF);
-    
+
     /* free up the image data here. */
     freeIcondata(MSIconDataP);
 
