@@ -24,10 +24,6 @@ while true ; do
         shift
         ;;
         -q|-qu|-qui|-quie|-quiet|--q|--qu|--qui|--quie|--quiet )
-        quietopt="-plain"
-        shift
-        ;;
-        -q|-qu|-qui|-quie|-quiet|--q|--qu|--qui|--quie|--quiet )
         quietopt="-quiet"
         shift
         ;;
@@ -80,7 +76,7 @@ esac
 # in some exceptional cases adjustment is necessary because of
 # "-dropedge".
 
-report=$(pamscale -reportonly $1 $tempfile)
+report=$(pamscale $quietopt -reportonly $1 $tempfile)
 if [ $? -ne 0 ]; then
   echo "pamstretch-gen: pamscale -reportonly $1 (file) failed" 1>&2
   exit 1

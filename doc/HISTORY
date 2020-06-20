@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.91.00
 
+              pamstretch-gen: Add -quiet (supposedly added in 10.86, but never
+              worked).
+
               pamstereogram: Add -tileable.  Thanks Scott Pakin.
 
               winicontoppm: Fix undefined behavior for various invalid input.
