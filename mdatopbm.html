@@ -13,7 +13,6 @@ mdatopbm - convert a Microdesign .mda or .mdp file into a PBM image
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>mdatopbm</b>
-[<b>-a</b>]
 [<b>-d</b>]
 [<b>-i</b>]
 [<b>--</b>]
@@ -37,9 +36,6 @@ Common Options</a>), <b>mdatopbm</b> recognizes the following
 command line options:
 
 <dl compact>
-<dt><b>-a</b>
-
-<dd>Generate Plain PBM output instead of Raw PBM
 
 <dt><b>-d</b>
 
@@ -55,6 +51,10 @@ ratio used in MicroDesign files.
 <dd>End of options (use this if the filename starts with "-")
 
 </dl>
+
+<p>The program also accepts option <b>-a</b> for historical reasons, for
+  the same meaning as the Netpbm common option <b>-plain</b>.
+  
 
 <h2 id="seealso">SEE ALSO</h2>
 

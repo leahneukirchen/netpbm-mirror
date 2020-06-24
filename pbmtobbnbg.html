@@ -20,17 +20,17 @@ pbmtobbnbg - convert a PBM image into BitGraph graphics
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pbmtobbnbg</b> reads a portable bitmap as input and produces BBN
-BitGraph terminal Display Pixel Data (DPD) sequence as output.
+<p><b>pbmtobbnbg</b> reads a PBM image as input and produces BBN BitGraph
+terminal Display Pixel Data (DPD) sequence as output.
 
 <p>
-The rasterop can be specified on the command line.  If this is omitted, 3
-(replace) will be used.  A position in (x,y) coordinates can also be
-specified.  If both are given, the rasterop comes first.  The portable bitmap
-is always taken from the standard input.
+  The rasterop can be specified on the command line.  If you omit this, the
+  program uses 3 (replace).  You can also specify a position in (x,y)
+  coordinates.  If you give both, the rasterop comes first.  The PBM always
+  comes from Standard Input.
 
 <p>
-Note that there is no bgtopbm tool.
+Note that there is no <b>bbnbgtopbm</b> tool.
 
 <h2 id="options">OPTIONS</h2>
 
