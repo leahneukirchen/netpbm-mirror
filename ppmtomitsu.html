@@ -1,34 +1,34 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtomitsu User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtomitsu</H1>
+<html><head><title>Ppmtomitsu User Manual</title></head>
+<body>
+<h1>ppmtomitsu</h1>
 Updated: 24 March 2009
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtomitsu - convert a PPM image to a Mitsubishi S340-10 file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtomitsu</B>
+<b>ppmtomitsu</b>
 
-[-sharpness <I>val</I>]
+[-sharpness <i>val</i>]
 
-[<B>-enlarge</B> <I>val</I>]
+[<b>-enlarge</b> <i>val</i>]
 
-[<B>-media</B> <I>string</I>]
+[<b>-media</b> <i>string</i>]
 
-[<B>-copy</B> <I>val</I>]
+[<b>-copy</b> <i>val</i>]
 
-[<B>-dpi300</B>]
+[<b>-dpi300</b>]
 
-[<B>-tiny</B>]
+[<b>-tiny</b>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -36,7 +36,7 @@ ppmtomitsu - convert a PPM image to a Mitsubishi S340-10 file
 format suitable to be printed by a Mitsubishi S340-10 printer, or any
 other Mitsubishi color sublimation printer.
 
-<P>The Mitsubishi S340-10 Color Sublimation printer supports 24bit
+<p>The Mitsubishi S340-10 Color Sublimation printer supports 24bit
 color.  Images of the available sizes take so long to transfer that
 there is a fast method, employing a lookuptable, that ppmtomitsu will
 use if there is a maximum of 256 colors in the image.  ppmtomitsu
@@ -66,72 +66,76 @@ PPM input that <b>ppmtomitsu</b> will use properly.
 
 <h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-sharpness</B> <I>1-4</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtomitsu</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-sharpness</b> <i>1-4</i>
+
+<dd>
 "sharpness" designation.  Default is  to use the current sharpness.
 
-<DT><B>-enlarge</B> <I>1-3</I>
+<dt><b>-enlarge</b> <i>1-3</i>
 
-<DD>
+<dd>
 Enlarge by a factor; Default is 1 (no enlarge)
 
-<DT><B>-media</B> {<B>A</B>|<B>A4</B>|<B>AS</B>|<B>A4S</B>}
+<dt><b>-media</b> {<b>A</b>|<b>A4</b>|<b>AS</b>|<b>A4S</b>}
 
-<DD>
+<dd>
 Designate the media you're using.  Default is 1184 x 1350, which will
 fit on any media.  A is 1216 x 1350, A4 is 1184 x 1452, AS is 1216 x
 1650 and A4S is 1184 x 1754.  A warning: If you specify a different
 media than the printer currently has, the printer will wait until you
 put in the correct media or switch it off.
 
-<DT><B>-copy</B> <I>1-9</I>
+<dt><b>-copy</b> <i>1-9</i>
 
-<DD>
+<dd>
 The number of copies to produce.  Default is 1.
 
-<DT><B>-dpi300</B>
+<dt><b>-dpi300</b>
 
-<DD>
+<dd>
 Double the number of allowed pixels for a S3600-30 Printer in S340-10
 compatibility mode.  (The S3600-30 has 300 dpi).
 
-<DT><B>-tiny</B>
+<dt><b>-tiny</b>
 
-<DD>
+<dd>
 Memory-saving, but always slow. The printer will get the data
 line-by-line in 24bit. It's probably a good idea to use this if your
 machine starts paging a lot without this option.
 
-</DL>
+</dl>
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
 Mitsubishi Sublimation Full Color Printer S340-10 Specifications of
 Parallel Interface LSP-F0232F
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmquant.html">pnmquant</A>, 
-<A HREF="pamscale.html">pamscale</A>, 
-<A HREF="ppm.html">ppm</A>
+<a href="pnmquant.html">pnmquant</a>, 
+<a href="pamscale.html">pamscale</a>, 
+<a href="ppm.html">ppm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1992, 93 by S.Petra Zeidler, MPIfR Bonn, Germany.  (<A
-HREF="mailto:spz@specklec.mpifr-bonn.mpg.de">spz@specklec.mpifr-bonn.mpg.de</A>)
+Copyright (C) 1992, 93 by S.Petra Zeidler, MPIfR Bonn, Germany.  (<a
+href="mailto:spz@specklec.mpifr-bonn.mpg.de">spz@specklec.mpifr-bonn.mpg.de</a>)
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

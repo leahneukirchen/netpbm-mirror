@@ -1,26 +1,23 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pcxtoppm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pcxtoppm</H1>
+<html><head><title>Pcxtoppm User Manual</title></head>
+<body>
+<h1>pcxtoppm</h1>
 Updated: 19 April 2004
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pcxtoppm - convert a PCX file into a PPM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pcxtoppm</B>
-[<B>-stdpalette</B>]
-[<B>-verbose</B>]
-[<I>pcxfile</I>]
+<b>pcxtoppm</b>
+[<b>-stdpalette</b>]
+[<b>-verbose</b>]
+[<i>pcxfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -29,36 +26,40 @@ as output.
 
 <p><b>pcxtoppm</b> recognizes the following PCX types:
 
-<UL COMPACT>
-<LI>Colormapped files with 2-16 colors.
+<ul compact>
+<li>Colormapped files with 2-16 colors.
 
-<P>"Packed pixel" format (1, 2 or 4 bits/pixel, 1 plane) or
+<p>"Packed pixel" format (1, 2 or 4 bits/pixel, 1 plane) or
 bitplane format (1 bit/pixel, 1-4 planes).  The program uses a
 predefined standard palette if the image does not provide one.
 "Does not provide one" means the palette in the PCX header is
 completely black.
 
-<LI>Colormapped files with 256 colors.
+<li>Colormapped files with 256 colors.
 
-<P>8 bits/pixel, 1 plane, colormap at the end of the file.
+<p>8 bits/pixel, 1 plane, colormap at the end of the file.
 
-<LI>24bit truecolor files.
+<li>24bit truecolor files.
 
-<P>24bit RGB: 8 bits/pixel, 3 planes.
+<p>24bit RGB: 8 bits/pixel, 3 planes.
 
-<LI>32bit truecolor files.
+<li>32bit truecolor files.
 
-<P>24bit RGB + 8bit intensity: 8 bits/pixel, 4 planes.
+<p>24bit RGB + 8bit intensity: 8 bits/pixel, 4 planes.
 
-</UL>
+</ul>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-stdpalette</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pcxtoppm</b> recognizes the following
+command line options:
 
-<DD>This option causes <b>pcxtoppm</b> to use its predefined standard 
+<dl compact>
+<dt><b>-stdpalette</b>
+
+<dd>This option causes <b>pcxtoppm</b> to use its predefined standard 
 palette even if the PCX image provides its own.  This is meaningful only
 for an image in the 16 color paletted PCX format.
 
@@ -66,32 +67,32 @@ for an image in the 16 color paletted PCX format.
 by a program too primitive to understand palettes that created a random
 palette by accident.
 
-</DL>
+<dt><b>-verbose</b>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<dd>Report details of the PCX header.
 
-<B><A HREF="ppmtopcx.html">ppmtopcx</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+</dl>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHORS</H2>
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="ppmtopcx.html">ppmtopcx</a></b>,
+<b><a href="ppm.html">ppm</a></b>
+
+<h2 id="authors">AUTHORS</h2>
 
 <p>Copyright 1990 by Michael Davidson.
 
-<p>Modified 1994 by Ingo Wilken (<A
-HREF="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</A>)
+<p>Modified 1994 by Ingo Wilken (<a
+href="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</a>)
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

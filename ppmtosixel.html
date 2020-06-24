@@ -1,29 +1,26 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtosixel User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtosixel</H1>
+<html><head><title>Ppmtosixel User Manual</title></head>
+<body>
+<h1>ppmtosixel</h1>
 Updated: 26 April 1991
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtosixel - convert a PPM image to DEC sixel format
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtosixel</B>
+<b>ppmtosixel</b>
 
-[<B>-raw</B>]
+[<b>-raw</b>]
 
-[<B>-margin</B>]
+[<b>-margin</b>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -31,40 +28,42 @@ ppmtosixel - convert a PPM image to DEC sixel format
 commands (SIX) as output.  The output is formatted for color printing,
 e.g. for a DEC LJ250 color inkjet printer.
 
-<P>If RGB values from the PPM file do not have maxval=100,
+<p>If RGB values from the PPM file do not have maxval=100,
 <b>ppmtosixel</b> rescales them to maxval 100.  A printer control
 header and a color assignment table begin the SIX file.  Image data is
 in a compressed format by default.  A printer control footer ends the
 image file.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-raw</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtosixel</b> recognizes the following
+command line options:
 
-<DD>If you specify this, each pixel will be explicitly described in
-the image file.  If <B>-raw</B> is not specified, output will default
+<dl compact>
+<dt><b>-raw</b>
+
+<dd>If you specify this, each pixel will be explicitly described in
+the image file.  If <b>-raw</b> is not specified, output will default
 to compressed format in which identical adjacent pixels are replaced
 by "repeat pixel" commands.  A raw file is often an order of
 magnitude larger than a compressed file and prints much slower.
 
-<DT><B>-margin</B>
+<dt><b>-margin</b>
 
-<DD>If you don't specify <B>-margin</B>, the image will start at the
+<dd>If you don't specify <b>-margin</b>, the image will start at the
 left margin (of the window, paper, or whatever).  If you <em>do</em>
-specify <B>-margin</B>, a 1.5 inch left margin will offset the image.
+specify <b>-margin</b>, a 1.5 inch left margin will offset the image.
 
-</DL>
+</dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>PRINTING</H2>
+<h2 id="printing">PRINTING</h2>
 
 <p>Generally, sixel files must reach the printer unfiltered.
 Use the lpr -x option or <b>cat filename &gt; /dev/tty0?</b>.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 Upon rescaling, truncation of the least significant bits of RGB values
 may result in poor color conversion.  If the original PPM maxval was
@@ -73,28 +72,24 @@ actual RGB values from the ppm file are more or less retained, the
 color palette of the LJ250 may not match the colors on your screen.
 This seems to be a printer limitation.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="ppm.html">ppm</A>
+<a href="ppm.html">ppm</a>
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Rick Vinci.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">PRINTING</A>
-<LI><A HREF="#lbAG">LIMITATIONS</A>
-<LI><A HREF="#lbAH">SEE ALSO</A>
-<LI><A HREF="#lbAI">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#printing">PRINTING</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

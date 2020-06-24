@@ -1,53 +1,57 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><title>Pamseq User Manual</title></HEAD>
-<BODY>
-<H1>pamseq</H1>
-<BR>
+<html><head><title>Pamseq User Manual</title></head>
+<body>
+<h1>pamseq</h1>
+<br>
 Updated: 8 May 2002
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
 
 pamseq - generate PAM image of all possible tuple values, in sequence
 
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamseq</B>
-[<B>-tupletype=</B><I>tupletype</I>]
-<I>depth</I>
-<I>maxval</I>
+<b>pamseq</b>
+[<b>-tupletype=</b><i>tupletype</i>]
+<i>depth</i>
+<i>maxval</i>
 
-<P>All options can be abbreviated to their shortest unique prefix.  You
+<p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
 use either white space or an equals sign between an option name and its
 value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>pamseq</B> generates a PAM image of a specified depth and specified
+<p><b>pamseq</b> generates a PAM image of a specified depth and specified
 maxval that consists of a single row.  The row consists of one tuple of
 every possible value, in order.
 
-<P>For a depth of one, the order is simple: From 0 to maxval, going from
+<p>For a depth of one, the order is simple: From 0 to maxval, going from
 left to right.  For higher depths, the highest numbered plane goes from
 0 to maxval (going left to right) while all the other planes have value 0.
 Then the sequence repeats except with the next highest plane set to a value
 of 1, then 2, etc.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-tupletype</B>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamseq</b> recognizes the following
+command line option:
+
+<dl compact>
+<dt><b>-tupletype</b>
+<dd>
 This is the value of the "tuple_type" attribute of the created PAM image.
 It can be any string up to 255 characters.
-</DL>
+</dl>
 
-
-<H2 id="usage">USAGE</H2>
+<h2 id="usage">USAGE</h2>
 
 <p>To create a simple ramp of the values 0..255, for input to various matrix
 calculations, try
@@ -59,7 +63,7 @@ calculations, try
 (Before <b>pamseq</b> existed, <b>pgmramp</b> was often pressed into service
 for this).
 
-<P>To create a PPM color map of all the possible colors representable with a
+<p>To create a PPM color map of all the possible colors representable with a
 maxval of 5, do
 <pre>
 <kbd>
@@ -77,26 +81,27 @@ of the set of "web safe" colors as defined by Netscape.  Most web
 browsers guarantee that they can produce at least these 216 colors
 (215 plus black).
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmremap.html">pnmremap</A></B>,
-<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pnmremap.html">pnmremap</a></b>,
+<b><a href="pamtopnm.html">pamtopnm</a></b>,
+<b><a href="pam.html">pam</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
+
 <b>pamseq</b> was added to Netpbm in June 2002.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#usage">USAGE</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#usage">USAGE</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>
 
 

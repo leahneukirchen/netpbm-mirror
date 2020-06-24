@@ -1,27 +1,24 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmdist User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmdist</H1>
+<html><head><title>Ppmdist User Manual</title></head>
+<body>
+<h1>ppmdist</h1>
 Updated: 22 July 1992
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmdist - simplistic grayscale assignment for machine generated, color images
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmdist</B>
+<b>ppmdist</b>
 
-[<B>-intensity</B>|<B>-frequency</B>]
+[<b>-intensity</b>|<b>-frequency</b>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -29,15 +26,15 @@ ppmdist - simplistic grayscale assignment for machine generated, color images
 grayscale assignment intended for use with grayscale or bitmap
 printers.
 
-<P>Often conversion from ppm to pgm will yield an image with contrast
+<p>Often conversion from ppm to pgm will yield an image with contrast
 too low for good printer output.  The program maximizes contrast
 between the gray levels output.
 
-<P>A ppm input of n colors is read, and a pgm of n gray levels is
+<p>A ppm input of n colors is read, and a pgm of n gray levels is
 written.  The gray levels take on the values 0..n-1, while maxval
 takes on n-1.
 
-<P>The mapping from color to stepped grayscale can be performed in
+<p>The mapping from color to stepped grayscale can be performed in
 order of input pixel intensity, or input pixel frequency (number of
 repetitions).
 
@@ -45,44 +42,44 @@ repetitions).
 colors.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-frequency</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmdist</b> recognizes the following
+command line options:
 
-<DD>Sort input colors by the number of times a color appears in the
+<dl compact>
+<dt><b>-frequency</b>
+
+<dd>Sort input colors by the number of times a color appears in the
 input, before mapping to evenly distributed graylevels of output.
 
-<DT><B>-intensity</B>
+<dt><b>-intensity</b>
 
 <dd>Sort input colors by their grayscale intensity, before mapping to
 evenly distributed graylevels of output.  This is the default.
 
-</DL>
+</dl>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="ppmtopgm.html">ppmtopgm</A>,
-<A HREF="ppmhist.html">ppmhist</A>,
-<A HREF="ppm.html">ppm</A>
+<a href="ppmtopgm.html">ppmtopgm</a>,
+<a href="ppmhist.html">ppmhist</a>,
+<a href="ppm.html">ppm</a>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1993 by Dan Stromberg.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

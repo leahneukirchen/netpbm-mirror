@@ -1,41 +1,36 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><title>Pbmtoepsi User Manual</title></HEAD>
-
-<BODY>
-<H1>pbmtoepsi</H1>
+<html><head><title>Pbmtoepsi User Manual</title></head>
+<body>
+<h1>pbmtoepsi</h1>
 Updated: June 2002
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 pbmtoepsi - convert a PBM image to an encapsulated PostScript
 style preview bitmap
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtoepsi</B>
-[<B>-dpi=</B><I>N</I>[<B>x</B><I>N</I>]]
-[<B>-bbonly</B>]
-[<I>pbmfile</I>]
+<b>pbmtoepsi</b>
+[<b>-dpi=</b><i>N</i>[<b>x</b><i>N</i>]]
+[<b>-bbonly</b>]
+[<i>pbmfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P>Reads a PBM image as input.  Produces an encapsulated Postscript
+<p>Reads a PBM image as input.  Produces an encapsulated Postscript
 style bitmap as output.  The output is not a stand alone postscript
 file, it is only a preview bitmap, which can be included in an
 encapsulated PostScript file.
 
-<P><b>pbmtoepsi</b> assumes the PBM input describes a whole output
+<p><b>pbmtoepsi</b> assumes the PBM input describes a whole output
 page, with one pixel on the page corresponding to one PBM pixel.  It
 detects white borders in the image and generates Postscript output
 that contains a Bounding Box statement to describe the location of the
@@ -43,16 +38,20 @@ principal image (the image excluding the white borders) on the page
 and thus does not include the borders in the raster part of the
 Postscript output.
 
-<P>There is no <b>epsitopbm</b> tool - this transformation is one way.
+<p>There is no <b>epsitopbm</b> tool - this transformation is one way.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-dpi=</B><I>N</I>[<B>x</B><I>N</I>]
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtoepsi</b> recognizes the following
+command line options:
 
-<DD>
-     <P>This option specifies the resolution in dots per inch of the
+<dl compact>
+<dt><b>-dpi=</b><i>N</i>[<b>x</b><i>N</i>]
+
+<dd>
+     <p>This option specifies the resolution in dots per inch of the
      ultimate output device.  You must specify this because the
      Bounding Box statement defines the bounding box in absolute
      distances, not in pixels.  <b>pbmtoepsi</b> assumes in
@@ -61,52 +60,48 @@ Postscript output.
      specification to calculate the size and location on the page of
      the bounding box.
 
-     <P>If you specify <I>N</I><B>x</B>N, the first number is the
+     <p>If you specify <i>N</i><b>x</b>N, the first number is the
      horizontal resolution and the second number is the vertical
-     resolution.  If you specify just a single number <I>N</I>, that is the
+     resolution.  If you specify just a single number <i>N</i>, that is the
      resolution in both directions.
 
-     <P>The default is 72 dots per inch in both directions.
+     <p>The default is 72 dots per inch in both directions.
 
-     <P>This option was new In Netpbm 10.3 (June 2002).  Before that, 
+     <p>This option was new In Netpbm 10.3 (June 2002).  Before that, 
      <b>pbmtoepsi</b> always assumed 72 dots per inch in both directions.
      
-<DT><B>-bbonly</B>
+<dt><b>-bbonly</b>
 
-<DD>
+<dd>
 Only create a boundary box, don't fill it with the image.
-</DL>
+</dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pbm.html">pbm</A></B>,
+<b><a href="pbm.html">pbm</a></b>,
 
-<B><A HREF="pnmtops.html">pnmtops</A></B>,
+<b><a href="pnmtops.html">pnmtops</a></b>,
 
-<B><A HREF="pstopnm.html">pstopnm</A></B>,
+<b><a href="pstopnm.html">pstopnm</a></b>,
 
-<B><A HREF="psidtopgm.html">psidtopgm</A></B>,
+<b><a href="psidtopgm.html">psidtopgm</a></b>,
 
-<B><A HREF="pbmtolps.html">pbmtolps</A></B>,
+<b><a href="pbmtolps.html">pbmtolps</a></b>,
 
 Postscript language documentation
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1988 Jef Poskanzer, modified by Doug Crabill 1992
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

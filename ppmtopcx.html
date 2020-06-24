@@ -1,41 +1,38 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtopcx User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtopcx</H1>
+<html><head><title>Ppmtopcx User Manual</title></head>
+<body>
+<h1>ppmtopcx</h1>
 Updated: 27 March 2004
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtopcx - convert a PPM image to a PCX file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtopcx</B>
+<b>ppmtopcx</b>
 
-[<B>-24bit</B>]
+[<b>-24bit</b>]
 
-[<B>-8bit</B>]
+[<b>-8bit</b>]
 
-[<B>-packed</B>]
+[<b>-packed</b>]
 
-[<B>-stdpalette</b>]
+[<b>-stdpalette</b>]
 
-[<B>-palette=</b><i>palettefile</i>]
+[<b>-palette=</b><i>palettefile</i>]
 
-[<B>-planes=</b><i>planes</i>]
+[<b>-planes=</b><i>planes</i>]
 
-[<B>-xpos=</B><I>cols</I>]
+[<b>-xpos=</b><i>cols</i>]
 
-[<B>-ypos=</B><I>rows</I>]
+[<b>-ypos=</b><i>rows</i>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -43,49 +40,53 @@ ppmtopcx - convert a PPM image to a PCX file
 as output.  The type of the PCX file depends on the number of colors
 in the input image:
 
-<DL COMPACT>
-<DT>16 colors or fewer:
+<dl compact>
+<dt>16 colors or fewer:
 
-<DD>1 bit/pixel, 1-4 planes.
+<dd>1 bit/pixel, 1-4 planes.
 
-<DT>more than 16 colors, but no more than 256:
+<dt>more than 16 colors, but no more than 256:
 
-<DD>8 bits/pixel, 1 plane, colormap at the end of the file.
+<dd>8 bits/pixel, 1 plane, colormap at the end of the file.
 
-<DT>More than 256 colors:
+<dt>More than 256 colors:
 
-<DD>24bit truecolor file (8 bits/pixel, 3 planes).
+<dd>24bit truecolor file (8 bits/pixel, 3 planes).
 
-</DL>
+</dl>
 
 <p>You can override some of that and explicitly choose the format with
 the options below.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-24bit</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtopcx</b> recognizes the following
+command line options:
 
-<DD>Produce a 24bit truecolor PCX file, even if the image has 256
+<dl compact>
+<dt><b>-24bit</b>
+
+<dd>Produce a 24bit truecolor PCX file, even if the image has 256
 colors or fewer.
 
-<DT><B>-8bit</B>
+<dt><b>-8bit</b>
 
-<DD>Produce an 8bit (256 colors) PCX file, even if the image has 16
+<dd>Produce an 8bit (256 colors) PCX file, even if the image has 16
 colors or fewer.
 
 <p>This option was added in Netpbm 10.18 (August 2003).
 
-<DT><B>-packed</B>
+<dt><b>-packed</b>
 
-<DD>Use "packed pixel" format for files with 16 colors or
+<dd>Use "packed pixel" format for files with 16 colors or
 fewer: 1, 2, or 4 bits/pixel, 1 plane.
 
-<DT><B>-stdpalette</B>
+<dt><b>-stdpalette</b>
 
-<DD>Instead of computing a palette from the colors in the image, use
+<dd>Instead of computing a palette from the colors in the image, use
 a standard, built-in 16 color palette.  If the image contains a color
 that is not in the standard palette, <b>ppmtopcx</b> fails.
 
@@ -137,14 +138,14 @@ those colors in your palette with <b>pnmremap</b>.
 
 <p>This option was new in Netpbhm 10.25 (October 2004).
 
-<DT><B>-planes=</b><i>planes</i>
+<dt><b>-planes=</b><i>planes</i>
 
-<DD>Generate a PCX file with <i>planes</i> planes, even though the number
+<dd>Generate a PCX file with <i>planes</i> planes, even though the number
 of colors in the image could be represented in fewer.  This makes the file
 larger, but some PCX interpreters are capable of processing only certain
 numbers of planes.
 
-<p>This is meaningful only when <b>ppmtopcx</B> generates an image in
+<p>This is meaningful only when <b>ppmtopcx</b> generates an image in
 the 16 color palette format without packed pixels.  Consequently, you
 cannot specify this option together with <b>-24bit</b> or
 <b>-8bit</b> or <b>-packed</b>.
@@ -156,50 +157,46 @@ chooses 3 planes.
 
 <p>This option was new in Netpbm 10.21 (March 2004).
      
-<DT><B>-xpos=</B><I>cols</I>
+<dt><b>-xpos=</b><i>cols</i>
 
-<DT><B>-ypos=</B><I>rows</I>
+<dt><b>-ypos=</b><i>rows</i>
 
-<DD> These options set the position of the image in some field
+<dd> These options set the position of the image in some field
 (e.g. on a screen) in columns to the right of the left edge and rows
 below the top edge.  The PCX format contains image position
 information.  Don't confuse this with the position of an area of
-interest within the image.  For example, using <B>pnmpad</B> to add a
+interest within the image.  For example, using <b>pnmpad</b> to add a
 10 pixel left border to an image and then converting that image to PCX
 with xpos = 0 is not the same as converting the original image to PCX
 and setting xpos = 10.
 
-<P>The values may be from -32767 to 32768.
+<p>The values may be from -32767 to 32768.
 
-<P>The default for each is zero.
+<p>The default for each is zero.
 
-</DL>
+</dl>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pcxtoppm.html">pcxtoppm</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="pcxtoppm.html">pcxtoppm</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
-Copyright (C) 1994 by Ingo Wilken (<A
-HREF="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</A>)
+Copyright (C) 1994 by Ingo Wilken (<a
+href="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</a>)
 
 <p>Based on previous work by Michael Davidson.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

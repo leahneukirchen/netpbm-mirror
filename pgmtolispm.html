@@ -1,73 +1,73 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pgmtolispm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pgmtolispm</H1>
+<html><head><title>Pgmtolispm User Manual</title></head>
+<body>
+<h1>pgmtolispm</h1>
 Updated: 06 March 1990
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pgmtolispm - convert a PGM image to Lisp Machine format
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pgmtolispm</B>
+<b>pgmtolispm</b>
 
-[<I>pgmfile</I>]
+[<i>pgmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pgmtolispm</b> reads a PGM image as input and produces a Lisp
 Machine bitmap as output.
 
-<P>This is the file format read by the tv:read-bit-array-file function
+<p>This is the file format read by the tv:read-bit-array-file function
 on TI Explorer and Symbolics lisp machines.
 
-<P>Given a PGM (instead of a PBM), <b>pgmtolispm</b> outputs a
+<p>Given a PGM (instead of a PBM), <b>pgmtolispm</b> outputs a
 multi-plane image.  This is probably not useful unless you have a
 color lisp machine.
 
-<P>Multi-plane bitmaps on lisp machines are color; but the lispm image
+<p>Multi-plane bitmaps on lisp machines are color; but the lispm image
 file format does not include a color map, so we must treat it as a
 graymap instead.  This is unfortunate.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="lispmtopgm.html">lispmtopgm</A>,
-<A HREF="pgm.html">pgm</A>
+<p>There are no command line options defined specifically
+for <b>pgmtolispm</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="lispmtopgm.html">lispmtopgm</a>,
+<a href="pgm.html">pgm</a>
+
+<h2 id="limitations">LIMITATIONS</h2>
 
 <p>Output width is always rounded up to the nearest multiple of 32;
 this might not always be what you want, but it probably is (arrays
 which are not modulo 32 cannot be passed to the Lispm BITBLT function,
 and thus cannot easily be displayed on the screen).
 
-<P>No color.
+<p>No color.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Jamie Zawinski and Jef Poskanzer.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">LIMITATIONS</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

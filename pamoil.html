@@ -1,94 +1,91 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamoil User Manual</TITLE>
-</HEAD><BODY>
-<H1>pamoil</H1>
+<html><head><title>Pamoil User Manual</title></head>
+<body>
+<h1>pamoil</h1>
 Updated: 25 June 2001
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamoil - turn a PAM image into an oil painting
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamoil</B>
+<b>pamoil</b>
 
-[<B>-n</B> <I>N</I>]
+[<b>-n</b> <i>N</i>]
 
-[<I>pamfile</I>]
+[<i>pamfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamoil</b> reads a Netpbm image as input and does an "oil
 transfer", and writes the same type of Netpbm image as output.
 
-<P>The oil transfer is described in "Beyond Photography" by
+<p>The oil transfer is described in "Beyond Photography" by
 Holzmann, chapter 4, photo 7.  It's a sort of localized smearing.
 
-<P>The smearing works like this: First, assume a grayscale image.  For
-each pixel in the image, <B>pamoil</B> looks at a square neighborhood
-around it.  <B>pamoil</B> determines what is the most common pixel
+<p>The smearing works like this: First, assume a grayscale image.  For
+each pixel in the image, <b>pamoil</b> looks at a square neighborhood
+around it.  <b>pamoil</b> determines what is the most common pixel
 intensity in the neighborhood, and puts a pixel of that intensity into
 the output in the same position as the input pixel.
 
-<P>For color images, or any arbitrary multi-channel image,
-<B>pamoil</B> computes each channel (e.g. red, green, and blue)
+<p>For color images, or any arbitrary multi-channel image,
+<b>pamoil</b> computes each channel (e.g. red, green, and blue)
 separately the same way as the grayscale case above.
 
-<P>At the edges of the image, where the regular neighborhood would run
-off the edge of the image, <B>pamoil</B> uses a clipped neighborhood.
+<p>At the edges of the image, where the regular neighborhood would run
+off the edge of the image, <b>pamoil</b> uses a clipped neighborhood.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-n</B> <I>size</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamoil</b> recognizes the following
+command line option:
 
-<DD>This is the size of the neighborhood used in the smearing.  The
+<dl compact>
+<dt><b>-n</b> <i>size</i>
+
+<dd>This is the size of the neighborhood used in the smearing.  The
 neighborhood is this many pixels in all four directions.
 
-<P>The default is 3.
+<p>The default is 3.
 
-</DL>
+</dl>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pgmbentley.html">pgmbentley</A></B>,
+<b><a href="pgmbentley.html">pgmbentley</a></b>,
 
-<B><A HREF="ppmrelief.html">ppmrelief</A></B>,
+<b><a href="ppmrelief.html">ppmrelief</a></b>,
 
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="ppm.html">ppm</a></b>
 
-<P>
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<p>
+<h2 id="author">AUTHOR</h2>
 
 <p>This program is based on pgmoil Copyright (C) 1990 by Wilson Bent
-(<A HREF="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</A>)
+(<a href="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</a>)
 
-<P>Modified to ppm by Chris Sheppard, June 25, 2001
+<p>Modified to ppm by Chris Sheppard, June 25, 2001
 
-<P>Modified to pnm, using pam functions, by Bryan Henderson June 28,
+<p>Modified to pnm, using pam functions, by Bryan Henderson June 28,
 2001.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,31 +1,28 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtoyuvsplit User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtoyuvsplit</H1>
+<html><head><title>Ppmtoyuvsplit User Manual</title></head>
+<body>
+<h1>ppmtoyuvsplit</h1>
 Updated: 06 March 2003
-<BR>
+<br>
 
-<A HREF="#index">Table Of Contents</A>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtoyuvsplit - convert a PPM image to 3 subsampled raw YUV files
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtoyuvsplit</B>
-<I>basename</I>
-[<I>ppmfile</I>]
+<b>ppmtoyuvsplit</b>
+<i>basename</i>
+[<i>ppmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtoyuvsplit</b> reads a PPM image as input.  Produces 3 raw
-files <i>basename</i>.Y, <i>basename</i>.U and <i>basename.V</i> as
+files <i>basename</i>.Y, <i>basename</i>.U and <i>basename</i>.V as
 output.
 
 <p>The output files are the subsampled raw YUV representation of the
@@ -40,33 +37,37 @@ Y file is 4 times the size of the U file or V file.
 <p>The YUV values are scaled according to CCIR.601, as assumed by
 MPEG.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="yuvsplittoppm.html">yuvsplittoppm</A>,
-<A HREF="ppmtoyuv.html">ppmtoyuv</a>,
-<A HREF="ppmtoeyuv.html">ppmtoeyuv</A>,
-<A HREF="ppmtompeg.html">ppmtompeg</A>,
-<A HREF="ppm.html">ppm</A>
+<p>There are no command line options defined specifically
+for <b>ppmtoyuvsplit</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="yuvsplittoppm.html">yuvsplittoppm</a>,
+<a href="ppmtoyuv.html">ppmtoyuv</a>,
+<a href="ppmtoeyuv.html">ppmtoeyuv</a>,
+<a href="ppmtompeg.html">ppmtompeg</a>,
+<a href="ppm.html">ppm</a>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-<p>Copyright (C) 1993 by Andre Beck. (<A
-HREF="mailto:Andre_Beck@IRS.Inf.TU-Dresden.de">Andre_Beck@IRS.Inf.TU-Dresden.de</A>)
+<p>Copyright (C) 1993 by Andre Beck. (<a
+href="mailto:Andre_Beck@IRS.Inf.TU-Dresden.de">Andre_Beck@IRS.Inf.TU-Dresden.de</a>)
 
-<P>Based on ppmtoyuv.c
+<p>Based on ppmtoyuv.c
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

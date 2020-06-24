@@ -1,122 +1,126 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtoicr User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtoicr</H1>
+<html><head><title>Ppmtoicr User Manual</title></head>
+<body>
+<h1>ppmtoicr</h1>
 Updated: 05 June 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtoicr - convert a PPM image into NCSA ICR format 
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtoicr</B>
+<b>ppmtoicr</b>
 
-[<B>-windowname</B> <I>name</I>]
+[<b>-windowname</b> <i>name</i>]
 
-[<B>-expand</B> <I>expand</I>]
+[<b>-expand</b> <i>expand</i>]
 
-[<B>-display</B> <I>display</I>]
+[<b>-display</b> <i>display</i>]
 
-[<B>-rle</B>]
+[<b>-rle</b>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtoicr</b> reads a PPM file as input.  Produces an NCSA Telnet
 Interactive Color Raster graphic file as output.
 
-If <I>ppmfile</I> is not supplied, <b>ppmtoicr</b> reads from Standard
+If <i>ppmfile</i> is not supplied, <b>ppmtoicr</b> reads from Standard
 Input.
 
-<P>Interactive Color Raster (ICR) is a protocol for displaying raster
+<p>Interactive Color Raster (ICR) is a protocol for displaying raster
 graphics on workstation screens. The protocol is implemented in NCSA
 Telnet for the Macintosh version 2.3.  The ICR protocol shares
 characteristics of the Tektronix graphics terminal emulation protocol.
 For example, escape sequences are used to control the display.
 
-<P><b>ppmtoicr</b> will output the appropriate sequences to create a
+<p><b>ppmtoicr</b> will output the appropriate sequences to create a
 window of the dimensions of the input image, create a colormap of up
 to 256 colors on the display, then load the picture data into the
 window.
 
-<P>Note that there is no icrtoppm tool - this transformation is one
+<p>Note that there is no icrtoppm tool - this transformation is one
 way.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-windowname</B> <I>name</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtoicr</b> recognizes the following
+command line options:
 
-<DD>Output will be displayed in <I>name</I> (Default is to use
-<I>ppmfile</I> or "untitled" if the input is from Standard
+<dl compact>
+<dt><b>-windowname</b> <i>name</i>
+
+<dd>Output will be displayed in <i>name</i> (Default is to use
+<i>ppmfile</i> or "untitled" if the input is from Standard
 Input).
 
-<DT><B>-expand</B> <I>expand</I>
+<dt><b>-expand</b> <i>expand</i>
 
-<DD>Output will be expanded on display by factor <I>expand</I> (For
+<dd>Output will be expanded on display by factor <i>expand</i> (For
 example, a value of 2 will cause four pixels to be displayed for every
 input pixel.)
 
-<DT><B>-display</B> <I>display</I>
+<dt><b>-display</b> <i>display</i>
 
-<DD>Output will be displayed on screen numbered <I>display</I>
+<dd>Output will be displayed on screen numbered <i>display</i>
 
-</DL>
+</dl>
 
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 To display a PPM file named <b>ppmfile</b> using the protocol:
 
-<PRE>
+<pre>
     ppmtoicr ppmfile
-</PRE>
+</pre>
 
-This will create a window named <I>ppmfile</I> on the display with the
-correct dimensions for <I>ppmfile</I>, create and download a colormap
+This will create a window named <i>ppmfile</i> on the display with the
+correct dimensions for <i>ppmfile</i>, create and download a colormap
 of up to 256 colors, and download the picture into the window.  You
 may achieve the same effect with the following sequence:
 
-<PRE>
+<pre>
     ppmtoicr ppmfile &gt; filename
     cat filename
-</PRE>
+</pre>
 
 <p>To display a GIF file using the protocol in a window titled after the
 input file, zoom the displayed image by a factor of 2, and run-length
 encode the data:
 
-<PRE>
+<pre>
     giftopnm giffile | ppmtoicr -w giffile -r -e 2
-</PRE>
+</pre>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
-<P>The protocol uses frequent fflush() calls to speed up display.  If
-you save the output to a file for later display via <B>cat</B>,
+<p>The protocol uses frequent fflush() calls to speed up display.  If
+you save the output to a file for later display via <b>cat</b>,
 <b>ppmtoicr</b> will draw much more slowly.  In either case,
 increasing the blocksize limit on the display will speed up
 transmission substantially.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="ppm.html">ppm</a></b>
 
-<P>NCSA Telnet for the Macintosh, University of Illinois at
+<p>NCSA Telnet for the Macintosh, University of Illinois at
 Urbana-Champaign (1989)
 
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p>Until Netpbm 10.71 (June 2015), there was a <b>-rle</b> option documented,
 which was said to cause the output to use run length encoding compression.
@@ -127,23 +131,23 @@ ever use this program again, much less want to use run length encoding, we
 removed it from the documentation rather than fix the code.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1990 by Kanthan Pillay (<A
-HREF="mailto:svpillay@Princeton.EDU">svpillay@Princeton.EDU</A>),
+Copyright (C) 1990 by Kanthan Pillay (<a
+href="mailto:svpillay@Princeton.EDU">svpillay@Princeton.EDU</a>),
 Princeton University Computing and Information Technology.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

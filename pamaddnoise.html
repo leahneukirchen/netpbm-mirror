@@ -1,89 +1,88 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamaddnoise User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamaddnoise</H1>
+<html><head><title>Pamaddnoise User Manual</title></head>
+<body>
+<h1>pamaddnoise</h1>
 Updated: 14 November 1995
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamaddnoise - add noise to a Netpbm image
 
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamaddnoise</B>
+<b>pamaddnoise</b>
 
-[<B>-type</B> <I>noise_type</I>]
+[<b>-type</b> <i>noise_type</i>]
 
-[<B>-seed</B> <I>int</I>]
+[<b>-seed</b> <i>int</i>]
 
-<BR>
+<br>
 
-<B>pamaddnoise</B> <B>-type</B> <B>gaussian</B>
+<b>pamaddnoise</b> <b>-type</b> <b>gaussian</b>
 
-[<B>-sigma1</B> <I>value</I>]
+[<b>-sigma1</b> <i>value</i>]
 
-[<B>-sigma2</B> <I>value</I>]
+[<b>-sigma2</b> <i>value</i>]
 
-<BR>
+<br>
 
-[<B>-seed</B> <I>int</I>]
+[<b>-seed</b> <i>int</i>]
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
-<BR>
+<br>
 
-<B>pamaddnoise</B> <B>-type </B> <B>multiplicative_gaussian</B>
+<b>pamaddnoise</b> <b>-type </b> <b>multiplicative_gaussian</b>
 
-[<B>-mgsigma</B> <I>value</I>]
+[<b>-mgsigma</b> <i>value</i>]
 
-<BR>
+<br>
 
-[<B>-seed</B> <I>int</I>]
+[<b>-seed</b> <i>int</i>]
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
-<BR>
+<br>
 
-<B>pamaddnoise</B> <B>-type</B> <B>impulse</B>
+<b>pamaddnoise</b> <b>-type</b> <b>impulse</b>
 
-[<B>-tolerance</B> <i>ratio</I>]
+[<b>-tolerance</b> <i>ratio</i>]
 
-[<B>-seed</B> <I>int</I>]
+[<b>-seed</b> <i>int</i>]
 
-<BR>
+<br>
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
-<BR>
+<br>
 
-<B>pamaddnoise</B> <B>-type </B> <B>laplacian</B>
+<b>pamaddnoise</b> <b>-type </b> <b>laplacian</b>
 
-[<B>-lsigma</B> <I>value</I>]
+[<b>-lsigma</b> <i>value</i>]
 
-[<B>-seed</B> <I>int</I>]
+[<b>-seed</b> <i>int</i>]
 
-<BR>
+<br>
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
-<BR>
+<br>
 
-<B>pamaddnoise</B> <B>-type </B> <B>poisson</B>
+<b>pamaddnoise</b> <b>-type </b> <b>poisson</b>
 
-[<B>-lambda</B> <I>value</I>]
+[<b>-lambda</b> <i>value</i>]
 
-[<B>-seed</B> <I>int</I>]
+[<b>-seed</b> <i>int</i>]
 
-<BR>
+<br>
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -92,45 +91,50 @@ pamaddnoise - add noise to a Netpbm image
 a plane of colors in a color space.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-lambda</b> <i>value</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamaddnoise</b> recognizes the following
+command line options:
 
-<DD>Used for poisson noise only.  The default value is 0.05.
+<dl compact>
+<dt><b>-lambda</b> <i>value</i>
 
-<DT><B>-lsigma</b> <i>value</i>
+<dd>Used for poisson noise only.  The default value is 0.05.
 
-<DD>Used for laplacian noise only.  The default value is 10.0.
+<dt><b>-lsigma</b> <i>value</i>
 
-<DT><B>-mgsigma</b> <i>value</i>
+<dd>Used for laplacian noise only.  The default value is 10.0.
 
-<DD>Used for multiplicative gaussian noise only.  The default value is
+<dt><b>-mgsigma</b> <i>value</i>
+
+<dd>Used for multiplicative gaussian noise only.  The default value is
 0.5.
 
-<DT><B>-seed</b> <i>int</i>
+<dt><b>-seed</b> <i>int</i>
 
-<DD>Used for all noise types.  Set the initial random number generator
+<dd>Used for all noise types.  Set the initial random number generator
 seed value.
 
-<DT><B>-sigma1</b> <i>value</i>
+<dt><b>-sigma1</b> <i>value</i>
 
-<DD>Used for gaussian noise only.  The default value is 4.0.
+<dd>Used for gaussian noise only.  The default value is 4.0.
 
-<DT><B>-sigma2</b> <i>value</i>
+<dt><b>-sigma2</b> <i>value</i>
 
-<DD>Used for gaussian noise only.  The default value is 20.0.
+<dd>Used for gaussian noise only.  The default value is 20.0.
 
-<DT><B>-tolerance</b> <i>ratio</i>
+<dt><b>-tolerance</b> <i>ratio</i>
 
-<DD>
+<dd>
 Used for impulse noise only.  The default value is 0.10.  This means
 that 5% of all pixel values will be set to 0 and 5% will be set to
 the maxval
 
-<DT><B>-type</b> <i>noise_type</i>
+<dt><b>-type</b> <i>noise_type</i>
 
-<DD>
+<dd>
 Select type of noise by name.  The following noise types are
 available: gaussian, multiplicative_gaussian, impulse, laplacian,
 poisson.  Only enough letters to be unique are required for the noise
@@ -144,31 +148,31 @@ type option.  The default noise type is <b>gaussian</b>.
 <li><b>poisson</b>
 </ul>
 
-</DL>
+</dl>
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
-<UL>
-<LI>"Adaptive Image Restoration in Signal-Dependent Noise"
+<ul>
+<li>"Adaptive Image Restoration in Signal-Dependent Noise"
 by R. Kasturi Institute for Electronic Science, Texas Tech University,
 1982
 
-<LI>"Digital Image Processing Algorithms" by Ioannis Pitas,
+<li>"Digital Image Processing Algorithms" by Ioannis Pitas,
 Prentice Hall, 1993 ISBN 0-13-145814-0
 
-</UL>
+</ul>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pgmnoise.html">pgmnoise</A>,
-<A HREF="pgmmedian.html">pgmmedian</A>,
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>,
+<a href="pgmnoise.html">pgmnoise</a>,
+<a href="pgmmedian.html">pgmmedian</a>,
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>,
 
 <h2 id="history">HISTORY</h2>
 
-<P><b>pamaddnoise</b> was added to Netpbm in Version 10.29 (August 2005).
+<p><b>pamaddnoise</b> was added to Netpbm in Version 10.29 (August 2005).
 It had been distributed by Mike Burns via his own web site before that
 (and continued to be so).
 
@@ -177,22 +181,21 @@ and worked only on PNM images.  In Netpbm 10.30, it was converted to handle
 PAM images and renamed to <b>pamaddnoise</b>.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1995 by Mike Burns &lt;<A
-HREF="mailto:burns@cac.psu.edu">burns@cac.psu.edu</A>&gt;
+Copyright (C) 1995 by Mike Burns &lt;<a
+href="mailto:burns@cac.psu.edu">burns@cac.psu.edu</a>&gt;
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

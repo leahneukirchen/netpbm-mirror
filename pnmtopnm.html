@@ -1,28 +1,25 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmtopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmtopnm</H1>
+<html><head><title>Pnmtopnm User Manual</title></head>
+<body>
+<h1>pnmtopnm</h1>
 Updated: 24 March 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmtopnm - copy a PNM image
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmtopnm</B>
+<b>pnmtopnm</b>
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pnmtopnm</b> simply copies a PNM image to Standard Output.  The
+<p><b>pnmtopnm</b> simply copies a PNM image to Standard Output.  The
 output has the same major PNM format (PBM, PGM, or PPM) and maxval as
 the input.  This may seem an unnecessary duplication of <b>cat</b>,
 but it lets you convert between the plain (ASCII) and raw (binary)
@@ -43,8 +40,14 @@ programs that process PNM images.
 program that takes PAM input via the Netpbm programming library
 facilities, it also takes PNM input.
 
-<A NAME="history">&nbsp;</A>
-<H2>HISTORY</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>There are no command line options defined specifically
+for <b>pnmtopnm</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="history">HISTORY</h2>
 
 <p><b>pnmtopnm</b> was new in Netpbm 10.23 (July 2004).  It obsoleted
 <b>pnmtoplainpnm</b>, which specifically did the conversion to plain
@@ -57,22 +60,21 @@ did everything that <b>pnmtopnm</b> did and more, so
 in Netpbm 10.27 (March 2005), <b>pnmtopnm</b> became simply an alternate
 name for <b>pamtopnm</b>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="ppmtoppm.html">ppmtoppm</A>
-<A HREF="pgmtopgm.html">pgmtopgm</A>
-<A HREF="pamtopnm.html">pamtopnm</A>
-<A HREF="pnm.html">pnm</A>
+<a href="ppmtoppm.html">ppmtoppm</a>
+<a href="pgmtopgm.html">pgmtopgm</a>
+<a href="pamtopnm.html">pamtopnm</a>
+<a href="pnm.html">pnm</a>
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

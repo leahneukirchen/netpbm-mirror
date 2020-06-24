@@ -1,30 +1,30 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmntsc User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmntsc</H1>
+<html><head><title>Ppmntsc User Manual</title></head>
+<body>
+<h1>ppmntsc</h1>
 Updated: April 19, 2000
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmntsc - Make RGB colors legal for NTSC or PAL color systems.
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmntsc</B>
+<b>ppmntsc</b>
 
-[<B>--pal</B>]
-[<B>--legalonly</B>]
-[<B>--illegalonly</B>]
-[<B>--correctedonly</B>]
-[<B>--verbose</B>]
-[<B>--debug</B>]
-[<I>infile</I>]
+[<b>--pal</b>]
+[<b>--legalonly</b>]
+[<b>--illegalonly</b>]
+[<b>--correctedonly</b>]
+[<b>--verbose</b>]
+[<b>--debug</b>]
+[<i>infile</i>]
 
-<P>Minimum unique abbreviations of options are acceptable.
+<p>Minimum unique abbreviations of options are acceptable.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -38,76 +38,79 @@ to an NTSC (or PAL) video system for recording, the
 "illegal" colors will be clipped.  This may result in an
 undesirable looking picture.
 
-<P>This utility tests each pixel in an image to see if it falls
+<p>This utility tests each pixel in an image to see if it falls
 within the legal NTSC (or PAL) range.  If not, it raises or lowers the
 pixel's saturation in the output so that it does fall within legal
 limits.  Pixels that are already OK just go unmodified into the
 output.
 
-<P>Input is from the file named <I>input</I>.  If <I>input</I> is
-<B>-</B>, input is from Standard Input.  If you don't specify
-<I>input</I>, input is from Standard Input.
+<p>Input is from the file named <i>input</i>.  If <i>input</i> is
+<b>-</b>, input is from Standard Input.  If you don't specify
+<i>input</i>, input is from Standard Input.
 
-<P>Output is always to Standard Output.
+<p>Output is always to Standard Output.
 
-<P>This program handles multi-image PPM input, producing multi-image
+<p>This program handles multi-image PPM input, producing multi-image
 PPM output.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmntsc</b> recognizes the following
+command line options:
 
-<DT><B>--pal</B>
-<DD>
+<dl compact>
+
+<dt><b>--pal</b>
+<dd>
 Use the PAL transform instead of the default NTSC.
 
-<DT><B>--verbose</B>
-<DD>
+<dt><b>--verbose</b>
+<dd>
 Print a grand total of the number of illegal pixels.
 
-<DT><B>--debug</B>
-<DD>
+<dt><b>--debug</b>
+<dd>
 Produce a humongous listing of illegal colors and their legal counterparts.
 NOTE:  This option may produce a great deal of output.
 
-<DT><B>--legalonly</B>
-<DD>
+<dt><b>--legalonly</b>
+<dd>
 Output only pixels that are already legal.  Output black in place of pixels
 that are not.
 
-<DT><B>--illegalonly</B>
-<DD>
+<dt><b>--illegalonly</b>
+<dd>
 Output only pixels that are illegal (and output them uncorrected).
 Output black in place of pixels that are already legal.
 
-<DT><B>--correctedonly</B>
-<DD>
+<dt><b>--correctedonly</b>
+<dd>
 Output only pixels that are corrected versions of illegal pixels.  Output
 black in place of pixels that are already legal.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="ppmdim.html">ppmdim</A></B>,
-<B><A HREF="pambrighten.html">pambrighten</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="ppmdim.html">ppmdim</a></b>,
+<b><a href="pambrighten.html">pambrighten</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Wes Barris, Minnesota Supercomputer Center, Inc., Bryan Henderson
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,29 +1,26 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtomda User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtomda</H1>
+<html><head><title>Pbmtomda User Manual</title></head>
+<body>
+<h1>pbmtomda</h1>
 Updated: 3 June 1999
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pbmtomda - convert a PBM image to a Microdesign .mda
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtomda</B>
+<b>pbmtomda</b>
 
-[<B>-d</B>]
-[<B>-i</B>]
-[<B>--</B>]
+[<b>-d</b>]
+[<b>-i</b>]
+[<b>--</b>]
 
 [<i>pbmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -32,53 +29,52 @@ produces a MicroDesign 2 area file (.MDA) as output.
 
 <p>If you do not specify <i>pbmfile</i>, <b>pbmtomda</b> uses Standard Input.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-d</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtomda</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-d</b>
+
+<dd>
 Halve the height of the output file, to compensate for the aspect 
 ratio used in MicroDesign files.
-<DT><B>-i</B>
+<dt><b>-i</b>
 
-<DD>
+<dd>
 Invert the colors used.
-<DT><B>--</B>
+<dt><b>--</b>
 
-<DD>
+<dd>
 End of options (use this if the filename starts with "-")
-</DL>
+</dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 There's no way to produce files in MicroDesign 3 format. MD3 itself and 
-<A HREF="mdatopbm.html">mdatopbm</A> can read files in either format.
+<a href="mdatopbm.html">mdatopbm</a> can read files in either format.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="mdatopbm.html">mdatopbm</A>,
-<A HREF="pbm.html">pbm</A>
+<a href="mdatopbm.html">mdatopbm</a>,
+<a href="pbm.html">pbm</a>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1999 John Elliott &lt;<A HREF="mailto:jce@seasip.demon.co.uk">jce@seasip.demon.co.uk</A>&gt;.
+Copyright (C) 1999 John Elliott &lt;<a href="mailto:jce@seasip.demon.co.uk">jce@seasip.demon.co.uk</a>&gt;.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">LIMITATIONS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

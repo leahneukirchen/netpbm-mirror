@@ -1,29 +1,26 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtoepson User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtoepson</H1>
+<html><head><title>Pbmtoepson User Manual</title></head>
+<body>
+<h1>pbmtoepson</h1>
 Updated: 8 August 2003
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 pbmtoepson - convert a PBM image into Epson printer graphics
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtoepson</B>
+<b>pbmtoepson</b>
 
 [<b>-dpi=</b><i>n</i>]
-[<b>-protocol=</b>{<b>escp9</b>|<B>escp</B>}]
+[<b>-protocol=</b>{<b>escp9</b>|<b>escp</b>}]
 [<b>-adjacent</b>]
 [<b>-nonadjacent</b>]
 
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -46,12 +43,16 @@ specification.
 
 <p>Note that there is no epsontopbm tool - this transformation is one way.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<dl COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtoepson</b> recognizes the following
+command line options:
 
-<dt><b>-protocol=</b>{<b>escp9</b>|<B>escp</B>}
+<dl compact>
+
+<dt><b>-protocol=</b>{<b>escp9</b>|<b>escp</b>}
 
 <dd>This determines which Epson printer protocol the output uses.
 <b>escp9</b> is the older ESC/P 9-pin protocol.  <b>escp</b> is the
@@ -87,29 +88,25 @@ printing unless that is incompatible with your other options.
 </dl>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmtoescp2.html">pbmtoescp2</A>,
-<A HREF="pbm.html">pbm</A>,
+<a href="pbmtoescp2.html">pbmtoescp2</a>,
+<a href="pbm.html">pbm</a>,
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1991 by John Tiller (<A
-HREF="mailto:tiller@galois.msfc.nasa.gov">tiller@galois.msfc.nasa.gov</A>)
+Copyright (C) 1991 by John Tiller (<a
+href="mailto:tiller@galois.msfc.nasa.gov">tiller@galois.msfc.nasa.gov</a>)
 and Jef Poskanzer.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<li><A HREF="#lbAB">NAME</A>
-<li><A HREF="#lbAC">SYNOPSIS</A>
-<li><A HREF="#lbAD">DESCRIPTION</A>
-<li><A HREF="#lbAE">OPTIONS</A>
-<li><A HREF="#lbAF">SEE ALSO</A>
-<li><A HREF="#lbAG">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

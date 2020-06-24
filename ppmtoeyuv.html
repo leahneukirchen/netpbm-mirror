@@ -1,25 +1,22 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtoeyuv User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtoeyuv</H1>
+<html><head><title>Ppmtoeyuv User Manual</title></head>
+<body>
+<h1>ppmtoeyuv</h1>
 Updated: April 3, 2000
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtoeyuv - convert a PPM image into a Berkeley YUV file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtoeyuv</B>
+<b>ppmtoeyuv</b>
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -27,30 +24,35 @@ ppmtoeyuv - convert a PPM image into a Berkeley YUV file
 Encoder YUV (not the same as Abekas YUV) file on the Standard Output
 file.
 
-<P>With no argument, <b>ppmtoeyuv</b>takes input from Standard Input.
-Otherwise, <I>ppmfile</I> is the file specification of the input file.
+<p>With no argument, <b>ppmtoeyuv</b>takes input from Standard Input.
+Otherwise, <i>ppmfile</i> is the file specification of the input file.
 
-<P><B>ppmtoeyuv</B> handles multi-image PPM input streams, outputting
+<p><b>ppmtoeyuv</b> handles multi-image PPM input streams, outputting
 consecutive eyuv images.  There must be at least one image, though.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="eyuvtoppm.html">eyuvtoppm</A></B>,
+<p>There are no command line options defined specifically
+for <b>ppmtoeyuv</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<B><A HREF="ppmtoyuv.html">ppmtoyuv</A></B>,
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="eyuvtoppm.html">eyuvtoppm</a></b>,
+
+<b><a href="ppmtoyuv.html">ppmtoyuv</a></b>,
+
+<b><a href="ppm.html">ppm</a></b>
 
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

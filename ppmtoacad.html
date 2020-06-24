@@ -1,60 +1,61 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtoacad User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtoacad</H1>
+<html><head><title>Ppmtoacad User Manual</title></head>
+<body>
+<h1>ppmtoacad</h1>
 Updated: 10 October 1991
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtoacad - convert PPM to Autocad database or slide
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 
-<B>ppmtoacad</B>
+<b>ppmtoacad</b>
 
-[<B>-dxb</B>]
+[<b>-dxb</b>]
 
-[<B>-poly</B>]
+[<b>-poly</b>]
 
-[<B>-background</B> <I>color</I>]
+[<b>-background</b> <i>color</i>]
 
-[<B>-white</B>]
+[<b>-white</b>]
 
-[<B>-aspect</B> <I>ratio</I>]
+[<b>-aspect</b> <i>ratio</i>]
 
-[<B>-8</B>]
+[<b>-8</b>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtoacad</b> reads a PPM image as input and produces an
 Autocad&#174; slide file or binary database import (.dxb) file as
-output.  If you don't specify <I>ppmfile</I>,
+output.  If you don't specify <i>ppmfile</i>,
 <b>ppmtoacad</b> takes the input from Standard Input.
 
 <p>(Typographical note: the name of Autocad is often rendered as
 AutoCAD.  Netpbm documentation uses standard American typography, wherein
 that is not a valid form of capitalization).
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>You may abbreviate any option to its shortest unique prefix.
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtoacad</b> recognizes the following
+command line options:
 
-<DL COMPACT>
-<DT><B>-dxb</B>
+<p>You may abbreviate any option to its shortest unique prefix.
 
-<DD><b>ppmtoacad</b> writes an Autocad binary database import (.dxb)
+<dl compact>
+<dt><b>-dxb</b>
+
+<dd><b>ppmtoacad</b> writes an Autocad binary database import (.dxb)
 file.  You read this file with the DXBIN command and, once loaded, it
 becomes part of the Autocad geometrical database, so you can view and
 edit it like any other object.  Each sequence of identical pixels
@@ -62,11 +63,11 @@ becomes a separate object in the database; this can result in very
 large Autocad drawing files.  However, if you want to trace over a
 bitmap, it lets you zoom and pan around the bitmap as you wish.
 
-<DT><B>-poly</B>
+<dt><b>-poly</b>
 
-<DD>If you don't specify the <B>-dxb</B> option, <b>ppmtoacad</b>
+<dd>If you don't specify the <b>-dxb</b> option, <b>ppmtoacad</b>
 generates an Autocad slide file.  Normally each row of pixels is
-represented by an Autocad line entity.  If you specify <B>-poly</B>,
+represented by an Autocad line entity.  If you specify <b>-poly</b>,
 <b>ppmtoacad</b> renders the pixels as filled polygons.  If you view
 the slide on a display with higher resolution than the source image,
 this will cause the pixels to expand instead of appearing as discrete
@@ -74,100 +75,95 @@ lines against the screen background color.  Regrettably, this
 representation yields slide files which occupy more storage space and
 take longer to display.
 
-<DT><B>-background</B> <I>color</I>
+<dt><b>-background</b> <i>color</i>
 
-<DD>Most Autocad display drivers can be configured to use any
+<dd>Most Autocad display drivers can be configured to use any
 available color as the screen background.  Some users prefer a black
 screen background, others white, while splinter groups advocate burnt
 ocher, tawny puce, and shocking gray.  Discarding pixels whose closest
 Autocad color representation is equal to the background color can
 substantially reduce the size of the Autocad database or slide file
 needed to represent a bitmap.  If you don't specify
-<B>-background</B>, <b>ppmtoacad</b> assumes the screen background
+<b>-background</b>, <b>ppmtoacad</b> assumes the screen background
 color to be black.  You may specify any Autocad color number as the
 screen background; <b>ppmtoacad</b> assumes color numbers to specify
 the hues defined in the standard Autocad 256 color palette.
 
-<DT><B>-white</B>
+<dt><b>-white</b>
 
-<DD>Since many Autocad users choose a white screen background, this
-option is provided as a short-cut.  Specifying <B>-white</B> is
-identical in effect to <B>-background 7</B>.
+<dd>Since many Autocad users choose a white screen background, this
+option is provided as a short-cut.  Specifying <b>-white</b> is
+identical in effect to <b>-background 7</b>.
 
-<DT><B>-aspect</B> <I>ratio</I>
+<dt><b>-aspect</b> <i>ratio</i>
 
-<DD>If the source image had non-square pixels (which means it is not
+<dd>If the source image had non-square pixels (which means it is not
 standard PPM), specify the ratio of the pixel width to pixel height as
-<I>ratio</I>.  <b>ppmtoacad</b> will correct the resulting slide or
+<i>ratio</i>.  <b>ppmtoacad</b> will correct the resulting slide or
 .dxb file so that pixels on the Autocad screen will be square.  For
 example, to correct an image made for a 320x200 VGA/MCGA screen,
-specify <B>-aspect 0.8333</B>.
+specify <b>-aspect 0.8333</b>.
 
-<DT><B>-8</B>
+<dt><b>-8</b>
 
-<DD>Restricts the colors in the output file to the 8 RGB shades.
-</DL>
+<dd>Restricts the colors in the output file to the 8 RGB shades.
+</dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>RESTRICTIONS</H2>
+<h2 id="restrictions">RESTRICTIONS</h2>
 
-<P>Autocad has a fixed palette of 256 colors, distributed along the
+<p>Autocad has a fixed palette of 256 colors, distributed along the
 hue, lightness, and saturation axes.  So it may poorly render images
 which contain many nearly-identical colors, or colors not closely
 approximated by Autocad's palette.
 
-<P><B>ppmtoacad</B> works best if the system displaying its output can
+<p><b>ppmtoacad</b> works best if the system displaying its output can
 display the full 256 color Autocad palette.  Monochrome, 8 color, and
 16 color configurations will produce less than optimal results.
 
-<P>When creating a .dxb file or a slide file with the <B>-poly</B>
-option, <B>ppmtoacad</B> finds both vertical and horizontal runs of
+<p>When creating a .dxb file or a slide file with the <b>-poly</b>
+option, <b>ppmtoacad</b> finds both vertical and horizontal runs of
 identical pixels and consolidates them into rectangular regions to
 reduce the size of the output file.  This is effective for images with
 large areas of constant color but it's no substitute for true raster
 to vector conversion.  In particular, this process does not optimize
 thin diagonal lines at all.
 
-<P>Output files can be huge.
+<p>Output files can be huge.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<p>Autocad Reference Manual: <I>Slide File Format</I> and <I>Binary
-Drawing Interchange (DXB) Files</I>, <B><A HREF="ppm.html">ppm</A></B>
+<p>Autocad Reference Manual: <i>Slide File Format</i> and <i>Binary
+Drawing Interchange (DXB) Files</i>, <b><a href="ppm.html">ppm</a></b>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-<PRE>
+<pre>
 John Walker
 Autodesk SA
 Avenue des Champs-Montants 14b
 CH-2074 MARIN
 Suisse/Schweiz/Svizzera/Svizra/Switzerland
-    <B>Usenet:</B><A HREF="mailto:kelvin@Autodesk.com">kelvin@Autodesk.com</A>
-    <B>Fax:</B>038/33 88 15
-    <B>Voice:</B>038/33 76 33
-</PRE>
+    <b>Usenet:</b><a href="mailto:kelvin@Autodesk.com">kelvin@Autodesk.com</a>
+    <b>Fax:</b>038/33 88 15
+    <b>Voice:</b>038/33 76 33
+</pre>
 
-<P>Permission to use, copy, modify, and distribute this software and
+<p>Permission to use, copy, modify, and distribute this software and
 its documentation for any purpose and without fee is hereby granted,
 without any conditions or restrictions.  This software is provided
 "as is" without express or implied warranty.
 
-<P>Autocad and Autodesk are registered trademarks of Autodesk, Inc.
+<p>Autocad and Autodesk are registered trademarks of Autodesk, Inc.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">LIMITATIONS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#restrictions">RESTRICTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

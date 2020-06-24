@@ -1,73 +1,70 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Macptopbm User Manual</TITLE></HEAD>
-<BODY>
-<H1>macptopbm</H1>
+<html><head><title>Macptopbm User Manual</title></head>
+<body>
+<h1>macptopbm</h1>
 Updated: 29 March 1989
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 macptopbm - convert a MacPaint file into a PBM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>macptopbm</B> [<B>-extraskip</B> <I>N</I>] [<I>macpfile</I>]
+<b>macptopbm</b> [<b>-extraskip</b> <i>N</i>] [<i>macpfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>macptopbm</b>reads a MacPaint file as input and produces a PBM
 image as output.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>You can abbreviate any option to its shortest unique prefix.
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>macptopbm</b> recognizes the following
+command line option:
 
-<DL COMPACT>
-<DT><B>-extraskip</B>
+<p>You can abbreviate any option to its shortest unique prefix.
 
-<DD>This option is to get around a problem with some methods of
+<dl compact>
+<dt><b>-extraskip</b>
+
+<dd>This option is to get around a problem with some methods of
 transferring files from the Mac world to the Unix world.  Most of
 these methods leave the Mac files alone, but a few of them add the
 "finderinfo" data onto the front of the Unix file.  This
 means an extra 128 bytes to skip over when reading the file.  The
 symptom to watch for is that the resulting PBM file looks shifted to
-one side.  If you get this, try <B>-extraskip</B> 128, and if that
+one side.  If you get this, try <b>-extraskip</b> 128, and if that
 still doesn't look right try another value.
 
-</DL>
+</dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="picttoppm.html">picttoppm</A>,
-<A HREF="pbmtomacp.html">pbmtomacp</A>,
-<A HREF="pbm.html">pbm</A>
+<a href="picttoppm.html">picttoppm</a>,
+<a href="pbmtomacp.html">pbmtomacp</a>,
+<a href="pbm.html">pbm</a>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1988 by Jef Poskanzer.
 
 The MacPaint-reading code is copyright (c) 1987 by Patrick J. Naughton
-(<A HREF="mailto:naughton@wind.sun.com">naughton@wind.sun.com</A>).
+(<a href="mailto:naughton@wind.sun.com">naughton@wind.sun.com</a>).
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
 

@@ -1,55 +1,55 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmcie User Manual</TITLE></HEAD>
-<BODY>
-<H1>PPMCIE</H1>
+<html><head><title>Ppmcie User Manual</title></head>
+<body>
+<h1>ppmcie</h1>
 Updated: July 31, 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmcie - draw a CIE color chart as a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 
-<B>ppmcie</B>
+<b>ppmcie</b>
 
 [
-<B>-rec709</B>|<B>-cie</B>|<B>-ebu</B>|<B>-hdtv</B>|<B>-ntsc</B>|<B>-smpte</B>
+<b>-rec709</b>|<b>-cie</b>|<b>-ebu</b>|<b>-hdtv</b>|<b>-ntsc</b>|<b>-smpte</b>
 ]
-[<B>-xy</B>|<B>-upvp</B>]
+[<b>-xy</b>|<b>-upvp</b>]
 
-[<B>-red</B> <I>rx</I> <I>ry</I>]
+[<b>-red</b> <i>rx</i> <i>ry</i>]
 
-[<B>-green</B> <I>gx</I> <I>gy</I>]
+[<b>-green</b> <i>gx</i> <i>gy</i>]
 
-[<B>-blue</B> <I>bx</I> <I>by</I>]
+[<b>-blue</b> <i>bx</i> <i>by</i>]
 
-[<B>-white</B> <I>wx</I> <I>wy</I>]
+[<b>-white</b> <i>wx</i> <i>wy</i>]
 
-[<B>-size</B> <I>edge</I>]
+[<b>-size</b> <i>edge</i>]
 
-[{<B>-xsize</B>|<B>-width</B>} <I>width</I>]
+[{<b>-xsize</b>|<b>-width</b>} <i>width</i>]
 
-[{<B>-ysize</B>|<B>-height</B>} <I>height</I>]
+[{<b>-ysize</b>|<b>-height</b>} <i>height</i>]
 
-[<B>-noblack</B>]
-[<B>-nowpoint</B>]
-[<B>-nolabel</B>]
-[<B>-noaxes</B>]
-[<B>-full</B>]
+[<b>-noblack</b>]
+[<b>-nowpoint</b>]
+[<b>-nolabel</b>]
+[<b>-noaxes</b>]
+[<b>-full</b>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>ppmcie</B> creates a PPM file containing a plot of the CIE
+<b>ppmcie</b> creates a PPM file containing a plot of the CIE
 "tongue" color chart -- to the extent possible in a PPM
 image.  Alternatively, creates a pseudo-PPM image of the color tongue
 using RGB values from a color system of your choice.
 
-<P>
+<p>
 The CIE color tongue is an image of all the hues that can be described
 by CIE X-Y chromaticity coordinates.  They are arranged on a two
 dimensional coordinate plane with the X chromaticity on the horizontal
@@ -57,40 +57,40 @@ axis and the Y chromaticity on the vertical scale.  (You can choose
 alternatively to use CIE u'-v' chromaticity coordinates, but the
 general idea of the color tongue is the same).
 
-<P>
+<p>
 Note that the PPM format specifies that the RGB values in the file are
 from the ITU-R Recommendation BT.709 color system, gamma-corrected.
-And positive.  See <B><A HREF="ppm.html">ppm</A></B> for details.  If
-you use one of the color system options on <B>ppmcie</B>, what you get
+And positive.  See <b><a href="ppm.html">ppm</a></b> for details.  If
+you use one of the color system options on <b>ppmcie</b>, what you get
 is not a true PPM image, but is very similar.  If you display such
-<B>ppmcie</B> output using a device that expects PPM input (which
+<b>ppmcie</b> output using a device that expects PPM input (which
 includes just about any computer graphics display program), it will
 display the wrong colors.
 
-<P>
+<p>
 However, you may have a device that expects one of these variations on 
 PPM.
 
-<P>
+<p>
 In every RGB color system you can specify, including the default
 (which produces a true PPM image) there are hues in the color tongue
 that can't be represented.  For example, monochromatic blue-green with 
 a wavelength of 500nm cannot be represented in a PPM image.  
 
-<P>
-For these hues, <B>ppmcie</B> substitutes a similar hue as follows:
+<p>
+For these hues, <b>ppmcie</b> substitutes a similar hue as follows:
 They are desaturated and rendered as the shade where the edge of the
 Maxwell triangle intersects a line drawn from the requested shade to
 the white point defined by the color system's white point.
-Furthermore, unless you specify the <B>-full</B> option, <B>ppmcie</B>
+Furthermore, unless you specify the <b>-full</b> option, <b>ppmcie</b>
 reduces their intensity by 25% compared to the true hues in the image.
 
-<P>
-<B>ppmcie</B> draws and labels the CIE X-Y coordinate axes unless you
+<p>
+<b>ppmcie</b> draws and labels the CIE X-Y coordinate axes unless you
 choose otherwise with options.
 
-<P>
-<B>ppmcie</B> draws the Maxwell triangle for the color system in use
+<p>
+<b>ppmcie</b> draws the Maxwell triangle for the color system in use
 on the color tongue.  The Maxwell triangle is the triangle whose
 vertices are the primary illuminant hues for the color system.  The
 hues inside the triangle show the color gamut for the color system.
@@ -100,150 +100,155 @@ denotes the Maxwell triangle by rendering it at full brightness, while
 rendering the rest of the color tongue as 3/4 brightness.  You can turn
 this off with options.
 
-<P>
-<B>ppmcie</B> also places a black cross at the color system's white
+<p>
+<b>ppmcie</b> also places a black cross at the color system's white
 point (with the center of the cross open so you can actually see the
 white color) and displays in text the CIE X-Y chromaticities of the
 primary illuminants and white point for the color system.  You can
 turn this off with options, though.
 
-<P>
-<B>ppmcie</B> annotates the periphery of the color tongue with the
+<p>
+<b>ppmcie</b> annotates the periphery of the color tongue with the
 wavelength, in nanometers of the monochromatic hues which appear
 there.
 
-<P>
-<B>ppmcie</B> displays the black body chromaticity curve for Planckian
+<p>
+<b>ppmcie</b> displays the black body chromaticity curve for Planckian
 radiators from 1000 to 30000 kelvins on the image.  This curve traces the
 colors of black bodies as various temperatures.
 
-<P>
+<p>
 You can choose from several standard color systems, or specify one of
 your own numerically.
 
-<P>
+<p>
 CIE charts, by their very nature, contain a very large number of
 colors.  If you're encoding the chart for a color mapped device or
-file format, you'll need to use <B>pnmquant</B> or <B>ppmdither</B> to
+file format, you'll need to use <b>pnmquant</b> or <b>ppmdither</b> to
 reduce the number of colors in the image.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmcie</b> recognizes the following
+command line options:
 
 <p>You may abbreviate any option to its shortest unique prefix.
 
-<DL COMPACT>
-<DT><B>-rec709</B>
-<DT><B>-cie</B>
-<DT><B>-ebu</B>
-<DT><B>-hdtv</B>
-<DT><B>-ntsc</B>
-<DT><B>-smpte</B>
+<dl compact>
+<dt><b>-rec709</b>
+<dt><b>-cie</b>
+<dt><b>-ebu</b>
+<dt><b>-hdtv</b>
+<dt><b>-ntsc</b>
+<dt><b>-smpte</b>
 
-<DD>
+<dd>
 Select a standard color system whose gamut to plot.  The default is
-<B>-rec709</B>, which chooses ITU-R Recommendation BT.709,
+<b>-rec709</b>, which chooses ITU-R Recommendation BT.709,
 gamma-corrected.  This is the only color system for which
-<B>ppmcie</B>'s output is a true PPM image.  See explanation above.
-<B>-ebu</B> chooses the primaries used in the PAL and SECAM
-broadcasting standards.  <B>-ntsc</B> chooses the primaries specified
+<b>ppmcie</b>'s output is a true PPM image.  See explanation above.
+<b>-ebu</b> chooses the primaries used in the PAL and SECAM
+broadcasting standards.  <b>-ntsc</b> chooses the primaries specified
 by the NTSC broadcasting system (few modern monitors actually cover
-this range).  <B>-smpte</B> selects the primaries recommended by the
+this range).  <b>-smpte</b> selects the primaries recommended by the
 Society of Motion Picture and Television Engineers (SMPTE) in
-standards RP-37 and RP-145, and <B>-hdtv</B> uses the much broader
-<I>HDTV ideal</I> primaries.  <B>-cie</B> chooses a color system that
+standards RP-37 and RP-145, and <b>-hdtv</b> uses the much broader
+<i>HDTV ideal</i> primaries.  <b>-cie</b> chooses a color system that
 has the largest possible gamut within the spectrum of the chart.  This
-is the same color system as you get with the <B>-cie</B> option to
-John Walker's <B>cietoppm</B> program.
+is the same color system as you get with the <b>-cie</b> option to
+John Walker's <b>cietoppm</b> program.
 
-<DT><B>-xy</B>
+<dt><b>-xy</b>
 
-<DD>
+<dd>
 plot CIE 1931 x y chromaticities.  This is the default.
 
-<DT><B>-upvp</B>
+<dt><b>-upvp</b>
 
-<DD>
+<dd>
 plot u' v' 1976 chromaticities rather than CIE 1931 x y
 chromaticities.  The advantage of u' v' coordinates is that equal
 intervals of distance on the u' v' plane correspond roughly to the
 eye's ability to discriminate colors.
 
-<DT><B>-red</B><I> rx ry</I>
+<dt><b>-red</b><i> rx ry</i>
 
-<DD>
-specifies the CIE <I>x</I> and <I>y</I> co-ordinates of the red
+<dd>
+specifies the CIE <i>x</i> and <i>y</i> co-ordinates of the red
 illuminant of a custom color system and selects the custom system.
 
-<DT><B>-green</B><I> gx gy</I>
+<dt><b>-green</b><i> gx gy</i>
 
-<DD>
-specifies the CIE <I>x</I> and <I>y</I> co-ordinates of the green
+<dd>
+specifies the CIE <i>x</i> and <i>y</i> co-ordinates of the green
 illuminant of the color system and selects the custom system.
 
-<DT><B>-blue</B><I> bx by</I>
+<dt><b>-blue</b><i> bx by</i>
 
-<DD>
-specifies the CIE <I>x</I> and <I>y</I> co-ordinates of the blue
+<dd>
+specifies the CIE <i>x</i> and <i>y</i> co-ordinates of the blue
 illuminant of the color system and selects the custom system.
 
-<DT><B>-white</B><I> wx wy</I>
+<dt><b>-white</b><i> wx wy</i>
 
-<DD>
-specifies the CIE <I>x</I> and <I>y</I> co-ordinates of the white
+<dd>
+specifies the CIE <i>x</i> and <i>y</i> co-ordinates of the white
 point of the color system and selects the custom system.
 
-<DT><B>-size</B><I> edge</I>
+<dt><b>-size</b><i> edge</i>
 
-<DD>
-Create an image of <I>edge</I> by <I>edge</I> pixels.  The default is
+<dd>
+Create an image of <i>edge</i> by <i>edge</i> pixels.  The default is
 512x512.
 
-<DT><B>-xsize|-width</B><I> width</I>
+<dt><b>-xsize|-width</b><i> width</i>
 
-<DD>
-Sets the width of the generated image to <I>width</I> pixels.  The
+<dd>
+Sets the width of the generated image to <i>width</i> pixels.  The
 default width is 512 pixels.  If the height and width of the image are
 not the same, the CIE diagram will be stretched in the longer
 dimension.
 
-<DT><B>-ysize|-height</B><I> height</I>
+<dt><b>-ysize|-height</b><i> height</i>
 
-<DD>
-Sets the height of the generated image to <I>height</I> pixels.  The
+<dd>
+Sets the height of the generated image to <i>height</i> pixels.  The
 default height is 512 pixels.  If the height and width of the image
 are not the same, the CIE diagram will be stretched in the longer
 dimension.
 
-<DT><B>-noblack</B>
+<dt><b>-noblack</b>
 
-<DD>
+<dd>
 Don't plot the black body chromaticity curve.
 
-<DT><B>-nowpoint</B>
+<dt><b>-nowpoint</b>
 
-<DD>
+<dd>
 Don't plot the color system's white point.
 
-<DT><B>-nolabel</B>
+<dt><b>-nolabel</b>
 
-<DD>
+<dd>
 Omit the label.
 
-<DT><B>-noaxes</B>
+<dt><b>-noaxes</b>
 
-<DD>
+<dd>
 Don't plot axes.
 
-<DT><B>-full</B>
+<dt><b>-full</b>
 
-<DD>
+<dd>
 Plot the entire CIE tongue in full brightness; don't dim the part
 which is outside the gamut of the specified color system (i.e. outside
 the Maxwell triangle).
 
-</DL>
+</dl>
 
-<h2 id="interpret">INTERPRETATION OF COLOR CHART</h2>
+<h2 id="interpretation">INTERPRETATION OF COLOR CHART</h2>
 
 <p>A color spectrum is a linear combination of one or more monochromatic
 colors.
@@ -349,38 +354,37 @@ involve infrared and ultraviolet light, so you can't see them.  This
 line is called the "line of purples."
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppmdither.html">ppmdither</A></B>,
-<B><A HREF="pnmquant.html">pnmquant</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="ppmdither.html">ppmdither</a></b>,
+<b><a href="pnmquant.html">pnmquant</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="author">AUTHOR</H2>
-
-<p>
-Copyright (C) 1995 by John Walker (<A
-HREF="mailto:kelvin@fourmilab.ch">kelvin@fourmilab.ch</A>)
+<h2 id="author">AUTHOR</h2>
 
 <p>
-WWW home page: <A
-HREF="http://www.fourmilab.ch/">http://www.fourmilab.ch/</A>
+Copyright (C) 1995 by John Walker (<a
+href="mailto:kelvin@fourmilab.ch">kelvin@fourmilab.ch</a>)
 
-<P>
+<p>
+WWW home page: <a
+href="http://www.fourmilab.ch/">http://www.fourmilab.ch/</a>
+
+<p>
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted,
 without any conditions or restrictions.  This software is provided as
 is without express or implied warranty.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#interpretation">INTERPRETATION OF COLOR CHART</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#interpretation">INTERPRETATION OF COLOR CHART</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

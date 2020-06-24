@@ -1,28 +1,25 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmtorle User Manual</TITLE></HEAD>
-<BODY>
-<H1>PNMTORLE</H1>
+<html><head><title>Pnmtorle User Manual</title></head>
+<body>
+<h1>PNMTORLE</h1>
 Updated: March 31, 1994
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmtorle - convert a Netpbm image file into an RLE image file.
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmtorle</B>
+<b>pnmtorle</b>
 
-[<B>-h</B>]
-[<B>-v</B>]
-[<B>-a</B>]
-[<B>-o</B> <I>outfile</I>]
-[<I>pnmfile</I>]
+[<b>-h</b>]
+[<b>-v</b>]
+[<b>-a</b>]
+[<b>-o</b> <i>outfile</i>]
+[<i>pnmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -30,7 +27,7 @@ pnmtorle - convert a Netpbm image file into an RLE image file.
 You can include a transparency mask.  If the input is a multiple image file,
 the output consists of several concatenated RLE images.
 
-<P>The RLE file will contain either a three channel color image (24
+<p>The RLE file will contain either a three channel color image (24
 bits) or a single channel grayscale image (8 bits) depending upon the
 pnm file depth.  If a converted ppm is displayed on an 8 bit display,
 the image must be dithered.  In order to produce a better looking
@@ -39,45 +36,48 @@ quantizing (to 8 bit mapped color) prior to its display.  This may be
 done by piping the output of this program into the Utah <b>mcut</b> or
 <b>rlequant</b> utilities.  We show an example of this later.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-v</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmtorle</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-v</b>
+
+<dd>
 This option will cause <b>pnmtorle</b> to operate in verbose mode.  The header
 information is written to "stderr".  Actually, there is not much header
 information stored in a Netpbm file, so this information is minimal.
-<DT><B>-h</B>
+<dt><b>-h</b>
 
-<DD>
+<dd>
 This option allows the header of the Netpbm image to be dumped to "stderr"
 without converting the file.  It is equivalent to using the -v option except
 that no file conversion takes place.
-<DT><B>-a</B>
+<dt><b>-a</b>
 
-<DD>
+<dd>
 This option causes <b>pnmtorle</b> to include an transparency channel in the
 output image.  The transparency channel is based on the image: Wherever a
 pixel is black, the corresponding trasparency value is transparent.
 Everywhere else, the transparency value is fully opaque.
 
-<DT><B>-o</B> <I>outfile</I>
+<dt><b>-o</b> <i>outfile</i>
 
-<DD>If you specify this option, <b>pnmtorle</b> writes the output to
-this file.  If <I>outfile</I> is <b>-</b> or you don't specify
+<dd>If you specify this option, <b>pnmtorle</b> writes the output to
+this file.  If <i>outfile</i> is <b>-</b> or you don't specify
 <b>-o</b>, <b>pnmtorle</b> writes the output to Standard Output.
 
-<DT><I>pnmfile</I>
+<dt><i>pnmfile</i>
 
-<DD>
+<dd>
 The name of the Netpbm image data file to be converted.  If not specified,
 standard input is assumed.
-</DL>
+</dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 <pre>
    pnmtorle -v file.ppm -o file.rle
@@ -92,13 +92,11 @@ resulting data in file.rle.
 
 <p>Dump the header information of the Netpbm file called file.pgm.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="rletopnm.html">rletopnm</A></B>
+<b><a href="rletopnm.html">rletopnm</a></b>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <pre>
 Wes Barris,
@@ -106,17 +104,15 @@ Army High Performance Computing Research Center (AHPCRC)
 Minnesota Supercomputer Center, Inc.
 </pre>
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">EXAMPLES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
