@@ -112,7 +112,7 @@ if [ $# = 0 ]; then
     usage
 fi
 
-tempdir=$(mktemp -d "${TMPDIR:-/tmp}/anytopnm.XXXXXXXX") ||
+tempdir=$(mktemp -d "${TMPDIR:-/tmp}/pcdovtoppm.XXXXXXXX") ||
     ( echo "Could not create temporary file. Exiting." 1>&2; exit 1; ) 
 trap 'rm -rf $tempdir' 0
 
@@ -149,7 +149,7 @@ do
             fi
         fi
     fi
-    imagefile=${tempdir}/pi.${row}.${col}.$$
+    imagefile=${tempdir}/pi.${row}.${col}
     rm -f $imagefile
     ttext="$i:t"
 
@@ -167,7 +167,7 @@ do
     imagefiles="$imagefiles $imagefile"
 
     if [ $col -ge $across -o $width -gt $maxwidth ] ; then
-        rowfile=${tempdir}/pi.${row}.$$
+        rowfile=${tempdir}/pi.${row}
         rm -f $rowfile
     if [ "$colors" = "n" ] ; then
         pnmcat $back -lr -jbottom $imagefiles > $rowfile
@@ -187,7 +187,7 @@ do
 done
 
 if [ ${#imagefiles[*]} -gt 0 ] ; then
-    rowfile=${tempdir}/pi.${row}.$$
+    rowfile=${tempdir}/pi.${row}
     rm -f $rowfile
     if [ "$colors" = "n" ] ; then
         pnmcat $back -lr -jbottom $imagefiles > $rowfile
