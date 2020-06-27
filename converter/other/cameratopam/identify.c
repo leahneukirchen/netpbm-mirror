@@ -234,7 +234,7 @@ adobeCoeff(const char * const make,
     double cc[4][4];
     double cm[4][3];
     double xyz[] = { 1,1,1 };
-    char name[130];
+    const char * name;
     unsigned int i;
 
     /* Make an identity matrix (1's on the diagonal) */
@@ -243,7 +243,7 @@ adobeCoeff(const char * const make,
         for (j = 0; j < 4; ++j)
             cc[i][j] = (i == j);
     }
-    sprintf (name, "%s %s", make, model);
+    pm_asprintf(&name, "%s %s", make, model);
 
     for (i = 0; i < ARRAY_SIZE(table); ++i) {
         const struct CoeffTableEntry * const entryP = &table[i];
@@ -257,6 +257,7 @@ adobeCoeff(const char * const make,
             break;
         }
     }
+    pm_strfree(name);
 }
 
 

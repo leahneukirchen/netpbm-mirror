@@ -117,32 +117,9 @@ ReadXimHeader(FILE *     const in_fp,
 */
     header->bits_channel = atoi(a_head.bits_per_channel);
     header->alpha_flag = atoi(a_head.alpha_channel);
-    if (strlen(a_head.author)) {
-        if (!(header->author = calloc((unsigned int)strlen(a_head.author)+1,
-                1))) {
-            pm_message("ReadXimHeader: can't calloc author string" );
-            return(0);
-        }
-    header->width = atoi(a_head.image_width);
-        strncpy(header->author, a_head.author, strlen(a_head.author));
-    }
-    if (strlen(a_head.date)) {
-        if (!(header->date =calloc((unsigned int)strlen(a_head.date)+1,1))){
-            pm_message("ReadXimHeader: can't calloc date string" );
-            return(0);
-        }
-    header->width = atoi(a_head.image_width);
-        strncpy(header->date, a_head.date, strlen(a_head.date));
-    }
-    if (strlen(a_head.program)) {
-        if (!(header->program = calloc(
-                    (unsigned int)strlen(a_head.program) + 1, 1))) {
-            pm_message("ReadXimHeader: can't calloc program string" );
-            return(0);
-        }
-    header->width = atoi(a_head.image_width);
-        strncpy(header->program, a_head.program,strlen(a_head.program));
-    }
+    pm_asprintf(&header->author,  a_head.author);
+    pm_asprintf(&header->date,    a_head.date);
+    pm_asprintf(&header->program, a_head.program);
     /* Do double checking for bakwards compatibility */
     if (header->npics == 0)
         header->npics = 1;

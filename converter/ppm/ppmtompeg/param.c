@@ -312,13 +312,13 @@ expandBackTickLine(const char *         const input,
                    struct inputSource * const inputSourceP) {
 
     FILE *fp;
-    char cmd[300];
+    const char * cmd;
     const char * start;
     const char * end;
-    char cdcmd[110];
+    const char * cdcmd;
 
     start = &input[1];
-    end = &input[strlen(input)-1];
+    end   = &input[strlen(input)-1];
 
     while (*end != '`') {
         end--;
@@ -327,14 +327,14 @@ expandBackTickLine(const char *         const input,
     end--;
 
     if (optionSeen[OPTION_INPUT_DIR])
-        sprintf(cdcmd,"cd %s;",currentPath);
+        pm_asprintf(&cdcmd,"cd %s;", currentPath);
     else
-        strcpy(cdcmd,"");
+        cdcmd = pm_strdup("");
 
     {
         char tmp[300];
         strncpy(tmp,start,end-start+1);
-        sprintf(cmd,"(%s %s)", cdcmd, tmp);
+        pm_asprintf(&cmd, "(%s %s)", cdcmd, tmp);
     }
 
     fp = popen(cmd, "r");
@@ -348,6 +348,8 @@ expandBackTickLine(const char *         const input,
 
         mergeInputSource(inputSourceP, &subInputSource);
     }
+    pm_strfree(cmd);
+    pm_strfree(cdcmd);
 }
 
 
