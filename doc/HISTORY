@@ -11,6 +11,14 @@ not yet  BJH  Release 10.91.00
 
               pamstereogram: Add -tileable.  Thanks Scott Pakin.
 
+              pcdovtoppm: more secure temporary file handling.
+
+              pcdovtoppm: properly selects Bash as interpreter.  Broken in
+              Netpbm 9.9 (March 2001).
+
+              anytopnm, pnmmargin: Fail properly when unable to create
+              temporary file.  Broken in Netpbm 10.75 (June 2016).
+
               winicontoppm: Fix undefined behavior for various invalid input.
               Always broken.  Winicontoppm was new in Netpbm 9.3 (June 2000).
 
