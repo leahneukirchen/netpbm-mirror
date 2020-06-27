@@ -10,6 +10,8 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
+
 #include "ppm.h"
 #include "mallocvar.h"
 
@@ -33,12 +35,17 @@ main(argc, argv)
 {
     int cmd, val;
     char buffer[BUFSIZ];
-    int planes = 3, rows = -1, cols = -1;
+    int planes = 3;
+    unsigned int rows;
+    unsigned int rowsX;
+    unsigned int cols;
+    bool colsIsSet;
     int r = 0, c = 0, p = 0, i;
     unsigned char **image = NULL;
     int *imlen;
     FILE *fp = stdin;
     int mode;
+    bool modeIsSet = false;
     int argn;
     unsigned char bf[3];
     pixel *pixrow;
@@ -93,10 +100,18 @@ main(argc, argv)
             case 'r':
                 switch (c) {
                 case 'S':   /* width */
-                    cols = val;
+                    if (val < 0)
+                        pm_error("invalid width value");
+                    else {
+                        cols = val;
+                        colsIsSet = true;
+                    }
                     break;
                 case 'T':   /* height */
-                    rows = val;
+                    if (val < 0)
+                        pm_error ("invalid height value");
+                    else
+                        rowsX = val;
                     break;
                 case 'U':   /* planes */
                     planes = val;
@@ -123,6 +138,7 @@ main(argc, argv)
                     if (val != 0 && val != 1)
                         pm_error("unimplemented trasmission mode %d", val);
                     mode = val;
+                    modeIsSet = true;
                     break;
                 case 'V':   /* send plane */
                 case 'W':   /* send last plane */
@@ -196,6 +212,10 @@ main(argc, argv)
         }
     }
     pm_close(fp);
+
+    if (!modeIsSet)
+        pm_error("Input does not contain a 'bM' transmission mode order");
+
     rows = r;
     if (mode == 1) {
         unsigned char *buf;

@@ -4,6 +4,44 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.06.27 BJH  Release 10.73.32
+
+              winicontoppm: Fix undefined behavior for various invalid input.
+              Always broken.  Winicontoppm was new in Netpbm 9.3 (June 2000).
+
+              winicontoppm: Fix incorrect output with 256 pixel wide or high
+              image.  Always broken.  Winicontoppm was new in Netpbm 9.3 (June
+              2000).
+
+              pjtoppm: Handle input stream with no transmission mode command.
+              Always broken.  Pjtoppm was in primordial Netpbm (1991).
+
+              picttoppm: Fix bug with an input file that specifies a clip
+              region (ClipRgn opcode) that is not contained within the
+              picture frame.  Result is invalid memory access.  Broken
+              some time 1994-2002.
+
+              picttoppm: Fix incorrect output (sheared) when a blit must be
+              scaled.  Broken in Netpbm 10.34 (June 2006) or 10.35 (August
+              2006).
+
+              pbmtonokia: Fix incorrect output with -txt option.
+
+              pbmtonokia: Fix incorrect output with newer compiler.
+
+              cameratopam: Fix buffer overrun.  Always present. (cameratopam
+              was new in Netpbm 10.28 (June 2005)).
+
+              ppmtompeg: Fix buffer overruns with very long names in input
+              parameter files.  Always broken.  Ppmtompeg was new in
+              Netpbm 8.4 (April 2000).
+
+              ximtoppm: Fix possible program crash due to invalid memory
+              reference.  Always broken.  ximtoppm was in primordial Netpbm,
+              ca 1989.
+
+              Build: make deb: make prereqs be for Debian 9.
+
 20.03.26 BJH  Release 10.73.31
 
               pbmtopgm: Fix incorrect output when convolution area is not

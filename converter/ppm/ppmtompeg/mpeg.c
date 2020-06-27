@@ -1667,14 +1667,14 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
                     unsigned int const frameNumber) {
 
     FILE    *fpointer;
-    char    fileName[256];
+    const char * fileName;
     int width, height;
     register int y;
 
     width = Fsize_x;
     height = Fsize_y;
 
-    sprintf(fileName, "%s.decoded.%u", outputFileName, frameNumber);
+    pm_asprintf(&fileName, "%s.decoded.%u", outputFileName, frameNumber);
     if (! realQuiet) {
         fprintf(stdout, "reading %s\n", fileName);
         fflush(stdout);
@@ -1714,6 +1714,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
             pm_message("Could not read enough bytes from '%s'", fileName);
     }
     fclose(fpointer);
+    pm_strfree(fileName);
 }
 
 
