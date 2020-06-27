@@ -19,12 +19,16 @@
 # Rewritten in sh by Steve McIntyre <93sam@debian.org>, 2001
 
 # You may want to change the default values in the next 6 lines:
-maxwidth=1152   # maximum width of the index image
-size=192                # make the images about this big
-across=6                # show this many images per row
-colors="noquant"        # maximum amount of colors or noquant (no quantization)
-back="-black"   # default background color
-font=" "                # default font or none (pbmtext's internal font)
+maxwidth=1152     # maximum width of the index image
+size=192          # make the images about this big
+across=6          # show this many images per row
+colors="noquant"  # maximum amount of colors or noquant (no quantization)
+back="-black"     # default background color
+font=" "          # default font or none (pbmtext's internal font)
+
+plainopt=""       # output plain ppm
+quietopt=""       # quiet operation (currently no effect)
+versionopt=0
 
 usage ()
 {
@@ -47,68 +51,92 @@ usage ()
     exit 1
 }
 
+version ()
+{
+    # report version using pnmscale
+    pnmscale -version $quietopt
+    exit 0
+}
+
 # Parse the options
 while :; do
     case "$1" in 
-        -m*)
+        -m|-ma|-max|-maxw|-maxwi|-maxwid|-maxwidt|-maxwidth )
              if [ $# -lt 2 ] ; then usage; fi
              maxwidth="$2"
              shift
              shift
              ;;
 
-        -s*)
+        -s|-si|-siz|-size )
              if [ $# -lt 2 ] ; then usage; fi
              size="$2"
              shift
              shift
              ;;
 
-            -a*)
-                if [ $# -lt 2 ] ; then usage; fi
-                across="$2"
-                shift
-                shift
-                ;;
+         -a|-ac|-acr|-acro|-acros|-across )
+             if [ $# -lt 2 ] ; then usage; fi
+             across="$2"
+             shift
+             shift
+             ;;
 
-            -c*)
-                if [ $# -lt 2 ] ; then usage; fi
-                colors="$2"
-                shift
-                shift
-                ;;
+         -c|-co|-col|-colo|-color|-colors )
+             if [ $# -lt 2 ] ; then usage; fi
+             colors="$2"
+             shift
+             shift
+             ;;
 
-            -f*)
-                if [ $# -lt 2 ] ; then usage; fi
-                font="-font $2"
-                shift
-                shift
-                ;;
+         -f|-fo|-fon|-font )
+             if [ $# -lt 2 ] ; then usage; fi
+             font="-font $2"
+             shift
+             shift
+             ;;
 
-            -b*)
-                back="-black"
-                shift
-                ;;
+         -b|-bl|-bla|-blac|-black )
+             back="-black"
+             shift
+             ;;
 
-            -w*)
-                back="-white"
-                shift
-                ;;
+         -w|-wh|-whi|-whit|-white )
+             back="-white"
+             shift
+             ;;
+             
+         -p|-pl|-pla|-plai|-plain )
+             plainopt="-plain"
+             shift
+             ;;
+            
+         -q|-qu|-qui|-quie|-quiet )
+             quietopt="-quiet"
+             shift
+             ;;
+             
+         -v|-ve|-ver|-vers|-versi|-versio|-version )
+             versionopt="1"
+             shift
+             ;;
+                    
+         -*)
+             echo "$0 : Unknown option $1" 1>&2
+             echo " " 1>&2
+             usage
+             ;;
 
-            -*)
-                echo "$0 : Unknown option $1"
-                echo " "
-                usage
-                ;;
-
-            *)
-                break
-                ;;
+         *)
+             break
+             ;;
 
     esac
 done
 
-if [ $# = 0 ]; then
+if [ $versionopt -eq 1 ] ; then
+    version
+elif [ $# = 0 ] ; then
     usage
 fi
 
@@ -126,10 +154,11 @@ width=$size
 
 # Convert the PCD overview file to many PPM images
 if [ -f $1 ] ; then
-    hpcdtoppm -Overview $1 $tmpfile
+    hpcdtoppm -Overview $1 $tmpfile ||
+        { echo "$0: Hpcdtoppm failed. Exiting" 1>&2 ; exit 1; }
 else
-    echo "$0 : Could not access $1"
-    echo " "
+    echo "$0 : Could not access $1" 1>&2
+    echo " " 1>&2
     usage
 fi
 
@@ -199,20 +228,18 @@ if [ ${#imagefiles[*]} -gt 0 ] ; then
     rowfiles="$rowfiles $rowfile"
 fi
 
-if [ ${#rowfiles[*]} = 1 ]; then
-    cat $rowfiles
+if [ ${#rowfiles[*]} = 1 ] ; then
+    ppmtoppm $plainopt < $rowfiles
 else
     if [ "$colors" = "n" ] ; then
-        pnmcat $back -tb $rowfiles
+        pnmcat $back -tb $plainopt $rowfiles
     else
-        pnmcat $back -tb $rowfiles | ppmquant -quiet $colors
+        pnmcat $back -tb $rowfiles | ppmquant $plainopt -quiet $colors
     fi
 fi
 
 rm -f $rowfiles
 
 exit 0
-
-
 
 

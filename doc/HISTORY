@@ -11,10 +11,11 @@ not yet  BJH  Release 10.91.00
 
               pamstereogram: Add -tileable.  Thanks Scott Pakin.
 
+              pcdovtoppm: implement -version, -plain, and -quiet.
+
               pcdovtoppm: more secure temporary file handling.
 
-              pcdovtoppm: properly selects Bash as interpreter.  Broken in
-              Netpbm 9.9 (March 2001).
+              pcdovtoppm: Improve the way it fails when 'hpcdtoppm' fails.
 
               anytopnm, pnmmargin: Fail properly when unable to create
               temporary file.  Broken in Netpbm 10.75 (June 2016).
@@ -72,6 +73,12 @@ not yet  BJH  Release 10.91.00
               ximtoppm: Fix possible program crash due to invalid memory
               reference.  Always broken.  ximtoppm was in primordial Netpbm,
               ca 1989.
+
+              pcdovtoppm: Fix bug: accepts anything starting with -s
+              as equivalent to -s.
+
+              pcdovtoppm: properly selects Bash as interpreter.  Broken in
+              Netpbm 9.9 (March 2001).
 
 20.03.26 BJH  Release 10.90.00
 
