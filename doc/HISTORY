@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.06.28 BJH  Release 10.90.05
+
+              winicontoppm: Fix undefined behavior for various invalid input.
+              Always broken.  Winicontoppm was new in Netpbm 9.3 (June 2000).
+
+              winicontoppm: Fix incorrect output with 256 pixel wide or high
+              image.  Always broken.  Winicontoppm was new in Netpbm 9.3 (June
+              2000).
+
 20.06.10 BJH  Release 10.90.04
 
               pjtoppm: Handle input stream with no transmission mode command.
