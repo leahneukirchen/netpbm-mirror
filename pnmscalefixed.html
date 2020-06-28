@@ -1,48 +1,48 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmscalefixed User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmscalefixed</H1>
-Updated: 18 November 2000
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmscalefixed User Manual</title></head>
+<body>
+<h1>pnmscalefixed</h1>
+Updated: 28 June 2020
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmscalefixed - scale a PNM file quickly
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>pnmscalefixed</B> is like <B>pamscale</B> except that
+<b>pnmscalefixed</b> is like <b>pamscale</b> except that
 it uses fixed point arithmetic internally instead of floating point,
 which may make it run faster.  In turn, it is less accurate and may
 distort the image.  It also lacks many of the features of <b>pamscale</b>.
 
-<P>Use the <B>pamscale</B> user manual with <B>pnmscalefixed</B>.  This
+<p>Use the <b>pamscale</b> user manual with <b>pnmscalefixed</b>.  This
 document only describes the difference.  Avoid any feature mentioned in
 the <b>pamscale</b> manual as not existing before Netpbm 9.9.
 
-<P><B>pnmscalefixed</B> uses fixed point 12 bit arithmetic.  By
-contrast, <B>pamscale</B> uses floating point arithmetic which on most
+<p><b>pnmscalefixed</b> uses fixed point 12 bit arithmetic.  By
+contrast, <b>pamscale</b> uses floating point arithmetic which on most
 machines is probably 24 bit precision.  This makes
-<B>pnmscalefixed</B> run faster (30% faster in one experiment), but
+<b>pnmscalefixed</b> run faster (30% faster in one experiment), but
 the imprecision can cause distortions at the right and bottom edges.
 
-<P>The distortion takes the following form: One pixel from the edge of
+<p>The distortion takes the following form: One pixel from the edge of
 the input is rendered larger in the output than the scaling factor
 requires.  Consequently, the rest of the image is smaller than the
 scaling factor requires, because the overall dimensions of the image
 are always as requested.  This distortion will usually be very hard to
 see.
 
-<P><B>pnmscalefixed</B> with the <B>-verbose</B> option tells you how
+<p><b>pnmscalefixed</b> with the <b>-verbose</b> option tells you how
 much distortion there is.
 
-<P>The amount of distortion depends on the size of the input image and how
+<p>The amount of distortion depends on the size of the input image and how
 close the scaling factor is to an integral 1/4096th.
 
-<P>If the scaling factor is an exact multiple of 1/4096, there is no
+<p>If the scaling factor is an exact multiple of 1/4096, there is no
 distortion.  So, for example doubling or halving an image causes no
 distortion.  But reducing it or enlarging it by a third would cause
 some distortion.  To consider an extreme case, scaling a 100,000 row
@@ -50,19 +50,57 @@ image down to 50,022 rows would create an output image with all of the
 input squeezed into the top 50,000 rows, and the last row of the input
 copied into the bottom 22 rows of output.
 
-<P><B>pnmscalefixed</B> could probably be modified to use 16 bit or
+<p><b>pnmscalefixed</b> could probably be modified to use 16 bit or
 better arithmetic without losing anything.  The modification would
 consist of a single constant in the source code.  Until there is a
 demonstrated need for that, though, the Netpbm maintainer wants to
 keep the safety cushion afforded by the original 12 bit precision.
 
-<P><B>pnmscalefixed</B> does not have <B>pamscale</b>'s <B>-nomix</B>
+<p><b>pnmscalefixed</b> does not have <b>pamscale</b>'s <b>-nomix</b>
 option.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#description">DESCRIPTION</A>
-</UL>
-</BODY>
-</HTML>
+<h2 id="options">OPTIONS</h2>
+
+<dl compact>
+<dt><b>-xsize</b>
+
+<dt><b>-width</b>
+
+<dt><b>-ysize</b>
+
+<dt><b>-height</b>
+
+<dt><b>-xscale</b>
+
+<dt><b>-yscale</b>
+
+<dt><b>-pixels</b>
+
+<dt><b>-xysize</b>
+
+<dt><b>-reduce</b>
+
+<dt><b>-verbose</b>
+
+<dd>Same as <a href="pamscale.html"><b>pamscale</b></a>.
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<ul>
+  <li><a href="pamscale.html"><b>pamscale</b></a>
+  <li><a href="pnmscale.html"><b>pnmscale</b></a>
+</ul>
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>
+
+
+
