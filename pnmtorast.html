@@ -1,56 +1,71 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmtorast User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmtorast</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmtorast User Manual</title></head>
+<body>
+<h1>pnmtorast</h1>
 Updated: 12 January 1991
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pnmtorast - convert a PPM into a Sun rasterfile
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmtorast</B>
-[<B>-standard</B>|<B>-rle</B>]
-[<I>pnmfile</I>]
+<b>pnmtorast</b>
+[<b>-standard</b>|<b>-rle</b>]
+[<i>pnmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pnmtorast</b>reads a PPM image as input and produces a Sun
 rasterfile as output.
 
-<P>Color values in Sun rasterfiles are eight bits wide, so
-<B>pnmtorast</B> will automatically scale colors to have a maxval of
-255.  An extra <B>pamdepth</B> step is not necessary.
+<p>Color values in Sun rasterfiles are eight bits wide, so
+<b>pnmtorast</b> will automatically scale colors to have a maxval of
+255.  An extra <b>pamdepth</b> step is not necessary.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>The <B>-standard</B> option forces the result to be in RT_STANDARD
-form; the <B>-rle</B> option, RT_BYTE_ENCODED, which is smaller but,
-well, less standard.  The default is <B>-rle</B>.
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmtorast</b> recognizes the following
+command line options:
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 
-<H2 id="seealso">SEE ALSO</H2>
+<dl compact>
+<dt><b>-standard</b>
 
-<p><A HREF="rasttopnm.html">rasttopnm</A>,
-<A HREF="pnm.html">pnm</A>
+<dd>
+<p>Forces the result to be in RT_STANDARD form.
 
-<H2 id="author">AUTHOR</H2>
+<dt><b>-rle</b>
+
+<dd>
+<p>Forces the result to be in RT_BYTE_ENCODED, which is smaller but,
+well, less standard.  <p>The default is <b>-rle</b>.
+
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<p><a href="rasttopnm.html">rasttopnm</a>,
+<a href="pnm.html">pnm</a>
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
