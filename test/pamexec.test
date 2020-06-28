@@ -1,0 +1,38 @@
+#! /bin/bash
+# This script tests: pamexec
+# Also requires: pbmtext pamfile pbmminkowski pbmtog3 g3topbm
+
+tmpdir=${tmpdir:-/tmp}
+test_pbm=${tmpdir}/test.pbm
+combined_pbm=${tmpdir}/combined.pbm
+
+for i in `seq 0 9`; do echo $i | pbmtext -builtin=fixed > ${test_pbm}$i; done
+cat ${test_pbm}[0123456789] > ${combined_pbm}
+
+echo "Test 1 : Should print 10 stdin: PBM RAW 21 24 1 1 BLACKANDWHITE twice"
+
+cat ${combined_pbm} | pamfile -all -mach | uniq -c 
+pamexec "pamfile -mach" ${combined_pbm}  | uniq -c
+
+echo "Test 2: Should print 1791121103 989 twice"
+
+for i in `seq 0 9`; do pbmminkowski ${test_pbm}$i   ; done | cksum
+pamexec "pbmminkowski" ${combined_pbm} | cksum
+
+rm ${test_pbm}[0123456789]
+
+echo "Test 3: Should print 2983705297 810 twice"
+
+pamexec "pbmtog3 -no | g3topbm" ${combined_pbm}  | cksum
+cat ${combined_pbm}  | cksum
+
+echo "Invalid command" 1>&2
+echo "Errors message should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test Invalid: Should not print anything"
+
+pamexec "false" ${combined_pbm}
+pamexec "pamfile | false" ${combined_pbm}
+
+rm ${combined_pbm}

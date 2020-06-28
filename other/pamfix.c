@@ -109,7 +109,7 @@ analyzeRaster(const struct pam * const pamP,
               bool               const verbose) {
 /*----------------------------------------------------------------------------
    Go through the raster at which the stream described by *tweakedPamP is
-   presently positioned and count how many rows can be successfully read
+   currently positioned and count how many rows can be successfully read
    (including validating the samples against pamP->maxval) and determine the
    highest sample value in those rows.
 

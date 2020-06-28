@@ -1,0 +1,72 @@
+#! /bin/bash
+# This script tests: rawtoppm
+# Also requires: pamcut ppmtorgb3 rgb3toppm ppmtoppm
+
+# Test 1
+
+echo "Test 1: should print '0 0 : 0'"
+
+rawtoppm -headerskip 15 227 149 testimg.ppm | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+# Test 2
+echo "Test 2: should print '0 0 : 0' five times"
+
+tmpdir=${tmpdir:-/tmp}
+test0_ppm=${tmpdir}/test0.ppm
+
+for i in 0 1 10 99 220
+  do
+  pamcut -cropright $i testimg.ppm > ${test0_ppm}
+  rawtoppm -headerskip 15 -rowskip $((i * 3)) $((227 - i)) 149 testimg.ppm | \
+  cmp -s ${test0_ppm} -
+  echo ${PIPESTATUS[@]} ":" $?
+  done  
+
+rm ${test0_ppm}
+
+
+# Test 3
+echo "Test 3: should print '0 0 0 : 0' five times"
+
+ppmtorgb3 testimg.ppm
+
+rgb3toppm testimg.red testimg.blu testimg.grn | \
+  rawtoppm -headerskip 15 -rbg 227 149  | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+rgb3toppm testimg.grn testimg.red testimg.blu | \
+  rawtoppm -headerskip 15 -grb 227 149 | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+rgb3toppm testimg.grn testimg.blu testimg.red | \
+  rawtoppm -headerskip 15 -gbr 227 149 | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+rgb3toppm testimg.blu testimg.red testimg.grn | \
+  rawtoppm -headerskip 15 -brg 227 149 | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+rgb3toppm testimg.blu testimg.grn testimg.red | \
+  rawtoppm -headerskip 15 -bgr 227 149 | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+# Test 4
+echo "Test 4"
+
+test1_ppm=${tmpdir}/test1.ppm
+
+cat <<EOF > ${test1_ppm}
+P3
+5 5
+9
+0 0 0  0 0 0  0 0 0  0 0 0  0 0 0
+0 0 0  0 0 5  5 5 5  5 9 9  9 9 9
+0 1 2  3 4 0  1 2 3  4 0 1  2 3 4
+0 1 2  3 4 1  2 3 4  5 2 3  4 5 6
+9 8 7  6 5 4  3 2 1  0 0 0  0 0 0
+EOF
+
+ppmtoppm < ${test1_ppm} | rawtoppm -headerskip 9 5 5 -plain
+
+rm ${test1_ppm} testimg.red testimg.grn testimg.blu

@@ -2,19 +2,12 @@
 # This script tests: pbmtext
 # Also requires:
 
-# This test requires the iconv command and an iso-8859-1 locale
-# Skip this test if they are not available
+# This test requires an iso-8859-1 locale
+# Skip this test if it is not available
 
 LANG=C
 LC_ALL=C
 export LANG LC_ALL
-
-iconv /dev/null
-if [ $? -ne 0  ]
-  then echo "iconv command not available." 1>&2
-       echo "Skipping." 1>&2
-       exit 80;
-fi
 
 tmpdir=${tmpdir:-/tmp}
 iso88591_locale_list=${tmpdir}/iso88591_locale_list
@@ -51,16 +44,15 @@ locale_for_test=${locale_to_test};
 
 
 # Two rows
-# Should print 3806607098 5110 twice
-
+# Should print 2066913605 5110 twice
 echo "Test 1"
 
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=160;i<=255;++i) printf("%c",i); }' | \
+             for (i=161;i<=255;++i) printf("%c",i); }' | \
     pbmtext -builtin bdf | cksum
 
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=160;i<=255;++i) printf("%c",i); }' | \
+             for (i=161;i<=255;++i) printf("%c",i); }' | \
     LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
 
 

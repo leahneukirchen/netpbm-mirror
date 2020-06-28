@@ -47,7 +47,7 @@ parseCommandLine(int argc, const char ** argv,
 
     unsigned int option_def_index;
 
-    MALLOCARRAY(option_def, 100);
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "width",       OPT_UINT,   &cmdlineP->width,   NULL, 0);

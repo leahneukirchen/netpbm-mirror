@@ -2,7 +2,6 @@
 
 #define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
-#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 #include <float.h>
@@ -13,6 +12,7 @@
 #include "global_variables.h"
 #include "decode.h"
 #include "foveon.h"
+#include "stdio_nofail.h"
 
 #if HAVE_INT64
    typedef int64_t INT64;
@@ -32,13 +32,13 @@
 
 
 
-static char *  
-foveon_gets(int    const offset, 
-            char * const str, 
+static char *
+foveon_gets(int    const offset,
+            char * const str,
             int    const len) {
 
     unsigned int i;
-    fseek (ifp, offset, SEEK_SET);
+    fseek_nofail (ifp, offset, SEEK_SET);
     for (i=0; i < len-1; ++i) {
         /* It certains seems wrong that we're reading a 16 bit integer
            and assigning it to char, but that's what Dcraw does.
@@ -55,7 +55,7 @@ foveon_gets(int    const offset,
 
 
 
-void 
+void
 parse_foveon(FILE * const ifp) {
     long fliplong;
     long pos;
@@ -63,14 +63,14 @@ parse_foveon(FILE * const ifp) {
     long junk;
     long entries;
 
-    fseek (ifp, 36, SEEK_SET);
+    fseek_nofail (ifp, 36, SEEK_SET);
     pm_readlittlelong(ifp, &fliplong);
     flip = fliplong;
-    fseek (ifp, -4, SEEK_END);
+    fseek_nofail (ifp, -4, SEEK_END);
     pm_readlittlelong(ifp, &pos);
-    fseek (ifp, pos, SEEK_SET);
+    fseek_nofail (ifp, pos, SEEK_SET);
     pm_readlittlelong(ifp, &magic);
-    if (magic != 0x64434553) 
+    if (magic != 0x64434553)
         return; /* SECd */
     pm_readlittlelong(ifp, &junk);
     pm_readlittlelong(ifp, &entries);
@@ -85,17 +85,17 @@ parse_foveon(FILE * const ifp) {
         pm_readlittlelong(ifp, &off);
         pm_readlittlelong(ifp, &len);
         pm_readlittlelong(ifp, &tag);
-            
-        save = ftell(ifp);
-        fseek (ifp, off, SEEK_SET);
+
+        save = ftell_nofail(ifp);
+        fseek_nofail (ifp, off, SEEK_SET);
         pm_readlittlelong(ifp, &sec_);
         if (sec_ != (0x20434553 | (tag << 24))) return;
         switch (tag) {
         case 0x47414d49:          /* IMAG */
-            if (data_offset) 
+            if (data_offset)
                 break;
             data_offset = off + 28;
-            fseek (ifp, 12, SEEK_CUR);
+            fseek_nofail (ifp, 12, SEEK_CUR);
             {
                 long wlong, hlong;
                 pm_readlittlelong(ifp, &wlong);
@@ -113,7 +113,7 @@ parse_foveon(FILE * const ifp) {
         case 0x504f5250:          /* PROP */
             pm_readlittlelong(ifp, &junk);
             pm_readlittlelong(ifp, &pent);
-            fseek (ifp, 12, SEEK_CUR);
+            fseek_nofail (ifp, 12, SEEK_CUR);
             off += pent*8 + 24;
             if (pent > 256) pent=256;
             for (i=0; i < pent*2; i++) {
@@ -133,14 +133,14 @@ parse_foveon(FILE * const ifp) {
                     timestamp = atoi (foveon_gets (poff[i][1], name, 64));
             }
         }
-        fseek (ifp, save, SEEK_SET);
+        fseek_nofail (ifp, save, SEEK_SET);
     }
     is_foveon = 1;
 }
 
 
 
-void  
+void
 foveon_coeff(int * const useCoeffP,
              float       coeff[3][4]) {
 
@@ -159,8 +159,8 @@ foveon_coeff(int * const useCoeffP,
 
 
 
-static void  
-foveon_decoder (unsigned int const huff[1024], 
+static void
+foveon_decoder (unsigned int const huff[1024],
                 unsigned int const code) {
 
     struct decode *cur;
@@ -180,7 +180,7 @@ foveon_decoder (unsigned int const huff[1024],
             }
         }
     }
-    if ((len = code >> 27) > 26) 
+    if ((len = code >> 27) > 26)
         return;
     code2 = (len+1) << 27 | (code & 0x3ffffff) << 1;
 
@@ -192,14 +192,14 @@ foveon_decoder (unsigned int const huff[1024],
 
 
 
-static void  
+static void
 foveon_load_camf() {
     unsigned int i, val;
     long key;
 
-    fseek (ifp, meta_offset, SEEK_SET);
+    fseek_nofail (ifp, meta_offset, SEEK_SET);
     pm_readlittlelong(ifp, &key);
-    fread (meta_data, 1, meta_length, ifp);
+    fread_nofail (meta_data, 1, meta_length, ifp);
     for (i=0; i < meta_length; i++) {
         key = (key * 1597 + 51749) % 244944;
         assert(have64BitArithmetic);
@@ -210,7 +210,7 @@ foveon_load_camf() {
 
 
 
-void  
+void
 foveon_load_raw(Image const image) {
 
     struct decode *dindex;
@@ -234,14 +234,14 @@ foveon_load_raw(Image const image) {
     for (row=0; row < height; row++) {
         long junk;
         memset (pred, 0, sizeof pred);
-        if (!bit) 
+        if (!bit)
             pm_readlittlelong(ifp, &junk);
         for (col=bit=0; col < width; col++) {
             FORC3 {
                 for (dindex=first_decode; dindex->branch[0]; ) {
                     if ((bit = (bit-1) & 31) == 31)
                         for (i=0; i < 4; i++)
-                            bitbuf = (bitbuf << 8) + fgetc(ifp);
+                            bitbuf = (bitbuf << 8) + fgetc_nofail(ifp);
                     dindex = dindex->branch[bitbuf >> bit & 1];
                 }
                 pred[c] += diff[dindex->leaf];
@@ -262,8 +262,8 @@ sget4(char const s[]) {
 
 
 
-static char *  
-foveon_camf_param (const char * const block, 
+static char *
+foveon_camf_param (const char * const block,
                    const char * const param) {
     unsigned idx, num;
     char *pos, *cp, *dp;
@@ -287,8 +287,8 @@ foveon_camf_param (const char * const block,
 
 
 
-static void *  
-foveon_camf_matrix (int                dim[3], 
+static void *
+foveon_camf_matrix (int                dim[3],
                     const char * const name) {
 
     unsigned i, idx, type, ndim, size, *mat;
@@ -325,9 +325,9 @@ foveon_camf_matrix (int                dim[3],
 
 
 
-static int  
-foveon_fixed (void *       const ptr, 
-              int          const size, 
+static int
+foveon_fixed (void *       const ptr,
+              int          const size,
               const char * const name) {
     void *dp;
     int dim[3];
@@ -345,7 +345,7 @@ static float  foveon_avg (unsigned short *pix, int range[2], float cfilt)
     float val, min=FLT_MAX, max=-FLT_MAX, sum=0;
 
     for (i=range[0]; i <= range[1]; i++) {
-        sum += val = 
+        sum += val =
             (short)pix[i*4] + ((short)pix[i*4]-(short)pix[(i-1)*4]) * cfilt;
         if (min > val) min = val;
         if (max < val) max = val;
@@ -390,11 +390,11 @@ static int  foveon_apply_curve (short *curve, int i)
     return i < 0 ? -(unsigned short)curve[1-i] : (unsigned short)curve[1+i];
 }
 
-void  
+void
 foveon_interpolate(Image const image,
                    float coeff[3][4]) {
 
-    static const short hood[] = { 
+    static const short hood[] = {
         -1,-1, -1,0, -1,1, 0,-1, 0,1, 1,-1, 1,0, 1,1 };
     short *pix, prev[3], *curve[8], (*shrink)[3];
     float cfilt=0.8, ddft[3][3][2], ppm[3][3][3];
@@ -441,7 +441,7 @@ foveon_interpolate(Image const image,
         for (i=0; i < 3; i++)
             FORC3 diag[c][i] = LAST(1,1)*LAST(2,2) - LAST(1,2)*LAST(2,1);
 #undef LAST
-        FORC3 div[c] = 
+        FORC3 div[c] =
             diag[c][0]*0.3127 + diag[c][1]*0.329 + diag[c][2]*0.3583;
     }
     num = 0;
@@ -494,11 +494,11 @@ foveon_interpolate(Image const image,
     for (row=1; row < height-1; row++) {
         FORC3 if (last[1][c] > last[0][c]) {
             if (last[1][c] > last[2][c])
-                black[row][c] = 
+                black[row][c] =
                     (last[0][c] > last[2][c]) ? last[0][c]:last[2][c];
         } else
             if (last[1][c] < last[2][c])
-                black[row][c] = 
+                black[row][c] =
                     (last[0][c] < last[2][c]) ? last[0][c]:last[2][c];
         memmove (last, last+1, 2*sizeof last[0]);
         memcpy (last[2], black[row+1], sizeof last[2]);
@@ -547,8 +547,8 @@ foveon_interpolate(Image const image,
                 diff = pix[c] - prev[c];
                 prev[c] = pix[c];
                 ipix[c] = pix[c] + floor ((diff + (diff*diff >> 14)) * cfilt
-                                          - ddft[0][c][1] 
-                                          - ddft[0][c][0] 
+                                          - ddft[0][c][1]
+                                          - ddft[0][c][0]
                                             * ((float) col/width - 0.5)
                                           - black[row][c] );
             }
@@ -563,7 +563,7 @@ foveon_interpolate(Image const image,
                         val += ppm[c][i][j] * work[i][j];
                 ipix[c] = floor ((ipix[c] + floor(val)) *
                                  ( sgrow[col/sgx  ][c] * (sgx - col%sgx) +
-                                   sgrow[col/sgx+1][c] * (col%sgx) ) / sgx / 
+                                   sgrow[col/sgx+1][c] * (col%sgx) ) / sgx /
                                  div[c]);
                 if (ipix[c] > 32000) ipix[c] = 32000;
                 pix[c] = ipix[c];
@@ -584,7 +584,7 @@ foveon_interpolate(Image const image,
             memset (fsum, 0, sizeof fsum);
             for (sum=j=0; j < 8; j++)
                 if (badpix[i] & (1 << j)) {
-                    FORC3 fsum[c] += 
+                    FORC3 fsum[c] +=
                         image[(row+hood[j*2])*width+col+hood[j*2+1]][c];
                     sum++;
                 }
@@ -665,8 +665,8 @@ foveon_interpolate(Image const image,
         pix = (short*)image[row*width+2];
         for (col=2; col < width-2; col++) {
             FORC3 dev[c] = -foveon_apply_curve (curve[7], pix[c] -
-                                                ((smrow[1][col][c] + 
-                                                  2*smrow[2][col][c] + 
+                                                ((smrow[1][col][c] +
+                                                  2*smrow[2][col][c] +
                                                   smrow[3][col][c]) >> 2));
             sum = (dev[0] + dev[1] + dev[2]) >> 3;
             FORC3 pix[c] += dev[c] - sum;
@@ -695,7 +695,7 @@ foveon_interpolate(Image const image,
             if (sum < 0) sum = 0;
             j = total[3] > 375 ? (sum << 16) / total[3] : sum * 174;
             FORC3 pix[c] += foveon_apply_curve (curve[6],
-                                                ((j*total[c] + 0x8000) >> 16) 
+                                                ((j*total[c] + 0x8000) >> 16)
                                                 - pix[c]);
             pix += 4;
         }
@@ -732,7 +732,7 @@ foveon_interpolate(Image const image,
                     shrink[row*(width/4)+col][c] = ipix[c] >> 4;
                 else
                     shrink[row*(width/4)+col][c] =
-                        (shrink[(row+1)*(width/4)+col][c]*1840 + 
+                        (shrink[(row+1)*(width/4)+col][c]*1840 +
                          ipix[c]*141 + 2048) >> 12;
         }
     }
@@ -742,7 +742,7 @@ foveon_interpolate(Image const image,
         if ((row & 3) == 0)
             for (col = width & ~3 ; col--; )
                 FORC3 smrow[0][col][c] = ipix[c] =
-                    (shrink[(row/4)*(width/4)+col/4][c]*1485 + 
+                    (shrink[(row/4)*(width/4)+col/4][c]*1485 +
                      ipix[c]*6707 + 4096) >> 13;
 
         /* Then smooth left-to-right */
@@ -757,7 +757,7 @@ foveon_interpolate(Image const image,
         else
             for (col=0; col < (width & ~3); col++)
                 FORC3 smrow[2][col][c] =
-                    (smrow[2][col][c]*6707 + smrow[1][col][c]*1485 + 4096) 
+                    (smrow[2][col][c]*6707 + smrow[1][col][c]*1485 + 4096)
                         >> 13;
 
         /* Adjust the chroma toward the smooth values */
@@ -770,7 +770,7 @@ foveon_interpolate(Image const image,
             for (sum=c=0; c < 3; c++) {
                 ipix[c] = foveon_apply_curve(
                     curve[c+3],
-                    ((smrow[2][col][c] * j + 0x8000) >> 16) - 
+                    ((smrow[2][col][c] * j + 0x8000) >> 16) -
                     image[row*width+col][c]);
                 sum += ipix[c];
             }

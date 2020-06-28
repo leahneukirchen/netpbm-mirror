@@ -83,7 +83,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "fmt",     OPT_STRING, &fmtOpt, 
+    OPTENT3(0, "fmt",     OPT_STRING, &fmtOpt,
             &fmtSpec, 0);
     OPTENT3(0, "net",     OPT_STRING, &netOpt,
             &netSpec, 0);
@@ -135,7 +135,7 @@ parseCommandLine(int argc, char ** argv,
                  "the 120 characters allowed by the format.",
                  (unsigned)strlen(cmdlineP->txt));
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -180,7 +180,7 @@ convertToHexNol(bit **       const image,
 
     /* header */
     fprintf(ofP, "06050415820000%s00%02X%02X01", networkCode, cols, rows);
-    
+
     /* image */
     for (row = 0; row < rows; ++row) {
         unsigned int col;
@@ -245,7 +245,7 @@ convertToHexNpm(bit **       const image,
                 FILE *       const ofP) {
 
     unsigned int row;
-    
+
     /* header */
     fprintf(ofP, "060504158A0000");
 
@@ -293,7 +293,7 @@ convertToNol(bit **       const image,
     unsigned int row;
     char header[32];
     unsigned int it;
-    
+
     /* header - this is a hack */
 
     header[ 0] = 'N';
@@ -318,7 +318,7 @@ convertToNol(bit **       const image,
     header[19] = 0;
 
     fwrite(header, 20, 1, ofP);
-    
+
     /* image */
     for (row = 0; row < rows; ++row) {
         unsigned int col;
@@ -368,7 +368,7 @@ convertToNgg(bit **       const image,
     header[15] = 0;
 
     fwrite(header, 16, 1, ofP);
-    
+
     /* image */
 
     for (row = 0; row < rows; ++row) {
@@ -395,35 +395,56 @@ convertToNpm(bit **       const image,
              const char * const text,
              FILE *       const ofP) {
 
+    size_t const textLen = text ? strlen(text) : 0;
+
     unsigned int row;
     char header[132];
-    size_t len;
-
-    if (text) 
-        len = strlen(text);
-    else
-        len = 0;
 
     /* header and optional text */
 
-    header[       0] = 'N';
-    header[       1] = 'P';
-    header[       2] = 'M';
-    header[       3] = 0;
-    header[       4] = len;
-    header[       5] = 0;
-    if (text)
-        memcpy(&header[6], text, len);
-    header[ 6 + len] = cols;
-    header[ 7 + len] = rows;
-    header[ 8 + len] = 1;
-    header[ 9 + len] = 1;
-    header[10 + len] = 0; /* unknown */
+    /* Our entry condition is that 'text' be a legal text field, which means
+       no more than 120 characters:
+    */
+    assert(textLen <= 120);
 
-    assert(10 + len < sizeof(header));
+    /* We don't have any specification of this format, but in May 2020, we
+       found what looks like a bug: the memcpy of the text field started at
+       &header[5] (overwriting the previous setting of header[5] and leaving
+       header[6+len-1] not set to anything).  Nobody ever complained about
+       this, so maybe somehow it worked better than the sensible code we have
+       now, where the text field starts in the 7th byte.
+    */
 
-    fwrite(header, 11 + len, 1, ofP);
-    
+    /* The code below that deliberately avoids using 'text' as an argument to
+       memcpy when 'text' is null looks like it should have no practical
+       effect, because with a zero length memcpy, it shouldn't matter what the
+       from and to arguments are.  But it's logically correct - a null pointer
+       just doesn't point anywhere.  And believe it or not, it has a practical
+       effect - a truly bizarre one.  This code used to be simpler and just
+       pass that null pointer to memcpy, with length 0, and as reported in May
+       2020, a new optimizing compiler caused header[3] to contain random
+       values.  That's right: 3.  Skipping that presumed no-op memcpy stopped
+       the behavior.
+    */
+
+    header[           0] = 'N';
+    header[           1] = 'P';
+    header[           2] = 'M';
+    header[           3] = 0;
+    header[           4] = textLen;
+    header[           5] = 0;
+    if (text)  /* see above */
+        memcpy(&header[6], text, textLen);
+    header[ 6 + textLen] = cols;
+    header[ 7 + textLen] = rows;
+    header[ 8 + textLen] = 1;
+    header[ 9 + textLen] = 1;
+    header[10 + textLen] = 0; /* unknown */
+
+    assert(10 + textLen < sizeof(header));
+
+    fwrite(header, 11 + textLen, 1, ofP);
+
     /* image: stream of bits, each row padded to a byte boundary
        inspired by gnokii/common/gsm-filesystems.c
      */
@@ -453,7 +474,7 @@ convertToNpm(bit **       const image,
 
 
 
-int 
+int
 main(int    argc,
      char * argv[]) {
 
@@ -521,6 +542,6 @@ Testing:
   The data was send with EMI/UCP protocol over TCP/IP.
 
   - 7.6.2001: tested with Nokia 3210: 72x14 Operator Logo
-  - 7.6.2001: tested with Nokia 6210: 72x14 Operator Logo and 
+  - 7.6.2001: tested with Nokia 6210: 72x14 Operator Logo and
               72x14 Group Graphic
 */

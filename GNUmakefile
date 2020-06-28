@@ -52,6 +52,11 @@
 # running in.  The -f option is necessary in order to have separate
 # source and object directories.
 
+# For the check targets, results go in a results directory, which you'll need
+# if a test fails to find out how it failed.  The default is
+# RESULTDIR_DEFAULT in config.mk.  Override it with
+# 'make resultdir=/tmp/myresultdir .
+
 ifeq ($(CURDIR)x,x)
 all package install:
 	@echo "YOU NEED AT LEAST VERSION 3.77 OF GNU MAKE TO BUILD NETPBM."

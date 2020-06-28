@@ -452,7 +452,7 @@ struct font2 const pbm_defaultBdffont2 = {
   255, NULL, 255,                 /* maxglyph, selector, maxmaxglyph */
   NULL, 0, 0,                     /* oldfont, fcols, frows */
   PBM_FORMAT,                     /* bit_format */
-  190, 190,                       /* total_chars, chars */
+  191, 191,                       /* total_chars, chars */
   FIXED_DATA,                     /* load_fn */
   32, 1,                          /* default_char, default_char_defined */
   (char *) "builtin bdf",         /* name */

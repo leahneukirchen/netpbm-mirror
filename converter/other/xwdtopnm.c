@@ -999,7 +999,7 @@ pixelReader_getbits(pixelReader * const rdrP,
 -----------------------------------------------------------------------------*/
     unsigned long pixel;
         /* Accumulator for the value we ultimately return.  We shift in
-           bits from the right end.  The number of bits presently in the
+           bits from the right end.  The number of bits currently in the
            accumulator is rdrP->bitsPerPixel - nBitsStillNeeded .
         */
 

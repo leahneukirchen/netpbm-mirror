@@ -190,7 +190,7 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int leftmarginSpec, rightmarginSpec;
     unsigned int topmarginSpec, bottommarginSpec;
 
-    MALLOCARRAY(option_def, 100);
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "resolution",    OPT_UINT,

@@ -47,7 +47,7 @@
   The characters in the border you see are irrelevant except for
   character size compuations.  The 12 x 8 array in the center is
   the font.  The top left character there belongs to code point
-  0, and the code points increase in standard reading order, so
+  32, and the code points increase in standard reading order, so
   the bottom right character is code point 127.  You can't define
   code points < 32 or > 127 with this font format.
 

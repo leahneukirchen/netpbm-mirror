@@ -1264,9 +1264,9 @@ cropOneImage(struct CmdlineInfo const cmdline,
              FILE *             const bdfP,
              FILE *             const ofP) {
 /*----------------------------------------------------------------------------
-   Crop the image to which the stream *ifP is presently positioned
+   Crop the image to which the stream *ifP is currently positioned
    and write the results to *ofP.  If bdfP is non-null, use the image
-   to which stream *bdfP is presently positioned as the borderfile
+   to which stream *bdfP is currently positioned as the borderfile
    (the file that tells us where the existing borders are in the input
    image).  Leave *ifP and *bdfP positioned after the image.
 

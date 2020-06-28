@@ -1357,10 +1357,10 @@ convertRasterByRows(pnmOut *       const pnmOutP,
            represented as single array element, so it's easy to work with.
         */
     xel * xelrow;
-        /* The ppm-format row of the image row we are presently converting */
+        /* The ppm-format row of the image row we are currently converting */
     gray * alpharow;
         /* The pgm-format row representing the alpha values for the image
-           row we are presently converting.
+           row we are currently converting.
         */
 
     unsigned int row;
@@ -1465,11 +1465,11 @@ convertTiffRaster(uint32 *        const raster,
 -----------------------------------------------------------------------------*/
     xel * xelrow;
         /* The ppm-format row of the image row we are
-           presently converting
+           currently converting
         */
     gray * alpharow;
         /* The pgm-format row representing the alpha values
-           for the image row we are presently converting.
+           for the image row we are currently converting.
         */
     unsigned int row;
 
@@ -1478,7 +1478,7 @@ convertTiffRaster(uint32 *        const raster,
 
     for (row = 0; row < rows; ++row) {
         uint32 * rp;
-            /* Address of pixel in 'raster' we are presently converting */
+            /* Address of pixel in 'raster' we are currently converting */
         unsigned int col;
 
         /* Start at beginning of row: */

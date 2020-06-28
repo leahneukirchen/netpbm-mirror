@@ -16,7 +16,7 @@
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2006-2015 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2006-2020 Scott Pakin <scott+pbm@pakin.org>
  *
  * All rights reserved.
  *
@@ -94,6 +94,7 @@ struct cmdlineInfo {
     enum outputType outputType;  /* Type of output file */
     unsigned int xbegin;         /* -xbegin option */
     unsigned int xbeginSpec;     /* -xbegin option count */
+    unsigned int tileable;       /* -tileable option */
 };
 
 
@@ -207,6 +208,8 @@ parseCommandLine(int                  argc,
             &planesSpec,              0);
     OPTENT3(0, "xbegin",          OPT_UINT,   &cmdlineP->xbegin,
             &cmdlineP->xbeginSpec,    0);
+    OPTENT3(0, "tileable",        OPT_FLAG,   NULL,
+            (unsigned int *)&cmdlineP->tileable,  0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -290,6 +293,11 @@ parseCommandLine(int                  argc,
 
     if (cmdlineP->makemask && cmdlineP->patfile)
         pm_error("You may not specify both -makemask and -patfile");
+
+    if (cmdlineP->tileable && cmdlineP->xbeginSpec)
+        pm_error("You may not specify both -tileable and -xbegin");
+    if (cmdlineP->tileable && !cmdlineP->patfile)
+        pm_error("-tileable is valid only with -patfile");
 
     if (cmdlineP->patfile && blackandwhite)
         pm_error("-blackandwhite is not valid with -patfile");
@@ -844,11 +852,12 @@ makeStereoRow(const struct pam * const inPamP,
               unsigned int       const dpi,
               unsigned int       const optWidth,
               unsigned int       const smoothing) {
+/*----------------------------------------------------------------------------
+  Given a row of the depth map inRow[], compute the sameL and sameR arrays,
+  which indicate for each pixel which pixel to its left and right it should be
+  colored the same as.
+-----------------------------------------------------------------------------*/
 
-/* Given a row of the depth map, compute the sameL and sameR arrays,
- * which indicate for each pixel which pixel to its left and right it
- * should be colored the same as.
- */
 #define Z(X) (inRow[X][0]/(double)inPamP->maxval)
 
     unsigned int col;
@@ -865,7 +874,7 @@ makeStereoRow(const struct pam * const inPamP,
 
         if (left >= 0 && right < inPamP->width) {
             bool isVisible;
-        
+
             if (sameL[right] != right) {
                 /* Right point already linked */
                 if (sameL[right] < left) {
@@ -1114,12 +1123,15 @@ static void
 makeImageRowMts(outGenerator *       const outGenP,
                 unsigned int         const row,
                 const unsigned int * const same,
-                unsigned int *       const sameFp,
+                unsigned int *       const colNumBuffer,
                 tuple *              const rowBuffer,
                 const tuple *        const outRow) {
 /*----------------------------------------------------------------------------
   Make a row of a mapped-texture stereogram.
 -----------------------------------------------------------------------------*/
+    unsigned int * const sameFp = colNumBuffer;
+        /* Fixed point of same[] */
+
     unsigned int * tuplesInCol;
         /* tuplesInCol[C] is the number of tuples averaged together to make
            Column C.
@@ -1165,7 +1177,6 @@ makeImageRowMts(outGenerator *       const outGenP,
 static void
 makeImageRow(outGenerator *       const outGenP,
              unsigned int         const row,
-             unsigned int         const optWidth,
              unsigned int         const xbegin,
              const unsigned int * const sameL,
              const unsigned int * const sameR,
@@ -1243,6 +1254,165 @@ invertHeightRow(const struct pam * const heightPamP,
 
 
 static void
+makeOneImageRow(unsigned int         const row,
+                outGenerator *       const outputGeneratorP,
+                bool                 const makeMask,
+                const unsigned int * const sameL,
+                const unsigned int * const sameR,
+                unsigned int *       const colNumBuffer,
+                unsigned int         const xbegin,
+                tuple *              const rowBuffer,
+                tuple *              const outRow) {
+
+    if (makeMask)
+        makeMaskRow(&outputGeneratorP->pam, xbegin, sameL, sameR, outRow);
+    else {
+        if (outputGeneratorP->textureP)
+            makeImageRowMts(outputGeneratorP, row, sameR, colNumBuffer,
+                            rowBuffer, outRow);
+        else
+            makeImageRow(outputGeneratorP, row,
+                         xbegin, sameL, sameR, outRow);
+    }
+}
+
+
+
+static void
+constructRowTileable(const struct pam *   const inPamP,
+                     outGenerator *       const outputGeneratorP,
+                     bool                 const makeMask,
+                     const unsigned int * const sameL,
+                     const unsigned int * const sameR,
+                     unsigned int         const row,
+                     tuple *              const outRow,
+                     tuple *              const outRowBuf1,
+                     tuple *              const outRowBuf2,
+                     unsigned int *       const colNumBuf2) {
+
+    tuple * const outRowMax = outRowBuf1;
+
+    unsigned int col;
+
+    /* Create two rows with extreme xbegin values and blend the second
+       into the first.  outRow[] serves as both the buffer for the xbegin=0
+       version and the merged output.  outRowMax[] is the buffer for the
+       xbegin=maximum case.
+    */
+    makeOneImageRow(row, outputGeneratorP, makeMask, sameL, sameR, colNumBuf2,
+                    0, outRowBuf2, outRow);
+
+    makeOneImageRow(row, outputGeneratorP, makeMask, sameL, sameR, colNumBuf2,
+                    inPamP->width - 1, outRowBuf2, outRowMax);
+
+    for (col = 0; col < inPamP->width; ++col) {
+        unsigned int plane;
+        unsigned int oplane;
+
+        if (outputGeneratorP->pam.have_opacity)
+            oplane = outputGeneratorP->pam.opacity_plane;
+
+        for (plane = 0; plane < outputGeneratorP->pam.color_depth; ++plane) {
+
+            sample samp, sampMax;
+
+            if (outputGeneratorP->pam.have_opacity) {
+                /* If one sample is fully transparent, use the
+                   other sample for both purposes
+                */
+                if (outRow[col][oplane] == 0)
+                    samp = sampMax = outRowMax[col][plane];
+                else if (outRowMax[col][oplane] == 0)
+                    samp = sampMax = outRow[col][plane];
+                else {
+                    samp    = outRow[col][plane];
+                    sampMax = outRowMax[col][plane];
+                }
+            } else {
+                samp    = outRow[col][plane];
+                sampMax = outRowMax[col][plane];
+            }
+
+            outRow[col][plane] =
+                (col*sampMax + (inPamP->width - col - 1)*samp) /
+                (inPamP->width - 1);
+        }
+        if (outputGeneratorP->pam.have_opacity) {
+            sample samp, sampMax;
+
+            /* Take the maximum alpha for partially transparent samples. */
+            samp    = outRow[col][oplane];
+            sampMax = outRowMax[col][oplane];
+            outRow[col][oplane] = MAX(samp, sampMax);
+        }
+    }
+}
+
+
+
+static void
+doRow(const struct pam * const inPamP,
+      outGenerator *     const outputGeneratorP,
+      double             const depthOfField,
+      double             const eyesep,
+      unsigned int       const dpi,
+      bool               const crossEyed,
+      bool               const makeMask,
+      bool               const tileable,
+      unsigned int       const magnifypat,
+      unsigned int       const smoothing,
+      unsigned int       const xbegin,
+      unsigned int       const row,
+      tuple *            const inRow,
+      tuple *            const outRowBuf0,
+      tuple *            const outRowBuf1,
+      tuple *            const outRowBuf2,
+      unsigned int *     const colNumBuf0,
+      unsigned int *     const colNumBuf1,
+      unsigned int *     const colNumBuf2) {
+
+    tuple *        const outRow = outRowBuf0;
+    unsigned int * const sameL  = colNumBuf0;
+        /* sameL[N] is the column number of a pixel to the
+           left forced to have the same color as the one in column N
+        */
+    unsigned int * const sameR = colNumBuf1;
+        /* sameR[N] is the column number of a pixel to the
+           right forced to have the same color as the one in column N
+        */
+
+    pnm_readpamrow(inPamP, inRow);
+
+    if (crossEyed)
+        /* Invert heights for cross-eyed (as opposed to wall-eyed)
+           people.
+        */
+        invertHeightRow(inPamP, inRow);
+
+    /* Determine color constraints. */
+    makeStereoRow(inPamP, inRow, sameL, sameR, depthOfField, eyesep, dpi,
+                  ROUNDU(eyesep * dpi)/(magnifypat * 2),
+                  smoothing);
+
+    /* Construct a single row. */
+    if (tileable) {
+        constructRowTileable(inPamP, outputGeneratorP, makeMask,
+                             sameL, sameR, row, outRow,
+                             outRowBuf1, outRowBuf2, colNumBuf2);
+
+    } else {
+        makeOneImageRow(row, outputGeneratorP, makeMask,
+                        sameL, sameR, colNumBuf2,
+                        xbegin, outRowBuf1, outRow);
+    }
+
+    /* Write the resulting row. */
+    pnm_writepamrow(&outputGeneratorP->pam, outRow);
+}
+
+
+
+static void
 makeImageRows(const struct pam * const inPamP,
               outGenerator *     const outputGeneratorP,
               double             const depthOfField,
@@ -1250,72 +1420,50 @@ makeImageRows(const struct pam * const inPamP,
               unsigned int       const dpi,
               bool               const crossEyed,
               bool               const makeMask,
+              bool               const tileable,
               unsigned int       const magnifypat,
               unsigned int       const smoothing,
               unsigned int       const xbegin) {
 
-    tuple * inRow;     /* One row of pixels read from the height-map file */
-    tuple * outRow;    /* One row of pixels to write to the height-map file */
-    unsigned int * sameR;
-        /* Malloced array: sameR[N] is the column number of a pixel to the
-           right forced to have the same color as the one in column N
-        */
-    unsigned int * sameL;
-        /* Malloced array: sameL[N] is the column number of a pixel to the
-           left forced to have the same color as the one in column N
-        */
-    unsigned int * sameRfp;
-        /* Malloced array: Fixed point of sameR[] */
-    tuple * rowBuffer;     /* Scratch row needed for texture manipulation */
+    tuple * inRow;    /* Buffer for use in reading from the height-map image */
+    tuple * outRowBuf0; /* Buffer for use in generating output rows */
+    tuple * outRowBuf1; /* Buffer for use in generating output rows */
+    tuple * outRowBuf2; /* Buffer for use in generating output rows */
+    unsigned int * colNumBuf0;
+    unsigned int * colNumBuf1;
+    unsigned int * colNumBuf2;
     unsigned int row;      /* Current row in the input and output files */
 
     inRow = pnm_allocpamrow(inPamP);
-    outRow = pnm_allocpamrow(&outputGeneratorP->pam);
-    MALLOCARRAY(sameR, inPamP->width);
-    if (sameR == NULL)
-        pm_error("Unable to allocate space for \"sameR\" array.");
-    MALLOCARRAY(sameL, inPamP->width);
-    if (sameL == NULL)
-        pm_error("Unable to allocate space for \"sameL\" array.");
-
-    MALLOCARRAY(sameRfp, inPamP->width);
-    if (sameRfp == NULL)
-        pm_error("Unable to allocate space for \"sameRfp\" array.");
-    rowBuffer = pnm_allocpamrow(&outputGeneratorP->pam);
+    outRowBuf0 = pnm_allocpamrow(&outputGeneratorP->pam);
+    outRowBuf1 = pnm_allocpamrow(&outputGeneratorP->pam);
+    outRowBuf2 = pnm_allocpamrow(&outputGeneratorP->pam);
+    MALLOCARRAY(colNumBuf0, inPamP->width);
+    if (colNumBuf0 == NULL)
+        pm_error("Unable to allocate space for %u column buffer",
+                 inPamP->width);
+    MALLOCARRAY(colNumBuf1, inPamP->width);
+    if (colNumBuf1 == NULL)
+        pm_error("Unable to allocate space for %u column buffer",
+                 inPamP->width);
+    MALLOCARRAY(colNumBuf2, inPamP->width);
+    if (colNumBuf2 == NULL)
+        pm_error("Unable to allocate space for %u column buffer",
+                 inPamP->width);
 
     for (row = 0; row < inPamP->height; ++row) {
-        pnm_readpamrow(inPamP, inRow);
-        if (crossEyed)
-            /* Invert heights for cross-eyed (as opposed to wall-eyed)
-               people.
-            */
-            invertHeightRow(inPamP, inRow);
-
-        /* Determine color constraints. */
-        makeStereoRow(inPamP, inRow, sameL, sameR, depthOfField, eyesep, dpi,
-                      ROUNDU(eyesep * dpi)/(magnifypat * 2),
-                      smoothing);
-
-        if (makeMask)
-            makeMaskRow(&outputGeneratorP->pam, xbegin, sameL, sameR, outRow);
-        else {
-            if (outputGeneratorP->textureP)
-                makeImageRowMts(outputGeneratorP, row, sameR, sameRfp,
-                                rowBuffer, outRow);
-            else
-                makeImageRow(outputGeneratorP, row,
-                             ROUNDU(eyesep * dpi)/(magnifypat * 2),
-                             xbegin, sameL, sameR, outRow);
-        }
-        /* Write the resulting row. */
-        pnm_writepamrow(&outputGeneratorP->pam, outRow);
+        doRow(inPamP, outputGeneratorP,  depthOfField, eyesep, dpi,
+              crossEyed, makeMask, tileable, magnifypat, smoothing, xbegin,
+              row,
+              inRow, outRowBuf0, outRowBuf1, outRowBuf2,
+              colNumBuf0, colNumBuf1, colNumBuf2);
     }
 
-    pnm_freepamrow(rowBuffer);
-    free(sameRfp);
-    free(sameL);
-    free(sameR);
-    pnm_freepamrow(outRow);
+    free(colNumBuf2);
+    free(colNumBuf1);
+    free(colNumBuf0);
+    pnm_freepamrow(outRowBuf1);
+    pnm_freepamrow(outRowBuf0);
     pnm_freepamrow(inRow);
 }
 
@@ -1361,8 +1509,8 @@ produceStereogram(FILE *             const ifP,
 
     makeImageRows(&inPam, outputGeneratorP,
                   cmdline.depth, cmdline.eyesep, cmdline.dpi,
-                  cmdline.crosseyed, cmdline.makemask, cmdline.magnifypat,
-                  cmdline.smoothing, xbegin);
+                  cmdline.crosseyed, cmdline.makemask, cmdline.tileable,
+                  cmdline.magnifypat, cmdline.smoothing, xbegin);
 
     if (cmdline.guidebottom)
         drawguides(cmdline.guidesize, &outputGeneratorP->pam,

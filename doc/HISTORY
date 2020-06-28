@@ -4,7 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-20.06.28 BJH  Release 10.90.05
+20.06.28 BJH  Release 10.91.00
+
+              pamstretch-gen: Add -quiet (supposedly added in 10.86, but never
+              worked).
+
+              pamstereogram: Add -tileable.  Thanks Scott Pakin.
+
+              pcdovtoppm: implement -version, -plain, and -quiet.
+
+              pcdovtoppm: more secure temporary file handling.
+
+              pcdovtoppm: Improve the way it fails when 'hpcdtoppm' fails.
+
+              anytopnm, pnmmargin: Fail properly when unable to create
+              temporary file.  Broken in Netpbm 10.75 (June 2016).
 
               winicontoppm: Fix undefined behavior for various invalid input.
               Always broken.  Winicontoppm was new in Netpbm 9.3 (June 2000).
@@ -13,27 +27,21 @@ CHANGE HISTORY
               image.  Always broken.  Winicontoppm was new in Netpbm 9.3 (June
               2000).
 
-20.06.10 BJH  Release 10.90.04
-
               pjtoppm: Handle input stream with no transmission mode command.
               Always broken.  Pjtoppm was in primordial Netpbm (1991).
 
-              cameratopam: Fix buffer overrun.  Always present. (cameratopam
-              was new in Netpbm 10.28 (June 2005)).
+              cameratopam: Handle I/O error on input file.  Always broken.
+              Cameratopam was new to Netpbm in Netpbm 10.25 (June 2005).
 
-              ppmtompeg: Fix buffer overruns with very long names in input
-              parameter files.  Always broken.  Ppmtompeg was new in
-              Netpbm 8.4 (April 2000).
-
-              ximtoppm: Fix possible program crash due to invalid memory
-              reference.  Always broken.  ximtoppm was in primordial Netpbm,
-              ca 1989.
+              xbmtopbm: Recognize "unsigned short" as an extension of
+              XBM X10 format.
 
               pjtoppm: Fix handling of input with width unspecified or not
               positive.  Always broken.  (Pjtoppm was in primordial Netpbm, ca
               1991).
 
-20.05.29 BJH  Release 10.90.03
+              winicontopam: Fix crash with PNG icon.  Always broken.
+              Winicontopam was new in Netpbm 10.63 (June 2013).
 
               picttoppm: Fix bug with an input file that specifies a clip
               region (ClipRgn opcode) that is not contained within the
@@ -44,16 +52,33 @@ CHANGE HISTORY
               scaled.  Broken in Netpbm 10.34 (June 2006) or 10.35 (August
               2006).
 
-20.05.06 BJH  Release 10.90.02
-
               pbmtonokia: Fix incorrect output with -txt option.
 
               pbmtonokia: Fix incorrect output with newer compiler.
 
-20.04.20 BJH  Release 10.90.01
-
               pnmtorle: Fix incorrect command and filename in header.
-              Brokne in Netpbm 10.88 (September 2019).
+              Broken in Netpbm 10.88 (September 2019).
+
+              cameratopam: Fix buffer overrun.  Always present. (cameratopam
+              was new in Netpbm 10.28 (June 2005)).
+
+              cameratopam: Fix undefined behavior using 'swab' to swap bytes
+              in place.  Always present. (cameratopam was new in Netpbm 10.28
+              (June 2005)).
+
+              ppmtompeg: Fix buffer overruns with very long names in input
+              parameter files.  Always broken.  Ppmtompeg was new in
+              Netpbm 8.4 (April 2000).
+
+              ximtoppm: Fix possible program crash due to invalid memory
+              reference.  Always broken.  ximtoppm was in primordial Netpbm,
+              ca 1989.
+
+              pcdovtoppm: Fix bug: accepts anything starting with -s
+              as equivalent to -s.
+
+              pcdovtoppm: properly selects Bash as interpreter.  Broken in
+              Netpbm 9.9 (March 2001).
 
 20.03.26 BJH  Release 10.90.00
 

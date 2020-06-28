@@ -24,6 +24,7 @@
 #include "bayer.h"
 #include "ljpeg.h"
 #include "dng.h"
+#include "stdio_nofail.h"
 
 #include "camera.h"
 
@@ -94,8 +95,8 @@ adobe_dng_load_raw_lj(Image const image) {
     unsigned short *rp;
 
     while (1) {
-        save = ftell(ifp);
-        fseek (ifp, get4(ifp), SEEK_SET);
+        save = ftell_nofail(ifp);
+        fseek_nofail (ifp, get4(ifp), SEEK_SET);
         if (!ljpeg_start (ifp, &jh)) break;
         if (trow >= raw_height) break;
         if (jh.high > raw_height-trow)
@@ -113,7 +114,7 @@ adobe_dng_load_raw_lj(Image const image) {
                 adobeCopyPixel(image,
                                trow+jrow, tcol+jcol, &rp, use_secondary);
         }
-        fseek (ifp, save+4, SEEK_SET);
+        fseek_nofail (ifp, save+4, SEEK_SET);
         if ((tcol += twide) >= raw_width) {
             tcol = 0;
             trow += jh.high;
@@ -157,14 +158,14 @@ nikon_compressed_load_raw(Image const image) {
     init_decoder();
     make_decoder (nikon_tree, 0);
 
-    fseek (ifp, nikon_curve_offset, SEEK_SET);
+    fseek_nofail (ifp, nikon_curve_offset, SEEK_SET);
     read_shorts (ifp, vpred, 4);
     csize = get2(ifp);
     curve = calloc (csize, sizeof *curve);
     merror (curve, "nikon_compressed_load_raw()");
     read_shorts (ifp, curve, csize);
 
-    fseek (ifp, data_offset, SEEK_SET);
+    fseek_nofail (ifp, data_offset, SEEK_SET);
     getbits(ifp, -1);
 
     for (row=0; row < height; row++)
@@ -197,8 +198,8 @@ nikon_load_raw(Image const image) {
     if (model[0] == 'E') {
       row = irow * 2 % height + irow / (height/2);
       if (row == 1 && atoi(model+1) < 5000) {
-    fseek (ifp, 0, SEEK_END);
-    fseek (ifp, ftell(ifp)/2, SEEK_SET);
+    fseek_nofail (ifp, 0, SEEK_END);
+    fseek_nofail (ifp, ftell_nofail(ifp)/2, SEEK_SET);
     getbits(ifp, -1);
       }
     }
@@ -227,8 +228,8 @@ nikon_is_compressed()
     return 0;
   if (strcmp(model,"D100"))
     return 1;
-  fseek (ifp, data_offset, SEEK_SET);
-  fread (test, 1, 256, ifp);
+  fseek_nofail (ifp, data_offset, SEEK_SET);
+  fread_nofail (test, 1, 256, ifp);
   for (i=15; i < 256; i+=16)
     if (test[i]) return 1;
   return 0;
@@ -244,9 +245,9 @@ nikon_e990()
   const unsigned char often[] = { 0x00, 0x55, 0xaa, 0xff };
 
   memset (histo, 0, sizeof histo);
-  fseek (ifp, 2064*1540*3/4, SEEK_SET);
+  fseek_nofail (ifp, 2064*1540*3/4, SEEK_SET);
   for (i=0; i < 2000; i++)
-    histo[fgetc(ifp)]++;
+    histo[fgetc_nofail(ifp)]++;
   for (i=0; i < 4; i++)
     if (histo[often[i]] > 400)
       return 1;
@@ -262,9 +263,9 @@ nikon_e2100()
   unsigned char t[12];
   int i;
 
-  fseek (ifp, 0, SEEK_SET);
+  fseek_nofail (ifp, 0, SEEK_SET);
   for (i=0; i < 1024; i++) {
-    fread (t, 1, 12, ifp);
+    fread_nofail (t, 1, 12, ifp);
     if (((t[2] & t[4] & t[7] & t[9]) >> 4
     & t[1] & t[6] & t[8] & t[11] & 3) != 3)
       return 0;
@@ -281,8 +282,8 @@ pentax_optio33()
   int i, sum[] = { 0, 0 };
   unsigned char tail[952];
 
-  fseek (ifp, -sizeof tail, SEEK_END);
-  fread (tail, 1, sizeof tail, ifp);
+  fseek_nofail (ifp, -sizeof tail, SEEK_END);
+  fread_nofail (tail, 1, sizeof tail, ifp);
   for (i=0; i < sizeof tail; i++)
     sum[(i>>2) & 1] += tail[i];
   return sum[0] < sum[1]*4;
@@ -297,8 +298,8 @@ minolta_z2()
   int i;
   char tail[424];
 
-  fseek (ifp, -sizeof tail, SEEK_END);
-  fread (tail, 1, sizeof tail, ifp);
+  fseek_nofail (ifp, -sizeof tail, SEEK_END);
+  fread_nofail (tail, 1, sizeof tail, ifp);
   for (i=0; i < sizeof tail; i++)
     if (tail[i]) return 1;
   return 0;
@@ -313,10 +314,10 @@ nikon_e2100_load_raw(Image const image) {
 
   for (row=0; row <= height; row+=2) {
     if (row == height) {
-      fseek (ifp, ((width==1616) << 13) - (-ftell(ifp) & -2048), SEEK_SET);
+      fseek_nofail (ifp, ((width==1616) << 13) - (-ftell_nofail(ifp) & -2048), SEEK_SET);
       row = 1;
     }
-    fread (data, 1, width*3/2, ifp);
+    fread_nofail (data, 1, width*3/2, ifp);
     for (dp=data, pix=pixel; pix < pixel+width; dp+=12, pix+=8) {
       pix[0] = (dp[2] >> 4) + (dp[ 3] << 4);
       pix[1] = (dp[2] << 8) +  dp[ 1];
@@ -356,7 +357,7 @@ fuji_s2_load_raw(Image const image) {
   unsigned short pixel[2944];
   int row, col, r, c;
 
-  fseek (ifp, (2944*24+32)*2, SEEK_CUR);
+  fseek_nofail (ifp, (2944*24+32)*2, SEEK_CUR);
   for (row=0; row < 2144; row++) {
     read_shorts(ifp, pixel, 2944);
     for (col=0; col < 2880; col++) {
@@ -372,7 +373,7 @@ fuji_s3_load_raw(Image const image) {
   unsigned short pixel[4352];
   int row, col, r, c;
 
-  fseek (ifp, (4352*2+32)*2, SEEK_CUR);
+  fseek_nofail (ifp, (4352*2+32)*2, SEEK_CUR);
   for (row=0; row < 1440; row++) {
     read_shorts(ifp, pixel, 4352);
     for (col=0; col < 4288; col++) {
@@ -408,7 +409,7 @@ fuji_common_load_raw(Image        const image,
 void
 fuji_s5000_load_raw(Image const image) {
 
-  fseek (ifp, (1472*4+24)*2, SEEK_CUR);
+  fseek_nofail (ifp, (1472*4+24)*2, SEEK_CUR);
   fuji_common_load_raw(image, 1472, 1423, 2152);
 }
 
@@ -449,7 +450,7 @@ rollei_load_raw(Image const image) {
   unsigned iten=0, isix, i, buffer=0, row, col, todo[16];
 
   isix = raw_width * raw_height * 5 / 8;
-  while (fread (pixel, 1, 10, ifp) == 10) {
+  while (fread_or_eof_nofail (pixel, 1, 10, ifp) == 10) {
     for (i=0; i < 10; i+=2) {
       todo[i]   = iten++;
       todo[i+1] = pixel[i] << 8 | pixel[i+1];
@@ -474,11 +475,11 @@ phase_one_load_raw(Image const image) {
   int row, col, a, b;
   unsigned short *pixel, akey, bkey;
 
-  fseek (ifp, 8, SEEK_CUR);
-  fseek (ifp, get4(ifp) + 296, SEEK_CUR);
+  fseek_nofail (ifp, 8, SEEK_CUR);
+  fseek_nofail (ifp, get4(ifp) + 296, SEEK_CUR);
   akey = get2(ifp);
   bkey = get2(ifp);
-  fseek (ifp, data_offset + 12 + top_margin*raw_width*2, SEEK_SET);
+  fseek_nofail (ifp, data_offset + 12 + top_margin*raw_width*2, SEEK_SET);
   pixel = calloc (raw_width, sizeof *pixel);
   merror (pixel, "phase_one_load_raw()");
   for (row=0; row < height; row++) {
@@ -501,7 +502,7 @@ ixpress_load_raw(Image const image) {
   int row, col;
 
   order = 0x4949;
-  fseek (ifp, 304 + 6*2*4090, SEEK_SET);
+  fseek_nofail (ifp, 304 + 6*2*4090, SEEK_SET);
   for (row=height; --row >= 0; ) {
     read_shorts(ifp, pixel, 4090);
     for (col=0; col < width; col++)
@@ -567,7 +568,7 @@ olympus_e300_load_raw(Image const image) {
   merror (data, "olympus_e300_load_raw()");
   pixel = (unsigned short *) (data + dwide);
   for (row=0; row < height; row++) {
-    fread (data, 1, dwide, ifp);
+    fread_nofail (data, 1, dwide, ifp);
     for (dp=data, pix=pixel; pix < pixel+raw_width; dp+=3, pix+=2) {
       if (((dp-data) & 15) == 15) dp++;
       pix[0] = dp[1] << 8 | dp[0];
@@ -586,7 +587,7 @@ olympus_cseries_load_raw(Image const image) {
   for (irow=0; irow < height; irow++) {
     row = irow * 2 % height + irow / (height/2);
     if (row < 2) {
-      fseek (ifp, data_offset - row*(-width*height*3/4 & -2048), SEEK_SET);
+      fseek_nofail (ifp, data_offset - row*(-width*height*3/4 & -2048), SEEK_SET);
       getbits(ifp, -1);
     }
     for (col=0; col < width; col++)
@@ -602,7 +603,7 @@ eight_bit_load_raw(Image const image) {
   pixel = calloc (raw_width, sizeof *pixel);
   merror (pixel, "eight_bit_load_raw()");
   for (row=0; row < height; row++) {
-    fread (pixel, 1, raw_width, ifp);
+    fread_nofail (pixel, 1, raw_width, ifp);
     for (col=0; col < width; col++)
       BAYER(row,col) = pixel[col];
   }
@@ -617,7 +618,7 @@ casio_qv5700_load_raw(Image const image) {
   int row, col;
 
   for (row=0; row < height; row++) {
-    fread (data, 1, 3232, ifp);
+    fread_nofail (data, 1, 3232, ifp);
     for (dp=data, pix=pixel; dp < data+3220; dp+=5, pix+=4) {
       pix[0] = (dp[0] << 2) + (dp[1] >> 6);
       pix[1] = (dp[1] << 4) + (dp[2] >> 4);
@@ -783,7 +784,7 @@ fill_input_buffer (j_decompress_ptr cinfo)
   static char jpeg_buffer[4096];
   size_t nbytes;
 
-  nbytes = fread (jpeg_buffer, 1, 4096, ifp);
+  nbytes = fread_or_eof_nofail (jpeg_buffer, 1, 4096, ifp);
   swab (jpeg_buffer, jpeg_buffer, nbytes);
   cinfo->src->next_input_byte = jpeg_buffer;
   cinfo->src->bytes_in_buffer = nbytes;
@@ -840,7 +841,7 @@ kodak_dc120_load_raw(Image const image)
   int row, shift, col;
 
   for (row=0; row < height; row++) {
-    fread (pixel, 848, 1, ifp);
+    fread_nofail (pixel, 848, 1, ifp);
     shift = row * mul[row & 3] + add[row & 3];
     for (col=0; col < width; col++)
       BAYER(row,col) = (unsigned short) pixel[(col + shift) % 848];
@@ -878,7 +879,7 @@ kodak_easy_load_raw(Image const image)
   pixel = calloc (raw_width, sizeof *pixel);
   merror (pixel, "kodak_easy_load_raw()");
   for (row=0; row < height; row++) {
-    fread (pixel, 1, raw_width, ifp);
+    fread_nofail (pixel, 1, raw_width, ifp);
     for (col=0; col < raw_width; col++) {
       icol = col - left_margin;
       if (icol < width)
@@ -912,21 +913,21 @@ kodak_compressed_load_raw(Image const image)
       if ((col & 255) == 0) {       /* Get the bit-lengths of the */
     len = width - col;      /* next 256 pixel values      */
     if (len > 256) len = 256;
-    save = ftell(ifp);
+    save = ftell_nofail(ifp);
     for (israw=i=0; i < len; i+=2) {
-      c = fgetc(ifp);
+      c = fgetc_nofail(ifp);
       if ((blen[i+0] = c & 15) > 12 ||
           (blen[i+1] = c >> 4) > 12 )
         israw = 1;
     }
     bitbuf = bits = pred[0] = pred[1] = 0;
     if (len % 8 == 4) {
-      bitbuf  = fgetc(ifp) << 8;
-      bitbuf += fgetc(ifp);
+      bitbuf  = fgetc_nofail(ifp) << 8;
+      bitbuf += fgetc_nofail(ifp);
       bits = 16;
     }
     if (israw)
-      fseek (ifp, save, SEEK_SET);
+      fseek_nofail (ifp, save, SEEK_SET);
       }
       if (israw) {          /* If the data is not compressed */
     switch (col & 7) {
@@ -944,7 +945,7 @@ kodak_compressed_load_raw(Image const image)
     len = blen[col & 255];      /* Number of bits for this pixel */
     if (bits < len) {       /* Got enough bits in the buffer? */
       for (i=0; i < 32; i+=8)
-        bitbuf += (INT64) fgetc(ifp) << (bits+(i^8));
+        bitbuf += (INT64) fgetc_nofail(ifp) << (bits+(i^8));
       bits += 32;
     }
     diff = bitbuf & (0xffff >> (16-len));  /* Pull bits from buffer */
@@ -976,14 +977,14 @@ kodak_yuv_load_raw(Image const image)
     len = (width - col + 1) * 3 & -4;
     if (len > 384) len = 384;
     for (i=0; i < len; ) {
-      c = fgetc(ifp);
+      c = fgetc_nofail(ifp);
       blen[i++] = c & 15;
       blen[i++] = c >> 4;
     }
     li = bitbuf = bits = y[1] = y[3] = cb = cr = 0;
     if (len % 8 == 4) {
-      bitbuf  = fgetc(ifp) << 8;
-      bitbuf += fgetc(ifp);
+      bitbuf  = fgetc_nofail(ifp) << 8;
+      bitbuf += fgetc_nofail(ifp);
       bits = 16;
     }
       }
@@ -991,7 +992,7 @@ kodak_yuv_load_raw(Image const image)
     len = blen[li++];
     if (bits < len) {
       for (i=0; i < 32; i+=8)
-        bitbuf += (INT64) fgetc(ifp) << (bits+(i^8));
+        bitbuf += (INT64) fgetc_nofail(ifp) << (bits+(i^8));
       bits += 32;
     }
     diff = bitbuf & (0xffff >> (16-len));
@@ -1062,20 +1063,20 @@ sony_load_raw(Image const image)
   struct pixel * pixelrow;
   unsigned i, key, row, col;
 
-  fseek (ifp, 200896, SEEK_SET);
-  fseek (ifp, (unsigned) fgetc(ifp)*4 - 1, SEEK_CUR);
+  fseek_nofail (ifp, 200896, SEEK_SET);
+  fseek_nofail (ifp, (unsigned) fgetc_nofail(ifp)*4 - 1, SEEK_CUR);
   order = 0x4d4d;
   key = get4(ifp);
-  fseek (ifp, 164600, SEEK_SET);
-  fread (head, 1, 40, ifp);
+  fseek_nofail (ifp, 164600, SEEK_SET);
+  fread_nofail (head, 1, 40, ifp);
   sony_decrypt ((void *) head, 10, 1, key);
   for (i=26; i-- > 22; )
     key = key << 8 | head[i];
-  fseek (ifp, data_offset, SEEK_SET);
+  fseek_nofail (ifp, data_offset, SEEK_SET);
   MALLOCARRAY(pixelrow, raw_width);
   merror (pixelrow, "sony_load_raw()");
   for (row=0; row < height; row++) {
-    fread (pixelrow, 2, raw_width, ifp);
+    fread_nofail (pixelrow, 2, raw_width, ifp);
     sony_decrypt ((void *) pixelrow, raw_width/2, !row, key);
     for (col=9; col < left_margin; col++)
       black += pixelrow[col].bytes[0] * 256 + pixelrow[col].bytes[1];
@@ -1095,14 +1096,14 @@ parse_minolta(FILE * const ifp)
 {
   int save, tag, len, offset, high=0, wide=0;
 
-  fseek (ifp, 4, SEEK_SET);
+  fseek_nofail (ifp, 4, SEEK_SET);
   offset = get4(ifp) + 8;
-  while ((save=ftell(ifp)) < offset) {
+  while ((save=ftell_nofail(ifp)) < offset) {
     tag = get4(ifp);
     len = get4(ifp);
     switch (tag) {
       case 0x505244:                /* PRD */
-    fseek (ifp, 8, SEEK_CUR);
+    fseek_nofail (ifp, 8, SEEK_CUR);
     high = get2(ifp);
     wide = get2(ifp);
     break;
@@ -1114,9 +1115,9 @@ parse_minolta(FILE * const ifp)
     camera_blue = get2(ifp) / camera_blue;
     break;
       case 0x545457:                /* TTW */
-    parse_tiff(ifp, ftell(ifp));
+    parse_tiff(ifp, ftell_nofail(ifp));
     }
-    fseek (ifp, save+len+8, SEEK_SET);
+    fseek_nofail (ifp, save+len+8, SEEK_SET);
   }
   raw_height = high;
   raw_width  = wide;
@@ -1168,24 +1169,24 @@ parse_ciff(FILE * const ifp,
       strcmp(model,"Canon PowerShot S70") &&
       strcmp(model,"Canon PowerShot Pro1"))
     key[0] = key[1] = 0;
-  fseek (ifp, offset+length-4, SEEK_SET);
+  fseek_nofail (ifp, offset+length-4, SEEK_SET);
   tboff = get4(ifp) + offset;
-  fseek (ifp, tboff, SEEK_SET);
+  fseek_nofail (ifp, tboff, SEEK_SET);
   nrecs = get2(ifp);
   for (i = 0; i < nrecs; i++) {
     type = get2(ifp);
     len  = get4(ifp);
     roff = get4(ifp);
     aoff = offset + roff;
-    save = ftell(ifp);
+    save = ftell_nofail(ifp);
     if (type == 0x080a) {       /* Get the camera make and model */
-      fseek (ifp, aoff, SEEK_SET);
-      fread (make, 64, 1, ifp);
-      fseek (ifp, aoff+strlen(make)+1, SEEK_SET);
-      fread (model, 64, 1, ifp);
+      fseek_nofail (ifp, aoff, SEEK_SET);
+      fread_nofail (make, 64, 1, ifp);
+      fseek_nofail (ifp, aoff+strlen(make)+1, SEEK_SET);
+      fread_nofail (model, 64, 1, ifp);
     }
     if (type == 0x102a) {       /* Find the White Balance index */
-      fseek (ifp, aoff+14, SEEK_SET);   /* 0=auto, 1=daylight, 2=cloudy ... */
+      fseek_nofail (ifp, aoff+14, SEEK_SET);   /* 0=auto, 1=daylight, 2=cloudy ... */
       wbi = get2(ifp);
       if (((!strcmp(model,"Canon EOS DIGITAL REBEL") ||
         !strcmp(model,"Canon EOS 300D DIGITAL"))) && wbi == 6)
@@ -1194,19 +1195,19 @@ parse_ciff(FILE * const ifp,
     if (type == 0x102c) {       /* Get white balance (G2) */
       if (!strcmp(model,"Canon PowerShot G1") ||
       !strcmp(model,"Canon PowerShot Pro90 IS")) {
-    fseek (ifp, aoff+120, SEEK_SET);
+    fseek_nofail (ifp, aoff+120, SEEK_SET);
     white[0][1] = get2(ifp);
     white[0][0] = get2(ifp);
     white[1][0] = get2(ifp);
     white[1][1] = get2(ifp);
       } else {
-    fseek (ifp, aoff+100, SEEK_SET);
+    fseek_nofail (ifp, aoff+100, SEEK_SET);
     goto common;
       }
     }
     if (type == 0x0032) {       /* Get white balance (D30 & G3) */
       if (!strcmp(model,"Canon EOS D30")) {
-    fseek (ifp, aoff+72, SEEK_SET);
+    fseek_nofail (ifp, aoff+72, SEEK_SET);
 common:
     camera_red   = get2(ifp) ^ key[0];
     camera_red   =(get2(ifp) ^ key[1]) / camera_red;
@@ -1214,13 +1215,13 @@ common:
     camera_blue /= get2(ifp) ^ key[1];
       } else if (!strcmp(model,"Canon PowerShot G6") ||
          !strcmp(model,"Canon PowerShot S70")) {
-    fseek (ifp, aoff+96 + remap_s70[wbi]*8, SEEK_SET);
+    fseek_nofail (ifp, aoff+96 + remap_s70[wbi]*8, SEEK_SET);
     goto common;
       } else if (!strcmp(model,"Canon PowerShot Pro1")) {
-    fseek (ifp, aoff+96 + wbi*8, SEEK_SET);
+    fseek_nofail (ifp, aoff+96 + wbi*8, SEEK_SET);
     goto common;
       } else {
-    fseek (ifp, aoff+80 + (wbi < 6 ? remap[wbi]*8 : 0), SEEK_SET);
+    fseek_nofail (ifp, aoff+80 + (wbi < 6 ? remap[wbi]*8 : 0), SEEK_SET);
     if (!camera_red)
       goto common;
       }
@@ -1228,38 +1229,38 @@ common:
     if (type == 0x10a9) {       /* Get white balance (D60) */
       if (!strcmp(model,"Canon EOS 10D"))
     wbi = remap_10d[wbi];
-      fseek (ifp, aoff+2 + wbi*8, SEEK_SET);
+      fseek_nofail (ifp, aoff+2 + wbi*8, SEEK_SET);
       camera_red  = get2(ifp);
       camera_red /= get2(ifp);
       camera_blue = get2(ifp);
       camera_blue = get2(ifp) / camera_blue;
     }
     if (type == 0x1030 && (wbi == 6 || wbi == 15)) {
-      fseek (ifp, aoff, SEEK_SET);  /* Get white sample */
+      fseek_nofail (ifp, aoff, SEEK_SET);  /* Get white sample */
       ciff_block_1030();
     }
     if (type == 0x1031) {       /* Get the raw width and height */
-      fseek (ifp, aoff+2, SEEK_SET);
+      fseek_nofail (ifp, aoff+2, SEEK_SET);
       raw_width  = get2(ifp);
       raw_height = get2(ifp);
     }
     if (type == 0x180e) {       /* Get the timestamp */
-      fseek (ifp, aoff, SEEK_SET);
+      fseek_nofail (ifp, aoff, SEEK_SET);
       timestamp = get4(ifp);
     }
     if (type == 0x580e)
       timestamp = len;
     if (type == 0x1810) {       /* Get the rotation */
-      fseek (ifp, aoff+12, SEEK_SET);
+      fseek_nofail (ifp, aoff+12, SEEK_SET);
       flip = get4(ifp);
     }
     if (type == 0x1835) {       /* Get the decoder table */
-      fseek (ifp, aoff, SEEK_SET);
+      fseek_nofail (ifp, aoff, SEEK_SET);
       crw_init_tables (get4(ifp));
     }
     if (type >> 8 == 0x28 || type >> 8 == 0x30) /* Get sub-tables */
       parse_ciff(ifp, aoff, len);
-    fseek (ifp, save, SEEK_SET);
+    fseek_nofail (ifp, save, SEEK_SET);
   }
   if (wbi == 0 && !strcmp(model,"Canon EOS D30"))
     camera_red = -1;            /* Use my auto WB for this photo */
@@ -1273,9 +1274,9 @@ parse_rollei(FILE * const ifp)
   struct tm t;
   time_t ts;
 
-  fseek (ifp, 0, SEEK_SET);
+  fseek_nofail (ifp, 0, SEEK_SET);
   do {
-    fgets (line, 128, ifp);
+    fgets_nofail (line, 128, ifp);
     if ((val = strchr(line,'=')))
       *val++ = 0;
     else
@@ -1314,13 +1315,13 @@ parse_mos(FILE * const ifp,
     char data[40];
     int skip, from, i, neut[4];
 
-    fseek (ifp, offset, SEEK_SET);
+    fseek_nofail (ifp, offset, SEEK_SET);
     while (1) {
-        fread (data, 1, 8, ifp);
+        fread_nofail (data, 1, 8, ifp);
         if (strcmp(data,"PKTS")) break;
-        fread (data, 1, 40, ifp);
+        fread_nofail (data, 1, 40, ifp);
         skip = get4(ifp);
-        from = ftell(ifp);
+        from = ftell_nofail(ifp);
         if (!strcmp(data,"NeutObj_neutrals")) {
             for (i=0; i < 4; i++)
                 fscanf (ifp, "%d", neut+i);
@@ -1328,7 +1329,7 @@ parse_mos(FILE * const ifp,
             camera_blue = (float) neut[2] / neut[3];
         }
         parse_mos(ifp, from);
-        fseek (ifp, skip+from, SEEK_SET);
+        fseek_nofail (ifp, skip+from, SEEK_SET);
     }
 }
 
@@ -1369,43 +1370,43 @@ parse_makernote(FILE * const ifp)
    its own byte-order!), or it might just be a table.
  */
   sorder = order;
-  fread (buf, 1, 10, ifp);
+  fread_nofail (buf, 1, 10, ifp);
   if (!strncmp (buf,"KC" ,2) ||     /* these aren't TIFF format */
       !strncmp (buf,"MLY",3)) return;
   if (!strcmp (buf,"Nikon")) {
-    base = ftell(ifp);
+    base = ftell_nofail(ifp);
     order = get2(ifp);
     if (get2(ifp) != 42) goto quit;
     offset = get4(ifp);
-    fseek (ifp, offset-8, SEEK_CUR);
+    fseek_nofail (ifp, offset-8, SEEK_CUR);
   } else if (!strncmp (buf,"FUJIFILM",8) ||
          !strcmp  (buf,"Panasonic")) {
     order = 0x4949;
-    fseek (ifp,  2, SEEK_CUR);
+    fseek_nofail (ifp,  2, SEEK_CUR);
   } else if (!strcmp (buf,"OLYMP") ||
          !strcmp (buf,"LEICA") ||
          !strcmp (buf,"EPSON"))
-    fseek (ifp, -2, SEEK_CUR);
+    fseek_nofail (ifp, -2, SEEK_CUR);
   else if (!strcmp (buf,"AOC") ||
        !strcmp (buf,"QVC"))
-    fseek (ifp, -4, SEEK_CUR);
-  else fseek (ifp, -10, SEEK_CUR);
+    fseek_nofail (ifp, -4, SEEK_CUR);
+  else fseek_nofail (ifp, -10, SEEK_CUR);
 
   entries = get2(ifp);
   while (entries--) {
     tag  = get2(ifp);
     type = get2(ifp);
     len  = get4(ifp);
-    save = ftell(ifp);
+    save = ftell_nofail(ifp);
     if (len * size[type < 13 ? type:0] > 4)
-      fseek (ifp, get4(ifp)+base, SEEK_SET);
+      fseek_nofail (ifp, get4(ifp)+base, SEEK_SET);
 
     if (tag == 0xc && len == 4) {
       camera_red  = getrat();
       camera_blue = getrat();
     }
     if (tag == 0x14 && len == 2560 && type == 7) {
-      fseek (ifp, 1248, SEEK_CUR);
+      fseek_nofail (ifp, 1248, SEEK_CUR);
       goto get2_256;
     }
     if (strstr(make,"PENTAX")) {
@@ -1413,19 +1414,19 @@ parse_makernote(FILE * const ifp)
       if (tag == 0x1c) tag = 0x1017;
     }
     if (tag == 0x8c)
-      nikon_curve_offset = ftell(ifp) + 2112;
+      nikon_curve_offset = ftell_nofail(ifp) + 2112;
     if (tag == 0x96)
-      nikon_curve_offset = ftell(ifp) + 2;
+      nikon_curve_offset = ftell_nofail(ifp) + 2;
     if (tag == 0x97) {
       if (!strcmp(model,"NIKON D100 ")) {
-    fseek (ifp, 72, SEEK_CUR);
+    fseek_nofail (ifp, 72, SEEK_CUR);
     camera_red  = get2(ifp) / 256.0;
     camera_blue = get2(ifp) / 256.0;
       } else if (!strcmp(model,"NIKON D2H")) {
-    fseek (ifp, 10, SEEK_CUR);
+    fseek_nofail (ifp, 10, SEEK_CUR);
     goto get2_rggb;
       } else if (!strcmp(model,"NIKON D70")) {
-    fseek (ifp, 20, SEEK_CUR);
+    fseek_nofail (ifp, 20, SEEK_CUR);
     camera_red  = get2(ifp);
     camera_red /= get2(ifp);
     camera_blue = get2(ifp);
@@ -1449,12 +1450,12 @@ parse_makernote(FILE * const ifp)
       black = (get4(ifp)+get4(ifp)+get4(ifp)+get4(ifp))/4;
     }
     if (tag == 0xe80 && len == 256 && type == 7) {
-      fseek (ifp, 48, SEEK_CUR);
+      fseek_nofail (ifp, 48, SEEK_CUR);
       camera_red  = get2(ifp) * 508 * 1.078 / 0x10000;
       camera_blue = get2(ifp) * 382 * 1.173 / 0x10000;
     }
     if (tag == 0xf00 && len == 614 && type == 7) {
-      fseek (ifp, 188, SEEK_CUR);
+      fseek_nofail (ifp, 188, SEEK_CUR);
       goto get2_256;
     }
     if (tag == 0x1017)
@@ -1468,14 +1469,14 @@ get2_256:
       camera_blue = get2(ifp) / 256.0;
     }
     if (tag == 0x4001) {
-      fseek (ifp, strstr(model,"EOS-1D") ? 68:50, SEEK_CUR);
+      fseek_nofail (ifp, strstr(model,"EOS-1D") ? 68:50, SEEK_CUR);
 get2_rggb:
       camera_red  = get2(ifp);
       camera_red /= get2(ifp);
       camera_blue = get2(ifp);
       camera_blue = get2(ifp) / camera_blue;
     }
-    fseek (ifp, save+4, SEEK_SET);
+    fseek_nofail (ifp, save+4, SEEK_SET);
   }
 quit:
   order = sorder;
@@ -1514,8 +1515,8 @@ parse_exif(FILE * const ifp, int base)
     /* type = */ get2(ifp);
     len  = get4(ifp);
     val  = get4(ifp);
-    save = ftell(ifp);
-    fseek (ifp, base+val, SEEK_SET);
+    save = ftell_nofail(ifp);
+    fseek_nofail (ifp, base+val, SEEK_SET);
     if (tag == 0x9003 || tag == 0x9004)
       get_timestamp(ifp);
     if (tag == 0x927c) {
@@ -1524,7 +1525,7 @@ parse_exif(FILE * const ifp, int base)
       else
     parse_makernote(ifp);
     }
-    fseek (ifp, save, SEEK_SET);
+    fseek_nofail (ifp, save, SEEK_SET);
   }
 }
 
@@ -1550,10 +1551,10 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     tag  = get2(ifp);
     type = get2(ifp);
     len  = get4(ifp);
-    save = ftell(ifp);
+    save = ftell_nofail(ifp);
     if (tag > 50700 && tag < 50800) done = 1;
     if (len * size[type < 13 ? type:0] > 4)
-      fseek (ifp, get4(ifp)+base, SEEK_SET);
+      fseek_nofail (ifp, get4(ifp)+base, SEEK_SET);
     switch (tag) {
       case 0x11:
     camera_red  = get4(ifp) / 256.0;
@@ -1580,10 +1581,10 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     kodak_data_compression = get2(ifp);
     break;
       case 0x10f:           /* Make */
-    fgets (make, 64, ifp);
+    fgets_nofail (make, 64, ifp);
     break;
       case 0x110:           /* Model */
-    fgets (model, 64, ifp);
+    fgets_nofail (model, 64, ifp);
     break;
       case 0x111:           /* StripOffset */
     data_offset = get4(ifp);
@@ -1595,7 +1596,7 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     tiff_samples = get2(ifp);
     break;
       case 0x131:           /* Software tag */
-    fgets (software, 64, ifp);
+    fgets_nofail (software, 64, ifp);
     if (!strncmp(software,"Adobe",5))
       make[0] = 0;
     break;
@@ -1604,7 +1605,7 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     break;
       case 0x144:           /* TileOffsets */
     if (level) {
-      data_offset = ftell(ifp);
+      data_offset = ftell_nofail(ifp);
     } else {
       strcpy (make, "Leaf");
       data_offset = get4(ifp);
@@ -1614,18 +1615,18 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     if (len > 2 && !is_dng && !strcmp(make,"Kodak"))
         len = 2;
     while (len--) {
-      i = ftell(ifp);
-      fseek (ifp, get4(ifp)+base, SEEK_SET);
+      i = ftell_nofail(ifp);
+      fseek_nofail (ifp, get4(ifp)+base, SEEK_SET);
       if (parse_tiff_ifd(ifp, base, level+1)) break;
-      fseek (ifp, i+4, SEEK_SET);
+      fseek_nofail (ifp, i+4, SEEK_SET);
     }
     break;
       case 33405:           /* Model2 */
-    fgets (model2, 64, ifp);
+    fgets_nofail (model2, 64, ifp);
     break;
       case 33422:           /* CFAPattern */
     if ((plen=len) > 16) plen = 16;
-    fread (cfa_pat, 1, plen, ifp);
+    fread_nofail (cfa_pat, 1, plen, ifp);
     for (colors=cfa=i=0; i < plen; i++) {
       colors += !(cfa & (1 << cfa_pat[i]));
       cfa |= 1 << cfa_pat[i];
@@ -1634,7 +1635,7 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
     if (cfa == 072) memcpy (cfa_pc,"\005\003\004\001",4);   /* GMCY */
     goto guess_cfa_pc;
       case 34665:           /* EXIF tag */
-    fseek (ifp, get4(ifp)+base, SEEK_SET);
+    fseek_nofail (ifp, get4(ifp)+base, SEEK_SET);
     parse_exif(ifp, base);
     break;
       case 50706:           /* DNGVersion */
@@ -1644,7 +1645,7 @@ parse_tiff_ifd(FILE * const ifp, int base, int level)
       case 50710:           /* CFAPlaneColor */
     if (len > 4) len = 4;
     colors = len;
-    fread (cfa_pc, 1, colors, ifp);
+    fread_nofail (cfa_pc, 1, colors, ifp);
 guess_cfa_pc:
     FORC4 tab[cfa_pc[c]] = c;
     for (i=16; i--; )
@@ -1701,7 +1702,7 @@ guess_cfa_pc:
     xyz[1] = getrat();
     xyz[2] = 1 - xyz[0] - xyz[1];
     }
-    fseek (ifp, save+4, SEEK_SET);
+    fseek_nofail (ifp, save+4, SEEK_SET);
   }
   for (i=0; i < colors; i++)
     FORC4 cc[i][c] *= ab[i];
@@ -1729,16 +1730,16 @@ parse_tiff(FILE * const ifp, int base)
 {
   int doff;
 
-  fseek (ifp, base, SEEK_SET);
+  fseek_nofail (ifp, base, SEEK_SET);
   order = get2(ifp);
   if (order != 0x4949 && order != 0x4d4d) return;
   get2(ifp);
   while ((doff = get4(ifp))) {
-    fseek (ifp, doff+base, SEEK_SET);
+    fseek_nofail (ifp, doff+base, SEEK_SET);
     if (parse_tiff_ifd(ifp, base, 0)) break;
   }
   if (!is_dng && !strncmp(make,"Kodak",5)) {
-    fseek (ifp, 12+base, SEEK_SET);
+    fseek_nofail (ifp, 12+base, SEEK_SET);
     parse_tiff_ifd(ifp, base, 2);
   }
 }

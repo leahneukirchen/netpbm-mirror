@@ -51,10 +51,18 @@ typedef unsigned long Longword;
  */
 
 struct Rect {
-    Word top;
-    Word left;
-    Word bottom;
-    Word right;
+/*----------------------------------------------------------------------------
+   A rectangle - description of a region of an image raster.
+
+   If last row or column is before first, it is a null rectangle - it
+   describes no pixels.
+-----------------------------------------------------------------------------*/
+    Word top;     /* Start row */
+    Word left;    /* Start column */
+    Word bottom;  /* End row */
+    Word right;   /* End column */
+
+    /* "End" means last plus one */
 };
 
 struct pixMap {
@@ -88,14 +96,21 @@ struct Pattern {
     Byte pix[64];
 };
 
-struct rgbPlanes {
+struct RgbPlanes {
+/*----------------------------------------------------------------------------
+   A raster, as three planes: red, green, blue.
+
+   Each plane is an array in row-major order.
+-----------------------------------------------------------------------------*/
+    unsigned int width;
+    unsigned int height;
     Word * red;
     Word * grn;
     Word * blu;
 };
 
 struct canvas {
-    struct rgbPlanes planes;
+    struct RgbPlanes planes;
 };
 
 typedef void (*transfer_func) (struct RGBColor* src, struct RGBColor* dst);
@@ -818,14 +833,36 @@ readRect(struct Rect * const r) {
 
 
 static int
-rectwidth(const struct Rect * const r) {
-    return r->right - r->left;
+rectisnull(struct Rect * const r) {
+
+    return r->top >= r->bottom || r->left >= r->right;
 }
 
 
 
 static int
+rectwidth(const struct Rect * const r) {
+
+    return r->right - r->left;
+}
+
+
+
+static bool
+rectequal(const struct Rect * const comparand,
+          const struct Rect * const comparator) {
+
+    return
+        comparand->top    == comparator->top &&
+        comparand->bottom == comparator->bottom &&
+        comparand->left   == comparator->left &&
+        comparand->right  == comparator->right;
+}
+
+
+static int
 rectheight(const struct Rect * const r) {
+
     return r->bottom - r->top;
 }
 
@@ -834,6 +871,7 @@ rectheight(const struct Rect * const r) {
 static bool
 rectsamesize(struct Rect const r1,
              struct Rect const r2) {
+
     return r1.right - r1.left == r2.right - r2.left &&
            r1.bottom - r1.top == r2.bottom - r2.top ;
 }
@@ -841,14 +879,18 @@ rectsamesize(struct Rect const r1,
 
 
 static void
-rectinter(struct Rect   const r1,
-          struct Rect   const r2,
-          struct Rect * const intersectionP) {
+rectintersect(const struct Rect * const r1P,
+              const struct Rect * const r2P,
+              struct Rect *       const intersectionP) {
+/*----------------------------------------------------------------------------
+   Compute the intersection of two rectangles.
 
-    intersectionP->left   = MAX(r1.left,   r2.left);
-    intersectionP->top    = MAX(r1.top,    r2.top);
-    intersectionP->right  = MIN(r1.right,  r2.right);
-    intersectionP->bottom = MIN(r1.bottom, r2.bottom);
+   Note that if the rectangles are disjoint, the result is a null rectangle.
+-----------------------------------------------------------------------------*/
+    intersectionP->left   = MAX(r1P->left,   r2P->left);
+    intersectionP->top    = MAX(r1P->top,    r2P->top);
+    intersectionP->right  = MIN(r1P->right,  r2P->right);
+    intersectionP->bottom = MIN(r1P->bottom, r2P->bottom);
 }
 
 
@@ -857,16 +899,17 @@ static void
 rectscale(struct Rect * const r,
           double        const xscale,
           double        const yscale) {
-    r->left *= xscale;
-    r->right *= xscale;
-    r->top *= yscale;
+
+    r->left   *= xscale;
+    r->right  *= xscale;
+    r->top    *= yscale;
     r->bottom *= yscale;
 }
 
 
 
 static void
-    initBlitList(blitList * const blitListP) {
+initBlitList(blitList * const blitListP) {
 
     blitListP->firstP          = NULL;
     blitListP->connectorP      = &blitListP->firstP;
@@ -1192,43 +1235,122 @@ decode16(unsigned char * const sixteen) {
 
 
 static void
-doDiffSize(struct Rect       const clipsrc,
-           struct Rect       const clipdst,
-           int               const pixSize,
-           int               const xsize,
-           int               const ysize,
-           transfer_func     const trf,
-           struct RGBColor * const color_map,
-           unsigned char *   const src,
-           int               const srcwid,
-           struct rgbPlanes  const dst,
-           unsigned int      const dstwid) {
+closeValidatePamscalePipe(FILE * const pipeP) {
 
-    unsigned int const dstadd = dstwid - rectwidth(&clipdst);
+    int rc;
 
-    FILE * pamscalePipeP;
-    const char * command;
-    FILE * scaled;
-    int cols, rows, format;
-    pixval maxval;
-    pixel * row;
-    pixel * rowp;
-    FILE * tempFileP;
-    const char * tempFilename;
+    rc = pclose(pipeP);
+
+    if (rc != 0)
+        pm_error("pamscale failed.  pclose() returned Errno %s (%d)",
+                 strerror(errno), errno);
+}
+
+
+
+static void
+convertScaledPpm(const char *      const scaledFilename,
+                 transfer_func     const trf,
+                 struct RgbPlanes  const dst,
+                 unsigned int      const dstadd) {
+
     Word * reddst;
     Word * grndst;
     Word * bludst;
+    FILE * scaledP;
+    int cols, rows, format;
+    pixval maxval;
+    pixel * pixrow;
 
-    reddst = dst.red;  /* initial value */
-    grndst = dst.grn;  /* initial value */
-    bludst = dst.blu;  /* initial value */
+    reddst = &dst.red[0];  /* initial value */
+    grndst = &dst.grn[0];  /* initial value */
+    bludst = &dst.blu[0];  /* initial value */
+
+    scaledP = pm_openr(scaledFilename);
+
+    ppm_readppminit(scaledP, &cols, &rows, &maxval, &format);
+
+    pixrow = ppm_allocrow(cols);
+
+    if (trf) {
+        unsigned int row;
+
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+
+            ppm_readppmrow(scaledP, pixrow, cols, maxval, format);
+
+            for (col = 0; col < cols; ++col) {
+                struct RGBColor dst_c, src_c;
+                dst_c.red = *reddst;
+                dst_c.grn = *grndst;
+                dst_c.blu = *bludst;
+                src_c.red = PPM_GETR(pixrow[col]) * 65536L / (maxval + 1);
+                src_c.grn = PPM_GETG(pixrow[col]) * 65536L / (maxval + 1);
+                src_c.blu = PPM_GETB(pixrow[col]) * 65536L / (maxval + 1);
+                (*trf)(&src_c, &dst_c);
+                *reddst++ = dst_c.red;
+                *grndst++ = dst_c.grn;
+                *bludst++ = dst_c.blu;
+            }
+            reddst += dstadd;
+            grndst += dstadd;
+            bludst += dstadd;
+        }
+    } else {
+        unsigned int row;
+
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+
+            ppm_readppmrow(scaledP, pixrow, cols, maxval, format);
+
+            for (col = 0; col < cols; ++col) {
+                *reddst++ = PPM_GETR(pixrow[col]) * 65536L / (maxval + 1);
+                *grndst++ = PPM_GETG(pixrow[col]) * 65536L / (maxval + 1);
+                *bludst++ = PPM_GETB(pixrow[col]) * 65536L / (maxval + 1);
+            }
+            reddst += dstadd;
+            grndst += dstadd;
+            bludst += dstadd;
+        }
+    }
+    assert(reddst == &dst.red[dst.height * dst.width]);
+    assert(grndst == &dst.grn[dst.height * dst.width]);
+    assert(bludst == &dst.blu[dst.height * dst.width]);
+
+    ppm_freerow(pixrow);
+    pm_close(scaledP);
+}
+
+
+
+static void
+doDiffSize(struct Rect       const srcRect,
+           struct Rect       const dstRect,
+           unsigned int      const pixSize,
+           transfer_func     const trf,
+           struct RGBColor * const color_map,
+           unsigned char *   const src,
+           unsigned int      const srcwid,
+           struct RgbPlanes  const dst) {
+/*----------------------------------------------------------------------------
+   Generate the raster in the plane buffers indicated by 'dst'.
+
+   'src' is the source pixels as a row-major array with rows 'srcwid' bytes
+   long.
+-----------------------------------------------------------------------------*/
+    FILE * pamscalePipeP;
+    const char * command;
+    FILE * tempFileP;
+    const char * tempFilename;
 
     pm_make_tmpfile(&tempFileP, &tempFilename);
 
     pm_close(tempFileP);
 
-    pm_asprintf(&command, "pamscale -xsize %d -ysize %d > %s",
-                rectwidth(&clipdst), rectheight(&clipdst), tempFilename);
+    pm_asprintf(&command, "pamscale -xsize %u -ysize %u > %s",
+                rectwidth(&dstRect), rectheight(&dstRect), tempFilename);
 
     pm_message("running command '%s'", command);
 
@@ -1239,108 +1361,61 @@ doDiffSize(struct Rect       const clipsrc,
 
     pm_strfree(command);
 
-    fprintf(pamscalePipeP, "P6\n%d %d\n%d\n",
-            rectwidth(&clipsrc), rectheight(&clipsrc), PPM_MAXMAXVAL);
+    fprintf(pamscalePipeP, "P6\n%u %u\n%u\n",
+            rectwidth(&srcRect), rectheight(&srcRect), PPM_MAXMAXVAL);
 
     switch (pixSize) {
     case 8: {
-        unsigned int rowNumber;
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const colorIndex = row[colNumber];
+        unsigned int row;
+        for (row = 0; row < rectheight(&srcRect); ++row) {
+            unsigned char * const rowBytes = &src[row * srcwid];
+            unsigned int col;
+            for (col = 0; col < rectwidth(&srcRect); ++col) {
+                unsigned int const colorIndex = rowBytes[col];
                 struct RGBColor * const ct = &color_map[colorIndex];
                 fputc(redepth(ct->red, 65535L), pamscalePipeP);
                 fputc(redepth(ct->grn, 65535L), pamscalePipeP);
                 fputc(redepth(ct->blu, 65535L), pamscalePipeP);
             }
         }
-    }
-    break;
+    } break;
     case 16: {
-        unsigned int rowNumber;
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                struct RGBColor const color = decode16(&row[colNumber * 2]);
+        unsigned int row;
+        for (row = 0; row < rectheight(&srcRect); ++row) {
+            unsigned char * const rowBytes = &src[row * srcwid];
+            unsigned int col;
+            for (col = 0; col < rectwidth(&srcRect); ++col) {
+                struct RGBColor const color = decode16(&rowBytes[col * 2]);
                 fputc(redepth(color.red, 32), pamscalePipeP);
                 fputc(redepth(color.grn, 32), pamscalePipeP);
                 fputc(redepth(color.blu, 32), pamscalePipeP);
             }
         }
-    }
-    break;
+    } break;
     case 32: {
         unsigned int const planeSize = srcwid / 4;
-        unsigned int rowNumber;
+        unsigned int row;
 
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned char * const redPlane = &row[planeSize * 0];
-            unsigned char * const grnPlane = &row[planeSize * 1];
-            unsigned char * const bluPlane = &row[planeSize * 2];
+        for (row = 0; row < rectheight(&srcRect); ++row) {
+            unsigned char * const rowBytes = &src[row * srcwid];
+            unsigned char * const redPlane = &rowBytes[planeSize * 0];
+            unsigned char * const grnPlane = &rowBytes[planeSize * 1];
+            unsigned char * const bluPlane = &rowBytes[planeSize * 2];
 
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                fputc(redepth(redPlane[colNumber], 256), pamscalePipeP);
-                fputc(redepth(grnPlane[colNumber], 256), pamscalePipeP);
-                fputc(redepth(bluPlane[colNumber], 256), pamscalePipeP);
+            unsigned int col;
+            for (col = 0; col < rectwidth(&srcRect); ++col) {
+                fputc(redepth(redPlane[col], 256), pamscalePipeP);
+                fputc(redepth(grnPlane[col], 256), pamscalePipeP);
+                fputc(redepth(bluPlane[col], 256), pamscalePipeP);
             }
         }
-    }
-    break;
-    }
+    } break;
+    } /* switch */
 
-    if (pclose(pamscalePipeP))
-        pm_error("pamscale failed.  pclose() returned Errno %s (%d)",
-                 strerror(errno), errno);
+    closeValidatePamscalePipe(pamscalePipeP);
 
-    ppm_readppminit(scaled = pm_openr(tempFilename), &cols, &rows,
-                    &maxval, &format);
-    row = ppm_allocrow(cols);
-    /* couldn't hurt to assert cols, rows and maxval... */
+    convertScaledPpm(tempFilename, trf, dst, dst.width-rectwidth(&dstRect));
 
-    if (trf == NULL) {
-        while (rows-- > 0) {
-            unsigned int i;
-            ppm_readppmrow(scaled, row, cols, maxval, format);
-            for (i = 0, rowp = row; i < cols; ++i, ++rowp) {
-                *reddst++ = PPM_GETR(*rowp) * 65536L / (maxval + 1);
-                *grndst++ = PPM_GETG(*rowp) * 65536L / (maxval + 1);
-                *bludst++ = PPM_GETB(*rowp) * 65536L / (maxval + 1);
-            }
-            reddst += dstadd;
-            grndst += dstadd;
-            bludst += dstadd;
-        }
-    }
-    else {
-        while (rows-- > 0) {
-            unsigned int i;
-            ppm_readppmrow(scaled, row, cols, maxval, format);
-            for (i = 0, rowp = row; i < cols; i++, rowp++) {
-                struct RGBColor dst_c, src_c;
-                dst_c.red = *reddst;
-                dst_c.grn = *grndst;
-                dst_c.blu = *bludst;
-                src_c.red = PPM_GETR(*rowp) * 65536L / (maxval + 1);
-                src_c.grn = PPM_GETG(*rowp) * 65536L / (maxval + 1);
-                src_c.blu = PPM_GETB(*rowp) * 65536L / (maxval + 1);
-                (*trf)(&src_c, &dst_c);
-                *reddst++ = dst_c.red;
-                *grndst++ = dst_c.grn;
-                *bludst++ = dst_c.blu;
-            }
-            reddst += dstadd;
-            grndst += dstadd;
-            bludst += dstadd;
-        }
-    }
-
-    pm_close(scaled);
-    ppm_freerow(row);
     pm_strfree(tempFilename);
     unlink(tempFilename);
 }
@@ -1348,7 +1423,7 @@ doDiffSize(struct Rect       const clipsrc,
 
 
 static void
-getRgb(struct rgbPlanes  const planes,
+getRgb(struct RgbPlanes  const planes,
        unsigned int      const index,
        struct RGBColor * const rgbP) {
 
@@ -1362,7 +1437,7 @@ getRgb(struct rgbPlanes  const planes,
 static void
 putRgb(struct RGBColor  const rgb,
        unsigned int     const index,
-       struct rgbPlanes const planes) {
+       struct RgbPlanes const planes) {
 
     planes.red[index] = rgb.red;
     planes.grn[index] = rgb.grn;
@@ -1374,12 +1449,11 @@ putRgb(struct RGBColor  const rgb,
 static void
 doSameSize(transfer_func           trf,
            int               const pixSize,
-           int               const xsize,
-           int               const ysize,
+           struct Rect       const srcRect,
            unsigned char *   const src,
            unsigned int      const srcwid,
            struct RGBColor * const color_map,
-           struct rgbPlanes  const dst,
+           struct RgbPlanes  const dst,
            unsigned int      const dstwid) {
 /*----------------------------------------------------------------------------
    Transfer pixels from 'src' to 'dst', applying the transfer function
@@ -1401,6 +1475,9 @@ doSameSize(transfer_func           trf,
    colors, never a palette index.  It is an array in row-major order
    with 'dstwid' words per row.
 -----------------------------------------------------------------------------*/
+    unsigned int const xsize = rectwidth(&srcRect);
+    unsigned int const ysize = rectheight(&srcRect);
+
     switch (pixSize) {
     case 8: {
         unsigned int rowNumber;
@@ -1476,12 +1553,11 @@ doSameSize(transfer_func           trf,
 
 static void
 blitIdempotent(unsigned int          const pixSize,
-               unsigned int          const xsize,
-               unsigned int          const ysize,
+               struct Rect           const srcRect,
                unsigned char *       const src,
                unsigned int          const srcwid,
                struct RGBColor *     const colorMap,
-               struct rgbPlanes      const dst,
+               struct RgbPlanes      const dst,
                unsigned int          const dstwid) {
 /*----------------------------------------------------------------------------
   This is the same as doSameSize(), except optimized for the case that
@@ -1491,6 +1567,9 @@ blitIdempotent(unsigned int          const pixSize,
   expanding it to handle arbitrary transfer functions, added functions
   for that.
 -----------------------------------------------------------------------------*/
+    unsigned int const xsize = rectwidth(&srcRect);
+    unsigned int const ysize = rectheight(&srcRect);
+
     switch (pixSize) {
     case 8: {
         unsigned int rowNumber;
@@ -1559,7 +1638,7 @@ doBlit(struct Rect       const srcRect,
        struct Rect       const srcBounds,
        struct raster     const srcplane,
        struct Rect       const dstBounds,
-       struct rgbPlanes  const canvasPlanes,
+       struct RgbPlanes  const canvasPlanes,
        int               const pixSize,
        int               const dstwid,
        struct RGBColor * const color_map,
@@ -1579,10 +1658,8 @@ doBlit(struct Rect       const srcRect,
    with 'dstwid' words per row.
 -----------------------------------------------------------------------------*/
     unsigned char * src;
-    struct rgbPlanes dst;
+    struct RgbPlanes dst;
     int dstoff;
-    int xsize;
-    int ysize;
     transfer_func trf;
 
     if (verbose) {
@@ -1601,12 +1678,17 @@ doBlit(struct Rect       const srcRect,
         assert(srcRowNumber < srcplane.rowCount);
         assert(srcRowOffset < srcplane.rowSize);
         src = srcplane.bytes + srcRowNumber * srcplane.rowSize + srcRowOffset;
-        xsize = rectwidth(&srcRect);
-        ysize = rectheight(&srcRect);
     }
 
+    /* This 'dstoff'/'dstadd' abomination has to be fixed.  We need to pass to
+       'doDiffSize' the whole actual canvas, 'canvasPlanes', and tell it to
+       what part of the canvas to write.  It can compute the location of each
+       destination row as it comes to it.
+     */
     dstoff = (dstRect.top - dstBounds.top) * dstwid +
         (dstRect.left - dstBounds.left);
+    dst.height = canvasPlanes.height - (dstRect.top - dstBounds.top);
+    dst.width  = canvasPlanes.width;
     dst.red = canvasPlanes.red + dstoff;
     dst.grn = canvasPlanes.grn + dstoff;
     dst.blu = canvasPlanes.blu + dstoff;
@@ -1618,14 +1700,14 @@ doBlit(struct Rect       const srcRect,
         trf = transfer(mode & ~64);
 
     if (!rectsamesize(srcRect, dstRect))
-        doDiffSize(srcRect, dstRect, pixSize, xsize, ysize,
-                   trf, color_map, src, srcplane.rowSize, dst, dstwid);
+        doDiffSize(srcRect, dstRect, pixSize,
+                   trf, color_map, src, srcplane.rowSize, dst);
     else {
         if (trf == NULL)
-            blitIdempotent(pixSize, xsize, ysize, src, srcplane.rowSize,
+            blitIdempotent(pixSize, srcRect, src, srcplane.rowSize,
                            color_map, dst, dstwid);
         else
-            doSameSize(trf, pixSize, xsize, ysize, src, srcplane.rowSize,
+            doSameSize(trf, pixSize, srcRect, src, srcplane.rowSize,
                        color_map, dst, dstwid);
     }
 }
@@ -1671,8 +1753,8 @@ blit(struct Rect       const srcRect,
         struct Rect clipsrc;
         struct Rect clipdst;
 
-        rectinter(srcBounds, srcRect, &clipsrc);
-        rectinter(dstBounds, dstRect, &clipdst);
+        rectintersect(&srcBounds, &srcRect, &clipsrc);
+        rectintersect(&dstBounds, &dstRect, &clipdst);
 
         if (blitListP) {
             addBlitList(blitListP,
@@ -1702,11 +1784,14 @@ blit(struct Rect       const srcRect,
 static void
 allocPlanes(unsigned int       const width,
             unsigned int       const height,
-            struct rgbPlanes * const planesP) {
+            struct RgbPlanes * const planesP) {
 
     unsigned int const planelen = width * height;
 
-    struct rgbPlanes planes;
+    struct RgbPlanes planes;
+
+    planes.width  = width;
+    planes.height = height;
 
     MALLOCARRAY(planes.red, planelen);
     MALLOCARRAY(planes.grn, planelen);
@@ -1725,7 +1810,7 @@ allocPlanes(unsigned int       const width,
 
 
 static void
-freePlanes(struct rgbPlanes const planes) {
+freePlanes(struct RgbPlanes const planes) {
 
     free(planes.red);
     free(planes.grn);
@@ -1882,7 +1967,7 @@ doBlitList(struct canvas * const canvasP,
 
 static void
 outputPpm(FILE *           const ofP,
-          struct rgbPlanes const planes) {
+          struct RgbPlanes const planes) {
 
     unsigned int width;
     unsigned int height;
@@ -1922,8 +2007,9 @@ outputPpm(FILE *           const ofP,
  * is padded with a null.
  */
 static Word
-get_op(int const version) {
-    if ((align & 1) && version == 2) {
+nextOp(int const version) {
+
+    if ((align & 0x1) && version == 2) {
         stage = "aligning for opcode";
         readByte();
     }
@@ -1958,10 +2044,19 @@ ClipRgn(struct canvas * const canvasP,
            it to accept this clip rectangle, this program found the image to
            have an invalid raster.
         */
+        struct Rect clipRgnParm;
 
-        readRect(&clip_rect);
-        rectinter(clip_rect, picFrame, &clip_rect);
-        /* XXX should clip this by picFrame */
+        readRect(&clipRgnParm);
+
+        rectintersect(&clipRgnParm, &picFrame, &clip_rect);
+
+        if (!rectequal(&clipRgnParm, &clip_rect)) {
+            pm_message("ClipRgn opcode says to clip to a region which "
+                       "is not contained within the picture frame.  "
+                       "Ignoring the part outside the picture frame.");
+            dumpRect("ClipRgn:", clipRgnParm);
+            dumpRect("Picture frame:", picFrame);
+        }
         if (verbose)
             dumpRect("clipping to", clip_rect);
     } else
@@ -2867,19 +2962,32 @@ RGBBkCol(struct canvas * const canvasP,
 
 
 
-#define PIXEL_INDEX(x,y) ((y) - picFrame.top) * rowlen + (x) - picFrame.left
+static unsigned int
+pixelIndex(struct Rect  const picFrame,
+           unsigned int const x,
+           unsigned int const y) {
+
+    unsigned int const rowLen = picFrame.right - picFrame.left;
+
+    assert(y >= picFrame.top  && y < picFrame.bottom);
+    assert(x >= picFrame.left && x < picFrame.right);
+
+    return (y - picFrame.top) * rowLen + (x - picFrame.left);
+}
+
+
 
 static void
-draw_pixel(struct canvas *   const canvasP,
-           int               const x,
-           int               const y,
-           struct RGBColor * const clr,
-           transfer_func           trf) {
+drawPixel(struct canvas *   const canvasP,
+          int               const x,
+          int               const y,
+          struct RGBColor * const clr,
+          transfer_func           trf) {
 
     if (x < clip_rect.left || x >= clip_rect.right ||
         y < clip_rect.top  || y >= clip_rect.bottom) {
     } else {
-        unsigned int const i = PIXEL_INDEX(x, y);
+        unsigned int const i = pixelIndex(picFrame, x, y);
 
         struct RGBColor dst;
 
@@ -2898,55 +3006,66 @@ draw_pixel(struct canvas *   const canvasP,
 
 
 static void
-draw_pen_rect(struct canvas * const canvasP,
-              struct Rect *   const r) {
+drawPenRect(struct canvas * const canvasP,
+            struct Rect *   const rP) {
 
-    int const rowadd = rowlen - (r->right - r->left);
+    if (!rectisnull(rP)) {
+        unsigned int const rowadd = rowlen - (rP->right - rP->left);
 
-    int i;
-    int x, y;
-    struct RGBColor dst;
+        unsigned int i;
+        unsigned int y;
 
-    i = PIXEL_INDEX(r->left, r->top);  /* initial value */
+        dumpRect("BRYAN: drawing rectangle ", *rP);
+        i = pixelIndex(picFrame, rP->left, rP->top);  /* initial value */
 
-    for (y = r->top; y < r->bottom; y++) {
-        for (x = r->left; x < r->right; x++) {
-            dst.red = canvasP->planes.red[i];
-            dst.grn = canvasP->planes.grn[i];
-            dst.blu = canvasP->planes.blu[i];
+        for (y = rP->top; y < rP->bottom; ++y) {
 
-            if (pen_pat.pix[(x & 7) + (y & 7) * 8])
-                (*pen_trf)(&black, &dst);
-            else
-                (*pen_trf)(&white, &dst);
+            unsigned int x;
 
-            canvasP->planes.red[i] = dst.red;
-            canvasP->planes.grn[i] = dst.grn;
-            canvasP->planes.blu[i] = dst.blu;
+            for (x = rP->left; x < rP->right; ++x) {
 
-            i++;
+                struct RGBColor dst;
+
+                assert(i < canvasP->planes.height * canvasP->planes.width);
+
+                dst.red = canvasP->planes.red[i];
+                dst.grn = canvasP->planes.grn[i];
+                dst.blu = canvasP->planes.blu[i];
+
+                if (pen_pat.pix[(x & 7) + (y & 7) * 8])
+                    (*pen_trf)(&black, &dst);
+                else
+                    (*pen_trf)(&white, &dst);
+
+                canvasP->planes.red[i] = dst.red;
+                canvasP->planes.grn[i] = dst.grn;
+                canvasP->planes.blu[i] = dst.blu;
+
+                ++i;
+            }
+            i += rowadd;
         }
-        i += rowadd;
     }
 }
 
 
 
 static void
-draw_pen(struct canvas * const canvasP,
-         int             const x,
-         int             const y) {
+drawPen(struct canvas * const canvasP,
+        int             const x,
+        int             const y) {
 
-    struct Rect penrect;
+    struct Rect unclippedPenrect;
+    struct Rect clippedPenrect;
 
-    penrect.left = x;
-    penrect.right = x + pen_width;
-    penrect.top = y;
-    penrect.bottom = y + pen_height;
+    unclippedPenrect.left = x;
+    unclippedPenrect.right = x + pen_width;
+    unclippedPenrect.top = y;
+    unclippedPenrect.bottom = y + pen_height;
 
-    rectinter(penrect, clip_rect, &penrect);
+    rectintersect(&unclippedPenrect, &clip_rect, &clippedPenrect);
 
-    draw_pen_rect(canvasP, &penrect);
+    drawPenRect(canvasP, &clippedPenrect);
 }
 
 /*
@@ -2963,11 +3082,11 @@ draw_pen(struct canvas * const canvasP,
  * Paul Heckbert    3 Sep 85
  */
 static void
-scan_line(struct canvas * const canvasP,
-          short           const x1,
-          short           const y1,
-          short           const x2,
-          short           const y2) {
+scanLine(struct canvas * const canvasP,
+         short           const x1,
+         short           const y1,
+         short           const x2,
+         short           const y2) {
 
     int d, x, y, ax, ay, sx, sy, dx, dy;
 
@@ -2981,7 +3100,7 @@ scan_line(struct canvas * const canvasP,
         if (ax>ay) {        /* x dominant */
             d = ay-(ax>>1);
             for (;;) {
-                draw_pen(canvasP, x, y);
+                drawPen(canvasP, x, y);
                 if (x==x2) return;
                 if ((x > rowlen) && (sx > 0)) return;
                 if (d>=0) {
@@ -2995,7 +3114,7 @@ scan_line(struct canvas * const canvasP,
         else {          /* y dominant */
             d = ax-(ay>>1);
             for (;;) {
-                draw_pen(canvasP, x, y);
+                drawPen(canvasP, x, y);
                 if (y==y2) return;
                 if ((y > collen) && (sy > 0)) return;
                 if (d>=0) {
@@ -3024,7 +3143,7 @@ Line(struct canvas * const canvasP,
   if (verbose)
     pm_message("(%d,%d) to (%d, %d)",
            p1.x,p1.y,current.x,current.y);
-  scan_line(canvasP, p1.x,p1.y,current.x,current.y);
+  scanLine(canvasP, p1.x,p1.y,current.x,current.y);
 }
 
 
@@ -3042,7 +3161,7 @@ LineFrom(struct canvas * const canvasP,
         pm_message("(%d,%d) to (%d, %d)", current.x, current.y, p1.x, p1.y);
 
     if (!blitListP)
-        scan_line(canvasP, current.x, current.y, p1.x, p1.y);
+        scanLine(canvasP, current.x, current.y, p1.x, p1.y);
 
     current.x = p1.x;
     current.y = p1.y;
@@ -3066,7 +3185,7 @@ ShortLine(struct canvas * const canvasP,
     current.y += p1.y;
 
     if (!blitListP)
-        scan_line(canvasP, p1.x, p1.y, current.x, current.y);
+        scanLine(canvasP, p1.x, p1.y, current.x, current.y);
 }
 
 
@@ -3086,7 +3205,7 @@ ShortLineFrom(struct canvas * const canvasP,
     p1.x += current.x;
     p1.y += current.y;
     if (!blitListP)
-        scan_line(canvasP, current.x, current.y, p1.x, p1.y);
+        scanLine(canvasP, current.x, current.y, p1.x, p1.y);
     current.x = p1.x;
     current.y = p1.y;
 }
@@ -3094,17 +3213,17 @@ ShortLineFrom(struct canvas * const canvasP,
 
 
 static void
-do_paintRect(struct canvas * const canvasP,
-             struct Rect     const prect) {
+doPaintRect(struct canvas * const canvasP,
+            struct Rect     const prect) {
 
     struct Rect rect;
 
     if (verbose)
         dumpRect("painting", prect);
 
-    rectinter(clip_rect, prect, &rect);
+    rectintersect(&clip_rect, &prect, &rect);
 
-    draw_pen_rect(canvasP, &rect);
+    drawPenRect(canvasP, &rect);
 }
 
 
@@ -3118,7 +3237,7 @@ paintRect(struct canvas * const canvasP,
 
     readRect(&cur_rect);
     if (!blitListP)
-        do_paintRect(canvasP, cur_rect);
+        doPaintRect(canvasP, cur_rect);
 }
 
 
@@ -3131,14 +3250,14 @@ paintSameRect(struct canvas * const canvasP,
               int             const version) {
 
     if (!blitListP)
-        do_paintRect(canvasP, cur_rect);
+        doPaintRect(canvasP, cur_rect);
 }
 
 
 
 static void
-do_frameRect(struct canvas * const canvasP,
-             struct Rect     const rect) {
+doFrameRect(struct canvas * const canvasP,
+            struct Rect     const rect) {
 
     if (verbose)
         dumpRect("framing", rect);
@@ -3147,13 +3266,13 @@ do_frameRect(struct canvas * const canvasP,
         unsigned int x, y;
 
         for (x = rect.left; x <= rect.right - pen_width; x += pen_width) {
-            draw_pen(canvasP, x, rect.top);
-            draw_pen(canvasP, x, rect.bottom - pen_height);
+            drawPen(canvasP, x, rect.top);
+            drawPen(canvasP, x, rect.bottom - pen_height);
         }
 
         for (y = rect.top; y <= rect.bottom - pen_height ; y += pen_height) {
-            draw_pen(canvasP, rect.left, y);
-            draw_pen(canvasP, rect.right - pen_width, y);
+            drawPen(canvasP, rect.left, y);
+            drawPen(canvasP, rect.right - pen_width, y);
         }
     }
 }
@@ -3168,8 +3287,9 @@ frameRect(struct canvas * const canvasP,
           int             const version) {
 
     readRect(&cur_rect);
+
     if (!blitListP)
-        do_frameRect(canvasP, cur_rect);
+        doFrameRect(canvasP, cur_rect);
 }
 
 
@@ -3182,7 +3302,7 @@ frameSameRect(struct canvas * const canvasP,
               int             const version) {
 
     if (!blitListP)
-        do_frameRect(canvasP, cur_rect);
+        doFrameRect(canvasP, cur_rect);
 }
 
 
@@ -3190,7 +3310,7 @@ frameSameRect(struct canvas * const canvasP,
 /* a stupid shell sort - I'm so embarrassed  */
 
 static void
-poly_sort(int const sort_index, struct Point points[]) {
+polySort(int const sort_index, struct Point points[]) {
   int d, i, j, temp;
 
   /* initialize and set up sort interval */
@@ -3223,9 +3343,9 @@ poly_sort(int const sort_index, struct Point points[]) {
 /* Watch out for the lack of error checking in the next two functions ... */
 
 static void
-scan_poly(struct canvas * const canvasP,
-          int             const np,
-          struct Point          pts[]) {
+scanPoly(struct canvas * const canvasP,
+         int             const np,
+         struct Point          pts[]) {
 
   int dx,dy,dxabs,dyabs,i,scan_index,j,k,px,py;
   int sdx,sdy,x,y,toggle,old_sdy,sy0;
@@ -3279,7 +3399,7 @@ scan_poly(struct canvas * const canvasP,
         scan_index++;
       }
       px += sdx;
-      draw_pen(canvasP, px, py);
+      drawPen(canvasP, px, py);
     }
       }
     else
@@ -3295,7 +3415,7 @@ scan_poly(struct canvas * const canvasP,
         old_sdy = sdy;
         if (sdy != 0) scan_index--;
       }
-      draw_pen(canvasP, px,py);
+      drawPen(canvasP, px,py);
       coord[scan_index].x = px;
       coord[scan_index].y = py;
       scan_index++;
@@ -3308,14 +3428,14 @@ scan_poly(struct canvas * const canvasP,
   scan_index--;
   if (sy0 + sdy == 0) scan_index--;
 
-  poly_sort(scan_index, coord);
+  polySort(scan_index, coord);
 
   toggle = 0;
   for (i = 0; i < scan_index; i++) {
     if ((coord[i].y == coord[i+1].y) && (toggle == 0))
       {
     for (j = coord[i].x; j <= coord[i+1].x; j++)
-      draw_pen(canvasP, j, coord[i].y);
+      drawPen(canvasP, j, coord[i].y);
     toggle = 1;
       }
     else
@@ -3342,7 +3462,7 @@ paintPoly(struct canvas * const canvasP,
 
   /* scan convert poly ... */
   if (!blitListP)
-      scan_poly(canvasP, np, pts);
+      scanPoly(canvasP, np, pts);
 }
 
 
@@ -3426,7 +3546,7 @@ TxSize(struct canvas * const canvasP,
 
 
 static void
-skip_text(blitList * const blitListP) {
+skipText(blitList * const blitListP) {
 
     skip(readByte());
 
@@ -3436,7 +3556,7 @@ skip_text(blitList * const blitListP) {
 
 
 static int
-abs_value(int const x) {
+absValue(int const x) {
     if (x < 0)
         return -x;
     else
@@ -3446,18 +3566,18 @@ abs_value(int const x) {
 
 
 static struct font*
-get_font(int const font,
-         int const size,
-         int const style) {
+getFont(int const font,
+        int const size,
+        int const style) {
 
     int closeness, bestcloseness;
     struct fontinfo* fi, *best;
 
     best = 0;
     for (fi = fontlist; fi; fi = fi->next) {
-        closeness = abs_value(fi->font - font) * 10000 +
-            abs_value(fi->size - size) * 100 +
-            abs_value(fi->style - style);
+        closeness = absValue(fi->font - font) * 10000 +
+            absValue(fi->size - size) * 100 +
+            absValue(fi->style - style);
         if (!best || closeness < bestcloseness) {
             best = fi;
             bestcloseness = closeness;
@@ -3511,9 +3631,9 @@ rotate(int * const x,
 
 
 static void
-do_ps_text(struct canvas * const canvasP,
-           Word            const tx,
-           Word            const ty) {
+doPsText(struct canvas * const canvasP,
+         Word            const tx,
+         Word            const ty) {
 
     int len, width, i, w, h, x, y, rx, ry, o;
     Byte str[256], ch;
@@ -3563,7 +3683,7 @@ do_ps_text(struct canvas * const canvasP,
                 if ((rx >= picFrame.left) && (rx < picFrame.right) &&
                     (ry >= picFrame.top) && (ry < picFrame.bottom))
                 {
-                    o = PIXEL_INDEX(rx, ry);
+                    o = pixelIndex(picFrame, rx, ry);
                     if (glyph->bmap[h * glyph->width + w]) {
                         canvasP->planes.red[o] = foreground.red;
                         canvasP->planes.grn[o] = foreground.grn;
@@ -3580,19 +3700,19 @@ do_ps_text(struct canvas * const canvasP,
 
 
 static void
-do_text(struct canvas *  const canvasP,
-        blitList *       const blitListP,
-        Word             const startx,
-        Word             const starty) {
+doText(struct canvas *  const canvasP,
+       blitList *       const blitListP,
+       Word             const startx,
+       Word             const starty) {
 
     if (blitListP)
-        skip_text(blitListP);
+        skipText(blitListP);
     else {
-        if (!(tfont = get_font(text_font, text_size, text_face)))
+        if (!(tfont = getFont(text_font, text_size, text_face)))
             tfont = pbm_defaultfont("bdf");
 
         if (ps_text)
-            do_ps_text(canvasP, startx, starty);
+            doPsText(canvasP, startx, starty);
         else {
             int len;
             Word x, y;
@@ -3612,8 +3732,8 @@ do_text(struct canvas *  const canvasP,
                             struct RGBColor * const colorP =
                                 glyph->bmap[h * glyph->width + w] ?
                                 &black : &white;
-                            draw_pixel(canvasP,
-                                       x + w + glyph->x, dy, colorP, text_trf);
+                            drawPixel(canvasP,
+                                      x + w + glyph->x, dy, colorP, text_trf);
                         }
                     }
                     x += glyph->xadd;
@@ -3638,7 +3758,7 @@ LongText(struct canvas * const canvasP,
 
     readPoint(&p);
 
-    do_text(canvasP, blitListP, p.x, p.y);
+    doText(canvasP, blitListP, p.x, p.y);
 }
 
 
@@ -3652,7 +3772,7 @@ DHText(struct canvas * const canvasP,
 
     current.x += readByte();
 
-    do_text(canvasP, blitListP, current.x, current.y);
+    doText(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3666,7 +3786,7 @@ DVText(struct canvas * const canvasP,
 
     current.y += readByte();
 
-    do_text(canvasP, blitListP, current.x, current.y);
+    doText(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3688,7 +3808,7 @@ DHDVText(struct canvas * const canvasP,
     current.x += dh;
     current.y += dv;
 
-    do_text(canvasP, blitListP, current.x, current.y);
+    doText(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3779,11 +3899,11 @@ DirectBitsRgn(struct canvas * const canvasP,
 
 
 static void
-do_pixmap(struct canvas * const canvasP,
-          blitList *      const blitListP,
-          int             const version,
-          Word            const rowBytes,
-          int             const is_region) {
+doPixmap(struct canvas * const canvasP,
+         blitList *      const blitListP,
+         int             const version,
+         Word            const rowBytes,
+         int             const is_region) {
 /*----------------------------------------------------------------------------
    Do a paletted image.
 -----------------------------------------------------------------------------*/
@@ -3835,12 +3955,12 @@ do_pixmap(struct canvas * const canvasP,
 
 
 static void
-do_bitmap(FILE *          const ifP,
-          struct canvas * const canvasP,
-          blitList *      const blitListP,
-          int             const version,
-          int             const rowBytes,
-          int             const is_region) {
+doBitmap(FILE *          const ifP,
+         struct canvas * const canvasP,
+         blitList *      const blitListP,
+         int             const version,
+         int             const rowBytes,
+         int             const is_region) {
 /*----------------------------------------------------------------------------
    Do a bitmap.  That's one bit per pixel, 0 is white, 1 is black.
 
@@ -3896,9 +4016,9 @@ BitsRect(struct canvas * const canvasP,
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
     if (pixMap)
-        do_pixmap(canvasP, blitListP, version, rowBytes, 0);
+        doPixmap(canvasP, blitListP, version, rowBytes, 0);
     else
-        do_bitmap(ifp, canvasP, blitListP, version, rowBytes, 0);
+        doBitmap(ifp, canvasP, blitListP, version, rowBytes, 0);
 }
 
 
@@ -3920,9 +4040,9 @@ BitsRegion(struct canvas * const canvasP,
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
     if (pixMap)
-        do_pixmap(canvasP, blitListP, version, rowBytes, 1);
+        doPixmap(canvasP, blitListP, version, rowBytes, 1);
     else
-        do_bitmap(ifp, canvasP, blitListP, version, rowBytes, 1);
+        doBitmap(ifp, canvasP, blitListP, version, rowBytes, 1);
 }
 
 
@@ -4243,7 +4363,7 @@ interpretPict(FILE * const ofP) {
     if (verbose)
         pm_message("PICT version %u", version);
 
-    while((opcode = get_op(version)) != 0xff)
+    while((opcode = nextOp(version)) != 0xff)
         processOpcode(opcode, &canvas, fullres ? &blitList : NULL, version);
 
     if (fullres) {
@@ -4335,3 +4455,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+

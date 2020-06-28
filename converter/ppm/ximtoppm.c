@@ -22,7 +22,9 @@
 #include "shhopt.h"
 #include "nstring.h"
 
-struct cmdlineInfo {
+
+
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -34,8 +36,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -57,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 
     if (!alphaoutSpec)
@@ -100,6 +102,11 @@ ReadXimHeader(FILE *     const in_fp,
         pm_message("ReadXimHeader: unable to read file header" );
         return(0);
     }
+    /* Force broken ASCIIZ strings to at least be valid ASCIIZ */
+    a_head.author [sizeof(a_head.author)  - 1] = '\0';
+    a_head.date   [sizeof(a_head.date)    - 1] = '\0';
+    a_head.program[sizeof(a_head.program) - 1] = '\0';
+
     if (atoi(a_head.header_size) != sizeof(ImageHeader)) {
         pm_message("ReadXimHeader: header size mismatch" );
         return(0);
@@ -113,13 +120,15 @@ ReadXimHeader(FILE *     const in_fp,
     header->ncolors = atoi(a_head.num_colors);
     header->nchannels = atoi(a_head.num_channels);
     header->bytes_per_line = atoi(a_head.bytes_per_line);
-/*    header->npics = atoi(a_head.num_pictures);
-*/
+#if 0
+    header->npics = atoi(a_head.num_pictures);
+#endif
     header->bits_channel = atoi(a_head.bits_per_channel);
     header->alpha_flag = atoi(a_head.alpha_channel);
     pm_asprintf(&header->author,  a_head.author);
     pm_asprintf(&header->date,    a_head.date);
     pm_asprintf(&header->program, a_head.program);
+
     /* Do double checking for backwards compatibility */
     if (header->npics == 0)
         header->npics = 1;
@@ -188,7 +197,8 @@ ReadImageChannel(FILE *         const infp,
         }
         /* return to the beginning of the next image's buffer */
         if (fseek(infp, marker, 0) == -1) {
-            pm_message("ReadImageChannel: can't fseek to location in image buffer" );
+            pm_message("ReadImageChannel: can't fseek to location "
+                       "in image buffer");
             return(0);
         }
         free((char *)line);
@@ -297,28 +307,26 @@ ReadXimImage(FILE *     const in_fp,
 ***********************************************************************/
 
 static int
-ReadXim(in_fp, xim)
-    FILE *in_fp;
-    XimImage *xim;
-{
+ReadXim(FILE *     const in_fp,
+        XimImage * const xim) {
+
     if (!ReadXimHeader(in_fp, xim)) {
         pm_message("can't read xim header" );
-    return(0);
-    }
-    if (!ReadXimImage(in_fp, xim)) {
+        return 0;
+    } else if (!ReadXimImage(in_fp, xim)) {
         pm_message("can't read xim data" );
-    return(0);
-    }
-    return(1);
+        return 0;
+    } else
+        return 1;
 }
 
 
 
 int
-main(int argc,
-     char *argv[]) {
+main(int          argc,
+     const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE *ifP, *imageout_file, *alpha_file;
     XimImage xim;
     pixel *pixelrow, colormap[256];
@@ -330,7 +338,7 @@ main(int argc,
     pixval maxval;
     bool success;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
