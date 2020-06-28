@@ -1,20 +1,20 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamdepth User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamdepth</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamdepth User Manual</title></head>
+<body>
+<h1>pamdepth</h1>
 Updated: 19 December 2013
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamdepth - change the depth (color resolution) in a Netpbm image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamdepth</B> <I>newmaxval</I> [<I>netpbmfile</I>]
+<b>pamdepth</b> <i>newmaxval</i> [<i>netpbmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -32,26 +32,33 @@ tell <b>pamdepth</b> to change it to depth 150.  The output has maxval
 
 <p>This program works on multi-image streams.
 
-<P>Be careful of off-by-one errors when choosing the new maxval.  For
+<p>Be careful of off-by-one errors when choosing the new maxval.  For
 instance, if you want the color values to be five bits wide, use a
 maxval of 31, not 32.
 
-<P>One important use of <B>pamdepth</B> is to convert a new format
+<p>One important use of <b>pamdepth</b> is to convert a new format
 2-byte-per-sample PNM file to the older 1-byte-per-sample format.
 Before April 2000, essentially all raw (binary) format PNM files had a
 maxval less than 256 and one byte per sample, and many programs may
-rely on that.  If you specify a <I>newmaxval</I> less than 256, the
+rely on that.  If you specify a <i>newmaxval</i> less than 256, the
 resulting file should be readable by any program that worked with PNM
 files before April 2000.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>,
-<A HREF="pnmquant.html">pnmquant</A>,
-<A HREF="ppmdither.html">ppmdither</A>
-<A HREF="pambrighten.html">pambrighten</A>
-<A HREF="pamfunc.html">pamfunc</A>
+<p>There are no command line options defined specifically
+for <b>pamdepth</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>,
+<a href="pnmquant.html">pnmquant</a>,
+<a href="ppmdither.html">ppmdither</a>
+<a href="pambrighten.html">pambrighten</a>
+<a href="pamfunc.html">pamfunc</a>
 
 <h2 id="history">HISTORY</h2>
 
@@ -61,13 +68,14 @@ with <b>pnmdepth</b> and adds the ability to process arbitrary PAM images
 and the ability to process multi-image input streams.  <b>pnmdepth</b>
 handled only PNM images and ignored all but the first in any stream.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

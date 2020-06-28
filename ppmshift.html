@@ -1,22 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmshift User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmshift</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmshift User Manual</title></head>
+<body>
+<h1>ppmshift</h1>
 Updated: 20 November 2008
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmshift - shift lines of a PPM image left or right by a random amount
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <b>ppmshift</b>
-<I>shift</I>
-[<I>ppmfile</I>]
+<i>shift</i>
+[<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,12 +28,19 @@ pixels.  The random distribution is uniform, centered at zero movement.
 2006) -- if you run the program twice in the same second, you may get
 identical output.
 
-<P>This is an effect the author intended to use for MPEG tests.
+<p>This is an effect the author intended to use for MPEG tests.
 Unfortunately, this program is not useful for that - it creates too random
 patterns to be used for animations.  Still, it might give interesting results
 on still images.
 
-<H2 id="example">EXAMPLE</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>There are no command line options defined specifically
+for <b>ppmshift</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="example">EXAMPLE</h2>
 
 <p>Check this out: Save your favorite model's picture from something like
 alt.binaries.pictures.supermodels (ok, or from any other picture source),
@@ -58,27 +65,28 @@ convert it to ppm, and process it e.g. like this, assuming the picture is
 <p>The resulting picture looks like the image being reflected on a water 
 surface with slight ripples.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="ppm.html">ppm</A>,
-<A HREF="pamcut.html">pamcut</A>,
-<A HREF="pamflip.html">pamflip</A>,
-<A HREF="ppmdim.html">ppmdim</A>,
-<A HREF="pnmcat.html">pnmcat</A>
+<a href="ppm.html">ppm</a>,
+<a href="pamcut.html">pamcut</a>,
+<a href="pamflip.html">pamflip</a>,
+<a href="ppmdim.html">ppmdim</a>,
+<a href="pnmcat.html">pnmcat</a>
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1993 by Frank Neumann
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#example">EXAMPLE</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#example">EXAMPLE</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

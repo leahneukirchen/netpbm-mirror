@@ -1,11 +1,11 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
 <html><head><title>Pampop9 User Manual</title></head>
 <body>
 
 <h1>pampop9</h1>
 Updated: 02 March 2003
 <br>
-<a HREF="#index">Table Of Contents</a>
+<a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
 pampop9 - simulate a multi-lens camera such as the Pop9
@@ -19,7 +19,7 @@ pampop9 - simulate a multi-lens camera such as the Pop9
 <i>xdelta</i>
 <i>ydelta</i>
 
-<h2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,7 +28,7 @@ pampop9 - simulate a multi-lens camera such as the Pop9
 times.
 Each of these tiles is taken from a slightly different offset within the
 source, as determined by the <i>xdelta</i> and <i>ydelta</i> arguments.
-</p>
+
 
 <p>
 The top line of tiles in the output is taken from the top of the source
@@ -37,7 +37,14 @@ the next with the 2*<i>ydelta</i> row, and so on.
 Similarly, the first column of tiles in the output is taken from the left
 of the source image, the next starts with the <i>xdelta</i> column, the
 next with the 2*<i>xdelta</i> column, and so on.
-</p>
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>There are no command line options defined specifically
+for <b>pampop9</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
 <h2 id="examples">EXAMPLES</h2>
 
@@ -49,7 +56,7 @@ If the origin is taken to be the top-left corner, then the top row of
 tiles will take start at (0, 0) (10, 0) (20, 0) within the source image,
 the middle row will start at (0, 10) (10, 10) (20, 10), and the bottom
 row at (0, 20) (10, 20) (20, 20).
-</p>
+
 
 <h2 id="history">HISTORY</h2>
 
@@ -61,7 +68,7 @@ no longer was valid.
 
 <h2 id="seealso">SEE ALSO</h2>
 
-<a HREF="pnmtile.html">pnmtile</a>
+<a href="pnmtile.html">pnmtile</a>
 
 <h2 id="author">AUTHOR</h2>
 
@@ -73,14 +80,15 @@ http://www.fsf.org/licenses/gpl.txt</a>).
 
 <h2 id="index">Table Of Contents</h2>
 
-<UL>
-<LI><a HREF="#synopsis">SYNOPSIS</a>
-<LI><a HREF="#description">DESCRIPTION</a>
-<LI><a HREF="#examples">EXAMPLES</a>
-<LI><a HREF="#seealso">SEE ALSO</a>
-<LI><a HREF="#history">HISTORY</a>
-<LI><a HREF="#author">AUTHOR</a>
-</UL>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
 
 </body>
 </html>

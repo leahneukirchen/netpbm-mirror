@@ -1,79 +1,87 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Fstopgm User Manual</TITLE></HEAD>
-<BODY>
-<H1>fstopgm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Fstopgm User Manual</title></head>
+<body>
+<h1>fstopgm</h1>
 Updated: 06 April 89
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 fstopgm - convert a Usenix FaceSaver(tm) file into a PGM image
 
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>fstopgm</B>
-[<I>fsfile</I>]
+<b>fstopgm</b>
+[<i>fsfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>fstopgm</b> reads a Usenix FaceSaver(tm) file as input and
 produces a PGM image as output.
 
-<P>FaceSaver(tm) files sometimes have rectangular pixels.  While
-<B>fstopgm</B> won't re-scale them into square pixels for you, it will
-give you the precise <B>pamscale</B> command that will do the job.
+<p>FaceSaver(tm) files sometimes have rectangular pixels.  While
+<b>fstopgm</b> won't re-scale them into square pixels for you, it will
+give you the precise <b>pamscale</b> command that will do the job.
 Because of this, reading a FaceSaver(tm) image is a two-step process.
 First you do:
 
-<PRE>
+<pre>
   fstopgm &gt; /dev/null
-</PRE>
+</pre>
 
-This will tell you whether you need to use <B>pamscale.</B>
+This will tell you whether you need to use <b>pamscale.</b>
 
 Then use one of the following pipelines:
-<PRE>
+<pre>
   fstopgm | pnmnorm
   fstopgm | pamscale -whatever | pnmnorm
-</PRE>
+</pre>
 
 To go to PBM, you want something more like one of these:
-<PRE>
+<pre>
   fstopgm | pamenlarge 3 | pnmnorm | pamditherbw
   fstopgm | pamenlarge 3 | pamscale &lt;whatever&gt; | pnmnorm | pamditherbw
-</PRE>
+</pre>
 
 You want to enlarge when going to a bitmap because otherwise you lose
 information; but enlarging by more than 3 does not look good.
 
-<P>FaceSaver is a registered trademark of Metron Computerware Ltd. of
+<p>FaceSaver is a registered trademark of Metron Computerware Ltd. of
 Oakland, CA.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="pgmtofs.html">pgmtofs</A>,
-<A HREF="pgm.html">pgm</A>,
-<A HREF="pnmnorm.html">pnmnorm</A>,
-<A HREF="pamenlarge.html">pamenlarge</A>,
-<A HREF="pamscale.html">pamscale</A>,
-<A HREF="pamditherbw.html">pamditherbw</A>
+<p>There are no command line options defined specifically
+for <b>fstopgm</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pgmtofs.html">pgmtofs</a>,
+<a href="pgm.html">pgm</a>,
+<a href="pnmnorm.html">pnmnorm</a>,
+<a href="pamenlarge.html">pamenlarge</a>,
+<a href="pamscale.html">pamscale</a>,
+<a href="pamditherbw.html">pamditherbw</a>
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

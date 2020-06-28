@@ -1,24 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><title>Pgmtopgm User Manual</title></HEAD>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pgmtopgm User Manual</title></head>
 
-<BODY>
-<H1>pgmtopgm</H1>
+<body>
+<h1>pgmtopgm</h1>
 Updated: September 2002
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pgmtopgm - copy PGM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pgmtopgm</B>
+<b>pgmtopgm</b>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pgmtopgm</b> simply copies a PGM image from Standard Input to
+<p><b>pgmtopgm</b> simply copies a PGM image from Standard Input to
 Standard Output.  This may seem an unnecessary duplication of
 <b>cat</b>, but remember that a PGM program can read a PBM image as
 if it were PGM.  So <b>pgmtopgm</b> can read either a PBM or PGM
@@ -33,27 +33,34 @@ need a true PGM image.
 <b>pbmtopgm</b> is a more general way to do that conversion.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="ppmtoppm.html">ppmtoppm</A></B>,
-<B><A HREF="pamtopam.html">pamtopam</A></B>,
-<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
-<B><A HREF="pbmtopgm.html">pbmtopgm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>,
-<B><A HREF="pgm.html">pgm</A></B>,
+<p>There are no command line options defined specifically
+for <b>pgmtopgm</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<H2 id="history">HISTORY</H2>
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="ppmtoppm.html">ppmtoppm</a></b>,
+<b><a href="pamtopam.html">pamtopam</a></b>,
+<b><a href="pamtopnm.html">pamtopnm</a></b>,
+<b><a href="pbmtopgm.html">pbmtopgm</a></b>,
+<b><a href="pbm.html">pbm</a></b>,
+<b><a href="pgm.html">pgm</a></b>,
+
+<h2 id="history">HISTORY</h2>
 
 <p>This program was added to Netpbm in Release 10.9 (September 2002).
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

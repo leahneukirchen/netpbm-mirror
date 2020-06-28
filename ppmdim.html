@@ -1,26 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmdim User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmdim</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmdim User Manual</title></head>
+<body>
+<h1>ppmdim</h1>
 Updated: June 2002
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 ppmdim - dim a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 ppmdim
-<I>dimfactor</I>
-[<I>ppmfile</I>]
+<i>dimfactor</i>
+[<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p>This program is largely obsoleted by the more general <A
-HREF="pamfunc.html"><b>pamfunc</b></A> (use the <b>-multiplier</b>
+<p>This program is largely obsoleted by the more general <a
+href="pamfunc.html"><b>pamfunc</b></a> (use the <b>-multiplier</b>
 option).  <b>ppmdim</b> remains for backward compatibility and also
 because its use of integer arithmetic may make it faster.
 
@@ -29,22 +29,30 @@ the specified dimfactor.  The dimfactor may be in the range from 0.0
 (total blackness, deep night, nada, null, nothing) to 1.0 (original
 picture's brightness).
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="ppm.html">ppm</A>,
-<A HREF="pamfunc.html">pamfunc</A>,
+<p>There are no command line options defined specifically
+for <b>ppmdim</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="ppm.html">ppm</a>,
+<a href="pamfunc.html">pamfunc</a>,
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1993 by Frank Neumann
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

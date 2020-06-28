@@ -1,21 +1,21 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Sbigtopgm User Manual</TITLE></HEAD>
-<BODY>
-<H1>sbigtopgm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Sbigtopgm User Manual</title></head>
+<body>
+<h1>sbigtopgm</h1>
 Updated: 18 January 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
+<h2>NAME</h2>
 
 sbigtopgm - convert an SBIG CCDOPS file to PGM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>sbigtopgm</B>
+<b>sbigtopgm</b>
 
-[<I>sbigfile</I>]
+[<i>sbigfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -23,31 +23,39 @@ sbigtopgm - convert an SBIG CCDOPS file to PGM
 by the Santa Barbara Instrument Group (SBIG) astronomical CCD cameras,
 and produces a PGM image as output.  Additional information on SBIG
 cameras and documentation of the file format is available at the Web
-site, <A HREF="http://www.sbig.com/">http://www.sbig.com/</A>.
+site, <a href="http://www.sbig.com/">http://www.sbig.com/</a>.
 
 <p><b>sbigtopgm</b> recognizes some variation on the documented SBIG Type 3
 format.  It allows any capitalization in the header.  It ignores all
 whitespace in the header except newlines.  So a header line can end in
 newline, CRLF, or the bizarre LF-CR actually required by the spec.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="pgmtosbig.html">pgmtosbig</A></B>
-<B><A HREF="pgm.html">pgm</A></B>
+<p>There are no command line options defined specifically
+for <b>sbigtopgm</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-John Walker (<B><A
-HREF="http://www.fourmilab.ch/">http://www.fourmilab.ch/</A></B>),
+<b><a href="pgmtosbig.html">pgmtosbig</a></b>
+<b><a href="pgm.html">pgm</a></b>
+
+<h2 id="author">AUTHOR</h2>
+
+John Walker (<b><a
+href="http://www.fourmilab.ch/">http://www.fourmilab.ch/</a></b>),
 January 1998.  This program is in the public domain.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

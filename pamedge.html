@@ -1,20 +1,20 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamedge User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamedge</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamedge User Manual</title></head>
+<body>
+<h1>pamedge</h1>
 Updated: 11 January 2003
-<BR>
+<br>
 
-<A HREF="#index">Table Of Contents</A>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamedge - edge-detect an image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamedge</B> [<I>imagefile</I>]
+<b>pamedge</b> [<i>imagefile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -33,20 +33,27 @@ two Sobel gradient operators at 90 degrees to each other.  For more
 details see "Digital Image Processing" by Gonzalez and
 Wintz, chapter 7.
 
-<P>The maxval of the output is the same as the maxval of the input, except at
+<p>The maxval of the output is the same as the maxval of the input, except at
 least 255.  The effect is better with larger maxvals, so you may want to
-increase the maxval of the input by running it through <B>pamdepth</B> first.
+increase the maxval of the input by running it through <b>pamdepth</b> first.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="pgmenhance.html">pgmenhance</A></B>,
-<B><A HREF="pamditherbw.html">pamditherbw</A></B>,
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="pammasksharpen.html">pammasksharpen</A></B>,
-<B><A HREF="pamsharpness.html">pamsharpness</A></B>,
-<B><A HREF="pamsharpmap.html">pamsharpmap</A></B>,
-<B><A HREF="pam.html">pam</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
+<p>There are no command line options defined specifically
+for <b>pamedge</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pgmenhance.html">pgmenhance</a></b>,
+<b><a href="pamditherbw.html">pamditherbw</a></b>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="pammasksharpen.html">pammasksharpen</a></b>,
+<b><a href="pamsharpness.html">pamsharpness</a></b>,
+<b><a href="pamsharpmap.html">pamsharpmap</a></b>,
+<b><a href="pam.html">pam</a></b>,
+<b><a href="pnm.html">pnm</a></b>
 
 <h2 id="history">HISTORY</h2>
 
@@ -55,20 +62,21 @@ It replaced <b>pgmedge</b>, which was the same thing, but worked only on
 PGM and PBM images.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Jef Poskanzer.  Adapted to <b>pnmedge</b> Peter
 Kichgessner in 1995, and then to <b>pamedge</b> by Bryan Henderson in
 2003.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

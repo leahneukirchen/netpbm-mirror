@@ -1,29 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmrelief User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmrelief</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmrelief User Manual</title></head>
+<body>
+<h1>ppmrelief</h1>
 Updated: 02 August 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmrelief - compute a relief of a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmrelief</B>
+<b>ppmrelief</b>
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmrelief</b> reads a PPM image as input, and writes a relief of
 that image as a PPM image as output.
 
-<P>The relief process is described in "Beyond Photography" by
+<p>The relief process is described in "Beyond Photography" by
 Holzmann, equation 3.19.  It's a sort of edge-detection and is essentially
 a convolution with this matrix:
 
@@ -35,25 +35,33 @@ a convolution with this matrix:
 </tt>
 </pre>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="pamshadedrelief.html">pamshadedrelief</A>, 
-<A HREF="pgmbentley.html">pgmbentley</A>, 
-<A HREF="pgmoil.html">pgmoil</A>, 
-<A HREF="ppm.html">ppm</A>
+<p>There are no command line options defined specifically
+for <b>ppmrelief</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-Copyright (C) 1990 by Wilson Bent (<A
-HREF="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</A>)
+<a href="pamshadedrelief.html">pamshadedrelief</a>, 
+<a href="pgmbentley.html">pgmbentley</a>, 
+<a href="pgmoil.html">pgmoil</a>, 
+<a href="ppm.html">ppm</a>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<h2 id="author">AUTHOR</h2>
+
+Copyright (C) 1990 by Wilson Bent (<a
+href="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</a>)
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,34 +1,34 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmnlfilt User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmnlfilt</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmnlfilt User Manual</title></head>
+<body>
+<h1>pnmnlfilt</h1>
 Updated: 24 October 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmnlfilt - non-linear filters: smooth, alpha trim mean, optimal
 estimation smoothing, edge enhancement.
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmnlfilt</B>
-<I>alpha</I>
-<I>radius</I>
-[<I>pnmfile</I>]
+<b>pnmnlfilt</b>
+<i>alpha</i>
+<i>radius</i>
+[<i>pnmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pnmnlfilt</B> produces an output image where the pixels are a
+<p><b>pnmnlfilt</b> produces an output image where the pixels are a
 summary of multiple pixels near the corresponding location in an input
 image.
 
-<P>This program works on multi-image streams.
+<p>This program works on multi-image streams.
 
-<P>This is something of a swiss army knife filter.  It has 3 distinct
+<p>This is something of a swiss army knife filter.  It has 3 distinct
 operating modes.  In all of the modes <b>pnmnlfilt</b> examines each
 pixel in the image and processes it according to the values of it and
 its surrounding pixels.  Rather than using a square block of
@@ -43,10 +43,10 @@ immediate neighbor square.
 <p>Your choice of "alpha" parameter selects among the three
 modes.
 
-<H3 id="alphatrimmedmean">
-Alpha trimmed mean filter (0.0 &lt;= alpha &lt;= 0.5)</H3>
+<h3 id="alphatrimmedmean">
+Alpha trimmed mean filter (0.0 &lt;= alpha &lt;= 0.5)</h3>
 
-<P>The value of the center pixel will be replaced by the mean of
+<p>The value of the center pixel will be replaced by the mean of
 the 7 hexagon values, but the 7 values are sorted by size and the top
 and bottom alpha portion of the 7 are excluded from the mean.  This
 implies that an alpha value of 0.0 gives the same sort of output as a
@@ -55,7 +55,7 @@ will determine the "strength" of the filter. A good value to
 start from for subtle filtering is alpha = 0.0, radius = 0.55 For a
 more blatant effect, try alpha 0.0 and radius 1.0
 
-<P>An alpha value of 0.5 will cause the median value of the 7 hexagons
+<p>An alpha value of 0.5 will cause the median value of the 7 hexagons
 to be used to replace the center pixel value. This sort of filter is
 good for eliminating "pop" or single pixel noise from an
 image without spreading the noise out or smudging features on the
@@ -65,10 +65,10 @@ smoothing and "pop" noise reduction. For subtle filtering
 try starting with values of alpha = 0.4, radius = 0.6 For a more
 blatant effect try alpha = 0.5, radius = 1.0
 
-<H3 id="optimalestsmooth">
-Optimal estimation smoothing. (1.0 &lt;= alpha &lt;= 2.0)</H3>
+<h3 id="optimalestsmooth">
+Optimal estimation smoothing. (1.0 &lt;= alpha &lt;= 2.0)</h3>
 
-<P>This type of filter applies a smoothing filter adaptively over the
+<p>This type of filter applies a smoothing filter adaptively over the
 image.  For each pixel the variance of the surrounding hexagon values
 is calculated, and the amount of smoothing is made inversely
 proportional to it. The idea is that if the variance is small then it
@@ -85,18 +85,18 @@ the alpha parameter to get the desired effect. This type of filter is
 best for filtering out dithering noise in both bitmap and color
 images.
 
-<H3 id="edgeenhance">Edge enhancement. (-0.1 &gt;= alpha &gt;= -0.9)</H3>
+<h3 id="edgeenhance">Edge enhancement. (-0.1 &gt;= alpha &gt;= -0.9)</h3>
 
-<P>This is the opposite type of filter to the smoothing filter. It
+<p>This is the opposite type of filter to the smoothing filter. It
 enhances edges. The alpha parameter controls the amount of edge
 enhancement, from subtle (-0.1) to blatant (-0.9). The radius
 parameter controls the effective radius as usual, but useful values
 are between 0.5 and 0.9. Try starting with values of alpha = 0.3,
 radius = 0.8
 
-<H3 id="combination">Combination use.</H3>
+<h3 id="combination">Combination use.</h3>
 
-<P>The various modes of <B>pnmnlfilt</B> can be used one after the
+<p>The various modes of <b>pnmnlfilt</b> can be used one after the
 other to get the desired result. For instance to turn a monochrome
 dithered image into a grayscale image you could try one or two passes
 of the smoothing filter, followed by a pass of the optimal estimation
@@ -105,7 +105,7 @@ enhancement is only likely to be useful after one of the non-linear
 filters (alpha trimmed mean or optimal estimation filter), as edge
 enhancement is the direct opposite of smoothing.
 
-<P>For reducing color quantization noise in images (ie. turning .gif
+<p>For reducing color quantization noise in images (ie. turning .gif
 files back into 24 bit files) you could try a pass of the optimal
 estimation filter (alpha 1.2, radius 1.0), a pass of the median filter
 (alpha 0.5, radius 0.55), and possibly a pass of the edge enhancement
@@ -114,27 +114,34 @@ declining alpha values are more effective than a single pass with a
 large alpha value.  As usual, there is a tradeoff between filtering
 effectiveness and losing detail. Experimentation is encouraged.
 
-<H2 id="references">References:</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>The alpha-trimmed mean filter is based on the description in IEEE
+<p>There are no command line options defined specifically
+for <b>pnmnlfilt</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="references">REFERENCES</h2>
+
+<p>The alpha-trimmed mean filter is based on the description in IEEE
 CG&amp;A May 1990 Page 23 by Mark E. Lee and Richard A. Redner, and
 has been enhanced to allow continuous alpha adjustment.
 
-<P>The optimal estimation filter is taken from an article
+<p>The optimal estimation filter is taken from an article
 "Converting Dithered Images Back to Gray Scale" by Allen
 Stenger, Dr Dobb's Journal, November 1992, and this article references
 "Digital Image Enhancement and Noise Filtering by Use of Local
 Statistics", Jong-Sen Lee, IEEE Transactions on Pattern Analysis
 and Machine Intelligence, March 1980.
 
-<P>The edge enhancement details are from <A
-HREF="pgmenhance.html">pgmenhance</A>, which is taken from Philip
+<p>The edge enhancement details are from <a
+href="pgmenhance.html">pgmenhance</a>, which is taken from Philip
 R. Thompson's "xim" program, which in turn took it from
 section 6 of "Digital Halftones by Dot Diffusion",
 D. E. Knuth, ACM Transaction on Graphics Vol. 6, No. 4, October 1987,
 which in turn got it from two 1976 papers by J. F. Jarvis et. al.
 
-<h2 id="parameters"></h2>
+<h2 id="parameters">PARAMETERS</h2>
 
 <p>The parameters are:
 
@@ -146,33 +153,35 @@ which in turn got it from two 1976 papers by J. F. Jarvis et. al.
 <dd>The radius (described above), in decimal.  May be fractional.
 </dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pgmenhance.html">pgmenhance</A>,
-<A HREF="pnmconvol.html">pnmconvol</A>,
-<A HREF="pnm.html">pnm</A>
+<a href="pgmenhance.html">pgmenhance</a>,
+<a href="pnmconvol.html">pnmconvol</a>,
+<a href="pnm.html">pnm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Graeme W. Gill <A HREF="mailto:graeme@labtam.oz.au">graeme@labtam.oz.au</A>
+Graeme W. Gill <a href="mailto:graeme@labtam.oz.au">graeme@labtam.oz.au</a>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
 <ul>
-  <LI><A HREF="#alphatrimmedmean">
-      Alpha trimmed mean filter.(0.0 &lt;= alpha &lt;= 0.5)</A>
-  <LI><A HREF="#optimalestsmooth">
-       Optimal estimation smoothing. (1.0 &lt;= alpha &lt;= 2.0)</A>
-  <LI><A HREF="#edgeenhance">
-      Edge enhancement. (-0.1 &gt;= alpha &gt;= -0.9)</A>
-  <LI><A HREF="#combination">Combination use.</A>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<ul>
+  <li><a href="#alphatrimmedmean">
+      Alpha trimmed mean filter.(0.0 &lt;= alpha &lt;= 0.5)</a>
+  <li><a href="#optimalestsmooth">
+       Optimal estimation smoothing. (1.0 &lt;= alpha &lt;= 2.0)</a>
+  <li><a href="#edgeenhance">
+      Edge enhancement. (-0.1 &gt;= alpha &gt;= -0.9)</a>
+  <li><a href="#combination">Combination use.</a>
   </ul>
-<LI><A HREF="#references">References:</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#parameters">PARAMETERS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

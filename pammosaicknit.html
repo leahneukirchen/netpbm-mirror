@@ -1,36 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>Pammosaicknit User Manual</title>
-<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
-</head>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pammosaicknit User Manual</title></head>
 <body>
-
 <h1>pammosaicknit</h1>
+Updated: 12 December 2010
+<br>
+<a href="#index">Table Of Contents</a>
 
-<p>Updated: 12 December 2010</p>
+<h2>NAME</h2>
 
-<p><a href="#contents">Table Of Contents</a></p>
-
-<h2 id="name">NAME</h2>
-
-<p>pammosaicknit - validate a mosaic knitting pattern</p>
-
+pammosaicknit - validate a mosaic knitting pattern
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
-<p><b>pammosaicknit</b> [<i>in_netpbmfile</i>]</p>
+<p><b>pammosaicknit</b> [<i>in_netpbmfile</i>]
 
 <h2 id="description">DESCRIPTION</h2>
 
-<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+<p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pammosaicknit</b> helps the user create
 <a href="http://en.wikipedia.org/wiki/Slip-stitch_knitting#Mosaic_knitting">mosaic
 knitting patterns</a>. The program inputs a black-and-white Netpbm image that
 describes a mosaic knitting pattern and outputs a color Netpbm image of the
-same pattern but with invalid runs shown in red.</p>
+same pattern but with invalid runs shown in red.
 
 <p>A valid knitting pattern starts with a "black" row on the
 bottom and alternates "white" and "black"
@@ -41,24 +33,30 @@ consecutive black pixels. Columns wrap horizontally, so a "white"
 row that both begins and ends with two black pixels is deemed to
 contain four consecutive black pixels. Because this is an invalid
 number for a "white" row, those four pixels will be recolored red
-in the output image.</p>
+in the output image.
 
 <p>For clarity, there are two shades of red in the output image.  Dark
 red pixels indicate pixels that were black in the input image but
 which must contain one or more white pixels. Light red pixels indicate
 pixels that were white in the input image but which must contain one
-or more black pixels.</p>
+or more black pixels.
 
 <p>If the output image contains no red pixels, then the input image
-represents a valid mosaic knitting pattern.</p>
+represents a valid mosaic knitting pattern.
 
+<h2 id="options">OPTIONS</h2>
+
+<p>There are no command line options defined specifically
+for <b>pammosaicknit</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
 <h2 id="arguments">ARGUMENTS</h2>
 
 <p><b>pammosaicknit</b>'s only argument,
 <i>in_netpbmfile</i>, is the name of an image file that represents a mosaic
 knitting pattern. If you don't specify
-<i>in_netpbmfile</i>, the program reads the image from Standard Input.</p>
+<i>in_netpbmfile</i>, the program reads the image from Standard Input.
 
 
 <h2 id="notes">NOTES</h2>
@@ -66,10 +64,9 @@ knitting pattern. If you don't specify
 <p>If the input image is not a black-and-white image, <b>pammosaicknit</b>
 converts it internally to black and white by thresholding each pixel's
 luminosity. The output image is always a color image containing at most four
-colors (black, white, dark red, light red).</p>
+colors (black, white, dark red, light red).
 
-
-<h2 id="see_also">SEE ALSO</h2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <ul>
 <li><a href="pam.html">pam</a></li>
@@ -77,25 +74,25 @@ colors (black, white, dark red, light red).</p>
 
 <h2 id="history">HISTORY</h2>
 
-<p>pammosaicknit was new in Netpbm 10.53 (December 2010).</p>
-
+<p>pammosaicknit was new in Netpbm 10.53 (December 2010).
 
 <h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 2010 Scott Pakin,
-<a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
+<a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a>
 
 
-<h2><a id="contents">Table Of Contents</a></h2>
+<h2 id="index">Table Of Contents</h2>
 
 <ul>
-<li><a href="#synopsis">SYNOPSIS</a></li>
-<li><a href="#description">DESCRIPTION</a></li>
-<li><a href="#arguments">ARGUMENTS</a></li>
-<li><a href="#notes">NOTES</a></li>
-<li><a href="#see_also">SEE ALSO</a></li>
-<li><a href="#history">HISTORY</a></li>
-<li><a href="#author">AUTHOR</a></li>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#arguments">ARGUMENTS</a>
+<li><a href="#notes">NOTES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
 </ul>
 
 </body>

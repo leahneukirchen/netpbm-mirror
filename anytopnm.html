@@ -1,34 +1,34 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Anytopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>anytopnm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Anytopnm User Manual</title></head>
+<body>
+<h1>anytopnm</h1>
 Updated: 15 November 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 anytopnm - convert an arbitrary type of image file to PBM, PGM, or PPM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>anytopnm</B> [<I>file</I>]
+<b>anytopnm</b> [<i>file</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>anytopnm</B> converts the input image, which may be in any of
+<p><b>anytopnm</b> converts the input image, which may be in any of
 about 100 graphics formats, to PBM, PGM, or PPM format, depending on
 that nature of the input image, and outputs it to Standard Output.
 
-<P>To determine the format of the input, <B>anytopnm</B> uses the
-<B>file</B> program (possibly assisted by the magic numbers file
+<p>To determine the format of the input, <b>anytopnm</b> uses the
+<b>file</b> program (possibly assisted by the magic numbers file
 fragment included with Netpbm). If that fails (very few image formats
-have magic numbers), <B>anytopnm</B> looks at the filename extension.
-If that fails, <B>anytopnm</B> punts.
+have magic numbers), <b>anytopnm</b> looks at the filename extension.
+If that fails, <b>anytopnm</b> punts.
 
-<P>The type of the output file depends on the input image.
+<p>The type of the output file depends on the input image.
 
 <p><b>anytopnm</b> uses the converters for particular graphics formats
 that are in the Netpbm package, so it can't convert any format that
@@ -43,15 +43,15 @@ convert it to PNM, so <b>anytopnm</b> invokes <b>giftopnm</b>.
 may still be able to convert an image with a specific Netpbm program when
 <b>anytopnm</b> fails to convert it.
 
-<P>If <B>file</B> indicates that the input file is compressed (either
-via Unix compress, gzip, or bzip compression), <B>anytopnm</B>
+<p>If <b>file</b> indicates that the input file is compressed (either
+via Unix compress, gzip, or bzip compression), <b>anytopnm</b>
 uncompresses it and proceeds as above with the uncompressed result.
 
-<P>If <B>file</B> indicates that the input file is encoded by uuencode
-or btoa, <B>anytopnm</B> decodes it and proceeds as above with the
+<p>If <b>file</b> indicates that the input file is encoded by uuencode
+or btoa, <b>anytopnm</b> decodes it and proceeds as above with the
 decoded result.
 
-<P>If <I>file</I> is <B>-</B> or not given, <B>anytopnm</B> takes its
+<p>If <i>file</i> is <b>-</b> or not given, <b>anytopnm</b> takes its
 input from Standard Input.
 
 <p>Many image formats are capable of representing multiple images.  In
@@ -64,23 +64,31 @@ images starting with Netpbm 10.69 (December 2014), but only the first in
 earlier releases.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="pamfile.html">pamfile</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
-<B>file</B> man page
+<p>There are no command line options defined specifically
+for <b>anytopnm</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pamfile.html">pamfile</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b>file</b> man page
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,20 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-<title>Pamtooctaveimg User Manual</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-</head>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtooctaveimg User Manual</title></head>
 <body>
-
 <h1>pamtooctaveimg</h1>
-
-<p>Updated: 27 June 2007<br />
-<a href="#index">Table Of Contents</a></p>
+<br>
+<p>Updated: 27 June 2007<br>
+<a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
 
-<p>pamtooctaveimg - convert a Netpbm image to a GNU Octave image</p>
+<p>pamtooctaveimg - convert a Netpbm image to a GNU Octave image
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
@@ -23,7 +17,7 @@
 
 <h2 id="description">DESCRIPTION</h2>
 
-<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+<p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamtooctaveimg</b> reads a Netpbm image as input and produces a <a
 href="http://www.octave.org/">GNU Octave</a> image file as output.
@@ -46,45 +40,53 @@ Image Processing chapter</a> of the GNU Octave manual for details.
 
 <p><b>pamtooctaveimg</b> writes the output Octave image to Standard Output.
 
-<h2 id="arguments">Arguments</h2>
+<h2 id="options">OPTIONS</h2>
+
+<p>There are no command line options defined specifically
+for <b>pamtooctaveimg</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="arguments">ARGUMENTS</h2>
 
 <p><i>netpbmfile</i> is the name of the file containing the input PNM
 or PAM image, or <b>-</b> to indicate Standard Input.  If you don't
 specify <i>netpbmfile</i>, the input is from Standard Input.
 <b>pamtooctaveimg</b> converts only the first image in the input stream.
 
-
-<h2 id="examples">Examples</h2>
+<h2 id="examples">EXAMPLES</h2>
 
 <pre>
 <kbd>
    % pamtooctaveimg myimage.ppm > myimage.img
    % octave
-   > [img,map] = loadimage("myimage.img");
+   &gt; [img,map] = loadimage("myimage.img");
 
    # (At this point, img is an X by Y matrix and map is a 3 by M matrix.)
 
-   > imshow(img,map);   # Displays img with colormap map
-   > [r,g,b] = ind2rgb(img,map);
+   &gt; imshow(img,map);   # Displays img with colormap map
+   &gt; [r,g,b] = ind2rgb(img,map);
 
    # (r, g, and b are now each X by Y matrices of color levels [0 to 1].)
 
-   > [newimg,newmap] = rgb2ind(r,b,g);   # Swap the blue and green channels.
-   > saveimage("newimage.ppm", newimg, "ppm", newmap);  # Save as a PPM file.
+   &gt; [newimg,newmap] = rgb2ind(r,b,g);   # Swap the blue and green channels.
+   &gt; saveimage("newimage.ppm", newimg, "ppm", newmap);  # Save as a PPM file.
 </kbd>
 </pre>
-
 
 <h2 id="notes">NOTES</h2>
 
 <p>There is no <b>octavetopam</b> program.  However, GNU Octave's
-<b>saveimage</b> command can save images in PPM format.</p>
-
+<b>saveimage</b> command can save images in PPM format.
 
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamtooctaveimg</b> was new in Netpbm 10.39 (June 2007).
 
+<h2 id="author">AUTHOR</h2>
+
+<p>Copyright (C) 2007 Scott Pakin,
+<a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a>.
 
 <h2 id="seealso">SEE ALSO</h2>
 
@@ -92,23 +94,19 @@ specify <i>netpbmfile</i>, the input is from Standard Input.
 href="http://www.gnu.org/software/octave/doc/interpreter/index.html"><b>octave</b></a>,
 <a href="pam.html"><b>pam</b></a>.
 
-<h2><a id="author">AUTHOR</a></h2> 
-
-<p>Copyright (C) 2007 Scott Pakin,
-<a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a>.</p>
-
-<hr />
+<hr>
 
 <h2 id="index">Table Of Contents</h2>
 <ul>
-<li><a href="#synopsis">SYNOPSIS</a></li>
-<li><a href="#description">DESCRIPTION</a></li>
-<li><a href="#arguments">ARGUMENTS</a></li>
-<li><a href="#examples">EXAMPLES</a></li>
-<li><a href="#notes">NOTES</a></li>
-<li><a href="#history">HISTORY</a></li>
-<li><a href="#seealso">SEE ALSO</a></li>
-<li><a href="#author">AUTHOR</a></li>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#arguments">ARGUMENTS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#notes">NOTES</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#seealso">SEE ALSO</a>
 </ul>
 </body>
 </html>

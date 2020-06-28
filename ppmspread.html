@@ -1,20 +1,20 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmspread User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmspread</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmspread User Manual</title></head>
+<body>
+<h1>ppmspread</h1>
 Updated: 20 November 2008
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmspread - displace a PPM image's pixels by a random amount
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<b>ppmspread</b> <I>amount</I> [<I>ppmfile</I>]
+<b>ppmspread</b> <i>amount</i> [<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -22,31 +22,39 @@ ppmspread - displace a PPM image's pixels by a random amount
 around a random bit relative to its original position. <i>amount</i>
 determines by how many pixels a pixel is to be moved around at most.
 
-<P>Pictures processed with this filter will seem to be somewhat
+<p>Pictures processed with this filter will seem to be somewhat
 dissolved or unfocussed (although they appear more coarse than images
-processed by something like <I>pnmconvol</I>).
+processed by something like <i>pnmconvol</i>).
 
 <p>The randomness in the image is limited before Netpbm 10.37 (December
 2006) -- if you run the program twice in the same second, you may get
 identical output.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="ppm.html">ppm</A>, 
-<A HREF="pnmconvol.html">pnmconvol</A>
+<p>There are no command line options defined specifically
+for <b>ppmspread</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="ppm.html">ppm</a>, 
+<a href="pnmconvol.html">pnmconvol</a>
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1993 by Frank Neumann
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
