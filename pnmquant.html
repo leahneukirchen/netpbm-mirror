@@ -17,8 +17,6 @@ pnmquant - quantize the colors in a Netpbm image to a smaller set
 [<B>-nofloyd</B>|<B>-nofs</B>]
 [<B>-spreadbrightness</B>|<B>-spreadluminosity</B>]
 {[<b>-norandom</b>]|[<b>-randomseed=</b><i>n</i>]}
-[<b>-quiet</b>]
-[<b>-plain</b>]
 <I>ncolors</I> [<I>pnmfile</I>]
 
 <P>All options can be abbreviated to their shortest unique prefix.  You
@@ -85,6 +83,32 @@ just a convenience.
 </kbd>
 </pre>
 
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<DT><B>-center</B>
+<DT><B>-meancolor</B>
+<DT><B>-meanpixel</B>
+<dt><b>-spreadbrightness</b>
+<dt><b>-spreadluminosity</b>
+<dd>
+  These options control the selection of the palette.  They are options to
+  <a href="pnmcolormap.html"><b>pnmcolormap</b></a>.
+
+<dt><b>-floyd</b>
+<dt><b>-fs</b>
+<dt><b>-nofloyd</b>
+<dt><b>-nofs</b>
+<dt><b>-norandom</b>
+<dt><b>-randomseed</b>
+<dt><b>-norandom</b>
+<dd>
+  These options control which color from the palette the program uses to
+  replace a pixel of a certain color from the input .  They are options to
+  <a href="pnmremap.html"><b>pnmremap</b></a>.
+</dl>
+
+
 <h2 id="history">HISTORY</h2>
 
 <p><b>pnmquant</b> did not exist before Netpbm 9.21 (January 2001).
@@ -111,6 +135,7 @@ images.  <b>ppmquant</b> continues to exist, but is only a front end
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#history">HISTORY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
