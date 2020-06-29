@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamscale User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamscale</H1>
-Updated: 03 January 2019
+Updated: 29 June 2020
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -28,15 +28,14 @@ pamscale - scale a Netpbm image
          <b>-pixels</B> <I>n</I>
       ]
       [
-         [<B>-verbose</b>]
-         [
-            <b>-nomix</B> 
-            |
-            <b>-filter=</b><i>functionName</i> [<b>-window=</b>functionName]
-         ]
-         [<b>-linear</b>]
-      }
+         <b>-nomix</B> 
+         |
+         <b>-filter=</b><i>functionName</i> [<b>-window=</b>functionName]
+      ]
+      [<b>-linear</b>]
       [<b>-reportonly</b>]
+      [<B>-verbose</b>]
+
       [<I>pnmfile</I>]
 
 </pre>
@@ -56,16 +55,16 @@ scales individually horizontally and vertically by specified factors.
 <P>You can either enlarge (scale factor &gt; 1) or reduce (scale factor
 &lt; 1).
 
-<p><b>pamscale</b> work on multi-image streams, scaling each one independently.
-But before Netpbm 10.49 (December 2009), it scales only the first image and
-ignores the rest of the stream.
+<p><b>pamscale</b> works on multi-image streams, scaling each one
+independently.  But before Netpbm 10.49 (December 2009), it scales only the
+first image and ignores the rest of the stream.
 
 <h3 id="scalefactor">The Scale Factors</h3>
 
 <p>The options <b>-width</b>, <b>-height</b>, <b>-xsize</b>, <b>-ysize</b>,
 <b>-xscale</b>, <b>-yscale</b>, <b>-xyfit</b>, <b>-xyfill</b>, <b>-reduce</b>,
 and <b>-pixels</b> control the amount of scaling.  For backward compatibility,
-there is also <b>-xysize</b> and the <i>scale_factor</i> argument, but you
+there are also <b>-xysize</b> and the <i>scale_factor</i> argument, but you
 shouldn't use those.
 
 <P><b>-width</b> and <b>-height</b> specify the width and height in pixels
@@ -164,9 +163,8 @@ tokens as follows.
 it down (without <B>-nomix</B>) to discard some information, then
 scale it back up using <B>pamstretch</B>.
 
-<P>Or scale it back up with <B>pamscale</B> and create a
-"pixelized" image, which is sort of a computer-age version
-of blurring.
+<P>Or scale it back up with <B>pamscale</B> and create a "pixelized" image,
+which is sort of a computer-age version of blurring.
 
 
 <h3 id="transparency">Transparency</h3>
@@ -312,8 +310,7 @@ smoother enlargement.
 but <B>pamenlarge</B> is faster still.  <B>pamenlarge</B> works only
 on integer enlargements.
 
-<p>discrete sampling (<b>-nomix</b>) was new in Netpbm 9.24 (January
-2002).
+<p>discrete sampling (<b>-nomix</b>) was new in Netpbm 9.24 (January 2002).
 
 
 <h4 id="resampling">Resampling</h4>
@@ -571,6 +568,59 @@ with <B>pnmscalefixed</B>, which uses fixed point arithmetic.
 the <B>pnmscalefixed</B> user manual for a complete discussion of the
 difference.
 
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+
+<dt><b>-width</b>
+<dt><b>-height</b>
+<dt><b>-xsize</b>
+<dt><b>-ysize</b>
+<dt><b>-xscale</b>
+<dt><b>-yscale</b>
+<dt><b>-xyfit</b>
+<dt><b>-xyfill</b>
+<dt><b>-reduce</b>
+<dt><b>-pixels</b>
+<dt><b>-xysize</b>
+<dd>
+  These options determine the horizontal and vertical scale factors.
+  <p>
+  See <a href="#scalefactor">The Scale Factors</a>.
+
+<dt><b>-reportonly</b>
+<dd>
+  This causes <b>pamscale</b> not to scale the image, but instead to
+  report to Standard Output what scaling the options and the input image
+  dimensions indicate.
+  <p>
+  See <a href="#reportonly">-reportonly</a>.
+  
+<dt><b>-nomix</b>
+<dd>
+  This option select <a href="#sampling">discrete sampling</a> as the
+  <a href="#methods">method of scaling</a>.
+
+<dt><b>-filter=</b><i>functionName</i>
+<dd>
+  This option selects <a href="#resampling">resampling</a> as the
+  <a href="#methods">method of scaling</a>.
+
+<dt><b>-window=</b><i>functionName</i>
+<dd>
+  This option selects a window function to modify the filter function
+  specified with <b>-filter</b>.
+
+  <p>See <a href="#resampling">Resampling</a>.
+
+<dt><b>-verbose</b>
+<dd>
+  This option causes <b>pamscale</b> to issue messages to Standard Error about
+  the scaling.
+  
+</dl>
+
+
 <H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmscalefixed.html">pnmscalefixed</A></B>,
@@ -632,6 +682,7 @@ original code remains.
     <LI><A HREF="#linear">Linear vs Gamma-adjusted</a>
     <LI><A HREF="#precision">Precision</A>
     </UL>
+  <LI><A HREF="#options">OPTIONS</A>
   <LI><A HREF="#seealso">SEE ALSO</A>  
   <LI><A HREF="#history">HISTORY</A>  
   </UL>
