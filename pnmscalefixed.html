@@ -2,7 +2,7 @@
 <html><head><title>Pnmscalefixed User Manual</title></head>
 <body>
 <h1>pnmscalefixed</h1>
-Updated: 18 November 2000
+Updated: 1 July 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -59,37 +59,60 @@ keep the safety cushion afforded by the original 12 bit precision.
 <p><b>pnmscalefixed</b> does not have <b>pamscale</b>'s <b>-nomix</b>
 option.
 
-<hr>
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmscalefixed</b> recognizes the following
+command line options:
 
 <dl compact>
 <dt><b>-xsize</b>
-
 <dt><b>-width</b>
-
 <dt><b>-ysize</b>
-
 <dt><b>-height</b>
-
 <dt><b>-xscale</b>
-
 <dt><b>-yscale</b>
-
 <dt><b>-pixels</b>
-
 <dt><b>-xysize</b>
-
 <dt><b>-reduce</b>
 
+<dd>
+<p>These options determine the scale factors.  See the
+<a href="pamscale.html"><B>pamscale</B></a> user manual for details.
+
 <dt><b>-verbose</b>
+
+<dd>
+<p>Report details of the transformation.
 </dl>
 
+<h2 id="history">HISTORY</h2>
+
+<p><b>pnmscalefixed</b> was originally <b>pnmscale</b>. In Netpbm 9.9
+(November 2000) <b>pnmscale</b> was rewritten to use floating point
+arithmetic; the former fixed point arithmetic version was renamed
+<b>pnmscalefixed</b>.
+
 <h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pamscale.html">pamscale</a></b>,
+<b><a href="pamstretch.html">pamstretch</a></b>,
+<b><a href="pamstretch-gen.html">pamstretch-gen</a></b>,
+<b><a href="pbmreduce.html">pbmreduce</a></b>,
+<b><a href="pbmpscale.html">pbmpscale</a></b>,
+<b><a href="pamenlarge.html">pamenlarge</a></b>,
+<b><a href="pnmscale.html">pnmscale</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="pam.html">pam</a></b>
+
+<hr>
 
 <h2 id="index">Table Of Contents</h2>
 <ul>
 <li><a href="#description">DESCRIPTION</a>
 <li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>  
 <li><a href="#seealso">SEE ALSO</a>
 </ul>
 </body>
