@@ -21,7 +21,7 @@ echo high compression
 pgmmake 0.5 -maxval=15 160 160 > ${mono_pgm}
 for flag in "-compressed" "-maybecompressed" "-uncompressed"
    do
-   pamtopdbimg $flag ${mono_pgm} | wc -c
+   pamtopdbimg $flag ${mono_pgm} | wc -c | tr -d ' '
    done  | uniq -c | awk '{print $1}'
 rm ${mono_pgm}
 

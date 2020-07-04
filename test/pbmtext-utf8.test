@@ -125,7 +125,7 @@ long_txt=${tmpdir}/long.txt
 test_out=${tmpdir}/test_out
 
 head -c 4999 /dev/zero | sed 's@\x00@\xc2\xbe@g' > ${long_txt}
-cat ${long_txt} | wc -c
+cat ${long_txt} | wc -c | tr -d ' '
 
 cat ${long_txt} | \
   LC_ALL=${locale_for_test} pbmtext -nomargins -builtin fixed -wchar | cksum
@@ -136,7 +136,7 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 echo -n "z" >> ${long_txt}
-cat ${long_txt} | wc -c
+cat ${long_txt} | wc -c | tr -d ' '
 
 cat ${long_txt} | \
   LC_ALL=${locale_for_test} \
