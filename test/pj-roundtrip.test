@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: ppmtopj pjtoppm
-# Also requires: pamseq pnmremap pamtopnm pamdepth ppmtopgm pgmtopbm
+# Also requires: pamseq pnmremap pamtopnm pamdepth ppmtoppm
 
 echo "Test 1. Should print:  0 0 0 0 : 0"
 
@@ -15,8 +15,12 @@ ppmtopj ${test8_ppm} | pjtoppm | pamdepth 1 | \
 
 rm ${test8_ppm}
 
-echo "Test 2. Should print:  0 0 0 0 0 : 0"
+echo "Test 2. Should print:  0 0 : 0"
 
-ppmtopj testgrid.pbm | pjtoppm | ppmtopgm | pgmtopbm | \
-  cmp -s - testgrid.pbm > /dev/null
+testout_ppm=${tmpdir}/testout.ppm
+
+ppmtopj testgrid.pbm | pjtoppm > ${testout_ppm}
+  ppmtoppm < testgrid.pbm | cmp -s - ${testout_ppm} > /dev/null
   echo ${PIPESTATUS[@]} ":" $?
+
+rm ${testout_ppm}
