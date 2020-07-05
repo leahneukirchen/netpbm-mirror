@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.92.00
 
+              pcdovtoppm: Fix some garbage from the conversion from csh to sh
+              in Netpbm 9.12 (March 2001) in conversion from csh arrays that
+              should have stopped it from working at all, despite reports from
+              users that they were using it.
+
 20.06.28 BJH  Release 10.91.00
 
               pamstretch-gen: Add -quiet (supposedly added in 10.86, but never
@@ -79,8 +84,8 @@ not yet  BJH  Release 10.92.00
               pcdovtoppm: Fix bug: accepts anything starting with -s
               as equivalent to -s.
 
-              pcdovtoppm: properly selects Bash as interpreter.  Broken in
-              Netpbm 9.9 (March 2001).
+              pcdovtoppm: properly selects Bash as interpreter.  Broken
+              in Netpbm 9.12 (March 2001) (when it was called pcdindex).
 
 20.03.26 BJH  Release 10.90.00
 
