@@ -30,6 +30,9 @@ struct CmdlineInfo {
     unsigned int  clumpSize;
     unsigned int  clusterRadius;
         /* Defined only for halftone == QT_CLUSTER */
+    unsigned int  randomSeed;
+    unsigned int  randomSeedSpec;
+        /* Defined only for halftone == QT_FS */
     float         threshval;
 };
 
@@ -72,6 +75,8 @@ parseCommandLine(int argc, const char ** argv,
             &valueSpec, 0);
     OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize,
             &clumpSpec, 0);
+    OPTENT3(0, "randomseed", OPT_UINT,  &cmdlineP->randomSeed,
+            &cmdlineP->randomSeedSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -126,6 +131,10 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("-clump must be at least 2.  You specified %u",
                      cmdlineP->clumpSize);
     }
+
+    if (cmdlineP->halftone != QT_FS && cmdlineP->randomSeedSpec)
+        pm_message ("Ignoring -randomseed value "
+                    "(meaningful only with Floyd-Steinberg)");
 
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  There is at most one "
@@ -441,7 +450,9 @@ fsDestroy(struct converter * const converterP) {
 static struct converter
 createFsConverter(unsigned int const cols,
                   gray         const maxval,
-                  float        const threshFraction) {
+                  float        const threshFraction,
+                  unsigned int const randomSeedSpec,
+                  unsigned int const randomSeed) {
 
     struct fsState * stateP;
     struct converter converter;
@@ -451,7 +462,7 @@ createFsConverter(unsigned int const cols,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, cols + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, cols + 2);
-    srand(pm_randseed());
+    srand(randomSeedSpec ? randomSeed : pm_randseed());
 
     {
         /* (random errors in [-fs_scale/8 .. fs_scale/8]) */
@@ -724,7 +735,9 @@ main(int argc, const char *argv[]) {
 
         switch (cmdline.halftone) {
         case QT_FS:
-            converter = createFsConverter(cols, maxval, cmdline.threshval);
+            converter = createFsConverter(cols, maxval, cmdline.threshval,
+                                          cmdline.randomSeedSpec,
+                                          cmdline.randomSeed);
             break;
         case QT_THRESH:
             converter = createThreshConverter(cols, maxval, cmdline.threshval);
