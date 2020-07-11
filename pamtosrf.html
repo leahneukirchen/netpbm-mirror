@@ -1,34 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-<title>Pamtosrf User Manual</title>
-<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
-</head>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtosrf User Manual</title></head>
 <body>
-
 <h1>pamtosrf</h1>
-
-<p>Updated: 27 May 2011</p>
-
-<p><a href="#index">Table Of Contents</a></p>
-
+Updated: 27 May 2011
+<br>
+<a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
+pamtosrf - convert a sequence of Netpbm images to a SRF image file
 
-<p>pamtosrf - convert a sequence of Netpbm images to a SRF image file</p>
 
-
-<h2><a id="synopsis">SYNOPSIS</a></h2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <p><b>pamtosrf</b>
 [<b>-verbose</b>]
 [<i>netpbmfile</i>]
 
 
-<h2><a id="description">DESCRIPTION</a></h2>
+<h2 id="description">DESCRIPTION</h2>
 
-<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+<p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamtosrf</b> reads a Netpbm image stream as input and produces a
 an SRF image file as output.  I don't know exactly what SRF is, but on popular
@@ -36,9 +27,9 @@ use of it is in Garmin vehicle information files, which tell a GPS receiver
 how to depict a vehicle on its display.
 
 <p>An SRF file can contain multiple images; each image in a multi-image
-Netpbm input stream becomes one image in the SRF.</p>
+Netpbm input stream becomes one image in the SRF.
 
-<P><B>pamtosrf</B> does not care how many images there are or what their
+<p><b>pamtosrf</b> does not care how many images there are or what their
 dimensions or content are.  However, a Garmin vehicle information file has
 specific requirements, so if you don't make your Netpbm input conform, neither
 will your SRF output.  For such a file, you should have two image: the first
@@ -47,7 +38,7 @@ image is a horizontal concatenation of 36 square images, each rotated 10
 degrees from the previous, thereby covering the full 360 degree circle.
 You could create this concatenation with <b>pnmcat -lr</b> and you could
 create the invidual views with <b>pnmrotate</b>.
-</P>
+
 
 <p>One way to use <b>pamtosrf</b> is to get an SRF file, convert it to PAM
 with <b>srftopam</b>, manipulate it, then convert it back with
@@ -59,6 +50,11 @@ Output is always on Standard Output.
 
 <h2 id="options">OPTIONS</h2>
 
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtosrf</b> recognizes the following
+command line option:
+
 <dl>
 <dt><b>-verbose</b></dt>
 <dd>Issue informational messages about the input and the conversion process.
@@ -66,7 +62,7 @@ Output is always on Standard Output.
 
 </dl>
 
-<h2><a id="see_also">SEE ALSO</a></h2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <ul>
   <li><a href="srftopam.html">srftopam</a>
@@ -76,20 +72,20 @@ Output is always on Standard Output.
 
 <h2 id="history">HISTORY</h2>
 
-<P><b>srftopam</b> was new in Netpbm 10.55 (June 2011).
+<p><b>srftopam</b> was new in Netpbm 10.55 (June 2011).
 
-<P>It was contributed by Mike Frysinger.
+<p>It was contributed by Mike Frysinger.
 
 <hr />
 
 <h2 id="index">Table Of Contents</h2>
 
 <ul>
-<li><a href="#synopsis">SYNOPSIS</a></li>
-<li><a href="#description">DESCRIPTION</a></li>
-<li><a href="#options">OPTIONS</a></li>
-<li><a href="#see_also">SEE ALSO</a></li>
-<li><a href="#history">HISTORY</a></li>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
 </ul>
 
 </body>

@@ -1,35 +1,34 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtomacp User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtomacp</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtomacp User Manual</title></head>
+<body>
+<h1>pbmtomacp</h1>
 Updated: 26 April 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pbmtomacp - convert a PBM image to a MacPaint file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtomacp</B>
-[<B>-left</B> <I>left</I>]
+<b>pbmtomacp</b>
+[<b>-left</b> <i>left</i>]
 
-[<B>-right</B> <I>right</I>]
+[<b>-right</b> <i>right</i>]
 
-[<B>-top</B> <I>top</I>]
+[<b>-top</b> <i>top</i>]
 
-[<B>-bottom</B> <I>bottom</I>]
+[<b>-bottom</b> <i>bottom</i>]
 
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or equals signs between an option name and
 its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -38,13 +37,18 @@ file as output.
 
 <p>If you do not specify <i>pbmfile</i>, <b>pbmtomacp</b> uses Standard Input.
 
-<P> The generated file is only the data fork of a picture.  You will
-need a program such as <B>mcvert</B> to generate a Macbinary or a
+<p> The generated file is only the data fork of a picture.  You will
+need a program such as <b>mcvert</b> to generate a Macbinary or a
 BinHex file that contains the necessary information to identify the
 file as a PNTG file to MacOS.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtomacp</b> recognizes the following
+command line options:
 
 <dl>
 
@@ -78,34 +82,32 @@ more flexibly by processing the input through <b>pamcut</b>.
     
 </dl>
 
+<h2 id="seealso">SEE ALSO</h2>
 
-<H2 id="seealso">SEE ALSO</H2>
-
-<A HREF="macptopbm.html">macptopbm</A>,
-<A HREF="ppmtopict.html">ppmtopict</A>,
-<A HREF="pamcut.html">pamcut</A>,
-<A HREF="pbm.html">pbm</A>,
+<a href="macptopbm.html">macptopbm</a>,
+<a href="ppmtopict.html">ppmtopict</a>,
+<a href="pamcut.html">pamcut</a>,
+<a href="pbm.html">pbm</a>,
 <b>mcvert</b> documentation
 
-
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pbmtomacp</b> was added to Netpbm in 1988, written by Douwe van der
 Schaaf (...!mcvax!uvapsy!vdschaaf).
 
-<p>In 2015, Akira Urushibata ("Douso") replaced the program with
-the current version, using different logic and none of the original code.
-The new version used the "packed PBM" facilities of the Netpbm
-library and the shhopt method of command line parsing.
+<p>In 2015, Akira Urushibata replaced the program with the current
+version, using different logic and none of the original code.  The new
+version used the "packed PBM" facilities of the Netpbm library and the
+shhopt method of command line parsing.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

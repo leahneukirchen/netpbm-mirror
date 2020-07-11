@@ -1,27 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><title>Pamunlookup User Manual</title></HEAD>
-<BODY>
-<H1>pamunlookup</H1>
-Updated: 9 August 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamunlookup User Manual</title></head>
+<body>
+<h1>pamunlookup</h1>
+Updated: 09 August 2015
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
+<h2>NAME</h2>
 pamunlookup - inverse of pamlookup
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamunlookup</B>
-<B>-lookupfile=</B><i>lookupfile</i>
-<I>inputfile</I>
+<b>pamunlookup</b>
+<b>-lookupfile=</b><i>lookupfile</i>
+<i>inputfile</i>
 
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -55,7 +54,7 @@ index image is the size of the lookup table.
 
 <h3 id="example">Example</h3>
 
-<P>Here is an example of <b>pamunlookup</b>'s function.
+<p>Here is an example of <b>pamunlookup</b>'s function.
 
 <p>Consider an input image consisting of a 3x2 PPM as follows:
 
@@ -92,44 +91,49 @@ image file and lookup table file are Standard Input.
 The output index image goes to Standard Output.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-lookupfile=</B><i>lookupfile</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamunlookup</b> recognizes the following
+command line option:
 
-<DD><i>lookupfile</i> names the file that contains the PAM or PNM
+<dl compact>
+<dt><b>-lookupfile=</b><i>lookupfile</i>
+
+<dd><i>lookupfile</i> names the file that contains the PAM or PNM
 image that is the lookup table.  This option is mandatory.
 
-</DL>
+</dl>
 
      
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamlookup.html">pamlookup</A>,
-<A HREF="ppmchange.html">ppmchange</A>,
-<A HREF="pnmcolormap.html">pnmcolormap</A>,
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>
+<a href="pamlookup.html">pamlookup</a>,
+<a href="ppmchange.html">ppmchange</a>,
+<a href="pnmcolormap.html">pnmcolormap</a>,
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>
 
 
-<H2 id="history">HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamunlookup</b> was new in Netpbm 10.72 (September 2015).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL COMPACT>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul compact>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
   <ul>
   <li><a href="#example">Example</a>  
   </ul>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>
 
 
 

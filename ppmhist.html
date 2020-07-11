@@ -1,25 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmhist User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmhist</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmhist User Manual</title></head>
+<body>
+<h1>ppmhist</h1>
 Updated: 24 August 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
+<h2>NAME</h2>
 ppmhist - print a histogram of the colors in a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmhist</B>
-[<B>-hexcolor</B> | <B>-float</B> | <B>-colorname</B> | <B>-map</B>]
-[<B>-nomap</B>]
-[<B>-noheader</B>]
-[<B>-sort=</B>{<B>frequency</B>,<B>rgb</B>}]
+<b>ppmhist</b>
+[<b>-hexcolor</b> | <b>-float</b> | <b>-colorname</b> | <b>-map</b>]
+[<b>-nomap</b>]
+[<b>-noheader</b>]
+[<b>-sort=</b>{<b>frequency</b>,<b>rgb</b>}]
 [<b>-forensic</b>
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -78,66 +78,71 @@ column for each distinct color in the image.
 <b>pnmcolormap all</b>.  <b>ppmhist</b> is much older than <b>pnmcolormap</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmhist</b> recognizes the following
+command line options:
 
-<DT><B>-sort=</B>{<B>frequency</B>,<B>rgb</B>}
+<dl compact>
 
-<DD>The <B>-sort</B> option determines the order in which the colors are
-listed in the output.  <B>rgb</B> means to sort them first by the intensity of
+<dt><b>-sort=</b>{<b>frequency</b>,<b>rgb</b>}
+
+<dd>The <b>-sort</b> option determines the order in which the colors are
+listed in the output.  <b>rgb</b> means to sort them first by the intensity of
 the red component of the color, then of the green, then of the blue, with the
-least intense first.  <B>frequency</B> means to list them in order of how many
+least intense first.  <b>frequency</b> means to list them in order of how many
 pixels in the input image have the color, with the most represented colors
 first.  Among colors with the same frequency, the order is the same as with
 <b>rgb</b>.
 
-<P>The default is <B>frequency</B>.
+<p>The default is <b>frequency</b>.
 
 <p>Before Netpbm 10.88 (September 2019), with <b>-sort=frequency</b>, the
 order of colors that have the same frequency is arbitrary.
   
-<DT><B>-hexcolor</B>
+<dt><b>-hexcolor</b>
 
-<DD>Print the color components in hexadecimal.  See <a href="#output">output
+<dd>Print the color components in hexadecimal.  See <a href="#output">output
 format</a>.
 
 <p>You may not specify this option along with <b>-float</b> or <b>map</b>.
 
-<DT><B>-float</B>
+<dt><b>-float</b>
 
-<DD>Print the color components and the luminosity as floating point
+<dd>Print the color components and the luminosity as floating point
 numbers in the range [0,1].  See <a href="#output">output format</a>.
 
 <p>You may not specify this option along with <b>-hexcolor</b> or <b>map</b>.
 
 <p>This option was added in Netpbm 10.19 (November 2003).
 
-<DT><B>-map</B>
+<dt><b>-map</b>
 
-<DD>Generates a PPM file of the colormap for the image, with the
+<dd>Generates a PPM file of the colormap for the image, with the
 color histogram as comments.  See <a href="#output">output format</a>.
 
 <p>You may not specify this option along with <b>-float</b> or <b>hexcolor</b>.
 
-<DT><B>-nomap</B>
+<dt><b>-nomap</b>
 
-<DD>
+<dd>
 Generates the histogram for human reading.  This is the default.
 
-<DT><B>-colorname</b>
+<dt><b>-colorname</b>
 
 <dd>Add the color name to the output.  This is the name from the <a
-href="libppm.html#rgb.txt">system color dictionary</a>.  If the exact
+href="libppm.html#dictionary">system color dictionary</a>.  If the exact
 color is not in the color dictionary, it is the closest color that is
 in the dictionary and is preceded by a '*'.  If you don't have a 
 system color dictionary, the program fails.
 
 <p>This option was added in Netpbm 10.10 (October 2002).
 
-<DT><B>-noheader</B>
+<dt><b>-noheader</b>
 
-<DD>Do not print the column headings.
+<dd>Do not print the column headings.
 
 <dt><b>-forensic</b><dd>
 
@@ -162,35 +167,35 @@ belongs.
 10.66 does not properly reject invalid sample values, so the effect is very
 similar to <b>-forensic</b>.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppm.html">ppm</A></B>,
+<b><a href="ppm.html">ppm</a></b>,
 
-<B><A HREF="pgmhist.html">pgmhist</A></B>,
+<b><a href="pgmhist.html">pgmhist</a></b>,
 
-<B><A HREF="pnmcolormap.html">pnmcolormap</A></B>,
+<b><a href="pnmcolormap.html">pnmcolormap</a></b>,
 
-<B><A HREF="pnmhistmap.html">pnmhistmap</A></B>,
+<b><a href="pnmhistmap.html">pnmhistmap</a></b>,
 
-<B><A HREF="ppmchange.html">ppmchange</A></B>
+<b><a href="ppmchange.html">ppmchange</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
   <ul>
   <li><a href="#output">Output Format</a>  
   </ul>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,16 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<html>
-<head>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<title>PamRubber User Manual</title>
-</head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamrubber User Manual</title></head>
 <body>
 <h1>pamrubber</h1>
 Updated: February 2011
-<p>
+<br>
 <a href="#index">Table Of Contents</a>
 
-<h2>NAME</h2> 
+<h2>NAME</h2>
 pamrubber - a rubber-sheeting utility that stretches an image
 based on control points
 
@@ -25,12 +21,11 @@ based on control points
 [<i>filename</i>]
 
 <p>Minimum unique abbreviation of options is acceptable.  You may use double
-hyphens instead of single hyphen to denote options.</p>
+hyphens instead of single hyphen to denote options.
 
 <h2 id="description">DESCRIPTION</h2>
 
-<p>This program is part
-of <a href="http://netpbm.sourceforge.net/doc/index.html">Netpbm</a>.</p>
+<p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p>The <b>pamrubber</b> utility converts a pam image into a new image with the
 contents moved around.  The transformation is often called "rubber
@@ -48,7 +43,7 @@ control points (for both source and target).  These are the corners of two
 quadrilaterals that will act as the coordinate system for both source and
 target images.  Consider them as non-orthogonal (0,0), (0,1), (1,0) and (1,1)
 points.  This transformation comes close to the one <b>pamperspective</b>
-does, however that program does other corrections as well.</p>
+does, however that program does other corrections as well.
 
 <p>When you specify less than four control points, the program adds control
 points in the following way.  With three control points, <b>pamrubber</b>
@@ -56,7 +51,7 @@ chooses the fourth one such that the four points form a parallelogram.  With
 two points, <b>pamrubber</b> considers them the opposite corners of a
 rectangle.  When you specify only one control point, <b>pamrubber</b> uses a
 rectangle from the top left corner of the image to the single control
-point.</p>
+point.
 
 <p>In "tri" mode, <b>pamrubber</b> conceptually cuts up the source
 and target image into triangles.  It Transforms within each corresponding pair
@@ -73,7 +68,7 @@ core of this utility in "tri" mode.  Between the three edges of the
 central triangle and the four edges of the image, <b>pamrubber</b> constructs
 another seven triangles.  Four control points define two central connected
 triangles.  In total this results in cutting the source and target image up
-into ten triangles.</p>
+into ten triangles.
 
 <p>In this case clearly a picture says more than a thousand words.  There is a
 graphical illustration of these various modes at
@@ -81,7 +76,7 @@ graphical illustration of these various modes at
 www.schaik.com/netpbm/rubber</a>.  An example of how to use this type of
 rubber sheeting in cartography is in the article
 <a href="http://www.isprs.org/proceedings/XXXVI/5-W1/papers/21.pdf">
-Visualizing the Landscape of Old-Time Tokyo</a>.</p>
+Visualizing the Landscape of Old-Time Tokyo</a>.
 
 
 <h2 id="parameters">PARAMETERS</h2>
@@ -91,13 +86,18 @@ and <i>y</i>.  The source and target image must have the same number of
 control points.  The minimum number of values specified here is 4 for a single
 control point in the source and target image.  The maximum is 16 for four
 control points in each image.
-</p>
+
 
 <p><i>filename</i> is the name of the input file. If you don't specify
-this, <b>pamrubber</b> reads the image from Standard Input.</p>
+this, <b>pamrubber</b> reads the image from Standard Input.
 
 
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamrubber</b> recognizes the following
+command line options:
 <dl compact>
 
 <dt><b>-tri</b> | <b>-quad</b></dt>
@@ -110,7 +110,7 @@ You must specify exactly one of these options.
 <dd>
 <p>This determines whether <b>pamrubber</b> uses nearest neighbor
 interpolation or bilinear interpolation of four source pixels.
-</p>
+
 </dd>
 
 <dt><b>-frame</b></dt>
@@ -137,20 +137,18 @@ and that still works.
 
 </dl>
 
-
 <h2 id="seealso">SEE ALSO</h2>
-<b><a href="http://netpbm.sourceforge.net/doc/pam.html">pam</a></b> and
-<b><a href="http://netpbm.sourceforge.net/doc/pamperspective.html">pamperspective</a></b>
-
+<b><a href="pam.html">pam</a></b> and
+<b><a href="pamperspective.html">pamperspective</a></b>
 
 <h2 id="history">HISTORY</h2>
-<p><b>pamrubber</b> was new in Netpbm 10.54 (March 2011).</p>
+<p><b>pamrubber</b> was new in Netpbm 10.54 (March 2011).
 
 
 <h2 id="authors">AUTHORS</h2>
 
 <p><a href="mailto:willem@schaik.com">Willem van Schaik</a> wrote this program
-in February 2011 and contributed it to Netpbm.</p>
+in February 2011 and contributed it to Netpbm.
 
 <br>
 <hr>
@@ -158,12 +156,12 @@ in February 2011 and contributed it to Netpbm.</p>
 <h2 id="index">Table Of Contents</h2>
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a>
-</li><li><a href="#description">DESCRIPTION</a>
-</li><li><a href="#parameters">PARAMETERS</a>
-</li><li><a href="#options">OPTIONS</a>
-</li><li><a href="#seealso">SEE ALSO</a>
-</li><li><a href="#authors">AUTHORS</a>
-</li>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#parameters">PARAMETERS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#authors">AUTHORS</a>
 </ul>
 </body>
 </html>

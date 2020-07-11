@@ -1,22 +1,13 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<html>
-<head>
-<title>Pamrecolor User Manual</title>
-<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-</head>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamrecolor User Manual</title></head>
 <body>
-
 <h1>pamrecolor</h1>
+Updated: 31 July 2010
+<br>
+<a href="#index">Table Of Contents</a>
 
-<p>Updated: 31 July 2010</p>
-
-<p><a href="#contents">Table Of Contents</a></p>
-
-
-<h2 id="name">NAME</h2>
-
-<p>pamrecolor - alter colors without affecting luminance</p>
+<h2>NAME</h2>
+pamrecolor - alter colors without affecting luminance
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
@@ -31,7 +22,6 @@
 [<b>-randomseed=</b><i>integer</i>]
 
 [<i>infile</i>]
-</p>
 
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -40,7 +30,7 @@ space in place of the equals sign to separate an option name from its value.
 
 <h2 id="description">DESCRIPTION</h2>
 
-<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+<p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamrecolor</b> changes an image's colors to be as close as
 possible to given target colors but with the constraint that the
@@ -49,7 +39,7 @@ image will look identical if both are converted to grayscale
 (e.g. with
 <a href="ppmtopgm.html">ppmtopgm</a>).  You can have <b>pamrecolor</b> select
 target colors randomly, specify a single hue for the entire image, or take the
-target colors from a target image.</p>
+target colors from a target image.
 
 <p><b>pamrecolor</b> works on pseudo-Netpbm images based on arbitrary
 color spaces.  You can define the color space explicitly or choose one
@@ -59,10 +49,15 @@ of many that <b>pamrecolor</b> knows by name.
 exact format of the PAM.  If you want a PNM (PBM, PGM, or PPM) image,
 use <a href="pamtopnm.html">pamtopnm</a> on the output.  There is no
 need to convert if you will use the image as input to a current Netpbm
-program, but many other programs don't know what a PAM is.</p>
+program, but many other programs don't know what a PAM is.
 
 
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamrecolor</b> recognizes the following
+command line options:
 
 <dl>
 
@@ -114,12 +109,12 @@ the format that uses sRGB.
 <p>The default is "ntsc" because this is the color space that the Netpbm
 formats and many graphics utilities use.  As a counterexample,
 <a href="http://www.gimp.org/">GIMP</a> uses sRGB as its native color
-space.</p>
+space.
 
 <p>The luminance values <b>pamrecolor</b> uses for each of the above come from
 Bruce Lindbloom's
 <a href="http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html">
-Computing RGB-to-XYZ and XYZ-to-RGB matrices</a> page.</p></dd>
+Computing RGB-to-XYZ and XYZ-to-RGB matrices</a> page.</dd>
 
 <dt><b>--rmult</b>=<i>fraction</i></dt>
 <dt><b>--gmult</b>=<i>fraction</i></dt>
@@ -142,7 +137,7 @@ library routine</a> (e.g.,&nbsp;"hotpink" or "#ff69b4").
 
 <p>If you specify neither <b>--targetcolor</b> nor
 <b>--colorfile</b>, <b>pamrecolor</b> will randomly select a target color for
-each pixel of the input image.</p>
+each pixel of the input image.
 
 <p>You may not specify both <b>-targetcolor</b> and <b>-colorfile</b>.
 
@@ -159,7 +154,7 @@ image to be repeated in a tile pattern.
 
 <p>If you specify neither <b>--targetcolor</b> nor
 <b>--colorfile</b>, <b>pamrecolor</b> will randomly select a target color for
-each pixel of the input image.</p>
+each pixel of the input image.
 
 <p>You may not specify both <b>-targetcolor</b> and <b>-colorfile</b>.
 
@@ -181,23 +176,23 @@ invocations.
 
 <h2 id="examples">EXAMPLES</h2>
 
-<p>This command tints an image yellow:</p>
+<p>This command tints an image yellow:
 
 <pre>
-    pamrecolor --targetcolor=yellow colorpic.pam > yellowpic.pam
+    pamrecolor --targetcolor=yellow colorpic.pam &gt; yellowpic.pam
 </pre>
 
 <p>This command takes the colors from <b>colorpicture.ppm</b> and applies
-them to <b>graypicture.pgm</b>:</p>
+them to <b>graypicture.pgm</b>:
 
 <pre>
-    pamrecolor --colorfile=colorpic.ppm graypic.pgm > colorizedpic.pam
+    pamrecolor --colorfile=colorpic.ppm graypic.pgm &gt; colorizedpic.pam
 </pre>
 
 <p>The grayscale version of <b>colorizedpic.pam</b> will look just like
 graypic.pgm.  Note that if you use a non-Netpbm tool to do the conversion to
 grayscale, you may additionally need to specify an
-appropriate <b>--colorspace</b> value for your conversion tool.</p>
+appropriate <b>--colorspace</b> value for your conversion tool.
 
 
 <h2 id="notes">NOTES</h2>
@@ -208,25 +203,25 @@ appropriate <b>--colorspace</b> value for your conversion tool.</p>
 <ul>
 <li>Specify a color file that is identical to the input image but with
 some large, colored text added to it.  The text will "magically"
-vanish when the image is converted to grayscale.</li>
+vanish when the image is converted to grayscale.
 
 <li>Provide a low-contrast grayscale image &mdash; perhaps a secret
 message written in similar shades of gray &mdash; as the input file and
 a colorful but completely different image as the color file.  If done
 carefully, the grayscale image can be hidden by the colorful image.
 Only people who know to convert the result to grayscale can recover
-the original grayscale image.</li>
+the original grayscale image.
 
 <li>Use <b>--targetcolor</b>=tan to make an image look like an
 old-timey photograph (or, more precisely, a
 <a href="http://en.wikipedia.org/wiki/Photographic_print_toning">sepia-toned
-photograph</a> of the late 1800s).</li>
+photograph</a> of the late 1800s).
 </ul>
 
 
 <h2 id="history">HISTORY</h2>
 
-<p>Scott Pakin wrote <b>pamrecolor</b> in July 2010.</p>
+<p>Scott Pakin wrote <b>pamrecolor</b> in July 2010.
 
 <p><b>pamrecolor</b> was new in Netpbm 10.52 (September 2010).
 
@@ -234,7 +229,7 @@ photograph</a> of the late 1800s).</li>
 <h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 2010 Scott
-Pakin, <a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
+Pakin, <a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a>
 
 
 <h2 id="seealso">SEE ALSO</h2>
@@ -251,16 +246,15 @@ Pakin, <a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
 <h2 id="index">Table Of Contents</h2>
 
 <ul>
-<li><a href="#synopsis">SYNOPSIS</a></li>
-<li><a href="#description">DESCRIPTION</a></li>
-<li><a href="#options">OPTIONS</a></li>
-<li><a href="#examples">EXAMPLES</a></li>
-<li><a href="#notes">NOTES</a></li>
-<li><a href="#history">HISTORY</a></li>
-<li><a href="#author">AUTHOR</a></li>
-<li><a href="#seealso">SEE ALSO</a></li>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#notes">NOTES</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#seealso">SEE ALSO</a>
 </ul>
 
 </body>
 </html>
-

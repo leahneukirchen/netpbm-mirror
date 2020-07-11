@@ -1,30 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><title>Pamlookup User Manual</title></HEAD>
-<BODY>
-<H1>pamlookup</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamlookup User Manual</title></head>
+<body>
+<h1>pamlookup</h1>
 Updated: 25 July 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
+<h2>NAME</h2>
 pamlookup - map an image to a new image by using it as indices into a table
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamlookup</B>
-<B>-lookupfile=</B><i>lookupfile</i>
-[<B>-byplane</B>]
-<B>-missingcolor=</B><i>color</i>
-[<B>-fit</B>]
-<I>indexfile</I>
+<b>pamlookup</b>
+<b>-lookupfile=</b><i>lookupfile</i>
+[<b>-byplane</b>]
+<b>-missingcolor=</b><i>color</i>
+[<b>-fit</b>]
+<i>indexfile</i>
 
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -111,7 +110,7 @@ index image file and lookup table file are Standard Input.
 
 <h3 id="wholetupleexample">Example - Whole Tuple Indexing</h3>
 
-<P>Here is an example of <b>pamlookup</b>'s function with whole
+<p>Here is an example of <b>pamlookup</b>'s function with whole
 tuple indexing (<b>-byplane</b> not specified).
 
 <p>Consider an index image consisting of a 3x2x1 PAM as follows:
@@ -171,7 +170,7 @@ is the following PPM image:
 
 <h3 id="byplaneexample">Example - By Plane Indexing</h3>
 
-<P>Here is an example of <b>pamlookup</b>'s function with by plane
+<p>Here is an example of <b>pamlookup</b>'s function with by plane
 tuple indexing (<b>-byplane</b> specified).
 
 <p>Consider an index image consisting of a 3x2x3 PAM as follows:
@@ -200,7 +199,7 @@ corresponds to 4, and Index 2 corresponds to 7.  The output of
 </table>
 
 
-<h3 id="misc">Miscellaneous</h3>
+<h3 id="miscellaneous">Miscellaneous</h3>
 
 <p>The <i>indexfile</i> argument identifies the file containing the index PAM
 or PNM image.  <b>-</b> means Standard Input.
@@ -214,12 +213,17 @@ output reflects the combination of both inputs), use <b>pamstack</b> to combine
 the two into one two-plane image (and use a 2-dimensional lookup table image).
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-lookupfile=</B><i>lookupfile</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamlookup</b> recognizes the following
+command line options:
 
-<DD><i>lookupfile</i> names the file that contains the PAM or PNM
+<dl compact>
+<dt><b>-lookupfile=</b><i>lookupfile</i>
+
+<dd><i>lookupfile</i> names the file that contains the PAM or PNM
 image that is the lookup table.  This option is mandatory.
 
 <dt><b>-byplane</b>
@@ -230,9 +234,9 @@ indexing.
 <p>This option was new in Netpbm 10.72 (September 2015).  Before that, there
 is no by plane indexing.
 
-<DT><B>-missingcolor=</B><i>color</i>
+<dt><b>-missingcolor=</b><i>color</i>
 
-<DD>This option is meaningful only if the lookup image (and therefore the 
+<dd>This option is meaningful only if the lookup image (and therefore the 
 output) is a PNM image.  <i>color</i> specifies the color that 
 is to go in the output wherever the index from the input is not present
 in the lookup table (not present means the index exceeds the dimensions
@@ -243,19 +247,19 @@ PPM).
 uses the value from the top left corner of the lookup image whenever
 an index exceeds the dimensions of the lookup image.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
-<P>Another way to deal with a too-small lookup image is to use the 
+<p>Another way to deal with a too-small lookup image is to use the 
 <b>-fit</b> option.
 
 <p>This option has no effect if you also specify <b>-fit</b> or
 <b>-byplane</b>.
 
-<DT><B>-fit</B>
+<dt><b>-fit</b>
 
-<DD>This option says to shrink or expand the lookup image as necessary
+<dd>This option says to shrink or expand the lookup image as necessary
 to fit the indices present in the index image, per the index image's
 maxval.  For example, if your index image has a single plane and a
 maxval of 255 and your lookup image is 1 row of 10 columns,
@@ -272,9 +276,9 @@ option has no effect.
 <b>pamlookup</b> always has the behavior requested by <b>-fit</b> when it does
 by plane indexing.
 
-</DL>
+</dl>
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 <h3>Example: rainfall map</h3>
 
@@ -315,7 +319,7 @@ Now if there are areas that get more than 100 centimeters of rainfall, they
 will just show up black in the output.
 
 <h3>Example: graphical diff</h3>
-<P>
+<p>
 Say you want to compare two PBM (black and white) images visually.  Each
 consists of black foreground pixels on a white background.  You want to
 create an image that contains background where both images contain background
@@ -360,36 +364,36 @@ produce the output:
 </pre>
 
      
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamunlookup.html">pamunlookup</A>,
-<A HREF="pnmremap.html">pnmremap</A>,
-<A HREF="ppmmake.html">ppmmake</A>,
-<A HREF="pnmcat.html">pnmcat</A>,
-<A HREF="pamstack.html">pamstack</A>,
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>
+<a href="pamunlookup.html">pamunlookup</a>,
+<a href="pnmremap.html">pnmremap</a>,
+<a href="ppmmake.html">ppmmake</a>,
+<a href="pnmcat.html">pnmcat</a>,
+<a href="pamstack.html">pamstack</a>,
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>
 
 
-<H2 id="history">HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamlookup</b> was new in Netpbm 10.13 (December 2002).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL COMPACT>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul compact>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
   <ul>
   <li><a href="#lookupimage">The Lookup Table Image</a>  
   <li><a href="#wholetupleexample">Example - Whole Tuple Indexing</a>  
   <li><a href="#byplaneexample">Example - By Plane Indexing</a>  
   <li><a href="#miscellaneous">Miscellaneous</a>  
   </ul>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

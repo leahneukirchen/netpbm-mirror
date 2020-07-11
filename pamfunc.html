@@ -1,19 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pamfunc User Manual</TITLE></HEAD>
-
-<BODY>
-<H1>pamfunc</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamfunc User Manual</title></head>
+<body>
+<h1>pamfunc</h1>
 Updated: December 2013
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamfunc - Apply a simple monadic arithmetic function to a Netpbm image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamfunc</B>
+<b>pamfunc</b>
 {
 <b>-multiplier=</b><i>realnum</i> |
 <b>-divisor=</b><i>realnum</i> |
@@ -29,23 +27,23 @@ pamfunc - Apply a simple monadic arithmetic function to a Netpbm image
 <b>-shiftright=</b><i>count</i>
 [<b>-changemaxval</b>]
 }
-[<I>filespec</I>]
+[<i>filespec</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pamfunc</b> reads a Netpbm image as input and produces a Netpbm
+<p><b>pamfunc</b> reads a Netpbm image as input and produces a Netpbm
 image as output, with the same format, and dimensions as the
 input.  <b>pamfunc</b> applies a simple transfer function to each
 sample in the input to generate the corresponding sample in the
 output.  The options determine what function.
 
-<P><b>pamarith</b> is the same thing for binary functions -- it takes
+<p><b>pamarith</b> is the same thing for binary functions -- it takes
 two images as input and applies a specified simple arithmetic function
 (e.g. addition) on pairs of samples from the two to produce the single
 output image.
@@ -85,8 +83,8 @@ range [0,1].
 
 <h4>Bit string functions</h4>
 
-<P>The bit string functions are those selected by the options
-<B>-andmask</B>, <B>-ormask</B>, <B>-xormask</B>, <B>-not</B>,
+<p>The bit string functions are those selected by the options
+<b>-andmask</b>, <b>-ormask</b>, <b>-xormask</b>, <b>-not</b>,
 <b>-shiftleft</b>, and <b>-shiftright</b>.
 
 <p>With these functions, the maxval has a very different meaning than in
@@ -112,44 +110,49 @@ more significant bits than the width indicated by the maxval.
 greater than the width indicated by the maxval.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-multiplier=<i>realnum</i></B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamfunc</b> recognizes the following
+command line options:
 
-<DD>
-     <P>This option makes the transfer function that of multiplying by
+<dl compact>
+<dt><b>-multiplier=<i>realnum</i></b>
+
+<dd>
+     <p>This option makes the transfer function that of multiplying by
      <i>realnum</i>.  <i>realnum</i> must be nonnegative.  If the result
      is greater than one, it is clipped to one.
 
-     <P>Where the input is a PGM or PPM image, this has the effect of
+     <p>Where the input is a PGM or PPM image, this has the effect of
      dimming or brightening it.  For a different kind of brightening,
      see <a href="pambrighten.html"><b>pambrighten</b></a> and
      <a href="ppmflash.html"><b>ppmflash</b></a>
 
-     <P>Also, see <a href="ppmdim.html"><b>ppmdim</b></a>, which does the same
+     <p>Also, see <a href="ppmdim.html"><b>ppmdim</b></a>, which does the same
      thing as <b>pamfunc -multiplier</b> on a PPM image with a multiplier
      between zero and one, except it uses integer arithmetic, so it may be
      faster.
 
-     <P>And <a href="ppmfade.html"><b>ppmfade</b></a> can generate a whole
+     <p>And <a href="ppmfade.html"><b>ppmfade</b></a> can generate a whole
      sequence of images of brightness declining to black or increasing to
      white, if that's what you want.
      
-<DT><B>-divisor=<i>realnum</i></B>
+<dt><b>-divisor=<i>realnum</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of dividing by
+<dd>
+     <p>This option makes the transfer function that of dividing by
      <i>realnum</i>.  <i>realnum</i> must be nonnegative.  If the result
      is greater than one, it is clipped to one.
 
-     <P>This is the same function as you would get with <b>-multiplier</b>,
+     <p>This is the same function as you would get with <b>-multiplier</b>,
      specifying the multiplicative inverse of <i>realnum</i>.
      
-<DT><B>-adder=<i>integer</i></B>
+<dt><b>-adder=<i>integer</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of adding
+<dd>
+     <p>This option makes the transfer function that of adding
      <i>integer</i>/<i>maxval</i>.  If the result is greater than one, it is
      clipped to one.  If it is less than zero, it is clipped to zero.
 
@@ -157,10 +160,10 @@ greater than the width indicated by the maxval.
      and an "adder" is a snake.  We use "adder" because
      it makes more sense.
      
-<DT><B>-subtractor=<i>integer</i></B>
+<dt><b>-subtractor=<i>integer</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of subtracting
+<dd>
+     <p>This option makes the transfer function that of subtracting
      <i>integer</i>/<i>maxval</i>.  If the result is greater than one, it is
      clipped to one.  If it is less than zero, it is clipped to zero.
 
@@ -168,53 +171,53 @@ greater than the width indicated by the maxval.
      "subtrahend" rather than a "subtractor." We use
      "subtractor" because it makes more sense.
 
-     <P>This is the same function as you would get with <b>-adder</b>,
+     <p>This is the same function as you would get with <b>-adder</b>,
      specifying the negative of <i>integer</i>.
      
-<DT><B>-min=<i>wholenum</i></B>
+<dt><b>-min=<i>wholenum</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of taking the maximum of
+<dd>
+     <p>This option makes the transfer function that of taking the maximum of
      the argument and <i>wholenum</i>/<i>maxval</i>.  I.e the minimum value in
      the output will be <i>wholenum</i>/<i>maxval</i>.
 
      If <i>wholenum</i>/<i>maxval</i> is greater than one, though, every value
      in the output will be one.
 
-<DT><B>-max=<i>wholenum</i></B>
+<dt><b>-max=<i>wholenum</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of taking the minimum of
+<dd>
+     <p>This option makes the transfer function that of taking the minimum of
      the argument and <i>wholenum</i>/<i>maxval</i>.  I.e the maximum value in
      the output will be <i>wholenum</i>/<i>maxval</i>.
 
      If <i>wholenum</i>/<i>maxval</i> is greater than one, the function is
      idempotent -- the output is identical to the input.
      
-<DT><B>-andmask=<i>hexmask</i></B>
+<dt><b>-andmask=<i>hexmask</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of bitwise anding
+<dd>
+     <p>This option makes the transfer function that of bitwise anding
      with <i>hexmask</i>.
 
      <p><i>hexmask</i> is in hexadecimal.  Example: <kbd>0f</kbd>
 
      <p>This option was new in Netpbm 10.40 (September 2007).
 
-<DT><B>-ormask=<i>hexmask</i></B>
+<dt><b>-ormask=<i>hexmask</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of bitwise
+<dd>
+     <p>This option makes the transfer function that of bitwise
      inclusive oring with <i>hexmask</i>.
 
      <p>This is analogous to <b>-andmask</b>.
 
      <p>This option was new in Netpbm 10.40 (September 2007).
 
-<DT><B>-xormask=<i>hexmask</i></B>
+<dt><b>-xormask=<i>hexmask</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of bitwise
+<dd>
+     <p>This option makes the transfer function that of bitwise
      exclusive oring with <i>hexmask</i>.
 
      <p>This is analogous to <b>-andmask</b>.
@@ -232,18 +235,18 @@ greater than the width indicated by the maxval.
 
      <p>This option was new in Netpbm 10.40 (September 2007).
 
-<DT><B>-shiftleft=<i>count</i></B>
+<dt><b>-shiftleft=<i>count</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of bitwise shifting
+<dd>
+     <p>This option makes the transfer function that of bitwise shifting
      left by <i>count</i> bits.
 
      <p>This option was new in Netpbm 10.40 (September 2007).
 
-<DT><B>-shiftright=<i>count</i></B>
+<dt><b>-shiftright=<i>count</i></b>
 
-<DD>
-     <P>This option makes the transfer function that of bitwise shifting
+<dd>
+     <p>This option makes the transfer function that of bitwise shifting
      right by <i>count</i> bits.
 
      <p>This is analogous to <b>-shiftleft</b>.
@@ -280,39 +283,39 @@ and the round trip is idempotent.
 
 <p>This option was new in Netpbm 10.65 (December 2013).
 
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppmdim.html">ppmdim</A></B>,
-<B><A HREF="pambrighten.html">pambrighten</A></B>,
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="pamarith.html">pamarith</A></B>,
-<b><A HREF="pamsummcol.html">pamsummcol</A></b>,
-<b><A HREF="pamsumm.html">pamsumm</A></b>,
-<B><A HREF="ppmfade.html">ppmfade</A></B>,
-<B><A HREF="pnminvert.html">pnminvert</A></B>,
+<b><a href="ppmdim.html">ppmdim</a></b>,
+<b><a href="pambrighten.html">pambrighten</a></b>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="pamarith.html">pamarith</a></b>,
+<b><a href="pamsummcol.html">pamsummcol</a></b>,
+<b><a href="pamsumm.html">pamsumm</a></b>,
+<b><a href="ppmfade.html">ppmfade</a></b>,
+<b><a href="pnminvert.html">pnminvert</a></b>,
 
-<B><A HREF="pam.html">pam</A></B>,
+<b><a href="pam.html">pam</a></b>,
 
-<B><A HREF="pnm.html">pnm</A></B>,
+<b><a href="pnm.html">pnm</a></b>,
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p>This program was added to Netpbm in Release 10.3 (June 2002).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
   <ul>
     <li><a href="#values">Values</a>
     </ul>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

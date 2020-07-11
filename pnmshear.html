@@ -1,28 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmshear User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmshear</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmshear User Manual</title></head>
+<body>
+<h1>pnmshear</h1>
 Updated: 22 March 2020
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pnmshear - shear a PNM image by a specified angle
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmshear</B>
+<b>pnmshear</b>
 
-[<B>-noantialias</B>] [<B>-background=</B><I>color</I>]
-<I>angle</I> [<I>pnmfile</I>]
+[<b>-noantialias</b>] [<b>-background=</b><i>color</i>]
+<i>angle</i> [<i>pnmfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or equals signs between an option name and
 its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -31,46 +30,51 @@ specified angle and produce a PNM image as output.  If the input file
 is in color, the output will be too, otherwise it will be grayscale.
 The angle is in degrees (floating point), and measures this:
 
-<PRE>
+<pre>
     +-------+  +-------+
     |       |  |\       \
     |  OLD  |  | \  NEW  \
     |       |  |an\       \
     +-------+  |gle+-------+
-</PRE>
+</pre>
 
 If the angle is negative, it shears the other way:
-<PRE>
+<pre>
     +-------+  |-an+-------+
     |       |  |gl/       /
     |  OLD  |  |e/  NEW  /
     |       |  |/       /
     +-------+  +-------+
-</PRE>
+</pre>
 
 The angle should not get too close to 90 or -90, or the resulting image will
 be unreasonably wide.  In fact, if it gets too close, the width will be so
 large that <b>pnmshear</b> cannot do computations in the word sizes it uses,
 and the program detects this and fails.
 
-<P><b>pnmshear</b> does the shearing by looping over the source pixels
+<p><b>pnmshear</b> does the shearing by looping over the source pixels
 and distributing fractions to each of the destination pixels.  This
 has an "anti-aliasing" effect - it avoids jagged edges and
 similar artifacts.  However, it also means that the original colors in
 the image are modified and there are typically more of them than you
 started with.  If you need to keep precisely the same set of colors,
-see the <B>-noantialias</B> option.  If the expanded palette is a
+see the <b>-noantialias</b> option.  If the expanded palette is a
 problem, you can run the result through <b>pnmquant</b>.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><b>-background=</b><i>color</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmshear</b> recognizes the following
+command line options:
 
-<DD>This determines the color of the background on which the sheared image
+<dl compact>
+<dt><b>-background=</b><i>color</i>
+
+<dd>This determines the color of the background on which the sheared image
 sits.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
@@ -89,7 +93,7 @@ of synthesizing output pixels from multiple input pixels.  The latter could
 cause the output to contain colors that are not in the input, which may not
 be desirable.  It also probably makes the output contain a large number of
 colors.  If you need a small number of colors, but it doesn't matter if they
-are the exact ones from the input, consider using <b>pnmquant</B> on the 
+are the exact ones from the input, consider using <b>pnmquant</b> on the 
 output instead of using <b>-noantialias</b>.
 
 <p>Note that to ensure the output does not contain colors that are not
@@ -98,27 +102,26 @@ in the input, you also must consider the background color.  See the
 
 </dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmrotate.html">pnmrotate</A>,
-<A HREF="pamflip.html">pamflip</A>,
-<A HREF="pnmquant.html">pnmquant</A>,
-<A HREF="pnm.html">pnm</A>
+<a href="pnmrotate.html">pnmrotate</a>,
+<a href="pamflip.html">pamflip</a>,
+<a href="pnmquant.html">pnmquant</a>,
+<a href="pnm.html">pnm</a>
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

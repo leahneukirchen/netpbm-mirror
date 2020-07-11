@@ -1,79 +1,83 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ilbmtoppm User Manual</TITLE></HEAD>
-<BODY>
-<H1>ilbmtoppm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ilbmtoppm User Manual</title></head>
+<body>
+<h1>ilbmtoppm</h1>
 Updated: 12 November 2014
-<BR>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A HREF="#index">Table Of Contents</A>
-
-<H2>NAME</H2>
+<h2>NAME</h2>
 ilbmtoppm - convert an ILBM file into a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ilbmtoppm</B>
-[<B>-ignore</B>&lt;chunkID&gt;<B>]</B>
+<b>ilbmtoppm</b>
+[<b>-ignore</b>&lt;chunkID&gt;<b>]</b>
 [
-<B>-isham</B> | <b>-isnotham</b> |
-<B>-isehb</B> | <b>-isnotehb</b> |
+<b>-isham</b> | <b>-isnotham</b> |
+<b>-isehb</b> | <b>-isnotehb</b> |
 <b>-isdeep</b> | <b>-isnotdeep</b>
 ]
-[<B>-cmaponly</B>]
-[<B>-adjustcolors</B>]
+[<b>-cmaponly</b>]
+[<b>-adjustcolors</b>]
 [<b>-transparent </b><i>color</i>]
 [<b>-maskfile</b> <i>filename</i>
-[<B>-verbose</B>]
-[<I>ILBMfile</I>]
+[<b>-verbose</b>]
+[<i>ILBMfile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ilbmtoppm</b> reads an IFF ILBM file as input and produces a PPM
 image as output.  <b>ilbmtoppm</b> can handle the following ILBM types:
 
-<UL>
-<LI>Normal ILBMs with 1-16 planes.
-<LI>Amiga Extra_Halfbrite (EHB)
-<LI>Amiga HAM with 3-16 planes.
-<LI>24 bit.
-<LI>Multiplatte (normal or HAM) pictures.
-<LI>Color map (BMHD + CMAP chunk only, nPlanes = 0).
-<LI>Unofficial direct color.  1-16 planes for each color component.
-</UL>
+<ul>
+<li>Normal ILBMs with 1-16 planes.
+<li>Amiga Extra_Halfbrite (EHB)
+<li>Amiga HAM with 3-16 planes.
+<li>24 bit.
+<li>Multiplatte (normal or HAM) pictures.
+<li>Color map (BMHD + CMAP chunk only, nPlanes = 0).
+<li>Unofficial direct color.  1-16 planes for each color component.
+</ul>
 
-<P><B>ilbmtoppm</b> uses these ILBM chunks: BMHD, CMAP, CAMG (only HAM
+<p><b>ilbmtoppm</b> uses these ILBM chunks: BMHD, CMAP, CAMG (only HAM
 &amp; EHB flags used), PCHG, BODY unofficial DCOL chunk to identify
 direct color ILBM.  It ignores these chunks: GRAB, DEST, SPRT, CRNG,
 CCRT, CLUT, DPPV, DRNG, EPSF.  It ignores, but displays in verbose
 mode, these: NAME, AUTH, (c), ANNO, DPI.  It skips chunks whose type
 it doesn't recognize.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ilbmtoppm</b> recognizes the following
+command line options:
+
+<dl compact>
 
 <dt><b>-transparent </b><i>color</i>
 <dd>This is the color that should "show through" in places where
 the image is transparent.
 
-<P><i>color</i> is like the <a href="libnetpbm_image.html#colorname">argument of
+<p><i>color</i> is like the <a href="libnetpbm_image.html#colorname">argument of
 the <b>pnm_parsecolor()</b> library routine</a>.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Give some information about the ILBM file.
+<dd>Give some information about the ILBM file.
 
-<DT><B>-ignore</b> <i>chunkID</i>
+<dt><b>-ignore</b> <i>chunkID</i>
 
-<DD>Skip a chunk.  <i>chunkID</i> is the 4-letter IFF chunk identifier
+<dd>Skip a chunk.  <i>chunkID</i> is the 4-letter IFF chunk identifier
 of the chunk to be skipped.
 
-<DT><B>-isham</b> | <b>-isehb</B>
+<dt><b>-isham</b> | <b>-isehb</b>
 
-<DD>Treat the input file as a HAM or Extra_Halfbrite picture, even if
+<dd>Treat the input file as a HAM or Extra_Halfbrite picture, even if
 these flags are not set in the CAMG chunk (or if there is no CAMG
 chunk).
 
@@ -96,47 +100,47 @@ map</em>, not the image itself.
 ILBM is a pure color map stream (it has a bitmap header with an <i>nplanes</i>
 value of zero or has no BODY chunk.
 
-<DT><B>-adjustcolors</B>
+<dt><b>-adjustcolors</b>
 
-<DD>If all colors in the CMAP have a value of less then 16, ilbmtoppm
+<dd>If all colors in the CMAP have a value of less then 16, ilbmtoppm
 assumes a 4-bit colormap and gives a warning.  With this option the
 colormap is scaled to 8 bits.
 
-</DL>
+</dl>
 
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 <p>The multipalette PCHG BigLineChanges and Huffman decompression code
 is untested.
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
 Amiga ROM Kernel Reference Manual - Devices (3rd Ed.)
 Addison Wesley, ISBN 0-201-56775-X
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="ppmtoilbm.html">ppmtoilbm</A>,
-<A HREF="ppm.html">ppm</A>
+<a href="ppmtoilbm.html">ppmtoilbm</a>,
+<a href="ppm.html">ppm</a>
 
-<H2 id="authors">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<p>Modified October 1993 by Ingo Wilken (<A
-HREF="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</A>)
+<p>Modified October 1993 by Ingo Wilken (<a
+href="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</a>)
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

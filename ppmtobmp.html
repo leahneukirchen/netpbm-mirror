@@ -1,63 +1,67 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtobmp User Manual</TITLE>
-</HEAD><BODY>
-<H1>ppmtobmp</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtobmp User Manual</title>
+</head><body>
+<h1>ppmtobmp</h1>
 Updated: 20 December 2018
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 ppmtobmp - convert a PPM image into a BMP file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtobmp</B>
+<b>ppmtobmp</b>
 
-[<B>-windows</B>]
+[<b>-windows</b>]
 
-[<B>-os2</B>]
+[<b>-os2</b>]
 
-[<B>-bpp=</B><I>bits_per_pixel</I>]
+[<b>-bpp=</b><i>bits_per_pixel</i>]
 
 [<b>-mapfile=</b><i>filename</i>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtobmp</b> reads a PPM image as input and produces a Microsoft
 Windows or OS/2 BMP file as output.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-windows</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtobmp</b> recognizes the following
+command line options:
 
-<DD>Tells the program to produce a Microsoft Windows BMP file.  (This
+<dl compact>
+<dt><b>-windows</b>
+
+<dd>Tells the program to produce a Microsoft Windows BMP file.  (This
 is the default.)
 
-<DT><B>-os2</B>
+<dt><b>-os2</b>
 
-<DD>Tells the program to produce an OS/2 BMP file.  (Before August
+<dd>Tells the program to produce an OS/2 BMP file.  (Before August
 2000, this was the default).
 
-<DT><B>-bpp</B>
+<dt><b>-bpp</b>
 
-<DD>This tells how many bits per pixel you want the BMP file to
+<dd>This tells how many bits per pixel you want the BMP file to
 contain.  Only 1, 4, 8, and 24 are possible.  By default,
-<B>ppmtobmp</B> chooses the smallest number with which it can
+<b>ppmtobmp</b> chooses the smallest number with which it can
 represent all the colors in the input image.  If you specify a number
 too small to represent all the colors in the input image,
-<B>ppmtobmp</B> tells you and terminates.  You can use <B>pnmquant</B>
-or <B>ppmdither</B> to reduce the number of colors in the image.
+<b>ppmtobmp</b> tells you and terminates.  You can use <b>pnmquant</b>
+or <b>ppmdither</b> to reduce the number of colors in the image.
 
 <p>Before Netpbm 10.85 (December 2018), <b>ppmtobmp</b> ignores this option if
 the input is PBM and produces a BMP with 1 bit per pixel.  With these
@@ -102,58 +106,58 @@ file.  <b>pamseq</b> too.
   palette in which each index is equal to the indexed gray value, and then
   ignoring the palette when you process the BMP image.
   
-<P>Here is an example of doing that:
+<p>Here is an example of doing that:
 
   <pre>
     <kbd>
-    $ pamseq 1 255 >mapfile.pgm
+    $ pamseq 1 255 &gt; mapfile.pgm
 
-    $ ppmtobmp -mapfile=mapfile.pgm input.pgm >output.bmp
+    $ ppmtobmp -mapfile=mapfile.pgm input.pgm &gt; output.bmp
     </kbd>
   </pre>
     
 <p>This option was new in Netpbm 10.45 (December 2008).
 
-</DL>
+</dl>
 
 
-<H2 id="notes">NOTES</H2>
+<h2 id="notes">NOTES</h2>
 
-<P>To get a faithful reproduction of the input image, the maxval of the
+<p>To get a faithful reproduction of the input image, the maxval of the
 input image must be 255.  If it is something else, 
 the colors in the BMP file may be slightly different from the colors
 in the input.
 
-<P>Windows icons are not BMP files.  Use <B>ppmtowinicon</B> to
+<p>Windows icons are not BMP files.  Use <b>ppmtowinicon</b> to
 create those.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="bmptoppm.html">bmptoppm</A></B>,
+<b><a href="bmptoppm.html">bmptoppm</a></b>,
 
-<B><A HREF="ppmtowinicon.html">ppmtowinicon</A></B>,
+<b><a href="ppmtowinicon.html">ppmtowinicon</a></b>,
 
-<B><A HREF="pnmquant.html">pnmquant</A></B>,
+<b><a href="pnmquant.html">pnmquant</a></b>,
 
-<B><A HREF="ppmdither.html">ppmdither</A></B>,
+<b><a href="ppmdither.html">ppmdither</a></b>,
 
-<B><A HREF="pnmremap.html">pnmremap</A></B>,
+<b><a href="pnmremap.html">pnmremap</a></b>,
 
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1992 by David W. Sanderson.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#notes">NOTES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#notes">NOTES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

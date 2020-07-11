@@ -1,22 +1,21 @@
- <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamexec User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamexec</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamexec User Manual</title></head>
+<body>
+<h1>pamexec</h1>
 Updated: 11 August 2011
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamexec - Execute a shell command on each image in a Netpbm image stream
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamexec</B>
+<b>pamexec</b>
 
 ["<i>command</i>"]
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
 [<b>-check</b>]
 
@@ -25,7 +24,7 @@ hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -33,8 +32,8 @@ space in place of the equals sign to separate an option name from its value.
 runs a specified shell command and supplies the image to it as Standard
 Input (with a pipe).
 
-<P><I>netpbmfile</I> is the file name of the input file, or
-<B>-</B> to indicate Standard Input.  The default is Standard Input.
+<p><i>netpbmfile</i> is the file name of the input file, or
+<b>-</b> to indicate Standard Input.  The default is Standard Input.
 
 <p>Many Netpbm programs understand multimage Netpbm streams themselves,
 so you don't need to use <b>pamexec</b> to run the program on the images
@@ -54,6 +53,11 @@ the result to <b>pamexec</b>.
 
 
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamexec</b> recognizes the following
+command line option:
 
 <dl>
 <dt><b>-check</b>
@@ -92,24 +96,25 @@ you can buffer through a temporary file like this:
 <p>Michael Pot wrote it, borrowing from <b>pamsplit</b>.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamfile.html">pamfile</A></B>,
-<B><A HREF="pampick.html">pampick</A></B>,
-<B><A HREF="pamsplit.html">pamsplit</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
-<B><A HREF="pam.html">pam</A></B>,
-<B>cat</b> man page
+<b><a href="pamfile.html">pamfile</a></b>,
+<b><a href="pampick.html">pampick</a></b>,
+<b><a href="pamsplit.html">pamsplit</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="pam.html">pam</a></b>,
+<b>cat</b> man page
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#applications">APPLICATIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#applications">APPLICATIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

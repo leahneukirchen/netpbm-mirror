@@ -1,37 +1,36 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamfile User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamfile</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamfile User Manual</title></head>
+<body>
+<h1>pamfile</h1>
 Updated: 04 July 2020
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamfile - describe a Netpbm (PAM or PNM) file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamfile</B>
+<b>pamfile</b>
 
-[<B>-allimages</B>]
-[<B>-comments</B>]
-[<B>-count</B>]
-[<B>-machine</B>]
-[<B>-size</B>]
+[<b>-allimages</b>]
+[<b>-comments</b>]
+[<b>-count</b>]
+[<b>-machine</b>]
+[<b>-size</b>]
 
-[<I>file</i> ...]
+[<i>file</i> ...]
 
-<P>Minimum unique abbreviations of options are acceptable.  You may use
+<p>Minimum unique abbreviations of options are acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pamfile</b> reads one or more Netpbm files as input and writes
+<p><b>pamfile</b> reads one or more Netpbm files as input and writes
 out short descriptions of the image type, size, etc.  This is partly
 for use in shell scripts, so the format is not particularly pretty.
 
@@ -39,13 +38,18 @@ for use in shell scripts, so the format is not particularly pretty.
 If that file is a pipe, that might cause problems for the process that is
 feeding the pipe.  In that case, see the <b>-allimages</b> option.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-allimages</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamfile</b> recognizes the following
+command line options:
 
-<DD>This option causes <b>pamfile</b> to describe every image in each
-input file.  Without this option, <B>pamfile</B> describes only the
+<dl compact>
+<dt><b>-allimages</b>
+
+<dd>This option causes <b>pamfile</b> to describe every image in each
+input file.  Without this option, <b>pamfile</b> describes only the
 first image in each input file.
 
 <p>This option also causes <b>pamfile</b> to read all the images from 
@@ -91,8 +95,8 @@ and <b>-size</b>.
   as with no options.
 
   <p>The output is one line of ASCII text per image.  Each line consists of
-    the file name, followed by a colon, followed by a space, then the
-    following tokens with a space in between:
+     the file name, followed by a colon, followed by a space, then the
+     following tokens with a space in between:
 
     <ol>
       <li>Format: &quot;PAM&quot;, &quot;PBM&quot;, &quot;PGM&quot;, or
@@ -132,28 +136,27 @@ use <b>-machine</b> instead.
 
 <p>This option was new in Netpbm 10.86 (March 2019).
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pam.html">pam</A></B>,
-<B><A HREF="ppmhist.html">ppmhist</A></B>,
-<B>file</B>
+<b><a href="pam.html">pam</a></b>,
+<b><a href="ppmhist.html">ppmhist</a></b>,
+<b>file</b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Jef Poskanzer.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
 

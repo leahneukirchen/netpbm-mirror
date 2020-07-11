@@ -1,24 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtog3 User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtog3</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtog3 User Manual</title></head>
+<body>
+<h1>pbmtog3</h1>
 Updated: 20 April 2017
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pbmtog3 - convert a PBM image into a Group 3 MH fax file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtog3</B>
+<b>pbmtog3</b>
 [<b>-reversebits</b>]
 [<b>-nofixedwidth</b>]
 [<b>-align8</b>|<b>-align16</b>]
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,11 +27,16 @@ file as output.
 <p>You can also generate a TIFF file that uses the same encoding
 inside, with <b>pamtotiff</b>.
 
-<P>There is no program in Netpbm that generates other fax formats,
+<p>There is no program in Netpbm that generates other fax formats,
 such as MR and MMR, but <b>pamtotiff</b> can generate TIFF files that
 use those encodings.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtog3</b> recognizes the following
+command line options:
 <dl>
 <dt><b>-reversebits</b>
 
@@ -66,19 +70,18 @@ You cannot specify both.
 
 </dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="g3topbm.html">g3topbm</A>,
-<A HREF="pamtotiff.html">pamtotiff</A>,
-<A HREF="pbm.html">pbm</A>
-<A HREF="faxformat.html">fax formats</A>
+<a href="g3topbm.html">g3topbm</a>,
+<a href="pamtotiff.html">pamtotiff</a>,
+<a href="pbm.html">pbm</a>,
+<a href="faxformat.html">fax formats</a>
 
-
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p>Before Netpbm 10.79 (June 2017), there was a different program by the same
 name in Netpbm, which was written by by Paul Haeberli
-&lt;<A HREF="mailto:paul@manray.sgi.com">paul@manray.sgi.com</A>&gt; in 1989
+&lt;<a href="mailto:paul@manray.sgi.com">paul@manray.sgi.com</a>&gt; in 1989
 and then modified extensively by others.
 
 <p>Akira Urushibata &lt;afu@wta.att.ne.jp&gt; wrote the current version, with
@@ -87,14 +90,14 @@ public domain.
 
 <p>The current program is backward compatible with the pre-10.79 version.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

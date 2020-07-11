@@ -1,52 +1,56 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtodjvurle User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtodjvurle</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtodjvurle User Manual</title></head>
+<body>
+<h1>pamtodjvurle</h1>
 Updated: 10 April 2004
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamtodjvurle - convert a Netpbm image to DjVu Color RLE format
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtodjvurle</B>
+<b>pamtodjvurle</b>
 
 [<b>-transparent</b> <i>color</i>]
-[<I>netpbmfile</I> [<I>rlefile</I>]]
+[<i>netpbmfile</i> [<i>rlefile</i>]]
 
 <p>Minimum unique abbreviation of options in acceptable.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamtodjvurle</b> reads a Netpbm image (PNM or PAM equivalent of
 PNM) as input and produces DjVu Color RLE format as output.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-transparent</b> <i>colorname</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtodjvurle</b> recognizes the following
+command line option:
 
-<DD>This option indicates which color in the image should be
+<dl compact>
+<dt><b>-transparent</b> <i>colorname</i>
+
+<dd>This option indicates which color in the image should be
 considered transparent.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
 <p>Default is "white".
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmtodjvurle.html">pbmtodjvurle</A>
-<A HREF="pam.html">pam</A>
+<a href="pbmtodjvurle.html">pbmtodjvurle</a>
+<a href="pam.html">pam</a>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamtodjvurle</b> was new in Netpbm 10.22 (April 2004) but a
 program that did almost the same thing, called <b>ppmtodjvurle</b>,
@@ -55,14 +59,14 @@ contributed to Netpbm by Scott Pakin &lt;scott+pbm@pakin.org&gt;.
 <b>pamtodjvurle</b> uses techniques taken from <b>ppmtodjvurle</b>,
 but no code is copied between them.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

@@ -1,22 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Xwdtopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>xwdtopnm</H1>
-Updated: 8 January 2010
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Xwdtopnm User Manual</title></head>
+<body>
+<h1>xwdtopnm</h1>
+Updated: 08 January 2010
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 xwdtopnm - convert an X11 or X10 window dump file to a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>xwdtopnm</B>
+<b>xwdtopnm</b>
 [<b>-verbose</b>]
 [<b>-headerdump</b>]
-[<I>xwdfile</I>]
+[<i>xwdfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -26,7 +26,7 @@ on the input file - if it's black and white, the output is PBM.  If
 it's grayscale, the output is PGM.  Otherwise, it's PPM.  The program
 tells you which type it is writing.
 
-<P>Using this program, you can convert anything you can display on an
+<p>Using this program, you can convert anything you can display on an
 X workstation's screen into a PNM image.  Just display whatever you're
 interested in, run the <b>xwd</b> program to capture the contents of
 the window, run it through <b>xwdtopnm</b>, and then use <b>pamcut</b>
@@ -48,7 +48,12 @@ configuration).  In particular, it cannot convert one with more than 24 bits
 per pixel.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>xwdtopnm</b> recognizes the following
+command line options:
 
 <dl>
 <dt><b>-verbose</b>
@@ -99,31 +104,31 @@ samples.  You can quiet this warning with the <b>-quiet</b> <a href="index.html#
 (March 2009).
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmtoxwd.html">pnmtoxwd</A>,
-<A HREF="pamendian.html">pamendian</A>,
-<A HREF="pamdepth.html">pamdepth</A>,
-<A HREF="pnm.html">pnm</A>,
+<a href="pnmtoxwd.html">pnmtoxwd</a>,
+<a href="pamendian.html">pamendian</a>,
+<a href="pamdepth.html">pamdepth</a>,
+<a href="pnm.html">pnm</a>,
 <b>xwd</b> man page
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
-<HR>
+<hr>
 
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
 <li><a href="#notes">NOTES</a>
   <ul>
   <li><a href="#twobytesamples">Two Byte Samples</a>
   </ul>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

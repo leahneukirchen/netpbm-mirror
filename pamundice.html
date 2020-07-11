@@ -1,13 +1,12 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamundice User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamundice</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamundice User Manual</title></head>
+<body>
+<h1>pamundice</h1>
 Updated: 26 April 2020
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamundice - combine grid of images (tiles) into one
 
 <h2 id="example">EXAMPLE</h2>
@@ -22,29 +21,29 @@ pamundice - combine grid of images (tiles) into one
 </pre>
 
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamundice</B>
+<b>pamundice</b>
 
-[<B>-across=</B><I>n</I>]
+[<b>-across=</b><i>n</i>]
 
-[<B>-down=</B><I>n</I>]
+[<b>-down=</b><i>n</i>]
 
-[<B>-hoverlap=</B><I>pixels</I>]
+[<b>-hoverlap=</b><i>pixels</i>]
 
-[<B>-voverlap=</B><I>pixels</I>]
+[<b>-voverlap=</b><i>pixels</i>]
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
 {<i>input_filename_pattern</i>,
 <b>-listfile=</b><i>filename</i>}
 
 
-<P>You can use the minimum unique abbreviation of the options.  You can use
+<p>You can use the minimum unique abbreviation of the options.  You can use
 two hyphens instead of one.  You can separate an option name from its value
 with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -160,27 +159,32 @@ produces, except that the precision may be more or less.
 numbered image).
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-across=</B><I>N</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamundice</b> recognizes the following
+command line options:
 
-<DD>This is the number of tiles across in the grid, i.e. the number of
+<dl compact>
+<dt><b>-across=</b><i>N</i>
+
+<dd>This is the number of tiles across in the grid, i.e. the number of
 tiles in each rank, or the number of files.
 
 <p>Default is 1.
 
 
-<DT><B>-down=</B><I>N</I>
+<dt><b>-down=</b><i>N</i>
 
-<DD>This is the number of tiles up and down in the grid, i.e. the
+<dd>This is the number of tiles up and down in the grid, i.e. the
 number of tiles in each file, or the number of ranks.
 
 <p>Default is 1.
 
-<DT><B>-hoverlap=</B><I>pixels</I>
+<dt><b>-hoverlap=</b><i>pixels</i>
 
-<DD>This is the amount in pixels to overlap the tiles horizontally.
+<dd>This is the amount in pixels to overlap the tiles horizontally.
 <b>pamundice</b> clips this much off the right edge of every tile
 before joining it to the adjacent image to the right.  The tiles along
 the right edge remain whole.
@@ -192,9 +196,9 @@ option of <b>pamdice</b>.
 
 <p>Default is zero -- no overlap.
 
-<DT><B>-voverlap=</B><I>pixels</I>
+<dt><b>-voverlap=</b><i>pixels</i>
 
-<DD>This is analogous to <b>-hoverlap</b>, but <b>pamundice</b>
+<dd>This is analogous to <b>-hoverlap</b>, but <b>pamundice</b>
 clips the bottom edge of each image before joining it to the one below.
 
 <dt><b>-listfile=</b><i>filename</i>
@@ -213,37 +217,37 @@ This is an alternative to specifying a file name pattern as an argument.
 
 <p>This option was new in Netpbm 10.90 (March 2020).
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Print information about the processing to Standard Error.
+<dd>Print information about the processing to Standard Error.
 
-</DL>
+</dl>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamundice</b> was new in Netpbm 10.39 (June 2007).  Before that,
 <b>pnmcat</b> is the best substitute.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamdice.html">pamdice</A></B>,
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
-<B><A HREF="pnmindex.html">pnmindex</A></B>,
-<B><A HREF="pnmtile.html">pnmtile</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pamdice.html">pamdice</a></b>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pnmindex.html">pnmindex</a></b>,
+<b><a href="pnmtile.html">pnmtile</a></b>,
+<b><a href="pnm.html">pnm</a></b>
+<b><a href="pam.html">pam</a></b>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#example">EXAMPLE</A>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">ARGUMENTS</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#example">EXAMPLE</a>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#arguments">ARGUMENTS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

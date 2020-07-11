@@ -1,27 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Zeisstopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>zeisstopnm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Zeisstopnm User Manual</title></head>
+<body>
+<h1>zeisstopnm</h1>
 Updated: 15 June 1993
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
 
+<h2>NAME</h2>
 zeisstopnm - convert a Zeiss confocal file to PNM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>zeisstopnm</B>
+<b>zeisstopnm</b>
 
 [<b>-pgm</b> | <b>-ppm</b>]
 
-[<I>zeissfile</I>]
+[<i>zeissfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>zeisstopnm</B> reads a Zeiss confocal file as input and produces
+<p><b>zeisstopnm</b> reads a Zeiss confocal file as input and produces
 a PNM image as output.  
 
 <p>By default, the exact type of the output depends on the input file:
@@ -30,36 +30,41 @@ which type it is writing.  You can override the default with the
 <b>-pgm</b> and <b>-ppm</b> options.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-pgm</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>zeisstopnm</b> recognizes the following
+command line options:
 
-<DD>Force the output to be in PGM format.
+<dl compact>
+<dt><b>-pgm</b>
 
-<DT><B>-ppm</B>
+<dd>Force the output to be in PGM format.
 
-<DD>
+<dt><b>-ppm</b>
+
+<dd>
 Force the output to be in PPM format.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnm.html">pnm</A>
+<a href="pnm.html">pnm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1993 by Oliver Trepte
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

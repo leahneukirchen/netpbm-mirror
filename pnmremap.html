@@ -1,43 +1,42 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmremap User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmremap</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmremap User Manual</title></head>
+<body>
+<h1>pnmremap</h1>
 Updated: 13 November 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pnmremap - replace colors in a PNM image with colors from another set
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmremap</B>
+<b>pnmremap</b>
 
-<B>-mapfile=</B><I>palettefile</I>
+<b>-mapfile=</b><i>palettefile</i>
 
-[<B>-floyd</B>|<B>-fs</B>|<B>-nfloyd</B>|<B>-nofs</B>]
+[<b>-floyd</b>|<b>-fs</b>|<b>-nfloyd</b>|<b>-nofs</b>]
 
 {[<b>-norandom</b>]|<b>randomseed=</b><i>n</i>}
 
-[<B>-firstisdefault</B>]
+[<b>-firstisdefault</b>]
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<B>-missingcolor=</B><I>colorspec</I>]
+[<b>-missingcolor=</b><i>colorspec</i>]
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or an equals sign between an option name
 and its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>pnmremap</B> replaces the colors in an input image with those
+<p><b>pnmremap</b> replaces the colors in an input image with those
 from a palette you specify.  Where colors in the input are present in
 the palette, they just stay the same in the output.  But where the
 input contains a color that is not in the palette, <b>pnmremap</b>
@@ -57,12 +56,12 @@ input (for another kind of dithering, see <b>ppmdither</b>).
 
 </ul>
 
-<P>Two reasons to use this program are: 1) you want to reduce the
+<p>Two reasons to use this program are: 1) you want to reduce the
 number of colors in the input image; and 2) you need to feed the image
 to something that can handle only certain colors.
 
-<P>To reduce colors, you can generate the palette with
-<B>pnmcolormap</B>.
+<p>To reduce colors, you can generate the palette with
+<b>pnmcolormap</b>.
 
 <p>By default, <b>pnmremap</b> maps an input color that is not in the
 palette to the closest color that <em>is</em> in the palette.  Closest
@@ -141,17 +140,17 @@ pnmcolormap testimg.ppm 256 &gt;palette.ppm
 pnmremap -map=palette.ppm testimg.ppm &gt;reduced_testimg.ppm
 </pre>
 
-<P>To limit colors to a certain set, a typical example is to create an
+<p>To limit colors to a certain set, a typical example is to create an
 image for posting on the World Wide Web, where different browsers know
 different colors.  But all browsers are supposed to know the 216
 "web safe" colors which are essentially all the colors you
 can represent in a PPM image with a maxval of 5.  So you can do this:
 
-<PRE>
+<pre>
 pamseq 3 5 &gt;websafe.pam
 
 pnmremap -map=websafe.pam testimg.ppm &gt;websafe_testimg.ppm
-</PRE>
+</pre>
 
 <p>Another useful palette is one for the 8 color IBM TTL color set, which
 you can create with
@@ -163,30 +162,35 @@ pamseq 3 1 &gt;ibmttl.pam
 just use the second one as the palette.  You don't have to reduce it
 down to only one pixel of each color, just use it as is.
 
-<P>The output image has the same type and maxval as the palette image.
+<p>The output image has the same type and maxval as the palette image.
 
-<H2 id="parameters">PARAMETERS</H2>
+<h2 id="parameters">PARAMETERS</h2>
 
-<P>There is one parameter, which is required: The file specification of
+<p>There is one parameter, which is required: The file specification of
 the input PNM file.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmremap</b> recognizes the following
+command line options:
 
-<DT><B>-mapfile=</B><i>palettefilename</i>
-<DD>
+<dl compact>
+
+<dt><b>-mapfile=</b><i>palettefilename</i>
+<dd>
 This names the file that contains the palette image.
 
-<P>This option is mandatory.
+<p>This option is mandatory.
 
-<DT><B>-floyd</B>
-<DT><B>-fs</B>
-<DT><B>-nofloyd</B>
-<DT><B>-nofs</B>
+<dt><b>-floyd</b>
+<dt><b>-fs</b>
+<dt><b>-nofloyd</b>
+<dt><b>-nofs</b>
 
-<DD>
+<dd>
 These options determine whether <b>pnmremap</b> does Floyd-Steinberg
 dithering.  Without Floyd-Steinberg, <b>pnmremap</b> selects the output color
 of a pixel based on the color of only the corresponding input pixel.  With
@@ -207,10 +211,10 @@ unmodified quantization has banding or other artifacts, especially
 when going to a small number of colors such as the above IBM set.
 However, it does take substantially more CPU time.
      
-<P><B>-fs</B> is a synonym for <B>-floyd</B>.  <B>-nofs</B> is a
-synonym for <B>-nofloyd</B>.
+<p><b>-fs</b> is a synonym for <b>-floyd</b>.  <b>-nofs</b> is a
+synonym for <b>-nofloyd</b>.
 
-<P>The default is <B>-nofloyd</B>.
+<p>The default is <b>-nofloyd</b>.
 
 <p>Before Netpbm 10.46 (March 2009), dithering doesn't work quite as you
 expect if the color map has a lower maxval than the input.  <b>pnmremap</b>
@@ -262,51 +266,51 @@ at random, adding another level of randomness to the dithering.
 <p>This option was new in Netpbm 10.82 (March 2018).
   
 
-<DT><B>-firstisdefault</B>
+<dt><b>-firstisdefault</b>
 
-<DD>This tells <b>pnmremap</b> to map any input color that is not in
+<dd>This tells <b>pnmremap</b> to map any input color that is not in
 the palette to the first color in the palette (the color of the pixel
 in the top left corner of the palette image)
 
 <p>See <a href="#description">DESCRIPTION</a>.
 
-<P>If you specify <B>-firstisdefault</B>, the maxval of your input
+<p>If you specify <b>-firstisdefault</b>, the maxval of your input
 must match the maxval of your palette image.
 
-<DT><B>-missingcolor=</B><I>colorspec</I>
+<dt><b>-missingcolor=</b><i>colorspec</i>
 
-<DD>This specifies the default color for <b>pnmremap</b> to map to a
-color in the input image that isn't in the palette.  <I>color</I> may
+<dd>This specifies the default color for <b>pnmremap</b> to map to a
+color in the input image that isn't in the palette.  <i>color</i> may
 or may not be in the palette image; it is part of the palette
 regardless.
 
-<P><i>colorspec</i> is as described for
+<p><i>colorspec</i> is as described for
 the <a href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
-<P>If you specify <B>-missingcolor</B>, the maxval of your input must
+<p>If you specify <b>-missingcolor</b>, the maxval of your input must
 match the maxval of your palette image.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Display helpful messages about the mapping process.
+<dd>Display helpful messages about the mapping process.
 
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmcolormap.html">pnmcolormap</A></B>,
-<B><A HREF="pamlookup.html">pamlookup</A></B>,
-<B><A HREF="pnmquant.html">pnmquant</A></B>,
-<B><A HREF="ppmquantall.html">ppmquantall</A></B>,
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="ppmdither.html">ppmdither</A></B>,
-<B><A HREF="ppmquant.html">ppmquant</A></B>,
-<B><A HREF="pamseq.html">pamseq</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="pnmcolormap.html">pnmcolormap</a></b>,
+<b><a href="pamlookup.html">pamlookup</a></b>,
+<b><a href="pnmquant.html">pnmquant</a></b>,
+<b><a href="ppmquantall.html">ppmquantall</a></b>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="ppmdither.html">ppmdither</a></b>,
+<b><a href="ppmquant.html">ppmquant</a></b>,
+<b><a href="pamseq.html">pamseq</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pnmremap</b> first appeared in Netpbm 9.23 (January 2002).
 Before that, its function was available only as part of the function
@@ -317,25 +321,25 @@ Netpbm 9.23 split it out into two separate programs:
 <b>pnmquant</b> with a program that simply calls <b>pnmcolormap</b> and
 <b>pnmremap</b>.
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
 <ul>
-  <LI><A HREF="#mismatch">Palette/Image Type Mismatch</A>
-  <LI><A HREF="#multiple">Multiple Image Stream</A>
-  <LI><A HREF="#example">Examples</A>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<ul>
+  <li><a href="#mismatch">Palette/Image Type Mismatch</a>
+  <li><a href="#multiple">Multiple Image Stream</a>
+  <li><a href="#example">Examples</a>
   </ul>
-<LI><A HREF="#parameters">PARAMETERS</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#parameters">PARAMETERS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,29 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamfind User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamfind</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamfind User Manual</title></head>
+<body>
+<h1>pamfind</h1>
 Updated: 13 March 2019
-<BR>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A HREF="#index">Table Of Contents</A>
-
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamfind - Print the locations of all tuples of a certain value in an image
 
-<H2 id="synopsis">SYNOPSIS</H2>
-<B>pamfind</B>
+<h2 id="synopsis">SYNOPSIS</h2>
+<b>pamfind</b>
 {
 <b>-target=</b><i>sample0</i><b>,</b><i>sample1</i><b>,</b> ... |
 <b>-color=</b><i>color</i>
 }
-[<B>-machine</B>]
-[<I>imagefile</I>]
+[<b>-machine</b>]
+[<i>imagefile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -40,11 +39,11 @@ results as if they are.
 <p>To do the opposite, see what tuple is at a given location, use
 <b>pamcut</b> and <b>pamtable</b>:
 
-  <PRE>
-    <TT>
+  <pre>
+    <tt>
       $ pamcut -left=5 -top=7 -width=1 -height=1 | pamtable
-    </TT>
-  </PRE>
+    </tt>
+  </pre>
 
 <p><b>ppmcolormask</b> also finds all the tuples of a certain value, at least
 in visual images, but instead of printing their coordinates, it generates a
@@ -52,7 +51,12 @@ mask image, which you can use to visualize where those tuples are or as input
 to another program.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamfind</b> recognizes the following
+command line options:
 
 <dl>
 
@@ -69,7 +73,7 @@ the image (e.g. 3 if it is a color image).
 
 <dd>
 This is the color to find, assuming the image is a color visual image.    
-<P><i>color</i> is as described for the <a
+<p><i>color</i> is as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
@@ -83,31 +87,31 @@ library routine</a>.
 
 <p>This option was new in Netpbm 10.87 (March 2020).
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="pamgetcolor.html">pamgetcolor</A></B>,
-<B><A HREF="ppmhist.html">ppmhist</A></B>,
-<B><A HREF="ppmcolormask.html">ppmcolormask</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pamtable.html">pamtable</A></B>,
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="pamgetcolor.html">pamgetcolor</a></b>,
+<b><a href="ppmhist.html">ppmhist</a></b>,
+<b><a href="ppmcolormask.html">ppmcolormask</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pamtable.html">pamtable</a></b>,
+<b><a href="pam.html">pam</a></b>
 
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamfind</b> was added to Netpbm in Release 10.86 (March 2019).
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF=#history>HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

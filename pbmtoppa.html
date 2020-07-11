@@ -1,57 +1,57 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtoppa User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtoppa</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtoppa User Manual</title></head>
+<body>
+<h1>pbmtoppa</h1>
 Updated: 01 May 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pbmtoppa - convert PBM image to HP Printer Performance Architecture (PPA)
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtoppa</B>
-[<I>pbm_file</I>
-[<I>ppa_file</I>]]
+<b>pbmtoppa</b>
+[<i>pbm_file</i>
+[<i>ppa_file</i>]]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>pbmtoppa</B> converts page images in PBM format to Hewlett
+<b>pbmtoppa</b> converts page images in PBM format to Hewlett
 Packard's PPA (Printer Performance Architecture) format, which is the
 data stream format expected by some HP "Windows-only"
 printers including the HP Deskjet 820C series, the HP DeskJet 720
 series, and the HP DeskJet 1000 series.
 
-<P><I>pbm_file</I> is the file specification of the input file or
-<B>-</B> for Standard Input.  The default is Standard Input.
+<p><i>pbm_file</i> is the file specification of the input file or
+<b>-</b> for Standard Input.  The default is Standard Input.
 
-<P>The input file contains one or more PBM images, with each one
+<p>The input file contains one or more PBM images, with each one
 being a single page.  Each image must have the exact dimensions of a
 page (at 600 pixels per inch in both directions).  Significantly, this
 is the format that Ghostscript produces.
 
-<P><I>ppa_file</I> is the file specification of the output file or
-<B>-</B> for Standard Output.  The default is Standard Output.
+<p><i>ppa_file</i> is the file specification of the output file or
+<b>-</b> for Standard Output.  The default is Standard Output.
 
-<P>To print Postscript on an HP PPA printer, just use Ghostscript with
-the <B>pbmraw</B> (or <B>pbm</B>) device driver.
+<p>To print Postscript on an HP PPA printer, just use Ghostscript with
+the <b>pbmraw</b> (or <b>pbm</b>) device driver.
 
-<P>You can generate a test page for use with this program with
-<B>pbmpage</B>.
+<p>You can generate a test page for use with this program with
+<b>pbmpage</b>.
 
-<P>You can also set up a printer filter so you can submit PBM input
+<p>You can also set up a printer filter so you can submit PBM input
 directly to your print queue.  See the documentation for your print
 spooler for information on how to do that, or look in hp820install.doc
 for an example lpd print filter for Postscript and text files.
 
-<P>Sometimes, <B>pbmtoppa</B> generates a file which the printer will
-not print (because <B>pbmtoppa</B>'s input is unprintable).  When this
+<p>Sometimes, <b>pbmtoppa</b> generates a file which the printer will
+not print (because <b>pbmtoppa</b>'s input is unprintable).  When this
 happens, all three lights blink to signal the error.  This is usually
 because there is material outside of the printer's printable area.  To
-make the file print, increase the margins via <B>pbmtoppa</B> options
+make the file print, increase the margins via <b>pbmtoppa</b> options
 or a configuration file.  See <a href="#calibration">the section on
 calibration </a> below.
 
@@ -74,171 +74,176 @@ reduced compared to a conventional printer.
 (Printer Control Language) language.  HP manufactured PPA printers for only
 a few years, and no one else ever did.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-v</B> <I>version</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtoppa</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-v</b> <i>version</i>
+
+<dd>
 printer version (720, 820, or 1000)
 
-<DT><B>-x</B> <I>xoff</I>
+<dt><b>-x</b> <i>xoff</i>
 
-<DD>
+<dd>
 horizontal offset adjustment in 1/600 inches.
 
-<DT><B>-y</B> <I>yoff</I>
+<dt><b>-y</b> <i>yoff</i>
 
-<DD>
+<dd>
 vertical offset adjustment in 1/600 inches.
 
-<DT><B>-t</B> <I>topmarg</I>
+<dt><b>-t</b> <i>topmarg</i>
 
-<DD>
+<dd>
 top margin in 1/600 inches    (default: 150 = 0.25 inch)
 
-<DT><B>-l</B> <I>leftmarg</I>
+<dt><b>-l</b> <i>leftmarg</i>
 
-<DD>
+<dd>
 left margin in 1/600 inches   (default: 150 = 0.25 inch)
 
-<DT><B>-r</B> <I>rightmarg</I>
+<dt><b>-r</b> <i>rightmarg</i>
 
-<DD>
+<dd>
 right margin in 1/600 inches (default: 150 = 0.25 inch)
 
-<DT><B>-b</B> <I>botmarg</I>
+<dt><b>-b</b> <i>botmarg</i>
 
-<DD>
+<dd>
 bottom margin in 1/600 inches (default: 150 = 0.25 inch)
 
-<DT><B>-s</B> <I>paper</I>
+<dt><b>-s</b> <i>paper</i>
 
-<DD>paper size: <B>us</B> or <B>a4</B>.  Default is <B>us</B>.
+<dd>paper size: <b>us</b> or <b>a4</b>.  Default is <b>us</b>.
 
 <dt><b>-d</b> <i>dpi</i>
 <dd>
 Print resolution in dots per inch.
 
-<DT><B>-f</B> <I>cfgfile</I>
+<dt><b>-f</b> <i>cfgfile</i>
 
-<DD>Read parameters from the configuration file named <I>cfgfile</I>.
+<dd>Read parameters from the configuration file named <i>cfgfile</i>.
 See <a href="#configfile">CONFIGURATION FILES</a>
 
-</DL>
+</dl>
 
-<P>The offset adjustments you specify with <B>-x</B> and <B>-y</B>
+<p>The offset adjustments you specify with <b>-x</b> and <b>-y</b>
 accumulate.  I.e. if you specify them multiple times, the total offset
 adjustment is the sum of the adjustments you specify.  <b>-x 60 -x 120</b>
 is the same as <b>-x 180</b>.
 
-<P>The <B>-v</B> option undoes any preceding <b>-x</b> and <b>-y</b>
+<p>The <b>-v</b> option undoes any preceding <b>-x</b> and <b>-y</b>
 options, leaving the horizontal and vertical adjustments their
 default values.
 
 
-<H2 id="configfile">CONFIGURATION FILES</H2>
+<h2 id="configfile">CONFIGURATION FILES</h2>
 
-<P>You can use a configuration file to specify parameters rather than
-use invocation options.  <B>pbmtoppa</B> processes the file
+<p>You can use a configuration file to specify parameters rather than
+use invocation options.  <b>pbmtoppa</b> processes the file
 <b>/etc/pbmtoppa.conf</b>, if it exists, before processing any
 options.  It then processes each configuration file named by a
-<B>-f</B> option in order, applying the parameters from the
+<b>-f</b> option in order, applying the parameters from the
 configuration file as if they were invocation options used in the
-place of the <B>-f</B> option.
+place of the <b>-f</b> option.
 
-<P>Configuration files have the following format:
+<p>Configuration files have the following format:
 
-<PRE>
-<B>#</B><I>Comment</I>
-<I>key1</I> <I>value1</I>
-<I>key2</I> <I>value2</I>
+<pre>
+<b>#</b><i>Comment</i>
+<i>key1</i> <i>value1</i>
+<i>key2</i> <i>value2</i>
 [etc.]
-</PRE>
+</pre>
 
-<P>Valid <I>key</I>s are <B>version</B>, <B>xoffset</B>,
-<B>yoffset</B>, <B>topmargin</B>, <B>leftmargin</B>,
-<B>rightmargin</B>, <B>bottommargin</B>, <B>papersize</B>, or any
+<p>Valid <i>key</i>s are <b>version</b>, <b>xoffset</b>,
+<b>yoffset</b>, <b>topmargin</b>, <b>leftmargin</b>,
+<b>rightmargin</b>, <b>bottommargin</b>, <b>papersize</b>, or any
 non-null prefix of these words.  Valid values are the same as with the
 corresponding invocation parameters.
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
-<P>Print a test pattern: 
-<PRE>
-<B>pbmpage | pbmppa &gt;/dev/lp1</B>
+<p>Print a test pattern: 
+<pre>
+<b>pbmpage | pbmppa &gt;/dev/lp1</b>
 </pre>
 
-<P>
+<p>
 Print three pages:
-<PRE>
-<B>cat page1.pbm page2.pbm page3.pbm | pbmppa &gt;/dev/lp1</B>
+<pre>
+<b>cat page1.pbm page2.pbm page3.pbm | pbmppa &gt;/dev/lp1</b>
 </pre>
-<P>
+<p>
 Print the Postscript file myfile.ps:
-<PRE>
+<pre>
 gs -sDEVICE=rawpbm -q -dNOPAUSE -r600 \
    -sOutputFile=- myfile.ps ;\
 | pbmtoppa | lpr
 </pre>
 
-<H2 id="calibration">CALIBRATION</H2>
+<h2 id="calibration">CALIBRATION</h2>
 
 <p>To be able to print successfully and properly, you need to tell
-<B>pbmtoppa</B> an X and a Y offset appropriate for your printer to
+<b>pbmtoppa</b> an X and a Y offset appropriate for your printer to
 use when generating the page.  You can specify these offsets with the
-<B>-x</B> and <B>-y</B> invocation options or with the <B>xoff</B> and
-<B>yoff</B> parameters in a <B>pbmtoppa</B> configuration file.
+<b>-x</b> and <b>-y</b> invocation options or with the <b>xoff</b> and
+<b>yoff</b> parameters in a <b>pbmtoppa</b> configuration file.
 
-<P>To determine the correct offsets, use the <B>pbmpage</B> program.
+<p>To determine the correct offsets, use the <b>pbmpage</b> program.
 
-<P>If while trying to do this calibration, the printer refuses to
+<p>If while trying to do this calibration, the printer refuses to
 print a page, but just blinks all three lights, specify large margins
-(e.g. 600 pixels -- one inch) via <B>pbmpage</B> invocation options
+(e.g. 600 pixels -- one inch) via <b>pbmpage</b> invocation options
 while doing the calibration.
 
-<P>For example:
-<PRE>
-<B>pbmpage | pbmtoppa &gt;/dev/lp1</B>
+<p>For example:
+<pre>
+<b>pbmpage | pbmtoppa &gt;/dev/lp1</b>
 </pre>
 or
 <pre>
-<B>pbmpage | pbmtoppa | lpr -l</B>
+<b>pbmpage | pbmtoppa | lpr -l</b>
 </pre>
 
 (if your printer filter recognizes the '-l' (direct output) parameter).
 
-<P>In the test pattern, the grid is marked off in pixel coordinate
+<p>In the test pattern, the grid is marked off in pixel coordinate
 numbers.  Unfortunately, these coordinates are probably cut off before
 the edge of the paper.  You'll have to use a ruler to estimate the
 pixel coordinate of the left and top edges of the actual sheet of
 paper (should be within +/- 300, may be negative; there are 600 pixels
 per inch).
 
-<P>Add these coordinates to the X and Y offsets by either editing the
-configuration file or using the <B>-x </B> and <B>-y</B> command-line
+<p>Add these coordinates to the X and Y offsets by either editing the
+configuration file or using the <b>-x </b> and <b>-y</b> command-line
 parameters.
 
-<P>When <B>pbmtoppa</B> is properly calibrated, the center mark should
+<p>When <b>pbmtoppa</b> is properly calibrated, the center mark should
 be in the center of the paper.  Also, the margins should be able to be
 as small as 1/4 inch without causing the printer to choke with
 'blinking lights syndrome'.
 
-<H2 id="redhat">RED HAT LINUX INSTALLATION</H2>
+<h2 id="redhat">RED HAT LINUX INSTALLATION</h2>
 
-<P>RedHat users may find the following tip from Panayotis Vryonis
-&lt;<A HREF="mailto:vrypan@hol.gr">vrypan@hol.gr</A>&gt; helpful.  The
+<p>RedHat users may find the following tip from Panayotis Vryonis
+&lt;<a href="mailto:vrypan@hol.gr">vrypan@hol.gr</a>&gt; helpful.  The
 same should work for the 820 and 1000, but it hasn't been tested.
 Also, use the pbmraw GSDriver if you have it; it's faster.
 
-<P>Here is a tip to integrate HP720C support in RedHat's printtool:
+<p>Here is a tip to integrate HP720C support in RedHat's printtool:
 
-<P>Install pbmtoppa. Copy pbmtoppa to /usr/bin.
+<p>Install pbmtoppa. Copy pbmtoppa to /usr/bin.
 
-<P>Edit "printerdb" (in my system it is found in
+<p>Edit "printerdb" (in my system it is found in
 /usr/lib/rhs/rhs-printfilters ) and append the following lines:
 
-<PRE>
+<pre>
 <code>
   
 ----------------------Cut here-----------------------
@@ -262,45 +267,45 @@ EndEntry
   </code>
 </pre>
 
-<P>Now you can add an HP720C printer just like any other, using
+<p>Now you can add an HP720C printer just like any other, using
 printtool.
 
-<H2 id="seealos">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pbmpage.html">pbmpage</A></B>,
-<B><A HREF="pstopnm.html">pstopnm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
+<b><a href="pbmpage.html">pbmpage</a></b>,
+<b><a href="pstopnm.html">pstopnm</a></b>,
+<b><a href="pbm.html">pbm</a></b>
 
-<P>This program was derived from <B>pbm2ppa</B>.  <B>pbm2ppa</B> is obsolete 
-and has been replaced by <B>pnm2ppa</B>, which does the same things as 
-<B>pbmtoppa</B> except it also works with color and has lots more features.  See 
-<A HREF="http://pnm2ppa.sourceforge.net">http://pnm2ppa.sourceforge.net</A> 
+<p>This program was derived from <b>pbm2ppa</b>.  <b>pbm2ppa</b> is obsolete 
+and has been replaced by <b>pnm2ppa</b>, which does the same things as 
+<b>pbmtoppa</b> except it also works with color and has lots more features.  See 
+<a href="http://pnm2ppa.sourceforge.net">http://pnm2ppa.sourceforge.net</a> 
 for more information about the PPA protocol and the separately distributed 
-<B>pnm2ppa</B> program.
+<b>pnm2ppa</b> program.
 
-<P>The file INSTALL-MORE in the pbmtoppa directory of the Netpbm
+<p>The file INSTALL-MORE in the pbmtoppa directory of the Netpbm
 source code contains detailed instructions on setting up a system to
 use pbmtoppa to allow convenient printing on HP PPA printers.  It was
 written by Michael Buehlmann.
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Tim Norman.  Copyright (C) 1998.  Licensed under GNU Public License
 
-<P>Manual page by Bryan Henderson, May 2000.
+<p>Manual page by Bryan Henderson, May 2000.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#configfile">CONFIGURATION FILES</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#calibration">CALIBRATION</A>
-<LI><A HREF="#redhat">REDHAT LINUX INSTALLATION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#configfile">CONFIGURATION FILES</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#calibration">CALIBRATION</a>
+<li><a href="#redhat">RED HAT LINUX INSTALLATION</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

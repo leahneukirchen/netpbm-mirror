@@ -1,40 +1,40 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtoxpm User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtoxpm</H1>
-Updated: Feb 22 2003
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtoxpm User Manual</title></head>
+<body>
+<h1>ppmtoxpm</h1>
+Updated: 22 February 2003
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 ppmtoxpm - convert a PPM image to an X11 pixmap
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtoxpm </B>
-[<B>-name=</B><I>xpmname</I>]
-[<B>-hexonly</B>]
-[<B>-rgb=</B><I>rgb-textfile</I>]
-[<B>-alphamask=</B><I>pgmfile</I>]
-[<I>ppmfile</I>]
+<b>ppmtoxpm </b>
+[<b>-name=</b><i>xpmname</i>]
+[<b>-hexonly</b>]
+[<b>-rgb=</b><i>rgb-textfile</i>]
+[<b>-alphamask=</b><i>pgmfile</i>]
+[<i>ppmfile</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtoxpm</b> reads a PPM image as input and produces X11 pixmap
 (version 3) as output.  This format can be loaded by the XPM library.
 
-<P>In the XPM output, colors may be identified by name, such as "Red", or
+<p>In the XPM output, colors may be identified by name, such as "Red", or
 in hexadecimal, for example "#FF0000".  In the hexadecimal format, there
 may be from 1 through 4 hexadecimal digits per RGB component.
 
 <p>By default, <b>ppmtoxpbm</b> tries to find a name for each color in
-the image in the <a href="libppm.html#rgb.txt">system color
+the image in the <a href="libppm.html#dictionary">system color
 dictionary</a>, and if it finds one, uses it.  If it doesn't it uses
 hexadecimal.  You can force <b>ppmtoxpbm</b> to use hexadecimal only
 with the <b>-hexonly</b> option.  You can specify a different color
@@ -49,7 +49,7 @@ input PPM is 100, <b>ppmtoxpm</b> uses 2 digits per component, as in
 <p>Some programs do not properly handle one-digit-per-component
 hexadecimal color specifiers.  They see the wrong colors.  To produce
 an XPM that such a program can handle, make sure the maxval of the input PPM
-is greater than 15, such as by running it through <B>pamdepth 255</b>.
+is greater than 15, such as by running it through <b>pamdepth 255</b>.
 
 <h3>Color Code Lengths - Image Size</h3>
 
@@ -76,103 +76,107 @@ actually produce any transparent pixels.  So subtract one from the number
 of possible colors if you use <b>-alpha</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-name=</B><I>xpmname</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtoxpm</b> recognizes the following
+command line options:
 
-<DD>This option specifies the prefix string which is specified in the
+<dl compact>
+<dt><b>-name=</b><i>xpmname</i>
+
+<dd>This option specifies the prefix string which is specified in the
 resulting XPM output.  If you don't use the <b>-name</b> otpion,
 <b>ppmtoxpm</b> defaults to the filename (without extension) of the
-<i>ppmfile</i> parameter.  If you do not specify <B>-name</B> or
-<I>ppmfile</I> (i.e. your input is from Standard Input), the prefix
-string defaults to the string <B>noname</B>.
+<i>ppmfile</i> parameter.  If you do not specify <b>-name</b> or
+<i>ppmfile</i> (i.e. your input is from Standard Input), the prefix
+string defaults to the string <b>noname</b>.
 
-<DT><B>-hexonly</B>
+<dt><b>-hexonly</b>
 
-<DD>This option says never to put color names in the XPM file, but rather
+<dd>This option says never to put color names in the XPM file, but rather
 to identify names by hexadecimal strings that explicitly identify RGB
 component intensities.  This means the reader of the file need not have
 access to a suitable color dictionary to interpret it.
 
-<P>This option was introduced in Netpbm 10.15 (April 2003).  Before that,
+<p>This option was introduced in Netpbm 10.15 (April 2003).  Before that,
 it was the default, overridden by specifying <b>-rgb</b>.
 
-<DT><B>-rgb=</B><I>rgb-textfile</I>
+<dt><b>-rgb=</b><i>rgb-textfile</i>
 
-<DD>This option names the file in which the color dictionary you want
+<dd>This option names the file in which the color dictionary you want
 to use resides.  By default, <b>ppmtoxpm</b> uses the <a
-href="libppm.html#rgb.txt">system color dictionary</a>, and if it cannot
+href="libppm.html#dictionary">system color dictionary</a>, and if it cannot
 open that file, uses hexadecimal color specifiers.
 
-<P>This option in meaningless when you specify <b>-hexonly</b>.
+<p>This option in meaningless when you specify <b>-hexonly</b>.
 
-<P>Before Netpbm 10.15 (April 2003), <b>ppmtoxpm</b> did not default
+<p>Before Netpbm 10.15 (April 2003), <b>ppmtoxpm</b> did not default
 to the system color dictionary.  If you didn't specify <b>-rgb</b>,
 <b>ppmtoxpbm</b> would use only hexadecimal color specifiers.
 
-<DT><B>-alphamask=</B><I>pgmfile</I>
+<dt><b>-alphamask=</b><i>pgmfile</i>
 
-<DD> This option names a PGM file to use as a transparency (alpha)
+<dd> This option names a PGM file to use as a transparency (alpha)
 mask.  The file must contain an image the same dimensions as the input
-image.  <B>ppmtoxpm</B> marks as transparent any pixel whose position
+image.  <b>ppmtoxpm</b> marks as transparent any pixel whose position
 in the transparency mask image is at most half white.  
 
-<P>If you don't specify <B>-alphamask</B>, <B>ppmtoxpm</B> makes all
+<p>If you don't specify <b>-alphamask</b>, <b>ppmtoxpm</b> makes all
 pixels in the output opaque.  
 
-<P><B>ppmcolormask</B> is one way to generate a transparency mask file.  You
+<p><b>ppmcolormask</b> is one way to generate a transparency mask file.  You
 might also generate it by extracting transparency information from an
-XPM file with the <B>-alphaout</B> option to <B>xpmtoppm</B>.
+XPM file with the <b>-alphaout</b> option to <b>xpmtoppm</b>.
 
-<P>There are similar options on other Netpbm converters that convert from
+<p>There are similar options on other Netpbm converters that convert from
 formats that include transparency information too.
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppmcolormask.html">ppmcolormask</A></B>,
-<B><A HREF="xpmtoppm.html">xpmtoppm</A></B>,
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="ppmcolormask.html">ppmcolormask</a></b>,
+<b><a href="xpmtoppm.html">xpmtoppm</a></b>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<BR>
-XPM Manual by Arnaud Le Hors <A
-HREF="mailto:lehors@mirsa.inria.fr">lehors@mirsa.inria.fr</A>
+<br>
+XPM Manual by Arnaud Le Hors <a
+href="mailto:lehors@mirsa.inria.fr">lehors@mirsa.inria.fr</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>
 Copyright (C) 1990 by Mark W. Snitily.
-<P>
+<p>
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted, provided
 that the above copyright notice appear in all copies and that both that
 copyright notice and this permission notice appear in supporting
 documentation.  This software is provided "as is" without express or
 implied warranty.
-<P>
+<p>
 This tool was developed for Schlumberger Technologies, ATE Division, and
 with their permission is being made available to the public with the above
 copyright notice and permission notice.
 
-<P>Upgraded to XPM2 by Paul Breslaw, Mecasoft SA, Zurich, Switzerland (<A
-HREF="mailto:paul@mecazh.uu.ch">paul@mecazh.uu.ch</A>), November 8,
+<p>Upgraded to XPM2 by Paul Breslaw, Mecasoft SA, Zurich, Switzerland (<a
+href="mailto:paul@mecazh.uu.ch">paul@mecazh.uu.ch</a>), November 8,
 1990.
 
-<P>Upgraded to XPM version 3 by Arnaud Le Hors(<A
-HREF="mailto:lehors@mirsa.inria.fr">lehors@mirsa.inria.fr</A>), April
+<p>Upgraded to XPM version 3 by Arnaud Le Hors(<a
+href="mailto:lehors@mirsa.inria.fr">lehors@mirsa.inria.fr</a>), April
 9, 1991.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,57 +1,56 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pamcomp User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamcomp</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamcomp User Manual</title></head>
+<body>
+<h1>pamcomp</h1>
 Updated: 13 August 2011
 <p>
-<A HREF="#index">Table Of Contents</A>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamcomp - composite (overlay) two Netpbm images together
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamcomp</B>
+<b>pamcomp</b>
 
-[<B>-align=</B>{<B>left</B> | <B>center</B> | <B>right</B> |
-<B>beyondleft</b> | <b>beyondright</b>}]
-<BR>
-[<B>-valign=</B>{<B>top</B> | <B>middle</B> | <B>bottom</B>|
+[<b>-align=</b>{<b>left</b> | <b>center</b> | <b>right</b> |
+<b>beyondleft</b> | <b>beyondright</b>}]
+<br>
+[<b>-valign=</b>{<b>top</b> | <b>middle</b> | <b>bottom</b>|
 <b>above</b> | <b>below</b>}]
-<BR>
-[<B>-xoff=</B><I>X</I>]
-[<B>-yoff=</B><I>Y</I>]
-<BR>
-[<B>-alpha=</B><I>alpha-pgmfile</I>]
-[<B>-invert</B>]
-[<B>-opacity=</b><i>opacity</i>]
+<br>
+[<b>-xoff=</b><i>X</i>]
+[<b>-yoff=</b><i>Y</i>]
+<br>
+[<b>-alpha=</b><i>alpha-pgmfile</i>]
+[<b>-invert</b>]
+[<b>-opacity=</b><i>opacity</i>]
 [<b>-mixtransparency</b>]
 [<b>-linear</b>]
-<BR>
-<I>overlay_file</I>
-[<I>underlying_file</I> [<I>output_file</I>]]
+<br>
+<i>overlay_file</i>
+[<i>underlying_file</i> [<i>output_file</i>]]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>pamcomp</B> reads two images and produces a composite image with
+<b>pamcomp</b> reads two images and produces a composite image with
 one of the images overlayed on top of the other, possible
 translucently.  The images need not be the same size.  The input and
 outputs are Netpbm format image files.
 
-<P>In its simplest use, <B>pamcomp</B> simply places the image in the
-file <I>overlay_file</I> on top of the image in the file
-<I>underlying_file</I>, blocking out the part of <I>underlying_file</I>
+<p>In its simplest use, <b>pamcomp</b> simply places the image in the
+file <i>overlay_file</i> on top of the image in the file
+<i>underlying_file</i>, blocking out the part of <i>underlying_file</i>
 beneath it.
 
-<P>If you add the <B>-alpha</B> option, then <B>pamcomp</B> uses the
-image in file <I>alpha-pgmfile</I> as a transparency mask, which means it
+<p>If you add the <b>-alpha</b> option, then <b>pamcomp</b> uses the
+image in file <i>alpha-pgmfile</i> as a transparency mask, which means it
 determines the level of transparency of each point in the overlay
 image.  The transparency mask must have the same dimensions as the overlay
 image.  In places where the transparency mask defines the overlay image to be
@@ -65,9 +64,9 @@ composite image contains a mixture of the overlay image and the
 underlying image and the level of translucence determines how much of
 each.
 
-<P>The transparency mask is a PGM file in which a white pixel represents
+<p>The transparency mask is a PGM file in which a white pixel represents
 opaqueness and a black pixel transparency.  Anything in between is
-translucent.  (Like any Netpbm program, <B>pamcomp</B> will see a PBM
+translucent.  (Like any Netpbm program, <b>pamcomp</b> will see a PBM
 file as if it is PGM).
 
 <p>If the overlay image is a PAM image of tuple type RGB_ALPHA or
@@ -86,8 +85,8 @@ you have to use the old method -- extract the transparency information from
 the original into a separate transparency mask and use that as input to
 <b>pamcomp</b>.
 
-<P>The output image is always of the same dimensions as the underlying
-image.  <B>pamcomp</B> uses only parts of the overlay image that fit
+<p>The output image is always of the same dimensions as the underlying
+image.  <b>pamcomp</b> uses only parts of the overlay image that fit
 within the underlying image.
 
 <p>The output image is a PAM image.  Its tuples are color, grayscale, or black
@@ -100,9 +99,9 @@ and then the opacities are as described under the <b>-mixtransparency</b>
 option.  Before Netpbm 10.56 (September 2011), the output never has an opacity
 channel.
 
-<P>To specify where on the underlying image to place the overlay
-image, use the <B>-align</B>, <B>-valign</B>, <B>-xoff</B>, and
-<B>-yoff</B> options.  Without these options, the default horizontal
+<p>To specify where on the underlying image to place the overlay
+image, use the <b>-align</b>, <b>-valign</b>, <b>-xoff</b>, and
+<b>-yoff</b> options.  Without these options, the default horizontal
 position is flush left and the default vertical position is flush top.
 
 <p>The overlay image, in the position you specify, need not fit entirely
@@ -112,18 +111,23 @@ specify positioning such that <em>none</em> of the overlay image is
 over the underlying image -- i.e. the overlay is out of frame.  If you
 do that, <b>pamcomp</b> issues a warning.
 
-<P> The overlay and underlying images may be of different formats
+<p> The overlay and underlying images may be of different formats
 (e.g. overlaying a PBM text image over a full color PPM image) and
 have different maxvals.  The output image has the more general of the
 two input formats and a maxval that is the least common multiple the
 two maxvals (or the maximum maxval allowable by the format, if the LCM
 is more than that).
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-align=</b><i>alignment</i>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamcomp</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-align=</b><i>alignment</i>
+<dd>
 This option selects the basic horizontal position of the overlay image
 with respect to the underlying image, in syntax reminiscent of HTML.
 <b>left</b> means flush left, <b>center</b> means centered, and <b>right</b>
@@ -139,8 +143,8 @@ added in Netpbm 10.10 (October 2002).
 
 <p>The default is <b>left</b>.
 
-<DT><B>-valign=</b><i>alignment</i>
-<DD>
+<dt><b>-valign=</b><i>alignment</i>
+<dd>
 
 This option selects the basic vertical position of the overlay image
 with respect to the underlying image, in syntax reminiscent of HTML.
@@ -157,36 +161,36 @@ added in Netpbm 10.10 (October 2002).
 
 <p>The default is <b>top</b>.
 
-<DT><B>-xoff=</B><I>x</I>
+<dt><b>-xoff=</b><i>x</i>
 
-<DD>This option modifies the horizontal positioning of the overlay
+<dd>This option modifies the horizontal positioning of the overlay
 image with respect to the underlying image as selected by the
 <b>-align</b> option.  <b>pamcomp</b> shifts the overlay image from
 that basic position <i>x</i> pixels to the right.  <i>x</i> can be
 negative to indicate shifting to the left.
 
 <p>The overlay need not fit entirely (or at all) on the underlying image.
-<B>pamcomp</B> uses only the parts that lie over the underlying image.
+<b>pamcomp</b> uses only the parts that lie over the underlying image.
 
-<P>Before Netpbm 10.10 (October 2002), <b>-xoff</b> was mutually 
+<p>Before Netpbm 10.10 (October 2002), <b>-xoff</b> was mutually 
 exclusive with <b>-align</b> and always measured from the left edge.
 
-<DT><B>-yoff=</B><I>y</I>
+<dt><b>-yoff=</b><i>y</i>
 
-<DD>This option modifies the vertical positioning of the overlay
+<dd>This option modifies the vertical positioning of the overlay
 image with respect to the underlying image as selected by the
 <b>-valign</b> option.  <b>pamcomp</b> shifts the overlay image from
 that basic position <i>y</i> pixels downward.  <i>y</i> can be
 negative to indicate shifting upward.
 
 <p>The overlay need not fit entirely (or at all) on the underlying image.
-<B>pamcomp</B> uses only the parts that lie over the underlying image.
+<b>pamcomp</b> uses only the parts that lie over the underlying image.
 
-<P>Before Netpbm 10.10 (October 2002), <b>-xoff</b> was mutually 
+<p>Before Netpbm 10.10 (October 2002), <b>-xoff</b> was mutually 
 exclusive with <b>-valign</b> and always measured from the top edge.
 
-<DT><B>-alpha=</B><i>alpha-pgmfile</i>
-<DD>
+<dt><b>-alpha=</b><i>alpha-pgmfile</i>
+<dd>
 This option names a file that contains the transparency mask.  If you don't
 specify this option, there is no transparency mask, which is equivalent to 
 having a transparency mask specify total opaqueness everywhere.
@@ -195,14 +199,14 @@ You can specify <b>-</b> as the value of this option and the transparency
 mask will come from Standard Input.  If you do this, don't specify
 Standard Input as the source of any other input image.
 
-<DT><B>-invert</B>
-<DD>
+<dt><b>-invert</b>
+<dd>
 This option inverts the sense of the values in the transparency mask, which 
 effectively switches the roles of the overlay image and the underlying
 image in places where the two intersect.
 
-<DT><B>-opacity=</B><i>opacity</i>
-<DD>
+<dt><b>-opacity=</b><i>opacity</i>
+<dd>
 This option tells how opaque the overlay image is to be, i.e. how much
 of the composite image should be from the overlay image, as opposed to
 the underlying image.  <i>opacity</i> is a floating point number, with
@@ -274,7 +278,7 @@ gamma-adjusted numbers and internal intensity-proportional numbers.
 <p>Sometimes you are not working with true PNM or PAM images, but
 rather a variation in which the sample values are in fact directly
 proportional to intensity.  If so, use the <b>-linear</b> option to
-tell <b>pamcomp</b> this.  <b>pamcomp</B> then will skip the
+tell <b>pamcomp</b> this.  <b>pamcomp</b> then will skip the
 conversions.
 
 <p>The conversion takes time.  And the difference between
@@ -297,50 +301,50 @@ other transformations that like linear PNM, and then convert it back
 to true PNM with <b>pnmgamma -ungamma</b>.  <b>pnmgamma</b> is often
 faster than <b>pamcomp</b> in doing the conversion.
 
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <p><b><a href="pammixmulti.html">pammixmulti.html</a></b> mixes together
 two or more images of the same size, in various ways.
 
-<p><B><A HREF="ppmmix.html">ppmmix</A></B> and <B><A
-HREF="pnmpaste.html">pnmpaste</A></B> are simpler, less general
+<p><b><a href="ppmmix.html">ppmmix</a></b> and <b><a
+href="pnmpaste.html">pnmpaste</a></b> are simpler, less general
 versions of the same tool.
 
-<p><B><A HREF="ppmcolormask.html">ppmcolormask</A></B> and <B><A
-HREF="pbmmask.html">pbmmask</A></B>, and <a
+<p><b><a href="ppmcolormask.html">ppmcolormask</a></b> and <b><a
+href="pbmmask.html">pbmmask</a></b>, and <a
 href="pambackground.html"><b>pambackground</b></a> can help with
 generating a transparency mask.
 
-<p><B><A HREF="pnmcomp.html">pnmcomp</A></B> is an older program that
+<p><b><a href="pnmcomp.html">pnmcomp</a></b> is an older program that
 runs faster, but has less function.
 
-<P><B><A HREF="pnm.html">pnm</A></B>
+<p><b><a href="pnm.html">pnm</a></b>
 
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamcomp</b> was new in Netpbm 10.21 (March 2004).  Its predecessor,
 <b>pnmcomp</b>, was one of the first programs added to Netpbm when the
 project went global in 1993.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1992 by David Koblas (<A
-HREF="mailto:koblas@mips.com">koblas@mips.com</A>).
+Copyright (C) 1992 by David Koblas (<a
+href="mailto:koblas@mips.com">koblas@mips.com</a>).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

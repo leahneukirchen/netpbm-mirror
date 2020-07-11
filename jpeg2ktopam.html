@@ -1,49 +1,49 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Jpeg2ktopam User Manual</TITLE></HEAD>
-<BODY>
-<H1>Jpeg2ktopam</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Jpeg2ktopam User Manual</title></head>
+<body>
+<h1>jpeg2ktopam</h1>
 Updated: 08 October 2009
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 jpeg2ktopam - convert JPEG-2000 code stream to PAM/PNM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>jpeg2ktopam</B>
-[<B>-verbose</B>]
-[<B>-debuglevel=</B><I>number</I>]
-<I>filename</I>
+<b>jpeg2ktopam</b>
+[<b>-verbose</b>]
+[<b>-debuglevel=</b><i>number</i>]
+<i>filename</i>
 
-<?makeman .SH OPTION USAGE ?>
+<?makeman .sh option usage ?>
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>jpeg2ktopam</b> converts the named JPEG-2000 file (JP2 or JPC),
+<p><b>jpeg2ktopam</b> converts the named JPEG-2000 file (JP2 or JPC),
 or Standard Input if no file is named, to a PBM, PGM, PPM, or PAM
 file on Standard Output.
 
-<P>The JPEG-2000 specification specifies two different formats: JP2 and
+<p>The JPEG-2000 specification specifies two different formats: JP2 and
 JPEG-2000 code stream (JPC).  JP2 represents a visual image quite
 specifically, whereas JPC is a more or less arbitrary array of codes.  A JP2
 image contains a JPC stream and metadata describing how that stream represents
 a visual image.  <b>jpeg2ktopam</b> converts both.
 
 <p>If the color space identified in the image is grayscale
-(JAS_IMAGE_CS_GRAY), <B>jpeg2ktopam</b> generates a PGM image, unless the
+(JAS_IMAGE_CS_GRAY), <b>jpeg2ktopam</b> generates a PGM image, unless the
 image contains only one bit per pixel, in which case <b>jpeg2ktopam</b>
 generates PBM.  If the color space is RGB (JAS_IMAGE_CS_RGB),
 <b>jpeg2ktopam</b> generates a PPM image.  If the input image is anything
 else, <b>jpeg2ktopam</b> generates a PAM image with no tuple type identified.
 
-<P>In the PGM and PPM cases, <b>jpeg2ktopam</b> assumes the intensity
+<p>In the PGM and PPM cases, <b>jpeg2ktopam</b> assumes the intensity
 values in the input image have the same meaning as for PGM and PPM.
 One thing that implies is the ITU-R Recommendation BT.709 color space,
 which means the assumption is false for JP2 input.  JP2 input uses
@@ -67,7 +67,7 @@ and the green component has a precision of 6 bits, the maxval is 63 and
 the red component codes from the JPEG-2000 image are multiplied by 63/15 to
 generate the output samples.
 
-<P><b>jpeg2ktopam</b> interprets the JPEG-2000 input with the <a
+<p><b>jpeg2ktopam</b> interprets the JPEG-2000 input with the <a
 href="http://www.ece.uvic.ca/~mdadams/jasper/">Jasper JPEG-2000
 library</a>.  See documentation of the library for details on what
 <b>jpeg2ktopam</b> handles.  Note that the Jasper library contains
@@ -77,7 +77,7 @@ the Jasper library write it "JasPer," but Netpbm documentation follows
 standard American English typography rules, which don't allow that
 kind of capitalization.
 
-<P>Use <b>pamtojpeg2k</b> to convert in the other direction.
+<p>Use <b>pamtojpeg2k</b> to convert in the other direction.
 
 <p>The program <b>jasper</b>, which is packaged with the Jasper 
 JPEG-2000 library, also converts between JPEG-2000 and PNM formats.
@@ -86,61 +86,66 @@ especially recently added features.  However, since it does not use the
 Netpbm library to read and write the Netpbm formats, it doesn't do as
 good a job on that side.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>jpeg2ktopam</b> recognizes the following
+command line options:
 
-<DT><B>-verbose</b>
+<dl compact>
 
-<DD>This option causes <b>jpeg2ktopam</b> to issue informational
+<dt><b>-verbose</b>
+
+<dd>This option causes <b>jpeg2ktopam</b> to issue informational
 messages about the conversion process.
 
-<DT><B>-debuglevel</b>=<i>number</i>
+<dt><b>-debuglevel</b>=<i>number</i>
 
-<DD>This option controls debug messages from the Jasper library.  
+<dd>This option controls debug messages from the Jasper library.  
 <b>jpeg2ktopam</b> passes <i>number</i> as the debug level to the Jasper
 JPEG-2000 decoder.
 
-</DL>
+</dl>
      
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 <pre>
   jpeg2ktopam myimg.jpc &gt;myimg.ppm
 </pre>
 
-
-<H2 id="jpeg2000">ABOUT JPEG-2000</H2>
+<h2 id="jpeg2000">ABOUT JPEG-2000</h2>
 
 <p>See <a href="pamtojpeg2k.html">the <b>pamtojpeg2k</b> manual</a>
 for general information on JPEG-2000 compression and the
 JPEG-2000 formats.
 
+<h2 id="seealso">SEE ALSO</h2>
 
-<H2 id="seealso">SEE ALSO</H2>
+<b><a href="pamtojpeg2k.html">pamtojpeg2k</a></b>,
+<b><a href="jpegtopnm.html">jpegtopnm</a></b>,
+<b><a href="ppm.html">ppm</a></b>,
+<b><a href="pgm.html">pgm</a></b>,
+<b><a href="pbm.html">pbm</a></b>,
+<b><a href="pam.html">pam</a></b>,
 
-<B><A HREF="pamtojpeg2k.html">pamtojpeg2k</A></B>,
-<B><A HREF="jpegtopnm.html">jpegtopnm</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>,
-<B><A HREF="pgm.html">pgm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>,
-<B><A HREF="pam.html">pam</A></B>,
-
-<H2>History</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>jpeg2ktopam</b> was added to Netpbm in Release 10.12 (November 2002).
 
 <p>Before Netpbm 10.49 (December 2009), <b>jpeg2ktopam</b> could not convert
 a JP2 file -- only JPC.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#jpeg2000">ABOUT JPEG-2000</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

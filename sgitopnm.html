@@ -1,27 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Sgitopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>sgitopnm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Sgitopnm User Manual</title></head>
+<body>
+<h1>sgitopnm</h1>
 Updated: 25 April 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 sgitopnm - convert a SGI image file to PNM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>sgitopnm</B>
+<b>sgitopnm</b>
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<B>-channel</B> <I>c</I>]
+[<b>-channel</b> <i>c</i>]
 
-[<I>SgiFileName</I>]
+[<i>SgiFileName</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -29,7 +28,7 @@ sgitopnm - convert a SGI image file to PNM
 image for a 2-dimensional (1- or 2-channel) input file, and a PPM image for
 a 3-dimensional (3 or more channels) input file.
 
-<P>Alternatively, the program produces a PGM image of any one of the
+<p>Alternatively, the program produces a PGM image of any one of the
 channels in the input file.
 
 <p>Before Netpbm 10.67 (June 2014), <b>sgitopnm</b> does not work on 2-channel
@@ -42,18 +41,23 @@ Standard Input.
 be a seekable file, so for example you can't feed it from a pipe.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-verbose</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>sgitopnm</b> recognizes the following
+command line options:
 
-<DD>Give some information about the SGI image file.
+<dl compact>
+<dt><b>-verbose</b>
 
-<DT><B>-channel</B> <I>n</I>
+<dd>Give some information about the SGI image file.
 
-<DD>Extract channel <I>n</I> of the image as a PGM image.
+<dt><b>-channel</b> <i>n</i>
 
-<p>Without this option, <B>sgitopnm</B> extracts the first 3 channels as a PPM
+<dd>Extract channel <i>n</i> of the image as a PGM image.
+
+<p>Without this option, <b>sgitopnm</b> extracts the first 3 channels as a PPM
 image or, if the input has 1 or 2 channels, extracts the first channel as a
 PGM image.
 
@@ -62,9 +66,9 @@ the transparency information with <b>-channel=2</b>.  You could then
 combine them into a PAM image of tuple type GRAYSCALE_ALPHA with
 <b>pamstack</b>.
 
-</DL>
+</dl>
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
 <p>The SGI image format specification version 1.0 is at
 ftp://ftp.sgi.com/graphics/grafica/sgiimage.html .
@@ -73,29 +77,29 @@ ftp://ftp.sgi.com/graphics/grafica/sgiimage.html .
 https://github.com/ZaaLabs/ZaaIL-TestImages/tree/master/SGI .
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnm.html">pnm</A></B>,
-<B><A HREF="pam.html">pam</A></B>,
-<B><A HREF="pnmtosgi.html">pnmtosgi</A></B>,
-<B><A HREF="pamstack.html">pamstack</A></B>
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="pam.html">pam</a></b>,
+<b><a href="pnmtosgi.html">pnmtosgi</a></b>,
+<b><a href="pamstack.html">pamstack</a></b>
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 1994 by Ingo Wilken
-(<A HREF="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">
-Ingo.Wilken@informatik.uni-oldenburg.de</A>)
+(<a href="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">
+Ingo.Wilken@informatik.uni-oldenburg.de</a>)
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

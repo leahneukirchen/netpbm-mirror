@@ -1,29 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamlevels User Manual</TITLE>
-</HEAD><BODY>
-<H1>pamlevels</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamlevels User Manual</title>
+</head><body>
+<h1>pamlevels</h1>
 Updated: 13 June 2018
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamlevels - effect a &quot;levels&quot; transformation
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamlevels</B>
-<b>-from1</b> <I>from1</I>
-<b>-to1</b> <I>to1</I>
-<b>-from2</b> <I>from2</I>
-<b>-to2</b> <I>to2</I>
-[<b>-from3</b> <I>from3</I>
-<b>-to3</b> <I>to3</I>]
+<b>pamlevels</b>
+<b>-from1</b> <i>from1</i>
+<b>-to1</b> <i>to1</i>
+<b>-from2</b> <i>from2</i>
+<b>-to2</b> <i>to2</i>
+[<b>-from3</b> <i>from3</i>
+<b>-to3</b> <i>to3</i>]
 [<b>-linear</b>]
 [<b>-fitbrightness</b>]
-[<I>pamfile</I>]
+[<i>pamfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -46,10 +45,10 @@ color-mapping options may be shortened to <b>-f1</b>...<b>-f3</b> and
 <p>When the transformation is linear (i.e. uses two mappings) and preserves
 zero (i.e. maps black to black), it corresponds to multiplication of light
 intensity by a constant and preserves
-<A HREF="http://www.c-f-systems.com/ColorIntegrity.html">color integrity</A>.
+<a href="http://www.c-f-systems.com/ColorIntegrity.html">color integrity</a>.
 
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 In the examples below, <code>\</code> denotes a line continuation:
 
 <p>To brighten an image by setting a darker white point&mdash;
@@ -72,6 +71,11 @@ pamlevels -f1 black -t1 black\
 The latter tranformation is similar to gamma-correction.
 
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamlevels</b> recognizes the following
+command line options:
 
 <dl>
 <dt><b>-from1</b>
@@ -117,32 +121,32 @@ implemented.
   
 </dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmnorm.html">pnmnorm</A></B>,
-<B><A HREF="pamrecolor.html">pamrecolor</A></B>,
-<B><A HREF="pnmgamma.html">pnmgamma</A></B>,
-<B><A HREF="pam.html">pnm</A></B>
+<b><a href="pnmnorm.html">pnmnorm</a></b>,
+<b><a href="pamrecolor.html">pamrecolor</a></b>,
+<b><a href="pnmgamma.html">pnmgamma</a></b>,
+<b><a href="pam.html">pnm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>This program was first submitted by Anton Shepelev
-(<A HREF="mailto:anton.txt@gmail.com">anton.txt@gmail.com</A>).
+(<a href="mailto:anton.txt@gmail.com">anton.txt@gmail.com</a>).
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamlevels</b> was new in Netpbm 10.83 (June 2018).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

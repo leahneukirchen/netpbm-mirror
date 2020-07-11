@@ -1,26 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamhue User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamhue</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamhue User Manual</title></head>
+<body>
+<h1>pamhue</h1>
 Updated: 07 January 2018
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamhue - change a Netpbm image's hues
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pamhue</b>
 [<b>-huechange=</b>[<i>degrees</i>]]
 <i>filename</i>
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -45,7 +45,7 @@ would change all red pixels to yellow and all yellow pixels to green, etc.
 <b>pambrighten</b>.
 
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 <p>To shift the color of each pixel 120 degrees clockwise:
 <pre>
@@ -58,38 +58,43 @@ pamhue -huechange=-120
 </pre>
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL>
-<DT><b>-huechange=</b><i>degrees</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamhue</b> recognizes the following
+command line option:
 
-<DD>This option specifies the amount to shift each color.  It is in degrees,
+<dl>
+<dt><b>-huechange=</b><i>degrees</i>
+
+<dd>This option specifies the amount to shift each color.  It is in degrees,
 with positive meaning clockwise and negative meaning counterclockwise.  It may
 be fractional and may be more than a full revolution.
 
 <p>This option is mandatory.
 
-</DL>  
+</dl>  
 
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamhue</b> was new in Netpbm 10.86 (March 2019).
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pambrighten.html">pambrighten</A>, 
-<A HREF="ppmflash.html">ppmflash</A>, 
-<A HREF="ppmhist.html">ppmhist</A>, 
-<A HREF="ppm.html">ppm</A>
+<a href="pambrighten.html">pambrighten</a>, 
+<a href="ppmflash.html">ppmflash</a>, 
+<a href="ppmhist.html">ppmhist</a>, 
+<a href="ppm.html">ppm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 2018 by Willem van Schaik.
 Copyright (C) 1990 by Brian Moffet.
 Copyright (C) 1989 by Jef Poskanzer.
 
-<P>
+<p>
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted, provided
 that the above copyright notice appear in all copies and that both that
@@ -97,16 +102,16 @@ copyright notice and this permission notice appear in supporting
 documentation.  This software is provided "as is" without express or
 implied warranty.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

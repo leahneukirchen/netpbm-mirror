@@ -1,35 +1,34 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamenlarge User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamenlarge</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamenlarge User Manual</title></head>
+<body>
+<h1>pamenlarge</h1>
 Updated: 07 January 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamenlarge - Enlarge a Netpbm image N times
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamenlarge</B>
+<b>pamenlarge</b>
 [<b>-scale=</b><i>integer</i>]
 [<b>-xscale=</b><i>integer</i>]
 [<b>-yscale=</b><i>integer</i>]
-[<I>filename</I>]
+[<i>filename</i>]
 
-<B>pamenlarge</B> <I>N</I> [<I>pnmfile</I>]
+<b>pamenlarge</b> <i>N</i> [<i>pnmfile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamenlarge</b> reads a Netpbm image as input, replicates its pixels
-<I>N</I> times, and produces a Netpbm image as output.  The output is
+<i>N</i> times, and produces a Netpbm image as output.  The output is
 the same type of image as the input.
 
-<P>If you enlarge by a factor of 3 or more, you should probably add a
+<p>If you enlarge by a factor of 3 or more, you should probably add a
 <b>pnmsmooth</b> step; otherwise, you can see the original pixels in
 the resulting image.
 
@@ -56,8 +55,8 @@ but at different speeds, each being faster than the one before.
 10.41 (December 2007).  Before 10.41, there are no special scale factors and
 PBM enlargement is significantly slower than today for all scale factors.
 
-<P><b>pamenlarge</b> can enlarge only by integer factors.  The slower
-but more general <b>pamscale</B> can enlarge or reduce by arbitrary
+<p><b>pamenlarge</b> can enlarge only by integer factors.  The slower
+but more general <b>pamscale</b> can enlarge or reduce by arbitrary
 factors.  <b>pamscale</b> allows you to enlarge by resampling, which
 gives you smoother enlargements.  But it is much slower.
 
@@ -84,6 +83,11 @@ argument goes before the file name argument.
 
   
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamenlarge</b> recognizes the following
+command line options:
 
 <dl>
 <dt><b>-scale=</b><i>integer</i>
@@ -117,29 +121,29 @@ which was in Pbmplus as far back as 1989.  The major difference is that
 <b>pamenlarge</b> can enlarge PAM format images in addition to PNM.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmreduce.html">pbmreduce</A>,
-<A HREF="pamscale.html">pamscale</A>,
-<A HREF="pamstretch.html">pamstretch</A>,
-<A HREF="pbmpscale.html">pbmpscale</A>,
-<A HREF="pnmsmooth.html">pnmsmooth</A>,
-<A HREF="pnm.html">pnm</A>
+<a href="pbmreduce.html">pbmreduce</a>,
+<a href="pamscale.html">pamscale</a>,
+<a href="pamstretch.html">pamstretch</a>,
+<a href="pbmpscale.html">pbmpscale</a>,
+<a href="pnmsmooth.html">pnmsmooth</a>,
+<a href="pnm.html">pnm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#arguments">ARGUMENTS</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#arguments">ARGUMENTS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,40 +1,39 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmdraw User Manual</TITLE></HEAD>
-<BODY>
-
-<H1>ppmdraw</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmdraw User Manual</title></head>
+<body>
+<h1>ppmdraw</h1>
 Updated: 22 June 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 ppmdraw - draw lines, text, etc on a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmdraw</B>
+<b>ppmdraw</b>
 
 {
-<B>-script=</B><I>script</I>
+<b>-script=</b><i>script</i>
 |
-<B>-scriptfile=</B><i>filename</i>
+<b>-scriptfile=</b><i>filename</i>
 }
 [<b>-verbose</b>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or an equals sign between an option name
 and its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>ppmdraw</B> draws lines, shapes, text, etc. on a PPM image.  It is
+<p><b>ppmdraw</b> draws lines, shapes, text, etc. on a PPM image.  It is
 essentially an easy-to-program front end to <b>libnetpbm</b>'s
 "ppmd" subroutines.  It lets you create a human-friendly
 script to describe the drawing rather than write a C program.
@@ -60,10 +59,10 @@ off, the script writes "there" in 10 pixel high black
 letters horizontally.  Finally, it draws a black line to a point 5
 pixels over and 20 pixels down from the end of "there."
 
-<P>If you don't specify <I>ppmfile</I>, <B>ppmdraw</B> reads its input
+<p>If you don't specify <i>ppmfile</i>, <b>ppmdraw</b> reads its input
 PPM image from Standard Input.
 
-<P>The output image goes to Standard Output.
+<p>The output image goes to Standard Output.
 
 <p><b>ppmdraw</b> works on multi-image streams.  It executes the same
 script on each input image and produces an output stream with one image
@@ -74,13 +73,18 @@ for each input image.  But before Netpbm 10.32 (February 2006),
 <b>ppmlabel</b> may be more what you want.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmdraw</b> recognizes the following
+command line options:
 
 
-<DL COMPACT>
-<DT><B>-script=</B><I>script</I>
+<dl compact>
+<dt><b>-script=</b><i>script</i>
 
-<DD>This option gives the script.  See <a href="#script">Script</a>.
+<dd>This option gives the script.  See <a href="#script">Script</a>.
 
 <p>You may not specify both <b>-script</b> and <b>-scriptfile</b>.
 
@@ -94,10 +98,10 @@ means Standard Input.
 <p>You may not specify <b>-</b> (Standard Input) for both
 <b>-scriptfile</b> and the input image file.
 
-</DL>
+</dl>
 
 
-<H2 ID="script">SCRIPT</H2>
+<h2 id="script">SCRIPT</h2>
 
 <p>The heart of <b>ppmdraw</b> function is its script.  The script is
 a character stream.  The stream consists of commands.  Commands are
@@ -150,7 +154,7 @@ documented.
 in which subsequent drawing commands draw.  Before the first
 <b>setcolor</b>, the current color is white.
 
-<P>There is one argument.  It specifies the color as described for the
+<p>There is one argument.  It specifies the color as described for the
 <a href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
@@ -251,25 +255,26 @@ will be within the image!
 
 <h2 id="history">HISTORY</h2>
 
-<P><B>ppmdraw</B> was new in Netpbm 10.29 (August 2005).
+<p><b>ppmdraw</b> was new in Netpbm 10.29 (August 2005).
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppmlabel.html">ppmlabel</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
-<B><A HREF="libnetpbm_draw.html">libnetpbm_draw</A></B>
+<b><a href="ppmlabel.html">ppmlabel</a></b>,
+<b><a href="ppm.html">ppm</a></b>
+<b><a href="libnetpbm_draw.html">libnetpbm_draw</a></b>
 
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#script">SCRIPT</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#script">SCRIPT</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

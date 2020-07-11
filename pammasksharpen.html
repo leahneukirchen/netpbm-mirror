@@ -1,40 +1,39 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pammasksharpen User Manual</TITLE></HEAD>
-<BODY>
-<H1>pammasksharpen</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pammasksharpen User Manual</title></head>
+<body>
+<h1>pammasksharpen</h1>
 Updated: 14 June 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pammasksharpen - Sharpen an image via an unsharp mask
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pammasksharpen</B>
+<b>pammasksharpen</b>
 [<b>-sharpness=</b><i>realnum</i>]
 [<b>-threshold=</b><i>realnum</i>]
-<I>maskfile</I> [<I>inputfile</I>]
+<i>maskfile</i> [<i>inputfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 <pre>
-   pamgauss 5 5 -sigma=.7 -tupletype=GRAYSCALE | pamtopnm >gauss.pgm
-   pnmconvol -nooffset gauss.pgm myimage.ppm >blurred.ppm
-   pammasksharpen blurred.ppm myimage.ppm >sharpened.ppm
+   pamgauss 5 5 -sigma=.7 -tupletype=GRAYSCALE | pamtopnm &gt; gauss.pgm
+   pnmconvol -nooffset gauss.pgm myimage.ppm &gt; blurred.ppm
+   pammasksharpen blurred.ppm myimage.ppm &gt; sharpened.ppm
 </pre>
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pammasksharpen</b> reads a Netpbm image as input and produces a
+<p><b>pammasksharpen</b> reads a Netpbm image as input and produces a
 sharpened version of it, in the same format, as output.  It does this
 via an unsharp mask, which you supply as another Netpbm image.
 
@@ -77,13 +76,18 @@ larger detail (more pixels involved), so can use a larger radius.
 Radius and sharpness (see <b>-sharpness</b> option) interact: reducing
 one allows you to increase the other.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pammasksharpen</b> recognizes the following
+command line options:
 
-<DT><B>-sharpness=</B><I>realnum</I>
+<dl compact>
 
-<DD>This specifies the magnitude of the sharpening.  It is the multiple
+<dt><b>-sharpness=</b><i>realnum</i>
+
+<dd>This specifies the magnitude of the sharpening.  It is the multiple
 of edgeness that gets added to each sample as described above.
 
 <p><i>realnum</i> is a nonnegative real decimal number.  Zero means
@@ -96,7 +100,7 @@ no sharpening at all.
 <p>This option was new in Netpbm 10.30 (October 2005).  Before that,
 the sharpness was always 1.0.
 
-<DT><B>-threshold=</B><I>realnum</I>
+<dt><b>-threshold=</b><i>realnum</i>
 
 <dd>This minimum amount of edgeness that will be considered edgeness
 at all.  i.e. if the magnitude of the edgeness is less than this,
@@ -113,28 +117,30 @@ areas.
 
 </dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmconvol.html">pnmconvol</A>,
-<A HREF="pamedge.html">pamedge</A>,
-<A HREF="pamsharpness.html">pamsharpness</A>,
-<A HREF="pamsharpmap.html">pamsharpmap</A>,
-<A HREF="pamarith.html">pamarith</A>,
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>
+<a href="pnmconvol.html">pnmconvol</a>,
+<a href="pamedge.html">pamedge</a>,
+<a href="pamsharpness.html">pamsharpness</a>,
+<a href="pamsharpmap.html">pamsharpmap</a>,
+<a href="pamarith.html">pamarith</a>,
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>
 
 
-<H2 id="history">HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pammasksharpen</b> was new in Netpbm 10.23 (July 2004).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

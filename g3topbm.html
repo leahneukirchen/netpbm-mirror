@@ -1,29 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>G3topbm User Manual</TITLE></HEAD>
-<BODY>
-<H1>g3topbm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>G3topbm User Manual</title></head>
+<body>
+<h1>g3topbm</h1>
 Updated: 03 December 2008
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 g3topbm - convert a Group 3 fax file into a PBM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>g3topbm</B>
-[<B>-kludge</B>]
-[<B>-reversebits</B>]
-[<B>-stretch</B>]
-[<B>-width=</B><i>pixels</i> | paper_size={A3|A4|A5|A6|B4}]
-[<B>-stop_error</B>]
-[<I>g3file</I>]
+<b>g3topbm</b>
+[<b>-kludge</b>]
+[<b>-reversebits</b>]
+[<b>-stretch</b>]
+[<b>-width=</b><i>pixels</i> | paper_size={A3|A4|A5|A6|B4}]
+[<b>-stop_error</b>]
+[<i>g3file</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -56,25 +56,30 @@ file, it will not tell you of your mistake.
 inside.  See <b>tifftopnm</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-kludge</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>g3topbm</b> recognizes the following
+command line options:
 
-<DD>Tells <b>g3topbm</b> to ignore the first few lines of the file;
+<dl compact>
+<dt><b>-kludge</b>
+
+<dd>Tells <b>g3topbm</b> to ignore the first few lines of the file;
 sometimes fax files have some junk at the beginning.
 
-<DT><B>-reversebits</B>
+<dt><b>-reversebits</b>
 
-<DD>Tells <b>g3topbm</b> to interpret bits least-significant first,
+<dd>Tells <b>g3topbm</b> to interpret bits least-significant first,
 instead of the default most-significant first.  Apparently some fax
 modems do it one way and others do it the other way.  If you get a
 whole bunch of "bad code word" messages, try using this
 option.
 
-<DT><B>-stretch</B>
+<dt><b>-stretch</b>
 
-<DD>This option tells <b>g3topbm</b> to stretch the image vertically by
+<dd>This option tells <b>g3topbm</b> to stretch the image vertically by
 duplicating each row.  This is for the low-quality transmission mode.
 
 <dt><b>-width=</b><i>pixels</i>
@@ -88,7 +93,7 @@ issues a warning or fails, depending on whether you specify
 
 <p>This option was new in Netpbm 10.33 (March 2006).
 
-<dt><b>-paper_size=</b>{<B>A3</B>,<B>A4</B>,<B>A5</B>,<b>A6</b>,<b>B4</b>}
+<dt><b>-paper_size=</b>{<b>A3</b>,<b>A4</b>,<b>A5</b>,<b>A6</b>,<b>B4</b>}
 
 <dd>This option tells <b>g3topbm</b> for what size paper this image is
 supposed to be formatted.  <b>g3topbm</b> uses the width of the paper
@@ -99,9 +104,9 @@ does not use the height of the paper for anything.
 
 <p>This option was new in Netpbm 10.33 (March 2006).
 
-<DT><B>-stop_error</B>
+<dt><b>-stop_error</b>
 
-<DD>This option tells <b>g3topbm</b> to fail when it finds a problem
+<dd>This option tells <b>g3topbm</b> to fail when it finds a problem
 in the input.  "Fail" means it terminates with a nonzero
 status code with the contents of the output file undefined.
 
@@ -121,24 +126,24 @@ input errors.
 <b>g3topbm</b> always failed when it encountered premature EOF and
 never failed when it encountered other problems.
 
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmtog3.html">pbmtog3</A>,
-<A HREF="tifftopnm.html">tifftopnm</A>,
-<A HREF="pbm.html">pbm</A>
-<A HREF="faxformat.html">fax formats</A>
+<a href="pbmtog3.html">pbmtog3</a>,
+<a href="tifftopnm.html">tifftopnm</a>,
+<a href="pbm.html">pbm</a>,
+<a href="faxformat.html">fax formats</a>
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

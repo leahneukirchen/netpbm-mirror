@@ -1,30 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Ppmglobe User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmglobe</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmglobe User Manual</title></head>
+<body>
+<h1>ppmglobe</h1>
 Updated: 23 February 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 ppmglobe - generate strips to glue onto a sphere
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmglobe</B>
+<b>ppmglobe</b>
 [<b>-background=</b><i>colorname</i>]
 [<b>-closeok</b>]
 <i>stripcount</i>
 [<i>filename</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use double
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -63,7 +61,7 @@ on it, but is used today because it is pretty.
 <p>You can find maps of planets at <a
 href="http://maps.jpl.nasa.gov">maps.jpl.nasa.gov</a>.
 
-<H2 id="parameters">PARAMETERS</H2>
+<h2 id="parameters">PARAMETERS</h2>
 
 <p><i>stripcount</i> is the number of strips <b>ppmglobe</b> is to
 generate in the output.  More strips makes it easier to fit onto a
@@ -84,15 +82,20 @@ on the right, <b>ppmglobe</b> produces a fractional strip on the right.
 specify this, <b>ppmglobe</b> reads the image from Standard Input.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmglobe</b> recognizes the following
+command line options:
 
-<DT><B>-background=</B><I>colorname</I>
-<DD>
+<dl compact>
+
+<dt><b>-background=</b><i>colorname</i>
+<dd>
 This specifies the color that goes between the strips.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
@@ -101,8 +104,8 @@ library routine</a>.
 <p>This option was new in Netpbm 10.31 (December 2005).  Before that,
 the background is always black.
 
-<DT><B>-closeok</B>
-<DD>
+<dt><b>-closeok</b>
+<dd>
 This means it is OK if the background isn't exactly the color you specify.
 Sometimes, it is impossible to represent a named color exactly because of the
 precision (i.e. maxval) of the image's color space.  If you specify
@@ -113,20 +116,20 @@ situation.
 
 <p>This option was new in Netpbm 10.31 (December 2005).
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppm.html">ppm</A></B>
-<B><A HREF="pnmmercator.html">pnmmercator</A></B>
+<b><a href="ppm.html">ppm</a></b>
+<b><a href="pnmmercator.html">pnmmercator</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
-<P><b>ppmglobe</b> was new in Netpbm 10.16 (June 2003).
+<p><b>ppmglobe</b> was new in Netpbm 10.16 (June 2003).
 
 <p>It is derived from Max Gensthaler's <b>ppmglobemap</b>.
 
-<H2 id="authors">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 <p><a href="mailto:Max@Gensthaler.de">Max Gensthaler</a>
 wrote a program he called
@@ -134,15 +137,16 @@ wrote a program he called
 Netpbm.  Bryan Henderson modified the code slightly and included it in
 Netpbm as <b>ppmglobe</b>.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#parameters">PARAMETERS</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#parameters">PARAMETERS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

@@ -1,60 +1,63 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pdbimgtopam User Manual</TITLE></HEAD>
-<BODY>
-<H1>pdbimgtopam</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pdbimgtopam User Manual</title></head>
+<body>
+<h1>pdbimgtopam</h1>
 Updated: 25 September 2010
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pdbimgtopam - convert a Palm Pilot Image Viewer PDB Image to a PAM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pdbimgtopam</B>
+<b>pdbimgtopam</b>
 
 [<b>-notefile=</b><i>filename</i>]
 [<b>-verbose</b>]
 
-[<I>pdbimgfile</I>]
+[<i>pdbimgfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pdbimgtopam</b> reads a Palm Pilot Image Viewer image (and Image
 record in a PDB file) as input, from Standard Input or
-<I>palmfile</I>, and produces a PAM image as output.
+<i>palmfile</i>, and produces a PAM image as output.
 
 <p>If the Pilot image is monochrome, the PAM output has maxval 1.
 Otherwise, it has maxval 255.  Note that Pilot images are always
 monochrome.  The PAM image has tuple type GRAYSCALE.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-verbose</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pdbimgtopam</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-verbose</b>
+
+<dd>
 Display various interesting information about the input file and process.
 
-<DT><B>-notefile=</B><i>filename</i>
+<dt><b>-notefile=</b><i>filename</i>
 
-<DD>
+<dd>
 Write the image note (if any) to the specified file.
 <p>
 If you don't specify this, <b>pdbimgtopam</b> ignores any image note.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamtopdbimg.html">pamtopdbimg</A></B>,
-<B><A HREF="pnmtopalm.html">pnmtopalm</A></B>,
-
-<A HREF="pam.html">pam</A>,
+<b><a href="pamtopdbimg.html">pamtopdbimg</a></b>,
+<b><a href="pnmtopalm.html">pnmtopalm</a></b>,
+<b><a href="pam.html">pam</a></b>
 
 <h2 id="history">HISTORY</h2>
 
@@ -63,14 +66,14 @@ It was modelled after Eric A. Howe's <b>imgvtopbm</b> package, which
 dates back to September 1997.
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

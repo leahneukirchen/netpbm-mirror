@@ -1,19 +1,19 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Fiascotopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>fiascotopnm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Fiascotopnm User Manual</title></head>
+<body>
+<h1>fiascotopnm</h1>
 Updated: 12 July 2000
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 fiascotopnm - Convert compressed FIASCO image to PGM, or PPM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>fiascotopnm </B>
-[<I>option</I>]...
-[<I>filename</I>]...
+<b>fiascotopnm </b>
+[<i>option</i>]...
+[<i>filename</i>]...
 
 <p>All option names may be abbreviated; for example, --output may be
 written --outp or --ou. For all options an one letter short option
@@ -22,201 +22,206 @@ mandatory or optional for short options, too. Both short and long
 options are case sensitive.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>fiascotopnm</B> decompresses the named FIASCO files, or the
+<p><b>fiascotopnm</b> decompresses the named FIASCO files, or the
 Standard Input if no file is named, and writes the images as PGM, or
 PPM files, depending on whether the FIASCO image is black and white or
 color.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-o</B>[<I>name</I>], <B>--output=</B>[<I>name</I>]
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>fiascotopnm</b> recognizes the following
+command line options:
 
-<DD> Write decompressed image to the file <I>name</I>.ppm (if PPM) or
-<I>name</I>.pgm (if PGM).  If <I>name</I> is <b>-</b>, then produce
+<dl compact>
+<dt><b>-o</b>[<i>name</i>], <b>--output=</b>[<i>name</i>]
+
+<dd> Write decompressed image to the file <i>name</i>.ppm (if PPM) or
+<i>name</i>.pgm (if PGM).  If <i>name</i> is <b>-</b>, then produce
 the image file on the standard output. The optional argument
-<I>name</I> can be omitted, then the input filename is used as
+<i>name</i> can be omitted, then the input filename is used as
 basename with the suffix .ppm or .pgm. In case of video streams, the
-frames are stored in the files <I>name</I>.<B>N</B>.ppm where <B>N</B>
+frames are stored in the files <i>name</i>.<b>N</b>.ppm where <b>N</b>
 is the frame number (of the form 00..0 - 99..9); output on the
 standard output is not possible with video streams.
 
-<P> If <I>name</I> is a relative path and the environment variable
-<B>FIASCO_IMAGES</B> is a (colon-separated) list of directories, then
+<p> If <i>name</i> is a relative path and the environment variable
+<b>FIASCO_IMAGES</b> is a (colon-separated) list of directories, then
 the output file(s) are written to the first (writable) directory of
 this list. Otherwise, the current directory is used to store the
 output file(s).
 
-<DT><B>-z</B>, <B>--fast</B>
-<DD>
+<dt><b>-z</b>, <b>--fast</b>
+<dd>
 Decompress images in the 4:2:0 format; i.e., each chroma channel is
 decompressed to an image of halved width and height. Use this option
 on slow machines when the desired frame rate is not achieved; the
 output quality is only slightly decreased. 
 
-<DT><B>-d</B>, <B>--double</B><DD>
+<dt><b>-d</b>, <b>--double</b><dd>
 Double the size of the X11 window both in width and height; no pixel
 interpolation is used, each pixel is just replaced by four identical
 pixels.
 
-<DT><B>-p</B>, <B>--panel</B>
-<DD>
+<dt><b>-p</b>, <b>--panel</b>
+<dd>
 Show a panel with play, stop, pause, record and exit buttons to
 control the display of videos. When pressing the record button, all
 frames are decompressed and stored in memory. The other buttons work
 in the usual way.
 
-<DT><B>-m</B> <I>N</I>, <B>--magnify=</B><I>N</I>
-<DD>
+<dt><b>-m</b> <i>N</i>, <b>--magnify=</b><i>N</i>
+<dd>
 Set magnification of the decompressed image. Positive values enlarge
 and negative values reduce the image width and height by a factor of
-2^|<I>N</I>|.
+2^|<i>N</i>|.
 
-<DT><B>-s</B> <I>N</I>, <B>--smoothing=</B><I>N</I>
-<DD>
+<dt><b>-s</b> <i>N</i>, <b>--smoothing=</b><i>N</i>
+<dd>
 Smooth decompressed image(s) along the partitioning borders by the
-given amount <I>N</I>. <I>N</I> is 1 (minimum) to 100 (maximum); default
-is 70. When <I>N</I>=0, then the smoothing amount specified in the
+given amount <i>N</i>. <i>N</i> is 1 (minimum) to 100 (maximum); default
+is 70. When <i>N</i>=0, then the smoothing amount specified in the
 FIASCO file is used (defined by the FIASCO coder).
 
-<DT><B>-F</B> <I>N</I>, <B>--fps=</B><I>N</I>
-<DD>
-Set number of frames per second to <I>N</I>. When using this option,
+<dt><b>-F</b> <i>N</i>, <b>--fps=</b><i>N</i>
+<dd>
+Set number of frames per second to <i>N</i>. When using this option,
 the frame rate specified in the FIASCO file is overridden.
 
-<DT><B>--verbose=</B><I>N</I>
-<DD>
-Set verbose of <B>fiascotopnm</B> to <I>N</I>.
+<dt><b>--verbose=</b><i>N</i>
+<dd>
+Set verbose of <b>fiascotopnm</b> to <i>N</i>.
 
-<DT><B>-v</B>, <B>--version</B>
-<DD>
-Print <B>fiascotopnm</B> version number, then exit.
+<dt><b>-v</b>, <b>--version</b>
+<dd>
+Print <b>fiascotopnm</b> version number, then exit.
 
-<DT><B>-f</B> <I>name</I>, <B>--config=</B><I>name</I>
+<dt><b>-f</b> <i>name</i>, <b>--config=</b><i>name</i>
 
-<DD>Load parameter file <I>name</I> to initialize the options of
-<B>fiascotopnm</B>.  See file <B>system.fiascorc</B> for an example of
-the syntax. Options of <B>fiascotopnm </B> are set by any of the
+<dd>Load parameter file <i>name</i> to initialize the options of
+<b>fiascotopnm</b>.  See file <b>system.fiascorc</b> for an example of
+the syntax. Options of <b>fiascotopnm </b> are set by any of the
 following methods (in the specified order):
 
-<OL>
-<LI>Global ressource file <B>/etc/system.fiascorc</B>
+<ol>
+<li>Global ressource file <b>/etc/system.fiascorc</b>
 
-<LI>$HOME<B>/.fiascorc</B>
+<li>$HOME<b>/.fiascorc</b>
 
-<LI>command line
+<li>command line
 
-<LI>--config=<I>name</I>
-</OL>
+<li>--config=<i>name</i>
+</ol>
 
-<DT><B>-h</B>, <B>--info</B>
-<DD>
+<dt><b>-h</b>, <b>--info</b>
+<dd>
 Print brief help, then exit.
 
-<DT><B>-H</B>, <B>--help</B>
-<DD>
+<dt><b>-H</b>, <b>--help</b>
+<dd>
 Print detailed help, then exit.
 
-</DL>
+</dl>
 
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
-<PRE>
+<pre>
 fiascotopnm foo.wfa &gt;foo.ppm
-</PRE>
+</pre>
 
-<P>Decompress the FIASCO file "foo.wfa" and store it as
+<p>Decompress the FIASCO file "foo.wfa" and store it as
 "foo.ppm".
 
-<PRE>
+<pre>
 fiascotopnm -o foo1.wfa foo2.wfa
-</PRE>
+</pre>
 
-<P>Decompress the FIASCO files "foo1.wfa" and
+<p>Decompress the FIASCO files "foo1.wfa" and
 "foo2.wfa" and write the frames to the image files
 "foo1.wfa.ppm" and "foo2.wfa.ppm".
 
-<PRE>
+<pre>
 fiascotopnm -oimage foo1.wfa
-</PRE>
+</pre>
 
-<P>Decompress the FIASCO file "foo1.wfa" and write all 15
+<p>Decompress the FIASCO file "foo1.wfa" and write all 15
 frames to the image files "image.00.ppm", ... ,
 "image.14.ppm".
 
-<PRE>
+<pre>
 fiascotopnm --fast --magnify=-1 --double video.wfa &gt;stream.ppm
-</PRE>
+</pre>
 
-<P>Decompress the FIASCO file "video.wfa".  The
+<p>Decompress the FIASCO file "video.wfa".  The
 decompression speed is as fast as possible: the image is decompressed
 (in 4:2:0 format) at a quarter of its original size; then the image is
 enlarged again by pixel doubling.
 
-<H2 id="files">FILES</H2>
+<h2 id="files">FILES</h2>
 
-<DL COMPACT>
-<DT><B>/etc/system.fiascorc</B>
+<dl compact>
+<dt><b>/etc/system.fiascorc</b>
 
-<DD>The systemwide initialization file.
+<dd>The systemwide initialization file.
 
-<DT>$HOME<B>/.fiascorc</B>
+<dt>$HOME<b>/.fiascorc</b>
 
-<DD>The personal initialization file.
+<dd>The personal initialization file.
 
-</DL>
+</dl>
 
-<H2 id="environment">ENVIRONMENT</H2>
+<h2 id="environment">ENVIRONMENT</h2>
 
-<DL COMPACT>
-<DT><B>FIASCO_IMAGES</B>
+<dl compact>
+<dt><b>FIASCO_IMAGES</b>
 
-<DD>Save path for image files. Default is "./".
+<dd>Save path for image files. Default is "./".
 
-<DT><B>FIASCO_DATA</B>
+<dt><b>FIASCO_DATA</b>
 
-<DD>Search path for FIASCO files. Default is "./".
+<dd>Search path for FIASCO files. Default is "./".
 
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmtofiasco.html">pnmtofiasco</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pnmtofiasco.html">pnmtofiasco</a></b>,
+<b><a href="pnm.html">pnm</a></b>
 
-<P>
+<p>
 Ullrich Hafner, Juergen Albert, Stefan Frank, and Michael Unger.
-<B>Weighted Finite Automata for Video Compression</B>, IEEE Journal on
+<b>Weighted Finite Automata for Video Compression</b>, IEEE Journal on
 Selected Areas In Communications, January 1998
-<BR>
+<br>
 
-Ullrich Hafner. <B>Low Bit-Rate Image and Video Coding with Weighted
-Finite Automata</B>, Ph.D. thesis, Mensch &amp; Buch Verlag, ISBN
+Ullrich Hafner. <b>Low Bit-Rate Image and Video Coding with Weighted
+Finite Automata</b>, Ph.D. thesis, Mensch &amp; Buch Verlag, ISBN
 3-89820-002-7, October 1999.
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Ullrich Hafner &lt;<A HREF="mailto:hafner@bigfoot.de">hafner@bigfoot.de</A>&gt;
+Ullrich Hafner &lt;<a href="mailto:hafner@bigfoot.de">hafner@bigfoot.de</a>&gt;
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#files">FILES</A>
-<LI><A HREF="#environment">ENVIRONMENT</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#files">FILES</a>
+<li><a href="#environment">ENVIRONMENT</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
 
 

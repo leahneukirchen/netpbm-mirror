@@ -1,45 +1,49 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmreduce User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmreduce</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmreduce User Manual</title></head>
+<body>
+<h1>pbmreduce</h1>
 Updated: 13 April 2016
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pbmreduce - read a PBM image and reduce it N times
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmreduce</B>
-[<B>-floyd</B>|<B>-fs</B>|<B>-threshold</B>]
-[<B>-value</B> <I>val</I>] <I>N</I>
+<b>pbmreduce</b>
+[<b>-floyd</b>|<b>-fs</b>|<b>-threshold</b>]
+[<b>-value</b> <i>val</i>] <i>N</i>
 [<b>-randomseed=</b><i>integer</i>]
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<P>You can abbreviate any option to its shortest unique prefix.
+<p>You can abbreviate any option to its shortest unique prefix.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pbmreduce</b> reads a PBM image as input and reduces it by a
-factor of <I>N</I>, producing a PBM image as output.
+factor of <i>N</i>, producing a PBM image as output.
 
-<P><b>pbmreduce</b> duplicates a lot of the functionality of
+<p><b>pbmreduce</b> duplicates a lot of the functionality of
 <b>pamditherbw</b>; you could do something like <tt>pamscale |
 pamditherbw</tt>, but <b>pbmreduce</b> is a lot faster.
 
-<P>You can use <B>pbmreduce</B> to "re-halftone" an image.
+<p>You can use <b>pbmreduce</b> to "re-halftone" an image.
 Let's say you have a scanner that only produces black&amp;white, not
 grayscale, and it does a terrible job of halftoning (most b&amp;w
 scanners fit this description).  One way to fix the halftoning is to
 scan at the highest possible resolution, say 300 dpi, and then reduce
 by a factor of three or so using <b>pbmreduce</b>.  You can even
-correct the brightness of an image, by using the <B>-value</B> option.
+correct the brightness of an image, by using the <b>-value</b> option.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmreduce</b> recognizes the following
+command line options:
 
 <dl>
 
@@ -52,7 +56,7 @@ reducing line drawings.
 
 <dt><b>-value</b>
 <dd>
-<P>This option alters the thresholding value for all quantizations.  It should
+<p>This option alters the thresholding value for all quantizations.  It should
 be a real number between 0 and 1.  Above 0.5 means darker images; below 0.5
 means lighter.
 
@@ -68,25 +72,25 @@ halftoning.
 </dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamenlarge.html">pamenlarge</A>,
-<A HREF="pamscale.html">pamscale</A>,
-<A HREF="pamditherbw.html">pamditherbw</A>,
-<A HREF="pbm.html">pbm</A>
+<a href="pamenlarge.html">pamenlarge</a>,
+<a href="pamscale.html">pamscale</a>,
+<a href="pamditherbw.html">pamditherbw</a>,
+<a href="pbm.html">pbm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1988 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,18 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><title>Pnmstitch User Manual</title></HEAD>
-
-<BODY>
-<H1>pnmstitch</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmstitch User Manual</title></head>
+<body>
+<h1>pnmstitch</h1>
 Updated: July 2002
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pnmstitch - stitch together two panoramic (side-by-side) photographs
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmstitch</B>
+<b>pnmstitch</b>
 [
 [<i>left_filespec</i>] <i>right_filespec</i> |
 <br>
@@ -29,15 +28,15 @@ pnmstitch - stitch together two panoramic (side-by-side) photographs
 [<b>-output=</b><i>output_filespec</i>]
 [<b>-verbose</b>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pnmstitch</b> stitches together two panoramic photographs.  This
+<p><b>pnmstitch</b> stitches together two panoramic photographs.  This
 means if you have photographs of the left and right side of something
 that is too big for a single camera frame, <b>pnmstitch</b> can join them
 into one wide picture.
@@ -69,59 +68,64 @@ both the argument and the option.  If you specify neither, the output goes to
 Standard Output.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-width=<i>width</i></B>
-<DT><B>-height=<i>height</i></B>
-<DT><B>-xrightpos=<i>column</i></B>
-<DT><B>-yrightpos=<i>row</i></B>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmstitch</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-width=<i>width</i></b>
+<dt><b>-height=<i>height</i></b>
+<dt><b>-xrightpos=<i>column</i></b>
+<dt><b>-yrightpos=<i>row</i></b>
+<dd>
 These are constraints on where <b>pnmstitch</b> stitches the images together.
 For the <b>LinearSliver</b> method, <i>column</i> and <i>row</i> tell what
 location in the right hand image matches up to the top right corner of the
 left hand image.
      
-<DT><b>-stitcher=</b>{<b>RotateSliver</b>,<b>BiLinearSliver</b>,
+<dt><b>-stitcher=</b>{<b>RotateSliver</b>,<b>BiLinearSliver</b>,
 <b>LinearSliver</b>}
 
-<DD>The default is <b>RotateSliver</b>.
+<dd>The default is <b>RotateSliver</b>.
 
 <dt><b>-filter=</b>{<b>LineAtATime</b>,<b>HorizontalCrop</b>}
 
-<DD>No details available.
+<dd>No details available.
      
 <dt><b>-output=</b><i>output_filespec</i>
 
-<DD>Name of output file.  If you don't specify this option, the output image
+<dd>Name of output file.  If you don't specify this option, the output image
 goes to Standard Output.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>This option causes <b>pnmstitch</b> to issue messages to Standard Error
+<dd>This option causes <b>pnmstitch</b> to issue messages to Standard Error
 about the stitching process.
      
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
-<B><A HREF="pamflip.html">pamflip</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pamflip.html">pamflip</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p>This program was added to Netpbm in Release 10.7 (August 2002).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

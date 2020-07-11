@@ -1,28 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pgmkernel User Manual</TITLE></HEAD>
-<BODY>
-<H1>pgmkernel</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pgmkernel User Manual</title></head>
+<body>
+<h1>pgmkernel</h1>
 Updated: 19 December 2013
-<BR>
-<A HREF="#index">Table Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pgmkernel - generate a convolution kernel
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <p>
-<B>pgmkernel</B>
-[<B>-weight=</B><I>number</I>]
-[<b>-maxval=</b>] {<I>size</I> | <i>width</i> <i>height</i>}
+<b>pgmkernel</b>
+[<b>-weight=</b><i>number</i>]
+[<b>-maxval=</b>] {<i>size</i> | <i>width</i> <i>height</i>}
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use double
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -30,7 +29,7 @@ space in place of the equals sign to separate an option name from its value.
 with <b>pnmconvol</b>.  The kernel is one where the weight of each location
 is inversely proportional to its distance from the center of the kernel.
 
-<p><b>pgmkernel</b> generates a PGM image of width and height <I>size</I>
+<p><b>pgmkernel</b> generates a PGM image of width and height <i>size</i>
 if you specify one argument, or width <i>width</i> and height <i>height</i>
 if you specify two arguments.
 
@@ -40,7 +39,7 @@ if you specify two arguments.
 K(i,j) = 1 / ( 1 + w * sqrt(i^2 + j^2)) 
 </blockquote>
 
-where <I>w</I> is a coefficient specified via the <b>-weight</b>
+where <i>w</i> is a coefficient specified via the <b>-weight</b>
 option.  <i>i</i> and <i>j</i> are measured in pixels.  K is zero
 everywhere beyond the specified kernel width and height.
 
@@ -49,7 +48,12 @@ the protocol <b>pnmconvol</b> specifies for representing the real numbers K
 in PGM.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pgmkernel</b> recognizes the following
+command line options:
 
 <dl>
 <dt><b>-weight=</b><i>number</i>
@@ -71,9 +75,9 @@ maxval is always 255.
 
 </dl>
 
-<h2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
-<P>The computation time is proportional to <I>width</I>*<I>height</I>.
+<p>The computation time is proportional to <i>width</i>*<i>height</i>.
 This increases rapidly with the increase of the kernel size.  A better
 approach could be using a FFT in these cases.
 
@@ -89,30 +93,30 @@ the program never worked with negative numbers and it isn't clear that the
 result would be useful, so <b>-weight</b> is now required to be nonnegative
 and the program fails gracefully if you specify a negative value.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmconvol.html">pnmconvol</A>,
-<A HREF="pnmsmooth.html">pnmsmooth</A>
-<A HREF="pamgauss.html">pamgauss</A>
-<A HREF="pgm.html">pgm</A>
-
-
-<H2 id="author">AUTHOR</H2>
-
-Alberto Accomazzi (<A
-HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>).
+<a href="pnmconvol.html">pnmconvol</a>,
+<a href="pnmsmooth.html">pnmsmooth</a>
+<a href="pamgauss.html">pamgauss</a>
+<a href="pgm.html">pgm</a>
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<h2 id="author">AUTHOR</h2>
+
+Alberto Accomazzi (<a
+href="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</a>).
+
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

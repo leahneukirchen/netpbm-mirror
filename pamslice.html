@@ -1,28 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pamslice User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamslice</H1>
-Updated: 8 February 2010
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamslice User Manual</title></head>
+<body>
+<h1>pamslice</h1>
+Updated: 08 February 2010
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamslice - extract one line of values out of a Netpbm image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamslice</B>
-{<B>-row=</B><i>rownumber</i> | <B>-column=</B><i>columnnumber</i>}
-[<B>-plane=</b><i>planenumber</i>]
-[<I>imagefile</I>]
+<b>pamslice</b>
+{<b>-row=</b><i>rownumber</i> | <b>-column=</b><i>columnnumber</i>}
+[<b>-plane=</b><i>planenumber</i>]
+[<i>imagefile</i>]
 
-<?makeman .SH OPTION USAGE ?>
-<P>All options can be abbreviated to their shortest unique prefix.
+<?makeman .sh option usage ?>
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -45,27 +44,32 @@ numbers mean.
 <p>If you want to see the entire raster of a Netpbm image, use
 <b>pamtable</b>.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-row=</B><i>rownumber</i>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamslice</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-row=</b><i>rownumber</i>
+<dd>
      This indicates that the slice is to be horizontal -- i.e. one row of the
      image -- and indicates which row.  Rows are numbered from the top
      starting with 0.
 
-     <P>You cannot specify both <b>-row</b> and <b>-column</b>.
+     <p>You cannot specify both <b>-row</b> and <b>-column</b>.
 
-<DT><B>-column=</B><i>colnumber</i>
-<DD>
+<dt><b>-column=</b><i>colnumber</i>
+<dd>
      This indicates that the slice is to be vertical -- i.e. one column of the
      image -- and indicates which column.  Columns are numbered from the left
      starting with 0.
 
-     <P>You cannot specify both <b>-row</b> and <b>-column</b>.
+     <p>You cannot specify both <b>-row</b> and <b>-column</b>.
 
-<DT><B>-plane=</B><i>planenumber</i>
-<DD>
+<dt><b>-plane=</b><i>planenumber</i>
+<dd>
      This specifies that you are interested in only one plane of the image
      and which one.  Planes are numbered from 0 and have meanings that vary
      on the type of image.  In a PPM image, Plane 0 is red, Plane 1 is
@@ -76,46 +80,46 @@ numbers mean.
      If you do specify <b>-plane</b>, each line of output contains one
      number in addition to the sequence number.
 
-<DT><B>-xmgr</B>
-<DD>
+<dt><b>-xmgr</b>
+<dd>
      This option causes <b>pamslice</b> to format the output as input for a
      <b>xmgr</b> so you can plot it.  The only difference this option makes
      is that it adds header information to the beginning of the output.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamtable.html">pamtable</A>
-<A HREF="pamcut.html">pamcut</A>
-<A HREF="pnmtopnm.html">pnmtopnm</A>
-<A HREF="pamchannel.html">pamchannel</A>
-<A HREF="pnm.html">pnm</A>
+<a href="pamtable.html">pamtable</a>
+<a href="pamcut.html">pamcut</a>
+<a href="pnmtopnm.html">pnmtopnm</a>
+<a href="pamchannel.html">pamchannel</a>
+<a href="pnm.html">pnm</a>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
-<P><b>pamslice</b> replaced <b>pgmslice</b> in Netpbm 10.3 (June 2002).
+<p><b>pamslice</b> replaced <b>pgmslice</b> in Netpbm 10.3 (June 2002).
 It was backward compatible, but worked on Netpbm images other than PGM and
 PBM and added the <b>-plane</b> and <b>-xmgr</b> options.
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-<P>Jos Dingjan &lt;<A
-HREF="mailto:jos@tuatha.org">jos@tuatha.org</A>&gt; wrote
+<p>Jos Dingjan &lt;<a
+href="mailto:jos@tuatha.org">jos@tuatha.org</a>&gt; wrote
 <b>pgmslice</b> after being unable to find the source code to Marco
 Beijersbergen's program with the same name.  Bryan Henderson converted it
 to <b>pamslice</b>.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
 

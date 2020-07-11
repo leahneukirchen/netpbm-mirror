@@ -1,42 +1,40 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pamtohtmltbl User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtohtmltbl</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtohtmltbl User Manual</title></head>
+<body>
+<h1>pamtohtmltbl</h1>
 Updated: 13 October 2008
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamtohtmltbl - convert pnm/pam visual image to an HTML table
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtohtmltbl</B>
+<b>pamtohtmltbl</b>
 [<b>-transparent=</b><i>color</i>]
 [<b>-verbose</b>]
-[<I>file</I>]
+[<i>file</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pamtohtmltbl</b> converts a visual image to an HTML table with one
+<p><b>pamtohtmltbl</b> converts a visual image to an HTML table with one
 cell per pixel.  The cell is empty, but its background color is that of the
 pixel.
 
-<P><i>file</i> is a PBM, PGM, PPM, or PAM file.  If PAM, it must be
+<p><i>file</i> is a PBM, PGM, PPM, or PAM file.  If PAM, it must be
 a standard visual image of tuple type RGB, GRAYSCALE, or BLACKANDWHITE, or
 something equivalent with extra higher numbered channels, but
 <b>pamtohtmltbl</b> doesn't check the tuple type; it just assumes.
 
-<P>Note that the more normal way to include a visual image in an HTML
+<p>Note that the more normal way to include a visual image in an HTML
 document is with a &lt;IMG&gt; tag.
 
 <p>Not all web browsers render tables as <b>pamtohtmltbl</b> expects,
@@ -44,51 +42,57 @@ and therefore show a grossly distorted image.  Internet Explorer 7 on
 Windows and Opera 9.02 on Windows have been seen to work; Firefox
 2.0.0.16 on the same Windows system has been seen not to.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-transparent=</B><i>color</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtohtmltbl</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-transparent=</b><i>color</i>
+
+<dd>
 This option indicates that pixels of the specified color are to be transparent
 in the HTML table.  The table cell for a pixel of this color will have no
 background color specified.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
 
-<DT><B>-verbose</b>
+<dt><b>-verbose</b>
 
 <dd>This option causes <b>pamtohtmltbl</b> to display messages about the
 conversion process.
      
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnm.html">pnm</A></B>
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pnm.html">pnm</a></b>
+<b><a href="pam.html">pam</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
-<P><b>pamtohtmltbl</b> was new in Netpbm 10.15 (April 2003).
-</DL>
+<p><b>pamtohtmltbl</b> was new in Netpbm 10.15 (April 2003).
+</dl>
 
-<H2 id="authors">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 <p>Alexander B. Ivanov (SSH) wrote a program he called
 <b>pnm2html</b>.  Bryan Henderson adapted it to use the Netpbm
 libraries and handle PAM images and follow Netpbm conventions, and
 named it <b>pamtohtmltbl</b>.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

@@ -1,38 +1,38 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Fitstopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>fitstopnm</H1>
-Updated: 2 August 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Fitstopnm User Manual</title></head>
+<body>
+<h1>fitstopnm</h1>
+Updated: 02 August 2015
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 fitstopnm - convert a FITS file into a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>fitstopnm</B>
-[<B>-image=</B><I>N</I>]
-[<B>-scanmax</B>]
-[<B>-printmax</B>]
-[<B>-min=</B><I>f</I>]
-[<B>-max=</B><I>f</I>]
+<b>fitstopnm</b>
+[<b>-image=</b><i>N</i>]
+[<b>-scanmax</b>]
+[<b>-printmax</b>]
+[<b>-min=</b><i>f</i>]
+[<b>-max=</b><i>f</i>]
 [<b>-omaxval=</b><i>N</i>
-[<I>FITSfile</I>]
+[<i>FITSfile</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>fitstopnm</b> reads a FITS (Flexible Image Transport System) file as
 input and produces a PPM image if the FITS file consists of 3 image planes
 (NAXIS = 3 and NAXIS3 = 3), or a PGM image if the FITS file consists of 2
-image planes (NAXIS = 2), or if you specify the <B>-image</B> option.
+image planes (NAXIS = 2), or if you specify the <b>-image</b> option.
 
 <p>Note that the PPM image is highly unlikely to be a true PPM image, as it is
 not normal for a FITS image to use the third axis as R, G, and B components of
@@ -45,10 +45,15 @@ programs such as <b>fitstopnm</b> that predate the PAM format).
 <p>If you work with FITS images with 3 axes, you should probably always use
 the <b>-image</b> option to avoid getting an unwanted pseudo-PPM image.
 
-<P>The program tells you what kind of PNM image it is writing.
+<p>The program tells you what kind of PNM image it is writing.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>fitstopnm</b> recognizes the following
+command line options:
 
 <dl>
 
@@ -60,7 +65,7 @@ want.
 
 <dt><b>-omaxval=</b><i>N</i>
 
-<P>This is the maxval that the output PNM image is to have.
+<p>This is the maxval that the output PNM image is to have.
 
 <p>By default, the maxval is the least possible to retain all the
 precision of the FITS input.  That means the difference between the
@@ -75,11 +80,11 @@ maxval is simply 255.
 <p>This option was new in Netpbm 10.39 (June 2007).  Before that, the
 output maxval is always the default.
 
-<dt><b>-min=</b><I>float</I>
+<dt><b>-min=</b><i>float</i>
 <dt><b>-max=</b><i>float</i>
 <dd>
 
-<P>You can use these options to override the min and max values as
+<p>You can use these options to override the min and max values as
 read from the FITS header or the image data if the header has no
 DATAMIN and DATAMAX keywords.
 
@@ -113,32 +118,32 @@ and quits without doing its normal job.
 -topbottom</b>.  See <a href="pamtofits.html#pixelorder"><b>pamtofits</b></a>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamtofits.html">pamtofits</A>,
-<A HREF="pamflip.html">pamflip</A>,
-<A HREF="pgm.html">pgm</A>
+<a href="pamtofits.html">pamtofits</a>,
+<a href="pamflip.html">pamflip</a>,
+<a href="pgm.html">pgm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer, with modifications by Daniel
-Briggs (<A HREF="mailto:dbriggs@nrao.edu">dbriggs@nrao.edu</A>) and
-Alberto Accomazzi (<A
-HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>).
+Briggs (<a href="mailto:dbriggs@nrao.edu">dbriggs@nrao.edu</a>) and
+Alberto Accomazzi (<a
+href="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</a>).
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#notes">NOTES</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#notes">NOTES</a>
   <ul>
   <li><a href="#pixelorder">Pixel Order</a>
   </ul>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,17 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtosvg User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtosvg</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtosvg User Manual</title></head>
+<body>
+<h1>pamtosvg</h1>
 Updated: 23 April 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamtosvg - convert a Netpbm image to a SVG (Scalable Vector Graphics) image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtosvg</B>
+<b>pamtosvg</b>
 
 [<b>-background-color=</b><i>colorname</i>]
 [<b>-centerline</b>]
@@ -27,14 +27,14 @@ pamtosvg - convert a Netpbm image to a SVG (Scalable Vector Graphics) image
 [<b>-preserve-width</b>]
 [<b>-remove-adjacent-corners</b>]
 [<b>-log</b>]
-[<b>-report-progress</b>] [<I>pnmfile</I>]
+[<b>-report-progress</b>] [<i>pnmfile</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -76,9 +76,14 @@ href="http://www.w3.org/Graphics/SVG/">the Worldwide Web Consortium's
 SVG web page</a>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtosvg</b> recognizes the following
+command line options:
+
+<dl compact>
 <dt><b>-background-color=</b><i>colorname</i>
 
 <dd>Treat the specified color as the background color and ignore it.
@@ -86,7 +91,7 @@ SVG web page</a>.
 <p>If you don't specify this option, <b>pamtosvg</b> does not recognize
 any background color.
 
-<P>Specify the color (<i>colorname</i>) as described for the <a
+<p>Specify the color (<i>colorname</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
@@ -169,21 +174,20 @@ when computing the tangent at that point.  Default is 3.
 
 <dd>Weight factor for fitting the linewidth.
 
-</DL>
+</dl>
 
-
-<H2 id="applicationnotes">Application Notes</H2>
+<h2 id="applicationnotes">APPLICATION NOTES</h2>
 
 <p>A convenient way to view an SVG document is with a web browser.  Many
 understand a file whose name ends in ".svg" to be an SVG
 image and can render it.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmquant.html">pnmquant</A></B>,
-<B><A HREF="pbmclean.html">pbmclean</A></B>,
-<A HREF="pnm.html">pnm</A>,
+<b><a href="pnmquant.html">pnmquant</a></b>,
+<b><a href="pbmclean.html">pbmclean</a></b>,
+<a href="pnm.html">pnm</a>,
 <a href="http://autotrace.sourceforge.net">Autotrace</a>
 
 <h2 id="history">HISTORY</h2>
@@ -205,16 +209,15 @@ Yamato and Martin Weber appear to be the principal creators of it.
 <p>As of June 2006, there was a <a
 href="http://autotrace.sourceforge.net">Sourceforge project</a> for it.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#applicationnotes">APPLICATION NOTES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#applicationnotes">APPLICATION NOTES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

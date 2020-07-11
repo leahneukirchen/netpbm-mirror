@@ -1,25 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmfade User Manual</TITLE></HEAD>
-<BODY>
-<H1>PPMFADE</H1>
-Updated: April 1, 2000
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmfade User Manual</title></head>
+<body>
+<h1>ppmfade</h1>
+Updated: 01 April 2000
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
-
+<h2>NAME</h2>
 ppmfade - generate a transition between two image files using special effects
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmfade</B>
-[<B>-f</B> <I>first.ppm</I>]
-[<B>-l</B> <I>last.ppm</I>]
-[<B>-mix</B>|<B>-spread</B>|<B>-shift</B>|
-<B>-relief</B>|<B>-oil</B>|<B>-edge</B>|<B>-bentley</B>|<B>-block</B>]
-[<B>-base</B> <I>name</I>]
+<b>ppmfade</b>
+[<b>-f</b> <i>first.ppm</i>]
+[<b>-l</b> <i>last.ppm</i>]
+[<b>-mix</b>|<b>-spread</b>|<b>-shift</b>|
+<b>-relief</b>|<b>-oil</b>|<b>-edge</b>|<b>-bentley</b>|<b>-block</b>]
+[<b>-base</b> <i>name</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -30,136 +29,140 @@ segments of a movie.  The input and output images are in the PPM
 format.  If you specify both input images, they should both be the
 same size.  If you want to fade from black to an image, specify only
 the last image.  If you want to fade from an image to black, specify
-only the first image.  <B>ppmfade</B> names the resulting image files
-<I>base</I><B>.</B><I>nnnn</I><B>.ppm</B>, where <I>nnnn</I> is a
-number varying between 0001 and 0030 and <I>base</I> is what you
-specify with via the <B>-base</B> option (default <B>fade</B>).
+only the first image.  <b>ppmfade</b> names the resulting image files
+<i>base</i><b>.</b><i>nnnn</i><b>.ppm</b>, where <i>nnnn</i> is a
+number varying between 0001 and 0030 and <i>base</i> is what you
+specify with via the <b>-base</b> option (default <b>fade</b>).
 
-<P>Another way to convert by steps from one image to another is
-morphing.  You can use <B>xmorph</B> to do that.
+<p>Another way to convert by steps from one image to another is
+morphing.  You can use <b>xmorph</b> to do that.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-f</b> <i>first.ppm</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmfade</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-f</b> <i>first.ppm</i>
+
+<dd>
 This is the image file (PPM format) to be used at the beginning of the
 transition.  If you don't specify this, the fade will start from black.
 
-<DT><B>-l</b> <i>last.ppm</i>
+<dt><b>-l</b> <i>last.ppm</i>
 
-<DD>
+<dd>
 This is the image file (PPM format) to be used at the ending of the
 transition.  If you don't specify this, the fade will end with black.
 
-<DT><B>-mix</B>
+<dt><b>-mix</b>
 
-<DD>
+<dd>
 The two images are superimposed with the brightness of the first image
 decreasing from full to none and the brightness of the final image
 increasing from none to full.  The transition is quadratic in brightness
 with faster transition in the beginning and slower at the end.
 
-<DT><B>-spread</B>
+<dt><b>-spread</b>
 
-<DD>
+<dd>
 The pixels in the first image will be moved (spread) further and further
 from their original location and then moved into the proper location in
 the final image.  This is the default transition.
 
-<DT><B>-shift</B>
+<dt><b>-shift</b>
 
-<DD>
+<dd>
 The pixels in the first image will be shifted further and further horizontally
 from their original location and then moved into the proper location in
 the final image.
 
-<DT><B>-relief</B>
+<dt><b>-relief</b>
 
-<DD>
+<dd>
 The first image is faded to a Laplacian relief filtered version of the
 first image.  This is then faded to a Laplacian relief filtered version
 of the second image and finally faded to the final image.
 
-<DT><B>-oil</B>
+<dt><b>-oil</b>
 
-<DD>The first image is faded to an "oil transfer" version
+<dd>The first image is faded to an "oil transfer" version
 of the first image.  This is then faded to an "oil transfer"
 version of the second image and finally faded to the final image.
 
-<DT><B>-edge</B>
+<dt><b>-edge</b>
 
-<DD>
+<dd>
 The first image is faded to an edge detected version of the first image.
 This is then faded to an edge detected version of the second image and
 finally faded to the final image.
 
-<DT><B>-bentley</B>
+<dt><b>-bentley</b>
 
-<DD> The first image is faded to a "Bentley Effect" version
+<dd> The first image is faded to a "Bentley Effect" version
 of the first image.  This is then faded to a "Bentley
 Effect" version of the second image and finally faded to the
 final image.
 
-<DT><B>-block</B>
+<dt><b>-block</b>
 
-<DD>
+<dd>
 The first image is defocused to small blocks.  The small blocks are converted
 to match a defocused version of the last image.  The block version of the last
 image is then focused to the final image.
 
-<DT><B>-base</B> <I>name</I>
+<dt><b>-base</b> <i>name</i>
 
-<DD>
+<dd>
 This forms part of the output filenames, as described above.
 
-</DL>
+</dl>
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
-<B>ppmfade -f teapot.ppm -l pyr.ppm</B>
+<b>ppmfade -f teapot.ppm -l pyr.ppm</b>
 
-<P>
+<p>
 Fade from teapot.ppm to pyr.ppm generating fade.0001.ppm to fade.0030.ppm using
 the "spread" transition.
 
-<P>
-<B>ppmfade -l teapot.ppm</B>
+<p>
+<b>ppmfade -l teapot.ppm</b>
 
-<P>
+<p>
 Fade from black to teapot.ppm generating fade.0001.ppm to fade.0030.ppm.
 
-<P>
-<B>ppmfade -f teapot.ppm -base end</B>
+<p>
+<b>ppmfade -f teapot.ppm -base end</b>
 
-<P>
+<p>
 Fade from teapot.ppm to black generating end.0001.ppm to end.0030.ppm.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B>tontsc</B> manual,
-<B>sgifade</B> manual,
-<B>smart_vfr</B> manual,
-<B>xmorph</B> manual,
-<B><A HREF="ppm.html">ppm</A></B>
+<b>tontsc</b> manual,
+<b>sgifade</b> manual,
+<b>smart_vfr</b> manual,
+<b>xmorph</b> manual,
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 Bryan Henderson, Olympia WA; April 2000
 
 <p>Inspired by and intended as a replacement for <b>pbmfade</b> (not a
 Netpbm program) by Wesley C. Barris.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

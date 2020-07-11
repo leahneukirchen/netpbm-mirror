@@ -1,41 +1,41 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><title>Ppmmake User Manual</title></HEAD>
-<BODY>
-<H1>ppmmake</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmmake User Manual</title></head>
+<body>
+<h1>ppmmake</h1>
 Updated: 02 September 2002
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 ppmmake - create a PPM image of a specified color and dimensions
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmmake</B>
+<b>ppmmake</b>
 [<b>-maxval=</b><i>maxval</i>]
-<I>color</I>
-<I>width</I>
-<i>height</I>
+<i>color</i>
+<i>width</i>
+<i>height</i>
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or an equals sign between an option name
 and its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>ppmmake</b> produces a PPM image of the specified color, width,
+<p><b>ppmmake</b> produces a PPM image of the specified color, width,
 height, and maxval.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
 
-<h2 id="example">EXAMPLES</H2>
+<h2 id="example">EXAMPLES</h2>
 
 <pre>
     ppmmake red 50 50
@@ -45,36 +45,42 @@ library routine</a>.
 </pre>
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL>
-<DT><b>-maxval=</b><i>maxval</i>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmmake</b> recognizes the following
+command line option:
+
+<dl>
+<dt><b>-maxval=</b><i>maxval</i>
+<dd>
      The maxval for the generated image.  Default is 255.
 <p>
      This option did not exist before June 2002.  Before, the maxval was
      always 255.
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmmake.html">pbmmake</A>,
-<A HREF="pgmmake.html">pgmmake</A>,
-<A HREF="ppmpat.html">ppmpat</A>,
-<A HREF="ppm.html">ppm</A>
+<a href="pbmmake.html">pbmmake</a>,
+<a href="pgmmake.html">pgmmake</a>,
+<a href="ppmpat.html">ppmpat</a>,
+<a href="ppm.html">ppm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#example">EXAMPLES</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#example">EXAMPLES</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEEALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

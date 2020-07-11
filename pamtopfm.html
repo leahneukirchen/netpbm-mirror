@@ -1,25 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtopfm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtopfm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtopfm User Manual</title></head>
+<body>
+<h1>pamtopfm</h1>
 Updated: 10 April 2004
 
-<A HREF="#index">Table Of Contents</A>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamtopfm - Convert Netpbm image to PFM (Portable Float Map)
 
-<H2 id="synopsis">SYNOPSIS</H2>
-<B>pamtopfm</B>
+<h2 id="synopsis">SYNOPSIS</h2>
+<b>pamtopfm</b>
 [<b>-endian=</b>{<b>big</b>|<b>little</b>}]
 [<b>-scale=</b><i>float</i>]
-[<I>imagefile</I>]
+[<i>imagefile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -49,20 +49,25 @@ and a non-color PFM otherwise.
 image to Netpbm format.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-scale=</b><i>float</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtopfm</b> recognizes the following
+command line options:
 
-<DD>
-     <P>This specifies the scale factor of the PFM image.  
+<dl compact>
+<dt><b>-scale=</b><i>float</i>
+
+<dd>
+     <p>This specifies the scale factor of the PFM image.  
      Scale factor is a component of the PFM format.
      Default is 1.0.
 
-<DT><B>-endian=</b>{<b>big</b>|<b>little</b>}
+<dt><b>-endian=</b>{<b>big</b>|<b>little</b>}
 
-<DD>
-     <P>This specifies the endianness of the PFM image.  The samples
+<dd>
+     <p>This specifies the endianness of the PFM image.  The samples
      in the raster of a PFM image are 4 byte IEEE floating point
      numbers.  A parameter of the IEEE format, and therefore the PFM
      format, is endianness, i.e. whether the specified bytes are
@@ -74,27 +79,27 @@ image to Netpbm format.
      <p>Default is whichever endianness the machine on which <b>pamtopfm</b>
      runs uses internally, which results in the faster execution.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="index.html">Netpbm</A></B>,
-<B><A HREF="pfmtopam.html">pfmtopam</A></B>,
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="index.html">Netpbm</a></b>,
+<b><a href="pfmtopam.html">pfmtopam</a></b>,
+<b><a href="pam.html">pam</a></b>
 
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamtopfm</b> was added to Netpbm in Release 10.22 (April 2004).
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

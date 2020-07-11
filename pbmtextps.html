@@ -1,19 +1,20 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><title>Pbmtextps User Manual</title></HEAD>
-<BODY>
-<H1>pbmtextps</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtextps User Manual</title></head>
+<body>
+<h1>pbmtextps</h1>
 Updated: 15 June 2016
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
 pbmtextps - render text into a PBM image using a postscript interpreter
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtextps</B>
-[<B>-font</B> <I>fontname</I>]
-[<B>-fontsize</B> <I>float</I>]
-[<B>-resolution</B> <I>n</I>]
+<b>pbmtextps</b>
+[<b>-font</b> <i>fontname</i>]
+[<b>-fontsize</b> <i>float</i>]
+[<b>-resolution</b> <i>n</i>]
 [<b>-leftmargin=</b><i>n</i>]
 [<b>-rightmargin=</b><i>n</i>]
 [<b>-topmargin=</b><i>n</i>]
@@ -22,16 +23,16 @@ pbmtextps - render text into a PBM image using a postscript interpreter
 [<b>-descent=</b><i>n</i>]
 [<b>-pad</b>]
 [<b>-crop</b>]
-[<B>-stroke</B> <I>n</I>]
+[<b>-stroke</b> <i>n</i>]
 [<b>-verbose</b>]
 [<b>-dump-ps</b>]
-<I>text</I>
+<i>text</i>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pbmtextps</b> takes a single line of text from the command line and
+<p><b>pbmtextps</b> takes a single line of text from the command line and
 renders it into a PBM image.  The image is of a single line of text; newline
 characters in the input have no effect.
 
@@ -43,7 +44,7 @@ no effect before Netpbm 10.42 (March 2008).  The output is always raw PBM.
 
 <h3 id="margins">Margins</h3>
 
-<P>By default, the image is cropped at the top and the right.  It is not
+<p>By default, the image is cropped at the top and the right.  It is not
 cropped at the left or bottom so that the text begins at the same position
 relative to the origin.  The size of the default left and bottom margins is
 explained below.
@@ -119,7 +120,7 @@ It is the same as <kbd>-leftmargin=0 -rightmargin=0 -topmargin=0
 
 <p>You cannot specify any other margin-affecting options with <b>-crop</b>.
 
-<P>The default top margin, when you specify neither <b>-ascent</b>,
+<p>The default top margin, when you specify neither <b>-ascent</b>,
 <b>-topmargin</b>, nor <b>-pad</b>, is as if you specified
 <b>topmargin=0</b>.
 
@@ -127,29 +128,34 @@ It is the same as <kbd>-leftmargin=0 -rightmargin=0 -topmargin=0
 <b>-bottommargin</b>, nor <b>-pad</b>, is as if you specified
 <b>-descent=</b><i>1.5*fontsize</i>.
 
-<P>The default left margin, when you do not specify <b>-leftmargin</b>, is
+<p>The default left margin, when you do not specify <b>-leftmargin</b>, is
 as if you specified <b>-leftmargin=</b><i>0.5*fontsize</i>.
 
-<P>The default right margin, when you do not specify <b>-rightmargin</b>,
+<p>The default right margin, when you do not specify <b>-rightmargin</b>,
 is as if you specified <b>-rightmargin=0</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-font=</B><i>fontname</i>
-<DD>
-<P>This specifies the font to use.  <i>fontname</i> is the name of any valid
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtextps</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-font=</b><i>fontname</i>
+<dd>
+<p>This specifies the font to use.  <i>fontname</i> is the name of any valid
 postscript font which is installed on the system.
 
 <p>The default is <b>TimesRoman</b>.
 
-<P><strong>Warning:</strong> if <i>fontname</i> does not name a valid font,
+<p><strong>Warning:</strong> if <i>fontname</i> does not name a valid font,
 <b>pbmtextps</b> just uses the default font.  It does not tell you it is doing
 this.
 
-<DT><B>-fontsize=</B><i>float</i>
-<DD>
+<dt><b>-fontsize=</b><i>float</i>
+<dd>
 This is the size of the font in points.  See the <b>-resolution</b> option for
 information on how to interpret this size.
 
@@ -157,8 +163,8 @@ information on how to interpret this size.
 
 <p>Before Netpbm 10.75 (June 2016), this has to be a whole number.
 
-<DT><B>-resolution=</B><i>n</i>
-<DD>
+<dt><b>-resolution=</b><i>n</i>
+<dd>
 This is the resolution in dots per inch of distance measurements pertaining to
 generation of the image.  PBM images don't have any inherent resolution, so a
 distance such as "1 inch" doesn't mean anything unless you separately specify
@@ -180,7 +186,7 @@ edge of the type.  See <a href="#margins">Margins</a> for details.
 
 <p>All sizes are in points, as a floating point number.
 
-<P>These options were new in Netpbm 10.75 (June 2016).
+<p>These options were new in Netpbm 10.75 (June 2016).
 
 <dt><b>-ascent=</b><i>n</i>
 <dt><b>-descent=</b><i>n</i>
@@ -190,7 +196,7 @@ the text baseline.  See <a href="#margins">Margins</a> for details.
 
 <p>Sizes are in points, as a floating point number.
 
-<P>These options were new in Netpbm 10.75 (June 2016).
+<p>These options were new in Netpbm 10.75 (June 2016).
 
 <dt><b>-pad</b>
 <dd>
@@ -198,7 +204,7 @@ This pads the image on the top and bottom to the where the highest and lowest
 characters in the font would reach, even if you don't have those characters in
 your text.  See <a href="#margins">Margins</a> for details.
 
-<P>This option was new in Netpbm 10.75 (June 2016).
+<p>This option was new in Netpbm 10.75 (June 2016).
 
 <dt><b>-crop</b>
 <dd>
@@ -206,10 +212,10 @@ This makes the program crop all sides to the far edge of the type.  It is the
 same as <kbd>-leftmargin=0 -rightmargin=0 -topmargin=0 -bottommargin=0</kbd>.
 See <a href="#margins">Margins</a> for details.
 
-<P>This option was new in Netpbm 10.75 (June 2016).
+<p>This option was new in Netpbm 10.75 (June 2016).
 
-<DT><B>-stroke=</B><i>n</i>
-<DD>
+<dt><b>-stroke=</b><i>n</i>
+<dd>
 This is the width of line, in points, to use for stroke font.  There is no
 default stroke width because the characters are solid by default.
 
@@ -225,49 +231,49 @@ program it would use to create the image, rather than the image itself.  You
 can use this as input to a Postscript interpreter (such as Ghostscript or a a
 printer) or to understand the program better.
 
-<P>This option was new in Netpbm 10.75 (June 2016).
+<p>This option was new in Netpbm 10.75 (June 2016).
 
-</DL>
+</dl>
 
-<H2 id="usage">USAGE</H2>
+<h2 id="usage">USAGE</h2>
 
 You can generate antialiased text by using a larger resolution than the
 default and scaling the image down using <b>pamscale</b>.
 
-<P>See the manual for the similar <B>pbmtext</B> for more advice on
+<p>See the manual for the similar <b>pbmtext</b> for more advice on
 usage.
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pbmtextps</b> was added to Netpbm in Release 10.0 (June 2002).
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pbmtext.html">pbmtext</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pnmcrop.html">pnmcrop</A></B>,
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="ppmchange.html">ppmchange</A></B>,
-<B><A HREF="pnmrotate.html">pnmrotate</A></B>,
-<B><A HREF="pamscale.html">pamscale</A></B>,
-<B><A HREF="ppmlabel.html">ppmlabel</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
+<b><a href="pbmtext.html">pbmtext</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pnmcrop.html">pnmcrop</a></b>,
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="ppmchange.html">ppmchange</a></b>,
+<b><a href="pnmrotate.html">pnmrotate</a></b>,
+<b><a href="pamscale.html">pamscale</a></b>,
+<b><a href="ppmlabel.html">ppmlabel</a></b>,
+<b><a href="pbm.html">pbm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 2002 by James McCann
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#usage">USAGE</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#usage">USAGE</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,41 +1,40 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtext</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtext User Manual</title></head>
+<body>
+<h1>pbmtext</h1>
 Updated: 29 May 2020
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pbmtext - render text into a PBM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtext</B>
-[<B>-wchar</B>]
-[<B>-font</B> <I>fontfile</I>]
-[<B>-builtin</B> <I>fontname</I>]
-[<B>-space</B> <I>pixels</I>]
-[<B>-lspace</B> <I>pixels</I>]
-[<B>-nomargins</B>]
-[<B>-width</B> <i>pixels</i>]
+<b>pbmtext</b>
+[<b>-wchar</b>]
+[<b>-font</b> <i>fontfile</i>]
+[<b>-builtin</b> <i>fontname</i>]
+[<b>-space</b> <i>pixels</i>]
+[<b>-lspace</b> <i>pixels</i>]
+[<b>-nomargins</b>]
+[<b>-width</b> <i>pixels</i>]
 [<b>-load-entire-font</b>]
 [<b>-verbose</b>]
 [<b>-dry-run</b>]
 [<b>-text-dump</b>]
-[<I>text</I>]
+[<i>text</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pbmtext</b> takes the specified text, either a single line from
+<p><b>pbmtext</b> takes the specified text, either a single line from
 the command line or multiple lines from standard input, and renders it
 into a PBM graphical image.
 
@@ -43,7 +42,7 @@ into a PBM graphical image.
 by spaces, except that if there are no non-option command line arguments, it
 is Standard Input.
   
-<P>In the image, each line of input is a line of output.  Lines are
+<p>In the image, each line of input is a line of output.  Lines are
   delimited by newline characters.
 
 <p>The program renders any character in an input line that is not in the font
@@ -56,11 +55,11 @@ is Standard Input.
   create tab stops every 8 characters.  Note that this is not useful if the
   font is proportional.
   
-<P>The image is just wide enough for the longest line of text, plus
+<p>The image is just wide enough for the longest line of text, plus
 margins, and just high enough to contain the lines of text, plus
 margins.
 
-<P>The left and right margins are twice the width of the widest
+<p>The left and right margins are twice the width of the widest
 character in the font; the top and bottom margins are the height of
 the tallest character in the font.  But if the text is only one line,
 all the margins are half of this.  You can use the <b>-nomargins</b> option
@@ -80,13 +79,18 @@ a <em>document</em>, you would be better off using a document formatting
 program to "print" to a Postscript file, then feeding that Postscript
 to <b>pstopnm</b>.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtext</b> recognizes the following
+command line options:
 
-<DT><B>-wchar</B>
+<dl compact>
 
-<DD>
+<dt><b>-wchar</b>
+
+<dd>
 
 <p>By default, <b>pbmtext</b> takes a single-byte character stream as input.
 When you specify <b>-wchar</b>, it treats input text as a multibyte character
@@ -99,10 +103,10 @@ be fed from standard input.
 <p>This option was new in Netpbm 10.82 (March 2018).
 
 
-<DT><B>-font</B>
-<DT><B>-builtin</B>
+<dt><b>-font</b>
+<dt><b>-builtin</b>
 
-<DD>
+<dd>
 
 <b>-builtin</b> selects a font among those built into Netpbm.
 
@@ -121,37 +125,37 @@ point type printed at 75 dpi).
 see <a href="#fonts">Fonts</a> below.
 
 
-<DT><B>-space</B> <I>pixels</I>
+<dt><b>-space</b> <i>pixels</i>
 
-<DD> Add <I>pixels</I> pixels of space between characters.  This is in
+<dd> Add <i>pixels</i> pixels of space between characters.  This is in
 addition to whatever space surrounding characters is built into the
 font, which is usually enough to produce a reasonable string of text.
 
-<P><I>pixels</I> may be fractional, in which case the number of
+<p><i>pixels</i> may be fractional, in which case the number of
 pixels added varies so as to achieve the specified average.  For
-example <B>-space=1.5</B> causes half the spaces to be 1 pixel and
+example <b>-space=1.5</b> causes half the spaces to be 1 pixel and
 half to be 2 pixels.
 
-<P><I>pixels</I> may be negative to crowd text together, but the
+<p><i>pixels</i> may be negative to crowd text together, but the
 author has not put much thought or testing into how this works in
 every possible case, so it might cause disastrous results.
 
-<DT><B>-lspace</B> <I>pixels</I>
+<dt><b>-lspace</b> <i>pixels</i>
 
-<DD> Add <I>pixels</I> pixels of space between lines.  This is in
+<dd> Add <i>pixels</i> pixels of space between lines.  This is in
 addition to whatever space above and below characters is built into
 the font, which is usually enough to produce a reasonable line
 spacing.
 
-<P><I>pixels</I> must be a whole number.
+<p><i>pixels</i> must be a whole number.
 
-<P><I>pixels</I> may be negative to crowd lines together, but the
+<p><i>pixels</i> may be negative to crowd lines together, but the
 author has not put much thought or testing into how this works in
 every possible case, so it might cause disastrous results.
 
-<DT><b>-nomargins</b>
+<dt><b>-nomargins</b>
 
-<DD>By default, <b>pbmtext</b> adds margins all around the image as
+<dd>By default, <b>pbmtext</b> adds margins all around the image as
 described above.  This option causes <b>pbmtext</b> not to add any
 margins.
 
@@ -160,9 +164,9 @@ because a character itself may include space at its edges.  To eliminate
 all surrounding background, so the type touches all four edges of the
 image, use <b>pnmcrop</b>.
 
-<DT><b>-width</b> <i>pixels</i>
+<dt><b>-width</b> <i>pixels</i>
 
-<DD>This specifies how much horizontal space the text is supposed to fit
+<dd>This specifies how much horizontal space the text is supposed to fit
 into.  
 
 <p>If the input is one line, <b>pbmtext</b> breaks it into multiple
@@ -213,30 +217,30 @@ specified by the current locale.
 
 <p>This option was new in Netpbm 10.82 (March 2018).
 
-</DL>
+</dl>
 
 
-<H2 id="usage">USAGE</H2>
+<h2 id="usage">USAGE</h2>
 
-<P>Often, you want to place text over another image.  One way to do this is
-with <B>ppmlabel</B>.  For more flexible (but complex) drawing of text on an
+<p>Often, you want to place text over another image.  One way to do this is
+with <b>ppmlabel</b>.  For more flexible (but complex) drawing of text on an
 image, there is <b>ppmdraw</b>.  These do not give you the font options that
-<B>pbmtext</B> does, though.
+<b>pbmtext</b> does, though.
 
-<P>Another way is to use <B>pbmtext</B> to create an image containing
-the text, then use <B>pamcomp</B> to overlay the text image onto your
+<p>Another way is to use <b>pbmtext</b> to create an image containing
+the text, then use <b>pamcomp</b> to overlay the text image onto your
 base image.  To make only the text (and not the entire rectangle
 containing it) cover the base image, you will need to give
-<B>pamcomp</B> a mask, via its <B>-alpha</B> option.  You can just use
+<b>pamcomp</b> a mask, via its <b>-alpha</b> option.  You can just use
 the text image itself as the mask, as long as you also specify the
-<B>-invert</B> option to <B>pamcomp</B>.
+<b>-invert</b> option to <b>pamcomp</b>.
 
-<P>If you want to overlay colored text instead of black, just use
-<B>ppmchange</B> to change all black pixels to the color of your
+<p>If you want to overlay colored text instead of black, just use
+<b>ppmchange</b> to change all black pixels to the color of your
 choice before overlaying the text image.  But still use the original
 black and white image for the transparency mask.
 
-<P>If you want the text at an angle, use <B>pnmrotate</B> on the text
+<p>If you want the text at an angle, use <b>pnmrotate</b> on the text
 image (and transparency mask) before overlaying.
 
 <h2 id="fonts">FONTS</h2>
@@ -291,7 +295,7 @@ option), you just create a PBM image of the text matrix below.
 <p>The first step is to display text matrix below on the screen,
 e.g. in an X11 window.
 
-<PRE>
+<pre>
 
     M ",/^_[`jpqy| M
 
@@ -306,7 +310,7 @@ e.g. in an X11 window.
 
     M ",/^_[`jpqy| M
 
-</PRE>
+</pre>
 
 <p>Make sure it's a fixed width font -- This should display as a
 perfect rectangle.
@@ -331,11 +335,11 @@ matrix.  For example, "l" might display with a little piece
 of the "m" attached on its right.
 
 <p>Do a screen grab or window dump of that text, using for instance 
-<B>xwd</B>, <B>xgrabsc</B>, or <B>screendump</B>.  Convert the result into a
-pbm file.  If necessary, use <B>pamcut</B> to remove anything you grabbed in
+<b>xwd</b>, <b>xgrabsc</b>, or <b>screendump</b>.  Convert the result into a
+pbm file.  If necessary, use <b>pamcut</b> to remove anything you grabbed in
 addition to the text pictured above (or be a wimp and use a graphical editor
-such as Gimp).  Finally, run it through <B>pnmcrop</B> to make sure the edges
-are right up against the text.  <B>pbmtext</B> can figure out the sizes and
+such as Gimp).  Finally, run it through <b>pnmcrop</b> to make sure the edges
+are right up against the text.  <b>pbmtext</b> can figure out the sizes and
 spacings from that.
 
 <p>There are some historical computer fonts, such as that used by the original
@@ -373,10 +377,10 @@ the user to supply a BDF file covering the necessary glyphs with the
 
 <h2 id="limitations">LIMITATIONS</h2>
 
-<P>If the text is from Standard Input, no line may be longer than 4999
+<p>If the text is from Standard Input, no line may be longer than 4999
 characters.  If one is, the program aborts with an appropriate error message.
 
-<P>If the text is from Standard Input and contains a null character, the
+<p>If the text is from Standard Input and contains a null character, the
 results are abnormal.  Lines may be truncated, and a single line may be
 considered multiple lines.  Normal text does not contain null characters, so
 this isn't a big problem.
@@ -448,39 +452,39 @@ of 8-bit character sets.
 <b>otf2bdf</b> by Mike Leisher</a>.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pbmtextps.html">pbmtextps</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pnmcrop.html">pnmcrop</A></B>,
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="ppmchange.html">ppmchange</A></B>,
-<B><A HREF="pnmrotate.html">pnmrotate</A></B>,
-<B><A HREF="ppmlabel.html">ppmlabel</A></B>,
-<B><A HREF="ppmdraw.html">ppmdraw</A></B>,
-<B><A HREF="pstopnm.html">pstopnm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>,
+<b><a href="pbmtextps.html">pbmtextps</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pnmcrop.html">pnmcrop</a></b>,
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="ppmchange.html">ppmchange</a></b>,
+<b><a href="pnmrotate.html">pnmrotate</a></b>,
+<b><a href="ppmlabel.html">ppmlabel</a></b>,
+<b><a href="ppmdraw.html">ppmdraw</a></b>,
+<b><a href="pstopnm.html">pstopnm</a></b>,
+<b><a href="pbm.html">pbm</a></b>,
 <b><a href="http://www.pango.org">Pango</a></b>,
 <b><a href="http://cairographics.org">Cairo</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1993 by Jef Poskanzer and George Phillips
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#usage">USAGE</A>
-<LI><A HREF="#fonts">FONTS</A>
-<LI><A HREF="#multibyte">MULTI-BYTE INPUT</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#tips">TIPS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#usage">USAGE</a>
+<li><a href="#fonts">FONTS</a>
+<li><a href="#multibyte">MULTI-BYTE INPUT</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#tips">TIPS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
 

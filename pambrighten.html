@@ -1,27 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pambrighten User Manual</TITLE></HEAD>
-<BODY>
-<H1>pambrighten</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pambrighten User Manual</title></head>
+<body>
+<h1>pambrighten</h1>
 Updated: 12 January 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pambrighten - change a PPM image's Saturation and Value
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pambrighten</b>
 [<b>-saturation=</b>[<b>+</b>|<b>-</b><i>saturation_percent</i>]]
 [<b>-value=</b>[<b>+</b>|<b>-</b><i>value_percent</i>]]
 <i>netpbmfile</i>
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -86,7 +86,7 @@ a PAM image (such as a transparency channel) get passed through.
 <p>If you want to modify the Hues in the image, use <b>pamhue</b>.
 
   
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 <p>To double the Value of each pixel:
 <pre>
 pambrighten -value=100
@@ -97,47 +97,52 @@ pambrighten -value=100
 pambrighten -saturation=+100 -value=-50
 </pre>
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL>
-<DT><b>-value=</b><i>value_percent</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pambrighten</b> recognizes the following
+command line options:
 
-<DD>This option specifies the amount, as a percentage, by which you want to
+<dl>
+<dt><b>-value=</b><i>value_percent</i>
+
+<dd>This option specifies the amount, as a percentage, by which you want to
 change the Value of each pixel.  It may be negative.
 
-<DT><b>-saturation=</b><i>value_percent</i>
+<dt><b>-saturation=</b><i>value_percent</i>
 
-<DD>This option specifies the amount, as a percentage, by which you want to
+<dd>This option specifies the amount, as a percentage, by which you want to
 change the Saturation of each pixel.  It may be negative.
 
-</DL>  
+</dl>  
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmnorm.html">pnmnorm</A>, 
-<A HREF="ppmdim.html">ppmdim</A>, 
-<A HREF="pamfunc.html">pamfunc</A>, 
-<A HREF="ppmflash.html">ppmflash</A>, 
-<A HREF="pamaltsat.html">pamaltsat</A>, 
-<A HREF="ppmbrighten.html">ppmbrighten</A>, 
-<A HREF="pamdepth.html">pamdepth</A>, 
-<A HREF="pnmgamma.html">pnmgamma</A>, 
-<A HREF="pamhue.html">pamhue</A>, 
-<A HREF="ppmhist.html">ppmhist</A>, 
-<A HREF="ppm.html">ppm</A>
+<a href="pnmnorm.html">pnmnorm</a>, 
+<a href="ppmdim.html">ppmdim</a>, 
+<a href="pamfunc.html">pamfunc</a>, 
+<a href="ppmflash.html">ppmflash</a>, 
+<a href="pamaltsat.html">pamaltsat</a>, 
+<a href="ppmbrighten.html">ppmbrighten</a>, 
+<a href="pamdepth.html">pamdepth</a>, 
+<a href="pnmgamma.html">pnmgamma</a>, 
+<a href="pamhue.html">pamhue</a>, 
+<a href="ppmhist.html">ppmhist</a>, 
+<a href="ppm.html">ppm</a>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
-<P><B>pambrighten</B> was new in Netphm 10.86 (March 2019).  It was a
+<p><b>pambrighten</b> was new in Netphm 10.86 (March 2019).  It was a
 PAM conversion of the much older <b>ppmbrighten</b>.
   
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 1990 by Brian Moffet.
 Copyright (C) 1989 by Jef Poskanzer.
 
-<P>
+<p>
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted, provided
 that the above copyright notice appear in all copies and that both that
@@ -145,16 +150,16 @@ copyright notice and this permission notice appear in supporting
 documentation.  This software is provided "as is" without express or
 implied warranty.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

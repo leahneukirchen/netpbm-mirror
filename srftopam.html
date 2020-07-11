@@ -1,34 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-<title>Srftopam User Manual</title>
-<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
-</head>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Srftopam User Manual</title></head>
 <body>
-
 <h1>srftopam</h1>
-
-<p>Updated: 27 May 2011</p>
-
-<p><a href="#index">Table Of Contents</a></p>
-
+Updated: 27 May 2011
+<br>
+<a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
+srftopam - convert a SRF image file to Netpbm images
 
-<p>srftopam - convert a SRF image file to Netpbm images</p>
 
-
-<h2><a id="synopsis">SYNOPSIS</a></h2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <p><b>srftopam</b>
 [<b>-verbose</b>]
 [<i>netpbmfile</i>]
 
 
-<h2><a id="description">DESCRIPTION</a></h2>
+<h2 id="description">DESCRIPTION</h2>
 
-<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+<p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>srftopam</b> reads a SRF image file as input and produces a
 multi-image stream of PAM images as output.
@@ -36,13 +27,18 @@ multi-image stream of PAM images as output.
 <p>This program performs the inverse of the conversion that <b>pamtosrf</b>
 does.  See that program's manual for more information about SRF and
 the relationship between the SRF and Netpbm representation of the
-images.</p>
+images.
 
 <p><i>netpbmfile</i> is the input stream, which defaults to Standard Input.
 Output is always on Standard Output.
 
 
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>srftopam</b> recognizes the following
+command line option:
 
 <dl>
 <dt><b>-verbose</b></dt>
@@ -51,7 +47,7 @@ Output is always on Standard Output.
 
 </dl>
 
-<h2><a id="see_also">SEE ALSO</a></h2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <ul>
   <li><a href="pamtosrf.html">pamtosrf</a>
@@ -62,9 +58,9 @@ Output is always on Standard Output.
 
 <h2 id="history">HISTORY</h2>
 
-<P><b>srftopam</b> was new in Netpbm 10.55 (June 2011).
+<p><b>srftopam</b> was new in Netpbm 10.55 (June 2011).
 
-<P>It was contributed by Mike Frysinger.
+<p>It was contributed by Mike Frysinger.
 
 
 <hr />
@@ -72,11 +68,11 @@ Output is always on Standard Output.
 <h2 id="index">Table Of Contents</h2>
 
 <ul>
-<li><a href="#synopsis">SYNOPSIS</a></li>
-<li><a href="#description">DESCRIPTION</a></li>
-<li><a href="#options">OPTIONS</a></li>
-<li><a href="#see_also">SEE ALSO</a></li>
-<li><a href="#history">HISTORY</a></li>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
 </ul>
 
 </body>

@@ -1,23 +1,20 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmcolormask User Manual</TITLE></HEAD>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmcolormask User Manual</title></head>
+<body>
+<h1>ppmcolormask</h1>
+Updated: 01 May 2006
+<br>
+<a href="#index">Table Of Contents</a>
 
-<BODY>
-
-<H1>ppmcolormask</H1>
-Updated: 1 May 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
-
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 ppmcolormask - produce mask of areas of a certain color in a PPM file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmcolormask</B> <b>-color=</b><i>color_list</i> [<I>ppmfile</I>]
+<b>ppmcolormask</b> <b>-color=</b><i>color_list</i> [<i>ppmfile</i>]
 
 <p>
-<B>ppmcolormask</B> <I>color</I> [<I>ppmfile</I>]
+<b>ppmcolormask</b> <i>color</i> [<i>ppmfile</i>]
 
 <h2 id="examples">EXAMPLES</h2>
 
@@ -33,26 +30,26 @@ ppmcolormask - produce mask of areas of a certain color in a PPM file
 </code>
 </pre>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>ppmcolormask</b> reads a PPM file as input and produces a PBM
+<p><b>ppmcolormask</b> reads a PPM file as input and produces a PBM
 (bitmap) file as output.  The output file is the same dimensions as
 the input file and is black in all places where the input file is a
 color indicated by the <b>-color</b> option, and white everywhere
 else.
 
-<P>The output of <B>ppmcolormask</B> is useful as a transparency mask input
-to <B>pamcomp</B>.  Note that you don't need <b>ppmcolormask</b> and
+<p>The output of <b>ppmcolormask</b> is useful as a transparency mask input
+to <b>pamcomp</b>.  Note that you don't need <b>ppmcolormask</b> and
 <b>pamcomp</b> if you are ultimately converting to PNG with
 <b>pnmtopng</b> because the <b>-transparent</b> option on <b>pnmtopng</b> does
 the same thing.
 
-<P><I>ppmfile</I> is the input file.  If you don't specify
-<I>ppmfile</I>, the input is from Standard Input.
+<p><i>ppmfile</i> is the input file.  If you don't specify
+<i>ppmfile</i>, the input is from Standard Input.
 
-<P>The output goes to Standard Output.
+<p>The output goes to Standard Output.
 
 <p>In the obsolete alternative syntax, specifying the <i>color</i>
 names a single exact color to be masked.
@@ -67,8 +64,13 @@ what color it is, use <b>pambackground</b>.
 
 <h2 id="options">OPTIONS</h2>
 
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmcolormask</b> recognizes the following
+command line option:
+
 <dl>
-<dt><b>-color=</b><I>color_list</I>
+<dt><b>-color=</b><i>color_list</i>
 
 <dd>This mandatory option specifies the colors that are to be masked
 (where the image is one of these colors, the output mask will be black).
@@ -105,27 +107,26 @@ color.
 
 </dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamfind.html">pamfind</A></B>,
-<B><A HREF="pambackground.html">pambackground</A></B>,
-<B><A HREF="ppmchange.html">ppmchange</A></B>,
-<B><A HREF="pgmtoppm.html">pgmtoppm</A></B>,
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="pbmmask.html">pbmmask</A></B>,
-<B><A HREF="pnmtopng.html">pnmtopng</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="pamfind.html">pamfind</a></b>,
+<b><a href="pambackground.html">pambackground</a></b>,
+<b><a href="ppmchange.html">ppmchange</a></b>,
+<b><a href="pgmtoppm.html">pgmtoppm</a></b>,
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="pbmmask.html">pbmmask</a></b>,
+<b><a href="pnmtopng.html">pnmtopng</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

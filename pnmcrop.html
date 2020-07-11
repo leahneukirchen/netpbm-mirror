@@ -1,40 +1,39 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmcrop User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmcrop</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmcrop User Manual</title></head>
+<body>
+<h1>pnmcrop</h1>
 Updated: 04 October 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pnmcrop - crop a Netpbm image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmcrop</B>
+<b>pnmcrop</b>
 
-[<B>-white</B>
-|<B>-black</B>
-|<B>-sides</B>
+[<b>-white</b>
+|<b>-black</b>
+|<b>-sides</b>
 |<b>-bg-color=</b><i>color</i>
 |<b>-bg-corner=</b>{
 <b>topleft</b>|<b>topright</b>|<b>bottomleft</b>|<b>bottomright</b>}
 ]
 
-[<B>-left</B>]
+[<b>-left</b>]
 
-[<B>-right</B>]
+[<b>-right</b>]
 
-[<B>-top</B>]
+[<b>-top</b>]
 
-[<B>-bottom</B>]
+[<b>-bottom</b>]
 
-[<B>-margin=</B><i>pixels</i>]
+[<b>-margin=</b><i>pixels</i>]
 
-[<B>-closeness=</B><I>closeness_percent</I>]
+[<b>-closeness=</b><i>closeness_percent</i>]
 
-[<B>-borderfile=</B><i>filename</i>]
+[<b>-borderfile=</b><i>filename</i>]
 
 [<b>-blank-image=</b>{<b>abort</b>|<b>pass</b>|<b>minimize</b>|<b>maxcrop</b>}]
 
@@ -42,14 +41,14 @@ pnmcrop - crop a Netpbm image
 
 [<b>-verbose</b>]
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -57,18 +56,18 @@ from its value.
 borders that are the background color, and produces the same type of
 image as output.
 
-<P>If you don't specify otherwise, <B>pnmcrop</B> assumes the
+<p>If you don't specify otherwise, <b>pnmcrop</b> assumes the
 background color is whatever color the top left and right corners of
 the image are and if they are different colors, something midway
 between them.  You can specify that the background is white or black
-with the <B>-white</B> and <B>-black</B> options or make
-<B>pnmcrop</B> base its guess on all four corners instead of just two
-with <B>-sides</B>.
+with the <b>-white</b> and <b>-black</b> options or make
+<b>pnmcrop</b> base its guess on all four corners instead of just two
+with <b>-sides</b>.
 
-<P>By default, <B>pnmcrop</B> chops off any stripe of background color
-it finds, on all four sides.  You can tell <B>pnmcrop</B> to remove
-only specific borders with the <B>-left</B>, <B>-right</B>,
-  <B>-top</B>, and <B>-bottom</B> options.
+<p>By default, <b>pnmcrop</b> chops off any stripe of background color
+it finds, on all four sides.  You can tell <b>pnmcrop</b> to remove
+only specific borders with the <b>-left</b>, <b>-right</b>,
+  <b>-top</b>, and <b>-bottom</b> options.
 
 <p>But note that <b>pnmcrop</b>'s determination of the background color is
 independent of which edges you crop, which may not be intuitive.  For example,
@@ -78,7 +77,7 @@ to crop the black border, but you actually won't crop anything,
 because <b>pnmcrop</b> considers the background color to be whatever color the
 top two corners are, which is blue, and there is no blue at the bottom of the
 image.  If you do want <b>pnmcrop</b> to take the background color from the
-edges being cropped, use <B>-bg-corner</B>.
+edges being cropped, use <b>-bg-corner</b>.
   
 <p>If you want to leave some border, use the <b>-margin</b> option.  It
 will not only spare some of the border from cropping, but will fill in
@@ -92,27 +91,32 @@ of images of the same dimensions, you may end up with images of differing
 dimensions.  Before Netpbm 10.37 (December 2006), <b>pnmcrop</b> ignored
 all input images but the first.
 
-<P>If you want to chop a specific amount off the side of an image, use
-<B>pamcut</B>.
+<p>If you want to chop a specific amount off the side of an image, use
+<b>pamcut</b>.
 
-<P>If you want to add different borders after removing the existing
-ones, use <B>pnmcat</B> or <B>pamcomp</B>.
+<p>If you want to add different borders after removing the existing
+ones, use <b>pnmcat</b> or <b>pamcomp</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-white</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmcrop</b> recognizes the following
+command line options:
 
-<DD>Take white to be the background color.  <B>pnmcrop</B> removes
+<dl compact>
+<dt><b>-white</b>
+
+<dd>Take white to be the background color.  <b>pnmcrop</b> removes
 borders which are white.
 
 <p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
 <b>-bg-color</b>, and <b>-bg-corner</b>.
 
-<DT><B>-black</B>
+<dt><b>-black</b>
 
-<DD>Take black to be the background color.  <B>pnmcrop </B> removes
+<dd>Take black to be the background color.  <b>pnmcrop </b> removes
 borders which are black.
 
 <p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
@@ -130,23 +134,23 @@ areas of this color.  <i>color</i> is a value that would be used as the
 
 <p>This option was new in Netpbm 10.86 (March 2019).
 
-<DT><B>-sides</B>
+<dt><b>-sides</b>
 
-<DD>Determine the background color from the colors of the four corners
-of the input image.  <B>pnmcrop</B> removes borders which are of the
+<dd>Determine the background color from the colors of the four corners
+of the input image.  <b>pnmcrop</b> removes borders which are of the
 background color.
 
-<P>If at least three of the four corners are the same color,
-<B>pnmcrop </B> takes that as the background color.  If not,
-<B>pnmcrop</B> looks for two corners of the same color in the
+<p>If at least three of the four corners are the same color,
+<b>pnmcrop </b> takes that as the background color.  If not,
+<b>pnmcrop</b> looks for two corners of the same color in the
 following order, taking the first found as the background color: top,
 left, right, bottom.  If all four corners are different colors,
-<B>pnmcrop</B> assumes an average of the four colors as the background
+<b>pnmcrop</b> assumes an average of the four colors as the background
 color.
 
-<P>The <B>-sides</B> option slows <B>pnmcrop</B> down, as it reads the
+<p>The <b>-sides</b> option slows <b>pnmcrop</b> down, as it reads the
 entire image to determine the background color in addition to the up
-to three times that it would read it without <B>-sides</B>.
+to three times that it would read it without <b>-sides</b>.
 
 <p>You may specify at most one of <b>-black</b>, <b>-white</b>, <b>-sides</b>,
 <b>-bg-color</b>, and <b>-bg-corner</b>.
@@ -162,21 +166,21 @@ color.
 
 <p>This option was new in Netpbm 10.86 (March 2019).
 
-<DT><B>-left</B>
+<dt><b>-left</b>
 
-<DD>Remove any left border.
+<dd>Remove any left border.
 
-<DT><B>-right</B>
+<dt><b>-right</b>
 
-<DD>Remove any right border.
+<dd>Remove any right border.
 
-<DT><B>-top</B>
+<dt><b>-top</b>
 
-<DD>Remove any top border.
+<dd>Remove any top border.
 
-<DT><B>-bottom</B>
+<dt><b>-bottom</b>
 
-<DD>Remove any bottom border.
+<dd>Remove any bottom border.
 
 <dt><b>-margin=</b><i>pixels</i>
 
@@ -185,9 +189,9 @@ if necessary.
 
 <p>This option was new in Netpbm 10.29 (August 2005).
 
-<dt><B>-closeness=</B><I>closeness_percent</I>
+<dt><b>-closeness=</b><i>closeness_percent</i>
 
-<p>Any color in the image that is at least this close to the operative
+<dd>Any color in the image that is at least this close to the operative
 background color is considered to be background.
 
 <p>You can use this if the image has borders that vary slightly in color, such
@@ -341,35 +345,34 @@ bottom, width, and height.
 
 <p>This option was new in Netpbm 10.86 (March 2019).
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Print on Standard Error information about the processing,
+<dd>Print on Standard Error information about the processing,
 including exactly how much is being cropped off of which sides.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamcut.html">pamcut</A></B>,
+<b><a href="pamcut.html">pamcut</a></b>,
 
-<B><A HREF="pamfile.html">pamfile</A></B>,
+<b><a href="pamfile.html">pamfile</a></b>,
 
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pnm.html">pnm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

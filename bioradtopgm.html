@@ -1,60 +1,64 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Bioradtopbm User Manual</TITLE></HEAD>
-<BODY>
-<H1>bioradtopgm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Bioradtopbm User Manual</title></head>
+<body>
+<h1>bioradtopgm</h1>
 Updated: 28 June 1993
-<BR>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A HREF="#index">Table Of Contents</A>
-
-<H2>NAME</H2>
+<h2>NAME</h2>
 bioradtopgm - convert a Biorad confocal file into a PGM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>bioradtopgm</B>
-[<B>-image#</B>]
-[<I>imagedata</I>]
+<b>bioradtopgm</b>
+[<b>-image#</b>]
+[<i>imagedata</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>bioradtopgm</b> reads a Biorad confocal file as input and
 produces a PGM image as output.  If the resulting image is upside
-down, run it through <B>pamflip -tb</B>.
+down, run it through <b>pamflip -tb</b>.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-image#</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>bioradtopgm</b> recognizes the following
+command line option:
 
-<DD>
+<dl compact>
+<dt><b>-image#</b>
+
+<dd>
 A Biorad image file may contain more than one image. With this option,
 you can specify which image to extract (only one at a time). The first
 image in the file has number zero. If no
 image number is supplied, only information about the image size and
 the number of images in the input is printed out. No output is produced.
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamflip.html">pamflip</A>,
-<A HREF="pgm.html">pgm</A>
+<a href="pamflip.html">pamflip</a>,
+<a href="pgm.html">pgm</a>
 
-<H2 id="authors">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 Copyright (C) 1993 by Oliver Trepte
-<BR>
+<br>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

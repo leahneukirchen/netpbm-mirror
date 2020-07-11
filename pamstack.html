@@ -1,32 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pamstack User Manual</TITLE></HEAD>
-<BODY>
-
-<H1>pamstack</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamstack User Manual</title></head>
+<body>
+<h1>pamstack</h1>
 Updated: 10 January 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
-
+<h2>NAME</h2>
 pamstack - stack planes of multiple PAM images into one PAM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamstack</B>
-[<B>-tupletype </B><I>tupletype</I>]
-[<I>inputfilespec</I> ...]
+<b>pamstack</b>
+[<b>-tupletype </b><i>tupletype</i>]
+[<i>inputfilespec</i> ...]
 
-<P>All options may be abbreviated to the shortest unique prefix.  You
+<p>All options may be abbreviated to the shortest unique prefix.  You
 may use two hyphens instead of one.  You may separate an option from
-its value with a space instead of <B>=</B>.
+its value with a space instead of <b>=</b>.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pamstack</b> reads multiple PAM or PNM images as input and
+<p><b>pamstack</b> reads multiple PAM or PNM images as input and
 produces a PAM image as output, consisting of all the planes
 (channels) of the inputs, stacked in the order specified.
 
@@ -34,11 +31,11 @@ produces a PAM image as output, consisting of all the planes
 "-" to mean Standard Input.  If you specify no arguments at all,
 the input is one file: Standard Input.
 
-<P>The output is the same dimensions as the inputs, except that the
+<p>The output is the same dimensions as the inputs, except that the
 depth is the sum of the depths of the inputs.  It has the same maxval.
-<B>pamstack</B> fails if the inputs are not all the same width, height,
+<b>pamstack</b> fails if the inputs are not all the same width, height,
 and maxval.  The tuple type is a null string unless you specify the
-<B>-tupletype</B> option.
+<b>-tupletype</b> option.
 
 <p><b>pamstack</b> works with multi-image streams.  It stacks the 1st
 image in all the streams into one output image (the first one in the
@@ -49,15 +46,15 @@ runs dry.  It's like a matrix operation.
 <p>Before Netpbm 10.32 (February 2006), <b>pamstack</b> ignored all but
 the first image in each input stream.
 
-<P><B>pamchannel</B> does the opposite of <B>pamstack</B>:  It extracts
+<p><b>pamchannel</b> does the opposite of <b>pamstack</b>:  It extracts
 individual planes from a single PAM.
 
-<P>Use <a href="pamtopnm.html">pamtopnm</a> to convert a suitable PAM
+<p>Use <a href="pamtopnm.html">pamtopnm</a> to convert a suitable PAM
 image to a more traditional PNM (PBM, PGM, or PPM) image.  (But there's
 no need to do that if you're going to feed it to a modern Netpbm program --
 they all take suitable PAM input directly).
 
-<P>One example of using <B>pamstack</B> is that some Netpbm programs
+<p>One example of using <b>pamstack</b> is that some Netpbm programs
 accept as input a PAM that represents graphic image with transparency
 information.  Taking a color image for example, this would be a PAM
 with tuple type "RGB_ALPHA".  In Netpbm, such images were
@@ -73,34 +70,39 @@ $ pamstack -tupletype=RGB_ALPHA myimage.ppm myalpha.pgm | \
 </kbd>
 </pre>
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamstack</b> recognizes the following
+command line option:
 
-<DT><B>-tupletype </B><I>tupletype</I>
-<DD>
+<dl compact>
+
+<dt><b>-tupletype </b><i>tupletype</i>
+<dd>
 This specifies the tuple type name to be recorded in the output.  You may
 use any string up to 255 characters.  Some programs recognize some names.
 If you omit this option, the default tuple type name is null.
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pam.html">pam</A></B>
-<B><A HREF="pamchannel.html">pamchannel</A></B>
+<b><a href="pam.html">pam</a></b>
+<b><a href="pamchannel.html">pamchannel</a></b>
 
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamstack</b> was new in Netpbm 10.0 (June 2002).
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

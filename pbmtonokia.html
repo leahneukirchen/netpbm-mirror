@@ -1,113 +1,117 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtonokia User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtonokia</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtonokia User Manual</title></head>
+<body>
+<h1>pbmtonokia</h1>
 Updated: 14 September 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pbmtonokia - convert a PBM image to Nokia Smart Messaging Formats
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtonokia</b>
+<b>pbmtonokia</b>
 [
 <b>-fmt</b>
   {
-    <B>HEX_NOL</B>,
-    <B>HEX_NGG</B>,
-    <B>HEX_NPM</B>,
-    <B>NOL</B>,
-    <B>NGG</B>,
-    <B>NPM</B>
+    <b>HEX_NOL</b>,
+    <b>HEX_NGG</b>,
+    <b>HEX_NPM</b>,
+    <b>NOL</b>,
+    <b>NGG</b>,
+    <b>NPM</b>
   }   
 ]
 <br>
-[<B>-net</b> <i>networkcode</i>]
+[<b>-net</b> <i>networkcode</i>]
 [<b>-txt</b> <i>text</i>]
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pbmtonokia</b> reads a PBM image as input and produces a Nokia
 Smart Messaging (hexcode, .ngg, .nol, .npm) file as output.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-fmt</B>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtonokia</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-fmt</b>
+<dd>
 Specifies the output format (default is HEX_NOL).
 
 <dl>
-<DT><b>HEX_NOL</b>
-<DD>
+<dt><b>HEX_NOL</b>
+<dd>
 Nokia Operator Logo as (uploadable) hexcode.
 Use option -net to specify network code.
 
-<DT><b>HEX_NGG</b>
-<DD>
+<dt><b>HEX_NGG</b>
+<dd>
 Nokia Group Graphic as (uploadable) hexcode.
 
-<DT><b>HEX_NPM</b>
-<DD>
+<dt><b>HEX_NPM</b>
+<dd>
 Nokia Picture Message as (uploadable) hexcode.
 Use option <b>-txt</b> to specify an optional text message.
 
-<DT><b>NOL</b>
-<DD>Nokia Operator Logo as .nol format. This is editable by
-the Group-Graphic Editor from Kessler Wireless Design (<A
-HREF="http://www.kessler-design.com">www.kessler-design.com</A>)
+<dt><b>NOL</b>
+<dd>Nokia Operator Logo as .nol format. This is editable by
+the Group-Graphic Editor from Kessler Wireless Design (<a
+href="http://www.kessler-design.com">www.kessler-design.com</a>)
 
-<DT><b>NGG</b>
+<dt><b>NGG</b>
 
-<DD>Nokia Group Graphic as .ngg format. This is editable by the
-Group-Graphic Editor from Kessler Wireless Design (<A
-HREF="http://www.kessler-design.com">www.kessler-design.com</A>)
+<dd>Nokia Group Graphic as .ngg format. This is editable by the
+Group-Graphic Editor from Kessler Wireless Design (<a
+href="http://www.kessler-design.com">www.kessler-design.com</a>)
 
-<DT><b>NPM</b>
+<dt><b>NPM</b>
 
-<DD>Nokia Picture Message as .npm format. This is editable by the
-Picture-Message Editor from Kessler Wireless Design (<A
-HREF="http://www.kessler-design.com">www.kessler-design.com</A>)
+<dd>Nokia Picture Message as .npm format. This is editable by the
+Picture-Message Editor from Kessler Wireless Design (<a
+href="http://www.kessler-design.com">www.kessler-design.com</a>)
 
 <p>This option was new in Netpbm 10.36 (October 2006).
 
 </dl>
      
-<DT><B>-net</B>
+<dt><b>-net</b>
 
-<DD>Specifies the 6 hex-digit operator network code for Operator
+<dd>Specifies the 6 hex-digit operator network code for Operator
 Logos (Default is 62F210 = D1,Germany).
 
-<DT><B>-txt</B>
+<dt><b>-txt</b>
 
-<DD>
+<dd>
 Specifies the text message for Picture Messages.  The maximum size
 text message allowed by the format is 120 characters.
 
 <p>Default is no text message.
 
-</DL>
+</dl>
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 This program currently accepts all PBM images with up to 255 rows or up to 255
 columns.  (Valid Nokia Group Graphics or Operator Logos can be 72 columns by 14
 rows and 78 columns by 21 rows; valid Nokia Picture Messages are 72 columns by
 28 rows.)  This program generates black and white graphics, not animated.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <ul>
-<li><B><A HREF="pbm.html">pbm</A></B>,
+<li><b><a href="pbm.html">pbm</a></b>,
 
-<li>Nokia Smart Messaging Specification (<A
-HREF="http://forum.nokia.com">http://forum.nokia.com</A>)
+<li>Nokia Smart Messaging Specification (<a
+href="http://forum.nokia.com">http://forum.nokia.com</a>)
 
 <li><a href="http://www.kessler-design.com/wireless/samples.html">
 http://www.kessler-design.com/wireless/samples.html</a>
@@ -116,20 +120,20 @@ http://www.kessler-design.com/wireless/samples.html</a>
 
 </ul>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 2001 Tim Ruehsen &lt;<A
-HREF="mailto:tim.ruehsen@openmediasystem.de">tim.ruehsen@openmediasystem.de</A>&gt;.
+Copyright (C) 2001 Tim Ruehsen &lt;<a
+href="mailto:tim.ruehsen@openmediasystem.de">tim.ruehsen@openmediasystem.de</a>&gt;.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

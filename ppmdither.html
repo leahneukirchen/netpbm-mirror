@@ -1,36 +1,35 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmdither User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmdither</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmdither User Manual</title></head>
+<body>
+<h1>ppmdither</h1>
 Updated: 16 December 2009
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 ppmdither - ordered dither for color images
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmdither</B>
+<b>ppmdither</b>
 
-[<B>-dim</B>=<I>power</I>]
+[<b>-dim</b>=<i>power</i>]
 
-[<B>-red</B>=<I>n</I>]
+[<b>-red</b>=<i>n</i>]
 
-[<B>-green</B>=<I>n</I>]
+[<b>-green</b>=<i>n</i>]
 
-[<B>-blue</B>=<I>n</I>]
+[<b>-blue</b>=<i>n</i>]
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or an equals sign between an option name
 and its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -45,57 +44,62 @@ primitive color printers, use <b>-red=2 -green=2 -blue=2</b>.
 <p>You can do another kind of dither -- Floyd-Steinberg -- with 
 <b>pnmquant</b> or <b>pnmremap</b>.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-dim</B> <I>power</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmdither</b> recognizes the following
+command line options:
 
-<DD> The size of the dithering matrix.  The dithering matrix is a
-square whose dimension is a power of 2.  <I>power</I> is that power of
+<dl compact>
+<dt><b>-dim</b> <i>power</i>
+
+<dd> The size of the dithering matrix.  The dithering matrix is a
+square whose dimension is a power of 2.  <i>power</i> is that power of
 2.  The default is 4, for a 16 by 16 matrix.
 
-<DT><B>-red</B>=<I>n</I>
+<dt><b>-red</b>=<i>n</i>
 
-<DD>
+<dd>
 The number of red shades to be used, including black; minimum of 2.
 
 <p>Default is 5.
 
-<DT><B>-green</B> <I>n</I>
+<dt><b>-green</b> <i>n</i>
 
-<DD>
+<dd>
 The number of green shades to be used, including black; minimum of 2.
 
 <p>Default is 9.
 
-<DT><B>-blue</B> <I>n</I>
+<dt><b>-blue</b> <i>n</i>
 
-<DD>
+<dd>
 The number of blue shades to be used, including black; minimum of 2.
 
 <p>Default is 5.
 
-</DL>
-<H2 id="seealso">SEE ALSO</H2>
+</dl>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamditherbw.html">pamditherbw</A>,
-<A HREF="pamdepth.html">pamdepth</A>,
-<A HREF="pnmquant.html">pnmquant</A>,
-<A href="pnmremap.html">pnmremap</A>,
-<A HREF="ppm.html">ppm</A>
+<a href="pamditherbw.html">pamditherbw</a>,
+<a href="pamdepth.html">pamdepth</a>,
+<a href="pnmquant.html">pnmquant</a>,
+<a href="pnmremap.html">pnmremap</a>,
+<a href="ppm.html">ppm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Christos Zoulas.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

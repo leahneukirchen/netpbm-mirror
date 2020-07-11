@@ -1,40 +1,40 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><title>Pgmmake User Manual</title></HEAD>
-<BODY>
-<H1>pgmmake</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pgmmake User Manual</title></head>
+<body>
+<h1>pgmmake</h1>
 Updated: 19 February 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pgmmake - create a PGM image of a specified gray level and dimensions
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pgmmake</B>
+<b>pgmmake</b>
 [<b>-maxval=</b><i>maxval</i>]
-<I>graylevel</I>
-<I>width</I>
-<i>height</I>
+<i>graylevel</i>
+<i>width</i>
+<i>height</i>
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or an equals sign between an option name
 and its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pgmmake</b> produces a PGM image of the specified gray level, width,
+<p><b>pgmmake</b> produces a PGM image of the specified gray level, width,
 height, and maxval.
 
-<P>Specify the gray level (<i>graylevel</i>) as a decimal floating point
+<p>Specify the gray level (<i>graylevel</i>) as a decimal floating point
 number in the range [0, 1].  E.g. 1 is white, 0 is black, and 0.5 is
 half luminosity gray.
 
-<h2 id="example">EXAMPLES</H2>
+<h2 id="example">EXAMPLES</h2>
 
 <pre>
     pgmmake 1 50 50
@@ -44,19 +44,24 @@ half luminosity gray.
 </pre>
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL>
-<DT><b>-maxval=</b><i>maxval</i>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pgmmake</b> recognizes the following
+command line option:
+
+<dl>
+<dt><b>-maxval=</b><i>maxval</i>
+<dd>
      The maxval for the generated image.  Default is 255.
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmmake.html">pbmmake</A>,
-<A HREF="ppmmake.html">ppmmake</A>,
-<A HREF="pgm.html">pgm</A>
+<a href="pbmmake.html">pbmmake</a>,
+<a href="ppmmake.html">ppmmake</a>,
+<a href="pgm.html">pgm</a>
 
 <h2 id="history">HISTORY</h2>
 
@@ -64,14 +69,15 @@ half luminosity gray.
 
 <p>With older Netpbm, use <b>ppmmake</b> and <b>ppmtopgm</b>.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#example">EXAMPLES</A>
-<LI><A HREF="#options">OPTIONS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#example">EXAMPLES</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

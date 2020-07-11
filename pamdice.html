@@ -1,13 +1,12 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamdice User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamdice</H1>
-Updated: 1 April 2007
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamdice User Manual</title></head>
+<body>
+<h1>pamdice</h1>
+Updated: 01 April 2007
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamdice - slice a Netpbm image into many horizontally and/or vertically
 
 <h2 id="example">EXAMPLE</h2>
@@ -22,29 +21,29 @@ pamdice - slice a Netpbm image into many horizontally and/or vertically
 </pre>
 
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamdice</B>
+<b>pamdice</b>
 
-<B>-outstem=</B><I>filenamestem</I>
+<b>-outstem=</b><i>filenamestem</i>
 
-[<B>-width=</B><I>width</I>]
+[<b>-width=</b><i>width</i>]
 
-[<B>-height=</B><I>height</I>]
+[<b>-height=</b><i>height</i>]
 
-[<B>-hoverlap=</B><I>hoverlap</I>]
+[<b>-hoverlap=</b><i>hoverlap</i>]
 
-[<B>-voverlap=</B><I>voverlap</I>]
+[<b>-voverlap=</b><i>voverlap</i>]
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<I>filename</I>]
+[<i>filename</i>]
 
-<P>You can use the minimum unique abbreviation of the options.  You can use
+<p>You can use the minimum unique abbreviation of the options.  You can use
 two hyphens instead of one.  You can separate an option name from its value
 with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -53,14 +52,14 @@ splits it horizontally and/or vertically into equal size pieces and
 writes them into separate files as the same kind of image.  You can
 optionally make the pieces overlap.
 
-<P>See the <B>-outstem</B> option for information on naming of the
+<p>See the <b>-outstem</b> option for information on naming of the
 output files.
 
-<P>The <B>-width</B> and <B>-height</B> options determine the size of
+<p>The <b>-width</b> and <b>-height</b> options determine the size of
 the output pieces.
 
 <p><b>pamundice</b> can rejoin the images.  For finer control, you can
-also use <P><B>pnmcat</B>.
+also use <p><b>pnmcat</b>.
 
 <p>One use for this is to make pieces that take less computer resources
 than the whole image to process.  For example, you might have an image
@@ -76,80 +75,85 @@ it lets you glue the pieces together into a sphere.
 grid, use <b>pamcut</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-outstem=</B>filenamestem
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamdice</b> recognizes the following
+command line options:
 
-<DD>This option determines the names of the output files.  Each output
+<dl compact>
+<dt><b>-outstem=</b>filenamestem
+
+<dd>This option determines the names of the output files.  Each output
 file is named
-<I>filenamestem</I><B>_</B><I>y</I><B>_</B><I>x</I><B>.</B><I>type</I>
-where <I>filenamestem</I> is the value of the <B>-outstem</B> option,
-<I>x</I> and y are the horizontal and vertical locations,
+<i>filenamestem</i><b>_</b><i>y</i><b>_</b><i>x</i><b>.</b><i>type</i>
+where <i>filenamestem</i> is the value of the <b>-outstem</b> option,
+<i>x</i> and y are the horizontal and vertical locations,
 respectively, in the input image of the output image, zero being the
-leftmost and top, and <I>type</I> is <B>.pbm</B>, <B>.pgm</B>,
-<B>.ppm</B>, or <B>.pam</B>, depending on the type of image.
+leftmost and top, and <i>type</i> is <b>.pbm</b>, <b>.pgm</b>,
+<b>.ppm</b>, or <b>.pam</b>, depending on the type of image.
 
-<DT><B>-width=</B><I>width</I>
+<dt><b>-width=</b><i>width</i>
 
-<DD>gives the width in pixels of the output images.  The rightmost
+<dd>gives the width in pixels of the output images.  The rightmost
 pieces are smaller than this if the input image is not a multiple of
-<I>width</I> pixels wide.
+<i>width</i> pixels wide.
 
-<DT><B>-height=</B><I>height</I>
+<dt><b>-height=</b><i>height</i>
 
-<DD>gives the height in pixels of the output images.  The bottom
+<dd>gives the height in pixels of the output images.  The bottom
 pieces are smaller than this if the input image is not a multiple of
-<I>height</I> pixels high.
+<i>height</i> pixels high.
 
-<DT><B>-hoverlap=</B><I>hoverlap</I>
+<dt><b>-hoverlap=</b><i>hoverlap</i>
 
-<DD>gives the horizontal overlap in pixels between output images.
-Each image in a row will overlap the previous one by <I>hoverlap</I>
+<dd>gives the horizontal overlap in pixels between output images.
+Each image in a row will overlap the previous one by <i>hoverlap</i>
 pixels.  By default, there is no overlap.
 
 <p>This option was new in Netpbm 10.23 (July 2004).
 
-<DT><B>-voverlap=</B><I>voverlap</I>
+<dt><b>-voverlap=</b><i>voverlap</i>
 
-<DD>gives the vertical overlap in pixels between output images.
-Each row of images will overlap the previous row by <I>voverlap</I>
+<dd>gives the vertical overlap in pixels between output images.
+Each row of images will overlap the previous row by <i>voverlap</i>
 pixels.  By default, there is no overlap.
 
 <p>This option was new in Netpbm 10.23 (July 2004).
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Print information about the processing to Standard Error.
+<dd>Print information about the processing to Standard Error.
 
-</DL>
+</dl>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamdice</b> was new in Netpbm 9.25 (March 2002).
 
 <p>Before Netpbm 10.29 (August 2005), there was a limit of 100 slices
 in each direction.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamundice.html">pamundice</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
-<B><A HREF="pgmslice.html">pgmslice</A></B>,
-<B><A HREF="ppmglobe.html">ppmglobe</A></B>
-<B><A HREF="pnm.html">pnm</A></B>
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pamundice.html">pamundice</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pgmslice.html">pgmslice</a></b>,
+<b><a href="ppmglobe.html">ppmglobe</a></b>
+<b><a href="pnm.html">pnm</a></b>
+<b><a href="pam.html">pam</a></b>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#example">EXAMPLE</A>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#example">EXAMPLE</a>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

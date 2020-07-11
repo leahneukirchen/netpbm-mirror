@@ -1,33 +1,32 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtopj User Manual</TITLE>
-</HEAD><BODY>
-<H1>ppmtopj</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtopj User Manual</title>
+</head><body>
+<h1>ppmtopj</h1>
 Updated: 13 July 1991
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 ppmtopj - convert a PPM image to an HP PaintJet file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtopj</B>
+<b>ppmtopj</b>
 
-[<b>-gamma</b> <I>val</I>]
+[<b>-gamma</b> <i>val</i>]
 
-[<B>-xpos</B> <I>val</I>]
+[<b>-xpos</b> <i>val</i>]
 
-[<B>-ypos</B> <I>val</I>]
+[<b>-ypos</b> <i>val</i>]
 
-[<B>-back</B> {<B>dark</B>|<B>lite</B>}]
+[<b>-back</b> {<b>dark</b>|<b>lite</b>}]
 
-[<B>-rle</B>]
+[<b>-rle</b>]
 
-[<B>-center</B>]
+[<b>-center</b>]
 
-[<B>-render</B> {
-<B>none</b> |
+[<b>-render</b> {
+<b>none</b> |
 <b>snap</b> |
 <b>bw</b> |
 <b>dither</b> |
@@ -35,19 +34,19 @@ ppmtopj - convert a PPM image to an HP PaintJet file
 <b>monodither</b> |
 <b>monodiffuse</b> |
 <b>clusterdither</b> |
-<b>monoclusterdither</B>
+<b>monoclusterdither</b>
 }]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>ppmtopj</b> reads a PPM image as input and converts it into a
+<p><b>ppmtopj</b> reads a PPM image as input and converts it into a
 format suitable to be printed by an HP PaintJet printer.
 
-<P>
+<p>
 For best results, the input file should be in 8-color RGB form;
 i.e. it should have only
 the 8 binary combinations of full-on and full-off primaries.
@@ -63,76 +62,81 @@ Or you could use
     ppmdither -red 2 -green 2 -blue 2
 </pre>
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtopj</b> recognizes the following
+command line options:
 
-<DT><B>-rle</B>
+<dl compact>
 
-<DD>
+<dt><b>-rle</b>
+
+<dd>
 Run length encode the image.
 (This can result in larger images)
 
-<DT><B>-back</B>
+<dt><b>-back</b>
 
-<DD>
+<dd>
 Enhance the foreground by indicating if the background is light or
 dark compared to the foreground.
 
-<DT><B>-render</B> <I>alg</I>
+<dt><b>-render</b> <i>alg</i>
 
-<DD>
+<dd>
 Use an internal rendering algorithm (default dither).
 
-<DT><B>-gamma</B> <I>int</I>
+<dt><b>-gamma</b> <i>int</i>
 
-<DD>
+<dd>
 Gamma correct the image using the integer <i>int</i> as a gamma (default 0).
 
-<DT><B>-center</B>
+<dt><b>-center</b>
 
-<DD>
+<dd>
 Center the image to an 8.5 by 11 page
 
-<DT><B>-xpos</B> <I>pos</I>
+<dt><b>-xpos</b> <i>pos</i>
 
-<DD>
+<dd>
 Move by <i>pos</i> pixels in the x direction.
 
-<DT><B>-ypos</B> <I>pos</I>
+<dt><b>-ypos</b> <i>pos</i>
 
-<DD>
+<dd>
 Move by <i>pos</i> pixels in the y direction.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 HP PaintJet XL Color Graphics Printer User's Guide,
 <a href="pnmtopclxl.html"><b>pnmtopclxl</b></a>,
 <a href="pjtoppm.html"><b>pjtoppm</b></a>,
-<A href="pamdepth.html"><b>pamdepth</b></A>,
-<A HREF="pnmremap.html"><b>pnmremap</b></A>,
-<A HREF="pamseq.html"><b>pamseq</b></A>,
-<A HREF="ppmdither.html"><b>ppmdither</b></A>,
+<a href="pamdepth.html"><b>pamdepth</b></a>,
+<a href="pnmremap.html"><b>pnmremap</b></a>,
+<a href="pamseq.html"><b>pamseq</b></a>,
+<a href="ppmdither.html"><b>ppmdither</b></a>,
 <a href="pbmtolj.html"><b>pbmtolj</b></a>,
 <a href="ppmtolj.html"><b>ppmtolj</b></a>,
 <a href="ppmtopjxl.html"><b>ppmtopjxl</b></a>,
 <a href="thinkjettopbm.html"><b>thinkjettopbm</b></a>,
-<A HREF="ppm.html"><b>ppm</b></A>
+<a href="ppm.html"><b>ppm</b></a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Christos Zoulas.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

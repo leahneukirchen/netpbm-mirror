@@ -1,27 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamchannel User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamchannel</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamchannel User Manual</title></head>
+<body>
+<h1>pamchannel</h1>
 Updated: 10 January 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamchannel - extract channels from a PAM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamchannel</B>
-[<B>-infile=</B><I>infile</I>]
-[<B>-tupletype=</B><I>tupletype</I>]
-[<I>channum</I> ...]
+<b>pamchannel</b>
+[<b>-infile=</b><i>infile</i>]
+[<b>-tupletype=</b><i>tupletype</i>]
+[<i>channum</i> ...]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use double
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -33,57 +32,62 @@ the input.
 with the first channel being zero.  The channels in the output are in the
 order of these arguments.
 
-<P>The output is the same dimensions as the input, except that the depth
-is the number of <I>channum</I> arguments you supply.  The tuple type
-is a null string unless you specify the <B>-tupletype</B> option.
+<p>The output is the same dimensions as the input, except that the depth
+is the number of <i>channum</i> arguments you supply.  The tuple type
+is a null string unless you specify the <b>-tupletype</b> option.
 
 <p>This program works on multi-image streams, producing a
 corresponding output stream.  But before Netpbm 10.32 (February 2006),
 it ignored every image after the first.
 
-<P><B>pamstack</B> does the opposite of <B>pamchannel</B>:  It takes multiple
+<p><b>pamstack</b> does the opposite of <b>pamchannel</b>:  It takes multiple
 PAM or PNM images as input and stacks their planes (channels) on top of
 one another to yield a single PAM.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamchannel</b> recognizes the following
+command line options:
 
-<DT><B>-infile</B> <I>infile</I>
-<DD>
+<dl compact>
+
+<dt><b>-infile</b> <i>infile</i>
+<dd>
 This specifies the input file, which defaults to Standard Input.  You
-may specify <B>-</B> to select Standard Input explicitly.
-<P>
+may specify <b>-</b> to select Standard Input explicitly.
+<p>
 This is a little unconventional for Netpbm programs, which usually 
-have the input file specification as an argument.  For <B>pamchannel</B>,
+have the input file specification as an argument.  For <b>pamchannel</b>,
 the arguments are channel numbers.
 
-<DT><B>-tupletype</B> <I>tupletype</I>
-<DD>
+<dt><b>-tupletype</b> <i>tupletype</i>
+<dd>
 This specified the tuple type name to be recorded in the output.  You may
 use any string up to 255 characters.  Some programs recognize some names.
 If you omit this option, the default tuple type name is null.
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pam.html">pam</A></B>
-<B><A HREF="pamstack.html">pamstack</A></B>
+<b><a href="pam.html">pam</a></b>
+<b><a href="pamstack.html">pamstack</a></b>
 
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamchannel</b> was new, along with the PAM format, in Netpbm
 9.7 (August 2000).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>
 

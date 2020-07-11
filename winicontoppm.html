@@ -1,25 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Winicontoppm User Manual</TITLE></HEAD>
-<BODY>
-<H1>winicontoppm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Winicontoppm User Manual</title></head>
+<body>
+<h1>winicontoppm</h1>
 Updated: 23 March 2003
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 winicontoppm - convert a Windows .ico image into 1 or more PPM images
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>winicontoppm</B>
-[<B>-writeands</B>]
-[<B>-allicons</B>|<b>-bestqual</b>]
+<b>winicontoppm</b>
+[<b>-writeands</b>]
+[<b>-allicons</b>|<b>-bestqual</b>]
 [<b>-multippm</b>]
 [<b>-verbose</b>]
-[<I>iconfile</I>]
-[<I>ppmdestfile</I>]
+[<i>iconfile</i>]
+[<i>ppmdestfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -29,75 +29,80 @@ better.
 <p><b>winicontoppm</b> reads a Microsoft Windows .ico file and
 converts it to one or more PPMs.
 
-<P>A Windows icon contains one or more images, at different resolutions
+<p>A Windows icon contains one or more images, at different resolutions
 and color depths.  Each image has an 'and' mask, which contains transparancy
 data. 
 
-<P>By default, the output goes to Standard Output.  If you specify
-<I>ppmdestfile</I>, output goes into one or more files named as
-follows.  If it's just one file (i.e. you specify the <B>-multippm</B>
-option or don't specify <B>-allicons</B>), the file name is
-<I>ppmdestfile</I><B>.ppm</B>.  If it's multiple files, their file
-names are <I>ppmdestfile</I><B>_1.ppm</B>,
-<I>ppmdestfile</I><B>_2.ppm</B>, etc.  <P> When you specify the
-<B>-writeands</B> option, the file names above are modified to include
-the string <B>xor</B> as in <I>ppmdestfile</I><B>_xor.ppm</B> or
-<I>ppmdestfile</I><B>_xor_1.ppm</B>.
+<p>By default, the output goes to Standard Output.  If you specify
+<i>ppmdestfile</i>, output goes into one or more files named as
+follows.  If it's just one file (i.e. you specify the <b>-multippm</b>
+option or don't specify <b>-allicons</b>), the file name is
+<i>ppmdestfile</i><b>.ppm</b>.  If it's multiple files, their file
+names are <i>ppmdestfile</i><b>_1.ppm</b>,
+<i>ppmdestfile</i><b>_2.ppm</b>, etc.  <p> When you specify the
+<b>-writeands</b> option, the file names above are modified to include
+the string <b>xor</b> as in <i>ppmdestfile</i><b>_xor.ppm</b> or
+<i>ppmdestfile</i><b>_xor_1.ppm</b>.
 
-<P><B>winicontoppm</b> can convert .ico images with 1, 4, 8, 24, or
+<p><b>winicontoppm</b> can convert .ico images with 1, 4, 8, 24, or
 32 bits per pixel.  Before Netpbm 10.15 (April 2003), it could not handle
 24 and 32.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-writeands</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>winicontoppm</b> recognizes the following
+command line options:
 
-<DD>For each icon written, also write the 'and' (transparancy) mask as
+<dl compact>
+<dt><b>-writeands</b>
+
+<dd>For each icon written, also write the 'and' (transparancy) mask as
 a separate PBM file.  It's name is of the form
-<I>ppmdestfile</I><B>_and.pbm</B> or
-<I>ppmdestfile</I><B>_and_1.pbm</B>.
+<i>ppmdestfile</i><b>_and.pbm</b> or
+<i>ppmdestfile</i><b>_and_1.pbm</b>.
 
-<DT><B>-allicons</B>
+<dt><b>-allicons</b>
 
-<DD>Extract all images from the .ico file.
+<dd>Extract all images from the .ico file.
 
 <p>If you specify neither this nor <b>-bestqual</b>, <b>winicontoppm</b>
 extracts the first image.
 
-<DT><B>-bestqual</B>
+<dt><b>-bestqual</b>
 
-<DD>Extract only the best quality (largest, then highest bpp) image
+<dd>Extract only the best quality (largest, then highest bpp) image
 from the .ico file.
 
 <p>If you specify neither this nor <b>-allicons</b>, <b>winicontoppm</b>
 extracts the first image.
 
-<DT><B>-multippm</B>
+<dt><b>-multippm</b>
 
-<DD>Write all PPMs to a single file.
+<dd>Write all PPMs to a single file.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="winicontopam.html">winicontopam</A></B>,
-<B><A HREF="pamtowinicon.html">pamtowinicon</A></B>,
-<B><A HREF="bmptopnm.html">bmptopnm</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="winicontopam.html">winicontopam</a></b>,
+<b><a href="pamtowinicon.html">pamtowinicon</a></b>,
+<b><a href="bmptopnm.html">bmptopnm</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 2000, 2003 by Lee Benfield.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

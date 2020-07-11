@@ -1,103 +1,107 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmpage User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmpage</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmpage User Manual</title></head>
+<body>
+<h1>pbmpage</h1>
 Updated: 08 June 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
-
+<h2>NAME</h2>
 pbmpage - create a one page test pattern for printing
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmpage</B>
-[<B>-a4</B>]
-<I>test_pattern</I>
+<b>pbmpage</b>
+[<b>-a4</b>]
+<i>test_pattern</i>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pbmpage</B> generates a one page test pattern to print on a
+<p><b>pbmpage</b> generates a one page test pattern to print on a
 sheet of paper, for use in calibrating a printer.  The test pattern in
 is PBM format.
 
-<P><B>pbmpage</B> produces an image intended for 600 dots per inch
+<p><b>pbmpage</b> produces an image intended for 600 dots per inch
 printer resolution.
 
-<P>If you are printing on an HP PPA printer, you can convert the
+<p>If you are printing on an HP PPA printer, you can convert the
 output of this program to a stream that you can feed to the printer
-with <B>pbmtoppa</B>.
+with <b>pbmtoppa</b>.
 
-<P>
+<p>
 Bear in mind that when you print the test pattern, you are testing not
 only the printer, but any converter or driver software along the
 printing path.  Any one of these components may adjust margins, crop
 the image, erase edges, and such.
 
-<P>If, because of addition of margins, the printer refuses to print the
-image because it is too big, use <B>pamcut</B> to cut the right and
+<p>If, because of addition of margins, the printer refuses to print the
+image because it is too big, use <b>pamcut</b> to cut the right and
 bottom edges off the test pattern until it is small enough to print.
 
-<P><I>test_pattern </I> is the number of the test pattern to generate,
-as follows.  The default is <B>1</B>.
+<p><i>test_pattern </i> is the number of the test pattern to generate,
+as follows.  The default is <b>1</b>.
 
-<DL COMPACT>
-<DT><B>1</B>
+<dl compact>
+<dt><b>1</b>
 
-<DD>
+<dd>
 A black on white grid ruled in numbers of pixels.  A black one pixel box
 is at the very edges of the paper.     
 
 <p>Before Netpbm 10.18 (August 2003), the perimeter box was not there.
 
-<DT><B>2</B>
+<dt><b>2</b>
 
-<DD>
+<dd>
 A vertical line segment, one pixel wide, extending 1/2" up from the
 exact center of the page.
-<DT><B>3</B>
+<dt><b>3</b>
 
-<DD>
+<dd>
 Two diagonal line segments, one starting at the upper left corner of the
 page, the other starting from the lower right corner of the page.  Both
 extend 1/2" toward the center of the page at 45 degrees.
-</DL>
+</dl>
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-a4</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmpage</b> recognizes the following
+command line option:
 
-<DD>Generate an image for A4 (European) paper.  Without this option,
-<B>pbmpage</B> generates an image for US standard paper (8 1/2"
+<dl compact>
+<dt><b>-a4</b>
+
+<dd>Generate an image for A4 (European) paper.  Without this option,
+<b>pbmpage</b> generates an image for US standard paper (8 1/2"
 wide x 11" high).
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pbmtoppa.html">pbmtoppa</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
+<b><a href="pbmtoppa.html">pbmtoppa</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pbm.html">pbm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Tim Norman.  Copyright (C) 1998.  Licensed under GNU Public License
 
-<P>Manual page by Bryan Henderson, May 2000.  Contributed to the public
+<p>Manual page by Bryan Henderson, May 2000.  Contributed to the public
 domain by its author.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

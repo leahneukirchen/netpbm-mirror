@@ -1,26 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtowinicon User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtowinicon</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtowinicon User Manual</title></head>
+<body>
+<h1>ppmtowinicon</h1>
 Updated: 01 May 2004
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 ppmtowinicon - convert PPM image into a Windows .ico file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtowinicon</B>
+<b>ppmtowinicon</b>
 
 [<b>-andpgms</b>]
 
-[<b>-output=</b><i>output.ico</I>]
+[<b>-output=</b><i>output.ico</i>]
 
-[<I>ppmfile</I> [<i>andfile</i>] ...]
+[<i>ppmfile</i> [<i>andfile</i>] ...]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -30,12 +29,12 @@ better.
 <p><b>ppmtowinicon</b> reads one or more PPM images as input and
 produces a Microsoft Windows .ico file as output.
 
-<P>A Windows icon contains 1 or more images, at different resolutions
+<p>A Windows icon contains 1 or more images, at different resolutions
 and color depths.  When Windows wants to display the icon, it searches
 through the images to find the one that best matches the number of colors
 and resolution of the display.
 
-<P>Microsoft recommends including at least the following formats in each
+<p>Microsoft recommends including at least the following formats in each
 icon.
 
 <ul>
@@ -62,7 +61,7 @@ be opaque.  Everywhere else, the icon will be transparent.  Note that
 as with any Netpbm program, you can use a PBM image for the transparency
 mask and <b>ppmtowinicon</b> will treat it like a PGM.
 
-<P>The and mask is like a transparency mask, except for what it signifies in
+<p>The and mask is like a transparency mask, except for what it signifies in
 the "not opaque" areas.  In the usual case, the foreground image is
 black in those areas, and in that case the areas are fully transparent
 -- the background shows through the icon.  But in general, a not
@@ -81,48 +80,53 @@ color your input image is at that location.
 <p>If you don't specify <b>-andmask</b>, <b>ppmtowinicon</b> puts
 all-opaque and masks into the .ico file.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-andpgms</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtowinicon</b> recognizes the following
+command line options:
 
-<DD>Include transparency information in the icons.
+<dl compact>
+<dt><b>-andpgms</b>
+
+<dd>Include transparency information in the icons.
 See the <a href="#transparency">transparency section</a>.
      
-<DT><B>-output=</b><i>output.ico</i>
+<dt><b>-output=</b><i>output.ico</i>
 
-<DD>Name of output file.  By default, <b>ppmtowinicon</b> writes the
+<dd>Name of output file.  By default, <b>ppmtowinicon</b> writes the
 icon to Standard Output.
 
-<DT><B>-truetransparent</b>
+<dt><b>-truetransparent</b>
 
 <dd>Make transparency in the icon normal instead of the special reverse
 video effect.  See the <a href="#transparency">transparency section</a>.
      
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamtowinicon.html">pamtowinicon</A></B>,
-<B><A HREF="winicontoppm.html">winicontoppm</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
-<B><A HREF="pgm.html">pgm</A></B>
+<b><a href="pamtowinicon.html">pamtowinicon</a></b>,
+<b><a href="winicontoppm.html">winicontoppm</a></b>,
+<b><a href="ppm.html">ppm</a></b>
+<b><a href="pgm.html">pgm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 2000 by Lee Benfield.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<UL>
-  <LI><A HREF="#transparency">TRANSPARENCY</A>
-  </UL>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<ul>
+  <li><a href="#transparency">TRANSPARENCY</a>
+  </ul>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

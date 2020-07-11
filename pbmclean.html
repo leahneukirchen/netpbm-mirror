@@ -1,37 +1,36 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmclean User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmclean</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmclean User Manual</title></head>
+<body>
+<h1>pbmclean</h1>
 Updated: 19 November 2011
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pbmclean - despeckle a PBM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmclean</B>
-[<B>-minneighbors=</B><I>N</I>]
-[<B>-black</B>|<B>-white</B>]
+<b>pbmclean</b>
+[<b>-minneighbors=</b><i>N</i>]
+[<b>-black</b>|<b>-white</b>]
 [<b>-extended</b>]
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<?makeman .SH OPTION USAGE ?>
-<P>You can use the minimum unique abbreviation of the options.  You
+<?makeman .sh option usage ?>
+<p>You can use the minimum unique abbreviation of the options.  You
 can use two hyphens instead of one.  You can separate an option name
 from its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pbmclean</B> cleans up a PBM image of random specks.  It reads a
+<p><b>pbmclean</b> cleans up a PBM image of random specks.  It reads a
 PBM image as input and outputs a PBM that is the same as the input
 except with isolated pixels inverted.
 
-<P>You can use <B>pbmclean </B> to clean up "snow" on bitmap
+<p>You can use <b>pbmclean </b> to clean up "snow" on bitmap
 images.
 
 <p>There are two ways <b>pbmclean</b> can define "isolated" pixels:
@@ -40,7 +39,7 @@ uses extended; otherwise it uses basic.
 
 <h3 id="basic"></h3>
 
-<P>In basic mode, <B>pbmclean</B> looks at each pixel individually, and any
+<p>In basic mode, <b>pbmclean</b> looks at each pixel individually, and any
 pixel that doesn't have at least a minimum number of pixels of the same color
 touching it is considered isolated and <b>pbmclean</b> erases it.
 
@@ -52,15 +51,15 @@ isolated.
 black pixels in an otherwise white field, each of those pixels is isolated,
 so <b>pbmclean</b> erases them - turns both white.
 
-<P>The default minimum 1 pixel &mdash; <b>pbmclean</b> flips only completely
+<p>The default minimum 1 pixel &mdash; <b>pbmclean</b> flips only completely
 isolated pixels.
 
-<P>(A <b>-minneighbors</b> value greater than 8 generates a completely
-inverted image (but use <B>pnminvert</B> to do that) -- or a
-completely white or completely black image with the <B>-black</B> or
-<B>-white</B> option).
+<p>(A <b>-minneighbors</b> value greater than 8 generates a completely
+inverted image (but use <b>pnminvert</b> to do that) -- or a
+completely white or completely black image with the <b>-black</b> or
+<b>-white</b> option).
 
-<P><B>pbmclean</B> considers the area beyond the edges of the image to
+<p><b>pbmclean</b> considers the area beyond the edges of the image to
 be white.  (This matters when you consider pixels right on the edge of
 the image).
 
@@ -88,20 +87,25 @@ pixels to escape <b>pbmclean</b>'s purge.
 <p>Extended mode was new in Netpbm 10.56 (September 2011).
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-black</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmclean</b> recognizes the following
+command line options:
 
-<DT><B>-white</B>
+<dl compact>
+<dt><b>-black</b>
 
-<DD>Flip pixels of the specified color.  By default, if you specify
-neither <B>-black</B> nor <B>-white</B>, <B>pbmclean</B> flips both
+<dt><b>-white</b>
+
+<dd>Flip pixels of the specified color.  By default, if you specify
+neither <b>-black</b> nor <b>-white</b>, <b>pbmclean</b> flips both
 black and white pixels which do not have sufficient identical
-neighbors.  If you specify <B>-black</B>, <B>pbmclean</B> leaves the
+neighbors.  If you specify <b>-black</b>, <b>pbmclean</b> leaves the
 white pixels alone and just erases isolated black pixels.  Vice versa
-for <B>-white</B>.  You may specify both <B>-black</B> and
-<B>-white</B> to get the same as the default behavior.
+for <b>-white</b>.  You may specify both <b>-black</b> and
+<b>-white</b> to get the same as the default behavior.
 
 <dt><b>-minneighbors=</b><i>N</i>
 
@@ -109,8 +113,8 @@ for <B>-white</B>.  You may specify both <B>-black</B> and
 for <b>pbmclean</b> to consider them legitimate and not clean them
 out of the image.  See <a href="#description">Description</a>.
 
-<P>Before December 2001, <B>pbmclean</B> accepted <B>-</B><I>N</I>
-instead of <B>-minneighbors</B>.  Before Netpbm 10.27 (March 2005),
+<p>Before December 2001, <b>pbmclean</b> accepted <b>-</b><i>N</i>
+instead of <b>-minneighbors</b>.  Before Netpbm 10.27 (March 2005),
 <b>-minneighbors</b> was <b>-minneighbor</b>.
 
 <dt><b>-extended</b>
@@ -120,18 +124,18 @@ detection.
 
 <p>This option was new in Netpbm 10.56 (September 2011).
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pbm.html">pbm</A></B>
+<b><a href="pbm.html">pbm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1990 by Angus Duggan
 Copyright (C) 1989 by Jef Poskanzer.
 Copyright (C) 2001 by Michael Sternberg.
-<P>
+<p>
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted, provided
 that the above copyright notice appear in all copies and that both that
@@ -139,14 +143,14 @@ copyright notice and this permission notice appear in supporting
 documentation.  This software is provided "as is" without express or
 implied warranty.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,35 +1,36 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtopsg3 User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtopsg3</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtopsg3 User Manual</title></head>
+<body>
+<h1>pbmtopsg3</h1>
 Updated: 12 March 2017
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
 pbmtopsg3 - convert PBM images to Postscript with G3 fax compression
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtopsg3</B>
-[<B>--title=</B><I>title</I>]
-[<B>--dpi=</B><I>dpi</I>]
-[<I>filespec</I>]
+<b>pbmtopsg3</b>
+[<b>--title=</b><i>title</i>]
+[<b>--dpi=</b><i>dpi</i>]
+[<i>filespec</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pbmtopsg3</b> converts the PBM images in the input PBM file to
+<p><b>pbmtopsg3</b> converts the PBM images in the input PBM file to
 pages in a Postscript file encoded with G3 fax compression.
 
 <p><b>pnmtops</b> is a more general program for converting from the Netpbm
 formats to Postscript, though it cannot produce the particular subformat
 that <b>pbmtopsg3</b> does.
 
-<P>If you don't specify <I>filespec</I>, the input is from Standard
+<p>If you don't specify <i>filespec</i>, the input is from Standard
 Input.
 
-<P>Remember that you can create a multi-image PBM file simply by
+<p>Remember that you can create a multi-image PBM file simply by
 concatenating single-image PBM files, so if each page is in a
 different file, you might do:
 
@@ -37,38 +38,43 @@ different file, you might do:
 cat faxpage* | pbmtopsg3 &gt;fax.ps
 </pre>
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-title</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtopsg3</b> recognizes the following
+command line options:
 
-<DD>The Postscript title value.  Default is no title.
+<dl compact>
+<dt><b>-title</b>
 
-<DT><B>-dpi</B>
+<dd>The Postscript title value.  Default is no title.
 
-<DD>The resolution of the Postscript output.  Default is 72 dpi.
+<dt><b>-dpi</b>
 
-</DL>
+<dd>The resolution of the Postscript output.  Default is 72 dpi.
 
-<H2 id="seealso">SEE ALSO</H2>
+</dl>
 
-<B><A HREF="pnmtops.html">pnmtops</A></B>,
-<B><A HREF="pstopnm.html">pstopnm</A></B>,
-<B>gs</b>,
-<B><A HREF="pstopnm.html">pstopnm</A></B>,
-<B><A HREF="pbmtolps.html">pbmtolps</A></B>,
-<B><A HREF="pbmtoepsi.html">pbmtoepsi</A></B>,
-<B><A HREF="pbmtog3.html">pbmtog3</A></B>,
-<B><A HREF="g3topbm.html">g3topbm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
+<h2 id="seealso">SEE ALSO</h2>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<b><a href="pnmtops.html">pnmtops</a></b>,
+<b><a href="pstopnm.html">pstopnm</a></b>,
+<b>gs</b>,
+<b><a href="pstopnm.html">pstopnm</a></b>,
+<b><a href="pbmtolps.html">pbmtolps</a></b>,
+<b><a href="pbmtoepsi.html">pbmtoepsi</a></b>,
+<b><a href="pbmtog3.html">pbmtog3</a></b>,
+<b><a href="g3topbm.html">g3topbm</a></b>,
+<b><a href="pbm.html">pbm</a></b>,
+<b><a href="faxformat.html">fax formats</a></b>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

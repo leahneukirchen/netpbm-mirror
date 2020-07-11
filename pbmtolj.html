@@ -1,30 +1,30 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtolj User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtolj</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtolj User Manual</title></head>
+<body>
+<h1>pbmtolj</h1>
 Updated: 23 April 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pbmtolj - convert a PBM image to HP LaserJet format
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtolj</B>
-[<B>-resolution</B> <I>N</I>]
-[<B>-float</B>]
-[<B>-noreset</B>]
-[<B>-packbits</B>]
-[<B>-delta</B>]
-[<B>-compress</B>]
-[<I>pbmfile</I>]
-[<B>-copies</B> <I>N</I>]
+<b>pbmtolj</b>
+[<b>-resolution</b> <i>N</i>]
+[<b>-float</b>]
+[<b>-noreset</b>]
+[<b>-packbits</b>]
+[<b>-delta</b>]
+[<b>-compress</b>]
+[<i>pbmfile</i>]
+[<b>-copies</b> <i>N</i>]
 
-<P>You can abbreviate any option to its shortest unique prefix.
+<p>You can abbreviate any option to its shortest unique prefix.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -47,49 +47,54 @@ after the first one are ignored.
 
 <p>Note that there is no ljtopbm tool.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-resolution</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtolj</b> recognizes the following
+command line options:
 
-<DD>Specifies the resolution of the output device, in dpi.  Another
+<dl compact>
+<dt><b>-resolution</b>
+
+<dd>Specifies the resolution of the output device, in dpi.  Another
 way to look at this is as a declaration of the resolution of the input
 image (PBM images don't have inherent resolution).  Typical values are
 75, 100, 150, 300, and 600.  The default is 75.
 
-<DT><B>-float</B>
+<dt><b>-float</b>
 
-<DD>Suppresses positioning commands.  By default, <b>pbmtolj</b>
-places the sequence <I>ESC &amp; l 0 E</I> in the output, which means
+<dd>Suppresses positioning commands.  By default, <b>pbmtolj</b>
+places the sequence <i>ESC &amp; l 0 E</i> in the output, which means
 to force the top margin to zero.  With <b>-float</b>, <b>pbmtolj</b>
 omits that command.
 
-<DT><B>-noreset</B>
+<dt><b>-noreset</b>
 
-<DD>Prevents pbmtolj from writing the reset sequences to the beginning
+<dd>Prevents pbmtolj from writing the reset sequences to the beginning
 and end of the output file.
 
-<DT><B>-packbits</B>
+<dt><b>-packbits</b>
 
-<DD>Enables use of TIFF packbits compression.
+<dd>Enables use of TIFF packbits compression.
 
-<DT><B>-delta</B>
+<dt><b>-delta</b>
 
-<DD>Enables use of delta-between-rows compression.
+<dd>Enables use of delta-between-rows compression.
 
-<DT><B>-compress</B>
+<dt><b>-compress</b>
 
-<DD>Enables use of both TIFF packbits, and delta-between-rows compression.
+<dd>Enables use of both TIFF packbits, and delta-between-rows compression.
 
-<DT><B>-copies</B>
+<dt><b>-copies</b>
 
-<DD>Specifies the number of copies. The default is 1.  This option
+<dd>Specifies the number of copies. The default is 1.  This option
 controls the "number of copies" printer control;
-<B>pbmtolj</B> generates only one copy of the image.
+<b>pbmtolj</b> generates only one copy of the image.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <a href="pnmtopclxl.html"><b>pnmtopclxl</b></a>,
 <a href="ppmtolj.html"><b>ppmtolj</b></a>,
@@ -97,23 +102,23 @@ controls the "number of copies" printer control;
 <a href="ppmtopj.html"><b>ppmtopj</b></a>,
 <a href="ppmtopjxl.html"><b>ppmtopjxl</b></a>,
 <a href="thinkjettopbm.html"><b>thinkjettopbm</b></a>,
-<a href="pbm.html">pbm</A>
+<a href="pbm.html">pbm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1988 by Jef Poskanzer and Michael Haberler.
-<B>-float</B> and <B>-noreset</B> options added by Wim Lewis.
-<B>-delta</b>, <b>-packbits</B>, and <B>-compress</B> options added by
+<b>-float</b> and <b>-noreset</b> options added by Wim Lewis.
+<b>-delta</b>, <b>-packbits</b>, and <b>-compress</b> options added by
 Dave Platt.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

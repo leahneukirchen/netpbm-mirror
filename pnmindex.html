@@ -1,50 +1,49 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmindex User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmindex</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmindex User Manual</title></head>
+<body>
+<h1>pnmindex</h1>
 Updated: 14 November 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pnmindex - build a visual index of a bunch of PNM images
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmindex</B>
+<b>pnmindex</b>
 
-[<B>-size=</B><I>N</I>]
+[<b>-size=</b><i>N</i>]
 
-[<B>-across=</B><I>N</I>]
+[<b>-across=</b><i>N</i>]
 
-[<B>-colors=</B><I>N</I>]
+[<b>-colors=</b><i>N</i>]
 
-[<B>-black</B>]
+[<b>-black</b>]
 
-[<B>-title=</B><I>title</I>]
+[<b>-title=</b><i>title</i>]
 
-[<B>-quant</B>|<B>-noquant</B>]
+[<b>-quant</b>|<b>-noquant</b>]
 
-<I>pnmfile</I> ...
+<i>pnmfile</i> ...
 
-<P>You can use the minimum unique abbreviation of the options.  You can use
+<p>You can use the minimum unique abbreviation of the options.  You can use
 two hyphens instead of one.  You can separate an option name from its value
 with white space instead of an equals sign.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>pnmindex</B> creates an index image containing thumbnail (small)
+<b>pnmindex</b> creates an index image containing thumbnail (small)
 versions of a bunch of PNM files you supply.  (Akin to a photographic
 "contact sheet."
 
-<P><B>pnmindex</B> labels each thumbnail and, optionally, contains a
+<p><b>pnmindex</b> labels each thumbnail and, optionally, contains a
 title.
 
-<P>If you just want to concatenate some images together in a grid, use
+<p>If you just want to concatenate some images together in a grid, use
 <b>pamundice</b> for that.
 
 <p>If you want to take apart the image you generated with <b>pnmindex</b>,
@@ -55,86 +54,91 @@ directory <b>/tmp</b>, but you can usse the <b>TMPDIR</b> environment variable
 to have them somewhere else.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-size=</B><I>N</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmindex</b> recognizes the following
+command line options:
 
-<DD>The size of each thumbnail.  The image is scaled to fit maximally
-inside a <I>N</I> x <I>N</I> pixel box without changing its aspect
+<dl compact>
+<dt><b>-size=</b><i>N</i>
+
+<dd>The size of each thumbnail.  The image is scaled to fit maximally
+inside a <i>N</i> x <i>N</i> pixel box without changing its aspect
 ratio.  Default is 100.
 
-<DT><B>-across=</B><I>N</I>
+<dt><b>-across=</b><i>N</i>
 
-<DD>The number of thumbnails in each row.  Default is 6.
+<dd>The number of thumbnails in each row.  Default is 6.
 
-<DT><B>-colors=</B><I>N</I>
+<dt><b>-colors=</b><i>N</i>
 
-<DD>The maximum number of colors allowed in the overall image.  If it
-would otherwise have more colors than these, <B>pnmindex</B> quantizes
+<dd>The maximum number of colors allowed in the overall image.  If it
+would otherwise have more colors than these, <b>pnmindex</b> quantizes
 the result.  The default is 256.
 
-<P>However, this value is meaningless if you specify the
-<B>-noquant</B> option.
+<p>However, this value is meaningless if you specify the
+<b>-noquant</b> option.
 
-<DT><B>-black</B>
+<dt><b>-black</b>
 
-<DD>This controls the color of the padding between the images;
+<dd>This controls the color of the padding between the images;
 normally it's white and the labels are black lettering on white
-background, but the <B>-black</B> option reverses this.
+background, but the <b>-black</b> option reverses this.
 
-<DT><B>-title=</B><I>title</I>
+<dt><b>-title=</b><i>title</i>
 
-<DD>
+<dd>
 Specifies a title top place at the top of the image.
 Default is no title.
 
-<DT><B>-quant</B>
+<dt><b>-quant</b>
 
-<DD>Enables quantization (to the number of colors specified by
-<B>-colors</B>).  Quantization is on by default but you can disable
-it with <B>-noquant.</B>
+<dd>Enables quantization (to the number of colors specified by
+<b>-colors</b>).  Quantization is on by default but you can disable
+it with <b>-noquant.</b>
 
-<DT><B>-noquant</B>
+<dt><b>-noquant</b>
 
-<DD>See <B>-quant</B>.
+<dd>See <b>-quant</b>.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamscale.html">pamscale</A></B>,
+<b><a href="pamscale.html">pamscale</a></b>,
 
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
 
-<B><A HREF="pbmtext.html">pbmtext</A></B>,
+<b><a href="pbmtext.html">pbmtext</a></b>,
 
-<B><A HREF="pnmquant.html">pnmquant</A></B>,
+<b><a href="pnmquant.html">pnmquant</a></b>,
 
-<B><A HREF="pamcut.html">pamcut</A></B>,
+<b><a href="pamcut.html">pamcut</a></b>,
 
-<B><A HREF="pamdice.html">pamdice</A></B>,
+<b><a href="pamdice.html">pamdice</a></b>,
 
-<B><A HREF="pamundice.html">pamundice</A></B>,
+<b><a href="pamundice.html">pamundice</a></b>,
 
-<B><A HREF="pnmtile.html">pnmtile</A></B>,
+<b><a href="pnmtile.html">pnmtile</a></b>,
 
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pnm.html">pnm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 1991 by Jef Poskanzer.
 
-<p><B>-title</B> and <B>-noquant</B> added 2000 by John Heidemann.
+<p><b>-title</b> and <b>-noquant</b> added 2000 by John Heidemann.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

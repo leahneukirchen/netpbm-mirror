@@ -1,26 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmsmooth User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmsmooth</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmsmooth User Manual</title></head>
+<body>
+<h1>pnmsmooth</h1>
 Updated: 19 December 2009
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<h2>NAME</H2>
-
+<h2>NAME</h2>
 pnmsmooth - smooth out an image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmsmooth</B>
+<b>pnmsmooth</b>
 [<b>-width=</b><i>cols</i>] [<b>-height=</b><i>rows</i>]
-[<I>pnmfile</I>] [<b>-size</b>]
+[<i>pnmfile</i>] [<b>-size</b>]
 
 <p>Minimum unique abbreviations of options is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,9 +27,14 @@ space in place of the equals sign to separate an option name from its value.
 average of its width X height neighbors.  It is implemented as a progam that
 invokes <b>pnmconvol</b> with an appropriate convolution matrix.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmsmooth</b> recognizes the following
+command line options:
+
+<dl compact>
 <dt><b>-width=</b><i>cols</i>
 <dt><b>-height=</b><i>rows</i>
 
@@ -46,9 +50,9 @@ necessary).
 <p>These options were new in Netpbm 10.32 (February 2006).  Before that,
 use <b>-size</b>.
 
-<DT><B>-size</b>
+<dt><b>-size</b>
 
-<DD>This deprecated option exists in current Netpbm for backward
+<dd>This deprecated option exists in current Netpbm for backward
 compatibility.  It was obsoleted by <b>-width</b> and <b>-height</b>
 in Netpbm 10.32 (February 2006).
 
@@ -69,9 +73,9 @@ mean the same in current <b>pnmsmooth</b> as in old <b>pnmsmooth</b>:
 </kbd>
 </pre>
 
-<DT><B>-dump=</b><i>dumpfile</i>
+<dt><b>-dump=</b><i>dumpfile</i>
 
-<DD>This options makes <b>pnmsmooth</b> only show you the
+<dd>This options makes <b>pnmsmooth</b> only show you the
 convolution matrix.  It writes to Standard Output a <b>pnmconvol</b>
 <b>-matrix</b> option value that represents the matrix.  It does not
 invoke <b>pnmconvol</b> and does not produce an output image.
@@ -81,14 +85,14 @@ It takes a file name as a value, and it writes to that file the
 convolution matrix as a PGM file (as used to be the normal input for
 <b>pnmconvol</b>).
 
-</DL>
+</dl>
 
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmconvol.html">pnmconvol</A>,
-<A HREF="pnm.html">pnm</A>
+<a href="pnmconvol.html">pnmconvol</a>,
+<a href="pnm.html">pnm</a>
 
 <h2 id="history">HISTORY</h2>
 
@@ -121,14 +125,14 @@ modified <b>pnmsmooth</b> to take advantage of the new features of
 <b>pnmconvol</b>, which <b>pnmsmooth</b> uses internally, the information
 needed to implement <b>-dump</b> was no longer available in the program).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

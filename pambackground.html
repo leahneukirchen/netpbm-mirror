@@ -1,20 +1,19 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pambackground User Manual</TITLE></HEAD>
-<BODY>
-<H1>pambackground</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pambackground User Manual</title></head>
+<body>
+<h1>pambackground</h1>
 Updated: 24 November 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pambackground - create a mask of the background area of an image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pambackground</B>
+<b>pambackground</b>
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
 [<b>-verbose=</b>]
 
@@ -24,7 +23,7 @@ may use white space in place of the equals sign to separate an option
 name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -91,8 +90,8 @@ what a PAM is and expect a mask to be in the form of a PGM or PBM image.  To
 convert <b>pambackground</b>'s output to PBM, use <b>pamtopnm -assume</b>.  To
 convert to PGM, use <b>pgmtopgm</b>.
 
-<P><I>netpbmfile</I> is the file specification of the input file, or
-<B>-</B> to indicate Standard Input.  The default is Standard Input.
+<p><i>netpbmfile</i> is the file specification of the input file, or
+<b>-</b> to indicate Standard Input.  The default is Standard Input.
 
 <p>A common use for a background mask is with <b>pamcomp</b>.  You
 could replace the entire background (or foreground) of your 
@@ -112,7 +111,12 @@ a background mask in cases that <b>pambackground</b> cannot: where there
 are see-through holes in the foreground image.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pambackground</b> recognizes the following
+command line option:
 
 <dl>
 
@@ -137,32 +141,33 @@ are see-through holes in the foreground image.
 </pre>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="ppmcolormask.html">ppmcolormask</A></B>,
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="ppmchange.html">ppmchange</A></B>,
-<B><A HREF="pnmquant.html">pnmquant</A></B>,
-<B><A HREF="pnmremap.html">pnmremap</A></B>,
-<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
-<B><A HREF="pgmtopgm.html">pgmtopgm</A></B>,
-<B><A HREF="pamstack.html">pamstack</A></B>,
-<B><A HREF="pamstack.html">pamgetcolor</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
-<B><A HREF="pam.html">pam</A></B>,
+<b><a href="ppmcolormask.html">ppmcolormask</a></b>,
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="ppmchange.html">ppmchange</a></b>,
+<b><a href="pnmquant.html">pnmquant</a></b>,
+<b><a href="pnmremap.html">pnmremap</a></b>,
+<b><a href="pamtopnm.html">pamtopnm</a></b>,
+<b><a href="pgmtopgm.html">pgmtopgm</a></b>,
+<b><a href="pamstack.html">pamstack</a></b>,
+<b><a href="pamstack.html">pamgetcolor</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="pam.html">pam</a></b>,
 
 <h2 id="history">HISTORY</h2>
 
-<P><B>pambackground</B> was new in Netpbm 10.37 (December 2006).
+<p><b>pambackground</b> was new in Netpbm 10.37 (December 2006).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

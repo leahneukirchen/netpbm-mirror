@@ -1,24 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmhistmap User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmhistmap</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmhistmap User Manual</title></head>
+<body>
+<h1>pnmhistmap</h1>
 Updated: 13 July 2009
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pnmhistmap - draw a histogram for a PGM or PPM file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmhistmap</B>
+<b>pnmhistmap</b>
 
-[<B>-red</B>] [<B>-green</B>] [<B>-blue</B>]
+[<b>-red</b>] [<b>-green</b>] [<b>-blue</b>]
 
-[<B>-black</B>] [<B>-white</B>]
+[<b>-black</b>] [<b>-white</b>]
 
-[<B>-max</B> <I>N</I>]
+[<b>-max</b> <i>N</i>]
 
 [<b>-lval</b>] [<b>-rval</b>]
 
@@ -26,16 +25,16 @@ pnmhistmap - draw a histogram for a PGM or PPM file
 
 [<b>-dots</b>]
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -50,10 +49,15 @@ one for the green input, and a blue one for the blue input.
 <p><img src="testimg.png" alt="image">
 <img src="testimg_histbar.png" alt="histogram from image">
 
-<p>If the input is PBM, <b>pnmhistmap</B> produces an error message
+<p>If the input is PBM, <b>pnmhistmap</b> produces an error message
 and no output image.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmhistmap</b> recognizes the following
+command line options:
 
 <dl>
 
@@ -112,15 +116,15 @@ some buckets represent no color (the count is zero).
 <p>This option was new in Netpbm 10.26 (January 2005).  Before that,
 the dimensions were always what the default is today.
 
-<DT><B>-black </B>
+<dt><b>-black </b>
 
-<DD>Ignore the count of black pixels when scaling the histogram.
+<dd>Ignore the count of black pixels when scaling the histogram.
 
-<DT><B>-white</B>
+<dt><b>-white</b>
 
-<DD>Ignore the count of white pixels when scaling the histogram.
+<dd>Ignore the count of white pixels when scaling the histogram.
 
-<P>The -black and -white options, which can be used separately or
+<p>The -black and -white options, which can be used separately or
 together, are useful for images with a large percentage of pixels
 whose value is zero or 255, which can cause the remaining histogram
 data to become unreadably small.  Note that, for color inputs, these
@@ -128,48 +132,48 @@ options apply to all colors; if, for example, the input has a large
 number of bright-red areas, you will probably want to use the -white
 option.
 
-<DT><B>-max N</B>
+<dt><b>-max N</b>
 
-<DD>Force the scaling of the histogram to use N as the largest-count value.
+<dd>Force the scaling of the histogram to use N as the largest-count value.
 This is useful for inputs with a large percentage of single-color pixels
 which are not black or white.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Report the progress of making the histogram, including the largest-count
+<dd>Report the progress of making the histogram, including the largest-count
 value used to scale the output.
 
-</DL>
+</dl>
 
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
-<P><b>pnmhistmap</b> assumes maxval is always 255.  Images with a
+<p><b>pnmhistmap</b> assumes maxval is always 255.  Images with a
 smaller maxval will only use the lower-value side of the histogram.
 You can overcome this either by piping the input through
 <b>pamdepth</b> or by cutting and scaling the lower-value side of the
 histogram.  Neither is a particularly elegant solution to the problem.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pgmhist.html">pgmhist</A>,
-<A HREF="ppmhist.html">ppmhist</A>,
-<A HREF="pgm.html">pgm</A>,
-<A HREF="ppm.html">ppm</A>
+<a href="pgmhist.html">pgmhist</a>,
+<a href="ppmhist.html">ppmhist</a>,
+<a href="pgm.html">pgm</a>,
+<a href="ppm.html">ppm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-<p>Wilson H. Bent. Jr. (<A HREF="mailto:whb@usc.edu">whb@usc.edu</A>).
+<p>Wilson H. Bent. Jr. (<a href="mailto:whb@usc.edu">whb@usc.edu</a>).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,29 +1,30 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmshadow User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmshadow</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmshadow User Manual</title></head>
+<body>
+<h1>ppmshadow</h1>
 Updated: 24 June 2017
-<BR><A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
+<h2>NAME</h2>
 ppmshadow - add simulated shadows to a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmshadow</B>
-[<B>-b</B> <I>blur_size</I>]
-[<B>-k</B>]
-[<B>-t</B>]
-[<B>-x</B> <I>xoffset</I>]
-[<B>-y</B> <I>yoffset</I>]
-[<I>ppmfile</I>]
+<b>ppmshadow</b>
+[<b>-b</b> <i>blur_size</i>]
+[<b>-k</b>]
+[<b>-t</b>]
+[<b>-x</b> <i>xoffset</i>]
+[<b>-y</b> <i>yoffset</i>]
+[<i>ppmfile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>ppmshadow</B> adds a simulated shadow to an image, giving the
+<p><b>ppmshadow</b> adds a simulated shadow to an image, giving the
 appearance that the contents of the image float above the page,
 casting a diffuse shadow on the background.  Shadows can either be
 black, as cast by opaque objects, or translucent, where the shadow
@@ -54,18 +55,23 @@ input has low maxval (including most notably if the input is PBM, which means
 its maxval is 1), run it through <b>pamdepth</b> to raise its maxval.  255 is
 usually a good choice.
 
-<p>Input is a PPM file named by the <I>ppmfile</I> command line argument; if
-you don't specify <I>ppmfile</I>, the input is Standard Input.
+<p>Input is a PPM file named by the <i>ppmfile</i> command line argument; if
+you don't specify <i>ppmfile</i>, the input is Standard Input.
 
-<P>The output is a PPM file, written to Standard Output.
+<p>The output is a PPM file, written to Standard Output.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-b</B> <I>blur_size</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmshadow</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-b</b> <i>blur_size</i>
+
+<dd>
 Sets the distance of the light source from the image.  Larger values
 move the light source closer, casting a more diffuse shadow, while
 smaller settings move the light further away, yielding a sharper
@@ -80,196 +86,196 @@ the light source closer to the object.  It does not make the shadow
 grow or shrink as would happpen in the real world if you moved a point
 light source closer to and further from an object.
 
-<DT><B>-k</B>
-<DD>
+<dt><b>-k</b>
+<dd>
 Keep the intermediate temporary image files.  When debugging, these
 intermediate files provide many clues as to the source of an error.
-See <a href="#files">below</a> for a list of the contents of each file.
+See <a href="#tempfiles">below</a> for a list of the contents of each file.
 
-<DT><B>-t</B>
-<DD>
+<dt><b>-t</b>
+<dd>
 Consider the non-background material in the image translucent -- it
 casts shadows of its own color rather than a black shadow, which is
 default.  This often results in fuzzy, difficult-to-read images but in
 some circumstances may look better.
 
-<DT><B>-x</B><I> xoffset</I>
+<dt><b>-x</b><i> xoffset</i>
 
-<DD>Specifies the displacement of the light source to the left of the
-image.  Larger settings of <B>xoffset</B> displace the shadow to the
+<dd>Specifies the displacement of the light source to the left of the
+image.  Larger settings of <b>xoffset</b> displace the shadow to the
 right, as would be cast by a light further to the left.  If not
-specified, the horizontal offset is half of <I>blur_size </I> (above),
+specified, the horizontal offset is half of <i>blur_size </i> (above),
 to the left.
 
-<DT><B>-y</B><I> yoffset</I>
+<dt><b>-y</b><i> yoffset</i>
 
-<DD> Specifies the displacement of the light source above the top of
+<dd> Specifies the displacement of the light source above the top of
 the image.  Larger settings displace the shadow downward,
 corresponding to moving the light further above the top of the image.
-If you don't specify <B>-y</B>, the vertical offset defaults to the
+If you don't specify <b>-y</b>, the vertical offset defaults to the
 same as the horizontal offset (above), upward.
 
-</DL>
+</dl>
 
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 <p>The source image must contain sufficient space on the edges in the
 direction in which the shadow is cast to contain the shadow -- if it
 doesn't some of the internal steps may fail.  You can usually expand
-the border of a too-tightly-cropped image with <B>pnmmargin</B> before
-processing it with <B>ppmshadow</B>.
+the border of a too-tightly-cropped image with <b>pnmmargin</b> before
+processing it with <b>ppmshadow</b>.
 
-<P>Black pixels and pixels with the same color as the image
+<p>Black pixels and pixels with the same color as the image
 background don't cast a shadow.  If this causes unintentional
 "holes" in the shadow, fill the offending areas with a color
 which differs from black or the background by RGB values of 1, which
 will be imperceptible to the viewer.  Since the comparison is exact,
 the modified areas will now cast shadows.  
 
-<P>The background color of the source image (which is preserved in
+<p>The background color of the source image (which is preserved in
 the output) is deemed to be the color of the pixel at the top left of
 the input image.  If that pixel isn't part of the background, simply
 add a one-pixel border at the top of the image, generate the shadow
 image, then delete the border from it.
 
-<P>If something goes wrong along the way, the error messages from the
-various Netpbm programs <B>ppmshadow</B> calls will, in general,
-provide little or no clue as to where <B>ppmshadow</B> went astray.
-In this case, Specify the <B>-k</B> option and examine the
+<p>If something goes wrong along the way, the error messages from the
+various Netpbm programs <b>ppmshadow</b> calls will, in general,
+provide little or no clue as to where <b>ppmshadow</b> went astray.
+In this case, Specify the <b>-k</b> option and examine the
 intermediate results in the temporary files (which this option causes
 to be preserved).  If you manually run the commands that
-<B>ppmshadow</B> runs on these files, you can figure out where the
+<b>ppmshadow</b> runs on these files, you can figure out where the
 problem is.  In problem cases where you want to manually tweak the
 image generation process along the way, you can keep the intermediate
-files with the <B>-k </B> option, modify them appropriately with an
+files with the <b>-k </b> option, modify them appropriately with an
 image editor, then recombine them with the steps used by the code in
-<B>ppmshadow</B>.
+<b>ppmshadow</b>.
 
-<P>Shadows are by default black, as cast by opaque material in the
-image occluding white light.  Use the <B>-t</B> option to simulate
+<p>Shadows are by default black, as cast by opaque material in the
+image occluding white light.  Use the <b>-t</b> option to simulate
 translucent material, where the shadow takes on the color of the
 object that casts it.  If the contrast between the image and
-background is insufficient, the <B>-t</B> option may yield
+background is insufficient, the <b>-t</b> option may yield
 unattractive results which resemble simple blurring of the original
 image.
 
-<P>Because Netpbm used to have a maximum maxval of 255, which meant
-that the largest convolution kernel <B>pnmconvol</B> could use was 11
-by 11, <B>ppmshadow</B> includes a horrid, CPU-time-burning kludge
+<p>Because Netpbm used to have a maximum maxval of 255, which meant
+that the largest convolution kernel <b>pnmconvol</b> could use was 11
+by 11, <b>ppmshadow</b> includes a horrid, CPU-time-burning kludge
 which, if a blur of greater than 11 is requested, performs an initial
-convolution with an 11 x 11 kernel, then calls <B>pnmsmooth</B>
+convolution with an 11 x 11 kernel, then calls <b>pnmsmooth</b>
 (which is itself a program that calls <b>pnmconvol</b> with a 3 x 3
 kernel) as many times as the requested blur exceeds 11.  It's ugly,
 but it gets the job done on those rare occasions where you need a blur
 greater than 11.
 
-<P>If you wish to generate an image at high resolution, then scale it
-to publication size with <B>pamscale</B> in order to eliminate jagged
+<p>If you wish to generate an image at high resolution, then scale it
+to publication size with <b>pamscale</b> in order to eliminate jagged
 edges by resampling, it's best to generate the shadow in the original
 high resolution image, prior to scaling it down in size.  If you scale
 first and then add the shadow, you'll get an unsightly jagged stripe
 between the edge of material and its shadow, due to resampled pixels
 intermediate between the image and background obscuring the shadow.
 
-<H2 id="exitstatus">EXIT STATUS</H2>
+<h2 id="exitstatus">EXIT STATUS</h2>
 
-<B>ppmshadow</B> returns status 0 if processing was completed without
+<b>ppmshadow</b> returns status 0 if processing was completed without
 errors, and a nonzero Unix error code if an error prevented generation
 of output.  Some errors may result in the script aborting, usually
 displaying error messages from various Netpbm components it uses,
 without returning a nonzero error code.  When this happens, the output
 file will be empty, so be sure to test this if you need to know if the
-program succeeded. 
+program succeeded.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="tempfiles">TEMPORARY FILES</h2>
 
-<B><A HREF="pnm.html">pnm</A></B>,
-<B><A HREF="pnmmargin.html">pnmmargin</A></B>,
-<B><A HREF="pnmconvol.html">pnmconvol</A></B>,
-<B><A HREF="pamscale.html">pamscale</A></B>,
-<B><A HREF="pnmsmooth.html">pnmsmooth</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
-
-
-<H2 id="tempfiles">TEMPORARY FILES</H2>
-
-<p><B>ppmshadow</B> creates a number of temporary files as it executes.  It
+<p><b>ppmshadow</b> creates a number of temporary files as it executes.  It
 creates a new directory for them in the directory named by the
 <b>TMPDIR</b> environment variable, defaulting to <b>/tmp</b> if it is not
 set.
 
-<p>In normal operation, <B>ppmshadow</B> finds a unique name for the
+<p>In normal operation, <b>ppmshadow</b> finds a unique name for the
 temporary directory and deletes each temporary file as
 soon as it is done with it and leaves no debris around after it
 completes.  To preserve the intermediate files for debugging, use the
-<B>-k</B> command line option.  In that case, the directory name is
+<b>-k</b> command line option.  In that case, the directory name is
 <b>ppmshadow</b><i>pid</i>, where <i>pid</i> is the process ID of
 the <b>ppmshadow</b> process, and the program fails if <b>ppmshadow</b> cannot
 create that directory because the name is already in use.
 
 <p>The temporary files are: 
-<DL COMPACT>
+<dl compact>
 
-<DT><B>infile.ppm</b>
-<DD>
+<dt><b>infile.ppm</b>
+<dd>
 A copy of the input.
 
-<DT><B>background.ppm</B>
-<DD>
+<dt><b>background.ppm</b>
+<dd>
 Blank image with background of source image
 
-<DT><B>bgmask.ppm</B>
-<DD>
+<dt><b>bgmask.ppm</b>
+<dd>
 Positive binary mask
 
-<DT><B>convkernel.ppm</B>
-<DD>
+<dt><b>convkernel.ppm</b>
+<dd>
 Convolution kernel for blurring shadow
 
-<DT><B>blurredlackshad.ppm</B>
-<DD>
+<dt><b>blurredlackshad.ppm</b>
+<dd>
 Blurred shadow image before coloring
 
-<DT><B>blurred.ppm</B>
-<DD>
+<dt><b>blurred.ppm</b>
+<dd>
 Blurred, colored shadow image
 
-<DT><B>shadow.ppm</B>
-<DD>
+<dt><b>shadow.ppm</b>
+<dd>
 Clipped shadow image, offset as requested
 
-<DT><B>shadback.ppm</B>
-<DD>
+<dt><b>shadback.ppm</b>
+<dd>
 Generated shadow times positive mask
 
-</DL>
+</dl>
 
-<H2 id="author">AUTHOR</H2>
 
-John Walker &lt;<A
-HREF="http://www.fourmilab.ch">http://www.fourmilab.ch</A>&gt; August
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="pnmmargin.html">pnmmargin</a></b>,
+<b><a href="pnmconvol.html">pnmconvol</a></b>,
+<b><a href="pamscale.html">pamscale</a></b>,
+<b><a href="pnmsmooth.html">pnmsmooth</a></b>,
+<b><a href="ppm.html">ppm</a></b>
+
+<h2 id="author">AUTHOR</h2>
+
+John Walker &lt;<a
+href="http://www.fourmilab.ch">http://www.fourmilab.ch</a>&gt; August
 8, 1997
 
-<H2 id="copyright">COPYRIGHT</H2>
+<h2 id="copyright">COPYRIGHT</h2>
 This software is in the public domain.  Permission to use, copy,
 modify, and distribute this software and its documentation for any
 purpose and without fee is hereby granted, without any conditions or
 restrictions.
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#exitstatus">EXIT STATUS</A>
-<LI><A HREF="#tempfiles">TEMPORARY FILES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-<LI><A HREF="#copyright">COPYRIGHT</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#exitstatus">EXIT STATUS</a>
+<li><a href="#tempfiles">TEMPORARY FILES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#copyright">COPYRIGHT</a>
+</ul>
+</body>
+</html>

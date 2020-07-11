@@ -1,35 +1,34 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmconvol User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmconvol</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmconvol User Manual</title></head>
+<body>
+<h1>pnmconvol</h1>
 Updated: 30 November 2018
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pnmconvol - general MxN convolution on a Netpbm image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pnmconvol</b>
 {
 <b>-matrix=</b><i>convolution_matrix</i>
 |
-<B>-matrixfile=</B><i>filename</i>[<b>,</b><i>filename</i>[<b>,</b> ...]]
+<b>-matrixfile=</b><i>filename</i>[<b>,</b><i>filename</i>[<b>,</b> ...]]
 }
 [<b>-normalize</b>]
 [<b>-bias=<i>n</i></b>]
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
 <p>
 
-<B>pnmconvol</B>
-<I>convolution_matrix_file</I>
+<b>pnmconvol</b>
+<i>convolution_matrix_file</i>
 [<b>-normalize</b>]
 [<b>-nooffset</b>]
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -37,7 +36,7 @@ hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -47,14 +46,14 @@ a specified convolution matrix, and writes a Netpbm image as output.
 <p>A command use for convolution is blurring.  See examples in the
 <a href="pamgauss.html"><b>pamgauss</b></a> manual.
   
-<P>Convolution means replacing each pixel with a weighted average of
+<p>Convolution means replacing each pixel with a weighted average of
 the nearby pixels.  The weights and the area to average are determined
 by the convolution matrix (sometimes called a convolution kernel),
 which you supply in one of several ways.  See <a href="#convolutionmatrix">
 Convolution Matrix</a>.
 
-<P>At the edges of the convolved image, where the convolution matrix would
-extend over the edge of the image, <B>pnmconvol</B> just copies the input
+<p>At the edges of the convolved image, where the convolution matrix would
+extend over the edge of the image, <b>pnmconvol</b> just copies the input
 pixels directly to the output.  It's often better to deal with the pixels near
 an edge by assuming some blank or background color beyond the edge.  To do
 that, use <b>pnmpad</b> to add a margin all around whose size is half that of
@@ -233,14 +232,14 @@ by dividing by the maxval.
 to be a simple average of its corresponding input pixel and its 8 neighbors,
 resulting in a smoothed image:
 
-<PRE>
+<pre>
     P2
     3 3
     18
     2 2 2
     2 2 2
     2 2 2
-</PRE>
+</pre>
 
 <p>(Note that the above text is an actual PGM file -- you can cut and paste
 it.  If you're not familiar with the plain PGM format, see
@@ -271,16 +270,16 @@ and then normalizes by dividing by half the maxval.  So to get the
 same result as we did above with <b>-nooffset</b>, the convolution
 matrix PNM image would have to look like this:
 
-<PRE>
+<pre>
     P2
     3 3
     18
     10 10 10
     10 10 10
     10 10 10
-</PRE>
+</pre>
 
-<P>To see how this works, do the above-mentioned offset: 10 - 18/2
+<p>To see how this works, do the above-mentioned offset: 10 - 18/2
 gives 1.  The normalization step divides by 18/2 = 9, which makes it
 1/9 - exactly what you want.  The equivalent matrix for 5x5 smoothing
 would have maxval 50 and be filled with 26.
@@ -288,7 +287,7 @@ would have maxval 50 and be filled with 26.
 <p>Note that with maxval 18, the range of possible values is 0 to 18.
 After offset, that's -9 to 9, and after normalizing, the range is -1 to 1.
 
-<P>The convolution file will usually be a PGM, so that the same
+<p>The convolution file will usually be a PGM, so that the same
 convolution gets applied to each color component.  However, if you
 want to use a PPM and do a different convolution to different
 colors, you can certainly do that.
@@ -309,30 +308,35 @@ filter but the output value is the minimum or maximum of the values in the
 window.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmconvol</b> recognizes the following
+command line options:
 
-<DT><B>-matrix=</b><i>convolution_matrix</i>
-<DD>The value of the convolution matrix.  See
+<dl compact>
+
+<dt><b>-matrix=</b><i>convolution_matrix</i>
+<dd>The value of the convolution matrix.  See
 <a href="#matrixopt">Convolution Matrix</a>.
 
 <p>You may not specify both this and <b>-matrixfile</b>.
 
-<P>This option was new in Netpbm 10.49 (December 2009).  Before
+<p>This option was new in Netpbm 10.49 (December 2009).  Before
 that, use a PNM file for the convolution matrix.
 
-<DT><B>-matrixfile=</b><i>filename</i>
-<DD>This specifies that you are supplying the convolution matrix in
+<dt><b>-matrixfile=</b><i>filename</i>
+<dd>This specifies that you are supplying the convolution matrix in
 a file and names that file.  See
 <a href="#matrixfile">Convolution Matrix</a>.
 
 <p>You may not specify both this and <b>-matrix</b>.
 
-<P>This option was new in Netpbm 10.49 (December 2009).  Before
+<p>This option was new in Netpbm 10.49 (December 2009).  Before
 that, use a PNM file for the convolution matrix.
 
-<DT><B>-normalize</B>
+<dt><b>-normalize</b>
 
 <dd>This option says to adjust the weights in your convolution matrix so they
 all add up to one.  You usually want them to add up to one so that the
@@ -389,53 +393,54 @@ output image, it clips it to the maxval.
 
 <p>This option was new in Netpbm 10.68 (September 2014).
 
-<DT><B>-nooffset=</b>
-<DD>This is part of the obsolete PNM image method of specifying the
+<dt><b>-nooffset=</b>
+<dd>This is part of the obsolete PNM image method of specifying the
 convolution matrix.  See
 <a href="#matrixpnm">Convolution Matrix</a>.
 
 </dl>
 
+<h2 id="history">HISTORY</h2>
 
-<H2 id="history">HISTORY</H2> <p>The <b>-nooffset</b> option was new in Netpbm
-10.23 (July 2004), making it substantially easier to specify a convolution
-matrix, but still hard.  In Netpbm 10.49 (December 2009), the PNM convolution
+<p>The <b>-nooffset</b> option was new in Netpbm 10.23 (July 2004),
+making it substantially easier to specify a convolution matrix, but
+still hard.  In Netpbm 10.49 (December 2009), the PNM convolution
 matrix tyranny was finally ended with the <b>-matrix</b> and
-<b>-matrixfile</b> options.  In between, <b>pnmconvol</b> was broken for a
-while because the Netpbm library started enforcing the requirement that a
-sample value not exceed the maxval of the image.  <b>pnmconvol</b> used the
-Netpbm library to read the PNM convolution matrix file, but in the pseudo-PNM
-format that <b>pnmconvol</b> uses, a sample value sometimes has to exceed
-the maxval.
+<b>-matrixfile</b> options.  In between, <b>pnmconvol</b> was broken
+for a while because the Netpbm library started enforcing the
+requirement that a sample value not exceed the maxval of the
+image.  <b>pnmconvol</b> used the Netpbm library to read the PNM
+convolution matrix file, but in the pseudo-PNM format
+that <b>pnmconvol</b> uses, a sample value sometimes has to exceed the
+maxval.
 
+<h2 id="seealso">SEE ALSO</h2>
 
-<H2 id="seealso">SEE ALSO</H2>
+<b><a href="pnmsmooth.html">pnmsmooth</a></b>,
+<b><a href="pgmmorphconv.html">pgmmorphconv</a></b>,
+<b><a href="pgmmedian.html">pgmmedian</a></b>,
+<b><a href="pnmnlfilt.html">pnmnlfilt</a></b>,
+<b><a href="pgmkernel.html">pgmkernel</a></b>,
+<b><a href="pamgauss.html">pamgauss</a></b>,
+<b><a href="pammasksharpen.html">pammasksharpen</a></b>,
+<b><a href="pnmpad.html">pnmpad</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pnm.html">pnm</a></b>
 
-<B><A HREF="pnmsmooth.html">pnmsmooth</A></B>,
-<B><A HREF="pgmmorphconv.html">pgmmorphconv</A></B>,
-<B><A HREF="pgmmedian.html">pgmmedian</A></B>,
-<B><A HREF="pnmnlfilt.html">pnmnlfilt</A></B>,
-<B><A HREF="pgmkernel.html">pgmkernel</A></B>,
-<B><A HREF="pamgauss.html">pamgauss</A></B>,
-<B><A HREF="pammasksharpen.html">pammasksharpen</A></B>,
-<B><A HREF="pnmpad.html">pnmpad</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
-
-<H2 id="authors">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
-<BR>
+<br>
 
-Modified 26 November 1994 by Mike Burns, <A
-HREF="mailto:burns@chem.psu.edu">burns@chem.psu.edu</A>
+Modified 26 November 1994 by Mike Burns, <a
+href="mailto:burns@chem.psu.edu">burns@chem.psu.edu</a>
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
   <ul>
   <li><a href="#convolutionmatrix">Convolution Matrix</a>
     <ul>
@@ -444,10 +449,10 @@ HREF="mailto:burns@chem.psu.edu">burns@chem.psu.edu</A>
     <li><a href="#matrixpnm">PNM File</a>
     </ul>
   </ul>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

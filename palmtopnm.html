@@ -1,45 +1,42 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Palmtopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>palmtopnm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Palmtopnm User Manual</title></head>
+<body>
+<h1>palmtopnm</h1>
 Updated: 26 January 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 palmtopnm - convert a Palm Bitmap to a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>palmtopnm</B>
+<b>palmtopnm</b>
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<B>-rendition</B> <I>N</I>]
+[<b>-rendition</b> <i>N</i>]
 
-[<B>-showhist</B>]
+[<b>-showhist</b>]
 
-<BR>
+[<i>palmfile</i>]
 
-[<I>palmfile</I>]
+<br>
 
-<BR>
+<b>palmtopnm</b>
 
-<B>palmtopnm</B>
+<b>-transparent</b>
 
-<B>-transparent</B>
+[<b>-verbose</b>]
 
-[<B>-verbose</B>]
+[<i>palmfile</i>]
 
-[<I>palmfile</I>]
-
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>palmtopnm</b> reads a Palm Bitmap as input, from Standard Input or
-<I>palmfile</I> and produces a PPM image as output.
+<i>palmfile</i> and produces a PPM image as output.
 
 <p>Alternatively (when you specify <b>-transparent</b>),
 <b>palmtopnm</b> writes the value of the transparent color in the Palm
@@ -59,17 +56,22 @@ the ones we found worth mentioning.
 <li>Packbits compression (new in Netpbm 10.27 (March 2005))
 </ul>
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-verbose</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>palmtopnm</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-verbose</b>
+
+<dd>
 Display various interesting information about the input file and process.
 
-<DT><B>-transparent</B>
+<dt><b>-transparent</b>
 
-<DD>
+<dd>
 If the Palm Bitmap has a transparent color set, 
 <b>palmtopnm</b> writes the value for that
 color to Standard Output in the form #RRGGBB, where
@@ -78,39 +80,39 @@ indicating a value in the range 0 through 255.  If no transparent color is set
 in the Bitmap, <b>palmtopnm</b> writes nothing.  <b>palmtopnm</b> does not
 generate any output image when you specify <b>-transparent</b>.
 
-<DT><B>-rendition N</B>
+<dt><b>-rendition N</b>
 
-<DD>
+<dd>
 Palm Bitmaps may contain several different renditions of the same
-image, with different depths.  By default, <B>palmtopnm </B> operates
+image, with different depths.  By default, <b>palmtopnm </b> operates
 on the first rendition (rendition number 1) in the image.  This
 switch allows you to operate on a different rendition.  The value must
 be between 1 and the number of renditions in the image, inclusive.
 
-<DT><B>-showhist</B>
+<dt><b>-showhist</b>
 
-<DD>
+<dd>
 This option causes <b>palmtopnm</b> to 
 write a histogram of colors in the input file to Standard Error.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmtopalm.html">pnmtopalm</A></B>,
-<B><A HREF="pamtopdbimg.html">pamtopdbimg</A></B>,
+<b><a href="pnmtopalm.html">pnmtopalm</a></b>,
+<b><a href="pamtopdbimg.html">pamtopdbimg</a></b>,
 
-<A HREF="pnm.html">pnm</A>,
+<a href="pnm.html">pnm</a>,
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
-<P>You cannot generate a transparency mask if the Palm Bitmap has a
+<p>You cannot generate a transparency mask if the Palm Bitmap has a
 transparent color.  However, you can still do this with
-<B>ppmcolormask</B> with a Netpbm pipe similar to:
+<b>ppmcolormask</b> with a Netpbm pipe similar to:
 
-<P>
-<B>palmtopnm bitmap.palm | 
-ppmcolormask `palmtopnm -transparent bitmap.palm`</B>
+<p>
+<b>palmtopnm bitmap.palm | 
+ppmcolormask `palmtopnm -transparent bitmap.palm`</b>
 
 <h2 id="history">HISTORY</h2>
 
@@ -118,7 +120,7 @@ ppmcolormask `palmtopnm -transparent bitmap.palm`</B>
 option.  But that had been redundant for a long time, since the Netpbm 
 common option <b>-plain</b> does the same thing.
 
-<H2 id="authors">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 This program was originally written as Tbmptopnm.c, by Ian Goldberg.
 It was heavily modified by Bill Janssen to add color, compression, and
@@ -126,16 +128,16 @@ transparency function.
 
 <p>Copyright 1995-2001 by Ian Goldberg and Bill Janssen.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

@@ -1,18 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtopdbimg User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtopdbimg</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtopdbimg User Manual</title></head>
+<body>
+<h1>pamtopdbimg</h1>
 Updated: 25 September 2010
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamtopdbimg - convert a Netpbm image to a Palm Pilot Image Viewer PDB Image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtopdbimg</B>
+<b>pamtopdbimg</b>
 
 [<b>-notefile=</b><i>filename</i>]
 [<b>-title=</b><i>text</i>]
@@ -21,9 +20,9 @@ pamtopdbimg - convert a Netpbm image to a Palm Pilot Image Viewer PDB Image
 [<b>-maybecompressed</b>]
 [<b>-4depth</b>]
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -35,28 +34,33 @@ Otherwise, the Pilot image is either 4-level or 16-level grayscale, depending
 on the <b>-4depth</b> option.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtopdbimg</b> recognizes the following
+command line options:
 
-<DT><B>-title=</B><i>text</i>
+<dl compact>
 
-<DD>
+<dt><b>-title=</b><i>text</i>
+
+<dd>
 The title of the image, to be included in the image.
 
-<DT><B>-compressed</B>
-<DT><B>-uncompressed</B>
-<DT><B>-maybecompressed</B>
+<dt><b>-compressed</b>
+<dt><b>-uncompressed</b>
+<dt><b>-maybecompressed</b>
 
-<DD>You may specify only one of these.
+<dd>You may specify only one of these.
 <b>-compressed</b> says to generate the image in compressed format.
 <b>-uncompressed</b> says to generate the image in uncompressed format.
 <b>-maybecompressed</b> says to generate whichever format is smaller
 (the compression algorithm sometimes actually makes the data larger).
 
-<DT><B>-4depth</B>
+<dt><b>-4depth</b>
 
-<DD>
+<dd>
 This option makes <b>pamtopdbimg</b> create the image in 16-level
 grayscale (4 bits per pixel) format.  If you don't specify this,
 <b>pamtopdbimg</b> uses 4-level (2 bits per pixel) format.
@@ -65,21 +69,21 @@ grayscale (4 bits per pixel) format.  If you don't specify this,
 (maxval 1).  In that case, <b>pamtopdbimg</b> generates the monochrome
 (1 bit per pixel) format regardless.
 
-<DT><B>-notefile=</B><i>filename</i>
+<dt><b>-notefile=</b><i>filename</i>
 
-<DD>
+<dd>
 Attach the note in the specified file to the image.
 <p>
 If you don't specify this, <b>pamtopdbimg</b> does not attach any note.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pdbimgtopam.html">pdbimgtopam</A></B>,
-<B><A HREF="palmtopnm.html">palmtopnm</A></B>,
+<b><a href="pdbimgtopam.html">pdbimgtopam</a></b>,
+<b><a href="palmtopnm.html">palmtopnm</a></b>,
 
-<A HREF="pam.html">pam</A>,
+<a href="pam.html">pam</a>,
 
 <h2 id="history">HISTORY</h2>
 
@@ -88,14 +92,14 @@ It was modelled after Eric A. Howe's <b>imgvtopbm</b> package, which
 dates back to September 1997.
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

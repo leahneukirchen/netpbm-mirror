@@ -1,10 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<html>
-<head><title>Pamtopng User Manual</title></head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtopng User Manual</title></head>
 <body>
 <h1>pamtopng</h1>
 Updated: 13 March 2019
-<BR>
+<br>
 <a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
@@ -26,9 +25,9 @@ pamtopng - convert a Netpbm image to PNG
 [<b>-ztxt=</b><i>file</i>]
 [<b>-itxt=</b><i>file</i>]
 [<b>-interlace</b>]
-[<I>pnmfile</i>]
+[<i>pnmfile</i>]
 
-<?makeman .SH OPTION USAGE ?>
+<?makeman .sh option usage ?>
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of a single hyphen to denote options.  You may use white space
@@ -124,14 +123,19 @@ of the option value to conform to the rest of Netpbm.
 
 <h2 id="options">OPTIONS</h2>
 
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtopng</b> recognizes the following
+command line options:
+
 <dl compact>
 
 <dt><b>-transparent=</b><i>color</i>
 <dd>
 <b>pamtopng</b> marks the specified color as transparent in the PNG image.
-<P>Specify the color (<i>color</i>) as described for
+<p>Specify the color (<i>color</i>) as described for
 the <a href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
-library routine</a>.  E.g. <B>red</B> or <B>rgb:ff/00/0d</B>.
+library routine</a>.  E.g. <b>red</b> or <b>rgb:ff/00/0d</b>.
 
 <dt><b>-background=</b><i>color</i>
 <dd>
@@ -315,7 +319,7 @@ channel, but nothing else.  It was a very small program with literally no
 command line options.
 
 <p>The goal in those days was eventually to expand <b>pnmtopng</b> to do the
-PAM alpha channel thing, rename it to <B>pamtopng</B>, and retire
+PAM alpha channel thing, rename it to <b>pamtopng</b>, and retire
 <b>pamrgbatopng</b>.  But <b>pnmtopng</b> is such a complex program, because
 of its dizzying array of features and its need for backward compatibility,
 that adding that one capability to it was a daunting task and for ten years

@@ -1,18 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamgauss User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamgauss</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamgauss User Manual</title></head>
+<body>
+<h1>pamgauss</h1>
 Updated: 18 May 2017
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 <b>pamgauss</b> - create a two-dimensional Gaussian function as a PAM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamgauss</B>
+<b>pamgauss</b>
 <i>width</i>
 <i>height</i>
 <b>-sigma=</b><i>number</i>
@@ -27,14 +26,14 @@ hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 <pre>
      pamgauss 7 7 -sigma=.5 -maximize -tupletype=GRAYSCALE | pamtopnm &gt;gauss.pgm
      pnmconvol -nooffset -normalize gauss.pgm myimage.ppm &gt;blurred.ppm
 </pre>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -77,7 +76,12 @@ center of the image and assigns the 3rd sample from the left the mean of those
 10 values.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamgauss</b> recognizes the following
+command line options:
 
 <dl>
 <dt><b>-sigma=</b><i>number</i>
@@ -143,26 +147,27 @@ essentially 1 - there is no oversampling.
 
 </dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmconvol.html">pnmconvol</A></B>,
-<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
-<B><A HREF="pgmkernel.html">pgmkernel</A></B>,
-<B><A HREF="pamseq.html">pamseq</A></B>,
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pnmconvol.html">pnmconvol</a></b>,
+<b><a href="pamtopnm.html">pamtopnm</a></b>,
+<b><a href="pgmkernel.html">pgmkernel</a></b>,
+<b><a href="pamseq.html">pamseq</a></b>,
+<b><a href="pam.html">pam</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamgauss</b> was new in Netpbm 10.23 (July 2004).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

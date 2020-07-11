@@ -1,31 +1,30 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pammixinterlace User Manual</TITLE></HEAD>
-<BODY>
-<H1>pammixinterlace</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pammixinterlace User Manual</title></head>
+<body>
+<h1>pammixinterlace</h1>
 Updated: 22 February 2007
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pammixinterlace - mix adjacent lines to merge interlaced images
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pammixinterlace</B>
+<b>pammixinterlace</b>
 
 [<b>-filter=</b>{<b>linear</b>, <b>fir</b>, <b>ffmpeg</b>}]
 
 [<b>-adaptive</b>]
 
-[<I>infile</I>]
+[<i>infile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pammixinterlace</B> is meant to operate on an image which is the
+<p><b>pammixinterlace</b> is meant to operate on an image which is the
 interlacing of two images, where raster rows 0, 2, 4, etc. are from
 one image and rows 1, 3, 5, etc. are from another.  (See below for
 why you might expect to encounter such an image).
@@ -34,7 +33,7 @@ why you might expect to encounter such an image).
 of the corresponding row of the input and its two neighbors.  It uses
 half of the main row and a quarter each of the two neighbor rows.
 
-<P>This can be useful if the image is a video capture from an
+<p>This can be useful if the image is a video capture from an
 interlaced video source.  In that case, each row shows the subject
 1/60 second before or after the two rows that surround it.  If the
 subject is moving, this can detract from the quality of the image.
@@ -58,6 +57,11 @@ You can do that with <b>pamdeinterlace</b>.
 
 <h2 id="options">OPTIONS</h2>
 
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pammixinterlace</b> recognizes the following
+command line options:
+
 <dl>
 
 <dt><b>-filter=</b>{<b>linear</b>,<b>fir</b>,<b>ffmpeg</b>}
@@ -79,19 +83,19 @@ a "comb" pattern.
 </dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamdeinterlace.html">pamdeinterlace</A></B>,
-<B><A HREF="pam.html">pam</A></B>
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pamdeinterlace.html">pamdeinterlace</a></b>,
+<b><a href="pam.html">pam</a></b>
+<b><a href="pnm.html">pnm</a></b>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

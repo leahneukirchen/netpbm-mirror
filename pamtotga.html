@@ -1,31 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtotga User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtotga</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtotga User Manual</title></head>
+<body>
+<h1>pamtotga</h1>
 Updated: 06 November 2018
-<BR>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A HREF="#index">Table Of Contents</A>
-
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamtotga - convert a Netpbm image to a TrueVision Targa file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtotga</B>
-[<B>-mono|-cmap|-cmap16|-rgb</B>]
-[<B>-norle</B>]
+<b>pamtotga</b>
+[<b>-mono|-cmap|-cmap16|-rgb</b>]
+[<b>-norle</b>]
 [<b>-name=</b><i>name</i>
-[<B>-verhose</B>]
-[<I>pamfile</I>]
+[<b>-verhose</b>]
+[<i>pamfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.  You
+<p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
 use either white space or equals signs between an option name and its
 value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -47,11 +45,16 @@ instead of 24 and the raster has an extra byte added to each pixel, at
 the tail end.  The value of that byte has the same meaning as in a PAM
 image with maxval 255.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-cmap</B>
-<DD>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtotga</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-cmap</b>
+<dd>
 Make output Targa file use a color map (palette) to make the output smaller.
 <p>
 Each color in the color map is 3 bytes, 8 bits each of red, green, and blue,
@@ -65,8 +68,8 @@ transparency information.
 of <b>pamtotga</b>.  Implementing a color map that contains transparency
 information is harder to implement).
 
-<DT><B>-cmap16</B>
-<DD>
+<dt><b>-cmap16</b>
+<dd>
 Same as <b>-cmap</b>, except a color map entry for full color input is 5
 bits each of red, green, and blue, stored as two bytes (16 bits).
 
@@ -74,8 +77,8 @@ bits each of red, green, and blue, stored as two bytes (16 bits).
 
 <p>This option was new in Netpbm 10.85 (December 2018).
     
-<DT><B>-mono</B>
-<DD>
+<dt><b>-mono</b>
+<dd>
 Make output Targa file of type 8 bit monochrome.  Input must be PBM or PGM
 or a PAM with BLACKANDWHITE or GRAYSCALE tuple type.
 See <b>-cmap</b>.
@@ -86,12 +89,12 @@ most highly constrained compatible type is used, where monochrome is
 more constrained than colormapped which is in turn more constrained
 than unmapped.
 
-<DT><B>-rgb</B>
-<DD>
+<dt><b>-rgb</b>
+<dd>
 Make output Targa file of type 24 bit unmapped color.  See <b>-cmap</b>.
 
-<DT><B>-norle</B>
-<DD>Do not use run-length encoding in the output Targa file.
+<dt><b>-norle</b>
+<dd>Do not use run-length encoding in the output Targa file.
 Run-length encoded files are smaller, but Some Targa readers can't
 read run-length encoded files.
 
@@ -111,17 +114,17 @@ Standard Input, <b>pamtotga</b> omits the image ID from the TGA header.
 process.
 
       
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="tgatoppm.html">tgatoppm</A>,
-<A HREF="pnmquant.html">pnmquant</a>,
-<A HREF="pamstack.html">pamstack</a>,
-<A HREF="pam.html">pam</A>
-<A HREF="pnm.html">pnm</A>
+<a href="tgatoppm.html">tgatoppm</a>,
+<a href="pnmquant.html">pnmquant</a>,
+<a href="pamstack.html">pamstack</a>,
+<a href="pam.html">pam</a>
+<a href="pnm.html">pnm</a>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p>This program was called <b>ppmtotga</b> until Netpbm 10.6 (July 2002).
 That was always a misnomer, though, because a PPM class program would not be
@@ -137,18 +140,19 @@ added to the PAM specification, it was specified with tuple type
 "RGB_ALPHA".  So in Netpbm 10.26 (January 2005), <b>pamtotga</b>
 changed to recognize "RGB_ALPHA" instead of "RGBA".
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Mark Shand and Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

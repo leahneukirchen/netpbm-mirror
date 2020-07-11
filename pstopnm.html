@@ -1,66 +1,65 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pstopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pstopnm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pstopnm User Manual</title></head>
+<body>
+<h1>pstopnm</h1>
 Updated: 06 December 2013
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pstopnm - convert a PostScript file to a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pstopnm</B>
+<b>pstopnm</b>
 
-[<B>-stdout</B>]
+[<b>-stdout</b>]
 
-[<B>-forceplain</B>]
+[<b>-forceplain</b>]
 
-[<B>-help</B>]
+[<b>-help</b>]
 
-[<B>-dpi=</b><i>dpi</i>]
+[<b>-dpi=</b><i>dpi</i>]
 
-[<B>-xsize=</B><I>pixels</I>]
-[<B>-ysize=</B><I>pixels</I>]
+[<b>-xsize=</b><i>pixels</i>]
+[<b>-ysize=</b><i>pixels</i>]
 
-[<B>-xborder=</B><I>frac</I>]
-[<B>-yborder=</B><I>frac</I>]
-[<B>-landscape</B>]
+[<b>-xborder=</b><i>frac</i>]
+[<b>-yborder=</b><i>frac</i>]
+[<b>-landscape</b>]
 
-[<B>-portrait</B>]
+[<b>-portrait</b>]
 
-[<B>-nocrop</B>]
+[<b>-nocrop</b>]
 
-[<B>-pbm</B>
+[<b>-pbm</b>
 
-|<B>-pgm</B>
+|<b>-pgm</b>
 
-|<B>-ppm</B>]
+|<b>-ppm</b>]
 
-[<B>-llx=</B><I>s</I>]
-[<B>-lly=</B><I>s</I>]
-[<B>-urx=</B><I>s</I>]
-[<B>-ury=</B><I>s</I>]
+[<b>-llx=</b><i>s</i>]
+[<b>-lly=</b><i>s</i>]
+[<b>-urx=</b><i>s</i>]
+[<b>-ury=</b><i>s</i>]
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<B>-xmax=</B><I>pixels</I>]
-[<B>-ymax=</B><I>pixels</I>]
+[<b>-xmax=</b><i>pixels</i>]
+[<b>-ymax=</b><i>pixels</i>]
 
-[<B>-textalphabits=</B>{<b>1</b>,<b>2</b>,<b>4</b>}]
+[<b>-textalphabits=</b>{<b>1</b>,<b>2</b>,<b>4</b>}]
 
 
-<I>psfile</I>[<B>.ps</B>]
+<i>psfile</i>[<b>.ps</b>]
 
-<?makeman .SH OPTION USAGE ?>
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<?makeman .sh option usage ?>
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -68,11 +67,11 @@ from its value.
 PGM, or PPM images as output.  This program simply uses GhostScript to
 render a PostScript file with its PNM device drivers.  If you don't
 have GhostScript installed or the version you have installed was not
-built with the relevant PNM device drivers, <B>pstopnm</B> will fail.
+built with the relevant PNM device drivers, <b>pstopnm</b> will fail.
 You can see if you have the proper environment by issuing the command
 <kbd>gs --help </kbd>.  If it responds and lists under "Available
-Devices" <B>pbm</B>, <B>pbmraw</B>, <B>pgm</B>, <B>pgmraw</B>,
-<B>pnm</B>, <B>pnmraw</B>, <B>ppm</B>, or <B>ppmraw</B>, you're in
+Devices" <b>pbm</b>, <b>pbmraw</b>, <b>pgm</b>, <b>pgmraw</b>,
+<b>pnm</b>, <b>pnmraw</b>, <b>ppm</b>, or <b>ppmraw</b>, you're in
 business.
 
 <p>It's important to understand that <b>pstopnm</b> is a Netpbm image file
@@ -82,35 +81,35 @@ renderer - an image generator.  One place you'll notice the difference is
 where you expect <kbd>pstopnm | pnmtops</kbd> to be idempotent (which is not
 the case).  There are details on this kind of conversion below.
 
-<P><B>pstopnm</B> uses the value of the <B>GHOSTSCRIPT</B>
+<p><b>pstopnm</b> uses the value of the <b>GHOSTSCRIPT</b>
 environment variable as the file name for the Ghostscript program.  If
-<B>GHOSTSCRIPT</B> is not set, <B>pstopnm</B> searches your
-<B>PATH</B> for a regular file named <B>gs</B>.  If it doesn't find
+<b>GHOSTSCRIPT</b> is not set, <b>pstopnm</b> searches your
+<b>PATH</b> for a regular file named <b>gs</b>.  If it doesn't find
 one, it assumes Ghostscript is in the file <b>/usr/bin/gs</b>.
 
-<P><B>pstopnm</B> does not use the Netpbm libraries to generate the
+<p><b>pstopnm</b> does not use the Netpbm libraries to generate the
 output files, so may not be entirely consistent with most Netpbm
 programs.
 
-<P><I>psfile</I>[<B>.ps</B>] is the name of the input file.
-<B>pstopnm</B> will add the <B>ps</B> to the end of the name you specify if no
+<p><i>psfile</i>[<b>.ps</b>] is the name of the input file.
+<b>pstopnm</b> will add the <b>ps</b> to the end of the name you specify if no
 file exists by the exact name you specify, but one with <b>.ps</b>added does.
-For Standard Input, use <B>-</B> or just don't give any argument.
+For Standard Input, use <b>-</b> or just don't give any argument.
 
-<P>If you use the <B>-stdout </B> option or your input is from Standard
-Input, <B>pstopnm</B> outputs images of all the pages as a multi-image file to
-Standard Output.  Otherwise, <B>pstopnm</B> creates one file for each page in
+<p>If you use the <b>-stdout </b> option or your input is from Standard
+Input, <b>pstopnm</b> outputs images of all the pages as a multi-image file to
+Standard Output.  Otherwise, <b>pstopnm</b> creates one file for each page in
 the Postscript input.  The files are named as follows: If the input file is
-named <B>psfile.ps</B>, the name of the files will be
-<B>psfile001.ppm</B>, <B>psfile002.ppm</B>, etc.  The filetype suffix
-is <B>.ppm</B>, <B>.pgm</B>, or <B>.pbm</B>, depending on which kind
+named <b>psfile.ps</b>, the name of the files will be
+<b>psfile001.ppm</b>, <b>psfile002.ppm</b>, etc.  The filetype suffix
+is <b>.ppm</b>, <b>.pgm</b>, or <b>.pbm</b>, depending on which kind
 of output you choose with your invocation options.  If the input file
-name does not end in <B>.ps</B>, the whole file name is used in the
+name does not end in <b>.ps</b>, the whole file name is used in the
 output file name.  For example, if the input file is named
-<B>psfile.old</B>, the output file name is <B>psfile.old001.ppm</B>,
+<b>psfile.old</b>, the output file name is <b>psfile.old001.ppm</b>,
 etc.
 
-<P>Note that the output file selection is inconsistent with most
+<p>Note that the output file selection is inconsistent with most
 Netpbm programs, because it does not default to Standard Output.  This
 is for historical reasons, based on the fact that the Netpbm formats
 did not always provide for a sequence of images in a single file.
@@ -136,14 +135,13 @@ details on what part of the input image goes into the output image and
 how big it is in the output and what borders and margins are in the
 output image.
 
-<P>It has been reported that on some Postscript Version 1 input,
-Ghostscript, and therefore <B>pstopnm</B>, produces no output.  To
+<p>It has been reported that on some Postscript Version 1 input,
+Ghostscript, and therefore <b>pstopnm</b>, produces no output.  To
 solve this problem, you can convert the file to Postscript Version 3
-with the program <B>ps2ps</B>.  It is reported that the program
-<B>pstops</B> does not work.
+with the program <b>ps2ps</b>.  It is reported that the program
+<b>pstops</b> does not work.
 
-<a name="dimensions"></a>
-<h3>Dimensions</h3>
+<h3 id="dimensions">Dimensions</h3>
 
 <p>This section describes what part of the input image gets used in
 the output and the dimensions of the output, including borders and
@@ -166,15 +164,15 @@ defined by four numbers, the lower left corner and the upper right
 corner x and y coordinates.  These coordinates are usually specified
 by the BoundingBox DSC statement (a Postscript comment) in the
 PostScript file, but they can be overridden by the user by specifying
-one or more of the following options: <B>-llx</B>, <B>-lly</B>,
-<B>-urx</B>, and <B>-ury</B>.
+one or more of the following options: <b>-llx</b>, <b>-lly</b>,
+<b>-urx</b>, and <b>-ury</b>.
 
 <p>The presence and thickness of a border to be added to the subject
 image to form the bordered subject image is controlled by the options
-<B>-xborder</B> and <B>-yborder</B>.  If <B>pstopnm</B> does not find
+<b>-xborder</b> and <b>-yborder</b>.  If <b>pstopnm</b> does not find
 a BoundingBox statement in the input, and you don't specify image area
-coordinates on the command line, <B>pstopnm</B> uses default values.
-If your input is from Standard Input, <B>pstopnm</B> does not use the
+coordinates on the command line, <b>pstopnm</b> uses default values.
+If your input is from Standard Input, <b>pstopnm</b> does not use the
 BoundingBox values (because of the technical difficulty of extracting that
 information and still feeding the file to Ghostscript), so you either
 have to specify the image area coordinates or take the default.
@@ -265,7 +263,7 @@ Postcript File Conversions</a> by Andrew T. Young.
 <pre>
 <kbd>
     $ pnmtops -nocenter -equalpixels -dpi 72 -noturn testimg.ppm &gt; testimg.ps
-    $ pstopnm -xborder=0 -yborder=0 -xsize=<i>XSIZE</i> -ysize=<I>YSIZE</I> \
+    $ pstopnm -xborder=0 -yborder=0 -xsize=<i>XSIZE</i> -ysize=<i>YSIZE</i> \
         -portrait -stdout -quiet testimg.ps &gt;testimg2.ppm
 </kbd>
 </pre>
@@ -296,30 +294,35 @@ wouldn't use those in a program).
 reversible conversion.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-forceplain</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pstopnm</b> recognizes the following
+command line options:
 
-<DD> forces the output file to be in plain (text) format.  Otherwise,
-it is in raw (binary) format.  See <B><A HREF="pbm.html">pbm</A></B>,
+<dl compact>
+<dt><b>-forceplain</b>
+
+<dd> forces the output file to be in plain (text) format.  Otherwise,
+it is in raw (binary) format.  See <b><a href="pbm.html">pbm</a></b>,
 etc.
 
-<DT><B>-llx=</B><I>bx</I>
+<dt><b>-llx=</b><i>bx</i>
 
-<DD>selects <I>bx</I> as the lower left corner x coordinate (in
+<dd>selects <i>bx</i> as the lower left corner x coordinate (in
 inches) on the Postscript input page of the subject image.
 See <a href="#dimensions">the Dimensions section</a>.
 
-<DT><B>-lly=</B><I>by</I>
+<dt><b>-lly=</b><i>by</i>
 
-<DD>selects <I>by</I> as the lower left corner y coordinate (in inches)
+<dd>selects <i>by</i> as the lower left corner y coordinate (in inches)
 on the Postscript input page of the subject image.
 See <a href="#dimensions">the Dimensions section</a>.
 
-<DT><B>-landscape</B>
+<dt><b>-landscape</b>
 
-<DD>renders the image in landscape orientation.  
+<dd>renders the image in landscape orientation.  
 
 <p>If you specify neither <b>-portrait</b> nor <b>-landscape</b>,
 <b>pstopnm</b> chooses the orientation that best fits the image on the
@@ -328,95 +331,95 @@ output page.
 <p>Landscape means printed sideways on the page, not printed the long way.
 Those are different things if the long edge of the page is the top one.
 
-<DT><B>-portrait</B>
+<dt><b>-portrait</b>
 
-<DD>renders the image in portrait orientation.
+<dd>renders the image in portrait orientation.
 
 <p>See <b>-landscape</b>.
 
-<DT><B>-nocrop</B>
+<dt><b>-nocrop</b>
 
-<DD>This option causes <b>pstopnm</b> to make the output image
+<dd>This option causes <b>pstopnm</b> to make the output image
 exactly the dimensions of the bordered subject image.  By default,
 <b>pstopnm</b> makes the output image the dimensions specified by
 <b>-xmax</b> and <b>-ymax</b>.  See <a href="#dimensions">the Dimensions
 section</a>.
 
-<DT><B>-pbm</b>
-<DT><B>-pgm</B>
-<DT><B>-ppm</B>
+<dt><b>-pbm</b>
+<dt><b>-pgm</b>
+<dt><b>-ppm</b>
 
-<DD>
+<dd>
 selects the format of the output file.  By default, all files are
 rendered as PPM.
 
-<DT><B>-stdout</B>
+<dt><b>-stdout</b>
 
-<DD>causes output to go to Standard Output instead of to regular
+<dd>causes output to go to Standard Output instead of to regular
 files, one per page (see description of output files above).  Use
-<B>pnmsplit</B> to extract individual pages from Standard Output.
+<b>pnmsplit</b> to extract individual pages from Standard Output.
 
-<DT><B>-urx=</B><I>tx</I>
+<dt><b>-urx=</b><i>tx</i>
 
-<DD>selects <I>tx</I> as the upper right corner x coordinate (in
+<dd>selects <i>tx</i> as the upper right corner x coordinate (in
 inches) on the Postscript input page of the subject image.  See <a
 href="#dimensions">the Dimensions section</a>.
 
-<DT><B>-ury=</B><I>ty</I>
+<dt><b>-ury=</b><i>ty</i>
 
-<DD>selects <I>ty</I> as the upper right corner y coordinate (in
+<dd>selects <i>ty</i> as the upper right corner y coordinate (in
 inches) on the Postscript input page of the subject image.  See <a
 href="#dimensions">the Dimensions section</a>.
 
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>
+<dd>
 prints processing information to stdout.
 
-<DT><B>-xborder=</B><I>frac</I> 
+<dt><b>-xborder=</b><i>frac</i> 
 
-<DD>specifies that the left and right borders added to the subject
-image are to be <I>frac</I> times the subject image width.  The
+<dd>specifies that the left and right borders added to the subject
+image are to be <i>frac</i> times the subject image width.  The
 default value is 0.1.  See <a href="#dimensions">the Dimensions
 section</a>.
 
 
-<DT><B>-xmax=</B><I>xmax</I>
+<dt><b>-xmax=</b><i>xmax</i>
 
-<DD>specifies that the output image is to be <I>xmax</I> pixels wide.
+<dd>specifies that the output image is to be <i>xmax</i> pixels wide.
 The default is 612.  See <a href="#dimensions">the Dimensions
 section</a>.
 
 
-<DT><B>-xsize=</B><I>xsize</I>
+<dt><b>-xsize=</b><i>xsize</i>
 
-<DD>specifies that the output image is to be <I>xsize</I> pixels wide.
+<dd>specifies that the output image is to be <i>xsize</i> pixels wide.
 See <a href="#dimensions">the Dimensions section</a>.
 
-<DT><B>-yborder=</B><I>frac</I>
+<dt><b>-yborder=</b><i>frac</i>
 
-<DD>specifies that the top and bottom borders added to the subject
-image are to be <I>frac</I> times the subject image height.  The
+<dd>specifies that the top and bottom borders added to the subject
+image are to be <i>frac</i> times the subject image height.  The
 default value is 0.1.  See <a href="#dimensions">the Dimensions
 section</a>.
 
 
-<DT><B>-ymax=</B><I>ymax</I>
+<dt><b>-ymax=</b><i>ymax</i>
 
-<DD>
+<dd>
 specifies that the output image is to be <i>ymax</i> pixels high.
 The default is 792.  See <a href="#dimensions">the Dimensions
 section</a>.
 
-<DT><B>-ysize=</B><I>ysize</I>
+<dt><b>-ysize=</b><i>ysize</i>
 
-<DD>specifies that the output image is to be <i>ymax</i> pixels high.
+<dd>specifies that the output image is to be <i>ymax</i> pixels high.
 See <a href="#dimensions">the Dimensions section</a>.
 
-<DT><B>-dpi=</b><i>dpi</i>
+<dt><b>-dpi=</b><i>dpi</i>
 
-<DD>specifies the output device resolution, in dots per inch, of the
+<dd>specifies the output device resolution, in dots per inch, of the
 Postscript printer that <b>pstopnm</b> simulates.  This is the number of
 PNM pixels <b>pstopnm</b> generates for each inch of image.
 See <a href="#dimensions">the Dimensions section</a>.
@@ -436,15 +439,15 @@ time.
 
 <p>The default is 4.
 
-<P>This option was new in Netpbm 10.53 (December 2010).  Older versions of
+<p>This option was new in Netpbm 10.53 (December 2010).  Older versions of
 <b>pstopnm</b> do no antialiasing.
 
-</DL>
+</dl>
 
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
-<P>The program will produce incorrect results with PostScript files that
+<p>The program will produce incorrect results with PostScript files that
 initialize the current transformation matrix.  In these cases, page
 translation and rotation will not have any effect.  To render these
 files, probably the best bet is to use the following options:
@@ -453,42 +456,42 @@ files, probably the best bet is to use the following options:
     pstopnm -xborder 0 -yborder 0 -portrait -nocrop file.ps
 </pre>
 
-<P>Additional options may be needed if the document is supposed to be
+<p>Additional options may be needed if the document is supposed to be
 rendered on a medium different from letter-size paper.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B>gs</B>,
-<B><A HREF="pnmtops.html">pnmtops</A></B>,
-<B><A HREF="psidtopgm.html">psidtopgm</A></B>,
-<B><A HREF="pbmtolps.html">pbmtolps</A></B>,
-<B><A HREF="pbmtoepsi.html">pbmtoepsi</A></B>,
-<B><A HREF="pnmsplit.html">pnmsplit</A></B>,
-<B>pstofits</B>
+<b>gs</b>,
+<b><a href="pnmtops.html">pnmtops</a></b>,
+<b><a href="psidtopgm.html">psidtopgm</a></b>,
+<b><a href="pbmtolps.html">pbmtolps</a></b>,
+<b><a href="pbmtoepsi.html">pbmtoepsi</a></b>,
+<b><a href="pnmsplit.html">pnmsplit</a></b>,
+<b>pstofits</b>
 
 
 
-<H2 id="copyright">COPYRIGHT</H2>
+<h2 id="copyright">COPYRIGHT</h2>
 
 <p>Copyright (c) 1992 Smithsonian Astrophysical Observatory
 
 <p>PostScript is a Trademark of Adobe Systems Incorporated.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Alberto Accomazzi, WIPL, Center for Astrophysics.
 
-<HR>
-<H2 id="table">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#copyright">COPYRIGHT</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#copyright">COPYRIGHT</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

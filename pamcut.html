@@ -1,57 +1,56 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamcut User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamcut</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamcut User Manual</title></head>
+<body>
+<h1>pamcut</h1>
 Updated: 04 October 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pamcut - cut a rectangle out of a PAM, PBM, PGM, or PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamcut</B>
+<b>pamcut</b>
 
-[<B>-left </B><I>colnum</I>]
+[<b>-left </b><i>colnum</i>]
 
-[<B>-right </B><I>colnum</I>]
+[<b>-right </b><i>colnum</i>]
 
-[<B>-top </B><I>rownum</I>]
+[<b>-top </b><i>rownum</i>]
 
-[<B>-bottom </B><I>rownum</I>]
+[<b>-bottom </b><i>rownum</i>]
 
-[<B>-width </B><I>cols</I>]
+[<b>-width </b><i>cols</i>]
 
-[<B>-height </B><I>rows</I>]
+[<b>-height </b><i>rows</i>]
 
-[<B>-pad</B>]
+[<b>-pad</b>]
 
-[<B>-cropleft </B><I>numcols</I>]
+[<b>-cropleft </b><i>numcols</i>]
 
-[<B>-cropright </B><I>numcols</I>]
+[<b>-cropright </b><i>numcols</i>]
 
-[<B>-croptop </B><I>numrows</I>]
+[<b>-croptop </b><i>numrows</i>]
 
-[<B>-cropbottom </B><I>numrows</I>]
+[<b>-cropbottom </b><i>numrows</i>]
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<I>left</i> <i>top</i> <i>width</i> <i>height</I>]
+[<i>left</i> <i>top</i> <i>width</i> <i>height</i>]
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
-<P>Minimum unique abbreviations of option are acceptable.  You may use
+<p>Minimum unique abbreviations of option are acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pamcut</b> reads a PAM, PBM, PGM, or PPM image as input and
+<p><b>pamcut</b> reads a PAM, PBM, PGM, or PPM image as input and
 extracts the specified rectangle, and produces the same kind of image
 as output.
 
@@ -72,91 +71,96 @@ options.
 <p>For example, <b>-left=50 -right=200</b> means to keep the 150 columns
 between Columns 50 and 200 inclusive.
 
-<P>You can code any mixture of the options.  What you don't specify defaults.
+<p>You can code any mixture of the options.  What you don't specify defaults.
 Those defaults are in favor of minimal cutting and in favor of cutting the
 right and bottom edges off.  It is an error to overspecify, i.e. to specify
-all three of <B>-left</B>, <B>-right</B>, and <B>-width</B> or <B>-top</B>,
-<B>-bottom</B>, and <B>-height</B> or <b>right</b> as well as
+all three of <b>-left</b>, <b>-right</b>, and <b>-width</b> or <b>-top</b>,
+<b>-bottom</b>, and <b>-height</b> or <b>right</b> as well as
 <b>-cropright</b>.
 
-<P>There is an older way to specify the rectangle to keep: positional
+<p>There is an older way to specify the rectangle to keep: positional
 arguments.  Arguments were the only way available before July 2000, but you
 should not use them in new applications.  Options are easier to remember and
 read, more expressive, and allow you to use defaults.
 
-<P>If you use both options and arguments, the two specifications get
+<p>If you use both options and arguments, the two specifications get
 mixed in an unspecified way.
 
-<P>To use arguments, specify all four of the <I>left</I>, <I>top</I>,
-<I>width</I>, and <I>height</I> arguments.  <I>left</I> and <I>top</I> have
-the same effect as specifying them as the argument of a <B>-left</B> or
-<B>-top</B> option, respectively.  <I>width</I> and <I>height</I> have the
-same effect as specifying them as the argument of a <B>-width</B> or
-<B>-height</B> option, respectively, where they are positive.  Where they are
+<p>To use arguments, specify all four of the <i>left</i>, <i>top</i>,
+<i>width</i>, and <i>height</i> arguments.  <i>left</i> and <i>top</i> have
+the same effect as specifying them as the argument of a <b>-left</b> or
+<b>-top</b> option, respectively.  <i>width</i> and <i>height</i> have the
+same effect as specifying them as the argument of a <b>-width</b> or
+<b>-height</b> option, respectively, where they are positive.  Where they are
 not positive, they have the same effect as specifying one less than the value
-as the argument to a <B>-right</B> or <B>-bottom</B> option, respectively.
-(E.g. <I>width</I> = 0 makes the cut go all the way to the right edge).
-Before July 2000, negative numbers were not allowed for <I>width</I> and
-<I>height</I>.
+as the argument to a <b>-right</b> or <b>-bottom</b> option, respectively.
+(E.g. <i>width</i> = 0 makes the cut go all the way to the right edge).
+Before July 2000, negative numbers were not allowed for <i>width</i> and
+<i>height</i>.
 
-<P>Input is from Standard Input if you don't specify the input file
-<I>pnmfile</I>.
+<p>Input is from Standard Input if you don't specify the input file
+<i>pnmfile</i>.
 
-<P>Output is to Standard Output.
+<p>Output is to Standard Output.
 
 <p><b>pamcut</b> works on a multi-image stream.  It cuts each image in the
 stream independently and produces a multi-image stream output.  Before
 Netpbm 10.32 (March 2006), it ignored all but the first image in the stream.
 
-<P>If you are splitting a single image into multiple same-size images,
-<B>pamdice</B> is faster and easier than running <B>pamcut</B>
+<p>If you are splitting a single image into multiple same-size images,
+<b>pamdice</b> is faster and easier than running <b>pamcut</b>
 multiple times.
 
 <p><b>pamcomp</b> is also useful for cutting and padding an image to a
 certain size.  You create a background image of the desired frame
 dimensions and overlay the subject image on it.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-left=</B><i>colnum</i>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamcut</b> recognizes the following
+command line options:
 
-<DD>The column number of the leftmost column to be in the output.
+<dl compact>
+<dt><b>-left=</b><i>colnum</i>
+
+<dd>The column number of the leftmost column to be in the output.
 Columns left of this get cut out.  If a nonnegative number, it refers
 to columns numbered from 0 at the left, increasing to the right.  If
 negative, it refers to columns numbered -1 at the right, decreasing to
 the left.
 
-<DT><B>-right=</B><i>colnum</i>
+<dt><b>-right=</b><i>colnum</i>
 
-<DD>The column number of the rightmost column to be in the output,
-numbered the same as for <B>-left.</B>  Columns to the right of this
+<dd>The column number of the rightmost column to be in the output,
+numbered the same as for <b>-left.</b>  Columns to the right of this
 get cut out.
 
-<DT><B>-top=</B><i>rownum</i>
+<dt><b>-top=</b><i>rownum</i>
 
-<DD>The row number of the topmost row to be in the output.  Rows above
+<dd>The row number of the topmost row to be in the output.  Rows above
 this get cut out.  If a nonnegative number it refers to rows numbered
 from 0 at the top, increasing downward.  If negative, it refers to
 columns numbered -1 at the bottom, decreasing upward.
 
-<DT><B>-bottom=</B><i>rownum</i>
+<dt><b>-bottom=</b><i>rownum</i>
 
-<DD>The row number of the bottom-most row to be in the output,
-numbered the same as for <B>-top</B>.  Rows below this get cut out.
+<dd>The row number of the bottom-most row to be in the output,
+numbered the same as for <b>-top</b>.  Rows below this get cut out.
 
-<DT><B>-width=</B><i>cols</i>
+<dt><b>-width=</b><i>cols</i>
 
-<DD>The number of columns to be in the output.  Must be positive.
+<dd>The number of columns to be in the output.  Must be positive.
 
-<DT><B>-height=</B><i>rows</i>
+<dt><b>-height=</b><i>rows</i>
 
-<DD>The number of rows to be in the output.  Must be positive.
+<dd>The number of rows to be in the output.  Must be positive.
 
-<DT><B>-cropleft</B>
-<DT><B>-cropright</B>
-<DT><B>-croptop</B>
-<DT><B>-cropbottom</B>
+<dt><b>-cropleft</b>
+<dt><b>-cropright</b>
+<dt><b>-croptop</b>
+<dt><b>-cropbottom</b>
 
 <dd>These options tell how many rows or columns to crop from the left,
 right, top, or bottom edges, respectively.
@@ -168,15 +172,15 @@ can achieve the same thing with <b>-left</b>, <b>top</b>, and negative values
 for <b>-right</b> and <b>-bottom</b>.  Remember to subtract one in the latter
 case; e.g. the equivalent of <b>-cropright=1</b> is <b>-right=-2</b>.
   
-<DT><B>-pad</B>
+<dt><b>-pad</b>
 
-<DD>If the rectangle you specify is not entirely within the input
-image, <B>pamcut</B> fails unless you also specify <B>-pad</B>.  In
+<dd>If the rectangle you specify is not entirely within the input
+image, <b>pamcut</b> fails unless you also specify <b>-pad</b>.  In
 that case, it pads the output with black up to the edges you specify.
 You can use this option if you need to have an image of certain
 dimensions and have an image of arbitrary dimensions.
 
-<P><B>pnmpad</B> also adds borders to an image, but you specify their
+<p><b>pnmpad</b> also adds borders to an image, but you specify their
 width directly.
 
 <p><b>pamcomp</b> does a more general form of this padding.  Create a
@@ -185,25 +189,25 @@ on it.  You can use options to have the subject image in the center of
 the frame or against any edge and make the padding any color (the padding
 color is the color of the background image).
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>
+<dd>
 Print information about the processing to Standard Error.
 
-</DL>
-<H2 id="seealso">SEE ALSO</H2>
+</dl>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmcrop.html">pnmcrop</A></B>,
-<B><A HREF="pamdice.html">pamdice</A></B>,
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="pnmpad.html">pnmpad</A></B>,
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
-<B><A HREF="pgmslice.html">pgmslice</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pnmcrop.html">pnmcrop</a></b>,
+<b><a href="pamdice.html">pamdice</a></b>,
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="pnmpad.html">pnmpad</a></b>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pgmslice.html">pgmslice</a></b>,
+<b><a href="pnm.html">pnm</a></b>
 
 <h2 id="history">HISTORY</h2>
 
-<P><B>pamcut</b> was derived from <b>pnmcut</b> in Netpbm 9.20 (May 2001).
+<p><b>pamcut</b> was derived from <b>pnmcut</b> in Netpbm 9.20 (May 2001).
 It was the first Netpbm program adapted to the new PAM format and programming
 library.
 
@@ -211,18 +215,19 @@ library.
 package.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,32 +1,31 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmmontage User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmmontage</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmmontage User Manual</title></head>
+<body>
+<h1>pnmmontage</h1>
 Updated: 22 November 2012
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
-
+<h2>NAME</h2>
 pnmmontage - create a montage of PNM images
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmmontage</B>
+<b>pnmmontage</b>
 
-[<B>-header=</B><I>headerfile</I>]
+[<b>-header=</b><i>headerfile</i>]
 
-[<B>-quality=</B><I>n</I>]
+[<b>-quality=</b><i>n</i>]
 
-[<B>-prefix=</B><I>prefix</I>]
+[<b>-prefix=</b><i>prefix</i>]
 
-[<B>-0</B>|<B>-1</B>|<B>-2</B>|<B>...</B>|<B>-9</B>]
+[<b>-0</b>|<b>-1</b>|<b>-2</b>|<b>...</b>|<b>-9</b>]
 
 [<b>-data=</b><i>filename</i>]
 
-<i>pnmfile</I>...
+<i>pnmfile</i>...
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -36,11 +35,16 @@ composite image.
 <p>Areas of the output that cannot be occupied by an image are black.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmmontage</b> recognizes the following
+command line options:
 
-<DT><b>-data=</b><i>filename</i>
+<dl compact>
+
+<dt><b>-data=</b><i>filename</i>
 
 <dd>This option causes <b>pnmmontage</b> to write a file that describes
 in machine-readable form the positions of the original images within
@@ -70,9 +74,9 @@ image)
 
 <p>This option was new in Netpbm 10.6 (July 2002).
 
-<DT><B>-header=</B><i>filename</i>
+<dt><b>-header=</b><i>filename</i>
 
-<DD>Tells <B>pnmmontage</B> to write a C header file of the locations
+<dd>Tells <b>pnmmontage</b> to write a C header file of the locations
 of the original images within the packed image.  Each original image
 generates four #defines within the packed file: xxxX, xxxY, xxxSZX,
 and xxxSZY, where xxx is the name of the file, converted to all
@@ -98,39 +102,39 @@ specifies the total size of the montage image.
 </tt>
 </pre>
 
-<DT><B>-prefix</B>
+<dt><b>-prefix</b>
 
-<DD>Tells <B>pnmmontage</B> to use the specified prefix on all of the
+<dd>Tells <b>pnmmontage</b> to use the specified prefix on all of the
 #defines it generates.
 
-<DT><B>-quality</B>
+<dt><b>-quality</b>
 
-<DD>Before attempting to place the subimages, <B>pnmmontage</B> will
+<dd>Before attempting to place the subimages, <b>pnmmontage</b> will
 calculate a minimum possible area for the montage; this is either the
 total of the areas of all the subimages, or the width of the widest
 subimage times the height of the tallest subimage, whichever is
-greater.  <B>pnmmontage</B> then initiates a problem-space search to
+greater.  <b>pnmmontage</b> then initiates a problem-space search to
 find the best packing; if it finds a solution that is (at least) as
 good as the minimum area times the quality as a percent, it will break
-out of the search.  Thus, <B>-quality=100</B> will find the best possible
+out of the search.  Thus, <b>-quality=100</b> will find the best possible
 solution; however, it may take a very long time to do so.  The default
-is <B>-quality=200.</B>
+is <b>-quality=200.</b>
 
-<DT><B>-0</b>, <b>-1</b>, ... <b>-9</B>
+<dt><b>-0</b>, <b>-1</b>, ... <b>-9</b>
 
-<DD>These options control the quality at a higher level than
-<B>-quality</B>; <B>-0</B> is the worst quality (pick the first
-solution found), while <B>-9</B> is the best quality (perform an
+<dd>These options control the quality at a higher level than
+<b>-quality</b>; <b>-0</b> is the worst quality (pick the first
+solution found), while <b>-9</b> is the best quality (perform an
 exhaustive search of problem space for the absolute best packing).
 The higher the number, the slower the computation.  The default is
-<B>-5</B>.
+<b>-5</b>.
 
-</DL>
+</dl>
 
 
-<H2 id="notes">NOTES</H2>
+<h2 id="notes">NOTES</h2>
 
-<p>Using <B>-9</B> is very slow on all but the smallest image sets.
+<p>Using <b>-9</b> is very slow on all but the smallest image sets.
 
 <p>The minimum area arrangement is often not a convenient shape.  For
 example, it might be a tall, thin column of images, when you'd rather
@@ -139,41 +143,41 @@ can include a strut image - a black image that wide and one pixel high.
 Similarly, you can use a vertical strut to force a minimum height.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
 
-<B><A HREF="pnmindex.html">pnmindex</A></B>,
+<b><a href="pnmindex.html">pnmindex</a></b>,
 
-<B><A HREF="pnm.html">pnm</A></B>,
+<b><a href="pnm.html">pnm</a></b>,
 
-<B><A HREF="pam.html">pam</A></B>,
+<b><a href="pam.html">pam</a></b>,
 
-<B><A HREF="pbm.html">pbm</A></B>,
+<b><a href="pbm.html">pbm</a></b>,
 
-<B><A HREF="pgm.html">pgm</A></B>,
+<b><a href="pgm.html">pgm</a></b>,
 
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pnmmontage</b> was new in Netpbm 9.10 (January 2001).
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 2000 by Ben Olmstead.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#notes">NOTES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#notes">NOTES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

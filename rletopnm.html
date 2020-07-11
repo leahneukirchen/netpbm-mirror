@@ -1,78 +1,83 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Rletopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>RLETOPNM</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Rletopnm User Manual</title></head>
+<body>
+<h1>rletopnm</h1>
 Updated: 13 April 2000
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
 
+<h2>NAME</h2>
 rletopnm - convert a Utah Raster Tools RLE image file to a PNM image file.
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>rletopnm</B>
+<b>rletopnm</b>
 
-[<B>--alphaout=</B>{<I>alpha-filename</I>,<B>-</B>}]
-[<B>--headerdump</B>|<B>-h</B>]
+[<b>--alphaout=</b>{<i>alpha-filename</i>,<b>-</b>}]
+[<b>--headerdump</b>|<b>-h</b>]
 
-[<B>--verbose</B>|<B>-v</B>]
+[<b>--verbose</b>|<b>-v</b>]
 
-[<I>rlefile</I>|<B>-</B>]
+[<i>rlefile</i>|<b>-</b>]
 
-<P>All options may be abbreviated to their minimum unique abbreviation
+<p>All options may be abbreviated to their minimum unique abbreviation
 and options and arguments may be in any order.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>rletopnm</b> converts Utah Raster Toolkit RLE image files to PNM
-image files.  <B>rletopnm</B> handles four types of RLE files:
+image files.  <b>rletopnm</b> handles four types of RLE files:
 Grayscale (8 bit data, no color map), Pseudocolor (8 bit data with a
 color map), Truecolor (24 bit data with color map), and Directcolor
-(24 bit data, no color map).  <B>rletopnm</B> generates a PPM file for
+(24 bit data, no color map).  <b>rletopnm</b> generates a PPM file for
 all these cases except for the Grayscale file, for which
-<B>rletopnm</B> generates a PGM file.
+<b>rletopnm</b> generates a PGM file.
 
-<P><I>rlefile</I> is the RLE input file.  If it is absent or <B>-</B>,
+<p><i>rlefile</i> is the RLE input file.  If it is absent or <b>-</b>,
 the input comes from Standard Input.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>--alphaout=</B><I>alpha-filename</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>rletopnm</b> recognizes the following
+command line options:
 
-<DD>
-<B>rletopnm </B> creates a PGM (portable graymap) file containing the
+<dl compact>
+<dt><b>--alphaout=</b><i>alpha-filename</i>
+
+<dd>
+<b>rletopnm </b> creates a PGM (portable graymap) file containing the
 transparency channel values in the input image.  If the input image doesn't
-contain an transparency channel, the <I>alpha-filename</I> file contains all
+contain an transparency channel, the <i>alpha-filename</i> file contains all
 zero (transparent) transparency values.  If you don't specify
-<B>--alphaout</B>, <B>rletopnm</B> does not generate a transparency file,
-and if the input image has a transparency channel, <B>rletopnm</B> simply
+<b>--alphaout</b>, <b>rletopnm</b> does not generate a transparency file,
+and if the input image has a transparency channel, <b>rletopnm</b> simply
 discards it.
 
-<P>If you specify <B>-</B> as the filename, <B>rletopnm</B> writes the
+<p>If you specify <b>-</b> as the filename, <b>rletopnm</b> writes the
 transparency output to Standard Output and discards the image.
 
-<P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
+<p>See <b><a href="pamcomp.html">pamcomp</a></b> for one way to use
 the transparency output file.
 
-<DT><B>--verbose</B>
+<dt><b>--verbose</b>
 
-<DD>This option causes <B>rletopnm </B> to operate in verbose mode.
+<dd>This option causes <b>rletopnm </b> to operate in verbose mode.
 It prints messages about what it's doing, including the contents of
 the RLE image header, to Standard Error.
 
-<DT><B>--headerdump</B>
+<dt><b>--headerdump</b>
 
-<DD>This option causes <B>rletopnm</B> to operate in header dump mode.
+<dd>This option causes <b>rletopnm</b> to operate in header dump mode.
 It prints the contents of the RLE image header to Standard Error, but
 does not produce any other output.
 
-</DL>
+</dl>
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
 <ul>
 <li>While running in verbose mode, convert lenna.rle to PPM format and
@@ -105,42 +110,42 @@ dartalpha.pgm):
 
 </ul>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmtorle.html">pnmtorle</A></B>,
+<b><a href="pnmtorle.html">pnmtorle</a></b>,
 
-<B><A HREF="pnmconvol.html">pnmconvol</A></B>,
+<b><a href="pnmconvol.html">pnmconvol</a></b>,
 
-<B><A HREF="pnm.html">pnm</A></B>,
+<b><a href="pnm.html">pnm</a></b>,
 
-<B><A HREF="ppm.html">ppm</A></B>,
+<b><a href="ppm.html">ppm</a></b>,
 
-<B><A HREF="pgm.html">pgm</A></B>,
+<b><a href="pgm.html">pgm</a></b>,
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Wes Barris
-<BR>
+<br>
 
 Army High Performance Computing Research Center (AHPCRC)
-<BR>
+<br>
 
 Minnesota Supercomputer Center, Inc.
 
-<P>Modifications by Eric Haines to support raw and plain formats.
+<p>Modifications by Eric Haines to support raw and plain formats.
 
-<P>Modifications by Bryan Henderson to create transparency files and use
+<p>Modifications by Bryan Henderson to create transparency files and use
 mnemonic options.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
