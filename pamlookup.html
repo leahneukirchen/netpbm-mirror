@@ -115,7 +115,7 @@ tuple indexing (<b>-byplane</b> not specified).
 
 <p>Consider an index image consisting of a 3x2x1 PAM as follows:
 
-<table summary="3x2x1 index image">
+<table>
 <?makeman l l l. ?>
 <tr> <td>0</td> <td>1</td> <td>0</td> </tr>
 <tr> <td>2</td> <td>2</td> <td>2</td> </tr>
@@ -123,7 +123,7 @@ tuple indexing (<b>-byplane</b> not specified).
 
 and a lookup table consisting of a 3x1 PPM image as follows:
 
-<table summary="3x1 lookup table">
+<table>
 <?makeman l l l. ?>
 <tr> <td>red</td> <td>yellow</td> <td>beige</td> </tr>
 </table>
@@ -132,7 +132,7 @@ The lookup table above says Index 0 corresponds to the color red,
 Index 1 corresponds to yellow, and Index 2 corresponds to beige.  The output
 of <b>pamlookup</b> is the following PPM image:
 
-<table summary="output image">
+<table>
 <?makeman l l l. ?>
 <tr> <td>red</td> <td>yellow</td> <td>red</td> </tr>
 <tr> <td>beige</td> <td>beige</td> <td>beige</td> </tr>
@@ -142,7 +142,7 @@ of <b>pamlookup</b> is the following PPM image:
 indices are ordered pairs of whole numbers instead of whole numbers.
 Our index image will be this 3x2x2 PAM image:
 
-<table summary="3x2x2 index image">
+<table>
 <?makeman l l l. ?>
 <tr> <td>(0,0)</td> <td>(0,1)</td> <td>(0,0)</td> </tr>
 <tr> <td>(1,1)</td> <td>(1,0)</td> <td>(0,0)</td> </tr>
@@ -150,18 +150,7 @@ Our index image will be this 3x2x2 PAM image:
 
 Our lookup table for the example will be this two dimensional PPM:
 
-<table summary="2x2 lookup table">
-<?makeman l l l. ?>
-<tr> <td>red</td>   <td>yellow</td> </tr>
-<tr> <td>green</td> <td>black</td> </tr>
-</table>
-
-This lookup table says Index (0,0) corresponds to the color red,
-Index (0,1) corresponds to yellow, Index (1,0) corresponds to green,
-and Index (1,1) corresponds to black.  The output of <b>pamlookup</b>
-is the following PPM image:
-
-<table summary="output image">
+<table>
 <?makeman l l l. ?>
 <tr> <td>red</td>   <td>yellow</td> <td>red</td> </tr>
 <tr> <td>black</td> <td>green</td>  <td>red</td> </tr>
@@ -175,7 +164,7 @@ tuple indexing (<b>-byplane</b> specified).
 
 <p>Consider an index image consisting of a 3x2x3 PAM as follows:
 
-<table summary="3x2x1 index image">
+<table>
 <?makeman l l l. ?>
 <tr> <td>(0,0,0)</td> <td>(1,0,0)</td> <td>(2,0,0)</td> </tr>
 <tr> <td>(2,2,0)</td> <td>(2,0,2)</td> <td>(2,0,0)</td> </tr>
@@ -183,7 +172,7 @@ tuple indexing (<b>-byplane</b> specified).
 
 and a lookup table consisting of a 3x1x1 PAM image with maxval 7 as follows:
 
-<table summary="3x1 lookup table">
+<table>
 <?makeman l l l. ?>
 <tr> <td>3</td> <td>4</td> <td>7</td> </tr>
 </table>
@@ -192,7 +181,7 @@ The lookup table above says Index 0 corresponds to the sample value 3, Index 1
 corresponds to 4, and Index 2 corresponds to 7.  The output of
 <b>pamlookup</b> is the following 3x2x3 PAM image:
 
-<table summary="output image">
+<table>
 <?makeman l l l. ?>
 <tr> <td>(3,3,3)</td> <td>(4,3,3)</td> <td>(7,3,3)</td> </tr>
 <tr> <td>(7,7,3)</td> <td>(7,3,7)</td> <td>(7,3,3)</td> </tr>
