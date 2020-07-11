@@ -87,16 +87,16 @@ integer parameter that, depending on <i>formatId</i>, indicates
 either precision or normalization. The following values are possible for
 <i>formatId</i>:
 <dl>
-<dt><tt>int</tt>
+<dt>int
 <dd>Samples are decimal integers normalized to the maxval specified by
 <i>param</i>.  Example: <b>rgb-255:255/128/64</b>
 This format is the default, with a maxval of 255.
-<dt><tt>norm</tt>
+<dt>norm
 <dd>Samples are floating point numbers normalized to unity.  E.g.
 <b>rgbi:1.0/0.5/.25</b>
 <i>param</i> specifies precision as the number of digits in the
 fractional part.
-<dt><tt>x11</tt>
+<dt>x11
 <dd>Samples are hexadecimal numbers with <i>param</i> digits,
 e.g. <b>rgb:01/ff/8000</b>
 </dl>
