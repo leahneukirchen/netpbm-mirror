@@ -1,38 +1,38 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pgmtopbm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pgmtopbm</H1>
-Updated: 20 June 2004
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pgmtopbm User Manual</title></head>
+<body>
+<h1>pgmtopbm</h1>
+Updated: 17 July 2020
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pgmtopbm - convert a PGM image to PBM
 
-<H2>SYNOPSIS</H2>
+<h2>SYNOPSIS</h2>
 
-<B>pgmtopbm</B>
+<b>pgmtopbm</b>
 
-[<B>-floyd</B> | <B>-fs</B> | <B>-threshold</B>
-| <B>-hilbert</B>
-| <B>-dither8</B> | <B>-d8</B> | <B>-cluster3</B>
-| <B>-c3</B> | <B>-cluster4</B> | <B>-c4</B>
-| <B>-cluster8</B> | <B>-c8</B>]
+[<b>-floyd</b> | <b>-fs</b> | <b>-threshold</b>
+| <b>-hilbert</b>
+| <b>-dither8</b> | <b>-d8</b> | <b>-cluster3</b>
+| <b>-c3</b> | <b>-cluster4</b> | <b>-c4</b>
+| <b>-cluster8</b> | <b>-c8</b>]
 
-[<B>-value</B> <I>val</I>]
+[<b>-value</b> <i>val</i>]
 
-[<B>-clump</B> <I>size</I>]
+[<b>-clump</b> <i>size</i>]
 
-[<I>pgmfile</I>]
+[<b>-randomseed</b> <i>integer</i>]
 
-<H2>DESCRIPTION</H2>
+[<i>pgmfile</i>]
+
+<h2>DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p>This program is obsolete since Netpbm 10.23 (July 2004).  Use <a
-href="pamditherbw.html"><b>pamditherbw</b></a> to do what this program
-used to do.
+<p>This program is almost entirely obsolete since Netpbm 10.23 (July
+2004).  Use <a href="pamditherbw.html"><b>pamditherbw</b></a> to do
+what this program used to do.
 
 <p><b>pgmtopbm</b> never was the simple converter it appeared to be.
 It was a dithering program.  Unfortunately, it didn't do the dithering
@@ -46,14 +46,23 @@ except that it
 <li>does the correct gamma adjustments.
 <li>produces PAM output instead of PBM.  (Modern Netpbm programs that
 accept PBM input also accept PAM input, but if you need actual PBM,
-you can use <b>pamtopbm</b> with <b>pamditherbw</b>).
+you can use <b>pamtopnm</b> with <b>pamditherbw</b>).
 </ul>
 So use the manual for <b>pamditherbw</b> for <b>pgmtopbm</b>, except
 ignore anything that says it was added after Netpbm Release 10.23
 and ignore any options that are not shown in the synopsis above.
 
-<p>If you just want to convert a PGM image with maxval 1 to PBM,
-use <a href="pamtopnm.html"><b>pamtopnm</b></a>
+<p>Although <b>pgmtopbm</b> is mostly obsolete, the simple threshold
+method (specified by <b>-threshold</b>) is an exception.  Unlike the
+other conversion methods, gamma-adjustment is not an issue with
+simple thresholding and <b>pgmtopbm</b> can produce PBM output
+directly.  Note that even in this basic mode of operation
+<b>pgmtopbm</b> may produce output which is slightly different from
+what <b>pamditherbw</b> does because of differences in internal
+calculation.
 
-</BODY>
-</HTML>
+<p>If you just want to convert a PGM image with maxval 1 to PBM,
+use <a href="pamtopnm.html"><b>pamtopnm</b></a>.
+
+</body>
+</html>

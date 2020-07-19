@@ -1,23 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Bmptopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>bmptopnm</H1>
-Updated: 5 December 2018
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Bmptopnm User Manual</title></head>
+<body>
+<h1>bmptopnm</h1>
+Updated: 05 December 2018
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 bmptopnm - convert a BMP file into a PBM, PGM, or PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>bmptopnm</B>
+<b>bmptopnm</b>
 
 [<b>-verbose</b>]
 
-[<I>bmpfile</I>]
+[<i>bmpfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -27,7 +27,7 @@ is colormapped and contains only black and white, the output is PBM.
 If the input is colormapped and contains only black white and gray,
 the output is PGM.  Otherwise, the output is PPM.
 
-<P><b>bmptopnm</b> understands BMP files compressed with run length
+<p><b>bmptopnm</b> understands BMP files compressed with run length
 encoding (RLE4/RLE8), but not if that encoding includes a "delta"
 (which is rare).  <b>bmptopnm</b> recognizes the delta and issues an
 error message.
@@ -42,34 +42,49 @@ either, and before Netpbm 10.85 (December 2018), it couldn't convert RLE4
 (between 10.32 and 10.85, it would act like it recognized the format, but
 produce garbage output).
 
-<P>Before Netpbm 10.18 (September 2003), this program could not convert
+<p>Before Netpbm 10.18 (September 2003), this program could not convert
 BMP images with the BI_BITFIELDS format ("compression type").  It would
 recognize the format and issue an error message.
 
-<P><b>bmptopnm</b> cannot convert OS/2 BMP files with 16 bits per
+<p><b>bmptopnm</b> cannot convert OS/2 BMP files with 16 bits per
 pixel (only because the author did not have a complete specification
 for them).  It recognizes the format and issues an error message.
 Before Netpbm 10.16 (June 2003), it also could not convert Windows BMP
 files with 16 bits per pixel.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="ppmtobmp.html">ppmtobmp</A></B>,
-<B><A HREF="ppmtowinicon.html">ppmtowinicon</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>bmptopnm</b> recognizes the following
+command line option:
 
-<H2 id="author">AUTHOR</H2>
+<dl compact>
+
+<dt><b>-verbose</b>
+<dd>Report contents of the BMP header to the standard error.
+
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="ppmtobmp.html">ppmtobmp</a></b>,
+<b><a href="ppmtowinicon.html">ppmtowinicon</a></b>,
+<b><a href="ppm.html">ppm</a></b>
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1992 by David W. Sanderson.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

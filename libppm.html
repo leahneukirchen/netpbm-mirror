@@ -499,20 +499,20 @@ color dictionary.
 
 <p><B>ppm_parsecolor()</B> interprets a color specification and returns a
 pixel of the color that it indicates.  It is the same as
-<a href="libnetbm_image.html#colorname">pnm_parsecolor</a>, except that it
+<a href="libnetpbm_image.html#colorname">pnm_parsecolor</a>, except that it
 returns a <b>pixel</b> instead of a <b>tuple</b>.
 
 <H4 id="ppm_parsecolor2">ppm_parsecolor2</H4>
 
 <p><B>ppm_parsecolor2()</B> interprets a color specification and returns a
 pixel of the color that it indicates and warns about rounding.  It is the same
-as <a href="libnetbm_image.html#colorname">pnm_parsecolor2</a>, except
+as <a href="libnetpbm_image.html#colorname">pnm_parsecolor2</a>, except
 that it returns a <b>pixel</b> instead of a <b>tuple</b>.
 
 <h4 id="ppm_colorname">ppm_colorname</h4>
 
 <P><B>ppm_colorname()</B> returns a string that describes the color
-of the given pixel.  If a <a href="#rgb.txt">system color dictionary</a>
+of the given pixel.  If a <a href="#dictionary">system color dictionary</a>
 is available and the color appears in it, <B>ppm_colorname()</B>
 returns the name of the color from the file.  If the color does not
 appear in a system color dictionary and <I>hexok</I> is true,

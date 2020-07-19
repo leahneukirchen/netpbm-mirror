@@ -1,37 +1,37 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmpat User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmpat</H1>
-Updated: 2 March 2016
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmpat User Manual</title></head>
+<body>
+<h1>ppmpat</h1>
+Updated: 02 March 2016
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmpat - make a pretty PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmpat</B>
-{<B>-gingham2</B>|<B>-g2</B>} |
-{<B>-gingham3</B>|<B>-g3</B>} |
-<B>-madras</B> |
-<B>-tartan</B> |
-<B>-poles</B> |
-<B>-squig</B> |
-<B>-camo</B> |
-<B>-anticamo</B>
-<b>-argyle1</b>
-<b>-argyle2</b>
-[<b>-color</b> <i>colorlist</i>
+<b>ppmpat</b>
+[{<b>-gingham2</b>|<b>-g2</b>} |
+{<b>-gingham3</b>|<b>-g3</b>} |
+<b>-madras</b> |
+<b>-tartan</b> |
+<b>-poles</b> |
+<b>-squig</b> |
+<b>-camo</b> |
+<b>-anticamo</b> |
+<b>-argyle1</b> |
+<b>-argyle2</b>]
+[<b>-color</b> <i>colorlist</i>]
 [<b>-randomseed</b> <i>integer</i>]
 
-<I>width</I> <I>height</I>
+<i>width</i> <i>height</i>
 
 
-<P>You can abbreviate any option to its shortest unique prefix.
+<p>You can abbreviate any option to its shortest unique prefix.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -46,70 +46,78 @@ with a pattern in it.
 <p>Some of the patterns have large numbers of colors, so if you want
 a simpler pattern, use <b>pnmquant</b> on the output.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>The options specify various pattern types:
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmpat</b> recognizes the following
+command line options:
 
-<DL COMPACT>
-<DT><B>-gingham2</B>
+<h3 id="patspec">Pattern Specification</h3>
 
-<DD>A gingham check pattern.  Can be tiled.
+<p>Specify the pattern type with these options.  One pattern type must
+be specified.
+
+<dl compact>
+<dt><b>-gingham2</b> <b>-g2</b>
+
+<dd>A gingham check pattern.  Can be tiled.
 
 <p>If you specify -color, give two colors: background and foreground, in that
 order.
 
-<DT><B>-gingham3</B>
+<dt><b>-gingham3</b> <b>-g3</b>
 
-<DD>A slightly more complicated gingham.  Can be tiled.
-
-<p>If you specify -color, give three colors: background and two foregrounds,
-in that order.
-
-<DT><B>-madras</B>
-
-<DD>A madras plaid.  Can be tiled.
+<dd>A slightly more complicated gingham.  Can be tiled.
 
 <p>If you specify -color, give three colors: background and two foregrounds,
 in that order.
 
-<DT><B>-tartan</B>
+<dt><b>-madras</b>
 
-<DD>A tartan plaid.  Can be tiled.
+<dd>A madras plaid.  Can be tiled.
 
 <p>If you specify -color, give three colors: background and two foregrounds,
 in that order.
 
-<DT><B>-poles</B>
+<dt><b>-tartan</b>
 
-<DD>Color gradients centered on randomly-placed poles.
+<dd>A tartan plaid.  Can be tiled.
+
+<p>If you specify -color, give three colors: background and two foregrounds,
+in that order.
+
+<dt><b>-poles</b>
+
+<dd>Color gradients centered on randomly-placed poles.
 
 <p>If you specify -color, give two or more colors.
 
-<DT><B>-squig</B>
+<dt><b>-squig</b>
 
-<DD>Squiggley tubular pattern.  Can be tiled.
+<dd>Squiggley tubular pattern.  Can be tiled.
 
 <p>If you specify -color, give three or more colors.  The first is the
 background color.
 
-<DT><B>-camo</B>
+<dt><b>-camo</b>
 
-<DD>Camouflage pattern.
+<dd>Camouflage pattern.
 
 <p>If you specify <b>-color</b>, give three or more colors.  The first is the
 background color; the others are colors for the leafy foreground shapes.
 The foreground shapes will probably occupy nearly the entire image, so that the
 background color is barely visible.
 
-<DT><B>-anticamo</B>
+<dt><b>-anticamo</b>
 
-<DD>Anti-camouflage pattern - like -camo, but ultra-bright colors.
+<dd>Anti-camouflage pattern - like -camo, but ultra-bright colors.
 
 <p>If you specify <b>-color</b>, this is the same as <b>-camo</b>.
 
-<DT><B>-argyle1</B>
+<dt><b>-argyle1</b>
 
-<DD>A diamond argyle pattern, without a cross through the diamond, with one
+<dd>A diamond argyle pattern, without a cross through the diamond, with one
 diamond.  Can be tiled.
 
 <p>If you specify -color, give two colors: background and foreground, in that
@@ -117,15 +125,21 @@ order.
 
 <p>This option was new in Netpbm 10.78 (March 2017).
 
-<DT><B>-argyle2</B>
+<dt><b>-argyle2</b>
 
-<DD>A diamond argyle pattern, with a cross through the diamond, with one
+<dd>A diamond argyle pattern, with a cross through the diamond, with one
 diamond.  Can be tiled.
 
 <p>If you specify -color, give three colors: background, foreground, and
 stripe, in that order.
 
 <p>This option was new in Netpbm 10.78 (March 2017).
+
+</dl>
+
+<h3 id="otheropts">Other Options</h3>
+
+<dl compact>
 
 <dt><b>-color</b> <i>colorlist</i>
 
@@ -139,7 +153,7 @@ with the pattern you specify, <b>ppmpat</b> fails, telling you how many colors
 to specify.
 
 <p><i>colorlist</i> is a comma-separated list of colors.
-<P>Specify each color as described for the <a
+<p>Specify each color as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
@@ -160,36 +174,39 @@ invocations.
 
 <p>This option was new in Netpbm 10.61 (December 2012).
 
-</DL>
+</dl>
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
 Some of the patterns are from "Designer's Guide to Color 3"
 by Jeanne Allen.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnmtile.html">pnmtile</A>, 
-<A HREF="pnmquant.html">pnmquant</A>, 
-<A HREF="ppmmake.html">ppmmake</A>, 
-<A HREF="ppmrainbow.html">ppmrainbow</A>, 
-<A HREF="pamgradient.html">pamgradient</A>, 
-<A HREF="ppm.html">ppm</A>
+<a href="pnmtile.html">pnmtile</a>, 
+<a href="pnmquant.html">pnmquant</a>, 
+<a href="ppmmake.html">ppmmake</a>, 
+<a href="ppmrainbow.html">ppmrainbow</a>, 
+<a href="pamgradient.html">pamgradient</a>, 
+<a href="ppm.html">ppm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#patspec">Pattern Specification</a>
+  <li><a href="#otheropts">Other Options</a>
+  </ul>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

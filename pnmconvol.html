@@ -49,7 +49,7 @@ a specified convolution matrix, and writes a Netpbm image as output.
 <p>Convolution means replacing each pixel with a weighted average of
 the nearby pixels.  The weights and the area to average are determined
 by the convolution matrix (sometimes called a convolution kernel),
-which you supply in one of several ways.  See <a href="#convolutionmatrix">
+which you supply in one of several ways.  See <a href="#convolmatrix">
 Convolution Matrix</a>.
 
 <p>At the edges of the convolved image, where the convolution matrix would
@@ -81,7 +81,7 @@ which <b>pnmconvol</b> would of course clip to zero, since Netpbm formats
 cannot represent negative numbers.
 
 
-<h3 id="convolutionmatrix">Convolution Matrix</h3>
+<h3 id="convolmatrix">Convolution Matrix</h3>
 
 <p>There are three ways to specify the convolution matrix:
 
@@ -442,12 +442,13 @@ href="mailto:burns@chem.psu.edu">burns@chem.psu.edu</a>
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
   <ul>
-  <li><a href="#convolutionmatrix">Convolution Matrix</a>
+  <li><a href="#convolmatrix">Convolution Matrix</a>
     <ul>
     <li><a href="#matrixopt">Directly On the Command Line</a>
     <li><a href="#matrixfile">Regular Matrix File</a>
     <li><a href="#matrixpnm">PNM File</a>
     </ul>
+  <li><a href="#otherconvol">Other Forms of Convolution</a>
   </ul>
 <li><a href="#options">OPTIONS</a>
 <li><a href="#history">HISTORY</a>

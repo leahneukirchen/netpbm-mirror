@@ -1,43 +1,43 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmquant User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmquant</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmquant User Manual</title></head>
+<body>
+<h1>pnmquant</h1>
 Updated: 09 February 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pnmquant - quantize the colors in a Netpbm image to a smaller set
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmquant</B>
-[<B>-center</B>|<B>-meancolor</B>|<B>-meanpixel</B>]
-[<B>-floyd</B>|<B>-fs</B>]
-[<B>-nofloyd</B>|<B>-nofs</B>]
-[<B>-spreadbrightness</B>|<B>-spreadluminosity</B>]
+<b>pnmquant</b>
+[<b>-center</b>|<b>-meancolor</b>|<b>-meanpixel</b>]
+[<b>-floyd</b>|<b>-fs</b>]
+[<b>-nofloyd</b>|<b>-nofs</b>]
+[<b>-spreadbrightness</b>|<b>-spreadluminosity</b>]
 {[<b>-norandom</b>]|[<b>-randomseed=</b><i>n</i>]}
-<I>ncolors</I> [<I>pnmfile</I>]
+<i>ncolors</i> [<i>pnmfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.  You
+<p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
 use either white space or equals signs between an option name and its
 value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmquant</b> reads a PNM image as input.  It chooses <I>ncolors</I>
+<p><b>pnmquant</b> reads a PNM image as input.  It chooses <i>ncolors</i>
 colors to best represent the image, maps the existing colors
 to the new ones, and writes a PNM image as output.
 
-<P>This program is simply a combination of <B>pnmcolormap</B> and
-<B>pnmremap</B>, where the colors of the input are remapped using a
+<p>This program is simply a combination of <b>pnmcolormap</b> and
+<b>pnmremap</b>, where the colors of the input are remapped using a
 color map which is generated from the colors in that same input.  The
 options have the same meaning as in those programs.  See their
-documentation to understand <B>pnmquant</B>.
+documentation to understand <b>pnmquant</b>.
 
 <p>You may actually get fewer than <b>ncolors</b> colors in the output because
   the method <b>pnmcolormap</b> uses to choose the best set of colors for the
@@ -59,9 +59,9 @@ documentation to understand <B>pnmquant</B>.
 <h3 id="separate">Running <b>pnmcolormap</b> and <b>pnmremap</b> Separately
 </h3>
 
-<P>It is much faster to call <B>pnmcolormap</B> and <B>pnmremap</B>
-directly than to run <B>pnmquant</B>.  You save the overhead of the
-Perl interpreter and creating two extra processes.  <B>pnmquant</B> is
+<p>It is much faster to call <b>pnmcolormap</b> and <b>pnmremap</b>
+directly than to run <b>pnmquant</b>.  You save the overhead of the
+Perl interpreter and creating two extra processes.  <b>pnmquant</b> is
 just a convenience.
 
 <p>Here is an example of the relationship between the programs:
@@ -85,16 +85,31 @@ just a convenience.
 
 <h2 id="options">OPTIONS</h2>
 
-<dl>
-<DT><B>-center</B>
-<DT><B>-meancolor</B>
-<DT><B>-meanpixel</B>
-<dt><b>-spreadbrightness</b>
-<dt><b>-spreadluminosity</b>
-<dd>
-  These options control the selection of the palette.  They are options to
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmquant</b> recognizes the following
+command line options:
+
+<h3 id="pnmcolormapopt">Options Passed to <b>pnmcolormap</b></h3>
+
+  <p>These options control the selection of the palette.  They are options to
   <a href="pnmcolormap.html"><b>pnmcolormap</b></a>.
 
+<dl compact>
+<dt><b>-center</b>
+<dt><b>-meancolor</b>
+<dt><b>-meanpixel</b>
+<dt><b>-spreadbrightness</b>
+<dt><b>-spreadluminosity</b>
+</dl>
+
+<h3 id="pnmremapopt">Options Passed to <b>pnmremap</b></h3>
+
+  <p>These options control which color from the palette the program uses to
+  replace a pixel of a certain color from the input.  They are options to
+  <a href="pnmremap.html"><b>pnmremap</b></a>.
+
+<dl compact>
 <dt><b>-floyd</b>
 <dt><b>-fs</b>
 <dt><b>-nofloyd</b>
@@ -102,12 +117,7 @@ just a convenience.
 <dt><b>-norandom</b>
 <dt><b>-randomseed</b>
 <dt><b>-norandom</b>
-<dd>
-  These options control which color from the palette the program uses to
-  replace a pixel of a certain color from the input .  They are options to
-  <a href="pnmremap.html"><b>pnmremap</b></a>.
 </dl>
-
 
 <h2 id="history">HISTORY</h2>
 
@@ -120,24 +130,31 @@ images.  <b>ppmquant</b> continues to exist, but is only a front end
   
 <p><b>-norandom</b> did not exist before Netpbm 10.82 (March 2018).
   
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmcolormap.html">pnmcolormap</A></B>,
-<B><A HREF="pnmremap.html">pnmremap</A></B>,
-<B><A HREF="ppmquantall.html">ppmquantall</A></B>,
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="ppmdither.html">ppmdither</A></B>,
-<B><A HREF="ppmquant.html">ppmquant</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pnmcolormap.html">pnmcolormap</a></b>,
+<b><a href="pnmremap.html">pnmremap</a></b>,
+<b><a href="ppmquantall.html">ppmquantall</a></b>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="ppmdither.html">ppmdither</a></b>,
+<b><a href="ppmquant.html">ppmquant</a></b>,
+<b><a href="pnm.html">pnm</a></b>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+  <ul>
+  <li><a href="#separate">Running pnmcolormap and pnmremap Separately</a>
+  </ul>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#pnmcolormapopt">Options Passed to pnmcolormap</a>
+  <li><a href="#pnmremapopt">Options Passed to pnmremap</a>
+  </ul>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

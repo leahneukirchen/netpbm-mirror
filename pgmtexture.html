@@ -1,80 +1,95 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pgmtexture User Manual</TITLE></HEAD>
-<BODY>
-<H1>pgmtexture</H1>
-Updated: 22 Aug 1991
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pgmtexture User Manual</title></head>
+<body>
+<h1>pgmtexture</h1>
+Updated: 22 August 1991
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pgmtexture - calculate textural features on a PGM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pgmtexture</B>
+<b>pgmtexture</b>
 
-[<B>-d</B> <I>d</I>]
+[<b>-d</b> <i>d</i>]
 
-[<I>pgmfile</I>]
+[<i>pgmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pgmtexture</b> reads a PGM image as input and calculates
 textural features based on spatial dependence matrices at 0, 45, 90,
-and 135 degrees for a distance <I>d</I> (default = 1).
+and 135 degrees for a distance <i>d</i> (default = 1).
 
 <p>Textural features include:
 
-<UL>
-<LI>Angular Second Moment
-<LI>Contrast
-<LI>Correlation
-<LI>Variance
-<LI>Inverse Difference Moment
-<LI>Sum Average
-<LI>Sum Variance
-<LI>Sum Entropy
-<LI>Entropy
-<LI>Difference Variance
-<LI>Difference Entropy
-<LI>Information Measures of Correlation
-<LI>Maximal Correlation Coefficient
-</UL>
+<ul>
+<li>Angular Second Moment
+<li>Contrast
+<li>Correlation
+<li>Variance
+<li>Inverse Difference Moment
+<li>Sum Average
+<li>Sum Variance
+<li>Sum Entropy
+<li>Entropy
+<li>Difference Variance
+<li>Difference Entropy
+<li>Information Measures of Correlation
+<li>Maximal Correlation Coefficient
+</ul>
      
-<P>Algorithm taken from: <CITE>Haralick, R.M., K. Shanmugam, and
+<p>Algorithm taken from: <cite>Haralick, R.M., K. Shanmugam, and
 I. Dinstein. 1973. Textural features for image classification.
-<I>IEEE Transactions on Systems, Man, and Cybertinetics,</I>
+<i>IEEE Transactions on Systems, Man, and Cybertinetics,</i>
 SMC-3(6):610-621.</cite>
      
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pgmtexture</b> recognizes the following
+command line option:
+
+<dl compact>
+
+<dt>-d <i>distance</i>
+<dd>The distance.  Default is 1.
+
+</dl>
+
+<h2 id="limitations">LIMITATIONS</h2>
 
 <p>The method for finding the Maximal Correlation Coefficient, which requires
 finding the second largest eigenvalue of a matrix Q, does not always converge.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pgm.html">pgm</A>,
-<A HREF="pamsharpness.html">pamsharpness</A>,
-<A HREF="pamsharpmap.html">pamsharpmap</A>,
-<A HREF="pgmedge.html">pgmedge</A>,
-<A HREF="pgmminkowski.html">pgmminkowski</A>
+<a href="pgm.html">pgm</a>,
+<a href="pamsharpness.html">pamsharpness</a>,
+<a href="pamsharpmap.html">pamsharpmap</a>,
+<a href="pgmedge.html">pgmedge</a>,
+<a href="pgmminkowski.html">pgmminkowski</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Texas Agricultural Experiment Station, employer for
 hire of James Darrell McCauley. 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#limitations">limitations</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

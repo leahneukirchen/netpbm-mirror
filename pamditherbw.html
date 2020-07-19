@@ -1,42 +1,42 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamditherbw User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamditherbw</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamditherbw User Manual</title></head>
+<body>
+<h1>pamditherbw</h1>
 Updated: 10 May 2010
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamditherbw - dither grayscale image to black and white
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamditherbw</B>
+<b>pamditherbw</b>
 
-[<B>-floyd</B> | <B>-fs</B>
+[<b>-floyd</b> | <b>-fs</b>
 | <b>-atkinson</b>
-| <B>-threshold</B>
-| <B>-hilbert</B>
-| <B>-dither8</B> | <B>-d8</B> | <B>-cluster3</B>
-| <B>-c3</B> | <B>-cluster4</B> | <B>-c4</B>
-| <B>-cluster8</B> | <B>-c8</B>]
+| <b>-threshold</b>
+| <b>-hilbert</b>
+| <b>-dither8</b> | <b>-d8</b> | <b>-cluster3</b>
+| <b>-c3</b> | <b>-cluster4</b> | <b>-c4</b>
+| <b>-cluster8</b> | <b>-c8</b>]
 
-[<B>-value</B> <I>val</I>]
+[<b>-value</b> <i>val</i>]
 
-[<B>-clump</B> <I>size</I>]
+[<b>-clump</b> <i>size</i>]
 
 [<b>-randomseed=</b><i>integer</i>]
 
-[<I>pamfile</I>]
+[<i>pamfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>pamditherbw</b> dithers a grayscale image.  Dithering means turning
+<p><b>pamditherbw</b> dithers a grayscale image.  Dithering means turning
 each shade of gray into a pattern of black and white pixels that, from
 a distance, look the same as the gray.
 
@@ -50,7 +50,7 @@ if it represented gray levels).
 this into a PBM (if you need to use it with an older program that doesn't
 understand PAM) with <b>pamtopnm</b>.
 
-<P>To do the opposite of dithering, you can usually just scale the image
+<p>To do the opposite of dithering, you can usually just scale the image
 down and then back up again with <b>pamscale</b>, possibly smoothing or
 blurring the result with <b>pnmsmooth</b> or <b>pnmconvol</b>.  Or use
 the special case program <b>pbmtopgm</b>.
@@ -70,21 +70,28 @@ does more sophisticated thresholding.
 <b>pamtopnm</b> will do that.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>The default quantization method is boustrophedonic Floyd-Steinberg
-error diffusion (<B>-floyd</B> or <B>-fs</B>).
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamditherbw</b> recognizes the following
+command line options:
 
-<p>Also available are simple thresholding (<B>-threshold</B>); Bayer's
-ordered dither (<B>-dither8</B>) with a 16x16 matrix;
+<h3 id="quantmethod">Quantization Method</h3>
+
+<p>The default quantization method is boustrophedonic Floyd-Steinberg
+error diffusion (<b>-floyd</b> or <b>-fs</b>).
+
+<p>Also available are simple thresholding (<b>-threshold</b>); Bayer's
+ordered dither (<b>-dither8</b>) with a 16x16 matrix;
 <a href="http://www.tinrocket.com/projects/programming/graphics/00158/">
 Atkinson</a>; and three different sizes of 45-degree clustered-dot
-dither (<B>-cluster3</B>, <B>-cluster4</B>, <B>-cluster8</B>).
+dither (<b>-cluster3</b>, <b>-cluster4</b>, <b>-cluster8</b>).
 
 <p>A space filling curve halftoning method using the Hilbert curve is
-also available (<B>-hilbert</B>).
+also available (<b>-hilbert</b>).
 
-<P>Floyd-Steinberg or Atkinson will almost always give the best
+<p>Floyd-Steinberg or Atkinson will almost always give the best
 looking results; however, looking good is not always what you want.
 For instance, you can use thresholding in a pipeline with the
 <b>pnmconvol</b>, for tasks such as edge and peak detection.  And
@@ -95,11 +102,11 @@ effect.
 <a href="http://www.tinrocket.com/projects/programming/graphics/00158/">
 some claim</a> Atkinson works better.
 
-<P>The Hilbert curve method is useful for processing images before
+<p>The Hilbert curve method is useful for processing images before
 display on devices that do not render individual pixels distinctly
 (like laser printers).  This dithering method can give better results
 than the dithering usually done by the laser printers themselves.  The
-<B>-clump</B> option alters the number of pixels in a clump.  Typically a PGM
+<b>-clump</b> option alters the number of pixels in a clump.  Typically a PGM
 image will have to be scaled to fit on a laser printer page (2400 x 3000
 pixels for an A4 300 dpi page), and then dithered to a PBM image before being
 converted to a postscript file.  A printing pipeline might look something
@@ -110,28 +117,31 @@ like:
       pamtopnm | pnmtops -scale 0.25 &gt; image.ps 
 </pre>
 
+<h3 id="otheropts">Other Options</h3>
+
 <dl>
 
 <dt><b>-value</b>
 
-<dd>This option alters the thresholding value for
-Floyd-Steinberg, Atkinson, and simple thresholding.  It should be a
-real number between 0 and 1.  Above 0.5 means darker images; below 0.5
-means lighter.
+<dd>This option alters the thresholding value for Floyd-Steinberg,
+Atkinson, and simple thresholding.  It should be a real number between
+0 and 1.  Above 0.5 means darker images; below 0.5 means lighter.
 
 <dt><b>-clump</b>
-<dd>This option alters the number of pixels in a clump.  This is usually an
-integer between 2 and 100 (default 5).  Smaller clump sizes smear the image
-less and are less grainy, but seem to lose some grey scale linearity.
+<dd>This option alters the number of pixels in a clump when the
+Hilbert curve method is used.  This is usually an integer between 2
+and 100 (default 5).  Smaller clump sizes smear the image less and are
+less grainy, but seem to lose some grey scale linearity.
 
 <dt><b>-randomseed=</b><i>integer</i>
 
-<dd>This is the seed for the random number generator that generates the
-pixels.
+<dd>The Floyd-Steiberg and Atkinson methods use random numbers to
+diffuse the error.  This is the seed for the random number generator.
+The other methods do not employ random numbers and ignore this option.
 
 <p>Use this to ensure you get the same image on separate invocations.
 
-<p>By default, <b>pgmnoise</b> uses a seed derived from the time of day
+<p>By default, <b>pamditherbw</b> uses a seed derived from the time of day
 and process ID, which gives you fairly uncorrelated results in multiple
 invocations.
 
@@ -140,29 +150,29 @@ invocations.
 </dl>
 
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
 <p>The only reference you need for this stuff is "Digital
 Halftoning" by Robert Ulichney, MIT Press, ISBN 0-262-21009-6.
 
-<P>The Hilbert curve space filling method is taken from "Digital
+<p>The Hilbert curve space filling method is taken from "Digital
 Halftoning with Space Filling Curves" by Luiz Velho, Computer
 Graphics Volume 25, Number 4, proceedings of SIGRAPH '91, page
 81. ISBN 0-89791-436-8
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamtopnm.html">pamtopnm</A>,
-<A HREF="pgmtopgm.html">pgmtopgm</A>,
-<A HREF="pbmtopgm.html">pbmtopgm</A>,
-<A HREF="pamthreshold.html">pamthreshold</A>,
-<A HREF="pbmreduce.html">pbmreduce</A>,
-<A HREF="pnmconvol.html">pnmconvol</A>,
-<A HREF="pamscale.html">pamscale</A>,
-<A HREF="pam.html">pam</A>,
-<A HREF="pnm.html">pnm</A>,
+<a href="pamtopnm.html">pamtopnm</a>,
+<a href="pgmtopgm.html">pgmtopgm</a>,
+<a href="pbmtopgm.html">pbmtopgm</a>,
+<a href="pamthreshold.html">pamthreshold</a>,
+<a href="pbmreduce.html">pbmreduce</a>,
+<a href="pnmconvol.html">pnmconvol</a>,
+<a href="pamscale.html">pamscale</a>,
+<a href="pam.html">pam</a>,
+<a href="pnm.html">pnm</a>,
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamditherbw</b> was new in Netpbm 10.23 (July 2004), but is
 essentially the same program as <b>pgmtopbm</b> that has existed
@@ -175,19 +185,24 @@ accepts PAM input in addition to PGM and PBM and produces PAM output.
 
 <p><b>-atkinson</b> was new in Netpbm 10.38 (March 2007).
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#quantmethod">Quantization Method</a>
+  <li><a href="#otheropts">Other Options</a>
+  </ul>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

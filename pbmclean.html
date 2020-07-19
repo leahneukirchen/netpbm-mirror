@@ -37,7 +37,7 @@ images.
 simple and extended.  When you specify <b>-extended</b>, <b>pbmclean</b>
 uses extended; otherwise it uses basic.
 
-<h3 id="basic"></h3>
+<h3 id="basic">Basic Mode</h3>
 
 <p>In basic mode, <b>pbmclean</b> looks at each pixel individually, and any
 pixel that doesn't have at least a minimum number of pixels of the same color
@@ -68,7 +68,7 @@ default, it flips isolated pixels of either color.  But you can
 specify <b>-black</b> or <b>-white</b> to have it flip only pixels of one
 color.
 
-<h3 id="extended"></h3>
+<h3 id="extended">Extended Mode</h3>
 
 <p>In extended mode, <b>pbmclean</b> erases all blobs which don't have the
 specified minimum number of pixels.  A blob is a set of contiguous pixels of
@@ -148,6 +148,10 @@ implied warranty.
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
+  <ul>
+  <li><a href="#basic">Basic Mode</a>
+  <li><a href="#extended">Extended Mode</a>
+  </ul>
 <li><a href="#options">OPTIONS</a>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#author">AUTHOR</a>

@@ -1,58 +1,58 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamscale User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamscale</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamscale User Manual</title></head>
+<body>
+<h1>pamscale</h1>
 Updated: 29 June 2020
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamscale - scale a Netpbm image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <pre>
-   <B>pamscale</B>
+   <b>pamscale</b>
       [ 
-         <I>scale_factor</I> 
+         <i>scale_factor</i> 
          |
-         {<B>-xyfit</B> | <B>-xyfill</b> | <b>-xysize</b>}
-           <I>cols</i> <i>rows</I> 
+         {<b>-xyfit</b> | <b>-xyfill</b> | <b>-xysize</b>}
+           <i>cols</i> <i>rows</i> 
          |
-         <B>-reduce</B> <I>reduction_factor</I> 
+         <b>-reduce</b> <i>reduction_factor</i> 
          |
-         [<B>-xsize=</B><I>cols</I> | <B>-width=</B><I>cols</I> | <B>-xscale=</B><I>factor</I>]
-         [<B>-ysize=</B><I>rows</I> | <B>-height=</B><I>rows</I> | <B>-yscale=</B><I>factor</I>]
+         [<b>-xsize=</b><i>cols</i> | <b>-width=</b><i>cols</i> | <b>-xscale=</b><i>factor</i>]
+         [<b>-ysize=</b><i>rows</i> | <b>-height=</b><i>rows</i> | <b>-yscale=</b><i>factor</i>]
          |
-         <b>-pixels</B> <I>n</I>
+         <b>-pixels</b> <i>n</i>
       ]
       [
-         <b>-nomix</B> 
+         <b>-nomix</b> 
          |
          <b>-filter=</b><i>functionName</i> [<b>-window=</b>functionName]
       ]
       [<b>-linear</b>]
       [<b>-reportonly</b>]
-      [<B>-verbose</b>]
+      [<b>-verbose</b>]
 
-      [<I>pnmfile</I>]
+      [<i>pnmfile</i>]
 
 </pre>
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pamscale</b> scales a Netpbm image by a specified factor, or
+<p><b>pamscale</b> scales a Netpbm image by a specified factor, or
 scales individually horizontally and vertically by specified factors.
 
-<P>You can either enlarge (scale factor &gt; 1) or reduce (scale factor
+<p>You can either enlarge (scale factor &gt; 1) or reduce (scale factor
 &lt; 1).
 
 <p><b>pamscale</b> works on multi-image streams, scaling each one
@@ -67,7 +67,7 @@ and <b>-pixels</b> control the amount of scaling.  For backward compatibility,
 there are also <b>-xysize</b> and the <i>scale_factor</i> argument, but you
 shouldn't use those.
 
-<P><b>-width</b> and <b>-height</b> specify the width and height in pixels
+<p><b>-width</b> and <b>-height</b> specify the width and height in pixels
 you want the resulting image to be.  See below for rules when you specify
 one and not the other.
 
@@ -80,28 +80,28 @@ width and height of the image to change from source to result (e.g.
 means you want to halve it).  See below for rules when you specify one and
 not the other.
 
-<P>When you specify an absolute size or scale factor for both
-dimensions, <B>pamscale</B> scales each dimension independently
+<p>When you specify an absolute size or scale factor for both
+dimensions, <b>pamscale</b> scales each dimension independently
 without consideration of the aspect ratio.
 
-<P>If you specify one dimension as a pixel size and don't specify the
-other dimension, <B>pamscale</B> scales the unspecified dimension to
+<p>If you specify one dimension as a pixel size and don't specify the
+other dimension, <b>pamscale</b> scales the unspecified dimension to
 preserve the aspect ratio.
 
-<P>If you specify one dimension as a scale factor and don't specify
-the other dimension, <B>pamscale</B> leaves the unspecified dimension
+<p>If you specify one dimension as a scale factor and don't specify
+the other dimension, <b>pamscale</b> leaves the unspecified dimension
 unchanged from the input.
 
-<P>If you specify the <I>scale_factor</I> parameter instead of
+<p>If you specify the <i>scale_factor</i> parameter instead of
 dimension options, that is the scale factor for both dimensions.  It
-is equivalent to <B>-xscale=</B><I>scale_factor</I><B>
--yscale=</B><I>scale_factor</I>.
+is equivalent to <b>-xscale=</b><i>scale_factor</i><b>
+-yscale=</b><i>scale_factor</i>.
 
-<P>Specifying the <B>-reduce</B> <I>reduction_factor</I> option is
-equivalent to specifying the <I>scale_factor </I> parameter, where
-<I>scale_factor</I> is the reciprocal of <I>reduction_factor</I>.
+<p>Specifying the <b>-reduce</b> <i>reduction_factor</i> option is
+equivalent to specifying the <i>scale_factor </i> parameter, where
+<i>scale_factor</i> is the reciprocal of <i>reduction_factor</i>.
 
-<P><B>-xyfit</B> specifies a bounding box.  <B>pamscale</B> scales
+<p><b>-xyfit</b> specifies a bounding box.  <b>pamscale</b> scales
 the input image to the largest size that fits within the box, while
 preserving its aspect ratio.  <b>-xysize</b> is a synonym for this.
 Before Netpbm 10.20 (January 2004), <b>-xyfit</b> did not exist, but
@@ -112,14 +112,14 @@ to the smallest size that completely fills the box, while preserving
 its aspect ratio.  This option has existed since Netpbm 10.20 (January
 2004).
 
-<P><B>-pixels</B> specifies a maximum total number of output pixels.
-<B>pamscale</B> scales the image down to that number of pixels.  If
+<p><b>-pixels</b> specifies a maximum total number of output pixels.
+<b>pamscale</b> scales the image down to that number of pixels.  If
 the input image is already no more than that many pixels,
-<B>pamscale</B> just copies it as output; <B>pamscale</B> does not
-scale up with <B>-pixels</B>.
+<b>pamscale</b> just copies it as output; <b>pamscale</b> does not
+scale up with <b>-pixels</b>.
 
-<P>If you enlarge by a factor of 3 or more, you should probably add a
-<I>pnmsmooth</I> step; otherwise, you can see the original pixels in
+<p>If you enlarge by a factor of 3 or more, you should probably add a
+<i>pnmsmooth</i> step; otherwise, you can see the original pixels in
 the resulting image.
 
 <h4 id="reportonly"><b>-reportonly</b></h4>
@@ -141,9 +141,9 @@ for choosing scale factors.
 example above, it would be
 
 <pre>
-<tt>
+<span style="font-family: monospace">
     500 400 0.250000 0.250000 125 100
-</tt>
+</span>
 </pre>
 
 <p>The output is a single line of text per input image, with blank-separated
@@ -163,11 +163,11 @@ tokens as follows.
 
 <h3 id="usage">Usage Notes</h3>
 
-<P>A useful application of <B>pamscale</B> is to blur an image.  Scale
-it down (without <B>-nomix</B>) to discard some information, then
-scale it back up using <B>pamstretch</B>.
+<p>A useful application of <b>pamscale</b> is to blur an image.  Scale
+it down (without <b>-nomix</b>) to discard some information, then
+scale it back up using <b>pamstretch</b>.
 
-<P>Or scale it back up with <B>pamscale</B> and create a "pixelized" image,
+<p>Or scale it back up with <b>pamscale</b> and create a "pixelized" image,
 which is sort of a computer-age version of blurring.
 
 
@@ -200,9 +200,9 @@ exception when the input is PAM.  If the PAM input tuple type is
 BLACKANDWHITE, the PAM output tuple type is also BLACKANDWHITE, and
 you get no meaningful pixel mixing.
 
-<P>If you want PBM output with PBM input, use <B>pamditherbw</B> to
-convert <B>pamscale</B>'s output to PBM.  Also consider
-<B>pbmreduce</B>.
+<p>If you want PBM output with PBM input, use <b>pamditherbw</b> to
+convert <b>pamscale</b>'s output to PBM.  Also consider
+<b>pbmreduce</b>.
 
 <p><b>pamscale</b>'s function is essentially undefined for PAM input
 images that are not of tuple type RGB, GRAYSCALE, BLACKANDWHITE, or
@@ -287,7 +287,7 @@ disappear completely.
 <p>You select discrete sampling with <b>pamscale</b>'s <b>-nomix</b>
 option.
 
-<p>Actually, <B>-nomix</b> doesn't do exactly what I described above.
+<p>Actually, <b>-nomix</b> doesn't do exactly what I described above.
 It does the scaling in two passes - first horizontal, then vertical.
 This can produce slightly different results.
 
@@ -303,15 +303,15 @@ pixel mixing.  Probably a better way is to do the pixel mixing, but
 then color quantize the result with <b>pnmquant</b> before converting
 to GIF.
 
-<P>When the scale factor is an integer (which means you're scaling
+<p>When the scale factor is an integer (which means you're scaling
 up), discrete sampling and pixel mixing are identical -- output pixels
 are always just N copies of the input pixels.  In this case, though,
-consider using <B>pamstretch</B> instead of <B>pamscale</B> to get the
+consider using <b>pamstretch</b> instead of <b>pamscale</b> to get the
 added pixels interpolated instead of just copied and thereby get a
 smoother enlargement.
 
-<P><b>pamscale</b>'s discrete sampling is faster than pixel mixing,
-but <B>pamenlarge</B> is faster still.  <B>pamenlarge</B> works only
+<p><b>pamscale</b>'s discrete sampling is faster than pixel mixing,
+but <b>pamenlarge</b> is faster still.  <b>pamenlarge</b> works only
 on integer enlargements.
 
 <p>discrete sampling (<b>-nomix</b>) was new in Netpbm 9.24 (January 2002).
@@ -517,7 +517,7 @@ and centered on the Y axis with height 1 and base 2.
 </dl>
 
 
-<H3 id="linear">Linear vs Gamma-adjusted</H3>
+<h3 id="linear">Linear vs Gamma-adjusted</h3>
 
 <p>The pixel mixing scaling method described above involves intensities
 of pixels (more precisely, it involves individual intensities of
@@ -531,7 +531,7 @@ gamma-adjusted numbers and internal intensity-proportional numbers.
 <p>Sometimes you are not working with true PNM or PAM images, but
 rather a variation in which the sample values are in fact directly
 proportional to intensity.  If so, use the <b>-linear</b> option to
-tell <b>pamscale</b> this.  <b>pamscale</B> then will skip the
+tell <b>pamscale</b> this.  <b>pamscale</b> then will skip the
 conversions.
 
 <p>The conversion takes time.  In one experiment, it increased by a factor of
@@ -562,17 +562,22 @@ values in this method; <b>pamscale</b> just copies numbers from its
 input to its output.
 
 
-<H3 id="precision">Precision</H3>
+<h3 id="precision">Precision</h3>
 
-<P><B>pamscale</B> uses floating point arithmetic internally.  There
+<p><b>pamscale</b> uses floating point arithmetic internally.  There
 is a speed cost associated with this.  For some images, you can get
 the acceptable results (in fact, sometimes identical results) faster
-with <B>pnmscalefixed</B>, which uses fixed point arithmetic.
-<B>pnmscalefixed</B> may, however, distort your image a little.  See
-the <B>pnmscalefixed</B> user manual for a complete discussion of the
+with <b>pnmscalefixed</b>, which uses fixed point arithmetic.
+<b>pnmscalefixed</b> may, however, distort your image a little.  See
+the <b>pnmscalefixed</b> user manual for a complete discussion of the
 difference.
 
 <h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamscale</b> recognizes the following
+command line options:
 
 <dl>
 
@@ -602,7 +607,7 @@ difference.
   
 <dt><b>-nomix</b>
 <dd>
-  This option select <a href="#sampling">discrete sampling</a> as the
+  This option selects <a href="#sampling">discrete sampling</a> as the
   <a href="#methods">method of scaling</a>.
 
 <dt><b>-filter=</b><i>functionName</i>
@@ -625,22 +630,23 @@ difference.
 </dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmscalefixed.html">pnmscalefixed</A></B>,
-<B><A HREF="pamstretch.html">pamstretch</A></B>,
-<B><A HREF="pamditherbw.html">pamditherbw</A></B>,
-<B><A HREF="pbmreduce.html">pbmreduce</A></B>,
-<B><A HREF="pbmpscale.html">pbmpscale</A></B>,
-<B><A HREF="pamenlarge.html">pamenlarge</A></B>,
-<B><A HREF="pnmsmooth.html">pnmsmooth</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pnmgamma.html">pnmgamma</A></B>,
-<B><A HREF="pnmscale.html">pnmscale</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pnmscalefixed.html">pnmscalefixed</a></b>,
+<b><a href="pamstretch.html">pamstretch</a></b>,
+<b><a href="pamstretch-gen.html">pamstretch-gen</a></b>,
+<b><a href="pamditherbw.html">pamditherbw</a></b>,
+<b><a href="pbmreduce.html">pbmreduce</a></b>,
+<b><a href="pbmpscale.html">pbmpscale</a></b>,
+<b><a href="pamenlarge.html">pamenlarge</a></b>,
+<b><a href="pnmsmooth.html">pnmsmooth</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pnmgamma.html">pnmgamma</a></b>,
+<b><a href="pnmscale.html">pnmscale</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="pam.html">pam</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamscale</b> was new in Netpbm 10.20 (January 2004).  It was
 adapted from, and obsoleted, <b>pnmscale</b>.  <b>pamscale</b>'s
@@ -664,32 +670,32 @@ derived, itself evolved out of the original Pbmplus version of
 <b>pnmscale</b> by Jef Poskanzer (1989, 1991).  But none of that
 original code remains.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-  <LI><A HREF="#synopsis">SYNOPSIS</A>
-  <LI><A HREF="#description">DESCRIPTION</A>
-  <UL>
-    <LI><A HREF="#scalefactor">The Scale Factors</a>
-    <UL>
-      <LI><A HREF="#reportonly"><b>-reportonly</b></a>
-      </UL>
-    <LI><A HREF="#usage">Usage Notes</a>
-    <LI><A HREF="#transparency">Transparency</a>
-    <LI><A HREF="#imagetype">Input And Output Image Types</a>
-    <LI><A HREF="#methods">Methods Of Scaling</a>
-    <UL>
-      <LI><A HREF="#mixing">Pixel Mixing</a>
-      <LI><A HREF="#sampling">Discrete Sampling</a>
-      <LI><A HREF="#resampling">Resampling</a>
-      </UL>
-    <LI><A HREF="#linear">Linear vs Gamma-adjusted</a>
-    <LI><A HREF="#precision">Precision</A>
-    </UL>
-  <LI><A HREF="#options">OPTIONS</A>
-  <LI><A HREF="#seealso">SEE ALSO</A>  
-  <LI><A HREF="#history">HISTORY</A>  
-  </UL>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+  <ul>
+  <li><a href="#scalefactor">The Scale Factors</a>
+    <ul>
+    <li><a href="#reportonly">-reportonly</a>
+    </ul>
+  <li><a href="#usage">Usage Notes</a>
+  <li><a href="#transparency">Transparency</a>
+  <li><a href="#imagetype">Input And Output Image Types</a>
+  <li><a href="#methods">Methods Of Scaling</a>
+    <ul>
+    <li><a href="#mixing">Pixel Mixing</a>
+    <li><a href="#sampling">Discrete Sampling</a>
+    <li><a href="#resampling">Resampling</a>
+    </ul>
+  <li><a href="#linear">Linear vs Gamma-adjusted</a>
+  <li><a href="#precision">Precision</a>
+  </ul>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
 
-</BODY>
-</HTML>
+</body>
+</html>

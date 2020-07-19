@@ -1,25 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Asciitopgm User Manual</TITLE></HEAD>
-<BODY>
-<H1>asciitopgm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Asciitopgm User Manual</title></head>
+<body>
+<h1>asciitopgm</h1>
 Updated: 20 January 2011
-<BR>
+<br>
 
-<A HREF="#index">Table Of Contents</A>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 asciitopgm - convert ASCII graphics into a PGM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>asciitopgm</B>
-[<b>-d</b> <i>divisor</I>] <I>height</i> <i>width</I> [<I>asciifile</I>]
+<b>asciitopgm</b>
+[<b>-d</b> <i>divisor</i>] <i>height</i> <i>width</i> [<i>asciifile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>asciitopgm</b> reads ASCII data as input and produces a PGM image
+<p><b>asciitopgm</b> reads ASCII data as input and produces a PGM image
 with pixel values which are an approximation of the
 "brightness" of the ASCII characters, assuming
 black-on-white printing.  In other words, a capital M is very dark, a
@@ -38,10 +38,10 @@ any input byte is not zero.
 <p>The output image is <i>height</i> pixels high by <i>width</i> pixels wide,
 truncating and padding with white on the right and bottom as necessary.
 
-<P>The <i>divisor</I> value is an integer (decimal) by which the
-blackness of an input character is divided; the default value is 1.
-You can use this to adjust the brightness of the output: for example,
-if the image is too bright, increase the divisor.
+<p>The <i>divisor</i> value is an integer (decimal) by which the
+blackness of an input character is divided.  You can use this to
+adjust the brightness of the output: for example, if the image is too
+bright, increase the divisor.
 
 <p>In a sort of reminiscence of Fortran line printer carriage control,
 where a line starts with <b>+</b> (plus), <b>asciitopgm</b> combines it
@@ -55,27 +55,44 @@ reserve the first character of every line that way.  If the first character is
 anything but <b>+</b>, <b>asciitopgm</b> considers it just to be first
 character of the image.
 
-<P>If you're looking for something that creates an image of text,
+<p>If you're looking for something that creates an image of text,
 with that text specified in ASCII, that is something quite different.
 Use <b>pbmtext</b> for that.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="pbmtoascii.html">pbmtoascii</A>,
-<A HREF="pbmtext.html">pbmtext</A>,
-<A HREF="pgm.html">pgm</A>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>asciitopgm</b> recognizes the following
+command line option:
 
-<H2 id="author">AUTHOR</H2>
+<dl compact>
+<dt><b>-d</b> <i>divisor</i>
 
-Wilson H. Bent. Jr. (<A HREF="mailto:whb@usc.edu">whb@usc.edu</A>)
+<dd>Specify the value by which the blackness of an input character is
+divided.  This is an integer value.  Default value is 1.  Larger
+values produce darker output images.
 
-<HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pbmtoascii.html">pbmtoascii</a>,
+<a href="pbmtext.html">pbmtext</a>,
+<a href="pgm.html">pgm</a>
+
+<h2 id="author">AUTHOR</h2>
+
+Wilson H. Bent. Jr. (<a href="mailto:whb@usc.edu">whb@usc.edu</a>)
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

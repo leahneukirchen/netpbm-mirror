@@ -1,23 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Yuv2topam User Manual</TITLE></HEAD>
-<BODY>
-<H1>yuy2topam</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Yuy2topam User Manual</title></head>
+<body>
+<h1>yuy2topam</h1>
 Updated: 23 December 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
 
 yuy2topam - convert YUY2 bytes to PAM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>yuy2topam</B>
+<b>yuy2topam</b>
 
-<b>-width=</b><I>pixels</i> 
+<b>-width=</b><i>pixels</i> 
 <b>-height=</b><i>pixels</i>
-[<I>filename</I>]
+[<i>filename</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,22 +29,42 @@ obviously can't get them from the file.
 
 The output image has maxval 255.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="pam.html">pam</A>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>yuy2topam</b> recognizes the following
+command line options:
 
-<H2 id="author">AUTHOR</H2>
+<dl compact>
 
-Michael Haardt &lt;<A
-HREF="mailto:michael@moria.de">michael@moria.de</A>&gt;.
+<dt><b>-width</b>=<i>width</i>
+<dd>Width of the image, in pixels.  This must be an even number. 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<dt><b>-height</b>=<i>height</i>
+<dd>Height of the image.
+
+</dl>
+
+<p>These options are mandatory.
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pam.html">pam</a>
+
+<h2 id="author">AUTHOR</h2>
+
+Michael Haardt &lt;<a
+href="mailto:michael@moria.de">michael@moria.de</a>&gt;.
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

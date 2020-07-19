@@ -1,61 +1,75 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Thinkjettopbm User Manual</TITLE></HEAD>
-<BODY>
-<H1>thinkjettopbm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Thinkjettopbm User Manual</title></head>
+<body>
+<h1>thinkjettopbm</h1>
 Updated: 03 April 2001
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
 
 thinkjettopbm - convert HP ThinkJet printer commands file to PBM
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>thinkjettopbm</B>
+<b>thinkjettopbm</b>
 
 [<b>-d</b>]
 
-[<I>thinkjet_file</I>]
+[<i>thinkjet_file</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>thinkjettopbm</b> reads HP ThinkJet printer commands from the
-standard input, or <I>thinkjet_file</I> if specified, and writes a PBM
+standard input, or <i>thinkjet_file</i> if specified, and writes a PBM
 image to Standard Output.  <p><b>thinkjettopbm</b> silently ignores
 text and non-graphics command sequences.
 
-<P>The <B>-d</B> option turns on debugging messages which are written
-to the standard error stream.
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>The program handles only a small subset of ThinkJet command
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>thinkjettopbm</b> recognizes the following
+command line option:
+
+<dl compact>
+
+<dt><b>-d</b>
+<dd>Turns on debugging messages which are written to the standard error stream.
+
+</dl>
+
+<h2 id="limitations">LIMITATIONS</h2>
+
+<p>The program handles only a small subset of ThinkJet command
 sequences, but enough to convert screen images from older HP test
 equipment.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <b><a href="pnmtopclxl.html">pnmtopclxl</a></b>,
 <b><a href="pbmtolj.html">pbmtolj</a></b>,
 <b><a href="ppmtolj.html">ppmtolj</a></b>,
 <b><a href="ppmtopj.html">ppmtopj</a></b>,
-<B><A HREF="pjtoppm.html">pjtoppm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
+<b><a href="pjtoppm.html">pjtoppm</a></b>,
+<b><a href="pbm.html">pbm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 2001 by W. Eric Norum
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

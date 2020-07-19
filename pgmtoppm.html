@@ -1,54 +1,54 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pgmtoppm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pgmtoppm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pgmtoppm User Manual</title></head>
+<body>
+<h1>pgmtoppm</h1>
 Updated: 10 December 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pgmtoppm - colorize a PGM (grayscale) image into a PPM (color) image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pgmtoppm</B> <I>colorspec</I> [<I>pgmfile</I>]
+<b>pgmtoppm</b> <i>colorspec</i> [<i>pgmfile</i>]
 
-<BR>
+<br>
 
-<B>pgmtoppm</B> <I>colorspec1</I><B>-</B><I>colorspec2</I> [<I>pgmfile</I>]
+<b>pgmtoppm</b> <i>colorspec1</i><b>-</b><i>colorspec2</i> [<i>pgmfile</i>]
 
-<BR>
+<br>
 
-<B>pgmtoppm</B> <B>-map=</B><I>mapfile</I> [<I>pgmfile</I>]
+<b>pgmtoppm</b> <b>-map=</b><i>mapfile</i> [<i>pgmfile</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use double
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pgmtoppm</b> reads a PGM as input and produces a PPM file as
 output with a specific color assigned to each gray value in the input.
 
-<P>If you specify one color argument, black in the pgm file stays
+<p>If you specify one color argument, black in the pgm file stays
 black and white in the pgm file turns into the specified color in the
 ppm file.  Gray values in between are linearly mapped to differing
 intensities of the specified color.
 
-<P>If you specify two color arguments (separated by a hyphen), then
+<p>If you specify two color arguments (separated by a hyphen), then
 black gets mapped to the first color and white gets mapped to the
 second and gray values in between get mapped linearly (across a three
 dimensional space) to colors in between.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
-<p>Also, you can specify an entire colormap with the <B>-map</B>
-option.  The mapfile is just a <B>ppm</B> file; it can be any shape,
+<p>Also, you can specify an entire colormap with the <b>-map</b>
+option.  The mapfile is just a <b>ppm</b> file; it can be any shape,
 all that matters is the colors in it and their order.  In this case,
 black gets mapped into the first color in the map file, and white gets
 mapped to the last and gray values in between are mapped linearly onto
@@ -59,52 +59,59 @@ the maxval of the map image.
 particular gray level is to use <b>pamlookup</b>.  You make an index
 file that explicitly associates a color with each possible gray level.
 
-<H2 id="maxval">NOTE - MAXVAL</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>When you don't use <b>-map</b>, the "maxval," or depth,
+<p>There are no command line options defined specifically
+for <b>pgmtoppm</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
+
+<h2 id="maxval">NOTE - MAXVAL</h2>
+
+<p>When you don't use <b>-map</b>, the "maxval," or depth,
 of the output image is the same as that of the input image.  The
 maxval affects the color resolution, which may cause quantization
 errors you don't anticipate in your output.  For example, you have a
 simple black and white image as a PGM with maxval 1.  Run this image
-through <B>pgmtoppm 0f/00/00</B> to try to make the image black and
+through <b>pgmtoppm 0f/00/00</b> to try to make the image black and
 faint red.  Because the output image will also have maxval 1, there is
 no such thing as faint red.  It has to be either full-on red or black.
-<B>pgmtoppm</B> rounds the color 0f/00/00 down to black, and you get
+<b>pgmtoppm</b> rounds the color 0f/00/00 down to black, and you get
 an output image that is nothing but black.
 
-<P>The fix is easy: Pass the input through <B>pamdepth</B> on the way
-into <B>pgmtoppm</B> to increase its depth to something that would
+<p>The fix is easy: Pass the input through <b>pamdepth</b> on the way
+into <b>pgmtoppm</b> to increase its depth to something that would
 give you the resolution you need to get your desired color.  In this
-case, <B>pamdepth 16</B> would do it.  Or spare yourself the
-unnecessary thinking and just say <B>pamdepth 255</B>.
+case, <b>pamdepth 16</b> would do it.  Or spare yourself the
+unnecessary thinking and just say <b>pamdepth 255</b>.
 
 <p>PBM input is a special case.  While you might think this would be
 equivalent to a PGM with maxval 1 since only two gray levels are
 necessary to represent a PBM image, <b>pgmtoppm</b>, like all Netpbm
 programs, in fact treats it as a maxval of 255.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="rgb3toppm.html">rgb3toppm</A></B>,
-<B><A HREF="ppmtopgm.html">ppmtopgm</A></B>,
-<B><A HREF="ppmtorgb3.html">ppmtorgb3</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>,
-<B><A HREF="pgm.html">pgm</A></B>
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="rgb3toppm.html">rgb3toppm</a></b>,
+<b><a href="ppmtopgm.html">ppmtopgm</a></b>,
+<b><a href="ppmtorgb3.html">ppmtorgb3</a></b>,
+<b><a href="ppm.html">ppm</a></b>,
+<b><a href="pgm.html">pgm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1991 by Jef Poskanzer.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#maxval">NOTE - MAXVAL</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#maxval">NOTE - MAXVAL</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,49 +1,70 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Eyuvtoppm User Manual</TITLE></HEAD>
-<BODY>
-<H1>eyuvtoppm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Eyuvtoppm User Manual</title></head>
+<body>
+<h1>eyuvtoppm</h1>
 Updated: 22 April 2001
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 eyuvtoppm - convert a Berkeley YUV file to a PPM file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>eyuvtoppm</B>
-[<B>--width</B>
-<I>width</I>]
-[<B>--height</B>
-<I>height</I>]
-[<I>eyuvfile</I>]
+<b>eyuvtoppm</b>
+[<b>--width</b>
+<i>width</i>]
+[<b>--height</b>
+<i>height</i>]
+[<i>eyuvfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>eyuvtoppm</b> reads a Berkeley Encoder YUV (not the same as
 Abekas YUV) file as input and produces a PPM image on Standard Output.
 
-<P>With no filename argument takes input from Standard Input.
-Otherwise, <I>eyuvfile </I> is the file specification of the input
+<p>With no filename argument takes input from Standard Input.
+Otherwise, <i>eyuvfile </i> is the file specification of the input
 file.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="ppmtoeyuv.html">ppmtoeyuv</A></B>,
-<B><A HREF="yuvtoppm.html">yuvtoppm</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>eyuvtoppm</b> recognizes the following
+command line options:
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<dl compact>
+
+<dt><b>--width</b> <i>width</i>
+<dd>Width of the image, in pixels.  Must be an even number.
+
+<dt><b>--height</b> <i>height</i>
+<dd>Height of the image, in pixels.  Must be an even number.
+
+</dl>
+
+<p>These options are mandatory.
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="ppmtoeyuv.html">ppmtoeyuv</a></b>,
+<b><a href="yuvtoppm.html">yuvtoppm</a></b>,
+<b><a href="ppm.html">ppm</a></b>
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>
 
 
 

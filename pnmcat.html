@@ -1,35 +1,35 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmcat User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmcat</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmcat User Manual</title></head>
+<body>
+<h1>pnmcat</h1>
 Updated: 30 May 2011
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmcat - concatenate Netpbm images
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmcat</B>
+<b>pnmcat</b>
 
-{<B>-leftright</B> | <B>-lr</B> | <B>-topbottom</b> | <b>-tb</b>}
+{<b>-leftright</b> | <b>-lr</b> | <b>-topbottom</b> | <b>-tb</b>}
 
-[<B>-white</B>|<B>-black</B>]
+[<b>-white</b>|<b>-black</b>]
 
-[<B>-jtop</B>|<B>-jbottom</B>|<B>-jcenter</b>]
-[<B>-jleft</B>|<B>-jright</B>|<b>-jcenter</b>]
+[<b>-jtop</b>|<b>-jbottom</b>|<b>-jcenter</b>]
+[<b>-jleft</b>|<b>-jright</b>|<b>-jcenter</b>]
 
-<I>pnmfile</i> ...
+<i>pnmfile</i> ...
 
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may
 use white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -44,52 +44,87 @@ pointless - the output is the same as the input).
 
 <p>To assemble a regular grid of images, you can use <b>pamundice</b>.
 
-<p>To do the reverse, you might use <B>pamdice</B> to split an image
-up into smaller ones of equal size or <B>pamcut</B> to chop off part
+<p>To do the reverse, you might use <b>pamdice</b> to split an image
+up into smaller ones of equal size or <b>pamcut</b> to chop off part
 of an image or extract part of an image.
 
-<P><B>pnmtile</B> concatenates a single input image to itself repeatedly.
+<p><b>pnmtile</b> concatenates a single input image to itself repeatedly.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>If the PNM images are not all the same height (left-right) or width
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmcat</b> recognizes the following
+command line options:
+
+<h3 id="direction">Direction</h3>
+
+<dl compact>
+<dt><b>-topbottom</b>, <b>-tb</b>
+<dd>Combine images vertically, top to bottom.
+
+<dt><b>-leftright</b>, <b>-lr</b>
+<dd>Combine images horizontally, left to right.
+
+<p>You must specify the direction by specifying one of the above.
+
+</dl>
+
+<h3 id="justification">Justification</h3>
+
+<dl compact>
+<dt><b>-jleft</b>, <b>-jcenter</b>, <b>-jright</b>
+<dd>
+If the PNM images are not all the same height (left-right) or width
 (top-bottom), the smaller ones have to be justified with the largest.
 By default, <b>pnmcat</b> centers them, but you can specify
 justification to one side or the other with one of the
-<b>-j</b><i>xxx</i> options.  So, <B>-topbottom -jleft</B> would stack the
+<b>-j</b><i>xxx</i> options.  So, <b>-topbottom -jleft</b> would stack the
 PNMs on top of each other, flush with the left edge.  <b>-leftright
 -jbottom</b> would line up the images left to right with their bottom edges
 aligned as if sitting on a table.
+</dl>
 
-<P>The <B>-white</B> and <B>-black</B> options specify what color to
-use to fill in the extra space when doing this justification.  If
-neither is specified, <b>pnmcat</b> chooses whichever seems to be
-right for the images.
+<h3 id="margincolor">Margin Color</h3>
 
-<H2 id="seealso">SEE ALSO</H2>
+<dl compact>
 
-<B><A HREF="pamundice.html">pamundice</A></B>,
+<dt><b>-white</b>, <b>-black</b>
+<dd>These options specify what color to use to fill in the extra space
+when doing the justification.  If neither is specified, <b>pnmcat</b>
+chooses whichever seems to be right for the images.
 
-<B><A HREF="pamdice.html">pamdice</A></B>,
+</dl>
 
-<B><A HREF="pnmtile.html">pnmtile</A></B>,
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamcut.html">pamcut</A></B>,
+<b><a href="pamundice.html">pamundice</a></b>,
 
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pamdice.html">pamdice</a></b>,
 
-<H2 id="author">AUTHOR</H2>
+<b><a href="pnmtile.html">pnmtile</a></b>,
+
+<b><a href="pamcut.html">pamcut</a></b>,
+
+<b><a href="pnm.html">pnm</a></b>
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#direction">Direction</a>
+  <li><a href="#justification">Justification</a>
+  <li><a href="#margincolor">Margin Color</a>
+  </ul>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

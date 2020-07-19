@@ -1,39 +1,39 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamflip User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamflip</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamflip User Manual</title></head>
+<body>
+<h1>pamflip</h1>
 Updated: 20 January 2008
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamflip - flip or rotate a PAM or PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamflip</B>
+<b>pamflip</b>
 {
-<B>-leftright</B> | <B>-lr</B> |
-<B>-topbottom</B> | <B>-tb</B> |
-<B>-transpose</B> | <B>-xy</B> |
-<B>-rotate90</B> | <B>-r90</B> | <B>-cw</B> |
-<B>-rotate270</B> | <B>-r270</B> | <B>-ccw</B> |
-<B>-rotate180</B> | <B>-r180</B>
-<B>-null</B> |
-<B>-xform=</b><i>xform1</i><b>,</b><i>xform2</i>...
+<b>-leftright</b> | <b>-lr</b> |
+<b>-topbottom</b> | <b>-tb</b> |
+<b>-transpose</b> | <b>-xy</b> |
+<b>-rotate90</b> | <b>-r90</b> | <b>-cw</b> |
+<b>-rotate270</b> | <b>-r270</b> | <b>-ccw</b> |
+<b>-rotate180</b> | <b>-r180</b>
+<b>-null</b> |
+<b>-xform=</b><i>xform1</i><b>,</b><i>xform2</i>...
 }
-[<B>-memsize=</b><i>mebibytes</i>]
-[<B>-pagesize=</b><i>bytes</i>]
-[<I>pamfile</I>]
+[<b>-memsize=</b><i>mebibytes</i>]
+[<b>-pagesize=</b><i>bytes</i>]
+[<i>pamfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.  You
+<p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
 use either white space or an equals sign between an option name and
 its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -57,7 +57,14 @@ hand, can do this particular transformation directly on the compressed
 data without loss.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamflip</b> recognizes the following
+command line options:
+
+<h3 id="transformation">Specifying the Transformation</h3>
 
 <p>You must supply exactly one of the following options:
 
@@ -70,55 +77,57 @@ for the change: this kind of interpretation of options is inconsistent
 with the rest of Netpbm and most of the Unix world, and thus hard to
 understand and to implement).
 
-<DL>
-<DT><B>-leftright</B>
-<DT><B>-lr</B>
-<DD>Flip left for right.
+<dl>
+<dt><b>-leftright</b>
+<dt><b>-lr</b>
+<dd>Flip left for right.
 
-<DT><B>-topbottom</B>
-<DT><B>-tb</B>
-<DD>Flip top for bottom.
+<dt><b>-topbottom</b>
+<dt><b>-tb</b>
+<dd>Flip top for bottom.
 
-<DT><B>-transpose</B>
-<DT><B>-xy</B>
-<DD>Transpose horizontal for vertical.  I.e. make the pixel at (x,y) be
+<dt><b>-transpose</b>
+<dt><b>-xy</b>
+<dd>Transpose horizontal for vertical.  I.e. make the pixel at (x,y) be
 at (y,x).
 
-<DT><B>-rotate90</B>
-<DT><B>-r90</B>
-<DT><B>-ccw</B>
-<DD>Rotate counterclockwise 90 degrees.
+<dt><b>-rotate90</b>
+<dt><b>-r90</b>
+<dt><b>-ccw</b>
+<dd>Rotate counterclockwise 90 degrees.
 
-<DT><B>-rotate180</B>
-<DT><B>-r180</B>
-<DD>Rotate 180 degrees.
+<dt><b>-rotate180</b>
+<dt><b>-r180</b>
+<dd>Rotate 180 degrees.
 
-<DT><B>-rotate270</B>
-<DT><B>-r270</B>
-<DT><B>-cw</B>
-<DD>Rotate counterclockwise 270 degrees (clockwise 90 degrees)
+<dt><b>-rotate270</b>
+<dt><b>-r270</b>
+<dt><b>-cw</b>
+<dd>Rotate counterclockwise 270 degrees (clockwise 90 degrees)
 
-<DT><B>-null</b> 
-<DD>No change.  (The purpose of this option is the
+<dt><b>-null</b> 
+<dd>No change.  (The purpose of this option is the
 convenience of programs that invoke <b>pamflip</b> after computing the
 kind of transformation desired, including none at all).
 
-<P>This option was new in Netpbm 10.13 (December 2002).
+<p>This option was new in Netpbm 10.13 (December 2002).
      
-<DT><B>-xform=</b><i>xform1</i><b>,</b><i>xform2</i>...
+<dt><b>-xform=</b><i>xform1</i><b>,</b><i>xform2</i>...
 
-<DD>Apply all the transforms listed, in order.  The valid values for
+<dd>Apply all the transforms listed, in order.  The valid values for
 the transforms are as follows and have the same meanings as the
 identically named options above.
-<UL>
-<LI>leftright
-<LI>topbottom
-<LI>transpose
-</UL>
+<ul>
+<li>leftright
+<li>topbottom
+<li>transpose
+</ul>
 
-<P>This option was new in Netpbm 10.13 (December 2002).
+<p>This option was new in Netpbm 10.13 (December 2002).
 
-</DL>
+</dl>
+
+<h3 id="memory">Memory Management</h3>
 
 <p>The following options help <b>pamflip</b> use memory efficiently.
 Some flipping operations on very large images can cause <b>pamflip</b>
@@ -213,40 +222,45 @@ use of real memory.
 
 </dl>
 
-Miscellaneous options:
+<h3 id="misc">Miscellaneous</h3>
+
 <dl>
 <dt><b>-verbose</b>
 <dd>This option causes <b>pamflip</b> to issue messages to Standard Error
 about its progress.
 </dl>
 
+<h2 id="seealso">SEE ALSO</h2>
 
-<H2 id="seealso">SEE ALSO</H2>
-
-<A HREF="pnmrotate.html">pnmrotate</A>, 
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>,
+<a href="pnmrotate.html">pnmrotate</a>, 
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>,
 <b>jpegtran</b> manual
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
-<P><b>pamflip</b> replaced <b>pnmflip</b> in Netpbm 10.13 (December 2002).
+<p><b>pamflip</b> replaced <b>pnmflip</b> in Netpbm 10.13 (December 2002).
 <b>pamflip</b> is backward compatible, but also works on PAM images.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<li><A HREF="#synopsis">SYNOPSIS</A>
-<li><A HREF="#description">DESCRIPTION</A>
-<li><A HREF="#options">OPTIONS</A>
-<li><A HREF="#seealso">SEE ALSO</A>
-<li><A HREF="#history">HISTORY</A>
-<li><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#transformation">Specifying the Transformation</a>
+  <li><a href="#memory">Memory Management</a>
+  <li><a href="#misc">Miscellaneous</a>
+  </ul>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

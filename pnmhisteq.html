@@ -1,38 +1,38 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmhisteq User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmhisteq</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmhisteq User Manual</title></head>
+<body>
+<h1>pnmhisteq</h1>
 Updated: 22 March 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmhisteq - histogram equalize a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmhisteq</B>
+<b>pnmhisteq</b>
 
-[<B>-gray</B>]
+[<b>-gray</b>]
 
-[<B>-noblack</B>]
-[<B>-nowhite</B>]
+[<b>-noblack</b>]
+[<b>-nowhite</b>]
 
-[<B>-rmap</B> <I>pgmfile</I>]
+[<b>-rmap</b> <i>pgmfile</i>]
 
-[<B>-wmap</B> <I>pgmfile</I>]
+[<b>-wmap</b> <i>pgmfile</i>]
 
-[<B>-verbose</B>]
+[<b>-verbose</b>]
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pnmhisteq</B> increases the contrast of a PGM or PPM image
+<p><b>pnmhisteq</b> increases the contrast of a PGM or PPM image
 through the technique of "histogram equalization."[1]
 
 <p><b>pnmhisteq</b> computes a histogram of the luminosity of the
@@ -45,10 +45,10 @@ The effect of this is that the image has equal numbers of pixels at each
 possible intensity level, which means it uses the available levels of
 intensity more efficiently and thereby has more visible detail.
 
-<P>Mathematically, the luminosity mapping is this: Assume the pixels
+<p>Mathematically, the luminosity mapping is this: Assume the pixels
 are sorted by luminosity into <i>B</i> buckets numbered from 0 (lowest
-luminosity) to <i>B</i>-1.  <i>N[i]</I> is the number of pixels in
-bucket <I>i</I>.  <I>T</I> is the total number of pixels (sum of
+luminosity) to <i>B</i>-1.  <i>N[i]</i> is the number of pixels in
+bucket <i>i</i>.  <i>T</i> is the total number of pixels (sum of
 <i>N[i]</i> over all <i>i</i>).  <i>W</i> is the luminosity of white.
 
 <p><b>pnmhisteq</b> replaces an input pixel whose luminosity falls into
@@ -77,10 +77,10 @@ continuous, the luminosities in the output aren't either and <b>pnmhisteq</b>
 doesn't meet the ideal of having exactly the same number of pixels of each
 luminosity in the output.
 
-<P>If you're processing a related set of images, for example frames of
+<p>If you're processing a related set of images, for example frames of
 an animation, it's generally best to apply the same luminosity mapping
 to every frame, since otherwise you'll get distracting frame-to-frame
-changes in the brightness of objects.  <B>pnmhisteq</B>'s <B>-wmap</B>
+changes in the brightness of objects.  <b>pnmhisteq</b>'s <b>-wmap</b>
 option allows you to save, as a PGM image, the luminosity map it
 computes from an image.  The <b>-rmap</b> option causes <b>pnmisteq</b>
 to use such an image as its luminosity map.
@@ -99,14 +99,19 @@ see high bars interleaved with low bars, with the local average being flat.
 To see local averages, use the <b>-width</b> option of <b>pnmhistmap</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>You can abbreviate any option to its shortest unique prefix.
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmhisteq</b> recognizes the following
+command line options:
 
-<DL COMPACT>
-<DT><B>-gray</B>
+<p>You can abbreviate any option to its shortest unique prefix.
 
-<DD>When processing a color image, only gray pixels (those with identical
+<dl compact>
+<dt><b>-gray</b>
+
+<dd>When processing a color image, only gray pixels (those with identical
 red, green, and blue values) are included in the histogram and
 modified in the output image.  This is a special purpose option
 intended for images where the actual data are gray scale, with color
@@ -114,7 +119,7 @@ annotations you don't want modified.  Weather satellite images that
 show continent outlines in color are best processed using this option.
 The option has no effect when the input is a graymap.
 
-<DT><B>-noblack</B>
+<dt><b>-noblack</b>
 
 <dd>Do not include black pixels in the equalization.  The black pixels in the
 output are exactly the black pixels in the input and the number of black
@@ -129,87 +134,86 @@ significant, all the stars would end up close to full white.
 
 <p>This option was new in Netpbm 10.70 (March 2015).
 
-<DT><B>-nowhite</B>
+<dt><b>-nowhite</b>
 
 <p>Same as <b>-noblack</b>, but for the white pixels.
 
 <p>This option was new in Netpbm 10.70 (March 2015).
 
-<DT><B>-rmap</B> <I>mapfile</I>
+<dt><b>-rmap</b> <i>mapfile</i>
 
-<DD>Process the image using the luminosity map specified by the PGM
-file <I>mapfile</I>.
+<dd>Process the image using the luminosity map specified by the PGM
+file <i>mapfile</i>.
 
-The PGM image, usually created by an earlier run of <B>pnmhisteq</B>
-with the <B>-wmap</B> option, contains a single row with number of
+The PGM image, usually created by an earlier run of <b>pnmhisteq</b>
+with the <b>-wmap</b> option, contains a single row with number of
 columns equal to the maxval (greatest intensity value) of the image
 plus one.  Each pixel in the image is transformed by looking up its
 luminosity in the corresponding column in the map file (column number
 = luminosity) and changing it to the value given by that column.
 
-<DT><B>-wmap</B> <I>mapfile</I>
+<dt><b>-wmap</b> <i>mapfile</i>
 
-<DD>Creates a PGM file <I>mapfile</I>, containing the luminosity map
+<dd>Creates a PGM file <i>mapfile</i>, containing the luminosity map
 computed from the histogram of the input image.  This map file can be
-read on subsequent runs of <B>pnmhisteq</B> with the <B>-rmap</B>
+read on subsequent runs of <b>pnmhisteq</b> with the <b>-rmap</b>
 option, allowing a group of images to be processed with an identical
 map.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Prints the histogram and luminosity map on Standard Error.
+<dd>Prints the histogram and luminosity map on Standard Error.
 
-</DL>
+</dl>
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 <p>Histogram equalization is effective for increasing the visible
 detail in scientific imagery and in some continuous-tone pictures.  It
 is often too drastic, however, for scanned halftone images, where it
 does an excellent job of making halftone artifacts apparent.  You
-might want to experiment with <B>pnmnorm</B> and <B>pnmgamma</B> for
+might want to experiment with <b>pnmnorm</b> and <b>pnmgamma</b> for
 more subtle contrast enhancement.
 
-<P>The luminosity map file supplied by the <B>-rmap</B> option must
+<p>The luminosity map file supplied by the <b>-rmap</b> option must
 have the same maxval as the input image.  This is always the case when
-the map file was created by the <B>-wmap</B> option of
-<B>pnmhisteq</B>.  If this restriction causes a problem, simply adjust
-the maxval of the map with <B>pamdepth</B> to agree with the input
+the map file was created by the <b>-wmap</b> option of
+<b>pnmhisteq</b>.  If this restriction causes a problem, simply adjust
+the maxval of the map with <b>pamdepth</b> to agree with the input
 image.
 
-<P>If the input is a PBM file (on which histogram equalization is an
+<p>If the input is a PBM file (on which histogram equalization is an
 identity operation), the only effect of passing the file through
-<B>pnmhisteq</B> will be the passage of time.
+<b>pnmhisteq</b> will be the passage of time.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmnorm.html">pnmnorm</A></B>,
+<b><a href="pnmnorm.html">pnmnorm</a></b>,
 
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
 
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
 
-<B><A HREF="pnmgamma.html">pnmgamma</A></B>,
+<b><a href="pnmgamma.html">pnmgamma</a></b>,
 
-<B><A HREF="pnm.html">pnm</A></B>,
+<b><a href="pnm.html">pnm</a></b>,
 
-<DL COMPACT>
-<DT>[1]
+<dl compact>
+<dt>[1]
 
-<DD>Russ, John C.  The Image Processing Handbook.  Boca Raton: CRC
+<dd>Russ, John C.  The Image Processing Handbook.  Boca Raton: CRC
 Press, 1992.  Pages 105-110.
 
-</DL>
+</dl>
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

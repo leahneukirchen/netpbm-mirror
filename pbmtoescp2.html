@@ -1,62 +1,65 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtoescp2 User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtoescp2</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtoescp2 User Manual</title></head>
+<body>
+<h1>pbmtoescp2</h1>
 Updated: 14 July 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pbmtoescp2 - convert a PBM image to a ESC/P2 printer file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtoescp2</B>
+<b>pbmtoescp2</b>
 
-[<B>-compress=</B><I>compressionmode</I>]
-[<B>-resolution=</B>{<b>180</b>|<b>360</b>|<b>720</b>}]
+[<b>-compress=</b><i>compressionmode</i>]
+[<b>-resolution=</b>{<b>180</b>|<b>360</b>|<b>720</b>}]
 [<b>-stripeheight=</b><i>n</i>]
 [<b>-formfeed</b>]
 [<b>-raw</b>]
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.  You
+<p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
 use either white space or equals signs between an option name and its
 value.
 
-
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pbmtoescp2</b> reads a PBM image as input.  It produces an ESC/P2
 raster graphic printer control stream as output.
 
-<P> This program creates an output that is printable on Epson printers that
+<p> This program creates an output that is printable on Epson printers that
 understand the ESC/P2 printer control language (e.g. the Stylus models).  For
 older Epson 9-pin dot matrix printers, which use the ESC/P protocol, see
-<B>pbmtoepson</B>.
+<b>pbmtoepson</b>.
 
 <p>The printed output has one pixel for each pixel of the input image, except
 that it is padded up to the stripe size (see <b>-stripeheight</b> option)
 vertically and to a multiple of 8 columns horizontally.  Before Netpbm 10.72
 (September 2015), the output is instead truncated to those boundaries.
 
-
-<H2 id="options">OPTIONS</H2>
-
-<P>Input is read from file <I>pbmfile</I> if specified, otherwise from
+<p>Input is read from file <i>pbmfile</i> if specified, otherwise from
 stdin. Output is written to stdout.
 
-<dl COMPACT>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtoescp2</b> recognizes the following
+command line options:
+
+<dl compact>
 
 <dt><b>-compress=</b><i>compressionmode</i>
 
 <dd>This determines the compression mode that <b>pbmtoescp2</b> uses
-in its output.  Valid values for <I>compressionmode</I> are <b>0</b>
-and <b>1</b>.  <b>-compress=0</B> results in a printer control stream
+in its output.  Valid values for <i>compressionmode</i> are <b>0</b>
+and <b>1</b>.  <b>-compress=0</b> results in a printer control stream
 with uncompressed raster graphic data.  <b>-compress=1</b> results in
 a printer control stream with RLE compressed raster graphic data
 (RLE means Run Length Encoding).  The default is <b>-compress=1</b>.
@@ -111,9 +114,9 @@ setting the line spacing).
 
 </dl>
 
-<H2 id="hints">HINTS</H2>
+<h2 id="hints">HINTS</h2>
 
-<P>RLE compresses very well bitmaps of line drawings, preferably horizontal
+<p>RLE compresses very well bitmaps of line drawings, preferably horizontal
 oriented contents like texts, sheets of music, etc.  However, bitmaps derived
 from photographs are not ideal for RLE.  In extreme cases, when no byte
 repetitions occur in the input, the result will be even slightly bigger than
@@ -129,38 +132,37 @@ with <b>pamscale</b>, <b>pamstretch</b>, <b>pbmreduce</b>, or
 <b>pamenlarge</b>.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="escp2topbm.html">escp2topbm</A></B>,
-<B><A HREF="pbmtoepson.html">pbmtoepson</A></B>,
-<B><A HREF="pamscale.html">pamscale</A></B>,
-<B><A HREF="pamstretch.html">pamstretch</A></B>,
-<B><A HREF="pbmreduce.html">pbmreduce</A></B>,
-<B><A HREF="pamenlarge.html">pamenlarge</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
+<b><a href="escp2topbm.html">escp2topbm</a></b>,
+<b><a href="pbmtoepson.html">pbmtoepson</a></b>,
+<b><a href="pamscale.html">pamscale</a></b>,
+<b><a href="pamstretch.html">pamstretch</a></b>,
+<b><a href="pbmreduce.html">pbmreduce</a></b>,
+<b><a href="pamenlarge.html">pamenlarge</a></b>,
+<b><a href="pbm.html">pbm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-<P>Copyright (C) 2003 by Ulrich Walcher (<A
-HREF="mailto:u.walcher@gmx.de">u.walcher@gmx.de</A>).
+<p>Copyright (C) 2003 by Ulrich Walcher (<a
+href="mailto:u.walcher@gmx.de">u.walcher@gmx.de</a>).
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pbmtoescp2</b> was added to Netpbm in Release 10.18 (August 2003);
 it was created around the same time.
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#hints">HINTS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#hints">HINTS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>
 
