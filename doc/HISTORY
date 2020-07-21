@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.91.01
+20.07.21 BJH  Release 10.91.01
 
               pbmtext: fix double-free crash with -font .  Introduced in
               Netpbm 10.91 (June 2020).
