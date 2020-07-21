@@ -1196,8 +1196,10 @@ pbm_loadbdffont2select(const char *               const filename,
 
    The returned object is in new malloc'ed storage, in many pieces.
    When done with, destroy with pbm_destroybdffont2().
------------------------------------------------------------------------------*/
 
+   The returned object refers to *selectorP, so that must continue to exist
+   until you call pbm_destroybdffont2().
+-----------------------------------------------------------------------------*/
     FILE *         ifP;
     Readline       readline;
     struct font2 * font2P;

@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.92.00
 
+              pbmtext: fix double-free crash with -font .  Introduced in
+              Netpbm 10.91 (June 2020).
+
               pgmtopbm: add -randomseed.
 
               pcdovtoppm: Fix some garbage from the conversion from csh to sh
