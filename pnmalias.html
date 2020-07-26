@@ -1,36 +1,36 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmalias User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmalias</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmalias User Manual</title></head>
+<body>
+<h1>pnmalias</h1>
 Updated: 15 March 2004
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmalias - antialias a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmalias</B>
+<b>pnmalias</b>
 
-[<B>-bgcolor</B> <I>color</I>]
+[<b>-bgcolor</b> <i>color</i>]
 
-[<B>-fgcolor</B> <I>color</I>]
+[<b>-fgcolor</b> <i>color</i>]
 
-[<B>-bonly</B>]
+[<b>-bonly</b>]
 
-[<B>-fonly</B>]
+[<b>-fonly</b>]
 
-[<B>-balias</B>]
+[<b>-balias</b>]
 
-[<B>-falias</B>]
+[<b>-falias</b>]
 
-[<B>-weight</B> <I>w</I>]
+[<b>-weight</b> <i>w</i>]
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -39,64 +39,69 @@ anti-aliasing to background and foreground pixels.  If the input file
 is a PBM, <b>pnmalias</b> promotes the output anti-aliased image to a
 PGM, and prints a message informing the user of the change in format.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P><B>-bgcolor</B> <I>colorb</I> sets the background color the
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmalias</b> recognizes the following
+command line options:
+
+<p><b>-bgcolor</b> <i>colorb</i> sets the background color the
 <i>colorb</i>.
 
-<p><B>-fgcolor</B> <I>colorf</I> sets the foreground color to
+<p><b>-fgcolor</b> <i>colorf</i> sets the foreground color to
 <i>colorf</i>.
 
 <p>Pixels with these values will be anti-aliased.  By default,
 <b>pnmalias</b> takes the background color to be black, and foreground
 color to be white.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
-<P>Note that even when dealing with PGMs, background and foreground
+<p>Note that even when dealing with PGMs, background and foreground
 colors need to be specified in the fashion described above.  In this
 case, <b>pnmalias</b> takes the background and foreground pixel values
 to be the value of the red component for the specified color.
 
-<P><B>-bonly</B> says to apply anti-aliasing only to the background pixels.
+<p><b>-bonly</b> says to apply anti-aliasing only to the background pixels.
 
-<p><B>-fonly</B> says to apply anti-aliasing only to the foreground pixels.
+<p><b>-fonly</b> says to apply anti-aliasing only to the foreground pixels.
 
-<P><B>-balias</B> says to apply anti-aliasing to all pixels surrounding
+<p><b>-balias</b> says to apply anti-aliasing to all pixels surrounding
 background pixels.
 
-<P><B>-falias</B> says to apply anti-aliasing to all pixels surrounding
+<p><b>-falias</b> says to apply anti-aliasing to all pixels surrounding
 foreground pixels.
 
 <p>If you specify neither <b>-balias</b> nor <b>-falias</b>,
 <b>pnmalias</b> applies anti-aliasing only among neighboring
 background and foreground pixels.
 
-<P><B>-weight</B> <I>w</I> says to use <I>w</I> as the central weight
-for the aliasing filter.  <I>w</I> must be a real number in the range
-0 &lt; <I>w</I> &lt; 1.  The lower the value of <I>w</I> is, the
+<p><b>-weight</b> <i>w</i> says to use <i>w</i> as the central weight
+for the aliasing filter.  <i>w</i> must be a real number in the range
+0 &lt; <i>w</i> &lt; 1.  The lower the value of <i>w</i> is, the
 "blurrier" the output image is.  The default is w = 1/3.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmtext.html">pbmtext</A>,
-<A HREF="pnmsmooth.html">pnmsmooth</A>,
-<A HREF="pnm.html">pnm</A>
+<a href="pbmtext.html">pbmtext</a>,
+<a href="pnmsmooth.html">pnmsmooth</a>,
+<a href="pnm.html">pnm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1992 by Alberto Accomazzi, Smithsonian Astrophysical Observatory.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

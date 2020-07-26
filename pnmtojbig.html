@@ -108,17 +108,16 @@ approximately 35 stripes will be used for the whole image.
 
 <dt><b>-m</b> <i>number</i>
 
-<dd>Select the maximum horizontal offset of the adaptive template
-pixel.  The JBIG encoder uses a number of neighbour pixels in order to
-get statistical a priori knowledge of the probability, whether the
-next pixel will be black or white.  One single pixel out of this
-template of context neighbor pixels can be moved around.  Especially
-for dithered images it can be a significant advantage to have one
-neighbor pixel which has a distance large enough to cover the period
-of a dither function.  By default, the adaptive template pixel can be
-moved up to 8 pixels away.  This encoder supports up to 23 pixels,
-however as decoders are only required to support at least a distance
-of 16 pixels by the standard, no higher value than 16 for
+<dd>Select the maximum horizontal offset of the adaptive template pixel.  The
+JBIG encoder uses a number of neighbour pixels in order to get statistical a
+priori knowledge of the probability, whether the next pixel will be black or
+white.  One single pixel out of this template of context neighbor pixels can
+be moved around.  Especially for dithered images it can be a significant
+advantage to have one neighbor pixel which has a distance large enough to
+cover the period of a dither function.  By default, the adaptive template
+pixel can be moved up to 8 pixels away.  This encoder go up to 23 pixels,
+however as decoders are only required to handle at least a distance of 16
+pixels by the standard, no higher value than 16 for
 <i>number</i> is recommended in order to maintain interoperability
 with other JBIG implementations.  The maximal vertical offset of the
 adaptive template pixel is always zero.

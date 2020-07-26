@@ -131,7 +131,7 @@ an image by continuously changing a single parameter.
 The best hardware mechanisms employ a
 single "inner loop" to achieve a wide variety of effects.  Interpolation
 and extrapolation of images can be a unifying approach, providing a single
-function that supports many common image processing operations.
+function that can do many common image processing operations.
 <p>
 Since a degenerate image is sometimes easier to calculate, extrapolation
 may offer a more efficient method to achieve effects such as sharpening
@@ -142,7 +142,7 @@ inaccuracy.
 <p>
 These image manipulation techniques can be used in paint programs to
 easily implement brushes that saturate, sharpen, lighten, darken,
-or modify contrast and color.  The only major change needed is to support
+or modify contrast and color.  The only major change needed is to work with
 alpha values outside the range 0.0 to 1.0.
 <p>
 It is surprising and unfortunate how many graphics software packages

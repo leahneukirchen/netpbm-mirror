@@ -1,34 +1,34 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>PAM format specification</TITLE>
-<META NAME="manual_section" CONTENT="5">
-</HEAD>
-<BODY>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>PAM format specification</title>
+<meta name="manual_section" content="5">
+</head>
+<body>
 
-<H1>pam</H1>
+<h1>pam</h1>
 Updated: 27 November 2013
-<BR>
+<br>
+<a href="#index">Table Of Contents</a>
 <?makeman .SH NAME ?>
 <?makeman pam - Netpbm common 2-dimensional bitmap format ?>
 
-<H2 id="general">GENERAL</H2>
+<h2 id="general">GENERAL</h2>
 
 <p>The PAM image format is a lowest common denominator 2 dimensional map
 format.
 
-<P>It is designed to be used for any of myriad kinds of graphics, but can
+<p>It is designed to be used for any of myriad kinds of graphics, but can
 theoretically be used for any kind of data that is arranged as a two
 dimensional rectangular array.  Actually, from another perspective it
 can be seen as a format for data arranged as a three dimensional
 array.
 
-<P>The name "PAM" is an acronym derived from "Portable
+<p>The name "PAM" is an acronym derived from "Portable
 Arbitrary Map." This derivation makes more sense if you consider
 it in the context of the other Netpbm format names: PBM, PGM, and PPM.
 
-<P>This format does not define the meaning of the data at any particular
+<p>This format does not define the meaning of the data at any particular
 point in the array.  It could be red, green, and blue light
 intensities such that the array represents a visual image, or it could
 be the same red, green, and blue components plus a transparency
@@ -36,7 +36,7 @@ component, or it could contain annual rainfalls for places on the
 surface of the Earth.  Any process that uses the PAM format must 
 further define the format to specify the meanings of the data.
 
-<P>A PAM image describes a two dimensional grid of tuples.  The tuples are
+<p>A PAM image describes a two dimensional grid of tuples.  The tuples are
 arranged in rows and columns.  The width of the image is the number of
 columns.  The height of the image is the number of rows.  All rows are the
 same width and all columns are the same height.  The tuples may have any
@@ -48,7 +48,7 @@ maxval is the same for every sample in the image.  The two dimensional array
 of all the Nth samples of each tuple is called the Nth plane or Nth channel of
 the image.
 
-<P>Though the basic format does not assign any meaning to the tuple values, it
+<p>Though the basic format does not assign any meaning to the tuple values, it
 does include an optional string that describes that meaning.  The
 contents of this string, called the tuple type, are arbitrary from the
 point of view of the basic PAM format, but users of the format may assign
@@ -56,23 +56,23 @@ meaning to it by convention so they can identify their particular
 implementations of the PAM format.  Some tuple types are defined as
 official subformats of PAM.  See <a href="#tupletype">Defined Tuple Types</a>.
 
-<H2 id="format_universe">The Confusing Universe of Netpbm Formats</H2>
+<h2 id="format_universe">The Confusing Universe of Netpbm Formats</h2>
 
-<P>It is easy to get confused about the relationship between the PAM
+<p>It is easy to get confused about the relationship between the PAM
 format and PBM, PGM, PPM, and PNM.  Here is a little enlightenment:
 
-<P>"PNM" is not really a format.  It is a shorthand for the PBM, PGM,
+<p>"PNM" is not really a format.  It is a shorthand for the PBM, PGM,
 and PPM formats collectively.  It is also the name of a group of
 library functions that can each handle all three of those formats.
 
-<P>"PAM" is in fact a fourth format.  But it is so general
+<p>"PAM" is in fact a fourth format.  But it is so general
 that you can represent the same information in a PAM image as you can
 in a PBM, PGM, or PPM image.  And in fact a program that is designed
 to read PBM, PGM, or PPM and does so with a recent version of the
 Netpbm library will read an equivalent PAM image just fine and the
 program will never know the difference.
 
-<P>To confuse things more, there is a collection of library routines
+<p>To confuse things more, there is a collection of library routines
 called the "pam" functions that read and write the PAM
 format, but also read and write the PBM, PGM, and PPM formats.  They
 do this because the latter formats are much older and more popular, so
@@ -80,21 +80,21 @@ even a new program must work with them.  Having the library handle all
 the formats makes it convenient to write programs that use the newer
 PAM format as well.
 
-<H2 id="layout">THE LAYOUT</H2>
+<h2 id="layout">THE LAYOUT</h2>
 
-<P>A convenient way to read and write the PAM format accurately is via the
+<p>A convenient way to read and write the PAM format accurately is via the
 <a href="libnetpbm.html">libnetpbm</a> C subroutine library.
 
-<P>A PAM file consists of a sequence of one or more PAM images.  There are
+<p>A PAM file consists of a sequence of one or more PAM images.  There are
 no data, delimiters, or padding before, after, or between images.
 
-<P>
+<p>
 Each PAM image consists of a header followed immediately by a raster.
-<P>
+<p>
 Here is an example header:
 
 <pre>
-<tt>
+<span style="font-family: monospace">
 P7
 WIDTH 227
 HEIGHT 149
@@ -102,87 +102,87 @@ DEPTH 3
 MAXVAL 255
 TUPLTYPE RGB
 ENDHDR
-</tt>
+</span>
 </pre>
 
-<P>The header begins with the ASCII characters "P7" followed
+<p>The header begins with the ASCII characters "P7" followed
 by newline.  This is the magic number.
 
-<P>Note: <b>xv</b> thumbnail images also start with the "P7" magic number.
+<p>Note: <b>xv</b> thumbnail images also start with the "P7" magic number.
 (This and PAM were independent extensions to the Netpbm formats).  The rest
 of the format makes it easy to distinguish PAM from that format, though).
 
-<P>The header continues with an arbitrary number of lines of ASCII
+<p>The header continues with an arbitrary number of lines of ASCII
 text.  Each line ends with and is delimited by a newline character.
 
-<P>Each header line consists of zero or more whitespace-delimited
+<p>Each header line consists of zero or more whitespace-delimited
 tokens or begins with "#".  If it begins with "#"
 it is a comment and the rest of this specification does not apply to
 it.
 
-<P>A header line which has zero tokens is valid but has no meaning.
+<p>A header line which has zero tokens is valid but has no meaning.
 
-<P>The type of header line is identified by its first token, which is
+<p>The type of header line is identified by its first token, which is
 8 characters or less:
 
-<DL COMPACT>
-<DT><B>ENDHDR  </B>
+<dl compact>
+<dt><b>ENDHDR  </b>
 
-<DD>This is the last line in the header.  The header must contain
+<dd>This is the last line in the header.  The header must contain
 exactly one of these header lines.
 
-<DT><B>HEIGHT  </B>
+<dt><b>HEIGHT  </b>
 
-<DD>The second token is a decimal number representing the height
+<dd>The second token is a decimal number representing the height
 of the image (number of rows).  The header must contain exactly one
 of these header lines.
 
-<DT><B>WIDTH</B>
+<dt><b>WIDTH</b>
 
-<DD>The second token is a decimal number representing the width of the
+<dd>The second token is a decimal number representing the width of the
 image (number of columns).  The header must contain exactly one of
 these header lines.
 
-<DT><B>DEPTH</B>
+<dt><b>DEPTH</b>
 
-<DD>The second token is a decimal number representing the depth of the
+<dd>The second token is a decimal number representing the depth of the
 image (number of planes or channels).  The header must contain exactly
 one of these header lines.
 
-<DT><B>MAXVAL</B>
+<dt><b>MAXVAL</b>
 
-<DD>The second token is a decimal number representing the maxval of the image.
+<dd>The second token is a decimal number representing the maxval of the image.
 The header must contain exactly one of these header lines.
 
-<DT><B>TUPLTYPE</B>
+<dt><b>TUPLTYPE</b>
 
-<DD>The header may contain any number of these header lines, including
+<dd>The header may contain any number of these header lines, including
 zero.  The rest of the line is part of the tuple type.  The rest of
 the line is not tokenized, but the tuple type does not include any
-white space immediately following <B>TUPLTYPE </B> or at the very end
+white space immediately following <b>TUPLTYPE </b> or at the very end
 of the line.  It does not include a newline.  There must be something
 other than white space after the <b>TUPLTYPE</b> token.
 
-<p>If there are multiple <B>TUPLTYPE</B> header lines, the tuple type
+<p>If there are multiple <b>TUPLTYPE</b> header lines, the tuple type
 is the concatenation of the values from each of them, separated by a
 single blank, in the order in which they appear in the header.  If
-there are no <B>TUPLTYPE</B> header lines the tuple type is the null
+there are no <b>TUPLTYPE</b> header lines the tuple type is the null
 string.
 
-</DL>
+</dl>
 
-<P>
+<p>
 The raster consists of each row of the image, in order from top to bottom,
 consecutive with no delimiter of any kind between, before, or after, rows.
-<P>
+<p>
 Each row consists of every tuple in the row, in order from left to
 right, consecutive with no delimiter of any kind between, before, or
 after, tuples.
-<P>
+<p>
 Each tuple consists of every sample in the tuple, in order,
 consecutive with no delimiter of any kind between, before, or after,
 samples.
-<P>
+<p>
 Each sample consists of an unsigned integer in pure binary format,
 with the most significant byte first.  The number of bytes is the
 minimum number of bytes required to represent the maxval of the image.
@@ -190,20 +190,20 @@ minimum number of bytes required to represent the maxval of the image.
 <p>The character referred to as "newline" herein is the
 character known in ASCII as Line Feed or LF.
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 <p>Height, width, depth, and maxval are at least 1.
 
 <p>Height, width, and depth have no defined maximum, but processors and
 generators of images usually have their own limitations.
 
-<P>The maxval of an image is never greater than 65535.  (The reason it is
+<p>The maxval of an image is never greater than 65535.  (The reason it is
 limited is to make it easier to build an image processor, in which
 intermediate arithmetic values often have to fit within 31 or 32 bits).
 There was no specified limitation before October, 2005, but essentially
 all implementations have always observed it.
 
-<H2 id="tupletype">DEFINED TUPLE TYPES</h2>
+<h2 id="tupletype">DEFINED TUPLE TYPES</h2>
 
 <p>Some tuple types are defined in this specification to specify
 official subformats of PAM for especially popular applications of the
@@ -225,34 +225,34 @@ separately validate that the depth is consistent with the tuple type.  Also,
 it is good practice to accept a depth that is too great and just ignore the
 higher numbered planes.
   
-<H3 id="visual">PAM Used For Visual Images</H3>
+<h3 id="visual">PAM Used For Visual Images</h3>
 
-<P>A common use of PAM images is to represent visual images such
+<p>A common use of PAM images is to represent visual images such
 as are typically represented by images in the older and more concrete
 PBM, PGM, and PPM formats.
 
 <h4>Black And White</h4>
 
-<P>A black and white image, such as would alternatively be represented by a
+<p>A black and white image, such as would alternatively be represented by a
 PBM image, has a tuple type of "BLACKANDWHITE".  Such a PAM image has a depth
 of 1 and maxval 1 where the one sample in each tuple is 0 to represent a black
 pixel and 1 to represent a white one.  The maxval, height, width, and order of
 tuples in the raster bear the obvious relationship to those of the equivalent
 PGM image.
 
-<P>Note that in the PBM format, a sample value of zero means white, but in
+<p>Note that in the PBM format, a sample value of zero means white, but in
 PAM, zero means black.
 
 <h4>Grayscale</h4>
 
-<P>A grayscale image, such as would alternatively be represented by a PGM
+<p>A grayscale image, such as would alternatively be represented by a PGM
 image, has a tuple type of "GRAYSCALE".  Such a PAM image has a depth of 1.
 The maxval, height, width, and raster bear the obvious relationship to those
 of the equivalent PGM image.
 
 <h4>Color</h4>
 
-<P>A color image, such as would alternatively be represented by a PPM image,
+<p>A color image, such as would alternatively be represented by a PPM image,
 has a tuple type of "RGB".  Such a PAM image has a depth of 3.  The maxval,
 height, width, and raster bear the obvious relationship to those of the PPM
 image.  The first plane represents red, the second green, and the third blue.
@@ -292,8 +292,9 @@ foreground color samples.
 
 <p>No Internet Media Type (aka MIME type, content type) for PBM has been
 registered with IANA, but the unofficial value
-<tt>image/x-portable-arbitrarymap</tt> is assigned by this specification, to
-be consistent with conventional values for the older Netpbm formats.
+<span style="font-family: monospace">image/x-portable-arbitrarymap</span> is
+assigned by this specification, to be consistent with conventional values for
+the older Netpbm formats.
 
 <h2 id="filename">FILE NAME</h2>
 
@@ -301,36 +302,36 @@ be consistent with conventional values for the older Netpbm formats.
 But this is not required.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="index.html">Netpbm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>,
-<B><A HREF="pgm.html">pgm</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
-<B><A HREF="libnetpbm.html">libnetpbm</A></B>
+<b><a href="index.html">Netpbm</a></b>,
+<b><a href="pbm.html">pbm</a></b>,
+<b><a href="pgm.html">pgm</a></b>,
+<b><a href="ppm.html">ppm</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="libnetpbm.html">libnetpbm</a></b>
 
 
-<HR>
-<H2 id="contents">Table Of Contents</H2>
-<UL>
-  <LI><A HREF="#general">GENERAL</A>
-  <LI><A HREF="#layout">THE LAYOUT</A>
-  <LI><A HREF="#limitations">LIMITATIONS</A>
-  <LI><A HREF="#format_universe">The Confusing Universe of Netpbm Formats</A>
-  <LI><A HREF="#tupletype">DEFINED TUPLE TYPES</A>
-    <UL>
-      <LI><A HREF="#visual">PAM Used For Visual Images</A>
-        <UL>
-          <LI>Black And White
-          <LI>Grayscale
-          <LI>Color
-          </UL>
-      </UL>
-  <LI><A HREF="#internetmediatype">INTERNET MEDIA TYPE</A>
-  <LI><A HREF="#filename">FILE NAME</A>
-  <LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#general">GENERAL</a>
+<li><a href="#format_universe">The Confusing Universe of Netpbm Formats</a>
+<li><a href="#layout">THE LAYOUT</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#tupletype">DEFINED TUPLE TYPES</a>
+  <ul>
+  <li><a href="#visual">PAM Used For Visual Images</a>
+    <ul>
+    <li>Black And White
+    <li>Grayscale
+    <li>Color
+    </ul>
+  </ul>
+<li><a href="#internetmediatype">INTERNET MEDIA TYPE</a>
+<li><a href="#filename">FILE NAME</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
 
-</BODY>
-</HTML>
+</body>
+</html>

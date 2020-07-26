@@ -1,26 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmmake User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmmake</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmmake User Manual</title></head>
+<body>
+<h1>pbmmake</h1>
 Updated: 13 December 2003
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pbmmake - create a blank bitmap of a specified size
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmmake</B>
-[<B>-white</B>|<B>-black</B>|<B>-gray</B>]
-<I>width</I>
-<i>height</I>
+<b>pbmmake</b>
+[<b>-white</b>|<b>-black</b>|<b>-gray</b>]
+<i>width</i>
+<i>height</i>
 
 <p>You can abbreviate any option to its shortest unique prefix.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,31 +28,46 @@ pbmmake - create a blank bitmap of a specified size
 height, either all black, all white, or a dithered gray.  The default
 is white.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>In addition to the usual <B>-white</B> and <B>-black</B>, this
-program implements <B>-gray</B>.  This gives a simple 50% gray pattern
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmmake</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-white</b>
+<dt><b>-black</b>
+<dt><b>-gray</b>
+
+<p>In addition to the usual <b>-white</b> and <b>-black</b>, this
+program implements <b>-gray</b>.  This gives a simple 50% gray pattern
 with 1's and 0's alternating.
 
-<H2 id="seealso">SEE ALSO</H2>
+<p>With none of the above specified, the output image will be entirely
+white.
 
-<A HREF="pgmmake.html">pgmmake</A>,
-<A HREF="ppmmake.html">ppmmake</A>,
-<A HREF="pbm.html">pbm</A>
+</dl>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pgmmake.html">pgmmake</a>,
+<a href="ppmmake.html">ppmmake</a>,
+<a href="pbm.html">pbm</a>
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
+<hr>
+<h2 id="index">Table Of Contents</h2>
 
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

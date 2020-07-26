@@ -1,30 +1,30 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Tifftopnm User Manual</TITLE></HEAD>
-<BODY>
-<H1>tifftopnm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Tifftopnm User Manual</title></head>
+<body>
+<h1>tifftopnm</h1>
 Updated: 02 January 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 tifftopnm - convert a TIFF file into a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>tifftopnm</B>
+<b>tifftopnm</b>
 
-[<B>-alphaout=</B>{<I>alpha-filename</I>,<B>-</B>}]
-[<B>-headerdump</B>]
+[<b>-alphaout=</b>{<i>alpha-filename</i>,<b>-</b>}]
+[<b>-headerdump</b>]
 [<b>-verbose</b>]
 <br>
-[<B>-respectfillorder</B>]
-[<B>-byrow</B>]
-[<B>-orientraw</B>]
-[<I>tiff-filename</I>]
+[<b>-respectfillorder</b>]
+[<b>-byrow</b>]
+[<b>-orientraw</b>]
+[<i>tiff-filename</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -39,9 +39,9 @@ which type it is writing.
 output stream.  Before Netpbm 10.27 (March 2005), however, it would
 just ignore all but the first input image.
 
-<P>The <I>tiff-filename</I> argument names the file that contains the Tiff
+<p>The <i>tiff-filename</i> argument names the file that contains the Tiff
 image.  If you specify "-" or don't specify this
-argument, <B>tifftopnm</B> uses Standard Input.
+argument, <b>tifftopnm</b> uses Standard Input.
 
 <p>In either case, before Netpbm 10.70 (March 2015), the file must be
 seekable.  That means no pipe, but any regular file is fine.  In current
@@ -49,14 +49,13 @@ Netpbm, the file need not be seekable, but if it isn't, <b>tifftopnm</b>
 creates a temporary regular file containing the entire image, so you must have
 resources for that (and it may defeat your reason for using a pipe).
 
-
 <h3 id="library">TIFF Capability</h3>
 
 <p><b>pamtotiff</b> uses the Libtiff.org TIFF library (or whatever
 equivalent you provide) to interpret the TIFF input.  So the set of files
 it is able to interpret is determined mostly by that library.
 
-<P>This program cannot read every possible TIFF file -- there are
+<p>This program cannot read every possible TIFF file -- there are
 myriad variations of the TIFF format.  However, it does understand
 monochrome and gray scale, RGB, RGBA (red/green/blue with transparency
 channel), CMYK (Cyan-Magenta-Yellow-Black ink color separation), and
@@ -77,91 +76,96 @@ intelligence.  That native intelligence does not know as many formats
 as TIFFRGBAImageGet() does.  And certain compressed formats simply
 cannot be read with TIFFReadScanLine().
 
-<P>Before Netpbm 10.11 (October 2002), <B>tifftopnm</b> never used
+<p>Before Netpbm 10.11 (October 2002), <b>tifftopnm</b> never used
 TIFFRGBAImageGet(), so it could not interpret many of the formats it
 can interpret today.
 
-<P>There is no fundamental reason that this program could not read
+<p>There is no fundamental reason that this program could not read
 other kinds of TIFF files even when they don't fit in memory all at
 once.  The existing limitations are mainly because no one has asked
 for more.
 
 <h3 id="output">Output Image</h3>
 
-<P>The PNM output has the same maxval as the Tiff input, except that
+<p>The PNM output has the same maxval as the Tiff input, except that
 if the Tiff input is colormapped (which implies a maxval of 65535) the
 PNM output has a maxval of 255.  Though this may result in lost
 information, such input images hardly ever actually have more color
 resolution than a maxval of 255 provides and people often cannot deal
 with PNM files that have maxval &gt; 255.  By contrast, a
 non-colormapped Tiff image that doesn't need a maxval &gt; 255 doesn't
-<EM>have</EM> a maxval &gt; 255, so when <b>tifftopnm</b> sees a
+<em>have</em> a maxval &gt; 255, so when <b>tifftopnm</b> sees a
 non-colormapped maxval &gt; 255, it takes it seriously and produces a
 matching output maxval.
 
-<P>Another exception is where the TIFF maxval is greater than 65535,
+<p>Another exception is where the TIFF maxval is greater than 65535,
 which is the maximum allowed by the Netpbm formats.  In that case,
 <b>tifftopnm</b> uses a maxval of 65535, and you lose some information
 in the conversion.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>You may abbreviate any option to its shortest unique prefix.  You may use
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>tifftopnm</b> recognizes the following
+command line options:
+
+<p>You may abbreviate any option to its shortest unique prefix.  You may use
 two hyphens instead of one in options.  You may separate an option and
 its value either by an equals sign or white space.
 
-<DL COMPACT>
-<DT><B>-alphaout=</B><I>alpha-filename</I>
+<dl compact>
+<dt><b>-alphaout=</b><i>alpha-filename</i>
 
-<DD><B>tifftopnm </B>creates a PGM file containing the alpha channel
+<dd><b>tifftopnm </b>creates a PGM file containing the alpha channel
 values in the input image.  If the input image doesn't contain a
-transparency channel, the <I>alpha-filename</I> file contains all zero
-(transparent) transparency values.  If you don't specify <B>-alphaout</B>,
+transparency channel, the <i>alpha-filename</i> file contains all zero
+(transparent) transparency values.  If you don't specify <b>-alphaout</b>,
 
-<B>tifftopnm</B> does not generate a transparency file, and if the input
-image has an transparency channel, <B>tifftopnm</B> simply discards it.
+<b>tifftopnm</b> does not generate a transparency file, and if the input
+image has an transparency channel, <b>tifftopnm</b> simply discards it.
 
-<P>If you specify <B>-</B> as the filename, <B>tifftopnm</B>
+<p>If you specify <b>-</b> as the filename, <b>tifftopnm</b>
 writes the transparency output to Standard Output and discards the image.
 
-<P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
+<p>See <b><a href="pamcomp.html">pamcomp</a></b> for one way to use
 the transparency output file.
 
-<DT><B>-respectfillorder</B>
+<dt><b>-respectfillorder</b>
 
-<DD>By default, <B>tifftopnm </B> ignores the "fillorder"
+<dd>By default, <b>tifftopnm </b> ignores the "fillorder"
 tag in the TIFF input, which means it may incorrectly interpret the
 image.  To make it follow the spec, use this option.  For a lengthy
-but engaging discussion of why <B>tifftopnm</B> works this way and how
-to use the <B>-respectfillorder</B> option, see the note on fillorder
+but engaging discussion of why <b>tifftopnm</b> works this way and how
+to use the <b>-respectfillorder</b> option, see the note on fillorder
 below.  
 
-<DT><B>-byrow</B>
+<dt><b>-byrow</b>
 
-<DD>This option can make <b>tifftopnm</b> run faster.
+<dd>This option can make <b>tifftopnm</b> run faster.
 
-<P><B>tifftopnm</B> has two ways to do the conversion from Tiff to PNM, using
+<p><b>tifftopnm</b> has two ways to do the conversion from Tiff to PNM, using
 respectively two facilities of the TIFF library:
 
-<DL>
+<dl>
 
-<DT>Whole Image
+<dt>Whole Image
 
-<DD>Decode the entire image into memory at once, using
+<dd>Decode the entire image into memory at once, using
 <b>TIFFRGBAImageGet()</b>, then convert to PNM and output row by row.
    
-<DT>Row By Row
-<DD>Read, convert, and output one row at a time
+<dt>Row By Row
+<dd>Read, convert, and output one row at a time
 using <b>TIFFReadScanline()</b>
 
-</DL>
+</dl>
 
-<P>Whole Image is preferable because the Tiff library does more of the
+<p>Whole Image is preferable because the Tiff library does more of the
 work, which means it understands more of the Tiff format possibilities
 now and in the future.  Also, some compressed TIFF formats don't allow
 you to extract an individual row.
 
-<P>Row By Row uses far less memory, which means with large images, it
+<p>Row By Row uses far less memory, which means with large images, it
 can run in environments where Whole Image cannot and may also run
 faster.  And because Netpbm code does more of the work, it's possible
 that it can be more flexible or at least give better diagnostic
@@ -170,13 +174,13 @@ information if there's something wrong with the TIFF.
 <p>The Netpbm native code may do something correctly that the TIFF
 library does incorrectly, or vice versa.
 
-<P>In Netpbm, we stress function over performance, so by default we
+<p>In Netpbm, we stress function over performance, so by default we
 try Whole Image first, and if we can't get enough memory for the
 decoded image or <b>TIFFRGBAImageGet()</b> fails, we fall back to Row By Row.
 But if you specify the <b>-byrow</b> option, <b>tifftopnm</b> will not
 attempt Whole Image.  If Row By Row does not work, it simply fails.
 
-<P>See <a href="#cmyk">Color Separation (CMYK) TIFFs</a> for a
+<p>See <a href="#cmyk">Color Separation (CMYK) TIFFs</a> for a
 description of one way Row By Row makes a significant difference in
 your results.
 
@@ -185,13 +189,13 @@ your results.
 <b>tifftopnm</b> then scales them back to maxval 65535, but the lower
 8 bits of information is gone.
 
-<p>In many versions of the TIFF library, <B>TIFFRGBAImageGet()</B> does not
+<p>In many versions of the TIFF library, <b>TIFFRGBAImageGet()</b> does not
 correctly interpret TIFF files in which the raster orientation is
 column-major (i.e. a row of the raster is a column of the image).
 With such a TIFF library and file, you must use <b>-byrow</b> to get
 correct output.
 
-<P>Before Netpbm 10.11 (October 2002), <B>tifftopnm</b> always did Row
+<p>Before Netpbm 10.11 (October 2002), <b>tifftopnm</b> always did Row
 By Row.  Netpbm 10.12 always tried Whole Image first.  <b>-byrow</b>
 came in with Netpbm 10.13 (January 2003).
 
@@ -230,18 +234,18 @@ that have an orientation other than the common one.
 
 <dd>Print extra messages to Standard Error about the conversion.
 
-<DT><B>-headerdump</B>
+<dt><b>-headerdump</b>
 
-<DD>Dump TIFF file information to stderr.  This information may be useful 
+<dd>Dump TIFF file information to stderr.  This information may be useful 
 in debugging TIFF file conversion problems.  
 
-</DL>
+</dl>
 
-<H2 id="notes">NOTES</H2>
+<h2 id="notes">NOTES</h2>
 
-<H3 id="fillorder">Fillorder</H3>
+<h3 id="fillorder">Fillorder</h3>
 
-<P>
+<p>
 There is a piece of information in the header of a TIFF image called
 "fillorder." The TIFF specification quite clearly states
 that this value tells the order in which bits are arranged in a byte
@@ -250,42 +254,42 @@ assuming that the image has a format where more than one pixel can be
 represented by a single byte: 1) the byte is filled from most
 significant bit to least significant bit going left to right in the
 image; and 2) the opposite.
-<P>
+<p>
 However, there is confusion in the world as to the meaning of
 fillorder.  Evidence shows that some people believe it has to do with
 byte order when a single value is represented by two bytes.
-<P>
+<p>
 These people cause TIFF images to be created that, while they use a 
 MSB-to-LSB fillorder, have a fillorder tag that says they used LSB-to-MSB.
 A program that properly interprets a TIFF image will not end up with the
 image that the author intended in this case.
-<P>
-For a long time, <B>tifftopnm</B> did not understand fillorder itself
+<p>
+For a long time, <b>tifftopnm</b> did not understand fillorder itself
 and assumed the fillorder was MSB-to-LSB regardless of the fillorder
 tag in the TIFF header.  And as far as I know, there is no legitimate
 reason to use a fillorder other than MSB-to-LSB.  So users of
-<B>tifftopnm</B> were happily using those TIFF images that had
+<b>tifftopnm</b> were happily using those TIFF images that had
 incorrect fillorder tags.
-<P>
-So that those users can continue to be happy, <B>tifftopnm</B> today
+<p>
+So that those users can continue to be happy, <b>tifftopnm</b> today
 continues to ignore the fillorder tag unless you tell it not to.  (It
 does, however, warn you when the fillorder tag does not say MSB-to-LSB
 that the tag is being ignored).
-<P>
+<p>
 If for some reason you have a TIFF image that actually has LSB-to-MSB
 fillorder, and its fillorder tag correctly indicates that, you must
-use the <B>-respectfillorder</B> option on <B>tifftopnm</B> to get
+use the <b>-respectfillorder</b> option on <b>tifftopnm</b> to get
 proper results.
-<P>
-Examples of incorrect TIFF images are at <A
-HREF="ftp://weather.noaa.gov.">ftp://weather.noaa.gov.</A> They are
-apparently created by a program called <B>faxtotiff</B>.
+<p>
+Examples of incorrect TIFF images are at <a
+href="ftp://weather.noaa.gov.">ftp://weather.noaa.gov.</a> They are
+apparently created by a program called <b>faxtotiff</b>.
 
-<P>
+<p>
 This note was written on January 1, 2002.
 
 
-<h3 id="cmyk">Color Separation (CMYK) TIFFs</H3>
+<h3 id="cmyk">Color Separation (CMYK) TIFFs</h3>
 
 <p>Some TIFF images contain color information in CMYK form, whereas PNM
 images use RGB.  There are various formulas for converting between these
@@ -307,36 +311,36 @@ Row By Row mode.
 Y=(1-K)*(1-B) formula always.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmtotiff.html">pnmtotiff</A></B>,
-<B><A HREF="pnmtotiffcmyk.html">pnmtotiffcmyk</A></B>,
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
+<b><a href="pnmtotiff.html">pnmtotiff</a></b>,
+<b><a href="pnmtotiffcmyk.html">pnmtotiffcmyk</a></b>,
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="pnm.html">pnm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Derived by Jef Poskanzer from tif2ras.c, which is Copyright (c)
-1990 by Sun Microsystems, Inc.  Author: Patrick J. Naughton (<A
-HREF="mailto:naughton@wind.sun.com">naughton@wind.sun.com</A>).
+1990 by Sun Microsystems, Inc.  Author: Patrick J. Naughton (<a
+href="mailto:naughton@wind.sun.com">naughton@wind.sun.com</a>).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-  <LI><A HREF="#synopsis">SYNOPSIS</A>
-  <LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
   <ul>
-    <LI><A HREF="#library">Tiff Capability</A>
-    <LI><A HREF="#output">Output Image</A>
-    </ul>
-  <LI><A HREF="#options">OPTIONS</A>
-  <LI><A HREF="#notes">NOTES</A>
-    <UL>
-      <LI><A HREF="#fillorder">Fillorder</A>
-      <LI><A HREF="#cmyk">Color Separation (CMYK) TIFFs</A>
-      </UL>
-  <LI><A HREF="#seealso">SEE ALSO</A>
-  <LI><A HREF="#author">AUTHOR</A>
-  </UL>
-</BODY>
-</HTML>
+  <li><a href="#library">TIFF Capability</a>
+  <li><a href="#output">Output Image</a>
+  </ul>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#notes">NOTES</a>
+  <ul>
+  <li><a href="#fillorder">Fillorder</a>
+  <li><a href="#cmyk">Color Separation (CMYK) TIFFs</a>
+  </ul>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

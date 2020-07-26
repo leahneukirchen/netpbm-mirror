@@ -1,27 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmpaste User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmpaste</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmpaste User Manual</title></head>
+<body>
+<h1>pnmpaste</h1>
 Updated: 16 December 2018
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmpaste - paste a rectangle into a PNM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmpaste</B>
+<b>pnmpaste</b>
 
-[<B>-replace</B>|<B>-or</B>|<B>-and</B>|<B>-xor</B>]
+[<b>-replace</b> | <b>-or</b> | <b>-and</b> | <b>-xor</b> |
+<b>-nor</b> | <b>-nand</b> | <b>-nxor</b>]
 
-<I>frompnmfile</i> <i>x</i> <i>y</I>
-[<I>intopnmfile</I>]
+<i>frompnmfile</i> <i>x</i> <i>y</i>
+[<i>intopnmfile</i>]
 
-<P>You can abbreviate all options to their shortest unique prefix.
+<p>You can abbreviate all options to their shortest unique prefix.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -42,28 +43,37 @@ edge or below the top edge of the base image, while a negative value
 indicates the number of pixels right of the right edge or below the
 bottom edge (so x = -5 means 5 pixels left of the right edge).
 
-<P>If any part of the pasted image does not fit within the base image,
+<p>If any part of the pasted image does not fit within the base image,
 <b>pnmpaste</b> fails.
 
-<p>This tool is most useful in combination with <I>pamcut</I>.  For
+<p>This tool is most useful in combination with <i>pamcut</i>.  For
 instance, if you want to edit a small segment of a large image, and
 your image editor cannot edit the large image, you can cut out the
 segment you are interested in, edit it, and then paste it back in.
 
-<P>Another useful companion tool is <B>pbmmask</B>.
+<p>Another useful companion tool is <b>pbmmask</b>.
 
-<P><B>pamcomp</B> is a more general tool, except that it lacks the
+<p><b>pamcomp</b> is a more general tool, except that it lacks the
 "or," "and," and "xor" functions.
-<B>pamcomp</B> allows you to specify a transparency mask in order to have
+<b>pamcomp</b> allows you to specify a transparency mask in order to have
 only part of the inserted image get inserted.  So the inserted pixels
 need not be a rectangle.  You can also have the inserted image be
 translucent, so the resulting image is a mixture of the inserted image
 and the base image.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>The option specifies the operation to use when doing the paste.
-The default is <B>-replace</B>, which means to do the obvious paste:
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmpaste</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-replace</b>, <b>-or</b>, <b>-and</b>, <b>-xor</b>,
+<b>-nor</b>, <b>-nand</b>, <b>-nxor</b>
+<dd>
+<p>These option specify the operation to use when doing the paste.
+The default is <b>-replace</b>, which means to do the obvious paste:
 replace pixels of the "into" image with those of the
 "from" image.
 
@@ -71,8 +81,8 @@ replace pixels of the "into" image with those of the
 and <b>nxor</b> are allowed only if both input images are PBM images.  They
 say to combine the "from" and "into" images by performing boolean operations:
 Each pixel of the output image is the result of the boolean operation on the
-corresponding pixels of the two input image, where white is TRUE and black is
-FALSE.
+corresponding pixels of the two input images, where white is TRUE and black
+is FALSE.
 
 <p>Note that this is different from what you would get by doing a bit
 arithmetic on the bits in the PBM images, because in PBM, white is
@@ -81,30 +91,31 @@ in boolean arithmetic.
 
 <p><b>-nand</b>, <b>-nor</b>, and <b>-nxor</b> were new in Netpbm 10.85
 (December 2018).
-  
-  
-<H2 id="seealso">SEE ALSO</H2>
 
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="pamcut.html">pamcut</A></B>,
-<B><A HREF="pnminvert.html">pnminvert</A></B>,
-<B><A HREF="pnmarith.html">pnmarith</A></B>,
-<B><A HREF="pbmmask.html">pbmmask</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>
+</dl>
+  
+<h2 id="seealso">SEE ALSO</h2>
 
-<H2 id="author">AUTHOR</H2>
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="pamcut.html">pamcut</a></b>,
+<b><a href="pnminvert.html">pnminvert</a></b>,
+<b><a href="pnmarith.html">pnmarith</a></b>,
+<b><a href="pbmmask.html">pbmmask</a></b>,
+<b><a href="pnm.html">pnm</a></b>
+
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

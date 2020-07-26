@@ -42,10 +42,9 @@ command line options:
 
 <dd>This option causes the output to have the bits in every byte
 reversed so the least significant bit becomes the most significant bit.
-Apparently, there is some ambiguity in transmission protocols so that
-the bits get reversed on transmission, and this compensates for that.
-If you get a whole bunch of "bad code word" messages when you try to
-read the G3 file (e.g. with <b>g3topbm</b>), try using this option.
+Some fax modems expect bits in reverse order, and this compensates for
+that. If you get a whole bunch of "bad code word" messages when you try
+to read the G3 file (e.g. with <b>g3topbm</b>), try using this option.
 Note that the output is not G3 when you use this option.
 
 <dt><b>-nofixedwidth</b>

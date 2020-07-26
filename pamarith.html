@@ -1,34 +1,33 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pamarith User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamarith</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamarith User Manual</title></head>
+<body>
+<h1>pamarith</h1>
 Updated: 03 January 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamarith - perform arithmetic on two Netpbm images
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamarith</B>
-<B>-add</B> | <B>-subtract</B> | <B>-multiply</B> | <b>-divide</b> |
-<B>-difference</B> |
-<B>-minimum</B> | <B>-maximum</B> | <B>-mean</B> | <B>-compare</B> |
-<B>-and</B> | <B>-or</B> | <B>-nand</B> | <B>-nor</B> | <B>-xor</B> |
-<B>-shiftleft</B> | <B>-shiftright</B>
-<I>pamfile1</I> <I>pamfile2</I>
+<b>pamarith</b>
+<b>-add</b> | <b>-subtract</b> | <b>-multiply</b> | <b>-divide</b> |
+<b>-difference</b> |
+<b>-minimum</b> | <b>-maximum</b> | <b>-mean</b> | <b>-compare</b> |
+<b>-and</b> | <b>-or</b> | <b>-nand</b> | <b>-nor</b> | <b>-xor</b> |
+<b>-shiftleft</b> | <b>-shiftright</b>
+<i>pamfile1</i> <i>pamfile2</i>
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pamarith</b> reads two PBM, PGM, PPM, or PAM images as input.
+<p><b>pamarith</b> reads two PBM, PGM, PPM, or PAM images as input.
 It performs the specified binary arithmetic operation on their sample
 values and produces an output of a format which is the more general of
 the two input formats.  The two input images must be of the same width
@@ -36,9 +35,9 @@ and height.  The arithmetic is performed on each pair of identically
 located tuples to generate the identically located tuple of the
 output.
 
-<P>For the purpose of the calculation, it assumes any PBM, PGM, or PPM
+<p>For the purpose of the calculation, it assumes any PBM, PGM, or PPM
 input image is the equivalent PAM image of tuple type
-<B>BLACKANDWHITE</B>, <B>GRAYSCALE</B>, or <B>RGB</B>, respectively,
+<b>BLACKANDWHITE</b>, <b>GRAYSCALE</b>, or <b>RGB</b>, respectively,
 and if it produces a PBM, PGM, or PPM output, produces the equivalent
 of the PAM image which is the result of the calculation.
 
@@ -49,7 +48,7 @@ argument image; the second <i>pamfile</i> argument identifies the
 <p>If the output is PAM, the tuple type is the same as the tuple type of
 the left input image.
 
-<P><b>pamarith</b> performs the arithmetic on each pair of identically
+<p><b>pamarith</b> performs the arithmetic on each pair of identically
 located tuples in the two input images.
 
 <p>The arithmetic operation is in all cases fundamentally a function from two
@@ -86,10 +85,10 @@ corresponds to "full intensity."), and a sample value
 divided by the maxval gives the fraction.
 
 <p>For <b>pamarith</b>, this interpretation applies to the regular
-arithmetic functions: <B>-add</B>, <B>-subtract</B>, <B>-multiply</B>,
+arithmetic functions: <b>-add</b>, <b>-subtract</b>, <b>-multiply</b>,
 <b>-divide</b>,
-<B>-difference</B>, <B>-minimum</B>, <B>-maximum</B>, <B>-mean</B>,
-and <B>-compare</B>.  For those, you should think of the arguments and
+<b>-difference</b>, <b>-minimum</b>, <b>-maximum</b>, <b>-mean</b>,
+and <b>-compare</b>.  For those, you should think of the arguments and
 result as numbers in the range [0,1).  For example, if the maxval of
 the left argument image is 100 and the maxval of the right argument
 image is 200 and the maxval of the output image is 200, and the left
@@ -97,7 +96,7 @@ sample value in an <b>-add</b> calculation is 50 and the right sample
 is 60, the actual calculation is 50/100 + 60/200 = 160/200, and
 the output sample value is 160.
 
-<P>For these functions, <b>pamarith</b> makes the output image's
+<p>For these functions, <b>pamarith</b> makes the output image's
 maxval the maximum of the two input maxvals, except with
 <b>-compare</b>, where <b>pamarith</b> uses an output maxval of 2.
 (Before Netpbm 10.14 (February 2003), there was no exception for
@@ -123,10 +122,10 @@ arithmetic on the fractions 5/255 and 10/255.  It multiplies those
 together and then rescales to the output maxval, giving a sample value
 in the output PAM of 50/255 rounded to the nearest integer: 0.
 
-<P>With the bit string operations, the maxval has a whole different
-meaning.  The operations in question are: <B>-and</B>, <B>-or</B>,
-<B>-nand</B>, <B>-nor</B>, <B>-xor</B>, and <B>-shiftleft</B>,
-<B>-shiftright</B>.
+<p>With the bit string operations, the maxval has a whole different
+meaning.  The operations in question are: <b>-and</b>, <b>-or</b>,
+<b>-nand</b>, <b>-nor</b>, <b>-xor</b>, and <b>-shiftleft</b>,
+<b>-shiftright</b>.
 
 <p>With these, each sample value in one or both input images, and in
 the output image, represents a bit string, not a number.  The maxval
@@ -144,30 +143,62 @@ interpretation of the samples.  The sample value is the actual shift
 count.  But it's still required that no sample value exceed the
 maxval.
 
-<h3 id="operations">The Operations</h3>
 
-<p>Most of the operations are obvious from the option name.  The following
-paragraphs cover those that aren't.
+<h2 id="note">NOTE: UNARY FUNCTIONS</h2>
 
-<P><B>-subtract</B> subtracts a value in the right input image from a
-value in the left input image.
+<p><b>pamarith</b> applies only binary functions.  If you want to apply a
+unary function, e.g. "halve", to a single image, use <b>pamfunc</b>.
 
-<P><B>-difference</B> calculates the absolute value of
-the difference.
 
-<p><b>-multiply</b> does an ordinary arithmetic multiplication, but
-tends to produce nonobvious results because of the way <b>pamarith</b>
-interprets sample values.  See <a href="#maxval">Maxval</a>.
+<h2 id="options">OPTIONS</h2>
 
-<P><b>-divide</b> divides a value in the left input image by the value
-in the right input image.  But like <b>-multiply</b>, it tends to
-produce nonobvious results.  Note that <b>pamarith</b> clipping
-behavior makes this of little use when the left argument (dividend) is
-greater than the right argument (divisor) -- the result in that case
-is always the maxval.  If the divisor is 0, the result is the maxval.
-This option was new in Netpbm 10.30 (October 2005).
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamarith</b> recognizes the following
+command line options:
 
-<P><B>-compare</B> produces the value <b>0</b> when the value in the
+<h3 id="function">The Function</h3>
+
+<p>These options select the function that <b>pamarith</b> applies.
+
+<p>You must specify one of these, and cannot specify more than one.
+  
+<dl compact>
+
+<dt><b>-add</b>
+<dd>Adds the two values.  If the result is larger than maxval, it is
+clipped.
+
+<dt><b>-subtract</b>
+<dd>Subtracts a value in the right input image from a value in the left input
+image.
+
+<dt><b>-minimum</b>
+<dd>Chooses the smaller value of the two.
+
+<dt><b>-maximum</b>
+<dd>Chooses the larger value of the two.
+
+<dt><b>-difference</b>
+<dd>Calculates the absolute value of the difference.
+
+<dt><b>-multiply</b>
+<dd>Does an ordinary arithmetic multiplication, but tends to produce
+nonobvious results because of the way <b>pamarith</b> interprets
+sample values.  See <a href="#maxval">Maxval</a>.
+
+<dt><b>-divide</b>
+<dd>Divides a value in the left input image by the value in the right
+input image.  But like <b>-multiply</b>, it tends to produce nonobvious
+results.  Note that <b>pamarith</b> clipping behavior makes this of
+little use when the left argument (dividend) is greater than the right
+argument (divisor) -- the result in that case is always the maxval.
+If the divisor is 0, the result is the maxval.
+
+<p><b>-divide</b> was new in Netpbm 10.30 (October 2005).
+
+<dt><b>-compare</b>
+<dd>Produces the value <b>0</b> when the value in the
 left input image is less than the value in the right input image,
 <b>1</b> when the values are equal, and <b>2</b> when the left is
 greater than the right.
@@ -179,44 +210,41 @@ say A is greater than B if A is less than B.
 
 <p><b>-compare</b> was new in Netpbm 10.13 (December 2002).
 
-<p><b>-and</b>, <b>-nand</b>, <b>-or</b>, <b>-nor</b>, and <b>-xor</b>
-consider the input and output images to contain bit strings; they
-compute bitwise logic operations.  Note that if the maxval is 1, you
-can also look at these as logic operations on boolean input values.
+<dt><b>-and</b>, <b>-nand</b>, <b>-or</b>, <b>-nor</b>, <b>-xor</b>
+<dd>These consider the input and output images to contain bit strings;
+they compute bitwise logic operations.  Note that if the maxval is 1,
+you can also look at these as logic operations on boolean input values.
 See section <a href="#maxval">Maxval</a> for the special meaning of
 maxval with respect to bit string operations such as these.
 
-<p><b>-shiftleft</b> and <b>-shiftright</b> consider the left input
-image and output image to contain bit strings.  They compute a bit
-shift operation, with bits falling off the left or right end and
-zeroes shifting in, as opposed to bits off one end to the other.  The
-right input image sample value is the number of bit positions to
-shift.
+<dt><b>-shiftleft</b>, <b>-shiftright</b>
+<dd>These consider the left input image and output image to contain
+bit strings.  They compute a bit shift operation, with bits falling
+off the left or right end and zeroes shifting in, as opposed to bits
+off one end to the other.  The right input image sample value is the
+number of bit positions to shift.
 
 <p>Note that the maxval (see <a href="#maxval">Maxval</a>) determines
 the width of the frame within which you are shifting.
 
-<h3 id="notes">Notes</h3>
+</dl>
 
-<P>If you want to apply a unary function, e.g. "halve", to a single
-image, use <b>pamfunc</b>.
+<h2 id="seealso">SEE ALSO</h2>
 
-<H2 id="seealso">SEE ALSO</H2>
-
-<A HREF="pamfunc.html"><b>pamfunc</b></A>,
-<A HREF="pamsummcol.html"><b>pamsummcol</b></A>,
-<A HREF="pamsumm.html"><b>pamsumm</b></A>,
-<A HREF="pnminvert.html"><b>pnminvert</b></A>,
-<A HREF="pambrighten.html"><b>pambrighten</b></A>,
-<A HREF="ppmdim.html"><b>ppmdim</b></A>,
-<A HREF="pnmconvol.html"><b>pnmconvol</b></A>,
-<A HREF="pamdepth.html"><b>pamdepth</b></A>,
-<A HREF="pnmpsnr.html"><b>pnmpsnr</b></A>,
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>
+<a href="pamfunc.html"><b>pamfunc</b></a>,
+<a href="pamsummcol.html"><b>pamsummcol</b></a>,
+<a href="pamsumm.html"><b>pamsumm</b></a>,
+<a href="pnminvert.html"><b>pnminvert</b></a>,
+<a href="pambrighten.html"><b>pambrighten</b></a>,
+<a href="ppmdim.html"><b>ppmdim</b></a>,
+<a href="pnmconvol.html"><b>pnmconvol</b></a>,
+<a href="pamdepth.html"><b>pamdepth</b></a>,
+<a href="pnmpsnr.html"><b>pnmpsnr</b></a>,
+<a href="pnm.html"><b>pnm</b></a>,
+<a href="pam.html"><b>pam</b></a>
 
 
-<H2 id="history">HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamarith</b> replaced <b>pnmarith</b> in Netpbm 10.3 (June 2002).
 
@@ -231,25 +259,29 @@ would be removed from Netpbm -- the plan was just to rewrite it to use
 the images to have different depths as long as one of them has depth 1, and
 that made it backward compatible with <b>pnmarith</b>.
 
-<P>The original <b>pnmarith</b> did not have the <b>-mean</b> option.
+<p>The original <b>pnmarith</b> did not have the <b>-mean</b> option.
 
-<P>The <b>-compare</b> option was added in Netpbm 10.13 (December 2002).
+<p>The <b>-compare</b> option was added in Netpbm 10.13 (December 2002).
 
 <p>The bit string operations were added in Netpbm 10.27 (March 2005).
 
-<P>The <b>-divide</b> option was added in Netpbm 10.30 (October 2005).
+<p>The <b>-divide</b> option was added in Netpbm 10.30 (October 2005).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#maxval">MAXVAL</A>
-<LI><A HREF="#operations">THE OPERATIONS</A>
-<LI><A HREF="#notes">NOTES</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+  <ul>
+  <li><a href="#maxval">Maxval</a>
+  </ul>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#options">The Functions</a>
+  </ul>
+<li><a href="#note">NOTE: UNARY FUNCTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

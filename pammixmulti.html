@@ -1,18 +1,14 @@
-<?xml version="1.0"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
-<html>
-<head>
-<title>Pammixmulti User Manual</title>
-</head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pammixmulti User Manual</title></head>
 <body>
 <h1>pammixmulti</h1>
-
-Updated: 18 November 2018<br />
+Updated: 18 November 2018<br>
+<br>
 <a href="#index">Table Of Contents</a>
   
 
-<h2 id="name">NAME</h2>
-<p>pammixmulti - blend together multiple PAM images</p>
+<h2>NAME</h2>
+<p>pammixmulti - blend together multiple PAM images
 
 
 <h2 id="synopsis">SYNOPSIS</h2>
@@ -26,20 +22,24 @@ Updated: 18 November 2018<br />
 <p>Minimum unique abbreviation of an option is acceptable. You can use a
 single hyphen instead of double hyphens to denote options. You can use white
 space in place of the equals sign to separate an option name from its
-value.</p>
+value.
 
 
 <h2 id="description">DESCRIPTION</h2>
-<p>This file is part of <a href="http://netpbm.sourceforge.net/doc/index.html">Netpbm</a>.</p>
+<p>This file is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pammixmulti</b> mixes two or more images to produce a new image. The
 program provides multiple ways to interpret "mix."
 
 
 <h2 id="options">OPTIONS</h2>
-<p><b>pammixmulti</b> accepts the following command-line options:</p>
 
-<dl>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pammixmulti</b> recognizes the following
+command line options:
+
+<dl compact>
 <dt><b>--blend</b>=average|random|mask</dt>
 <dd>
 <p>This option specifies how the input images should be mixed to produce the
@@ -50,7 +50,7 @@ output is produced by selecting the corresponding pixel from one of the input
 images, chosen at random on a per-pixel basis.  With
 <b>--blend</b>=<code>mask</code>, each pixel in the output is produced by a
 weighted average of the corresponding pixels from all the input images based
-on the grayscale level of an additional mask image.</p>
+on the grayscale level of an additional mask image.
 </dd>
 
 <dt><b>--maskfile</b>=<i>filename</i></dt>
@@ -60,7 +60,7 @@ grayscale mask file to control the blending of each pixel.  (If the file is
 not grayscale, the first channel is treated as gray).  Where the mask file is
 black, the first image is selected. Where the mask file is white, the last
 image is selected.  Intermediate levels of gray select intermediate
-images.</p>
+images.
 </dd>
 
 <dt><b>--stdev</b>=<i>number</i></dt>
@@ -77,7 +77,7 @@ that includes roughly equal amounts of the corresponding pixel from images 1
 and 2 but less of the corresponding pixel from image 3.  As <i>number</i>
 tends towards the number of input images (going beyond that has diminishing
 impact), the output tends to look more
-like <b>--blend</b>=average. <i>number</i> defaults to 0.25.</p>
+like <b>--blend</b>=average. <i>number</i> defaults to 0.25.
 </dd>
 
 <dt><b>--randomseed</b> <i>integer</i>
@@ -91,39 +91,39 @@ like <b>--blend</b>=average. <i>number</i> defaults to 0.25.</p>
 
 <h2 id="arguments">ARGUMENTS</h2>
 
-<p>You supply the names of the files to mix as non-option arguments.</p>
+<p>You supply the names of the files to mix as non-option arguments.
 
 
 <h2 id="examples">EXAMPLES</h2>
 
-<p>Average a bunch of PPM images to produce a new PAM image:</p>
+<p>Average a bunch of PPM images to produce a new PAM image:
 <pre><code>
     pammixmulti input*.ppm &gt;output.ppm
 </code></pre>
 
 <p>Mix these same images by taking each pixel from a randomly selected input
-image:</p>
+image:
 
 <pre><code>
     pammixmulti --blend=random input*.ppm &gt;output.ppm
 </code></pre>
 
 <p>Use a mask image to control the fading among input images on a
-pixel-by-pixel basis:</p>
+pixel-by-pixel basis:
 
 <pre><code>
     pammixmulti --blend=mask --maskfile=mask.pgm &gt;output.pam \
        one.pam two.pam three.pam four.pam
 </code></pre>
 
-<p>Do the same but with more abrupt transitions:</p>
+<p>Do the same but with more abrupt transitions:
 
 <pre><code>
     pammixmulti --blend=mask --maskfile=mask.pgm --stdev=0.0 &gt;output.pam \
        one.pam two.pam three.pam four.pam
 </code></pre>
 
-<p>and now with more gradual transitions:</p>
+<p>and now with more gradual transitions:
 
 <pre><code>
     pammixmulti --blend=mask --maskfile=mask.pgm --stdev=1.0 &gt;output.pam \
@@ -131,14 +131,14 @@ pixel-by-pixel basis:</p>
 </code></pre>
 
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pammixmulti</b> was new in Netpbm 10.85 (December 2018).
 
 
 <h2 id="author">AUTHOR</h2>
 
-<p>Copyright 2018 Scott Pakin, scott+pbm@pakin.org.</p>
+<p>Copyright 2018 Scott Pakin, scott+pbm@pakin.org.
 
 <h2 id="seealso">SEE ALSO</h2>
 
@@ -152,14 +152,14 @@ pixel-by-pixel basis:</p>
 <h2 id="index">Table Of Contents</h2>
 
 <ul>
-<li><a href="#synopsis">SYNOPSIS</a></li>
-<li><a href="#description">DESCRIPTION</a></li>
-<li><a href="#options">OPTIONS</a></li>
-<li><a href="#arguments">ARGUMENTS</a></li>
-<li><a href="#examples">EXAMPLES</a></li>
-<li><a href="#history">HISTORY</a></li>
-<li><a href="#author">AUTHOR</a></li>
-<li><a href="#seealso">SEE ALSO</a></li>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#arguments">ARGUMENTS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#seealso">SEE ALSO</a>
 </ul>
 
 </body>

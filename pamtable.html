@@ -1,23 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtable User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtable</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtable User Manual</title></head>
+<body>
+<h1>pamtable</h1>
 Updated: 15 April 2017
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamtable - print the raster as a table of numerical sample values
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtable</B>
+<b>pamtable</b>
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -26,12 +26,12 @@ sample values.  For example, a 5-pixel wide, 2-pixel high rainbow (black, red,
 green, blue, white) PPM image with maxval 255 would appear as follows:
 
 <pre>
-<tt>
+<span style="font-family: monospace">
 
         0   0   0|255   0   0|  0 255   0|  0   0 255|255 255 255
         0   0   0|255   0   0|  0 255   0|  0   0 255|255 255 255
 
-</tt>
+</span>
 </pre>
 
 
@@ -53,7 +53,7 @@ number of spaces required to print the maxval of the image.
 <p>If you want the samples to print more densely, use <b>pamdepth</b> to
 reduce the maxval (thus making the decimal numbers for the samples narrower).
 
-<P>The <b>less</b> program (not part of Netpbm) is good for browsing through
+<p>The <b>less</b> program (not part of Netpbm) is good for browsing through
 the table.  Use its <b>--chop-long-lines</b> option and use cursor movement
 keys to scroll around in the image.
 
@@ -67,33 +67,36 @@ comes from Standard Input.
 
 <h2 id="options">OPTIONS</h2>
 
-<p>None.
+<p>There are no command line options defined specifically
+for <b>pamtable</b>, but it recognizes the options common to all
+programs based on libnetpbm (See <a href="index.html#commonoptions">
+Common Options</a>.)
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamfile.html">pamfile</A>,
-<A HREF="pamcut.html">pamcut</A>,
-<A HREF="pamchannel.html">pamchannel</A>,
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>,
-<A HREF="pamslice.html">pamslice</A>,
-<A HREF="ppmtoarbtxt.html">ppmtoarbtxt</A>,
-<A HREF="ppmtoterm.html">ppmtoterm</A>,
+<a href="pamfile.html">pamfile</a>,
+<a href="pamcut.html">pamcut</a>,
+<a href="pamchannel.html">pamchannel</a>,
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>,
+<a href="pamslice.html">pamslice</a>,
+<a href="ppmtoarbtxt.html">ppmtoarbtxt</a>,
+<a href="ppmtoterm.html">ppmtoterm</a>,
 
 
 <h2 id="history">HISTORY</h2>
 
 <p><b>pamtable</b> was new in Netpbm 10.79 (June 2017).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">ARGUMENTS</A>
-<LI><A HREF="#seealso">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#arguments">ARGUMENTS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

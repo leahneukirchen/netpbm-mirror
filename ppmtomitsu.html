@@ -36,7 +36,7 @@ ppmtomitsu - convert a PPM image to a Mitsubishi S340-10 file
 format suitable to be printed by a Mitsubishi S340-10 printer, or any
 other Mitsubishi color sublimation printer.
 
-<p>The Mitsubishi S340-10 Color Sublimation printer supports 24bit
+<p>The Mitsubishi S340-10 Color Sublimation printer can print in 24 bit
 color.  Images of the available sizes take so long to transfer that
 there is a fast method, employing a lookuptable, that ppmtomitsu will
 use if there is a maximum of 256 colors in the image.  ppmtomitsu
@@ -50,8 +50,8 @@ printer.  The printer understands putting together images in the
 printers memory; ppmtomitsu doesn't utilize this as pnmcat etc provide
 the same functionality and let you view the result on-screen, too.
 The S340-10 is the lowest common denominator printer; for higher
-resolution printers there's the dpi300 option. The other printers also
-support higher values for enlarge eg, but I don't think that's
+resolution printers there's the dpi300 option. The other printers are also
+capable of higher values for enlarge eg, but I don't think that's
 essential enough to warrant a change in the program.
 
 <p>For proper results, the input maxval must be 255.  Use <b>pamdepth</b>

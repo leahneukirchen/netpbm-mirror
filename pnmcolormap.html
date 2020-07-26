@@ -1,64 +1,64 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmcolormap User Manual</TITLE></HEAD>
-<BODY>
-<H1>pnmcolormap</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmcolormap User Manual</title></head>
+<body>
+<h1>pnmcolormap</h1>
 Updated: 09 February 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pnmcolormap - create quantization color map for a Netpbm image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmcolormap</B>
+<b>pnmcolormap</b>
 
-[<B>-center</B>|<B>-meancolor</B>|<B>-meanpixel</B>]
+[<b>-center</b>|<b>-meancolor</b>|<b>-meanpixel</b>]
 
-[<B>-spreadbrightness</B>|<B>-spreadluminosity</B>]
+[<b>-spreadbrightness</b>|<b>-spreadluminosity</b>]
 
-[<B>-splitpixelct</B>|<B>-splitcolorct</B>|<b>-splitspread</b>]
+[<b>-splitpixelct</b>|<b>-splitcolorct</b>|<b>-splitspread</b>]
 
-[<B>-sort</B>]
+[<b>-sort</b>]
 
-[<B>-square</B>] 
+[<b>-square</b>] 
 
-<I>ncolors</I>|<B>all</B>
+<i>ncolors</i>|<b>all</b>
 
-[<I>pnmfile</I>]
+[<i>pnmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pnmcolormap</b> reads a PNM or PAM image as input, chooses
-<I>ncolors</I> colors to best represent the image and writes a PNM
+<i>ncolors</i> colors to best represent the image and writes a PNM
 color map defining them as output.  A PAM image may actually contain
 tuples of any kind, but <b>pnmcolormap</b>'s concept of the tuple values
 that best represent the ones present in the image may not make sense if
 the tuple type isn't RGB or GRAYSCALE.  The design of the program, and
 the rest of this manual, assumes the tuples represent colors.
 
-<P>You can use this map as input to <B>pnmremap</B> on the same input
+<p>You can use this map as input to <b>pnmremap</b> on the same input
 image to quantize the colors in that image, I.e. produce a similar
-image with fewer colors.  <B>pnmquant</B> does both the <B>pnmcolormap</B>
-and <B>pnmremap</B> steps for you.
+image with fewer colors.  <b>pnmquant</b> does both the <b>pnmcolormap</b>
+and <b>pnmremap</b> steps for you.
 
-<P>A PNM colormap is a PNM image of any dimensions that contains at
+<p>A PNM colormap is a PNM image of any dimensions that contains at
 least one pixel of each color in the set of colors it represents.  The
 ones <b>pnmcolormap</b> generates have exactly one pixel of each color,
 except where padding is necessary with the <b>-square</b> option.
 
-<P>The quantization method is Heckbert's "median cut".
+<p>The quantization method is Heckbert's "median cut".
 See <a href="#quant">QUANTIZATION METHOD</a>.
 
-<P>The output image is of the same format (PBM, PGM, PPM, PAM) as the
+<p>The output image is of the same format (PBM, PGM, PPM, PAM) as the
 input image.  Note that a colormap of a PBM image is not very
 interesting.
 
-<P>The colormap generally has the same maxval as the input image, but
-<B>pnmcolormap</B> may reduce it if there are too many colors in the
+<p>The colormap generally has the same maxval as the input image, but
+<b>pnmcolormap</b> may reduce it if there are too many colors in the
 input, as part of its quantization algorithm.
 
 <p><b>pnmcolormap</b> works on a multi-image input stream.  In that
@@ -72,77 +72,82 @@ from each image would make the same color in two images map to
 different colors.  Before Netpbm 10.31 (December 2005), <b>pnmcolormap</b>
 ignored any image after the first.
 
-<P>If you want to create a colormap without basing it on the colors in
-an input image, <B>pamseq</B>, <b>ppmmake</b>, and <b>pnmcat</b> can
+<p>If you want to create a colormap without basing it on the colors in
+an input image, <b>pamseq</b>, <b>ppmmake</b>, and <b>pnmcat</b> can
 be useful.
 
-<H2 id="parameters">PARAMETERS</H2>
+<h2 id="parameters">PARAMETERS</h2>
 
-<P>The single parameter, which is required, is the number of colors you want
-in the output colormap.  <B>pnmcolormap</B> may produce a color map with
-slightly fewer colors than that.  You may specify <B>all</B> to get a colormap
+<p>The single parameter, which is required, is the number of colors you want
+in the output colormap.  <b>pnmcolormap</b> may produce a color map with
+slightly fewer colors than that.  You may specify <b>all</b> to get a colormap
 of every color in the input image (no quantization).  When you specify
 <b>all</b>, the function is essentially the same as that of <b>ppmhist
 -map</b>.  <b>ppmhist</b> is much older.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>All options can be abbreviated to their shortest unique prefix.  You
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmcolormap</b> recognizes the following
+command line options:
+
+<p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
 use either white space or an equals sign between an option name and
 its value.
 
-<DL COMPACT>
-<DT><B>-sort</B>
+<dl compact>
+<dt><b>-sort</b>
 
-<DD>This option causes the output colormap to be sorted by the red
+<dd>This option causes the output colormap to be sorted by the red
 component intensity, then the green, then the blue in ascending order.
 This is an insertion sort, so it is not very fast on large colormaps.
 Sorting is useful because it allows you to compare two sets of colors.
 
-<DT><B>-square</B>
+<dt><b>-square</b>
 
-<DD>By default, <B>pnmcolormap</B> produces as the color map a PPM
+<dd>By default, <b>pnmcolormap</b> produces as the color map a PPM
 image with one row and with one column for each color in the colormap.
-This option causes <B>pnmcolormap</B> instead to produce a PPM image
+This option causes <b>pnmcolormap</b> instead to produce a PPM image
 that is within one row or column of being square, with the last pixel
 duplicated as necessary to create a number of pixels which is such an
 almost-perfect square.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>This option causes <B>pnmcolormap</B> to display messages to
-Standard Error about the quantization.  <DT><B>-center</B>
+<dd>This option causes <b>pnmcolormap</b> to display messages to
+Standard Error about the quantization.  <dt><b>-center</b>
 
-<DT><B>-meancolor</B>
+<dt><b>-meancolor</b>
 
-<DT><B>-meanpixel</B>
+<dt><b>-meanpixel</b>
 
-<DT><B>-spreadbrightness</B>
+<dt><b>-spreadbrightness</b>
 
-<DT><B>-spreadluminosity</B>
+<dt><b>-spreadluminosity</b>
 
-<DT><B>-splitpixelct</B>
+<dt><b>-splitpixelct</b>
 
-<DT><B>-splitcolorct</B>
+<dt><b>-splitcolorct</b>
 
-<DT><B>-splitspread</B>
+<dt><b>-splitspread</b>
 
-<DD>These options control the quantization algorithm.  See <a
+<dd>These options control the quantization algorithm.  See <a
 href="#quant">QUANTIZATION METHOD</a>.
 
-</DL>
+</dl>
 
 
-<H2 id="quant">QUANTIZATION METHOD</H2>
+<h2 id="quant">QUANTIZATION METHOD</h2>
 
-<P>A quantization method is a way to choose which colors, being fewer
+<p>A quantization method is a way to choose which colors, being fewer
 in number than in the input, you want in the output.
-<B>pnmcolormap</B> uses Heckbert's "median cut" quantization
+<b>pnmcolormap</b> uses Heckbert's "median cut" quantization
 method.
 
-<P>This method involves separating all the colors into
+<p>This method involves separating all the colors into
 "boxes," each holding colors that represent about the same
 number of pixels.  You start with one box and split boxes in two until
 the number of boxes is the same as the number of colors you want in
@@ -165,31 +170,31 @@ the output, and choose one color to represent each box.
   in Netpbm 10.88 (September 2019).  Before that, <b>pnmcolormap</b> always
   splits the box containing the most pixels.
   
-<P>When you split a box, you do it so each sub-box has the same number of
+<p>When you split a box, you do it so each sub-box has the same number of
 pixels (except one sub-box has more if the full box has an odd number), with
 the &quot;greatest&quot; pixels in one sub-box and the &quot;least&quot;
 pixels in the other.  "Greater," for a particular box, means it is brighter in
 the color component (red, green, blue) which has the largest spread in that
-box.  <B>pnmcolormap</B> gives you two ways to define "largest spread.": 1)
+box.  <b>pnmcolormap</b> gives you two ways to define "largest spread.": 1)
 largest spread of brightness; 2) largest spread of contribution to the
 luminosity of the color.  E.g. red is weighted much more than blue.  Select
-among these with the <B>-spreadbrightness</B> and <B>-spreadluminosity</B>
-options.  The default is <B>-spreadbrightness</B>.  Where there are multiple
+among these with the <b>-spreadbrightness</b> and <b>-spreadluminosity</b>
+options.  The default is <b>-spreadbrightness</b>.  Where there are multiple
 colors of the median magnitude, they are distributed arbitrarily among between
 the subboxes.  This arbitrary distribution depends upon what the system's
 <b>qsort</b> function does with multiple equal values, so <b>pnmcolormap</b>
 may produce slightly different results on different systems.
 
-<P><B>pnmcolormap</B> provides three ways of choosing a color to represent a
+<p><b>pnmcolormap</b> provides three ways of choosing a color to represent a
 box: 1) the center color - the color halfway between the greatest and least
 colors in the box, using the above definition of "greater"; 2) the mean of the
 colors (each component averaged separately by brightness) in the box; 3) the
 mean weighted by the number of pixels of a color in the image.
 
-<P>Select among these with the <B>-center</B>, <B>-meancolor</B>, and
-<B>-meanpixel</B> options.  The default is <B>-center</B>.
+<p>Select among these with the <b>-center</b>, <b>-meancolor</b>, and
+<b>-meanpixel</b> options.  The default is <b>-center</b>.
 
-<P>Note that in all three methods, there may be colors in the output
+<p>Note that in all three methods, there may be colors in the output
 which do not appear in the input at all.
 
 <p>Also note that the color chosen to represent the colors in Box A the best
@@ -203,27 +208,27 @@ and in fact the color <b>pnmcolormap</b> chose to represent Box B may not
 appear in the <b>pnmremap</b> output at all.
   
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
 "Color Image Quantization for Frame Buffer Display" by Paul Heckbert,
 SIGGRAPH '82 Proceedings, page 297.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmremap.html">pnmremap</A></B>,
-<B><A HREF="pnmquant.html">pnmquant</A></B>,
-<B><A HREF="ppmquantall.html">ppmquantall</A></B>,
-<B><A HREF="pamgetcolor.html">pamgetcolor</A></B>,
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
-<B><A HREF="ppmdither.html">ppmdither</A></B>,
-<B><A HREF="pamseq.html">pamseq</A></B>,
-<B><A HREF="ppmmake.html">ppmmake</A></B>,
-<B><A HREF="pnmcat.html">pnmcat</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="pnmremap.html">pnmremap</a></b>,
+<b><a href="pnmquant.html">pnmquant</a></b>,
+<b><a href="ppmquantall.html">ppmquantall</a></b>,
+<b><a href="pamgetcolor.html">pamgetcolor</a></b>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
+<b><a href="ppmdither.html">ppmdither</a></b>,
+<b><a href="pamseq.html">pamseq</a></b>,
+<b><a href="ppmmake.html">ppmmake</a></b>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
-<P>Before Netpbm 10.15 (April 2003), <b>pnmcolormap</b> used a lot
+<p>Before Netpbm 10.15 (April 2003), <b>pnmcolormap</b> used a lot
 more memory for large images because it kept the entire input image in
 memory.  Now, it processes it a row at a time, but because it
 sometimes must make multiple passes through the image, it first copies
@@ -239,23 +244,23 @@ Netpbm 9.23 split it out into two separate programs:
 <b>pnmquant</b> with a program that simply calls <b>pnmcolormap</b> and
 <b>pnmremap</b>.
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#parameters">PARAMETERS</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#quant">QUANTIZATION METHOD</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#parameters">PARAMETERS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#quant">QUANTIZATION METHOD</a>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

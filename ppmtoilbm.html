@@ -1,61 +1,61 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtoilbm User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtoilbm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtoilbm User Manual</title></head>
+<body>
+<h1>ppmtoilbm</h1>
 Updated: 28 June 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtoilbm - convert a PPM image into an ILBM file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtoilbm</B>
+<b>ppmtoilbm</b>
 
-[<B>-maxplanes</B>|<B>-mp</B> <I>N</I>]
+[<b>-maxplanes</b>|<b>-mp</b> <i>N</i>]
 
-[<B>-fixplanes</B>|<B>-fp</B> <I>N</I>]
+[<b>-fixplanes</b>|<b>-fp</b> <i>N</i>]
 
-[<B>-ham6</B>|<B>-ham8</B>]
+[<b>-ham6</b>|<b>-ham8</b>]
 
-[{<B>-dcbits</B>|<B>-dcplanes</B>} <i>r</i> <i>g</i> <i>b</i>]
+[{<b>-dcbits</b>|<b>-dcplanes</b>} <i>r</i> <i>g</i> <i>b</i>]
 
 [
-<B>-normal</B>|<B>-hamif</B>|<B>-hamforce</B>|<B>-24if</B>|<B>-24force</B>|
-<b>-dcif</b>|<b>-dcforce</B>|<b>-cmaponly</B>
+<b>-normal</b>|<b>-hamif</b>|<b>-hamforce</b>|<b>-24if</b>|<b>-24force</b>|
+<b>-dcif</b>|<b>-dcforce</b>|<b>-cmaponly</b>
 ]
 
-[<B>-ecs</B>|<B>-aga</B>]
+[<b>-ecs</b>|<b>-aga</b>]
 
-[<B>-compress</B>|<B>-nocompress</B>]
+[<b>-compress</b>|<b>-nocompress</b>]
 
-[<B>-cmethod</B> <I>type</I>]
+[<b>-cmethod</b> <i>type</i>]
 
-[<B>-map</B> <i>ppmfile</i>]
+[<b>-map</b> <i>ppmfile</i>]
 
-[<B>ppmfile</B>]
+[<b>ppmfile</b>]
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtoilbm</b> reads a PPM image as input.  Produces an ILBM file
 as output.  <b>ppmtoilbm</b> understands the following ILBM types:
 
-<UL COMPACT>
+<ul compact>
 
-<LI>Normal ILBMs with 1-16 planes
+<li>Normal ILBMs with 1-16 planes
 
-<LI>Amiga HAM with 3-16 planes
+<li>Amiga HAM with 3-16 planes
 
-<LI>24 bit
+<li>24 bit
 
-<LI>Color map (BMHD + CMAP chunk only, nPlanes = 0)
+<li>Color map (BMHD + CMAP chunk only, nPlanes = 0)
 
-<LI>Unofficial direct color.  1-16 planes for each color component.
+<li>Unofficial direct color.  1-16 planes for each color component.
 
 </ul>
 
@@ -63,110 +63,115 @@ as output.  <b>ppmtoilbm</b> understands the following ILBM types:
 colormap files) unofficial DCOL chunk for direct color ILBM.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtoilbm</b> recognizes the following
+command line options:
 
 <p>Options marked with (*) can be prefixed with a "no",
 e.g. "-nohamif".  All options can be abbreviated to their
 shortest unique prefix.
 
-<DL COMPACT>
-<DT><B>-maxplanes</b> | <b>-mp</b> <i>n</i>
+<dl compact>
+<dt><b>-maxplanes</b> | <b>-mp</b> <i>n</i>
 
-<DD>(default 5, minimum 1, maximum 16) Maximum planes to write in a
+<dd>(default 5, minimum 1, maximum 16) Maximum planes to write in a
 normal ILBM.  If the image does not fit into &lt;n&gt; planes,
 ppmtoilbm writes a HAM file (if -hamif is used), a 24bit file (if
 -24if is used) or a direct color file (if -dcif is used) or aborts
 with an error.
 
-<DT><B>-fixplanes</b> | <b>-fp</b> <i>b</i>
+<dt><b>-fixplanes</b> | <b>-fp</b> <i>b</i>
 
-<DD>(min 1, max 16) If a normal ILBM is written, it will have exactly
+<dd>(min 1, max 16) If a normal ILBM is written, it will have exactly
 &lt;n&gt; planes.
 
-<DT><B>-hambits</b> | <b>-hamplanes</b> <i>n</i>
+<dt><b>-hambits</b> | <b>-hamplanes</b> <i>n</i>
 
-<DD>(default 6, min 3, max 16) Select number of planes for HAM
-picture.  The current Amiga hardware supports 6 and 8 planes, so for
+<dd>(default 6, min 3, max 16) Select number of planes for HAM
+picture.  The current Amiga hardware understands 6 and 8 planes, so for
 now you should only use this values.
 
-<DT><B>-normal</B>
+<dt><b>-normal</b>
 
-<DD>Turns off -hamif/-24if/-dcif, -hamforce/-24force/-dcforce and
+<dd>Turns off -hamif/-24if/-dcif, -hamforce/-24force/-dcforce and
 -cmaponly.  Also sets compression type to byterun1.
 
 <p>This is the default.
 
-<DT><B>-hamif</B> (*)
-<DT><B>-24if</B> (*)
-<DT><B>-dcif</B> (*)
+<dt><b>-hamif</b> (*)
+<dt><b>-24if</b> (*)
+<dt><b>-dcif</b> (*)
 
-<DD>Write a HAM/24bit/direct color file if the image does not fit into
+<dd>Write a HAM/24bit/direct color file if the image does not fit into
 &lt;maxplanes&gt; planes.
 
-<DT><B>-hamforce</B> (*)
-<DT><B>-24force</B> (*)
-<DT><B>-dcforce</B> (*)
+<dt><b>-hamforce</b> (*)
+<dt><b>-24force</b> (*)
+<dt><b>-dcforce</b> (*)
 
-<DD>Write a HAM/24bit/direct color file.
+<dd>Write a HAM/24bit/direct color file.
 
-<DT><B>-dcbits</b> <i>r</i> <i>g</i> <i>b</i>
-<DT><b>-dcplanes</b> <i>r</i> <i>g</i> <i>b</i>
+<dt><b>-dcbits</b> <i>r</i> <i>g</i> <i>b</i>
+<dt><b>-dcplanes</b> <i>r</i> <i>g</i> <i>b</i>
 
-<DD>(default 5, min 1, max 16).  Select number of bits for red, green
+<dd>(default 5, min 1, max 16).  Select number of bits for red, green
 and blue in a direct color ILBM.
 
-<DT><B>-ecs</B>
+<dt><b>-ecs</b>
 
-<DD>Shortcut for: -hamplanes 6 -maxplanes 5
+<dd>Shortcut for: -hamplanes 6 -maxplanes 5
 
 <p>This is the default.
 
-<DT><B>-aga</B>
+<dt><b>-aga</b>
 
-<DD>Shortcut for: <b>-hamplanes 8 -maxplanes 8</B>
+<dd>Shortcut for: <b>-hamplanes 8 -maxplanes 8</b>
 
-<DT><B>-ham6</B>
+<dt><b>-ham6</b>
 
-<DD>Shortcut for: <b>-hamplanes 6 -hamforce</B>
+<dd>Shortcut for: <b>-hamplanes 6 -hamforce</b>
 
-<DT><B>-ham8</B>
+<dt><b>-ham8</b>
 
-<DD>Shortcut for: <b>-hamplanes 8 -hamforce</b>
+<dd>Shortcut for: <b>-hamplanes 8 -hamforce</b>
 
-<DT><B>-compress</B> (*)
+<dt><b>-compress</b> (*)
 
-<DD>This is the default.
+<dd>This is the default.
 
-<DD>Compress the BODY chunk.  The default compression method is
+<dd>Compress the BODY chunk.  The default compression method is
 byterun1.  Compression requires building the ILBM image in memory;
 turning compression off allows stream-writing of the image, but the
 resulting file will usually be 30% to 50% larger.  Another alternative
 is the -savemem option, this will keep memory requirements for
 compression at a minimum, but is very slow.
 
-<DT><B>-cmethod</b> <b>none</b>|<b>byterun1</B>
+<dt><b>-cmethod</b> <b>none</b>|<b>byterun1</b>
 
-<DD>This option does the same thing as <b>-compress</b>.
+<dd>This option does the same thing as <b>-compress</b>.
 
-<DT><B>-map</b> <i>ppmfile</i>
+<dt><b>-map</b> <i>ppmfile</i>
 
-<DD>Write a normal ILBM using the colors in &lt;ppmfile&gt; as the
+<dd>Write a normal ILBM using the colors in &lt;ppmfile&gt; as the
 colormap.  The colormap file also determines the number of planes, a
 <b>-maxplanes</b> or <b>-fixplanes</b> option is ignored.
 
-<DT><B>-cmaponly</B>
+<dt><b>-cmaponly</b>
 
-<DD>Write a colormap file: only BMHD and CMAP chunks, no BODY chunk,
+<dd>Write a colormap file: only BMHD and CMAP chunks, no BODY chunk,
 nPlanes = 0.
 
-<DT><B>-savemem</B>
+<dt><b>-savemem</b>
 
-<DD>See the <b>-compress</b> option.
+<dd>See the <b>-compress</b> option.
 
-</DL>
+</dl>
 
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
 <p>HAM pictures will always get a grayscale colormap; a real color
 selection algorithm might give better results.  On the other hand,
@@ -175,17 +180,17 @@ the same depth (no. of planes) share a common colormap, which is
 useful for building HAM animations.
 
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="references">REFERENCES</h2>
 
 Amiga ROM Kernel Reference Manual - Devices (3rd Ed.)
-<BR>
+<br>
 Addison Wesley, ISBN 0-201-56775-X
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="ppm.html">ppm</A>, 
-<A HREF="ilbmtoppm.html">ilbmtoppm</A>
+<a href="ppm.html">ppm</a>, 
+<a href="ilbmtoppm.html">ilbmtoppm</a>
 
 
 <h2 id="history">HISTORY</h2>
@@ -193,25 +198,25 @@ Addison Wesley, ISBN 0-201-56775-X
 <p>For about a year in 1993-1994, there was a <b>-savemem</b> option.
 
 
-<H2 id="authoris">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 <p>Copyright (C) 1989 by Jef Poskanzer.
 
-<p>Modified October 1993 by Ingo Wilken (<A
-HREF="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</A>)
+<p>Modified October 1993 by Ingo Wilken (<a
+href="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</a>)
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

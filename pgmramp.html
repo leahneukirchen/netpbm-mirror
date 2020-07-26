@@ -1,28 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><title>Pgmramp User Manual</title>
-</HEAD><BODY>
-<H1>pgmramp</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pgmramp User Manual</title></head>
+<body>
+<h1>pgmramp</h1>
 Updated: 15 February 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pgmramp - generate a grayscale ramp
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pgmramp</B>
-{<B>-lr</B>|<B>-tb</B>|<B>-rectangle</B>|<B>-ellipse</B>|<b>-diagonal</b>}
+<b>pgmramp</b>
+{<b>-lr</b>|<b>-tb</b>|<b>-rectangle</b>|<b>-ellipse</b>|<b>-diagonal</b>}
 [<b>-maxval=</b><i>maxval</i>]
-<I>width</i> <i>height</I>
+<i>width</i> <i>height</i>
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or an equals sign between an option name
 and its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -47,75 +47,81 @@ example, the <b>-lr</b> option gives you a left to right ramp and
 
 gives you a right to left ramp.
 
-<P>To generate a simple ramp of all the values from 0 to maxval, and not
+<p>To generate a simple ramp of all the values from 0 to maxval, and not
 necessarily a graphic image, use <b><a href="pamseq.html">pamseq</a></b>.
 
 <p><b>ppmrainbow</b> does something similar to what <b>pgmramp</b> does,
 but for color.  The image fades between two colors of your choice.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pgmramp</b> recognizes the following
+command line options:
+<p>
 You must specify exactly one of the ramp type options.
-<DL COMPACT>
-<DT><B>-lr</B>
-<DD>
+
+<dl compact>
+<dt><b>-lr</b>
+<dd>
 A left to right ramp.  Black on the left; white on the right.
 
-<DT><B>-tb</B>
-<DD>
+<dt><b>-tb</b>
+<dd>
 A top to bottom ramp.  Black on top; white on the bottom.
 
-<DT><B>-rectangle</B>
-<DD>
+<dt><b>-rectangle</b>
+<dd>
 An outside-in rectangular ramp.  It is black around the edges and white
 in the center.
 
-<DT><B>-ellipse</B>
-<DD>
+<dt><b>-ellipse</b>
+<dd>
 An outside-in elliptical ramp.  It is black around the edge and white
 in the center.
 
-<DT><B>-diagonal</B>
-<DD>
+<dt><b>-diagonal</b>
+<dd>
 A ramp from top left corner diagonally down to bottom right.  Black at
 the top left; white at the bottom right.
 <p>
 This option was new in Netpbm 10.66 (March 2014).
 
-<DT><b>-maxval=</b><i>maxval</i>
-<DD>
+<dt><b>-maxval=</b><i>maxval</i>
+<dd>
      The maxval for the generated image.  Default is 255.
 <p>
      This option was new in Netpbm 10.1 (June 2002).  Before that, the maxval
      is always 255.
      
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamflip.html"><b>pamflip</b></A>,
-<A HREF="pamarith.html"><b>pamarith</b></A>,
-<A HREF="pnmgamma.html"><b>pnmgamma</b></A>,
-<A HREF="pamseq.html"><b>pamseq</b></A>,
-<A HREF="ppmrainbow.html"><b>ppmrainbow</b></A>,
-<A HREF="pamgradient.html"><b>pamgradient</b></A>,
-<A HREF="pgm.html">pgm</A>
+<a href="pamflip.html"><b>pamflip</b></a>,
+<a href="pamarith.html"><b>pamarith</b></a>,
+<a href="pnmgamma.html"><b>pnmgamma</b></a>,
+<a href="pamseq.html"><b>pamseq</b></a>,
+<a href="ppmrainbow.html"><b>ppmrainbow</b></a>,
+<a href="pamgradient.html"><b>pamgradient</b></a>,
+<a href="pgm.html">pgm</a>
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#optoins">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

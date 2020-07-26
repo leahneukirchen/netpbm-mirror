@@ -1,80 +1,79 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Hpcdtoppm User Manual</TITLE></HEAD>
-<BODY>
-<H1>hpcdtoppm</H1>
-Updated: 7 August 2003
-<BR>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Hpcdtoppm User Manual</title></head>
+<body>
+<h1>hpcdtoppm</h1>
+Updated: 07 August 2003
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A HREF="#index">Table Of Contents</A>
-
-<H2>NAME</H2>
+<h2>NAME</h2>
 hpcdtoppm - convert a Photo-CD image into a PBM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>hpcdtoppm</B>
-<I>infile</I>
-[<B>-a</B>]
-[{<B>-C</B>|<B>-0</B>|<B>-Overview</B>|<B>-O</B>} <I>file opt</I>]
-[<B>-c0</B>]
-[<B>-c-</B>]
-[<B>-c+</B>]
-[<B>-crop</B>]
-[<B>-d</B>]
-[<B>-dpi</B> <I>f</I>]
-[<B>-eps</B>]
-[<B>-epsd</B>]
-[<B>-epsg</B>]
-[<B>-fak</B> <I>scale</I>]
-[<B>-hori</B>]
-[<B>-i</B>]
-[<B>-l</B>]
-[<B>-m</B>]
-[<B>-n</B>]
-[<B>-pb</B> <I>pos</I>]
-[<B>-pgm</B>]
-[<B>-ph</B> <I>height</I>]
-[<B>-pl</B> <I>pos</I>]
-[<B>-pos</B>]
-[<B>-ppm</B>]
-[<B>-ps</B>]
-[<B>-psd</B>]
-[<B>-psg</B>]
-[<B>-pw</B> <I>width</I>]
-[<B>-r</B>]
-[<B>-rep</B>]
-[<B>-S</B> <I>long short</I>]
-[<B>-s</B>]
-[<B>-vert</B>]
-[<B>-x</B>]
-[<B>-ycc</B>]
-[<B>-1</B>|<B>-Base/16</B>|<B>-128x192</B>]
-[<B>-2</B>|<B>-Base/4</B>|<B>-256x384</B>]
-[<B>-3</B>|<B>-Base</B>|<B>-512x768</B>]
-[<B>-4</B>|<B>-4Base</B>|<B>-1024x1536</B>]
-[<B>-5</B>|<B>-16Base</B>|<B>-2048x3072</B>]
-[<B>-6</B>|<B>-64Base</B>|<B>-4096x6144</B>]
-[<I>outfile</I>]
+<b>hpcdtoppm</b>
+<i>infile</i>
+[<b>-a</b>]
+[{<b>-C</b>|<b>-0</b>|<b>-Overview</b>|<b>-O</b>} <i>file opt</i>]
+[<b>-c0</b>]
+[<b>-c-</b>]
+[<b>-c+</b>]
+[<b>-crop</b>]
+[<b>-d</b>]
+[<b>-dpi</b> <i>f</i>]
+[<b>-eps</b>]
+[<b>-epsd</b>]
+[<b>-epsg</b>]
+[<b>-fak</b> <i>scale</i>]
+[<b>-hori</b>]
+[<b>-i</b>]
+[<b>-l</b>]
+[<b>-m</b>]
+[<b>-n</b>]
+[<b>-pb</b> <i>pos</i>]
+[<b>-pgm</b>]
+[<b>-ph</b> <i>height</i>]
+[<b>-pl</b> <i>pos</i>]
+[<b>-pos</b>]
+[<b>-ppm</b>]
+[<b>-ps</b>]
+[<b>-psd</b>]
+[<b>-psg</b>]
+[<b>-pw</b> <i>width</i>]
+[<b>-r</b>]
+[<b>-rep</b>]
+[<b>-S</b> <i>long short</i>]
+[<b>-s</b>]
+[<b>-vert</b>]
+[<b>-x</b>]
+[<b>-ycc</b>]
+[<b>-1</b>|<b>-Base/16</b>|<b>-128x192</b>]
+[<b>-2</b>|<b>-Base/4</b>|<b>-256x384</b>]
+[<b>-3</b>|<b>-Base</b>|<b>-512x768</b>]
+[<b>-4</b>|<b>-4Base</b>|<b>-1024x1536</b>]
+[<b>-5</b>|<b>-16Base</b>|<b>-2048x3072</b>]
+[<b>-6</b>|<b>-64Base</b>|<b>-4096x6144</b>]
+[<i>outfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p>This program accepts Photo-CD image or overview file data from the
-specified input file, <I>infile</I> (or, if the resolution is lower
-than 64Base and the file argument is specified as <B>-</B>, from
+specified input file, <i>infile</i> (or, if the resolution is lower
+than 64Base and the file argument is specified as <b>-</b>, from
 standard input), and writes either PBM Format or PostScript to the
 specified output file (or to standard output if no file is specified).
 
-<P>On a standard Photo-CD, image files appear in the directory
+<p>On a standard Photo-CD, image files appear in the directory
 <b>photo_cd/images</b>, in files with names of the form
-img<I>nnnn</i>.pcd, where <I>nnnn</I> is a 4-digit-number.  The
-overview file appears in <B>photo_cd/overview.pcd</B>.
+img<i>nnnn</i>.pcd, where <i>nnnn</i> is a 4-digit-number.  The
+overview file appears in <b>photo_cd/overview.pcd</b>.
 
-<P>Photo-CD images are stored using as many as 6 different resolutions:
+<p>Photo-CD images are stored using as many as 6 different resolutions:
 
 
-<PRE>
+<pre>
           Format              Resolution
           ------              ----------
           64Base              4096x6144 (ProPhotoCD only)
@@ -83,309 +82,314 @@ overview file appears in <B>photo_cd/overview.pcd</B>.
           Base                512x768
           Base/4              256x384
           Base/16             128x192
-</PRE>
+</pre>
 
-<P>The overview file employs Base/16 format.
+<p>The overview file employs Base/16 format.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
 Invoking <b>hpcdtoppm</b> without arguments produces a list of default
 values.  Note that you can supply only one size option.
 
-<DL COMPACT>
-<DT><B>-a</B>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>hpcdtoppm</b> recognizes the following
+command line options:
 
-<DD>Automatically determine image orientation (this option is
+<dl compact>
+<dt><b>-a</b>
+
+<dd>Automatically determine image orientation (this option is
 experimental, and does not work for overview files).
 
-<DT>{<B>-C</B> | <B>-0</B> | <B>-Overview</B> | <B>-O</B> } <I>file opt</I>
+<dt>{<b>-C</b> | <b>-0</b> | <b>-Overview</b> | <b>-O</b> } <i>file opt</i>
 
-<DD>Extract all images from an overview file.  The mandatory
-<I>file</I> argument is the name of a PPM file; output files are named
-<i>filennnn</I>, where <I>nnnn</I> is a 4-digit number.  Overview
+<dd>Extract all images from an overview file.  The mandatory
+<i>file</i> argument is the name of a PPM file; output files are named
+<i>filennnn</i>, where <i>nnnn</i> is a 4-digit number.  Overview
 images are extracted in their original Base/16 format.  The value of
-<I>opt</I> determines the orientation of the contact sheet image;
+<i>opt</i> determines the orientation of the contact sheet image;
 recognized values are:
 
-<DL COMPACT>
-<DT><B>n</B>
+<dl compact>
+<dt><b>n</b>
 
-<DD>Do not rotate the image.
+<dd>Do not rotate the image.
 
-<DT><B>l</B>
+<dt><b>l</b>
 
-<DD>Rotate the picture counter-clockwise (portrait mode).
+<dd>Rotate the picture counter-clockwise (portrait mode).
 
-<DT><B>r</B>
+<dt><b>r</b>
 
-<DD>Rotate the picture clockwise (portrait mode).
+<dd>Rotate the picture clockwise (portrait mode).
 
-</DL>
+</dl>
 
-<DT><B>-c0</B>
+<dt><b>-c0</b>
 
-<DD>Do not correct (brighten or darken) the image.
+<dd>Do not correct (brighten or darken) the image.
 
-<DT><B>-c-</B>
+<dt><b>-c-</b>
 
-<DD>Darken the image.
+<dd>Darken the image.
 
-<DT><B>-c+</B>
+<dt><b>-c+</b>
 
-<DD>Brighten the image.
+<dd>Brighten the image.
 
-<DT><B>-crop</B>
+<dt><b>-crop</b>
 
-<DD>Cut off the black frame which sometimes appears at the image
+<dd>Cut off the black frame which sometimes appears at the image
 borders.
 
-<DT><B>-d</B>
+<dt><b>-d</b>
 
-<DD>Show only the decompressed difference rather than the complete image
+<dd>Show only the decompressed difference rather than the complete image
 (applicable only to 4Base and 16Base images).
 
-<DT><B>-dpi</b> <i>res</i>
+<dt><b>-dpi</b> <i>res</i>
 
-<DD>Set the printer resolution to <I>res</I> for dithered Postscript
+<dd>Set the printer resolution to <i>res</i> for dithered Postscript
 images.
 
-<DT><B>-eps</B>
+<dt><b>-eps</b>
 
-<DD>Write a RGB Encapsulated Postscript color image.
+<dd>Write a RGB Encapsulated Postscript color image.
 
-<DT><B>-epsd</B>
+<dt><b>-epsd</b>
 
-<DD>Write a Floyd-Steinberg dithered image in Encapsulated Postscript.
+<dd>Write a Floyd-Steinberg dithered image in Encapsulated Postscript.
 
-<DT><B>-epsg</B>
+<dt><b>-epsg</b>
 
-<DD>Write a grayscale image in Encapsulated Postscript.
+<dd>Write a grayscale image in Encapsulated Postscript.
 
-<DT><B>-fak</b> <i>scale</i>
+<dt><b>-fak</b> <i>scale</i>
 
-<DD>Set the scaling factor for dithered PostScript images to
-<I>scale</I>.
+<dd>Set the scaling factor for dithered PostScript images to
+<i>scale</i>.
 
-<DT><B>-hori</B>
+<dt><b>-hori</b>
 
-<DD>Flip the image horizontally.
+<dd>Flip the image horizontally.
 
-<DT><B>-i</B>
+<dt><b>-i</b>
 
-<DD>Send information from an image file header to Standard Error.
+<dd>Send information from an image file header to Standard Error.
 
-<DT><B>-l</B>
+<dt><b>-l</b>
 
-<DD>Rotate the picture counter-clockwise (portrait mode).
+<dd>Rotate the picture counter-clockwise (portrait mode).
 
-<DT><B>-m</B>
+<dt><b>-m</b>
 
-<DD>Write messages about the phases of decoding to standard error.
+<dd>Write messages about the phases of decoding to standard error.
 
-<DT><B>-n</B>
+<dt><b>-n</b>
 
-<DD>Do not rotate the image.
+<dd>Do not rotate the image.
 
-<DT><B>-pb</b> <i>pos</i>
+<dt><b>-pb</b> <i>pos</i>
 
-<DD>Set the bottom position of the Postscript image to <I>pos</I>.
+<dd>Set the bottom position of the Postscript image to <i>pos</i>.
 
-<DT><B>-pgm</B>
+<dt><b>-pgm</b>
 
-<DD>Write a <I>pgm</I> (grayscale) image.
+<dd>Write a <i>pgm</i> (grayscale) image.
 
-<DT><B>-ph height</B>
+<dt><b>-ph height</b>
 
-<DD>Set the height of the Postscript image to <I>height</I>.
+<dd>Set the height of the Postscript image to <i>height</i>.
 
-<DT><B>-pl</b> <i>pos</i>
+<dt><b>-pl</b> <i>pos</i>
 
-<DD>Set the leftmost position of the Postscript image to <I>pos</I>.
+<dd>Set the leftmost position of the Postscript image to <i>pos</i>.
 
-<DT><B>-pos</B>
+<dt><b>-pos</b>
 
-<DD>Print the relative starting position of the data for the current
+<dd>Print the relative starting position of the data for the current
 resolution.  
 
-<DT><B>-ppm</B>
+<dt><b>-ppm</b>
 
-<DD>Write a <I>ppm</I> RGB (color) image.
+<dd>Write a <i>ppm</i> RGB (color) image.
 
-<DT><B>-ps</B>
+<dt><b>-ps</b>
 
-<DD>Write a RGB Postscript color image.
+<dd>Write a RGB Postscript color image.
 
-<DT><B>-psd</B>
+<dt><b>-psd</b>
 
-<DD>Write a Floyd-Steinberg dithered image in Postscript.
+<dd>Write a Floyd-Steinberg dithered image in Postscript.
 
-<DT><B>-psg</B>
+<dt><b>-psg</b>
 
-<DD>Write a Postscript grayscale image.
+<dd>Write a Postscript grayscale image.
 
-<DT><B>-pw width</B>
+<dt><b>-pw width</b>
 
-<DD>Set the width of the Postscript image to <I>width</I>.
+<dd>Set the width of the Postscript image to <i>width</i>.
 
-<DT><B>-r</B>
+<dt><b>-r</b>
 
-<DD>Rotate the picture clockwise (portrait mode).
+<dd>Rotate the picture clockwise (portrait mode).
 
-<DT><B>-rep</B>
+<dt><b>-rep</b>
 
-<DD>Try to jump over reading errors in the Huffman code. 
+<dd>Try to jump over reading errors in the Huffman code. 
 
-<DT><B>-S</b> <i>long</i> <i>short</i>
+<dt><b>-S</b> <i>long</i> <i>short</i>
 
-<DD>Cut out a subrectangle with boundaries defined by the values:
+<dd>Cut out a subrectangle with boundaries defined by the values:
 
-<DL COMPACT>
-<DT><I>long</I>
+<dl compact>
+<dt><i>long</i>
 
-<DD>For the longer side of the image.
+<dd>For the longer side of the image.
 
-<DT><I>short</I>
+<dt><i>short</i>
 
-<DD>For the shorter side of the image.
+<dd>For the shorter side of the image.
 
-</DL>
+</dl>
 
-where <I>long</I> and <I>short</I> take one of two forms:
+where <i>long</i> and <i>short</i> take one of two forms:
 
-<DL COMPACT>
-<DT><B>a-b</B>
+<dl compact>
+<dt><b>a-b</b>
 
-<DD>Cut from position <I>a</I> to position <I>b</I>.
+<dd>Cut from position <i>a</i> to position <i>b</i>.
 
-<DT><B>a+b</B>
+<dt><b>a+b</b>
 
-<DD>Starting at offset <I>a</I>, cut a length of <I>b</I>.
+<dd>Starting at offset <i>a</i>, cut a length of <i>b</i>.
 
-</DL>
+</dl>
 
-and where <I>a</I> and <I>b</I> are either integers representing pixel
+and where <i>a</i> and <i>b</i> are either integers representing pixel
 locations, or floating point values over the range [0.0 ... 1.0],
 representing the fraction of the length of a side.
 
-<DT><B>-s</B>
+<dt><b>-s</b>
 
-<DD>Apply a simple sharpness operator to the luminosity channel.
+<dd>Apply a simple sharpness operator to the luminosity channel.
 
-<DT><B>-vert</B>
+<dt><b>-vert</b>
 
-<DD>Flip the image vertically.
+<dd>Flip the image vertically.
 
-<DT><B>-x</B>
+<dt><b>-x</b>
 
-<DD> Overskip Mode (applicable to Base/16, Base/4, Base and 4Base).
+<dd> Overskip Mode (applicable to Base/16, Base/4, Base and 4Base).
 In Photo-CD images the luminosity channel is stored in full
 resolution, the two chromaticity channels are stored in half
 resolution only and have to be interpolated.  In Overskip Mode, the
 chromaticity channels of the next higher resolution are taken instead
 of interpolating.  To see the difference, generate one PPM with and
-one PPM without this option.  Use <B><A
-HREF="pamarith.html">pamarith</A></B> to generate the difference image
-of these two images.  Call <B><A HREF="ppmhist.html">ppmhist</A></B>
-for this difference or show it with <b>xv</b> (push the <B>HistEq</B> button
+one PPM without this option.  Use <b><a
+href="pamarith.html">pamarith</a></b> to generate the difference image
+of these two images.  Call <b><a href="ppmhist.html">ppmhist</a></b>
+for this difference or show it with <b>xv</b> (push the <b>HistEq</b> button
 in the color editor).
 
-<DT><B>-ycc</B>
+<dt><b>-ycc</b>
 
-<DD>Write the image in a variation on PPM format in which the samples
+<dd>Write the image in a variation on PPM format in which the samples
 are YCC instead of RGB.
 
-<DT><B>-1</B>|<B>-Base/16</B>|<B>-128x192</B>
+<dt><b>-1</b>|<b>-Base/16</b>|<b>-128x192</b>
 
-<DD>Extract the Base/16 image.
+<dd>Extract the Base/16 image.
 
-<DT><B>-2</b>|<b>-Base/4</b>|<b>-256x384</B>
+<dt><b>-2</b>|<b>-Base/4</b>|<b>-256x384</b>
 
-<DD>Extract the Base/4 image.
+<dd>Extract the Base/4 image.
 
-<DT><B>-3</b>|<b>-Base</b>|<b>-512x768</B>
+<dt><b>-3</b>|<b>-Base</b>|<b>-512x768</b>
 
-<DD>Extract the Base image.
+<dd>Extract the Base image.
 
-<DT><B>-4</b>|<b>-4Base</b>|<b>-1024x1536</B>
+<dt><b>-4</b>|<b>-4Base</b>|<b>-1024x1536</b>
 
-<DD>Extract the 4Base image.
+<dd>Extract the 4Base image.
 
-<DT><B>-5</b>|<b>-16Base</b>|<b>-2048x3072</B>
+<dt><b>-5</b>|<b>-16Base</b>|<b>-2048x3072</b>
 
-<DD>Extract the 16Base image.
+<dd>Extract the 16Base image.
 
-<DT><B>-6</b>|<b>-64Base</b>|<b>-4096x6144</B>
+<dt><b>-6</b>|<b>-64Base</b>|<b>-4096x6144</b>
 
-<DD>Extract the 64Base image.  This resolution can be extracted from
+<dd>Extract the 64Base image.  This resolution can be extracted from
 ProPhotoCD images only.  The path of the 64Base extension files is
 derived from the path to the image file. This means that it doesn't
 work on stdin an the directory structure must be the very same as on
 the ProPhotoCD.
 
-</DL>
+</dl>
 
-<H2 id="postscriptoutput">Postcript Output</H2>
+<h2 id="postscriptoutput">POSTSCRIPT OUTPUT</h2>
 
-<p>For Postscript output (options <B>-ps</B>, <B>-eps</B>,
-<B>-psg</B>, <B>-epsg</B>, <B>-psd</B>, <B>-epsg</B>) you can define
+<p>For Postscript output (options <b>-ps</b>, <b>-eps</b>,
+<b>-psg</b>, <b>-epsg</b>, <b>-psd</b>, <b>-epsg</b>) you can define
 both the resolution and placement of the image.  Both size and
 position are specified in points (1/72 inch).
 
-<P>The position of the image (where the origin is assumed to be at the
-lower left corner of the page) is controlled by the <B>-pl</B> and
-<B>-pb</B> options (applicable at all resolutions).  
+<p>The position of the image (where the origin is assumed to be at the
+lower left corner of the page) is controlled by the <b>-pl</b> and
+<b>-pb</b> options (applicable at all resolutions).  
 
-<P>The size of color and grayscale images is changed with the
-<B>-pw</B> and <B>-ph</B> options.  Every image pixel is mapped onto
+<p>The size of color and grayscale images is changed with the
+<b>-pw</b> and <b>-ph</b> options.  Every image pixel is mapped onto
 one Postscript pixel.
 
-<P>There are three modes of control for dithered Postscript: 
+<p>There are three modes of control for dithered Postscript: 
 
-<DL COMPACT>
-<DT>Image size
+<dl compact>
+<dt>Image size
 
-<DD> (<B>-pw</B> and <B>-ph</B>)
+<dd> (<b>-pw</b> and <b>-ph</b>)
 
-<DT>Printer resolution
+<dt>Printer resolution
 
-<DD>(<B>-dpi</B>)
+<dd>(<b>-dpi</b>)
 
-<DT>Scaling factor
+<dt>Scaling factor
 
-<DD>(<B>-fak</B>)
+<dd>(<b>-fak</b>)
 
-</DL>
+</dl>
 
-<P>These three factors are interdependent, hence no more then two can
-be specified simultaneously.  Using <B>-dpi</B> and the
-<B>-pw</B>/<B>-ph</B> options together often yields pleasing results.
+<p>These three factors are interdependent, hence no more then two can
+be specified simultaneously.  Using <b>-dpi</b> and the
+<b>-pw</b>/<b>-ph</b> options together often yields pleasing results.
 Even using the default values for these options will produce results
 differing from those obtained without use of the options.
 
-<H2 id="limitations">Limitations</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 <p>The program ignores read protection.
 
-<P>The <B>-i</B> option is not working correctly.
+<p>The <b>-i</b> option is not working correctly.
 
-<P>Available information obout the Photo-CD format is vague; this
+<p>Available information obout the Photo-CD format is vague; this
 program was developed by trial-and-error after staring at hex-dumps.
 Please send bugs reports and patches to the author.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pcdovtoppm.html">pcdovtoppm</A>,
-<A HREF="pamarith.html">pamarith</A>,
-<A HREF="ppm.html">ppm</A>,
-<A HREF="ppmhist.html">ppmhist</A>,
-<A HREF="pnmquant.html">pnmquant</A>,
-<A HREF="ppmtopgm.html">ppmtopgm</A>,
-<A HREF="ppmtorgb3.html">ppmtorgb3</A>,
+<a href="pcdovtoppm.html">pcdovtoppm</a>,
+<a href="pamarith.html">pamarith</a>,
+<a href="ppm.html">ppm</a>,
+<a href="ppmhist.html">ppmhist</a>,
+<a href="pnmquant.html">pnmquant</a>,
+<a href="ppmtopgm.html">ppmtopgm</a>,
+<a href="ppmtorgb3.html">ppmtorgb3</a>,
 <b>xv</b>
 
 
-<H2 id="version">VERSION</H2>
+<h2 id="version">VERSION</h2>
 
 <p>The name <b>hpcdtoppm</b> stands for "Hadmut's pcdtoppm," to
 make it distinguishable in the event that someone else is building a
@@ -394,10 +398,10 @@ similar application and naming it <b>pcdtoppm</b>.
 <p>This is version 0.6.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (c) 1992, 1993, 1994 by Hadmut Danisch (<A
-HREF="mailto:danisch@ira.uka.de">danisch@ira.uka.de</A>).
+Copyright (c) 1992, 1993, 1994 by Hadmut Danisch (<a
+href="mailto:danisch@ira.uka.de">danisch@ira.uka.de</a>).
 
 <p>Hadmut Danish has given permission to Bryan Henderson (August 2003)
 to distribute this documentation as part of Netpbm on Sourceforge and
@@ -413,26 +417,26 @@ and without fee is hereby granted, provided that the above copyright
 notice appear in all copies and that both that copyright notice and
 this permission notice appear in supporting documentation.
 
-<P>The <b>hpcdtoppm</b> software itself (as opposed to this supporting
+<p>The <b>hpcdtoppm</b> software itself (as opposed to this supporting
 documentation) is licensed by Danisch under a similar license, but
 with an additional restriction that a recipient may not sell the
 software or use it in profit-making activity.  See the source code of
 the program for details on its license.
 
-<P> Manual page extensively modified by R. P. C. Rodgers (<A
-HREF="mailto:rodgers@nlm.nih.gov">rodgers@nlm.nih.gov</A>).
+<p> Manual page extensively modified by R. P. C. Rodgers (<a
+href="mailto:rodgers@nlm.nih.gov">rodgers@nlm.nih.gov</a>).
 
-<HR>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#postscriptoutput">POSTSCRIPT OUTPUT</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#version">VERSION</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#postscriptoutput">POSTSCRIPT OUTPUT</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#version">VERSION</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

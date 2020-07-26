@@ -1,59 +1,59 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtotiff User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtotiff</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtotiff User Manual</title></head>
+<body>
+<h1>pamtotiff</h1>
 Updated: 05 April 2017
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamtotiff - convert a Netpbm image to a TIFF file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtotiff</B>
+<b>pamtotiff</b>
 
-[<B>-none</B> | <B>-packbits</B> | <B>-lzw</B> | <B>-g3</B> | <B>-g4</B>
-| <B>-flate</B> | <B>-adobeflate</B>]
+[<b>-none</b> | <b>-packbits</b> | <b>-lzw</b> | <b>-g3</b> | <b>-g4</b>
+| <b>-flate</b> | <b>-adobeflate</b>]
 
-[<B>-2d</B>]
+[<b>-2d</b>]
 
-[<B>-fill</B>]
+[<b>-fill</b>]
 
-[<B>-predictor=</B><I>n</I>]
+[<b>-predictor=</b><i>n</i>]
 
-[<B>-msb2lsb</B>|<B>-lsb2msb</B>]
+[<b>-msb2lsb</b>|<b>-lsb2msb</b>]
 
-[<B>-rowsperstrip=</B><I>n</I>]
+[<b>-rowsperstrip=</b><i>n</i>]
 
-[<B>-minisblack</B>|<B>-miniswhite</B>|<B>mb</B>|<b>mw</b>]
+[<b>-minisblack</b>|<b>-miniswhite</b>|<b>mb</b>|<b>mw</b>]
 
-[<B>-truecolor</B>]
+[<b>-truecolor</b>]
 
-[<B>-color</B>]
+[<b>-color</b>]
 
-[<B>-indexbits=</B><I>bitwidthlist</I>]
-
-<br>
-[<B>-xresolution=</b><i>xres</i>]
-
-[<B>-yresolution=</b><i>yres</i>]
+[<b>-indexbits=</b><i>bitwidthlist</i>]
 
 <br>
-[<B>-resolutionunit=</b>{<b>inch</b> | <b>centimeter</b> | <b>none</b> |
+[<b>-xresolution=</b><i>xres</i>]
+
+[<b>-yresolution=</b><i>yres</i>]
+
+<br>
+[<b>-resolutionunit=</b>{<b>inch</b> | <b>centimeter</b> | <b>none</b> |
 <b>in</b> | <b>cm</b> | <b>no</b>}]
 
 [<b>-append</b>]
 
 [<b>-tag=</b><i>taglist</i>]
 
-[<I>pamfile</I>]
+[<i>pamfile</i>]
 
-<P>You can use the minimum unique abbreviation of the options.  You
+<p>You can use the minimum unique abbreviation of the options.  You
 can use two hyphens instead of one.  You can separate an option name
 from its value with white space instead of an equals sign.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -67,7 +67,7 @@ ignored all but the first Netpbm image in the input stream.
 
 <h3 id="output">The Output File</h3>
 
-<P>By default, the output goes to Standard Output.  Alternatively, you can
+<p>By default, the output goes to Standard Output.  Alternatively, you can
 specify an output file with the <b>-output</b> option and <b>pamtotiff</b>
 will write its output directly to that file.
 
@@ -131,18 +131,18 @@ for example, you would set up a write-only Standard Output to the
 file /tmp/myimage.tiff like this:
 
 <pre>
-<tt>
+<kbd>
     $ pamtotiff myimage.pnm &gt;/tmp/myimage.tiff
-</tt>
+</kbd>
 </pre>
 
 In Bash, you would set up a read/write Standard Output to the file
 /tmp/myimage.tiff like this:
 
 <pre>
-<tt>
+<kbd>
     $ pamtotiff myimage.pnm 1&lt;&gt;/tmp/myimage.tiff
-</tt>
+</kbd>
 </pre>
 
 <h3 id="library">TIFF Capability</h3>
@@ -151,11 +151,16 @@ In Bash, you would set up a read/write Standard Output to the file
 equivalent you provide) to generate the TIFF output.  Details of the
 format it produces are therefore controlled by that library.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtotiff</b> recognizes the following
+command line options:
 
 <h3 id="compression">Compression</h3>
 
-<P>By default, <B>pamtotiff</B> creates a TIFF file with no
+<p>By default, <b>pamtotiff</b> creates a TIFF file with no
 compression.  This is your best bet most of the time.  If you want to
 try another compression scheme or tweak some of the other even more
 obscure output options, there are a number of options which to
@@ -169,20 +174,20 @@ now expired and new TIFF libraries do LZW, but the <b>pamtotiff</b>
 behavior remains the same for compatibility with older TIFF libraries
 and applications of <b>pamtotiff</b>.
 
-<P>The <B>-none</B>, <B>-packbits</B>, <B>-lzw</B>, <B>-g3</B>,
-<B>-g4</B>, <B>-flate</B>, and <B>-adobeflate</B> options are used to
+<p>The <b>-none</b>, <b>-packbits</b>, <b>-lzw</b>, <b>-g3</b>,
+<b>-g4</b>, <b>-flate</b>, and <b>-adobeflate</b> options are used to
 override the default and set the compression scheme used in creating
 the output file.
 
-The <B>-predictor</B> option is meaningful only with LZW compression: a
+The <b>-predictor</b> option is meaningful only with LZW compression: a
 predictor value of 2 causes each scanline of the output image to undergo
 horizontal differencing before it is encoded; a value of 1 forces each
-scanline to be encoded without differencing.  By default, <B>pamtotiff</B>
-creates a TIFF file with msb-to-lsb fill order.  The <B>-msb2lsb</B> and
-<B>-lsb2msb</B> options are used to override the default and set the fill
+scanline to be encoded without differencing.  By default, <b>pamtotiff</b>
+creates a TIFF file with msb-to-lsb fill order.  The <b>-msb2lsb</b> and
+<b>-lsb2msb</b> options are used to override the default and set the fill
 order used in creating the file.
 
-<P>With some older TIFF libraries, <B>-lzw</B> doesn't work because
+<p>With some older TIFF libraries, <b>-lzw</b> doesn't work because
 the TIFF library doesn't do LZW compression.  This is because of
 concerns about Unisys's patent on LZW which was then in force.
 Actually, with very old TIFF libraries, <b>-lzw</b> works because no
@@ -193,7 +198,7 @@ issue.
 patent-free compression common in the Unix world implemented by the 
 "Z" library.  It is what the PNG format uses.
 
-<H4 id="faxcompression">Fax Compression</H4>
+<h4 id="faxcompression">Fax Compression</h4>
 
 <p>If you have bilevel data (e.g. PBM), you can generate a TIFF that uses the
 same compression scheme specified for use by fax machines.  See the <a
@@ -219,7 +224,7 @@ shall be zero-filled to a byte boundary.
 <h3 id="fillorder">Fill Order</h3>
 <p>The <b>-msb2lsb</b> and <b>lsb2msb</b> options control the fill order.
 
-<P>The fill order is the order in which pixels are packed into a byte in
+<p>The fill order is the order in which pixels are packed into a byte in
 the Tiff raster, in the case that there are multiple pixels per byte.
 msb-to-lsb means that the leftmost columns go into the most
 significant bits of the byte in the Tiff image.  However, there is
@@ -230,55 +235,55 @@ endianness of integers in a Tiff image is designated by the image's
 magic number).  However, ImageMagick and older Netpbm both have been known
 to implement that interpretation.  2001.09.06.
 
-<P>If the image does not have sub-byte pixels, these options have no
+<p>If the image does not have sub-byte pixels, these options have no
 effect other than to set the value of the FILLORDER tag in the Tiff
 image (which may be useful for those programs that misinterpret the
 tag with reference to 16 bit samples).
 
 <h3 id="colorspace">Color Space</h3>
 
-<P><B>-color</B> tells <B>pamtotiff</B> to produce a color, as
+<p><b>-color</b> tells <b>pamtotiff</b> to produce a color, as
 opposed to grayscale, TIFF image if the input is PPM, even if it
-contains only shades of gray.  Without this option, <B>pamtotiff</B>
+contains only shades of gray.  Without this option, <b>pamtotiff</b>
 produces a grayscale TIFF image if the input is PPM and contains only
 shades of gray, and at most 256 shades.  Otherwise, it produces a
-color TIFF output.  For PBM and PGM input, <B>pamtotiff</B> always
+color TIFF output.  For PBM and PGM input, <b>pamtotiff</b> always
 produces grayscale TIFF output and this option has no effect.
 
-<P>The <B>-color</B> option can prevent <B>pamtotiff</B> from making
+<p>The <b>-color</b> option can prevent <b>pamtotiff</b> from making
 two passes through the input file, thus improving speed and memory
 usage.  See <a href="#multipass">Multiple Passes</a>.
 
-<P><B>-truecolor</B> tells <B>pamtotiff</B> to produce the 24-bit RGB
+<p><b>-truecolor</b> tells <b>pamtotiff</b> to produce the 24-bit RGB
 form of TIFF output if it is producing a color TIFF image.  Without
-this option, <B>pamtotiff</B> produces a colormapped (paletted) TIFF
+this option, <b>pamtotiff</b> produces a colormapped (paletted) TIFF
 image unless there are more than 256 colors (and in the latter case,
 issues a warning).
 
-<P>The <B>-truecolor</B> option can prevent <B>pamtotiff</B> from
+<p>The <b>-truecolor</b> option can prevent <b>pamtotiff</b> from
 making two passes through the input file, thus improving speed and
 memory usage.  See <a href="#multipass">Multiple Passes</a>.
 
-<P>The <B>-color</b> and <b>-truecolor</b> options did not exist
+<p>The <b>-color</b> and <b>-truecolor</b> options did not exist
 before Netpbm 9.21 (December 2001).
 
-<P>If <B>pamtotiff</B> produces a grayscale TIFF image, this option
+<p>If <b>pamtotiff</b> produces a grayscale TIFF image, this option
 has no effect.
 
-<P>The <B>-minisblack</B> and <B>-miniswhite</B> options force the
+<p>The <b>-minisblack</b> and <b>-miniswhite</b> options force the
 output image to have a "minimum is black" or "minimum
 is white" photometric, respectively.  If you don't specify
-either, <B>pamtotiff</b> uses minimum is black except when using Group
-3 or Group 4 compression, in which case <B>pamtotiff</B> follows CCITT
+either, <b>pamtotiff</b> uses minimum is black except when using Group
+3 or Group 4 compression, in which case <b>pamtotiff</b> follows CCITT
 fax standards and uses "minimum is white." This usually
 results in better compression and is generally preferred for bilevel
 coding.  These photometrics are for grayscale images, so these options are
 invalid if the image is color (but only if it is truly color; they are
 valid with, for example, a PPM image that contains only shades of gray).
 
-<P>Before Netpbm 9.11 (February 200)1, <B>pamtotiff</B> always produced
+<p>Before Netpbm 9.11 (February 200)1, <b>pamtotiff</b> always produced
 "minimum is black," because of a bug.  In either case,
-<B>pamtotiff</B> sets the photometric interpretation tag in the TIFF
+<b>pamtotiff</b> sets the photometric interpretation tag in the TIFF
 output according to which photometric is actually used.
 
 <p>Before Netpbm 10.78 (March 2017), <b>pamtotiff</b> respected
@@ -286,28 +291,28 @@ output according to which photometric is actually used.
 invalid TIFF images that have the indicated photometric but red, green, and
 blue raster planes.
 
-<P>The <B>-indexbits</B> option is meaningful only for a colormapped
+<p>The <b>-indexbits</b> option is meaningful only for a colormapped
 (paletted) image.  In this kind of image, the raster contains values
 which are indexes into a table of colors, with the indexes normally
 taking less space that the color description in the table.
-<B>pamtotiff</B> can generate indexes of 1, 2, 4, or 8 bits.  By
+<b>pamtotiff</b> can generate indexes of 1, 2, 4, or 8 bits.  By
 default, it will use 8, because many programs that interpret TIFF
 images can't handle any other width.
 
-<P>But if you have a small number of colors, you can make your image
+<p>But if you have a small number of colors, you can make your image
 considerably smaller by allowing fewer than 8 bits per index, using the
-<B>-indexbits</B> option.  The value is a comma-separated list of the
-bit widths you allow.  <B>pamtotiff</B> chooses the smallest width you allow
+<b>-indexbits</b> option.  The value is a comma-separated list of the
+bit widths you allow.  <b>pamtotiff</b> chooses the smallest width you allow
 that allows it to index the entire color table.  If you don't allow any
-such width, <B>pamtotiff</B> fails.  Normally, the only useful value for
-this option is <B>1,2,4,8</B>, because a program either understands the 8
+such width, <b>pamtotiff</b> fails.  Normally, the only useful value for
+this option is <b>1,2,4,8</b>, because a program either understands the 8
 bit width (default) or understands them all.
 
-<P>In a Baseline TIFF image, according to the 1992 TIFF 6.0
+<p>In a Baseline TIFF image, according to the 1992 TIFF 6.0
 specification, 4 and 8 are the only valid widths.  There are no formal
 standards that allow any other values.
 
-<P>This option was added in June 2002.  Before that, only 8 bit indices were
+<p>This option was added in June 2002.  Before that, only 8 bit indices were
 possible.
 
 <h3 id="extratags">Extra Tags</h3>
@@ -373,7 +378,7 @@ an IMAGEWIDTH tag that gives the actual width of the image.
 
 <h3 id="outputoptions">Output</h3>
 
-<p>See <a href="output">The Output File</a>.
+<p>See <a href="#output">The Output File</a>.
 
 <p><b>-output</b> names the output file.  Without this option
 <b>pamtotiff</b> writes to Standard Output.
@@ -396,29 +401,29 @@ always Standard Output in 10.67) instead of replacing its contents.
 
 <h3 id="other">Other</h3>
 
-<P>You can use the <B>-rowsperstrip</B> option to set the number of
+<p>You can use the <b>-rowsperstrip</b> option to set the number of
 rows (scanlines) in each strip of data in the output file.  By
 default, the output file has the number of rows per strip set to a
 value that will ensure each strip is no more than 8 kilobytes long.
 
 
-<H2 id="notes">NOTES</H2>
+<h2 id="notes">NOTES</h2>
 
-<P>There are myriad variations of the TIFF format, and this program
-generates only a few of them.  <B>pamtotiff</B> creates a grayscale
+<p>There are myriad variations of the TIFF format, and this program
+generates only a few of them.  <b>pamtotiff</b> creates a grayscale
 TIFF file if its input is a PBM (monochrome) or PGM (grayscale) or
-equivalent PAM file.  <B>pamtotiff</B> also creates a grayscale file
+equivalent PAM file.  <b>pamtotiff</b> also creates a grayscale file
 if it input is PPM (color) or equivalent PAM, but there is only one
 color in the image.
 
 <p>If the input is a PPM (color) file and there are 256 colors or
-fewer, but more than 1, <B>pamtotiff</B> generates a color palette
-TIFF file.  If there are more colors than that, <B>pamtotiff</B>
+fewer, but more than 1, <b>pamtotiff</b> generates a color palette
+TIFF file.  If there are more colors than that, <b>pamtotiff</b>
 generates an RGB (not RGBA) single plane TIFF file.  Use
-<B>pnmtotiffcmyk</B> to generate the cyan-magenta-yellow-black ink
+<b>pnmtotiffcmyk</b> to generate the cyan-magenta-yellow-black ink
 color separation TIFF format.
 
-<P>The number of bits per sample in the TIFF output is determined by
+<p>The number of bits per sample in the TIFF output is determined by
 the maxval of the Netpbm input.  If the maxval is less than 256, the bits
 per sample in the output is the smallest number that can encode the
 maxval.  If the maxval is greater than or equal to 256, there are 16
@@ -460,25 +465,25 @@ your planes aren't really color components, you'll want to disable this
 via the <b>-color</b> option.
 
 
-<H3 id="multipass">Multiple Passes</H3>
+<h3 id="multipass">Multiple Passes</h3>
 
-<P><B>pamtotiff</B> reads the input image once if it can, and
+<p><b>pamtotiff</b> reads the input image once if it can, and
 otherwise twice.  It needs that second pass (which happens before the
 main pass, of course) to analyze the colors in the image and generate
 a color map (palette) and determine if the image is grayscale.  So the
 second pass happens only when the input is PPM.  And you can avoid it
-then by specifying both the <B>-truecolor</B> and <B>-color</B>
+then by specifying both the <b>-truecolor</b> and <b>-color</b>
 options.
 
-<P> If the input image is small enough to fit in your system's file
+<p> If the input image is small enough to fit in your system's file
 cache, the second pass is very fast.  If not, it requires reading from
 disk twice, which can be slow.
 
-<P>When the input is from a file that cannot be rewound and reread,
-<B>pamtotiff</B> reads the entire input image into a temporary file
+<p>When the input is from a file that cannot be rewound and reread,
+<b>pamtotiff</b> reads the entire input image into a temporary file
 which can, and works from that.  Even if it needs only one pass.
 
-<P>Before Netpbm 9.21 (December 2001), <b>pamtotiff</b> always read
+<p>Before Netpbm 9.21 (December 2001), <b>pamtotiff</b> always read
 the entire image into virtual memory and then did one, two, or three
 passes through the memory copy.  The <b>-truecolor</b> and
 <b>-color</b> options did not exist.  The passes through memory would
@@ -487,7 +492,7 @@ The image in memory required considerably more memory (12 bytes per
 pixel) than the cached file version of the image would.
 
 
-<h3>Resolution</h3>
+<h3 id="resolution">Resolution</h3>
 
 <p>A Tiff image may contain information about the resolution of the image,
 which means how big in real dimensions (centimeters, etc.) each pixel in the
@@ -535,7 +540,7 @@ does not contain horizontal resolution information.  Likewise for
 <b>-yresolution</b>.  If you don't specify <b>-resolutionunit</b>, the
 default is inches.
 
-<li>Before Netpbm 10.16 (June 2003), <B>-resolutionunit</b> did not
+<li>Before Netpbm 10.16 (June 2003), <b>-resolutionunit</b> did not
 exist and the resolution unit was always inches.
 
 </ul>
@@ -546,56 +551,57 @@ exist and the resolution unit was always inches.
 PAM input.  It was extended and renamed in Netpbm 10.30 (October 2005).
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="tifftopnm.html">tifftopnm</A></B>,
+<b><a href="tifftopnm.html">tifftopnm</a></b>,
 
-<B><A HREF="pnmtotiffcmyk.html">pnmtotiffcmyk</A></B>,
+<b><a href="pnmtotiffcmyk.html">pnmtotiffcmyk</a></b>,
 
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
+<b><a href="pamdepth.html">pamdepth</a></b>,
 
-<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
+<b><a href="pamtopnm.html">pamtopnm</a></b>,
 
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pam.html">pam</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Derived by Jef Poskanzer from ras2tiff.c, which is
 Copyright (c) 1990 by Sun Microsystems, Inc.
-Author: Patrick J. Naughton (<A HREF="mailto:naughton@wind.sun.com">naughton@wind.sun.com</A>).
+Author: Patrick J. Naughton (<a href="mailto:naughton@wind.sun.com">naughton@wind.sun.com</a>).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
   <ul>
   <li><a href="#output">The Output File</a>
-  <ul>
+    <ul>
     <li><a href="#oldoutput">Old Versions</a>
     </ul>
   <li><a href="#library">TIFF Capability</a>
   </ul>
-<LI><A HREF="#options">OPTIONS</A>
+<li><a href="#options">OPTIONS</a>
   <ul>
   <li><a href="#compression">Compression</a>
     <ul>
     <li><a href="#faxcompression">Fax Compression</a>
     </ul>
   <li><a href="#fillorder">Fill Order</a>
-  <li><a href="#colorspacer">Color Space</a>
+  <li><a href="#colorspace">Color Space</a>
   <li><a href="#extratags">Extra Tags</a>
   <li><a href="#outputoptions">Output</a>
   <li><a href="#other">Other</a>
   </ul>
-<LI><A HREF="#notes">NOTES</A>
-<UL>
-<LI><A HREF="#multipass">Multiple Passes</A>
-<LI><A HREF="#extrachannel">Extra Channels</A>
-</UL>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#notes">NOTES</a>
+  <ul>
+  <li><a href="#extrachannel">Extra Channels</a>
+  <li><a href="#multipass">Multiple Passes</a>
+  <li><a href="#resolution">Resolution</a>
+  </ul>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

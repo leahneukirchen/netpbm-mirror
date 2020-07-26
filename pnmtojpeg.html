@@ -1,111 +1,116 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pnmtojpeg User Manual</TITLE></HEAD>
-<BODY>
-<H1>PNMTOJPEG</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pnmtojpeg User Manual</title></head>
+<body>
+<h1>pnmtojpeg</h1>
 Updated: 23 April 2007
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pnmtojpeg - convert PNM image to a JFIF ("JPEG") image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pnmtojpeg</B>
-[<B>-exif=</B><I>filespec</I>]
-[<B>-quality=</B><I>n</I>]
-[{<B>-grayscale</B>|<B>-greyscale</B>}]
-[<B>-density=</B><I>n</I><b>x</b><i>n</i>[<b>dpi</b>,<b>dpcm</b>]]
-[<B>-optimize</B>|<b>-optimise</b>]
-[<B>-rgb</B>]
-[<B>-progressive</B>]
-[<B>-comment=</B><I>text</I>]
-[<B>-dct=</b>{<b>int</B>|<b>fast</b>|<b>float</b>}]
-[<B>-arithmetic</b>]
-[<B>-restart=</B><I>n</I>]
-[<B>-smooth=</B><I>n</I>]
-[<B>-maxmemory=</B><I>n</I>]
-[<B>-verbose</B>]
-[<B>-baseline</B>]
-[<B>-qtables=</B><I>filespec</I>]
-[<B>-qslots=n[,...]</B>]
-[<B>-sample=</B><I>H</i><b>x</b><i>V</i>[,...]]
-[<B>-scans=</B><I>filespec</I>]
-[<B>-tracelevel=</b><i>N</i>]
+<b>pnmtojpeg</b>
+[<b>-exif=</b><i>filespec</i>]
+[<b>-quality=</b><i>n</i>]
+[{<b>-grayscale</b>|<b>-greyscale</b>}]
+[<b>-density=</b><i>n</i><b>x</b><i>n</i>[<b>dpi</b>,<b>dpcm</b>]]
+[<b>-optimize</b>|<b>-optimise</b>]
+[<b>-rgb</b>]
+[<b>-progressive</b>]
+[<b>-comment=</b><i>text</i>]
+[<b>-dct=</b>{<b>int</b>|<b>fast</b>|<b>float</b>}]
+[<b>-arithmetic</b>]
+[<b>-restart=</b><i>n</i>]
+[<b>-smooth=</b><i>n</i>]
+[<b>-maxmemory=</b><i>n</i>]
+[<b>-verbose</b>]
+[<b>-baseline</b>]
+[<b>-qtables=</b><i>filespec</i>]
+[<b>-qslots=n[,...]</b>]
+[<b>-sample=</b><i>H</i><b>x</b><i>V</i>[,...]]
+[<b>-scans=</b><i>filespec</i>]
+[<b>-tracelevel=</b><i>N</i>]
 
-<I>filename</I>
+<i>filename</i>
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pnmtojpeg</B> converts the named PBM, PGM, or PPM image file, or
+<p><b>pnmtojpeg</b> converts the named PBM, PGM, or PPM image file, or
 the standard input if no file is named, to a JFIF file on the standard
 output.
 
-<P><B>pnmtojpeg</B> uses the Independent JPEG Group's JPEG library to
-create the output file.  See <B><A
-HREF="http://www.ijg.org">http://www.ijg.org</A> </B> for information
+<p><b>pnmtojpeg</b> uses the Independent JPEG Group's JPEG library to
+create the output file.  See <b><a
+href="http://www.ijg.org">http://www.ijg.org</a> </b> for information
 on the library.
 
-<P>"JFIF" is the correct name for the image format commonly
+<p>"JFIF" is the correct name for the image format commonly
 known as "JPEG." Strictly speaking, JPEG is a method of
 compression.  The image format using JPEG compression that is by far
 the most common is JFIF.  There is also a subformat of TIFF that uses
 JPEG compression.
 
-<P>EXIF is an image format that is a subformat of JFIF (to wit, a JFIF
+<p>EXIF is an image format that is a subformat of JFIF (to wit, a JFIF
 file that contains an EXIF header as an APP1 marker).
-<B>pnmtojpeg</B> creates an EXIF image when you specify the
-<B>-exif</B> option.
+<b>pnmtojpeg</b> creates an EXIF image when you specify the
+<b>-exif</b> option.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<p>The basic options are:
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pnmtojpeg</b> recognizes the following
+command line options:
 
-<DL COMPACT>
-<DT><B>-exif=</B><I>filespec</I>
+<h3 id="basicopts">Basic Options</h3>
 
-<DD>
+<dl compact>
+<dt><b>-exif=</b><i>filespec</i>
+
+<dd>
 This option specifies that the output image is to be EXIF (a subformat
 of JFIF), i.e. it will have an EXIF header as a JFIF APP1 marker.
 The contents of that marker are the contents of the specified file.
-The special value <B>-</B> 
+The special value <b>-</b> 
 means to read the EXIF header contents from standard input.  It is
 invalid to specify standard input for both the EXIF header and the
 input image.
-<P>
+<p>
 The EXIF file starts with a two byte field which is the length of
 the file, including the length field, in pure binary, most significant
 byte first.  The special value of zero for the length field means there
-is to be no EXIF header, i.e. the same as no <B>-exif</B>
+is to be no EXIF header, i.e. the same as no <b>-exif</b>
 option.  This is useful for when you convert a file from JFIF to PNM
-using <B>jpegtopnm</B>,
+using <b>jpegtopnm</b>,
 then transform it, then convert it back to JFIF with
-<B>pnmtojpeg</B>, and you don't know whether or not it includes an EXIF header.
-<B>jpegtopnm</B>
+<b>pnmtojpeg</b>, and you don't know whether or not it includes an EXIF header.
+<b>jpegtopnm</b>
 creates an EXIF file containing nothing but two bytes of zero when
 the input JFIF file has no EXIF header.  Thus, you can transfer
 any EXIF header from the input JFIF to the output JFIF without
 worrying about whether an EXIF header actually exists.
-<P>
+<p>
 The contents of the EXIF file after the length field are the exact
 byte for byte contents of the APP1 marker, not counting the length
 field, that constitutes the EXIF header.
 
-<DT><B>-quality=</B><I>n</I>
+<dt><b>-quality=</b><i>n</i>
 
-<DD>Scale quantization tables to adjust image quality.  <I>n</I> is 0
+<dd>Scale quantization tables to adjust image quality.  <i>n</i> is 0
 (worst) to 100 (best); default is 75.  Below about 25 can produce images
 some interpreters won't be able to interpret.  See below for more info.
 
-<DT><B>-grayscale</B>
-<DT><B>-greyscale</B>
+<dt><b>-grayscale</b>
+<dt><b>-greyscale</b>
 <dt><b>-rgb</b>
 
 <dd>These options determine the color space used in the JFIF output.
@@ -129,7 +134,7 @@ The extra CPU time probably indicates that processing of all the extra
 compressed data consumed all the CPU time saved by not having to
 convert the RGB inputs to YCbCr.
 
-<P>Grayscale format takes up a lot less space and takes less time to create
+<p>Grayscale format takes up a lot less space and takes less time to create
 and process than the color formats, even if the image contains nothing
 but black, white, and gray.
 
@@ -173,30 +178,30 @@ image.
 <b>pnmtojpeg</b> always created a JFIF with a density of 1x1 in
 unspecified units.
 
-<DT><B>-optimize</B>
+<dt><b>-optimize</b>
 
-<DD> Perform optimization of entropy encoding parameters.  Without
-this, <B>pnmtojpeg</B> uses default encoding parameters.
-<B>-optimize</B> usually makes the JFIF file a little smaller, but
-<B>pnmtojpeg</B> runs somewhat slower and needs much more memory.
+<dd> Perform optimization of entropy encoding parameters.  Without
+this, <b>pnmtojpeg</b> uses default encoding parameters.
+<b>-optimize</b> usually makes the JFIF file a little smaller, but
+<b>pnmtojpeg</b> runs somewhat slower and needs much more memory.
 Image quality and speed of decompression are unaffected by
-<B>-optimize</B>.
+<b>-optimize</b>.
 
-<DT><B>-progressive</B>
+<dt><b>-progressive</b>
 
-<DD>
+<dd>
 Create a progressive JPEG file (see below).
-<DT><B>-comment=</B><I>text</I>
+<dt><b>-comment=</b><i>text</i>
 
-<DD>
+<dd>
 Include a comment marker in the JFIF output, with comment text 
-<I>text</I>.
+<i>text</i>.
 
 Without this option, there are no comment markers in the output.
 
-</DL>
+</dl>
 
-<P>The <B>-quality</B> option lets you trade off compressed file size
+<p>The <b>-quality</b> option lets you trade off compressed file size
 against quality of the reconstructed image: the higher the quality
 setting, the larger the JFIF file, and the closer the output image
 will be to the original input.  Normally you want to use the lowest
@@ -204,11 +209,11 @@ quality setting (smallest file) that decompresses into something
 visually indistinguishable from the original image.  For this purpose
 the quality setting should be between 50 and 95 for reasonable
 results; the default of 75 is often about right.  If you see defects
-at <B>-quality=75</B>, then go up 5 or 10 counts at a time until you
+at <b>-quality=75</b>, then go up 5 or 10 counts at a time until you
 are happy with the output image.  (The optimal setting will vary from
 one image to another.)
 
-<p><B>-quality=100</B> generates a quantization table of all 1's,
+<p><b>-quality=100</b> generates a quantization table of all 1's,
 minimizing loss in the quantization step (but there is still
 information loss in subsampling, as well as roundoff error).  This
 setting is mainly of interest for experimental purposes.  Quality
@@ -216,18 +221,18 @@ values above about 95 are <em>not</em> recommended for normal use; the
 compressed file size goes up dramatically for hardly any gain in
 output image quality.
 
-<P>In the other direction, quality values below 50 will produce very
+<p>In the other direction, quality values below 50 will produce very
 small files of low image quality.  Settings around 5 to 10 might be
 useful in preparing an index of a large image library, for example.
-Try <B>-quality=2</B> (or so) for some amusing Cubist effects.  (Note:
+Try <b>-quality=2</b> (or so) for some amusing Cubist effects.  (Note:
 quality values below about 25 generate 2-byte quantization tables,
-which are considered optional in the JFIF standard.  <B>pnmtojpeg</B>
+which are considered optional in the JFIF standard.  <b>pnmtojpeg</b>
 emits a warning message when you give such a quality value, because
 some other JFIF programs may be unable to decode the resulting file.
-Use <B>-baseline</B> if you need to ensure compatibility at low
+Use <b>-baseline</b> if you need to ensure compatibility at low
 quality values.)
 
-<P>The <B>-progressive</B> option creates a "progressive
+<p>The <b>-progressive</b> option creates a "progressive
 JPEG" file.  In this type of JFIF file, the data is stored in
 multiple scans of increasing quality.  If the file is being
 transmitted over a slow communications link, the decoder can use the
@@ -245,27 +250,28 @@ JPEG file at all.
 might consider the JPEG2000 format instead.  See <a
 href="pamtojpeg2k.html">pamtojpeg2k</a>.
 
-<p>Options for advanced users:
-<DL COMPACT>
+<h3 id="advancedopts">Advanced options</h3>
 
-<DT><B>-dct=int</B>
+<dl compact>
 
-<DD>Use integer DCT method (default).
+<dt><b>-dct=int</b>
 
-<DT><B>-dct=fast</B>
+<dd>Use integer DCT method (default).
 
-<DD>Use fast integer DCT (less accurate).
+<dt><b>-dct=fast</b>
 
-<DT><B>-dct=float</B>
+<dd>Use fast integer DCT (less accurate).
 
-<DD>Use floating-point DCT method.  The float method is very slightly
+<dt><b>-dct=float</b>
+
+<dd>Use floating-point DCT method.  The float method is very slightly
 more accurate than the int method, but is much slower unless your
 machine has very fast floating-point hardware.  Also note that results
 of the floating-point method may vary slightly across machines, while
 the integer methods should give the same results everywhere.  The fast
 integer method is much less accurate than the other two.
 
-<DT><B>-arithmetic</b>
+<dt><b>-arithmetic</b>
 <dd>Use arithmetic coding.  Default is Huffman encoding.  Arithmetic coding
 tends to get you a smaller result.
 
@@ -286,111 +292,111 @@ with the message, "Sorry, there are legal restrictions on
 arithmetic coding" or "Sorry, arithmetic coding not
 supported," this is the problem.
      
-<DT><B>-restart=</B><I>n</I>
+<dt><b>-restart=</b><i>n</i>
 
-<DD>
-Emit a JPEG restart marker every <I>n</I> MCU rows, or every <I>n</I>
-MCU blocks if you append <B>B</B> to the number.  <B>-restart 0</B>
+<dd>
+Emit a JPEG restart marker every <i>n</i> MCU rows, or every <i>n</i>
+MCU blocks if you append <b>B</b> to the number.  <b>-restart 0</b>
 (the default) means no restart markers.
 
-<DT><B>-smooth=</B><I>n</I>
+<dt><b>-smooth=</b><i>n</i>
 
-<DD>
-Smooth the input image to eliminate dithering noise.  <I>n</I>,
+<dd>
+Smooth the input image to eliminate dithering noise.  <i>n</i>,
 ranging from 1 to 100, indicates the strength of smoothing.  0 (the
 default) means no smoothing.
 
-<DT><B>-maxmemory=</B><I>n</I>
+<dt><b>-maxmemory=</b><i>n</i>
 
-<DD>
+<dd>
 Set a limit for amount of memory to use in processing large images.  Value is
 in thousands of bytes, or millions of bytes if you append
-<B>M</B> to the number.  For example, <B>-max=4m</B>
-selects 4,000,000 bytes.  If <B>pnmtojpeg</B>
+<b>M</b> to the number.  For example, <b>-max=4m</b>
+selects 4,000,000 bytes.  If <b>pnmtojpeg</b>
 needs more space, it will use temporary files.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>
+<dd>
 Print to the Standard Error file messages about the conversion process.
 This can be helpful in debugging problems.
-</DL>
+</dl>
 
-<P>The <B>-restart</B> option tells <B>pnmtojpeg </B> to insert extra
+<p>The <b>-restart</b> option tells <b>pnmtojpeg </b> to insert extra
 markers that allow a JPEG decoder to resynchronize after a
 transmission error.  Without restart markers, any damage to a
 compressed file will usually ruin the image from the point of the
 error to the end of the image; with restart markers, the damage is
 usually confined to the portion of the image up to the next restart
 marker.  Of course, the restart markers occupy extra space.  We
-recommend <B>-restart=1</B> for images that will be transmitted
+recommend <b>-restart=1</b> for images that will be transmitted
 across unreliable networks such as Usenet.
 
-<P>The <B>-smooth</B> option filters the input to eliminate
+<p>The <b>-smooth</b> option filters the input to eliminate
 fine-scale noise.  This is often useful when converting dithered
 images to JFIF: a moderate smoothing factor of 10 to 50 gets rid of
 dithering patterns in the input file, resulting in a smaller JFIF file
 and a better-looking image.  Too large a smoothing factor will visibly
 blur the image, however.
 
-<P>Options for wizards:
+<h3 id="wizardopts">Wizard Options</h3>
 
-<DL COMPACT>
-<DT><B>-baseline</B>
+<dl compact>
+<dt><b>-baseline</b>
 
-<DD>Force baseline-compatible quantization tables to be generated.
+<dd>Force baseline-compatible quantization tables to be generated.
 This clamps quantization values to 8 bits even at low quality
 settings.  (This switch is poorly named, since it does not ensure that
 the output is actually baseline JPEG.  For example, you can use
-<B>-baseline</B> and <B>-progressive</B> together.)
+<b>-baseline</b> and <b>-progressive</b> together.)
 
-<DT><B>-qtables=</B><I>filespec</I>
+<dt><b>-qtables=</b><i>filespec</i>
 
-<DD>Use the quantization tables given in the specified text file.
+<dd>Use the quantization tables given in the specified text file.
 
-<DT><B>-qslots=n[,...]</B>
+<dt><b>-qslots=n[,...]</b>
 
-<DD>Select which quantization table to use for each color component.
+<dd>Select which quantization table to use for each color component.
 
-<DT><B>-sample=</B><I>H</i><b>x</b><i>V</i>[,...]
+<dt><b>-sample=</b><i>H</i><b>x</b><i>V</i>[,...]
 
-<DD>Set JPEG sampling factors for each color component.
+<dd>Set JPEG sampling factors for each color component.
 
-<DT><B>-scans=</B><I>filespec</I>
+<dt><b>-scans=</b><i>filespec</i>
 
-<DD>Use the scan script given in the specified text file.  See below
+<dd>Use the scan script given in the specified text file.  See below
 for information on scan scripts.
 
-<DT><B>-tracelevel=</B><I>N</I>
+<dt><b>-tracelevel=</b><i>N</i>
 
-<DD>This sets the level of debug tracing the program outputs as it runs.
+<dd>This sets the level of debug tracing the program outputs as it runs.
 0 means none, and is the default.  This level primarily controls tracing
 of the JPEG library, and you can get some pretty interesting information
 about the compression process.
 
-</DL>
+</dl>
 
-<P>The "wizard" options are intended for experimentation
+<p>The "wizard" options are intended for experimentation
 with JPEG.  If you don't know what you are doing, <strong>don't use
 them</strong>.  These switches are documented further in the file
 wizard.doc that comes with the Independent JPEG Group's JPEG library.
 
-<H2 id="examples">EXAMPLES</H2>
+<h2 id="examples">EXAMPLES</h2>
 
-<P>This example compresses the PPM file foo.ppm with a quality factor
+<p>This example compresses the PPM file foo.ppm with a quality factor
 of 60 and saves the output as foo.jpg:
 
 <pre>
-    <B>pnmtojpeg -quality=60 foo.ppm &gt; foo.jpg</B>
+    <b>pnmtojpeg -quality=60 foo.ppm &gt; foo.jpg</b>
 </pre>
 
 <p>Here's a more typical example.  It converts from BMP to JFIF:
 
 <pre>
-    <B>cat foo.bmp | bmptoppm | pnmtojpeg &gt; foo.jpg</B>
+    <b>cat foo.bmp | bmptoppm | pnmtojpeg &gt; foo.jpg</b>
 </pre>
 
-<h2 id="loss">JPEG Loss</h2>
+<h2 id="loss">JPEG LOSS</h2>
 
 <p>When you compress with JPEG, you lose information -- i.e. the resulting
 image has somewhat lower quality than the original.  This is a characteristic
@@ -400,24 +406,24 @@ to JFIF, you will lose quality.  The more you do it, the more you lose.
 Drawings (charts, cartoons, line drawings, and such with few colors
 and sharp edges) suffer the most.
 
-<P>To avoid this, you can use a compressed image format other than
+<p>To avoid this, you can use a compressed image format other than
 JPEG.  PNG and JPEG2000 are good choices, and Netpbm contains converters
 for those.
 
 <p>If you need to use JFIF on a drawing, you should experiment with
-<B>pnmtojpeg</B>'s <B>-quality</B> and <B>-smooth</B> options to get a
-satisfactory conversion.  <B>-smooth 10</B> or so is often helpful.
+<b>pnmtojpeg</b>'s <b>-quality</b> and <b>-smooth</b> options to get a
+satisfactory conversion.  <b>-smooth 10</b> or so is often helpful.
 
-<P>Because of the loss, you should do all the manipulation you have to
+<p>Because of the loss, you should do all the manipulation you have to
 do on the image in some other format and convert to JFIF as the last
 step.  And if you can keep a copy in the original format, so much the
 better.
 
-The <B>-optimize</B> option to <B>pnmtojpeg</B> is worth using when
+The <b>-optimize</b> option to <b>pnmtojpeg</b> is worth using when
 you are making a "final" version for posting or archiving.
 It's also a win when you are using low quality settings to make very
 small JFIF files; the percentage improvement is often a lot more than
-it is on larger files.  (At present, <B>-optimize</B> mode is
+it is on larger files.  (At present, <b>-optimize</b> mode is
 automatically in effect when you generate a progressive JPEG file).
 
 <p>You can do flipping and rotating transformations losslessly with
@@ -426,118 +432,123 @@ Jpeg Group's JPEG library.  <b>jpegtran</b> exercises its intimate
 knowledge of the way JPEG works to do the transformation without ever
 actually decompressing the image.
 
-<h2 id="otherprog"></h2>
+<h2 id="otherprog">OTHER PROGRAMS</h2>
 
-<P>Another program, <B>cjpeg</B>, is similar.  <B>cjpeg</B> is
+<p>Another program, <b>cjpeg</b>, is similar.  <b>cjpeg</b> is
 maintained by the Independent JPEG Group and packaged with the JPEG
-library which <B>pnmtojpeg</B> uses for all its JPEG work.  Because of
+library which <b>pnmtojpeg</b> uses for all its JPEG work.  Because of
 that, you may expect it to exploit more current JPEG features.  Also,
-since you have to have the library to run <B>pnmtojpeg</B>, but not
-vice versa, <B>cjpeg</B> may be more commonly available.
+since you have to have the library to run <b>pnmtojpeg</b>, but not
+vice versa, <b>cjpeg</b> may be more commonly available.
 
-<p>On the other hand, <B>cjpeg</B> does not use the NetPBM libraries
-to process its input, as all the NetPBM tools such as <B>pnmtojpeg</B>
+<p>On the other hand, <b>cjpeg</b> does not use the NetPBM libraries
+to process its input, as all the NetPBM tools such as <b>pnmtojpeg</b>
 do.  This means it is less likely to be consistent with all the other
 programs that deal with the NetPBM formats.  Also, the command syntax
-of <B>pnmtojpeg</B> is consistent with that of the other Netpbm tools,
-unlike <B>cjpeg</B>.
+of <b>pnmtojpeg</b> is consistent with that of the other Netpbm tools,
+unlike <b>cjpeg</b>.
 
-<H2 id="scanscripts">SCAN SCRIPTS</H2>
+<h2 id="scanscripts">SCAN SCRIPTS</h2>
 
-<P>Use the <B>-scan</B> option to specify a scan script.  Or use the
-<B>-progressive</B> option to specify a particular built-in scan
+<p>Use the <b>-scan</b> option to specify a scan script.  Or use the
+<b>-progressive</b> option to specify a particular built-in scan
 script.
 
-<P>Just what a scan script is, and the basic format of the scan script
-file, is covered in the <B>wizard.doc</B> file that comes with the
+<p>Just what a scan script is, and the basic format of the scan script
+file, is covered in the <b>wizard.doc</b> file that comes with the
 Independent JPEG Group's JPEG library.  Scan scripts are same for
-<B>pnmtojpeg</B> as the are for <B>cjpeg</B>.
+<b>pnmtojpeg</b> as the are for <b>cjpeg</b>.
 
-<P>This section contains additional information that isn't, but
+<p>This section contains additional information that isn't, but
 probably should be, in that document.
 
-<P>First, there are many restrictions on what is a valid scan script.
-The JPEG library, and thus <B>pnmtojpeg</B>, checks thoroughly for any
+<p>First, there are many restrictions on what is a valid scan script.
+The JPEG library, and thus <b>pnmtojpeg</b>, checks thoroughly for any
 lack of compliance with these restrictions, but does little to tell
 you how the script fails to comply.  The messages are very general and
 sometimes untrue.
 
-<P>
+<p>
 To start with, the entries for the DC coefficient must come before any
 entries for the AC coefficients.  The DC coefficient is Coefficient 0;
 all the other coefficients are AC coefficients.  So in an entry for
 the DC coefficient, the two numbers after the colon must be 0 and 0.
 In an entry for AC coefficients, the first number after the colon must
 not be 0.
-<P>
+<p>
 In a DC entry, the color components must be in increasing order.
 E.g. "0,2,1" before the colon is wrong.  So is "0,0,0".
-<P>
+<p>
 In an entry for an AC coefficient, you must specify only one color
 component.  I.e. there can be only one number before the colon.
-<P>
+<p>
 In the first entry for a particular coefficient for a particular color
 component, the "Ah" value must be zero, but the Al value can be any
 valid bit number.  In subsequent entries, Ah must be the Al value from
 the previous entry (for that coefficient for that color component),
 and the Al value must be one less than the Ah value.
-<P>
+<p>
 The script must ultimately specify at least some of the DC coefficient
 for every color component.  Otherwise, you get the error message
 "Script does not transmit all the data."  You need not specify all of
 the bits of the DC coefficient, or any of the AC coefficients.
-<P>
+<p>
 There is a standard option in building the JPEG library to omit scan
 script capability.  If for some reason your library was built with
 this option, you get the message "Requested feature was omitted at
 compile time."
 
-<H2 id="environment">ENVIRONMENT</H2>
+<h2 id="environment">ENVIRONMENT</h2>
 
-<DL COMPACT>
-<DT><B>JPEGMEM</B>
+<dl compact>
+<dt><b>JPEGMEM</b>
 
-<DD>If this environment variable is set, its value is the default
+<dd>If this environment variable is set, its value is the default
 memory limit.  The value is specified as described for the
-<B>-maxmemory</B> option.  An explicit <B>-maxmemory </B> option
-overrides any <B>JPEGMEM</B>.
+<b>-maxmemory</b> option.  An explicit <b>-maxmemory </b> option
+overrides any <b>JPEGMEM</b>.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="jpegtopnm.html">jpegtopnm</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
-<B>cjpeg</B> man page,
-<B>djpeg</b> man page,
-<B>jpegtran</B> man page,
-<B>rdjpgcom</B> man page,
-<B>wrjpgcom</B> man page
+<b><a href="jpegtopnm.html">jpegtopnm</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b>cjpeg</b> man page,
+<b>djpeg</b> man page,
+<b>jpegtran</b> man page,
+<b>rdjpgcom</b> man page,
+<b>wrjpgcom</b> man page
 
 <p>Wallace, Gregory K.  "The JPEG Still Picture Compression
 Standard", Communications of the ACM, April 1991 (vol. 34,
 no. 4), pp. 30-44.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-<B>pnmtojpeg</B> and this manual were derived in large part from
-<B>cjpeg</B>, by the Independent JPEG Group.  The program is otherwise
+<b>pnmtojpeg</b> and this manual were derived in large part from
+<b>cjpeg</b>, by the Independent JPEG Group.  The program is otherwise
 by Bryan Henderson on March 07, 2000.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#loss">JPEG LOSS</A>
-<LI><A HREF="#otherprog">OTHER PROGRAMS</A>
-<LI><A HREF="#scanscripts">SCAN SCRIPTS</A>
-<LI><A HREF="#environment">ENVIRONMENT</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#basicopts">Basic Options</a>
+  <li><a href="#advancedopts">Advanced options</a>
+  <li><a href="#wizardopts">Wizard Options</a>
+  </ul>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#loss">JPEG LOSS</a>
+<li><a href="#otherprog">OTHER PROGRAMS</a>
+<li><a href="#scanscripts">SCAN SCRIPTS</a>
+<li><a href="#environment">ENVIRONMENT</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

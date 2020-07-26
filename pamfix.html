@@ -1,32 +1,32 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamfix User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamfix</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamfix User Manual</title></head>
+<body>
+<h1>pamfix</h1>
 Updated: 06 March 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamfix - repair a Netpbm image with various corruptions
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamfix</B>
+<b>pamfix</b>
 
 [<b>-truncate</b>]
 [<b>-changemaxval</b>]
 [<b>-clip</b>]
 [<b>-verbose</b>]
 
-[<I>netpbmfile</I>]
+[<i>netpbmfile</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -40,7 +40,7 @@ illegally large sample values.
 <p><b>pamfix</b> looks at only on the first image in a multi-image stream.
 
 
-<h3 id="truncatedstream">Truncated stream</h3>
+<h3 id="truncatedstream">Truncated Stream</h3>
 
 <p>This is a stream that is missing the last part.  Netpbm corrects this
 by creating an output image that simply has fewer rows.
@@ -111,12 +111,42 @@ in the image.  Request this with <b>-changemaxval</b>.
 <p>You cannot specify both <b>-clip</b> and <b>-changemaxval</b>.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pam.html">pam</A>,
-<A HREF="pamcut.html">pamcut</A>,
-<A HREF="pamfile.html">pamfile</A>,
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamfix</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-truncate</b>
+
+<dd>Create a truncated output image from all the valid input rows that
+could be read.
+
+<dt><b>-changemaxval</b>
+
+<dd>Raise the maxval to cope with pixel values that exceed the maxval
+stated in the header of the input file.
+
+<dt><b>-clip</b>
+
+<dd>Change all pixel values that exceed the maxval stated in the header
+of the input file.
+
+<dt><b>-verbose</b>
+
+<dd>Report details of the transportation to standard error.
+
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pnm.html">pnm</a>,
+<a href="pam.html">pam</a>,
+<a href="pamcut.html">pamcut</a>,
+<a href="pamfile.html">pamfile</a>,
+<a href="pamvalidate.html">pamvalidate</a>
 
 <h2 id="history">HISTORY</h2>
 
@@ -125,15 +155,18 @@ in the image.  Request this with <b>-changemaxval</b>.
 the truncated image repair (and for invalid sample values would simply pass
 them through to its output, generating an invalid Netpbm image).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<li><a href="#truncatedstream">Truncated Stream</a>
-<li><a href="#excessivesample">Excessive Sample Value</a>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+  <ul> 
+  <li><a href="#truncatedstream">Truncated Stream</a>
+  <li><a href="#excessivesample">Excessive Sample Value</a>
+  </ul>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>
