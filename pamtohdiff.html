@@ -1,31 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtohdiff User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtohdiff</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtohdiff User Manual</title></head>
+<body>
+<h1>pamtohdiff</h1>
 Updated: 15 April 2002
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamtohdiff - convert PAM image to horizontal difference image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtohdiff</B>
-[<I>pamfile</I>]
-[<B>-verbose</B>]
+<b>pamtohdiff</b>
+[<i>pamfile</i>]
+[<b>-verbose</b>]
 
-<P>
-Minimum unique abbreviation of option is acceptable.  You may use double
-hyphens instead of single hyphens to denote options.  You may use white
-space in place of the equals sign to separate an option name from its value.
-
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>pamtohdiff</B> takes a PAM (or PNM) image as input and produces a
+<p><b>pamtohdiff</b> takes a PAM (or PNM) image as input and produces a
 horizontal difference image version of it as output.  A horizontal
 difference image is one where the samples in each row indicate the
 difference between the sample value in the corresponding sample of the
@@ -36,7 +31,7 @@ over a long extent, the corresponding row in the horizontal difference
 image will contain all zeroes.  That makes it compress better than the
 original image.
 
-<P>Because the horizontal difference samples can be positive or
+<p>Because the horizontal difference samples can be positive or
 negative, but PAM samples are unsigned integers, the samples in the
 horizontal difference image PAM are defined to be the difference
 modulus the range of the input (maxval + 1).  This doesn't lose any
@@ -63,28 +58,45 @@ though, do a <b>pamdepth</b> to double the maxval first.
 difference of zero, which is most common, is represented by a PAM sample
 value in the output of one half the maxval.
 
-<P>The output PAM has a tuple type of "hdiff".
+<p>The output PAM has a tuple type of "hdiff".
 
-<P>You can use <B>hdifftopam</B> to recover the original image from a
+<p>You can use <b>hdifftopam</b> to recover the original image from a
 horizontal difference image PAM.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
 
-<B><A HREF="hdifftopam.html">hdifftopam</A></B>,
-<B><A HREF="pamdepth.html">pamdepth</A></B>,
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtohdiff</b> recognizes the following
+command line option:
 
-<H2 id="author">AUTHOR</H2>
+<dl compact>
+<dt><b>-verbose</b>
+<dd>Currently no effect.  This may change in future versions.
+
+<!-- Minimum unique abbreviation of options is acceptable.  You may use
+double hyphens instead of single hyphens. -->
+
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="hdifftopam.html">hdifftopam</a></b>,
+<b><a href="pamdepth.html">pamdepth</a></b>
+
+<h2 id="author">AUTHOR</h2>
 
 Bryan Henderson
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

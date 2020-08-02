@@ -1,40 +1,40 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmlabel User Manual</TITLE></HEAD>
-<BODY>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmlabel User Manual</title></head>
+<body>
 
-<H1>ppmlabel</H1>
+<h1>ppmlabel</h1>
 Updated: 15 April 2006
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 ppmlabel - add text to a PPM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmlabel</B>
+<b>ppmlabel</b>
 
-[<B>-angle</B> <I>angle</I>]
+[<b>-angle</b> <i>angle</i>]
 
-[<B>-background</B> { <B>transparent</B> | <I>color</I> } ]
+[<b>-background</b> { <b>transparent</b> | <i>color</i> } ]
 
-[<B>-color</B> <I>color</I>]
+[<b>-color</b> <i>color</i>]
 
-[<B>-file</B> <I>filename</I>]
+[<b>-file</b> <i>filename</i>]
 
-[<B>-size</B>
+[<b>-size</b>
 
-<I>textsize</I>]
+<i>textsize</i>]
 
-[<B>-text</B> <I>text_string</i>]
+[<b>-text</b> <i>text_string</i>]
 
-[<B>-x</B> <I>column</I>]
+[<b>-x</b> <i>column</i>]
 
-[<B>-y</B> <I>row</I>]
+[<b>-y</b> <i>row</i>]
 
 ...
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
 
 <h2 id="example">EXAMPLE</h2>
@@ -47,81 +47,86 @@ ppmlabel - add text to a PPM image
 </code>
 </pre>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>ppmlabel</B> uses the text drawing facilities of <B>libnetpbm</B>'s
+<p><b>ppmlabel</b> uses the text drawing facilities of <b>libnetpbm</b>'s
 "ppmd" component to add text to a PBM image.  You control
 the location, size, baseline angle, color of the text, and background
 color (if any) with command line arguments.  You can specify the text
 on the command line or supply it in files.
 
 <p>You can add any number of separate labels in a single invocation of
-<B>ppmlabel</B>, limited only by any restrictions your environment has
+<b>ppmlabel</b>, limited only by any restrictions your environment has
 on the number and size of program arguments (e.g. a shell's command 
 size limit).
 
-<P>If you don't specify <I>ppmfile</I>, <B>ppmlabel</B> reads its input
+<p>If you don't specify <i>ppmfile</i>, <b>ppmlabel</b> reads its input
 PPM image from Standard Input.
 
-<P>The output image goes to Standard Output.
+<p>The output image goes to Standard Output.
 
-<P>A more sophisticated way to add a label to an image is to use
+<p>A more sophisticated way to add a label to an image is to use
 <b>pbmtext</b> or <b>pbmtextps</b> to create an image of the text, then
 <b>pamcomp</b> to overlay it onto the base image.
 
 <p>Another more general program is <b>ppmdraw</b>.  It is slightly harder
 to use for simple labelling.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<p>The arguments on the <B>ppmlabel</B> command line are not options in
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmlabel</b> recognizes the following
+command line options:
+
+<p>The arguments on the <b>ppmlabel</b> command line are not options in
 the strict sense; they are commands which control the placement and
 appearance of the text being added to the input image.  They are
 executed left to right, and any number of arguments may appear.
 
-<P>You can abbreviate any option to its shortest unique prefix.
+<p>You can abbreviate any option to its shortest unique prefix.
 
-<DL COMPACT>
-<DT><B>-angle</B><I> angle</I>
+<dl compact>
+<dt><b>-angle</b><i> angle</i>
 
-<DD>This option sets the angle of the baseline of subsequent text.
-<I>angle</I> is an integral number of degrees, measured
+<dd>This option sets the angle of the baseline of subsequent text.
+<i>angle</i> is an integral number of degrees, measured
 counterclockwise from the row axis of the image.
 
-<DT><B>-background</b> { <b>transparent</b> | <I>color</I> }
+<dt><b>-background</b> { <b>transparent</b> | <i>color</i> }
 
-<DD>If the argument is <B>transparent</B>, <b>ppmlabel</b> draws the
+<dd>If the argument is <b>transparent</b>, <b>ppmlabel</b> draws the
 text over the existing pixels in the image.  If you specify a
-<I>color</I> (see the <B>-color</B> option below for information on
+<i>color</i> (see the <b>-color</b> option below for information on
 how to specify colors), <b>ppmlabel</b> generates background rectangles
 enclosing subsequent text, and those rectangles are filled with that
 color.
 
-<DT><B>-color</B> <I>color</I>
+<dt><b>-color</b> <i>color</i>
 
-<DD>This option sets the color for subsequent text.
+<dd>This option sets the color for subsequent text.
 
-<P>Specify the color (<i>color</i>) as described for the <a
+<p>Specify the color (<i>color</i>) as described for the <a
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
 <p><b>-colour</b> is an acceptable alternate spelling.
 
-<DT><B>-file</B> <I>filename</I>
+<dt><b>-file</b> <i>filename</i>
 
-<DD>This option causes <b>ppmlabel</b> to read lines of text from the file
-named <I>filename</I> and draw it on successive lines.
+<dd>This option causes <b>ppmlabel</b> to read lines of text from the file
+named <i>filename</i> and draw it on successive lines.
 
-<DT><B>-size</B> <I>textsize</I>
+<dt><b>-size</b> <i>textsize</i>
 
-<DD>This option sets the height of the tallest characters above the
-baseline to <I>textsize</I> pixels.
+<dd>This option sets the height of the tallest characters above the
+baseline to <i>textsize</i> pixels.
 
-<DT><B>-text</B> <I>text_string</I>
+<dt><b>-text</b> <i>text_string</i>
 
-<DD>This option causes <b>ppmlabel</b> to draw the specified text
+<dd>This option causes <b>ppmlabel</b> to draw the specified text
 string.  It advances the location for subsequent text down 1.75 times
 the current <i>textsize</i>.  That lets you draw multiple lines of
 text in a reasonable manner without specifying the position of each
@@ -135,61 +140,61 @@ the whole string as a single token.  E.g.
 </pre>
 
 
-<DT><B>-x</B> <I>column</I>
+<dt><b>-x</b> <i>column</i>
 
-<DD>This option sets the pixel column at which subsequent text will
+<dd>This option sets the pixel column at which subsequent text will
 be left justified.  Depending on the shape of the first character, the
 actual text may begin a few pixels to the right of this point.
 
-<DT><B>-y</B> <I>row</I>
+<dt><b>-y</b> <i>row</i>
 
-<DD>This option sets the pixel row which will form the baseline of
+<dd>This option sets the pixel row which will form the baseline of
 subsequent text.  Characters with descenders, such as "y," will extend
 below this line.  
 
-</DL>
+</dl>
 
-<H2 id="limitations">LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</h2>
 
-<P>Text strings are restricted to 7 bit ASCII.  The text font used by
-<B>ppmlabel</B> doesn't include definitions for 8 bit ISO 8859/1 characters.
+<p>Text strings are restricted to 7 bit ASCII.  The text font used by
+<b>ppmlabel</b> doesn't include definitions for 8 bit ISO 8859/1 characters.
 
-<P>When drawing multiple lines of text with a non-transparent
+<p>When drawing multiple lines of text with a non-transparent
 background, it should probably fill the space between the lines with
 the background color.  This is tricky to get right when the text is
 rotated to a non-orthogonal angle.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 
-<B><A HREF="ppmmake.html">ppmmake</A></B>,
-<B><A HREF="ppmdraw.html">ppmdraw</A></B>,
-<B><A HREF="pbmtext.html">pbmtext</A></B>,
-<B><A HREF="pbmtextps.html">pbmtextps</A></B>,
-<B><A HREF="pamcomp.html">pamcomp</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="ppmmake.html">ppmmake</a></b>,
+<b><a href="ppmdraw.html">ppmdraw</a></b>,
+<b><a href="pbmtext.html">pbmtext</a></b>,
+<b><a href="pbmtextps.html">pbmtextps</a></b>,
+<b><a href="pamcomp.html">pamcomp</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1995 by John Walker (<A HREF="mailto:kelvin@fourmilab.ch">kelvin@fourmilab.ch</A>)<BR>
-WWW home page: <A HREF="http://www.fourmilab.ch/">http://www.fourmilab.ch/</A><BR>
+Copyright (C) 1995 by John Walker (<a href="mailto:kelvin@fourmilab.ch">kelvin@fourmilab.ch</a>)<br>
+WWW home page: <a href="http://www.fourmilab.ch/">http://www.fourmilab.ch/</a><br>
 
-<P>Permission to use, copy, modify, and distribute this software and
+<p>Permission to use, copy, modify, and distribute this software and
 its documentation for any purpose and without fee is hereby granted,
 without any conditions or restrictions.  This software is provided
 ``as is'' without express or implied warranty.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#example">EXAMPLE</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#limitations">LIMITATIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#example">EXAMPLE</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#limitations">LIMITATIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

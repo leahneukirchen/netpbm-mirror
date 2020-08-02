@@ -1,94 +1,94 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Winicontopam User Manual</TITLE></HEAD>
-<BODY>
-<H1>winicontopam</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Winicontopam User Manual</title></head>
+<body>
+<h1>winicontopam</h1>
 Updated: 12 April 2013
-<BR>
-<A HREF="#index">Table of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
+<h2>NAME</h2>
 
 winicontopam - convert a Microsoft Windows icon file into a Netpbm PAM file
 
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>winicontopam</B>
-[<B>-image=</B><I>index</I> | <B>-allimages</B>]
-[<B>-andmasks</B>]
-[<B>-verbose</B>]
-[<I>icon_file</I>]
+<b>winicontopam</b>
+[<b>-image=</b><i>index</i> | <b>-allimages</b>]
+[<b>-andmasks</b>]
+[<b>-verbose</b>]
+[<i>icon_file</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or equals signs between an option name and
 its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>winicontopam</B> reads a Microsoft Windows icon file and
+<p><b>winicontopam</b> reads a Microsoft Windows icon file and
 converts it to one or more RGB_ALPHA Netpbm PAM files.
 
-<P>The transparency channel is copied from the 8-bit transparency data from
+<p>The transparency channel is copied from the 8-bit transparency data from
 the icon, if present.  If no 8-bit transparency data is available, the
 transparency channel is constructed from the so-called "AND mask".
 
-<P>The output goes to Standard Output.
+<p>The output goes to Standard Output.
 
 <p>The output is a multi-image PAM file.  If you want a separate file for
 each image, use <a href="pamsplit.html"><b>pamsplit</b></a>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-In addition to the options common to all programs based on libnetpbm (most
-notably <B>-quiet</B>, see <A HREF="index.html#commonoptions">Common
-Options</A>), <B>winicontopam</B> recognizes the following command
-line options:
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>winicontopam</b> recognizes the following
+command line options:
 
-<DL COMPACT>
+<dl compact>
 
-<DT><B>-allimages</B>
+<dt><b>-allimages</b>
 
-<DD>Convert all images in the input.
+<dd>Convert all images in the input.
 
 <p>You may not specify this together with <b>-image</b>.
 
 <p>By default, <b>winicontopam</b> converts only the one "best
 quality" image (largest, then most bits per pixel).
 
-<DT><B>-image=</B><I>index</I>
+<dt><b>-image=</b><i>index</i>
 
-<DD>Convert image number <I>index</I> (starting with zero).
+<dd>Convert image number <i>index</i> (starting with zero).
 
 <p>You may not specify this together with <b>-allimages</b>.
 
 <p>By default, <b>winicontopam</b> converts the "best quality"
 image (largest, then most bits per pixel).
 
-<DT><B>-andmasks</B>
+<dt><b>-andmasks</b>
 
-<DD>If the image to be extracted contains both 8-bit transparency
+<dd>If the image to be extracted contains both 8-bit transparency
 data and AND mask, write a five-channel Netpbm PAM file with the AND
 mask stored to the fifth plane.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Print more messages
+<dd>Print more messages
 
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <ul>
-<li><A HREF="pamtowinicon.html"><b>pamtowinicon</b></A>
-<li><A HREF="winicontoppm.html"><b>winicontoppm</b></A>
-<li><A HREF="pamsplit.html"><b>pamsplit</b></A>
-<li><A HREF="pam.html">pam</A> 
-<li><A HREF="winicon.html">winicon</A>
+<li><a href="pamtowinicon.html"><b>pamtowinicon</b></a>
+<li><a href="winicontoppm.html"><b>winicontoppm</b></a>
+<li><a href="pamsplit.html"><b>pamsplit</b></a>
+<li><a href="pam.html"><b>pam</b></a> 
+<li><a href="winicon.html"><b>winicon</b></a>
 </ul>
 
 <p>For information on the PNG format,
@@ -102,21 +102,21 @@ see <a href="http://schaik.com/png">http://schaik.com/png</a>.
 conventions.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 2013 by Ludolf Holzheid.
 
 <p>Translated to Netpbm coding style by Bryan Henderson.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,41 +1,46 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtoascii User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmtoascii</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtoascii User Manual</title></head>
+<body>
+<h1>pbmtoascii</h1>
 Updated: 02 April 2010
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pbmtoascii - convert a PBM image to ASCII graphics
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmtoascii</B>
+<b>pbmtoascii</b>
 
-[<B>-1x2</B>|<B>-2x4</B>]
+[<b>-1x2</b>|<b>-2x4</b>]
 
-[<I>pbmfile</I>]
+[<i>pbmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pbmtoascii</b> reads a PBM image as input and produces a somewhat
 crude ASCII graphic image as output.
 
-<P>To convert back, use <A HREF="asciitopgm.html">asciitopgm</A>.
+<p>To convert back, use <a href="asciitopgm.html">asciitopgm</a>.
 
 <p><b>ppmtoterm</b> does a similar thing for color images to be displayed
 on color text terminals.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<p>The <B>-1x2</B> and <B>-2x4</B> options give you two alternate ways for the
-pixels to get mapped to characters.  With <B>1x2</B>, the default, each
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtoascii</b> recognizes the following
+command line options:
+
+<p>The <b>-1x2</b> and <b>-2x4</b> options give you two alternate ways for the
+pixels to get mapped to characters.  With <b>1x2</b>, the default, each
 character represents a group of 1 pixel across by 2 pixels down.  With
-<B>-2x4</B>, each character represents 2 pixels across by 4 pixels down.  With
+<b>-2x4</b>, each character represents 2 pixels across by 4 pixels down.  With
 the 1x2 mode you can see the individual pixels, so it's useful for previewing
 small images on a non-graphics terminal.  The 2x4 mode lets you display larger
 images on a small display, but it obscures pixel-level details.  2x4 mode is
@@ -47,25 +52,25 @@ pamscale -width 158 | pnmnorm | pamditherbw -threshold | pbmtoascii -2x4
 
 should give good results.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="asciitopgm.html">asciitopgm</A>
+<a href="asciitopgm.html">asciitopgm</a>
 <a href="ppmtoascii.html">ppmtoascii</a>
 <a href="ppmtoterm.html">ppmtoterm</a>
-<A HREF="pbm.html">pbm</A>
+<a href="pbm.html">pbm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1988, 1992 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

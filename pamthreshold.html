@@ -1,36 +1,36 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pamthreshold User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamthreshold</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head><title>Pamthreshold User Manual</title></head>
+<body>
+<h1>pamthreshold</h1>
 Updated: 06 June 2007
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamthreshold - threshold grayscale image to black and white
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamthreshold</B>
+<b>pamthreshold</b>
 [<b>-simple</b>]
 [<b>-local=</b><i>width</i><b>x</b><i>height</i>]
 [<b>-dual=</b><i>width</i><b>x</b><i>height</i>]
 [<b>-threshold=</b><i>threshold</i>]
 [<b>-contrast=</b><i>threshold</i>]
-[<I>inputpamfile</I>]
+[<i>inputpamfile</i>]
 
-<P>Minimum unique abbreviations of options are acceptable. You may use
+<p>Minimum unique abbreviations of options are acceptable. You may use
 double hyphens instead of a single hyphen to denote options. You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pamthreshold</b> thresholds a grayscale image. Thresholding means
+<p><b>pamthreshold</b> thresholds a grayscale image. Thresholding means
 dividing the image into background and foreground by comparing every pixel
 to a thresholding value.
 
@@ -50,7 +50,7 @@ amount of space that PAM uses for the image) with
 
 <p>The output is to Standard Output.
 
-<P>When the input has a transparency channel, <b>pamthreshold</b> includes
+<p>When the input has a transparency channel, <b>pamthreshold</b> includes
 a transparency channel in the output.  Since the output has maxval 1, the
 transparency channel can indicate only fully transparent or fully opaque.
 <b>pamthreshold</b> make it fully transparent where the input is more
@@ -62,9 +62,14 @@ that, <b>pamthreshold</b> ignores any transparency channel in the input.
 <p>Another way to convert a grayscale image to black and white is to
 dither.  Dithering is using clustered black and white pixels such that
 if you step back and look at the picture, you see varying levels of
-gray.  <B>pamditherbw</B> does dithering.
+gray.  <b>pamditherbw</b> does dithering.
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamthreshold</b> recognizes the following
+command line options:
 
 <p>Without any options, <b>pamthreshold</b> uses a method based on the
 iterative algorithm found in
@@ -83,7 +88,7 @@ Error, and you can turn them off with the Netpbm common option
 <p>Options <b>-simple</b>, <b>-local</b>, and <b>-dual</b> select other
 methods.
 
-<DL COMPACT>
+<dl compact>
 
 <dt><b>-simple</b></dt>
 
@@ -139,17 +144,17 @@ the range [0, 1].
 <p>If you don't specify this option, <b>pamthreshold</b> uses a contrast
 threshold of 0.05.  Without <b>-dual</b> this option is meaningless.
 
-</DL>
+</dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pamditherbw.html">pamditherbw</A></B>,
-<B><A HREF="ppmtopgm.html">ppmtopgm</A></B>,
-<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
-<B><A HREF="pam.html">pam</A></B>
+<b><a href="pamditherbw.html">pamditherbw</a></b>,
+<b><a href="ppmtopgm.html">ppmtopgm</a></b>,
+<b><a href="pamtopnm.html">pamtopnm</a></b>,
+<b><a href="pam.html">pam</a></b>
 
-<H2 id="history">HISTORY</H2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamthreshold</b> was new in Netpbm 10.34 (June 2006).
 
@@ -158,16 +163,16 @@ threshold of 0.05.  Without <b>-dual</b> this option is meaningless.
 <b>pamthreshold</b> is Copyright &copy; 2006 by Erik Auerswald and released
 under the <a href="http://www.gnu.org/licenses/gpl.html">GPL</a>.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
 

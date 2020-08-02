@@ -1,28 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmtolps User Manual</TITLE></HEAD>
-<BODY>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmtolps User Manual</title></head>
+<body>
 
-<H1>pbmtolps</H1>
+<h1>pbmtolps</h1>
 Updated: 06 July 2019
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pbmtolps - convert PBM image to PostScript
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pbmtolps</b>
 [<b>-dpi</b>=<i>n</i>]
 [<i>pbmfile</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -38,11 +38,16 @@ subformat that <b>pbmtolps</b> does.
 (&quot;dot&quot;).  For this to work, you must use a <b>-dpi</b> option to
 tell <b>pmtolps</b> the resolution of the target printer, in dots per inch.
   
-<P>The Postscript program <b>pbmtolps</b> generates draws paths of less than
+<p>The Postscript program <b>pbmtolps</b> generates draws paths of less than
 1000 segments so as not to overrun limits on the Apple Laserwriter and
 possibly other printers.
 
-<h2 id="options">Options</h2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmtolps</b> recognizes the following
+command line option:
 
 <dl>
 <dt><b>-dpi=</b><i>n</i>
@@ -50,27 +55,28 @@ possibly other printers.
 </dl>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pnmtops.html">pnmtops</A></B>,
-<B><A HREF="pstopnm.html">pstopnm</A></B>,
-<B><A HREF="pbmtoepsi.html">pbmtoepsi</A></B>,
-<B><A HREF="psidtopgm.html">psidtopgm</A></B>,
-<B>gs</B>,
-<B><A HREF="pbm.html">pbm</A></B>,
+<b><a href="pnmtops.html">pnmtops</a></b>,
+<b><a href="pstopnm.html">pstopnm</a></b>,
+<b><a href="pbmtoepsi.html">pbmtoepsi</a></b>,
+<b><a href="psidtopgm.html">psidtopgm</a></b>,
+<b>gs</b>,
+<b><a href="pbm.html">pbm</a></b>,
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-George Phillips &lt;<A
-HREF="mailto:phillips@cs.ubc.ca">phillips@cs.ubc.ca</A>&gt;
+George Phillips &lt;<a
+href="mailto:phillips@cs.ubc.ca">phillips@cs.ubc.ca</a>&gt;
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

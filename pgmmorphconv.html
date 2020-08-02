@@ -1,19 +1,19 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD><TITLE>Pgmmorphconv User Manual</TITLE></HEAD>
-<BODY>
-<H1>pgmmorphconv</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head><title>Pgmmorphconv User Manual</title></head>
+<body>
+<h1>pgmmorphconv</h1>
 Updated: 29 March 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pgmmorphconv - perform morphological convolutions: dilation, erosion
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pgmmorphconv</B>
+<b>pgmmorphconv</b>
 [
  <b>-erode</b> |
  <b>-dilate</b> |
@@ -21,19 +21,19 @@ pgmmorphconv - perform morphological convolutions: dilation, erosion
  <b>-close</b> |
  <b>-gradient</b>
 ]
-<I>templatefile</I>
-[<I>pgmfile</I>]
+<i>templatefile</i>
+[<i>pgmfile</i>]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
+<p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pgmmorphconv</b> performs morphological convolutions on a
+<p><b>pgmmorphconv</b> performs morphological convolutions on a
 PGM image: dilation and erosion.
 
 <p><b>pgmmorphconv</b> performs a "topological" convolution.  For each
@@ -67,6 +67,13 @@ a weighted average of nearby input pixels instead of a minimum or maximum.
 way, and can be used to filter an image to enhance certain features, to
 ease their automatic recognition.
 
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pgmmorphconv</b> recognizes the following
+command line options:
+
 <p>The options <b>-erode</b> and <b>-dilate</b> obviously produce an
 erosion or dilation, respectively.  <p>The <b>-open</b> option causes
 <b>pgmmorphconv</b> to perform first an erode and then a dilate
@@ -78,13 +85,12 @@ erode.  If you specify none of these options, it is the same as
 difference between the eroded image and the dilated image.  <b>-gradient</b>
 was new in Netpbm 10.70 (March 2015).
 
-
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <ul>
-<li><B><A HREF="pgmminkowski.html">pgmminkowski</A></B>
-<li><B><A HREF="pnmconvol.html">pnmconvol</A></B>
-<li><B><A HREF="pgm.html">pgm</A></B>
+<li><b><a href="pgmminkowski.html">pgmminkowski</a></b>
+<li><b><a href="pnmconvol.html">pnmconvol</a></b>
+<li><b><a href="pgm.html">pgm</a></b>
 </ul>
 
 <p>For more information about morphological convolutions, see e.g.
@@ -102,19 +108,20 @@ Phys. Rev. E 63, 016201-1 - 016201-7 (2001)
 </ul>
 
 
-<H2 id="authors">AUTHORS</H2>
+<h2 id="authors">AUTHORS</h2>
 
 Luuk van Dijk, 2001.
 
 <p>Based on work which is Copyright (C) 1989, 1991 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#authors">AUTHORS</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#authors">AUTHORS</a>
+</ul>
+</body>
+</html>

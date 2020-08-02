@@ -1,10 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
 <html><head><title>Pamperspective User Manual</title></head>
-
 <body>
-
 <h1>pamperspective</h1>
-Updated: 2 September 2004
+Updated: 02 September 2004
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -53,7 +51,7 @@ pamperspective - a reverse scanline renderer for Netpbm images
 
 </pre>
 
-<?makeman .SH OPTION USAGE ?>
+<?makeman .sh option usage ?>
 <p>Minimum unique abbreviation of option is acceptable. (But note 
 that shortest unique prefixes might be longer in future versions of 
 the program.) You may use single hyphens instead of double hyphen to 
@@ -62,7 +60,7 @@ to separate an option name from its value. All options starting with
 hyphens may be given in any order. 
 
 
-<h2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -90,6 +88,11 @@ angle.
 
 <h2 id="options">OPTIONS</h2>
 
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamperspective</b> recognizes the following
+command line options:
+
 <p>For options of the form <b>--name=</b><i>num</i>, You can specify
 the value <i>num</i> in any of the traditional ways.  Additionally,
 you can specify it as <i>num1</i>/<i>num2</i>, where <i>num1</i> and
@@ -98,7 +101,7 @@ specifying a width/height ratio of 4/3, without having to write
 infinitely many digits.  Where <i>num</i> is supposed to be a natural
 number, <b>pamperspective</b> does not allow this format.
 
-<h3>Quadrilateral specification options</h3>
+<h3 id="quadspecoptions">Quadrilateral Specification Options</h3>
 
 <dl>
   <dt><b>--upper_left_x=</b><i>num</i></dt>
@@ -451,15 +454,15 @@ pamflip -rotate90 infile |
   
 <h2 id="seealso">SEE ALSO</h2>
 
-<a href="http://netpbm.sourceforge.net/doc/index.html"><b>netpbm</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pam.html"><b>pam</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pnm.html"><b>pnm</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pamcut.html"><b>pamcut</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pamflip.html"><b>pamflip</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pnmrotate.html"><b>pnmrotate</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pamscale.html"><b>pamscale</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pnmshear.html"><b>pnmshear</b></a>,
-<a href="http://netpbm.sourceforge.net/doc/pnmstitch.html"><b>pnmstitch</b></a>
+<a href="index.html"><b>netpbm</b></a>,
+<a href="pam.html"><b>pam</b></a>,
+<a href="pnm.html"><b>pnm</b></a>,
+<a href="pamcut.html"><b>pamcut</b></a>,
+<a href="pamflip.html"><b>pamflip</b></a>,
+<a href="pnmrotate.html"><b>pnmrotate</b></a>,
+<a href="pamscale.html"><b>pamscale</b></a>,
+<a href="pnmshear.html"><b>pnmshear</b></a>,
+<a href="pnmstitch.html"><b>pnmstitch</b></a>
 
 <h2 id="history">HISTORY</h2>
 
@@ -475,24 +478,24 @@ to copy, distribute and/or modify this document under the terms of the
 GNU General Public License, Version 2 or any later version published
 by the Free Software Foundation.
 
-<HR>
+<hr>
 <h2 id="index">Table Of Contents</h2>
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
 <li><a href="#options">OPTIONS</a>
   <ul>
+  <li><a href="#quadspecoptions">Quadrilateral Specification Options</a>
   <li><a href="#frameoptions">Frame Options</a>
   <li><a href="#outputsizeoptions">Output Size Options</a>
   <li><a href="#outputoptions">Output Options</a>
   </ul>
-<li><a href="#hints">HINTS</a>  
-<li><a href="#seealso">SEE ALSO</a>  
-<li><a href="#history">HISTORY</a>  
-<li><a href="#author">AUTHOR</a>  
+<li><a href="#hints">HINTS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
 </ul>
-
-</body></html>
-
+</body>
+</html>
 
 

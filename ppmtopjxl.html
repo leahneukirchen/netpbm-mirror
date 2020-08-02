@@ -1,99 +1,129 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtopjxl User Manual</TITLE>
-</HEAD><BODY>
-<H1>PPMTOPJXL</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtopjxl User Manual</title></head>
+<body>
+<h1>ppmtopjxl</h1>
 Updated: 14 March 1991
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmtopjxl - convert a PPM image to an HP PaintJet XL PCL file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 ppmtopjxl 
 [<b>-nopack</b>] 
-[<b>-gamma</b> <I>n</I>] 
+[<b>-gamma</b> <i>n</i>] 
 [<b>-presentation</b>] 
 [<b>-dark</b>] 
 [<b>-diffuse</b>] 
 [<b>-cluster</b>] 
 [<b>-dither</b>] 
-[<b>-xshift</b> <I>s</I>] 
-[<b>-yshift</b> <I>s</I>] 
-[<b>-xshift</b> <I>s</I>] 
-[<b>-yshift</b> <I>s</I>] 
-[{<b>-xsize</b>|<b>-width</b>|<b>-xscale</b>} <I>s</I>] 
-[{<b>-ysize</b>|<b>-height</b>|<b>-yscale</b>} <I>s</I>] 
+[<b>-xshift</b> <i>s</i>] 
+[<b>-yshift</b> <i>s</i>] 
+[<b>-xshift</b> <i>s</i>] 
+[<b>-yshift</b> <i>s</i>] 
+[{<b>-xsize</b>|<b>-width</b>|<b>-xscale</b>} <i>s</i>] 
+[{<b>-ysize</b>|<b>-height</b>|<b>-yscale</b>} <i>s</i>] 
 [<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtopjxl</b> reads a PPM image as input and produces a PCL file
 suitable for printing on an HP PaintJet XL printer as output.
 
-<P>The generated file is not suitable for printing on a normal
-PrintJet printer.  The <B>-nopack</B> option generates a file which
-does not use the normal TIFF 4.0 compression method. This file might
+<p>The generated file is not suitable for printing on a normal
+PrintJet printer.  The <b>-nopack</b> option generates a file which
+does not use the normal TIFF 4.0 compression method and thus might
 be printable on a normal PaintJet printer (not an XL).
 
-<P>The <B>-gamma</B> option sets the gamma correction for the
-image. The useful range for the PaintJet XL is approximately 0.6 to
-1.5.
+<h2 id="options">OPTIONS</h2>
 
-<P>You an alter the rendering algorithm used for images with the
-<B>-dither,</B> <B>-cluster,</B> and <B>-diffuse</B> options.  These
-options select ordered dithering, clustered ordered dithering, or
-error diffusion respectively.  You can use the <B>-dark</B> option to
-enhance images with a dark background when they are reduced in size.
-The <B>-presentation</B> option turns on presentation mode, in which
-two passes are made over the paper to increase ink density.  You
-should use this only for images where quality is critical.
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtopjxl</b> recognizes the following
+command line options:
 
-<P>You can resize the image by setting the <B>-xsize</B> and
-<B>-ysize</B> options.  The parameter to either of these options is
+<dl compact>
+
+<dt><b>-nopack</b>
+<dd><p>Generate a file which does not use the normal TIFF 4.0 compression
+method. This file might be printable on a normal PaintJet printer
+(not an XL).
+
+<dt><b>-gamma</b>
+
+<dd><p>Set the gamma correction for the image. The useful range for the
+PaintJet XL is approximately 0.6 to 1.5.
+
+<dt><b>-dither</b>, <b>-cluster</b>, <b>-diffuse</b>
+
+<dd><p>Alter the rendering algorithm used for images.  These options
+select ordered dithering, clustered ordered dithering, or error
+diffusion respectively.
+
+<dt><b>-dark</b>
+
+<dd><p>Enhance images with a dark background when they are reduced in size.
+
+<dt><b>-presentation</b>
+
+<dd><p>Turn on presentation mode, in which two passes are made over the
+paper to increase ink density.  You should use this only for images where
+quality is critical.
+
+<dt><b>-xsize</b>, <b>-ysize</b>
+
+<dd><p>Resize the image.  The parameter to either of these options is
 interpreted as the number of dots to set the width or height to, but
-you may append an optional dimension of `<B>pt</B>' (points),
-`<B>dp</B>' (decipoints), `<B>in</B>' (inches), or `<B>cm</B>'
+you may append an optional dimension of `<b>pt</b>' (points),
+`<b>dp</b>' (decipoints), `<b>in</b>' (inches), or `<b>cm</b>'
 (centimetres).  If you specify only one dimension, <b>ppmtopjxl</b>
 will scale the other one appropriately.
 
-<P>The options <B>-width</B> and <B>-height</B> are synonyms of
-<B>-xsize</B> and <B>-ysize.</B>
+<dt><b>-width</b>, <b>-height</b>
 
-<P>You can alternatively use the <B>-xscale</B> and <B>-yscale</B>
-options to scale the image by a simple factor.
+<dd><p>Synonyms of <b>-xsize</b> and <b>-ysize</b>.
 
-<P>You can shift the image on the page with the <B>-xshift</B> and
-<B>-yshift</B> options.  These move the image the specified dimensions
-right and down.
+<dt><b>-xscale</b>, <b>-yscale</b>
 
-<H2 id="seealso">SEE ALSO</H2>
+<dd><p>Alternatives to <b>-xsize</b> and <b>-ysize</b>.  Scale the
+image by a simple factor.
+
+<dt><b>-xshift</b>, <b>-yshift</b>
+
+<dd><p>Shift the image on the page.  These move the image the specified
+dimensions right and down.
+
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
 
 <a href="pnmtopclxl.html"><b>pnmtopclxl</b></a>,
 <a href="pbmtolj.html"><b>pbmtolj</b></a>,
 <a href="ppmtolj.html"><b>ppmtolj</b></a>,
 <a href="ppmtopj.html"><b>ppmtopj</b></a>,
 <a href="thinkjettopbm.html"><b>thinkjettopbm</b></a>,
-<A HREF="ppm.html">ppm</A>
+<a href="ppm.html">ppm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Angus Duggan
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
 
 
 

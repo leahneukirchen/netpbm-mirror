@@ -1,23 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtofits User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtofits</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtofits User Manual</title></head>
+<body>
+<h1>pamtofits</h1>
 Updated: 25 September 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pamtofits - convert a Netpbm image into FITS format
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtofits</B>
-[<B>-max</B> <I>f</I>]
-[<B>-min</B> <I>f</I>]
-[<I>pamfile</I>]
+<b>pamtofits</b>
+[<b>-max</b> <i>f</i>]
+[<b>-min</b> <i>f</i>]
+[<i>pamfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -29,7 +29,12 @@ PGM image, the output file consists of a single plane image (NAXIS =
 2). If instead the input file is a PPM image, the output file will
 consist of a three-plane image (NAXIS = 3, NAXIS3 = 3).
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtofits</b> recognizes the following
+command line options:
 
 <p><b>-min</b> and <b>-max</b> tell <b>pamtofits</b> what "physical
 values" zero and maxval sample values, respectively, in the input
@@ -83,31 +88,31 @@ PAM input.  It was extended and renamed in Netpbm 10.30 (October 2005).
 <p><b>pnmtofits</b> was itself an extension of <b>pgmtofits</b>, which
 was added to Pbmplus in 1989.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="fitstopnm.html">fitstopnm</A>,
-<A HREF="pam.html">pam</A>
+<a href="fitstopnm.html">fitstopnm</a>,
+<a href="pam.html">pam</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-Copyright (C) 1989 by Wilson H. Bent (<A
-HREF="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</A>), with
-modifications by Alberto Accomazzi (<A
-HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>).
+Copyright (C) 1989 by Wilson H. Bent (<a
+href="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</a>), with
+modifications by Alberto Accomazzi (<a
+href="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</a>).
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#notes">NOTES</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#notes">NOTES</a>
   <ul>
   <li><a href="#pixelorder">Pixel Order</a>
   </ul>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -13,8 +13,9 @@ pbmreduce - read a PBM image and reduce it N times
 
 <b>pbmreduce</b>
 [<b>-floyd</b>|<b>-fs</b>|<b>-threshold</b>]
-[<b>-value</b> <i>val</i>] <i>N</i>
+[<b>-value</b> <i>val</i>]
 [<b>-randomseed=</b><i>integer</i>]
+<i>N</i>
 [<i>pbmfile</i>]
 
 <p>You can abbreviate any option to its shortest unique prefix.
@@ -27,8 +28,8 @@ pbmreduce - read a PBM image and reduce it N times
 factor of <i>N</i>, producing a PBM image as output.
 
 <p><b>pbmreduce</b> duplicates a lot of the functionality of
-<b>pamditherbw</b>; you could do something like <tt>pamscale |
-pamditherbw</tt>, but <b>pbmreduce</b> is a lot faster.
+<b>pamditherbw</b>; you could do something like <kbd>pamscale |
+pamditherbw</kbd>, but <b>pbmreduce</b> is a lot faster.
 
 <p>You can use <b>pbmreduce</b> to "re-halftone" an image.
 Let's say you have a scanner that only produces black&amp;white, not
@@ -53,6 +54,10 @@ By default, <b>pbmreduce</b> does the halftoning after the reduction via
 boustrophedonic Floyd-Steinberg error diffusion; however, you can use this
 option to specify simple thresholding.  This gives better results when
 reducing line drawings.
+
+<dt><b>-floyd</b>, <b>-fs</b>
+<dd>Specify the Floyd-Steinberg error diffusion method.  This is the
+default.
 
 <dt><b>-value</b>
 <dd>

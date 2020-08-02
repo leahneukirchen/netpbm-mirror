@@ -1,23 +1,15 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>Pamsistoaglyph User Manual</title>
-<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
-</head>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamsistoaglyph User Manual</title></head>
 <body>
-
 <h1>pamsistoaglyph</h1>
+Updated: 05 April 2009
+<br>
+<a href="#index">Table Of Contents</a>
 
-<p>Updated: 5 April 2009
+<h2>NAME</h2>
 
-<p><a href="#index">Table Of Contents</a></p>
-
-
-<h2 id="name">NAME</h2>
-
-<p>pamsistoaglyph - convert a single-image stereogram to a red/cyan
-anaglyphic image</p>
+pamsistoaglyph - convert a single-image stereogram to a red/cyan
+anaglyphic image
 
 
 <h2 id="synopsis">SYNOPSIS</h2>
@@ -28,11 +20,11 @@ anaglyphic image</p>
 [--<b>minsep</b>=<i>number</i>]
 [--<b>gray</b>=<i>number</i>]
 [<i>in_netpbmfile</i>
-</p>
+
 
 <p>All options can be abbreviated to their shortest unique prefix. You
 may use either white space or an equals sign between an option name
-and its value.</p>
+and its value.
 
 
 <h2 id="description">DESCRIPTION</h2>
@@ -40,34 +32,38 @@ and its value.</p>
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamsistoaglyph</b> reads a Netpbm image as input and
-produces a Netpbm image as output.</p>
+produces a Netpbm image as output.
 
 <p><b>pamsistoaglyph</b> takes a single-image stereogram
 (SIS) such as those produced by <a href=
-"http://netpbm.sourceforge.net/doc/pamstereogram.html">pamstereogram</a>
+"pamstereogram.html">pamstereogram</a>
 and converts it to a red/cyan anaglyphic image such as those produced
-by <a href="http://netpbm.sourceforge.net/doc/ppm3d.html">ppm3d</a>.
+by <a href="ppm3d.html">ppm3d</a>.
 Many people have trouble tricking their eyes into focusing beyond the
 image in front of them and are therefore unable to perceive the 3-D
 shape hidden within a single-image stereogram.  Anaglyphic stereograms
 are easier to perceive in 3-D but require a pair of red/cyan glasses
 such as those often used to watch 3-D movies. The goal of
 <b>pamsistoaglyph</b> is to help people who have trouble
-viewing single-image stereograms see the intriguing 3-D effect.</p>
+viewing single-image stereograms see the intriguing 3-D effect.
 
 <p><b>pamsistoaglyph</b> can convert single-image random-dot
 stereograms (SIRDS), wallpaper stereograms, and even dual-image
-stereograms to anaglyphic images.</p>
+stereograms to anaglyphic images.
 
 
 <h2 id="options">OPTIONS</h2>
 
-<p>For most images, no command-line options need to be specified. The
-following options are available, however, for unusual
-circumstances:</p>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamsistoaglyph</b> recognizes the following
+command line options:
+
+<p>For most images, no command-line options need to be specified.  The
+following options are available, however, for unusual circumstances.
 
 <dl>
-<dt><b>--invert</b></dt>
+<dt><b>--invert</b>
 <dd>Swap the left- and right-eye
     images. <b>pamsistoaglyph</b> assumes that its input
     represents a wall-eyed stereogram and generates the anaglyphic
@@ -75,17 +71,17 @@ circumstances:</p>
     the page where it should pop out of the page (and vice versa),
     this typically implies that the input image represents a
     cross-eyed stereogram. Use <b>--invert</b> to correct
-    the image depth.</dd>
+    the image depth.
 
-<dt><b>--sep</b>=<i>number</i></dt>
+<dt><b>--sep</b>=<i>number</i>
 <dd>Specify the distance in pixels between the left- and right-eye
     images. Essentially, this corresponds to the distance between
     repetitions of the background pattern.  The <b>--sep</b>
     option should rarely be necessary
     as <b>pamsistoaglyph</b> is fairly good at determining
-    automatically the eye-separation distance.</dd>
+    automatically the eye-separation distance.
 
-<dt><b>--minsep</b>=<i>number</i></dt>
+<dt><b>--minsep</b>=<i>number</i>
 <dd>This option is similar to <b>--sep</b> but
     constrains <b>pamsistoaglyph</b> only to
     a <i>minimum</i> eye-separation distance. Any distance larger
@@ -94,9 +90,9 @@ circumstances:</p>
     as <b>pamsistoaglyph</b> is fairly good at determining
     automatically the eye-separation distance.  The default value for
     the minimum eye-separation distance is 10% of the image width;
-    this value seems to work well in practice.</dd>
+    this value seems to work well in practice.
 
-<dt><b>--gray</b>=<i>number</i></dt>
+<dt><b>--gray</b>=<i>number</i>
 <dd>Limit the number of gray levels to use when searching for the
     optimal eye-separation
     distance.  Because <b>pamsistoaglyph</b> looks for
@@ -107,7 +103,7 @@ circumstances:</p>
     unintentional color variations (such as those caused by conversion
     from a low-quality JPEG image, for example). The default of 63
     seems to work well so the <b>--gray</b> option should
-    rarely be necessary.</dd>
+    rarely be necessary.
 </dl>
 
 
@@ -116,22 +112,22 @@ circumstances:</p>
 <p>The registration algorithm used by <b>pamsistoaglyph</b>
 was developed specifically for this program. As far as the author
 knows, there are no existing algorithms for converting stereograms to
-anaglyphs.  The algorithm works as follows:</p>
+anaglyphs.  The algorithm works as follows:
 
 <ol>
 <li>Convert the image to grayscale to increase the ability to identify
-    matches.</li>
+    matches.
 
 <li>Count the number of pixels that match <i>N</i> pixels ahead in the
-    image for all <i>N</i> in [1, <i>width</i>/2].</li>
+    image for all <i>N</i> in [1, <i>width</i>/2].
 
 <li>Maintain a running mean (&mu;) and standard deviation (&sigma;) of
-    the number of matched pixels.</li>
+    the number of matched pixels.
 
 <li>Store the <i>N</i> corresponding to each spike in the number of
     matched pixels. A spike is defined as a tally that exceeds the
     mean plus one, two, or three standard deviations. Only the first
-    spike of a given standard-deviation multiplier is stored.</li>
+    spike of a given standard-deviation multiplier is stored.
 
 <li>If a tally greater than &mu;+3&sigma; was encountered, return the
     corresponding <i>N</i>. If not, then if a tally greater than
@@ -142,13 +138,13 @@ anaglyphs.  The algorithm works as follows:</p>
     produces the minimum average distance between matched pixels
     (i.e.,&nbsp;<i>#matches</i> divided by <i>#pixels</i>). If no
     such <i>N</i> exceeds the minimum allowable eye-separation value,
-    return zero to indicate failure.</li>
+    return zero to indicate failure.
 
 <li>If the algorithm returned zero, rerun the algorithm independently
     on each row of the input image and return the median of
     all <i>N</i> that exceed the minimum allowable eye-separation
     value. If no such <i>N</i> exists, abort with an error
-    message.</li>
+    message.
 </ol>
 
 <h2 id="history">HISTORY</h2>
@@ -160,7 +156,7 @@ in Netpbm in Release 10.47 (June 2009).
 <h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 2009 Scott
-Pakin, <a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
+Pakin, <a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a>
 
 
 <h2 id="seealso">SEE ALSO</h2>
@@ -178,13 +174,13 @@ Pakin, <a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
 <h2 id="index">Table Of Contents</h2>
 
 <ul>
-<li><a href="#synopsis">SYNOPSIS</a></li>
-<li><a href="#description">DESCRIPTION</a></li>
-<li><a href="#options">OPTIONS</a></li>
-<li><a href="#notes">NOTES</a></li>
-<li><a href="#history">HISTORY</a></li>
-<li><a href="#author">AUTHOR</a></li>
-<li><a href="#seealso">SEE ALSO</a></li>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#notes">NOTES</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#seealso">SEE ALSO</a>
 </ul>
 
 </body>

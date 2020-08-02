@@ -1,137 +1,137 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtowinicon User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtowinicon</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtowinicon User Manual</title></head>
+<body>
+<h1>pamtowinicon</h1>
 Updated: 12 April 2013
-<BR>
-<A HREF="#index">Table of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2 id="name">NAME</H2>
+<h2>NAME</h2>
 
 pamtowinicon - convert Netpbm PAM images to a Microsoft Windows icon file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pamtowinicon</B>
-[<B>-pngthreshold=</B><I>threshold</I>]
-[<B>-truetransparent</B>]
-[<B>-verbose</B>]
-[<I>pam_file</I>]
+<b>pamtowinicon</b>
+[<b>-pngthreshold=</b><i>threshold</i>]
+[<b>-truetransparent</b>]
+[<b>-verbose</b>]
+[<i>pam_file</i>]
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or equals signs between an option name and
 its value.
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>pamtowinicon</B> reads an RGB_ALPHA Netpbm PAM file and converts it to a
+<p><b>pamtowinicon</b> reads an RGB_ALPHA Netpbm PAM file and converts it to a
 Microsoft Windows icon file.
 
-<P>The output goes to Standard Output.
+<p>The output goes to Standard Output.
 
 <p>The input is a multi-image PAM file; each image becomes an icon in the
 output file.  If you have input images in multiple files, you can simply
 combine them with <b>cat</b> and pass the result to <b>pamtowinicon</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
 In addition to the options common to all programs based on libnetpbm (most
-notably <B>-quiet</B>, see <A HREF="index.html#commonoptions">Common
-Options</A>), <B>pamtowinicon</B> recognizes the following command
+notably <b>-quiet</b>, see <a href="index.html#commonoptions">Common
+Options</a>), <b>pamtowinicon</b> recognizes the following command
 line options:
 
-<DL COMPACT>
-<DT><B>-pngthreshold=</B><I>threshold</I>
+<dl compact>
+<dt><b>-pngthreshold=</b><i>threshold</i>
 
-<DD><b>pamtowinicon</b> encodes images with resolutions above or equal <I>threshold</I> by <I>threshold</I> as PNG by running
-<A HREF="pnmtopng.html"><b>pnmtopng</b></A>.  Other images it encodes
+<dd><b>pamtowinicon</b> encodes images with resolutions above or equal <i>threshold</i> by <i>threshold</i> as PNG by running
+<a href="pnmtopng.html"><b>pnmtopng</b></a>.  Other images it encodes
 using the more traditional BMP format.
 
-<P>When the program uses PNG encoding for a 5-channel PAM with separate AND mask (see below), it discards the AND mask.
+<p>When the program uses PNG encoding for a 5-channel PAM with separate AND mask (see below), it discards the AND mask.
 
-<P>The default value for <I>threshold</I> is 128.
+<p>The default value for <i>threshold</i> is 128.
 
-<DT><B>-truetransparent</B>
+<dt><b>-truetransparent</b>
 
-<DD>Make all pixels outside the opaque area black, avoiding inversion
+<dd>Make all pixels outside the opaque area black, avoiding inversion
 and other effects on the background of the image
-(see <A HREF="winicon.html">Windows Icons</A>).
+(see <a href="winicon.html">Windows Icons</a>).
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Print more messages
+<dd>Print more messages
 
-</DL>
+</dl>
 
 
-<H2 id="images">IMAGES</H2>
+<h2 id="images">IMAGES</h2>
 
-<p><B>pamtowinicon</B> reads a (multi-image) Netpbm PAM file
+<p><b>pamtowinicon</b> reads a (multi-image) Netpbm PAM file
 as input and outputs an single Windows icon file containing those images.
 
 <p>The images in the icon file are in the same order as in the PAM input.
 
 
-<H3 id="paminput">PAM Input</H3>
+<h3 id="paminput">PAM Input</h3>
 
 <p>
 <b>pamtowinicon</b> interprets the PAM images as follows, based on
 the number of channels.
 
-<TABLE border=1 align="center">
+<table style="text-align=center" border=1>
 <?makeman l l. ?>
 <?makeman _ ?>
-<TR><TH>channels</TH><TH>image</TH></TR>
-<TR><TD>1</TD><TD>fully opaque grayscale image</TD></TR>
-<TR><TD>2</TD><TD>grayscale image with transparency channel</TD></TR>
-<TR><TD>3</TD><TD>fully opaque color image</TD></TR>
-<TR><TD>4</TD><TD>color image with transparency channel</TD></TR>
-<TR><TD>5</TD><TD>color image with transparency channel and additional AND
-mask</TD></TR>
-</TABLE>
+<tr><th>channels</th><th>image</th></tr>
+<tr><td>1</td><td>fully opaque grayscale image</td></tr>
+<tr><td>2</td><td>grayscale image with transparency channel</td></tr>
+<tr><td>3</td><td>fully opaque color image</td></tr>
+<tr><td>4</td><td>color image with transparency channel</td></tr>
+<tr><td>5</td><td>color image with transparency channel and additional AND
+mask</td></tr>
+</table>
 
-<P>The tuple types of the PAMs are irrelevant.
+<p>The tuple types of the PAMs are irrelevant.
 
 
-<H3 id="andmask">AND Mask</H3>
+<h3 id="andmask">AND Mask</h3>
 
 The so-called "AND mask" is a special feature of Microsoft
 Windows icons.  It is required for all BMP encoded images.  At the
 first sight, the AND mask is a 1-bit transparency channel, but it is also
 used for e.g. shading the icon while dragging.  See
-<A HREF="winicon.html">Windows Icons</A> for details.
+<a href="winicon.html">Windows Icons</a> for details.
 
-<P>If there is no explicit AND mask, but transparency data in the
-input image, <B>pamtowinicon</B> sets the AND mask to opaque where the
+<p>If there is no explicit AND mask, but transparency data in the
+input image, <b>pamtowinicon</b> sets the AND mask to opaque where the
 sample in the transparency channel is below maxval, and to transparent
 elsewhere.
 
-<P>If no transparency data is present in the input image,
-<B>pamtowinicon</B> assumes the whole image to be fully opaque.
+<p>If no transparency data is present in the input image,
+<b>pamtowinicon</b> assumes the whole image to be fully opaque.
 
 
-<H3 id="bmpoutput">BMP Output</H3>
+<h3 id="bmpoutput">BMP Output</h3>
 
-When BMP encoding an image, <B>pamtowinicon</B> tries to use the most
-compact <B>BI_RGB</B> format allowed for icon images with a color
+When BMP encoding an image, <b>pamtowinicon</b> tries to use the most
+compact <b>BI_RGB</b> format allowed for icon images with a color
 depth of eight bits per channel.
 
-<P><B>pamtowinicon</B> generates neither 16-bit <B>BI_RGB</B> nor
-<B>BI_BITFIELDS</B> BMP encoded images, even if the maxval of the input
+<p><b>pamtowinicon</b> generates neither 16-bit <b>BI_RGB</b> nor
+<b>BI_BITFIELDS</b> BMP encoded images, even if the maxval of the input
 PAM is not 255.
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <ul>
-<li><A HREF="winicontopam.html"><b>winicontopam</b></A>
-<li><A HREF="ppmtowinicon.html"><b>ppmtowinicon</b></A>
-<li><A HREF="pam.html">pam</A>
-<li><A HREF="winicon.html">Windows Icons</A>
+<li><a href="winicontopam.html"><b>winicontopam</b></a>
+<li><a href="ppmtowinicon.html"><b>ppmtowinicon</b></a>
+<li><a href="pam.html"><b>pam</b></a>
+<li><a href="winicon.html"><b>Windows Icons</b></a>
 </ul>
 
 <p>For information on the PNG format, see
@@ -145,27 +145,27 @@ PAM is not 255.
 Netpbm conventions.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 <p>Copyright (C) 2013 by Ludolf Holzheid.
 
 <p>Translated to Netpbm coding style by Bryan Henderson.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#images">IMAGES</A>
-<UL>
-<LI><A HREF="#paminput">PAM Input</A>
-<LI><A HREF="#andmask">AND Mask</A>
-<LI><A HREF="#bmpoutput">BMP Output</A>
-</UL>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#images">IMAGES</a>
+  <ul>
+  <li><a href="#paminput">PAM Input</a>
+  <li><a href="#andmask">AND Mask</a>
+  <li><a href="#bmpoutput">BMP Output</a>
+  </ul>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

@@ -1,114 +1,116 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pcdovtoppm User Manual</TITLE></HEAD>
-<BODY>
-<H1>pcdovtoppm</H1>
-Updated: 01 June 2001
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pcdovtoppm User Manual</title></head>
+<body>
+<h1>pcdovtoppm</h1>
+Updated: 02 August 2020
+<br>
+<a href="#index">Table Of Contents</a>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pcdovtoppm - create index image for a photo CD
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pcdovtoppm</B>
-[<B>-m </B><I>width</I>]
-[<B>-s </B><I>size</I>]
-[<B>-a </B><I>across</I>]
-[<B>-c </B><I>colors</I>]
-[<B>-f </B><I>font</I>]
-[<B>-b</B>|<B>-w</B>]
-[<I>pcdfile</I>]
+<b>pcdovtoppm</b>
+[<b>-m </b><i>width</i>]
+[<b>-s </b><i>size</i>]
+[<b>-a </b><i>across</i>]
+[<b>-c </b><i>colors</i>]
+[<b>-f </b><i>font</i>]
+[<b>-b</b>|<b>-w</b>]
+[<i>pcdfile</i>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P>This program generates an index image in PPM format for a photo CD,
+<p>This program generates an index image in PPM format for a photo CD,
 based on the photo CD overview file.
 
-<P>You can achieve a similar result with <B>hpcdtoppm -Overview</B>
-followed by <B>pnmindex -black</B> on the generated PPM images.
+<p>You can achieve a similar result with <b>hpcdtoppm -Overview</b>
+followed by <b>pnmindex -black</b> on the generated PPM images.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<DL COMPACT>
-<DT><B>-w</B><I>width</I>
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pcdovtoppm</b> recognizes the following
+command line options:
 
-<DD>
+<dl compact>
+<dt><b>-w</b><i>width</i>
+
+<dd>
 Maximum width of the result image (default: 1152).
-<DT><B>-s</B><I>size</I>
+<dt><b>-s</b><i>size</i>
 
-<DD>
+<dd>
 Maximum size of each of the images (default: 192).
-<DT><B>-a</B><I>across</I>
+<dt><b>-a</b><i>across</i>
 
-<DD>
+<dd>
 Maximum number of images across (default: 6).
-<DT><B>-c</B><I>colors</I>
+<dt><b>-c</b><i>colors</i>
 
-<DD>
+<dd>
 Maximum number of colors, or 
-<B>n</B>
+<b>n</b>
 
 to mean no quantization
-<DT><B>-f</B><I>font</I>
+<dt><b>-f</b><i>font</i>
 
-<DD>
+<dd>
 Font to be used for annotation (default: internal font).
-<DT><B>-b</B>
+<dt><b>-b</b>
 
-<DD>
+<dd>
 Black background color (default).
-<DT><B>-w</B>
+<dt><b>-w</b>
 
-<DD>
+<dd>
 White background color.
 
-</DL>
+</dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>EXAMPLES</H2>
+<p>
+The Netpbm common options <b>-version</b>, <b>-plain</b> and
+<b>-quiet</b> were implemented starting with Netpbm 10.91 (June 2020).  Before
+that, none of these options were valid.
 
-<PRE>
-<B>pcdovtoppm -m 768 -s 96 -f smallfont.pbm overview.pcd &gt; overview.ppm</B>
-</prE>
 
-<PRE>
-<B>pcdovtoppm /cdrom/photo_cd/overview.pcd | ppmtojpeg &gt; overview.jpg</B>
-</PRE>
+<h2 id="examples">EXAMPLES</h2>
 
-<A NAME="history">&nbsp;</A>
-<H2>HISTORY</H2>
+<pre>
+<b>pcdovtoppm -m 768 -s 96 -f smallfont.pbm overview.pcd &gt; overview.ppm</b>
+</pre>
 
-<P>This program was formerly called <b>pcdindex</b>, which did not fit
+<pre>
+<b>pcdovtoppm /cdrom/photo_cd/overview.pcd | ppmtojpeg &gt; overview.jpg</b>
+</pre>
+
+<h2 id="history">HISTORY</h2>
+
+<p>This program was formerly called <b>pcdindex</b>, which did not fit
 Netpbm naming conventions.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="hpcdtoppm.html">hpcdtoppm</A></B>,
-<B><A HREF="pnmindex.html">pnmindex</A></B>,
-<B><A HREF="ppmtojpeg.html">ppmtojpeg</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>
+<b><a href="hpcdtoppm.html">hpcdtoppm</a></b>,
+<b><a href="pnmindex.html">pnmindex</a></b>,
+<b><a href="ppmtojpeg.html">ppmtojpeg</a></b>,
+<b><a href="ppm.html">ppm</a></b>
 
-<HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
-<UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#history">HISTORY></A>
-<LI><A HREF="#lbAF">EXAMPLES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

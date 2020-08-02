@@ -1,23 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmtoascii User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtoascii</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtoascii User Manual</title></head>
+<body>
+<h1>ppmtoascii</h1>
 Updated: 09 April 2010
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 ppmtoascii - convert a PPM image to ASCII graphics with ANSI terminal color
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmtoascii</B>
+<b>ppmtoascii</b>
 
-[<B>-1x2</B>|<B>-2x4</B>]
+[<b>-1x2</b>|<b>-2x4</b>]
 
-[<I>ppmfile</I>]
+[<i>ppmfile</i>]
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -25,7 +25,7 @@ ppmtoascii - convert a PPM image to ASCII graphics with ANSI terminal color
 crude ASCII graphic image as output, with ANSI terminal control characters
 so it has crude color when sent to a color text terminal.
 
-<P>There is no converter for the other direction.
+<p>There is no converter for the other direction.
 
 <p><b>ppmtoterm</b> does a similar thing, but displays each character of the
 image as a single pixel (using the same dense character for every pixel),
@@ -44,18 +44,23 @@ control characters (because none are needed for a strictly black and white
 image).
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<p>The <B>-1x2</B> and <B>-2x4</B> options give you two alternate ways for the
-pixels to get mapped to characters.  With <B>1x2</B>, the default, each
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmtoascii</b> recognizes the following
+command line options:
+
+<p>The <b>-1x2</b> and <b>-2x4</b> options give you two alternate ways for the
+pixels to get mapped to characters.  With <b>1x2</b>, the default, each
 character represents a group of 1 pixel across by 2 pixels down.  With
-<B>-2x4</B>, each character represents 2 pixels across by 4 pixels down.
+<b>-2x4</b>, each character represents 2 pixels across by 4 pixels down.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pbmtoascii.html">pbmtoascii</A>
+<a href="pbmtoascii.html">pbmtoascii</a>
 <a href="ppmtoterm.html">ppmtoterm</a>
-<A HREF="ppm.html">ppm</A>
+<a href="ppm.html">ppm</a>
 
 
 <h2 id="history">HISTORY</h2>
@@ -64,19 +69,19 @@ character represents a group of 1 pixel across by 2 pixels down.  With
 derived it from <b>pbmtoascii</b>.
 
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 2010 by Frank Ch. Eigler.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

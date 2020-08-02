@@ -1,15 +1,15 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pamtilt User Manual</TITLE></HEAD>
-<BODY>
-<H1>pamtilt</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtilt User Manual</title></head>
+<body>
+<h1>pamtilt</h1>
 Updated: 28 August 2005
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 pamtilt - print the tilt angle of a PGM file
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pamtilt</b>
 [<b>-angle=</b><i>maxangle</i>]
@@ -27,13 +27,13 @@ pamtilt - print the tilt angle of a PGM file
 
 <pre>
 <kbd>
-    scanimage --mode Gray --resolution 300 >crooked.pgm
-    pnmrotate -b white `pamtilt crooked.pgm` crooked.pgm >straight.pgm
+    scanimage --mode Gray --resolution 300 &gt;crooked.pgm
+    pnmrotate -b white `pamtilt crooked.pgm` crooked.pgm &gt;straight.pgm
 </kbd>
     (then crop, threshold, etc.)
 </pre>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -63,11 +63,14 @@ well as grayscale, but you will minimize artifacts if you scan and
 rotate in grayscale before you apply a threshold to make a bilevel
 image.
         
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<p>A few options have general utility:
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtilt</b> recognizes the following
+command line options:
 
-<DL COMPACT>
+<dl compact>
 
 <dt><b>-angle=</b><i>maxangle</i>
 
@@ -94,8 +97,8 @@ Show on Standard Error the measurements computed at each tested angle.
 accommodate a wide variety of input documents.
 
 <dl>
-<DT>
-<B>-quality=</B><i>q</i>
+<dt>
+<b>-quality=</b><i>q</i>
 
 <dd>Require a signal-to-noise ratio of a least <i>q</i> on the first
 iteration to report a valid result.  Larger values reduce the chances
@@ -140,7 +143,7 @@ Set the angle increment of the first iteration, in degrees.
 
 <h2 id="references">REFERENCES</h2>
 
-<p><B>pamtilt</B> implements a somewhat simplified algorithm inspired
+<p><b>pamtilt</b> implements a somewhat simplified algorithm inspired
 by: "Measuring Document Image Skew and Orientation", by Bloomberg,
 Kopec, and Dasari.  In SPIE Volume 2422, Document Recognition II,
 pages 302-316, February 1995.
@@ -159,15 +162,16 @@ pages 302-316, February 1995.
 <p>Gregg Townsend wrote it and sent it to Bryan Henderson in August
 2005.  Bryan recoded it to fit Netpbm conventions.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#examples">EXAMPLES</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#history">HISTORY</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#references">REFERENCES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

@@ -1,14 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>Libnetpbm Image Processing Manual</TITLE>
-<META NAME="manual_section" CONTENT="3">
-</HEAD>
-<BODY>
-<H1>Libnetpbm Image Processing Manual</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>Libnetpbm Image Processing Manual</title>
+<meta name="manual_section" content="3">
+</head>
+<body>
+<h1>Libnetpbm Image Processing Manual</h1>
 Updated: May 2018
 <br>
-<p><A HREF="#toc">Table Of Contents</A>
+<p><a href="#toc">Table Of Contents</a>
 <?makeman .SH NAME ?>
 <?makeman libnetpbm_image - overview of netpbm image-processing functions ?>
 <?makeman .SH DESCRIPTION ?>
@@ -21,9 +21,9 @@ library for processing images, using the Netpbm image formats and the
 largely obsolete PBM, PGM, PPM, and PNM classes of <b>libnetpbm</b> functions.
 For those, see
 <ul>
-  <li><a href="libpbm.html">PBM Function Manual</a>
+  <li><a href="libpbm.html">PBM Function Manual</a>,
   <li><a href="libpgm.html">PGM Function Manual</a>,
-  <li><a href="libppm.html">PPM Function Manual</a>
+  <li><a href="libppm.html">PPM Function Manual</a>,
   <li><a href="libpnm.html">PNM Function Manual</a>
 </ul>
 Note that you do <em>not</em> need those functions to process PBM, PGM, PPM,
@@ -45,7 +45,7 @@ oriented toward processing image data.  Read about those in the
 <p>To use these services, #include <b>pam.h</b>.
 
 
-<H2 id="types">Types</h2>
+<h2 id="types">Types</h2>
 
 <p>Here are some important types that you use with <b>libnetpbm</b>:
 
@@ -85,21 +85,21 @@ a <b>pam</b> structure, which is defined as follows:
 
 <pre>
   <code>
-    <B>struct pam {</B>
-        <B>int </B><I>size</I>
-        <B>int </B><I>len</I>
-        <B>FILE *</B><I>file   </I>
-        <B>int </B><I>format</I>
-        <B>int </B><I>plainformat</I>
-        <B>int </B><I>height</I>
-        <B>int </B><I>width</I>
-        <B>int </B><I>depth</I>
-        <B>sample </B><I>maxval</I>
-        <B>int </B><I>bytes_per_sample</I>
-        <B>char </B><I>tuple_type</I><B>[256]</B>
-        <B>int </B><I>allocation_depth</I>
-        <B>char **</B><I>comment_p</I><B>;</B>
-    <B>}</B>
+    <b>struct pam {</b>
+        <b>int </b><i>size</i>
+        <b>int </b><i>len</i>
+        <b>FILE *</b><i>file   </i>
+        <b>int </b><i>format</i>
+        <b>int </b><i>plainformat</i>
+        <b>int </b><i>height</i>
+        <b>int </b><i>width</i>
+        <b>int </b><i>depth</i>
+        <b>sample </b><i>maxval</i>
+        <b>int </b><i>bytes_per_sample</i>
+        <b>char </b><i>tuple_type</i><b>[256]</b>
+        <b>int </b><i>allocation_depth</i>
+        <b>char **</b><i>comment_p</i><b>;</b>
+    <b>}</b>
     </code>
   </pre>
 
@@ -107,25 +107,25 @@ a <b>pam</b> structure, which is defined as follows:
 for information on the <b>pam</b> structure.
 
 
-<H2 id="macros">Macros</h2>
+<h2 id="macros">Macros</h2>
 
-<B>PNM_MAXMAXVAL</B> is the maximum maxval that Netpbm images could
+<b>PNM_MAXMAXVAL</b> is the maximum maxval that Netpbm images could
 historically have: 255.  Many programs aren't capable of handling Netpbm
 images with a maxval larger than this.  It's named this way for backward
 compatibility -- it had this name back when it was <em>the</em> maximum
 maxval.
 
-<p><B>PNM_OVERALLMAXVAL</b> is the maximum maxval that Netpbm images can
+<p><b>PNM_OVERALLMAXVAL</b> is the maximum maxval that Netpbm images can
 have today (65535).
 
-<P><B>PBM_FORMAT</b>, <B>RPBM_FORMAT</b>, <B>PGM_FORMAT</b>,
-<B>RPGM_FORMAT</B>, <b>PPM_FORMAT</B>, <B>RPPM_FORMAT</B>, and
-<B>PAM_FORMAT</B> are the format codes of the various Netpbm formats.
-<B>RPBM_FORMAT</B> is the raw PBM format and <B>PBM_FORMAT</B> is the
+<p><b>PBM_FORMAT</b>, <b>RPBM_FORMAT</b>, <b>PGM_FORMAT</b>,
+<b>RPGM_FORMAT</b>, <b>PPM_FORMAT</b>, <b>RPPM_FORMAT</b>, and
+<b>PAM_FORMAT</b> are the format codes of the various Netpbm formats.
+<b>RPBM_FORMAT</b> is the raw PBM format and <b>PBM_FORMAT</b> is the
 plain PBM format, and so on.  See the <i>format</i> member of <a
 href="libnetpbm_ug.html#pamstruct">the <b>pam</b> structure</a>.
 
-<p><B>PAM_FORMAT_TYPE(</B><I>format</I><B>)</B> gives the type of a
+<p><b>PAM_FORMAT_TYPE(</b><i>format</i><b>)</b> gives the type of a
 format, given the format code.  The types of formats are PBM, PGM,
 PPM, and PAM and macros for the type codes are, respectively,
 PBM_TYPE, PGM_TYPE, PPM_TYPE, and PAM_TYPE.  Note that there are more
@@ -135,59 +135,59 @@ format codes for the plain and raw subformats of each format.
 <p>Macros for the tuple types that are defined by Netpbm are as follows.
 See the <i>tuple_type</i> member of <a
 href="libnetpbm_ug.html#pamstruct">the <b>pam</b> structure</a>.
-<UL>
-<LI><b>PAM_PBM_TUPLETYPE</b>
-<LI><b>PAM_PGM_TUPLETYPE</b>
-<LI><b>PAM_PPM_TUPLETYPE</b>
-<LI><b>PAM_PBM_ALPHA_TUPLETYPE</b>
-<LI><b>PAM_PGM_ALPHA_TUPLETYPE</b>
-<LI><b>PAM_PPM_ALPHA_TUPLETYPE</b>
-</UL>
+<ul>
+<li><b>PAM_PBM_TUPLETYPE</b>
+<li><b>PAM_PGM_TUPLETYPE</b>
+<li><b>PAM_PPM_TUPLETYPE</b>
+<li><b>PAM_PBM_ALPHA_TUPLETYPE</b>
+<li><b>PAM_PGM_ALPHA_TUPLETYPE</b>
+<li><b>PAM_PPM_ALPHA_TUPLETYPE</b>
+</ul>
 
 
-<H2 id="functions">Functions</H2>
+<h2 id="functions">Functions</h2>
 
 <p>These interfaces are declared in <b>pam.h</b>.
 
 <h3 id="memory">Memory Management</h3>
 <h4>Synopsis</h4>
-<P>
-<B>tuple ** pnm_allocpamarray(</B>
-<B>struct pam *</B><I>pamP</I><B>);</B>
+<p>
+<b>tuple ** pnm_allocpamarray(</b>
+<b>struct pam *</b><i>pamP</i><b>);</b>
 
-<P>
-<B>tuple * pnm_allocpamrow(</B>
-<B>struct pam *</B><I>pamP</I><B>);</B>
+<p>
+<b>tuple * pnm_allocpamrow(</b>
+<b>struct pam *</b><i>pamP</i><b>);</b>
 
-<P>
-<B>void pnm_freepamarray(</B>
-<B>tuple **</B><I>tuplearray</I><B>,</B>
-<B>struct pam *</B><I>pamP</I><B>);</B>
+<p>
+<b>void pnm_freepamarray(</b>
+<b>tuple **</b><i>tuplearray</i><b>,</b>
+<b>struct pam *</b><i>pamP</i><b>);</b>
 
-<P>
-<B>void pnm_freepamrow(</B>
-<B>tuple *</B><I>tuplerow</I><B>);</B>
+<p>
+<b>void pnm_freepamrow(</b>
+<b>tuple *</b><i>tuplerow</i><b>);</b>
 
-<P>
-<B>tuple * allocpamtuple(</B>
-<B>struct pam *</B><I>pamP</I><B>);</B>
+<p>
+<b>tuple * allocpamtuple(</b>
+<b>struct pam *</b><i>pamP</i><b>);</b>
 
-<P>
-<B>void pnm_freepamtuple(</B>
-<B>tuple </B><I>tuple</I>
-<B>);</B>
+<p>
+<b>void pnm_freepamtuple(</b>
+<b>tuple </b><i>tuple</i>
+<b>);</b>
 
-<P>
-<B>tuple * allocpamtuplen(</B>
-<B>struct pam *</B><I>pamP</I><B>);</B>
+<p>
+<b>tuple * allocpamtuplen(</b>
+<b>struct pam *</b><i>pamP</i><b>);</b>
 
-<P>
-<B>tuplen * pnm_allocpamrown(</B>
-<B>struct pam *</B><I>pamP</I><B>);</B>
+<p>
+<b>tuplen * pnm_allocpamrown(</b>
+<b>struct pam *</b><i>pamP</i><b>);</b>
 
-<P>
-<B>void pnm_freepamrown(</B>
-<B>tuplen *</B><I>tuplenrow</I><B>);</B>
+<p>
+<b>void pnm_freepamrown(</b>
+<b>tuplen *</b><i>tuplenrow</i><b>);</b>
 
 
 
@@ -196,16 +196,16 @@ href="libnetpbm_ug.html#pamstruct">the <b>pam</b> structure</a>.
 <p><b>pnm_allocpamtuple</b> allocates space for a tuple.
   <b>pnm_freepamtuple</b> frees space allocated for a tuple.
 
-<p><B>pnm_allocpamarray()</B> allocates space for an array of tuples.
-<B>pnm_freepamarray()</B> frees an array space allocated by
-<B>pnm_allocpamarray()</B> or <B>pnm_readpam()</B>.
+<p><b>pnm_allocpamarray()</b> allocates space for an array of tuples.
+<b>pnm_freepamarray()</b> frees an array space allocated by
+<b>pnm_allocpamarray()</b> or <b>pnm_readpam()</b>.
 
 <p><b>pnm_allocpamtuplen</b> is the same as <b>pnm_allocpamtuple</b>
 except that it allocates space for a tuple in the normalized form.
 <b>pnm_freepamtuplen</b> is similarly like <b>pnm_freepamtuple</b>.
 
-<P><B>pnm_allocpamrow() </B> allocates space for a row of a PAM image,
-in basic form.  <B>pnm_freepamrow()</B> frees it.
+<p><b>pnm_allocpamrow() </b> allocates space for a row of a PAM image,
+in basic form.  <b>pnm_freepamrow()</b> frees it.
 
 <p><b>pnm_allocpamrown()</b> is the same as <b>pnm_allocpamrow()</b> 
 except that it allocates space for a PAM row in the normalized form.
@@ -215,43 +215,43 @@ except that it allocates space for a PAM row in the normalized form.
 <h3 id="reading">Reading Netpbm Files</h3>
 <h4>Synopsis</h4>
 
-<P>
-<B>void pnm_readpaminit(</B>
-<B>FILE *</B><I>file</I><B>,</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>int </B><I>size</I><B>);</B>
+<p>
+<b>void pnm_readpaminit(</b>
+<b>FILE *</b><i>file</i><b>,</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>int </b><i>size</i><b>);</b>
 
-<P>
-<B>void pnm_readpamrow(</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>tuple *</B><I>tuplerow</I><B>);</B>
+<p>
+<b>void pnm_readpamrow(</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>tuple *</b><i>tuplerow</i><b>);</b>
 
-<P>
-<B>tuple ** pnm_readpam(</B>
-<B>FILE *</B><I>file</I><B>,</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>int </B><I>size</I><B>);</B>
+<p>
+<b>tuple ** pnm_readpam(</b>
+<b>FILE *</b><i>file</i><b>,</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>int </b><i>size</i><b>);</b>
 
-<P>
-<B>void pnm_readpamrown(</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>tuplen *</B><I>tuplenrow</I><B>);</B>
+<p>
+<b>void pnm_readpamrown(</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>tuplen *</b><i>tuplenrow</i><b>);</b>
 
 
 <h4>Description</h4>
 
-<P><B>pnm_readpaminit()</B> reads the header of a Netpbm image.
+<p><b>pnm_readpaminit()</b> reads the header of a Netpbm image.
 
 <p>See above for a general description of the <i>pamP</i> argument.
 
 <p><b>pnm_readpaminit()</b> returns the information from the header in
-the <B>*</B><I>pamP</I> structure.  It does not require any members of
-<B>*</B><I>pamP</I> through <b>tuple_type</b> to be set at invocation,
+the <b>*</b><i>pamP</i> structure.  It does not require any members of
+<b>*</b><i>pamP</i> through <b>tuple_type</b> to be set at invocation,
 and sets all of those members.  It expects all members after
 <b>tuple_type</b> to be meaningful.
 
-<p><I>size</I> is the size of the <B>*</B><I>pamP</I> structure as understood
-by the program processing the image.  <b>pnm_readpaminit()</B> does not
+<p><i>size</i> is the size of the <b>*</b><i>pamP</i> structure as understood
+by the program processing the image.  <b>pnm_readpaminit()</b> does not
 attempt to use or set any members of the structure beyond that.  The point of
 this argument is that the definition of the structure may change over time,
 with additional fields being added to the end.  This argument allows
@@ -259,10 +259,10 @@ with additional fields being added to the end.  This argument allows
 exploit the additional features and an old program that cannot (or a new
 program that just doesn't want to deal with the added complexity).  At a
 minimum, this size must contain the members up through <b>tuple_type</b>.  You
-should use the <b>PAM_STRUCT_SIZE</B> macro to compute this argument.
+should use the <b>PAM_STRUCT_SIZE</b> macro to compute this argument.
 E.g. <b>PAM_STRUCT_SIZE(tuple_type)</b>.
 
-<B>PAM_STRUCT_SIZE</B> was introduced in Netpbm 10.23 (July 2004).  In older
+<b>PAM_STRUCT_SIZE</b> was introduced in Netpbm 10.23 (July 2004).  In older
 Netpbm, you can just use sizeof(), but then your code is <em>not</em> forward
 compatible at the source code level with newer libnetpbm (because when you
 compile it with newer libnetpbm header files, you'll be saying your structure
@@ -270,36 +270,36 @@ contains all the new members that have been invented, but your code doesn't
 actually initialize them).  So you might want to compute a proper size
 yourself.
 
-<P>The function expects to find the image file positioned to the start
+<p>The function expects to find the image file positioned to the start
 of the header and leaves it positioned to the start of the raster.
 
-<P><B>pnm_readpamrow()</B> reads a row of the raster from a Netpbm
-image file.  It expects all of the members of the <B>*pamP</B>
+<p><b>pnm_readpamrow()</b> reads a row of the raster from a Netpbm
+image file.  It expects all of the members of the <b>*pamP</b>
 structure to be set upon invocation and does not modify any of them.
 It expects to find the file positioned to the start of the row in
 question in the raster and leaves it positioned just after it.  It
-returns the row as the array of tuples <I>tuplerow</I>, which must
+returns the row as the array of tuples <i>tuplerow</i>, which must
 already have its column pointers set up so that it forms a C
 2-dimensional array.  The leftmost tuple is Element 0 of this array.
 
-<P><B>pnm_readpam()</B> reads an entire image from a PAM or PNM image
+<p><b>pnm_readpam()</b> reads an entire image from a PAM or PNM image
 file and allocates the space in which to return the raster.  It
 expects to find the file positioned to the first byte of the image and
 leaves it positioned just after the image.
 
-<P><B>*</B><I>pamP</I> is the same as for <b>pnm_readpaminit()</b>.
+<p><b>*</b><i>pamP</i> is the same as for <b>pnm_readpaminit()</b>.
 
-<P>The return value is a newly allocated array of the rows of the image,
+<p>The return value is a newly allocated array of the rows of the image,
 with the top row being Element 0 of the array.  Each row is represented
-as <B>pnm_readpamrow()</B> would return.
+as <b>pnm_readpamrow()</b> would return.
 
-<P>The return value is also effectively a 3-dimensional C array of
+<p>The return value is also effectively a 3-dimensional C array of
 samples, with the dimensions corresponding to the height, width, and
 depth of the image, in that order.
 
-<P><B>pnm_readpam()</B> combines the functions of
-<B>pnm_allocpamarray()</B>, <B>pnm_readpaminit()</B>, and iterations
-of <B>pnm_readpamrow()</B>.  It may require more dynamic storage than
+<p><b>pnm_readpam()</b> combines the functions of
+<b>pnm_allocpamarray()</b>, <b>pnm_readpaminit()</b>, and iterations
+of <b>pnm_readpamrow()</b>.  It may require more dynamic storage than
 you can afford.
 
 <p><b>pnm_readpamrown()</b> is like <b>pnm_readpamrow()</b> except that
@@ -314,76 +314,76 @@ that won't fit in a C 'int').
 
 <h3 id="writing">Writing Netpbm Files</h3>
 <h4>Synopsis</h4>
-<P>
-<B>void pnm_writepaminit(</B>
-<B>struct pam *</B><I>pamP</I><B>);</B>
+<p>
+<b>void pnm_writepaminit(</b>
+<b>struct pam *</b><i>pamP</i><b>);</b>
 
-<P>
-<B>void pnm_writepamrow(</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>const tuple *</B><I>tuplerow</I><B>);</B>
+<p>
+<b>void pnm_writepamrow(</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>const tuple *</b><i>tuplerow</i><b>);</b>
 
-<P>
-<B>void pnm_writepam(</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>const tuple * const *</B><I>tuplearray</I><B>);</B>
+<p>
+<b>void pnm_writepam(</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>const tuple * const *</b><i>tuplearray</i><b>);</b>
 
-<P>
-<B>void pnm_writepamrown(</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>const tuplen *</B><I>tuplerown</I><B>);</B>
+<p>
+<b>void pnm_writepamrown(</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>const tuplen *</b><i>tuplerown</i><b>);</b>
 
 <p>
 <b>void pnm_formatpamrow(</b>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>const tuple *</B><I>tuplerow</I>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>const tuple *</b><i>tuplerow</i>
 <b>unsigned char * const </b><i>outbuf</i><b>,</b>
 <b>unsigned int * const </b><i>rowSizeP</i>
-<B>);</B>
+<b>);</b>
 
 <h4>Description</h4>
 
-<P><B>pnm_writepaminit()</B> writes the header of a PAM or PNM image
+<p><b>pnm_writepaminit()</b> writes the header of a PAM or PNM image
 and computes some of the fields of the pam structure.
 
 <p>See above for a description of the <i>pamP</i> argument.
 
-<P>The following members of the <B>*</B><I>pamP</I> structure must be
+<p>The following members of the <b>*</b><i>pamP</i> structure must be
 set upon invocation to tell the function how and what to write.
-<B>size</B>, <B>len</B>, <B>file</B>, <B>format</B>, <B>height</B>,
-<B>width</B>, <B>depth</B>, <B>maxval</B>.  Furthermore, if
-<b>format</b> is <b>PAM_FORMAT</b>, <B>tuple_type</B> must be set and
+<b>size</b>, <b>len</b>, <b>file</b>, <b>format</b>, <b>height</b>,
+<b>width</b>, <b>depth</b>, <b>maxval</b>.  Furthermore, if
+<b>format</b> is <b>PAM_FORMAT</b>, <b>tuple_type</b> must be set and
 if <b>format</b> is <em>not</em> <b>PAM_FORMAT</b>, <b>plainformat</b>
 must be set.
 
-<P><B>pnm_writepaminit()</B> sets the <B>bytes_per_sample</B> member based on
+<p><b>pnm_writepaminit()</b> sets the <b>bytes_per_sample</b> member based on
 the information supplied.
 
-<P><B>pnm_writepamrow()</B> writes a row of the raster into a PAM or
+<p><b>pnm_writepamrow()</b> writes a row of the raster into a PAM or
 PNM image file.  It expects to find the file positioned where the row
 should start and leaves it positioned just after the row.  The
-function requires all the elements of <B>*</B><I>pamP</I> to be set
+function requires all the elements of <b>*</b><i>pamP</i> to be set
 upon invocation and doesn't modify them.
 
-<P><I>tuplerow</I> is an array of tuples representing the row.  The
+<p><i>tuplerow</i> is an array of tuples representing the row.  The
 leftmost tuple is Element 0 of this array.
 
-<p><B>pnm_writepam()</B> writes an entire PAM or PNM image to a PAM or
+<p><b>pnm_writepam()</b> writes an entire PAM or PNM image to a PAM or
 PNM image file.  It expects to find the file positioned to where the
 image should start and leaves it positioned just after the image.
 
 <p>The members of the <b>*</b><i>pamP</i> structure that must be set up
 invocation, and their meanings, is the same as for <b>pnm_writepaminit</b>.
 
-<P><B>pnm_writepam()</B> sets the <B>bytes_per_sample</B> member based on the
+<p><b>pnm_writepam()</b> sets the <b>bytes_per_sample</b> member based on the
 information supplied.
 
-<P><I>tuplearray</I> is an array of rows such that you would pass to
-<B>pnm_writepamrow()</B>, with the top row being Element 0 of the
+<p><i>tuplearray</i> is an array of rows such that you would pass to
+<b>pnm_writepamrow()</b>, with the top row being Element 0 of the
 array.
 
-<P><B>pnm_writepam()</B> combines the functions of
-<B>pnm_writepaminit()</B>, and iterations of <B>pnm_writepamrow()</B>.
+<p><b>pnm_writepam()</b> combines the functions of
+<b>pnm_writepaminit()</b>, and iterations of <b>pnm_writepamrow()</b>.
 Its raster input may be more storage than you can afford.
 
 <p><b>pnm_writepamrown()</b> is like <b>pnm_writepamrow()</b> except that
@@ -404,92 +404,92 @@ C library string functions.
 
 <h4>Synopsis</h4>
 
-<P>
-<B>void pnm_YCbCrtuple(</B>
-<B>tuple </B><I>tuple</I><B>,</B>
-<B>double *</B><I>YP</I><B>,</B>
-<B>double *</B><I>CrP</I><B>,</B>
-<B>double *</B><I>CbP</I><B>);</B>
+<p>
+<b>void pnm_YCbCrtuple(</b>
+<b>tuple </b><i>tuple</i><b>,</b>
+<b>double *</b><i>YP</i><b>,</b>
+<b>double *</b><i>CrP</i><b>,</b>
+<b>double *</b><i>CbP</i><b>);</b>
 
-<P>
-<B>void pnm_YCbCr_to_rgbtuple(</B>
-<B>const struct pam * const </B><I>pamP</I><B>,</B>
-<B>tuple const </B><I>tuple</I><B>,</B>
-<B>double const </B><I>Y</I><B>,</B>
-<B>double const </B><I>Cb</I><B>,</B>
-<B>double const </B><I>Cr</I><B>,</B>
-<B>int * const </B><I>overflowP</I><B>);</B>
+<p>
+<b>void pnm_YCbCr_to_rgbtuple(</b>
+<b>const struct pam * const </b><i>pamP</i><b>,</b>
+<b>tuple const </b><i>tuple</i><b>,</b>
+<b>double const </b><i>Y</i><b>,</b>
+<b>double const </b><i>Cb</i><b>,</b>
+<b>double const </b><i>Cr</i><b>,</b>
+<b>int * const </b><i>overflowP</i><b>);</b>
 
-<P>
-<B>extern double pnm_lumin_factor[3];</B>
+<p>
+<b>extern double pnm_lumin_factor[3];</b>
 
-<P>
-<B>void pnm_normalizetuple(</B>
-<B>struct pam * const </B><I>pamP</I><B>,</B>
-<B>tuple        const </B><I>tuple</I><B>,</B>
-<B>tuplen       const </B><I>tuplen</I><B>);</B>
+<p>
+<b>void pnm_normalizetuple(</b>
+<b>struct pam * const </b><i>pamP</i><b>,</b>
+<b>tuple        const </b><i>tuple</i><b>,</b>
+<b>tuplen       const </b><i>tuplen</i><b>);</b>
 
-<P>
-<B>void pnm_unnormalizetuple(</B>
-<B>struct pam * const </B><I>pamP</I><B>,</B>
-<B>tuplen       const </B><I>tuplen</I><B>,</B>
-<B>tuple        const </B><I>tuple</I><B>);</B>
+<p>
+<b>void pnm_unnormalizetuple(</b>
+<b>struct pam * const </b><i>pamP</i><b>,</b>
+<b>tuplen       const </b><i>tuplen</i><b>,</b>
+<b>tuple        const </b><i>tuple</i><b>);</b>
 
-<P>
-<B>void pnm_normalizeRow(</B>
-<B>struct pam *       const </B><I>pamP</I><B>,</B>
-<B>const tuple *      const </B><I>tuplerow</I><B>,</B>
-<B>pnm_transformMap * const </B><I>transform</I><B>,</B>
-<B>tuplen *           const </B><I>tuplenrow</I><B>);</B>
+<p>
+<b>void pnm_normalizeRow(</b>
+<b>struct pam *       const </b><i>pamP</i><b>,</b>
+<b>const tuple *      const </b><i>tuplerow</i><b>,</b>
+<b>pnm_transformMap * const </b><i>transform</i><b>,</b>
+<b>tuplen *           const </b><i>tuplenrow</i><b>);</b>
 
-<P>
-<B>void pnm_unnormalizeRow(</B>
-<B>struct pam *       const </B><I>pamP</I><B>,</B>
-<B>const tuplen *     const </B><I>tuplenrow</I><B>,</B>
-<B>pnm_transformMap * const </B><I>transform</I><B>,</B>
-<B>tuple *            const </B><I>tuplerow</I><B>);</B>
+<p>
+<b>void pnm_unnormalizeRow(</b>
+<b>struct pam *       const </b><i>pamP</i><b>,</b>
+<b>const tuplen *     const </b><i>tuplenrow</i><b>,</b>
+<b>pnm_transformMap * const </b><i>transform</i><b>,</b>
+<b>tuple *            const </b><i>tuplerow</i><b>);</b>
 
-<P>
-<B>void pnm_gammarown(</B>
-<B>struct pam * const </B><I>pamP</I><B>,</B>
-<B>tuplen *     const </B><I>row</I><B>);</B>
+<p>
+<b>void pnm_gammarown(</b>
+<b>struct pam * const </b><i>pamP</i><b>,</b>
+<b>tuplen *     const </b><i>row</i><b>);</b>
 
-<P>
-<B>void pnm_ungammarown(</B>
-<B>struct pam * const </B><I>pamP</I><B>,</B>
-<B>tuplen *     const </B><I>row</I><B>);</B>
+<p>
+<b>void pnm_ungammarown(</b>
+<b>struct pam * const </b><i>pamP</i><b>,</b>
+<b>tuplen *     const </b><i>row</i><b>);</b>
 
-<P>
-<B>void pnm_applyopacityrown(</B>
-<B>struct pam * const </B><I>pamP</I><B>,</B>
-<B>tuplen *     const </B><I>tuplenrow</I><B>);</B>
+<p>
+<b>void pnm_applyopacityrown(</b>
+<b>struct pam * const </b><i>pamP</i><b>,</b>
+<b>tuplen *     const </b><i>tuplenrow</i><b>);</b>
 
-<P>
-<B>void pnm_unapplyopacityrown(</B>
-<B>struct pam * const </B><I>pamP</I><B>,</B>
-<B>tuplen *     const </B><I>tuplenrow</I><B>);</B>
-<P>
-<B>pnm_transformMap * pnm_creategammatransform(</B>
-<B>const struct pam * const </B><I>pamP</I><B>);</B>
+<p>
+<b>void pnm_unapplyopacityrown(</b>
+<b>struct pam * const </b><i>pamP</i><b>,</b>
+<b>tuplen *     const </b><i>tuplenrow</i><b>);</b>
+<p>
+<b>pnm_transformMap * pnm_creategammatransform(</b>
+<b>const struct pam * const </b><i>pamP</i><b>);</b>
 
-<P>
-<B>void pnm_freegammatransform(</B>
-<B>const pnm_transformMap * const </B><I>transform</I><B>,</B>
-<B>const struct pam *       const </B><I>pamP</I><B>);</B>
+<p>
+<b>void pnm_freegammatransform(</b>
+<b>const pnm_transformMap * const </b><i>transform</i><b>,</b>
+<b>const struct pam *       const </b><i>pamP</i><b>);</b>
 
-<P>
-<B>pnm_transformMap * pnm_createungammatransform(</B>
-<B>const struct pam * const </B><I>pamP</I><B>);</B>
+<p>
+<b>pnm_transformMap * pnm_createungammatransform(</b>
+<b>const struct pam * const </b><i>pamP</i><b>);</b>
 
-<P>
-<B>void pnm_freeungammatransform(</B>
-<B>const pnm_transformMap * const </B><I>transform</I><B>,</B>
-<B>const struct pam *       const </B><I>pamP</I><B>);</B>
+<p>
+<b>void pnm_freeungammatransform(</b>
+<b>const pnm_transformMap * const </b><i>transform</i><b>,</b>
+<b>const struct pam *       const </b><i>pamP</i><b>);</b>
 
 
 <h4>Description</h4>
 
-<P><B>pnm_YCbCrtuple()</B> returns the Y/Cb/Cr luminance/chrominance
+<p><b>pnm_YCbCrtuple()</b> returns the Y/Cb/Cr luminance/chrominance
 representation of the color represented by the input tuple, assuming
 that the tuple is an RGB color representation (which is the case if it
 was read from a PPM image).  The output components are based on the
@@ -533,7 +533,7 @@ alone.
 not one that <b>libnetpbm</b> recognizes as having an opacity plane),
 <b>pnm_applyopacityrown()</b> does nothing (which is the same as assuming
 opacity 100%).  The tuple types that <b>libnetpbm</b> recognizes as
-having opacity are <B>RGB_ALPHA</B> and <B>GRAYSCALE_ALPHA</B>.
+having opacity are <b>RGB_ALPHA</b> and <b>GRAYSCALE_ALPHA</b>.
 
 <p><b>pnm_unapplyopacityrown()</b> does the reverse.  It assumes the
 intensities are already reduced according to the opacity plane, and
@@ -625,57 +625,57 @@ destroy the objects.
 
 <h4>Synopsis</h4>
 
-<P>
-<B>tuple pnm_parsecolor(</B>
-<B>const char * </B><I>colorname</I><b>,</b>
+<p>
+<b>tuple pnm_parsecolor(</b>
+<b>const char * </b><i>colorname</i><b>,</b>
 <b>sample </b><i>maxval</i>
-<B>);</B>
+<b>);</b>
   
-<P>
-<B>tuple pnm_parsecolor2(</B>
-<B>const char * </B><I>colorname</I><b>,</b>
+<p>
+<b>tuple pnm_parsecolor2(</b>
+<b>const char * </b><i>colorname</i><b>,</b>
 <b>sample </b><i>maxval</i><b>,</b>
 <b>int </b><i>closeOk</i>
-<B>);</B>
+<b>);</b>
   
-<P>
-<B>tuplen pnm_parsecolorn(</B>
-<B>const char * </B><I>colorname</I>
-<B>);</B>
+<p>
+<b>tuplen pnm_parsecolorn(</b>
+<b>const char * </b><i>colorname</i>
+<b>);</b>
 
 
-<P>
-<B>pnm_colorspec_rgb_integer(</B>
+<p>
+<b>pnm_colorspec_rgb_integer(</b>
 <b>struct pam * </b><i>pamP</i><b>,</b>
 <b>tuple </b><i>color</i><b>,</b>
 <b>sample </b><i>maxval</i>
-<B>);</B>
+<b>);</b>
 
-<P>
-<B>pnm_colorspec_rgb_norm(</B>
+<p>
+<b>pnm_colorspec_rgb_norm(</b>
 <b>struct pam * </b><i>pamP</i><b>,</b>
 <b>tuple </b><i>color</i>
 <b>unsigned int </b><i>digitCt</i>
-<B>);</B>
+<b>);</b>
 
-<P>
-<B>pnm_colorspec_rgb_x11(</B>
+<p>
+<b>pnm_colorspec_rgb_x11(</b>
 <b>struct pam * </b><i>pamP</i><b>,</b>
 <b>tuple </b><i>color</i><b>,</b>
 <b>unsigned int </b><i>hexDigitCt</i>
-<B>);</B>
+<b>);</b>
 
-<P>
-<B>pnm_colorspec_dict(</B>
+<p>
+<b>pnm_colorspec_dict(</b>
 <b>struct pam * </b><i>pamP</i><b>,</b>
 <b>tuple </b><i>color</i>
-<B>);</B>
+<b>);</b>
 
-<P>
-<B>pnm_colorspec_dict_close(</B>
+<p>
+<b>pnm_colorspec_dict_close(</b>
 <b>struct pam * </b><i>pamP</i><b>,</b>
 <b>tuple </b><i>color</i>
-<B>);</B>
+<b>);</b>
 
 
 <h4>Description</h4>
@@ -735,40 +735,45 @@ such as <b>pnm_parsecolor</b> and is the return value of functions such as
 
 <ul>
 
-<li>a name, as defined in the <a href="#rgb.txt">system color dictionary
+<li>a name, as defined in the <a href="libppm.html#dictionary">system color dictionary
 </a>.
 
-<LI> An X11-style hexadecimal specifier:
-<tt>rgb:<i>r</i>/<i>g</i>/<i>b</i></tt>, where <i>r</i>, <i>g</i>, and
-<i>b</i> are each 1- to 4-digit hexadecimal numbers.  For each, the maxval
-is the maximum number that can be represented in the number of hexadecimal
-digits given.  Example: <tt>rgb:01/ff/8000</tt> specifies 1/255 red
-intensity, maximum green intensity, and about half blue intensity.
+<li> An X11-style hexadecimal specifier:
+<span style="font-family: monospace">rgb:<i>r</i>/<i>g</i>/<i>b</i></span>,
+where <i>r</i>, <i>g</i>, and
+<i>b</i> are each 1- to 4-digit hexadecimal numbers.  For each, the maxval is
+the maximum number that can be represented in the number of hexadecimal digits
+given.  Example: <span style="font-family: monospace">rgb:01/ff/8000</span>
+specifies 1/255 red intensity, maximum green intensity, and about half blue
+intensity.
 
-<LI> An X11-style decimal specifier:
-<tt>rgbi:<i>r</i>/<i>g</i>/<i>b</i></tt>, where <i>r</i>, <i>g</i>,
-and <i>b</i> are floating point numbers from 0 to 1.  Example:
-<tt>rgbi:1.0/0.5/.25</tt>.
+<li> An X11-style decimal specifier:
+<span style="font-family: monospace">rgbi:<i>r</i>/<i>g</i>/<i>b</i></span>,
+where <i>r</i>, <i>g</i>, and <i>b</i> are floating point numbers from 0 to 1.
+Example: <span style="font-family: monospace">rgbi:1.0/0.5/.25</span>.
 
-<li><tt>rgb-<i>maxval</i>:<i>r</i>/<i>g</i>/<i>b</i></tt>, where
-<i>r</i>, <i>g</i>, and <i>b</i> are integers from 0 to <i>maxval</i>.
-Example: <tt>rgb-255:255/128/64</tt>.  <i>maxval</i> can be from 1 to 65535.
+<li><span style="font-family:monospace">rgb-<i>maxval</i>:<i>r</i>/<i>g</i>/<i>b</i></span>, where <i>r</i>, <i>g</i>, and <i>b</i> are integers from 0 to
+<i>maxval</i>.  Example: <span style="font-family: monospace">
+rgb-255:255/128/64</span>.  <i>maxval</i> can be from 1 to 65535.
 <p>
 This format was new in Netpbm 10.83 (June 2018).
 
-<li>an old-X11-style hexadecimal triple: <tt>#rgb</tt>, <tt>#rrggbb</tt>, 
-<tt>#rrrgggbbb</tt>, or <tt>#rrrrggggbbbb</tt>.
+<li>an old-X11-style hexadecimal triple: <span style="font-family: monospace">
+#rgb</span>, <span style="font-family: monospace">#rrggbb</span>,
+<span style="font-family: monospace">#rrrgggbbb</span>, or
+<span style="font-family: monospace">#rrrrggggbbbb</span>.
 
 <li>A triplet of decimal floating point numbers from 0.0 to 1.0, representing
 red, green, and blue intensities respectively, separated by commas.
-Example: <tt>1.0,0.5,.25</tt>.  This is for backwards compatibility; it was in
-use before MIT came up with the similar and preferred rgbi style).
+Example: <span style="font-family: monospace">1.0,0.5,.25</span>.  This is for
+backwards compatibility; it was in use before MIT came up with the similar and
+preferred rgbi style).
 
 </ul>
 
-<P>If <i>colorname</i> does not conform to any of these formats, including the
+<p>If <i>colorname</i> does not conform to any of these formats, including the
 case that it is a name, but is not in the system color dictionary,
-<B>pnm_parsecolor()</B> <a href="liberror.html">throws an error</a>.
+<b>pnm_parsecolor()</b> <a href="liberror.html">throws an error</a>.
 
   
 <h3 id="misc">Miscellaneous</h3>
@@ -776,30 +781,30 @@ case that it is a name, but is not in the system color dictionary,
 <h4>Synopsis</h4>
 
 
-<P>
-<B>void pnm_checkpam(</B>
-<B>struct pam *</B><I>pamP</I><B>,</B>
-<B>const enum pm_check_type </B><I>check_type</I><B>,</B>
-<B>enum pm_check_code *</B><I>retvalP</I><B>);</B>
+<p>
+<b>void pnm_checkpam(</b>
+<b>struct pam *</b><i>pamP</i><b>,</b>
+<b>const enum pm_check_type </b><i>check_type</i><b>,</b>
+<b>enum pm_check_code *</b><i>retvalP</i><b>);</b>
 
-<P>
-<B>void pnm_nextimage(</B>
-<B>FILE *</B><I>file</I><B>,</B>
-<B>int * const </B><I>eofP</I><B>);</B>
+<p>
+<b>void pnm_nextimage(</b>
+<b>FILE *</b><i>file</i><b>,</b>
+<b>int * const </b><i>eofP</i><b>);</b>
 
 <h4>Description</h4>
 
-<P><B>pnm_checkpam()</B> checks for the common file integrity error
+<p><b>pnm_checkpam()</b> checks for the common file integrity error
 where the file is the wrong size to contain the raster, according to
 the information in the header.
 
-<P><B>pnm_nextimage()</B>positions a Netpbm image input file to the
-next image in it (so that a subsequent <B>pnm_readpaminit()</B> reads
+<p><b>pnm_nextimage()</b>positions a Netpbm image input file to the
+next image in it (so that a subsequent <b>pnm_readpaminit()</b> reads
 its header).
 
 
-<HR>
-<H2 id="toc">Table Of Contents</H2>
+<hr>
+<h2 id="toc">Table Of Contents</h2>
 
 <ul>
   <li><a href="#types">Types</a>
@@ -820,5 +825,5 @@ its header).
 
 
 
-</BODY>
-</HTML>
+</body>
+</html>

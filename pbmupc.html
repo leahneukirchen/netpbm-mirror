@@ -1,22 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pbmupc User Manual</TITLE></HEAD>
-<BODY>
-<H1>pbmupc</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmupc User Manual</title></head>
+<body>
+<h1>pbmupc</h1>
 Updated: 29 April 2015
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pbmupc - create a Universal Product Code PBM image
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>pbmupc</B>
+<b>pbmupc</b>
 
-[<B>-s1</B> | <B>-s2</B>] <I>type</i> <i>manufacturer</i> <i>product</I>
+[<b>-s1</b> | <b>-s2</b>] <i>type</i> <i>manufacturer</i> <i>product</i>
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -25,53 +25,58 @@ The three arguments are: a one digit product type, a five digit
 manufacturer code, and a five digit product code.
 For example, "0 72890 00011" is the code for Heineken.
 
-<P><b>pbmupc</b> produces an image 230 bits wide and 175 bits high.  If you
-want a different size run the output through <B>pamscale</B>.
+<p><b>pbmupc</b> produces an image 230 bits wide and 175 bits high.  If you
+want a different size run the output through <b>pamscale</b>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>The <B>-s1</B> and <B>-s2</B> options select the style of UPC to
-generate.  The default, <B>-s1</B>, looks more or less like this:
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pbmupc</b> recognizes the following
+command line options:
 
-<PRE>
+<p>The <b>-s1</b> and <b>-s2</b> options select the style of UPC to
+generate.  The default, <b>-s1</b>, looks more or less like this:
+
+<pre>
  ||||||||||||||||
  ||||||||||||||||
  ||||||||||||||||
  ||||||||||||||||
 0||12345||67890||5
-</PRE>
+</pre>
 
-The other style, <B>-s2</B>, puts the product type digit higher up,
+The other style, <b>-s2</b>, puts the product type digit higher up,
 and doesn't display the checksum digit:
 
-<PRE>
+<pre>
  ||||||||||||||||
  ||||||||||||||||
 0||||||||||||||||
  ||||||||||||||||
  ||12345||67890||
-</PRE>
+</pre>
 
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pamscale.html">pamscale</A>
-<A HREF="pbm.html">pbm</A>
+<a href="pamscale.html">pamscale</a>
+<a href="pbm.html">pbm</a>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
 
-</BODY>
-</HTML>
+</body>
+</html>

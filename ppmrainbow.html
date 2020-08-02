@@ -1,39 +1,39 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Ppmrainbow User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmrainbow</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmrainbow User Manual</title></head>
+<body>
+<h1>ppmrainbow</h1>
 Updated: 12 November 2014
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 ppmrainbow - Generate a rainbow
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>ppmrainbow</B>
+<b>ppmrainbow</b>
 
-[<B>-width=</B><I>number</I>] [<B>-height=</B><I>number</I>]
+[<b>-width=</b><i>number</i>] [<b>-height=</b><i>number</i>]
 
-<BR>
+<br>
 
-[<B>-tmpdir=</B><I>directory</I>] [<B>-norepeat</B>] [<B>-verbose</B>] <I>color</I> ...
+[<b>-tmpdir=</b><i>directory</i>] [<b>-norepeat</b>] [<b>-verbose</b>] <i>color</i> ...
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>ppmrainbow</B> generates a PPM image that fades from one color to
+<b>ppmrainbow</b> generates a PPM image that fades from one color to
 another to another from left to right, like a rainbow.
 
-<P>If you want a vertical or other non-horizontal rainbow, run the output
-through <B>pnmrotate</B> or <b>pamflip</b>.
+<p>If you want a vertical or other non-horizontal rainbow, run the output
+through <b>pnmrotate</b> or <b>pamflip</b>.
 
-<P>One use for such a rainbow is to compose it with another image
+<p>One use for such a rainbow is to compose it with another image
 under a transparency mask in order to add a rainbow area to another image.
-In fact, you can make rainbow-colored text by using <B>pbmtext</B>,
-<B>pamcomp</B>, and <B>ppmrainbow</B>.
+In fact, you can make rainbow-colored text by using <b>pbmtext</b>,
+<b>pamcomp</b>, and <b>ppmrainbow</b>.
 
 <p><b>pgmramp</b> does a similar thing for grayscale images.
 
@@ -43,89 +43,89 @@ kind of processing; not to look at), see <b>pamseq</b>.
 
 <h2 id="arguments">ARGUMENTS</h2>
 
-<P><I>color</I> ... is the list of colors, in order from left to right,
+<p><i>color</i> ... is the list of colors, in order from left to right,
 to go into the rainbow.
 
 <p>The first color is added again on the right end of the image unless you
 specify the <b>-norepeat</b> option.  This means you can concatenate multiple
 copies (tile, as with <b>pnmtile</b>) to make a continuous larger image.
 
-<P><i>color</i> is as described for
+<p><i>color</i> is as described for
 the <a href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
 
-<H2 id="options">OPTIONS</H2>
+<h2 id="options">OPTIONS</h2>
 
-<P>All options can be abbreviated to their shortest unique prefix.
+<p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
 may use either white space or equals signs between an option name and
 its value.
 
-<DL COMPACT>
-<DT><B>-width </B><I>number</I>
+<dl compact>
+<dt><b>-width </b><i>number</i>
 
-<DD>
+<dd>
 The width in pixels of the output image.
 
-<P>Default is 600.
+<p>Default is 600.
 
-<DT><B>-height </B><I>number</I>
+<dt><b>-height </b><i>number</i>
 
-<DD>
+<dd>
 The height in pixels of the output image.
 
-<P>Default is 8.
+<p>Default is 8.
 
-<DT><b>-norepeat</b>
+<dt><b>-norepeat</b>
      
 <dd>This option makes <b>ppmrainbow</b> end the rainbow with the last
 color you specify.  Without this option, <b>ppmrainbow</b> adds the
 first color you specify to the right end of the rainbow as if you had
 repeated it.
 
-<DT><B>-tmpdir</B>
+<dt><b>-tmpdir</b>
 
-<DD>The directory specification of the directory <B>ppmrainbow</B> is
+<dd>The directory specification of the directory <b>ppmrainbow</b> is
 to use for temporary files.
 
-<P>Default is the value of the <B>TMPDIR</B> environment variable, or
-<b>/tmp</b> if <B>TMPDIR</B> is not set.
+<p>Default is the value of the <b>TMPDIR</b> environment variable, or
+<b>/tmp</b> if <b>TMPDIR</b> is not set.
 
 <p><b>ppmrainbow</b> always creates a directory within this directory
 and creates all its files within that directory.
 
-<DT><B>-verbose</B>
+<dt><b>-verbose</b>
 
-<DD>Print the "commands" (invocations of other Netpbm
-programs) that <B>ppmrainbow</B> uses to create the image.
+<dd>Print the "commands" (invocations of other Netpbm
+programs) that <b>ppmrainbow</b> uses to create the image.
 
-</DL>
+</dl>
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="pgmramp.html">pgmramp</A></B>,
-<B><A HREF="pamseq.html">pamseq</A></B>,
-<B><A HREF="pamgradient.html">pamgradient</A></B>,
-<B><A HREF="ppmmake.html">ppmmake</A></B>,
-<B><A HREF="ppmfade.html">ppmfade</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>.
+<b><a href="pgmramp.html">pgmramp</a></b>,
+<b><a href="pamseq.html">pamseq</a></b>,
+<b><a href="pamgradient.html">pamgradient</a></b>,
+<b><a href="ppmmake.html">ppmmake</a></b>,
+<b><a href="ppmfade.html">ppmfade</a></b>,
+<b><a href="ppm.html">ppm</a></b>.
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
-<P>Arjen Bax wrote <B>ppmrainbow</B> in June 2001 and contributed it
+<p>Arjen Bax wrote <b>ppmrainbow</b> in June 2001 and contributed it
 to the Netpbm package.  Bryan Henderson wrote this manual in July
 2001.
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#options">ARGUMENTS</A>
-<LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#arguments">ARGUMENTS</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

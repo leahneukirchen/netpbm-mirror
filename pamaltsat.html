@@ -117,12 +117,15 @@ with a suitable intensity.
 
 <p>The effect of this method on each component intensity may be expressed in
 the following equation:
-<center>
-<tt>sat = orig * strength - Iorig * (strength - 1)</tt>
-</center>
-<br>
-where <tt>sat</tt> is the saturated sample, <tt>orig</tt> the original sample,
-and <tt>Iorig</tt> the total intensity of the original color.
+<pre>
+<span style="font-family: monospace">
+    sat = orig * strength - Iorig * (strength - 1)
+</span>
+</pre>
+where <span style="font-family: monospace">sat</span> is the saturated
+sample, <span style="font-family: monospace">orig</span> the original sample,
+and <span style="font-family: monospace">Iorig</span> the total intensity of
+the original color.
 
 <p>The method is also related to color integrity because both its operations
 are part of that concept: multiplication of component intensities by the same
@@ -150,8 +153,8 @@ command line options:
 <dd>specifies the saturation method to use:
 <table>
 <tr><th>method name</th><th>option value</th></tr>
-<tr><td>Logarithmic</td><td><tt>log </tt></td></tr>
-<tr><td>Spectral   </td><td><tt>spectrum</tt></td></tr>
+<tr><td>Logarithmic</td><td><kbd>log </kbd></td></tr>
+<tr><td>Spectral   </td><td><kbd>spectrum</kbd></td></tr>
 </table>
 
 <p>The default is <b>spectrum</b>
