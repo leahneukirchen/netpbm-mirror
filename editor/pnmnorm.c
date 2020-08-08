@@ -318,12 +318,32 @@ maximumValue(const unsigned int * const hist,
 
 
 
+static unsigned int
+brightnessCount(const unsigned int * const hist,
+                unsigned int         const highest) {
+/*----------------------------------------------------------------------------
+   The number of distinct brightnesses in the image according to
+   histogram 'hist', which goes up to brightness 'highest'.
+-----------------------------------------------------------------------------*/
+    xelval i;
+    unsigned int nonzeroCount;
+
+    for (i = 0, nonzeroCount = 0; i <= highest; ++i) {
+        if (hist[i] > 0)
+            ++nonzeroCount;
+    }
+
+    return nonzeroCount;
+}
+
+
+
 static void
-computeBottomPercentile(unsigned int         hist[],
-                        unsigned int   const highest,
-                        unsigned int   const total,
-                        float          const percent,
-                        unsigned int * const percentileP) {
+computeBottomPercentile(const unsigned int * const hist,
+                        unsigned int         const highest,
+                        unsigned int         const total,
+                        float                const percent,
+                        unsigned int *       const percentileP) {
 /*----------------------------------------------------------------------------
    Compute the lowest index of hist[] such that the sum of the hist[]
    values with that index and lower represent at least 'percent' per cent of
@@ -351,11 +371,11 @@ computeBottomPercentile(unsigned int         hist[],
 
 
 static void
-computeTopPercentile(unsigned int         hist[],
-                     unsigned int   const highest,
-                     unsigned int   const total,
-                     float          const percent,
-                     unsigned int * const percentileP) {
+computeTopPercentile(const unsigned int * const hist,
+                     unsigned int         const highest,
+                     unsigned int         const total,
+                     float                const percent,
+                     unsigned int *       const percentileP) {
 /*----------------------------------------------------------------------------
    Compute the highest index of hist[] such that the sum of the hist[]
    values with that index and higher represent 'percent' per cent of
@@ -506,6 +526,61 @@ disOverlap(xelval   const reqBvalue,
 
 
 
+static xelval
+resolvedPctBvalue(const unsigned int * const hist,
+                  unsigned int         const totalPixelCt,
+                  xelval               const maxval,
+                  struct CmdlineInfo   const cmdline) {
+
+    xelval retval;
+
+    if (cmdline.bsingle)
+        retval = minimumValue(hist, maxval);
+    else if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
+        retval = cmdline.bvalue;
+    } else {
+        xelval percentBvalue;
+
+        computeBottomPercentile(hist, maxval, totalPixelCt, cmdline.bpercent,
+                                &percentBvalue);
+        if (cmdline.bvalueSpec)
+            retval = MIN(percentBvalue, cmdline.bvalue);
+        else
+            retval = percentBvalue;
+    }
+    return retval;
+}
+
+
+
+static xelval
+resolvedPctWvalue(const unsigned int * const hist,
+                  unsigned int         const totalPixelCt,
+                  xelval               const maxval,
+                  struct CmdlineInfo   const cmdline) {
+
+    xelval retval;
+
+    if (cmdline.wsingle)
+        retval = maximumValue(hist, maxval);
+    else if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
+        retval = cmdline.wvalue;
+    } else {
+        xelval percentWvalue;
+
+        computeTopPercentile(hist, maxval, totalPixelCt, cmdline.wpercent,
+                             &percentWvalue);
+        if (cmdline.wvalueSpec)
+            retval = MAX(percentWvalue, cmdline.wvalue);
+        else
+            retval = percentWvalue;
+    }
+
+    return retval;
+}
+
+
+
 static void
 resolvePercentParams(FILE *             const ifP,
                      unsigned int       const cols,
@@ -533,32 +608,17 @@ resolvePercentParams(FILE *             const ifP,
         buildHistogram(ifP, cols, rows, maxval, format, hist,
                        cmdline.brightMethod);
 
-        if (cmdline.bsingle)
-            *bvalueP = minimumValue(hist, maxval);
-        else if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
-            *bvalueP = cmdline.bvalue;
+        if (!cmdline.bvalueSpec && !cmdline.wvalueSpec &&
+            brightnessCount(hist, maxval) < 2) {
+            /* Special case - you can't stretch a single brightness to both
+               ends.  So just don't stretch at all.
+            */
+            *bvalueP = 0;
+            *wvalueP = maxval;
         } else {
-            xelval percentBvalue;
-            computeBottomPercentile(hist, maxval, cols*rows, cmdline.bpercent,
-                                    &percentBvalue);
-            if (cmdline.bvalueSpec)
-                *bvalueP = MIN(percentBvalue, cmdline.bvalue);
-            else
-                *bvalueP = percentBvalue;
-        }
+            *bvalueP = resolvedPctBvalue(hist, cols * rows, maxval, cmdline);
 
-        if (cmdline.wsingle)
-            *wvalueP = maximumValue(hist, maxval);
-        else if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
-            *wvalueP = cmdline.wvalue;
-        } else {
-            xelval percentWvalue;
-            computeTopPercentile(hist, maxval, cols*rows, cmdline.wpercent,
-                                 &percentWvalue);
-            if (cmdline.wvalueSpec)
-                *wvalueP = MAX(percentWvalue, cmdline.wvalue);
-            else
-                *wvalueP = percentWvalue;
+            *wvalueP = resolvedPctWvalue(hist, cols * rows, maxval, cmdline);
         }
         free(hist);
     }
