@@ -6,10 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.92.00
 
-              pbmtext: fix double-free crash with -font .  Introduced in
+              pnmnorm: Fix bug: output too dark when -bpercent and -wpercent
+              indicate overlapping values.  Broken since Netpbm 10.43 (June
+              2008).
+
+              pbmtext: Fix double-free crash with -font .  Introduced in
               Netpbm 10.91 (June 2020).
 
-              pgmtopbm: add -randomseed.
+              pgmtopbm: Add -randomseed.
 
               pcdovtoppm: Fix some garbage from the conversion from csh to sh
               in Netpbm 9.12 (March 2001) in conversion from csh arrays that
@@ -23,7 +27,7 @@ not yet  BJH  Release 10.92.00
 
               pamstereogram: Add -tileable.  Thanks Scott Pakin.
 
-              pcdovtoppm: implement -version, -plain, and -quiet.
+              pcdovtoppm: Implement -version, -plain, and -quiet.
 
               pcdovtoppm: more secure temporary file handling.
 
