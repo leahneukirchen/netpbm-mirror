@@ -1,10 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>Netpbm User Manual</TITLE>
-</HEAD>
-<BODY>
-<H1>Error Handling</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>Netpbm User Manual</title>
+</head>
+<body>
+<h1>Error Handling</h1>
 
 <h2 id="error">Netpbm Programming Library Errors</h2>
 
@@ -96,7 +96,7 @@ setjmp() first, then tell the Netpbm programming library with
 </code>
 </pre>
 
-<P>This example should look really strange to you if you haven't read
+<p>This example should look really strange to you if you haven't read
 the documentation of <b>setjmp()</b>.  Remember that there is a
 hyperjump such that the program is executing the <b>pnm_readpam()</b>
 and then suddenly is returning a second time from the setjmp()!
@@ -138,9 +138,9 @@ appropriate one of these.
 <h4>Overview</h4>
 
 <p>
-<B>void pm_error(</b>
-<b>char *</B> <I>fmt</I><B>,</B>
-<B>... );</B>
+<b>void pm_error(</b>
+<b>char *</b> <i>fmt</i><b>,</b>
+<b>... );</b>
 
 <h4>Example</h4>
 
@@ -152,7 +152,7 @@ if (argc-1 &lt; 3)
 </code>
 </pre>
 
-<P><B>pm_error()</B> is a <B>printf()</B> style routine that 
+<p><b>pm_error()</b> is a <b>printf()</b> style routine that 
 simply throws an error.  It issues an error message exactly like
 <b>pm_errormsg()</b> would in the process.
 
@@ -162,9 +162,9 @@ simply throws an error.  It issues an error message exactly like
 <h4>Overview</h4>
 
 <p>
-<B>void pm_errormsg(</b>
-<b>char *</B> <I>fmt</I><B>,</B>
-<B>... );</B>
+<b>void pm_errormsg(</b>
+<b>char *</b> <i>fmt</i><b>,</b>
+<b>... );</b>
 
 <h4>Example</h4>
 
@@ -176,7 +176,7 @@ if (rc = -1)
 </code>
 </pre>
 
-<P><B>pm_errormsg()</B> is a <B>printf()</B> style routine that 
+<p><b>pm_errormsg()</b> is a <b>printf()</b> style routine that 
 issues an error message.  By default, it writes the message to Standard
 Error, but you can register a user error message routine to be called
 instead, and that might do something such as write the message into a 
@@ -196,7 +196,7 @@ newlines or tabs in it.
 <h4>Overview</h4>
 
 <p>
-<B>void pm_setusererrormsgfn(pm_usererrormsgfn *</B> <I>function</I><B>);</b>
+<b>void pm_setusererrormsgfn(pm_usererrormsgfn *</b> <i>function</i><b>);</b>
 
 <h4>Example</h4>
 
@@ -215,7 +215,7 @@ newlines or tabs in it.
 </code>
 </pre>
 
-<P><B>pm_setusererrormsgfn()</B> registers a handler for error messages,
+<p><b>pm_setusererrormsgfn()</b> registers a handler for error messages,
 called a user error message routine.  Any library function that wants
 to issue an error message in the future will call that function with
 the message as an argument.

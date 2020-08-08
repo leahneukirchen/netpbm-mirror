@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
 <html> <head>
 <title>Libnetbpm Utility Functions</title>
 <meta name="manual_section" content="3">
@@ -8,7 +8,7 @@
 
 <p>Updated: 27 August 2006
 
-<p><A HREF="#toc">Table Of Contents</A>
+<p><a href="#toc">Table Of Contents</a>
 
 <p>These library functions are part of <a href="index.html">Netpbm</a>.
 
@@ -25,23 +25,23 @@ Manual</a>
 
 <p>To use these services, #include <b>pam.h</b>.
 
-<H2 id="functions">Functions</H2>
+<h2 id="functions">Functions</h2>
 
 <h3 id="initialization">Initialization</h3>
 
 <h4>Overview</h4>
 
 <p>
-<B>void pm_init(</B>
-<B>const char * </B><I>progname</I><B>,</B>
-<B>unsigned int </B><I>flags</I>
-<B>);</B>
+<b>void pm_init(</b>
+<b>const char * </b><i>progname</i><b>,</b>
+<b>unsigned int </b><i>flags</i>
+<b>);</b>
 
 <p>
-<B>void pm_proginit(</B>
-<B>int * </B><I>argcP</I><B>,</B>
-<B>char * </B><I>argv</I><B>[]</B>
-<B>);</B>
+<b>void pm_proginit(</b>
+<b>int * </b><i>argcP</i><b>,</b>
+<b>char * </b><i>argv</i><b>[]</b>
+<b>);</b>
 
 <h4>Description</h4>
 
@@ -54,7 +54,7 @@ them from the argument list.
 services, need not invoke <b>pm_proginit</b>.  But such a program
 must invoke <b>pm_init()</b>.
 
-<P>By "Netpbm program," we mean a program that is part of
+<p>By "Netpbm program," we mean a program that is part of
 the Netpbm package or is intended to act like one.  <b>pm_proginit()</b>
 does things that all Netpbm programs do by convention.  For example,
 it scans the argument list for <a href="index.html#commonoptions">
@@ -92,56 +92,56 @@ for backward compatibility and are identical the <b>pm_proginit()</b>.
 <h3 id="file">File Or Image Stream Access</h3>
 
 <h4>Overview</h4>
-<P>
-<B>FILE *pm_openr(</b>
-<b>char *</B> <I>name</I>
-<B>);</B>
+<p>
+<b>FILE *pm_openr(</b>
+<b>char *</b> <i>name</i>
+<b>);</b>
 
-<P>
-<B>FILE *pm_openw(</b>
-<b>char *</B> <I>name</I>
-<B>);</B>
+<p>
+<b>FILE *pm_openw(</b>
+<b>char *</b> <i>name</i>
+<b>);</b>
 
-<P>
-<B>FILE *pm_openr_seekable(</b>
-<b>const char *</B> <I>name</I>
-<B>);</B>
+<p>
+<b>FILE *pm_openr_seekable(</b>
+<b>const char *</b> <i>name</i>
+<b>);</b>
 
-<P>
-<B>FILE *pm_close(</b>
-<b>FILE *</B> <I>fp</I>
-<B>);</B>
+<p>
+<b>FILE *pm_close(</b>
+<b>FILE *</b> <i>fp</i>
+<b>);</b>
 
-<P>
-<B>void pm_tell2(</b>
-<b>FILE * </B> <I>fileP</I><B>,</b>
-<b>pm_filepos *</B> <I>fileposP</I><B>,</b>
+<p>
+<b>void pm_tell2(</b>
+<b>FILE * </b> <i>fileP</i><b>,</b>
+<b>pm_filepos *</b> <i>fileposP</i><b>,</b>
 <b>unsigned int</b> <i>fileposSize</i>
-<B>);</B>
+<b>);</b>
 
-<P>
-<B>unsigned int pm_tell(</b>
-<b>FILE *</B> <I>fileP</I>
-<B>);</B>
+<p>
+<b>unsigned int pm_tell(</b>
+<b>FILE *</b> <i>fileP</i>
+<b>);</b>
 
-<P>
-<B>void pm_seek2(</b>
-<b>FILE * </B> <I>fileP</I><B>,</b>
-<b>const pm_filepos *</B> <I>fileposP</I><B>,</b>
+<p>
+<b>void pm_seek2(</b>
+<b>FILE * </b> <i>fileP</i><b>,</b>
+<b>const pm_filepos *</b> <i>fileposP</i><b>,</b>
 <b>unsigned int</b> <i>fileposSize</i>
-<B>);</B>
+<b>);</b>
 
-<P>
-<B>void pm_seek(</b>
-<b>FILE * </B> <I>fileP</I><B>,</b>
-<b>unsigned long</B> <I>filepos</I>
-<B>);</B>
+<p>
+<b>void pm_seek(</b>
+<b>FILE * </b> <i>fileP</i><b>,</b>
+<b>unsigned long</b> <i>filepos</i>
+<b>);</b>
 
-<P>
-<B>char *pm_read_unknown_size(</b>
-<b>FILE *</B> <I>fp</I><B>,</b>
-<b>long *</B> <I>nread</I>
-<B>);</B>
+<p>
+<b>char *pm_read_unknown_size(</b>
+<b>FILE *</b> <i>fp</i><b>,</b>
+<b>long *</b> <i>nread</i>
+<b>);</b>
 
 
 <h4>Description</h4>
@@ -154,30 +154,30 @@ using the standard large file interface.  Before Netpbm 10.15 (April 2003),
 though, they would fail to open any file that large or process any offset
 in a file that could not be represented in 32 bits.
 
-<p><B>pm_openr()</B> opens the given file for reading, with
-appropriate error checking.  A filename of <B>-</B> is taken to mean
-Standard Input.  <B>pm_openw()</B> opens the given file for writing,
-with appropriate error checking.  <B>pm_close()</B> closes the file
+<p><b>pm_openr()</b> opens the given file for reading, with
+appropriate error checking.  A filename of <b>-</b> is taken to mean
+Standard Input.  <b>pm_openw()</b> opens the given file for writing,
+with appropriate error checking.  <b>pm_close()</b> closes the file
 descriptor, with appropriate error checking.
 
-<P><B>pm_openr_seekable()</B> appears to open the file just like
-<B>pm_openr()</B>, but the file thus opened is guaranteed to be
+<p><b>pm_openr_seekable()</b> appears to open the file just like
+<b>pm_openr()</b>, but the file thus opened is guaranteed to be
 seekable (you can use ftell() and fseek() on it).
-<B>pm_openr_seekable()</B> pulls this off by copying the entire file
+<b>pm_openr_seekable()</b> pulls this off by copying the entire file
 to a temporary file and giving you the handle of the temporary file,
 if it has to.  If the file you name is a regular file, it's already
-seekable so <B>pm_openr_seekable()</B> just does the same thing as
-<B>pm_openr()</B>.
+seekable so <b>pm_openr_seekable()</b> just does the same thing as
+<b>pm_openr()</b>.
 
 But if it is, say, a pipe, it isn't seekable.  So
-<B>pm_openr_seekable()</B> reads the pipe until EOF into a temporary
+<b>pm_openr_seekable()</b> reads the pipe until EOF into a temporary
 file, then opens that temporary file and returns the handle of the
-temporary file.  The temporary file is seekable.  <P> The file
-<B>pm_openr_seekable()</B> creates is one that the operating system
+temporary file.  The temporary file is seekable.  <p> The file
+<b>pm_openr_seekable()</b> creates is one that the operating system
 recognizes as temporary, so when you close the file, by any means, it
 gets deleted.
 
-<P>
+<p>
 You need a seekable file if you intend to make multiple passes through
 the file.  The only alternative is to read the entire image into
 memory and work from that copy.  That may use too much memory.  Note
@@ -186,11 +186,11 @@ memory.  As much as 96 times less space!  Each sample is an integer in
 the buffer, which is usually 96 bits.  In the file, a sample may be as
 small as 1 bit and rarely more than 8 bits.
 
-<P><B>pm_tell2()</B> returns a handle for the current position of the
+<p><b>pm_tell2()</b> returns a handle for the current position of the
 image stream (file), whether it be the header or a row of the raster.
-Use the handle as an argument to <B>pm_seek2()</B> to reposition the
+Use the handle as an argument to <b>pm_seek2()</b> to reposition the
 file there later.  The file must be seekable (which you can ensure by
-opening it with <B>pm_openr_seekable()</B>) or this may fail.
+opening it with <b>pm_openr_seekable()</b>) or this may fail.
 
 <p>The file position handle is of type <b>pm_filepos</b>, which is
 intended to be opaque, i.e. used only with these two functions.  In
@@ -209,145 +209,145 @@ bits.
 <p><b>pm_tell2()</b> and <b>pm_seek2()</b> replaced <b>pm_tell()</b> and
 <b>pm_seek()</b> in Netpbm 10.15 (April 2003).
 
-<P><B>pm_read_unknown_size()</B> reads an entire file or input stream
+<p><b>pm_read_unknown_size()</b> reads an entire file or input stream
 of unknown size to a buffer.  It allocates more memory as needed.  The
-calling routine has to free the allocated buffer with <B>free()</B>.
+calling routine has to free the allocated buffer with <b>free()</b>.
 
-<P><B>pm_read_unknown_size()</B> returns a pointer to the allocated
-buffer.  The <B>nread</B> argument returns the number of bytes read.
+<p><b>pm_read_unknown_size()</b> returns a pointer to the allocated
+buffer.  The <b>nread</b> argument returns the number of bytes read.
 
 
 <h3 id="endian">Endian I/O</h3>
 
 <h4>Entry Points</h4>
 
-<P>
-<B>void pm_readchar(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>char *</B> <I>sP</I>
-<B>);</B>
+<p>
+<b>void pm_readchar(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>char *</b> <i>sP</i>
+<b>);</b>
 
-<P>
-<B>void pm_writechar(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>char</B> <I>s</I>
-<B>);</B>
+<p>
+<b>void pm_writechar(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>char</b> <i>s</i>
+<b>);</b>
 
-<P>
-<B>int pm_readbigshort(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>short *</B> <I>sP</I>
-<B>);</B>
+<p>
+<b>int pm_readbigshort(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>short *</b> <i>sP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writebigshort(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>short</B> <I>s</I>
-<B>);</B>
+<p>
+<b>int pm_writebigshort(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>short</b> <i>s</i>
+<b>);</b>
 
-<P>
-<B>int pm_readbiglong(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>long *</B> <I>lP</I>
-<B>);</B>
+<p>
+<b>int pm_readbiglong(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>long *</b> <i>lP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writebiglong(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>long</B> <I>l</I>
-<B>);</B>
+<p>
+<b>int pm_writebiglong(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>long</b> <i>l</i>
+<b>);</b>
 
-<P>
-<B>int pm_readlittleshort(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>short *</B> <I>sP</I>
-<B>);</B>
+<p>
+<b>int pm_readlittleshort(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>short *</b> <i>sP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writelittleshort(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>short</B> <I>s</I>
-<B>);</B>
+<p>
+<b>int pm_writelittleshort(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>short</b> <i>s</i>
+<b>);</b>
 
-<P>
-<B>int pm_readlittlelong(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>long *</B> <I>lP</I>
-<B>);</B>
+<p>
+<b>int pm_readlittlelong(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>long *</b> <i>lP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writelittlelong(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>long</B> <I>l</I>
-<B>);</B>
+<p>
+<b>int pm_writelittlelong(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>long</b> <i>l</i>
+<b>);</b>
 
-<P>
-<B>void pm_readcharu(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>char *</B> <I>sP</I>
-<B>);</B>
+<p>
+<b>void pm_readcharu(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>char *</b> <i>sP</i>
+<b>);</b>
 
-<P>
-<B>void pm_writecharu(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>char</B> <I>s</I>
-<B>);</B>
+<p>
+<b>void pm_writecharu(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>char</b> <i>s</i>
+<b>);</b>
 
-<P>
-<B>int pm_readbigshortu(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>short *</B> <I>sP</I>
-<B>);</B>
+<p>
+<b>int pm_readbigshortu(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>short *</b> <i>sP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writebigshortu(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>short</B> <I>s</I>
-<B>);</B>
+<p>
+<b>int pm_writebigshortu(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>short</b> <i>s</i>
+<b>);</b>
 
-<P>
-<B>int pm_readbiglongu(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>long *</B> <I>lP</I>
-<B>);</B>
+<p>
+<b>int pm_readbiglongu(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>long *</b> <i>lP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writebiglongu(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>long</B> <I>l</I>
-<B>);</B>
+<p>
+<b>int pm_writebiglongu(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>long</b> <i>l</i>
+<b>);</b>
 
-<P>
-<B>int pm_readlittleshortu(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>short *</B> <I>sP</I>
-<B>);</B>
+<p>
+<b>int pm_readlittleshortu(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>short *</b> <i>sP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writelittleshortu(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>short</B> <I>s</I>
-<B>);</B>
+<p>
+<b>int pm_writelittleshortu(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>short</b> <i>s</i>
+<b>);</b>
 
-<P>
-<B>int pm_readlittlelongu(</b>
-<b>FILE *</B> <I>in</I><B>,</b>
-<b>long *</B> <I>lP</I>
-<B>);</B>
+<p>
+<b>int pm_readlittlelongu(</b>
+<b>FILE *</b> <i>in</i><b>,</b>
+<b>long *</b> <i>lP</i>
+<b>);</b>
 
-<P>
-<B>int pm_writelittlelongu(</b>
-<b>FILE *</B> <I>out</I><B>,</b>
-<b>long</B> <I>l</I>
-<B>);</B>
+<p>
+<b>int pm_writelittlelongu(</b>
+<b>FILE *</b> <i>out</i><b>,</b>
+<b>long</b> <i>l</i>
+<b>);</b>
 
 <h4>Description</h4>
 
-<B>pm_readchar()</B>, <B>pm_writechar()</B>, <B>pm_readbigshort()</B>,
-<B>pm_writebigshort()</B>, <B>pm_readbiglong()</B>,
-<B>pm_writebiglong()</B>, <B>pm_readlittleshort()</B>,
-<B>pm_writelittleshort()</B>, <B>pm_readlittlelong()</B>, and
-<B>pm_writelittlelong()</B> are routines to read and write 1-byte,
+<b>pm_readchar()</b>, <b>pm_writechar()</b>, <b>pm_readbigshort()</b>,
+<b>pm_writebigshort()</b>, <b>pm_readbiglong()</b>,
+<b>pm_writebiglong()</b>, <b>pm_readlittleshort()</b>,
+<b>pm_writelittleshort()</b>, <b>pm_readlittlelong()</b>, and
+<b>pm_writelittlelong()</b> are routines to read and write 1-byte,
 2-byte, and 4-byte pure binary integers in either big- or
 little-endian byte order.  Note that a "long int" C type might
 be wider than 4 bytes, but the "long" routines still read and
@@ -356,7 +356,7 @@ write 4 bytes.
 <p><b>pm_readbiglongu()</b>, etc. (names ending in <b>u</b>) are the same
 except they work on unsigned versions of the type.
 
-<P>The routines with declared return values always return 0.  Before
+<p>The routines with declared return values always return 0.  Before
 Netpbm 10.27 (March 2005), they returned -1 on failure, including EOF.
 Now, they issue an error message to Standard Error and abort the program
 if the I/O fails or encounters EOF.
@@ -364,48 +364,48 @@ if the I/O fails or encounters EOF.
 <p>The 1-byte routines were new in Netpbm 10.27 (March 2005).
 The unsigned versions were new somewhere around Netpbm 10.21 (2004).
 
-<H3 id="maxval">Maxval Arithmetic</H3>
+<h3 id="maxval">Maxval Arithmetic</h3>
 
 <h4>Entry Points</h4>
-<P>
-<B>int pm_maxvaltobits(</b>
-<b>int</B> <I>maxval</I>
-<B>);</B>
+<p>
+<b>int pm_maxvaltobits(</b>
+<b>int</b> <i>maxval</i>
+<b>);</b>
 
-<P>
-<B>int pm_bitstomaxval(</b>
-<b>int</B> <I>bits</I>
-<B>);</B>
+<p>
+<b>int pm_bitstomaxval(</b>
+<b>int</b> <i>bits</i>
+<b>);</b>
 
-<P>
-<B>unsigned int pm_lcm(</b>
-<b>unsigned int</B> <I>x</I><B>,</B>
-<B>unsigned int</B> <I>y</I><B>,</B>
-<B>unsigned int</B> <I>z</I><B>,</B>
-<B>unsigned int</B> <I>limit</I>
-<B>);</B>
+<p>
+<b>unsigned int pm_lcm(</b>
+<b>unsigned int</b> <i>x</i><b>,</b>
+<b>unsigned int</b> <i>y</i><b>,</b>
+<b>unsigned int</b> <i>z</i><b>,</b>
+<b>unsigned int</b> <i>limit</i>
+<b>);</b>
 
 <h4>Description</h4>
 
-<p><B>pm_maxvaltobits()</B> and <B>pm_bitstomaxval()</B> convert
+<p><b>pm_maxvaltobits()</b> and <b>pm_bitstomaxval()</b> convert
 between a maxval and the minimum number of bits required to hold it.
 
-<P><B>pm_lcm()</B> computes the least common multiple of 3 integers.
+<p><b>pm_lcm()</b> computes the least common multiple of 3 integers.
 You also specify a limit and if the LCM would be higher than that
-limit, <B>pm_lcm()</B> just returns that limit.
+limit, <b>pm_lcm()</b> just returns that limit.
 
-<H3 id="gamma">Gamma Arithmetic</H3>
+<h3 id="gamma">Gamma Arithmetic</h3>
 
 <h4>Entry Points</h4>
-<P>
-<B>float pm_gamma709(</b>
-<b>float</B> <I>intensity</I>
-<B>);</B>
+<p>
+<b>float pm_gamma709(</b>
+<b>float</b> <i>intensity</i>
+<b>);</b>
 
-<P>
-<B>float pm_ungamma709(</b>
-<b>float</B> <I>brightness</I>
-<B>);</B>
+<p>
+<b>float pm_ungamma709(</b>
+<b>float</b> <i>brightness</i>
+<b>);</b>
 
 
 <h4>Description</h4>
@@ -444,34 +444,34 @@ value to a gamma-adjusted intensity value (roughly proportional to
 brightness, which is the human subjective perception of intensity),
 using the ITU-R Recommendation BT.709 gamma transfer function.
 
-<P><B>pm_ungamma709</b> is the inverse of <b>pm_gamma709</b>.
+<p><b>pm_ungamma709</b> is the inverse of <b>pm_gamma709</b>.
 
-<H3 id="message">Messages</H3>
+<h3 id="message">Messages</h3>
 
 <h4>Overview</h4>
 
-<P>
-<B>void pm_message(</b>
-<b>char *</B> <I>fmt</I><B>,</B>
-<B>... );</B>
+<p>
+<b>void pm_message(</b>
+<b>char *</b> <i>fmt</i><b>,</b>
+<b>... );</b>
 
 <p>
-<B>void pm_setusermessagefn(pm_usermessagefn *</B> <I>function</I><B>);</b>
+<b>void pm_setusermessagefn(pm_usermessagefn *</b> <i>function</i><b>);</b>
 
 <h4>Description</h4>
 
-<p><B>pm_message()</B> is a <B>printf()</B> style routine to write an
+<p><b>pm_message()</b> is a <b>printf()</b> style routine to write an
 informational message to the Standard Error file stream.
-<B>pm_message()</B> suppresses the message, however, if the user
-specified the <B>-quiet</B> <a href="index.html#commonoptions">common
+<b>pm_message()</b> suppresses the message, however, if the user
+specified the <b>-quiet</b> <a href="index.html#commonoptions">common
 option</a> on the command line.  Note that Netpbm programs are often
 used interactively, but also often used by programs.  In the
 interactive case, it is nice to issue messages about what the program
 is doing, but in the program case, such messages are usually
-undesirable.  By using <B>pm_message()</B> for all your messages, you
+undesirable.  By using <b>pm_message()</b> for all your messages, you
 make your program usable in both cases.  Without any effort on your
 part, program users of your program can avoid the messages by
-specifying the <B>-quiet</B> option.
+specifying the <b>-quiet</b> option.
 
 <p>Netpbm distinguishes between error messages and information
 messages; <b>pm_message()</b> is just for informational messages.  To
@@ -522,12 +522,12 @@ Example:
 <li><a href="libtmpfile.html">pm_tmpfile</a>
 </ul>
 
-<H3 id="keyword">Keyword Matching</H3>
+<h3 id="keyword">Keyword Matching</h3>
 
 <h4>Entry Points</h4>
 
-<P>
-<B>void pm_keymatch();</b>
+<p>
+<b>void pm_keymatch();</b>
 
 <h4>Description</h4>
 
@@ -536,13 +536,13 @@ option processing.  Today, you can do better option processing more
 easily with the shhopt facility.  See any recent program in the Netpbm
 package for an example.
 
-<B>pm_keymatch()</B> does a case-insensitive match of <B>str</B>
-against <B>keyword</B>.  <B>str</B> can be a leading substring of
-<B>keyword</B>, but at least <B>minchars</B> must be present.
+<b>pm_keymatch()</b> does a case-insensitive match of <b>str</b>
+against <b>keyword</b>.  <b>str</b> can be a leading substring of
+<b>keyword</b>, but at least <b>minchars</b> must be present.
 
 
-<HR>
-<H2 id="toc">Table Of Contents</H2>
+<hr>
+<h2 id="toc">Table Of Contents</h2>
 
 <ul>
   <li><a href="#functions">Functions</a>

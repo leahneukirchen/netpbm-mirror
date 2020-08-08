@@ -1,14 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>Libnetpbm PPM Drawing Function Manual</TITLE>
-<META NAME="manual_section" CONTENT="3">
-</HEAD>
-<BODY>
-<H1>Libnetpbm PPM Drawing Function Manual</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>Libnetpbm PPM Drawing Function Manual</title>
+<meta name="manual_section" content="3">
+</head>
+<body>
+<h1>Libnetpbm PPM Drawing Function Manual</h1>
 Updated: April 2018
 <br>
-<p><A HREF="#toc">Table Of Contents</A>
+<p><a href="#toc">Table Of Contents</a>
 <?makeman .SH NAME ?>
 <?makeman libnetpbm_draw \- Libnetpbm PPM Drawing Function Manual ?>
 <?makeman .SH DESCRIPTION ?>
@@ -123,7 +123,7 @@ fill with a pattern.
 
 <h3 id="ppmd_makeLineLeg">ppmd_makeLineLeg</h3>
 
-<P>This function returns a data structure of type <b>ppmd_pathleg</b>, to
+<p>This function returns a data structure of type <b>ppmd_pathleg</b>, to
 be used in a data structure of type <b>ppmd_path</b>, to be use with
 function <b>ppmd_fill_path</b>.
 
@@ -193,14 +193,14 @@ make the path building more efficient.
 <p>This facility was new in Netpbm 10.78 (March 2017).  Before that, you
 have to build the <b>ppmd_path</b> by directly setting its members.
 
-<h3 id="ppmd_path_builder_create">ppmd_path_builder</h3>
+<h3 id="ppmd_pathbuilder_create">ppmd_path_builder</h3>
 
 <p>This creates a <b>ppmd_path_builder</b> object (i.e. allocates memory for
 it and initializes it).  You must ultimately destroy it
 with <b>ppmd_path_builder_destroy</b>.
 
 
-<h3 id="ppmd_path_builder_destroy">ppmd_path_builder_destroy</h3>
+<h3 id="ppmd_pathbuilder_destroy">ppmd_path_builder_destroy</h3>
 
 <p>This destroys a <b>ppmd_path_builder</b> object created with
 <b>ppmd_path_builder_create</b> (i.e. frees the memory).
@@ -432,15 +432,15 @@ can't use the handle after this.
 font to which to set it with a handle such as you get from
 <b>ppmd_read_font</b> or <b>ppmd_get_font</b>.
 
-<HR>
-<H2 id="toc">Table Of Contents</H2>
+<hr>
+<h2 id="toc">Table Of Contents</h2>
 
 <ul>
   <li><a href="#basicfunctions">Basic Functions</a>
     <ul>
       <li><a href="#ppmd_setlinetype">ppmd_setlinetype</a>
       <li><a href="#ppmd_setlineclip">ppmd_setlineclip</a>
-      <li><a href="#ppmd_setline">ppmd_setline</a>
+      <li><a href="#ppmd_line">ppmd_line</a>
       <li><a href="#ppmd_spline3">ppmd_spline3</a>
       <li><a href="#ppmd_polyspline">ppmd_polyspline</a>
       <li><a href="#ppmd_circle">ppmd_circle</a>
@@ -476,5 +476,5 @@ font to which to set it with a handle such as you get from
 
 
 
-</BODY>
-</HTML>
+</body>
+</html>

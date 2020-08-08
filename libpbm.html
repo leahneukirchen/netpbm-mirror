@@ -1,182 +1,182 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>User manual for old pbm functions</TITLE>
-<META NAME="manual_section" CONTENT="3">
-</HEAD>
-<BODY>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>User manual for old pbm functions</title>
+<meta name="manual_section" content="3">
+</head>
+<body>
 
-<H1>pbm Functions</H1>
+<h1>pbm Functions</h1>
 Updated: 8 September 2007
-<BR>
-<A HREF="#index">Table Of Contents</A>
-<H2>NAME</H2>
+<br>
+<a href="#index">Table Of Contents</a>
+<h2>NAME</h2>
 libpbm - libnetpbm functions to read and write PBM image files
 
-<H2 id="synopsis">SYNOPSIS</H2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
-<B>#include &lt;netpbm/pbm.h&gt;</B>
+<b>#include &lt;netpbm/pbm.h&gt;</b>
 
-<P>
-<B>bit **pbm_allocarray(int</B>
-<I>cols</I><B>,  int </B><I>rows</I><B>);</B>
+<p>
+<b>bit **pbm_allocarray(int</b>
+<i>cols</i><b>,  int </b><i>rows</i><b>);</b>
 
-<P>
-<B>bit *pbm_allocrow(int</B>
-<I>cols</I><B>);</B>
+<p>
+<b>bit *pbm_allocrow(int</b>
+<i>cols</i><b>);</b>
 
-<P>
-<B>pbm_freearray(bit </B>
-<B>**</B><I>bits</I><B>, int </B><I>rows</I><B>);</B>
+<p>
+<b>pbm_freearray(bit </b>
+<b>**</b><i>bits</i><b>, int </b><i>rows</i><b>);</b>
 
-<P>
-<B>pbm_freerow(bit</B>
-<B>*</B><I>bitrow</I><B>);</B>
+<p>
+<b>pbm_freerow(bit</b>
+<b>*</b><i>bitrow</i><b>);</b>
 
-<P>
-<B>void pbm_readpbminit(FILE *</B>
-<I>fp</I><B>,
-int *</B><I>colsP</I><B>,
-int *</B><I>rowsP</I><B>,
-int *</B><I>formatP</I><B>);</B>
+<p>
+<b>void pbm_readpbminit(FILE *</b>
+<i>fp</i><b>,
+int *</b><i>colsP</i><b>,
+int *</b><i>rowsP</i><b>,
+int *</b><i>formatP</i><b>);</b>
 
-<P>
-<B>void pbm_readpbmrow(FILE *</B>
-<I>fp</I><B>,
-bit *</B><I>bitrow</I><B>,
-int </B><I>cols</I><B>,
-int </B><I>format</I><B>);</B>
+<p>
+<b>void pbm_readpbmrow(FILE *</b>
+<i>fp</i><b>,
+bit *</b><i>bitrow</i><b>,
+int </b><i>cols</i><b>,
+int </b><i>format</i><b>);</b>
 
-<P>
-<B>void pbm_readpbmrow_packed(FILE *</B>
-<I>fp</I><B>,</B>
+<p>
+<b>void pbm_readpbmrow_packed(FILE *</b>
+<i>fp</i><b>,</b>
 
-<BR>
+<br>
 
-<B>unsigned char * const </B><I>packed_bits</I><B>,</B>
-<B>const int </B><I>cols</I><B>,</B>
-<B>const int </B><I>format</I><B>);</B>
+<b>unsigned char * const </b><i>packed_bits</i><b>,</b>
+<b>const int </b><i>cols</i><b>,</b>
+<b>const int </b><i>format</i><b>);</b>
 
-<P>
-<B>void bit** pbm_readpbm(FILE *</B>
-<I>fp</I><B>, int *</B><I>colsP</I><B>, int *</B><I>rowsP</I><B>);</B>
+<p>
+<b>void bit** pbm_readpbm(FILE *</b>
+<i>fp</i><b>, int *</b><i>colsP</i><b>, int *</b><i>rowsP</i><b>);</b>
 
-<P>
-<B>void pbm_writepbminit(FILE *</B>
-<I>fp</I><B>,
-int </B><I>cols</I><B>,
-int </B><I>rows</I><B>,
-int </B><I>forceplain</I><B>);</B>
+<p>
+<b>void pbm_writepbminit(FILE *</b>
+<i>fp</i><b>,
+int </b><i>cols</i><b>,
+int </b><i>rows</i><b>,
+int </b><i>forceplain</i><b>);</b>
 
-<P>
-<B>void pbm_writepbmrow(FILE *</B>
-<I>fp</I><B>,
-bit *</B><I>bitrow</I><B>,
-int </B><I>cols</I><B>,
-int </B><I>forceplain</I><B>);</B>
+<p>
+<b>void pbm_writepbmrow(FILE *</b>
+<i>fp</i><b>,
+bit *</b><i>bitrow</i><b>,
+int </b><i>cols</i><b>,
+int </b><i>forceplain</i><b>);</b>
 
-<P>
-<B>void pbm_writepbmrow_packed(FILE *</B>
-<I>fp</I><B>,</B>
+<p>
+<b>void pbm_writepbmrow_packed(FILE *</b>
+<i>fp</i><b>,</b>
 
-<BR>
+<br>
 
-<B>unsigned char * const </B><I>packed_bits</I><B>,</B>
-<B>const int </B><I>cols</I><B>,</B>
-<B>const int </B><I>forceplain</I><B>);</B>
+<b>unsigned char * const </b><i>packed_bits</i><b>,</b>
+<b>const int </b><i>cols</i><b>,</b>
+<b>const int </b><i>forceplain</i><b>);</b>
 
-<P>
-<B>void pbm_writepbm(FILE *</B>
-<I>fp</I><B>,
-bit **</B><I>bits</I><B>,
-int </B><I>cols</I><B>,
-int </B><I>rows</I><B>,
-int </B><I>forceplain</I><B>);</B>
+<p>
+<b>void pbm_writepbm(FILE *</b>
+<i>fp</i><b>,
+bit **</b><i>bits</i><b>,
+int </b><i>cols</i><b>,
+int </b><i>rows</i><b>,
+int </b><i>forceplain</i><b>);</b>
 
-<P>
-<B>#define pbm_packed_bytes(</B><I>cols</I><B>) ...</B>
+<p>
+<b>#define pbm_packed_bytes(</b><i>cols</i><b>) ...</b>
 
-<P>
-<B>void pbm_nextimage(</B>
-<B>FILE *</B><I>file</I><B>,</B>
-<B>int * const </B><I>eofP</I><B>);</B>
+<p>
+<b>void pbm_nextimage(</b>
+<b>FILE *</b><i>file</i><b>,</b>
+<b>int * const </b><i>eofP</i><b>);</b>
 
-<P>
-<B>void pbm_check(</B>
-<B>FILE * </B><I>file</I><B>,</B>
-<B>const enum pm_check_type </B><I>check_type</I><B>,</B>
-<B>const int </B><I>format</I><B>,</B>
-<B>const int </B><I>cols</I><B>,</B>
-<B>const int </B><I>rows</I><B>,</B>
-<B>enum pm_check_code * const </B><I>retval</I><B>);</B>
+<p>
+<b>void pbm_check(</b>
+<b>FILE * </b><i>file</i><b>,</b>
+<b>const enum pm_check_type </b><i>check_type</i><b>,</b>
+<b>const int </b><i>format</i><b>,</b>
+<b>const int </b><i>cols</i><b>,</b>
+<b>const int </b><i>rows</i><b>,</b>
+<b>enum pm_check_code * const </b><i>retval</i><b>);</b>
 
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>These library functions are part of <a href="index.html">Netpbm</a>.
 
-<H3 id="types">TYPES AND CONSTANTS</H3>
+<h3 id="types">TYPES AND CONSTANTS</h3>
 
-<B>typedef ... bit;</B>
+<b>typedef ... bit;</b>
 
-<P>
-<B>#define PBM_WHITE ...</B>
+<p>
+<b>#define PBM_WHITE ...</b>
 
-<P>
-<B>#define PBM_BLACK ...</B>
+<p>
+<b>#define PBM_BLACK ...</b>
 
-<P>Each <B>bit</B> should contain only the values of <B>PBM_WHITE</B>
-or <B>PBM_BLACK</B>.
+<p>Each <b>bit</b> should contain only the values of <b>PBM_WHITE</b>
+or <b>PBM_BLACK</b>.
 
-<P><B>#define PBM_FORMAT ...</B>
+<p><b>#define PBM_FORMAT ...</b>
 
-<P><B>#define RPBM_FORMAT ...</B>
+<p><b>#define RPBM_FORMAT ...</b>
 
-<P><B>#define PBM_TYPE PBM_FORMAT</B>
+<p><b>#define PBM_TYPE PBM_FORMAT</b>
 
-<P><B>#define </B>
-<B>PBM_FORMAT_TYPE(</B><I>f</I><B>) ...</B>
+<p><b>#define </b>
+<b>PBM_FORMAT_TYPE(</b><i>f</i><b>) ...</b>
 
-<P>These are for distinguishing different file formats and types.
+<p>These are for distinguishing different file formats and types.
 
-<H3 id="initialization">INITIALIZATION</H3>
+<h3 id="initialization">INITIALIZATION</h3>
 
 <p><b>pbm_init()</b> is obsolete (at least since Netpbm 9.25 (March 2002)).
 Use <a href="libpm.html#initialization"><b>pm_proginit()</b></a> instead.
 
-<P><b>pbm_init()</b> is identical to <b>pm_proginit</b>.
+<p><b>pbm_init()</b> is identical to <b>pm_proginit</b>.
 
-<H3 id="memorymanagement">MEMORY MANAGEMENT</H3>
+<h3 id="memorymanagement">MEMORY MANAGEMENT</h3>
 
-<B>pbm_allocarray()</B> allocates an array of bits.
-<B>pbm_allocrow()</B> allocates a row of the given number of bits.
-<B>pbm_freearray()</B> frees the array allocated with
-<B>pbm_allocarray()</B> containing the given number of rows.
-<B>pbm_freerow()</B> frees a row of bits.
+<b>pbm_allocarray()</b> allocates an array of bits.
+<b>pbm_allocrow()</b> allocates a row of the given number of bits.
+<b>pbm_freearray()</b> frees the array allocated with
+<b>pbm_allocarray()</b> containing the given number of rows.
+<b>pbm_freerow()</b> frees a row of bits.
 
 
-<H3 id="reading">READING PBM IMAGE FILES</H3>
+<h3 id="reading">READING PBM IMAGE FILES</h3>
 
-<P><B>pbm_readpbminit()</B> reads the header from a PBM image in a PBM
+<p><b>pbm_readpbminit()</b> reads the header from a PBM image in a PBM
 file, filling in the rows, cols and format variables.
-<B>pbm_readpbmrow()</B> reads a row of bits into the <I>bitrow </I>
-array.  Format and cols were filled in by <B>pbm_readpbminit()</B>.
+<b>pbm_readpbmrow()</b> reads a row of bits into the <i>bitrow </i>
+array.  Format and cols were filled in by <b>pbm_readpbminit()</b>.
 
-<B>pbm_readpbmrow_packed()</B> is like <B>pbm_readpbmrow()</B> except
-instead of returning a <B>bits</B> array, it returns an array
-<I>packed_bits</I> of bytes with the pixels of the image row packed
+<b>pbm_readpbmrow_packed()</b> is like <b>pbm_readpbmrow()</b> except
+instead of returning a <b>bits</b> array, it returns an array
+<i>packed_bits</i> of bytes with the pixels of the image row packed
 into them.  The pixels are in order from left to right across the row
 and from the beginning of the array to the end.  Within a byte, the
 bits are in order from the most significant bit to the least
 significant bit.  If the number of pixels in the row is not a multiple
 of 8, the last byte returned is padded on the least significant bit
-side with undefined bits.  White is represented by a <B>PBM_WHITE</B>
-bit; black by <B>PBM_BLACK</B>.
+side with undefined bits.  White is represented by a <b>PBM_WHITE</b>
+bit; black by <b>PBM_BLACK</b>.
 
-<P><B>pbm_readpbm()</B> reads an entire bitmap file into memory,
+<p><b>pbm_readpbm()</b> reads an entire bitmap file into memory,
 returning the allocated array and filling in the rows and cols
-variables.  This function combines <B>pbm_readpbminit()</B>,
-<B>pbm_allocarray()</B> and <B>pbm_readpbmrow()</B>.
+variables.  This function combines <b>pbm_readpbminit()</b>,
+<b>pbm_allocarray()</b> and <b>pbm_readpbmrow()</b>.
 
 <p><b>pbm_readpbminit()</b> and <b>pbm_readpbm</b> abort the program with
 a message to Standard Error if the PBM image header is not syntactically
@@ -190,32 +190,32 @@ valid, including if it contains a number too large to be processed using
 the system's normal data structures (to wit, a number that won't fit in
 a C 'int').
 
-<H3 id="writing">WRITING PBM IMAGE FILES</H3>
+<h3 id="writing">WRITING PBM IMAGE FILES</h3>
 
-<B>pbm_writepbminit()</B> writes the header for a PBM image in a PBM
-file.  <I>forceplain</I> is a boolean value specifying that a plain
+<b>pbm_writepbminit()</b> writes the header for a PBM image in a PBM
+file.  <i>forceplain</i> is a boolean value specifying that a plain
 format (text) file to be written, as opposed to a raw format (binary)
-one.  <B>pbm_writepbmrow()</B> writes a row to a PBM file.
-<B>pbm_writepbmrow_packed()</B> is the same as
-<B>pbm_writepbmrow()</B> except that you supply the row to write as an
-array of bytes packed with bits instead of as a <B>bits</B> array.
-The format of <I>packed_bits </I> is the same as that returned by
-<B>pbm_readpbmrow()</B>.
+one.  <b>pbm_writepbmrow()</b> writes a row to a PBM file.
+<b>pbm_writepbmrow_packed()</b> is the same as
+<b>pbm_writepbmrow()</b> except that you supply the row to write as an
+array of bytes packed with bits instead of as a <b>bits</b> array.
+The format of <i>packed_bits </i> is the same as that returned by
+<b>pbm_readpbmrow()</b>.
 
-<P><B>pbm_writepbm()</B> writes the header and all data for a PBM
-image to a PBM file.  This function combines <B>pbm_writepbminit()</B>
-and <B>pbm_writepbmrow()</B>.
+<p><b>pbm_writepbm()</b> writes the header and all data for a PBM
+image to a PBM file.  This function combines <b>pbm_writepbminit()</b>
+and <b>pbm_writepbmrow()</b>.
 
-<H3 id="miscellaneous">MISCELLANEOUS</H3>
+<h3 id="miscellaneous">MISCELLANEOUS</h3>
 
-<P><B>pbm_nextimage()</B> positions a PBM input file to the next image
-in it (so that a subsequent <B>pbm_readpbminit()</B> reads its
+<p><b>pbm_nextimage()</b> positions a PBM input file to the next image
+in it (so that a subsequent <b>pbm_readpbminit()</b> reads its
 header).
 
-<P>Immediately before a call to <B>pbm_nextimage()</B>, the file must
+<p>Immediately before a call to <b>pbm_nextimage()</b>, the file must
 be positioned either at its beginning (i.e. nothing has been read from
 the file yet) or just after an image (i.e. as left by a
-<B>pbm_readpbmrow() </B> of the last row in the image).
+<b>pbm_readpbmrow() </b> of the last row in the image).
 
 <p>Note that in the raw PNM and PAM format, the next image always
 starts immediately after the previous image, so all
@@ -223,82 +223,82 @@ starts immediately after the previous image, so all
 image or the file is positioned at end-of-file.  In plain PNM, though,
 there may be white space between images.
 
-<P>If <B>pbm_nextimage() </B> successfully positions to the next
-image, it returns <B>*</B><I>eofP</I> false (0).  If there is no next
-image in the file, it returns <B>*</B><I>eofP</I> true .  If it can't
+<p>If <b>pbm_nextimage() </b> successfully positions to the next
+image, it returns <b>*</b><i>eofP</i> false (0).  If there is no next
+image in the file, it returns <b>*</b><i>eofP</i> true .  If it can't
 position or determine the file status because of a file error, it
 <a href="liberror.html#error">throws an error</a>.
 
-<P><B>pbm_check()</B> checks for the common file integrity error where
+<p><b>pbm_check()</b> checks for the common file integrity error where
 the file is the wrong size to contain all the image data.
-<B>pbm_check()</B> assumes the file is positioned after an image
-header (as if <B>pbm_readpbminit() </B> was the last operation on the
+<b>pbm_check()</b> assumes the file is positioned after an image
+header (as if <b>pbm_readpbminit() </b> was the last operation on the
 file).  It checks the file size to see if the number of bytes left in
 the file are the number required to contain the image raster.  If the
-file is too short, <B>pbm_check()</B> causes the program t <a
+file is too short, <b>pbm_check()</b> causes the program t <a
 href="liberror.html#error">throws an error</a>.  Otherwise, it returns
-one of the following values (enumerations of the <B>enum
-pm_check_code</B> type) as <B>*</B><I>retval</I>:
+one of the following values (enumerations of the <b>enum
+pm_check_code</b> type) as <b>*</b><i>retval</i>:
 
-<DL COMPACT>
-<DT><B>PM_CHECK_OK</B>
+<dl compact>
+<dt><b>PM_CHECK_OK</b>
 
-<DD>The file's size is exactly what is required to hold the image raster.
+<dd>The file's size is exactly what is required to hold the image raster.
 
-<DT><B>PM_CHECK_UNKNOWN_TYPE</B>
+<dt><b>PM_CHECK_UNKNOWN_TYPE</b>
 
-<DD><I>format</I> is not a format whose size <B>pbm_check()</B> can
-anticipate.  The only format with which <B>pbm_check()</B> can deal is
+<dd><i>format</i> is not a format whose size <b>pbm_check()</b> can
+anticipate.  The only format with which <b>pbm_check()</b> can deal is
 raw PBM format.
 
-<DT><B>PM_CHECK_TOO_LONG</B>
+<dt><b>PM_CHECK_TOO_LONG</b>
 
-<DD>The file is longer than it needs to be to contain the image
+<dd>The file is longer than it needs to be to contain the image
 raster.  The extra data might be another image.
 
-<DT><B>PM_CHECK_UNCHECKABLE</B>
+<dt><b>PM_CHECK_UNCHECKABLE</b>
 
-<DD>The file is not a kind that has a predictable size, so there is no
-simple way for <B>pbm_check()</B> to know if it is the right size.
+<dd>The file is not a kind that has a predictable size, so there is no
+simple way for <b>pbm_check()</b> to know if it is the right size.
 Only a regular file has predictable size.  A pipe is a common example
 of a file that does not.
 
-</DL>
+</dl>
 
-<P><I>check_type</I> must have the value <B>PM_CHECK_BASIC </B> (an
-enumerated value of the <B>pm_check_type</B> enumerated type).
-Otherwise, the effect of <B>pbm_check()</B> is unpredictable.  This
+<p><i>check_type</i> must have the value <b>PM_CHECK_BASIC </b> (an
+enumerated value of the <b>pm_check_type</b> enumerated type).
+Otherwise, the effect of <b>pbm_check()</b> is unpredictable.  This
 argument exists for future backward compatible expansion of the
-function of <B>pbm_check()</B>.
+function of <b>pbm_check()</b>.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="libpgm.html">libpgm</A></B>,
-<B><A HREF="libppm.html">libppm</A></B>,
-<B><A HREF="libpnm.html">libpnm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
+<b><a href="libpgm.html">libpgm</a></b>,
+<b><a href="libppm.html">libppm</a></b>,
+<b><a href="libpnm.html">libpnm</a></b>,
+<b><a href="pbm.html">pbm</a></b>
 
-<H2 id="author">AUTHOR</H2>
+<h2 id="author">AUTHOR</h2>
 
 Copyright (C) 1989, 1991 by Tony Hansen and Jef Poskanzer.
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
+<hr>
+<h2 id="index">Table Of Contents</h2>
 
-<UL>
-<LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#description">DESCRIPTION</A>
-  <UL>
-  <LI><A HREF="#types">TYPES AND CONSTANTS</A>
-  <LI><A HREF="#initialization">INITIALIZATION</A>
-  <LI><A HREF="#memorymanagement">MEMORY MANAGEMENT</A>
-  <LI><A HREF="#reading">READING PBM IMAGE FILES</A>
-  <LI><A HREF="#writing">WRITING PBM IMAGE FILES</A>
-  <LI><A HREF="#miscellaneous">MISCELLANEOUS</A>
-  </UL>
-<LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
-</UL>
-</BODY>
-</HTML>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+  <ul>
+  <li><a href="#types">TYPES AND CONSTANTS</a>
+  <li><a href="#initialization">INITIALIZATION</a>
+  <li><a href="#memorymanagement">MEMORY MANAGEMENT</a>
+  <li><a href="#reading">READING PBM IMAGE FILES</a>
+  <li><a href="#writing">WRITING PBM IMAGE FILES</a>
+  <li><a href="#miscellaneous">MISCELLANEOUS</a>
+  </ul>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

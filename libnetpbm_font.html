@@ -1,16 +1,16 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>Libnetpbm PBM Font Function Manual</TITLE>
-<META NAME="manual_section" CONTENT="3">
-</HEAD>
-<BODY>
-<H1>Libnetpbm PBM Font Function Manual</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>Libnetpbm PBM Font Function Manual</title>
+<meta name="manual_section" content="3">
+</head>
+<body>
+<h1>Libnetpbm PBM Font Function Manual</h1>
 Updated: April 2018
 <br>
-<p><A HREF="#toc">Table Of Contents</A>
+<p><a href="#toc">Table Of Contents</a>
 <?makeman .SH NAME ?>
-<?makeman libnetpbm_draw \- Libnetpbm PPM Drawing Function Manual ?>
+<?makeman libnetpbm_font \- Libnetpbm PBM Font Function Manual ?>
 <?makeman .SH DESCRIPTION ?>
 
 <p>This reference manual covers functions in the <b>libnetpbm</b> library for
@@ -30,7 +30,7 @@ in this facility.
 <p><b>libnetpbm</b> represents a font with an object of type
 <b>struct font</b>.  The library provides functions to create these objects.
   
-<P>The object these functions create is in newly allocated memory and you
+<p>The object these functions create is in newly allocated memory and you
 can't actually free it.  The memory may be in multiple pieces, pointing to
 each other, and <b>libnetpbm</b> provides no destroy function.  (This is only
 because of implementation laziness).
@@ -73,7 +73,7 @@ available in the
 collection named &quot;font-adobe-75dpi&quot;, in a file named
 <b>timR12.pcf.gz</b>.
 
-<P>Ergo, it is likely that the font was copied into Netpbm from that font in
+<p>Ergo, it is likely that the font was copied into Netpbm from that font in
 1991.
 
 <p>You may need a copyright license from the copyright owners of that original
@@ -112,7 +112,7 @@ or <b>pbm_loadbdffont</b> accordingly.
 
 <h3 id="pbm_loadpbmfont"><b>pbm_loadpbmfont</b></h3>
 
-<h3 id="pbm_loadbffont2"><b>pbm_loadbdffont2</b></h3>
+<h3 id="pbm_loadbdffont2"><b>pbm_loadbdffont2</b></h3>
 
 <h3 id="pbm_loadbdffont"><b>pbm_loadbdffont</b></h3>
 
@@ -124,19 +124,19 @@ instead.
 <h3 id="pbm_dumpfont"><b>pbm_dumpfont</b></h3>
 
 
-<HR>
-<H2 id="toc">Table Of Contents</H2>
+<hr>
+<h2 id="toc">Table Of Contents</h2>
 
 <ul>
   <li><a href="#fontobject">Font Object</a>
   <li><a href="#thefunctions">The Functions</a>
     <ul>
-      <li><a href="#pbm_default_font">pbm_default_font</a>
+      <li><a href="#pbm_defaultfont">pbm_defaultfont</a>
       <li><a href="#pbm_dissectfont">pbm_dissectfont</a>
       <li><a href="#pbm_loadfont">pbm_loadfont</a>
       <li><a href="#pbm_loadpbmfont">pbm_loadpbmfont</a>
       <li><a href="#pbm_loadbdffont2">pbm_loadbdffont2</a>
-      <li><a href="#pbm_lodbdffont">pbm_loadbdffont</a>
+      <li><a href="#pbm_loadbdffont">pbm_loadbdfont</a>
       <li><a href="#pbm_expandbdffont">pbm_expandbdffont</a>
       <li><a href="#pbm_dumpfont">pbm_dumpfont</a>
       </ul>
@@ -144,5 +144,5 @@ instead.
 
 
 
-</BODY>
-</HTML>
+</body>
+</html>

@@ -1,62 +1,62 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>The PBM Format</TITLE>
-<META NAME="manual_section" CONTENT="5">
-</HEAD>
-<BODY>
-<H1>pbm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>The PBM Format</title>
+<meta name="manual_section" content="5">
+</head>
+<body>
+<h1>pbm</h1>
 Updated: 27 November 2013
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 pbm - Netpbm bi-level image format
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P>The PBM format is a lowest common denominator monochrome file
+<p>The PBM format is a lowest common denominator monochrome file
 format.  It serves as the common language of a large family of bitmap
 image conversion filters.  Because the format pays no heed to
 efficiency, it is simple and general enough that one can easily
 develop programs to convert to and from just about any other graphics
 format, or to manipulate the image.
 
-<P>The name "PBM" is an acronym derived from "Portable Bit Map."
+<p>The name "PBM" is an acronym derived from "Portable Bit Map."
 
-<P>This is not a format that one would normally use to store a file
+<p>This is not a format that one would normally use to store a file
 or to transmit it to someone -- it's too expensive and not expressive
 enough for that.  It's just an intermediary format.  In it's purest
 use, it lives only in a pipe between two other programs.
 
 <h2 id="layout">THE LAYOUT</h2>
 
-<P>The format definition is as follows.
+<p>The format definition is as follows.
 
-<P>A PBM file consists of a sequence of one or more PBM images. There are
+<p>A PBM file consists of a sequence of one or more PBM images. There are
 no data, delimiters, or padding before, after, or between images.
 
-<P>Each PBM image consists of the following:
+<p>Each PBM image consists of the following:
 
-<UL>
+<ul>
 
-<LI>A "magic number" for identifying the file type.
+<li>A "magic number" for identifying the file type.
 A pbm image's magic number is the two characters "P4".
 
-<LI>Whitespace (blanks, TABs, CRs, LFs).
+<li>Whitespace (blanks, TABs, CRs, LFs).
 
-<LI>The width in pixels of the image, formatted as ASCII characters in decimal.
+<li>The width in pixels of the image, formatted as ASCII characters in decimal.
 
-<LI>Whitespace.
+<li>Whitespace.
 
-<LI>The height in pixels of the image, again in ASCII decimal.
+<li>The height in pixels of the image, again in ASCII decimal.
 
-<LI>A single whitespace character (usually a newline).
+<li>A single whitespace character (usually a newline).
 
-<LI>A raster of Height rows, in order from top to bottom.  Each row is
+<li>A raster of Height rows, in order from top to bottom.  Each row is
 Width bits, packed 8 to a byte, with don't care bits to fill out the
 last byte in the row.  Each bit represents a pixel: 1 is black, 0 is
 white.  The order of the pixels is left to right.  The order of their
@@ -65,7 +65,7 @@ significant bit.  The order of the file bytes is from the beginning of
 the file toward the end of the file.
 
 
-<P>A row of an image is horizontal.  A column is vertical.  The pixels
+<p>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
 
 <li>Before the whitespace character that delimits the raster, any
@@ -76,7 +76,7 @@ of what you might consider a token.  Note also that this means if you
 have a comment right before the raster, the newline at the end of the
 comment is not sufficient to delimit the raster.
 
-</UL>
+</ul>
 
 <p>All characters referred to herein are encoded in ASCII.
 "newline" refers to the character known in ASCII as Line
@@ -86,7 +86,7 @@ calls white space).
 
 
 <h3 id="plainpbm">Plain PBM</h3>
-<P>
+<p>
 There is actually another version of the PBM format, even more
 simplistic, more lavishly wasteful of space than PBM, called Plain
 PBM.  Plain PBM actually came first, but even its inventor couldn't
@@ -103,7 +103,7 @@ here, because you can decode it by inspection.
 default, but the <a href="index.html#commonoptions">common option</a>
 <b>-plain</b> chooses Plain PBM.
 
-<P>The difference is:
+<p>The difference is:
 <ul>
 <li>
 There is exactly one image in a file.
@@ -123,7 +123,7 @@ No line should be longer than 70 characters.
 </ul>
 
 Here is an example of a small image in the plain PBM format.
-<PRE>
+<pre>
 P1
 # feep.pbm
 24 7
@@ -134,14 +134,14 @@ P1
 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0
 0 1 0 0 0 0 0 1 1 1 1 0 0 1 1 1 1 0 0 1 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-</PRE>
+</pre>
 
 <p>There is a newline character at the end of each of these lines.
 
-<P>You can generate the Plain PBM format from the regular PBM format
-(first image in the file only) with the <B>pnmtoplainpnm</B> program.
+<p>You can generate the Plain PBM format from the regular PBM format
+(first image in the file only) with the <b>pnmtoplainpnm</b> program.
 
-<P>Programs that read this format should be as lenient as possible,
+<p>Programs that read this format should be as lenient as possible,
 accepting anything that looks remotely like a bitmap.
 
 
@@ -163,33 +163,33 @@ cases where distinguishing between the particular subformats of PNM is not
 convenient.
 
 
-<H2 id="compatibility">COMPATIBILITY</H2>
+<h2 id="compatibility">COMPATIBILITY</h2>
 
-<P>Before July 2000, there could be at most one image in a PBM file.  As
+<p>Before July 2000, there could be at most one image in a PBM file.  As
 a result, most tools to process PBM files ignore (and don't read) any
 data after the first image.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<B><A HREF="libnetpbm.html">libnetpbm</A></B>,
-<B><A HREF="pnm.html">pnm</A></B>,
-<B><A HREF="pgm.html">pgm</A></B>,
-<B><A HREF="ppm.html">ppm</A></B>,
-<B><A HREF="pam.html">pam</A></B>,
-<B><A HREF="directory.html">programs that process PBM</A></B>
+<b><a href="libnetpbm.html">libnetpbm</a></b>,
+<b><a href="pnm.html">pnm</a></b>,
+<b><a href="pgm.html">pgm</a></b>,
+<b><a href="ppm.html">ppm</a></b>,
+<b><a href="pam.html">pam</a></b>,
+<b><a href="directory.html">programs that process PBM</a></b>
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#layout">THE LAYOUT</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
 <ul>
-  <li><A HREF="#plainpbm">Plain PBM</A>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#layout">THE LAYOUT</a>
+<ul>
+  <li><a href="#plainpbm">Plain PBM</a>
     </ul>
-<li><A HREF="#internetmediatype">INTERNET MEDIA TYPE</A>
-<li><A HREF="#filename">FILE NAME</A>
-<LI><A HREF="#compatibility">COMPATIBILITY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#internetmediatype">INTERNET MEDIA TYPE</a>
+<li><a href="#filename">FILE NAME</a>
+<li><a href="#compatibility">COMPATIBILITY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

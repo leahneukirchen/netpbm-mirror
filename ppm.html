@@ -1,27 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<TITLE>PPM Format Specification</TITLE>
-<META NAME="manual_section" CONTENT="5">
-</HEAD>
-<BODY>
-<H1>ppm</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html>
+<head>
+<title>PPM Format Specification</title>
+<meta name="manual_section" content="5">
+</head>
+<body>
+<h1>ppm</h1>
 Updated: 09 October 2016
-<BR>
-<A HREF="#index">Table Of Contents</A>
+<br>
+<a href="#index">Table Of Contents</a>
 
-<H2>NAME</H2>
+<h2>NAME</h2>
 
 PPM - Netpbm color image format
 
-<H2 id="description">DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P>The PPM format is a lowest common denominator color image file
+<p>The PPM format is a lowest common denominator color image file
 format.
 
-<P>It should be noted that this format is egregiously inefficient.
+<p>It should be noted that this format is egregiously inefficient.
 It is highly redundant, while containing a lot of information that the
 human eye can't even discern.  Furthermore, the format allows very
 little information about the image besides basic color, which means
@@ -30,7 +30,7 @@ information to get any decent use out of it.  However, it is very easy
 to write and analyze programs to process this format, and that is the
 point.
 
-<P>It should also be noted that files often conform to this format in
+<p>It should also be noted that files often conform to this format in
 every respect except the precise semantics of the sample values.
 These files are useful because of the way PPM is used as an
 intermediary format.  They are informally called PPM files, but to be
@@ -38,48 +38,48 @@ absolutely precise, you should indicate the variation from true PPM.
 For example, "PPM using the red, green, and blue colors that the
 scanner in question uses."
 
-<P>The name "PPM" is an acronym derived from "Portable Pixel Map."
+<p>The name "PPM" is an acronym derived from "Portable Pixel Map."
 Images in this format (or a precursor of it) were once also called
 "portable pixmaps."
 
-<H2 id="format">THE FORMAT</H2>
+<h2 id="format">THE FORMAT</h2>
 
-<P>The format definition is as follows.  You can use the <a
+<p>The format definition is as follows.  You can use the <a
 href="libnetpbm.html">libnetpbm</a> C subroutine library to read and
 interpret the format conveniently and accurately.
 
-<P>A PPM file consists of a sequence of one or more PPM images. There are
+<p>A PPM file consists of a sequence of one or more PPM images. There are
 no data, delimiters, or padding before, after, or between images.
 
-<P>Each PPM image consists of the following:
+<p>Each PPM image consists of the following:
 
-<OL>
-<LI>A "magic number" for identifying the file type.
+<ol>
+<li>A "magic number" for identifying the file type.
 A ppm image's magic number is the two characters "P6".
-<LI>
+<li>
 Whitespace (blanks, TABs, CRs, LFs).
-<LI>
+<li>
 A width, formatted as ASCII characters in decimal.
-<LI>
+<li>
 Whitespace.
-<LI>
+<li>
 A height, again in ASCII decimal.
-<LI>
+<li>
 Whitespace.
-<LI>
+<li>
 The maximum color value (Maxval), again in ASCII decimal.  Must be less
 than 65536 and more than zero.
 
-<LI>A single whitespace character (usually a newline).
+<li>A single whitespace character (usually a newline).
 
-<LI>A raster of Height rows, in order from top to bottom.  Each row
+<li>A raster of Height rows, in order from top to bottom.  Each row
 consists of Width pixels, in order from left to right.  Each pixel is
 a triplet of red, green, and blue samples, in that order.  Each sample
 is represented in pure binary by either 1 or 2 bytes.  If the Maxval
 is less than 256, it is 1 byte.  Otherwise, it is 2 bytes.  The most
 significant byte is first.
 
-<P>A row of an image is horizontal.  A column is vertical.  The pixels
+<p>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
      
 <p>In the raster, the sample values are "nonlinear." They are
@@ -100,21 +100,21 @@ organization, the ITU, ca. 2000, the standard was renamed.  This
 document once referred to the standard as CIE Rec. 709, but it isn't
 clear now that CIE ever sponsored such a standard.
 
-<P>Note that another popular color space is the newer sRGB.  A common
+<p>Note that another popular color space is the newer sRGB.  A common
 variation from PPM is to substitute this color space for the one specified.
 You can use <b>pnmgamma</b> to convert between this variation and true PPM.
 
 <p>Note that a common variation from the PPM format is to have the sample
 values be "linear," i.e. as specified above except without
-the gamma adjustment.  <B>pnmgamma</B> takes such a PPM variant as
+the gamma adjustment.  <b>pnmgamma</b> takes such a PPM variant as
 input and produces a true PPM as output.
 
-</OL>
+</ol>
 
 <p>Strings starting with "#" may be comments, the same as
 with <a href="pbm.html">PBM</a>.
 
-<P>Note that you can use <B>pamdepth</B> to convert between a the
+<p>Note that you can use <b>pamdepth</b> to convert between a the
 format with 1 byte per sample and the one with 2 bytes per sample.
 
 <p>All characters referred to herein are encoded in ASCII.
@@ -125,13 +125,13 @@ calls white space).
 
 <h3 id="plainppm">Plain PPM</h3>
 
-<P>There is actually another version of the PPM format that is fairly
+<p>There is actually another version of the PPM format that is fairly
 rare: "plain" PPM format.  The format above, which generally
 considered the normal one, is known as the "raw" PPM format.
-See <B><A HREF="pbm.html">pbm</A></B> for some commentary on how plain
+See <b><a href="pbm.html">pbm</a></b> for some commentary on how plain
 and raw formats relate to one another and how to use them.
 
-<P>The difference in the plain format is:
+<p>The difference in the plain format is:
 
 <ul>
 <li>
@@ -151,8 +151,8 @@ red sample of the next pixel.
 No line should be longer than 70 characters.
 </ul>
 
-<P>Here is an example of a small image in this format.
-<PRE>
+<p>Here is an example of a small image in this format.
+<pre>
 P3
 # feep.ppm
 4 4
@@ -161,11 +161,11 @@ P3
  0  0  0    0 15  7    0  0  0    0  0  0
  0  0  0    0  0  0    0 15  7    0  0  0
 15  0 15    0  0  0    0  0  0    0  0  0
-</PRE>
+</pre>
 
-<P>There is a newline character at the end of each of these lines.
+<p>There is a newline character at the end of each of these lines.
 
-<P>Programs that read this format should be as lenient as possible,
+<p>Programs that read this format should be as lenient as possible,
 accepting anything that looks remotely like a PPM image.
 
 
@@ -187,37 +187,37 @@ cases where distinguishing between the particular subformats of PNM is not
 convenient.
 
 
-<H2 id="compatibility">COMPATIBILITY</H2>
+<h2 id="compatibility">COMPATIBILITY</h2>
 
-<P>Before April 2000, a raw format PPM file could not have a maxval greater
+<p>Before April 2000, a raw format PPM file could not have a maxval greater
 than 255.  Hence, it could not have more than one byte per sample.  Old
 programs may depend on this.
 
-<P>Before July 2000, there could be at most one image in a PPM file.  As
+<p>Before July 2000, there could be at most one image in a PPM file.  As
 a result, most tools to process PPM files ignore (and don't read) any
 data after the first image.
 
-<H2 id="seealso">SEE ALSO</H2>
+<h2 id="seealso">SEE ALSO</h2>
 
-<A HREF="pnm.html">pnm</A>,
-<A HREF="pgm.html">pgm</A>,
-<A HREF="pbm.html">pbm</A>,
-<A HREF="pam.html">pam</A>,
-<A HREF="directory.html">programs that process PPM</A>
+<a href="pnm.html">pnm</a>,
+<a href="pgm.html">pgm</a>,
+<a href="pbm.html">pbm</a>,
+<a href="pam.html">pam</a>,
+<a href="directory.html">programs that process PPM</a>
 
 
-<HR>
-<H2 id="index">Table Of Contents</H2>
-<UL>
-<LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#format">THE FORMAT</A>
+<hr>
+<h2 id="index">Table Of Contents</h2>
 <ul>
-  <li><A HREF="#plainppm">Plain PPM</A>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#format">THE FORMAT</a>
+<ul>
+  <li><a href="#plainppm">Plain PPM</a>
     </ul>
-<li><A HREF="#internetmediatype">INTERNET MEDIA TYPE</A>
-<li><A HREF="#filename">FILE NAME</A>
-<LI><A HREF="#compatibility">COMPATIBILITY</A>
-<LI><A HREF="#seealso">SEE ALSO</A>
-</UL>
-</BODY>
-</HTML>
+<li><a href="#internetmediatype">INTERNET MEDIA TYPE</a>
+<li><a href="#filename">FILE NAME</a>
+<li><a href="#compatibility">COMPATIBILITY</a>
+<li><a href="#seealso">SEE ALSO</a>
+</ul>
+</body>
+</html>

@@ -1,15 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD>
-<TITLE>Ppmtogif User Manual</TITLE></HEAD>
-<BODY>
-<H1>ppmtogif</H1>
-<BR>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Ppmtogif User Manual</title></head>
+<body>
+<h1>ppmtogif</h1>
+
+<h2>NAME</h2>
+
+ppmtogif - replaced by pamtogif
+
+<h2>DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
 <p><b>ppmtogif</b> was replaced in Netpbm 10.37 (December 2006) by
 <b><a href="pamtogif.html">pamtogif</a></b>.
 
-<P><B>pamtogif</b> is mostly backward compatible with <b>ppmtogif</b>.
+<p><b>pamtogif</b> is mostly backward compatible with <b>ppmtogif</b>.
 
-<P>One way <b>pamtogif</b> is not backward compatible with <b>ppmtogif</b>
+<p>One way <b>pamtogif</b> is not backward compatible with <b>ppmtogif</b>
 is that to specify a transparency (alpha) mask with <b>ppmtogif</b>, you
 supply the transparency as a separate pseudo-PGM image and use the
 <b>-alpha</b> option, whereas with <b>pamtogif</b>, you supply an input
@@ -24,7 +31,7 @@ image, then feeding <b>pamtogif</b> the combined image it expects.
 Other than that, the compatibility <b>ppmtogif</b> just passes input and
 options directly to <b>pamtogif</b>.
 
-<P>You should not make any new use of <b>ppmtogif</b> and if you modify an
+<p>You should not make any new use of <b>ppmtogif</b> and if you modify an
 existing use, you should upgrade to <b>pamtogif</b>.  But note that if you
 write a program that might have to be used with old Netpbm, <b>ppmtogif</b> is
 the only way to do that.
@@ -70,8 +77,8 @@ the alpha image need not have the same maxval as the input.
 <b>ppmtogif</b> interprets the alpha file using the alpha file's
 maxval.
 
-<P>You cannot specify both <B>-transparent</B> and <B>-alpha</B>.
+<p>You cannot specify both <b>-transparent</b> and <b>-alpha</b>.
 
 
-</BODY>
-</HTML>
+</body>
+</html>
