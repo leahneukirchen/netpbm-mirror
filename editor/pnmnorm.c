@@ -38,7 +38,7 @@
 
 enum brightMethod {BRIGHT_LUMINOSITY, BRIGHT_COLORVALUE, BRIGHT_SATURATION};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -70,7 +70,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -265,7 +265,12 @@ buildHistogram(FILE *   const ifp,
 static xelval
 minimumValue(const unsigned int * const hist,
              unsigned int         const highest) {
+/*----------------------------------------------------------------------------
+   The minimum brightness in the image, according to histogram 'hist',
+   which goes up to 'highest'.
 
+   Abort the program if there are no pixels of any brightness.
+-----------------------------------------------------------------------------*/
     xelval i;
     bool foundOne;
 
@@ -288,7 +293,12 @@ minimumValue(const unsigned int * const hist,
 static xelval
 maximumValue(const unsigned int * const hist,
              unsigned int         const highest) {
+/*----------------------------------------------------------------------------
+   The maximum brightness in the image, according to histogram 'hist',
+   which goes up to 'highest'.
 
+   Abort the program if there are no pixels of any brightness.
+-----------------------------------------------------------------------------*/
     xelval i;
     bool foundOne;
 
@@ -502,7 +512,7 @@ resolvePercentParams(FILE *             const ifP,
                      unsigned int       const rows,
                      xelval             const maxval,
                      int                const format,
-                     struct cmdlineInfo const cmdline,
+                     struct CmdlineInfo const cmdline,
                      xelval *           const bvalueP,
                      xelval *           const wvalueP) {
 /*----------------------------------------------------------------------------
@@ -562,7 +572,7 @@ computeEndValues(FILE *             const ifP,
                  int                const rows,
                  xelval             const maxval,
                  int                const format,
-                 struct cmdlineInfo const cmdline,
+                 struct CmdlineInfo const cmdline,
                  xelval *           const bvalueP,
                  xelval *           const wvalueP,
                  bool *             const quadraticP,
@@ -629,7 +639,7 @@ computeLinearTransfer(xelval   const bvalue,
     unsigned int val;
     /* The following for structure is a hand optimization of this one:
        for (i = bvalue; i <= wvalue; ++i)
-       newBrightness[i] = (i-bvalue)*maxval/range);
+           newBrightness[i] = (i-bvalue)*maxval/range);
        (with proper rounding)
     */
     for (i = bvalue, val = range/2;
@@ -937,8 +947,8 @@ reportTransferParm(bool   const quadratic,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
-    FILE *ifP;
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
     pm_filepos imagePos;
     xelval maxval;
     int rows, cols, format;
