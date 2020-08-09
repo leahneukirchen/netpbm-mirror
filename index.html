@@ -647,12 +647,14 @@ are specifically for KDE.
 <h3 id="programmingtools">Programming Tools</h3>
 
 <p>If you're writing a program in C to draw and manipulate images, check out
-<a href="http://www.boutell.com/gd">gd</a>.  Netpbm contains a C library for
-drawing images (<b>libnetpbm</b>'s "ppmd" routines), but it is
-probably not as capable or documented as <b>gd</b>.  You can easily run any
-Netpbm program from a C program with the <b>pm_system</b> function from the
-Netpbm programming library, but that is less efficient than <b>gd</b>
-functions that do the same thing.
+<a href="https://github.com/libgd/libgd">gd</a>.  Netpbm contains a C library
+for drawing images (<b>libnetpbm</b>'s "ppmd" routines), but it is 
+not as capable or documented as <b>gd</b>.  There are wrapper libraries
+available for Perl, PHP, and other language.
+
+<p>You can easily run any Netpbm program from a C program with
+the <b>pm_system</b> function from the Netpbm programming library, but that is
+less efficient than <b>gd</b> functions that do the same thing.
 
 <p><a href="http://cairographics.org/">Cairo</a> is similar.
 
@@ -741,8 +743,9 @@ href="http://pyexif.sourceforge.net.">http://pyexif.sourceforge.net.</a>
 Architecture): <a
 href="http://www.forminnovation.com">ImageToolbox</a> ($2500, demo
 available).  This can convert from TIFF -&gt; IOCA and back again.
-<a href="http://www.thethinktanksoftware.com/details.html">Ameri-Imager</a>
-($40 Windows only).
+
+<p><a href="https://ameri-imager.software.informer.com/">Ameri-Imager</a> is
+an image and video editor.  ($40 Windows only).
 
 <p><b>pnm2ppa</b> converts to HP's "Winprinter" format (for
 HP 710, 720, 820, 1000, etc).  It is a superset of Netpbm's
