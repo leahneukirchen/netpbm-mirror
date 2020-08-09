@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.92.00
 
+              pnmnorm: With bounds specified as -bpercent or -bsingle and
+              -wpercent or -wsingle, and the image has only one brightness,
+              don't attempt any normalization - leave image as is.  (Previous
+              version produce all black with -keephues).
+
               pnmnorm: Fix bug: output too dark when -bpercent and -wpercent
               indicate overlapping values.  Broken since Netpbm 10.43 (June
               2008).
