@@ -32,7 +32,7 @@ PORTBINARIES = pamaddnoise pamaltsat pambackground pambrighten pamcomp pamcut \
 	       pnmnlfilt pnmnorm pnmpad pnmpaste \
 	       pnmremap pnmrotate \
 	       pnmscalefixed pnmshear pnmsmooth pnmstitch pnmtile \
-	       ppmbrighten ppmchange ppmcolormask \
+	       ppmchange ppmcolormask \
 	       ppmdim ppmdist ppmdither ppmdraw \
 	       ppmflash ppmlabel ppmmix \
 
@@ -44,7 +44,7 @@ NOMERGEBINARIES =
 MERGEBINARIES = $(PORTBINARIES)
 
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
-SCRIPTS = pnmflip ppmfade ppmquant ppmshadow \
+SCRIPTS = ppmbrighten pnmflip ppmfade ppmquant ppmshadow \
 	  pamstretch-gen pnmmargin pnmquant pnmquantall 
 
 OBJECTS = $(BINARIES:%=%.o)

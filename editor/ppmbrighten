@@ -1,0 +1,23 @@
+#! /bin/sh
+
+pambrightenOpts=''
+normalize='no'
+
+for opt in "$@"; do
+
+    case $opt in
+        -normalize|-normaliz|-normali|-normal|-norma|-norm|-nor|-no|-n)
+            normalize='yes'
+            ;;
+        *)
+            pambrightenOpts="$pambrightenOpts $opt"
+            ;;
+    esac
+done
+
+if test "$normalize" = 'yes'; then
+    pnmnorm -bsingle -wsingle -keephues | \
+        pambrighten $pambrightenOpts | ppmtoppm
+else
+    pambrighten $pambrightenOpts | ppmtoppm
+fi
