@@ -23,6 +23,11 @@ pbmtocis - convert a PBM image to a CompuServe RLE image
 <p><b>pbmtocis</b> reads a PBM image as input and produces a CompuServe
 RLE image as output.
 
+<p>A CompuServe RLE image can be either 128 x 96 pixels or 256 x 192 pixels.
+Anything in excess on the right or bottom is cropped.  If width or height
+is insufficient, padding is added on the right or bottom.  For better
+control of the size adjustment use <b>pamcut</b> or <b>pnmpad</b>.
+
 <h2 id="options">OPTIONS</h2>
 
 <p>In addition to the options common to all programs based on libnetpbm
@@ -45,8 +50,11 @@ pad with white pixels rather than black.
 <h2 id="seealso">SEE ALSO</h2>
 
 <a href="cistopbm.html">cistopbm</a>,
-<a href="pbm.html">pbm</a>,
-<a href="http://staticweb.rasip.fer.hr/research/compress/algorithms_run-length_coding.htm#examples">CompuServe RLE file format</a>
+<a href="pamcut.html">pamcut</a>,
+<a href="pnmpad.html">pnmpad</a>,
+<a href="pbm.html">pbm</a>
+<a href="https://web.archive.org/web/20140721001738/staticweb.rasip.fer.hr/research/compress/algorithms_run-length_coding.htm">CompuServe RLE file format</a>
+
 
 <h2 id="history">HISTORY</h2>
 

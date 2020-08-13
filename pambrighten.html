@@ -12,9 +12,9 @@ pambrighten - change a PPM image's Saturation and Value
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pambrighten</b>
-[<b>-saturation=</b>[<b>+</b>|<b>-</b><i>saturation_percent</i>]]
-[<b>-value=</b>[<b>+</b>|<b>-</b><i>value_percent</i>]]
-<i>netpbmfile</i>
+[<b>-saturation=</b>[<b>+</b>|<b>-</b>]<i>saturation_percent</i>]
+[<b>-value=</b>[<b>+</b>|<b>-</b>]<i>value_percent</i>]
+[<i>netpbmfile</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
@@ -32,6 +32,9 @@ the percentage change for each of those parameters.
 <p>You can also remap the colors of the pixels so their Values cover the full
 range of possible Values.
 
+<p>The input image is from the file named <i>netpbmfile</i>, or Standard
+Input if <i>netpbmfile</i> is not specified.
+  
 <p>The output format is the same as the input format and any extra channels,
 such as transparency, are passed through.
   
