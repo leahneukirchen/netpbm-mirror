@@ -53,7 +53,7 @@ for word in "$@"; do
 done
 
 if test "$normalize" = 'yes'; then
-    pnmnorm -bsingle -wsingle -keephues $infile | \
+    pnmnorm -bsingle -wsingle -colorvalue -keephues $infile | \
         pambrighten $pambrightenOpts | ppmtoppm
 else
     pambrighten $pambrightenOpts $infile | ppmtoppm
