@@ -2,7 +2,7 @@
 <html><head><title>Pnmcrop User Manual</title></head>
 <body>
 <h1>pnmcrop</h1>
-Updated: 04 October 2019
+Updated: 16 August 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -261,7 +261,17 @@ fails if there is no apparent background color in the original image
   <dd>no modification to image
 
   <dt>minimize
-  <dd>output is a single pixel (of the background color)
+    <dd>output is a single row, column, or pixel (of the background color).
+      If you crop both vertically and horizontally (the default), it is a
+      single pixel.  If you crop only vertically, a single row, of the
+      original width.  If you crop only horizontally, it is a single column,
+      of the original height.
+
+      The background can be more than one color when you specify
+      <b>-closeness</b>, so it matters which row, column, or pixel remains.
+      If you crop on the top and not bottom, it is the last row that remains.
+      If you crop on both the top and bottom, it is the middle row that
+      remains.  The other cases follow similarly.
 
   <dt>maxcrop
     <dd>This odd function selects a hypothetical cropping which is not even
