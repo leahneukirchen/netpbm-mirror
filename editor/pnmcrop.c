@@ -1128,7 +1128,8 @@ extremeCrops(struct CmdlineInfo const cmdline,
              unsigned int       const cols,
              unsigned int       const rows) {
 /*----------------------------------------------------------------------------
-   Crops that crop as much as possible, reducing output to a single pixel.
+   Crops that crop as much as possible, reducing output to a single
+   row, column, or pixel.
 -----------------------------------------------------------------------------*/
     CropSet retval;
 
