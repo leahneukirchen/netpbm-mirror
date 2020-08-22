@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.92.00
 
+              pnmcrop: Make -margin effective with -blank-image=minimize.
+
               pnmnorm: With bounds specified as -bpercent or -bsingle and
               -wpercent or -wsingle, and the image has only one brightness,
               don't attempt any normalization - leave image as is.  (Previous
