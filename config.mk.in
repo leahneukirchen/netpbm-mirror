@@ -657,16 +657,6 @@ DLLVER =
 #Cygwin
 #DLLVER = $(NETPBM_MAJOR_RELEASE)
 
-#NETPBM_DOCURL is the URL of the main documentation page for Netpbm.
-#This is a directory which contains a file for each Netpbm program,
-#library, and file type.  E.g. The documentation for jpegtopnm might be in
-#http://netpbm.sourceforge.net/doc/jpegtopnm.html .  This value gets
-#installed in the man pages (which say no more than to read the webpage)
-#and in the Manweb netpbm.url file.
-NETPBM_DOCURL = http://netpbm.sourceforge.net/doc/
-#For a system with no web access, but a local copy of the doc:
-#NETPBM_DOCURL = file:/usr/doc/netpbm/
-
 # RGB_DB_PATH is where Netpbm looks for the color database when the RGBDEF
 # environment variable is not set.  See pm_config.in.h for details.
 RGB_DB_PATH = /usr/local/netpbm/rgb.txt:/usr/share/netpbm/rgb.txt:/etc/X11/rgb.txt:/usr/lib/X11/rgb.txt:/usr/share/X11/rgb.txt:/usr/X11R6/lib/X11/rgb.txt

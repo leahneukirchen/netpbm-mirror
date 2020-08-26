@@ -27,6 +27,9 @@ not yet  BJH  Release 10.92.00
               should have stopped it from working at all, despite reports from
               users that they were using it.
 
+              Configure: remove obsolete question about URL to put in pointer
+              man pages of yesteryear.
+
 20.06.28 BJH  Release 10.91.00
 
               pamstretch-gen: Add -quiet (supposedly added in 10.86, but never
