@@ -280,11 +280,9 @@ ordinary_testprogs="\
   pnmtotiffcmyk \
   pnmtoxwd \
   ppm3d \
-  ppmbrighten \
   ppmchange \
   ppmcie \
   ppmcolormask \
-  ppmcolors \
   ppmdcfont \
   ppmddumpfont \
   ppmdim \
@@ -308,6 +306,7 @@ ordinary_testprogs="\
   ppmshadow \
   ppmshift \
   ppmspread \
+  ppmsvgalib \
   ppmtoacad \
   ppmtoapplevol \
   ppmtoarbtxt \
@@ -318,6 +317,7 @@ ordinary_testprogs="\
   ppmtoilbm \
   ppmtoleaf \
   ppmtolj \
+  ppmtompeg \
   ppmtomitsu \
   ppmtoneo \
   ppmtopcx \
@@ -431,3 +431,5 @@ testExitStatus anytopnm 0 $?
 
 manweb --help > /dev/null
     testExitStatus manweb 0 $?
+
+# We do not test vidtoppm.

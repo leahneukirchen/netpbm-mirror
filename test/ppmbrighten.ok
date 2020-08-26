@@ -1,3 +1,11 @@
+Test 1: Should print 1969633344 101484
 1969633344 101484
-3688219243 101484
+Test 2: Should print 295150171 101484
 295150171 101484
+Test 3: Should print 1
+1
+Test Error: Should print 1 four times
+1
+1
+1
+1

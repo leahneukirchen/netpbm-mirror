@@ -26,14 +26,16 @@ pnmtofits: ok
 pnmtoplainpnm: ok
 pnmtopnm: ok
 pnmtotiff: ok
+ppmbrighten: ok
+ppmcolors: ok
 ppmnorm: ok
 ppmquant: ok
 ppmquantall: ok
 ppmtogif: ok
 ppmtojpeg: ok
 ppmtomap: ok
-ppmtompeg: ok
 ppmtotga: ok
 ppmtouil: ok
 hpcdtoppm: ok
 pcdovtoppm: ok
+pcdindex: ok

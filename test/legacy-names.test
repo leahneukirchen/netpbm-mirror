@@ -83,13 +83,14 @@ ordinary_testprogs="\
   pnmtoplainpnm \
   pnmtopnm \
   pnmtotiff \
+  ppmbrighten \
+  ppmcolors \
   ppmnorm \
   ppmquant \
   ppmquantall \
   ppmtogif \
   ppmtojpeg \
   ppmtomap \
-  ppmtompeg \
   ppmtotga \
   ppmtouil \
 "
@@ -125,10 +126,13 @@ for i in $ordinary_testprogs
 
 
 
-# Test hpcdtoppm and pcdovtoppm.  Simply confirm their existence.
+# Test hpcdtoppm, pcdovtoppm and pcdindex.  Simply confirm their existence.
 
 type -p hpcdtoppm > /dev/null
 testExitStatus hpcdtoppm 0 $?
 
 type -p pcdovtoppm > /dev/null
 testExitStatus pcdovtoppm 0 $?
+
+type -p pcdindex > /dev/null
+testExitStatus pcdindex 0 $?

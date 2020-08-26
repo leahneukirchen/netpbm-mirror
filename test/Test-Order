@@ -83,6 +83,7 @@ pnmremap2.test
 pnmquant.test
 pnmquantall.test
 pnmtile.test
+pambrighten.test
 ppmbrighten.test
 ppmdither.test
 ppmrelief.test
