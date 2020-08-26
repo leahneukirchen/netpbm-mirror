@@ -44,7 +44,7 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "verbose",  OPT_STRING, NULL, 
+    OPTENT3(0, "verbose",  OPT_STRING, NULL,
             &cmdlineP->verbose, 0);
 
     opt.opt_table = option_def;
@@ -100,7 +100,7 @@ createSampleMap(sample   const oldMaxval,
 static void
 transformRaster(struct pam * const inpamP,
                 struct pam * const outpamP) {
-                
+
     tuple * tuplerow;
     unsigned int row;
     sample * sampleMap;  /* malloc'ed */
@@ -152,16 +152,16 @@ main(int argc, const char * argv[]) {
         pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
         outpam = inpam;  /* initial value */
-        
+
         outpam.file = stdout;
         outpam.maxval = cmdline.newMaxval;
-        
+
         if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE) {
             pm_message( "promoting from PBM to PGM" );
             outpam.format = PGM_TYPE;
         } else
             outpam.format = inpam.format;
-        
+
         pnm_writepaminit(&outpam);
 
         transformRaster(&inpam, &outpam);
@@ -173,3 +173,6 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
+
+
+
