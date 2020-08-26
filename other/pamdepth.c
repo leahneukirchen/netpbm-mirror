@@ -63,8 +63,8 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("New maxval must be at least 1.  You specified %d",
                      intval);
         else if (intval > PNM_OVERALLMAXVAL)
-            pm_error("newmaxval (%d) is too large.\n"
-                     "The maximum allowed by the PNM formats is %d.",
+            pm_error("newmaxval (%d) is too large.  "
+                     "The maximum allowed by the PNM formats is %u.",
                      intval, PNM_OVERALLMAXVAL);
         else
             cmdlineP->newMaxval = intval;
