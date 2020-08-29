@@ -13,6 +13,9 @@ not yet  BJH  Release 10.92.00
               don't attempt any normalization - leave image as is.  (Previous
               version produce all black with -keephues).
 
+              pamdepth: fix bug: doesn't work on PAM with black and white
+              tuple type.
+
               pnmnorm: Fix bug: output too dark when -bpercent and -wpercent
               indicate overlapping values.  Broken since Netpbm 10.43 (June
               2008).

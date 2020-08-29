@@ -13,6 +13,7 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 #include "pam.h"
 
@@ -157,10 +158,18 @@ main(int argc, const char * argv[]) {
         outpam.maxval = cmdline.newMaxval;
 
         if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE) {
-            pm_message( "promoting from PBM to PGM" );
             outpam.format = PGM_TYPE;
         } else
             outpam.format = inpam.format;
+
+        if (streq(inpam.tuple_type, PAM_PBM_TUPLETYPE)) {
+            pm_message("promoting from black and white to grayscale");
+            strcpy(outpam.tuple_type, PAM_PGM_TUPLETYPE);
+        } else if (streq(inpam.tuple_type, PAM_PBM_ALPHA_TUPLETYPE)) {
+            pm_message("promoting from black and white to grayscale");
+            strcpy(outpam.tuple_type, PAM_PGM_ALPHA_TUPLETYPE);
+        } else
+            strcpy(outpam.tuple_type, inpam.tuple_type);
 
         pnm_writepaminit(&outpam);
 
