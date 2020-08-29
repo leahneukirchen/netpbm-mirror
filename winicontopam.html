@@ -2,7 +2,7 @@
 <html><head><title>Winicontopam User Manual</title></head>
 <body>
 <h1>winicontopam</h1>
-Updated: 12 April 2013
+Updated: 29 August 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -28,12 +28,21 @@ its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>winicontopam</b> reads a Microsoft Windows icon file and
-converts it to one or more RGB_ALPHA Netpbm PAM images.
+<p><b>winicontopam</b> reads a Microsoft Windows icon file and converts it to
+one or more RGB_ALPHA Netpbm PAM images.
 
-<p>The transparency channel is copied from the 8-bit transparency data from
-the icon, if present.  If no 8-bit transparency data is available, the
-transparency channel is constructed from the so-called "AND mask".
+<p>There are two kinds of transparency information a a Windows icon can have:
+and mask and graded transparency map.  The and mask is older and indicates for
+each pixel whether it is fully opaque or fully transparent.  The graded
+transparency map can indicate translucent values too.  The graded transparency
+map is present in an icon that uses PNG encoding or uses BMP encoding with 32
+bits per pixel.
+
+<p>The transparency plane in the PAM output of <b>winicontopam</b> comes from
+  the graded transparency map if it exists and the and mask otherwise.
+
+<p>An icon may actually have both forms of transparency information.  See
+<b>-andmasks</b>.
 
 <p>The output goes to Standard Output.
 
@@ -70,9 +79,11 @@ image (largest, then most bits per pixel).
 
 <dt><b>-andmasks</b>
 
-<dd>If the image to be extracted contains both 8-bit transparency
-data and AND mask, produce five-channel Netpbm PAM images with the AND
-mask as the fifth plane.
+<dd>If the image to be extracted contains both graded transparency data and an
+AND mask, produce five-channel Netpbm PAM images with the AND mask as the
+fifth plane.  An image that formally has graded transparency data, but it
+indicates nothing but opaque pixels is considered not to have graded
+transparency data, so <b>-andmasks</b> would have no effect on it.
 
 <dt><b>-verbose</b>
 
