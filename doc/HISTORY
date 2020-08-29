@@ -4,9 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.08.29 BJH  Release 10.91.02
+
+              pamdepth: fix bug: doesn't work on PAM with black and white
+              tuple type.
+
+              pnmnorm: Fix bug: output too dark when -bpercent and -wpercent
+              indicate overlapping values.  Broken since Netpbm 10.43 (June
+              2008).
+
 20.07.21 BJH  Release 10.91.01
 
-              pbmtext: fix double-free crash with -font .  Introduced in
+              pbmtext: Fix double-free crash with -font .  Introduced in
               Netpbm 10.91 (June 2020).
 
               pcdovtoppm: Fix some garbage from the conversion from csh to sh
@@ -21,7 +30,7 @@ CHANGE HISTORY
 
               pamstereogram: Add -tileable.  Thanks Scott Pakin.
 
-              pcdovtoppm: implement -version, -plain, and -quiet.
+              pcdovtoppm: Implement -version, -plain, and -quiet.
 
               pcdovtoppm: more secure temporary file handling.
 
