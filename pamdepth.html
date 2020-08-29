@@ -2,7 +2,7 @@
 <html><head><title>Pamdepth User Manual</title></head>
 <body>
 <h1>pamdepth</h1>
-Updated: 19 December 2013
+Updated: 26 August 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -44,6 +44,25 @@ rely on that.  If you specify a <i>newmaxval</i> less than 256, the
 resulting file should be readable by any program that worked with PNM
 files before April 2000.
 
+<h3 id="output_format">Output Format</h3>
+
+<p>The output format (PBM, etc.) and, in the case of PAM, tuple type, of the
+output is usually the same as the input.
+
+<p>However, changing the depth of a black and white image does not make
+sense, except to turn it into a grayscale image, so if the input is a black
+and white image, <b>pamdepth</b> makes the output grayscale.  To be more
+precise, if the input is a PBM image, the output is PGM, and if the input
+is a PAM with tuple type BLACK_AND_WHITE or BLACK_AND_WHITE_ALPHA, the
+output is a PAM with tuple type GRAYSCALE or GRAYSCALE_ALPHA, respectively.
+
+<p>This conversion happens even if the new maxval is 1.
+
+<p>Before Netpbm 10.92 (September 2020), <b>pamdepth</b> failed if the input
+was PAM with a black and white tuple type and the new maxval was anything but
+1.  But it always promoted PBM to PGM.
+
+  
 <h2 id="options">OPTIONS</h2>
 
 <p>There are no command line options defined specifically

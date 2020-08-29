@@ -218,7 +218,7 @@ in Row 1 is one at the top of the image rather than the bottom).
 
 <p>Tuple type never determines how many samples are in a tuple (that is
 instead determined by the DEPTH header line).  Tuple type could be said to
-imply a depth (number of samples per tuple)it because certain tuple types are
+imply a depth (number of samples per tuple) because certain tuple types are
 valid only in combination with certain DEPTH values, but it is good
 programming practice to use DEPTH for the depth when decoding the raster and
 separately validate that the depth is consistent with the tuple type.  Also,
@@ -263,7 +263,7 @@ image.  The first plane represents red, the second green, and the third blue.
 contains transparency information.  In that variation, the tuple type
 has "_ALPHA" added to it (e.g. "RGB_ALPHA") and one
 more plane.  The highest numbered plane is the opacity plane (sometimes
-called an transparency plane or transparency plane).
+called an alpha plane or transparency plane).
 
 <p>In this kind of image, the color represented by a pixel is actually
 a combination of an explicitly specified foreground color and a background

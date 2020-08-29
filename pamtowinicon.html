@@ -47,11 +47,15 @@ line options:
 <dl compact>
 <dt><b>-pngthreshold=</b><i>threshold</i>
 
-<dd><b>pamtowinicon</b> encodes images with resolutions above or equal <i>threshold</i> by <i>threshold</i> as PNG by running
+<dd><b>pamtowinicon</b> encodes images with resolutions above or
+equal <i>threshold</i> by <i>threshold</i> as PNG by running
 <a href="pnmtopng.html"><b>pnmtopng</b></a>.  Other images it encodes
 using the more traditional BMP format.
 
-<p>When the program uses PNG encoding for a 5-channel PAM with separate AND mask (see below), it discards the AND mask.
+<p>When the program uses PNG encoding for a 5-channel PAM with separate AND
+mask (see below), it discards the AND mask.  Because PNG has always had the
+ability to specify transparency, the Windows icon format does not provide for
+a separate and mask when the icon is encoded in PNG.
 
 <p>The default value for <i>threshold</i> is 128.
 
@@ -79,8 +83,8 @@ as input and outputs an single Windows icon file containing those images.
 <h3 id="paminput">PAM Input</h3>
 
 <p>
-<b>pamtowinicon</b> interprets the PAM images as follows, based on
-the number of channels.
+<b>pamtowinicon</b> interprets the PAM images as follows, based on the number
+of channels.
 
 <table style="text-align=center" border=1>
 <?makeman l l. ?>
