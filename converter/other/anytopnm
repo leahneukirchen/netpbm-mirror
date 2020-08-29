@@ -538,7 +538,7 @@ else
 fi
 
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/anytopnm.XXXXXXXX") ||
-    ( echo "Could not create temporary file. Exiting." 1>&2; exit 1; ) 
+    { echo "Could not create temporary file. Exiting." 1>&2; exit 1; }
 trap 'rm -rf $tempdir' 0
 
 # Take out all spaces

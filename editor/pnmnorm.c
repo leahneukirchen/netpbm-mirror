@@ -485,7 +485,7 @@ disOverlap(xelval   const reqBvalue,
             }
         } else {
             /* Both ends are free; use the point halfway between them. */
-            xelval const midPoint = (reqWvalue + reqBvalue + maxval/2)/2;
+            xelval const midPoint = (reqWvalue + reqBvalue)/2;
             *nonOlapBvalueP = MIN(midPoint, maxval-1);
             *nonOlapWvalueP = *nonOlapBvalueP + 1;
         }

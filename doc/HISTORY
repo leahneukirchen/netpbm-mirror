@@ -4,7 +4,24 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-20.06.27 BJH  Relese 10.86.15
+20.08.29 BJH  Release 10.86.16
+
+              anytopnm, pnmmargin: Fail properly when unable to create
+              temporary file.  Broken in Netpbm 10.75 (June 2016).
+
+              pamdepth: fix bug: doesn't work on PAM with black and white
+              tuple type.
+
+              pnmnorm: Fix bug: output too dark when -bpercent and -wpercent
+              indicate overlapping values.  Broken since Netpbm 10.43 (June
+              2008).
+
+              pcdovtoppm: Fix some garbage from the conversion from csh to sh
+              in Netpbm 9.12 (March 2001) in conversion from csh arrays that
+              should have stopped it from working at all, despite reports from
+              users that they were using it.
+
+20.06.27 BJH  Release 10.86.15
 
               winicontoppm: Fix undefined behavior for various invalid input.
               Always broken.  Winicontoppm was new in Netpbm 9.3 (June 2000).
