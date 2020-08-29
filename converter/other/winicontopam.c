@@ -106,7 +106,7 @@ parseCommandLine(int argc, const char **argv,
 
 
 
-static unsigned char const pngHeader[] = PNG_HEADER;
+static unsigned char const pngSignature[] = PNG_SIGNATURE;
 
 
 
@@ -613,7 +613,10 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                  uint16_t                  const index,
                  bool *                    const haveAlphaP,
                  uint32_t *                const bytesConsumedP) {
-
+/*----------------------------------------------------------------------------
+   Return as *haveAlphaP whether the Xor mask indicates the pixels are
+   anything but fully opaque.
+-----------------------------------------------------------------------------*/
     uint32_t   bitfields[4];
     uint8_t    shift    [4];
     sample     maxval   [4];
@@ -780,12 +783,21 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
     bytesConsumed += truncatedXorSize;
 
     /*  A fully transparent alpha channel (all zero) in XOR mask is
-        defined to be void by Microsoft, and a fully opaque alpha
-        channel (all maxval) is trivial and will be dropped.
+        defined to be void by Microsoft.
     */
+    if (verbose) {
+        if (allTransparent)
+            pm_message("image %2u: All pixels are nominally coded in the "
+                       "transparency map as fully transparent, "
+                       "which is defined by the format to mean they "
+                       "are all opaque", index);
+        if (allOpaque)
+            pm_message("image %2u: All pixels are fully opaque "
+                       "in the transparency map", index);
+    }
     *haveAlphaP = !allTransparent && !allOpaque;
 
-    if (!allTransparent && verbose) {
+    if (!allTransparent && ! allOpaque && verbose) {
         unsigned int i;
         unsigned int c;
 
@@ -809,7 +821,16 @@ readAnd(struct BitmapInfoHeader * const hdrP,
         uint16_t                  const index,
         unsigned int              const plane,
         sample                    const maxval) {
+/*----------------------------------------------------------------------------
+  Fill in plane 'plane' of the tuple array 'tuples' according to the and
+  mask of a Windows icon.  Where the and mask for a pixel is 1, set the
+  plane to 'maxval'; where it is zero, set it to zero.
 
+  'bitmap' is the and mask, in a format describe dby *hdrP.
+
+  'index' is the position of the icon in question in the Windows icon file --
+  the first image in the file is 0, second is 1, etc.
+-----------------------------------------------------------------------------*/
     int16_t  row;
     uint32_t bytesConsumed;
     uint32_t bytesPerRow;
@@ -938,7 +959,13 @@ readXorMask(struct BitmapInfoHeader * const hdrP,
             uint32_t *                const bytesConsumedP) {
 /*----------------------------------------------------------------------------
    Read the so-called XOR mask (for non-monochrome images, this is the
-   color pixmap)
+   color pixmap, which may include transparency).
+
+   Return the pixels as 'tuples', an array whose width and height are
+   given by *hdrP and depth is 4.
+
+   Return as *haveAlphaP whether the Xor mask indicates the pixels are
+   anything but fully opaque.
 -----------------------------------------------------------------------------*/
     /*  preset the PAM with fully opaque black (just in case the image
         is truncated and not all pixels are filled in below).
@@ -1054,9 +1081,9 @@ convertBmp(const unsigned char * const image,
     offset += xorByteCt;
 
     {
-        /* If there is no alpha channel in XOR mask, store the AND mask to
-           the transparency plane.  Else, here are two transparency
-           maps. If requested, store the AND mask to a fifth PAM plane
+        /* If there is no alpha channel in the XOR mask, use the AND mask as
+           the transparency plane.  Else, there are two transparency
+           maps. If requested, return the AND mask as a fifth PAM plane.
         */
         bool haveAnd;
         unsigned int andPlane;
@@ -1095,15 +1122,15 @@ reportPngInfo(const unsigned char * const image,
 
     struct PngIhdr ihdr;
 
-    ihdr.length      = u32_be (image, sizeof(pngHeader)  +0);
-    ihdr.signature   = u32_xx (image, sizeof(pngHeader)  +4);
-    ihdr.width       = u32_be (image, sizeof(pngHeader)  +8);
-    ihdr.height      = u32_be (image, sizeof(pngHeader) +12);
-    ihdr.bit_depth   = u8_be  (image, sizeof(pngHeader) +16);
-    ihdr.color_type  = u8_be  (image, sizeof(pngHeader) +17);
-    ihdr.compression = u8_be  (image, sizeof(pngHeader) +18);
-    ihdr.filter      = u8_be  (image, sizeof(pngHeader) +19);
-    ihdr.interlace   = u8_be  (image, sizeof(pngHeader) +20);
+    ihdr.length      = u32_be (image, sizeof(pngSignature)  +0);
+    ihdr.signature   = u32_xx (image, sizeof(pngSignature)  +4);
+    ihdr.width       = u32_be (image, sizeof(pngSignature)  +8);
+    ihdr.height      = u32_be (image, sizeof(pngSignature) +12);
+    ihdr.bit_depth   = u8_be  (image, sizeof(pngSignature) +16);
+    ihdr.color_type  = u8_be  (image, sizeof(pngSignature) +17);
+    ihdr.compression = u8_be  (image, sizeof(pngSignature) +18);
+    ihdr.filter      = u8_be  (image, sizeof(pngSignature) +19);
+    ihdr.interlace   = u8_be  (image, sizeof(pngSignature) +20);
 
     if ((ihdr.length != 13)
         || ihdr.signature != *(uint32_t*)"IHDR") {
@@ -1246,7 +1273,7 @@ convertImage(struct File *         const icoP,
 
     image = readImage(icoP, dirEntryP);
 
-    if (MEMEQ(image, pngHeader, sizeof (pngHeader)))
+    if (MEMEQ(image, pngSignature, sizeof (pngSignature)))
         convertPng(image, ofP, dirEntryP);
     else
         convertBmp(image, ofP, dirEntryP, needHeaderDump, wantAndMaskPlane);
