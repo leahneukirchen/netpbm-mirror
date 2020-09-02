@@ -10,7 +10,7 @@
   ENHANCEMENT IDEAS:
 
   1) speed up by doing integer arithmetic instead of floating point for
-  multiply/divide where possible.  Especially when multiplying by an 
+  multiply/divide where possible.  Especially when multiplying by an
   integer.
 
   2) speed up by not transforming the raster in the idempotent cases
@@ -78,7 +78,7 @@ parseHex(const char * const hexString) {
     return retval;
 }
 
-         
+
 
 static void
 parseCommandLine(int argc, const char ** const argv,
@@ -103,7 +103,7 @@ parseCommandLine(int argc, const char ** const argv,
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "multiplier", OPT_FLOAT,  &cmdlineP->u.multiplier, 
+    OPTENT3(0,   "multiplier", OPT_FLOAT,  &cmdlineP->u.multiplier,
             &multiplierSpec, 0);
     OPTENT3(0,   "divisor",    OPT_FLOAT,  &cmdlineP->u.divisor,
             &divisorSpec,    0);
@@ -150,12 +150,12 @@ parseCommandLine(int argc, const char ** const argv,
     if (multiplierSpec) {
         cmdlineP->function = FN_MULTIPLY;
         if (cmdlineP->u.multiplier < 0)
-            pm_error("Multiplier must be nonnegative.  You specified %f", 
+            pm_error("Multiplier must be nonnegative.  You specified %f",
                      cmdlineP->u.multiplier);
     } else if (divisorSpec) {
         cmdlineP->function = FN_DIVIDE;
         if (cmdlineP->u.divisor < 0)
-            pm_error("Divisor must be nonnegative.  You specified %f", 
+            pm_error("Divisor must be nonnegative.  You specified %f",
                      cmdlineP->u.divisor);
     } else if (adderSpec) {
         cmdlineP->function = FN_ADD;
@@ -180,20 +180,20 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->function = FN_SHIFTLEFT;
     } else if (shiftrightSpec) {
         cmdlineP->function = FN_SHIFTRIGHT;
-    } else 
+    } else
         pm_error("You must specify one of -multiplier, -divisor, "
                  "-adder, -subtractor, -min, -max, "
                  "-and, -or, -xor, -not, -shiftleft, or -shiftright");
-        
+
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  File spec is the only argument.",
                  argc-1);
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
-    else 
+    else
         cmdlineP->inputFileName = argv[1];
-    
+
     free(option_def);
 }
 
@@ -329,7 +329,7 @@ applyFunction(struct CmdlineInfo const cmdline,
            1/cmdline.u.divisor instead of divide by cmdline.u.divisor,
            so we compute that here.  Note that if the function isn't
            divide, both cmdline.u.divisor and oneOverDivisor are
-           meaningless.  
+           meaningless.
         */
     unsigned int col;
 
@@ -381,7 +381,7 @@ applyFunction(struct CmdlineInfo const cmdline,
             outputRow[col][plane] = MIN(outpam.maxval, outSample);
         }
     }
-}                
+}
 
 
 
@@ -432,7 +432,7 @@ main(int argc, const char *argv[]) {
     pnm_freepamrow(inputRow);
     pm_close(inpam.file);
     pm_close(outpam.file);
-    
+
     return 0;
 }
 
