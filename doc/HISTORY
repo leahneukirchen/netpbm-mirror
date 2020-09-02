@@ -11,7 +11,10 @@ not yet  BJH  Release 10.92.00
               pnmnorm: With bounds specified as -bpercent or -bsingle and
               -wpercent or -wsingle, and the image has only one brightness,
               don't attempt any normalization - leave image as is.  (Previous
-              version produce all black with -keephues).
+              version produces all black with -keephues).
+
+              pamfunc: Fix always wrong output with -not.  Always broken.
+              (-not was new in Netpbm 10.40 (September 2007)).
 
               pamdepth: fix bug: doesn't work on PAM with black and white
               tuple type.

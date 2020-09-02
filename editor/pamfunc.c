@@ -368,7 +368,7 @@ applyFunction(struct CmdlineInfo const cmdline,
                 outSample = inSample ^ cmdline.u.mask;
                 break;
             case FN_NOT:
-                outSample = ~inSample;
+                outSample = ~inSample & outpam.maxval;
                 break;
             case FN_SHIFTLEFT:
                 outSample =
