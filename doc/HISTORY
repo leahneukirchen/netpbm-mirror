@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.09.05 BJH  Release 10.91.03
+
+              pamfunc: Fix always wrong output with -not.  Always broken.
+              (-not was new in Netpbm 10.40 (September 2007)).
+
+              ximtoppm: Fix bug: invalid memory references with pathological
+              image input.  Broken in Netpbm 10.91.00 (June 2020).
+
 20.08.29 BJH  Release 10.91.02
 
               pamdepth: fix bug: doesn't work on PAM with black and white
