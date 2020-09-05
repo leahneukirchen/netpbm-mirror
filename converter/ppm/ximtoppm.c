@@ -125,9 +125,9 @@ ReadXimHeader(FILE *     const in_fp,
 #endif
     header->bits_channel = atoi(a_head.bits_per_channel);
     header->alpha_flag = atoi(a_head.alpha_channel);
-    pm_asprintf(&header->author,  a_head.author);
-    pm_asprintf(&header->date,    a_head.date);
-    pm_asprintf(&header->program, a_head.program);
+    header->author = pm_strdup(a_head.author);
+    header->date = pm_strdup(a_head.date);
+    header->program = pm_strdup(a_head.program);
 
     /* Do double checking for backwards compatibility */
     if (header->npics == 0)

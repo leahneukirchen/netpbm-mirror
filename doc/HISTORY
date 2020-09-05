@@ -33,6 +33,9 @@ not yet  BJH  Release 10.92.00
               should have stopped it from working at all, despite reports from
               users that they were using it.
 
+              ximtoppm: Fix bug: invalid memory references with pathological
+              image input.  Broken in Netpbm 10.91 (June 2020).
+
               Configure: remove obsolete question about URL to put in pointer
               man pages of yesteryear.
 
