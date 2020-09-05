@@ -322,8 +322,8 @@ ifneq ($(LINUXSVGALIB),NONE)
   MERGELIBS += $(LINUXSVGALIB)
 endif
 
-ifneq ($(shell pkg-config --modversion libpng$(PNGVER)),)
-  PNGLD = $(shell pkg-config --libs libpng$(PNGVER))
+ifneq ($(shell $(PKG_CONFIG) --modversion libpng$(PNGVER)),)
+  PNGLD = $(shell $(PKG_CONFIG) --libs libpng$(PNGVER))
 else
   ifneq ($(shell libpng$(PNGVER)-config --version),)
     PNGLD = $(shell libpng$(PNGVER)-config --ldflags)
@@ -332,8 +332,8 @@ else
   endif
 endif
 
-ifneq ($(shell pkg-config --modversion libxml-2.0),)
-  XML2LD=$(shell pkg-config --libs libxml-2.0)
+ifneq ($(shell $(PKG_CONFIG) --modversion libxml-2.0),)
+  XML2LD=$(shell $(PKG_CONFIG) --libs libxml-2.0)
 else
   ifneq ($(shell xml2-config --version),)
     XML2LD=$(shell xml2-config --libs)
@@ -342,8 +342,8 @@ else
   endif
 endif
 
-ifneq ($(shell pkg-config x11 --libs),)
-  X11LD = $(shell pkg-config x11 --libs)
+ifneq ($(shell $(PKG_CONFIG) x11 --libs),)
+  X11LD = $(shell $(PKG_CONFIG) x11 --libs)
 else
   X11LD = $(shell $(LIBOPT) $(LIBOPTR) $(X11LIB))
 endif
