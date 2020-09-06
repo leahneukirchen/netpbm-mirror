@@ -769,11 +769,16 @@ dec_clnpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos,
 
 
 
-static int
-jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile,
-                   jpc_dec_tcomp_t *tcomp, jpc_dec_band_t *band,
-  jpc_dec_cblk_t *cblk, int dopartial, int maxlyrs)
-{
+static void
+jpc_dec_decodecblk(jpc_dec_t *       const dec,
+                   jpc_dec_tile_t *  const tile,
+                   jpc_dec_tcomp_t * const tcomp,
+                   jpc_dec_band_t *  const band,
+                   jpc_dec_cblk_t *  const cblk,
+                   int               const dopartial,
+                   int               const maxlyrs,
+                   const char **     const errorP) {
+
     jpc_dec_seg_t *seg;
     int i;
     int bpno;
@@ -788,9 +793,13 @@ jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile,
 
     if (!cblk->flags) {
         /* Note: matrix is assumed to be zeroed */
-        if (!(cblk->flags = jas_matrix_create(jas_matrix_numrows(cblk->data) +
-          2, jas_matrix_numcols(cblk->data) + 2))) {
-            return -1;
+        unsigned int const nrow = jas_matrix_numrows(cblk->data) + 2;
+        unsigned int const ncol = jas_matrix_numcols(cblk->data) + 2;
+        cblk->flags = jas_matrix_create(nrow, ncol);
+        if (!cblk->flags) {
+            pm_asprintf(errorP, "Out of memory allocating a flags matrix of "
+                        "%u rows by %u columns", nrow, ncol);
+            return;
         }
     }
 
@@ -804,7 +813,8 @@ jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile,
         if (seg->type == JPC_SEG_MQ) {
             if (!cblk->mqdec) {
                 if (!(cblk->mqdec = jpc_mqdec_create(JPC_NUMCTXS, 0))) {
-                    return -1;
+                    pm_asprintf(errorP, "jpc_mqdec_create failed");
+                    return;
                 }
                 jpc_mqdec_setctxs(cblk->mqdec, JPC_NUMCTXS, jpc_mqctxs);
             }
@@ -833,9 +843,9 @@ jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile,
             }
             bpno = band->roishift + band->numbps - 1 - (cblk->numimsbs +
               (seg->passno + i - cblk->firstpassno + 2) / 3);
-if (bpno < 0) {
-    goto premature_exit;
-}
+            if (bpno < 0) {
+                goto exit;
+            }
 #if 1
             passtype = (seg->passno + i + 2) % 3;
 #else
@@ -879,14 +889,18 @@ if (bpno < 0) {
             }
 
             if (ret) {
-                fprintf(stderr, "coding pass failed passtype=%d segtype=%d\n", passtype, seg->type);
-                return -1;
+                pm_asprintf(errorP,
+                            "coding pass failed passtype=%d segtype=%d",
+                            passtype, seg->type);
+                return;
             }
 
         }
 
         if (seg->type == JPC_SEG_MQ) {
-/* Note: dont destroy mq decoder because context info will be lost */
+            /* Note: dont destroy mq decoder because context info will be
+               lost
+            */
         } else {
             assert(seg->type == JPC_SEG_RAW);
             if (tile->cp->ccps[compno].cblkctx & JPC_COX_PTERM) {
@@ -898,9 +912,10 @@ if (bpno < 0) {
             }
             if ((ret = jpc_bitstream_inalign(cblk->nulldec, fillmask,
               filldata)) < 0) {
-                return -1;
+                pm_asprintf(errorP, "jpc_bitstream_inalign failed");
+                return;
             } else if (ret > 0) {
-                fprintf(stderr, "warning: bad termination pattern detected\n");
+                pm_message("warning: bad termination pattern detected");
             }
             jpc_bitstream_close(cblk->nulldec);
             cblk->nulldec = 0;
@@ -914,8 +929,8 @@ if (bpno < 0) {
 
     assert(dopartial ? (!cblk->curseg) : 1);
 
-premature_exit:
-    return 0;
+exit:
+    *errorP = NULL;
 }
 
 
@@ -965,17 +980,21 @@ jpc_dec_decodecblks(jpc_dec_t *      const decP,
                                      cblkcnt < prcP->numcblks;
                                      ++cblkcnt, ++cblkP) {
 
-                                    if (jpc_dec_decodecblk(decP, tileP, tcompP,
-                                                           bandP, cblkP, 1,
-                                                           JPC_MAXLYRS)) {
+                                    const char * error;
+
+                                    jpc_dec_decodecblk(decP, tileP, tcompP,
+                                                       bandP, cblkP, 1,
+                                                       JPC_MAXLYRS, &error);
+                                    if (error) {
                                         pm_asprintf(errorP,
                                                     "jpc_dec_decodecblk "
                                                     "failed on comp %u, "
                                                     "rlvl %u, "
                                                     "band %u, prc %u, "
-                                                    "cblk %u",
+                                                    "cblk %u.  %s",
                                                     compcnt, rlvlcnt, bandcnt,
-                                                    prccnt, cblkcnt);
+                                                    prccnt, cblkcnt, error);
+                                        pm_strfree(error);
                                         return;
                                     }
                                 }
