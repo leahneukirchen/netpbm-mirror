@@ -415,9 +415,11 @@ jas_stream_t *jas_stream_tmpfile()
         if (rc == 0) {
             pm_setjmpbuf(&jmpbuf);
             *obj = pm_tmpfile_fd();
+            pm_setjmpbuf(NULL);
         } else {
             /* pm_tmpfile_fd() threw an error */
             jas_stream_destroy(stream);
+            pm_setjmpbuf(NULL);
             return 0;
         }
     }

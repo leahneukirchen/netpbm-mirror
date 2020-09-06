@@ -13,6 +13,8 @@ not yet  BJH  Release 10.92.00
               don't attempt any normalization - leave image as is.  (Previous
               version produces all black with -keephues).
 
+              pgmtopbm: Add -randomseed.
+
               pamfunc: Fix always wrong output with -not.  Always broken.
               (-not was new in Netpbm 10.40 (September 2007)).
 
@@ -26,7 +28,8 @@ not yet  BJH  Release 10.92.00
               pbmtext: Fix double-free crash with -font .  Introduced in
               Netpbm 10.91 (June 2020).
 
-              pgmtopbm: Add -randomseed.
+              jpeg2ktopam: Fix crash whenever the program fails.  Broken in
+              Netpbm 10.42 (March 2008).
 
               pcdovtoppm: Fix some garbage from the conversion from csh to sh
               in Netpbm 9.12 (March 2001) in conversion from csh arrays that
