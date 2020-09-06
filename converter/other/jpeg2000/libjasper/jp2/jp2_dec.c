@@ -117,6 +117,8 @@
 #include "jasper/jas_malloc.h"
 #include "jasper/jas_version.h"
 
+#include "netpbm/nstring.h"
+
 #include "jp2_cod.h"
 #include "jp2_dec.h"
 
@@ -271,8 +273,11 @@ fromiccpcs(int cs) {
 
 
 
-jas_image_t *
-jp2_decode(jas_stream_t *in, char *optstr) {
+void
+jp2_decode(jas_stream_t * const in,
+           const char *   const optstr,
+           jas_image_t ** const imagePP,
+           const char **  const errorP) {
 
     jp2_box_t *box;
     int found;
@@ -386,9 +391,15 @@ jp2_decode(jas_stream_t *in, char *optstr) {
         goto error;
     }
 
-    if (!(dec->image = jpc_decode(in, optstr))) {
-        jas_eprintf("error: cannot decode code stream\n");
-        goto error;
+    {
+        const char * decodeError;
+        jpc_decode(in, optstr, &dec->image, &decodeError);
+        if (decodeError) {
+            jas_eprintf("error: cannot decode code stream.  %s\n",
+                        decodeError);
+            pm_strfree(decodeError);
+            goto error;
+        }
     }
 
     /* An IHDR box must be present. */
@@ -614,7 +625,9 @@ jp2_decode(jas_stream_t *in, char *optstr) {
 
     jp2_dec_destroy(dec);
 
-    return image;
+    *imagePP = image;
+    *errorP = NULL;
+    return;
 
 error:
     if (box) {
@@ -623,7 +636,7 @@ error:
     if (dec) {
         jp2_dec_destroy(dec);
     }
-    return 0;
+    pm_asprintf(errorP, "failed");
 }
 
 

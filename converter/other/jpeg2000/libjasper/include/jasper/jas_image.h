@@ -300,7 +300,10 @@ typedef struct {
 
 typedef struct {
 
-	jas_image_t *(*decode)(jas_stream_t *in, char *opts);
+	void (*decode)(jas_stream_t * const in,
+				   const char *   const opts,
+				   jas_image_t ** const imagePP,
+				   const char **  const errorP);
 	/* Decode image data from a stream. */
 
 	int (*encode)(jas_image_t *image, jas_stream_t *out, char *opts);
@@ -442,8 +445,12 @@ void jas_image_destroy(jas_image_t *image);
   any compression. */
 uint_fast32_t jas_image_rawsize(jas_image_t *image);
 
-/* Create an image from a stream in some specified format. */
-jas_image_t *jas_image_decode(jas_stream_t *in, int fmt, char *optstr);
+void
+jas_image_decode(jas_stream_t * const in,
+				 int            const fmt,
+				 const char *   const optstr,
+				 jas_image_t ** const imagePP,
+				 const char **  const errorP);
 
 /* Write an image to a stream in a specified format. */
 int jas_image_encode(jas_image_t *image, jas_stream_t *out, int fmt,
@@ -567,14 +574,22 @@ int bmp_validate(jas_stream_t *in);
 
 #if !defined(EXCLUDE_JP2_CAPABILITY)
 /* Format-dependent operations for JP2 capability. */
-jas_image_t *jp2_decode(jas_stream_t *in, char *optstr);
+void
+jp2_decode(jas_stream_t * const in,
+		   const char *   const optstr,
+		   jas_image_t ** const imagePP,
+		   const char **  const errorP);
 int jp2_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int jp2_validate(jas_stream_t *in);
 #endif
 
 #if !defined(EXCLUDE_JPC_CAPABILITY)
 /* Format-dependent operations for JPEG-2000 code stream capability. */
-jas_image_t *jpc_decode(jas_stream_t *in, char *optstr);
+void
+jpc_decode(jas_stream_t * const in,
+           const char *   const optstr,
+           jas_image_t ** const imagePP,
+           const char **  const errorP);
 int jpc_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int jpc_validate(jas_stream_t *in);
 #endif

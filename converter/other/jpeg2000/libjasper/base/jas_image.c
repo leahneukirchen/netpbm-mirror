@@ -126,6 +126,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include "netpbm/nstring.h"
+
 #include "jasper/jas_math.h"
 #include "jasper/jas_image.h"
 #include "jasper/jas_malloc.h"
@@ -379,21 +381,46 @@ static void jas_image_cmpt_destroy(jas_image_cmpt_t *cmpt)
 * Load and save operations.
 \*****************************************************************************/
 
-jas_image_t *jas_image_decode(jas_stream_t *in, int fmt, char *optstr)
-{
+void
+jas_image_decode(jas_stream_t * const in,
+				 int            const fmtArg,
+				 const char *   const optstr,
+				 jas_image_t ** const imagePP,
+				 const char **  const errorP) {
+/*----------------------------------------------------------------------------
+  Create an image from a stream in some specified format
+-----------------------------------------------------------------------------*/
 	jas_image_fmtinfo_t *fmtinfo;
+	int fmt;
 
 	/* If possible, try to determine the format of the input data. */
-	if (fmt < 0) {
+	if (fmtArg < 0) {
 		if ((fmt = jas_image_getfmt(in)) < 0) {
-			return 0;
+			pm_asprintf(errorP, "jas_image_getfmt failed");
+			return;
+		}
+	} else
+		fmt = fmtArg;
+
+	if (!(fmtinfo = jas_image_lookupfmtbyid(fmt))) {
+		pm_asprintf(errorP, "jas_image_lookupfmtbyid of format %d failed",
+					fmt);
+		return;
+	}
+	{
+		const char * error;
+
+		(*fmtinfo->ops.decode)(in, optstr, imagePP, &error);
+		if (error) {
+			pm_asprintf(errorP, "decoder failed.  %s", error);
+			pm_strfree(error);
+		} else {
+			*errorP = NULL;
 		}
 	}
-	if (!(fmtinfo = jas_image_lookupfmtbyid(fmt))) {
-		return 0;
-	}
-	return (fmtinfo->ops.decode) ? (*fmtinfo->ops.decode)(in, optstr) : 0;
 }
+
+
 
 int jas_image_encode(jas_image_t *image, jas_stream_t *out, int fmt, char *optstr)
 {

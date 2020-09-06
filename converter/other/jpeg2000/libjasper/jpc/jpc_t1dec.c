@@ -124,6 +124,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "netpbm/nstring.h"
+
 #include "jasper/jas_fix.h"
 #include "jasper/jas_stream.h"
 #include "jasper/jas_math.h"
@@ -916,51 +918,74 @@ premature_exit:
     return 0;
 }
 
-int
-jpc_dec_decodecblks(jpc_dec_t *dec, jpc_dec_tile_t *tile)
-{
-    jpc_dec_tcomp_t *tcomp;
-    int compcnt;
-    jpc_dec_rlvl_t *rlvl;
-    int rlvlcnt;
-    jpc_dec_band_t *band;
-    int bandcnt;
-    jpc_dec_prc_t *prc;
-    int prccnt;
-    jpc_dec_cblk_t *cblk;
-    int cblkcnt;
 
-    for (compcnt = dec->numcomps, tcomp = tile->tcomps; compcnt > 0;
-      --compcnt, ++tcomp) {
-        for (rlvlcnt = tcomp->numrlvls, rlvl = tcomp->rlvls;
-          rlvlcnt > 0; --rlvlcnt, ++rlvl) {
-            if (!rlvl->bands) {
-                continue;
-            }
-            for (bandcnt = rlvl->numbands, band = rlvl->bands;
-              bandcnt > 0; --bandcnt, ++band) {
-                if (!band->data) {
-                    continue;
-                }
-                for (prccnt = rlvl->numprcs, prc = band->prcs;
-                  prccnt > 0; --prccnt, ++prc) {
-                    if (!prc->cblks) {
-                        continue;
-                    }
-                    for (cblkcnt = prc->numcblks,
-                      cblk = prc->cblks; cblkcnt > 0;
-                      --cblkcnt, ++cblk) {
-                        if (jpc_dec_decodecblk(dec, tile, tcomp,
-                          band, cblk, 1, JPC_MAXLYRS)) {
-                            return -1;
+
+void
+jpc_dec_decodecblks(jpc_dec_t *      const decP,
+                    jpc_dec_tile_t * const tileP,
+                    const char **    const errorP) {
+/*----------------------------------------------------------------------------
+  Decode all of the code blocks for a particular tile
+-----------------------------------------------------------------------------*/
+    unsigned int compcnt;
+    jpc_dec_tcomp_t * tcompP;
+
+    for (compcnt = 0, tcompP = tileP->tcomps;
+         compcnt < decP->numcomps;
+         ++compcnt, ++tcompP) {
+
+        unsigned int rlvlcnt;
+        jpc_dec_rlvl_t * rlvlP;
+
+        for (rlvlcnt = 0, rlvlP = tcompP->rlvls;
+             rlvlcnt < tcompP->numrlvls;
+             ++rlvlcnt, ++rlvlP) {
+
+            if (rlvlP->bands) {
+                unsigned int bandcnt;
+                jpc_dec_band_t * bandP;
+
+                for (bandcnt = 0, bandP = rlvlP->bands;
+                     bandcnt < rlvlP->numbands;
+                     ++bandcnt, ++bandP) {
+
+                    if (bandP->data) {
+                        unsigned int prccnt;
+                        jpc_dec_prc_t * prcP;
+
+                        for (prccnt = 0, prcP = bandP->prcs;
+                             prccnt < rlvlP->numprcs;
+                             ++prccnt, ++prcP) {
+
+                            if (prcP->cblks) {
+                                unsigned int cblkcnt;
+                                jpc_dec_cblk_t * cblkP;
+
+                                for (cblkcnt = 0, cblkP = prcP->cblks;
+                                     cblkcnt < prcP->numcblks;
+                                     ++cblkcnt, ++cblkP) {
+
+                                    if (jpc_dec_decodecblk(decP, tileP, tcompP,
+                                                           bandP, cblkP, 1,
+                                                           JPC_MAXLYRS)) {
+                                        pm_asprintf(errorP,
+                                                    "jpc_dec_decodecblk "
+                                                    "failed on comp %u, "
+                                                    "rlvl %u, "
+                                                    "band %u, prc %u, "
+                                                    "cblk %u",
+                                                    compcnt, rlvlcnt, bandcnt,
+                                                    prccnt, cblkcnt);
+                                        return;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-
             }
         }
     }
-
-    return 0;
+    *errorP = NULL;
 }
 
