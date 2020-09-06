@@ -2479,55 +2479,48 @@ jpc_decode(jas_stream_t * const in,
     jas_image_t *image;
     const char * error;
 
-    dec = 0;
-
     if (jpc_dec_parseopts(optstr, &opts)) {
         pm_asprintf(errorP, "jpc_dec_parseopts failed");
-        goto errorRet;
+        return;
     }
 
     jpc_initluts();
 
-    if (!(dec = jpc_dec_create(&opts, in))) {
+    dec = jpc_dec_create(&opts, in);
+
+    if (!dec) {
         pm_asprintf(errorP, "jpc_dec_create failed");
-        goto errorRet;
-    }
-
-    /* Do most of the work. */
-    jpc_dec_decode(dec, &error);
-    if (error) {
-        pm_asprintf(errorP, "jpc_dec_decode failed.  %s", error);
-        pm_strfree(error);
-        goto errorRet;
-    }
-
-    if (jas_image_numcmpts(dec->image) >= 3) {
-        jas_image_setcolorspace(dec->image, JAS_IMAGE_CS_RGB);
-        jas_image_setcmpttype(dec->image, 0,
-          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_R));
-        jas_image_setcmpttype(dec->image, 1,
-          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_G));
-        jas_image_setcmpttype(dec->image, 2,
-          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B));
     } else {
-        jas_image_setcolorspace(dec->image, JAS_IMAGE_CS_GRAY);
-        jas_image_setcmpttype(dec->image, 0,
-          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_GRAY_Y));
-    }
+        /* Do most of the work. */
+        jpc_dec_decode(dec, &error);
+        if (error) {
+            pm_asprintf(errorP, "jpc_dec_decode failed.  %s", error);
+            pm_strfree(error);
+        } else {
+            if (jas_image_numcmpts(dec->image) >= 3) {
+                jas_image_setcolorspace(dec->image, JAS_IMAGE_CS_RGB);
+                jas_image_setcmpttype(dec->image, 0,
+                                      JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_R));
+                jas_image_setcmpttype(dec->image, 1,
+                                      JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_G));
+                jas_image_setcmpttype(dec->image, 2,
+                                      JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B));
+            } else {
+                jas_image_setcolorspace(dec->image, JAS_IMAGE_CS_GRAY);
+                jas_image_setcmpttype(dec->image, 0,
+                                      JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_GRAY_Y));
+            }
 
-    /* Save the return value. */
-    image = dec->image;
+            /* Save the return value. */
+            image = dec->image;
 
-    /* Stop the image from being discarded. */
-    dec->image = 0;
+            /* Stop the image from being discarded. */
+            dec->image = 0;
 
-    /* Destroy decoder. */
-    jpc_dec_destroy(dec);
+            *imagePP = image;
 
-    *imagePP = image;
-
-errorRet:
-    if (dec) {
+            *errorP = NULL;
+        }
         jpc_dec_destroy(dec);
     }
 }
