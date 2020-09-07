@@ -1,0 +1,88 @@
+#! /bin/bash
+# This script tests: pamfunc
+# Also requires: pamseq pamtopnm
+
+tmpdir=${tmpdir:-/tmp}
+input_pgm=${tmpdir}/input.pgm
+
+echo "Test 1"  
+
+pamseq 1 15 | pamtopnm -assume > ${input_pgm}
+pamtopnm -plain ${input_pgm} | tr '\n' ' '; echo
+
+pamfunc -adder=3 -plain ${input_pgm} | tr '\n' ' '; echo
+pamfunc -subtractor=3 -plain ${input_pgm} | tr '\n' ' '; echo
+pamfunc -multiplier=3 -plain ${input_pgm} | tr '\n' ' '; echo
+pamfunc -divisor=2 -plain ${input_pgm} | tr '\n' ' '; echo
+pamfunc -max=6 -plain ${input_pgm} | tr '\n' ' '; echo
+pamfunc -min=5 -plain ${input_pgm} | tr '\n' ' '; echo
+
+pamfunc -shiftleft  1  -plain ${input_pgm} | tr '\n' ' '; echo
+pamfunc -shiftright 1  -plain ${input_pgm} | tr '\n' ' '; echo
+pamfunc -shiftleft  1 ${input_pgm} | pamfunc -shiftright 1 -plain | \
+  tr '\n' ' '; echo
+pamfunc -shiftright 1 ${input_pgm} | pamfunc -shiftleft 1  -plain | \
+  tr '\n' ' '; echo
+
+
+echo "Test 2 (-changemaxval)"
+
+pamfunc -divisor 2 -changemaxval ${input_pgm} -plain | \
+  tr '\n' ' '; echo
+pamfunc -multiplier 0.25 -changemaxval ${input_pgm} -plain | \
+  tr '\n' ' '; echo
+
+rm ${input_pgm}
+
+echo "Test 3: Should print 1926073387 101484 eight times"
+
+cat testimg.ppm | cksum
+
+pamfunc -not testimg.ppm | pamfunc -not | cksum
+pamfunc -andmask 0xff testimg.ppm | cksum
+pamfunc -ormask  0x00 testimg.ppm | cksum
+pamfunc -xormask 0x00 testimg.ppm | cksum
+pamfunc -xormask 0xff testimg.ppm | pamfunc -xormask 0xff | cksum
+pamfunc -shiftleft  0 testimg.ppm | cksum
+pamfunc -shiftright 0 testimg.ppm | cksum
+
+
+echo "Test 4: Should print 2425386270 41 six times"
+
+cat testgrid.pbm | cksum
+
+pamfunc -andmask  0x1 testgrid.pbm | cksum
+pamfunc -ormask   0x0 testgrid.pbm | cksum
+pamfunc -xormask  0x1 testgrid.pbm | pamfunc -xormask 0x1 | cksum
+
+pamfunc -shiftleft  0 testgrid.pbm | cksum
+pamfunc -shiftright 0 testgrid.pbm | cksum
+
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test Error: Should print 0 then 1 twenty-four times"
+
+output_ppm=${tmpdir}/output.ppm
+
+for fn in "-multiplier" "-multiplier=-1" \
+  "-divisor" "-divisor=-20" \
+  "-adder" "-adder 0.5" "-subtractor" "-subtractor 0.1" \
+  "-multiplier=1 -divisor=2" "-adder=2 -subtractor=3" \
+  "-min" "-max" "-andmask" "-ormask" "-xormask" "-not 1" \
+  "-min=1 -max=2"  "-andmask=1 -ormask=0" "-andmask=0xffff" \
+  "-shiftleft" "-shiftright" "-changemaxval" \
+  "-shiftleft=1 -shiftright=1" \
+  "-multiplier=0.5 -changemaxval=65535"
+  do
+
+  # uncomment to debug
+  # echo ${fn}
+
+  pamfunc ${fn} testimg.ppm > ${output_ppm}
+  test $? -eq 1 -o $? -eq 99
+  echo $?
+  test -s ${output_ppm}
+  echo $?
+  done

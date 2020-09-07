@@ -1,0 +1,104 @@
+#! /bin/bash
+# This script tests: pamarith
+# Also requires: pamchannel pamseq pamtopnm pgmmake pnmcat rgb3toppm
+
+tmpdir=${tmpdir:-/tmp}
+input1_pgm=${tmpdir}/input1.pgm
+input2_pgm=${tmpdir}/input2.pgm
+output_pgm=${tmpdir}/output.pgm
+input1_ppm=${tmpdir}/input1.ppm
+input2_ppm=${tmpdir}/input2.ppm
+
+echo "Test 1"
+
+pamseq 1 15 | pamtopnm -assume > ${input1_pgm}
+pgmmake -maxval 15 0.15 16 1 > ${input2_pgm}
+
+rgb3toppm ${input1_pgm} ${input1_pgm} ${input1_pgm} > ${input1_ppm} 
+rgb3toppm ${input2_pgm} ${input2_pgm} ${input2_pgm} > ${input2_ppm} 
+
+pnmcat -tb -plain ${input1_pgm} ${input2_pgm}
+
+for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
+    "-minimum" "-maximum" "-mean" "-compare" \
+    "-and" "-or" "-nand" "-nor"  "-xor" \
+    "-shiftleft" "-shiftright"
+  do
+  echo ${fn}
+  pamarith ${fn} -plain ${input1_pgm} ${input2_pgm} | tr '\n' ' '; echo
+  pamarith ${fn} ${input1_pgm} ${input2_pgm} > ${output_pgm}
+  rgb3toppm  ${output_pgm} ${output_pgm} ${output_pgm} | cksum
+  pamarith ${fn} ${input1_ppm} ${input2_pgm} | cksum
+  pamarith ${fn} ${input1_ppm} ${input2_ppm} | cksum
+  done
+
+rm ${input1_pgm} ${input2_pgm} ${output_pgm} ${input2_ppm}
+
+echo "Test 2 (input = output)"
+echo "cksum is 2425386270 41 or 2921940274 59"
+
+for image in testgrid.pbm ${input1_ppm}
+  do
+  echo "input image"
+  cat ${image} | cksum 
+  for fn in "-minimum" "-maximum" "-mean" "-and" "-or"
+    do
+    echo ${fn}
+    pamarith ${fn} ${image} ${image} | cksum
+    done
+  done
+
+
+echo "Test 3 (blank output)"
+echo "cksum is 2817549367 41 or 320101399 59"
+
+for image in testgrid.pbm ${input1_ppm}
+  do
+  for fn in "-subtract" "-difference" "-xor"
+    do
+    echo ${fn}
+    pamarith ${fn} ${image} ${image} | cksum
+    done
+  done
+
+rm ${input1_ppm}
+
+
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test Error: Should print 1 twenty-two times"
+
+output_ppm=${tmpdir}/output.ppm
+
+for option in "-add -subtract" \
+    "-multiply -divide" \
+    "-difference -minimum" \
+    "-maximum -mean" \
+    "-compare -and" \
+    "-or -nand" \
+    "-nor -xor" \
+    "-shiftleft -shiftright"
+  do
+  pamarith ${option} testimg.ppm testimg.ppm > ${output_ppm}
+    echo $?
+    test -s ${output_ppm}
+    echo $?
+  done
+
+  pamarith -add testimg.ppm testimg.ppm testimg.ppm > ${output_ppm}
+    echo $?
+    test -s ${output_ppm}
+    echo $?
+  pamarith -add testimg.ppm testgrid.pbm > ${output_ppm}
+    echo $?
+    test -s ${output_ppm}
+    echo $?
+  pamchannel -infile testimg.ppm 0 1 | \
+    pamarith -add testimg.ppm - > ${output_ppm}
+    echo $?
+    test -s ${output_ppm}
+    echo $?
+
+rm ${output_ppm}
