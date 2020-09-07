@@ -19,7 +19,7 @@ static bool
 isDyadic(enum function const function) {
 
     bool retval;
-    
+
     switch (function) {
     case FN_ADD:
     case FN_MEAN:
@@ -71,7 +71,7 @@ parseCommandLine(int argc, const char ** const argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
-    
+
     unsigned int addSpec, subtractSpec, multiplySpec, divideSpec,
         differenceSpec,
         minimumSpec, maximumSpec, meanSpec, compareSpec,
@@ -160,7 +160,7 @@ parseCommandLine(int argc, const char ** const argv,
             cmdlineP->operandFileNames = &argv[1];
         }
     }
-}        
+}
 
 
 
@@ -183,7 +183,7 @@ static enum category
 functionCategory(enum function const function) {
 
     enum category retval;
-    
+
     switch (function) {
     case FN_ADD:
     case FN_SUBTRACT:
@@ -228,7 +228,7 @@ computeOutputType(struct pam *  const outpamP,
     outpamP->width       = inpam1.width;
     outpamP->depth       = MAX(inpam1.depth, inpam2.depth);
 
-    switch (functionCategory(function)) {    
+    switch (functionCategory(function)) {
     case CATEGORY_FRACTIONAL_ARITH:
         if (function == FN_COMPARE)
             outpamP->maxval = 2;
@@ -239,7 +239,7 @@ computeOutputType(struct pam *  const outpamP,
         if (inpam2.maxval != inpam1.maxval)
             pm_error("For a bit string operation, the maxvals of the "
                      "left and right image must be the same.  You have "
-                     "left=%u and right=%u", 
+                     "left=%u and right=%u",
                      (unsigned)inpam1.maxval, (unsigned)inpam2.maxval);
 
         if (pm_bitstomaxval(pm_maxvaltobits(inpam1.maxval)) != inpam1.maxval)
@@ -366,7 +366,7 @@ applyNormalizedFunction(enum function const function,
         operands[0] / operands[1] : 1.;
         break;
     case FN_DIFFERENCE:
-        result = operands[0] > operands[1] ? 
+        result = operands[0] > operands[1] ?
             operands[0] - operands[1] : operands[1] - operands[0];
         break;
     case FN_MINIMUM:
@@ -379,7 +379,7 @@ applyNormalizedFunction(enum function const function,
         result = samplenMean(operands, operandCt);
         break;
     case FN_COMPARE:
-        result = 
+        result =
             operands[0] > operands[1] ?
             1. : operands[0] < operands[1] ?
             0. : .5;
@@ -416,7 +416,7 @@ doNormalizedArith(struct pam *  const inpam1P,
            computation
         */
     unsigned int * plane;
-        /* plane[0] is the plane number in the first operand image for 
+        /* plane[0] is the plane number in the first operand image for
            the current one-sample computation.  plane[1] is the plane number
            in the second operand image, etc.
          */
@@ -433,10 +433,10 @@ doNormalizedArith(struct pam *  const inpam1P,
         unsigned int col;
         pnm_readpamrown(inpam1P, tuplerown[0]);
         pnm_readpamrown(inpam2P, tuplerown[1]);
-        
+
         for (col = 0; col < outpamP->width; ++col) {
             unsigned int outplane;
-            
+
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
                 unsigned int op;
 
@@ -446,8 +446,8 @@ doNormalizedArith(struct pam *  const inpam1P,
                 for (op = 0; op < operandCt; ++op)
                     operands[op] = tuplerown[op][col][plane[op]];
 
-                tuplerownOut[col][outplane] = 
-                    applyNormalizedFunction(function, operands, operandCt); 
+                tuplerownOut[col][outplane] =
+                    applyNormalizedFunction(function, operands, operandCt);
                 assert(tuplerownOut[col][outplane] >= 0.);
                 assert(tuplerownOut[col][outplane] <= 1.);
             }
@@ -737,7 +737,7 @@ doUnNormalizedArith(struct pam *  const inpam1P,
            computation
         */
     unsigned int * plane;
-        /* plane[0] is the plane number in the first operand image for 
+        /* plane[0] is the plane number in the first operand image for
            the current one-sample computation.  plane[1] is the plane number
            in the second operand image, etc.
          */
@@ -759,10 +759,10 @@ doUnNormalizedArith(struct pam *  const inpam1P,
         unsigned int col;
         pnm_readpamrow(inpam1P, tuplerow[0]);
         pnm_readpamrow(inpam2P, tuplerow[1]);
-        
+
         for (col = 0; col < outpamP->width; ++col) {
             unsigned int outplane;
-            
+
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
                 unsigned int op;
 
@@ -772,7 +772,7 @@ doUnNormalizedArith(struct pam *  const inpam1P,
                 for (op = 0; op < operandCt; ++op)
                     operands[op] = tuplerow[op][col][plane[op]];
 
-                tuplerowOut[col][outplane] = 
+                tuplerowOut[col][outplane] =
                     applyUnNormalizedFunction(function, operands, operandCt,
                                               maxval);
 
@@ -802,7 +802,7 @@ main(int argc, const char *argv[]) {
     struct pam outpam;
     FILE * if1P;
     FILE * if2P;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -833,7 +833,7 @@ main(int argc, const char *argv[]) {
 
     pnm_writepaminit(&outpam);
 
-    switch (functionCategory(cmdline.function)) {    
+    switch (functionCategory(cmdline.function)) {
     case CATEGORY_FRACTIONAL_ARITH:
         if (inpam1.maxval == inpam2.maxval)
             doUnNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function);
@@ -848,6 +848,6 @@ main(int argc, const char *argv[]) {
 
     pm_close(if1P);
     pm_close(if2P);
-    
+
     return 0;
 }
