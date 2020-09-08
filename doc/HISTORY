@@ -34,8 +34,9 @@ not yet  BJH  Release 10.92.00
               pamarith: Fix crash with -compare where inputs are PBM.  Broken
               in Netpbm 10.14 (February 2003).
 
-              pamfunc: Fix crash with -changemaxval and PBM input.  Always
-              broken.  -changemaxval was new in Netpbm 10.65 (December 2013).
+              pamfunc: Fix crash with -changemaxval and PBM or BLACKANDWHITE
+              PAM input.  Always broken.  -changemaxval was new in Netpbm
+              10.65 (December 2013).
 
               pcdovtoppm: Fix some garbage from the conversion from csh to sh
               in Netpbm 9.12 (March 2001) in conversion from csh arrays that

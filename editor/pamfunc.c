@@ -20,6 +20,7 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 #include "pam.h"
 
@@ -421,6 +422,9 @@ main(int argc, const char *argv[]) {
 
     planTransform(cmdline, inpam.maxval, outpam.format,
                   &outpam.maxval, &mustChangeRaster);
+
+    if (outpam.maxval > 1 && strneq(outpam.tuple_type, "BLACKANDWHITE", 13))
+        strcpy(outpam.tuple_type, "");
 
     pnm_writepaminit(&outpam);
 
