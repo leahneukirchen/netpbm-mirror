@@ -4,6 +4,7 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 #include "pam.h"
 
@@ -289,7 +290,11 @@ computeOutputType(struct pam *  const outpamP,
         outpamP->maxval = inpam1.maxval;
     }
     outpamP->bytes_per_sample = (pm_maxvaltobits(outpamP->maxval)+7)/8;
-    strcpy(outpamP->tuple_type, inpam1.tuple_type);
+
+    if (outpamP->maxval > 1 && strneq(inpam1.tuple_type, "BLACKANDWHITE", 13))
+        strcpy(outpamP->tuple_type, "");
+    else
+        strcpy(outpamP->tuple_type, inpam1.tuple_type);
 }
 
 

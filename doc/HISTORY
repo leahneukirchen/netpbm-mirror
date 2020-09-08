@@ -31,8 +31,8 @@ not yet  BJH  Release 10.92.00
               jpeg2ktopam: Fix crash whenever the program fails.  Broken in
               Netpbm 10.42 (March 2008).
 
-              pamarith: Fix crash with -compare where inputs are PBM.  Broken
-              in Netpbm 10.14 (February 2003).
+              pamarith: Fix crash with -compare where inputs are PBM or
+              BLACKANDWHITE PAM.  Broken in Netpbm 10.14 (February 2003).
 
               pamfunc: Fix crash with -changemaxval and PBM or BLACKANDWHITE
               PAM input.  Always broken.  -changemaxval was new in Netpbm
