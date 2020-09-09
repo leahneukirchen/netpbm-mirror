@@ -988,10 +988,10 @@ jpc_dec_decodecblks(jpc_dec_t *      const decP,
                                     if (error) {
                                         pm_asprintf(errorP,
                                                     "jpc_dec_decodecblk "
-                                                    "failed on comp %u, "
-                                                    "rlvl %u, "
+                                                    "failed on component %u, "
+                                                    "resolution level %u, "
                                                     "band %u, prc %u, "
-                                                    "cblk %u.  %s",
+                                                    "code block %u.  %s",
                                                     compcnt, rlvlcnt, bandcnt,
                                                     prccnt, cblkcnt, error);
                                         pm_strfree(error);
