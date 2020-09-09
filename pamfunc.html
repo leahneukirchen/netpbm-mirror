@@ -2,7 +2,7 @@
 <html><head><title>Pamfunc User Manual</title></head>
 <body>
 <h1>pamfunc</h1>
-Updated: December 2013
+Updated: 09 September 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -43,6 +43,11 @@ input.  <b>pamfunc</b> applies a simple transfer function to each
 sample in the input to generate the corresponding sample in the
 output.  The options determine what function.
 
+<p>The samples involved are PAM samples.  If the input is PBM, PGM, or PPM,
+the output will be that same format, but <b>pamfunc</b> applies the functions
+to the PAM equivalent samples, yielding PAM equivalent samples.  This can
+be nonintuitive in the <a href="#pbmoddness">PBM</a> case.
+  
 <p><b>pamarith</b> is the same thing for binary functions -- it takes
 two images as input and applies a specified simple arithmetic function
 (e.g. addition) on pairs of samples from the two to produce the single
@@ -108,6 +113,18 @@ more significant bits than the width indicated by the maxval.
 
 <p>For a shifting operation, the shift count you specify must not be
 greater than the width indicated by the maxval.
+
+<h4 id="pbmoddness">PBM Oddness</h4>
+
+<p>If you're familiar with the PBM format, you may find <b>pamfunc</b>'s
+operation on PBM images to be nonintuitive.  Because in PBM black is
+represented as 1 and white as 0 (1.0 and 0.0 normlized), you might be
+expecting adding 1 to white to yield black.
+
+<p>But the PBM format is irrelevant, because <b>pamfunc</b> operates on the
+numbers found in the PAM equivalent (see above).  In a PAM black and white
+image, black is 0 and white is 1 (0.0 and 1.0 normalized).  So white plus 1
+(clipped to the maximum of 1.0) is white.
 
 
 <h2 id="options">OPTIONS</h2>

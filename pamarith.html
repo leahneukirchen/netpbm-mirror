@@ -2,7 +2,7 @@
 <html><head><title>Pamarith User Manual</title></head>
 <body>
 <h1>pamarith</h1>
-Updated: 03 January 2015
+Updated: 09 September 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -76,6 +76,19 @@ contains the tuple (s) and the right input image contains the tuple
 (t1,t2,...tN), and the function is f, then the output image contains
 the tuple (f(s,t1),f(s,t2),...,f(s,tN)).
 
+
+<h3 id="pbmoddness">PBM Oddness</h3>
+
+<p>If you're familiar with the PBM format, you may find <b>pamarith</b>'s
+operation on PBM images to be nonintuitive.  Because in PBM black is
+represented as 1 and white as 0, you might be expecting black minus black
+to be white.
+
+<p>But the PBM format is irrelevant, because <b>pamarith</b> operates on the
+numbers found in the PAM equivalent (see above).  In a PAM black and white
+image, black is 0 and white is 1.  So black minus black is black.
+
+  
 <h3 id="maxval">Maxval</h3>
 
 <p>The meanings of the samples with respect to the maxval varies
@@ -277,6 +290,7 @@ that made it backward compatible with <b>pnmarith</b>.
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
   <ul>
+  <li><a href="#pbmoddness">PBM Oddness</a>
   <li><a href="#maxval">Maxval</a>
   </ul>
 <li><a href="#note">NOTE: UNARY FUNCTIONS</a>
