@@ -196,15 +196,15 @@ parseCommandLine(int argc, char ** argv,
     if (!ilyrratesSpec)
         cmdlineP->ilyrrates = (char*) "";
     if (progressionSpec) {
-        if (strcmp(progressionOpt, "lrcp") == 0)
+        if (streq(progressionOpt, "lrcp"))
             cmdlineP->progression = PROG_LRCP;
-        if (strcmp(progressionOpt, "rlcp") == 0)
+        else if (streq(progressionOpt, "rlcp"))
             cmdlineP->progression = PROG_RLCP;
-        if (strcmp(progressionOpt, "rpcl") == 0)
+        else if (streq(progressionOpt, "rpcl"))
             cmdlineP->progression = PROG_RPCL;
-        if (strcmp(progressionOpt, "pcrl") == 0)
+        else if (streq(progressionOpt, "pcrl"))
             cmdlineP->progression = PROG_PCRL;
-        if (strcmp(progressionOpt, "cprl") == 0)
+        else if (streq(progressionOpt, "cprl"))
             cmdlineP->progression = PROG_CPRL;
         else
             pm_error("Invalid value for -progression: '%s'.  "
