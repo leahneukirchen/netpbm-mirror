@@ -445,12 +445,14 @@ void jas_image_destroy(jas_image_t *image);
   any compression. */
 uint_fast32_t jas_image_rawsize(jas_image_t *image);
 
+#define JAS_HAVE_PMJAS_IMAGE_DECODE
+
 void
-jas_image_decode(jas_stream_t * const in,
-				 int            const fmt,
-				 const char *   const optstr,
-				 jas_image_t ** const imagePP,
-				 const char **  const errorP);
+pmjas_image_decode(jas_stream_t * const in,
+				   int            const fmt,
+				   const char *   const optstr,
+				   jas_image_t ** const imagePP,
+				   const char **  const errorP);
 
 /* Write an image to a stream in a specified format. */
 int jas_image_encode(jas_image_t *image, jas_stream_t *out, int fmt,

@@ -132,8 +132,8 @@ readJ2k(const char *   const inputFilename,
 
     validateJ2k(instreamP);
 
-    jas_image_decode(instreamP, jas_image_getfmt(instreamP), options,
-                     &jasperP, &error);
+    pmjas_image_decode(instreamP, jas_image_getfmt(instreamP), options,
+                       &jasperP, &error);
     if (error)
         pm_error("Unable to interpret JPEG-2000 input.  %s", error);
 

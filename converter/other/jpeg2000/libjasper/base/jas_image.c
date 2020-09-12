@@ -382,11 +382,11 @@ static void jas_image_cmpt_destroy(jas_image_cmpt_t *cmpt)
 \*****************************************************************************/
 
 void
-jas_image_decode(jas_stream_t * const in,
-				 int            const fmtArg,
-				 const char *   const optstr,
-				 jas_image_t ** const imagePP,
-				 const char **  const errorP) {
+pmjas_image_decode(jas_stream_t * const in,
+				   int            const fmtArg,
+				   const char *   const optstr,
+				   jas_image_t ** const imagePP,
+				   const char **  const errorP) {
 /*----------------------------------------------------------------------------
   Create an image from a stream in some specified format
 -----------------------------------------------------------------------------*/
