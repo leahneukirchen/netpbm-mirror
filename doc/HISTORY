@@ -34,6 +34,9 @@ not yet  BJH  Release 10.92.00
               pamtojpeg2k: Fix failure with most -progression values.  Always
               broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
 
+              pamtojpeg2k: Fix wrong result with -tilegrdtly.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
               pamarith: Fix crash with -compare where inputs are PBM or
               BLACKANDWHITE PAM.  Broken in Netpbm 10.14 (February 2003).
 
