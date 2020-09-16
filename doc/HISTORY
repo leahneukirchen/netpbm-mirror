@@ -44,6 +44,10 @@ not yet  BJH  Release 10.92.00
               PAM input.  Always broken.  -changemaxval was new in Netpbm
               10.65 (December 2013).
 
+              pammixmulti: Fix bug: -randomseed ignored on some systems.
+              Always broken.  (pammixmulti was new in Netpbm 10.85 (December
+              2018).
+
               pcdovtoppm: Fix some garbage from the conversion from csh to sh
               in Netpbm 9.12 (March 2001) in conversion from csh arrays that
               should have stopped it from working at all, despite reports from

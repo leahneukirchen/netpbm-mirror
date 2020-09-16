@@ -243,7 +243,7 @@ blendTuplesRandom(struct ProgramState * const stateP,
   from a random input image.
 -----------------------------------------------------------------------------*/
     unsigned int const depth = stateP->inPam[0].depth;
-    unsigned int const img = (unsigned int) (random() % stateP->inFileCt);
+    unsigned int const img = (unsigned int) (rand() % stateP->inFileCt);
 
     unsigned int samp;
 
