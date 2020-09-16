@@ -266,11 +266,12 @@ validateFunction(struct CmdlineInfo const cmdline,
 static void
 planTransform(struct CmdlineInfo const cmdline,
               sample             const inputMaxval,
+              int                const outputFormat,
               sample *           const outputMaxvalP,
               bool *             const mustChangeRasterP) {
 /*----------------------------------------------------------------------------
    Plan the transform described by 'cmdline', given the maxval of the input
-   image is 'inputMaxval.
+   image is 'inputMaxval and the output format will be 'outputFormat'.
 
    The plan just consists of whether to change the maxval or the raster.
    Some multiplications and divisions can be achieved just by changing the
@@ -278,30 +279,36 @@ planTransform(struct CmdlineInfo const cmdline,
 -----------------------------------------------------------------------------*/
     if (cmdline.changemaxval) {
         /* User allows us to change the maxval, if that makes it easier */
-        if (cmdline.function == FN_MULTIPLY || cmdline.function == FN_DIVIDE) {
-            float const multiplier =
-                cmdline.function == FN_MULTIPLY ? cmdline.u.multiplier :
-                (1/cmdline.u.divisor);
-
-            float const neededMaxval = inputMaxval / multiplier;
-
-            if (neededMaxval + 0.5 < inputMaxval) {
-                /* Lowering the maxval might make some of the sample values
-                   higher than the maxval, so we'd have to modify the raster
-                   to clip them.
-                */
-                *outputMaxvalP     = inputMaxval;
-                *mustChangeRasterP = true;
-            } else if (neededMaxval > PAM_OVERALL_MAXVAL) {
-                *outputMaxvalP     = inputMaxval;
-                *mustChangeRasterP = true;
-            } else {
-                *outputMaxvalP     = ROUNDU(neededMaxval);
-                *mustChangeRasterP = false;
-            }
-        } else {
+        if (PNM_FORMAT_TYPE(outputFormat) == PBM_TYPE) {
             *outputMaxvalP     = inputMaxval;
             *mustChangeRasterP = true;
+        } else {
+            if (cmdline.function == FN_MULTIPLY ||
+                cmdline.function == FN_DIVIDE) {
+                float const multiplier =
+                    cmdline.function == FN_MULTIPLY ? cmdline.u.multiplier :
+                    (1/cmdline.u.divisor);
+
+                float const neededMaxval = inputMaxval / multiplier;
+
+                if (neededMaxval + 0.5 < inputMaxval) {
+                    /* Lowering the maxval might make some of the sample
+                       values higher than the maxval, so we'd have to modify
+                       the raster to clip them.
+                    */
+                    *outputMaxvalP     = inputMaxval;
+                    *mustChangeRasterP = true;
+                } else if (neededMaxval > PAM_OVERALL_MAXVAL) {
+                    *outputMaxvalP     = inputMaxval;
+                    *mustChangeRasterP = true;
+                } else {
+                    *outputMaxvalP     = ROUNDU(neededMaxval);
+                    *mustChangeRasterP = false;
+                }
+            } else {
+                *outputMaxvalP     = inputMaxval;
+                *mustChangeRasterP = true;
+            }
         }
     } else {
         *outputMaxvalP     = inputMaxval;
@@ -412,7 +419,8 @@ main(int argc, const char *argv[]) {
     outpam = inpam;    /* Initial value -- most fields should be same */
     outpam.file = stdout;
 
-    planTransform(cmdline, inpam.maxval, &outpam.maxval, &mustChangeRaster);
+    planTransform(cmdline, inpam.maxval, outpam.format,
+                  &outpam.maxval, &mustChangeRaster);
 
     pnm_writepaminit(&outpam);
 
