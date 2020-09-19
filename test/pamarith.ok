@@ -84,7 +84,44 @@ P2 16 1 15 0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3
 2898922266 59
 2898922266 59
 2898922266 59
-Test 2 (input = output)
+Test 2 PBM
+P1
+8 2
+01010101
+00001111
+-add
+P1 8 1 00000101 
+-subtract
+P1 8 1 11110101 
+-multiply
+P1 8 1 01011111 
+-divide
+P1 8 1 01010000 
+-difference
+P1 8 1 10100101 
+-minimum
+P1 8 1 01011111 
+-maximum
+P1 8 1 00000101 
+-mean
+P1 8 1 00000101 
+-compare
+P2 8 1 2 1 0 1 0 2 1 2 1  
+-and
+P1 8 1 01011111 
+-or
+P1 8 1 00000101 
+-nand
+P1 8 1 10100000 
+-nor
+P1 8 1 11111010 
+-xor
+P1 8 1 10100101 
+-shiftleft
+P1 8 1 11110101 
+-shiftright
+P1 8 1 11110101 
+Test 3 (input = output)
 cksum is 2425386270 41 or 2921940274 59
 input image
 2425386270 41
@@ -110,7 +147,7 @@ input image
 2921940274 59
 -or
 2921940274 59
-Test 3 (blank output)
+Test 4 (blank output)
 cksum is 2817549367 41 or 320101399 59
 -subtract
 2817549367 41
@@ -124,26 +161,22 @@ cksum is 2817549367 41 or 320101399 59
 320101399 59
 -xor
 320101399 59
-Test Error: Should print 1 twenty-two times
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1
+Expected failure 10 1
+Expected failure 11 1
+Expected failure 12 1
+Expected failure 13 1
+Expected failure 14 1
+Expected failure 15 1
+Expected failure 16 1
+Expected failure 17 1
+Expected failure 18 1

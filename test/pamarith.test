@@ -1,6 +1,8 @@
+
 #! /bin/bash
 # This script tests: pamarith
 # Also requires: pamchannel pamseq pamtopnm pgmmake pnmcat rgb3toppm
+# Also requires: pbmmake pamenlarge
 
 tmpdir=${tmpdir:-/tmp}
 input1_pgm=${tmpdir}/input1.pgm
@@ -34,7 +36,30 @@ for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
 
 rm ${input1_pgm} ${input2_pgm} ${output_pgm} ${input2_ppm}
 
-echo "Test 2 (input = output)"
+
+input1_pbm=${tmpdir}/input1.pbm
+input2_pbm=${tmpdir}/input2.pbm
+
+echo "Test 2 PBM"
+
+pbmmake -g 8 1 > ${input1_pbm}
+pbmmake -g 2 1 | pamenlarge -xscale=4 > ${input2_pbm}
+
+pnmcat -tb -plain ${input1_pbm} ${input2_pbm}
+
+for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
+    "-minimum" "-maximum" "-mean" "-compare" \
+    "-and" "-or" "-nand" "-nor"  "-xor" \
+    "-shiftleft" "-shiftright"
+  do
+  echo ${fn}
+  pamarith ${fn} -plain ${input1_pbm} ${input2_pbm} | tr '\n' ' '; echo
+  done
+
+rm ${input1_pbm} ${input2_pbm}
+
+
+echo "Test 3 (input = output)"
 echo "cksum is 2425386270 41 or 2921940274 59"
 
 for image in testgrid.pbm ${input1_ppm}
@@ -49,7 +74,7 @@ for image in testgrid.pbm ${input1_ppm}
   done
 
 
-echo "Test 3 (blank output)"
+echo "Test 4 (blank output)"
 echo "cksum is 2817549367 41 or 320101399 59"
 
 for image in testgrid.pbm ${input1_ppm}
@@ -68,37 +93,73 @@ echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-echo "Test Error: Should print 1 twenty-two times"
+echo "Test Invalid"
 
 output_ppm=${tmpdir}/output.ppm
 
-for option in "-add -subtract" \
-    "-multiply -divide" \
-    "-difference -minimum" \
-    "-maximum -mean" \
-    "-compare -and" \
-    "-or -nand" \
-    "-nor -xor" \
-    "-shiftleft -shiftright"
-  do
-  pamarith ${option} testimg.ppm testimg.ppm > ${output_ppm}
-    echo $?
-    test -s ${output_ppm}
-    echo $?
-  done
+pamarith -add -subtract testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 1"
+  test -s ${output_ppm}; echo " "$?
+pamarith -multiply -divide testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 2"
+  test -s ${output_ppm}; echo " "$?
+pamarith -difference -minimum testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 3"
+  test -s ${output_ppm}; echo " "$?
+pamarith -maximum -mean testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 4"
+  test -s ${output_ppm}; echo " "$?
+pamarith -compare -and testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 5"
+  test -s ${output_ppm}; echo " "$?
+pamarith -or -nand testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 6"
+  test -s ${output_ppm}; echo " "$?
+pamarith -nor -xor testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 7"
+  test -s ${output_ppm}; echo " "$?
+pamarith -shiftleft -shiftright testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 8"
+  test -s ${output_ppm}; echo " "$?
+pamarith -add=1 testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 9"
+  test -s ${output_ppm}; echo " "$?
 
-  pamarith -add testimg.ppm testimg.ppm testimg.ppm > ${output_ppm}
-    echo $?
-    test -s ${output_ppm}
-    echo $?
-  pamarith -add testimg.ppm testgrid.pbm > ${output_ppm}
-    echo $?
-    test -s ${output_ppm}
-    echo $?
-  pamchannel -infile testimg.ppm 0 1 | \
-    pamarith -add testimg.ppm - > ${output_ppm}
-    echo $?
-    test -s ${output_ppm}
-    echo $?
+pamarith -plain testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 10"
+  test -s ${output_ppm}; echo " "$?
+
+pamarith testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 11"
+  test -s ${output_ppm}; echo " "$?
+
+pamarith -add testimg.ppm testimg.ppm testimg.ppm > ${output_ppm}
+  echo -n "Expected failure 12"
+  test -s ${output_ppm}; echo " "$?
+pamarith -add testimg.ppm > ${output_ppm}
+  echo -n "Expected failure 13"
+  test -s ${output_ppm}; echo " "$?
+pamarith -add > ${output_ppm}
+  echo -n "Expected failure 14"
+  test -s ${output_ppm}; echo " "$?
+
+pamarith -add testimg.ppm testgrid.pbm > ${output_ppm}
+  echo -n "Expected failure 15"
+  test -s ${output_ppm}; echo " "$?
+
+pamchannel -infile testimg.ppm 0 1 | \
+  pamarith -add testimg.ppm - > ${output_ppm}
+  echo -n "Expected failure 16"
+  test -s ${output_ppm}; echo " "$?
+
+pamenlarge -xscale=2 testgrid.pbm | \
+  pamarith -add testgrid.pbm - > ${output_ppm}
+  echo -n "Expected failure 17"
+  test -s ${output_ppm}; echo " "$?
+
+pamenlarge -yscale=3 testgrid.pbm | \
+  pamarith -add testgrid.pbm - > ${output_ppm}
+  echo -n "Expected failure 18"
+  test -s ${output_ppm}; echo " "$?
 
 rm ${output_ppm}
