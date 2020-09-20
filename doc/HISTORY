@@ -59,6 +59,10 @@ not yet  BJH  Release 10.92.00
               Configure: remove obsolete question about URL to put in pointer
               man pages of yesteryear.
 
+              Build: fix bug: PKG_CONFIG make variable not used for merge
+              build.  Always broken (PKG_CONFIG was new in Netpbm 10.76
+              (September 2016).
+
 20.06.28 BJH  Release 10.91.00
 
               pamstretch-gen: Add -quiet (supposedly added in 10.86, but never
