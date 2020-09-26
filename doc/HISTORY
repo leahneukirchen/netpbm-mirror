@@ -4,6 +4,8 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.93.00
+
 20.09.26 BJH  Release 10.92.00
 
               pnmcrop: Make -margin effective with -blank-image=minimize.
