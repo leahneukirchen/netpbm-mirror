@@ -114,12 +114,6 @@ fi
 
 tmpfile=`tempfile -p pi -m 600`
 
-rowfiles=()
-imagefiles=()
-row=1
-col=1
-width=$size
-
 # Convert the PCD overview file to many PPM images
 if [ -f $1 ] ; then
     hpcdtoppm -Overview $1 $tmpfile
@@ -129,14 +123,20 @@ else
     usage
 fi
 
+imagefiles=
+rowfiles=
+row=1
+col=1
+width=$size
+
 for i in "$tmpfile"* 
 do
     if [ -f $i ] ; then
-        description=`pnmfile $i`
-        if [ "${description[4]}" -le $size -a \
-             "${description[6]}" -le $size ] ; then
+        thiswidth=$(pamfile -machine $i | cut -f 4 -d ' ')
+        thisheight=$(pamfile -machine $i | cut -f 5 -d ' ')
+        if [ "$thiswidth" -le $size -a "$thisheight" -le $size ] ; then
             cat $i > $tmpfile
-                else
+        else
             if [ "$colors" = "n" ] ; then
                 pnmscale -quiet -xysize $size $size $i > $tmpfile
             else
@@ -158,8 +158,8 @@ do
     fi
 
     rm -f $tmpfile
-    description=`pnmfile $imagefile`
-    width=$(( $width + ${description[4]} ))
+    thisWidth=$(pamfile -machine $i | cut -f 4 -d ' ')
+    width=$(( $width + $thisWidth ))
     imagefiles="$imagefiles $imagefile"
 
     if [ $col -ge $across -o $width -gt $maxwidth ] ; then
@@ -172,7 +172,7 @@ do
         ppmquant -quiet $colors > $rowfile
     fi
     rm -f $imagefiles
-    imagefiles=()
+    imagefiles=
     rowfiles="$rowfiles $rowfile"
     col=1
     row=$(( $row + 1 ))
@@ -182,7 +182,7 @@ do
     fi
 done
 
-if [ ${#imagefiles[*]} -gt 0 ] ; then
+if [ -n $imagefiles ] ; then
     rowfile=pi.${row}.$$
     rm -f $rowfile
     if [ "$colors" = "n" ] ; then
@@ -195,7 +195,7 @@ if [ ${#imagefiles[*]} -gt 0 ] ; then
     rowfiles="$rowfiles $rowfile"
 fi
 
-if [ ${#rowfiles[*]} = 1 ]; then
+if [ $(echo $rowfiles|wc -w) -eq 1 ] ; then
     cat $rowfiles
 else
     if [ "$colors" = "n" ] ; then
