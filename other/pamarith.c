@@ -213,6 +213,30 @@ functionCategory(enum function const function) {
 
 
 
+static int
+outFmtForCompare(int const format1,
+                 int const format2) {
+/*----------------------------------------------------------------------------
+   The format for the output image, given that the function is Compare and
+   'format1' and 'format2' are the input image formats.
+
+   Note that Compare is special because its maxval is always 2, and that
+   won't work for PBM.
+-----------------------------------------------------------------------------*/
+    int const tentativeFormat = MAX(format1, format2);
+
+    int retval;
+
+    switch (tentativeFormat) {
+    case PBM_FORMAT:  retval = PGM_FORMAT;      break;
+    case RPBM_FORMAT: retval = RPGM_FORMAT;     break;
+    default:          retval = tentativeFormat; break;
+    }
+    return retval;
+}
+
+
+
 static void
 computeOutputType(struct pam *  const outpamP,
                   struct pam    const inpam1,
@@ -222,13 +246,17 @@ computeOutputType(struct pam *  const outpamP,
     outpamP->size        = sizeof(struct pam);
     outpamP->len         = PAM_STRUCT_SIZE(tuple_type);
     outpamP->file        = stdout;
-    outpamP->format      = MAX(inpam1.format, inpam2.format);
     outpamP->plainformat = FALSE;
     outpamP->height      = inpam1.height;
     outpamP->width       = inpam1.width;
     outpamP->depth       = MAX(inpam1.depth, inpam2.depth);
 
-    switch (functionCategory(function)) {    
+    if (function == FN_COMPARE)
+        outpamP->format = outFmtForCompare(inpam1.format, inpam2.format);
+    else
+        outpamP->format = MAX(inpam1.format, inpam2.format);
+
+    switch (functionCategory(function)) {
     case CATEGORY_FRACTIONAL_ARITH:
         if (function == FN_COMPARE)
             outpamP->maxval = 2;
@@ -835,7 +863,7 @@ main(int argc, const char *argv[]) {
 
     switch (functionCategory(cmdline.function)) {    
     case CATEGORY_FRACTIONAL_ARITH:
-        if (inpam1.maxval == inpam2.maxval)
+        if (inpam1.maxval == inpam2.maxval && inpam2.maxval == outpam.maxval)
             doUnNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function);
         else
             doNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function);

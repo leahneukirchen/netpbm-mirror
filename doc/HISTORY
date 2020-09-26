@@ -4,6 +4,35 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.09.26 BJH  Release 10.86.17
+
+              pamfunc: Fix always wrong output with -not.  Always broken.
+              (-not was new in Netpbm 10.40 (September 2007)).
+
+              jpeg2ktopam: Fix crash whenever the program fails.  Broken in
+              Netpbm 10.42 (March 2008).
+
+              pamtojpeg2k: Fix failure with most -progression values.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              pamtojpeg2k: Fix wrong result with -tilegrdtly.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              pamarith: Fix crash with -compare where inputs are PBM.  Broken
+              in Netpbm 10.14 (February 2003).
+
+              pamfunc: Fix crash with -changemaxval and PBM input.  Always
+              broken.  -changemaxval was new in Netpbm 10.65 (December 2013).
+
+              pammixmulti: Fix bug: -randomseed ignored on some systems.
+              Always broken.  (pammixmulti was new in Netpbm 10.85 (December
+              2018).
+
+              pcdovtoppm: Fix some garbage from the conversion from csh to sh
+              in Netpbm 9.12 (March 2001) in conversion from csh arrays that
+              should have stopped it from working at all, despite reports from
+              users that they were using it.
+
 20.08.29 BJH  Release 10.86.16
 
               anytopnm, pnmmargin: Fail properly when unable to create
