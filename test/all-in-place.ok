@@ -238,11 +238,9 @@ pnmtosir: ok
 pnmtotiffcmyk: ok
 pnmtoxwd: ok
 ppm3d: ok
-ppmbrighten: ok
 ppmchange: ok
 ppmcie: ok
 ppmcolormask: ok
-ppmcolors: ok
 ppmdcfont: ok
 ppmddumpfont: ok
 ppmdim: ok
@@ -266,6 +264,7 @@ ppmrough: ok
 ppmshadow: ok
 ppmshift: ok
 ppmspread: ok
+ppmsvgalib: ok
 ppmtoacad: ok
 ppmtoapplevol: ok
 ppmtoarbtxt: ok
@@ -276,6 +275,7 @@ ppmtoicr: ok
 ppmtoilbm: ok
 ppmtoleaf: ok
 ppmtolj: ok
+ppmtompeg: ok
 ppmtomitsu: ok
 ppmtoneo: ok
 ppmtopcx: ok

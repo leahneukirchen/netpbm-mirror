@@ -83,6 +83,7 @@ pnmremap2.test
 pnmquant.test
 pnmquantall.test
 pnmtile.test
+pambrighten.test
 ppmbrighten.test
 ppmdither.test
 ppmrelief.test
@@ -90,6 +91,9 @@ pamedge.test
 ppmdim.test
 pnmshear.test
 pgmbentley.test
+
+pamfunc.test
+pamarith.test
 
 pamenlarge.test
 pamenlarge-pbm.test
@@ -149,9 +153,10 @@ enlarge-reduce-roundtrip.test
 cut-cat-roundtrip.test
 pamhue-roundtrip.test
 
-# Round-trip tests: miscellaneous utility
+# Round-trip tests: miscellaneous utilities
 
 pamexec-roundtrip.test
+channel-stack-roundtrip.test
 
 # Round-trip tests : lossless converters
 
@@ -202,6 +207,7 @@ tiff-flate-lzw-roundtrip.test
 utahrle-roundtrip.test
 wbmp-roundtrip.test
 winicon-roundtrip.test
+winicon-roundtrip2.test
 xbm-roundtrip.test
 xpm-roundtrip.test
 xv-roundtrip.test

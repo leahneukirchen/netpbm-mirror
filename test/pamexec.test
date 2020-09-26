@@ -11,8 +11,8 @@ cat ${test_pbm}[0123456789] > ${combined_pbm}
 
 echo "Test 1 : Should print 10 stdin: PBM RAW 21 24 1 1 BLACKANDWHITE twice"
 
-cat ${combined_pbm} | pamfile -all -mach | uniq -c 
-pamexec "pamfile -mach" ${combined_pbm}  | uniq -c
+cat ${combined_pbm} | pamfile -all -mach | uniq -c | sed 's/^ *//' 
+pamexec "pamfile -mach" ${combined_pbm}  | uniq -c | sed 's/^ *//' 
 
 echo "Test 2: Should print 1791121103 989 twice"
 

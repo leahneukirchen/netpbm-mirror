@@ -1,13 +1,37 @@
 #! /bin/bash
-# This script tests: pamtowinicon winicontopam
-# Also requires: pamcut pnmtile pamtopnm ppmtopgm pgmtopbm
+# This script tests: pamtowinicon ppmtowinicon winicontopam
+# Also requires: pamchannel pamcut pamdepth pamtopam pngtopam pnmtile pnmtopng
 
+tmpdir=${tmpdir:-/tmp}
+test_pam=${tmpdir}/testimg.pam
 
-pamcut --left=30 --width=48 --height=48 testimg.ppm | \
-pamtowinicon | winicontopam | \
-  pamtopnm | cksum
+echo "Test 1. Should print 4241318573 6973 four times"
 
-pnmtile 32 32 testgrid.pbm | \
-pamtowinicon | winicontopam | \
-  pamtopnm | ppmtopgm | \
-  pgmtopbm  -th -val=0.5 | cksum
+pamcut --left=30 --width=48 --height=48 testimg.ppm | pamtopam | \
+  tee ${test_pam} | cksum
+pamtowinicon ${test_pam} | winicontopam | \
+  pamchannel -tupletype="RGB" 0 1 2 | cksum
+pamtowinicon -pngthreshold=300 ${test_pam} | winicontopam | \
+  pamchannel -tupletype="RGB" 0 1 2 | cksum
+pamtowinicon -pngthreshold=1   ${test_pam} | winicontopam | \
+  pamchannel -tupletype="RGB" 0 1 2 | cksum
+
+rm ${test_pam}
+
+echo "Test 1. Should print 819454437 1093 six times"
+
+pnmtile 32 32 testgrid.pbm | pamtopam | \
+  tee ${test_pam} | cksum
+pamtowinicon ${test_pam} | winicontopam | \
+  pamdepth 1 | pamchannel -tupletype="BLACKANDWHITE" 0 | cksum
+pamtowinicon -pngthreshold=300 ${test_pam} | winicontopam | \
+  pamdepth 1 | pamchannel -tupletype="BLACKANDWHITE" 0 | cksum
+pamtowinicon -pngthreshold=1   ${test_pam} | winicontopam | 
+  pamdepth 1 | pamchannel -tupletype="BLACKANDWHITE" 0 | cksum
+pamtowinicon -pngthreshold=1   ${test_pam} | winicontopam | 
+  pamchannel -tupletype="BLACKANDWHITE" 0 | cksum
+
+rm ${test_pam}
+
+pnmtile 32 32 testgrid.pbm | ppmtowinicon | winicontopam | \
+  pamdepth 1 | pamchannel -tupletype="BLACKANDWHITE" 0 | cksum

@@ -46,8 +46,8 @@ endif
 
 BINARIES = $(PORTBINARIES)
 
-OBJECTS = $(BINARIES:%=%.o)
-MERGE_OBJECTS = $(BINARIES:%=%.o2) 
+OBJECTS = $(BINARIES:%=%.o) libjasper_compat.o
+MERGE_OBJECTS = $(BINARIES:%=%.o2) libjasper_compat.o2
 ifeq ($(JASPERLIB),$(INTERNAL_JASPERLIB))
   # MERGE_OBJECTS contains relative paths, so $(INTERNAL_JASPERLIB) had better
   # be relative to the current directory.
@@ -63,7 +63,7 @@ include $(SRCDIR)/common.mk
 
 LIBOPTS = $(shell $(LIBOPT) $(JASPERLIB_USE))
 
-$(BINARIES): %: %.o $(JASPERLIB_DEP) $(LIBOPT)
+$(BINARIES): %: %.o libjasper_compat.o $(JASPERLIB_DEP) $(LIBOPT)
 $(BINARIES): LDFLAGS_TARGET = $(LIBOPTS) $(JASPERDEPLIBS)
 
 $(INTERNAL_JASPERLIB): $(BUILDDIR)/$(SUBDIR)/libjasper FORCE

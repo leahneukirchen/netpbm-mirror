@@ -2241,27 +2241,6 @@ print("\n");
 
 #******************************************************************************
 #
-#  CONFIGURE DOCUMENTATION
-#
-#*****************************************************************************
-
-print("What URL will you use for the main Netpbm documentation page?\n");
-print("This information does not get built into any programs or libraries.\n");
-print("It does not make anything actually install that web page.\n");
-print("It is just for including in legacy man pages.\n");
-print("\n");
-
-my $default = "http://netpbm.sourceforge.net/doc/";
-
-my $netpbm_docurl = prompt("Documentation URL", $default);
-
-print("\n");
-
-
-
-
-#******************************************************************************
-#
 #  VALIDATE THE CONFIGURATION USER HAS SELECTED
 #
 #*****************************************************************************
@@ -2603,10 +2582,6 @@ if (defined($linuxsvgahdr_dir)) {
 }
 if (defined($linuxsvgalib)) {
     push(@config_mk, "LINUXSVGALIB = $linuxsvgalib\n");
-}
-
-if (defined($netpbm_docurl)) {
-    push(@config_mk, "NETPBM_DOCURL = $netpbm_docurl\n");
 }
 
 if ($inttypesHeaderFile ne '<inttypes.h>') {

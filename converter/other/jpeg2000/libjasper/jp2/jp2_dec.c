@@ -117,6 +117,8 @@
 #include "jasper/jas_malloc.h"
 #include "jasper/jas_version.h"
 
+#include "netpbm/nstring.h"
+
 #include "jp2_cod.h"
 #include "jp2_dec.h"
 
@@ -271,8 +273,11 @@ fromiccpcs(int cs) {
 
 
 
-jas_image_t *
-jp2_decode(jas_stream_t *in, char *optstr) {
+void
+jp2_decode(jas_stream_t * const in,
+           const char *   const optstr,
+           jas_image_t ** const imagePP,
+           const char **  const errorP) {
 
     jp2_box_t *box;
     int found;
@@ -295,32 +300,34 @@ jp2_decode(jas_stream_t *in, char *optstr) {
     image = 0;
 
     if (!(dec = jp2_dec_create())) {
-        goto error;
+        pm_asprintf(errorP, "jp2_dec_create failed");
+        goto cleanup;
     }
 
     /* Get the first box.  This should be a JP box. */
     if (!(box = jp2_box_get(in))) {
-        jas_eprintf("error: cannot get box\n");
-        goto error;
+        pm_asprintf(errorP, "cannot get box");
+        goto cleanup;
     }
     if (box->type != JP2_BOX_JP) {
-        jas_eprintf("error: expecting signature box\n");
-        goto error;
+        pm_asprintf(errorP, "expecting signature box");
+        goto cleanup;
     }
     if (box->data.jp.magic != JP2_JP_MAGIC) {
-        jas_eprintf("incorrect magic number\n");
-        goto error;
+        pm_asprintf(errorP, "incorrect magic number");
+        goto cleanup;
     }
     jp2_box_destroy(box);
     box = 0;
 
     /* Get the second box.  This should be a FTYP box. */
     if (!(box = jp2_box_get(in))) {
-        goto error;
+        pm_asprintf(errorP, "cannot get second box");
+        goto cleanup;
     }
     if (box->type != JP2_BOX_FTYP) {
-        jas_eprintf("expecting file type box\n");
-        goto error;
+        pm_asprintf(errorP, "expecting file type box");
+        goto cleanup;
     }
     jp2_box_destroy(box);
     box = 0;
@@ -329,7 +336,7 @@ jp2_decode(jas_stream_t *in, char *optstr) {
     found = 0;
     while ((box = jp2_box_get(in))) {
         if (jas_getdbglevel() >= 1) {
-            fprintf(stderr, "box type %s\n", box->info->name);
+            jas_eprintf("box type '%s'\n", box->info->name);
         }
         switch (box->type) {
         case JP2_BOX_JP2C:
@@ -382,19 +389,24 @@ jp2_decode(jas_stream_t *in, char *optstr) {
     }
 
     if (!found) {
-        jas_eprintf("error: no code stream found\n");
-        goto error;
+        pm_asprintf(errorP, "no code stream found");
+        goto cleanup;
     }
 
-    if (!(dec->image = jpc_decode(in, optstr))) {
-        jas_eprintf("error: cannot decode code stream\n");
-        goto error;
+    {
+        const char * decodeError;
+        jpc_decode(in, optstr, &dec->image, &decodeError);
+        if (decodeError) {
+            pm_asprintf(errorP, "cannot decode code stream.  %s", decodeError);
+            pm_strfree(decodeError);
+            goto cleanup;
+        }
     }
 
     /* An IHDR box must be present. */
     if (!dec->ihdr) {
-        jas_eprintf("error: missing IHDR box\n");
-        goto error;
+        pm_asprintf(errorP, "missing IHDR box");
+        goto cleanup;
     }
 
     /* Does the number of components indicated in the IHDR box match
@@ -405,8 +417,8 @@ jp2_decode(jas_stream_t *in, char *optstr) {
 
     /* At least one component must be present. */
     if (!jas_image_numcmpts(dec->image)) {
-        jas_eprintf("error: no components\n");
-        goto error;
+        pm_asprintf(errorP, "no components");
+        goto cleanup;
     }
 
     /* Determine if all components have the same data type. */
@@ -428,15 +440,15 @@ jp2_decode(jas_stream_t *in, char *optstr) {
 
     /* Can we handle the compression type? */
     if (dec->ihdr->data.ihdr.comptype != JP2_IHDR_COMPTYPE) {
-        jas_eprintf("error: not capable of this compression type\n");
-        goto error;
+        pm_asprintf(errorP, "not capable of this compression type");
+        goto cleanup;
     }
 
     if (dec->bpcc) {
         /* Is the number of components indicated in the BPCC box
           consistent with the code stream data? */
         if (dec->bpcc->data.bpcc.numcmpts != jas_image_numcmpts(
-          dec->image)) {
+                dec->image)) {
             jas_eprintf("warning: number of components mismatch\n");
         }
         /* Is the component data type information indicated in the BPCC
@@ -455,8 +467,8 @@ jp2_decode(jas_stream_t *in, char *optstr) {
 
     /* A COLR box must be present. */
     if (!dec->colr) {
-        jas_eprintf("error: no COLR box\n");
-        goto error;
+        pm_asprintf(errorP, "no COLR box");
+        goto cleanup;
     }
 
     switch (dec->colr->data.colr.method) {
@@ -502,14 +514,14 @@ jp2_decode(jas_stream_t *in, char *optstr) {
             /* Is the component number reasonable? */
             if (dec->cmap->data.cmap.ents[i].cmptno >=
                 jas_image_numcmpts(dec->image)) {
-                jas_eprintf("error: invalid component number in CMAP box\n");
-                goto error;
+                pm_asprintf(errorP, "invalid component number in CMAP box");
+                goto cleanup;
             }
             /* Is the LUT index reasonable? */
             if (dec->cmap->data.cmap.ents[i].pcol >=
                 dec->pclr->data.pclr.numchans) {
-                jas_eprintf("error: invalid CMAP LUT index\n");
-                goto error;
+                pm_asprintf(errorP, "invalid CMAP LUT index");
+                goto cleanup;
             }
         }
     }
@@ -517,8 +529,8 @@ jp2_decode(jas_stream_t *in, char *optstr) {
     /* Allocate space for the channel-number to component-number LUT. */
     dec->chantocmptlut = jas_malloc(dec->numchans * sizeof(uint_fast16_t));
     if (!dec->chantocmptlut) {
-        jas_eprintf("error: no memory\n");
-        goto error;
+        pm_asprintf(errorP, "no memory");
+        goto cleanup;
     }
 
     if (!dec->cmap) {
@@ -564,8 +576,8 @@ jp2_decode(jas_stream_t *in, char *optstr) {
                 }
 #endif
             } else {
-                jas_eprintf("error: invalid MTYP in CMAP box\n");
-                goto error;
+                pm_asprintf(errorP, "invalid MTYP in CMAP box");
+                goto cleanup;
             }
         }
     }
@@ -604,8 +616,8 @@ jp2_decode(jas_stream_t *in, char *optstr) {
 
     /* Ensure that some components survived. */
     if (!jas_image_numcmpts(dec->image)) {
-        jas_eprintf("error: no components\n");
-        goto error;
+        pm_asprintf(errorP, "no components");
+        goto cleanup;
     }
 
     /* Prevent the image from being destroyed later. */
@@ -614,16 +626,17 @@ jp2_decode(jas_stream_t *in, char *optstr) {
 
     jp2_dec_destroy(dec);
 
-    return image;
+    *imagePP = image;
+    *errorP = NULL;
+    return;
 
-error:
+cleanup:
     if (box) {
         jp2_box_destroy(box);
     }
     if (dec) {
         jp2_dec_destroy(dec);
     }
-    return 0;
 }
 
 

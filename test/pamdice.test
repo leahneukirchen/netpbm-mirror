@@ -12,7 +12,7 @@ pbmmake -w 2 5 | pamdice -height=1 -width=1 -outstem=${fname_stem} -plain
 ls ${fname_stem}*.pbm | while read file
   do
   cat ${file} | tr '\n'  '@' ; echo 
-  done | sort | uniq -c
+  done | sort | uniq -c | sed 's/^ *//'
 
 rm ${fname_stem}*.pbm
 

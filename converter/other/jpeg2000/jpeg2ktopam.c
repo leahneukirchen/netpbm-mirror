@@ -29,11 +29,9 @@
 
 #include "libjasper_compat.h"
 
-enum compmode {COMPMODE_INTEGER, COMPMODE_REAL};
 
-enum progression {PROG_LRCP, PROG_RLCP, PROG_RPCL, PROG_PCRL, PROG_CPRL};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -44,15 +42,15 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
    sometimes, one of these strings is actually just a suffix of an entry
    in argv!
 -----------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
     optStruct3 opt;
 
     unsigned int debuglevelSpec;
@@ -71,7 +69,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
 
     if (!debuglevelSpec)
         cmdlineP->debuglevel = 0;
@@ -84,6 +82,7 @@ parseCommandLine(int argc, char ** argv,
         pm_error("Too many arguments.  The only argument accepted\n"
                  "is the input file specification");
 
+    free(option_def);
 }
 
 
@@ -114,9 +113,11 @@ static void
 readJ2k(const char *   const inputFilename,
         jas_image_t ** const jasperPP) {
 
+    const char * const options = "";
+
     jas_image_t * jasperP;
     jas_stream_t * instreamP;
-    const char * options;
+    const char * error;
 
     if (streq(inputFilename, "-")) {
         /* The input image is to be read from standard input. */
@@ -131,13 +132,10 @@ readJ2k(const char *   const inputFilename,
 
     validateJ2k(instreamP);
 
-    options = "";
-
-    jasperP = jas_image_decode(instreamP, jas_image_getfmt(instreamP),
-                               (char*)options);
-    if (jasperP == NULL)
-        pm_error("Unable to interpret JPEG-2000 input.  "
-                 "The Jasper library jas_image_decode() subroutine failed.");
+    pmjas_image_decode(instreamP, jas_image_getfmt(instreamP), options,
+                       &jasperP, &error);
+    if (error)
+        pm_error("Unable to interpret JPEG-2000 input.  %s", error);
 
     jas_stream_close(instreamP);
 
@@ -483,9 +481,9 @@ convertToPamPnm(struct pam *  const outpamP,
 
 
 int
-main(int argc, char **argv)
+main(int argc, const char **argv)
 {
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam outpam;
     int * jasperCmpt;  /* malloc'ed */
        /* jaspercmpt[P] is the component number for use with the
@@ -493,7 +491,7 @@ main(int argc, char **argv)
        */
     jas_image_t * jasperP;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 

@@ -17,7 +17,7 @@
 #include "shhopt.h"
 #include "pam.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -30,7 +30,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec strings we return are stored in the storage that
    was passed to us as the argv array.
@@ -45,7 +45,7 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "verbose",  OPT_STRING, NULL, 
+    OPTENT3(0, "verbose",  OPT_STRING, NULL,
             &cmdlineP->verbose, 0);
 
     opt.opt_table = option_def;
@@ -64,8 +64,8 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("New maxval must be at least 1.  You specified %d",
                      intval);
         else if (intval > PNM_OVERALLMAXVAL)
-            pm_error("newmaxval (%d) is too large.\n"
-                     "The maximum allowed by the PNM formats is %d.",
+            pm_error("newmaxval (%d) is too large.  "
+                     "The maximum allowed by the PNM formats is %u.",
                      intval, PNM_OVERALLMAXVAL);
         else
             cmdlineP->newMaxval = intval;
@@ -101,7 +101,7 @@ createSampleMap(sample   const oldMaxval,
 static void
 transformRaster(struct pam * const inpamP,
                 struct pam * const outpamP) {
-                
+
     tuple * tuplerow;
     unsigned int row;
     sample * sampleMap;  /* malloc'ed */
@@ -136,7 +136,7 @@ transformRaster(struct pam * const inpamP,
 int
 main(int argc, const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam;
     struct pam outpam;
@@ -153,15 +153,15 @@ main(int argc, const char * argv[]) {
         pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
         outpam = inpam;  /* initial value */
-        
+
         outpam.file = stdout;
         outpam.maxval = cmdline.newMaxval;
-        
+
         if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE) {
             outpam.format = PGM_TYPE;
         } else
             outpam.format = inpam.format;
-        
+
         if (streq(inpam.tuple_type, PAM_PBM_TUPLETYPE)) {
             pm_message("promoting from black and white to grayscale");
             strcpy(outpam.tuple_type, PAM_PGM_TUPLETYPE);
@@ -182,3 +182,6 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
+
+
+
