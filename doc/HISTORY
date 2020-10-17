@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.93.00
 
+              Fix bug: fails with more than two operands for -mulitply,
+              -minimum, -maximum, -nand, and -nor.
+
 20.09.26 BJH  Release 10.92.00
 
               pnmcrop: Make -margin effective with -blank-image=minimize.
@@ -2032,6 +2035,10 @@ not yet  BJH  Release 10.93.00
 10.06.27 BJH  Release 10.51.00
 
               Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
+
+              pamarith: Allow more than two operands for functions for which
+              it makes sense (all but -subtract, -difference, -compare,
+              -divide, -shiftleft, and -shiftright).
 
               pnmtops: Add -bitsperpixel option.
 
