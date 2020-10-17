@@ -2,7 +2,7 @@
 <html><head><title>Pamarith User Manual</title></head>
 <body>
 <h1>pamarith</h1>
-Updated: 09 September 2020
+Updated: 17 October 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -14,10 +14,11 @@ pamarith - perform arithmetic on two Netpbm images
 <b>pamarith</b>
 <b>-add</b> | <b>-subtract</b> | <b>-multiply</b> | <b>-divide</b> |
 <b>-difference</b> |
-<b>-minimum</b> | <b>-maximum</b> | <b>-mean</b> | <b>-compare</b> |
+<b>-minimum</b> | <b>-maximum</b> | <b>-mean</b> |
+<b>-equal</b> | <b>-compare</b> |
 <b>-and</b> | <b>-or</b> | <b>-nand</b> | <b>-nor</b> | <b>-xor</b> |
 <b>-shiftleft</b> | <b>-shiftright</b>
-<i>pamfile1</i> <i>pamfile2</i>
+<i>pamfile1</i> <i>pamfile2</i> ...
 
 <p>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
@@ -27,7 +28,7 @@ name and its value with white space instead of an equals sign.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pamarith</b> reads two PBM, PGM, PPM, or PAM images as input.
+<p><b>pamarith</b> reads two or more PBM, PGM, PPM, or PAM images as input.
 It performs the specified binary arithmetic operation on their sample
 values and produces an output of a format which is the more general of
 the two input formats.  The two input images must be of the same width
@@ -35,6 +36,14 @@ and height.  The arithmetic is performed on each pair of identically
 located tuples to generate the identically located tuple of the
 output.
 
+<p>For functions that are commutative and associative, <b>pamarith</b> applies
+  the binary function repetitively on as many input images as you supply.  For
+  example, for <b>-add</b> , the output is the sum of all the inputs; for
+  <b>-equal</b>, it tells you whether all the inputs are equal.  For other
+  functions (e.g. <b>-subtract</b>), the program fails if you supply more
+  than two input images.  (Before Netpbm 10.51 (June 2010), the program always
+  failed with more than two input images).
+  
 <p>Most of what <b>pamarith</b> does is not meaningful for visual images.  It
   works toward Netpbm's secondary purpose of just manipulating arbitrary
   matrices of numbers.
@@ -105,6 +114,7 @@ divided by the maxval gives the fraction.
 arithmetic functions: <b>-add</b>, <b>-subtract</b>, <b>-multiply</b>,
 <b>-divide</b>,
 <b>-difference</b>, <b>-minimum</b>, <b>-maximum</b>, <b>-mean</b>,
+<b>-equal</b>,
 and <b>-compare</b>.  For those, you should think of the arguments and
 result as numbers in the range [0,1).  For example, if the maxval of
 the left argument image is 100 and the maxval of the right argument
@@ -115,11 +125,11 @@ the output sample value is 160.
 
 <p>For these functions, <b>pamarith</b> makes the output image's
 maxval the maximum of the two input maxvals, except with
-<b>-compare</b>, where <b>pamarith</b> uses an output maxval of 2.
-(Before Netpbm 10.14 (February 2003), there was no exception for
-<b>-compare</b>; in 10.14, the exception was just that the maxval
-was <em>at least</em> 2, and sometime between 10.18 and 10.26 (January
-2005), it changed to being exactly 2).
+<b>-equal </b> and <b>-compare</b>.  For <b>-equal</b>, the output maxval is
+always 1.  For <b>-compare</b>, it is always 2.  (Before Netpbm 10.14
+(February 2003), there was no exception for <b>-compare</b>; in 10.14, the
+exception was just that the maxval was <em>at least</em> 2, and sometime
+between 10.18 and 10.26 (January 2005), it changed to being exactly 2).
 
 <p>If the result of a calculation falls outside the range [0, 1),
 <b>pamarith</b> clips it -- i.e.  considers it to be zero or 1-.
@@ -214,6 +224,18 @@ If the divisor is 0, the result is the maxval.
 
 <p><b>-divide</b> was new in Netpbm 10.30 (October 2005).
 
+<dt><b>-equal</b>
+<dd>Produces maxval when the values in the two images are equal and
+zero when they are not.  Note that the output maxval is always 1 for
+<b>-equal</b>.
+
+<p>If the maxvals of the input images are not identical, <b>pamarith</b>
+may claim two values are not equal when in fact they are, because of
+the precision with which it does the arithmetic.  However, it will never
+say A is greater than B if A is less than B.
+
+<p><b>-equal</b> was new in Netpbm 10.93 (December 2020).
+
 <dt><b>-compare</b>
 <dd>Produces the value <b>0</b> when the value in the
 left input image is less than the value in the right input image,
@@ -283,6 +305,11 @@ that made it backward compatible with <b>pnmarith</b>.
 <p>The bit string operations were added in Netpbm 10.27 (March 2005).
 
 <p>The <b>-divide</b> option was added in Netpbm 10.30 (October 2005).
+
+<p>The ability to have more than one input (operand) was added in Netpbm
+10.51 (June 2010), but not documented until October 2020.
+
+<p>The <b>-equal</b> option was added in Netpbm 10.93 (December 2020).
 
 <hr>
 <h2 id="index">Table Of Contents</h2>
