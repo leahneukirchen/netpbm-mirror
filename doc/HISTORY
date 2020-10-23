@@ -6,8 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.93.00
 
-              Fix bug: fails with more than two operands for -mulitply,
-              -minimum, -maximum, -nand, and -nor.
+              pamarith: Add -equal.
+
+              pamarith: Fix bug: fails with more than two operands for
+              -mulitply, -minimum, -maximum, -nand, and -nor.
 
 20.09.26 BJH  Release 10.92.00
 

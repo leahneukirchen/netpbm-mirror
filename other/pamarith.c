@@ -9,7 +9,7 @@
 #include "pam.h"
 
 enum function {FN_ADD, FN_SUBTRACT, FN_MULTIPLY, FN_DIVIDE, FN_DIFFERENCE,
-               FN_MINIMUM, FN_MAXIMUM, FN_MEAN, FN_COMPARE,
+               FN_MINIMUM, FN_MAXIMUM, FN_MEAN, FN_EQUAL, FN_COMPARE,
                FN_AND, FN_OR, FN_NAND, FN_NOR, FN_XOR,
                FN_SHIFTLEFT, FN_SHIFTRIGHT
               };
@@ -27,6 +27,7 @@ isDyadic(enum function const function) {
     case FN_MINIMUM:
     case FN_MAXIMUM:
     case FN_MEAN:
+    case FN_EQUAL:
     case FN_AND:
     case FN_NAND:
     case FN_OR:
@@ -75,7 +76,7 @@ parseCommandLine(int argc, const char ** const argv,
 
     unsigned int addSpec, subtractSpec, multiplySpec, divideSpec,
         differenceSpec,
-        minimumSpec, maximumSpec, meanSpec, compareSpec,
+        minimumSpec, maximumSpec, meanSpec, equalSpec, compareSpec,
         andSpec, orSpec, nandSpec, norSpec, xorSpec,
         shiftleftSpec, shiftrightSpec;
 
@@ -90,6 +91,7 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0, "minimum",     OPT_FLAG,   NULL, &minimumSpec,    0);
     OPTENT3(0, "maximum",     OPT_FLAG,   NULL, &maximumSpec,    0);
     OPTENT3(0, "mean",        OPT_FLAG,   NULL, &meanSpec,       0);
+    OPTENT3(0, "equal",       OPT_FLAG,   NULL, &equalSpec,      0);
     OPTENT3(0, "compare",     OPT_FLAG,   NULL, &compareSpec,    0);
     OPTENT3(0, "and",         OPT_FLAG,   NULL, &andSpec,        0);
     OPTENT3(0, "or",          OPT_FLAG,   NULL, &orSpec,         0);
@@ -107,7 +109,7 @@ parseCommandLine(int argc, const char ** const argv,
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (addSpec + subtractSpec + multiplySpec + divideSpec + differenceSpec +
-        minimumSpec + maximumSpec + meanSpec + compareSpec +
+        minimumSpec + maximumSpec + meanSpec + equalSpec + compareSpec +
         andSpec + orSpec + nandSpec + norSpec + xorSpec +
         shiftleftSpec + shiftrightSpec > 1)
         pm_error("You may specify only one function");
@@ -128,6 +130,8 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->function = FN_MAXIMUM;
     else if (meanSpec)
         cmdlineP->function = FN_MEAN;
+    else if (equalSpec)
+        cmdlineP->function = FN_EQUAL;
     else if (compareSpec)
         cmdlineP->function = FN_COMPARE;
     else if (andSpec)
@@ -192,6 +196,7 @@ functionCategory(enum function const function) {
     case FN_MINIMUM:
     case FN_MAXIMUM:
     case FN_MEAN:
+    case FN_EQUAL:
     case FN_COMPARE:
     case FN_MULTIPLY:
     case FN_DIVIDE:
@@ -262,6 +267,8 @@ computeOutputType(struct pam *  const outpamP,
     case CATEGORY_FRACTIONAL_ARITH:
         if (function == FN_COMPARE)
             outpamP->maxval = 2;
+        else if (function == FN_EQUAL)
+            outpamP->maxval = 1;
         else
             outpamP->maxval = MAX(inpam1.maxval, inpam2.maxval);
         break;
@@ -317,6 +324,21 @@ samplenSum(samplen      const operands[],
 
 
 static samplen
+samplenProduct(samplen      const operands[],
+               unsigned int const operandCt) {
+
+    unsigned int i;
+    double product;
+
+    for (i = 1, product = operands[0]; i < operandCt; ++i)
+        product *= operands[i];
+
+    return product;
+}
+
+
+
+static samplen
 samplenMin(samplen      const operands[],
            unsigned int const operandCt) {
 
@@ -364,16 +386,18 @@ samplenMean(samplen      const operands[],
 
 
 static samplen
-samplenProduct(samplen      const operands[],
-               unsigned int const operandCt) {
+samplenEqual(samplen      const operands[],
+             unsigned int const operandCt) {
 
     unsigned int i;
-    double product;
+    bool allEqual;
 
-    for (i = 1, product = operands[0]; i < operandCt; ++i)
-        product *= operands[i];
+    for (i = 1, allEqual = true; i < operandCt; ++i) {
+        if (operands[i] != operands[0])
+            allEqual = false;
+    }
 
-    return product;
+    return allEqual ? 1.0 : 0.0;
 }
 
 
@@ -411,6 +435,9 @@ applyNormalizedFunction(enum function const function,
         break;
     case FN_MEAN:
         result = samplenMean(operands, operandCt);
+        break;
+    case FN_EQUAL:
+        result = samplenEqual(operands, operandCt);
         break;
     case FN_COMPARE:
         result =
@@ -518,6 +545,22 @@ sampleSum(sample       const operands[],
 
 
 static sample
+sampleProduct(sample       const operands[],
+              unsigned int const operandCt,
+              sample       const maxval) {
+
+    unsigned int i;
+    double product;
+
+    for (i = 0, product = 1.0; i < operandCt; ++i) {
+        product *= ((double)operands[i]/maxval);
+    }
+    return (sample)(product * maxval + 0.5);
+}
+
+
+
+static sample
 sampleMin(sample       const operands[],
           unsigned int const operandCt) {
 
@@ -567,17 +610,18 @@ sampleMean(sample       const operands[],
 
 
 static sample
-sampleProduct(sample       const operands[],
-              unsigned int const operandCt,
-              sample       const maxval) {
+sampleEqual(sample       const operands[],
+            unsigned int const operandCt,
+            sample       const maxval) {
 
     unsigned int i;
-    double product;
+    bool allEqual;
 
-    for (i = 0, product = 1.0; i < operandCt; ++i) {
-        product *= ((double)operands[i]/maxval);
+    for (i = 1, allEqual = true; i < operandCt; ++i) {
+        if (operands[i] != operands[0])
+            allEqual = false;
     }
-    return (sample)(product * maxval + 0.5);
+    return allEqual ? maxval : 0;
 }
 
 
@@ -699,6 +743,9 @@ applyUnNormalizedFunction(enum function const function,
         break;
     case FN_MEAN:
         result = sampleMean(operands, operandCt);
+        break;
+    case FN_EQUAL:
+        result = sampleEqual(operands, operandCt, maxval);
         break;
     case FN_COMPARE:
         result = operands[0] > operands[1] ?
