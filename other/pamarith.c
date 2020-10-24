@@ -1,12 +1,15 @@
 #include <assert.h>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
 #include "pam.h"
+
+static double const EPSILON = 1.0e-5;
 
 enum function {FN_ADD, FN_SUBTRACT, FN_MULTIPLY, FN_DIVIDE, FN_DIFFERENCE,
                FN_MINIMUM, FN_MAXIMUM, FN_MEAN, FN_EQUAL, FN_COMPARE,
@@ -56,6 +59,7 @@ struct CmdlineInfo {
     enum function function;
     unsigned int operandCt;
     const char ** operandFileNames;
+    double closeness;
 };
 
 
@@ -78,7 +82,9 @@ parseCommandLine(int argc, const char ** const argv,
         differenceSpec,
         minimumSpec, maximumSpec, meanSpec, equalSpec, compareSpec,
         andSpec, orSpec, nandSpec, norSpec, xorSpec,
-        shiftleftSpec, shiftrightSpec;
+        shiftleftSpec, shiftrightSpec, closenessSpec;
+
+    unsigned int closeness;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -100,6 +106,7 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0, "xor",         OPT_FLAG,   NULL, &xorSpec,        0);
     OPTENT3(0, "shiftleft",   OPT_FLAG,   NULL, &shiftleftSpec,  0);
     OPTENT3(0, "shiftright",  OPT_FLAG,   NULL, &shiftrightSpec, 0);
+    OPTENT3(0, "closeness",   OPT_UINT,   &closeness, &closenessSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -150,6 +157,18 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->function = FN_SHIFTRIGHT;
     else
         pm_error("You must specify a function (e.g. '-add')");
+
+    if (closenessSpec) {
+        if (cmdlineP->function != FN_EQUAL)
+            pm_error("-closeness is valid only with -equal");
+        else {
+            if (closeness > 100)
+                pm_error("-closeness value %u is not a valid percentage",
+                         closeness);
+            cmdlineP->closeness = (double)closeness/100;
+        }
+    } else
+        cmdlineP->closeness = EPSILON;
 
     if (argc-1 < 2)
         pm_error("You must specify at least two arguments: the files which "
@@ -387,13 +406,14 @@ samplenMean(samplen      const operands[],
 
 static samplen
 samplenEqual(samplen      const operands[],
-             unsigned int const operandCt) {
+             unsigned int const operandCt,
+             double       const closeness) {
 
     unsigned int i;
     bool allEqual;
 
     for (i = 1, allEqual = true; i < operandCt; ++i) {
-        if (operands[i] != operands[0])
+        if (fabs(operands[i]- operands[0]) > closeness)
             allEqual = false;
     }
 
@@ -405,7 +425,8 @@ samplenEqual(samplen      const operands[],
 static samplen
 applyNormalizedFunction(enum function const function,
                         samplen       const operands[],
-                        unsigned int  const operandCt) {
+                        unsigned int  const operandCt,
+                        double        const closeness) {
 
     samplen result;
 
@@ -437,7 +458,7 @@ applyNormalizedFunction(enum function const function,
         result = samplenMean(operands, operandCt);
         break;
     case FN_EQUAL:
-        result = samplenEqual(operands, operandCt);
+        result = samplenEqual(operands, operandCt, closeness);
         break;
     case FN_COMPARE:
         result =
@@ -459,7 +480,8 @@ static void
 doNormalizedArith(struct pam *  const inpam1P,
                   struct pam *  const inpam2P,
                   struct pam *  const outpamP,
-                  enum function const function) {
+                  enum function const function,
+                  double        const closeness) {
 
     /* Some of the logic in this subroutine is designed for future
        expansion into non-dyadic computations.  But for now, all
@@ -508,7 +530,8 @@ doNormalizedArith(struct pam *  const inpam1P,
                     operands[op] = tuplerown[op][col][plane[op]];
 
                 tuplerownOut[col][outplane] =
-                    applyNormalizedFunction(function, operands, operandCt);
+                    applyNormalizedFunction(function, operands, operandCt,
+                                            closeness);
                 assert(tuplerownOut[col][outplane] >= 0.);
                 assert(tuplerownOut[col][outplane] <= 1.);
             }
@@ -919,7 +942,8 @@ main(int argc, const char *argv[]) {
         if (inpam1.maxval == inpam2.maxval && inpam2.maxval == outpam.maxval)
             doUnNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function);
         else
-            doNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function);
+            doNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function,
+                              cmdline.closeness);
         break;
     case CATEGORY_BITSTRING:
     case CATEGORY_SHIFT:
