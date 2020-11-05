@@ -84,7 +84,7 @@ parseCommandLine(int argc, const char ** const argv,
         andSpec, orSpec, nandSpec, norSpec, xorSpec,
         shiftleftSpec, shiftrightSpec, closenessSpec;
 
-    unsigned int closeness;
+    float closeness;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -106,7 +106,7 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0, "xor",         OPT_FLAG,   NULL, &xorSpec,        0);
     OPTENT3(0, "shiftleft",   OPT_FLAG,   NULL, &shiftleftSpec,  0);
     OPTENT3(0, "shiftright",  OPT_FLAG,   NULL, &shiftrightSpec, 0);
-    OPTENT3(0, "closeness",   OPT_UINT,   &closeness, &closenessSpec, 0);
+    OPTENT3(0, "closeness",   OPT_FLOAT,  &closeness, &closenessSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -162,8 +162,8 @@ parseCommandLine(int argc, const char ** const argv,
         if (cmdlineP->function != FN_EQUAL)
             pm_error("-closeness is valid only with -equal");
         else {
-            if (closeness > 100)
-                pm_error("-closeness value %u is not a valid percentage",
+            if (closeness < 0 || closeness > 100)
+                pm_error("-closeness value %f is not a valid percentage",
                          closeness);
             cmdlineP->closeness = (double)closeness/100;
         }
