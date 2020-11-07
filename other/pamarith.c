@@ -911,11 +911,6 @@ main(int argc, const char *argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (cmdline.operandCt != 2)
-        /* Code for > 2 operands not written yet */
-        pm_error("You specified %u operands.  We understand only 2.",
-                 cmdline.operandCt);
-
     if1P = pm_openr(cmdline.operandFileNames[0]);
     if2P = pm_openr(cmdline.operandFileNames[1]);
 
