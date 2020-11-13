@@ -11,7 +11,7 @@
 
 static double const EPSILON = 1.0e-5;
 
-enum function {FN_ADD, FN_SUBTRACT, FN_MULTIPLY, FN_DIVIDE, FN_DIFFERENCE,
+enum Function {FN_ADD, FN_SUBTRACT, FN_MULTIPLY, FN_DIVIDE, FN_DIFFERENCE,
                FN_MINIMUM, FN_MAXIMUM, FN_MEAN, FN_EQUAL, FN_COMPARE,
                FN_AND, FN_OR, FN_NAND, FN_NOR, FN_XOR,
                FN_SHIFTLEFT, FN_SHIFTRIGHT
@@ -20,7 +20,7 @@ enum function {FN_ADD, FN_SUBTRACT, FN_MULTIPLY, FN_DIVIDE, FN_DIFFERENCE,
 
 
 static bool
-isDyadic(enum function const function) {
+isDyadic(enum Function const function) {
 
     bool retval;
 
@@ -56,7 +56,7 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    enum function function;
+    enum Function function;
     unsigned int operandCt;
     const char ** operandFileNames;
     double closeness;
@@ -204,7 +204,7 @@ enum category {
 
 
 static enum category
-functionCategory(enum function const function) {
+functionCategory(enum Function const function) {
 
     enum category retval;
 
@@ -262,25 +262,105 @@ outFmtForCompare(int const format1,
 
 
 
+static unsigned int
+maxDepth(const struct pam * const pam,
+         unsigned int       const pamCt) {
+
+    unsigned int maxDepthSoFar;
+    unsigned int i;
+
+    assert(pamCt >= 1);
+
+    maxDepthSoFar = pam[0].depth;
+    for (i = 1; i < pamCt; ++i) {
+        if (pam[i].depth > maxDepthSoFar)
+            maxDepthSoFar = pam[i].depth;
+    }
+    return maxDepthSoFar;
+}
+
+
+
+static int
+maxFormat(const struct pam * const pam,
+          unsigned int       const pamCt) {
+
+    int maxFormatSoFar;
+    unsigned int i;
+
+    assert(pamCt >= 1);
+
+    maxFormatSoFar = pam[0].format;
+    for (i = 1; i < pamCt; ++i) {
+        if (pam[i].format > maxFormatSoFar)
+            maxFormatSoFar = pam[i].format;
+    }
+    return maxFormatSoFar;
+}
+
+
+
+static sample
+maxMaxval(const struct pam * const pam,
+          unsigned int       const pamCt) {
+
+    sample maxMaxvalSoFar;
+    unsigned int i;
+
+    assert(pamCt >= 1);
+
+    maxMaxvalSoFar = pam[0].maxval;
+    for (i = 1; i < pamCt; ++i) {
+        if (pam[i].maxval > maxMaxvalSoFar)
+            maxMaxvalSoFar = pam[i].maxval;
+    }
+    return maxMaxvalSoFar;
+}
+
+
+
+static bool
+maxvalsAreEqual(const struct pam * const pam,
+                unsigned int       const pamCt) {
+
+    bool equalSoFar;
+    unsigned int i;
+
+    assert(pamCt >= 1);
+
+    equalSoFar = true;
+
+    for (i = 1; i < pamCt; ++i) {
+        if (pam[i].maxval != pam[0].maxval)
+            equalSoFar = false;
+    }
+    return equalSoFar;
+}
+
+
+
 static void
-computeOutputType(struct pam *  const outpamP,
-                  struct pam    const inpam1,
-                  struct pam    const inpam2,
-                  enum function const function) {
+computeOutputType(struct pam *       const outpamP,
+                  const struct pam * const inpam,   /* array */
+                  unsigned int       const operandCt,
+                  enum Function      const function) {
+
+    assert(operandCt >= 1);
 
     outpamP->size        = sizeof(struct pam);
     outpamP->len         = PAM_STRUCT_SIZE(tuple_type);
     outpamP->file        = stdout;
     outpamP->plainformat = FALSE;
-    outpamP->height      = inpam1.height;
-    outpamP->width       = inpam1.width;
-    outpamP->depth       = MAX(inpam1.depth, inpam2.depth);
+    outpamP->height      = inpam[0].height;
+    outpamP->width       = inpam[0].width;
+    outpamP->depth       = maxDepth(inpam, operandCt);
 
 
-    if (function == FN_COMPARE)
-        outpamP->format = outFmtForCompare(inpam1.format, inpam2.format);
-    else
-        outpamP->format = MAX(inpam1.format, inpam2.format);
+    if (function == FN_COMPARE) {
+        assert(operandCt == 2);
+        outpamP->format = outFmtForCompare(inpam[0].format, inpam[1].format);
+    } else
+        outpamP->format = maxFormat(inpam, operandCt);
 
     switch (functionCategory(function)) {
     case CATEGORY_FRACTIONAL_ARITH:
@@ -289,38 +369,40 @@ computeOutputType(struct pam *  const outpamP,
         else if (function == FN_EQUAL)
             outpamP->maxval = 1;
         else
-            outpamP->maxval = MAX(inpam1.maxval, inpam2.maxval);
+            outpamP->maxval = maxMaxval(inpam, operandCt);
         break;
     case CATEGORY_BITSTRING:
-        if (inpam2.maxval != inpam1.maxval)
+        if (maxvalsAreEqual(inpam, operandCt))
             pm_error("For a bit string operation, the maxvals of the "
-                     "left and right image must be the same.  You have "
-                     "left=%u and right=%u",
-                     (unsigned)inpam1.maxval, (unsigned)inpam2.maxval);
+                     "operand images must be the same.  Yours differ");
 
-        if (pm_bitstomaxval(pm_maxvaltobits(inpam1.maxval)) != inpam1.maxval)
+        if (pm_bitstomaxval(pm_maxvaltobits(inpam[0].maxval)) !=
+            inpam[0].maxval)
             pm_error("For a bit string operation, the maxvals of the inputs "
                      "must be a full binary count, i.e. a power of two "
                      "minus one such as 0xff.  You have 0x%x",
-                     (unsigned)inpam1.maxval);
+                     (unsigned)inpam[0].maxval);
 
-        outpamP->maxval = inpam1.maxval;
+        outpamP->maxval = inpam[0].maxval;
         break;
     case CATEGORY_SHIFT:
-        if (pm_bitstomaxval(pm_maxvaltobits(inpam1.maxval)) != inpam1.maxval)
+        if (pm_bitstomaxval(pm_maxvaltobits(inpam[0].maxval)) !=
+            inpam[0].maxval)
             pm_error("For a bit shift operation, the maxval of the left "
                      "input image "
                      "must be a full binary count, i.e. a power of two "
                      "minus one such as 0xff.  You have 0x%x",
-                     (unsigned)inpam1.maxval);
-        outpamP->maxval = inpam1.maxval;
+                     (unsigned)inpam[0].maxval);
+        outpamP->maxval = inpam[0].maxval;
     }
     outpamP->bytes_per_sample = (pm_maxvaltobits(outpamP->maxval)+7)/8;
 
-    if (outpamP->maxval > 1 && strneq(inpam1.tuple_type, "BLACKANDWHITE", 13))
+    if (outpamP->maxval > 1 &&
+        strneq(inpam[0].tuple_type, "BLACKANDWHITE", 13)) {
+
         strcpy(outpamP->tuple_type, "");
-    else
-        strcpy(outpamP->tuple_type, inpam1.tuple_type);
+    } else
+        strcpy(outpamP->tuple_type, inpam[0].tuple_type);
 }
 
 
@@ -423,7 +505,7 @@ samplenEqual(samplen      const operands[],
 
 
 static samplen
-applyNormalizedFunction(enum function const function,
+applyNormalizedFunction(enum Function const function,
                         samplen       const operands[],
                         unsigned int  const operandCt,
                         double        const closeness) {
@@ -477,17 +559,11 @@ applyNormalizedFunction(enum function const function,
 
 
 static void
-doNormalizedArith(struct pam *  const inpam1P,
-                  struct pam *  const inpam2P,
-                  struct pam *  const outpamP,
-                  enum function const function,
-                  double        const closeness) {
-
-    /* Some of the logic in this subroutine is designed for future
-       expansion into non-dyadic computations.  But for now, all
-       computations have exactly two operands.
-    */
-    unsigned int const operandCt = 2;
+doNormalizedArith(const struct pam * const inpam,  /* array */
+                  unsigned int       const operandCt,
+                  const struct pam * const outpamP,
+                  enum Function      const function,
+                  double             const closeness) {
 
     tuplen ** tuplerown;
         /* tuplerown[0] is the current row in the first operand image */
@@ -503,28 +579,32 @@ doNormalizedArith(struct pam *  const inpam1P,
            the current one-sample computation.  plane[1] is the plane number
            in the second operand image, etc.
          */
+    unsigned int i;
 
     MALLOCARRAY_NOFAIL(operands, operandCt);
     MALLOCARRAY_NOFAIL(plane, operandCt);
     MALLOCARRAY_NOFAIL(tuplerown, operandCt);
 
-    tuplerown[0] = pnm_allocpamrown(inpam1P);
-    tuplerown[1] = pnm_allocpamrown(inpam2P);
+    for (i = 0; i < operandCt; ++i)
+        tuplerown[i] = pnm_allocpamrown(&inpam[i]);
     tuplerownOut = pnm_allocpamrown(outpamP);
 
     for (row = 0; row < outpamP->height; ++row) {
+        unsigned int i;
         unsigned int col;
-        pnm_readpamrown(inpam1P, tuplerown[0]);
-        pnm_readpamrown(inpam2P, tuplerown[1]);
+
+        for (i = 0; i < operandCt; ++i)
+            pnm_readpamrown(&inpam[i], tuplerown[i]);
 
         for (col = 0; col < outpamP->width; ++col) {
             unsigned int outplane;
 
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
+                unsigned int i;
                 unsigned int op;
 
-                plane[0] = MIN(outplane, inpam1P->depth-1);
-                plane[1] = MIN(outplane, inpam2P->depth-1);
+                for (i = 0; i < operandCt; ++i)
+                    plane[i] = MIN(outplane, inpam[i].depth-1);
 
                 for (op = 0; op < operandCt; ++op)
                     operands[op] = tuplerown[op][col][plane[op]];
@@ -539,8 +619,8 @@ doNormalizedArith(struct pam *  const inpam1P,
         pnm_writepamrown(outpamP, tuplerownOut);
     }
 
-    pnm_freepamrown(tuplerown[0]);
-    pnm_freepamrown(tuplerown[1]);
+    for (i = 0; i < operandCt; ++i)
+        pnm_freepamrown(tuplerown[i]);
     free(tuplerown);
     pnm_freepamrown(tuplerownOut);
     free(plane);
@@ -727,7 +807,7 @@ sampleXor(sample       const operands[],
 
 
 static sample
-applyUnNormalizedFunction(enum function const function,
+applyUnNormalizedFunction(enum Function const function,
                           sample        const operands[],
                           unsigned int  const operandCt,
                           sample        const maxval) {
@@ -814,21 +894,15 @@ applyUnNormalizedFunction(enum function const function,
 
 
 static void
-doUnNormalizedArith(struct pam *  const inpam1P,
-                    struct pam *  const inpam2P,
-                    struct pam *  const outpamP,
-                    enum function const function) {
+doUnNormalizedArith(const struct pam * const inpam,  /* array */
+                    unsigned int       const operandCt,
+                    const struct pam * const outpamP,
+                    enum Function      const function) {
 /*----------------------------------------------------------------------------
    Take advantage of the fact that both inputs and the output use the same
    maxval to do the computation without time-consuming normalization of
    sample values.
 -----------------------------------------------------------------------------*/
-    /* Some of the logic in this subroutine is designed for future
-       expansion into non-dyadic computations.  But for now, all
-       computations have exactly two operands.
-    */
-    unsigned int const operandCt = 2;
-
     sample const maxval = outpamP->maxval;
 
     tuple ** tuplerow;
@@ -845,33 +919,33 @@ doUnNormalizedArith(struct pam *  const inpam1P,
            the current one-sample computation.  plane[1] is the plane number
            in the second operand image, etc.
          */
-
-    /* Input conditions: */
-    assert(inpam1P->maxval == maxval);
-    assert(inpam2P->maxval == maxval);
-    assert(outpamP->maxval == maxval);
+    unsigned int i;
 
     MALLOCARRAY_NOFAIL(operands, operandCt);
     MALLOCARRAY_NOFAIL(plane, operandCt);
     MALLOCARRAY_NOFAIL(tuplerow, operandCt);
 
-    tuplerow[0]   = pnm_allocpamrow(inpam1P);
-    tuplerow[1]   = pnm_allocpamrow(inpam2P);
+    for (i = 0; i < operandCt; ++i)
+        tuplerow[i]   = pnm_allocpamrow(&inpam[i]);
+
     tuplerowOut = pnm_allocpamrow(outpamP);
 
     for (row = 0; row < outpamP->height; ++row) {
+        unsigned int i;
         unsigned int col;
-        pnm_readpamrow(inpam1P, tuplerow[0]);
-        pnm_readpamrow(inpam2P, tuplerow[1]);
+
+        for (i = 0; i < operandCt; ++i)
+            pnm_readpamrow(&inpam[i], tuplerow[i]);
 
         for (col = 0; col < outpamP->width; ++col) {
             unsigned int outplane;
 
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
                 unsigned int op;
+                unsigned int i;
 
-                plane[0] = MIN(outplane, inpam1P->depth-1);
-                plane[1] = MIN(outplane, inpam2P->depth-1);
+                for (i = 0; i < operandCt; ++i)
+                    plane[i] = MIN(outplane, inpam[i].depth-1);
 
                 for (op = 0; op < operandCt; ++op)
                     operands[op] = tuplerow[op][col][plane[op]];
@@ -887,8 +961,8 @@ doUnNormalizedArith(struct pam *  const inpam1P,
         pnm_writepamrow(outpamP, tuplerowOut);
     }
 
-    pnm_freepamrow(tuplerow[0]);
-    pnm_freepamrow(tuplerow[1]);
+    for (i = 0; i < operandCt; ++i)
+        pnm_freepamrow(tuplerow[i]);
     free(tuplerow);
     pnm_freepamrow(tuplerowOut);
     free(plane);
@@ -901,53 +975,68 @@ int
 main(int argc, const char *argv[]) {
 
     struct CmdlineInfo cmdline;
-    struct pam inpam1;
-    struct pam inpam2;
-    struct pam outpam;
-    FILE * if1P;
-    FILE * if2P;
+    struct pam * inpam;  /* malloc'ed array */
+    FILE **      ifP;    /* malloc'ed array */
+    struct pam   outpam;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if1P = pm_openr(cmdline.operandFileNames[0]);
-    if2P = pm_openr(cmdline.operandFileNames[1]);
+    MALLOCARRAY(inpam, cmdline.operandCt);
+    MALLOCARRAY(ifP,   cmdline.operandCt);
 
-    pnm_readpaminit(if1P, &inpam1, PAM_STRUCT_SIZE(tuple_type));
-    pnm_readpaminit(if2P, &inpam2, PAM_STRUCT_SIZE(tuple_type));
+    if (!inpam || !ifP)
+        pm_error("Failed to allocate arrays for %u operands",
+                 cmdline.operandCt);
 
-    if (inpam1.width != inpam2.width || inpam1.height != inpam2.height)
-        pm_error("The two images must be the same width and height.  "
-                 "The first is %ux%ux%u, but the second is %ux%ux%u",
-                 inpam1.width, inpam1.height, inpam1.depth,
-                 inpam2.width, inpam2.height, inpam2.depth);
+    {
+        unsigned int i;
+        for (i = 0; i < cmdline.operandCt; ++i) {
+            ifP[i] = pm_openr(cmdline.operandFileNames[i]);
 
-    if (inpam1.depth != 1 && inpam2.depth != 1 && inpam1.depth != inpam2.depth)
-        pm_error("The two images must have the same depth or one of them "
-                 "must have depth 1.  The first has depth %u and the second "
-                 "has depth %u", inpam1.depth, inpam2.depth);
+            pnm_readpaminit(ifP[i], &inpam[i], PAM_STRUCT_SIZE(tuple_type));
 
-    computeOutputType(&outpam, inpam1, inpam2, cmdline.function);
+            if (i > 0) {
+                if (inpam[i].width != inpam[0].width ||
+                    inpam[i].height != inpam[0].height) {
+                    pm_error("The images must be the same width and height.  "
+                             "The first is %ux%ux%u, but another is %ux%ux%u",
+                             inpam[0].width, inpam[0].height, inpam[0].depth,
+                             inpam[i].width, inpam[i].height, inpam[i].depth);
+                }
+            }
+        }
+    }
+    computeOutputType(&outpam, inpam, cmdline.operandCt, cmdline.function);
 
     pnm_writepaminit(&outpam);
 
     switch (functionCategory(cmdline.function)) {
     case CATEGORY_FRACTIONAL_ARITH:
-        if (inpam1.maxval == inpam2.maxval && inpam2.maxval == outpam.maxval)
-            doUnNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function);
+        if (maxvalsAreEqual(inpam, cmdline.operandCt) &&
+            inpam[0].maxval == outpam.maxval)
+            doUnNormalizedArith(inpam, cmdline.operandCt, &outpam,
+                                cmdline.function);
         else
-            doNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function,
-                              cmdline.closeness);
+            doNormalizedArith(inpam, cmdline.operandCt, &outpam,
+                              cmdline.function, cmdline.closeness);
         break;
     case CATEGORY_BITSTRING:
     case CATEGORY_SHIFT:
-        doUnNormalizedArith(&inpam1, &inpam2, &outpam, cmdline.function);
+        doUnNormalizedArith(inpam, cmdline.operandCt, &outpam,
+                            cmdline.function);
         break;
     }
 
-    pm_close(if1P);
-    pm_close(if2P);
+    {
+        unsigned int i;
+        for (i = 0; i < cmdline.operandCt; ++i)
+            pm_close(ifP[i]);
+    }
 
     return 0;
 }
+
+
+
