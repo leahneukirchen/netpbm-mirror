@@ -39,11 +39,15 @@ output.
 
 <p>For functions that are commutative and associative, <b>pamarith</b> applies
   the binary function repetitively on as many input images as you supply.  For
-  example, for <b>-add</b> , the output is the sum of all the inputs; for
-  <b>-equal</b>, it tells you whether all the inputs are equal.  For other
-  functions (e.g. <b>-subtract</b>), the program fails if you supply more
-  than two input images.  (Before Netpbm 10.51 (June 2010), the program always
-  failed with more than two input images).
+  example, for <b>-add</b> , the output is the sum of all the inputs.  For
+  other functions (e.g. <b>-subtract</b>), the program fails if you supply
+  more than two input images.  (Before Netpbm 10.93 (December 2020), the
+  program always failed with more than two input images).
+
+<p>For some other functions, <b>pamarith</b> could theoretically compute a
+  meaningful result for multiple arguments, but it fails nonetheless if you
+  give more than two input images.  <b>-mean</b> and <b>-equal</b> are in that
+  category.
   
 <p>Most of what <b>pamarith</b> does is not meaningful for visual images.  It
   works toward Netpbm's secondary purpose of just manipulating arbitrary
@@ -322,7 +326,7 @@ that made it backward compatible with <b>pnmarith</b>.
 <p>The <b>-divide</b> option was added in Netpbm 10.30 (October 2005).
 
 <p>The ability to have more than one input (operand) was added in Netpbm
-10.51 (June 2010), but not documented until October 2020.
+10.93 (December 2020).
 
 <p>The <b>-equal</b> option was added in Netpbm 10.93 (December 2020).
 
