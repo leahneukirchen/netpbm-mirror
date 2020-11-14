@@ -29,8 +29,6 @@ isDyadic(enum Function const function) {
     case FN_MULTIPLY:
     case FN_MINIMUM:
     case FN_MAXIMUM:
-    case FN_MEAN:
-    case FN_EQUAL:
     case FN_AND:
     case FN_NAND:
     case FN_OR:
@@ -42,8 +40,10 @@ isDyadic(enum Function const function) {
     case FN_DIFFERENCE:
     case FN_COMPARE:
     case FN_DIVIDE:
+    case FN_MEAN:
     case FN_SHIFTLEFT:
     case FN_SHIFTRIGHT:
+    case FN_EQUAL:
         retval = TRUE;
         break;
     }
@@ -176,9 +176,11 @@ parseCommandLine(int argc, const char ** const argv,
                  argc-1);
     else {
         if (isDyadic(cmdlineP->function) && argc-1 > 2)
-            pm_error("You specified %u arguments, but a dyadic function.  "
-                     "For a dyadic function, you must specify 2 arguments:  "
-                     "the operands of the function", argc-1);
+            pm_error("You specified %u arguments, but a function "
+                     "which is not associative and commutative.  "
+                     "Unless a function is associative and commutative "
+                     "(like -add), you must specify exactly two arguments. ",
+                     argc-1);
         else {
             cmdlineP->operandCt = argc-1;
             cmdlineP->operandFileNames = &argv[1];
