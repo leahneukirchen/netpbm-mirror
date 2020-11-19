@@ -374,7 +374,7 @@ computeOutputType(struct pam *       const outpamP,
             outpamP->maxval = maxMaxval(inpam, operandCt);
         break;
     case CATEGORY_BITSTRING:
-        if (maxvalsAreEqual(inpam, operandCt))
+        if (!maxvalsAreEqual(inpam, operandCt))
             pm_error("For a bit string operation, the maxvals of the "
                      "operand images must be the same.  Yours differ");
 
