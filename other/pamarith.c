@@ -205,6 +205,64 @@ enum category {
 
 
 
+static void
+validateSameWidthHeight(const struct pam * const inpam  /* array */,
+                        unsigned int       const operandCt) {
+    unsigned int i;
+
+    for (i = 1; i < operandCt; ++i) {
+
+        if (i > 0) {
+            if (inpam[i].width  != inpam[0].width ||
+                inpam[i].height != inpam[0].height) {
+                pm_error("The images must be the same width and height.  "
+                         "The first is %ux%ux%u, but another is %ux%ux%u",
+                         inpam[0].width, inpam[0].height, inpam[0].depth,
+                         inpam[i].width, inpam[i].height, inpam[i].depth);
+            }
+        }
+    }
+}
+
+
+
+static void
+validateCompatibleDepth(const struct pam * const inpam  /* array */,
+                        unsigned int       const operandCt) {
+
+    unsigned int i;
+    bool         haveNonUnityDepth;
+    unsigned int nonUnityDepth;
+
+    for (i = 0, haveNonUnityDepth = false; i < operandCt; ++i) {
+        if (inpam[i].depth != 1) {
+            if (haveNonUnityDepth) {
+                if (inpam[i].depth != nonUnityDepth)
+                    pm_error("The images must have the same depth "
+                             "or depth 1.  "
+                             "But one has depth %u and another %u",
+                             nonUnityDepth, inpam[i].depth);
+            } else {
+                haveNonUnityDepth = true;
+                nonUnityDepth = inpam[i].depth;
+            }
+        }
+    }
+}
+
+
+
+static void
+validateConsistentDimensions(const struct pam * const inpam  /* array */,
+                             unsigned int       const operandCt) {
+
+    validateSameWidthHeight(inpam, operandCt);
+
+    validateCompatibleDepth(inpam, operandCt);
+}
+
+
+
 static enum category
 functionCategory(enum Function const function) {
 
@@ -998,18 +1056,10 @@ main(int argc, const char *argv[]) {
             ifP[i] = pm_openr(cmdline.operandFileNames[i]);
 
             pnm_readpaminit(ifP[i], &inpam[i], PAM_STRUCT_SIZE(tuple_type));
-
-            if (i > 0) {
-                if (inpam[i].width != inpam[0].width ||
-                    inpam[i].height != inpam[0].height) {
-                    pm_error("The images must be the same width and height.  "
-                             "The first is %ux%ux%u, but another is %ux%ux%u",
-                             inpam[0].width, inpam[0].height, inpam[0].depth,
-                             inpam[i].width, inpam[i].height, inpam[i].depth);
-                }
-            }
         }
     }
+    validateConsistentDimensions(inpam, cmdline.operandCt);
+
     computeOutputType(&outpam, inpam, cmdline.operandCt, cmdline.function);
 
     pnm_writepaminit(&outpam);

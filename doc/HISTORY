@@ -12,6 +12,9 @@ not yet  BJH  Release 10.93.00
               it makes sense (all but -subtract, -difference, -compare,
               -divide, -shiftleft, and -shiftright).
 
+              pamrith: fail if operand images have different depth and not
+              depth 1.
+
 20.09.26 BJH  Release 10.92.00
 
               pnmcrop: Make -margin effective with -blank-image=minimize.
