@@ -1,8 +1,7 @@
-
 #! /bin/bash
 # This script tests: pamarith
-# Also requires: pamchannel pamseq pamtopnm pgmmake pnmcat rgb3toppm
-# Also requires: pbmmake pamenlarge
+# Also requires: pamtopnm rgb3toppm pamenlarge pnmcat pamseq pbmmake pgmmake 
+# Also requires: ppmpat pamchannel 
 
 tmpdir=${tmpdir:-/tmp}
 input1_pgm=${tmpdir}/input1.pgm
@@ -22,7 +21,7 @@ rgb3toppm ${input2_pgm} ${input2_pgm} ${input2_pgm} > ${input2_ppm}
 pnmcat -tb -plain ${input1_pgm} ${input2_pgm}
 
 for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
-    "-minimum" "-maximum" "-mean" "-compare" \
+    "-minimum" "-maximum" "-mean" "-compare" "-equal" \
     "-and" "-or" "-nand" "-nor"  "-xor" \
     "-shiftleft" "-shiftright"
   do
@@ -36,7 +35,6 @@ for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
 
 rm ${input1_pgm} ${input2_pgm} ${output_pgm} ${input2_ppm}
 
-
 input1_pbm=${tmpdir}/input1.pbm
 input2_pbm=${tmpdir}/input2.pbm
 
@@ -48,7 +46,7 @@ pbmmake -g 2 1 | pamenlarge -xscale=4 > ${input2_pbm}
 pnmcat -tb -plain ${input1_pbm} ${input2_pbm}
 
 for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
-    "-minimum" "-maximum" "-mean" "-compare" \
+    "-minimum" "-maximum" "-mean" "-compare" "-equal" \
     "-and" "-or" "-nand" "-nor"  "-xor" \
     "-shiftleft" "-shiftright"
   do
@@ -58,8 +56,38 @@ for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
 
 rm ${input1_pbm} ${input2_pbm}
 
+echo "Test 3"
 
-echo "Test 3 (input = output)"
+input3_ppm=${tmpdir}/input3.ppm
+input4_ppm=${tmpdir}/input4.ppm
+input4_pgm=${tmpdir}/input4.pgm
+
+ppmpat -tartan  -color=rgb:f0/f0/00,rgb:80/00/80,rgb:0f/00/0f 20 15 \
+  > ${input3_ppm}
+ppmpat -argyle2 -color=rgb:01/01/01,rgb:02/02/02,rgb:05/05/05 20 15 \
+  > ${input4_ppm}
+pamchannel -infile ${input4_ppm} 0 > ${input4_pgm}
+
+for fn in "-add" "-multiply" "-difference" \
+    "-minimum" "-maximum" "-mean" "-equal" \
+    "-and" "-or" "-nand" "-nor" "-xor"
+  do
+  echo ${fn}
+  pamarith ${fn} ${input3_ppm} ${input4_ppm} | cksum
+  pamarith ${fn} ${input4_ppm} ${input3_ppm} | cksum
+  pamarith ${fn} ${input3_ppm} ${input4_pgm} | pamtopnm | cksum
+  done
+
+for fn in "-subtract" "-divide" "-compare" "-shiftleft" "-shiftright"
+  do
+  echo ${fn}
+  pamarith ${fn} ${input3_ppm} ${input4_ppm} | cksum
+  pamarith ${fn} ${input3_ppm} ${input4_pgm} | pamtopnm | cksum
+  done
+
+rm ${input3_ppm} ${input4_ppm} ${input4_pgm}
+
+echo "Test 4 (input = output)"
 echo "cksum is 2425386270 41 or 2921940274 59"
 
 for image in testgrid.pbm ${input1_ppm}
@@ -74,7 +102,7 @@ for image in testgrid.pbm ${input1_ppm}
   done
 
 
-echo "Test 4 (blank output)"
+echo "Test 5 (blank output)"
 echo "cksum is 2817549367 41 or 320101399 59"
 
 for image in testgrid.pbm ${input1_ppm}
@@ -97,6 +125,8 @@ echo "Test Invalid"
 
 output_ppm=${tmpdir}/output.ppm
 
+# multiple functions
+
 pamarith -add -subtract testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 1"
   test -s ${output_ppm}; echo " "$?
@@ -112,54 +142,174 @@ pamarith -maximum -mean testimg.ppm testimg.ppm > ${output_ppm} || \
 pamarith -compare -and testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 5"
   test -s ${output_ppm}; echo " "$?
-pamarith -or -nand testimg.ppm testimg.ppm > ${output_ppm} || \
+pamarith -compare -equal testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 6"
   test -s ${output_ppm}; echo " "$?
-pamarith -nor -xor testimg.ppm testimg.ppm > ${output_ppm} || \
+pamarith -or -nand testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 7"
   test -s ${output_ppm}; echo " "$?
-pamarith -shiftleft -shiftright testimg.ppm testimg.ppm > ${output_ppm} || \
+pamarith -nor -xor testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 8"
   test -s ${output_ppm}; echo " "$?
-pamarith -add=1 testimg.ppm testimg.ppm > ${output_ppm} || \
+pamarith -shiftleft -shiftright testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 9"
   test -s ${output_ppm}; echo " "$?
 
-pamarith -plain testimg.ppm testimg.ppm > ${output_ppm} || \
-  echo -n "Expected failure 10"
-  test -s ${output_ppm}; echo " "$?
+# -add does not take a value
 
-pamarith testimg.ppm testimg.ppm > ${output_ppm} || \
+pamarith -add=1 testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 10"
+ test -s ${output_ppm}; echo " "$?
+
+# No function
+
+pamarith -plain testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 11"
   test -s ${output_ppm}; echo " "$?
 
-pamarith -add testimg.ppm testimg.ppm testimg.ppm > ${output_ppm}
+pamarith testimg.ppm testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 12"
   test -s ${output_ppm}; echo " "$?
-pamarith -add testimg.ppm > ${output_ppm}
+
+# Just one input image file
+
+pamarith -add testimg.ppm > ${output_ppm} || \
   echo -n "Expected failure 13"
   test -s ${output_ppm}; echo " "$?
-pamarith -add > ${output_ppm}
+
+# No input image file
+
+pamarith -add > ${output_ppm} || \
   echo -n "Expected failure 14"
   test -s ${output_ppm}; echo " "$?
 
-pamarith -add testimg.ppm testgrid.pbm > ${output_ppm}
+# Input images with different depth (number of planes)
+
+pamchannel -infile testimg.ppm 0 1 | \
+  pamarith -add testimg.ppm - > ${output_ppm} || \
   echo -n "Expected failure 15"
   test -s ${output_ppm}; echo " "$?
 
-pamchannel -infile testimg.ppm 0 1 | \
-  pamarith -add testimg.ppm - > ${output_ppm}
+
+# Input images with different x/y dimensions
+
+pamarith -add testimg.ppm testgrid.pbm > ${output_ppm} || \
   echo -n "Expected failure 16"
   test -s ${output_ppm}; echo " "$?
 
 pamenlarge -xscale=2 testgrid.pbm | \
-  pamarith -add testgrid.pbm - > ${output_ppm}
+  pamarith -add testgrid.pbm - > ${output_ppm} || \
   echo -n "Expected failure 17"
   test -s ${output_ppm}; echo " "$?
 
 pamenlarge -yscale=3 testgrid.pbm | \
-  pamarith -add testgrid.pbm - > ${output_ppm}
+  pamarith -add testgrid.pbm - > ${output_ppm} || \
   echo -n "Expected failure 18"
+  test -s ${output_ppm}; echo " "$?
+
+
+# Invalid usage of -closeness
+
+pamarith -equal -closeness=100.1 testgrid.pbm > ${output_ppm} || \
+  echo -n "Expected failure 19"
+  test -s ${output_ppm}; echo " "$?
+pamarith -equal -closeness=-10 testgrid.pbm > ${output_ppm} || \
+  echo -n "Expected failure 20"
+  test -s ${output_ppm}; echo " "$?
+pamarith -closeness -equal testgrid.pbm > ${output_ppm} || \
+  echo -n "Expected failure 21"
+  test -s ${output_ppm}; echo " "$?
+pamarith -compare -closeness=10 testgrid.pbm > ${output_ppm} || \
+  echo -n "Expected failure 22"
+  test -s ${output_ppm}; echo " "$?
+
+# Bit string functions
+# Create PGM test input
+
+input3_pgm=${tmpdir}/input3.pgm
+input4_pgm=${tmpdir}/input4.pgm
+input5_pgm=${tmpdir}/input5.pgm
+
+pgmmake -maxval=4095 1.0 3 1 > ${input3_pgm} 
+pgmmake -maxval=4096 1.0 3 1 > ${input4_pgm}
+pgmmake -maxval=8191 1.0 3 1 > ${input5_pgm}
+
+# Bit string functions - Maxval must match
+
+pamarith -and ${input3_pgm} ${input5_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 23"
+  test -s ${output_ppm}; echo " "$?
+pamarith -or ${input3_pgm} ${input5_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 24"
+  test -s ${output_ppm}; echo " "$?
+pamarith -nand ${input3_pgm} ${input5_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 25"
+  test -s ${output_ppm}; echo " "$?
+pamarith -nor ${input3_pgm} ${input5_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 26"
+  test -s ${output_ppm}; echo " "$?
+pamarith -xor ${input3_pgm} ${input5_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 27"
+  test -s ${output_ppm}; echo " "$?
+
+# Bit string functions - Maxval must be 2^n -1
+
+pamarith -and ${input4_pgm} ${input4_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 28"
+  test -s ${output_ppm}; echo " "$?
+pamarith -or ${input4_pgm} ${input4_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 29"
+  test -s ${output_ppm}; echo " "$?
+pamarith -nand ${input4_pgm} ${input4_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 30"
+  test -s ${output_ppm}; echo " "$?
+pamarith -nor ${input4_pgm} ${input4_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 31"
+  test -s ${output_ppm}; echo " "$?
+pamarith -xor ${input4_pgm} ${input4_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 32"
+  test -s ${output_ppm}; echo " "$?
+
+pamarith -shiftleft ${input4_pgm} ${input4_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 33"
+  test -s ${output_ppm}; echo " "$?
+pamarith -shiftright ${input4_pgm} ${input4_pgm} > ${output_ppm} || \
+  echo -n "Expected failure 34"
+  test -s ${output_ppm}; echo " "$?
+
+rm ${input3_pgm} ${input4_pgm} ${input5_pgm}
+
+# Functions that do not allow more than two input images.
+# Only the functions that are commutative and associative allow
+# three or more inputs.
+
+pamarith -subtract testimg.ppm testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 35"
+  test -s ${output_ppm}; echo " "$?
+pamarith -divide testimg.ppm testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 36"
+  test -s ${output_ppm}; echo " "$?
+pamarith -compare testimg.ppm testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 37"
+  test -s ${output_ppm}; echo " "$?
+pamarith -difference testimg.ppm testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 38"
+  test -s ${output_ppm}; echo " "$?
+pamarith -shiftleft testimg.ppm testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 39"
+  test -s ${output_ppm}; echo " "$?
+pamarith -shiftright testimg.ppm testimg.ppm testimg.ppm > ${output_ppm} || \
+  echo -n "Expected failure 40"
+  test -s ${output_ppm}; echo " "$?
+
+# Currently -equal and -mean do not allow more than two input images.
+# These two cases should be removed once improvements are made.
+
+pamarith -equal testgrid.pbm testgrid.pbm testgrid.pbm > ${output_ppm} || \
+  echo -n "Expected failure 41"
+  test -s ${output_ppm}; echo " "$?
+pamarith -mean testgrid.pbm  testgrid.pbm testgrid.pbm > ${output_ppm} || \
+  echo -n "Expected failure 42"
   test -s ${output_ppm}; echo " "$?
 
 rm ${output_ppm}

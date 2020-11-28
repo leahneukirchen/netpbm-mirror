@@ -94,6 +94,8 @@ pgmbentley.test
 
 pamfunc.test
 pamarith.test
+pamarith-compare-equal.test
+pamarith-multiple-input.test
 
 pamenlarge.test
 pamenlarge-pbm.test
