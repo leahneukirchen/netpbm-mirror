@@ -120,149 +120,190 @@ ppm_fs_init(unsigned int const cols,
 
 
 void
-ppm_fs_free(fi)
-    ppm_fs_info *fi;
-{
-    if( fi ) {
-        free(fi->thisrederr); free(fi->thisgreenerr); free(fi->thisblueerr);
-        free(fi->nextrederr); free(fi->nextgreenerr); free(fi->nextblueerr);
-        free(fi);
+ppm_fs_free(ppm_fs_info * const fiP) {
+
+    if (fiP) {
+        free(fiP->thisrederr); free(fiP->thisgreenerr); free(fiP->thisblueerr);
+        free(fiP->nextrederr); free(fiP->nextgreenerr); free(fiP->nextblueerr);
+        free(fiP);
     }
 }
 
 
+
 int
-ppm_fs_startrow(fi, pixrow)
-    ppm_fs_info *fi;
-    pixel *pixrow;
-{
-    register int col;
+ppm_fs_startrow(ppm_fs_info * const fiP,
+                pixel *       const pixrow) {
 
-    if( !fi )
-        return 0;
+    int retval;
 
-    fi->pixrow = pixrow;
-
-    for( col = 0; col < fi->cols + 2; col++ )
-        fi->nextrederr[col] = fi->nextgreenerr[col] = fi->nextblueerr[col] = 0;
-
-    if( fi->lefttoright ) {
-        fi->col_end = fi->cols;
-        col = 0;
-    }
+    if (!fiP)
+        retval = 0;
     else {
-        fi->col_end = -1;
-        col = fi->cols - 1;
+        unsigned int col;
+
+        fiP->pixrow = pixrow;
+
+        for (col = 0; col < fiP->cols + 2; ++col) {
+            fiP->nextrederr  [col] = 0;
+            fiP->nextgreenerr[col] = 0;
+            fiP->nextblueerr [col] = 0;
+        }
+
+        if(fiP->lefttoright) {
+            fiP->col_end = fiP->cols;
+            col = 0;
+        } else {
+            fiP->col_end = -1;
+            col = fiP->cols - 1;
+        }
+        fs_adjust(fiP, col);
+
+        retval = col;
     }
-    fs_adjust(fi, col);
-    return col;
+    return retval;
 }
 
 
+
 int
-ppm_fs_next(fi, col)
-    ppm_fs_info *fi;
+ppm_fs_next(ppm_fs_info * const fiP,
+            int           const startCol) {
+
     int col;
-{
-    if( !fi )
+
+    col = startCol;  /* initial value */
+
+    if (!fiP)
         ++col;
     else {
-        if( fi->lefttoright )
+        if (fiP->lefttoright)
             ++col;
         else
             --col;
-        if( col == fi->col_end )
-            col = fi->cols;
+        if (col == fiP->col_end)
+            col = fiP->cols;
         else
-            fs_adjust(fi, col);
+            fs_adjust(fiP, col);
     }
     return col;
 }
 
 
-void
-ppm_fs_endrow(fi)
-    ppm_fs_info *fi;
-{
-    long *tmp;
 
-    if( fi ) {
-        tmp = fi->thisrederr;   fi->thisrederr   = fi->nextrederr;   fi->nextrederr   = tmp;
-        tmp = fi->thisgreenerr; fi->thisgreenerr = fi->nextgreenerr; fi->nextgreenerr = tmp;
-        tmp = fi->thisblueerr;  fi->thisblueerr  = fi->nextblueerr;  fi->nextblueerr  = tmp;
-        if( fi->flags & FS_ALTERNATE )
-            fi->lefttoright = !(fi->lefttoright);
+void
+ppm_fs_endrow(ppm_fs_info * const fiP) {
+
+    if (fiP) {
+        {
+            long * const tmp = fiP->thisrederr;
+            fiP->thisrederr = fiP->nextrederr;
+            fiP->nextrederr = tmp;
+        }
+        {
+            long * const tmp = fiP->thisgreenerr;
+            fiP->thisgreenerr = fiP->nextgreenerr;
+            fiP->nextgreenerr = tmp;
+        }
+        {
+            long * const tmp = fiP->thisblueerr;
+            fiP->thisblueerr = fiP->nextblueerr;
+            fiP->nextblueerr = tmp;
+        }
+        if (fiP->flags & FS_ALTERNATE)
+            fiP->lefttoright = !fiP->lefttoright;
     }
 }
 
 
+
 void
-ppm_fs_update(fi, col, pP)
-    ppm_fs_info *fi;
-    int col;
-    pixel *pP;
-{
-    if( fi )
-        ppm_fs_update3(fi, col, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP));
+ppm_fs_update(ppm_fs_info * const fiP,
+              int           const col,
+              pixel *       const pP) {
+
+    if (fiP)
+        ppm_fs_update3(fiP, col, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP));
 }
 
 
+
 void
-ppm_fs_update3(ppm_fs_info * const fi,
+ppm_fs_update3(ppm_fs_info * const fiP,
                int           const col,
                pixval        const r,
                pixval        const g,
                pixval        const b) {
 
     int const errcol = col + 1;
-    long err;
 
-    if (fi) {
-        long const rerr = (long)(fi->red)   - (long)r;
-        long const gerr = (long)(fi->green) - (long)g;
-        long const berr = (long)(fi->blue)  - (long)b;
+    if (fiP) {
+        long const rerr = (long)(fiP->red)   - (long)r;
+        long const gerr = (long)(fiP->green) - (long)g;
+        long const berr = (long)(fiP->blue)  - (long)b;
 
-        if ( fi->lefttoright ) {
-            long two_err;
+        if ( fiP->lefttoright ) {
+            {
+                long const two_err = 2*rerr;
 
-            two_err = 2*rerr;
-            err = rerr;     fi->nextrederr[errcol+1] += err;    /* 1/16 */
-            err += two_err; fi->nextrederr[errcol-1] += err;    /* 3/16 */
-            err += two_err; fi->nextrederr[errcol  ] += err;    /* 5/16 */
-            err += two_err; fi->thisrederr[errcol+1] += err;    /* 7/16 */
+                long err;
 
-            two_err = 2*gerr;
-            err = gerr;     fi->nextgreenerr[errcol+1] += err;    /* 1/16 */
-            err += two_err; fi->nextgreenerr[errcol-1] += err;    /* 3/16 */
-            err += two_err; fi->nextgreenerr[errcol  ] += err;    /* 5/16 */
-            err += two_err; fi->thisgreenerr[errcol+1] += err;    /* 7/16 */
+                err = rerr;     fiP->nextrederr[errcol+1] += err;    /* 1/16 */
+                err += two_err; fiP->nextrederr[errcol-1] += err;    /* 3/16 */
+                err += two_err; fiP->nextrederr[errcol  ] += err;    /* 5/16 */
+                err += two_err; fiP->thisrederr[errcol+1] += err;    /* 7/16 */
+            }
+            {
+                long const two_err = 2*gerr;
 
-            two_err = 2*berr;
-            err = berr;     fi->nextblueerr[errcol+1] += err;    /* 1/16 */
-            err += two_err; fi->nextblueerr[errcol-1] += err;    /* 3/16 */
-            err += two_err; fi->nextblueerr[errcol  ] += err;    /* 5/16 */
-            err += two_err; fi->thisblueerr[errcol+1] += err;    /* 7/16 */
-        }
-        else {
-            long two_err;
+                long err;
 
-            two_err = 2*rerr;
-            err = rerr;     fi->nextrederr[errcol-1] += err;    /* 1/16 */
-            err += two_err; fi->nextrederr[errcol+1] += err;    /* 3/16 */
-            err += two_err; fi->nextrederr[errcol  ] += err;    /* 5/16 */
-            err += two_err; fi->thisrederr[errcol-1] += err;    /* 7/16 */
+                err = gerr;     fiP->nextgreenerr[errcol+1] += err;  /* 1/16 */
+                err += two_err; fiP->nextgreenerr[errcol-1] += err;  /* 3/16 */
+                err += two_err; fiP->nextgreenerr[errcol  ] += err;  /* 5/16 */
+                err += two_err; fiP->thisgreenerr[errcol+1] += err;  /* 7/16 */
+            }
+            {
+                long const two_err = 2*berr;
 
-            two_err = 2*gerr;
-            err = gerr;     fi->nextgreenerr[errcol-1] += err;    /* 1/16 */
-            err += two_err; fi->nextgreenerr[errcol+1] += err;    /* 3/16 */
-            err += two_err; fi->nextgreenerr[errcol  ] += err;    /* 5/16 */
-            err += two_err; fi->thisgreenerr[errcol-1] += err;    /* 7/16 */
+                long err;
 
-            two_err = 2*berr;
-            err = berr;     fi->nextblueerr[errcol-1] += err;    /* 1/16 */
-            err += two_err; fi->nextblueerr[errcol+1] += err;    /* 3/16 */
-            err += two_err; fi->nextblueerr[errcol  ] += err;    /* 5/16 */
-            err += two_err; fi->thisblueerr[errcol-1] += err;    /* 7/16 */
+                err = berr;     fiP->nextblueerr[errcol+1] += err;  /* 1/16 */
+                err += two_err; fiP->nextblueerr[errcol-1] += err;  /* 3/16 */
+                err += two_err; fiP->nextblueerr[errcol  ] += err;  /* 5/16 */
+                err += two_err; fiP->thisblueerr[errcol+1] += err;  /* 7/16 */
+            }
+        } else {
+            {
+                long const two_err = 2*rerr;
+
+                long err;
+
+                err = rerr;     fiP->nextrederr[errcol-1] += err;    /* 1/16 */
+                err += two_err; fiP->nextrederr[errcol+1] += err;    /* 3/16 */
+                err += two_err; fiP->nextrederr[errcol  ] += err;    /* 5/16 */
+                err += two_err; fiP->thisrederr[errcol-1] += err;    /* 7/16 */
+            }
+            {
+                long const two_err = 2*gerr;
+
+                long err;
+
+                err = gerr;     fiP->nextgreenerr[errcol-1] += err;  /* 1/16 */
+                err += two_err; fiP->nextgreenerr[errcol+1] += err;  /* 3/16 */
+                err += two_err; fiP->nextgreenerr[errcol  ] += err;  /* 5/16 */
+                err += two_err; fiP->thisgreenerr[errcol-1] += err;  /* 7/16 */
+            }
+            {
+                long const two_err = 2*berr;
+
+                long err;
+
+                err = berr;     fiP->nextblueerr[errcol-1] += err;  /* 1/16 */
+                err += two_err; fiP->nextblueerr[errcol+1] += err;  /* 3/16 */
+                err += two_err; fiP->nextblueerr[errcol  ] += err;  /* 5/16 */
+                err += two_err; fiP->thisblueerr[errcol-1] += err;  /* 7/16 */
+            }
         }
     }
 }
