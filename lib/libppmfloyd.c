@@ -1,8 +1,8 @@
-/* 
+/*
 These functions were taken from Ingo Wilken's ilbm package by Bryan
 Henderson on 01.03.10.  Because ppmtoilbm and ilbmtoppm are the only
 programs that will use these in the foreseeable future, they remain
-lightly documented and tested. 
+lightly documented and tested.
 
 But they look like they would be useful in other Netpbm programs that
 do Floyd-Steinberg.
@@ -29,7 +29,7 @@ do Floyd-Steinberg.
 
 
 static void
-fs_adjust(ppm_fs_info * const fi, 
+fs_adjust(ppm_fs_info * const fi,
           int           const col) {
 
     int     const errcol = col+1;
@@ -59,7 +59,7 @@ allocateFi(int const cols) {
     ppm_fs_info * fi;
 
     MALLOCVAR(fi);
-    
+
     if (fi != NULL) {
         MALLOCARRAY(fi->thisrederr  , cols + 2);
         MALLOCARRAY(fi->thisgreenerr, cols + 2);
@@ -67,12 +67,12 @@ allocateFi(int const cols) {
         MALLOCARRAY(fi->nextrederr  , cols + 2);
         MALLOCARRAY(fi->nextgreenerr, cols + 2);
         MALLOCARRAY(fi->nextblueerr , cols + 2);
-        
-        if (fi->thisrederr   == NULL || 
-            fi->thisgreenerr == NULL || 
+
+        if (fi->thisrederr   == NULL ||
+            fi->thisgreenerr == NULL ||
             fi->thisblueerr  == NULL ||
-            fi->nextrederr   == NULL || 
-            fi->nextgreenerr == NULL || 
+            fi->nextrederr   == NULL ||
+            fi->nextgreenerr == NULL ||
             fi->nextblueerr  == NULL)
             pm_error("out of memory allocating "
                      "Floyd-Steinberg control structure");
@@ -90,7 +90,7 @@ ppm_fs_init(unsigned int const cols,
             unsigned int const flags) {
 
     ppm_fs_info * fiP;
-    
+
     fiP = allocateFi(cols);
 
     fiP->lefttoright = 1;
@@ -111,7 +111,7 @@ ppm_fs_init(unsigned int const cols,
         unsigned int i;
 
         for (i = 0; i < cols + 2; ++i)
-            fiP->thisrederr[i] = fiP->thisgreenerr[i] = 
+            fiP->thisrederr[i] = fiP->thisgreenerr[i] =
                 fiP->thisblueerr[i] = 0;
     }
     return fiP;
@@ -208,10 +208,10 @@ ppm_fs_update(fi, col, pP)
 
 
 void
-ppm_fs_update3(ppm_fs_info * const fi, 
-               int           const col, 
-               pixval        const r, 
-               pixval        const g, 
+ppm_fs_update3(ppm_fs_info * const fi,
+               int           const col,
+               pixval        const r,
+               pixval        const g,
                pixval        const b) {
 
     int const errcol = col + 1;
@@ -221,7 +221,7 @@ ppm_fs_update3(ppm_fs_info * const fi,
         long const rerr = (long)(fi->red)   - (long)r;
         long const gerr = (long)(fi->green) - (long)g;
         long const berr = (long)(fi->blue)  - (long)b;
-    
+
         if ( fi->lefttoright ) {
             long two_err;
 
