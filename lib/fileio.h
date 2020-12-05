@@ -13,12 +13,12 @@ unsigned int
 pm_getuint(FILE * const file);
 
 unsigned int
-pm_getraw(FILE *       const file, 
+pm_getraw(FILE *       const file,
           unsigned int const bytes);
 
 void
-pm_putraw(FILE *       const file, 
-          unsigned int const value, 
+pm_putraw(FILE *       const file,
+          unsigned int const value,
           unsigned int const bytes);
 
 #endif
