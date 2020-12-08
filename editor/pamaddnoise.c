@@ -1,8 +1,8 @@
 /*
-** 
-** Add gaussian, multiplicative gaussian, impulse, laplacian or 
+**
+** Add gaussian, multiplicative gaussian, impulse, laplacian or
 ** poisson noise to a portable anymap.
-** 
+**
 ** Version 1.0  November 1995
 **
 ** Copyright (C) 1995 by Mike Burns (burns@cac.psu.edu)
@@ -64,14 +64,14 @@ gaussian_noise(sample   const maxval,
     double x1, x2, xn, yn;
     double rawNewSample;
 
-    x1 = (rand() & RANDOM_MASK) / arand; 
+    x1 = (rand() & RANDOM_MASK) / arand;
 
     if (x1 == 0.0)
         x1 = 1.0;
     x2 = (rand() & RANDOM_MASK) / arand;
     xn = sqrt(-2.0 * log(x1)) * cos(2.0 * M_PI * x2);
     yn = sqrt(-2.0 * log(x1)) * sin(2.0 * M_PI * x2);
-    
+
     rawNewSample =
         origSample + (sqrt((double) origSample) * sigma1 * xn) + (sigma2 * yn);
 
@@ -91,9 +91,9 @@ impulse_noise(sample   const maxval,
 
     double const low_tol  = tolerance / 2.0;
     double const high_tol = 1.0 - (tolerance / 2.0);
-    double const sap = (rand() & RANDOM_MASK) / arand; 
+    double const sap = (rand() & RANDOM_MASK) / arand;
 
-    if (sap < low_tol) 
+    if (sap < low_tol)
         *newSampleP = 0;
     else if ( sap >= high_tol )
         *newSampleP = maxval;
@@ -112,8 +112,8 @@ laplacian_noise(sample   const maxval,
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double const u = (rand() & RANDOM_MASK) / arand; 
-                
+    double const u = (rand() & RANDOM_MASK) / arand;
+
     double rawNewSample;
 
     if (u <= 0.5) {
@@ -148,14 +148,14 @@ multiplicative_gaussian_noise(sample   const maxval,
     double rawNewSample;
 
     {
-        double const uniform = (rand() & RANDOM_MASK) / arand; 
+        double const uniform = (rand() & RANDOM_MASK) / arand;
         if (uniform <= EPSILON)
             rayleigh = infinity;
         else
             rayleigh = sqrt(-2.0 * log( uniform));
     }
     {
-        double const uniform = (rand() & RANDOM_MASK) / arand; 
+        double const uniform = (rand() & RANDOM_MASK) / arand;
         gauss = rayleigh * cos(2.0 * M_PI * uniform);
     }
     rawNewSample = origSample + (origSample * mgsigma * gauss);
@@ -194,7 +194,7 @@ poisson_noise(sample   const maxval,
 
 
 
-int 
+int
 main(int argc, char * argv[]) {
 
     FILE * ifP;
@@ -214,14 +214,14 @@ main(int argc, char * argv[]) {
         "[-sigma1 x] [-sigma2 x] [-lambda x] [-seed n] "
         "[-tolerance ratio] [pgmfile]";
 
-    const char * const noise_name[] = { 
+    const char * const noise_name[] = {
         "gaussian",
         "impulse",
         "laplacian",
         "multiplicative_gaussian",
         "poisson"
     };
-    int const noise_id[] = { 
+    int const noise_id[] = {
         GAUSSIAN,
         IMPULSE,
         LAPLACIAN,
@@ -238,7 +238,7 @@ main(int argc, char * argv[]) {
     };
 
     /* define default values for configurable options */
-    float lambda = 0.05;        
+    float lambda = 0.05;
     float lsigma = 10.0;
     float mgsigma = 0.5;
     float sigma1 = 4.0;
@@ -258,13 +258,13 @@ main(int argc, char * argv[]) {
             ++argn;
             if ( argn >= argc )
             {
-                pm_message( 
+                pm_message(
                     "incorrect number of arguments for -lambda option" );
                 pm_usage( usage );
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -lambda option: %s", 
+                pm_message( "invalid argument to -lambda option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -275,13 +275,13 @@ main(int argc, char * argv[]) {
             ++argn;
             if ( argn >= argc )
             {
-                pm_message( 
+                pm_message(
                     "incorrect number of arguments for -lsigma option" );
                 pm_usage( usage );
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -lsigma option: %s", 
+                pm_message( "invalid argument to -lsigma option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -292,13 +292,13 @@ main(int argc, char * argv[]) {
             ++argn;
             if ( argn >= argc )
             {
-                pm_message( 
+                pm_message(
                     "incorrect number of arguments for -mgsigma option" );
                 pm_usage( usage );
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -mgsigma option: %s", 
+                pm_message( "invalid argument to -mgsigma option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -314,7 +314,7 @@ main(int argc, char * argv[]) {
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -seed option: %s", 
+                pm_message( "invalid argument to -seed option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -326,13 +326,13 @@ main(int argc, char * argv[]) {
             ++argn;
             if ( argn >= argc )
             {
-                pm_message( 
+                pm_message(
                     "incorrect number of arguments for -sigma1 option" );
                 pm_usage( usage );
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -sigma1 option: %s", 
+                pm_message( "invalid argument to -sigma1 option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -344,13 +344,13 @@ main(int argc, char * argv[]) {
             ++argn;
             if ( argn >= argc )
             {
-                pm_message( 
+                pm_message(
                     "incorrect number of arguments for -sigma2 option" );
                 pm_usage( usage );
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -sigma2 option: %s", 
+                pm_message( "invalid argument to -sigma2 option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -361,13 +361,13 @@ main(int argc, char * argv[]) {
             ++argn;
             if ( argn >= argc )
             {
-                pm_message( 
+                pm_message(
                     "incorrect number of arguments for -tolerance option" );
                 pm_usage( usage );
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -tolerance option: %s", 
+                pm_message( "invalid argument to -tolerance option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -383,19 +383,19 @@ main(int argc, char * argv[]) {
             }
             else if ( argv[argn][0] == '-' )
             {
-                pm_message( "invalid argument to -type option: %s", 
+                pm_message( "invalid argument to -type option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
             /* search through list of valid noise types and compare */
             i = 0;
-            while ( ( i < MAX_NOISE_TYPES ) && 
-                    !pm_keymatch( argv[argn], 
+            while ( ( i < MAX_NOISE_TYPES ) &&
+                    !pm_keymatch( argv[argn],
                                   noise_name[i], noise_compare[i] ) )
                 ++i;
             if ( i >= MAX_NOISE_TYPES )
             {
-                pm_message( "invalid argument to -type option: %s", 
+                pm_message( "invalid argument to -type option: %s",
                             argv[argn] );
                 pm_usage( usage );
             }
@@ -431,7 +431,7 @@ main(int argc, char * argv[]) {
     tuplerow = pnm_allocpamrow(&inpam);
     newtuplerow = pnm_allocpamrow(&inpam);
     infinity = (double) inpam.maxval;
-    
+
     for (row = 0; row < inpam.height; ++row) {
         unsigned int col;
         pnm_readpamrow(&inpam, tuplerow);
@@ -445,28 +445,28 @@ main(int argc, char * argv[]) {
                                    &newtuplerow[col][plane],
                                    sigma1, sigma2);
                     break;
-                    
+
                 case IMPULSE:
                     impulse_noise(inpam.maxval,
                                   tuplerow[col][plane],
                                   &newtuplerow[col][plane],
                                   tolerance);
                    break;
-                    
+
                 case LAPLACIAN:
                     laplacian_noise(inpam.maxval, infinity,
                                     tuplerow[col][plane],
                                     &newtuplerow[col][plane],
                                     lsigma);
                     break;
-                    
+
                 case MULTIPLICATIVE_GAUSSIAN:
                     multiplicative_gaussian_noise(inpam.maxval, infinity,
                                                   tuplerow[col][plane],
                                                   &newtuplerow[col][plane],
                                                   mgsigma);
                     break;
-                    
+
                 case POISSON:
                     poisson_noise(inpam.maxval,
                                   tuplerow[col][plane],
@@ -484,3 +484,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+
