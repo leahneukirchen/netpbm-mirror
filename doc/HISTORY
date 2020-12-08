@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+20.12.08 BJH  Release 10.86.18
+
+              pamarith: Fix bug: fails with more than two operands for
+              -mulitply, -minimum, -maximum, -nand, and -nor.
+
+              pamaddnoise: fix bug: garbage output with -type impulse.  Always
+              broken (pamaddnoise's precursors pnmaddnoise was new to Netpbm
+              in Netpbm 10.29 (August 2005).
+
 20.09.26 BJH  Release 10.86.17
 
               pamfunc: Fix always wrong output with -not.  Always broken.
@@ -1938,6 +1947,10 @@ CHANGE HISTORY
 10.06.27 BJH  Release 10.51.00
 
               Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
+
+              pamarith: Allow more than two operands for functions for which
+              it makes sense (all but -subtract, -difference, -compare,
+              -divide, -shiftleft, and -shiftright).
 
               pnmtops: Add -bitsperpixel option.
 

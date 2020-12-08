@@ -22,21 +22,21 @@ isDyadic(enum function const function) {
     
     switch (function) {
     case FN_ADD:
+    case FN_MULTIPLY:
+    case FN_MINIMUM:
+    case FN_MAXIMUM:
     case FN_MEAN:
     case FN_AND:
+    case FN_NAND:
     case FN_OR:
+    case FN_NOR:
     case FN_XOR:
         retval = FALSE;
         break;
     case FN_SUBTRACT:
     case FN_DIFFERENCE:
-    case FN_MINIMUM:
-    case FN_MAXIMUM:
     case FN_COMPARE:
-    case FN_MULTIPLY:
     case FN_DIVIDE:
-    case FN_NAND:
-    case FN_NOR:
     case FN_SHIFTLEFT:
     case FN_SHIFTRIGHT:
         retval = TRUE;
