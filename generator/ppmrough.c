@@ -37,6 +37,7 @@ struct CmdlineInfo {
 };
 
 
+
 static void
 parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
@@ -91,7 +92,7 @@ static void
 procLeft(int          const r1,
          int          const r2,
          int          const c1,
-         int          const c2, 
+         int          const c2,
          unsigned int const var) {
 
     int cm, rm, c;
@@ -220,7 +221,7 @@ main(int argc, const char * argv[]) {
     fg_blue = PPM_GETB(fgcolor);
 
     if (cmdline.verbose) {
-        pm_message("width is %d, height is %d, variance is %d.", 
+        pm_message("width is %d, height is %d, variance is %d.",
                    cols, rows, cmdline.var);
         if (left >= 0)
             pm_message("ragged left border is required");
@@ -278,7 +279,7 @@ main(int argc, const char * argv[]) {
         for (col = right_c2; col < cols; col++)
             PPM_ASSIGN(PIX[right_r2][col], BG_RED, BG_GREEN, BG_BLUE);
 
-        procRight(right_r1, right_r2, right_c1, right_c2, 
+        procRight(right_r1, right_r2, right_c1, right_c2,
                    cmdline.width, cmdline.var);
     }
 
@@ -313,7 +314,7 @@ main(int argc, const char * argv[]) {
         for (row = bottom_r2; row < rows; ++row)
             PPM_ASSIGN(PIX[row][bottom_c2], BG_RED, BG_GREEN, BG_BLUE);
 
-        procBottom(bottom_c1, bottom_c2, bottom_r1, bottom_r2, 
+        procBottom(bottom_c1, bottom_c2, bottom_r1, bottom_r2,
                    cmdline.height, cmdline.var);
     }
 
