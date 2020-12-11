@@ -33,10 +33,15 @@
 #include "pm_c_util.h"
 #include "pam.h"
 
-#define RANDOM_MASK 0x7FFF  /* only compare lower 15 bits.  Stupid PCs. */
-
 static double const EPSILON = 1.0e-5;
-static double const arand = 32767.0;      /* 2^15-1 in case stoopid computer */
+
+static double
+rand1() {
+
+    return (double)rand()/RAND_MAX;
+}
+
+
 
 enum noiseType {
     GAUSSIAN,
@@ -64,11 +69,11 @@ gaussian_noise(sample   const maxval,
     double x1, x2, xn, yn;
     double rawNewSample;
 
-    x1 = (rand() & RANDOM_MASK) / arand;
+    x1 = rand1();
 
     if (x1 == 0.0)
         x1 = 1.0;
-    x2 = (rand() & RANDOM_MASK) / arand;
+    x2 = rand1();
     xn = sqrt(-2.0 * log(x1)) * cos(2.0 * M_PI * x2);
     yn = sqrt(-2.0 * log(x1)) * sin(2.0 * M_PI * x2);
 
@@ -91,7 +96,7 @@ impulse_noise(sample   const maxval,
 
     double const low_tol  = tolerance / 2.0;
     double const high_tol = 1.0 - (tolerance / 2.0);
-    double const sap = (rand() & RANDOM_MASK) / arand;
+    double const sap = rand1();
 
     if (sap < low_tol)
         *newSampleP = 0;
@@ -114,7 +119,7 @@ laplacian_noise(sample   const maxval,
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double const u = (rand() & RANDOM_MASK) / arand;
+    double const u = rand1();
 
     double rawNewSample;
 
@@ -150,14 +155,14 @@ multiplicative_gaussian_noise(sample   const maxval,
     double rawNewSample;
 
     {
-        double const uniform = (rand() & RANDOM_MASK) / arand;
+        double const uniform = rand1();
         if (uniform <= EPSILON)
             rayleigh = infinity;
         else
             rayleigh = sqrt(-2.0 * log( uniform));
     }
     {
-        double const uniform = (rand() & RANDOM_MASK) / arand;
+        double const uniform = rand1();
         gauss = rayleigh * cos(2.0 * M_PI * uniform);
     }
     rawNewSample = origSample + (origSample * mgsigma * gauss);
@@ -184,10 +189,10 @@ poisson_noise(sample   const maxval,
 
     rr = 1.0;  /* initial value */
     k = 0;     /* initial value */
-    rr = rr * ((rand() & RANDOM_MASK) / arand);
+    rr = rr * rand1();
     while (rr > x1) {
         ++k;
-        rr = rr * ((rand() & RANDOM_MASK) / arand);
+        rr = rr * rand1();
     }
     rawNewSample = k / lambda;
 
