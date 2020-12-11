@@ -1,7 +1,7 @@
 /*
 **
 ** Add gaussian, multiplicative gaussian, impulse, laplacian or
-** poisson noise to a portable anymap.
+** poisson noise to a Netpbm image
 **
 ** Version 1.0  November 1995
 **
@@ -35,6 +35,8 @@
 
 static double const EPSILON = 1.0e-5;
 
+
+
 static double
 rand1() {
 
@@ -55,11 +57,11 @@ enum noiseType {
 
 
 static void
-gaussian_noise(sample   const maxval,
-               sample   const origSample,
-               sample * const newSampleP,
-               float    const sigma1,
-               float    const sigma2) {
+addGaussianNoise(sample   const maxval,
+                 sample   const origSample,
+                 sample * const newSampleP,
+                 float    const sigma1,
+                 float    const sigma2) {
 /*----------------------------------------------------------------------------
    Add Gaussian noise.
 
@@ -86,10 +88,10 @@ gaussian_noise(sample   const maxval,
 
 
 static void
-impulse_noise(sample   const maxval,
-              sample   const origSample,
-              sample * const newSampleP,
-              float    const tolerance) {
+addImpulseNoise(sample   const maxval,
+                sample   const origSample,
+                sample * const newSampleP,
+                float    const tolerance) {
 /*----------------------------------------------------------------------------
    Add impulse (salt and pepper) noise
 -----------------------------------------------------------------------------*/
@@ -109,11 +111,11 @@ impulse_noise(sample   const maxval,
 
 
 static void
-laplacian_noise(sample   const maxval,
-                double   const infinity,
-                sample   const origSample,
-                sample * const newSampleP,
-                float    const lsigma) {
+addLaplacianNoise(sample   const maxval,
+                  double   const infinity,
+                  sample   const origSample,
+                  sample * const newSampleP,
+                  float    const lsigma) {
 /*----------------------------------------------------------------------------
    Add Laplacian noise
 
@@ -141,11 +143,11 @@ laplacian_noise(sample   const maxval,
 
 
 static void
-multiplicative_gaussian_noise(sample   const maxval,
-                              double   const infinity,
-                              sample   const origSample,
-                              sample * const newSampleP,
-                              float    const mgsigma) {
+addMultiplicativeGaussianNoise(sample   const maxval,
+                               double   const infinity,
+                               sample   const origSample,
+                               sample * const newSampleP,
+                               float    const mgsigma) {
 /*----------------------------------------------------------------------------
    Add multiplicative Gaussian noise
 
@@ -173,10 +175,10 @@ multiplicative_gaussian_noise(sample   const maxval,
 
 
 static void
-poisson_noise(sample   const maxval,
-              sample   const origSample,
-              sample * const newSampleP,
-              float    const lambda) {
+addPoissonNoise(sample   const maxval,
+                sample   const origSample,
+                sample * const newSampleP,
+                float    const lambda) {
 /*----------------------------------------------------------------------------
    Add Poisson noise
 -----------------------------------------------------------------------------*/
@@ -435,8 +437,9 @@ main(int argc, char * argv[]) {
 
     pnm_writepaminit(&outpam);
 
-    tuplerow = pnm_allocpamrow(&inpam);
+    tuplerow    = pnm_allocpamrow(&inpam);
     newtuplerow = pnm_allocpamrow(&inpam);
+
     infinity = (double) inpam.maxval;
 
     for (row = 0; row < inpam.height; ++row) {
@@ -447,38 +450,38 @@ main(int argc, char * argv[]) {
             for (plane = 0; plane < inpam.depth; ++plane) {
                 switch (noise_type) {
                 case GAUSSIAN:
-                    gaussian_noise(inpam.maxval,
-                                   tuplerow[col][plane],
-                                   &newtuplerow[col][plane],
-                                   sigma1, sigma2);
+                    addGaussianNoise(inpam.maxval,
+                                     tuplerow[col][plane],
+                                     &newtuplerow[col][plane],
+                                     sigma1, sigma2);
                     break;
 
                 case IMPULSE:
-                    impulse_noise(inpam.maxval,
-                                  tuplerow[col][plane],
-                                  &newtuplerow[col][plane],
-                                  tolerance);
+                    addImpulseNoise(inpam.maxval,
+                                    tuplerow[col][plane],
+                                    &newtuplerow[col][plane],
+                                    tolerance);
                    break;
 
                 case LAPLACIAN:
-                    laplacian_noise(inpam.maxval, infinity,
-                                    tuplerow[col][plane],
-                                    &newtuplerow[col][plane],
-                                    lsigma);
+                    addLaplacianNoise(inpam.maxval, infinity,
+                                      tuplerow[col][plane],
+                                      &newtuplerow[col][plane],
+                                      lsigma);
                     break;
 
                 case MULTIPLICATIVE_GAUSSIAN:
-                    multiplicative_gaussian_noise(inpam.maxval, infinity,
-                                                  tuplerow[col][plane],
-                                                  &newtuplerow[col][plane],
-                                                  mgsigma);
+                    addMultiplicativeGaussianNoise(inpam.maxval, infinity,
+                                                   tuplerow[col][plane],
+                                                   &newtuplerow[col][plane],
+                                                   mgsigma);
                     break;
 
                 case POISSON:
-                    poisson_noise(inpam.maxval,
-                                  tuplerow[col][plane],
-                                  &newtuplerow[col][plane],
-                                  lambda);
+                    addPoissonNoise(inpam.maxval,
+                                    tuplerow[col][plane],
+                                    &newtuplerow[col][plane],
+                                    lambda);
                     break;
 
                 }
