@@ -173,32 +173,74 @@ addMultiplicativeGaussianNoise(sample   const maxval,
 }
 
 
+static double
+poissonPmf(double       const lambda,
+           unsigned int const k) {
+/*----------------------------------------------------------------------------
+   This is the probability mass function (PMF) of a discrete random variable
+   with lambda 'lambda'.
+
+   I.e. it gives the probability that a value sampled from a Poisson
+   distribution with lambda 'lambda' has the value 'k'.
+
+   That means it's the probability that in a Poisson stream of events in which
+   the mean number of events in an interval of a certains size is 'lambda' that
+   'k' events happen.
+-----------------------------------------------------------------------------*/
+    double x;
+    unsigned int i;
+
+    /* We're computing the formula
+
+         (pow(lamda, k) * exp(-lambda)) / fact(k).
+
+       Note that k is ordinarily quite small.
+    */
+
+    x = exp(-lambda);
+
+    for (i = 1; i <= k; ++i) {
+        x *= lambda;
+        x /= i;
+    }
+    return x;
+}
+
+
 
 static void
-addPoissonNoise(sample   const maxval,
-                sample   const origSample,
-                sample * const newSampleP,
-                float    const lambda) {
+addPoissonNoise(struct pam * const pamP,
+                sample       const origSample,
+                sample *     const newSampleP,
+                float        const lambdaOfMaxval) {
 /*----------------------------------------------------------------------------
    Add Poisson noise
 -----------------------------------------------------------------------------*/
-    double const x  = lambda * origSample;
-    double const x1 = exp(-x);
+    samplen const origSamplen = pnm_normalized_sample(pamP, origSample);
 
-    double rawNewSample;
-    float rr;
+    double const lambda  = origSamplen * lambdaOfMaxval;
+
+    double const u = rand1();
+
+    /* We now apply the inverse CDF (cumulative distribution function) of the
+       Poisson distribution to uniform random variable 'u' to get a Poisson
+       random variable.  Unfortunately, we have no algebraic equation for the
+       inverse of the CDF, but the random variable is discrete, so we can just
+       iterate.
+    */
+
     unsigned int k;
+    double cumProb;
 
-    rr = 1.0;  /* initial value */
-    k = 0;     /* initial value */
-    rr = rr * rand1();
-    while (rr > x1) {
-        ++k;
-        rr = rr * rand1();
+    for (k = 0, cumProb = 0.0; k < lambdaOfMaxval; ++k) {
+
+        cumProb += poissonPmf(lambda, k);
+
+        if (cumProb >= u)
+            break;
     }
-    rawNewSample = k / lambda;
 
-    *newSampleP = MIN(MAX((int)rawNewSample, 0), maxval);
+    *newSampleP = pnm_unnormalized_sample(pamP, k/lambdaOfMaxval);
 }
 
 
@@ -247,7 +289,7 @@ main(int argc, char * argv[]) {
     };
 
     /* define default values for configurable options */
-    float lambda = 0.05;
+    float lambda = 12.0;
     float lsigma = 10.0;
     float mgsigma = 0.5;
     float sigma1 = 4.0;
@@ -478,7 +520,7 @@ main(int argc, char * argv[]) {
                     break;
 
                 case POISSON:
-                    addPoissonNoise(inpam.maxval,
+                    addPoissonNoise(&inpam,
                                     tuplerow[col][plane],
                                     &newtuplerow[col][plane],
                                     lambda);
