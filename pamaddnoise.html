@@ -2,7 +2,7 @@
 <html><head><title>Pamaddnoise User Manual</title></head>
 <body>
 <h1>pamaddnoise</h1>
-Updated: 14 November 1995
+Updated: 12 December 2020
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -98,7 +98,13 @@ command line options:
 <dl compact>
 <dt><b>-lambda</b> <i>value</i>
 
-<dd>Used for poisson noise only.  The default value is 0.05.
+<dd>This is the expected value of the Poisson distribution for a sample value
+  of mximum intensity.  The expected value for other intensities is
+  proportional; e.g. for half intensity, it is half this value.
+
+<p>This is meaningful only with <b>-type=poisson</b>.
+
+<p>The default value is 12.
 
 <dt><b>-lsigma</b> <i>value</i>
 
