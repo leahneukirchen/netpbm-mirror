@@ -31,6 +31,7 @@
 #include <math.h>
 
 #include "pm_c_util.h"
+#include "pm_gamma.h"
 #include "pam.h"
 
 static double const EPSILON = 1.0e-5;
@@ -218,7 +219,9 @@ addPoissonNoise(struct pam * const pamP,
 -----------------------------------------------------------------------------*/
     samplen const origSamplen = pnm_normalized_sample(pamP, origSample);
 
-    double const lambda  = origSamplen * lambdaOfMaxval;
+    float const origSampleIntensity = pm_ungamma709(origSamplen);
+
+    double const lambda  = origSampleIntensity * lambdaOfMaxval;
 
     double const u = rand1();
 
@@ -240,7 +243,11 @@ addPoissonNoise(struct pam * const pamP,
             break;
     }
 
-    *newSampleP = pnm_unnormalized_sample(pamP, k/lambdaOfMaxval);
+    {
+        samplen const newSamplen = pm_gamma709(k/lambdaOfMaxval);
+
+        *newSampleP = pnm_unnormalized_sample(pamP, newSamplen);
+    }
 }
 
 
