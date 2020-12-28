@@ -97,6 +97,8 @@ impulse_noise(sample   const maxval,
         *newSampleP = 0;
     else if ( sap >= high_tol )
         *newSampleP = maxval;
+    else
+        *newSampleP = origSample;
 }
 
 
