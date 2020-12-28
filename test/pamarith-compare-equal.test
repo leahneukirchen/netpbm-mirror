@@ -1,0 +1,75 @@
+#! /bin/bash
+# This script tests: pamarith
+# Also requires: ppmpat pnminvert pbmmake pgmmake
+
+tmpdir=${tmpdir:-/tmp}
+input1_ppm=${tmpdir}/input1.ppm
+input2_ppm=${tmpdir}/input2.ppm
+
+echo "Test 1"
+
+ppmpat -tartan -color=rgb:00/80/ff,rgb:80/ff/00,rgb:ff/00/80 \
+   8 8  > ${input1_ppm}
+ppmpat -tartan -color=rgb:80/ff/00,rgb:ff/00/80,rgb:00/80/ff \
+   8 8  > ${input2_ppm}
+
+pamarith -compare -plain ${input1_ppm} ${input1_ppm} | \
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pamarith -compare -plain ${input1_ppm} ${input2_ppm} | \
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+
+echo "Test 2"
+
+pamarith -equal -plain ${input1_ppm} ${input1_ppm} | \
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pamarith -equal -plain ${input1_ppm} ${input2_ppm} | \
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+
+rm ${input1_ppm} ${input2_ppm}
+
+echo "Test 3"
+
+pamarith -equal -plain testgrid.pbm testgrid.pbm  | \
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pnminvert testgrid.pbm | pamarith -equal -plain testgrid.pbm - | \
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pbmmake -w 14 16 | pamarith -equal -plain testgrid.pbm - | \
+  awk '{printf("%s%c",$0, NR<3 || NR%2==0 ? "\n" : " ")}' | 
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pbmmake -b 14 16 | pamarith -equal -plain testgrid.pbm - | \
+  awk '{printf("%s%c",$0, NR<3 || NR%2==0 ? "\n" : " ")}' | 
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+
+echo "Test 4"
+  
+pamarith -compare -plain testgrid.pbm testgrid.pbm  | \
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pnminvert testgrid.pbm | pamarith -compare -plain testgrid.pbm - | \
+  awk '{printf("%s%c",$0, NR<4 || NR%2==1 ? "\n" : " ")}' | 
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pbmmake -w 14 16 | pamarith -compare -plain testgrid.pbm - | \
+  awk '{printf("%s%c",$0, NR<4 || NR%2==1 ? "\n" : " ")}' | 
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+pbmmake -b 14 16 | pamarith -compare -plain testgrid.pbm - | \
+  awk '{printf("%s%c",$0, NR<4 || NR%2==1 ? "\n" : " ")}' | 
+  uniq -c | sed -e 's/^ *//' -e 's/ /:/'
+
+
+echo "Test 5"
+# -closeness
+
+input40_pgm=${tmpdir}/input40.pgm
+input50_pgm=${tmpdir}/input50.pgm
+equal_pgm=${tmpdir}/equal.pgm
+
+pgmmake -maxval=99 0.40 7 3 > ${input40_pgm}
+pgmmake -maxval=99 0.50 7 3 > ${input50_pgm}
+
+echo "Should produce 1285449498 54"
+pamarith -equal -plain ${input40_pgm} ${input40_pgm} | cksum
+pamarith -equal -plain -closeness=10.2 ${input40_pgm} ${input50_pgm} | cksum
+pamarith -equal -plain -closeness=11 ${input40_pgm} ${input50_pgm} | cksum
+pamarith -equal -plain -closeness=90 ${input40_pgm} ${input50_pgm} | cksum
+echo "Should produce 244506188 54"
+pamarith -equal -plain ${input40_pgm} ${input50_pgm} | cksum
+pamarith -equal -plain -closeness=09   ${input40_pgm} ${input50_pgm} | cksum

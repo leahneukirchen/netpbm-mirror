@@ -368,7 +368,7 @@ pm_freearray(char ** const rowIndex,
 /* Case-insensitive keyword matcher. */
 
 int
-pm_keymatch(const char *       const strarg,
+pm_keymatch(const char * const strarg,
             const char * const keywordarg,
             int          const minchars) {
     int len;

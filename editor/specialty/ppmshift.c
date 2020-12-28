@@ -9,69 +9,117 @@
 /* V1.1    16.11.1993  Rewritten to be NetPBM.programming conforming */
 /*********************************************************************/
 
+#include <stdbool.h>
+
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "ppm.h"
 
-/**************************/
-/* start of main function */
-/**************************/
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+
+    unsigned int shift;
+    unsigned int seed;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options. */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    unsigned int seedSpec;
+
+    MALLOCARRAY(option_def, 100);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = true;  /* We have no parms that are negative numbers */
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "seed",            OPT_UINT,     &cmdlineP->seed,
+            &seedSpec,         0);
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!seedSpec)
+        cmdlineP->seed = pm_randseed();
+
+    if (argc-1 < 1)
+        pm_error("You must specify the shift factor as an argument");
+    else {
+        int const arg1 = atoi(argv[1]);
+        if (arg1 < 0)
+            pm_error("shift factor must be 0 or more");
+        cmdlineP->shift = arg1;
+
+        if (argc-1 < 2)
+            cmdlineP->inputFileName = "-";
+        else {
+            cmdlineP->inputFileName = argv[2];
+
+            if (argc-1 > 2)
+                pm_error("Too many arguments (%u).  "
+                         "Shift factor and input file name are the only "
+                         "possible arguments", argc-1);
+        }
+    }
+    free(option_def);
+}
+
+
+
 int
-main(int    argc,
-     char * argv[]) {
+main(int argc, const char ** argv) {
 
     FILE * ifP;
-    unsigned int row;
-    int argn, rows, cols, format;
+    struct CmdlineInfo cmdline;
+    int rows, cols, format;
+    pixval maxval;
     pixel * srcrow;
     pixel * destrow;
-    pixval maxval;
-    int shift, nowshift;
-    int shiftArg;
-
-    const char * const usage = "shift [ppmfile]\n        shift: maximum number of pixels to shift a line by\n";
+    unsigned int row;
+    unsigned int shift;
 
     /* parse in 'default' parameters */
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-    argn = 1;
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* parse in shift number */
-    if (argn == argc)
-        pm_usage(usage);
-    if (sscanf(argv[argn], "%d", &shiftArg) != 1)
-        pm_usage(usage);
-    if (shiftArg < 0)
-        pm_error("shift factor must be 0 or more");
-    ++argn;
+    srand(cmdline.seed);
 
-    /* parse in filename (if present, stdin otherwise) */
-    if (argn != argc)
-    {
-        ifP = pm_openr(argv[argn]);
-        ++argn;
-    }
-    else
-        ifP = stdin;
-
-    if (argn != argc)
-        pm_usage(usage);
+    ifP = pm_openr(cmdline.inputFileName);
 
     /* read first data from file */
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
 
-    if (shiftArg > cols) {
+    if (cmdline.shift > cols) {
         shift = cols;
-        pm_message("shift amount is larger than picture width - reset to %d",
+        pm_message("shift amount is larger than picture width - reset to %u",
                    shift);
     } else
-        shift = shiftArg;
+        shift = cmdline.shift;
 
     srcrow = ppm_allocrow(cols);
 
     destrow = ppm_allocrow(cols);
 
     ppm_writeppminit(stdout, cols, rows, maxval, 0);
-
-    srand(pm_randseed());
 
     /** now do the shifting **/
     /* the range by which a line is shifted lays in the range from */
@@ -80,6 +128,7 @@ main(int    argc,
     for (row = 0; row < rows; ++row) {
         pixel * pP;
         pixel * pP2;
+        unsigned int nowshift;
 
         if (shift != 0)
             nowshift = (rand() % (shift+1)) - ((shift+1) / 2);

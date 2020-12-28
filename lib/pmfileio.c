@@ -31,6 +31,7 @@
     /* This makes the the x64() functions available on AIX */
 
 #include "netpbm/pm_config.h"
+#include <stdbool.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
@@ -799,48 +800,50 @@ pm_readmagicnumber(FILE * const ifP) {
    Oliver Trepte, oliver@fysik4.kth.se, 930613
 */
 
-#define PM_BUF_SIZE 16384      /* First try this size of the buffer, then
-                                  double this until we reach PM_MAX_BUF_INC */
-#define PM_MAX_BUF_INC 65536   /* Don't allocate more memory in larger blocks
-                                  than this. */
+static size_t const initBufSz = 16384;
+  /* First try this size of the buffer, then
+     double this until we reach 'maxBufInc' */
+static size_t const maxBufInc = 65536;
+    /* Don't allocate more memory in larger blocks than this. */
 
 char *
-pm_read_unknown_size(FILE * const file,
-                     long * const nread) {
-    long nalloc;
+pm_read_unknown_size(FILE * const ifP,
+                     long * const nReadP) {
+    size_t nAlloc;
     char * buf;
+    size_t nRead;
     bool eof;
 
-    *nread = 0;
-    nalloc = PM_BUF_SIZE;
-    MALLOCARRAY(buf, nalloc);
+    nAlloc = initBufSz;   /* initial value */
+
+    MALLOCARRAY(buf, nAlloc);
 
     if (!buf)
-        pm_error("Failed to allocate %lu bytes for read buffer",
-                 (unsigned long) nalloc);
+        pm_error("Failed to allocate %lu bytes for read buffer", nAlloc);
 
-    eof = FALSE;  /* initial value */
-
-    while(!eof) {
+    for (eof = false, nRead = 0; !eof; ) {
         int val;
 
-        if (*nread >= nalloc) { /* We need a larger buffer */
-            if (nalloc > PM_MAX_BUF_INC)
-                nalloc += PM_MAX_BUF_INC;
+        if (nRead >= nAlloc) { /* We need a larger buffer */
+            if (nAlloc > maxBufInc)
+                nAlloc += maxBufInc;
             else
-                nalloc += nalloc;
-            REALLOCARRAY(buf, nalloc);
+                nAlloc += nAlloc;
+            REALLOCARRAY(buf, nAlloc);
             if (!buf)
                 pm_error("Failed to allocate %lu bytes for read buffer",
-                         (unsigned long) nalloc);
+                         nAlloc);
         }
 
-        val = getc(file);
+        val = getc(ifP);
         if (val == EOF)
-            eof = TRUE;
+            eof = true;
         else
-            buf[(*nread)++] = val;
+            buf[nRead++] = val;
     }
+
+    *nReadP = (long)nRead;
+
     return buf;
 }
 
