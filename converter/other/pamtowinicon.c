@@ -974,6 +974,10 @@ convertOneImage(unsigned int     const imageNum,
 
     doingPng = pam.width * pam.height >= pngThreshold;
 
+    if (verbose)
+        pm_message("Image %2u: encoding as %s",
+                   imageNum, doingPng ? "PNG" : "BMP");
+
     readAndScalePam(&pam, doingPng, tuples);
 
     determineImageType(&pam, tuples, &getPixel,

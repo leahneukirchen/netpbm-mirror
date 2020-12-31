@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.94.00
 
+              pamtowinicon: Add BMP/PNG encoding to verbose output.
+
 20.12.28 BJH  Release 10.93.00
 
               pamarith: Add -equal.
