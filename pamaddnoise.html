@@ -14,69 +14,54 @@ pamaddnoise - add noise to a Netpbm image
 
 <b>pamaddnoise</b>
 
-[<b>-type</b> <i>noise_type</i>]
-
-[<b>-seed</b> <i>int</i>]
-
+<br>
+{
 <br>
 
-<b>pamaddnoise</b> <b>-type</b> <b>gaussian</b>
+[<b>-type</b> <b>gaussian</b>]
 
 [<b>-sigma1</b> <i>value</i>]
 
 [<b>-sigma2</b> <i>value</i>]
 
 <br>
-
-[<b>-seed</b> <i>int</i>]
-
-[<i>netpbmfile</i>]
-
+|
 <br>
 
-<b>pamaddnoise</b> <b>-type </b> <b>multiplicative_gaussian</b>
+
+<b>-type </b> <b>multiplicative_gaussian</b>
 
 [<b>-mgsigma</b> <i>value</i>]
 
 <br>
-
-[<b>-seed</b> <i>int</i>]
-
-[<i>netpbmfile</i>]
-
+|
 <br>
 
-<b>pamaddnoise</b> <b>-type</b> <b>impulse</b>
+<b>-type</b> <b>impulse</b>
 
 [<b>-tolerance</b> <i>ratio</i>]
 
-[<b>-seed</b> <i>int</i>]
-
+<br>
+|
 <br>
 
-[<i>netpbmfile</i>]
-
-<br>
-
-<b>pamaddnoise</b> <b>-type </b> <b>laplacian</b>
+<b>-type </b> <b>laplacian</b>
 
 [<b>-lsigma</b> <i>value</i>]
 
-[<b>-seed</b> <i>int</i>]
-
+<br>
+|
 <br>
 
-[<i>netpbmfile</i>]
-
-<br>
-
-<b>pamaddnoise</b> <b>-type </b> <b>poisson</b>
+<b>-type </b> <b>poisson</b>
 
 [<b>-lambda</b> <i>value</i>]
 
-[<b>-seed</b> <i>int</i>]
-
 <br>
+}
+<br>
+
+[<b>-seed</b> <i>int</i>]
 
 [<i>netpbmfile</i>]
 

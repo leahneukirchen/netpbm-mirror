@@ -118,6 +118,28 @@ two input formats and a maxval that is the least common multiple the
 two maxvals (or the maximum maxval allowable by the format, if the LCM
 is more than that).
 
+
+<h2 id="arguments">ARGUMENTS</h2>
+
+<p>The <i>overlay_file</i> argument is the name of the file containing the
+  overly image, while <i>underlying_file</i> is the name of the file
+  containing the underlying image.  For either, you may specify &quot;-&quot;
+  to indicate Standard Input, and <i>underlying</i> file defaults to Standard
+  Input.  Make sure you aren't specifying (or defaulting) Standard Input as
+  both.
+
+<p>Note that there may be a third input file, identified by an
+<b>-alphafile</b> option.
+
+
+<p>The <i>output_file</i> argument is the name of the file to which
+  <b>pamcomp</b> writes the output, creating or truncating it first.  You may
+  specify &quot;-&quot; to indicate Standard Output, in which
+  case <b>pamcomp</b> does not truncate it.  Note that <b>pamcomp</b> is
+  unusual among Netpbm programs, as a historical accident, in having an output
+  file argument; Netpbm programs normally write to Standard Output only.
+  
+  
 <h2 id="options">OPTIONS</h2>
 
 <p>In addition to the options common to all programs based on libnetpbm
@@ -341,6 +363,7 @@ href="mailto:koblas@mips.com">koblas@mips.com</a>).
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
+<li><a href="#arguments">ARGUMENTS</a>
 <li><a href="#options">OPTIONS</a>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#history">HISTORY</a>

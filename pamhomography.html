@@ -1,0 +1,305 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>pamhomography</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+
+<h1 id="pamhomography">pamhomography</h1>
+
+Updated: 03 January 2021
+<br>
+<a href="#index">Table of Contents</a>
+
+
+<h2 id="NAME">NAME</h2>
+
+<p>pamhomography - map one arbitrary quadrilateral image region to another</p>
+
+
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p><b>pamhomography</b>
+  [<b>-from</b>=<i>coords</i>]
+  [<b>-to</b>=<i>coords</i>]
+  [<b>-mapfile</b>=<i>map_file</i>]
+  [<b>-view</b>=<i>coords</i>]
+  [<b>-fill</b>=<i>color</i>]
+  [<i>pam_file</i>]
+
+<p>You can abbreviate any option to its shortest unique prefix. You can use
+two hyphens instead of one to delimit an option. You can separate an option
+from its value with whitespace instead of <code>=</code>.</p>
+
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<p>This program is part
+of <a href="http://netpbm.sourceforge.net/">Netpbm</a>.</p>
+
+<p><b>pamhomography</b> transforms a quadrilateral&mdash;not necessarily
+rectangular&mdash;region of an image, producing a new image.
+
+<p>You can do any
+<a href="https://en.wikipedia.org/wiki/Affine_transformation#Image_transformation">affine image transformation</a>: translation, reflection, scaling,
+rotation, and shearing/skewing. However, <b>pamhomography</b> additionally can
+do <i>bilinear</i> transforms, which means it can warp any quadrilateral to any
+other quadrilateral, even when this mapping cannot be described using a single
+set of linear equations. This can be useful, for example, for creating
+perspective views of rectangular images or for reverse-mapping a perspective
+view back to a rectangular projection.</p>
+
+
+<h2 id="OPTIONS">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm (most
+notably <b>-quiet</b>, see <a href="http://index.html#commonoptions">Common
+Options</a>), <b>pamhomography</b> recognizes the following command line
+options:</p>
+
+<dl>
+
+<dt id="from-coords"><b>-from</b>=<i>coords</i></dt>
+<dd>
+
+<p>This defines the source quadrilateral. <i>coords</i> is a list of four
+  integer-valued (<i>x</i>, <i>y</i>) coordinates. If you do not
+  specify <b>-from</b>, the source quadrilateral is taken to be the four
+  corners of the input image in clockwise order, starting from the upper
+  left.</p>
+
+</dd>
+<dt id="to-coords"><b>-to</b>=<i>coords</i></dt>
+<dd>
+
+<p>This defines the target quadrilateral. <i>coords</i> is a list of four
+integer-valued (<i>x</i>, <i>y</i>) coordinates. If you do not
+specify <b>-to</b>, the target quadrilateral is taken to be the four corners
+of the input image in clockwise order, starting from the upper left.</p>
+
+</dd>
+<dt id="mapfile-map_file"><b>-mapfile</b>=<i>map_file</i></dt>
+<dd>
+
+<p>This names a text file that describes the mapping from the source to the
+target quadrilateral. The file <i>map_file</i> must contain either eight
+integer-valued (<i>x</i>, <i>y</i>) coordinates, being the four source
+coordinates followed by the corresponding four target coordinates, or only
+four (<i>x</i>, <i>y</i>) coordinates, being only the four target
+coordinates. In the latter case, the source quadrilateral is taken to be the
+four corners of the input image in clockwise order, starting from the upper
+left.</p>
+
+</dd>
+<dt id="view-coords"><b>-view</b>=<i>coords</i></dt>
+<dd>
+
+<p>This defines the target view. <i>coords</i> is a list of two integer-valued
+(<i>x</i>, <i>y</i>) coordinates: the upper left and lower right boundaries,
+respectively, of the pixels that will be visible in the output image. If
+<b>-view</b> is not specified, the target view will fit precisely the target
+quadrilateral.</p>
+
+</dd>
+<dt id="fill-color"><b>-fill</b>=<i>color</i></dt>
+<dd>
+
+<p>This is the color with which the program fills all pixels that lie outside
+of the target quadrilateral. Specify the color as described for the
+<a href="http://libnetpbm_image.html#colorname">
+argument of the pnm_parsecolor() library routine</a>.
+
+<p>The default is black, and for images with a transparency plane, transparent.
+
+</dd>
+</dl>
+
+<p>Cooordinates should normally be specified in clockwise order. The syntax is
+fairly flexible: all characters other than the plus sign, minus sign, and
+digits are treated as separators. Although coordinates need to be integers,
+they may lie outside the image's boundary.</p>
+
+<p>If you specify <b>-mapfile</b> along with <b>-from</b> and/or <b>-to</b>,
+<b>-from</b> and <b>-to</b> override the quadrilaterals specified
+by <i>map_file</i>.</p>
+
+
+<h2 id="PARAMETERS">PARAMETERS</h2>
+
+<p><b>pamhomography</b>'s only parameter, <i>pam_file</i>, is the name of the
+  file containing the input image. If you don't specify <i>pam_file</i>, the
+  image comes from Standard Input.
+
+  
+<h2 id="NOTES">NOTES</h2>
+
+<p>The output image uses the same Netpbm format as the input image.</p>
+
+<p>Simple transformations are best handled by other Netpbm programs, such as
+those listed in the <a href="#SEE-ALSO">&quot;SEE ALSO&quot;</a> section
+below. Use <b>pamhomography</b> for more sophisticated transformations such as
+perspective adjustments, rotations around an arbitrary point in the image,
+extraction of non-rectangular quadrilaterals, shearings by coordinates rather
+than by angle, and, in general, all transformations that are most easily
+expressed as mapping four points in one image to four points in another
+image.</p>
+
+<h2 id="EXAMPLES">EXAMPLES</h2>
+
+<p>The following examples use the
+<a href="park_row.ppm">park_row.ppm </a> test image, which is a
+<a href="https://commons.wikimedia.org/wiki/File:15_Park_Row_3.JPG">
+photograph of New York City's Park Row Building</a>, scaled to
+441&times;640, converted to a PPM file, and redistributed under the terms of
+the <a href="https://en.wikipedia.org/wiki/GNU_Free_Documentation_License">
+GFDL</a>.</p>
+
+<p>The first example showcases the real power of bilinear transformations.
+Assuming <i>park_row_rect.map</i> has the following contents:</p>
+
+<pre><code>    (147, 51) (316, 105) (402, 595) (92, 560)
+      (0,  0) (440,   0) (440, 639)  (0, 639)</code></pre>
+
+<p>then</p>
+
+<pre><code>    pamhomography -mapfile park_row_rect.map park_row.ppm &gt; park_row_rect.ppm</code></pre>
+
+<p>projects the building's facade from a perspective view to a rectilinear
+front-on view. Remember that <b>pamhomography</b> ignores the parentheses and
+commas used in <i>park_row_rect.map</i>; they merely make the file more
+human-readable. We equivalently could have written</p>
+
+<pre><code>    147 51 316 105 402 595 92 560 0 0 440 0 440 639 0 639</code></pre>
+
+<p>or any of myriad other variations.</p>
+
+<p><b>pamhomography</b> can warp the image to a trapezoid to make it look like
+it's leaning backwards in 3-D:</p>
+
+<pre><code>    pamhomography -to &quot;50,0 390,0 440,200 0,200&quot; park_row.ppm &gt; park_row_trap.ppm</code></pre>
+
+<p>As a very simple example,</p>
+
+<pre><code>    pamhomography -to &quot;440,0 0,0 0,639 440,639&quot; park_row.ppm &gt; park_row_flip.ppm</code></pre>
+
+<p>flips the image left-to-right. Note that in this case the target
+quadrilateral's coordinates are listed in counterclockwise order because
+that represents the correspondence between points (0, 0) &harr; (440, 0) and
+(0, 639) &harr; (639, 0).</p>
+
+<p>Scaling is also straightforward. The following command scales down the
+image from 441&times;640 to 341&times;540:</p>
+
+<pre><code>    pamhomography -to &quot;0,0 340,0 340,539 0,539&quot; park_row.ppm &gt; park_row_small.ppm</code></pre>
+
+<p>Let's add 100 pixels of tan border to the above. We use <b>-view</b> and
+<b>-fill</b> to accomplish that task:</p>
+
+<pre><code>    pamhomography -to &quot;0,0 340,0 340,539 0,539&quot; -view &quot;-100,-100 440,639&quot; -fill tan park_row.ppm &gt; park_row_small_border.ppm</code></pre>
+
+<p>We can add a border without having to scale the image:</p>
+
+<pre><code>    pamhomography -view &quot;-100,-100 540,739&quot; -fill tan park_row.ppm &gt; park_row_border.ppm</code></pre>
+
+<p>The <b>-view</b> option can also be used to extract a rectangle out of an
+image, discarding the rest of the image:</p>
+
+<pre><code>    pamhomography -view &quot;130,10 205,80&quot; park_row.ppm &gt; park_row_cut.ppm</code></pre>
+
+<p>Specifying the same set of coordinates to <b>-from</b> and <b>-to</b> has
+the same effect but also allows you to extract non-rectangular quadrilaterals
+from an image:</p>
+
+<pre><code>    pamhomography -from &quot;185,300 310,325 320,425 180,405&quot; -to &quot;185,300 310,325 320,425 180,405&quot; park_row.ppm &gt; park_row_cut_2.ppm</code></pre>
+
+<p>Rotation is doable but takes some effort. The challenge is that you need to
+compute the rotated coordinates yourself. The matrix expression to rotate
+points \((x_1, y_1)\) \((x_2, y_2)\), \((x_3, y_3)\), and \((x_4, y_4)\)
+clockwise by \(\theta\) degrees around point \((c_x, c_y)\) is</p>
+
+<p>\[ \begin{bmatrix} 1 &amp; 0 &amp; c_x \\ 0 &amp; 1 &amp; c_y \\ 0 &amp; 0
+&amp; 1 \end{bmatrix} \begin{bmatrix} \cos \theta &amp; -\sin \theta &amp; 0
+\\ \sin \theta &amp; \cos \theta &amp; 0 \\ 0 &amp; 0 &amp; 1 \end{bmatrix}
+\begin{bmatrix} 1 &amp; 0 &amp; -c_x \\ 0 &amp; 1 &amp; -c_y \\ 0 &amp; 0
+&amp; 1 \end{bmatrix} \begin{bmatrix} x_1 &amp; x_2 &amp; x_3 &amp; x_4 \\ y_1
+&amp; y_2 &amp; y_3 &amp; y_4 \\ 1 &amp; 1 &amp; 1 &amp; 1 \end{bmatrix}
+\quad. \]</p>
+
+<p>For example, to rotate <i>park_row.ppm</i> 30&deg; clockwise around (220,
+320) you would compute</p>
+
+<p>\[ \begin{bmatrix} 1 &amp; 0 &amp; 220 \\ 0 &amp; 1 &amp; 320 \\ 0 &amp; 0
+&amp; 1 \end{bmatrix} \begin{bmatrix} \cos 30^{\circ} &amp; -\sin 30^{\circ}
+&amp; 0 \\ \sin 30^{\circ} &amp; \cos 30^{\circ} &amp; 0 \\ 0 &amp; 0 &amp; 1
+\end{bmatrix} \begin{bmatrix} 1 &amp; 0 &amp; -220 \\ 0 &amp; 1 &amp; -320 \\
+0 &amp; 0 &amp; 1 \end{bmatrix} \begin{bmatrix} 0 &amp; 440 &amp; 440 &amp; 0
+\\ 0 &amp; 0 &amp; 639 &amp; 639 \\ 1 &amp; 1 &amp; 1 &amp; 1 \end{bmatrix} =
+\begin{bmatrix} 189.4744 &amp; 570.5256 &amp; 251.0256 &amp; -130.0256 \\
+-67.1281 &amp; 152.8719 &amp; 706.2621 &amp; 486.2621 \\ 1.0000 &amp; 1.0000
+&amp; 1.0000 &amp; 1.0000 \end{bmatrix} \quad, \]</p>
+
+<p>round these coordinates to integers, transpose the matrix, and produce the
+following map file, <i>park_row_rot30.map</i>:</p>
+
+<pre><code>     189  -67
+     571  153
+     251  706
+    -130  486</code></pre>
+
+<p>(These are the &quot;to&quot; coordinates; we use the default, full-image
+&quot;from&quot; coordinates.) The mapping then works as in all of the
+preceding examples:</p>
+
+<pre><code>    pamhomography -mapfile park_row_rot30.map park_row.ppm &gt; park_row_rot30.ppm</code></pre>
+
+
+<h2 id="SEE-ALSO">SEE ALSO</h2>
+
+<ul>
+  <li><a href="http://pamcut.html">pamcut</a>
+  <li><a href="http://pamenlarge.html">pamenlarge</a>
+  <li><a href="http://pamflip.html">pamflip</a>
+  <li><a href="http://pamperspective.html">pamperspective</a>
+  <li><a href="http://pamscale.html">pamscale</a>
+  <li><a href="http://pamstretch.html">pamstretch</a>
+  <li><a href="http://pam.html">pam</a>
+  <li><a href="http://pnmmargin.html">pnmmargin</a>
+  <li><a href="http://pnmpad.html">pnmpad</a>
+  <li><a href="http://pnmrotate.html">pnmrotate</a>
+  <li><a href="http://pnmshear.html">pnmshear</a>
+</ul>
+
+
+<h2 id="SEE-ALSO">SEE ALSO</h2>
+
+<p><b>pamhomography</b> was new in Netpbm 10.94 (March 2021).
+  
+
+<h2 id="AUTHOR">AUTHOR</h2>
+
+<p>Copyright &copy; 2020 Scott
+Pakin, <a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a></p>
+
+
+<h2 id="index">Table of Contents</h2>
+
+<ul>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#OPTIONS">OPTIONS</a></li>
+  <li><a href="#PARAMETERS">PARAMETERS</a></li>
+  <li><a href="#NOTES">NOTES</a></li>
+  <li><a href="#EXAMPLES">EXAMPLES</a></li>
+  <li><a href="#SEE-ALSO">SEE ALSO</a></li>
+  <li><a href="#HISTORY">HISTORY</a></li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+</ul>
+
+</body>
+</html>
+
+
