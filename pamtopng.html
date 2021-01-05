@@ -142,9 +142,10 @@ library routine</a>.  E.g. <b>red</b> or <b>rgb:ff/00/0d</b>.
 This causes <b>pamtopng</b> to create a background color chunk in the PNG
 output which can be used for subsequent transparency channel or transparent
 color conversions.  Specify <i>color</i> the same as for <b>-transparent</b>.
+<p>
 
 <dt><b>-gamma=</b><i>value</i>
-<dd>This causes <b>pnmtopng</b> to create a gAMA chunk.  This information
+<dd>This causes <b>pamtopng</b> to create a gAMA chunk.  This information
 helps describe how the color values in the PNG must be interpreted.  Without
 the gAMA chunk, whatever interprets the PNG must get this information
 separately (or just assume something standard).  If your input is a true PPM
@@ -154,7 +155,8 @@ gamma transfer function than the one specified for PPM.  A common case of this
 is when the image is created by simple hardware that doesn't have digital
 computational ability.  Also, some simple programs that generate images from
 scratch do it with a gamma transfer in which the gamma value is 1.0.
-
+<p>
+  
 <dt><b>-chroma=</b><i>chroma_list</i>
 <dd>This option specifies how red, green, and blue component values
 of a pixel specify a particular color, by telling the chromaticities
@@ -226,12 +228,13 @@ string.  There is no limit on the number of entries.
 
 <dt><b>-ztxt=</b><i>filename</i>
 <dd>The same as <b>-text</b>, except the text string is compressed in the
-PNG output.  <b>pnmtopng</b> uses zTXt chunks instead of a tEXt chunks.
+PNG output.  <b>pamtopng</b> uses zTXt chunks instead of a tEXt chunks.
+<p>
 
 <dt><b>-itxt=</b><i>filename</i>
 <dd>Similar to <b>-text</b>, but the text strings can be in a language other
 than English.  The PNG image indicates what language that is and includes the
-text string key both in English and that language.  <b>pnmtopng</b> uses
+text string key both in English and that language.  <b>pamtopng</b> uses
 iTXt chunks instead of tEXt chunks.
 
 <p>For each record, you must specify the language and give the key both in
@@ -254,7 +257,8 @@ The format is either a two character "nl" or an extended code like "en-US".
 <dd>This option allows you to specify the modification time value to be placed
 in the PNG output.  You can specify the year parameter either as a two or four
 digit value.
-
+<p>
+    
 <dt><b>-interlace</b>
 <dd>
 This causes the PNG file to be interlaced, in Adam7 format.  The interlaced
@@ -285,6 +289,7 @@ when generating an interlaced PNG).
 <dt><b>-verbose</b>
 <dd>
 This causes the program to display various facts about the conversion.
+<p>
 
 </dl>
 

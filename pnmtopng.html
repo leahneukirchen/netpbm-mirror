@@ -145,12 +145,14 @@ command line options:
 <dd>
 This causes <b>pnmtopng</b> to display information about the format of the
 output file.
+<p>
 
 <dt><b>-downscale</b>
 <dd>
 This enables <b>pnmtopng</b> to scale maxvalues of more then 65535 to 16
 bits. Since this means loss of image data, <b>pnmtopng</b> does not do it by
 default.
+<p>
 
 <dt><b>-interlace</b>
 <dd>
@@ -168,6 +170,7 @@ top, so the displayer could display each row of the image as it arrives and
 gradually paint down to the bottom.  But with an interlaced image, the
 displayer can start by showing a low-resolution version of the image, then
 gradually improve the display as more data arrives.
+<p>
      
 <dt><b>-alpha=</b><i>filename</i>
 
@@ -179,6 +182,7 @@ in the PNG format.  If it can represent the transparency information through a
 palette, it will do so in order to make a smaller PNG file.
 <b>pnmtopng</b> even sorts the palette so it can omit the opaque colors
 from the transparency part of the palette and save space for the palette.
+<p>
 
 <dt><b>-transparent=</b><i>color</i>
 <dd>
@@ -212,6 +216,7 @@ color does not appear in the image, there will be no transparency.
 Causes <b>pnmtopng</b> to create a background color chunk in the PNG output
 which can be used for subsequent transparency channel or transparent color
 conversions.  Specify <i>color</i> the same as for <b>-transparent</b>.
+<p>
 
 <dt><b>-palette=</b><i>palettefile</i>
 
@@ -250,11 +255,13 @@ case of this is when the image is created by simple hardware that doesn't
 have digital computational ability.  Also, some simple programs that generate
 images from scratch do it with a gamma transfer in which the gamma value is
 1.0.
+<p>
 
 <dt><b>-hist</b>
 
 <dd>Use this parameter to create a chunk that specifies the frequency
 (or histogram) of the colors in the image.
+<p>
 
 <dt><b>-text=</b><i>filename</i>
 
@@ -262,6 +269,7 @@ images from scratch do it with a gamma transfer in which the gamma value is
 This option lets you include arbitrary text strings in the PNG output, as tEXt
 chunks.
 
+<p>
 <i>filename</i> is the name of a file that contains your text strings.
 
 <p>The output contains a distinct tEXt chunk for each entry in the file.
@@ -302,7 +310,7 @@ key for the text string starts with &quot;A&quot; or &quot;T&quot;.  This
 odd exception exists for backward compatibility; we don't know why the program
 was originally designed this way, except that the distinction was meant to
 roughly identify the keys &quot;Author&quot; and &quot;Title&quot;.
-
+<p>
 
 <dt><b>-rgb=</b><i>chroma_list</i>
 
@@ -482,7 +490,7 @@ resulting PNG output is as similar to the Netpbm input as possible.  For
 example, the PNG output will not be paletted and the transparency channel will
 be represented as a full transparency channel even if the information could be
 represented more succinctly with a transparency chunk.
-
+<p>
 
 <dt><b>-libversion</b>
 
