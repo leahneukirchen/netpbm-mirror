@@ -8,6 +8,8 @@ not yet  BJH  Release 10.94.00
 
               Add pamhomography:  Thanks Scott Pakin.
 
+              pamstereogram: Add -yfillshift .
+
               pamtowinicon: Add BMP/PNG encoding to verbose output.
 
               libnetpbm: pm_system: Fix bug: standard input feeder process

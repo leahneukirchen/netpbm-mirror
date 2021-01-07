@@ -16,7 +16,7 @@
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2006-2020 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2006-2021 Scott Pakin <scott+pbm@pakin.org>
  *
  * All rights reserved.
  *
@@ -85,6 +85,7 @@ struct cmdlineInfo {
     unsigned int magnifypat;     /* -magnifypat option */
     int xshift;                  /* -xshift option */
     int yshift;                  /* -yshift option */
+    int yfillshift;              /* -yfillshift option */
     const char * patfile;        /* -patfile option.  Null if none */
     const char * texfile;        /* -texfile option.  Null if none */
     const char * bgcolor;        /* -bgcolor option */
@@ -153,8 +154,8 @@ parseCommandLine(int                  argc,
     unsigned int option_def_index;
 
     unsigned int patfileSpec, texfileSpec, dpiSpec, eyesepSpec, depthSpec,
-        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec,
-      bgcolorSpec, smoothingSpec, planesSpec;
+        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec, yfillshiftSpec,
+        bgcolorSpec, smoothingSpec, planesSpec;
 
     unsigned int blackandwhite, grayscale, color;
     const char ** planes;
@@ -194,6 +195,8 @@ parseCommandLine(int                  argc,
             &xshiftSpec,              0);
     OPTENT3(0, "yshift",          OPT_INT,    &cmdlineP->yshift,
             &yshiftSpec,              0);
+    OPTENT3(0, "yfillshift",      OPT_INT,    &cmdlineP->yfillshift,
+            &yfillshiftSpec,          0);
     OPTENT3(0, "patfile",         OPT_STRING, &cmdlineP->patfile,
             &patfileSpec,             0);
     OPTENT3(0, "texfile",         OPT_STRING, &cmdlineP->texfile,
@@ -282,9 +285,10 @@ parseCommandLine(int                  argc,
 
     if (!xshiftSpec)
         cmdlineP->xshift = 0;
-
     if (!yshiftSpec)
         cmdlineP->yshift = 0;
+    if (!yfillshiftSpec)
+        cmdlineP->yfillshift = 0;
 
     if (xshiftSpec && !cmdlineP->patfile)
         pm_error("-xshift is valid only with -patfile");
@@ -1178,6 +1182,8 @@ static void
 makeImageRow(outGenerator *       const outGenP,
              unsigned int         const row,
              unsigned int         const xbegin,
+             unsigned int         const farWidth,
+             int                  const yfillshift,
              const unsigned int * const sameL,
              const unsigned int * const sameR,
              const tuple *        const outRow) {
@@ -1200,20 +1206,26 @@ makeImageRow(outGenerator *       const outGenP,
 
   sameL[N] > N is not allowed.
 -----------------------------------------------------------------------------*/
-    int col;
+    unsigned int const width  = outGenP->pam.width;
+    unsigned int const height = outGenP->pam.height;
+
+    unsigned int col;
     int lastLinked;
 
-    for (col = (int)xbegin, lastLinked = INT_MIN;
-         col < outGenP->pam.width;
-         ++col) {
+    for (col = xbegin, lastLinked = -1; col < width; ++col) {
 
         tuple newtuple;
 
-        if (sameL[col] == col || sameL[col] < (int)xbegin) {
+        if (sameL[col] == col || sameL[col] < xbegin) {
             if (lastLinked == col - 1)
                 newtuple = outRow[col - 1];
-            else
-                newtuple = outGenP->getTuple(outGenP, col, row);
+            else {
+                if (col < xbegin + farWidth)
+                    newtuple = outGenP->getTuple(outGenP, col, row);
+                else
+                    newtuple = outGenP->getTuple(
+                        outGenP, col, (row + height - yfillshift) % height);
+            }
         } else {
           newtuple = outRow[sameL[col]];
           lastLinked = col;
@@ -1222,20 +1234,25 @@ makeImageRow(outGenerator *       const outGenP,
         pnm_assigntuple(&outGenP->pam, outRow[col], newtuple);
     }
 
-    for (col = (int)xbegin - 1, lastLinked = INT_MIN; col >= 0; --col) {
+    for (col = xbegin, lastLinked = -1; col > 0; --col) {
         tuple newtuple;
 
-        if (sameR[col] == col) {
-            if (lastLinked == col + 1)
-                newtuple = outRow[col + 1];
-            else
-                newtuple = outGenP->getTuple(outGenP, col, row);
+        if (sameR[col-1] == col) {
+            if (lastLinked == col)
+                newtuple = outRow[col];
+            else {
+                if (col > xbegin - farWidth)
+                    newtuple = outGenP->getTuple(outGenP, col-1, row);
+                else
+                    newtuple = outGenP->getTuple(
+                        outGenP, col-1, (row + height - yfillshift) % height);
+            }
         } else {
-            newtuple = outRow[sameR[col]];
-            lastLinked = col;
+            newtuple = outRow[sameR[col-1]];
+            lastLinked = col-1;
                 /* Keep track of the last pixel to be constrained. */
         }
-        pnm_assigntuple(&outGenP->pam, outRow[col], newtuple);
+        pnm_assigntuple(&outGenP->pam, outRow[col-1], newtuple);
     }
 }
 
@@ -1261,6 +1278,8 @@ makeOneImageRow(unsigned int         const row,
                 const unsigned int * const sameR,
                 unsigned int *       const colNumBuffer,
                 unsigned int         const xbegin,
+                unsigned int         const farWidth,
+                int                  const yfillshift,
                 tuple *              const rowBuffer,
                 tuple *              const outRow) {
 
@@ -1272,7 +1291,7 @@ makeOneImageRow(unsigned int         const row,
                             rowBuffer, outRow);
         else
             makeImageRow(outputGeneratorP, row,
-                         xbegin, sameL, sameR, outRow);
+                         xbegin, farWidth, yfillshift, sameL, sameR, outRow);
     }
 }
 
@@ -1284,6 +1303,8 @@ constructRowTileable(const struct pam *   const inPamP,
                      bool                 const makeMask,
                      const unsigned int * const sameL,
                      const unsigned int * const sameR,
+                     unsigned int         const farWidth,
+                     int                  const yfillshift,
                      unsigned int         const row,
                      tuple *              const outRow,
                      tuple *              const outRowBuf1,
@@ -1300,10 +1321,10 @@ constructRowTileable(const struct pam *   const inPamP,
        xbegin=maximum case.
     */
     makeOneImageRow(row, outputGeneratorP, makeMask, sameL, sameR, colNumBuf2,
-                    0, outRowBuf2, outRow);
+                    farWidth, yfillshift, 0, outRowBuf2, outRow);
 
     makeOneImageRow(row, outputGeneratorP, makeMask, sameL, sameR, colNumBuf2,
-                    inPamP->width - 1, outRowBuf2, outRowMax);
+                    farWidth, yfillshift, inPamP->width - 1, outRowBuf2, outRowMax);
 
     for (col = 0; col < inPamP->width; ++col) {
         unsigned int plane;
@@ -1362,6 +1383,8 @@ doRow(const struct pam * const inPamP,
       unsigned int       const magnifypat,
       unsigned int       const smoothing,
       unsigned int       const xbegin,
+      unsigned int       const farWidth,
+      int                const yfillshift,
       unsigned int       const row,
       tuple *            const inRow,
       tuple *            const outRowBuf0,
@@ -1397,13 +1420,16 @@ doRow(const struct pam * const inPamP,
     /* Construct a single row. */
     if (tileable) {
         constructRowTileable(inPamP, outputGeneratorP, makeMask,
-                             sameL, sameR, row, outRow,
+                             sameL, sameR,
+                             farWidth, yfillshift,
+                             row, outRow,
                              outRowBuf1, outRowBuf2, colNumBuf2);
 
     } else {
         makeOneImageRow(row, outputGeneratorP, makeMask,
                         sameL, sameR, colNumBuf2,
-                        xbegin, outRowBuf1, outRow);
+                        xbegin, farWidth, yfillshift,
+                        outRowBuf1, outRow);
     }
 
     /* Write the resulting row. */
@@ -1423,7 +1449,8 @@ makeImageRows(const struct pam * const inPamP,
               bool               const tileable,
               unsigned int       const magnifypat,
               unsigned int       const smoothing,
-              unsigned int       const xbegin) {
+              unsigned int       const xbegin,
+              int                const yfillshift) {
 
     tuple * inRow;    /* Buffer for use in reading from the height-map image */
     tuple * outRowBuf0; /* Buffer for use in generating output rows */
@@ -1433,6 +1460,8 @@ makeImageRows(const struct pam * const inPamP,
     unsigned int * colNumBuf1;
     unsigned int * colNumBuf2;
     unsigned int row;      /* Current row in the input and output files */
+    unsigned int pixelEyesep;
+    unsigned int farWidth;
 
     inRow = pnm_allocpamrow(inPamP);
     outRowBuf0 = pnm_allocpamrow(&outputGeneratorP->pam);
@@ -1451,10 +1480,13 @@ makeImageRows(const struct pam * const inPamP,
         pm_error("Unable to allocate space for %u column buffer",
                  inPamP->width);
 
+    pixelEyesep = ROUNDU(eyesep * dpi);
+    farWidth = pixelEyesep/(magnifypat * 2);
+
     for (row = 0; row < inPamP->height; ++row) {
         doRow(inPamP, outputGeneratorP,  depthOfField, eyesep, dpi,
               crossEyed, makeMask, tileable, magnifypat, smoothing, xbegin,
-              row,
+              farWidth, yfillshift, row,
               inRow, outRowBuf0, outRowBuf1, outRowBuf2,
               colNumBuf0, colNumBuf1, colNumBuf2);
     }
@@ -1510,7 +1542,8 @@ produceStereogram(FILE *             const ifP,
     makeImageRows(&inPam, outputGeneratorP,
                   cmdline.depth, cmdline.eyesep, cmdline.dpi,
                   cmdline.crosseyed, cmdline.makemask, cmdline.tileable,
-                  cmdline.magnifypat, cmdline.smoothing, xbegin);
+                  cmdline.magnifypat, cmdline.smoothing, xbegin,
+                  cmdline.yfillshift);
 
     if (cmdline.guidebottom)
         drawguides(cmdline.guidesize, &outputGeneratorP->pam,
