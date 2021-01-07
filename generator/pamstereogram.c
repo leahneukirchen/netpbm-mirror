@@ -1237,7 +1237,7 @@ makeImageRow(outGenerator *       const outGenP,
     for (col = xbegin, lastLinked = -1; col > 0; --col) {
         tuple newtuple;
 
-        if (sameR[col-1] == col) {
+        if (sameR[col-1] == col-1) {
             if (lastLinked == col)
                 newtuple = outRow[col];
             else {
