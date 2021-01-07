@@ -2,9 +2,10 @@
 <html><head><title>Pamstereogram User Manual</title></head>
 <body>
 <h1>pamstereogram</h1>
-Updated: 10 May 2020
-<br>
-<a href="#index">Table Of Contents</a>
+
+<p>Updated: 2 January 2021
+
+<p><a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
 
@@ -78,20 +79,20 @@ image, use <b>pamtopnm</b> on the output.  There is no need to convert
 if you will use the image as input to a current Netpbm program, but
 many other programs don't know what a PAM is.
 
-<p>To make a red/green type of stereogram (that you view with 3-D
+<p>To make a red/cyan type of stereogram (that you view with 3-D
 glasses) instead, see <b>ppm3d</b>.
 
 
 <h2 id="options">OPTIONS</h2>
 
+<p>You may use either single or double hyphens to denote options.  You
+may use either whitespace or an equals sign to separate an option name
+from its value.
+
 <p>In addition to the options common to all programs based on libnetpbm
 (most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
 Common Options</a>), <b>pamstereogram</b> recognizes the following
 command line options:
-
-<p>You may use either single or double hyphens to denote options.  You
-may use either whitespace or an equals sign to separate an option name
-from its value.
 
 <dl>
 
@@ -184,13 +185,24 @@ Netpbm 10.61 (December 2012), it has no effect without <b>-texfile</b>.
 <dt><b>-xshift=</b><i>pixels</i>
 <dd>Shift the pattern image (designated by <b>-patfile</b>) to the
 right by <i>pixels</i> pixels (default: 0).
-<!-- -xshift is helpful when creating "true-color" stereograms. -->
+<p>
 This option is valid only along with <b>-patfile</b>.
 
 <dt><b>-yshift</b> <i>pixels</i>
 <dd>Shift the pattern image (designated by <b>-patfile</b>)
 downwards by <i>pixels</i> pixels (default: 0). This option is
 valid only along with <b>-patfile</b>.
+
+<dt><b>-yfillshift</b> <i>pixels</i></dt>
+<dd>Shift the pattern image (designated by <b>-patfile</b>) downwards
+by <i>pixels</i> pixels (default: 0) but only after the initial
+population of the pattern.  (If used with <b>-yshift</b> the resulting
+shifts are summed.)  A small <b>-yfillshift</b> helps reduce visual
+artifacts in the 3-D image.  Steer's website, referenced under
+<a href="#seealso">SEE ALSO</a>, recommends a shift of approximately
+1/16" (6&ndash;7 pixels at <b>pamstereogram</b>'s default of 100 DPI).
+
+<p>This option was new in Netpbm 10.94 (March 2021).
 
 <dt><b>-magnifypat=</b><i>scale</i>
 <dd>Magnify each pixel in the pattern file or each random dot by
