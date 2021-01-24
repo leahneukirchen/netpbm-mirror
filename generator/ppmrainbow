@@ -26,6 +26,19 @@ exec perl -w -x -S -- "$0" "$@"
 use strict;
 use Getopt::Long;
 use File::Temp;
+use IO::Handle;
+
+
+
+sub pm_message($) {
+    STDERR->print("ppmrainbow: $_[0]\n");
+}
+
+sub pm_error($) {
+    pm_message($_[0]);
+    exit(1);
+}
+
 
 my ($FALSE, $TRUE) = (0,1);
 
@@ -42,15 +55,6 @@ sub doVersionHack($) {
         my $termStatus = system('pgmramp', '--version');
         exit($termStatus == 0 ? 0 : 1);
     }
-}
-
-
-
-sub fatal($) {
-    my ($msg) = @_;
-
-    print(STDERR "ppmrainbow: $msg\n");
-    exit(1);
 }
 
 
@@ -79,14 +83,14 @@ GetOptions("width=i"   => \$Twid,
            "verbose!"  => \$verbose);
 
 if ($Twid < 1 || $Thgt < 1) {
-    fatal("invalid width and/or height");
+    pm_error("invalid width and/or height");
 }
 my $verboseCommand = $verbose ? "set -x;" : "";
 
 if (@ARGV < 1) {
-    fatal("You must specify at least one color as an argument");
+    pm_error("You must specify at least one color as an argument");
 } elsif (@ARGV < 2 && ! $repeat) {
-    fatal("With the -norepeat option, you must specify at least two colors " .
+    pm_error("With the -norepeat option, you must specify at least two colors " .
           "as arguments.");
 }
 
@@ -115,7 +119,7 @@ while (@colorlist >= 2) {
     my $rc = system("$verboseCommand pgmramp -lr $w $Thgt | " .
                     "pgmtoppm \"$colorlist[0]-$colorlist[1]\" >$outfile");
     if ($rc != 0) {
-        fatal("pgmramp|pgmtoppm pipe failed.");
+        pm_error("pgmramp|pgmtoppm pipe failed.");
     }
     $widthRemaining -= $w;
     $n++;
