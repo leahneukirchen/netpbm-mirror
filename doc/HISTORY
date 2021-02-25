@@ -28,18 +28,18 @@ not yet  BJH  Release 10.94.00
               it makes sense (all but -subtract, -difference, -compare,
               -divide, -shiftleft, and -shiftright).
 
-              pamrith: fail if operand images have different depth and not
+              pamarith: fail if operand images have different depth and not
               depth 1.
 
               ppmshift: Add -seed .
 
               pamaddnoise: Fix incorrect output for -type poisson.  Always
-              broken.  (pamaddnoise was new to Netpbm in Netpbm 10.29 (August
-              2005)).
+              broken.  (pamaddnoise's precursor pnmaddnoies was new to Netpbm
+              in Netpbm 10.29 (August 2005)).
 
               pamaddnoise: fix bug: garbage output with -type impulse.  Always
-              broken (pamaddnoise's precursors pnmaddnoise was new to Netpbm
-              in Netpbm 10.29 (August 2005).
+              broken (pamaddnoise's precursor pnmaddnoise was new to Netpbm
+              in Netpbm 10.29 (August 2005)).
 
 20.09.26 BJH  Release 10.92.00
 
