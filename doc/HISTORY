@@ -12,6 +12,10 @@ not yet  BJH  Release 10.94.00
 
               pamtowinicon: Add BMP/PNG encoding to verbose output.
 
+              Use internal random number generator everywhere random numbers
+              are used except ppmtoilbm, so seeded results are the same on
+              all platforms.
+
               libnetpbm: pm_system: Fix bug: standard input feeder process
               repositions unrelated files.  Always broken (pm_system was new
               in Netpbm 10.13 (September 2003).
@@ -19,6 +23,8 @@ not yet  BJH  Release 10.94.00
               Pamtowinicon: Fix crash or incorrect output with PNG encoding
               (result of pm_system bug above).  Always broken (Pamtowinicon
               was new in Netpbm 10.63 (June 2013).
+
+              pnmtopng: Fix trivial memory leaks.
 
 20.12.28 BJH  Release 10.93.00
 
