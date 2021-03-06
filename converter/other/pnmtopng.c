@@ -511,6 +511,8 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFileName = argv[1];
     else
         pm_error("Program takes at most one argument:  input file name");
+
+    free(option_def);
 }
 
 
@@ -2362,7 +2364,8 @@ writeRaster(struct pngx *        const pngxP,
     /* max: 3 color channels, one alpha channel, 16-bit */
     MALLOCARRAY(line, cols * 8);
     if (line == NULL)
-        pm_error("out of memory allocating PNG row buffer");
+        pm_error("out of memory allocating PNG row buffer for %u columns",
+                 cols);
 
     for (pass = 0; pass < pngxP->numPassesRequired; ++pass) {
         unsigned int row;
@@ -2379,6 +2382,7 @@ writeRaster(struct pngx *        const pngxP,
             pngx_writeRow(pngxP, line);
         }
     }
+    free(line);
     pnm_freerow(xelrow);
 }
 
