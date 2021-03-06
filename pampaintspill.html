@@ -2,7 +2,7 @@
 <html><head><title>Pampaintspill User Manual</title></head>
 <body>
 <h1>pampaintspill</h1>
-Updated: 09 February 2020
+Updated: 06 March 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -17,6 +17,8 @@ pampaintspill - smoothly spill colors into the background
 [<b>--wrap</b>] [<b>--all</b>]
 [<b>--downsample</b>=<i>number</i>]
 [<b>--power</b>=<i>number</i>] [<i>filename</i>]
+[<b>-randomseed=</b><i>integer</i>]
+
 
 <p>Minimum unique abbreviations of option are acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
@@ -101,6 +103,13 @@ command line options:
       the number of paint sources increases. Positive numbers (e.g., 1.0 and
       2.0) make the paint sources stand out in the output image by pushing the
       gradients away from them.</dd>
+  <dt><b>-randomseed=</b><i>integer</i>
+   <dd>This is the seed for the random number generator that generates the
+  pixels.
+  
+  <p>Use this to ensure you get the same image on separate invocations.
+  
+  <p>This option was new in Netpbm 10.94 (March 2021).
 </dl>
 
 

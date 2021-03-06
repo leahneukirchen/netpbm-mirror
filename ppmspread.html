@@ -2,7 +2,7 @@
 <html><head><title>Ppmspread User Manual</title></head>
 <body>
 <h1>ppmspread</h1>
-Updated: 20 November 2008
+Updated: 06 March 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -13,6 +13,8 @@ ppmspread - displace a PPM image's pixels by a random amount
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>ppmspread</b> <i>amount</i> [<i>ppmfile</i>]
+[<b>-randomseed=</b><i>integer</i>]
+
 
 <h2 id="description">DESCRIPTION</h2>
 
@@ -33,11 +35,25 @@ identical output.
 
 <h2 id="options">OPTIONS</h2>
 
-<p>There are no command line options defined specifically
-for <b>ppmspread</b>, but it recognizes the options common to all
-programs based on libnetpbm (See <a href="index.html#commonoptions">
-Common Options</a>.)
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>ppmspread</b> recognizes the following
+command line options:
 
+<dl>
+  
+<dt><b>-randomseed=</b><i>integer</i>
+
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>This option was new in Netpbm 10.94 (March 2021).
+
+</dl>
+
+  
 <h2 id="seealso">SEE ALSO</h2>
 
 <a href="ppm.html">ppm</a>, 
