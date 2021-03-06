@@ -12,9 +12,9 @@
 #include <stdbool.h>
 
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "ppm.h"
-
 
 
 struct CmdlineInfo {
@@ -24,6 +24,7 @@ struct CmdlineInfo {
     const char * inputFileName;
 
     unsigned int shift;
+    unsigned int seedSpec;
     unsigned int seed;
 };
 
@@ -42,8 +43,6 @@ parseCommandLine(int argc, const char ** const argv,
 
     unsigned int option_def_index;
 
-    unsigned int seedSpec;
-
     MALLOCARRAY(option_def, 100);
 
     opt.opt_table = option_def;
@@ -52,13 +51,10 @@ parseCommandLine(int argc, const char ** const argv,
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "seed",            OPT_UINT,     &cmdlineP->seed,
-            &seedSpec,         0);
+            &cmdlineP->seedSpec,         0);
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-
-    if (!seedSpec)
-        cmdlineP->seed = pm_randseed();
 
     if (argc-1 < 1)
         pm_error("You must specify the shift factor as an argument");
@@ -84,6 +80,62 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 
+static void
+shiftRow(pixel *            const srcrow,
+         unsigned int       const cols,
+         unsigned int       const shift,
+         pixel *            const destrow,
+         struct pm_randSt * const randStP) {
+
+    /* the range by which a line is shifted lays in the range from */
+    /* -shift/2 .. +shift/2 pixels; however, within this range it is */
+    /* randomly chosen */
+
+    pixel * pP;
+    pixel * pP2;
+    unsigned int nowshift;
+
+    if (shift != 0)
+        nowshift = (pm_rand(randStP) % (shift+1)) - ((shift+1) / 2);
+    else
+        nowshift = 0;
+
+    pP  = &srcrow[0];
+    pP2 = &destrow[0];
+
+    /* if the shift value is less than zero, we take the original
+       pixel line and copy it into the destination line translated
+       to the left by x pixels. The empty pixels on the right end
+       of the destination line are filled up with the pixel that
+       is the right-most in the original pixel line.
+    */
+    if (nowshift < 0) {
+        unsigned int col;
+        pP += abs(nowshift);
+        for (col = 0; col < cols; ++col) {
+            PPM_ASSIGN(*pP2, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP));
+            ++pP2;
+            if (col < (cols + nowshift) - 1)
+                ++pP;
+        }
+    } else {
+        unsigned int col;
+        /* The shift value is 0 or positive, so fill the first
+           <nowshift> pixels of the destination line with the
+           first pixel from the source line, and copy the rest of
+           the source line to the dest line
+        */
+        for (col = 0; col < cols; ++col) {
+            PPM_ASSIGN(*pP2, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP));
+            ++pP2;
+            if (col >= nowshift)
+                ++pP;
+        }
+    }
+}
+
+
+
 int
 main(int argc, const char ** argv) {
 
@@ -95,13 +147,15 @@ main(int argc, const char ** argv) {
     pixel * destrow;
     unsigned int row;
     unsigned int shift;
+    struct pm_randSt randSt;
 
     /* parse in 'default' parameters */
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.seed);
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, cmdline.seedSpec, cmdline.seed);
 
     ifP = pm_openr(cmdline.inputFileName);
 
@@ -115,67 +169,23 @@ main(int argc, const char ** argv) {
     } else
         shift = cmdline.shift;
 
-    srcrow = ppm_allocrow(cols);
-
+    srcrow  = ppm_allocrow(cols);
     destrow = ppm_allocrow(cols);
 
     ppm_writeppminit(stdout, cols, rows, maxval, 0);
 
-    /** now do the shifting **/
-    /* the range by which a line is shifted lays in the range from */
-    /* -shift/2 .. +shift/2 pixels; however, within this range it is */
-    /* randomly chosen */
     for (row = 0; row < rows; ++row) {
-        pixel * pP;
-        pixel * pP2;
-        unsigned int nowshift;
-
-        if (shift != 0)
-            nowshift = (rand() % (shift+1)) - ((shift+1) / 2);
-        else
-            nowshift = 0;
-
         ppm_readppmrow(ifP, srcrow, cols, maxval, format);
 
-        pP  = &srcrow[0];
-        pP2 = &destrow[0];
-
-        /* if the shift value is less than zero, we take the original
-           pixel line and copy it into the destination line translated
-           to the left by x pixels. The empty pixels on the right end
-           of the destination line are filled up with the pixel that
-           is the right-most in the original pixel line.
-        */
-        if (nowshift < 0) {
-            unsigned int col;
-            pP += abs(nowshift);
-            for (col = 0; col < cols; ++col) {
-                PPM_ASSIGN(*pP2, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP));
-                ++pP2;
-                if (col < (cols + nowshift) - 1)
-                    ++pP;
-            }
-        } else {
-            unsigned int col;
-            /* The shift value is 0 or positive, so fill the first
-               <nowshift> pixels of the destination line with the
-               first pixel from the source line, and copy the rest of
-               the source line to the dest line
-            */
-            for (col = 0; col < cols; ++col) {
-                PPM_ASSIGN(*pP2, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP));
-                ++pP2;
-                if (col >= nowshift)
-                    ++pP;
-            }
-        }
+        shiftRow(srcrow, cols, shift, destrow, &randSt);
 
         ppm_writeppmrow(stdout, destrow, cols, maxval, 0);
     }
 
-    pm_close(ifP);
-    ppm_freerow(srcrow);
     ppm_freerow(destrow);
+    ppm_freerow(srcrow);
+    pm_close(ifP);
+    pm_randterm(&randSt);
 
     return 0;
 }

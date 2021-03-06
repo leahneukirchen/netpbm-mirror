@@ -58,11 +58,12 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 
 
-enum outputType {OUTPUT_BW, OUTPUT_GRAYSCALE, OUTPUT_COLOR};
+enum OutputType {OUTPUT_BW, OUTPUT_GRAYSCALE, OUTPUT_COLOR};
 
 /* ---------------------------------------------------------------------- */
 
@@ -92,7 +93,7 @@ struct cmdlineInfo {
     unsigned int smoothing;      /* -smoothing option */
     unsigned int randomseed;     /* -randomseed option */
     unsigned int randomseedSpec; /* -randomseed option count */
-    enum outputType outputType;  /* Type of output file */
+    enum OutputType outputType;  /* Type of output file */
     unsigned int xbegin;         /* -xbegin option */
     unsigned int xbeginSpec;     /* -xbegin option count */
     unsigned int tileable;       /* -tileable option */
@@ -406,11 +407,12 @@ typedef struct outGenerator {
 
 
 
-struct randomState {
+struct RandomState {
     /* The state of a randomColor generator. */
     unsigned int magnifypat;
     tuple *      currentRow;
     unsigned int prevy;
+    struct pm_randSt * randStP;
 };
 
 
@@ -425,7 +427,7 @@ randomColor(outGenerator * const outGenP,
 /*----------------------------------------------------------------------------
    Return a random RGB value.
 -----------------------------------------------------------------------------*/
-    struct randomState * const stateP = outGenP->stateP;
+    struct RandomState * const stateP = outGenP->stateP;
 
     /* Every time we start a new row, we select a new sequence of random
        colors.
@@ -440,7 +442,7 @@ randomColor(outGenerator * const outGenP,
             unsigned int plane;
 
             for (plane = 0; plane < outGenP->pam.depth; ++plane) {
-                unsigned int const randval = rand();
+                unsigned int const randval = pm_rand(stateP->randStP);
                 thisTuple[plane] = randval % modulus;
             }
         }
@@ -460,9 +462,13 @@ static outGenStateTerm termRandomColor;
 static void
 termRandomColor(outGenerator * const outGenP) {
 
-    struct randomState * const stateP = outGenP->stateP;
+    struct RandomState * const stateP = outGenP->stateP;
 
     pnm_freepamrow(stateP->currentRow);
+
+    pm_randterm(stateP->randStP);
+
+    free(stateP->randStP);
 }
 
 
@@ -472,7 +478,7 @@ initRandomColor(outGenerator *     const outGenP,
                 const struct pam * const inPamP,
                 struct cmdlineInfo const cmdline) {
 
-    struct randomState * stateP;
+    struct RandomState * stateP;
 
     outGenP->pam.format      = PAM_FORMAT;
     outGenP->pam.plainformat = 0;
@@ -502,6 +508,10 @@ initRandomColor(outGenerator *     const outGenP,
     stateP->currentRow = pnm_allocpamrow(&outGenP->pam);
     stateP->magnifypat = cmdline.magnifypat;
     stateP->prevy      = (unsigned int)(-cmdline.magnifypat);
+
+    MALLOCVAR_NOFAIL(stateP->randStP);
+    pm_randinit(stateP->randStP);
+    pm_srand2(stateP->randStP, cmdline.randomseedSpec, cmdline.randomseed);
 
     outGenP->stateP         = stateP;
     outGenP->getTuple       = &randomColor;
@@ -1600,8 +1610,6 @@ main(int argc, const char *argv[]) {
     if (cmdline.verbose)
         reportParameters(cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
-
     ifP = pm_openr(cmdline.inputFilespec);
 
     /* Produce a stereogram. */
@@ -1611,6 +1619,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
-
 
 

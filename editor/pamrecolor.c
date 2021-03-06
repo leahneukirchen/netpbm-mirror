@@ -32,6 +32,7 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 
@@ -175,17 +176,25 @@ explicitlyColorRow(struct pam *   const pamP,
 
 static void
 randomlyColorRow(struct pam *   const pamP,
-                 tuplen *       const rowData) {
+                 tuplen *       const rowData,
+                 bool           const randomseedSpec,
+                 unsigned int   const randomseed) {
 /*----------------------------------------------------------------------
   Assign each tuple in a row a random color.
 ------------------------------------------------------------------------*/
     unsigned int col;
+    struct pm_randSt randSt;
+
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, randomseedSpec, randomseed);
 
     for (col = 0; col < pamP->width; ++col) {
-        rowData[col][PAM_RED_PLANE] = rand() / (float)RAND_MAX;
-        rowData[col][PAM_GRN_PLANE] = rand() / (float)RAND_MAX;
-        rowData[col][PAM_BLU_PLANE] = rand() / (float)RAND_MAX;
+        rowData[col][PAM_RED_PLANE] = pm_drand(&randSt);
+        rowData[col][PAM_GRN_PLANE] = pm_drand(&randSt);
+        rowData[col][PAM_BLU_PLANE] = pm_drand(&randSt);
     }
+
+    pm_randterm(&randSt);
 }
 
 
@@ -462,8 +471,6 @@ main(int argc, const char *argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
-
     ifP = pm_openr(cmdline.inputFileName);
     inPam.comment_p = &comments;
     pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(comment_p));
@@ -505,7 +512,8 @@ main(int argc, const char *argv[]) {
             if (cmdline.targetcolorSpec)
                 explicitlyColorRow(&colorPam, colorRow, cmdline.targetcolor);
             else
-                randomlyColorRow(&colorPam, colorRow);
+                randomlyColorRow(&colorPam, colorRow,
+                                 cmdline.randomseedSpec, cmdline.randomseed);
         }
         recolorRow(&inPam, inRow,
                    &cmdline.color2gray, colorRow,

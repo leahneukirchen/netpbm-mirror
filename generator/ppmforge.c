@@ -37,9 +37,10 @@
 #include <assert.h>
 
 #include "pm_c_util.h"
-#include "ppm.h"
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
+#include "ppm.h"
 
 static double const hugeVal = 1e50;
 
@@ -59,12 +60,8 @@ typedef struct {
 
 /* Definition for obtaining random numbers. */
 
-#define nrand 4               /* Gauss() sample count */
-#define Cast(low, high) ((low)+(((high)-(low)) * ((rand() & 0x7FFF) / arand)))
-
 /*  Local variables  */
 
-static double arand, gaussadd, gaussfac; /* Gaussian random parameters */
 static double fracdim;            /* Fractal dimension */
 static double powscale;           /* Power law scaling exponent */
 static int meshsize = 256;        /* FFT mesh size */
@@ -335,45 +332,73 @@ fourn(float *     const data,
 #undef SWAP
 
 
+struct Gauss {
+    struct pm_randSt randSt;
+    unsigned int     nrand;          /* Gauss() sample count */
+    double           arand;
+    double           gaussadd;
+    double           gaussfac;
+};
+
+
 
 static void
-initgauss(unsigned int const seed) {
+initgauss(struct Gauss * const gaussP,
+          unsigned int   const seed) {
 /*----------------------------------------------------------------------------
   Initialize random number generators.
 
   As given in Peitgen & Saupe, page 77.
 -----------------------------------------------------------------------------*/
+    gaussP->nrand = 4;
+
     /* Range of random generator */
-    arand = pow(2.0, 15.0) - 1.0;
-    gaussadd = sqrt(3.0 * nrand);
-    gaussfac = 2 * gaussadd / (nrand * arand);
-    srand(seed);
+    gaussP->arand    = pow(2.0, 15.0) - 1.0;
+    gaussP->gaussadd = sqrt(3.0 * gaussP->nrand);
+    gaussP->gaussfac = 2 * gaussP->gaussadd / (gaussP->nrand * gaussP->arand);
+
+    pm_randinit(&gaussP->randSt);
+    pm_srand(&gaussP->randSt, seed);
 }
 
 
 
 static double
-gauss() {
+gauss(struct Gauss * const gaussP) {
 /*----------------------------------------------------------------------------
   A Gaussian random number.
 
   As given in Peitgen & Saupe, page 77.
 -----------------------------------------------------------------------------*/
-    int i;
+    unsigned int i;
     double sum;
 
-    for (i = 1, sum = 0.0; i <= nrand; ++i) {
-        sum += (rand() & 0x7FFF);
+    for (i = 1, sum = 0.0; i <= gaussP->nrand; ++i) {
+        sum += (pm_rand(&gaussP->randSt) & 0x7FFF);
     }
-    return gaussfac * sum - gaussadd;
+    return gaussP->gaussfac * sum - gaussP->gaussadd;
+}
+
+
+
+static double
+cast(double         const low,
+     double         const high,
+     struct Gauss * const gaussP) {
+
+    return
+        low +
+        ((high-low) * ((pm_rand(&gaussP->randSt) & 0x7FFF) / gaussP->arand));
+
 }
 
 
 
 static void
-spectralsynth(float **     const x,
-              unsigned int const n,
-              double        const h) {
+spectralsynth(float **       const x,
+              unsigned int   const n,
+              double         const h,
+              struct Gauss * const gaussP) {
 /*----------------------------------------------------------------------------
   Spectrally synthesized fractal motion in two dimensions.
 
@@ -395,9 +420,10 @@ spectralsynth(float **     const x,
 
     for (i = 0; i <= n / 2; i++) {
         for (j = 0; j <= n / 2; j++) {
-            phase = 2 * M_PI * ((rand() & 0x7FFF) / arand);
+            phase = 2 * M_PI * ((pm_rand(&gaussP->randSt) & 0x7FFF) /
+                                gaussP->arand);
             if (i != 0 || j != 0) {
-                rad = pow((double) (i * i + j * j), -(h + 1) / 2) * gauss();
+                rad = pow((double) (i*i + j*j), -(h + 1) / 2) * gauss(gaussP);
             } else {
                 rad = 0;
             }
@@ -416,8 +442,9 @@ spectralsynth(float **     const x,
     Imag(a, n / 2, n / 2) = 0;
     for (i = 1; i <= n / 2 - 1; i++) {
         for (j = 1; j <= n / 2 - 1; j++) {
-            phase = 2 * M_PI * ((rand() & 0x7FFF) / arand);
-            rad = pow((double) (i * i + j * j), -(h + 1) / 2) * gauss();
+            phase = 2 * M_PI * ((pm_rand(&gaussP->randSt) & 0x7FFF) /
+                                gaussP->arand);
+            rad = pow((double) (i * i + j * j), -(h + 1) / 2) * gauss(gaussP);
             rcos = rad * cos(phase);
             rsin = rad * sin(phase);
             Real(a, i, n - j) = rcos;
@@ -469,22 +496,22 @@ temprgb(double   const temp,
 
 
 static void
-etoile(pixel * const pix) {
+etoile(pixel *        const pix,
+       struct Gauss * const gaussP) {
 /*----------------------------------------------------------------------------
     Set a pixel in the starry sky.
 -----------------------------------------------------------------------------*/
-    if ((rand() % 1000) < starfraction) {
-#define StarQuality 0.5       /* Brightness distribution exponent */
-#define StarIntensity   8         /* Brightness scale factor */
-#define StarTintExp 0.5       /* Tint distribution exponent */
-        double v = StarIntensity * pow(1 / (1 - Cast(0, 0.9999)),
-                                       (double) StarQuality),
-            temp,
-            r, g, b;
-
-        if (v > 255) {
-            v = 255;
-        }
+    if ((pm_rand(&gaussP->randSt) % 1000) < starfraction) {
+        double const starQuality   = 0.5;
+            /* Brightness distribution exponent */
+        double const starIntensity = 8;
+            /* Brightness scale factor */
+        double const starTintExp = 0.5;
+            /* Tint distribution exponent */
+        double const v =
+            MIN(255.0,
+                starIntensity * pow(1 / (1 - cast(0, 0.9999, gaussP)),
+                                    (double) starQuality));
 
         /* We make a special case for star color  of zero in order to
            prevent  floating  point  roundoff  which  would  otherwise
@@ -493,13 +520,17 @@ etoile(pixel * const pix) {
            256 shades in the image. */
 
         if (starcolor == 0) {
-            int vi = v;
+            pixval const vi = v;
 
             PPM_ASSIGN(*pix, vi, vi, vi);
         } else {
+            double temp;
+            double r, g, b;
+
             temp = 5500 + starcolor *
-                pow(1 / (1 - Cast(0, 0.9999)), StarTintExp) *
-                ((rand() & 7) ? -1 : 1);
+                pow(1 / (1 - cast(0, 0.9999, gaussP)), starTintExp) *
+                ((pm_rand(&gaussP->randSt) & 7) ? -1 : 1);
+
             /* Constrain temperature to a reasonable value: >= 2600K
                (S Cephei/R Andromedae), <= 28,000 (Spica). */
             temp = MAX(2600, MIN(28000, temp));
@@ -575,7 +606,8 @@ createPlanetStuff(bool             const clouds,
                   unsigned char ** const cpP,
                   Vector *         const sunvecP,
                   unsigned int     const cols,
-                  pixval           const maxval) {
+                  pixval           const maxval,
+                  struct Gauss *   const gaussP) {
 
     double *u, *u1;
     unsigned int *bxf, *bxc;
@@ -585,8 +617,8 @@ createPlanetStuff(bool             const clouds,
 
     /* Compute incident light direction vector. */
 
-    shang = hourspec ? hourangle : Cast(0, 2 * M_PI);
-    siang = inclspec ? inclangle : Cast(-M_PI * 0.12, M_PI * 0.12);
+    shang = hourspec ? hourangle : cast(0, 2 * M_PI, gaussP);
+    siang = inclspec ? inclangle : cast(-M_PI * 0.12, M_PI * 0.12, gaussP);
 
     sunvecP->x = sin(shang) * cos(siang);
     sunvecP->y = sin(siang);
@@ -594,7 +626,7 @@ createPlanetStuff(bool             const clouds,
 
     /* Allow only 25% of random pictures to be crescents */
 
-    if (!hourspec && ((rand() % 100) < 75)) {
+    if (!hourspec && ((pm_rand(&gaussP->randSt) % 100) < 75)) {
         flipped = (sunvecP->z < 0);
         sunvecP->z = fabs(sunvecP->z);
     } else
@@ -634,7 +666,7 @@ createPlanetStuff(bool             const clouds,
         pm_error("Cannot allocate %u element interpolation tables.", cols);
     {
         unsigned int j;
-        for (j = 0; j < cols; j++) {
+        for (j = 0; j < cols; ++j) {
             double const bx = (n - 1) * uprj(j, cols);
 
             bxf[j] = floor(bx);
@@ -651,8 +683,9 @@ createPlanetStuff(bool             const clouds,
 
 
 static void
-generateStarrySkyRow(pixel *      const pixels,
-                     unsigned int const cols) {
+generateStarrySkyRow(pixel *        const pixels,
+                     unsigned int   const cols,
+                     struct Gauss * const gaussP) {
 /*----------------------------------------------------------------------------
   Generate a starry sky.  Note  that no FFT is performed;
   the output is  generated  directly  from  a  power  law
@@ -660,8 +693,8 @@ generateStarrySkyRow(pixel *      const pixels,
 -----------------------------------------------------------------------------*/
     unsigned int j;
 
-    for (j = 0; j < cols; j++)
-        etoile(pixels + j);
+    for (j = 0; j < cols; ++j)
+        etoile(pixels + j, gaussP);
 }
 
 
@@ -881,7 +914,8 @@ generatePlanetRow(pixel *         const pixelrow,
                   int             const byc,
                   int             const byf,
                   Vector          const sunvec,
-                  pixval          const maxval) {
+                  pixval          const maxval,
+                  struct Gauss *  const gaussP) {
 
     unsigned int const StarClose = 2;
 
@@ -924,24 +958,25 @@ generatePlanetRow(pixel *         const pixelrow,
     /* Left stars */
 
     for (col = 0; (int)col < (int)(cols/2 - (lcos + StarClose)); ++col)
-        etoile(&pixelrow[col]);
+        etoile(&pixelrow[col], gaussP);
 
     /* Right stars */
 
     for (col = cols/2 + (lcos + StarClose); col < cols; ++col)
-        etoile(&pixelrow[col]);
+        etoile(&pixelrow[col], gaussP);
 }
 
 
 
 static void
-genplanet(bool         const stars,
-          bool         const clouds,
-          float *      const a,
-          unsigned int const cols,
-          unsigned int const rows,
-          unsigned int const n,
-          unsigned int const rseed) {
+genplanet(bool           const stars,
+          bool           const clouds,
+          float *        const a,
+          unsigned int   const cols,
+          unsigned int   const rows,
+          unsigned int   const n,
+          unsigned int   const rseed,
+          struct Gauss * const gaussP) {
 /*----------------------------------------------------------------------------
   Generate planet from elevation array.
 
@@ -971,13 +1006,13 @@ genplanet(bool         const stars,
                    clouds ? "clouds" : "planet",
                    rseed, fracdim, powscale, meshsize);
         createPlanetStuff(clouds, a, n, &u, &u1, &bxf, &bxc, &cp, &sunvec,
-                          cols, maxval);
+                          cols, maxval, gaussP);
     }
 
     pixelrow = ppm_allocrow(cols);
     for (row = 0; row < rows; ++row) {
         if (stars)
-            generateStarrySkyRow(pixelrow, cols);
+            generateStarrySkyRow(pixelrow, cols, gaussP);
         else {
             double const by = (n - 1) * uprj(row, rows);
             int    const byf = floor(by) * n;
@@ -993,7 +1028,8 @@ genplanet(bool         const stars,
                 generatePlanetRow(pixelrow, row, rows, cols,
                                   t, t1, u, u1, cp, bxc, bxf, byc, byf,
                                   sunvec,
-                                  maxval);
+                                  maxval,
+                                  gaussP);
         }
         ppm_writeppmrow(stdout, pixelrow, cols, maxval, FALSE);
     }
@@ -1098,14 +1134,15 @@ planet(unsigned int const cols,
 -----------------------------------------------------------------------------*/
     float * a;
     bool error;
+    struct Gauss gauss;
 
-    initgauss(rseed);
+    initgauss(&gauss, rseed);
 
     if (stars) {
         a = NULL;
         error = FALSE;
     } else {
-        spectralsynth(&a, meshsize, 3.0 - fracdim);
+        spectralsynth(&a, meshsize, 3.0 - fracdim, &gauss);
         if (a == NULL) {
             error = TRUE;
         } else {
@@ -1117,7 +1154,7 @@ planet(unsigned int const cols,
         }
     }
     if (!error)
-        genplanet(stars, clouds, a, cols, rows, meshsize, rseed);
+        genplanet(stars, clouds, a, cols, rows, meshsize, rseed, &gauss);
 
     if (a != NULL)
         free(a);
@@ -1159,10 +1196,10 @@ main(int argc, const char ** argv) {
     cols = (MAX(cmdline.height, cmdline.width) + 1) & (~1);
     rows = cmdline.height;
 
-    success = planet(cols, rows, cmdline.night, cmdline.clouds, cmdline.seed);
+    success = planet(cols, rows, cmdline.night,
+                     cmdline.clouds, cmdline.seed);
 
     exit(success ? 0 : 1);
 }
-
 
 

@@ -16,10 +16,10 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "ppm.h"
 
-static pixel** PIX;
 static pixval BG_RED, BG_GREEN, BG_BLUE;
 
 
@@ -89,95 +89,239 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-procLeft(int          const r1,
-         int          const r2,
-         int          const c1,
-         int          const c2,
-         unsigned int const var) {
+makeAllForegroundColor(pixel **     const pixels,
+                       unsigned int const rows,
+                       unsigned int const cols,
+                       pixval       const r,
+                       pixval       const g,
+                       pixval       const b) {
 
-    int cm, rm, c;
+    unsigned int row;
 
-    if (r1 + 1 == r2)  return;
-    rm = (r1 + r2) >> 1;
-    cm = (c1 + c2) >> 1;
-    cm += (int)floor(((float)rand() / RAND_MAX - 0.5) * var + 0.5);
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
 
-    for (c = 0; c < cm; c++)
-        PPM_ASSIGN(PIX[rm][c], BG_RED, BG_GREEN, BG_BLUE);
-
-    procLeft(r1, rm, c1, cm, var);
-    procLeft(rm, r2, cm, c2, var);
+        for (col = 0; col < cols; ++col)
+            PPM_ASSIGN(pixels[row][col], r, g, b);
+    }
 }
 
 
 
 static void
-procRight(int          const r1,
-          int          const r2,
-          int          const c1,
-          int          const c2,
-          unsigned int const width,
-          unsigned int const var) {
+procLeft(pixel **           const pixels,
+         int                const r1,
+         int                const r2,
+         int                const c1,
+         int                const c2,
+         unsigned int       const var,
+         struct pm_randSt * const randStP) {
 
-    int cm, rm, c;
+    if (r1 + 1 != r2) {
+        int const rm = (r1 + r2) >> 1;
+        int const cm = ((c1 + c2) >> 1) +
+            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
 
-    if (r1 + 1 == r2)  return;
-    rm = (r1 + r2) >> 1;
-    cm = (c1 + c2) >> 1;
-    cm += (int)floor(((float)rand() / RAND_MAX - 0.5) * var + 0.5);
+        int c;
 
-    for (c = cm; c < width; c++)
-        PPM_ASSIGN(PIX[rm][c], BG_RED, BG_GREEN, BG_BLUE);
+        for (c = 0; c < cm; c++)
+            PPM_ASSIGN(pixels[rm][c], BG_RED, BG_GREEN, BG_BLUE);
 
-    procRight(r1, rm, c1, cm, width, var);
-    procRight(rm, r2, cm, c2, width, var);
+        procLeft(pixels, r1, rm, c1, cm, var, randStP);
+        procLeft(pixels, rm, r2, cm, c2, var, randStP);
+    }
 }
 
 
 
 static void
-procTop(int          const c1,
-        int          const c2,
-        int          const r1,
-        int          const r2,
-        unsigned int const var) {
+procRight(pixel **           const pixels,
+          int                const r1,
+          int                const r2,
+          int                const c1,
+          int                const c2,
+          unsigned int       const width,
+          unsigned int       const var,
+          struct pm_randSt * const randStP) {
 
-    int rm, cm, r;
+    if (r1 + 1 != r2) {
+        int const rm = (r1 + r2) >> 1;
+        int const cm = ((c1 + c2) >> 1) +
+            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
 
-    if (c1 + 1 == c2)  return;
-    cm = (c1 + c2) >> 1;
-    rm = (r1 + r2) >> 1;
-    rm += (int)floor(((float)rand() / RAND_MAX - 0.5) * var + 0.5);
+        int c;
 
-    for (r = 0; r < rm; r++)
-        PPM_ASSIGN(PIX[r][cm], BG_RED, BG_GREEN, BG_BLUE);
+        for (c = cm; c < width; c++)
+            PPM_ASSIGN(pixels[rm][c], BG_RED, BG_GREEN, BG_BLUE);
 
-    procTop(c1, cm, r1, rm, var);
-    procTop(cm, c2, rm, r2, var);
+        procRight(pixels, r1, rm, c1, cm, width, var, randStP);
+        procRight(pixels, rm, r2, cm, c2, width, var, randStP);
+    }
 }
 
 
 
 static void
-procBottom(int          const c1,
-           int          const c2,
-           int          const r1,
-           int          const r2,
-           unsigned int const height,
-           unsigned int const var) {
+procTop(pixel **           const pixels,
+        int                const c1,
+        int                const c2,
+        int                const r1,
+        int                const r2,
+        unsigned int       const var,
+        struct pm_randSt * const randStP) {
 
-    int rm, cm, r;
+    if (c1 + 1 != c2) {
+        int const cm = (c1 + c2) >> 1;
+        int const rm = ((r1 + r2) >> 1) +
+            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
 
-    if (c1 + 1 == c2)  return;
-    cm = (c1 + c2) >> 1;
-    rm = (r1 + r2) >> 1;
-    rm += (int)floor(((float)rand() / RAND_MAX - 0.5) * var + 0.5);
+        int r;
 
-    for (r = rm; r < height; r++)
-        PPM_ASSIGN(PIX[r][cm], BG_RED, BG_GREEN, BG_BLUE);
+        for (r = 0; r < rm; r++)
+            PPM_ASSIGN(pixels[r][cm], BG_RED, BG_GREEN, BG_BLUE);
 
-    procBottom(c1, cm, r1, rm, height, var);
-    procBottom(cm, c2, rm, r2, height, var);
+        procTop(pixels, c1, cm, r1, rm, var, randStP);
+        procTop(pixels, cm, c2, rm, r2, var, randStP);
+    }
+}
+
+
+
+static void
+procBottom(pixel **           const pixels,
+           int                const c1,
+           int                const c2,
+           int                const r1,
+           int                const r2,
+           unsigned int       const height,
+           unsigned int       const var,
+           struct pm_randSt * const randStP) {
+
+    if (c1 + 1 != c2) {
+        int const cm = (c1 + c2) >> 1;
+        int const rm = ((r1 + r2) >> 1) +
+            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
+
+        int r;
+
+        for (r = rm; r < height; ++r)
+            PPM_ASSIGN(pixels[r][cm], BG_RED, BG_GREEN, BG_BLUE);
+
+        procBottom(pixels, c1, cm, r1, rm, height, var, randStP);
+        procBottom(pixels, cm, c2, rm, r2, height, var, randStP);
+    }
+}
+
+
+
+static void
+makeRaggedLeftBorder(pixel **           const pixels,
+                     unsigned int       const rows,
+                     unsigned int       const cols,
+                     unsigned int       const left,
+                     unsigned int       const var,
+                     struct pm_randSt * const randStP) {
+
+    if (left >= 0) {
+        int const leftC1 = left;
+        int const leftC2 = left;
+        int const leftR1 = 0;
+        int const leftR2 = rows - 1;
+
+        unsigned int col;
+
+        for (col = 0; col < leftC1; ++col)
+            PPM_ASSIGN(pixels[leftR1][col], BG_RED, BG_GREEN, BG_BLUE);
+        for (col = 0; col < leftC2; ++col)
+            PPM_ASSIGN(pixels[leftR2][col], BG_RED, BG_GREEN, BG_BLUE);
+
+        procLeft(pixels, leftR1, leftR2, leftC1, leftC2, var, randStP);
+    }
+}
+
+
+
+static void
+makeRaggedRightBorder(pixel **           const pixels,
+                      unsigned int       const rows,
+                      unsigned int       const cols,
+                      unsigned int       const right,
+                      unsigned int       const width,
+                      unsigned int       const var,
+                      struct pm_randSt * const randStP) {
+
+    if (right >= 0) {
+        int const rightC1 = cols - right - 1;
+        int const rightC2 = cols - right - 1;
+        int const rightR1 = 0;
+        int const rightR2 = rows - 1;
+
+        unsigned int col;
+
+        for (col = rightC1; col < cols; ++col)
+            PPM_ASSIGN(pixels[rightR1][col], BG_RED, BG_GREEN, BG_BLUE);
+        for (col = rightC2; col < cols; ++col)
+            PPM_ASSIGN(pixels[rightR2][col], BG_RED, BG_GREEN, BG_BLUE);
+
+        procRight(pixels, rightR1, rightR2, rightC1, rightC2, width, var,
+                  randStP);
+    }
+}
+
+
+
+static void
+makeRaggedTopBorder(pixel **           const pixels,
+                    unsigned int       const rows,
+                    unsigned int       const cols,
+                    unsigned int       const top,
+                    unsigned int       const var,
+                    struct pm_randSt * const randStP) {
+
+    if (top >= 0) {
+        unsigned int const topR1 = top;
+        unsigned int const topR2 = top;
+        unsigned int const topC1 = 0;
+        unsigned int const topC2 = cols - 1;
+
+        unsigned int row;
+
+        for (row = 0; row < topR1; ++row)
+            PPM_ASSIGN(pixels[row][topC1], BG_RED, BG_GREEN, BG_BLUE);
+        for (row = 0; row < topR2; ++row)
+            PPM_ASSIGN(pixels[row][topC2], BG_RED, BG_GREEN, BG_BLUE);
+
+        procTop(pixels, topC1, topC2, topR1, topR2, var, randStP);
+    }
+}
+
+
+
+static void
+makeRaggedBottomBorder(pixel **            const pixels,
+                       unsigned int        const rows,
+                       unsigned int        const cols,
+                       unsigned int        const bottom,
+                       unsigned int        const height,
+                       unsigned int        const var,
+                       struct pm_randSt *  const randStP) {
+
+    if (bottom >= 0) {
+        unsigned int const bottomR1 = rows - bottom - 1;
+        unsigned int const bottomR2 = rows - bottom - 1;
+        unsigned int const bottomC1 = 0;
+        unsigned int const bottomC2 = cols - 1;
+
+        unsigned int row;
+
+        for (row = bottomR1; row < rows; ++row)
+            PPM_ASSIGN(pixels[row][bottomC1], BG_RED, BG_GREEN, BG_BLUE);
+        for (row = bottomR2; row < rows; ++row)
+            PPM_ASSIGN(pixels[row][bottomC2], BG_RED, BG_GREEN, BG_BLUE);
+
+        procBottom(pixels, bottomC1, bottomC2, bottomR1, bottomR2,
+                   height, var, randStP);
+    }
 }
 
 
@@ -188,14 +332,18 @@ main(int argc, const char * argv[]) {
     struct CmdlineInfo cmdline;
     pixel bgcolor, fgcolor;
     pixval fg_red, fg_green, fg_blue;
-    int rows, cols, row;
+    int rows, cols;
     int left, right, top, bottom;
+    struct pm_randSt randSt;
+    static pixel** pixels;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
+    pm_randinit(&randSt);
+    pm_srand(&randSt,
+             cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
 
     cols = cmdline.width;
     rows = cmdline.height;
@@ -236,97 +384,34 @@ main(int argc, const char * argv[]) {
         pm_message("foreground is %s",
                    ppm_colorname(&fgcolor, PPM_MAXMAXVAL, 1));
         if (cmdline.randomseedSpec)
-            pm_message("srand() initialized with seed %u", cmdline.randomseed);
+            pm_message("pm_rand() initialized with seed %u",
+                       cmdline.randomseed);
     }
 
-    /* Allocate memory for the whole pixmap */
-    PIX = ppm_allocarray(cols, rows);
+    pixels = ppm_allocarray(cols, rows);
 
-    /* First, set all pixel to foreground color */
-    for (row = 0; row < rows; row++) {
-        unsigned int col;
-        for (col = 0; col < cols; ++col)
-            PPM_ASSIGN(PIX[row][col], fg_red, fg_green, fg_blue);
-    }
-    /* Make a ragged left border */
-    if (left >= 0) {
-        int const left_c1 = left;
-        int const left_c2 = left;
-        int const left_r1 = 0;
-        int const left_r2 = rows - 1;
+    makeAllForegroundColor(pixels, rows, cols, fg_red, fg_green, fg_blue);
 
-        unsigned int col;
+    makeRaggedLeftBorder(pixels, rows, cols, left, cmdline.var, &randSt);
 
-        for (col = 0; col < left_c1; ++col)
-            PPM_ASSIGN(PIX[left_r1][col], BG_RED, BG_GREEN, BG_BLUE);
-        for (col = 0; col < left_c2; ++col)
-            PPM_ASSIGN(PIX[left_r2][col], BG_RED, BG_GREEN, BG_BLUE);
+    makeRaggedRightBorder(pixels, rows, cols, right,
+                          cmdline.width, cmdline.var, &randSt);
 
-        procLeft(left_r1, left_r2, left_c1, left_c2, cmdline.var);
-    }
+    makeRaggedTopBorder(pixels, rows, cols, top, cmdline.var, &randSt);
 
-    /* Make a ragged right border */
-    if (right >= 0) {
-        int const right_c1 = cols - right - 1;
-        int const right_c2 = cols - right - 1;
-        int const right_r1 = 0;
-        int const right_r2 = rows - 1;
+    makeRaggedBottomBorder(pixels, rows, cols, bottom,
+                           cmdline.height, cmdline.var, &randSt);
 
-        unsigned int col;
-
-        for (col = right_c1; col < cols; col++)
-            PPM_ASSIGN(PIX[right_r1][col], BG_RED, BG_GREEN, BG_BLUE);
-        for (col = right_c2; col < cols; col++)
-            PPM_ASSIGN(PIX[right_r2][col], BG_RED, BG_GREEN, BG_BLUE);
-
-        procRight(right_r1, right_r2, right_c1, right_c2,
-                   cmdline.width, cmdline.var);
-    }
-
-    /* Make a ragged top border */
-    if (top >= 0) {
-        int const top_r1 = top;
-        int const top_r2 = top;
-        int const top_c1 = 0;
-        int const top_c2 = cols - 1;
-
-        unsigned int row;
-
-        for (row = 0; row < top_r1; ++row)
-            PPM_ASSIGN(PIX[row][top_c1], BG_RED, BG_GREEN, BG_BLUE);
-        for (row = 0; row < top_r2; ++row)
-            PPM_ASSIGN(PIX[row][top_c2], BG_RED, BG_GREEN, BG_BLUE);
-
-        procTop(top_c1, top_c2, top_r1, top_r2, cmdline.var);
-    }
-
-    /* Make a ragged bottom border */
-    if (bottom >= 0) {
-        int const bottom_r1 = rows - bottom - 1;
-        int const bottom_r2 = rows - bottom - 1;
-        int const bottom_c1 = 0;
-        int const bottom_c2 = cols - 1;
-
-        unsigned int row;
-
-        for (row = bottom_r1; row < rows; ++row)
-            PPM_ASSIGN(PIX[row][bottom_c1], BG_RED, BG_GREEN, BG_BLUE);
-        for (row = bottom_r2; row < rows; ++row)
-            PPM_ASSIGN(PIX[row][bottom_c2], BG_RED, BG_GREEN, BG_BLUE);
-
-        procBottom(bottom_c1, bottom_c2, bottom_r1, bottom_r2,
-                   cmdline.height, cmdline.var);
-    }
+    pm_randterm(&randSt);
 
     /* Write pixmap */
-    ppm_writeppm(stdout, PIX, cols, rows, PPM_MAXMAXVAL, 0);
+    ppm_writeppm(stdout, pixels, cols, rows, PPM_MAXMAXVAL, 0);
 
-    ppm_freearray(PIX, rows);
+    ppm_freearray(pixels, rows);
 
     pm_close(stdout);
 
     return 0;
 }
-
 
 

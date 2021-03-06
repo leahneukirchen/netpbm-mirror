@@ -19,6 +19,10 @@ UTILOBJECTS = \
   matrix.o \
   nsleep.o \
   nstring.o \
+  rand.o \
+  randsysrand.o \
+  randsysrandom.o \
+  randmersenne.o \
   runlength.o \
   shhopt.o \
   token.o \

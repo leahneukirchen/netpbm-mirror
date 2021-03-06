@@ -13,6 +13,7 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 
 typedef enum {
     BLEND_AVERAGE,   /* Take the average color of all pixels */
@@ -36,6 +37,8 @@ struct ProgramState {
         /* Standard deviation when selecting images via a mask */
     unsigned long ** imageWeights;
         /* Per-image weights as a function of grayscale level */
+    struct pm_randSt randSt;
+        /* Random number generator parameters and internal state */
 };
 
 
@@ -134,9 +137,9 @@ parseCommandLine(int argc, const char ** argv,
 }
 
 static void
-openInputFiles(unsigned int          const inFileCt,
-               const char **         const inFileName,
-               struct ProgramState * const stateP) {
+initInput(unsigned int          const inFileCt,
+          const char **         const inFileName,
+          struct ProgramState * const stateP) {
 /*----------------------------------------------------------------------------
   Open all of the input files.
 
@@ -178,6 +181,25 @@ openInputFiles(unsigned int          const inFileCt,
     stateP->inPam    = inPam;
     stateP->inFileCt = inFileCt;
 }
+
+
+
+static void
+termInput(struct ProgramState * const stateP) {
+/*----------------------------------------------------------------------------
+  Deallocate all of the resources we allocated.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+
+    for (i = 0; i < stateP->inFileCt; ++i) {
+        pnm_freepamrow(stateP->inTupleRows[i]);
+        pm_close(stateP->inPam[i].file);
+    }
+
+    free(stateP->inTupleRows);
+    free(stateP->inPam);
+}
+
 
 
 static void
@@ -233,6 +255,15 @@ initOutput(FILE *                const ofP,
 }
 
 
+static void
+termOutput(struct ProgramState * const stateP) {
+
+    free(stateP->outTupleRow);
+
+    pm_close(stateP->outPam.file);
+}
+
+
 
 static void
 blendTuplesRandom(struct ProgramState * const stateP,
@@ -243,8 +274,8 @@ blendTuplesRandom(struct ProgramState * const stateP,
   from a random input image.
 -----------------------------------------------------------------------------*/
     unsigned int const depth = stateP->inPam[0].depth;
-    unsigned int const img = (unsigned int) (rand() % stateP->inFileCt);
-
+    unsigned int const img = (unsigned int) (pm_rand(&stateP->randSt) %
+                                             stateP->inFileCt);
     unsigned int samp;
 
     for (samp = 0; samp < depth; ++samp)
@@ -276,23 +307,26 @@ blendTuplesAverage(struct ProgramState * const stateP,
 
 
 
+#if 0
 static void
-randomNormal2(double * const r1P,
-              double * const r2P) {
+randomNormal2(double *           const r1P,
+              double *           const r2P,
+              struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
   Return two normally distributed random numbers.
 -----------------------------------------------------------------------------*/
     double u1, u2;
 
     do {
-        u1 = drand48();
-        u2 = drand48();
+        u1 = drand48(randStP);
+        u2 = drand48(randStP);
     }
     while (u1 <= DBL_EPSILON);
 
     *r1P = sqrt(-2.0*log(u1)) * cos(2.0*M_PI*u2);
     *r2P = sqrt(-2.0*log(u1)) * sin(2.0*M_PI*u2);
 }
+#endif
 
 
 
@@ -332,7 +366,8 @@ precomputeImageWeights(struct ProgramState * const stateP,
             double r[2];
             unsigned int k;
 
-            randomNormal2(&r[0], &r[1]);
+            pm_gaussrand2(&stateP->randSt, &r[0], &r[1]);
+
             for (k = 0; k < 2; ++k) {
                 int const img =
                     r[k] * sigma + pctGray * stateP->inFileCt * 0.999999;
@@ -453,26 +488,6 @@ blendImages(BlendType             const blend,
 
 
 
-static void
-termState(struct ProgramState * const stateP) {
-/*----------------------------------------------------------------------------
-  Deallocate all of the resources we allocated.
------------------------------------------------------------------------------*/
-    unsigned int i;
-
-    for (i = 0; i < stateP->inFileCt; ++i) {
-        pnm_freepamrow(stateP->inTupleRows[i]);
-        pm_close(stateP->inPam[i].file);
-    }
-
-    free(stateP->outTupleRow);
-    free(stateP->inTupleRows);
-    free(stateP->inPam);
-    pm_close(stateP->outPam.file);
-}
-
-
-
 int
 main(int argc, const char * argv[]) {
 
@@ -483,12 +498,13 @@ main(int argc, const char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
-
-    openInputFiles(cmdline.inFileNameCt, cmdline.inFileName, &state);
+    initInput(cmdline.inFileNameCt, cmdline.inFileName, &state);
 
     if (cmdline.blend == BLEND_MASK)
         initMask(cmdline.maskfile, &state);
+
+    pm_randinit(&state.randSt);
+    pm_srand2(&state.randSt, cmdline.randomseedSpec, cmdline.randomseed);
 
     initOutput(stdout, &state);
 
@@ -497,10 +513,14 @@ main(int argc, const char * argv[]) {
 
     blendImages(cmdline.blend, &state);
 
+    termOutput(&state);
+
+    pm_randterm(&state.randSt);
+
     if (cmdline.blend == BLEND_MASK)
         termMask(&state);
 
-    termState(&state);
+    termInput(&state);
 
     freeCmdline(&cmdline);
 

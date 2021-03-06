@@ -48,6 +48,10 @@ LIBOBJECTS_X = \
   util/matrix.o \
   util/nsleep.o \
   util/nstring.o \
+  util/rand.o \
+  util/randsysrand.o \
+  util/randsysrandom.o \
+  util/randmersenne.o \
   util/runlength.o \
   util/shhopt.o \
   util/token.o \

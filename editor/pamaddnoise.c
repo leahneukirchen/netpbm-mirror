@@ -33,18 +33,20 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pm_gamma.h"
 #include "pam.h"
 
 static double const EPSILON = 1.0e-5;
+static double const SALT_RATIO = 0.5;
 
 
 
 static double
-rand1() {
+rand1(struct pm_randSt * const randStP) {
 
-    return (double)rand()/RAND_MAX;
+    return (double)pm_rand(randStP)/RAND_MAX;
 }
 
 
@@ -67,6 +69,7 @@ struct CmdlineInfo {
 
     enum NoiseType noiseType;
 
+    unsigned int seedSpec;
     unsigned int seed;
 
     float lambda;
@@ -119,7 +122,7 @@ parseCommandLine(int argc, const char ** const argv,
 
     unsigned int option_def_index;
 
-    unsigned int typeSpec, seedSpec, lambdaSpec, lsigmaSpec, mgsigmaSpec,
+    unsigned int typeSpec, lambdaSpec, lsigmaSpec, mgsigmaSpec,
         sigma1Spec, sigma2Spec, toleranceSpec;
 
     const char * type;
@@ -128,21 +131,21 @@ parseCommandLine(int argc, const char ** const argv,
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "type",            OPT_STRING,   &type,
-            &typeSpec,         0);
+            &typeSpec,           0);
     OPTENT3(0,   "seed",            OPT_UINT,     &cmdlineP->seed,
-            &seedSpec,         0);
+            &cmdlineP->seedSpec, 0);
     OPTENT3(0,   "lambda",          OPT_FLOAT,    &cmdlineP->lambda,
-            &lambdaSpec,       0);
+            &lambdaSpec,         0);
     OPTENT3(0,   "lsigma",          OPT_FLOAT,    &cmdlineP->lsigma,
-            &lsigmaSpec,       0);
+            &lsigmaSpec,         0);
     OPTENT3(0,   "mgsigma",         OPT_FLOAT,    &cmdlineP->mgsigma,
-            &mgsigmaSpec,      0);
+            &mgsigmaSpec,        0);
     OPTENT3(0,   "sigma1",          OPT_FLOAT,    &cmdlineP->sigma1,
-            &sigma1Spec,       0);
+            &sigma1Spec,         0);
     OPTENT3(0,   "sigma2",          OPT_FLOAT,    &cmdlineP->sigma2,
-            &sigma2Spec,       0);
+            &sigma2Spec,         0);
     OPTENT3(0,   "tolerance",       OPT_FLOAT,    &cmdlineP->tolerance,
-            &toleranceSpec,    0);
+            &toleranceSpec,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -193,7 +196,7 @@ parseCommandLine(int argc, const char ** const argv,
     if (!toleranceSpec)
         cmdlineP->tolerance = 0.10;
 
-    if (!seedSpec)
+    if (!cmdlineP->seedSpec)
         cmdlineP->seed = pm_randseed();
 
     if (argc-1 > 1)
@@ -211,11 +214,12 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 static void
-addGaussianNoise(sample   const maxval,
-                 sample   const origSample,
-                 sample * const newSampleP,
-                 float    const sigma1,
-                 float    const sigma2) {
+addGaussianNoise(sample             const maxval,
+                 sample             const origSample,
+                 sample *           const newSampleP,
+                 float              const sigma1,
+                 float              const sigma2,
+                 struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add Gaussian noise.
 
@@ -225,11 +229,11 @@ addGaussianNoise(sample   const maxval,
     double x1, x2, xn, yn;
     double rawNewSample;
 
-    x1 = rand1();
+    x1 = rand1(randStP);
 
     if (x1 == 0.0)
         x1 = 1.0;
-    x2 = rand1();
+    x2 = rand1(randStP);
     xn = sqrt(-2.0 * log(x1)) * cos(2.0 * M_PI * x2);
     yn = sqrt(-2.0 * log(x1)) * sin(2.0 * M_PI * x2);
 
@@ -242,40 +246,42 @@ addGaussianNoise(sample   const maxval,
 
 
 static void
-addImpulseNoise(sample   const maxval,
-                sample   const origSample,
-                sample * const newSampleP,
-                float    const tolerance) {
+addImpulseNoise(sample             const maxval,
+                sample             const origSample,
+                sample *           const newSampleP,
+                float              const tolerance,
+                double             const saltRatio,
+                struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add impulse (salt and pepper) noise
 -----------------------------------------------------------------------------*/
 
-    double const low_tol  = tolerance / 2.0;
-    double const high_tol = 1.0 - (tolerance / 2.0);
-    double const sap = rand1();
+    double const pepperRatio = 1.0 - saltRatio;
+    double const loTolerance = tolerance * pepperRatio;
+    double const hiTolerance = 1.0 - tolerance * saltRatio;
+    double const sap         = rand1(randStP);
 
-    if (sap < low_tol)
-        *newSampleP = 0;
-    else if ( sap >= high_tol )
-        *newSampleP = maxval;
-    else
-        *newSampleP = origSample;
+    *newSampleP =
+        sap < loTolerance ? 0 :
+        sap >= hiTolerance? maxval :
+        origSample;
 }
 
 
 
 static void
-addLaplacianNoise(sample   const maxval,
-                  double   const infinity,
-                  sample   const origSample,
-                  sample * const newSampleP,
-                  float    const lsigma) {
+addLaplacianNoise(sample             const maxval,
+                  double             const infinity,
+                  sample             const origSample,
+                  sample *           const newSampleP,
+                  float              const lsigma,
+                  struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add Laplacian noise
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double const u = rand1();
+    double const u = rand1(randStP);
 
     double rawNewSample;
 
@@ -297,11 +303,12 @@ addLaplacianNoise(sample   const maxval,
 
 
 static void
-addMultiplicativeGaussianNoise(sample   const maxval,
-                               double   const infinity,
-                               sample   const origSample,
-                               sample * const newSampleP,
-                               float    const mgsigma) {
+addMultiplicativeGaussianNoise(sample             const maxval,
+                               double             const infinity,
+                               sample             const origSample,
+                               sample *           const newSampleP,
+                               float              const mgsigma,
+                               struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add multiplicative Gaussian noise
 
@@ -311,14 +318,14 @@ addMultiplicativeGaussianNoise(sample   const maxval,
     double rawNewSample;
 
     {
-        double const uniform = rand1();
+        double const uniform = rand1(randStP);
         if (uniform <= EPSILON)
             rayleigh = infinity;
         else
             rayleigh = sqrt(-2.0 * log( uniform));
     }
     {
-        double const uniform = rand1();
+        double const uniform = rand1(randStP);
         gauss = rayleigh * cos(2.0 * M_PI * uniform);
     }
     rawNewSample = origSample + (origSample * mgsigma * gauss);
@@ -363,10 +370,11 @@ poissonPmf(double       const lambda,
 
 
 static void
-addPoissonNoise(struct pam * const pamP,
-                sample       const origSample,
-                sample *     const newSampleP,
-                float        const lambdaOfMaxval) {
+addPoissonNoise(struct pam *       const pamP,
+                sample             const origSample,
+                sample *           const newSampleP,
+                float              const lambdaOfMaxval,
+                struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add Poisson noise
 -----------------------------------------------------------------------------*/
@@ -376,7 +384,7 @@ addPoissonNoise(struct pam * const pamP,
 
     double const lambda  = origSampleIntensity * lambdaOfMaxval;
 
-    double const u = rand1();
+    double const u = rand1(randStP);
 
     /* We now apply the inverse CDF (cumulative distribution function) of the
        Poisson distribution to uniform random variable 'u' to get a Poisson
@@ -416,12 +424,14 @@ main(int argc, const char ** argv) {
     const tuple * newtuplerow;
     unsigned int row;
     double infinity;
+    struct pm_randSt randSt;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.seed);
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, cmdline.seedSpec, cmdline.seed);
 
     ifP = pm_openr(cmdline.inputFileName);
 
@@ -448,35 +458,40 @@ main(int argc, const char ** argv) {
                     addGaussianNoise(inpam.maxval,
                                      tuplerow[col][plane],
                                      &newtuplerow[col][plane],
-                                     cmdline.sigma1, cmdline.sigma2);
+                                     cmdline.sigma1, cmdline.sigma2,
+                                     &randSt);
                     break;
 
                 case NOISETYPE_IMPULSE:
                     addImpulseNoise(inpam.maxval,
                                     tuplerow[col][plane],
                                     &newtuplerow[col][plane],
-                                    cmdline.tolerance);
+                                    cmdline.tolerance, SALT_RATIO,
+                                    &randSt);
                    break;
 
                 case NOISETYPE_LAPLACIAN:
                     addLaplacianNoise(inpam.maxval, infinity,
                                       tuplerow[col][plane],
                                       &newtuplerow[col][plane],
-                                      cmdline.lsigma);
+                                      cmdline.lsigma,
+                                      &randSt);
                     break;
 
                 case NOISETYPE_MULTIPLICATIVE_GAUSSIAN:
                     addMultiplicativeGaussianNoise(inpam.maxval, infinity,
                                                    tuplerow[col][plane],
                                                    &newtuplerow[col][plane],
-                                                   cmdline.mgsigma);
+                                                   cmdline.mgsigma,
+                                                   &randSt);
                     break;
 
                 case NOISETYPE_POISSON:
                     addPoissonNoise(&inpam,
                                     tuplerow[col][plane],
                                     &newtuplerow[col][plane],
-                                    cmdline.lambda);
+                                    cmdline.lambda,
+                                    &randSt);
                     break;
 
                 }
@@ -484,6 +499,7 @@ main(int argc, const char ** argv) {
         }
         pnm_writepamrow(&outpam, newtuplerow);
     }
+    pm_randterm(&randSt);
     pnm_freepamrow(newtuplerow);
     pnm_freepamrow(tuplerow);
 

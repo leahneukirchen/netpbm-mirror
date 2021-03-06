@@ -1,20 +1,18 @@
-/*----------------------------------------------------------------------------*/
+/*=============================================================================
+                              pamrubber
+===============================================================================
+  Transform images using Rubber Sheeting algorithm
+  See: http://www.schaik.com/netpbm/rubber/
 
-/* pamrubber.c - transform images using Rubber Sheeting algorithm
-**               see: http://www.schaik.com/netpbm/rubber/
-**
-** Copyright (C) 2011 by Willem van Schaik (willem@schaik.com)
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
+  Copyright (C) 2011 by Willem van Schaik (willem@schaik.com)
 
-/*----------------------------------------------------------------------------*/
-
+  Permission to use, copy, modify, and distribute this software and its
+  documentation for any purpose and without fee is hereby granted, provided
+  that the above copyright notice appear in all copies and that both that
+  copyright notice and this permission notice appear in supporting
+  documentation.  This software is provided "as is" without express or
+  implied warranty.
+=============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,10 +23,10 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 #include "pamdraw.h"
-
 
 
 typedef struct {
@@ -54,7 +52,7 @@ typedef struct {
     point br;  /* bottom right */
 } quadrilateral;
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     unsigned int nCP;
     point        oldCP[4];
     point        newCP[4];
@@ -64,14 +62,14 @@ struct cmdlineInfo {
     unsigned int frame;
     unsigned int linear;
     unsigned int verbose;
-    unsigned int randseedSpec;
-    unsigned int randseed;
+    unsigned int randomseedSpec;
+    unsigned int randomseed;
 };
 
 
 static void
 parseCmdline(int argc, const char ** argv,
-             struct cmdlineInfo * const cmdlineP) {
+             struct CmdlineInfo * const cmdlineP) {
 
 /* parse all parameters from the command line */
 
@@ -92,10 +90,10 @@ parseCmdline(int argc, const char ** argv,
     OPTENT3(0, "frame",    OPT_FLAG, NULL, &cmdlineP->frame,    0);
     OPTENT3(0, "linear",   OPT_FLAG, NULL, &cmdlineP->linear,   0);
     OPTENT3(0, "verbose",  OPT_FLAG, NULL, &cmdlineP->verbose,  0);
-    OPTENT3(0, "randseed", OPT_UINT, &cmdlineP->randseed,
-            &cmdlineP->randseedSpec, 0);
-    OPTENT3(0, "randomseed", OPT_UINT, &cmdlineP->randseed,
-            &cmdlineP->randseedSpec, 0);
+    OPTENT3(0, "randseed", OPT_UINT, &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec, 0);
+    OPTENT3(0, "randomseed", OPT_UINT, &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* we have no short (old-fashioned) options */
@@ -339,28 +337,29 @@ windtriangle(triangle * const tP,
 
 
 static double
-tiny(void) {
+tiny(struct pm_randSt * const randStP) {
 
-    if (rand() % 2)
-        return +1E-6 * (double) ((rand() % 90) + 9);
+    if (pm_rand(randStP) % 2)
+        return +1E-6 * (double) ((pm_rand(randStP) % 90) + 9);
     else
-        return -1E-6 * (double) ((rand() % 90) + 9);
+        return -1E-6 * (double) ((pm_rand(randStP) % 90) + 9);
 }
 
 
 
 static void
 angle(point * const p1P,
-      point * const p2P) {
+      point * const p2P,
+      struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Move *p2P slightly if necessary to make sure the line (*p1P, *p2P)
    is not horizontal or vertical.
 -----------------------------------------------------------------------------*/
     if (p1P->x == p2P->x) { /* vertical line */
-        p2P->x += tiny();
+        p2P->x += tiny(randStP);
     }
     if (p1P->y == p2P->y) { /* horizontal line */
-        p2P->y += tiny();
+        p2P->y += tiny(randStP);
     }
 }
 
@@ -720,8 +719,10 @@ static void drawClippedTriangle(const struct pam * const pamP,
 
 
 static void
-prepTrig(int const wd,
-         int const ht) {
+prepTrig(int          const wd,
+         int          const ht,
+         bool         const randomseedSpec,
+         unsigned int const randomseed) {
 
 /* create triangles using control points */
 
@@ -731,16 +732,20 @@ prepTrig(int const wd,
     point c2p1, c2p2, c2p3, c2p4;
     line l1, l2;
     point p0;
+    struct pm_randSt randSt;
 
-    rtl1 = makepoint(0.0 + tiny(),               0.0 + tiny());
-    rtr1 = makepoint((double) wd - 1.0 + tiny(), 0.0 + tiny());
-    rbl1 = makepoint(0.0 + tiny(),               (double) ht - 1.0 + tiny());
-    rbr1 = makepoint((double) wd - 1.0 + tiny(), (double) ht - 1.0 + tiny());
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, randomseedSpec, randomseed);
 
-    rtl2 = makepoint(0.0 + tiny(),               0.0 + tiny());
-    rtr2 = makepoint((double) wd - 1.0 + tiny(), 0.0 + tiny());
-    rbl2 = makepoint(0.0 + tiny(),               (double) ht - 1.0 + tiny());
-    rbr2 = makepoint((double) wd - 1.0 + tiny(), (double) ht - 1.0 + tiny());
+    rtl1 = makepoint(0.0 + tiny(&randSt),               0.0 + tiny(&randSt));
+    rtr1 = makepoint((double) wd - 1.0 + tiny(&randSt), 0.0 + tiny(&randSt));
+    rbl1 = makepoint(0.0 + tiny(&randSt),               (double) ht - 1.0 + tiny(&randSt));
+    rbr1 = makepoint((double) wd - 1.0 + tiny(&randSt), (double) ht - 1.0 + tiny(&randSt));
+
+    rtl2 = makepoint(0.0 + tiny(&randSt),               0.0 + tiny(&randSt));
+    rtr2 = makepoint((double) wd - 1.0 + tiny(&randSt), 0.0 + tiny(&randSt));
+    rbl2 = makepoint(0.0 + tiny(&randSt),               (double) ht - 1.0 + tiny(&randSt));
+    rbr2 = makepoint((double) wd - 1.0 + tiny(&randSt), (double) ht - 1.0 + tiny(&randSt));
 
     if (nCP == 1) {
         c1p1 = oldCP[0];
@@ -772,8 +777,8 @@ prepTrig(int const wd,
         c2p2 = newCP[1];
 
         /* check for hor/ver edges */
-        angle (&c1p1, &c1p2);
-        angle (&c2p1, &c2p2);
+        angle (&c1p1, &c1p2, &randSt);
+        angle (&c2p1, &c2p2, &randSt);
 
         /* connect two control points to corners to get 6 triangles */
         /* left side */
@@ -811,13 +816,13 @@ prepTrig(int const wd,
         /* Move vertices slightly if necessary to make sure no edge is
            horizontal or vertical.
         */
-        angle(&c1p1, &c1p2);
-        angle(&c1p2, &c1p3);
-        angle(&c1p3, &c1p1);
+        angle(&c1p1, &c1p2, &randSt);
+        angle(&c1p2, &c1p3, &randSt);
+        angle(&c1p3, &c1p1, &randSt);
 
-        angle(&c2p1, &c2p2);
-        angle(&c2p2, &c2p3);
-        angle(&c2p3, &c2p1);
+        angle(&c2p1, &c2p2, &randSt);
+        angle(&c2p2, &c2p3, &randSt);
+        angle(&c2p3, &c2p1, &randSt);
 
         if (windtriangle(&tri1s[0], c1p1, c1p2, c1p3)) {
             tri2s[0] = maketriangle(c2p1, c2p2, c2p3);
@@ -871,19 +876,19 @@ prepTrig(int const wd,
         c2p4 = newCP[3];
 
         /* check for hor/ver edges */
-        angle (&c1p1, &c1p2);
-        angle (&c1p2, &c1p3);
-        angle (&c1p3, &c1p4);
-        angle (&c1p4, &c1p1);
-        angle (&c1p1, &c1p3);
-        angle (&c1p2, &c1p4);
+        angle (&c1p1, &c1p2, &randSt);
+        angle (&c1p2, &c1p3, &randSt);
+        angle (&c1p3, &c1p4, &randSt);
+        angle (&c1p4, &c1p1, &randSt);
+        angle (&c1p1, &c1p3, &randSt);
+        angle (&c1p2, &c1p4, &randSt);
 
-        angle (&c2p1, &c2p2);
-        angle (&c2p2, &c2p3);
-        angle (&c2p3, &c2p4);
-        angle (&c2p4, &c2p1);
-        angle (&c2p1, &c2p3);
-        angle (&c2p2, &c2p4);
+        angle (&c2p1, &c2p2, &randSt);
+        angle (&c2p2, &c2p3, &randSt);
+        angle (&c2p3, &c2p4, &randSt);
+        angle (&c2p4, &c2p1, &randSt);
+        angle (&c2p1, &c2p3, &randSt);
+        angle (&c2p2, &c2p4, &randSt);
 
         /*-------------------------------------------------------------------*/
         /*        -1-      -2-        -3-      -4-        -5-      -6-       */
@@ -979,6 +984,8 @@ prepTrig(int const wd,
                      &tri2s[9], c2p3, c2p1, rtl2, rtr2, rbl2, rbr2);
         nTri = 10;
     }
+
+    pm_randterm(&randSt);
 }
 
 
@@ -1277,7 +1284,7 @@ warpQuad(point   const p2,
 
 
 static void
-setGlobalCP(struct cmdlineInfo const cmdline) {
+setGlobalCP(struct CmdlineInfo const cmdline) {
 
     unsigned int i;
 
@@ -1392,7 +1399,7 @@ pix(tuple **     const tuples,
 int
 main(int argc, const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam, outpam;
     tuple ** inTuples;
@@ -1404,8 +1411,6 @@ main(int argc, const char ** const argv) {
     parseCmdline(argc, argv, &cmdline);
 
     setGlobalCP(cmdline);
-
-    srand(cmdline.randseedSpec ? cmdline.randseed : pm_randseed());
 
     ifP = pm_openr(cmdline.fileName);
 
@@ -1421,7 +1426,8 @@ main(int argc, const char ** const argv) {
     makeAllWhite(&outpam, outTuples);
 
     if (cmdline.tri)
-        prepTrig(inpam.width, inpam.height);
+        prepTrig(inpam.width, inpam.height,
+                 cmdline.randomseedSpec, cmdline.randomseed);
     if (cmdline.quad)
         prepQuad();
 

@@ -11,9 +11,11 @@
 */
 
 #include "pm_c_util.h"
-#include "pbm.h"
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
+#include "pbm.h"
+
 #include <assert.h>
 
 #define SCALE 1024
@@ -105,7 +107,7 @@ parseCommandLine(int argc, const char ** argv,
         unsigned int scale;
 
         scale = strtol(argv[1], &endptr, 10);
-        if (*argv[1] == '\0') 
+        if (*argv[1] == '\0')
             pm_error("Scale argument is a null string.  Must be a number.");
         else if (*endptr != '\0')
             pm_error("Scale argument contains non-numeric character '%c'.",
@@ -115,7 +117,7 @@ parseCommandLine(int argc, const char ** argv,
                      "You specified %d", scale);
         else if (scale > INT_MAX / scale)
             pm_error("Scale argument too large.  You specified %d", scale);
-        else 
+        else
             cmdlineP->scale = scale;
 
         if (argc-1 > 1) {
@@ -145,10 +147,11 @@ struct FS {
 static void
 initializeFloydSteinberg(struct FS  * const fsP,
                          int          const newcols,
-                         unsigned int const seed,
-                         bool         const seedSpec) {
+                         bool         const seedSpec,
+                         unsigned int const seed) {
 
     unsigned int col;
+    struct pm_randSt randSt;
 
     MALLOCARRAY(fsP->thiserr, newcols + 2);
     MALLOCARRAY(fsP->nexterr, newcols + 2);
@@ -156,33 +159,36 @@ initializeFloydSteinberg(struct FS  * const fsP,
     if (fsP->thiserr == NULL || fsP->nexterr == NULL)
         pm_error("out of memory");
 
-    srand(seedSpec ? seed : pm_randseed());
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, seedSpec, seed);
 
     for (col = 0; col < newcols + 2; ++col)
-        fsP->thiserr[col] = (rand() % SCALE - HALFSCALE) / 4;
+        fsP->thiserr[col] = ((int) (pm_rand(&randSt) % SCALE) - HALFSCALE) / 4;
         /* (random errors in [-SCALE/8 .. SCALE/8]) */
+
+    pm_randterm(&randSt);
 }
 
 
 
 /*
     Scanning method
-    
+
     In Floyd-Steinberg dithering mode horizontal direction of scan alternates
     between rows; this is called "serpentine scanning".
-    
+
     Example input (14 x 7), N=3:
-    
+
     111222333444xx    Fractional pixels on the right edge and bottom edge (x)
-    111222333444xx    are ignored; their values do not influence output. 
+    111222333444xx    are ignored; their values do not influence output.
     111222333444xx
     888777666555xx
     888777666555xx
     888777666555xx
     xxxxxxxxxxxxxx
-    
+
     Output (4 x 2):
-    
+
     1234
     8765
 
@@ -196,11 +202,14 @@ enum Direction { RIGHT_TO_LEFT, LEFT_TO_RIGHT };
 static enum Direction
 oppositeDir(enum Direction const arg) {
 
+    enum Direction retval;
+
     switch (arg) {
-    case LEFT_TO_RIGHT: return RIGHT_TO_LEFT;
-    case RIGHT_TO_LEFT: return LEFT_TO_RIGHT;
+    case LEFT_TO_RIGHT: retval = RIGHT_TO_LEFT; break;
+    case RIGHT_TO_LEFT: retval = LEFT_TO_RIGHT; break;
     }
-    assert(false);  /* All cases handled above */
+
+    return retval;
 }
 
 
@@ -240,7 +249,7 @@ main(int argc, const char * argv[]) {
 
     if (cmdline.halftone == QT_FS)
         initializeFloydSteinberg(&fs, newcols,
-                                 cmdline.randomseed, cmdline.randomseedSpec);
+                                 cmdline.randomseedSpec, cmdline.randomseed);
     else {
         /* These variables are meaningless in this case, and the values
            should never be used.
@@ -258,10 +267,10 @@ main(int argc, const char * argv[]) {
         int limitCol;
         int startCol;
         int step;
-   
+
         for (colChar = 0; colChar < colChars; ++colChar)
             newbitrow[colChar] = 0x00;  /* Clear to white */
- 
+
         for (subrow = 0; subrow < cmdline.scale; ++subrow)
             pbm_readpbmrow(ifP, bitslice[subrow], cols, format);
 
@@ -274,7 +283,7 @@ main(int argc, const char * argv[]) {
         case LEFT_TO_RIGHT: {
             startCol = 0;
             limitCol = newcols;
-            step = +1;  
+            step = +1;
         } break;
         case RIGHT_TO_LEFT: {
             startCol = newcols - 1;

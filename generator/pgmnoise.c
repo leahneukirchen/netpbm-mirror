@@ -7,12 +7,12 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pgm.h"
 
 
-
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -21,13 +21,15 @@ struct cmdlineInfo {
     unsigned int maxval;
     unsigned int randomseed;
     unsigned int randomseedSpec;
+    unsigned int verbose;
 };
 
 
 
 static void
-parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc,
+                 const char **        const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -46,6 +48,8 @@ parseCommandLine(int argc, const char ** const argv,
             &cmdlineP->randomseedSpec,      0);
     OPTENT3(0,   "maxval",       OPT_UINT,    &cmdlineP->maxval,
             &maxvalSpec,                    0);
+    OPTENT3(0,   "verbose",      OPT_FLAG,    NULL,
+            &cmdlineP->verbose,             0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -57,7 +61,7 @@ parseCommandLine(int argc, const char ** const argv,
 
     if (maxvalSpec) {
         if (cmdlineP->maxval > PGM_OVERALLMAXVAL)
-            pm_error("Maxval too large: %u.  Maximu is %u",
+            pm_error("Maxval too large: %u.  Maximum is %u",
                      cmdlineP->maxval, PGM_OVERALLMAXVAL);
         else if (cmdlineP->maxval == 0)
             pm_error("Maxval must not be zero");
@@ -95,15 +99,21 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 static unsigned int
-randPool(unsigned int const digits) {
+randPool(unsigned int       const digits,
+         bool               const verbose,
+         struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
   Draw 'digits' bits from pool of random bits.  If the number of random bits
-  in pool is insufficient, call rand() and add 31 bits to it.
+  in pool is insufficient, call pm_rand() and add N bits to it.
+
+  N is 31 or 32.  In raw mode we set this value to 32 regardless of the
+  actual number of available bits.  If insufficient, the MSB will be
+  set to zero.
 
   'digits' must be at most 16.
 
-  We assume that each call to rand() generates 31 bits, or RAND_MAX ==
-  2147483647.
+  We assume that each call to pm_rand() generates 31 or 32 bits,
+  or randStP->max == 2147483647 or 4294967294.
 
   The underlying logic is flexible and endian-free.  The above conditions
   can be relaxed.
@@ -112,21 +122,24 @@ randPool(unsigned int const digits) {
     static unsigned int len=0;        /* number of valid bits in pool */
 
     unsigned int const mask = (1 << digits) - 1;
-
+    unsigned int const randbits = (randStP->max == 2147483647) ? 31 : 32;
     unsigned int retval;
 
-    assert(RAND_MAX == 2147483647 && digits <= 16);
+    assert(randStP->max == 2147483647 || randStP->max == 4294967294);
+    assert(digits <= 16);
 
     retval = hold;  /* initial value */
 
     if (len > digits) { /* Enough bits in hold to satisfy request */
         hold >>= digits;
         len   -= digits;
-    } else {              /* Load another 31 bits into hold */
-        hold    = rand();
+    } else {            /* Load another 31 or 32 bits into hold */
+        hold    = pm_rand(randStP);
+        if (verbose)
+            pm_message("pm_rand(): %08lX", hold);
         retval |= (hold << len);
         hold >>=  (digits - len);
-        len = 31 - digits + len;
+        len = randbits - digits + len;
     }
     return (retval & mask);
 }
@@ -134,19 +147,23 @@ randPool(unsigned int const digits) {
 
 
 static void
-pgmnoise(FILE *       const ofP,
-         unsigned int const cols,
-         unsigned int const rows,
-         gray         const maxval) {
+pgmnoise(FILE *             const ofP,
+         unsigned int       const cols,
+         unsigned int       const rows,
+         gray               const maxval,
+         bool               const verbose,
+         struct pm_randSt * const randStP) {
 
-    bool const usingPool = !(RAND_MAX==2147483647 && (maxval & (maxval+1)));
+    bool const usingPool =
+      !( (randStP->max==2147483647UL || randStP->max==4294967294UL)
+           && (maxval & (maxval+1)) );
     unsigned int const bitLen = pm_maxvaltobits(maxval);
 
     unsigned int row;
     gray * destrow;
 
     /* If maxval is 2^n-1, we draw exactly n bits from the pool.
-       Otherwise call rand() and determine gray value by modulo.
+       Otherwise call pm_rand() and determine gray value by modulo.
 
        In the latter case, there is a minuscule skew toward 0 (=black)
        because smaller numbers are produced more frequently by modulo.
@@ -155,7 +172,7 @@ pgmnoise(FILE *       const ofP,
 
        To illustrate the point, consider converting the outcome of one
        roll of a fair, six-sided die to 5 values (0 to 4) by N % 5.  The
-       probability for values 1, 2, 3, 4 are 1/6, but 0 alone is 2/6.
+       probability for values 1, 2, 3, 4 is 1/6, but 0 alone is 2/6.
        Average is 10/6 or 1.6667, compared to 2.0 from an ideal
        generator which produces exactly 5 values.  With two dice
        average improves to 70/36 or 1.9444.
@@ -172,12 +189,11 @@ pgmnoise(FILE *       const ofP,
         if (usingPool) {
             unsigned int col;
             for (col = 0; col < cols; ++col)
-                destrow[col] = randPool(bitLen);
-        }
-        else {
+                destrow[col] = randPool(bitLen, verbose, randStP);
+        } else {
             unsigned int col;
             for (col = 0; col < cols; ++col)
-                destrow[col] = rand() % (maxval + 1);
+                destrow[col] = pm_rand(randStP) % (maxval + 1);
         }
         pgm_writepgmrow(ofP, destrow, cols, maxval, 0);
     }
@@ -191,18 +207,22 @@ int
 main(int          argc,
      const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
+    struct pm_randSt randSt;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, cmdline.randomseedSpec, cmdline.randomseed);
 
-    pgmnoise(stdout, cmdline.width, cmdline.height, cmdline.maxval);
+    pgmnoise(stdout, cmdline.width, cmdline.height, cmdline.maxval,
+             cmdline.verbose, &randSt);
+
+    pm_randterm(&randSt);
 
     return 0;
 }
-
 
 
