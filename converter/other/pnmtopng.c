@@ -56,6 +56,7 @@
 #endif                               /*  2 for warnings (1 == error) */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h> /* strcat() */
 #include <limits.h>
 #include <png.h>
@@ -140,12 +141,6 @@ typedef struct _jmpbuf_wrapper {
   jmp_buf jmpbuf;
 } jmpbuf_wrapper;
 
-#ifndef TRUE
-#  define TRUE 1
-#endif
-#ifndef FALSE
-#  define FALSE 0
-#endif
 #ifndef NONE
 #  define NONE 0
 #endif
@@ -394,8 +389,8 @@ parseCommandLine(int argc, const char ** argv,
 
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -673,7 +668,7 @@ lookupColorAlpha(coloralphahash_table const caht,
 
 
 /* The following variables belong to getChv() and freeChv() */
-static bool getChv_computed = FALSE;
+static bool getChv_computed = false;
 static colorhist_vector getChv_chv;
 
 
@@ -724,7 +719,7 @@ getChv(FILE *             const ifP,
             else
                 pm_message("Too many colors (more than %u) found", maxColors);
         }
-        getChv_computed = TRUE;
+        getChv_computed = true;
     }
     *chvP = getChv_chv;
     *colorsP = getChv_colors;
@@ -738,7 +733,7 @@ static void freeChv(void) {
         if (getChv_chv)
             ppm_freecolorhist(getChv_chv);
 
-    getChv_computed = FALSE;
+    getChv_computed = false;
 }
 
 
@@ -752,7 +747,7 @@ pgmBitsAreRepeated(unsigned int const repeatedSize,
                    xelval       const maxval,
                    int          const format) {
 /*----------------------------------------------------------------------------
-   Return TRUE iff all the samples in the image in file 'ifP',
+   Return true iff all the samples in the image in file 'ifP',
    described by 'cols', 'rows', 'maxval', and 'format', consist in the
    rightmost 'repeatedSize' * 2 bits of two identical sets of
    'repeatedSize' bits.
@@ -776,7 +771,7 @@ pgmBitsAreRepeated(unsigned int const repeatedSize,
 
     pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
-    mayscale = TRUE;  /* initial assumption */
+    mayscale = true;  /* initial assumption */
 
     for (row = 0; row < rows && mayscale; ++row) {
         unsigned int col;
@@ -787,7 +782,7 @@ pgmBitsAreRepeated(unsigned int const repeatedSize,
             xelval const testbits1 = testbits2 & mask1;
                 /* The lower half of the bits of interest in the sample */
             if (((testbits1 << repeatedSize) | testbits1) != testbits2)
-                mayscale = FALSE;
+                mayscale = false;
         }
     }
     pnm_freerow(xelrow);
@@ -880,7 +875,7 @@ meaningful_bits_ppm(FILE *         const ifp,
     maxMeaningfulBits = pm_maxvaltobits(maxval);
 
     if (maxval == 65535) {
-        mayscale = TRUE;   /* initial assumption */
+        mayscale = true;   /* initial assumption */
         pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
         for (row = 0; row < rows && mayscale; ++row) {
             unsigned int col;
@@ -890,7 +885,7 @@ meaningful_bits_ppm(FILE *         const ifp,
                 if ((PPM_GETR(p) & 0xff) * 0x101 != PPM_GETR(p) ||
                     (PPM_GETG(p) & 0xff) * 0x101 != PPM_GETG(p) ||
                     (PPM_GETB(p) & 0xff) * 0x101 != PPM_GETB(p))
-                    mayscale = FALSE;
+                    mayscale = false;
             }
         }
         if (mayscale)
@@ -926,7 +921,7 @@ tryTransparentColor(FILE *     const ifp,
 
     pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
 
-    singleColorIsTrans = TRUE;  /* initial assumption */
+    singleColorIsTrans = true;  /* initial assumption */
 
     for (row = 0; row < rows && singleColorIsTrans; ++row) {
         int col;
@@ -938,16 +933,16 @@ tryTransparentColor(FILE *     const ifp,
                 */
                 if (pnmType == PPM_TYPE) {
                     if (!PPM_EQUAL(xelrow[col], transcolor))
-                        singleColorIsTrans = FALSE;
+                        singleColorIsTrans = false;
                 } else {
                     if (PNM_GET1(xelrow[col]) != PNM_GET1(transcolor))
-                        singleColorIsTrans = FALSE;
+                        singleColorIsTrans = false;
                 }
             } else if (alphaMask[row][col] != alphaMaxval) {
                 /* Here's an area of the mask that is translucent.  That
                    disqualified us.
                 */
-                singleColorIsTrans = FALSE;
+                singleColorIsTrans = false;
             } else {
                 /* Here's an area of the mask that is opaque.  If it's
                    the same color as our candidate transparent color,
@@ -955,10 +950,10 @@ tryTransparentColor(FILE *     const ifp,
                 */
                 if (pnmType == PPM_TYPE) {
                     if (PPM_EQUAL(xelrow[col], transcolor))
-                        singleColorIsTrans = FALSE;
+                        singleColorIsTrans = false;
                 } else {
                     if (PNM_GET1(xelrow[col]) == PNM_GET1(transcolor))
-                        singleColorIsTrans = FALSE;
+                        singleColorIsTrans = false;
                 }
             }
         }
@@ -990,8 +985,8 @@ analyzeAlpha(FILE *       const ifP,
   of a certain color fully transparent and every other pixel opaque,
   we can simply identify that color in the PNG.
 
-  We have to do this before any scaling occurs, since alpha is only
-  possible with 8 and 16-bit.
+  We have to do this before any scaling occurs, since alpha is possible
+  only with 8 and 16-bit.
 -----------------------------------------------------------------------------*/
     xel * xelrow;
     bool foundTransparentPixel;
@@ -1034,7 +1029,7 @@ analyzeAlpha(FILE *       const ifP,
             pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
             for (col = 0; col < cols && !foundTransparentPixel; ++col) {
                 if (alphaMask[row][col] == 0) {
-                    foundTransparentPixel = TRUE;
+                    foundTransparentPixel = true;
                     transcolor = pnm_xeltopixel(xelrow[col], format);
                 }
             }
@@ -1115,16 +1110,16 @@ determineTransparency(struct cmdlineInfo const cmdline,
         if (alphaCanBeTransparencyIndex && !cmdline.force) {
             if (verbose)
                 pm_message("converting alpha mask to transparency index");
-            *alphaP       = FALSE;
+            *alphaP       = false;
             *transparentP = 2;
             *transColorP  = alphaTranscolor;
         } else if (allOpaque) {
             if (verbose)
                 pm_message("Skipping alpha because mask is all opaque");
-            *alphaP       = FALSE;
+            *alphaP       = false;
             *transparentP = -1;
         } else {
-            *alphaP       = TRUE;
+            *alphaP       = true;
             *transparentP = -1;
         }
         *alphaMaxvalP = alphaMaxval;
@@ -1134,17 +1129,17 @@ determineTransparency(struct cmdlineInfo const cmdline,
            use with trans[], which can have stuff in it if the user specified
            a transparent color.
         */
-        *alphaP       = FALSE;
+        *alphaP       = false;
         *alphaMaxvalP = 255;
 
         if (cmdline.transparent) {
             const char * transstring2;
             /* The -transparent value, but with possible leading '=' removed */
             if (cmdline.transparent[0] == '=') {
-                *transExactP = TRUE;
+                *transExactP = true;
                 transstring2 = &cmdline.transparent[1];
             } else {
-                *transExactP = FALSE;
+                *transExactP = false;
                 transstring2 = cmdline.transparent;
             }
             /* We do this funny PPM_DEPTH thing instead of just passing 'maxval'
@@ -1206,7 +1201,7 @@ hasColor(FILE *       const ifP,
             for (col = 0; col < cols && isGray; ++col) {
                     xel const p = xelrow[col];
                 if (PPM_GETR(p) != PPM_GETG(p) || PPM_GETG(p) != PPM_GETB(p))
-                    isGray = FALSE;
+                    isGray = false;
             }
         }
 
@@ -1335,10 +1330,10 @@ compute_nonalpha_palette(colorhist_vector const chv,
             int j;
             bool found;
 
-            found = FALSE;
+            found = false;
             for (j = 0; j < ordered_palette_size && !found; ++j) {
                 if (PNM_EQUAL(ordered_palette[j], chv[colorIndex].color))
-                    found = TRUE;
+                    found = true;
             }
             if (!found)
                 pm_error("failed to find color (%d, %d, %d), which is in the "
@@ -1631,7 +1626,7 @@ compute_alpha_palette(FILE *         const ifP,
    MAXPALETTEENTRIES elements.
 
    If there are more than MAXPALETTEENTRIES color/alpha pairs in the image,
-   don't return any palette information -- just return *tooBigP == TRUE.
+   don't return any palette information -- just return *tooBigP == true.
 -----------------------------------------------------------------------------*/
     colorhist_vector chv;
     unsigned int colors;
@@ -1709,9 +1704,9 @@ makeOneColorTransparentInPalette(xel            const transColor,
    can do a better job when the opaque entries are all last in the
    color/alpha palette).
 
-   If the specified color is not there and exact == TRUE, return
+   If the specified color is not there and exact == true, return
    without changing anything, but issue a warning message.  If it's
-   not there and exact == FALSE, just find the closest color.
+   not there and exact == false, just find the closest color.
 
    We assume every entry in the palette is opaque upon entry.
 
@@ -2834,9 +2829,9 @@ convertpnm(struct cmdlineInfo const cmdline,
         if (verbose)
             pm_message("Not using color map.  %s", noColormapReason);
         pm_strfree(noColormapReason);
-        colorMapped = FALSE;
+        colorMapped = false;
     } else
-        colorMapped = TRUE;
+        colorMapped = true;
 
     computeColorMapLookupTable(colorMapped, palettePnm, paletteSize,
                                transPnm, transSize, alpha, alphaMaxval,
