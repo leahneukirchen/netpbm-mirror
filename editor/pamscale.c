@@ -2108,33 +2108,45 @@ scaleWithoutMixing(const struct pam * const inpamP,
 -----------------------------------------------------------------------------*/
     tuple * tuplerow;  /* An input row */
     tuple * newtuplerow;
-    int row;
-    int rowInInput;
+    unsigned int row;
+        /* The number of the next row to be output */
+    unsigned int rowInInput;
+        /* The number of the next row to be read from the input */
 
     assert(outpamP->maxval == inpamP->maxval);
     assert(outpamP->depth  == inpamP->depth);
 
     tuplerow = pnm_allocpamrow(inpamP);
-    rowInInput = -1;
+    rowInInput = 0;
 
     newtuplerow = pnm_allocpamrow(outpamP);
 
     for (row = 0; row < outpamP->height; ++row) {
-        int col;
+        unsigned int col;
 
-        int const inputRow = (int) (row / yscale);
+        unsigned int const inputRow = (int) (row / yscale);
+            /* The number of the input row that we will use for this output
+               row.
+            */
 
-        for (; rowInInput < inputRow; ++rowInInput)
+        for (; rowInInput <= inputRow; ++rowInInput)
             pnm_readpamrow(inpamP, tuplerow);
 
         for (col = 0; col < outpamP->width; ++col) {
-            int const inputCol = (int) (col / xscale);
+            unsigned int const inputCol = (int) (col / xscale);
 
             pnm_assigntuple(inpamP, newtuplerow[col], tuplerow[inputCol]);
         }
 
         pnm_writepamrow(outpamP, newtuplerow);
     }
+    /* Read off and discard rest of rows, because whatever is supplying the
+       input stream may expect it to be consumed and because Caller will expect
+       the stream to be positioned to the next image.
+    */
+    for (; rowInInput < inpamP->height; ++rowInInput)
+        pnm_readpamrow(inpamP, tuplerow);
+
     pnm_freepamrow(tuplerow);
     pnm_freepamrow(newtuplerow);
 }

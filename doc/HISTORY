@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.03.07 BJH  Release 10.86.19
+
+              pamscale: fix bogus "bad magic number" or similar failure most
+              of the time with -nomix.  Broken since Netpbm 10.49 (December
+              2009).
+              
+              libnetpbm: pm_system: Fix bug: standard input feeder process
+              repositions unrelated files.  Always broken (pm_system was new
+              in Netpbm 10.13 (September 2003).
+
+              Pamtowinicon: Fix crash or incorrect output with PNG encoding
+              (result of pm_system bug above).  Always broken (Pamtowinicon
+              was new in Netpbm 10.63 (June 2013).
+
 20.12.08 BJH  Release 10.86.18
 
               pamarith: Fix bug: fails with more than two operands for
