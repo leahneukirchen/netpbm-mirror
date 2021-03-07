@@ -16,6 +16,10 @@ not yet  BJH  Release 10.94.00
               are used except ppmtoilbm, so seeded results are the same on
               all platforms.
 
+              pamscale: fix bogus "bad magic number" or similar failure most
+              of the time with -nomix.  Broken since Netpbm 10.49 (December
+              2009).
+              
               libnetpbm: pm_system: Fix bug: standard input feeder process
               repositions unrelated files.  Always broken (pm_system was new
               in Netpbm 10.13 (September 2003).
