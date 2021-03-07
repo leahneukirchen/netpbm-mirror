@@ -958,6 +958,8 @@ tryTransparentColor(FILE *     const ifp,
             }
         }
     }
+    *singleColorIsTransP = singleColorIsTrans;
+
     pnm_freerow(xelrow);
 }
 
