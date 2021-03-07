@@ -40,8 +40,8 @@
 
 
 static void
-closeUninheritableFds(int const stdinFd,
-                      int const stdoutFd) {
+closeUninheritableFds(int const keepFdA,
+                      int const keepFdB) {
 /*----------------------------------------------------------------------------
   Close all the file descriptors that we declare uninheritable -- files Parent
   has open that Child has no business accessing.
@@ -49,14 +49,21 @@ closeUninheritableFds(int const stdinFd,
   Closing an extra file descriptor is essential to allow the file to close
   when Parent closes it.
 
+  It is also essential to prevent the system from messing with the position of
+  the file as the child process exits.  If the file descriptor is backing a
+  stream (FILE *), some process-exit code seeks the file to the current stream
+  position (from the readahead position), but having the file descriptor
+  closed defeats that.
+
   We define uninheritable as less than 64 and not Standard Input, Output,
-  or Error, or 'stdinFd' or 'stdoutFd'.
+  or Error, or 'keepFdA' or 'keepFdB'.
 -----------------------------------------------------------------------------*/
     int fd;
 
     for (fd = 0; fd < 64; ++fd) {
-        if (fd == stdinFd) {
-        } else if (fd == stdoutFd) {
+        if (false) {
+        } else if (fd == keepFdA) {
+        } else if (fd == keepFdB) {
         } else if (fd == STDIN_FILENO) {
         } else if (fd == STDOUT_FILENO) {
         } else if (fd == STDERR_FILENO) {
@@ -148,6 +155,9 @@ createPipeFeeder(void          pipeFeederRtn(int, void *),
     } else if (rc == 0) {
         /* This is the child -- the stdin feeder process */
         close(pipeToFeed[0]);
+
+        closeUninheritableFds(pipeToFeed[1], pipeToFeed[1]);
+
         (*pipeFeederRtn)(pipeToFeed[1], feederParm);
         exit(0);
     } else {
