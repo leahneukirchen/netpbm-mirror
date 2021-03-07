@@ -1474,9 +1474,14 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
     int row;
     xel * xelrow;
     unsigned int alphaColorPairCnt;
+        /* Number of different alpha/color pairs we've seen so far as we
+           iterate through the image.
+        */
 
     cht = ppm_colorhisttocolorhash(chv, colors);
 
+    /* We have not seen any alphas of any color yet. */
+    alphaColorPairCnt = 0;
     for (colorIndex = 0; colorIndex < colors; ++colorIndex) {
         alphasOfColor[colorIndex] = NULL;
         alphasOfColorCnt[colorIndex] = 0;

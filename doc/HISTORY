@@ -20,9 +20,14 @@ not yet  BJH  Release 10.94.00
               of the time with -nomix.  Broken since Netpbm 10.49 (December
               2009).
 
-              pnmtopng: fix incorrect transparency in output.  Introduced
-              after Netpbm 10.35 (August 2006) but not after Netpbm 10.47
-              (June 2009).
+              pnmtopng: fix incorrect transparency in output when requesting
+              transparency.  Introduced after Netpbm 10.35 (August 2006) but
+              not after Netpbm 10.47 (June 2009).
+
+              pnmtopng: fix buffer overrun or bogus "too many color/
+              transparency pairs" failure when requesting transparency.
+              Introduced after Netpbm 10.26 (January 2005) but not after
+              Netpbm 10.35 (August 2006).
 
               libnetpbm: pm_system: Fix bug: standard input feeder process
               repositions unrelated files.  Always broken (pm_system was new
