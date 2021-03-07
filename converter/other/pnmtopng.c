@@ -899,7 +899,7 @@ meaningful_bits_ppm(FILE *         const ifp,
 
 
 static void
-tryTransparentColor(FILE *     const ifp,
+tryTransparentColor(FILE *     const ifP,
                     pm_filepos const rasterPos,
                     int        const cols,
                     int        const rows,
@@ -909,7 +909,14 @@ tryTransparentColor(FILE *     const ifp,
                     gray       const alphaMaxval,
                     pixel      const transcolor,
                     bool *     const singleColorIsTransP) {
+/*----------------------------------------------------------------------------
+   Find out if the transparent pixels identified by alpha mask 'alphaMask'
+   (whose maxval is 'alphaMaxval') are exactly the pixels of color
+   'transcolor'.  Return answer as *singleColorIsTransP.
 
+   The image we analyze is that on input stream *ifP, starting at position
+   'rasterPos', and we leave that stream positioned arbitrarily.
+-----------------------------------------------------------------------------*/
     int const pnmType = PNM_FORMAT_TYPE(format);
 
     xel * xelrow;
@@ -919,13 +926,13 @@ tryTransparentColor(FILE *     const ifp,
 
     xelrow = pnm_allocrow(cols);
 
-    pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
+    pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
     singleColorIsTrans = true;  /* initial assumption */
 
     for (row = 0; row < rows && singleColorIsTrans; ++row) {
         int col;
-        pnm_readpnmrow(ifp, xelrow, cols, maxval, format);
+        pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
         for (col = 0 ; col < cols && singleColorIsTrans; ++col) {
             if (alphaMask[row][col] == 0) { /* transparent */
                 /* If we have a second transparent color, we're
