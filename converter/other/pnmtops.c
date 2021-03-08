@@ -9,7 +9,7 @@
 
          We use methods we learned from Dirk Krause's program Bmeps.
          Previous versions used raster encoding code based on Bmeps
-         code.  This program does not used any code from Bmeps.
+         code.  This program does not use any code from Bmeps.
 
       2) Use our own filters and redefine /readstring .  This is aboriginal
          Netpbm code, from when Postscript was young.  The filters are
@@ -1268,7 +1268,7 @@ putFilters(unsigned int const postscriptLevel,
     assert(postscriptLevel > 1);
 
     /* We say to decode flate, then rle, so Caller must ensure it encodes
-       rel, then flate.
+       rle, then flate.
     */
 
     if (ascii85)
