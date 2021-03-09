@@ -49,7 +49,7 @@ pmjas_image_decode(jas_stream_t * const in,
 
     if (jasperP) {
         *imagePP = jasperP;
-        *errorP  = errorP;
+        *errorP  = NULL;
     } else {
         pm_asprintf(errorP, "Failed.  Details may have been written to "
                     "Standard Error");
