@@ -93,7 +93,7 @@ shiftRow(pixel *            const srcrow,
 
     pixel * pP;
     pixel * pP2;
-    unsigned int nowshift;
+    int nowshift;
 
     if (shift != 0)
         nowshift = (pm_rand(randStP) % (shift+1)) - ((shift+1) / 2);
