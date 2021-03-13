@@ -874,17 +874,17 @@ paletteHasPartialTransparency(struct pngx * const pngxP) {
         if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
             struct pngx_trns const trans = pngx_trns(pngxP);
 
-            bool foundGray;
+            bool foundPartial;
             unsigned int i;
 
-            for (i = 0, foundGray = FALSE;
-                 i < trans.numTrans && !foundGray;
+            for (i = 0, foundPartial = FALSE;
+                 i < trans.numTrans && !foundPartial;
                  ++i) {
                 if (trans.trans[i] != 0 && trans.trans[i] != pngxP->maxval) {
-                    foundGray = TRUE;
+                    foundPartial = TRUE;
                 }
             }
-            retval = foundGray;
+            retval = foundPartial;
         } else
             retval = FALSE;
     } else
