@@ -29,6 +29,9 @@ not yet  BJH  Release 10.94.00
               Introduced after Netpbm 10.26 (January 2005) but not after
               Netpbm 10.35 (August 2006).
 
+              pamtojpeg2k: Fix constant failure with message about file
+              close failing.
+
               libnetpbm: pm_system: Fix bug: standard input feeder process
               repositions unrelated files.  Always broken (pm_system was new
               in Netpbm 10.13 (September 2003).
