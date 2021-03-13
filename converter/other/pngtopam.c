@@ -668,10 +668,16 @@ dumpPngInfo(struct pngx * const pngxP) {
                    background.blue);
     }
 
-    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS))
-        pm_message("tRNS chunk (transparency): %u entries",
-                   pngx_trns(pngxP).numTrans);
-    else
+    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
+        struct pngx_trns const trns = pngx_trns(pngxP);
+
+        pm_message("tRNS chunk (transparency):");
+        pm_message("  %u palette entries", trns.numTrans);
+        pm_message("  transparent color = (%u,%u,%u)",
+                   trns.transColor.red,
+                   trns.transColor.green,
+                   trns.transColor.blue);
+    } else
         pm_message("tRNS chunk (transparency): not present");
 
     if (pngx_chunkIsPresent(pngxP, PNG_INFO_gAMA))
