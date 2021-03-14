@@ -42,6 +42,10 @@ not yet  BJH  Release 10.94.00
 
               pnmtopng: Fix trivial memory leaks.
 
+              pnmtops: Fix incorrect output (arithmetic overflow) when
+              bounding box is exactly INT_MAX high or wide.  Always broken.
+              Pnmtops was in primordial Netpbm.
+
 20.12.28 BJH  Release 10.93.00
 
               pamarith: Add -equal.
