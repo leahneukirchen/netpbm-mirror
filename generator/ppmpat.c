@@ -14,7 +14,6 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
                            /* get M_PI in math.h */
 #define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
-#define SPIROGRAPHS 0   /* Spirograph to be added soon */
 
 #include <assert.h>
 #include <math.h>
@@ -41,9 +40,6 @@ typedef enum {
     PAT_SQUIG,
     PAT_CAMO,
     PAT_ANTICAMO,
-    PAT_SPIRO1,
-    PAT_SPIRO2,
-    PAT_SPIRO3
 } Pattern;
 
 typedef struct {
@@ -81,7 +77,6 @@ validateColorCount(Pattern      const basePattern,
     switch (basePattern) {
     case PAT_GINGHAM2:
     case PAT_ARGYLE1:
-    case PAT_SPIRO1:
         if (colorCount != 2)
             pm_error("Wrong number of colors: %u. "
                      "2 colors are required for the specified pattern.",
@@ -113,8 +108,6 @@ validateColorCount(Pattern      const basePattern,
                      colorCount);
         break;
 
-    case PAT_SPIRO2:
-    case PAT_SPIRO3:
     default:
         pm_error("INTERNAL ERROR.");
     }
@@ -189,9 +182,6 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int squig;
     unsigned int camo;
     unsigned int anticamo;
-    unsigned int spiro1;
-    unsigned int spiro2;
-    unsigned int spiro3;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -220,16 +210,6 @@ parseCommandLine(int argc, const char ** argv,
             &camo,       0);
     OPTENT3(0, "anticamo",      OPT_FLAG,   NULL,
             &anticamo,   0);
-#if SPIROGRAPHS != 0
-    OPTENT3(0, "spiro1",        OPT_FLAG,   NULL,
-            &spiro1,     0);
-    OPTENT3(0, "spiro2",        OPT_FLAG,   NULL,
-            &spiro2,     0);
-    OPTENT3(0, "spiro3",        OPT_FLAG,   NULL,
-            &spiro3,     0);
-#else
-    spiro1 = spiro2 = spiro3 = 0;
-#endif
     OPTENT3(0, "color",         OPT_STRINGLIST, &colorText,
             &cmdlineP->colorSpec,           0);
     OPTENT3(0, "randomseed",    OPT_UINT,       &cmdlineP->randomseed,
@@ -247,8 +227,7 @@ parseCommandLine(int argc, const char ** argv,
         gingham2 + gingham3 + madras + tartan + argyle1 + argyle2 +
         poles +
         squig +
-        camo + anticamo +
-        spiro1 + spiro2 + spiro3;
+        camo + anticamo;
 
     if (basePatternCount < 1)
         pm_error("You must specify a base pattern option such as -gingham2");
@@ -276,12 +255,6 @@ parseCommandLine(int argc, const char ** argv,
             cmdlineP->basePattern = PAT_CAMO;
         else if (anticamo)
             cmdlineP->basePattern = PAT_ANTICAMO;
-        else if (spiro1)
-            cmdlineP->basePattern = PAT_SPIRO1;
-        else if (spiro2)
-            cmdlineP->basePattern = PAT_SPIRO2;
-        else if (spiro3)
-            cmdlineP->basePattern = PAT_SPIRO3;
         else
             assert(false);  /* Every possibility is accounted for */
     }
