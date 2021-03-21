@@ -11,6 +11,11 @@
 #include "shhopt.h"
 #include "pgm.h"
 
+/* constants */
+static unsigned long int const ceil31bits = 0x7fffffffUL;
+static unsigned long int const ceil32bits = 0xffffffffUL;
+
+
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -99,49 +104,57 @@ parseCommandLine(int argc,
 
 
 static unsigned int
-randPool(unsigned int       const digits,
-         bool               const verbose,
+randPool(unsigned int       const nDigits,
          struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
-  Draw 'digits' bits from pool of random bits.  If the number of random bits
+  Draw 'nDigits' bits from pool of random bits.  If the number of random bits
   in pool is insufficient, call pm_rand() and add N bits to it.
 
-  N is 31 or 32.  In raw mode we set this value to 32 regardless of the
-  actual number of available bits.  If insufficient, the MSB will be
-  set to zero.
+  N is 31 or 32.  In raw mode we use N = 32 regardless of the actual number of
+  available bits.  If there are only 31 available, we use zero for the MSB.
 
-  'digits' must be at most 16.
+  'nDigits' must be at most 16.
 
-  We assume that each call to pm_rand() generates 31 or 32 bits,
-  or randStP->max == 2147483647 or 4294967294.
+  We assume that each call to pm_rand() generates 31 or 32 bits, or
+  randStP->max == 2147483647 or 4294967295.
 
-  The underlying logic is flexible and endian-free.  The above conditions
-  can be relaxed.
+  The underlying logic is flexible and endian-free.  The above conditions can
+  be relaxed.
 -----------------------------------------------------------------------------*/
     static unsigned long int hold=0;  /* entropy pool */
     static unsigned int len=0;        /* number of valid bits in pool */
 
-    unsigned int const mask = (1 << digits) - 1;
-    unsigned int const randbits = (randStP->max == 2147483647) ? 31 : 32;
+    unsigned int const mask = (1 << nDigits) - 1;
+    unsigned int const randbits = (randStP->max == ceil31bits) ? 31 : 32;
     unsigned int retval;
 
-    assert(randStP->max == 2147483647 || randStP->max == 4294967294);
-    assert(digits <= 16);
+    assert(randStP->max == ceil31bits || randStP->max == ceil32bits);
+    assert(nDigits <= 16);
 
     retval = hold;  /* initial value */
 
-    if (len > digits) { /* Enough bits in hold to satisfy request */
-        hold >>= digits;
-        len   -= digits;
+    if (len > nDigits) { /* Enough bits in hold to satisfy request */
+        hold >>= nDigits;
+        len   -= nDigits;
     } else {            /* Load another 31 or 32 bits into hold */
         hold    = pm_rand(randStP);
-        if (verbose)
-            pm_message("pm_rand(): %08lX", hold);
         retval |= (hold << len);
-        hold >>=  (digits - len);
-        len = randbits - digits + len;
+        hold >>=  (nDigits - len);
+        len = randbits - nDigits + len;
     }
     return (retval & mask);
+}
+
+
+
+static void
+reportVerbose(struct pm_randSt * const randStP,
+              gray               const maxval,
+              bool               const usingPool)  {
+
+    pm_message("random seed: %u", randStP->seed);
+    pm_message("random max: %u maxval: %u", randStP->max, maxval);
+    pm_message("method: %s", usingPool ? "pool" : "modulo");
 }
 
 
@@ -155,8 +168,8 @@ pgmnoise(FILE *             const ofP,
          struct pm_randSt * const randStP) {
 
     bool const usingPool =
-      !( (randStP->max==2147483647UL || randStP->max==4294967294UL)
-           && (maxval & (maxval+1)) );
+        (randStP->max==ceil31bits || randStP->max==ceil32bits) &&
+        !(maxval & (maxval+1));
     unsigned int const bitLen = pm_maxvaltobits(maxval);
 
     unsigned int row;
@@ -168,7 +181,7 @@ pgmnoise(FILE *             const ofP,
        In the latter case, there is a minuscule skew toward 0 (=black)
        because smaller numbers are produced more frequently by modulo.
        Thus we employ the pool method only when it is certain that no
-       skew will ensue.
+       skew will result.
 
        To illustrate the point, consider converting the outcome of one
        roll of a fair, six-sided die to 5 values (0 to 4) by N % 5.  The
@@ -179,7 +192,16 @@ pgmnoise(FILE *             const ofP,
 
        The more (distinct) dice we roll, or the more binary digits we
        draw, the smaller the skew.
+
+       The pool method is economical.  But there is an additional merit:
+       No bits are lost this way.  This gives us a means to check the
+       integrity of the random number generator.
+
+       - Akira Urushibata, March 2021
     */
+
+    if (verbose)
+        reportVerbose(randStP, maxval, usingPool);
 
     destrow = pgm_allocrow(cols);
 
@@ -189,7 +211,7 @@ pgmnoise(FILE *             const ofP,
         if (usingPool) {
             unsigned int col;
             for (col = 0; col < cols; ++col)
-                destrow[col] = randPool(bitLen, verbose, randStP);
+                destrow[col] = randPool(bitLen, randStP);
         } else {
             unsigned int col;
             for (col = 0; col < cols; ++col)
