@@ -16,15 +16,15 @@ not yet  BJH  Release 10.94.00
               are used except ppmtoilbm, so seeded results are the same on
               all platforms.
 
-              pamscale: fix bogus "bad magic number" or similar failure most
+              pamscale: Fix bogus "bad magic number" or similar failure most
               of the time with -nomix.  Broken since Netpbm 10.49 (December
               2009).
 
-              pnmtopng: fix incorrect transparency in output when requesting
+              pnmtopng: Fix incorrect transparency in output when requesting
               transparency.  Introduced after Netpbm 10.35 (August 2006) but
               not after Netpbm 10.47 (June 2009).
 
-              pnmtopng: fix buffer overrun or bogus "too many color/
+              pnmtopng: Fix buffer overrun or bogus "too many color/
               transparency pairs" failure when requesting transparency.
               Introduced after Netpbm 10.26 (January 2005) but not after
               Netpbm 10.35 (August 2006).
