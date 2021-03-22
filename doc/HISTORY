@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.03.22 BJH  Release 10.93.03
+
+              pnmtops: Fix incorrect output (arithmetic overflow) when
+              bounding box is exactly INT_MAX high or wide.  Always broken.
+              Pnmtops was in primordial Netpbm.
+
 21.03.10 BJH  Release 10.93.02
 
               pnmtopng: fix incorrect transparency in output when requesting
