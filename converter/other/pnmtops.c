@@ -1012,8 +1012,8 @@ validateComputableBoundingBox(float const scols,
     float const bbWidth  = llx + scols + 0.5;
     float const bbHeight = lly + srows + 0.5;
 
-    if (bbHeight < INT_MIN || bbHeight > INT_MAX ||
-        bbWidth  < INT_MIN || bbWidth  > INT_MAX)
+    if ((double)bbHeight < INT_MIN || (double)bbHeight > INT_MAX ||
+        (double)bbWidth  < INT_MIN || (double)bbWidth  > INT_MAX)
         pm_error("Bounding box dimensions %.1f x %.1f are too large "
                  "for computations.  "
                  "This probably means input image width, height, "

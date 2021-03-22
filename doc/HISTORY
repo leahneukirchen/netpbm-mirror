@@ -4,6 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.03.21 BJH  Release 10.86.20
+
+              pnmtopng: fix incorrect transparency in output when requesting
+              transparency.  Introduced after Netpbm 10.35 (August 2006) but
+              not after Netpbm 10.47 (June 2009).
+
+              pnmtopng: fix buffer overrun or bogus "too many color/
+              transparency pairs" failure when requesting transparency.
+              Introduced after Netpbm 10.26 (January 2005) but not after
+              Netpbm 10.35 (August 2006).
+
+              pnmtops: Fix incorrect output (arithmetic overflow) when
+              bounding box is exactly INT_MAX high or wide.  Always broken.
+              Pnmtops was in primordial Netpbm.
+
 21.03.07 BJH  Release 10.86.19
 
               pamscale: fix bogus "bad magic number" or similar failure most
