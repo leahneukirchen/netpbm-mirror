@@ -15,6 +15,7 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -59,8 +60,8 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0,   "check",   OPT_FLAG,   NULL,         &cmdlineP->check, 0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
+    opt.short_allowed = false; /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;   /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -172,7 +173,7 @@ main(int argc, const char *argv[]) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    for (eof = FALSE, imageSeq = 0; !eof; ++imageSeq) {
+    for (eof = false, imageSeq = 0; !eof; ++imageSeq) {
         const char * error;
 
         doOneImage(ifP, cmdline.command, cmdline.check, &error);
