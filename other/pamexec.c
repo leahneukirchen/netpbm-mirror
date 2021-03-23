@@ -25,7 +25,7 @@
 #include "mallocvar.h"
 #include "pam.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -40,7 +40,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the pointers we place into *cmdlineP are sometimes to storage
    in the argv array.
@@ -157,7 +157,7 @@ doOneImage(FILE *        const ifP,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
 
     FILE *       ifP;         /* Input file pointer */
     int          eof;         /* No more images in input */
