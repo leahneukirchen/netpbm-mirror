@@ -1,0 +1,6 @@
+Test: Floyd-Steinberg
+Should print 3849876047 33894
+3849876047 33894
+Test: Atkinson
+Should print 2887295695 33894
+2887295695 33894

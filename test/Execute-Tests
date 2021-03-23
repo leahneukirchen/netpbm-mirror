@@ -178,6 +178,7 @@ elif [ $VALGRIND_TESTS = "on" ]
   mkdir $valdir
  
   vg_command_base="valgrind --trace-children=yes";
+  # You may want to add --track-origins=yes to the above.
 
   for i in awk basename cat cksum cmp comm cp cut date dirname \
            egrep fgrep file grep gs head iconv mkdir mktemp perl rm \
@@ -185,6 +186,7 @@ elif [ $VALGRIND_TESTS = "on" ]
            testrandom Available-Testprog
 
     # Tell valgrind not to probe execution of the above programs.
+    # You may add programs in Netpbm to the above to speed up tests.
 
     do vg_skip=$vg_skip"/*/"$i","; done;
 
@@ -238,10 +240,11 @@ if [ $VALGRIND_TESTS = "on" ]
 fi
 
 # Execute a single test and test its result.
-# But first check if the .ok file exists.  (Some .ok files are
-# dynamically created.)  Then see if target programs and requirements
-# are in place.  If either of these conditions are not met, do
-# not execute the test and report "Not Testable".
+# But first check if the .ok file exists.
+# (In past versions certain .ok files were dynamically created.)
+# Then see if target programs and requirements are in place.  If
+# either of these conditions are not met, do not execute the test and
+# report "Not Testable".
 
 if [ ! -s ${srcdir}/${tname%.test}.ok ]
 then

@@ -8,27 +8,14 @@ include $(BUILDDIR)/config.mk
 
 MERGE_OBJECTS =
 
-PROGS = testrandom
-
-OKSTOGENERATE = $(patsubst %.rand-ok, %.ok, $(wildcard *.rand-ok))
-
-all: $(PROGS) $(OKSTOGENERATE)
-
-testrandom.o: testrandom.c
-	$(CC_FOR_BUILD) -c -o $@ $(CFLAGS_FOR_BUILD) $<
-
-testrandom: testrandom.o
-	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD) $<
-
-RAND_VARIETY ?= $(shell ./testrandom -x)
-
-$(OKSTOGENERATE): %.ok: %.rand-ok testrandom
-	sed -n "/^$(RAND_VARIETY)|/s/^$(RAND_VARIETY)|//p" $< > $@
+PROGS =
 
 OMIT_TEST_RULE = 1
 include $(SRCDIR)/common.mk
 
+all:
+
 distclean clean: cleanlocal
 .PHONY: cleanlocal
 cleanlocal:
-	rm -f $(PROGS) $(patsubst %.rand-ok,%.ok,$(wildcard *.rand-ok))
+

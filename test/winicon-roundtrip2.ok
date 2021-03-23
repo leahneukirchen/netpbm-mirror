@@ -1,3 +1,4 @@
+Should print: former checksum values
 16 24 32 48 64 : 1 plane
 Should print 2588356089 8591 or 3783949470 69390 four times
 2588356089 8591
@@ -38,6 +39,7 @@ Should print 2704877198 33359 or 1699833476 276750 four times
 Should print 2567279592 41655 or 4154838752 345902 twice
 2567279592 41655
 2567279592 41655
+Should print: latter checksum values
 16 32 48 256 : 1 plane
 Should print 2588356089 8591 or 3783949470 69390 four times
 3783949470 69390

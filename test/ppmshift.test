@@ -1,0 +1,27 @@
+#! /bin/bash
+# This script tests: ppmshift
+# Also requires:
+
+echo "Test 1. Should print: 3705777303 101484"
+ppmshift -seed=1 10 testimg.ppm | cksum
+
+echo "Test 2. Should print: 202790723 685"
+ppmshift -seed=1 1 testgrid.pbm | cksum
+
+echo "Test 3. Should print: 0 : 0"
+ppmshift -seed=1 0 testimg.ppm | cmp -s - testimg.ppm | \
+  echo ${PIPESTATUS[@]} ":" $?
+
+tmpdir=${tmpdir:-/tmp}
+test_pbm=${tmpdir}/test.pbm
+
+ppmshift -seed=2 14 testgrid.pbm > ${test_pbm}
+
+for i in 15 16 20 1000
+  do
+  echo "Test 4. ("$i") Should print: 0 : 0"
+  ppmshift -seed=2 $i testgrid.pbm > ${test_pbm} | cmp -s - testgrid.ppm | \
+    echo ${PIPESTATUS[@]} ":" $?
+  done
+
+rm ${test_pbm}

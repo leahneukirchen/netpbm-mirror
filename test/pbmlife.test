@@ -1,0 +1,13 @@
+#! /bin/bash
+# This script tests: pbmlife pbmminkowski
+# Also requires: pbmtext
+
+pbmtext FO+89 -plain
+echo
+pbmtext FO+89 | pbmminkowski
+echo
+pbmtext FO+89 | pbmlife | pbmminkowski
+echo
+pbmtext FO+89 | pbmlife | pbmlife | pbmminkowski
+echo
+pbmtext FO+89 | pbmlife | pbmlife | pbmlife | pbmminkowski
