@@ -65,7 +65,7 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 < 1) 
+    if (argc-1 < 1)
         pm_error("You must specify at least one argument: the shell command "
                  "to execute");
     else {
@@ -92,7 +92,7 @@ pipeOneImage(FILE * const infileP,
     struct pam inpam;
     struct pam outpam;
     enum pm_check_code checkRetval;
-    
+
     unsigned int row;
     tuple * tuplerow;
 
@@ -133,7 +133,7 @@ doOneImage(FILE *        const ifP,
     ofP = popen(command, "w");
 
     if (ofP == NULL)
-        pm_asprintf(errorP, 
+        pm_asprintf(errorP,
                     "Failed to start shell to run command '%s'.  "
                     "errno = %d (%s)",
                     command, errno, strerror(errno));
@@ -141,7 +141,7 @@ doOneImage(FILE *        const ifP,
         int rc;
 
         pipeOneImage(ifP, ofP);
-            
+
         rc = pclose(ofP);
 
         if (check && rc != 0)
@@ -169,12 +169,12 @@ main(int argc, const char *argv[]) {
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.inputFileName);
 
     for (eof = FALSE, imageSeq = 0; !eof; ++imageSeq) {
         const char * error;
-        
+
         doOneImage(ifP, cmdline.command, cmdline.check, &error);
 
         if (error) {
@@ -185,9 +185,8 @@ main(int argc, const char *argv[]) {
         pnm_nextimage(ifP, &eof);
     }
     pm_close(ifP);
-    
+
     return 0;
 }
-
 
 
