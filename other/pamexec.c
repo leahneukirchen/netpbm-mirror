@@ -18,6 +18,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
+#include <setjmp.h>
 #include <errno.h>
 
 #include "pm_c_util.h"
@@ -25,6 +27,26 @@
 #include "nstring.h"
 #include "mallocvar.h"
 #include "pam.h"
+
+
+/* About SIGPIPE:
+
+   Unix has a strange function where by default, if you write into a pipe when
+   the reading side of the pipe has been closed, it generates a signal (of
+   class SIGPIPE), but if you tell the OS to ignore signals of class SIGPIPE,
+   then instead of generating that signal, the system call to write to the
+   pipe just fails.
+
+   Pamexec writes to a pipe when it feeds an image to the user's program's
+   Standard Input.  Should the user's program close its end of the pipe (such
+   as by exiting) before reading the whole image, that would, if we did
+   nothing to deal with it, cause Pamexec to receive a SIGPIPE signal, which
+   would make the OS terminate Pamexec.
+
+   We don't want that, so we tell the OS to ignore SIGPIPE signals, so that
+   instead our attempt to write to the pipe just fails and we fail with a
+   meaningful error message.
+*/
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -108,9 +130,25 @@ pipeOneImage(FILE * const infileP,
 
     tuplerow = pnm_allocpamrow(&inpam);
 
-    for (row = 0; row < inpam.height; ++row) {
-        pnm_readpamrow(&inpam, tuplerow);
-        pnm_writepamrow(&outpam, tuplerow);
+    {
+        jmp_buf jmpbuf;
+        int rc;
+        rc = setjmp(jmpbuf);
+        if (rc == 0) {
+            pm_setjmpbuf(&jmpbuf);
+
+            for (row = 0; row < inpam.height; ++row) {
+                pnm_readpamrow(&inpam, tuplerow);
+                pnm_writepamrow(&outpam, tuplerow);
+            }
+        } else {
+            pm_setjmpbuf(NULL);
+            pm_error("Failed to read image and pipe it to program's "
+                     "Standard Input.  If previous messages indicate "
+                     "a broken pipe error, that means the program closed "
+                     "its Standard Error (possibly by exiting) before "
+                     "it had read the entire image>");
+        }
     }
 
     pnm_freepamrow(tuplerow);
@@ -170,6 +208,11 @@ main(int argc, const char *argv[]) {
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
+
+    /* Make write to closed pipe fail rather than generate a signal.
+       See comments at top of program.
+    */
+    signal(SIGPIPE, SIG_IGN);
 
     ifP = pm_openr(cmdline.inputFileName);
 
