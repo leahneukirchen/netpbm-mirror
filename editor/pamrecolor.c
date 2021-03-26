@@ -44,7 +44,7 @@
 #define CLAMPxy(N, A, B) MAX(MIN((float)(N), (float)(B)), (float)(A))
 
 
-struct rgbfrac {
+struct Rgbfrac {
     /* This structure represents red, green, and blue, each expressed
        as a fraction from 0.0 to 1.0.
     */
@@ -53,19 +53,19 @@ struct rgbfrac {
     float bfrac;
 };
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* This structure represents all of the information the user
        supplied in the command line but in a form that's easy for the
        program to use.
     */
     const char *    inputFileName;  /* '-' if stdin */
     const char *    colorfile;      /* NULL if unspecified */
-    struct rgbfrac  color2gray;
+    struct Rgbfrac  color2gray;
         /* colorspace/rmult/gmult/bmult options.  Negative numbers if
            unspecified.
         */
     unsigned int    targetcolorSpec;
-    struct rgbfrac  targetcolor;
+    struct Rgbfrac  targetcolor;
     unsigned int    randomseed;
     unsigned int    randomseedSpec;
 };
@@ -73,7 +73,7 @@ struct cmdlineInfo {
 
 
 static float
-rgb2gray(struct rgbfrac * const color2grayP,
+rgb2gray(struct Rgbfrac * const color2grayP,
          float            const red,
          float            const grn,
          float            const blu) {
@@ -124,7 +124,7 @@ getColorRow(struct pam  * const pamP,
 
 static void
 convertRowToGray(struct pam     * const pamP,
-                 struct rgbfrac * const color2gray,
+                 struct Rgbfrac * const color2gray,
                  tuplen         * const tupleRow,
                  samplen        * const grayRow) {
 /*----------------------------------------------------------------------
@@ -162,7 +162,7 @@ convertRowToGray(struct pam     * const pamP,
 static void
 explicitlyColorRow(struct pam *   const pamP,
                    tuplen *       const rowData,
-                   struct rgbfrac const tint) {
+                   struct Rgbfrac const tint) {
 
     unsigned int col;
 
@@ -203,7 +203,7 @@ randomlyColorRow(struct pam *   const pamP,
 static void
 recolorRow(struct pam     * const inPamP,
            tuplen         * const inRow,
-           struct rgbfrac * const color2grayP,
+           struct Rgbfrac * const color2grayP,
            tuplen         * const colorRow,
            struct pam     * const outPamP,
            tuplen         * const outRow) {
@@ -303,10 +303,10 @@ recolorRow(struct pam     * const inPamP,
 
 
 
-static struct rgbfrac
+static struct Rgbfrac
 color2GrayFromCsName(const char * const csName) {
 
-    struct rgbfrac retval;
+    struct Rgbfrac retval;
 
     /* Thanks to
        http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
@@ -362,7 +362,7 @@ color2GrayFromCsName(const char * const csName) {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP ) {
+                 struct CmdlineInfo * const cmdlineP ) {
 
     optEntry     * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options */
@@ -455,7 +455,7 @@ parseCommandLine(int argc, const char ** const argv,
 
 int
 main(int argc, const char *argv[]) {
-    struct cmdlineInfo cmdline;          /* Command-line parameters */
+    struct CmdlineInfo cmdline;          /* Command-line parameters */
     struct pam         inPam;
     struct pam         outPam;
     struct pam         colorPam;
