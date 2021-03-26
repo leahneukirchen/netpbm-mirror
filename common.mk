@@ -470,7 +470,7 @@ empty.c:
 # 2000.06.15
 
 # DJGPP can do SYMKINKs for programs but not for ordinary files, so
-# it define SYMLINKEXE, other system don't need it
+# it defines SYMLINKEXE, other system don't need it
 ifeq ($(SYMLINKEXE)x,x)
   SYMLINKEXE := $(SYMLINK)
 endif
