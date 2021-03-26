@@ -1,3 +1,4 @@
+
 /* ----------------------------------------------------------------------
  *
  * Replace every pixel in an image with one of equal luminance
@@ -481,7 +482,6 @@ main(int argc, const char *argv[]) {
     outPam.depth = 4 - (inPam.depth % 2);
     outPam.allocation_depth = outPam.depth;
     strcpy(outPam.tuple_type, PAM_PPM_TUPLETYPE);
-    pnm_writepaminit(&outPam);
 
     if (cmdline.colorfile) {
         colorfP = pm_openr(cmdline.colorfile);
@@ -498,6 +498,8 @@ main(int argc, const char *argv[]) {
     outRow = pnm_allocpamrown(&outPam);
 
     colorRowBuffer = pnm_allocpamrown(&outPam);
+
+    pnm_writepaminit(&outPam);
 
     for (row = 0; row < inPam.height; ++row) {
         tuplen * colorRow;
