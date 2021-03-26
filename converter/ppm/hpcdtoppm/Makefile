@@ -19,7 +19,7 @@ install.bin install.merge: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # In June 2002, pcdovtoppm replaced pcdindex
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pcdovtoppm$(EXE) pcdindex$(EXE) 
+	$(SYMLINK) pcdovtoppm pcdindex
 
 
 FORCE:

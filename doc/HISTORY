@@ -49,6 +49,9 @@ not yet  BJH  Release 10.94.00
               bounding box is exactly INT_MAX high or wide.  Always broken.
               Pnmtops was in primordial Netpbm.
 
+              make package: fix no such file pcdovtoppm.exe failure on
+              Windows.
+
 20.12.28 BJH  Release 10.93.00
 
               pamarith: Add -equal.
