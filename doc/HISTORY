@@ -4,6 +4,36 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.03.27 BJH  Release 10.73.35
+
+              pamscale: fix bogus "bad magic number" or similar failure most
+              of the time with -nomix.  Broken since Netpbm 10.49 (December
+              2009).
+
+              pnmtopng: fix incorrect transparency in output when requesting
+              transparency.  Introduced after Netpbm 10.35 (August 2006) but
+              not after Netpbm 10.47 (June 2009).
+
+              pnmtopng: fix buffer overrun or bogus "too many color/
+              transparency pairs" failure when requesting transparency.
+              Introduced after Netpbm 10.26 (January 2005) but not after
+              Netpbm 10.35 (August 2006).
+
+              libnetpbm: pm_system: Fix bug: standard input feeder process
+              repositions unrelated files.  Always broken (pm_system was new
+              in Netpbm 10.13 (September 2003).
+
+              Pamtowinicon: Fix crash or incorrect output with PNG encoding
+              (result of pm_system bug above).  Always broken (Pamtowinicon
+              was new in Netpbm 10.63 (June 2013).
+
+              pnmtops: Fix incorrect output (arithmetic overflow) when
+              bounding box is exactly INT_MAX high or wide.  Always broken.
+              Pnmtops was in primordial Netpbm.
+
+              make package: fix no such file pcdovtoppm.exe failure on
+              Windows.
+
 20.12.28 BJH  Release 10.73.34
 
               pamarith: Fix bug: fails with more than two operands for
