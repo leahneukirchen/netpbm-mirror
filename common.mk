@@ -150,7 +150,7 @@ IMPORTINC_LIB_HEADERS := \
 IMPORTINC_LIB_UTIL_HEADERS := \
   bitarith.h bitio.h bitreverse.h filename.h intcode.h floatcode.h io.h \
   matrix.h mallocvar.h \
-  nsleep.h nstring.h pm_c_util.h runlength.h shhopt.h token.h
+  nsleep.h nstring.h pm_c_util.h rand.h runlength.h shhopt.h token.h
 
 IMPORTINC_HEADERS := \
   $(IMPORTINC_ROOT_HEADERS) \
@@ -470,7 +470,7 @@ empty.c:
 # 2000.06.15
 
 # DJGPP can do SYMKINKs for programs but not for ordinary files, so
-# it define SYMLINKEXE, other system don't need it
+# it defines SYMLINKEXE, other system don't need it
 ifeq ($(SYMLINKEXE)x,x)
   SYMLINKEXE := $(SYMLINK)
 endif

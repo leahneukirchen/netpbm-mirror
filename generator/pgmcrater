@@ -36,6 +36,16 @@ exec perl -w -x -S -- "$0" "$@"
 use strict;
 
 use Getopt::Long;
+use IO::Handle;
+
+
+
+sub pm_message($) {
+    STDERR->print("pgmcrater: $_[0]\n");
+}
+
+
+
 
 sub doVersionHack($) {
     my ($argvR) = @_;
@@ -69,7 +79,7 @@ my $validOptions = GetOptions(
     'randomseed=i' => \my $randomseedOpt);
 
 if (!$validOptions) {
-    print STDERR "Invalid syntax\n";
+    pm_message("Invalid syntax");
     exit(100);
 }
 

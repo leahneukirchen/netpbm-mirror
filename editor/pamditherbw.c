@@ -14,11 +14,13 @@
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "dithers.h"
+#include "rand.h"
 #include "mallocvar.h"
 #include "shhopt.h"
+#include "pam.h"
+#include "dithers.h"
 #include "pm_gamma.h"
+
 
 enum halftone {QT_FS,
                QT_ATKINSON,
@@ -588,7 +590,9 @@ fsDestroy(struct converter * const converterP) {
 
 static struct converter
 createFsConverter(struct pam * const graypamP,
-                  float        const threshFraction) {
+                  float        const threshFraction,
+                  bool         const randomseedSpec,
+                  unsigned int const randomseed) {
 
     struct fsState * stateP;
     struct converter converter;
@@ -605,9 +609,17 @@ createFsConverter(struct pam * const graypamP,
 
     {
         /* (random errors in [-1/8 .. 1/8]) */
+
         unsigned int col;
+        struct pm_randSt randSt;
+
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomseedSpec, randomseed);
+
         for (col = 0; col < graypamP->width + 2; ++col)
-            stateP->thiserr[col] = ((float)rand()/RAND_MAX - 0.5) / 4;
+            stateP->thiserr[col] = (pm_drand(&randSt) - 0.5) / 4;
+
+        pm_randterm(&randSt);
     }
 
     stateP->halfWhite = threshFraction;
@@ -725,7 +737,9 @@ atkinsonDestroy(struct converter * const converterP) {
 
 static struct converter
 createAtkinsonConverter(struct pam * const graypamP,
-                        float        const threshFraction) {
+                        float        const threshFraction,
+                        bool         const randomseedSpec,
+                        unsigned int const randomseed) {
 
     struct atkinsonState * stateP;
     struct converter converter;
@@ -743,11 +757,18 @@ createAtkinsonConverter(struct pam * const graypamP,
     {
         /* (random errors in [-1/8 .. 1/8]) */
         unsigned int col;
+        struct pm_randSt randSt;
+
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomseedSpec, randomseed);
+
         for (col = 0; col < graypamP->width + 2; ++col) {
-            stateP->error[0][col] = ((float)rand()/RAND_MAX - 0.5) / 4;
+            stateP->error[0][col] = (pm_drand(&randSt) - 0.5) / 4;
             stateP->error[1][col] = 0.0;
             stateP->error[2][col] = 0.0;
         }
+
+        pm_randterm(&randSt);
     }
 
     stateP->halfWhite = threshFraction;
@@ -934,8 +955,6 @@ main(int argc, char *argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
-
     ifP = pm_openr(cmdline.inputFilespec);
 
     if (cmdline.halftone == QT_HILBERT)
@@ -956,10 +975,14 @@ main(int argc, char *argv[]) {
 
         switch (cmdline.halftone) {
         case QT_FS:
-            converter = createFsConverter(&graypam, cmdline.threshval);
+            converter = createFsConverter(&graypam, cmdline.threshval,
+                                          cmdline.randomseedSpec,
+                                          cmdline.randomseed);
             break;
         case QT_ATKINSON:
-            converter = createAtkinsonConverter(&graypam, cmdline.threshval);
+            converter = createAtkinsonConverter(&graypam, cmdline.threshval,
+                                                cmdline.randomseedSpec,
+                                                cmdline.randomseed);
             break;
         case QT_THRESH:
             converter = createThreshConverter(&graypam, cmdline.threshval);

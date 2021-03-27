@@ -4,29 +4,40 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-21.03.22 BJH  Release 10.93.03
+21.03.27 BJH  Release 10.94.00
 
-              pnmtops: Fix incorrect output (arithmetic overflow) when
-              bounding box is exactly INT_MAX high or wide.  Always broken.
-              Pnmtops was in primordial Netpbm.
+              Add pamhomography:  Thanks Scott Pakin.
 
-21.03.10 BJH  Release 10.93.02
+              pamstereogram: Add -yfillshift .
 
-              pnmtopng: fix incorrect transparency in output when requesting
+              pamtowinicon: Add BMP/PNG encoding to verbose output.
+
+              Use internal random number generator everywhere random numbers
+              are used except ppmtoilbm, so seeded results are the same on
+              all platforms.
+
+              pamexec: Issue message instead of being killed by a signal when
+              the exec'ed program does not read the whole image"
+
+              ppmforge: Fail if -dimension is greater than 5, which is
+              useless.
+
+              pamscale: Fix bogus "bad magic number" or similar failure most
+              of the time with -nomix.  Broken since Netpbm 10.49 (December
+              2009).
+
+              pnmtopng: Fix incorrect transparency in output when requesting
               transparency.  Introduced after Netpbm 10.35 (August 2006) but
               not after Netpbm 10.47 (June 2009).
 
-              pnmtopng: fix buffer overrun or bogus "too many color/
+              pnmtopng: Fix buffer overrun or bogus "too many color/
               transparency pairs" failure when requesting transparency.
               Introduced after Netpbm 10.26 (January 2005) but not after
               Netpbm 10.35 (August 2006).
 
-21.03.07 BJH  Release 10.93.01
+              pamtojpeg2k: Fix constant failure with message about file
+              close failing.
 
-              pamscale: fix bogus "bad magic number" or similar failure most
-              of the time with -nomix.  Broken since Netpbm 10.49 (December
-              2009).
-              
               libnetpbm: pm_system: Fix bug: standard input feeder process
               repositions unrelated files.  Always broken (pm_system was new
               in Netpbm 10.13 (September 2003).
@@ -34,6 +45,15 @@ CHANGE HISTORY
               Pamtowinicon: Fix crash or incorrect output with PNG encoding
               (result of pm_system bug above).  Always broken (Pamtowinicon
               was new in Netpbm 10.63 (June 2013).
+
+              pnmtopng: Fix trivial memory leaks.
+
+              pnmtops: Fix incorrect output (arithmetic overflow) when
+              bounding box is exactly INT_MAX high or wide.  Always broken.
+              Pnmtops was in primordial Netpbm.
+
+              make package: fix no such file pcdovtoppm.exe failure on
+              Windows.
 
 20.12.28 BJH  Release 10.93.00
 
@@ -43,18 +63,18 @@ CHANGE HISTORY
               it makes sense (all but -subtract, -difference, -compare,
               -divide, -shiftleft, and -shiftright).
 
-              pamrith: fail if operand images have different depth and not
+              pamarith: fail if operand images have different depth and not
               depth 1.
 
               ppmshift: Add -seed .
 
               pamaddnoise: Fix incorrect output for -type poisson.  Always
-              broken.  (pamaddnoise was new to Netpbm in Netpbm 10.29 (August
-              2005)).
+              broken.  (pamaddnoise's precursor pnmaddnoies was new to Netpbm
+              in Netpbm 10.29 (August 2005)).
 
               pamaddnoise: fix bug: garbage output with -type impulse.  Always
-              broken (pamaddnoise's precursors pnmaddnoise was new to Netpbm
-              in Netpbm 10.29 (August 2005).
+              broken (pamaddnoise's precursor pnmaddnoise was new to Netpbm
+              in Netpbm 10.29 (August 2005)).
 
 20.09.26 BJH  Release 10.92.00
 

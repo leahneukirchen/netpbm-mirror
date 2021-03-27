@@ -103,6 +103,7 @@ ordinary_testprogs="\
   pamgauss \
   pamgetcolor \
   pamgradient \
+  pamhomography \
   pamhue \
   pamlevels \
   pamlookup \

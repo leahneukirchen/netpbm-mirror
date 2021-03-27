@@ -61,6 +61,7 @@ pamfunc: ok
 pamgauss: ok
 pamgetcolor: ok
 pamgradient: ok
+pamhomography: ok
 pamhue: ok
 pamlevels: ok
 pamlookup: ok

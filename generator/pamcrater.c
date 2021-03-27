@@ -48,6 +48,7 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "nstring.h"
 #include "pam.h"
@@ -169,11 +170,12 @@ static double const DepthBias2  = 0.5;      /* Square of depth bias */
 
 
 static double const
-cast(double const high) {
+cast(double             const high,
+     struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    A random number in the range [0, 'high'].
 -----------------------------------------------------------------------------*/
-    return high * ((rand() & 0x7FFF) / arand);
+    return high * ((pm_rand(randStP) & 0x7FFF) / arand);
 }
 
 
@@ -252,11 +254,12 @@ setElev(struct pam * const pamP,
 
 
 static void
-smallCrater(struct pam * const pamP,
-            tuple **     const terrain,
-            int          const cx,
-            int          const cy,
-            double       const radius) {
+smallCrater(struct pam *       const pamP,
+            tuple **           const terrain,
+            int                const cx,
+            int                const cy,
+            double             const radius,
+            struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Generate a crater with a special method for tiny craters.
 
@@ -283,10 +286,10 @@ smallCrater(struct pam * const pamP,
             /* The mean elevation of the Moore neighborhood (9 pixels
                centered on the crater location).
             */
-        
+
         /* Perturb the mean elevation by a small random factor. */
 
-        int const x = radius >= 1 ? ((rand() >> 8) & 0x3) - 1 : 0;
+        int const x = radius >= 1 ? ((pm_rand(randStP) >> 8) & 0x3) - 1 : 0;
 
         assert(axelev > 0);
 
@@ -374,7 +377,7 @@ normalCrater(struct pam * const pamP,
                 av = (axelev + cz) * (1 - roll) +
                     (terrainMod(pamP, terrain, x, y) + cz) * roll;
                 av = MAX(1000, MIN(64000, av));
-                
+
                 setElev(pamP, terrain, x, y, av);
             }
         }
@@ -388,19 +391,20 @@ normalCrater(struct pam * const pamP,
 
 
 static void
-plopCrater(struct pam * const pamP,
-           tuple **     const terrain,
-           int          const cx,
-           int          const cy,
-           double       const radius,
-           bool         const verbose) {
+plopCrater(struct pam *       const pamP,
+           tuple **           const terrain,
+           int                const cx,
+           int                const cy,
+           double             const radius,
+           bool               const verbose,
+           struct pm_randSt * const randStP) {
 
     if (verbose && pm_have_float_format())
         pm_message("Plopping crater at (%4d, %4d) with radius %g",
                    cx, cy, radius);
 
     if (radius < 3)
-        smallCrater (pamP, terrain, cx, cy, radius);
+        smallCrater (pamP, terrain, cx, cy, radius, randStP);
     else
         normalCrater(pamP, terrain, cx, cy, radius);
 }
@@ -448,6 +452,7 @@ genCraters(struct CmdlineInfo const cmdline) {
 -----------------------------------------------------------------------------*/
     tuple ** terrain;    /* elevation array */
     struct pam pam;
+    struct pm_randSt randSt;
 
     /* Allocate the elevation array and initialize it to mean surface
        elevation.
@@ -455,18 +460,22 @@ genCraters(struct CmdlineInfo const cmdline) {
 
     initCanvas(cmdline.width, cmdline.height, &pam, &terrain);
 
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, cmdline.randomseedSpec, cmdline.randomseed);
+
     if (cmdline.test)
         plopCrater(&pam, terrain,
                    pam.width/2 + cmdline.offset,
                    pam.height/2 + cmdline.offset,
-                   (double) cmdline.radius, cmdline.verbose);
+                   (double) cmdline.radius, cmdline.verbose,
+                   &randSt);
     else {
         unsigned int const ncraters = cmdline.number; /* num of craters */
         unsigned int l;
 
         for (l = 0; l < ncraters; ++l) {
-            int const cx = cast((double) pam.width  - 1);
-            int const cy = cast((double) pam.height - 1);
+            int const cx = cast((double) pam.width  - 1, &randSt);
+            int const cy = cast((double) pam.height - 1, &randSt);
 
             /* Thanks, Rudy, for this equation that maps the uniformly
                distributed numbers from cast() into an area-law distribution
@@ -475,15 +484,19 @@ genCraters(struct CmdlineInfo const cmdline) {
                Produces values within the interval:
                0.56419 <= radius <= 56.419
             */
-            double const radius = sqrt(1 / (M_PI * (1 - cast(0.9999))));
+            double const radius =
+                sqrt(1 / (M_PI * (1 - cast(0.9999, &randSt))));
 
-            plopCrater(&pam, terrain, cx, cy, radius, cmdline.verbose);
+            plopCrater(&pam, terrain, cx, cy, radius,
+                       cmdline.verbose, &randSt);
 
             if (((l + 1) % 100000) == 0)
                 pm_message("%u craters generated of %u (%u%% done)",
                            l + 1, ncraters, ((l + 1) * 100) / ncraters);
         }
     }
+
+    pm_randterm(&randSt);
 
     pnm_writepam(&pam, terrain);
 
@@ -503,12 +516,9 @@ main(int argc, const char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
-
     genCraters(cmdline);
 
     return 0;
 }
-
 
 

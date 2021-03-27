@@ -27,7 +27,8 @@ pamexec "pbmtog3 -no | g3topbm" ${combined_pbm}  | cksum
 cat ${combined_pbm}  | cksum
 
 echo "Invalid command" 1>&2
-echo "Errors message should appear below the line." 1>&2
+echo "Executes quietly." 1>&2
+echo "Errors message should not appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 echo "Test Invalid: Should not print anything"

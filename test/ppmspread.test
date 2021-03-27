@@ -1,0 +1,12 @@
+#! /bin/bash
+# This script tests: ppmspread
+# Also requires: ppmtopgm pgmtopbm
+
+echo "Test 1. Should print 639729144 101484"
+ppmspread -randomseed=1 10 testimg.ppm | cksum
+
+echo "Test 2. Should print 3278353642 685"
+ppmspread -randomseed=1 1 testgrid.pbm | cksum
+
+echo "Test 3. Should print 2425386270 41"
+ppmspread -randomseed=1 0 testgrid.pbm | ppmtopgm | pgmtopbm | cksum

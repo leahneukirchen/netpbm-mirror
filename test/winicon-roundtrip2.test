@@ -7,7 +7,7 @@ tmpdir=${tmpdir:-/tmp}
 test_pam=${tmpdir}/testimg.pam
 test1_pam=${tmpdir}/testimg1.pam
 test2_pam=${tmpdir}/testimg2.pam
-#test3_pam=${tmpdir}/testimg3.pam
+
 test4_pam=${tmpdir}/testimg4.pam
 test5_pam=${tmpdir}/testimg5.pam
 black_pam=${tmpdir}/black.pam
@@ -19,6 +19,10 @@ gray_pam=${tmpdir}/gray.pam
 
 for sizes in "16 24 32 48 64" "16 32 48 256"
   do
+  if  echo $sizes | awk '{exit !($NF==64)}' ;
+  then echo "Should print: former checksum values";
+  else echo "Should print: latter checksum values";
+  fi
 
   for size in ${sizes}
     do
@@ -65,11 +69,11 @@ for sizes in "16 24 32 48 64" "16 32 48 256"
   pamstack ${gray_pam} ${gray_pam} | \
   pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | tee ${test2_pam} | cksum
   pamtowinicon ${test2_pam} | winicontopam -allimages | \
-    pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | cksum
+    pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | pamdepth 255 | cksum
   pamtowinicon -pngthreshold=300 ${test2_pam} | winicontopam -allimages | \
     pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | cksum
   pamtowinicon -pngthreshold=1   ${test2_pam} | winicontopam -allimages | \
-    pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | cksum
+    pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | pamdepth 255 | cksum
 
   rm ${test2_pam}
 

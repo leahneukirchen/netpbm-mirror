@@ -45,10 +45,10 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 #include "pammap.h"
-
 
 static time_t const timeUpdateDelta = 30;
     /* Seconds between progress updates */
@@ -67,6 +67,8 @@ struct cmdlineInfo {
     unsigned int all;
     float        power;
     unsigned int downsample;
+    unsigned int randomseedSpec;
+    unsigned int randomseed;
 };
 
 struct coords {
@@ -98,16 +100,18 @@ parseCommandLine(int argc, const char ** const argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
     option_def_index = 0;          /* Incremented by OPTENTRY */
 
-    OPTENT3(0, "bgcolor",    OPT_STRING, &cmdlineP->bgcolor,    
+    OPTENT3(0, "bgcolor",    OPT_STRING, &cmdlineP->bgcolor,
             &bgcolorSpec, 0);
     OPTENT3(0, "wrap",       OPT_FLAG,   NULL,
             &cmdlineP->wrap,       0);
     OPTENT3(0, "all",        OPT_FLAG,   NULL,
             &cmdlineP->all,        0);
-    OPTENT3(0, "power",      OPT_FLOAT,  &cmdlineP->power,      
+    OPTENT3(0, "power",      OPT_FLOAT,  &cmdlineP->power,
             &powerSpec, 0);
-    OPTENT3(0, "downsample", OPT_UINT,   &cmdlineP->downsample, 
+    OPTENT3(0, "downsample", OPT_UINT,   &cmdlineP->downsample,
             &downsampleSpec, 0);
+    OPTENT3(0, "randomseed", OPT_UINT,   &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = 0;
@@ -223,7 +227,9 @@ locatePaintSources(struct pam *            const pamP,
                    tuple **                const tuples,
                    tuple                   const bgColor,
                    unsigned int            const downsample,
-                   struct paintSourceSet * const paintSourcesP) {
+                   struct paintSourceSet * const paintSourcesP,
+                   bool                    const randomseedSpec,
+                   unsigned int            const randomseed) {
 /*--------------------------------------------------------------------
   Construct a list of all pixel coordinates in the input image that
   represent a non-background color.
@@ -248,21 +254,24 @@ locatePaintSources(struct pam *            const pamP,
     pm_message("Image contains %u background + %u non-background pixels",
                pamP->width * pamP->height - paintSources.size,
                paintSources.size);
-    
+
     /* Reduce the number of paint sources to reduce execution time. */
     if (downsample > 0 && downsample < paintSources.size) {
+        struct pm_randSt randSt;
         unsigned int i;
 
-        srand(pm_randseed());
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomseedSpec, randomseed);
 
         for (i = 0; i < downsample; ++i) {
             unsigned int const swapIdx =
-                i + rand() % (paintSources.size - i);
+                i + pm_rand(&randSt) % (paintSources.size - i);
             struct coords const swapVal = paintSources.list[i];
 
             paintSources.list[i] = paintSources.list[swapIdx];
             paintSources.list[swapIdx] = swapVal;
         }
+        pm_randterm(&randSt);
         paintSources.size = downsample;
     }
 
@@ -426,7 +435,7 @@ produceOutputImage(struct pam *          const pamP,
     for (row = 0; row < pamP->height; ++row) {
         struct coords   target;
         double        * newColor;
-        
+
         MALLOCARRAY(newColor, pamP->depth);
 
         target.y = row;
@@ -484,7 +493,8 @@ main(int argc, const char *argv[]) {
                pnm_colorname(&inPam, bgColor, PAM_COLORNAME_HEXOK));
 
     locatePaintSources(&inPam, inTuples, bgColor, cmdline.downsample,
-                       &paintSources);
+                       &paintSources,
+                       cmdline.randomseedSpec, cmdline.randomseed);
 
     produceOutputImage(&inPam, inTuples, bgColor, paintSources, distFunc,
                        cmdline.power, cmdline.all, &outTuples);
@@ -498,3 +508,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+

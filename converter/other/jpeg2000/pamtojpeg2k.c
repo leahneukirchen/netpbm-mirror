@@ -35,7 +35,7 @@ enum compmode {COMPMODE_INTEGER, COMPMODE_REAL};
 
 enum progression {PROG_LRCP, PROG_RLCP, PROG_RPCL, PROG_PCRL, PROG_CPRL};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -73,7 +73,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdline_p structure are actually in the supplied argv array.  And
@@ -372,9 +372,11 @@ convertToJasperImage(struct pam *   const inpamP,
 
 static void
 writeJpc(jas_image_t *      const jasperP,
-         struct cmdlineInfo const cmdline,
-         FILE *             const ofP) {
-
+         struct CmdlineInfo const cmdline,
+         int                const ofd) {
+/*----------------------------------------------------------------------------
+   Write the image *jasperP to open file 'ofd'.
+-----------------------------------------------------------------------------*/
     jas_stream_t * outStreamP;
     const char * options;
     const char * ilyrratesOpt;
@@ -459,7 +461,7 @@ writeJpc(jas_image_t *      const jasperP,
     pm_strfree(ilyrratesOpt);
 
     /* Open the output image file (Standard Output) */
-    outStreamP = jas_stream_fdopen(fileno(ofP), "w+b");
+    outStreamP = jas_stream_fdopen(ofd, "w+b");
     if (outStreamP == NULL)
         pm_error("Unable to open output stream.  jas_stream_fdopen() "
                  "failed");
@@ -500,7 +502,7 @@ writeJpc(jas_image_t *      const jasperP,
 int
 main(int argc, char **argv)
 {
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam;
     jas_image_t * jasperP;
@@ -526,7 +528,7 @@ main(int argc, char **argv)
 
     convertToJasperImage(&inpam, &jasperP);
 
-    writeJpc(jasperP, cmdline, stdout);
+    writeJpc(jasperP, cmdline, fileno(stdout));
 
 	jas_image_destroy(jasperP);
 

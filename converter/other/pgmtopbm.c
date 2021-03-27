@@ -17,6 +17,7 @@
 #include "pgm.h"
 #include "dithers.h"
 #include "mallocvar.h"
+#include "rand.h"
 
 enum halftone {QT_FS, QT_THRESH, QT_DITHER8, QT_CLUSTER, QT_HILBERT};
 
@@ -462,14 +463,19 @@ createFsConverter(unsigned int const cols,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, cols + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, cols + 2);
-    srand(randomSeedSpec ? randomSeed : pm_randseed());
 
     {
         /* (random errors in [-fs_scale/8 .. fs_scale/8]) */
         unsigned int col;
+        struct pm_randSt randSt;
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomSeedSpec, randomSeed);
+
         for (col = 0; col < cols + 2; ++col)
             stateP->thiserr[col] =
-                (long)(rand() % fs_scale - half_fs_scale) / 4;
+                (long)(pm_rand(&randSt) % fs_scale - half_fs_scale) / 4;
+
+        pm_randterm(&randSt);
     }
 
     stateP->fs_forward = TRUE;
