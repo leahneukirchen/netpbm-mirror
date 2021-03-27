@@ -2,7 +2,7 @@
 <html><head><title>Ppmforge User Manual</title></head>
 <body>
 <h1>ppmforge</h1>
-Updated: 25 October 1991
+Updated: 27 March 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -154,12 +154,11 @@ to 0.75.
 
 <dt><b>-dimension</b> <i>dimen</i>
 
-<dd> Sets the fractal dimension to the specified <i>dimen</i>, which
-may be any floating point value between 0 and 3.  Higher fractal
-dimensions create more ``chaotic'' images, which require higher
-resolution output and a larger FFT mesh size to look good.  If no
-dimension is specified, 2.4 is used when generating planets and 2.15
-for clouds.
+<dd> Sets the fractal dimension to the specified <i>dimen</i>, which may be
+any real number between 0 and 5 inclusive.  Higher fractal dimensions create
+more ``chaotic'' images, which require higher resolution output and a larger
+FFT mesh size to look good.  If no dimension is specified, the program uses
+2.4 when generating planets and 2.15 for clouds.
 
 <dt><b>-glaciers</b> <i>level</i>
 
