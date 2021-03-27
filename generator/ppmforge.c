@@ -34,6 +34,7 @@
 #define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
 #include <math.h>
+#include <float.h>
 #include <assert.h>
 
 #include "pm_c_util.h"
@@ -168,6 +169,11 @@ parseCommandLine(int argc, const char **argv,
     if (dimensionSpec) {
         if (cmdlineP->dimension <= 0.0)
             pm_error("-dimension must be greater than zero.  "
+                     "You specified %f", cmdlineP->dimension);
+        else if (cmdlineP->dimension > 5.0 + FLT_EPSILON)
+            pm_error("-dimension must not be greater than 5.  "
+                     "Results are not interesting with higher numbers, so "
+                     "we assume it is a mistake.  "
                      "You specified %f", cmdlineP->dimension);
     } else
         cmdlineP->dimension = cmdlineP->clouds ? 2.15 : 2.4;

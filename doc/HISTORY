@@ -19,6 +19,9 @@ not yet  BJH  Release 10.94.00
               pamexec: Issue message instead of being killed by a signal when
               the exec'ed program does not read the whole image"
 
+              ppmforge: Fail if -dimension is greater than 5, which is
+              useless.
+
               pamscale: Fix bogus "bad magic number" or similar failure most
               of the time with -nomix.  Broken since Netpbm 10.49 (December
               2009).
