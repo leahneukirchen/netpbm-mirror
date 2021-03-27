@@ -1,4 +1,8 @@
+#include <stdlib.h>
+
 #include "netpbm/rand.h"
+
+
 
 static void
 vinit(struct pm_randSt * const randStP) {

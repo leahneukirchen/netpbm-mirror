@@ -1,3 +1,9 @@
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
+#define _XOPEN_SOURCE 500  /* Make sure random() is in stdlib.h */
+#define _BSD_SOURCE  /* Make sure random() is in stdlib.h */
+
+#include <stdlib.h>
+
 #include "netpbm/rand.h"
 
 static void
