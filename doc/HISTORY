@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.03.30 BJH  Release 10.94.01
+
+              Add missing test files.
+
 21.03.27 BJH  Release 10.94.00
 
               Add pamhomography:  Thanks Scott Pakin.
