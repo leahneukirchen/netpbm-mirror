@@ -1,0 +1,99 @@
+Test 1.
+Should print: 2132901423 10015
+2132901423 10015
+Test 2.
+P2
+5 20
+9999
+1612 9302 6734 4585 4204
+5391 9429 3985 2298 7403
+2835 4565 740 4426 8239
+2720 519 8804 4697 8106
+3009 4609 4243 4039 746
+2626 2536 8553 8460 1771
+7212 4909 929 1418 4126
+2695 4553 893 8587 4728
+4844 7306 495 5920 2597
+8076 445 6934 5307 8902
+9058 5693 9660 3006 2222
+2786 6116 5227 1234 7006
+4839 1161 1026 3808 5152
+3250 4612 9652 7801 1673
+4425 7642 6209 5879 1891
+1326 2609 3880 4788 4008
+2678 1923 1099 1100 9586
+2873 7582 3983 1720 6969
+2059 8444 8154 2595 3247
+6536 8742 7111 4600 9344
+Test 3.
+1
+P2 16 1 1 1 0 1 0 0 1 0 0 0 0 1 0 1 1 1 1 2
+P2 16 1 2 1 2 0 2 1 1 2 2 2 0 2 0 1 2 1 0 3
+P2 16 1 3 1 1 2 0 0 1 3 3 1 0 0 3 2 2 2 1 4
+P2 16 1 4 0 4 4 3 3 3 1 1 4 2 3 4 1 3 3 0 5
+P2 16 1 5 1 5 0 2 1 1 5 5 5 0 2 3 4 5 1 0 6
+P2 16 1 6 0 3 4 3 3 6 0 5 0 3 4 6 5 5 2 5 7
+P2 16 1 7 5 4 0 2 7 3 0 6 2 5 5 5 6 1 0 4 8
+P2 16 1 8 4 5 0 5 7 1 2 5 8 0 2 3 1 8 4 0 9
+P2 16 1 9 5 9 4 8 3 3 1 1 9 2 8 9 6 3 3 0 10
+P2 16 1 10 0 3 5 0 3 1 5 1 0 0 9 1 4 5 5 6 11
+P2 16 1 11 1 11 0 8 7 1 11 5 11 0 8 9 4 11 1 0 12
+P2 16 1 12 6 9 3 1 6 1 7 2 12 9 1 0 9 11 12 1 13
+P2 16 1 13 7 3 4 10 3 13 7 5 7 10 4 13 12 5 9 12 14
+P2 16 1 14 10 14 9 8 13 13 11 11 14 12 8 9 1 8 13 0 15
+P2 16 1 15 5 2 4 15 1 12 10 6 11 14 0 8 7 4 15 15 16
+P2 16 1 16 2 9 15 8 14 7 7 16 5 5 16 2 4 6 1 14 255
+P2 16 1 255 37 244 193 106 235 128 71 255 140 47 103 184 72 20 188 238 65535
+P2 16 1 65535 62501 27329 33003 65351 12172 47207 5192 61116 32511 7 50057 8396 43723 19813 7813 65473 
+Test 4.
+1  stdin:	PGM raw, 1 by 10  maxval 1
+2  stdin:	PGM raw, 2 by 10  maxval 2
+3  stdin:	PGM raw, 3 by 10  maxval 3
+4  stdin:	PGM raw, 4 by 10  maxval 4
+5  stdin:	PGM raw, 5 by 10  maxval 5
+6  stdin:	PGM raw, 6 by 10  maxval 6
+7  stdin:	PGM raw, 7 by 10  maxval 7
+8  stdin:	PGM raw, 8 by 10  maxval 8
+9  stdin:	PGM raw, 9 by 10  maxval 9
+10  stdin:	PGM raw, 10 by 10  maxval 10
+11  stdin:	PGM raw, 11 by 10  maxval 11
+12  stdin:	PGM raw, 12 by 10  maxval 12
+13  stdin:	PGM raw, 13 by 10  maxval 13
+14  stdin:	PGM raw, 14 by 10  maxval 14
+15  stdin:	PGM raw, 15 by 10  maxval 15
+16  stdin:	PGM raw, 16 by 10  maxval 16
+30  stdin:	PGM raw, 30 by 10  maxval 30
+31  stdin:	PGM raw, 31 by 10  maxval 31
+32  stdin:	PGM raw, 32 by 10  maxval 32
+254  stdin:	PGM raw, 254 by 10  maxval 254
+255  stdin:	PGM raw, 255 by 10  maxval 255
+256  stdin:	PGM raw, 256 by 10  maxval 256
+65534  stdin:	PGM raw, 65534 by 10  maxval 65534
+65535  stdin:	PGM raw, 65535 by 10  maxval 65535
+Test 5.
+Should print four identical lines
+969759084 1682
+969759084 1682
+969759084 1682
+969759084 1682
+Test 6.
+First column should be 2^n - 1
+1 pgmnoise: method: pool
+3 pgmnoise: method: pool
+7 pgmnoise: method: pool
+15 pgmnoise: method: pool
+31 pgmnoise: method: pool
+63 pgmnoise: method: pool
+127 pgmnoise: method: pool
+255 pgmnoise: method: pool
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1
+Expected failure 10 1
