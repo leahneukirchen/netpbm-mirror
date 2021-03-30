@@ -2,6 +2,22 @@
 # This script tests: pgmnoise
 # Also requires:
 
+# These tests are for examining the integrity of the random number
+# generator.  There is some overlap between the tests here and tests
+# in pgmnoise.test, but the tests here are better focused for
+# diagnosing problems with the random number generator.
+#
+# Test 1 is for determining the kind of random number generator in
+# use.
+#
+# Test 2 prints random numbers in an output format close to what the
+# test in the original Mersenne Twister code produces.
+#
+# If these tests fail, subsequent tests which depend on random numbers
+# will fail too.  There is no provision (beyond remarks in the script
+# files) for generators other than the Mersenne Twister in those
+# tests.
+
 echo "Test 1: Should produce:"
 
 echo "P2"
@@ -42,9 +58,11 @@ perlPgmProcessorProgram='
 pgmnoise -randomseed=5489 -plain -maxval=65535 10 200 | tee /tmp/z |
   perl -walne "$perlPgmProcessorProgram"
 
+# The above outputs (10 * 200 / 2) = 1000 samples.
+
 #    Method to generate output for Test 2 from original
 #    Mersenne Twister source code
-
+#
 # Download Mersenne Twister code.  See lib/util/randmersenne.c for URL.
 # Edit mt19937ar.c:
 #   In function main() at bottom of file, replace
@@ -64,5 +82,5 @@ pgmnoise -randomseed=5489 -plain -maxval=65535 10 200 | tee /tmp/z |
 # The number of samples must be larger than 624 to ensure proper
 # generation in batches after the first.
 
-
-
+# If you encounter problems, adjust the 200 (rows) above and tweak
+# the code in mt19937ar.c accordingly to produce more random numbers.
