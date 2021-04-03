@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.95.00
 
+              Build: Don't attempt to build 'pamexec' on systems without
+              Unix process management.  Bug introduced in Netpbm 10.94
+              (March 2021).
+
 21.03.27 BJH  Release 10.94.00
 
               Add pamhomography:  Thanks Scott Pakin.

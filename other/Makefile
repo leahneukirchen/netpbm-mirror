@@ -28,6 +28,10 @@ PORTBINARIES = pamarith pambayer pamchannel pamdepth \
 	pamstack pamsummcol pamunlookup pamvalidate pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 
+ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
+  PORTBINARIES += pamexec
+endif
+
 ifneq ($(LINUXSVGALIB),NONE)
   PORTBINARIES += ppmsvgalib
 endif
