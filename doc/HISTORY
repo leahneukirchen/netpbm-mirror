@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.04.08 BJH  Release 10.94.02
+
+              Build: Fix build failure due to missing 'random' function on
+              Mingw platform.  Bug introduced in Netpbm 10.94 (March 2021).
+
+              Build: Don't attempt to build 'pamexec' on systems without
+              Unix process management.  Bug introduced in Netpbm 10.94
+              (March 2021).
+
 21.03.30 BJH  Release 10.94.01
 
               Add missing test files.
