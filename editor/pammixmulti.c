@@ -285,8 +285,8 @@ randomNormal2(double * const r1P,
     double u1, u2;
 
     do {
-        u1 = drand48();
-        u2 = drand48();
+        u1 = (double)rand() / RAND_MAX;
+        u2 = (double)rand() / RAND_MAX;
     }
     while (u1 <= DBL_EPSILON);
 

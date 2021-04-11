@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.04.11 BJH  Release 10.86.21
+
+              Build: fix failure of pammixmulti to compile for Mingw for lack
+              of drand48.  Always broken (pammixmulti was new in Netpbm 10.85
+              (December 2018)).
+
+              make package: fix no such file pcdovtoppm.exe failure on
+              Windows.
+
 21.03.21 BJH  Release 10.86.20
 
               pnmtopng: fix incorrect transparency in output when requesting
