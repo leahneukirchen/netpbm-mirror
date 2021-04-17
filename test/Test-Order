@@ -2,6 +2,7 @@
 
 all-in-place.test
 legacy-names.test
+random-generator.test
 
 # Generator tests
 
@@ -61,6 +62,7 @@ pnmtopnm-plain.test
 pamdepth.test
 
 pamditherbw.test
+pamditherbw-random.test
 pamhue.test
 
 pbmclean.test
@@ -77,7 +79,11 @@ ppmchange.test
 pambackground.test
 pnmpaste-pbm.test
 
+ppmshift.test
+ppmspread.test
+
 pbmpscale.test
+pamrecolor.test
 pnmremap1.test
 pnmremap2.test
 pnmquant.test
@@ -136,6 +142,7 @@ ppmdfont.test
 pamfix.test
 pamvalidate.test
 pamexec.test
+pbmlife.test
 
 # Round-trip tests : editors
 
@@ -157,6 +164,7 @@ pamhue-roundtrip.test
 
 # Round-trip tests: miscellaneous utilities
 
+pamendian-roundtrip.test
 pamexec-roundtrip.test
 channel-stack-roundtrip.test
 
