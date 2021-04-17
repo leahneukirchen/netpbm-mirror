@@ -2,7 +2,7 @@
 <html><head><title>Pamtris User Manual</title></head>
 <body>
 <h1>pamtris</h1>
-Updated: 05 November 2020
+Updated: 15 April 2021
 <p>
 <a href="#index">Table Of Contents</a>
 
@@ -231,108 +231,60 @@ directly for any serious drawing; you will probably want to use a general
 purpose programming language to generate a temporary <b>pamtris</b> command
 file.
 
-<p>For example, the <b>draw_pacman</b> procedure in the following C program
-generates <b>pamtris</b> instructions to produce a picture of NAMCO's Pac-Man,
-with custom colors, position, radius, orientation and mouth opening angle. It
-generates dozens of <b>vertex</b> commands tracing around the perimeter of a
-circle. (Note: The PAM image produced by piping the output of the below program
-into <b>pamtris</b> was subsequently downscaled through
-<b>pamscale&nbsp;-linear&nbsp;-xscale&nbsp;0.5&nbsp;-yscale&nbsp;0.5</b> to achieve
-an <a href="#antialias">anti-aliased</a> effect.)
+<p>For example, the <b>draw_polygon</b> procedure in the C program below
+outputs <b>pamtris</b> instructions to draw a regular polygon. It does this
+by generating a number of <b>vertex</b> instructions tracing around the
+perimeter of the corresponding circumscribed circle. (Note: The PAM image
+produced by piping the output of the below program into <b>pamtris</b> was
+subsequently downscaled through
+<b>pamscale&nbsp;-linear&nbsp;-xscale&nbsp;0.25&nbsp;-yscale&nbsp;0.25</b>
+to achieve an <a href="#antialias">anti-aliased</a> effect.)
 
 <p>
-<img alt="Pac-Man" src="pamtris_pacman.png">
+<img alt="Regular Polygons" src="pamtris_polygons.png">
 
 <pre>
-  <code>
-/* ------------------------------------
- * width       = 256
- * height      = 256
- * num_attribs = 3
- * tupletyple  = RGB_ALPHA
- * --------------------------------- */
+<code>
+/* ----------------------- *
+ * width       = 512       *
+ * height      = 512       *
+ * num_attribs = 3         *
+ * tupletype   = RGB_ALPHA *
+ * ----------------------- */
 
-#include &lt;stdint.h&gt;
-#include &lt;stdio.h&gt;
 #include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
 
 #define PI 3.14159265358979323844
 
-struct rgb_spec { uint8_t r, g, b; };
-
-void draw_pacman (
-  int const center_x,
-  int const center_y,
-  int const radius,
-  int const depth,
-  struct rgb_spec const inner_color,
-  struct rgb_spec const outer_color,
-  int const orientation,      /* &lt;-- Angle of mouth's horizontal axis, in
-                               * degrees. */
-  int const mouth_half_angle  /* &lt;-- Half angle between mouth's top and
-                               * bottom, in degrees. Use something between 0
-                               * and 180. */
-) {
-    double const ori_rad = PI*orientation/180;
-    double const mha_rad = PI*mouth_half_angle/180;
-
+void draw_polygon
+(int const center_x, int const center_y, int const radius, int const sides)
+{
     printf("mode fan\n"
-           "attr %d %d %d\n"
-           "vert %d %d %d\n"
-           "attr %d %d %d\n",
-           inner_color.r, inner_color.g, inner_color.b,
-           center_x,      center_y,              depth,
-           outer_color.r, outer_color.g, outer_color.b
-    );
+           "vertex %d %d 0\n", center_x, center_y);
 
+    for(int i = 0; i &lt;= sides; i++)
     {
-        double angle;
+        int const x = round(center_x + radius * cos(i*2.0*PI / sides));
+        int const y = round(center_y - radius * sin(i*2.0*PI / sides));
 
-        for(angle = mha_rad; angle &lt;= 2*PI - mha_rad; angle += 2*PI/360)
-        {
-            int const x = round(center_x + cos(ori_rad + angle) * radius);
-            int const y = round(center_y - sin(ori_rad + angle) * radius);
-
-            printf("vertex %d %d %d\n", x, y, depth);
-        }
+        printf("vertex %d %d 0\n", x, y);
     }
 }
 
 int main(void)
 {
-    struct rgb_spec const inner_colors[3] = {
-        {255, 255, 0}, {  0, 200, 255}, {0, 255, 80}
-    };
-    struct rgb_spec const outer_colors[3] = {
-        {255,  25, 0}, {200,   0, 255}, {0, 100, 10}
-    };
+    puts("attribs 0 185 80");       /* color: green   */
+    draw_polygon(300, 210, 150, 5); /* draws pentagon */
 
-    int i;
-
-    for(i = 0; i &lt; 3; i++)
-        draw_pacman(128 + cos(i*2*PI/3)*72, 128 - sin(i*2*PI/3)*72,
-                    58                    , 0                     ,
-                    inner_colors[i]       , outer_colors[i]       ,
-                    i*120                 , (3-i)*15
-        );
+    puts("attribs 255 15 240");     /* color: magenta */
+    draw_polygon(150, 320, 100, 7); /* draws heptagon */
 
     puts("!");
-
-    return 0;
 }
-
 </code>
 </pre>
-
-<p>Below are two other examples which demonstrate what else can be feasibly
-obtained through this meta-programming approach, especially when combining
-<b>pamtris</b> with other Netpbm programs (Earth texture from
-<a href="https://visibleearth.nasa.gov/view.php?id=73580">nasa.gov</a>):
-
-<p>
-<img alt="Isometric Rainbow Waves" src="pamtris_isowaves.gif">
-<img alt="Rotating Earth" src="pamtris_earth.gif">
-
 
 <h2 id="options">OPTIONS</h2>
 
@@ -375,7 +327,7 @@ which may be no longer than 255 characters.
 <p>The input instruction stream may override this with a <b>reset</b>
 command.
 
-<p>The default is an empty (null) string.
+<p>The default is a null string.
 
 <p>This option cannot be specified together with  <b>-rgb</b> or
 <b>-grayscale</b>.
@@ -493,9 +445,13 @@ instructs it to enter a drawing mode it is currently already in. One might
 use this approach to reset the current vertex list without changing the
 current drawing mode.
 
-<p><b>Regardless of the current drawing mode, a new triangle is immediately
-rasterized into the frame buffer as soon as the necessary vertices for it are
-provided through the current vertex list.</b>
+<p>Regardless of the current drawing mode, the program immediately rasterizes
+a new triangle into the frame buffer as soon as you provide the necessary
+vertices for it through the current vertex list. (If you reset the vertex list
+before giving all the vertices necessary to draw a new triangle, the program
+effectively discards from the list any vertices that might have been pushed
+into the vertex list up to that point without using them to draw any new
+triangles.)
 
 <p>In the following descriptions of each drawing mode, triangles' and
 vertices' indices (ordinal numbers) are 0-based.
@@ -504,10 +460,10 @@ vertices' indices (ordinal numbers) are 0-based.
 "TRIANGLES" drawing mode. While in this mode, a series of separate triangles
 is constructed. Every three vertices pushed into the current vertex list
 specify a new triangle.  Formally, this means that every
-<i>N<sup>th</sup></i> triangle is specified by vertices 3 * <i>N</i>, 3
-* <i>N</i> + 1, and 3 * <i>N</i> + 2. This is the default initial mode and is
-therefore not required to be set explicitly before drawing any triangles.
-
+<i>N<sup>th</sup></i> triangle is specified by vertices 3*<i>N</i>,
+3*<i>N</i>&nbsp;+&nbsp;1, and 3*<i>N</i>&nbsp;+&nbsp;2. This is the default
+initial mode and is therefore not required to be set explicitly before
+drawing any triangles.  
 
 <p>The <b>strip</b> argument instructs <b>pamtris</b> to enter the "STRIP"
 drawing mode.  While in this mode, <b>pamtris</b> constructs a "triangle
@@ -515,7 +471,7 @@ strip." That is, the first three vertices pushed into the current vertex
 list specify the first triangle, and every new vertex pushed after that
 specifies, together with the previous two, the next triangle. Formally, this
 means that every <i>N</i><sup>th</sup> triangle is specified by vertices
-<i>N</i>, <i>N</i> + 1, and <i>N</i> + 2.
+<i>N</i>, <i>N</i>&nbsp;+&nbsp;1, and <i>N</i>&nbsp;+&nbsp;2.
 
 <p>The <b>fan</b> argument instructs <b>pamtris</b> to enter the "FAN" 
 drawing mode.  While in this mode, a so-called "triangle fan" is constructed.
@@ -523,7 +479,7 @@ That is, the first three vertices pushed into the current vertex list specify
 the first triangle, and every new vertex pushed after that specifies, together
 with the previous vertex and the first one, the next triangle. Formally, this
 means that every <i>N</i><sup>th</sup> triangle is specified by vertices
-<i>0</i>, <i>N</i> + 1, and <i>N</i> + 2. 
+<i>0</i>, <i>N</i>&nbsp;+&nbsp;1, and <i>N</i>&nbsp;+&nbsp;2. 
 </dd>
 
 <dt>
@@ -602,7 +558,7 @@ otherwise the output images might look very wrong.  <i>w</i> was new in Netpbm
 10.85 (December 2018).
 
 <p>Consider the
-<a href="https://en.wikipedia.org/wiki/Viewing_frustum">
+<a href="https://en.wikipedia.org/wiki/Viewing_frustum" target="_tab">
 typical model</a> of the so-called "viewing frustum" used to project vertices
 in 3D "world space" onto a planar "image space." If we adopt the convention
 that a "z-plane" means any plane parallel to the view-plane (a.k.a. picture
@@ -725,12 +681,17 @@ providing the desired texture file as a "lookup table."  If you are drawing
 pictures in perspective, make sure to provide adequate values for the
 <i>w</i> parameter to your vertex commands
 (<a href="#cmd_vertex">see above</a>) so that the resulting samples in
-the images produced by <b>pamtris</b> are perspective-correct.
+the images produced by <b>pamtris</b> are perspective-correct. You might
+want to consider using <a href="pnmtile.html"><b>pnmtile</b></a> to make
+textures which are inteded to be "repeated" along triangle meshes.
 
-<p>You might want to consider using
-<a href="pnmtile.html"><b>pnmtile</b></a> to make textures which are
-inteded to be "repeated" along triangle meshes.
+<p> The animated GIF below is an example of what can be achieved using the
+technique described above (Earth texture from
+<a href="https://visibleearth.nasa.gov/view.php?id=73580" target="_tab">
+nasa.gov</a>).
 
+<p>
+<img alt="Rotating Earth" src="pamtris_earth.gif">
 
 <h3 id="antialias">Anti-aliased edges</h3>
 
@@ -741,8 +702,9 @@ the desired final size, and then, when all postprocessing is done,
 downscale the final image(s) to the desired size. Drawing images with
 twice the desired width and height, then downscaling them to the intended
 size while disregarding gamma (i.e. what <b>pamscale&nbsp;-linear</b> does)
-often produces good enough results.
-
+often produces good enough results; but the larger the ratio <i>
+"size&nbsp;of&nbsp;original&nbsp;image"&nbsp;/&nbsp;"size&nbsp;of&nbsp;downscaled&nbsp; image"
+</i>, the better the quality of the anti-aliasing effect.
 
 <h2 id="seealso">SEE ALSO</h2>
 
@@ -755,13 +717,6 @@ often produces good enough results.
 <b><a href="pamdepth.html">pamdepth</a></b>
 <b><a href="pamexec.html">pamexec</a></b>
 <b><a href="pam.html">pam</a></b>
-
-<h2 id="author">AUTHOR</h2>
-
-<b>pamtris</b> was originally written by
-<a href="mailto:lucaslunar32@hotmail.com">Lucas Brunno Luna</a>.
-The author is grateful to Bryan Henderson for offering suggestions regarding
-usability.
 
 <h2 id="history">HISTORY</h2>
 
@@ -783,7 +738,6 @@ usability.
 <li><a href="#instruction_code">INSTRUCTION CODE</a>
 <li><a href="#tips">TIPS</a>
 <li><a href="#seealso">SEE ALSO</a>
-<li><a href="#author">AUTHOR</a>
 <li><a href="#history">HISTORY</a>
 </ul>
 
