@@ -2,7 +2,7 @@
 #
 # makeman -- compile netpbm's stereotyped HTML to troff markup
 #
-# This approach works because we control the entire document universe 
+# This approach works because we control the entire document universe
 # this is going to convert and can reinforce useful stereotypes.
 #
 # The output of this tool uses cliches parseable by doclifter,
@@ -29,7 +29,7 @@
 # Version 1.1, February 11 2016
 #
 #   Added ability to process &mdash; &minus;
-#   Added footer message to clarify original source. 
+#   Added footer message to clarify original source.
 #
 
 import os, sys, re
@@ -151,7 +151,7 @@ def makeman(name, file, indoc):
     indoc = "\n".join(lines)
     indoc = re.sub(r"\s*\.sp", "\n.sp", indoc)
     # Format email addresses as italic
-    indoc = re.sub('(?i)<A[ \n]+HREF="mailto:[^>]+">([^<]+)</A>', r'\\fI\1\\fP', indoc)    
+    indoc = re.sub('(?i)<A[ \n]+HREF="mailto:[^>]+">([^<]+)</A>', r'\\fI\1\\fP', indoc)
     # Format manual cross-references
     def xrefmatch(match):
         xrefto = match.group(2)
@@ -200,7 +200,7 @@ def makeman(name, file, indoc):
     indoc = re.sub('(?i)<H2>([^><]*)</H2>', ".SH \\1", indoc)
     indoc = re.sub('(?i)<H3>([^><]*)</H3>', ".SS \\1", indoc)
     indoc = re.sub('(?i)<H4>([^><]*)</H4>', ".B \\1", indoc)
-    # 
+    #
     # Process definition lists -- just turn them into .TPs
     indoc = re.sub("(?i) *<DL *(COMPACT)?>", "", indoc)
     indoc = re.sub("(?i) *</DL>", "", indoc)
@@ -282,7 +282,7 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
         # First pass: gather locations for cross-references:
         sectmap = {}
         for file in arguments:
-            try: 
+            try:
                 infp = open(os.path.join(dirprefix, file))
             except:
                 sys.stderr.write("makeman: can't open %s\n" % file)
@@ -313,7 +313,7 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
                 LiftException("%s has two <HR> tags!" % file)
         # Second pass: do formatting
         for file in arguments:
-            try: 
+            try:
                 infp = open(os.path.join(dirprefix, file))
             except:
                 sys.stderr.write("makeman: can't open %s\n" % file)
