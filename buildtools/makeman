@@ -2,6 +2,15 @@
 #
 # makeman -- compile netpbm's stereotyped HTML to troff markup
 #
+# Example:
+#
+#    $ makeman pamcut.html pamcomp.html
+#
+#    $ makeman -v -d /tmp/inputdir pamcut.html
+#
+# The output troff file is in the same directory as the input HTML file, named
+# the same except with .1 extension.
+
 # This approach works because we control the entire document universe
 # this is going to convert and can reinforce useful stereotypes.
 #
@@ -9,10 +18,8 @@
 # which should thus be able to recover all the semantic information
 # it looks like this thing is losing.
 #
-# Known bugs:
-#  * Ordered lists are smashed into unordered lists
-#
 # Limitations:
+#  * Ordered lists are smashed into unordered lists
 #  * IMG tags are issued as .IMG preceded by a bolded caption containing
 #    the alt content.  This will only work if the page is formatted with
 #    mwww macros.
@@ -221,6 +228,9 @@ def makeman(name, file, indoc):
     # Acronyms
     indoc = re.sub('<acronym [a-zA-Z0-9:= \n"]*>', "", indoc)
     indoc = re.sub("</acronym>", "", indoc)
+    # Abbreviation - just erase tags
+    indoc = re.sub('<abbr [^>]+>', '', indoc)
+    indoc = re.sub('</abbr>', '', indoc)
     # Image tags
     indoc = re.sub(' *<img src="([^"]*)" alt="([^"]*)"( *[a-z]*="?[0-9]*"?)*>', ".B \\2\n.IMG -C \\1", indoc)
     # Special characters
@@ -248,6 +258,9 @@ def makeman(name, file, indoc):
     # Debugging
     #sys.stderr.write("Name: %s, Title: %s, Date: %s\n" % (name, title, date))
     # Time for error checking now
+    # We replaced every HTML tag we could above, so any remaining in
+    #   'indoc' represent material we don't know how to convert, which we call
+    #   bad lines.
     badlines = []
     for line in indoc.split("\n"):
         if "<" in line or ">" in line.replace(" >", "") or re.search(r'(?<!^\\)&.*;', line):
@@ -282,10 +295,12 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
         # First pass: gather locations for cross-references:
         sectmap = {}
         for file in arguments:
+            fullfilenm = os.path.join(dirprefix, file)
             try:
-                infp = open(os.path.join(dirprefix, file))
+                infp = open(fullfilenm)
             except:
-                sys.stderr.write("makeman: can't open %s\n" % file)
+                sys.stderr.write(
+                    "makeman: can't open input file '%s'\n" % fullfilenm)
                 continue
             indoc = infp.read()
             infp.close()
@@ -313,10 +328,12 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
                 LiftException("%s has two <HR> tags!" % file)
         # Second pass: do formatting
         for file in arguments:
+            fullfilenm = os.path.join(dirprefix, file)
             try:
-                infp = open(os.path.join(dirprefix, file))
+                infp = open(fullfilenm)
             except:
-                sys.stderr.write("makeman: can't open %s\n" % file)
+                sys.stderr.write(
+                    "makeman: can't open output file '%s'\n" % fullfilenm)
                 continue
             indoc = infp.read()
             infp.close()
