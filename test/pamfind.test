@@ -8,7 +8,7 @@ sorted1_res=${tmpdir}/pamfind_sorted1.res
 
 # Test 1
 echo "Test 1"
-pamfind -color=grey17     testimg.ppm 
+pamfind -color=grey17     testimg.ppm
 pamfind -target=210,57,41 testimg.ppm
 pamfind -target=50,55,49 -machine testimg.ppm
 
@@ -25,7 +25,7 @@ pamfind -target=1 testgrid.pbm | sort > ${sorted1_res}
 comm -3 ${sorted0_res}  ${sorted1_res}  |
   awk 'END {if (NR==226) print  "okay";
             else printf("failure (line count=%d)\n", NR)}'
-comm -12 ${sorted0_res}  ${sorted1_res} | 
+comm -12 ${sorted0_res}  ${sorted1_res} |
   awk '{print}; END { if(NR == 0) print  "okay";
             else printf("failure (line count=%d)\n", NR)}'
 
@@ -44,12 +44,21 @@ echo "-----------------------------------------------------------" 1>&2
 echo "Test Invalid"
 
 pamfind -color=black -target=1,1,1 testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
-pamfind -target=0,0 testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
-pamfind -target=0,0,0,0 testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
-pamfind testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
-rm ${test_out}
+pamfind -target=0,0 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pamfind -target=0,0,0,0 testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pamfind testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}

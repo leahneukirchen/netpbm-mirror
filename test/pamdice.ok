@@ -13,9 +13,14 @@ P1@1 1@0@
 P1@1 1@1@
 Test Invalid
 Expected failure 1
+Expected failure 1.rm
 Expected failure 2
+Expected failure 2.rm
 Expected failure 3
+Expected failure 3.rm
 Expected failure 4
+Expected failure 4.rm
 Expected failure 5
+Expected failure 5.rm
 Expected failure 6
-Expected failure (output files)
+Expected failure 6.rm

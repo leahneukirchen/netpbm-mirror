@@ -19,12 +19,16 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pbmpscale testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pbmpscale 0 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pbmpscale 2 3 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
-
-rm -f ${test_out}
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}

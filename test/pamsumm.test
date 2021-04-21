@@ -28,12 +28,21 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pamsumm -sum -min  testimg.ppm > ${test_out} || \
-   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
-pamsumm -sum -max  testimg.ppm > ${test_out} || \
-   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
-pamsumm -mean -max testimg.ppm > ${test_out} || \
-   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
-pamsumm            testimg.ppm > ${test_out} || \
-   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
-rm ${test_out}
+pamsumm -sum -max  testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pamsumm -mean -max testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pamsumm            testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}

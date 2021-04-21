@@ -18,7 +18,7 @@ for ((x=0; x<3; ++x))
 pamundice -across=3 -down=5 ${fname_stem}"_%1d_%1a".pgm | cksum
 
 ls ${fname_stem}_?_?.pgm | \
-    pamundice -across=3 -down=5 -listfile=- | cksum 
+    pamundice -across=3 -down=5 -listfile=- | cksum
 
 
 # Test 2.
@@ -30,7 +30,7 @@ for ((y=0; y<5; ++y))
   do
   pamundice -across=3 ${fname_stem}"_"$y"_%1a".pgm > ${tempfile}_"$y"
   done
- 
+
 pnmcat -tb ${tempfile}_[01234] | cksum
 rm ${tempfile}_[01234]
 
@@ -129,55 +129,78 @@ echo "-----------------------------------------------------------" 1>&2
 
 # No input file pattern specified
 pamundice -down=5 -across=2 > ${test_out} || \
-echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # -down=0
 pamundice -down=0 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # -across=0
 pamundice -down=5 -across=0 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # -down too large
 pamundice -down=6 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # -across too large
 pamundice -down=5 -across=3 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # precision does not match
 pamundice -down=5 -across=2 ${fname_stem}_"%2d"_"%2a".pbm > ${test_out} || \
-echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # precision set to zero
 pamundice -down=5 -across=2 ${fname_stem}_"%0d"_"%0a".pbm > ${test_out} || \
-echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # no precision
 pamundice -down=5 -across=2 ${fname_stem}_"%d"_"%a".pbm > ${test_out} || \
-echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # -hoverlap too large
 pamundice -down=5 -across=2 -hoverlap=18 \
   ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-echo -n "Expected failure 9"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # -voverlap too large
 pamundice -down=5 -across=2 -voverlap=19 \
   ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-echo -n "Expected failure 10"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # corrupt listfile : file names do not exist
 seq 10 | sed -e 's/^/::::::/' -e 's/$/::::::/' | \
   pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
-echo -n "Expected failure 11"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # listfile with insufficient lines (insufficient file entries)
 ls ${fname_stem}_*_*.pbm | head -n 9 | \
   pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
-echo -n "Expected failure 12"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 rm ${fname_stem}*.pbm
-

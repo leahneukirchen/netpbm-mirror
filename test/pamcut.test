@@ -59,51 +59,79 @@ echo "-----------------------------------------------------------" 1>&2
 
 # overspecification
 pamcut -left=1 -right=1 -width=14 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -top=1 -bottom=1 -height=16 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -right=1 -cropright=1 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -top=1 -croptop=1 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -bottom=1 -cropbottom=1 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -left=1 -cropleft=1 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # excessive cropping
 pamcut -cropleft=7 -cropright=8 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -left=7 -right=6 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -croptop=8 -cropbottom=8 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 9"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -top=10 -bottom=9 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # pad absent
 pamcut -cropleft=1 -width=14 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 10"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut -croptop=1  -height=16 testgrid.pbm > ${test_out} || \
-   echo -n "Expected failure 11"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 # legacy style: insufficient number of positional parameters
 pamcut 5 testimg.ppm > ${test_out} || \
-   echo -n "Expected failure 12"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut 5 4 testimg.ppm > ${test_out} || \
-   echo -n "Expected failure 13"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 13"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
 pamcut 5 5 30 testimg.ppm > ${test_out} || \
-   echo -n "Expected failure 14"; test -s ${test_out}; echo " "$?
-
-rm -f ${test_out}
+  echo -n "Expected failure 14"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
