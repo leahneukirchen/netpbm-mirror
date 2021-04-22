@@ -207,6 +207,7 @@ def makeman(name, file, indoc):
     indoc = re.sub('(?i)<H2>([^><]*)</H2>', ".SH \\1", indoc)
     indoc = re.sub('(?i)<H3>([^><]*)</H3>', ".SS \\1", indoc)
     indoc = re.sub('(?i)<H4>([^><]*)</H4>', ".B \\1", indoc)
+    indoc = re.sub('(?i)<H5>([^><]*)</H5>', ".B \\1", indoc)
     #
     # Process definition lists -- just turn them into .TPs
     indoc = re.sub("(?i) *<DL *(COMPACT)?>", "", indoc)
@@ -231,6 +232,9 @@ def makeman(name, file, indoc):
     # Abbreviation - just erase tags
     indoc = re.sub('<abbr [^>]+>', '', indoc)
     indoc = re.sub('</abbr>', '', indoc)
+    # Span - just erase tags
+    indoc = re.sub('(?i)<span [^>]+>', '', indoc)
+    indoc = re.sub('(?i)</span>', '', indoc)
     # Image tags
     indoc = re.sub(' *<img src="([^"]*)" alt="([^"]*)"( *[a-z]*="?[0-9]*"?)*>', ".B \\2\n.IMG -C \\1", indoc)
     # Special characters
