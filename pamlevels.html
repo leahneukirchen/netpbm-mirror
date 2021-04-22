@@ -52,23 +52,31 @@ intensity by a constant and preserves
 In the examples below, <code>\</code> denotes a line continuation:
 
 <p>To brighten an image by setting a darker white point&mdash;
-<pre>pamlevels -f1 black -t1 black \
--f2 white:0.9 -t2 white in.ppm &gt; out.ppm</pre>
+<pre>
+    pamlevels -f1 black -t1 black \
+      -f2 white:0.9 -t2 white in.ppm &gt; out.ppm
+</pre>
 
 <p>To adjust the white point&mdash;
 <pre>
-pamlevels -f1 black -t1 black\
--f2 rgbi:0.9/0.83/0.80 -t2 white in.ppm &gt; out.ppm</pre>
+    pamlevels -f1 black -t1 black \
+      -f2 rgbi:0.9/0.83/0.80 -t2 white in.ppm &gt; out.ppm
+</pre>
 
 <p>To set a lighter black point&mdash;
-<pre>pamlevels -f1 white:0.06 -t1 black
--f2 white -t2 white in.ppm &gt; out.ppm</pre>
+<pre>
+    pamlevels -f1 white:0.06 -t1 black \
+      -f2 white -t2 white in.ppm &gt; out.ppm
+</pre>
 
 <p>To increase brightness by compression&mdash;
-<pre>pamlevels \
--f1 black -t1 black -f2 white -t2 white \
--f3 white:0.5 -t3 white:0.6 in.ppm &gt; out.ppm</pre>
+<pre>
+    pamlevels \
+      -f1 black -t1 black -f2 white -t2 white \
+      -f3 white:0.5 -t3 white:0.6 in.ppm &gt; out.ppm
+</pre>
 The latter tranformation is similar to gamma-correction.
+
 
 <h2 id="options">OPTIONS</h2>
 
