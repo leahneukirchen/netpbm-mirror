@@ -253,7 +253,7 @@ def makeman(name, file, indoc):
     indoc = re.sub("(?i) *</table>.*", ".TE", indoc)
     # First the single-line case
     indoc = re.sub("(?i)</td> *<td>", "\t", indoc)
-    indoc = re.sub("(?i)<tr> *<td>", "", indoc)
+    indoc = re.sub("(?i)<tr> *<td( [^>]*)?>", "", indoc)
     indoc = re.sub("(?i)</td> *</tr>", "", indoc)
     # Then the multiline case
     indoc = re.sub(r'(?i)\s*<t[hd][^>]*>([^<\n]*)</t[dh]>\s*', '\t\\1', indoc)
