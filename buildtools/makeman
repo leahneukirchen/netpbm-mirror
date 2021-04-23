@@ -117,7 +117,7 @@ def makeman(name, file, indoc):
     indoc = ('.TH "%s" %d "%s" "%s"\n' % (title,section,date,source)) + indoc
     # Literal layout
     indoc = re.sub("(?i)\n *<PRE>", "\n.nf", indoc)
-    indoc = re.sub("(?i)\n *</PRE>", "\n.fi", indoc)
+    indoc = re.sub("(?i) *</PRE>\n", "\n.fi\n", indoc)
     indoc = re.sub("(?i)\n *<BLOCKQUOTE>", "\n.RS", indoc)
     indoc = re.sub("(?i)\n *</BLOCKQUOTE>", "\n.RE", indoc)
     # Highlight processing
@@ -232,6 +232,9 @@ def makeman(name, file, indoc):
     # Abbreviation - just erase tags
     indoc = re.sub('<abbr [^>]+>', '', indoc)
     indoc = re.sub('</abbr>', '', indoc)
+    # Subscript - just erase tags
+    indoc = re.sub('(?i)<sub [^>]+>', '', indoc)
+    indoc = re.sub('(?i)</sub>', '', indoc)
     # Span - just erase tags
     indoc = re.sub('(?i)<span [^>]+>', '', indoc)
     indoc = re.sub('(?i)</span>', '', indoc)
