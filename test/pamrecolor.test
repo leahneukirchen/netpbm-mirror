@@ -26,34 +26,37 @@ echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pamrecolor --targetcolor=rgb:00/11/22 --colorfile={base1_pgm} testimg.ppm > ${test_out} || \
+pamrecolor --targetcolor=rgb:00/11/22 \
+           --colorfile=${base1_pgm} testimg.ppm > ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
-pamrecolor --rmult=0.3  --gmult=0.3  --bmult=0.3 --colorfile={base1_pgm} testimg.ppm > ${test_out} || \
+pamrecolor --rmult=0.3  --gmult=0.3  --bmult=0.3 \
+           --colorfile=${base1_pgm} testimg.ppm > ${test_out} || \
   echo -n "Expected failure 2"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
-pamrecolor --colorspace=void --targetcolor=rgb:80/80/80 testimg.ppm > ${test_out} || \
+pamrecolor --colorspace=void \
+           --targetcolor=rgb:80/80/80 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 3"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamrecolor --targetcolor=vague testimg.ppm > ${test_out} || \
   echo -n "Expected failure 4"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamrecolor --colorfile=${truncated_file} testimg.ppm > ${test_out} || \
   echo -n "Expected failure 5"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamrecolor --rmult=0.2989 --gmult=0.5866 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 6"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 rm ${base_pgm} ${truncated_file}

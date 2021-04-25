@@ -90,124 +90,124 @@ echo "-----------------------------------------------------------" 1>&2
 
 echo "Test Invalid"
 
-output_ppm=${tmpdir}/output.ppm
+test_out=${tmpdir}/test_out
 
-pamfunc -multiplier testimg.ppm > ${output_ppm} || \
+pamfunc -multiplier testimg.ppm > ${test_out} || \
   echo -n "Expected failure 1"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -multiplier=-1 testimg.ppm > ${output_ppm} || \
+pamfunc -multiplier=-1 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 2"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -divisor testimg.ppm > ${output_ppm} || \
+pamfunc -divisor testimg.ppm > ${test_out} || \
   echo -n "Expected failure 3"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -divisor=-20 testimg.ppm > ${output_ppm} || \
+pamfunc -divisor=-20 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 4"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -adder testimg.ppm > ${output_ppm} || \
+pamfunc -adder testimg.ppm > ${test_out} || \
   echo -n "Expected failure 5"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -adder 0.5 testimg.ppm > ${output_ppm} || \
+pamfunc -adder 0.5 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 6"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -subtractor testimg.ppm > ${output_ppm} || \
+pamfunc -subtractor testimg.ppm > ${test_out} || \
   echo -n "Expected failure 7"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -subtractor 0.1 testimg.ppm > ${output_ppm} || \
+pamfunc -subtractor 0.1 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 8"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -multiplier=1 -divisor=2 testimg.ppm > ${output_ppm} || \
+pamfunc -multiplier=1 -divisor=2 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 9"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -adder=2 -subtractor=3 testimg.ppm > ${output_ppm} || \
+pamfunc -adder=2 -subtractor=3 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 10"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -min testimg.ppm > ${output_ppm} || \
+pamfunc -min testimg.ppm > ${test_out} || \
   echo -n "Expected failure 11"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -max testimg.ppm > ${output_ppm} || \
+pamfunc -max testimg.ppm > ${test_out} || \
   echo -n "Expected failure 12"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -andmask testimg.ppm > ${output_ppm} || \
+pamfunc -andmask testimg.ppm > ${test_out} || \
   echo -n "Expected failure 13"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -ormask testimg.ppm > ${output_ppm} || \
+pamfunc -ormask testimg.ppm > ${test_out} || \
   echo -n "Expected failure 14"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -xormask testimg.ppm > ${output_ppm} || \
+pamfunc -xormask testimg.ppm > ${test_out} || \
   echo -n "Expected failure 15"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -not 1 testimg.ppm > ${output_ppm} || \
+pamfunc -not 1 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 16"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -min=1 -max=2 testimg.ppm > ${output_ppm} || \
+pamfunc -min=1 -max=2 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 17"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -andmask=1 -ormask=0 testimg.ppm > ${output_ppm} || \
+pamfunc -andmask=1 -ormask=0 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 18"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -andmask=0xffff testimg.ppm > ${output_ppm} || \
+pamfunc -andmask=0xffff testimg.ppm > ${test_out} || \
   echo -n "Expected failure 19"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -shiftleft testimg.ppm > ${output_ppm} || \
+pamfunc -shiftleft testimg.ppm > ${test_out} || \
   echo -n "Expected failure 20"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -shiftright testimg.ppm > ${output_ppm} || \
+pamfunc -shiftright testimg.ppm > ${test_out} || \
   echo -n "Expected failure 21"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -changemaxval testimg.ppm > ${output_ppm} || \
+pamfunc -changemaxval testimg.ppm > ${test_out} || \
   echo -n "Expected failure 22"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -shiftleft=1 -shiftright=1 testimg.ppm > ${output_ppm} || \
+pamfunc -shiftleft=1 -shiftright=1 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 23"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-pamfunc -multiplier=0.5 -changemaxval=65535 testimg.ppm > ${output_ppm} || \
+pamfunc -multiplier=0.5 -changemaxval=65535 testimg.ppm > ${test_out} || \
   echo -n "Expected failure 24"
-  test -s ${output_ppm}; echo " "$?
+  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
