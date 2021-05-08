@@ -11,6 +11,8 @@ not yet  BJH  Release 10.95.00
               Always broken (pamtogif was new in Netpbm 10.37 (December 2006).
               Thanks Karol Kosek <krkk@krkk.ct8.pl>.
 
+              ppmtogif: Same as 'pamtogif' fix above, but with -alpha option.
+              
               Build: Fix build failure due to missing 'random' function on
               Mingw platform.  Bug introduced in Netpbm 10.94 (March 2021).
 
