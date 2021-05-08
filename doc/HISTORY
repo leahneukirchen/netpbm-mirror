@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.05.08 BJH  Release 10.94.03
+
+              pamtogif: Fix failure with bogus message about wrong depth with
+              grayscale and black and white PAM images with transparency.
+              Always broken (pamtogif was new in Netpbm 10.37 (December 2006).
+              Thanks Karol Kosek <krkk@krkk.ct8.pl>.
+
 21.04.08 BJH  Release 10.94.02
 
               Build: Fix build failure due to missing 'random' function on
