@@ -6,25 +6,17 @@
    Bryan got the base from
    http://www.ijs.si/software/snprintf/snprintf-2.2.tar.gz, but made
    a lot of changes and additions.
+   The code from ww.ijs.si was written by
 
- * AUTHOR
- *   Mark Martinec <mark.martinec@ijs.si>, April 1999.
- *
- *   Copyright 1999, Mark Martinec. All rights reserved.
- *
- * TERMS AND CONDITIONS
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the "Frontier Artistic License" which comes
- *   with this Kit.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty
- *   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *   See the Frontier Artistic License for more details.
- *
- *   You should have received a copy of the Frontier Artistic License
- *   with this Kit in the file named LICENSE.txt .
- *   If not, I'll be glad to provide one.
+     Mark Martinec <mark.martinec@ijs.si>
+
+   in April 1999 and June 2000.  Martinec claims copyright as of 1999, 2000,
+   2001, and 2002 and licenses the code to Netpbm maintainers and users (as
+   members of the public) under the GNU General Public License.
+
+   All other authors likewise license this code to the public under the
+   GNU General Public license.
+
  *
  * FEATURES
  * - careful adherence to specs regarding flags, field width and precision;

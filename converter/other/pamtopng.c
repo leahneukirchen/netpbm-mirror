@@ -287,7 +287,17 @@ colorTypeFromInputType(const struct pam * const pamP) {
             pm_error("Input tuple type is GRAYSCALE, "
                      "but number of planes is %u instead of 1",
                      pamP->depth);
-    } else if (strneq(pamP->tuple_type, "BLACKANDWHITE", 3)) {
+     } else if (strneq(pamP->tuple_type, "BLACKANDWHITE_ALPHA", 19)) {
+        if (pamP->depth != 2)
+            pm_error("Input tuple type is BLACKANDWHITE_ALPHA, "
+                     "but number of planes is %u instead of 2",
+                     pamP->depth);
+        if (pamP->maxval != 1)
+            pm_error("Input tuple type is BLACKANDWHITE_ALPHA, "
+                     "but maxval is %u instead of 1", (unsigned)pamP->maxval);
+
+        retval = PNG_COLOR_TYPE_GRAY_ALPHA;
+    } else if (strneq(pamP->tuple_type, "BLACKANDWHITE", 13)) {
         if (pamP->depth != 1)
             pm_error("Input tuple type is BLACKANDWHITE, "
                      "but number of planes is %u instead of 1",
@@ -785,7 +795,8 @@ pngBitDepth(unsigned int const pnmBitDepth,
     unsigned int retval;
 
     if ((pngColorType == PNG_COLOR_TYPE_RGB ||
-         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA) &&
+         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA ||
+         pngColorType == PNG_COLOR_TYPE_GRAY_ALPHA) &&
         pnmBitDepth < 8) {
 
         retval = 8;
