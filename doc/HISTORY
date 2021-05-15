@@ -6,9 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.95.00
 
+              pamtopng: Fix rejection of all BLACKANDWHITE_ALPHA images
+              with message about wrong depth.  Always broken (pamtopng
+              was new in Netpbm 10.71 (June 2015)),
+
               pamtogif: Fix failure with bogus message about wrong depth with
               grayscale and black and white PAM images with transparency.
-              Always broken (pamtogif was new in Netpbm 10.37 (December 2006).
+              Always broken (pamtogif was new in Netpbm 10.37 (December 2006)).
               Thanks Karol Kosek <krkk@krkk.ct8.pl>.
 
               ppmtogif: Same as 'pamtogif' fix above, but with -alpha option.

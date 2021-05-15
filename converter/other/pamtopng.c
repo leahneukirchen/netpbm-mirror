@@ -287,6 +287,16 @@ colorTypeFromInputType(const struct pam * const pamP) {
             pm_error("Input tuple type is GRAYSCALE, "
                      "but number of planes is %u instead of 1",
                      pamP->depth);
+     } else if (strneq(pamP->tuple_type, "BLACKANDWHITE_ALPHA", 19)) {
+        if (pamP->depth != 2)
+            pm_error("Input tuple type is BLACKANDWHITE_ALPHA, "
+                     "but number of planes is %u instead of 2",
+                     pamP->depth);
+        if (pamP->maxval != 1)
+            pm_error("Input tuple type is BLACKANDWHITE_ALPHA, "
+                     "but maxval is %u instead of 1", (unsigned)pamP->maxval);
+
+        retval = PNG_COLOR_TYPE_GRAY_ALPHA;
     } else if (strneq(pamP->tuple_type, "BLACKANDWHITE", 3)) {
         if (pamP->depth != 1)
             pm_error("Input tuple type is BLACKANDWHITE, "
