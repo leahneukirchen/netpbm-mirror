@@ -11,6 +11,10 @@ not yet  BJH  Release 10.95.00
               Netpbm 10.71 (June 2015)).  Thanks Karol Kosek
               <krkk@krkk.ct8.pl>.
 
+              pamtopng: Fix failure with GRAYSCALE_ALPHA images with maxval
+              less than 255.  Always broken (pamtopng was new in Netpbm 10.71
+              (June 2015)).  Thanks Karol Kosek <krkk@krkk.ct8.pl>.
+              
               pamtopng: Fix: treats all tuple types that start with BLA as
               BLACKANDWHITE.  Always broken (pamtopng was new in Netpbm 10.71
               (June 2015)).

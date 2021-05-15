@@ -795,7 +795,8 @@ pngBitDepth(unsigned int const pnmBitDepth,
     unsigned int retval;
 
     if ((pngColorType == PNG_COLOR_TYPE_RGB ||
-         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA) &&
+         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA ||
+         pngColorType == PNG_COLOR_TYPE_GRAY_ALPHA) &&
         pnmBitDepth < 8) {
 
         retval = 8;
