@@ -14,7 +14,14 @@
 
 SOURCE_DATE_OR_NONE=${SOURCE_DATE_EPOCH:-NONE}
 
-BUILD_DATETIME=$(date +%s)
+NOW_FROM_DATE_PGM=$(date +%s)
+if [ "$NOW_FROM_DATE_PGM" = "%s" ]; then
+    # This system's 'date' doesn't know %s.  (Solaris 10 for example).
+    # Try Perl
+    BUILD_DATETIME=$(perl -e 'print time()')
+else
+    BUILD_DATETIME=$NOW_FROM_DATE_PGM
+fi
 
 LOGNAME_OR_UNKNOWN=${LOGNAME:-UNKNOWN}
 USER=${USER:-$LOGNAME_OR_UNKNOWN}
