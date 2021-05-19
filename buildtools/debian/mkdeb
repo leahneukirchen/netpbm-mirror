@@ -89,13 +89,7 @@ sub netpbmVersion($) {
     } else {
         my $version = <VERSION>;
         chomp($version);
-
-        if ($version =~ m{^Netpbm (\S*)}) {
-            my ($versionNumber) = ($1);
-            $retval = $versionNumber;
-        } else {
-            die("Can't understand format of '$versionFileName': '$version'");
-        }
+        $retval = $version;
         close(VERSION);
     }
 

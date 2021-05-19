@@ -37,6 +37,9 @@ not yet  BJH  Release 10.95.00
               in Netpbm 10.78 (March 2017).  Thanks Claes Nästén
               (pekdon@gmail.com).
 
+              Mkdeb: fix failure with message about unrecognized format of
+              VERSION file.  Introduced in Netpbm 10.90 (March 2020).
+
 21.03.27 BJH  Release 10.94.00
 
               Add pamhomography:  Thanks Scott Pakin.
@@ -299,7 +302,7 @@ not yet  BJH  Release 10.95.00
               won't accept it.
 
               Install: Use e.g. "10.90.00" for version in pkg-config and
-              config file, intead of e.g. "Netpbm 10.90.00".
+              config file, instead of e.g. "Netpbm 10.90.00".
 
 19.12.29 BJH  Release 10.89.00
 
