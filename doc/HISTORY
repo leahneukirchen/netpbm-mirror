@@ -18,7 +18,11 @@ not yet  BJH  Release 10.95.00
               pamtopng: Fix: treats all tuple types that start with BLA as
               BLACKANDWHITE.  Always broken (pamtopng was new in Netpbm 10.71
               (June 2015)).
-              
+
+              pamtopng: Fix -transparent option - program recognized
+              -transparency instead.  Always broken (pamtopng was new in
+              Netpbm 10.71 (June 2015)).
+
               pamtogif: Fix failure with bogus message about wrong depth with
               grayscale and black and white PAM images with transparency.
               Always broken (pamtogif was new in Netpbm 10.37 (December 2006)).
