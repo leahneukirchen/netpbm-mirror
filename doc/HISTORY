@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.05.26 BJH  Release 10.94.05
+
+              pamtopng: Fix -transparent option - program recognized
+              -transparency instead.  Always broken (pamtopng was new in
+              Netpbm 10.71 (June 2015)).
+
+              Build: make it work on systems that don't have date +%s.  Broken
+              in Netpbm 10.78 (March 2017).  Thanks Claes Nästén
+              (pekdon@gmail.com).
+
+              Mkdeb: fix failure with message about unrecognized format of
+              VERSION file.  Introduced in Netpbm 10.90 (March 2020).
+
 21.05.15 BJH  Release 10.94.04
 
               pamtopng: Fix rejection of all BLACKANDWHITE_ALPHA images with
@@ -18,7 +31,7 @@ CHANGE HISTORY
               pamtopng: Fix: treats all tuple types that start with BLA as
               BLACKANDWHITE.  Always broken (pamtopng was new in Netpbm 10.71
               (June 2015)).
-              
+
 21.05.08 BJH  Release 10.94.03
 
               pamtogif: Fix failure with bogus message about wrong depth with
@@ -301,7 +314,7 @@ CHANGE HISTORY
               won't accept it.
 
               Install: Use e.g. "10.90.00" for version in pkg-config and
-              config file, intead of e.g. "Netpbm 10.90.00".
+              config file, instead of e.g. "Netpbm 10.90.00".
 
 19.12.29 BJH  Release 10.89.00
 
