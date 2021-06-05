@@ -132,7 +132,9 @@ command line options:
 
 <dt><b>-transparent=</b><i>color</i>
 <dd>
-<b>pamtopng</b> marks the specified color as transparent in the PNG image.
+<b>pamtopng</b> marks the specified color as transparent in the PNG image --
+Every pixel of this color is fully transparent.  This causes <b>pamtopng</b> to
+include a tRNS chunk in the image identifying that color.
 <p>Specify the color (<i>color</i>) as described for
 the <a href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.  E.g. <b>red</b> or <b>rgb:ff/00/0d</b>.

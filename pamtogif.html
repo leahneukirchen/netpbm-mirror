@@ -2,7 +2,7 @@
 <html><head><title>Pamtogif User Manual</title></head>
 <body>
 <h1>pamtogif</h1>
-Updated: 22 March 2007
+Updated: 05 June 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -62,12 +62,12 @@ that were new with GIF89, to wit the <b>-transparent</b> or
 <b>-comment</b> options.  Otherwise, it creates GIF87.  Really old GIF
 readers conceivably could not recognize GIF89.
 
-<p>The GIF format is not capable of representing an image with more than
-256 colors in it (it contains a color map with a maximum size of 256).
-If the image you want to convert has more colors than that (<b>ppmhist</b>
-can tell you), you can use <b>pnmquant</b> to reduce it to 256.  Or
-use the more complex but faster method described under the <b>-mapfile</b>
-option.
+<p><b>pamtogif</b> generates a GIF image with a single image block, which
+means the image cannot have more than 256 colors in it (it contains a single
+color map with a maximum size of 256).  If the image you want to convert has
+more colors than that (<b>ppmhist</b> can tell you), you can
+use <b>pnmquant</b> to reduce it to 256.  Or use the more complex but faster
+method described under the <b>-mapfile</b> option.
 
 <p>If your input image is a PAM with transparency information, <b>ppmtogif</b>
 uses one entry in the GIF colormap specifically for the transparent pixels,
@@ -172,7 +172,7 @@ in RGB space.  If multiple colors are equidistant, <b>pamtogif</b>
 chooses one of them arbitrarily.
 
 <p>However, if you prefix your color specification with "=",
-e.g.  <b>-transparent==red</b>, only the exact color you specify will
+e.g. <b>-transparent==red</b>, only the exact color you specify will
 be transparent.  If that color does not appear in the image, there
 will be no transparency.  <b>pamtogif</b> issues an information
 message when this is the case.
@@ -180,30 +180,6 @@ message when this is the case.
 <p>When you specify <b>-transparent</b>, <b>pamtogif</b> ignores
 explicit transparency information (the "alpha channel") in
 the input image.
-
-<dt><b>-alpha=</b><i>pgmfile</i>
-
-<dd>There is no <b>-alpha</b> option.  <b>pamtogif</b>'s predecessor had
-such an option because it was not capable of taking PAM input that contains
-a transparency (alpha) plane, so one used this option to supply a
-transparency plane as a separate PGM file.
-
- This option names a PGM file that contains a transparency mask for the
-image.  <b>pamtogif</b> creates fully transparent pixels wherever the
-transparency mask indicates transparency greater than 50%.  The color of
-those pixels is that specified by the <b>-alphacolor</b>
-option, or black by default.
-
-<p>To do this, <b>pamtogif</b> creates an entry in the GIF colormap in
-addition to the entries for colors that are actually in the image.  It
-marks that colormap entry as transparent and uses that colormap index
-in the output image to create a transparent pixel.
-
-<p> The transparency image must be the same dimensions as the input
-image, but may have any maxval.  White means opaque and black means
-transparent.
-
-<p> You cannot specify both <b>-transparent</b> and <b>-alpha</b>.  
 
 <dt><b>-alphacolor=</b><i>color</i>
 
