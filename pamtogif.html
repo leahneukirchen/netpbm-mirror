@@ -2,7 +2,7 @@
 <html><head><title>Pamtogif User Manual</title></head>
 <body>
 <h1>pamtogif</h1>
-Updated: 05 June 2021
+Updated: 09 June 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -56,11 +56,14 @@ multiple GIF images into an animated GIF, use <a
 href="http://www.lcdf.org/gifsicle/"><b>gifsicle</b></a> (not part of
 the Netpbm package).
 
-<p><b>pamtogif</b> creates either an original GIF87 format GIF file or
-the newer GIF89 format.  It creates GIF89 when you request features
-that were new with GIF89, to wit the <b>-transparent</b> or
-<b>-comment</b> options.  Otherwise, it creates GIF87.  Really old GIF
-readers conceivably could not recognize GIF89.
+<p><b>pamtogif</b> creates either an original GIF87 format GIF file or the
+  newer GIF89 format.  It creates GIF89 when the output needs to have features
+  that were new with GIF89, to wit transparency or comments.  Otherwise, it
+  creates GIF87.  Really old GIF readers conceivably could not recognize
+  GIF89.  The output needs to have transparency when either the input has a
+  transparency information or you specify the <b>-transparent</b> option.  It
+  needs to have comments when you specify the
+  <b>-comment</b> option.
 
 <p><b>pamtogif</b> generates a GIF image with a single image block, which
 means the image cannot have more than 256 colors in it (it contains a single
@@ -69,11 +72,21 @@ more colors than that (<b>ppmhist</b> can tell you), you can
 use <b>pnmquant</b> to reduce it to 256.  Or use the more complex but faster
 method described under the <b>-mapfile</b> option.
 
-<p>If your input image is a PAM with transparency information, <b>ppmtogif</b>
+<p>If your input image is a PAM with transparency information, <b>pamtogif</b>
 uses one entry in the GIF colormap specifically for the transparent pixels,
 so you can have at most 255 opaque colors.  In contrast, if you use the
 <b>-transparent</b> option, one of the colors from the input becomes
 transparent, so the limit is still 256.
+
+<p><b>pamtogif</b> recognizes transparency information in the input by the
+  tuple type being <b>RGB_ALPHA</b>, <B>GRAYSCALE_ALPHA</B>, or
+  <b>BLACKANDWHITE_ALPHA</b>.  This is the case for any image that has
+  transparency information and was created by a Netpbm program that
+  manipulates visual images.  If, on the other hand, you have a PAM generated
+  some other way, but you know the planes have the same meaning as implied by
+  these tuple types, you can make <b>pamtogif</b> process the transparency
+  information by changing the tuple type accordingly before you pass it
+  to <b>pamtogif</b>.  You can use <b>pamstack</b> to change the tuple type.
 
 <p><b>pamtogif</b> was new in Netpbm 10.37 (December 2006).  In older Netpbm,
 use <b>ppmtogif</b>.
