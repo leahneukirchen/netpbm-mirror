@@ -2489,6 +2489,14 @@ if ($platform eq "GNU") {
     push(@config_mk, "CC = cc -no-cpp-precomp\n");
     push(@config_mk, gnuCflags('cc'));
     push(@config_mk, 'CFLAGS_SHLIB = -fno-common', "\n");
+    # -D_DARWIN_SOURCE is a hack.  We've seen build fail on MacOS because the
+    # C library erroneously neglects to include 'sprintf' and 'vasprintf' in
+    # <stdio.h> under the conditions under which Netpbm includes it.
+    # -D_DARWIN_SOURCE makes it include them.  *_SOURCE macros are supposed to
+    # be defined in the source code to which they apply, but since this is
+    # just a hack, we prefer to do it with a compiler option and leave the
+    # source code unsullied.
+    push(@config_mk, "CFLAGS += -D_DARWIN_SOURCE\n");
 
     my $installNameOpt;
     if ($netpbmlib_runtime_path eq '') {

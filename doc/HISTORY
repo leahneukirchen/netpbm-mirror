@@ -37,10 +37,13 @@ not yet  BJH  Release 10.95.00
               Unix process management.  Bug introduced in Netpbm 10.94
               (March 2021).
 
-              Build: make it work on systems that don't have date +%s.  Broken
+              Build: Make it work on systems that don't have date +%s.  Broken
               in Netpbm 10.78 (March 2017).  Thanks Claes Nästén
               (pekdon@gmail.com).
 
+              Build: Fix for MacOS build failures with missing sprintf and
+              vasprintf in broken build environment.
+              
               Mkdeb: fix failure with message about unrecognized format of
               VERSION file.  Introduced in Netpbm 10.90 (March 2020).
 
