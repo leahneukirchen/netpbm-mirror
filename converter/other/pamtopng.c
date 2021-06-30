@@ -61,8 +61,8 @@ static bool verbose;
 struct CmdlineInfo {
     const char * inputFileName;
     unsigned int verbose;
-    unsigned int transparencySpec;
-    const char * transparency;
+    unsigned int transparentSpec;
+    const char * transparent;
     unsigned int chromaSpec;
     struct pngx_chroma chroma;
     unsigned int gammaSpec;
@@ -205,8 +205,8 @@ parseCommandLine (int                  argc,
 
     OPTENT3(0,  "verbose",      OPT_FLAG,       NULL,
             &cmdlineP->verbose,        0);
-    OPTENT3(0,  "transparency", OPT_STRING,     &cmdlineP->transparency,
-            &cmdlineP->transparencySpec, 0);
+    OPTENT3(0,  "transparent", OPT_STRING,      &cmdlineP->transparent,
+            &cmdlineP->transparentSpec, 0);
     OPTENT3(0,  "chroma",       OPT_STRING,     &chroma,
             &cmdlineP->chromaSpec,     0);
     OPTENT3(0,  "gamma",        OPT_FLOAT,      &cmdlineP->gamma,
@@ -296,7 +296,17 @@ colorTypeFromInputType(const struct pam * const pamP) {
             pm_error("Input tuple type is GRAYSCALE, "
                      "but number of planes is %u instead of 1",
                      pamP->depth);
-    } else if (strneq(pamP->tuple_type, "BLACKANDWHITE", 3)) {
+     } else if (strneq(pamP->tuple_type, "BLACKANDWHITE_ALPHA", 19)) {
+        if (pamP->depth != 2)
+            pm_error("Input tuple type is BLACKANDWHITE_ALPHA, "
+                     "but number of planes is %u instead of 2",
+                     pamP->depth);
+        if (pamP->maxval != 1)
+            pm_error("Input tuple type is BLACKANDWHITE_ALPHA, "
+                     "but maxval is %u instead of 1", (unsigned)pamP->maxval);
+
+        retval = PNG_COLOR_TYPE_GRAY_ALPHA;
+    } else if (strneq(pamP->tuple_type, "BLACKANDWHITE", 13)) {
         if (pamP->depth != 1)
             pm_error("Input tuple type is BLACKANDWHITE, "
                      "but number of planes is %u instead of 1",
@@ -410,7 +420,7 @@ doTrnsChunk(const struct pam * const pamP,
     else {
         xelval const pngMaxval = pm_bitstomaxval(pngx_bitDepth(pngxP));
         png_color_16 const pngColor = parseAndScaleColor(trans, pngMaxval);
-            /* Transparency color from text format scaled from 16-bit to
+            /* Transparent color from text format scaled from 16-bit to
                maxval.
             */
 
@@ -687,7 +697,8 @@ writePng(const struct pam * const pamP,
 
 
     if ((pngColorType == PNG_COLOR_TYPE_RGB ||
-         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA) &&
+         pngColorType == PNG_COLOR_TYPE_RGB_ALPHA ||
+         pngColorType == PNG_COLOR_TYPE_GRAY_ALPHA) &&
         pnmBitDepth < 8) {
 
         pngBitDepth = 8;
@@ -704,8 +715,8 @@ writePng(const struct pam * const pamP,
     sBit = sigBitsFmImgType(pnmBitDepth, pngColorType);
 
     /* Where requested, add ancillary chunks */
-    if (cmdline.transparencySpec)
-        doTrnsChunk(pamP, pngxP,cmdline.transparency);
+    if (cmdline.transparentSpec)
+        doTrnsChunk(pamP, pngxP,cmdline.transparent);
 
     if (cmdline.chromaSpec)
         doChrmChunk(pngxP, cmdline.chroma);
