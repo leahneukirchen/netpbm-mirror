@@ -4,6 +4,8 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.96.00
+
 21.06.30 BJH  Release 10.95.00
 
               pamtopng: Fix rejection of all BLACKANDWHITE_ALPHA images with
