@@ -31,14 +31,17 @@ test_out=${tmpdir}/test_out
 
 for combination in "-lr -tb" "-lr -rectangle" "-rectangle -ellipse"
 do pgmramp $combination 10 10 > ${test_out} || \
-   echo -n "Expected failure: $combination" ; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure: $combination"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 done
 
 pgmramp -lr     1 > ${test_out} || \
   echo -n "Expected failure: insufficient parameters"; \
   test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
 pgmramp -tb 1 1 1 > ${test_out} || \
   echo -n "Expected failure: excessive parameters"; \
   test -s ${test_out}; echo " "$?
-
-rm ${test_out}
+  rm -f ${test_out}

@@ -20,7 +20,7 @@ echo "Test 3."
 for maxval in `seq 16` 255 65535
   do
   echo ${maxval}
-  pgmnoise -maxval=${maxval} -randomseed=1 -plain 16 1 | tr '\n' ' ' 
+  pgmnoise -maxval=${maxval} -randomseed=1 -plain 16 1 | tr '\n' ' '
   done
 echo
 
@@ -35,7 +35,7 @@ for maxval in `seq 16` 30 31 32 254 255 256 65534 65535
 
 echo "Test 5."
 echo "Should print four identical lines"
-# width height values do not affect random number sequence 
+# width height values do not affect random number sequence
 for xysize in "1 10000" "100 100" "250 40" "1000 10"
   do pgmnoise --randomseed=0 ${xysize} | pgmhist -mach | cksum
   done
@@ -48,7 +48,7 @@ echo "Test 6."
 echo "First column should be 2^n - 1"
 # The "pool" method of generating pixvals is used iff maxval is
 # a power of 2 minus 1: 1, 3, 7, 15, 31 ...
-for maxval in `seq 35; seq 60 69; seq 120 129; seq 250 259` 
+for maxval in `seq 35; seq 60 69; seq 120 129; seq 250 259`
   do
   pgmnoise -maxval=${maxval} -randomseed=1 -verbose 1 1 > /dev/null \
   2> ${messages}
@@ -68,22 +68,51 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pgmnoise 0 0  > ${test_out} || \
-   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise 0 1  > ${test_out} || \
-   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise 1 0  > ${test_out} || \
-   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise      > ${test_out} || \
-   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise 1    > ${test_out} || \
-   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise 100 -1 > ${test_out} || \
-   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise -randomseed=-1 100 100  > ${test_out} || \
-   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise -maxval=-1 100 100  > ${test_out} || \
-   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise -maxval=0 100 100  > ${test_out} || \
-   echo -n "Expected failure 9"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pgmnoise -maxval=$((256 * 256 * 256 * 256)) 10 10 > ${test_out} || \
-   echo -n "Expected failure 10"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}

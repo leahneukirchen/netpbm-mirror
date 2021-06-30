@@ -74,6 +74,7 @@ for option in "-reportfull -reportsize" \
     do
     echo ${option}
     pnmcrop -reportfull ${option} testgrid.pbm > ${test_out} || \
-        echo -n "Expected failure: " ${option}; test -s ${test_out}; echo " "$?
-        rm ${test_out} 
+        echo -n "Expected failure: " ${option}
+        test -s ${test_out}; echo " "$?
+        rm ${test_out}
     done

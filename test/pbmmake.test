@@ -32,20 +32,41 @@ tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
 pbmmake -b -w -plain 1 1 > ${test_out} || \
-   echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
-pbmmake -b -g -plain 1 1 > ${test_out} || \
-   echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
-pbmmake -white -gray -plain 1 1 > ${test_out} || \
-   echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
-pbmmake -white -plain   > ${test_out} || \
-   echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
-pbmmake -white -plain 1 > ${test_out} || \
-   echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
-pbmmake -white -plain 1 0 > ${test_out} || \
-   echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
-pbmmake -white -plain 0 1 > ${test_out} || \
-   echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
-pbmmake -white -plain 1 1 1 > ${test_out} || \
-   echo -n "Expected failure 8"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
-rm ${test_out}
+pbmmake -b -g -plain 1 1 > ${test_out} || \
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pbmmake -white -gray -plain 1 1 > ${test_out} || \
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pbmmake -white -plain   > ${test_out} || \
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pbmmake -white -plain 1 > ${test_out} || \
+  echo -n "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pbmmake -white -plain 1 0 > ${test_out} || \
+  echo -n "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pbmmake -white -plain 0 1 > ${test_out} || \
+  echo -n "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
+pbmmake -white -plain 1 1 1 > ${test_out} || \
+  echo -n "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}

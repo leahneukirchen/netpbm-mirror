@@ -7,7 +7,7 @@ LC_ALL=C
 export LANG LC_ALL
 
 
-# This test requires a working UTF-8 locale 
+# This test requires a working UTF-8 locale
 # Skip this test if it is are not available
 
 iconv /dev/null
@@ -22,11 +22,11 @@ utf_locale_list=${tmpdir}/utf_locale_list
 
 locale_to_test="en_US.utf8"  # Initial value
 # Edit the above value if necessary
-  
+
 # Make a list of available locales which end in "utf8"
 locale -a | grep "\.utf8$" > ${utf_locale_list}
 
-# Hunt for a valid utf8 locale  
+# Hunt for a valid utf8 locale
 # Submit each candidate to a trial pbmtext run until one that works is
 # encountered
 
@@ -142,12 +142,15 @@ cat ${long_txt} | \
   LC_ALL=${locale_for_test} \
   pbmtext -nomargins -builtin fixed -wchar > ${test_out} || \
   echo -n "Expected failure 1";
-  test -s ${test_out}; echo " "$? 
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
 cat ${long_txt} | \
   LC_ALL=${locale_for_test} \
   pbmtext -nomargins -builtin fixed -wchar > ${test_out} || \
   echo -n "Expected failure 2";
-  test -s ${test_out}; echo " "$?  
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 
 rm ${long_txt}
 
@@ -165,39 +168,42 @@ echo "Test 6 Invalid"
 
 awk 'BEGIN { printf("%c%c",128,129);  print ""}' | \
         LC_ALL=${locale_for_test} \
-        pbmtext -builtin bdf -wchar -text-dump > ${test_out} 
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
   echo -n "6-1:" ${PIPESTATUS[@]} ":" $?
-  test -s ${test_out}; echo " "$?  
-  
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
 awk 'BEGIN { printf("ABC%c%c",192, 193);  print ""}' | \
         LC_ALL=${locale_for_test} \
-        pbmtext -builtin bdf -wchar -text-dump > ${test_out} 
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
   echo -n "6-2:" ${PIPESTATUS[@]} ":" $?
-  test -s ${test_out}; echo " "$?  
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 
 awk 'BEGIN { printf("abcde%c%c", 254, 253);  print ""}' | \
         LC_ALL=${locale_for_test} \
-        pbmtext -builtin bdf -wchar -text-dump > ${test_out} 
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
   echo -n "6-3:" ${PIPESTATUS[@]} ":" $?
-  test -s ${test_out}; echo " "$?  
-  
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
 awk 'BEGIN { printf("abcdefg%c%c", 195, 15);  print ""}' | \
         LC_ALL=${locale_for_test} \
-        pbmtext -builtin bdf -wchar -text-dump > ${test_out} 
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
   echo -n "6-4:" ${PIPESTATUS[@]} ":" $?
-  test -s ${test_out}; echo " "$?  
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 
 awk 'BEGIN { printf("123456789%c%c%c", 224, 143 ,0);  print ""}' | \
         LC_ALL=${locale_for_test} \
-        pbmtext -builtin bdf -wchar -text-dump > ${test_out} 
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
   echo -n "6-5:" ${PIPESTATUS[@]} ":" $?
-  test -s ${test_out}; echo " "$?  
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 
 awk 'BEGIN { printf("abcdefg123ABCDEFG%c%c%c%c",247, 135, 135, 7);  print ""}' | \
         LC_ALL=${locale_for_test} \
-        pbmtext -builtin bdf -wchar -text-dump > ${test_out} 
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
   echo -n "6-6:" ${PIPESTATUS[@]} ":" $?
-  test -s ${test_out}; echo " "$? 
-  
-rm ${test_out}
-  
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

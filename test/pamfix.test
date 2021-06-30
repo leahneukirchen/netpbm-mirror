@@ -54,13 +54,14 @@ echo "-----------------------------------------------------------" 1>&2
 echo -e "P2\n3 2\n7\n0 1 2\n6 7 8" | pamfix -change -clip > ${test_out} || \
   echo -n "Expected failure 1";
   test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 
 echo -e "P1\n5 5" | pamfix -truncate -plain > ${test_out} || \
   echo -n "Expected failure 2";
   test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 
 echo -e "P2\n3 3\255" | pamfix -truncate -plain > ${test_out} || \
   echo -n "Expected failure 3";
   test -s ${test_out}; echo " "$?
-
-rm ${test_out}
+  rm -f ${test_out}

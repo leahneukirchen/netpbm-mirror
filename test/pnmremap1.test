@@ -33,17 +33,32 @@ tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
 pnmremap -mapfile=/dev/null testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmremap -mapfile=/dev/zero testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmremap testimg.ppm                    > ${test_out} || \
-  echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmremap -fs -nofs testimg.ppm          > ${test_out} || \
-  echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmremap -mapfile=testgrid.pbm -missingcolor=rgb:00/ff/00 testimg.ppm \
  > ${test_out} || \
-  echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
-pnmremap -mapfile=testgrid.pbm -firstisdefault testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
 
-rm ${test_out}
+pnmremap -mapfile=testgrid.pbm -firstisdefault testimg.ppm > ${test_out} || \
+  echo -n "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}

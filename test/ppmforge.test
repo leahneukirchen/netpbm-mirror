@@ -1,9 +1,52 @@
 #! /bin/bash
 # This script tests: ppmforge
-# Also requires:
+# Also requires: pnmpsnr
 
-# Use small x y values to avoid floating point issues.
-
-# Should print: 3634219838 196623 (Glibc)
-#               3262664440 196623 (MAC OS)
+echo "Test 1. Should print: 547829788 196623  (Mersenne Twister)" 
+#               3634219838 196623 (Glibc rand() )
+#               3262664440 196623 (MAC OS rand() )
 ppmforge -night -seed 1 | cksum
+
+tmpdir=${tmpdir:-/tmp}
+test_ppm=${tmpdir}/test.ppm
+
+
+# Target values for following tests were determined by running the
+# ppmforge command pairs 30 times with different seeds, finding
+# the minimum (or "poorest match") for each component and 
+# subtracting 0.01 dB.   As such these are weak tests.
+
+
+echo "Test 2."
+ppmforge -cloud -seed 1 -power 0.75 > ${test_ppm}
+ppmforge -cloud -seed 1 -power 0.74 | \
+  pnmpsnr -rgb -target1=41.15 -target2=41.15 -target3=999 - ${test_ppm}
+
+rm ${test_ppm}
+
+echo "Test 3."
+ppmforge -cloud -seed 1 -dimension 2.15 > ${test_ppm}
+ppmforge -cloud -seed 1 -dimension 2.175 | \
+  pnmpsnr -rgb -target1=43.39 -target2=43.39 -target3=999 - ${test_ppm}
+
+  # Note that there should be no difference for the target3: blue.
+
+
+
+rm ${test_ppm}
+
+echo "Test 4."
+ppmforge -seed 1 -stars 0 -ice 0.01 -power 1.18 -hour 10 >  ${test_ppm}
+ppmforge -seed 1 -stars 0 -ice 0.01 -power 1.22 -hour 10 | \
+  pnmpsnr -target1=27.89 -target2=24.25 -target3=37.87 - ${test_ppm}
+
+rm ${test_ppm}
+
+echo "Test 5."
+ppmforge -seed 1 -stars 0 -ice 0.01 \
+    -inclination 9  -hour 12 -power 200 > ${test_ppm} 
+ppmforge -seed 1 -stars 0 -ice 0.01 \
+    -inclination 10 -hour 12 -power 200 | \
+  pnmpsnr -target1=53.89 -target2=49.38 -target3=65.15 - ${test_ppm}
+
+rm ${test_ppm}

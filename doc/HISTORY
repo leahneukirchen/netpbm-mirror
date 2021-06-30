@@ -4,20 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-21.05.26 BJH  Release 10.94.05
-
-              pamtopng: Fix -transparent option - program recognized
-              -transparency instead.  Always broken (pamtopng was new in
-              Netpbm 10.71 (June 2015)).
-
-              Build: make it work on systems that don't have date +%s.  Broken
-              in Netpbm 10.78 (March 2017).  Thanks Claes Nästén
-              (pekdon@gmail.com).
-
-              Mkdeb: fix failure with message about unrecognized format of
-              VERSION file.  Introduced in Netpbm 10.90 (March 2020).
-
-21.05.15 BJH  Release 10.94.04
+21.06.30 BJH  Release 10.95.00
 
               pamtopng: Fix rejection of all BLACKANDWHITE_ALPHA images with
               message about wrong depth.  Always broken (pamtopng was new in
@@ -32,15 +19,17 @@ CHANGE HISTORY
               BLACKANDWHITE.  Always broken (pamtopng was new in Netpbm 10.71
               (June 2015)).
 
-21.05.08 BJH  Release 10.94.03
+              pamtopng: Fix -transparent option - program recognized
+              -transparency instead.  Always broken (pamtopng was new in
+              Netpbm 10.71 (June 2015)).
 
               pamtogif: Fix failure with bogus message about wrong depth with
               grayscale and black and white PAM images with transparency.
               Always broken (pamtogif was new in Netpbm 10.37 (December 2006)).
               Thanks Karol Kosek <krkk@krkk.ct8.pl>.
 
-21.04.08 BJH  Release 10.94.02
-
+              ppmtogif: Same as 'pamtogif' fix above, but with -alpha option.
+              
               Build: Fix build failure due to missing 'random' function on
               Mingw platform.  Bug introduced in Netpbm 10.94 (March 2021).
 
@@ -48,9 +37,15 @@ CHANGE HISTORY
               Unix process management.  Bug introduced in Netpbm 10.94
               (March 2021).
 
-21.03.30 BJH  Release 10.94.01
+              Build: Make it work on systems that don't have date +%s.  Broken
+              in Netpbm 10.78 (March 2017).  Thanks Claes Nästén
+              (pekdon@gmail.com).
 
-              Add missing test files.
+              Build: Fix for MacOS build failures with missing sprintf and
+              vasprintf in broken build environment.
+              
+              Mkdeb: fix failure with message about unrecognized format of
+              VERSION file.  Introduced in Netpbm 10.90 (March 2020).
 
 21.03.27 BJH  Release 10.94.00
 

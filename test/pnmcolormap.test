@@ -3,7 +3,7 @@
 # Also requires:
 
 pnmcolormap -plain -sort 2 testgrid.pbm
-pnmcolormap -plain -sort -square 2 testgrid.pbm 
+pnmcolormap -plain -sort -square 2 testgrid.pbm
 pnmcolormap -plain -sort all testgrid.pbm
 
 echo 1>&2
@@ -15,19 +15,37 @@ tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
 pnmcolormap 0 testimg.ppm   > ${test_out} || \
-  echo -n "Expected failure 1"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmcolormap -1 testimg.ppm  > ${test_out} || \
-  echo -n "Expected failure 2"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmcolormap 0.1 testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 3"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmcolormap -center -meancolor 16 testimg.ppm    > ${test_out} || \
-  echo -n "Expected failure 4"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmcolormap -center -meanpixel 16 testimg.ppm    > ${test_out} || \
-  echo -n "Expected failure 5"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmcolormap -meancolor -meanpixel 16 testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 6"; test -s ${test_out}; echo " "$?
+  echo -n "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}
+
 pnmcolormap -spreadbrightness -spreadluminosity 16 \
   testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 7"; test -s ${test_out}; echo " "$?
-
-rm ${test_out}
+  echo -n "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f {test_out}

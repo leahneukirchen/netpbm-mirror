@@ -11,7 +11,7 @@ echo "Test 1."
 pbmmake -w 2 5 | pamdice -height=1 -width=1 -outstem=${fname_stem} -plain
 ls ${fname_stem}*.pbm | while read file
   do
-  cat ${file} | tr '\n'  '@' ; echo 
+  cat ${file} | tr '\n'  '@' ; echo
   done | sort | uniq -c | sed 's/^ *//'
 
 rm ${fname_stem}*.pbm
@@ -22,7 +22,7 @@ echo "Test 2."
 pbmmake -g 2 5 | pamdice -height=1 -width=1 -outstem=${fname_stem} -plain
 ls ${fname_stem}*.pbm | while read file
   do
-  cat ${file} | tr '\n'  '@' ; echo 
+  cat ${file} | tr '\n'  '@' ; echo
   done
 
 rm ${fname_stem}*.pbm
@@ -36,33 +36,44 @@ echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
+# No output files should be producd.  With nothing to remove,
+# the rm commands should always fail.
+
 # No input file
 pamdice -width=10 -height=10  -outstem=${fname_stem} /dev/null || \
 echo "Expected failure 1"
+rm ${fname_stem}* ||
+echo "Expected failure 1.rm"
 
 # No -outstem
 pamdice -width=10 -height=10 testgrid.pbm || \
 echo "Expected failure 2"
+rm ${fname_stem}* ||
+echo "Expected failure 2.rm"
 
 # -width=0
 pamdice -width=0 -height=10 -outstem=${fname_stem} testgrid.pbm || \
 echo "Expected failure 3"
+rm ${fname_stem}* ||
+echo "Expected failure 3.rm"
 
 # -height=0
 pamdice -width=10 -height=0 -outstem=${fname_stem} testgrid.pbm || \
 echo "Expected failure 4"
+rm ${fname_stem}* ||
+echo "Expected failure 4.rm"
 
 # -hoverlap larger than width
 pamdice -width=10 -height=10 -hoverlap=11 \
   -outstem=${fname_stem} testgrid.pbm || \
 echo "Expected failure 5"
+rm ${fname_stem}* ||
+echo "Expected failure 5.rm"
+
 
 # -voverlap larger than height
 pamdice -width=10 -height=10 -voverlap=11 \
   -outstem=${fname_stem} testgrid.pbm || \
 echo "Expected failure 6"
-
-
-# Ensure that no output files are produced by the above
-ls ${fname_stem}* || \
-echo "Expected failure (output files)"
+rm ${fname_stem}* ||
+echo "Expected failure 6.rm"
