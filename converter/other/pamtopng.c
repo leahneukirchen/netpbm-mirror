@@ -50,8 +50,8 @@ struct CmdlineInfo {
     const char * inputFileName;
     unsigned int verbose;
     unsigned int interlace;
-    unsigned int transparencySpec;
-    const char * transparency;
+    unsigned int transparentSpec;
+    const char * transparent;
     unsigned int chromaSpec;
     struct pngx_chroma chroma;
     unsigned int gammaSpec;
@@ -196,8 +196,8 @@ parseCommandLine (int                  argc,
             &cmdlineP->verbose,        0);
     OPTENT3(0,  "interlace",    OPT_FLAG,       NULL,
             &cmdlineP->interlace,      0);
-    OPTENT3(0,  "transparency", OPT_STRING,     &cmdlineP->transparency,
-            &cmdlineP->transparencySpec, 0);
+    OPTENT3(0,  "transparent", OPT_STRING,      &cmdlineP->transparent,
+            &cmdlineP->transparentSpec, 0);
     OPTENT3(0,  "chroma",       OPT_STRING,     &chroma,
             &cmdlineP->chromaSpec,     0);
     OPTENT3(0,  "gamma",        OPT_FLOAT,      &cmdlineP->gamma,
@@ -413,7 +413,7 @@ doTrnsChunk(const struct pam * const pamP,
     else {
         xelval const pngMaxval = pm_bitstomaxval(pngx_bitDepth(pngxP));
         png_color_16 const pngColor = parseAndScaleColor(trans, pngMaxval);
-            /* Transparency color from text format scaled from 16-bit to
+            /* Transparent color from text format scaled from 16-bit to
                maxval.
             */
 
@@ -816,8 +816,8 @@ addAncillaryChunks(struct pam *       const pamP,
 /*----------------------------------------------------------------------------
   Where requested, add ancillary chunks.
 -----------------------------------------------------------------------------*/
-    if (cmdline.transparencySpec)
-        doTrnsChunk(pamP, pngxP,cmdline.transparency);
+    if (cmdline.transparentSpec)
+        doTrnsChunk(pamP, pngxP,cmdline.transparent);
 
     if (cmdline.chromaSpec)
         doChrmChunk(pngxP, cmdline.chroma);

@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.06.30 BJH  Release 10.86.23
+
+              pamtopng: Fix -transparent option - program recognized
+              -transparency instead.  Always broken (pamtopng was new in
+              Netpbm 10.71 (June 2015)).
+
+              Build: make it work on systems that don't have date +%s.  Broken
+              in Netpbm 10.78 (March 2017).  Thanks Claes Nästén
+              (pekdon@gmail.com).
+
 21.05.15 BJH  Release 10.86.22
 
               pamtopng: Fix rejection of all BLACKANDWHITE_ALPHA images with
@@ -18,7 +28,7 @@ CHANGE HISTORY
               pamtopng: Fix: treats all tuple types that start with BLA as
               BLACKANDWHITE.  Always broken (pamtopng was new in Netpbm 10.71
               (June 2015)).
-              
+
               pamtogif: Fix failure with bogus message about wrong depth with
               grayscale and black and white PAM images with transparency.
               Always broken (pamtogif was new in Netpbm 10.37 (December 2006)).
