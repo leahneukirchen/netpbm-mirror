@@ -1220,15 +1220,19 @@ makeImageRow(outGenerator *       const outGenP,
     unsigned int const height = outGenP->pam.height;
 
     unsigned int col;
-    int lastLinked;
+    bool colHasBeenLinked;
+    unsigned int lastLinkedCol;
+        /* Last column to have been linked; meaningless if 'colHasBeenLinked'
+           is false.
+        */
 
-    for (col = xbegin, lastLinked = -1; col < width; ++col) {
+    for (col = xbegin, colHasBeenLinked = false; col < width; ++col) {
 
         tuple newtuple;
 
         if (sameL[col] == col || sameL[col] < xbegin) {
-            if (lastLinked == col - 1)
-                newtuple = outRow[col - 1];
+            if (colHasBeenLinked && lastLinkedCol == col - 1)
+                newtuple = outRow[lastLinkedCol];
             else {
                 if (col < xbegin + farWidth)
                     newtuple = outGenP->getTuple(outGenP, col, row);
@@ -1237,19 +1241,20 @@ makeImageRow(outGenerator *       const outGenP,
                         outGenP, col, (row + height - yfillshift) % height);
             }
         } else {
-          newtuple = outRow[sameL[col]];
-          lastLinked = col;
-              /* Keep track of the last pixel to be constrained. */
+            newtuple = outRow[sameL[col]];
+            colHasBeenLinked = true;
+            lastLinkedCol = col;
+                /* Keep track of the last pixel to be constrained. */
         }
         pnm_assigntuple(&outGenP->pam, outRow[col], newtuple);
     }
 
-    for (col = xbegin, lastLinked = -1; col > 0; --col) {
+    for (col = xbegin, colHasBeenLinked = false; col > 0; --col) {
         tuple newtuple;
 
         if (sameR[col-1] == col-1) {
-            if (lastLinked == col)
-                newtuple = outRow[col];
+            if (colHasBeenLinked && lastLinkedCol == col)
+                newtuple = outRow[lastLinkedCol];
             else {
                 if (col > xbegin - farWidth)
                     newtuple = outGenP->getTuple(outGenP, col-1, row);
@@ -1259,7 +1264,8 @@ makeImageRow(outGenerator *       const outGenP,
             }
         } else {
             newtuple = outRow[sameR[col-1]];
-            lastLinked = col-1;
+            colHasBeenLinked = true;
+            lastLinkedCol = col - 1;
                 /* Keep track of the last pixel to be constrained. */
         }
         pnm_assigntuple(&outGenP->pam, outRow[col-1], newtuple);
