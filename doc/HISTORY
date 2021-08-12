@@ -3,6 +3,10 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
+21.08.12 BJH  Release 10.95.01
+
+              pamstereogram: Fix crash with -xbegin=0.  Thanks Scott Pakin.
+              Introduced in Netpbm 10.94.
 
 21.06.30 BJH  Release 10.95.00
 
