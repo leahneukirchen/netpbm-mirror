@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.08.30 BJH  Release 10.86.24
+
+              ximtoppm: Fix bug: invalid memory references with pathological
+              image input.  Broken in Netpbm 86.15 (June 2020).
+
 21.06.30 BJH  Release 10.86.23
 
               pamtopng: Fix -transparent option - program recognized
