@@ -405,9 +405,9 @@ pnm_setpamrow(const struct pam * const pamP,
               tuple *            const tuplerow,
               sample             const value) {
 
-    int col;
+    unsigned int col;
     for (col = 0; col < pamP->width; ++col) {
-        int plane;
+        unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
             tuplerow[col][plane] = value;
     }
