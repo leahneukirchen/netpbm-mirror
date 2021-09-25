@@ -28,7 +28,7 @@ enum orientation {TOPBOTTOM, LEFTRIGHT};
 
 enum justification {JUST_CENTER, JUST_MIN, JUST_MAX};
 
-struct imgInfo {
+typedef struct {
     /* This obviously should be a struct pam.  We should convert this
        to 'pamcat'.
     */
@@ -37,11 +37,11 @@ struct imgInfo {
     int    rows;
     int    format;
     xelval maxval;
-};
+} ImgInfo;
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -56,7 +56,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -178,7 +178,7 @@ parseCommandLine(int argc, const char ** const argv,
 static void
 computeOutputParms(unsigned int     const nfiles,
                    enum orientation const orientation,
-                   struct imgInfo   const img[],
+                   ImgInfo          const img[],
                    unsigned int *   const newcolsP,
                    unsigned int *   const newrowsP,
                    xelval *         const newmaxvalP,
@@ -194,7 +194,7 @@ computeOutputParms(unsigned int     const nfiles,
     newrows = 0;
 
     for (i = 0; i < nfiles; ++i) {
-        const struct imgInfo * const imgP = &img[i];
+        const ImgInfo * const imgP = &img[i];
 
         if (i == 0) {
             newmaxval = imgP->maxval;
@@ -318,7 +318,7 @@ padFillBitrow(unsigned char * const destBitrow,
 */
 
 
-struct imgInfoPbm2 {
+typedef struct {
     /* Information about one image */
     unsigned char * proberow;
         /* Top row of image, when background color is
@@ -332,22 +332,22 @@ struct imgInfoPbm2 {
         /* Background color.  0x00 means white; 0xff means black */
     unsigned int padtop;
         /* Top padding amount */
-};
+} ImgInfoPbm2;
 
 
 
 static void
-getPbmImageInfo(struct imgInfo        const img[],
+getPbmImageInfo(ImgInfo               const img[],
                 unsigned int          const nfiles,
                 unsigned int          const newrows,
                 enum justification    const justification,
                 enum backcolor        const backcolor,
-                struct imgInfoPbm2 ** const img2P) {
+                ImgInfoPbm2 **        const img2P) {
 /*----------------------------------------------------------------------------
    Read the first row of each image in img[] and return that and additional
    information about images as *img2P.
 -----------------------------------------------------------------------------*/
-    struct imgInfoPbm2 * img2;
+    ImgInfoPbm2 * img2;
     unsigned int i;
 
     MALLOCARRAY_NOFAIL(img2, nfiles);
@@ -394,8 +394,8 @@ getPbmImageInfo(struct imgInfo        const img[],
 
 
 static void
-destroyPbmImg2(struct imgInfoPbm2 * const img2,
-               unsigned int         const nfiles) {
+destroyPbmImg2(ImgInfoPbm2 * const img2,
+               unsigned int  const nfiles) {
 
     unsigned int i;
 
@@ -414,7 +414,7 @@ concatenateLeftRightPbm(FILE *             const ofP,
                         unsigned int       const newcols,
                         unsigned int       const newrows,
                         enum justification const justification,
-                        struct imgInfo     const img[],
+                        ImgInfo            const img[],
                         enum backcolor     const backcolor) {
 
     unsigned char * const outrow = pbm_allocrow_packed(newcols);
@@ -423,7 +423,7 @@ concatenateLeftRightPbm(FILE *             const ofP,
            packed PBM row.
         */
 
-    struct imgInfoPbm2 * img2;
+    ImgInfoPbm2 * img2;
         /* malloc'ed array, one element per image.  Shadows img[] */
     unsigned int row;
 
@@ -479,7 +479,7 @@ concatenateTopBottomPbm(FILE *             const ofP,
                         int                const newcols,
                         int                const newrows,
                         enum justification const justification,
-                        struct imgInfo     const img[],
+                        ImgInfo            const img[],
                         enum backcolor     const backcolor) {
 
     unsigned char * const outrow = pbm_allocrow_packed(newcols);
@@ -574,17 +574,17 @@ concatenateTopBottomPbm(FILE *             const ofP,
 
 
 
-struct imgGen2 {
+typedef struct {
     xel * xelrow;
     xel * inrow;
     xel   background;
     int   padtop;
-};
+} ImgGen2;
 
 
 
 static void
-getGenImgInfo(struct imgInfo     const img[],
+getGenImgInfo(ImgInfo            const img[],
               unsigned int       const nfiles,
               xel *              const newxelrow,
               unsigned int       const newrows,
@@ -592,9 +592,9 @@ getGenImgInfo(struct imgInfo     const img[],
               int                const newformat,
               enum justification const justification,
               enum backcolor     const backcolor,
-              struct imgGen2 **  const img2P) {
+              ImgGen2 **         const img2P) {
 
-    struct imgGen2 * img2;
+    ImgGen2 * img2;
     unsigned int i;
 
     MALLOCARRAY_NOFAIL(img2, nfiles);
@@ -654,11 +654,12 @@ concatenateLeftRightGen(FILE *             const ofP,
                         xelval             const newmaxval,
                         int                const newformat,
                         enum justification const justification,
-                        struct imgInfo     const img[],
+                        ImgInfo            const img[],
                         enum backcolor     const backcolor) {
 
     xel * const outrow = pnm_allocrow(newcols);
-    struct imgGen2 * img2;
+
+    ImgGen2 *    img2;
     unsigned int row;
 
     getGenImgInfo(img, nfiles, outrow, newrows,
@@ -716,7 +717,7 @@ concatenateTopBottomGen(FILE *             const ofP,
                         xelval             const newmaxval,
                         int                const newformat,
                         enum justification const justification,
-                        struct imgInfo     const img[],
+                        ImgInfo            const img[],
                         enum backcolor     const backcolor) {
 
     xel * const newxelrow = pnm_allocrow(newcols);
@@ -808,8 +809,8 @@ int
 main(int           argc,
      const char ** argv) {
 
-    struct cmdlineInfo cmdline;
-    struct imgInfo * img;  /* malloc'ed array */
+    struct CmdlineInfo cmdline;
+    ImgInfo * img;  /* malloc'ed array */
     xelval newmaxval;
     int newformat;
     unsigned int i;
