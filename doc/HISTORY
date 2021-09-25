@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.96.00
 
+              pgmtoppm: Eliminate dependency on color dictionary when user
+              does not specify any colors by name.
+
               pamstereogram: Fix crash with -xbegin=0.  Thanks Scott Pakin.
               Introduced in Netpbm 10.94.
 

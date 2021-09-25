@@ -82,9 +82,13 @@ parseCommandLine(int argc, char ** argv,
         }
     } else {
         /* Arguments are color or color range and file name */
+        /* For defaults, we use "rgbi:..." instead of the simpler "black"
+           and "white" so that we don't have unnecessary dependency on a
+           color dictionary being available.
+        */
         if (argc-1 < 1) {
-            cmdlineP->colorBlack = "black";
-            cmdlineP->colorWhite = "white";
+            cmdlineP->colorBlack = "rgbi:0/0/0";
+            cmdlineP->colorWhite = "rgbi:1/1/1";
         } else {
             char * buffer = strdup(argv[1]);
             char * hyphenPos = strchr(buffer, '-');
@@ -93,7 +97,7 @@ parseCommandLine(int argc, char ** argv,
                 cmdlineP->colorBlack = buffer;
                 cmdlineP->colorWhite = hyphenPos+1;
             } else {
-                cmdlineP->colorBlack = "black";
+                cmdlineP->colorBlack = "rgbi:0/0/0";
                 cmdlineP->colorWhite = buffer;
             }
         }
