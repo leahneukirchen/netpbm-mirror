@@ -4,7 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-21.06.30 BJH  Release 20.73.36
+21.09.25 BJH  Release 10.73.37
+
+              ximtoppm: Fix bug: invalid memory references with pathological
+              image input.  Broken in Netpbm 10.73.32 (June 2020).
+
+21.06.30 BJH  Release 10.73.36
 
               pamtopng: Fix rejection of all BLACKANDWHITE_ALPHA images with
               message about wrong depth.  Always broken (pamtopng was new in
