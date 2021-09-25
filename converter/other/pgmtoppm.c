@@ -37,7 +37,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -101,7 +101,7 @@ parseCommandLine(int argc, char ** argv,
             cmdlineP->inputFilename = "-";
         else
             cmdlineP->inputFilename = argv[2];
-        
+
         if (argc-1 > 2)
             pm_error("Program takes at most 2 arguments:  "
                      "color name/range and input file name.  "
@@ -128,7 +128,7 @@ convertWithMap(FILE * const ifP,
     pixval mapmaxval;
     pixel ** mappixels;
     unsigned int mapmaxcolor;
-    
+
     mapFileP = pm_openr(mapFileName);
     mappixels = ppm_readppm(mapFileP, &mapcols, &maprows, &mapmaxval);
     pm_close(mapFileP);
@@ -138,7 +138,7 @@ convertWithMap(FILE * const ifP,
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
-            
+
         pgm_readpgmrow(ifP, grayrow, cols, maxval, format);
 
         for (col = 0; col < cols; ++col) {
@@ -176,7 +176,7 @@ convertLinear(FILE * const ifP,
 
     colorBlack = ppm_parsecolor(colorNameBlack, maxval);
     colorWhite = ppm_parsecolor(colorNameWhite, maxval);
- 
+
     red0 = PPM_GETR(colorBlack);
     grn0 = PPM_GETG(colorBlack);
     blu0 = PPM_GETB(colorBlack);
@@ -228,7 +228,7 @@ main(int    argc,
         convertWithMap(ifP, cols, rows, maxval, format, cmdline.map,
                        stdout, grayrow, pixelrow);
     else
-        convertLinear(ifP, cols, rows, maxval, format, 
+        convertLinear(ifP, cols, rows, maxval, format,
                       cmdline.colorBlack, cmdline.colorWhite, stdout,
                       grayrow, pixelrow);
 
@@ -241,3 +241,6 @@ main(int    argc,
     */
     return 0;
 }
+
+
+
