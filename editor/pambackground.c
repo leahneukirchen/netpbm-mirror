@@ -8,7 +8,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFileName;  
+    const char * inputFileName;
     unsigned int verbose;
 };
 
@@ -48,7 +48,7 @@ parseCommandLine(int argc, char ** const argv,
             pm_error("There is at most one argument:  input file name.  "
                      "You specified %d", argc-1);
     }
-}        
+}
 
 
 
@@ -83,7 +83,7 @@ allocateOutputPointerRow(unsigned int const width,
 
 
 static void
-createWhiteTuple(const struct pam * const pamP, 
+createWhiteTuple(const struct pam * const pamP,
                  tuple *            const whiteTupleP) {
 /*----------------------------------------------------------------------------
    Create a "white" tuple.  By that we mean a tuple all of whose elements
@@ -134,7 +134,7 @@ selectBackground(struct pam * const pamP,
             bg = ul;
         }
     }
-    
+
     *bgColorP = pnm_allocpamtuple(pamP);
     pnm_assigntuple(pamP, *bgColorP, bg);
 }
@@ -410,13 +410,13 @@ findBackgroundPixels(struct pam *                   const inpamP,
 
     backgroundComplete = FALSE;
     passes = 0;
-    
+
     while (!backgroundComplete) {
         bool expandedHoriz, expandedVert;
 
         expandBackgroundHoriz(pi, inpamP->width, inpamP->height,
                               &expandedHoriz);
-    
+
         expandBackgroundVert(pi, inpamP->width, inpamP->height,
                              &expandedVert);
 
@@ -431,7 +431,7 @@ findBackgroundPixels(struct pam *                   const inpamP,
     *piP = (const unsigned char * const *)pi;
 }
 
-                     
+
 
 static void
 writeOutput(const struct pam *            const inpamP,
@@ -476,7 +476,7 @@ main(int argc, char *argv[]) {
     pm_filepos rasterpos;
     tuple backgroundColor;
     const unsigned char * const * pi;
-    
+
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -500,6 +500,9 @@ main(int argc, char *argv[]) {
     pm_close(ifP);
 
     pnm_freepamtuple(backgroundColor);
-    
+
     return 0;
 }
+
+
+
