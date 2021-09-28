@@ -2,7 +2,7 @@
 <html><head><title>Pbmmask User Manual</title></head>
 <body>
 <h1>pbmmask</h1>
-Updated: 08 August 1989
+Updated: 28 September 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -20,13 +20,14 @@ pbmmask - create a mask bitmap from a regular bitmap
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pbmmask</b> reads a PBM image as input and Generates a
+<p><b>pbmmask</b> reads a PBM image as input and generates a
 corresponding mask of the foreground areas as another PBM image.
 
-<p>The color to be interpreted as "background" is
-determined automatically.  Regardless of which color is background,
-the mask will be white where the background is and black where the
-figure is.
+<p>This is probably obsoleted by <b>pambackground</b>.
+  
+<p>The color to be interpreted as "background" is determined automatically.
+Regardless of which color is background, the mask will be white where the
+background is and black where the figure is.
 
 <p>This lets you do a masked paste like this, for objects with a black
 background:
@@ -80,6 +81,7 @@ cellular automaton tool...)
 
 <h2 id="seealso">SEE ALSO</h2>
 
+<b><a href="pambackground.html">pambackground</a></b>
 <b><a href="ppmcolormask.html">ppmcolormask</a></b>,
 <b><a href="pnmpaste.html">pnmpaste</a></b>,
 <b><a href="pnminvert.html">pnminvert</a></b>,
@@ -91,6 +93,17 @@ cellular automaton tool...)
 
 Copyright (C) 1988 by Jef Poskanzer.
 
+<h2 id="history">HISTORY</h2>
+
+<p><b>pbmmask</b> is one of the oldest programs in Netpbm.  In September 2021,
+  the date on this manual was August 8, 1989 (being the date of the last
+  substantial update).  We updated the page  then just to add this historical
+  information and recommend <b>pambackground</b>.
+
+<p>It is likely that when Bryan wrote <b>pambackground</b> in 2006, he was
+  unaware <b>pbmmask</b> existed.  Otherwise, he would presumably have
+  replaced <b>pbmmask</b> with a wrapper around <b>pambackground</b>.
+
 <hr>
 <h2 id="index">Table Of Contents</h2>
 <ul>
@@ -99,6 +112,7 @@ Copyright (C) 1988 by Jef Poskanzer.
 <li><a href="#options">OPTIONS</a>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#author">AUTHOR</a>
+<li><a href="#history">HISTORY</a>
 </ul>
 </body>
 </html>
