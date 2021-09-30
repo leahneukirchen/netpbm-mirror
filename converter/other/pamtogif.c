@@ -23,9 +23,10 @@ static bool verbose;
 
 
 enum TransparencyType {TRANS_NONE, TRANS_COLOR, TRANS_ALPHA};
-    // The source of transparency for the GIF: nothing is transparent,
-    // All pixels of a certain color are transparent, or the alpha plane
-    // in the input tells what is transparent.
+    /* The source of transparency for the GIF: nothing is transparent,
+       All pixels of a certain color are transparent, or the alpha plane
+       in the input tells what is transparent.
+    */
 
 typedef unsigned int StringCode;
     /* A code to be place in the GIF raster.  It represents
@@ -1674,7 +1675,7 @@ computeTransparent(enum TransparencyType const transType,
     case TRANS_NONE: {
         cmapP->haveTransparent = FALSE;
     } break;
-    }  // switch
+    }  /* switch */
     reportTransparent(transType, cmapP);
 }
 
