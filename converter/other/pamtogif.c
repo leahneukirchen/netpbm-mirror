@@ -1516,7 +1516,7 @@ gifEncode(struct pam *  const pamP,
           bool          const noclear,
           bool          const usingAlpha) {
 /*----------------------------------------------------------------------------
-   'useAlpha' means use the alpha (transparency) plane, if there is one, to
+   'usingAlpha' means use the alpha (transparency) plane, if there is one, to
    determine which GIF pixels are transparent.  When this is true, the
    colormap *cmapP must contain a transparent entry.
 -----------------------------------------------------------------------------*/
@@ -2035,7 +2035,7 @@ main(int argc, char *argv[]) {
     gifEncode(&pam, stdout, rasterPos,
               cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
               cmdline.aspect, !cmdline.nolzw, cmdline.noclear,
-              !cmdline.transparent);
+              transType==TRANS_ALPHA);
 
     destroyCmap(&cmap);
 
