@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.09.30 BJH  Release 10.96.01
+
+              pamtogif: Fix bug: doesn't ignore the input alpha mask when user
+              specified -transparent.  Broken in Netpbm 10.37 (December 2006).
+
 21.09.25 BJH  Release 10.96.00
 
               pgmtoppm: Eliminate dependency on color dictionary when user
