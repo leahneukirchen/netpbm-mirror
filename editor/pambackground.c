@@ -301,8 +301,8 @@ expandBackgroundHoriz(unsigned char ** const pi,
                       unsigned int     const height,
                       bool *           const expandedP) {
 /*----------------------------------------------------------------------------
-   In every row, expand the background rightward from any known background
-   pixel through all consecutive unknown pixels.
+   In every row except top and bottom, expand the background rightward from
+   any known background pixel through all consecutive unknown pixels.
 
    Then do the same thing leftward.
 
@@ -343,8 +343,9 @@ expandBackgroundVert(unsigned char ** const pi,
                      unsigned int     const height,
                      bool *           const expandedP) {
 /*----------------------------------------------------------------------------
-   In every column, expand the background downward from any known background
-   pixel through all consecutive unknown pixels.
+   In every column except leftmost and rightmost, expand the background
+   downward from any known background pixel through all consecutive unknown
+   pixels.
 
    Then do the same thing upward.
 
@@ -400,7 +401,7 @@ findBackgroundPixels(struct pam *                   const inpamP,
 -----------------------------------------------------------------------------*/
     unsigned char ** pi;
     bool backgroundComplete;
-    unsigned int passes;
+    unsigned int passCt;
 
     pi = newPi(inpamP->width, inpamP->height);
 
@@ -409,7 +410,7 @@ findBackgroundPixels(struct pam *                   const inpamP,
     setEdges(pi, inpamP->width, inpamP->height);
 
     backgroundComplete = FALSE;
-    passes = 0;
+    passCt = 0;
 
     while (!backgroundComplete) {
         bool expandedHoriz, expandedVert;
@@ -422,11 +423,11 @@ findBackgroundPixels(struct pam *                   const inpamP,
 
         backgroundComplete = !expandedHoriz && !expandedVert;
 
-        ++passes;
+        ++passCt;
     }
 
     if (verbose)
-        pm_message("Background found in %u passes", passes);
+        pm_message("Background found in %u passes", passCt);
 
     *piP = (const unsigned char * const *)pi;
 }
