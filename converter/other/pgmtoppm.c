@@ -20,7 +20,7 @@
 #include "shhopt.h"
 #include "ppm.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -33,8 +33,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -64,7 +64,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!mapSpec)
@@ -172,21 +172,19 @@ convertLinear(FILE * const ifP,
               gray *       const grayrow,
               pixel *      const pixelrow) {
 
-    pixel colorBlack, colorWhite;
-    pixval red0, grn0, blu0, red1, grn1, blu1;
+    pixel const colorBlack = ppm_parsecolor(colorNameBlack, maxval);
+    pixel const colorWhite = ppm_parsecolor(colorNameWhite, maxval);
+
+    pixval const red0 = PPM_GETR(colorBlack);
+    pixval const grn0 = PPM_GETG(colorBlack);
+    pixval const blu0 = PPM_GETB(colorBlack);
+    pixval const red1 = PPM_GETR(colorWhite);
+    pixval const grn1 = PPM_GETG(colorWhite);
+    pixval const blu1 = PPM_GETB(colorWhite);
+
     unsigned int row;
 
     ppm_writeppminit(ofP, cols, rows, maxval, 0);
-
-    colorBlack = ppm_parsecolor(colorNameBlack, maxval);
-    colorWhite = ppm_parsecolor(colorNameWhite, maxval);
-
-    red0 = PPM_GETR(colorBlack);
-    grn0 = PPM_GETG(colorBlack);
-    blu0 = PPM_GETB(colorBlack);
-    red1 = PPM_GETR(colorWhite);
-    grn1 = PPM_GETG(colorWhite);
-    blu1 = PPM_GETB(colorWhite);
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
@@ -208,17 +206,17 @@ convertLinear(FILE * const ifP,
 
 
 int
-main(int    argc,
-     char * argv[]) {
+main(int          argc,
+     const char * argv[]) {
 
     FILE * ifP;
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     gray * grayrow;
     pixel * pixelrow;
     int rows, cols, format;
     gray maxval;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
