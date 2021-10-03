@@ -2,7 +2,7 @@
 <html><head><title>Pgmtoppm User Manual</title></head>
 <body>
 <h1>pgmtoppm</h1>
-Updated: 10 December 2006
+Updated: 02 October 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -12,6 +12,13 @@ pgmtoppm - colorize a PGM (grayscale) image into a PPM (color) image
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
+<b>pgmtoppm</b>
+[<b>-black=</b><i>colorspec1</i>]
+[<b>-white=</b><i>colorspec2</i>]
+ [<i>pgmfile</i>]
+
+<b>pgmtoppm</b> <b>-map=</b><i>filename</i> [<i>pgmfile</i>]
+
 <b>pgmtoppm</b> <i>colorspec</i> [<i>pgmfile</i>]
 
 <br>
@@ -20,7 +27,6 @@ pgmtoppm - colorize a PGM (grayscale) image into a PPM (color) image
 
 <br>
 
-<b>pgmtoppm</b> <b>-map=</b><i>mapfile</i> [<i>pgmfile</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
@@ -33,39 +39,86 @@ space in place of the equals sign to separate an option name from its value.
 <p><b>pgmtoppm</b> reads a PGM as input and produces a PPM file as
 output with a specific color assigned to each gray value in the input.
 
-<p>If you specify one color argument, black in the pgm file stays
-black and white in the pgm file turns into the specified color in the
-ppm file.  Gray values in between are linearly mapped to differing
-intensities of the specified color.
+<p>You can specify the color in the output to which black in the input maps,
+  and the color to which white maps.  All the gray values in between map
+  linearly (across a three dimensional space) to colors between the black and
+  white colors you specify.
 
-<p>If you specify two color arguments (separated by a hyphen), then
-black gets mapped to the first color and white gets mapped to the
-second and gray values in between get mapped linearly (across a three
-dimensional space) to colors in between.
+<p>Use the <b>-black</b> and <b>-white</b> options for this.  For historical
+  reasons, you can alternatively use a non-option argument to specify the
+  colors.  If you do that, <b>pgmtoppm</b> interprets the color argument
+  like this: if the argument takes the form <i>black</i>-<i>white</i>,
+  it has the effect of <b>black=</b><i>black</i> <b>-white=</b><i>white</i>
+  If instead there is no hyphen in the color argument, it has the effect of
+  <b>white=</b><i>color_argument</i>.
 
-<p>Specify the color (<i>color</i>) as described for the <a
-href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
-library routine</a>.
-
-<p>Also, you can specify an entire colormap with the <b>-map</b>
-option.  The mapfile is just a <b>ppm</b> file; it can be any shape,
-all that matters is the colors in it and their order.  In this case,
-black gets mapped into the first color in the map file, and white gets
-mapped to the last and gray values in between are mapped linearly onto
-the sequence of colors in between.  The maxval of the output image is
-the maxval of the map image.
-
+<p>Because of the historical syntax, it is not possible to let both
+  <b>-black</b> and <b>-white</b> default (but you shouldn't want to --
+  see below for advice on making such a null conversion).
+  
+<p>You can alternatively specify an entire colormap with the <b>-map</b>
+option.
+  
 <p>A more direct way to specify a particular color to replace each
 particular gray level is to use <b>pamlookup</b>.  You make an index
 file that explicitly associates a color with each possible gray level.
 
+<p>If all you want to do is convert PGM to PPM, keeping the same gray pixels,
+  you may not need to.  All Netpbm programs that expect PPM input also
+  recognize PGM.  And if you must have a PPM file, use <b>ppmtoppm</b>
+  instead.  It is more efficient and easier to use.
+
+  
 <h2 id="options">OPTIONS</h2>
 
-<p>There are no command line options defined specifically
-for <b>pgmtoppm</b>, but it recognizes the options common to all
-programs based on libnetpbm (See <a href="index.html#commonoptions">
-Common Options</a>.)
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pgmtoppm</b> recognizes the following
+command line options:
 
+<dl>
+
+<dt><b>-black=</b><i>colorspec</i>
+
+<dd>The program maps black pixels in the input to this color in the output.
+The default is black.
+
+<p>Specify the color (<i>color</i>) as described for
+the <a href="libnetpbm_image.html#colorname">argument of
+the <b>pnm_parsecolor()</b> library routine</a>.
+
+<p>You cannot specify this together with <b>-map</b>.
+
+<p>This option was new in Netpbm 10.97 (December 2021).  Before that,
+  use the color argument.
+  
+<dt><b>-white=</b><i>colorspec</i>
+
+<dd>The program maps white pixels in the input to this color in the output.
+The default is white.
+
+<p>Specify the color (<i>color</i>) as described for
+the <a href="libnetpbm_image.html#colorname">argument of
+the <b>pnm_parsecolor()</b> library routine</a>.
+
+<p>You cannot specify this together with <b>-map</b>.
+  
+<p>This option was new in Netpbm 10.97 (December 2021).  Before that,
+  use the color argument.
+
+<dt><b>-map=</b><i>filename</i>
+
+<dd>This option specifies a complete mapping of gray values in the input to
+    color values in the output.  The map file (named <i>filename</i>) is just
+    a <b>ppm</b> file; it can be any shape, all that matters is the colors in
+    it and their order.  In this case, black gets mapped into the first color
+    in the map file, and white gets mapped to the last and gray values in
+    between are mapped linearly onto the sequence of colors in between.  The
+    maxval of the output image is the maxval of the map image.
+
+</dl>
+
+  
 <h2 id="maxval">NOTE - MAXVAL</h2>
 
 <p>When you don't use <b>-map</b>, the "maxval," or depth,
