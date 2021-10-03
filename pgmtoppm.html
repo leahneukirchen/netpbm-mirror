@@ -48,9 +48,9 @@ output with a specific color assigned to each gray value in the input.
   reasons, you can alternatively use a non-option argument to specify the
   colors.  If you do that, <b>pgmtoppm</b> interprets the color argument
   like this: if the argument takes the form <i>black</i>-<i>white</i>,
-  it has the effect of <b>black=</b><i>black</i> <b>-white=</b><i>white</i>
+  it has the effect of <b>-black=</b><i>black</i> <b>-white=</b><i>white</i>
   If instead there is no hyphen in the color argument, it has the effect of
-  <b>white=</b><i>color_argument</i>.
+  <b>-white=</b><i>color_argument</i>.
 
 <p>Because of the historical syntax, it is not possible to let both
   <b>-black</b> and <b>-white</b> default (but you shouldn't want to --
@@ -145,6 +145,7 @@ programs, in fact treats it as a maxval of 255.
 
 <h2 id="seealso">SEE ALSO</h2>
 
+<b><a href="ppmtoppm.html">ppmtoppm</a></b>,
 <b><a href="pamdepth.html">pamdepth</a></b>,
 <b><a href="rgb3toppm.html">rgb3toppm</a></b>,
 <b><a href="ppmtopgm.html">ppmtopgm</a></b>,
