@@ -17,6 +17,7 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 #include "ppm.h"
 
@@ -26,8 +27,10 @@ struct CmdlineInfo {
     */
     const char * inputFilename;  /* '-' if stdin */
     const char * map;
-    const char * colorBlack;
-    const char * colorWhite;
+    const char * colorBlack;  /* malloc'ed */
+        /* The color to which the user says to map black */
+    const char * colorWhite;  /* malloc'ed */
+        /* The color to which the user says to map white */
 };
 
 
@@ -52,11 +55,18 @@ parseCommandLine(int argc, const char ** argv,
 
     unsigned int option_def_index;
 
-    unsigned int mapSpec;
+    unsigned int blackSpec, whiteSpec, mapSpec;
+
+    const char * blackOpt;
+    const char * whiteOpt;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0, "black",          OPT_STRING,    &blackOpt,
+            &blackSpec,          0);
+    OPTENT3(0, "white",          OPT_STRING,    &whiteOpt,
+            &whiteSpec,          0);
     OPTENT3(0, "map",            OPT_STRING,    &cmdlineP->map,
             &mapSpec,            0);
 
@@ -71,6 +81,10 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->map = NULL;
 
     if (mapSpec) {
+        if (blackSpec || whiteSpec)
+            pm_error("You may not specify -black or -white "
+                     "together with -map");
+
         /* No color argument; only argument is file name */
         if (argc-1 < 1)
             cmdlineP->inputFilename = "-";
@@ -81,36 +95,70 @@ parseCommandLine(int argc, const char ** argv,
                          "the file name.  You specified %u", argc-1);
         }
     } else {
-        /* Arguments are color or color range and file name */
-        /* For defaults, we use "rgbi:..." instead of the simpler "black"
-           and "white" so that we don't have unnecessary dependency on a
-           color dictionary being available.
+        /* For default colors, we use "rgbi:..." instead of the simpler
+           "black" and "white" so that we don't have an unnecessary dependency
+           on a color dictionary being available.
         */
-        if (argc-1 < 1) {
-            cmdlineP->colorBlack = "rgbi:0/0/0";
-            cmdlineP->colorWhite = "rgbi:1/1/1";
+        if (blackSpec || whiteSpec) {
+            cmdlineP->colorBlack =
+                pm_strdup(blackSpec ? blackOpt : "rgbi:0/0/0");
+            cmdlineP->colorWhite =
+                pm_strdup(whiteSpec ? whiteOpt : "rgbi:1/1/1");
+
+            /* The only possibly argument is input file name */
+            if (argc-1 < 1)
+                cmdlineP->inputFilename = "-";
+            else {
+                cmdlineP->inputFilename = argv[1];
+                if (argc-1 > 1)
+                    pm_error("Whten you specify -black or -white, "
+                             "there can be at most one non-option arguments:  "
+                             "the file name.  "
+                             "You specified %u", argc-1);
+            }
         } else {
-            char * buffer = strdup(argv[1]);
-            char * hyphenPos = strchr(buffer, '-');
-            if (hyphenPos) {
-                *hyphenPos = '\0';
-                cmdlineP->colorBlack = buffer;
-                cmdlineP->colorWhite = hyphenPos+1;
+            /* Arguments are color or color range and optional file name */
+
+            if (argc-1 < 1) {
+                cmdlineP->colorBlack = pm_strdup("rgbi:0/0/0");
+                cmdlineP->colorWhite = pm_strdup("rgbi:1/1/1");
             } else {
-                cmdlineP->colorBlack = "rgbi:0/0/0";
-                cmdlineP->colorWhite = buffer;
+                char * buffer = strdup(argv[1]);
+                if (!buffer)
+                    pm_error("Out of memory allocating tiny buffer");
+                char * hyphenPos = strchr(buffer, '-');
+                if (hyphenPos) {
+                    *hyphenPos = '\0';
+                    cmdlineP->colorBlack = pm_strdup(buffer);
+                    cmdlineP->colorWhite = pm_strdup(hyphenPos+1);
+                } else {
+                    cmdlineP->colorBlack = pm_strdup("rgbi:0/0/0");
+                    cmdlineP->colorWhite = pm_strdup(buffer);
+                }
+                free(buffer);
+            }
+
+            if (argc-1 < 2)
+                cmdlineP->inputFilename = "-";
+            else {
+                cmdlineP->inputFilename = argv[2];
+
+                if (argc-1 > 2)
+                    pm_error("Program takes at most 2 arguments:  "
+                             "color name/range and input file name.  "
+                             "You specified %u", argc-1);
             }
         }
-        if (argc-1 < 2)
-            cmdlineP->inputFilename = "-";
-        else
-            cmdlineP->inputFilename = argv[2];
-
-        if (argc-1 > 2)
-            pm_error("Program takes at most 2 arguments:  "
-                     "color name/range and input file name.  "
-                     "You specified %u", argc-1);
     }
+}
+
+
+
+static void
+freeCommandLine(struct CmdlineInfo const cmdline) {
+
+    pm_strfree(cmdline.colorBlack);
+    pm_strfree(cmdline.colorWhite);
 }
 
 
@@ -237,6 +285,8 @@ main(int          argc,
     ppm_freerow(pixelrow);
     pgm_freerow(grayrow);
     pm_close(ifP);
+
+    freeCommandLine(cmdline);
 
     /* If the program failed, it previously aborted with nonzero completion
        code, via various function calls.
