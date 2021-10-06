@@ -85,6 +85,9 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("You may not specify -black or -white "
                      "together with -map");
 
+        cmdlineP->colorBlack = NULL;
+        cmdlineP->colorWhite = NULL;
+
         /* No color argument; only argument is file name */
         if (argc-1 < 1)
             cmdlineP->inputFilename = "-";
@@ -157,8 +160,10 @@ parseCommandLine(int argc, const char ** argv,
 static void
 freeCommandLine(struct CmdlineInfo const cmdline) {
 
-    pm_strfree(cmdline.colorBlack);
-    pm_strfree(cmdline.colorWhite);
+    if (cmdline.colorBlack)
+        pm_strfree(cmdline.colorBlack);
+    if (cmdline.colorWhite)
+        pm_strfree(cmdline.colorWhite);
 }
 
 
