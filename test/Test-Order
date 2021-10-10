@@ -136,6 +136,8 @@ rawtoppm.test
 
 pbm-misc-converters.test
 
+gif-transparent1.test
+
 # Miscellaneous utility tests
 
 ppmdfont.test
@@ -152,6 +154,7 @@ pnminvert-roundtrip.test
 pamflip-roundtrip.test
 pamdepth-roundtrip.test
 pad-crop-roundtrip.test
+pbm-ppm-roundtrip.test
 cut-paste-roundtrip.test
 rgb3-roundtrip.test
 ppmchange-roundtrip.test

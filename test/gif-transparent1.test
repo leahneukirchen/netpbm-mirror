@@ -1,0 +1,224 @@
+#! /bin/bash
+# This script tests: giftopnm pamtogif ppmtogif
+# Also requires: pamarith pamcomp pamdepth pamenlarge pamstack pbmmake
+# Also requires: pnminvert ppmchange ppmpat ppmtopgm ppmtoppm 
+
+tmpdir=${tmpdir:-/tmp}
+
+madras_ppm=${tmpdir}/madras.ppm
+gingham_ppm=${tmpdir}/gingham.ppm
+argyle_ppm=${tmpdir}/argyle.ppm
+
+alpha0_pbm=${tmpdir}/alpha0.pbm
+alpha1_pbm=${tmpdir}/alpha1.pbm
+clear_pbm=${tmpdir}/clear.pbm
+opaque_pbm=${tmpdir}/opaque.pbm
+alpha0_pam=${tmpdir}/alpha0.pam
+alpha1_pam=${tmpdir}/alpha1.pam
+clear_pam=${tmpdir}/clear.pam
+opaque_pam=${tmpdir}/opaque.pam
+
+image0_alpha_pam=${tmpdir}/image0.alpha.pam
+image1_alpha_pam=${tmpdir}/image1.alpha.pam
+
+out_pnm=${tmpdir}/out.pnm
+out0_ppm=${tmpdir}/out0.ppm
+out1_ppm=${tmpdir}/out1.ppm
+out2_ppm=${tmpdir}/out2.ppm
+a0_out_pbm=${tmpdir}/a0.out.pbm
+a1_out_pbm=${tmpdir}/a1.out.pbm
+
+# Make test images & alpha masks
+
+ppmpat -argyle2 \
+  -color=rgb:00/00/00,rgb:ff/ff/ff,rgb:ff/ff/ff 40 24 > ${argyle_ppm}
+ppmpat -gingham3 \
+  -color=rgb:3f/3f/3f,rgb:7f/7f/7f,rgb:ef/ef/ef 40 24 > ${gingham_ppm}
+ppmpat -madras \
+       -color=rgb:0f/0f/0f,rgb:ff/00/00,rgb:00/ff/00 40 24 > ${madras_ppm}
+
+pbmmake -g 5 3 | pamenlarge 8 | tee ${alpha0_pbm} | \
+  pamdepth 255 > ${alpha0_pam}
+pnminvert ${alpha0_pbm} | tee ${alpha1_pbm} | \
+  pamdepth 255 > ${alpha1_pam}
+
+pbmmake -w 40 24 | tee ${clear_pbm} | pamdepth 255 > ${clear_pam}
+pbmmake -b 40 24 | tee ${opaque_pbm} | pamdepth 255 > ${opaque_pam}
+
+
+echo "Test 0."
+echo "Should print 0 or 1 0."
+i=1
+for test_pnm in ${argyle_ppm} ${gingham_ppm} ${madras_ppm} \
+			      ${alpha0_pbm} ${alpha1_pbm}
+  do
+  echo -n "Image $i: "; i=$((i+1));
+  pamtogif ${test_pnm} | giftopnm | tee ${out_pnm} | \
+    cmp -s - ${test_pnm}; result=$?
+
+  if [ $result -eq 0 ];
+    then echo $?;
+  else
+    ppmtoppm < ${out_pnm} | cmp -s - ${test_pnm}; echo $result $?
+  fi
+  # madras, alpha, alpha1 : should match
+  # argyle: giftopnm produces PBM, gingham: giftopnm produces PGM
+  rm ${out_pnm}
+  done
+
+
+echo "Test 1."  # Color + alpha channel
+echo "Should print 0 unless otherwise stated."
+
+i=1
+for test_pnm in  ${argyle_ppm} ${gingham_ppm} ${madras_ppm}
+  do
+  echo "Image $i"; i=$((i+1));
+
+  pamstack -tupletype="RGB_ALPHA" ${test_pnm} ${alpha0_pam} > \
+    ${image0_alpha_pam}
+  pamstack -tupletype="RGB_ALPHA" ${test_pnm} ${alpha1_pam} > \
+    ${image1_alpha_pam}
+
+  pamtogif ${image0_alpha_pam} | giftopnm -alphaout=${a0_out_pbm} | \
+    ppmtoppm | tee ${out0_ppm} | \
+    cmp -s - ${test_pnm}; echo "a1:" $? "(should print 1)"
+  cmp -s ${alpha0_pbm} ${a0_out_pbm}; echo "a2:" $?  # Should match
+
+  pamarith -multiply ${test_pnm} ${alpha0_pbm} | \
+    cmp -s - ${out0_ppm}; echo "a3:" $? # Should match
+
+  pamtogif ${image1_alpha_pam} | giftopnm -alphaout=${a1_out_pbm} | \
+    ppmtoppm | tee ${out1_ppm} | \
+    cmp -s - ${test_pnm}; echo "b1:" $? "(should print 1)"
+
+  cmp -s ${alpha1_pbm} ${a1_out_pbm}; echo "b2:" $?  # Should match
+
+  pamarith -multiply ${test_pnm} ${alpha1_pam} | \
+    cmp -s - ${out1_ppm}; echo "b3:" $?    # Should match
+
+  pamarith -multiply ${test_pnm} ${alpha0_pbm} | \
+    cmp -s - ${out0_ppm}; echo "c1:" $?    # Should match
+
+  pamarith -multiply ${test_pnm} ${alpha1_pbm} | \
+    cmp -s - ${out1_ppm}; echo "c2:" $?    # Should match
+
+  pamcomp -alpha=${alpha0_pbm} ${out0_ppm} ${out1_ppm} | \
+    cmp -s - ${test_pnm}; echo "c3:" $?    # Should match
+
+  pamcomp -alpha=${alpha1_pbm} ${out1_ppm} ${out0_ppm} | \
+    cmp -s - ${test_pnm}; echo "c4:" $?    # Should match
+
+  pamtogif ${image0_alpha_pam} -alphacolor=rgb:00/00/80 | \
+    giftopnm  -alphaout=${a0_out_pbm} > /dev/null
+    cmp -s ${a0_out_pbm} ${alpha0_pbm}; echo "d1:" $?    # Should match
+
+  pamtogif ${image0_alpha_pam} -alphacolor=rgb:00/00/80 | \
+    giftopnm | ppmtoppm | \
+    ppmchange rgb:00/00/80 rgb:00/00/00 -remainder=rgb:ff/ff/ff | \
+    ppmtopgm | \
+    cmp -s - ${alpha0_pam}; echo "d2:" $?    # Should match
+
+  rm ${image0_alpha_pam} ${image1_alpha_pam}
+  rm ${out0_ppm} ${out1_ppm} # ${out0_pnm} ${out1_pnm}
+  rm ${a0_out_pbm} ${a1_out_pbm}
+
+  done
+
+echo "Test 2."  # clear/opaque alpha channel
+echo "Should print 0 unless otherwise stated."
+
+i=1
+for test_pnm in  ${argyle_ppm} ${gingham_ppm} ${madras_ppm}
+  do
+  echo "Image $i"; i=$((i+1));
+
+  pamstack -tupletype="RGB_ALPHA" ${test_pnm} ${clear_pam} > \
+    ${image0_alpha_pam}
+  pamstack -tupletype="RGB_ALPHA" ${test_pnm} ${opaque_pam} > \
+    ${image1_alpha_pam}
+
+  # clear
+  pamtogif ${image0_alpha_pam} | giftopnm -alphaout=${a0_out_pbm} | \
+    ppmtoppm | tee ${out0_ppm} | \
+    cmp -s - ${test_pnm}; echo "cl1:" $? # Should match
+  cmp -s ${clear_pbm} ${a0_out_pbm}; echo "cl2:" $?  # Should match
+
+  # opaque
+  pamtogif ${image1_alpha_pam} | giftopnm -alphaout=${a1_out_pbm} | \
+    tee ${out1_ppm} | \
+    cmp -s - ${test_pnm}; echo "op1:" $? "(should print 1)"
+
+  cmp -s ${opaque_pbm} ${a1_out_pbm}; echo "op2:" $?  # Should match
+
+  rm ${image0_alpha_pam} ${image1_alpha_pam}
+  rm ${out0_ppm} ${out1_ppm}
+  rm ${a0_out_pbm} ${a1_out_pbm}
+
+  done
+
+rm ${clear_pbm} ${clear_pam} ${opaque_pbm} ${opaque_pam}
+
+
+echo "Test 3."  # ppmtogif
+echo "Should print 0 in all cases."
+
+i=1
+for test_pnm in  ${argyle_ppm} ${gingham_ppm} ${madras_ppm}
+  do
+  echo "Image $i"; i=$((i+1));
+
+  ppmtogif -alpha=${alpha0_pbm} ${test_pnm} | \
+    giftopnm -alphaout=${a0_out_pbm} | \
+    ppmtoppm > ${out0_ppm}
+    cmp -s ${alpha0_pbm} ${a0_out_pbm}; echo "a2:" $?  # Should match
+  pamarith -multiply ${test_pnm} ${alpha0_pbm} | \
+    cmp -s - ${out0_ppm}; echo "a3:" $? # Should match
+
+  ppmtogif -alpha=${alpha1_pbm} ${test_pnm} | \
+    giftopnm -alphaout=${a1_out_pbm} | \
+    ppmtoppm > ${out1_ppm}
+    cmp -s ${alpha1_pbm} ${a1_out_pbm}; echo "b2:" $?  # Should match
+  pamarith -multiply ${test_pnm} ${alpha1_pam} | \
+    cmp -s - ${out1_ppm}; echo "b3:" $?    # Should match
+
+  pamcomp -alpha=${alpha1_pbm} ${out1_ppm} ${out0_ppm} | \
+    cmp -s - ${test_pnm}; echo "c4:" $?    # Should match
+
+  rm ${out0_ppm} ${out1_ppm}
+  rm ${a0_out_pbm} ${a1_out_pbm}
+
+  done
+
+rm ${alpha0_pbm} ${alpha1_pbm}
+rm ${alpha0_pam} ${alpha1_pam}
+rm ${argyle_ppm} ${gingham_ppm}
+
+
+echo "Test 4."
+echo "Should print 0 in all cases."
+# no separate alpha channel
+# designate colors which appear in madras as transparent 
+
+for color in "0f/0f/0f" "ff/00/00" "00/ff/00"
+  do
+  echo "color=rgb:"${color}
+  pamtogif -transparent=rgb:${color} ${madras_ppm} | \
+    giftopnm -alphaout=${a0_out_pbm} > ${out0_ppm}
+    cmp -s ${madras_ppm} ${out0_ppm}; echo $?   # Should match 
+
+  pbmmake -g 40 24 | pamdepth 255 | pamstack ${madras_ppm} - | 
+  pamtogif -transparent=rgb:${color} - | \
+    giftopnm -alphaout=${a1_out_pbm} > ${out1_ppm}
+    cmp -s ${madras_ppm} ${out1_ppm}; echo $?   # Should match 
+
+  ppmchange rgb:${color} rgb:00/00/00 \
+    -remainder=rgb:ff/ff/ff ${madras_ppm} > ${out2_ppm}
+
+  ppmtoppm < ${a0_out_pbm} | \
+    cmp -s ${out2_ppm} -; echo $?   # Should match 
+
+  rm ${out0_ppm} ${out1_ppm} ${out2_ppm} ${a0_out_pbm} ${a1_out_pbm}
+  done
+
+rm ${madras_ppm} 

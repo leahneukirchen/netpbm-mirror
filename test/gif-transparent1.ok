@@ -1,0 +1,99 @@
+Test 0.
+Should print 0 or 1 0.
+Image 1: 1 0
+Image 2: 1 0
+Image 3: 0
+Image 4: 0
+Image 5: 0
+Test 1.
+Should print 0 unless otherwise stated.
+Image 1
+a1: 1 (should print 1)
+a2: 0
+a3: 0
+b1: 1 (should print 1)
+b2: 0
+b3: 0
+c1: 0
+c2: 0
+c3: 0
+c4: 0
+d1: 0
+d2: 0
+Image 2
+a1: 1 (should print 1)
+a2: 0
+a3: 0
+b1: 1 (should print 1)
+b2: 0
+b3: 0
+c1: 0
+c2: 0
+c3: 0
+c4: 0
+d1: 0
+d2: 0
+Image 3
+a1: 1 (should print 1)
+a2: 0
+a3: 0
+b1: 1 (should print 1)
+b2: 0
+b3: 0
+c1: 0
+c2: 0
+c3: 0
+c4: 0
+d1: 0
+d2: 0
+Test 2.
+Should print 0 unless otherwise stated.
+Image 1
+cl1: 0
+cl2: 0
+op1: 1 (should print 1)
+op2: 0
+Image 2
+cl1: 0
+cl2: 0
+op1: 1 (should print 1)
+op2: 0
+Image 3
+cl1: 0
+cl2: 0
+op1: 1 (should print 1)
+op2: 0
+Test 3.
+Should print 0 in all cases.
+Image 1
+a2: 0
+a3: 0
+b2: 0
+b3: 0
+c4: 0
+Image 2
+a2: 0
+a3: 0
+b2: 0
+b3: 0
+c4: 0
+Image 3
+a2: 0
+a3: 0
+b2: 0
+b3: 0
+c4: 0
+Test 4.
+Should print 0 in all cases.
+color=rgb:0f/0f/0f
+0
+0
+0
+color=rgb:ff/00/00
+0
+0
+0
+color=rgb:00/ff/00
+0
+0
+0

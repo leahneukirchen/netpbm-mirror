@@ -1,0 +1,35 @@
+#! /bin/bash
+# This script tests: pgmtoppm ppmtopgm ppmtoppm pgmtopbm
+# Also requires: pbmmake pgmcolormask pnminvert
+
+echo "Test 1.  Should print 2425386270 41 five times."
+
+cat testgrid.pbm | cksum
+pgmtoppm black-white testgrid.pbm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 | cksum
+pgmtoppm white-black testgrid.pbm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 | pnminvert | cksum
+pgmtoppm white-black testgrid.pbm | ppmcolormask white | cksum
+ppmtoppm < testgrid.pbm | ppmtopgm | pgmtopbm -th -val=0.5 | cksum
+
+echo "Test 2."
+
+pbmmake -w 7 3  -plain
+echo
+
+pbmmake -w 7 3 | pgmtoppm black-white | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain
+echo
+pbmmake -w 7 3 | ppmtoppm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain
+echo
+
+pbmmake -b 17 2 -plain
+echo
+
+pbmmake -b 17 2 | pgmtoppm black-white | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain
+echo
+pbmmake -b 17 2 | ppmtoppm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain
+

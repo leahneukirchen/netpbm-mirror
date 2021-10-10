@@ -2,6 +2,9 @@
 # This script tests: pamflip
 # Also requires:
 
+echo "Test 1.  Should produce 1926073387 101484 14 times"
+
+# TODO use smaller image
 
 pamflip -lr testimg.ppm | pamflip -lr | cksum
 pamflip -tb testimg.ppm | pamflip -tb | cksum
@@ -16,6 +19,19 @@ pamflip -r270 testimg.ppm | \
   pamflip -r270 | \
   pamflip -r270 | \
   pamflip -r270 | cksum
+pamflip -xform=leftright testimg.ppm | pamflip -leftright | cksum
+pamflip -xform=topbottom testimg.ppm | pamflip -topbottom | cksum
+pamflip -xform=transpose testimg.ppm | pamflip -transpose | cksum
+pamflip -xform=leftright,leftright testimg.ppm | cksum
+pamflip -xform=topbottom,topbottom testimg.ppm | cksum
+pamflip -xform=transpose,transpose testimg.ppm | cksum
+pamflip -tb testimg.ppm | pamflip -lr | \
+  pamflip -xform=leftright,topbottom | cksum
+pamflip -tb testimg.ppm | pamflip -lr | pamflip -xy | \
+  pamflip -xform=leftright,topbottom,transpose | cksum
+
+
+echo "Test 2.  Should produce 2425386270 41 6 times"
 
 pamflip -lr testgrid.pbm | \
   pamflip -lr | cksum
@@ -33,3 +49,8 @@ pamflip -r270 testgrid.pbm | \
   pamflip -r270 | \
   pamflip -r270 | \
   pamflip -r270 | cksum
+
+
+# TODO: single pixel image, one-dimensional (single row, single column) image
+# PBM various lengths: samples with -lr
+
