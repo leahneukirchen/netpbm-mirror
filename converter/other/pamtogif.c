@@ -1892,14 +1892,14 @@ computeColormapFromInput(struct pam *   const pamP,
 
 
 static void
-computeLibnetpbmColormap(struct pam *   const pamP,
-                         bool           const haveAlpha,
-                         const char *   const mapfile,
-                         tuple *        const color,
-                         tuplehash *    const tuplehashP,
-                         struct pam *   const mapPamP,
-                         unsigned int * const colorCountP,
-                         bool           const sort) {
+computeLibnetpbmColormap(struct pam *          const pamP,
+                         enum TransparencyType const transType,
+                         const char *          const mapfile,
+                         tuple *               const color,
+                         tuplehash *           const tuplehashP,
+                         struct pam *          const mapPamP,
+                         unsigned int *        const colorCountP,
+                         bool                  const sort) {
 /*----------------------------------------------------------------------------
    Compute a colormap, libnetpbm style, for the image described by
    'pamP', which is positioned to the raster.
@@ -1913,21 +1913,23 @@ computeLibnetpbmColormap(struct pam *   const pamP,
    The tuples of the color map have a meaningful depth of 1 (grayscale) or 3
    (color) and *mapPamP reflects that.
 
-   While we're at it, count the colors and validate that there aren't
-   too many.  Return the count as *colorCountP.  In determining if there are
-   too many, allow one slot for a fake transparency color if 'haveAlpha'
-   is true.  If there are too many, issue an error message and abort the
+   While we're at it, count the colors and validate that there aren't too
+   many.  Return the count as *colorCountP.  In determining if there are too
+   many, allow one slot for a fake transparency color if 'transType' is
+   'TRANS_ALPHA'.  If there are too many, issue an error message and abort the
    program.
 
    'sort' means to sort the colormap by red intensity, then by green
    intensity, then by blue intensity, as opposed to arbitrary order.
 -----------------------------------------------------------------------------*/
-    unsigned int const maxcolors = haveAlpha ? MAXCMAPSIZE - 1 : MAXCMAPSIZE;
+    unsigned int const maxcolors =
+        transType == TRANS_ALPHA ? MAXCMAPSIZE - 1 : MAXCMAPSIZE;
         /* The most colors we can tolerate in the image.  If we have
            our own made-up entry in the colormap for transparency, it
            isn't included in this count.
         */
-    unsigned int const nInputComp = haveAlpha ? pamP->depth - 1 : pamP->depth;
+    unsigned int const nInputComp =
+        pamAlphaPlane(pamP) ? pamP->depth - 1 : pamP->depth;
         /* Number of color components (not alpha) in the input image */
 
     unsigned int i;
@@ -2010,15 +2012,15 @@ main(int argc, char *argv[]) {
 
     pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
 
-    computeLibnetpbmColormap(&pam, !!pamAlphaPlane(&pam), cmdline.mapfile,
+    transType = cmdline.transparent ? TRANS_COLOR :
+        pamAlphaPlane(&pam) ? TRANS_ALPHA :
+        TRANS_NONE;
+
+    computeLibnetpbmColormap(&pam, transType, cmdline.mapfile,
                              cmap.color, &cmap.tuplehash,
                              &cmap.pam, &cmap.cmapSize, cmdline.sort);
 
     assert(cmap.pam.maxval == pam.maxval);
-
-    transType = cmdline.transparent ? TRANS_COLOR :
-        pamAlphaPlane(&pam) ? TRANS_ALPHA :
-        TRANS_NONE;
 
     if (transType == TRANS_ALPHA) {
         /* Add a fake entry to the end of the colormap for transparency.
