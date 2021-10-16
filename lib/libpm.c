@@ -844,6 +844,9 @@ pm_parse_width(const char * const arg) {
    Return the image width represented by the decimal ASCIIZ string
    'arg'.  Fail if it doesn't validly represent a width or represents
    a width that can't be conveniently used in computation.
+
+   See comments at 'validateComputableSize' in libpam.c for details on
+   the purpose of these validations.
 -----------------------------------------------------------------------------*/
     unsigned int width;
     const char * error;

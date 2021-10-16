@@ -90,7 +90,12 @@ validateComputableSize(struct pam * const pamP) {
    the size of a tuple row, in bytes, can be represented by an 'int'.
 
    Another common operation is adding 1 or 2 to the highest row, column,
-   or plane number in the image, so we make sure that's possible.
+   or plane number in the image, so we make sure that's possible.  And in
+   bitmap images, rounding up to multiple of 8 is common, so we provide for
+   that too.
+
+   Note that it's still the programmer's responsibility to ensure that his
+   code, using values known to have been validated here, cannot overflow.
 -----------------------------------------------------------------------------*/
     if (pamP->width == 0)
         pm_error("Width is zero.  Image must be at least one pixel wide");
@@ -111,10 +116,10 @@ validateComputableSize(struct pam * const pamP) {
 
         if (depth > INT_MAX - 2)
             pm_error("image depth (%u) too large to be processed", depth);
-        if (pamP->width > INT_MAX - 2)
+        if (pamP->width > INT_MAX - 10)
             pm_error("image width (%u) too large to be processed",
                      pamP->width);
-        if (pamP->height > INT_MAX - 2)
+        if (pamP->height > INT_MAX - 10)
             pm_error("image height (%u) too large to be processed",
                      pamP->height);
     }
