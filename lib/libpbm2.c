@@ -72,9 +72,9 @@ validateComputableSize(unsigned int const cols,
    A common operation is adding 1 or 2 to the highest row or
    column number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 2)
+    if (cols > INT_MAX - 10)
         pm_error("image width (%u) too large to be processed", cols);
-    if (rows > INT_MAX - 2)
+    if (rows > INT_MAX - 10)
         pm_error("image height (%u) too large to be processed", rows);
 }
 

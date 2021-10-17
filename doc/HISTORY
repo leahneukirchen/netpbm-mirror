@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.10.17 BJH  Release 10.86.25
+
+              pamtogif: Fix bug: doesn't ignore the input alpha mask when user
+              specified -transparent.  Broken in Netpbm 10.37 (December 2006).
+
+              libnetpbm: When validating computable size of width and height,
+              allow for adding up to 10 instead of 2, to account for rounding
+              up to a multiple of 8 in processing bit maps.
+
 21.08.30 BJH  Release 10.86.24
 
               ximtoppm: Fix bug: invalid memory references with pathological

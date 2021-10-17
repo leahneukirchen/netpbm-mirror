@@ -24,6 +24,11 @@ static unsigned int const gifMaxval = 255;
 static bool verbose;
 
 
+enum TransparencyType {TRANS_NONE, TRANS_COLOR, TRANS_ALPHA};
+    // The source of transparency for the GIF: nothing is transparent,
+    // All pixels of a certain color are transparent, or the alpha plane
+    // in the input tells what is transparent.
+
 typedef unsigned int StringCode;
     /* A code to be place in the GIF raster.  It represents
        a string of one or more pixels.  You interpret this in the context
@@ -87,7 +92,12 @@ struct CmdlineInfo {
 
 static unsigned int
 pamAlphaPlane(struct pam * const pamP) {
+/*----------------------------------------------------------------------------
+   The number of the alpha plane, or zero if there is no alpha plane, as
+   indicated by *pamP.
 
+   Note that the alpha plane is never zero in any Netpbm tuple type.
+-----------------------------------------------------------------------------*/
     unsigned int alphaPlane;
 
     if (streq(pamP->tuple_type, "RGB_ALPHA"))
@@ -440,18 +450,25 @@ gifPixel(struct pam *   const pamP,
          sample         const alphaThreshold,
          struct Cmap *  const cmapP) {
 /*----------------------------------------------------------------------------
-   Return as *colorIndexP the colormap index of the tuple 'tuple',
-   whose format is described by *pamP, using colormap *cmapP.
+   Return the colormap index of the tuple 'tuple', whose format is described
+   by *pamP, using colormap *cmapP.
 
-   'alphaThreshold' is the alpha level below which we consider a
-   pixel transparent for GIF purposes.
+   'alphaPlane' is the number of the plane in 'tuple' to use for transparency,
+   or zero if we aren't to use any plane for transparency.  (note that Caller
+   cannot specify plane 0 for transparency).
+
+   'alphaThreshold' is the alpha level below which we consider a pixel
+   transparent for GIF purposes.
+
+   If 'alphaPlane' is nonzero, we assume *cmapP contains a transparent
+   entry.
 -----------------------------------------------------------------------------*/
     int colorIndex;
 
-    if (alphaPlane && tuple[alphaPlane] < alphaThreshold &&
-        cmapP->haveTransparent)
+    if (alphaPlane && tuple[alphaPlane] < alphaThreshold) {
+        assert(cmapP->haveTransparent);
         colorIndex = cmapP->transparent;
-    else {
+    } else {
         int found;
 
         pnm_lookuptuple(pamP, cmapP->tuplehash, tuple,
@@ -1269,6 +1286,14 @@ writeRaster(struct pam *  const pamP,
    Get the raster to write from 'rowReaderP', which gives tuples whose
    format is described by 'pamP'.
 
+   'alphaPlane' is the number of the plane in the tuples supplied by
+   'rowReaderP' that we should use for transparency information, and
+   'alphaThreshold' is the value in that plane below which we should consider
+   the pixel transparent for GIF purposes.
+
+   'alphaPlane' is zero to indicate we should not use any plane as an alpha
+   plane (so it's not possible to specify Plane 0 as alpha).
+
    Use the colormap 'cmapP' to generate the raster ('rowReaderP' gives
    pixel values as RGB samples; the GIF raster is colormap indices).
 
@@ -1489,8 +1514,13 @@ gifEncode(struct pam *  const pamP,
           char          const comment[],
           float         const aspect,
           bool          const lzw,
-          bool          const noclear) {
-
+          bool          const noclear,
+          bool          const usingAlpha) {
+/*----------------------------------------------------------------------------
+   'usingAlpha' means use the alpha (transparency) plane, if there is one, to
+   determine which GIF pixels are transparent.  When this is true, the
+   colormap *cmapP must contain a transparent entry.
+-----------------------------------------------------------------------------*/
     unsigned int const leftOffset = 0;
     unsigned int const topOffset  = 0;
 
@@ -1502,7 +1532,7 @@ gifEncode(struct pam *  const pamP,
            pixels in the output image.
         */
 
-    unsigned int const alphaPlane = pamAlphaPlane(pamP);
+    unsigned int const alphaPlane = usingAlpha ? pamAlphaPlane(pamP) : 0;
 
     RowReader * rowReaderP;
 
@@ -1544,9 +1574,22 @@ gifEncode(struct pam *  const pamP,
 
 
 static void
-reportTransparent(struct Cmap * const cmapP) {
+reportTransparent(enum TransparencyType const transType,
+                  struct Cmap *         const cmapP) {
 
     if (verbose) {
+        switch (transType) {
+        case TRANS_NONE:
+            pm_message("Not making transparent pixels");
+            break;
+        case TRANS_COLOR:
+            pm_message("Making pixels of a certain color transparent");
+            break;
+        case TRANS_ALPHA:
+            pm_message("Making pixels transparent per input alpha mask");
+            break;
+        }
+
         if (cmapP->haveTransparent) {
             tuple const color = cmapP->color[cmapP->transparent];
             pm_message("Color %u (%lu, %lu, %lu) is transparent",
@@ -1562,41 +1605,45 @@ reportTransparent(struct Cmap * const cmapP) {
 
 
 static void
-computeTransparent(char          const colorarg[],
-                   bool          const usingFakeTrans,
-                   unsigned int  const fakeTransparent,
-                   struct Cmap * const cmapP) {
+computeTransparent(enum TransparencyType const transType,
+                   char                  const colorarg[],
+                   unsigned int          const fakeTransparent,
+                   struct Cmap *         const cmapP) {
 /*----------------------------------------------------------------------------
    Figure out the color index (index into the colormap) of the color
-   that is to be transparent in the GIF.
+   that is to be transparent in the GIF and set it in the colormap.
 
-   colorarg[] is the string that specifies the color the user wants to
-   be transparent (e.g. "red", "#fefefe").  Its maxval is the maxval
-   of the colormap.  'cmap' is the full colormap except that its
-   'transparent' component isn't valid.
+   'transType' tells what the source of the transparency is.
 
-   colorarg[] is a standard Netpbm color specification, except that
-   may have a "=" prefix, which means it specifies a particular exact
-   color, as opposed to without the "=", which means "the color that
-   is closest to this and actually in the image."
+   If 'transType' says all pixels of a single foreground color are to be
+   transparent:
 
-   colorarg[] null means the color didn't ask for a particular color
-   to be transparent.
+     'colorarg' is the specification of that color.  Its
+     maxval is the maxval of the colormap.
 
-   Establish no transparent color if colorarg[] specifies an exact
-   color and that color is not in the image.  Also issue an
-   informational message.
+     colorarg[] is a standard Netpbm color specification (e.g. "red",
+     "#fefefe"), except that may have a "=" prefix, which means it specifies a
+     particular exact color, as opposed to without the "=", which means "the
+     color that is closest to this and actually in the image."
 
-   'usingFakeTrans' means pixels will be transparent because of something
-   other than their foreground color, and 'fakeTransparent' is the
-   color map index for transparent colors.
+     Establish no transparent color if colorarg[] specifies an exact
+     color and that color is not in the image.  Also issue an
+     informational message.
+
+   If 'transType' says an input alpha channel will dtermine what pixels are
+   transparent:
+
+     'fakeTransparent' is the special color map index for transparent pixels.
 -----------------------------------------------------------------------------*/
-    if (colorarg) {
+    switch (transType) {
+    case TRANS_COLOR: {
         const char * colorspec;
         bool exact;
         tuple transcolor;
         int found;
         int colorindex;
+
+        assert(colorarg);
 
         if (colorarg[0] == '=') {
             colorspec = &colorarg[1];
@@ -1621,13 +1668,16 @@ computeTransparent(char          const colorarg[],
             pm_message("Warning: specified transparent color "
                        "does not occur in image.");
         }
-    } else if (usingFakeTrans) {
+    } break;
+    case TRANS_ALPHA: {
         cmapP->haveTransparent = TRUE;
         cmapP->transparent = fakeTransparent;
-    } else
+    } break;
+    case TRANS_NONE: {
         cmapP->haveTransparent = FALSE;
-
-    reportTransparent(cmapP);
+    } break;
+    }  // switch
+    reportTransparent(transType, cmapP);
 }
 
 
@@ -1940,13 +1990,13 @@ main(int argc, char *argv[]) {
     struct pam pam;
     unsigned int bitsPerPixel;
     pm_filepos rasterPos;
-
     struct Cmap cmap;
         /* The colormap, with all its accessories */
+    enum TransparencyType transType;
     unsigned int fakeTransparent;
         /* colormap index of the fake transparency color we're using to
-           implement the alpha mask.  Undefined if we're not doing an alpha
-           mask.
+           implement the alpha mask.  Defined only if 'transType' is
+           TRANS_ALPHA.
         */
 
     pnm_init(&argc, argv);
@@ -1967,7 +2017,11 @@ main(int argc, char *argv[]) {
 
     assert(cmap.pam.maxval == pam.maxval);
 
-    if (pamAlphaPlane(&pam)) {
+    transType = cmdline.transparent ? TRANS_COLOR :
+        pamAlphaPlane(&pam) ? TRANS_ALPHA :
+        TRANS_NONE;
+
+    if (transType == TRANS_ALPHA) {
         /* Add a fake entry to the end of the colormap for transparency.
            Make its color black.
         */
@@ -1976,13 +2030,13 @@ main(int argc, char *argv[]) {
 
     bitsPerPixel = cmap.cmapSize == 1 ? 1 : nSignificantBits(cmap.cmapSize-1);
 
-    computeTransparent(cmdline.transparent,
-                       !!pamAlphaPlane(&pam), fakeTransparent, &cmap);
+    computeTransparent(transType, cmdline.transparent, fakeTransparent, &cmap);
 
     /* All set, let's do it. */
     gifEncode(&pam, stdout, rasterPos,
               cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-              cmdline.aspect, !cmdline.nolzw, cmdline.noclear);
+              cmdline.aspect, !cmdline.nolzw, cmdline.noclear,
+              !cmdline.transparent);
 
     destroyCmap(&cmap);
 
