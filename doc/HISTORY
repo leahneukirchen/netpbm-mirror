@@ -8,6 +8,8 @@ not yet  BJH  Release 10.97.00
 
               pgmtoppm: Add -black, -white.
 
+              pampaintspill: Add -near.  Thanks Scott Pakin.
+
               pamtogif: Fix bug: doesn't ignore the input alpha mask when user
               specified -transparent.  Broken in Netpbm 10.37 (December 2006).
 
