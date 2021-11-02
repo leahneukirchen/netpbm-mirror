@@ -2,7 +2,7 @@
 <html><head><title>Pampaintspill User Manual</title></head>
 <body>
 <h1>pampaintspill</h1>
-Updated: 06 March 2021
+Updated: 02 November 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -14,8 +14,10 @@ pampaintspill - smoothly spill colors into the background
 <p>
 <b>pampaintspill</b>
 [<b>--bgcolor</b>=<i>color</i>]
-[<b>--wrap</b>] [<b>--all</b>]
+[<b>--wrap</b>]
+[<b>--all</b>]
 [<b>--downsample</b>=<i>number</i>]
+[<b>--near</b>=<i>number</i>]
 [<b>--power</b>=<i>number</i>] [<i>filename</i>]
 [<b>-randomseed=</b><i>integer</i>]
 
@@ -92,6 +94,16 @@ command line options:
       pixels to use as paint sources for the gradients and ignores the rest,
       thereby trading off image quality for speed of execution.</dd>
 
+  <dt><b>--near</b>=<i>number</i></dt>
+  <dd>Consider only the nearest <i>number</i> paint sources when computing
+      a pixel's new color.  The default is to consider all paint sources.
+      In most cases, <i>number</i> should be fairly small, or its impact
+      will be minimal and execution time will increase unnecessarily.  A
+      value of 1 produces a coloring that looks a lot like a Voronoi
+      diagram.
+
+      <p>This option was new in Netpbm 10.97 (December 2021).</dd>
+
   <dt><b>--power</b>=<i>number</i></dt>
   <dd>Control how color intensity changes as a function of the
       distance from a paint source. The default value for <i>number</i> is
@@ -103,13 +115,14 @@ command line options:
       the number of paint sources increases. Positive numbers (e.g., 1.0 and
       2.0) make the paint sources stand out in the output image by pushing the
       gradients away from them.</dd>
+
   <dt><b>-randomseed=</b><i>integer</i>
-   <dd>This is the seed for the random number generator that generates the
+  <dd>This is the seed for the random number generator that generates the
   pixels.
-  
+
   <p>Use this to ensure you get the same image on separate invocations.
-  
-  <p>This option was new in Netpbm 10.94 (March 2021).
+
+  <p>This option was new in Netpbm 10.94 (March 2021).</dd>
 </dl>
 
 
@@ -131,7 +144,7 @@ command line options:
 
 <h2 id="copyright">COPYRIGHT</h2>
 
-<p>Copyright&nbsp;&copy; 2010 Scott Pakin,
+<p>Copyright&nbsp;&copy; 2010&ndash;2021 Scott Pakin,
 <a href="mailto:scott+pbm@pakin.org"><i>scott+pbm@pakin.org</i></a>.
 
 <h2 id="index">Table Of Contents</h2>
