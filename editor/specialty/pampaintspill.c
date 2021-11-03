@@ -433,14 +433,6 @@ computeDistances(struct pam *           const pamP,
             }
         }
         distancesP->size = numNear;
-
-        if (false) {
-            pm_message("Nearest point to (%u, %u) is "
-                       "(%u, %u) @ distance**2 of %.5g",
-                       target.x, target.y,
-                       distancesP->sources[0].x, distancesP->sources[0].y,
-                       distancesP->distSqrs[0]);
-        }
     }
 }
 
