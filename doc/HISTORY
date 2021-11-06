@@ -18,6 +18,8 @@ not yet  BJH  Release 10.97.00
               the image than the first.  Always broken (Pamrubber was new in
               Netpbm 10.54 (March 2011)).
 
+              pbmclean: Fix overallocation of memory (waste).
+
               libnetpbm: When validating computable size of width and height,
               allow for adding up to 10 instead of 2, to account for rounding
               up to a multiple of 8 in processing bit maps.

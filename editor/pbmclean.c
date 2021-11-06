@@ -381,7 +381,7 @@ cleanSimple(FILE *             const ifP,
    Do the traditional clean where you look only at the immediate neighboring
    pixels of a subject pixel to determine whether to erase that pixel.
 -----------------------------------------------------------------------------*/
-    bit ** buffer;
+    bit ** buffer;  /* one bit per pixel */
         /* The rows of the input relevant to our current processing:
            the current row and the one above and below it.
         */
@@ -399,7 +399,7 @@ cleanSimple(FILE *             const ifP,
     setupInputBuffers(ifP, cols, format, &buffer, &edgeRow,
                       &thisRow, &nextRow);
 
-    outRow = pbm_allocrow(cols);
+    outRow = pbm_allocrow_packed(cols);
 
     pbm_writepbminit(ofP, cols, rows, 0) ;
 
@@ -756,12 +756,12 @@ cleanExtended(FILE *             const ifP,
    We erase (flip) every pixel in every trivial blob.  A trivial blob is
    one with 'trivialSize' pixels or fewer.
 -----------------------------------------------------------------------------*/
-    bit ** pixels;
+    bit ** pixels;    /* one byte per pixel */
     int cols, rows;
 
     pixels = pbm_readpbm(ifP, &cols, &rows);
 
-	cleanPixels(pixels, cols, rows, foregroundColor, trivialSize, nFlippedP);
+        cleanPixels(pixels, cols, rows, foregroundColor, trivialSize, nFlippedP);
 
     pbm_writepbm(ofP, pixels, cols, rows, 0);
 
