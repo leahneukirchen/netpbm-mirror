@@ -44,7 +44,7 @@
 #define dataobject_OBJECTCREATIONFAILED 4
 #define dataobject_BADFORMAT 5
 
-/* ReadRow(file, row, length) 
+/* ReadRow(file, row, length)
 ** Reads from 'file' the encoding of bytes to fill in 'row'.  Row will be
 ** truncated or padded (with WHITE) to exactly 'length' bytes.
 **
@@ -52,7 +52,7 @@
 **      '|'     correct end of line
 **      '\0'    if the length was satisfied (before a terminator)
 **      EOF     if the file ended
-**      '\'  '{'    other recognized ends. 
+**      '\'  '{'    other recognized ends.
 ** The '|' is the expected end and pads the row with WHITE.
 ** The '\' and '{' are error conditions and may indicate the
 ** beginning of some other portion of the data stream.
@@ -76,11 +76,11 @@ ReadRow(FILE *          const file,
   'file' is where to get them from.
   'row' is where to put bytes.
   'length' is how many bytes in row must be filled.
-  
+
   Return the delimiter that marks the end of the row, or EOF if EOF marks
   the end of the row, or NUL in some cases.
 -----------------------------------------------------------------------------*/
-    /* Each input character is processed by the central loop.  There are 
+    /* Each input character is processed by the central loop.  There are
     ** some input codes which require two or three characters for
     ** completion; these are handled by advancing the state machine.
     ** Errors are not processed; instead the state machine is reset
@@ -98,7 +98,7 @@ ReadRow(FILE *          const file,
         RepeatAndDigit
             /* have seen repeat code and its first following digit */
     };
-    
+
     enum StateCode InputState;  /* current state */
     int c;     /* the current input character */
     long repeatcount;  /* current repeat value */
@@ -106,8 +106,8 @@ ReadRow(FILE *          const file,
     long pendinghex;    /* the first of a pair of hex characters */
     int lengthRemaining;
     unsigned char * cursor;
-    
-    /* We cannot exit when length becomes zero because we need to check 
+
+    /* We cannot exit when length becomes zero because we need to check
     ** to see if a row ending character follows.  Thus length is checked
     ** only when we get a data generating byte.  If length then is
     ** zero, we ungetc the byte.
@@ -148,7 +148,7 @@ ReadRow(FILE *          const file,
             while (lengthRemaining-- > 0)
                 *cursor++ = WHITEBYTE;
             return c;
-    
+
         CASE1(0x21):
         CASE6(0x22):
         CASE8(0x28):
@@ -227,9 +227,9 @@ ReadRow(FILE *          const file,
             break;
 
         store:
-            /* generate byte(s) into the output row 
+            /* generate byte(s) into the output row
                Use repeatcount, depending on state.  */
-            if (lengthRemaining < repeatcount) 
+            if (lengthRemaining < repeatcount)
                 /* reduce repeat count if it would exceed
                    available space */
                 repeatcount = lengthRemaining;
@@ -269,7 +269,7 @@ ReadATKRaster(FILE * const ifP) {
         pm_error ("input file not Andrew raster object");
 
     fscanf(ifP, " %d ", &version);
-    if (version < 2) 
+    if (version < 2)
         pm_error ("version too old to parse");
 
     {
@@ -277,8 +277,8 @@ ReadATKRaster(FILE * const ifP) {
         long xscale, yscale;
         long xoffset, yoffset, subwidth, subheight;
         /* ignore all these features: */
-        fscanf(ifP, " %u %ld %ld %ld %ld %ld %ld",  
-               &options, &xscale, &yscale, &xoffset, 
+        fscanf(ifP, " %u %ld %ld %ld %ld %ld %ld",
+               &options, &xscale, &yscale, &xoffset,
                &yoffset, &subwidth, &subheight);
     }
     /* scan to end of line in case this is actually something beyond V2 */
@@ -291,8 +291,12 @@ ReadATKRaster(FILE * const ifP) {
 
     fscanf(ifP, " %d %d %d ", &objectid, &width, &height);
 
-    if (width < 1 || height < 1 || width > 1000000 || height > 1000000) 
+    if (width < 1 || height < 1 || width > 1000000 || height > 1000000)
         pm_error("bad width or height");
+        /* Note: Whether these values are upper limits set by the author of
+           the original version of this program, or come from the official
+           file format specification is unknown.
+        */
 
     pbm_writepbminit(stdout, width, height, 0);
     bitrow = pbm_allocrow_packed(width);
@@ -302,7 +306,7 @@ ReadATKRaster(FILE * const ifP) {
         long const nextChar = ReadRow(ifP, bitrow, rowlen);
 
         switch (nextChar) {
-        case '|': 
+        case '|':
             pbm_writepbmrow_packed(stdout, bitrow, width, 0);
             break;
         case EOF:
