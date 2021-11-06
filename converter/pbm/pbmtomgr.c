@@ -33,7 +33,7 @@ putinit(unsigned int const rows,
     head._reserved = ' ';
     writtenCount = fwrite(&head, sizeof(head), 1, stdout);
     if (writtenCount != 1)
-        pm_error("fwrite() failed to write the MGR header.");    
+        pm_error("fwrite() failed to write the MGR header.");
 }
 
 
@@ -63,7 +63,7 @@ main(int argc,
         inputFileName = argv[1];
     else
         inputFileName = "-";
-    
+
     ifP = pm_openr(inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
@@ -71,14 +71,14 @@ main(int argc,
         pm_error("Image width too large: %u (max: %u)", cols, maxDimension);
     if (rows > maxDimension)
         pm_error("Image height too large: %u (max: %u)", rows, maxDimension);
-    
+
     bitrow = pbm_allocrow_packed(cols);
     bytesPerRow = pbm_packed_bytes(cols);
 
     putinit(rows, cols);
-    
+
     for (row = 0; row < rows; ++row) {
-        /* The raster formats are identical. 
+        /* The raster formats are identical.
            The row end pad bits are set to 0 in mgr.
         */
         size_t bytesWritten;
@@ -89,7 +89,7 @@ main(int argc,
         bytesWritten = fwrite(bitrow, 1, bytesPerRow, stdout);
         if (bytesWritten != bytesPerRow )
             pm_error("fwrite() failed to write MGR bitmap "
-                     "to Standard Output.");    
+                     "to Standard Output.");
     }
     pm_close(ifP);
     return 0;
@@ -102,7 +102,7 @@ main(int argc,
    pbm_readpbmrow_packed(), write function from putc() to fwrite().
 
    Retired bitwise transformation functions.
-   
+
    Produces only new style bitmap (8 bit padding.)  See mgrtopbm.c .
 */
 
