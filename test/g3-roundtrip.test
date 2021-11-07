@@ -1,11 +1,15 @@
 #! /bin/bash
 # This script tests: g3topbm pbmtog3
-# Also requires: pnmcrop pbmmake
+# Also requires: pnmcrop pbmmake pbmpage pnmpad
 
 tmpdir=${tmpdir:-/tmp}
 complete256_pbm=${tmpdir}/complete256.pbm
 widew_pbm=${tmpdir}/widew.pbm
 wideb_pbm=${tmpdir}/wideb.pbm
+page_pbm=${tmpdir}/page.pbm
+pagemax_pbm=${tmpdir}/pagemax.pbm
+
+echo "Test 1.  Should print 0 0 0 : 0 or 0 0 0 0 : 0 total three times"
 
 pbmtog3 -nofixedwidth testgrid.pbm | \
 g3topbm -width=14 | cmp -s - testgrid.pbm
@@ -19,6 +23,10 @@ pbmtog3 testgrid.pbm | \
 g3topbm  | pnmcrop -white -right -bottom | \
  cmp -s - testgrid.pbm ; echo ${PIPESTATUS[@]} ":" $?
 
+
+echo "Test 2.  Should print 0 0 0 : 0 or 0 0 0 0 : 0 total seven times"
+echo "then 1777627284 265, 2985378006 3135, 3651878552 3135"
+
 # works with gawk and mawk
 # produce all possible 8-bit patterns
 
@@ -27,7 +35,7 @@ LC_ALL=C awk 'BEGIN { print "P4";         # header
                       for (i=0;i<256;++i) # raster
                            printf("%c",i) }' > ${complete256_pbm}
 
-pbmtog3 -nofixedwidth  ${complete256_pbm} |  g3topbm -width=8 | \
+pbmtog3 -nofixedwidth  ${complete256_pbm} | g3topbm -width=8 | \
  cmp -s - ${complete256_pbm} ; echo ${PIPESTATUS[@]} ":" $?
 
 pbmtog3 -reverse -nofixedwidth ${complete256_pbm} | \
@@ -54,8 +62,26 @@ pbmmake -b 5000 5 > ${wideb_pbm}
 pbmtog3 -nofixedwidth ${wideb_pbm} | g3topbm | \
  cmp -s - ${wideb_pbm} ; echo ${PIPESTATUS[@]} ":" $?
 
+
+
 cat ${complete256_pbm} | cksum
 cat ${wideb_pbm} | cksum
 cat ${widew_pbm} | cksum
 
 rm ${complete256_pbm} ${wideb_pbm} ${widew_pbm}
+
+
+echo "Test 3.  Should print 0 0 0 : 0 twice"
+echo "then 356688157 17399694 twice"
+
+pbmpage 3 -a4 | pamenlarge 2 > ${page_pbm}
+pbmtog3 -nofixedwidth  ${page_pbm} | g3topbm | \
+ cmp -s - ${page_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+pnmpad -width=1000 -height=1400 ${page_pbm} > ${pagemax_pbm}
+pbmtog3 -nofixedwidth  ${pagemax_pbm} | g3topbm  | \
+ cmp -s - ${pagemax_pbm} ; echo ${PIPESTATUS[@]} ":" $?
+
+cat ${page_pbm} | cksum
+cat ${pagemax_pbm} | cksum
+
