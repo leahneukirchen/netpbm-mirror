@@ -690,7 +690,6 @@ enlargePbm(struct pam * const inpamP,
         unsigned int const rightPadding =
             scaleMethod == METHOD_GENERAL ? 0 : (xScaleFactor - 1) * 8;
 
-        assert (outcols < UINT_MAX - rightPadding);
         outrow = pbm_allocrow_packed(outcols + rightPadding);
 
         if (scaleMethod == METHOD_GENERAL)
