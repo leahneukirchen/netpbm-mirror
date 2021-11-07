@@ -10,6 +10,8 @@ not yet  BJH  Release 10.97.00
 
               pampaintspill: Add -near.  Thanks Scott Pakin.
 
+              g3topbm: Fix bug: arbitrary behavior with very wide image.
+
               pamtogif: Fix bug: doesn't ignore the input alpha mask when user
               specified -transparent.  Broken in Netpbm 10.37 (December 2006).
 

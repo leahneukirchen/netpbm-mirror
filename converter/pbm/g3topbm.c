@@ -527,7 +527,7 @@ readFaxRow(struct BitStream * const bitStreamP,
     done = FALSE;
 
     while (!done) {
-        if (col >= MAXCOLS) {
+        if (col > MAXCOLS) {
             pm_asprintf(exceptionP, "Line is too long for this program to "
                         "handle -- longer than %u columns", MAXCOLS);
             done = TRUE;
@@ -552,12 +552,11 @@ readFaxRow(struct BitStream * const bitStreamP,
                 curcode = (curcode << 1) | bit;
                 ++curlen;
 
-		if (curlen > 11 && curcode == 0x00) {
-		    if (++fillbits > MAXFILLBITS)
-                pm_error("Encountered %u consecutive fill bits.  "
-                       "Aborting", fillbits);
-		}
-		else if (curlen - fillbits > 13) {
+                if (curlen > 11 && curcode == 0x00) {
+                    if (++fillbits > MAXFILLBITS)
+                        pm_error("Encountered %u consecutive fill bits.  "
+                                 "Aborting", fillbits);
+                } else if (curlen - fillbits > 13) {
                     formatBadCodeException(exceptionP, col, curlen, curcode);
                     done = TRUE;
                 } else if (curcode != 0) {
