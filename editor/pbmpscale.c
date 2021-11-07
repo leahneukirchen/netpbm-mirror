@@ -141,7 +141,7 @@ validateComputableDimensions(unsigned int const width,
    See validateComputetableSize() in libpam.c
    and pbm_readpbminitrest() in libpbm2.c
 -----------------------------------------------------------------------------*/
-    unsigned int const maxWidthHeight = INT_MAX - 2;
+    unsigned int const maxWidthHeight = INT_MAX - 10;
     unsigned int const maxScaleFactor = maxWidthHeight / MAX(height, width);
 
     if (scaleFactor > maxScaleFactor)
@@ -154,8 +154,8 @@ validateComputableDimensions(unsigned int const width,
 
 static void
 writeBitSpan(unsigned char * const packedBitrow,
-             int             const cols,
-             int             const offset,
+             unsigned int    const cols,
+             unsigned int    const offset,
              int             const color) {
 /*----------------------------------------------------------------------------
    Write white (color="0") or black (="1") bits into packedBitrow[],
