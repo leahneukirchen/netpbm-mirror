@@ -47,9 +47,16 @@
 
 
 #include <stdbool.h>
+#include <assert.h>
 
 #include "mallocvar.h"
 #include "pbm.h"
+
+static unsigned int widthMax = 127 * 256 + 255;
+    /* Limit in official Epson manual */
+
+static unsigned int const heightMax = 5120 * 200;
+    /* 5120 rows is sufficient for US legal at 360 DPI */
 
 #define ESC 033
 
@@ -97,7 +104,7 @@ readChar(FILE * const ifP) {
 
 
 
-static void       
+static void
 readStripeHeader(unsigned int * const widthThisStripeP,
                  unsigned int * const rowsThisStripeP,
                  unsigned int * const compressionP,
@@ -113,12 +120,16 @@ readStripeHeader(unsigned int * const widthThisStripeP,
     compression     = stripeHeader[0];
     /* verticalResolution   = stripeHeader[1]; */
     /* horizontalResolution = stripeHeader[2]; */
-    rowsThisStripe  = stripeHeader[3];  
+    rowsThisStripe  = stripeHeader[3];
     widthThisStripe = stripeHeader[5] * 256 + stripeHeader[4];
 
     if (widthThisStripe == 0 || rowsThisStripe == 0)
         pm_error("Error: Abnormal value in data block header:  "
                  "Says stripe has zero width or height");
+
+    if (widthThisStripe > widthMax)
+        pm_error("Error: Abnormal width value in data block header:  %u",
+                 widthThisStripe);
 
     if (compression != 0 && compression != 1)
         pm_error("Error: Unknown compression mode %u", compression);
@@ -132,7 +143,7 @@ readStripeHeader(unsigned int * const widthThisStripeP,
 
 /* RLE decoder */
 static void
-decEpsonRLE(unsigned int    const blockSize, 
+decEpsonRLE(unsigned int    const blockSize,
             unsigned char * const outBuffer,
             FILE *          const ifP) {
 
@@ -163,7 +174,7 @@ decEpsonRLE(unsigned int    const blockSize,
             unsigned int i;
 
             for (i = 0; i < runLength; ++i)
-                outBuffer[dpos + i] = repeatChar;  
+                outBuffer[dpos + i] = repeatChar;
             dpos += runLength;
         }
     }
@@ -180,7 +191,7 @@ processStripeRaster(unsigned char ** const bitarray,
                     unsigned int     const compression,
                     FILE *           const ifP,
                     unsigned int *   const rowIdxP) {
-         
+
     unsigned int const initialRowIdx = *rowIdxP;
     unsigned int const widthInBytes = pbm_packed_bytes(width);
     unsigned int const blockSize = rowsThisStripe * widthInBytes;
@@ -221,14 +232,12 @@ expandBitarray(unsigned char *** const bitarrayP,
                unsigned int   *  const bitarraySizeP) {
 
     unsigned int const heightIncrement = 5120;
-    unsigned int const heightMax = 5120 * 200;
-        /* 5120 rows is sufficient for US legal at 360 DPI */
 
     *bitarraySizeP += heightIncrement;
     if (*bitarraySizeP > heightMax)
-        pm_error("Image too tall");
+        pm_error("Error: Image too tall");
     else
-        REALLOCARRAY_NOFAIL(*bitarrayP, *bitarraySizeP); 
+        REALLOCARRAY_NOFAIL(*bitarrayP, *bitarraySizeP);
 }
 
 
@@ -244,7 +253,7 @@ writePbmImage(unsigned char ** const bitarray,
         pm_error("No image");
 
     pbm_writepbminit(stdout, width, height, 0);
- 
+
     for (row = 0; row < height; ++row) {
         pbm_cleanrowend_packed(bitarray[row], width);
         pbm_writepbmrow_packed(stdout, bitarray[row], width, 0);
@@ -300,7 +309,7 @@ main(int          argc,
                 unsigned int compression;
                 unsigned int rowsThisStripe;
                 unsigned int widthThisStripe;
-            
+
                 readStripeHeader(&widthThisStripe, &rowsThisStripe,
                                  &compression, ifP);
 
@@ -311,7 +320,7 @@ main(int          argc,
                     /* The official Epson manual says valid values are 1, 8,
                        24 but we just print a warning message and continue if
                        other values are detected.
-                    */ 
+                    */
                     pm_message("Abnormal data block height value: %u "
                                "(ignoring)",
                                rowsThisStripe);
@@ -326,6 +335,10 @@ main(int          argc,
                              width, widthThisStripe);
                 }
                 height += rowsThisStripe;
+                assert(height <= INT_MAX - 10);
+                    /* Becuse image height is tested in expandBitarray()
+                       with a more stringent condition.
+                    */
                 if (height > bitarraySize)
                     expandBitarray(&bitarray, &bitarraySize);
 

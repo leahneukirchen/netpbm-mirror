@@ -12,10 +12,12 @@
 
 /*
   Most icon images are monochrome: Depth=1
+
   Depth=8 images are extremely rare.  At least some of these are color
-  images but we can't tell the palette color order.
+  images but we haven't found information on the palette color order.
   Output will be in pgm.  Convert to ppm with pgmtoppm or pamlookup
-  if necessary.
+  if necessary.  It is up to the user to provide the color palette in
+  a form acceptable by the above conversion utilities.
 */
 
 #include <assert.h>
@@ -28,9 +30,9 @@
 
 
 static void
-ReadIconFileHeader(FILE * const file, 
-                   int *  const widthP, 
-                   int *  const heightP, 
+ReadIconFileHeader(FILE * const file,
+                   int *  const widthP,
+                   int *  const heightP,
                    int *  const depthP,
                    int *  const bitsPerItemP) {
 
@@ -49,7 +51,7 @@ ReadIconFileHeader(FILE * const file,
                 ch == ' ')
             ;
         for (i = 0;
-             ch != '=' && ch != ',' && ch != '\n' && ch != '\t' && 
+             ch != '=' && ch != ',' && ch != '\n' && ch != '\t' &&
                  ch != ' ' && (i < (sizeof(variable) - 1));
              ++i) {
             variable[i] = ch;
@@ -82,7 +84,7 @@ ReadIconFileHeader(FILE * const file,
         } else if (streq(variable, "Valid_bits_per_item")) {
             if (value != 16 && value !=32)
                 pm_error("invalid Valid_bits_per_item");
-            *bitsPerItemP = value; 
+            *bitsPerItemP = value;
             ++fieldCt;
         }
     }
@@ -93,10 +95,17 @@ ReadIconFileHeader(FILE * const file,
 
     if (*widthP <= 0)
         pm_error("invalid width (must be positive): %d", *widthP);
+    else if (*widthP % 8 > 0)
+        pm_message("warning: width not a multiple of 8: %d", *widthP);
+        /* We don't know whether widths which are not a multiple of 8
+           are allowed.   The program must gracefully handle this case
+           because sun icon files are easy to edit by hand.
+        */
     if (*heightP <= 0)
         pm_error("invalid height (must be positive): %d", *heightP);
 
 }
+
 
 
 int
@@ -125,7 +134,7 @@ main(int argc, const char ** argv) {
         maxval = 1;
         pbm_writepbminit(stdout, cols, rows, 0);
         bitrow = pbm_allocrow_packed(cols);
-        colChars = cols / 8;
+        colChars = pbm_packed_bytes(cols);
     } else {
         assert(depth == 8);
         format = PGM_TYPE;
@@ -156,7 +165,7 @@ main(int argc, const char ** argv) {
                 else
                     grayrow[colChar] = data;
             } else
-                pm_error("error scanning bits item %u" , colChar);
+                pm_error("error scanning bits item %u", colChar);
         }
 
         /* output row */
@@ -165,6 +174,11 @@ main(int argc, const char ** argv) {
         else
             pgm_writepgmrow(stdout, grayrow, cols, maxval, 0);
     }
+
+    if (format == PBM_TYPE)
+        pbm_freerow_packed(bitrow);
+    else
+        pgm_freerow(grayrow);
 
     pm_close(ifP);
     pm_close(stdout);

@@ -712,7 +712,7 @@ extractRowsPBM(const struct pam * const inpamP,
 
     if (leftcol > 0) {
         totalWidth = MAX(rightcol+1, inpamP->width) + 7;
-        if (totalWidth > INT_MAX)
+        if (totalWidth > INT_MAX - 10)
             /* Prevent overflows in pbm_allocrow_packed() */
             pm_error("Specified right edge is too far "
                      "from the right end of input image");
@@ -721,7 +721,7 @@ extractRowsPBM(const struct pam * const inpamP,
         writeOffset = leftcol;
     } else {
         totalWidth = -leftcol + MAX(rightcol+1, inpamP->width);
-        if (totalWidth > INT_MAX)
+        if (totalWidth > INT_MAX - 10)
             pm_error("Specified left/right edge is too far "
                      "from the left/right end of input image");
 

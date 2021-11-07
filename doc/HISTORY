@@ -18,6 +18,10 @@ not yet  BJH  Release 10.97.00
               the image than the first.  Always broken (Pamrubber was new in
               Netpbm 10.54 (March 2011)).
 
+              sunicontopnm, escp2topbm, mgrtopbm, ybmtopbm, pamcut, pbmpscale,
+              pnmcat, pnmpad: Fix arithmetic overrun with ridiculously large
+              image.
+
               pbmclean: Fix overallocation of memory (waste).
 
               libnetpbm: When validating computable size of width and height,

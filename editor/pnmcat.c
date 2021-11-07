@@ -115,7 +115,7 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->backcolor = BACK_AUTO;
 
     if (jtop + jbottom + jleft + jright + jcenter > 1)
-        pm_error("You may specify onlyone of -jtop, -jbottom, "
+        pm_error("You may specify only one of -jtop, -jbottom, "
                  "-jleft, and -jright");
     else {
         switch (cmdlineP->orientation) {
@@ -367,7 +367,8 @@ getPbmImageInfo(ImgInfo               const img[],
             switch (backcolor) {
             case BACK_AUTO: {
                 bit bgBit;
-                img2[i].proberow = pbm_allocrow_packed(img[i].cols+7);
+                img2[i].proberow =
+                    pbm_allocrow_packed((unsigned int)img[i].cols + 7);
                 pbm_readpbmrow_bitoffset(
                     img[i].ifP, img2[i].proberow,
                     img[i].cols, img[i].format, img2[i].offset % 8);

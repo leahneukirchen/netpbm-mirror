@@ -16,12 +16,54 @@
 
 
 static void
-readMgrHeader(FILE *          const ifP, 
-              unsigned int *  const colsP, 
-              unsigned int *  const rowsP, 
-              unsigned int *  const depthP, 
+interpHdrWidth(struct b_header const head,
+               unsigned int *  const colsP) {
+
+    if (head.h_wide < ' ' || head.l_wide < ' ')
+        pm_error("Invalid width field in MGR header");
+    else {
+        unsigned int const maxDimension = 4095;
+
+        unsigned int const cols =
+            (((int)head.h_wide - ' ') << 6) + ((int)head.l_wide - ' ');
+
+        if (cols == 0 || cols > maxDimension)
+            pm_error("Invalid width value (%u) in MGR header", cols);
+        else
+            *colsP = cols;
+    }
+}
+
+
+
+static void
+interpHdrHeight(struct b_header const head,
+                unsigned int *  const rowsP) {
+
+    if (head.h_high < ' ' || head.l_high < ' ')
+        pm_error("Invalid height field in MGR header");
+    else {
+        unsigned int const maxDimension = 4095;
+
+        unsigned int const rows =
+            (((int)head.h_high - ' ') << 6) + ((int)head.l_high - ' ');
+
+        if (rows == 0 || rows > maxDimension)
+            pm_error("Invalid height value (%u) in MGR header", rows);
+        else
+            *rowsP = rows;
+    }
+}
+
+
+
+static void
+readMgrHeader(FILE *          const ifP,
+              unsigned int *  const colsP,
+              unsigned int *  const rowsP,
+              unsigned int *  const depthP,
               unsigned int *  const padrightP ) {
-    
+
     struct b_header head;
     unsigned int pad;
     size_t bytesRead;
@@ -31,10 +73,10 @@ readMgrHeader(FILE *          const ifP,
         pm_error("Unable to read 1st byte of file.  "
                  "fread() returns errno %d (%s)",
                  errno, strerror(errno));
-    if (head.magic[0] == 'y' && head.magic[1] == 'z') { 
+    if (head.magic[0] == 'y' && head.magic[1] == 'z') {
         /* new style bitmap */
         size_t bytesRead;
-        bytesRead = fread(&head.depth, 
+        bytesRead = fread(&head.depth,
                           sizeof(head) - sizeof(struct old_b_header), 1, ifP);
         if (bytesRead != 1 )
             pm_error("Unable to read header after 1st byte.  "
@@ -42,11 +84,11 @@ readMgrHeader(FILE *          const ifP,
                      errno, strerror(errno));
         *depthP = (int) head.depth - ' ';
         pad = 8;
-    } else if (head.magic[0] == 'x' && head.magic[1] == 'z') { 
+    } else if (head.magic[0] == 'x' && head.magic[1] == 'z') {
         /* old style bitmap with 32-bit padding */
         *depthP = 1;
         pad = 32;
-    } else if (head.magic[0] == 'z' && head.magic[1] == 'z') { 
+    } else if (head.magic[0] == 'z' && head.magic[1] == 'z') {
         /* old style bitmap with 16-bit padding */
         *depthP = 1;
         pad = 16;
@@ -60,14 +102,10 @@ readMgrHeader(FILE *          const ifP,
         pad = 0;  /* should never reach here */
     }
 
-    if (head.h_wide < ' ' || head.l_wide < ' ')
-        pm_error("Invalid width field in MGR header");
-    if (head.h_high < ' ' || head.l_high < ' ')
-        pm_error("Invalid width field in MGR header");
-    
-    *colsP = (((int)head.h_wide - ' ') << 6) + ((int)head.l_wide - ' ');
-    *rowsP = (((int)head.h_high - ' ') << 6) + ((int) head.l_high - ' ');
-    *padrightP = ( ( *colsP + pad - 1 ) / pad ) * pad - *colsP;
+    interpHdrWidth (head, colsP);
+    interpHdrHeight(head, rowsP);
+
+    *padrightP = ((*colsP + pad - 1) / pad) * pad - *colsP;
 }
 
 
@@ -93,7 +131,7 @@ main(int    argc,
         inputFileName = argv[1];
     else
         inputFileName = "-";
-    
+
     ifP = pm_openr(inputFileName);
 
     readMgrHeader(ifP, &cols, &rows, &depth, &padright);
@@ -103,7 +141,7 @@ main(int    argc,
     pbm_writepbminit(stdout, cols, rows, 0);
 
     bitrow = pbm_allocrow_packed(cols + padright);
-    
+
     itemCount = (cols + padright ) / 8;
 
     for (row = 0; row < rows; ++row) {
@@ -128,9 +166,9 @@ main(int    argc,
    Changed bitrow from plain to raw, read function from getc() to fread(),
    write function from pbm_writepbmrow() to pbm_writepbmrow_packed().
    Retired bitwise transformation functions.
-   
+
    NOT tested for old-style format files.  Only one zz file in mgrsrc-0.69 .
-  
+
 */
 
 
