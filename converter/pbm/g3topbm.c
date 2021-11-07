@@ -527,7 +527,7 @@ readFaxRow(struct BitStream * const bitStreamP,
     done = FALSE;
 
     while (!done) {
-        if (col > MAXCOLS) {
+        if (col >= MAXCOLS) {
             pm_asprintf(exceptionP, "Line is too long for this program to "
                         "handle -- longer than %u columns", MAXCOLS);
             done = TRUE;
