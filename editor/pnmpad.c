@@ -11,7 +11,7 @@
 #include "shhopt.h"
 #include "pnm.h"
 
-#define MAX_WIDTHHEIGHT INT_MAX-10
+#define MAX_WIDTHHEIGHT ((INT_MAX)-10)
     /* The maximum width or height value we can handle without risking
        arithmetic overflow
     */
@@ -268,7 +268,7 @@ validateHorizontalSize(struct cmdlineInfo const cmdline,
         pm_error("The right padding value you specified is too large.");
 
     if ((double) cols +
-        (double) lpad + 
+        (double) lpad +
         (double) rpad +
         (double) mwidthMaxPad > MAX_WIDTHHEIGHT)
         pm_error("Given padding parameters make output width too large "
@@ -378,7 +378,7 @@ computePadSizesOneDim(unsigned int   const unpaddedSize,
         unsigned int const totalPadBeforeMult =
             begPadBeforeMult + endPadBeforeMult;
         double const begFrac =
-            totalPadBeforeMult > 0 ? 
+            totalPadBeforeMult > 0 ?
             (double)begPadBeforeMult / totalPadBeforeMult :
             0.0;
         unsigned int const addlMsizeBegPad = ROUNDU(morePadNeeded * begFrac);
@@ -501,7 +501,7 @@ reportPadSizes(int          const inCols,
 
     unsigned int const outCols = inCols + lpad + rpad;
     unsigned int const outRows = inRows + tpad + bpad;
- 
+
     printf("%u %u %u %u %u %u\n", lpad, rpad, tpad, bpad, outCols, outRows);
 
 }
@@ -547,7 +547,7 @@ padPbm(FILE *       const ifP,
     /* Write top margin */
     for (row = 0; row < tpad; ++row)
         pbm_writepbmrow_packed(stdout, bgrow, newcols, 0);
-    
+
     /* Read rows, shift and write with left and right margins added */
     for (row = 0; row < rows; ++row) {
         pbm_readpbmrow_bitoffset(ifP, newrow, cols, format, lpad);

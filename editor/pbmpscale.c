@@ -12,7 +12,7 @@
 #define LEFTBITS pm_byteLeftBits
 #define RIGHTBITS pm_byteRightBits
 
-/* Table for translating bit pattern into "corners" flag element */ 
+/* Table for translating bit pattern into "corners" flag element */
 
 unsigned char const
 transTable[512] = {
@@ -141,7 +141,7 @@ validateComputableDimensions(unsigned int const width,
    See validateComputetableSize() in libpam.c
    and pbm_readpbminitrest() in libpbm2.c
 -----------------------------------------------------------------------------*/
-    unsigned int const maxWidthHeight = INT_MAX - 2;
+    unsigned int const maxWidthHeight = INT_MAX - 10;
     unsigned int const maxScaleFactor = maxWidthHeight / MAX(height, width);
 
     if (scaleFactor > maxScaleFactor)
@@ -154,8 +154,8 @@ validateComputableDimensions(unsigned int const width,
 
 static void
 writeBitSpan(unsigned char * const packedBitrow,
-             int             const cols,
-             int             const offset,
+             unsigned int    const cols,
+             unsigned int    const offset,
              int             const color) {
 /*----------------------------------------------------------------------------
    Write white (color="0") or black (="1") bits into packedBitrow[],
@@ -191,8 +191,8 @@ setFlags(const bit *     const prevrow,
          unsigned char * const flags,
          unsigned int    const cols ) {
 /*----------------------------------------------------------------------------
-   Scan one row, examining the row above and row below, and determine 
-   whether there are "corners" for each pixel.  Feed a 9 bit sample into 
+   Scan one row, examining the row above and row below, and determine
+   whether there are "corners" for each pixel.  Feed a 9 bit sample into
    pre-calculated array transTable[512] to calculate all four corner statuses
    at once.
 
@@ -220,7 +220,7 @@ setFlags(const bit *     const prevrow,
        The high byte of the patterns is a mask, which determines which bits are
        not ignored.
     */
-    uint16_t const patterns[] 
+    uint16_t const patterns[]
         = { 0x0000,   0xd555,            /* no corner */
             0x0001,   0xffc1, 0xd514,    /* normal corner */
             0x0002,   0xd554, 0xd515, 0xbea2, 0xdfc0, 0xfd81, 0xfd80, 0xdf80,
@@ -230,7 +230,7 @@ setFlags(const bit *     const prevrow,
     /*
       For example, the NE corner is examined with the following 8 bit sample:
       Current : W : NW : N : NE : E : SE : S
-      (SW is the "square behind") 
+      (SW is the "square behind")
       */
 #endif
 
@@ -257,7 +257,7 @@ setFlags(const bit *     const prevrow,
         sample = ( ( prevrow24 >> ( 8 -offset) ) & 0x01c0 )
             | ( ( thisrow24 >> (11 -offset) ) & 0x0038 )
             | ( ( nextrow24 >> (14 -offset) ) & 0x0007 );
-        
+
         flags[col] =  transTable[sample];
     }
 }
@@ -275,14 +275,14 @@ expandRow(const bit *     const thisrow,
           int             const ucutoff) {
 /*----------------------------------------------------------------------------
   Process one row, using flags array as reference.  If pixel has no corners
-  output a NxN square of the given color, otherwise output with the 
+  output a NxN square of the given color, otherwise output with the
   specified corner area(s) clipped off.
 -----------------------------------------------------------------------------*/
     unsigned int const outcols = cols * scale;
 
     unsigned int i;
     unsigned int col;
-    
+
     for (i = 0; i < scale; ++i) {
         int const zone = (i > ucutoff) - (i < cutoff);
         int const cut1 =
@@ -297,7 +297,7 @@ expandRow(const bit *     const thisrow,
         cut[1] = cut1;
         cut[2] = cut1 ? cut1 - 1 : 0;
         cut[3] = (cut1 && cutoff > 1) ? cut1 - 1 : cut1;
-      
+
         for (col = 0; col < cols; ++col) {
             unsigned int const col8 = col / 8;
             unsigned int const offset = col % 8;
@@ -309,11 +309,11 @@ expandRow(const bit *     const thisrow,
             if (flag == 0x00) {
                 /* There are no corners, no color change */
                 outcol += scale;
-            } else { 
+            } else {
                 switch (zone) {
                 case -1:
                     if (i==0 && flag == 0xff) {
-                        /* No corners, color changed */ 
+                        /* No corners, color changed */
                         cutl = cutr = 0;
                         flags[col] = 0x00;
                             /* Use above skip procedure next cycle */
@@ -330,7 +330,7 @@ expandRow(const bit *     const thisrow,
                     cutr = cut[SE(flag)];
                     break;
                 }
-                
+
                 if (cutl > 0) {
                     writeBitSpan(outrow, cutl, outcol, !pix);
                     outcol += cutl;
@@ -368,7 +368,7 @@ main(int argc, const char ** argv) {
     bit * outrow;
     unsigned int row;
     unsigned int i;
-    int cols, rows;
+    unsigned int cols, rows;
     int format;
     unsigned int outcols;
     unsigned int outrows;
@@ -384,10 +384,10 @@ main(int argc, const char ** argv) {
 
     pbm_readpbminit(ifP, &cols, &rows, &format) ;
 
-    validateComputableDimensions(cols, rows, cmdline.scale); 
+    validateComputableDimensions(cols, rows, cmdline.scale);
 
     outcols = cols * cmdline.scale;
-    outrows = rows * cmdline.scale; 
+    outrows = rows * cmdline.scale;
 
     /* Initialize input buffers.
        We add a margin of 8 bits on the right of the three rows.
@@ -402,7 +402,7 @@ main(int argc, const char ** argv) {
     for (i = 0; i < pbm_packed_bytes(cols + 8); ++i)
         edgerow[i] = 0x00;
 
-    /* Add blank bytes at right edges */ 
+    /* Add blank bytes at right edges */
     for (i = 0; i < 3; ++i)
         buffer[i][pbm_packed_bytes(cols + 8) - 1] = 0x00;
 
