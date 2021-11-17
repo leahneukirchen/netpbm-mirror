@@ -549,10 +549,10 @@ processX11Header(X11WDFileHeader *  const h11P,
             pm_error("couldn't read rest of X11 XWD file header");
 
     /* Check whether we can handle this dump. */
-    if (h11FixedP->pixmap_depth > 24)
-        pm_error( "can't handle X11 pixmap_depth > 24");
-    if (h11FixedP->bits_per_rgb > 24)
-        pm_error("can't handle X11 bits_per_rgb > 24");
+    if (h11FixedP->pixmap_depth > 32)
+        pm_error( "can't handle X11 pixmap_depth > 32");
+    if (h11FixedP->bits_per_rgb > 32)
+        pm_error("can't handle X11 bits_per_rgb > 32");
     if (h11FixedP->pixmap_format != ZPixmap && h11FixedP->pixmap_depth != 1)
         pm_error("can't handle X11 pixmap_format %d with depth != 1",
                  h11FixedP->pixmap_format);

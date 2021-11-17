@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.97.00
 
+              xwdtopnm: Add ability to process bit depth 32.
+
               pgmtoppm: Add -black, -white.
 
               pampaintspill: Add -near.  Thanks Scott Pakin.
