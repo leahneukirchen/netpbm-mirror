@@ -47,9 +47,16 @@
 
 
 #include <stdbool.h>
+#include <assert.h>
 
 #include "mallocvar.h"
 #include "pbm.h"
+
+static unsigned int widthMax = 127 * 256 + 255;
+    /* Limit in official Epson manual */
+
+static unsigned int const heightMax = 5120 * 200;
+    /* 5120 rows is sufficient for US legal at 360 DPI */
 
 #define ESC 033
 
@@ -119,6 +126,10 @@ readStripeHeader(unsigned int * const widthThisStripeP,
     if (widthThisStripe == 0 || rowsThisStripe == 0)
         pm_error("Error: Abnormal value in data block header:  "
                  "Says stripe has zero width or height");
+
+    if (widthThisStripe > widthMax)
+        pm_error("Error: Abnormal width value in data block header:  %u",
+                 widthThisStripe);
 
     if (compression != 0 && compression != 1)
         pm_error("Error: Unknown compression mode %u", compression);
@@ -221,12 +232,10 @@ expandBitarray(unsigned char *** const bitarrayP,
                unsigned int   *  const bitarraySizeP) {
 
     unsigned int const heightIncrement = 5120;
-    unsigned int const heightMax = 5120 * 200;
-        /* 5120 rows is sufficient for US legal at 360 DPI */
 
     *bitarraySizeP += heightIncrement;
     if (*bitarraySizeP > heightMax)
-        pm_error("Image too tall");
+        pm_error("Error: Image too tall");
     else
         REALLOCARRAY_NOFAIL(*bitarrayP, *bitarraySizeP); 
 }
@@ -326,6 +335,10 @@ main(int          argc,
                              width, widthThisStripe);
                 }
                 height += rowsThisStripe;
+                assert(height <= INT_MAX - 10);
+                    /* Becuse image height is tested in expandBitarray()
+                       with a more stringent condition.
+                    */
                 if (height > bitarraySize)
                     expandBitarray(&bitarray, &bitarraySize);
 

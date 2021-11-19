@@ -11,7 +11,7 @@
 #include "shhopt.h"
 #include "pnm.h"
 
-#define MAX_WIDTHHEIGHT INT_MAX-10
+#define MAX_WIDTHHEIGHT ((INT_MAX)-10)
     /* The maximum width or height value we can handle without risking
        arithmetic overflow
     */

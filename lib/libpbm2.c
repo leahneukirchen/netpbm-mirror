@@ -216,6 +216,9 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
    Read it into packedBits[], preserving surrounding image data.
 
    Logic not tested for negative offsets.
+
+   Because we are reading in packed mode large cols and offset values are
+   acceptable; dividing by 8 prevents overflows.
 -----------------------------------------------------------------------------*/
     unsigned int const rsh = offset % 8;
     unsigned int const lsh = (8 - rsh) % 8;
@@ -224,12 +227,14 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
            Aligned to nearest byte boundary to the left, so the first
            few bits might contain original data, not output.
         */
-    unsigned int const last = pbm_packed_bytes(cols+rsh) - 1;
+    unsigned int const last = pbm_packed_bytes((unsigned int)cols + rsh) - 1;
         /* Position within window of rightmost byte after shift */
 
     /* The original leftmost and rightmost chars. */
     unsigned char const origHead = window[0];
     unsigned char const origEnd  = window[last];
+
+    assert(cols > 0 && pbm_packed_bytes(cols) > 0);
 
     pbm_readpbmrow_packed(ifP, window, cols, format);
 

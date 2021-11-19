@@ -367,7 +367,8 @@ getPbmImageInfo(struct imgInfo        const img[],
             switch (backcolor) {
             case BACK_AUTO: {
                 bit bgBit;
-                img2[i].proberow = pbm_allocrow_packed(img[i].cols+7);
+                img2[i].proberow =
+                    pbm_allocrow_packed((unsigned int)img[i].cols + 7);
                 pbm_readpbmrow_bitoffset(
                     img[i].ifP, img2[i].proberow,
                     img[i].cols, img[i].format, img2[i].offset % 8);
