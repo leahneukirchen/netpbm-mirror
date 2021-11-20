@@ -968,6 +968,12 @@ pm_bs_long(long const l) {
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wduplicated-cond"
+
+
+
 void
 pm_tell2(FILE *       const fileP,
          void *       const fileposP,
@@ -1008,6 +1014,10 @@ pm_tell2(FILE *       const fileP,
 
 
 
+#pragma GCC diagnostic pop
+
+
+
 unsigned int
 pm_tell(FILE * const fileP) {
 
@@ -1017,6 +1027,12 @@ pm_tell(FILE * const fileP) {
 
     return filepos;
 }
+
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wduplicated-cond"
 
 
 
@@ -1044,6 +1060,10 @@ pm_seek2(FILE *             const fileP,
                  fileposSize, (unsigned int)sizeof(pm_filepos),
                  (unsigned int) sizeof(long));
 }
+
+
+
+#pragma GCC diagnostic pop
 
 
 
