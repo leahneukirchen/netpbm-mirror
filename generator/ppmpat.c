@@ -39,7 +39,7 @@ typedef enum {
     PAT_POLES,
     PAT_SQUIG,
     PAT_CAMO,
-    PAT_ANTICAMO,
+    PAT_ANTICAMO
 } Pattern;
 
 typedef struct {
