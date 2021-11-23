@@ -1077,7 +1077,7 @@ argyle(pixel **     const pixels,
 
 
 
-static unsigned int const MAXPOLES = 500;
+#define MAXPOLES 500
 
 
 
