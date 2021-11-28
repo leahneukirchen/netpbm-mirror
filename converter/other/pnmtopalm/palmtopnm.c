@@ -823,11 +823,12 @@ readPackBitsRow16(FILE *          const ifP,
     unsigned int j;
 
     for (j = 0;  j < bytesPerRow; ) {
-        char incount;
-        pm_readchar(ifP, &incount);
-        if (incount < 0) {
+        unsigned char incountByte;
+        pm_readcharu(ifP, &incountByte);
+        if (incountByte & 0x80) {
+            int const signedIncount = (signed char)incountByte;
             /* How do we handle incount == -128 ? */
-            unsigned int const runlength = (-incount + 1) * 2;
+            unsigned int const runlength = (-signedIncount + 1) * 2;
             unsigned int k;
             unsigned short inval;
             pm_readlittleshortu(ifP, &inval);
@@ -838,7 +839,7 @@ readPackBitsRow16(FILE *          const ifP,
             j += runlength;
         } else {
             /* We just read the stream of shorts as a stream of chars */
-            unsigned int const nonrunlength = (incount + 1) * 2;
+            unsigned int const nonrunlength = (incountByte + 1) * 2;
             unsigned int k;
             for (k = 0; (k < nonrunlength) && (j + k <= bytesPerRow); ++k) {
                 unsigned char inval;
@@ -865,18 +866,19 @@ readPackBitsRow(FILE *          const ifP,
     unsigned int j;
 
     for (j = 0;  j < bytesPerRow; ) {
-        char incount;
-        pm_readchar(ifP, &incount);
-        if (incount < 0) {
+        unsigned char incountByte;
+        pm_readcharu(ifP, &incountByte);
+        if (incountByte & 0x80) {
             /* How do we handle incount == -128 ? */
-            unsigned int const runlength = -incount + 1;
+            int const signedIncount = (char)incountByte;
+            unsigned int const runlength = -signedIncount + 1;
             unsigned char inval;
             pm_readcharu(ifP, &inval);
             if (j + runlength <= bytesPerRow)
                 memset(palmrow + j, inval, runlength);
             j += runlength;
         } else {
-            unsigned int const nonrunlength = incount + 1;
+            unsigned int const nonrunlength = incountByte + 1;
             unsigned int k;
             for (k = 0; k < nonrunlength && j + k <= bytesPerRow; ++k) {
                 unsigned char inval;
