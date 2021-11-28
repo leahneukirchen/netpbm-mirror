@@ -17,6 +17,10 @@ not yet  BJH  Release 10.97.00
               pamtogif: Fix bug: doesn't ignore the input alpha mask when user
               specified -transparent.  Broken in Netpbm 10.37 (December 2006).
 
+              palmtopnm: Fix bug: fails with PackBits input on platform with
+              default unsigned char, such as ppc64.  Always broken.  (Ability
+              to convert PackBits input was new in Netpbm 10.27 (March 2005).
+              
               pamrubber: Fix bug: random behavior with -quad when you specify
               both points for source or target and the second one is lower in
               the image than the first.  Always broken (Pamrubber was new in
