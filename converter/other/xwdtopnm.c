@@ -593,6 +593,9 @@ processX11Header(X11WDFileHeader *  const h11P,
         *formatP = PPM_TYPE;
 
         /* See discussion above about this maxval */
+        if (h11FixedP->bits_per_rgb > 16)
+            pm_error("Invalid bits_per_rgb for TrueColor image: %u. "
+                     "Maximum possible is 16");
         *maxvalP = pm_bitstomaxval(h11FixedP->bits_per_rgb);
     } else if (*visualclassP == StaticGray && h11FixedP->bits_per_pixel == 1) {
         *formatP = PBM_TYPE;
