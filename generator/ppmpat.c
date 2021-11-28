@@ -42,6 +42,7 @@ typedef enum {
     PAT_ANTICAMO
 } Pattern;
 
+
 typedef struct {
 /*----------------------------------------------------------------------------
    An ordered list of colors with a cursor.
@@ -57,14 +58,77 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    Pattern      basePattern;
-    unsigned int width;
-    unsigned int height;
-    unsigned int colorSpec;
-    ColorTable   colorTable;
-    unsigned int randomseed;
-    unsigned int randomseedSpec;
+    Pattern         basePattern;
+    unsigned int    width;
+    unsigned int    height;
+    unsigned int    colorSpec;
+    ColorTable      colorTable;
+    unsigned int    randomseed;
+    unsigned int    randomseedSpec;
+    ppmd_drawproc * drawProc;
 };
+
+
+
+static pixel
+averageTwoColors(pixel const p1,
+                 pixel const p2) {
+
+    pixel p;
+
+    PPM_ASSIGN(p,
+               (PPM_GETR(p1) + PPM_GETR(p2)) / 2,
+               (PPM_GETG(p1) + PPM_GETG(p2)) / 2,
+               (PPM_GETB(p1) + PPM_GETB(p2)) / 2);
+
+    return p;
+}
+
+
+
+static ppmd_drawproc average_drawproc;
+
+static void
+average_drawproc(pixel **     const pixels,
+                 int          const cols,
+                 int          const rows,
+                 pixval       const maxval,
+                 int          const col,
+                 int          const row,
+                 const void * const clientdata) {
+/*----------------------------------------------------------------------------
+  Reset the pixel's color to the average of the original color and the color
+  indicated by * clientdata.
+-----------------------------------------------------------------------------*/
+
+    if (col >= 0 && col < cols && row >= 0 && row < rows)
+        pixels[row][col] =
+            averageTwoColors(pixels[row][col], *((const pixel*) clientdata));
+}
+
+
+
+static ppmd_drawproc checkerboard_drawproc;
+
+static void
+checkerboard_drawproc(pixel **     const pixels,
+                      int          const cols,
+                      int          const rows,
+                      pixval       const maxval,
+                      int          const col,
+                      int          const row,
+                      const void * const clientdata) {
+/*----------------------------------------------------------------------------
+  If col and row are both even or both odd, do nothing.
+  If one is even and the other is odd, set the pixel's color to that indicated
+  by * clientdata.
+-----------------------------------------------------------------------------*/
+    if (col >= 0 && col < cols && row >= 0 &&
+        row < rows && row % 2 != col % 2)
+
+        pixels[row][col] = *((const pixel*) clientdata);
+}
+
 
 
 static void
@@ -182,6 +246,7 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int squig;
     unsigned int camo;
     unsigned int anticamo;
+    unsigned int meshSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -199,9 +264,9 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "tartan",        OPT_FLAG,   NULL,
             &tartan,     0);
     OPTENT3(0, "argyle1",       OPT_FLAG,   NULL,
-            &argyle1,     0);
+            &argyle1,    0);
     OPTENT3(0, "argyle2",       OPT_FLAG,   NULL,
-            &argyle2,     0);
+            &argyle2,    0);
     OPTENT3(0, "poles",         OPT_FLAG,   NULL,
             &poles,      0);
     OPTENT3(0, "squig",         OPT_FLAG,   NULL,
@@ -214,6 +279,8 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->colorSpec,           0);
     OPTENT3(0, "randomseed",    OPT_UINT,       &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec,      0);
+    OPTENT3(0, "mesh",          OPT_FLAG,   NULL,
+            &meshSpec,   0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -264,6 +331,14 @@ parseCommandLine(int argc, const char ** argv,
         free(colorText);
     } else
         cmdlineP->colorTable.count = 0;
+
+    if (meshSpec) {
+        if (gingham2 + gingham3 + madras + tartan > 0)
+            cmdlineP->drawProc = &checkerboard_drawproc;
+        else
+            pm_message("-mesh ignored (no effect with specified pattern)");
+    } else
+        cmdlineP->drawProc = &average_drawproc;
 
     if (argc-1 != 2)
         pm_error("You must specify 2 non-option arguments: width and height "
@@ -363,37 +438,6 @@ randomDarkColor(struct pm_randSt * const randStP,
 
 
 
-static pixel
-averageTwoColors(pixel const p1,
-                 pixel const p2) {
-
-    pixel p;
-
-    PPM_ASSIGN(p,
-               (PPM_GETR(p1) + PPM_GETR(p2)) / 2,
-               (PPM_GETG(p1) + PPM_GETG(p2)) / 2,
-               (PPM_GETB(p1) + PPM_GETB(p2)) / 2);
-
-    return p;
-}
-
-
-
-static ppmd_drawproc average_drawproc;
-
-static void
-average_drawproc(pixel **     const pixels,
-                 int          const cols,
-                 int          const rows,
-                 pixval       const maxval,
-                 int          const col,
-                 int          const row,
-                 const void * const clientdata) {
-
-    if (col >= 0 && col < cols && row >= 0 && row < rows)
-        pixels[row][col] =
-            averageTwoColors(pixels[row][col], *((const pixel*) clientdata));
-}
 
 
 
@@ -563,7 +607,7 @@ clearBackgroundCamo(pixel **           const pixels,
     } else if (antiflag)
         color = randomAnticamoColor(randStP, maxval);
     else
-        color = randomCamoColor(randStP,maxval);
+        color = randomCamoColor(randStP, maxval);
 
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 0, cols, rows, PPMD_NULLDRAWPROC,
@@ -704,6 +748,7 @@ gingham2(pixel **           const pixels,
          unsigned int       const rows,
          ColorTable         const colorTable,
          struct pm_randSt * const randStP,
+         ppmd_drawproc    * const drawproc,
          pixval             const maxval) {
 
     bool  const colorSpec = (colorTable.count > 0);
@@ -726,11 +771,11 @@ gingham2(pixel **           const pixels,
 
     /* Woof. */
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, 0, cols, rowso2, average_drawproc,
+        pixels, cols, rows, maxval, 0, 0, cols, rowso2, drawproc,
         &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rowso2, cols, rows - rowso2,
-        average_drawproc, &forecolor);
+        drawproc, &forecolor);
 }
 
 
@@ -741,6 +786,7 @@ gingham3(pixel **           const pixels,
          unsigned int       const rows,
          ColorTable         const colorTable,
          struct pm_randSt * const randStP,
+         ppmd_drawproc    * const drawproc,
          pixval             const maxval) {
 
     bool  const colorSpec = (colorTable.count > 0);
@@ -772,17 +818,17 @@ gingham3(pixel **           const pixels,
 
     /* Woof. */
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, 0, cols, rowso4, average_drawproc,
+        pixels, cols, rows, maxval, 0, 0, cols, rowso4, drawproc,
         &backcolor);
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, rowso4, cols, rowso4, average_drawproc,
+        pixels, cols, rows, maxval, 0, rowso4, cols, rowso4, drawproc,
         &fore1color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 2 * rowso4, cols, rowso4,
-        average_drawproc, &fore2color);
+        drawproc, &fore2color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 3 * rowso4, cols, rows - rowso4,
-        average_drawproc, &fore1color);
+        drawproc, &fore1color);
 }
 
 
@@ -793,6 +839,7 @@ madras(pixel **           const pixels,
        unsigned int       const rows,
        ColorTable         const colorTable,
        struct pm_randSt * const randStP,
+       ppmd_drawproc    * const drawproc,
        pixval             const maxval) {
 
     bool  const colorSpec = (colorTable.count > 0);
@@ -868,54 +915,54 @@ madras(pixel **           const pixels,
 
     /* Woof. */
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, 0, cols, rows2, average_drawproc,
+        pixels, cols, rows, maxval, 0, 0, cols, rows2, drawproc,
         &backcolor);
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, rows2, cols, rows3, average_drawproc,
+        pixels, cols, rows, maxval, 0, rows2, cols, rows3, drawproc,
         &fore2color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rows2 + rows3, cols, rows2,
-        average_drawproc, &backcolor);
+        drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 2 * rows2 + rows3, cols, rows2,
-        average_drawproc, &fore1color);
+        drawproc, &fore1color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 3 * rows2 + rows3, cols, rows2,
-        average_drawproc, &backcolor);
+        drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 4 * rows2 + rows3, cols, rows6a,
-        average_drawproc, &fore2color);
+        drawproc, &fore2color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 4 * rows2 + rows3 + rows6a, cols, rows2,
-        average_drawproc, &backcolor);
+        drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 5 * rows2 + rows3 + rows6a, cols, rows3,
-        average_drawproc, &fore1color);
+        drawproc, &fore1color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 5 * rows2 + 2 * rows3 + rows6a, cols,
-        rows2, average_drawproc, &backcolor);
+        rows2, drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 6 * rows2 + 2 * rows3 + rows6a, cols,
-        rows3, average_drawproc, &fore1color);
+        rows3, drawproc, &fore1color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 6 * rows2 + 3 * rows3 + rows6a, cols,
-        rows2, average_drawproc, &backcolor);
+        rows2, drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 7 * rows2 + 3 * rows3 + rows6a, cols,
-        rows6b, average_drawproc, &fore2color);
+        rows6b, drawproc, &fore2color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 7 * rows2 + 3 * rows3 + rows6a + rows6b,
-        cols, rows2, average_drawproc, &backcolor);
+        cols, rows2, drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 8 * rows2 + 3 * rows3 + rows6a + rows6b,
-        cols, rows2, average_drawproc, &fore1color);
+        cols, rows2, drawproc, &fore1color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, 9 * rows2 + 3 * rows3 + rows6a + rows6b,
-        cols, rows2, average_drawproc, &backcolor);
+        cols, rows2, drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0,
         10 * rows2 + 3 * rows3 + rows6a + rows6b,
-        cols, rows3, average_drawproc, &fore2color);
+        cols, rows3, drawproc, &fore2color);
 }
 
 
@@ -926,6 +973,7 @@ tartan(pixel **           const pixels,
        unsigned int       const rows,
        ColorTable         const colorTable,
        struct pm_randSt * const randStP,
+       ppmd_drawproc    * const drawproc,
        pixval             const maxval) {
 
     bool  const colorSpec = (colorTable.count > 0);
@@ -977,29 +1025,29 @@ tartan(pixel **           const pixels,
 
     /* Woof. */
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, 0, cols, rows5a, average_drawproc,
+        pixels, cols, rows, maxval, 0, 0, cols, rows5a, drawproc,
         &backcolor);
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, rows5a, cols, rows1, average_drawproc,
+        pixels, cols, rows, maxval, 0, rows5a, cols, rows1, drawproc,
         &fore1color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rows5a + rows1, cols, rows5b,
-        average_drawproc, &backcolor);
+        drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rows10 + rows1, cols, rows3,
-        average_drawproc, &fore2color);
+        drawproc, &fore2color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rows10 + rows1 + rows3, cols, rows1,
-        average_drawproc, &backcolor);
+        drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rows10 + 2 * rows1 + rows3, cols, rows3,
-        average_drawproc, &fore2color);
+        drawproc, &fore2color);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rows10 + 2 * rows1 + 2 * rows3, cols,
-        rows1, average_drawproc, &backcolor);
+        rows1, drawproc, &backcolor);
     ppmd_filledrectangle(
         pixels, cols, rows, maxval, 0, rows10 + 3 * rows1 + 2 * rows3, cols,
-        rows3, average_drawproc, &fore2color);
+        rows3, drawproc, &fore2color);
 }
 
 
@@ -1541,22 +1589,22 @@ main(int argc, const char ** argv) {
     switch (cmdline.basePattern) {
     case PAT_GINGHAM2:
         gingham2(pixels, cmdline.width, cmdline.height,
-                 cmdline.colorTable, &randSt, PPM_MAXMAXVAL);
+                 cmdline.colorTable, &randSt, cmdline.drawProc, PPM_MAXMAXVAL);
         break;
 
     case PAT_GINGHAM3:
         gingham3(pixels, cmdline.width, cmdline.height,
-                 cmdline.colorTable, &randSt, PPM_MAXMAXVAL);
+                 cmdline.colorTable, &randSt, cmdline.drawProc, PPM_MAXMAXVAL);
         break;
 
     case PAT_MADRAS:
         madras(pixels, cmdline.width, cmdline.height,
-               cmdline.colorTable, &randSt, PPM_MAXMAXVAL);
+               cmdline.colorTable, &randSt, cmdline.drawProc, PPM_MAXMAXVAL);
         break;
 
     case PAT_TARTAN:
         tartan(pixels, cmdline.width, cmdline.height,
-               cmdline.colorTable, &randSt, PPM_MAXMAXVAL);
+               cmdline.colorTable, &randSt, cmdline.drawProc, PPM_MAXMAXVAL);
         break;
 
     case PAT_ARGYLE1:
