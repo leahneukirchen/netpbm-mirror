@@ -825,7 +825,7 @@ readPackBitsRow16(FILE *          const ifP,
     unsigned int j;
 
     for (j = 0;  j < bytesPerRow; ) {
-        char incount;
+        signed char incount;
         pm_readchar(ifP, &incount);
         if (incount < 0) {
             /* How do we handle incount == -128 ? */
@@ -868,7 +868,7 @@ readPackBitsRow(FILE *          const ifP,
     unsigned int j;
 
     for (j = 0;  j < bytesPerRow; ) {
-        char incount;
+        signed char incount;
         pm_readchar(ifP, &incount);
         if (incount < 0) {
             /* How do we handle incount == -128 ? */
