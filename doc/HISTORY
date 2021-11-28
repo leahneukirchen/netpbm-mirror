@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.11.28 BJH  Release 10.96.04
+
+              palmtopnm: Fix bug: fails with PackBits input on platform with
+              default unsigned char, such as ppc64.  Always broken.  (Ability
+              to convert PackBits input was new in Netpbm 10.27 (March 2005).
+              
 21.11.07 BJH  Release 10.96.03
 
               sunicontopnm, escp2topbm, mgrtopbm, ybmtopbm, pamcut, pbmpscale,
