@@ -78,7 +78,7 @@ red component of a pixel) is greater than 255 and therefore each sample
 takes 2 bytes to represent.  This can be a problem because some programs
 expect those bytes in a different order from what the Netpbm format specs
 say, which is what <b>xwdtopnm</b> produces, which means they will see totally
-different colors that they should.   <b>xv</b> is one such program.
+different colors than they should.   <b>xv</b> is one such program.
 
 <p>If this is a problem (e.g. you want to look at the output of <b>xwdtopnm</b>
 with <b>xv</b>), there are two ways to fix it:
@@ -91,7 +91,7 @@ so there is only one byte per sample.
 </ul>
 
 <p>Often, there is no good reason to have a maxval greater than 255.  It
-happens because in XWD, byte not PNM, each color component of a pixel can have
+happens because in XWD, but not PNM, each color component of a pixel can have
 different resolution, for example 5 bits for blue (maxval 31), 5 bits for red
 (maxval 31), and 6 bits for green (maxval 63), for a total of 16 bits per
 pixel.  In order to reproduce the colors as closely as possible,
