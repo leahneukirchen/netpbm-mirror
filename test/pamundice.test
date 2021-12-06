@@ -1,12 +1,11 @@
 #! /bin/bash
 # This script tests: pamundice
-# Also requires: pgmmake pnmtile pnmcat pnmpad
+# Also requires: pamfile pgmmake pnmtile pnmcat
 
 tmpdir=${tmpdir:-/tmp}
 fname_stem=${tmpdir}/part
 
-# Test 1.
-echo "Test 1."
+echo "Test 1.  Should print 2096818803 2818 twice"
 
 for ((x=0; x<3; ++x))
   do for ((y=0; y<5; ++y))
@@ -20,9 +19,7 @@ pamundice -across=3 -down=5 ${fname_stem}"_%1d_%1a".pgm | cksum
 ls ${fname_stem}_?_?.pgm | \
     pamundice -across=3 -down=5 -listfile=- | cksum
 
-
-# Test 2.
-echo "Test 2."
+echo "Test 2.  Should print 2096818803 2818 twice"
 
 tempfile=${tmpdir}/temp
 
@@ -46,8 +43,7 @@ rm ${tempfile}_[012]
 
 rm ${fname_stem}_?_?.pgm
 
-# Test 3.
-echo "Test 3."
+echo "Test 3.  Should print 2096818803 2818 twice"
 
 for ((x=0; x<2; ++x))
   do for ((y=0; y<5; ++y))
@@ -89,21 +85,22 @@ rm ${fname_stem}_?_?.pgm
 
 
 # Test 4.
-echo "Test 4."
+echo "Test 4.  Should print 2434390296 4436 four times"
 
-# Add margins to testgrid.pbm
+msize=$(pamfile -size maze.pbm)
+mw=$(echo ${msize} | cut -d" " -f1)
+mh=$(echo ${msize} | cut -d" " -f2)
 
-testimg_pbm=${tmpdir}/testimg.pbm
-pnmpad -top=2 -left=3 -black testgrid.pbm > ${testimg_pbm}
+pnmtile $((${mw} * 2)) $((${mh} * 5)) maze.pbm | cksum
 
 for x in `seq 0 1`
   do for y in `seq 0 4`
-    do cp ${testimg_pbm} ${fname_stem}_${y}_${x}.pbm; done
+    do cp maze.pbm ${fname_stem}_${y}_${x}.pbm; done
   done
 
 for (( i=0 ; i<=9; ++i))
   do
-  echo ${testimg_pbm}
+  echo maze.pbm
   done | pamundice -down=5 -across=2 -listfile=- | cksum
 
 pamundice -down=5 -across=2 ${fname_stem}_"%1d"_"%1a".pbm | cksum
@@ -111,11 +108,8 @@ pamundice -down=5 -across=2 ${fname_stem}_"%1d"_"%1a".pbm | cksum
 echo "A warning message should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pamundice -down=5 -across=2 ${testimg_pbm} | cksum
+pamundice -down=5 -across=2 maze.pbm | cksum
 
-pnmtile 34 90 ${testimg_pbm} | cksum
-
-rm ${testimg_pbm}
 
 # Test Invalid.
 echo "Test Invalid"
@@ -176,14 +170,14 @@ pamundice -down=5 -across=2 ${fname_stem}_"%d"_"%a".pbm > ${test_out} || \
   rm -f {test_out}
 
 # -hoverlap too large
-pamundice -down=5 -across=2 -hoverlap=18 \
+pamundice -down=5 -across=2 -hoverlap=$((${mw}+1)) \
   ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
   echo -n "Expected failure 9"
   test -s ${test_out}; echo " "$?
   rm -f {test_out}
 
 # -voverlap too large
-pamundice -down=5 -across=2 -voverlap=19 \
+pamundice -down=5 -across=2 -voverlap=$((${mh}+1)) \
   ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
   echo -n "Expected failure 10"
   test -s ${test_out}; echo " "$?

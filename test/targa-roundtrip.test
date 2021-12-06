@@ -4,24 +4,21 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-#Test 1: Should print 2425386270 41, cksum of testgrid.pbm, ten times
-
-echo "Test 1"
+echo "Test 1: Should print 281226646 481, cksum of maze.pbm, ten times"
 
 for mode in "-mono" "-mono -norle" \
             "-cmap" "-cmap -norle" "-cmap16" "-cmap16 -norle" \
             "-rgb"  "-rgb  -norle" "" "-norle"
   do
-  pamtotga ${mode} testgrid.pbm | \
+  pamtotga ${mode} maze.pbm | \
     tgatoppm | ppmtopgm | \
     pgmtopbm -threshold -val 0.5 | cksum
   done
 
-#Test 2:  Should produce 1571496937 33838, cksum of testimg.red, ten times
+echo \
+  "Test 2:  Should produce 1571496937 33838, cksum of testimg.red, ten times"
 
-echo "Test 2"
-
-test_pam=${tmpdir}/testimg.pgm
+test_pam=${tmpdir}/testimg.pam
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 > ${test_pam}
 
 for mode in "-mono" "-mono -norle" \
@@ -34,18 +31,15 @@ for mode in "-mono" "-mono -norle" \
 rm ${test_pam}
 
 
-#Test 3: Should print 1926073387 101484, cksum of testimg.ppm, four times
-
-echo "Test 3"
+echo \
+    "Test 3: Should print 1926073387 101484, cksum of testimg.ppm, four times"
 
 for mode in "-rgb" "-rgb -norle" "" "-norle"
   do
   pamtotga ${mode} testimg.ppm | tgatoppm | cksum
   done
 
-#Test 4: Should print 0 six times
-
-echo "Test 4"
+echo "Test 4: Should print 0 0 0 : 0 six times"
 
 test256_ppm=${tmpdir}/test256.ppm
 pnmquant 256 testimg.ppm > ${test256_ppm} || echo "pnmquant failed"
@@ -58,9 +52,8 @@ for mode in "-rgb" "-rgb -norle" "-cmap" "-cmap -norle" "" "-norle"
 done
 
 
-#Test 5: Should print 0 eight times
-
-echo "Test 5"
+echo \
+    "Test 5: Should print 0 0 0 : 0 twice, then 0 0 0 0 : 0 six times"
 
 test256_31_ppm=${tmpdir}/test256-31.ppm
 pamdepth 31 ${test256_ppm} > ${test256_31_ppm} || echo "pamdepth failed"

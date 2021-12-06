@@ -4,4 +4,4 @@
 
 
 pamtopam < testimg.ppm | pamtopnm | cksum
-pamtopam < testgrid.pbm | pamtopnm | cksum
+pamtopam < maze.pbm | pamtopnm | cksum

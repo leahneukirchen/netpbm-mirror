@@ -29,6 +29,6 @@ pamtotiff -lzw ${tartan_ppm} | tifftopnm | cksum
 pamtotiff -lzw -predictor=1 ${tartan_ppm} | tifftopnm | cksum
 
 # PBM image: test flate compression
-pamtotiff -flate testgrid.pbm | tifftopnm | cksum
+pamtotiff -flate maze.pbm | tifftopnm | cksum
 
 rm ${tartan_ppm}

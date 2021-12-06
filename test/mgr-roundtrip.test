@@ -2,8 +2,8 @@
 # This script tests: pbmtomgr mgrtopbm
 # Also requires: pbmmake
 
-echo "Test 1.  Should print 2425386270 41"
-pbmtomgr testgrid.pbm | mgrtopbm | cksum
+echo "Test 1.  Should print 281226646 481"
+pbmtomgr maze.pbm | mgrtopbm | cksum
 
 echo "Test 2.  Should print 429369764 1034, 448060073 4105 twice each"
 # Maximum width and height allowed

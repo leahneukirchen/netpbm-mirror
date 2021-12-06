@@ -2,31 +2,43 @@
 # This script tests: ppmpat
 # Also requires:
 
-# Test 1. Should print: 4008533639 781
-echo "Test 1"
-ppmpat -g2 --color=rgb:32/0d/b7,rgb:31/58/a3 16 16 | cksum
+echo "Test 1. Should print: 4008533639 781"
+ppmpat -gingham2 \
+       -color=rgb:32/0d/b7,rgb:31/58/a3 16 16 | cksum
 
-# Test 2. Should print: 3805937800 9613
-echo "Test 2"
-ppmpat -g3 --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 64 50 | cksum
+echo "Test 2. Should print: 738714211 781"
+ppmpat -g2 -mesh \
+       --color=rgb:32/0d/b7,rgb:31/58/a3 16 16 | cksum
 
-# Test 3. Should print: 2698433077 1549
-echo "Test 3"
-ppmpat -madras --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 32 16 | cksum
+echo "Test 3. Should print: 3805937800 9613"
+ppmpat -gingham3 \
+       -color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 64 50 | cksum
 
-# Test 4. Should print: 3705929501 781
-echo "Test 4"
+echo "Test 4. Should print: 1586690955 9613"
+ppmpat -g3 -mesh \
+       -color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 64 50 | cksum
+
+echo "Test 5. Should print: 2698433077 1549"
+ppmpat -madras \
+       --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 32 16 | cksum
+
+echo "Test 6. Should print: 1526189097 1549"
+ppmpat -madras -mesh \
+       --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 32 16 | cksum
+
+echo "Test 7. Should print: 3705929501 781"
 ppmpat -tartan --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 16 16 | cksum
 
-# Test 5. Should print: 3057513592 661
-echo "Test 5"
+echo "Test 8. Should print: 1996587666 781"
+ppmpat -tartan -mesh \
+       --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 16 16 | cksum
+
+echo "Test 9. Should print: 3057513592 661"
 ppmpat -argyle1 --color=rgb:ff/ff/ff,rgb:ff/0/0 12 18 | cksum
 
-# Test 6. Should print: 1861389287 661
-echo "Test 6"
+echo "Test 10. Should print: 1861389287 661"
 ppmpat -argyle2 --color=rgb:00/00/00,rgb:ff/80/80,rgb:e0/e0/e0 12 18 | cksum
 
-# Test 7.
 echo "Test Invalid"
 
 tmpdir=${tmpdir:-/tmp}

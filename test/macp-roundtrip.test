@@ -1,8 +1,6 @@
 #! /bin/bash
 # This script tests: pbmtomacp macptopbm
-# Also requires: pnmcrop pbmpage pbmupc pnmpad
-
-PATH=/home/netpbm/p4151/bin/:$PATH
+# Also requires: pnmcrop pbmpage pbmupc pnmpad pbmmake
 
 tmpdir=${tmpdir:-/tmp}
 temp1_pbm=${tmpdir}/temp1.pbm
@@ -11,25 +9,23 @@ tempupc_pbm=${tmpdir}/tempupc.pbm
 temp3_pbm=${tmpdir}/temp3.pbm
 temp3_macp=${tmpdir}/temp3.macp
 
-echo "Test 1. Should produce 2425386270 41 twice"
-
-# Because Macpaint files are fixed size (576 x 720 pixels)
+# Macpaint files are fixed size (576 x 720 pixels)
 # pbmtomacp automatically adds padding when input is smaller.
 
-pbmtomacp testgrid.pbm | macptopbm | tee ${temp1_pbm} | \
+echo "Test 1. Should produce 281226646 481 twice"
+pbmtomacp maze.pbm | macptopbm | tee ${temp1_pbm} | \
     pnmcrop | cksum
 
 pbmtomacp ${temp1_pbm} | macptopbm | pnmcrop | cksum
 
 rm ${temp1_pbm}
 
-
 echo "Test 2. Should produce 2329957971 51851"
 pbmpage 1 | pbmtomacp | macptopbm | cksum
 
-
 echo "Test 3. Should produce 2907103393 5086 three times"
-pbmupc 0 12345 67890 | tee ${tempupc_pbm} | pnmpad -black -t 44 -b 20 -l 100 -r 251 | \
+pbmupc 0 12345 67890 | tee ${tempupc_pbm} | \
+    pnmpad -black -t 44 -b 20 -l 100 -r 251 | \
     pbmtomacp | macptopbm | \
     tee ${temp2_pbm} | \
     pnmcrop | pnmcrop | cksum
@@ -49,6 +45,7 @@ pbmtomacp ${temp3_pbm} | tee ${temp3_macp} | macptopbm | cksum
 
 pbmtomacp -norle ${temp3_pbm} | macptopbm | cksum
 
-( head -c 128 /dev/zero ; cat ${temp3_macp} ) | macptopbm -extraskip 128 | cksum
+( head -c 128 /dev/zero ; cat ${temp3_macp} ) | \
+    macptopbm -extraskip 128 | cksum
 
 rm ${temp3_pbm} ${temp3_macp}

@@ -1,75 +1,77 @@
 #! /bin/bash
 # This script tests: pamslice pamdeinterlace
-# Also requires: pamcut pamtopnm pamflip
+# Also requires: pamfile pamcut pamtopnm pamflip
 
-
-# Test 1.
-# Slice rows, one by one, out of testgrid.pbm.
+echo "Test 1.  Should print 139976034 137 twice"
+# Slice rows, one by one, out of maze.pbm.
 # Add header and reconstruct pbm image.
 # Note that in pamslice output 0 is white and 1 is black: opposite of PBM
-# Should print 2425386270 41
+
+mwidth=$(pamfile -size maze.pbm | cut -d" " -f1)
+height=16
+
+pamcut -top=0 -left=0 -height=${height} maze.pbm | cksum
 
 (echo "P1"
- echo "14 16"
- seq 0 15 | while read i;
+ echo "${mwidth} ${height}"
+ for ((i = 0; i < ${height}; ++i))
      do
-     pamslice -row=$i testgrid.pbm
-     done | awk '{print $2}' | sed 'y/01/10/' ) \
+     pamslice -row=$i maze.pbm
+     done | cut -d" " -f2- | sed 'y/01/10/' ) \
  | pamtopnm | cksum
 
-# Test 2.
+
+echo "Test 2.  Should print 1624460505 574 three times"
 # Slice rows, one by one, out of ppm test image
 # We take a part out of testimg.ppm with pamcut for processing the
 # whole image takes much time.
 # Add header and reconstruct ppm image.
-# Should print 914327477 4864
+
 
 tmpdir=${tmpdir:-/tmp}
+test1711_ppm=${tmpdir}/test1711.ppm
 
-test4933_ppm=${tmpdir}/test4933.ppm
-
-pamcut 50 50 49 33 testimg.ppm > ${test4933_ppm}
+pamcut -left=50 -top=50 -width=17 -height=11 testimg.ppm | \
+  tee ${test1711_ppm} | cksum
 
 (echo "P3"
- echo "49 33"
+ echo "17 11"
  echo "255"
- seq 0 32 | while read i;
+ for ((i = 0; i < 11; ++i))
      do
-     pamslice -row=$i ${test4933_ppm}
-     done | awk '{print $2, $3, $4}' ) \
+     pamslice -row=$i ${test1711_ppm}
+     done | cut -d" " -f2- ) \
  | pamtopnm | cksum
 
 # Same as above test 2, but take cols instead of rows.
 # Should print 914327477 4864
 
 (echo "P3"
- echo "33 49"
+ echo "11 17"
  echo "255"
- seq 0 48 | while read i;
+ for ((i = 0; i < 17; ++i))
      do
-     pamslice -col=$i ${test4933_ppm}
-     done | awk '{print $2, $3, $4}' ) \
- | pamflip -xy | cksum
+     pamslice -col=$i ${test1711_ppm}
+     done | cut -d " " -f2- ) | pamflip -xy | cksum
 
-# Test 4.
+echo "Test 3.  Should print 1624460505 574"
 # Divide input image into two with pamdeinterlace and recombine.
 
 testeven_ppm=${tmpdir}/testeven.ppm
 testodd_ppm=${tmpdir}/testodd.ppm
 
-pamdeinterlace -takeodd ${test4933_ppm} > ${testodd_ppm}
-pamdeinterlace -takeeven ${test4933_ppm} > ${testeven_ppm}
+pamdeinterlace -takeodd ${test1711_ppm} > ${testodd_ppm}
+pamdeinterlace -takeeven ${test1711_ppm} > ${testeven_ppm}
 
-(echo "P3"
- echo "49 33"
- echo "255"
- ( seq 0 15 | while read i;
-     do
-     pamslice -row=$i ${testeven_ppm}
-     pamslice -row=$i ${testodd_ppm}
-     done
-     pamslice -row=16 ${testeven_ppm};
- )  | awk '{print $2, $3, $4}' ) \
- | pamtopnm | cksum
+( echo "P3"
+  echo "17 11"
+  echo "255"
+  ( for ((i = 0; i < 5; ++i))
+        do
+        pamslice -row=$i ${testeven_ppm}
+        pamslice -row=$i ${testodd_ppm}
+        done
+        pamslice -row=5 ${testeven_ppm};
+  ) | cut -d" " -f2- ) | pamtopnm | cksum
 
-rm ${test4933_ppm} ${testodd_ppm} ${testeven_ppm}
+rm ${test1711_ppm} ${testodd_ppm} ${testeven_ppm}

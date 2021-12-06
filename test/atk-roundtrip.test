@@ -2,16 +2,17 @@
 # This script tests: pbmtoatk atktopbm
 # Also requires: pbmmake
 
-echo "Test 1. Should print 2425386270 41"
-# cksum of testgrid.pbm
+echo "Test 1. Should print 281226646 481"
+# cksum of maze.pbm
 
-pbmtoatk testgrid.pbm | atktopbm | cksum
+pbmtoatk maze.pbm | atktopbm | cksum
 
 tmpdir=${tmpdir:-/tmp}
 maxwidth_pbm=${tmpdir}/maxwidth.pbm
 maxheight_pbm=${tmpdir}/maxheight.pbm
 
-echo "Test 2. Should print 1824220442 125013 twice, then 2146497872 1000013 twice"
+echo \
+ "Test 2. Should print 1824220442 125013 twice, then 2146497872 1000013 twice"
 
 pbmmake -g 1000000 1 | tee ${maxwidth_pbm} | cksum
 pbmtoatk ${maxwidth_pbm} | atktopbm | cksum

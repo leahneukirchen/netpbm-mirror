@@ -2,14 +2,21 @@
 # This script tests: pamsumm
 # Also requires:
 
-echo "Test 1"
+echo "Test 1.  Should print in order: 56, 0, 1, 0.250000"
 
 for type in -sum -min -max -mean
   do
   pamsumm -brief $type testgrid.pbm
   done
 
-echo "Test 2"
+echo "Test 2.  Should print in order: 1627, 0, 1, 0.483794"
+
+for type in -sum -min -max -mean
+  do
+  pamsumm -brief $type maze.pbm
+  done
+
+echo "Test 3.  Should print in order: 10772432, 15, 255, 106.164760"
 
 for type in -sum -min -max -mean
   do

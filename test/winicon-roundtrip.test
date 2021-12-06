@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pamtowinicon ppmtowinicon winicontopam
-# Also requires: pamchannel pamcut pamdepth pamtopam pngtopam pnmtile pnmtopng
+# Also requires: pamchannel pamcut pamdepth pamtopam
 
 tmpdir=${tmpdir:-/tmp}
 test_pam=${tmpdir}/testimg.pam
@@ -18,9 +18,9 @@ pamtowinicon -pngthreshold=1   ${test_pam} | winicontopam | \
 
 rm ${test_pam}
 
-echo "Test 1. Should print 819454437 1093 six times"
+echo "Test 1. Should print 1009647580 1093 six times"
 
-pnmtile 32 32 testgrid.pbm | pamtopam | \
+pamcut -top=0 -left=0 -width=32 -height=32 maze.pbm | pamtopam | \
   tee ${test_pam} | cksum
 pamtowinicon ${test_pam} | winicontopam | \
   pamdepth 1 | pamchannel -tupletype="BLACKANDWHITE" 0 | cksum
@@ -33,5 +33,6 @@ pamtowinicon -pngthreshold=1   ${test_pam} | winicontopam |
 
 rm ${test_pam}
 
-pnmtile 32 32 testgrid.pbm | ppmtowinicon | winicontopam | \
+pamcut -top=0 -left=0 -width=32 -height=32 maze.pbm | \
+  ppmtowinicon | winicontopam | \
   pamdepth 1 | pamchannel -tupletype="BLACKANDWHITE" 0 | cksum

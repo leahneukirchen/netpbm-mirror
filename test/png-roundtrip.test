@@ -28,7 +28,7 @@ for flags in "" -interlace \
 pnmtopng testimg.ppm $flags | pngtopam | cksum
 done
 
-# Test 2.  Should print 2425386270 41 18 times
+# Test 2.  Should print 281226646 481 18 times
 for flags in "" -interlace \
   -gamma=.45 \
   -hist \
@@ -47,5 +47,5 @@ for flags in "" -interlace \
   -comp_strategy=filtered \
   -force
   do
-  pnmtopng testgrid.pbm $flags | pngtopam | cksum
+  pnmtopng maze.pbm $flags | pngtopam | cksum
   done

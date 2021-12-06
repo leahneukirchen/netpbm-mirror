@@ -88,9 +88,9 @@ for fn in "-subtract" "-divide" "-compare" "-shiftleft" "-shiftright"
 rm ${input3_ppm} ${input4_ppm} ${input4_pgm}
 
 echo "Test 4 (input = output)"
-echo "cksum is 2425386270 41 or 2921940274 59"
+echo "Prints 281226646 481 five times, then 2921940274 59 five times"
 
-for image in testgrid.pbm ${input1_ppm}
+for image in maze.pbm ${input1_ppm}
   do
   echo "input image"
   cat ${image} | cksum
@@ -103,9 +103,9 @@ for image in testgrid.pbm ${input1_ppm}
 
 
 echo "Test 5 (blank output)"
-echo "cksum is 2817549367 41 or 320101399 59"
+echo "Prints 2247801875 481 three times, then 320101399 59 three times"
 
-for image in testgrid.pbm ${input1_ppm}
+for image in maze.pbm ${input1_ppm}
   do
   for fn in "-subtract" "-difference" "-xor"
     do
@@ -115,7 +115,6 @@ for image in testgrid.pbm ${input1_ppm}
   done
 
 rm ${input1_ppm}
-
 
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2

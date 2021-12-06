@@ -2,17 +2,25 @@
 # This script tests: pnmcrop pnmmargin pnmpad
 # Also requires:
 
+# Test 1. Should produce 1926073387 101484, cksum of testimg.ppm
+
 pnmmargin -white 10 testimg.ppm | \
   pnmcrop | cksum
+
+# Test 2. Should produce 1926073387 101484
 
 pnmpad -white -left 10 -top 10 testimg.ppm | \
   pnmpad -white -right 10 -bottom 10 | \
   pnmcrop -right -bottom | pnmcrop -left -top | cksum
 
-pnmmargin -white 10 testgrid.pbm | \
+# Test 3. Should produce 281226646 481, cksum of maze.pbm
+
+pnmmargin -white 10 maze.pbm | \
   pnmcrop | cksum
 
-pnmpad -white -left 10 -top 10 testgrid.pbm | \
+# Test 4. Should produce 281226646 481
+
+pnmpad -white -left 10 -top 10 maze.pbm | \
   pnmpad -white -right 10 -bottom 10 | \
   pnmcrop -left -right | pnmcrop -top -bottom | cksum
 

@@ -2,6 +2,7 @@
 # This script tests: pbmtoxbm xbmtopbm
 # Also requires:
 
+echo "Test.  Should print 281226646 481 twice"
 
-pbmtoxbm testgrid.pbm | xbmtopbm | cksum
-pbmtoxbm -x10 testgrid.pbm | xbmtopbm | cksum
+pbmtoxbm maze.pbm | xbmtopbm | cksum
+pbmtoxbm -x10 maze.pbm | xbmtopbm | cksum

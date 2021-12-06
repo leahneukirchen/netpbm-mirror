@@ -1,56 +1,108 @@
 #! /bin/bash
 # This script tests: pamflip
-# Also requires:
+# Also requires: ppmpat pamseq pamtopnm
 
-echo "Test 1.  Should produce 1926073387 101484 14 times"
+tmpdir=${tmpdir:-/tmp}
+tartan_ppm=${tmpdir}/test.ppm
+test1_pgm=${tmpdir}/test1.pgm
+test2_pgm=${tmpdir}/test2.pgm
+dot_ppm=${tmpdir}/dot.ppm
 
-# TODO use smaller image
+echo "Test 1.  Should produce 1988581932 2989 fifteen times"
 
-pamflip -lr testimg.ppm | pamflip -lr | cksum
-pamflip -tb testimg.ppm | pamflip -tb | cksum
-pamflip -r180 testimg.ppm | \
+ppmpat -tartan -mesh \
+       -color=rgb:0/0/0,rgb:ff/00/ff,rgb:80/90/20 31 32 > ${tartan_ppm}
+
+pamflip -null ${tartan_ppm} | cksum
+pamflip -lr ${tartan_ppm} | pamflip -lr | cksum
+pamflip -tb ${tartan_ppm} | pamflip -tb | cksum
+pamflip -r180 ${tartan_ppm} | \
   pamflip -r180 | cksum
-pamflip -xy testimg.ppm | pamflip -xy | cksum
-pamflip -r90 testimg.ppm | \
-  pamflip -r90 | \
-  pamflip -r90 | \
-  pamflip -r90 | cksum
-pamflip -r270 testimg.ppm | \
-  pamflip -r270 | \
-  pamflip -r270 | \
-  pamflip -r270 | cksum
-pamflip -xform=leftright testimg.ppm | pamflip -leftright | cksum
-pamflip -xform=topbottom testimg.ppm | pamflip -topbottom | cksum
-pamflip -xform=transpose testimg.ppm | pamflip -transpose | cksum
-pamflip -xform=leftright,leftright testimg.ppm | cksum
-pamflip -xform=topbottom,topbottom testimg.ppm | cksum
-pamflip -xform=transpose,transpose testimg.ppm | cksum
-pamflip -tb testimg.ppm | pamflip -lr | \
+pamflip -xy ${tartan_ppm} | pamflip -xy | cksum
+pamflip -r90 ${tartan_ppm} | pamflip -r90 | \
+  pamflip -r90 | pamflip -r90 | cksum
+pamflip -r270 ${tartan_ppm} | pamflip -r270 | \
+  pamflip -r270 | pamflip -r270 | cksum
+pamflip -xform=leftright ${tartan_ppm} | pamflip -leftright | cksum
+pamflip -xform=topbottom ${tartan_ppm} | pamflip -topbottom | cksum
+pamflip -xform=transpose ${tartan_ppm} | pamflip -transpose | cksum
+pamflip -xform=leftright,leftright ${tartan_ppm} | cksum
+pamflip -xform=topbottom,topbottom ${tartan_ppm} | cksum
+pamflip -xform=transpose,transpose ${tartan_ppm} | cksum
+pamflip -tb ${tartan_ppm} | pamflip -lr | \
   pamflip -xform=leftright,topbottom | cksum
-pamflip -tb testimg.ppm | pamflip -lr | pamflip -xy | \
+pamflip -tb ${tartan_ppm} | pamflip -lr | pamflip -xy | \
   pamflip -xform=leftright,topbottom,transpose | cksum
 
+rm ${tartan_ppm}
 
-echo "Test 2.  Should produce 2425386270 41 6 times"
+pamseq 1 15 | pamtopnm -assume > ${test1_pgm}
 
-pamflip -lr testgrid.pbm | \
-  pamflip -lr | cksum
-pamflip -tb testgrid.pbm | \
-  pamflip -tb | cksum
-pamflip -r180 testgrid.pbm | \
-  pamflip -r180 | cksum
-pamflip -xy testgrid.pbm | \
-  pamflip -xy | cksum
-pamflip -r90 testgrid.pbm | \
-  pamflip -r90 | \
-  pamflip -r90 | \
-  pamflip -r90 | cksum
-pamflip -r270 testgrid.pbm | \
-  pamflip -r270 | \
-  pamflip -r270 | \
-  pamflip -r270 | cksum
+echo "Test 2.  Should produce 2729474106 27 nine times"
 
+pamflip -null ${test1_pgm} | cksum
+pamflip -lr ${test1_pgm} | pamflip -lr | cksum
+pamflip -tb ${test1_pgm} | pamflip -tb | cksum
+pamflip -r180 ${test1_pgm} | pamflip -r180 | cksum
+pamflip -xy ${test1_pgm} | pamflip -xy | cksum
+pamflip -r90 ${test1_pgm} | pamflip -r270 | cksum
+pamflip -r270 ${test1_pgm} | pamflip -r90 | cksum
+pamflip -r90 ${test1_pgm} | pamflip -r90 | \
+  pamflip -r90 | pamflip -r90 | cksum
+pamflip -r270 ${test1_pgm} | pamflip -r270 | \
+  pamflip -r270 | pamflip -r270 | cksum
 
-# TODO: single pixel image, one-dimensional (single row, single column) image
-# PBM various lengths: samples with -lr
+pamflip -r180 ${test1_pgm} > ${test2_pgm}
+rm ${test1_pgm}
 
+echo "Test 3.  Should produce 1849343241 27 nine times"
+
+pamflip -null ${test2_pgm} | cksum
+pamflip -lr ${test2_pgm} | pamflip -lr | cksum
+pamflip -tb ${test2_pgm} | pamflip -tb | cksum
+pamflip -r180 ${test2_pgm} | pamflip -r180 | cksum
+pamflip -xy ${test2_pgm} | pamflip -xy | cksum
+pamflip -r90 ${test2_pgm} | pamflip -r270 | cksum
+pamflip -r270 ${test2_pgm} | pamflip -r90 | cksum
+pamflip -r90 ${test2_pgm} | pamflip -r90 | \
+    pamflip -r90 | pamflip -r90 | cksum
+pamflip -r270 ${test2_pgm} | pamflip -r270 | \
+    pamflip -r270 | pamflip -r270 | cksum
+
+rm ${test2_pgm}
+
+cat > ${dot_ppm} <<EOF
+P3
+1 1
+65535
+1 10000 65535
+EOF
+
+echo "Test 4.  Should print a single pixel PPM image maxval 65535 in "
+echo "plain (ascii) format; then produce 2434897823 19 nine times"
+
+pamflip -null -plain ${dot_ppm}
+pamflip -null ${dot_ppm} | cksum
+pamflip -lr ${dot_ppm} | pamflip -lr | cksum
+pamflip -tb ${dot_ppm} | pamflip -tb | cksum
+pamflip -r180 ${dot_ppm} | pamflip -r180 | cksum
+pamflip -xy ${dot_ppm} | pamflip -xy | cksum
+pamflip -r90 ${dot_ppm} | pamflip -r270 | cksum
+pamflip -r270 ${dot_ppm} | pamflip -r90 | cksum
+pamflip -r90 ${dot_ppm} | pamflip -r90 | pamflip -r90 | pamflip -r90 | cksum
+pamflip -r270 ${dot_ppm} | pamflip -r270 | \
+    pamflip -r270 | pamflip -r270 | cksum
+
+rm ${dot_ppm}
+
+echo "Test 4.  Should produce 281226646 481 seven times"
+
+pamflip -null maze.pbm | cksum
+pamflip -lr maze.pbm | pamflip -lr | cksum
+pamflip -tb maze.pbm | pamflip -tb | cksum
+pamflip -r180 maze.pbm | pamflip -r180 | cksum
+pamflip -xy maze.pbm | pamflip -xy | cksum
+pamflip -r90 maze.pbm | pamflip -r90 | pamflip -r90 | pamflip -r90 | cksum
+pamflip -r270 maze.pbm | pamflip -r270 | pamflip -r270 | pamflip -r270 | cksum
+
+# TODO: PBM various lengths: samples with -lr

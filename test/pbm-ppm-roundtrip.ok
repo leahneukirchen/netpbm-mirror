@@ -1,10 +1,10 @@
-Test 1.  Should print 2425386270 41 five times.
-2425386270 41
-2425386270 41
-2425386270 41
-2425386270 41
-2425386270 41
-Test 2.
+Test 1.  Should print 281226646 481 five times.
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+Test 2.  Should print three all-white, then three all-black PBM images
 P1
 7 3
 0000000

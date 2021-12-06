@@ -78,12 +78,12 @@ pamtotiff -mb ${argylegray_ppm} -append -output ${multiimage_tiff} && \
   tifftopnm ${multiimage_tiff} | pampick 4 | cksum
 
 # PBM image
-# Should print 2425386270 41 three times
+# Should print 281226646 481 three times
 
 echo PBM
-pamtotiff testgrid.pbm | tifftopnm | cksum
-pamtotiff -g3 -fill testgrid.pbm | tifftopnm | cksum
-pamtotiff -g4 -mb testgrid.pbm -append -output ${multiimage_tiff} && \
+pamtotiff maze.pbm | tifftopnm | cksum
+pamtotiff -g3 -fill maze.pbm | tifftopnm | cksum
+pamtotiff -g4 -mb maze.pbm -append -output ${multiimage_tiff} && \
   tifftopnm ${multiimage_tiff} | pampick 5 | cksum
 
 # Extract individual images from multi-image tiff file

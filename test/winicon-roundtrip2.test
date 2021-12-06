@@ -1,7 +1,6 @@
 #! /bin/bash
 # This script tests: pamtowinicon winicontopam
-# Also requires: pamchannel pamdepth pamstack pamtopam pbmmake pngtopam
-# Also requires: pnmtopng ppmpat
+# Also requires: pamchannel pamdepth pamstack pamtopam pbmmake ppmpat
 
 tmpdir=${tmpdir:-/tmp}
 test_pam=${tmpdir}/testimg.pam

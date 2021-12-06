@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: g3topbm pbmtog3
-# Also requires: pnmcrop pbmmake pbmpage pnmpad
+# Also requires: pamfile pnmcrop pbmmake pbmpage pnmpad pamenlarge
 
 tmpdir=${tmpdir:-/tmp}
 complete256_pbm=${tmpdir}/complete256.pbm
@@ -11,17 +11,19 @@ pagemax_pbm=${tmpdir}/pagemax.pbm
 
 echo "Test 1.  Should print 0 0 0 : 0 or 0 0 0 0 : 0 total three times"
 
-pbmtog3 -nofixedwidth testgrid.pbm | \
-g3topbm -width=14 | cmp -s - testgrid.pbm
+width=$(pamfile -size maze.pbm | cut -d" " -f1)
+
+pbmtog3 -nofixedwidth maze.pbm | \
+g3topbm -width=${width} | cmp -s - maze.pbm
 echo ${PIPESTATUS[@]} ":" $?
 
-pbmtog3 -nofixedwidth -reversebits testgrid.pbm | \
-g3topbm -width=14 -reversebits | cmp -s - testgrid.pbm
+pbmtog3 -nofixedwidth -reversebits maze.pbm | \
+g3topbm -width=${width} -reversebits | cmp -s - maze.pbm
 echo ${PIPESTATUS[@]} ":" $?
 
-pbmtog3 testgrid.pbm | \
+pbmtog3 maze.pbm | \
 g3topbm  | pnmcrop -white -right -bottom | \
- cmp -s - testgrid.pbm ; echo ${PIPESTATUS[@]} ":" $?
+ cmp -s - maze.pbm ; echo ${PIPESTATUS[@]} ":" $?
 
 
 echo "Test 2.  Should print 0 0 0 : 0 or 0 0 0 0 : 0 total seven times"
@@ -62,8 +64,6 @@ pbmmake -b 5000 5 > ${wideb_pbm}
 pbmtog3 -nofixedwidth ${wideb_pbm} | g3topbm | \
  cmp -s - ${wideb_pbm} ; echo ${PIPESTATUS[@]} ":" $?
 
-
-
 cat ${complete256_pbm} | cksum
 cat ${wideb_pbm} | cksum
 cat ${widew_pbm} | cksum
@@ -85,3 +85,4 @@ pbmtog3 -nofixedwidth  ${pagemax_pbm} | g3topbm  | \
 cat ${page_pbm} | cksum
 cat ${pagemax_pbm} | cksum
 
+rm ${page_pbm} ${pagemax_pbm} 

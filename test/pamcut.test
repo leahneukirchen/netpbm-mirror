@@ -1,28 +1,23 @@
 #! /bin/bash
 # This script tests: pamcut pbmmake
-# Also requires:
+# Also requires: pamfile
 
-# Test 1.  Should print 2958909756 124815
-echo Test 1.
+echo "Test 1.  Should print 2958909756 124815"
 
 pamcut -top 0 -left 0 -width 260 -height 160 \
   -pad testimg.ppm | cksum
 
-# Test 2.  Should print 1550940962 10933
-echo Test 2.
+echo "Test 2.  Should print 1550940962 10933"
 
 pamcut -top 200 -left 120 -width 40 -height 40 \
   -pad testimg.ppm | cksum
 
-# Test 3.  Should print 708474423 14 twice
-echo Test 3.
+echo "Test 3.  Should print 708474423 14 twice"
 
 pamcut -top 5 -left 5 -bottom 5 -right 5 testimg.ppm | cksum
 pamcut -width 1 -height 1 -bottom 5 -right 5 testimg.ppm | cksum
 
-
-# Test 4.  Should print 659346598 80124 four times
-echo Test 4.
+echo "Test 4.  Should print 659346598 80124 four times"
 
 pamcut -croptop 10 -cropleft 10 -cropbottom 10 -cropright 10 testimg.ppm | \
   cksum
@@ -30,19 +25,20 @@ pamcut -top 10 -left 10 -bottom 138 -right 216 testimg.ppm | cksum
 pamcut -top 10 -left 10 -bottom -11 -right -11 testimg.ppm | cksum
 pamcut -top 10 -left 10 -width 207 -height 129 testimg.ppm | cksum
 
+echo "Test 5. Should print 281226646 481 five times"
 
-# Test 5. Should print 2425386270 41 five times
-echo Test 5.
-
-pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 testgrid.pbm | \
+width=$(pamfile -size maze.pbm | awk '{print $1}')
+height=$(pamfile -size maze.pbm | awk '{print $2}')
+ 
+pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 maze.pbm | \
   cksum
-pamcut -top 0 -left 0 -bottom 15 -right 13 testgrid.pbm | cksum
-pamcut -top 0 -left 0 -bottom -1 -right -1 testgrid.pbm | cksum
-pamcut -top 0 -left 0 -width 14 -height 16 testgrid.pbm | cksum
-pamcut testgrid.pbm | cksum
-
-# Test 6.  Should print 3412257956 129
-echo Test 6.
+pamcut -top 0 -left 0 -bottom $((${height} -1)) -right $((${width} -1)) \
+  maze.pbm | cksum
+pamcut -top 0 -left 0 -bottom -1 -right -1 maze.pbm | cksum
+pamcut -top 0 -left 0 -width ${width} -height ${height} maze.pbm | cksum
+pamcut maze.pbm | cksum
+ 
+echo "Test 6.  Should print 3412257956 129"
 
 pbmmake -g 50 50 | pamcut 5 5 30 30 | cksum
 

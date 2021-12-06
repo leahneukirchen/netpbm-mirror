@@ -1,14 +1,18 @@
 #! /bin/bash
 # This script tests: pbmtocis cistopbm
-# Also requires: pbmmake pamcut
+# Also requires: pbmmake pamcut pamfile
 
+tmpdir=${tmpdir:-/tmp}
+test_pbm=${tmpdir}/test.pbm
 
 # Output images produced by pbmtocis are of fixed size,
 # either 128x96 or 256x192.
 # Smaller input images are padded, larger ones are cropped.
 
-# Test 1. Should print 2631579683 1546
-pbmmake -g 128 96 | pbmtocis | cistopbm | cksum
+echo "Test 1. Should print 2631579683 1546 twice"
+pbmmake -g 128 96 | tee ${test_pbm} | cksum
+pbmtocis ${test_pbm} | cistopbm | cksum
 
-# Test 2. Should print 2425386270 41
-pbmtocis testgrid.pbm | cistopbm | pamcut 0 0 14 16 | cksum
+echo "Test 2. Should print 281226646 481, cksum of maze.pbm"
+size=$(pamfile -size maze.pbm | awk '{print "-width="$1,"-height="$2}')
+pbmtocis maze.pbm | cistopbm | pamcut -left=0 -top=0 ${size} | cksum

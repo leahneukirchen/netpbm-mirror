@@ -2,9 +2,9 @@
 # This script tests: pnmcolormap
 # Also requires:
 
-pnmcolormap -plain -sort 2 testgrid.pbm
-pnmcolormap -plain -sort -square 2 testgrid.pbm
-pnmcolormap -plain -sort all testgrid.pbm
+pnmcolormap -plain -sort 2 maze.pbm
+pnmcolormap -plain -sort -square 2 maze.pbm
+pnmcolormap -plain -sort all maze.pbm
 
 echo 1>&2
 echo "Invalid command-line arguments." 1>&2
