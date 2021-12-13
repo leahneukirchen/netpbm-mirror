@@ -24,7 +24,9 @@
 # pstopnm does not use libnetpbm functions for output.
 # Output is filtered through at least one Netpbm program.
 
-# Test 1. Should print: 2425386270 41
+echo "Test 1.  Should print: 281226646 481"
+
+tmpdir=${tmpdir:-/tmp}
 testgrid1_ps=${tmpdir}/testgrid1.ps
 
 pbmtopsg3 -dpi=72 testgrid.pbm \
@@ -36,13 +38,12 @@ pstopnm -xborder=0 -yborder=0 -llx=0 -lly=-16 -urx=14 \
 rm ${testgrid1_ps}
 
 
-
-# Test 2. Should print: 2916080186 235
+echo "Test 2.  Should print: 2154092425 3374"
 # Output is pgm maxval=1 with black and white inverted.
-#
+
 testgrid_epsi=${tmpdir}/testgrid.epsi
 
-pbmtoepsi testgrid.pbm > ${testgrid_epsi} && \
+pbmtoepsi maze.pbm > ${testgrid_epsi} && \
 xysizebps=`awk  '/BeginPreview/ {print $2,$3,$4}' \
     ${testgrid_epsi}` && \
 awk '/^%%BeginPreview:/ { p=1; next } /^%%EndImage/ { p=0; next } \

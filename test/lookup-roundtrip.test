@@ -10,3 +10,5 @@ ppmhist testimg.ppm -map > ${mapfile}
 # Test.  Should produce 1926073387 101484
 pamunlookup -lookupfile=${mapfile} testimg.ppm |\
   pamlookup -lookupfile=${mapfile} | cksum
+
+rm ${mapfile}

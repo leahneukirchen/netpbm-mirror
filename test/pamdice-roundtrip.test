@@ -42,7 +42,7 @@ tiles=$(( (${mh}+${height}-1) / ${height} ))
 
 pamdice maze.pbm -outstem=${fname_stem} -height=${height}
 pamundice ${fname_stem}_%1d_%1a.pbm -down=${tiles} | cksum
-#rm ${fname_stem}_*_*.pbm
+rm ${fname_stem}_*_*.pbm
 
 echo "Test 5.  Should print 1926073387 101484 five times"
 

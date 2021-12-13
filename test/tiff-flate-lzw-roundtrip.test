@@ -8,11 +8,11 @@
 ## features.
 
 tmpdir=${tmpdir:-/tmp}
-
 tartan_ppm=${tmpdir}/testimg40.ppm
 
 # Make a test image with reduced colors which compresses better
-# cksum is 1079668603 10237
+
+echo "Test 1.  Should print 1079668603 10237 six times"
 
 ppmpat -tartan --color=rgb:32/0d/b7,rgb:31/58/a3,rgb:e9/5e/d4 71 48 | \
   tee ${tartan_ppm} | cksum
@@ -28,7 +28,9 @@ pamtotiff -adobeflate ${tartan_ppm} | tifftopnm | cksum
 pamtotiff -lzw ${tartan_ppm} | tifftopnm | cksum
 pamtotiff -lzw -predictor=1 ${tartan_ppm} | tifftopnm | cksum
 
+rm ${tartan_ppm}
+
+echo "Test 2.  Should print 281226646 481"
+
 # PBM image: test flate compression
 pamtotiff -flate maze.pbm | tifftopnm | cksum
-
-rm ${tartan_ppm}

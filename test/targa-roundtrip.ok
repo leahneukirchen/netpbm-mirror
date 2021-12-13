@@ -1,4 +1,4 @@
-Test 1: Should print 281226646 481, cksum of maze.pbm, ten times
+Test 1:  Should print 281226646 481 ten times
 281226646 481
 281226646 481
 281226646 481
@@ -9,7 +9,7 @@ Test 1: Should print 281226646 481, cksum of maze.pbm, ten times
 281226646 481
 281226646 481
 281226646 481
-Test 2:  Should produce 1571496937 33838, cksum of testimg.red, ten times
+Test 2:  Should produce 1571496937 33838 ten times
 1571496937 33838
 1571496937 33838
 1571496937 33838
@@ -20,19 +20,19 @@ Test 2:  Should produce 1571496937 33838, cksum of testimg.red, ten times
 1571496937 33838
 1571496937 33838
 1571496937 33838
-Test 3: Should print 1926073387 101484, cksum of testimg.ppm, four times
+Test 3.  Should print 1926073387 101484 four times
 1926073387 101484
 1926073387 101484
 1926073387 101484
 1926073387 101484
-Test 4: Should print 0 0 0 : 0 six times
+Test 4.  Should print 0 0 0 : 0 six times
 0 0 0 : 0
 0 0 0 : 0
 0 0 0 : 0
 0 0 0 : 0
 0 0 0 : 0
 0 0 0 : 0
-Test 5: Should print 0 0 0 : 0 twice, then 0 0 0 0 : 0 six times
+Test 4.  Should print 0 0 0 : 0 twice, then 0 0 0 0 : 0 six times
 0 0 0 : 0
 0 0 0 : 0
 0 0 0 0 : 0

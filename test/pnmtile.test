@@ -31,19 +31,19 @@ echo "-----------------------------------------------------------" 1>&2
 pnmtile 100 testgrid.pbm > ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pnmtile 100 0 testgrid.pbm > ${test_out} || \
   echo -n "Expected failure 2"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pnmtile 0 100 testgrid.pbm > ${test_out} || \
   echo -n "Expected failure 3"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pnmtile 100 100 100 testgrid.pbm > ${test_out} || \
   echo -n "Expected failure 4"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}

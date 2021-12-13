@@ -45,4 +45,4 @@ echo "-----------------------------------------------------------" 1>&2
 pamhue testimg.ppm  > ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}

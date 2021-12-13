@@ -37,7 +37,7 @@ rm ${input1_ppm} ${inputm_ppm} ${input2_ppm}
 echo "Test 3"
 
 input3_pbm=${tmpdir}/input3.pbm
-pamcut maze.pbm -left=0 -right=0 -width=35 -height=33 > ${input3_pbm} 
+pamcut maze.pbm -left=0 -top=0 -width=35 -height=33 > ${input3_pbm} 
 
 pamarith -equal -plain ${input3_pbm} ${input3_pbm}  | \
   uniq -c | sed -e 's/^ *//' -e 's/ /:/'

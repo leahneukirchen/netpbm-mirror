@@ -58,4 +58,4 @@ for width in `seq 16`
       #
     done
 
-rm ${test3_pbm}.[1-9]  ${test3_pbm}.1[1-6]
+rm ${test3_pbm}.[1-9]  ${test3_pbm}.1[0-6]

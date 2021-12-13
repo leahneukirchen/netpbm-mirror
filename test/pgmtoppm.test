@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pgmtoppm
-# Also requires: pamtopnm pgmtoppm pnminvert pamseq pgmramp
+# Also requires: pamtopnm pnminvert pamseq pgmramp
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -68,72 +68,72 @@ pgmtoppm white testimg.ppm > \
   ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm -map=/dev/null testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 2"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm black white testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 3"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm hwite testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 4"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm off-color testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 5"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm rgb-255:7/7/7 testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 6"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm -black=black -white=white white testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 7"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm -black=rgb:0/0/0 -map=${palette_ppm} testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 8"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm -white=rgb:ff/ff/ff -map=${palette_ppm} testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 9"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm rgb:ff/ff/ff -map=${palette_ppm} testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 10"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmtoppm rgb:00/00/00-rgb:ff/ff/ff -map=${palette_ppm} testgrid.pbm > \
   ${test_out} || \
   echo -n "Expected failure 11"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 #pgmtoppm rgb-255:7/7/7 testgrid.pbm > \
 #  ${test_out} || \
 #  echo -n "Expected failure 12"
 #  test -s ${test_out}; echo " "$?
-#  rm -f {test_out}
+#  rm -f ${test_out}
 
 rm -f ${palette_ppm}

@@ -33,14 +33,14 @@ echo "-----------------------------------------------------------" 1>&2
 pamfile -size -machine  testimg.ppm > ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamfile -count -machine testimg.ppm > ${test_out} || \
   echo -n "Expected failure 2"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 head -n1 testimg.ppm | pamfile > ${test_out} || \
   echo -n "Expected failure 3"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}

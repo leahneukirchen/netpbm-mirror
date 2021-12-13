@@ -173,3 +173,5 @@ do
   echo $?
   rm ${font_corrupt_bdf}
 done
+
+rm ${font_bdf}

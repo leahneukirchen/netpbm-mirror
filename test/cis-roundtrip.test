@@ -16,3 +16,5 @@ pbmtocis ${test_pbm} | cistopbm | cksum
 echo "Test 2. Should print 281226646 481, cksum of maze.pbm"
 size=$(pamfile -size maze.pbm | awk '{print "-width="$1,"-height="$2}')
 pbmtocis maze.pbm | cistopbm | pamcut -left=0 -top=0 ${size} | cksum
+
+rm ${test_pbm}
