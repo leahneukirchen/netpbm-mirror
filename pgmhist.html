@@ -2,7 +2,7 @@
 <html><head><title>Pgmhist User Manual</title></head>
 <body>
 <h1>pgmhist</h1>
-Updated: 02 March 2014
+Updated: 18 December 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -33,7 +33,8 @@ gray values or other gray value distribution metrics.
 <p>If you specify none of <b>-median</b>, <b>-quartile</b>, or <b>-decile</b>,
 <b>pgmhist</b> prints a complete histogram showing how many pixels of each
 possible gray value exist in the image.  Along with each gray value, it tells
-you how many pixels are more black and more white than it.
+you how many pixels are at lest as black as it and how many are at least as
+white.
 
 <p><b>-median</b>, <b>-quartile</b>, and <b>-decile</b> options cause
 <b>pgmhist</b> instead to print the indicated quantiles.  Each quantile is a

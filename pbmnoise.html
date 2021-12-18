@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pbmnoise User Manual</title></head>
+<body>
+<h1>pgmnoise</h1>
+Updated: 18 December 2021
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+pbmnoise - create a PBM image made up of white noise
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pbmnoise</b> <i>width</i> <i>height</i>
+
+[<b>-ratio=</b><i>M</i><b>/</b><i>N</i>]
+[<b>-pack</b>]
+[<b>-randomseed=</b><i>integer</i>]
+[<b>-endian=</b>]{<b>big</b>|<b>little</b>|<b>native</b>|<b>swap</b>}] 
+
+<p>Minimum unique abbreviations of option are acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white space
+in place of the equals sign to separate an option name from its value.
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pbmnoise</b> creates a PBM image with random pixels.  You specify the
+probability each pixel will be black or white (essentially, the proportion of
+black to white pixels in the image).
+
+<p>You specify the dimensions of the image with the <i>width</i> and
+<i>height</i> arguments.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm (most
+notably <b>-quiet</b>, see <a href="index.html#commonoptions"> Common
+Options</a>), <b>pbmnoise</b> recognizes the following command line options:
+
+<dl>
+<dt><b>-ratio=</b><i>M</i><b>/</b><i>N</i>
+<dd>The proportion of black pixels in the generated image.
+
+<p>To be precise, this is the probability that any given pixel will be black.
+By the law of large numbers, we can expect the proportion of black pixels in a
+reasonably large image to be close to this fraction.
+
+<p>The option value is a fraction.  The denominator must be 1 or an integer
+power of 2 up to 65536.  the numerator must be 0 or a positive integer not
+exceeding denominator.
+
+<p>The default is 1/2, meaning the output image has essentially the same
+number of black and white pixels.
+
+<p>If the ratio is 0 the output image is entirely white.  If 1, the output is
+entirely black.
+
+<dt><b>-pack</b>
+<dd>
+The program generates pixels in 32-bit units discarding any fractional pixels
+at row ends by default.  When this option is specified, the unused pixels are
+carried over to the next row, eliminating waste in exchange for some overhead
+cost.
+
+<p>Using this option improves performance when the image width is small.
+
+<dt><b>-randomseed=</b><i>integer</i>
+<dd>
+This is the seed for the random number generator that generates the pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>pbmnoise</b> uses a seed derived from the time of day and
+process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+
+<dt><b>-endian=</b><i>mode</i>
+<dd>
+<b>pbmnoise</b> internally generates random 32-bit integers and uses the
+machine's binary encoding of those integers as strings of pixels.  Because the
+integers are random, it doesn't normally matter what binaary encoding is used
+for them, but if you need consistent results between machines using the same
+random number generator, it matters.  For that reason (mainly for testing the
+program), this option lets you control that encoding, between big-endian and
+little-endian.
+
+<p><i>mode</i> is one of the following:
+
+<dl compact>
+<dt><b>big</b>
+<dd>
+Force big-endian output by rearranging bytes on little-endian machines.  No
+effect on big-endian machines.
+
+<dt><b>little</b>
+<dd>
+Likewise, force little-endian output.
+
+<dt><b>native</b>
+
+<dd>
+Do not rearrange anything.  This is the default.
+
+<dt><b>swap</b>
+<dd>
+Always swap regardless of system endianness.
+</dl>
+</dl>
+
+
+<h2 id="examples">EXAMPLES</h2>
+
+<p>This generates a random PBM image with roughly one-third of pixels colored
+black:
+<pre><code>
+  pbmnoise -ratio=11/32 1200 1200 > random.pbm
+</code></pre>
+
+<p>The following is an alternate method for generating a random PBM image
+which uses <b>pgmnoise</b> and <b>pgmtopbm</b> instead of <b>pbmnoise</b>.  It
+is less efficient.
+<pre><code>
+  pgmnoise -maxval=100 1200 1200 | \
+    pgmtopbm -threshold -value=0.333 > random.pbm
+</code></pre>
+
+<p>This generates a random PPM image, maxval 1:
+<pre><code>
+  pbmnoise 600 400 > red.pbm
+  pbmnoise 600 400 > green.pbm
+  pbmnoise 600 400 > blue.pbm
+  rgb3topbm red.pbm green.pbm blue.pbm > random.ppm
+</code></pre>
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pbm.html">pbm</a>
+<a href="pgmnoise.html">pgmnoise</a>
+<a href="pgmnoise.html">pgmtopbm</a>
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pbmnoise</b> was new in Netpbm 10.97 (December 2021).
+
+<p>In Netpbm before that, you can use <b>pgmnoise</b>.
+
+  
+<h2 id="author">AUTHOR</h2>
+<p>
+Akira F Urushibata wrote this program and contributed it to the public domain
+in December 2021.
+<p>
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>

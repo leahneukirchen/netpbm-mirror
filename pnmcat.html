@@ -75,10 +75,11 @@ command line options:
 <dl compact>
 <dt><b>-jleft</b>, <b>-jcenter</b>, <b>-jright</b>
 <dd>
-If the PNM images are not all the same height (left-right) or width
-(top-bottom), the smaller ones have to be justified with the largest.
-By default, <b>pnmcat</b> centers them, but you can specify
-justification to one side or the other with one of the
+  If the PNM images are not all the same height when you're concatenating left
+  to right or width when you're concatenating top to bottom, the smaller ones
+  have to be justified with the largest.  By default, <b>pnmcat</b> centers
+  them, but you can specify justification to one side or the other with one of
+  the
 <b>-j</b><i>xxx</i> options.  So, <b>-topbottom -jleft</b> would stack the
 PNMs on top of each other, flush with the left edge.  <b>-leftright
 -jbottom</b> would line up the images left to right with their bottom edges
