@@ -1,7 +1,8 @@
 /* pbmnoise.c - create a random bitmap of a specified size
                 with a specified ratio of white/black pixels
 
-   Written by Akira F Urushibata December 2021
+   Written by Akira F Urushibata and contributed to the public domain 
+   December 2021
 */
 
 #include <math.h>
