@@ -452,6 +452,35 @@ pm_tmpfile_fd(void) {
 }
 
 
+static bool
+isSeekable(FILE * const fP) {
+/*----------------------------------------------------------------------------
+   The file is seekable -- we can set its read/write position to anything we
+   want.
+
+   If we can't tell if it is seekable, we return false.
+-----------------------------------------------------------------------------*/
+    int statRc;
+    struct stat statbuf;
+
+    /* I would use fseek() to determine if the file is seekable and
+       be a little more general than checking the type of file, but I
+       don't have reliable information on how to do that.  I have seen
+       streams be partially seekable -- you can, for example seek to
+       0 if the file is positioned at 0 but you can't actually back up
+       to 0.  I have seen documentation that says the errno for an
+       unseekable stream is EBADF and in practice seen ESPIPE.
+
+       On the other hand, regular files are always seekable and even if
+       some other file is, it doesn't hurt much to assume it isn't.
+    */
+
+    statRc = fstat(fileno(fP), &statbuf);
+
+    return statRc == 0 && S_ISREG(statbuf.st_mode);
+}
+
+
 
 FILE *
 pm_openr_seekable(const char name[]) {
@@ -466,61 +495,42 @@ pm_openr_seekable(const char name[]) {
   We use a file that the operating system recognizes as temporary, so
   it picks the filename and deletes the file when Caller closes it.
 -----------------------------------------------------------------------------*/
-    int stat_rc;
-    int seekable;  /* logical: file is seekable */
-    struct stat statbuf;
-    FILE * original_file;
-    FILE * seekable_file;
+    FILE * originalFileP;
+    FILE * seekableFileP;
 
-    original_file = pm_openr((char *) name);
+    originalFileP = pm_openr((char *) name);
 
-    /* I would use fseek() to determine if the file is seekable and
-       be a little more general than checking the type of file, but I
-       don't have reliable information on how to do that.  I have seen
-       streams be partially seekable -- you can, for example seek to
-       0 if the file is positioned at 0 but you can't actually back up
-       to 0.  I have seen documentation that says the errno for an
-       unseekable stream is EBADF and in practice seen ESPIPE.
-
-       On the other hand, regular files are always seekable and even if
-       some other file is, it doesn't hurt much to assume it isn't.
-    */
-
-    stat_rc = fstat(fileno(original_file), &statbuf);
-    if (stat_rc == 0 && S_ISREG(statbuf.st_mode))
-        seekable = TRUE;
-    else
-        seekable = FALSE;
-
-    if (seekable) {
-        seekable_file = original_file;
+    if (isSeekable(originalFileP)) {
+        seekableFileP = originalFileP;
     } else {
-        seekable_file = pm_tmpfile();
+        seekableFileP = pm_tmpfile();
 
         /* Copy the input into the temporary seekable file */
-        while (!feof(original_file) && !ferror(original_file)
-               && !ferror(seekable_file)) {
+        while (!feof(originalFileP) && !ferror(originalFileP)
+               && !ferror(seekableFileP)) {
             char buffer[4096];
-            int bytes_read;
-            bytes_read = fread(buffer, 1, sizeof(buffer), original_file);
-            fwrite(buffer, 1, bytes_read, seekable_file);
+            size_t nBytesRead;
+
+            nBytesRead = fread(buffer, 1, sizeof(buffer), originalFileP);
+            fwrite(buffer, 1, nBytesRead, seekableFileP);
         }
-        if (ferror(original_file))
+        if (ferror(originalFileP))
             pm_error("Error reading input file into temporary file.  "
                      "Errno = %s (%d)", strerror(errno), errno);
-        if (ferror(seekable_file))
+        if (ferror(seekableFileP))
             pm_error("Error writing input into temporary file.  "
                      "Errno = %s (%d)", strerror(errno), errno);
-        pm_close(original_file);
+        pm_close(originalFileP);
         {
-            int seek_rc;
-            seek_rc = fseek(seekable_file, 0, SEEK_SET);
-            if (seek_rc != 0)
+            int seekRc;
+
+            seekRc = fseek(seekableFileP, 0, SEEK_SET);
+            if (seekRc != 0)
                 pm_error("fseek() failed to rewind temporary file.  "
                          "Errno = %s (%d)", strerror(errno), errno);
         }
     }
-    return seekable_file;
+    return seekableFileP;
 }
 
 
