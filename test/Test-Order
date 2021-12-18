@@ -27,6 +27,9 @@ ppmforge-parameters.test
 
 # Generators with random components
 
+pbmnoise1.test
+pbmnoise2.test
+pbmnoise-parameters.test
 pgmnoise.test
 pgmnoise-parameters.test
 ppmpat-random.test
