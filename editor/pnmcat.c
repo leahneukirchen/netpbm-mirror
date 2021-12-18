@@ -703,6 +703,9 @@ concatenateLeftRightGen(FILE *             const ofP,
                 */
             }
         }
+        /* Note that img2[N].inrow{] is an alias to part of outrow[], so
+           outrow[] has been set.
+        */
         pnm_writepnmrow(ofP, outrow, newcols, newmaxval, newformat, 0);
     }
     pnm_freerow(outrow);
