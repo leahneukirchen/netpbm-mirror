@@ -72,8 +72,8 @@ https://wnww.gnu.org/software/gsl/doc/html/rng.html
   Twister method and does not rely on any randomness facility of the operating
   system, but it is easy to compile an alternative version that uses others.
 
-  The Mersenne Twister method was new to Netpbm in Netpbm 10.94
-  (March 2021).  Before that, Netpbm used standard OS-provided facilities.
+  The Mersenne Twister method was new to Netpbm in Netpbm 10.94 (March 2021).
+  Before that, Netpbm used standard OS-provided facilities.
 
   Programs that use random numbers have existed in Netpbm since PBMPlus days.
   The system rand() function was used in instances randomness was required;
@@ -87,15 +87,15 @@ https://wnww.gnu.org/software/gsl/doc/html/rng.html
 
   This was not considered a problem in the early days.  Deterministic
   operation was not a feature users requested and it was impossible regardless
-  of the random number generation method on most programs because they did
-  not allow a user to specify a seed for the generator.
+  of the random number generation method on most programs because they did not
+  allow a user to specify a seed for the generator.
 
   This state of affairs changed as Netpbm got firmly established as a
   base-level system package.  Security became critical for many users.  A
   crucial component of quality control is automated regression tests (="make
   check").  Unpredictable behavior gets in the way of testing.  One by one
   programs were given the -randomseed (or -seed) option to ensure reproducible
-  results.  Often this was done as new tests cases were written.  However,
+  results.  Often this was done as new test cases were written.  However,
   inconsistent output caused by system-level differences in rand()
   implementation remained a major obstacle.
 
@@ -215,6 +215,39 @@ pm_gaussrand(struct pm_randSt * const randStP) {
     }
 
     return retval;
+}
+
+
+
+uint32_t
+pm_rand32(struct pm_randSt * const randStP) {
+/*-----------------------------------------------------------------------------
+  Generate a 32-bit random number.
+
+  This is a provision for users who select a non-default random number
+  generator which returns less than 32 bits per call.  Many system generators
+  are known to return 31 bits (max = 2147483647 or 0x7FFFFFFF).
+
+  This does not work with generators that return less than 11 bits per call.
+  The least we know of is the archaic RANDU, which generates 15 bits (max =
+  32767 or 0x7FFF).
+-----------------------------------------------------------------------------*/
+    unsigned int const randMax = randStP->max;
+
+    uint32_t retval;
+
+    if (randMax >= 0xFFFFFFFF)
+        retval = pm_rand(randStP);
+    else {
+        uint32_t scale;
+
+        retval = 0;  /* Initial value */
+
+        for (scale = 0xFFFFFFFF; scale > 0; scale /= (randMax +1))
+            retval *= (randMax + 1) + pm_rand(randStP);
+    }
+
+    return retval;;
 }
 
 

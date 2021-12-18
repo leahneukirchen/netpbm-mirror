@@ -3,6 +3,8 @@
 #ifndef RAND_H_INCLUDED
 #define RAND_H_INCLUDED
 
+#include <inttypes.h>
+
 #include "netpbm/pm_c_util.h"
 #include "netpbm/mallocvar.h"
 
@@ -102,6 +104,9 @@ pm_gaussrand2(struct pm_randSt * const randStP,
 
 extern double
 pm_gaussrand(struct pm_randSt * const randStP);
+
+extern uint32_t
+pm_rand32(struct pm_randSt * const randStP);
 
 
 #endif
