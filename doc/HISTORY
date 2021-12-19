@@ -38,6 +38,10 @@ not yet  BJH  Release 10.97.00
               allow for adding up to 10 instead of 2, to account for rounding
               up to a multiple of 8 in processing bit maps.
 
+              Build: Don't attempt to build 'pamexec' on systems without
+              Unix process management.  Bug introduced in Netpbm 10.94
+              (March 2021) and supposedly fixed in 10.95, but not really.
+
 21.09.25 BJH  Release 10.96.00
 
               pgmtoppm: Eliminate dependency on color dictionary when user
