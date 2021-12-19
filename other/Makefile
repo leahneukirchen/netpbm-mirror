@@ -24,7 +24,7 @@ endif
 # build.
 
 PORTBINARIES = pamarith pambayer pamchannel pamdepth \
-	pamendian pamexec pamfix pamlookup pampick pamsplit \
+	pamendian pamfix pamlookup pampick pamsplit \
 	pamstack pamsummcol pamunlookup pamvalidate pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 

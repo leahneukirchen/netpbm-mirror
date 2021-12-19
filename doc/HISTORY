@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.12.19 BJH  Release 10.96.05
+
+              Build: Don't attempt to build 'pamexec' on systems without
+              Unix process management.  Bug introduced in Netpbm 10.94
+              (March 2021) and supposedly fixed in 10.95, but not really.
+
 21.11.28 BJH  Release 10.96.04
 
               palmtopnm: Fix bug: fails with PackBits input on platform with
