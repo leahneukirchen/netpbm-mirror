@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+21.12.20 BJH  Release 10.96.06
+
+              Fix version number.
+
 21.12.19 BJH  Release 10.96.05
 
               Build: Don't attempt to build 'pamexec' on systems without
