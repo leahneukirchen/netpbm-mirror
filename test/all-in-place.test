@@ -167,6 +167,7 @@ ordinary_testprogs="\
   pbmmake \
   pbmmask \
   pbmminkowski \
+  pbmnoise \
   pbmpage \
   pbmpscale \
   pbmreduce \

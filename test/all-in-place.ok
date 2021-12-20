@@ -125,6 +125,7 @@ pbmlife: ok
 pbmmake: ok
 pbmmask: ok
 pbmminkowski: ok
+pbmnoise: ok
 pbmpage: ok
 pbmpscale: ok
 pbmreduce: ok
