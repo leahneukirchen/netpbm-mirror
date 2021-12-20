@@ -136,6 +136,18 @@ struct pam {
         /* The plane number of the opacity plane;  meaningless if
            'haveOpacity' is false or 'visual' is false.
         */
+    int is_seekable;  /* boolean */
+        /* The file 'file' is seekable -- you can set the position of next
+           reading or writing to anything and any time.
+
+           If libnetpbm cannot tell if it is seekable or not, this is false.
+        */
+    pm_filepos raster_pos;
+        /* The file position of the raster (which is also the end of the
+           header).
+
+           Meaningless if 'is_seekable' is false.
+        */
 };
 
 #define PAM_HAVE_ALLOCATION_DEPTH 1
@@ -341,6 +353,12 @@ void
 pnm_writepaminit(struct pam * const pamP);
 
 void
+pnm_formatpamtuples(const struct pam * const pamP,
+                    const tuple *      const tuplerow,
+                    unsigned char *    const outbuf,
+                    unsigned int       const nTuple,
+                    unsigned int *     const rowSizeP);
+void
 pnm_formatpamrow(const struct pam * const pamP,
                  const tuple *      const tuplerow,
                  unsigned char *    const outbuf,
@@ -353,6 +371,14 @@ void
 pnm_writepamrowmult(const struct pam * const pamP,
                     const tuple *      const tuplerow,
                     unsigned int       const rptcnt);
+
+void
+pnm_writepamrowpart(const struct pam * const pamP,
+                    const tuple *      const tuplerow,
+                    unsigned int       const firstRow,
+                    unsigned int       const firstCol,
+                    unsigned int       const rowCt,
+                    unsigned int       const colCt);
 
 void
 pnm_writepam(struct pam * const pamP, tuple ** const tuplearray);

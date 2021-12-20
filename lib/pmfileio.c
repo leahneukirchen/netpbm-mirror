@@ -978,6 +978,14 @@ pm_bs_long(long const l) {
 
 
 
+int
+pm_is_seekable(FILE * const fP) {
+
+    return isSeekable(fP) ? 1 : 0;
+}
+
+
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wduplicated-cond"

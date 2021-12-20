@@ -421,6 +421,20 @@ pnm_setpamrow(const struct pam * const pamP,
 
 
 
+static void
+setSeekableAndRasterPos(struct pam * const pamP) {
+
+    if (pamP->size >= PAM_STRUCT_SIZE(is_seekable))
+        pamP->is_seekable = pm_is_seekable(pamP->file);
+
+    if (pamP->size >= PAM_STRUCT_SIZE(raster_pos)) {
+        if (pamP->is_seekable)
+            pm_tell2(pamP->file, &pamP->raster_pos, sizeof(pamP->raster_pos));
+    }
+}
+
+
+
 #define MAX_LABEL_LENGTH 8
 #define MAX_VALUE_LENGTH 255
 
@@ -950,6 +964,8 @@ pnm_readpaminit(FILE *       const file,
     pamP->plainformat = FALSE;
         /* See below for complex explanation of why this is FALSE. */
 
+    setSeekableAndRasterPos(pamP);
+
     interpretTupleType(pamP);
 
     validateComputableSize(pamP);
@@ -1058,8 +1074,6 @@ pnm_writepaminit(struct pam * const pamP) {
 
     interpretTupleType(pamP);
 
-    pamP->len = MIN(pamP->size, PAM_STRUCT_SIZE(opacity_plane));
-
     switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE:
         /* See explanation below of why we ignore 'pm_plain_output' here. */
@@ -1118,6 +1132,10 @@ pnm_writepaminit(struct pam * const pamP) {
         pm_error("Invalid format passed to pnm_writepaminit(): %d",
                  pamP->format);
     }
+
+    setSeekableAndRasterPos(pamP);
+
+    pamP->len = MIN(pamP->size, PAM_STRUCT_SIZE(raster_pos));
 }
 
 
