@@ -67,20 +67,20 @@ cat ${diag_ppm} | pnmcat -tb ${diag2tb_ppm} - | cksum
 rm ${diag2lr_ppm} ${diag2tb_ppm}
 
 echo "Test 11.  Should print 3622741282 1019 twice"
-pnmcat -tb -white testgrid.pbm ${diag_ppm} | tee /tmp/a.ppm | cksum
-pnmcat -tb -jcenter -white testgrid.pbm ${diag_ppm} | tee /tmp/c.ppm | cksum
+pnmcat -tb -white testgrid.pbm ${diag_ppm} | cksum
+pnmcat -tb -jcenter -white testgrid.pbm ${diag_ppm} | cksum
 echo "Test 12.  Should print 1401081637 1019"
-pnmcat -tb -jleft -white testgrid.pbm ${diag_ppm}  | tee /tmp/b.ppm | cksum
+pnmcat -tb -jleft -white testgrid.pbm ${diag_ppm}  | cksum
 echo "Test 13.  Should print 2756501917 1019"
-pnmcat -tb -jright -white testgrid.pbm ${diag_ppm} | tee /tmp/d.ppm | cksum
+pnmcat -tb -jright -white testgrid.pbm ${diag_ppm} | cksum
 
 echo "Test 14. Should print 587933655 107742 twice"
-pnmcat -lr -black testgrid.pbm testimg.ppm | tee /tmp/e.ppm | cksum
-pnmcat -lr -jcenter -black testgrid.pbm testimg.ppm | tee /tmp/g.ppm | cksum
+pnmcat -lr -black testgrid.pbm testimg.ppm | cksum
+pnmcat -lr -jcenter -black testgrid.pbm testimg.ppm | cksum
 echo "Test 15.  Should print 3948141157 107742"
-pnmcat -lr -jtop -black testgrid.pbm testimg.ppm | tee /tmp/f.ppm | cksum
+pnmcat -lr -jtop -black testgrid.pbm testimg.ppm | cksum
 echo "Test 16.  Should print 3910239002 107742"
-pnmcat -lr -jbottom -black testgrid.pbm testimg.ppm | tee /tmp/h.ppm | cksum
+pnmcat -lr -jbottom -black testgrid.pbm testimg.ppm | cksum
 
 rm ${diag_ppm}
 
