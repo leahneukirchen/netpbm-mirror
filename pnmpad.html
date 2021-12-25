@@ -2,7 +2,7 @@
 <html><head><title>Pnmpad User Manual</title></head>
 <body>
 <h1>pnmpad</h1>
-Updated: 05 October 2019
+Updated: 25 December 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -123,12 +123,18 @@ between the left and right sides of the image to maintain the ratio the other
 options produce.  E.g. if you say <b>-left=10 -right=10 -mwidth=50</b> with a
 100-pixel image, you end up with a 150-pixel image with the extra padding
 split evenly between left and right for a total of 25 pixels of padding
-on the left and 25 on the right.
+on the left and 25 on the right.  If the other options indicate no
+padding, <b>pnmpad</b> adds padding in the ratio specified by <b>-halign</b>
+and if <b>-halign</b> is not specified, equally on both sides.
+
+<p>Before Netpbm 10.97 (December 2021), <b>pnmpad</b> does not allow
+<b>-halign</b> with <b>-mwidth</b> and adds padding only on the right
+when <b>-mwidth</b> is specified and the other options indicate no padding.
+  
+<p>Before Netpbm 10.72 (September 2015), there is no <b>-mwidth</b>.
 
 <p>Before Netpbm 10.23 (July 2004), <b>pnmpad</b> did not allow the
 <b>-left</b> or <b>-right</b> option together with <b>-width</b>.
-
-<p>Before Netpbm 10.72 (September 2015), there is no <b>-mwidth</b>.
 
 <dt><b>-top=</b><i>pixels</i>
 <dt><b>-bottom=</b><i>pixels</i>

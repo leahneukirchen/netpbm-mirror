@@ -2,7 +2,7 @@
 <html><head><title>Pamexec User Manual</title></head>
 <body>
 <h1>pamexec</h1>
-Updated: 11 August 2011
+Updated: 21 December 2021
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -35,13 +35,13 @@ Input (with a pipe).
 <p><i>netpbmfile</i> is the file name of the input file, or
 <b>-</b> to indicate Standard Input.  The default is Standard Input.
 
-<p>Many Netpbm programs understand multimage Netpbm streams themselves,
-so you don't need to use <b>pamexec</b> to run the program on the images
-in the stream.  Ideally, all Netpbm programs would have that capability,
-but multi-image streams are a relatively recent invention, so older Netpbm
-programs just process the first image in the stream and then stop.  Even
-recently written Netpbm programs work that way, since the authors aren't
-aware of the multi-image possibility.
+<p>Many Netpbm programs understand multimage Netpbm streams themselves, so you
+don't need to use <b>pamexec</b> to run the program on the images in the
+stream.  Ideally, all Netpbm programs would have that capability, but
+multi-image streams are a relatively recent invention, so older Netpbm
+programs just process the first image in the stream and then stop.  Even many
+recently written Netpbm programs work that way, since the authors aren't aware
+of the multi-image possibility.
 
 <p>Another way to process a multi-image stream is to use <b>pamsplit</b> to
 explode it into multiple files, one image per file.  You can then process
@@ -81,11 +81,12 @@ To make an animated GIF movie:
 
 <p><b>pamexec</b> assumes all commands consume all of Standard Input.
 If yours doesn't (perhaps it just exits when it's seen enough),
-you can buffer through a temporary file like this:
+  you can buffer through a temporary file like this, which copies the
+  first 3 lines of every image (the PPM header) to Standard Output:
 
 <pre>
 <kbd>
-    pamexec "cat &gt;/tmp/x; head -3 x" myvideo.ppm  
+    pamexec "cat &gt;/tmp/x; head --lines=3 x" myvideo.ppm  
 </kbd>
 </pre>
 
