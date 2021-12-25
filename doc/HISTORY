@@ -8,6 +8,10 @@ not yet  BJH  Release 10.97.00
 
               Add pbnnoise.
 
+              pnmpad: Use -halign with -mwidth and default to centering the
+              image instead of left-justifying when no other padding is being
+              added.  Same with -mheight, -valign, and top-justifying.
+
               xwdtopnm: Add ability to process bit depth 32.
 
               pgmtoppm: Add -black, -white.
