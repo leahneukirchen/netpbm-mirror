@@ -20,33 +20,36 @@ static short const ybmMagic = ( ( '!' << 8 ) | '!' );
 
 static void
 getinit(FILE *  const ifP,
-        short * const colsP,
-        short * const rowsP,
-        short * const depthP) {
+        unsigned int * const colsP,
+        unsigned int * const rowsP,
+        int *          const depthP) {
 
-    short magic;
+    short int magic;
+    short int cols, rows;
     int rc;
 
     rc = pm_readbigshort(ifP, &magic);
     if (rc == -1)
         pm_error("EOF / read error");
-
-    if (magic != ybmMagic)
+    else if (magic != ybmMagic)
         pm_error("bad magic number in YBM file");
 
-    rc = pm_readbigshort(ifP, colsP);
+    rc = pm_readbigshort(ifP, &cols);
     if (rc == -1 )
         pm_error("EOF / read error");
+    else if (cols <= 0)
+        pm_error("invalid width value in YBM file");
 
-    rc = pm_readbigshort(ifP, rowsP);
+    rc = pm_readbigshort(ifP, &rows);
     if (rc == -1)
         pm_error("EOF / read error");
+    else if (rows <= 0)
+        pm_error("invalid height value in YBM file");
 
+    *colsP = (unsigned int) cols;
+    *rowsP = (unsigned int) rows;
     *depthP = 1;
 }
-
-
-
 
 
 
@@ -55,9 +58,9 @@ main(int argc, const char * argv[]) {
 
     FILE * ifP;
     bit * bitrow;
-    short rows, cols;
+    unsigned int rows, cols;
     unsigned int row;
-    short depth;
+    int depth;
     const char * inputFile;
 
     pm_proginit(&argc, argv);
@@ -76,7 +79,7 @@ main(int argc, const char * argv[]) {
 
     getinit(ifP, &cols, &rows, &depth);
     if (depth != 1)
-        pm_error("YBM file has depth of %u, must be 1", (unsigned)depth);
+        pm_error("YBM file has depth of %u, must be 1", (unsigned int) depth);
     
     pbm_writepbminit(stdout, cols, rows, 0);
 

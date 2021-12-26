@@ -1007,10 +1007,10 @@ prepQuad(void) {
         } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* top-right and bottom-left */
             quad1 = quadRect(oldCP[1].x, oldCP[0].x, oldCP[0].y, oldCP[1].y);
-        } else if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
+        } else if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y > oldCP[1].y)) {
             /* bottom-left and top-right */
             quad1 = quadRect(oldCP[0].x, oldCP[1].x, oldCP[1].y, oldCP[0].y);
-        } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
+        } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y > oldCP[1].y)) {
             /* bottom-right and top-left */
             quad1 = quadRect(oldCP[1].x, oldCP[0].x, oldCP[1].y, oldCP[0].y);
         }
@@ -1021,10 +1021,10 @@ prepQuad(void) {
         } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* top-right and bottom-left */
             quad2 = quadRect(newCP[1].x, newCP[0].x, newCP[0].y, newCP[1].y);
-        } else if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
+        } else if ((newCP[0].x < newCP[1].x) && (newCP[0].y > newCP[1].y)) {
             /* bottom-left and top-right */
             quad2 = quadRect(newCP[0].x, newCP[1].x, newCP[1].y, newCP[0].y);
-        } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
+        } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y > newCP[1].y)) {
             /* bottom-right and top-left */
             quad2 = quadRect(newCP[1].x, newCP[0].x, newCP[1].y, newCP[0].y);
         }

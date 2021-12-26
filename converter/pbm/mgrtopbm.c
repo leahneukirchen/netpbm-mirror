@@ -16,6 +16,48 @@
 
 
 static void
+interpHdrWidth(struct b_header const head,
+               unsigned int *  const colsP) {
+
+    if (head.h_wide < ' ' || head.l_wide < ' ')
+        pm_error("Invalid width field in MGR header");
+    else {
+        unsigned int const maxDimension = 4095;
+
+        unsigned int const cols =
+            (((int)head.h_wide - ' ') << 6) + ((int)head.l_wide - ' ');
+
+        if (cols == 0 || cols > maxDimension)
+            pm_error("Invalid width value (%u) in MGR header", cols);
+        else
+            *colsP = cols;
+    }
+}
+
+
+
+static void
+interpHdrHeight(struct b_header const head,
+                unsigned int *  const rowsP) {
+
+    if (head.h_high < ' ' || head.l_high < ' ')
+        pm_error("Invalid height field in MGR header");
+    else {
+        unsigned int const maxDimension = 4095;
+
+        unsigned int const rows =
+            (((int)head.h_high - ' ') << 6) + ((int)head.l_high - ' ');
+
+        if (rows == 0 || rows > maxDimension)
+            pm_error("Invalid height value (%u) in MGR header", rows);
+        else
+            *rowsP = rows;
+    }
+}
+
+
+
+static void
 readMgrHeader(FILE *          const ifP, 
               unsigned int *  const colsP, 
               unsigned int *  const rowsP, 
@@ -60,13 +102,9 @@ readMgrHeader(FILE *          const ifP,
         pad = 0;  /* should never reach here */
     }
 
-    if (head.h_wide < ' ' || head.l_wide < ' ')
-        pm_error("Invalid width field in MGR header");
-    if (head.h_high < ' ' || head.l_high < ' ')
-        pm_error("Invalid width field in MGR header");
+    interpHdrWidth (head, colsP);
+    interpHdrHeight(head, rowsP);
     
-    *colsP = (((int)head.h_wide - ' ') << 6) + ((int)head.l_wide - ' ');
-    *rowsP = (((int)head.h_high - ' ') << 6) + ((int) head.l_high - ' ');
     *padrightP = ( ( *colsP + pad - 1 ) / pad ) * pad - *colsP;
 }
 
