@@ -184,7 +184,7 @@ computeCharacterSize(const bit **   const font,
 
 
 
-struct font*
+struct font *
 pbm_dissectfont(const bit ** const fontsheet,
                 unsigned int const frows,
                 unsigned int const fcols) {
@@ -222,56 +222,61 @@ pbm_dissectfont(const bit ** const fontsheet,
     unsigned int charWidth, charHeight;
         /* Maximum dimensions of glyph itself, inside its cell */
 
-    int row, col, ch, r, c, i;
-    struct font * fn;
+    unsigned int row, col;
+    int ch;
+    unsigned int i;
+    struct font * fontP;
 
     computeCharacterSize(fontsheet, fcols, frows,
                          &cellWidth, &cellHeight, &charWidth, &charHeight);
 
     /* Now convert to a general font */
 
-    MALLOCVAR(fn);
-    if (fn == NULL)
+    MALLOCVAR(fontP);
+    if (fontP == NULL)
         pm_error("out of memory allocating font structure");
 
-    fn->maxwidth  = charWidth;
-    fn->maxheight = charHeight;
-    fn->x = fn->y = 0;
+    fontP->maxwidth  = charWidth;
+    fontP->maxheight = charHeight;
+    fontP->x = fontP->y = 0;
 
-    fn->oldfont = fontsheet;
-    fn->frows = frows;
-    fn->fcols = fcols;
+    fontP->oldfont = fontsheet;
+    fontP->frows = frows;
+    fontP->fcols = fcols;
 
     /* Now fill in the 0,0 coords. */
     row = cellHeight * 2;
     col = cellWidth  * 2;
 
     /* Load individual glyphs */
-    for ( ch = 0; ch < nCharsInFont; ++ch ) {
+    for (ch = 0; ch < nCharsInFont; ++ch) {
         /* Allocate memory separately for each glyph.
            pbm_loadbdffont2() does this in exactly the same manner.
          */
-        struct glyph * const glyph =
+        struct glyph * const glyphP =
              (struct glyph *) malloc (sizeof (struct glyph));
-        char * const bmap = (char*) malloc(fn->maxwidth * fn->maxheight);
+        char * const bmap = (char*) malloc(fontP->maxwidth * fontP->maxheight);
 
-        if ( bmap == NULL || glyph == NULL )
+        unsigned int r;
+
+        if (bmap == NULL || glyphP == NULL)
             pm_error( "out of memory allocating glyph data" );
 
-        glyph->width  = fn->maxwidth;
-        glyph->height = fn->maxheight;
-        glyph->x = glyph->y = 0;
-        glyph->xadd = cellWidth;
+        glyphP->width  = fontP->maxwidth;
+        glyphP->height = fontP->maxheight;
+        glyphP->x = glyphP->y = 0;
+        glyphP->xadd = cellWidth;
 
-        for ( r = 0; r < glyph->height; ++r )
-            for ( c = 0; c < glyph->width; ++c )
-                bmap[r * glyph->width + c] = fontsheet[row + r][col + c];
-
-        glyph->bmap = bmap;
-        fn->glyph[firstCodePoint + ch] = glyph;
+        for (r = 0; r < glyphP->height; ++r) {
+            unsigned int c;
+            for (c = 0; c < glyphP->width; ++c)
+                bmap[r * glyphP->width + c] = fontsheet[row + r][col + c];
+        }
+        glyphP->bmap = bmap;
+        fontP->glyph[firstCodePoint + ch] = glyphP;
 
         col += cellWidth;
-        if ( col >= cellWidth * 14 ) {
+        if (col >= cellWidth * 14) {
             col = cellWidth * 2;
             row += cellHeight;
         }
@@ -279,12 +284,12 @@ pbm_dissectfont(const bit ** const fontsheet,
 
     /* Initialize all remaining character positions to "undefined." */
     for (i = 0; i < firstCodePoint; ++i)
-        fn->glyph[i] = NULL;
+        fontP->glyph[i] = NULL;
 
     for (i = firstCodePoint + nCharsInFont; i <= PM_FONT_MAXGLYPH; ++i)
-        fn->glyph[i] = NULL;
+        fontP->glyph[i] = NULL;
 
-    return fn;
+    return fontP;
 }
 
 

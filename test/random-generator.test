@@ -55,7 +55,7 @@ perlPgmProcessorProgram='
   }
 '
 
-pgmnoise -randomseed=5489 -plain -maxval=65535 10 200 | tee /tmp/z |
+pgmnoise -randomseed=5489 -plain -maxval=65535 10 200 | \
   perl -walne "$perlPgmProcessorProgram"
 
 # The above outputs (10 * 200 / 2) = 1000 samples.

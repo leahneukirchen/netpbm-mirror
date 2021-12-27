@@ -58,12 +58,12 @@ interpHdrHeight(struct b_header const head,
 
 
 static void
-readMgrHeader(FILE *          const ifP, 
-              unsigned int *  const colsP, 
-              unsigned int *  const rowsP, 
-              unsigned int *  const depthP, 
+readMgrHeader(FILE *          const ifP,
+              unsigned int *  const colsP,
+              unsigned int *  const rowsP,
+              unsigned int *  const depthP,
               unsigned int *  const padrightP ) {
-    
+
     struct b_header head;
     unsigned int pad;
     size_t bytesRead;
@@ -73,10 +73,10 @@ readMgrHeader(FILE *          const ifP,
         pm_error("Unable to read 1st byte of file.  "
                  "fread() returns errno %d (%s)",
                  errno, strerror(errno));
-    if (head.magic[0] == 'y' && head.magic[1] == 'z') { 
+    if (head.magic[0] == 'y' && head.magic[1] == 'z') {
         /* new style bitmap */
         size_t bytesRead;
-        bytesRead = fread(&head.depth, 
+        bytesRead = fread(&head.depth,
                           sizeof(head) - sizeof(struct old_b_header), 1, ifP);
         if (bytesRead != 1 )
             pm_error("Unable to read header after 1st byte.  "
@@ -84,11 +84,11 @@ readMgrHeader(FILE *          const ifP,
                      errno, strerror(errno));
         *depthP = (int) head.depth - ' ';
         pad = 8;
-    } else if (head.magic[0] == 'x' && head.magic[1] == 'z') { 
+    } else if (head.magic[0] == 'x' && head.magic[1] == 'z') {
         /* old style bitmap with 32-bit padding */
         *depthP = 1;
         pad = 32;
-    } else if (head.magic[0] == 'z' && head.magic[1] == 'z') { 
+    } else if (head.magic[0] == 'z' && head.magic[1] == 'z') {
         /* old style bitmap with 16-bit padding */
         *depthP = 1;
         pad = 16;
@@ -104,8 +104,8 @@ readMgrHeader(FILE *          const ifP,
 
     interpHdrWidth (head, colsP);
     interpHdrHeight(head, rowsP);
-    
-    *padrightP = ( ( *colsP + pad - 1 ) / pad ) * pad - *colsP;
+
+    *padrightP = ((*colsP + pad - 1) / pad) * pad - *colsP;
 }
 
 
@@ -131,7 +131,7 @@ main(int    argc,
         inputFileName = argv[1];
     else
         inputFileName = "-";
-    
+
     ifP = pm_openr(inputFileName);
 
     readMgrHeader(ifP, &cols, &rows, &depth, &padright);
@@ -141,7 +141,7 @@ main(int    argc,
     pbm_writepbminit(stdout, cols, rows, 0);
 
     bitrow = pbm_allocrow_packed(cols + padright);
-    
+
     itemCount = (cols + padright ) / 8;
 
     for (row = 0; row < rows; ++row) {
@@ -166,9 +166,9 @@ main(int    argc,
    Changed bitrow from plain to raw, read function from getc() to fread(),
    write function from pbm_writepbmrow() to pbm_writepbmrow_packed().
    Retired bitwise transformation functions.
-   
+
    NOT tested for old-style format files.  Only one zz file in mgrsrc-0.69 .
-  
+
 */
 
 

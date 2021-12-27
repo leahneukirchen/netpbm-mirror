@@ -1282,6 +1282,8 @@ computeImageWidth(struct Text          const formattedText,
                   unsigned int *       const colsP,
                   unsigned int *       const maxleftbP) {
 
+    assert (pbm_maxfontwidth() < (INT_MAX - 10) / LINEBUFSIZE);
+
     if (intercharacterSpace < 0 && fontP->maxwidth < -intercharacterSpace)
         pm_error("negative -space value %.2f exceeds font width",
                  intercharacterSpace);

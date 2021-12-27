@@ -4,19 +4,19 @@
 #include "shhopt.h"
 #include "pam.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFileName;  
+    const char * inputFileName;
     unsigned int verbose;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -37,7 +37,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 < 1)
@@ -48,7 +48,7 @@ parseCommandLine(int argc, char ** const argv,
             pm_error("There is at most one argument:  input file name.  "
                      "You specified %d", argc-1);
     }
-}        
+}
 
 
 
@@ -83,7 +83,7 @@ allocateOutputPointerRow(unsigned int const width,
 
 
 static void
-createWhiteTuple(const struct pam * const pamP, 
+createWhiteTuple(const struct pam * const pamP,
                  tuple *            const whiteTupleP) {
 /*----------------------------------------------------------------------------
    Create a "white" tuple.  By that we mean a tuple all of whose elements
@@ -134,7 +134,7 @@ selectBackground(struct pam * const pamP,
             bg = ul;
         }
     }
-    
+
     *bgColorP = pnm_allocpamtuple(pamP);
     pnm_assigntuple(pamP, *bgColorP, bg);
 }
@@ -301,8 +301,8 @@ expandBackgroundHoriz(unsigned char ** const pi,
                       unsigned int     const height,
                       bool *           const expandedP) {
 /*----------------------------------------------------------------------------
-   In every row, expand the background rightward from any known background
-   pixel through all consecutive unknown pixels.
+   In every row except top and bottom, expand the background rightward from
+   any known background pixel through all consecutive unknown pixels.
 
    Then do the same thing leftward.
 
@@ -343,8 +343,9 @@ expandBackgroundVert(unsigned char ** const pi,
                      unsigned int     const height,
                      bool *           const expandedP) {
 /*----------------------------------------------------------------------------
-   In every column, expand the background downward from any known background
-   pixel through all consecutive unknown pixels.
+   In every column except leftmost and rightmost, expand the background
+   downward from any known background pixel through all consecutive unknown
+   pixels.
 
    Then do the same thing upward.
 
@@ -400,7 +401,7 @@ findBackgroundPixels(struct pam *                   const inpamP,
 -----------------------------------------------------------------------------*/
     unsigned char ** pi;
     bool backgroundComplete;
-    unsigned int passes;
+    unsigned int passCt;
 
     pi = newPi(inpamP->width, inpamP->height);
 
@@ -409,29 +410,29 @@ findBackgroundPixels(struct pam *                   const inpamP,
     setEdges(pi, inpamP->width, inpamP->height);
 
     backgroundComplete = FALSE;
-    passes = 0;
-    
+    passCt = 0;
+
     while (!backgroundComplete) {
         bool expandedHoriz, expandedVert;
 
         expandBackgroundHoriz(pi, inpamP->width, inpamP->height,
                               &expandedHoriz);
-    
+
         expandBackgroundVert(pi, inpamP->width, inpamP->height,
                              &expandedVert);
 
         backgroundComplete = !expandedHoriz && !expandedVert;
 
-        ++passes;
+        ++passCt;
     }
 
     if (verbose)
-        pm_message("Background found in %u passes", passes);
+        pm_message("Background found in %u passes", passCt);
 
     *piP = (const unsigned char * const *)pi;
 }
 
-                     
+
 
 static void
 writeOutput(const struct pam *            const inpamP,
@@ -468,16 +469,16 @@ writeOutput(const struct pam *            const inpamP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam inpam;
     FILE * ifP;
     pm_filepos rasterpos;
     tuple backgroundColor;
     const unsigned char * const * pi;
-    
-    pnm_init(&argc, argv);
+
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -500,6 +501,9 @@ main(int argc, char *argv[]) {
     pm_close(ifP);
 
     pnm_freepamtuple(backgroundColor);
-    
+
     return 0;
 }
+
+
+

@@ -1,0 +1,85 @@
+#! /bin/bash
+# This script tests: pbmnoise
+# Also requires: pgmhist
+
+# Expected value and variance of binominal distribution:
+# Pb: probability of getting a black pixel (=ratio)
+# Pw: probability of getting a white pixel (= 1 - Pb = 1 - ratio)
+#
+# E(width, height, Pb, Pw) = width * height * Pb
+# V(width, height, Pb, Pw) = width * height * Pb * Pw
+#
+# When width * height is large and Pb is not too near edges
+# approximate with normal distribution
+
+echo "Test 1.  Should print OK 1, then OK 2 three times"
+
+args1="-endian=big -randomseed=1"
+
+( pbmnoise            ${args1} 320 200 | pgmhist
+  pbmnoise -ratio=1/2 ${args1} 160 400 | pgmhist
+  pbmnoise -ratio=2/4 ${args1} 64000 1 | pgmhist
+  pbmnoise -pack      ${args1} 10 6400 | pgmhist ) | \
+  awk 'BEGIN { pixels=64000; Pb=Pw=0.5;
+               average=pixels*Pb;
+               sd=sqrt(pixels*Pb*Pw);  # standard deviation
+               sl=1.96                 # significance level 
+               limit1 = average - sd * sl;
+               limit2 = average + sd * sl
+               count=-1  # initial value
+              }
+       $1!=0  { next }
+              { v=1  }    # initial value
+       limit1 < $2 && $2 < limit2 { v=0 }
+       v==0   {print "OK", (count==prev)+1}
+       v==1   {print "NG" $0}
+              {prev=count}'
+
+
+
+echo "Test 2.  Should print OK 1, then OK 2 three times"
+
+args2="-endian=big -randomseed=2"
+
+( pbmnoise -ratio=11/32        ${args1} 32  119 | pgmhist
+  pbmnoise -ratio=11/32        ${args1} 224  17 | pgmhist
+  pbmnoise -ratio=22/64        ${args1} 3808  1 | pgmhist
+  pbmnoise -ratio=44/128 -pack ${args1} 1904 2 | pgmhist ) | \
+  awk 'BEGIN {pixels=32*119; Pb=11/32; Pw=1-Pb;
+               average=pixels*Pb;
+               sd=sqrt(pixels*Pb*Pw);  # standard deviation
+               sl=1.96                 # significance level 
+               limit1 = average - sd * sl;
+               limit2 = average + sd * sl
+               count=-1  # initial value
+              }
+       $1!=0  { next }
+              { v=1  }    # initial value
+       limit1 < $2 && $2 < limit2 { v=0 }
+       v==0   {print "OK", (count==prev)+1}
+       v==1   {print "NG" $0}
+              {prev=count}'
+
+
+
+
+echo "Test 3-black.  Should print 255    384    100%    100% four times"
+
+pbmnoise -ratio=0/1     -randomseed=1       128 3 | pgmhist | \
+  awk '$1==0 || $1==255'
+pbmnoise -ratio=0/1024  -randomseed=1       64  6 | pgmhist | \
+  awk '$1==0 || $1==255'
+pbmnoise -ratio=0/8192  -randomseed=1       32 12 | pgmhist | \
+  awk '$1==0 || $1==255'
+pbmnoise -ratio=0/65536 -randomseed=1 -pack 1 384 | pgmhist | \
+  awk '$1==0 || $1==255'
+
+echo "Test 3-white.  Should print 0    320    100%    100% three times"
+
+pbmnoise -ratio=1/1         -randomseed=1       64  5 | pgmhist | \
+  awk '$1==0 || $1==255'
+pbmnoise -ratio=8/8         -randomseed=1       32 10 | pgmhist | \
+  awk '$1==0 || $1==255'
+pbmnoise -ratio=65536/65536 -randomseed=1 -pack 2 160 | pgmhist | \
+  awk '$1==0 || $1==255'
+

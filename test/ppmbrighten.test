@@ -26,6 +26,7 @@ echo "-----------------------------------------------------------" 1>&2
 
 echo "Test Error: Should print 1 four times"
 
+tmpdir=${tmpdir:-/tmp}
 output_ppm=${tmpdir}/output.ppm
 
 pambrighten -v -120 testimg.ppm > ${output_ppm}
@@ -36,3 +37,5 @@ pambrighten -s -120 testimg.ppm > ${output_ppm}
 echo $?
 test -s ${output_ppm}
 echo $?
+
+rm ${output_ppm}

@@ -27,6 +27,9 @@ ppmforge-parameters.test
 
 # Generators with random components
 
+pbmnoise1.test
+pbmnoise2.test
+pbmnoise-parameters.test
 pgmnoise.test
 pgmnoise-parameters.test
 ppmpat-random.test
@@ -136,6 +139,8 @@ rawtoppm.test
 
 pbm-misc-converters.test
 
+gif-transparent1.test
+
 # Miscellaneous utility tests
 
 ppmdfont.test
@@ -152,6 +157,7 @@ pnminvert-roundtrip.test
 pamflip-roundtrip.test
 pamdepth-roundtrip.test
 pad-crop-roundtrip.test
+pbm-ppm-roundtrip.test
 cut-paste-roundtrip.test
 rgb3-roundtrip.test
 ppmchange-roundtrip.test

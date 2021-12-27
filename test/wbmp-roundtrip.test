@@ -3,5 +3,5 @@
 # Also requires:
 
 
-# Should print 2425386270 41, cksum of testgrid.pbm
-pbmtowbmp testgrid.pbm | wbmptopbm | cksum
+# Should print 281226646 481, cksum of maze.pbm
+pbmtowbmp maze.pbm | wbmptopbm | cksum

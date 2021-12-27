@@ -1,6 +1,15 @@
 #! /bin/bash
 # This script tests: ppmtoppm
-# Also requires:
+# Also requires: pbmmake pgmramp
 
+echo "Test 1.  Should print a simple 4 x 3 pattern"
+pbmmake -g 4 3 | ppmtoppm -plain
 
-ppmtoppm < testgrid.pbm | cksum
+echo "Test 2.  Should print a simple 6 x 8 pattern"
+pgmramp -diagonal -maxval=5 6 8 | ppmtoppm -plain
+
+echo "Test 3.  Should print 669206373 10102"
+ppmtoppm < maze.pbm | cksum
+
+echo "Test 4.  Should print 1926073387 101484"
+ppmtoppm < testimg.ppm | cksum

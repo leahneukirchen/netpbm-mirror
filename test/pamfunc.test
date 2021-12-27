@@ -73,16 +73,16 @@ pamfunc -shiftleft  0 testimg.ppm | cksum
 pamfunc -shiftright 0 testimg.ppm | cksum
 
 
-echo "Test 5: Should print 2425386270 41 six times"
+echo "Test 5: Should print 281226646 481 six times"
 
-cat testgrid.pbm | cksum
+cat maze.pbm | cksum
 
-pamfunc -andmask  0x1 testgrid.pbm | cksum
-pamfunc -ormask   0x0 testgrid.pbm | cksum
-pamfunc -xormask  0x1 testgrid.pbm | pamfunc -xormask 0x1 | cksum
+pamfunc -andmask  0x1 maze.pbm | cksum
+pamfunc -ormask   0x0 maze.pbm | cksum
+pamfunc -xormask  0x1 maze.pbm | pamfunc -xormask 0x1 | cksum
 
-pamfunc -shiftleft  0 testgrid.pbm | cksum
-pamfunc -shiftright 0 testgrid.pbm | cksum
+pamfunc -shiftleft  0 maze.pbm | cksum
+pamfunc -shiftright 0 maze.pbm | cksum
 
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2

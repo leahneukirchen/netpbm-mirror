@@ -69,11 +69,11 @@ writeRaster(FILE *       const ifP,
         unsigned int col;
 
         for (col = 0; col < st4Width; ++col) {
-            char c;
+            unsigned char c;
 
-            pm_readchar(ifP, &c);
+            pm_readcharu(ifP, &c);
 
-            tuplerow[col][0] = (unsigned char)c;
+            tuplerow[col][0] = c;
         }
         pnm_writepamrow(pamP, tuplerow);
     }

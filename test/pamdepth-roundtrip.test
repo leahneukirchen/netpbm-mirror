@@ -9,5 +9,5 @@ pamdepth $i testimg.ppm | \
   pamdepth 255 | cksum
 done
 
-pamdepth 255 testgrid.pbm | pamdepth 1 | \
+pamdepth 255 maze.pbm | pamdepth 1 | \
   pgmtopbm -th -val=0.5 | cksum

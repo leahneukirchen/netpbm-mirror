@@ -5,5 +5,5 @@
 
 pamtopnm -plain testimg.ppm | \
   pamtopnm | cksum
-pamtopnm -plain testgrid.pbm | \
+pamtopnm -plain maze.pbm | \
   pamtopnm | cksum

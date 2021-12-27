@@ -1,0 +1,19 @@
+Test 1.  Should print OK 1, then OK 2 three times
+OK 1
+OK 2
+OK 2
+OK 2
+Test 2.  Should print OK 1, then OK 2 three times
+OK 1
+OK 2
+OK 2
+OK 2
+Test 3-black.  Should print 255    384    100%    100% four times
+  255    384    100%    100%
+  255    384    100%    100%
+  255    384    100%    100%
+  255    384    100%    100%
+Test 3-white.  Should print 0    320    100%    100% three times
+    0    320    100%    100%
+    0    320    100%    100%
+    0    320    100%    100%

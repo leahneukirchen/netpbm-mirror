@@ -21,39 +21,39 @@ test_out=${tmpdir}/test_out
 pgmmake 100  5 5 > ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmmake 1.01 5 5 > ${test_out} || \
   echo -n "Expected failure 2"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmmake .5   5   > ${test_out} || \
   echo -n "Expected failure 3"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmmake .5       > ${test_out} || \
   echo -n "Expected failure 4"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmmake -maxval=5        5 5 > ${test_out} || \
   echo -n "Expected failure 5"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmmake -maxval=0     .5 5 5 > ${test_out} || \
   echo -n "Expected failure 6"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmmake -maxval=-1    .5 5 5 > ${test_out} || \
   echo -n "Expected failure 7"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pgmmake -maxval=65536 .5 5 5 > ${test_out} || \
   echo -n "Expected failure 8"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}

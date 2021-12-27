@@ -1,6 +1,8 @@
 #! /bin/bash
 # This script tests: pamfix
-# Also requires:
+# Also requires: pbmmake
+
+tmpdir=${tmpdir:-/tmp}
 
 # Test 1.
 echo "Test 1"

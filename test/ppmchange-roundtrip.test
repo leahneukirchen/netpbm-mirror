@@ -3,10 +3,10 @@
 # Also requires: pgmtopbm pnminvert ppmtopgm
 
 
-ppmchange black white white black testgrid.pbm | \
+ppmchange black white white black maze.pbm | \
 pnminvert | ppmtopgm | \
 pgmtopbm -th -val=0.5 | cksum
 
-ppmchange  black white white black testgrid.pbm | \
+ppmchange  black white white black maze.pbm | \
 ppmchange  black white white black | \
 ppmtopgm | pgmtopbm -th -val=0.5 | cksum

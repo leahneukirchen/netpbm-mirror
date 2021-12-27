@@ -386,6 +386,9 @@ pm_bs_short(short const s);
 long
 pm_bs_long(long const l);
 
+int
+pm_is_seekable(FILE * const fileP);
+
 unsigned int
 pm_tell(FILE * const fileP);
 

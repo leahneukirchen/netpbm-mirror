@@ -18,6 +18,7 @@
 *
 *  ESC/P Reference Manual (1997)
 *  ftp://download.epson-europe.com/pub/download/182/epson18162eu.zip
+*  See Part 1 "ESC ." Print Raster Graphics
 */
 
 #include <string.h>
@@ -28,7 +29,7 @@
 #include "runlength.h"
 #include "pbm.h"
 
-
+#define MAXCOLS (127 * 256 + 255)  /* Limit in official Epson manual */
 
 static char const esc = 033;
 
@@ -57,19 +58,19 @@ parseCommandLine(int argc, const char ** argv,
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
-    OPTENT3(0, "compress",     OPT_UINT,    &cmdlineP->compress,    
+    OPTENT3(0, "compress",     OPT_UINT,    &cmdlineP->compress,
             &compressSpec,    0);
-    OPTENT3(0, "resolution",   OPT_UINT,    &cmdlineP->resolution,  
+    OPTENT3(0, "resolution",   OPT_UINT,    &cmdlineP->resolution,
             &resolutionSpec,  0);
-    OPTENT3(0, "stripeheight", OPT_UINT,    &cmdlineP->stripeHeight,  
+    OPTENT3(0, "stripeheight", OPT_UINT,    &cmdlineP->stripeHeight,
             &stripeHeightSpec, 0);
-    OPTENT3(0, "raw",          OPT_FLAG,    NULL,  
+    OPTENT3(0, "raw",          OPT_FLAG,    NULL,
             &rawSpec,    0);
-    OPTENT3(0, "formfeed",     OPT_FLAG,    NULL,  
+    OPTENT3(0, "formfeed",     OPT_FLAG,    NULL,
             &formfeedSpec,    0);
-    
+
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
-    
+
     if (argc-1 > 1)
         pm_error("Too many arguments: %d.  "
                  "Only argument is the filename", argc-1);
@@ -155,7 +156,7 @@ main(int argc, const char * argv[]) {
     unsigned char * bitrow[256];
     unsigned char * compressedData;
     struct CmdlineInfo cmdline;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -164,7 +165,7 @@ main(int argc, const char * argv[]) {
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
-    if (cols / 256 > 127)  /* Limit in official Epson manual */
+    if (cols > MAXCOLS)
         pm_error("Image width is too large");
 
     outColByteCt = pbm_packed_bytes(cols);
@@ -229,7 +230,7 @@ main(int argc, const char * argv[]) {
         }
     }
 
-    free(inBuff); 
+    free(inBuff);
     free(compressedData);
     pm_close(ifP);
 

@@ -1,6 +1,12 @@
+Test 1.  Should print 1926073387 101484
 1926073387 101484
+Test 2.  Should print 3744829044 101514
 3744829044 101514
-2425386270 41
+Test 3.  Should print 281226646 481 twice
+281226646 481
+281226646 481
+Test 4.  Should print 0 twice
 0
 0
+Test 5.  Should print 0 0 : 0
 0 0 : 0

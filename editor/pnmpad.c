@@ -129,16 +129,16 @@ parseCommandLine(int argc, const char ** argv,
        pm_error("You can specify -height only once");
 
     if (xalignSpec && (cmdlineP->leftSpec || cmdlineP->rightSpec))
-        pm_error("You cannot specify both -xalign and -left or -right");
+        pm_error("You cannot specify both -halign and -left or -right");
 
     if (yalignSpec && (cmdlineP->topSpec || cmdlineP->bottomSpec))
-        pm_error("You cannot specify both -yalign and -top or -bottom");
+        pm_error("You cannot specify both -valign and -top or -bottom");
 
-    if (xalignSpec && !cmdlineP->xsizeSpec)
-        pm_error("-xalign is meaningless without -width");
+    if (xalignSpec && (!cmdlineP->xsizeSpec && !mwidthSpec) )
+        pm_error("-halign is meaningless without -width or -mwidth");
 
-    if (yalignSpec && !cmdlineP->ysizeSpec)
-        pm_error("-yalign is meaningless without -height");
+    if (yalignSpec && (!cmdlineP->ysizeSpec && !mheightSpec) )
+        pm_error("-valign is meaningless without -height or -mheight");
 
     if (xalignSpec) {
         if (cmdlineP->xalign < 0)
@@ -268,7 +268,7 @@ validateHorizontalSize(struct cmdlineInfo const cmdline,
         pm_error("The right padding value you specified is too large.");
 
     if ((double) cols +
-        (double) lpad + 
+        (double) lpad +
         (double) rpad +
         (double) mwidthMaxPad > MAX_WIDTHHEIGHT)
         pm_error("Given padding parameters make output width too large "
@@ -378,9 +378,9 @@ computePadSizesOneDim(unsigned int   const unpaddedSize,
         unsigned int const totalPadBeforeMult =
             begPadBeforeMult + endPadBeforeMult;
         double const begFrac =
-            totalPadBeforeMult > 0 ? 
+            totalPadBeforeMult > 0 ?
             (double)begPadBeforeMult / totalPadBeforeMult :
-            0.0;
+            align;
         unsigned int const addlMsizeBegPad = ROUNDU(morePadNeeded * begFrac);
             /* # of pixels we have to add to the beginning to satisfy
                user's desire for the final size to be a multiple of something
@@ -501,7 +501,7 @@ reportPadSizes(int          const inCols,
 
     unsigned int const outCols = inCols + lpad + rpad;
     unsigned int const outRows = inRows + tpad + bpad;
- 
+
     printf("%u %u %u %u %u %u\n", lpad, rpad, tpad, bpad, outCols, outRows);
 
 }
@@ -547,7 +547,7 @@ padPbm(FILE *       const ifP,
     /* Write top margin */
     for (row = 0; row < tpad; ++row)
         pbm_writepbmrow_packed(stdout, bgrow, newcols, 0);
-    
+
     /* Read rows, shift and write with left and right margins added */
     for (row = 0; row < rows; ++row) {
         pbm_readpbmrow_bitoffset(ifP, newrow, cols, format, lpad);

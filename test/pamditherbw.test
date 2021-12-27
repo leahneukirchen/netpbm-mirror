@@ -49,61 +49,61 @@ echo "-----------------------------------------------------------" 1>&2
 pamditherbw -fs -atkinson       ${test_red} > ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -floyd -atkinson    ${test_red} > ${test_out} || \
   echo -n "Expected failure 2"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -dither8  -cluster3 ${test_red} > ${test_out} || \
   echo -n "Expected failure 3"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -cluster3 -cluster4 ${test_red} > ${test_out} || \
   echo -n "Expected failure 4"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -cluster3 -cluster8 ${test_red} > ${test_out} || \
   echo -n "Expected failure 5"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -cluster4 -cluster8 ${test_red} > ${test_out} || \
   echo -n "Expected failure 6"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -hilbert -threshold ${test_red} > ${test_out} || \
   echo -n "Expected failure 7"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -clump=8            ${test_red} > ${test_out} || \
   echo -n "Expected failure 8"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -fs -clump=8        ${test_red} > ${test_out} || \
   echo -n "Expected failure 9"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -hilbert -clump=1   ${test_red} > ${test_out} || \
   echo -n "Expected failure 10"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -th -value=-1       ${test_red} > ${test_out} || \
   echo -n "Expected failure 11"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamditherbw -th -value=1.1      ${test_red} > ${test_out} || \
   echo -n "Expected failure 12"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 rm ${test_red}

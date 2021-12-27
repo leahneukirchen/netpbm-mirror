@@ -22,8 +22,8 @@
 
 
 static void
-write_atk_bytes(FILE *        const file, 
-                unsigned char const curbyte, 
+write_atk_bytes(FILE *        const file,
+                unsigned char const curbyte,
                 unsigned int  const startcount) {
 
     /* codes for data stream */
@@ -37,7 +37,7 @@ write_atk_bytes(FILE *        const file,
     #define BLACKBYTE 0xFF
 
     /* WriteRow table for conversion of a byte value to two character
-       hex representation 
+       hex representation
     */
 
     static unsigned char hex[16] = {
@@ -82,10 +82,10 @@ write_atk_bytes(FILE *        const file,
 
 
 static void
-process_atk_byte(int *           const pcurcount, 
-                 unsigned char * const pcurbyte, 
-                 FILE *          const file, 
-                 unsigned char   const newbyte, 
+process_atk_byte(int *           const pcurcount,
+                 unsigned char * const pcurbyte,
+                 FILE *          const file,
+                 unsigned char   const newbyte,
                  int             const eolflag) {
 
     int curcount;
@@ -93,7 +93,7 @@ process_atk_byte(int *           const pcurcount,
 
     curcount = *pcurcount;  /* initial value */
     curbyte  = *pcurbyte;  /* initial value */
-    
+
     if (curcount < 1) {
         *pcurbyte = curbyte = newbyte;
         *pcurcount = curcount = 1;
@@ -139,6 +139,17 @@ main(int argc, const char ** argv) {
     }
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
+    /* Note: atktopbm imposes limits: cols <= 1000000 rows <= 1000000
+       Whether these values are defined in the official file format
+       specification is unknown.  We issue warning messages when large
+       values are encountered.
+     */
+
+    if (cols > 1000000)
+        pm_message("Proceeding with extremely large width value: %u", cols);
+    if (rows > 1000000)
+        pm_message("Proceeding with extremely large height value: %u", rows);
+
     bitrow = pbm_allocrow_packed(cols);
 
     printf("\\begindata{raster,%d}\n", 1);
@@ -152,7 +163,7 @@ main(int argc, const char ** argv) {
 
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
         pbm_cleanrowend_packed(bitrow, cols);
-        
+
         for (i = 0, curbyte = 0, curcount = 0; i < byteCt; ++i) {
             process_atk_byte(&curcount, &curbyte, stdout,
                              bitrow[i],
@@ -162,7 +173,7 @@ main(int argc, const char ** argv) {
 
     pbm_freerow_packed(bitrow);
     pm_close(ifP);
-    
+
     printf("\\enddata{raster, %d}\n", 1);
 
     return 0;

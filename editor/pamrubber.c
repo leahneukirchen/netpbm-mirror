@@ -193,38 +193,39 @@ makeline(point const p1,
 
 
 
-static bool
-intersect(line *  const l1P,
-          line *  const l2P,
-          point * const pP) {
+static void
+findIntersection(const line *  const l1P,
+                 const line *  const l2P,
+                 bool *        const theyIntersectP,
+                 point *       const intersectionP) {
 
-    bool cross;
+    bool theyIntersect;
 
     if (((l2P->p2.y - l2P->p1.y) * (l1P->p2.x - l1P->p1.x) -
          (l2P->p2.x - l2P->p1.x) * (l1P->p2.y - l1P->p1.y)) == 0) {
         /* parallel lines */
 
-        cross = false;
+        theyIntersect = false;
 
         if ((l1P->p1.x == l1P->p2.x) && (l2P->p1.x == l2P->p2.x)) {
             /* two vertical lines */
-            pP->x = (l1P->p1.x + l2P->p1.x) / 2.0;
-            pP->y = 1e10;
+            intersectionP->x = (l1P->p1.x + l2P->p1.x) / 2.0;
+            intersectionP->y = 1e10;
         } else if ((l1P->p1.y == l1P->p2.y) && (l2P->p1.y == l2P->p2.y)) {
             /* two horizontal lines */
-            pP->x = 1e10;
-            pP->y = (l1P->p1.y + l2P->p1.y) / 2.0;
+            intersectionP->x = 1e10;
+            intersectionP->y = (l1P->p1.y + l2P->p1.y) / 2.0;
         } else {
             if (fabs(l1P->p2.y - l1P->p1.y) > fabs(l1P->p2.x - l1P->p1.x)) {
                 /* steep slope */
-                pP->y = 1e10;
-                pP->x = (l1P->p2.x - l1P->p1.x) / (l1P->p2.y - l1P->p1.y)
-                    * 1e10;
+                intersectionP->y = 1e10;
+                intersectionP->x =
+                    (l1P->p2.x - l1P->p1.x) / (l1P->p2.y - l1P->p1.y) * 1e10;
             } else {
                 /* even slope */
-                pP->x = 1e10;
-                pP->y = (l1P->p2.y - l1P->p1.y) / (l1P->p2.x - l1P->p1.x)
-                    * 1e10;
+                intersectionP->x = 1e10;
+                intersectionP->y =
+                    (l1P->p2.y - l1P->p1.y) / (l1P->p2.x - l1P->p1.x) * 1e10;
             }
         }
     } else {
@@ -242,16 +243,16 @@ intersect(line *  const l1P,
                * (l1P->p2.x - l1P->p1.x) - (l2P->p2.x - l2P->p1.x)
                * (l1P->p2.y - l1P->p1.y));
 
-        pP->x = l1P->p1.x + ua * (l1P->p2.x - l1P->p1.x);
-        pP->y = l1P->p1.y + ua * (l1P->p2.y - l1P->p1.y);
+        intersectionP->x = l1P->p1.x + ua * (l1P->p2.x - l1P->p1.x);
+        intersectionP->y = l1P->p1.y + ua * (l1P->p2.y - l1P->p1.y);
 
         if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0))
-            cross = true;
+            theyIntersect = true;
         else
-            cross = false;
+            theyIntersect = false;
     }
-
-    return cross;
+    if (theyIntersectP)
+        *theyIntersectP = theyIntersect;
 }
 
 
@@ -307,28 +308,29 @@ insidetri(triangle * const triP,
 
 
 static bool
-windtriangle(triangle * const tP,
+windtriangle(triangle * const triP,
              point      const p1,
              point      const p2,
              point      const p3) {
     point f, c;
-    line le, lv;
     bool cw;
 
     /* find cross of vertical through p3 and the edge p1-p2 */
     f.x = p3.x;
     f.y = -1.0;
-    lv = makeline(p3, f);
-    le = makeline(p1, p2);
-    intersect(&le, &lv, &c);
+    {
+        line const lv = makeline(p3, f);
+        line const le = makeline(p1, p2);
+        findIntersection(&le, &lv, NULL, &c);
+    }
 
     /* check for clockwise winding triangle */
     if (((p1.x > p2.x) && (p3.y < c.y)) ||
         ((p1.x < p2.x) && (p3.y > c.y))) {
-        *tP = maketriangle(p1, p2, p3);
+        *triP = maketriangle(p1, p2, p3);
         cw = true;
     } else { /* p1/2/3 were counter clockwise */
-        *tP = maketriangle(p1, p3, p2);
+        *triP = maketriangle(p1, p3, p2);
         cw = false;
     }
     return cw;
@@ -612,12 +614,16 @@ quadCorner(point           const p0,
 
     /* p0-p1 and p2-p3 are the diagonals */
 
+    triangle tri;
+
     if (fabs(p0.x - p1.x) + fabs(p0.y - p1.y) >=
         fabs(p2.x - p3.x) + fabs(p2.y - p3.y)) {
-        quadCornerSized(p0, p1, p2, p3, mid, quadP, triP);
+        quadCornerSized(p0, p1, p2, p3, mid, quadP, &tri);
     } else {
-        quadCornerSized(p2, p3, p0, p1, mid, quadP, triP);
+        quadCornerSized(p2, p3, p0, p1, mid, quadP, &tri);
     }
+    if (triP)
+        *triP = tri;
 }
 
 
@@ -730,7 +736,6 @@ prepTrig(int          const wd,
     point rtl2, rtr2, rbl2, rbr2;
     point c1p1, c1p2, c1p3, c1p4;
     point c2p1, c2p2, c2p3, c2p4;
-    line l1, l2;
     point p0;
     struct pm_randSt randSt;
 
@@ -897,47 +902,58 @@ prepTrig(int          const wd,
         /*       3   4    2   4      4   3    2   3      4   2    3   2      */
         /*-------------------------------------------------------------------*/
 
-        /* center two triangles */
-        l1 = makeline(c1p1, c1p4);
-        l2 = makeline(c1p2, c1p3);
-        if (intersect(&l1, &l2, &p0)) {
-            if (windtriangle(&tri1s[0], c1p1, c1p2, c1p3)) {
-                tri1s[1] = maketriangle(c1p4, c1p3, c1p2);
-                tri2s[0] = maketriangle(c2p1, c2p2, c2p3);
-                tri2s[1] = maketriangle(c2p4, c2p3, c2p2);
-            } else {
-                tri1s[1] = maketriangle(c1p4, c1p2, c1p3);
-                tri2s[0] = maketriangle(c2p1, c2p3, c2p2);
-                tri2s[1] = maketriangle(c2p4, c2p2, c2p3);
+        {
+            /* center two triangles */
+            line const l1 = makeline(c1p1, c1p4);
+            line const l2 = makeline(c1p2, c1p3);
+            bool theyIntersect;
+            findIntersection(&l1, &l2, &theyIntersect, &p0);
+            if (theyIntersect) {
+                if (windtriangle(&tri1s[0], c1p1, c1p2, c1p3)) {
+                    tri1s[1] = maketriangle(c1p4, c1p3, c1p2);
+                    tri2s[0] = maketriangle(c2p1, c2p2, c2p3);
+                    tri2s[1] = maketriangle(c2p4, c2p3, c2p2);
+                } else {
+                    tri1s[1] = maketriangle(c1p4, c1p2, c1p3);
+                    tri2s[0] = maketriangle(c2p1, c2p3, c2p2);
+                    tri2s[1] = maketriangle(c2p4, c2p2, c2p3);
+                }
             }
         }
-        l1 = makeline(c1p1, c1p3);
-        l2 = makeline(c1p2, c1p4);
-        if (intersect(&l1, &l2, &p0)) {
-            if (windtriangle(&tri1s[0], c1p1, c1p2, c1p4)) {
-                tri1s[1] = maketriangle(c1p3, c1p4, c1p2);
-                tri2s[0] = maketriangle(c2p1, c2p2, c2p4);
-                tri2s[1] = maketriangle(c2p3, c2p4, c2p2);
-            } else {
-                tri1s[1] = maketriangle(c1p3, c1p2, c1p4);
-                tri2s[0] = maketriangle(c2p1, c2p4, c2p2);
-                tri2s[1] = maketriangle(c2p3, c2p2, c2p4);
+        {
+            line const l1 = makeline(c1p1, c1p3);
+            line const l2 = makeline(c1p2, c1p4);
+            bool theyIntersect;
+            findIntersection(&l1, &l2, &theyIntersect, &p0);
+            if (theyIntersect) {
+                if (windtriangle(&tri1s[0], c1p1, c1p2, c1p4)) {
+                    tri1s[1] = maketriangle(c1p3, c1p4, c1p2);
+                    tri2s[0] = maketriangle(c2p1, c2p2, c2p4);
+                    tri2s[1] = maketriangle(c2p3, c2p4, c2p2);
+                } else {
+                    tri1s[1] = maketriangle(c1p3, c1p2, c1p4);
+                    tri2s[0] = maketriangle(c2p1, c2p4, c2p2);
+                    tri2s[1] = maketriangle(c2p3, c2p2, c2p4);
+                }
             }
         }
-        l1 = makeline(c1p1, c1p2);
-        l2 = makeline(c1p3, c1p4);
-        if (intersect(&l1, &l2, &p0)) {
-            if (windtriangle(&tri1s[0], c1p1, c1p3, c1p4)) {
-                tri1s[1] = maketriangle(c1p2, c1p4, c1p3);
-                tri2s[0] = maketriangle(c2p1, c2p3, c2p4);
-                tri2s[1] = maketriangle(c2p2, c2p4, c2p3);
-            } else {
-                tri1s[1] = maketriangle(c1p2, c1p3, c1p4);
-                tri2s[0] = maketriangle(c2p1, c2p4, c2p3);
-                tri2s[1] = maketriangle(c2p2, c2p3, c2p4);
+        {
+            line const l1 = makeline(c1p1, c1p2);
+            line const l2 = makeline(c1p3, c1p4);
+            bool theyIntersect;
+            findIntersection(&l1, &l2, &theyIntersect, &p0);
+            if (theyIntersect) {
+                if (windtriangle(&tri1s[0], c1p1, c1p3, c1p4)) {
+                    tri1s[1] = maketriangle(c1p2, c1p4, c1p3);
+                    tri2s[0] = maketriangle(c2p1, c2p3, c2p4);
+                    tri2s[1] = maketriangle(c2p2, c2p4, c2p3);
+                } else {
+                    tri1s[1] = maketriangle(c1p2, c1p3, c1p4);
+                    tri2s[0] = maketriangle(c2p1, c2p4, c2p3);
+                    tri2s[1] = maketriangle(c2p2, c2p3, c2p4);
+                }
             }
         }
-
         /* control points in correct orientation */
         c1p1 = tri1s[0].p1;
         c1p2 = tri1s[0].p2;
@@ -995,11 +1011,6 @@ prepQuad(void) {
 
 /* order quad control points */
 
-    double d01, d12, d20;
-    line l1, l2;
-    point mid;
-    triangle tri;
-
     if (nCP == 1) {
         /* create a rectangle from top-left corner of image and control
            point
@@ -1042,9 +1053,9 @@ prepQuad(void) {
                furthest apart
             */
 
-            d01 = distance(newCP[0], newCP[1]);
-            d12 = distance(newCP[1], newCP[2]);
-            d20 = distance(newCP[2], newCP[0]);
+            double const d01 = distance(newCP[0], newCP[1]);
+            double const d12 = distance(newCP[1], newCP[2]);
+            double const d20 = distance(newCP[2], newCP[0]);
 
             if ((d01 > d12) && (d01 > d20)) {
                 oldCP[3].x = oldCP[0].x + oldCP[1].x - oldCP[2].x;
@@ -1074,51 +1085,72 @@ prepQuad(void) {
 
         /* nCP = 3 or 4 */
 
-        /* find the intersection of the diagonals */
-        l1 = makeline(oldCP[0], oldCP[1]);
-        l2 = makeline(oldCP[2], oldCP[3]);
-        if (intersect(&l1, &l2, &mid)) {
-            quadCorner(oldCP[0], oldCP[1], oldCP[2], oldCP[3],
-                       mid, &quad1, &tri);
-        } else {
-            l1 = makeline(oldCP[0], oldCP[2]);
-            l2 = makeline(oldCP[1], oldCP[3]);
-            if (intersect(&l1, &l2, &mid))
-                quadCorner(oldCP[0], oldCP[2], oldCP[1], oldCP[3],
-                           mid, &quad1, &tri);
+        {
+            /* find the intersection of the diagonals */
+            line const l1 = makeline(oldCP[0], oldCP[1]);
+            line const l2 = makeline(oldCP[2], oldCP[3]);
+            bool theyIntersect;
+            point mid;
+            findIntersection(&l1, &l2, &theyIntersect, &mid);
+            if (theyIntersect)
+                quadCorner(oldCP[0], oldCP[1], oldCP[2], oldCP[3],
+                           mid, &quad1, NULL);
             else {
-                l1 = makeline(oldCP[0], oldCP[3]);
-                l2 = makeline(oldCP[1], oldCP[2]);
-                if (intersect(&l1, &l2, &mid))
-                    quadCorner(oldCP[0], oldCP[3],
-                               oldCP[1], oldCP[2], mid, &quad1, &tri);
-                else
-                    pm_error("The four old control points don't seem "
-                             "to be corners.");
+                line const l1 = makeline(oldCP[0], oldCP[2]);
+                line const l2 = makeline(oldCP[1], oldCP[3]);
+                bool theyIntersect;
+                point mid;
+                findIntersection(&l1, &l2, &theyIntersect, &mid);
+                if (theyIntersect)
+                    quadCorner(oldCP[0], oldCP[2], oldCP[1], oldCP[3],
+                               mid, &quad1, NULL);
+                else {
+                    line const l1 = makeline(oldCP[0], oldCP[3]);
+                    line const l2 = makeline(oldCP[1], oldCP[2]);
+                    bool theyIntersect;
+                    point mid;
+                    findIntersection(&l1, &l2, &theyIntersect, &mid);
+                    if (theyIntersect)
+                        quadCorner(oldCP[0], oldCP[3],
+                                   oldCP[1], oldCP[2], mid, &quad1, NULL);
+                    else
+                        pm_error("The four old control points don't seem "
+                                 "to be corners.");
+                }
             }
         }
-
-        /* repeat for the "to-be" control points */
-        l1 = makeline(newCP[0], newCP[1]);
-        l2 = makeline(newCP[2], newCP[3]);
-        if (intersect(&l1, &l2, &mid))
-            quadCorner(newCP[0], newCP[1], newCP[2], newCP[3],
-                       mid, &quad2, &tri);
-        else {
-            l1 = makeline(newCP[0], newCP[2]);
-            l2 = makeline(newCP[1], newCP[3]);
-            if (intersect(&l1, &l2, &mid))
-                quadCorner(newCP[0], newCP[2], newCP[1], newCP[3],
-                           mid, &quad2, &tri);
+        {
+            /* repeat for the "to-be" control points */
+            line const l1 = makeline(newCP[0], newCP[1]);
+            line const l2 = makeline(newCP[2], newCP[3]);
+            bool theyIntersect;
+            point mid;
+            findIntersection(&l1, &l2, &theyIntersect, &mid);
+            if (theyIntersect)
+                quadCorner(newCP[0], newCP[1], newCP[2], newCP[3],
+                           mid, &quad2, NULL);
             else {
-                l1 = makeline(newCP[0], newCP[3]);
-                l2 = makeline(newCP[1], newCP[2]);
-                if (intersect(&l1, &l2, &mid))
-                    quadCorner(newCP[0], newCP[3],
-                               newCP[1], newCP[2], mid, &quad2, &tri);
-                else
-                    pm_error("The four new control points don't seem "
-                             "to be corners.");
+                line const l1 = makeline(newCP[0], newCP[2]);
+                line const l2 = makeline(newCP[1], newCP[3]);
+                bool theyIntersect;
+                point mid;
+                findIntersection(&l1, &l2, &theyIntersect, &mid);
+                if (theyIntersect)
+                    quadCorner(newCP[0], newCP[2], newCP[1], newCP[3],
+                               mid, &quad2, NULL);
+                else {
+                    line const l1 = makeline(newCP[0], newCP[3]);
+                    line const l2 = makeline(newCP[1], newCP[2]);
+                    bool theyIntersect;
+                    point mid;
+                    findIntersection(&l1, &l2, &theyIntersect, &mid);
+                    if (theyIntersect)
+                        quadCorner(newCP[0], newCP[3],
+                                   newCP[1], newCP[2], mid, &quad2, NULL);
+                    else
+                        pm_error("The four new control points don't seem "
+                                 "to be corners.");
+                }
             }
         }
     }
@@ -1134,14 +1166,11 @@ warpTrig(point   const p2,
 
     point e1p1, e1p2, e1p3;
     point e2p1, e2p2, e2p3;
-    line lp, le;
-    line l1, l2, l3;
-    double d1, d2, d3;
-    int i;
+    unsigned int i;
 
     /* find in which triangle p2 lies */
-    for (i = 0; i < nTri; i++) {
-        if (insidetri (&tri2s[i], p2))
+    for (i = 0; i < nTri; ++i) {
+        if (insidetri(&tri2s[i], p2))
             break;
     }
 
@@ -1149,25 +1178,33 @@ warpTrig(point   const p2,
         *p1P = makepoint(0.0, 0.0);
     else {
         /* where in triangle is point */
-        d1 = fabs (p2.x - tri2s[i].p1.x) + fabs (p2.y - tri2s[i].p1.y);
-        d2 = fabs (p2.x - tri2s[i].p2.x) + fabs (p2.y - tri2s[i].p2.y);
-        d3 = fabs (p2.x - tri2s[i].p3.x) + fabs (p2.y - tri2s[i].p3.y);
+        double const d1 =
+            fabs (p2.x - tri2s[i].p1.x) + fabs (p2.y - tri2s[i].p1.y);
+        double const d2 =
+            fabs (p2.x - tri2s[i].p2.x) + fabs (p2.y - tri2s[i].p2.y);
+        double const d3 =
+            fabs (p2.x - tri2s[i].p3.x) + fabs (p2.y - tri2s[i].p3.y);
 
-        /* line through p1 and p intersecting with edge p2-p3 */
-        lp = makeline(tri2s[i].p1, p2);
-        le = makeline(tri2s[i].p2, tri2s[i].p3);
-        intersect (&lp, &le, &e2p1);
+        {
+            /* line through p1 and p intersecting with edge p2-p3 */
+            line const lp = makeline(tri2s[i].p1, p2);
+            line const le = makeline(tri2s[i].p2, tri2s[i].p3);
+            findIntersection(&lp, &le, NULL, &e2p1);
+        }
 
-        /* line through p2 and p intersecting with edge p3-p1 */
-        lp = makeline(tri2s[i].p2, p2);
-        le = makeline(tri2s[i].p3, tri2s[i].p1);
-        intersect (&lp, &le, &e2p2);
+        {
+            /* line through p2 and p intersecting with edge p3-p1 */
+            line const lp = makeline(tri2s[i].p2, p2);
+            line const le = makeline(tri2s[i].p3, tri2s[i].p1);
+            findIntersection(&lp, &le, NULL, &e2p2);
+        }
 
-        /* line through p3 and p intersecting with edge p1-p2 */
-        lp = makeline(tri2s[i].p3, p2);
-        le = makeline(tri2s[i].p1, tri2s[i].p2);
-        intersect (&lp, &le, &e2p3);
-
+        {
+            /* line through p3 and p intersecting with edge p1-p2 */
+            line const lp = makeline(tri2s[i].p3, p2);
+            line const le = makeline(tri2s[i].p1, tri2s[i].p2);
+            findIntersection(&lp, &le, NULL, &e2p3);
+        }
         /* map target control points to source control points */
         e1p1.x = tri1s[i].p2.x
             + (e2p1.x - tri2s[i].p2.x)/(tri2s[i].p3.x - tri2s[i].p2.x)
@@ -1188,17 +1225,19 @@ warpTrig(point   const p2,
             + (e2p3.y - tri2s[i].p1.y)/(tri2s[i].p2.y - tri2s[i].p1.y)
             * (tri1s[i].p2.y - tri1s[i].p1.y);
 
-        /* intersect grid lines in source */
-        l1 = makeline(tri1s[i].p1, e1p1);
-        l2 = makeline(tri1s[i].p2, e1p2);
-        l3 = makeline(tri1s[i].p3, e1p3);
+        {
+            /* intersect grid lines in source */
+            line const l1 = makeline(tri1s[i].p1, e1p1);
+            line const l2 = makeline(tri1s[i].p2, e1p2);
+            line const l3 = makeline(tri1s[i].p3, e1p3);
 
-        if ((d1 < d2) && (d1 < d3))
-            intersect (&l2, &l3, p1P);
-        else if (d2 < d3)
-            intersect (&l1, &l3, p1P);
-        else
-            intersect (&l1, &l2, p1P);
+            if ((d1 < d2) && (d1 < d3))
+                findIntersection(&l2, &l3, NULL, p1P);
+            else if (d2 < d3)
+                findIntersection(&l1, &l3, NULL, p1P);
+            else
+                findIntersection(&l1, &l2, NULL, p1P);
+        }
     }
 }
 
@@ -1215,8 +1254,6 @@ warpQuad(point   const p2,
     point c2tl, c2tr, c2bl, c2br;
     point e1t, e1b, e1l, e1r;
     point e2t, e2b, e2l, e2r;
-    line l2t, l2b, l2l, l2r;
-    line lh, lv;
 
     c1tl = quad1.tl;
     c1tr = quad1.tr;
@@ -1228,24 +1265,27 @@ warpQuad(point   const p2,
     c2bl = quad2.bl;
     c2br = quad2.br;
 
-    l2t = makeline(c2tl, c2tr);
-    l2b = makeline(c2bl, c2br);
-    l2l = makeline(c2tl, c2bl);
-    l2r = makeline(c2tr, c2br);
+    {
+        line const l2t = makeline(c2tl, c2tr);
+        line const l2b = makeline(c2bl, c2br);
+        line const l2l = makeline(c2tl, c2bl);
+        line const l2r = makeline(c2tr, c2br);
 
-    /* find intersections of lines through control points */
-    intersect (&l2t, &l2b, &h2);
-    intersect (&l2l, &l2r, &v2);
+        /* find intersections of lines through control points */
+        findIntersection(&l2t, &l2b, NULL, &h2);
+        findIntersection(&l2l, &l2r, NULL, &v2);
 
-    /* find intersections of axes through P with control point box */
-    lv = makeline(p2, v2);
-    intersect (&l2t, &lv, &e2t);
-    intersect (&l2b, &lv, &e2b);
+        {
+            /* find intersections of axes through P with control point box */
+            line const lv = makeline(p2, v2);
+            line const lh = makeline(p2, h2);
 
-    lh = makeline(p2, h2);
-    intersect (&l2l, &lh, &e2l);
-    intersect (&l2r, &lh, &e2r);
-
+            findIntersection(&l2t, &lv, NULL, &e2t);
+            findIntersection(&l2b, &lv, NULL, &e2b);
+            findIntersection(&l2l, &lh, NULL, &e2l);
+            findIntersection(&l2r, &lh, NULL, &e2r);
+        }
+    }
     /* map target control points to source control points */
     e1t.x = c1tl.x + (e2t.x - c2tl.x)/(c2tr.x - c2tl.x) * (c1tr.x - c1tl.x);
     if (c1tl.y == c1tr.y)
@@ -1275,10 +1315,12 @@ warpQuad(point   const p2,
             = c1tr.x + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.x - c1tr.x);
     e1r.y = c1tr.y + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.y - c1tr.y);
 
-    /* intersect grid lines in source */
-    lv = makeline(e1t, e1b);
-    lh = makeline(e1l, e1r);
-    intersect (&lh, &lv, p1P);
+    {
+        /* intersect grid lines in source */
+        line const lv = makeline(e1t, e1b);
+        line const lh = makeline(e1l, e1r);
+        findIntersection(&lh, &lv, NULL, p1P);
+    }
 }
 
 

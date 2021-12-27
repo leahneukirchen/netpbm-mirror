@@ -2,6 +2,5 @@
 # This script tests: pbmtocmuwm cmuwmtopbm
 # Also requires:
 
-
-# Should print 2425386270 41, cksum of testgrid.pbm
-pbmtocmuwm testgrid.pbm | cmuwmtopbm | cksum
+echo "Should print 281226646 481, cksum of maze.pbm"
+pbmtocmuwm maze.pbm | cmuwmtopbm | cksum

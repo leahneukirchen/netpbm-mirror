@@ -71,7 +71,7 @@ writePamPlainPbmRow(const struct pam *  const pamP,
 
 static void
 writePamPlainRow(const struct pam *  const pamP,
-                    const tuple *       const tuplerow) {
+                 const tuple *       const tuplerow) {
 
     int const samplesPerLine =
         samplesPerPlainLine(pamP->maxval, pamP->depth, 79);
@@ -101,17 +101,25 @@ writePamPlainRow(const struct pam *  const pamP,
 
 
 static void
-formatPbmRow(const struct pam * const pamP,
-             const tuple *      const tuplerow,
-             unsigned char *    const outbuf,
-             unsigned int *     const rowSizeP) {
+formatPbm(const struct pam * const pamP,
+          const tuple *      const tuplerow,
+          unsigned char *    const outbuf,
+          unsigned int       const nTuple,
+          unsigned int *     const rowSizeP) {
+/*----------------------------------------------------------------------------
+   Create the image of 'nTuple' consecutive tuples of a row in the raster of a
+   raw format PBM image.
 
+   Put the image at *outbuf; put the number of bytes of it at *rowSizeP.
+-----------------------------------------------------------------------------*/
     unsigned char accum;
     int col;
 
+    assert(nTuple <= pamP->width);
+
     accum = 0;  /* initial value */
 
-    for (col=0; col < pamP->width; ++col) {
+    for (col=0; col < nTuple; ++col) {
         accum |=
             (tuplerow[col][0] == PAM_PBM_BLACK ? PBM_BLACK : PBM_WHITE)
                 << (7-col%8);
@@ -120,12 +128,12 @@ formatPbmRow(const struct pam * const pamP,
                 accum = 0;
         }
     }
-    if (pamP->width % 8 != 0) {
-        unsigned int const lastByteIndex = pamP->width/8;
+    if (nTuple % 8 != 0) {
+        unsigned int const lastByteIndex = nTuple/8;
         outbuf[lastByteIndex] = accum;
         *rowSizeP = lastByteIndex + 1;
     } else
-        *rowSizeP = pamP->width/8;
+        *rowSizeP = nTuple/8;
 }
 
 
@@ -171,36 +179,40 @@ sampleToBytes4(unsigned char       buf[4],
 
 
 static __inline__ void
-format1BpsRow(const struct pam * const pamP,
-              const tuple *      const tuplerow,
-              unsigned char *    const outbuf,
-              unsigned int *     const rowSizeP) {
+format1Bps(const struct pam * const pamP,
+           const tuple *      const tuplerow,
+           unsigned char *    const outbuf,
+           unsigned int       const nTuple,
+           unsigned int *     const rowSizeP) {
 /*----------------------------------------------------------------------------
-   Create the image of a row in the raster of a raw format Netpbm
-   image that has one byte per sample (ergo not PBM).
+   Create the image of 'nTuple' consecutive tuples of a row in the raster of a
+   raw format Netpbm image that has one byte per sample (ergo not PBM).
 
    Put the image at *outbuf; put the number of bytes of it at *rowSizeP.
 -----------------------------------------------------------------------------*/
     int col;
     unsigned int bufferCursor;
 
+    assert(nTuple <= pamP->width);
+
     bufferCursor = 0;  /* initial value */
 
-    for (col = 0; col < pamP->width; ++col) {
+    for (col = 0; col < nTuple; ++col) {
         unsigned int plane;
         for (plane=0; plane < pamP->depth; ++plane)
             outbuf[bufferCursor++] = (unsigned char)tuplerow[col][plane];
     }
-    *rowSizeP = pamP->width * 1 * pamP->depth;
+    *rowSizeP = nTuple * 1 * pamP->depth;
 }
 
 
 
 static __inline__ void
-format2BpsRow(const struct pam * const pamP,
-              const tuple *      const tuplerow,
-              unsigned char *    const outbuf,
-              unsigned int *     const rowSizeP) {
+format2Bps(const struct pam * const pamP,
+           const tuple *      const tuplerow,
+           unsigned char *    const outbuf,
+           unsigned int       const nTuple,
+           unsigned int *     const rowSizeP) {
 /*----------------------------------------------------------------------------
   Analogous to format1BpsRow().
 -----------------------------------------------------------------------------*/
@@ -209,24 +221,27 @@ format2BpsRow(const struct pam * const pamP,
     int col;
     unsigned int bufferCursor;
 
+    assert(nTuple <= pamP->width);
+
     bufferCursor = 0;  /* initial value */
 
-    for (col=0; col < pamP->width; ++col) {
+    for (col=0; col < nTuple; ++col) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
             sampleToBytes2(ob[bufferCursor++], tuplerow[col][plane]);
     }
 
-    *rowSizeP = pamP->width * 2 * pamP->depth;
+    *rowSizeP = nTuple * 2 * pamP->depth;
 }
 
 
 
 static __inline__ void
-format3BpsRow(const struct pam * const pamP,
-              const tuple *      const tuplerow,
-              unsigned char *    const outbuf,
-              unsigned int *     const rowSizeP) {
+format3Bps(const struct pam * const pamP,
+           const tuple *      const tuplerow,
+           unsigned char *    const outbuf,
+           unsigned int       const nTuple,
+           unsigned int *     const rowSizeP) {
 /*----------------------------------------------------------------------------
   Analogous to format1BpsRow().
 -----------------------------------------------------------------------------*/
@@ -235,24 +250,27 @@ format3BpsRow(const struct pam * const pamP,
     int col;
     unsigned int bufferCursor;
 
+    assert(nTuple <= pamP->width);
+
     bufferCursor = 0;  /* initial value */
 
-    for (col=0; col < pamP->width; ++col) {
+    for (col=0; col < nTuple; ++col) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
             sampleToBytes3(ob[bufferCursor++], tuplerow[col][plane]);
     }
 
-    *rowSizeP = pamP->width * 3 * pamP->depth;
+    *rowSizeP = nTuple * 3 * pamP->depth;
 }
 
 
 
 static __inline__ void
-format4BpsRow(const struct pam * const pamP,
-              const tuple *      const tuplerow,
-              unsigned char *    const outbuf,
-              unsigned int *     const rowSizeP) {
+format4Bps(const struct pam * const pamP,
+           const tuple *      const tuplerow,
+           unsigned char *    const outbuf,
+           unsigned int       const nTuple,
+           unsigned int *     const rowSizeP) {
 /*----------------------------------------------------------------------------
   Analogous to format1BpsRow().
 -----------------------------------------------------------------------------*/
@@ -261,15 +279,54 @@ format4BpsRow(const struct pam * const pamP,
     int col;
     unsigned int bufferCursor;
 
+    assert(nTuple <= pamP->width);
+
     bufferCursor = 0;  /* initial value */
 
-    for (col=0; col < pamP->width; ++col) {
+    for (col=0; col < nTuple; ++col) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
             sampleToBytes4(ob[bufferCursor++], tuplerow[col][plane]);
     }
 
-    *rowSizeP = pamP->width * 4 * pamP->depth;
+    *rowSizeP = nTuple * 4 * pamP->depth;
+}
+
+
+
+void
+pnm_formatpamtuples(const struct pam * const pamP,
+                    const tuple *      const tuplerow,
+                    unsigned char *    const outbuf,
+                    unsigned int       const nTuple,
+                    unsigned int *     const rowSizeP) {
+/*----------------------------------------------------------------------------   Create the image of 'nTuple' consecutive tuples of a row in the raster of a
+   raw (not plain) format Netpbm image, as described by *pamP and tuplerow[].
+   Put the image at *outbuf.
+
+   'outbuf' must be the address of space allocated with pnm_allocrowimage().
+
+   We return as *rowSizeP the number of bytes in the image.
+-----------------------------------------------------------------------------*/
+    if (nTuple > pamP->width) {
+        pm_error("pnm_formatpamtuples called to write more tuples (%u) "
+                 "than the width of a row (%u)",
+                 nTuple, pamP->width);
+    }
+
+    if (PAM_FORMAT_TYPE(pamP->format) == PBM_TYPE)
+        formatPbm(pamP, tuplerow, outbuf, nTuple, rowSizeP);
+    else {
+        switch(pamP->bytes_per_sample){
+        case 1: format1Bps(pamP, tuplerow, outbuf, nTuple, rowSizeP); break;
+        case 2: format2Bps(pamP, tuplerow, outbuf, nTuple, rowSizeP); break;
+        case 3: format3Bps(pamP, tuplerow, outbuf, nTuple, rowSizeP); break;
+        case 4: format4Bps(pamP, tuplerow, outbuf, nTuple, rowSizeP); break;
+        default:
+            pm_error("invalid bytes per sample passed to "
+                     "pnm_formatpamrow(): %u",  pamP->bytes_per_sample);
+        }
+    }
 }
 
 
@@ -280,27 +337,9 @@ pnm_formatpamrow(const struct pam * const pamP,
                  unsigned char *    const outbuf,
                  unsigned int *     const rowSizeP) {
 /*----------------------------------------------------------------------------
-   Create the image of a row in the raster of a raw (not plain) format
-   Netpbm image, as described by *pamP and tuplerow[].  Put the image
-   at *outbuf.
-
-   'outbuf' must be the address of space allocated with pnm_allocrowimage().
-
-   We return as *rowSizeP the number of bytes in the row image.
+  Same as 'pnm_formatpamtuples', except formats an entire row.
 -----------------------------------------------------------------------------*/
-    if (PAM_FORMAT_TYPE(pamP->format) == PBM_TYPE)
-        formatPbmRow(pamP, tuplerow, outbuf, rowSizeP);
-    else {
-        switch(pamP->bytes_per_sample){
-        case 1: format1BpsRow(pamP, tuplerow, outbuf, rowSizeP); break;
-        case 2: format2BpsRow(pamP, tuplerow, outbuf, rowSizeP); break;
-        case 3: format3BpsRow(pamP, tuplerow, outbuf, rowSizeP); break;
-        case 4: format4BpsRow(pamP, tuplerow, outbuf, rowSizeP); break;
-        default:
-            pm_error("invalid bytes per sample passed to "
-                     "pnm_formatpamrow(): %u",  pamP->bytes_per_sample);
-        }
-    }
+    pnm_formatpamtuples(pamP, tuplerow, outbuf, pamP->width, rowSizeP);
 }
 
 
@@ -393,6 +432,74 @@ pnm_writepamrowmult(const struct pam * const pamP,
    } else
        /* Simple common case - use fastpath */
        writePamRawRow(pamP, tuplerow, count);
+}
+
+
+
+void
+pnm_writepamrowpart(const struct pam * const pamP,
+                    const tuple *      const tuplerow,
+                    unsigned int       const firstRow,
+                    unsigned int       const firstCol,
+                    unsigned int       const rowCt,
+                    unsigned int       const colCt) {
+/*----------------------------------------------------------------------------
+   Write part of multiple consecutive rows to the file.
+
+   For each of 'rowCt' consecutive rows starting at 'firstRow', write the
+   'colCt' columns starting at 'firstCol'.  The tuples to write are those in
+   'tuplerow', starting at the beginning of 'tuplerow'.
+
+   Fail if the file is not seekable (or not known to be seekable) or the
+   output format is not raw (i.e. is plain) or the output format is PBM.
+-----------------------------------------------------------------------------*/
+    unsigned int const bytesPerTuple = pamP->depth * pamP->bytes_per_sample;
+
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    unsigned int tupleImageSize;
+    unsigned char * outbuf;  /* malloc'ed */
+
+    if (pamP->len < PAM_STRUCT_SIZE(raster_pos) || !pamP->raster_pos)
+        pm_error("pnm_writepamrowpart called on nonseekable file");
+
+    if (PAM_FORMAT_TYPE(pamP->format) == PBM_TYPE)
+        pm_error("pnm_witepamrowpart called for PBM image");
+
+    if (pm_plain_output || pamP->plainformat)
+        pm_error("pnm_writepamrowpart called for plain format image");
+
+    outbuf = pnm_allocrowimage(pamP);
+
+    pnm_formatpamtuples(pamP, tuplerow, outbuf, colCt, &tupleImageSize);
+
+    if (setjmp(jmpbuf) != 0) {
+        pnm_freerowimage(outbuf);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int row;
+
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        for (row = firstRow; row < firstRow + rowCt; ++row) {
+            pm_filepos const firstTuplePos =
+                pamP->raster_pos +
+                (row * pamP->width + firstCol) * bytesPerTuple;
+            size_t bytesWritten;
+
+            pm_seek2(pamP->file, &firstTuplePos, sizeof(firstTuplePos));
+
+            bytesWritten = fwrite(outbuf, 1, tupleImageSize, pamP->file);
+
+            if (bytesWritten != tupleImageSize)
+                pm_error("fwrite() failed to write %u image tuples "
+                         "to the file.  errno=%d (%s)",
+                         colCt, errno, strerror(errno));
+        }
+        pm_setjmpbuf(origJmpbufP);
+    }
+    pnm_freerowimage(outbuf);
 }
 
 

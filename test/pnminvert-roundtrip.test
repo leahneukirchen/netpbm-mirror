@@ -4,4 +4,4 @@
 
 
 pnminvert testimg.ppm | pnminvert | cksum
-pnminvert testgrid.pbm | pnminvert | cksum
+pnminvert maze.pbm | pnminvert | cksum

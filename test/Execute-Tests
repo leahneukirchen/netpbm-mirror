@@ -103,6 +103,10 @@ if [ ! -f ./testgrid.pbm ]
   then cp -v ${srcdir}/testgrid.pbm ./testgrid.pbm
 fi
 
+if [ ! -f ./maze.pbm ]
+  then cp -v ${srcdir}/maze.pbm ./maze.pbm
+fi
+
 if [ ! -f ./testimg.ppm ]
   then cp -v ${srcdir}/testimg.ppm  ./testimg.ppm 
 fi
@@ -181,7 +185,7 @@ elif [ $VALGRIND_TESTS = "on" ]
   # You may want to add --track-origins=yes to the above.
 
   for i in awk basename cat cksum cmp comm cp cut date dirname \
-           egrep fgrep file grep gs head iconv mkdir mktemp perl rm \
+           egrep fgrep file grep gs head iconv ls mkdir mktemp perl rm \
            sed seq sh sort tee tr uniq wc \
            testrandom Available-Testprog
 
@@ -248,6 +252,7 @@ fi
 
 if [ ! -s ${srcdir}/${tname%.test}.ok ]
 then
+  echo "${tname%.test}.ok does not exist"
   let result=4;
 else
   ${srcdir}/Available-Testprog \
@@ -299,7 +304,7 @@ fi
 # (Do not erase them if we are working from the source directory.)
 
 if [ ! $PWD -ef ${srcdir} ]
-    then rm ./testimg.ppm ./testgrid.pbm
+    then rm ./testimg.ppm ./testgrid.pbm ./maze.pbm
 fi
 
 

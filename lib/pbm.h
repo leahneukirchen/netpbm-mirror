@@ -47,6 +47,19 @@ pbm_allocrow(unsigned int const cols);
   ((bit**) pm_allocarray(cols, rows, sizeof(bit)))
 #define pbm_freearray(bits, rows) pm_freearray((char**) bits, rows)
 #define pbm_freerow(bitrow) pm_freerow((char*) bitrow)
+
+/* Beware of arithmetic overflows when using pbm_packed_bytes(),
+   pbm_allocrow_packed() and pbm_allocarray_packed().
+
+   When cols is signed int, pbm_packed_bytes(cols + 8) overflows
+   with large values.   Same with pamP->width which is always signed int.
+
+   Function validateComputableSize() called by pbm_readpbminit()
+   provides a margin of 10, but the "+7" uses much of it.
+
+   To prevent overflows, cast cols or pamP->width to unsigned int
+   like this: pbm_packed_bytes((unsigned int) cols +8))
+*/
 #define pbm_packed_bytes(cols) (((cols)+7)/8)
 #define pbm_allocrow_packed(cols) \
     ((unsigned char *) pm_allocrow(pbm_packed_bytes(cols), \

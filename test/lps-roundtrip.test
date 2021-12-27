@@ -1,22 +1,25 @@
 #! /bin/bash
 # This script tests: pbmtolps pstopnm
-# Also requires: gs pamdepth pamscale pnmcrop pnmpsnr
+# Also requires: gs pamdepth pamscale pnmcrop pnmpsnr pamfile
 
 # The ordinary round-trip does not work because of the way ghostscript
 # renders: a line is considered wider than a single pixel and all pixels
 # it touches are set to black if the output is PBM.  To work around this,
 # we tell pstopnm to output PGM at a high resolution (=large dpi value).
 
+tmpdir=${tmpdir:-/tmp}
+test_pgm=${tmpdir}/test.pgm
 
-test_pgm=${tmpdir}/testgrid.pgm
+echo "Test.  Should print match"
 
+xysize=$(pamfile -size testgrid.pbm | awk '{print "-xsize="$1,"-ysize="$2}')
 pamdepth 255 testgrid.pbm > ${test_pgm}
-
+  
 pbmtolps -dpi 72 testgrid.pbm | \
     pstopnm -dpi $((72*12)) -stdout -pgm | \
-    pnmcrop -white | pamscale -xsize=14 -ysize=16 | \
+    pnmcrop -white | pamscale ${xysize}  | \
     pnmpsnr -target=30 - ${test_pgm}
-
-# ghostscript version 8.71: pnmpsnr lumina 33.14dB
-
+  
+    # ghostscript version 8.71: pnmpsnr lumina 33.14dB
+  
 rm ${test_pgm}

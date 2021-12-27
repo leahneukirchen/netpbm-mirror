@@ -63,7 +63,7 @@ parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -110,7 +110,7 @@ parseCommandLine(int argc, const char ** argv,
 
     if (!notefileSpec)
         cmdlineP->notefile = NULL;
-    
+
     if (compressed + uncompressed + maybeCompressed > 1)
         pm_error("You may specify only one of -compressed, -uncompressed, "
                  "-maybecompressed");
@@ -232,7 +232,7 @@ imageWrite(IMAGE *   const imgP,
 static int
 textWrite(TEXT * const textP,
           FILE * const fileP) {
-    
+
     if (textP)
         fwrite(textP->data, 1, strlen(textP->data), fileP);
 
@@ -303,7 +303,7 @@ ipdbWrite(IPDB * const pdbP,
     rc = pdbheadWrite(pdbP->p, fileP);
     if (rc != 0)
         pm_error("Failed to write PDB header.  %s", ipdb_err(rc));
-            
+
     rc = rechdrWrite(irP, fileP);
     if (rc != 0)
         pm_error("Failed to write image record header.  %s", ipdb_err(rc));
@@ -513,7 +513,7 @@ insertG16image(IPDB *          const pdbP,
         /* Pad with white on the bottom */
         for (; row < ipdb_height(pdbP); ++row)
             memset(outP, 0, rowSize);
-    } 
+    }
 }
 
 
@@ -544,7 +544,7 @@ insertGimage(IPDB *          const pdbP,
         /* Pad with white on the bottom */
         for (; row < ipdb_height(pdbP); ++row)
             memset(outP, 0, rowSize);
-    } 
+    }
 }
 
 
@@ -575,7 +575,7 @@ insertMimage(IPDB *          const pdbP,
         /* Pad with white on the bottom */
         for (; row < ipdb_height(pdbP); ++row)
             memset(outP, 0, rowSize);
-    } 
+    }
 }
 
 
@@ -730,3 +730,6 @@ main(int argc, const char **argv) {
 
     return EXIT_SUCCESS;
 }
+
+
+

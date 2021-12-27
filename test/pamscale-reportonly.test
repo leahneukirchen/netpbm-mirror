@@ -33,34 +33,34 @@ pamscale -reportonly -xsize=640 -ysize=400 -xscale=2 testimg.ppm > \
   ${test_out} || \
   echo -n "Expected failure 1"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamscale -reportonly -xsize=640 -xscale=2 -yscale=3 testimg.ppm > \
   ${test_out} || \
   echo -n "Expected failure 2"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamscale -reportonly -xsize=640 -ysize=400 -pixels=200000 testimg.ppm \
   > ${test_out} || \
   echo -n "Expected failure 3"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamscale -reportonly -xsize=640 -ysize=400 -xysize 640 400 testimg.ppm \
   > ${test_out} || \
   echo -n "Expected failure 4"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamscale -reportonly -xsize=640 -ysize=400 -xyfit  640 400 testimg.ppm \
   > ${test_out} || \
   echo -n "Expected failure 5"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}
 
 pamscale -reportonly -xsize=640 -ysize=400 -xyfill 640 400 testimg.ppm \
   > ${test_out} || \
   echo -n "Expected failure 6"
   test -s ${test_out}; echo " "$?
-  rm -f {test_out}
+  rm -f ${test_out}

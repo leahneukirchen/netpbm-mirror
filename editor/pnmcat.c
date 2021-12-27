@@ -115,7 +115,7 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->backcolor = BACK_AUTO;
 
     if (jtop + jbottom + jleft + jright + jcenter > 1)
-        pm_error("You may specify onlyone of -jtop, -jbottom, "
+        pm_error("You may specify only one of -jtop, -jbottom, "
                  "-jleft, and -jright");
     else {
         switch (cmdlineP->orientation) {
@@ -703,6 +703,9 @@ concatenateLeftRightGen(FILE *             const ofP,
                 */
             }
         }
+        /* Note that img2[N].inrow{] is an alias to part of outrow[], so
+           outrow[] has been set.
+        */
         pnm_writepnmrow(ofP, outrow, newcols, newmaxval, newformat, 0);
     }
     pnm_freerow(outrow);

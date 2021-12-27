@@ -1,8 +1,27 @@
 #! /bin/bash
 # This script tests: pbmtosunicon sunicontopnm
-# Also requires: pamcut
+# Also requires: pamcut pnmpad
 
 # Width of Sun icons are multiples of 8.
 
-# Test.  Should print: 2425386270 41
-pbmtosunicon testgrid.pbm | sunicontopnm | pamcut 1 0 14 16 | cksum
+#imgsize=$(pamfile -size maze.pbm | awk '{print "-width="$1, "-height="$2}')
+
+tmpdir=${tmpdir:-/tmp}
+
+maze16_pbm=${tmpdir}/maze16.pbm
+maze32_pbm=${tmpdir}/maze32.pbm
+maze64_pbm=${tmpdir}/maze64.pbm
+
+pamcut -top=0 -left=0 -width=16 -height=16 maze.pbm > ${maze16_pbm} 
+pamcut -top=0 -left=0 -width=32 -height=32 maze.pbm > ${maze32_pbm} 
+pnmpad -width=64 -height=64 maze.pbm > ${maze64_pbm} 
+
+echo "Test.  Should print 0 three times"
+pbmtosunicon ${maze16_pbm} | sunicontopnm | cmp -s - ${maze16_pbm}
+echo $?
+pbmtosunicon ${maze32_pbm} | sunicontopnm | cmp -s - ${maze32_pbm}
+echo $?
+pbmtosunicon ${maze64_pbm} | sunicontopnm | cmp -s - ${maze64_pbm}
+echo $?
+
+rm ${maze16_pbm} ${maze32_pbm} ${maze64_pbm}

@@ -31,12 +31,12 @@ struct CmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, const char ** argv, 
+static void
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -84,7 +84,7 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
-        
+
         if (argc-1 > 1)
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
