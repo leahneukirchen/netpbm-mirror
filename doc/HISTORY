@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
+              pamendian: fix bogus "sample exceeds maxval" failure.
+              Introduced in Netpbm 10.66 (March 2014).
+
 21.12.27 BJH  Release 10.97.00
 
               Add pbnnoise.
