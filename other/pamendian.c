@@ -1,17 +1,18 @@
-/******************************************************************************
+/*=============================================================================
                               pamendian
-*******************************************************************************
+===============================================================================
 
   Reverse the endianness of multi-byte samples in a Netpbm stream.
   I.e. convert between the true format and the little endian variation of
   it.
-******************************************************************************/
-  
+=============================================================================*/
+
 #include "pam.h"
 
 
 static sample
-reverseSample(sample const insample, unsigned int const bytesPerSample) {
+reverseSample(sample       const insample,
+              unsigned int const bytesPerSample) {
 /*----------------------------------------------------------------------------
   Return a sample whose value is the least significant
   'bytes_per_sample' bytes, in reverse order.
@@ -30,14 +31,14 @@ reverseSample(sample const insample, unsigned int const bytesPerSample) {
 
 
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char ** argv) {
 
     struct pam inpam, outpam;
     tuple * intuplerow;
     tuple * outtuplerow;
     unsigned int row;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     pnm_readpaminit(stdin, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -46,7 +47,7 @@ int main(int argc, char *argv[]) {
 
     pnm_writepaminit(&outpam);
 
-    intuplerow = pnm_allocpamrow(&inpam);      
+    intuplerow  = pnm_allocpamrow(&inpam);
     outtuplerow = pnm_allocpamrow(&outpam);
 
     for (row = 0; row < inpam.height; row++) {
@@ -54,17 +55,19 @@ int main(int argc, char *argv[]) {
         pnm_readpamrow(&inpam, intuplerow);
         for (col = 0; col < inpam.width; col++) {
             unsigned int plane;
-            for (plane = 0; plane < inpam.depth; plane++) 
-                outtuplerow[col][plane] = 
-                    reverseSample(intuplerow[col][plane], 
+            for (plane = 0; plane < inpam.depth; plane++)
+                outtuplerow[col][plane] =
+                    reverseSample(intuplerow[col][plane],
                                   inpam.bytes_per_sample);
         }
         pnm_writepamrow(&outpam, outtuplerow);
     }
 
-    pnm_freepamrow(outtuplerow);        
-    pnm_freepamrow(intuplerow);        
+    pnm_freepamrow(outtuplerow);
+    pnm_freepamrow(intuplerow);
 
-    exit(0);
+    return 0;
 }
+
+
 
