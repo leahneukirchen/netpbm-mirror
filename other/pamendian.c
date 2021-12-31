@@ -15,7 +15,7 @@ reverseSample(sample       const insample,
               unsigned int const bytesPerSample) {
 /*----------------------------------------------------------------------------
   Return a sample whose value is the least significant
-  'bytes_per_sample' bytes, in reverse order.
+  'bytesPerSample' bytes, in reverse order.
 -----------------------------------------------------------------------------*/
     unsigned int bytePos;
     sample shiftedInsample;
