@@ -2438,7 +2438,7 @@ unpackUncompressedBits(FILE *          const ifP,
     unsigned char * linebuf;
 
     if (verbose)
-        pm_message("Bits are compressed");
+        pm_message("Bits are not packed");
 
     MALLOCARRAY(linebuf, rowBytes + 100);
     if (linebuf == NULL)
@@ -2774,7 +2774,7 @@ unpackCompressedBits(FILE *          const ifP,
     unsigned int linebufSize;
 
     if (verbose)
-        pm_message("Bits are compressed");
+        pm_message("Bits are packed");
 
     linebufSize = rowBytes;
     MALLOCARRAY(linebuf, linebufSize);
