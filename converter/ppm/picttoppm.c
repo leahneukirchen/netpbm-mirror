@@ -82,7 +82,7 @@ parseCommandLine(int argc,
 
     unsigned int option_def_index;
 
-    unsigned int fontdirSpec;
+    unsigned int fontdirSpec, verboseSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -95,8 +95,8 @@ parseCommandLine(int argc,
             &cmdlineP->noheader,              0);
     OPTENT3(0, "quickdraw",   OPT_FLAG,      NULL,
             &cmdlineP->quickdraw,             0);
-    OPTENT3(0, "verbose",     OPT_FLAG,      NULL,
-            &cmdlineP->verbose,               0);
+    OPTENT3(0, "verbose",     OPT_UINT,      &cmdlineP->verbose,
+            &verboseSpec,               0);
 
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
@@ -107,6 +107,9 @@ parseCommandLine(int argc,
 
     if (!fontdirSpec)
         cmdlineP->fontdir = NULL;
+
+    if (!verboseSpec)
+        cmdlineP->verbose = 0;
 
     if (argc-1 < 0)
         cmdlineP->inputFileName = "-";
