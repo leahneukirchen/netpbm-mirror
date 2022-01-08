@@ -141,18 +141,18 @@ struct Rect {
 
 struct PixMap {
     struct Rect Bounds;
-    Word version;
-    Word packType;
-    Longword packSize;
-    Longword hRes;
-    Longword vRes;
-    Word pixelType;
-    Word pixelSize;
-    Word cmpCount;
-    Word cmpSize;
-    Longword planeBytes;
-    Longword pmTable;
-    Longword pmReserved;
+    Word        version;
+    Word        packType;
+    Longword    packSize;
+    Longword    hRes;
+    Longword    vRes;
+    Word        pixelType;
+    Word        pixelSize;
+    Word        cmpCount;
+    Word        cmpSize;
+    Longword    planeBytes;
+    Longword    pmTable;
+    Longword    pmReserved;
 };
 
 struct RGBColor {
@@ -2366,7 +2366,7 @@ expand1Bit(unsigned char * const packed,
 static void
 unpackBuf(unsigned char *  const packed,
           unsigned int     const packedLen,
-          int              const bitsPerPixel,
+          unsigned int     const bitsPerPixel,
           unsigned char ** const expandedP,
           unsigned int *   const expandedLenP) {
 /*----------------------------------------------------------------------------
@@ -2436,6 +2436,9 @@ unpackUncompressedBits(FILE *          const ifP,
 -----------------------------------------------------------------------------*/
     unsigned int rowOfRect;
     unsigned char * linebuf;
+
+    if (verbose)
+        pm_message("Bits are compressed");
 
     MALLOCARRAY(linebuf, rowBytes + 100);
     if (linebuf == NULL)
@@ -2770,6 +2773,9 @@ unpackCompressedBits(FILE *          const ifP,
     unsigned char * linebuf;
     unsigned int linebufSize;
 
+    if (verbose)
+        pm_message("Bits are compressed");
+
     linebufSize = rowBytes;
     MALLOCARRAY(linebuf, linebufSize);
     if (linebuf == NULL)
@@ -2807,7 +2813,7 @@ static void
 unpackbits(FILE *           const ifP,
            struct Rect *    const boundsP,
            Word             const rowBytesArg,
-           int              const bitsPerPixel,
+           unsigned int     const bitsPerPixel,
            struct Raster *  const rasterP) {
 
     unsigned int const rectHeight = boundsP->bottom - boundsP->top;
@@ -2819,7 +2825,7 @@ unpackbits(FILE *           const ifP,
     stage = "unpacking packbits";
 
     if (verbose)
-        pm_message("rowBytes = %u, bitsPerPixel = %d",
+        pm_message("rowBytes = %u, bitsPerPixel = %u",
                    rowBytesArg, bitsPerPixel);
 
     allocateRaster(&raster, rectWidth, rectHeight, bitsPerPixel);
