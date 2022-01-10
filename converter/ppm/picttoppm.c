@@ -2554,7 +2554,7 @@ expandRun(unsigned char * const block,
 
         assert(block[0] & 0x80);  /* It's a run */
 
-        if (verbose > 1)
+        if (verbose > 2)
             pm_message("Block: run of %u packed %u-byte units",
                        runLength, pkpixsize);
 
@@ -2633,7 +2633,7 @@ copyPixelGroup(unsigned char * const block,
         assert(blockLimit >= 1);  /* block[0] exists */
         assert((block[0] & 0x80) == 0);  /* It's not a run */
 
-        if (verbose > 1)
+        if (verbose > 2)
             pm_message("Block: %u explicit packed %u-byte units",
                        groupLen, pkpixsize);
 
@@ -2735,7 +2735,8 @@ interpretCompressedLine(unsigned char * const linebuf,
         assert(rasterCursor <= rowSize);
     }
     if (verbose > 1)
-        pm_message("Got %u pixels for row", rasterCursor);
+        pm_message("Decompressed %u bytes into %u bytes for row",
+                   lineCursor, rasterCursor);
 }
 
 
@@ -4491,12 +4492,12 @@ processOpcode(FILE *          const ifP,
 
 
 static void
-interpretPict(FILE *  const ifP,
-              FILE *  const ofP,
-              bool    const noheader,
-              bool    const fullres,
-              bool    const quickdraw,
-              bool    const verboseArg) {
+interpretPict(FILE *       const ifP,
+              FILE *       const ofP,
+              bool         const noheader,
+              bool         const fullres,
+              bool         const quickdraw,
+              unsigned int const verboseArg) {
 
     Byte ch;
     Word picSize;
