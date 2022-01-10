@@ -293,19 +293,24 @@ allocateRaster(struct Raster * const rasterP,
         /* TODO: I'm still trying to figure out this format.
 
            My theory today:
-           The row data is in plane order (a row consists of red
-           plane, then, green, then blue, then some 4th plane).
 
-           The old hack code said 3 bytes per pixel here, and could get
-           away with it because it never got to decoding the 4th plane.
+           The row data is in plane order (a row consists of red plane, then,
+           green, then blue, then some 4th plane).
 
-           But the new clean code needs to tell it like it is and allocate
-           4 bytes per pixel.  If we say 3 bytes per pixel here, we get an
-           "invalid PICT" error because the image actually contains 4
-           bytes per pixel and as we decompress it, we run out of place
-           to put the data.
+           If the image is compressed, each row is compressed separately, with
+           the planes opaque to the compressor.
 
-           We have yet to see if we can properly interpret the data.
+           The old hack code said 3 bytes per pixel here, and could get away
+           with it because it never got to decoding the 4th plane.
+
+           But the new clean code needs to tell it like it is and allocate 4
+           bytes per pixel.  If we say 3 bytes per pixel here, we get an
+           "invalid PICT" error on one image because the image actually
+           contains 4 bytes per pixel and as we decompress it, we run out of
+           place to put the data.
+
+           On another image we've seen, the decompressor generates 3 bytes per
+           pixel.
         */
 
         rasterP->rowSize = allocWidth * 4;
@@ -544,8 +549,8 @@ struct ConstName ps_flip_name[] = {
 
 
 static const char*
-const_name(const struct ConstName * const table,
-           unsigned int             const ct) {
+constName(const struct ConstName * const table,
+          unsigned int             const ct) {
 
     static char numbuf[32];
 
@@ -583,8 +588,8 @@ picComment(FILE * const ifP,
             if (verbose) {
                 pm_message("%s justification, %s flip, %d degree rotation, "
                            "%d/2 linespacing",
-                           const_name(ps_just_name, ps_just),
-                           const_name(ps_flip_name, ps_flip),
+                           constName(ps_just_name, ps_just),
+                           constName(ps_flip_name, ps_flip),
                            ps_rotation, ps_linespace);
             }
         } else
@@ -1074,11 +1079,14 @@ rgbAllSame(const struct RGBColor * const colorP,
 }
 
 
+
 static bool
 rgbIsWhite(const struct RGBColor * const colorP) {
 
     return rgbAllSame(colorP, 0xffff);
 }
+
+
 
 static bool
 rgbIsBlack(const struct RGBColor * const colorP) {
@@ -1087,122 +1095,133 @@ rgbIsBlack(const struct RGBColor * const colorP) {
 }
 
 
-static void
-srcCopy(struct RGBColor * const src,
-        struct RGBColor * const dst) {
 
-    if (rgbIsBlack(src))
-        *dst = foreground;
+static void
+srcCopy(struct RGBColor * const srcP,
+        struct RGBColor * const dstP) {
+
+    if (rgbIsBlack(srcP))
+        *dstP = foreground;
     else
-        *dst = background;
+        *dstP = background;
 }
 
 
 
 static void
-srcOr(struct RGBColor * const src,
-      struct RGBColor * const dst) {
-    if (rgbIsBlack(src))
-        *dst = foreground;
+srcOr(struct RGBColor * const srcP,
+      struct RGBColor * const dstP) {
+
+    if (rgbIsBlack(srcP))
+        *dstP = foreground;
 }
 
 
 
 static void
-srcXor(struct RGBColor * const src,
-       struct RGBColor * const dst) {
-    dst->red ^= ~src->red;
-    dst->grn ^= ~src->grn;
-    dst->blu ^= ~src->blu;
+srcXor(struct RGBColor * const srcP,
+       struct RGBColor * const dstP) {
+
+    dstP->red ^= ~srcP->red;
+    dstP->grn ^= ~srcP->grn;
+    dstP->blu ^= ~srcP->blu;
 }
 
 
 
 static void
-srcBic(struct RGBColor * const src,
-       struct RGBColor * const dst) {
-    if (rgbIsBlack(src))
-        *dst = background;
+srcBic(struct RGBColor * const srcP,
+       struct RGBColor * const dstP) {
+
+    if (rgbIsBlack(srcP))
+        *dstP = background;
 }
 
 
 
 static void
-notSrcCopy(struct RGBColor * const src,
-           struct RGBColor * const dst) {
-    if (rgbIsWhite(src))
-        *dst = foreground;
-    else if (rgbIsBlack(src))
-        *dst = background;
+notSrcCopy(struct RGBColor * const srcP,
+           struct RGBColor * const dstP) {
+
+    if (rgbIsWhite(srcP))
+        *dstP = foreground;
+    else if (rgbIsBlack(srcP))
+        *dstP = background;
 }
 
 
 
 static void
-notSrcOr(struct RGBColor * const src,
-         struct RGBColor * const dst) {
-    if (rgbIsWhite(src))
-        *dst = foreground;
+notSrcOr(struct RGBColor * const srcP,
+         struct RGBColor * const dstP) {
+
+    if (rgbIsWhite(srcP))
+        *dstP = foreground;
 }
 
 
 
 static void
-notSrcBic(struct RGBColor * const src,
-          struct RGBColor * const dst) {
-    if (rgbIsWhite(src))
-        *dst = background;
+notSrcBic(struct RGBColor * const srcP,
+          struct RGBColor * const dstP) {
+
+    if (rgbIsWhite(srcP))
+        *dstP = background;
 }
 
 
 
 static void
-notSrcXor(struct RGBColor * const src,
-          struct RGBColor * const dst) {
-    dst->red ^= src->red;
-    dst->grn ^= src->grn;
-    dst->blu ^= src->blu;
+notSrcXor(struct RGBColor * const srcP,
+          struct RGBColor * const dstP) {
+
+    dstP->red ^= srcP->red;
+    dstP->grn ^= srcP->grn;
+    dstP->blu ^= srcP->blu;
 }
 
 
 
 static void
-addOver(struct RGBColor * const src,
-        struct RGBColor * const dst) {
-    dst->red += src->red;
-    dst->grn += src->grn;
-    dst->blu += src->blu;
+addOver(struct RGBColor * const srcP,
+        struct RGBColor * const dstP) {
+
+    dstP->red += srcP->red;
+    dstP->grn += srcP->grn;
+    dstP->blu += srcP->blu;
 }
 
 
 
 static void
-addPin(struct RGBColor * const src,
-       struct RGBColor * const dst) {
-    if ((long)dst->red + (long)src->red > (long)op_color.red)
-        dst->red = op_color.red;
+addPin(struct RGBColor * const srcP,
+       struct RGBColor * const dstP) {
+
+    if ((long)dstP->red + (long)srcP->red > (long)op_color.red)
+        dstP->red = op_color.red;
     else
-        dst->red = dst->red + src->red;
+        dstP->red = dstP->red + srcP->red;
 
-    if ((long)dst->grn + (long)src->grn > (long)op_color.grn)
-        dst->grn = op_color.grn;
+    if ((long)dstP->grn + (long)srcP->grn > (long)op_color.grn)
+        dstP->grn = op_color.grn;
     else
-        dst->grn = dst->grn + src->grn;
+        dstP->grn = dstP->grn + srcP->grn;
 
-    if ((long)dst->blu + (long)src->blu > (long)op_color.blu)
-        dst->blu = op_color.blu;
+    if ((long)dstP->blu + (long)srcP->blu > (long)op_color.blu)
+        dstP->blu = op_color.blu;
     else
-        dst->blu = dst->blu + src->blu;
+        dstP->blu = dstP->blu + srcP->blu;
 }
 
 
 
 static void
-subOver(struct RGBColor * const src,
-        struct RGBColor * const dst) {
-    dst->red -= src->red;
-    dst->grn -= src->grn;
-    dst->blu -= src->blu;
+subOver(struct RGBColor * const srcP,
+        struct RGBColor * const dstP) {
+
+    dstP->red -= srcP->red;
+    dstP->grn -= srcP->grn;
+    dstP->blu -= srcP->blu;
 }
 
 
@@ -1211,74 +1230,81 @@ subOver(struct RGBColor * const src,
 
 
 static void
-subPin(struct RGBColor * const src,
-       struct RGBColor * const dst) {
-    if ((long)dst->red - (long)src->red < (long)op_color.red)
-        dst->red = op_color.red;
-    else
-        dst->red = dst->red - src->red;
+subPin(struct RGBColor * const srcP,
+       struct RGBColor * const dstP) {
 
-    if ((long)dst->grn - (long)src->grn < (long)op_color.grn)
-        dst->grn = op_color.grn;
+    if ((long)dstP->red - (long)srcP->red < (long)op_color.red)
+        dstP->red = op_color.red;
     else
-        dst->grn = dst->grn - src->grn;
+        dstP->red = dstP->red - srcP->red;
 
-    if ((long)dst->blu - (long)src->blu < (long)op_color.blu)
-        dst->blu = op_color.blu;
+    if ((long)dstP->grn - (long)srcP->grn < (long)op_color.grn)
+        dstP->grn = op_color.grn;
     else
-        dst->blu = dst->blu - src->blu;
+        dstP->grn = dstP->grn - srcP->grn;
+
+    if ((long)dstP->blu - (long)srcP->blu < (long)op_color.blu)
+        dstP->blu = op_color.blu;
+    else
+        dstP->blu = dstP->blu - srcP->blu;
 }
 
 
 
 static void
-adMax(struct RGBColor * const src,
-      struct RGBColor * const dst) {
-    if (src->red > dst->red) dst->red = src->red;
-    if (src->grn > dst->grn) dst->grn = src->grn;
-    if (src->blu > dst->blu) dst->blu = src->blu;
+adMax(struct RGBColor * const srcP,
+      struct RGBColor * const dstP) {
+
+    if (srcP->red > dstP->red) dstP->red = srcP->red;
+    if (srcP->grn > dstP->grn) dstP->grn = srcP->grn;
+    if (srcP->blu > dstP->blu) dstP->blu = srcP->blu;
 }
 
 
 
 static void
-adMin(struct RGBColor * const src,
-      struct RGBColor * const dst) {
-    if (src->red < dst->red) dst->red = src->red;
-    if (src->grn < dst->grn) dst->grn = src->grn;
-    if (src->blu < dst->blu) dst->blu = src->blu;
+adMin(struct RGBColor * const srcP,
+      struct RGBColor * const dstP) {
+
+    if (srcP->red < dstP->red) dstP->red = srcP->red;
+    if (srcP->grn < dstP->grn) dstP->grn = srcP->grn;
+    if (srcP->blu < dstP->blu) dstP->blu = srcP->blu;
 }
 
 
 
 static void
-blend(struct RGBColor * const src,
-      struct RGBColor * const dst) {
+blend(struct RGBColor * const srcP,
+      struct RGBColor * const dstP) {
+
 #define blend_component(cmp)    \
-    ((long)src->cmp * (long)op_color.cmp) / 65536 +    \
-    ((long)dst->cmp * (long)(65536 - op_color.cmp) / 65536)
+    ((long)srcP->cmp * (long)op_color.cmp) / 65536 +    \
+    ((long)dstP->cmp * (long)(65536 - op_color.cmp) / 65536)
 
-    dst->red = blend_component(red);
-    dst->grn = blend_component(grn);
-    dst->blu = blend_component(blu);
+    dstP->red = blend_component(red);
+    dstP->grn = blend_component(grn);
+    dstP->blu = blend_component(blu);
 }
 
 
 
 static void
-transparent(struct RGBColor * const src,
-            struct RGBColor * const dst) {
-    if (src->red != background.red ||
-        src->grn != background.grn ||
-        src->blu != background.blu) {
-        *dst = *src;
+transparent(struct RGBColor * const srcP,
+            struct RGBColor * const dstP) {
+
+    if (srcP->red != background.red ||
+        srcP->grn != background.grn ||
+        srcP->blu != background.blu) {
+
+        *dstP = *srcP;
     }
 }
 
 
 
 static transfer_func
-transfer(int const mode) {
+transferFunctionForMode(unsigned int const mode) {
+
     switch (mode) {
     case  0: return srcCopy;
     case  1: return srcOr;
@@ -1297,9 +1323,8 @@ transfer(int const mode) {
     case 38: return subOver;
     case 39: return adMin;
     default:
-        if (mode != 0)
-            pm_message("no transfer function for code %s, using srcCopy",
-                const_name(transfer_name, mode));
+        pm_message("no transfer function for code %s, using srcCopy",
+                   constName(transfer_name, mode));
         return srcCopy;
     }
 }
@@ -1565,6 +1590,8 @@ doSameSize(transfer_func           trf,
 
    'src' has the same format as the 'bytes' member of struct Raster.
    'srcwid' is the size in bytes of each row, like raster.rowSize.
+   Note that there may be padding in there; there isn't necessarily
+   'srcwid' bytes of information in a row.
 
    We use only the first 'ysize' rows and only the first 'xsize'
    pixels of each row.
@@ -1746,10 +1773,9 @@ doBlit(struct Rect       const srcRect,
        int               const pixSize,
        int               const dstwid,
        struct RGBColor * const color_map,
-       int               const mode) {
+       unsigned int      const mode) {
 /*----------------------------------------------------------------------------
-   Transfer some pixels from 'srcplane' to 'canvasPlanes', applying the
-   transfer function 'trf'.
+   Transfer some pixels from 'srcplane' to 'canvasPlanes'.
 
    'srcplane' contains the rectangle 'srcBounds' of the image.
    'canvasPlanes' contains the rectangle 'dstRect' of the image.
@@ -1765,6 +1791,9 @@ doBlit(struct Rect       const srcRect,
     struct RgbPlanes dst;
     int dstoff;
     transfer_func trf;
+        /* A transfer function to use as we transfer the pixels.
+           NULL for none.
+        */
 
     if (verbose) {
         dumpRect("copying from:", srcRect);
@@ -1801,7 +1830,7 @@ doBlit(struct Rect       const srcRect,
     if ((mode & ~64) == 0)
         trf = NULL;    /* optimized srcCopy */
     else
-        trf = transfer(mode & ~64);
+        trf = transferFunctionForMode(mode & ~64);
 
     if (!rectsamesize(srcRect, dstRect))
         doDiffSize(srcRect, dstRect, pixSize,
@@ -1818,7 +1847,7 @@ doBlit(struct Rect       const srcRect,
 
 
 
-static int
+static void
 blit(struct Rect       const srcRect,
      struct Rect       const srcBounds,
      struct Raster     const srcplane,
@@ -1829,7 +1858,7 @@ blit(struct Rect       const srcRect,
      struct Rect       const dstBounds,
      int               const dstwid,
      struct RGBColor * const color_map,
-     int               const mode) {
+     unsigned int      const mode) {
 /*----------------------------------------------------------------------------
    'srcplane' contains the rectangle 'srcBounds' of the image.
 
@@ -1838,19 +1867,8 @@ blit(struct Rect       const srcRect,
    if 'blitListP' is non-null, we don't draw anything on 'canvasP'; instead,
    we add to the list *blitlistP a description of what needs to be drawn.
 -----------------------------------------------------------------------------*/
-
-    /* I can't tell what the result value of this function is supposed to mean,
-       but I found several return statements that did not set it to anything,
-       and several calls that examine it.  I'm guessing that "1" is the
-       appropriate thing to return in those cases, so I made it so.
-       -Bryan 00.03.02
-    */
-
-    int retval;
-
-    if (ps_text)
-        retval = 1;
-    else {
+    if (ps_text) {
+    } else {
         /* Almost got it.  Clip source rect with source bounds.
            clip dest rect with dest bounds.
         */
@@ -1864,17 +1882,12 @@ blit(struct Rect       const srcRect,
             addBlitList(blitListP,
                         clipsrc, srcBounds, srcplane, pixSize,
                         clipdst, color_map, mode);
-
-            retval = 0;
         } else {
             doBlit(clipsrc, clipdst,
                    srcBounds, srcplane, dstBounds, canvasP->planes,
                    pixSize, dstwid, color_map, mode);
-
-            retval = 1;
         }
     }
-    return retval;
 }
 
 
@@ -2475,13 +2488,15 @@ reportValidateCompressedLineLen(unsigned int const row,
                                 unsigned int const linelen,
                                 unsigned int const rowSize) {
 /*----------------------------------------------------------------------------
-   'row' is a row number in the raster.
+  Report the line length and fail the program if it is obviously wrong.
 
-   'linelen' is the number of bytes of PICT that the PICT says hold the
-   compressed version of that row.
+ 'row' is a row number in the raster.
 
-   'rowSize' is the number of bytes we expect the uncompressed line to
-   be (includes pad pixels on the right).
+ 'linelen' is the number of bytes of PICT that the PICT says hold the
+ compressed version of that row.
+
+ 'rowSize' is the number of bytes we expect the uncompressed line to
+ be (includes pad pixels on the right).
 -----------------------------------------------------------------------------*/
     if (verbose > 1)
         pm_message("Row %u: %u-byte compressed line", row, linelen);
@@ -2687,13 +2702,13 @@ interpretCompressedLine(unsigned char * const linebuf,
                         unsigned int    const rowSize,
                         unsigned int    const bitsPerPixel) {
 /*----------------------------------------------------------------------------
-   linebuf[] contains 'linelen' bytes from the PICT image that represents
-   one row of the image, in compressed format.  Return the
-   uncompressed pixels of that row as rowRaster[].
+   linebuf[] contains 'linelen' bytes from the PICT image that represents one
+   row of the image, in compressed format.  Return the uncompressed pixels of
+   that row as rowRaster[].
 
-   rowRaster[] has 'rowSize' bytes of space.  Caller ensures that
-   linebuf[] does not contain more pixels than that, unless the PICT
-   image from which it comes is corrupt.
+   rowRaster[] has 'rowSize' bytes of space.  Caller ensures that linebuf[]
+   does not contain more pixels than that, unless the PICT image from which it
+   comes is corrupt.
 -----------------------------------------------------------------------------*/
     unsigned int lineCursor;
         /* Cursor into linebuf[] -- the compressed data */
@@ -2757,7 +2772,7 @@ unpackCompressedBits(FILE *          const ifP,
                      unsigned int    const rowBytes,
                      unsigned int    const bitsPerPixel) {
 /*----------------------------------------------------------------------------
-   Read the raster on file *ifP and place it in 'raster'.
+   Set the raster bytes of 'raster' with bytes read from *ifP.
 
    The data in the file is compressed with run length encoding and
    possibly packed multiple pixels per byte as well.
@@ -3041,9 +3056,9 @@ PnMode(FILE *          const ifP,
         pen_mode -= 8;
     if (verbose)
         pm_message("pen transfer mode = %s",
-            const_name(transfer_name, pen_mode));
+            constName(transfer_name, pen_mode));
 
-    pen_trf = transfer(pen_mode);
+    pen_trf = transferFunctionForMode(pen_mode);
 }
 
 
@@ -3656,10 +3671,10 @@ TxMode(FILE *          const ifP,
         text_mode -= 8;
     if (verbose)
         pm_message("text transfer mode = %s",
-            const_name(transfer_name, text_mode));
+            constName(transfer_name, text_mode));
 
     /* ignore the text mask bit 'cause we don't handle it yet */
-    text_trf = transfer(text_mode & ~64);
+    text_trf = transferFunctionForMode(text_mode & ~64);
 }
 
 
@@ -3675,7 +3690,7 @@ TxFont(FILE *          const ifP,
     text_font = readWord(ifP);
 
     if (verbose)
-        pm_message("text font %s", const_name(font_name, text_font));
+        pm_message("text font %s", constName(font_name, text_font));
 }
 
 
@@ -4032,7 +4047,7 @@ directBits(FILE *          const ifP,
 
     mode = readWord(ifP);
     if (verbose)
-        pm_message("transfer mode = %s", const_name(transfer_name, mode));
+        pm_message("transfer mode = %s", constName(transfer_name, mode));
 
     if (skipRegion)
         skipPolyOrRegion(ifP, canvasP, blitListP, pictVersion);
@@ -4115,7 +4130,7 @@ doPixmap(FILE *          const ifP,
     mode = readWord(ifP);
 
     if (verbose)
-        pm_message("transfer mode = %s", const_name(transfer_name, mode));
+        pm_message("transfer mode = %s", constName(transfer_name, mode));
 
     if (is_region)
         skipPolyOrRegion(ifP, canvasP, blitListP, version);
@@ -4161,7 +4176,7 @@ doBitmap(FILE *          const ifP,
     readRect(ifP, &dstRect);
     mode = readWord(ifP);
     if (verbose)
-        pm_message("transfer mode = %s", const_name(transfer_name, mode));
+        pm_message("transfer mode = %s", constName(transfer_name, mode));
 
     if (is_region)
         skipPolyOrRegion(ifP, canvasP, blitListP, version);
@@ -4500,9 +4515,9 @@ interpretPict(FILE *  const ifP,
         pen_pat.pix[i] = bkpat.pix[i] = fillpat.pix[i] = 1;
     pen_width = pen_height = 1;
     pen_mode = 0; /* srcCopy */
-    pen_trf = transfer(pen_mode);
+    pen_trf = transferFunctionForMode(pen_mode);
     text_mode = 0; /* srcCopy */
-    text_trf = transfer(text_mode);
+    text_trf = transferFunctionForMode(text_mode);
 
     if (!noheader) {
         stage = "Reading 512 byte header";
