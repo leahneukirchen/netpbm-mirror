@@ -1393,7 +1393,7 @@ doDiffSize(struct Rect       const srcRect,
         }
     } break;
     case 32: {
-        unsigned int const planeSize = srcwid / 4;
+        unsigned int const planeSize = rectwidth(&srcRect);
         unsigned int row;
 
         for (row = 0; row < rectheight(&srcRect); ++row) {
@@ -1520,7 +1520,7 @@ doSameSize(transfer_func           trf,
         }
     } break;
     case 32: {
-        unsigned int const planeSize = srcwid / 4;
+        unsigned int const planeSize = xsize;
         unsigned int rowNumber;
 
         for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
@@ -1605,7 +1605,7 @@ blitIdempotent(unsigned int          const pixSize,
         }
     } break;
     case 32: {
-        unsigned int const planeSize = srcwid / 4;
+        unsigned int const planeSize = xsize;
         unsigned int rowNumber;
 
         for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
