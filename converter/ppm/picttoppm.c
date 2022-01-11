@@ -1596,11 +1596,14 @@ doSameSize8bpp(transfer_func           trf,
             unsigned int const dstCursor = dstRowCurs + colNumber;
             unsigned int const colorIndex = srcrow[colNumber];
 
-            struct RGBColor dstColor;
+            if (trf) {
+                struct RGBColor dstColor;
 
-            getRgb(dst, dstCursor, &dstColor);
-            (*trf)(&colorMap[colorIndex], &dstColor);
-            putRgb(dstColor, dstCursor, dst);
+                getRgb(dst, dstCursor, &dstColor);
+                (*trf)(&colorMap[colorIndex], &dstColor);
+                putRgb(dstColor, dstCursor, dst);
+            } else
+                putRgb(colorMap[colorIndex], dstCursor, dst);
         }
     }
 }
@@ -1627,16 +1630,20 @@ doSameSize16bpp(transfer_func           trf,
             unsigned int const dstCursor = dstRowCurs + colNumber;
             struct RGBColor const srcColor = decode16(&row[colNumber*2]);
 
-            struct RGBColor dstColor;
             struct RGBColor scaledSrcColor;
 
             scaledSrcColor.red = srcColor.red << 11;
             scaledSrcColor.grn = srcColor.grn << 11;
             scaledSrcColor.blu = srcColor.blu << 11;
 
-            getRgb(dst, dstCursor, &dstColor);
-            (*trf)(&scaledSrcColor, &dstColor);
-            putRgb(dstColor, dstCursor, dst);
+            if (trf) {
+                struct RGBColor dstColor;
+
+                getRgb(dst, dstCursor, &dstColor);
+                (*trf)(&scaledSrcColor, &dstColor);
+                putRgb(dstColor, dstCursor, dst);
+            } else
+                putRgb(scaledSrcColor, dstCursor, dst);
         }
     }
 }
@@ -1668,15 +1675,20 @@ doSameSize32bpp(transfer_func           trf,
         for (colNumber = 0; colNumber < xsize; ++colNumber) {
             unsigned int const dstCursor = dstRowCurs + colNumber;
 
-            struct RGBColor srcColor, dstColor;
+            struct RGBColor srcColor;
 
             srcColor.red = redPlane[colNumber] << 8;
             srcColor.grn = grnPlane[colNumber] << 8;
             srcColor.blu = bluPlane[colNumber] << 8;
 
-            getRgb(dst, dstCursor, &dstColor);
-            (*trf)(&srcColor, &dstColor);
-            putRgb(dstColor, dstCursor, dst);
+            if (trf) {
+                struct RGBColor dstColor;
+
+                getRgb(dst, dstCursor, &dstColor);
+                (*trf)(&srcColor, &dstColor);
+                putRgb(dstColor, dstCursor, dst);
+            } else
+                putRgb(srcColor, dstCursor, dst);
         }
     }
 }
@@ -1735,87 +1747,6 @@ doSameSize(transfer_func           trf,
 
 
 static void
-blitIdempotent(unsigned int          const pixSize,
-               struct Rect           const srcRect,
-               unsigned char *       const src,
-               unsigned int          const srcwid,
-               struct RGBColor *     const colorMap,
-               struct RgbPlanes      const dst,
-               unsigned int          const dstwid) {
-/*----------------------------------------------------------------------------
-  This is the same as doSameSize(), except optimized for the case that
-  the transfer function is idempotent (i.e. it's just a straight copy).
-  The original author's comments suggest that this optimization isn't
-  all that important -- that he just wrote this first and instead of
-  expanding it to handle arbitrary transfer functions, added functions
-  for that.
------------------------------------------------------------------------------*/
-    unsigned int const xsize = rectwidth(&srcRect);
-    unsigned int const ysize = rectheight(&srcRect);
-
-    switch (pixSize) {
-    case 8: {
-        unsigned int rowNumber;
-
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const srcrow = &src[rowNumber * srcwid];
-            unsigned int const dstRowCurs = rowNumber * dstwid;
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const dstCursor = dstRowCurs + colNumber;
-                struct RGBColor * const ct = colorMap + srcrow[colNumber];
-                dst.red[dstCursor] = ct->red;
-                dst.grn[dstCursor] = ct->grn;
-                dst.blu[dstCursor] = ct->blu;
-            }
-        }
-    } break;
-    case 16: {
-        unsigned int rowNumber;
-
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const srcrow = &src[rowNumber * srcwid];
-            unsigned int const dstRowCurs = rowNumber * dstwid;
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const dstCursor = dstRowCurs + colNumber;
-                struct RGBColor const srcColor =
-                    decode16(&srcrow[colNumber * 2]);
-                dst.red[dstCursor] = srcColor.red << 11;
-                dst.grn[dstCursor] = srcColor.grn << 11;
-                dst.blu[dstCursor] = srcColor.blu << 11;
-            }
-        }
-    } break;
-    case 32: {
-        unsigned int const planeSize = srcwid / 4;
-        unsigned int rowNumber;
-
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const srcrow = &src[rowNumber * srcwid];
-            unsigned char * const redPlane = &srcrow[planeSize * 0];
-            unsigned char * const grnPlane = &srcrow[planeSize * 1];
-            unsigned char * const bluPlane = &srcrow[planeSize * 2];
-            unsigned int const dstRowCurs = rowNumber * dstwid;
-
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const dstCursor = dstRowCurs + colNumber;
-                dst.red[dstCursor] = redPlane[colNumber] << 8;
-                dst.grn[dstCursor] = grnPlane[colNumber] << 8;
-                dst.blu[dstCursor] = bluPlane[colNumber] << 8;
-            }
-        }
-    } break;
-    default:
-        pm_error("INTERNAL ERROR: invalid bits per pixel (%u) in "
-                 "blitIdempotent()", pixSize);
-    }
-}
-
-
-
-static void
 doBlit(struct Rect       const srcRect,
        struct Rect       const dstRect,
        struct Rect       const srcBounds,
@@ -1824,7 +1755,7 @@ doBlit(struct Rect       const srcRect,
        struct RgbPlanes  const canvasPlanes,
        int               const pixSize,
        int               const dstwid,
-       struct RGBColor * const color_map,
+       struct RGBColor * const colorMap,
        unsigned int      const mode) {
 /*----------------------------------------------------------------------------
    Transfer some pixels from 'srcplane' to 'canvasPlanes'.
@@ -1886,14 +1817,10 @@ doBlit(struct Rect       const srcRect,
 
     if (!rectsamesize(srcRect, dstRect))
         doDiffSize(srcRect, dstRect, pixSize,
-                   trf, color_map, src, srcplane.rowSize, dst);
+                   trf, colorMap, src, srcplane.rowSize, dst);
     else {
-        if (trf == NULL)
-            blitIdempotent(pixSize, srcRect, src, srcplane.rowSize,
-                           color_map, dst, dstwid);
-        else
-            doSameSize(trf, pixSize, srcRect, src, srcplane.rowSize,
-                       color_map, dst, dstwid);
+        doSameSize(trf, pixSize, srcRect, src, srcplane.rowSize,
+                   colorMap, dst, dstwid);
     }
 }
 
