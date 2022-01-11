@@ -1576,12 +1576,120 @@ putRgb(struct RGBColor  const rgb,
 
 
 static void
+doSameSize8bpp(transfer_func           trf,
+               unsigned int      const xsize,
+               unsigned int      const ysize,
+               unsigned char *   const src,
+               unsigned int      const srcwid,
+               struct RGBColor * const colorMap,
+               struct RgbPlanes  const dst,
+               unsigned int      const dstwid) {
+
+    unsigned int rowNumber;
+
+    for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
+        unsigned char * const srcrow = &src[rowNumber * srcwid];
+        unsigned int const dstRowCurs = rowNumber * dstwid;
+
+        unsigned int colNumber;
+        for (colNumber = 0; colNumber < xsize; ++colNumber) {
+            unsigned int const dstCursor = dstRowCurs + colNumber;
+            unsigned int const colorIndex = srcrow[colNumber];
+
+            struct RGBColor dstColor;
+
+            getRgb(dst, dstCursor, &dstColor);
+            (*trf)(&colorMap[colorIndex], &dstColor);
+            putRgb(dstColor, dstCursor, dst);
+        }
+    }
+}
+
+
+
+static void
+doSameSize16bpp(transfer_func           trf,
+                unsigned int      const xsize,
+                unsigned int      const ysize,
+                unsigned char *   const src,
+                unsigned int      const srcwid,
+                struct RgbPlanes  const dst,
+                unsigned int      const dstwid) {
+
+    unsigned int rowNumber;
+
+    for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
+        unsigned char * const row = &src[rowNumber * srcwid];
+        unsigned int const dstRowCurs = rowNumber * dstwid;
+
+        unsigned int colNumber;
+        for (colNumber = 0; colNumber < xsize; ++colNumber) {
+            unsigned int const dstCursor = dstRowCurs + colNumber;
+            struct RGBColor const srcColor = decode16(&row[colNumber*2]);
+
+            struct RGBColor dstColor;
+            struct RGBColor scaledSrcColor;
+
+            scaledSrcColor.red = srcColor.red << 11;
+            scaledSrcColor.grn = srcColor.grn << 11;
+            scaledSrcColor.blu = srcColor.blu << 11;
+
+            getRgb(dst, dstCursor, &dstColor);
+            (*trf)(&scaledSrcColor, &dstColor);
+            putRgb(dstColor, dstCursor, dst);
+        }
+    }
+}
+
+
+
+static void
+doSameSize32bpp(transfer_func           trf,
+                unsigned int      const xsize,
+                unsigned int      const ysize,
+                unsigned char *   const src,
+                unsigned int      const srcwid,
+                struct RgbPlanes  const dst,
+                unsigned int      const dstwid) {
+
+    unsigned int const planeSize = srcwid / 4;
+
+    unsigned int rowNumber;
+
+    for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
+        unsigned char * const row = &src[rowNumber * srcwid];
+        unsigned char * const redPlane = &row[planeSize * 0];
+        unsigned char * const grnPlane = &row[planeSize * 1];
+        unsigned char * const bluPlane = &row[planeSize * 2];
+        unsigned int const dstRowCurs = rowNumber * dstwid;
+
+        unsigned int colNumber;
+
+        for (colNumber = 0; colNumber < xsize; ++colNumber) {
+            unsigned int const dstCursor = dstRowCurs + colNumber;
+
+            struct RGBColor srcColor, dstColor;
+
+            srcColor.red = redPlane[colNumber] << 8;
+            srcColor.grn = grnPlane[colNumber] << 8;
+            srcColor.blu = bluPlane[colNumber] << 8;
+
+            getRgb(dst, dstCursor, &dstColor);
+            (*trf)(&srcColor, &dstColor);
+            putRgb(dstColor, dstCursor, dst);
+        }
+    }
+}
+
+
+
+static void
 doSameSize(transfer_func           trf,
            int               const pixSize,
            struct Rect       const srcRect,
            unsigned char *   const src,
            unsigned int      const srcwid,
-           struct RGBColor * const color_map,
+           struct RGBColor * const colorMap,
            struct RgbPlanes  const dst,
            unsigned int      const dstwid) {
 /*----------------------------------------------------------------------------
@@ -1610,71 +1718,15 @@ doSameSize(transfer_func           trf,
     unsigned int const ysize = rectheight(&srcRect);
 
     switch (pixSize) {
-    case 8: {
-        unsigned int rowNumber;
-
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const srcrow = &src[rowNumber * srcwid];
-            unsigned int const dstRowCurs = rowNumber * dstwid;
-
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const dstCursor = dstRowCurs + colNumber;
-                unsigned int const colorIndex = srcrow[colNumber];
-                struct RGBColor dstColor;
-                getRgb(dst, dstCursor, &dstColor);
-                (*trf)(&color_map[colorIndex], &dstColor);
-                putRgb(dstColor, dstCursor, dst);
-            }
-        }
-    } break;
-    case 16: {
-        unsigned int rowNumber;
-
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned int const dstRowCurs = rowNumber * dstwid;
-
-            unsigned int colNumber;
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const dstCursor = dstRowCurs + colNumber;
-                struct RGBColor const srcColor = decode16(&row[colNumber*2]);
-                struct RGBColor dstColor;
-                struct RGBColor scaledSrcColor;
-                scaledSrcColor.red = srcColor.red << 11;
-                scaledSrcColor.grn = srcColor.grn << 11;
-                scaledSrcColor.blu = srcColor.blu << 11;
-                getRgb(dst, dstCursor, &dstColor);
-                (*trf)(&scaledSrcColor, &dstColor);
-                putRgb(dstColor, dstCursor, dst);
-            }
-        }
-    } break;
-    case 32: {
-        unsigned int const planeSize = srcwid / 4;
-        unsigned int rowNumber;
-
-        for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
-            unsigned char * const row = &src[rowNumber * srcwid];
-            unsigned char * const redPlane = &row[planeSize * 0];
-            unsigned char * const grnPlane = &row[planeSize * 1];
-            unsigned char * const bluPlane = &row[planeSize * 2];
-            unsigned int const dstRowCurs = rowNumber * dstwid;
-
-            unsigned int colNumber;
-
-            for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                unsigned int const dstCursor = dstRowCurs + colNumber;
-                struct RGBColor srcColor, dstColor;
-                getRgb(dst, dstCursor, &dstColor);
-                srcColor.red = redPlane[colNumber] << 8;
-                srcColor.grn = grnPlane[colNumber] << 8;
-                srcColor.blu = bluPlane[colNumber] << 8;
-                (*trf)(&srcColor, &dstColor);
-                putRgb(dstColor, dstCursor, dst);
-            }
-        }
-    } break;
+    case 8:
+        doSameSize8bpp(trf, xsize, ysize, src, srcwid, colorMap, dst, dstwid);
+        break;
+    case 16:
+        doSameSize16bpp(trf, xsize, ysize, src, srcwid, dst, dstwid);
+        break;
+    case 32:
+        doSameSize32bpp(trf, xsize, ysize, src, srcwid, dst, dstwid);
+        break;
     default:
         pm_error("Impossible value of pixSize: %u", pixSize);
     }
