@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
+              picttoppm: Fix incorrect output for 32 bit per pixel images
+              that have only 3 planes.  Broken in Netpbm 10.34 (June 2006).
+
               pamendian: fix bogus "sample exceeds maxval" failure.
               Introduced in Netpbm 10.66 (March 2014).
 

@@ -1522,7 +1522,7 @@ doDiffSize(struct Rect       const srcRect,
         }
     } break;
     case 32: {
-        unsigned int const planeSize = srcwid / 4;
+        unsigned int const planeSize = rectwidth(&srcRect);
         unsigned int row;
 
         for (row = 0; row < rectheight(&srcRect); ++row) {
@@ -1659,7 +1659,7 @@ doSameSize32bpp(transfer_func           trf,
                 struct RgbPlanes  const dst,
                 unsigned int      const dstwid) {
 
-    unsigned int const planeSize = srcwid / 4;
+    unsigned int const planeSize = xsize;
 
     unsigned int rowNumber;
 
