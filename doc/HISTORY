@@ -4,7 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.98.00
+22.01.11 BJH  Release 10.97.02
+
+              ppmtoilbm: Fix wild memory references and hangs with -map .
+              Introduced in Netpbm 9.12 (March 2001).
+
+22.01.09 BJH  Release 10.97.01
  
               picttoppm: Fix incorrect output for 32 bit per pixel images
               that have only 3 planes.  Broken in Netpbm 10.34 (June 2006).
