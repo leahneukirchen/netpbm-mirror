@@ -12,6 +12,9 @@ not yet  BJH  Release 10.98.00
               pamendian: fix bogus "sample exceeds maxval" failure.
               Introduced in Netpbm 10.66 (March 2014).
 
+              ppmtoilbm: Fix wild memory references and hangs with -map .
+              Introduced in Netpbm 9.12 (March 2001).
+
 21.12.27 BJH  Release 10.97.00
 
               Add pbnnoise.
