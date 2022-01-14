@@ -111,7 +111,7 @@ parseCommandLine(int argc,
     if (!verboseSpec)
         cmdlineP->verbose = 0;
 
-    if (argc-1 < 0)
+    if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
