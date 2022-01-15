@@ -117,13 +117,13 @@
 static unsigned char *coded_rowbuf; /* buffer for uncompressed scanline */
 static unsigned char *compr_rowbuf; /* buffer for compressed scanline */
 static pixel **pixels;  /* PPM image (NULL for row-by-row operation) */
-static pixel *pixrow;   
+static pixel *pixrow;
     /* current row in PPM image (pointer into pixels array, or buffer
-       for row-by-row operation) 
+       for row-by-row operation)
     */
 
 static long viewportmodes = 0;
-static int slicesize = 1; 
+static int slicesize = 1;
     /* rows per slice for multipalette images - NOT USED */
 
 static unsigned char compmethod = DEF_COMPRESSION;   /* default compression */
@@ -154,7 +154,7 @@ static bodyblock *cur_block = &firstblock;
 static char *anno_chunk, *auth_chunk, *name_chunk, *text_chunk, *copyr_chunk;
 
 /* flags */
-static short compr_force = 0;   
+static short compr_force = 0;
     /* force compressed output, even if the image got larger  - NOT USED */
 static short gen_camg = 0;      /* write CAMG chunk */
 
@@ -358,7 +358,7 @@ writeCmap(pixel * const colormap,
     pm_writebiglong(stdout, cmapsize);
     if( maxval != MAXCOLVAL ) {
         int *table;
-        pm_message("maxval is not %d - automatically rescaling colors", 
+        pm_message("maxval is not %d - automatically rescaling colors",
                    MAXCOLVAL);
         table = makeValTable(maxval, MAXCOLVAL);
         for( i = 0; i < colors; i++ ) {
@@ -455,7 +455,7 @@ compressRow(unsigned int const bytes) {
                 &compressedByteCt);
             break;
         default:
-            pm_error("compressRow(): unknown compression method %d", 
+            pm_error("compressRow(): unknown compression method %d",
                      compmethod);
     }
     storeBodyrow(compr_rowbuf, compressedByteCt);
@@ -549,35 +549,35 @@ reportTooManyColors(int         const ifmode,
                     int         const hamplanes,
                     DirectColor const dcol,
                     int         const deepbits) {
-    
+
     int const maxcolors = 1 << maxplanes;
 
     switch( ifmode ) {
     case MODE_HAM:
         pm_message("too many colors for %d planes - "
-                   "proceeding to write a HAM%d file", 
+                   "proceeding to write a HAM%d file",
                    maxplanes, hamplanes);
-        pm_message("if you want a non-HAM file, try doing a 'pnmquant %d'", 
+        pm_message("if you want a non-HAM file, try doing a 'pnmquant %d'",
                    maxcolors);
         break;
     case MODE_DCOL:
         pm_message("too many colors for %d planes - "
-                   "proceeding to write a %d:%d:%d direct color ILBM", 
+                   "proceeding to write a %d:%d:%d direct color ILBM",
                    maxplanes, dcol.r, dcol.g, dcol.b);
         pm_message("if you want a non-direct color file, "
                    "try doing a 'pnmquant %d'", maxcolors);
         break;
     case MODE_DEEP:
         pm_message("too many colors for %d planes - "
-                   "proceeding to write a %d-bit \'deep\' ILBM", 
+                   "proceeding to write a %d-bit \'deep\' ILBM",
                    maxplanes, deepbits*3);
         pm_message("if you want a non-deep file, "
-                   "try doing a 'pnmquant %d'", 
+                   "try doing a 'pnmquant %d'",
                    maxcolors);
         break;
     default:
         pm_error("too many colors for %d planes - "
-                 "try doing a 'pnmquant %d'", 
+                 "try doing a 'pnmquant %d'",
                  maxplanes, maxcolors);
         break;
     }
@@ -597,7 +597,7 @@ getIntVal(const char * const string,
         pm_error("option \"%s\" needs integer argument", option);
 
     if (val < bot || val > top)
-        pm_error("option \"%s\" argument value out of range (%d..%d)", 
+        pm_error("option \"%s\" argument value out of range (%d..%d)",
                  option, bot, top);
 
     return val;
@@ -611,10 +611,10 @@ getComprMethod(const char * const string) {
     int retval;
     if( pm_keymatch(string, "none", 1) || pm_keymatch(string, "0", 1) )
         retval = cmpNone;
-    else if( pm_keymatch(string, "byterun1", 1) || 
+    else if( pm_keymatch(string, "byterun1", 1) ||
              pm_keymatch(string, "1", 1) )
         retval = cmpByteRun1;
-    else 
+    else
         pm_error("unknown compression method: %s", string);
     return retval;
 }
@@ -629,12 +629,12 @@ getMaskType(const char * const string) {
     if( pm_keymatch(string, "none", 1) || pm_keymatch(string, "0", 1) )
         retval = mskNone;
     else
-    if( pm_keymatch(string, "plane", 1) || 
+    if( pm_keymatch(string, "plane", 1) ||
         pm_keymatch(string, "maskplane", 1) ||
         pm_keymatch(string, "1", 1) )
         retval = mskHasMask;
     else
-    if( pm_keymatch(string, "transparentcolor", 1) || 
+    if( pm_keymatch(string, "transparentcolor", 1) ||
         pm_keymatch(string, "2", 1) )
         retval = mskHasTransparentColor;
     else
@@ -663,7 +663,7 @@ getHammapMode(const char * const string) {
     else
     if( pm_keymatch(string, "rgb5", 4) )
         retval = HAMMODE_RGB5;
-    else 
+    else
         pm_error("unknown HAM colormap selection mode: %s", string);
     return retval;
 }
@@ -724,7 +724,7 @@ hcmp(const void * const a,
     const hentry * const vaP = a;
     const hentry * const vbP = b;
 
-    return(vbP->count - vaP->count);  
+    return(vbP->count - vaP->count);
 }
 
 
@@ -799,17 +799,17 @@ computeHamCmap(int   const cols,
                     if( dist <= maxdist ) {
                         unsigned int sum = hmap[i].count + hmap[col].count;
 
-                        hmap[i].r = ROUNDDIV(hmap[i].r * hmap[i].count + 
+                        hmap[i].r = ROUNDDIV(hmap[i].r * hmap[i].count +
                                              r * hmap[col].count, sum);
-                        hmap[i].g = ROUNDDIV(hmap[i].g * hmap[i].count + 
+                        hmap[i].g = ROUNDDIV(hmap[i].g * hmap[i].count +
                                              g * hmap[col].count, sum);
-                        hmap[i].b = ROUNDDIV(hmap[i].b * hmap[i].count + 
+                        hmap[i].b = ROUNDDIV(hmap[i].b * hmap[i].count +
                                              b * hmap[col].count, sum);
                         hmap[i].count = sum;
 
                         hmap[col] = hmap[i];    /* temp store */
-                        for( tmp = i-1; 
-                             tmp >= 0 && hmap[tmp].count < hmap[col].count; 
+                        for( tmp = i-1;
+                             tmp >= 0 && hmap[tmp].count < hmap[col].count;
                              tmp-- )
                             hmap[tmp+1] = hmap[tmp];
                         hmap[tmp+1] = hmap[col];
@@ -922,15 +922,15 @@ doHamBody(FILE *  const ifP,
                 int ucr, ucg, ucb;  /* unscaled values of colormap entry */
 
                 if(  hammapmode == HAMMODE_GRAY ) {
-                    if( maxval <= 255 ) 
-                        /* Use fast approximation to 
+                    if( maxval <= 255 )
+                        /* Use fast approximation to
                            0.299 r + 0.587 g + 0.114 b. */
                         i = (int)ppm_fastlumin(p);
-                    else 
-                        /* Can't use fast approximation, 
-                           so fall back on floats. 
+                    else
+                        /* Can't use fast approximation,
+                           so fall back on floats.
                         */
-                        i = (int)(PPM_LUMIN(p) + 0.5); 
+                        i = (int)(PPM_LUMIN(p) + 0.5);
                             /* -IUW added '+ 0.5' */
                     i = itoh[i];
                 }
@@ -948,8 +948,8 @@ doHamBody(FILE *  const ifP,
                         }
                     }
                 }
-                ucr = PPM_GETR(colormap[i]); 
-                ucg = PPM_GETG(colormap[i]); 
+                ucr = PPM_GETR(colormap[i]);
+                ucg = PPM_GETG(colormap[i]);
                 ucb = PPM_GETB(colormap[i]);
 
                 if( noprev ) {  /* no previous pixel, must use colormap */
@@ -977,21 +977,21 @@ doHamBody(FILE *  const ifP,
                         (sb - scb)*(sb - scb);
 #endif
 
-                    if( di <= dr && di <= dg && di <= db ) {    
+                    if( di <= dr && di <= dg && di <= db ) {
                         /* prefer colormap lookup */
-                        raw_rowbuf[col] = i; 
+                        raw_rowbuf[col] = i;
                         upr = ucr;  upg = ucg;  upb = ucb;
                         spr = scr;  spg = scg;  spb = scb;
                     }
                     else
                     if( db <= dr && db <= dg ) {
-                        raw_rowbuf[col] = sb + hamcode_blue; 
+                        raw_rowbuf[col] = sb + hamcode_blue;
                         spb = sb;
                         upb = ub;
                     }
                     else
                     if( dr <= dg ) {
-                        raw_rowbuf[col] = sr + hamcode_red;  
+                        raw_rowbuf[col] = sr + hamcode_red;
                         spr = sr;
                         upr = ur;
                     }
@@ -1004,11 +1004,11 @@ doHamBody(FILE *  const ifP,
             }
             else {  /* prefect match in cmap */
                 raw_rowbuf[col] = i;    /* + (HAMCODE_CMAP << colbits) */
-                upr = PPM_GETR(colormap[i]); 
-                upg = PPM_GETG(colormap[i]); 
+                upr = PPM_GETR(colormap[i]);
+                upg = PPM_GETG(colormap[i]);
                 upb = PPM_GETB(colormap[i]);
-                spr = itoh[upr];            
-                spg = itoh[upg];            
+                spr = itoh[upr];
+                spg = itoh[upg];
                 spb = itoh[upb];
             }
         }
@@ -1102,12 +1102,12 @@ ppmToHam(FILE *  const ifP,
             }
             break;
             case HAMMODE_RGB4:
-                colormap = computeHamCmap(cols, rows, maxval, hamcolors, 
+                colormap = computeHamCmap(cols, rows, maxval, hamcolors,
                                           &colors, 4);
                 cmapmaxval = 15;
                 break;
             case HAMMODE_RGB5:
-                colormap = computeHamCmap(cols, rows, maxval, 
+                colormap = computeHamCmap(cols, rows, maxval,
                                           hamcolors, &colors, 5);
                 cmapmaxval = 31;
                 break;
@@ -1118,7 +1118,7 @@ ppmToHam(FILE *  const ifP,
     else {
         hammapmode = HAMMODE_MAPFILE;
         if( colors > hamcolors ) {
-            pm_message("colormap too large - using first %d colors", 
+            pm_message("colormap too large - using first %d colors",
                        hamcolors);
             colors = hamcolors;
         }
@@ -1131,9 +1131,9 @@ ppmToHam(FILE *  const ifP,
         newcmap = ppm_allocrow(colors);
         table = makeValTable(cmapmaxval, maxval);
         for( i = 0; i < colors; i++ )
-            PPM_ASSIGN(newcmap[i], 
-                       table[PPM_GETR(colormap[i])], 
-                       table[PPM_GETG(colormap[i])], 
+            PPM_ASSIGN(newcmap[i],
+                       table[PPM_GETR(colormap[i])],
+                       table[PPM_GETG(colormap[i])],
                        table[PPM_GETB(colormap[i])]);
         free(table);
         ppm_freerow(colormap);
@@ -1147,16 +1147,16 @@ ppmToHam(FILE *  const ifP,
 
     bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
     if( DO_COMPRESS ) {
-        bodysize = doHamBody(ifP, NULL, cols, rows, maxval, 
+        bodysize = doHamBody(ifP, NULL, cols, rows, maxval,
                                hammaxval, nPlanes, colormap, colors);
-        /*bodysize = doHamBody(ifP, NULL, cols, 
+        /*bodysize = doHamBody(ifP, NULL, cols,
           rows, maxval, hammaxval, nPlanes, colbits, nocolor);*/
         if( bodysize > oldsize )
             pm_message("warning - %s compression increases BODY size "
-                       "by %ld%%", 
+                       "by %ld%%",
                        cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
         else
-            pm_message("BODY compression (%s): %ld%%", 
+            pm_message("BODY compression (%s): %ld%%",
                        cmpNAME[compmethod], 100*(oldsize-bodysize)/oldsize);
     }
 
@@ -1184,7 +1184,7 @@ ppmToHam(FILE *  const ifP,
     if( DO_COMPRESS )
         writeBodyRows();
     else
-        doHamBody(ifP, stdout, cols, rows, maxval, hammaxval, 
+        doHamBody(ifP, stdout, cols, rows, maxval, hammaxval,
                   nPlanes, colormap, colors);
 }
 
@@ -1199,7 +1199,7 @@ doDeepBody(FILE * const ifP,
            FILE * const ofP,
            int    const cols,
            int    const rows,
-           pixval const maxval, 
+           pixval const maxval,
            int    const bitspercolor) {
 
     int row, col;
@@ -1215,7 +1215,7 @@ doDeepBody(FILE * const ifP,
 
     newmaxval = pm_bitstomaxval(bitspercolor);
     if( maxval != newmaxval ) {
-        pm_message("maxval is not %d - automatically rescaling colors", 
+        pm_message("maxval is not %d - automatically rescaling colors",
                    newmaxval);
         table = makeValTable(maxval, newmaxval);
     }
@@ -1283,7 +1283,7 @@ ppmToDeep(FILE * const ifP,
             pm_message("warning - %s compression increases BODY size by %ld%%",
                        cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
         else
-            pm_message("BODY compression (%s): %ld%%", 
+            pm_message("BODY compression (%s): %ld%%",
                        cmpNAME[compmethod], 100*(oldsize-bodysize)/oldsize);
     }
 
@@ -1324,7 +1324,7 @@ doDcolBody(FILE *        const ifP,
            FILE *        const ofP,
            int           const cols,
            int           const rows,
-           pixval        const maxval, 
+           pixval        const maxval,
            DirectColor * const dcol) {
 
     int row, col;
@@ -1394,10 +1394,10 @@ ppmToDcol(FILE *        const ifP,
         bodysize = doDcolBody(ifP, NULL, cols, rows, maxval, dcol);
         if( bodysize > oldsize )
             pm_message("warning - %s compression increases BODY size by %ld%%",
-                       cmpNAME[compmethod], 
+                       cmpNAME[compmethod],
                        100*(bodysize-oldsize)/oldsize);
         else
-            pm_message("BODY compression (%s): %ld%%", cmpNAME[compmethod], 
+            pm_message("BODY compression (%s): %ld%%", cmpNAME[compmethod],
                        100*(oldsize-bodysize)/oldsize);
     }
 
@@ -1470,16 +1470,16 @@ doStdBody(FILE *  const ifP,
         for( col = 0; col < cols; ++col ) {
             pP = &prow[col];
 
-            if( maskmethod == mskHasTransparentColor && 
+            if( maskmethod == mskHasTransparentColor &&
                 maskrow[col] == PBM_WHITE )
                 i = transpIndex;
             else {
                 /* Check hash table to see if we have already matched
-                   this color. 
+                   this color.
                 */
                 i = ppm_lookupcolor(cht, pP);
                 if( i == -1 ) {
-                    i = ppm_findclosestcolor(colormap, colors, pP);    
+                    i = ppm_findclosestcolor(colormap, colors, pP);
                         /* No; search colormap for closest match. */
                     if( usehash ) {
                         if( ppm_addtocolorhash(cht, pP, i) < 0 ) {
@@ -1515,7 +1515,7 @@ ppmToStd(FILE *  const ifP,
          int     const maxval,
          pixel * const colormapArg,
          int     const colorsArg,
-         int     const cmapmaxvalArg, 
+         int     const cmapmaxvalArg,
          int     const maxcolors,
          int     const nPlanes) {
 
@@ -1531,7 +1531,7 @@ ppmToStd(FILE *  const ifP,
 
     if( maskmethod == mskHasTransparentColor ) {
         if( transpColor ) {
-            transpIndex = 
+            transpIndex =
                 ppm_addtocolorrow(colormap, &colors, maxcolors, transpColor);
         }
         else
@@ -1553,9 +1553,9 @@ ppmToStd(FILE *  const ifP,
         newcmap = ppm_allocrow(colors);
         table = makeValTable(cmapmaxval, maxval);
         for (i = 0; i < colors; ++i)
-            PPM_ASSIGN(newcmap[i], 
-                       table[PPM_GETR(colormap[i])], 
-                       table[PPM_GETG(colormap[i])], 
+            PPM_ASSIGN(newcmap[i],
+                       table[PPM_GETR(colormap[i])],
+                       table[PPM_GETG(colormap[i])],
                        table[PPM_GETB(colormap[i])]);
         free(table);
         colormap = newcmap;
@@ -1565,13 +1565,13 @@ ppmToStd(FILE *  const ifP,
 
     bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
     if( DO_COMPRESS ) {
-        bodysize = doStdBody(ifP, NULL, cols, rows, maxval, colormap, 
+        bodysize = doStdBody(ifP, NULL, cols, rows, maxval, colormap,
                              colors, nPlanes);
         if( bodysize > oldsize )
             pm_message("warning - %s compression increases BODY size by %ld%%",
                        cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
         else
-            pm_message("BODY compression (%s): %ld%%", 
+            pm_message("BODY compression (%s): %ld%%",
                        cmpNAME[compmethod], 100*(oldsize-bodysize)/oldsize);
     }
 
@@ -1640,7 +1640,7 @@ ppmToRgb8(FILE * const ifP,
         for( col1 = 0; col1 < cols; col1 = col2 ) {
             col2 = col1 + 1;
             if( maskrow ) {
-                while( col2 < cols && PPM_EQUAL(pP[col1], pP[col2]) && 
+                while( col2 < cols && PPM_EQUAL(pP[col1], pP[col2]) &&
                        maskrow[col1] == maskrow[col2] )
                     col2++;
             }
@@ -1731,7 +1731,7 @@ ppmToRgbn(FILE * const ifP,
         for( col1 = 0; col1 < cols; col1 = col2 ) {
             col2 = col1 + 1;
             if( maskrow ) {
-                while( col2 < cols && PPM_EQUAL(pP[col1], pP[col2]) && 
+                while( col2 < cols && PPM_EQUAL(pP[col1], pP[col2]) &&
                        maskrow[col1] == maskrow[col2] )
                     col2++;
             }
@@ -1763,14 +1763,14 @@ ppmToRgbn(FILE * const ifP,
                 else {
                     ++compr_len;                  /* 3 bit repeat count = 0 */
                     if( count <= 255 )
-                        compr_row[compr_len++] = (unsigned char)count;  
+                        compr_row[compr_len++] = (unsigned char)count;
                             /* byte repeat count */
                     else {
-                        compr_row[compr_len++] = (unsigned char)0;   
+                        compr_row[compr_len++] = (unsigned char)0;
                             /* byte repeat count = 0 */
-                        compr_row[compr_len++] = (count >> 8) & 0xff; 
+                        compr_row[compr_len++] = (count >> 8) & 0xff;
                             /* word repeat count MSB */
-                        compr_row[compr_len++] = count & 0xff;    
+                        compr_row[compr_len++] = count & 0xff;
                             /* word repeat count LSB */
                     }
                 }
@@ -1884,7 +1884,7 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-rgbn", 5) )
             forcemode = MODE_RGBN;
         else
-        if( pm_keymatch(argv[argn], "-maxplanes", 4) || 
+        if( pm_keymatch(argv[argn], "-maxplanes", 4) ||
             pm_keymatch(argv[argn], "-mp", 3) ) {
             if( ++argn >= argc )
                 pm_error("-maxplanes requires a value");
@@ -1892,7 +1892,7 @@ main(int argc, char ** argv) {
             fixplanes = 0;
         }
         else
-        if( pm_keymatch(argv[argn], "-fixplanes", 4) || 
+        if( pm_keymatch(argv[argn], "-fixplanes", 4) ||
             pm_keymatch(argv[argn], "-fp", 3) ) {
             if( ++argn >= argc )
                 pm_error("-fixplanes requires a value");
@@ -1917,7 +1917,7 @@ main(int argc, char ** argv) {
                     break;
                 default:
                     pm_error("This program does not know how to handle "
-                             "masking method '%s'", 
+                             "masking method '%s'",
                              mskNAME[maskmethod]);
             }
         }
@@ -1996,7 +1996,7 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-hambits", 5) ) {
             if( ++argn >= argc )
                 pm_usage("-hambits requires a value");
-            hamplanes = 
+            hamplanes =
                 getIntVal(argv[argn], argv[argn-1], 3, HAMMAXPLANES-2) +2;
         }
         else
@@ -2100,7 +2100,7 @@ main(int argc, char ** argv) {
                 forcemode = MODE_NONE;
         }
         else
-        if( pm_keymatch(argv[argn], "-dcbits", 4) || 
+        if( pm_keymatch(argv[argn], "-dcbits", 4) ||
             pm_keymatch(argv[argn], "-dcplanes", 4) ) {
             if( argc - argn < 4 )
                 pm_error("-dcbits requires 4 arguments");
@@ -2136,7 +2136,7 @@ main(int argc, char ** argv) {
             compmethod = getComprMethod(argv[argn]);
         }
         else
-        if( pm_keymatch(argv[argn], "-nofloyd", 5) || 
+        if( pm_keymatch(argv[argn], "-nofloyd", 5) ||
             pm_keymatch(argv[argn], "-nofs", 5) )
 	    defunctArgs++;
         else
@@ -2208,10 +2208,10 @@ main(int argc, char ** argv) {
         case MODE_CMAP:
             /* Figure out the colormap. */
             pm_message("computing colormap...");
-            colormap = ppm_mapfiletocolorrow(ifP, MAXCOLORS, &colors, 
+            colormap = ppm_mapfiletocolorrow(ifP, MAXCOLORS, &colors,
                                              &cmapmaxval);
             if (colormap == NULL)
-                pm_error("too many colors - try doing a 'pnmquant %d'", 
+                pm_error("too many colors - try doing a 'pnmquant %d'",
                          MAXCOLORS);
             pm_message("%d colors found", colors);
             break;
@@ -2219,11 +2219,11 @@ main(int argc, char ** argv) {
             if (mapfile)
                 initRead(ifP, &cols, &rows, &maxval, &format, 0);
             else {
-                initRead(ifP, &cols, &rows, &maxval, &format, 1);  
+                initRead(ifP, &cols, &rows, &maxval, &format, 1);
                     /* read file into memory */
                 pm_message("computing colormap...");
-                colormap = 
-                    ppm_computecolorrow(pixels, cols, rows, MAXCOLORS, 
+                colormap =
+                    ppm_computecolorrow(pixels, cols, rows, MAXCOLORS,
                                         &colors);
                 if (colormap) {
                     cmapmaxval = maxval;
@@ -2244,7 +2244,7 @@ main(int argc, char ** argv) {
 
         pm_message("reading colormap file...");
         mapfp = pm_openr(mapfile);
-        colormap = ppm_mapfiletocolorrow(mapfp, MAXCOLORS, &colors, 
+        colormap = ppm_mapfiletocolorrow(mapfp, MAXCOLORS, &colors,
                                          &cmapmaxval);
         pm_close(mapfp);
         if (colormap == NULL)
@@ -2280,11 +2280,11 @@ main(int argc, char ** argv) {
         if (DO_COMPRESS)
             pm_rlenc_allocoutbuf(&compr_rowbuf, RowBytes(cols), PM_RLE_PACKBITS);
     }
-    
+
     switch (mode) {
         case MODE_HAM:
             viewportmodes |= vmHAM;
-            ppmToHam(ifP, cols, rows, maxval, 
+            ppmToHam(ifP, cols, rows, maxval,
                      colormap, colors, cmapmaxval, hamplanes);
             break;
         case MODE_DEEP:
@@ -2303,7 +2303,7 @@ main(int argc, char ** argv) {
             ppmToCmap(colormap, colors, cmapmaxval);
             break;
         default:
-            ppmToStd(ifP, cols, rows, maxval, colormap, colors, 
+            ppmToStd(ifP, cols, rows, maxval, colormap, colors,
                      cmapmaxval, MAXCOLORS, nPlanes);
             break;
     }
