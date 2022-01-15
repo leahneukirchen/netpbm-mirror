@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
+              ppmtoilbm: Remove -floyd (aka -fs) option, which hasn't worked
+              in a long time if ever and is inappropriate function for this
+              program.  And the broken code is inconsistent with new random
+              number logic elsewhere in the package.
+
               picttoppm: Fix incorrect output for 32 bit per pixel images
               that have only 3 planes.  Broken in Netpbm 10.34 (June 2006).
 

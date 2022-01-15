@@ -73,7 +73,6 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "ppm.h"
-#include "ppmfloyd.h"
 #include "pbm.h"
 #include "runlength.h"
 #include "ilbm.h"
@@ -157,7 +156,6 @@ static char *anno_chunk, *auth_chunk, *name_chunk, *text_chunk, *copyr_chunk;
 /* flags */
 static short compr_force = 0;   
     /* force compressed output, even if the image got larger  - NOT USED */
-static short floyd = 0;         /* apply floyd-steinberg error diffusion */
 static short gen_camg = 0;      /* write CAMG chunk */
 
 #define WORSTCOMPR(bytes)       ((bytes) + (bytes)/128 + 1)
@@ -878,7 +876,6 @@ doHamBody(FILE *  const ifP,
 
     int col, row, i;
     rawtype *raw_rowbuf;
-    ppm_fs_info *fi = NULL;
     colorhash_table cht, cht2;
     long bodysize = 0;
     int *itoh;      /* table image -> ham */
@@ -898,9 +895,6 @@ doHamBody(FILE *  const ifP,
 
     itoh = makeValTable(maxval, hammaxval);
 
-    if( floyd )
-        fi = ppm_fs_init(cols, maxval, 0);
-
     for( row = 0; row < rows; row++ ) {
         int noprev;
         int spr, spg, spb;   /* scaled values of previous pixel */
@@ -909,9 +903,7 @@ doHamBody(FILE *  const ifP,
 
         noprev = 1;
         prow = nextPixrow(ifP, row);
-        for( col = ppm_fs_startrow(fi, prow); 
-             col < cols; 
-             col = ppm_fs_next(fi, col) ) {
+        for( col = 0; col < cols; ++col ) {
 
             pixel const p = prow[col];
 
@@ -1019,12 +1011,10 @@ doHamBody(FILE *  const ifP,
                 spg = itoh[upg];            
                 spb = itoh[upb];
             }
-            ppm_fs_update3(fi, col, upr, upg, upb);
         }
         bodysize += encodeRow(ofP, raw_rowbuf, cols, nPlanes);
         if( maskmethod == mskHasMask )
             bodysize += encodeMaskrow(ofP, raw_rowbuf, cols);
-        ppm_fs_endrow(fi);
     }
     if( ofP && ODD(bodysize) )
         putByte(0);
@@ -1033,7 +1023,6 @@ doHamBody(FILE *  const ifP,
 
     /* clean up */
     free(raw_rowbuf);
-    ppm_fs_free(fi);
 
     return bodysize;
 }
@@ -1467,23 +1456,18 @@ doStdBody(FILE *  const ifP,
     int row, col, i;
     pixel *pP;
     rawtype *raw_rowbuf;
-    ppm_fs_info *fi = NULL;
     long bodysize = 0;
     int usehash = 1;
     colorhash_table cht;
 
     MALLOCARRAY_NOFAIL(raw_rowbuf, cols);
     cht = ppm_colorrowtocolorhash(colormap, colors);
-    if( floyd )
-        fi = ppm_fs_init(cols, maxval, FS_ALTERNATE);
 
     for( row = 0; row < rows; row++ ) {
         pixel *prow;
         prow = nextPixrow(ifP, row);
 
-        for( col = ppm_fs_startrow(fi, prow); 
-             col < cols; 
-             col = ppm_fs_next(fi, col) ) {
+        for( col = 0; col < cols; ++col ) {
             pP = &prow[col];
 
             if( maskmethod == mskHasTransparentColor && 
@@ -1507,12 +1491,10 @@ doStdBody(FILE *  const ifP,
                 }
             }
             raw_rowbuf[col] = i;
-            ppm_fs_update(fi, col, &colormap[i]);
         }
         bodysize += encodeRow(ofP, raw_rowbuf, cols, nPlanes);
         if( maskmethod == mskHasMask )
             bodysize += encodeMaskrow(ofP, raw_rowbuf, cols);
-        ppm_fs_endrow(fi);
     }
     if( ofP && ODD(bodysize) )
         putByte(0);
@@ -1520,7 +1502,6 @@ doStdBody(FILE *  const ifP,
     /* clean up */
     ppm_freecolorhash(cht);
     free(raw_rowbuf);
-    ppm_fs_free(fi);
 
     return bodysize;
 }
@@ -1878,6 +1859,7 @@ main(int argc, char ** argv) {
     pixval cmapmaxval;      /* maxval of colors in cmap */
     const char * mapfile;
     const char * transpname;
+    unsigned int defunctArgs = 0;
 
     ppm_init(&argc, argv);
 
@@ -2154,13 +2136,9 @@ main(int argc, char ** argv) {
             compmethod = getComprMethod(argv[argn]);
         }
         else
-        if( pm_keymatch(argv[argn], "-floyd", 3) || 
-            pm_keymatch(argv[argn], "-fs", 3) )
-            floyd = 1;
-        else
         if( pm_keymatch(argv[argn], "-nofloyd", 5) || 
             pm_keymatch(argv[argn], "-nofs", 5) )
-            floyd = 0;
+	    defunctArgs++;
         else
         if( pm_keymatch(argv[argn], "-annotation", 3) ) {
             if( ++argn >= argc )
@@ -2325,8 +2303,6 @@ main(int argc, char ** argv) {
             ppmToCmap(colormap, colors, cmapmaxval);
             break;
         default:
-            if (mapfile == NULL)
-                floyd = 0;          /* would only slow down conversion */
             ppmToStd(ifP, cols, rows, maxval, colormap, colors, 
                      cmapmaxval, MAXCOLORS, nPlanes);
             break;
