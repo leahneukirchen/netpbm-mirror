@@ -20,6 +20,11 @@ not yet  BJH  Release 10.98.00
               ppmtoilbm: Fix wild memory references and hangs with -map .
               Introduced in Netpbm 9.12 (March 2001).
 
+              Remove Floyd-Steinberg dithering functions (ppm_fs_*) from
+              libnetpbm (libppmfloyd).  No longer used.  Floyd-Steinberg
+              dithering logic can be found in pnmremap.  libppmfloyd
+              was previously used by ppmtoilbm.
+
 21.12.27 BJH  Release 10.97.00
 
               Add pbnnoise.
