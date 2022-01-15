@@ -2,7 +2,7 @@
 # This script tests: pamendian
 # Also requires: pamdepth pgmtopbm pamseq
 
-echo "Test 1: Should print '0 0 0 : 0'" 
+echo "Test 1.  Should print '0 0 0 : 0'" 
 
 tmpdir=${tmpdir:-/tmp}
 test0_pam=${tmpdir}/test0.pam
@@ -15,8 +15,12 @@ pamendian < ${test0_pam} | pamendian |\
 rm ${test0_pam}
 
 
-echo "Test 2 should print echo '0 0 0 0 0 : 0'" 
+echo "Test 2.  Should print '0 0 0 0 0 : 0' twice" 
 
 pamdepth 65535 testgrid.pbm | pamendian | pamendian | \
   pgmtopbm -th -val=0.5 | cmp -s - testgrid.pbm
+  echo ${PIPESTATUS[@]} ":" $?
+
+pamdepth 4095 maze.pbm | pamendian | pamendian | \
+  pgmtopbm -th -val=0.5 | cmp -s - maze.pbm
   echo ${PIPESTATUS[@]} ":" $?

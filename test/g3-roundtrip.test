@@ -11,7 +11,7 @@ pagemax_pbm=${tmpdir}/pagemax.pbm
 
 echo "Test 1.  Should print 0 0 0 : 0 or 0 0 0 0 : 0 total three times"
 
-width=$(pamfile -size maze.pbm | cut -d" " -f1)
+width=$(pamfile -size maze.pbm | cut -d " " -f 1) 
 
 pbmtog3 -nofixedwidth maze.pbm | \
 g3topbm -width=${width} | cmp -s - maze.pbm

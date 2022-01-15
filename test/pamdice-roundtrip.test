@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamdice pamundice
 # Also requires: pamfile
 
@@ -6,8 +6,8 @@ tmpdir=${tmpdir:-/tmp}
 fname_stem=${tmpdir}/pamdice_part
 
 mazesize=$(pamfile -size maze.pbm)
-mw=$(echo ${mazesize} | cut -d" " -f1)
-mh=$(echo ${mazesize} | cut -d" " -f2)
+mw=$(echo ${mazesize} | cut -d " " -f 1)
+mh=$(echo ${mazesize} | cut -d " " -f 2)
 
 echo "Test 1.  Should print 281226646 481"
 

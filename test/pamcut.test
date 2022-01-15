@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamcut pbmmake
 # Also requires: pamfile
 
@@ -27,8 +27,9 @@ pamcut -top 10 -left 10 -width 207 -height 129 testimg.ppm | cksum
 
 echo "Test 5. Should print 281226646 481 five times"
 
-width=$(pamfile -size maze.pbm | awk '{print $1}')
-height=$(pamfile -size maze.pbm | awk '{print $2}')
+mazesize=$(pamfile -size maze.pbm)
+width=$(echo ${mazesize} | cut -d " " -f 1)
+height=$(echo ${mazesize} | cut -d " " -f 2)
  
 pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 maze.pbm | \
   cksum

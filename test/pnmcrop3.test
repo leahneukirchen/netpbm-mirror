@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmcrop
 # Also requires: pnmpad pamfile pgmmake
 
@@ -16,7 +16,7 @@ pnmpad -top=11 -bottom=1 -left=21 -right=9 testimg.ppm > ${test_ppm}
 pnmpad -top=4 -bottom=4 -left=8 -right=5 testgrid.pbm > ${border_pbm}
 pnmpad -top=7 -bottom=5 -left=30 -right=0 testimg.ppm > ${border_ppm}
 
-pgmmake 0.5 `pamfile -size ${test_pbm}` > ${gray_pgm}
+pgmmake 0.5 $(pamfile -size ${test_pbm}) > ${gray_pgm}
 
 # Test 1
 echo Test 1
@@ -38,7 +38,7 @@ echo Test 2
 for input_file in ${test_pbm} ${test_ppm}
   do
   echo `basename ${input_file}`
-  for margin in `seq 0 5`
+  for margin in 0 1 2 3 4 5  # for margin in `seq 0 5`
     do
     pnmcrop -reportsize -margin=${margin} ${input_file} || echo fail2
     done
@@ -59,13 +59,22 @@ pnmcrop -borderfile=${border_pbm} ${test_pbm} | pnmcrop -black -reportsize
 
 pnmcrop -borderfile=${border_ppm} ${test_ppm} | cksum 
 
-# The following two cases are expected to fai
+test_out=${tmpdir}/test_out
 
+# The following two cases are expected to fail
+
+echo "Border file size mismatch" 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "--------------------------------------------" 1>&2
 
-pnmcrop -borderfile=${border_ppm} ${test_pbm} | cksum 
-pnmcrop -borderfile=${border_pbm} ${test_ppm} | cksum 
+pnmcrop -borderfile=${border_ppm} ${test_pbm} > ${test_out} || \
+        echo -n "Expected failure 1";
+        test -s ${test_out}; echo " "$?
+        rm ${test_out}
 
+pnmcrop -borderfile=${border_pbm} ${test_ppm} > ${test_out} || \
+        echo -n "Expected failure 2";
+        test -s ${test_out}; echo " "$?
+        rm ${test_out}
 
 rm ${test_pbm} ${test_ppm} ${border_pbm} ${border_ppm} ${gray_pgm}

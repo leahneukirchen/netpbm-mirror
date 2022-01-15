@@ -1,3 +1,8 @@
+Test 1.
+ok
+Test 2.
+ok
+Test 3.  Should print ok 7 times
 ok
 ok
 ok
@@ -5,6 +10,9 @@ ok
 ok
 ok
 ok
+Test 4.
+ok
+Test 5.  Should print ok 7 times.
 ok
 ok
 ok
@@ -12,7 +20,5 @@ ok
 ok
 ok
 ok
-ok
-ok
-ok
+Test 6.
 ok

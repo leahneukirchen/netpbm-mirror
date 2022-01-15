@@ -1,4 +1,5 @@
-Test 1: Should print '0 0 0 : 0'
+Test 1.  Should print '0 0 0 : 0'
 0 0 0 : 0
-Test 2 should print echo '0 0 0 0 0 : 0'
+Test 2.  Should print '0 0 0 0 0 : 0' twice
+0 0 0 0 0 : 0
 0 0 0 0 0 : 0

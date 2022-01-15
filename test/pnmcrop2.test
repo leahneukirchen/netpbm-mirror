@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmcrop
 # Also requires:
 
@@ -44,7 +44,7 @@ for corner in topleft topright bottomleft bottomright
 
 echo Test 3
 
-for closeness in `seq 0 6`
+for closeness in 0 1 2 3 4 5 6  # for closeness in `seq 0 6`
   do
   echo ${closeness}
   pnmcrop -reportfull -bg-corner=topleft -closeness=${closeness} ${test_pgm} \

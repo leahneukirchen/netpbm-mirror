@@ -77,7 +77,7 @@ Should print four identical lines
 969759084 1682
 969759084 1682
 Test 6.
-First column should be 2^n - 1
+First column should be 2^n - 1.  Last column should be 'pool'.
 1 pgmnoise: method: pool
 3 pgmnoise: method: pool
 7 pgmnoise: method: pool
@@ -86,6 +86,9 @@ First column should be 2^n - 1
 63 pgmnoise: method: pool
 127 pgmnoise: method: pool
 255 pgmnoise: method: pool
+511 pgmnoise: method: pool
+1023 pgmnoise: method: pool
+65535 pgmnoise: method: pool
 Test Invalid
 Expected failure 1 1
 Expected failure 2 1

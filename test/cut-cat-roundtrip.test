@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamcut
 # Also requires: pamfile pnmcat pnmpad pnmcrop
 
@@ -16,30 +16,30 @@ testimg_ppm_sum=`cat testimg.ppm | cksum`
 echo ${testimg_ppm_sum}
 
  imgsize=$(pamfile -size testimg.ppm)
- iw=$(echo ${imgsize} | cut -d" " -f1)
- ih=$(echo ${imgsize} | cut -d" " -f2)
+ width=$(echo ${imgsize} | cut -d " " -f 1)
+ height=$(echo ${imgsize} | cut -d " " -f 2)
 
 for i in 0 1 128 224 225
   do
   pamcut -left=$((i+1)) testimg.ppm > ${right_ppm}
   pamcut -right=$i      testimg.ppm > ${left_ppm}
   pnmcat -lr ${left_ppm} ${right_ppm} | \
-    pamcut -left=0 -width=${iw} | cksum
+    pamcut -left=0 -width=${width} | cksum
   rm ${left_ppm} ${right_ppm}
   done
 
 echo "Test 2.  Should print 3891261972 202953 1926073387 101484 six times"
 # Padding added to right.
 
-pnmpad -right=${iw} -black testimg.ppm | cksum | tr '\n' ' '
+pnmpad -right=${width} -black testimg.ppm | cksum | tr '\n' ' '
 echo ${testimg_ppm_sum}
 
 for border in 0 1 128 224 225
   do
-  pamcut -left=$((${border}+1)) -width=${iw} -pad testimg.ppm > ${right_ppm}
-  pamcut -right=${border} -width=${iw} -pad testimg.ppm > ${left_ppm}
+  pamcut -left=$((${border}+1)) -width=${width} -pad testimg.ppm > ${right_ppm}
+  pamcut -right=${border} -width=${width} -pad testimg.ppm > ${left_ppm}
   pnmcat -lr ${left_ppm} ${right_ppm} ${left_ppm} | \
-    pamcut -left=$((${iw}-${border}-1))  -width=$((${iw}*2)) | \
+    pamcut -left=$((${width}-${border}-1))  -width=$((${width}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' '
   pnmcrop -black -right ${padded_ppm} | cksum
   rm ${left_ppm} ${right_ppm} ${padded_ppm}
@@ -54,21 +54,22 @@ for border in 0 1 70 147
   pamcut -top=$((${border}+1)) testimg.ppm > ${bottom_ppm}
   pamcut -bottom=${border}     testimg.ppm > ${top_ppm}
   pnmcat -tb ${top_ppm} ${bottom_ppm} | \
-    pamcut -top=0 -height=${ih} | cksum
+    pamcut -top=0 -height=${height} | cksum
   rm ${top_ppm} ${bottom_ppm}
   done
 
 echo "Test 4.  Should print 26789469 202953 1926073387 101484 five times"
 # Padding added to bottom.
 
-pnmpad -bottom=${ih} -black testimg.ppm | cksum | tr '\n' ' '
+pnmpad -bottom=${height} -black testimg.ppm | cksum | tr '\n' ' '
 echo ${testimg_ppm_sum}
 for border in 0 1 70 147
   do
-  pamcut -top=$((${border}+1)) -height=${ih} -pad testimg.ppm > ${bottom_ppm}
-  pamcut -bottom=${border}     -height=${ih} -pad testimg.ppm > ${top_ppm}
+  pamcut -top=$((${border}+1)) -height=${height} -pad testimg.ppm \
+    > ${bottom_ppm}
+  pamcut -bottom=${border}     -height=${height} -pad testimg.ppm > ${top_ppm}
   pnmcat -tb ${top_ppm} ${bottom_ppm} ${top_ppm} | \
-    pamcut -top=$((${ih}-${border}-1))  -height=$((${ih}*2)) | \
+    pamcut -top=$((${height}-${border}-1))  -height=$((${height}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' 'cksum
   pnmcrop -black -bottom ${padded_ppm} | cksum
   rm ${top_ppm} ${bottom_ppm} ${padded_ppm}
@@ -86,15 +87,15 @@ maze_pbm_sum=`cat maze.pbm | cksum`
 echo ${maze_pbm_sum}
 
 imgsize=$(pamfile -size maze.pbm)
-iw=$(echo ${imgsize} | cut -d" " -f1)
-ih=$(echo ${imgsize} | cut -d" " -f2)
+width=$(echo ${imgsize} | cut -d " " -f 1)
+height=$(echo ${imgsize} | cut -d " " -f 2)
 
 for i in 0 1 10 30 50
   do
   pamcut -left=$((i+1)) maze.pbm > ${right_ppm}
   pamcut -right=$i      maze.pbm > ${left_ppm}
   pnmcat -lr ${left_ppm} ${right_ppm} | \
-    pamcut -left=0 -width=${iw} | cksum
+    pamcut -left=0 -width=${width} | cksum
   rm ${left_ppm} ${right_ppm}
   done
 
@@ -102,15 +103,15 @@ for i in 0 1 10 30 50
 echo "Test 6.  Should print 1748767123 895 281226646 481 six times"
 # Padding added to right.
 
-pnmpad -right=${iw} -black maze.pbm | cksum | tr '\n' ' '
+pnmpad -right=${width} -black maze.pbm | cksum | tr '\n' ' '
 echo ${maze_pbm_sum}
 
 for border in 0 1 10 30 50
   do
-  pamcut -left=$((${border}+1)) -width=${iw} -pad maze.pbm > ${right_ppm}
-  pamcut -right=${border} -width=${iw} -pad maze.pbm > ${left_ppm}
+  pamcut -left=$((${border}+1)) -width=${width} -pad maze.pbm > ${right_ppm}
+  pamcut -right=${border} -width=${width} -pad maze.pbm > ${left_ppm}
   pnmcat -lr ${left_ppm} ${right_ppm} ${left_ppm} | \
-    pamcut -left=$((${iw}-${border}-1))  -width=$((${iw}*2)) | \
+    pamcut -left=$((${width}-${border}-1))  -width=$((${width}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' '
   pnmcrop -black -right ${padded_ppm} | cksum
   rm ${left_ppm} ${right_ppm} ${padded_ppm}
@@ -125,21 +126,21 @@ for border in 0 1 12 21 31 44
   pamcut -top=$((${border}+1)) maze.pbm > ${bottom_ppm}
   pamcut -bottom=${border}     maze.pbm > ${top_ppm}
   pnmcat -tb ${top_ppm} ${bottom_ppm} | \
-    pamcut -top=0 -height=${ih} | cksum
+    pamcut -top=0 -height=${height} | cksum
   rm ${top_ppm} ${bottom_ppm}
   done
 
 echo "Test 8.  Should print 1346655680 954 281226646 481 five times"
 # Padding added to bottom.
 
-pnmpad -bottom=${ih} -black maze.pbm | cksum | tr '\n' ' '
+pnmpad -bottom=${height} -black maze.pbm | cksum | tr '\n' ' '
 echo ${maze_pbm_sum}
 for border in 0 1 10 50
   do
-  pamcut -top=$((${border}+1)) -height=${ih} -pad maze.pbm > ${bottom_ppm}
-  pamcut -bottom=${border}     -height=${ih} -pad maze.pbm > ${top_ppm}
+  pamcut -top=$((${border}+1)) -height=${height} -pad maze.pbm > ${bottom_ppm}
+  pamcut -bottom=${border}     -height=${height} -pad maze.pbm > ${top_ppm}
   pnmcat -tb ${top_ppm} ${bottom_ppm} ${top_ppm} | \
-    pamcut -top=$((${ih}-${border}-1))  -height=$((${ih}*2)) | \
+    pamcut -top=$((${height}-${border}-1))  -height=$((${height}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' 'cksum
   pnmcrop -black -bottom ${padded_ppm} | cksum
   rm ${top_ppm} ${bottom_ppm} ${padded_ppm}

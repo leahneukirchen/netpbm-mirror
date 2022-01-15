@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamslice pamdeinterlace
 # Also requires: pamfile pamcut pamtopnm pamflip
 
@@ -7,14 +7,14 @@ echo "Test 1.  Should print 139976034 137 twice"
 # Add header and reconstruct pbm image.
 # Note that in pamslice output 0 is white and 1 is black: opposite of PBM
 
-mwidth=$(pamfile -size maze.pbm | cut -d" " -f1)
+mwidth=$(pamfile -size maze.pbm | cut -d " " -f 1)
 height=16
 
 pamcut -top=0 -left=0 -height=${height} maze.pbm | cksum
 
 (echo "P1"
  echo "${mwidth} ${height}"
- for ((i = 0; i < ${height}; ++i))
+ for i in `seq 0 $((${height}-1))` 
      do
      pamslice -row=$i maze.pbm
      done | cut -d" " -f2- | sed 'y/01/10/' ) \
@@ -27,7 +27,6 @@ echo "Test 2.  Should print 1624460505 574 three times"
 # whole image takes much time.
 # Add header and reconstruct ppm image.
 
-
 tmpdir=${tmpdir:-/tmp}
 test1711_ppm=${tmpdir}/test1711.ppm
 
@@ -37,21 +36,20 @@ pamcut -left=50 -top=50 -width=17 -height=11 testimg.ppm | \
 (echo "P3"
  echo "17 11"
  echo "255"
- for ((i = 0; i < 11; ++i))
+ for i in 0 1 2 3 4 5 6 7 8 9 10   # for i in `seq 0 10`
      do
-     pamslice -row=$i ${test1711_ppm}
+     pamslice -row=${i} ${test1711_ppm}
      done | cut -d" " -f2- ) \
  | pamtopnm | cksum
 
 # Same as above test 2, but take cols instead of rows.
-# Should print 914327477 4864
 
 (echo "P3"
  echo "11 17"
  echo "255"
- for ((i = 0; i < 17; ++i))
+ for i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16    # for i in `seq 0 16`
      do
-     pamslice -col=$i ${test1711_ppm}
+     pamslice -col=${i} ${test1711_ppm}
      done | cut -d " " -f2- ) | pamflip -xy | cksum
 
 echo "Test 3.  Should print 1624460505 574"
@@ -66,10 +64,10 @@ pamdeinterlace -takeeven ${test1711_ppm} > ${testeven_ppm}
 ( echo "P3"
   echo "17 11"
   echo "255"
-  ( for ((i = 0; i < 5; ++i))
+  ( for i in  0 1 2 3 4 
         do
-        pamslice -row=$i ${testeven_ppm}
-        pamslice -row=$i ${testodd_ppm}
+        pamslice -row=${i} ${testeven_ppm}
+        pamslice -row=${i} ${testodd_ppm}
         done
         pamslice -row=5 ${testeven_ppm};
   ) | cut -d" " -f2- ) | pamtopnm | cksum
