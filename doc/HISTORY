@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.01.22 BJH  Release 10.86.28
+ 
+              picttoppm: Fix incorrect output for 32 bit per pixel images
+              that have only 3 planes.  Broken in Netpbm 10.34 (June 2006).
+
+              pamendian: fix bogus "sample exceeds maxval" failure.
+              Introduced in Netpbm 10.66 (March 2014).
+
+              ppmtoilbm: Fix wild memory references and hangs with -map .
+              Introduced in Netpbm 9.12 (March 2001).
+
+              pgmtexture: Fix incorrect output.  Always broken.  (Program was
+              added in primordial Netpbm in 1991).
+              
 21.11.28 BJH  Release 10.86.27
 
               palmtopnm: Fix bug: fails with PackBits input on platform with
