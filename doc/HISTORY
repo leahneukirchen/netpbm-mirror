@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
+              pnmtopsnr: Fix typo in error message.  Always broken (pnmpsnr
+              was new in Netpbm 9.6 (July 2000).
+
               ppmtoilbm: Remove -floyd (aka -fs) option, which hasn't worked
               in a long time if ever and is inappropriate function for this
               program.  And the broken code is inconsistent with new random
@@ -5771,7 +5774,7 @@ not yet  BJH  Release 10.98.00
 
 00.07.12 BJH  Release 9.6
 
-              Add pnmtofiasco, fiascotopnm, psnpsnr.  Thanks to Ullrich
+              Add pnmtofiasco, fiascotopnm, pnmpnsr.  Thanks to Ullrich
               Hafner.
 
               Make Pnmcrop use a temporary file instead of huge amounts

@@ -179,7 +179,7 @@ validateInput(struct pam const pam1,
                  pam1.height, pam2.height);
 
     if (pam1.maxval != pam2.maxval)
-        pm_error("images do not have the same maxval.  This programs works "
+        pm_error("images do not have the same maxval.  This program works "
                  "only on like maxvals.  "
                  "The first image has maxval %u, "
                  "while the second has %u.  Use Pamdepth to change the "
