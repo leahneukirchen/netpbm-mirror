@@ -49,7 +49,16 @@ static bool const sortit = FALSE;
 static float *
 vector(unsigned int const nl,
        unsigned int const nh) {
+/*----------------------------------------------------------------------------
+  Allocate a float vector with range [nl..nh]
 
+  We do some seedy C here, subtracting an arbitrary integer from a pointer and
+  calling the result a pointer.  It normally works because the only way we'll
+  use that pointer is by adding that same integer or something greater to it.
+
+  The point of this is not to allocate memory for vector elements that will
+  never be referenced (component < nl).
+-----------------------------------------------------------------------------*/
     float * v;
 
     assert(nh >= nl);
