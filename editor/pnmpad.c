@@ -128,11 +128,10 @@ parseCommandLine(int argc, const char ** argv,
     if (cmdlineP->ysizeSpec > 1)
        pm_error("You can specify -height only once");
 
-    if (xalignSpec && (cmdlineP->leftSpec || cmdlineP->rightSpec)
-	           && !mwidthSpec)
+    if (xalignSpec && (cmdlineP->leftSpec || cmdlineP->rightSpec))
         pm_error("You cannot specify both -halign and -left or -right");
-    if (yalignSpec && (cmdlineP->topSpec || cmdlineP->bottomSpec)
-	           && !mheightSpec)
+
+    if (yalignSpec && (cmdlineP->topSpec || cmdlineP->bottomSpec))
         pm_error("You cannot specify both -valign and -top or -bottom");
 
     if (xalignSpec && (!cmdlineP->xsizeSpec && !mwidthSpec) )
