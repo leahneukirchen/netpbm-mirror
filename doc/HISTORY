@@ -26,10 +26,6 @@ not yet  BJH  Release 10.98.00
               ppmtoilbm: Fix wild memory references and hangs with -map .
               Introduced in Netpbm 9.12 (March 2001).
 
-              pnmpad: Fix rejection of -halign along with -left, -right, and
-              -mwidth.  And analogous vertical padding case.  Introduced in
-              Netpbm 10.97 (December 2021).
-              
               pgmtexture: Fix incorrect output.  Always broken.  (Program was
               added in primordial Netpbm in 1991).
               
