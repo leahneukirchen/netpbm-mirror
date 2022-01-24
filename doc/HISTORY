@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.01.24 BJH  Release 10.86.29
+
+              picttoppm:  Fix inability to compile introduced in Netpbm
+              10.86.28 (2 days ago).
+
 22.01.22 BJH  Release 10.86.28
  
               picttoppm: Fix incorrect output for 32 bit per pixel images

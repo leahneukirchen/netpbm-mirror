@@ -1273,7 +1273,7 @@ doDiffSize(struct Rect       const clipsrc,
     }
     break;
     case 32: {
-        unsigned int const planeSize = rectwidth(&srcRect);
+        unsigned int const planeSize = rectwidth(&clipsrc);
         unsigned int rowNumber;
 
         for (rowNumber = 0; rowNumber < ysize; ++rowNumber) {
