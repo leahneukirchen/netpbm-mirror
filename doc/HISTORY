@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.01.25 BJH  Release 10.86.30
+
+              pgmabel: Fix incorrect output.  Always broken.  (Program was
+              new in Netpbm 10.3 (July 2002).
+
+              libnetpbm: Fix version number
+
 22.01.24 BJH  Release 10.86.29
 
               picttoppm:  Fix inability to compile introduced in Netpbm
