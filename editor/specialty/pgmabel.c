@@ -100,20 +100,19 @@ abel ( float *y, int N, double *adl)
 {
     register int n;
     double *rho, *rhop;       /* results and new index                       */
-    float  *yp;               /* new indizes for the y-array                 */
 
     MALLOCARRAY(rho, N);
     if( !rho )
         pm_error( "out of memory" );
+    for (n=0 ; n<N ; n++)
+        rho[n] = 0;
+
     rhop = rho;
-    yp  = y;
 
     for (n=0 ; n<N ; n++)
     {
-        *(rhop++) = ((*yp++) - Sum(n,rho,N,adl))/(adl[n*N+n]);
-/*    *(rhop++) = ((*yp++) - Sum(n,rho,N))/(dr(n,n+0.5,N));  old version */
-        if ( *rhop < 0.0 ) *rhop = 0.0;         /*  error correction !       */
-/*   if (n > 2) rhop[n-1] = (rho[n-2]+rho[n-1]+rho[n])/3.0;  stabilization*/
+        rhop[n] = MAX(0, (y[n] - Sum(n,rho,N,adl))/(adl[n*N+n]));
+            /* Clip to 0 for error correction !  */
     }
     for (n=0 ; n<N ; n++)
         {

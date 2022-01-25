@@ -29,6 +29,9 @@ not yet  BJH  Release 10.98.00
               pgmtexture: Fix incorrect output.  Always broken.  (Program was
               added in primordial Netpbm in 1991).
               
+              pgmabel: Fix incorrect output.  Always broken.  (Program was
+              new in Netpbm 10.3 (July 2002).
+
               Remove Floyd-Steinberg dithering functions (ppm_fs_*) from
               libnetpbm (libppmfloyd).  No longer used.  Floyd-Steinberg
               dithering logic can be found in pnmremap.  libppmfloyd
