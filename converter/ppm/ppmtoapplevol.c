@@ -68,6 +68,10 @@ main (int argc, const char * argv[]) {
     if (rows != 12)
         pm_error("Input image must be 12 rows tall.  Yours is %u", rows);
 
+    if (cols > 255)
+        pm_error("Input image must not be more than 255 columns wide."
+                 "  Yours is %u", cols);
+
     writeHeader(cols, stdout);
 
     pixelrow = ppm_allocrow(cols);
@@ -75,7 +79,7 @@ main (int argc, const char * argv[]) {
     for (row = 0; row < rows; row++) {
         unsigned int col;
         
-        ppm_readppmrow(stdin, pixelrow, cols, maxval, format);
+        ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
 
         for (col = 0; col < cols; ++col) {
             unsigned int const maxval15Value =

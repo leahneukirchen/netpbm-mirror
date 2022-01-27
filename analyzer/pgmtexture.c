@@ -51,6 +51,7 @@ vector(unsigned int const nl,
        unsigned int const nh) {
 
     float * v;
+    unsigned int i;
 
     assert(nh >= nl);
 
@@ -59,6 +60,8 @@ vector(unsigned int const nl,
     if (v == NULL)
         pm_error("Unable to allocate memory for a vector.");
 
+    for(i = 0; i < nh - nl +1; ++i)
+        v[i] = 0;
     return v - nl;
 }
 
