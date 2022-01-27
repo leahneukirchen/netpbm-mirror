@@ -2,7 +2,7 @@
 <html><head><title>Ppmtoapplevol User Manual</title></head>
 <body>
 <h1>ppmtoapplevol</h1>
-Updated: 08 January 2010
+Updated: 27 January 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -26,11 +26,17 @@ volume label image as output.
 <p>EFI-based Apple systems use a simple image format to provide textual labels
 for devices.  This program generates that format.
 
-<p>The input image must be exactly 12 rows tall.  Use <b>pamfile</b> to
-see how tall your image is and <b>pamscale</b> or <b>pamcut</b> to make
-it 12 rows if it isn't.
+<p>The input image must be exactly 12 rows tall and up to 255 columns wide.
+  The program fails if it is not.  Use <b>pamfile</b> to see the dimensions of
+  your image and <b>pamscale</b> or <b>pamcut</b> to make it 12 rows and less
+  than 256 columns if it isn't.
 
 <p>Netpbm does not have a converter for the other direction.
+
+<h2 id="arguments">ARGUMENTS</h2>
+
+<p>The optional <i>ppmfile</i> argument is the name of the input file.
+  The default is to read the input image from Standard Input.
 
 <h2 id="options">OPTIONS</h2>
 
@@ -54,6 +60,7 @@ Common Options</a>.)
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
+<li><a href="#arguments">ARGUMENTS</a>
 <li><a href="#options">OPTIONS</a>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#history">HISTORY</a>

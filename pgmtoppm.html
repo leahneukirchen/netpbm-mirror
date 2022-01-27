@@ -36,6 +36,11 @@ space in place of the equals sign to separate an option name from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
+<p>If all you want to do is convert PGM to PPM, keeping the same gray pixels,
+  you may not need to.  All Netpbm programs that expect PPM input also
+  recognize PGM.  And if you must have a PPM file, use <b>ppmtoppm</b>
+  instead.  It is more efficient and easier to use.
+
 <p><b>pgmtoppm</b> reads a PGM as input and produces a PPM file as
 output with a specific color assigned to each gray value in the input.
 
@@ -62,11 +67,6 @@ option.
 <p>A more direct way to specify a particular color to replace each
 particular gray level is to use <b>pamlookup</b>.  You make an index
 file that explicitly associates a color with each possible gray level.
-
-<p>If all you want to do is convert PGM to PPM, keeping the same gray pixels,
-  you may not need to.  All Netpbm programs that expect PPM input also
-  recognize PGM.  And if you must have a PPM file, use <b>ppmtoppm</b>
-  instead.  It is more efficient and easier to use.
 
   
 <h2 id="options">OPTIONS</h2>

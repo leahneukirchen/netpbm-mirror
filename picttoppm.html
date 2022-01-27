@@ -13,7 +13,7 @@ picttoppm - convert a Macintosh PICT file to a PPM
 
 <b>picttoppm</b>
 
-[<b>-verbose</b>]
+[<b>-verbose=</b><i>n</i>]
 
 [<b>-fullres</b>]
 
@@ -79,11 +79,15 @@ not stored in the data fork of a PICT file.
 <dd>Execute only pure quickdraw operations.  In particular, turn off
 the interpretation of special PostScript printer operations.
 
-<dt><b>-verbose</b>
+<dt><b>-verbose=</b><i>n</i>
 
-<dd>Print a whole bunch of information about the PICT file and the
-conversion process that only <b>picttoppm</b> hackers really care
-about.
+<dd>Print a whole bunch of information about the PICT file and the conversion
+process that only <b>picttoppm</b> hackers really care about.
+
+<p><i>n</i> is the verbosity level, 0-2.
+
+<p>Before Netpbm 10.98 (March 2022), this option is a flag option that you
+specify multiple times to specify increasing verbosity.
 
 </dl>
 

@@ -2,7 +2,7 @@
 <html><head><title>Ppmtoilbm User Manual</title></head>
 <body>
 <h1>ppmtoilbm</h1>
-Updated: 28 June 2015
+Updated: 15 January 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -156,8 +156,8 @@ compression at a minimum, but is very slow.
 <dt><b>-map</b> <i>ppmfile</i>
 
 <dd>Write a normal ILBM using the colors in &lt;ppmfile&gt; as the
-colormap.  The colormap file also determines the number of planes, a
-<b>-maxplanes</b> or <b>-fixplanes</b> option is ignored.
+colormap.  The colormap file also determines the number of planes;
+<b>-maxplanes</b> and <b>-fixplanes</b> are ignored.
 
 <dt><b>-cmaponly</b>
 
@@ -179,7 +179,6 @@ this allows row-by-row operation on HAM images, and all HAM images of
 the same depth (no. of planes) share a common colormap, which is
 useful for building HAM animations.
 
-
 <h2 id="references">REFERENCES</h2>
 
 Amiga ROM Kernel Reference Manual - Devices (3rd Ed.)
@@ -197,7 +196,25 @@ Addison Wesley, ISBN 0-201-56775-X
 
 <p>For about a year in 1993-1994, there was a <b>-savemem</b> option.
 
+<p>There used to be a <b>-floyd</b> (aka <b>-fs</b>) option that was supposed
+  to cause images to be dithered so that a larger number of colors in the PPM
+  input could be represented in a smaller number of colors in the ILBM output.
+  But it was never documented.  Furthermore, developers discovered in January
+  2022 that the code for this was nonfunctional because of defects, and had
+  been for a very long time and maybe always.  Finally,, this functions is not
+  appropriate in the Netpbm philosophy, because dithering should be done by a
+  separate dithering program, not a format conversion program.  Indeed,
+  the programs <b>ppmdither</b>, <b>pnmquant</b>, and <b>pnmremap</b> can do
+  this.
 
+<p>Therefore, since Netpbm 10.98 (March 2022), the dithering code has not been
+  in the program and any attempt to use the options fails with a simple
+  invalid option message.  But the <b>-nofloyd</b> and <b>-nofs</b> options
+  remain, doing nothing as they were designed to do, and still not documented.
+  This is just in case something uses those options, since the cost of
+  maintaining them is so small.
+
+  
 <h2 id="authors">AUTHORS</h2>
 
 <p>Copyright (C) 1989 by Jef Poskanzer.

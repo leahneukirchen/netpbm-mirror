@@ -2,7 +2,7 @@
 <html><head><title>Pgmmedian User Manual</title></head>
 <body>
 <h1>pgmmedian</h1>
-Updated: 28 August 2005
+Updated: 20 January 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -41,6 +41,11 @@ the output is the median of a certain set of pixels in the neighborhood of the
 corresponding input pixel.  The effect is to eliminate locally extreme values.
 Such pixels typically show up as speckles.
 
+<p>Pixels at the edges of the image, pixels where the convolution kernel would
+go off the edge of the image, are just copied.  For example, if <b>-height</b>
+is 9, the first 4 and last 4 rows of the input image are just copied to the
+output.
+  
 <p>See the <b>-type</b> and <b>-cutoff</b> options for information on
 how <b>pgmmedian</b> chooses between the two methods.
 
@@ -73,12 +78,16 @@ value.
 
 <dd>Width of the median mask to apply.
 
+<p>Maximum allowed is the width of the input image.
+  
 <p>Default is 3.
 
 <dt><b>-height=</b><i>n</i>
 
 <dd>Height of the median mask to apply.
 
+<p>Maximum allowed is the height of the input image.
+  
 <p>Default is 3.
 
 <dt><b>-type</b> <i>median_type</i>
