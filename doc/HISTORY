@@ -18,6 +18,10 @@ not yet  BJH  Release 10.98.00
               specify the input file argument.  Always broken.  (ppmtoapplevol
               was new in Netpbm 10.54 (March 2011).
 
+              ppmtoapplevol: Fix bug: produces garbage with input image wider
+              than 255.  Always broken.  (ppmtoapplevol was new in Netpbm
+              10.54 (March 2011).
+
               pgmmedian: fix crash when median matrix is wider or higher than
               the input image.
 
