@@ -14,6 +14,10 @@ not yet  BJH  Release 10.98.00
               program.  And the broken code is inconsistent with new random
               number logic elsewhere in the package.
 
+              ppmtoapplevol: Fix bug: reads from Standard Input even when you
+              specify the input file argument.  Always broken.  (ppmtoapplevol
+              was new in Netpbm 10.54 (March 2011).
+
               pgmmedian: fix crash when median matrix is wider or higher than
               the input image.
 
