@@ -2,7 +2,7 @@
 <html><head><title>Pbmtoibm23xx User Manual</title></head>
 <body>
 <h1>pbmtoibm23xx</h1>
-Updated: 16 October 2004
+Updated: 28 January 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -12,8 +12,9 @@ pbmtoibm23xx - convert a PBM image to IBM 23XX printer stream
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pbmtoibm23xxx</b>
-[<b>-xres=</b><i>dpi</i>]
-[<b>-yres=</b><i>dpi</i>]
+<b>-xres=</b><i>dpi</i>
+<b>-yres=</b><i>dpi</i>
+[<b>slow</b>
 [<i>pbmfile</i> ...]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -44,10 +45,14 @@ command line options:
 <dd>This option specifies the horizontal resolution in dots per inch.
 Valid values are 60, 120, and 240.
 
+<p>This option is mandatory.
+
 <dt><b>-yres=</b><i>dpi</i>
 
 <dd>This option specifies the vertical resolution in dots per inch.
 Valid values are 60, 120, and 240.
+
+<p>This option is mandatory.
 
 <dt><b>-slow</b>
 
