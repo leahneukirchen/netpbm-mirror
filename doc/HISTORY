@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
+              libnetpbm, various programs: fix bug: bogus warning that a color
+              specified on command line cannot be represented exactly with the
+              maxval being used.  Introduced in Netpbm 10.83 (June 2018).
+
               pnmtopsnr: Fix typo in error message.  Always broken (pnmpsnr
               was new in Netpbm 9.6 (July 2000).
 
