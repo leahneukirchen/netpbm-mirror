@@ -405,6 +405,7 @@ pbmnoise_packed(FILE *             const ofP,
 
             wordSave = bitrowByWord[words - 1];
 
+            pbm_cleanrowend_packed(bitrow0, cols);
             pbm_writepbmrow_packed(ofP, bitrow0, cols, 0);
             offset = cols % 32;
         } else {
