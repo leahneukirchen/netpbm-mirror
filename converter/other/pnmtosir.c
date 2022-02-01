@@ -20,7 +20,7 @@
 
 int
 main(int argc, const char * argv[]) {
-    
+
     FILE * ifP;
     xel ** xels;
     int rows, cols, format;
@@ -43,9 +43,9 @@ main(int argc, const char * argv[]) {
     }  else {
         ifP = stdin;
     }
-    
+
     xels = pnm_readpnm(ifP, &cols, &rows, &maxval, &format);
-    
+
     /* Figure out the colormap. */
     switch (PNM_FORMAT_TYPE(format) ) {
     case PPM_TYPE:
@@ -105,7 +105,7 @@ main(int argc, const char * argv[]) {
 
     for (n = 0; n < 1024; ++n)
         pm_writelittleshort(stdout,Lut[n]);
- 
+
     /* Finally, write out the data. */
     switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE: {
@@ -114,13 +114,13 @@ main(int argc, const char * argv[]) {
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 unsigned char const ub =
-                    (char) (PPM_GETR(xels[row][col]) * (255 / maxval)); 
+                    (char) (PPM_GETR(xels[row][col]) * (255 / maxval));
                 fputc(ub, stdout);
             }
         }
         for (row = 0; row < rows; ++row) {
             unsigned int col;
-            for (col = 0; col < cols; ++col) {  
+            for (col = 0; col < cols; ++col) {
                 unsigned const char ub =
                     (char) (PPM_GETG(xels[row][col]) * (255 / maxval));
                 fputc(ub, stdout);
@@ -128,7 +128,7 @@ main(int argc, const char * argv[]) {
         }
         for (row = 0; row < rows; ++row) {
             unsigned int col;
-            for (col = 0; col < cols; ++col) {  
+            for (col = 0; col < cols; ++col) {
                 unsigned const char ub =
                     (char) (PPM_GETB(xels[row][col]) * (255 / maxval));
                 fputc(ub, stdout);
@@ -148,10 +148,11 @@ main(int argc, const char * argv[]) {
         }
     } break;
     }
-    
+
     pm_close(ifP);
 
     return 0;
 }
+
 
 
