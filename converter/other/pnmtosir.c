@@ -27,9 +27,9 @@ main(int argc, const char * argv[]) {
     unsigned int n;
     bool isGrayscale;
     xelval maxval;
-    unsigned short Header[16];
-    unsigned short LutHeader[16];
-    unsigned short Lut[2048];
+    unsigned short Header[10];
+    unsigned short LutHeader[5];
+    unsigned short Lut[1024];
 
     pm_proginit(&argc, argv);
 
@@ -93,12 +93,16 @@ main(int argc, const char * argv[]) {
         pm_writelittleshort(stdout,LutHeader[n]);
     for (n = 5; n < 256; ++n)
         pm_writelittleshort(stdout,0);
- 
-    for (n = 0; n < 3; ++n) {
+
+    for (n = 0; n < 256; ++n) {
         unsigned int m;
-        for (m = 0; m < 256; ++m)
-            Lut[m * 4 + n] = m << 8;
+        for (m = 0; m < 3; ++m)
+            Lut[n * 4 + m] = n << 8;
+
+        Lut[n * 4 + 3] = 0;
+            /* Clear to ensure repeatable output, suppress Valgrind error */
     }
+
     for (n = 0; n < 1024; ++n)
         pm_writelittleshort(stdout,Lut[n]);
  

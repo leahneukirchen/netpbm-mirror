@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
+              pnmtosir: Set some possibly meaningless bits in output to zero
+              so output is repeatable.
+
               libnetpbm, various programs: fix bug: bogus warning that a color
               specified on command line cannot be represented exactly with the
               maxval being used.  Introduced in Netpbm 10.83 (June 2018).
