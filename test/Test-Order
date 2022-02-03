@@ -129,15 +129,28 @@ pammixmulti-identity.test
 
 symmetry.test
 
+# Standard input tests
+
+stdin-pbm1.test
+stdin-pbm2.test
+stdin-pgm1.test
+stdin-pgm2.test
+stdin-ppm1.test
+stdin-ppm2.test
+stdin-ppm3.test
+stdin-pnm1.test
+stdin-pnm2.test
+
+pbm-misc-converters.test
+
 # Format converter tests
 
 pamtopdbimg.test
 pbmtog3.test
+ppmtoapplevol.test
 411toppm.test
 eyuvtoppm.test
 rawtoppm.test
-
-pbm-misc-converters.test
 
 gif-transparent1.test
 
@@ -155,6 +168,7 @@ pnm-plain-roundtrip.test
 pnm-pam-roundtrip.test
 pnminvert-roundtrip.test
 pamflip-roundtrip.test
+pamflip-pbm-roundtrip.test
 pamdepth-roundtrip.test
 pad-crop-roundtrip.test
 pbm-ppm-roundtrip.test

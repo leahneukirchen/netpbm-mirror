@@ -1,0 +1,15 @@
+ppmchange: 0 0 0
+ppmcolormask -color=rgb:0/0/ff : 0 0 0
+ppmdim 0.5 : 0 0 0
+ppmdist: 0 0 0
+ppmdither: 0 0 0
+ppmflash 0.5 : 0 0 0
+ppmglobe 12 : 0 0 0
+ppmhist: 0 0 0
+ppmlabel: 0 0 0
+ppmntsc: 0 0 0
+ppmrelief: 0 0 0
+ppmshadow: 0 0 0
+ppmshift 2 -seed=1 : 0 0 0
+ppmspread 2 -randomseed=1 : 0 0 0
+ppmtv 0.5 : 0 0 0

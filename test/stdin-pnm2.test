@@ -1,0 +1,77 @@
+#! /bin/sh
+# This script tests: pnmtofiasco fiascotopnm pnmtojbig jbigtopnm pnmtojpeg
+# This script tests: jpegtopnm pnmtopalm palmtopnm pnmtopng pngtopam pnmtops
+# This script tests: pstopnm pnmtorast rasttopnm pnmtorle rletopnm pnmtosgi
+# This script tests: sgitopnm pnmtosir sirtopnm pnmtoxwd xwdtopnm pnmtotiffcmyk
+# This script tests: tifftopnm
+# Also requires: pgmramp
+
+tmpdir=${tmpdir:-/tmp}
+test_pgm=${tmpdir}/test.pgm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+pgmramp -diag 32 32 > ${test_pgm}
+
+echo "Test.  Should print (command): 0 0 0"
+echo "The following are exceptions: should print (command): 0 0 1"
+echo "pnmtops, pstopnm, pnmtorle, pnmtoxwd, pnmtotiffcmyk"
+echo
+
+for fmt in  \
+        fiasco \
+        jbig \
+        jpeg \
+        palm \
+        png \
+        ps \
+        rast \
+        rle \
+        sgi \
+        sir \
+        xwd \
+	tiffcmyk
+  do
+
+  if [ ${fmt} = "fiasco" ]
+    then testprog1="pnmto"${fmt}" --progress-meter 0 ";
+  else
+      testprog1="pnmto"${fmt};
+  fi
+
+  if [ ${fmt} = "png" ]
+    then testprog2=${fmt}"topam";
+  elif [ ${fmt} = "tiffcmyk" ]
+    then testprog2="tifftopnm";
+  else
+    testprog2=${fmt}"topnm";
+  fi
+
+  ${testprog1} ${test_pgm} > ${out1};   status1=$?
+  ${testprog1} < ${test_pgm} > ${out2}; status2=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog1}": "${status1} ${status2} $?  
+
+  ${testprog2} ${out1} > ${out3};       status3=$?
+  ${testprog2} < ${out1} > ${out4};     status4=$?
+  cmp -s ${out3} ${out4}
+  echo ${testprog2}": "${status3} ${status4} $?
+
+  rm ${out1} ${out2} ${out3} ${out4}
+  done
+
+rm ${test_pgm}
+
+
+# pnmtofiasco  width, height must be even and at least 32
+# 
+# pnmtojbig    input must be bilevel black-white or gray
+# pnmtops      input file name embedded in output
+# pnmtorle     input file name, creation time embedded in output
+#              file name blank when input is from stdin
+# pnmtotiffcmyk  input file name embedded in output
+#                "Standard input" if from stdin
+# pnmtoxwd     input file name embedded in output
+#              "stdin" if from stdin

@@ -1,0 +1,72 @@
+#! /bin/sh
+# This script tests: ppmtobmp bmptopnm ppmtoilbm ilbmtoppm ppmtoleaf leaftoppm
+# This script tests: ppmtoneo neotoppm ppmtopcx pcxtoppm ppmtopi1 pi1toppm
+# This script tests: ppmtopict picttoppm ppmtopj pjtoppm ppmtospu sputoppm
+# This script tests: ppmtoxpm xpmtoppm
+# Also requires: ppmmake
+
+tmpdir=${tmpdir:-/tmp}
+test_ppm=${tmpdir}/test.ppm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+
+ppmmake -maxval 7 rgb:00/00/00 320 200 > ${test_ppm}
+
+tmpdir=${tmpdir:-/tmp}
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+for fmt in \
+        bmp \
+        ilbm \
+        leaf \
+        neo \
+        pcx \
+        pi1 \
+        pict \
+        pj \
+        spu \
+        xpm
+  do
+  testprog1="ppmto"${fmt}
+  if [ ${fmt} = "bmp" ]
+    then testprog2=${fmt}"topnm";
+  else testprog2=${fmt}"toppm";
+  fi
+
+  ${testprog1} ${test_ppm} > ${out1};      status1=$?
+  ${testprog1} < ${test_ppm} > ${out2};    status2=$?
+  if [ ${fmt} = "xpm" ]
+    then
+    sed -i '/^static char/s/static char .* = {/static char file/' \
+	    ${out1} ${out2};
+  fi 
+  cmp -s ${out1} ${out2}
+  diff ${out1} ${out2}
+  echo ${testprog1}": "${status1} ${status2} $?
+
+  ${testprog2} ${out1} > ${out3};      status3=$?
+  ${testprog2} < ${out1} > ${out4};    status4=$?
+  cmp -s ${out3} ${out4}
+  echo ${testprog2}": "${status3} ${status4} $?
+  done
+
+# asciitopgm
+# bmptopnm
+
+# winicontopam
+
+# spu width=320 height=200 fixed
+
+# eyuvtoppm width, height is mandatory
+# yuvtoppm width, height is mandatory
+
+# winicontoppm max size 255 255
+
+# xpm maxval 15 or larger
+
+# yuvsplit  splits output into three files
+
+# ppmtowinicon winicontoppm legacy

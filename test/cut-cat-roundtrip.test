@@ -12,12 +12,12 @@ padded_ppm=${tmpdir}/padded.ppm
 
 echo "Test 1.  Should print 1926073387 101484 six times"
 
-testimg_ppm_sum=`cat testimg.ppm | cksum`
+testimg_ppm_sum=`cksum < testimg.ppm`
 echo ${testimg_ppm_sum}
 
- imgsize=$(pamfile -size testimg.ppm)
- width=$(echo ${imgsize} | cut -d " " -f 1)
- height=$(echo ${imgsize} | cut -d " " -f 2)
+imgsize=$(pamfile -size testimg.ppm)
+width=$(echo ${imgsize} | cut -d " " -f 1)
+height=$(echo ${imgsize} | cut -d " " -f 2)
 
 for i in 0 1 128 224 225
   do
@@ -83,7 +83,7 @@ padded_pbm=${tmpdir}/padded.pbm
 
 echo "Test 5.  Should print 281226646 481 six times"
 
-maze_pbm_sum=`cat maze.pbm | cksum`
+maze_pbm_sum=`cksum < maze.pbm`
 echo ${maze_pbm_sum}
 
 imgsize=$(pamfile -size maze.pbm)

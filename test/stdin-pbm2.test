@@ -1,0 +1,67 @@
+#! /bin/sh
+# This script tests: pbmtoatk atktopbm pbmtocis cistopbm pbmtocmuwm cmuwmtopbm
+# This script tests: pbmtoescp2 escp2topbm pbmtog3 g3topbm pbmtogem gemtopnm
+# This script tests: pbmtomacp macptopbm pbmtomda mdatopbm pbmtomgr mgrtopbm
+# This script tests: pbmtomrf mrftopbm pbmtopi3 pi3topbm pbmtosunicon
+# This script tests: sunicontopnm pbmtowbmp wbmptopbm pbmtoybm ybmtopbm
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+for fmt in  \
+        atk \
+        cis \
+        cmuwm \
+        escp2 \
+        g3 \
+        gem \
+        macp \
+        mda \
+        mgr \
+        mrf \
+        pi3 \
+        sunicon \
+        wbmp \
+        ybm
+  do
+  testprog1="pbmto"${fmt}
+
+  if [ ${fmt} = "sunicon" -o ${fmt} = "gem" ];
+    then testprog2=${fmt}"topnm";
+    else testprog2=${fmt}"topbm";
+  fi
+
+  ${testprog1} testgrid.pbm > ${out1};      status1=$?
+  ${testprog1} < testgrid.pbm > ${out2};    status2=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog1}": "${status1} ${status2} $?
+  
+  ${testprog2} ${out1} > ${out3};      status3=$?
+  ${testprog2} < ${out1} > ${out4};    status4=$?
+
+  if [ ${fmt} = "xbm" ];
+    then sed -i '3s/noname/testgrid/' ${out3};
+  fi       
+
+  cmp -s ${out3} ${out4}
+  echo ${testprog2}": "${status3} ${status4} $?
+  
+  rm ${out1} ${out2} ${out3} ${out4}
+  done
+
+# We don't test Pbmtopgm Pgmtopbm Asciitopbm Asciitopgm here
+
+# Pbmtopk Pktopbm require resolution output pk file, tk file
+#            some conditions apply to input image dimensions
+
+# These three programs embed the input file name in the output
+# If the input is from stdin, "noname"
+# Pbmtolps tested in lps-roundtrip.test
+# Pbmtoxbm           xbm-roundtrip.test
+# Pbmtozinc          pbm-misc-converters.test
+
+# Icontopbm Pbmtoicon Pbmtox10bm are legacy

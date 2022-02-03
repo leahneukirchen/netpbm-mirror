@@ -1,0 +1,59 @@
+#! /bin/sh
+# This script tests: pnmalias pnmcat pnmcolormap pnmconvol pnmcrop pnmgamma
+# This script tests: pnmhisteq pnmhistmap pnminvert pnmmargin pnmmercator
+# This script tests: pnmmontage pnmnlfilt pnmnorm pnmpad pnmquant pnmrotate
+# This script tests: pnmscalefixed pnmshear pnmsmooth pnmtile pnmtoddif
+# This script tests: pnmtopclxl
+# Also requires: ppmpat pamflip
+
+tmpdir=${tmpdir:-/tmp}
+small_ppm=${tmpdir}/test.ppm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+
+ppmpat -g2 -color=rgb:00/00/ff,rgb:ff/00/00 -mesh 4 4 > ${small_ppm}
+
+for testprog in  \
+        pnmalias \
+        "pnmcat -lr " \
+        "pnmcolormap all " \
+        "pnmconvol -matrix=-1,3,-1 " \
+        pnmcrop \
+        "pnmgamma -ungamma 0.5 " \
+        pnmhisteq \
+        pnmhistmap \
+        pnminvert \
+        "pnmmargin 2 " \
+        pnmmercator \
+        pnmmontage \
+        "pnmnlfilt 0.5 0.5 " \
+        pnmnorm \
+        pnmpad \
+        "pnmquant 64 " \
+        "pnmrotate 90 " \
+        "pnmscalefixed 1 " \
+        "pnmshear 45 " \
+        pnmsmooth \
+        "pnmtile 4 4 " \
+	pnmtoddif \
+	"pnmtopclxl -colorok "
+  do
+  ${testprog} ${small_ppm} > ${out1};      status1=$?
+  ${testprog} < ${small_ppm} > ${out2};    status2=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog}": "${status1} ${status2} $?
+  rm ${out1} ${out2}
+  done
+
+
+rm ${small_ppm}
+
+# Pnmquantall: overwrites input files
+# Pnmremap:  requires -mapfile=file
+# Pnmpsnr : compares two input files
+# Pnmindex: no input from stdin
+# Pnmpaste: requires two input files
+# Pnmstitch: requires two input files
+
+# pnmmargin: uses pamflip
+# pnmsmooth: uses pnmconvol

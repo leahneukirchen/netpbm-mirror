@@ -1,6 +1,6 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmtoilbm ilbmtoppm
-# Also requires: pamseq pamdepth pamtopnm pnmremap
+# Also requires: pamseq pamdepth pamtopnm pnmremap pnmcolormap
 
 echo "Test 1.  Should produce 669206373 10102 five times"
 #Output is PPM raw, 57 by 59  maxval 255
@@ -16,14 +16,25 @@ ppmtoilbm testimg.ppm | ilbmtoppm | cksum
 ppmtoilbm -24force testimg.ppm | ilbmtoppm | cksum
 ppmtoilbm -dcbits 8 8 8 -nocompress testimg.ppm | ilbmtoppm | cksum
 
+tmpdir=${tmpdir:-/tmp}
 
 echo "Test 3.  Should print 984199586 101484"
-pamseq 3 5 -tupletype=RGB | pamdepth 255 | pamtopnm | \
+test_ppm=${tmpdir}/test.ppm
+pamseq 3 5 -tupletype=RGB | pamdepth 255 | pamtopnm | tee ${test_ppm} | \
   pnmremap -mapfile=- testimg.ppm | ppmtoilbm | ilbmtoppm | cksum
 
 
-echo "Test 4.  Should print 2059976475 661 twice"
-pamseq 3 5 -tupletype=RGB | pamtopnm | \
-  ppmtoilbm -compress | ilbmtoppm | cksum
-pamseq 3 5 -tupletype=RGB | pamtopnm | \
-  ppmtoilbm -nocompress | ilbmtoppm | cksum
+echo "Test 4.  Should print 2059976475 661 three times"
+cat ${test_ppm} | cksum
+ppmtoilbm -compress ${test_ppm} | ilbmtoppm | cksum
+ppmtoilbm -nocompress ${test_ppm} | ilbmtoppm | cksum
+
+rm ${test_ppm}
+
+echo "Test 5.  Should print 482756572 101484 twice"
+mapfile=${tmpdir}/mapfile
+pnmcolormap 32 testimg.ppm > ${mapfile}
+ppmtoilbm -map ${mapfile} testimg.ppm | ilbmtoppm | tee ${test_ppm} | cksum
+ppmtoilbm -map ${mapfile} ${test_ppm} | ilbmtoppm | cksum
+
+rm ${mapfile} ${test_ppm}
