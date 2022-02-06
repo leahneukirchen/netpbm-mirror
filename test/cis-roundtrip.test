@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtocis cistopbm
 # Also requires: pbmmake pamcut pamfile
 

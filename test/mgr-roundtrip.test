@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtomgr mgrtopbm
 # Also requires: pbmmake
 

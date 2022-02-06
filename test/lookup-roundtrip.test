@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamlookup pamunlookup
 # Also requires: ppmhist
 

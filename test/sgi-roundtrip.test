@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmtosgi sgitopnm
 # Also requires: rgb3toppm pamdepth pamtopnm pgmtopbm
 

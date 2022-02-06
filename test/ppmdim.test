@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmdim
 # Also requires: pamfunc pamarith pamsumm
 

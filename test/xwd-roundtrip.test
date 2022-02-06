@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmtoxwd xwdtopnm
 # Also requires: pamchannel pamtopnm pamdepth
 

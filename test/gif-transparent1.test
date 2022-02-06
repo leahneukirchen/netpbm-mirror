@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: giftopnm pamtogif ppmtogif
 # Also requires: pamarith pamcomp pamdepth pamenlarge pamstack pbmmake
 # Also requires: pnminvert ppmchange ppmpat ppmtopgm ppmtoppm 

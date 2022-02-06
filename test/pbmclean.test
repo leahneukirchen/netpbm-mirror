@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmclean
 # Also requires: pbmmake pbmpage pbmtext pnmmargin pnmpad
 

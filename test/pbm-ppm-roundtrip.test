@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pgmtoppm ppmtopgm ppmtoppm pgmtopbm
 # Also requires: pbmmake ppmcolormask pnminvert
 

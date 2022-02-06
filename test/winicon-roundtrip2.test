@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamtowinicon winicontopam
 # Also requires: pamchannel pamdepth pamstack pamtopam pbmmake ppmpat
 

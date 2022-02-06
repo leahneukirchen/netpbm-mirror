@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmshear
 # Also requires: pbmmake pnmpad
 

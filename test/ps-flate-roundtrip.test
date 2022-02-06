@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmtops pstopnm
 # Also requires: pamtopnm gs zlib
 

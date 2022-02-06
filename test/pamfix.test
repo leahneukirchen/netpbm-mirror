@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamfix
 # Also requires: pbmmake
 
@@ -9,37 +9,37 @@ echo "Test 1"
 
 pbmmake -g 5 5 | pamfix -truncate -plain
 
-echo -e "P1\n5 5\n01010\n10101\n01010\n00001\n1" |\
+printf "P1\n5 5\n01010\n10101\n01010\n00001\n1\n" |\
   pamfix -truncate -plain
 
-echo -e "P1\n5 5\n01010\n10101\n01010\n0000\n1" |\
+printf "P1\n5 5\n01010\n10101\n01010\n0000\n1\n" |\
   pamfix -truncate -plain
 
-echo -e "P1\n5 5\n01010\n10102\n01010\n00001\n1" |\
+printf "P1\n5 5\n01010\n10102\n01010\n00001\n1\n" |\
   pamfix -truncate -plain
 
 # Test 2
 
 echo "Test 2"
 
-echo -e "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 0" |\
+printf "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 0\n" |\
   pamfix -truncate -plain
 
-echo -e "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7" |\
+printf "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7\n" |\
   pamfix -truncate -plain
-echo -e "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 8" |\
+printf "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 8\n" |\
   pamfix -truncate -plain
 
-echo -e "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 8" |\
+printf "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 8\n" |\
   pamfix -change -plain
 
-echo -e "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 8" |\
+printf "P2\n3 3\n7\n0 1 2\n3 4 5\n6 7 8\n" |\
  pamfix -clip -plain
 
-echo -e "P2\n3 3\n7\n0 1 2\n3 4 8\n0 0 0" |\
+printf "P2\n3 3\n7\n0 1 2\n3 4 8\n0 0 0\n" |\
   pamfix -change -truncate -plain
 
-echo -e "P2\n3 3\n7\n0 1 2\n3 4 8\n0 0 0" |\
+printf "P2\n3 3\n7\n0 1 2\n3 4 8\n0 0 0\n" |\
   pamfix -clip -truncate -plain
 
 # Test Invalid
@@ -53,17 +53,17 @@ echo "Invalid command-line combination, invalid input" 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-echo -e "P2\n3 2\n7\n0 1 2\n6 7 8" | pamfix -change -clip > ${test_out} || \
+printf "P2\n3 2\n7\n0 1 2\n6 7 8\n" | pamfix -change -clip > ${test_out} || \
   echo -n "Expected failure 1";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-echo -e "P1\n5 5" | pamfix -truncate -plain > ${test_out} || \
+printf "P1\n5 5\n" | pamfix -truncate -plain > ${test_out} || \
   echo -n "Expected failure 2";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
-echo -e "P2\n3 3\255" | pamfix -truncate -plain > ${test_out} || \
+printf "P2\n3 3\255\n" | pamfix -truncate -plain > ${test_out} || \
   echo -n "Expected failure 3";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}

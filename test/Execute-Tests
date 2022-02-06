@@ -185,8 +185,8 @@ elif [ $VALGRIND_TESTS = "on" ]
   # You may want to add --track-origins=yes to the above.
 
   for i in awk basename cat cksum cmp comm cp cut date dirname \
-           egrep fgrep file grep gs head iconv ls mkdir mktemp perl rm \
-           sed seq sh sort tee tr uniq wc \
+           egrep fgrep file grep gs head iconv ls mkdir mktemp perl \
+           printf rm sed seq sh sort tee tr uniq wc \
            testrandom Available-Testprog
 
     # Tell valgrind not to probe execution of the above programs.

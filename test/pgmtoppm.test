@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pgmtoppm
 # Also requires: pamtopnm pnminvert pamseq pgmramp
 

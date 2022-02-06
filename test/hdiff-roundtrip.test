@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: hdifftopam pamtohdiff
 # Also requires:
 

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnminvert
 # Also requires: pbmmake pamchannel pamtopnm
 
