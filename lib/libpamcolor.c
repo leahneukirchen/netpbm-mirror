@@ -338,7 +338,7 @@ warnIfNotExact(const char * const colorname,
 
     float const epsilon = 1.0/65536.0;
 
-    if (fabs((float)(rounded[plane] / maxval) - exact[plane]) > epsilon) {
+    if (fabs(((float)rounded[plane] / maxval) - exact[plane]) > epsilon) {
         pm_message("WARNING: Component %u of color '%s' is %f, "
                    "which cannot be represented precisely with maxval %lu.  "
                    "Approximating as %lu.",

@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.02.13 BJH  Release 10.86.31
+
+              libnetpbm, various programs: fix bug: bogus warning that a color
+              specified on command line cannot be represented exactly with the
+              maxval being used.  Introduced in Netpbm 10.83 (June 2018).
+
+              ppmtoapplevol: Fix bug: reads from Standard Input even when you
+              specify the input file argument.  Always broken.  (ppmtoapplevol
+              was new in Netpbm 10.54 (March 2011).
+
+              ppmtoapplevol: Fix bug: produces garbage with input image wider
+              than 255.  Always broken.  (ppmtoapplevol was new in Netpbm
+              10.54 (March 2011).
+
 22.01.25 BJH  Release 10.86.30
 
               pgmabel: Fix incorrect output.  Always broken.  (Program was
