@@ -44,7 +44,6 @@ for fmt in \
 	    ${out1} ${out2};
   fi 
   cmp -s ${out1} ${out2}
-  diff ${out1} ${out2}
   echo ${testprog1}": "${status1} ${status2} $?
 
   ${testprog2} ${out1} > ${out3};      status3=$?
