@@ -18,7 +18,7 @@
   USA
 
   Copyright Alexandre Becoulet <diaxen AT free DOT fr>
-  
+
   Completely rewritten for Netpbm by Bryan Henderson August 2005.
 */
 
@@ -127,7 +127,7 @@ calc_4(const struct pam * const pamP,
   (even/odd is with respect to ('xoffset', 'yoffset')).
 -----------------------------------------------------------------------------*/
     unsigned int row;
-    
+
     /* Do the even rows -- the even column pixels get copied from the input,
        while the odd column pixels get the mean of adjacent even ones
     */
@@ -146,7 +146,7 @@ calc_4(const struct pam * const pamP,
     for (row = yoffset; row + 2 < pamP->height; row += 2) {
         unsigned int col;
         for (col = xoffset; col < pamP->width; ++col) {
-            outtuples[row + 1][col][plane] = 
+            outtuples[row + 1][col][plane] =
                 noInterpolation ?
                 0 :
                 (outtuples[row][col][plane] +
@@ -409,11 +409,11 @@ main(int argc, const char **argv) {
     tuple ** outtuples;
 
     pm_proginit(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.inputFilespec);
-    
+
     intuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     makeOutputPam(&inpam, &outpam, !!cmdline.subchannel);
@@ -433,3 +433,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
+
+
