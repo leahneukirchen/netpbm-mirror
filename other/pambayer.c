@@ -32,25 +32,25 @@
 #include "nstring.h"
 
 
-enum bayerType {
+enum BayerType {
     BAYER1,
     BAYER2,
     BAYER3,
     BAYER4
 };
 
-struct cmdlineInfo {
-    const char * inputFilespec;
-    enum bayerType bayerType;
-    unsigned int nointerpolate;
-    unsigned int subchannel;
+struct CmdlineInfo {
+    const char *   inputFilespec;
+    enum BayerType bayerType;
+    unsigned int   nointerpolate;
+    unsigned int   subchannel;
 };
 
 
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -67,12 +67,12 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "type",     OPT_UINT, &type,
-            &typeSpec, 0);
+    OPTENT3(0, "type",          OPT_UINT, &type,
+            &typeSpec,                      0);
     OPTENT3(0, "nointerpolate", OPT_FLAG, NULL,
-            &cmdlineP->nointerpolate, 0);
-    OPTENT3(0, "subchannel", OPT_FLAG, NULL,
-            &cmdlineP->subchannel, 0);
+            &cmdlineP->nointerpolate,       0);
+    OPTENT3(0, "subchannel",    OPT_FLAG, NULL,
+            &cmdlineP->subchannel,          0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -107,13 +107,13 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-calc_4(const struct pam * const pamP,
-       tuple **           const intuples,
-       tuple **           const outtuples,
-       unsigned int       const plane,
-       bool               const noInterpolation,
-       unsigned int       const xoffset,
-       unsigned int       const yoffset) {
+calc4(const struct pam * const pamP,
+      tuple **           const intuples,
+      tuple **           const outtuples,
+      unsigned int       const plane,
+      bool               const noInterpolation,
+      unsigned int       const xoffset,
+      unsigned int       const yoffset) {
 /*----------------------------------------------------------------------------
     X . X
     . . .
@@ -158,13 +158,13 @@ calc_4(const struct pam * const pamP,
 
 
 static void
-calc_5(const struct pam * const pamP,
-       tuple **           const intuples,
-       tuple **           const outtuples,
-       unsigned int       const plane,
-       bool               const noInterpolation,
-       unsigned int       const xoffset,
-       unsigned int       const yoffset) {
+calc5(const struct pam * const pamP,
+      tuple **           const intuples,
+      tuple **           const outtuples,
+      unsigned int       const plane,
+      bool               const noInterpolation,
+      unsigned int       const xoffset,
+      unsigned int       const yoffset) {
 /*----------------------------------------------------------------------------
    . X .
    X . X
@@ -200,7 +200,7 @@ calc_5(const struct pam * const pamP,
 
 
 
-struct compAction {
+struct CompAction {
     unsigned int xoffset;
     unsigned int yoffset;
     void (*calc)(const struct pam * const pamP,
@@ -214,7 +214,7 @@ struct compAction {
 
 
 
-static struct compAction const comp_1[3] = {
+static struct CompAction const comp1[3] = {
 /*----------------------------------------------------------------------------
   G B G B
   R G R G
@@ -222,45 +222,45 @@ static struct compAction const comp_1[3] = {
   R G R G
 -----------------------------------------------------------------------------*/
 
-    { 0, 1, calc_4 },
-    { 0, 1, calc_5 },
-    { 1, 0, calc_4 }
+    { 0, 1, calc4 },
+    { 0, 1, calc5 },
+    { 1, 0, calc4 }
 };
 
-static struct compAction const comp_2[3] = {
+static struct CompAction const comp2[3] = {
 /*----------------------------------------------------------------------------
   R G R G
   G B G B
   R G R G
   G B G B
 -----------------------------------------------------------------------------*/
-    { 0, 0, calc_4 },
-    { 0, 0, calc_5 },
-    { 1, 1, calc_4 }
+    { 0, 0, calc4 },
+    { 0, 0, calc5 },
+    { 1, 1, calc4 }
 };
 
-static struct compAction const comp_3[3] = {
+static struct CompAction const comp3[3] = {
 /*----------------------------------------------------------------------------
   B G B G
   G R G R
   B G B G
   G R G R
 -----------------------------------------------------------------------------*/
-    { 1, 1, calc_4 },
-    { 0, 0, calc_5 },
-    { 0, 0, calc_4 }
+    { 1, 1, calc4 },
+    { 0, 0, calc5 },
+    { 0, 0, calc4 }
 };
 
-static struct compAction const comp_4[3] = {
+static struct CompAction const comp4[3] = {
 /*----------------------------------------------------------------------------
   G R G R
   B G B G
   G R G R
   B G B G
 -----------------------------------------------------------------------------*/
-    { 1, 0, calc_4 },
-    { 0, 1, calc_5 },
-    { 0, 1, calc_4 }
+    { 1, 0, calc4 },
+    { 0, 1, calc5 },
+    { 0, 1, calc4 }
 };
 
 
@@ -293,7 +293,7 @@ makeOutputPam(const struct pam * const inpamP,
 
 
 
-struct xyOffset {
+struct XyOffset {
 /*----------------------------------------------------------------------------
    A two-dimensional offset within a matrix.
 -----------------------------------------------------------------------------*/
@@ -303,8 +303,8 @@ struct xyOffset {
 
 
 
-static struct xyOffset
-offsetForType(enum bayerType const bayerType) {
+static struct XyOffset
+offsetForType(enum BayerType const bayerType) {
 /*----------------------------------------------------------------------------
    The offset within a bayer matrix of Type 'bayerType' where you find the
 
@@ -313,7 +313,7 @@ offsetForType(enum bayerType const bayerType) {
 
    square
 -----------------------------------------------------------------------------*/
-    struct xyOffset retval;
+    struct XyOffset retval;
 
     switch (bayerType) {
         case BAYER1:
@@ -339,12 +339,12 @@ offsetForType(enum bayerType const bayerType) {
 
 
 static void
-calc_subchannel(const struct pam * const pamP,
-                tuple **           const intuples,
-                tuple **           const outtuples,
-                enum bayerType     const bayerType) {
+calcSubchannel(const struct pam * const pamP,
+               tuple **           const intuples,
+               tuple **           const outtuples,
+               enum BayerType     const bayerType) {
 
-    struct xyOffset const offset = offsetForType(bayerType);
+    struct XyOffset const offset = offsetForType(bayerType);
 
     unsigned int row;
 
@@ -359,16 +359,16 @@ calc_subchannel(const struct pam * const pamP,
 
 
 
-static const struct compAction *
-actionTableForType(enum bayerType const bayerType) {
+static const struct CompAction *
+actionTableForType(enum BayerType const bayerType) {
 
-    const struct compAction * retval;
+    const struct CompAction * retval;
 
     switch (bayerType) {
-    case BAYER1: retval = comp_1; break;
-    case BAYER2: retval = comp_2; break;
-    case BAYER3: retval = comp_3; break;
-    case BAYER4: retval = comp_4; break;
+    case BAYER1: retval = comp1; break;
+    case BAYER2: retval = comp2; break;
+    case BAYER3: retval = comp3; break;
+    case BAYER4: retval = comp4; break;
     }
     return retval;
 }
@@ -376,20 +376,20 @@ actionTableForType(enum bayerType const bayerType) {
 
 
 static void
-calc_image(struct pam *   const inpamP,
-           tuple **       const intuples,
-           tuple **       const outtuples,
-           enum bayerType const bayerType,
-           bool           const wantNoInterpolate) {
+calcImage(struct pam *   const inpamP,
+          tuple **       const intuples,
+          tuple **       const outtuples,
+          enum BayerType const bayerType,
+          bool           const wantNoInterpolate) {
 
-    const struct compAction * const compActionTable =
+    const struct CompAction * const compActionTable =
         actionTableForType(bayerType);
 
     unsigned int plane;
 
     for (plane = 0; plane < 3; ++plane) {
 
-        struct compAction const compAction = compActionTable[plane];
+        struct CompAction const compAction = compActionTable[plane];
 
         compAction.calc(inpamP, intuples, outtuples, plane,
                         wantNoInterpolate,
@@ -401,7 +401,7 @@ calc_image(struct pam *   const inpamP,
             int
 main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam;
     struct pam outpam;
@@ -421,10 +421,10 @@ main(int argc, const char **argv) {
     outtuples = pnm_allocpamarray(&outpam);
 
     if (cmdline.subchannel)
-        calc_subchannel(&inpam, intuples, outtuples, cmdline.bayerType);
+        calcSubchannel(&inpam, intuples, outtuples, cmdline.bayerType);
     else
-        calc_image(&inpam, intuples, outtuples,cmdline.bayerType,
-                   !!cmdline.nointerpolate);
+        calcImage(&inpam, intuples, outtuples,cmdline.bayerType,
+                  !!cmdline.nointerpolate);
 
     pnm_writepam(&outpam, outtuples);
 
