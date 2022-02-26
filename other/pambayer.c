@@ -109,6 +109,54 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
+clearTuples(const struct pam * const pamP,
+            tuple **           const outtuples) {
+/*----------------------------------------------------------------------------
+  Make tuples at the edge that may not get set to anything by the normal
+  computation of the bayer pattern black.
+-----------------------------------------------------------------------------*/
+    if (pamP->height <= 4 || pamP->width <= 4) {
+        unsigned int row;
+
+        for (row = 0; row < pamP->height; ++row) {
+            unsigned int col;
+            for (col = 0; col < pamP->width; ++col) {
+                unsigned int plane;
+                for (plane = 0; plane < pamP->depth; ++plane)
+                    outtuples[row][col][plane] = 0;
+            }
+        }
+    } else {
+        unsigned int col;
+        unsigned int row;
+
+        for (col = 0; col < pamP->width; ++col) {
+            unsigned int plane;
+
+            for (plane = 0; plane < pamP->depth; ++plane) {
+                outtuples[0][col][plane] = 0;
+                outtuples[1][col][plane] = 0;
+                outtuples[pamP->height-2][col][plane] = 0;
+                outtuples[pamP->height-1][col][plane] = 0;
+            }
+
+            for (row = 2; row < pamP->height - 2; ++row) {
+                unsigned int plane;
+
+                for (plane = 0; plane < pamP->depth; ++plane) {
+                    outtuples[row][0][plane] = 0;
+                    outtuples[row][1][plane] = 0;
+                    outtuples[row][pamP->width-2][plane] = 0;
+                    outtuples[row][pamP->width-1][plane] = 0;
+                }
+            }
+        }
+    }
+}
+
+
+
+static void
 calc4(const struct pam * const pamP,
       tuple **           const intuples,
       tuple **           const outtuples,
@@ -380,6 +428,7 @@ actionTableForType(enum BayerType const bayerType) {
 static void
 calcImage(struct pam *   const inpamP,
           tuple **       const intuples,
+          struct pam *   const outpamP,
           tuple **       const outtuples,
           enum BayerType const bayerType,
           bool           const wantNoInterpolate) {
@@ -388,6 +437,8 @@ calcImage(struct pam *   const inpamP,
         actionTableForType(bayerType);
 
     unsigned int plane;
+
+    clearTuples(outpamP, outtuples);
 
     for (plane = 0; plane < 3; ++plane) {
 
@@ -425,7 +476,7 @@ main(int argc, const char **argv) {
     if (cmdline.subchannel)
         calcSubchannel(&inpam, intuples, outtuples, cmdline.bayerType);
     else
-        calcImage(&inpam, intuples, outtuples,cmdline.bayerType,
+        calcImage(&inpam, intuples, &outpam, outtuples,cmdline.bayerType,
                   !!cmdline.nointerpolate);
 
     pnm_writepam(&outpam, outtuples);
