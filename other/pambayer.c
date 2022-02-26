@@ -81,6 +81,8 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
+    free(option_def);
+
     if (argc-1 < 1)
         cmdlineP->inputFilespec = "-";
     else if (argc-1 > 1)
