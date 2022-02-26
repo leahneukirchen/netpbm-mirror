@@ -43,6 +43,7 @@ struct cmdlineInfo {
     const char * inputFilespec;
     enum bayerType bayerType;
     unsigned int nointerpolate;
+    unsigned int subchannel;
 };
 
 
@@ -70,6 +71,8 @@ parseCommandLine(int argc, const char ** argv,
             &typeSpec, 0);
     OPTENT3(0, "nointerpolate", OPT_FLAG, NULL,
             &cmdlineP->nointerpolate, 0);
+    OPTENT3(0, "subchannel", OPT_FLAG, NULL,
+            &cmdlineP->subchannel, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -85,6 +88,9 @@ parseCommandLine(int argc, const char ** argv,
                  "You specified %u", argc-1);
     else
         cmdlineP->inputFilespec = argv[1];
+
+    if (cmdlineP->nointerpolate && cmdlineP->subchannel)
+        pm_error("You cannot use -nointerpolate with -subchannel");
 
     if (!typeSpec)
         pm_error("You must specify the -type option");
@@ -261,19 +267,94 @@ static struct compAction const comp_4[3] = {
 
 static void
 makeOutputPam(const struct pam * const inpamP,
-              struct pam *       const outpamP) {
+              struct pam *       const outpamP,
+              bool               const wantSubchannel) {
 
     outpamP->size   = sizeof(*outpamP);
     outpamP->len    = PAM_STRUCT_SIZE(tuple_type);
     outpamP->file   = stdout;
     outpamP->format = PAM_FORMAT;
     outpamP->plainformat = 0;
-    outpamP->width  = inpamP->width;
-    outpamP->height = inpamP->height;
-    outpamP->depth  = 3;
     outpamP->maxval = inpamP->maxval;
     outpamP->bytes_per_sample = inpamP->bytes_per_sample;
-    STRSCPY(outpamP->tuple_type, "RGB");
+
+    if (wantSubchannel) {
+        outpamP->width  = inpamP->width/2;
+        outpamP->height = inpamP->height/2;
+        outpamP->depth  = 1;
+        STRSCPY(outpamP->tuple_type, "BAYERSUBCHANNEL");
+    } else {
+        outpamP->width  = inpamP->width;
+        outpamP->height = inpamP->height;
+        outpamP->depth  = 3;
+        STRSCPY(outpamP->tuple_type, "RGB");
+    }
+}
+
+
+
+struct xyOffset {
+/*----------------------------------------------------------------------------
+   A two-dimensional offset within a matrix.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
+    unsigned int col;
+};
+
+
+
+static struct xyOffset
+offsetForType(enum bayerType const bayerType) {
+/*----------------------------------------------------------------------------
+   The offset within a bayer matrix of Type 'bayerType' where you find the
+
+     G B
+     R G
+
+   square
+-----------------------------------------------------------------------------*/
+    struct xyOffset retval;
+
+    switch (bayerType) {
+        case BAYER1:
+            retval.row = 0;
+            retval.col = 0;
+            break;
+        case BAYER2:
+            retval.row = 0;
+            retval.col = 1;
+            break;
+        case BAYER3:
+            retval.row = 1;
+            retval.col = 0;
+            break;
+        case BAYER4:
+            retval.row = 1;
+            retval.col = 1;
+            break;
+    }
+    return retval;
+}
+
+
+
+static void
+calc_subchannel(const struct pam * const pamP,
+                tuple **           const intuples,
+                tuple **           const outtuples,
+                enum bayerType     const bayerType) {
+
+    struct xyOffset const offset = offsetForType(bayerType);
+
+    unsigned int row;
+
+    for (row = offset.row; row < pamP->height; row += 2) {
+        unsigned int col;
+
+        for (col = offset.col; col < pamP->width; col += 2) {
+            outtuples[row/2][col/2][0] = intuples[row][col][0];
+        }
+    }
 }
 
 
@@ -294,7 +375,30 @@ actionTableForType(enum bayerType const bayerType) {
 
 
 
-int
+static void
+calc_image(struct pam *   const inpamP,
+           tuple **       const intuples,
+           tuple **       const outtuples,
+           enum bayerType const bayerType,
+           bool           const wantNoInterpolate) {
+
+    const struct compAction * const compActionTable =
+        actionTableForType(bayerType);
+
+    unsigned int plane;
+
+    for (plane = 0; plane < 3; ++plane) {
+
+        struct compAction const compAction = compActionTable[plane];
+
+        compAction.calc(inpamP, intuples, outtuples, plane,
+                        wantNoInterpolate,
+                        compAction.xoffset, compAction.yoffset);
+    }
+}
+
+
+            int
 main(int argc, const char **argv) {
 
     struct cmdlineInfo cmdline;
@@ -303,8 +407,6 @@ main(int argc, const char **argv) {
     struct pam outpam;
     tuple ** intuples;
     tuple ** outtuples;
-    const struct compAction * compActionTable;
-    unsigned int plane;
 
     pm_proginit(&argc, argv);
     
@@ -314,19 +416,16 @@ main(int argc, const char **argv) {
     
     intuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    compActionTable = actionTableForType(cmdline.bayerType);
-
-    makeOutputPam(&inpam, &outpam);
+    makeOutputPam(&inpam, &outpam, !!cmdline.subchannel);
 
     outtuples = pnm_allocpamarray(&outpam);
 
-    for (plane = 0; plane < 3; ++plane) {
-        struct compAction const compAction = compActionTable[plane];
+    if (cmdline.subchannel)
+        calc_subchannel(&inpam, intuples, outtuples, cmdline.bayerType);
+    else
+        calc_image(&inpam, intuples, outtuples,cmdline.bayerType,
+                   !!cmdline.nointerpolate);
 
-        compAction.calc(&inpam, intuples, outtuples, plane,
-                        cmdline.nointerpolate,
-                        compAction.xoffset, compAction.yoffset);
-    }
     pnm_writepam(&outpam, outtuples);
 
     pnm_freepamarray(outtuples, &outpam);
