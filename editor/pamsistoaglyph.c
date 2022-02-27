@@ -6,7 +6,7 @@
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2009 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2009-2022 Scott Pakin <scott+pbm@pakin.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -127,7 +127,10 @@ readAsGray( const char * const fileName,
         for (col = 0; col < pamP->width; ++col) {
             double YP, CbP, CrP;
 
-            pnm_YCbCrtuple( tuplerow[col], &YP, &CbP, &CrP );
+            if (pamP->depth >= 3)
+                pnm_YCbCrtuple(tuplerow[col], &YP, &CbP, &CrP);
+            else
+                YP = (double) tuplerow[col][0];
             grayArray[row][col] = (gray)
                 (YP * maxGrayVal / (double)pamP->maxval);
         }

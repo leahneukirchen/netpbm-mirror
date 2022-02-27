@@ -9,6 +9,10 @@ not yet  BJH  Release 10.98.00
               pnmtosir: Set some possibly meaningless bits in output to zero
               so output is repeatable.
 
+              pamsistoaglyph: Fix invalid memory reference and incorrect
+              output on depth 1 input.  Always broken.  (pamsistoaglyph was
+              new in Netpbm 10.47 (June 2009).  Thanks Scott Pakin.
+
               pambayer: Fix bogus colors at edges.  Always Broken (pambayer
               was new in Release 10.30 (October 2005)).
 
