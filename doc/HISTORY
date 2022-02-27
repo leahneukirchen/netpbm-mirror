@@ -6,8 +6,6 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
-              pambayer: Add -subchannel.
-
               pnmtosir: Set some possibly meaningless bits in output to zero
               so output is repeatable.
 
