@@ -151,7 +151,7 @@ bestEyeSepWeEncountered(int const bestSeparation[3],
     for (i = 2; i >= 0; --i) {
         if (bestSeparation[i] != 0)
             return bestSeparation[i];
-    }    
+    }
     return altBestSeparation;
 }
 
@@ -428,4 +428,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
 
