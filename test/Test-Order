@@ -80,6 +80,7 @@ pnminvert.test
 pamchannel.test
 ppmchange.test
 pambackground.test
+pnmpad-reportonly.test
 pnmpaste-pbm.test
 
 ppmshift.test
@@ -140,6 +141,8 @@ stdin-ppm2.test
 stdin-ppm3.test
 stdin-pnm1.test
 stdin-pnm2.test
+stdin-pam1.test
+stdin-pam2.test
 
 pbm-misc-converters.test
 

@@ -1,0 +1,72 @@
+#! /bin/bash
+# This script tests: pamaddnoise pamaltsat pambackground pambayer
+# This script tests: pambrighten pamcut pamdeinterlace pamdepth pamditherbw
+# This script tests: pamedge pamexec pamfile pamfind pamfix pamflip
+# This script tests: pamfunc pamhomography pamhue pamlevels
+# This script tests: pammixinterlace pammosaicknit pamoil
+# This script tests: pamperspective pamrecolor pamrubber pamscale
+# This script tests: pamshadedrelief pamsharpness pamsistoaglyph
+# This script tests: pamslice pamsplit pamstack pamstereogram pamstretch
+# This script tests: pamstretch-gen pamsumm pamsummcol pamtable pamthreshold
+# This script tests: pamtilt pamtopnm pamwipeout
+# Also requires: pbmmake
+
+tmpdir=${tmpdir:-/tmp}
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+small_pbm=${tmpdir}/small.pbm
+
+pbmmake -g 5 5 > ${small_pbm}
+
+for testprog in \
+    "pamaddnoise -seed=1" \
+    "pamaltsat -strength=1" \
+    pambackground \
+    "pambayer -type=2" \
+    pambrighten \
+    pamcut \
+    pamdeinterlace \
+    "pamdepth 15" \
+    "pamditherbw -threshold" \
+    pamedge \
+    "pamexec cat" \
+    "pamfile -size" \
+    "pamfind -target=1" \
+    pamfix \
+    "pamflip -lr" \
+    "pamfunc -not" \
+    "pamhomography -from 0,0,0,1,1,0,1,1" \
+    "pamhue -huechange=60" \
+    "pamlevels -f1 rgb:0/0/0 -t1 rgb:0/0/0 -f2 rgb:ff/ff/ff -t2 rgb:ff/ff/ff" \
+    pammixinterlace \
+    pammosaicknit \
+    pamoil \
+    "pamperspective 0 0 0 1 1 0 1 1" \
+    pamrecolor \
+    "pamrubber -quad 1 1 2 2" \
+    "pamscale 2" \
+    pamshadedrelief \
+    pamsharpness \
+    pamsistoaglyph \
+    "pamslice -row=1" \
+    pamsplit \
+    pamstack \
+    "pamstereogram -randomseed=1" \
+    "pamstretch 1" \
+    "pamstretch-gen 1" \
+    "pamsumm -max" \
+    "pamsummcol -mean" \
+    pamtable \
+    pamthreshold \
+    pamtilt \
+    pamtopnm \
+    "pamwipeout -tb"   
+  do
+  ${testprog} ${small_pbm} > ${out1};      status1=$?
+  ${testprog} < ${small_pbm} > ${out2};    status2=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog}": "${status1} ${status2} $?
+  rm ${out1} ${out2}
+  done
+
+rm ${small_pbm}

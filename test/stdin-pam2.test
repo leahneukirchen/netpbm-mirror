@@ -1,0 +1,63 @@
+#! /bin/bash
+# This script tests: pammasksharpen pammixmulti pamdice
+# This script tests: pamlookup pamunlookup
+# Also requires: pbmmake
+
+tmpdir=${tmpdir:-/tmp}
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+small_pbm=${tmpdir}/small.pbm
+
+pbmmake -g 3 3 > ${small_pbm}
+
+for testprog in \
+    pammasksharpen \
+    pammixmulti
+  do
+  ${testprog} ${small_pbm}   ${small_pbm} > ${out1};   status1=$?
+  ${testprog} ${small_pbm} < ${small_pbm} > ${out2};   status2=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog}": "${status1} ${status2} $?
+  rm ${out1} ${out2}
+  done
+
+  dicestem=${tmpdir}/dice
+
+  testprog="pamdice -outstem=${dicestem}"
+  ${testprog} ${small_pbm}; status1=$?
+  cat ${dicestem}_*_*.pbm > ${out1}
+  rm ${dicestem}_*_*.pbm
+  ${testprog} < ${small_pbm}; status2=$?
+  cat ${dicestem}_*_*.pbm > ${out2}
+  rm ${dicestem}_*_*.pbm
+  cmp -s ${out1} ${out2}
+  echo pamdice: ${status1} ${status2} $?
+  rm ${out1} ${out2}
+
+lookup_ppm=${tmpdir}/lookup.ppm
+
+cat > ${lookup_ppm} <<EOF
+P3
+2 1
+2
+0 0 0
+0 1 2
+EOF
+
+  testprog="pamlookup -lookupfile=${lookup_ppm}"
+  ${testprog}   ${small_pbm} > ${out1}; status1=$?
+  ${testprog} < ${small_pbm} > ${out2}; status2=$?
+  cmp -s ${out1} ${out2}
+  echo pamlookup": "${status1} ${status2} $?
+  rm ${out2}
+
+  testprog="pamunlookup -lookupfile=${lookup_ppm}"
+  ${testprog}   ${out1} > ${out3}; status1=$?
+  ${testprog} < ${out1} > ${out4}; status2=$?
+  cmp -s ${out3} ${out4}
+  echo pamunlookup": "${status1} ${status2} $?
+  rm ${out1} ${out3} ${out4}
+
+rm ${lookup_ppm} ${small_pbm}
