@@ -23,16 +23,16 @@ typedef struct xvPalette {
 } xvPalette;
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     const char * inputFileName;
 };
 
 
 
 static void
-parseCommandLine(int const argc,
-                 char *    argv[],
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int const                  argc,
+                 const char *               argv[],
+                 struct CmdlineInfo * const cmdlineP) {
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
@@ -228,15 +228,15 @@ writeXvRaster(struct pam * const pamP,
 
 
 int
-main(int    argc,
-     char * argv[]) {
+main(int          argc,
+     const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam pam;
     xvPalette xvPalette;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
