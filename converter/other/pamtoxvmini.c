@@ -100,6 +100,8 @@ findClosestColor(struct pam *      const pamP,
 /*----------------------------------------------------------------------------
    Find the color in the palette *xvPaletteP that is closest to the color
    'tuple' and return its index in the palette.
+
+   *pamP gives the format of 'tuple', which must be RGB with maxval 255.
 -----------------------------------------------------------------------------*/
     unsigned int paletteIndex;
     unsigned int bestPaletteIndex;
@@ -155,11 +157,16 @@ getPaletteIndexThroughCache(struct pam *      const pamP,
     int found;
     int paletteIndex;
 
+    /* As required by findClosestColor(): */
+    assert(pamP->depth >= 3);
+    assert(pamP->maxval == 255);
+
     pnm_lookuptuple(pamP, paletteHash, tuple, &found, &paletteIndex);
     if (found)
         *paletteIndexP = paletteIndex;
     else {
         int fits;
+
         findClosestColor(pamP, tuple, xvPaletteP, paletteIndexP);
 
         pnm_addtotuplehash(pamP, paletteHash, tuple, *paletteIndexP, &fits);
@@ -198,6 +205,7 @@ writeXvRaster(struct pam * const pamP,
 
     scaledPam = *pamP;
     scaledPam.maxval = 255;
+    scaledPam.depth = MAX(3, pamP->depth);
 
     for (row = 0; row < pamP->height; ++row) {
         unsigned int col;
