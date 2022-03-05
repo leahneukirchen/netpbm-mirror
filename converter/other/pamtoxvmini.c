@@ -75,7 +75,7 @@ static void
 writeXvHeader(FILE *       const ofP,
               unsigned int const cols,
               unsigned int const rows) {
-           
+
     fprintf(ofP, "P7 332\n");
 
     fprintf(ofP, "# Created by Pamtoxvmini\n");
@@ -94,7 +94,7 @@ writeXvHeader(FILE *       const ofP,
 
 static void
 findClosestColor(struct pam *      const pamP,
-                 tuple             const tuple, 
+                 tuple             const tuple,
                  const xvPalette * const xvPaletteP,
                  unsigned int *    const paletteIndexP) {
 /*----------------------------------------------------------------------------
@@ -118,12 +118,12 @@ findClosestColor(struct pam *      const pamP,
         unsigned int const tupleRed = tuple[PAM_RED_PLANE];
         unsigned int const tupleGrn = tuple[PAM_GRN_PLANE];
         unsigned int const tupleBlu = tuple[PAM_BLU_PLANE];
-        
+
         unsigned int const paletteRed = xvPaletteP->red[paletteIndex];
         unsigned int const paletteGrn = xvPaletteP->grn[paletteIndex];
         unsigned int const paletteBlu = xvPaletteP->blu[paletteIndex];
 
-        unsigned int const distance = 
+        unsigned int const distance =
             SQR((int)tupleRed - (int)paletteRed) +
             SQR((int)tupleGrn - (int)paletteGrn) +
             SQR((int)tupleBlu - (int)paletteBlu);
@@ -161,15 +161,15 @@ getPaletteIndexThroughCache(struct pam *      const pamP,
     else {
         int fits;
         findClosestColor(pamP, tuple, xvPaletteP, paletteIndexP);
-        
+
         pnm_addtotuplehash(pamP, paletteHash, tuple, *paletteIndexP, &fits);
-        
+
         if (!fits)
             pm_error("Can't get memory for palette hash.");
     }
 }
 
-    
+
 
 static void
 writeXvRaster(struct pam * const pamP,
@@ -227,7 +227,7 @@ writeXvRaster(struct pam * const pamP,
 
 
 
-int 
+int
 main(int    argc,
      char * argv[]) {
 
@@ -235,7 +235,7 @@ main(int    argc,
     FILE * ifP;
     struct pam pam;
     xvPalette xvPalette;
- 
+
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -249,10 +249,13 @@ main(int    argc,
     pnm_setminallocationdepth(&pam, 3);
 
     writeXvHeader(stdout, pam.width, pam.height);
-    
+
     writeXvRaster(&pam, &xvPalette, stdout);
 
     pm_close(ifP);
 
     return 0;
 }
+
+
+
