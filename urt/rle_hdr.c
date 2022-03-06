@@ -40,7 +40,7 @@ rle_names(rle_hdr *    const hdrP,
           const char * const pgmname,
           const char * const fname,
           int          const imgNum) {
-/*---------------------------------------------------------------------------- 
+/*----------------------------------------------------------------------------
  * Load program and file names into header.
  * Inputs:
  *  hdrP:      Header to modify.

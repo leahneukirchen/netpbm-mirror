@@ -49,7 +49,7 @@
 
 /* Typedef for void * so we can use it consistently. */
 #ifdef VOID_STAR
-typedef	void *void_star;
+typedef void *void_star;
 #else
 typedef char *void_star;
 #endif
@@ -59,7 +59,7 @@ typedef char *void_star;
  * before including this file.
  */
 #ifndef NO_DECLARE_MALLOC
-#   include <sys/types.h>	/* For size_t. */
+#   include <sys/types.h>       /* For size_t. */
     extern void_star malloc( size_t );
     extern void_star calloc( size_t, size_t );
     extern void_star realloc( void_star, size_t );
@@ -75,12 +75,12 @@ extern char *getenv( CONST_DECL char *name );
      * TAG( bstring bzero )
      * 'Byte string' functions.
      */
-#   define bzero( _str, _n )		memset( _str, '\0', _n )
-#   define bcopy( _from, _to, _count )	memcpy( _to, _from, _count )
+#   define bzero( _str, _n )            memset( _str, '\0', _n )
+#   define bcopy( _from, _to, _count )  memcpy( _to, _from, _count )
 #endif
 
 #ifdef NEED_SETLINEBUF
-#   define setlinebuf( _s )	setvbuf( (_s), NULL, _IOLBF, 0 )
+#   define setlinebuf( _s )     setvbuf( (_s), NULL, _IOLBF, 0 )
 #endif
 
 #endif
