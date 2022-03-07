@@ -3,7 +3,7 @@
 <body>
 
 <h1>pnmtorle</h1>
-Updated: 31 March 1994
+Updated: 07 March 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -15,11 +15,17 @@ pnmtorle - convert a Netpbm image file into an RLE image file.
 
 <b>pnmtorle</b>
 
-[<b>-h</b>]
-[<b>-v</b>]
-[<b>-a</b>]
-[<b>-o</b> <i>outfile</i>]
+[<b>-header</b>]
+[<b>-verbose</b>]
+[<b>-alpha</b>]
+[<b>-outfile=</b><i>outfile</i>]
 [<i>pnmfile</i>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
 
 <h2 id="description">DESCRIPTION</h2>
 
@@ -29,67 +35,71 @@ pnmtorle - convert a Netpbm image file into an RLE image file.
 You can include a transparency mask.  If the input is a multiple image file,
 the output consists of several concatenated RLE images.
 
-<p>The RLE file will contain either a three channel color image (24
-bits) or a single channel grayscale image (8 bits) depending upon the
-pnm file depth.  If a converted ppm is displayed on an 8 bit display,
-the image must be dithered.  In order to produce a better looking
-image (on 8 bit displays), it is recommended that the image be
-quantizing (to 8 bit mapped color) prior to its display.  This may be
-done by piping the output of this program into the Utah <b>mcut</b> or
-<b>rlequant</b> utilities.  We show an example of this later.
+<p><i>pnmfile</i> is the name of the Netpbm image input file.  If you don't
+specify this argument, input is from Standard Input.
+
+<p>The RLE file will contain either a three channel color image (24 bits) or a
+single channel grayscale image (8 bits) depending upon the type of Netpbm
+input.  If the Netpbm input is color, the RLE output is 3 channel 24 bit
+color.  If the Netpbm input is grayscale or black and white, the RLE output is
+single channel grayscale.
+
 
 <h2 id="options">OPTIONS</h2>
 
-<p>In addition to the options common to all programs based on libnetpbm
-(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
-Common Options</a>), <b>pnmtorle</b> recognizes the following
-command line options:
+<p>In addition to the options common to all programs based on libnetpbm (most
+notably <b>-quiet</b>, see <a href="index.html#commonoptions"> Common
+Options</a>), <b>pnmtorle</b> recognizes the following command line options:
 
 <dl compact>
-<dt><b>-v</b>
+<dt><b>-verbose</b>
+<dd>
+  This option will cause <b>pnmtorle</b> to operate in verbose mode.  The
+  program writes header information to Standard Error.  Actually, there is not
+  much header information stored in a Netpbm file, so this information is
+  minimal.
+
+  <p>Before Netpbm 10.98 (March 2022), this option is just <b>-v</b>.
+
+<dt><b>-header</b>
 
 <dd>
-This option will cause <b>pnmtorle</b> to operate in verbose mode.  The header
-information is written to "stderr".  Actually, there is not much header
-information stored in a Netpbm file, so this information is minimal.
-<dt><b>-h</b>
+This option causes the program to dump the header of the Netpbm image to be
+Standard Error without converting the file.  It is equivalent to using
+the <b>-verbose</b> option except that no file conversion takes place.
+
+  <p>Before Netpbm 10.98 (March 2022), this option is just <b>-h</b>.
+
+<dt><b>-alpha</b>
 
 <dd>
-This option allows the header of the Netpbm image to be dumped to "stderr"
-without converting the file.  It is equivalent to using the -v option except
-that no file conversion takes place.
-<dt><b>-a</b>
-
-<dd>
-This option causes <b>pnmtorle</b> to include an transparency channel in the
+This option causes <b>pnmtorle</b> to include a transparency channel in the
 output image.  The transparency channel is based on the image: Wherever a
 pixel is black, the corresponding trasparency value is transparent.
 Everywhere else, the transparency value is fully opaque.
 
-<dt><b>-o</b> <i>outfile</i>
+<dt><b>-outfile</b> <i>outfile</i>
 
 <dd>If you specify this option, <b>pnmtorle</b> writes the output to
 this file.  If <i>outfile</i> is <b>-</b> or you don't specify
-<b>-o</b>, <b>pnmtorle</b> writes the output to Standard Output.
+<b>-outfile</b>, <b>pnmtorle</b> writes the output to Standard Output.
 
-<dt><i>pnmfile</i>
+  <p>Before Netpbm 10.98 (March 2022), this option is just <b>-o</b>.and
+    must be separated from its value by a space, not an equal sign.
 
-<dd>
-The name of the Netpbm image data file to be converted.  If not specified,
-standard input is assumed.
 </dl>
 
 <h2 id="examples">EXAMPLES</h2>
 
 <pre>
-   pnmtorle -v file.ppm -o file.rle
+   pnmtorle -verbose file.ppm -outfile=file.rle
 </pre>
 
 <p>While running in verbose mode, convert file.ppm to RLE format and store
 resulting data in file.rle.
 
 <pre>
-   pnmtorle -h file.pgm
+   pnmtorle -header file.pgm
 </pre>
 
 <p>Dump the header information of the Netpbm file called file.pgm.
