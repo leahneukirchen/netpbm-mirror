@@ -193,7 +193,10 @@ pm_selector_mark(struct pm_selector * const selectorP,
     }
 }
 
+
+
 /* There is no function for erasing a marked bit */
+
 
 
 int  /* boolean */
@@ -312,14 +315,13 @@ tokenize(char *         const s,
 
     while (*p) {
         if (!ISGRAPH(*p)) {
-            if(!ISSPACE(*p)) {
-              /* Control chars excluding 09 - 0d (space), 80-ff */
-            pm_message("Warning: non-ASCII character '%x' in "
-                       "BDF font file", *p);
+            if (!ISSPACE(*p)) {
+                /* Control chars excluding 09 - 0d (space), 80-ff */
+                pm_message("Warning: non-ASCII character '%x' in "
+                           "BDF font file", *p);
             }
             *p++ = '\0';
-        }
-        else {
+        } else {
             words[n++] = p;
             if (n >= wordsSz - 1)
                 break;
@@ -395,6 +397,7 @@ parseBitmapRow(const char *    const hex,
                         glyphWidth, hex);
         else {
             char const hdig = *p++;
+
             unsigned int hdigValue;
 
             if (hdig >= '0' && hdig <= '9')
@@ -517,7 +520,7 @@ static void
 validateWordCount(Readline *    const readlineP,
                   unsigned int  const nWords) {
 
-    if( readlineP->wordCt != nWords )
+    if (readlineP->wordCt != nWords)
         pm_error("Wrong number of arguments in '%s' line in BDF font file",
                  readlineP->arg[0]);
 
@@ -536,7 +539,6 @@ readExpectedStatement(Readline *    const readlineP,
   beginning of the line is that, e.g. "STARTFONT").  Check for the number
   of words: 'nWords'.  If either condition is not met, fail the program.
 -----------------------------------------------------------------------------*/
-
     bool eof;
 
     readline_read(readlineP, &eof);
@@ -561,7 +563,6 @@ skipCharacter(Readline * const readlineP) {
 
   At entry the stream must be positioned at the end of the ENCODING line.
 -----------------------------------------------------------------------------*/
-
     char * rc;
     do {
         rc = fgets(readlineP->line, MAXBDFLINE+1, readlineP->ifP);
@@ -625,9 +626,11 @@ interpEncoding(const char **  const arg,
 
    'maxmaxglyph' is the maximum codepoint in the font.
 -----------------------------------------------------------------------------*/
-    bool gotCodepoint = false;   /* initial value */
+    bool gotCodepoint;
     bool badCodepoint;
     unsigned int codepoint;
+
+    gotCodepoint = false;  /* initial value */
 
     if (wordToInt(arg[1]) >= 0) {
         codepoint = wordToInt(arg[1]);
@@ -662,8 +665,9 @@ readEncoding(Readline *     const readlineP,
              bool *         const badCodepointP,
              PM_WCHAR       const maxmaxglyph) {
 
+    const char * const expected = "ENCODING";
+
     bool eof;
-    const char * expected = "ENCODING";
 
     readline_read(readlineP, &eof);
 
@@ -672,7 +676,7 @@ readEncoding(Readline *     const readlineP,
     else if (!streq(readlineP->arg[0], expected))
         pm_error("Statement of type '%s' where '%s' expected in BDF font file",
                  readlineP->arg[0], expected);
-    else if(readlineP->wordCt != 2 &&  readlineP->wordCt != 3)
+    else if (readlineP->wordCt != 2 &&  readlineP->wordCt != 3)
         pm_error("Wrong number of arguments in '%s' line in BDF font file",
                  readlineP->arg[0]);
 
@@ -747,7 +751,7 @@ validateGlyphLimits(const struct font2 * const font2P,
 static void
 readStartchar(Readline * const readlineP,
               const char ** charNameP) {
-        
+
         const char * charName;
         bool eof;
 
@@ -786,6 +790,7 @@ readGlyph(Readline * const readlineP,
           struct glyph ** const glyphPP) {
 
     struct glyph * glyphP;
+
     MALLOCVAR(glyphP);
     if (glyphP == NULL)
         pm_error("no memory for font glyph for '%s' character",
@@ -959,7 +964,10 @@ loadCharsetString(const char *  const registry,
 }
 
 
+
 static unsigned int const maxTokenLen = 60;
+
+
 
 static void
 doCharsetRegistry(Readline *    const readlineP,
@@ -1178,7 +1186,6 @@ initializeGlyphArray(struct font2 * const font2P,
            It may not be defined in the font, but the program may try
            to use space as a substitute char
         */
-
 }
 
 
@@ -1220,7 +1227,7 @@ pbm_loadbdffont2select(const char *               const filename,
     if (font2P->selectorP == NULL) {
         PM_WCHAR i;
 
-        for(i = 0; i <= maxmaxglyph; ++i)
+        for (i = 0; i <= maxmaxglyph; ++i)
             font2P->glyph[i] = NULL;
             /* Initial value.  Overwrite later if codepoint i is defined. */
     }
@@ -1252,10 +1259,10 @@ pbm_loadbdffont2select(const char *               const filename,
     }
     fclose(ifP);
 
-    if(font2P->total_chars == 0)
+    if (font2P->total_chars == 0)
         pm_error("No glyphs found in BDF font file "
                  "in codepoint range 0 - %u", (unsigned int) maxmaxglyph);
-    if(font2P->chars == 0)
+    if (font2P->chars == 0)
         pm_error("Not any requested glyphs found in BDF font file "
                  "in codepoint range 0 - %u", (unsigned int) maxmaxglyph);
 
@@ -1272,23 +1279,21 @@ pbm_loadbdffont2select(const char *               const filename,
 }
 
 
+
 struct font2 *
 pbm_loadbdffont2(const char * const filename,
                  PM_WCHAR     const maxmaxglyph) {
 
-  return (pbm_loadbdffont2select(filename, maxmaxglyph, NULL));
-
-  return(0);
+    return pbm_loadbdffont2select(filename, maxmaxglyph, NULL);
 }
-
 
 
 
 static struct font *
 font2ToFont(const struct font2 * const font2P) {
 
-            struct font  * fontP;
-            unsigned int   codePoint;
+    struct font  * fontP;
+    unsigned int   codePoint;
 
     MALLOCVAR(fontP);
     if (fontP == NULL)
