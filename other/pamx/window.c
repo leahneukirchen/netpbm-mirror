@@ -348,7 +348,27 @@ placeImage(viewer * const viewerP,
            int      const height,
            int *    const rxP,     /* input and output */
            int *    const ryP) {   /* input and output */
+/*----------------------------------------------------------------------------
+   Move the X window of *viewerP on the right place on the display to contain
+   an image whose dimensions are 'width' by 'height'.
 
+   As input *rxP and *ryP are the current location of the window (offset from
+   the top left corner of the display of the top left corner of the window).
+   We update them with the new location.
+
+   If the image is narrower than the display, center it.
+
+   Otherwise, either left-justify it or right-justify it depending upon the
+   current position of the window:
+
+      If in the current position, the right edge of the image is within the
+      display, right-justify.
+
+      Otherwise left-justify.
+
+
+   Do the analogous thing for vertical placement.
+-----------------------------------------------------------------------------*/
     int pixx, pixy;
 
     pixx = *rxP;
@@ -366,7 +386,7 @@ placeImage(viewer * const viewerP,
         pixy = (viewerP->height - height) / 2;
     else {
         if ((pixy < 0) && (pixy + height < viewerP->height))
-            pixy = viewerP->height - viewerP->height;
+            pixy = viewerP->height - height;
         if (pixy > 0)
             pixy = 0;
     }
