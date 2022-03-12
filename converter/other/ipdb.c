@@ -80,7 +80,7 @@ ipdb_img_size(IMAGE * const imgP) {
 
 
 
- #define img_row(i, r)   
+ #define img_row(i, r)
 
  static pilot_time_t const unixepoch = (66*365+17)*24*3600;
      /* The unix epoch in Mac time (the Mac epoch is 00:00 UTC 1904.01.01).
@@ -174,7 +174,7 @@ ipdb_img_size(IMAGE * const imgP) {
 
  void
  ipdb_clear(IPDB * const pdbP) {
-     
+
      if (pdbP) {
          ipdb_image_free(pdbP->i);
          ipdb_text_free(pdbP->t);
@@ -213,7 +213,7 @@ ipdb_pdbhead_alloc(const char * const name) {
          */
         pdbHeadP->ctime =
             pdbHeadP->mtime = (pilot_time_t)time(NULL) + unixepoch;
-        
+
         MEMSCPY(&pdbHeadP->type, IPDB_vIMG);
         MEMSCPY(&pdbHeadP->id,   IPDB_View);
     }
@@ -234,7 +234,7 @@ rechdr_alloc(int      const type,
     RECHDR  * recHdrP;
 
     MALLOCVAR(recHdrP);
-    
+
     if (recHdrP) {
         MEMSSET(recHdrP, 0);
 
@@ -292,10 +292,10 @@ ipdb_image_alloc(const char * const name,
                 rechdr_free(imgP->r);
         } else
             failed = true;
-        
+
         if (failed)
             ipdb_image_free(imgP);
-    } else 
+    } else
         failed = true;
 
     return failed ? NULL : imgP;
@@ -383,3 +383,6 @@ ipdb_typeName(uint8_t const type) {
     default: return "???";
     }
 }
+
+
+
