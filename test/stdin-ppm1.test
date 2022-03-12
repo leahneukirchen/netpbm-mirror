@@ -30,8 +30,9 @@ for testprog in  \
   do
   ${testprog} ${test_ppm} > ${out1};      status1=$?
   ${testprog} < ${test_ppm} > ${out2};    status2=$?
+  test -s ${out1};                        status3=$?
   cmp -s ${out1} ${out2}
-  echo ${testprog}": "${status1} ${status2} $?
+  echo ${testprog}": "${status1} ${status2} ${status3} $?
   rm ${out1} ${out2}
   done
 

@@ -40,8 +40,9 @@ for testprog in  \
   do
   ${testprog} ${small_ppm} > ${out1};      status1=$?
   ${testprog} < ${small_ppm} > ${out2};    status2=$?
+  test -s ${out1};                         status3=$?
   cmp -s ${out1} ${out2}
-  echo ${testprog}": "${status1} ${status2} $?
+  echo ${testprog}": "${status1} ${status2} ${status3} $?
   rm ${out1} ${out2}
   done
 
@@ -49,7 +50,7 @@ for testprog in  \
 rm ${small_ppm}
 
 # Pnmquantall: overwrites input files
-# Pnmremap:  requires -mapfile=file
+# Pnmremap: requires -mapfile=file
 # Pnmpsnr : compares two input files
 # Pnmindex: no input from stdin
 # Pnmpaste: requires two input files

@@ -143,6 +143,7 @@ stdin-pnm1.test
 stdin-pnm2.test
 stdin-pam1.test
 stdin-pam2.test
+stdin-pam3.test
 
 pbm-misc-converters.test
 

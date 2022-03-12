@@ -1,42 +1,41 @@
-pamaddnoise -seed=1: 0 0 0
-pamaltsat -strength=1: 0 0 0
-pambackground: 0 0 0
-pambayer -type=2: 0 0 0
-pambrighten: 0 0 0
-pamcut: 0 0 0
-pamdeinterlace: 0 0 0
-pamdepth 15: 0 0 0
-pamditherbw -threshold: 0 0 0
-pamedge: 0 0 0
-pamexec cat: 0 0 0
-pamfile -size: 0 0 0
-pamfind -target=1: 0 0 0
-pamfix: 0 0 0
-pamflip -lr: 0 0 0
-pamfunc -not: 0 0 0
-pamhomography -from 0,0,0,1,1,0,1,1: 0 0 0
-pamhue -huechange=60: 0 0 0
-pamlevels -f1 rgb:0/0/0 -t1 rgb:0/0/0 -f2 rgb:ff/ff/ff -t2 rgb:ff/ff/ff: 0 0 0
-pammixinterlace: 0 0 0
-pammosaicknit: 0 0 0
-pamoil: 0 0 0
-pamperspective 0 0 0 1 1 0 1 1: 0 0 0
-pamrecolor: 0 0 0
-pamrubber -quad 1 1 2 2: 0 0 0
-pamscale 2: 0 0 0
-pamshadedrelief: 0 0 0
-pamsharpness: 0 0 0
-pamsistoaglyph: 0 0 0
-pamslice -row=1: 0 0 0
-pamsplit: 0 0 0
-pamstack: 0 0 0
-pamstereogram -randomseed=1: 0 0 0
-pamstretch 1: 0 0 0
-pamstretch-gen 1: 0 0 0
-pamsumm -max: 0 0 0
-pamsummcol -mean: 0 0 0
-pamtable: 0 0 0
-pamthreshold: 0 0 0
-pamtilt: 0 0 0
-pamtopnm: 0 0 0
-pamwipeout -tb: 0 0 0
+pamaddnoise -seed=1: 0 0 0 0
+pamaltsat -strength=1: 0 0 0 0
+pambackground: 0 0 0 0
+pambayer -type=2: 0 0 0 0
+pambrighten: 0 0 0 0
+pamcut: 0 0 0 0
+pamdeinterlace: 0 0 0 0
+pamdepth 15: 0 0 0 0
+pamditherbw -threshold: 0 0 0 0
+pamedge: 0 0 0 0
+pamexec cat: 0 0 0 0
+pamfile -size: 0 0 0 0
+pamfind -target=1: 0 0 0 0
+pamfix: 0 0 0 0
+pamflip -lr: 0 0 0 0
+pamfunc -not: 0 0 0 0
+pamhomography -from 0,0,0,1,1,0,1,1: 0 0 0 0
+pamhue -huechange=60: 0 0 0 0
+pamlevels -f1 rgb:0/0/0 -t1 rgb:0/0/0 -f2 rgb:ff/ff/ff -t2 rgb:ff/ff/ff: 0 0 0 0
+pammixinterlace: 0 0 0 0
+pammosaicknit: 0 0 0 0
+pamoil: 0 0 0 0
+pamperspective 0 0 0 1 1 0 1 1: 0 0 0 0
+pamrecolor: 0 0 0 0
+pamrubber -quad 1 1 2 2: 0 0 0 0
+pamscale 2: 0 0 0 0
+pamshadedrelief: 0 0 0 0
+pamsharpness: 0 0 0 0
+pamsistoaglyph: 0 0 0 0
+pamslice -row=1: 0 0 0 0
+pamstack: 0 0 0 0
+pamstereogram -randomseed=1: 0 0 0 0
+pamstretch 1: 0 0 0 0
+pamstretch-gen 1: 0 0 0 0
+pamsumm -max: 0 0 0 0
+pamsummcol -mean: 0 0 0 0
+pamtable: 0 0 0 0
+pamthreshold: 0 0 0 0
+pamtilt: 0 0 0 0
+pamtopnm: 0 0 0 0
+pamwipeout -tb: 0 0 0 0

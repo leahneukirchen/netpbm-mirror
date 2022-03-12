@@ -1,0 +1,32 @@
+Test.  Should print (command): 0 0 0 0
+The following are exceptions: should print (command): 0 0 0 1
+pamtotga, pamtotiff
+
+pamtoavs: 0 0 0 0
+avstopam: 0 0 0 0
+pamtohdiff: 0 0 0 0
+hdifftopam: 0 0 0 0
+pamtojpeg2k: 0 0 0 0
+jpeg2ktopam: 0 0 0 0
+pamtopdbimg -fixedtime: 0 0 0 0
+pdbimgtopam: 0 0 0 0
+pamtopfm: 0 0 0 0
+pfmtopam: 0 0 0 0
+pamtopng: 0 0 0 0
+pngtopam: 0 0 0 0
+pamtosrf: 0 0 0 0
+srftopam: 0 0 0 0
+pamtosvg: 0 0 0 0
+svgtopam: 0 0 0 0
+pamtowinicon: 0 0 0 0
+winicontopam: 0 0 0 0
+pamtotga: 0 0 0 1
+tgatoppm: 0 0 0 0
+pamtoxvmini: 0 0 0 0
+xvminitoppm: 0 0 0 0
+pamtofits: 0 0 0 0
+fitstopnm: 0 0 0 0
+pamtogif: 0 0 0 0
+giftopnm: 0 0 0 0
+pamtotiff: 0 0 0 1
+tifftopnm: 0 0 0 0

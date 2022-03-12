@@ -1,9 +1,16 @@
 #! /bin/sh
-# This script tests: pnmtofiasco fiascotopnm pnmtojbig jbigtopnm pnmtojpeg
-# This script tests: jpegtopnm pnmtopalm palmtopnm pnmtopng pngtopam pnmtops
-# This script tests: pstopnm pnmtorast rasttopnm pnmtorle rletopnm pnmtosgi
-# This script tests: sgitopnm pnmtosir sirtopnm pnmtoxwd xwdtopnm pnmtotiffcmyk
-# This script tests: tifftopnm
+# This script tests: pnmtofiasco fiascotopnm
+# This script tests: pnmtojbig jbigtopnm
+# This script tests: pnmtojpeg jpegtopnm
+# This script tests: pnmtopalm palmtopnm
+# This script tests: pnmtopng pngtopam
+# This script tests: pnmtops pstopnm
+# This script tests: pnmtorast rasttopnm
+# This script tests: pnmtorle rletopnm
+# This script tests: pnmtosgi sgitopnm
+# This script tests: pnmtosir sirtopnm
+# This script tests: pnmtoxwd xwdtopnm
+# This script tests: pnmtotiffcmyk tifftopnm
 # Also requires: pgmramp
 
 tmpdir=${tmpdir:-/tmp}
@@ -16,9 +23,12 @@ out4=${tmpdir}/out4
 pgmramp -diag 32 32 > ${test_pgm}
 
 echo "Test.  Should print (command): 0 0 0"
-echo "The following are exceptions: should print (command): 0 0 1"
-echo "pnmtops, pstopnm, pnmtorle, pnmtoxwd, pnmtotiffcmyk"
+echo "The following are exceptions: should print (command): 0 0 0 1"
+echo "pnmtops, pstopnm, pnmtoxwd, pnmtotiffcmyk"
 echo
+
+export NO_ADD_RLE_HISTORY=1
+# Suppress command-line sequence, execution time in pnmtorle header
 
 for fmt in  \
         fiasco \
@@ -42,7 +52,9 @@ for fmt in  \
   fi
 
   if [ ${fmt} = "png" ]
-    then testprog2=${fmt}"topam";
+    then testprog2="pngtopam";
+  elif [ ${fmt} = "ps" ]
+    then testprog2="pstopnm -stdout ";
   elif [ ${fmt} = "tiffcmyk" ]
     then testprog2="tifftopnm";
   else
@@ -51,26 +63,28 @@ for fmt in  \
 
   ${testprog1} ${test_pgm} > ${out1};   status1=$?
   ${testprog1} < ${test_pgm} > ${out2}; status2=$?
+  test -s ${out1};                      status3=$?
   cmp -s ${out1} ${out2}
-  echo ${testprog1}": "${status1} ${status2} $?  
+  echo ${testprog1}": "${status1} ${status2} ${status3} $?
+  rm ${out2}
 
-  ${testprog2} ${out1} > ${out3};       status3=$?
-  ${testprog2} < ${out1} > ${out4};     status4=$?
+  ${testprog2} ${out1} > ${out3};       status4=$?
+  ${testprog2} < ${out1} > ${out4};     status5=$?
+  test -s ${out3};                      status6=$?
   cmp -s ${out3} ${out4}
-  echo ${testprog2}": "${status3} ${status4} $?
+  echo ${testprog2}": "${status4} ${status5} ${status6} $?
+  rm ${out1} ${out3} ${out4}
 
-  rm ${out1} ${out2} ${out3} ${out4}
   done
 
 rm ${test_pgm}
 
 
 # pnmtofiasco  width, height must be even and at least 32
-# 
+#              use --progressmeter option to suppress progress meter
+#
 # pnmtojbig    input must be bilevel black-white or gray
 # pnmtops      input file name embedded in output
-# pnmtorle     input file name, creation time embedded in output
-#              file name blank when input is from stdin
 # pnmtotiffcmyk  input file name embedded in output
 #                "Standard input" if from stdin
 # pnmtoxwd     input file name embedded in output

@@ -1,9 +1,18 @@
 #! /bin/sh
-# This script tests: pbmtoatk atktopbm pbmtocis cistopbm pbmtocmuwm cmuwmtopbm
-# This script tests: pbmtoescp2 escp2topbm pbmtog3 g3topbm pbmtogem gemtopnm
-# This script tests: pbmtomacp macptopbm pbmtomda mdatopbm pbmtomgr mgrtopbm
-# This script tests: pbmtomrf mrftopbm pbmtopi3 pi3topbm pbmtosunicon
-# This script tests: sunicontopnm pbmtowbmp wbmptopbm pbmtoybm ybmtopbm
+# This script tests: atktopbm pbmtoatk
+# This script tests: cistopbm pbmtocis
+# This script tests: cmuwmtopbm pbmtocmuwm
+# This script tests: escp2topbm pbmtoescp2
+# This script tests: g3topbm pbmtog3
+# This script tests: gemtopbm pbmtogem
+# This script tests: macptopbm pbmtomacp
+# This script tests: mdatopbm pbmtomda
+# This script tests: mgrtopbm pbmtomgr
+# This script tests: mrftopbm pbmtomrf
+# This script tests: pi3topbm pbmtopi3
+# This script tests: sunicontopbm pbmtosunicon
+# This script tests: wbmptopbm pbmtowbmp
+# This script tests: ybmtopbm pbmtoybm
 # Also requires:
 
 tmpdir=${tmpdir:-/tmp}
@@ -35,22 +44,24 @@ for fmt in  \
     else testprog2=${fmt}"topbm";
   fi
 
-  ${testprog1} testgrid.pbm > ${out1};      status1=$?
-  ${testprog1} < testgrid.pbm > ${out2};    status2=$?
+  ${testprog1} testgrid.pbm > ${out1};     status1=$?
+  ${testprog1} < testgrid.pbm > ${out2};   status2=$?
+  test -s ${out1};                         status3=$?
   cmp -s ${out1} ${out2}
-  echo ${testprog1}": "${status1} ${status2} $?
-  
+  echo ${testprog1}": "${status1} ${status2} ${status3} $?
+  rm ${out2}
+
   ${testprog2} ${out1} > ${out3};      status3=$?
   ${testprog2} < ${out1} > ${out4};    status4=$?
 
   if [ ${fmt} = "xbm" ];
     then sed -i '3s/noname/testgrid/' ${out3};
-  fi       
+  fi
 
+  test -s ${out3};                         status5=$?
   cmp -s ${out3} ${out4}
-  echo ${testprog2}": "${status3} ${status4} $?
-  
-  rm ${out1} ${out2} ${out3} ${out4}
+  echo ${testprog2}": "${status3} ${status4} ${status5} $?
+  rm ${out1} ${out3} ${out4}
   done
 
 # We don't test Pbmtopgm Pgmtopbm Asciitopbm Asciitopgm here

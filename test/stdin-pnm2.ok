@@ -1,28 +1,28 @@
 Test.  Should print (command): 0 0 0
-The following are exceptions: should print (command): 0 0 1
-pnmtops, pstopnm, pnmtorle, pnmtoxwd, pnmtotiffcmyk
+The following are exceptions: should print (command): 0 0 0 1
+pnmtops, pstopnm, pnmtoxwd, pnmtotiffcmyk
 
-pnmtofiasco --progress-meter 0 : 0 0 0
-fiascotopnm: 0 0 0
-pnmtojbig: 0 0 0
-jbigtopnm: 0 0 0
-pnmtojpeg: 0 0 0
-jpegtopnm: 0 0 0
-pnmtopalm: 0 0 0
-palmtopnm: 0 0 0
-pnmtopng: 0 0 0
-pngtopam: 0 0 0
-pnmtops: 0 0 1
-pstopnm: 0 0 1
-pnmtorast: 0 0 0
-rasttopnm: 0 0 0
-pnmtorle: 0 0 1
-rletopnm: 0 0 0
-pnmtosgi: 0 0 0
-sgitopnm: 0 0 0
-pnmtosir: 0 0 0
-sirtopnm: 0 0 0
-pnmtoxwd: 0 0 1
-xwdtopnm: 0 0 0
-pnmtotiffcmyk: 0 0 1
-tifftopnm: 0 0 0
+pnmtofiasco --progress-meter 0 : 0 0 0 0
+fiascotopnm: 0 0 0 0
+pnmtojbig: 0 0 0 0
+jbigtopnm: 0 0 0 0
+pnmtojpeg: 0 0 0 0
+jpegtopnm: 0 0 0 0
+pnmtopalm: 0 0 0 0
+palmtopnm: 0 0 0 0
+pnmtopng: 0 0 0 0
+pngtopam: 0 0 0 0
+pnmtops: 0 0 0 1
+pstopnm -stdout : 0 0 0 1
+pnmtorast: 0 0 0 0
+rasttopnm: 0 0 0 0
+pnmtorle: 0 0 0 0
+rletopnm: 0 0 0 0
+pnmtosgi: 0 0 0 0
+sgitopnm: 0 0 0 0
+pnmtosir: 0 0 0 0
+sirtopnm: 0 0 0 0
+pnmtoxwd: 0 0 0 1
+xwdtopnm: 0 0 0 0
+pnmtotiffcmyk: 0 0 0 1
+tifftopnm: 0 0 0 0

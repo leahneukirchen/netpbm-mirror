@@ -1,22 +1,26 @@
 #! /bin/sh
-# This script tests: ppmtobmp bmptopnm ppmtoilbm ilbmtoppm ppmtoleaf leaftoppm
-# This script tests: ppmtoneo neotoppm ppmtopcx pcxtoppm ppmtopi1 pi1toppm
-# This script tests: ppmtopict picttoppm ppmtopj pjtoppm ppmtospu sputoppm
+# This script tests: ppmtobmp bmptopnm
+# This script tests: ppmtoilbm ilbmtoppm
+# This script tests: ppmtoleaf leaftoppm
+# This script tests: ppmtoneo neotoppm
+# This script tests: ppmtopcx pcxtoppm
+# This script tests: ppmtopi1 pi1toppm
+# This script tests: ppmtopict picttoppm
+# This script tests: ppmtopj pjtoppm
+# This script tests: ppmtospu sputoppm
 # This script tests: ppmtoxpm xpmtoppm
 # Also requires: ppmmake
 
 tmpdir=${tmpdir:-/tmp}
-test_ppm=${tmpdir}/test.ppm
-out1=${tmpdir}/out1
-out2=${tmpdir}/out2
-
-ppmmake -maxval 7 rgb:00/00/00 320 200 > ${test_ppm}
-
-tmpdir=${tmpdir:-/tmp}
+small_ppm=${tmpdir}/small.ppm
+large_ppm=${tmpdir}/large.ppm
 out1=${tmpdir}/out1
 out2=${tmpdir}/out2
 out3=${tmpdir}/out3
 out4=${tmpdir}/out4
+
+ppmmake -maxval 65535 rgb:00/00/00 8 3 > ${small_ppm}
+ppmmake -maxval 7 rgb:00/00/00 320 200 > ${large_ppm}
 
 for fmt in \
         bmp \
@@ -36,36 +40,38 @@ for fmt in \
   else testprog2=${fmt}"toppm";
   fi
 
-  ${testprog1} ${test_ppm} > ${out1};      status1=$?
-  ${testprog1} < ${test_ppm} > ${out2};    status2=$?
+  if [ ${fmt} = "spu" ]
+    then test_ppm=${large_ppm};
+  else test_ppm=${small_ppm};
+  fi
+
+  ${testprog1} ${test_ppm} > ${out1};    status1=$?
+  ${testprog1} < ${test_ppm} > ${out2};  status2=$?
+  test -s ${out1};                       status3=$?
   if [ ${fmt} = "xpm" ]
     then
     sed -i '/^static char/s/static char .* = {/static char file/' \
 	    ${out1} ${out2};
-  fi 
+  fi
   cmp -s ${out1} ${out2}
-  echo ${testprog1}": "${status1} ${status2} $?
+  echo ${testprog1}": "${status1} ${status2} ${status3} $?
+  rm ${out2}
 
-  ${testprog2} ${out1} > ${out3};      status3=$?
-  ${testprog2} < ${out1} > ${out4};    status4=$?
+  ${testprog2} ${out1} > ${out3};      status4=$?
+  ${testprog2} < ${out1} > ${out4};    status5=$?
+  test -s ${out1};                     status6=$?
   cmp -s ${out3} ${out4}
-  echo ${testprog2}": "${status3} ${status4} $?
+  echo ${testprog2}": "${status4} ${status5} ${status6} $?
+  rm ${out1} ${out3} ${out4}
   done
 
-# asciitopgm
-# bmptopnm
+rm ${small_ppm} ${large_ppm}
 
-# winicontopam
+# ppmtopict width must be 8 or more
 
-# spu width=320 height=200 fixed
+# ppmtospu sputoppm width=320 height=200 fixed
 
-# eyuvtoppm width, height is mandatory
-# yuvtoppm width, height is mandatory
+# Eyuvtoppm, Yuvtoppm width, height are mandatory
 
-# winicontoppm max size 255 255
-
-# xpm maxval 15 or larger
-
-# yuvsplit  splits output into three files
-
-# ppmtowinicon winicontoppm legacy
+# Ppmtowinicon Winicontoppm legacy
+# Winicontoppm max size 255 255
