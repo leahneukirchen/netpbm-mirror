@@ -23,15 +23,12 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE   /* Ensure strdup() is in <string.h> */
 #include <assert.h>
-#include <time.h>
 #include <string.h>
 
 #include "mallocvar.h"
 #include "nstring.h"
+
 #include "ipdb.h"
-
-typedef uint32_t pilot_time_t;
-
 
 
 
@@ -49,7 +46,7 @@ imgPpb(IMAGE * const imgP) {
 
 
 unsigned int
-ipdb_img_ppb(IMAGE * const imgP) {
+ipdb_imgPpb(IMAGE * const imgP) {
 /*----------------------------------------------------------------------------
    Pixels per byte
 -----------------------------------------------------------------------------*/
@@ -59,7 +56,7 @@ ipdb_img_ppb(IMAGE * const imgP) {
 
 
 size_t
-ipdb_img_size(IMAGE * const imgP) {
+ipdb_imgSize(IMAGE * const imgP) {
 /*----------------------------------------------------------------------------
   Size (in bytes) of an image's data.
 -----------------------------------------------------------------------------*/
@@ -71,114 +68,108 @@ ipdb_img_size(IMAGE * const imgP) {
 /*
  * Return the start of row `r'.
  */
- uint8_t *
- ipdb_img_row(IMAGE *      const imgP,
-              unsigned int const row) {
+uint8_t *
+ipdb_imgRow(IMAGE *      const imgP,
+            unsigned int const row) {
 
-     return &imgP->data[(row) * imgP->width / imgPpb(imgP)];
- }
-
-
-
- #define img_row(i, r)
-
- static pilot_time_t const unixepoch = (66*365+17)*24*3600;
-     /* The unix epoch in Mac time (the Mac epoch is 00:00 UTC 1904.01.01).
-        The 17 is the number of leap years.
-     */
-
- static const char * const errorDesc[] = {
-     /* E_BADCOLORS      */
-     "Invalid palette, only {0x00, 0x55, 0xAA, 0xFF} allowed.",
-
-     /* E_NOTIMAGE       */
-     "Not an image file.",
-
-     /* E_IMAGETHERE     */
-     "Image record already present, logic error.",
-
-     /* E_IMAGENOTTHERE  */
-     "Image record required before text record, logic error.",
-
-     /* E_TEXTTHERE      */
-     "Text record already present, logic error.",
-
-     /* E_NOTRECHDR      */
-     "Invalid record header encountered.",
-
-     /* E_UNKNOWNRECHDR  */
-     "Unknown record header.",
-
-     /* E_TOOBIGG        */
-     "Image too big, maximum size approx. 640*400 gray pixels.",
-
-     /* E_TOOBIGM        */
-     "Image too big, maximum size approx. 640*800 monochrome pixels.",
- };
+    return &imgP->data[(row) * imgP->width / imgPpb(imgP)];
+}
 
 
 
- const char *
- ipdb_err(int const e) {
+static const char * const errorDesc[] = {
+    /* E_BADCOLORS      */
+    "Invalid palette, only {0x00, 0x55, 0xAA, 0xFF} allowed.",
 
-     if (e < 0)
-         return e >= E_LAST ? errorDesc[-e - 1] : "unknown error";
-     else
-         return strerror(e);
- }
+    /* E_NOTIMAGE       */
+    "Not an image file.",
 
+    /* E_IMAGETHERE     */
+    "Image record already present, logic error.",
 
+    /* E_IMAGENOTTHERE  */
+    "Image record required before text record, logic error.",
 
- static void
- rechdr_free(RECHDR * const recP) {
+    /* E_TEXTTHERE      */
+    "Text record already present, logic error.",
 
-     if (recP) {
-         free(recP->extra);
-         free(recP);
-     }
- }
+    /* E_NOTRECHDR      */
+    "Invalid record header encountered.",
 
+    /* E_UNKNOWNRECHDR  */
+    "Unknown record header.",
 
+    /* E_TOOBIGG        */
+    "Image too big, maximum size approx. 640*400 gray pixels.",
 
- void
- ipdb_image_free(IMAGE * const imgP) {
-
-     if (imgP) {
-         rechdr_free(imgP->r);
-         free(imgP->data);
-         free(imgP);
-     }
- }
+    /* E_TOOBIGM        */
+    "Image too big, maximum size approx. 640*800 monochrome pixels.",
+};
 
 
 
- void
- ipdb_text_free(TEXT * const textP) {
+const char *
+ipdb_err(int const e) {
 
-     if (textP) {
-         rechdr_free(textP->r);
-         free(textP->data);
-         free(textP);
-     }
- }
-
-
-
- void
- ipdb_pdbhead_free(PDBHEAD * const headP) {
-
-     free(headP);
- }
+    if (e < 0)
+        return e >= E_LAST ? errorDesc[-e - 1] : "unknown error";
+    else
+        return strerror(e);
+}
 
 
 
- void
- ipdb_clear(IPDB * const pdbP) {
+static void
+rechdr_free(RECHDR * const recP) {
 
-     if (pdbP) {
-         ipdb_image_free(pdbP->i);
-         ipdb_text_free(pdbP->t);
-         ipdb_pdbhead_free(pdbP->p);
+    if (recP) {
+        free(recP->extra);
+        free(recP);
+    }
+}
+
+
+
+void
+ipdb_imageFree(IMAGE * const imgP) {
+
+    if (imgP) {
+        rechdr_free(imgP->r);
+        free(imgP->data);
+        free(imgP);
+    }
+}
+
+
+
+void
+ipdb_textFree(TEXT * const textP) {
+
+    if (textP) {
+        rechdr_free(textP->r);
+        if (textP->data)
+            free(textP->data);
+        free(textP);
+    }
+}
+
+
+
+void
+ipdb_pdbheadFree(PDBHEAD * const headP) {
+
+    free(headP);
+}
+
+
+
+void
+ipdb_clear(IPDB * const pdbP) {
+
+    if (pdbP) {
+        ipdb_imageFree(pdbP->i);
+        ipdb_textFree(pdbP->t);
+        ipdb_pdbheadFree(pdbP->p);
     }
 }
 
@@ -194,7 +185,7 @@ ipdb_free(IPDB * const pdbP) {
 
 
 PDBHEAD *
-ipdb_pdbhead_alloc(const char * const name) {
+ipdb_pdbheadAlloc() {
 
     PDBHEAD * pdbHeadP;
 
@@ -202,20 +193,6 @@ ipdb_pdbhead_alloc(const char * const name) {
 
     if (pdbHeadP) {
         MEMSZERO(pdbHeadP);
-
-        STRSCPY(pdbHeadP->name, name == NULL ? "unnamed" : name);
-
-        /*
-         * All of the Image Viewer pdb files that I've come across have
-         * 3510939142U (1997.08.16 14:38:22 UTC) here.  I don't know where
-         * this bizarre date comes from but the real date works fine so
-         * I'm using it.
-         */
-        pdbHeadP->ctime =
-            pdbHeadP->mtime = (pilot_time_t)time(NULL) + unixepoch;
-
-        MEMSCPY(&pdbHeadP->type, IPDB_vIMG);
-        MEMSCPY(&pdbHeadP->id,   IPDB_View);
     }
     return pdbHeadP;
 }
@@ -223,7 +200,7 @@ ipdb_pdbhead_alloc(const char * const name) {
 
 
 static RECHDR *
-rechdr_alloc(int      const type,
+rechdrCreate(int      const type,
              uint32_t const offset) {
 
     /*
@@ -255,10 +232,10 @@ rechdr_alloc(int      const type,
 
 
 IMAGE *
-ipdb_image_alloc(const char * const name,
-            int          const type,
-            int          const w,
-            int          const h) {
+ipdb_imageCreate(const char * const name,
+                 int          const type,
+                 int          const w,
+                 int          const h) {
 
     bool failed;
     IMAGE * imgP;
@@ -277,7 +254,7 @@ ipdb_image_alloc(const char * const name,
         imgP->width    = w;
         imgP->height   = h;
 
-        imgP->r = rechdr_alloc(IMG_REC, IMGOFFSET);
+        imgP->r = rechdrCreate(IMG_REC, IMGOFFSET);
 
         if (imgP->r) {
             if (w != 0 && h != 0) {
@@ -294,7 +271,7 @@ ipdb_image_alloc(const char * const name,
             failed = true;
 
         if (failed)
-            ipdb_image_free(imgP);
+            ipdb_imageFree(imgP);
     } else
         failed = true;
 
@@ -304,7 +281,7 @@ ipdb_image_alloc(const char * const name,
 
 
 TEXT *
-ipdb_text_alloc(const char * const content) {
+ipdb_textAlloc(void) {
 
     TEXT * textP;
     bool failed;
@@ -320,22 +297,13 @@ ipdb_text_alloc(const char * const content) {
     if (textP) {
         MEMSZERO(textP);
 
-        textP->r = rechdr_alloc(TEXT_REC, 0);
+        textP->r = rechdrCreate(TEXT_REC, 0);
 
-        if (textP->r) {
-            if (content) {
-                textP->data = strdup(content);
-
-                if (!textP->data)
-                    failed = true;
-            }
-            if (failed)
-                rechdr_free(textP->r);
-        } else
+        if (textP->r == NULL)
             failed = true;
 
         if (failed)
-            ipdb_text_free(textP);
+            free(textP);
     } else
         failed = true;
 
@@ -345,7 +313,7 @@ ipdb_text_alloc(const char * const content) {
 
 
 IPDB *
-ipdb_alloc(const char * const name) {
+ipdb_alloc(void) {
 
     IPDB * pdbP;
     bool failed;
@@ -357,12 +325,11 @@ ipdb_alloc(const char * const name) {
     if (pdbP) {
         MEMSZERO(pdbP);
 
-        if (name) {
-            pdbP->p = ipdb_pdbhead_alloc(name);
+        pdbP->p = ipdb_pdbheadAlloc();
 
-            if (!pdbP->p)
-                failed = true;
-        }
+        if (!pdbP->p)
+            failed = true;
+
         if (failed)
             ipdb_free(pdbP);
     } else

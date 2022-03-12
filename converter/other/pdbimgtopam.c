@@ -224,7 +224,7 @@ readCompressed(IMAGE *    const imgP,
          * this extra byte and ignore it by paying attention to
          * the image dimensions.
          */
-       size_t const maxCompressedSizeWithBloat = ipdb_img_size(imgP) * 2;
+       size_t const maxCompressedSizeWithBloat = ipdb_imgSize(imgP) * 2;
          /*
           * Provide a buffer large enough for the worst case.
           * See note in lib/util/runlength.c .
@@ -306,9 +306,9 @@ imageReadHeader(FILE *  const fileP,
         pm_message("  Y_anchor: %u", imgP->y_anchor);
         pm_message("  Width: %u", imgP->width);
         pm_message("  Height: %u", imgP->height);
-        pm_message("Pixels per byte: %u", ipdb_img_ppb(imgP));
+        pm_message("Pixels per byte: %u", ipdb_imgPpb(imgP));
         pm_message("Image size: %lu bytes",
-                   (unsigned long)ipdb_img_size(imgP));
+                   (unsigned long)ipdb_imgSize(imgP));
     }
 }
 
@@ -318,7 +318,7 @@ imageReadData(FILE *   const fileP,
               IMAGE *  const imgP,
               uint32_t const end_offset) {
 
-    size_t const imageSize = ipdb_img_size(imgP);
+    size_t const imageSize = ipdb_imgSize(imgP);
 
     int retval;
     size_t dataSize;
@@ -531,62 +531,56 @@ ipdbRead(IPDB * const pdbP,
 
     int retval;
 
+    int status;
+
     ipdb_clear(pdbP);
 
-    pdbP->p = ipdb_pdbhead_alloc(NULL);
+    status = pdbheadRead(pdbP->p, fileP);
 
-    if (pdbP->p == NULL)
-        retval = ENOMEM;
+    if (status != 0)
+        retval = status;
     else {
-        int status;
-
-        status = pdbheadRead(pdbP->p, fileP);
-
-        if (status != 0)
-            retval = status;
+        pdbP->i = ipdb_imageCreate(pdbP->p->name, IMG_GRAY, 0, 0);
+        if (pdbP->i == NULL)
+            retval = ENOMEM;
         else {
-            pdbP->i = ipdb_image_alloc(pdbP->p->name, IMG_GRAY, 0, 0);
-            if (pdbP->i == NULL)
-                retval = ENOMEM;
+            int status;
+            status = rechdrRead(pdbP->i->r, fileP);
+            if (status != 0)
+                retval = status;
             else {
-                int status;
-                status = rechdrRead(pdbP->i->r, fileP);
-                if (status != 0)
-                    retval = status;
-                else {
-                    if (pdbP->p->num_recs > 1) {
-                        pdbP->t = ipdb_text_alloc(NULL);
-                        if (pdbP->t == NULL)
-                            retval = ENOMEM;
-                        else {
-                            int status;
-                            status = rechdrRead(pdbP->t->r, fileP);
-                            if (status != 0)
-                                retval = status;
-                            else
-                                retval = 0;
-                        }
-                    } else
-                        retval = 0;
-
-                    if (retval == 0) {
-                        uint32_t const offset =
-                            pdbP->t == NULL ?
-                            UNKNOWN_OFFSET : pdbP->t->r->offset - 1;
-
+                if (pdbP->p->num_recs > 1) {
+                    pdbP->t = ipdb_textAlloc();
+                    if (pdbP->t == NULL)
+                        retval = ENOMEM;
+                    else {
                         int status;
-
-                        status = imageRead(pdbP->i, offset, fileP, verbose);
+                        status = rechdrRead(pdbP->t->r, fileP);
                         if (status != 0)
                             retval = status;
-                        else {
-                            if (pdbP->t != NULL) {
-                                int status;
+                        else
+                            retval = 0;
+                    }
+                } else
+                    retval = 0;
 
-                                status = textRead(pdbP->t, fileP);
-                                if (status != 0)
-                                    retval = status;
-                            }
+                if (retval == 0) {
+                    uint32_t const offset =
+                        pdbP->t == NULL ?
+                        UNKNOWN_OFFSET : pdbP->t->r->offset - 1;
+
+                    int status;
+
+                    status = imageRead(pdbP->i, offset, fileP, verbose);
+                    if (status != 0)
+                        retval = status;
+                    else {
+                        if (pdbP->t != NULL) {
+                            int status;
+
+                            status = textRead(pdbP->t, fileP);
+                            if (status != 0)
+                                retval = status;
                         }
                     }
                 }
@@ -664,7 +658,7 @@ g16row(IPDB *       const pdbP,
        unsigned int const row,
        uint8_t *    const buffer) {
 
-    g16unpack(ipdb_img_row(pdbP->i, row), buffer, ipdb_width(pdbP));
+    g16unpack(ipdb_imgRow(pdbP->i, row), buffer, ipdb_width(pdbP));
 }
 
 
@@ -674,7 +668,7 @@ grow(IPDB *       const pdbP,
      unsigned int const row,
      uint8_t *    const buffer) {
 
-    gunpack(ipdb_img_row(pdbP->i, row), buffer, ipdb_width(pdbP));
+    gunpack(ipdb_imgRow(pdbP->i, row), buffer, ipdb_width(pdbP));
 }
 
 
@@ -684,7 +678,7 @@ mrow(IPDB *       const pdbP,
      unsigned int const row,
      uint8_t *    const buffer) {
 
-    munpack(ipdb_img_row(pdbP->i, row), buffer, ipdb_width(pdbP));
+    munpack(ipdb_imgRow(pdbP->i, row), buffer, ipdb_width(pdbP));
 }
 
 
@@ -777,7 +771,7 @@ main(int argc, const char ** argv) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    pdbP = ipdb_alloc(NULL);
+    pdbP = ipdb_alloc();
     if (pdbP == NULL)
         pm_error("Could not allocate IPDB structure.");
 
