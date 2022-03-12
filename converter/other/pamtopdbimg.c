@@ -46,7 +46,7 @@
 
 enum CompMode {COMPRESSED, MAYBE, UNCOMPRESSED};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -61,7 +61,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -724,7 +724,7 @@ readtxt(IPDB *       const pdbP,
 int
 main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     IPDB * pdbP;
     FILE * ifP;
     int comp;
