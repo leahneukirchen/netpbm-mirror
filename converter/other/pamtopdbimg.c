@@ -55,6 +55,7 @@ struct CmdlineInfo {
     const char * notefile;  /* NULL if not specified */
     enum CompMode compMode;
     unsigned int depth4;
+    unsigned int fixedtime;
 };
 
 
@@ -97,6 +98,8 @@ parseCommandLine(int argc, const char ** argv,
             &uncompressed,            0);
     OPTENT3(0, "4depth",              OPT_FLAG,      NULL,
             &cmdlineP->depth4,        0);
+    OPTENT3(0, "fixedtime",           OPT_FLAG,      NULL,
+            &cmdlineP->fixedtime,     0);
 
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
@@ -154,19 +157,27 @@ static uint32_t const unixepoch = (66*365+17)*24*3600;
 
 static void
 setPdbHeader(PDBHEAD *    const pdbHeadP,
-             const char * const name) {
+             const char * const name,
+             bool         const wantFixedTime) {
 
     STRSCPY(pdbHeadP->name, name);
 
-    /*
-     * All of the Image Viewer pdb files that I've come across have
-     * 3510939142U (1997.08.16 14:38:22 UTC) here.  I don't know where
-     * this bizarre datetime comes from but the real date works fine so
-     * I'm using it.
-     */
-    pdbHeadP->ctime =
-        pdbHeadP->mtime = (uint32_t)time(NULL) + unixepoch;
+    {
+        /*
+         * All of the Image Viewer pdb files that I've come across have
+         * 3510939142U (1997.08.16 14:38:22 UTC) here.  I don't know where
+         * this bizarre datetime comes from but the real date works fine so
+         * I'm using it unless user asked for a fixed time (probably just so he
+         * gets repeatable output).
+         */
 
+        uint32_t const stdTime = 3510939142U;
+
+        uint32_t const hdrDt =
+            wantFixedTime ? stdTime : (uint32_t)time(NULL) + unixepoch;
+
+        pdbHeadP->ctime = pdbHeadP->mtime = hdrDt;
+    }
     MEMSCPY(&pdbHeadP->type, IPDB_vIMG);
     MEMSCPY(&pdbHeadP->id,   IPDB_View);
 }
@@ -749,7 +760,7 @@ main(int argc, const char **argv) {
     if (pdbP == NULL)
         pm_error("Failed to allocate IPDB structure");
 
-    setPdbHeader(pdbP->p, cmdline.title);
+    setPdbHeader(pdbP->p, cmdline.title, cmdline.fixedtime);
 
     readimg(pdbP, ifP, cmdline.depth4);
 

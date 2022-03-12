@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.98.00
 
+              pamtopdbimg: Add -fixedtime.
+
               pnmtosir: Set some possibly meaningless bits in output to zero
               so output is repeatable.
 
