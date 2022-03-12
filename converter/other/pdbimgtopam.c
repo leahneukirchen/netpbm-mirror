@@ -56,7 +56,7 @@ parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -90,7 +90,7 @@ parseCommandLine(int argc, const char ** argv,
 
     if (!notefileSpec)
         cmdlineP->notefile = NULL;
-    
+
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
@@ -152,7 +152,7 @@ decompress(const uint8_t * const compressed,
         const uint8_t * inP;
         uint8_t *       outP;
         size_t          bytesLeft;
-        
+
         for (bytesLeft = imageSize,
                  inP  = &compressed[0], outP = &uncompressed[0];
              bytesLeft > 0;
@@ -251,7 +251,7 @@ readCompressed(IMAGE *    const imgP,
          * Read to the indicated offset.
          */
         dataSize = end_offset - ftell(fP) + 1;
-        
+
         MALLOCARRAY(buffer, dataSize);
 
         if (buffer == NULL)
@@ -318,7 +318,7 @@ imageReadData(FILE *   const fileP,
               IMAGE *  const imgP,
               uint32_t const end_offset) {
 
-    size_t const imageSize = ipdb_img_size(imgP);  
+    size_t const imageSize = ipdb_img_size(imgP);
 
     int retval;
     size_t dataSize;
@@ -390,7 +390,7 @@ textRead(TEXT * const textP,
         return 0;
 
     textP->r->offset = (uint32_t)ftell(fileP);
-    
+
     /*
      * What a pain in the ass!  Why the hell isn't there a length
      * attached to the text record?  I suppose the designer wasn't
@@ -453,7 +453,7 @@ pdbheadRead(PDBHEAD * const pdbHeadP,
     pm_readbiglongu2(fileP, &pdbHeadP->next_rec);
     pm_readbigshortu(fileP, &pdbHeadP->num_recs);
 
-    if (!memeq(pdbHeadP->type, IPDB_vIMG, 4) 
+    if (!memeq(pdbHeadP->type, IPDB_vIMG, 4)
         || !memeq(pdbHeadP->id, IPDB_View, 4))
         retval = E_NOTIMAGE;
     else
@@ -568,7 +568,7 @@ ipdbRead(IPDB * const pdbP,
                         }
                     } else
                         retval = 0;
-                    
+
                     if (retval == 0) {
                         uint32_t const offset =
                             pdbP->t == NULL ?
@@ -582,7 +582,7 @@ ipdbRead(IPDB * const pdbP,
                         else {
                             if (pdbP->t != NULL) {
                                 int status;
-                                
+
                                 status = textRead(pdbP->t, fileP);
                                 if (status != 0)
                                     retval = status;
@@ -663,7 +663,7 @@ static void
 g16row(IPDB *       const pdbP,
        unsigned int const row,
        uint8_t *    const buffer) {
-    
+
     g16unpack(ipdb_img_row(pdbP->i, row), buffer, ipdb_width(pdbP));
 }
 
@@ -715,7 +715,7 @@ writeImgPam(IPDB * const pdbP,
            PAM_PBM_TUPLETYPE : PAM_PGM_TUPLETYPE);
 
     pnm_writepaminit(&pam);
-    
+
     tupleRow = pnm_allocpamrow(&pam);
 
     for (row = 0; row < pam.height; ++row) {
@@ -731,7 +731,7 @@ writeImgPam(IPDB * const pdbP,
 
         for (col = 0; col < pam.width; ++col)
             tupleRow[col][0] = imgRow[col];
-        
+
         pnm_writepamrow(&pam, tupleRow);
     }
     pnm_freepamrow(tupleRow);
@@ -754,7 +754,7 @@ writeText(IPDB *       const pdbP,
         fP = pm_openw(name);
         if (fP == NULL)
             pm_error("Could not open note file '%s' for output", name);
-        
+
         fprintf(fP, "%s\n", note);
 
         pm_close(fP);
@@ -795,3 +795,6 @@ main(int argc, const char ** argv) {
 
     return EXIT_SUCCESS;
 }
+
+
+
