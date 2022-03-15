@@ -66,16 +66,17 @@ sub doVersionHack($) {
 
 sub tempFile($) {
 
+    my ($suffix) = @_;
+
     # We trust Perl's File::Temp to do a better job of creating the temp
     # file, but it doesn't exist before Perl 5.6.1.
 
     if (eval { require File::Temp; 1 }) {
         return File::Temp::tempfile("pnmquant_XXXX", 
-                                    SUFFIX=>".pnm", 
+                                    SUFFIX=>$suffix, 
                                     DIR=>File::Spec->tmpdir(),
                                     UNLINK=>$TRUE);
     } else {
-        my ($suffix) = @_;
         my $fileName;
         local *file;  # For some inexplicable reason, must be local, not my
         my $i;
