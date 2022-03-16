@@ -533,8 +533,6 @@ ipdbRead(IPDB * const pdbP,
 
     int status;
 
-    ipdb_clear(pdbP);
-
     status = pdbheadRead(pdbP->p, fileP);
 
     if (status != 0)

@@ -216,9 +216,6 @@ ipdb_free(IPDB *);
 IPDB *
 ipdb_alloc(void);
 
-void
-ipdb_clear(IPDB * const pdbP);
-
 PDBHEAD *
 ipdb_pdbheadAlloc(void);
 

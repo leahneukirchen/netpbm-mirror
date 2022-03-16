@@ -164,21 +164,17 @@ ipdb_pdbheadFree(PDBHEAD * const headP) {
 
 
 void
-ipdb_clear(IPDB * const pdbP) {
-
-    if (pdbP) {
-        ipdb_imageFree(pdbP->i);
-        ipdb_textFree(pdbP->t);
-        ipdb_pdbheadFree(pdbP->p);
-    }
-}
-
-
-
-void
 ipdb_free(IPDB * const pdbP) {
 
-    ipdb_clear(pdbP);
+    if (pdbP->i)
+        ipdb_imageFree(pdbP->i);
+
+    if (pdbP->t)
+        ipdb_textFree(pdbP->t);
+
+    if (pdbP->p)
+        ipdb_pdbheadFree(pdbP->p);
+
     free(pdbP);
 }
 
