@@ -366,7 +366,7 @@ placeImage(viewer * const viewerP,
         pixy = (viewerP->height - height) / 2;
     else {
         if ((pixy < 0) && (pixy + height < viewerP->height))
-            pixy = viewerP->height - viewerP->height;
+            pixy = viewerP->height - height;
         if (pixy > 0)
             pixy = 0;
     }

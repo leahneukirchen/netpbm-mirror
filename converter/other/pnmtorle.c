@@ -207,12 +207,35 @@ write_rle_data(void) {
 
 
 
+static void
+skip_data(FILE      * const fp,
+          int         const width,
+          int         const height,
+          gray        const maxval,
+          int         const format) {
+
+    xel * xelrow;
+    unsigned int scan;
+
+    MALLOCARRAY(xelrow, width);
+    if (xelrow == NULL)
+        pm_error("Failed to allocate memory for row of %u pixels", width);
+
+    for(scan=0; scan < height; ++scan)
+        pnm_readpnmrow(fp, xelrow, width, maxval, format);
+
+    free(xelrow);
+}
+
+
+
 int
 main(int argc, char **  argv) {
 
     const char * pnmname;
     const char * outname;
     int oflag;
+    int eof;
 
     pnm_init(&argc, argv);
 
@@ -245,18 +268,17 @@ main(int argc, char **  argv) {
 
     hdr.rle_file = rle_open_f( hdr.cmd, outname, "wb" );
 
-    if (header)
+    for (eof = 0; !eof; ) {
         read_pnm_header();
-    else {
-        int eof;
-        for (eof = 0; !eof; ) {
-            read_pnm_header();
+
+        if (header)
+            skip_data(fp, width, height, maxval, format);
+        else {
             rle_addhist(argv, NULL, &hdr);
             write_rle_header();
             write_rle_data();
-            
-            pnm_nextimage(fp, &eof);
         }
+        pnm_nextimage(fp, &eof);
     }
     pm_close(fp);
 
