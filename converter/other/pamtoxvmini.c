@@ -179,7 +179,7 @@ getPaletteIndexThroughCache(struct pam *      const pamP,
 
 
 static void
-writeXvRaster(struct pam * const pamP,
+writeXvRaster(struct pam * const inpamP,
               xvPalette *  const xvPaletteP,
               FILE *       const ofP) {
 /*----------------------------------------------------------------------------
@@ -197,34 +197,40 @@ writeXvRaster(struct pam * const pamP,
     unsigned int row;
     unsigned char * xvrow;
     struct pam scaledPam;
+    struct pam scaledRgbPam;
+
+    pnm_setminallocationdepth(inpamP, 3);
 
     paletteHash = pnm_createtuplehash();
 
-    tuplerow = pnm_allocpamrow(pamP);
-    xvrow = (unsigned char*)pm_allocrow(pamP->width, 1);
+    tuplerow = pnm_allocpamrow(inpamP);
+    xvrow = (unsigned char*)pm_allocrow(inpamP->width, 1);
 
-    scaledPam = *pamP;
+    scaledPam = *inpamP;  /* initial value */
     scaledPam.maxval = 255;
-    scaledPam.depth = MAX(3, pamP->depth);
 
-    for (row = 0; row < pamP->height; ++row) {
+    scaledRgbPam = scaledPam;  /* initial value */
+    scaledRgbPam.depth = MAX(3, scaledPam.depth);
+
+    for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
 
-        pnm_readpamrow(pamP, tuplerow);
-        pnm_scaletuplerow(pamP, tuplerow, tuplerow, scaledPam.maxval);
+        pnm_readpamrow(inpamP, tuplerow);
+        pnm_scaletuplerow(inpamP, tuplerow, tuplerow, scaledPam.maxval);
         pnm_makerowrgb(&scaledPam, tuplerow);
 
-        for (col = 0; col < scaledPam.width; ++col) {
+        for (col = 0; col < scaledRgbPam.width; ++col) {
             unsigned int paletteIndex;
 
-            getPaletteIndexThroughCache(&scaledPam, tuplerow[col], xvPaletteP,
-                                        paletteHash, &paletteIndex);
+            getPaletteIndexThroughCache(&scaledRgbPam, tuplerow[col],
+                                        xvPaletteP, paletteHash,
+                                        &paletteIndex);
 
             assert(paletteIndex < 256);
 
             xvrow[col] = paletteIndex;
         }
-        fwrite(xvrow, 1, scaledPam.width, ofP);
+        fwrite(xvrow, 1, scaledRgbPam.width, ofP);
     }
 
     pm_freerow((char*)xvrow);
@@ -253,8 +259,6 @@ main(int          argc,
     makeXvPalette(&xvPalette);
 
     pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(allocation_depth));
-
-    pnm_setminallocationdepth(&pam, 3);
 
     writeXvHeader(stdout, pam.width, pam.height);
 
