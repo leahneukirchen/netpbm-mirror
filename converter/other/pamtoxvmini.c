@@ -23,16 +23,16 @@ typedef struct xvPalette {
 } xvPalette;
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     const char * inputFileName;
 };
 
 
 
 static void
-parseCommandLine(int const argc,
-                 char *    argv[],
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int const                  argc,
+                 const char *               argv[],
+                 struct CmdlineInfo * const cmdlineP) {
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
@@ -75,7 +75,7 @@ static void
 writeXvHeader(FILE *       const ofP,
               unsigned int const cols,
               unsigned int const rows) {
-           
+
     fprintf(ofP, "P7 332\n");
 
     fprintf(ofP, "# Created by Pamtoxvmini\n");
@@ -94,12 +94,14 @@ writeXvHeader(FILE *       const ofP,
 
 static void
 findClosestColor(struct pam *      const pamP,
-                 tuple             const tuple, 
+                 tuple             const tuple,
                  const xvPalette * const xvPaletteP,
                  unsigned int *    const paletteIndexP) {
 /*----------------------------------------------------------------------------
    Find the color in the palette *xvPaletteP that is closest to the color
    'tuple' and return its index in the palette.
+
+   *pamP gives the format of 'tuple', which must be RGB with maxval 255.
 -----------------------------------------------------------------------------*/
     unsigned int paletteIndex;
     unsigned int bestPaletteIndex;
@@ -118,12 +120,12 @@ findClosestColor(struct pam *      const pamP,
         unsigned int const tupleRed = tuple[PAM_RED_PLANE];
         unsigned int const tupleGrn = tuple[PAM_GRN_PLANE];
         unsigned int const tupleBlu = tuple[PAM_BLU_PLANE];
-        
+
         unsigned int const paletteRed = xvPaletteP->red[paletteIndex];
         unsigned int const paletteGrn = xvPaletteP->grn[paletteIndex];
         unsigned int const paletteBlu = xvPaletteP->blu[paletteIndex];
 
-        unsigned int const distance = 
+        unsigned int const distance =
             SQR((int)tupleRed - (int)paletteRed) +
             SQR((int)tupleGrn - (int)paletteGrn) +
             SQR((int)tupleBlu - (int)paletteBlu);
@@ -155,24 +157,29 @@ getPaletteIndexThroughCache(struct pam *      const pamP,
     int found;
     int paletteIndex;
 
+    /* As required by findClosestColor(): */
+    assert(pamP->depth >= 3);
+    assert(pamP->maxval == 255);
+
     pnm_lookuptuple(pamP, paletteHash, tuple, &found, &paletteIndex);
     if (found)
         *paletteIndexP = paletteIndex;
     else {
         int fits;
+
         findClosestColor(pamP, tuple, xvPaletteP, paletteIndexP);
-        
+
         pnm_addtotuplehash(pamP, paletteHash, tuple, *paletteIndexP, &fits);
-        
+
         if (!fits)
             pm_error("Can't get memory for palette hash.");
     }
 }
 
-    
+
 
 static void
-writeXvRaster(struct pam * const pamP,
+writeXvRaster(struct pam * const inpamP,
               xvPalette *  const xvPaletteP,
               FILE *       const ofP) {
 /*----------------------------------------------------------------------------
@@ -190,33 +197,40 @@ writeXvRaster(struct pam * const pamP,
     unsigned int row;
     unsigned char * xvrow;
     struct pam scaledPam;
+    struct pam scaledRgbPam;
+
+    pnm_setminallocationdepth(inpamP, 3);
 
     paletteHash = pnm_createtuplehash();
 
-    tuplerow = pnm_allocpamrow(pamP);
-    xvrow = (unsigned char*)pm_allocrow(pamP->width, 1);
+    tuplerow = pnm_allocpamrow(inpamP);
+    xvrow = (unsigned char*)pm_allocrow(inpamP->width, 1);
 
-    scaledPam = *pamP;
+    scaledPam = *inpamP;  /* initial value */
     scaledPam.maxval = 255;
 
-    for (row = 0; row < pamP->height; ++row) {
+    scaledRgbPam = scaledPam;  /* initial value */
+    scaledRgbPam.depth = MAX(3, scaledPam.depth);
+
+    for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
 
-        pnm_readpamrow(pamP, tuplerow);
-        pnm_scaletuplerow(pamP, tuplerow, tuplerow, scaledPam.maxval);
+        pnm_readpamrow(inpamP, tuplerow);
+        pnm_scaletuplerow(inpamP, tuplerow, tuplerow, scaledPam.maxval);
         pnm_makerowrgb(&scaledPam, tuplerow);
 
-        for (col = 0; col < scaledPam.width; ++col) {
+        for (col = 0; col < scaledRgbPam.width; ++col) {
             unsigned int paletteIndex;
 
-            getPaletteIndexThroughCache(&scaledPam, tuplerow[col], xvPaletteP,
-                                        paletteHash, &paletteIndex);
+            getPaletteIndexThroughCache(&scaledRgbPam, tuplerow[col],
+                                        xvPaletteP, paletteHash,
+                                        &paletteIndex);
 
             assert(paletteIndex < 256);
 
             xvrow[col] = paletteIndex;
         }
-        fwrite(xvrow, 1, scaledPam.width, ofP);
+        fwrite(xvrow, 1, scaledRgbPam.width, ofP);
     }
 
     pm_freerow((char*)xvrow);
@@ -227,16 +241,16 @@ writeXvRaster(struct pam * const pamP,
 
 
 
-int 
-main(int    argc,
-     char * argv[]) {
+int
+main(int          argc,
+     const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam pam;
     xvPalette xvPalette;
- 
-    pnm_init(&argc, argv);
+
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -246,13 +260,14 @@ main(int    argc,
 
     pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(allocation_depth));
 
-    pnm_setminallocationdepth(&pam, 3);
-
     writeXvHeader(stdout, pam.width, pam.height);
-    
+
     writeXvRaster(&pam, &xvPalette, stdout);
 
     pm_close(ifP);
 
     return 0;
 }
+
+
+

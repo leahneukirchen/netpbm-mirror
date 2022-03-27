@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtopi3 pi3topbm
 # Also requires: pbmmake pamcut pamfile
 

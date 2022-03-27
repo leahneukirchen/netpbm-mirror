@@ -4,7 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-22.03.20 BJH  Release 10.97.06
+22.03.27 BJH  Release 10.98.00
+
+              pamtopdbimg: Add -fixedtime.
+
+              ppmfade: Use temporary files securely.
+              
+              pnmtosir: Set some possibly meaningless bits in output to zero
+              so output is repeatable.
 
               pamx: Fix bug: top-justifies image in all cases where it should
               bottom-justify.  Always broken.  (pamx was new in Netpbm 10.34
@@ -12,22 +19,24 @@ CHANGE HISTORY
 
               pnmtorle: Fix bug: -h works only on first image.
 
-22.02.27 BJH  Release 10.97.05
-
               pamsistoaglyph: Fix invalid memory reference and incorrect
               output on depth 1 input.  Always broken.  (pamsistoaglyph was
               new in Netpbm 10.47 (June 2009).  Thanks Scott Pakin.
 
-              pambayer: Fix bogus colors at edges.  Always broken (pambayer
+              pambayer: Fix bogus colors at edges.  Always Broken (pambayer
               was new in Release 10.30 (October 2005)).
-
-22.02.13 BJH  Release 10.97.04
 
               libnetpbm, various programs: fix bug: bogus warning that a color
               specified on command line cannot be represented exactly with the
               maxval being used.  Introduced in Netpbm 10.83 (June 2018).
 
-22.01.27 BJH  Release 10.97.03
+              pnmtopsnr: Fix typo in error message.  Always broken (pnmpsnr
+              was new in Netpbm 9.6 (July 2000).
+
+              ppmtoilbm: Remove -floyd (aka -fs) option, which hasn't worked
+              in a long time if ever and is inappropriate function for this
+              program.  And the broken code is inconsistent with new random
+              number logic elsewhere in the package.
 
               ppmtoapplevol: Fix bug: reads from Standard Input even when you
               specify the input file argument.  Always broken.  (ppmtoapplevol
@@ -37,24 +46,28 @@ CHANGE HISTORY
               than 255.  Always broken.  (ppmtoapplevol was new in Netpbm
               10.54 (March 2011).
 
+              pgmmedian: fix crash when median matrix is wider or higher than
+              the input image.
+
+              picttoppm: Fix incorrect output for 32 bit per pixel images
+              that have only 3 planes.  Broken in Netpbm 10.34 (June 2006).
+
+              pamendian: fix bogus "sample exceeds maxval" failure.
+              Introduced in Netpbm 10.66 (March 2014).
+
+              ppmtoilbm: Fix wild memory references and hangs with -map .
+              Introduced in Netpbm 9.12 (March 2001).
+
               pgmtexture: Fix incorrect output.  Always broken.  (Program was
               added in primordial Netpbm in 1991).
               
               pgmabel: Fix incorrect output.  Always broken.  (Program was
               new in Netpbm 10.3 (July 2002).
 
-22.01.11 BJH  Release 10.97.02
-
-              ppmtoilbm: Fix wild memory references and hangs with -map .
-              Introduced in Netpbm 9.12 (March 2001).
-
-22.01.09 BJH  Release 10.97.01
- 
-              picttoppm: Fix incorrect output for 32 bit per pixel images
-              that have only 3 planes.  Broken in Netpbm 10.34 (June 2006).
-
-              pamendian: fix bogus "sample exceeds maxval" failure.
-              Introduced in Netpbm 10.66 (March 2014).
+              Remove Floyd-Steinberg dithering functions (ppm_fs_*) from
+              libnetpbm (libppmfloyd).  No longer used.  Floyd-Steinberg
+              dithering logic can be found in pnmremap.  libppmfloyd
+              was previously used by ppmtoilbm.
 
 21.12.27 BJH  Release 10.97.00
 
@@ -5798,7 +5811,7 @@ CHANGE HISTORY
 
 00.07.12 BJH  Release 9.6
 
-              Add pnmtofiasco, fiascotopnm, psnpsnr.  Thanks to Ullrich
+              Add pnmtofiasco, fiascotopnm, pnmpnsr.  Thanks to Ullrich
               Hafner.
 
               Make Pnmcrop use a temporary file instead of huge amounts

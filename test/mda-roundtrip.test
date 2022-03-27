@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtomda mdatopbm
 # Also requires: pbmmake pnmpad pamcut pamfile
 

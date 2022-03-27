@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamcrater pamshadedrelief
 # Also requires: pamstack pamvalidate pamcut pamflip
 

@@ -1,103 +1,82 @@
 Test 1
-test.pbm
-
-0 0 -7 0 28 25 rgb-1:1/1/1 0.000000
--white
-0 0 -7 0 28 25 rgb-1:1/1/1 0.000000
--black
-0 0 0 -2 28 30 rgb-1:0/0/0 0.000000
--sides
-0 0 -7 0 28 25 rgb-1:1/1/1 0.000000
--top
-0 0 -7 0 28 25 rgb-1:1/1/1 0.000000
--bottom
-0 0 0 0 28 32 rgb-1:1/1/1 0.000000
--left
-0 0 0 0 28 32 rgb-1:1/1/1 0.000000
--right
-0 0 0 0 28 32 rgb-1:1/1/1 0.000000
--top -bottom
-0 0 -7 0 28 25 rgb-1:1/1/1 0.000000
--bottom -bg-corner=bottomright
-0 0 0 -2 28 30 rgb-1:0/0/0 0.000000
--right -bg-corner=bottomright
-0 0 0 0 28 32 rgb-1:0/0/0 0.000000
--bg-color=white
-0 0 0 0 28 32 rgb-1:1/1/1 0.000000
--bg-color=black
-0 0 0 -2 28 30 rgb-1:0/0/0 0.000000
--bg-color=red
-0 0 0 0 28 32 rgb-1:0/0/0 0.000000
-test.ppm
-
+file: maze.pbm option: 
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -white
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -black
+0 0 0 -2 71 73 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -sides
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -top
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -bottom
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -left
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -right
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -top -bottom
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -bottom -bg-corner=bottomright
+0 0 0 -2 71 73 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -right -bg-corner=bottomright
+0 0 0 0 71 75 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -bg-color=white
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -bg-color=black
+0 0 0 -2 71 73 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -bg-color=red
+0 0 0 0 71 75 rgb-1:0/0/0 0.000000
+file: rose.ppm option: 
 0 0 0 0 250 161 rgb-255:127/127/127 0.000000
--white
+file: rose.ppm option: -white
 -6 0 0 0 244 161 rgb-255:255/255/255 0.000000
--black
+file: rose.ppm option: -black
 0 -11 0 0 239 161 rgb-255:0/0/0 0.000000
--sides
+file: rose.ppm option: -sides
 -6 0 0 0 244 161 rgb-255:255/255/255 0.000000
--top
+file: rose.ppm option: -top
 0 0 0 0 250 161 rgb-255:127/127/127 0.000000
--bottom
+file: rose.ppm option: -bottom
 0 0 0 0 250 161 rgb-255:127/127/127 0.000000
--left
+file: rose.ppm option: -left
 0 0 0 0 250 161 rgb-255:127/127/127 0.000000
--right
+file: rose.ppm option: -right
 0 0 0 0 250 161 rgb-255:127/127/127 0.000000
--top -bottom
+file: rose.ppm option: -top -bottom
 0 0 0 0 250 161 rgb-255:127/127/127 0.000000
--bottom -bg-corner=bottomright
+file: rose.ppm option: -bottom -bg-corner=bottomright
 0 0 0 0 250 161 rgb-255:0/0/0 0.000000
--right -bg-corner=bottomright
+file: rose.ppm option: -right -bg-corner=bottomright
 0 -11 0 0 239 161 rgb-255:0/0/0 0.000000
--bg-color=white
+file: rose.ppm option: -bg-color=white
 -6 0 0 0 244 161 rgb-255:255/255/255 0.000000
--bg-color=black
+file: rose.ppm option: -bg-color=black
 0 -11 0 0 239 161 rgb-255:0/0/0 0.000000
--bg-color=red
+file: rose.ppm option: -bg-color=red
 0 0 0 0 250 161 rgb-255:255/0/0 0.000000
-Test 2
-test.pbm
-
-3130931737 109
-3130931737 109
--white
-3130931737 109
-3130931737 109
--top
-3130931737 109
-3130931737 109
-test.ppm
-
-1435955776 120765
-1435955776 120765
--white
-638507845 117867
-638507845 117867
--top
-1435955776 120765
-1435955776 120765
+Test 2.  Should print 0 six times
+file: maze.pbm option:
+0
+file: maze.pbm option: -white
+0
+file: maze.pbm option: -top
+0
+file: rose.ppm option:
+0
+file: rose.ppm option: -white
+0
+file: rose.ppm option: -top
+0
 Test Invalid
--reportfull -reportsize
 Expected failure:  -reportfull -reportsize 1
--reportfull -borderfile=testgrid.pbm
 Expected failure:  -reportfull -borderfile=testgrid.pbm 1
--reportsize -borderfile=testgrid.pbm
 Expected failure:  -reportsize -borderfile=testgrid.pbm 1
--black -white
 Expected failure:  -black -white 1
--black -sides
 Expected failure:  -black -sides 1
--white -bg-color=red
 Expected failure:  -white -bg-color=red 1
--white -bg-corner=topleft
 Expected failure:  -white -bg-corner=topleft 1
--white -bg-corner=top
 Expected failure:  -white -bg-corner=top 1
--blank-image=pasturize
 Expected failure:  -blank-image=pasturize 1
--bg-color=black -closeness=-1
 Expected failure:  -bg-color=black -closeness=-1 1
--bg-color=black -closeness=101
 Expected failure:  -bg-color=black -closeness=101 1

@@ -1,23 +1,23 @@
 /*
  * This software is copyrighted as noted below.  It may be freely copied,
- * modified, and redistributed, provided that the copyright notice is 
+ * modified, and redistributed, provided that the copyright notice is
  * preserved on all copies.
- * 
+ *
  * There is no warranty or other guarantee of fitness for this software,
  * it is provided solely "as is".  Bug reports or fixes may be sent
  * to the author, who may or may not act on them as he desires.
  *
  * You may not include this software in a program or other software product
- * without supplying the source, or without informing the end-user that the 
+ * without supplying the source, or without informing the end-user that the
  * source is available for no extra charge.
  *
  * If you modify this software, you should include a notice giving the
  * name of the person performing the modification, the date of modification,
  * and the reason for such modification.
  */
-/* 
+/*
  * rle_putcom.c - Add a picture comment to the header struct.
- * 
+ *
  * Author:  Spencer W. Thomas
  *      Computer Science Dept.
  *      University of Utah
@@ -33,7 +33,7 @@
 
 /*****************************************************************
  * TAG( match )
- * 
+ *
  * Match a name against a test string for "name=value" or "name".
  * If it matches name=value, return pointer to value part, if just
  * name, return pointer to NUL at end of string.  If no match, return NULL.
@@ -72,7 +72,7 @@ match(const char * const nArg,
 
 /*****************************************************************
  * TAG( rle_putcom )
- * 
+ *
  * Put a comment into the header struct.
  * Inputs:
  *  value:      Value to add to comments.
@@ -123,47 +123,4 @@ rle_putcom(const char * const value,
     }
 
     return NULL;
-}
-
-
-
-/*****************************************************************
- * TAG( rle_delcom )
- * 
- * Delete a comment from header struct.
- * Inputs:
- *  name:       Name of comment to delete.
- *  the_hdr:    Header to delete comment from.
- * Outputs:
- *  the_hdr:    Modified header struct.
- *  Returns original comment value.
- * Assumptions:
- *  [None]
- * Algorithm:
- *  [None]
- */
-const char *
-rle_delcom(const char * const name,
-           rle_hdr *    const the_hdr) {
-
-    const char * v = NULL;
-
-    if (the_hdr->comments == NULL)
-        v = NULL;
-    else {
-        const char ** cp;
-
-        for (cp = the_hdr->comments; *cp != NULL; ++cp)
-            if (match(name, *cp) != NULL) {
-                v = *cp;
-                for ( ; *cp != NULL; ++cp)
-                    *cp = cp[1];
-                break;
-            }
-        /* Not found */
-        if (*the_hdr->comments == NULL)
-            the_hdr->comments = NULL;
-    }
-
-    return v;
 }

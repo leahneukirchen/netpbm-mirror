@@ -87,7 +87,7 @@ else
 
     case "$color" in
         -gofigure )
-        pnmcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
+        pamcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
         ;;
         -white | -black )
         pnmpad $plainopt $color \

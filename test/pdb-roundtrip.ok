@@ -1,18 +1,18 @@
-pbm grid
+Test 1: pbm grid : Should print 2224198737 25671 three times
 2224198737 25671
 2224198737 25671
 2224198737 25671
-pbm tiled
+Test 2: pbmnoise : Should print 0 0 0 0 : 0 four times
 0 0 0 0 : 0
 0 0 0 0 : 0
 0 0 0 0 : 0
 0 0 0 0 : 0
-pgm ellipse
+Test 3: pgm ellipse : Should print 0 0 0 0 0 : 0 four times
 0 0 0 0 0 : 0
 0 0 0 0 0 : 0
 0 0 0 0 0 : 0
 0 0 0 0 0 : 0
-pgm ellipse -4depth
+Test 4: pgm ellipse -4depth : Should print 0 0 0 0 0 : 0 three times
 0 0 0 0 0 : 0
 0 0 0 0 0 : 0
 0 0 0 0 0 : 0

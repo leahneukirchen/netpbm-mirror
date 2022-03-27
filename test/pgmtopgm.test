@@ -1,6 +1,12 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pgmtopgm
-# Also requires:
+# Also requires: pgmmake
 
+echo "Test 1.  Should print two identical PGM images"
 
-pgmtopgm < testgrid.pbm | cksum
+pgmmake -plain 0 10 1
+pgmmake 0 10 1 | pgmtopgm -plain
+
+echo "Test 2.  Should print 2582999797 3376"
+
+pgmtopgm < maze.pbm | cksum

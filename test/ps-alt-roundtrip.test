@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtoepsi pbmtopsg3 psidtopgm pstopnm
 # Also requires: gs pnmcrop
 

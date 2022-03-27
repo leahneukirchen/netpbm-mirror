@@ -1,0 +1,11 @@
+pgmabel: 0 0 0 0
+pgmbentley: 0 0 0 0
+pgmdeshadow: 0 0 0 0
+pgmenhance: 0 0 0 0
+pgmhist: 0 0 0 0
+pgmmedian: 0 0 0 0
+pgmminkowski: 0 0 0 0
+pgmtexture: 0 0 0 0
+pgmtopbm -th : 0 0 0 0
+pgmtoppm rgb:00/00/00 : 0 0 0 0
+rawtopgm -headerskip 11 3 3 : 0 0 0 0

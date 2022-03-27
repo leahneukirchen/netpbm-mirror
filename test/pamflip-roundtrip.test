@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamflip
 # Also requires: ppmpat pamseq pamtopnm
 
@@ -8,7 +8,7 @@ test1_pgm=${tmpdir}/test1.pgm
 test2_pgm=${tmpdir}/test2.pgm
 dot_ppm=${tmpdir}/dot.ppm
 
-echo "Test 1.  Should produce 1988581932 2989 fifteen times"
+echo "Test 1.  Should print 1988581932 2989 fifteen times"
 
 ppmpat -tartan -mesh \
        -color=rgb:0/0/0,rgb:ff/00/ff,rgb:80/90/20 31 32 > ${tartan_ppm}
@@ -38,7 +38,7 @@ rm ${tartan_ppm}
 
 pamseq 1 15 | pamtopnm -assume > ${test1_pgm}
 
-echo "Test 2.  Should produce 2729474106 27 nine times"
+echo "Test 2.  Should print 2729474106 27 nine times"
 
 pamflip -null ${test1_pgm} | cksum
 pamflip -lr ${test1_pgm} | pamflip -lr | cksum
@@ -55,7 +55,7 @@ pamflip -r270 ${test1_pgm} | pamflip -r270 | \
 pamflip -r180 ${test1_pgm} > ${test2_pgm}
 rm ${test1_pgm}
 
-echo "Test 3.  Should produce 1849343241 27 nine times"
+echo "Test 3.  Should print 1849343241 27 nine times"
 
 pamflip -null ${test2_pgm} | cksum
 pamflip -lr ${test2_pgm} | pamflip -lr | cksum
@@ -79,10 +79,19 @@ P3
 EOF
 
 echo "Test 4.  Should print a single pixel PPM image maxval 65535 in "
-echo "plain (ascii) format; then produce 2434897823 19 nine times"
+echo "plain (ascii) format; then print 2434897823 19 fifteen times"
 
 pamflip -null -plain ${dot_ppm}
+
+# These are not round-trip
 pamflip -null ${dot_ppm} | cksum
+pamflip -lr ${dot_ppm} | cksum
+pamflip -tb ${dot_ppm} | cksum
+pamflip -xy ${dot_ppm} | cksum
+pamflip -r90 ${dot_ppm} | cksum
+pamflip -r180 ${dot_ppm} | cksum
+pamflip -r270 ${dot_ppm} | cksum
+
 pamflip -lr ${dot_ppm} | pamflip -lr | cksum
 pamflip -tb ${dot_ppm} | pamflip -tb | cksum
 pamflip -r180 ${dot_ppm} | pamflip -r180 | cksum
@@ -95,7 +104,7 @@ pamflip -r270 ${dot_ppm} | pamflip -r270 | \
 
 rm ${dot_ppm}
 
-echo "Test 4.  Should produce 281226646 481 seven times"
+echo "Test 5.  Should print 281226646 481 seven times"
 
 pamflip -null maze.pbm | cksum
 pamflip -lr maze.pbm | pamflip -lr | cksum
@@ -104,5 +113,3 @@ pamflip -r180 maze.pbm | pamflip -r180 | cksum
 pamflip -xy maze.pbm | pamflip -xy | cksum
 pamflip -r90 maze.pbm | pamflip -r90 | pamflip -r90 | pamflip -r90 | cksum
 pamflip -r270 maze.pbm | pamflip -r270 | pamflip -r270 | pamflip -r270 | cksum
-
-# TODO: PBM various lengths: samples with -lr

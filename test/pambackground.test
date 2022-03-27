@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pambackground
 # Also requires: pamgradient pamseq pbmmake pnmmargin pnmremap pnmtile pnmpad
 

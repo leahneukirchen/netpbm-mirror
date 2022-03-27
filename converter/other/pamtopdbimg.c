@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 
 #include "pm_c_util.h"
@@ -45,7 +46,7 @@
 
 enum CompMode {COMPRESSED, MAYBE, UNCOMPRESSED};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -54,13 +55,14 @@ struct cmdlineInfo {
     const char * notefile;  /* NULL if not specified */
     enum CompMode compMode;
     unsigned int depth4;
+    unsigned int fixedtime;
 };
 
 
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -96,6 +98,8 @@ parseCommandLine(int argc, const char ** argv,
             &uncompressed,            0);
     OPTENT3(0, "4depth",              OPT_FLAG,      NULL,
             &cmdlineP->depth4,        0);
+    OPTENT3(0, "fixedtime",           OPT_FLAG,      NULL,
+            &cmdlineP->fixedtime,     0);
 
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
@@ -141,6 +145,42 @@ parseCommandLine(int argc, const char ** argv,
 #define setg16pixel(b,v,o)  ((b) |= ((v) << (4 - 4*(o))))
 #define setgpixel(b,v,o)    ((b) |= ((v) << (6 - 2*(o))))
 #define setmpixelblack(b,o)    ((b) |= (1 << (7 - (o))))
+
+
+
+static uint32_t const unixepoch = (66*365+17)*24*3600;
+    /* The unix epoch in Mac time (the Mac epoch is 00:00 UTC 1904.01.01).
+       The 17 is the number of leap years.
+    */
+
+
+
+static void
+setPdbHeader(PDBHEAD *    const pdbHeadP,
+             const char * const name,
+             bool         const wantFixedTime) {
+
+    STRSCPY(pdbHeadP->name, name);
+
+    {
+        /*
+         * All of the Image Viewer pdb files that I've come across have
+         * 3510939142U (1997.08.16 14:38:22 UTC) here.  I don't know where
+         * this bizarre datetime comes from but the real date works fine so
+         * I'm using it unless user asked for a fixed time (probably just so he
+         * gets repeatable output).
+         */
+
+        uint32_t const stdTime = 3510939142U;
+
+        uint32_t const hdrDt =
+            wantFixedTime ? stdTime : (uint32_t)time(NULL) + unixepoch;
+
+        pdbHeadP->ctime = pdbHeadP->mtime = hdrDt;
+    }
+    MEMSCPY(&pdbHeadP->type, IPDB_vIMG);
+    MEMSCPY(&pdbHeadP->id,   IPDB_View);
+}
 
 
 
@@ -249,9 +289,9 @@ compressIfRequired(IPDB *     const pdbP,
 
     if (comp == IPDB_NOCOMPRESS) {
         *compressedDataP = pdbP->i->data;
-        *compressedSizeP = ipdb_img_size(pdbP->i);
+        *compressedSizeP = ipdb_imgSize(pdbP->i);
     } else {
-        int const uncompressedSz = ipdb_img_size(pdbP->i);
+        int const uncompressedSz = ipdb_imgSize(pdbP->i);
 
         unsigned char * outbuf;
         size_t          compressedSz;
@@ -475,7 +515,7 @@ imageInsertInit(IPDB * const pdbP,
                      ipdb_typeName(type), MAX_SIZE(type));
         else {
             pdbP->i =
-                ipdb_image_alloc(name, type, adjustedWidth, adjustedHeight);
+                ipdb_imageCreate(name, type, adjustedWidth, adjustedHeight);
             if (pdbP->i == NULL)
                 pm_message("Could not get memory for %u x %u image",
                            adjustedWidth, adjustedHeight);
@@ -582,7 +622,7 @@ insertMimage(IPDB *          const pdbP,
 
 static int
 insertText(IPDB *       const pdbP,
-           const char * const s) {
+           const char * const content) {
 
     int retval;
 
@@ -591,17 +631,23 @@ insertText(IPDB *       const pdbP,
     else if (pdbP->p->num_recs == 2)
         retval = E_TEXTTHERE;
     else {
-        pdbP->t = ipdb_text_alloc(s);
+        pdbP->t = ipdb_textAlloc();
         if (pdbP->t == NULL)
             retval = ENOMEM;
         else {
-            pdbP->p->num_recs = 2;
+            pdbP->t->data = strdup(content);
 
-            pdbP->i->r->offset += 8;
-            pdbP->t->r->offset =
-                pdbP->i->r->offset + IMAGESIZE + ipdb_img_size(pdbP->i);
+            if (pdbP->t->data == NULL)
+                retval = ENOMEM;
+            else {
+                pdbP->p->num_recs = 2;
 
-            retval = 0;
+                pdbP->i->r->offset += 8;
+                pdbP->t->r->offset =
+                    pdbP->i->r->offset + IMAGESIZE + ipdb_imgSize(pdbP->i);
+
+                retval = 0;
+            }
         }
     }
     return retval;
@@ -689,7 +735,7 @@ readtxt(IPDB *       const pdbP,
 int
 main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     IPDB * pdbP;
     FILE * ifP;
     int comp;
@@ -709,10 +755,12 @@ main(int argc, const char **argv) {
     if (strlen(cmdline.title) > 31)
         pm_error("Title too long.  Max length is 31 characters.");
 
-    pdbP = ipdb_alloc(cmdline.title);
+    pdbP = ipdb_alloc();
 
     if (pdbP == NULL)
         pm_error("Failed to allocate IPDB structure");
+
+    setPdbHeader(pdbP->p, cmdline.title, cmdline.fixedtime);
 
     readimg(pdbP, ifP, cmdline.depth4);
 

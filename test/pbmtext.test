@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtext
 # Also requires: pamfile
 
@@ -41,7 +41,7 @@ for flags in "" "-builtin fixed"
 do
 pbmtext ${flags} ${text} | tee ${temp_pbm} | cksum
 width1=`pamfile ${temp_pbm} | awk '$2=="PBM" && NR==1 {w=$4}; END {print w}' `
-width2=`pbmtext ${flags} ${text} --dry-run | awk '{print $1}' `
+width2=`pbmtext ${flags} ${text} --dry-run | cut -d " " -f 1`
 
 if [ ${width1} -eq ${width2} ]; then
     pbmtext ${flags} -width=${width1} ${text} | cksum

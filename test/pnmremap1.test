@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmremap
 # Also requires: pamseq pamtopnm
 

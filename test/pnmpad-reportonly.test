@@ -1,0 +1,129 @@
+#! /bin/sh
+# This script tests: pnmpad
+# Also requires: pbmmake pgmmake ppmmake pamfile
+
+tmpdir=${tmpdir:-/tmp}
+
+test1_pbm=${tmpdir}/test1.pbm
+test2_pbm=${tmpdir}/test2.pbm
+test_pgm=${tmpdir}/test.pgm
+test_ppm=${tmpdir}/test.ppm
+
+testimg_size=$(pamfile -size testimg.ppm) 
+
+echo "Test 1.  Should print 0 0 0 0 ${testimg_size} six times" 
+
+for pad in "" "-left=0" "-right=0" "-top=0" "-bottom=0" \
+           "-left=0 -right=0 -top=0 -bottom=0"
+  do
+  pnmpad -reportonly ${pad} testimg.ppm || echo "failure"
+  done
+
+
+echo "Test 2.  Should print 10 0 0 0 110 17 seven times" 
+ 
+pbmmake -w 100 17 > ${test1_pbm}
+for pad in "-left=10" \
+           "-left=10 -right=0" \
+           "-left=10 -width=90" \
+           "-left=10 -width=105" \
+           "-left=10 -width=110" \
+           "-right=0 -width=110" \
+           "-halign=1.0 -width=110"
+  do
+  pnmpad -reportonly ${pad} ${test1_pbm} || echo "failure"
+  done
+
+
+echo "Test 3.  Should print 0 10 0 0 110 19 eight times" 
+pgmmake 0.5 100 19 > ${test_pgm}
+for pad in "-right=10" \
+           "-right=10 -left=0" \
+           "-right=10 -width=90" \
+           "-right=10 -width=105" \
+           "-right=10 -width=110" \
+           "-left=0 -width=110" \
+           "-halign=0.0 -width=110" \
+           "-right=1 -mwidth=11"
+  do
+  pnmpad -reportonly ${pad} ${test_pgm} || echo "failure"
+  done
+
+
+echo "Test 4.  Should print 10 10 0 0 120 19 four times" 
+for pad in "-left=10 -right=10" \
+           "-right=10 -width=120" \
+           "-halign=0.5 -width=120" \
+           "-left=1 -right=1 -mwidth=30"
+  do
+  pnmpad -reportonly ${pad} ${test_pgm} || echo "failure"
+  done
+
+
+echo "Test 5.  Should print 0 0 10 0 27 110 seven times" 
+ 
+pbmmake -w 27 100 > ${test2_pbm}
+for pad in "-top=10" \
+           "-top=10 -bottom=0" \
+           "-top=10 -height=50" \
+           "-top=10 -height=101" \
+           "-top=10 -height=110" \
+           "-bottom=0 -height=110" \
+           "-valign=1.0 -height=110"
+  do
+  pnmpad -reportonly ${pad} ${test2_pbm} || echo "failure"
+  done
+
+
+echo "Test 6.  Should print 0 0 0 10 19 110 eight times" 
+ppmmake rgb:33/44/55 19 100 > ${test_ppm}
+for pad in "-bottom=10" \
+           "-bottom=10 -top=0" \
+           "-bottom=10 -height=10" \
+           "-bottom=10 -height=107" \
+           "-bottom=10 -height=110" \
+           "-top=0 -height=110" \
+           "-valign=0.0 -height=110" \
+           "-bottom=1 -mheight=10"
+  do
+  pnmpad -reportonly ${pad} ${test_ppm} || echo "failure"
+  done
+
+
+echo "Test 7.  Should print 0 0 12 12 27 124 four times" 
+for pad in "-top=12 -bottom=12" \
+           "-top=12 -height=124" \
+           "-valign=0.5 -height=124" \
+           "-top=11 -bottom=11 -mheight=4"
+  do
+  pnmpad -reportonly ${pad} ${test2_pbm} || echo "failure"
+  done
+
+
+echo "Test 8.  Should print 5 10 0 0 115 17 seven times"
+for pad in "-l 5 -r 10 -w 115" \
+           "-l 5       -w 115" \
+           "     -r 10 -w 115" \
+           "-l 5 -r 10       " \
+           "-halign 0.333 -w 115 " \
+           "-l 2 -r 4 -mw 23" \
+           "-halign 0.333 -mw 23"
+  do
+  pnmpad -reportonly ${pad} ${test1_pbm} || echo "failure"
+  done
+
+
+echo "Test 9.  Should print 0 0 4 8 19 112 seven times"
+for pad in "-t 4 -b 8 -h 112" \
+           "-t 4      -h 112" \
+           "     -b 8 -h 112" \
+           "-t 4 -b 8       " \
+           "-t 4 -b 8 -mh 14" \
+           "-valign 0.333 -mh 14" \
+           "-valign 0.333 -h 112"
+  do
+  pnmpad -reportonly ${pad} ${test_ppm} || echo "failure"
+  done
+
+
+rm ${test1_pbm} ${test2_pbm} ${test_pgm} ${test_ppm}

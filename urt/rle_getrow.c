@@ -1,14 +1,14 @@
 /*
  * This software is copyrighted as noted below.  It may be freely copied,
- * modified, and redistributed, provided that the copyright notice is 
+ * modified, and redistributed, provided that the copyright notice is
  * preserved on all copies.
- * 
+ *
  * There is no warranty or other guarantee of fitness for this software,
  * it is provided solely "as is".  Bug reports or fixes may be sent
  * to the author, who may or may not act on them as he desires.
  *
  * You may not include this software in a program or other software product
- * without supplying the source, or without informing the end-user that the 
+ * without supplying the source, or without informing the end-user that the
  * source is available for no extra charge.
  *
  * If you modify this software, you should include a notice giving the
@@ -18,15 +18,15 @@
  *  Modified at BRL 16-May-88 by Mike Muuss to avoid Alliant STDC desire
  *  to have all "void" functions so declared.
  */
-/* 
+/*
  * rle_getrow.c - Read an RLE file in.
- * 
+ *
  * Author:  Spencer W. Thomas
  *      Computer Science Dept.
  *      University of Utah
  * Date:    Wed Apr 10 1985
  * Copyright (c) 1985 Spencer W. Thomas
- * 
+ *
  * $Id: rle_getrow.c,v 3.0.1.5 1992/03/04 19:33:08 spencer Exp spencer $
  */
 
@@ -43,7 +43,7 @@
 /* Read a two-byte "short" that started in VAX (LITTLE_ENDIAN) order */
 #define VAXSHORT( var, fp )\
     { var = fgetc(fp)&0xFF; var |= (fgetc(fp)) << 8; }
-  
+
 /* Instruction format -- first byte is opcode, second is datum. */
 
 #define OPCODE(inst) (inst[0] & ~LONG)
@@ -77,7 +77,7 @@ rle_get_setup(rle_hdr * const the_hdr) {
     FILE * infile = the_hdr->rle_file;
     int i;
     char * comment_buf;
-    
+
     /* Clear old stuff out of the header. */
     rle_hdr_clear(the_hdr);
     if (the_hdr->is_init != RLE_INIT_MAGIC)
@@ -167,7 +167,7 @@ rle_get_setup(rle_hdr * const the_hdr) {
         evenlen = (comlen + 1) & ~1;    /* make it even */
         if (evenlen) {
             MALLOCARRAY(comment_buf, evenlen);
-    
+
             if (comment_buf == NULL) {
                 pm_error("Malloc failed for comment buffer of size %d "
                          "in rle_get_setup, reading '%s'",
@@ -218,78 +218,13 @@ rle_get_setup(rle_hdr * const the_hdr) {
 
 
 
-void
-rle_get_setup_ok(rle_hdr *    const the_hdr,
-                 const char * const prog_name,
-                 const char * const file_name) {
-/*-----------------------------------------------------------------------------
-  Read the initialization information from an RLE file.
-
-  Inputs:
-   the_hdr:    Contains pointer to the input file.
-   prog_name:  Program name to be printed in the error message.
-       file_name:  File name to be printed in the error message.
-                   If NULL, the string "stdin" is generated.
-
-  Outputs:
-   the_hdr:    Initialized with information from the input file.
-       If reading the header fails, it prints an error message
-       and exits with the appropriate status code.
-  Algorithm:
-   rle_get_setup does all the work.
----------------------------------------------------------------------------- */
-    int code;
-
-    /* Backwards compatibility: if is_init is not properly set, 
-     * initialize the header.
-     */
-    if (the_hdr->is_init != RLE_INIT_MAGIC) {
-        FILE * const f = the_hdr->rle_file;
-        rle_hdr_init( the_hdr );
-        the_hdr->rle_file = f;
-        rle_names(the_hdr, prog_name, file_name, 0);
-    }
-
-    code = rle_get_error(rle_get_setup(the_hdr),
-                         the_hdr->cmd, the_hdr->file_name);
-    if (code)
-        exit(code);
-}
-
-
-
-void
-rle_debug( on_off )
-    int on_off;
-{
-/*-----------------------------------------------------------------------------
-  Turn RLE debugging on or off.
-  Inputs:
-   on_off:     if 0, stop debugging, else start.
-  Outputs:
-   Sets internal debug flag.
-  Assumptions:
-   [None]
-  Algorithm:
-   [None]
----------------------------------------------------------------------------- */
-    debug_f = on_off;
-
-    /* Set line buffering on stderr.  Character buffering is the default, and
-     * it is SLOOWWW for large amounts of output.
-     */
-    setvbuf(stderr, NULL, _IOLBF, 0);
-}
-
-
-
 int
 rle_getrow(rle_hdr *    const the_hdr,
            rle_pixel ** const scanline) {
 /*-----------------------------------------------------------------------------
   Get a scanline from the input file.
   Inputs:
-   the_hdr:    Header structure containing information about 
+   the_hdr:    Header structure containing information about
            the input file.
   Outputs:
    scanline:   an array of pointers to the individual color
@@ -304,10 +239,10 @@ rle_getrow(rle_hdr *    const the_hdr,
    specified (the_hdr->background is true), just set the
    scanlines to the background color.  If clear-to-background is
    not set, just increment the scanline number and return.
-  
+
    Otherwise, read input until a vertical skip is encountered,
    decoding the instructions into scanline data.
- 
+
    If ymax is reached (or, somehow, passed), continue reading and
    discarding input until end of image.
 ---------------------------------------------------------------------------- */

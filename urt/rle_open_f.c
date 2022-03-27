@@ -322,31 +322,3 @@ rle_open_f(const char * prog_name, const char * file_name, const char * mode)
     return fp;
 }
 
-
-/*****************************************************************
- * TAG( rle_close_f )
- *
- * Close a file opened by rle_open_f.  If the file is stdin or stdout,
- * it will not be closed.
- * Inputs:
- *  fd: File to close.
- * Outputs:
- *  None.
- * Assumptions:
- *  fd is open.
- * Algorithm:
- *  If fd is NULL, just return.
- *  If fd is stdin or stdout, don't close it.  Otherwise, call fclose.
- */
-void
-rle_close_f( fd )
-    FILE *fd;
-{
-    if ( fd == NULL || fd == stdin || fd == stdout )
-        return;
-    else
-        fclose( fd );
-}
-
-
-

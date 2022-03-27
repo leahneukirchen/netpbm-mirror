@@ -78,7 +78,7 @@ main (int argc, const char * argv[]) {
 
     for (row = 0; row < rows; row++) {
         unsigned int col;
-        
+
         ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
 
         for (col = 0; col < cols; ++col) {

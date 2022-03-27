@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pgmramp pamgauss pgmkernel pbmmake pbmpscale
 # Also requires: pamflip
 
@@ -25,7 +25,7 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-# Test 1.
+echo "Test 1."
 rect_pgm=${tmpdir}/rect.pgm
 
 pgmramp -rect 31 31 > ${rect_pgm}
@@ -37,7 +37,8 @@ pgmramp -rect 31 31 > ${rect_pgm}
 
 rm ${rect_pgm}
 
-# Test 2.
+
+echo "Test 2."
 circle_pgm=${tmpdir}/circle.pgm
 pgmramp -ell 63 63 > ${circle_pgm}
 
@@ -48,7 +49,8 @@ pgmramp -ell 63 63 > ${circle_pgm}
 
 rm ${circle_pgm}
 
-# Test 3.  Should print "ok" 7 times
+
+echo "Test 3.  Should print ok 7 times"
 gauss_pgm=${tmpdir}/gauss.pgm
 for size in 3 4 5 8 13 21 25
 do
@@ -63,7 +65,7 @@ rm ${gauss_pgm}
 done
 
 
-# Test 4.
+echo "Test 4."
 kernel_pgm=${tmpdir}/kernel.pgm
 pgmkernel 15 15 > ${kernel_pgm}
 
@@ -74,12 +76,12 @@ pgmkernel 15 15 > ${kernel_pgm}
 
 rm ${kernel_pgm}
 
-# Test 5.
-# Should print "ok" 7 times.
+
+echo "Test 5.  Should print ok 7 times."
 pscale_pbm=${tmpdir}/pscale.pbm
-for size in `seq 1 7`
-do
-pbmmake -g 5 5 | pbmpscale $size > ${pscale_pbm}
+for size in 1 2 3 4 5 6 7  # for size in `seq 7`
+  do
+  pbmmake -g 5 5 | pbmpscale ${size} > ${pscale_pbm}
 
 ( for op in -null -tb -lr -r90
     do pamflip $op ${pscale_pbm} | cksum
@@ -89,7 +91,8 @@ pbmmake -g 5 5 | pbmpscale $size > ${pscale_pbm}
 rm ${pscale_pbm}
 done
 
-# Test 6.
+
+echo "Test 6."
 ell_pgm=${tmpdir}/ell.pgm
 pgmramp -ell 101 33 > ${ell_pgm}
 

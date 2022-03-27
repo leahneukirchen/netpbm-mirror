@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pgmtost4 st4topgm
 # Also requires: pamchannel pamtopnm pamcut
 

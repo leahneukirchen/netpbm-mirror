@@ -1,10 +1,14 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamtopnm
-# Also requires: pgmtopgm ppmtoppm
+# Also requires: pbmmake pgmramp ppmpat
 
-pamtopnm -plain testgrid.pbm
+echo "Test.  Should print three identical images in plain format, twice each"
 
-pgmtopgm < testgrid.pbm | pamtopnm -plain
+pbmmake -g 5 5 -plain
+pbmmake -g 5 5 | pamtopnm -plain
 
-ppmtoppm < testgrid.pbm | pamtopnm -plain | \
-  head -n11
+pgmramp -maxval 7 -diag 8 8 -plain
+pgmramp -maxval 7 -diag 8 8 | pamtopnm -plain
+
+ppmpat -g2 -color=rgb:00/1f/ff,rgb:3f/00/00 -mesh 4 4 -plain
+ppmpat -g2 -color=rgb:00/1f/ff,rgb:3f/00/00 -mesh 4 4 | pamtopnm -plain

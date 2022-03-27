@@ -1,4 +1,4 @@
-void 
+void
 RunSetup(rle_hdr * the_hdr);
 
 void

@@ -1,0 +1,49 @@
+#! /bin/sh
+# This script tests: pgmtofs fstopgm
+# This script tests: pgmtolispm lispmtopgm
+# This script tests: pgmtost4 st4topgm
+# Also requires: pgmmake
+
+tmpdir=${tmpdir:-/tmp}
+test_pgm=${tmpdir}/test.pgm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+pgmmake 0.75 192 165 > ${test_pgm}
+
+for fmt in  \
+        fs \
+        lispm \
+	st4
+  do
+  testprog1="pgmto"${fmt}
+  testprog2=${fmt}"topgm"
+
+  ${testprog1} ${test_pgm} > ${out1};   status1=$?
+  ${testprog1} < ${test_pgm} > ${out2}; status2=$?
+  test -s ${out1};                      status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog1}" :" ${status1} ${status2} ${status3} $?
+  rm ${out2}
+
+  ${testprog2} ${out1} > ${out3};     status4=$?
+  ${testprog2} < ${out1} > ${out4};   status5=$?
+  test -s ${out3};                    status6=$?
+  cmp -s ${out3} ${out4}
+  echo ${testprog2}" :" ${status4} ${status5} ${status6} $?
+
+  rm ${out1} ${out3} ${out4}
+  done
+
+rm ${test_pgm}
+
+# pgmtost4 size must be 192 x 165
+
+# The following programs do not have converters in the opposite direction:
+# Bioradtopgm
+# Hipstopgm
+# Psidtopgm
+# Rawtopgm
+# Spottopgm

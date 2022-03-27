@@ -50,19 +50,19 @@ typedef unsigned short rle_map;
 /*
  * Defines for traditional channel numbers.
  */
-#define RLE_RED     0   /* Red channel traditionally here. */
-#define RLE_GREEN   1   /* Green channel traditionally here. */
-#define RLE_BLUE    2   /* Blue channel traditionally here. */
-#define RLE_ALPHA      -1   /* Alpha channel here. */
+#define RLE_RED    0   /* Red channel traditionally here. */
+#define RLE_GREEN  1   /* Green channel traditionally here. */
+#define RLE_BLUE   2   /* Blue channel traditionally here. */
+#define RLE_ALPHA -1   /* Alpha channel here. */
 
 /*
  * Return values from rle_get_setup.
  */
-#define RLE_SUCCESS  0
-#define RLE_NOT_RLE -1
-#define RLE_NO_SPACE    -2
-#define RLE_EMPTY   -3
-#define RLE_EOF     -4
+#define RLE_SUCCESS   0
+#define RLE_NOT_RLE  -1
+#define RLE_NO_SPACE -2
+#define RLE_EMPTY    -3
+#define RLE_EOF      -4
 
 /*
  * "Magic" value for is_init field.  Pi * 2^29.
@@ -103,7 +103,7 @@ typedef
          *      bits[c/8] & (1 << (c%8))
          */
 #define RLE_SET_BIT(glob,bit) \
-        ((glob).bits[((bit)&0xff)/8] |= (1<<((bit)&0x7)))
+            ((glob).bits[((bit)&0xff)/8] |= (1<<((bit)&0x7)))
 #define RLE_CLR_BIT(glob,bit) \
             ((glob).bits[((bit)&0xff)/8] &= ~(1<<((bit)&0x7)))
 #define RLE_BIT(glob,bit) \
@@ -166,13 +166,6 @@ extern int rle_get_error( int code,
                           const char *fname );
 
 /* From rle_getrow.c */
-
-/*****************************************************************
- * TAG( rle_debug )
- *
- * Turn RLE debugging on or off.
- */
-extern void rle_debug( int on_off );
 
 int
 rle_get_setup(rle_hdr * const the_hdr);
@@ -239,16 +232,6 @@ extern void rle_hdr_clear( rle_hdr *the_hdr );
 
 /* From rle_putrow.c. */
 
-/*****************************************************************
- * TAG( rgb_to_bw )
- *
- * Converts RGB data to gray data via the NTSC Y transform.
- */
-extern void rgb_to_bw( rle_pixel *red_row,
-                       rle_pixel *green_row,
-                       rle_pixel *blue_row,
-                       rle_pixel *bw_row,
-                       int rowlen );
 
 /*****************************************************************
  * TAG( rle_puteof )
@@ -285,13 +268,6 @@ extern void rle_put_setup( rle_hdr * the_hdr );
  */
 extern void rle_skiprow( rle_hdr *the_hdr, int nrow );
 
-/* From rle_cp.c */
-/*****************************************************************
- * TAG( rle_cp )
- * Copy image data from input to output with minimal interpretation.
- */
-extern void rle_cp( rle_hdr *in_hdr, rle_hdr *out_hdr );
-
 /* From rle_row_alc.c. */
 /*****************************************************************
  * TAG( rle_row_alloc )
@@ -308,14 +284,6 @@ extern int rle_row_alloc( rle_hdr * the_hdr,
      */
 extern void rle_row_free( rle_hdr *the_hdr, rle_pixel **scanp );
 
-/* From buildmap.c. */
-/*
- * buildmap - build a more usable colormap from data in the_hdr struct.
-     */
-extern rle_pixel **buildmap( rle_hdr *the_hdr,
-                             int minmap,
-                             double orig_gamma,
-                             double new_gamma );
 
 /* From rle_getcom.c. */
 /*****************************************************************
@@ -329,54 +297,10 @@ rle_getcom(const char * const name,
 
 /* From rle_putcom.c. */
 
-/* Delete a specific comment from the image comments. */
-const char *
-rle_delcom(const char * const name,
-           rle_hdr *    const the_hdr);
-
 /* Put (or replace) a comment into the image comments. */
 const char *
 rle_putcom(const char * const value,
            rle_hdr *    const the_hdr);
-
-/* From dither.c. */
-/*****************************************************************
- * TAG( bwdithermap )
- * Create a color map for ordered dithering in grays.
- */
-extern void bwdithermap( int levels, double gamma, int bwmap[],
-                         int divN[256], int modN[256], int magic[16][16] );
-/*****************************************************************
- * TAG( ditherbw )
- * Dither a gray-scale value.
- */
-extern int ditherbw( int x, int y, int val,
-                     int divN[256], int modN[256], int magic[16][16] );
-/*****************************************************************
- * TAG( dithergb )
- * Dither a color value.
- */
-extern int dithergb( int x, int y, int r, int g, int b,
-                     int divN[256], int modN[256], int magic[16][16] );
-/*****************************************************************
- * TAG( dithermap )
- * Create a color map for ordered dithering in color.
- */
-extern void dithermap( int levels, double gamma, int rgbmap[][3],
-                       int divN[256], int modN[256], int magic[16][16] );
-/*****************************************************************
- * TAG( make_square )
- * Make a 16x16 magic square for ordered dithering.
- */
-extern void make_square( double N, int divN[256], int modN[256],
-                         int magic[16][16] );
-
-/* From float_to_exp.c. */
-/*****************************************************************
- * TAG( float_to_exp )
- * Convert a list of floating point numbers to "exp" format.
- */
-extern void float_to_exp( int count, float * floats, rle_pixel * pixels );
 
 /* From rle_open_f.c. */
 /*****************************************************************
@@ -398,24 +322,6 @@ rle_open_f_noexit(const char * const prog_name,
                   const char * const file_name,
                   const char * const mode);
 
-/*****************************************************************
- * TAG( rle_close_f )
- *
- * Close a file opened by rle_open_f.  If the file is stdin or stdout,
- * it will not be closed.
- */
-extern void
-rle_close_f( FILE *fd );
-
-/* From colorquant.c. */
-/*****************************************************************
- * TAG( colorquant )
- * Compute a colormap for quantizing an image to a limited set of colors.
- */
-extern int colorquant( rle_pixel *red, rle_pixel *green, rle_pixel *blue,
-                       unsigned long pixels, rle_pixel *colormap[3],
-                       int colors, int bits,
-                       rle_pixel *rgbmap, int fast, int otherimages );
 
 /* From rle_addhist.c. */
 
@@ -432,38 +338,5 @@ rle_addhist(char *          argv[],
  */
 extern char *cmd_name( char **argv );
 
-/* From scanargs.c. */
-/*****************************************************************
- * TAG( scanargs )
- * Scan command argument list and parse arguments.
- */
-extern int scanargs( int argc,
-                     char **argv,
-                     const char *format,
-                     ... );
-
-/* From hilbert.c */
-/*****************************************************************
- * TAG( hilbert_i2c )
- * Convert an index into a Hilbert curve to a set of coordinates.
- */
-extern void hilbert_c2i( int n, int m, int a[], long int *r );
-
-/*****************************************************************
- * TAG( hilbert_c2i )
- * Convert coordinates of a point on a Hilbert curve to its index.
- */
-extern void hilbert_i2c( int n, int m, long int r, int a[] );
-
-/* From inv_cmap.c */
-/*****************************************************************
- * TAG( inv_cmap )
- * Compute an inverse colormap efficiently.
- */
-extern void inv_cmap( int colors,
-                      unsigned char *colormap[3],
-                      int bits,
-                      unsigned long *dist_buf,
-                      unsigned char *rgbmap );
 
 #endif /* RLE_H */

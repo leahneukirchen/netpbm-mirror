@@ -1,13 +1,13 @@
-#! /bin/bash
+ #! /bin/sh
 # This script tests: pnmcrop
 # Also requires: pnmpad pnmmargin pamcut
 
 tmpdir=${tmpdir:-/tmp}
 
-test_pbm=${tmpdir}/test.pbm
-test_ppm=${tmpdir}/test.ppm
+test_pbm=${tmpdir}/maze.pbm
+test_ppm=${tmpdir}/rose.ppm
 
-pnmmargin -white 7 testgrid.pbm | pnmpad -black -bottom=2  > ${test_pbm}
+pnmmargin -white 7 maze.pbm | pnmpad -black -bottom=2  > ${test_pbm}
 pnmmargin -white 6 testimg.ppm  | pnmpad -black -right=11  > ${test_ppm}
 
 #Test 1
@@ -15,36 +15,41 @@ echo Test 1
 
 for input_file in ${test_pbm} ${test_ppm}
   do
-  echo `basename ${input_file}`
+  bfile=`basename ${input_file}`
   for option in "" "-white" "-black" "-sides" \
               "-top" "-bottom" "-left" "-right" "-top -bottom" \
               "-bottom -bg-corner=bottomright" \
               "-right -bg-corner=bottomright" \
               "-bg-color=white" "-bg-color=black" "-bg-color=red"
     do
-    echo ${option}
+    echo "file: ${bfile} option: ${option}"
     pnmcrop -reportfull ${option} ${input_file} || echo fail
     done
   done
 
 #Test 2
-echo Test 2
+echo "Test 2.  Should print 0 six times"
+
+out_pnm=${tmpdir}/out.pnm
 
 for input_file in ${test_pbm} ${test_ppm}
   do
-  echo `basename ${input_file}`
+  bfile=`basename ${input_file}`
   for option in "" "-white" "-top"
     do
-    echo ${option}
+    echo file: ${bfile} option: ${option}
     # Normal crop operation
-    pnmcrop ${option} ${input_file} | cksum
+    pnmcrop ${option} ${input_file} > ${out_pnm}
 
     # Compute edge extents with pnmcrop; let pamcut do the actual cropping
     pamcut ${input_file} `pnmcrop -reportsize ${option} ${input_file} | \
         awk 'NF==6 && NR==1 && \
              $1<=0 && $2<=0 && $3<=0 && $4<=0 && $5>=0 && $6>=0 \
-             { printf("-cropleft=%d -cropright=%d  ", -$1, -$2);
-               printf("-croptop=%d -cropbottom=%d", -$3, -$4) }' ` | cksum
+             { printf("-cropleft=%d -cropright=%d ", -$1, -$2);
+               printf("-croptop=%d -cropbottom=%d ", -$3, -$4) }' ` | \
+        cmp -s - ${out_pnm}
+    echo $?
+    rm ${out_pnm}
     done
   done
 
@@ -72,7 +77,6 @@ for option in "-reportfull -reportsize" \
               "-bg-color=black -closeness=-1" \
               "-bg-color=black -closeness=101"
     do
-    echo ${option}
     pnmcrop -reportfull ${option} testgrid.pbm > ${test_out} || \
         echo -n "Expected failure: " ${option}
         test -s ${test_out}; echo " "$?

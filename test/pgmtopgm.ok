@@ -1,1 +1,11 @@
-729348909 237
+Test 1.  Should print two identical PGM images
+P2
+10 1
+255
+0 0 0 0 0 0 0 0 0 0
+P2
+10 1
+255
+0 0 0 0 0 0 0 0 0 0
+Test 2.  Should print 2582999797 3376
+2582999797 3376

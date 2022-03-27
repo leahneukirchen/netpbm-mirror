@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamarith
 # Also requires: pamtopnm rgb3toppm pamenlarge pnmcat pamseq pbmmake pgmmake
 # Also requires: ppmpat pamchannel

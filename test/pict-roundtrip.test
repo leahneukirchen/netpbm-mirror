@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: picttoppm ppmtopict
 # Also requires: pamseq pamdepth pamtopnm pnmremap
 
