@@ -78,6 +78,8 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
+    free(option_def);
+
     if (argc-1 < 1)
         cmdlineP->inputFilespec = "-";
     else if (argc-1 > 1)
@@ -95,6 +97,41 @@ parseCommandLine(int argc, const char ** argv,
         case 3: cmdlineP->bayerType = BAYER3; break;
         case 4: cmdlineP->bayerType = BAYER4; break;
         }
+    }
+}
+
+
+
+static void
+clearTuples(const struct pam * const pamP,
+	    tuple **           const outtuples) {
+
+    unsigned int row;
+    unsigned int col;
+    unsigned int plane;
+
+    if(pamP->height <= 4 || pamP->width <= 4) {
+        for(row=0; row < pamP->height; ++row)
+          for(col=0; col < pamP->width; ++col)
+            for (plane=0; plane < pamP->depth; ++plane)
+              outtuples[row][col][plane] = 0;
+    }
+    else {
+        for(col = 0; col < pamP->width; ++col)
+            for (plane = 0; plane < pamP->depth; ++plane) {
+                outtuples[0][col][plane] = 0;
+                outtuples[1][col][plane] = 0;
+                outtuples[pamP->height-2][col][plane] = 0;
+                outtuples[pamP->height-1][col][plane] = 0;
+          }
+
+        for(row = 2; row < pamP->height - 2; ++row)
+            for (plane = 0; plane < pamP->depth; ++plane) {
+                outtuples[row][0][plane] = 0;
+                outtuples[row][1][plane] = 0;
+                outtuples[row][pamP->width-2][plane] = 0;
+                outtuples[row][pamP->width-1][plane] = 0;
+            }
     }
 }
 
@@ -319,6 +356,7 @@ main(int argc, const char **argv) {
     makeOutputPam(&inpam, &outpam);
 
     outtuples = pnm_allocpamarray(&outpam);
+    clearTuples(&outpam, outtuples);
 
     for (plane = 0; plane < 3; ++plane) {
         struct compAction const compAction = compActionTable[plane];

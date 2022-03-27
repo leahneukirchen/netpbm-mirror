@@ -4,6 +4,44 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.03.27 BJH  Release 10.73.39
+
+              pamx: Fix bug: top-justifies image in all cases where it should
+              bottom-justify.  Always broken.  (pamx was new in Netpbm 10.34
+              (June 2006).
+
+              pnmtorle: Fix bug: -h works only on first image.
+
+              pamsistoaglyph: Fix invalid memory reference and incorrect
+              output on depth 1 input.  Always broken.  (pamsistoaglyph was
+              new in Netpbm 10.47 (June 2009).  Thanks Scott Pakin.
+
+              ppmtoapplevol: Fix bug: reads from Standard Input even when you
+              specify the input file argument.  Always broken.  (ppmtoapplevol
+              was new in Netpbm 10.54 (March 2011).
+
+              ppmtoapplevol: Fix bug: produces garbage with input image wider
+              than 255.  Always broken.  (ppmtoapplevol was new in Netpbm
+              10.54 (March 2011).
+
+              picttoppm: Fix incorrect output for 32 bit per pixel images
+              that have only 3 planes.  Broken in Netpbm 10.34 (June 2006).
+
+              pamendian: fix bogus "sample exceeds maxval" failure.
+              Introduced in Netpbm 10.66 (March 2014).
+
+              ppmtoilbm: Fix wild memory references and hangs with -map .
+              Introduced in Netpbm 9.12 (March 2001).
+
+              pgmtexture: Fix incorrect output.  Always broken.  (Program was
+              added in primordial Netpbm in 1991).
+              
+              pambayer: Fix bogus colors at edges.  Always broken (pambayer
+              was new in Release 10.30 (October 2005)).
+
+              pgmabel: Fix incorrect output.  Always broken.  (Program was
+              new in Netpbm 10.3 (July 2002).
+
 21.12.26 BJH  Release 10.73.38
 
               pamtogif: Fix bug: doesn't ignore the input alpha mask when user

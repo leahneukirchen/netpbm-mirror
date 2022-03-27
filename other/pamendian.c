@@ -49,6 +49,8 @@ int main(int argc, char *argv[]) {
     intuplerow = pnm_allocpamrow(&inpam);      
     outtuplerow = pnm_allocpamrow(&outpam);
 
+    inpam.maxval = 65535;
+
     for (row = 0; row < inpam.height; row++) {
         unsigned int col;
         pnm_readpamrow(&inpam, intuplerow);

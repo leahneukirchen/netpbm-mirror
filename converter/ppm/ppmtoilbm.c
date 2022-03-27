@@ -2274,6 +2274,7 @@ main(int argc, char ** argv) {
         if (colors == 0)
             pm_error("empty colormap??");
         pm_message("%d colors found in colormap", colors);
+        nPlanes = pm_maxvaltobits(colors-1);
     }
 
     if (maskmethod != mskNone) {
