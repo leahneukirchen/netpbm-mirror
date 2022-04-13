@@ -821,28 +821,46 @@ readPackBitsRow16(FILE *          const ifP,
 
         Although the [...] spec is byte-oriented, the 16-bit algorithm is
         identical [to the 8-bit algorithm]: just substitute "word" for "byte".
+
+        A note about the 0x80 control byte value: There are some sources that
+        suggest that 1) no Palm file ever uses that value; and 2) a Palm
+        decoder should treat it as a no-op and other decoders do.  We don't
+        treat it as a no-op because we believe it is far more likely that if
+        someone _does_ put that value in a file, he means "repeat the next
+        word 129 times" than "do nothing."  Plus, it's just simpler and
+        cleaner.  Because of the ambiguity, though, anyone creating a Palm
+        file should avoid 0x80.
     */
     unsigned int j;
 
     for (j = 0;  j < bytesPerRow; ) {
-        unsigned char incountByte;
-        pm_readcharu(ifP, &incountByte);
-        if (incountByte & 0x80) {
-            int const signedIncount = (signed char)incountByte;
-            /* How do we handle incount == -128 ? */
-            unsigned int const runlength = (-signedIncount + 1) * 2;
-            unsigned int k;
+        unsigned char controlByte;
+        unsigned int  controlNum;
+
+        pm_readcharu(ifP, &controlByte);
+        controlNum = (unsigned int)controlByte;
+
+        if (controlNum >= 128) {
+            /* It's a run - output multiple copies of the next input word */
+            unsigned int const runlength = (257 - controlNum) * 2;
+
             unsigned short inval;
+
             pm_readlittleshortu(ifP, &inval);
+
             if (j + runlength <= bytesPerRow) {
+                unsigned int k;
                 for (k = 0; k < runlength; k += 2)
                     memcpy(palmrow + j + k, &inval, 2);
             }
             j += runlength;
         } else {
+            /* It's a nonrun - output the next words literally */
             /* We just read the stream of shorts as a stream of chars */
-            unsigned int const nonrunlength = (incountByte + 1) * 2;
+            unsigned int const nonrunlength = (controlNum + 1) * 2;
+
             unsigned int k;
+
             for (k = 0; (k < nonrunlength) && (j + k <= bytesPerRow); ++k) {
                 unsigned char inval;
                 pm_readcharu(ifP, &inval);
@@ -866,23 +884,32 @@ readPackBitsRow(FILE *          const ifP,
                 unsigned char * const palmrow,
                 unsigned int    const bytesPerRow) {
 
+    /* See comments in 'readPackbitsRow16.  Everything here is the same
+       except with 1-byte words instead of 2-byte words.
+    */
     unsigned int j;
 
     for (j = 0;  j < bytesPerRow; ) {
-        unsigned char incountByte;
-        pm_readcharu(ifP, &incountByte);
-        if (incountByte & 0x80) {
-            /* How do we handle incount == -128 ? */
-            int const signedIncount = (char)incountByte;
-            unsigned int const runlength = -signedIncount + 1;
+        unsigned char controlByte;
+        unsigned int  controlNum;
+
+        pm_readcharu(ifP, &controlByte);
+        controlNum = controlByte;
+
+        if (controlNum >= 128) {
+            unsigned int const runlength = 257 - controlNum;
+
             unsigned char inval;
+
             pm_readcharu(ifP, &inval);
             if (j + runlength <= bytesPerRow)
                 memset(palmrow + j, inval, runlength);
             j += runlength;
         } else {
-            unsigned int const nonrunlength = incountByte + 1;
+            unsigned int const nonrunlength = controlNum + 1;
+
             unsigned int k;
+
             for (k = 0; k < nonrunlength && j + k <= bytesPerRow; ++k) {
                 unsigned char inval;
                 pm_readcharu(ifP, &inval);
