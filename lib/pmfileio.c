@@ -633,8 +633,8 @@ pm_readbigshort(FILE *  const ifP,
 
     unsigned short s;
 
-    s  = (unsigned short)getcNofail(ifP) << 8;
-    s |= (unsigned short)getcNofail(ifP) << 0;
+    s  = getcNofail(ifP) << 8;
+    s |= getcNofail(ifP) << 0;
 
     *sP = s;
 
@@ -661,10 +661,10 @@ pm_readbiglong(FILE * const ifP,
 
     unsigned long l;
 
-    l  = (unsigned long)getcNofail(ifP) << 24ul;
-    l |= (unsigned long)getcNofail(ifP) << 16ul;
-    l |= (unsigned long)getcNofail(ifP) <<  8ul;
-    l |= (unsigned long)getcNofail(ifP) <<  0ul;
+    l  = getcNofail(ifP) << 24;
+    l |= getcNofail(ifP) << 16;
+    l |= getcNofail(ifP) <<  8;
+    l |= getcNofail(ifP) <<  0;
 
     *lP = l;
 
@@ -709,8 +709,8 @@ pm_readlittleshort(FILE *  const ifP,
                    short * const sP) {
     unsigned short s;
 
-    s  = (unsigned short)getcNofail(ifP) << 0;
-    s |= (unsigned short)getcNofail(ifP) << 8;
+    s  = getcNofail(ifP) << 0;
+    s |= getcNofail(ifP) << 8;
 
     *sP = s;
 
@@ -736,10 +736,10 @@ pm_readlittlelong(FILE * const ifP,
                   long * const lP) {
     unsigned long l;
 
-    l  = (unsigned long)getcNofail(ifP) <<  0ul;
-    l |= (unsigned long)getcNofail(ifP) <<  8ul;
-    l |= (unsigned long)getcNofail(ifP) << 16ul;
-    l |= (unsigned long)getcNofail(ifP) << 24ul;
+    l  = getcNofail(ifP) <<  0;
+    l |= getcNofail(ifP) <<  8;
+    l |= getcNofail(ifP) << 16;
+    l |= getcNofail(ifP) << 24;
 
     *lP = l;
 
