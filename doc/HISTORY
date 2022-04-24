@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.04.24 BJH  Release 10.98.02
+
+              palmtopnm: Fix failure with bogus claim of invalid input on
+              architectures that do not use two's complement negative numbers.
+              Always broken.  (Ability to convert PackBits input was new in
+              Netpbm 10.27 (March 2005).
+
 22.04.10 BJH  Release 10.98.01
 
               pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output.
