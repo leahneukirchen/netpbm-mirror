@@ -516,7 +516,7 @@ buildBt709ToSrgbGamma(xelval       table[],
         if (radiance < linearCutoffSrgb * normalizer)
             srgb = radiance * linearExpansionSrgb;
         else
-            srgb = 1.055 * pow(normalized, oneOverGammaSrgb) - 0.055;
+            srgb = 1.055 * pow(radiance, oneOverGammaSrgb) - 0.055;
 
         assert(srgb <= 1.0);
 
@@ -567,14 +567,14 @@ buildSrgbToBt709Gamma(xelval       table[],
         if (i < linearCutoffSrgb / linearCompressionSrgb)
             radiance = normalized * linearCompressionSrgb;
         else
-            radiance = pow((normalized + 0.099) / 1.099, gammaSrgb);
+            radiance = pow((normalized + 0.055) / 1.055, gammaSrgb);
 
         assert(radiance <= 1.0);
 
         if (radiance < linearCutoff709 * normalizer)
             bt709 = radiance * linearExpansion709;
         else
-            bt709 = 1.055 * pow(normalized, oneOverGamma709) - 0.055;
+            bt709 = 1.099 * pow(radiance, oneOverGamma709) - 0.099;
 
         assert(bt709 <= 1.0);
 
