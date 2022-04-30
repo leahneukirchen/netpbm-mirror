@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@ destroyCmdline(struct CmdlineInfo * const cmdlineP)  {
 
 
 static unsigned int
-nEntries(char ** const stringList) {
+entryCt(char ** const stringList) {
 
     unsigned int i;
 
@@ -65,9 +66,9 @@ parseOptList(bool         const isSpec,
         sample * sampleList;
         const char * memberError;
 
-        if (nEntries(stringList) != depth) {
+        if (entryCt(stringList) != depth) {
             pm_error("Wrong number of values for -%s: %u.  Need %u",
-                     optNm, nEntries(stringList), depth);
+                     optNm, entryCt(stringList), depth);
         }
 
         MALLOCARRAY(sampleList, depth);
@@ -234,59 +235,121 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
-static unsigned int
-powint(unsigned int base, unsigned int exponent) {
-/*----------------------------------------------------------------------------
-   This is standard pow(), but for integers and optimized for small
-   exponents.
------------------------------------------------------------------------------*/
-    unsigned int result;
-    unsigned int i;
+static void
+computeMinMaxStep(unsigned int   const depth,
+                  sample         const maxval,
+                  const sample * const min,
+                  const sample * const max,
+                  const sample * const step,
+                  sample **      const minP,
+                  sample **      const maxP,
+                  sample **      const stepP) {
 
-    result = 1;  /* initial value */
-    for (i = 0; i < exponent; ++i)
-        result *= base;
+    unsigned int plane;
 
-    return(result);
+    MALLOCARRAY(*minP,  depth);
+    MALLOCARRAY(*maxP,  depth);
+    MALLOCARRAY(*stepP, depth);
+
+    for (plane = 0; plane < depth; ++plane) {
+        (*minP)[plane]  = min  ? min[plane]  : 0;
+        (*maxP)[plane]  = max  ? max[plane]  : maxval;
+        (*stepP)[plane] = step ? step[plane] : 1;
+    }
 }
 
 
+
+static int
+imageWidth(unsigned int   const depth,
+           const sample * const min,
+           const sample * const max,
+           const sample * const step) {
+/*----------------------------------------------------------------------------
+   The width of the output image (i.e. the number of pixels in the image),
+   given that the minimum and maximum sample values in Plane P are min[P] and
+   max[P] and the samples step by step[P].
+
+   E.g. in the sample case of min 0, max 4, and step 1 everywhere, with
+   depth 2,  We return 5*5 = 25.
+-----------------------------------------------------------------------------*/
+    unsigned int product;
+    unsigned int plane;
+
+    for (plane = 0, product=1; plane < depth; ++plane) {
+        assert(max[plane] >= min[plane]);
+
+        unsigned int const valueCtThisPlane =
+            ROUNDUP((max[plane] - min[plane] + 1), step[plane])/step[plane];
+
+        if (INT_MAX / valueCtThisPlane < product)
+            pm_error("Uncomputably large number of pixels (greater than %u",
+                     INT_MAX);
+
+        product *= valueCtThisPlane;
+    }
+    assert(product < INT_MAX);
+
+    return product;
+}
+
+
+
 static void
-permuteHigherPlanes(struct pam const pam, int const nextplane,
-                    tuple * const tuplerow, int * const colP,
-                    tuple const lowerPlanes) {
+permuteHigherPlanes(unsigned int   const depth,
+                    const sample * const min,
+                    const sample * const max,
+                    const sample * const step,
+                    unsigned int   const nextPlane,
+                    tuple *        const tuplerow,
+                    int *          const colP,
+                    tuple          const lowerPlanes) {
 /*----------------------------------------------------------------------------
    Create all the possible permutations of tuples whose lower-numbered planes
    contain the values from 'lowerPlanes'.  I.e. vary the higher-numbered
-   planes between zero and maxval.
+   planes according to min[], max[], and step[].
 
    Write them sequentially into *tuplerow, starting at *colP.  Adjust
    *colP to next the column after the ones we write.
 
-   lower-numbered means with plane numbers less than 'nextplane'.
+   lower-numbered means with plane numbers less than 'nextPlane'.
 
    We modify 'lowerPlanes' in the higher planes to undefined values.
 -----------------------------------------------------------------------------*/
-    if (nextplane == pam.depth - 1) {
+    if (nextPlane == depth - 1) {
+        /* lowerPlanes[] contains values for all the planes except the
+           highest, so we just vary the highest plane and combine that
+           with lowerPlanes[] and output that to tuplerow[].
+        */
         sample value;
-        for (value = 0; value <= pam.maxval; ++value) {
+
+        for (value = min[nextPlane];
+             value <= max[nextPlane];
+             value += step[nextPlane]) {
+
             unsigned int plane;
-            for (plane = 0; plane < nextplane; ++plane)
+
+            for (plane = 0; plane < nextPlane; ++plane)
                 tuplerow[*colP][plane] = lowerPlanes[plane];
-            tuplerow[*colP][nextplane] = value;
+
+            tuplerow[*colP][nextPlane] = value;
+
             ++(*colP);
         }
     } else {
         sample value;
 
-        for (value = 0; value <= pam.maxval; ++value) {
+        for (value = min[nextPlane];
+             value <= max[nextPlane];
+             value += step[nextPlane]) {
             /* We do something sleazy here and use Caller's lowerPlanes[]
                variable as a local variable, modifying it in the higher
                plane positions.  That's just for speed.
             */
-            lowerPlanes[nextplane] = value;
+            lowerPlanes[nextPlane] = value;
 
-            permuteHigherPlanes(pam, nextplane+1, tuplerow, colP, lowerPlanes);
+            permuteHigherPlanes(depth, min, max, step,
+                                nextPlane+1, tuplerow, colP, lowerPlanes);
         }
     }
 }
@@ -307,17 +370,24 @@ main(int argc, const char **argv) {
            permuteHigherPlanes().
         */
     tuple * tuplerow;
+    sample * min;   /* malloc'ed array */
+    sample * max;   /* malloc'ed array */
+    sample * step;  /* malloc'ed array */
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
+
+    computeMinMaxStep(cmdline.depth, cmdline.maxval,
+                      cmdline.min, cmdline.max, cmdline.step,
+                      &min, &max, &step);
 
     pam.size = sizeof(pam);
     pam.len = PAM_STRUCT_SIZE(tuple_type);
     pam.file = stdout;
     pam.format = PAM_FORMAT;
     pam.plainformat = 0;
-    pam.width = powint(cmdline.maxval+1, cmdline.depth);
+    pam.width = imageWidth(cmdline.depth, min, max, step);
     pam.height = 1;
     pam.depth = cmdline.depth;
     pam.maxval = cmdline.maxval;
@@ -331,7 +401,8 @@ main(int argc, const char **argv) {
 
     col = 0;
 
-    permuteHigherPlanes(pam, 0, tuplerow, &col, lowerPlanes);
+    permuteHigherPlanes(pam.depth, min, max, step,
+                        0, tuplerow, &col, lowerPlanes);
 
     if (col != pam.width)
         pm_error("INTERNAL ERROR: Wrote %d columns; should have written %d.",
