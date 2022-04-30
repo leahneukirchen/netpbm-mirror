@@ -75,12 +75,14 @@ pamperspective: ok
 pampick: ok
 pampop9: ok
 pamrecolor: ok
+pamrestack: ok
 pamrubber: ok
 pamscale: ok
 pamseq: ok
 pamshadedrelief: ok
 pamsharpmap: ok
 pamsharpness: ok
+pamshuffle: ok
 pamsistoaglyph: ok
 pamslice: ok
 pamsplit: ok

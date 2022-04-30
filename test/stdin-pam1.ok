@@ -22,10 +22,12 @@ pammosaicknit: 0 0 0 0
 pamoil: 0 0 0 0
 pamperspective 0 0 0 1 1 0 1 1: 0 0 0 0
 pamrecolor: 0 0 0 0
+pamrestack: 0 0 0 0
 pamrubber -quad 1 1 2 2: 0 0 0 0
 pamscale 2: 0 0 0 0
 pamshadedrelief: 0 0 0 0
 pamsharpness: 0 0 0 0
+pamshuffle -randomseed=1: 0 0 0 0
 pamsistoaglyph: 0 0 0 0
 pamslice -row=1: 0 0 0 0
 pamstack: 0 0 0 0

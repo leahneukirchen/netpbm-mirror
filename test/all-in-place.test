@@ -117,12 +117,14 @@ ordinary_testprogs="\
   pampick \
   pampop9 \
   pamrecolor \
+  pamrestack \
   pamrubber \
   pamscale \
   pamseq \
   pamshadedrelief \
   pamsharpmap \
   pamsharpness \
+  pamshuffle \
   pamsistoaglyph \
   pamslice \
   pamsplit \

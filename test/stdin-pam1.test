@@ -4,8 +4,8 @@
 # This script tests: pamedge pamexec pamfile pamfind pamfix pamflip
 # This script tests: pamfunc pamhomography pamhue pamlevels
 # This script tests: pammixinterlace pammosaicknit pamoil
-# This script tests: pamperspective pamrecolor pamrubber pamscale
-# This script tests: pamshadedrelief pamsharpness pamsistoaglyph
+# This script tests: pamperspective pamrecolor pamrestack pamrubber pamscale
+# This script tests: pamshadedrelief pamsharpness pamshuffle pamsistoaglyph
 # This script tests: pamslice pamstack pamstereogram pamstretch
 # This script tests: pamstretch-gen pamsumm pamsummcol pamtable pamthreshold
 # This script tests: pamtilt pamtopnm pamwipeout
@@ -43,10 +43,12 @@ for testprog in \
     pamoil \
     "pamperspective 0 0 0 1 1 0 1 1" \
     pamrecolor \
+    pamrestack \
     "pamrubber -quad 1 1 2 2" \
     "pamscale 2" \
     pamshadedrelief \
     pamsharpness \
+    "pamshuffle -randomseed=1" \
     pamsistoaglyph \
     "pamslice -row=1" \
     pamstack \
