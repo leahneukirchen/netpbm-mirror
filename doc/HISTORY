@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.99.00
 
+              Add pamrestack.
+
+              Add pamshuffle.
+
               palmtopnm: Fix failure with bogus claim of invalid input on
               architectures that do not use two's complement negative numbers.
               Always broken.  (Ability to convert PackBits input was new in
