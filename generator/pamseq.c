@@ -6,6 +6,8 @@
 #include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
+#include "mallocvar.h"
+#include "nstring.h"
 
 
 
@@ -16,7 +18,98 @@ struct CmdlineInfo {
     unsigned int depth;
     sample maxval;
     const char * tupletype;
+    sample * min;   /* array of size 'depth' */
+    sample * max;   /* array of size 'depth' */
+    sample * step;  /* array of size 'depth' */
 };
+
+
+
+static void
+destroyCmdline(struct CmdlineInfo * const cmdlineP)  {
+
+    if (cmdlineP->min)
+        free(cmdlineP->min);
+    if (cmdlineP->max)
+        free(cmdlineP->max);
+    if (cmdlineP->step)
+        free(cmdlineP->step);
+}
+
+
+
+static unsigned int
+nEntries(char ** const stringList) {
+
+    unsigned int i;
+
+    for (i = 0; stringList[i]; ++i) {}
+
+    return i;
+}
+
+
+
+static void
+parseOptList(bool         const isSpec,
+             char **      const stringList,
+             unsigned int const depth,
+             sample       const maxval,
+             const char * const optNm,
+             sample **    const sampleListP) {
+
+    if (!isSpec)
+        *sampleListP = NULL;
+    else {
+        unsigned int i;
+        sample * sampleList;
+        const char * memberError;
+
+        if (nEntries(stringList) != depth) {
+            pm_error("Wrong number of values for -%s: %u.  Need %u",
+                     optNm, nEntries(stringList), depth);
+        }
+
+        MALLOCARRAY(sampleList, depth);
+
+        for (i = 0, memberError = NULL; i < depth && !memberError; ++i) {
+            char * endPtr;
+            sampleList[i] = strtoul(stringList[i], &endPtr, 10);
+
+            if (strlen(stringList[i]) == 0)
+                pm_asprintf(&memberError, "is null string");
+            else if (*endPtr != '\0')
+                pm_asprintf(&memberError,
+                            "contains non-numeric character '%c'",
+                            *endPtr);
+            else if (sampleList[i] > maxval)
+                pm_asprintf(&memberError, "is greater than maxval %lu",
+                            maxval);
+        }
+        if (memberError) {
+            free(sampleList);
+            pm_errormsg("Value in -%s %s", optNm, memberError);
+            pm_longjmp();
+        }
+        *sampleListP = sampleList;
+    }
+}
+
+
+
+static void
+validateMinIsAtMostMax(sample *     const min,
+                       sample *     const max,
+                       unsigned int const depth) {
+
+    unsigned int plane;
+
+    for (plane = 0; plane < depth; ++plane) {
+        if (min[plane] > max[plane])
+            pm_error("-min for plane %u (%lu) is greater than -max (%lu)",
+                     plane, min[plane], max[plane]);
+    }
+}
 
 
 
@@ -31,18 +124,30 @@ parseCommandLine(int argc, const char ** argv,
   Note that some string information we return as *cmdlineP is in the storage
   argv[] points to.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
-        /* Instructions to OptParseOptions2 on how to parse our options.
-         */
+    optEntry *option_def;
     optStruct3 opt;
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
 
+    unsigned int maxSpec;
+    char ** max;
+    unsigned int minSpec;
+    char ** min;
+    unsigned int stepSpec;
+    char ** step;
     unsigned int tupletypeSpec;
     unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "tupletype",  OPT_STRING, &cmdlineP->tupletype,
             &tupletypeSpec,     0);
-
+    OPTENT3(0,   "min",         OPT_STRINGLIST, &min,
+            &minSpec,           0);
+    OPTENT3(0,   "max",         OPT_STRINGLIST, &max,
+            &maxSpec,           0);
+    OPTENT3(0,   "step",        OPT_STRINGLIST, &step,
+            &stepSpec,          0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -87,6 +192,22 @@ parseCommandLine(int argc, const char ** argv,
                      (unsigned int) cmdlineP->maxval, cmdlineP->depth,
                      (unsigned int) -1);
     }
+    parseOptList(minSpec, min,  cmdlineP->depth, cmdlineP->maxval, "min",
+                 &cmdlineP->min);
+    parseOptList(maxSpec, max,  cmdlineP->depth, cmdlineP->maxval, "max",
+                 &cmdlineP->max);
+    parseOptList(stepSpec, step, cmdlineP->depth, cmdlineP->maxval, "step",
+                 &cmdlineP->step);
+
+    if (cmdlineP->min && cmdlineP->max)
+        validateMinIsAtMostMax(cmdlineP->min, cmdlineP->max, cmdlineP->depth);
+
+    if (minSpec)
+        free(min);
+    if (maxSpec)
+        free(max);
+    if (stepSpec)
+        free(step);
 }
 
 
@@ -197,6 +318,8 @@ main(int argc, const char **argv) {
     pnm_writepamrow(&pam, tuplerow);
 
     pnm_freepamrow(tuplerow);
+
+    destroyCmdline(&cmdline);
 
     return 0;
 }
