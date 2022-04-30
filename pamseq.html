@@ -3,13 +3,13 @@
 <body>
 <h1>pamseq</h1>
 <br>
-Updated: 08 May 2002
+Updated: 30 April 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
 
-pamseq - generate PAM image of all possible tuple values, in sequence
+pamseq - generate PAM image of a numerical sequence of tuple values
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
@@ -17,6 +17,9 @@ pamseq - generate PAM image of all possible tuple values, in sequence
 [<b>-tupletype=</b><i>tupletype</i>]
 <i>depth</i>
 <i>maxval</i>
+[<b>-min=</b><i>n</i><b>,</b><i>n</i><b>,</b>...]
+[<b>-max=</b><i>n</i><b>,</b><i>n</i><b>,</b>...]
+[<b>-step=</b><i>n</i><b>,</b><i>n</i><b>,</b>...]
 
 <p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
@@ -28,27 +31,120 @@ value.
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamseq</b> generates a PAM image of a specified depth and specified
-maxval that consists of a single row.  The row consists of one tuple of
-every possible value, in order.
+  maxval that consists of a single row.  The row consists of tuples
+  containing sample values in a numerical sequence.
 
-<p>For a depth of one, the order is simple: From 0 to maxval, going from
-left to right.  For higher depths, the highest numbered plane goes from
-0 to maxval (going left to right) while all the other planes have value 0.
-Then the sequence repeats except with the next highest plane set to a value
-of 1, then 2, etc.
+<p>For example
 
+<pre>
+<kbd>
+    pamseq 1 4
+</kbd>
+</pre>
+
+  generates a 5 pixel wide image of 1 row with depth 1 tuples containing these
+  samples, in order from left to right:
+
+<pre>
+    0 1 2 3 4
+</pre>
+
+  The following example uses depth 2:
+
+<pre>
+<kbd>
+    pamseq 2 2
+</kbd>
+</pre>
+
+  The resulting image is a 9 pixel wide image of 1 row with depth 2 containing
+  these samples, in order from left to right;
+
+<pre>
+    (0,0) (0,1) (0,2) (1,0) (1,2) (1,3) (2,0) (2,1) 2,2)
+</pre>
+
+<p>
+  You can choose the starting and ending sample values and the step for each
+  plane:  Here is an example of that:
+
+<pre>
+<kbd>
+    pamseq 1 255 -min=4 -max=8 -step=2
+</kbd>
+</pre>
+
+This generates
+
+<pre>
+    4 6 8
+</pre>
+
+In two dimensions:
+
+<pre>
+<kbd>
+    pamseq 2 255 -min=0,4 -max=2,8 -step=1,2
+</kbd>
+</pre>
+
+<pre>
+    (0,4) (0,6) (0,8) (1,4) (1,6) (1,8) (2,4) (2,6) (2,8)
+</pre>
+
+
+<p>
+  <b>pamseq</b> varies first the highest numbered plane, then the next lower
+  numbered plane, etc.  Within each plane, the program varies from low sample
+  value to high.
+
+  
 <h2 id="options">OPTIONS</h2>
 
 <p>In addition to the options common to all programs based on libnetpbm
 (most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
 Common Options</a>), <b>pamseq</b> recognizes the following
-command line option:
+command line options:
 
 <dl compact>
 <dt><b>-tupletype</b>
 <dd>
 This is the value of the "tuple_type" attribute of the created PAM image.
 It can be any string up to 255 characters.
+
+<dt><b>-min=</b><i>n</i><b>,</b><i>n</i><b>,</b>...
+<dd>
+  This gives the starting value for the sequence in each plane.  The number
+  of comma-separated numbers must be equal to the number of planes in the
+  image (its depth).  Each number must be a whole number no greater than
+  the maxval of the image.  The first number is for Plane 0, the second for
+  Plane 1, etc.
+
+  <p>The default is 0 in every plane.
+
+  <p>This option was new in Netpbm 10.99 (June 2022).
+
+<dt><b>-max=</b><i>n</i><b>,</b><i>n</i><b>,</b>...
+  <p>This is analogous to <b>-min</b>, giving the ending value for the
+    sequence.
+
+  <p>Each value must be at least as great as the corresponding <b>-min</b>
+    value.
+
+    <p>The default is the maxval in every plane.
+    
+  <p>This option was new in Netpbm 10.99 (June 2022).
+
+<dt><b>-step=</b><i>n</i><b>,</b><i>n</i><b>,</b>...
+  <p>This is analogous to <b>-min</b>, giving the step value for the
+    sequence (difference between two consecutive numbers).
+
+    <p>Each value must be positive and no greater than the maxval.
+
+    <p>The default is 1.
+    
+  <p>This option was new in Netpbm 10.99 (June 2022).
+
 </dl>
 
 <h2 id="usage">USAGE</h2>
@@ -81,10 +177,28 @@ of the set of "web safe" colors as defined by Netscape.  Most web
 browsers guarantee that they can produce at least these 216 colors
 (215 plus black).
 
+<p><b>pamrestack</b> can often produce a useful two-dimensional image from
+<b>pamseq</b>'s single row.
+
+<pre>
+<kbd>
+    pamseq 2 255 -min=0,4 -max=2,8 -step=1,2 | pamrestack -width=3
+</kbd>
+</pre>
+
+<pre>
+    (0,4) (0,6) (0,8)
+    (1,4) (1,6) (1,8)
+    (2,4) (2,6) (2,8)
+</pre>
+  
+
+  
 <h2 id="seealso">SEE ALSO</h2>
 
 <b><a href="pnmremap.html">pnmremap</a></b>,
 <b><a href="pamtopnm.html">pamtopnm</a></b>,
+<b><a href="pamrestack.html">pamrestack</a></b>,
 <b><a href="pam.html">pam</a></b>
 
 <h2 id="history">HISTORY</h2>
