@@ -24,11 +24,11 @@ static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-  Convert program invocation arguments (argc,argv) into a format the 
+  Convert program invocation arguments (argc,argv) into a format the
   program can use easily, struct cmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
-  Note that some string information we return as *cmdlineP is in the storage 
+  Note that some string information we return as *cmdlineP is in the storage
   argv[] points to.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc(100*sizeof(optEntry));
@@ -40,7 +40,7 @@ parseCommandLine(int argc, char ** argv,
     unsigned int option_def_index;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "tupletype",  OPT_STRING, &cmdlineP->tupletype, 
+    OPTENT3(0,   "tupletype",  OPT_STRING, &cmdlineP->tupletype,
             &tupletypeSpec,     0);
 
 
@@ -57,9 +57,9 @@ parseCommandLine(int argc, char ** argv,
         struct pam pam;
         if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
             pm_error("The tuple type you specified is too long.  "
-                     "Maximum %u characters.", 
+                     "Maximum %u characters.",
                      (unsigned)sizeof(pam.tuple_type)-1);
-    }        
+    }
 
     if (argc-1 < 2)
         pm_error("Need two arguments: depth and maxval.");
@@ -77,13 +77,13 @@ parseCommandLine(int argc, char ** argv,
                      "specified '%s'", argv[2]);
         if (cmdlineP->maxval > PNM_OVERALLMAXVAL)
             pm_error("The maxval you specified (%u) is too big.  "
-                     "Maximum is %u", (unsigned int) cmdlineP->maxval, 
+                     "Maximum is %u", (unsigned int) cmdlineP->maxval,
                      PNM_OVERALLMAXVAL);
-        if (pm_maxvaltobits(cmdlineP->maxval) + 
+        if (pm_maxvaltobits(cmdlineP->maxval) +
             pm_maxvaltobits(cmdlineP->depth-1) > sizeof(unsigned int)*8)
             pm_error("The maxval (%u) and depth (%u) you specified result "
                      "in a larger number of tuples than this program can "
-                     "handle (roughly %u)", 
+                     "handle (roughly %u)",
                      (unsigned int) cmdlineP->maxval, cmdlineP->depth,
                      (unsigned int) -1);
     }
@@ -101,7 +101,7 @@ powint(unsigned int base, unsigned int exponent) {
     unsigned int i;
 
     result = 1;  /* initial value */
-    for (i = 0; i < exponent; ++i) 
+    for (i = 0; i < exponent; ++i)
         result *= base;
 
     return(result);
@@ -109,8 +109,8 @@ powint(unsigned int base, unsigned int exponent) {
 
 
 static void
-permuteHigherPlanes(struct pam const pam, int const nextplane, 
-                    tuple * const tuplerow, int * const colP, 
+permuteHigherPlanes(struct pam const pam, int const nextplane,
+                    tuple * const tuplerow, int * const colP,
                     tuple const lowerPlanes) {
 /*----------------------------------------------------------------------------
    Create all the possible permutations of tuples whose lower-numbered planes
@@ -159,14 +159,14 @@ main(int argc, char **argv) {
     tuple lowerPlanes;
         /* This is working storage passed to permuteHigherPlanes(),
            which we call.  Note that because we always pass zero as the
-           "planes" argument to permuteHigherPlanes(), none of the 
-           "lower planes" value is defined as an input to 
+           "planes" argument to permuteHigherPlanes(), none of the
+           "lower planes" value is defined as an input to
            permuteHigherPlanes().
         */
     tuple * tuplerow;
-    
+
     pnm_init(&argc, argv);
-   
+
     parseCommandLine(argc, argv, &cmdline);
 
     pam.size = sizeof(pam);
@@ -181,7 +181,7 @@ main(int argc, char **argv) {
     strcpy(pam.tuple_type, cmdline.tupletype);
 
     pnm_writepaminit(&pam);
-   
+
     tuplerow = pnm_allocpamrow(&pam);
 
     lowerPlanes = pnm_allocpamtuple(&pam);
@@ -195,8 +195,11 @@ main(int argc, char **argv) {
                  col, pam.width);
 
     pnm_writepamrow(&pam, tuplerow);
-    
+
     pnm_freepamrow(tuplerow);
 
     return 0;
 }
+
+
+
