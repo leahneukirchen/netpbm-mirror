@@ -74,7 +74,7 @@ parseOptList(bool         const isSpec,
 
         for (i = 0, memberError = NULL; i < depth && !memberError; ++i) {
             char * endPtr;
-            sampleList[i] = strtoul(stringList[i], &endPtr, 10);
+            long const n = strtol(stringList[i], &endPtr, 10);
 
             if (strlen(stringList[i]) == 0)
                 pm_asprintf(&memberError, "is null string");
@@ -82,9 +82,13 @@ parseOptList(bool         const isSpec,
                 pm_asprintf(&memberError,
                             "contains non-numeric character '%c'",
                             *endPtr);
-            else if (sampleList[i] > maxval)
+            else if (n < 0)
+                pm_asprintf(&memberError, "is negative");
+            else if (n > maxval)
                 pm_asprintf(&memberError, "is greater than maxval %lu",
                             maxval);
+            else
+                sampleList[i] = n;
         }
         if (memberError) {
             free(sampleList);
@@ -108,6 +112,21 @@ validateMinIsAtMostMax(sample *     const min,
         if (min[plane] > max[plane])
             pm_error("-min for plane %u (%lu) is greater than -max (%lu)",
                      plane, min[plane], max[plane]);
+    }
+}
+
+
+
+static void
+validateStepIsPositive(sample *     const step,
+                       unsigned int const depth) {
+
+    unsigned int plane;
+
+    for (plane = 0; plane < depth; ++plane) {
+        if (step[plane] <= 0)
+            pm_error("-step for plane %u (%lu) is not positive",
+                     plane, step[plane]);
     }
 }
 
@@ -201,6 +220,9 @@ parseCommandLine(int argc, const char ** argv,
 
     if (cmdlineP->min && cmdlineP->max)
         validateMinIsAtMostMax(cmdlineP->min, cmdlineP->max, cmdlineP->depth);
+
+    if (cmdlineP->step)
+        validateStepIsPositive(cmdlineP->step, cmdlineP->depth);
 
     if (minSpec)
         free(min);
