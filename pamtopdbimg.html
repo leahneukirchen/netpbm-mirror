@@ -2,7 +2,7 @@
 <html><head><title>Pamtopdbimg User Manual</title></head>
 <body>
 <h1>pamtopdbimg</h1>
-Updated: 25 September 2010
+Updated: 12 March 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -19,6 +19,7 @@ pamtopdbimg - convert a Netpbm image to a Palm Pilot Image Viewer PDB Image
 [<b>-uncompressed</b>]
 [<b>-maybecompressed</b>]
 [<b>-4depth</b>]
+[<b>-fixedtime</b>]
 
 [<i>netpbmfile</i>]
 
@@ -75,6 +76,15 @@ grayscale (4 bits per pixel) format.  If you don't specify this,
 Attach the note in the specified file to the image.
 <p>
 If you don't specify this, <b>pamtopdbimg</b> does not attach any note.
+
+<dt><b>-fixedtime</b>
+<dd>
+Fake the mtime and ctime vaues in the PDB image with a value that is the
+same every time you run the program.  This facilitates testing and
+verification because it means with the same input you always get the
+same output.
+<p>
+This option was new in Netpbm 10.98 (March 2022).
 
 </dl>
 

@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamshuffle User Manual</title></head>
+<body>
+<h1>pamshuffle</h1>
+Updated:
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+pamshuffle - Shuffle pixels of a Netpbm image
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pamshuffle</b>
+[<b>-column</b>
+[<b>-randomseed</b> <i>integer</i>]]
+[<i>pamfile</i>]
+
+<p>Minimum unique abbreviations of option are acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamshuffle</b> reads a Netpbm image as input and produces an output file
+with the pixels shuffled.  The operation only changes the location of existing
+pixels; nothing is discarded or added.
+
+<p>By default, pixels change location within rows independently, but it is
+also possible to perform the same shuffle on every row, meaning the program is
+shuffling vertical columns of pixels.  Either way, there is no vertical
+rearrangement; this means images consisting entirely of horizontal stripes,
+such as the national banners of Germany, Thailand and Ukraine, will be
+unchanged.
+
+<p>To shuffle vertically, or to perform a complete scramble, use
+<b>pamshuffle</b> together with <b>pamflip</b>.  See examples below.
+
+<p>Input is from Standard Input if you don't specify the input file
+<i>pamfile</i>.
+
+<p>Output is to Standard Output.
+
+<p><b>pamshuffle</b> works on a multi-image stream.  It operates on
+each image in the stream independently and produces a multi-image
+stream output.
+
+<p>The shuffling algorithm is the widely known
+<a href="https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle">
+Fisher-Yates method</a>.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamshuffle</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-column</b>
+
+<dd>Shuffle vertical columns, i.e. perform the same movement on all rows.
+Without this option, the program shuffles each row independently.
+
+<dt><b>-randomseed</b>= <i>integer</i>
+
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>pamshuffle</b> uses a seed derived from the time of day
+and process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+</dl>
+
+
+<h2 id="examples">EXAMPLES</h2>
+
+<p>In the following example, output is to Standard Output.  You will probably
+want to add redirection to somewhere useful.
+
+<ul>
+<li><p><b>pamshuffle</b> is useful when you want to randomize the orderly
+output of image generators such as <b>pamseq</b> and <b>pgmramp</b>.
+
+<p>Produce five permutations of integers 0 to 15:
+
+<pre>
+<kbd>
+pgmramp -lr -maxval=15 16 5 | pamshuffle -plain
+</kbd>
+</pre>
+
+<li>Shuffle columns:
+
+<pre>
+<kbd>
+pamshuffle -column image.ppm
+</kbd>
+</pre>
+
+
+<li>Shuffle rows:
+
+<pre>
+<kbd>
+pamflip -cw image.ppm | pamshuffle | pamflip -ccw
+</kbd>
+</pre>
+
+<li>Perform complete shuffle:
+
+<pre>
+<kbd>
+pamflip -cw image.ppm | pamshuffle | pamflip -ccw | pamshuffle
+</kbd>
+</pre>
+
+</ul>
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pamseq.html">pamseq</a></b>,
+<b><a href="pgmramp.html">pgmramp</a></b>,
+<b><a href="pamflip.html">pamflip</a></b>,
+<b><a href="ppmshift.html">ppmshift</a></b>,
+<b><a href="ppmspread.html">ppmspread</a></b>,
+<b><a href="pam.html">pam</a></b>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamshuffle</b> was new in Netpbm 10.99 (June 2022).
+
+
+<h2 id="author">AUTHOR</h2>
+
+By Akira F. Urushibata.  Contributed to the public domain by the author.
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+
+</body>
+</html>

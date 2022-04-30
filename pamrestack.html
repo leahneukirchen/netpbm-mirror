@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamrestack User Manual</title></head>
+<body>
+<h1>pamrestack</h1>
+Updated:
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+pamrestack - Rearrange rows of a Netpbm image
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pamrestack</b>
+
+[<b>-width=</b><i>width</i>]
+
+[<b>-trim=</b>{<b>fill</b>|<b>crop</b>|<b>abort</b>}]
+
+[<b>-verbose</b>]
+
+[<i>pamfile</i>]
+
+<p>Minimum unique abbreviations of option are acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamrestack</b> rearranges the pixels of a Netpbm image into different
+size rows.  E.g. if an image is 100 pixels wide and 50 pixels high, you can
+rearrange it to 125 wide and 40 high.  In that case, 25 pixels from the start
+of the 2nd row of the input would be moved to the end of the 1st row of input,
+50 pixels from the 3rd row would be moved to the 2nd row, etc.
+
+<p>Put another way, <b>pamrestack</b> arranges all the input rows into one
+long sequence and produces output rows therefrom, in FIFO order.
+
+<p>Input is from Standard Input if you don't specify the input
+file <i>pamfile</i>.
+
+<p>Output is to Standard Output.
+
+<p><b>pamrestack</b> works on a multi-image stream.  It cuts each image in the
+stream independently and produces a multi-image stream output.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamrestack</b> recognizes the following
+command line options:
+
+<dl compact>
+<dt><b>-width=</b><i>width</i>
+
+<dd>The width of the output.  If this option is not specified, the output will
+  consist of a single row wide enough to contain all the pixels of the input
+  image.
+
+<dt><b>-trim=</b>{<b>fill</b>|<b>crop</b>|<b>abort</b>}
+
+<dd>This option specifies what to do when the new width does not cleanly
+divide the number of pixels in the input image.
+
+<dl>
+  <dt><b>fill</b>
+  <dd>(Default) Complete the final row by adding black pixels as necessary.
+
+  <dt><b>crop</b>
+    <dd>Discard the final partial row.  If this means there is nothing to
+    output, fail the program.
+
+  <dt><b>abort</b>
+  <dd>Fail the program..
+</dl>
+  
+<dt><b>-verbose</b>
+
+<dd>
+Print information about the processing to Standard Error.
+
+</dl>
+
+<h2 id="usage">USAGE</h2>  
+
+<p><b>pamrestack</b> is a general editor with many possible uses.
+<ul>
+  <li>
+    <b>pamrestack</b> can rearrange into rectangles single-dimention images
+    produced by programs such as <b>ppmhist</b> and <b>pamseq</b>.  This makes
+    the output easier to examine with a viewer.  Conversely, <b>pamrestack</b>
+    can be used to convert a normal rectangular image into one wide row or one
+    tall column if that is desireable for compression, conversion, or analysis.
+
+  <li>
+    <b>pamrestack</b> can repair images corrupted by an incorrect width value
+    in the header.  Images grabbed from the framebuffer device often exhibit
+    this problem.
+
+  <li><b>pamrestack</b> can be used with <b>pamdice</b>, <b>pamundice</b>,
+    <b>pnmcat</b>, etc. to divide and combine images in the process of
+    interlacing.
+  </ul>
+
+
+<h2 id="examples">EXAMPLES</h2>
+
+<ul>
+  <li>Rearrange the one-dimensional output of <b>pamseq</b> into a square:
+
+<pre>
+<kbd>
+pamseq 3 255 | pamrestack -width=4096
+</kbd>
+</pre>
+
+<li>Combine two files, each 600 pixels wide, one with the odd rows and
+  another with the even rows, to construct an interlaced image:
+
+<pre>
+<kbd>
+pnmcat -leftright oddrows.ppm evenrows.ppm | pamrestack -width=600
+</kbd>
+</pre>
+
+
+<li>Like the above, but invert all pixels in the even rows left to right
+  to produce a serpentine interlace:
+
+<pre>
+<kbd>
+  pamflip -leftright evenrows.ppm |
+    pnmcat -leftright oddrows.ppm - |
+      pamrestack -width 600
+</kbd>
+</pre>
+
+</ul>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pamseq.html">pamseq</a></b>,
+<b><a href="ppmhist.html">ppmhist</a></b>,
+<b><a href="pnmshear.html">pnmshear</a></b>,
+<b><a href="pamdeinterlace.html">pamdeinterlace</a></b>,
+<b><a href="pamdice.html">pamdice</a></b>,
+<b><a href="pamundice.html">pamundice</a></b>,
+<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pam.html">pam</a></b>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamrestack</b> was new in Netpbm 10.99 (June 2022).
+
+
+<h2 id="author">AUTHOR</h2>
+
+By Akira F. Urushibata.  Contributed to the public domain by the author.
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#usage">USAGE</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+
+</body>
+</html>
