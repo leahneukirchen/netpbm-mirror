@@ -9,7 +9,7 @@
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -21,8 +21,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
   Convert program invocation arguments (argc,argv) into a format the
   program can use easily, struct cmdlineInfo.  Validate arguments along
@@ -48,7 +48,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!tupletypeSpec)
@@ -151,9 +151,9 @@ permuteHigherPlanes(struct pam const pam, int const nextplane,
 
 
 int
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam pam;
     int col;
     tuple lowerPlanes;
@@ -165,7 +165,7 @@ main(int argc, char **argv) {
         */
     tuple * tuplerow;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
