@@ -10,14 +10,12 @@ main ( int argc, char **argv ) {
     /* initial values here are just to demonstrate what gets set and
        what doesn't by the code below.
     */
-    int help_flag = 7;
-    unsigned int help_spec =7;
-    unsigned int height_spec =7;
-    unsigned int name_spec= 7;
+    unsigned int heightSpec =7;
+    unsigned int nameSpec= 7;
     char *name= "initial";
     int height=7;
-    int verbose_flag=7;
-    int debug_flag=7;
+    int verboseFlag=7;
+    int debugFlag=7;
     char ** methodlist;
     struct optNameValue * optlist;
 
@@ -26,12 +24,12 @@ main ( int argc, char **argv ) {
     optEntry * option_def;
     MALLOCARRAY(option_def, 100);
 
-    OPTENT3(0,   "height",   OPT_INT,        &height,       &height_spec, 0);
-    OPTENT3('n', "name",     OPT_STRING,     &name,         &name_spec,   0);
-    OPTENT3('v', "verbose",  OPT_FLAG,       &verbose_flag, NULL,         0);
-    OPTENT3('g', "debug",    OPT_FLAG,       &debug_flag,   NULL,         0);
-    OPTENT3(0,   "methods",  OPT_STRINGLIST, &methodlist,   NULL,         0);
-    OPTENT3(0,   "options",  OPT_NAMELIST,   &optlist,      NULL,         0);
+    OPTENT3(0,   "height",   OPT_INT,        &height,       &heightSpec,  0);
+    OPTENT3('n', "name",     OPT_STRING,     &name,         &nameSpec,    0);
+    OPTENT3('v', "verbose",  OPT_FLAG,       &verboseFlag,  NULL,         0);
+    OPTENT3('g', "debug",    OPT_FLAG,       &debugFlag,    NULL,         0);
+    OPTENT3(0,   "methods",  OPT_STRINGLIST, &methodlist,   &methodSpec,  0);
+    OPTENT3(0,   "options",  OPT_NAMELIST,   &optlist,      &optSpec,     0);
 
     opt.opt_table = option_def;
     opt.short_allowed = 1;
@@ -43,13 +41,13 @@ main ( int argc, char **argv ) {
 
     printf("argc=%d\n", argc);
     printf("height=%d\n", height);
-    printf("height_spec=%d\n", height_spec);
+    printf("height_spec=%d\n", heightSpec);
     printf("name='%s'\n", name);
-    printf("name_spec=%d\n", name_spec);
-    printf("verbose_flag=%d\n", verbose_flag);
-    printf("debug_flag=%d\n", verbose_flag);
+    printf("name_spec=%d\n", nameSpec);
+    printf("verbose_flag=%d\n", verboseFlag);
+    printf("debug_flag=%d\n", verboseFlag);
 
-    if (methodlist) {
+    if (methodSpec) {
         unsigned int i;
         printf("methods: ");
         while (methodlist[i]) {
@@ -60,7 +58,7 @@ main ( int argc, char **argv ) {
     } else
         printf("No -options\n");
 
-    if (optlist) {
+    if (optSpec) {
         unsigned int i;
         while (optlist[i].name) {
             printf("option '%s' = '%s'\n", optlist[i].name, optlist[i].value);
