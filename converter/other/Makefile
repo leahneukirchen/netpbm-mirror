@@ -134,14 +134,15 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtoavs pamtodjvurle pamtofits pamtogif \
 		pamtohdiff pamtohtmltbl pamtompfont pamtooctaveimg \
-		pamtopam pamtopdbimg pamtopfm pamtopnm pamtosrf pamtouil \
+		pamtopam pamtopdbimg pamtopfm pamtopnm \
+                pamtoqoi pamtosrf pamtouil \
 		pamtowinicon pamtoxvmini \
 		pbmtopgm pdbimgtopam pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl pnmtorast \
-		pnmtosgi pnmtosir pamtotga pnmtoxwd \
+		pnmtosgi pnmtosir pamtotga pnmtoxwd qoitopam \
 		rasttopnm rlatopam sgitopnm sirtopnm srftopam sunicontopnm \
-		winicontopam xwdtopnm yuy2topam zeisstopnm
+		winicontopam xwdtopnm yuy2topam zeisstopnm \
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm pnmtops
@@ -168,7 +169,7 @@ BINARIES = $(PORTBINARIES)
 
 MERGEBINARIES = $(BINARIES)
 
-EXTRA_OBJECTS = exif.o rast.o ipdb.o srf.o
+EXTRA_OBJECTS = exif.o rast.o ipdb.o srf.o qoi.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
   EXTRA_OBJECTS += pngx.o
@@ -237,6 +238,11 @@ pnmtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 jpegtopnm: jpegdatasource.o exif.o
 jpegtopnm: ADDL_OBJECTS = jpegdatasource.o exif.o
 jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
+
+pamtoqoi: pamtoqoi.o qoi.o
+pamtoqoi: ADDL_OBJECTS = qoi.o
+qoitopam: pamtoqoi.o qoi.o
+qoitopam: ADDL_OBJECTS = qoi.o
 
 srftopam pamtosrf: srf.o
 srftopam pamtosrf: ADDL_OBJECTS = srf.o
