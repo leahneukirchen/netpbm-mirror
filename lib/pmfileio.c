@@ -939,6 +939,54 @@ pm_getline(FILE *   const ifP,
 
 
 
+void
+pm_readfile(FILE *                 const fileP,
+            const unsigned char ** const bytesP,
+            size_t *               const szP) {
+
+    unsigned char * buf;
+    size_t allocatedSz;
+    size_t szSoFar;
+    size_t chunkSz;
+    bool eof;
+
+    for (szSoFar = 0, buf = NULL, allocatedSz = 0, chunkSz = 4096,
+             eof = false;
+         !eof; ) {
+
+        size_t bytesReadCt;
+
+        if (szSoFar + chunkSz > allocatedSz) {
+            allocatedSz = szSoFar + chunkSz;
+            REALLOCARRAY(buf, allocatedSz);
+
+            if (!buf) {
+                pm_error("Failed to get memory for %lu byte input buffer",
+                         allocatedSz);
+            }
+        }
+        bytesReadCt = fread(buf + szSoFar, 1, chunkSz, fileP);
+
+        if (ferror(fileP))
+            pm_error("Failed to read input from file");
+
+        szSoFar += bytesReadCt;
+
+        if (bytesReadCt < chunkSz)
+            eof = true;
+        else {
+            /* Double buffer and read size up to 1 MiB */
+            if (szSoFar <= 1024*1024)
+                chunkSz = szSoFar;
+        }
+    }
+
+    *bytesP = buf;
+    *szP    = szSoFar;
+}
+
+
+
 union cheat {
     uint32_t l;
     short s;

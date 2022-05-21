@@ -380,6 +380,11 @@ pm_getline(FILE *   const ifP,
            int *    const eofP,
            size_t * const lineLenP);
 
+void
+pm_readfile(FILE *                 const fileP,
+            const unsigned char ** const bytesP,
+            size_t *               const szP);
+
 short
 pm_bs_short(short const s);
 
