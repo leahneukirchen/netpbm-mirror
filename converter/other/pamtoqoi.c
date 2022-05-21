@@ -93,7 +93,7 @@ static trqr_t get_trqr(const char *tuple_type) {
 int main(int argc, char **argv) {
     struct pam input;
     trqr_t trqr = NULL;
-    qoi_desc qd = {
+    qoi_Desc qd = {
         .colorspace = QOI_SRGB
     };
     tuplen *tr = NULL;
@@ -106,9 +106,9 @@ int main(int argc, char **argv) {
 
     qd.width = input.width;
     qd.height = input.height;
-    qd.channels = input.depth <= 3 ? 3 : 4;
+    qd.channelCt = input.depth <= 3 ? 3 : 4;
 
-    qb = malloc(qd.width * qd.height * qd.channels);
+    qb = malloc(qd.width * qd.height * qd.channelCt);
 
     trqr = get_trqr(input.tuple_type);
     if(!trqr) {
@@ -142,10 +142,10 @@ int main(int argc, char **argv) {
     /* Read and convert rows. */
     for(size_t i = 0; i < qd.height; i++) {
         pnm_readpamrown(&input, tr);
-        trqr(tr, input.width, qb + i * input.width * qd.channels);
+        trqr(tr, input.width, qb + i * input.width * qd.channelCt);
     }
     pnm_freepamrown(tr);
-    int ol = 0;
+    unsigned int ol = 0;
     unsigned char *buf = qoi_encode(qb, &qd, &ol);
     free(qb);
     fwrite(buf, ol, 1, stdout);
