@@ -68,7 +68,7 @@ read32(const unsigned char *bytes, int *p) {
 void *
 qoi_encode(const void *     const data,
            const qoi_Desc * const descP,
-           unsigned int *   const outLenP) {
+           size_t *         const outLenP) {
 
     int p;
     unsigned int i, maxSize, run;
@@ -199,7 +199,7 @@ qoi_encode(const void *     const data,
 
 void *
 qoi_decode(const void * const data,
-           unsigned int const size,
+           size_t       const size,
            qoi_Desc *   const descP) {
 
     const unsigned char * bytes;

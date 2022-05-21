@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
         trqr(tr, input.width, qb + i * input.width * qd.channelCt);
     }
     pnm_freepamrown(tr);
-    unsigned int ol = 0;
+    size_t ol;
     unsigned char *buf = qoi_encode(qb, &qd, &ol);
     free(qb);
     fwrite(buf, ol, 1, stdout);

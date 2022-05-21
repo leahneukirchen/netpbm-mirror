@@ -259,7 +259,7 @@ typedef struct {
 void *
 qoi_encode(const void *     const data,
            const qoi_Desc * const descP,
-           unsigned int *   const outLenP);
+           size_t *         const outLenP);
 
 /* Decode a QOI image from memory.
 
@@ -272,7 +272,7 @@ qoi_encode(const void *     const data,
 
 void *
 qoi_decode(const void * const data,
-           unsigned int const size,
+           size_t       const size,
            qoi_Desc *   const descP);
 
 #endif

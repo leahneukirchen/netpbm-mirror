@@ -14,117 +14,58 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
 
+#include "pm.h"
 #include "pam.h"
+#include "mallocvar.h"
 #include "qoi.h"
 
 #define QOI_MAXVAL 0xFF
 
-/* Resizes buf of type T* so that at least needed+1 bytes
-   are available, executing err if realloc fails.
-   Uses realloc -- is there a Netpbm equivalent?
-*/
-#define RESIZE(buf, T, needed, allocated, err)  \
-    do {                                        \
-    size_t tmpn = (allocated);                  \
-    while((needed)+1 >= tmpn)                   \
-        tmpn = tmpn ? tmpn * 2 : 8;             \
-    if(tmpn != allocated) {                     \
-        T *tmpb = realloc((buf), tmpn);         \
-        if(!tmpb) {err}                         \
-        else {                                  \
-            (allocated) = tmpn;                 \
-            (buf) = tmpb;                       \
-        }                                       \
-    }                                           \
-    } while(0)
 
 
 static void
-readFile(FILE *                 const fileP,
-         const unsigned char ** const bytesP,
-         unsigned int *         const sizeP) {
+readQoi(FILE *                 const ifP,
+        qoi_Desc *             const qoiDescP,
+        const unsigned char ** const qoiRasterP) {
 
-    unsigned char * buf;
-    size_t allocatedSz;
-    size_t sizeSoFar;
-    size_t bytesReadCt;
-
-    buf = NULL; /* initial value */
-    allocatedSz = 0;  /* initial value */
-    sizeSoFar = 0;  /* initial value */
-    *sizeP  = 0;
-
-    bytesReadCt = 0;  /* initial value */
-    do {
-        sizeSoFar += bytesReadCt;
-        RESIZE(buf, unsigned char, sizeSoFar + 4096, allocatedSz, free(buf);
-               pm_error("Failed to get memory"););
-        bytesReadCt = fread(buf + sizeSoFar, 1, 4096, fileP);
-    } while (bytesReadCt != 0);
-
-    if (ferror(fileP)) {
-        free(buf);
-        pm_error("Failed to read input");
-    } else {
-        *bytesP = buf;
-        *sizeP  = sizeSoFar;
-    }
-}
-
-
-
-int
-main(int argc, char **argv) {
-
-    struct pam outpam;
-
-    outpam.size        = sizeof(struct pam);
-    outpam.len         = PAM_STRUCT_SIZE(tuple_type);
-    outpam.maxval      = QOI_MAXVAL;
-    outpam.plainformat = 0;
-
-    qoi_Desc qoiDesc;
-
-    qoiDesc.channelCt = 0;
-
-    pm_proginit(&argc, (const char **)argv);
-
-    unsigned int qoiSz;
+    size_t qoiSz;
     const unsigned char * qoiImg;
     unsigned char * qoiRaster;
-    tuple * tuplerow;
-    unsigned int qoiRasterCursor;
-    unsigned int row;
+    qoi_Desc qoiDesc;
 
     /* Unfortunately, qoi.h does not implement a streaming decoder,
        we need to read the whole stream into memory -- expensive.
        We might be able to cheat here with mmap sometimes,
        but it's not worth the effort.
     */
-    readFile(stdin, &qoiImg, &qoiSz);
+    pm_readfile(stdin, &qoiImg, &qoiSz);
 
     qoiRaster = qoi_decode(qoiImg, qoiSz, &qoiDesc);
 
     if (!qoiRaster)
         pm_error("Decoding qoi failed.");
 
-    outpam.depth  = qoiDesc.channelCt == 3 ? 3 : 4;
-    outpam.width  = qoiDesc.width;
-    outpam.height = qoiDesc.height;
-    outpam.format = PAM_FORMAT;
-    outpam.file   = stdout;
+    *qoiDescP = qoiDesc;
+    *qoiRasterP = qoiRaster;
 
-    if (qoiDesc.channelCt == 3)
-        strcpy(outpam.tuple_type, PAM_PPM_TUPLETYPE);
-    else
-        strcpy(outpam.tuple_type, PAM_PPM_ALPHA_TUPLETYPE);
+    free((void*)qoiImg);
+}
 
-    pnm_writepaminit(&outpam);
+
+
+static void
+writeRaster(struct pam            const outpam,
+            const unsigned char * const qoiRaster) {
+
+    unsigned int qoiRasterCursor;
+    unsigned int row;
+    tuple * tuplerow;
 
     tuplerow = pnm_allocpamrow(&outpam);
 
@@ -143,9 +84,43 @@ main(int argc, char **argv) {
         pnm_writepamrow(&outpam, tuplerow);
     }
 
-    free((void*)qoiImg);
-    free(qoiRaster);
     pnm_freepamrow(tuplerow);
+}
+
+
+
+int
+main(int argc, char **argv) {
+
+    const unsigned char * qoiRaster;
+    qoi_Desc qoiDesc;
+    struct pam outpam;
+
+    pm_proginit(&argc, (const char **)argv);
+
+    outpam.size        = sizeof(struct pam);
+    outpam.len         = PAM_STRUCT_SIZE(tuple_type);
+    outpam.maxval      = QOI_MAXVAL;
+    outpam.plainformat = 0;
+
+    readQoi(stdin, &qoiDesc, &qoiRaster);
+
+    outpam.depth  = qoiDesc.channelCt == 3 ? 3 : 4;
+    outpam.width  = qoiDesc.width;
+    outpam.height = qoiDesc.height;
+    outpam.format = PAM_FORMAT;
+    outpam.file   = stdout;
+
+    if (qoiDesc.channelCt == 3)
+        strcpy(outpam.tuple_type, PAM_PPM_TUPLETYPE);
+    else
+        strcpy(outpam.tuple_type, PAM_PPM_ALPHA_TUPLETYPE);
+
+    pnm_writepaminit(&outpam);
+
+    writeRaster(outpam, qoiRaster);
+
+    free((void*)qoiRaster);
 
     return 0;
 }
