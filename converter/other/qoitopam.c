@@ -36,8 +36,6 @@ readQoi(FILE *                 const ifP,
 
     size_t qoiSz;
     const unsigned char * qoiImg;
-    unsigned char * qoiRaster;
-    qoi_Desc qoiDesc;
 
     /* Unfortunately, qoi.h does not implement a streaming decoder,
        we need to read the whole stream into memory -- expensive.
@@ -46,13 +44,7 @@ readQoi(FILE *                 const ifP,
     */
     pm_readfile(stdin, &qoiImg, &qoiSz);
 
-    qoiRaster = qoi_decode(qoiImg, qoiSz, &qoiDesc);
-
-    if (!qoiRaster)
-        pm_error("Decoding qoi failed.");
-
-    *qoiDescP = qoiDesc;
-    *qoiRasterP = qoiRaster;
+    qoi_decode(qoiImg, qoiSz, qoiDescP, qoiRasterP);
 
     free((void*)qoiImg);
 }

@@ -256,10 +256,11 @@ typedef struct {
    The returned qoi data should be free()d after use.
 */
 
-void *
-qoi_encode(const void *     const data,
-           const qoi_Desc * const descP,
-           size_t *         const outLenP);
+void
+qoi_encode(const unsigned char *  const data,
+           const qoi_Desc *       const descP,
+           const unsigned char ** const qoiImageP,
+           size_t *               const outLenP);
 
 /* Decode a QOI image from memory.
 
@@ -270,9 +271,10 @@ qoi_encode(const void *     const data,
    The returned pixel data should be free()d after use.
 */
 
-void *
-qoi_decode(const void * const data,
-           size_t       const size,
-           qoi_Desc *   const descP);
+void
+qoi_decode(const unsigned char *  const qoiImage,
+           size_t                 const size,
+           qoi_Desc *             const descP,
+           const unsigned char ** const qoiRasterP);
 
 #endif

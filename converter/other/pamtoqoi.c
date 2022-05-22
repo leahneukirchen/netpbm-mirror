@@ -139,7 +139,7 @@ main(int argc, char **argv) {
     qoi_Desc qoiDesc;
     tuplen * tuplerown;
     unsigned char * qoiRaster;
-    unsigned char * qoiImage;
+    const unsigned char * qoiImage;
     size_t qoiSz;
     unsigned int row;
 
@@ -169,11 +169,11 @@ main(int argc, char **argv) {
              inpam.width,
              &qoiRaster[row * inpam.width * qoiDesc.channelCt]);
     }
-    qoiImage = qoi_encode(qoiRaster, &qoiDesc, &qoiSz);
+    qoi_encode(qoiRaster, &qoiDesc, &qoiImage, &qoiSz);
 
     pm_writefile(stdout, qoiImage, qoiSz);
 
-    free(qoiImage);
+    free((void*)qoiImage);
     free(qoiRaster);
     pnm_freepamrown(tuplerown);
 
