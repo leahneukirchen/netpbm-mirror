@@ -14,140 +14,171 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "pam.h"
 #include <string.h>
 #include <assert.h>
+#include "pam.h"
+#include "nstring.h"
 #include "qoi.h"
 
 #define QOI_MAXVAL 0xFF
 
 /* tuple row to qoi row */
-typedef void (*trqr_t)(const tuplen *tuprow,
-                       size_t len,
-                       unsigned char *qoi_row);
+typedef void Trqr(const tuplen *  const tuplerown,
+                  unsigned int    const width,
+                  unsigned char * const qoiRow);
 
-static void trqr_ppm(const tuplen *tuprow,
-               size_t len,
-               unsigned char *qoi_row) {
-    size_t j = 0;
-    for(size_t i = 0; i < len; i++) {
-        qoi_row[j++] = tuprow[i][0] * QOI_MAXVAL;
-        qoi_row[j++] = tuprow[i][1] * QOI_MAXVAL;
-        qoi_row[j++] = tuprow[i][2] * QOI_MAXVAL;
-    }
-}
-static void trqr_ppma(const tuplen *tuprow,
-               size_t len,
-               unsigned char *qoi_row) {
-    size_t j = 0;
-    for(size_t i = 0; i < len; i++) {
-        qoi_row[j++] = tuprow[i][0] * QOI_MAXVAL;
-        qoi_row[j++] = tuprow[i][1] * QOI_MAXVAL;
-        qoi_row[j++] = tuprow[i][2] * QOI_MAXVAL;
-        qoi_row[j++] = tuprow[i][3] * QOI_MAXVAL;
+static Trqr trqrRgb;
+
+static void
+trqrRgb(const tuplen *  const tuplerown,
+        unsigned int    const cols,
+        unsigned char * const qoiRow) {
+
+    size_t qoiRowCursor;
+    unsigned int col;
+
+    for (col = 0, qoiRowCursor = 0; col < cols; ++col) {
+        qoiRow[qoiRowCursor++] = tuplerown[col][PAM_RED_PLANE] * QOI_MAXVAL;
+        qoiRow[qoiRowCursor++] = tuplerown[col][PAM_GRN_PLANE] * QOI_MAXVAL;
+        qoiRow[qoiRowCursor++] = tuplerown[col][PAM_BLU_PLANE] * QOI_MAXVAL;
     }
 }
 
-static void trqr_pgm(const tuplen *tuprow,
-               size_t len,
-               unsigned char *qoi_row) {
-    size_t j = 0;
-    for(size_t i = 0; i < len; i++) {
-        unsigned char tmp = tuprow[i][0] * QOI_MAXVAL;
-        qoi_row[j++] = tmp;
-        qoi_row[j++] = tmp;
-        qoi_row[j++] = tmp;
-    }
-}
-static void trqr_pgma(const tuplen *tuprow,
-               size_t len,
-               unsigned char *qoi_row) {
-    size_t j = 0;
-    for(size_t i = 0; i < len; i++) {
-        unsigned char tmp = tuprow[i][0] * QOI_MAXVAL;
-        qoi_row[j++] = tmp;
-        qoi_row[j++] = tmp;
-        qoi_row[j++] = tmp;
-        qoi_row[j++] = tuprow[i][1] * QOI_MAXVAL;
+
+
+static Trqr trqrRgba;
+
+static void
+trqrRgba(const tuplen *  const tuplerown,
+         unsigned int    const cols,
+         unsigned char * const qoiRow) {
+
+    size_t qoiRowCursor;
+    unsigned int col;
+
+    for (col = 0, qoiRowCursor = 0; col < cols; ++col) {
+        qoiRow[qoiRowCursor++] = tuplerown[col][PAM_RED_PLANE] * QOI_MAXVAL;
+        qoiRow[qoiRowCursor++] = tuplerown[col][PAM_GRN_PLANE] * QOI_MAXVAL;
+        qoiRow[qoiRowCursor++] = tuplerown[col][PAM_BLU_PLANE] * QOI_MAXVAL;
+        qoiRow[qoiRowCursor++] = tuplerown[col][PAM_TRN_PLANE] * QOI_MAXVAL;
     }
 }
 
-static trqr_t get_trqr(const char *tuple_type) {
 
-    if(!strcmp(tuple_type, PAM_PPM_TUPLETYPE))
-       return trqr_ppm;
 
-    if(!strcmp(tuple_type, PAM_PPM_ALPHA_TUPLETYPE))
-        return trqr_ppma;
+static Trqr trqrGray;
 
-    if(!strcmp(tuple_type, PAM_PBM_TUPLETYPE) ||
-       !strcmp(tuple_type, PAM_PGM_TUPLETYPE))
-        return trqr_pgm;
+static void
+trqrGray(const tuplen *  const tuplerown,
+         unsigned int    const cols,
+         unsigned char * const qoiRow) {
 
-    if(!strcmp(tuple_type, PAM_PBM_ALPHA_TUPLETYPE) ||
-       !strcmp(tuple_type, PAM_PGM_ALPHA_TUPLETYPE))
-        return trqr_pgma;
-    return NULL;
+    size_t qoiRowCursor;
+    unsigned int col;
+
+    for (col = 0, qoiRowCursor = 0; col < cols; ++col) {
+        unsigned char const qoiSample = tuplerown[col][0] * QOI_MAXVAL;
+
+        qoiRow[qoiRowCursor++] = qoiSample;
+        qoiRow[qoiRowCursor++] = qoiSample;
+        qoiRow[qoiRowCursor++] = qoiSample;
+    }
 }
 
-int main(int argc, char **argv) {
-    struct pam input;
-    trqr_t trqr = NULL;
-    qoi_Desc qd = {
-        .colorspace = QOI_SRGB
-    };
-    tuplen *tr = NULL;
-    unsigned char *qb = NULL;
+
+
+static Trqr trqrGrayAlpha;
+
+static void
+trqrGrayAlpha(const tuplen *  const tuplerown,
+              unsigned int    const cols,
+              unsigned char * const qoiRow) {
+
+    size_t qoiRowCursor;
+    unsigned int col;
+
+    for (col = 0, qoiRowCursor = 0; col < cols; ++col) {
+        unsigned char const qoiSample = tuplerown[col][0] * QOI_MAXVAL;
+
+        qoiRow[qoiRowCursor++] = qoiSample;
+        qoiRow[qoiRowCursor++] = qoiSample;
+        qoiRow[qoiRowCursor++] = qoiSample;
+        qoiRow[qoiRowCursor++] =
+            tuplerown[col][PAM_GRAY_TRN_PLANE] * QOI_MAXVAL;
+    }
+}
+
+
+
+static Trqr *
+trqrForTupleType(const char * const tupleType) {
+
+    if (streq(tupleType, PAM_PPM_TUPLETYPE))
+        return &trqrRgb;
+    else if(streq(tupleType, PAM_PPM_ALPHA_TUPLETYPE))
+        return &trqrRgba;
+    else if(streq(tupleType, PAM_PBM_TUPLETYPE) ||
+            streq(tupleType, PAM_PGM_TUPLETYPE))
+        return &trqrGray;
+    else if(streq(tupleType, PAM_PBM_ALPHA_TUPLETYPE) ||
+            streq(tupleType, PAM_PGM_ALPHA_TUPLETYPE))
+        return &trqrGrayAlpha;
+    else {
+        pm_error("Don't know how to convert tuple type '%s'.", tupleType);
+        return NULL;  /* Suppress compiler warning */
+    }
+}
+
+
+
+int
+main(int argc, char **argv) {
+
+    struct pam inpam;
+    Trqr * trqr;
+    qoi_Desc qoiDesc;
+    tuplen * tuplerown;
+    unsigned char * qoiRaster;
+    unsigned char * qoiImage;
+    size_t qoiSz;
+    unsigned int row;
 
     pm_proginit(&argc, (const char **)argv);
 
-    pnm_readpaminit(stdin, &input, PAM_STRUCT_SIZE(tuple_type));
-    tr = pnm_allocpamrown(&input);
+    pnm_readpaminit(stdin, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    qd.width = input.width;
-    qd.height = input.height;
-    qd.channelCt = input.depth <= 3 ? 3 : 4;
+    tuplerown = pnm_allocpamrown(&inpam);
 
-    qb = malloc(qd.width * qd.height * qd.channelCt);
+    qoiDesc.colorspace = QOI_SRGB;
+    qoiDesc.width      = inpam.width;
+    qoiDesc.height     = inpam.height;
+    qoiDesc.channelCt  = inpam.depth <= 3 ? 3 : 4;
 
-    trqr = get_trqr(input.tuple_type);
-    if(!trqr) {
-        pm_message("Unknown tuple type. Determining conversion by depth.");
-        switch(input.depth) {
-            case 1:
-            trqr = trqr_pgm;
-            pm_message("Conversion: like grayscale");
-            break;
+    qoiRaster = malloc(qoiDesc.width * qoiDesc.height * qoiDesc.channelCt);
 
-            case 2:
-            trqr = trqr_pgma;
-            pm_message("Conversion: like grayscale_alpha");
-            break;
+    if (!qoiRaster)
+        pm_error("Unable to get memory for QOI raster %u x %u x %u",
+                 qoiDesc.width, qoiDesc.height, qoiDesc.channelCt);
 
-            case 3:
-            trqr = trqr_ppm;
-            pm_message("Conversion: like rgb");
-            break;
+    trqr = trqrForTupleType(inpam.tuple_type);
 
-            case 4:
-            trqr = trqr_ppma;
-            pm_message("Conversion: like rgb_alpha");
-            break;
-
-            default:
-            pm_error("Unsupported depth?");
-            break;
-        }
-    }
     /* Read and convert rows. */
-    for(size_t i = 0; i < qd.height; i++) {
-        pnm_readpamrown(&input, tr);
-        trqr(tr, input.width, qb + i * input.width * qd.channelCt);
+    for (row = 0; row < inpam.height; ++row) {
+        pnm_readpamrown(&inpam, tuplerown);
+        trqr(tuplerown,
+             inpam.width,
+             &qoiRaster[row * inpam.width * qoiDesc.channelCt]);
     }
-    pnm_freepamrown(tr);
-    size_t ol;
-    unsigned char *buf = qoi_encode(qb, &qd, &ol);
-    free(qb);
-    fwrite(buf, ol, 1, stdout);
+    qoiImage = qoi_encode(qoiRaster, &qoiDesc, &qoiSz);
+
+    pm_writefile(stdout, qoiImage, qoiSz);
+
+    free(qoiImage);
+    free(qoiRaster);
+    pnm_freepamrown(tuplerown);
+
     return 0;
 }
+
+
+
