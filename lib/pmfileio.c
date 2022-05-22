@@ -987,6 +987,24 @@ pm_readfile(FILE *                 const fileP,
 
 
 
+void
+pm_writefile(FILE *                const fileP,
+             const unsigned char * const bytes,
+             size_t                const sz) {
+
+    size_t bytesWrittenCt;
+
+    bytesWrittenCt = fwrite(bytes, 1, sz, fileP);
+
+    if (bytesWrittenCt != sz) {
+        pm_error("Failed to write %lu bytes to Standard Output.  "
+                 "%lu bytes successfully written",
+                 sz, bytesWrittenCt);
+    }
+}
+
+
+
 union cheat {
     uint32_t l;
     short s;

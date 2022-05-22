@@ -385,6 +385,11 @@ pm_readfile(FILE *                 const fileP,
             const unsigned char ** const bytesP,
             size_t *               const szP);
 
+void
+pm_writefile(FILE *                const fileP,
+             const unsigned char * const bytes,
+             size_t                const sz);
+
 short
 pm_bs_short(short const s);
 
