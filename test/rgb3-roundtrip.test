@@ -11,20 +11,20 @@ tmpdir=${tmpdir:-/tmp}
 
 # Test 1.  PPM (color) input
 echo "Test 1.  Should print 1926073387 101484"
-testimg_ppm=${tmpdir}/testimg.ppm
-testimg_red=${tmpdir}/testimg.red
-testimg_grn=${tmpdir}/testimg.grn
-testimg_blu=${tmpdir}/testimg.blu
+rose_ppm=${tmpdir}/rose.ppm
+rose_red=${tmpdir}/rose.red
+rose_grn=${tmpdir}/rose.grn
+rose_blu=${tmpdir}/rose.blu
 
-cp testimg.ppm ${tmpdir} &&
-ppmtorgb3 ${testimg_ppm} &&
-rgb3toppm ${testimg_red} ${testimg_grn} ${testimg_blu} | cksum
+cp testimg.ppm ${rose_ppm} &&
+ppmtorgb3 ${rose_ppm} &&
+rgb3toppm ${rose_red} ${rose_grn} ${rose_blu} | cksum
 
 # Simple cat of three planes
 echo "Test 2.  Should print 3744829044 101514"
-cat ${testimg_red} ${testimg_grn} ${testimg_blu} | cksum
+cat ${rose_red} ${rose_grn} ${rose_blu} | cksum
 
-rm ${testimg_ppm} ${testimg_red} ${testimg_grn} ${testimg_blu}
+rm ${rose_ppm} ${rose_red} ${rose_grn} ${rose_blu}
 
 # Test 3.  PBM (monochrome) input
 echo "Test 3.  Should print 281226646 481 twice"

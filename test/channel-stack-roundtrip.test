@@ -1,6 +1,6 @@
 #! /bin/sh
-# This script tests: pamchanel pamstack
-# Also requires: pamtopam pamstack pamtopnm
+# This script tests: pamchannel pamstack
+# Also requires: pamtopam pamtopnm
 
 tmpdir=${tmpdir:-/tmp}
 r_pam=${tmpdir}/testimg_r.pam

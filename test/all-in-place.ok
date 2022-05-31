@@ -109,6 +109,7 @@ pamtopdbimg: ok
 pamtopfm: ok
 pamtopng: ok
 pamtopnm: ok
+pamtoqoi: ok
 pamtosrf: ok
 pamtosvg: ok
 pamtotga: ok
@@ -302,6 +303,7 @@ ppmtv: ok
 ppmwheel: ok
 psidtopgm: ok
 pstopnm: ok
+qoitopam: ok
 qrttoppm: ok
 rasttopnm: ok
 rawtopgm: ok

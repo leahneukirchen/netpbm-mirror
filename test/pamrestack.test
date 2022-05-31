@@ -1,0 +1,91 @@
+#! /bin/sh
+# This script tests: pamrestack
+# Also requires: pamfile pamflip pgmramp pnmcrop pnminvert
+
+tmpdir=${tmpdir:-/tmp}
+ramp_pgm=${tmpdir}/ramp.pgm
+ramp2_pgm=${tmpdir}/ramp2.pgm
+maze_singlerow_pbm=${tmpdir}/maze_singlerow.pbm
+maze_inverted_pbm=${tmpdir}/maze_inverted.pbm
+
+echo "Test 1."
+
+pgmramp -lr -maxval=7 8 3 | tee ${ramp_pgm} | pamrestack -plain
+pamrestack -width=10 -trim=fill -plain ${ramp_pgm}
+pamrestack -width=10 -trim=crop -plain ${ramp_pgm}
+pamrestack -width=4 -trim=fill -plain ${ramp_pgm}
+pamrestack -width=12 -trim=fill -plain ${ramp_pgm}
+
+echo "Test 2.  Should print 0 twelve times"
+
+for width in 2 4 5 8 12 24
+do
+    pamrestack -width=${width} -trim=crop ${ramp_pgm} > ${ramp2_pgm}
+    for flag in "-trim=crop"  "-trim=fill"
+    do
+    pamrestack -width=${width} ${flag} ${ramp2_pgm} | cmp -s - ${ramp2_pgm}
+    echo $?
+    done
+done
+
+rm ${ramp_pgm} ${ramp2_pgm}
+
+echo "Test 3.  Should produce 3141273448 431 fifteen times"
+
+# Invert maze.pbm because the lower right corner is black
+
+pixels=`pamfile -size maze.pbm | awk '{print $1 * $2}'`
+
+pnminvert maze.pbm | tee ${maze_inverted_pbm} | \
+  pamrestack | tee ${maze_singlerow_pbm} | pnmcrop -right -black | cksum
+for width in 1 2 3 100 1000 ${pixels} $((pixels -1))
+do
+pamrestack -width=${width} ${maze_inverted_pbm} | pamrestack | \
+  pnmcrop -right -black | cksum
+pamrestack -width=${width} ${maze_singlerow_pbm} | \
+  pamrestack | pnmcrop -right -black | cksum
+done
+
+rm ${maze_inverted_pbm} ${maze_singlerow_pbm}
+
+echo "Test 4. Should produce 1768948962 101484 twice"
+
+pamrestack -width=1 testimg.ppm | pamflip -ccw | cksum
+pamrestack \
+  -width=`pamfile -size testimg.ppm | cut -d " " -f2` testimg.ppm | \
+  pamrestack | cksum
+
+test_out=${tmpdir}/test_out
+echo "Test Invalid."
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamrestack testgrid.pbm maze.pbm > ${test_out} || \
+  echo -n "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamrestack -abort \
+  -width=$((pixels * 2 + 1 )) maze.pbm > ${test_out} || \
+  echo -n "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamrestack -crop \
+  -width=$((pixels * 2 + 1)) maze.pbm > ${test_out} || \
+  echo -n "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamrestack -width=0 maze.pbm > ${test_out} || \
+  echo -n "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamrestack -width maze.pbm > ${test_out} || \
+  echo -n "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

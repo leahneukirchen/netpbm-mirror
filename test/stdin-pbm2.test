@@ -4,13 +4,13 @@
 # This script tests: cmuwmtopbm pbmtocmuwm
 # This script tests: escp2topbm pbmtoescp2
 # This script tests: g3topbm pbmtog3
-# This script tests: gemtopbm pbmtogem
+# This script tests: gemtopnm pbmtogem
 # This script tests: macptopbm pbmtomacp
 # This script tests: mdatopbm pbmtomda
 # This script tests: mgrtopbm pbmtomgr
 # This script tests: mrftopbm pbmtomrf
 # This script tests: pi3topbm pbmtopi3
-# This script tests: sunicontopbm pbmtosunicon
+# This script tests: sunicontopnm pbmtosunicon
 # This script tests: wbmptopbm pbmtowbmp
 # This script tests: ybmtopbm pbmtoybm
 # Also requires:

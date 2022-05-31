@@ -16,7 +16,7 @@
 # Also requires: pgmmake
 
 tmpdir=${tmpdir:-/tmp}
-test_pgm=${tmpdir}/test.ppm
+test_pgm=${tmpdir}/test.pgm
 out1=${tmpdir}/out1
 out2=${tmpdir}/out2
 out3=${tmpdir}/out3

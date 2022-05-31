@@ -16,7 +16,7 @@ pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=60 | \
 
 echo "Test 3"
 # pamhue has no effect on monotone images
-# Should print 281226646 481 twice
+# Should print 0 0 : 0 twice
 
 pamhue -huechange=45  maze.pbm | cmp -s - maze.pbm
   echo ${PIPESTATUS[@]} ":" $?
@@ -25,7 +25,7 @@ pamhue -huechange=180 maze.pbm | cmp -s - maze.pbm
 
 echo "Test 4"
 # spinning the color wheel by multiples of 360 leaves the image unchanged
-# Should print 1926073387 101484 twice
+# Should print 0 0 : 0 twice
 
 pamhue -huechange=0 testimg.ppm   | cmp -s - testimg.ppm
   echo ${PIPESTATUS[@]} ":" $?

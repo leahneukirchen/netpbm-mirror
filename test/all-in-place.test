@@ -151,6 +151,7 @@ ordinary_testprogs="\
   pamtopfm \
   pamtopng \
   pamtopnm \
+  pamtoqoi \
   pamtosrf \
   pamtosvg \
   pamtotga \
@@ -344,6 +345,7 @@ ordinary_testprogs="\
   ppmwheel \
   psidtopgm \
   pstopnm \
+  qoitopam \
   qrttoppm \
   rasttopnm \
   rawtopgm \

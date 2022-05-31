@@ -3,45 +3,45 @@
 # Also requires: ppmtorgb3 pgmhist pnmcat
 
 tmpdir=${tmpdir:-/tmp}
-test_ppm=${tmpdir}/testimg.ppm
+rose_ppm=${tmpdir}/rose.ppm
 
-cp testimg.ppm ${tmpdir} &&
-ppmtorgb3 ${test_ppm}
+cp testimg.ppm ${rose_ppm} &&
+ppmtorgb3 ${rose_ppm}
 
-test_red=${tmpdir}/testimg.red
-test_grn=${tmpdir}/testimg.grn
-test_blu=${tmpdir}/testimg.blu
+rose_red=${tmpdir}/rose.red
+rose_grn=${tmpdir}/rose.grn
+rose_blu=${tmpdir}/rose.blu
 
-pnmquantall 20 ${test_red} ${test_grn} ${test_blu}
+pnmquantall 20 ${rose_red} ${rose_grn} ${rose_blu}
 
-for i in ${test_red} ${test_grn} ${test_blu}
+for i in ${rose_red} ${rose_grn} ${rose_blu}
 do
 cat $i | cksum
 done
 
 # Should print 1
 
-pnmcat ${test_red} ${test_grn} ${test_blu} -tb | \
+pnmcat ${rose_red} ${rose_grn} ${rose_blu} -tb | \
     pgmhist -m | awk '$2>0 {s++}; END { print (s<=20) }'
 
 
 tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+rose_out=${tmpdir}/rose_out
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-pnmquantall -ext xx 0 ${test_red} ${test_grn} ${test_blu} || \
+pnmquantall -ext xx 0 ${rose_red} ${rose_grn} ${rose_blu} || \
    echo "Expected failure 1"
-rm ${test_red}xx ${test_grn}xx ${test_blu}xx || \
+rm ${rose_red}xx ${rose_grn}xx ${rose_blu}xx || \
    echo "Expected failure 1.rm"
-pnmquantall -ext xx 1 ${test_red} ${test_grn} ${test_blu} || \
+pnmquantall -ext xx 1 ${rose_red} ${rose_grn} ${rose_blu} || \
    echo "Expected failure 2"
-rm ${test_red}xx ${test_grn}xx ${test_blu}xx || \
+rm ${rose_red}xx ${rose_grn}xx ${rose_blu}xx || \
    echo "Expected failure 2.rm"
 pnmquantall -ext xx 2 || \
    echo "Expected failure 3"
 
-rm ${test_red} ${test_grn} ${test_blu} ${test_ppm}
+rm ${rose_red} ${rose_grn} ${rose_blu} ${rose_ppm}
