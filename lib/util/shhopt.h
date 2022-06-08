@@ -82,6 +82,7 @@ Now run this program with something like
   you need an OPTENTINIT call to establish the empty option table:
 
     optEntry * option_def;
+    unsigned int option_def_index;
     MALLOCARRAY(option_def, 1);
     OPTENTINIT;
 
