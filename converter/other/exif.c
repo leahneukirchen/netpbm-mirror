@@ -533,7 +533,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         for (end = byteCount; end > 0 && value[end] == ' '; --end);
 
         /* Skip "ASCII" if it is there */
-        if (end >= 5 && MEMEQ(value, "ASCII", 5))
+        if (end >= 5 && memeq(value, "ASCII", 5))
             cursor = 5;
         else
             cursor = 0;
@@ -860,12 +860,12 @@ exif_parse(const unsigned char * const exifData,
     if (wantTagTrace)
         fprintf(stderr, "Exif header %d bytes long\n",length);
 
-    if (MEMEQ(exifData + 0, "II" , 2)) {
+    if (memeq(exifData + 0, "II" , 2)) {
         if (wantTagTrace) 
             fprintf(stderr, "Exif header in Intel order\n");
         byteOrder = NORMAL;
     } else {
-        if (MEMEQ(exifData + 0, "MM", 2)) {
+        if (memeq(exifData + 0, "MM", 2)) {
             if (wantTagTrace) 
                 fprintf(stderr, "Exif header in Motorola order\n");
             byteOrder = MOTOROLA;

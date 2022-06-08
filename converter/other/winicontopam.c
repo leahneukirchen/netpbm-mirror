@@ -1273,7 +1273,7 @@ convertImage(struct File *         const icoP,
 
     image = readImage(icoP, dirEntryP);
 
-    if (MEMEQ(image, pngSignature, sizeof (pngSignature)))
+    if (memeq(image, pngSignature, sizeof (pngSignature)))
         convertPng(image, ofP, dirEntryP);
     else
         convertBmp(image, ofP, dirEntryP, needHeaderDump, wantAndMaskPlane);

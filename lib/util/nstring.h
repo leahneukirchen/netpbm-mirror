@@ -30,8 +30,6 @@ extern "C" {
 #define STRSEQ(A, B) \
 	(strneq((A), (B), sizeof(A)))
 
-#define MEMEQ(a,b,c) (memcmp(a, b, c) == 0)
-
 #define MEMSEQ(a,b) (memeq(a, b, sizeof(*(a))))
 
 #define MEMSSET(a,b) (memset(a, b, sizeof(*(a))))
