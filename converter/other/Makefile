@@ -169,7 +169,7 @@ BINARIES = $(PORTBINARIES)
 
 MERGEBINARIES = $(BINARIES)
 
-EXTRA_OBJECTS = exif.o rast.o ipdb.o srf.o qoi.o
+EXTRA_OBJECTS = exif.o rast.o ipdb.o srf.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
   EXTRA_OBJECTS += pngx.o
@@ -238,11 +238,6 @@ pnmtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 jpegtopnm: jpegdatasource.o exif.o
 jpegtopnm: ADDL_OBJECTS = jpegdatasource.o exif.o
 jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
-
-pamtoqoi: pamtoqoi.o qoi.o
-pamtoqoi: ADDL_OBJECTS = qoi.o
-qoitopam: pamtoqoi.o qoi.o
-qoitopam: ADDL_OBJECTS = qoi.o
 
 srftopam pamtosrf: srf.o
 srftopam pamtosrf: ADDL_OBJECTS = srf.o
