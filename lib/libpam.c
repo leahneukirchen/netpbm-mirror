@@ -434,6 +434,8 @@ setSeekableAndRasterPos(struct pam * const pamP) {
 }
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
 
 #define MAX_LABEL_LENGTH 8
 #define MAX_VALUE_LENGTH 255
@@ -443,7 +445,7 @@ parseHeaderLine(const char * const buffer,
                 char *       const label,
                 char *       const value) {
 /*----------------------------------------------------------------------------
-   We truncate the labe to MAX_LABEL_LENGTH and the value to
+   We truncate the label to MAX_LABEL_LENGTH and the value to
    MAX_VALUE_LENGTH.  There must be at least that much space (plus space
    for a terminating NUL) at 'label' and 'value', respectively.
 -----------------------------------------------------------------------------*/
@@ -484,6 +486,7 @@ parseHeaderLine(const char * const buffer,
         value[valueCurs] = '\0';
     }
 }
+#pragma GCC diagnostic pop
 
 
 
