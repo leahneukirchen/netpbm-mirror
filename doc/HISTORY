@@ -4,14 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-22.04.24 BJH  Release 10.98.02
+22.06.24 BJH  Release 10.99.00
+
+              Add pamrestack.
+
+              Add pamshuffle.
+
+              Add pamtoqoi, qoitopam.
 
               palmtopnm: Fix failure with bogus claim of invalid input on
               architectures that do not use two's complement negative numbers.
               Always broken.  (Ability to convert PackBits input was new in
               Netpbm 10.27 (March 2005).
-
-22.04.10 BJH  Release 10.98.01
 
               pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output.
               Always broken (These options were new in Netpbm 10.32 (February
@@ -19,6 +23,9 @@ CHANGE HISTORY
 
               pamdice: Fix incorrect output file name with PAM input.  Always
               broken (pamdice was new in Netpbm 9.25 (March 2002).
+
+              libnetpbm: Stop bogus runtime error check failure in pmfileio.c
+              shifts.
 
 22.03.27 BJH  Release 10.98.00
 

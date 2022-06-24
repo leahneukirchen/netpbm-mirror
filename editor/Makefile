@@ -17,13 +17,12 @@ SUBDIRS = pamflip specialty
 # build.
 
 PORTBINARIES = pamaddnoise pamaltsat pambackground pambrighten pamcomp pamcut \
-	       pamdice pamditherbw pamedge \
-	       pamenlarge \
+	       pamdice pamditherbw pamedge pamenlarge \
 	       pamfunc pamhomography pamhue pamlevels \
 	       pammasksharpen pammixmulti \
-	       pamperspective pamrecolor pamrubber \
-	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
-	       pamwipeout \
+	       pamperspective pamrecolor pamrestack pamrubber \
+	       pamscale pamshuffle pamsistoaglyph pamstretch pamthreshold \
+	       pamundice pamwipeout \
 	       pbmclean pbmmask pbmpscale pbmreduce \
 	       pgmdeshadow pgmenhance \
 	       pgmmedian \

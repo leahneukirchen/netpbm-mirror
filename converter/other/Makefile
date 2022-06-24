@@ -134,14 +134,15 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtoavs pamtodjvurle pamtofits pamtogif \
 		pamtohdiff pamtohtmltbl pamtompfont pamtooctaveimg \
-		pamtopam pamtopdbimg pamtopfm pamtopnm pamtosrf pamtouil \
+		pamtopam pamtopdbimg pamtopfm pamtopnm \
+                pamtoqoi pamtosrf pamtouil \
 		pamtowinicon pamtoxvmini \
 		pbmtopgm pdbimgtopam pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl pnmtorast \
-		pnmtosgi pnmtosir pamtotga pnmtoxwd \
+		pnmtosgi pnmtosir pamtotga pnmtoxwd qoitopam \
 		rasttopnm rlatopam sgitopnm sirtopnm srftopam sunicontopnm \
-		winicontopam xwdtopnm yuy2topam zeisstopnm
+		winicontopam xwdtopnm yuy2topam zeisstopnm \
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm pnmtops

@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamrecolor
-# Also requires: ppmtopgm pgmmake
+# Also requires: pgmmake
 
 tmpdir=${tmpdir:-/tmp}
 base_pgm=${tmpdir}/base.pgm

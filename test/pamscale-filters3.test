@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pamscale pamstretch pamstretch-gen 
-# Also requires: pamvalidate pnmpsnr
+# Also requires: pamfile pamvalidate pnmpsnr
 
 tmpdir=${tmpdir:-/tmp}
 stretch_ppm=${tmpdir}/stretch.ppm
