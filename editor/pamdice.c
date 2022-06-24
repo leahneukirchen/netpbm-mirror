@@ -219,12 +219,14 @@ computeOutputFilenameFormat(int           const format,
 
     const char * filenameSuffix;
 
-    switch(PNM_FORMAT_TYPE(format)) {
+    switch(PAM_FORMAT_TYPE(format)) {
     case PPM_TYPE: filenameSuffix = "ppm"; break;
     case PGM_TYPE: filenameSuffix = "pgm"; break;
     case PBM_TYPE: filenameSuffix = "pbm"; break;
     case PAM_TYPE: filenameSuffix = "pam"; break;
-    default:       filenameSuffix = "";    break;
+    default:
+        pm_error("INTERNAL ERROR: impossible value for libnetpbm image "
+                 "fomat code: %d", format);
     }
     
     pm_asprintf(filenameFormatP, "%%s_%%0%uu_%%0%uu.%s",
