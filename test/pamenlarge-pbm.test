@@ -18,7 +18,8 @@ LC_ALL=C awk 'BEGIN { print "P4";         # header
 # Test 1.
 echo "test 1"
  
-for xs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 # for xs in `seq 23`
+for xs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+  # for xs in `seq 23`
   do
   pamenlarge -xscale=${xs} ${complete256_pbm} | cksum
   done
@@ -26,7 +27,8 @@ for xs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 # for xs i
 # Test 2.
 echo "test 2"
 
-for xs1 in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15  # for xs in `seq 15`
+for xs1 in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+  # for xs1 in `seq 15`
   do
   xs2=$((30-${xs1}))
   pamenlarge -xscale=${xs1} ${complete256_pbm} | \
@@ -52,7 +54,7 @@ for width in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  # for width in `seq 16`
   done
  
   for xscale in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  # for xscale in `seq 16`
-    do echo -n ${xscale} " "
+    do printf "%d  " ${xscale}
     for width in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16  # for width in `seq 16` 
       do pamenlarge -xscale=${xscale} ${test3_pbm}.${width} ; done | cksum
       #

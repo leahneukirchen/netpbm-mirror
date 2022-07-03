@@ -10,40 +10,40 @@ tmpdir=${tmpdir:-/tmp}
 
 echo "Test 1. Should print 1926073387 101484"
 
-rose_ppm=${tmpdir}/rose.ppm
+test_ppm=${tmpdir}/testimg.ppm
 
-cp testimg.ppm ${rose_ppm} &&
-ppmtorgb3 ${rose_ppm}
+cp testimg.ppm ${tmpdir} &&
+ppmtorgb3 ${test_ppm}
 
-rose_red=${tmpdir}/rose.red
-rose_grn=${tmpdir}/rose.grn
-rose_blu=${tmpdir}/rose.blu
+test_red=${tmpdir}/testimg.red
+test_grn=${tmpdir}/testimg.grn
+test_blu=${tmpdir}/testimg.blu
 out_red=${tmpdir}/out.red
 out_grn=${tmpdir}/out.grn
 #out_blu=${tmpdir}/out.blu
 
-pamtogif ${rose_red} | giftopnm > ${out_red} &&
-pamtogif ${rose_grn} | giftopnm > ${out_grn} &&
-pamtogif ${rose_blu} | giftopnm | \
+pamtogif ${test_red} | giftopnm > ${out_red} &&
+pamtogif ${test_grn} | giftopnm > ${out_grn} &&
+pamtogif ${test_blu} | giftopnm | \
   rgb3toppm ${out_red} ${out_grn} - | \
   cksum
 
-rm ${rose_ppm} ${rose_grn} ${rose_blu} ${out_red} ${out_grn}
+rm ${test_ppm} ${test_grn} ${test_blu} ${out_red} ${out_grn}
 
 echo "Test 2. Should produce 1571496937 33838 six times"
 
-rose_gif=${tmpdir}/rose.gif
+test_gif=${tmpdir}/testimg.gif
 
-cat ${rose_red} | cksum
-pamtogif ${rose_red} | giftopnm | cksum
-pamtogif -interlace ${rose_red} | giftopnm | cksum
-pamtogif -noclear ${rose_red} | giftopnm | cksum
-pamtogif -sort ${rose_red} | tee ${rose_gif} | \
+cat ${test_red} | cksum
+pamtogif ${test_red} | giftopnm | cksum
+pamtogif -interlace ${test_red} | giftopnm | cksum
+pamtogif -noclear ${test_red} | giftopnm | cksum
+pamtogif -sort ${test_red} | tee ${test_gif} | \
   giftopnm | cksum
-echo "junk" >> ${rose_gif} && \
-  giftopnm -image=1 -quitearly ${rose_gif} | cksum
+echo "junk" >> ${test_gif} && \
+  giftopnm -image=1 -quitearly ${test_gif} | cksum
 
-rm  ${rose_gif} ${rose_red}
+rm  ${test_gif} ${test_red}
 
 echo "Test 3. Should produce 281226646 481 six times"
 # maze.pbm is too small for -noclear to take effect 
@@ -78,7 +78,7 @@ echo ""
 echo "Test 5. Should produce: N : 0 0 0 0 : 0 , N : 0 0 0 0 : 0"
 echo "(N=238, 239, 240, 241, 255, 256, 257, 4030, 4031, 4097)"
 
-rose_pgm=${tmpdir}/rose.pgm
+test_pgm=${tmpdir}/testimg.pgm
 
 # The following awk scripts produce a PGM file with no repeated
 # sequences.  Obviously this cannot be compressed at all; the codes
@@ -114,14 +114,14 @@ awk -v maxval=${maxval} 'BEGIN \
 
 for size in 238 239 240 241 255 256 257
   do
-  pamcut -height=${size} ${test257_pgm} > ${rose_pgm} &&
-  pamtogif -verbose ${rose_pgm} | giftopnm | pamdepth ${maxval} | \
-    cmp - ${rose_pgm}
-  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
-  pamtogif -nolzw -verbose ${rose_pgm} | giftopnm | pamdepth ${maxval} | \
-    cmp - ${rose_pgm}
-  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
-  rm ${rose_pgm}
+  pamcut -height=${size} ${test257_pgm} > ${test_pgm} &&
+  pamtogif -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  printf "${size} : ${PIPESTATUS[*]} : $? , "
+  pamtogif -nolzw -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  printf "${size} : ${PIPESTATUS[*]} : $?\n"
+  rm ${test_pgm}
   done 
 
 rm ${test257_pgm}
@@ -144,16 +144,16 @@ awk -v maxval=${maxval} 'BEGIN \
 
 for size in 4030 4031 4097
   do
-  pamcut -height ${size} ${test4097_pgm} > ${rose_pgm} &&
-  pamtogif -verbose ${rose_pgm} | giftopnm | pamdepth ${maxval} | \
-    cmp - ${rose_pgm}
+  pamcut -height ${size} ${test4097_pgm} > ${test_pgm} &&
+  pamtogif -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
   # pamdepth ${maxval} is necessary because
   # giftopnm output is maxval 255
-  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
-  pamtogif -nolzw ${rose_pgm} | giftopnm | pamdepth ${maxval} | \
-    cmp - ${rose_pgm}
-  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
-  rm ${rose_pgm}
+  printf "${size} : ${PIPESTATUS[*]} : $? , "
+  pamtogif -nolzw ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  printf "${size} : ${PIPESTATUS[*]} : $?\n"
+  rm ${test_pgm}
   done 
 
 rm ${test4097_pgm}

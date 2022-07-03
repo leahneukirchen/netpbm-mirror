@@ -29,7 +29,7 @@ echo "Test 4."
 for maxval in  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 \
                30 31 32 254 255 256 65534 65535
   do
-  echo -n ${maxval} " "
+  printf "%d  " ${maxval}
   pgmnoise -maxval=${maxval} -randomseed=1 -plain ${maxval} 10 | \
     pamvalidate | pamfile
   done
@@ -78,51 +78,51 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pgmnoise 0 0  > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise 0 1  > ${test_out} || \
-  echo -n "Expected failure 2"
+  printf "Expected failure 2"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise 1 0  > ${test_out} || \
-  echo -n "Expected failure 3"
+  printf "Expected failure 3"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise      > ${test_out} || \
-  echo -n "Expected failure 4"
+  printf "Expected failure 4"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise 1    > ${test_out} || \
-  echo -n "Expected failure 5"
+  printf "Expected failure 5"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise 100 -1 > ${test_out} || \
-  echo -n "Expected failure 6"
+  printf "Expected failure 6"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise -randomseed=-1 100 100  > ${test_out} || \
-  echo -n "Expected failure 7"
+  printf "Expected failure 7"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise -maxval=-1 100 100  > ${test_out} || \
-  echo -n "Expected failure 8"
+  printf "Expected failure 8"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise -maxval=0 100 100  > ${test_out} || \
-  echo -n "Expected failure 9"
+  printf "Expected failure 9"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pgmnoise -maxval=$((256 * 256 * 256 * 256)) 10 10 > ${test_out} || \
-  echo -n "Expected failure 10"
+  printf "Expected failure 10"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}

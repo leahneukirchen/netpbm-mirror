@@ -68,12 +68,12 @@ echo "Error messages should appear below the line." 1>&2
 echo "--------------------------------------------" 1>&2
 
 pnmcrop -borderfile=${border_ppm} ${test_pbm} > ${test_out} || \
-        echo -n "Expected failure 1";
+        printf "Expected failure 1";
         test -s ${test_out}; echo " "$?
         rm ${test_out}
 
 pnmcrop -borderfile=${border_pbm} ${test_ppm} > ${test_out} || \
-        echo -n "Expected failure 2";
+        printf "Expected failure 2";
         test -s ${test_out}; echo " "$?
         rm ${test_out}
 

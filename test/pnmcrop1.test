@@ -78,7 +78,7 @@ for option in "-reportfull -reportsize" \
               "-bg-color=black -closeness=101"
     do
     pnmcrop -reportfull ${option} testgrid.pbm > ${test_out} || \
-        echo -n "Expected failure: " ${option}
+        printf "Expected failure:  %s" "${option}"
         test -s ${test_out}; echo " "$?
         rm ${test_out}
     done

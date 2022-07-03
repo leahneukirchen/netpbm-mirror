@@ -127,80 +127,80 @@ test_out=${tmpdir}/test_out
 # multiple functions
 
 pamarith -add -subtract testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -multiply -divide testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 2"
+  printf "Expected failure 2"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -difference -minimum testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 3"
+  printf "Expected failure 3"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -maximum -mean testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 4"
+  printf "Expected failure 4"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -compare -and testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 5"
+  printf "Expected failure 5"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -compare -equal testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 6"
+  printf "Expected failure 6"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -or -nand testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 7"
+  printf "Expected failure 7"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -nor -xor testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 8"
+  printf "Expected failure 8"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -shiftleft -shiftright testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 9"
+  printf "Expected failure 9"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # -add does not take a value
 
 pamarith -add=1 testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 10"
+  printf "Expected failure 10"
  test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # No function
 
 pamarith -plain testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 11"
+  printf "Expected failure 11"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 12"
+  printf "Expected failure 12"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # Just one input image file
 
 pamarith -add testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 13"
+  printf "Expected failure 13"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # No input image file
 
 pamarith -add > ${test_out} || \
-  echo -n "Expected failure 14"
+  printf "Expected failure 14"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
@@ -208,48 +208,48 @@ pamarith -add > ${test_out} || \
 
 pamchannel -infile testimg.ppm 0 1 | \
   pamarith -add testimg.ppm - > ${test_out} || \
-  echo -n "Expected failure 15"
+  printf "Expected failure 15"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # Input images with different x/y dimensions
 
 pamarith -add testimg.ppm testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 16"
+  printf "Expected failure 16"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamenlarge -xscale=2 testgrid.pbm | \
   pamarith -add testgrid.pbm - > ${test_out} || \
-  echo -n "Expected failure 17"
+  printf "Expected failure 17"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamenlarge -yscale=3 testgrid.pbm | \
   pamarith -add testgrid.pbm - > ${test_out} || \
-  echo -n "Expected failure 18"
+  printf "Expected failure 18"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # Invalid usage of -closeness
 
 pamarith -equal -closeness=100.1 testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 19"
+  printf "Expected failure 19"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -equal -closeness=-10 testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 20"
+  printf "Expected failure 20"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -closeness -equal testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 21"
+  printf "Expected failure 21"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -compare -closeness=10 testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 22"
+  printf "Expected failure 22"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
@@ -267,64 +267,64 @@ pgmmake -maxval=8191 1.0 3 1 > ${input5_pgm}
 # Bit string functions - Maxval must match
 
 pamarith -and ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  echo -n "Expected failure 23"
+  printf "Expected failure 23"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -or ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  echo -n "Expected failure 24"
+  printf "Expected failure 24"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -nand ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  echo -n "Expected failure 25"
+  printf "Expected failure 25"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -nor ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  echo -n "Expected failure 26"
+  printf "Expected failure 26"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -xor ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  echo -n "Expected failure 27"
+  printf "Expected failure 27"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # Bit string functions - Maxval must be 2^n -1
 
 pamarith -and ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  echo -n "Expected failure 28"
+  printf "Expected failure 28"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -or ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  echo -n "Expected failure 29"
+  printf "Expected failure 29"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -nand ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  echo -n "Expected failure 30"
+  printf "Expected failure 30"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -nor ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  echo -n "Expected failure 31"
+  printf "Expected failure 31"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -xor ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  echo -n "Expected failure 32"
+  printf "Expected failure 32"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -shiftleft ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  echo -n "Expected failure 33"
+  printf "Expected failure 33"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -shiftright ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  echo -n "Expected failure 34"
+  printf "Expected failure 34"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
@@ -335,32 +335,32 @@ rm ${input3_pgm} ${input4_pgm} ${input5_pgm}
 # three or more inputs.
 
 pamarith -subtract testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 35"
+  printf "Expected failure 35"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -divide testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 36"
+  printf "Expected failure 36"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -compare testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 37"
+  printf "Expected failure 37"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -difference testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 38"
+  printf "Expected failure 38"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -shiftleft testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 39"
+  printf "Expected failure 39"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -shiftright testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 40"
+  printf "Expected failure 40"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
@@ -368,11 +368,11 @@ pamarith -shiftright testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
 # These two cases should be removed once improvements are made.
 
 pamarith -equal testgrid.pbm testgrid.pbm testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 41"
+  printf "Expected failure 41"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamarith -mean testgrid.pbm  testgrid.pbm testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 42"
+  printf "Expected failure 42"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}

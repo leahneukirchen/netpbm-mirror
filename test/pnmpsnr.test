@@ -36,22 +36,22 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pnmpsnr ${b_pbm} ${w_pbm} ${b_pbm}     > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pnmpsnr ${b_pbm}                       > ${test_out} || \
-  echo -n "Expected failure 2"
+  printf "Expected failure 2"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pnmpsnr ${b_pbm} ${w_pbm} -target1=100 > ${test_out} || \
-  echo -n "Expected failure 3"
+  printf "Expected failure 3"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pnmpsnr                   -machine     > ${test_out} || \
-  echo -n "Expected failure 4"
+  printf "Expected failure 4"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 

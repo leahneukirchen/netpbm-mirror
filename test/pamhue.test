@@ -16,7 +16,7 @@ pamseq -tupletype=RGB 3 1 | pamdepth 255 | pamhue -huechange=60 | \
 
 echo "Test 3"
 # pamhue has no effect on monotone images
-# Should print 0 0 : 0 twice
+# Should print 281226646 481 twice
 
 pamhue -huechange=45  maze.pbm | cmp -s - maze.pbm
   echo ${PIPESTATUS[@]} ":" $?
@@ -25,7 +25,7 @@ pamhue -huechange=180 maze.pbm | cmp -s - maze.pbm
 
 echo "Test 4"
 # spinning the color wheel by multiples of 360 leaves the image unchanged
-# Should print 0 0 : 0 twice
+# Should print 1926073387 101484 twice
 
 pamhue -huechange=0 testimg.ppm   | cmp -s - testimg.ppm
   echo ${PIPESTATUS[@]} ":" $?
@@ -43,6 +43,6 @@ echo "An error message should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pamhue testimg.ppm  > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}

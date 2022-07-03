@@ -123,63 +123,63 @@ echo "-----------------------------------------------------------" 1>&2
 
 # No input file pattern specified
 pamundice -down=5 -across=2 > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # -down=0
 pamundice -down=0 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  echo -n "Expected failure 2"
+  printf "Expected failure 2"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # -across=0
 pamundice -down=5 -across=0 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  echo -n "Expected failure 3"
+  printf "Expected failure 3"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # -down too large
 pamundice -down=6 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  echo -n "Expected failure 4"
+  printf "Expected failure 4"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # -across too large
 pamundice -down=5 -across=3 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  echo -n "Expected failure 5"
+  printf "Expected failure 5"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # precision does not match
 pamundice -down=5 -across=2 ${fname_stem}_"%2d"_"%2a".pbm > ${test_out} || \
-  echo -n "Expected failure 6"
+  printf "Expected failure 6"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # precision set to zero
 pamundice -down=5 -across=2 ${fname_stem}_"%0d"_"%0a".pbm > ${test_out} || \
-  echo -n "Expected failure 7"
+  printf "Expected failure 7"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # no precision
 pamundice -down=5 -across=2 ${fname_stem}_"%d"_"%a".pbm > ${test_out} || \
-  echo -n "Expected failure 8"
+  printf "Expected failure 8"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # -hoverlap too large
 pamundice -down=5 -across=2 -hoverlap=$((${mw}+1)) \
   ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  echo -n "Expected failure 9"
+  printf "Expected failure 9"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # -voverlap too large
 pamundice -down=5 -across=2 -voverlap=$((${mh}+1)) \
   ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  echo -n "Expected failure 10"
+  printf "Expected failure 10"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
@@ -188,14 +188,14 @@ for i in 0 1 2 3 4 5 6 7 8 9
   do
   mktemp -u XXXXXXXXXX.${i} || echo ":::::::::::"${i}":::::::::::"
   done | pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
-  echo -n "Expected failure 11"
+  printf "Expected failure 11"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 # listfile with insufficient lines (insufficient file entries)
 ls ${fname_stem}_*_*.pbm | head -n 9 | \
   pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
-  echo -n "Expected failure 12"
+  printf "Expected failure 12"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 

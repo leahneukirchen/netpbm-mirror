@@ -30,11 +30,11 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pamdepth 0 testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pamdepth 65536 testimg.ppm > ${test_out} || \
-  echo -n "Expected failure 2"
+  printf "Expected failure 2"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
