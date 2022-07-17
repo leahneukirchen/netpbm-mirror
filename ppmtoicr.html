@@ -2,7 +2,7 @@
 <html><head><title>Ppmtoicr User Manual</title></head>
 <body>
 <h1>ppmtoicr</h1>
-Updated: 05 June 2015
+Updated: 17 July 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -20,9 +20,12 @@ ppmtoicr - convert a PPM image into NCSA ICR format
 
 [<b>-display</b> <i>display</i>]
 
-[<b>-rle</b>]
-
 [<i>ppmfile</i>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
 
 <h2 id="description">DESCRIPTION</h2>
 
@@ -58,10 +61,15 @@ command line options:
 <dl compact>
 <dt><b>-windowname</b> <i>name</i>
 
-<dd>Output will be displayed in <i>name</i> (Default is to use
-<i>ppmfile</i> or "untitled" if the input is from Standard
-Input).
+<dd>Output will be displayed in <i>name</i>.
 
+<p><i>name</i> must be printable characters, and not &quot;^&quot;.
+
+<p>Default is to use the input file name if specified on the command line or
+  "untitled" if the input is from Standard Input.  In the former case, any
+  unprintable character or &quot;^&quot; in the file name becomes a
+  &quot;.&quot; in the window name.
+    
 <dt><b>-expand</b> <i>expand</i>
 
 <dd>Output will be expanded on display by factor <i>expand</i> (For
@@ -93,11 +101,10 @@ may achieve the same effect with the following sequence:
 </pre>
 
 <p>To display a GIF file using the protocol in a window titled after the
-input file, zoom the displayed image by a factor of 2, and run-length
-encode the data:
+input file, zoom the displayed image by a factor of 2:
 
 <pre>
-    giftopnm giffile | ppmtoicr -w giffile -r -e 2
+    giftopnm giffile | ppmtoicr -windowname=giffile -expand=2
 </pre>
 
 <h2 id="limitations">LIMITATIONS</h2>
