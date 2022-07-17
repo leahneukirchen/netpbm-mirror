@@ -12,10 +12,141 @@
 
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "ppm.h"
+#include "pm_c_util.h"
+#include "shhopt.h"
+#include "mallocvar.h"
+#include "nstring.h"
 
 #define MAXCOLORCT 256
 #define CLUTCOLORCT 768
+
+/* The following are arbitrary limits.  We could not find an official
+   format specification for this.
+*/
+#define MAXSIZE 32767
+#define MAXDISP 1024
+#define MAXNAMELEN 80
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFilename;
+    const char * windowname;  /* NULL means not specified */
+    unsigned int expand;
+    unsigned int display;
+};
+
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry *option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+    unsigned int windowNameSpec;
+    unsigned int rleSpec;
+    unsigned int expandSpec;
+    unsigned int displaySpec;
+
+    MALLOCARRAY(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+
+    OPTENT3(0,   "windowname",  OPT_STRING, &cmdlineP->windowname,
+            &windowNameSpec, 0);
+    OPTENT3(0,   "expand",      OPT_UINT,   &cmdlineP->expand,
+            &expandSpec,     0);
+    OPTENT3(0,   "display",     OPT_UINT,   &cmdlineP->display,
+            &displaySpec,    0);
+    OPTENT3(0,   "rle",         OPT_FLAG,   NULL,
+            &rleSpec,        0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!expandSpec)
+        cmdlineP->expand = 1;
+
+    if (!displaySpec)
+        cmdlineP->display = 0;
+
+    if (rleSpec)
+        pm_error("The -rle command line option no longer exists.");
+
+    if (cmdlineP->expand == 0)
+        pm_error("-expand value must be positive.");
+
+    if (cmdlineP->display > MAXDISP)
+        pm_error("-display value is too large.  Maximum is %u", MAXDISP);
+
+    if (argc-1 < 1) {
+        cmdlineP->inputFilename = "-";
+    } else
+        cmdlineP->inputFilename = argv[1];
+
+    if (argc-1 > 1)
+        pm_error("Program takes zero or one argument (filename).  You "
+                 "specified %u", argc-1);
+
+    if (windowNameSpec) {
+        if (strlen(cmdlineP->windowname) > MAXNAMELEN)
+            pm_error("-windowname value is too long.  (max %u chars)",
+                      MAXNAMELEN);
+        {
+            unsigned int i;
+            for (i = 0; cmdlineP->windowname[i]; ++i) {
+                if (!isprint (cmdlineP->windowname[i]))
+                    pm_error("-window option contains nonprintable character");
+                if (cmdlineP->windowname[i] =='^') {
+                    /* '^' terminates the window name string in ICR */
+                    pm_error("-windowname option value '%s' contains "
+                             "disallowed '^' character.",
+                             cmdlineP->windowname);
+                }
+            }
+        }
+    } else
+        cmdlineP->windowname = NULL;
+}
+
+
+
+static void
+validateComputableSize(unsigned int const cols,
+                       unsigned int const rows,
+                       unsigned int const expand) {
+/*----------------------------------------------------------------------------
+  We don't have any information on what the limit for these values should be.
+
+  The ICR protocol was used around 1990 when PC main memory was measured in
+  megabytes.
+-----------------------------------------------------------------------------*/
+
+    if (cols > MAXSIZE / expand)
+        pm_error("image width (%f) too large to be processed",
+                 (float) cols * expand);
+    if (rows > MAXSIZE / expand)
+        pm_error("image height (%f) too large to be processed",
+                 (float) rows * expand);
+}
+
 
 
 
@@ -130,69 +261,58 @@ sendOutPicture(pixel **        const pixels,
 
 
 
-int
+static const char *
+windowNameFmFileName(const char * const fileName) {
+
+    /* Use the input file name, with unprintable characters and '^'
+       replaced with '.'.  '^' terminates the window name string in
+       the output file.  Truncate if necessary.
+    */
+    char * windowName;  /* malloced */
+    unsigned int i;
+
+    windowName = malloc(MAXNAMELEN+1);
+    if (!windowName)
+        pm_error("Failed to get %u bytes of memory for window name "
+                 "buffer", MAXNAMELEN+1);
+
+    for (i = 0; i < MAXNAMELEN && fileName[i]; ++i) {
+        const char thisChar = fileName[i];
+
+        if (!isprint(thisChar) || thisChar =='^')
+            windowName[i] = '.';
+        else
+            windowName[i] = thisChar;
+    }
+    windowName[i] = '\0';
+
+    return windowName;
+}
+
+
+            int
 main(int argc, const char ** const argv) {
 
     FILE * ifP;
     int rows, cols;
     int colorCt;
-    int argn;
     pixval maxval;
     colorhist_vector chv;
     char rgb[CLUTCOLORCT];
-    const char * windowName;
-    int display, expand;
-    int winflag;
-    const char* const usage = "[-windowname windowname] [-expand expand] [-display display] [ppmfile]";
-    pixel** pixels;
+    pixel ** pixels;
     colorhash_table cht;
+    struct CmdlineInfo cmdline;
+    const char * windowName;
 
     pm_proginit(&argc, argv);
 
-    argn = 1;
-    windowName = "untitled";
-    winflag = 0;
-    expand = 1;
-    display = 0;
+    parseCommandLine(argc, argv, &cmdline);
 
-    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-    {
-        if ( pm_keymatch(argv[argn],"-windowname",2) && argn + 1 < argc )
-        {
-            ++argn;
-            windowName = argv[argn];
-            winflag = 1;
-        }
-        else if ( pm_keymatch(argv[argn],"-expand",2) && argn + 1 < argc )
-        {
-            ++argn;
-            if ( sscanf( argv[argn], "%d",&expand ) != 1 )
-                pm_usage( usage );
-        }
-        else if ( pm_keymatch(argv[argn],"-display",2) && argn + 1 < argc )
-        {
-            ++argn;
-            if ( sscanf( argv[argn], "%d",&display ) != 1 )
-                pm_usage( usage );
-        }
-        else
-            pm_usage( usage );
-    }
-
-    if ( argn < argc )
-    {
-        ifP = pm_openr( argv[argn] );
-        if ( ! winflag )
-            windowName = argv[argn];
-        ++argn;
-    }
-    else
-        ifP = stdin;
-
-    if ( argn != argc )
-        pm_usage( usage );
+    ifP = pm_openr(cmdline.inputFilename);
 
     pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
+
+    validateComputableSize(cols, rows, cmdline.expand);
 
     pm_close(ifP);
 
@@ -213,17 +333,28 @@ main(int argc, const char ** const argv) {
     /************** Create a new window using ICR protocol *********/
     /* Format is "ESC^W;left;top;width;height;display;windowname"  */
 
-    pm_message("Creating window %s ...", windowName);
+    if (cmdline.windowname)
+        windowName = pm_strdup(cmdline.windowname);
+    else {
+        if (streq(cmdline.inputFilename, "-"))
+            windowName = pm_strdup("untitled");
+        else
+            windowName = windowNameFmFileName(cmdline.inputFilename);
+    }
+    pm_message("Creating window '%s' ...", windowName);
 
     printf("\033^W;%d;%d;%d;%d;%d;%s^",
-           0, 0, cols * expand, rows * expand, display, windowName);
+           0, 0, cols * cmdline.expand, rows * cmdline.expand,
+                 cmdline.display, windowName);
     fflush(stdout);
 
     /****************** Download the colormap.  ********************/
 
     downloadColormap(rgb, windowName);
 
-    sendOutPicture(pixels, rows, cols, cht, expand, windowName);
+    sendOutPicture(pixels, rows, cols, cht, cmdline.expand, windowName);
+
+    pm_strfree(windowName);
 
     return 0;
 }

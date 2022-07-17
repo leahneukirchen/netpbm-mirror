@@ -9,6 +9,14 @@ not yet  BJH  Release 11.00.00
               (No significance to new major number; just ran out of 2-digit
               minor numbers).
 
+              ppmtoicr: Fix bug: all options cause bogus command line parsing
+              errors.  Always broken.  Ppmtoicr was new in 1991.
+
+              ppmtoicr: Fix arithmetic overflows.
+
+              ppmtoicr: make -rle option issue an error message saying it no
+              longer exists (it did, sort of, before 2015).
+
 22.06.24 BJH  Release 10.99.00
 
               Add pamrestack.
