@@ -2,7 +2,7 @@
 <html><head><title>Pbmtextps User Manual</title></head>
 <body>
 <h1>pbmtextps</h1>
-Updated: 04 June 2022
+Updated: 21 July 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -157,10 +157,18 @@ command line options:
 <dt><b>-font=</b><i>fontname</i>
 <dd>
 <p>This specifies the font to use.  <i>fontname</i> is the name of any valid
-postscript font which is installed on the system.
+Postscript font which is installed on the system.
 
 <p>The default is <b>TimesRoman</b>.
 
+<p>Here is a way to get a list of the names of all the available fonts:
+
+<pre>
+<kbd>
+        $ gs -c &apos;(*) {==} 256 string /Font resourceforall&apos;
+</kbd>
+</pre>
+  
 <p><strong>Warning:</strong> if <i>fontname</i> does not name a valid font,
 <b>pbmtextps</b> just uses the default font.  It does not tell you it is doing
 this.
