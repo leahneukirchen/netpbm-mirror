@@ -52,6 +52,9 @@ validateFontName(const char * const name) {
 -----------------------------------------------------------------------------*/
     unsigned int idx;
 
+    if (name[0] == '\0')
+        pm_error("Font name is empty string");
+
     for (idx = 0; name[idx] != '\0'; ++idx) {
         char const c = name[idx];
 
@@ -244,6 +247,8 @@ parseCommandLine(int argc, const char ** argv,
 
     validateFontName(cmdlineP->font);
 
+    if (cmdlineP->res <= 0)
+        pm_error("-resolution must be positive");
     if (cmdlineP->fontsize <= 0)
         pm_error("-fontsize must be positive");
     if (cmdlineP->ascent < 0)
@@ -413,11 +418,8 @@ gsArgList(const char *       const outputFilename,
     const char ** retval;
     unsigned int argCt;  /* Number of arguments in 'retval' so far */
 
-    if (cmdline.res <= 0)
-         pm_error("Resolution (dpi) must be positive.");
-
-    if (cmdline.fontsize <= 0)
-         pm_error("Font size must be positive.");
+    assert(cmdline.res > 0);
+    assert(cmdline.fontsize > 0);
 
     MALLOCARRAY_NOFAIL(retval, maxArgCt+2);
 
