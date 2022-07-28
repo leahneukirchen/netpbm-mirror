@@ -725,10 +725,10 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
             case PAD_AUTO:
                 thisEntryP->cachedRow = pnm_allocpamrow(&inpam[i]);
                 pnm_readpamrow(inpamP, thisEntryP->cachedRow);
-                padPlanesRow(planePadMethod, &inpam[i], thisEntryP->cachedRow,
-                             outpamP);
                 pnm_scaletuplerow(&inpam[i], thisEntryP->cachedRow,
                                   thisEntryP->cachedRow, outpamP->maxval);
+                padPlanesRow(planePadMethod, &inpam[i], thisEntryP->cachedRow,
+                             outpamP);
                 {
                     struct pam cachedRowPam;
                     cachedRowPam = *outpamP;
@@ -821,10 +821,10 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
             } else if (row >= thisEntryP->padtop &&
                        row < thisEntryP->padtop + inpamP->height) {
                 pnm_readpamrow(&inpam[i], thisEntryP->out);
-                padPlanesRow(planePadMethod, &inpam[i], thisEntryP->out,
-                             outpamP);
                 pnm_scaletuplerow(&inpam[i], thisEntryP->out,
                                   thisEntryP->out, outpamP->maxval);
+                padPlanesRow(planePadMethod, &inpam[i], thisEntryP->out,
+                             outpamP);
             } else {
                 /* It's a row of padding, so image i's part of outrow[] is
                    already set appropriately.
@@ -923,9 +923,9 @@ readFirstTBRowAndDetermineBackground(const struct pam *  const inpamP,
 
     pnm_readpamrow(inpamP, out);
 
-    padPlanesRow(planePadMethod, inpamP, out, outpamP);
-
     pnm_scaletuplerow(inpamP, out, out, outpamP->maxval);
+
+    padPlanesRow(planePadMethod, inpamP, out, outpamP);
 
     {
         partialOutpam = *outpamP;
@@ -1017,6 +1017,10 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
 
         for (row = startRow; row < inpamP->height; ++row) {
             pnm_readpamrow(inpamP, out);
+
+            pnm_scaletuplerow(inpamP, out, out, outpamP->maxval);
+
+            padPlanesRow(planePadMethod, inpamP, out, outpamP);
 
             pnm_writepamrow(outpamP, newTuplerow);
         }
