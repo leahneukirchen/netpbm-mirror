@@ -699,7 +699,7 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
     MALLOCARRAY_NOFAIL(imgCtl, fileCt);
 
     for (i = 0; i < fileCt; ++i) {
-        struct LrImgCtl *  const thisEntryP = &imgCtl[i];
+        LrImgCtl *         const thisEntryP = &imgCtl[i];
         const struct pam * const inpamP     = &inpam[i];
 
         switch (justification) {  /* Determine top padding */
@@ -730,7 +730,7 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
                 pnm_scaletuplerow(&inpam[i], thisEntryP->cachedRow,
                                   thisEntryP->cachedRow, outpamP->maxval);
                 thisEntryP->background = pnm_backgroundtuplerow(
-                    thisEntryP->cachedRow, &inpam[i], outpamP);
+                    outpamP, thisEntryP->cachedRow);
                 break;
             case PAD_BLACK:
                 thisEntryP->cachedRow = NULL;
@@ -755,10 +755,10 @@ destroyLrImgCtlArray(LrImgCtl *   const imgCtl,  /* array */
     unsigned int i;
 
     for (i = 0; i < fileCt; ++i) {
-        struct LrImgCtl * const thisEntryP = &imgCtl[i];
+        LrImgCtl * const thisEntryP = &imgCtl[i];
 
-        pnm_freepamtuple(thisEntry->background);
-        pnm_freepamrow(thisEntry->.cachedRow);
+        pnm_freepamtuple(thisEntryP->background);
+        pnm_freepamrow(thisEntryP->cachedRow);
     }
 
     free(imgCtl);
@@ -787,8 +787,8 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
         unsigned int i;
 
         for (i = 0; i < fileCt; ++i) {
-            LrImgCtl *   const thisEntryP = &imgCtl[i];
-            struct pam * const inpamP     = &inpam[i];
+            LrImgCtl *   const thisEntryP   = &imgCtl[i];
+            const struct pam * const inpamP = &inpam[i];
 
             if ((row == 0 && thisEntryP->padtop > 0) ||
                 row == thisEntryP->padtop + inpamP->height) {
@@ -828,6 +828,8 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
         */
         pnm_writepamrow(outpamP, outrow);
     }
+    destroyLrImgCtlArray(imgCtl, fileCt);
+
     pnm_freepamrow(outrow);
 }
 
@@ -920,6 +922,8 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
     }
 
     for (i = 0; i < fileCt; ++i, backgroundPrev = background) {
+        const struct pam * const inpamP = &inpam[i];
+
         unsigned int row;
         unsigned int startRow;
         bool backChanged;
@@ -934,7 +938,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
             out = &newTuplerow[0];
         } else {
             unsigned int const padLeft =
-                leftPadAmount(outpamP, &inpam[i], justification);
+                leftPadAmount(outpamP, inpamP, justification);
 
             if (padColorMethod == PAD_AUTO) {
                 /* Determine background color */
@@ -942,13 +946,13 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
                 startRow = 1;
                 out = &newTuplerow[padLeft];
 
-                pnm_readpamrow(&inpam[i], out);
+                pnm_readpamrow(inpamP, out);
 
-                padPlanesRow(planePadMethod, &inpam[i], out, outpamP);
+                padPlanesRow(planePadMethod, inpamP, out, outpamP);
 
-                pnm_scaletuplerow(&inpam[i], out, out, outpamP->maxval);
+                pnm_scaletuplerow(inpamP, out, out, outpamP->maxval);
 
-                background = pnm_backgroundtuplerow(out, &inpam[i], outpamP);
+                background = pnm_backgroundtuplerow(outpamP, out);
 
                 backChanged =
                     i == 0 ||
@@ -970,7 +974,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
             pnm_writepamrow(outpamP, newTuplerow);
 
         for (row = startRow; row < inpamP->height; ++row) {
-            pnm_readpamrow(&inpam[i], out);
+            pnm_readpamrow(inpamP, out);
 
             pnm_writepamrow(outpamP, newTuplerow);
         }
