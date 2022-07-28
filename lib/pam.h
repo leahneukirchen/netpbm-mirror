@@ -305,6 +305,9 @@ pnm_getopacity(const struct pam * const pamP,
 void
 pnm_createBlackTuple(const struct pam * const pamP, tuple * const blackTupleP);
 
+void
+pnm_createWhiteTuple(const struct pam * const pamP, tuple * const whiteTupleP);
+
 tuple
 pnm_allocpamtuple(const struct pam * const pamP);
 
@@ -589,6 +592,10 @@ pnm_YCbCr_to_rgbtuple(const struct pam * const pamP,
 tuple
 pnm_backgroundtuple(struct pam *  const pamP,
                     tuple      ** const tuples);
+
+tuple
+pnm_backgroundtuplerow(const struct pam * const pamP,
+                       tuple      *       const tuplerow);
 
 /*----------------------------------------------------------------------------
    These are meant for passing to pm_system() as Standard Input feeder

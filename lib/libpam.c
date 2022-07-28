@@ -216,6 +216,24 @@ pnm_createBlackTuple(const struct pam * const pamP,
 
 
 
+void
+pnm_createWhiteTuple(const struct pam * const pamP,
+                     tuple *            const whiteTupleP) {
+/*----------------------------------------------------------------------------
+   Create a "white" tuple.  By that we mean a tuple all of whose elements are
+   the maxval.  If it's an RGB, grayscale, or b&w pixel, that means it's
+   white.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+
+    *whiteTupleP = pnm_allocpamtuple(pamP);
+
+    for (i = 0; i < pamP->depth; ++i)
+        (*whiteTupleP)[i] = pamP->maxval;
+}
+
+
+
 static tuple *
 allocPamRow(const struct pam * const pamP) {
 /*----------------------------------------------------------------------------
@@ -1420,6 +1438,60 @@ pnm_backgroundtuple(struct pam *  const pamP,
 
 
 
+tuple
+pnm_backgroundtuplerow(const struct pam * const pamP,
+                       tuple            * const tuplerow) {
+/*-----------------------------------------------------------------------------
+  Guess a good background color for an image that contains row 'tuplerow'
+  (probably top or bottom edge), described by *pamP.
+
+  This function was copied from libpnm3.c's pnm_backgroundxelrow() and
+  modified to use tuples instead of xels.
+-----------------------------------------------------------------------------*/
+    tuple bgtuple, l, r;
+
+    bgtuple = pnm_allocpamtuple(pamP);
+
+    l = tuplerow[0];
+    r = tuplerow[pamP->width-1];
+
+    if (pnm_tupleequal(pamP, l, r)) {
+        /* Both corners are same color, so that's the background color,
+           without any extra computation.
+        */
+        pnm_assigntuple(pamP, bgtuple, l);
+    } else {
+        /* Corners are different */
+
+        if (pamP->depth == 1 && pamP->maxval == 1) {
+            /* It's black and white, with one corner black, the other white.
+               We consider whichever color is most prevalent in the row the
+               background color.
+            */
+            unsigned int col;
+            unsigned int blackCt;
+
+            for (col = 0, blackCt = 0; col < pamP->width; ++col) {
+                if (tuplerow[col] == 0)
+                    ++blackCt;
+            }
+            if (blackCt > pamP->width / 2)
+                bgtuple[0] = 0;
+            else
+                bgtuple[0] = pamP->maxval;
+        } else {
+            /* Use the cartesian mean of the two corner colors */
+            unsigned int plane;
+
+            for (plane = 0; plane < pamP->depth; ++plane)
+                bgtuple[plane] = (l[plane] + r[plane])/2;
+        }
+    }
+    return bgtuple;
+}
+
+
+
 /*=============================================================================
    pm_system() Standard Input feeder and Standard Output accepter functions.
 =============================================================================*/
@@ -1459,3 +1531,6 @@ pm_accept_to_pamtuples(int    const pipeToSuckFd,
 
     pm_close(inpamP->file);
 }
+
+
+
