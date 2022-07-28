@@ -801,8 +801,10 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                    image 'i', so set its part of outrow[] to padding.
                 */
                 unsigned int col;
-                for (col = 0; col < inpamP->width; ++col)
-                    thisEntryP->out[col] = thisEntryP->background;
+                for (col = 0; col < inpamP->width; ++col) {
+                    pnm_assigntuple(outpamP, thisEntryP->out[col],
+                                    thisEntryP->background);
+                }
             }
             if (row == thisEntryP->padtop && thisEntryP->cachedRow) {
                 /* We're at the top row of file 'i', and that row
@@ -810,9 +812,10 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                    background.  Copy it to image i's part of outrow[].
                 */
                 unsigned int col;
-                for (col = 0; col < inpamP->width; ++col)
-                    thisEntryP->out[col] = thisEntryP->cachedRow[col];
-
+                for (col = 0; col < inpamP->width; ++col) {
+                    pnm_assigntuple(outpamP, thisEntryP->out[col],
+                                    thisEntryP->cachedRow[col]);
+                }
                 free(thisEntryP->cachedRow);
                 thisEntryP->cachedRow = NULL;
             } else if (row >= thisEntryP->padtop &&
