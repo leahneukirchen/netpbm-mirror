@@ -209,7 +209,7 @@ typedef struct {
 /* OPTENT3 is the same as OPTENTRY except that it also sets the "specified"
    element of the table entry (so it assumes OPTION_DEF is a table of optEntry
    instead of optStruct).  This is a pointer to a variable that the parser
-   will set to and indication of whether the option appears in the command
+   will set to an indication of whether the option appears in the command
    line.  1 for yes; 0 for no.
 
    HISTORICAL NOTE: Until 2019, this was the number of times the option was
@@ -224,8 +224,8 @@ typedef struct {
        const char * alpha_filename
        unsigned int alpha_spec;
        MALLOCARRAY_NOFAIL(option_def, 100);
-       OPTENT3('h', "verbose",  OPT_FLAG,   &verbose_flag    NULL);
-       OPTENT3(0,   "alphaout", OPT_STRING, &alpha_filename, &alpha_spec);
+       OPTENT3('h', "verbose",  OPT_FLAG,   &verbose_flag,   NULL,        0);
+       OPTENT3(0,   "alphaout", OPT_STRING, &alpha_filename, &alpha_spec, 0);
 */
 
 #define OPTENT3(shortvalue,longvalue,typevalue,outputvalue,specifiedvalue, \
