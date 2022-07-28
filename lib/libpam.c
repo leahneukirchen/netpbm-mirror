@@ -1448,43 +1448,49 @@ pnm_backgroundtuplerow(const struct pam * const pamP,
   This function was copied from libpnm3.c's pnm_backgroundxelrow() and
   modified to use tuples instead of xels.
 -----------------------------------------------------------------------------*/
-    tuple bgtuple, l, r;
+    tuple bgtuple;
 
     bgtuple = pnm_allocpamtuple(pamP);
 
-    l = tuplerow[0];
-    r = tuplerow[pamP->width-1];
+    assert (pamP->width > 0);
 
-    if (pnm_tupleequal(pamP, l, r)) {
-        /* Both corners are same color, so that's the background color,
-           without any extra computation.
-        */
-        pnm_assigntuple(pamP, bgtuple, l);
-    } else {
-        /* Corners are different */
+    if (pamP->width == 1)
+        pnm_assigntuple(pamP, bgtuple, tuplerow[0]);
+    else {
+        tuple const l = tuplerow[0];
+        tuple const r = tuplerow[pamP->width-1];
 
-        if (pamP->depth == 1 && pamP->maxval == 1) {
-            /* It's black and white, with one corner black, the other white.
-               We consider whichever color is most prevalent in the row the
-               background color.
+        if (pnm_tupleequal(pamP, l, r)) {
+            /* Both corners are same color, so that's the background color,
+               without any extra computation.
             */
-            unsigned int col;
-            unsigned int blackCt;
-
-            for (col = 0, blackCt = 0; col < pamP->width; ++col) {
-                if (tuplerow[col] == 0)
-                    ++blackCt;
-            }
-            if (blackCt > pamP->width / 2)
-                bgtuple[0] = 0;
-            else
-                bgtuple[0] = pamP->maxval;
+            pnm_assigntuple(pamP, bgtuple, l);
         } else {
-            /* Use the cartesian mean of the two corner colors */
-            unsigned int plane;
+            /* Corners are different */
 
-            for (plane = 0; plane < pamP->depth; ++plane)
-                bgtuple[plane] = (l[plane] + r[plane])/2;
+            if (pamP->depth == 1 && pamP->maxval == 1) {
+                /* It's black and white, with one corner black, the other
+                   white.  We consider whichever color is most prevalent in
+                   the row the background color.
+                */
+                unsigned int col;
+                unsigned int blackCt;
+
+                for (col = 0, blackCt = 0; col < pamP->width; ++col) {
+                    if (tuplerow[col] == 0)
+                        ++blackCt;
+                }
+                if (blackCt > pamP->width / 2)
+                    bgtuple[0] = 0;
+                else
+                    bgtuple[0] = pamP->maxval;
+            } else {
+                /* Use the cartesian mean of the two corner colors */
+                unsigned int plane;
+
+                for (plane = 0; plane < pamP->depth; ++plane)
+                    bgtuple[plane] = (l[plane] + r[plane])/2;
+            }
         }
     }
     return bgtuple;
