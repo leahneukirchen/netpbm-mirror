@@ -724,13 +724,18 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
             switch (padColorMethod){
             case PAD_AUTO:
                 thisEntryP->cachedRow = pnm_allocpamrow(&inpam[i]);
-                pnm_readpamrow(&inpam[i], thisEntryP->cachedRow);
+                pnm_readpamrow(inpamP, thisEntryP->cachedRow);
                 padPlanesRow(planePadMethod, &inpam[i], thisEntryP->cachedRow,
                              outpamP);
                 pnm_scaletuplerow(&inpam[i], thisEntryP->cachedRow,
                                   thisEntryP->cachedRow, outpamP->maxval);
-                thisEntryP->background = pnm_backgroundtuplerow(
-                    outpamP, thisEntryP->cachedRow);
+                {
+                    struct pam cachedRowPam;
+                    cachedRowPam = *outpamP;
+                    cachedRowPam.width = inpamP->width;
+                    thisEntryP->background = pnm_backgroundtuplerow(
+                        &cachedRowPam, thisEntryP->cachedRow);
+                }
                 break;
             case PAD_BLACK:
                 thisEntryP->cachedRow = NULL;
@@ -894,6 +899,42 @@ setHorizPadding(tuple *            const newTuplerow,
 
 
 static void
+readFirstTBRowAndDetermineBackground(const struct pam *  const inpamP,
+                                     const struct pam *  const outpamP,
+                                     tuple *             const out,
+                                     enum PlanePadMethod const planePadMethod,
+                                     tuple *             const backgroundP) {
+/*----------------------------------------------------------------------------
+   Read the first row of an input image into 'out', adjusting it to conform
+   to the output depth and maxval described by *outpamP.
+
+   The image is positioned to the first row at entry.
+
+   From this row, determine the background color for the input image and
+   return it as *backgroundP (a newly malloced tuple).
+-----------------------------------------------------------------------------*/
+    struct pam partialOutpam;
+        /* Descriptor for the input image with depth and maxval adjusted to
+           that of the output image.
+        */
+
+    pnm_readpamrow(inpamP, out);
+
+    padPlanesRow(planePadMethod, inpamP, out, outpamP);
+
+    pnm_scaletuplerow(inpamP, out, out, outpamP->maxval);
+
+    {
+        partialOutpam = *outpamP;
+        partialOutpam.width = inpamP->width;
+
+        *backgroundP = pnm_backgroundtuplerow(&partialOutpam, out);
+    }
+}
+
+
+
+static void
 concatenateTopBottomGen(const struct pam *  const outpamP,
                         const struct pam *  const inpam,  /* array */
                         unsigned int        const fileCt,
@@ -911,7 +952,10 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
     tuple backgroundPrev;
 
     switch (padColorMethod) {
-    case PAD_AUTO: /* do nothing now, determine at start of each image */
+    case PAD_AUTO:
+        /* Backgournd is different for each input image */
+        backgroundPrev = pnm_allocpamtuple(outpamP);
+            /* Dummy value; just need something to free */
         break;
     case PAD_BLACK:
         pnm_createBlackTuple(outpamP, &background);
@@ -921,7 +965,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
         break;
     }
 
-    for (i = 0; i < fileCt; ++i, backgroundPrev = background) {
+    for (i = 0; i < fileCt; ++i) {
         const struct pam * const inpamP = &inpam[i];
 
         unsigned int row;
@@ -941,22 +985,17 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
                 leftPadAmount(outpamP, inpamP, justification);
 
             if (padColorMethod == PAD_AUTO) {
-                /* Determine background color */
-
-                startRow = 1;
                 out = &newTuplerow[padLeft];
-
-                pnm_readpamrow(inpamP, out);
-
-                padPlanesRow(planePadMethod, inpamP, out, outpamP);
-
-                pnm_scaletuplerow(inpamP, out, out, outpamP->maxval);
-
-                background = pnm_backgroundtuplerow(outpamP, out);
+                readFirstTBRowAndDetermineBackground(
+                    inpamP, outpamP, out, planePadMethod, &background);
 
                 backChanged =
                     i == 0 ||
                     pnm_tupleequal(outpamP, background, backgroundPrev);
+                pnm_freepamtuple(backgroundPrev);
+                backgroundPrev = background;
+
+                startRow = 1;
             } else {
                 /* Background color is constant: black or white */
                 startRow = 0;
@@ -979,6 +1018,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
             pnm_writepamrow(outpamP, newTuplerow);
         }
     }
+    pnm_freepamtuple(background);
     pnm_freepamrow(newTuplerow);
 }
 
@@ -1001,7 +1041,7 @@ main(int           argc,
 
     for (i = 0; i < cmdline.fileCt; ++i) {
         FILE * const ifP = pm_openr(cmdline.inputFileName[i]);
-        pnm_readpaminit(ifP, &inpam[i], PAM_STRUCT_SIZE(opacity_plane));
+        pnm_readpaminit(ifP, &inpam[i], PAM_STRUCT_SIZE(tuple_type));
     }
 
     outpam.file = stdout;
