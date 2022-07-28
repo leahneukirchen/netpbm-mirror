@@ -16,7 +16,8 @@ SUBDIRS = pamflip specialty
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamaddnoise pamaltsat pambackground pambrighten pamcomp pamcut \
+PORTBINARIES = pamaddnoise pamaltsat pambackground pambrighten \
+	       pamcat pamcomp pamcut \
 	       pamdice pamditherbw pamedge pamenlarge \
 	       pamfunc pamhomography pamhue pamlevels \
 	       pammasksharpen pammixmulti \

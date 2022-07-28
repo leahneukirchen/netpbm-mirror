@@ -9,6 +9,8 @@ not yet  BJH  Release 11.00.00
               (No significance to new major number; just ran out of 2-digit
               minor numbers).
 
+              Add pamcat.
+
               pbmtextps: improve error messages.
 
               ppmtoicr: Fix bug: all options cause bogus command line parsing
