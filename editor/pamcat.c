@@ -960,7 +960,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
     switch (padColorMethod) {
     case PAD_AUTO:
         /* Backgournd is different for each input image */
-        backgroundPrev = pnm_allocpamtuple(outpamP);
+        background = pnm_allocpamtuple(outpamP);
             /* Dummy value; just need something to free */
         break;
     case PAD_BLACK:
@@ -992,6 +992,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
 
             if (padColorMethod == PAD_AUTO) {
                 out = &newTuplerow[padLeft];
+                backgroundPrev = background;
                 readFirstTBRowAndDetermineBackground(
                     inpamP, outpamP, out, planePadMethod, &background);
 
@@ -999,7 +1000,6 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
                     i == 0 ||
                     pnm_tupleequal(outpamP, background, backgroundPrev);
                 pnm_freepamtuple(backgroundPrev);
-                backgroundPrev = background;
 
                 startRow = 1;
             } else {
