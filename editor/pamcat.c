@@ -371,87 +371,89 @@ typedef struct {
         /* Background color.  0x00 means white; 0xff means black */
     unsigned int padtop;
         /* Top padding amount */
-} ImgInfoPbm;
+} LrImgCtlPbm;
 
 
 
 static void
-getPbmImageInfo(const struct pam *  const inpam,  /* array */
-                unsigned int        const fileCt,
-                unsigned int        const newRows,
-                enum Justification  const justification,
-                enum PadColorMethod const padColorMethod,
-                ImgInfoPbm **       const imgInfoP) {
+createLrImgCtlPbm(const struct pam *  const inpam,  /* array */
+                  unsigned int        const fileCt,
+                  unsigned int        const outHeight,
+                  enum Justification  const justification,
+                  enum PadColorMethod const padColorMethod,
+                  LrImgCtlPbm **      const imgCtlP) {
 /*----------------------------------------------------------------------------
    Read the first row of each image in inpam[] and return that and additional
-   information about images as *imgInfoP.
+   information about images as *imgCtlP.
 -----------------------------------------------------------------------------*/
-    ImgInfoPbm * imgInfo;  /* array, size 'fileCt' */
+    LrImgCtlPbm * imgCtl;  /* array, size 'fileCt' */
     unsigned int i;
 
-    MALLOCARRAY_NOFAIL(imgInfo, fileCt);
+    MALLOCARRAY_NOFAIL(imgCtl, fileCt);
 
     for (i = 0; i < fileCt; ++i) {
+        LrImgCtlPbm * const imgCtlP = &imgCtl[i];
+
         switch (justification) {
         case JUST_MIN:
-            imgInfo[i].padtop = 0;
+            imgCtlP->padtop = 0;
             break;
         case JUST_MAX:
-            imgInfo[i].padtop = newRows - inpam[i].height;
+            imgCtlP->padtop = outHeight - inpam[i].height;
             break;
         case JUST_CENTER:
-            imgInfo[i].padtop = (newRows - inpam[i].width) / 2;
+            imgCtlP->padtop = (outHeight - inpam[i].height) / 2;
             break;
         }
 
-        imgInfo[i].offset =
-            (i == 0) ? 0 : imgInfo[i-1].offset + inpam[i-1].width;
+        imgCtlP->offset =
+            (i == 0) ? 0 : imgCtl[i-1].offset + inpam[i-1].width;
 
-        if (inpam[i].height == newRows)  /* no padding */
-            imgInfo[i].proberow = NULL;
+        if (inpam[i].height == outHeight)  /* no padding */
+            imgCtlP->proberow = NULL;
         else {                   /* determine pad color for image i */
             switch (padColorMethod) {
             case PAD_AUTO: {
                 bit bgBit;
-                imgInfo[i].proberow =
+                imgCtlP->proberow =
                     pbm_allocrow_packed((unsigned int)inpam[i].width + 7);
                 pbm_readpbmrow_bitoffset(
-                    inpam[i].file, imgInfo[i].proberow,
-                    inpam[i].width, inpam[i].format, imgInfo[i].offset % 8);
+                    inpam[i].file, imgCtlP->proberow,
+                    inpam[i].width, inpam[i].format, imgCtlP->offset % 8);
 
                 bgBit = pbm_backgroundbitrow(
-                    imgInfo[i].proberow, inpam[i].width,
-                    imgInfo[i].offset % 8);
+                    imgCtlP->proberow, inpam[i].width,
+                    imgCtlP->offset % 8);
 
-                imgInfo[i].background = bgBit == PBM_BLACK ? 0xff : 0x00;
+                imgCtlP->background = bgBit == PBM_BLACK ? 0xff : 0x00;
             } break;
             case PAD_BLACK:
-                imgInfo[i].proberow   = NULL;
-                imgInfo[i].background = 0xff;
+                imgCtlP->proberow   = NULL;
+                imgCtlP->background = 0xff;
                 break;
             case PAD_WHITE:
-                imgInfo[i].proberow   = NULL;
-                imgInfo[i].background = 0x00;
+                imgCtlP->proberow   = NULL;
+                imgCtlP->background = 0x00;
                 break;
             }
         }
     }
-    *imgInfoP = imgInfo;
+    *imgCtlP = imgCtl;
 }
 
 
 
 static void
-destroyPbmImgInfo(ImgInfoPbm *  const imgInfo,
-                  unsigned int  const fileCt) {
+destroyPbmImgCtl(LrImgCtlPbm * const imgCtl,  /* array */
+                 unsigned int  const fileCt) {
 
     unsigned int i;
 
     for (i = 0; i < fileCt; ++i) {
-        if (imgInfo[i].proberow)
-            free(imgInfo[i].proberow);
+        if (imgCtl[i].proberow)
+            free(imgCtl[i].proberow);
     }
-    free(imgInfo);
+    free(imgCtl);
 }
 
 
@@ -465,17 +467,17 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
 
     unsigned char * const outrow = pbm_allocrow_packed(outpamP->width);
         /* We use just one outrow.  All padding and image data (with the
-           exception of following imgInfo.proberow) goes directly into this
+           exception of following imgCtl.proberow) goes directly into this
            packed PBM row.
         */
 
-    ImgInfoPbm * imgInfo;
+    LrImgCtlPbm * imgCtl;
         /* malloc'ed array, one element per image.  Shadows inpam[] */
     unsigned int row;
 
-    getPbmImageInfo(inpam, fileCt, outpamP->height,
-                    justification, padColorMethod,
-                    &imgInfo);
+    createLrImgCtlPbm(inpam, fileCt, outpamP->height,
+                      justification, padColorMethod,
+                      &imgCtl);
 
     outrow[pbm_packed_bytes(outpamP->width)-1] = 0x00;
 
@@ -483,29 +485,34 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
         unsigned int i;
 
         for (i = 0; i < fileCt; ++i) {
+            const LrImgCtlPbm * const imgCtlP = &imgCtl[i];
 
-            if ((row == 0 && imgInfo[i].padtop > 0) ||
-                row == imgInfo[i].padtop + inpam[i].height) {
+            pm_message("BRYAN: row=%u, i=%u, padtop=%u", row, i, imgCtlP->padtop);
+            if ((row == 0 && imgCtlP->padtop > 0) ||
+                row == imgCtlP->padtop + inpam[i].height) {
 
                 /* This row begins a run of padding, either above or below
                    file 'i', so set 'outrow' to padding.
                 */
-                padFillBitrow(outrow, imgInfo[i].background, inpam[i].width,
-                              imgInfo[i].offset);
+                padFillBitrow(outrow, imgCtlP->background, inpam[i].width,
+                              imgCtlP->offset);
             }
 
-            if (row == imgInfo[i].padtop && imgInfo[i].proberow != NULL) {
+            if (row == imgCtlP->padtop && imgCtlP->proberow != NULL) {
                 /* Top row has been read to proberow[] to determine
                    background.  Copy it to outrow[].
                 */
-                copyBitrow(imgInfo[i].proberow, outrow,
-                           inpam[i].width, imgInfo[i].offset);
-            } else if (row >= imgInfo[i].padtop &&
-                       row < imgInfo[i].padtop + inpam[i].height) {
+                pm_message("BRYAN: copying proberow");
+                copyBitrow(imgCtlP->proberow, outrow,
+                           inpam[i].width, imgCtlP->offset);
+            } else if (row >= imgCtlP->padtop &&
+                       row < imgCtlP->padtop + inpam[i].height) {
+                pm_message("BRYAN: copying normally");
                 pbm_readpbmrow_bitoffset(
                     inpam[i].file, outrow, inpam[i].width, inpam[i].format,
-                    imgInfo[i].offset);
+                    imgCtlP->offset);
             } else {
+                pm_message("Leaving padding");
                 /* It's a row of padding, so outrow[] is already set
                    appropriately.
                 */
@@ -514,7 +521,7 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
         pbm_writepbmrow_packed(outpamP->file, outrow, outpamP->width, 0);
     }
 
-    destroyPbmImgInfo(imgInfo, fileCt);
+    destroyPbmImgCtl(imgCtl, fileCt);
 
     pbm_freerow_packed(outrow);
 }
