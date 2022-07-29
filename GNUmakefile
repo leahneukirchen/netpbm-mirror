@@ -24,6 +24,18 @@
 #   The default target is either "merge" or "nonmerge", as determined by
 #   the DEFAULT_TARGET variable set by config.mk.
 
+# Debugging techniques:
+#
+#   To build so you can easily debug with a debugger such as Gdb:
+#
+#     make CFLAGS="-g -O0"
+#
+#   To debug libnetpbm, link it statically into the using program:
+#
+#     make NETPBMLIBTYPE=unixstatic pamcut
+#
+#     (Then 'ldd ./pamcut' to make sure it worked)
+#
 # About the "merge" target: Normally the Makefiles build separate
 # executables for each program.  However, on some systems (especially
 # those without shared libraries) this can mean a lot of space.  In
