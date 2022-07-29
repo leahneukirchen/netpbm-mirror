@@ -487,7 +487,6 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
         for (i = 0; i < fileCt; ++i) {
             const LrImgCtlPbm * const imgCtlP = &imgCtl[i];
 
-            pm_message("BRYAN: row=%u, i=%u, padtop=%u", row, i, imgCtlP->padtop);
             if ((row == 0 && imgCtlP->padtop > 0) ||
                 row == imgCtlP->padtop + inpam[i].height) {
 
@@ -502,17 +501,14 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
                 /* Top row has been read to proberow[] to determine
                    background.  Copy it to outrow[].
                 */
-                pm_message("BRYAN: copying proberow");
                 copyBitrow(imgCtlP->proberow, outrow,
                            inpam[i].width, imgCtlP->offset);
             } else if (row >= imgCtlP->padtop &&
                        row < imgCtlP->padtop + inpam[i].height) {
-                pm_message("BRYAN: copying normally");
                 pbm_readpbmrow_bitoffset(
                     inpam[i].file, outrow, inpam[i].width, inpam[i].format,
                     imgCtlP->offset);
             } else {
-                pm_message("Leaving padding");
                 /* It's a row of padding, so outrow[] is already set
                    appropriately.
                 */
