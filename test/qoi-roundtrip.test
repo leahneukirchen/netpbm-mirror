@@ -1,0 +1,254 @@
+#! /bin/bash
+# This script tests: qoitopnm pamtoqoi
+# Also requires: pamdepth pamfile pamseq pamstack pamtopnm pbmmake
+# Also requires: pgmnoise ppmpat ppmtopgm
+
+# Ensure that sed operates in original narrow-character mode
+
+LANG=C
+LC_ALL=C
+export LANG LC_ALL
+
+tmpdir=${tmpdir:-/tmp}
+
+maze_qoi=${tmpdir}/maze.qoi
+maze_bw_alpha=${tmpdir}/maze_bw_alpha.pam
+maze_rgb=${tmpdir}/maze_rgb.pam
+maze_rgb_alpha=${tmpdir}/maze_rgb_alpha.pam
+
+echo "Test 1.  Should print 1.N 0 0"
+
+pbmmake -g $(pamfile -size maze.pbm) |\
+  pamstack -tupletype="BLACKANDWHITE_ALPHA" maze.pbm - > ${maze_bw_alpha}
+
+pbmmake -g $(pamfile -size maze.pbm) |\
+  pamstack -tupletype="RGB" maze.pbm maze.pbm maze.pbm |\
+  pamdepth 255 > ${maze_rgb}
+printf "1.0 $? "
+
+pbmmake -g $(pamfile -size maze.pbm) |\
+  pamstack -tupletype="RGB_ALPHA" maze.pbm maze.pbm maze.pbm - |\
+  pamdepth 255 > ${maze_rgb_alpha}
+echo $?
+
+# PBM, PBM + alpha
+
+pamtoqoi maze.pbm | tee ${maze_qoi} | qoitopam | cmp -s - ${maze_rgb}
+printf "1.1 $? "
+test -s ${maze_qoi}
+echo $?
+
+pamdepth 8 maze.pbm | pamtoqoi | qoitopam | cmp -s - ${maze_rgb}
+printf "1.2 $? "
+test -s ${maze_rgb}
+echo $?
+
+pamtoqoi ${maze_bw_alpha} | qoitopam | cmp -s - ${maze_rgb_alpha}
+printf "1.3 $? "
+test -s ${maze_bw_alpha}
+echo $?
+
+pamdepth 2 ${maze_bw_alpha} | pamstack -tupletype="GRAYSCALE_ALPHA" |\
+  pamtoqoi | qoitopam | cmp -s - ${maze_rgb_alpha}
+printf "1.4 $? "
+test -s ${maze_rgb_alpha}
+echo $?
+
+rm ${maze_rgb} ${maze_rgb_alpha} ${maze_bw_alpha}
+
+echo "Test 2.  Should print 2.N 0 0"
+
+# ---- PGM, PGM + alpha
+
+noise1_pgm=${tmpdir}/noise1.pgm
+noise2_pgm=${tmpdir}/noise2.pgm
+test_gray_alpha=${tmpdir}/test_gray_alpha.pam
+res_gray_alpha=${tmpdir}/res_gray_alpha.pam
+
+pgmnoise --randomseed=0 20 20 > ${noise1_pgm}
+pgmnoise --randomseed=1 20 20 | tee ${noise2_pgm} |\
+  pamstack -tupletype="GRAYSCALE_ALPHA" ${noise1_pgm} - \
+  > ${test_gray_alpha}
+printf "2.0 $? "
+
+pamstack -tupletype="RGB_ALPHA" \
+  ${noise1_pgm} ${noise1_pgm} ${noise1_pgm} ${noise2_pgm} > ${res_gray_alpha}
+echo $?
+
+rm ${noise2_pgm}
+
+pamtoqoi ${noise1_pgm} | qoitopam | pamtopnm | ppmtopgm |\
+  cmp -s - ${noise1_pgm}
+printf "2.1 $? "
+test -s ${noise1_pgm}
+echo $?
+
+
+pamdepth 65535 ${noise1_pgm} | pamtoqoi | qoitopam | pamtopnm | ppmtopgm |\
+  cmp -s - ${noise1_pgm}
+printf "2.2 $? "
+test -s ${noise1_pgm}
+echo $?
+
+pamtoqoi ${test_gray_alpha} | qoitopam | cmp -s - ${res_gray_alpha}
+printf "2.3 $? "
+test -s ${test_gray_alpha}
+echo $?
+
+pamdepth 4095 ${test_gray_alpha} | pamtoqoi | qoitopam |\
+  cmp -s - ${res_gray_alpha}
+printf "2.4 $? "
+test -s ${res_gray_alpha}
+echo $?
+
+rm ${test_gray_alpha} ${res_gray_alpha}
+
+echo "Test 3.  Should print 3.N 0 0"
+
+# rgb rgb-alpha
+
+tartan_ppm=${tmpdir}/tartan.ppm
+tartan_qoi=${tmpdir}/tartan.qoi
+test_rgb_alpha=${tmpdir}/test_rgb_alpha.pam
+
+ppmpat -tartan 20 20 | tee ${tartan_ppm} |\
+  pamstack -tupletype="RGB_ALPHA" - ${noise1_pgm} > ${test_rgb_alpha}
+printf "3.0 $? "
+test -s ${tartan_ppm}
+echo $?
+
+pamtoqoi ${tartan_ppm} | tee ${tartan_qoi} | qoitopam | pamtopnm |\
+  cmp -s - ${tartan_ppm}
+printf "3.1 $? "
+test -s ${tartan_qoi}
+echo $?
+rm ${tartan_qoi}
+
+pamdepth 4095 ${tartan_ppm} | pamtoqoi | tee ${tartan_qoi} |\
+  qoitopam | pamtopnm | cmp -s - ${tartan_ppm}
+printf "3.2 $? "
+test -s ${tartan_qoi}
+echo $?
+rm ${tartan_qoi}
+
+pamtoqoi ${test_rgb_alpha} | qoitopam | cmp -s - ${test_rgb_alpha}
+printf "3.3 $? "
+test -s ${test_rgb_alpha}
+echo $?
+
+pamdepth 511 ${test_rgb_alpha} | pamtoqoi | qoitopam |\
+  cmp -s - ${test_rgb_alpha}
+printf "3.4 $? "
+test -s ${test_rgb_alpha}
+echo $?
+
+rm ${noise1_pgm} ${tartan_ppm} ${test_rgb_alpha}
+
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test.out
+maze_qoi_size=$(cat ${maze_qoi} | wc -c)
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Should print: Expected failure N 1"
+
+pamseq -tupletype="void" 1 1 | pamtoqoi > \
+  ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+( echo "P1"; echo "400000001 1" ;
+  head -c 400000001 /dev/zero ) | pamtoqoi > \
+  ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# Replace fields in the qoi file header with invalid values
+  
+( printf "qojf"
+  tail -c +5 ${maze_qoi} ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+( head -c 4 ${maze_qoi}
+  head -c 4 /dev/zero
+  tail -c +9 ${maze_qoi} ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+( head -c 8 ${maze_qoi}
+  head -c 4 /dev/zero
+  tail -c +13 ${maze_qoi} ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# Following sed construct means: "replace first 8 bytes of input
+# stream."  echo -e -n and printf may be straightforward but
+# unfortunately they are not portable.  Is there any better solution?
+# Suggestions welcome.
+
+( head -c 4 ${maze_qoi}
+  tail -c +5 ${maze_qoi} | \
+  sed '1s/^......../\x00\x00\x4F\xFF\x00\x00\x4F\xFF/' ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+( head -c 12 ${maze_qoi}
+  tail -c +13 ${maze_qoi} | sed '1s/^./\x01/' ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+( head -c 13 ${maze_qoi}
+  tail -c +14 ${maze_qoi} | sed '1s/^./\x02/' ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+echo "------------------------------"
+echo "Should print: Expected failure N 0"
+
+( head -c $(( ${maze_qoi_size} - 9 )) ${maze_qoi}
+  tail -c 9 ${maze_qoi} |   sed '1s/^./\xfd/' ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+head -c $(( ${maze_qoi_size} - 1 )) ${maze_qoi} | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+( head -c $(( ${maze_qoi_size} - 1 )) ${maze_qoi}
+  printf '1' ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+( cat ${maze_qoi}; printf '1' ) | qoitopam > \
+  ${test_out} || \
+  printf "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+rm ${maze_qoi}

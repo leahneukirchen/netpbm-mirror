@@ -83,6 +83,7 @@ ordinary_testprogs="\
   pambackground \
   pambayer \
   pambrighten \
+  pamcat \
   pamchannel \
   pamcomp \
   pamcrater \

@@ -1,0 +1,16 @@
+Test 1.  Should print 0 five times.
+0
+0
+0
+0
+0
+Test 2.  Should print P1 1 1 0 three times
+P1 1 1 0 
+P1 1 1 0 
+P1 1 1 0 
+Test 3.  Should print eulerchi: N
+ eulerchi:	1
+ eulerchi:	2
+ eulerchi:	3
+ eulerchi:	4
+ eulerchi:	5

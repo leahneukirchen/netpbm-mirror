@@ -3,6 +3,7 @@ pamaltsat -strength=1: 0 0 0 0
 pambackground: 0 0 0 0
 pambayer -type=2: 0 0 0 0
 pambrighten: 0 0 0 0
+pamcat -topbottom: 0 0 0 0
 pamcut: 0 0 0 0
 pamdeinterlace: 0 0 0 0
 pamdepth 15: 0 0 0 0

@@ -16,6 +16,8 @@ pbmtext.test
 pbmtext-bdf.test
 pbmtext-iso88591.test
 pbmtext-utf8.test
+pbmtextps-dump.test
+pbmtextps.test
 pbmupc.test
 pgmramp.test
 pamgauss.test
@@ -232,6 +234,7 @@ pj-roundtrip.test
 ps-roundtrip.test
 ps-flate-roundtrip.test
 ps-alt-roundtrip.test
+qoi-roundtrip.test
 sgi-roundtrip.test
 sbig-roundtrip.test
 st4-roundtrip.test

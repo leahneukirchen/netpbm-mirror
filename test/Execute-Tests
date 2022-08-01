@@ -186,7 +186,7 @@ elif [ $VALGRIND_TESTS = "on" ]
 
   for i in awk basename cat cksum cmp comm cp cut date dirname \
            egrep fgrep file grep gs head iconv ls mkdir mktemp perl \
-           printf rm sed seq sh sort tee tr uniq wc \
+           printf rm sed seq sh sort tail tee tr uniq wc \
            testrandom Available-Testprog
 
     # Tell valgrind not to probe execution of the above programs.

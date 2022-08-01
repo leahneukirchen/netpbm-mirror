@@ -5,6 +5,7 @@
 # This script tests: pamtopdbimg pdbimgtopam
 # This script tests: pamtopfm pfmtopam
 # This script tests: pamtopng pngtopam
+# This script tests: pamtoqoi qoitopam
 # This script tests: pamtosrf srftopam
 # This script tests: pamtosvg svgtopam
 # This script tests: pamtowinicon winicontopam
@@ -36,6 +37,7 @@ for fmt in \
     pdbimg \
     pfm \
     png \
+    qoi \
     srf \
     svg \
     winicon \
