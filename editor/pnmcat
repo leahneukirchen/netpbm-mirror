@@ -1,3 +1,9 @@
 #! /bin/sh
 
-pamcat -extendplane "$@" | pnmtopnm
+if test "$1" = '-version'; then
+  pamcat -version
+elif test "$1" = '--version'; then
+  pamcat --version
+else
+  pamcat -extendplane "$@" | pnmtopnm
+fi
