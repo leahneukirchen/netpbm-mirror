@@ -102,6 +102,71 @@ systemf(const char * const fmt,
 
 
 
+static const char *
+shellQuote(const char * const arg) {
+/*----------------------------------------------------------------------------
+   A string that in a Bourne shell command forms a single token whose value
+   understood by the shell is 'arg'.
+
+   For example,
+
+     'arg'           result
+     --------------  --------------
+
+     hello           'hello'
+     two words       'two words'
+     'Bryan's'       \''Bryan'\''s'\'
+
+   Note that in the last example the result is a concatenation of two
+   single-quoted strings and 3 esaped single quotes outside of those quoted
+   strings.
+
+   You can use this safely to insert an arbitrary string from an untrusted
+   source into a shell command without worrying about it changing the nature
+   of the shell command.
+
+   In newly malloced storage.
+-----------------------------------------------------------------------------*/
+    unsigned int const worstCaseResultLen = 3 * strlen(arg) + 1;
+
+    char * buffer;
+    unsigned int i;
+    unsigned int cursor;
+    bool inquotes;
+
+    MALLOCARRAY_NOFAIL(buffer, worstCaseResultLen);
+
+    for (i = 0, cursor=0, inquotes=false; i < strlen(arg); ++i) {
+        if (arg[i] == '\'') {
+            if (inquotes) {
+                buffer[cursor++] = '\'';  /* Close the quotation */
+                inquotes = false;
+            }
+            assert(!inquotes);
+            buffer[cursor++] = '\\';  /* Add escaped */
+            buffer[cursor++] = '\'';  /*    single quote */
+        } else {
+            if (!inquotes) {
+                buffer[cursor++] = '\'';
+                inquotes = true;
+            }
+            assert(inquotes);
+            buffer[cursor++] = arg[i];
+        }
+    }
+    if (inquotes)
+        buffer[cursor++] = '\'';   /* Close the final quotation */
+
+    buffer[cursor++] = '\0';  /* Terminate string */
+
+    assert(cursor <= worstCaseResultLen);
+
+    return buffer;
+}
+
+
+
+
 static void
 parseCommandLine(int argc, char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
@@ -195,9 +260,37 @@ freeCmdline(struct CmdlineInfo const cmdline) {
 
 
 static void
+validateTmpdir(const char * const dirNm) {
+/*----------------------------------------------------------------------------
+   Abort program if 'dirNm' contains special characters that would cause
+   trouble if included in a shell command.
+
+   The cleanest thing to do would be to allow any characters in the directory
+   name and just quote and escape the properly every time we include the name
+   of a temporary file in a shell command, but we're too lazy for that.
+-----------------------------------------------------------------------------*/
+    if (
+        strchr(dirNm, '\\') ||
+        strchr(dirNm, '\'') ||
+        strchr(dirNm, ' ') ||
+        strchr(dirNm, '"') ||
+        strchr(dirNm, '$') ||
+        strchr(dirNm, '`') ||
+        strchr(dirNm, '!')
+        ) {
+        pm_error("TMPDIR environment variable contains a shell special "
+                 "character; this program cannot use that.");
+    }
+}
+
+
+
+static void
 makeTempDir(const char ** const tempDirP) {
 
     const char * const tmpdir = getenv("TMPDIR") ? getenv("TMPDIR") : "/tmp";
+
+    validateTmpdir(tmpdir);
 
     const char * mytmpdir;
     int rc;
@@ -248,6 +341,7 @@ makeTitle(const char * const title,
           const char * const tempDir) {
 
     const char * const invertStage = blackBackground ? "| pnminvert " : "";
+    const char * const titleToken  = shellQuote(title);
 
     const char * fileName;
 
@@ -256,12 +350,11 @@ makeTitle(const char * const title,
     /* This quoting is not adequate.  We really should do this without
        a shell at all.
     */
-    systemf("pbmtext \"%s\" "
-            "%s"
-            "> %s",
-            title, invertStage, fileName);
+    systemf("pbmtext %s %s > %s",
+            titleToken, invertStage, fileName);
 
     pm_strfree(fileName);
+    pm_strfree(titleToken);
 }
 
 
@@ -270,7 +363,11 @@ static void
 copyImage(const char * const inputFileName,
           const char * const outputFileName) {
 
-    systemf("cat %s > %s", inputFileName, outputFileName);
+    const char * const inputFileNmToken = shellQuote(inputFileName);
+
+    systemf("cat %s > %s", inputFileNmToken, outputFileName);
+
+    pm_strfree(inputFileNmToken);
 }
 
 
@@ -283,6 +380,8 @@ copyScaleQuantImage(const char * const inputFileName,
                     unsigned int const quant,
                     unsigned int const colors) {
 
+    const char * const inputFileNmToken = shellQuote(inputFileName);
+
     const char * scaleCommand;
 
     switch (PNM_FORMAT_TYPE(format)) {
@@ -290,13 +389,13 @@ copyScaleQuantImage(const char * const inputFileName,
         pm_asprintf(&scaleCommand,
                     "pamscale -quiet -xysize %u %u %s "
                     "| pgmtopbm > %s",
-                    size, size, inputFileName, outputFileName);
+                    size, size, inputFileNmToken, outputFileName);
         break;
 
     case PGM_TYPE:
         pm_asprintf(&scaleCommand,
                     "pamscale -quiet -xysize %u %u %s >%s",
-                    size, size, inputFileName, outputFileName);
+                    size, size, inputFileNmToken, outputFileName);
         break;
 
     case PPM_TYPE:
@@ -304,11 +403,11 @@ copyScaleQuantImage(const char * const inputFileName,
             pm_asprintf(&scaleCommand,
                         "pamscale -quiet -xysize %u %u %s "
                         "| pnmquant -quiet %u > %s",
-                        size, size, inputFileName, colors, outputFileName);
+                        size, size, inputFileNmToken, colors, outputFileName);
         else
             pm_asprintf(&scaleCommand,
                         "pamscale -quiet -xysize %u %u %s >%s",
-                        size, size, inputFileName, outputFileName);
+                        size, size, inputFileNmToken, outputFileName);
         break;
     default:
         pm_error("Unrecognized Netpbm format: %d", format);
@@ -317,6 +416,7 @@ copyScaleQuantImage(const char * const inputFileName,
     systemf("%s", scaleCommand);
 
     pm_strfree(scaleCommand);
+    pm_strfree(inputFileNmToken);
 }
 
 
@@ -398,14 +498,16 @@ makeImageFile(const char * const thumbnailFileName,
    a white background instead.
 -----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
-    const char * const invertStage = blackBackground ? "| pnminvert " : "";
+    const char * const invertStage   = blackBackground ? "| pnminvert " : "";
+    const char * inputFileNmToken    = shellQuote(inputFileName);
 
-    systemf("pbmtext \"%s\" "
-            "%s"
+    systemf("pbmtext %s %s"
             "| pamcat -extendplane %s -topbottom %s - "
             "> %s",
-            inputFileName, invertStage, blackWhiteOpt,
+            inputFileNmToken, invertStage, blackWhiteOpt,
             thumbnailFileName, outputFileName);
+
+    pm_strfree(inputFileNmToken);
 }
 
 
