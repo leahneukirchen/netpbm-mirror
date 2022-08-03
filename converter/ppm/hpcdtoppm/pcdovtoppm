@@ -144,7 +144,7 @@ tempdir=$(mktemp -d "${TMPDIR:-/tmp}/pcdovtoppm.XXXXXXXX") ||
     { echo "Could not create temporary file. Exiting." 1>&2; exit 1; }
 trap 'rm -rf $tempdir' 0
 
-tmpfile=`tempfile -p pi -m 600`
+tmpfile=$(tempfile -p pi -m 600)
 
 # Convert the PCD overview file to many PPM images
 if [ -f $1 ] ; then
@@ -183,11 +183,12 @@ do
     ttext="$i:t"
 
     if [ "$back" = "-white" ] ; then
-        pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2| \
-        pnmcat $back -tb $tmpfile - > $imagefile
+        pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2 | \
+        pamcat -extendplane $back -topbottom $tmpfile - > $imagefile
     else
         pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2 | \
-        pnminvert | pnmcat $back -tb $tmpfile - > $imagefile
+          pnminvert | \
+          pamcat -extendplane $back -topbottom $tmpfile - > $imagefile
     fi
 
     rm -f $tmpfile
@@ -199,9 +200,9 @@ do
         rowfile=${tempdir}/pi.${row}
         rm -f $rowfile
     if [ "$colors" = "n" ] ; then
-        pnmcat $back -lr -jbottom $imagefiles > $rowfile
+        pamcat -extendplane $back -leftright -jbottom $imagefiles > $rowfile
     else
-        pnmcat $back -lr -jbottom $imagefiles | \
+        pamcat -extendplane $back -leftright -jbottom $imagefiles | \
         ppmquant -quiet $colors > $rowfile
     fi
     rm -f $imagefiles
@@ -219,10 +220,10 @@ if [ -n $imagefiles ] ; then
     rowfile=${tempdir}/pi.${row}
     rm -f $rowfile
     if [ "$colors" = "n" ] ; then
-        pnmcat $back -lr -jbottom $imagefiles > $rowfile
+        pamcat -extendplane $back -leftright -jbottom $imagefiles > $rowfile
     else
-        pnmcat $back -lr -jbottom $imagefiles | \
-        ppmquant -quiet $colors > $rowfile
+        pamcat -extendplane $back -leftright -jbottom $imagefiles | \
+          ppmquant -quiet $colors > $rowfile
     fi
     rm -f $imagefiles
     rowfiles="$rowfiles $rowfile"
@@ -232,9 +233,11 @@ if [ $(echo $rowfiles|wc -w) -eq 1 ] ; then
     ppmtoppm $plainopt < $rowfiles
 else
     if [ "$colors" = "n" ] ; then
-        pnmcat $back -tb $plainopt $rowfiles
+        pamcat -extendplane $back -topbottom $rowfiles | \
+          ppmtoppm $plainopt
     else
-        pnmcat $back -tb $rowfiles | ppmquant $plainopt -quiet $colors
+        pamcat -extendplane $back -tb $rowfiles | \
+          ppmquant $plainopt -quiet $colors
     fi
 fi
 

@@ -155,9 +155,12 @@ for i in "$@"; do
     imagefile=$tempdir/pi.${row}.${col}
     rm -f $imagefile
     if [ "$back" = "-white" ]; then
-        pbmtext "$i" | pnmcat $back -tb $tmpfile - > $imagefile
+        pbmtext "$i" | \
+          pamcat -extendplane $back -topbottom $tmpfile - > $imagefile
     else
-        pbmtext "$i" | pnminvert | pnmcat $back -tb $tmpfile - > $imagefile
+        pbmtext "$i" | \
+          pnminvert | \
+          pamcat -extendplane $back -topbottom $tmpfile - > $imagefile
     fi
     imagefiles=( ${imagefiles[*]} $imagefile )
 
@@ -166,10 +169,12 @@ for i in "$@"; do
         rm -f $rowfile
 
         if [ $maxformat != PPM -o "$doquant" = "false" ]; then
-            pnmcat $back -lr -jbottom ${imagefiles[*]} > $rowfile
+            pamcat -extendplane $back -leftright -jbottom ${imagefiles[*]} \
+              > $rowfile
         else
-            pnmcat $back -lr -jbottom ${imagefiles[*]} | \
-            pnmquant -quiet $colors > $rowfile
+            pamcat -extendplane $back -leftright -jbottom ${imagefiles[*]} | \
+              pnmquant -quiet $colors \
+              > $rowfile
         fi
 
         rm -f ${imagefiles[*]}
@@ -190,22 +195,27 @@ if [ ${#imagefiles[*]} -gt 0 ]; then
     rowfile=$tempdir/pi.${row}
     rm -f $rowfile
     if [ $maxformat != PPM -o "$doquant" = "false" ]; then
-        pnmcat $back -lr -jbottom ${imagefiles[*]} > $rowfile
+        pamcat -extendplane $back -leftright -jbottom ${imagefiles[*]} \
+          > $rowfile
     else
-        pnmcat $back -lr -jbottom ${imagefiles[*]} | \
-        pnmquant -quiet $colors > $rowfile
+        pamcat -extendplane $back -leftright -jbottom ${imagefiles[*]} | \
+          pnmquant -quiet $colors > \
+          $rowfile
     fi
     rm -f ${imagefiles[*]}
     rowfiles=( ${rowfiles[*]} $rowfile )
 fi
 
 if [ ${#rowfiles[*]} -eq 1 ]; then
-    cat $rowfiles
+    pnmtopnm $rowfiles
 else
     if [ $maxformat != PPM -o "$doquant" = "false" ]; then
-        pnmcat $back -tb ${rowfiles[*]}
+        pamcat -extendplane $back -topbottom ${rowfiles[*]} |\
+          pnmtopnm
     else
-        pnmcat $back -tb ${rowfiles[*]} | pnmquant -quiet $colors
+        pamcat -extendplane $back -topbottom ${rowfiles[*]} | \
+          pnmquant -quiet $colors | \
+          pnmtopnm
     fi
 fi
 rm -f ${rowfiles[*]}
