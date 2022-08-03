@@ -32,7 +32,7 @@
 #include "nstring.h"
 #include "pnm.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -104,7 +104,7 @@ systemf(const char * const fmt,
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 
     unsigned int option_def_index;
     optEntry *option_def;
@@ -181,7 +181,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 static void
-freeCmdline(struct cmdlineInfo const cmdline) {
+freeCmdline(struct CmdlineInfo const cmdline) {
 
     unsigned int i;
 
@@ -594,7 +594,7 @@ writeRowsAndDelete(unsigned int const rows,
 
 int
 main(int argc, char *argv[]) {
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     const char * tempDir;
     int maxFormatType;
     unsigned int colsInRow;
