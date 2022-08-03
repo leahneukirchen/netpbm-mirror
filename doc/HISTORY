@@ -21,6 +21,8 @@ not yet  BJH  Release 11.00.00
               ppmtoicr: make -rle option issue an error message saying it no
               longer exists (it did, sort of, before 2015).
 
+              pnmindex: fix shell injection vulnerabilities.
+
 22.06.24 BJH  Release 10.99.00
 
               Add pamrestack.
