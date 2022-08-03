@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.08.03 BJH  Release 10.99.02
+
+              pnmindex: fix shell injection vulnerabilities.  Broken since
+              Netpbm 10.28 (June 2005).
+
 22.07.17 BJH  Release 10.99.01
 
               ppmtoicr: Fix bug: all options cause bogus command line parsing
