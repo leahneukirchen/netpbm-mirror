@@ -387,13 +387,22 @@ makeImageFile(const char * const thumbnailFileName,
               const char * const inputFileName,
               bool         const blackBackground,
               const char * const outputFileName) {
+/*----------------------------------------------------------------------------
+   Create one thumbnail image.  It consists of the image in the file named
+   'thumbnailFileName' with text of that name appended to the bottom.
 
+   Write the result to the file named 'outputFileName'.
+
+   'blackBackground' means give the image a black background where padding
+   is necessary and make the text white on black.  If false, give the image
+   a white background instead.
+-----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
     const char * const invertStage = blackBackground ? "| pnminvert " : "";
 
     systemf("pbmtext \"%s\" "
             "%s"
-            "| pnmcat %s -topbottom %s - "
+            "| pamcat -extendplane %s -topbottom %s - "
             "> %s",
             inputFileName, invertStage, blackWhiteOpt,
             thumbnailFileName, outputFileName);
@@ -505,7 +514,7 @@ combineIntoRowAndDelete(unsigned int const row,
 
     fileList = thumbnailFileList(tempDir, row, cols);
 
-    systemf("pnmcat %s -leftright -jbottom %s "
+    systemf("pamcat -extendplane %s -leftright -jbottom %s "
             "%s"
             ">%s",
             blackWhiteOpt, fileList, quantStage, fileName);
@@ -572,7 +581,7 @@ writeRowsAndDelete(unsigned int const rows,
 
     fileList = rowFileList(tempDir, rows);
 
-    systemf("pnmcat %s -topbottom %s %s",
+    systemf("pamcat -extendplane %s -topbottom %s | pnmtopnm -assume %s",
             blackWhiteOpt, fileList, quantStage);
 
     pm_strfree(fileList);
