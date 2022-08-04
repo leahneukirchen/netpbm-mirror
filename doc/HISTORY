@@ -21,7 +21,11 @@ not yet  BJH  Release 11.00.00
               ppmtoicr: make -rle option issue an error message saying it no
               longer exists (it did, sort of, before 2015).
 
-              pnmindex: fix shell injection vulnerabilities.
+              pnmindex: fix shell injection vulnerabilities.  Broken since
+              Netpbm 10.28 (June 2005).
+
+              pnmmargin: fix shell injection vulneraibility.  Always broken
+              (Program was added in primordial Netpbm in 1990).
 
 22.06.24 BJH  Release 10.99.00
 
