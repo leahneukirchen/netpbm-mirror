@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamcat User Manual</title></head>
+<body>
+<h1>pamcat</h1>
+Updated: 30 July 2022
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+
+pamcat - concatenate Netpbm images
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pamcat</b>
+
+{<b>-leftright</b> | <b>-lr</b> | <b>-topbottom</b> | <b>-tb</b>}
+
+[<b>-extendplane</b>]
+
+[<b>-white</b>|<b>-black</b>]
+
+[<b>-jtop</b>|<b>-jbottom</b>|<b>-jcenter</b>]
+[<b>-jleft</b>|<b>-jright</b>|<b>-jcenter</b>]
+
+<i>netpbmfile</i> ...
+
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may
+use white space in place of the equals sign to separate an option name
+from its value.
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamcat</b> reads one or more Netpbm images as input, concatenates them
+either left to right or top to bottom, and produces a single PAM image
+as output.
+
+<p>As an exception for greater efficiency, <b>pamcat</b> produces raw PBM
+output if all of the input images are raw PBM.
+
+<p>Options <b>-leftright</b> and <b>-topbottom</b> determine the direction
+  of the concatenation.
+  
+<p>The images do not have to be the same shape:  You can concatenate images
+  of different widths top to bottom and of different heights left to right.
+  You can concatenate images of different depths (numbers of planes).  You
+  can concatenate a PBM image with a PPM image.
+
+<p>Where the input images are of different depths, the depth of the output is
+  the maximum of the depths of the inputs.  <b>pamcat</b> adds higher numbered
+  planes to the input images as padding.  You can choose whether those higher
+  planes have all zero (black) sample values or duplicate the highest numbered
+  plane in the input.  Use the <b>-extendplane</b> option for this.  The
+  duplication function is useful when your inputs are visual images, without
+  transparency planes, because it effectively translates black and white
+  pixels from a 1-plane black and white input image to black and white pixels
+  in 3-plane color output and gray pixels from a 1-plane grayscale input image
+  to the same grays in 3-plane color output.
+
+<p>Where the input images are of different widths and you concatenate top
+  to bottom, <b>pamcat</b> generates output as wide as the widest of the
+  inputs and pads the narrower ones.  The images can be justified either
+  left, right, or center within this padded field.  Use options
+  <b>-jleft</b>, <b>-jright</b>, and <b>-jcenter</b> to control this.
+
+<p>Similarly, where the input images are of different heights and you
+  concatenate left to right, <b>pamcat</b> generates output as tall as the
+  tallest of the inputs and pads the shorter ones.  The images can be
+  justified either top, bottom, or center within this padded field.  Use
+  options
+  <b>-jtop</b>, <b>-jbottom</b>, and <b>-jcenter</b> to control this.
+
+<p>You can make the padding black or white or let <b>pamcat</b> determine a
+  likely background color, with possibly different colored padding for each
+  input image.  Control this with the <b>-black</b> and <b>-white</b> options.
+
+<p>The arguments are names of input files.  Any one of these, but not more
+than one, may be "-" to indicate Standard Input.  If you have no
+arguments, that means a single input image from Standard Input (and that is
+pointless - the output is the same as the input).
+
+<p>To assemble a regular grid of images, you can use <b>pamundice</b>.
+
+<p>To do the reverse, you might use <b>pamdice</b> to split an image
+up into smaller ones of equal size or <b>pamcut</b> to chop off part
+of an image or extract part of an image.
+
+<p><b>pnmtile</b> concatenates a single input image to itself repeatedly.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamcat</b> recognizes the following
+command line options:
+
+<h3 id="direction">Direction</h3>
+
+<dl compact>
+<dt><b>-topbottom</b>, <b>-tb</b>
+<dd>Combine images vertically, top to bottom.
+
+<dt><b>-leftright</b>, <b>-lr</b>
+<dd>Combine images horizontally, left to right.
+
+  <p>You must specify the direction by specifying one of the above.  You cannot
+    specify both.
+
+</dl>
+
+<h3 id="justification">Justification</h3>
+
+<dl compact>
+  <dt><b>-jleft</b>
+  <dd>Left-justify images in a top-bottom concatenation.
+    <p>You cannot specify this with <b>-jright</b>
+    <p>This option is invalid in a left-right concatenation.
+
+  <dt><b>-jright</b>
+  <dd>Right-justify images in a top-bottom concatenation.
+    <p>You cannot specify this with <b>-jleft</b>
+    <p>This option is invalid in a left-right concatenation.
+
+  <dt><b>-jtop</b>
+  <dd>Top-justify images in a left-right concatenation.
+    <p>You cannot specify this with <b>-jbottom</b>
+    <p>This option is invalid in a top-bottom concatenation.
+
+  <dt><b>-jbottom</b>
+  <dd>Bottom-justify images in a left-right concatenation.
+    <p>You cannot specify this with <b>-jtop</b>
+    <p>This option is invalid in a top-bottom concatenation.
+
+  <dt><b>-jcenter</b>
+  <dd>Center images (valid for both left-right and top-bottom concatenations).
+    This is the default.
+    
+</dl>
+
+<p>By default, <b>pamcat</b> centers the smaller images.
+  <b>-topbottom -jleft</b> would stack the images on top of each other, flush
+  with the left edge.  <b>-leftright -jbottom</b> would line up the images
+  left to right with their bottom edges aligned as if sitting on a table.
+
+
+<h3 id="paddingcolor">Padding Color</h3>
+
+<dl compact>
+
+<dd>These options specify what color to use to fill in the extra space when
+doing the justification.  If neither is specified, <b>pamcat</b> chooses
+whichever color seems to be right for the images, and the color may be
+different for each image.
+
+<dt><b>-white</b>
+<dd>Make all padding white.
+  <p>You may not specify this with <b>-black</b>
+<dt><b>-black</b>
+<dd>Make all padding black.
+  <p>You may not specify this with <b>-white</b>
+
+</dl>
+
+
+<h3 id="depthextension">Depth Extension</h3>
+
+<dl compact>
+
+<dd>This option controls what happens when the input image have different
+  depths (number of planes), so <b>pamcat</b> adds planes to the shallower
+  input images.
+
+<p>The default is to make the additional planes all zero.
+  
+<dt><b>-extendplane</b>
+<dd>Make the additional planes copies of the highest numbered plane in the
+  input.
+  <p>This is appropriate whenever the input images are visual images without a
+    transparency plane.  PBM, PGM, and PPM images are all examples of visual
+    images without a transparency plane.  PAM images with tuple types
+    &quot;BLACKANDWHITE&quot;, &quot;GRAYSCALE&quot;, and &quot;RGB&quot;
+    are also examples.
+
+</dl>
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pamundice.html">pamundice</a></b>,
+
+<b><a href="pamdice.html">pamdice</a></b>,
+
+<b><a href="pnmtile.html">pnmtile</a></b>,
+
+<b><a href="pamcut.html">pamcut</a></b>,
+
+<b><a href="pnm.html">pnm</a></b>,
+
+<b><a href="pam.html">pam</a></b>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p>Primordial Netpbm/Pbmplus contained concatenation tools, but there were two
+  of them: <b>pbmcatlr</b> for left-right concatenation of PBM images
+  and <b>pbmcattb</b> for top-bottom concatenation.  When the PGM and PPM
+  formats were added, these programs were combined and extended to handle all
+  three formats, as <b>pnmcat</b>.  All of this work was done by Pbmplus
+  author Jef Poskanzer.
+
+<p>In Netpbm 10.44 (September 2008), Akira F Urushibata added special fast
+  processing for raw PBM images, exploiting bitstring processing CPU
+  facilities.
+
+<p><b>pnmcat</b> was one of the most essential programs in Netpbm, but one
+  thing it could not concatenate was PAM images with transparency.  So in
+  Netpbm 11.00 (September 2022), Bryan Henderson wrote <b>pamcat</b> to
+  replace it.  It reused the raw PBM fast path code from <b>pnmcat</b> almost
+  verbatim.
+
+<p>At that time, Netpbm continued to include <b>pnmcat</b>, but now it did
+  nothing but invoke <b>pamcat</b> with an <b>-extendplane</b> option and pipe
+  the output through <b>pnmtopnm</b>.  It was intended for backward
+  compatibility only.
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#direction">Direction</a>
+  <li><a href="#justification">Justification</a>
+  <li><a href="#paddingcolor">Padding Color</a>
+  <li><a href="#depthextension">Depth Extension</a>
+  </ul>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>
