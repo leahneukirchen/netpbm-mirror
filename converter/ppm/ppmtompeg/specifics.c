@@ -41,6 +41,7 @@
 
 #include "netpbm/mallocvar.h"
 #include "netpbm/nstring.h"
+#include "netpbm/pm_system.h"
 
 #include "all.h"
 #include "mtypes.h"
@@ -152,38 +153,37 @@ static char version = -1;
 void
 Specifics_Init() {
 
-    FILE *specificsFP;
+    /* 'specificsFile' is a global variable whose value is the name of the
+       specifics file, given by the parameter file.
+    */
+
+    FILE *       specificsFP;
+    const char * preprocessedFileNm;
+
+    pm_message("Specifics file: %s", specificsFile);
+
+    pm_asprintf(&preprocessedFileNm, "%s.cpp", specificsFile);
+
+    pm_system_lp("rm", NULL, NULL, NULL, NULL, "-f", preprocessedFileNm);
 
     {
         const char * command;
-        pm_asprintf(&command, "rm -f %s.cpp", specificsFile);
-        system(command);
+        pm_asprintf(&command, "cpp -P %s %s -o %s",
+                    specificsDefines, specificsFile, preprocessedFileNm);
+        pm_system(NULL, NULL, NULL, NULL, command);
         pm_strfree(command);
     }
-    {
-        const char * command;
-        pm_asprintf(&command, "cpp -P %s %s %s.cpp",
-                    specificsDefines, specificsFile, specificsFile);
-        system(command);
-        pm_strfree(command);
-    }
-    strcat(specificsFile, ".cpp");
-    if ((specificsFP = fopen(specificsFile, "r")) == NULL) {
-        fprintf(stderr, "Error with specifics file, cannot open %s\n",
-                specificsFile);
-        exit(1);
-    }
-    printf("Specifics file: %s\n", specificsFile);
+
+    specificsFP = pm_openr(preprocessedFileNm);
+
+    pm_system_lp("rm", NULL, NULL, NULL, NULL, "-f", preprocessedFileNm);
 
     Parse_Specifics_File(specificsFP);
-    {
-        const char * command;
-        pm_asprintf(&command, "rm -f %s.cpp", specificsFile);
-        system(command);
-        pm_strfree(command);
-    }
-}
 
+    pm_close(specificsFP);
+
+    pm_strfree(preprocessedFileNm);
+}
 
 
 
