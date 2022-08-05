@@ -168,7 +168,7 @@ Specifics_Init() {
 
     {
         const char * command;
-        pm_asprintf(&command, "cpp -P %s %s -o %s",
+        pm_asprintf(&command, "cpp -P %s '%s' -o '%s'",
                     specificsDefines, specificsFile, preprocessedFileNm);
         pm_system(NULL, NULL, NULL, NULL, command);
         pm_strfree(command);
