@@ -110,7 +110,7 @@ else
     # Cat things together.
     pamcat -extendplane -leftright $tmp2 $tmp1 $tmp2 > $tmp4
     pamcat -extendplane -topbottom $tmp3 $tmp4 $tmp3 | \
-      pnmtopnm $plainopt
+      pamtopnm $plainopt
 fi
 
 

@@ -683,7 +683,7 @@ writeRowsAndDelete(unsigned int const rows,
 
     fileList = rowFileList(tempDir, rows);
 
-    systemf("pamcat -extendplane %s -topbottom %s | pnmtopnm -assume %s",
+    systemf("pamcat -extendplane %s -topbottom %s | pamtopnm -assume %s",
             blackWhiteOpt, fileList, quantStage);
 
     pm_strfree(fileList);
