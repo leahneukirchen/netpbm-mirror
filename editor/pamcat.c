@@ -349,11 +349,11 @@ padFillBitrow(unsigned char * const destBitrow,
 
 
 
-/* concatenateLeftRightPBM() and concatenateLeftRightGen()
+/* concatenateLeftRightPbm() and concatenateLeftRightGen()
    employ almost identical algorithms.
    The difference is in the data types and functions.
 
-   Same for concatenateTopBottomPBM() and concatenateTopBottomGen().
+   Same for concatenateTopBottomPbm() and concatenateTopBottomGen().
 */
 
 
@@ -481,7 +481,7 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
 
     outrow[pbm_packed_bytes(outpamP->width)-1] = 0x00;
 
-    for (row = 0; row < outpamP->width; ++row) {
+    for (row = 0; row < outpamP->height; ++row) {
         unsigned int i;
 
         for (i = 0; i < fileCt; ++i) {
