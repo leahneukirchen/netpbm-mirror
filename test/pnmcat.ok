@@ -1,4 +1,8 @@
-Test 1.  Should print a simple PBM image four times
+Test 1.  Should print a simple PBM image five times
+P1
+2 2
+01
+10
 P1
 2 2
 01

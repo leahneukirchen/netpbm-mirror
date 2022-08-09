@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamarith
-# Also requires: pamtopnm rgb3toppm pamenlarge pnmcat pamseq pbmmake pgmmake
+# Also requires: pamtopnm rgb3toppm pamenlarge pamcat pamseq pbmmake pgmmake
 # Also requires: ppmpat pamchannel
 
 tmpdir=${tmpdir:-/tmp}
@@ -18,7 +18,7 @@ pgmmake -maxval 15 0.15 16 1 > ${input2_pgm}
 rgb3toppm ${input1_pgm} ${input1_pgm} ${input1_pgm} > ${input1_ppm}
 rgb3toppm ${input2_pgm} ${input2_pgm} ${input2_pgm} > ${input2_ppm}
 
-pnmcat -tb -plain ${input1_pgm} ${input2_pgm}
+pamcat -tb ${input1_pgm} ${input2_pgm} | pamtopnm -assume -plain
 
 for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
     "-minimum" "-maximum" "-mean" "-compare" "-equal" \
@@ -43,7 +43,7 @@ echo "Test 2 PBM"
 pbmmake -g 8 1 > ${input1_pbm}
 pbmmake -g 2 1 | pamenlarge -xscale=4 > ${input2_pbm}
 
-pnmcat -tb -plain ${input1_pbm} ${input2_pbm}
+pamcat -tb -plain ${input1_pbm} ${input2_pbm}
 
 for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
     "-minimum" "-maximum" "-mean" "-compare" "-equal" \

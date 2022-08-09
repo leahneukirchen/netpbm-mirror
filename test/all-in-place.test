@@ -245,7 +245,6 @@ ordinary_testprogs="\
   pktopbm \
   pngtopam \
   pnmalias \
-  pnmcat \
   pnmcolormap \
   pnmconvol \
   pnmcrop \

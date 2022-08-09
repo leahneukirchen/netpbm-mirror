@@ -69,6 +69,7 @@ ordinary_testprogs="\
   pgmslice \
   pngtopnm \
   pnmarith \
+  pnmcat \
   pnmcomp \
   pnmcut \
   pnmdepth \

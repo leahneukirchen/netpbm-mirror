@@ -11,9 +11,13 @@ diag_ppm=${tmpdir}/diag.ppm
 diag2lr_ppm=${tmpdir}/diag2lr.ppm
 diag2tb_ppm=${tmpdir}/diag2tb.ppm
 
-echo "Test 1.  Should print a simple PBM image four times"
+echo "Test 1.  Should print a simple PBM image five times"
+# Check input from stdin and from designated input file
+# Similar to tests in stdin-p?m.test
+
 pbmmake -g 2 2 | tee ${check2x2_pbm} | pnmcat -lr -plain
 pnmcat -tb -plain ${check2x2_pbm}
+pnmcat -tb -plain < ${check2x2_pbm}
 pnmcat -lr -black -plain ${check2x2_pbm}
 cat ${check2x2_pbm} | pnmcat -tb -white -plain
 
@@ -39,9 +43,13 @@ cat maze.pbm | pnmcat -tb - ${maze2tb_pbm} | cksum
 rm ${maze2lr_pbm} ${maze2tb_pbm}
 
 echo "Test 6.  Should print a simple PGM image three times"
-pgmramp -diag 4 4 -maxval=3 | tee ${diag_pgm} | pnmcat -lr -plain
-pnmcat -tb -plain ${diag_pgm}
-cat ${diag_pgm} | pnmcat -tb -plain
+# Use sed to scrape off space at line end for compatibility
+# with older versions of pnmcat
+
+pgmramp -diag 4 4 -maxval=3 | tee ${diag_pgm} | pnmcat -lr -plain |\
+  sed 's/ *$//'
+pnmcat -tb -plain ${diag_pgm} | sed 's/ *$//'
+cat ${diag_pgm} | pnmcat -tb -plain | sed 's/ *$//'
 
 rm ${diag_pgm}
 

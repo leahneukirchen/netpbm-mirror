@@ -12,6 +12,7 @@ pgmoil: ok
 pgmslice: ok
 pngtopnm: ok
 pnmarith: ok
+pnmcat: ok
 pnmcomp: ok
 pnmcut: ok
 pnmdepth: ok

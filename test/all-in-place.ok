@@ -203,7 +203,6 @@ pjtoppm: ok
 pktopbm: ok
 pngtopam: ok
 pnmalias: ok
-pnmcat: ok
 pnmcolormap: ok
 pnmconvol: ok
 pnmcrop: ok
