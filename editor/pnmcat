@@ -1,9 +1,34 @@
 #! /bin/sh
 
-if test "$1" = '-version'; then
-  pamcat -version
-elif test "$1" = '--version'; then
-  pamcat --version
-else
-  pamcat -extendplane "$@" | pamtopnm
-fi
+plainopt=""
+quietopt=""
+pamcatopts=""
+
+# Parse args.
+while true ; do
+    case "$1" in
+        -v|--v|-version|--version )
+        pamcat --version; exit $?;
+        ;;
+        -p|-pl|-pla|-plai|-plain|--p|--pl|--pla|--plai|--plain )
+        plainopt="-plain"
+        shift
+        ;;
+        -q|-qu|-qui|-quie|-quiet|--q|--qu|--qui|--quie|--quiet )
+        quietopt="-quiet"
+	shift
+        ;;
+	"" )
+	break
+	;;
+	* )
+        pamcatargs=${pamcatargs}" $1" 	    
+	shift
+	;;
+    esac
+  done
+
+pamcat -extendplane ${pamcatargs} ${quietopt} | \
+  pamtopnm --assume ${plainopt} ${quietopt}
+
+
