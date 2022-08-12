@@ -1452,7 +1452,7 @@ pnm_backgroundtuplerow(const struct pam * const pamP,
 
     bgtuple = pnm_allocpamtuple(pamP);
 
-    assert (pamP->width > 0);
+    assert(pamP->width > 0);
 
     if (pamP->width == 1)
         pnm_assigntuple(pamP, bgtuple, tuplerow[0]);
