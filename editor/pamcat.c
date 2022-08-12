@@ -720,9 +720,11 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
         thisEntryP->out =
             (i == 0 ? &newTuplerow[0] : imgCtl[i-1].out + inpam[i-1].width);
 
-        if (inpamP->height == outpamP->height)  /* no vertical padding */
-            thisEntryP->cachedRow = NULL;
-        else {
+        if (inpamP->height == outpamP->height) { /* no vertical padding */
+            thisEntryP->cachedRow  = NULL;
+            pnm_createBlackTuple(outpamP, &thisEntryP->background);
+                /* Meaningless because no padding */
+        } else {
             /* Determine pad color */
             switch (padColorMethod){
             case PAD_AUTO:
