@@ -643,6 +643,8 @@ padPlanesRow(enum PlanePadMethod const planePadMethod,
 -----------------------------------------------------------------------------*/
     unsigned int plane;
 
+    assert(inpamP->allocation_depth >= outpamP->depth);
+
     for (plane = inpamP->depth; plane < outpamP->depth; ++plane) {
         unsigned int col;
 
@@ -1053,13 +1055,16 @@ main(int           argc,
 
     for (i = 0; i < cmdline.fileCt; ++i) {
         FILE * const ifP = pm_openr(cmdline.inputFileName[i]);
-        pnm_readpaminit(ifP, &inpam[i], PAM_STRUCT_SIZE(tuple_type));
+        pnm_readpaminit(ifP, &inpam[i], PAM_STRUCT_SIZE(allocation_depth));
     }
 
     outpam.file = stdout;
 
     computeOutputParms(cmdline.fileCt, cmdline.orientation, inpam,
                        cmdline.verbose, &outpam);
+
+    for (i = 0; i < cmdline.fileCt; ++i)
+        pnm_setminallocationdepth(&inpam[i], outpam.depth);
 
     pnm_writepaminit(&outpam);
 
