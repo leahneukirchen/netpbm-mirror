@@ -184,6 +184,52 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 static void
+reportPlans(unsigned int       const fileCt,
+            const struct pam * const outpamP) {
+
+    pm_message("Concatenating %u input images", fileCt);
+
+    pm_message("Output width, height, depth: %u x %u x %u",
+               outpamP->width, outpamP->height, outpamP->depth);
+
+    if (outpamP->format == RPBM_FORMAT)
+        pm_message("Using PBM fast path and producing raw PBM output");
+    else if (outpamP->format == PBM_FORMAT)
+        pm_message("Output format: Plain PBM");
+    else {
+        pm_message("Output maxval (max of all inputs): %lu", outpamP->maxval);
+
+        switch (outpamP->format) {
+        case PGM_FORMAT:
+            pm_message("Output format: Plain PGM");
+            break;
+        case RPGM_FORMAT:
+            pm_message("Output format: Raw PGM");
+            break;
+        case PPM_FORMAT:
+            pm_message("Output format: Plain PPM");
+            break;
+        case RPPM_FORMAT:
+            pm_message("Output format: Raw PPM");
+            break;
+        case PAM_FORMAT:
+            pm_message("Output format: PAM");
+
+            if (strlen(outpamP->tuple_type) > 0)
+
+                pm_message("Output tuple type (same as all inputs): '%s'",
+                           outpamP->tuple_type);
+            else
+                pm_message("Output tuple type is null string because "
+                           "input images have various tuple types");
+            break;
+        }
+    }
+}
+
+
+
+static void
 computeOutputParms(unsigned int       const fileCt,
                    enum Orientation   const orientation,
                    const struct pam * const inpam,  /* array */
@@ -191,26 +237,20 @@ computeOutputParms(unsigned int       const fileCt,
                    struct pam *       const outpamP) {
 
     double newCols, newRows, newDepth;
-    const char * newTupletype;
     sample newMaxval;
-    bool allPbm;
-        /* All the input images are raw PBM, so far as we've seen */
+    int newFormat;
+    const char * newTupletype;
     bool tupleTypeVaries;
         /* We've seen multiple tuple types among the input images */
     unsigned int i;
 
-    for (i = 0, newCols = 0, newRows = 0, newMaxval = 0, allPbm = true,
+    for (i = 0, newCols = 0, newRows = 0, newDepth = 0, newMaxval = 0,
+             newFormat = 0,
              newTupletype = NULL, tupleTypeVaries = false;
          i < fileCt;
          ++i) {
 
         const struct pam * const inpamP = &inpam[i];
-
-        if (inpamP->format != RPBM_FORMAT)
-            allPbm = false;
-
-        newMaxval = MAX(newMaxval, inpamP->maxval);
-        newDepth  = MAX(newDepth,  inpamP->depth);
 
         switch (orientation) {
         case LEFTRIGHT:
@@ -227,10 +267,17 @@ computeOutputParms(unsigned int       const fileCt,
                 tupleTypeVaries = true;
         } else
             newTupletype = inpamP->tuple_type;
+
+        newDepth  = MAX(newDepth,  inpamP->depth);
+        newMaxval = MAX(newMaxval, inpamP->maxval);
+
+        if (PNM_FORMAT_TYPE(inpamP->format) > PNM_FORMAT_TYPE(newFormat))
+            newFormat = inpamP->format;
     }
     assert(newCols   > 0);
     assert(newRows   > 0);
     assert(newMaxval > 0);
+    assert(newFormat > 0);
 
     if (newCols > INT_MAX)
        pm_error("Output width too large: %.0f.", newCols);
@@ -249,28 +296,13 @@ computeOutputParms(unsigned int       const fileCt,
     outpamP->depth            = newDepth;
     outpamP->allocation_depth = newDepth;
     outpamP->maxval           = newMaxval;
-    outpamP->format           = allPbm ? RPBM_FORMAT : PAM_FORMAT;
+    outpamP->format           = newFormat;
     STRSCPY(outpamP->tuple_type, tupleTypeVaries ? "" : newTupletype);
     outpamP->comment_p        = NULL;
     outpamP->plainformat      = false;
 
-    if (verbose) {
-        pm_message("Concatenating %u input images", fileCt);
-        pm_message("Output width, height, depth: %u x %u x %u",
-                   outpamP->width, outpamP->height, outpamP->depth);
-        if (outpamP->format == RPBM_FORMAT)
-            pm_message("Using PBM fast path and producing raw PBM output");
-        else {
-            pm_message("Output maxval (max of all inputs): %lu",
-                       outpamP->maxval);
-            if (strlen(outpamP->tuple_type) > 0)
-                pm_message("Output tuple type (same as all inputs): '%s'",
-                           outpamP->tuple_type);
-            else
-                pm_message("Output tuple type is null string because input "
-                           "images have various tuple types");
-        }
-    }
+    if (verbose)
+        reportPlans(fileCt, outpamP);
 }
 
 
