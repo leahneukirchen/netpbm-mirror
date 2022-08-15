@@ -30,12 +30,6 @@ enum PadColorMethod {PAD_BLACK, PAD_WHITE, PAD_AUTO};
   */
 
 
-enum PlanePadMethod {PLANEPAD_ZERO, PLANEPAD_EXTEND};
-  /* The method for adding additional planes when some images have fewer
-     planes than others.  The additional plane is either all zeroes or
-     equal to the highest plane in the original image.
-  */
-
 enum Orientation {TOPBOTTOM, LEFTRIGHT};
   /* Direction of concatenation */
 
@@ -49,7 +43,6 @@ struct CmdlineInfo {
     const char **       inputFileName;
     unsigned int        fileCt;
     enum PadColorMethod padColorMethod;
-    enum PlanePadMethod planePadMethod;
     enum Orientation    orientation;
     enum Justification  justification;
     unsigned int        verbose;
@@ -72,7 +65,7 @@ parseCommandLine(int argc, const char ** const argv,
     unsigned int option_def_index;
 
     unsigned int leftright, topbottom;
-    unsigned int black, white, extendplane;
+    unsigned int black, white;
     unsigned int jtop, jbottom, jleft, jright, jcenter;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -89,7 +82,6 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0, "jleft",       OPT_FLAG,   NULL, &jleft,             0);
     OPTENT3(0, "jright",      OPT_FLAG,   NULL, &jright,            0);
     OPTENT3(0, "jcenter",     OPT_FLAG,   NULL, &jcenter,           0);
-    OPTENT3(0, "extendplane", OPT_FLAG,   NULL, &extendplane,       0);
     OPTENT3(0, "verbose",     OPT_FLAG,   NULL, &cmdlineP->verbose, 0);
 
     opt.opt_table = option_def;
@@ -119,8 +111,6 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->padColorMethod = PAD_WHITE;
     else
         cmdlineP->padColorMethod = PAD_AUTO;
-
-    cmdlineP->planePadMethod = extendplane ? PLANEPAD_EXTEND : PLANEPAD_ZERO;
 
     if (jtop + jbottom + jleft + jright + jcenter > 1)
         pm_error("You may specify only one of -jtop, -jbottom, "
@@ -183,6 +173,100 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 
+static const char *
+tupletypeX(bool         const allVisual,
+           unsigned int const colorDepth,
+           sample       const maxMaxval,
+           bool         const haveOpacity) {
+
+    const char * retval;
+
+    if (allVisual) {
+        switch (colorDepth) {
+        case 1:
+            if (maxMaxval == 1)
+                retval = haveOpacity ? "BLACKANDWHITE_ALPHA" : "BLACKANDWHITE";
+            else
+                retval = haveOpacity ? "GRAYSCALE_ALPHA"     : "GRAYSCALE";
+            break;
+        case 3:
+            retval = haveOpacity ? "RGB_ALPHA"           : "RGB";
+            break;
+        default:
+            assert(false);
+        }
+    } else
+        retval = "";
+
+    return retval;
+}
+
+
+
+typedef struct {
+    /* This describes a transformation from one tuple type to another,
+       e.g. from BLACKANDWHITE to GRAY_ALPHA.
+
+       For transformations bewteen the defined ones for visual images, the
+       only "up" transformations are covered.
+    */
+    bool mustPromoteColor;
+        /* Plane 0, which is the black/white or grayscale plane and also
+           the red plane must be copied as the red, green, and blue planes
+           (0, 1, and 2).
+        */
+    bool mustPromoteOpacity;
+        /* Plane 1, which is the opacity plane for black and white or
+           grayscale tuples, must be copied as the RGB opacity plane (3).
+        */
+    bool mustCreateOpacity;
+        /* The opacity plane value must be set to opaque */
+
+    bool mustPadZero;
+        /* Where the target tuple type is deeper than the source tuple
+           type, all higher numbered planes must be cleared to zero.
+
+           This is mutually exclusive with the rest of the musts.
+        */
+
+} TtTransform;
+
+
+
+static TtTransform
+ttXformForImg(const struct pam * const inpamP,
+              const struct pam * const outpamP) {
+/*----------------------------------------------------------------------------
+  The transform required to transform tuples of the kind described by *inpamP
+  to tuples of the kind described by *outpamP (e.g. from grayscale to RGB,
+  which involves replicating one plane into three).
+
+  We assume *outpamP tuples are of a type that is at least as expressive than
+  *inpamP tuples.  So e.g. outpamP->tuple_type cannot be "GRAYSCALE" if
+  inpamP->tuple_type is "RGB".
+-----------------------------------------------------------------------------*/
+    TtTransform retval;
+
+    if (inpamP->visual && outpamP->visual) {
+        retval.mustPromoteColor   =
+            (outpamP->color_depth > inpamP->color_depth);
+        retval.mustPromoteOpacity =
+            (outpamP->color_depth > inpamP->color_depth &&
+             (outpamP->have_opacity && inpamP->have_opacity));
+        retval.mustCreateOpacity  =
+            (outpamP->have_opacity && !inpamP->have_opacity);
+        retval.mustPadZero = false;
+    } else {
+        retval.mustPromoteColor   = false;
+        retval.mustPromoteOpacity = false;
+        retval.mustCreateOpacity  = false;
+        retval.mustPadZero        = true;
+    }
+    return retval;
+}
+
+
+
 static void
 reportPlans(unsigned int       const fileCt,
             const struct pam * const outpamP) {
@@ -216,12 +300,10 @@ reportPlans(unsigned int       const fileCt,
             pm_message("Output format: PAM");
 
             if (strlen(outpamP->tuple_type) > 0)
-
-                pm_message("Output tuple type (same as all inputs): '%s'",
-                           outpamP->tuple_type);
+                pm_message("Output tuple type: '%s'", outpamP->tuple_type);
             else
                 pm_message("Output tuple type is null string because "
-                           "input images have various tuple types");
+                           "input images have various non-visual tuple types");
             break;
         }
     }
@@ -236,17 +318,21 @@ computeOutputParms(unsigned int       const fileCt,
                    bool               const verbose,
                    struct pam *       const outpamP) {
 
-    double newCols, newRows, newDepth;
-    sample newMaxval;
+    double newCols, newRows;
+    unsigned int maxDepth;
+    sample maxMaxval;
     int newFormat;
-    const char * newTupletype;
-    bool tupleTypeVaries;
-        /* We've seen multiple tuple types among the input images */
+    const char * firstTupletype;
+    bool allSameTt;
+    bool allVisual;
+    unsigned int maxColorDepth;
+    bool haveOpacity;
     unsigned int i;
 
-    for (i = 0, newCols = 0, newRows = 0, newDepth = 0, newMaxval = 0,
+    for (i = 0, newCols = 0, newRows = 0, maxDepth = 0, maxMaxval = 0,
              newFormat = 0,
-             newTupletype = NULL, tupleTypeVaries = false;
+             allVisual = true, maxColorDepth = 0, haveOpacity = false,
+             firstTupletype = NULL, allSameTt = true;
          i < fileCt;
          ++i) {
 
@@ -262,22 +348,30 @@ computeOutputParms(unsigned int       const fileCt,
             newCols = MAX(newCols, inpamP->width);
             break;
         }
-        if (newTupletype) {
-            if (!streq(inpamP->tuple_type, newTupletype))
-                tupleTypeVaries = true;
-        } else
-            newTupletype = inpamP->tuple_type;
 
-        newDepth  = MAX(newDepth,  inpamP->depth);
-        newMaxval = MAX(newMaxval, inpamP->maxval);
+        if (!firstTupletype)
+            firstTupletype = inpamP->tuple_type;
+        if (inpamP->tuple_type != firstTupletype)
+            allSameTt = false;
 
-        if (PNM_FORMAT_TYPE(inpamP->format) > PNM_FORMAT_TYPE(newFormat))
+        if (!inpamP->visual)
+            allVisual = false;
+
+        if (inpamP->have_opacity)
+            haveOpacity = true;
+
+        maxDepth      = MAX(maxDepth,      inpamP->depth);
+        maxColorDepth = MAX(maxColorDepth, inpamP->color_depth);
+        maxMaxval     = MAX(maxMaxval,     inpamP->maxval);
+
+        if (PAM_FORMAT_TYPE(inpamP->format) > PAM_FORMAT_TYPE(newFormat))
             newFormat = inpamP->format;
     }
-    assert(newCols   > 0);
-    assert(newRows   > 0);
-    assert(newMaxval > 0);
-    assert(newFormat > 0);
+    assert(newCols       > 0);
+    assert(newRows       > 0);
+    assert(maxMaxval     > 0);
+    assert(maxColorDepth > 0);
+    assert(newFormat     > 0);
 
     if (newCols > INT_MAX)
        pm_error("Output width too large: %.0f.", newCols);
@@ -285,7 +379,7 @@ computeOutputParms(unsigned int       const fileCt,
        pm_error("Output height too large: %.0f.", newRows);
 
     outpamP->size = sizeof(*outpamP);
-    outpamP->len  = PAM_STRUCT_SIZE(raster_pos);
+    outpamP->len  = PAM_STRUCT_SIZE(tuple_type);
 
     /* Note that while 'double' is not in general a precise numerical type,
        in the case of a sum of integers which is less than INT_MAX, it
@@ -293,11 +387,16 @@ computeOutputParms(unsigned int       const fileCt,
     */
     outpamP->height           = (unsigned int)newRows;
     outpamP->width            = (unsigned int)newCols;
-    outpamP->depth            = newDepth;
-    outpamP->allocation_depth = newDepth;
-    outpamP->maxval           = newMaxval;
+    outpamP->depth            = MAX(maxDepth,
+                                    maxColorDepth + (haveOpacity ? 1 : 0));
+    outpamP->allocation_depth = 0;  /* This means same as depth */
+    outpamP->maxval           = maxMaxval;
     outpamP->format           = newFormat;
-    STRSCPY(outpamP->tuple_type, tupleTypeVaries ? "" : newTupletype);
+    if (allSameTt)
+        STRSCPY(outpamP->tuple_type, firstTupletype);
+    else
+        STRSCPY(outpamP->tuple_type,
+                tupletypeX(allVisual, maxColorDepth, maxMaxval, haveOpacity));
     outpamP->comment_p        = NULL;
     outpamP->plainformat      = false;
 
@@ -663,36 +762,55 @@ concatenateTopBottomPbm(const struct pam *  const outpamP,
 
 
 static void
-padPlanesRow(enum PlanePadMethod const planePadMethod,
-             const struct pam *  const inpamP,
+padPlanesRow(const struct pam *  const inpamP,
              tuple *             const outrow,
              const struct pam *  const outpamP) {
 /*----------------------------------------------------------------------------
-   Add additional planes to *outrow as needed to pad out to the depth
-   indicated in *outpamP from the depth indicated in *inpamP.
-
-   'planePadMethod' tells what to use for the new planes.
+  Rearrange the planes of *outrow as needed to transform them into tuples
+  as described by *outpamP from tuples as described by *inpamP.
 -----------------------------------------------------------------------------*/
-    unsigned int plane;
+    TtTransform const ttTransform = ttXformForImg(inpamP, outpamP);
 
     assert(inpamP->allocation_depth >= outpamP->depth);
 
-    for (plane = inpamP->depth; plane < outpamP->depth; ++plane) {
+    if (ttTransform.mustPromoteOpacity) {
         unsigned int col;
 
+        assert(outpamP->depth >= PAM_TRN_PLANE);
+
         for (col = 0; col < inpamP->width; ++col) {
-            switch (planePadMethod) {
-            case PLANEPAD_ZERO:
+            outrow[col][outpamP->opacity_plane] =
+                outrow[col][inpamP->opacity_plane];
+        }
+    }
+    if (ttTransform.mustPromoteColor) {
+        unsigned int col;
+
+        assert(outpamP->depth >= PAM_GRN_PLANE);
+        assert(outpamP->depth >= PAM_BLU_PLANE);
+
+        for (col = 0; col < inpamP->width; ++col) {
+            assert(PAM_RED_PLANE == 0);
+            outrow[col][PAM_GRN_PLANE] = outrow[col][0];
+            outrow[col][PAM_BLU_PLANE] = outrow[col][0];
+        }
+    }
+
+    if (ttTransform.mustCreateOpacity) {
+        unsigned int col;
+
+        for (col = 0; col < inpamP->width; ++col)
+            outrow[col][outpamP->opacity_plane] = outpamP->maxval;
+    }
+
+    if (ttTransform.mustPadZero) {
+        unsigned int plane;
+
+        for (plane = inpamP->depth; plane < outpamP->depth; ++plane) {
+            unsigned int col;
+
+            for (col = 0; col < inpamP->width; ++col)
                 outrow[col][plane] = 0;
-                break;
-            case PLANEPAD_EXTEND:
-                assert(plane >= 1);
-                    /* Because depth is always at least 1 and we started at
-                       inpam[i].depth:
-                    */
-                outrow[col][plane] = outrow[col][plane-1];
-                break;
-            }
         }
     }
 }
@@ -727,7 +845,6 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
                     const struct pam *  const outpamP,
                     enum Justification  const justification,
                     enum PadColorMethod const padColorMethod,
-                    enum PlanePadMethod const planePadMethod,
                     LrImgCtl **         const imgCtlP) {
 
     LrImgCtl * imgCtl;  /* array */
@@ -766,8 +883,7 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
                 pnm_readpamrow(inpamP, thisEntryP->cachedRow);
                 pnm_scaletuplerow(&inpam[i], thisEntryP->cachedRow,
                                   thisEntryP->cachedRow, outpamP->maxval);
-                padPlanesRow(planePadMethod, &inpam[i], thisEntryP->cachedRow,
-                             outpamP);
+                padPlanesRow(&inpam[i], thisEntryP->cachedRow, outpamP);
                 {
                     struct pam cachedRowPam;
                     cachedRowPam = *outpamP;
@@ -786,6 +902,12 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
                 break;
             }
         }
+        /* Opacity sample of background color sample is meaningless at this
+           point; make it opaque.
+        */
+        if (outpamP->have_opacity)
+            thisEntryP->background[outpamP->opacity_plane] = outpamP->maxval;
+
     }
     *imgCtlP = imgCtl;
 }
@@ -815,8 +937,7 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                         const struct pam *  const inpam,  /* array */
                         unsigned int        const fileCt,
                         enum Justification  const justification,
-                        enum PadColorMethod const padColorMethod,
-                        enum PlanePadMethod const planePadMethod) {
+                        enum PadColorMethod const padColorMethod) {
 
     tuple * const outrow = pnm_allocpamrow(outpamP);
 
@@ -824,7 +945,7 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
     unsigned int row;
 
     createLrImgCtlArray(inpam, fileCt, outrow, outpamP,
-                        justification, padColorMethod, planePadMethod,
+                        justification, padColorMethod,
                         &imgCtl);
 
     for (row = 0; row < outpamP->height; ++row) {
@@ -862,8 +983,7 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                 pnm_readpamrow(&inpam[i], thisEntryP->out);
                 pnm_scaletuplerow(&inpam[i], thisEntryP->out,
                                   thisEntryP->out, outpamP->maxval);
-                padPlanesRow(planePadMethod, &inpam[i], thisEntryP->out,
-                             outpamP);
+                padPlanesRow(&inpam[i], thisEntryP->out, outpamP);
             } else {
                 /* It's a row of padding, so image i's part of outrow[] is
                    already set appropriately.
@@ -878,6 +998,37 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
     destroyLrImgCtlArray(imgCtl, fileCt);
 
     pnm_freepamrow(outrow);
+}
+
+
+
+static tuple
+initialBackgroundColor(const struct pam *  const outpamP,
+                       enum PadColorMethod const padColorMethod) {
+
+    tuple retval;
+
+    switch (padColorMethod) {
+    case PAD_AUTO:
+        /* Background is different for each input image */
+        retval = pnm_allocpamtuple(outpamP);
+            /* Dummy value; just need something to free */
+        break;
+    case PAD_BLACK:
+        pnm_createBlackTuple(outpamP, &retval);
+        break;
+    case PAD_WHITE:
+        pnm_createWhiteTuple(outpamP, &retval);
+        break;
+    }
+
+    /* Opacity sample of background color sample is meaningless at this point;
+       make it opaque.
+    */
+    if (outpamP->have_opacity)
+        retval[outpamP->opacity_plane] = outpamP->maxval;
+
+    return retval;
 }
 
 
@@ -944,7 +1095,6 @@ static void
 readFirstTBRowAndDetermineBackground(const struct pam *  const inpamP,
                                      const struct pam *  const outpamP,
                                      tuple *             const out,
-                                     enum PlanePadMethod const planePadMethod,
                                      tuple *             const backgroundP) {
 /*----------------------------------------------------------------------------
    Read the first row of an input image into 'out', adjusting it to conform
@@ -955,22 +1105,29 @@ readFirstTBRowAndDetermineBackground(const struct pam *  const inpamP,
    From this row, determine the background color for the input image and
    return it as *backgroundP (a newly malloced tuple).
 -----------------------------------------------------------------------------*/
-    struct pam partialOutpam;
-        /* Descriptor for the input image with depth and maxval adjusted to
-           that of the output image.
-        */
-
     pnm_readpamrow(inpamP, out);
 
     pnm_scaletuplerow(inpamP, out, out, outpamP->maxval);
 
-    padPlanesRow(planePadMethod, inpamP, out, outpamP);
+    padPlanesRow(inpamP, out, outpamP);
 
     {
+        struct pam partialOutpam;
+            /* Descriptor for the input image with depth and maxval adjusted to
+               that of the output image.
+            */
+        tuple background;
+
         partialOutpam = *outpamP;
         partialOutpam.width = inpamP->width;
 
-        *backgroundP = pnm_backgroundtuplerow(&partialOutpam, out);
+        background = pnm_backgroundtuplerow(&partialOutpam, out);
+
+        /* Make the background opaque */
+        if (outpamP->have_opacity)
+            background[outpamP->opacity_plane] = outpamP->maxval;
+
+        *backgroundP = background;
     }
 }
 
@@ -981,8 +1138,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
                         const struct pam *  const inpam,  /* array */
                         unsigned int        const fileCt,
                         enum Justification  const justification,
-                        enum PadColorMethod const padColorMethod,
-                        enum PlanePadMethod const planePadMethod) {
+                        enum PadColorMethod const padColorMethod) {
 
     tuple * const newTuplerow = pnm_allocpamrow(outpamP);
     tuple * out;
@@ -993,19 +1149,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
     tuple background;
     tuple backgroundPrev;
 
-    switch (padColorMethod) {
-    case PAD_AUTO:
-        /* Backgournd is different for each input image */
-        background = pnm_allocpamtuple(outpamP);
-            /* Dummy value; just need something to free */
-        break;
-    case PAD_BLACK:
-        pnm_createBlackTuple(outpamP, &background);
-        break;
-    case PAD_WHITE:
-        pnm_createWhiteTuple(outpamP, &background);
-        break;
-    }
+    background = initialBackgroundColor(outpamP, padColorMethod);
 
     for (i = 0; i < fileCt; ++i) {
         const struct pam * const inpamP = &inpam[i];
@@ -1030,7 +1174,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
                 out = &newTuplerow[padLeft];
                 backgroundPrev = background;
                 readFirstTBRowAndDetermineBackground(
-                    inpamP, outpamP, out, planePadMethod, &background);
+                    inpamP, outpamP, out, &background);
 
                 backChanged =
                     i == 0 ||
@@ -1059,7 +1203,7 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
 
             pnm_scaletuplerow(inpamP, out, out, outpamP->maxval);
 
-            padPlanesRow(planePadMethod, inpamP, out, outpamP);
+            padPlanesRow(inpamP, out, outpamP);
 
             pnm_writepamrow(outpamP, newTuplerow);
         }
@@ -1087,13 +1231,14 @@ main(int           argc,
 
     for (i = 0; i < cmdline.fileCt; ++i) {
         FILE * const ifP = pm_openr(cmdline.inputFileName[i]);
-        pnm_readpaminit(ifP, &inpam[i], PAM_STRUCT_SIZE(allocation_depth));
+        inpam[i].comment_p = NULL;  /* Don't want to see the comments */
+        pnm_readpaminit(ifP, &inpam[i], PAM_STRUCT_SIZE(opacity_plane));
     }
-
-    outpam.file = stdout;
 
     computeOutputParms(cmdline.fileCt, cmdline.orientation, inpam,
                        cmdline.verbose, &outpam);
+
+    outpam.file = stdout;
 
     for (i = 0; i < cmdline.fileCt; ++i)
         pnm_setminallocationdepth(&inpam[i], outpam.depth);
@@ -1118,14 +1263,12 @@ main(int           argc,
         case LEFTRIGHT:
             concatenateLeftRightGen(&outpam, inpam, cmdline.fileCt,
                                     cmdline.justification,
-                                    cmdline.padColorMethod,
-                                    cmdline.planePadMethod);
+                                    cmdline.padColorMethod);
             break;
         case TOPBOTTOM:
             concatenateTopBottomGen(&outpam, inpam, cmdline.fileCt,
                                     cmdline.justification,
-                                    cmdline.padColorMethod,
-                                    cmdline.planePadMethod);
+                                    cmdline.padColorMethod);
             break;
         }
     }
