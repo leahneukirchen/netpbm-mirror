@@ -145,8 +145,7 @@ sub tempFile($) {
 sub makeColorMap($$$$) {
     my ($fileNamesR, $newColorCt, $colorMapFileName, $errorR) = @_;
 
-    my $pamcatCmd =
-       "pamcat -extendplane -topbottom -white -jleft @{$fileNamesR}";
+    my $pamcatCmd = "pamcat -topbottom -white -jleft @{$fileNamesR}";
 
     my $pnmcolormapCmd = "pnmcolormap $newColorCt";
 

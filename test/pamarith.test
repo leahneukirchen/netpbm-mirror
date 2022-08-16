@@ -18,7 +18,7 @@ pgmmake -maxval 15 0.15 16 1 > ${input2_pgm}
 rgb3toppm ${input1_pgm} ${input1_pgm} ${input1_pgm} > ${input1_ppm}
 rgb3toppm ${input2_pgm} ${input2_pgm} ${input2_pgm} > ${input2_ppm}
 
-pamcat -tb ${input1_pgm} ${input2_pgm} | pamtopnm -assume -plain
+pamcat -tb ${input1_pgm} ${input2_pgm} -plain
 
 for fn in "-add" "-subtract" "-multiply" "-divide" "-difference" \
     "-minimum" "-maximum" "-mean" "-compare" "-equal" \

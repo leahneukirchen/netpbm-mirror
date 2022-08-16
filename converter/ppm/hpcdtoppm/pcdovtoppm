@@ -184,11 +184,11 @@ do
 
     if [ "$back" = "-white" ] ; then
         pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2 | \
-        pamcat -extendplane $back -topbottom $tmpfile - > $imagefile
+        pamcat $back -topbottom $tmpfile - > $imagefile
     else
         pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2 | \
           pnminvert | \
-          pamcat -extendplane $back -topbottom $tmpfile - > $imagefile
+          pamcat $back -topbottom $tmpfile - > $imagefile
     fi
 
     rm -f $tmpfile
@@ -200,9 +200,9 @@ do
         rowfile=${tempdir}/pi.${row}
         rm -f $rowfile
     if [ "$colors" = "n" ] ; then
-        pamcat -extendplane $back -leftright -jbottom $imagefiles > $rowfile
+        pamcat $back -leftright -jbottom $imagefiles > $rowfile
     else
-        pamcat -extendplane $back -leftright -jbottom $imagefiles | \
+        pamcat $back -leftright -jbottom $imagefiles | \
         ppmquant -quiet $colors > $rowfile
     fi
     rm -f $imagefiles
@@ -220,9 +220,9 @@ if [ -n $imagefiles ] ; then
     rowfile=${tempdir}/pi.${row}
     rm -f $rowfile
     if [ "$colors" = "n" ] ; then
-        pamcat -extendplane $back -leftright -jbottom $imagefiles > $rowfile
+        pamcat $back -leftright -jbottom $imagefiles > $rowfile
     else
-        pamcat -extendplane $back -leftright -jbottom $imagefiles | \
+        pamcat $back -leftright -jbottom $imagefiles | \
           ppmquant -quiet $colors > $rowfile
     fi
     rm -f $imagefiles
@@ -233,10 +233,10 @@ if [ $(echo $rowfiles|wc -w) -eq 1 ] ; then
     ppmtoppm $plainopt < $rowfiles
 else
     if [ "$colors" = "n" ] ; then
-        pamcat -extendplane $back -topbottom $rowfiles | \
+        pamcat $back -topbottom $rowfiles | \
           ppmtoppm $plainopt
     else
-        pamcat -extendplane $back -tb $rowfiles | \
+        pamcat $back -tb $rowfiles | \
           ppmquant $plainopt -quiet $colors
     fi
 fi

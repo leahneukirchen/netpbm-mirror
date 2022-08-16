@@ -502,7 +502,7 @@ makeImageFile(const char * const thumbnailFileName,
     const char * inputFileNmToken    = shellQuote(inputFileName);
 
     systemf("pbmtext %s %s"
-            "| pamcat -extendplane %s -topbottom %s - "
+            "| pamcat %s -topbottom %s - "
             "> %s",
             inputFileNmToken, invertStage, blackWhiteOpt,
             thumbnailFileName, outputFileName);
@@ -616,7 +616,7 @@ combineIntoRowAndDelete(unsigned int const row,
 
     fileList = thumbnailFileList(tempDir, row, cols);
 
-    systemf("pamcat -extendplane %s -leftright -jbottom %s "
+    systemf("pamcat %s -leftright -jbottom %s "
             "%s"
             ">%s",
             blackWhiteOpt, fileList, quantStage, fileName);
@@ -683,7 +683,7 @@ writeRowsAndDelete(unsigned int const rows,
 
     fileList = rowFileList(tempDir, rows);
 
-    systemf("pamcat -extendplane %s -topbottom %s | pamtopnm -assume %s",
+    systemf("pamcat %s -topbottom %s %s",
             blackWhiteOpt, fileList, quantStage);
 
     pm_strfree(fileList);

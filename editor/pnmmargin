@@ -108,9 +108,8 @@ else
     pamflip -rotate90 $tmp2 > $tmp3
 
     # Cat things together.
-    pamcat -extendplane -leftright $tmp2 $tmp1 $tmp2 > $tmp4
-    pamcat -extendplane -topbottom $tmp3 $tmp4 $tmp3 | \
-      pamtopnm $plainopt
+    pamcat -leftright $tmp2 $tmp1 $tmp2 > $tmp4
+    pamcat -topbottom $plainopt $tmp3 $tmp4 $tmp3
 fi
 
 

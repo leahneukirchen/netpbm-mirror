@@ -127,7 +127,7 @@ while (@colorlist >= 2) {
 }
 
 my $termStat =
-    system("$verboseCommand pamcat -leftright @outlist | ppmtoppm");
+    system("$verboseCommand pamcat -leftright @outlist");
 if ($termStat != 0) {
     exit 1;
 }

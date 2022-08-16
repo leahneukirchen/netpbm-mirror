@@ -28,7 +28,7 @@ for y in 0 1 2 3 4
   pamundice -across=3 ${fname_stem}"_"$y"_%1a".pgm > ${tempfile}_"$y"
   done
 
-pamcat -tb ${tempfile}_[01234] | pamtopnm --assume | cksum
+pamcat -tb ${tempfile}_[01234] | cksum
 rm ${tempfile}_[01234]
 
 # Note: the following 2 are valid.  There should not be warning messages.
@@ -38,7 +38,7 @@ for x in 0 1 2
   pamundice -down=5 ${fname_stem}"_%1d_"$x.pgm > ${tempfile}"_"$x
   done
 
-pamcat -lr ${tempfile}_[012] | pamtopnm --assume | cksum
+pamcat -lr ${tempfile}_[012] | cksum
 rm ${tempfile}_[012]
 
 rm ${fname_stem}_?_?.pgm
