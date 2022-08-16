@@ -45,7 +45,7 @@ NOMERGEBINARIES =
 MERGEBINARIES = $(PORTBINARIES)
 
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
-SCRIPTS = ppmbrighten pnmcat pnmflip ppmfade ppmquant ppmshadow \
+SCRIPTS = ppmbrighten pnmflip ppmfade ppmquant ppmshadow \
 	  pamstretch-gen pnmmargin pnmquant pnmquantall 
 
 OBJECTS = $(BINARIES:%=%.o)
@@ -101,6 +101,10 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmcomp$(EXE) ; \
 	$(SYMLINK) pamcomp$(EXE) pnmcomp$(EXE)
+# In August 2022, pamcat replaced pnmcat
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmcat$(EXE) ; \
+	$(SYMLINK) pamcat$(EXE) pnmcat$(EXE)
 
 mergecomptrylist:
 	cat /dev/null >$@
@@ -112,4 +116,5 @@ mergecomptrylist:
 	echo "TRY(\"pnmcut\",     main_pamcut);"     >>$@
 	echo "TRY(\"pnmscale\",   main_pamscale);"   >>$@
 	echo "TRY(\"pnmcomp\",    main_pamcomp);"    >>$@
+	echo "TRY(\"pnmcat\",     main_pamcomp);"    >>$@
 
