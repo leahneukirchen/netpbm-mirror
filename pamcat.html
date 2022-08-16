@@ -16,8 +16,6 @@ pamcat - concatenate Netpbm images
 
 {<b>-leftright</b> | <b>-lr</b> | <b>-topbottom</b> | <b>-tb</b>}
 
-[<b>-extendplane</b>]
-
 [<b>-white</b>|<b>-black</b>]
 
 [<b>-jtop</b>|<b>-jbottom</b>|<b>-jcenter</b>]
@@ -36,11 +34,8 @@ from its value.
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pamcat</b> reads one or more Netpbm images as input, concatenates them
-either left to right or top to bottom, and produces a single PAM image
-as output.
-
-<p>As an exception for greater efficiency, <b>pamcat</b> produces raw PBM
-output if all of the input images are raw PBM.
+either left to right or top to bottom, and produces a single Netpbm image as
+output.
 
 <p>Options <b>-leftright</b> and <b>-topbottom</b> determine the direction
   of the concatenation.
@@ -48,18 +43,24 @@ output if all of the input images are raw PBM.
 <p>The images do not have to be the same shape:  You can concatenate images
   of different widths top to bottom and of different heights left to right.
   You can concatenate images of different depths (numbers of planes).  You
-  can concatenate a PBM image with a PPM image.
+  can concatenate a PBM image with a PPM image.  Et cetera.
 
-<p>Where the input images are of different depths, the depth of the output is
-  the maximum of the depths of the inputs.  <b>pamcat</b> adds higher numbered
-  planes to the input images as padding.  You can choose whether those higher
-  planes have all zero (black) sample values or duplicate the highest numbered
-  plane in the input.  Use the <b>-extendplane</b> option for this.  The
-  duplication function is useful when your inputs are visual images, without
-  transparency planes, because it effectively translates black and white
-  pixels from a 1-plane black and white input image to black and white pixels
-  in 3-plane color output and gray pixels from a 1-plane grayscale input image
-  to the same grays in 3-plane color output.
+<p>The format of the output image is the highest of the formats of the
+  input images, in the order PBM, PGM, PPM, PAM.
+
+<p>For PAM output, if all of the input images has the same tuple type
+  (including implied tuple types of PNM images), that is the tuple type of the
+  output.  If the inputs differ, but are all visual tuple types, the
+  output&apos;s tuple type is the most primitive that can represent all the
+  input.  E.g. if inputs are GRAYSCALE and RGB, the output is RGB, and if the
+  inputs are GRAYSCALE_ALPHA and RGB, the output is RGB_ALPHA.  If the inputs
+  differ and are not all visual, the output tuple type is a null string.
+
+<p>When the output is PAM, its depth is the maximum of the depths of the
+  inputs (including implied depths of PNM images), but at least enough to
+  represent the tuple type specified above.  In the case of nonvisual PAM
+  output, input images are padded to this output depth with higher numbered
+  planes of all zeroes.
 
 <p>Where the input images are of different widths and you concatenate top
   to bottom, <b>pamcat</b> generates output as wide as the widest of the
@@ -78,6 +79,11 @@ output if all of the input images are raw PBM.
   likely background color, with possibly different colored padding for each
   input image.  Control this with the <b>-black</b> and <b>-white</b> options.
 
+<p>Where the output image contains transparency information (because at least
+  one of the input images does), the padding is opaque.  (That is consistent
+  with the result for an output image without transparency information, because
+  such an image is defined to be opaque).
+  
 <p>The arguments are names of input files.  Any one of these, but not more
 than one, may be "-" to indicate Standard Input.  If you have no
 arguments, that means a single input image from Standard Input (and that is
@@ -167,28 +173,6 @@ different for each image.
 </dl>
 
 
-<h3 id="depthextension">Depth Extension</h3>
-
-<dl compact>
-
-<dd>This option controls what happens when the input image have different
-  depths (number of planes), so <b>pamcat</b> adds planes to the shallower
-  input images.
-
-<p>The default is to make the additional planes all zero.
-  
-<dt><b>-extendplane</b>
-<dd>Make the additional planes copies of the highest numbered plane in the
-  input.
-  <p>This is appropriate whenever the input images are visual images without a
-    transparency plane.  PBM, PGM, and PPM images are all examples of visual
-    images without a transparency plane.  PAM images with tuple types
-    &quot;BLACKANDWHITE&quot;, &quot;GRAYSCALE&quot;, and &quot;RGB&quot;
-    are also examples.
-
-</dl>
-
-
 <h2 id="seealso">SEE ALSO</h2>
 
 <b><a href="pamundice.html">pamundice</a></b>,
@@ -223,11 +207,6 @@ different for each image.
   replace it.  It reused the raw PBM fast path code from <b>pnmcat</b> almost
   verbatim.
 
-<p>At that time, Netpbm continued to include <b>pnmcat</b>, but now it did
-  nothing but invoke <b>pamcat</b> with an <b>-extendplane</b> option and pipe
-  the output through <b>pamtopnm</b>.  It was intended for backward
-  compatibility only.
-
 <hr>
 <h2 id="index">Table Of Contents</h2>
 <ul>
@@ -238,7 +217,6 @@ different for each image.
   <li><a href="#direction">Direction</a>
   <li><a href="#justification">Justification</a>
   <li><a href="#paddingcolor">Padding Color</a>
-  <li><a href="#depthextension">Depth Extension</a>
   </ul>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#history">HISTORY</a>

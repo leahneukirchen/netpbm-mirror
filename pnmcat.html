@@ -2,7 +2,7 @@
 <html><head><title>Pnmcat User Manual</title></head>
 <body>
 <h1>pnmcat</h1>
-Updated: 30 July 2022
+Updated: 13 August 2022
 
 <h2>NAME</h2>
 
@@ -12,65 +12,15 @@ pnmcat - replaced by pamcat
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmcat</b> was obsoleted by <a href="pamcat.html"><b>pamcat</b></a>,
-introduced with Netpbm 11.00 (September 2022).  <b>pamcat</b> is almost
-backward compatible with <b>pnmcat</b>, plus adds many additional functions,
-including the ability to process PAM images.
-
-<p>These are the ways in which <b>pamcat</b> is not backward compatible with
-  <b>pnmcat</b>:
-
-  <ul>
-    <li><b>pamcat</b> produces PAM output, whereas <b>pnmcat</b> produces PNM.
-      With <b>pamcat</b>, If your inputs are PNM and you want PNM output, you
-      can run the output through <b>pamtopnm</b>.  But most Netpbm programs
-      that take PNM input can just as well take the PAM input, so this may not
-      be necessary.
-
-    <li><b>pnmcat</b> recognizes PBM, PGM, and PPM input images as visual
-      images and makes sure the images are the same in the concatenated
-      outputs even though the output may be a different format.  For example,
-      if you are concatenating PBM image foo.pbm and PPM image bar.ppm, the
-      resulting image will be PPM and the foo part of it will have the same
-      black and white pixels as the foo.pbm input.
-
-      <p><b>pamcat</b>, on the other hand, work on generic PAM images and does
-        not really recognize colors.  It sees a PBM input as a 1-plane image
-        and a PPM input as a 3-plane image and produces a 3-plane output
-        image.  By default, in the example above, the foo part of the output
-        contains the black and white sample values in its first plane, but
-        zeroes in its second and third planes, which means if you take the
-        output image to be a PPM-like color visual image, the foo part is
-        black and red instead of black and white.
-
-      <p>But this is easy to fix.  Use the <b>-extendplane</b> option to say
-        instead of making those additional planes zero, make them copies of
-        the first plane.  So the three panes in the foo part of the output
-        image will all contain the same sample values as the single plane of
-        the PBM input, which means if you use the output image as a color
-        image, those pixels are black and white.
-  </ul>
-
-<p>For full backward compatibility, <b>pnmcat</b> remains in Netpbm,
-  implemented as a simple wrapper of <b>pamcat</b>.  For the fewest problems
-  with future releases of Netpbm, you should not use <b>pnmcat</b> in any
-  new work.
-
-
-<h2>Using pnmcat in old Netpbm</h2>
+<p><b>pnmcat</b> was obsoleted by <a
+href="pamcat.html"><b>pamcat</b></a>, introduced with Netpbm 11.00
+(September 2022).  <b>pamcat</b> is backward compatible with <b>pnmcat</b>,
+plus adds many additional functions, including the ability to process PAM
+images.
 
 <p>In Netpbm before 11.00, use the manual for <b>pamcat</b> with
-<b>pnmcat</b>, observing the following differences:
-
-<ul>
-  <li><b>pnmcat</b> accepts only PNM input (i.e. PBM, PGM, or PPM)
-    and produces only PNM output.  The output is the highest format
-    (PBM, PGM, PPM) of any of its inputs.
-
-  <li>Features that the manual says were added to <b>pamcat</b>
-    in Release 11.00 or later are not there.
-</ul>
-
+<b>pnmcat</b>.  Features that are in <b>pamcat</b> but not <b>pnmcat</b>
+are indicated by statements that they didn't exist before 11.00.
 
 </body>
 </html>
