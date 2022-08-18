@@ -124,12 +124,9 @@ strncaseeq(const char * const comparand,
 #define TOUPPER(C) ((char)toupper((unsigned char)(C)))
 
 
-/* These are all private versions of commonly available standard C
-   library subroutines whose names are the same except with the N at
-   the end.  Because not all standard C libraries have them all,
-   Netpbm must include them in its own libraries, and because some
-   standard C libraries have some of them, Netpbm must use different
-   names for them.
+/* Most of these are private versions of commonly available standard C library
+   subroutines whose names are similar.  They're here because not all standard
+   C libraries have them.
 
    The GNU C library has all of them.  All but the oldest standard C libraries
    have snprintf().
