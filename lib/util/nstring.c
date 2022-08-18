@@ -1,9 +1,9 @@
-/*
- * snprintf.c - a portable implementation of snprintf
- *
+/*=============================================================================
+                               nstring.c
+===============================================================================
 
    THIS MODULE WAS ADAPTED FOR NETPBM BY BRYAN HENDERSON ON 2002.03.24.
-   Bryan got the base from
+   Bryan got the base snprintf.c from
    http://www.ijs.si/software/snprintf/snprintf-2.2.tar.gz, but made
    a lot of changes and additions.
    The code from ww.ijs.si was written by
@@ -83,28 +83,7 @@
  * For historical discussion on changes in the semantics and standards
  * of snprintf see printf(3) man page in the Linux programmers manual.
  *
- * Routines asprintf and vasprintf return a pointer (in the ptr argument)
- * to a buffer sufficiently large to hold the resulting string. This pointer
- * should be passed to free(3) to release the allocated storage when it is
- * no longer needed. If sufficient space cannot be allocated, these functions
- * will return -1 and set ptr to be a NULL pointer. These two routines are a
- * GNU C library extensions (glibc).
- *
- * Routines asnprintf and vasnprintf are similar to asprintf and vasprintf,
- * yet, like snprintf and vsnprintf counterparts, will write at most str_m-1
- * characters into the allocated output string, the last character in the
- * allocated buffer then gets the terminating null. If the formatted string
- * length (the return value) is greater than or equal to the str_m argument,
- * the resulting string was truncated and some of the formatted characters
- * were discarded. These routines present a handy way to limit the amount
- * of allocated memory to some sane value.
- *
- * AVAILABILITY
- *   http://www.ijs.si/software/snprintf/
- *
- */
-
-
+=============================================================================*/
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE  /* Make sure strdup() is in string.h */
