@@ -327,16 +327,16 @@ computeOutputParms(unsigned int       const fileCt,
     bool allVisual;
     unsigned int maxColorDepth;
     bool haveOpacity;
-    unsigned int i;
+    unsigned int fileSeq;
 
-    for (i = 0, newCols = 0, newRows = 0, maxDepth = 0, maxMaxval = 0,
+    for (fileSeq = 0, newCols = 0, newRows = 0, maxDepth = 0, maxMaxval = 0,
              newFormat = 0,
              allVisual = true, maxColorDepth = 0, haveOpacity = false,
              firstTupletype = NULL, allSameTt = true;
-         i < fileCt;
-         ++i) {
+         fileSeq < fileCt;
+         ++fileSeq) {
 
-        const struct pam * const inpamP = &inpam[i];
+        const struct pam * const inpamP = &inpam[fileSeq];
 
         switch (orientation) {
         case LEFTRIGHT:
@@ -518,42 +518,44 @@ createLrImgCtlPbm(const struct pam *  const inpam,  /* array */
    information about images as *imgCtlP.
 -----------------------------------------------------------------------------*/
     LrImgCtlPbm * imgCtl;  /* array, size 'fileCt' */
-    unsigned int i;
+    unsigned int fileSeq;
 
     MALLOCARRAY_NOFAIL(imgCtl, fileCt);
 
-    for (i = 0; i < fileCt; ++i) {
-        LrImgCtlPbm * const imgCtlP = &imgCtl[i];
+    for (fileSeq = 0; fileSeq < fileCt; ++fileSeq) {
+        LrImgCtlPbm *      const imgCtlP = &imgCtl[fileSeq];
+        const struct pam * const inpamP  = &inpam[fileSeq];
 
         switch (justification) {
         case JUST_MIN:
             imgCtlP->padtop = 0;
             break;
         case JUST_MAX:
-            imgCtlP->padtop = outHeight - inpam[i].height;
+            imgCtlP->padtop = outHeight - inpam[fileSeq].height;
             break;
         case JUST_CENTER:
-            imgCtlP->padtop = (outHeight - inpam[i].height) / 2;
+            imgCtlP->padtop = (outHeight - inpamP->height) / 2;
             break;
         }
 
         imgCtlP->offset =
-            (i == 0) ? 0 : imgCtl[i-1].offset + inpam[i-1].width;
+            (fileSeq == 0) ?
+                0 : imgCtl[fileSeq-1].offset + inpam[fileSeq-1].width;
 
-        if (inpam[i].height == outHeight)  /* no padding */
+        if (inpamP->height == outHeight)  /* no padding */
             imgCtlP->proberow = NULL;
         else {                   /* determine pad color for image i */
             switch (padColorMethod) {
             case PAD_AUTO: {
                 bit bgBit;
                 imgCtlP->proberow =
-                    pbm_allocrow_packed((unsigned int)inpam[i].width + 7);
+                    pbm_allocrow_packed((unsigned int)inpamP->width + 7);
                 pbm_readpbmrow_bitoffset(
-                    inpam[i].file, imgCtlP->proberow,
-                    inpam[i].width, inpam[i].format, imgCtlP->offset % 8);
+                    inpamP->file, imgCtlP->proberow,
+                    inpamP->width, inpamP->format, imgCtlP->offset % 8);
 
                 bgBit = pbm_backgroundbitrow(
-                    imgCtlP->proberow, inpam[i].width,
+                    imgCtlP->proberow, inpamP->width,
                     imgCtlP->offset % 8);
 
                 imgCtlP->background = bgBit == PBM_BLACK ? 0xff : 0x00;
@@ -613,18 +615,19 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
     outrow[pbm_packed_bytes(outpamP->width)-1] = 0x00;
 
     for (row = 0; row < outpamP->height; ++row) {
-        unsigned int i;
+        unsigned int fileSeq;
 
-        for (i = 0; i < fileCt; ++i) {
-            const LrImgCtlPbm * const imgCtlP = &imgCtl[i];
+        for (fileSeq = 0; fileSeq < fileCt; ++fileSeq) {
+            const LrImgCtlPbm * const imgCtlP = &imgCtl[fileSeq];
+            const struct pam *  const inpamP  = &inpam[fileSeq];
 
             if ((row == 0 && imgCtlP->padtop > 0) ||
-                row == imgCtlP->padtop + inpam[i].height) {
+                row == imgCtlP->padtop + inpamP->height) {
 
                 /* This row begins a run of padding, either above or below
                    file 'i', so set 'outrow' to padding.
                 */
-                padFillBitrow(outrow, imgCtlP->background, inpam[i].width,
+                padFillBitrow(outrow, imgCtlP->background, inpamP->width,
                               imgCtlP->offset);
             }
 
@@ -633,11 +636,11 @@ concatenateLeftRightPbm(struct pam *        const outpamP,
                    background.  Copy it to outrow[].
                 */
                 copyBitrow(imgCtlP->proberow, outrow,
-                           inpam[i].width, imgCtlP->offset);
+                           inpamP->width, imgCtlP->offset);
             } else if (row >= imgCtlP->padtop &&
-                       row < imgCtlP->padtop + inpam[i].height) {
+                       row < imgCtlP->padtop + inpamP->height) {
                 pbm_readpbmrow_bitoffset(
-                    inpam[i].file, outrow, inpam[i].width, inpam[i].format,
+                    inpamP->file, outrow, inpamP->width, inpamP->format,
                     imgCtlP->offset);
             } else {
                 /* It's a row of padding, so outrow[] is already set
@@ -674,7 +677,7 @@ concatenateTopBottomPbm(const struct pam *  const outpamP,
            input image.
         */
 
-    unsigned int i;
+    unsigned int fileSeq;
     unsigned int row, startRow;
 
     outrow[pbm_packed_bytes(outpamP->width)-1] = 0x00;
@@ -685,8 +688,10 @@ concatenateTopBottomPbm(const struct pam *  const outpamP,
     case PAD_WHITE:  background = 0x00;  break;
     }
 
-    for (i = 0; i < fileCt; ++i) {
-        if (inpam[i].width == outpamP->width) {
+    for (fileSeq = 0; fileSeq < fileCt; ++fileSeq) {
+        const struct pam * const inpamP = &inpam[fileSeq];
+
+        if (inpamP->width == outpamP->width) {
             /* No padding */
             startRow   = 0;
             backChange = FALSE;
@@ -699,10 +704,10 @@ concatenateTopBottomPbm(const struct pam *  const outpamP,
                 padleft = 0;
                 break;
             case JUST_MAX:
-                padleft = outpamP->width - inpam[i].width;
+                padleft = outpamP->width - inpamP->width;
                 break;
             case JUST_CENTER:
-                padleft = (outpamP->width - inpam[i].width) / 2;
+                padleft = (outpamP->width - inpamP->width) / 2;
                 break;
             }
 
@@ -713,31 +718,32 @@ concatenateTopBottomPbm(const struct pam *  const outpamP,
                 startRow = 1;
 
                 pbm_readpbmrow_bitoffset(
-                    inpam[i].file, outrow, inpam[i].width, inpam[i].format,
+                    inpamP->file, outrow, inpamP->width, inpamP->format,
                     padleft);
 
-                bgBit = pbm_backgroundbitrow(outrow, inpam[i].width, padleft);
+                bgBit = pbm_backgroundbitrow(outrow, inpamP->width, padleft);
                 background = bgBit == PBM_BLACK ? 0xff : 0x00;
 
-                backChange = (i == 0 || background != backgroundPrev);
+                backChange = (fileSeq == 0 || background != backgroundPrev);
             } break;
             case PAD_WHITE:
             case PAD_BLACK:
                 startRow = 0;
-                backChange = (i == 0);
+                backChange = (fileSeq == 0);
                 break;
             }
 
-            if (backChange || (i > 0 && inpam[i-1].width > inpam[i].width)) {
+            if (backChange ||
+                (fileSeq > 0 && inpam[fileSeq-1].width > inpamP->width)) {
                 unsigned int const padright =
-                    outpamP->width - padleft - inpam[i].width;
+                    outpamP->width - padleft - inpamP->width;
 
                 if (padleft > 0)
                     padFillBitrow(outrow, background, padleft, 0);
 
                 if (padright > 0)
                     padFillBitrow(outrow, background, padright,
-                                  padleft + inpam[i].width);
+                                  padleft + inpamP->width);
 
             }
         }
@@ -748,9 +754,9 @@ concatenateTopBottomPbm(const struct pam *  const outpamP,
             */
             pbm_writepbmrow_packed(outpamP->file, outrow, outpamP->width, 0);
 
-        for (row = startRow; row < inpam[i].height; ++row) {
-            pbm_readpbmrow_bitoffset(inpam[i].file, outrow, inpam[i].width,
-                                     inpam[i].format, padleft);
+        for (row = startRow; row < inpamP->height; ++row) {
+            pbm_readpbmrow_bitoffset(inpamP->file, outrow, inpamP->width,
+                                     inpamP->format, padleft);
             pbm_writepbmrow_packed(outpamP->file, outrow, outpamP->width, 0);
         }
 
@@ -848,13 +854,13 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
                     LrImgCtl **         const imgCtlP) {
 
     LrImgCtl * imgCtl;  /* array */
-    unsigned int i;
+    unsigned int fileSeq;
 
     MALLOCARRAY_NOFAIL(imgCtl, fileCt);
 
-    for (i = 0; i < fileCt; ++i) {
-        LrImgCtl *         const thisEntryP = &imgCtl[i];
-        const struct pam * const inpamP     = &inpam[i];
+    for (fileSeq = 0; fileSeq < fileCt; ++fileSeq) {
+        LrImgCtl *         const thisEntryP = &imgCtl[fileSeq];
+        const struct pam * const inpamP     = &inpam[fileSeq];
 
         switch (justification) {  /* Determine top padding */
             case JUST_MIN:
@@ -869,7 +875,8 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
         }
 
         thisEntryP->out =
-            (i == 0 ? &newTuplerow[0] : imgCtl[i-1].out + inpam[i-1].width);
+            (fileSeq == 0 ?
+             &newTuplerow[0] : imgCtl[fileSeq-1].out + inpam[fileSeq-1].width);
 
         if (inpamP->height == outpamP->height) { /* no vertical padding */
             thisEntryP->cachedRow  = NULL;
@@ -879,11 +886,11 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
             /* Determine pad color */
             switch (padColorMethod){
             case PAD_AUTO:
-                thisEntryP->cachedRow = pnm_allocpamrow(&inpam[i]);
+                thisEntryP->cachedRow = pnm_allocpamrow(inpamP);
                 pnm_readpamrow(inpamP, thisEntryP->cachedRow);
-                pnm_scaletuplerow(&inpam[i], thisEntryP->cachedRow,
+                pnm_scaletuplerow(inpamP, thisEntryP->cachedRow,
                                   thisEntryP->cachedRow, outpamP->maxval);
-                padPlanesRow(&inpam[i], thisEntryP->cachedRow, outpamP);
+                padPlanesRow(inpamP, thisEntryP->cachedRow, outpamP);
                 {
                     struct pam cachedRowPam;
                     cachedRowPam = *outpamP;
@@ -918,10 +925,10 @@ static void
 destroyLrImgCtlArray(LrImgCtl *   const imgCtl,  /* array */
                      unsigned int const fileCt) {
 
-    unsigned int i;
+    unsigned int fileSeq;
 
-    for (i = 0; i < fileCt; ++i) {
-        LrImgCtl * const thisEntryP = &imgCtl[i];
+    for (fileSeq = 0; fileSeq < fileCt; ++fileSeq) {
+        LrImgCtl * const thisEntryP = &imgCtl[fileSeq];
 
         pnm_freepamtuple(thisEntryP->background);
         pnm_freepamrow(thisEntryP->cachedRow);
@@ -949,11 +956,11 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                         &imgCtl);
 
     for (row = 0; row < outpamP->height; ++row) {
-        unsigned int i;
+        unsigned int fileSeq;
 
-        for (i = 0; i < fileCt; ++i) {
-            LrImgCtl *   const thisEntryP   = &imgCtl[i];
-            const struct pam * const inpamP = &inpam[i];
+        for (fileSeq = 0; fileSeq < fileCt; ++fileSeq) {
+            LrImgCtl *   const thisEntryP   = &imgCtl[fileSeq];
+            const struct pam * const inpamP = &inpam[fileSeq];
 
             if ((row == 0 && thisEntryP->padtop > 0) ||
                 row == thisEntryP->padtop + inpamP->height) {
@@ -980,10 +987,10 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                 thisEntryP->cachedRow = NULL;
             } else if (row >= thisEntryP->padtop &&
                        row < thisEntryP->padtop + inpamP->height) {
-                pnm_readpamrow(&inpam[i], thisEntryP->out);
-                pnm_scaletuplerow(&inpam[i], thisEntryP->out,
+                pnm_readpamrow(inpamP, thisEntryP->out);
+                pnm_scaletuplerow(inpamP, thisEntryP->out,
                                   thisEntryP->out, outpamP->maxval);
-                padPlanesRow(&inpam[i], thisEntryP->out, outpamP);
+                padPlanesRow(inpamP, thisEntryP->out, outpamP);
             } else {
                 /* It's a row of padding, so image i's part of outrow[] is
                    already set appropriately.
@@ -1145,14 +1152,14 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
         /* The location in newTuplerow[] that the row from the current
            input image goes.
         */
-    unsigned int i;
+    unsigned int fileSeq;
     tuple background;
     tuple backgroundPrev;
 
     background = initialBackgroundColor(outpamP, padColorMethod);
 
-    for (i = 0; i < fileCt; ++i) {
-        const struct pam * const inpamP = &inpam[i];
+    for (fileSeq = 0; fileSeq < fileCt; ++fileSeq) {
+        const struct pam * const inpamP = &inpam[fileSeq];
 
         unsigned int row;
         unsigned int startRow;
@@ -1177,8 +1184,8 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
                     inpamP, outpamP, out, &background);
 
                 backChanged =
-                    i == 0 ||
-                    pnm_tupleequal(outpamP, background, backgroundPrev);
+                    fileSeq == 0 ||
+                        pnm_tupleequal(outpamP, background, backgroundPrev);
                 pnm_freepamtuple(backgroundPrev);
 
                 startRow = 1;
@@ -1186,10 +1193,10 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
                 /* Background color is constant: black or white */
                 startRow = 0;
                 out = &newTuplerow[padLeft];
-                backChanged = (i == 0);
+                backChanged = (fileSeq == 0);
             }
 
-            setHorizPadding(newTuplerow, outpamP, backChanged, inpam, i,
+            setHorizPadding(newTuplerow, outpamP, backChanged, inpam, fileSeq,
                             padLeft, background);
         }
 
