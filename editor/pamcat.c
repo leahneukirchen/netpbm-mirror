@@ -912,11 +912,15 @@ createLrImgCtlArray(const struct pam *  const inpam,  /* array */
                 break;
             }
         }
-        /* Opacity sample of background color sample is meaningless at this
-           point; make it opaque.
-        */
-        if (outpamP->have_opacity)
-            thisEntryP->background[outpamP->opacity_plane] = outpamP->maxval;
+        if (outpamP->visual) {
+            /* Any opacity sample in background color tuple is meaningless at
+               this point; make it opaque.
+            */
+            if (outpamP->have_opacity) {
+                thisEntryP->background[outpamP->opacity_plane] =
+                    outpamP->maxval;
+            }
+        }
 
     }
     *imgCtlP = imgCtl;
@@ -1032,11 +1036,13 @@ initialBackgroundColor(const struct pam *  const outpamP,
         break;
     }
 
-    /* Opacity sample of background color sample is meaningless at this point;
-       make it opaque.
-    */
-    if (outpamP->have_opacity)
-        retval[outpamP->opacity_plane] = outpamP->maxval;
+    if (outpamP->visual) {
+        /* Any opacity sample in background color tuple is meaningless at this
+           point; make it opaque.
+        */
+        if (outpamP->have_opacity)
+            retval[outpamP->opacity_plane] = outpamP->maxval;
+    }
 
     return retval;
 }
@@ -1133,9 +1139,11 @@ readFirstTBRowAndDetermineBackground(const struct pam *  const inpamP,
 
         background = pnm_backgroundtuplerow(&partialOutpam, out);
 
-        /* Make the background opaque */
-        if (outpamP->have_opacity)
-            background[outpamP->opacity_plane] = outpamP->maxval;
+        if (outpamP->visual) {
+            /* Make the background opaque. */
+            if (outpamP->have_opacity)
+                background[outpamP->opacity_plane] = outpamP->maxval;
+        }
 
         *backgroundP = background;
     }
