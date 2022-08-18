@@ -354,14 +354,15 @@ computeOutputParms(unsigned int       const fileCt,
         if (inpamP->tuple_type != firstTupletype)
             allSameTt = false;
 
-        if (!inpamP->visual)
+        if (inpamP->visual) {
+            maxColorDepth = MAX(maxColorDepth, inpamP->color_depth);
+
+            if (inpamP->have_opacity)
+                haveOpacity = true;
+        } else
             allVisual = false;
 
-        if (inpamP->have_opacity)
-            haveOpacity = true;
-
         maxDepth      = MAX(maxDepth,      inpamP->depth);
-        maxColorDepth = MAX(maxColorDepth, inpamP->color_depth);
         maxMaxval     = MAX(maxMaxval,     inpamP->maxval);
 
         if (PAM_FORMAT_TYPE(inpamP->format) > PAM_FORMAT_TYPE(newFormat))
@@ -370,7 +371,6 @@ computeOutputParms(unsigned int       const fileCt,
     assert(newCols       > 0);
     assert(newRows       > 0);
     assert(maxMaxval     > 0);
-    assert(maxColorDepth > 0);
     assert(newFormat     > 0);
 
     if (newCols > INT_MAX)
@@ -387,8 +387,11 @@ computeOutputParms(unsigned int       const fileCt,
     */
     outpamP->height           = (unsigned int)newRows;
     outpamP->width            = (unsigned int)newCols;
-    outpamP->depth            = MAX(maxDepth,
+    if (allVisual)
+        outpamP->depth        = MAX(maxDepth,
                                     maxColorDepth + (haveOpacity ? 1 : 0));
+    else
+        outpamP->depth        = maxDepth;
     outpamP->allocation_depth = 0;  /* This means same as depth */
     outpamP->maxval           = maxMaxval;
     outpamP->format           = newFormat;
