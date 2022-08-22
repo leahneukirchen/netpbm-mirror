@@ -1,6 +1,12 @@
 #! /bin/sh
 # This script tests: pnmcat
-# Also requires: pbmmake pgmramp ppmtoppm
+# Also requires: pbmmake pgmramp ppmtoppm pamcat
+
+if [ ${CHECK_TYPE} = tree ]
+  then echo "Skipping." 1>&2
+       echo "Running \"make package; make check\" is recommended." 1>&2
+  exit 80;
+fi
 
 tmpdir=${tmpdir:-/tmp}
 check2x2_pbm=${tmpdir}/check2x2.pbm

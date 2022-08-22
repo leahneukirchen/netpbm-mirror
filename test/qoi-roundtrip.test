@@ -1,5 +1,5 @@
 #! /bin/bash
-# This script tests: qoitopnm pamtoqoi
+# This script tests: qoitopam pamtoqoi
 # Also requires: pamdepth pamfile pamseq pamstack pamtopnm pbmmake
 # Also requires: pgmnoise ppmpat ppmtopgm
 

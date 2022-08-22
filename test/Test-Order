@@ -72,6 +72,7 @@ pamhue.test
 
 pbmclean.test
 pamcut.test
+pamcat1.test
 pnmcat.test
 pamdice.test
 pamundice.test
