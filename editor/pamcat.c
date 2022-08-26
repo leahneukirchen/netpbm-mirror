@@ -207,8 +207,8 @@ typedef struct {
     /* This describes a transformation from one tuple type to another,
        e.g. from BLACKANDWHITE to GRAY_ALPHA.
 
-       For transformations bewteen the defined ones for visual images, the
-       only "up" transformations are covered.
+       For transformations bewteen the defined ones for visual images,
+       only the "up" transformations are covered.
     */
     bool mustPromoteColor;
         /* Plane 0, which is the black/white or grayscale plane and also
@@ -241,7 +241,7 @@ ttXformForImg(const struct pam * const inpamP,
   to tuples of the kind described by *outpamP (e.g. from grayscale to RGB,
   which involves replicating one plane into three).
 
-  We assume *outpamP tuples are of a type that is at least as expressive than
+  We assume *outpamP tuples are of a type that is at least as expressive as
   *inpamP tuples.  So e.g. outpamP->tuple_type cannot be "GRAYSCALE" if
   inpamP->tuple_type is "RGB".
 -----------------------------------------------------------------------------*/
@@ -844,7 +844,6 @@ typedef struct {
         /* Number of rows of padding that go above this image in the output */
 } LrImgCtl;
 
-/* TODO: free LrImgCtl, including allocated stuff within */
 
 
 static void
@@ -972,7 +971,7 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
             if ((row == 0 && thisEntryP->padtop > 0) ||
                 row == thisEntryP->padtop + inpamP->height) {
                 /* This row begins a run of padding, either above or below
-                   image 'i', so set its part of outrow[] to padding.
+                   image 'fileSeq', so set its part of outrow[] to padding.
                 */
                 unsigned int col;
                 for (col = 0; col < inpamP->width; ++col) {
@@ -981,9 +980,9 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                 }
             }
             if (row == thisEntryP->padtop && thisEntryP->cachedRow) {
-                /* We're at the top row of file 'i', and that row
+                /* We're at the top row of image 'fileSeq', and that row
                    has already been read to cachedRow[] to determine
-                   background.  Copy it to image i's part of outrow[].
+                   background.  Copy it to image fileseq's part of outrow[].
                 */
                 unsigned int col;
                 for (col = 0; col < inpamP->width; ++col) {
@@ -999,8 +998,8 @@ concatenateLeftRightGen(const struct pam *  const outpamP,
                                   thisEntryP->out, outpamP->maxval);
                 padPlanesRow(inpamP, thisEntryP->out, outpamP);
             } else {
-                /* It's a row of padding, so image i's part of outrow[] is
-                   already set appropriately.
+                /* It's a row of padding, so image filesSeq's part of outrow[]
+                   is already set appropriately.
                 */
             }
         }
@@ -1080,7 +1079,7 @@ setHorizPadding(tuple *            const newTuplerow,
    contents of the previous output row).  *outpamP describes it.
 
    'backChanged' means the background color is different for the current row
-   than for the previous one.
+   from that of the previous row.
 
    inpam[] is the array of descriptors for all the input images.  'imageSeq'
    is the index into this array for the current image.
@@ -1212,8 +1211,9 @@ concatenateTopBottomGen(const struct pam *  const outpamP,
         }
 
         if (startRow == 1)
-            /* Top row already read for auto background
-               color determination.  Write it out. */
+            /* Top row was already read for auto background color
+               determination.  Write it out.
+            */
             pnm_writepamrow(outpamP, newTuplerow);
 
         for (row = startRow; row < inpamP->height; ++row) {
