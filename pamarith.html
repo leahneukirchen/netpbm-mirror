@@ -234,10 +234,9 @@ If the divisor is 0, the result is the maxval.
 zero when they are not.  Note that the output maxval is always 1 for
 <b>-equal</b>.
 
-<p>If the maxvals of the input images are not identical, <b>pamarith</b>
-may claim two values are not equal when in fact they are, because of
-the precision with which it does the arithmetic.  However, it will never
-say A is greater than B if A is less than B.
+<p>If the maxvals of the input images are not identical, <b>pamarith</b> may
+claim two values are not equal when in fact they are, because of the precision
+with which it does the arithmetic.
 
 <p>You can make the equality test approximate with the <b>-closeness</b>
 option.  This gives the percentage of maxval by which the samples can
