@@ -13,6 +13,8 @@ not yet  BJH  Release 11.00.00
 
               pamtable: add -tuple.
 
+              pamtable: add -hex.
+
               pbmtextps: improve error messages.
 
               ppmtoicr: Fix bug: all options cause bogus command line parsing

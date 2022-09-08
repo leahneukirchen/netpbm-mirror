@@ -23,6 +23,7 @@ struct CmdlineInfo {
     */
     const char * inputFileName;  /* Name of input file */
     enum Style   outputStyle;
+    unsigned int hex;
     unsigned int verbose;
 };
 
@@ -44,6 +45,7 @@ parseCommandLine(int argc, const char ** const argv,
     option_def_index = 0;   /* incremented by OPTENT3 */
 
     OPTENT3(0,   "tuple",     OPT_FLAG,  NULL, &tuple,               0);
+    OPTENT3(0,   "hex",       OPT_FLAG,  NULL, &cmdlineP->hex,       0);
     OPTENT3(0,   "verbose",   OPT_FLAG,  NULL, &cmdlineP->verbose,   0);
         /* For future expansion */
 
@@ -53,6 +55,9 @@ parseCommandLine(int argc, const char ** const argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (tuple && hex)
+        pm_error("-hex is invalid with -tuple");
 
     if (tuple)
         cmdlineP->outputStyle = STYLE_TUPLE;
@@ -94,8 +99,17 @@ typedef struct {
 
 
 
+static double const
+log16(double const arg) {
+
+    return log(arg)/log(16);
+}
+
+
+
 static const char *
-basicSampleFormat(const struct pam * const pamP) {
+basicSampleFormat(const struct pam * const pamP,
+                  bool               const wantHex) {
 /*----------------------------------------------------------------------------
    The printf format string for a single sample in the output table.
 
@@ -103,11 +117,21 @@ basicSampleFormat(const struct pam * const pamP) {
 
    This format does not include any spacing between samples.
 -----------------------------------------------------------------------------*/
-    unsigned int const decimalWidth = ROUNDU(ceil(log10(pamP->maxval + 1)));
-
+    unsigned int cipherWidth;
+    char         formatSpecifier;
+    const char * flag;
     const char * retval;
 
-    pm_asprintf(&retval, "%%%uu", decimalWidth);
+    if (wantHex) {
+        formatSpecifier = 'x';
+        cipherWidth     = ROUNDU(ceil(log16(pamP->maxval + 1)));
+        flag            = "0";
+    } else {
+        formatSpecifier = 'u';
+        cipherWidth     = ROUNDU(ceil(log10(pamP->maxval + 1)));
+        flag            = "";
+    }
+    pm_asprintf(&retval, "%%%s%u%c", flag, cipherWidth, formatSpecifier);
 
     return retval;
 }
@@ -117,11 +141,12 @@ basicSampleFormat(const struct pam * const pamP) {
 static void
 makeFormat(const struct pam * const pamP,
            enum Style         const outputStyle,
+           bool               const wantHex,
            Format *           const formatP) {
 
     switch (outputStyle) {
       case STYLE_BASIC:
-          formatP->sampleFmt         = basicSampleFormat(pamP);
+          formatP->sampleFmt         = basicSampleFormat(pamP, wantHex);
           formatP->interSampleGutter = " ";
           formatP->interTupleGutter  = pamP->depth > 1 ? "|" : " ";
           formatP->rowStartString    = "";
@@ -181,14 +206,15 @@ static void
 printRaster(FILE *             const ifP,
             const struct pam * const pamP,
             FILE *             const ofP,
-            enum Style         const outputStyle) {
+            enum Style         const outputStyle,
+            bool               const wantHex) {
 
     Format format;
 
     tuple * inputRow;   /* Row from input image */
     unsigned int row;
 
-    makeFormat(pamP, outputStyle, &format);
+    makeFormat(pamP, outputStyle, wantHex, &format);
 
     inputRow = pnm_allocpamrow(pamP);
 
@@ -220,7 +246,7 @@ main(int argc, const char *argv[]) {
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    printRaster(ifP, &inpam, stdout, cmdline.outputStyle);
+    printRaster(ifP, &inpam, stdout, cmdline.outputStyle, cmdline.hex);
 
     pm_close(inpam.file);
 
