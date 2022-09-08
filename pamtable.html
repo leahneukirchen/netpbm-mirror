@@ -34,6 +34,7 @@ green, blue, white) PPM image with maxval 255 would appear as follows:
 </span>
 </pre>
 
+<p>There are other output formats possible.  See the command line options.
 
 <p>If you care to see only certain rows or columns, use <b>pamcut</b> to
 filter the input.
@@ -67,10 +68,34 @@ comes from Standard Input.
 
 <h2 id="options">OPTIONS</h2>
 
-<p>There are no command line options defined specifically
-for <b>pamtable</b>, but it recognizes the options common to all
-programs based on libnetpbm (See <a href="index.html#commonoptions">
-Common Options</a>.)
+<p>In addition to the options common to all programs based on libnetpbm (most
+notably <b>-quiet</b>, see <a href="index.html#commonoptions"> Common
+Options</a>), <b>pamtable</b> recognizes the following command line options:
+
+<dl compact>
+<dt><b>-tuple</b>
+
+<dd>Print the tuple values in mathematical tuple notation, like this:
+
+<pre>
+<span style="font-family: monospace">
+
+        (0, 0, 0) (255, 0, 0) (0, 255, 0) (0, 0, 255) (255, 255, 255)
+        (0, 0, 0) (255, 0, 0) (0, 255, 0) (0, 0, 255) (255, 255, 255)
+
+</span>
+</pre>
+    
+<p>This option was new in Netpbm 10.11.00 (September 2022).
+
+<dt><b>-verbose</b>
+
+<p>Print additional messages about the processing.
+  
+<dd>
+
+</dl>
+
 
 <h2 id="seealso">SEE ALSO</h2>
 
