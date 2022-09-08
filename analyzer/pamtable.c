@@ -15,12 +15,15 @@
 #include "mallocvar.h"
 #include "nstring.h"
 
+enum Style {STYLE_BASIC, STYLE_TUPLE};
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* Name of input file */
-    unsigned int  verbose;
+    enum Style   outputStyle;
+    unsigned int verbose;
 };
 
 
@@ -34,11 +37,13 @@ parseCommandLine(int argc, const char ** const argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
+    unsigned int tuple;
 
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
 
+    OPTENT3(0,   "tuple",     OPT_FLAG,  NULL, &tuple,               0);
     OPTENT3(0,   "verbose",   OPT_FLAG,  NULL, &cmdlineP->verbose,   0);
         /* For future expansion */
 
@@ -48,6 +53,11 @@ parseCommandLine(int argc, const char ** const argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (tuple)
+        cmdlineP->outputStyle = STYLE_TUPLE;
+    else
+        cmdlineP->outputStyle = STYLE_BASIC;
 
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  File name is the only argument.",
@@ -74,12 +84,18 @@ typedef struct {
     const char * interTupleGutter;
        /* What we print between tuples within a row */
 
+    const char * rowStartString;
+       /* What we print at the beginning of each row */
+
+    const char * rowEndString;
+       /* What we print at the end of each row */
+
 } Format;
 
 
 
 static const char *
-sampleFormat(const struct pam * const pamP) {
+basicSampleFormat(const struct pam * const pamP) {
 /*----------------------------------------------------------------------------
    The printf format string for a single sample in the output table.
 
@@ -100,13 +116,25 @@ sampleFormat(const struct pam * const pamP) {
 
 static void
 makeFormat(const struct pam * const pamP,
+           enum Style         const outputStyle,
            Format *           const formatP) {
 
-    formatP->sampleFmt = sampleFormat(pamP);
-
-    formatP->interSampleGutter = " ";
-
-    formatP->interTupleGutter = pamP->depth > 1 ? "|" : " ";
+    switch (outputStyle) {
+      case STYLE_BASIC:
+          formatP->sampleFmt         = basicSampleFormat(pamP);
+          formatP->interSampleGutter = " ";
+          formatP->interTupleGutter  = pamP->depth > 1 ? "|" : " ";
+          formatP->rowStartString    = "";
+          formatP->rowEndString      = "\n";
+          break;
+      case STYLE_TUPLE:
+          formatP->sampleFmt         = pm_strdup("%u");
+          formatP->interSampleGutter = ",";
+          formatP->interTupleGutter  = ") (";
+          formatP->rowStartString    = "(";
+          formatP->rowEndString      = ")\n";
+          break;
+    }
 }
 
 
@@ -127,6 +155,8 @@ printRow(const struct pam * const pamP,
 
     unsigned int col;
 
+    fputs (format.rowStartString, ofP);
+
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
 
@@ -142,7 +172,7 @@ printRow(const struct pam * const pamP,
         }
     }
 
-    fputs("\n", ofP);
+    fputs (format.rowEndString, ofP);
 }
 
 
@@ -150,14 +180,15 @@ printRow(const struct pam * const pamP,
 static void
 printRaster(FILE *             const ifP,
             const struct pam * const pamP,
-            FILE *             const ofP) {
+            FILE *             const ofP,
+            enum Style         const outputStyle) {
 
     Format format;
 
     tuple * inputRow;   /* Row from input image */
     unsigned int row;
 
-    makeFormat(pamP, &format);
+    makeFormat(pamP, outputStyle, &format);
 
     inputRow = pnm_allocpamrow(pamP);
 
@@ -189,7 +220,7 @@ main(int argc, const char *argv[]) {
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    printRaster(ifP, &inpam, stdout);
+    printRaster(ifP, &inpam, stdout, cmdline.outputStyle);
 
     pm_close(inpam.file);
 

@@ -11,6 +11,8 @@ not yet  BJH  Release 11.00.00
 
               Add pamcat.
 
+              pamtable: add -tuple.
+
               pbmtextps: improve error messages.
 
               ppmtoicr: Fix bug: all options cause bogus command line parsing
@@ -24,7 +26,7 @@ not yet  BJH  Release 11.00.00
               pnmindex: fix shell injection vulnerabilities.  Broken since
               Netpbm 10.28 (June 2005).
 
-              pnmmargin: fix shell injection vulneraibility.  Always broken
+              pnmmargin: fix shell injection vulnerability.  Always broken
               (Program was added in primordial Netpbm in 1990).
 
 22.06.24 BJH  Release 10.99.00
