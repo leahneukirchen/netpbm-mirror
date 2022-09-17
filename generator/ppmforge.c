@@ -241,7 +241,7 @@ parseCommandLine(int argc, const char **argv,
 
 
 static void
-fourn(float *     const data,
+fourn(double *    const data,
       const int * const nn,
       int         const ndim,
       int         const isign) {
@@ -272,7 +272,7 @@ fourn(float *     const data,
     int i1, i2, i3;
     int i2rev, i3rev, ip1, ip2, ip3, ifp1, ifp2;
     int ibit, idim, k1, k2, n, nprev, nrem, ntot;
-    float tempi, tempr;
+    double tempi, tempr;
     double theta, wi, wpi, wpr, wr, wtemp;
 
 #define SWAP(a,b) tempr=(a); (a) = (b); (b) = tempr
@@ -401,7 +401,7 @@ cast(double         const low,
 
 
 static void
-spectralsynth(float **       const x,
+spectralsynth(double **      const aP,
               unsigned int   const n,
               double         const h,
               struct Gauss * const gaussP) {
@@ -411,18 +411,20 @@ spectralsynth(float **       const x,
   This algorithm is given under the name SpectralSynthesisFM2D on page 108 of
   Peitgen & Saupe.
 -----------------------------------------------------------------------------*/
-    unsigned bl;
+    unsigned int const bl = ((((unsigned long) n) * n) + 1) * 2;
+
     int i, j, i0, j0, nsize[3];
     double rad, phase, rcos, rsin;
-    float *a;
+    double * a;
 
-    bl = ((((unsigned long) n) * n) + 1) * 2 * sizeof(float);
-    a = (float *) calloc(bl, 1);
-    if (a == (float *) 0) {
-        pm_error("Cannot allocate %d x %d result array (% d bytes).",
+    MALLOCARRAY(a, bl);
+
+    if (!a) {
+        pm_error("Cannot allocate %u x %u result array (%u doubles).",
                  n, n, bl);
     }
-    *x = a;
+    for (i = 0; i < bl; ++i)
+        a[i] = 0.0;  /* initial value */
 
     for (i = 0; i <= n / 2; i++) {
         for (j = 0; j <= n / 2; j++) {
@@ -463,6 +465,8 @@ spectralsynth(float **       const x,
     nsize[0] = 0;
     nsize[1] = nsize[2] = n;          /* Dimension of frequency domain array */
     fourn(a, nsize, 2, -1);       /* Take inverse 2D Fourier transform */
+
+    *aP = a;
 }
 
 
@@ -572,9 +576,9 @@ atSat(double const x,
 
 
 static unsigned char *
-makeCp(float *      const a,
-       unsigned int const n,
-       pixval       const maxval) {
+makeCp(const double * const a,
+       unsigned int   const n,
+       pixval         const maxval) {
 
     /* Prescale the grid points into intensities. */
 
@@ -587,7 +591,7 @@ makeCp(float *      const a,
     if (cp == NULL)
         pm_error("Unable to allocate %u bytes for cp array", n);
 
-    ap = cp;
+    ap = cp;  /* initial value */
     {
         unsigned int i;
         for (i = 0; i < n; i++) {
@@ -603,7 +607,7 @@ makeCp(float *      const a,
 
 static void
 createPlanetStuff(bool             const clouds,
-                  float *          const a,
+                  const double *   const a,
                   unsigned int     const n,
                   double **        const uP,
                   double **        const u1P,
@@ -977,7 +981,7 @@ generatePlanetRow(pixel *         const pixelrow,
 static void
 genplanet(bool           const stars,
           bool           const clouds,
-          float *        const a,
+          const double * const a,
           unsigned int   const cols,
           unsigned int   const rows,
           unsigned int   const n,
@@ -1052,7 +1056,7 @@ genplanet(bool           const stars,
 
 
 static void
-applyPowerLawScaling(float * const a,
+applyPowerLawScaling(double * const a,
                      int     const meshsize,
                      double  const powscale) {
 
@@ -1065,7 +1069,7 @@ applyPowerLawScaling(float * const a,
             for (j = 0; j < meshsize; j++) {
                 double const r = Real(a, i, j);
                 if (r > 0)
-                    Real(a, i, j) = pow(r, powscale);
+                    Real(a, i, j) = MIN(hugeVal, pow(r, powscale));
             }
         }
     }
@@ -1074,10 +1078,10 @@ applyPowerLawScaling(float * const a,
 
 
 static void
-computeExtremeReal(const float * const a,
-                   int           const meshsize,
-                   double *      const rminP,
-                   double *      const rmaxP) {
+computeExtremeReal(const double * const a,
+                   int            const meshsize,
+                   double *       const rminP,
+                   double *       const rmaxP) {
 
     /* Compute extrema for autoscaling. */
 
@@ -1103,8 +1107,8 @@ computeExtremeReal(const float * const a,
 
 
 static void
-replaceWithSpread(float * const a,
-                  int     const meshsize) {
+replaceWithSpread(double * const a,
+                  int      const meshsize) {
 /*----------------------------------------------------------------------------
   Replace the real part of each element of the 'a' array with a
   measure of how far the real is from the middle; sort of a standard
@@ -1138,7 +1142,7 @@ planet(unsigned int const cols,
 /*----------------------------------------------------------------------------
    Make a planet.
 -----------------------------------------------------------------------------*/
-    float * a;
+    double * a;
     bool error;
     struct Gauss gauss;
 
@@ -1149,7 +1153,7 @@ planet(unsigned int const cols,
         error = FALSE;
     } else {
         spectralsynth(&a, meshsize, 3.0 - fracdim, &gauss);
-        if (a == NULL) {
+        if (!a) {
             error = TRUE;
         } else {
             applyPowerLawScaling(a, meshsize, powscale);
