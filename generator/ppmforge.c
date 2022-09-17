@@ -1057,8 +1057,8 @@ genplanet(bool           const stars,
 
 static void
 applyPowerLawScaling(double * const a,
-                     int     const meshsize,
-                     double  const powscale) {
+                     int      const meshsize,
+                     double   const powscale) {
 
     /* Apply power law scaling if non-unity scale is requested. */
 
