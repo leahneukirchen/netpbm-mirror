@@ -31,6 +31,9 @@ not yet  BJH  Release 11.00.00
               pnmmargin: fix shell injection vulnerability.  Always broken
               (Program was added in primordial Netpbm in 1990).
 
+              build: Create backward compatibility symbolic link for
+              pnminterp-gen, missing for over 20 years.
+
 22.06.24 BJH  Release 10.99.00
 
               Add pamrestack.

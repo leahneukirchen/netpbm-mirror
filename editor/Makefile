@@ -64,10 +64,15 @@ install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
-# backward compatibility: program used to be pnminterp
+
+# In December 2001, pamstretch replaced pnminterp and pamstretch-getn
+# replaced pnminterp-gen
 	cd $(PKGDIR)/bin ; \
 	rm -f pnminterp$(EXE); \
 	$(SYMLINK) pamstretch$(EXE) pnminterp$(EXE)
+	cd $(PKGDIR)/bin ; \
+	rm -f pnminterp-gen$(EXE); \
+	$(SYMLINK) pamstretch-gen$(EXE) pnminterp-gen$(EXE)
 # In March 2002, pnmnorm replaced ppmnorm and pgmnorm
 	cd $(PKGDIR)/bin ; \
 	rm -f ppmnorm$(EXE) ; \
