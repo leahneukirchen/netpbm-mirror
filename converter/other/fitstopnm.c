@@ -44,6 +44,7 @@
 #include <string.h>
 #include <float.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include "pm_config.h"
 #include "pm_c_util.h"
@@ -150,29 +151,25 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
-struct FITS_Header {
-  int simple;       /* basic format or not */
-  int bitpix;
-      /* number of bits per pixel, positive for integer, negative
-         for floating point
-      */
-  int naxis;        /* number of axes */
-  int naxis1;       /* number of points on axis 1 */
-  int naxis2;       /* number of points on axis 2 */
-  int naxis3;       /* number of points on axis 3 */
-  double datamin;   /* min # (Physical value!) */
-  double datamax;   /* max #     "       "     */
-  double bzer;      /* Physical value = Array value*bscale + bzero */
-  double bscale;
-};
-
-
 typedef enum {
     VF_CHAR, VF_SHORT, VF_LONG, VF_FLOAT, VF_DOUBLE
-} valFmt;
+} ValFmt;
 
-struct fitsRasterInfo {
-    valFmt valFmt;
+struct FITS_Header {
+    bool simple;      /* basic format */
+    ValFmt valFmt;    /* format of values -- bits per pixel, integer/float */
+    int naxis;        /* number of axes */
+    int naxis1;       /* number of points on axis 1 */
+    int naxis2;       /* number of points on axis 2 */
+    int naxis3;       /* number of points on axis 3 */
+    double datamin;   /* min # (Physical value!) */
+    double datamax;   /* max #     "       "     */
+    double bzer;      /* Physical value = Array value*bscale + bzero */
+    double bscale;
+};
+
+struct FitsRasterInfo {
+    ValFmt valFmt;
     double bzer;
     double bscale;
 };
@@ -296,7 +293,7 @@ readFitsDouble(FILE *   const ifP,
 
 
 
-static valFmt
+static ValFmt
 valFmtFromBitpix(int const bitpix) {
 /*----------------------------------------------------------------------------
    Return the format of a "value" in the FITS file, given the value
@@ -323,7 +320,7 @@ valFmtFromBitpix(int const bitpix) {
 
 static void
 readVal(FILE *   const ifP,
-        valFmt   const fmt,
+        ValFmt   const fmt,
         double * const vP) {
 
     switch (fmt) {
@@ -368,11 +365,12 @@ static void
 readFitsHeader(FILE *               const ifP,
                struct FITS_Header * const hP) {
 
-    int seenEnd;
+    bool seenEnd;
 
-    seenEnd = 0;
+    seenEnd = false;  /* initial state */
+
     /* Set defaults */
-    hP->simple  = 0;
+    hP->simple  = false;
     hP->bzer    = 0.0;
     hP->bscale  = 1.0;
     hP->datamin = - DBL_MAX;
@@ -383,13 +381,15 @@ readFitsHeader(FILE *               const ifP,
         for (i = 0; i < 36; ++i) {
             char buf[80];
             char c;
+            int d;
 
             readCard(ifP, buf);
 
             if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
                 if (c == 'T' || c == 't')
-                    hP->simple = 1;
-            } else if (sscanf(buf, "BITPIX = %d", &(hP->bitpix)) == 1);
+                    hP->simple = true;
+            } else if (sscanf(buf, "BITPIX = %d", &d) == 1)
+                hP->valFmt = valFmtFromBitpix(d);
             else if (sscanf(buf, "NAXIS = %d", &(hP->naxis)) == 1);
             else if (sscanf(buf, "NAXIS1 = %d", &(hP->naxis1)) == 1);
             else if (sscanf(buf, "NAXIS2 = %d", &(hP->naxis2)) == 1);
@@ -398,7 +398,7 @@ readFitsHeader(FILE *               const ifP,
             else if (sscanf(buf, "DATAMAX = %lf", &(hP->datamax)) == 1);
             else if (sscanf(buf, "BZERO = %lf", &(hP->bzer)) == 1);
             else if (sscanf(buf, "BSCALE = %lf", &(hP->bscale)) == 1);
-            else if (strncmp(buf, "END ", 4 ) == 0) seenEnd = 1;
+            else if (strncmp(buf, "END ", 4 ) == 0) seenEnd = true;
         }
     }
 }
@@ -461,7 +461,7 @@ scanImageForMinMax(FILE *       const ifP,
                    unsigned int const images,
                    int          const cols,
                    int          const rows,
-                   valFmt       const valFmt,
+                   ValFmt       const valFmt,
                    double       const bscale,
                    double       const bzer,
                    unsigned int const imagenum,
@@ -554,7 +554,7 @@ computeMinMax(FILE *             const ifP,
     if (datamin == -DBL_MAX || datamax == DBL_MAX) {
         double scannedDatamin, scannedDatamax;
         scanImageForMinMax(ifP, images, cols, rows,
-                           valFmtFromBitpix(h.bitpix), h.bscale, h.bzer,
+                           h.valFmt, h.bscale, h.bzer,
                            imagenum, multiplane,
                            &scannedDatamin, &scannedDatamax);
 
@@ -571,7 +571,7 @@ computeMinMax(FILE *             const ifP,
 
 static xelval
 determineMaxval(struct CmdlineInfo const cmdline,
-                valFmt             const valFmt,
+                ValFmt             const valFmt,
                 double             const datamax,
                 double             const datamin) {
 
@@ -612,7 +612,7 @@ convertPgmRaster(FILE *                const ifP,
                  xelval                const maxval,
                  unsigned int          const desiredImage,
                  unsigned int          const imageCount,
-                 struct fitsRasterInfo const rasterInfo,
+                 struct FitsRasterInfo const rasterInfo,
                  double                const scale,
                  double                const datamin,
                  xel **                const xels) {
@@ -658,7 +658,7 @@ convertPpmRaster(FILE *                const ifP,
                  unsigned int          const cols,
                  unsigned int          const rows,
                  xelval                const maxval,
-                 struct fitsRasterInfo const rasterInfo,
+                 struct FitsRasterInfo const rasterInfo,
                  double                const scale,
                  double                const datamin,
                  xel **                const xels) {
@@ -708,7 +708,7 @@ convertRaster(FILE *                const ifP,
               bool                  const multiplane,
               unsigned int          const desiredImage,
               unsigned int          const imageCount,
-              struct fitsRasterInfo const rasterInfo,
+              struct FitsRasterInfo const rasterInfo,
               double                const scale,
               double                const datamin) {
 
@@ -743,7 +743,7 @@ main(int argc, const char * argv[]) {
     double scale;
     double datamin, datamax;
     struct FITS_Header fitsHeader;
-    struct fitsRasterInfo rasterInfo;
+    struct FitsRasterInfo rasterInfo;
 
     unsigned int imageCount;
     unsigned int desiredImage;
@@ -774,7 +774,7 @@ main(int argc, const char * argv[]) {
 
     rasterInfo.bscale = fitsHeader.bscale;
     rasterInfo.bzer   = fitsHeader.bzer;
-    rasterInfo.valFmt = valFmtFromBitpix(fitsHeader.bitpix);
+    rasterInfo.valFmt = fitsHeader.valFmt;
 
     interpretPlanes(fitsHeader, cmdline.image, cmdline.verbose,
                     &imageCount, &multiplane, &desiredImage);
