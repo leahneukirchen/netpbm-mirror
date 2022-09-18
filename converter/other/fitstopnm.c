@@ -74,12 +74,12 @@ struct CmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, const char ** argv, 
+static void
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -140,7 +140,7 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
-        
+
         if (argc-1 > 1)
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
@@ -153,7 +153,7 @@ parseCommandLine(int argc, const char ** argv,
 struct FITS_Header {
   int simple;       /* basic format or not */
   int bitpix;
-      /* number of bits per pixel, positive for integer, negative 
+      /* number of bits per pixel, positive for integer, negative
          for floating point
       */
   int naxis;        /* number of axes */
@@ -334,15 +334,15 @@ readVal(FILE *   const ifP,
     case VF_SHORT:
         readFitsShort(ifP, vP);
         break;
-      
+
     case VF_LONG:
         readFitsLong(ifP, vP);
         break;
-      
+
     case VF_FLOAT:
         readFitsFloat(ifP, vP);
         break;
-      
+
     case VF_DOUBLE:
         readFitsDouble(ifP, vP);
         break;
@@ -369,7 +369,7 @@ readFitsHeader(FILE *               const ifP,
                struct FITS_Header * const hP) {
 
     int seenEnd;
-  
+
     seenEnd = 0;
     /* Set defaults */
     hP->simple  = 0;
@@ -377,7 +377,7 @@ readFitsHeader(FILE *               const ifP,
     hP->bscale  = 1.0;
     hP->datamin = - DBL_MAX;
     hP->datamax = DBL_MAX;
-  
+
     while (!seenEnd) {
         unsigned int i;
         for (i = 0; i < 36; ++i) {
@@ -385,7 +385,7 @@ readFitsHeader(FILE *               const ifP,
             char c;
 
             readCard(ifP, buf);
-    
+
             if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
                 if (c == 'T' || c == 't')
                     hP->simple = 1;
@@ -421,7 +421,7 @@ interpretPlanes(struct FITS_Header const fitsHeader,
         if (imageRequest) {
             if (imageRequest > fitsHeader.naxis3)
                 pm_error("Only %u plane%s in this file.  "
-                         "You requested image %u", 
+                         "You requested image %u",
                          fitsHeader.naxis3, fitsHeader.naxis3 > 1 ? "s" : "",
                          imageRequest);
             else {
@@ -446,7 +446,7 @@ interpretPlanes(struct FITS_Header const fitsHeader,
         }
     }
     if (verbose) {
-        
+
         pm_message("FITS stream is %smultiplane", *multiplaneP ? "" : "not ");
         pm_message("We will take image %u (1 is first) of %u "
                    "in the FITS stream",
@@ -476,7 +476,7 @@ scanImageForMinMax(FILE *       const ifP,
     unsigned int image;
     pm_filepos rasterPos;
     double fmaxval;
-    
+
     pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
 
     pm_message("Scanning file for scaling parameters");
@@ -576,7 +576,7 @@ determineMaxval(struct CmdlineInfo const cmdline,
                 double             const datamin) {
 
     xelval retval;
-                
+
     if (cmdline.omaxvalSpec)
         retval = cmdline.omaxval;
     else {
@@ -616,7 +616,7 @@ convertPgmRaster(FILE *                const ifP,
                  double                const scale,
                  double                const datamin,
                  xel **                const xels) {
-        
+
     /* Note: the FITS specification does not give the association between
        file position and image position (i.e. is the first pixel in the
        file the top left, bottom left, etc.).  We use the common sense,
@@ -648,7 +648,7 @@ convertPgmRaster(FILE *                const ifP,
                 }
             }
         }
-    } 
+    }
 }
 
 
@@ -754,15 +754,15 @@ main(int argc, const char * argv[]) {
         /* This is a one-image multiplane stream; 'desiredImage'
            is undefined
         */
-  
+
     pm_proginit(&argc, argv);
-  
+
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
 
     readFitsHeader(ifP, &fitsHeader);
-  
+
     if (!fitsHeader.simple)
         pm_error("FITS file is not in simple format, can't read");
 
