@@ -25,6 +25,8 @@ not yet  BJH  Release 11.00.00
               ppmtoicr: make -rle option issue an error message saying it no
               longer exists (it did, sort of, before 2015).
 
+              ppmforge: Fix arbitrary output with really large -power.
+              
               pnmindex: fix shell injection vulnerabilities.  Broken since
               Netpbm 10.28 (June 2005).
 
