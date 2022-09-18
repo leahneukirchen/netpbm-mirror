@@ -17,6 +17,10 @@ not yet  BJH  Release 11.00.00
 
               pbmtextps: improve error messages.
 
+              pnmtofits: fix arbitrary behavior when FITS input lacks
+              required fields in header.  Always broken.  Pnmtofits'
+              predecessor was in primordial Netpbm (1989).
+
               ppmtoicr: Fix bug: all options cause bogus command line parsing
               errors.  Always broken.  Ppmtoicr was new in 1991.
 

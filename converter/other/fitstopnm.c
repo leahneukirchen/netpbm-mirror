@@ -158,10 +158,10 @@ typedef enum {
 struct FITS_Header {
     bool simple;      /* basic format */
     ValFmt valFmt;    /* format of values -- bits per pixel, integer/float */
-    int naxis;        /* number of axes */
-    int naxis1;       /* number of points on axis 1 */
-    int naxis2;       /* number of points on axis 2 */
-    int naxis3;       /* number of points on axis 3 */
+    unsigned int naxis;  /* number of axes */
+    unsigned int naxis1;       /* number of points on axis 1 */
+    unsigned int naxis2;       /* number of points on axis 2 */
+    unsigned int naxis3;       /* number of points on axis 3 */
     double datamin;   /* min # (Physical value!) */
     double datamax;   /* max #     "       "     */
     double bzer;      /* Physical value = Array value*bscale + bzero */
@@ -361,46 +361,119 @@ readCard(FILE * const ifP,
 
 
 
+
+static void
+processNaxisN(unsigned int   const n,
+              int            const value,
+              bool           const gotNaxis,
+              unsigned int   const naxis,
+              bool *         const gotNaxisNP,
+              unsigned int * const naxisNP) {
+
+    if (*gotNaxisNP)
+        pm_error("Invalid FITS header: two NAXIS%u keywords", n);
+    else {
+        *gotNaxisNP = true;
+
+        if (!gotNaxis)
+            pm_error("Invalid FITS header: NAXIS must precede NAXIS%u", n);
+        else if (naxis < n)
+            pm_error("Invalid FITS header: NAXIS%u for image with "
+                     "only %u axes", n, naxis);
+        else if (value < 0)
+            pm_error("Invalid NAXIS%u value %d in FITS header:  "
+                     "Must not be negative", n, value);
+        else
+            *naxisNP = value;
+    }
+}
+
+
+
 static void
 readFitsHeader(FILE *               const ifP,
                struct FITS_Header * const hP) {
 
-    bool seenEnd;
+    bool gotSimple, gotNaxis, gotN1, gotN2, gotN3, gotBitpix, gotEnd;
 
-    seenEnd = false;  /* initial state */
+    gotSimple = false;  /* initial value */
+    gotNaxis  = false;  /* initial value */
+    gotN1     = false;  /* initial value */
+    gotN2     = false;  /* initial value */
+    gotN3     = false;  /* initial value */
+    gotBitpix = false;  /* initial value */
+    gotEnd    = false;  /* initial value */
 
     /* Set defaults */
-    hP->simple  = false;
     hP->bzer    = 0.0;
     hP->bscale  = 1.0;
     hP->datamin = - DBL_MAX;
     hP->datamax = DBL_MAX;
 
-    while (!seenEnd) {
+    while (!gotEnd) {
         unsigned int i;
         for (i = 0; i < 36; ++i) {
             char buf[80];
             char c;
-            int d;
+            int n;
 
             readCard(ifP, buf);
 
             if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
+                if (gotSimple)
+                    pm_error("FITS header has two SIMPLE keywords");
+                gotSimple = true;
                 if (c == 'T' || c == 't')
                     hP->simple = true;
-            } else if (sscanf(buf, "BITPIX = %d", &d) == 1)
-                hP->valFmt = valFmtFromBitpix(d);
-            else if (sscanf(buf, "NAXIS = %d", &(hP->naxis)) == 1);
-            else if (sscanf(buf, "NAXIS1 = %d", &(hP->naxis1)) == 1);
-            else if (sscanf(buf, "NAXIS2 = %d", &(hP->naxis2)) == 1);
-            else if (sscanf(buf, "NAXIS3 = %d", &(hP->naxis3)) == 1);
-            else if (sscanf(buf, "DATAMIN = %lf", &(hP->datamin)) == 1);
-            else if (sscanf(buf, "DATAMAX = %lf", &(hP->datamax)) == 1);
-            else if (sscanf(buf, "BZERO = %lf", &(hP->bzer)) == 1);
-            else if (sscanf(buf, "BSCALE = %lf", &(hP->bscale)) == 1);
-            else if (strncmp(buf, "END ", 4 ) == 0) seenEnd = true;
+                else if (c == 'F' || c == 'f')
+                    hP->simple = false;
+                else
+                    pm_error("Invalid SIMPLE value '%c'.  Only 'T' and 'F' "
+                             "are recognized", c);
+            } else if (sscanf(buf, "BITPIX = %d", &n) == 1) {
+                if (gotBitpix)
+                    pm_error("FITS header has two NAXIS keywords");
+                gotBitpix = true;
+                hP->valFmt = valFmtFromBitpix(n);
+            } else if (sscanf(buf, "NAXIS = %d", &n) == 1) {
+                gotNaxis = true;
+                if (n < 0)
+                    pm_error("Invalid value %d for NAXIS in FITS header.  "
+                             "Value must not be negative", n);
+                else
+                    hP->naxis = n;
+            } else if (sscanf(buf, "NAXIS1 = %d", &n) == 1) {
+                processNaxisN(1, n, gotNaxis, hP->naxis, &gotN1, &hP->naxis1);
+            } else if (sscanf(buf, "NAXIS2 = %d", &n) == 1) {
+                processNaxisN(2, n, gotNaxis, hP->naxis, &gotN2, &hP->naxis2);
+            } else if (sscanf(buf, "NAXIS3 = %d", &n) == 1) {
+                processNaxisN(3, n, gotNaxis, hP->naxis, &gotN3, &hP->naxis3);
+            } else if (sscanf(buf, "DATAMIN = %lf", &(hP->datamin)) == 1) {
+            } else if (sscanf(buf, "DATAMAX = %lf", &(hP->datamax)) == 1) {
+            } else if (sscanf(buf, "BZERO = %lf", &(hP->bzer)) == 1) {
+            } else if (sscanf(buf, "BSCALE = %lf", &(hP->bscale)) == 1) {
+            } else if (strncmp(buf, "END ", 4 ) == 0) {
+                gotEnd = true;
+            }
         }
     }
+    if (!gotSimple)
+        pm_error("FITS header missing the SIMPLE keyword");
+    if (!gotBitpix)
+        pm_error("FITS header missing the BITPIX keyword");
+    if (!gotNaxis)
+        pm_error("FITS header missing the NAXIS keyword");
+
+    if (hP->naxis > 3)
+        pm_error("FITS file has %u axes; this program can handle "
+                 "no more than 3", hP->naxis);
+
+    if (hP->naxis > 0 && !gotN1)
+        pm_error("FITS header missing NAXIS1 keyword");
+    if (hP->naxis > 1 && !gotN2)
+        pm_error("FITS header missing NAXIS1 keyword");
+    if (hP->naxis > 2 && !gotN3)
+        pm_error("FITS header missing NAXIS3 keyword");
 }
 
 
