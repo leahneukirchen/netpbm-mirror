@@ -45,12 +45,12 @@ struct cmdlineInfo {
 
 
 
-static void 
+static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*--------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -95,7 +95,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
-        
+
         if (argc-1 > 1)
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
@@ -127,7 +127,7 @@ padToMultipleOf36Cards(unsigned int const nCardsAlreadyWritten) {
 
     unsigned int const npadCard = 36 - (nCardsAlreadyWritten % 36);
     unsigned int i;
-    
+
     for (i = 0; i < npadCard; ++i)
         writeHeaderCard("");
 }
@@ -146,7 +146,7 @@ writeFitsHeader(int    const bitpix,
 
     char buffer[80+1];
     unsigned int cardsWritten;
-                
+
     cardsWritten = 0;  /* initial value */
 
     sprintf(buffer, "%-20.20s%10.10s", "SIMPLE  =", "T");
@@ -178,7 +178,7 @@ writeFitsHeader(int    const bitpix,
     sprintf(buffer, "%-18.18s%12.5E", "BSCALE  =", bscale);
     writeHeaderCard(buffer);
     ++cardsWritten;
-    
+
     sprintf(buffer, "%-18.18s%12.5E", "BZERO   =", fitsBzero);
     writeHeaderCard(buffer);
     ++cardsWritten;
@@ -263,7 +263,7 @@ main(int argc, char * argv[]) {
            the default case, that PNM sample value is also the FITS "physical"
            value, but user options can change that.
         */
-    
+
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -287,7 +287,7 @@ main(int argc, char * argv[]) {
     assert(datamax > datamin);
 
     bscale = (datamax - datamin) / pam.maxval;
-    
+
     if (pam.maxval > 255) {
         bitpix = 16;
         /* Because 16 bit FITS samples are signed, we have to do a 2**15
@@ -315,3 +315,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+
