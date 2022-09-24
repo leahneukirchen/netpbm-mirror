@@ -4,6 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.09.24 BJH  Release 10.73.41
+
+              pnmindex: fix shell injection vulnerabilities.  Broken since
+              Netpbm 10.28 (June 2005).
+
+              ppmtoicr: Fix bug: all options cause bogus command line parsing
+              errors.  Always broken.  Ppmtoicr was new in 1991.
+
+              ppmtoicr: Fix arithmetic overflows.
+
+              ppmtoicr: make -rle option issue an error message saying it no
+              longer exists (it did, sort of, before 2015).
+
+              pnmindex: fix shell injection vulnerabilities.  Broken since
+              Netpbm 10.28 (June 2005).
+
+              pnmmargin: fix shell injection vulneraibility.  Always broken
+              (Program was added in primordial Netpbm in 1990).
+
 22.06.24 BJH  Release 10.73.40
 
               palmtopnm: Fix failure with bogus claim of invalid input on
