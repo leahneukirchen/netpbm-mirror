@@ -67,6 +67,13 @@ fi
 size="$1"
 shift
 
+case $size in
+    ''|*[!0-9]*)
+        echo "Size argument '$size' is not a whole number"
+        exit 1
+        ;;
+esac
+
 if [ ${2-""} ] ; then
     echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
     exit 1
