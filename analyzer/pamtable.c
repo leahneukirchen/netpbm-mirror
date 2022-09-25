@@ -56,7 +56,7 @@ parseCommandLine(int argc, const char ** const argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (tuple && hex)
+    if (tuple && cmdlineP->hex)
         pm_error("-hex is invalid with -tuple");
 
     if (tuple)
