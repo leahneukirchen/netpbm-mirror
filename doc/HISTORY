@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.99.03
+22.09.24 BJH  Release 10.99.03
 
               pnmmargin: fix shell injection vulnerability.  Always broken
               (Program was added in primordial Netpbm in 1990).
