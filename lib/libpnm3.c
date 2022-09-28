@@ -106,10 +106,14 @@ pnm_backgroundxelrow(xel *  const xelrow,
                      int    const cols,
                      xelval const maxval,
                      int    const format) {
+/*----------------------------------------------------------------------------
+   Guess a good background color for an image that contains row 'xelrow'
+   (probably top or bottom edge).
 
+   'cols', 'maxval', and 'format' describe 'xelrow'.
+-----------------------------------------------------------------------------*/
     xel bgxel, l, r;
 
-    /* Guess a good background value. */
     l = xelrow[0];
     r = xelrow[cols-1];
 

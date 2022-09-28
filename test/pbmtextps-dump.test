@@ -1,0 +1,84 @@
+#! /bin/sh
+# This script tests: pbmtextps
+# Also requires:
+
+# Dump several variants of the ps file and compare against default.
+# Ghostscript is not required.
+
+tmpdir=${tmpdir:-/tmp}
+text_pbm=${tmpdir}/text.pbm
+text_ps=${tmpdir}/text.ps
+
+text="UNIX Philosophy: Do one thing and do it well."
+
+# Test 1:
+echo "Test 1"
+
+pbmtextps -dump-ps ${text} > ${text_ps}
+
+# Font name is random sequence of alphanumerical characters.
+# Should not match any real name.
+
+for flag in \
+  "-font=ZQUEl8eS38RlsvEahHGNfnrbSswrcJKFwvlCdEttwcheuXvCN49MvWmndqj4" \
+  "-fontsize 2000" \
+  "-resolution 7200" \
+  "-leftmargin=15" \
+  "-rightmargin=20" \
+  "-topmargin=10" \
+  "-bottommargin=14" \
+  "-ascent=30" \
+  "-descent=20" \
+  "-pad" \
+  "-crop" \
+  "-stroke 1"
+  do
+  echo ${flag}
+  pbmtextps -dump-ps ${flag} ${text} | diff ${text_ps} - | grep "^[<>]"
+  done
+
+rm ${text_ps}
+
+
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command line arguments" 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+test_out=${tmpdir}/test.out
+
+n=1
+
+for error_flag in \
+  "-fontsize" \
+  "-fontsize 0" \
+  "-resolution" \
+  "-resolution=0" \
+  "-leftmargin" \
+  "-leftmargin -1" \
+  "-rightmargin" \
+  "-rightmargin -1" \
+  "-topmargin" \
+  "-topmargin -1" \
+  "-bottommargin" \
+  "-bottommargin -1" \
+  "-ascent" \
+  "-ascent -1" \
+  "-descent" \
+  "-descent -1" \
+  "-stroke=A" \
+  "-pad -crop" 
+  do
+    pbmtextps ${error_flag} -dump-ps ${text} >${test_out} || \
+    printf "Expected failure $n (${error_flag})";
+    test -s ${test_out}; echo " "$?
+    rm -f ${test_out}
+    n=$((n + 1))
+  done
+
+  pbmtextps -font="" -dump-ps ${text} >${test_out} || \
+  printf "Expected failure $n (-font=\"\")";
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

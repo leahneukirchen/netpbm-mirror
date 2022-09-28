@@ -4,17 +4,22 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-22.09.24 BJH  Release 10.99.03
+22.09.28 BJH  Release 11.00.00
 
-              pnmmargin: fix shell injection vulnerability.  Always broken
-              (Program was added in primordial Netpbm in 1990).
+              (No significance to new major number; just ran out of 2-digit
+              minor numbers).
 
-22.08.03 BJH  Release 10.99.02
+              Add pamcat.
 
-              pnmindex: fix shell injection vulnerabilities.  Broken since
-              Netpbm 10.28 (June 2005).
+              pamtable: add -tuple.
 
-22.07.17 BJH  Release 10.99.01
+              pamtable: add -hex.
+
+              pbmtextps: improve error messages.
+
+              pnmtofits: fix arbitrary behavior when FITS input lacks
+              required fields in header.  Always broken.  Pnmtofits'
+              predecessor was in primordial Netpbm (1989).
 
               ppmtoicr: Fix bug: all options cause bogus command line parsing
               errors.  Always broken.  Ppmtoicr was new in 1991.
@@ -23,6 +28,17 @@ CHANGE HISTORY
 
               ppmtoicr: make -rle option issue an error message saying it no
               longer exists (it did, sort of, before 2015).
+
+              ppmforge: Fix arbitrary output with really large -power.
+              
+              pnmindex: fix shell injection vulnerabilities.  Broken since
+              Netpbm 10.28 (June 2005).
+
+              pnmmargin: fix shell injection vulnerability.  Always broken
+              (Program was added in primordial Netpbm in 1990).
+
+              build: Create backward compatibility symbolic link for
+              pnminterp-gen, missing for over 20 years.
 
 22.06.24 BJH  Release 10.99.00
 

@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pnmtops pstopnm
-# Also requires: pamtopnm gs pbmmake pnmshear pnmpad pnmcat
+# Also requires: pamtopnm gs pbmmake pnmshear pnmpad pamcat
 
 
 # Failure message
@@ -37,7 +37,7 @@ pbmmake -g 2 2 > ${g_pbm}
 pbmmake -g 8 4 | \
   pnmshear 45 -noantialias -background=black | \
   pnmpad -right 60 | \
-  pnmcat -tb -jright - ${g_pbm} > ${t_pbm} &&
+  pamcat -tb -jright - ${g_pbm} > ${t_pbm} &&
 for flag in "" "-rle" "-ps -rle -ascii" \
             "-bitspersample=2 -rle" "-ps -bitspersample=4 -rle" \
             "-bitspersample=8 -rle" "-ps -bitspersample=12 -rle -dict"

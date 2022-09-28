@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pamaddnoise pamaltsat pambackground pambayer
-# This script tests: pambrighten pamcut pamdeinterlace pamdepth pamditherbw
+# This script tests: pambrighten pamcat pamcut pamdeinterlace pamdepth pamditherbw
 # This script tests: pamedge pamexec pamfile pamfind pamfix pamflip
 # This script tests: pamfunc pamhomography pamhue pamlevels
 # This script tests: pammixinterlace pammosaicknit pamoil
@@ -24,6 +24,7 @@ for testprog in \
     pambackground \
     "pambayer -type=2" \
     pambrighten \
+    "pamcat -topbottom" \
     pamcut \
     pamdeinterlace \
     "pamdepth 15" \

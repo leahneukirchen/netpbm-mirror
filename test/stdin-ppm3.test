@@ -1,4 +1,4 @@
-#! /bin/sh
+o#! /bin/sh
 # This script tests: ppmtobmp bmptopnm
 # This script tests: ppmtoilbm ilbmtoppm
 # This script tests: ppmtoleaf leaftoppm
@@ -33,26 +33,24 @@ for fmt in \
         pj \
         spu \
         xpm
-  do
-  testprog1="ppmto"${fmt}
+do
+  if [ ${fmt} = "xpm" ]
+    then testprog1="ppmto${fmt} -name small";
+  else 	 testprog1="ppmto${fmt}";
+  fi
   if [ ${fmt} = "bmp" ]
     then testprog2=${fmt}"topnm";
-  else testprog2=${fmt}"toppm";
+  else   testprog2=${fmt}"toppm";
   fi
 
   if [ ${fmt} = "spu" ]
     then test_ppm=${large_ppm};
-  else test_ppm=${small_ppm};
+  else   test_ppm=${small_ppm};
   fi
 
   ${testprog1} ${test_ppm} > ${out1};    status1=$?
   ${testprog1} < ${test_ppm} > ${out2};  status2=$?
   test -s ${out1};                       status3=$?
-  if [ ${fmt} = "xpm" ]
-    then
-    sed -i '/^static char/s/static char .* = {/static char file/' \
-	    ${out1} ${out2};
-  fi
   cmp -s ${out1} ${out2}
   echo ${testprog1}": "${status1} ${status2} ${status3} $?
   rm ${out2}

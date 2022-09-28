@@ -10,13 +10,13 @@ echo "Test 1"
 # Should print 3898818212 967 twice
 
 pbmtext UNIX Philosophy: Do one thing and do it well. | cksum
-echo -n "UNIX Philosophy: Do one thing and do it well." | pbmtext | cksum
+printf "UNIX Philosophy: Do one thing and do it well." | pbmtext | cksum
 
 # Should print 2506052117 1354 twice
 
 pbmtext -builtin fixed \
     For truth is always strange. Stranger than fiction. Lord Byron | cksum
-echo -n "For truth is always strange. Stranger than fiction. Lord Byron" | \
+printf "For truth is always strange. Stranger than fiction. Lord Byron" | \
     pbmtext -builtin fixed | cksum
 
 
@@ -112,42 +112,42 @@ echo "Test 6 Invalid"
 test_out=${tmpdir}/test_out
 
 pbmtext -font=testgrid.pbm foo > ${test_out} || \
-  echo -n "Expected failure 1";
+  printf "Expected failure 1";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pbmtext -font=testimg.ppm  foo > ${test_out} || \
-  echo -n "Expected failure 2";
+  printf "Expected failure 2";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pbmtext -builtin=void      foo > ${test_out} || \
-  echo -n "Expected failure 3";
+  printf "Expected failure 3";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pbmtext -font=${font_pbm} -builtin=fixed foo > ${test_out}  || \
-  echo -n "Expected failure 4";
+  printf "Expected failure 4";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pbmtext -dry-run    -text-dump  foo > ${test_out} || \
-  echo -n "Expected failure 5";
+  printf "Expected failure 5";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pbmtext -dump-sheet -text-dump  foo > ${test_out} || \
-  echo -n "Expected failure 6";
+  printf "Expected failure 6";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pbmtext -dry-run    -dump-sheet foo > ${test_out} || \
-  echo -n "Expected failure 7";
+  printf "Expected failure 7";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 pbmtext -wchar foo > ${test_out} || \
-  echo -n "Expected failure 8";
+  printf "Expected failure 8";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
@@ -168,7 +168,7 @@ cat ${long_txt} | pbmtext -nomargins -builtin fixed  | cksum
 
 echo "Test 8 Invalid"
 
-echo -n "z" >> ${long_txt}
+printf "z" >> ${long_txt}
 awk '{print "text length:", length($0)}' ${long_txt}
 
 echo 1>&2
@@ -177,18 +177,18 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pbmtext -nomargins -builtin fixed `cat ${long_txt}` > ${test_out}  || \
-  echo -n "Expected failure 1";
+  printf "Expected failure 1";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 cat ${long_txt} | pbmtext -nomargins -builtin fixed > ${test_out}  || \
-  echo -n "Expected failure 2";
+  printf "Expected failure 2";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 
 cat ${long_txt} | \
   LC_ALL=C pbmtext -nomargins -builtin fixed -wchar > ${test_out}  || \
-  echo -n "Expected failure 3";
+  printf "Expected failure 3";
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 

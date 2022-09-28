@@ -16,5 +16,5 @@ ppmtopj: 0 0 0 0
 pjtoppm: 0 0 0 0
 ppmtospu: 0 0 0 0
 sputoppm: 0 0 0 0
-ppmtoxpm: 0 0 0 0
+ppmtoxpm -name small: 0 0 0 0
 xpmtoppm: 0 0 0 0

@@ -46,7 +46,7 @@ echo "-----------------------------------------------------------" 1>&2
 
 # overspecification
 pbmclean -black -white -min=1 -extended testgrid.pbm > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
 

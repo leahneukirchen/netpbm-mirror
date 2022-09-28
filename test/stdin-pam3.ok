@@ -14,6 +14,8 @@ pamtopfm: 0 0 0 0
 pfmtopam: 0 0 0 0
 pamtopng: 0 0 0 0
 pngtopam: 0 0 0 0
+pamtoqoi: 0 0 0 0
+qoitopam: 0 0 0 0
 pamtosrf: 0 0 0 0
 srftopam: 0 0 0 0
 pamtosvg: 0 0 0 0

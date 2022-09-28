@@ -1,0 +1,34 @@
+Test 1.  Should print 1.N 0 0
+1.0 0 0
+1.1 0 0
+1.2 0 0
+1.3 0 0
+1.4 0 0
+Test 2.  Should print 2.N 0 0
+2.0 0 0
+2.1 0 0
+2.2 0 0
+2.3 0 0
+2.4 0 0
+Test 3.  Should print 3.N 0 0
+3.0 0 0
+3.1 0 0
+3.2 0 0
+3.3 0 0
+3.4 0 0
+Test Invalid
+Should print: Expected failure N 1
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+------------------------------
+Should print: Expected failure N 0
+Expected failure 9 0
+Expected failure 10 0
+Expected failure 11 0
+Expected failure 12 0

@@ -19,7 +19,6 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
-#include "pm_system.h"
 #include "nstring.h"
 #include "pam.h"
 #include "pammap.h"

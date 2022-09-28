@@ -15,16 +15,16 @@ tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
 pbmmake 10 11 | ppmtoapplevol > ${test_out} || \
-  echo -n "Expected failure 1"
+  printf "Expected failure 1"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
  
 pbmmake 10 13 | ppmtoapplevol > ${test_out} || \
-  echo -n "Expected failure 2"
+  printf "Expected failure 2"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}
  
 pbmmake 256 12 | ppmtoapplevol > ${test_out} || \
-  echo -n "Expected failure 3"
+  printf "Expected failure 3"
   test -s ${test_out}; echo " "$?
   rm -f ${test_out}

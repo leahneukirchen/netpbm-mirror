@@ -1,0 +1,65 @@
+Test 1
+-font=ZQUEl8eS38RlsvEahHGNfnrbSswrcJKFwvlCdEttwcheuXvCN49MvWmndqj4
+< /FindFont {/Times-Roman findfont} def
+> /FindFont {/ZQUEl8eS38RlsvEahHGNfnrbSswrcJKFwvlCdEttwcheuXvCN49MvWmndqj4 findfont} def
+-fontsize 2000
+< /fontsize 24.000000 def
+> /fontsize 2000.000000 def
+< /descent 36.000000 def
+< /leftmargin 12.000000 def
+> /descent 3000.000000 def
+> /leftmargin 1000.000000 def
+-resolution 7200
+-leftmargin=15
+< /leftmargin 12.000000 def
+> /leftmargin 15.000000 def
+-rightmargin=20
+< /rightmargin 0.000000 def
+> /rightmargin 20.000000 def
+-topmargin=10
+< /topmargin 0.000000 def
+> /topmargin 10.000000 def
+-bottommargin=14
+< /descent 36.000000 def
+> /descent 0.000000 def
+< /bottommargin 0.000000 def
+> /bottommargin 14.000000 def
+-ascent=30
+< /ascent 0.000000 def
+> /ascent 30.000000 def
+-descent=20
+< /descent 36.000000 def
+> /descent 20.000000 def
+-pad
+< /descent 36.000000 def
+> /descent 0.000000 def
+< /pad false def
+> /pad true def
+-crop
+< /descent 36.000000 def
+< /leftmargin 12.000000 def
+> /descent 0.000000 def
+> /leftmargin 0.000000 def
+-stroke 1
+< /pensize -1.000000 def
+> /pensize 1.000000 def
+Test Invalid
+Expected failure 1 (-fontsize) 1
+Expected failure 2 (-fontsize 0) 1
+Expected failure 3 (-resolution) 1
+Expected failure 4 (-resolution=0) 1
+Expected failure 5 (-leftmargin) 1
+Expected failure 6 (-leftmargin -1) 1
+Expected failure 7 (-rightmargin) 1
+Expected failure 8 (-rightmargin -1) 1
+Expected failure 9 (-topmargin) 1
+Expected failure 10 (-topmargin -1) 1
+Expected failure 11 (-bottommargin) 1
+Expected failure 12 (-bottommargin -1) 1
+Expected failure 13 (-ascent) 1
+Expected failure 14 (-ascent -1) 1
+Expected failure 15 (-descent) 1
+Expected failure 16 (-descent -1) 1
+Expected failure 17 (-stroke=A) 1
+Expected failure 18 (-pad -crop) 1
+Expected failure 19 (-font="") 1

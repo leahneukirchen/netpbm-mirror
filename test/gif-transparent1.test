@@ -52,7 +52,7 @@ i=1
 for test_pnm in ${argyle_ppm} ${gingham_ppm} ${madras_ppm} \
 			      ${alpha0_pbm} ${alpha1_pbm}
   do
-  echo -n "Image $i: "; i=$((i+1));
+  printf "Image $i: "; i=$((i+1));
   pamtogif ${test_pnm} | giftopnm | tee ${out_pnm} | \
     cmp -s - ${test_pnm}; result=$?
 

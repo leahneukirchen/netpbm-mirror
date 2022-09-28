@@ -1,5 +1,5 @@
 /*============================================================================
-                              pnmindex   
+                                pnmindex
 ==============================================================================
 
   build a visual index of a bunch of PNM images
@@ -32,7 +32,7 @@
 #include "nstring.h"
 #include "pnm.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -56,11 +56,11 @@ systemf(const char * const fmt,
         ...) {
 
     va_list varargs;
-    
+
     size_t dryRunLen;
-    
+
     va_start(varargs, fmt);
-    
+
     pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
 
     va_end(varargs);
@@ -83,7 +83,7 @@ systemf(const char * const fmt,
             va_start(varargs, fmt);
 
             pm_vsnprintf(shellCommand, allocSize, fmt, varargs, &realLen);
-                
+
             assert(realLen == dryRunLen);
             va_end(varargs);
 
@@ -94,12 +94,12 @@ systemf(const char * const fmt,
             if (rc != 0)
                 pm_error("shell command '%s' failed.  rc %d",
                          shellCommand, rc);
-            
+
             pm_strfree(shellCommand);
         }
     }
 }
-        
+
 
 
 static const char *
@@ -168,8 +168,8 @@ shellQuote(const char * const arg) {
 
 
 static void
-parseCommandLine(int argc, char ** argv, 
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 
     unsigned int option_def_index;
     optEntry *option_def;
@@ -183,13 +183,13 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "black",       OPT_FLAG,   NULL,                  
+    OPTENT3(0, "black",       OPT_FLAG,   NULL,
             &cmdlineP->black,         0);
-    OPTENT3(0, "noquant",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "noquant",     OPT_FLAG,   NULL,
             &cmdlineP->noquant,       0);
-    OPTENT3(0, "quant",       OPT_FLAG,   NULL,                  
+    OPTENT3(0, "quant",       OPT_FLAG,   NULL,
             &quant,                   0);
-    OPTENT3(0, "verbose",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "verbose",     OPT_FLAG,   NULL,
             &cmdlineP->verbose,       0);
     OPTENT3(0, "size",        OPT_UINT,   &cmdlineP->size,
             &sizeSpec,                0);
@@ -202,7 +202,7 @@ parseCommandLine(int argc, char ** argv,
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE; 
+    opt.allowNegNum = FALSE;
 
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
@@ -212,7 +212,7 @@ parseCommandLine(int argc, char ** argv,
 
     if (!colorsSpec)
         cmdlineP->colors = 256;
-    
+
     if (!sizeSpec)
         cmdlineP->size = 100;
 
@@ -246,7 +246,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 static void
-freeCmdline(struct cmdlineInfo const cmdline) {
+freeCmdline(struct CmdlineInfo const cmdline) {
 
     unsigned int i;
 
@@ -326,9 +326,9 @@ rowFileName(const char * const dirName,
             unsigned int const row) {
 
     const char * fileName;
-    
+
     pm_asprintf(&fileName, "%s/pi.%u", dirName, row);
-    
+
     return fileName;
 }
 
@@ -368,7 +368,7 @@ copyImage(const char * const inputFileName,
     systemf("cat %s > %s", inputFileNmToken, outputFileName);
 
     pm_strfree(inputFileNmToken);
-} 
+}
 
 
 
@@ -386,26 +386,26 @@ copyScaleQuantImage(const char * const inputFileName,
 
     switch (PNM_FORMAT_TYPE(format)) {
     case PBM_TYPE:
-        pm_asprintf(&scaleCommand, 
+        pm_asprintf(&scaleCommand,
                     "pamscale -quiet -xysize %u %u %s "
                     "| pgmtopbm > %s",
                     size, size, inputFileNmToken, outputFileName);
         break;
-        
+
     case PGM_TYPE:
-        pm_asprintf(&scaleCommand, 
+        pm_asprintf(&scaleCommand,
                     "pamscale -quiet -xysize %u %u %s >%s",
                     size, size, inputFileNmToken, outputFileName);
         break;
-        
+
     case PPM_TYPE:
         if (quant)
-            pm_asprintf(&scaleCommand, 
+            pm_asprintf(&scaleCommand,
                         "pamscale -quiet -xysize %u %u %s "
                         "| pnmquant -quiet %u > %s",
                         size, size, inputFileNmToken, colors, outputFileName);
         else
-            pm_asprintf(&scaleCommand, 
+            pm_asprintf(&scaleCommand,
                         "pamscale -quiet -xysize %u %u %s >%s",
                         size, size, inputFileNmToken, outputFileName);
         break;
@@ -426,7 +426,7 @@ formatTypeMax(int const typeA,
               int const typeB) {
 
     if (typeA == PPM_TYPE || typeB == PPM_TYPE)
-        return PPM_TYPE; 
+        return PPM_TYPE;
     else if (typeA == PGM_TYPE || typeB == PGM_TYPE)
         return PGM_TYPE;
     else
@@ -441,9 +441,9 @@ thumbnailFileName(const char * const dirName,
                   unsigned int const col) {
 
     const char * fileName;
-    
+
     pm_asprintf(&fileName, "%s/pi.%u.%u", dirName, row, col);
-    
+
     return fileName;
 }
 
@@ -464,7 +464,7 @@ thumbnailFileList(const char * const dirName,
         pm_error("Unable to allocate %u bytes for file list", maxListSize);
 
     list[0] = '\0';
-    
+
     for (col = 0; col < cols; ++col) {
         const char * const fileName = thumbnailFileName(dirName, row, col);
 
@@ -487,19 +487,28 @@ makeImageFile(const char * const thumbnailFileName,
               const char * const inputFileName,
               bool         const blackBackground,
               const char * const outputFileName) {
+/*----------------------------------------------------------------------------
+   Create one thumbnail image.  It consists of the image in the file named
+   'thumbnailFileName' with text of that name appended to the bottom.
 
+   Write the result to the file named 'outputFileName'.
+
+   'blackBackground' means give the image a black background where padding
+   is necessary and make the text white on black.  If false, give the image
+   a white background instead.
+-----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
     const char * const invertStage   = blackBackground ? "| pnminvert " : "";
     const char * inputFileNmToken    = shellQuote(inputFileName);
 
     systemf("pbmtext %s %s"
-            "| pnmcat %s -topbottom %s - "
+            "| pamcat %s -topbottom %s - "
             "> %s",
             inputFileNmToken, invertStage, blackWhiteOpt,
             thumbnailFileName, outputFileName);
 
     pm_strfree(inputFileNmToken);
-}    
+}
 
 
 
@@ -519,21 +528,21 @@ makeThumbnail(const char *  const inputFileName,
     xelval maxval;
     const char * tmpfile;
     const char * fileName;
-        
+
     ifP = pm_openr(inputFileName);
     pnm_readpnminit(ifP, &imageCols, &imageRows, &maxval, &format);
     pm_close(ifP);
-    
+
     pm_asprintf(&tmpfile, "%s/pi.tmp", tempDir);
 
     if (imageCols < size && imageRows < size)
         copyImage(inputFileName, tmpfile);
     else
-        copyScaleQuantImage(inputFileName, tmpfile, format, 
+        copyScaleQuantImage(inputFileName, tmpfile, format,
                             size, quant, colors);
 
     fileName = thumbnailFileName(tempDir, row, col);
-        
+
     makeImageFile(tmpfile, inputFileName, black, fileName);
 
     unlink(tmpfile);
@@ -543,7 +552,7 @@ makeThumbnail(const char *  const inputFileName,
 
     *formatP = format;
 }
-        
+
 
 
 static void
@@ -552,7 +561,7 @@ unlinkThumbnailFiles(const char * const dirName,
                      unsigned int const cols) {
 
     unsigned int col;
-    
+
     for (col = 0; col < cols; ++col) {
         const char * const fileName = thumbnailFileName(dirName, row, col);
 
@@ -569,7 +578,7 @@ unlinkRowFiles(const char * const dirName,
                unsigned int const rows) {
 
     unsigned int row;
-    
+
     for (row = 0; row < rows; ++row) {
         const char * const fileName = rowFileName(dirName, row);
 
@@ -595,7 +604,7 @@ combineIntoRowAndDelete(unsigned int const row,
     const char * fileName;
     const char * quantStage;
     const char * fileList;
-    
+
     fileName = rowFileName(tempDir, row);
 
     unlink(fileName);
@@ -607,7 +616,7 @@ combineIntoRowAndDelete(unsigned int const row,
 
     fileList = thumbnailFileList(tempDir, row, cols);
 
-    systemf("pnmcat %s -leftright -jbottom %s "
+    systemf("pamcat %s -leftright -jbottom %s "
             "%s"
             ">%s",
             blackWhiteOpt, fileList, quantStage, fileName);
@@ -641,7 +650,7 @@ rowFileList(const char * const dirName,
 
         if (strlen(list) + strlen(fileName) + 1 > maxListSize - 1)
             pm_error("File name list too long for this program to handle.");
-        
+
         else {
             strcat(list, " ");
             strcat(list, fileName);
@@ -666,7 +675,7 @@ writeRowsAndDelete(unsigned int const rows,
 
     const char * quantStage;
     const char * fileList;
-    
+
     if (maxFormatType == PPM_TYPE && quant)
         pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colors);
     else
@@ -674,7 +683,7 @@ writeRowsAndDelete(unsigned int const rows,
 
     fileList = rowFileList(tempDir, rows);
 
-    systemf("pnmcat %s -topbottom %s %s",
+    systemf("pamcat %s -topbottom %s %s",
             blackWhiteOpt, fileList, quantStage);
 
     pm_strfree(fileList);
@@ -687,7 +696,7 @@ writeRowsAndDelete(unsigned int const rows,
 
 int
 main(int argc, char *argv[]) {
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     const char * tempDir;
     int maxFormatType;
     unsigned int colsInRow;
@@ -699,7 +708,7 @@ main(int argc, char *argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     verbose = cmdline.verbose;
-    
+
     makeTempDir(&tempDir);
 
     maxFormatType = PBM_TYPE;
@@ -714,7 +723,7 @@ main(int argc, char *argv[]) {
 
         int format;
 
-        makeThumbnail(inputFileName, cmdline.size, cmdline.black, 
+        makeThumbnail(inputFileName, cmdline.size, cmdline.black,
                       !cmdline.noquant, cmdline.colors, tempDir,
                       rowsDone, colsInRow, &format);
 
@@ -742,3 +751,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

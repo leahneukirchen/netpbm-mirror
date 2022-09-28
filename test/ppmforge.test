@@ -47,6 +47,6 @@ ppmforge -seed 1 -stars 0 -ice 0.01 \
     -inclination 9  -hour 12 -power 200 > ${test_ppm} 
 ppmforge -seed 1 -stars 0 -ice 0.01 \
     -inclination 10 -hour 12 -power 200 | \
-  pnmpsnr -target1=53.89 -target2=49.38 -target3=65.15 - ${test_ppm}
+  pnmpsnr -target1=46.07 -target2=52.00 -target3=67.77 - ${test_ppm}
 
 rm ${test_ppm}

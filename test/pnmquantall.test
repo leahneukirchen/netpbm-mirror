@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pnmquantall
-# Also requires: ppmtorgb3 pgmhist pnmcat
+# Also requires: ppmtorgb3 pgmhist pamcat
 
 tmpdir=${tmpdir:-/tmp}
 rose_ppm=${tmpdir}/rose.ppm
@@ -21,7 +21,7 @@ done
 
 # Should print 1
 
-pnmcat ${rose_red} ${rose_grn} ${rose_blu} -tb | \
+pamcat ${rose_red} ${rose_grn} ${rose_blu} -tb | \
     pgmhist -m | awk '$2>0 {s++}; END { print (s<=20) }'
 
 

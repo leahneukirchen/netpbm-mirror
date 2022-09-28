@@ -1,0 +1,271 @@
+#! /bin/sh
+# This script tests: pamcat
+# Also requires: pbmmake pgmmake ppmmake pamseq pamrestack
+
+tmpdir=${tmpdir:-/tmp}
+check10x10_pbm=${tmpdir}/check10x10.pbm
+check40x10_pbm=${tmpdir}/check40x10.pbm
+check10x30_pbm=${tmpdir}/check10x30.pbm
+
+gray5x5_pgm=${tmpdir}/gray5x5.pgm
+gray10x5_pgm=${tmpdir}/gray10x5.pgm
+gray5x25_pgm=${tmpdir}/gray5x25.pgm
+
+yellow4x5_ppm=${tmpdir}/yellow4x5.ppm
+yellow16x5_ppm=${tmpdir}/yellow16x5.ppm
+yellow4x15_ppm=${tmpdir}/yellow4x15.ppm
+
+seq2_4h_pam=${tmpdir}/seq2_4h.pam
+seq2_4h4_pam=${tmpdir}/seq2_4h4.pam
+seq2_4v_pam=${tmpdir}/seq2_4v.pam
+seq2_4v3_pam=${tmpdir}/seq2_4v3.pam
+
+
+echo "Test 1.  Should print 15135078 29, then 0 fourteen times"
+
+pbmmake -g 10 10 | tee ${check10x10_pbm} | cksum
+for opt in "-leftright" "-lr" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-topbottom" "-tb" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black"
+  do
+  pamcat ${opt} ${check10x10_pbm} | cmp -s ${check10x10_pbm} - ; echo $?
+  done
+
+
+echo "Test 2.  Should print 1957849403 59, 0 six times, 1 once"
+pbmmake -g 40 10 | tee ${check40x10_pbm} | cksum
+for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-tb"
+  do
+  pamcat ${opt} ${check10x10_pbm} ${check10x10_pbm} \
+         ${check10x10_pbm} ${check10x10_pbm} | \
+  cmp -s ${check40x10_pbm} - ; echo $?
+  done
+
+
+echo "Test 3.  Should print 2673197404 69, 0 six times, 1 once"
+pbmmake -g 10 30 | tee ${check10x30_pbm} | cksum
+for opt in "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black" \
+    "-lr"
+  do
+  pamcat ${opt} ${check10x10_pbm} ${check10x10_pbm} ${check10x10_pbm} |\
+  cmp -s ${check10x30_pbm} - ; echo $? 	
+  done
+
+rm ${check10x10_pbm} ${check40x10_pbm} ${check10x30_pbm}
+
+
+echo "Test 4.  Should print 2285402562 36, then 0 twelve times"
+
+pgmmake 0.125 5 5 | tee ${gray5x5_pgm} | cksum
+for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black"
+  do
+  pamcat ${opt} ${gray5x5_pgm} | cmp -s ${gray5x5_pgm} - ; echo $?
+  done
+
+
+echo "Test 5.  Should print 1836757613 62, 0 six times, 1 once"
+pgmmake 0.125 10 5 | tee ${gray10x5_pgm} | cksum
+for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-tb"
+  do
+  pamcat ${opt} ${gray5x5_pgm} ${gray5x5_pgm} |\
+  cmp -s ${gray10x5_pgm} - ; echo $?
+  done
+
+
+echo "Test 6.  Should print 3601245348 137, 0 six times, 1 once"
+pgmmake 0.125 5 25 | tee ${gray5x25_pgm} | cksum
+for opt in "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black" \
+    "-lr"
+  do
+  pamcat ${opt} ${gray5x5_pgm} ${gray5x5_pgm} ${gray5x5_pgm} \
+	 ${gray5x5_pgm} ${gray5x5_pgm} |\
+  cmp -s ${gray5x25_pgm} - ; echo $?
+  done
+
+
+rm ${gray5x5_pgm} ${gray10x5_pgm} ${gray5x25_pgm}
+
+
+echo "Test 7.  Should print 1572996771 71, then 0 twelve times"
+ppmmake rgb:255/255/1 4 5 | tee ${yellow4x5_ppm} | cksum
+for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black"
+  do
+  pamcat ${opt} ${yellow4x5_ppm} |\
+  cmp -s ${yellow4x5_ppm} - ; echo $?
+  done
+
+
+echo "Test 8.  Should print 270413826 252, 0 six times, 1 once"
+ppmmake rgb:255/255/1 16 5 | tee ${yellow16x5_ppm} | cksum
+for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-tb"
+  do
+  pamcat ${opt} ${yellow4x5_ppm} ${yellow4x5_ppm} \
+         ${yellow4x5_ppm} ${yellow4x5_ppm} |\
+  cmp -s ${yellow16x5_ppm} - ; echo $?
+  done
+
+
+echo "Test 9.  Should print 2942772630 192, 0 six times, 1 once"
+ppmmake rgb:255/255/1 4 15 | tee ${yellow4x15_ppm} | cksum
+for opt in "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black" \
+    "-lr"
+  do
+  pamcat ${opt} ${yellow4x5_ppm} ${yellow4x5_ppm} ${yellow4x5_ppm} |\
+  cmp -s ${yellow4x15_ppm} - ; echo $?
+  done
+
+rm ${yellow4x5_ppm} ${yellow16x5_ppm} ${yellow4x15_ppm}
+
+
+echo "Test 10.  Should print 2700536985 95, then 0 twelve times"
+pamseq 2 4 | tee ${seq2_4h_pam} | cksum
+for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black"
+  do
+  pamcat ${opt} ${seq2_4h_pam}  |\
+  cmp -s ${seq2_4h_pam} - ; echo $?
+  done
+
+
+echo "Test 11.  Should print 2193235886 195, 0 eight times, 1 once"
+pamrestack -width=1 ${seq2_4h_pam} | tee ${seq2_4v_pam} |\
+  pamenlarge -xscale=3 |\
+  tee ${seq2_4v3_pam} | cksum
+pamcat -lr ${seq2_4v_pam} ${seq2_4v_pam} | pamcat -lr - ${seq2_4v_pam} |\
+  cmp -s ${seq2_4v3_pam} - ; echo $?
+pamcat -lr ${seq2_4v_pam} | pamcat -lr - ${seq2_4v_pam}  ${seq2_4v_pam} |\
+  cmp -s ${seq2_4v3_pam} - ; echo $?
+for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
+    "-lr -white" "-lr -black" \
+    "-topbottom"
+  do
+  pamcat ${opt} ${seq2_4v_pam} ${seq2_4v_pam} ${seq2_4v_pam} |\
+  cmp -s ${seq2_4v3_pam} - ; echo $?
+  done
+
+
+echo "Test 12.  Should print 2773166369 245, 0 nine times, 1 once"
+pamenlarge -yscale 4 ${seq2_4h_pam} | tee ${seq2_4h4_pam} | cksum
+pamcat -tb ${seq2_4h_pam} |\
+    pamcat -tb - ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam} |\
+    cmp -s ${seq2_4h4_pam} - ; echo $?
+pamcat -tb ${seq2_4h_pam} ${seq2_4h_pam} |\
+    pamcat -tb - ${seq2_4h_pam} ${seq2_4h_pam} |\
+    cmp -s ${seq2_4h4_pam} - ; echo $?
+pamcat -tb ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam}|\
+    pamcat -tb - ${seq2_4h_pam} |\
+    cmp -s ${seq2_4h4_pam} - ; echo $?
+for opt in "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
+    "-tb -white" "-tb -black" \
+    "-leftright"
+  do
+  pamcat ${opt} ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam} |\
+  cmp -s ${seq2_4h4_pam} - ; echo $?
+  done
+
+rm ${seq2_4h_pam} ${seq2_4v_pam} ${seq2_4v3_pam} ${seq2_4h4_pam}
+
+
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+# direction not specified
+pamcat testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# both directions specified
+pamcat -topbottom -leftright testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# both pad colors specified
+pamcat -topbottom -white -black testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# justification parameters overspecified
+pamcat -lr -jtop -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -lr -jtop -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -lr -jcenter -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -tb -jleft -jright testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -tb -jleft -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -tb -jcenter -jright testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# justification parameter in the wrong direction
+pamcat -lr -jleft    testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -lr -jright   testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -tb -jtop     testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamcat -tb -jbottom  testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 13"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# more than one input image from standard input
+cat testgrid.pbm | pamcat -lr - - testimg.ppm > ${test_out} || \
+  printf "Expected failure 14"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

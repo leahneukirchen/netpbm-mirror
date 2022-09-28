@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 #include "netpbm/pam.h"
-#include "netpbm/pm_system.h"
 #include "netpbm/pm_gamma.h"
 #include "netpbm/nstring.h"
 #include "netpbm/ppm.h"
