@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamcut
-# Also requires: pamfile pnmcat pnmpad pnmcrop
+# Also requires: pamfile pamcat pnmpad pnmcrop
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -23,7 +23,7 @@ for i in 0 1 128 224 225
   do
   pamcut -left=$((i+1)) testimg.ppm > ${right_ppm}
   pamcut -right=$i      testimg.ppm > ${left_ppm}
-  pnmcat -lr ${left_ppm} ${right_ppm} | \
+  pamcat -lr ${left_ppm} ${right_ppm} | \
     pamcut -left=0 -width=${width} | cksum
   rm ${left_ppm} ${right_ppm}
   done
@@ -38,7 +38,7 @@ for border in 0 1 128 224 225
   do
   pamcut -left=$((${border}+1)) -width=${width} -pad testimg.ppm > ${right_ppm}
   pamcut -right=${border} -width=${width} -pad testimg.ppm > ${left_ppm}
-  pnmcat -lr ${left_ppm} ${right_ppm} ${left_ppm} | \
+  pamcat -lr ${left_ppm} ${right_ppm} ${left_ppm} | \
     pamcut -left=$((${width}-${border}-1))  -width=$((${width}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' '
   pnmcrop -black -right ${padded_ppm} | cksum
@@ -53,7 +53,7 @@ for border in 0 1 70 147
   do
   pamcut -top=$((${border}+1)) testimg.ppm > ${bottom_ppm}
   pamcut -bottom=${border}     testimg.ppm > ${top_ppm}
-  pnmcat -tb ${top_ppm} ${bottom_ppm} | \
+  pamcat -tb ${top_ppm} ${bottom_ppm} | \
     pamcut -top=0 -height=${height} | cksum
   rm ${top_ppm} ${bottom_ppm}
   done
@@ -68,7 +68,7 @@ for border in 0 1 70 147
   pamcut -top=$((${border}+1)) -height=${height} -pad testimg.ppm \
     > ${bottom_ppm}
   pamcut -bottom=${border}     -height=${height} -pad testimg.ppm > ${top_ppm}
-  pnmcat -tb ${top_ppm} ${bottom_ppm} ${top_ppm} | \
+  pamcat -tb ${top_ppm} ${bottom_ppm} ${top_ppm} | \
     pamcut -top=$((${height}-${border}-1))  -height=$((${height}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' 'cksum
   pnmcrop -black -bottom ${padded_ppm} | cksum
@@ -94,7 +94,7 @@ for i in 0 1 10 30 50
   do
   pamcut -left=$((i+1)) maze.pbm > ${right_ppm}
   pamcut -right=$i      maze.pbm > ${left_ppm}
-  pnmcat -lr ${left_ppm} ${right_ppm} | \
+  pamcat -lr ${left_ppm} ${right_ppm} | \
     pamcut -left=0 -width=${width} | cksum
   rm ${left_ppm} ${right_ppm}
   done
@@ -110,7 +110,7 @@ for border in 0 1 10 30 50
   do
   pamcut -left=$((${border}+1)) -width=${width} -pad maze.pbm > ${right_ppm}
   pamcut -right=${border} -width=${width} -pad maze.pbm > ${left_ppm}
-  pnmcat -lr ${left_ppm} ${right_ppm} ${left_ppm} | \
+  pamcat -lr ${left_ppm} ${right_ppm} ${left_ppm} | \
     pamcut -left=$((${width}-${border}-1))  -width=$((${width}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' '
   pnmcrop -black -right ${padded_ppm} | cksum
@@ -125,7 +125,7 @@ for border in 0 1 12 21 31 44
   do
   pamcut -top=$((${border}+1)) maze.pbm > ${bottom_ppm}
   pamcut -bottom=${border}     maze.pbm > ${top_ppm}
-  pnmcat -tb ${top_ppm} ${bottom_ppm} | \
+  pamcat -tb ${top_ppm} ${bottom_ppm} | \
     pamcut -top=0 -height=${height} | cksum
   rm ${top_ppm} ${bottom_ppm}
   done
@@ -139,7 +139,7 @@ for border in 0 1 10 50
   do
   pamcut -top=$((${border}+1)) -height=${height} -pad maze.pbm > ${bottom_ppm}
   pamcut -bottom=${border}     -height=${height} -pad maze.pbm > ${top_ppm}
-  pnmcat -tb ${top_ppm} ${bottom_ppm} ${top_ppm} | \
+  pamcat -tb ${top_ppm} ${bottom_ppm} ${top_ppm} | \
     pamcut -top=$((${height}-${border}-1))  -height=$((${height}*2)) | \
     tee ${padded_ppm} | cksum | tr '\n' ' 'cksum
   pnmcrop -black -bottom ${padded_ppm} | cksum
