@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.00.01
 
+              fitstopnm: fix invalid memory reference (nonterminated ASCIIZ
+              string).
+
 22.09.28 BJH  Release 11.00.00
 
               (No significance to new major number; just ran out of 2-digit
