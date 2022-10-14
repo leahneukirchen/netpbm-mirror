@@ -355,7 +355,7 @@ readCard(FILE * const ifP,
     size_t bytesRead;
 
     bytesRead = fread(buf, 1, 80, ifP);
-    if (bytesRead == 0)
+    if (bytesRead < 80)
         pm_error("error reading header");
 }
 
@@ -394,8 +394,10 @@ static void
 readFitsHeader(FILE *               const ifP,
                struct FITS_Header * const hP) {
 
-    bool gotSimple, gotNaxis, gotN1, gotN2, gotN3, gotBitpix, gotEnd;
 
+    bool gotEmpty, gotSimple, gotNaxis, gotN1, gotN2, gotN3, gotBitpix, gotEnd;
+
+    gotEmpty  = false;  /* initial value */    
     gotSimple = false;  /* initial value */
     gotNaxis  = false;  /* initial value */
     gotN1     = false;  /* initial value */
@@ -412,14 +414,19 @@ readFitsHeader(FILE *               const ifP,
 
     while (!gotEnd) {
         unsigned int i;
+
         for (i = 0; i < 36; ++i) {
-            char buf[80];
+            char buf[81];
             char c;
             int n;
 
-            readCard(ifP, buf);
+            readCard(ifP, buf); /* Reads into first 80 elements of buf[] */
 
-            if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
+            buf[80] = '\0'; /* Make ASCIIZ string */
+
+            if (sscanf(buf, " %c", &c) < 1) {
+                gotEmpty = true;
+            } else if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
                 if (gotSimple)
                     pm_error("FITS header has two SIMPLE keywords");
                 gotSimple = true;
@@ -454,6 +461,9 @@ readFitsHeader(FILE *               const ifP,
             } else if (sscanf(buf, "BSCALE = %lf", &(hP->bscale)) == 1) {
             } else if (strncmp(buf, "END ", 4 ) == 0) {
                 gotEnd = true;
+                if (gotEmpty == true)
+                    pm_message("Blank card(s) were encountered before "
+			       "END in header");
             }
         }
     }
