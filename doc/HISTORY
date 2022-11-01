@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.00.01
 
+              pamtojpeg2k: add -size option.  Doesn't precisely work (and
+              -compression has never worked precisely either); should be
+              fixed some day.
+
               fitstopnm: fix invalid memory reference (nonterminated ASCIIZ
               string).
 

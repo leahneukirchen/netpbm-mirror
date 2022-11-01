@@ -69,7 +69,6 @@ static void prc_destroy(jpc_enc_prc_t *prcs);
 static jpc_enc_cblk_t *cblk_create(jpc_enc_cblk_t *cblk, jpc_enc_cp_t *cp,
   jpc_enc_prc_t *prc);
 static void cblk_destroy(jpc_enc_cblk_t *cblks);
-int ratestrtosize(const char *s, uint_fast32_t rawsize, uint_fast32_t *size);
 static void pass_destroy(jpc_enc_pass_t *pass);
 void jpc_enc_dump(jpc_enc_t *enc);
 
@@ -143,7 +142,6 @@ typedef enum {
     OPT_NUMGBITS,
     OPT_RATE,
     OPT_ILYRRATES,
-    OPT_JP2OVERHEAD
 } optid_t;
 
 jas_taginfo_t encopts[] = {
@@ -173,7 +171,6 @@ jas_taginfo_t encopts[] = {
     {OPT_NUMGBITS, "numgbits"},
     {OPT_RATE, "rate"},
     {OPT_ILYRRATES, "ilyrrates"},
-    {OPT_JP2OVERHEAD, "_jp2overhead"},
     {-1, 0}
 };
 
@@ -292,6 +289,28 @@ error:
 
 
 
+static void
+ratestrtosize(const char *    const s,
+              uint_fast32_t   const rawsize,
+              uint_fast32_t * const sizeP) {
+
+    if (strchr(s, 'B')) {
+        *sizeP = atoi(s);
+    } else {
+        jpc_flt_t const f = atof(s);
+
+        if (f < 0) {
+            *sizeP = 0;
+        } else if (f > 1.0) {
+            *sizeP = rawsize + 1;
+        } else {
+            *sizeP = f * rawsize;
+        }
+    }
+}
+
+
+
 /*****************************************************************************\
 * Option parsing code.
 \*****************************************************************************/
@@ -314,7 +333,6 @@ cp_create(char *optstr, jas_image_t *image) {
     uint_fast16_t prcwidthexpn;
     uint_fast16_t prcheightexpn;
     bool enablemct;
-    uint_fast32_t jp2overhead;
     uint_fast16_t lyrno;
     uint_fast32_t hsteplcm;
     uint_fast32_t vsteplcm;
@@ -332,7 +350,6 @@ cp_create(char *optstr, jas_image_t *image) {
     prcwidthexpn = 15;
     prcheightexpn = 15;
     enablemct = true;
-    jp2overhead = 0;
 
     cp->ccps = 0;
     cp->debug = 0;
@@ -380,6 +397,10 @@ cp_create(char *optstr, jas_image_t *image) {
 
     cp->rawsize = jas_image_rawsize(image);
     cp->totalsize = UINT_FAST32_MAX;
+        /* Set default value, the special value that means size is unlimited
+           (so lossless coding is called for).  To be overridden if user
+           specified
+        */
 
     tcp = &cp->tcp;
     tcp->csty = 0;
@@ -492,12 +513,8 @@ cp_create(char *optstr, jas_image_t *image) {
             cp->tccp.numgbits = atoi(jas_tvparser_getval(tvp));
             break;
         case OPT_RATE:
-            if (ratestrtosize(jas_tvparser_getval(tvp), cp->rawsize,
-              &cp->totalsize)) {
-                fprintf(stderr,
-                  "ignoring bad rate specifier %s\n",
-                  jas_tvparser_getval(tvp));
-            }
+            ratestrtosize(jas_tvparser_getval(tvp), cp->rawsize,
+                          &cp->totalsize);
             break;
         case OPT_ILYRRATES:
             if (jpc_atoaf(jas_tvparser_getval(tvp), &numilyrrates,
@@ -505,13 +522,10 @@ cp_create(char *optstr, jas_image_t *image) {
                 fprintf(stderr,
                         "warning: invalid intermediate layer rates specifier "
                         "ignored (%s)\n",
-                  jas_tvparser_getval(tvp));
+                        jas_tvparser_getval(tvp));
             }
             break;
 
-        case OPT_JP2OVERHEAD:
-            jp2overhead = atoi(jas_tvparser_getval(tvp));
-            break;
         default:
             fprintf(stderr, "warning: ignoring invalid option %s\n",
              jas_tvparser_gettag(tvp));
@@ -521,11 +535,6 @@ cp_create(char *optstr, jas_image_t *image) {
 
     jas_tvparser_destroy(tvp);
     tvp = 0;
-
-    if (cp->totalsize != UINT_FAST32_MAX) {
-        cp->totalsize = (cp->totalsize > jp2overhead) ?
-          (cp->totalsize - jp2overhead) : 0;
-    }
 
     if (cp->imgareatlx == UINT_FAST32_MAX) {
         cp->imgareatlx = 0;
@@ -697,20 +706,28 @@ cp_create(char *optstr, jas_image_t *image) {
         /* The intermediate layers rates must increase monotonically. */
         for (lyrno = 0; lyrno + 2 < tcp->numlyrs; ++lyrno) {
             if (tcp->ilyrrates[lyrno] >= tcp->ilyrrates[lyrno + 1]) {
-                fprintf(stderr,
-                        "intermediate layer rates must increase "
-                        "monotonically\n");
+                pm_message("Compression rate for Layer %u (%f) "
+                           "is not greater than that for Layer %u (%f).  "
+                           "Rates must increase at every layer",
+                           (unsigned)(lyrno+1),
+                           jpc_fixtodbl(tcp->ilyrrates[lyrno + 1]),
+                           (unsigned)lyrno,
+                           jpc_fixtodbl(tcp->ilyrrates[lyrno]));
                 goto error;
             }
         }
         /* The intermediate layer rates must be less than the overall rate. */
         if (cp->totalsize != UINT_FAST32_MAX) {
             for (lyrno = 0; lyrno < tcp->numlyrs - 1; ++lyrno) {
-                if (jpc_fixtodbl(tcp->ilyrrates[lyrno]) >
-                    ((double) cp->totalsize) / cp->rawsize) {
-                    fprintf(stderr,
-                            "warning: intermediate layer rates must be "
-                            "less than overall rate\n");
+                double const thisLyrRate = jpc_fixtodbl(tcp->ilyrrates[lyrno]);
+                double const completeRate =
+                    ((double) cp->totalsize) / cp->rawsize;
+                if (thisLyrRate > completeRate) {
+                    pm_message(
+                        "Compression rate for Layer %u is %f, "
+                        "which is greater than the rate for the complete "
+                        "image (%f)",
+                        (unsigned)lyrno, thisLyrRate, completeRate);
                     goto error;
                 }
             }
@@ -752,28 +769,6 @@ jpc_enc_cp_destroy(jpc_enc_cp_t *cp) {
 }
 
 
-
-int
-ratestrtosize(const char *s, uint_fast32_t rawsize, uint_fast32_t *size) {
-
-    char *cp;
-    jpc_flt_t f;
-
-    /* Note: This function must not modify output size on failure. */
-    if ((cp = strchr(s, 'B'))) {
-        *size = atoi(s);
-    } else {
-        f = atof(s);
-        if (f < 0) {
-            *size = 0;
-        } else if (f > 1.0) {
-            *size = rawsize + 1;
-        } else {
-            *size = f * rawsize;
-        }
-    }
-    return 0;
-}
 
 /*****************************************************************************\
 * Encoder constructor and destructor.
@@ -844,6 +839,8 @@ jpc_enc_destroy(jpc_enc_t *enc) {
 
 static int
 jpc_enc_encodemainhdr(jpc_enc_t *enc) {
+
+    uint_fast32_t const maintlrlen = 2;
 
     jpc_siz_t *siz;
     jpc_cod_t *cod;
@@ -961,7 +958,7 @@ jpc_enc_encodemainhdr(jpc_enc_t *enc) {
                   (analgain + 1)), bandinfo->synenergywt);
             } else {
                 absstepsize = jpc_inttofix(1);
-            }   
+            }
             cp->ccps[cmptno].stepsizes[bandno] =
               jpc_abstorelstepsize(absstepsize,
               cp->ccps[cmptno].prec + analgain);
@@ -1038,14 +1035,27 @@ jpc_enc_encodemainhdr(jpc_enc_t *enc) {
         enc->mrk = 0;
     }
 
-#define MAINTLRLEN  2
     mainhdrlen = jas_stream_getrwcount(enc->out) - startoff;
     enc->len += mainhdrlen;
     if (enc->cp->totalsize != UINT_FAST32_MAX) {
-        uint_fast32_t overhead;
-        overhead = mainhdrlen + MAINTLRLEN;
-        enc->mainbodysize = (enc->cp->totalsize >= overhead) ?
-          (enc->cp->totalsize - overhead) : 0;
+        uint_fast32_t const overhead = mainhdrlen + maintlrlen;
+
+        if (overhead > enc->cp->totalsize) {
+            pm_message("Requested limit on image size of %u bytes "
+                       "is not possible because it is less than "
+                       "the image metadata size (%u bytes)",
+                       (unsigned)enc->cp->totalsize, (unsigned)overhead);
+            return -1;
+        }
+        enc->mainbodysize = enc->cp->totalsize - overhead;
+        /* This has never actually worked.  'totalsize' is supposed to be
+           the total all-in, so if you request total size 200, you should
+           get an output file 200 bytes or smaller; but we see 209 bytes.
+           Furthermore, at 194 bytes, we get a warning that an empty layer
+           is generated, which probably is actually an error.
+
+           We should fix this some day.
+        */
     } else {
         enc->mainbodysize = UINT_FAST32_MAX;
     }
@@ -1166,12 +1176,12 @@ calcrdslopes(jpc_enc_cblk_t *cblk) {
 
 static void
 traceLayerSizes(const uint_fast32_t * const lyrSizes,
-                unsigned int          const layerCt) {
+                uint_fast32_t         const layerCt) {
 
     if (jas_getdbglevel() > 0) {
-        unsigned int i;
+        uint_fast32_t i;
         for (i = 0; i < layerCt; ++i) {
-            fprintf(stderr, "Layer %u size = ", i);
+            fprintf(stderr, "Layer %u size = ", (unsigned)i);
 
             if (lyrSizes[i] == UINT_FAST32_MAX)
                 fprintf(stderr, "Unlimited");
@@ -1196,41 +1206,22 @@ computeLayerSizes(jpc_enc_t *      const encP,
        "unlimited".
     */
 
-    unsigned int const lastLyrno = tileP->numlyrs - 1;
+    uint_fast32_t const lastLyrno = tileP->numlyrs - 1;
 
-    unsigned int lyrno;
+    uint_fast32_t lyrno;
 
     assert(tileP->numlyrs > 0);
 
     for (lyrno = 0; lyrno < lastLyrno; ++lyrno) {
-        tileP->lyrsizes[lyrno] = tileP->rawsize * jpc_fixtodbl(
-            cpP->tcp.ilyrrates[lyrno]);
+        tileP->lyrsizes[lyrno] =
+            MAX(tileP->rawsize *
+                jpc_fixtodbl(cpP->tcp.ilyrrates[lyrno]),
+                tilehdrlen + 1) - tilehdrlen;
     }
 
     tileP->lyrsizes[lastLyrno] =
-        (cpP->totalsize != UINT_FAST32_MAX) ?
-        (rho * encP->mainbodysize) : UINT_FAST32_MAX;
-
-
-    /* Subtract 'tilehdrlen' from every layer. */
-
-    for (lyrno = 0; lyrno < tileP->numlyrs; ++lyrno) {
-        if (tileP->lyrsizes[lyrno] != UINT_FAST32_MAX) {
-            if (tilehdrlen <= tileP->lyrsizes[lyrno]) {
-                tileP->lyrsizes[lyrno] -= tilehdrlen;
-            } else {
-                tileP->lyrsizes[lyrno] = 0;
-            }
-        }
-    }
-
-    if (tileP->lyrsizes[lastLyrno] < 1)
-        pm_asprintf(errorP, "Cannot make image that small (%u bytes).  "
-                    "Even with pixels compressed as far as possible, metadata "
-                    "would exceed the limit",
-                    (unsigned)cpP->totalsize);
-    else
-        *errorP = NULL;
+        (cpP->totalsize == UINT_FAST32_MAX) ?
+        UINT_FAST32_MAX : (rho * encP->mainbodysize);
 
     traceLayerSizes(tileP->lyrsizes, tileP->numlyrs);
 }
@@ -1313,8 +1304,8 @@ trace_layeringinfo(jpc_enc_t * const encP) {
 
 static void
 validateCumlensIncreases(const uint_fast32_t * const cumlens,
-                         unsigned int          const numlyrs) {
-    unsigned int lyrno;
+                         uint_fast32_t          const numlyrs) {
+    uint_fast32_t lyrno;
 
     for (lyrno = 1; lyrno < numlyrs - 1; ++lyrno) {
         if (cumlens[lyrno - 1] > cumlens[lyrno]) {
@@ -1404,7 +1395,7 @@ findMinMaxRDSlopeValues(jpc_enc_tile_t * const tileP,
 static void
 performTier2CodingOneLayer(jpc_enc_t *      const encP,
                            jpc_enc_tile_t * const tileP,
-                           unsigned int     const lyrno,
+                           uint_fast32_t     const lyrno,
                            jas_stream_t *   const outP,
                            const char **    const errorP) {
 /*----------------------------------------------------------------------------
@@ -1444,7 +1435,7 @@ performTier2CodingOneLayer(jpc_enc_t *      const encP,
 static void
 assignHighSlopePassesToLayer(jpc_enc_t *      const encP,
                              jpc_enc_tile_t * const tileP,
-                             unsigned int     const lyrno,
+                             uint_fast32_t     const lyrno,
                              bool             const haveThresh,
                              jpc_flt_t        const thresh) {
 /*----------------------------------------------------------------------------
@@ -1522,7 +1513,7 @@ assignHighSlopePassesToLayer(jpc_enc_t *      const encP,
 static void
 doLayer(jpc_enc_t *      const encP,
         jpc_enc_tile_t * const tileP,
-        unsigned int     const lyrno,
+        uint_fast32_t     const lyrno,
         uint_fast32_t    const allowedSize,
         jpc_flt_t        const mnrdslope,
         jpc_flt_t        const mxrdslope,
@@ -1550,7 +1541,7 @@ doLayer(jpc_enc_t *      const encP,
         long pos;
         jpc_flt_t lo;
         jpc_flt_t hi;
-        unsigned int numiters;
+        uint_fast32_t numiters;
 
         lo = mnrdslope;  /* initial value */
         hi = mxrdslope;  /* initial value */
@@ -1625,10 +1616,10 @@ doLayer(jpc_enc_t *      const encP,
 
 
 static void
-performTier2Coding(jpc_enc_t *     const encP,
-                   unsigned int    const numlyrs,
-                   uint_fast32_t * const cumlens,
-                   const char **   const errorP) {
+performTier2Coding(jpc_enc_t *      const encP,
+                   uint_fast32_t    const numlyrs,
+                   uint_fast32_t *  const cumlens,
+                   const char **    const errorP) {
 /*----------------------------------------------------------------------------
    Encode in 'numlyrs' layers, such that at each layer L, the size is
    cumlens[L].
@@ -1636,7 +1627,7 @@ performTier2Coding(jpc_enc_t *     const encP,
     jpc_enc_tile_t * const tileP = encP->curtile;
 
     jas_stream_t * outP;
-    unsigned int lyrno;
+    uint_fast32_t lyrno;
     jpc_flt_t mnrdslope;
     jpc_flt_t mxrdslope;
 
@@ -2770,7 +2761,7 @@ jpc_enc_encodemainbody(jpc_enc_t *enc) {
         tile->rawsize = cp->rawsize * rho;
 
         computeLayerSizes(enc, tile, cp, rho, tilehdrlen, &error);
-        
+
         if (!error) {
             int rc;
             performTier2Coding(enc, tile->numlyrs, tile->lyrsizes, &error);

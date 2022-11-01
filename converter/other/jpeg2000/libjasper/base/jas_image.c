@@ -675,7 +675,7 @@ int jas_image_fmtfromname(char *name)
 		return -1;
 	}
 	++ext;
-	/* Try to find a format that uses this extension. */	
+	/* Try to find a format that uses this extension. */
 	for (i = 0, fmtinfo = jas_image_fmtinfos; i < jas_image_numfmts; ++i,
 	  ++fmtinfo) {
 		/* Do we have a match? */
@@ -686,24 +686,27 @@ int jas_image_fmtfromname(char *name)
 	return -1;
 }
 
-/******************************************************************************\
+/*****************************************************************************\
 * Miscellaneous operations.
-\******************************************************************************/
+\*****************************************************************************/
 
-uint_fast32_t jas_image_rawsize(jas_image_t *image)
-{
-	uint_fast32_t rawsize;
-	uint_fast32_t cmptno;
-	jas_image_cmpt_t *cmpt;
+uint_fast32_t
+jas_image_rawsize(jas_image_t * const imageP) {
+/*----------------------------------------------------------------------------
+   The raw size of the image, i.e. the number of bytes the raster of the image
+   would take if just represented simply, with no compression.
+-----------------------------------------------------------------------------*/
+    uint_fast32_t rawsize;
+    uint_fast32_t cmptno;
 
-	rawsize = 0;
-	for (cmptno = 0; cmptno < image->numcmpts_; ++cmptno) {
-		cmpt = image->cmpts_[cmptno];
-		rawsize += (cmpt->width_ * cmpt->height_ * cmpt->prec_ +
-		  7) / 8;
-	}
-	return rawsize;
+    for (cmptno = 0, rawsize = 0; cmptno < imageP->numcmpts_; ++cmptno) {
+        jas_image_cmpt_t * const cmptP = imageP->cmpts_[cmptno];
+        rawsize += (cmptP->width_ * cmptP->height_ * cmptP->prec_ + 7) / 8;
+    }
+    return rawsize;
 }
+
+
 
 void jas_image_delcmpt(jas_image_t *image, uint_fast16_t cmptno)
 {
