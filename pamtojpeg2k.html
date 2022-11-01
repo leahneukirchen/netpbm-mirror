@@ -2,7 +2,7 @@
 <html><head><title>Pamtojpeg2k User Manual</title></head>
 <body>
 <h1>pamtojpeg2k</h1>
-Updated: 31 January 2014
+Updated: 1 November 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -24,7 +24,8 @@ pamtojpeg2k - convert PAM/PNM image to a JPEG-2000 code stream
 [<b>-cblkheight=</b><i>rows</i>]
 [<b>-mode=</b>{<b>integer</b>|<b>int</b>|<b>real</b>}]
 [<b>-compression=</b><i>ratio</i>]
-[<b>-ilyrrates=</b><i>ratestring</i>]
+[<b>-size=</b><i>bytes</i>]
+[<b>-ilyrrates=</b>[<i>realnumber</i>[,<i>realnumber</i>, ...]]
 [<b>-numrlvls=</b><i>number</i>]
 [<b>-progression=</b>{<b>lrcp</b>|<b>rlcp</b>|<b>rpcl</b>|<b>pcrl</b>|<b>cprl</b>}]
 [<b>-numgbits=</b><i>number</i>]
@@ -135,7 +136,7 @@ for details.
 <dt><b>-cblkwidth=</b><i>columns</i>
 <dt><b>-cblkheight=</b><i>rows</i>
 <dt><b>-mode=</b>{<b>integer</b>|<b>int</b>|<b>real</b>}
-<dt><b>-ilyrrates=</b><i>ratestring</i>
+<dt><b>-ilyrrates=</b>[<i>realnumber</i>[,<i>realnumber</i>, ...]]
 <dt><b>-numrlvls=</b><i>number</i>
 <dt><b>-progression=</b>{<b>lrcp</b>|<b>rlcp</b>|<b>rpcl</b>|<b>pcrl</b>|<b>cprl</b>}
 <dt><b>-numgbits=</b><i>number</i>
@@ -149,6 +150,17 @@ for details.
 <dt><b>-pterm</b>
 <dt><b>-resetprob</b>
 </dl>
+
+<p><b>-ilyrrates</b> (&quot;intermediate layer rates&quot;) lets you control
+  the compression at each layer.  The compressed image is arranged in layers,
+  so if you transmit it somewhere serially, enough information to make a low
+  quality image arrives soon, then later more information arrives to improve
+  the quality of the image, and so on until the entire image arrives.  The
+  value of this option is a list of ascending fractions, such as
+  &quot;.1,.3,.5&quot;.  Each fraction says the size of the layers up to and
+  including that layer should add up to that fraction of the size of the input
+  image.  If the size of the entire image is limited by <b>-compression</b>
+  or <b>-size</b>, none of these numbers may exceed that limit.
 
 <h3 id="otheropts">Other Options</h3>
 
@@ -173,15 +185,36 @@ saying so.
 compression it can without losing any quality.  Because of the metadata issue
 described above, this may mean, for a small image, the image actually expands.
 
-<p>Note that though the Jasper library takes a compression factor, this
-option specifies a compression ratio.  The compression factor is the
-multiplicative inverse of (1 divided by) the compression ratio.
+<p>This option controls the &quot;rate&quot; option of the Jasper library.
+Note that though the Jasper library takes a compression factor, this option
+specifies a compression ratio.  The compression factor is the multiplicative
+inverse of (1 divided by) the compression ratio.
 
+<p>You may not specify this with <b>-size</b>.
+  
 <p>Before Netpbm 10.61 (December 2012), the default was a compression ratio
 of 1, and if <b>pamtojpeg2k</b> could not make the output that small, it just
 made it as small as it could, with zero quality.  You know this is happening
 when you see the warning message, "empty layer generated."
 
+<dt><b>-size=</b><i>bytes</i>
+
+<dd>This option specifies the maximum size in bytes you want the output image
+to have.  This size is all-in, including headers and trailers and other
+metadata.  <b>pamtojpeg2k</b> will omit as much information as necessary to
+get under this limit.
+
+<p>It is possible to specify a value impossibly small, for example a value
+that doesn&apos;t even leave room for the image header.  If you do this, the
+program fails with an explanatory message.
+  
+<p>This option controls the &quot;rate&quot; option of the Jasper library.
+
+<p>You may not specify this with <b>-compression</b>.
+
+<p>This option was new in Netpbm 11.1 (December 2022).
+  
+  
 <dt><b>-verbose</b>
 
 <dd>This option causes <b>pamtojpeg2k</b> to issue informational messages about
