@@ -124,6 +124,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "netpbm/nstring.h"
+
 #include "jasper/jas_fix.h"
 #include "jasper/jas_malloc.h"
 #include "jasper/jas_math.h"
@@ -149,74 +151,115 @@ static int jpc_encrawsigpass(jpc_bitstream_t *out, int bitpos, int,
 static int jpc_encrawrefpass(jpc_bitstream_t *out, int bitpos, int,
   jas_matrix_t *flags, jas_matrix_t *data, int term, long *nmsedec);
 
-/******************************************************************************\
+/*****************************************************************************\
 * Code for encoding code blocks.
-\******************************************************************************/
+\*****************************************************************************/
+
+static void
+encodeBlocksOfPrc(jpc_enc_prc_t *   const prcP,
+                  jpc_enc_band_t *  const bandP,
+                  jpc_enc_tcmpt_t * const tcmptP,
+                  jpc_enc_t *       const encoderP,
+                  const char **     const errorP) {
+
+    if (prcP->cblks) {
+        int bmx;
+        uint_fast32_t cblkno;
+
+        bmx = 0;
+
+        for (cblkno = 0; cblkno < prcP->numcblks; ++ cblkno) {
+            jpc_enc_cblk_t * const cblkP = &prcP->cblks[cblkno];
+
+            int mx;
+            uint_fast32_t i;
+
+            mx = 0;
+            for (i = 0; i < jas_matrix_numrows(cblkP->data); ++i) {
+                uint_fast32_t j;
+
+                for (j = 0;
+                     j < jas_matrix_numcols(cblkP->data);
+                     ++j) {
+                    int const v =
+                        abs(jas_matrix_get(cblkP->data, i, j));
+                    if (v > mx)
+                        mx = v;
+                }
+            }
+            if (mx > bmx)
+                bmx = mx;
+            cblkP->numbps =
+                JAS_MAX(jpc_firstone(mx) + 1 - JPC_NUMEXTRABITS,
+                        0);
+        }
+
+        for (cblkno = 0; cblkno < prcP->numcblks; ++ cblkno) {
+            jpc_enc_cblk_t * const cblkP = &prcP->cblks[cblkno];
+
+            cblkP->numimsbs = bandP->numbps - cblkP->numbps;
+            assert(cblkP->numimsbs >= 0);
+        }
+
+        for (cblkno = 0, *errorP = NULL;
+             cblkno < prcP->numcblks && !*errorP;
+             ++ cblkno) {
+
+            jpc_enc_cblk_t * const cblkP = &prcP->cblks[cblkno];
+
+            int rc;
+
+            rc = jpc_enc_enccblk(encoderP,
+                                 cblkP->stream, tcmptP, bandP, cblkP);
+            if (rc != 0)
+                pm_asprintf(errorP, "Encoding failed on code block %u "
+                            "of %u", (unsigned)cblkno,
+                            (unsigned)prcP->numcblks);
+        }
+    } else
+        *errorP = NULL;
+}
+
+
 
 /* Encode all of the code blocks associated with the current tile. */
-int jpc_enc_enccblks(jpc_enc_t *enc)
-{
-    jpc_enc_tcmpt_t *tcmpt;
-    jpc_enc_tcmpt_t *endcomps;
-    jpc_enc_rlvl_t *lvl;
-    jpc_enc_rlvl_t *endlvls;
-    jpc_enc_band_t *band;
-    jpc_enc_band_t *endbands;
-    jpc_enc_cblk_t *cblk;
-    jpc_enc_cblk_t *endcblks;
-    int i;
-    int j;
-    int mx;
-    int bmx;
-    int v;
-    jpc_enc_tile_t *tile;
-    uint_fast32_t prcno;
-    jpc_enc_prc_t *prc;
+int
+jpc_enc_enccblks(jpc_enc_t * const encoderP) {
 
-    tile = enc->curtile;
+    jpc_enc_tile_t * const tileP = encoderP->curtile;
 
-    endcomps = &tile->tcmpts[tile->numtcmpts];
-    for (tcmpt = tile->tcmpts; tcmpt != endcomps; ++tcmpt) {
-        endlvls = &tcmpt->rlvls[tcmpt->numrlvls];
-        for (lvl = tcmpt->rlvls; lvl != endlvls; ++lvl) {
-            if (!lvl->bands) {
-                continue;
-            }
-            endbands = &lvl->bands[lvl->numbands];
-            for (band = lvl->bands; band != endbands; ++band) {
-                if (!band->data) {
-                    continue;
-                }
-                for (prcno = 0, prc = band->prcs; prcno < lvl->numprcs; ++prcno, ++prc) {
-                    if (!prc->cblks) {
-                        continue;
-                    }
-                    bmx = 0;
-                    endcblks = &prc->cblks[prc->numcblks];
-                    for (cblk = prc->cblks; cblk != endcblks; ++cblk) {
-                        mx = 0;
-                        for (i = 0; i < jas_matrix_numrows(cblk->data); ++i) {
-                            for (j = 0; j < jas_matrix_numcols(cblk->data); ++j) {
-                                v = abs(jas_matrix_get(cblk->data, i, j));
-                                if (v > mx) {
-                                    mx = v;
-                                }
+    uint_fast32_t cmptno;
+
+    for (cmptno = 0; cmptno < tileP->numtcmpts; ++cmptno) {
+        jpc_enc_tcmpt_t * const tcmptP = &tileP->tcmpts[cmptno];
+
+        unsigned int lvlno;
+        for (lvlno = 0; lvlno < tcmptP->numrlvls; ++ lvlno) {
+            jpc_enc_rlvl_t * const lvlP = &tcmptP->rlvls[lvlno];
+
+            if (lvlP->bands) {
+                uint_fast32_t bandno;
+
+                for (bandno = 0; bandno < lvlP->numbands; ++bandno) {
+                    jpc_enc_band_t * const bandP = &lvlP->bands[bandno];
+
+                    if (bandP->data) {
+                        uint_fast32_t prcno;
+
+                        for (prcno = 0; prcno < lvlP->numprcs; ++prcno) {
+
+                            const char * error;
+
+                            encodeBlocksOfPrc(&bandP->prcs[prcno],
+                                              bandP,
+                                              tcmptP,
+                                              encoderP,
+                                              &error);
+
+                            if (error) {
+                                pm_strfree(error);
+                                return -1;
                             }
-                        }
-                        if (mx > bmx) {
-                            bmx = mx;
-                        }
-                        cblk->numbps = JAS_MAX(jpc_firstone(mx) + 1 - JPC_NUMEXTRABITS, 0);
-                    }
-
-                    for (cblk = prc->cblks; cblk != endcblks; ++cblk) {
-                        cblk->numimsbs = band->numbps - cblk->numbps;
-                        assert(cblk->numimsbs >= 0);
-                    }
-
-                    for (cblk = prc->cblks; cblk != endcblks; ++cblk) {
-                        if (jpc_enc_enccblk(enc, cblk->stream, tcmpt, band, cblk)) {
-                            return -1;
                         }
                     }
                 }
@@ -225,6 +268,8 @@ int jpc_enc_enccblks(jpc_enc_t *enc)
     }
     return 0;
 }
+
+
 
 static int getthebyte(jas_stream_t *in, long off)
 {
