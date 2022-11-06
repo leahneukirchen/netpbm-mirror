@@ -1019,8 +1019,7 @@ computeLayerSizes(jpc_enc_t *      const encP,
                   jpc_enc_tile_t * const tileP,
                   jpc_enc_cp_t *   const cpP,
                   double           const rho,
-                  long             const tilehdrlen,
-                  const char **    const errorP) {
+                  long             const tilehdrlen) {
 
     /* Note that in allowed sizes, UINT_FAST32_MAX is a special value meaning
        "unlimited".
@@ -1473,14 +1472,53 @@ performTier2Coding(jpc_enc_t *      const encP,
 
 
 
-static int
-encodetiledata(jpc_enc_t *enc) {
 
-    assert(enc->tmpstream);
-    if (jpc_enc_encpkts(enc, enc->tmpstream)) {
-        return -1;
+
+static void
+encodeTileBody(jpc_enc_t *   const encoderP,
+               long          const tilehdrlen,
+               const char ** const errorP) {
+/*----------------------------------------------------------------------------
+   Encode the body of encoder *encoderP's current tile, writing the encoded
+   result to the encoder's output stream.
+
+   Assume the tile header is already in that stream, and its length is
+   'tilehdrlen'.
+-----------------------------------------------------------------------------*/
+    jpc_enc_tile_t * const tileP = encoderP->curtile;
+    jpc_enc_cp_t *   const cp    = encoderP->cp;
+
+    int rc;
+
+    rc = jpc_enc_enccblks(encoderP);
+    if (rc != 0)
+        pm_asprintf(errorP, "jpc_enc_enccblks() failed");
+    else {
+        double const rho =
+            (double) (tileP->brx - tileP->tlx) * (tileP->bry - tileP->tly) /
+            ((cp->refgrdwidth - cp->imgareatlx) * (cp->refgrdheight -
+                                                   cp->imgareatly));
+        const char * error;
+
+        tileP->rawsize = cp->rawsize * rho;
+
+        computeLayerSizes(encoderP, tileP, cp, rho, tilehdrlen);
+
+        performTier2Coding(encoderP, tileP->numlyrs, tileP->lyrsizes, &error);
+
+        if (error) {
+            pm_asprintf(errorP, "Tier 2 coding failed.  %s", error);
+            pm_strfree(error);
+        } else {
+            int rc;
+
+            rc = jpc_enc_encpkts(encoderP, encoderP->tmpstream);
+            if (rc != 0)
+                pm_asprintf(errorP, "jpc_enc_encpkts() failed\n");
+            else
+                *errorP = NULL;
+        }
     }
-    return 0;
 }
 
 
@@ -1506,7 +1544,6 @@ encodemainbody(jpc_enc_t *enc) {
     long tilelen;
     jpc_enc_tile_t *tile;
     jpc_enc_cp_t *cp;
-    double rho;
     uint_fast16_t cmptno;
     int samestepsizes;
     jpc_enc_ccp_t *ccps;
@@ -1520,7 +1557,6 @@ encodemainbody(jpc_enc_t *enc) {
     jpc_fix_t mag;
     int numgbits;
     const char * error;
-    int rc;
 
     cp = enc->cp;
 
@@ -1776,36 +1812,14 @@ encodemainbody(jpc_enc_t *enc) {
 /************************************************************************/
 /************************************************************************/
 
-        rc = jpc_enc_enccblks(enc);
-        if (rc != 0) {
-            fprintf(stderr, "jpc_enc_enccblks() failed, called from "
-                    "'encodemainbody'\n");
-            return -1;
-        }
-
-        cp = enc->cp;
-        rho = (double) (tile->brx - tile->tlx) * (tile->bry - tile->tly) /
-            ((cp->refgrdwidth - cp->imgareatlx) * (cp->refgrdheight -
-                                                   cp->imgareatly));
-        tile->rawsize = cp->rawsize * rho;
-
-        computeLayerSizes(enc, tile, cp, rho, tilehdrlen, &error);
-
-        if (!error) {
-            int rc;
-            performTier2Coding(enc, tile->numlyrs, tile->lyrsizes, &error);
-
-            rc =  encodetiledata(enc);
-            if (rc != 0)
-                pm_asprintf(&error, "encodetiledata() failed\n");
-        }
+        encodeTileBody(enc, tilehdrlen, &error);
+            /* Encodes current tile; writes to output file */
 
         if (error) {
             fprintf(stderr, "%s\n", error);
             pm_strfree(error);
             return -1;
         }
-
         tilelen = jas_stream_tell(enc->tmpstream);
 
         if (jas_stream_seek(enc->tmpstream, 6, SEEK_SET) < 0) {
