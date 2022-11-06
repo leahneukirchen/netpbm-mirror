@@ -156,49 +156,44 @@ static int jpc_encrawrefpass(jpc_bitstream_t *out, int bitpos, int,
 \*****************************************************************************/
 
 static void
-encodeBlocksOfPrc(jpc_enc_prc_t *   const prcP,
-                  jpc_enc_band_t *  const bandP,
-                  jpc_enc_tcmpt_t * const tcmptP,
-                  jpc_enc_t *       const encoderP,
-                  const char **     const errorP) {
+encodeBlocksOfPrecinct(jpc_enc_prc_t *   const prcP,
+                       jpc_enc_band_t *  const bandP,
+                       jpc_enc_tcmpt_t * const tcmptP,
+                       jpc_enc_t *       const encoderP,
+                       const char **     const errorP) {
 
     if (prcP->cblks) {
         int bmx;
         uint_fast32_t cblkno;
 
-        bmx = 0;
-
-        for (cblkno = 0; cblkno < prcP->numcblks; ++ cblkno) {
+        for (cblkno = 0, bmx = 0; cblkno < prcP->numcblks; ++ cblkno) {
             jpc_enc_cblk_t * const cblkP = &prcP->cblks[cblkno];
 
             int mx;
-            uint_fast32_t i;
+            uint_fast32_t row;
 
-            mx = 0;
-            for (i = 0; i < jas_matrix_numrows(cblkP->data); ++i) {
-                uint_fast32_t j;
+            for (row = 0, mx = 0;
+                 row < jas_matrix_numrows(cblkP->data);
+                 ++row) {
 
-                for (j = 0;
-                     j < jas_matrix_numcols(cblkP->data);
-                     ++j) {
-                    int const v =
-                        abs(jas_matrix_get(cblkP->data, i, j));
+                uint_fast32_t col;
+
+                for (col = 0; col < jas_matrix_numcols(cblkP->data); ++col) {
+                    int const v = abs(jas_matrix_get(cblkP->data, row, col));
                     if (v > mx)
                         mx = v;
                 }
             }
             if (mx > bmx)
                 bmx = mx;
-            cblkP->numbps =
-                JAS_MAX(jpc_firstone(mx) + 1 - JPC_NUMEXTRABITS,
-                        0);
+
+            cblkP->numbps = MAX(jpc_firstone(mx) + 1 - JPC_NUMEXTRABITS, 0);
         }
 
         for (cblkno = 0; cblkno < prcP->numcblks; ++ cblkno) {
             jpc_enc_cblk_t * const cblkP = &prcP->cblks[cblkno];
 
-            cblkP->numimsbs = bandP->numbps - cblkP->numbps;
-            assert(cblkP->numimsbs >= 0);
+            assert(cblkP->numbps <= bandP->numbps);
         }
 
         for (cblkno = 0, *errorP = NULL;
@@ -222,10 +217,11 @@ encodeBlocksOfPrc(jpc_enc_prc_t *   const prcP,
 
 
 
-/* Encode all of the code blocks associated with the current tile. */
 int
 jpc_enc_enccblks(jpc_enc_t * const encoderP) {
-
+/*----------------------------------------------------------------------------
+  Encode all of the code blocks associated with the current tile.
+-----------------------------------------------------------------------------*/
     jpc_enc_tile_t * const tileP = encoderP->curtile;
 
     uint_fast32_t cmptno;
@@ -250,11 +246,11 @@ jpc_enc_enccblks(jpc_enc_t * const encoderP) {
 
                             const char * error;
 
-                            encodeBlocksOfPrc(&bandP->prcs[prcno],
-                                              bandP,
-                                              tcmptP,
-                                              encoderP,
-                                              &error);
+                            encodeBlocksOfPrecinct(&bandP->prcs[prcno],
+                                                   bandP,
+                                                   tcmptP,
+                                                   encoderP,
+                                                   &error);
 
                             if (error) {
                                 pm_strfree(error);
