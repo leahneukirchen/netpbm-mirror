@@ -1496,8 +1496,7 @@ assignHighSlopePassesToLayer(jpc_enc_t *      const encP,
                                         for (; passP != endpassesP; ++passP) {
                                             passP->lyrno = -1;
                                         }
-                                    
-                                    }   
+                                    }
                                 }
                             }
                         }
@@ -1513,7 +1512,7 @@ assignHighSlopePassesToLayer(jpc_enc_t *      const encP,
 static void
 doLayer(jpc_enc_t *      const encP,
         jpc_enc_tile_t * const tileP,
-        uint_fast32_t     const lyrno,
+        uint_fast32_t    const lyrno,
         uint_fast32_t    const allowedSize,
         jpc_flt_t        const mnrdslope,
         jpc_flt_t        const mxrdslope,
@@ -2218,7 +2217,7 @@ prc_create(jpc_enc_prc_t *prc, jpc_enc_cp_t *cp, jpc_enc_band_t *band) {
         }
 
         prc->cblks = jas_malloc(prc->numcblks * sizeof(jpc_enc_cblk_t));
-        
+
         if (!prc->cblks)
             goto error;
         for (cblkno = 0, cblk = prc->cblks;
@@ -2436,9 +2435,9 @@ jpc_enc_dump(jpc_enc_t *enc) {
                      prcno < rlvl->numprcs;
                      ++prcno, ++prc) {
                     fprintf(stderr, "        prc %5d %5d %5d %5d (%5d %5d)\n",
-                            (int)prc->tlx, (int)prc->tly, 
+                            (int)prc->tlx, (int)prc->tly,
                             (int)prc->brx, (int)prc->bry,
-                            (int)(prc->brx - prc->tlx), 
+                            (int)(prc->brx - prc->tlx),
                             (int)(prc->bry - prc->tly));
                     if (!prc->cblks) {
                         continue;
