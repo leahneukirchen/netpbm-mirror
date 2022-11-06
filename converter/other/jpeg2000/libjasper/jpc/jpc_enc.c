@@ -77,17 +77,8 @@ void jpc_enc_dump(jpc_enc_t *enc);
 \*****************************************************************************/
 
 void quantize(jas_matrix_t *data, jpc_fix_t stepsize);
-static int jpc_enc_encodemainhdr(jpc_enc_t *enc);
-static int jpc_enc_encodemainbody(jpc_enc_t *enc);
-int jpc_enc_encodetiledata(jpc_enc_t *enc);
 jpc_enc_t *jpc_enc_create(jpc_enc_cp_t *cp, jas_stream_t *out, jas_image_t *image);
 void jpc_enc_destroy(jpc_enc_t *enc);
-static int jpc_enc_encodemainhdr(jpc_enc_t *enc);
-static int jpc_enc_encodemainbody(jpc_enc_t *enc);
-int jpc_enc_encodetiledata(jpc_enc_t *enc);
-int setins(int numvalues, jpc_flt_t *values, jpc_flt_t value);
-static jpc_enc_cp_t *cp_create(char *optstr, jas_image_t *image);
-void jpc_enc_cp_destroy(jpc_enc_cp_t *cp);
 
 
 
@@ -227,67 +218,9 @@ trace(const char * const fmt, ...) {
 
 
 
-int
-jpc_encode(jas_image_t *image, jas_stream_t *out, char *optstr) {
-
-    jpc_enc_t *enc;
-    jpc_enc_cp_t *cp;
-
-    enc = 0;
-    cp = 0;
-
-    jpc_initluts();
-
-    if (!(cp = cp_create(optstr, image))) {
-        fprintf(stderr, "invalid JP encoder options\n");
-        goto error;
-    }
-
-    if (!(enc = jpc_enc_create(cp, out, image))) {
-        goto error;
-    }
-    cp = 0;
-
-    /* Encode the main header. */
-    if (jpc_enc_encodemainhdr(enc)) {
-        goto error;
-    }
-
-    /* Encode the main body.  This constitutes most of the encoding work. */
-    if (jpc_enc_encodemainbody(enc)) {
-        goto error;
-    }
-
-    /* Write EOC marker segment. */
-    if (!(enc->mrk = jpc_ms_create(JPC_MS_EOC))) {
-        goto error;
-    }
-    if (jpc_putms(enc->out, enc->cstate, enc->mrk)) {
-        fprintf(stderr, "cannot write EOI marker\n");
-        goto error;
-    }
-    jpc_ms_destroy(enc->mrk);
-    enc->mrk = 0;
-
-    if (jas_stream_flush(enc->out)) {
-        goto error;
-    }
-
-    jpc_enc_destroy(enc);
-
-    return 0;
-
-error:
-    if (cp) {
-        jpc_enc_cp_destroy(cp);
-    }
-    if (enc) {
-        jpc_enc_destroy(enc);
-    }
-    return -1;
-}
-
-
+/*****************************************************************************\
+* Option parsing code.
+\*****************************************************************************/
 
 static void
 ratestrtosize(const char *    const s,
@@ -311,9 +244,19 @@ ratestrtosize(const char *    const s,
 
 
 
-/*****************************************************************************\
-* Option parsing code.
-\*****************************************************************************/
+static void
+cp_destroy(jpc_enc_cp_t *cp) {
+
+    if (cp->ccps) {
+        if (cp->tcp.ilyrrates) {
+            jas_free(cp->tcp.ilyrrates);
+        }
+        jas_free(cp->ccps);
+    }
+    jas_free(cp);
+}
+
+
 
 static jpc_enc_cp_t *
 cp_create(char *optstr, jas_image_t *image) {
@@ -749,96 +692,15 @@ error:
         jas_tvparser_destroy(tvp);
     }
     if (cp) {
-        jpc_enc_cp_destroy(cp);
+        cp_destroy(cp);
     }
     return 0;
-}
-
-
-
-void
-jpc_enc_cp_destroy(jpc_enc_cp_t *cp) {
-
-    if (cp->ccps) {
-        if (cp->tcp.ilyrrates) {
-            jas_free(cp->tcp.ilyrrates);
-        }
-        jas_free(cp->ccps);
-    }
-    jas_free(cp);
-}
-
-
-
-/*****************************************************************************\
-* Encoder constructor and destructor.
-\*****************************************************************************/
-
-jpc_enc_t *
-jpc_enc_create(jpc_enc_cp_t *cp, jas_stream_t *out, jas_image_t *image) {
-
-    jpc_enc_t *enc;
-
-    enc = 0;
-
-    if (!(enc = jas_malloc(sizeof(jpc_enc_t)))) {
-        goto error;
-    }
-
-    enc->image = image;
-    enc->out = out;
-    enc->cp = cp;
-    enc->cstate = 0;
-    enc->tmpstream = 0;
-    enc->mrk = 0;
-    enc->curtile = 0;
-
-    if (!(enc->cstate = jpc_cstate_create())) {
-        goto error;
-    }
-    enc->len = 0;
-    enc->mainbodysize = 0;
-
-    return enc;
-
-error:
-
-    if (enc) {
-        jpc_enc_destroy(enc);
-    }
-    return 0;
-}
-
-
-
-void
-jpc_enc_destroy(jpc_enc_t *enc) {
-
-    /* The image object (i.e., enc->image) and output stream object
-       (i.e., enc->out) are created outside of the encoder.
-       Therefore, they must not be destroyed here.
-    */
-
-    if (enc->curtile) {
-        jpc_enc_tile_destroy(enc->curtile);
-    }
-    if (enc->cp) {
-        jpc_enc_cp_destroy(enc->cp);
-    }
-    if (enc->cstate) {
-        jpc_cstate_destroy(enc->cstate);
-    }
-    if (enc->tmpstream) {
-        jas_stream_close(enc->tmpstream);
-    }
-
-    jas_free(enc);
 }
 
 
 
 static int
-jpc_enc_encodemainhdr(jpc_enc_t *enc) {
+encodemainhdr(jpc_enc_t *enc) {
 
     uint_fast32_t const maintlrlen = 2;
 
@@ -1061,48 +923,6 @@ jpc_enc_encodemainhdr(jpc_enc_t *enc) {
     }
 
     return 0;
-}
-
-
-
-int
-jpc_enc_encodetiledata(jpc_enc_t *enc) {
-
-    assert(enc->tmpstream);
-    if (jpc_enc_encpkts(enc, enc->tmpstream)) {
-        return -1;
-    }
-    return 0;
-}
-
-
-
-void
-quantize(jas_matrix_t *data, jpc_fix_t stepsize) {
-
-    int i;
-    int j;
-    jpc_fix_t t;
-
-    if (stepsize == jpc_inttofix(1)) {
-        return;
-    }
-
-    for (i = 0; i < jas_matrix_numrows(data); ++i) {
-        for (j = 0; j < jas_matrix_numcols(data); ++j) {
-            t = jas_matrix_get(data, i, j);
-
-{
-    if (t < 0) {
-        t = jpc_fix_neg(jpc_fix_div(jpc_fix_neg(t), stepsize));
-    } else {
-        t = jpc_fix_div(t, stepsize);
-    }
-}
-
-            jas_matrix_set(data, i, j, t);
-        }
-    }
 }
 
 
@@ -1649,6 +1469,526 @@ performTier2Coding(jpc_enc_t *      const encP,
         }
     }
     JAS_DBGLOG(10, ("done doing rateallocation\n"));
+}
+
+
+
+static int
+encodetiledata(jpc_enc_t *enc) {
+
+    assert(enc->tmpstream);
+    if (jpc_enc_encpkts(enc, enc->tmpstream)) {
+        return -1;
+    }
+    return 0;
+}
+
+
+
+static int
+encodemainbody(jpc_enc_t *enc) {
+
+    int tileno;
+    int i;
+    jpc_sot_t *sot;
+    jpc_enc_tcmpt_t *comp;
+    jpc_enc_tcmpt_t *endcomps;
+    jpc_enc_band_t *band;
+    jpc_enc_band_t *endbands;
+    jpc_enc_rlvl_t *lvl;
+    int rlvlno;
+    jpc_qcc_t *qcc;
+    jpc_cod_t *cod;
+    int adjust;
+    int j;
+    int absbandno;
+    long tilehdrlen;
+    long tilelen;
+    jpc_enc_tile_t *tile;
+    jpc_enc_cp_t *cp;
+    double rho;
+    uint_fast16_t cmptno;
+    int samestepsizes;
+    jpc_enc_ccp_t *ccps;
+    jpc_enc_tccp_t *tccp;
+    int bandno;
+    uint_fast32_t x;
+    uint_fast32_t y;
+    int mingbits;
+    int actualnumbps;
+    jpc_fix_t mxmag;
+    jpc_fix_t mag;
+    int numgbits;
+    const char * error;
+    int rc;
+
+    cp = enc->cp;
+
+    for (tileno = 0; tileno < cp->numtiles; ++tileno) {
+        enc->curtile = jpc_enc_tile_create(enc->cp, enc->image, tileno);
+        if (!enc->curtile)
+            abort();
+
+        tile = enc->curtile;
+
+        if (jas_getdbglevel() >= 10) {
+            jpc_enc_dump(enc);
+        }
+
+        endcomps = &tile->tcmpts[tile->numtcmpts];
+        for (cmptno = 0, comp = tile->tcmpts;
+             cmptno < tile->numtcmpts;
+             ++cmptno, ++comp) {
+            if (!cp->ccps[cmptno].sgnd) {
+                adjust = 1 << (cp->ccps[cmptno].prec - 1);
+                for (i = 0; i < jas_matrix_numrows(comp->data); ++i) {
+                    for (j = 0; j < jas_matrix_numcols(comp->data); ++j) {
+                        *jas_matrix_getref(comp->data, i, j) -= adjust;
+                    }
+                }
+            }
+        }
+
+        if (!tile->intmode) {
+            endcomps = &tile->tcmpts[tile->numtcmpts];
+            for (comp = tile->tcmpts; comp != endcomps; ++comp) {
+                jas_matrix_asl(comp->data, JPC_FIX_FRACBITS);
+            }
+        }
+
+        switch (tile->mctid) {
+        case JPC_MCT_RCT:
+            assert(jas_image_numcmpts(enc->image) == 3);
+            jpc_rct(tile->tcmpts[0].data, tile->tcmpts[1].data,
+                    tile->tcmpts[2].data);
+            break;
+        case JPC_MCT_ICT:
+            assert(jas_image_numcmpts(enc->image) == 3);
+            jpc_ict(tile->tcmpts[0].data, tile->tcmpts[1].data,
+                    tile->tcmpts[2].data);
+            break;
+        default:
+            break;
+        }
+
+        for (i = 0; i < jas_image_numcmpts(enc->image); ++i) {
+            comp = &tile->tcmpts[i];
+            jpc_tsfb_analyze(comp->tsfb,
+                             ((comp->qmfbid == JPC_COX_RFT) ?
+                              JPC_TSFB_RITIMODE : 0), comp->data);
+
+        }
+
+        endcomps = &tile->tcmpts[tile->numtcmpts];
+        for (cmptno = 0, comp = tile->tcmpts;
+             comp != endcomps;
+             ++cmptno, ++comp) {
+            mingbits = 0;
+            absbandno = 0;
+            /* All bands must have a corresponding quantizer step size,
+               even if they contain no samples and are never coded. */
+            /* Some bands may not be hit by the loop below, so we must
+               initialize all of the step sizes to a sane value. */
+            memset(comp->stepsizes, 0, sizeof(comp->stepsizes));
+            for (rlvlno = 0, lvl = comp->rlvls;
+                 rlvlno < comp->numrlvls;
+                 ++rlvlno, ++lvl) {
+                if (!lvl->bands) {
+                    absbandno += rlvlno ? 3 : 1;
+                    continue;
+                }
+                endbands = &lvl->bands[lvl->numbands];
+                for (band = lvl->bands; band != endbands; ++band) {
+                    if (!band->data) {
+                        ++absbandno;
+                        continue;
+                    }
+                    actualnumbps = 0;
+                    mxmag = 0;
+                    for (y = 0; y < jas_matrix_numrows(band->data); ++y) {
+                        for (x = 0; x < jas_matrix_numcols(band->data); ++x) {
+                            mag = abs(jas_matrix_get(band->data, y, x));
+                            if (mag > mxmag) {
+                                mxmag = mag;
+                            }
+                        }
+                    }
+                    if (tile->intmode) {
+                        actualnumbps =
+                            jpc_firstone(mxmag) + 1;
+                    } else {
+                        actualnumbps =
+                            jpc_firstone(mxmag) + 1 - JPC_FIX_FRACBITS;
+                    }
+                    numgbits = actualnumbps - (cp->ccps[cmptno].prec - 1 +
+                                               band->analgain);
+                    if (numgbits > mingbits) {
+                        mingbits = numgbits;
+                    }
+                    if (!tile->intmode) {
+                        band->absstepsize =
+                            jpc_fix_div(
+                                jpc_inttofix(1 << (band->analgain + 1)),
+                                band->synweight);
+                    } else {
+                        band->absstepsize = jpc_inttofix(1);
+                    }
+                    band->stepsize = jpc_abstorelstepsize(
+                        band->absstepsize, cp->ccps[cmptno].prec +
+                        band->analgain);
+                    band->numbps = cp->tccp.numgbits +
+                        JPC_QCX_GETEXPN(band->stepsize) - 1;
+
+                    if ((!tile->intmode) && band->data) {
+                        quantize(band->data, band->absstepsize);
+                    }
+
+                    comp->stepsizes[absbandno] = band->stepsize;
+                    ++absbandno;
+                }
+            }
+
+            assert(JPC_FIX_FRACBITS >= JPC_NUMEXTRABITS);
+            if (!tile->intmode) {
+                jas_matrix_divpow2(comp->data,
+                                   JPC_FIX_FRACBITS - JPC_NUMEXTRABITS);
+            } else {
+                jas_matrix_asl(comp->data, JPC_NUMEXTRABITS);
+            }
+        }
+
+        if (mingbits > cp->tccp.numgbits) {
+            fprintf(stderr, "error: too few guard bits (need at least %d)\n",
+                    mingbits);
+            return -1;
+        }
+
+        enc->tmpstream = jas_stream_memopen(0, 0);
+        if (!enc->tmpstream) {
+            fprintf(stderr, "cannot open tmp file\n");
+            return -1;
+        }
+
+        /* Write the tile header. */
+        enc->mrk = jpc_ms_create(JPC_MS_SOT);
+        if (!enc->mrk)
+            return -1;
+        sot = &enc->mrk->parms.sot;
+        sot->len = 0;
+        sot->tileno = tileno;
+        sot->partno = 0;
+        sot->numparts = 1;
+        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+            fprintf(stderr, "cannot write SOT marker\n");
+            return -1;
+        }
+        jpc_ms_destroy(enc->mrk);
+        enc->mrk = 0;
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+        tccp = &cp->tccp;
+        for (cmptno = 0; cmptno < cp->numcmpts; ++cmptno) {
+            comp = &tile->tcmpts[cmptno];
+            if (comp->numrlvls != tccp->maxrlvls) {
+                if (!(enc->mrk = jpc_ms_create(JPC_MS_COD))) {
+                    return -1;
+                }
+                /* XXX = this is not really correct. we are using comp #0's
+                   precint sizes and other characteristics */
+                comp = &tile->tcmpts[0];
+                cod = &enc->mrk->parms.cod;
+                cod->compparms.csty = 0;
+                cod->compparms.numdlvls = comp->numrlvls - 1;
+                cod->prg = tile->prg;
+                cod->numlyrs = tile->numlyrs;
+                cod->compparms.cblkwidthval =
+                    JPC_COX_CBLKSIZEEXPN(comp->cblkwidthexpn);
+                cod->compparms.cblkheightval =
+                    JPC_COX_CBLKSIZEEXPN(comp->cblkheightexpn);
+                cod->compparms.cblksty = comp->cblksty;
+                cod->compparms.qmfbid = comp->qmfbid;
+                cod->mctrans = (tile->mctid != JPC_MCT_NONE);
+                for (i = 0; i < comp->numrlvls; ++i) {
+                    cod->compparms.rlvls[i].parwidthval =
+                        comp->rlvls[i].prcwidthexpn;
+                    cod->compparms.rlvls[i].parheightval =
+                        comp->rlvls[i].prcheightexpn;
+                }
+                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+                    return -1;
+                }
+                jpc_ms_destroy(enc->mrk);
+                enc->mrk = 0;
+            }
+        }
+
+        for (cmptno = 0, comp = tile->tcmpts;
+             cmptno < cp->numcmpts;
+             ++cmptno, ++comp) {
+            ccps = &cp->ccps[cmptno];
+            if (ccps->numstepsizes == comp->numstepsizes) {
+                samestepsizes = 1;
+                for (bandno = 0; bandno < ccps->numstepsizes; ++bandno) {
+                    if (ccps->stepsizes[bandno] != comp->stepsizes[bandno]) {
+                        samestepsizes = 0;
+                        break;
+                    }
+                }
+            } else {
+                samestepsizes = 0;
+            }
+            if (!samestepsizes) {
+                if (!(enc->mrk = jpc_ms_create(JPC_MS_QCC))) {
+                    return -1;
+                }
+                qcc = &enc->mrk->parms.qcc;
+                qcc->compno = cmptno;
+                qcc->compparms.numguard = cp->tccp.numgbits;
+                qcc->compparms.qntsty = (comp->qmfbid == JPC_COX_INS) ?
+                    JPC_QCX_SEQNT : JPC_QCX_NOQNT;
+                qcc->compparms.numstepsizes = comp->numstepsizes;
+                qcc->compparms.stepsizes = comp->stepsizes;
+                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+                    return -1;
+                }
+                qcc->compparms.stepsizes = 0;
+                jpc_ms_destroy(enc->mrk);
+                enc->mrk = 0;
+            }
+        }
+
+        /* Write a SOD marker to indicate the end of the tile header. */
+        if (!(enc->mrk = jpc_ms_create(JPC_MS_SOD))) {
+            return -1;
+        }
+        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+            fprintf(stderr, "cannot write SOD marker\n");
+            return -1;
+        }
+        jpc_ms_destroy(enc->mrk);
+        enc->mrk = 0;
+        tilehdrlen = jas_stream_getrwcount(enc->tmpstream);
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+        rc = jpc_enc_enccblks(enc);
+        if (rc != 0) {
+            fprintf(stderr, "jpc_enc_enccblks() failed, called from "
+                    "'encodemainbody'\n");
+            return -1;
+        }
+
+        cp = enc->cp;
+        rho = (double) (tile->brx - tile->tlx) * (tile->bry - tile->tly) /
+            ((cp->refgrdwidth - cp->imgareatlx) * (cp->refgrdheight -
+                                                   cp->imgareatly));
+        tile->rawsize = cp->rawsize * rho;
+
+        computeLayerSizes(enc, tile, cp, rho, tilehdrlen, &error);
+
+        if (!error) {
+            int rc;
+            performTier2Coding(enc, tile->numlyrs, tile->lyrsizes, &error);
+
+            rc =  encodetiledata(enc);
+            if (rc != 0)
+                pm_asprintf(&error, "encodetiledata() failed\n");
+        }
+
+        if (error) {
+            fprintf(stderr, "%s\n", error);
+            pm_strfree(error);
+            return -1;
+        }
+
+        tilelen = jas_stream_tell(enc->tmpstream);
+
+        if (jas_stream_seek(enc->tmpstream, 6, SEEK_SET) < 0) {
+            return -1;
+        }
+        jpc_putuint32(enc->tmpstream, tilelen);
+
+        if (jas_stream_seek(enc->tmpstream, 0, SEEK_SET) < 0) {
+            return -1;
+        }
+        if (jpc_putdata(enc->out, enc->tmpstream, -1)) {
+            return -1;
+        }
+        enc->len += tilelen;
+
+        jas_stream_close(enc->tmpstream);
+        enc->tmpstream = 0;
+
+        jpc_enc_tile_destroy(enc->curtile);
+        enc->curtile = 0;
+
+    }
+
+    return 0;
+}
+
+
+
+int
+jpc_encode(jas_image_t *image, jas_stream_t *out, char *optstr) {
+
+    jpc_enc_t *enc;
+    jpc_enc_cp_t *cp;
+
+    enc = 0;
+    cp = 0;
+
+    jpc_initluts();
+
+    if (!(cp = cp_create(optstr, image))) {
+        fprintf(stderr, "invalid JP encoder options\n");
+        goto error;
+    }
+
+    if (!(enc = jpc_enc_create(cp, out, image))) {
+        goto error;
+    }
+    cp = 0;
+
+    /* Encode the main header. */
+    if (encodemainhdr(enc)) {
+        goto error;
+    }
+
+    /* Encode the main body.  This constitutes most of the encoding work. */
+    if (encodemainbody(enc)) {
+        goto error;
+    }
+
+    /* Write EOC marker segment. */
+    if (!(enc->mrk = jpc_ms_create(JPC_MS_EOC))) {
+        goto error;
+    }
+    if (jpc_putms(enc->out, enc->cstate, enc->mrk)) {
+        fprintf(stderr, "cannot write EOI marker\n");
+        goto error;
+    }
+    jpc_ms_destroy(enc->mrk);
+    enc->mrk = 0;
+
+    if (jas_stream_flush(enc->out)) {
+        goto error;
+    }
+
+    jpc_enc_destroy(enc);
+
+    return 0;
+
+error:
+    if (cp) {
+        cp_destroy(cp);
+    }
+    if (enc) {
+        jpc_enc_destroy(enc);
+    }
+    return -1;
+}
+
+
+
+/*****************************************************************************\
+* Encoder constructor and destructor.
+\*****************************************************************************/
+
+jpc_enc_t *
+jpc_enc_create(jpc_enc_cp_t *cp, jas_stream_t *out, jas_image_t *image) {
+
+    jpc_enc_t *enc;
+
+    enc = 0;
+
+    if (!(enc = jas_malloc(sizeof(jpc_enc_t)))) {
+        goto error;
+    }
+
+    enc->image = image;
+    enc->out = out;
+    enc->cp = cp;
+    enc->cstate = 0;
+    enc->tmpstream = 0;
+    enc->mrk = 0;
+    enc->curtile = 0;
+
+    if (!(enc->cstate = jpc_cstate_create())) {
+        goto error;
+    }
+    enc->len = 0;
+    enc->mainbodysize = 0;
+
+    return enc;
+
+error:
+
+    if (enc) {
+        jpc_enc_destroy(enc);
+    }
+    return 0;
+}
+
+
+
+void
+jpc_enc_destroy(jpc_enc_t *enc) {
+
+    /* The image object (i.e., enc->image) and output stream object
+       (i.e., enc->out) are created outside of the encoder.
+       Therefore, they must not be destroyed here.
+    */
+
+    if (enc->curtile) {
+        jpc_enc_tile_destroy(enc->curtile);
+    }
+    if (enc->cp) {
+        cp_destroy(enc->cp);
+    }
+    if (enc->cstate) {
+        jpc_cstate_destroy(enc->cstate);
+    }
+    if (enc->tmpstream) {
+        jas_stream_close(enc->tmpstream);
+    }
+
+    jas_free(enc);
+}
+
+
+
+void
+quantize(jas_matrix_t *data, jpc_fix_t stepsize) {
+
+    int i;
+    int j;
+    jpc_fix_t t;
+
+    if (stepsize == jpc_inttofix(1)) {
+        return;
+    }
+
+    for (i = 0; i < jas_matrix_numrows(data); ++i) {
+        for (j = 0; j < jas_matrix_numcols(data); ++j) {
+            t = jas_matrix_get(data, i, j);
+
+{
+    if (t < 0) {
+        t = jpc_fix_neg(jpc_fix_div(jpc_fix_neg(t), stepsize));
+    } else {
+        t = jpc_fix_div(t, stepsize);
+    }
+}
+
+            jas_matrix_set(data, i, j, t);
+        }
+    }
 }
 
 
@@ -2448,352 +2788,6 @@ jpc_enc_dump(jpc_enc_t *enc) {
             }
         }
     }
-}
-
-
-
-static int
-jpc_enc_encodemainbody(jpc_enc_t *enc) {
-
-    int tileno;
-    int i;
-    jpc_sot_t *sot;
-    jpc_enc_tcmpt_t *comp;
-    jpc_enc_tcmpt_t *endcomps;
-    jpc_enc_band_t *band;
-    jpc_enc_band_t *endbands;
-    jpc_enc_rlvl_t *lvl;
-    int rlvlno;
-    jpc_qcc_t *qcc;
-    jpc_cod_t *cod;
-    int adjust;
-    int j;
-    int absbandno;
-    long tilehdrlen;
-    long tilelen;
-    jpc_enc_tile_t *tile;
-    jpc_enc_cp_t *cp;
-    double rho;
-    uint_fast16_t cmptno;
-    int samestepsizes;
-    jpc_enc_ccp_t *ccps;
-    jpc_enc_tccp_t *tccp;
-    int bandno;
-    uint_fast32_t x;
-    uint_fast32_t y;
-    int mingbits;
-    int actualnumbps;
-    jpc_fix_t mxmag;
-    jpc_fix_t mag;
-    int numgbits;
-    const char * error;
-
-    cp = enc->cp;
-
-    for (tileno = 0; tileno < cp->numtiles; ++tileno) {
-        enc->curtile = jpc_enc_tile_create(enc->cp, enc->image, tileno);
-        if (!enc->curtile)
-            abort();
-
-        tile = enc->curtile;
-
-        if (jas_getdbglevel() >= 10) {
-            jpc_enc_dump(enc);
-        }
-
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (cmptno = 0, comp = tile->tcmpts;
-             cmptno < tile->numtcmpts;
-             ++cmptno, ++comp) {
-            if (!cp->ccps[cmptno].sgnd) {
-                adjust = 1 << (cp->ccps[cmptno].prec - 1);
-                for (i = 0; i < jas_matrix_numrows(comp->data); ++i) {
-                    for (j = 0; j < jas_matrix_numcols(comp->data); ++j) {
-                        *jas_matrix_getref(comp->data, i, j) -= adjust;
-                    }
-                }
-            }
-        }
-
-        if (!tile->intmode) {
-            endcomps = &tile->tcmpts[tile->numtcmpts];
-            for (comp = tile->tcmpts; comp != endcomps; ++comp) {
-                jas_matrix_asl(comp->data, JPC_FIX_FRACBITS);
-            }
-        }
-
-        switch (tile->mctid) {
-        case JPC_MCT_RCT:
-            assert(jas_image_numcmpts(enc->image) == 3);
-            jpc_rct(tile->tcmpts[0].data, tile->tcmpts[1].data,
-                    tile->tcmpts[2].data);
-            break;
-        case JPC_MCT_ICT:
-            assert(jas_image_numcmpts(enc->image) == 3);
-            jpc_ict(tile->tcmpts[0].data, tile->tcmpts[1].data,
-                    tile->tcmpts[2].data);
-            break;
-        default:
-            break;
-        }
-
-        for (i = 0; i < jas_image_numcmpts(enc->image); ++i) {
-            comp = &tile->tcmpts[i];
-            jpc_tsfb_analyze(comp->tsfb,
-                             ((comp->qmfbid == JPC_COX_RFT) ?
-                              JPC_TSFB_RITIMODE : 0), comp->data);
-
-        }
-
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (cmptno = 0, comp = tile->tcmpts;
-             comp != endcomps;
-             ++cmptno, ++comp) {
-            mingbits = 0;
-            absbandno = 0;
-            /* All bands must have a corresponding quantizer step size,
-               even if they contain no samples and are never coded. */
-            /* Some bands may not be hit by the loop below, so we must
-               initialize all of the step sizes to a sane value. */
-            memset(comp->stepsizes, 0, sizeof(comp->stepsizes));
-            for (rlvlno = 0, lvl = comp->rlvls;
-                 rlvlno < comp->numrlvls;
-                 ++rlvlno, ++lvl) {
-                if (!lvl->bands) {
-                    absbandno += rlvlno ? 3 : 1;
-                    continue;
-                }
-                endbands = &lvl->bands[lvl->numbands];
-                for (band = lvl->bands; band != endbands; ++band) {
-                    if (!band->data) {
-                        ++absbandno;
-                        continue;
-                    }
-                    actualnumbps = 0;
-                    mxmag = 0;
-                    for (y = 0; y < jas_matrix_numrows(band->data); ++y) {
-                        for (x = 0; x < jas_matrix_numcols(band->data); ++x) {
-                            mag = abs(jas_matrix_get(band->data, y, x));
-                            if (mag > mxmag) {
-                                mxmag = mag;
-                            }
-                        }
-                    }
-                    if (tile->intmode) {
-                        actualnumbps =
-                            jpc_firstone(mxmag) + 1;
-                    } else {
-                        actualnumbps =
-                            jpc_firstone(mxmag) + 1 - JPC_FIX_FRACBITS;
-                    }
-                    numgbits = actualnumbps - (cp->ccps[cmptno].prec - 1 +
-                                               band->analgain);
-                    if (numgbits > mingbits) {
-                        mingbits = numgbits;
-                    }
-                    if (!tile->intmode) {
-                        band->absstepsize =
-                            jpc_fix_div(
-                                jpc_inttofix(1 << (band->analgain + 1)),
-                                band->synweight);
-                    } else {
-                        band->absstepsize = jpc_inttofix(1);
-                    }
-                    band->stepsize = jpc_abstorelstepsize(
-                        band->absstepsize, cp->ccps[cmptno].prec +
-                        band->analgain);
-                    band->numbps = cp->tccp.numgbits +
-                        JPC_QCX_GETEXPN(band->stepsize) - 1;
-
-                    if ((!tile->intmode) && band->data) {
-                        quantize(band->data, band->absstepsize);
-                    }
-
-                    comp->stepsizes[absbandno] = band->stepsize;
-                    ++absbandno;
-                }
-            }
-
-            assert(JPC_FIX_FRACBITS >= JPC_NUMEXTRABITS);
-            if (!tile->intmode) {
-                jas_matrix_divpow2(comp->data,
-                                   JPC_FIX_FRACBITS - JPC_NUMEXTRABITS);
-            } else {
-                jas_matrix_asl(comp->data, JPC_NUMEXTRABITS);
-            }
-        }
-
-        if (mingbits > cp->tccp.numgbits) {
-            fprintf(stderr, "error: too few guard bits (need at least %d)\n",
-                    mingbits);
-            return -1;
-        }
-
-        enc->tmpstream = jas_stream_memopen(0, 0);
-        if (!enc->tmpstream) {
-            fprintf(stderr, "cannot open tmp file\n");
-            return -1;
-        }
-
-        /* Write the tile header. */
-        enc->mrk = jpc_ms_create(JPC_MS_SOT);
-        if (!enc->mrk)
-            return -1;
-        sot = &enc->mrk->parms.sot;
-        sot->len = 0;
-        sot->tileno = tileno;
-        sot->partno = 0;
-        sot->numparts = 1;
-        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-            fprintf(stderr, "cannot write SOT marker\n");
-            return -1;
-        }
-        jpc_ms_destroy(enc->mrk);
-        enc->mrk = 0;
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-        tccp = &cp->tccp;
-        for (cmptno = 0; cmptno < cp->numcmpts; ++cmptno) {
-            comp = &tile->tcmpts[cmptno];
-            if (comp->numrlvls != tccp->maxrlvls) {
-                if (!(enc->mrk = jpc_ms_create(JPC_MS_COD))) {
-                    return -1;
-                }
-                /* XXX = this is not really correct. we are using comp #0's
-                   precint sizes and other characteristics */
-                comp = &tile->tcmpts[0];
-                cod = &enc->mrk->parms.cod;
-                cod->compparms.csty = 0;
-                cod->compparms.numdlvls = comp->numrlvls - 1;
-                cod->prg = tile->prg;
-                cod->numlyrs = tile->numlyrs;
-                cod->compparms.cblkwidthval =
-                    JPC_COX_CBLKSIZEEXPN(comp->cblkwidthexpn);
-                cod->compparms.cblkheightval =
-                    JPC_COX_CBLKSIZEEXPN(comp->cblkheightexpn);
-                cod->compparms.cblksty = comp->cblksty;
-                cod->compparms.qmfbid = comp->qmfbid;
-                cod->mctrans = (tile->mctid != JPC_MCT_NONE);
-                for (i = 0; i < comp->numrlvls; ++i) {
-                    cod->compparms.rlvls[i].parwidthval =
-                        comp->rlvls[i].prcwidthexpn;
-                    cod->compparms.rlvls[i].parheightval =
-                        comp->rlvls[i].prcheightexpn;
-                }
-                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-                    return -1;
-                }
-                jpc_ms_destroy(enc->mrk);
-                enc->mrk = 0;
-            }
-        }
-
-        for (cmptno = 0, comp = tile->tcmpts;
-             cmptno < cp->numcmpts;
-             ++cmptno, ++comp) {
-            ccps = &cp->ccps[cmptno];
-            if (ccps->numstepsizes == comp->numstepsizes) {
-                samestepsizes = 1;
-                for (bandno = 0; bandno < ccps->numstepsizes; ++bandno) {
-                    if (ccps->stepsizes[bandno] != comp->stepsizes[bandno]) {
-                        samestepsizes = 0;
-                        break;
-                    }
-                }
-            } else {
-                samestepsizes = 0;
-            }
-            if (!samestepsizes) {
-                if (!(enc->mrk = jpc_ms_create(JPC_MS_QCC))) {
-                    return -1;
-                }
-                qcc = &enc->mrk->parms.qcc;
-                qcc->compno = cmptno;
-                qcc->compparms.numguard = cp->tccp.numgbits;
-                qcc->compparms.qntsty = (comp->qmfbid == JPC_COX_INS) ?
-                    JPC_QCX_SEQNT : JPC_QCX_NOQNT;
-                qcc->compparms.numstepsizes = comp->numstepsizes;
-                qcc->compparms.stepsizes = comp->stepsizes;
-                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-                    return -1;
-                }
-                qcc->compparms.stepsizes = 0;
-                jpc_ms_destroy(enc->mrk);
-                enc->mrk = 0;
-            }
-        }
-
-        /* Write a SOD marker to indicate the end of the tile header. */
-        if (!(enc->mrk = jpc_ms_create(JPC_MS_SOD))) {
-            return -1;
-        }
-        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-            fprintf(stderr, "cannot write SOD marker\n");
-            return -1;
-        }
-        jpc_ms_destroy(enc->mrk);
-        enc->mrk = 0;
-        tilehdrlen = jas_stream_getrwcount(enc->tmpstream);
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-        if (jpc_enc_enccblks(enc)) {
-            abort();
-            return -1;
-        }
-
-        cp = enc->cp;
-        rho = (double) (tile->brx - tile->tlx) * (tile->bry - tile->tly) /
-            ((cp->refgrdwidth - cp->imgareatlx) * (cp->refgrdheight -
-                                                   cp->imgareatly));
-        tile->rawsize = cp->rawsize * rho;
-
-        computeLayerSizes(enc, tile, cp, rho, tilehdrlen, &error);
-
-        if (!error) {
-            int rc;
-            performTier2Coding(enc, tile->numlyrs, tile->lyrsizes, &error);
-
-            rc =  jpc_enc_encodetiledata(enc);
-            if (rc != 0)
-                pm_asprintf(&error, "jpc_enc_encodetiledata() failed\n");
-        }
-
-        if (error) {
-            fprintf(stderr, "%s\n", error);
-            pm_strfree(error);
-            return -1;
-        }
-
-        tilelen = jas_stream_tell(enc->tmpstream);
-
-        if (jas_stream_seek(enc->tmpstream, 6, SEEK_SET) < 0) {
-            return -1;
-        }
-        jpc_putuint32(enc->tmpstream, tilelen);
-
-        if (jas_stream_seek(enc->tmpstream, 0, SEEK_SET) < 0) {
-            return -1;
-        }
-        if (jpc_putdata(enc->out, enc->tmpstream, -1)) {
-            return -1;
-        }
-        enc->len += tilelen;
-
-        jas_stream_close(enc->tmpstream);
-        enc->tmpstream = 0;
-
-        jpc_enc_tile_destroy(enc->curtile);
-        enc->curtile = 0;
-
-    }
-
-    return 0;
 }
 
 
