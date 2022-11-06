@@ -1679,7 +1679,6 @@ encodemainbody(jpc_enc_t *enc) {
 
                     int numgbits;
 
-                    pm_message("comp %u level %u band %u", (unsigned)cmptno, (unsigned)rlvlno, (unsigned)bandno);
                     quantizeBand(band, tile, cp,
                                  cp->ccps[cmptno].prec,
                                  cp->tccp.numgbits,
