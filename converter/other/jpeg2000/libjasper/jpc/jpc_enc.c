@@ -1561,17 +1561,8 @@ quantizeBand(jpc_enc_band_t * const bandP,
         }
         bandP->stepsize = jpc_abstorelstepsize(
             bandP->absstepsize, prec + bandP->analgain);
-        /* I couldn't figure out what the calculation with tccp_numgbits and
-           stepsize does (or even what a step size is), but there is an
-           assertion elsewhere than the number here is at least at large as
-           the 'numbps' value for every code block, which means
-           'actualnumbps'.  In practice, we saw that not be true, so we added
-           the code to make 'actualnumbps' the floor here in hopes that would
-           fix the problem.  22.11.06
-        */
-        bandP->numbps =
-            MAX(actualnumbps,
-                tccp_numgbits + JPC_QCX_GETEXPN(bandP->stepsize) - 1);
+
+        bandP->numbps = tccp_numgbits + JPC_QCX_GETEXPN(bandP->stepsize) - 1;
 
         if (!tileP->intmode && bandP->data)
             quantize(bandP->data, bandP->absstepsize);
@@ -1688,6 +1679,7 @@ encodemainbody(jpc_enc_t *enc) {
 
                     int numgbits;
 
+                    pm_message("comp %u level %u band %u", (unsigned)cmptno, (unsigned)rlvlno, (unsigned)bandno);
                     quantizeBand(band, tile, cp,
                                  cp->ccps[cmptno].prec,
                                  cp->tccp.numgbits,
