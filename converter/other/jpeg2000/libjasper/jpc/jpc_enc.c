@@ -1436,8 +1436,8 @@ static void
 assignHighSlopePassesToLayer(jpc_enc_t *      const encP,
                              jpc_enc_tile_t * const tileP,
                              uint_fast32_t     const lyrno,
-                             bool             const haveThresh,
-                             jpc_flt_t        const thresh) {
+                             bool              const haveThresh,
+                             jpc_flt_t         const thresh) {
 /*----------------------------------------------------------------------------
   Assign all passes with R-D slopes greater than or equal to 'thresh' to layer
   'lyrno' and the rest to no layer.
@@ -1549,52 +1549,46 @@ doLayer(jpc_enc_t *      const encP,
         goodThresh = 0;     /* initial value */
 
         do {
-            if (allowedSize == UINT_FAST32_MAX) {
-                /* There's no rate constraint (This can be true of the last
-                   layer, e.g. for lossless coding). */
-                goodThresh = -1;
-                haveGoodThresh = true;
-            } else {
-                jpc_flt_t const thresh = (lo + hi) / 2;
+            jpc_flt_t const thresh = (lo + hi) / 2;
 
-                int rc;
-                long oldpos;
+            int rc;
+            long oldpos;
 
-                /* Save the tier 2 coding state. */
-                jpc_save_t2state(encP);
-                oldpos = jas_stream_tell(outP);
-                assert(oldpos >= 0);
+            /* Save the tier 2 coding state. */
+            jpc_save_t2state(encP);
+            oldpos = jas_stream_tell(outP);
+            assert(oldpos >= 0);
 
-                assignHighSlopePassesToLayer(encP, tileP, lyrno, true, thresh);
+            assignHighSlopePassesToLayer(encP, tileP, lyrno, true, thresh);
 
-                performTier2CodingOneLayer(encP, tileP, lyrno, outP, errorP);
+            performTier2CodingOneLayer(encP, tileP, lyrno, outP, errorP);
 
-                if (!*errorP) {
-                    pos = jas_stream_tell(outP);
+            if (!*errorP) {
+                pos = jas_stream_tell(outP);
 
-                    /* Check the rate constraint. */
-                    assert(pos >= 0);
-                    if (pos > allowedSize) {
-                        /* The rate is too high. */
-                        lo = thresh;
-                    } else if (pos <= allowedSize) {
-                        /* The rate is low enough, so try higher. */
-                        hi = thresh;
-                        if (!haveGoodThresh || thresh < goodThresh) {
-                            goodThresh = thresh;
-                            haveGoodThresh = true;
-                        }
+                /* Check the rate constraint. */
+                assert(pos >= 0);
+                if (pos > allowedSize) {
+                    /* The rate is too high. */
+                    lo = thresh;
+                } else if (pos <= allowedSize) {
+                    /* The rate is low enough, so try higher. */
+                    hi = thresh;
+                    if (!haveGoodThresh || thresh < goodThresh) {
+                        goodThresh = thresh;
+                        haveGoodThresh = true;
                     }
                 }
-                /* Restore the tier 2 coding state. */
-                jpc_restore_t2state(encP);
-                rc = jas_stream_seek(outP, oldpos, SEEK_SET);
-                if (rc < 0)
-                    abort();
-
-                trace("iter %u: allowedlen=%08ld actuallen=%08ld thresh=%f",
-                      numiters, allowedSize, pos, thresh);
             }
+            /* Restore the tier 2 coding state. */
+            jpc_restore_t2state(encP);
+            rc = jas_stream_seek(outP, oldpos, SEEK_SET);
+            if (rc < 0)
+                abort();
+
+            trace("iter %u: allowedlen=%08ld actuallen=%08ld thresh=%f",
+                  numiters, allowedSize, pos, thresh);
+
             ++numiters;
         } while (lo < hi - 1e-3 && numiters < 32 && !*errorP);
     }
