@@ -1544,11 +1544,11 @@ quantizeBand(jpc_enc_band_t * const bandP,
             for (x = 0; x < jas_matrix_numcols(bandP->data); ++x)
                 mxmag = MAX(mxmag, abs(jas_matrix_get(bandP->data, y, x)));
         }
-        if (tileP->intmode) {
+        if (tileP->intmode)
             actualnumbps = jpc_firstone(mxmag) + 1;
-        } else {
+        else
             actualnumbps = jpc_firstone(mxmag) + 1 - JPC_FIX_FRACBITS;
-        }
+
         *numgbitsP = actualnumbps - (prec - 1 + bandP->analgain);
 
         if (!tileP->intmode) {
@@ -1561,11 +1561,11 @@ quantizeBand(jpc_enc_band_t * const bandP,
         }
         bandP->stepsize = jpc_abstorelstepsize(
             bandP->absstepsize, prec + bandP->analgain);
+
         bandP->numbps = tccp_numgbits + JPC_QCX_GETEXPN(bandP->stepsize) - 1;
 
-        if ((!tileP->intmode) && bandP->data) {
+        if (!tileP->intmode && bandP->data)
             quantize(bandP->data, bandP->absstepsize);
-        }
     } else
         *numgbitsP = 0;
 }
@@ -1578,11 +1578,6 @@ encodemainbody(jpc_enc_t *enc) {
     int tileno;
     int i;
     jpc_sot_t *sot;
-    jpc_enc_tcmpt_t *comp;
-    jpc_enc_tcmpt_t *endcomps;
-    jpc_enc_band_t *band;
-    jpc_enc_band_t *endbands;
-    jpc_enc_rlvl_t *lvl;
     int rlvlno;
     jpc_qcc_t *qcc;
     jpc_cod_t *cod;
@@ -1593,17 +1588,17 @@ encodemainbody(jpc_enc_t *enc) {
     long tilelen;
     jpc_enc_tile_t *tile;
     jpc_enc_cp_t *cp;
-    uint_fast16_t cmptno;
     int samestepsizes;
     jpc_enc_ccp_t *ccps;
     jpc_enc_tccp_t *tccp;
-    int bandno;
-    int mingbits;
+    int mingbits; /* Minimum number of guard bits needed */
     const char * error;
 
     cp = enc->cp;
 
     for (tileno = 0; tileno < cp->numtiles; ++tileno) {
+        uint_fast16_t cmptno;
+
         enc->curtile = jpc_enc_tile_create(enc->cp, enc->image, tileno);
         if (!enc->curtile)
             abort();
@@ -1614,10 +1609,10 @@ encodemainbody(jpc_enc_t *enc) {
             jpc_enc_dump(enc);
         }
 
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (cmptno = 0, comp = tile->tcmpts;
-             cmptno < tile->numtcmpts;
-             ++cmptno, ++comp) {
+        for (cmptno = 0; cmptno < tile->numtcmpts; ++cmptno) {
+
+            jpc_enc_tcmpt_t * const comp = &tile->tcmpts[cmptno];
+
             if (!cp->ccps[cmptno].sgnd) {
                 adjust = 1 << (cp->ccps[cmptno].prec - 1);
                 for (i = 0; i < jas_matrix_numrows(comp->data); ++i) {
@@ -1629,8 +1624,9 @@ encodemainbody(jpc_enc_t *enc) {
         }
 
         if (!tile->intmode) {
-            endcomps = &tile->tcmpts[tile->numtcmpts];
-            for (comp = tile->tcmpts; comp != endcomps; ++comp) {
+            uint_fast16_t cmptno;
+            for (cmptno = 0; cmptno < tile->numtcmpts; ++cmptno) {
+                jpc_enc_tcmpt_t * const comp = &tile->tcmpts[cmptno];
                 jas_matrix_asl(comp->data, JPC_FIX_FRACBITS);
             }
         }
@@ -1651,17 +1647,17 @@ encodemainbody(jpc_enc_t *enc) {
         }
 
         for (i = 0; i < jas_image_numcmpts(enc->image); ++i) {
-            comp = &tile->tcmpts[i];
+            jpc_enc_tcmpt_t * const comp = &tile->tcmpts[i];
             jpc_tsfb_analyze(comp->tsfb,
                              ((comp->qmfbid == JPC_COX_RFT) ?
                               JPC_TSFB_RITIMODE : 0), comp->data);
 
         }
 
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (cmptno = 0, comp = tile->tcmpts;
-             comp != endcomps;
-             ++cmptno, ++comp) {
+        for (cmptno = 0; cmptno < tile->numtcmpts; ++cmptno) {
+
+            jpc_enc_tcmpt_t * const comp = &tile->tcmpts[cmptno];
+
             mingbits = 0;
             absbandno = 0;
             /* All bands must have a corresponding quantizer step size,
@@ -1669,17 +1665,21 @@ encodemainbody(jpc_enc_t *enc) {
             /* Some bands may not be hit by the loop below, so we must
                initialize all of the step sizes to a sane value. */
             memset(comp->stepsizes, 0, sizeof(comp->stepsizes));
-            for (rlvlno = 0, lvl = comp->rlvls;
-                 rlvlno < comp->numrlvls;
-                 ++rlvlno, ++lvl) {
+            for (rlvlno = 0; rlvlno < comp->numrlvls; ++rlvlno) {
+                jpc_enc_rlvl_t * const lvl = &comp->rlvls[rlvlno];
+
+                unsigned int bandno;
+
                 if (!lvl->bands) {
                     absbandno += rlvlno ? 3 : 1;
                     continue;
                 }
-                endbands = &lvl->bands[lvl->numbands];
-                for (band = lvl->bands; band != endbands; ++band) {
+                for (bandno = 0; bandno < lvl->numbands; ++bandno) {
+                    jpc_enc_band_t * const band = &lvl->bands[bandno];
+
                     int numgbits;
 
+                    pm_message("comp %u level %u band %u", (unsigned)cmptno, (unsigned)rlvlno, (unsigned)bandno);
                     quantizeBand(band, tile, cp,
                                  cp->ccps[cmptno].prec,
                                  cp->tccp.numgbits,
@@ -1736,31 +1736,32 @@ encodemainbody(jpc_enc_t *enc) {
 
         tccp = &cp->tccp;
         for (cmptno = 0; cmptno < cp->numcmpts; ++cmptno) {
-            comp = &tile->tcmpts[cmptno];
+            jpc_enc_tcmpt_t * const comp = &tile->tcmpts[cmptno];
+            jpc_enc_tcmpt_t * const comp0 = &tile->tcmpts[0];
+
             if (comp->numrlvls != tccp->maxrlvls) {
                 if (!(enc->mrk = jpc_ms_create(JPC_MS_COD))) {
                     return -1;
                 }
                 /* XXX = this is not really correct. we are using comp #0's
                    precint sizes and other characteristics */
-                comp = &tile->tcmpts[0];
                 cod = &enc->mrk->parms.cod;
                 cod->compparms.csty = 0;
-                cod->compparms.numdlvls = comp->numrlvls - 1;
+                cod->compparms.numdlvls = comp0->numrlvls - 1;
                 cod->prg = tile->prg;
                 cod->numlyrs = tile->numlyrs;
                 cod->compparms.cblkwidthval =
-                    JPC_COX_CBLKSIZEEXPN(comp->cblkwidthexpn);
+                    JPC_COX_CBLKSIZEEXPN(comp0->cblkwidthexpn);
                 cod->compparms.cblkheightval =
-                    JPC_COX_CBLKSIZEEXPN(comp->cblkheightexpn);
-                cod->compparms.cblksty = comp->cblksty;
-                cod->compparms.qmfbid = comp->qmfbid;
+                    JPC_COX_CBLKSIZEEXPN(comp0->cblkheightexpn);
+                cod->compparms.cblksty = comp0->cblksty;
+                cod->compparms.qmfbid = comp0->qmfbid;
                 cod->mctrans = (tile->mctid != JPC_MCT_NONE);
-                for (i = 0; i < comp->numrlvls; ++i) {
+                for (i = 0; i < comp0->numrlvls; ++i) {
                     cod->compparms.rlvls[i].parwidthval =
-                        comp->rlvls[i].prcwidthexpn;
+                        comp0->rlvls[i].prcwidthexpn;
                     cod->compparms.rlvls[i].parheightval =
-                        comp->rlvls[i].prcheightexpn;
+                        comp0->rlvls[i].prcheightexpn;
                 }
                 if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
                     return -1;
@@ -1770,11 +1771,12 @@ encodemainbody(jpc_enc_t *enc) {
             }
         }
 
-        for (cmptno = 0, comp = tile->tcmpts;
-             cmptno < cp->numcmpts;
-             ++cmptno, ++comp) {
+        for (cmptno = 0; cmptno < cp->numcmpts; ++cmptno) {
+            jpc_enc_tcmpt_t * const comp = &tile->tcmpts[cmptno];
+
             ccps = &cp->ccps[cmptno];
             if (ccps->numstepsizes == comp->numstepsizes) {
+                unsigned int bandno;
                 samestepsizes = 1;
                 for (bandno = 0; bandno < ccps->numstepsizes; ++bandno) {
                     if (ccps->stepsizes[bandno] != comp->stepsizes[bandno]) {
