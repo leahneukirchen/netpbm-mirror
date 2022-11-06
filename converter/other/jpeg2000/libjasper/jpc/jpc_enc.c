@@ -1816,7 +1816,8 @@ encodemainbody(jpc_enc_t *enc) {
             /* Encodes current tile; writes to output file */
 
         if (error) {
-            fprintf(stderr, "%s\n", error);
+            fprintf(stderr, "Failed to encode body of tile %u.  %s\n",
+                    tileno, error);
             pm_strfree(error);
             return -1;
         }
