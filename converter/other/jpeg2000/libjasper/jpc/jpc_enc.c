@@ -1523,6 +1523,55 @@ encodeTileBody(jpc_enc_t *   const encoderP,
 
 
 
+static void
+quantizeBand(jpc_enc_band_t * const bandP,
+             jpc_enc_tile_t * const tileP,
+             jpc_enc_cp_t *   const cp,
+             int              const prec,
+             int              const tccp_numgbits,
+             int *            const numgbitsP) {
+
+    if (bandP->data) {
+        int actualnumbps;
+        uint_fast32_t y;
+        jpc_fix_t mxmag;
+
+        for (y = 0, actualnumbps = 0, mxmag = 0;
+             y < jas_matrix_numrows(bandP->data);
+             ++y) {
+            uint_fast32_t x;
+
+            for (x = 0; x < jas_matrix_numcols(bandP->data); ++x)
+                mxmag = MAX(mxmag, abs(jas_matrix_get(bandP->data, y, x)));
+        }
+        if (tileP->intmode) {
+            actualnumbps = jpc_firstone(mxmag) + 1;
+        } else {
+            actualnumbps = jpc_firstone(mxmag) + 1 - JPC_FIX_FRACBITS;
+        }
+        *numgbitsP = actualnumbps - (prec - 1 + bandP->analgain);
+
+        if (!tileP->intmode) {
+            bandP->absstepsize =
+                jpc_fix_div(
+                    jpc_inttofix(1 << (bandP->analgain + 1)),
+                    bandP->synweight);
+        } else {
+            bandP->absstepsize = jpc_inttofix(1);
+        }
+        bandP->stepsize = jpc_abstorelstepsize(
+            bandP->absstepsize, prec + bandP->analgain);
+        bandP->numbps = tccp_numgbits + JPC_QCX_GETEXPN(bandP->stepsize) - 1;
+
+        if ((!tileP->intmode) && bandP->data) {
+            quantize(bandP->data, bandP->absstepsize);
+        }
+    } else
+        *numgbitsP = 0;
+}
+
+
+
 static int
 encodemainbody(jpc_enc_t *enc) {
 
@@ -1549,13 +1598,7 @@ encodemainbody(jpc_enc_t *enc) {
     jpc_enc_ccp_t *ccps;
     jpc_enc_tccp_t *tccp;
     int bandno;
-    uint_fast32_t x;
-    uint_fast32_t y;
     int mingbits;
-    int actualnumbps;
-    jpc_fix_t mxmag;
-    jpc_fix_t mag;
-    int numgbits;
     const char * error;
 
     cp = enc->cp;
@@ -1635,51 +1678,17 @@ encodemainbody(jpc_enc_t *enc) {
                 }
                 endbands = &lvl->bands[lvl->numbands];
                 for (band = lvl->bands; band != endbands; ++band) {
-                    if (!band->data) {
-                        ++absbandno;
-                        continue;
-                    }
-                    actualnumbps = 0;
-                    mxmag = 0;
-                    for (y = 0; y < jas_matrix_numrows(band->data); ++y) {
-                        for (x = 0; x < jas_matrix_numcols(band->data); ++x) {
-                            mag = abs(jas_matrix_get(band->data, y, x));
-                            if (mag > mxmag) {
-                                mxmag = mag;
-                            }
-                        }
-                    }
-                    if (tile->intmode) {
-                        actualnumbps =
-                            jpc_firstone(mxmag) + 1;
-                    } else {
-                        actualnumbps =
-                            jpc_firstone(mxmag) + 1 - JPC_FIX_FRACBITS;
-                    }
-                    numgbits = actualnumbps - (cp->ccps[cmptno].prec - 1 +
-                                               band->analgain);
-                    if (numgbits > mingbits) {
-                        mingbits = numgbits;
-                    }
-                    if (!tile->intmode) {
-                        band->absstepsize =
-                            jpc_fix_div(
-                                jpc_inttofix(1 << (band->analgain + 1)),
-                                band->synweight);
-                    } else {
-                        band->absstepsize = jpc_inttofix(1);
-                    }
-                    band->stepsize = jpc_abstorelstepsize(
-                        band->absstepsize, cp->ccps[cmptno].prec +
-                        band->analgain);
-                    band->numbps = cp->tccp.numgbits +
-                        JPC_QCX_GETEXPN(band->stepsize) - 1;
+                    int numgbits;
 
-                    if ((!tile->intmode) && band->data) {
-                        quantize(band->data, band->absstepsize);
-                    }
+                    quantizeBand(band, tile, cp,
+                                 cp->ccps[cmptno].prec,
+                                 cp->tccp.numgbits,
+                                 &numgbits);
+
+                    mingbits = MAX(mingbits, numgbits);
 
                     comp->stepsizes[absbandno] = band->stepsize;
+
                     ++absbandno;
                 }
             }
