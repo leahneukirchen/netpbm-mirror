@@ -88,7 +88,7 @@ for fn in "-subtract" "-divide" "-compare" "-shiftleft" "-shiftright"
 rm ${input3_ppm} ${input4_ppm} ${input4_pgm}
 
 echo "Test 4 (input = output)"
-echo "Prints 281226646 481 five times, then 2921940274 59 five times"
+echo "Prints 281226646 481 six times, then 2921940274 59 six times"
 
 for image in maze.pbm ${input1_ppm}
   do
