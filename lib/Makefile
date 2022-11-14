@@ -99,8 +99,30 @@ libpbm3.o: CFLAGS_TARGET+=$(CFLAGS_SSE)
 $(LIBOBJECTS): %.o: %.c importinc
 	$(CC) -c $(INCLUDES) $(CFLAGS_ALL) -o $@ $<
 
-MAJ = 11
-MIN = $(NETPBM_MINOR_RELEASE)
+# The major number increases when there is a non-backward-compatible change
+# to the library at the binary level, meaning any client of the library needs
+# to keep using the old library until it has been recompiled for the new
+# library.  We try very hard never to lose backward compatibility at the
+# source level, which would mean the client source code has to be modified
+# before it can use the new library.
+#
+# The major number might seem like it corresponds to the major version number
+# of Netpbm, but it does not.  It is independent.
+#
+# Adding functions is backward compatible, so does not require a major number
+# change.
+#
+# The minor number must always increase within a major number.
+#
+# It is convenient to have the minor number equal to the minor version number
+# of Netpbm, but when we changed the Netpbm major version number from 10 to 11
+# just to keep the minor version number 2 digits, we had to continue
+# increasing the library minor number, so we went to 100 + minor version
+# number.  If we ever increase the major number to 12, we can go back to using
+# the minor version number for the library minor number.
+
+MAJ := 11
+$(eval MIN:=$(shell echo $$((100+$(NETPBM_MINOR_RELEASE)))))
 
 SONAME = libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ)
 
