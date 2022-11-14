@@ -1567,7 +1567,8 @@ quantizeBand(jpc_enc_band_t * const bandP,
            the 'numbps' value for every code block, which means
            'actualnumbps'.  In practice, we saw that not be true, so we added
            the code to make 'actualnumbps' the floor here in hopes that would
-           fix the problem.  22.11.06
+           fix the problem.  But with the change, the image that caused the
+           assertion failure produces incorrect output.  22.11.07
         */
         bandP->numbps =
             MAX(actualnumbps,
