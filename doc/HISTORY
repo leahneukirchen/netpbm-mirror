@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.00.01
 
+              pamcat: Add -listfile .
+
               pamtojpeg2k: add -size option.  Doesn't precisely work (and
               -compression has never worked precisely either); should be
               fixed some day.
@@ -16,6 +18,7 @@ not yet  BJH  Release 11.00.01
               packaging: Fix library minor number to 100 + Netpbm minor number
               so it is higher than previous ones in library major 100.
               I.e. libnetpbm.so.100.101 instead of libnetpbm.so.100.1.
+              Introduced in Netpbm 11.00.00.
 
 22.09.28 BJH  Release 11.00.00
 

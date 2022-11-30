@@ -9,6 +9,8 @@
 
 =============================================================================*/
 
+#include <stdio.h>
+#include <limits.h>
 #include <assert.h>
 
 #include "pm_c_util.h"
@@ -36,18 +38,48 @@ enum Orientation {TOPBOTTOM, LEFTRIGHT};
 enum Justification {JUST_CENTER, JUST_MIN, JUST_MAX};
   /* Justification of images in concatenation */
 
+/* FOPEN_MAX is usually defined in stdio.h, PATH_MAX in limits.h
+   Given below are typical values.  Adjust as necessary.
+ */
+
+#ifndef FOPEN_MAX
+  #define FOPEN_MAX 16
+#endif
+
+#ifndef PATH_MAX
+  #define PATH_MAX 255
+#endif
+
+
+static const char **
+copyOfStringList(const char ** const list,
+                 unsigned int  const size) {
+
+    const char ** retval;
+    unsigned int i;
+
+    MALLOCARRAY_NOFAIL(retval, size);
+
+    for (i = 0; i < size; ++i)
+        retval[i] = pm_strdup(list[i]);
+
+    return retval;
+}
+
+
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char **       inputFileName;
-    unsigned int        fileCt;
+    unsigned int        inputFileCt;
+    const char *        listfile;  /* NULL if not specified */
     enum PadColorMethod padColorMethod;
     enum Orientation    orientation;
     enum Justification  justification;
     unsigned int        verbose;
 };
-
 
 
 static void
@@ -67,6 +99,7 @@ parseCommandLine(int argc, const char ** const argv,
     unsigned int leftright, topbottom;
     unsigned int black, white;
     unsigned int jtop, jbottom, jleft, jright, jcenter;
+    unsigned int listfileSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -82,6 +115,8 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0, "jleft",       OPT_FLAG,   NULL, &jleft,             0);
     OPTENT3(0, "jright",      OPT_FLAG,   NULL, &jright,            0);
     OPTENT3(0, "jcenter",     OPT_FLAG,   NULL, &jcenter,           0);
+    OPTENT3(0, "listfile",    OPT_STRING, &cmdlineP->listfile,
+            &listfileSpec,      0);
     OPTENT3(0, "verbose",     OPT_FLAG,   NULL, &cmdlineP->verbose, 0);
 
     opt.opt_table = option_def;
@@ -148,27 +183,144 @@ parseCommandLine(int argc, const char ** const argv,
         }
     }
 
-    if (argc-1 < 1) {
-        MALLOCARRAY_NOFAIL(cmdlineP->inputFileName, 1);
-        cmdlineP->inputFileName[0] = "-";
-        cmdlineP->fileCt = 1;
+    if (listfileSpec) {
+        if (argc-1 > 0)
+          pm_error ("You can not specify files on the command line and "
+                    "also -listfile.");
     } else {
-        unsigned int i;
-        unsigned int stdinCt;
+        cmdlineP->listfile = NULL;
+
+        if (argc-1 < 1) {
+            MALLOCARRAY_NOFAIL(cmdlineP->inputFileName, 1);
+            cmdlineP->inputFileName[0] = "-";
+            cmdlineP->inputFileCt = 1;
+        } else {
+            unsigned int i;
+            unsigned int stdinCt;
             /* Number of input files user specified as Standard Input */
 
-        MALLOCARRAY_NOFAIL(cmdlineP->inputFileName, argc-1);
+            MALLOCARRAY_NOFAIL(cmdlineP->inputFileName, argc-1);
 
-        for (i = 0, stdinCt = 0; i < argc-1; ++i) {
-            cmdlineP->inputFileName[i] = argv[1+i];
-            if (streq(argv[1+i], "-"))
-                ++stdinCt;
+            for (i = 0, stdinCt = 0; i < argc-1; ++i) {
+                cmdlineP->inputFileName[i] = argv[1+i];
+                if (streq(argv[1+i], "-"))
+                    ++stdinCt;
+            }
+            cmdlineP->inputFileCt = argc-1;
+            if (stdinCt > 1)
+                pm_error("At most one input image can come from "
+                         "Standard Input.  You specified %u", stdinCt);
         }
-        cmdlineP->fileCt = argc-1;
-        if (stdinCt > 1)
-            pm_error("At most one input image can come from Standard Input.  "
-                     "You specified %u", stdinCt);
     }
+}
+
+
+
+static void
+freeCmdLine(struct CmdlineInfo const cmdline) {
+
+    if (!cmdline.listfile)
+        free(cmdline.inputFileName);
+}
+
+
+
+static void
+createInFileListFmFile(const char  *        const listFileNm,
+                       bool                 const verbose,
+                       const char ***       const inputFileNmP,
+                       unsigned int *       const inputFileCtP) {
+
+    FILE * const lfP = pm_openr(listFileNm);
+
+    const char ** inputFileNm;
+    unsigned int inputFileCt;
+    unsigned int emptyLineCt;
+    unsigned int stdinCt;
+    int eof;
+
+    MALLOCARRAY_NOFAIL(inputFileNm, FOPEN_MAX);
+
+    for (inputFileCt = emptyLineCt = stdinCt = eof = 0; !eof; ) {
+
+        size_t lineLen;
+        char * buf;
+        size_t bufferSz;
+
+        buf = NULL;  /* initial value */
+        bufferSz = 0;  /* initial value */
+
+        pm_getline(lfP, &buf, &bufferSz, &eof, &lineLen);
+
+        if (!eof) {
+            if (lineLen == 0)
+                ++emptyLineCt;
+            else if (lineLen > PATH_MAX)
+                pm_error("Path/file name in list file is too long "
+                         "(%u bytes).  Maximum is %u bytes",
+                         (unsigned)lineLen, PATH_MAX);
+            else /* 0 < lineLen < PATH_MAX */ {
+                if (inputFileCt >= FOPEN_MAX)
+                    pm_error("Too many files in list file.  Maximum is %u",
+                             FOPEN_MAX);
+                else {
+                    inputFileNm[inputFileCt] = buf;
+                    ++inputFileCt;
+                    if (streq(buf, "-"))
+                        ++stdinCt;
+                }
+            }
+        }
+    }
+
+    pm_close(lfP);
+
+    if (stdinCt > 1)
+        pm_error("At most one input image can come from Standard Input.  "
+                 "You specified %u", stdinCt);
+
+    if (inputFileCt == 0)
+        pm_error("No files specified in list file.");
+
+    if (verbose) {
+        pm_message("%u files specified and %u blank lines in list file",
+                   inputFileCt, emptyLineCt);
+    }
+
+    *inputFileCtP = inputFileCt;
+    *inputFileNmP = inputFileNm;
+}
+
+
+
+static void
+createInFileList(struct CmdlineInfo const cmdline,
+                 bool               const verbose,
+                 const char ***     const inputFileNmP,
+                 unsigned int *     const inputFileCtP) {
+
+    if (cmdline.listfile)
+        createInFileListFmFile(cmdline.listfile, verbose,
+                               inputFileNmP, inputFileCtP);
+    else {
+        *inputFileCtP = cmdline.inputFileCt;
+        *inputFileNmP = copyOfStringList(cmdline.inputFileName,
+                                         cmdline.inputFileCt);
+    }
+}
+
+
+
+static void
+freeInFileList(const char ** const inputFileNm,
+               unsigned int  const inputFileCt) {
+
+    unsigned int i;
+
+    for (i = 0; i < inputFileCt; ++i)
+        pm_strfree(inputFileNm[i]);
+
+    free(inputFileNm);
 }
 
 
@@ -1237,6 +1389,8 @@ main(int           argc,
      const char ** argv) {
 
     struct CmdlineInfo cmdline;
+    const char ** inputFileNm;
+    unsigned int inputFileCt;
     struct pam * inpam;  /* malloc'ed array */
     struct pam outpam;
     unsigned int i;
@@ -1245,20 +1399,23 @@ main(int           argc,
 
     parseCommandLine(argc, argv, &cmdline);
 
-    MALLOCARRAY_NOFAIL(inpam, cmdline.fileCt);
+    createInFileList(cmdline, !!cmdline.verbose, &inputFileNm, &inputFileCt);
 
-    for (i = 0; i < cmdline.fileCt; ++i) {
-        FILE * const ifP = pm_openr(cmdline.inputFileName[i]);
+    MALLOCARRAY_NOFAIL(inpam, inputFileCt);
+
+    for (i = 0; i < inputFileCt; ++i) {
+        FILE *  ifP;
+        ifP = pm_openr(inputFileNm[i]);
         inpam[i].comment_p = NULL;  /* Don't want to see the comments */
         pnm_readpaminit(ifP, &inpam[i], PAM_STRUCT_SIZE(opacity_plane));
     }
 
-    computeOutputParms(cmdline.fileCt, cmdline.orientation, inpam,
+    computeOutputParms(inputFileCt, cmdline.orientation, inpam,
                        cmdline.verbose, &outpam);
 
     outpam.file = stdout;
 
-    for (i = 0; i < cmdline.fileCt; ++i)
+    for (i = 0; i < inputFileCt; ++i)
         pnm_setminallocationdepth(&inpam[i], outpam.depth);
 
     pnm_writepaminit(&outpam);
@@ -1266,12 +1423,12 @@ main(int           argc,
     if (outpam.format == RPBM_FORMAT) {
         switch (cmdline.orientation) {
         case LEFTRIGHT:
-            concatenateLeftRightPbm(&outpam, inpam, cmdline.fileCt,
+            concatenateLeftRightPbm(&outpam, inpam, inputFileCt,
                                     cmdline.justification,
                                     cmdline.padColorMethod);
             break;
         case TOPBOTTOM:
-            concatenateTopBottomPbm(&outpam, inpam, cmdline.fileCt,
+            concatenateTopBottomPbm(&outpam, inpam, inputFileCt,
                                     cmdline.justification,
                                     cmdline.padColorMethod);
             break;
@@ -1279,21 +1436,22 @@ main(int           argc,
     } else {
         switch (cmdline.orientation) {
         case LEFTRIGHT:
-            concatenateLeftRightGen(&outpam, inpam, cmdline.fileCt,
+            concatenateLeftRightGen(&outpam, inpam, inputFileCt,
                                     cmdline.justification,
                                     cmdline.padColorMethod);
             break;
         case TOPBOTTOM:
-            concatenateTopBottomGen(&outpam, inpam, cmdline.fileCt,
+            concatenateTopBottomGen(&outpam, inpam, inputFileCt,
                                     cmdline.justification,
                                     cmdline.padColorMethod);
             break;
         }
     }
-    for (i = 0; i < cmdline.fileCt; ++i)
+    for (i = 0; i < inputFileCt; ++i)
         pm_close(inpam[i].file);
-    free(cmdline.inputFileName);
     free(inpam);
+    freeInFileList(inputFileNm, inputFileCt);
+    freeCmdLine(cmdline);
     pm_close(stdout);
 
     return 0;
