@@ -21,7 +21,7 @@ pamcat - concatenate Netpbm images
 [<b>-jtop</b>|<b>-jbottom</b>|<b>-jcenter</b>]
 [<b>-jleft</b>|<b>-jright</b>|<b>-jcenter</b>]
 
-<i>netpbmfile</i> ...
+[<i>netpbmfile</i> ... | <b>-listfile=</b>{<i>filename</i>|<b>-</b>}]
 
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use
@@ -85,10 +85,12 @@ output.
   such an image is defined to be opaque).
   
 <p>The arguments are names of input files.  Any one of these, but not more
-than one, may be "-" to indicate Standard Input.  If you have no
-arguments, that means a single input image from Standard Input (and that is
-pointless - the output is the same as the input).
-
+than one, may be "-" to indicate Standard Input.  If you have no arguments
+(and do not specify <b>-listfile</b>), that means a single input image from
+Standard Input (and that is pointless - the output is the same as the input).
+You can supply the file names in a file instead of as arguments with a
+<b>-listfile</b> option.
+  
 <p>To assemble a regular grid of images, you can use <b>pamundice</b>.
 
 <p>To do the reverse, you might use <b>pamdice</b> to split an image
@@ -172,6 +174,25 @@ different for each image.
 
 </dl>
 
+<h3 id="miscellaneousopt">Miscellaneous</h3>
+
+<dl>
+<dt><b>-listfile=</b>{<i>filename</i>|<b>-</b>}
+<dd>This specifies the name of a file that contains the list of input files.
+  Option value <b>-</b> means the list comes from Standard Input.
+
+  <p>The file contains one file name per newline-delimited line in whatever
+    code the system <b>fopen</b> service expects.  You may omit the newline
+    on the last line.  Empty lines are ignored.  There is no mechanism for
+    including comments in the list (so if you want to have a commented list,
+    preprocess it to remove comments before supplying it to <b>pamcat</b>).
+
+  <p>You may not specify file names as command line arguments together with
+    <b>-listfile</b>
+    
+  <p>This option was new in Netpbm 11.00.01 (December 2022).
+
+</dl>
 
 <h2 id="seealso">SEE ALSO</h2>
 
