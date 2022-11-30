@@ -2,7 +2,7 @@
 <html><head><title>Pamcat User Manual</title></head>
 <body>
 <h1>pamcat</h1>
-Updated: 30 July 2022
+Updated: 30 November 2022
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -90,7 +90,11 @@ than one, may be "-" to indicate Standard Input.  If you have no arguments
 Standard Input (and that is pointless - the output is the same as the input).
 You can supply the file names in a file instead of as arguments with a
 <b>-listfile</b> option.
-  
+
+<p>Regardless of how you specify the input files, you may not concatenate
+  more files than your system&apos;s limit on the number of concurrently
+  open files by one process.  16 is a typical number for that.
+
 <p>To assemble a regular grid of images, you can use <b>pamundice</b>.
 
 <p>To do the reverse, you might use <b>pamdice</b> to split an image
@@ -189,6 +193,10 @@ different for each image.
 
   <p>You may not specify file names as command line arguments together with
     <b>-listfile</b>
+
+  <p>You may not list more files than than your system&apos;s limit on the
+  number of concurrently open files by one process.  16 is a typical number
+  for that.
     
   <p>This option was new in Netpbm 11.00.01 (December 2022).
 
