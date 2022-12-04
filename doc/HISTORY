@@ -146,7 +146,7 @@ not yet  BJH  Release 11.00.01
 
 21.12.27 BJH  Release 10.97.00
 
-              Add pbnnoise.
+              Add pbmnoise.
 
               pnmpad: Use -halign with -mwidth and default to centering the
               image instead of left-justifying when no other padding is being
