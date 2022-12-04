@@ -11,14 +11,15 @@
 
 <h1>pamhomography</h1>
 
-Updated: 03 January 2021
+Updated: 04 December 2022
 <br>
 <a href="#index">Table of Contents</a>
 
 
 <h2>NAME</h2>
 
-<p>pamhomography - map one arbitrary quadrilateral image region to another</p>
+<p>pamhomography - stretch/shrink a quadrilateral region of an image to
+  another quadrilateral shape</p>
 
 
 <h2 id="SYNOPSIS">SYNOPSIS</h2>
@@ -29,6 +30,7 @@ Updated: 03 January 2021
   [<b>-mapfile</b>=<i>map_file</i>]
   [<b>-view</b>=<i>coords</i>]
   [<b>-fill</b>=<i>color</i>]
+  [<b>-verbose</b>
   [<i>pam_file</i>]
 
 <p>You can abbreviate any option to its shortest unique prefix. You can use
@@ -41,8 +43,9 @@ from its value with whitespace instead of <code>=</code>.</p>
 <p>This program is part
 of <a href="http://netpbm.sourceforge.net/">Netpbm</a>.</p>
 
-<p><b>pamhomography</b> transforms a quadrilateral&mdash;not necessarily
-rectangular&mdash;region of an image, producing a new image.
+<p><b>pamhomography</b> stretches and shrinks an arbitrary quadrilateral
+portion of an input image you specify (not necessarily rectangular), into a
+new quadrilateral shape you specify, producing a new image.
 
 <p>You can do any
 <a href="https://en.wikipedia.org/wiki/Affine_transformation#Image_transformation">affine image transformation</a>: translation, reflection, scaling,
@@ -67,20 +70,18 @@ options:</p>
 <dd>
 
 <p>This defines the source quadrilateral. <i>coords</i> is a list of four
-  integer-valued (<i>x</i>, <i>y</i>) coordinates. If you do not
-  specify <b>-from</b>, the source quadrilateral is taken to be the four
-  corners of the input image in clockwise order, starting from the upper
-  left.</p>
+  integer-valued (<i>x</i>, <i>y</i>) coordinates. If you do not specify the
+  source with either <b>-from</b> or <b>-mapfile</b>, the source quadrilateral
+  is the entire input image.
 
 </dd>
 <dt><b>-to</b>=<i>coords</i></dt>
 <dd>
 
 <p>This defines the target quadrilateral. <i>coords</i> is a list of four
-integer-valued (<i>x</i>, <i>y</i>) coordinates. If you do not
-specify <b>-to</b>, the target quadrilateral is taken to be the four corners
-of the input image in clockwise order, starting from the upper left.</p>
-
+integer-valued (<i>x</i>, <i>y</i>) coordinates. If you do not specify the
+target with either <b>-to</b> or <b>-mapfile</b>, the target quadrilateral is
+the same as the entire input image.
 </dd>
 <dt><b>-mapfile</b>=<i>map_file</i></dt>
 <dd>
@@ -93,6 +94,9 @@ four (<i>x</i>, <i>y</i>) coordinates, being only the four target
 coordinates. In the latter case, the source quadrilateral is taken to be the
 four corners of the input image in clockwise order, starting from the upper
 left.</p>
+
+<p>Anything you specify with <b>-to</b> or <b>-from</b> overrides what is in
+  this file.
 
 </dd>
 <dt><b>-view</b>=<i>coords</i></dt>
@@ -116,17 +120,20 @@ argument of the pnm_parsecolor() library routine</a>.
 <p>The default is black, and for images with a transparency plane, transparent.
 
 </dd>
+
+<dt><b>-verbose</b>
+<dd>
+This makes the program issue some informational messages about what it is
+doing.
+
 </dl>
+
+
 
 <p>Cooordinates should normally be specified in clockwise order. The syntax is
 fairly flexible: all characters other than the plus sign, minus sign, and
 digits are treated as separators. Although coordinates need to be integers,
 they may lie outside the image's boundary.</p>
-
-<p>If you specify <b>-mapfile</b> along with <b>-from</b> and/or <b>-to</b>,
-<b>-from</b> and <b>-to</b> override the quadrilaterals specified
-by <i>map_file</i>.</p>
-
 
 <h2 id="PARAMETERS">PARAMETERS</h2>
 

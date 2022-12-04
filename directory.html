@@ -593,6 +593,12 @@ convert Palm Pilot Image Viewer format to Netpbm formats.
 <dt><b><a href="pbmtozinc.html">pbmtozinc</a></b>
 <dd>convert PBM to Zinc Interface Library icon
 
+<dt><b><a href="pamtoqoi.html">pamtoqoi</a></b>
+<dd>convert from Netpbm formats to Quite OK Image format
+
+<dt><b><a href="qoitopam.html">qoitopam</a></b>
+<dd>convert from Quite OK Image format to PAM
+  
 <dt><b><a href="rawtopgm.html">rawtopgm</a></b>
 <dd>convert raw grayscale bytes to PGM
 
@@ -886,7 +892,8 @@ a color map containing all possible colors of given maxval
 <dd>rubber sheet deforming, distortion, stretching of an image
 
 <dt><b><a href="pamhomography.html">pamhomography</a></b>
-<dd>map one arbitrary quadrilateral image region to another
+<dd>stretch/shrink a quadrilateral region of an image to
+another quadrilateral shape
 
 <dt><b><a href="pamaddnoise.html">pamaddnoise</a></b>
 <dd>add noise to an image
@@ -916,12 +923,6 @@ a color map containing all possible colors of given maxval
 <dt><b><a href="pamundice.html">pamundice</a></b>
 <dd>assemble an image from tiles (opposite of <b>pamdice</b>)
 
-<dt><b><a href="ppmtorgb3.html">ppmtorgb3</a></b>
-<dd>separate a PPM into three PGMs
-
-<dt><b><a href="rgb3toppm.html">rgb3toppm</a></b>
-<dd>combine three PGMs into one PPM
-
 <dt><b><a href="pammixinterlace.html">pammixinterlace</a></b>
 
 <dd>mix adjacent lines to merge interlaced images
@@ -950,6 +951,9 @@ a color map containing all possible colors of given maxval
 
 <dt><b><a href="ppmfade.html">ppmfade</a></b>
 <dd>produce series of images fading from one to another
+
+<dt><b><a href="pamshuffle.html">pamshuffle</a></b>
+<dd>move pixels around randomly
 
 <dt><b><a href="pamoil.html">pamoil</a></b>
 <dd>turn a PNM or PAM image into an oil painting
@@ -1034,11 +1038,20 @@ These all work on the Netpbm formats as input.
 <dt><b><a href="pamstack.html">pamstack</a></b>
 <dd>stack the planes of multiple PAM images into a single output image
 
+<dt><b><a href="ppmtorgb3.html">ppmtorgb3</a></b>
+<dd>separate a PPM into three PGMs
+
+<dt><b><a href="rgb3toppm.html">rgb3toppm</a></b>
+<dd>combine three PGMs into one PPM
+
 <dt><b><a href="pampick.html">pampick</a></b>
 <dd>pick images out of a multi-image Netpbm image stream
 
 <dt><b><a href="pamsplit.html">pamsplit</a></b>
 <dd>split a multi-image Netpbm file into multiple 1-image files
+
+<dt><b><a href="pamrestack.html">pamrestack</a></b>
+<dd>rearrange (reflow) pixels into different size rows
 
 <dt><b><a href="pamexec.html">pamexec</a></b>
 <dd>run a shell command on each image of a multi-image stream
