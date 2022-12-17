@@ -1,7 +1,6 @@
-/******************************************************************************
-                               pnmcolormap.c
-*******************************************************************************
-
+/*=============================================================================
+                               pnmcolormap
+===============================================================================
   Create a colormap file (a PPM image containing one pixel of each of a set
   of colors).  Base the set of colors on an input image.
 
@@ -20,9 +19,7 @@
   copyright notice and this permission notice appear in supporting
   documentation.  This software is provided "as is" without express or
   implied warranty.
-
-******************************************************************************/
-
+=============================================================================*/
 #include <assert.h>
 #include <math.h>
 
