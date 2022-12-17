@@ -436,13 +436,13 @@ computeBoxSpread(const struct Box *    const boxP,
 
 
 static unsigned int
-freqTotal(tupletable2 const freqtable) {
+freqTotal(tupletable2 const freqTable) {
 
     unsigned int i;
     unsigned int sum;
 
-    for (i = 0, sum = 0; i < freqtable.size; ++i)
-        sum += freqtable.table[i]->value;
+    for (i = 0, sum = 0; i < freqTable.size; ++i)
+        sum += freqTable.table[i]->value;
 
     return sum;
 }
@@ -669,7 +669,7 @@ splitBox(struct BoxVector *    const boxVectorP,
     unsigned int const sum      = boxVectorP->box[boxIdx].sum;
 
     unsigned int medianIndex;
-    int lowersum;
+    unsigned int lowerSum;
         /* Number of pixels whose value is "less than" the median */
 
 
@@ -692,9 +692,9 @@ splitBox(struct BoxVector *    const boxVectorP,
         */
         unsigned int i;
 
-        lowersum = colorFreqTable.table[boxStart]->value; /* initial value */
-        for (i = 1; i < boxSize - 1 && lowersum < sum/2; ++i) {
-            lowersum += colorFreqTable.table[boxStart + i]->value;
+        lowerSum = colorFreqTable.table[boxStart]->value; /* initial value */
+        for (i = 1; i < boxSize - 1 && lowerSum < sum/2; ++i) {
+            lowerSum += colorFreqTable.table[boxStart + i]->value;
         }
         medianIndex = i;
     }
@@ -703,7 +703,7 @@ splitBox(struct BoxVector *    const boxVectorP,
         struct Box * const oldBoxP = &boxVectorP->box[boxIdx];
 
         oldBoxP->colorCt = medianIndex;
-        oldBoxP->sum     = lowersum;
+        oldBoxP->sum     = lowerSum;
         computeBoxSpread(oldBoxP, colorFreqTable, depth, methodForLargest,
                          &oldBoxP->maxdim, &oldBoxP->spread);
     }
@@ -712,7 +712,7 @@ splitBox(struct BoxVector *    const boxVectorP,
 
         newBoxP->index   = boxStart + medianIndex;
         newBoxP->colorCt = boxSize - medianIndex;
-        newBoxP->sum     = sum - lowersum;
+        newBoxP->sum     = sum - lowerSum;
         computeBoxSpread(newBoxP, colorFreqTable, depth, methodForLargest,
                          &newBoxP->maxdim, &newBoxP->spread);
         ++boxVectorP->boxCt;
