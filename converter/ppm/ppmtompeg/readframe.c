@@ -1,13 +1,13 @@
 /*===========================================================================*
- * readframe.c                    
- *                                
- *  procedures to read in frames  
- *                                
- * EXPORTED PROCEDURES:           
- *  ReadFrame                     
- *  SetFileType                   
- *  SetFileFormat                 
- *                                
+ * readframe.c
+ *
+ *  procedures to read in frames
+ *
+ * EXPORTED PROCEDURES:
+ *  ReadFrame
+ *  SetFileType
+ *  SetFileFormat
+ *
  *===========================================================================*/
 
 /* COPYRIGHT INFORMATION IS AT THE END OF THIS FILE */
@@ -62,7 +62,7 @@ struct YuvLine {
 #ifdef __OS2__
   #define popen _popen
 #endif
-   
+
 
 /*==================*
  * Global VARIABLES *
@@ -100,7 +100,7 @@ static void DoKillDim (MpegFrame *mf, int w, int h);
 
 
 
-void    
+void
 SetResize(bool const set) {
     resizeFrame = set;
 }
@@ -134,7 +134,7 @@ ReadPNM(MpegFrame * const mpegFrameP,
 static void
 openFile(struct inputSource * const inputSourceP,
          unsigned int         const frameNumber,
-         const char *         const conversion, 
+         const char *         const conversion,
          FILE **              const ifPP) {
 
     if (inputSourceP->stdinUsed) {
@@ -145,24 +145,24 @@ openFile(struct inputSource * const inputSourceP,
                 "INPUT_CONVERTER * in the parameter file or supply the "
                 "frames in files by specifying a directory with "
                 "INPUT_DIRECTORY in the parameter file.");
-        
+
         *ifPP = stdin;
     } else {
         const char * fileName;
         const char * fullFileName;
-        
+
         GetNthInputFileName(inputSourceP, frameNumber, &fileName);
-        
+
         pm_asprintf(&fullFileName, "%s/%s", currentPath, fileName);
-        
+
         CurrFile = fullFileName;
-        
+
         if (fileType == ANY_FILE_TYPE) {
             char command[1024];
             const char * convertPtr;
             char * commandPtr;
             const char * charPtr;
-            
+
             /* replace every occurrence of '*' with fullFileName */
             convertPtr = conversion;
             commandPtr = command;
@@ -172,7 +172,7 @@ openFile(struct inputSource * const inputSourceP,
                     ++commandPtr;
                     ++convertPtr;
                 }
-                
+
                 if (*convertPtr == '*') {
                     /* copy fullFileName */
                     charPtr = fullFileName;
@@ -185,7 +185,7 @@ openFile(struct inputSource * const inputSourceP,
                 }
             }
             *commandPtr = '\0';
-            
+
             *ifPP = popen(command, "r");
             if (*ifPP == NULL) {
                 pm_message(
@@ -201,7 +201,7 @@ openFile(struct inputSource * const inputSourceP,
             *ifPP = fopen(fullFileName, "rb");
             if (*ifPP == NULL)
                 pm_error("Couldn't open input file '%s'", fullFileName);
-            
+
             if (baseFormat == JMOVIE_FILE_TYPE)
                 unlink(fullFileName);
         }
@@ -238,7 +238,7 @@ fileIsAtEnd(FILE * const ifP) {
 
     c = getc(ifP);
     if (c == EOF) {
-        if (feof(ifP)) 
+        if (feof(ifP))
             eof = TRUE;
         else
             pm_error("File error on getc() to position to image");
@@ -248,7 +248,7 @@ fileIsAtEnd(FILE * const ifP) {
         eof = FALSE;
 
         rc = ungetc(c, ifP);
-        if (rc == EOF) 
+        if (rc == EOF)
             pm_error("File error doing ungetc() to position to image.");
     }
     return eof;
@@ -295,7 +295,7 @@ ReadFrameFile(MpegFrame *  const frameP,
 
             /* Encoder YUV */
             if ((strncmp (yuvConversion, "EYUV", 4) == 0) ||
-                (strncmp (yuvConversion, "UCB", 3) == 0)) 
+                (strncmp (yuvConversion, "UCB", 3) == 0))
 
                 ReadEYUV(framePtr, ifP, realWidth, realHeight);
 
@@ -322,9 +322,9 @@ ReadFrameFile(MpegFrame *  const frameP,
         }
 
         if (resizeFrame)
-            Frame_Resize(frameP, &tempFrame, Fsize_x, Fsize_y, 
+            Frame_Resize(frameP, &tempFrame, Fsize_x, Fsize_y,
                          outputWidth, outputHeight);
-    
+
         if (GammaCorrection)
             DoGamma(frameP, Fsize_x, Fsize_y);
 
@@ -338,7 +338,7 @@ ReadFrameFile(MpegFrame *  const frameP,
 
 
 void
-ReadFrame(MpegFrame *          const frameP, 
+ReadFrame(MpegFrame *          const frameP,
           struct inputSource * const inputSourceP,
           unsigned int         const frameNumber,
           const char *         const conversion,
@@ -693,7 +693,7 @@ SeparateLine(fpointer, lineptr, width)
         fprintf(stderr, "       or any even-length string consisting of the letters U, V, and Y.\n");
             exit(1);
         }
-    
+
     }
 
 }
@@ -738,7 +738,7 @@ ReadY(mf, fpointer, width, height)
     for (y = Fsize_y; y < height; y++) {
     safe_fread(junk, 1, width, fpointer);
     }
-    
+
     for (y = 0 ; y < (Fsize_y >> 1); y++) {
       memset(mf->orig_cb[y], 128, (Fsize_x>>1));
       memset(mf->orig_cr[y], 128, (Fsize_x>>1));
@@ -830,7 +830,7 @@ int w,h;
   int i,j;
 
   if (!init_done) {
-    for(i=0; i<256; i++) 
+    for(i=0; i<256; i++)
       GammaVal[i]=(unsigned char) (pow(((double) i)/255.0,GammaValue)*255.0+0.5);
     init_done=TRUE;
   }
@@ -871,7 +871,7 @@ int w,h;
                         ^ kill_dim_break
                              ^kill_dim_end
               kill_dim_slope gives the slope (y = kill_dim_slope * x +0)
-              from 0 to kill_dim_break                      
+              from 0 to kill_dim_break
  *
  *===========================================================================*/
 
@@ -930,7 +930,7 @@ int w,h;
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/RCS/readframe.c,v 1.27 1995/08/14 22:31:40 smoot Exp $
  *  $Log: readframe.c,v $
  *  Revision 1.27  1995/08/14 22:31:40  smoot
