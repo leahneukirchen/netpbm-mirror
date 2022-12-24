@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.12.24 BJH  Release 11.00.03
+
+              ppmtompeg: Fix crash with resize option because of invalid
+              memory free.
+
 22.11.14 BJH  Release 11.00.02
 
               packaging: Fix library minor number to 100 + Netpbm minor number
