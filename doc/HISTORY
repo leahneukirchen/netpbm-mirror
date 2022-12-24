@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+22.12.24 BJH  Release 10.86.36
+
+              ppmtompeg: Fix crash with resize option because of invalid
+              memory free.
+
+              fitstopnm: fix invalid memory reference (nonterminated ASCIIZ
+              string).
+
 22.09.24 BJH  Release 10.86.35
 
               pnmindex: fix shell injection vulnerabilities.  Broken since
