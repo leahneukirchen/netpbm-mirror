@@ -12,6 +12,9 @@ not yet  BJH  Release 11.00.01
               -compression has never worked precisely either); should be
               fixed some day.
 
+              ppmtompeg: Fix crash with resize option because of invalid
+              memory free.
+
               fitstopnm: fix invalid memory reference (nonterminated ASCIIZ
               string).
 

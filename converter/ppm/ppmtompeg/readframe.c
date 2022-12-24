@@ -262,14 +262,11 @@ ReadFrameFile(MpegFrame *  const frameP,
               const char * const conversion,
               bool *       const eofP) {
 /*----------------------------------------------------------------------------
-   Read a frame from the file 'ifP'.
+   Read a frame from the file 'ifP', doing adjustments as indicated.
 
    Return *eofP == TRUE iff we encounter EOF before we can get the
    frame.
 -----------------------------------------------------------------------------*/
-    MpegFrame   tempFrame;
-    MpegFrame * framePtr;
-
     /* To make this code fit Netpbm properly, we should remove handling
        of all types except PNM and use pm_nextimage() to handle sensing
        of end of stream.
@@ -278,17 +275,22 @@ ReadFrameFile(MpegFrame *  const frameP,
     if (fileIsAtEnd(ifP))
         *eofP = TRUE;
     else {
+        MpegFrame   preResizeFrame;
+            /* The frame object that holds the frame before resizing */
+        MpegFrame * rawFrameP;
+            /* The frame object with which we read in the raw frame */
+
         *eofP = FALSE;
 
         if (resizeFrame) {
-            tempFrame.inUse = FALSE;
-            tempFrame.orig_y = NULL;
-            tempFrame.y_blocks = NULL;
-            tempFrame.decoded_y = NULL;
-            tempFrame.halfX = NULL;
-            framePtr = &tempFrame;
+            preResizeFrame.inUse = FALSE;
+            preResizeFrame.orig_y = NULL;
+            preResizeFrame.y_blocks = NULL;
+            preResizeFrame.decoded_y = NULL;
+            preResizeFrame.halfX = NULL;
+            rawFrameP = &preResizeFrame;
         } else
-            framePtr = frameP;
+            rawFrameP = frameP;
 
         switch(baseFormat) {
         case YUV_FILE_TYPE:
@@ -297,34 +299,35 @@ ReadFrameFile(MpegFrame *  const frameP,
             if ((strncmp (yuvConversion, "EYUV", 4) == 0) ||
                 (strncmp (yuvConversion, "UCB", 3) == 0))
 
-                ReadEYUV(framePtr, ifP, realWidth, realHeight);
+                ReadEYUV(rawFrameP, ifP, realWidth, realHeight);
 
             else
                 /* Abekas-type (interlaced) YUV */
-                ReadAYUV(framePtr, ifP, realWidth, realHeight);
+                ReadAYUV(rawFrameP, ifP, realWidth, realHeight);
 
             break;
         case Y_FILE_TYPE:
-            ReadY(framePtr, ifP, realWidth, realHeight);
+            ReadY(rawFrameP, ifP, realWidth, realHeight);
             break;
         case PNM_FILE_TYPE:
-            ReadPNM(framePtr, ifP);
+            ReadPNM(rawFrameP, ifP);
             break;
         case SUB4_FILE_TYPE:
-            ReadSub4(framePtr, ifP, yuvWidth, yuvHeight);
+            ReadSub4(rawFrameP, ifP, yuvWidth, yuvHeight);
             break;
         case JPEG_FILE_TYPE:
         case JMOVIE_FILE_TYPE:
-            ReadJPEG(framePtr, ifP);
+            ReadJPEG(rawFrameP, ifP);
             break;
         default:
             break;
         }
 
-        if (resizeFrame)
-            Frame_Resize(frameP, &tempFrame, Fsize_x, Fsize_y,
+        if (resizeFrame) {
+            assert(rawFrameP == &preResizeFrame);
+            Frame_Resize(frameP, &preResizeFrame, Fsize_x, Fsize_y,
                          outputWidth, outputHeight);
-
+        }
         if (GammaCorrection)
             DoGamma(frameP, Fsize_x, Fsize_y);
 

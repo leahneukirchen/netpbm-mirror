@@ -842,8 +842,6 @@ Frame_Resize(MpegFrame * const omf,
                 exit(1);
 
     free(frameAP);
-    free(mf);
 }
-
 
 
