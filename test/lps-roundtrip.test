@@ -30,4 +30,4 @@ pbmtolps -dpi 72 < testgrid.pbm | sed 's/noname/testgrid.pbm/' | \
     cmp -s ${test_ps} -
     echo $?
   
-rm ${test_pgm}
+rm ${test_pgm} ${test_ps}
