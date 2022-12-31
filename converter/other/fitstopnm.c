@@ -358,7 +358,7 @@ readCard(FILE * const ifP,
     size_t bytesRead;
 
     bytesRead = fread(buf, 1, 80, ifP);
-    if (bytesRead == 0)
+    if (bytesRead < 80)
         pm_error("error reading header");
 }
 
@@ -380,12 +380,15 @@ readFitsHeader(FILE *               const ifP,
   
     while (!seenEnd) {
         unsigned int i;
+
         for (i = 0; i < 36; ++i) {
-            char buf[80];
+            char buf[81];
             char c;
 
-            readCard(ifP, buf);
+            readCard(ifP, buf); /* Reads into first 80 elements of buf[] */
     
+            buf[80] = '\0'; /* Make ASCIIZ string */
+
             if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
                 if (c == 'T' || c == 't')
                     hP->simple = 1;
