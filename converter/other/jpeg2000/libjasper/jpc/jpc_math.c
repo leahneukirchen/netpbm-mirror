@@ -50,6 +50,8 @@ jpc_firstone(int_fast32_t const arg) {
 /*---------------------------------------------------------------------------- 
   Calculate the bit position of the first leading one in a nonnegative
   integer.
+
+  LSB is bit position 0.  Iff there are no ones, return -1.
 -----------------------------------------------------------------------------*/
 	int n;
     int x;

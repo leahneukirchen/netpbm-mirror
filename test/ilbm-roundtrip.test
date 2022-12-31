@@ -2,7 +2,7 @@
 # This script tests: ppmtoilbm ilbmtoppm
 # Also requires: pamseq pamdepth pamtopnm pnmremap pnmcolormap
 
-echo "Test 1.  Should produce 669206373 10102 five times"
+echo "Test 1.  Should produce 669206373 10102 four times"
 #Output is PPM raw, 57 by 59  maxval 255
 
 ppmtoilbm maze.pbm | ilbmtoppm | cksum

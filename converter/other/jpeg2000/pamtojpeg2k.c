@@ -53,6 +53,8 @@ struct CmdlineInfo {
     enum compmode compmode;
     unsigned int compressionSpec;
     float        compression;
+    unsigned int size;
+    unsigned int sizeSpec;
     char *       ilyrrates;
     enum progression progression;
     unsigned int numrlvls;
@@ -76,7 +78,7 @@ parseCommandLine(int argc, char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
-   *cmdline_p structure are actually in the supplied argv array.  And
+   *cmdlineP structure are actually in the supplied argv array.  And
    sometimes, one of these strings is actually just a suffix of an entry
    in argv!
 -----------------------------------------------------------------------------*/
@@ -126,6 +128,8 @@ parseCommandLine(int argc, char ** argv,
             &modeSpec,           0);
     OPTENT3(0, "compression",  OPT_FLOAT,  &cmdlineP->compression,
             &cmdlineP->compressionSpec,    0);
+    OPTENT3(0, "size",         OPT_UINT,   &cmdlineP->size,
+            &cmdlineP->sizeSpec,           0);
     OPTENT3(0, "ilyrrates",    OPT_STRING, &cmdlineP->ilyrrates,
             &ilyrratesSpec,      0);
     OPTENT3(0, "progression",  OPT_STRING, &progressionOpt,
@@ -218,6 +222,9 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->numgbits = 2;
     if (!debuglevelSpec)
         cmdlineP->debuglevel = 0;
+
+    if (cmdlineP->compressionSpec && cmdlineP->sizeSpec)
+        pm_error("You cannot specify by -compression and -size");
 
     if (argc - 1 == 0)
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
@@ -405,6 +412,8 @@ writeJpc(jas_image_t *      const jasperP,
 
     if (cmdline.compressionSpec)
         sprintf(rateOpt, "rate=%1.9f", 1.0/cmdline.compression);
+    else if (cmdline.sizeSpec)
+        sprintf(rateOpt, "rate=%uB", cmdline.size);
     else {
         /* No 'rate' option.  This means there is no constraint on the image
            size, so the encoder will compress losslessly.  Note that the

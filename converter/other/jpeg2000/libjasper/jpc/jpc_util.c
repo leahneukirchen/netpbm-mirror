@@ -114,9 +114,9 @@
  * $Id$
  */
 
-/******************************************************************************\
+/*****************************************************************************\
 * Includes
-\******************************************************************************/
+\*****************************************************************************/
 
 #include <assert.h>
 #include <stdio.h>
@@ -133,21 +133,21 @@
 #include "jpc_flt.h"
 #include "jpc_util.h"
 
-/******************************************************************************\
+/*****************************************************************************\
 * Miscellaneous Functions
-\******************************************************************************/
+\*****************************************************************************/
 
-int jpc_atoaf(const char *s, int *numvalues, double **values)
-{
-	static char delim[] = ", \t\n";
+static unsigned int
+countOfTokens(const char * const s,
+			  const char * const delim) {
+
+	unsigned int n;
 	char buf[4096];
-	int n;
-	double *vs;
-	char *cp;
+	const char * cp;
 
 	strncpy(buf, s, sizeof(buf));
 	buf[sizeof(buf) - 1] = '\0';
-	n = 0;
+	n = 0;  /* initial value */
 	if ((cp = strtok(buf, delim))) {
 		++n;
 		while ((cp = strtok(0, delim))) {
@@ -156,32 +156,57 @@ int jpc_atoaf(const char *s, int *numvalues, double **values)
 			}
 		}
 	}
+	return n;
+}
 
-	if (n) {
-		if (!(vs = jas_malloc(n * sizeof(double)))) {
+
+
+int
+jpc_atoaf(const char * const s,
+		  int *        const numvaluesP,
+		  double **    const valuesP) {
+/*----------------------------------------------------------------------------
+   Parse a string like "3.2,9,-5".  Return as *numvaluesP the number of
+   values in the string and as *valuesP a malloced array of the values.
+
+   But if the string is empty (*numvaluesP is zero), return *valuesP NULL.
+
+   Delimiters can be comma as in the example or space, tab, or newline.
+-----------------------------------------------------------------------------*/
+	char const delim[] = ", \t\n";
+
+	unsigned int const valueCt = countOfTokens(s, delim);
+
+	if (valueCt > 0) {
+		unsigned int i;
+		double * vs;
+		const char * cp;
+		char buf[4096];
+
+		if (!(vs = jas_malloc(valueCt * sizeof(double)))) {
 			return -1;
 		}
 
 		strncpy(buf, s, sizeof(buf));
 		buf[sizeof(buf) - 1] = '\0';
-		n = 0;
+		i = 0;
 		if ((cp = strtok(buf, delim))) {
-			vs[n] = atof(cp);
-			++n;
+			vs[i] = atof(cp);
+			++i;
 			while ((cp = strtok(0, delim))) {
 				if (cp[0] != '\0') {
-					vs[n] = atof(cp);
-					++n;
+					vs[i] = atof(cp);
+					++i;
 				}
 			}
 		}
+		assert(i == valueCt);
+		*numvaluesP = valueCt;
+		*valuesP    = vs;
 	} else {
-		vs = 0;
+		*valuesP    = NULL;
+		*numvaluesP = 0;
 	}
-
-	*numvalues = n;
-	*values = vs;
-
 	return 0;
 }
 

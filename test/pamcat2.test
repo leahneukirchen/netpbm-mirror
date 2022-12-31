@@ -28,6 +28,8 @@ pamcat -tb -jc -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
 pamcat -tb -jr -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
 pamcat -tb     -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
 
+rm ${dotw_pbm}
+
 echo "Test 3."
 pbmmake -b 1 1 > ${dotb_pbm}
 
@@ -38,6 +40,10 @@ pamcat -tb -jl -white ${dotb_pbm} ${check5x5_pbm} ${dotb_pbm} |\
   pamflip -ccw | cksum
 pamcat -tb -jr -white ${dotb_pbm} ${check5x5_pbm} ${dotb_pbm} |\
   pamflip -cw | cksum
+
+rm ${dotb_pbm}
+rm ${check5x5_pbm}
+
 
 echo "Test 4."
 ppmmake rgb:20/40/d0 1 1 | tee ${dot_ppm} | pamcat -lr | cksum
@@ -53,4 +59,6 @@ for just in -jleft -jcenter -jright
 do
 pamcat -tb ${just} ${dot_ppm} maze.pbm ${dot_ppm} | cksum
 done
- 
+
+rm ${dot_ppm}
+

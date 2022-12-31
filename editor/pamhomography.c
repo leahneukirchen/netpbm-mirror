@@ -49,25 +49,55 @@
 #define MIN4(A, B, C, D) MIN(MIN(A, B), MIN(C, D))
 #define MAX4(A, B, C, D) MAX(MAX(A, B), MAX(C, D))
 
-/* A point on the image plane.  It may or may not lie within the
-   bounds of the image itself. */
-typedef struct Point {
+typedef struct {
+/*----------------------------------------------------------------------------
+  A point on the image plane.  It may or may not lie within the
+  bounds of the image itself.
+-----------------------------------------------------------------------------*/
     int x;
     int y;
 } Point;
 
-/* A quadrilateral on the image plane */
-typedef struct Quad {
+
+static Point
+pointXy(int const x,
+        int const y) {
+
+    Point retval;
+
+    retval.x = x;
+    retval.y = y;
+
+    return retval;
+}
+
+
+
+typedef struct {
+/*----------------------------------------------------------------------------
+  A quadrilateral on the image plane.
+-----------------------------------------------------------------------------*/
     Point ul;
     Point ur;
     Point lr;
     Point ll;
 } Quad;
 
-/* A user-specified mapping from one quadrilateral to another */
-typedef struct QuadMap {
-    Quad from;
-    Quad to;
+typedef struct {
+/*----------------------------------------------------------------------------
+  A specification of a quadrilateral on the image plane, either explicitly
+  or just as "the whole image".
+-----------------------------------------------------------------------------*/
+    bool wholeImage;
+    Quad explicit;  /* Meaningful only if 'wholeImage' is false */
+} QuadSpec;
+
+typedef struct {
+/*----------------------------------------------------------------------------
+   Specification of a mapping from one quadrilateral to another
+-----------------------------------------------------------------------------*/
+    QuadSpec from;
+    QuadSpec to;
 } QuadMap;
 
 struct CmdlineInfo {
@@ -75,21 +105,27 @@ struct CmdlineInfo {
        in a form easy for the program to use.
     */
     const char * inputFilespec;  /* "-" if stdin */
-    QuadMap      qmap;           /* Source and target quadrilaterals */
-    Quad         bbox;           /* Bounding box for the target image */
-    const char * fillColor;      /* Fill color for unused coordinates */
+    QuadMap      qmap;
+        /* Source and target quadrilaterals as specified by -to and -from;
+           Note that the file identified by 'mapfile' also supplies such
+           information.
+        */
+    QuadSpec     view;
+        /* Bounding box for the target image */
+    const char * mapfile;        /* Null if not specified */
+    const char * fill;           /* Null if not specified */
+    unsigned int verbose;
 };
 
 
 
-static unsigned int
-parseCoords(const char * const str,
-            int *        const coords) {
+static void
+parseCoords(const char *   const str,
+            int *          const coords,
+            unsigned int * const nP) {
 /*----------------------------------------------------------------------------
-  Parse a list of up to 16 integers.  The function returns the number
-  of integers encountered.
+  Parse a list of up to 16 integers.  Return as *nP how may there are.
 -----------------------------------------------------------------------------*/
-
     const char * p;
     char * pnext;
     unsigned int i;
@@ -106,138 +142,86 @@ parseCoords(const char * const str,
         errno = 0;  /* strtol() sets errno on error. */
         val = strtol(p, &pnext, 10);
         if (errno == ERANGE)
-            return i;  /* Integer lies out of long int range */
+            break;  /* Integer lies out of long int range */
         if (errno != 0 || pnext == p)
-            return i;  /* Too few integers */
+            break;  /* Too few integers */
         coords[i] = (int)val;
         if ((long int)coords[i] != val)
-            return i;  /* Integer lies out of int range */
+            break;  /* Integer lies out of int range */
     }
-    return i;
+    *nP = i;
 }
 
 
 
-static void
-parseViewString(const char * const str,
-                Quad *       const quad) {
+static Quad
+quadFmViewString(const char * const str) {
 /*----------------------------------------------------------------------------
   Parse a list of four integers in the order {ulx, uly, lrx, lry} into a
-  quadrilateral.  The function aborts on error.
+  quadrilateral.
+
+  Abort the program if 'str' is not valid.
 -----------------------------------------------------------------------------*/
-
+    Quad retval;
     int coords[16];
+    unsigned int nCoord;
 
-    if (parseCoords(str, coords) != 4)
-        pm_error("failed to parse \"%s\" as a list of four integers", str);
-    quad->ul.x = quad->ll.x = coords[0];
-    quad->ul.y = quad->ur.y = coords[1];
-    quad->lr.x = quad->ur.x = coords[2];
-    quad->lr.y = quad->ll.y = coords[3];
+    parseCoords(str, coords, &nCoord);
+
+    if (nCoord != 4)
+        pm_error("failed to parse '%s' as a list of four integers", str);
+
+    retval.ul.x = retval.ll.x = coords[0];
+    retval.ul.y = retval.ur.y = coords[1];
+    retval.lr.x = retval.ur.x = coords[2];
+    retval.lr.y = retval.ll.y = coords[3];
+
+    return retval;
 }
 
 
 
-static void
-parseQuadString(const char * const str,
-                Quad *       const quad) {
+static Quad
+quadFmIntList(const int * const coords) {
+    Quad retval;
+
+    retval.ul.x = coords[0];
+    retval.ul.y = coords[1];
+    retval.ur.x = coords[2];
+    retval.ur.y = coords[3];
+    retval.lr.x = coords[4];
+    retval.lr.y = coords[5];
+    retval.ll.x = coords[6];
+    retval.ll.y = coords[7];
+
+    return retval;
+}
+
+
+
+static Quad
+quadFmString(const char * const str) {
 /*----------------------------------------------------------------------------
   Parse a list of eight integers in the order {ulx, uly, urx, ury,
-  lrx, lry, llx, lly} into a quadrilateral.  The function aborts on
-  error.
------------------------------------------------------------------------------*/
+  lrx, lry, llx, lly} into a quadrilateral.
 
+  Abort the program if 'str' is not a valid list of eight integers.
+-----------------------------------------------------------------------------*/
     int coords[16];
+    unsigned int nCoord;
 
-    if (parseCoords(str, coords) != 8)
-        pm_error("failed to parse \"%s\" as a list of eight integers", str);
-    quad->ul.x = coords[0];
-    quad->ul.y = coords[1];
-    quad->ur.x = coords[2];
-    quad->ur.y = coords[3];
-    quad->lr.x = coords[4];
-    quad->lr.y = coords[5];
-    quad->ll.x = coords[6];
-    quad->ll.y = coords[7];
+    parseCoords(str, coords, &nCoord);
+
+    if (nCoord != 8)
+        pm_error("failed to parse '%s' as a list of eight integers", str);
+
+    return quadFmIntList(coords);
 }
 
 
 
 static void
-readMapFile(const char * const fname,
-            QuadMap *    const qmap) {
-/*----------------------------------------------------------------------------
-  Read from a file either 16 numbers in the order {ulx1, uly1, urx1, ury1,
-  lrx1, lry1, llx1, lly1, ulx2, uly2, urx2, ury2, lrx2, lry2, llx2, lly2}
-  or 8 numbers in the order {ulx2, uly2, urx2, ury2, lrx2, lry2, llx2,
-  lly2}.  This function aborts on error.
------------------------------------------------------------------------------*/
-
-    FILE * fp;
-    char * str;      /* Entire file contents */
-    int coords[16];  /* File as a list of up to 16 coordinates */
-    char * c;
-    long int nread;
-
-    /* Read the entire file. */
-    fp = pm_openr(fname);
-    str = pm_read_unknown_size(fp, &nread);
-    REALLOCARRAY_NOFAIL(str, nread + 1);
-    str[nread] = '\0';
-    pm_close(fp);
-
-    /* Replace newlines and tabs with spaces to prettify error reporting. */
-    for (c = str; *c != '\0'; ++c)
-        if (isspace(*c))
-            *c = ' ';
-
-    /* Read either {from, to} or just a {to} quadrilateral. */
-    switch (parseCoords(str, coords)) {
-    case 16:
-        /* 16 integers: assign both the "from" and the "to" quadrilateral. */
-        qmap->from.ul.x = coords[0];
-        qmap->from.ul.y = coords[1];
-        qmap->from.ur.x = coords[2];
-        qmap->from.ur.y = coords[3];
-        qmap->from.lr.x = coords[4];
-        qmap->from.lr.y = coords[5];
-        qmap->from.ll.x = coords[6];
-        qmap->from.ll.y = coords[7];
-        qmap->to.ul.x = coords[8];
-        qmap->to.ul.y = coords[9];
-        qmap->to.ur.x = coords[10];
-        qmap->to.ur.y = coords[11];
-        qmap->to.lr.x = coords[12];
-        qmap->to.lr.y = coords[13];
-        qmap->to.ll.x = coords[14];
-        qmap->to.ll.y = coords[15];
-        break;
-    case 8:
-        /* 8 integers: assign only the "to" quadrilateral. */
-        memset((void *)&qmap->from, 0, sizeof(Quad));
-        qmap->to.ul.x = coords[0];
-        qmap->to.ul.y = coords[1];
-        qmap->to.ur.x = coords[2];
-        qmap->to.ur.y = coords[3];
-        qmap->to.lr.x = coords[4];
-        qmap->to.lr.y = coords[5];
-        qmap->to.ll.x = coords[6];
-        qmap->to.ll.y = coords[7];
-        break;
-    default:
-        /* Any other number of integers: issue an error message. */
-        pm_error("failed to parse \"%s\" as a list of either 8 or 16 integers",
-                 str);
-        break;
-    }
-
-    free(str);
-}
-
-
-
-static void
-parseCommandLine(int                  argc,
+parseCommandLine(int                        argc,
                  const char **        const argv,
                  struct CmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
@@ -255,23 +239,26 @@ parseCommandLine(int                  argc,
 
     unsigned int option_def_index;
 
-    unsigned int mapFileSpec = 0, fromSpec = 0, toSpec = 0;
-    unsigned int viewSpec = 0, fillColorSpec = 0;
-    char *mapFile, *from, *to, *view;
+    unsigned int mapfileSpec, fromSpec, toSpec, viewSpec, fillSpec;
+    const char * from;
+    const char * to;
+    const char * view;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "mapfile",         OPT_STRING, &mapFile,
-            &mapFileSpec,             0);
+    OPTENT3(0, "mapfile",         OPT_STRING, &cmdlineP->mapfile,
+            &mapfileSpec,             0);
     OPTENT3(0, "from",            OPT_STRING, &from,
             &fromSpec,                0);
     OPTENT3(0, "to",              OPT_STRING, &to,
             &toSpec,                  0);
     OPTENT3(0, "view",            OPT_STRING, &view,
             &viewSpec,                0);
-    OPTENT3(0, "fill",            OPT_STRING, &cmdlineP->fillColor,
-            &fillColorSpec,           0);
+    OPTENT3(0, "fill",            OPT_STRING, &cmdlineP->fill,
+            &fillSpec,                0);
+    OPTENT3(0, "verbose",         OPT_FLAG,   NULL,
+            &cmdlineP->verbose,       0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -280,23 +267,29 @@ parseCommandLine(int                  argc,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and local variables. */
 
-    if (!fillColorSpec)
-        cmdlineP->fillColor = NULL;
+    if (!fillSpec)
+        cmdlineP->fill = NULL;
 
-    memset((void *)&cmdlineP->qmap, 0, sizeof(QuadMap));
-    if (mapFileSpec)
-        readMapFile(mapFile, &cmdlineP->qmap);
-    if (fromSpec)
-        parseQuadString(from, &cmdlineP->qmap.from);
-    if (toSpec)
-        parseQuadString(to, &cmdlineP->qmap.to);
-    if (!mapFileSpec && !fromSpec && !toSpec && !viewSpec)
-        pm_error("You must specify at least one of "
-                 "-mapfile, -qin, -qout, and -view");
-    if (viewSpec)
-        parseViewString(view, &cmdlineP->bbox);
-    else
-        memset((void *)&cmdlineP->bbox, 0, sizeof(Quad));
+    if (!mapfileSpec)
+        cmdlineP->mapfile = NULL;
+
+    if (fromSpec) {
+        cmdlineP->qmap.from.wholeImage = false;
+        cmdlineP->qmap.from.explicit = quadFmString(from);
+    } else
+        cmdlineP->qmap.from.wholeImage = true;
+
+    if (toSpec) {
+        cmdlineP->qmap.to.wholeImage = false;
+        cmdlineP->qmap.to.explicit = quadFmString(to);
+    } else
+        cmdlineP->qmap.to.wholeImage = true;
+
+    if (viewSpec) {
+        cmdlineP->view.wholeImage = false;
+        cmdlineP->view.explicit   = quadFmViewString(view);
+    } else
+        cmdlineP->view.wholeImage = true;
 
     if (argc < 2)
         cmdlineP->inputFilespec = "-";
@@ -304,77 +297,168 @@ parseCommandLine(int                  argc,
         cmdlineP->inputFilespec = argv[1];
     else
         pm_error("Too many non-option arguments: %u.  "
-                 "Only argument is input file name", argc - 1);
+                 "Only possible argument is input file name", argc - 1);
 
     free((void *) option_def);
 }
 
 
 
+static void
+readMapFile(const char * const fname,
+            QuadMap *    const qmapP) {
+/*----------------------------------------------------------------------------
+  Read from a file either 16 numbers in the order {ulx1, uly1, urx1, ury1,
+  lrx1, lry1, llx1, lly1, ulx2, uly2, urx2, ury2, lrx2, lry2, llx2, lly2}
+  or 8 numbers in the order {ulx2, uly2, urx2, ury2, lrx2, lry2, llx2,
+  lly2}.
+
+  Abort the program if the file does not contain data in this format.
+-----------------------------------------------------------------------------*/
+    FILE * fp;
+    char * str;      /* Entire file contents */
+    int coords[16];  /* File as a list of up to 16 coordinates */
+    unsigned int nCoord;
+    long int nread;
+
+    /* Read the entire file. */
+    fp = pm_openr(fname);
+    str = pm_read_unknown_size(fp, &nread);
+    REALLOCARRAY_NOFAIL(str, nread + 1);
+    str[nread] = '\0';
+    pm_close(fp);
+
+    {
+        unsigned int i;
+        /* Replace newlines and tabs with spaces to prettify error
+           reporting.
+        */
+        for (i = 0; str[i]; ++i)
+            if (isspace(str[i]))
+                str[i] = ' ';
+    }
+    parseCoords(str, coords, &nCoord);
+
+    /* Read either {from, to} or just a {to} quadrilateral. */
+    switch (nCoord) {
+    case 16:
+        /* 16 integers: assign both the "from" and the "to" quadrilateral. */
+        qmapP->from.wholeImage = false;
+        qmapP->from.explicit   = quadFmIntList(&coords[0]);
+        qmapP->to.wholeImage   = false;
+        qmapP->to.explicit     = quadFmIntList(&coords[8]);
+        break;
+    case 8:
+        /* 8 integers: assign only the "to" quadrilateral. */
+        qmapP->from.wholeImage = true;
+        qmapP->to.explicit     = quadFmIntList(coords);
+        break;
+    default:
+        /* Not valid input */
+        pm_error("failed to parse contents of map file '%s' ('%s') "
+                 "as a list of either 8 or 16 integers",
+                 fname, str);
+        break;
+    }
+
+    free(str);
+}
+
+
+
+static void
+reportQuads(Quad const qfrom,
+            Quad const qto) {
+
+    pm_message("Copying from ((%d,%d),(%d,%d),(%d,%d),(%d,%d)) "
+               "to ((%d,%d),(%d,%d),(%d,%d),(%d,%d))",
+               qfrom.ul.x, qfrom.ul.y,
+               qfrom.ur.x, qfrom.ur.y,
+               qfrom.lr.x, qfrom.lr.y,
+               qfrom.ll.x, qfrom.ll.y,
+               qto.ul.x,   qto.ul.y,
+               qto.ur.x,   qto.ur.y,
+               qto.lr.x,   qto.lr.y,
+               qto.ll.x,   qto.ll.y
+        );
+}
+
+
+
+static void
+reportBbox(Quad const bbox) {
+
+    pm_message("The bounding box is ((%d,%d),(%d,%d),(%d,%d),(%d,%d))",
+               bbox.ul.x, bbox.ul.y,
+               bbox.ur.x, bbox.ur.y,
+               bbox.lr.x, bbox.lr.y,
+               bbox.ll.x, bbox.ll.y
+        );
+}
+
+
+
 static tuple
-parseFillColor(const struct pam *         const pamP,
-               const struct CmdlineInfo * const cmdlineP) {
+parseFillColor(const struct pam * const pamP,
+               const char *       const fillColorSpec) {
 /*----------------------------------------------------------------------------
   Parse the fill color into the correct format for the given PAM metadata.
 -----------------------------------------------------------------------------*/
+    tuple retval;
 
-    tuple rgb;
-    tuple fillColor;
+    if (!fillColorSpec)
+        pnm_createBlackTuple(pamP, &retval);
+    else {
+        tuple const rgb = pnm_parsecolor(fillColorSpec, pamP->maxval);
 
-    if (!cmdlineP->fillColor) {
-        pnm_createBlackTuple(pamP, &fillColor);
-        return fillColor;
+        retval = pnm_allocpamtuple(pamP);
+
+        switch (pamP->depth) {
+        case 1:
+            /* Grayscale */
+            retval[0] = (rgb[PAM_RED_PLANE]*299 +
+                         rgb[PAM_GRN_PLANE]*587 +
+                         rgb[PAM_BLU_PLANE]*114)/1000;
+            break;
+        case 2:
+            /* Grayscale + alpha */
+            retval[0] = (rgb[PAM_RED_PLANE]*299 +
+                         rgb[PAM_GRN_PLANE]*587 +
+                         rgb[PAM_BLU_PLANE]*114)/1000;
+            retval[PAM_GRAY_TRN_PLANE] = pamP->maxval;
+            break;
+        case 3:
+            /* RGB */
+            pnm_assigntuple(pamP, retval, rgb);
+            break;
+        case 4:
+            /* RGB + alpha */
+            pnm_assigntuple(pamP, retval, rgb);
+            retval[PAM_TRN_PLANE] = pamP->maxval;
+            break;
+        default:
+            pm_error("unexpected image depth %d", pamP->depth);
+            break;
+        }
     }
-
-    rgb = pnm_parsecolor(cmdlineP->fillColor, pamP->maxval);
-    fillColor = pnm_allocpamtuple(pamP);
-    switch (pamP->depth) {
-    case 1:
-        /* Grayscale */
-        fillColor[0] = (rgb[PAM_RED_PLANE]*299 +
-                        rgb[PAM_GRN_PLANE]*587 +
-                        rgb[PAM_BLU_PLANE]*114)/1000;
-        break;
-    case 2:
-        /* Grayscale + alpha */
-        fillColor[0] = (rgb[PAM_RED_PLANE]*299 +
-                        rgb[PAM_GRN_PLANE]*587 +
-                        rgb[PAM_BLU_PLANE]*114)/1000;
-        fillColor[PAM_GRAY_TRN_PLANE] = pamP->maxval;
-        break;
-    case 3:
-        /* RGB */
-        pnm_assigntuple(pamP, fillColor, rgb);
-        break;
-    case 4:
-        /* RGB + alpha */
-        pnm_assigntuple(pamP, fillColor, rgb);
-        fillColor[PAM_TRN_PLANE] = pamP->maxval;
-        break;
-    default:
-        pm_error("unexpected image depth %d", pamP->depth);
-        break;
-    }
-
-    return fillColor;
+    return retval;
 }
 
 
 
 static tuple **
-initOutputImage(const struct pam *         const pamP,
-                const struct CmdlineInfo * const cmdlineP) {
+initOutputImage(const struct pam * const pamP,
+                const char *       const fillColorSpec) {
 /*----------------------------------------------------------------------------
-  Allocate and initialize the output image.
+  Allocate and initialize the output image data structure.
 -----------------------------------------------------------------------------*/
-
     tuple fillColor;    /* Fill color to use for unused coordinates */
     tuple ** outImg;    /* Output image */
     unsigned int row;
 
     outImg = pnm_allocpamarray(pamP);
 
-    fillColor = parseFillColor(pamP, cmdlineP);
+    fillColor = parseFillColor(pamP, fillColorSpec);
     for (row = 0; row < pamP->height; ++row) {
         unsigned int col;
 
@@ -390,138 +474,142 @@ initOutputImage(const struct pam *         const pamP,
 
 
 static void
-computeSteps(const Quad * const qfrom,
-             const Quad * const qto,
-             double *     const ustep,
-             double *     const vstep) {
+computeSteps(Quad     const qfrom,
+             Quad     const qto,
+             double * const ustepP,
+             double * const vstepP) {
 /*----------------------------------------------------------------------------
   Compute increments for u and v as these range from 0.0 to 1.0.
 -----------------------------------------------------------------------------*/
-
     double fx0, fx1, fxd;
     double tx0, tx1, txd;
     double fy0, fy1, fyd;
     double ty0, ty1, tyd;
 
     /* Compute ustep as the inverse of the maximum possible x delta across
-       either the "from" or "to" quadrilateral. */
-    fx0 = MIN4((double)qfrom->ur.x,
-               (double)qfrom->ul.x,
-               (double)qfrom->lr.x,
-               (double)qfrom->ll.x);
-    fx1 = MAX4((double)qfrom->ur.x,
-               (double)qfrom->ul.x,
-               (double)qfrom->lr.x,
-               (double)qfrom->ll.x);
+       either the "from" or "to" quadrilateral.
+    */
+    fx0 = MIN4((double)qfrom.ur.x,
+               (double)qfrom.ul.x,
+               (double)qfrom.lr.x,
+               (double)qfrom.ll.x);
+    fx1 = MAX4((double)qfrom.ur.x,
+               (double)qfrom.ul.x,
+               (double)qfrom.lr.x,
+               (double)qfrom.ll.x);
     fxd = fx1 - fx0;
-    tx0 = MIN4((double)qto->ur.x,
-               (double)qto->ul.x,
-               (double)qto->lr.x,
-               (double)qto->ll.x);
-    tx1 = MAX4((double)qto->ur.x,
-               (double)qto->ul.x,
-               (double)qto->lr.x,
-               (double)qto->ll.x);
+
+    tx0 = MIN4((double)qto.ur.x,
+               (double)qto.ul.x,
+               (double)qto.lr.x,
+               (double)qto.ll.x);
+    tx1 = MAX4((double)qto.ur.x,
+               (double)qto.ul.x,
+               (double)qto.lr.x,
+               (double)qto.ll.x);
     txd = tx1 - tx0;
+
     if (fxd == 0.0 && txd == 0.0)
-        *ustep = 1.0;  /* Arbitrary nonzero step */
-    *ustep = 0.5/MAX(fxd, txd);
-        /* Divide into 0.5 instead of 1.0 for additional smoothing. */
+        *ustepP = 1.0;  /* Arbitrary nonzero step */
+    else
+        *ustepP = 0.5/MAX(fxd, txd);
+            /* Divide into 0.5 instead of 1.0 for additional smoothing. */
 
     /* Compute vstep as the inverse of the maximum possible y delta across
-       either the "from" or "to" quadrilateral
-  . */
-    fy0 = MIN4((double)qfrom->ur.y,
-               (double)qfrom->ul.y,
-               (double)qfrom->lr.y,
-               (double)qfrom->ll.y);
-    fy1 = MAX4((double)qfrom->ur.y,
-               (double)qfrom->ul.y,
-               (double)qfrom->lr.y,
-               (double)qfrom->ll.y);
+       either the "from" or "to" quadrilateral.
+    */
+    fy0 = MIN4((double)qfrom.ur.y,
+               (double)qfrom.ul.y,
+               (double)qfrom.lr.y,
+               (double)qfrom.ll.y);
+    fy1 = MAX4((double)qfrom.ur.y,
+               (double)qfrom.ul.y,
+               (double)qfrom.lr.y,
+               (double)qfrom.ll.y);
     fyd = fy1 - fy0;
-    ty0 = MIN4((double)qto->ur.y,
-               (double)qto->ul.y,
-               (double)qto->lr.y,
-               (double)qto->ll.y);
-    ty1 = MAX4((double)qto->ur.y,
-               (double)qto->ul.y,
-               (double)qto->lr.y,
-               (double)qto->ll.y);
+    ty0 = MIN4((double)qto.ur.y,
+               (double)qto.ul.y,
+               (double)qto.lr.y,
+               (double)qto.ll.y);
+    ty1 = MAX4((double)qto.ur.y,
+               (double)qto.ul.y,
+               (double)qto.lr.y,
+               (double)qto.ll.y);
     tyd = ty1 - ty0;
+
     if (fyd == 0.0 && tyd == 0.0)
-        *vstep = 1.0;  /* Arbitrary nonzero step */
-    *vstep = 0.5/MAX(fyd, tyd);
-        /* Divide into 0.5 instead of 1.0 for additional smoothing. */
+        *vstepP = 1.0;  /* Arbitrary nonzero step */
+    else
+        *vstepP = 0.5/MAX(fyd, tyd);
+            /* Divide into 0.5 instead of 1.0 for additional smoothing. */
 }
 
 
 
-static Quad *
-prepareQuadrilateral(const struct pam * const pamP,
-                     const Quad *       const qdata) {
+static Quad
+quadrilateralFmSpec(const struct pam * const pamP,
+                    QuadSpec           const qdata) {
 /*----------------------------------------------------------------------------
-  If a quadrilateral has all zero points, replace it with a quadrilateral
-  of the full size of the image.  The caller should free the result.
+  The quadrilateral specified by 'qdata'.
 -----------------------------------------------------------------------------*/
+    Quad retval;
 
-    Quad * qcopy;
-
-    MALLOCVAR_NOFAIL(qcopy);
-
-    if (qdata->ul.x == 0 && qdata->ul.y == 0 &&
-        qdata->ur.x == 0 && qdata->ur.y == 0 &&
-        qdata->ll.x == 0 && qdata->ll.y == 0 &&
-        qdata->lr.x == 0 && qdata->lr.y == 0) {
+    if (qdata.wholeImage) {
         /* Set the quadrilateral to the image's bounding box. */
-        memset((void *)qcopy, 0, sizeof(Quad));
-        qcopy->ur.x = pamP->width - 1;
-        qcopy->lr.x = pamP->width - 1;
-        qcopy->lr.y = pamP->height - 1;
-        qcopy->ll.y = pamP->height - 1;
+        retval.ul = pointXy(0,               0               );
+        retval.ur = pointXy(pamP->width - 1, 0               );
+        retval.ll = pointXy(0,               pamP->height - 1);
+        retval.lr = pointXy(pamP->width - 1, pamP->height - 1);
     } else {
         /* Use the quadrilateral as specified. */
-        memcpy(qcopy, qdata, sizeof(Quad));
+        retval = qdata.explicit;
     }
 
-    return qcopy;
+    return retval;
 }
 
 
-static void
-coordsAtPercent(const Quad * const quad,
-                double       const u,
-                double       const v,
-                int *        const x,
-                int *        const y) {
+
+static Point
+coordsAtPercent(Quad   const quad,
+                double const u,
+                double const v) {
 /*----------------------------------------------------------------------------
   Return the (x, y) coordinates that lie at (u%, v%) from the upper left to
   the lower right of a given quadrilateral.
 -----------------------------------------------------------------------------*/
-
-    *x = (int) nearbyint((1.0 - u)*(1.0 - v)*quad->ul.x +
-                         u*(1.0 - v)*quad->ur.x +
-                         u*v*quad->lr.x +
-                         (1.0 - u)*v*quad->ll.x);
-    *y = (int) nearbyint((1.0 - u)*(1.0 - v)*quad->ul.y +
-                         u*(1.0 - v)*quad->ur.y +
-                         u*v*quad->lr.y +
-                         (1.0 - u)*v*quad->ll.y);
+    return pointXy(
+        (int) nearbyint((1.0 - u) * (1.0 - v) * quad.ul.x +   /* x */
+                        u * (1.0 - v) * quad.ur.x +
+                        u * v * quad.lr.x +
+                        (1.0 - u) * v * quad.ll.x),
+        (int) nearbyint((1.0 - u) * (1.0 - v) * quad.ul.y +   /* y */
+                        u * (1.0 - v) * quad.ur.y +
+                        u * v * quad.lr.y +
+                        (1.0 - u) * v * quad.ll.y)
+        );
 }
 
 
 
-static void
-computeBoundingBox(const Quad * const q,
-                   Quad *       const bbox) {
+static Quad
+boundingBoxOfQuadrilateral(Quad const q) {
 /*----------------------------------------------------------------------------
-  Compute the bounding box of a given quadrilateral.
+  The bounding box of quadrilateral 'q'.
 -----------------------------------------------------------------------------*/
+    Quad retval;
 
-    bbox->ul.x = bbox->ll.x = MIN4(q->ul.x, q->ur.x, q->lr.x, q->ll.x);
-    bbox->ul.y = bbox->ur.y = MIN4(q->ul.y, q->ur.y, q->lr.y, q->ll.y);
-    bbox->ur.x = bbox->lr.x = MAX4(q->ul.x, q->ur.x, q->lr.x, q->ll.x);
-    bbox->ll.y = bbox->lr.y = MAX4(q->ul.y, q->ur.y, q->lr.y, q->ll.y);
+    int const leftLimit = MIN4(q.ul.x, q.ur.x, q.lr.x, q.ll.x);
+    int const rghtLimit = MAX4(q.ul.x, q.ur.x, q.lr.x, q.ll.x);
+    int const topLimit  = MIN4(q.ul.y, q.ur.y, q.lr.y, q.ll.y);
+    int const botLimit  = MAX4(q.ul.y, q.ur.y, q.lr.y, q.ll.y);
+
+    retval.ul = pointXy(leftLimit, topLimit);
+    retval.ur = pointXy(rghtLimit, topLimit);
+    retval.ll = pointXy(leftLimit, botLimit);
+    retval.lr = pointXy(rghtLimit, botLimit);
+
+    return retval;
 }
 
 
@@ -529,8 +617,8 @@ computeBoundingBox(const Quad * const q,
 static void
 mapQuadrilaterals(const struct pam * const inPamP,
                   const struct pam * const outPamP,
-                  const Quad *       const qfrom,
-                  const Quad *       const qto,
+                  Quad               const qfrom,
+                  Quad               const qto,
                   tuple **           const inImg,
                   tuple **           const outImg,
                   int                const xofs,
@@ -540,109 +628,120 @@ mapQuadrilaterals(const struct pam * const inPamP,
   target image.  This is the function that implemens pamhomography's
   primary functionality.
 -----------------------------------------------------------------------------*/
-
     sample ** channel;
         /* Aggregated values for a single channel */
     unsigned long ** tally;
         /* Number of values at each coordinate in the above */
     double ustep, vstep;
         /* Steps to use when iterating from 0.0 to 1.0 */
-    double u, v;
-    unsigned int plane, row, col;
+    unsigned int plane;
 
     MALLOCARRAY2_NOFAIL(channel, outPamP->height, outPamP->width);
-    MALLOCARRAY2_NOFAIL(tally, outPamP->height, outPamP->width);
+    MALLOCARRAY2_NOFAIL(tally,   outPamP->height, outPamP->width);
 
     computeSteps(qfrom, qto, &ustep, &vstep);
 
     for (plane = 0; plane < outPamP->depth; ++plane) {
         /* Reset the channel colors and tally for each plane, */
-        for (row = 0; row < outPamP->height; ++row)
+        unsigned int row;
+        double v;
+        for (row = 0; row < outPamP->height; ++row) {
+            unsigned int col;
             for (col = 0; col < outPamP->width; ++col) {
                 channel[row][col] = 0;
-                tally[row][col] = 0;
+                tally  [row][col] = 0;
             }
-
+        }
         /* Iterate from 0% to 100% in the y dimension. */
         for (v = 0.0; v <= 1.0; v += vstep) {
             /* Iterate from 0% to 100% in the x dimension. */
+            double u;
             for (u = 0.0; u <= 1.0; u += ustep) {
-                int x0, y0;  /* "From" coordinate */
-                int x1, y1;  /* "To" coordinate */
+                Point from;  /* "From" coordinate */
+                Point to;    /* "To" coordinate */
 
-                /* Map (u%, v%) of one quadrilateral to (u%, v%) of the
-                   other quadrilateral. */
-                coordsAtPercent(qfrom, u, v, &x0, &y0);
-                coordsAtPercent(qto, u, v, &x1, &y1);
+                /* Map (u%, v%) of one quadrilateral to (u%, v%) of the other
+                   quadrilateral.
+                */
+                from = coordsAtPercent(qfrom, u, v);
+                to   = coordsAtPercent(qto,   u, v);
 
-                /* Copy the source image's (x0, y0) to the destination
-                   image's (x1, y1) in the current plane. */
-                x1 += xofs;
-                y1 += yofs;
-                if (x0 >= 0 && y0 >= 0 &&
-                    x0 < inPamP->width && y0 < inPamP->height &&
-                    x1 >= 0 && y1 >= 0 &&
-                    x1 < outPamP->width && y1 < outPamP->height) {
-                    channel[y1][x1] += inImg[y0][x0][plane];
-                    tally[y1][x1]++;
+                /* Copy the source image's 'from' pixel as the destination
+                   image's 'to' pixel in the current plane.
+                */
+                to.x += xofs;
+                to.y += yofs;
+                if (from.x >= 0 && from.y >= 0 &&
+                    from.x < inPamP->width && from.y < inPamP->height &&
+                    to.x >= 0 && to.y >= 0 &&
+                    to.x < outPamP->width && to.y < outPamP->height) {
+
+                    channel[to.y][to.x] += inImg[from.y][from.x][plane];
+                    ++tally[to.y][to.x];
                 }
             }
         }
 
         /* Assign the current plane in the output image the average color
            at each point. */
-        for (row = 0; row < outPamP->height; ++row)
-            for (col = 0; col < outPamP->width; ++col)
+        for (row = 0; row < outPamP->height; ++row) {
+            unsigned int col;
+            for (col = 0; col < outPamP->width; ++col) {
                 if (tally[row][col] != 0)
                     outImg[row][col][plane] =
                         (channel[row][col] + tally[row][col]/2) /
                         tally[row][col];
+            }
+        }
     }
 
     pm_freearray2((void ** const)tally);
     pm_freearray2((void ** const)channel);
-    free((void *)qto);
-    free((void *)qfrom);
 }
 
 
 
 static void
-processFile(FILE *                     const ifP,
-            const struct CmdlineInfo * const cmdlineP) {
+processFile(FILE *       const ifP,
+            QuadMap      const qmap,
+            QuadSpec     const view,
+            const char * const fillColorSpec,
+            bool         const verbose) {
 /*----------------------------------------------------------------------------
   Read the input image, create the output image, and map a quadrilateral in
   the former to a quadrilateral in the latter.
 -----------------------------------------------------------------------------*/
-
     struct pam inPam;    /* PAM metadata for the input file */
     struct pam outPam;   /* PAM metadata for the output file */
     tuple ** inImg;      /* Input image */
     tuple ** outImg;     /* Output image */
-    Quad *qfrom, *qto;   /* Source and target quadrilaterals */
+    Quad qfrom, qto;     /* Source and target quadrilaterals */
     Quad bbox;           /* Bounding box around the transformed input image */
 
     inImg = pnm_readpam(ifP, &inPam, PAM_STRUCT_SIZE(tuple_type));
 
     /* Extract quadrilaterals and populate them with the image bounds
        if necessary. */
-    qfrom = prepareQuadrilateral(&inPam, &cmdlineP->qmap.from);
-    qto = prepareQuadrilateral(&inPam, &cmdlineP->qmap.to);
+    qfrom = quadrilateralFmSpec(&inPam, qmap.from);
+    qto   = quadrilateralFmSpec(&inPam, qmap.to);
+
+    if (verbose)
+        reportQuads(qfrom, qto);
 
     /* Allocate storage for the target image. */
-    if (cmdlineP->bbox.ul.x == 0 && cmdlineP->bbox.ul.y == 0 &&
-        cmdlineP->bbox.lr.x == 0 && cmdlineP->bbox.lr.y == 0)
-        /* User did not specify a target bounding box.  Compute optimal
-           dimensions. */
-        computeBoundingBox(qto, &bbox);
+    if (view.wholeImage)
+        bbox = boundingBoxOfQuadrilateral(qto);
     else
-        /* User specified a target bounding box.  Use it. */
-        bbox = cmdlineP->bbox;
-    outPam = inPam;
-    outPam.file = stdout;
-    outPam.width = bbox.lr.x - bbox.ul.x + 1;
+        bbox = view.explicit;
+
+    if (verbose)
+        reportBbox(bbox);
+
+    outPam = inPam;  /* initial value */
+    outPam.file   = stdout;
+    outPam.width  = bbox.lr.x - bbox.ul.x + 1;
     outPam.height = bbox.lr.y - bbox.ul.y + 1;
-    outImg = initOutputImage(&outPam, cmdlineP);
+    outImg        = initOutputImage(&outPam, fillColorSpec);
 
     mapQuadrilaterals(&inPam, &outPam,
                       qfrom, qto,
@@ -662,16 +761,39 @@ main(int argc, const char *argv[]) {
 
     struct CmdlineInfo cmdline;      /* Parsed command line */
     FILE * ifP;
+    QuadMap qmap;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
+    if (cmdline.mapfile) {
+        /* Use the from and/or to values from the map file where the user
+           didn't explicitly state them
+        */
+        QuadMap mapFileValue;
+
+        readMapFile(cmdline.mapfile, &mapFileValue);
+
+        if (cmdline.qmap.from.wholeImage)
+            qmap.from = mapFileValue.from;
+        else
+            qmap.from = cmdline.qmap.from;
+
+        if (cmdline.qmap.to.wholeImage)
+            qmap.to = mapFileValue.to;
+        else
+            qmap.to = cmdline.qmap.to;
+    } else
+        qmap = cmdline.qmap;
+
     ifP = pm_openr(cmdline.inputFilespec);
 
-    processFile(ifP, &cmdline);
+    processFile(ifP, qmap, cmdline.view, cmdline.fill, !!cmdline.verbose);
 
     pm_close(ifP);
 
     return 0;
 }
+
+

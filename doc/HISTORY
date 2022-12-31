@@ -4,22 +4,24 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-22.12.24 BJH  Release 11.00.03
+22.12.31 BJH  Release 11.01.00
+
+              pamcat: Add -listfile .
+
+              pamtojpeg2k: add -size option.  Doesn't precisely work (and
+              -compression has never worked precisely either); should be
+              fixed some day.
 
               ppmtompeg: Fix crash with resize option because of invalid
               memory free.
 
-22.11.14 BJH  Release 11.00.02
+              fitstopnm: fix invalid memory reference (nonterminated ASCIIZ
+              string).
 
               packaging: Fix library minor number to 100 + Netpbm minor number
               so it is higher than previous ones in library major 100.
               I.e. libnetpbm.so.100.101 instead of libnetpbm.so.100.1.
               Introduced in Netpbm 11.00.00.
-
-22.10.14 BJH  Release 11.00.01
-
-              fitstopnm: fix invalid memory reference (nonterminated ASCIIZ
-              string).
 
 22.09.28 BJH  Release 11.00.00
 
@@ -147,7 +149,7 @@ CHANGE HISTORY
 
 21.12.27 BJH  Release 10.97.00
 
-              Add pbnnoise.
+              Add pbmnoise.
 
               pnmpad: Use -halign with -mwidth and default to centering the
               image instead of left-justifying when no other padding is being

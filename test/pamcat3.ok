@@ -1,0 +1,19 @@
+Test 1.   Should print 585134073 133221 four times
+585134073 133221
+585134073 133221
+585134073 133221
+585134073 133221
+Test 2.   Should print 1331083756 152559 three times
+1331083756 152559
+1331083756 152559
+1331083756 152559
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1

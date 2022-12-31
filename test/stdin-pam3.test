@@ -72,4 +72,4 @@ for fmt in \
   echo ${testprog2}": "${status4} ${status5} ${status6} $?
   done
 
-rm ${test_pgm}
+rm ${test_pgm} ${out1} ${out2} ${out3} ${out4}
