@@ -144,7 +144,7 @@ tempdir=$(mktemp -d "${TMPDIR:-/tmp}/pcdovtoppm.XXXXXXXX") ||
     { echo "Could not create temporary file. Exiting." 1>&2; exit 1; }
 trap 'rm -rf $tempdir' 0
 
-tmpfile=$(tempfile -p pi -m 600)
+tmpfile=$(mktemp --tmpdir piXXXXXX)
 
 # Convert the PCD overview file to many PPM images
 if [ -f $1 ] ; then

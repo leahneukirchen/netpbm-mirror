@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.02.00
 
+              pcdovtoppm: remove dependency on obsolete 'tempfile' program.
+
 22.12.31 BJH  Release 11.01.00
 
               pamcat: Add -listfile .
