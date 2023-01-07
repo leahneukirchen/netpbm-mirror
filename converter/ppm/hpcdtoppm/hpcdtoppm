@@ -10,7 +10,7 @@ are reading.
 
 You can get a copy of Hpcdtoppm from 
 
-  http://metalab.unc.edu/pub/Linux/apps/graphics/convert/hpcdtoppm.linux.tar.gz
+  http://ibiblio.org/pub/Linux/apps/graphics/convert/hpcdtoppm-netpbm.tgz
 
 and replace this stand-in program with the real one.
 
