@@ -8,6 +8,9 @@ not yet  BJH  Release 11.02.00
 
               pcdovtoppm: remove dependency on obsolete 'tempfile' program.
 
+              build: change the way you add the separately distributed
+              'hpcdtoppm' code to the build.
+
 22.12.31 BJH  Release 11.01.00
 
               pamcat: Add -listfile .

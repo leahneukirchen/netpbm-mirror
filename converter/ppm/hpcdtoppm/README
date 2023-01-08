@@ -1,20 +1,25 @@
-This 'hpcdtoppm' directory is really just a placeholder for the real
-Hpcdtoppm source code.  
+The 'hpcdtoppm' code in this directory is just a dummy version of the program
+that tells you where to get the real code.
 
-The real Hpcdtoppm source code cannot be distributed on Sourceforge
-because a copyright holder does not license it in a way open enough to
-meet Sourceforge's requirements.
+The real "hpcdtoppm' source code cannot be distributed on Sourceforge because
+a copyright holder does not license it in a way open enough to meet
+Sourceforge's requirements.
 
-Therefore, the Netpbm maintainer distributes Hpcdtoppm via another channel
-and distributes this dummy directory in the main Netpbm source tree on 
-Sourceforge.  When you run the program named 'hpcdtoppm' in this directory,
-it tells you how to get the real Hpcdtoppm.
+Therefore, the Netpbm maintainer distributes 'hpcdtoppm' via another channel
+and distributes this dummy directory in the main Netpbm source tree on
+Sourceforge.
 
-When you get the real Hpcdtoppm tarball, just unpack it and replace
-this entire 'hpcdtoppm' directory with its contents.  Then build
-Netpbm normally.
+The code is at 
 
-Bear in mind when you get the real Hpcdtoppm, that it is not as openly
-licensed as what's in the rest of the Netpbm source tree.  As you'll
-see in the license that comes with Hpcdtoppm, you may _not_ sell it to
-someone else.)
+  http://ibiblio.org/pub/Linux/apps/graphics/convert/hpcdtoppm-netpbm.tgz
+
+When you get the real 'hpcdtoppm' tarball, just unpack its contents into the
+'hpcdtoppm-import' subdirectory.  Then build Netpbm normally.  The build
+detects the presence of the code and builds and packages the real 'hpcdtoppm'
+program instead of the dummy one.
+
+Bear in mind when you get the real 'hpcdtoppm' that it is not as openly
+licensed as what's in the rest of the Netpbm source tree.  As you'll see in
+the license that comes with 'hpcdtoppm', you may _not_ sell it to someone
+else.)
+
