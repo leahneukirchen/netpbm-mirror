@@ -27,6 +27,7 @@
 
 #define _XOPEN_SOURCE 500
   /* Make sure popen() is in stdio.h, strdup() is in string.h */
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +41,8 @@
 #include "shhopt.h"
 #include "pm_system.h"
 #include "pbm.h"
+
+enum InputFmt {INPUT_LITERAL, INPUT_ASCIIHEX, INPUT_ASCII85};
 
 static void
 validateFontName(const char * const name) {
@@ -74,8 +77,8 @@ validateFontName(const char * const name) {
 
 
 static void
-asciiHexEncode(char *          const inbuff,
-               char *          const outbuff) {
+asciiHexEncode(const char * const inbuff,
+               char *       const outbuff) {
 /*-----------------------------------------------------------------------------
   Convert the input text string to ASCII-Hex encoding.
 
@@ -86,14 +89,290 @@ asciiHexEncode(char *          const inbuff,
 
     unsigned int idx;
 
+    outbuff[0] = '<';
+
     for (idx = 0; inbuff[idx] != '\0'; ++idx) {
         unsigned int const item = (unsigned char) inbuff[idx];
 
-        outbuff[idx*2]   = hexits[item >> 4];
-        outbuff[idx*2+1] = hexits[item & 0xF];
+        outbuff[1 + idx * 2 + 0] = hexits[item >> 4];
+        outbuff[1 + idx * 2 + 1] = hexits[item & 0xF];
     }
 
-    outbuff[idx * 2] = '\0';
+    if (idx == 0)
+        pm_message("Empty input string");
+
+    outbuff[1 + idx * 2] = '>';
+    outbuff[1 + idx * 2 + 1] = '\0';
+}
+
+
+
+static void
+failForInvalidChar(char         const c,
+                   const char * const type) {
+
+    if (c >= 0x32 || c < 0x7F)
+        pm_error("Invalid character '%c' in '%s' input string",   c, type);
+    else
+        pm_error("Invalid character 0x%02x in '%s' input string", c, type);
+}
+
+
+
+static void
+formatNonemptyAsciiHex(const char * const inbuff,
+                       char       * const outbuff,
+                       unsigned int const inLen) {
+
+    unsigned int inIdx, outIdx;
+        /* Cursors in input and output buffers, respectively */
+    unsigned int validCharCt;
+        /* Number of valid hex characters we've processed so far in input */
+    unsigned int startIdx, endIdx;
+        /* Limits of input buffer cursor ('inIdx') */
+
+     if (inbuff[0] == '<') {
+         startIdx = 1;
+         endIdx = inLen - 2;
+     } else {
+         startIdx = 0;
+         endIdx = inLen - 1;
+     }
+
+     validCharCt = 0;  /* No valid characters seen yet */
+
+     outIdx = 0;  /* Start at beginning of output buffer */
+
+     outbuff[outIdx++] = '<';
+
+     for (inIdx = startIdx; inIdx <= endIdx; ++inIdx) {
+         switch (inbuff[inIdx]) {
+         case '<':
+         case '>':
+             pm_error("Misplaced character '%c' in Ascii Hex input string",
+                      inbuff[inIdx]);
+           break;
+         case '\f':
+         case '\n':
+         case '\r':
+         case ' ':
+         case '\t':
+             /* ignore whitespace chars */
+             break;
+         default:
+             if ((inbuff [inIdx] >='0' && inbuff [inIdx] <='9') ||
+                 (inbuff [inIdx] >='A' && inbuff [inIdx] <='F') ||
+                 (inbuff [inIdx] >='a' && inbuff [inIdx] <='f')) {
+
+                 outbuff[outIdx++] = inbuff [inIdx];
+                 ++validCharCt;
+             } else
+                 failForInvalidChar(inbuff[inIdx], "Ascii Hex");
+             break;
+         }
+     }
+
+     if (validCharCt == 0)
+         pm_message("Empty Ascii Hex input string");
+     else if (validCharCt % 2 != 0)
+         pm_error("Number of characters in Ascii Hex input string "
+                  "is not even");
+
+     outbuff[outIdx++] = '>';
+     outbuff[outIdx++] = '\0';
+}
+
+
+
+static void
+formatAsciiHexString(const char * const inbuff,
+                     char       * const outbuff,
+                     unsigned int const inLen) {
+/*----------------------------------------------------------------------------
+  Format the ASCII Hex input 'inbuff' as a Postscript ASCII Hex string,
+  e.g. "<313233>".  Input can be just the ASCII Hex (e.g. "313233") or already
+  formatted (e.g. "<313233>").  Input may also contain white space, which we
+  ignore -- our output never contains white space.  Though in Postscript, an
+  ASCII NUL character counts as white space, we consider it the end of the
+  input.
+
+  We consider white space outside of the <> delimiters to be an error.
+
+  Abort with error message if there is anything other than valid hex digits in
+  the ASCII hex string proper.  This is necessary to prevent code injection.
+----------------------------------------------------------------------------*/
+    if (inLen == 0 ||
+        (inLen == 2 && inbuff[0] == '<' && inbuff[inLen-1] == '>' )) {
+        pm_message("Empty Ascii Hex input string");
+        strncpy(outbuff, "<>", 3);
+    } else {
+        if (inbuff[0] == '<' && inbuff[inLen-1] != '>' )
+            pm_error("Ascii Hex input string starts with '<' "
+                     "but does not end with '>'");
+        else if (inbuff[0] != '<' && inbuff[inLen-1] == '>' )
+            pm_error("Ascii Hex input string ends with '>' "
+                     "but does not start with '<'");
+
+        formatNonemptyAsciiHex(inbuff, outbuff, inLen);
+    }
+}
+
+
+
+static void
+formatNonemptyAscii85(const char * const inbuff,
+                      char       * const outbuff,
+                      unsigned int const inLen) {
+
+    unsigned int inIdx, outIdx;
+        /* Cursors in input and output buffers, respectively */
+    unsigned int seqPos;
+        /* Position in 5-character Ascii-85 sequence where 'inIdx' points */
+    unsigned int startIdx, endIdx;
+        /* Limits of input buffer cursor ('inIdx') */
+
+    if (inLen > 4 && inbuff[0] == '<' && inbuff[1] == '~' &&
+        inbuff[inLen-2] == '~' && inbuff[inLen-1] == '>') {
+        startIdx = 2;
+        endIdx = inLen - 3;
+    } else {
+        startIdx = 0;
+        endIdx = inLen - 1;
+    }
+
+    seqPos = 0;  /* No 5-character Ascii-85 sequence encountered yet */
+    outIdx = 0;  /* Start filling output buffer from beginning */
+
+    outbuff[outIdx++] = '<';
+    outbuff[outIdx++] = '~';
+
+    for (inIdx = startIdx; inIdx <= endIdx; ++inIdx) {
+      switch (inbuff[inIdx]) {
+        case '<':
+      case '~':
+      case '>':
+          pm_error("Misplaced character '%c' in Ascii 85 input string",
+                   inbuff[inIdx]);
+          break;
+      case '\f':
+      case '\n':
+      case '\r':
+      case ' ':
+      case '\t':
+          break;
+      case 'z':
+          /* z extension */
+          if (seqPos > 0)
+              pm_error("Special 'z' character appears in the middle of a "
+                       "5-character Ascii-85 sequence, which is invalid");
+          else
+              outbuff[outIdx++] = inbuff[inIdx];
+          break;
+        default:
+          /* valid Ascii 85 char */
+          if (inbuff [inIdx] >='!' && inbuff [inIdx] <='u') {
+              outbuff[outIdx++] = inbuff[inIdx];
+              seqPos = (seqPos + 1) % 5;
+          } else
+              failForInvalidChar(inbuff[inIdx], "Ascii 85");
+          break;
+      }
+    }
+
+    if (outIdx == 2) {
+        pm_message("Empty Ascii 85 input string");
+    }
+
+    outbuff[outIdx++]   = '~';
+    outbuff[outIdx++] = '>';
+    outbuff[outIdx++] = '\0';
+}
+
+
+
+static void
+formatAscii85String(const char * const inbuff,
+                    char       * const outbuff,
+                    unsigned int const inLen) {
+/*----------------------------------------------------------------------------
+  Format the Ascii-85 input 'inbuff' as a Postscript Ascii-85 string,
+  e.g. "<~313233~>".  Input can be just the Ascii-85 (e.g. "313233") or
+  already formatted (e.g. "<~313233~>").  Input may also contain white space,
+  which we ignore -- our output never contains white space.  Though in
+  Postscript, an ASCII NUL character counts as white space, we consider it the
+  end of the input.
+
+  We consider white space outside of the <~~> delimiters to be an error.
+
+  Abort with error message if we encounter anything other than valid Ascii-85
+  encoding characters in the string proper.  Note that the Adobe variant
+  does not support the "y" extention.
+----------------------------------------------------------------------------*/
+    if (inLen == 0 || (inLen == 4 && strncmp (inbuff, "<~~>", 4) == 0)) {
+        pm_message("Empty Ascii 85 input string");
+        strncpy(outbuff,"<~~>", 5);
+    } else {
+        if (inLen >= 2) {
+            if (inbuff[0] == '<' && inbuff[1] == '~' &&
+                (inLen < 4 || inbuff[inLen-2] != '~'
+                 || inbuff[inLen-1] != '>' ))
+                pm_error("Ascii 85 input string starts with '<~' "
+                         "but does not end with '~>'");
+            else if (inbuff[inLen-2] == '~' && inbuff[inLen-1] == '>' &&
+                     (inLen < 4 || inbuff[0] != '<' || inbuff[1] != '~'))
+                pm_error("Ascii 85 input string ends with '~>' "
+                         "but does not start with '<~'");
+        }
+        formatNonemptyAscii85(inbuff, outbuff, inLen);
+    }
+}
+
+
+
+static void
+combineArgs(int            const argc,
+            const char **  const argv,
+            const char **  const textP,
+            unsigned int * const textSizeP) {
+
+    unsigned int totalTextSize;
+    char * text;
+    size_t * argSize;
+    unsigned int i;
+    size_t idx;
+
+    MALLOCARRAY_NOFAIL(argSize, argc);
+        /* argv[0] not accessed; argSize[0] not used */
+
+    for (i = 1, totalTextSize = 0; i < argc; ++i) {
+        argSize[i] = strlen(argv[i]);
+        totalTextSize += argSize[i];
+    }
+
+    totalTextSize = totalTextSize + (argc - 2);  /* adjust for spaces */
+
+    MALLOCARRAY(text, totalTextSize + 1); /* add one for \0 at end */
+    if (text == NULL)
+        pm_error("out of memory allocating buffer for "
+                 "%u characters of text", totalTextSize);
+
+    strncpy(text, argv[1], argSize[1]);
+    for (i = 2, idx = argSize[1]; i < argc; ++i) {
+        text[idx++] = ' ';
+        strncpy(&text[idx], argv[i], argSize[i]);
+        idx += argSize[i];
+    }
+
+    assert(idx == totalTextSize);
+
+    text[idx++] = '\0';
+
+    assert(strlen(text) == totalTextSize);
+
+    *textP     = text;
+    *textSizeP = totalTextSize;
+
+    free(argSize);
 }
 
 
@@ -101,54 +380,64 @@ asciiHexEncode(char *          const inbuff,
 static void
 buildTextFromArgs(int           const argc,
                   const char ** const argv,
-                  const char ** const asciiHexTextP) {
+                  const char ** const inputTextP,
+                  enum InputFmt const inputFmt) {
 /*----------------------------------------------------------------------------
-   Build the array of text to be included in the Postscript program to
-   be rendered, from the arguments of this program.
+   Build the string of text to be included in the Postscript program to be
+   rendered, from the arguments of this program.
 
-   We encode it in ASCII-Hex notation as opposed to using the plain text from
-   the command line because 1) the command line might have Postscript control
-   characters in it; and 2) the command line might have text in 8-bit or
-   multibyte code, but a Postscript program is supposed to be entirely
-   printable ASCII characters.
+   We encode it in either ASCII-Hex or ASCII-85 as opposed to using the plain
+   text from the command line because 1) the command line might have
+   Postscript control characters in it; and 2) the command line might have
+   text in 8-bit or multibyte code, but a Postscript program is supposed to be
+   entirely printable ASCII characters.
 -----------------------------------------------------------------------------*/
-    char * text;
-    unsigned int totalTextSize;
-    unsigned int i;
-
-    text = strdup("");
-    totalTextSize = 1;
+    const char * text;
+        /* All the arguments ('argv') concatenated */
+    unsigned int textSize;
+        /* Length of 'text' */
 
     if (argc-1 < 1)
         pm_error("No text");
 
-    for (i = 1; i < argc; ++i) {
-        if (i > 1) {
-            totalTextSize += 1;
-            text = realloc(text, totalTextSize);
-            if (text == NULL)
-                pm_error("out of memory");
-            strcat(text, " ");
-        }
-        totalTextSize += strlen(argv[i]);
-        text = realloc(text, totalTextSize);
-        if (text == NULL)
-            pm_error("out of memory");
-        strcat(text, argv[i]);
-    }
+    combineArgs(argc, argv, &text, &textSize);
 
-    {
+    switch (inputFmt) {
+    case INPUT_LITERAL: {
         char * asciiHexText;
 
-        MALLOCARRAY(asciiHexText, totalTextSize * 2);
-
+        MALLOCARRAY(asciiHexText, textSize * 2 + 3);
         if (!asciiHexText)
             pm_error("Unable to allocate memory for hex encoding of %u "
-                     "characters of text", totalTextSize);
+                     "characters of text", textSize);
 
         asciiHexEncode(text, asciiHexText);
-        *asciiHexTextP = asciiHexText;
+        *inputTextP = asciiHexText;
+    } break;
+    case INPUT_ASCIIHEX: {
+        char * asciiHexText;
+
+        MALLOCARRAY(asciiHexText, textSize + 3);
+        if (!asciiHexText)
+            pm_error("Unable to allocate memory for hex encoding of %u "
+                     "characters of text", textSize);
+
+        formatAsciiHexString(text, asciiHexText, textSize);
+        *inputTextP = asciiHexText;
+    } break;
+    case INPUT_ASCII85: {
+        char * ascii85Text;
+
+        MALLOCARRAY(ascii85Text, textSize + 5);
+        if (!ascii85Text)
+            pm_error("Unable to allocate memory for hex encoding of %u "
+                     "characters of text", textSize);
+
+        formatAscii85String(text, ascii85Text, textSize);
+        *inputTextP = ascii85Text;
+    } break;
     }
+
     pm_strfree(text);
 }
 
@@ -158,20 +447,23 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    unsigned int res;
-    float        fontsize;
-    const char * font;
-    float        stroke;
-    float        ascent;
-    float        descent;
-    float        leftmargin;
-    float        rightmargin;
-    float        topmargin;
-    float        bottommargin;
-    unsigned int pad;
-    unsigned int verbose;
-    unsigned int dump;
-    const char * text;
+    unsigned int  res;
+    float         fontsize;
+    const char *  font;
+    float         stroke;
+    float         ascent;
+    float         descent;
+    float         leftmargin;
+    float         rightmargin;
+    float         topmargin;
+    float         bottommargin;
+    unsigned int  pad;
+    unsigned int  verbose;
+    unsigned int  dump;
+    const char *  text;
+        /* Text to render, in Postscript format, either Ascii-hex
+           (e.g. <313233>) or Ascii-85 (e.g. <~aBc-~>)
+        */
 };
 
 
@@ -192,6 +484,7 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int cropSpec, ascentSpec, descentSpec;
     unsigned int leftmarginSpec, rightmarginSpec;
     unsigned int topmarginSpec, bottommarginSpec;
+    unsigned int asciihexSpec, ascii85Spec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -220,6 +513,10 @@ parseCommandLine(int argc, const char ** argv,
             NULL,                    &cropSpec,                 0);
     OPTENT3(0, "pad",           OPT_FLAG,
             NULL,                    &cmdlineP->pad,            0);
+    OPTENT3(0, "asciihex",      OPT_FLAG,
+            NULL,                    &asciihexSpec,             0);
+    OPTENT3(0, "ascii85",       OPT_FLAG,
+            NULL,                    &ascii85Spec,              0);
     OPTENT3(0, "verbose",       OPT_FLAG,
             NULL,                    &cmdlineP->verbose,        0);
     OPTENT3(0, "dump-ps",       OPT_FLAG,
@@ -236,8 +533,6 @@ parseCommandLine(int argc, const char ** argv,
     cmdlineP->leftmargin  = 0;
     cmdlineP->topmargin   = 0;
     cmdlineP->bottommargin = 0;
-    cropSpec       = FALSE;
-    cmdlineP->pad  = FALSE;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -264,7 +559,7 @@ parseCommandLine(int argc, const char ** argv,
     if (cmdlineP->bottommargin <0)
         pm_error("-bottommargin must not be negative");
 
-    if (cropSpec == TRUE) {
+    if (cropSpec) {
         if (ascentSpec || descentSpec ||
             leftmarginSpec || rightmarginSpec ||
             topmarginSpec || bottommarginSpec ||
@@ -280,8 +575,24 @@ parseCommandLine(int argc, const char ** argv,
              cmdlineP->leftmargin = cmdlineP->fontsize / 2;
     }
 
-    buildTextFromArgs(argc, argv, &cmdlineP->text);
+    {
+        enum InputFmt inputFmt;
 
+        if (asciihexSpec) {
+            if (ascii85Spec)
+                pm_error("You cannot specify both -asciihex and -ascii85");
+            else
+                inputFmt = INPUT_ASCIIHEX;
+        } else if (ascii85Spec)
+            inputFmt = INPUT_ASCII85;
+        else
+            inputFmt = INPUT_LITERAL;
+
+        if (argc-1 < 1)
+            pm_error("No text");
+
+        buildTextFromArgs(argc, argv, &cmdlineP->text, inputFmt);
+    }
     free(option_def);
 }
 
@@ -330,7 +641,7 @@ postscriptProgram(struct CmdlineInfo const cmdline) {
         "/FindFont {/%s findfont} def\n"
         "/fontsize %f def\n"
         "/pensize %f def\n"
-        "/textstring <%s> def\n"
+        "/textstring %s def\n"
         "/ascent %f def\n"
         "/descent %f def\n"
         "/leftmargin %f def\n"

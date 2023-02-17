@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.02.00
 
+              pbmtextps: Add -asciihex, -ascii85.
+
+              pbmtextps: Allow multiple arguments for text (concatenate them).
+
               pcdovtoppm: remove dependency on obsolete 'tempfile' program.
 
               build: change the way you add the separately distributed
