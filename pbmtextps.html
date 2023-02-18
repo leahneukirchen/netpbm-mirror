@@ -2,7 +2,7 @@
 <html><head><title>Pbmtextps User Manual</title></head>
 <body>
 <h1>pbmtextps</h1>
-Updated: 21 July 2022
+Updated: 17 February 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -24,9 +24,11 @@ pbmtextps - render text into a PBM image using a postscript interpreter
 [<b>-pad</b>]
 [<b>-crop</b>]
 [<b>-stroke</b> <i>n</i>]
+[<b>-asciihex</b>]
+[<b>-ascii85</b>]
 [<b>-verbose</b>]
 [<b>-dump-ps</b>]
-<i>text</i>
+<i>text</i> [<i>text</i> ...]
 
 <h2 id="description">DESCRIPTION</h2>
 
@@ -146,6 +148,67 @@ as if you specified <b>-leftmargin=</b><i>0.5*fontsize</i>.
 is as if you specified <b>-rightmargin=0</b>.
 
 
+<h2 id="input_text">Input Text</h2>
+
+<p>The simplest way to specify the text to render is just to specify it,
+  in ASCII, as the sole argument of the command.  For example,
+
+  <pre>
+    <kbd>
+  $ pbmtextps &quot;hello world&quot;
+    </kbd>
+  </pre>
+
+<p>But you can also spread it across multiple arguments.  <b>pbmtextps</b>
+  concatenates them right to left with a single space in between:
+  
+  <pre>
+    <kbd>
+  $ pbmtextps hello world
+    </kbd>
+  </pre>
+
+<p>With an <b>-asciihex</b> option, you can specify the text in
+Postscript&apos;s ASCII-HEX code:
+  
+  <pre>
+    <kbd>
+  $ pbmtextps -asciihex 68656c6c6f20776f726c64
+    </kbd>
+  </pre>
+
+<p>You can optionally include the ASCII-HEX text delimiters that would appear
+around the text in a Postscript program:
+
+  <pre>
+    <kbd>
+  $ pbmtextps -asciihex &quot;<68656c6c6f20776f726c64>&quot;
+    </kbd>
+  </pre>
+
+<p>Note that the <> delimiters have special meaning to command shells, so if
+you are invoking <b>pbmtextps</b> via a command shell, be sure to quote them,
+as is done in this example.
+  
+<p>With <b>-asciihex</b>, you can include white space anywhere in the coded
+text; it has no effect.  And you can spread the argument across multiple
+arguments as for plain ASCII input:
+
+  <pre>
+    <kbd>
+  $ pbmtextps -asciihex &quot;<&quot; &quot;68656c6c6f 20 776f726c64 &quot;>&quot;
+    </kbd>
+  </pre>
+
+<p>But note that while Postscript allows an ASCII NUL character as white
+  space, there is no way to pass an argument including a NUL character to
+  <b>pbmtextps</b>.
+  
+<p>With an <b>-ascii85</b> option, you can specify the text in
+Postscript&apos;s ASCII-85 code.  This is analogous to <b>-asciihex</b>.  The
+Postscript delimiters for an ASCII-85 text string are <~ ~>.
+
+  
 <h2 id="options">OPTIONS</h2>
 
 <p>In addition to the options common to all programs based on libnetpbm
@@ -233,6 +296,24 @@ See <a href="#margins">Margins</a> for details.
 
 <p>This option was new in Netpbm 10.75 (June 2016).
 
+<dt><b>-asciihex</b>
+<dd>
+This means the text in the arguments is in Postscript ASCII-HEX code.
+See <a href="input_text">Input Text</a>.
+
+<p>You cannot specify this together with <b>-ascii85</b>.
+
+<p>This option was new in Netpbm 11.02 (March 2023)l
+
+<dt><b>-ascii85</b>
+<dd>
+This means the text in the arguments is in Postscript ASCII-85 code.
+See <a href="input_text">Input Text</a>.
+
+<p>You cannot specify this together with <b>-asciihex</b>.
+
+<p>This option was new in Netpbm 11.02 (March 2023)l
+  
 <dt><b>-stroke=</b><i>n</i>
 <dd>
 This is the width of line, in points, to use for stroke font.  There is no
