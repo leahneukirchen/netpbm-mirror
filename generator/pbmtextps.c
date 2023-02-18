@@ -391,6 +391,11 @@ buildTextFromArgs(int           const argc,
    Postscript control characters in it; and 2) the command line might have
    text in 8-bit or multibyte code, but a Postscript program is supposed to be
    entirely printable ASCII characters.
+
+   Official Postscript specifications have a limit on the length of a program
+   line, which means there is a limit on the length of text string such as we
+   generate.  But we don't worry about that because Ghostscript actually
+   accepts very long program lines.
 -----------------------------------------------------------------------------*/
     const char * text;
         /* All the arguments ('argv') concatenated */
@@ -701,6 +706,13 @@ postscriptProgram(struct CmdlineInfo const cmdline) {
 
     const char * retval;
     const char * psVariable;
+
+    /* According to Adobe, maximum line length in a Postscript program is
+       255 characters excluding the newline.  The following may generated a
+       line longer than that if 'cmdline.text' or 'cmdline.font' is long.
+       However, Ghostscript accepts much longer lines, so we don't worry
+       about that.
+    */
 
     pm_asprintf(&psVariable, psTemplate, cmdline.font,
                 cmdline.fontsize, cmdline.stroke, cmdline.text,
