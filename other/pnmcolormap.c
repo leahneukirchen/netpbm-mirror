@@ -38,9 +38,16 @@ enum MethodForRep {REP_CENTER_BOX, REP_AVERAGE_COLORS, REP_AVERAGE_PIXELS};
 enum MethodForSplit {SPLIT_MAX_PIXELS, SPLIT_MAX_COLORS, SPLIT_MAX_SPREAD};
 
 struct Box {
-    unsigned int index;
+/*----------------------------------------------------------------------------
+   A box contains an extent of a color frequency table, i.e. the colors
+   with some consecutive index values in the color frequency table.
+-----------------------------------------------------------------------------*/
+    unsigned int startIndex;
+        /* First index in the extent */
     unsigned int colorCt;
+        /* Size of the extent (Number of colors in it) */
     unsigned int sum;
+        /* Number of pixels of all colors in the extent */
     unsigned int maxdim;
         /* which dimension has the largest spread.  RGB plane number. */
     sample       spread;
@@ -49,8 +56,13 @@ struct Box {
 
 struct BoxVector {
     struct Box * box;  /* malloc'ed array */
+        /* An array of boxes that contain consecutive extents of a color
+           frequency table.  The list covers the entire table.
+        */
     unsigned int boxCt;
+        /* Number of boxes in the above list */
     unsigned int capacity;
+        /* Number of boxes the list is capable of containing */
 };
 
 struct CmdlineInfo {
@@ -76,7 +88,7 @@ struct CmdlineInfo {
 
 static void
 parseCommandLine (int argc, const char ** argv,
-                  struct CmdlineInfo *cmdlineP) {
+                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -417,7 +429,7 @@ computeBoxSpread(const struct Box *    const boxP,
     MALLOCARRAY_NOFAIL(minval, depth);
     MALLOCARRAY_NOFAIL(maxval, depth);
 
-    findBoxBoundaries(colorFreqTable, depth, boxP->index, boxP->colorCt,
+    findBoxBoundaries(colorFreqTable, depth, boxP->startIndex, boxP->colorCt,
                       minval, maxval);
 
     switch (methodForLargest) {
@@ -466,9 +478,9 @@ newBoxVector(tupletable2           const colorFreqTable,
         pm_error("out of memory allocating box vector table");
 
     /* Set up the initial box. */
-    boxVector.box[0].index   = 0;
-    boxVector.box[0].colorCt = colorCt;
-    boxVector.box[0].sum     = sum;
+    boxVector.box[0].startIndex = 0;
+    boxVector.box[0].colorCt    = colorCt;
+    boxVector.box[0].sum        = sum;
 
     computeBoxSpread(&boxVector.box[0], colorFreqTable, depth,
                      methodForLargest,
@@ -621,19 +633,19 @@ colormapFromBv(unsigned int      const colorCt,
     for (boxIdx = 0; boxIdx < boxVector.boxCt; ++boxIdx) {
         switch (methodForRep) {
         case REP_CENTER_BOX:
-            centerBox(boxVector.box[boxIdx].index,
+            centerBox(boxVector.box[boxIdx].startIndex,
                       boxVector.box[boxIdx].colorCt,
                       colorFreqTable, depth,
                       colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_COLORS:
-            averageColors(boxVector.box[boxIdx].index,
+            averageColors(boxVector.box[boxIdx].startIndex,
                           boxVector.box[boxIdx].colorCt,
                           colorFreqTable, depth,
                           colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_PIXELS:
-            averagePixels(boxVector.box[boxIdx].index,
+            averagePixels(boxVector.box[boxIdx].startIndex,
                           boxVector.box[boxIdx].colorCt,
                           colorFreqTable, depth,
                           colormap.table[boxIdx]->tuple);
@@ -664,7 +676,7 @@ splitBox(struct BoxVector *    const boxVectorP,
 
    Assume the box contains at least two colors.
 -----------------------------------------------------------------------------*/
-    unsigned int const boxStart = boxVectorP->box[boxIdx].index;
+    unsigned int const boxStart = boxVectorP->box[boxIdx].startIndex;
     unsigned int const boxSize  = boxVectorP->box[boxIdx].colorCt;
     unsigned int const sum      = boxVectorP->box[boxIdx].sum;
 
@@ -710,9 +722,9 @@ splitBox(struct BoxVector *    const boxVectorP,
     {
         struct Box * const newBoxP = &boxVectorP->box[boxVectorP->boxCt];
 
-        newBoxP->index   = boxStart + medianIndex;
-        newBoxP->colorCt = boxSize - medianIndex;
-        newBoxP->sum     = sum - lowerSum;
+        newBoxP->startIndex = boxStart + medianIndex;
+        newBoxP->colorCt    = boxSize - medianIndex;
+        newBoxP->sum        = sum - lowerSum;
         computeBoxSpread(newBoxP, colorFreqTable, depth, methodForLargest,
                          &newBoxP->maxdim, &newBoxP->spread);
         ++boxVectorP->boxCt;
@@ -736,7 +748,7 @@ mediancut(tupletable2           const colorFreqTable,
    image whose pixels are summarized by the histogram
    'colorFreqTable'.  Each tuple in that table has depth 'depth'.
    colorFreqTable.table[i] tells the number of pixels in the subject image
-   have a particular color.
+   that have a particular color.
 
    As a side effect, sort 'colorFreqTable'.
 -----------------------------------------------------------------------------*/
