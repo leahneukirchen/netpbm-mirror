@@ -33,7 +33,25 @@ rm ${test_ppm}
 
 echo "Test 5.  Should print 482756572 101484 twice"
 mapfile=${tmpdir}/mapfile
-pnmcolormap 32 testimg.ppm > ${mapfile}
+
+# The following was produced by running "pnmcolormap -plain 32 testimg.ppm"
+# We use a prefabricated mapfile because pnmcolormap is known to
+# produce slightly different output on different systems.
+
+cat > ${mapfile} << EOF
+P3
+32 1
+255
+106 82 80 46 43 34 128 62 46 189 68 63 209 41 43 209 65 46 241 62 72
+ 240 189 195 
+122 142 103 92 131 68 159 129 188 177 205 195 96 132 107 193 150 107
+ 242 253 238 241 73 108 
+121 75 67 182 67 47 98 88 48 237 36 47 66 45 42 68 84 43 182 45 41
+ 70 77 67 
+96 45 45 237 62 47 150 59 41 189 76 103 48 69 31 52 68 52 48 45 51
+ 105 80 130 
+EOF
+
 ppmtoilbm -map ${mapfile} testimg.ppm | ilbmtoppm | tee ${test_ppm} | cksum
 ppmtoilbm -map ${mapfile} ${test_ppm} | ilbmtoppm | cksum
 
