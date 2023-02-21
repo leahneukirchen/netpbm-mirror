@@ -55,9 +55,13 @@ struct Box {
 };
 
 struct BoxVector {
+    tupletable2 colorFreqTable;
+        /* The colors and their frequencies (number of pixels in the image of
+           that color), ordered into consectuive boxes, as defined by 'box'.
+        */
     struct Box * box;  /* malloc'ed array */
-        /* An array of boxes that contain consecutive extents of a color
-           frequency table.  The list covers the entire table.
+        /* An array of boxes that contain consecutive extents of
+           'colorFreqTable'.  The list covers the entire table.
         */
     unsigned int boxCt;
         /* Number of boxes in the above list */
@@ -472,6 +476,8 @@ newBoxVector(tupletable2           const colorFreqTable,
 
     struct BoxVector boxVector;
 
+    boxVector.colorFreqTable = colorFreqTable;
+
     MALLOCARRAY(boxVector.box, capacity);
 
     if (!boxVector.box)
@@ -614,7 +620,6 @@ averagePixels(int          const boxStart,
 static tupletable2
 colormapFromBv(unsigned int      const colorCt,
                struct BoxVector  const boxVector,
-               tupletable2       const colorFreqTable,
                unsigned int      const depth,
                enum MethodForRep const methodForRep) {
     /*
@@ -635,19 +640,19 @@ colormapFromBv(unsigned int      const colorCt,
         case REP_CENTER_BOX:
             centerBox(boxVector.box[boxIdx].startIndex,
                       boxVector.box[boxIdx].colorCt,
-                      colorFreqTable, depth,
+                      boxVector.colorFreqTable, depth,
                       colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_COLORS:
             averageColors(boxVector.box[boxIdx].startIndex,
                           boxVector.box[boxIdx].colorCt,
-                          colorFreqTable, depth,
+                          boxVector.colorFreqTable, depth,
                           colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_PIXELS:
             averagePixels(boxVector.box[boxIdx].startIndex,
                           boxVector.box[boxIdx].colorCt,
-                          colorFreqTable, depth,
+                          boxVector.colorFreqTable, depth,
                           colormap.table[boxIdx]->tuple);
             break;
         default:
@@ -663,16 +668,14 @@ colormapFromBv(unsigned int      const colorCt,
 static void
 splitBox(struct BoxVector *    const boxVectorP,
          unsigned int          const boxIdx,
-         tupletable2           const colorFreqTable,
          unsigned int          const depth,
          enum MethodForLargest const methodForLargest,
          enum MethodForSplit   const methodForSplit) {
 /*----------------------------------------------------------------------------
-   Split Box 'boxIdx' in the box vector 'boxVector' (so that bv contains one
-   more box than it did as input).  Split it so that each new box represents
-   about half of the pixels in the distribution given by 'colorFreqTable' for
-   the colors in the original box, but with distinct colors in each of the two
-   new boxes.
+   Split Box 'boxIdx' in the box vector 'boxVector' (so that 'boxVector'
+   contains one more box than it did as input).  Split it so that each new box
+   represents about half of the pixels in the image for the colors in the
+   original box, but with distinct colors in each of the two new boxes.
 
    Assume the box contains at least two colors.
 -----------------------------------------------------------------------------*/
@@ -694,8 +697,8 @@ splitBox(struct BoxVector *    const boxVectorP,
        parameter to compareplane(), which is called by qsort().
     */
     compareplanePlane = boxVectorP->box[boxIdx].maxdim;
-    qsort((char*) &colorFreqTable.table[boxStart], boxSize,
-          sizeof(colorFreqTable.table[boxStart]),
+    qsort((char*) &boxVectorP->colorFreqTable.table[boxStart], boxSize,
+          sizeof(boxVectorP->colorFreqTable.table[boxStart]),
           compareplane);
 
     {
@@ -704,9 +707,10 @@ splitBox(struct BoxVector *    const boxVectorP,
         */
         unsigned int i;
 
-        lowerSum = colorFreqTable.table[boxStart]->value; /* initial value */
+        lowerSum = boxVectorP->colorFreqTable.table[boxStart]->value;
+            /* initial value */
         for (i = 1; i < boxSize - 1 && lowerSum < sum/2; ++i) {
-            lowerSum += colorFreqTable.table[boxStart + i]->value;
+            lowerSum += boxVectorP->colorFreqTable.table[boxStart + i]->value;
         }
         medianIndex = i;
     }
@@ -716,7 +720,8 @@ splitBox(struct BoxVector *    const boxVectorP,
 
         oldBoxP->colorCt = medianIndex;
         oldBoxP->sum     = lowerSum;
-        computeBoxSpread(oldBoxP, colorFreqTable, depth, methodForLargest,
+        computeBoxSpread(oldBoxP, boxVectorP->colorFreqTable,
+                         depth, methodForLargest,
                          &oldBoxP->maxdim, &oldBoxP->spread);
     }
     {
@@ -725,7 +730,8 @@ splitBox(struct BoxVector *    const boxVectorP,
         newBoxP->startIndex = boxStart + medianIndex;
         newBoxP->colorCt    = boxSize - medianIndex;
         newBoxP->sum        = sum - lowerSum;
-        computeBoxSpread(newBoxP, colorFreqTable, depth, methodForLargest,
+        computeBoxSpread(newBoxP, boxVectorP->colorFreqTable,
+                         depth, methodForLargest,
                          &newBoxP->maxdim, &newBoxP->spread);
         ++boxVectorP->boxCt;
     }
@@ -775,11 +781,10 @@ mediancut(tupletable2           const colorFreqTable,
         if (boxIdx >= boxVector.boxCt)
             multicolorBoxesExist = FALSE;
         else
-            splitBox(&boxVector, boxIdx, colorFreqTable, depth,
+            splitBox(&boxVector, boxIdx, depth,
                      methodForLargest, methodForSplit);
     }
-    *colormapP = colormapFromBv(newColorCt, boxVector, colorFreqTable,
-                                depth, methodForRep);
+    *colormapP = colormapFromBv(newColorCt, boxVector, depth, methodForRep);
 
     destroyBoxVector(boxVector);
 }
