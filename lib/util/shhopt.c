@@ -92,48 +92,57 @@ optStructCount(const optEntry opt[])
 
 
 
+enum Shortlong {SL_SHORT, SL_LONG};
+
+
 static int
-optMatch(optEntry     const opt[],
-         const char * const s,
-         int          const lng) {
+optMatch(optEntry       const opt[],
+         const char *   const targetOpt,
+         enum Shortlong const shortLong) {
 /*------------------------------------------------------------------------
  |  FUNCTION      Find a matching option.
  |
- |  INPUT         opt     array of possible options.
- |                s       string to match, without `-' or `--'.
- |                lng     match long option, otherwise short.
+ |  INPUT         opt        array of valid option names.
+ |                targetOpt  option string to match, without `-' or `--'.
+ |                           e.g. "verbose" or "height=5"
+ |                shortLong  whether to match short option or long
  |
  |  RETURNS       Index to the option if found, -1 if not found.
  |
  |  DESCRIPTION   Short options are matched from the first character in
  |                the given string.
+ |
+ |                Where multiple entries in opt[] match, return the first.
  */
 
     unsigned int const nopt = optStructCount(opt);
 
     unsigned int q;
     unsigned int matchlen;
-    const char * p;
 
     matchlen = 0;  /* initial value */
 
-    if (lng) {
-        if ((p = strchr(s, '=')) != NULL)
-            matchlen = p - s;
+    if (shortLong == SL_LONG) {
+        const char * const equalPos = strchr(targetOpt, '=');
+        if (equalPos)
+            matchlen = equalPos - &targetOpt[0];
         else
-            matchlen = strlen(s);
+            matchlen = strlen(targetOpt);
     }
     for (q = 0; q < nopt; ++q) {
-        if (lng) {
+        switch (shortLong) {
+        case SL_LONG: {
             if (opt[q].longName) {
-                if (strncmp(s, opt[q].longName, matchlen) == 0)
+                if (strneq(targetOpt, opt[q].longName, matchlen))
                     return q;
             }
-        } else {
+        }
+        case SL_SHORT: {
             if (opt[q].shortName) {
-                if (s[0] == opt[q].shortName)
+                if (targetOpt[0] == opt[q].shortName)
                     return q;
             }
+        }
         }
     }
     return -1;
@@ -590,7 +599,7 @@ pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
         } else if (strncmp(argv[ai], "--", 2) == 0) {
             /* long option */
             /* find matching option */
-            if ((mi = optMatch(opt_table, argv[ai] + 2, 1)) < 0)
+            if ((mi = optMatch(opt_table, argv[ai] + 2, SL_LONG)) < 0)
                 optFatal("unrecognized option `%s'", argv[ai]);
 
             /* possibly locate the argument to this option. */
@@ -630,7 +639,7 @@ pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
             optarg = -1;
             while (*o && !done) {
                 /* find matching option */
-                if ((mi = optMatch(opt_table, o, 0)) < 0)
+                if ((mi = optMatch(opt_table, o, SL_SHORT)) < 0)
                     optFatal("unrecognized option `-%c'", *o);
 
                 /* does this option take an argument? */
@@ -692,7 +701,7 @@ parse_short_option_token(char *argv[], const int argc, const int ai,
     processed_arg = 0;  /* initial value */
     while (*o && !processed_arg) {
 		/* find matching option */
-		if ((mi = optMatch(opt_table, o, 0)) < 0)
+		if ((mi = optMatch(opt_table, o, SL_SHORT)) < 0)
 		    optFatal("unrecognized option `-%c'", *o);
 
 		/* does this option take an argument? */
@@ -784,7 +793,7 @@ parse_long_option(char *   const argv[],
     */
     *tokens_consumed_p = 1;  /* initial assumption */
     /* find matching option */
-    if ((mi = optMatch(opt_table, &argv[ai][namepos], 1)) < 0)
+    if ((mi = optMatch(opt_table, &argv[ai][namepos], SL_LONG)) < 0)
         fatalUnrecognizedLongOption(argv[ai], opt_table);
 
     /* possibly locate the argument to this option. */
