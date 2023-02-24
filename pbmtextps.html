@@ -148,7 +148,7 @@ as if you specified <b>-leftmargin=</b><i>0.5*fontsize</i>.
 is as if you specified <b>-rightmargin=0</b>.
 
 
-<h2 id="input_text">Input Text</h2>
+<h3 id="input_text">Input Text</h2>
 
 <p>The simplest way to specify the text to render is just to specify it,
   in ASCII, as the sole argument of the command.  For example,
@@ -196,7 +196,7 @@ arguments as for plain ASCII input:
 
   <pre>
     <kbd>
-  $ pbmtextps -asciihex &quot;<&quot; &quot;68656c6c6f 20 776f726c64 &quot;>&quot;
+  $ pbmtextps -asciihex &quot;<&quot; 68656c6c6f 20 776f726c64 &quot;>&quot;
     </kbd>
   </pre>
 
@@ -299,20 +299,20 @@ See <a href="#margins">Margins</a> for details.
 <dt><b>-asciihex</b>
 <dd>
 This means the text in the arguments is in Postscript ASCII-HEX code.
-See <a href="input_text">Input Text</a>.
+See <a href="#input_text">Input Text</a>.
 
 <p>You cannot specify this together with <b>-ascii85</b>.
 
-<p>This option was new in Netpbm 11.02 (March 2023)l
+<p>This option was new in Netpbm 11.02 (March 2023)
 
 <dt><b>-ascii85</b>
 <dd>
 This means the text in the arguments is in Postscript ASCII-85 code.
-See <a href="input_text">Input Text</a>.
+See <a href="#input_text">Input Text</a>.
 
 <p>You cannot specify this together with <b>-asciihex</b>.
 
-<p>This option was new in Netpbm 11.02 (March 2023)l
+<p>This option was new in Netpbm 11.02 (March 2023)
   
 <dt><b>-stroke=</b><i>n</i>
 <dd>
@@ -328,7 +328,7 @@ about its processing.
 <dd>
 This option makes <b>pbmtextps</b> write to Standard Output the Postscript
 program it would use to create the image, rather than the image itself.  You
-can use this as input to a Postscript interpreter (such as Ghostscript or a a
+can use this as input to a Postscript interpreter (such as Ghostscript or a
 printer) or to understand the program better.
 
 <p>This option was new in Netpbm 10.75 (June 2016).
