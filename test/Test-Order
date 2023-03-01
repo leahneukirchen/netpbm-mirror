@@ -51,6 +51,7 @@ pbmminkowski.test
 pgmminkowski.test
 
 pnmcolormap.test
+pnmcolormap2.test
 
 # Basic (internal) converter tests
 
