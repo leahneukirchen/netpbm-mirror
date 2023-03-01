@@ -248,11 +248,8 @@ formatNonemptyAscii85(const char * const inbuff,
 
     for (inIdx = startIdx; inIdx <= endIdx; ++inIdx) {
       switch (inbuff[inIdx]) {
-        case '<':
       case '~':
-      case '>':
-          pm_error("Misplaced character '%c' in Ascii 85 input string",
-                   inbuff[inIdx]);
+          pm_error("Misplaced character '~' in Ascii 85 input string");
           break;
       case '\f':
       case '\n':
