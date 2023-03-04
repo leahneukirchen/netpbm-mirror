@@ -825,6 +825,9 @@ mediancut(tupletable2           const colorFreqTable,
             multicolorBoxesExist = FALSE;
         else
             splitBox(&boxVector, boxIdx, methodForLargest, methodForSplit);
+                /* Side effect: sorts the extent of 'colorfreqTable' that is
+                   in the box
+                */
     }
 
     if (wantBvReport)
@@ -987,6 +990,9 @@ computeColorMapFromInput(FILE *                const ifP,
    relevant to our colormap mission; just a fringe benefit).
 -----------------------------------------------------------------------------*/
     tupletable2 colorFreqTable;
+        /* Table of all colors in the image, with the number of pixels of
+           each color.
+        */
 
     computeHistogram(ifP, formatP, freqPamP, &colorFreqTable);
 
