@@ -43,6 +43,13 @@ Test 1
 -stroke 1
 < /pensize -1.000000 def
 > /pensize 1.000000 def
+Test 2
+30 31 32 20 41 42 43 2d 78 79 7a 2e
+1
+303132204142432d78797a2e
+1
+<303132 20 414243 2d 78797a 2e>
+1
 Test Invalid
 Expected failure 1 (-fontsize) 1
 Expected failure 2 (-fontsize 0) 1
@@ -62,4 +69,20 @@ Expected failure 15 (-descent) 1
 Expected failure 16 (-descent -1) 1
 Expected failure 17 (-stroke=A) 1
 Expected failure 18 (-pad -crop) 1
-Expected failure 19 (-font="") 1
+Expected failure 19 (-asciihex <a>) 1
+Expected failure 20 (-asciihex ) 1
+Expected failure 21 (-asciihex <53756c667572) 1
+Expected failure 22 (-asciihex 53756c667572>) 1
+Expected failure 23 (-asciihex <5375<6c667572>) 1
+Expected failure 24 (-asciihex <53756c>667572>) 1
+Expected failure 25 (-ascii85 <~@<6O!FD5W(~) 1
+Expected failure 26 (-ascii85 ~@<6O!FD5W(~>) 1
+Expected failure 27 (-ascii85 <~@<6O<~!FD5W(~>) 1
+Expected failure 28 (-ascii85 <~@<6O~>!FD5W(~>) 1
+Expected failure 29 (-ascii85 <~@<6O!FD5W(~~>) 1
+Expected failure 30 (-ascii85 v) 1
+Expected failure 31 (-ascii85 y) 1
+Expected failure 32 (-ascii85 1z) 1
+Expected failure 33 (-ascii85 z1z) 1
+Expected failure 34 (-ascii85 <~0123z~>) 1
+Expected failure 35 (-font="") 1
