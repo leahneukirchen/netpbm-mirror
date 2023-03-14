@@ -24,7 +24,7 @@ errorHandler(png_structp     const png_ptr,
 
     jmp_buf * jmpbufP;
 
-    /* this function, aside from the extra step of retrieving the "error
+    /* This function, aside from the extra step of retrieving the "error
        pointer" (below) and the fact that it exists within the application
        rather than within libpng, is essentially identical to libpng's
        default error handler.  The second point is critical:  since both
