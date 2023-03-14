@@ -10,6 +10,12 @@ not yet  BJH  Release 11.02.00
 
               pcdovtoppm: remove dependency on obsolete 'tempfile' program.
 
+              pamtopng: fix -chroma option: always rejected.  Always broken.
+              pamtopng was new in Netpbm 10.70 (June 2015).
+
+              pnmtopng: fix -rgb option: always rejected.  Always broken
+              -rgb was new in Netpbm 10.30 (October 2005).
+
               build: change the way you add the separately distributed
               'hpcdtoppm' code to the build.
 
