@@ -187,9 +187,9 @@ parseRgbOpt(const char *         const rgbOpt,
                    &rgbP->gx, &rgbP->gy,
                    &rgbP->bx, &rgbP->by);
 
-    if (count != 6)
+    if (count != 8)
         pm_error("Invalid syntax for the -rgb option value '%s'.  "
-                 "Should be 6 floating point number: "
+                 "Should be 8 floating point numbers: "
                  "x and y for each of white, red, green, and blue",
                  rgbOpt);
 }
