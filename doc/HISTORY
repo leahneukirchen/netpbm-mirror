@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.03.14 BJH  Release 10.86.37
+
+              pamtopng: fix -chroma option: always rejected.  Always broken.
+              pamtopng was new in Netpbm 10.70 (June 2015).
+
+              pnmtopng: fix -rgb option: always rejected.  Always broken
+              -rgb was new in Netpbm 10.30 (October 2005).
+
 22.12.24 BJH  Release 10.86.36
 
               ppmtompeg: Fix crash with resize option because of invalid
