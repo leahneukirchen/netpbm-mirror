@@ -4,13 +4,13 @@
   This program is part of the Netpbm package.
 
   This program converts from the JFIF format, which is based on JPEG, to
-  the fundamental ppm or pgm format (depending on whether the JFIF 
+  the fundamental ppm or pgm format (depending on whether the JFIF
   image is gray scale or color).
 
   This program is by Bryan Henderson on 2000.03.20, but is derived
   with permission from the program djpeg, which is in the Independent
   Jpeg Group's JPEG library package.  Under the terms of that permission,
-  redistribution of this software is restricted as described in the 
+  redistribution of this software is restricted as described in the
   file README.JPEG.
 
   Copyright (C) 1991-1998, Thomas G. Lane.
@@ -45,7 +45,7 @@
     (http://topo.math.u-psud.fr/~bousch/exifdump.py) and Jhead
     (http://www.sentex.net/~mwandel/jhead).
 
-    
+
 *****************************************************************************/
 
 #define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
@@ -76,7 +76,7 @@
 enum inklevel {NORMAL, ADOBE, GUESS};
    /* This describes image samples that represent ink levels.  NORMAL
       means 0 is no ink; ADOBE means 0 is maximum ink.  GUESS means we
-      don't know what 0 means, so we have to guess from information in 
+      don't know what 0 means, so we have to guess from information in
       the image.
       */
 
@@ -86,11 +86,11 @@ enum colorspace {
        given our particular inputs to the decompressor.  The
        decompressor is theoretically capable of other, e.g. YCCK.
        Unlike the JPEG library, this type distinguishes between the
-       Adobe and non-Adobe style of CMYK samples.  
+       Adobe and non-Adobe style of CMYK samples.
     */
     GRAYSCALE_COLORSPACE,
-    RGB_COLORSPACE, 
-    CMYK_NORMAL_COLORSPACE, 
+    RGB_COLORSPACE,
+    CMYK_NORMAL_COLORSPACE,
     CMYK_ADOBE_COLORSPACE
     };
 
@@ -119,16 +119,16 @@ struct cmdlineInfo {
 static bool displayComments;
     /* User wants comments from the JPEG to be displayed */
 
-static void 
+static void
 interpret_maxmemory(bool         const maxmemorySpec,
-                    const char * const maxmemory, 
-                    long int *   const max_memory_to_use_p) { 
+                    const char * const maxmemory,
+                    long int *   const max_memory_to_use_p) {
 /*----------------------------------------------------------------------------
    Interpret the "maxmemory" command line option.
 -----------------------------------------------------------------------------*/
     long int lval;
     char ch;
-    
+
     if (!maxmemorySpec) {
         *max_memory_to_use_p = -1;  /* unspecified */
     } else if (sscanf(maxmemory, "%ld%c", &lval, &ch) < 1) {
@@ -141,7 +141,7 @@ interpret_maxmemory(bool         const maxmemorySpec,
 
 
 static void
-interpret_adobe(const int adobe, const int notadobe, 
+interpret_adobe(const int adobe, const int notadobe,
                 enum inklevel * const inklevel_p) {
 /*----------------------------------------------------------------------------
    Interpret the adobe/notadobe command line options
@@ -153,7 +153,7 @@ interpret_adobe(const int adobe, const int notadobe,
             *inklevel_p = ADOBE;
         else if (notadobe)
             *inklevel_p = NORMAL;
-        else 
+        else
             *inklevel_p = GUESS;
     }
 }
@@ -192,7 +192,7 @@ parseCommandLine(int                  const argc,
 
     MALLOCARRAY_NOFAIL(option_def, 100);
     MALLOCARRAY_NOFAIL(argv_parse, argc);
-    
+
     /* argv, except we modify it as we parse */
 
     option_def_index = 0;   /* incremented by OPTENTRY */
@@ -200,14 +200,14 @@ parseCommandLine(int                  const argc,
     OPTENT3(0, "dct",         OPT_STRING, &dctval,
             &dctvalSpec, 0);
     OPTENT3(0, "maxmemory",   OPT_STRING, &maxmemory,
-            &maxmemorySpec, 0); 
+            &maxmemorySpec, 0);
     OPTENT3(0, "nosmooth",    OPT_FLAG,   NULL, &cmdlineP->nosmooth,      0);
-    OPTENT3(0, "tracelevel",  OPT_UINT,   &cmdlineP->trace_level,   
+    OPTENT3(0, "tracelevel",  OPT_UINT,   &cmdlineP->trace_level,
             &tracelevelSpec, 0);
     OPTENT3(0, "adobe",       OPT_FLAG,   NULL, &adobe,                   0);
     OPTENT3(0, "notadobe",    OPT_FLAG,   NULL, &notadobe,                0);
     OPTENT3(0, "comments",    OPT_FLAG,   NULL, &cmdlineP->comments,      0);
-    OPTENT3(0, "exif",        OPT_STRING, &cmdlineP->exif_filespec, 
+    OPTENT3(0, "exif",        OPT_STRING, &cmdlineP->exif_filespec,
             &exifSpec, 0);
     OPTENT3(0, "dumpexif",    OPT_FLAG,   NULL, &cmdlineP->dumpexif,      0);
     OPTENT3(0, "multiple",    OPT_FLAG,   NULL, &cmdlineP->multiple,      0);
@@ -223,7 +223,7 @@ parseCommandLine(int                  const argc,
         argv_parse[i] = argv[i];
 
     pm_optParseOptions3( &argc_parse, argv_parse, opt, sizeof(opt), 0);
-        /* Uses and sets argc_parse, argv_parse, 
+        /* Uses and sets argc_parse, argv_parse,
            and some of *cmdlineP and others. */
 
     if (!tracelevelSpec)
@@ -236,7 +236,7 @@ parseCommandLine(int                  const argc,
         cmdlineP->input_filespec = strdup("-");  /* he wants stdin */
     else if (argc_parse - 1 == 1)
         cmdlineP->input_filespec = strdup(argv_parse[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
@@ -252,7 +252,7 @@ parseCommandLine(int                  const argc,
         else pm_error("Invalid value for the --dct option: '%s'.", dctval);
     }
 
-    interpret_maxmemory(maxmemorySpec, maxmemory, 
+    interpret_maxmemory(maxmemorySpec, maxmemory,
                         &cmdlineP->max_memory_to_use);
 
     interpret_adobe(adobe, notadobe, &cmdlineP->inklevel);
@@ -276,7 +276,7 @@ jpeg_getc (j_decompress_ptr cinfo)
   struct jpeg_source_mgr * datasrc = cinfo->src;
 
   if (datasrc->bytes_in_buffer == 0) {
-      if (! (*datasrc->fill_input_buffer) (cinfo)) 
+      if (! (*datasrc->fill_input_buffer) (cinfo))
           pm_error("Can't suspend here.");
   }
   datasrc->bytes_in_buffer--;
@@ -290,14 +290,14 @@ print_text_marker (j_decompress_ptr cinfo) {
    This is a routine that you can register with the Jpeg decompressor
    with e.g.
 
-     jpeg_set_marker_processor(cinfoP, JPEG_APP0 + app_type, 
+     jpeg_set_marker_processor(cinfoP, JPEG_APP0 + app_type,
                                print_text_marker);
 
   The decompressor then calls it when it encounters a miscellaneous marker
   of the specified type (e.g. APP1).  At that time, the jpeg input stream
   is positioned to the marker contents -- first 2 bytes of length information,
   MSB first, where the length includes those two bytes, then the data.
-  
+
   We just get and print the contents of the marker.
 
   This routine is no longer used; it is kept as an example in case we want
@@ -305,13 +305,13 @@ print_text_marker (j_decompress_ptr cinfo) {
   the Jpeg library store all the markers in memory for our later access.
 -----------------------------------------------------------------------------*/
     const boolean traceit = (cinfo->err->trace_level >= 1);
-    const boolean display_value = 
+    const boolean display_value =
         traceit || (cinfo->unread_marker == JPEG_COM && displayComments);
-    
+
     INT32 length;
     unsigned int ch;
     unsigned int lastch = 0;
-    
+
     length = jpeg_getc(cinfo) << 8;
     length += jpeg_getc(cinfo);
     length -= 2;			/* discount the length word itself */
@@ -323,17 +323,17 @@ print_text_marker (j_decompress_ptr cinfo) {
             fprintf(stderr, "APP%d, length %ld:\n",
                     cinfo->unread_marker - JPEG_APP0, (long) length);
     }
-    
+
     if (cinfo->unread_marker == JPEG_COM && displayComments)
         fprintf(stderr, "COMMENT: ");
-    
+
     while (--length >= 0) {
         ch = jpeg_getc(cinfo);
         if (display_value) {
             /* Emit the character in a readable form.
              * Nonprintables are converted to \nnn form,
              * while \ is converted to \\.
-             * Newlines in CR, CR/LF, or LF form will be printed as one 
+             * Newlines in CR, CR/LF, or LF form will be printed as one
              * newline.
              */
             if (ch == '\r') {
@@ -351,10 +351,10 @@ print_text_marker (j_decompress_ptr cinfo) {
           lastch = ch;
         }
     }
-    
+
     if (display_value)
         fprintf(stderr, "\n");
-    
+
     return TRUE;
 }
 #endif
@@ -381,7 +381,7 @@ print_marker(struct jpeg_marker_struct const marker) {
             /* Emit the character in a readable form.
              * Nonprintables are converted to \nnn form,
              * while \ is converted to \\.
-             * Newlines in CR, CR/LF, or LF form will be printed as one 
+             * Newlines in CR, CR/LF, or LF form will be printed as one
              * newline.
              */
             if (marker.data[i] == '\r') {
@@ -407,11 +407,11 @@ typedef struct rgb {unsigned int r; unsigned int g; unsigned int b;} rgb_type;
 
 
 static rgb_type *
-read_rgb(JSAMPLE *ptr, const enum colorspace color_space, 
+read_rgb(JSAMPLE *ptr, const enum colorspace color_space,
          const unsigned int maxval) {
 /*----------------------------------------------------------------------------
   Return the RGB triple corresponding to the color of the JPEG pixel at
-  'ptr', which is in color space 'color_space'.  
+  'ptr', which is in color space 'color_space'.
 
   Assume 'maxval' is the maximum sample value in the input pixel, and also
   use it for the maximum sample value in the return value.
@@ -421,8 +421,8 @@ read_rgb(JSAMPLE *ptr, const enum colorspace color_space,
     switch (color_space) {
     case RGB_COLORSPACE: {
         rgb.r = GETJSAMPLE(*(ptr+0));
-        rgb.g = GETJSAMPLE(*(ptr+1)); 
-        rgb.b = GETJSAMPLE(*(ptr+2)); 
+        rgb.g = GETJSAMPLE(*(ptr+1));
+        rgb.b = GETJSAMPLE(*(ptr+2));
     }
         break;
     case CMYK_NORMAL_COLORSPACE: {
@@ -469,8 +469,8 @@ static xel * pnmbuffer;      /* Output buffer.  Input to pnm_writepnmrow() */
 
 static void
 copyPixelRow(JSAMPROW        const jpegbuffer,
-             unsigned int    const width, 
-             unsigned int    const samplesPerPixel, 
+             unsigned int    const width,
+             unsigned int    const samplesPerPixel,
              enum colorspace const colorSpace,
              FILE *          const ofP,
              int             const format,
@@ -480,7 +480,7 @@ copyPixelRow(JSAMPROW        const jpegbuffer,
     unsigned int outputCursor;     /* Cursor into output buffer 'pnmbuffer' */
 
     ptr = &jpegbuffer[0];  /* Start at beginning of input row */
-    
+
     for (outputCursor = 0; outputCursor < width; ++outputCursor) {
         xel currentPixel;
         if (samplesPerPixel >= 3) {
@@ -502,7 +502,7 @@ set_color_spaces(const J_COLOR_SPACE jpeg_color_space,
                  int * const output_type_p,
                  J_COLOR_SPACE * const out_color_space_p) {
 /*----------------------------------------------------------------------------
-   Decide what type of output (PPM or PGM) we shall generate and what 
+   Decide what type of output (PPM or PGM) we shall generate and what
    color space we must request from the JPEG decompressor, based on the
    color space of the input JPEG image, 'jpeg_color_space'.
 
@@ -548,7 +548,7 @@ set_color_spaces(const J_COLOR_SPACE jpeg_color_space,
         pm_error("Internal error: unknown color space code %d passed "
                  "to set_color_spaces().", jpeg_color_space);
     }
-    pm_message("WRITING %s FILE", 
+    pm_message("WRITING %s FILE",
                *output_type_p == PPM_TYPE ? "PPM" : "PGM");
 }
 
@@ -578,8 +578,8 @@ print_verbose_info_about_header(struct jpeg_decompress_struct const cinfo){
 
     struct jpeg_marker_struct * markerP;
 
-    pm_message("input color space is %d (%s)\n", 
-               cinfo.jpeg_color_space, 
+    pm_message("input color space is %d (%s)\n",
+               cinfo.jpeg_color_space,
                colorspace_name(cinfo.jpeg_color_space));
 
     /* Note that raw information about marker, including marker type code,
@@ -595,14 +595,14 @@ print_verbose_info_about_header(struct jpeg_decompress_struct const cinfo){
     for (markerP = cinfo.marker_list; markerP; markerP = markerP->next) {
         if (markerP->marker == JPEG_COM)
             pm_message("Comment marker (COM):");
-        else if (markerP->marker >= JPEG_APP0 && 
+        else if (markerP->marker >= JPEG_APP0 &&
                  markerP->marker <= JPEG_APP0+15)
-            pm_message("Miscellaneous marker type APP%d:", 
+            pm_message("Miscellaneous marker type APP%d:",
                        markerP->marker - JPEG_APP0);
         else
             pm_message("Miscellaneous marker of unknown type (0x%X):",
                        markerP->marker);
-        
+
         print_marker(*markerP);
     }
 }
@@ -611,9 +611,9 @@ print_verbose_info_about_header(struct jpeg_decompress_struct const cinfo){
 
 static void
 beginJpegInput(struct jpeg_decompress_struct * const cinfoP,
-               const boolean verbose, 
-               const J_DCT_METHOD dct_method, 
-               const int max_memory_to_use, 
+               const boolean verbose,
+               const J_DCT_METHOD dct_method,
+               const int max_memory_to_use,
                const boolean nosmooth) {
 /*----------------------------------------------------------------------------
    Read the JPEG header, create decompressor object (and
@@ -627,18 +627,18 @@ beginJpegInput(struct jpeg_decompress_struct * const cinfoP,
         cinfoP->mem->max_memory_to_use = max_memory_to_use;
     if (nosmooth)
         cinfoP->do_fancy_upsampling = FALSE;
-    
+
 }
 
 
 
 static void
 print_comments(struct jpeg_decompress_struct const cinfo) {
-    
+
     struct jpeg_marker_struct * markerP;
 
     for (markerP = cinfo.marker_list;
-         markerP; markerP = markerP->next) 
+         markerP; markerP = markerP->next)
         if (markerP->marker == JPEG_COM) {
             pm_message("COMMENT:");
             print_marker(*markerP);
@@ -659,7 +659,7 @@ print_exif_info(struct jpeg_marker_struct const marker) {
 
     assert(marker.data_length >= 6);
 
-    exif_parse(marker.data+6, marker.data_length-6, 
+    exif_parse(marker.data+6, marker.data_length-6,
                &imageInfo, wantTagTrace, &error);
 
     if (error) {
@@ -674,11 +674,11 @@ print_exif_info(struct jpeg_marker_struct const marker) {
 static boolean
 is_exif(struct jpeg_marker_struct const marker) {
 /*----------------------------------------------------------------------------
-   Return true iff the JPEG miscellaneous marker 'marker' is an Exif 
+   Return true iff the JPEG miscellaneous marker 'marker' is an Exif
    header.
 -----------------------------------------------------------------------------*/
     boolean retval;
-    
+
     if (marker.marker == JPEG_APP0+1) {
         if (marker.data_length >=6 && memcmp(marker.data, "Exif", 4) == 0)
             retval = TRUE;
@@ -702,7 +702,7 @@ dump_exif(struct jpeg_decompress_struct const cinfo) {
 
     found_one = FALSE;  /* initial value */
 
-    for (markerP = cinfo.marker_list; markerP; markerP = markerP->next) 
+    for (markerP = cinfo.marker_list; markerP; markerP = markerP->next)
         if (is_exif(*markerP)) {
             pm_message("EXIF INFO:");
             print_exif_info(*markerP);
@@ -715,7 +715,7 @@ dump_exif(struct jpeg_decompress_struct const cinfo) {
 
 
 static void
-save_exif(struct jpeg_decompress_struct const cinfo, 
+save_exif(struct jpeg_decompress_struct const cinfo,
           const char *                  const exif_filespec) {
 /*----------------------------------------------------------------------------
   Write the contents of the first Exif header in the image into the
@@ -730,7 +730,7 @@ save_exif(struct jpeg_decompress_struct const cinfo,
 
     exif_file = pm_openw(exif_filespec);
 
-    for (markerP = cinfo.marker_list; 
+    for (markerP = cinfo.marker_list;
          markerP && !is_exif(*markerP);
          markerP = markerP->next);
 
@@ -766,20 +766,20 @@ tellDetails(struct jpeg_decompress_struct const cinfo,
 
     print_verbose_info_about_header(cinfo);
 
-    pm_message("Input image data precision = %d bits", 
+    pm_message("Input image data precision = %d bits",
                cinfo.data_precision);
     pm_message("Output file will have format %c%c "
-               "with max sample value of %d.", 
+               "with max sample value of %d.",
                (char) (output_type/256), (char) (output_type % 256),
                maxval);
-}  
+}
 
 
 
 static enum colorspace
 computeColorSpace(struct jpeg_decompress_struct * const cinfoP,
                   enum inklevel                   const inklevel) {
-    
+
     enum colorspace colorSpace;
 
     if (cinfoP->out_color_space == JCS_GRAYSCALE)
@@ -810,19 +810,19 @@ convertRaster(struct jpeg_decompress_struct * const cinfoP,
               FILE *                          const ofP,
               xelval                          const format,
               unsigned int                    const maxval) {
-              
+
     JSAMPROW jpegbuffer;  /* Input buffer.  Filled by jpeg_scanlines() */
 
     jpegbuffer = ((*cinfoP->mem->alloc_sarray)
                   ((j_common_ptr) cinfoP, JPOOL_IMAGE,
-                   cinfoP->output_width * cinfoP->output_components, 
+                   cinfoP->output_width * cinfoP->output_components,
                    (JDIMENSION) 1)
         )[0];
 
     while (cinfoP->output_scanline < cinfoP->output_height) {
         jpeg_read_scanlines(cinfoP, &jpegbuffer, 1);
         if (ofP)
-            copyPixelRow(jpegbuffer, cinfoP->output_width, 
+            copyPixelRow(jpegbuffer, cinfoP->output_width,
                          cinfoP->out_color_components,
                          color_space, ofP, format, maxval);
     }
@@ -831,7 +831,7 @@ convertRaster(struct jpeg_decompress_struct * const cinfoP,
 
 
 static void
-convertImage(FILE *                          const ofP, 
+convertImage(FILE *                          const ofP,
              struct cmdlineInfo              const cmdline,
              struct jpeg_decompress_struct * const cinfoP) {
 
@@ -840,23 +840,23 @@ convertImage(FILE *                          const ofP,
            or PGM_TYPE, which conveniently also pass as format values
            PPM_FORMAT and PGM_FORMAT.
         */
-    xelval maxval;  
+    xelval maxval;
         /* The maximum value of a sample (color component), both in the input
            and the output.
         */
     enum colorspace color_space;
         /* The color space of the pixels coming out of the JPEG decompressor */
 
-    beginJpegInput(cinfoP, cmdline.verbose, 
-                   cmdline.dct_method, 
+    beginJpegInput(cinfoP, cmdline.verbose,
+                   cmdline.dct_method,
                    cmdline.max_memory_to_use, cmdline.nosmooth);
-                   
+
     set_color_spaces(cinfoP->jpeg_color_space, &format,
                      &cinfoP->out_color_space);
 
     maxval = pm_bitstomaxval(cinfoP->data_precision);
 
-    if (cmdline.verbose) 
+    if (cmdline.verbose)
         tellDetails(*cinfoP, maxval, format);
 
     /* Calculate output image dimensions so we can allocate space */
@@ -871,9 +871,9 @@ convertImage(FILE *                          const ofP,
                          maxval, format, FALSE);
 
     pnmbuffer = pnm_allocrow(cinfoP->output_width);
-    
+
     color_space = computeColorSpace(cinfoP, cmdline.inklevel);
-    
+
     convertRaster(cinfoP, color_space, ofP, format, maxval);
 
     if (cmdline.comments)
@@ -917,7 +917,7 @@ convertImages(FILE *                          const ofP,
               struct cmdlineInfo              const cmdline,
               struct jpeg_decompress_struct * const cinfoP,
               struct sourceManager *          const sourceManagerP) {
-              
+
     if (cmdline.multiple) {
         unsigned int imageSequence;
         for (imageSequence = 0; dsDataLeft(sourceManagerP); ++imageSequence) {
@@ -967,11 +967,11 @@ main(int argc, char **argv) {
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_decompress(&cinfo);
 
-    if (cmdline.trace_level == 0 && cmdline.verbose) 
+    if (cmdline.trace_level == 0 && cmdline.verbose)
         cinfo.err->trace_level = 1;
-    else 
+    else
         cinfo.err->trace_level = cmdline.trace_level;
-    
+
     saveMarkers(&cinfo);
 
     sourceManagerP = dsCreateSource(cmdline.input_filespec);
@@ -985,7 +985,7 @@ main(int argc, char **argv) {
     if (ofP) {
         int rc;
         rc = fclose(ofP);
-        if (rc == EOF) 
+        if (rc == EOF)
             pm_error("Error writing output file.  Errno = %s (%d).",
                      strerror(errno), errno);
     }
@@ -993,6 +993,9 @@ main(int argc, char **argv) {
     dsDestroySource(sourceManagerP);
 
     free(cmdline.input_filespec);
-  
+
     exit(jerr.num_warnings > 0 ? EXIT_WARNING : EXIT_SUCCESS);
 }
+
+
+
