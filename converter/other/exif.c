@@ -63,7 +63,7 @@ typedef struct {
 static int const bytesPerFormat[] = {0,1,1,2,4,8,1,1,2,4,8,4,8};
 #define NUM_FORMATS 12
 
-#define FMT_BYTE       1 
+#define FMT_BYTE       1
 #define FMT_STRING     2
 #define FMT_USHORT     3
 #define FMT_ULONG      4
@@ -218,10 +218,10 @@ get16u(const void * const data,
    Convert a 16 bit unsigned value from file's native byte order
 --------------------------------------------------------------------------*/
     if (byteOrder == MOTOROLA){
-        return (((const unsigned char *)data)[0] << 8) | 
+        return (((const unsigned char *)data)[0] << 8) |
             ((const unsigned char *)data)[1];
     }else{
-        return (((const unsigned char *)data)[1] << 8) | 
+        return (((const unsigned char *)data)[1] << 8) |
             ((const unsigned char *)data)[0];
     }
 }
@@ -235,16 +235,16 @@ get32s(const void * const data,
    Convert a 32 bit signed value from file's native byte order
 --------------------------------------------------------------------------*/
     if (byteOrder == MOTOROLA){
-        return  
+        return
             (((const char *)data)[0] << 24) |
             (((const unsigned char *)data)[1] << 16) |
-            (((const unsigned char *)data)[2] << 8 ) | 
+            (((const unsigned char *)data)[2] << 8 ) |
             (((const unsigned char *)data)[3] << 0 );
     } else {
-        return  
+        return
             (((const char *)data)[3] << 24) |
             (((const unsigned char *)data)[2] << 16) |
-            (((const unsigned char *)data)[1] << 8 ) | 
+            (((const unsigned char *)data)[1] << 8 ) |
             (((const unsigned char *)data)[0] << 0 );
     }
 }
@@ -263,8 +263,8 @@ get32u(const void * const data,
 
 
 static void
-printFormatNumber(FILE *       const fileP, 
-                  const void * const ValuePtr, 
+printFormatNumber(FILE *       const fileP,
+                  const void * const ValuePtr,
                   int          const Format,
                   int          const ByteCount,
                   ByteOrder    const byteOrder) {
@@ -279,25 +279,25 @@ printFormatNumber(FILE *       const fileP,
     case FMT_USHORT:
         fprintf(fileP, "%d\n",get16u(ValuePtr, byteOrder));
         break;
-    case FMT_ULONG:     
+    case FMT_ULONG:
     case FMT_SLONG:
         fprintf(fileP, "%d\n",get32s(ValuePtr, byteOrder));
         break;
-    case FMT_SSHORT:    
+    case FMT_SSHORT:
         fprintf(fileP, "%hd\n",(signed short)get16u(ValuePtr, byteOrder));
         break;
     case FMT_URATIONAL:
-    case FMT_SRATIONAL: 
+    case FMT_SRATIONAL:
         fprintf(fileP, "%d/%d\n",get32s(ValuePtr, byteOrder),
                 get32s(4+(char *)ValuePtr, byteOrder));
         break;
-    case FMT_SINGLE:    
+    case FMT_SINGLE:
         fprintf(fileP, "%f\n",(double)*(float *)ValuePtr);
         break;
     case FMT_DOUBLE:
         fprintf(fileP, "%f\n",*(double *)ValuePtr);
         break;
-    default: 
+    default:
         fprintf(fileP, "Unknown format %d:", Format);
         {
             unsigned int a;
@@ -366,7 +366,7 @@ traceTag(int                   const tag,
          const unsigned char * const valuePtr,
          unsigned int          const byteCount,
          ByteOrder             const byteOrder) {
-             
+
     /* Show tag name */
     unsigned int a;
     bool found;
@@ -421,11 +421,11 @@ traceTag(int                   const tag,
 
 /* Forward declaration for recursion */
 
-static void 
-processExifDir(const unsigned char *  const ExifData, 
+static void
+processExifDir(const unsigned char *  const ExifData,
                unsigned int           const ExifLength,
                unsigned int           const DirOffset,
-               exif_ImageInfo *       const imageInfoP, 
+               exif_ImageInfo *       const imageInfoP,
                ByteOrder              const byteOrder,
                bool                   const wantTagTrace,
                const unsigned char ** const LastExifRefdP);
@@ -437,7 +437,7 @@ processDirEntry(const unsigned char *  const dirEntry,
                 unsigned int           const exifLength,
                 ByteOrder              const byteOrder,
                 bool                   const wantTagTrace,
-                exif_ImageInfo *       const imageInfoP, 
+                exif_ImageInfo *       const imageInfoP,
                 unsigned int *         const thumbnailOffsetP,
                 unsigned int *         const thumbnailSizeP,
                 bool *                 const haveThumbnailP,
@@ -456,12 +456,12 @@ processDirEntry(const unsigned char *  const dirEntry,
 
     if ((format-1) >= NUM_FORMATS) {
         /* (-1) catches illegal zero case as unsigned underflows
-           to positive large.  
+           to positive large.
         */
         pm_message("Illegal number format %d for tag %04x", format, tag);
         return;
     }
-        
+
     byteCount = components * bytesPerFormat[format];
 
     if (byteCount > 4){
@@ -506,12 +506,12 @@ processDirEntry(const unsigned char *  const dirEntry,
         break;
 
     case TAG_XRESOLUTION:
-        imageInfoP->XResolution = 
+        imageInfoP->XResolution =
             convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_YRESOLUTION:
-        imageInfoP->YResolution = 
+        imageInfoP->YResolution =
             convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
@@ -541,7 +541,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         /* Skip consecutive blanks and NULs */
 
         for (;
-             cursor < byteCount && 
+             cursor < byteCount &&
                  (value[cursor] == '\0' || value[cursor] == ' ');
              ++cursor);
 
@@ -559,7 +559,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         /* Simplest way of expressing aperture, so I trust it the most.
            (overwrite previously computd value if there is one)
         */
-        imageInfoP->ApertureFNumber = 
+        imageInfoP->ApertureFNumber =
             (float)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
@@ -577,10 +577,10 @@ processDirEntry(const unsigned char *  const dirEntry,
 
     case TAG_FOCALLENGTH:
         /* Nice digital cameras actually save the focal length
-           as a function of how farthey are zoomed in. 
+           as a function of how farthey are zoomed in.
         */
 
-        imageInfoP->FocalLength = 
+        imageInfoP->FocalLength =
             (float)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
@@ -588,23 +588,23 @@ processDirEntry(const unsigned char *  const dirEntry,
         /* Inidcates the distacne the autofocus camera is focused to.
            Tends to be less accurate as distance increases.
         */
-        imageInfoP->Distance = 
+        imageInfoP->Distance =
             (float)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_EXPOSURETIME:
         /* Simplest way of expressing exposure time, so I
            trust it most.  (overwrite previously computd value
-           if there is one) 
+           if there is one)
         */
-        imageInfoP->ExposureTime = 
+        imageInfoP->ExposureTime =
             (float)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_SHUTTERSPEED:
         /* More complicated way of expressing exposure time,
            so only use this value if we don't already have it
-           from somewhere else.  
+           from somewhere else.
         */
         if (imageInfoP->ExposureTime == 0){
             imageInfoP->ExposureTime = (float)
@@ -622,9 +622,9 @@ processDirEntry(const unsigned char *  const dirEntry,
         break;
 
     case TAG_ORIENTATION:
-        imageInfoP->Orientation = 
+        imageInfoP->Orientation =
             (int)convertAnyFormat(valuePtr, format, byteOrder);
-        if (imageInfoP->Orientation < 1 || 
+        if (imageInfoP->Orientation < 1 ||
             imageInfoP->Orientation > 8){
             pm_message("Undefined rotation value %d",
                        imageInfoP->Orientation);
@@ -635,7 +635,7 @@ processDirEntry(const unsigned char *  const dirEntry,
     case TAG_EXIF_IMAGELENGTH:
     case TAG_EXIF_IMAGEWIDTH:
         /* Use largest of height and width to deal with images
-           that have been rotated to portrait format.  
+           that have been rotated to portrait format.
         */
         ExifImageWidth =
             MIN(ExifImageWidth,
@@ -650,11 +650,11 @@ processDirEntry(const unsigned char *  const dirEntry,
     case TAG_FOCALPLANEUNITS:
         switch((int)convertAnyFormat(valuePtr, format, byteOrder)){
         case 1: FocalplaneUnits = 25.4; break; /* 1 inch */
-        case 2: 
+        case 2:
             /* According to the information I was using, 2
                means meters.  But looking at the Cannon
                powershot's files, inches is the only
-               sensible value.  
+               sensible value.
             */
             FocalplaneUnits = 25.4;
             break;
@@ -670,34 +670,34 @@ processDirEntry(const unsigned char *  const dirEntry,
         */
 
     case TAG_EXPOSURE_BIAS:
-        imageInfoP->ExposureBias = 
+        imageInfoP->ExposureBias =
             (float) convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_WHITEBALANCE:
-        imageInfoP->Whitebalance = 
+        imageInfoP->Whitebalance =
             (int)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_METERING_MODE:
-        imageInfoP->MeteringMode = 
+        imageInfoP->MeteringMode =
             (int)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_EXPOSURE_PROGRAM:
-        imageInfoP->ExposureProgram = 
+        imageInfoP->ExposureProgram =
             (int)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_ISO_EQUIVALENT:
-        imageInfoP->ISOequivalent = 
+        imageInfoP->ISOequivalent =
             (int)convertAnyFormat(valuePtr, format, byteOrder);
-        if ( imageInfoP->ISOequivalent < 50 ) 
+        if ( imageInfoP->ISOequivalent < 50 )
             imageInfoP->ISOequivalent *= 200;
         break;
 
     case TAG_COMPRESSION_LEVEL:
-        imageInfoP->CompressionLevel = 
+        imageInfoP->CompressionLevel =
             (int)convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
@@ -720,7 +720,7 @@ processDirEntry(const unsigned char *  const dirEntry,
                        "but Exif data is only %u bytes.",
                        subdirOffset, exifLength);
         else
-            processExifDir(exifData, exifLength, subdirOffset, 
+            processExifDir(exifData, exifLength, subdirOffset,
                            imageInfoP, byteOrder, wantTagTrace,
                            lastExifRefdP);
     } break;
@@ -729,11 +729,11 @@ processDirEntry(const unsigned char *  const dirEntry,
 
 
 
-static void 
-processExifDir(const unsigned char *  const exifData, 
+static void
+processExifDir(const unsigned char *  const exifData,
                unsigned int           const exifLength,
                unsigned int           const dirOffset,
-               exif_ImageInfo *       const imageInfoP, 
+               exif_ImageInfo *       const imageInfoP,
                ByteOrder              const byteOrder,
                bool                   const wantTagTrace,
                const unsigned char ** const lastExifRefdP) {
@@ -753,7 +753,7 @@ processExifDir(const unsigned char *  const exifData,
         const unsigned char * const dirEnd =
             DIR_ENTRY_ADDR(dirStart, numDirEntries);
         if (dirEnd + 4 > (exifData + exifLength)){
-            if (dirEnd + 2 == exifData + exifLength || 
+            if (dirEnd + 2 == exifData + exifLength ||
                 dirEnd == exifData + exifLength){
                 /* Version 1.3 of jhead would truncate a bit too much.
                    This also caught later on as well.
@@ -789,9 +789,9 @@ processExifDir(const unsigned char *  const exifData,
         /* In addition to linking to subdirectories via exif tags,
            there's also a potential link to another directory at the end
            of each directory.  This has got to be the result of a
-           committee!  
+           committee!
         */
-        if (DIR_ENTRY_ADDR(dirStart, numDirEntries) + 4 <= 
+        if (DIR_ENTRY_ADDR(dirStart, numDirEntries) + 4 <=
             exifData + exifLength){
             unsigned int const subdirOffset =
                 get32u(dirStart + 2 + 12*numDirEntries, byteOrder);
@@ -804,7 +804,7 @@ processExifDir(const unsigned char *  const exifData,
                            As Jhead produces this form of format incorrectness,
                            I'll just let it pass silently.
                         */
-                        if (wantTagTrace) 
+                        if (wantTagTrace)
                             printf("Thumbnail removed with "
                                    "Jhead 1.3 or earlier\n");
                     }else{
@@ -837,10 +837,10 @@ processExifDir(const unsigned char *  const exifData,
 
 
 
-void 
+void
 exif_parse(const unsigned char * const exifData,
            unsigned int          const length,
-           exif_ImageInfo *      const imageInfoP, 
+           exif_ImageInfo *      const imageInfoP,
            bool                  const wantTagTrace,
            const char **         const errorP) {
 /*--------------------------------------------------------------------------
@@ -861,18 +861,18 @@ exif_parse(const unsigned char * const exifData,
         fprintf(stderr, "Exif header %d bytes long\n",length);
 
     if (memeq(exifData + 0, "II" , 2)) {
-        if (wantTagTrace) 
+        if (wantTagTrace)
             fprintf(stderr, "Exif header in Intel order\n");
         byteOrder = NORMAL;
     } else {
         if (memeq(exifData + 0, "MM", 2)) {
-            if (wantTagTrace) 
+            if (wantTagTrace)
                 fprintf(stderr, "Exif header in Motorola order\n");
             byteOrder = MOTOROLA;
         } else {
             pm_asprintf(errorP, "Invalid alignment marker in Exif "
                         "data.  First two bytes are '%c%c' (0x%02x%02x) "
-                        "instead of 'II' or 'MM'.", 
+                        "instead of 'II' or 'MM'.",
                         exifData[0], exifData[1], exifData[0], exifData[1]);
         }
     }
@@ -895,29 +895,29 @@ exif_parse(const unsigned char * const exifData,
                 */
             pm_message("Suspicious offset of first IFD value in Exif header");
         }
-        
+
         imageInfoP->Comments[0] = '\0';  /* Initial value - null string */
-        
+
         HaveXRes = FALSE;  /* Initial assumption */
         FocalplaneUnits = 0;
         ExifImageWidth = 0;
-        
+
         lastExifRefd = exifData;
         DirWithThumbnailPtrs = NULL;
-        
-        processExifDir(exifData, length, FirstOffset, 
+
+        processExifDir(exifData, length, FirstOffset,
                        imageInfoP, byteOrder, wantTagTrace, &lastExifRefd);
-        
+
         /* Compute the CCD width, in millimeters. */
         if (HaveXRes){
             imageInfoP->HaveCCDWidth = 1;
-            imageInfoP->CCDWidth = 
+            imageInfoP->CCDWidth =
                     (float)(ExifImageWidth * FocalplaneUnits / FocalplaneXRes);
         } else
             imageInfoP->HaveCCDWidth = 0;
-            
+
         if (wantTagTrace){
-            fprintf(stderr, 
+            fprintf(stderr,
                     "Non-settings part of Exif header: %lu bytes\n",
                     (unsigned long)(exifData + length - lastExifRefd));
         }
@@ -926,7 +926,7 @@ exif_parse(const unsigned char * const exifData,
 
 
 
-void 
+void
 exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
                    FILE *                 const fileP) {
 /*--------------------------------------------------------------------------
@@ -980,7 +980,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
             "rotate 270",       /* rotate 270 to right it. */
         };
 
-        fprintf(fileP, "Orientation  : %s\n", 
+        fprintf(fileP, "Orientation  : %s\n",
                 OrientTab[imageInfoP->Orientation]);
     }
 
@@ -1008,11 +1008,11 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
 
     if (imageInfoP->ExposureTime) {
         if (imageInfoP->ExposureTime < 0.010){
-            fprintf(fileP, 
+            fprintf(fileP,
                     "Exposure time: %6.4f s ",
                     (double)imageInfoP->ExposureTime);
         }else{
-            fprintf(fileP, 
+            fprintf(fileP,
                     "Exposure time: %5.3f s ",
                     (double)imageInfoP->ExposureTime);
         }
@@ -1041,7 +1041,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
         fprintf(fileP, "Exposure bias:%4.2f\n",
                 (double)imageInfoP->ExposureBias);
     }
-        
+
     if (imageInfoP->Whitebalance){ /* 05-jan-2001 vcs */
         switch(imageInfoP->Whitebalance) {
         case 1:
@@ -1119,5 +1119,6 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
 
     fprintf(fileP, "\n");
 }
+
 
 
