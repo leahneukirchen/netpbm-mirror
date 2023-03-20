@@ -112,6 +112,7 @@ struct CmdlineInfo {
     enum Inklevel inklevel;
     unsigned int  comments;
     unsigned int  dumpexif;
+    unsigned int  traceexif;
     unsigned int  multiple;
     unsigned int  repair;
 };
@@ -214,6 +215,7 @@ parseCommandLine(int                  const argc,
     OPTENT3(0, "dumpexif",    OPT_FLAG,   NULL, &cmdlineP->dumpexif,      0);
     OPTENT3(0, "multiple",    OPT_FLAG,   NULL, &cmdlineP->multiple,      0);
     OPTENT3(0, "repair",      OPT_FLAG,   NULL, &cmdlineP->repair,        0);
+    OPTENT3(0, "traceexif",   OPT_FLAG,   NULL, &cmdlineP->traceexif,     0);
 
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
@@ -651,13 +653,12 @@ printComments(struct jpeg_decompress_struct const cinfo) {
 
 
 static void
-printExifInfo(struct jpeg_marker_struct const marker) {
+printExifInfo(struct jpeg_marker_struct const marker,
+              bool                      const wantTagTrace) {
 /*----------------------------------------------------------------------------
    Dump as informational messages the contents of the Jpeg miscellaneous
    marker 'marker', assuming it is an Exif header.
 -----------------------------------------------------------------------------*/
-    bool const wantTagTrace = false;
-
     exif_ImageInfo imageInfo;
     const char * error;
 
@@ -696,7 +697,8 @@ isExif(struct jpeg_marker_struct const marker) {
 
 
 static void
-dumpExif(struct jpeg_decompress_struct const cinfo) {
+dumpExif(struct jpeg_decompress_struct const cinfo,
+         bool                          const wantTrace) {
 /*----------------------------------------------------------------------------
    Dump as informational messages the contents of all EXIF headers in
    the image, interpreted.  An EXIF header is an APP1 marker.
@@ -709,7 +711,7 @@ dumpExif(struct jpeg_decompress_struct const cinfo) {
          markerP = markerP->next)
         if (isExif(*markerP)) {
             pm_message("EXIF INFO:");
-            printExifInfo(*markerP);
+            printExifInfo(*markerP, wantTrace);
             foundOne = true;
         }
     if (!foundOne)
@@ -883,7 +885,7 @@ convertImage(FILE *                          const ofP,
     if (cmdline.comments)
         printComments(*cinfoP);
     if (cmdline.dumpexif)
-        dumpExif(*cinfoP);
+        dumpExif(*cinfoP, cmdline.traceexif);
     if (cmdline.exifFileName)
         saveExif(*cinfoP, cmdline.exifFileName);
 
