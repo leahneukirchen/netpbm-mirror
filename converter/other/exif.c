@@ -46,15 +46,15 @@
 
 #include "exif.h"
 
-static const unsigned char * DirWithThumbnailPtrs;
-static double FocalplaneXRes;
-bool HaveXRes;
-static double FocalplaneUnits;
-static int ExifImageWidth;
+static const unsigned char * dirWithThumbnailPtrs;
+static double focalplaneXRes;
+static bool haveXRes;
+static double focalplaneUnits;
+static int exifImageWidth;
 
 typedef struct {
-    unsigned short Tag;
-    const char * Desc;
+    unsigned short tag;
+    const char * desc;
 } TagTable;
 
 
@@ -207,7 +207,7 @@ static TagTable const tagTable[] = {
 
 
 
-typedef enum { NORMAL, MOTOROLA } ByteOrder;
+typedef enum { ORDER_NORMAL, ORDER_MOTOROLA } ByteOrder;
 
 
 
@@ -217,10 +217,10 @@ get16u(const void * const data,
 /*--------------------------------------------------------------------------
    Convert a 16 bit unsigned value from file's native byte order
 --------------------------------------------------------------------------*/
-    if (byteOrder == MOTOROLA){
+    if (byteOrder == ORDER_MOTOROLA) {
         return (((const unsigned char *)data)[0] << 8) |
             ((const unsigned char *)data)[1];
-    }else{
+    } else {
         return (((const unsigned char *)data)[1] << 8) |
             ((const unsigned char *)data)[0];
     }
@@ -234,7 +234,7 @@ get32s(const void * const data,
 /*--------------------------------------------------------------------------
    Convert a 32 bit signed value from file's native byte order
 --------------------------------------------------------------------------*/
-    if (byteOrder == MOTOROLA){
+    if (byteOrder == ORDER_MOTOROLA) {
         return
             (((const char *)data)[0] << 24) |
             (((const unsigned char *)data)[1] << 16) |
@@ -264,45 +264,45 @@ get32u(const void * const data,
 
 static void
 printFormatNumber(FILE *       const fileP,
-                  const void * const ValuePtr,
-                  int          const Format,
-                  int          const ByteCount,
+                  const void * const valuePtr,
+                  int          const format,
+                  int          const byteCount,
                   ByteOrder    const byteOrder) {
 /*--------------------------------------------------------------------------
    Display a number as one of its many formats
 --------------------------------------------------------------------------*/
-    switch(Format){
+    switch(format) {
     case FMT_SBYTE:
     case FMT_BYTE:
-        fprintf(fileP, "%02x\n", *(unsigned char *)ValuePtr);
+        fprintf(fileP, "%02x\n", *(unsigned char *)valuePtr);
         break;
     case FMT_USHORT:
-        fprintf(fileP, "%d\n",get16u(ValuePtr, byteOrder));
+        fprintf(fileP, "%d\n",get16u(valuePtr, byteOrder));
         break;
     case FMT_ULONG:
     case FMT_SLONG:
-        fprintf(fileP, "%d\n",get32s(ValuePtr, byteOrder));
+        fprintf(fileP, "%d\n",get32s(valuePtr, byteOrder));
         break;
     case FMT_SSHORT:
-        fprintf(fileP, "%hd\n",(signed short)get16u(ValuePtr, byteOrder));
+        fprintf(fileP, "%hd\n",(signed short)get16u(valuePtr, byteOrder));
         break;
     case FMT_URATIONAL:
     case FMT_SRATIONAL:
-        fprintf(fileP, "%d/%d\n",get32s(ValuePtr, byteOrder),
-                get32s(4+(char *)ValuePtr, byteOrder));
+        fprintf(fileP, "%d/%d\n",get32s(valuePtr, byteOrder),
+                get32s(4+(char *)valuePtr, byteOrder));
         break;
     case FMT_SINGLE:
-        fprintf(fileP, "%f\n",(double)*(float *)ValuePtr);
+        fprintf(fileP, "%f\n",(double)*(float *)valuePtr);
         break;
     case FMT_DOUBLE:
-        fprintf(fileP, "%f\n",*(double *)ValuePtr);
+        fprintf(fileP, "%f\n",*(double *)valuePtr);
         break;
     default:
-        fprintf(fileP, "Unknown format %d:", Format);
+        fprintf(fileP, "Unknown format %d:", format);
         {
             unsigned int a;
-            for (a = 0; a < ByteCount && a < 16; ++a)
-                printf("%02x", ((unsigned char *)ValuePtr)[a]);
+            for (a = 0; a < byteCount && a < 16; ++a)
+                printf("%02x", ((const unsigned char *)valuePtr)[a]);
         }
         fprintf(fileP, "\n");
     }
@@ -311,51 +311,50 @@ printFormatNumber(FILE *       const fileP,
 
 
 static double
-convertAnyFormat(const void * const ValuePtr,
-                 int          const Format,
+convertAnyFormat(const void * const valuePtr,
+                 int          const format,
                  ByteOrder    const byteOrder) {
 /*--------------------------------------------------------------------------
    Evaluate number, be it int, rational, or float from directory.
 --------------------------------------------------------------------------*/
-    double Value;
-    Value = 0;
+    double value;
 
-    switch(Format){
+    switch(format) {
     case FMT_SBYTE:
-        Value = *(signed char *)ValuePtr;
+        value = *(signed char *)valuePtr;
         break;
     case FMT_BYTE:
-        Value = *(unsigned char *)ValuePtr;
+        value = *(unsigned char *)valuePtr;
         break;
     case FMT_USHORT:
-        Value = get16u(ValuePtr, byteOrder);
+        value = get16u(valuePtr, byteOrder);
         break;
     case FMT_ULONG:
-        Value = get32u(ValuePtr, byteOrder);
+        value = get32u(valuePtr, byteOrder);
         break;
     case FMT_URATIONAL:
     case FMT_SRATIONAL: {
         int num, den;
-        num = get32s(ValuePtr, byteOrder);
-        den = get32s(4+(char *)ValuePtr, byteOrder);
-        Value = den == 0 ? 0 : (double)(num/den);
+        num = get32s(valuePtr, byteOrder);
+        den = get32s(4+(char *)valuePtr, byteOrder);
+        value = den == 0 ? 0 : (double)(num/den);
     } break;
     case FMT_SSHORT:
-        Value = (signed short)get16u(ValuePtr, byteOrder);
+        value = (signed short)get16u(valuePtr, byteOrder);
         break;
     case FMT_SLONG:
-        Value = get32s(ValuePtr, byteOrder);
+        value = get32s(valuePtr, byteOrder);
         break;
 
     /* Not sure if this is correct (never seen float used in Exif format) */
     case FMT_SINGLE:
-        Value = (double)*(float *)ValuePtr;
+        value = (double)*(float *)valuePtr;
         break;
     case FMT_DOUBLE:
-        Value = *(double *)ValuePtr;
+        value = *(double *)valuePtr;
         break;
     }
-    return Value;
+    return value;
 }
 
 
@@ -370,19 +369,19 @@ traceTag(int                   const tag,
     /* Show tag name */
     unsigned int a;
     bool found;
-    for (a = 0, found = false; !found; ++a){
-        if (tagTable[a].Tag == 0){
+    for (a = 0, found = false; !found; ++a) {
+        if (tagTable[a].tag == 0) {
             fprintf(stderr, "  Unknown Tag %04x Value = ", tag);
             found = true;
         }
-        if (tagTable[a].Tag == tag){
-            fprintf(stderr, "    %s = ",tagTable[a].Desc);
+        if (tagTable[a].tag == tag) {
+            fprintf(stderr, "    %s = ",tagTable[a].desc);
             found = true;
         }
     }
 
     /* Show tag value. */
-    switch(format){
+    switch(format) {
 
     case FMT_UNDEFINED:
         /* Undefined is typically an ascii string. */
@@ -392,9 +391,10 @@ traceTag(int                   const tag,
            (different from int arrays)
         */
         bool noPrint;
+
         printf("\"");
-        for (a = 0, noPrint = false; a < byteCount; ++a){
-            if (ISPRINT((valuePtr)[a])){
+        for (a = 0, noPrint = false; a < byteCount; ++a) {
+            if (ISPRINT((valuePtr)[a])) {
                 fprintf(stderr, "%c", valuePtr[a]);
                 noPrint = false;
             } else {
@@ -402,7 +402,7 @@ traceTag(int                   const tag,
                    proprietary bits of binary information this program may not
                    know how to parse.
                 */
-                if (!noPrint){
+                if (!noPrint) {
                     fprintf(stderr, "?");
                     noPrint = true;
                 }
@@ -422,13 +422,13 @@ traceTag(int                   const tag,
 /* Forward declaration for recursion */
 
 static void
-processExifDir(const unsigned char *  const ExifData,
-               unsigned int           const ExifLength,
-               unsigned int           const DirOffset,
+processExifDir(const unsigned char *  const exifData,
+               unsigned int           const exifLength,
+               unsigned int           const dirOffset,
                exif_ImageInfo *       const imageInfoP,
                ByteOrder              const byteOrder,
                bool                   const wantTagTrace,
-               const unsigned char ** const LastExifRefdP);
+               const unsigned char ** const lastExifRefdP);
 
 
 static void
@@ -464,10 +464,10 @@ processDirEntry(const unsigned char *  const dirEntry,
 
     byteCount = components * bytesPerFormat[format];
 
-    if (byteCount > 4){
+    if (byteCount > 4) {
         unsigned const offsetVal = get32u(&dirEntry[8], byteOrder);
         /* If its bigger than 4 bytes, the dir entry contains an offset.*/
-        if (offsetVal + byteCount > exifLength){
+        if (offsetVal + byteCount > exifLength) {
             /* Bogus pointer offset and / or bytecount value */
             pm_message("Illegal pointer offset value in EXIF "
                        "for tag %04x.  "
@@ -481,7 +481,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         valuePtr = &dirEntry[8];
     }
 
-    if (*lastExifRefdP < valuePtr + byteCount){
+    if (*lastExifRefdP < valuePtr + byteCount) {
         /* Keep track of last byte in the exif header that was actually
            referenced.  That way, we know where the discardable thumbnail data
            begins.
@@ -495,7 +495,7 @@ processDirEntry(const unsigned char *  const dirEntry,
     *haveThumbnailP = (tag == TAG_THUMBNAIL_OFFSET);
 
     /* Extract useful components of tag */
-    switch (tag){
+    switch (tag) {
 
     case TAG_MAKE:
         STRSCPY(imageInfoP->CameraMake, (const char*)valuePtr);
@@ -568,7 +568,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         /* More relevant info always comes earlier, so only use this field if
            we don't have appropriate aperture information yet.
         */
-        if (imageInfoP->ApertureFNumber == 0){
+        if (imageInfoP->ApertureFNumber == 0) {
             imageInfoP->ApertureFNumber = (float)
                 exp(convertAnyFormat(valuePtr, format, byteOrder)
                     * log(2) * 0.5);
@@ -606,7 +606,7 @@ processDirEntry(const unsigned char *  const dirEntry,
            so only use this value if we don't already have it
            from somewhere else.
         */
-        if (imageInfoP->ExposureTime == 0){
+        if (imageInfoP->ExposureTime == 0) {
             imageInfoP->ExposureTime = (float)
                 (1/exp(convertAnyFormat(valuePtr, format, byteOrder)
                        * log(2)));
@@ -614,7 +614,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         break;
 
     case TAG_FLASH:
-        if ((int)convertAnyFormat(valuePtr, format, byteOrder) & 0x7){
+        if ((int)convertAnyFormat(valuePtr, format, byteOrder) & 0x7) {
             imageInfoP->FlashUsed = TRUE;
         }else{
             imageInfoP->FlashUsed = FALSE;
@@ -625,7 +625,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         imageInfoP->Orientation =
             (int)convertAnyFormat(valuePtr, format, byteOrder);
         if (imageInfoP->Orientation < 1 ||
-            imageInfoP->Orientation > 8){
+            imageInfoP->Orientation > 8) {
             pm_message("Undefined rotation value %d",
                        imageInfoP->Orientation);
             imageInfoP->Orientation = 0;
@@ -637,31 +637,31 @@ processDirEntry(const unsigned char *  const dirEntry,
         /* Use largest of height and width to deal with images
            that have been rotated to portrait format.
         */
-        ExifImageWidth =
-            MIN(ExifImageWidth,
+        exifImageWidth =
+            MIN(exifImageWidth,
                 (int)convertAnyFormat(valuePtr, format, byteOrder));
         break;
 
     case TAG_FOCALPLANEXRES:
-        HaveXRes = TRUE;
-        FocalplaneXRes = convertAnyFormat(valuePtr, format, byteOrder);
+        haveXRes = true;
+        focalplaneXRes = convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_FOCALPLANEUNITS:
-        switch((int)convertAnyFormat(valuePtr, format, byteOrder)){
-        case 1: FocalplaneUnits = 25.4; break; /* 1 inch */
+        switch((int)convertAnyFormat(valuePtr, format, byteOrder)) {
+        case 1: focalplaneUnits = 25.4; break; /* 1 inch */
         case 2:
             /* According to the information I was using, 2
                means meters.  But looking at the Cannon
                powershot's files, inches is the only
                sensible value.
             */
-            FocalplaneUnits = 25.4;
+            focalplaneUnits = 25.4;
             break;
 
-        case 3: FocalplaneUnits = 10;   break;  /* 1 centimeter*/
-        case 4: FocalplaneUnits = 1;    break;  /* 1 millimeter*/
-        case 5: FocalplaneUnits = .001; break;  /* 1 micrometer*/
+        case 3: focalplaneUnits = 10;   break;  /* 1 centimeter*/
+        case 4: focalplaneUnits = 1;    break;  /* 1 millimeter*/
+        case 5: focalplaneUnits = .001; break;  /* 1 micrometer*/
         }
         break;
 
@@ -742,23 +742,24 @@ processExifDir(const unsigned char *  const exifData,
 --------------------------------------------------------------------------*/
     const unsigned char * const dirStart = exifData + dirOffset;
     unsigned int const numDirEntries = get16u(&dirStart[0], byteOrder);
+
     unsigned int de;
     bool haveThumbnail;
     unsigned int thumbnailOffset;
     unsigned int thumbnailSize;
 
-    #define DIR_ENTRY_ADDR(Start, Entry) (Start+2+12*(Entry))
+    #define DIR_ENTRY_ADDR(Start, Entry) (Start + 2 + 12*(Entry))
 
     {
         const unsigned char * const dirEnd =
             DIR_ENTRY_ADDR(dirStart, numDirEntries);
-        if (dirEnd + 4 > (exifData + exifLength)){
+        if (dirEnd + 4 > (exifData + exifLength)) {
             if (dirEnd + 2 == exifData + exifLength ||
-                dirEnd == exifData + exifLength){
+                dirEnd == exifData + exifLength) {
                 /* Version 1.3 of jhead would truncate a bit too much.
                    This also caught later on as well.
                 */
-            }else{
+            } else {
                 /* Note: Files that had thumbnails trimmed with jhead
                    1.3 or earlier might trigger this.
                 */
@@ -770,20 +771,19 @@ processExifDir(const unsigned char *  const exifData,
     }
 
     if (wantTagTrace)
-        pm_message("Directory with %d entries", numDirEntries);
+        pm_message("Directory with %u entries", numDirEntries);
 
-    haveThumbnail   = false;  /* initial value */
     thumbnailOffset = 0;      /* initial value */
     thumbnailSize   = 0;      /* initial value */
 
-    for (de = 0; de < numDirEntries; ++de)
+    for (de = 0, haveThumbnail = false; de < numDirEntries; ++de)
         processDirEntry(DIR_ENTRY_ADDR(dirStart, de), exifData, exifLength,
                         byteOrder, wantTagTrace, imageInfoP,
                         &thumbnailOffset, &thumbnailSize, &haveThumbnail,
                         lastExifRefdP);
 
     if (haveThumbnail)
-        DirWithThumbnailPtrs = dirStart;
+        dirWithThumbnailPtrs = dirStart;
 
     {
         /* In addition to linking to subdirectories via exif tags,
@@ -792,14 +792,14 @@ processExifDir(const unsigned char *  const exifData,
            committee!
         */
         if (DIR_ENTRY_ADDR(dirStart, numDirEntries) + 4 <=
-            exifData + exifLength){
+            exifData + exifLength) {
             unsigned int const subdirOffset =
                 get32u(dirStart + 2 + 12*numDirEntries, byteOrder);
-            if (subdirOffset){
+            if (subdirOffset) {
                 const unsigned char * const subdirStart =
                     exifData + subdirOffset;
-                if (subdirStart > exifData + exifLength){
-                    if (subdirStart < exifData + exifLength + 20){
+                if (subdirStart > exifData + exifLength) {
+                    if (subdirStart < exifData + exifLength + 20) {
                         /* Jhead 1.3 or earlier would crop the whole directory!
                            As Jhead produces this form of format incorrectness,
                            I'll just let it pass silently.
@@ -807,28 +807,28 @@ processExifDir(const unsigned char *  const exifData,
                         if (wantTagTrace)
                             printf("Thumbnail removed with "
                                    "Jhead 1.3 or earlier\n");
-                    }else{
+                    } else {
                         pm_message("Illegal subdirectory link");
                     }
-                }else{
+                } else {
                     if (subdirOffset <= exifLength)
                         processExifDir(exifData, exifLength, subdirOffset,
                                        imageInfoP, byteOrder, wantTagTrace,
                                        lastExifRefdP);
                 }
             }
-        }else{
+        } else {
             /* The exif header ends before the last next directory pointer. */
         }
     }
 
-    if (thumbnailSize && thumbnailOffset){
-        if (thumbnailSize + thumbnailOffset <= exifLength){
+    if (thumbnailSize && thumbnailOffset) {
+        if (thumbnailSize + thumbnailOffset <= exifLength) {
             /* The thumbnail pointer appears to be valid.  Store it. */
             imageInfoP->ThumbnailPointer = exifData + thumbnailOffset;
             imageInfoP->ThumbnailSize = thumbnailSize;
 
-            if (wantTagTrace){
+            if (wantTagTrace) {
                 fprintf(stderr, "Thumbnail size: %u bytes\n", thumbnailSize);
             }
         }
@@ -852,23 +852,23 @@ exif_parse(const unsigned char * const exifData,
   'length' is the length of the Exif section.
 --------------------------------------------------------------------------*/
     ByteOrder byteOrder;
-    int FirstOffset;
+    unsigned int firstOffset;
     const unsigned char * lastExifRefd;
 
     *errorP = NULL;  /* initial assumption */
 
     if (wantTagTrace)
-        fprintf(stderr, "Exif header %d bytes long\n",length);
+        fprintf(stderr, "Exif header %u bytes long\n", length);
 
     if (memeq(exifData + 0, "II" , 2)) {
         if (wantTagTrace)
             fprintf(stderr, "Exif header in Intel order\n");
-        byteOrder = NORMAL;
+        byteOrder = ORDER_NORMAL;
     } else {
         if (memeq(exifData + 0, "MM", 2)) {
             if (wantTagTrace)
                 fprintf(stderr, "Exif header in Motorola order\n");
-            byteOrder = MOTOROLA;
+            byteOrder = ORDER_MOTOROLA;
         } else {
             pm_asprintf(errorP, "Invalid alignment marker in Exif "
                         "data.  First two bytes are '%c%c' (0x%02x%02x) "
@@ -879,7 +879,7 @@ exif_parse(const unsigned char * const exifData,
     if (!*errorP) {
         unsigned short const start = get16u(exifData + 2, byteOrder);
         /* Check the next value for correctness. */
-        if (start != 0x002a){
+        if (start != 0x002a) {
             pm_asprintf(errorP, "Invalid Exif header start.  "
                         "two bytes after the alignment marker "
                         "should be 0x002a, but is 0x%04x",
@@ -887,8 +887,8 @@ exif_parse(const unsigned char * const exifData,
         }
     }
     if (!*errorP) {
-        FirstOffset = get32u(exifData + 4, byteOrder);
-        if (FirstOffset < 8 || FirstOffset > 16){
+        firstOffset = get32u(exifData + 4, byteOrder);
+        if (firstOffset < 8 || firstOffset > 16) {
             /* I used to ensure this was set to 8 (website I used
                indicated its 8) but PENTAX Optio 230 has it set
                differently, and uses it as offset. (Sept 11 2002)
@@ -898,25 +898,25 @@ exif_parse(const unsigned char * const exifData,
 
         imageInfoP->Comments[0] = '\0';  /* Initial value - null string */
 
-        HaveXRes = FALSE;  /* Initial assumption */
-        FocalplaneUnits = 0;
-        ExifImageWidth = 0;
+        haveXRes = FALSE;  /* Initial assumption */
+        focalplaneUnits = 0;
+        exifImageWidth = 0;
 
         lastExifRefd = exifData;
-        DirWithThumbnailPtrs = NULL;
+        dirWithThumbnailPtrs = NULL;
 
-        processExifDir(exifData, length, FirstOffset,
+        processExifDir(exifData, length, firstOffset,
                        imageInfoP, byteOrder, wantTagTrace, &lastExifRefd);
 
         /* Compute the CCD width, in millimeters. */
-        if (HaveXRes){
+        if (haveXRes) {
             imageInfoP->HaveCCDWidth = 1;
             imageInfoP->CCDWidth =
-                    (float)(ExifImageWidth * FocalplaneUnits / FocalplaneXRes);
+                    (float)(exifImageWidth * focalplaneUnits / focalplaneXRes);
         } else
             imageInfoP->HaveCCDWidth = 0;
 
-        if (wantTagTrace){
+        if (wantTagTrace) {
             fprintf(stderr,
                     "Non-settings part of Exif header: %lu bytes\n",
                     (unsigned long)(exifData + length - lastExifRefd));
@@ -945,7 +945,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
 
     if (imageInfoP->Orientation > 1) {
 
-        /* Only print orientation if one was supplied, and if its not
+        /* Print orientation only if one was supplied, and if its not
            1 (normal orientation)
 
            1 - The 0th row is at the visual top of the image
@@ -968,7 +968,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
            Note: The descriptions here are the same as the name of the
            command line option to pass to jpegtran to right the image
         */
-        static const char * OrientTab[9] = {
+        static const char * orientTab[9] = {
             "Undefined",
             "Normal",           /* 1 */
             "flip horizontal",  /* left right reversed mirror */
@@ -981,7 +981,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
         };
 
         fprintf(fileP, "Orientation  : %s\n",
-                OrientTab[imageInfoP->Orientation]);
+                orientTab[imageInfoP->Orientation]);
     }
 
     if (imageInfoP->IsColor == 0)
@@ -994,7 +994,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
     if (imageInfoP->FocalLength) {
         fprintf(fileP, "Focal length : %4.1fmm",
                 (double)imageInfoP->FocalLength);
-        if (imageInfoP->HaveCCDWidth){
+        if (imageInfoP->HaveCCDWidth) {
             fprintf(fileP, "  (35mm equivalent: %dmm)",
                     (int)
                     (imageInfoP->FocalLength/imageInfoP->CCDWidth*36 + 0.5));
@@ -1007,7 +1007,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
                 (double)imageInfoP->CCDWidth);
 
     if (imageInfoP->ExposureTime) {
-        if (imageInfoP->ExposureTime < 0.010){
+        if (imageInfoP->ExposureTime < 0.010) {
             fprintf(fileP,
                     "Exposure time: %6.4f s ",
                     (double)imageInfoP->ExposureTime);
@@ -1016,17 +1016,17 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
                     "Exposure time: %5.3f s ",
                     (double)imageInfoP->ExposureTime);
         }
-        if (imageInfoP->ExposureTime <= 0.5){
+        if (imageInfoP->ExposureTime <= 0.5) {
             fprintf(fileP, " (1/%d)",(int)(0.5 + 1/imageInfoP->ExposureTime));
         }
         fprintf(fileP, "\n");
     }
-    if (imageInfoP->ApertureFNumber){
+    if (imageInfoP->ApertureFNumber) {
         fprintf(fileP, "Aperture     : f/%3.1f\n",
                 (double)imageInfoP->ApertureFNumber);
     }
-    if (imageInfoP->Distance){
-        if (imageInfoP->Distance < 0){
+    if (imageInfoP->Distance) {
+        if (imageInfoP->Distance < 0) {
             fprintf(fileP, "Focus dist.  : Infinite\n");
         }else{
             fprintf(fileP, "Focus dist.  :%5.2fm\n",
@@ -1034,15 +1034,15 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
         }
     }
 
-    if (imageInfoP->ISOequivalent){ /* 05-jan-2001 vcs */
+    if (imageInfoP->ISOequivalent) { /* 05-jan-2001 vcs */
         fprintf(fileP, "ISO equiv.   : %2d\n",(int)imageInfoP->ISOequivalent);
     }
-    if (imageInfoP->ExposureBias){ /* 05-jan-2001 vcs */
+    if (imageInfoP->ExposureBias) { /* 05-jan-2001 vcs */
         fprintf(fileP, "Exposure bias:%4.2f\n",
                 (double)imageInfoP->ExposureBias);
     }
 
-    if (imageInfoP->Whitebalance){ /* 05-jan-2001 vcs */
+    if (imageInfoP->Whitebalance) { /* 05-jan-2001 vcs */
         switch(imageInfoP->Whitebalance) {
         case 1:
             fprintf(fileP, "Whitebalance : sunny\n");
@@ -1057,7 +1057,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
             fprintf(fileP, "Whitebalance : cloudy\n");
         }
     }
-    if (imageInfoP->MeteringMode){ /* 05-jan-2001 vcs */
+    if (imageInfoP->MeteringMode) { /* 05-jan-2001 vcs */
         switch(imageInfoP->MeteringMode) {
         case 2:
             fprintf(fileP, "Metering Mode: center weight\n");
@@ -1070,7 +1070,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
             break;
         }
     }
-    if (imageInfoP->ExposureProgram){ /* 05-jan-2001 vcs */
+    if (imageInfoP->ExposureProgram) { /* 05-jan-2001 vcs */
         switch(imageInfoP->ExposureProgram) {
         case 2:
             fprintf(fileP, "Exposure     : program (auto)\n");
@@ -1083,7 +1083,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
             break;
         }
     }
-    if (imageInfoP->CompressionLevel){ /* 05-jan-2001 vcs */
+    if (imageInfoP->CompressionLevel) { /* 05-jan-2001 vcs */
         switch(imageInfoP->CompressionLevel) {
         case 1:
             fprintf(fileP, "Jpeg Quality  : basic\n");
@@ -1105,7 +1105,7 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
 
         for (a = 0; a < MAX_COMMENT && imageInfoP->Comments[a]; ++a) {
             char const c = imageInfoP->Comments[a];
-            if (c == '\n'){
+            if (c == '\n') {
                 /* Do not start a new line if the string ends with a cr */
                 if (imageInfoP->Comments[a+1] != '\0')
                     fprintf(fileP, "\nComment      : ");

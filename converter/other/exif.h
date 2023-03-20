@@ -10,12 +10,12 @@
     #define PATH_MAX _MAX_PATH
 #endif
 
-/*--------------------------------------------------------------------------
-  This structure stores Exif header image elements in a simple manner
-  Used to store camera data as extracted from the various ways that it can be
-  stored in an exif header
---------------------------------------------------------------------------*/
 typedef struct {
+/*--------------------------------------------------------------------------
+  A structure of this type stores Exif header image elements in a simple
+  manner Used to store camera data as extracted from the various ways that it
+  can be stored in an exif header
+--------------------------------------------------------------------------*/
     char  CameraMake   [32];
     char  CameraModel  [40];
     char  DateTime     [20];
