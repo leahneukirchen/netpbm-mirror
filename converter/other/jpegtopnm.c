@@ -463,23 +463,23 @@ read_rgb(JSAMPLE *       const ptr,
 
 
 
-/* pnmbuffer is declared global because it would be improper to pass a
-   pointer to it as input to copy_pixel_row(), since it isn't
-   logically a parameter of the operation, but rather is private to
-   copy_pixel_row().  But it would be impractical to allocate and free
-   the storage with every call to copy_pixel_row().
-*/
-static xel * pnmbuffer;      /* Output buffer.  Input to pnm_writepnmrow() */
-
 static void
-copyPixelRow(JSAMPROW        const jpegbuffer,
-             unsigned int    const width,
-             unsigned int    const samplesPerPixel,
-             enum Colorspace const colorSpace,
-             FILE *          const ofP,
-             int             const format,
-             xelval          const maxval) {
+convertPixelRow(JSAMPROW        const jpegbuffer,
+                unsigned int    const width,
+                unsigned int    const samplesPerPixel,
+                enum Colorspace const colorSpace,
+                int             const format,
+                xelval          const maxval,
+                xel *           const pnmbuffer) {
+/*----------------------------------------------------------------------------
+  Convert the pixels in 'jpegbuffer' from libjpeg format to libnetpbm
+  format in 'pnmbuffer'.
 
+  The row has 'width' pixels and the data in 'jpegbuffer' is formatted with
+  'samplesPerPixel' samples per pixel with colorspace 'colorSpace'.
+
+  The output Netpbm data is in format 'format' with maxval 'maxval'.
+-----------------------------------------------------------------------------*/
     JSAMPLE * ptr;
     unsigned int outputCursor;     /* Cursor into output buffer 'pnmbuffer' */
 
@@ -496,7 +496,6 @@ copyPixelRow(JSAMPROW        const jpegbuffer,
         ptr += samplesPerPixel;  /* move to next pixel of input */
         pnmbuffer[outputCursor] = currentPixel;
     }
-    pnm_writepnmrow(ofP, pnmbuffer, width, maxval, format, false);
 }
 
 
@@ -817,8 +816,13 @@ convertRaster(struct jpeg_decompress_struct * const cinfoP,
               FILE *                          const ofP,
               xelval                          const format,
               unsigned int                    const maxval) {
-
+/*----------------------------------------------------------------------------
+   Read the raster from the input and write it out in Netpbm format
+   to file *ofP, in format 'format', with maxval 'maxval'.
+-----------------------------------------------------------------------------*/
     JSAMPROW jpegbuffer;  /* Input buffer.  Filled by jpeg_scanlines() */
+
+    xel * pnmbuffer;      /* Output buffer */
 
     jpegbuffer = ((*cinfoP->mem->alloc_sarray)
                   ((j_common_ptr) cinfoP, JPOOL_IMAGE,
@@ -826,13 +830,20 @@ convertRaster(struct jpeg_decompress_struct * const cinfoP,
                    (JDIMENSION) 1)
         )[0];
 
+    pnmbuffer = pnm_allocrow(cinfoP->output_width);
+
     while (cinfoP->output_scanline < cinfoP->output_height) {
         jpeg_read_scanlines(cinfoP, &jpegbuffer, 1);
-        if (ofP)
-            copyPixelRow(jpegbuffer, cinfoP->output_width,
-                         cinfoP->out_color_components,
-                         colorspace, ofP, format, maxval);
+        if (ofP) {
+            convertPixelRow(jpegbuffer, cinfoP->output_width,
+                            cinfoP->out_color_components,
+                            colorspace, format, maxval, pnmbuffer);
+
+            pnm_writepnmrow(ofP, pnmbuffer, cinfoP->output_width,
+                            maxval, format, false);
+        }
     }
+    pnm_freerow(pnmbuffer);
 }
 
 
@@ -877,8 +888,6 @@ convertImage(FILE *                          const ofP,
         pnm_writepnminit(ofP, cinfoP->output_width, cinfoP->output_height,
                          maxval, format, false);
 
-    pnmbuffer = pnm_allocrow(cinfoP->output_width);
-
     colorspace = computeColorSpace(cinfoP, cmdline.inklevel);
 
     convertRaster(cinfoP, colorspace, ofP, format, maxval);
@@ -889,8 +898,6 @@ convertImage(FILE *                          const ofP,
         dumpExif(*cinfoP, cmdline.traceexif);
     if (cmdline.exifFileName)
         saveExif(*cinfoP, cmdline.exifFileName);
-
-    pnm_freerow(pnmbuffer);
 
     /* Finish decompression and release decompressor memory. */
     jpeg_finish_decompress(cinfoP);
