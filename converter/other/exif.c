@@ -7,8 +7,10 @@
   Bryan Henderson adapted it to Netpbm in September 2001.  Bryan
   added more of Wandel's code, from Jhead 1.9 dated December 2002 in
   January 2003.
---------------------------------------------------------------------------*/
 
+  Bryan fundamentally rewrote it in March 2023 because it wasn't properly
+  dealing with the main image vs thumbnail IFDs.
+--------------------------------------------------------------------------*/
 
 /*
   N.B. "EXIF" refers to a whole image file format; some people think it is
@@ -67,7 +69,6 @@
 
 #include "exif.h"
 
-static const unsigned char * dirWithThumbnailPtrs;
 static double focalplaneXRes;
 static bool haveXRes;
 static double focalplaneUnits;
@@ -480,7 +481,7 @@ processIfd(const unsigned char *  const exifData,
            exif_ifd *             const ifdP,
            ByteOrder              const byteOrder,
            bool                   const wantTagTrace,
-           const unsigned char ** const lastExifRefdP);
+           const char **          const errorP);
 
 
 static void
@@ -492,8 +493,7 @@ processDirEntry(const unsigned char *  const dirEntry,
                 exif_ifd *             const ifdP,
                 unsigned int *         const thumbnailOffsetP,
                 unsigned int *         const thumbnailSizeP,
-                bool *                 const haveThumbnailP,
-                const unsigned char ** const lastExifRefdP) {
+                const char **          const errorP) {
 
     int const tag        = get16u(&dirEntry[0], byteOrder);
     int const format     = get16u(&dirEntry[2], byteOrder);
@@ -505,6 +505,8 @@ processDirEntry(const unsigned char *  const dirEntry,
            we declare it as a pointer to a generic byte here.
         */
     unsigned int valueSz;
+
+    *errorP = NULL;  /* initial assumption */
 
     if ((format-1) >= NUM_FORMATS) {
         /* (-1) catches illegal zero case as unsigned underflows
@@ -533,18 +535,8 @@ processDirEntry(const unsigned char *  const dirEntry,
         valuePtr = &dirEntry[8];
     }
 
-    if (*lastExifRefdP < valuePtr + valueSz) {
-        /* Keep track of last byte in the exif header that was actually
-           referenced.  That way, we know where the discardable thumbnail data
-           begins.
-        */
-        *lastExifRefdP = valuePtr + valueSz;
-    }
-
     if (wantTagTrace)
         traceTag(tag, format, valuePtr, valueSz, byteOrder);
-
-    *haveThumbnailP = (tag == TAG_THUMBNAIL_OFFSET);
 
     /* Extract useful components of tag */
     switch (tag) {
@@ -608,7 +600,7 @@ processDirEntry(const unsigned char *  const dirEntry,
 
     case TAG_FNUMBER:
         /* Simplest way of expressing aperture, so I trust it the most.
-           (overwrite previously computd value if there is one)
+           (overwrite previously computed value if there is one)
         */
         ifdP->apertureFNumber =
             (float)numericValue(valuePtr, format, byteOrder);
@@ -770,10 +762,18 @@ processDirEntry(const unsigned char *  const dirEntry,
                        "directory link.  Offset is %u, "
                        "but Exif data is only %u bytes.",
                        subdirOffset, exifLength);
-        else
+        else {
+            const char * error;
             processIfd(exifData, exifLength, subdirOffset,
                        ifdP, byteOrder, wantTagTrace,
-                       lastExifRefdP);
+                       &error);
+
+            if (error) {
+                pm_asprintf(errorP, "Failed to process "
+                            "ExifOffset/InteropOffset tag.  %s", error);
+                pm_strfree(error);
+            }
+        }
     } break;
     }
 }
@@ -787,7 +787,7 @@ processIfd(const unsigned char *  const exifData,
            exif_ifd *             const ifdP,
            ByteOrder              const byteOrder,
            bool                   const wantTagTrace,
-           const unsigned char ** const lastExifRefdP) {
+           const char **          const errorP) {
 /*--------------------------------------------------------------------------
    Process one of the nested EXIF IFDs (Image File Directory).
 --------------------------------------------------------------------------*/
@@ -795,31 +795,12 @@ processIfd(const unsigned char *  const exifData,
     unsigned int const numDirEntries = get16u(&dirStart[0], byteOrder);
 
     unsigned int de;
-    bool haveThumbnail;
     unsigned int thumbnailOffset;
     unsigned int thumbnailSize;
 
-    #define DIR_ENTRY_ADDR(Start, Entry) (Start + 2 + 12*(Entry))
+    *errorP = NULL;  /* initial value */
 
-    {
-        const unsigned char * const dirEnd =
-            DIR_ENTRY_ADDR(dirStart, numDirEntries);
-        if (dirEnd + 4 > (exifData + exifLength)) {
-            if (dirEnd + 2 == exifData + exifLength ||
-                dirEnd == exifData + exifLength) {
-                /* Version 1.3 of jhead would truncate a bit too much.
-                   This also caught later on as well.
-                */
-            } else {
-                /* Note: Files that had thumbnails trimmed with jhead
-                   1.3 or earlier might trigger this.
-                */
-                pm_message("Illegal directory entry size");
-                return;
-            }
-        }
-        *lastExifRefdP = MAX(*lastExifRefdP, dirEnd);
-    }
+    #define DIR_ENTRY_ADDR(Start, Entry) (Start + 2 + 12*(Entry))
 
     if (wantTagTrace)
         pm_message("Directory with %u entries", numDirEntries);
@@ -827,14 +808,19 @@ processIfd(const unsigned char *  const exifData,
     thumbnailOffset = 0;      /* initial value */
     thumbnailSize   = 0;      /* initial value */
 
-    for (de = 0, haveThumbnail = false; de < numDirEntries; ++de)
+    for (de = 0; de < numDirEntries && !*errorP; ++de) {
+        const char * error;
         processDirEntry(DIR_ENTRY_ADDR(dirStart, de), exifData, exifLength,
                         byteOrder, wantTagTrace, ifdP,
-                        &thumbnailOffset, &thumbnailSize, &haveThumbnail,
-                        lastExifRefdP);
+                        &thumbnailOffset, &thumbnailSize,
+                        &error);
 
-    if (haveThumbnail)
-        dirWithThumbnailPtrs = dirStart;
+        if (error) {
+            pm_asprintf(errorP, "Failed to process tag %u.  %s",
+                        de, error);
+            pm_strfree(error);
+        }
+    }
 
     {
         /* Recursively process the next directory in the chain, if there is
@@ -860,10 +846,12 @@ processIfd(const unsigned char *  const exifData,
                         pm_message("Illegal subdirectory link");
                     }
                 } else {
+                    const char * error;
+                    /* Dummy, since this code will be deleted */
                     if (subdirOffset <= exifLength)
                         processIfd(exifData, exifLength, subdirOffset,
                                    ifdP, byteOrder, wantTagTrace,
-                                   lastExifRefdP);
+                                   &error);
                 }
             }
         } else {
@@ -902,7 +890,6 @@ exif_parse(const unsigned char * const exifData,
 --------------------------------------------------------------------------*/
     ByteOrder byteOrder;
     unsigned int firstOffset;
-    const unsigned char * lastExifRefd;
 
     *errorP = NULL;  /* initial assumption */
 
@@ -936,6 +923,8 @@ exif_parse(const unsigned char * const exifData,
         }
     }
     if (!*errorP) {
+        const char * error;
+
         firstOffset = get32u(exifData + 4, byteOrder);
         if (firstOffset < 8 || firstOffset > 16) {
             /* I used to ensure this was set to 8 (website I used
@@ -952,25 +941,21 @@ exif_parse(const unsigned char * const exifData,
         focalplaneUnits = 0;
         exifImageWidth = 0;
 
-        lastExifRefd = exifData;
-        dirWithThumbnailPtrs = NULL;
-
         processIfd(exifData, length, firstOffset,
                    &imageInfoP->mainImage, byteOrder, wantTagTrace,
-                   &lastExifRefd);
+                   &error);
 
-        /* Compute the CCD width, in millimeters. */
-        if (haveXRes && exifImageWidth) {
-            imageInfoP->mainImage.haveCCDWidth = 1;
-            imageInfoP->mainImage.ccdWidth =
+        if (error) {
+            pm_asprintf(errorP, "Failed to process IFD.  %s", error);
+            pm_strfree(error);
+        } else {
+            /* Compute the CCD width, in millimeters. */
+            if (haveXRes && exifImageWidth) {
+                imageInfoP->mainImage.haveCCDWidth = 1;
+                imageInfoP->mainImage.ccdWidth =
                     (float)(exifImageWidth * focalplaneUnits / focalplaneXRes);
-        } else
-            imageInfoP->mainImage.haveCCDWidth = 0;
-
-        if (wantTagTrace) {
-            fprintf(stderr,
-                    "Non-settings part of Exif header: %lu bytes\n",
-                    (unsigned long)(exifData + length - lastExifRefd));
+            } else
+                imageInfoP->mainImage.haveCCDWidth = 0;
         }
     }
 }
