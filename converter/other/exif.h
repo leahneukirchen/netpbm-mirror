@@ -12,50 +12,59 @@
 
 typedef struct {
 /*--------------------------------------------------------------------------
-  A structure of this type stores Exif header image elements in a simple
-  manner Used to store camera data as extracted from the various ways that it
-  can be stored in an exif header
+  A structure of this type contains the information from an EXIF header
+  Image File Directory (IFD).
+
+  It appears that some of these members are possible only for certain kinds of
+  IFD (e.g. ThumbnailSize does not appear in a legal IFD for a main image),
+  but we recognize all tags in all IFDs all the same.
 --------------------------------------------------------------------------*/
-    char  CameraMake   [32];
-    char  CameraModel  [40];
-    char  DateTime     [20];
-    float XResolution;
-    float YResolution;
-    int   Orientation;
-    int   IsColor;
-    int   FlashUsed;
-    float FocalLength;
-    float ExposureTime;
-    float ApertureFNumber;
-    float Distance;
-    int   HaveCCDWidth;  /* boolean */
-    float CCDWidth;
-    float ExposureBias;
-    int   Whitebalance;
-    int   MeteringMode;
-    int   ExposureProgram;
-    int   ISOequivalent;
-    int   CompressionLevel;
-    char  Comments[MAX_COMMENT];
+    char  cameraMake   [32];
+    char  cameraModel  [40];
+    char  dateTime     [20];
+    float xResolution;
+    float yResolution;
+    int   orientation;
+    int   isColor;
+    int   flashUsed;
+    float focalLength;
+    float exposureTime;
+    float apertureFNumber;
+    float distance;
+    int   haveCCDWidth;  /* boolean */
+    float ccdWidth;
+    float exposureBias;
+    int   whiteBalance;
+    int   meteringMode;
+    int   exposureProgram;
+    int   isoEquivalent;
+    int   compressionLevel;
+    char  comments[MAX_COMMENT];
 
-    const unsigned char * ThumbnailPointer;  /* Pointer at the thumbnail */
-    unsigned ThumbnailSize;     /* Size of thumbnail. */
+    const unsigned char * thumbnail;  /* Pointer at the thumbnail */
+    unsigned thumbnailSize;     /* Size of thumbnail. */
+} exif_ifd;
 
-    const char * DatePointer;
+
+typedef struct {
+/*--------------------------------------------------------------------------
+  A structure of this type contains the information from an EXIF header.
+--------------------------------------------------------------------------*/
+    exif_ifd mainImage;       /* aka IFD0 */
+    exif_ifd thumbnailImage;  /* aka IFD1 */
 } exif_ImageInfo;
 
 
 /* Prototypes for exif.c functions. */
 
-void 
-exif_parse(const unsigned char * const exifSection, 
+void
+exif_parse(const unsigned char * const exifSection,
            unsigned int          const length,
-           exif_ImageInfo *      const imageInfoP, 
+           exif_ImageInfo *      const imageInfoP,
            bool                  const wantTagTrace,
            const char **         const errorP);
 
-void 
-exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
-                   FILE *                 const fileP);
+void
+exif_showImageInfo(const exif_ImageInfo * const imageInfoP);
 
 #endif
