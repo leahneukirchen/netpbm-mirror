@@ -69,15 +69,12 @@
 
 #include "exif.h"
 
-static double focalplaneXRes;
-static bool haveXRes;
-static double focalplaneUnits;
-static int exifImageWidth;
+
 
 typedef struct {
     unsigned short tag;
     const char * desc;
-} TagTable;
+} TagTableEntry;
 
 
 
@@ -141,7 +138,7 @@ static int const bytesPerFormat[] = {0,1,1,2,4,8,1,1,2,4,8,4,8};
 #define TAG_THUMBNAIL_OFFSET  0x0201
 #define TAG_THUMBNAIL_LENGTH  0x0202
 
-static TagTable const tagTable[] = {
+static TagTableEntry const tagTable[] = {
   {   0x100,   "ImageWidth"},
   {   0x101,   "ImageLength"},
   {   0x102,   "BitsPerSample"},
@@ -443,7 +440,7 @@ traceTag(int                   const tag,
     const char * tagValue;
     unsigned int i;
 
-    for (i = 0, tagNm = NULL;tagTable[i].tag; ++i) {
+    for (i = 0, tagNm = NULL; tagTable[i].tag; ++i) {
         if (tagTable[i].tag == tag)
             tagNm = pm_strdup(tagTable[i].desc);
     }
@@ -477,10 +474,11 @@ traceTag(int                   const tag,
 static void
 processIfd(const unsigned char *  const exifData,
            unsigned int           const exifLength,
-           unsigned int           const dirOffset,
-           exif_ifd *             const ifdP,
+           const unsigned char *  const ifdData,
            ByteOrder              const byteOrder,
            bool                   const wantTagTrace,
+           exif_ifd *             const ifdP,
+           const unsigned char ** const nextIfdPP,
            const char **          const errorP);
 
 
@@ -674,37 +672,41 @@ processDirEntry(const unsigned char *  const dirEntry,
         break;
 
     case TAG_EXIF_IMAGELENGTH:
+        ifdP->imageLength =
+            (unsigned int)numericValue(valuePtr, format, byteOrder);
+        break;
+
     case TAG_EXIF_IMAGEWIDTH:
-        /* Use largest of height and width to deal with images
-           that have been rotated to portrait format.
-        */
-        exifImageWidth =
-            MIN(exifImageWidth,
-                (int)numericValue(valuePtr, format, byteOrder));
+        ifdP->imageWidth =
+            (unsigned int)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_FOCALPLANEXRES:
-        haveXRes = true;
-        focalplaneXRes = numericValue(valuePtr, format, byteOrder);
+        ifdP->focalPlaneXRes = numericValue(valuePtr, format, byteOrder);
         break;
 
-    case TAG_FOCALPLANEUNITS:
-        switch((int)numericValue(valuePtr, format, byteOrder)) {
-        case 1: focalplaneUnits = 25.4; break; /* 1 inch */
+    case TAG_FOCALPLANEUNITS: {
+        int const tagValue = (int)numericValue(valuePtr, format, byteOrder);
+        switch (tagValue) {
+        case 1: ifdP->focalPlaneUnits = 25.4; break; /* 1 inch */
         case 2:
             /* According to the information I was using, 2
                means meters.  But looking at the Cannon
                powershot's files, inches is the only
                sensible value.
             */
-            focalplaneUnits = 25.4;
+            ifdP->focalPlaneUnits = 25.4;
             break;
 
-        case 3: focalplaneUnits = 10;   break;  /* 1 centimeter*/
-        case 4: focalplaneUnits = 1;    break;  /* 1 millimeter*/
-        case 5: focalplaneUnits = .001; break;  /* 1 micrometer*/
+        case 3: ifdP->focalPlaneUnits = 10.0;  break;  /* 1 centimeter*/
+        case 4: ifdP->focalPlaneUnits = 1.0;   break;  /* 1 millimeter*/
+        case 5: ifdP->focalPlaneUnits = .001;  break;  /* 1 micrometer*/
+        default:
+            pm_asprintf(errorP, "Unrecognized FOCALPLANEUNITS value %d.  "
+                        "We know only 1, 2, 3, 4, and 5",
+                        tagValue);
         }
-        break;
+    } break;
 
         /* Remaining cases contributed by: Volker C. Schoech
            (schoech@gmx.de)
@@ -754,22 +756,32 @@ processDirEntry(const unsigned char *  const dirEntry,
 
     case TAG_EXIF_OFFSET:
     case TAG_INTEROP_OFFSET: {
-        unsigned int const subdirOffset = get32u(valuePtr, byteOrder);
-        if (subdirOffset >= exifLength)
-            pm_message("Illegal exif or interop offset "
+        unsigned int const subIfdOffset = get32u(valuePtr, byteOrder);
+        if (subIfdOffset + 4 > exifLength)
+            pm_message("Invalid exif or interop offset "
                        "directory link.  Offset is %u, "
                        "but Exif data is only %u bytes.",
-                       subdirOffset, exifLength);
+                       subIfdOffset, exifLength);
         else {
-            const char * error;
-            processIfd(exifData, exifLength, subdirOffset,
-                       ifdP, byteOrder, wantTagTrace,
-                       &error);
+            /* Process the chain of IFDs starting at 'subIfdOffset'.
+               Merge whatever tags are in them into *ifdP
+            */
+            const unsigned char * nextIfdP;
 
-            if (error) {
-                pm_asprintf(errorP, "Failed to process "
-                            "ExifOffset/InteropOffset tag.  %s", error);
-                pm_strfree(error);
+            for (nextIfdP = exifData + subIfdOffset; nextIfdP;) {
+                const char * error;
+
+                pm_message("Processing subIFD");
+
+                processIfd(exifData, exifLength, exifData + subIfdOffset,
+                           byteOrder, wantTagTrace,
+                           ifdP, &nextIfdP, &error);
+
+                if (error) {
+                    pm_asprintf(errorP, "Failed to process "
+                                "ExifOffset/InteropOffset tag.  %s", error);
+                    pm_strfree(error);
+                }
             }
         }
     } break;
@@ -779,18 +791,59 @@ processDirEntry(const unsigned char *  const dirEntry,
 
 
 static void
+locateNextIfd(const unsigned char *  const exifData,
+              unsigned int           const exifLength,
+              ByteOrder              const byteOrder,
+              const unsigned char *  const nextIfdLinkPtr,
+              const unsigned char ** const nextIfdPP,
+              const char **          const errorP) {
+
+    if (nextIfdLinkPtr + 4 > exifData + exifLength)
+        pm_asprintf(errorP, "EXIF header ends before next-IFD link");
+    else {
+        if (nextIfdLinkPtr + 4 <= exifData + exifLength) {
+            unsigned int const nextIfdLink =
+                get32u(nextIfdLinkPtr, byteOrder);
+                /* Offset in EXIF header of next IFD, or zero if none */
+
+            if (nextIfdLink) {
+                if (nextIfdLink + 4 >= exifLength) {
+                    pm_asprintf(errorP, "Next IFD link is %u, "
+                                "but EXIF header is only %u bytes long",
+                                nextIfdLink, exifLength);
+                } else
+                    *nextIfdPP = exifData + nextIfdLink;
+            } else
+                *nextIfdPP = NULL;
+        }
+    }
+}
+
+
+
+static void
 processIfd(const unsigned char *  const exifData,
            unsigned int           const exifLength,
-           unsigned int           const dirOffset,
-           exif_ifd *             const ifdP,
+           const unsigned char *  const ifdData,
            ByteOrder              const byteOrder,
            bool                   const wantTagTrace,
+           exif_ifd *             const ifdP,
+           const unsigned char ** const nextIfdPP,
            const char **          const errorP) {
 /*--------------------------------------------------------------------------
-   Process one of the nested EXIF IFDs (Image File Directory).
+   Process one EXIF IFD (Image File Directory).
+
+   The text of the IFD is at 'ifdData'.
+
+   The text of the EXIF header of which the IFD is part is the 'exifLength'
+   bytes at 'exifData'.
+
+   Return the contents of the directory (tags) as *ifdP.
+
+   Return as *nextIfdPP a pointer into the EXIF header at 'exifData'
+   to the next IFD in the chain, or NULL if this is the last IFD.
 --------------------------------------------------------------------------*/
-    const unsigned char * const dirStart = exifData + dirOffset;
-    unsigned int const numDirEntries = get16u(&dirStart[0], byteOrder);
+    unsigned int const numDirEntries = get16u(&ifdData[0], byteOrder);
 
     unsigned int de;
 
@@ -799,14 +852,15 @@ processIfd(const unsigned char *  const exifData,
     #define DIR_ENTRY_ADDR(Start, Entry) (Start + 2 + 12*(Entry))
 
     if (wantTagTrace)
-        pm_message("Directory with %u entries", numDirEntries);
+        pm_message("Processing IFD at %p with %u entries",
+                   ifdData, numDirEntries);
 
     ifdP->thumbnailOffset = 0;      /* initial value */
     ifdP->thumbnailLength = 0;      /* initial value */
 
     for (de = 0; de < numDirEntries && !*errorP; ++de) {
         const char * error;
-        processDirEntry(DIR_ENTRY_ADDR(dirStart, de), exifData, exifLength,
+        processDirEntry(DIR_ENTRY_ADDR(ifdData, de), exifData, exifLength,
                         byteOrder, wantTagTrace, ifdP,
                         &error);
 
@@ -817,54 +871,19 @@ processIfd(const unsigned char *  const exifData,
         }
     }
 
-    {
-        /* Recursively process the next directory in the chain, if there is
-           one
-        */
-        if (DIR_ENTRY_ADDR(dirStart, numDirEntries) + 4 <=
-            exifData + exifLength) {
-            unsigned int const subdirOffset =
-                get32u(dirStart + 2 + 12*numDirEntries, byteOrder);
-            if (subdirOffset) {
-                const unsigned char * const subdirStart =
-                    exifData + subdirOffset;
-                if (subdirStart > exifData + exifLength) {
-                    if (subdirStart < exifData + exifLength + 20) {
-                        /* Jhead 1.3 or earlier would crop the whole directory!
-                           As Jhead produces this form of format incorrectness,
-                           I'll just let it pass silently.
-                        */
-                        if (wantTagTrace)
-                            pm_message("Thumbnail removed with "
-                                       "Jhead 1.3 or earlier");
-                    } else {
-                        pm_message("Illegal subdirectory link");
-                    }
-                } else {
-                    const char * error;
-                    /* Dummy, since this code will be deleted */
-                    if (subdirOffset <= exifLength)
-                        processIfd(exifData, exifLength, subdirOffset,
-                                   ifdP, byteOrder, wantTagTrace,
-                                   &error);
-                }
-            }
-        } else {
-            /* The exif header ends before the last next directory pointer. */
-        }
-    }
+    locateNextIfd(exifData, exifLength, byteOrder,
+                  DIR_ENTRY_ADDR(ifdData, numDirEntries),
+                  nextIfdPP, errorP);
 
     if (ifdP->thumbnailLength && ifdP->thumbnailOffset) {
         if (ifdP->thumbnailOffset + ifdP->thumbnailLength <= exifLength) {
             /* The thumbnail pointer appears to be valid.  Store it. */
             ifdP->thumbnail     = exifData + ifdP->thumbnailOffset;
             ifdP->thumbnailSize = ifdP->thumbnailLength;
-
-            if (wantTagTrace) {
-                pm_message("Thumbnail size: %u bytes", ifdP->thumbnailSize);
-            }
         }
     }
+    if (wantTagTrace)
+        pm_message("Done processing IFD at %p", ifdData);
 }
 
 
@@ -919,38 +938,77 @@ exif_parse(const unsigned char * const exifData,
     }
     if (!*errorP) {
         const char * error;
+        const unsigned char * nextIfdP;
 
         firstOffset = get32u(exifData + 4, byteOrder);
         if (firstOffset < 8 || firstOffset > 16) {
             /* I used to ensure this was set to 8 (website I used
                indicated its 8) but PENTAX Optio 230 has it set
                differently, and uses it as offset. (Sept 11 2002)
-                */
+            */
             pm_message("Suspicious offset of first IFD value in Exif header");
         }
 
         imageInfoP->mainImage.comments[0] = '\0';
             /* Initial value - null string */
 
-        haveXRes = FALSE;  /* Initial assumption */
-        focalplaneUnits = 0;
-        exifImageWidth = 0;
+        imageInfoP->mainImage.focalPlaneXRes = 0;  /* Initial assumption */
+        imageInfoP->mainImage.focalPlaneUnits = 0;
+        imageInfoP->mainImage.imageWidth = 0;
+        imageInfoP->mainImage.imageLength = 0;
 
-        processIfd(exifData, length, firstOffset,
-                   &imageInfoP->mainImage, byteOrder, wantTagTrace,
-                   &error);
+        pm_message("Processing main image IFD (IFD0)");
+
+        processIfd(exifData, length, exifData + firstOffset, byteOrder,
+                   wantTagTrace,
+                   &imageInfoP->mainImage, &nextIfdP, &error);
 
         if (error) {
-            pm_asprintf(errorP, "Failed to process IFD.  %s", error);
+            pm_asprintf(errorP, "Failed to process main image IFD.  %s",
+                        error);
             pm_strfree(error);
-        } else {
+        }
+
+        if (nextIfdP) {
+            const char * error;
+
+            pm_message("Processing thumbnail IFD (IFD1)");
+
+            processIfd(exifData, length, nextIfdP, byteOrder,
+                       wantTagTrace,
+                       &imageInfoP->thumbnailImage, &nextIfdP, &error);
+
+            if (error) {
+                pm_asprintf(errorP,
+                            "Failed to process thumbnail image IFD.  %s",
+                            error);
+                pm_strfree(error);
+            } else {
+                if (nextIfdP) {
+                    pm_message("Ignoring third IFD in EXIF header because "
+                               "We understand only two -- one for the main "
+                               "image and one for the thumbnail");
+                }
+            }
+        }
+        if (!*errorP) {
             /* Compute the CCD width, in millimeters. */
-            if (haveXRes && exifImageWidth) {
-                imageInfoP->mainImage.haveCCDWidth = 1;
-                imageInfoP->mainImage.ccdWidth =
-                    (float)(exifImageWidth * focalplaneUnits / focalplaneXRes);
+            if (imageInfoP->mainImage.focalPlaneXRes &&
+                imageInfoP->mainImage.focalPlaneUnits &&
+                imageInfoP->mainImage.imageWidth &&
+                imageInfoP->mainImage.imageLength) {
+
+                unsigned int const maxDim =
+                    MAX(imageInfoP->mainImage.imageWidth,
+                        imageInfoP->mainImage.imageLength);
+
+                imageInfoP->haveCCDWidth = true;
+                imageInfoP->ccdWidth =
+                    (float)(maxDim *
+                            imageInfoP->mainImage.focalPlaneUnits /
+                            imageInfoP->mainImage.focalPlaneXRes);
             } else
-                imageInfoP->mainImage.haveCCDWidth = 0;
+                imageInfoP->haveCCDWidth = false;
         }
     }
 }
@@ -999,24 +1057,6 @@ showIfd(const exif_ifd * const ifdP) {
     if (ifdP->flashUsed >= 0)
         pm_message("Flash used   : %s",
                    ifdP->flashUsed ? "Yes" :"No");
-
-    if (ifdP->focalLength) {
-        const char * mm35equiv;
-
-        if (ifdP->haveCCDWidth) {
-            pm_asprintf(&mm35equiv, "  (35mm equivalent: %dmm)",
-                        (int) (ifdP->focalLength/ifdP->ccdWidth*36 + 0.5));
-        } else
-            mm35equiv = pm_strdup("");
-
-        pm_message("Focal length : %4.1fmm %s",
-                   (double)ifdP->focalLength, mm35equiv);
-
-        pm_strfree(mm35equiv);
-    }
-
-    if (ifdP->haveCCDWidth)
-        pm_message("CCD width    : %2.4fmm", (double)ifdP->ccdWidth);
 
     if (ifdP->exposureTime) {
         const char * timeDisp;
@@ -1140,6 +1180,25 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP) {
 --------------------------------------------------------------------------*/
 
     showIfd(&imageInfoP->mainImage);
+
+    if (imageInfoP->mainImage.focalLength) {
+        const char * mm35equiv;
+
+        if (imageInfoP->haveCCDWidth) {
+            pm_asprintf(&mm35equiv, "  (35mm equivalent: %dmm)",
+                        (int) (imageInfoP->mainImage.focalLength /
+                               imageInfoP->ccdWidth*36 + 0.5));
+        } else
+            mm35equiv = pm_strdup("");
+
+        pm_message("Focal length : %4.1fmm %s",
+                   (double)imageInfoP->mainImage.focalLength, mm35equiv);
+
+        pm_strfree(mm35equiv);
+    }
+
+    if (imageInfoP->haveCCDWidth)
+        pm_message("CCD width    : %2.4fmm", (double)imageInfoP->ccdWidth);
 }
 
 

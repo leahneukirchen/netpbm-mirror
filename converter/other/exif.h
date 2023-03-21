@@ -31,8 +31,6 @@ typedef struct {
     float exposureTime;
     float apertureFNumber;
     float distance;
-    int   haveCCDWidth;  /* boolean */
-    float ccdWidth;
     float exposureBias;
     int   whiteBalance;
     int   meteringMode;
@@ -42,6 +40,10 @@ typedef struct {
     char  comments[MAX_COMMENT];
     unsigned int thumbnailOffset;
     unsigned int thumbnailLength;
+    unsigned int imageLength;
+    unsigned int imageWidth;
+    double       focalPlaneXRes;
+    double       focalPlaneUnits;
 
     const unsigned char * thumbnail;  /* Pointer at the thumbnail */
     unsigned thumbnailSize;     /* Size of thumbnail. */
@@ -54,6 +56,8 @@ typedef struct {
 --------------------------------------------------------------------------*/
     exif_ifd mainImage;       /* aka IFD0 */
     exif_ifd thumbnailImage;  /* aka IFD1 */
+    bool     haveCCDWidth;
+    float    ccdWidth;
 } exif_ImageInfo;
 
 
