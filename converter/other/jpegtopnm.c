@@ -708,12 +708,13 @@ dumpExif(struct jpeg_decompress_struct const cinfo,
 
     for (markerP = cinfo.marker_list, foundOne = false;
          markerP;
-         markerP = markerP->next)
+         markerP = markerP->next) {
         if (isExif(*markerP)) {
             pm_message("EXIF INFO:");
             printExifInfo(*markerP, wantTrace);
             foundOne = true;
         }
+    }
     if (!foundOne)
         pm_message("No EXIF info in image.");
 }
