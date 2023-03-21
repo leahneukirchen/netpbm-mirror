@@ -455,11 +455,8 @@ traceTag(int                   const tag,
 
     case FMT_UNDEFINED:
         /* Undefined is typically an ascii string. */
-
     case FMT_STRING: {
         tagValue = stringTraceValue(value, valueSz);
-
-        fprintf(stderr, "\"\n");
     } break;
 
     default:
