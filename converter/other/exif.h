@@ -40,6 +40,8 @@ typedef struct {
     int   isoEquivalent;
     int   compressionLevel;
     char  comments[MAX_COMMENT];
+    unsigned int thumbnailOffset;
+    unsigned int thumbnailLength;
 
     const unsigned char * thumbnail;  /* Pointer at the thumbnail */
     unsigned thumbnailSize;     /* Size of thumbnail. */

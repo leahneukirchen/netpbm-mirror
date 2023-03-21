@@ -491,8 +491,6 @@ processDirEntry(const unsigned char *  const dirEntry,
                 ByteOrder              const byteOrder,
                 bool                   const wantTagTrace,
                 exif_ifd *             const ifdP,
-                unsigned int *         const thumbnailOffsetP,
-                unsigned int *         const thumbnailSizeP,
                 const char **          const errorP) {
 
     int const tag        = get16u(&dirEntry[0], byteOrder);
@@ -745,12 +743,12 @@ processDirEntry(const unsigned char *  const dirEntry,
         break;
 
     case TAG_THUMBNAIL_OFFSET:
-        *thumbnailOffsetP = (unsigned int)
+        ifdP->thumbnailOffset = (unsigned int)
             numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_THUMBNAIL_LENGTH:
-        *thumbnailSizeP = (unsigned int)
+        ifdP->thumbnailLength = (unsigned int)
             numericValue(valuePtr, format, byteOrder);
         break;
 
@@ -795,8 +793,6 @@ processIfd(const unsigned char *  const exifData,
     unsigned int const numDirEntries = get16u(&dirStart[0], byteOrder);
 
     unsigned int de;
-    unsigned int thumbnailOffset;
-    unsigned int thumbnailSize;
 
     *errorP = NULL;  /* initial value */
 
@@ -805,14 +801,13 @@ processIfd(const unsigned char *  const exifData,
     if (wantTagTrace)
         pm_message("Directory with %u entries", numDirEntries);
 
-    thumbnailOffset = 0;      /* initial value */
-    thumbnailSize   = 0;      /* initial value */
+    ifdP->thumbnailOffset = 0;      /* initial value */
+    ifdP->thumbnailLength = 0;      /* initial value */
 
     for (de = 0; de < numDirEntries && !*errorP; ++de) {
         const char * error;
         processDirEntry(DIR_ENTRY_ADDR(dirStart, de), exifData, exifLength,
                         byteOrder, wantTagTrace, ifdP,
-                        &thumbnailOffset, &thumbnailSize,
                         &error);
 
         if (error) {
@@ -859,14 +854,14 @@ processIfd(const unsigned char *  const exifData,
         }
     }
 
-    if (thumbnailSize && thumbnailOffset) {
-        if (thumbnailSize + thumbnailOffset <= exifLength) {
+    if (ifdP->thumbnailLength && ifdP->thumbnailOffset) {
+        if (ifdP->thumbnailOffset + ifdP->thumbnailLength <= exifLength) {
             /* The thumbnail pointer appears to be valid.  Store it. */
-            ifdP->thumbnail = exifData + thumbnailOffset;
-            ifdP->thumbnailSize = thumbnailSize;
+            ifdP->thumbnail     = exifData + ifdP->thumbnailOffset;
+            ifdP->thumbnailSize = ifdP->thumbnailLength;
 
             if (wantTagTrace) {
-                fprintf(stderr, "Thumbnail size: %u bytes\n", thumbnailSize);
+                pm_message("Thumbnail size: %u bytes", ifdP->thumbnailSize);
             }
         }
     }
