@@ -19,31 +19,39 @@ typedef struct {
   IFD (e.g. ThumbnailSize does not appear in a legal IFD for a main image),
   but we recognize all tags in all IFDs all the same.
 --------------------------------------------------------------------------*/
-    char  cameraMake   [32];
-    char  cameraModel  [40];
-    char  dateTime     [20];
-    float xResolution;
-    float yResolution;
-    int   orientation;
-    int   isColor;
-    int   flashUsed;
-    float focalLength;
-    float exposureTime;
-    float apertureFNumber;
-    float distance;
-    float exposureBias;
-    int   whiteBalance;
-    int   meteringMode;
-    int   exposureProgram;
-    int   isoEquivalent;
-    int   compressionLevel;
-    char  comments[MAX_COMMENT];
-    unsigned int thumbnailOffset;
-    unsigned int thumbnailLength;
-    unsigned int imageLength;
-    unsigned int imageWidth;
-    double       focalPlaneXRes;
-    double       focalPlaneUnits;
+    /* In all of the following members, a null pointer means "not present,"
+       which normally means the tag from which the information comes was
+       not present in the IFD.
+
+       The EXIF format might require certain tags to be present, but we
+       don't.
+    */
+    const char *   cameraMake;
+    const char *   cameraModel;
+    const char *   dateTime;
+    float *        xResolutionP;
+    float *        yResolutionP;
+    int *          orientationP;
+    int *          isColorP;
+    int *          flashP;
+    float *        focalLengthP;
+    float *        exposureTimeP;
+    unsigned int * shutterSpeedP;  /* e.g. 128 for 1/128 second */
+    float *        apertureFNumberP;
+    float *        distanceP;
+    float *        exposureBiasP;
+    int *          whiteBalanceP;
+    int *          meteringModeP;
+    int *          exposureProgramP;
+    int *          isoEquivalentP;
+    int *          compressionLevelP;
+    const char *   comments;
+    unsigned int * thumbnailOffsetP;
+    unsigned int * thumbnailLengthP;
+    unsigned int * exifImageLengthP;
+    unsigned int * exifImageWidthP;
+    double *       focalPlaneXResP;
+    double *       focalPlaneUnitsP;
 
     const unsigned char * thumbnail;  /* Pointer at the thumbnail */
     unsigned thumbnailSize;     /* Size of thumbnail. */
@@ -56,8 +64,7 @@ typedef struct {
 --------------------------------------------------------------------------*/
     exif_ifd mainImage;       /* aka IFD0 */
     exif_ifd thumbnailImage;  /* aka IFD1 */
-    bool     haveCCDWidth;
-    float    ccdWidth;
+    float *  ccdWidthP;  /* NULL means none */
 } exif_ImageInfo;
 
 
@@ -72,5 +79,8 @@ exif_parse(const unsigned char * const exifSection,
 
 void
 exif_showImageInfo(const exif_ImageInfo * const imageInfoP);
+
+void
+exif_terminateImageInfo(exif_ImageInfo * const imageInfoP);
 
 #endif

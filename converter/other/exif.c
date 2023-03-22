@@ -52,6 +52,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <ctype.h>
+#include <assert.h>
 
 #if MSVCRT
     #include <sys/utime.h>
@@ -70,6 +71,17 @@
 #include "exif.h"
 
 
+
+enum Orientation {
+    ORIENT_NORMAL,
+    ORIENT_FLIP_HORIZ,   /* left right reversed mirror */
+    ORIENT_ROTATE_180,   /* upside down */
+    ORIENT_FLIP_VERT,    /* upside down mirror */
+    ORIENT_TRANSPOSE,    /* Flipped about top-left <--> bottom-right axis*/
+    ORIENT_ROTATE_90,    /* rotate 90 cw to right it */
+    ORIENT_TRANSVERSE,   /* flipped about top-right <--> bottom-left axis */
+    ORIENT_ROTATE_270    /* rotate 270 to right it */
+};
 
 typedef struct {
     unsigned short tag;
@@ -324,7 +336,7 @@ numberTraceValue(const void * const valueP,
 
         MALLOCARRAY(hex, byteCt*2 + 1);
         if (!hex)
-                retval = pm_strsol;
+            retval = pm_strsol;
         else {
             unsigned int i;
             for (i = 0; i < byteCt && i < 16; ++i) {
@@ -469,6 +481,138 @@ traceTag(int                   const tag,
 
 
 
+static void
+initializeIfd(exif_ifd * const ifdP) {
+
+    ifdP->cameraMake        = NULL;
+    ifdP->cameraModel       = NULL;
+    ifdP->dateTime          = NULL;
+    ifdP->xResolutionP      = NULL;
+    ifdP->yResolutionP      = NULL;
+    ifdP->orientationP      = NULL;
+    ifdP->isColorP          = NULL;
+    ifdP->flashP            = NULL;
+    ifdP->focalLengthP      = NULL;
+    ifdP->exposureTimeP     = NULL;
+    ifdP->shutterSpeedP     = NULL;
+    ifdP->apertureFNumberP  = NULL;
+    ifdP->distanceP         = NULL;
+    ifdP->exposureBiasP     = NULL;
+    ifdP->whiteBalanceP     = NULL;
+    ifdP->meteringModeP     = NULL;
+    ifdP->exposureProgramP  = NULL;
+    ifdP->isoEquivalentP    = NULL;
+    ifdP->compressionLevelP = NULL;
+    ifdP->comments          = NULL;
+    ifdP->thumbnailOffsetP  = NULL;
+    ifdP->thumbnailLengthP  = NULL;
+    ifdP->exifImageLengthP  = NULL;
+    ifdP->exifImageWidthP   = NULL;
+    ifdP->focalPlaneXResP   = NULL;
+    ifdP->focalPlaneUnitsP  = NULL;
+    ifdP->thumbnail         = NULL;
+}
+
+
+
+static void
+freeIfPresent(const void * const arg) {
+
+    if (arg)
+        free((void *)arg);
+}
+
+
+
+static void
+strfreeIfPresent(const char * const arg) {
+
+    if (arg)
+        pm_strfree(arg);
+}
+
+
+
+static void
+terminateIfd(exif_ifd * const ifdP) {
+
+    strfreeIfPresent(ifdP->cameraMake  );
+    strfreeIfPresent(ifdP->cameraModel );
+    strfreeIfPresent(ifdP->dateTime    );
+    strfreeIfPresent(ifdP->comments    );
+    freeIfPresent(ifdP->xResolutionP      );
+    freeIfPresent(ifdP->yResolutionP      );
+    freeIfPresent(ifdP->orientationP      );
+    freeIfPresent(ifdP->isColorP          );
+    freeIfPresent(ifdP->flashP            );
+    freeIfPresent(ifdP->focalLengthP      );
+    freeIfPresent(ifdP->exposureTimeP     );
+    freeIfPresent(ifdP->shutterSpeedP     );
+    freeIfPresent(ifdP->apertureFNumberP  );
+    freeIfPresent(ifdP->distanceP         );
+    freeIfPresent(ifdP->exposureBiasP     );
+    freeIfPresent(ifdP->whiteBalanceP     );
+    freeIfPresent(ifdP->meteringModeP     );
+    freeIfPresent(ifdP->exposureProgramP  );
+    freeIfPresent(ifdP->isoEquivalentP    );
+    freeIfPresent(ifdP->compressionLevelP );
+    freeIfPresent(ifdP->thumbnailOffsetP  );
+    freeIfPresent(ifdP->thumbnailLengthP  );
+    freeIfPresent(ifdP->exifImageLengthP  );
+    freeIfPresent(ifdP->exifImageWidthP   );
+    freeIfPresent(ifdP->focalPlaneXResP   );
+    freeIfPresent(ifdP->focalPlaneUnitsP  );
+}
+
+
+
+static const char *
+commentValue(const unsigned char * const valuePtr,
+             unsigned int          const valueSz) {
+
+    /* Olympus has this padded with trailing spaces.  We stop the copy
+       where those start.
+    */
+    const char * const value = (const char *)valuePtr;
+
+    const char * retval;
+    char * buffer;  /* malloc'ed */
+    unsigned int cursor;
+    unsigned int end;
+
+    for (end = valueSz; end > 0 && value[end] == ' '; --end);
+
+    /* Skip "ASCII" if it is there */
+    if (end >= 5 && memeq(value, "ASCII", 5))
+        cursor = 5;
+    else
+        cursor = 0;
+
+    /* Skip consecutive blanks and NULs */
+
+    for (;
+         cursor < valueSz &&
+             (value[cursor] == '\0' || value[cursor] == ' ');
+         ++cursor);
+
+    /* Copy the rest as the comment */
+
+    MALLOCARRAY(buffer, end - cursor + 1);
+    if (!buffer)
+        retval = pm_strsol;
+    else {
+        unsigned int outCursor;
+        for (outCursor = 0; cursor < end; ++cursor)
+            buffer[outCursor++] = value[cursor];
+
+        buffer[outCursor++] = '\0';
+
+        retval = buffer;
+    }
+    return retval;
+}
+
+
 /* Forward declaration for recursion */
 
 static void
@@ -533,82 +677,57 @@ processDirEntry(const unsigned char *  const dirEntry,
 
     if (wantTagTrace)
         traceTag(tag, format, valuePtr, valueSz, byteOrder);
-
+    /* TODO: Need to deal with nonterminated strings in tag value */
+    /* TODO: Deal with repeated tag */
     /* Extract useful components of tag */
     switch (tag) {
-
     case TAG_MAKE:
-        STRSCPY(ifdP->cameraMake, (const char*)valuePtr);
+        ifdP->cameraMake = pm_strdup((const char*)valuePtr);
         break;
 
     case TAG_MODEL:
-        STRSCPY(ifdP->cameraModel, (const char*)valuePtr);
+        ifdP->cameraModel = pm_strdup((const char*)valuePtr);
         break;
 
     case TAG_XRESOLUTION:
-        ifdP->xResolution =
-            numericValue(valuePtr, format, byteOrder);
+        MALLOCVAR_NOFAIL(ifdP->xResolutionP);
+        *ifdP->xResolutionP = numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_YRESOLUTION:
-        ifdP->yResolution =
-            numericValue(valuePtr, format, byteOrder);
+        MALLOCVAR_NOFAIL(ifdP->yResolutionP);
+        *ifdP->yResolutionP = numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_DATETIME_ORIGINAL:
-        STRSCPY(ifdP->dateTime, (const char*)valuePtr);
+        ifdP->dateTime = pm_strdup((const char*)valuePtr);
         break;
 
-    case TAG_USERCOMMENT: {
-        /* Olympus has this padded with trailing spaces.  We stop the copy
-           where those start.
-        */
-        const char * const value = (const char *)valuePtr;
-
-        unsigned int cursor;
-        unsigned int outCursor;
-        unsigned int end;
-
-        for (end = valueSz; end > 0 && value[end] == ' '; --end);
-
-        /* Skip "ASCII" if it is there */
-        if (end >= 5 && memeq(value, "ASCII", 5))
-            cursor = 5;
-        else
-            cursor = 0;
-
-        /* Skip consecutive blanks and NULs */
-
-        for (;
-             cursor < valueSz &&
-                 (value[cursor] == '\0' || value[cursor] == ' ');
-             ++cursor);
-
-        /* Copy the rest as the comment */
-
-        for (outCursor = 0;
-             cursor < end && outCursor < MAX_COMMENT-1;
-             ++cursor)
-            ifdP->comments[outCursor++] = value[cursor];
-
-        ifdP->comments[outCursor++] = '\0';
-    } break;
+    case TAG_USERCOMMENT:
+        ifdP->comments = commentValue(valuePtr, valueSz);
+        break;
 
     case TAG_FNUMBER:
         /* Simplest way of expressing aperture, so I trust it the most.
-           (overwrite previously computed value if there is one)
+           (replace any existing value, as it will be based on a less useful
+           tag that came earlier in the IFD).
         */
-        ifdP->apertureFNumber =
+        if (ifdP->apertureFNumberP)
+            free(ifdP->apertureFNumberP);
+
+        MALLOCVAR_NOFAIL(ifdP->apertureFNumberP);
+        *ifdP->apertureFNumberP =
             (float)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_APERTURE:
     case TAG_MAXAPERTURE:
-        /* More relevant info always comes earlier, so only use this field if
-           we don't have appropriate aperture information yet.
+        /* If we already have aperture information, it probably came from an
+           FNUMBER tag and is superior, so we leave it alone
         */
-        if (ifdP->apertureFNumber == 0) {
-            ifdP->apertureFNumber = (float)
+        if (!ifdP->apertureFNumberP) {
+            MALLOCVAR_NOFAIL(ifdP->apertureFNumberP);
+            *ifdP->apertureFNumberP = (float)
                 exp(numericValue(valuePtr, format, byteOrder)
                     * log(2) * 0.5);
         }
@@ -619,7 +738,8 @@ processDirEntry(const unsigned char *  const dirEntry,
            as a function of how farthey are zoomed in.
         */
 
-        ifdP->focalLength =
+        MALLOCVAR_NOFAIL(ifdP->focalLengthP);
+        *ifdP->focalLengthP =
             (float)numericValue(valuePtr, format, byteOrder);
         break;
 
@@ -627,84 +747,96 @@ processDirEntry(const unsigned char *  const dirEntry,
         /* Inidcates the distacne the autofocus camera is focused to.
            Tends to be less accurate as distance increases.
         */
-        ifdP->distance =
+        MALLOCVAR_NOFAIL(ifdP->distanceP);
+        *ifdP->distanceP =
             (float)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_EXPOSURETIME:
-        /* Simplest way of expressing exposure time, so I
-           trust it most.  (overwrite previously computd value
-           if there is one)
-        */
-        ifdP->exposureTime =
+        MALLOCVAR_NOFAIL(ifdP->exposureTimeP);
+        *ifdP->exposureTimeP =
             (float)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_SHUTTERSPEED:
-        /* More complicated way of expressing exposure time,
-           so only use this value if we don't already have it
-           from somewhere else.
-        */
-        if (ifdP->exposureTime == 0) {
-            ifdP->exposureTime = (float)
-                (1/exp(numericValue(valuePtr, format, byteOrder)
-                       * log(2)));
-        }
+        MALLOCVAR_NOFAIL(ifdP->shutterSpeedP);
+        *ifdP->shutterSpeedP =
+            1 << (unsigned int)numericValue(valuePtr, format, byteOrder);
         break;
 
-    case TAG_FLASH:
-        if ((int)numericValue(valuePtr, format, byteOrder) & 0x7) {
-            ifdP->flashUsed = TRUE;
-        }else{
-            ifdP->flashUsed = FALSE;
-        }
-        break;
+    case TAG_FLASH: {
+        unsigned int const tagValue =
+            (unsigned int)numericValue(valuePtr, format, byteOrder);
 
-    case TAG_ORIENTATION:
-        ifdP->orientation =
-            (int)numericValue(valuePtr, format, byteOrder);
-        if (ifdP->orientation < 1 ||
-            ifdP->orientation > 8) {
-            pm_message("Undefined rotation value %d",
-                       ifdP->orientation);
-            ifdP->orientation = 0;
+        MALLOCVAR_NOFAIL(ifdP->flashP);
+
+        *ifdP->flashP = ((tagValue & 0x7) != 0);
+
+    } break;
+
+    case TAG_ORIENTATION: {
+        unsigned int const tagValue =
+            (unsigned int)numericValue(valuePtr, format, byteOrder);
+
+        if (tagValue < 1 || tagValue > 8)
+            pm_asprintf(errorP, "Unrecognized orientation value %d",
+                        tagValue);
+        else {
+            MALLOCVAR_NOFAIL(ifdP->orientationP);
+
+            switch (tagValue) {
+            case 1: *ifdP->orientationP = ORIENT_NORMAL;     break;
+            case 2: *ifdP->orientationP = ORIENT_FLIP_HORIZ; break;
+            case 3: *ifdP->orientationP = ORIENT_ROTATE_180; break;
+            case 4: *ifdP->orientationP = ORIENT_FLIP_VERT;  break;
+            case 5: *ifdP->orientationP = ORIENT_TRANSPOSE;  break;
+            case 6: *ifdP->orientationP = ORIENT_ROTATE_90;  break;
+            case 7: *ifdP->orientationP = ORIENT_TRANSVERSE; break;
+            case 8: *ifdP->orientationP = ORIENT_ROTATE_270; break;
+            default:
+                assert(false);
+            }
         }
-        break;
+        } break;
 
     case TAG_EXIF_IMAGELENGTH:
-        ifdP->imageLength =
+        MALLOCVAR_NOFAIL(ifdP->exifImageLengthP);
+        *ifdP->exifImageLengthP =
             (unsigned int)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_EXIF_IMAGEWIDTH:
-        ifdP->imageWidth =
+        MALLOCVAR_NOFAIL(ifdP->exifImageWidthP);
+        *ifdP->exifImageWidthP =
             (unsigned int)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_FOCALPLANEXRES:
-        ifdP->focalPlaneXRes = numericValue(valuePtr, format, byteOrder);
+        MALLOCVAR_NOFAIL(ifdP->focalPlaneXResP);
+        *ifdP->focalPlaneXResP = numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_FOCALPLANEUNITS: {
         int const tagValue = (int)numericValue(valuePtr, format, byteOrder);
-        switch (tagValue) {
-        case 1: ifdP->focalPlaneUnits = 25.4; break; /* 1 inch */
-        case 2:
-            /* According to the information I was using, 2
-               means meters.  But looking at the Cannon
-               powershot's files, inches is the only
-               sensible value.
-            */
-            ifdP->focalPlaneUnits = 25.4;
-            break;
 
-        case 3: ifdP->focalPlaneUnits = 10.0;  break;  /* 1 centimeter*/
-        case 4: ifdP->focalPlaneUnits = 1.0;   break;  /* 1 millimeter*/
-        case 5: ifdP->focalPlaneUnits = .001;  break;  /* 1 micrometer*/
-        default:
+        if (tagValue < 1 || tagValue > 5) {
             pm_asprintf(errorP, "Unrecognized FOCALPLANEUNITS value %d.  "
                         "We know only 1, 2, 3, 4, and 5",
                         tagValue);
+        } else {
+            MALLOCVAR_NOFAIL(ifdP->focalPlaneUnitsP);
+
+            switch (tagValue) {
+            case 1: *ifdP->focalPlaneUnitsP = 25.4;  break; /* 1 inch */
+            case 2: *ifdP->focalPlaneUnitsP = 100.0; break; /* 1 meter */
+            case 3: *ifdP->focalPlaneUnitsP = 10.0;  break;  /* 1 centimeter*/
+            case 4: *ifdP->focalPlaneUnitsP = 1.0;   break;  /* 1 millimeter*/
+            case 5: *ifdP->focalPlaneUnitsP = .001;  break;  /* 1 micrometer*/
+            }
+            /* According to the information I was using, 2 means meters.  But
+               looking at the Cannon powershot's files, inches is the only
+               sensible value.
+            */
         }
     } break;
 
@@ -713,44 +845,52 @@ processDirEntry(const unsigned char *  const dirEntry,
         */
 
     case TAG_EXPOSURE_BIAS:
-        ifdP->exposureBias =
+        MALLOCVAR_NOFAIL(ifdP->exposureBiasP);
+        *ifdP->exposureBiasP =
             (float) numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_WHITEBALANCE:
-        ifdP->whiteBalance =
-            (int)numericValue(valuePtr, format, byteOrder);
+        MALLOCVAR_NOFAIL(ifdP->whiteBalanceP);
+        *ifdP->whiteBalanceP = (int)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_METERING_MODE:
-        ifdP->meteringMode =
-            (int)numericValue(valuePtr, format, byteOrder);
+        MALLOCVAR_NOFAIL(ifdP->meteringModeP);
+        *ifdP->meteringModeP = (int)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_EXPOSURE_PROGRAM:
-        ifdP->exposureProgram =
+        MALLOCVAR_NOFAIL(ifdP->exposureProgramP);
+        *ifdP->exposureProgramP =
             (int)numericValue(valuePtr, format, byteOrder);
         break;
 
-    case TAG_ISO_EQUIVALENT:
-        ifdP->isoEquivalent =
-            (int)numericValue(valuePtr, format, byteOrder);
-        if ( ifdP->isoEquivalent < 50 )
-            ifdP->isoEquivalent *= 200;
-        break;
+    case TAG_ISO_EQUIVALENT: {
+        int const tagValue = (int)numericValue(valuePtr, format, byteOrder);
+
+        MALLOCVAR_NOFAIL(ifdP->isoEquivalentP);
+        if (tagValue < 50)
+            *ifdP->isoEquivalentP = tagValue * 200;
+        else
+            *ifdP->isoEquivalentP = tagValue;
+    } break;
 
     case TAG_COMPRESSION_LEVEL:
-        ifdP->compressionLevel =
+        MALLOCVAR_NOFAIL(ifdP->compressionLevelP);
+        *ifdP->compressionLevelP =
             (int)numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_THUMBNAIL_OFFSET:
-        ifdP->thumbnailOffset = (unsigned int)
+        MALLOCVAR_NOFAIL(ifdP->thumbnailOffsetP);
+        *ifdP->thumbnailOffsetP = (unsigned int)
             numericValue(valuePtr, format, byteOrder);
         break;
 
     case TAG_THUMBNAIL_LENGTH:
-        ifdP->thumbnailLength = (unsigned int)
+        MALLOCVAR_NOFAIL(ifdP->thumbnailLengthP);
+        *ifdP->thumbnailLengthP = (unsigned int)
             numericValue(valuePtr, format, byteOrder);
         break;
 
@@ -771,7 +911,8 @@ processDirEntry(const unsigned char *  const dirEntry,
             for (nextIfdP = exifData + subIfdOffset; nextIfdP;) {
                 const char * error;
 
-                pm_message("Processing subIFD");
+                if (wantTagTrace)
+                    pm_message("Processing subIFD");
 
                 processIfd(exifData, exifLength, exifData + subIfdOffset,
                            byteOrder, wantTagTrace,
@@ -855,9 +996,6 @@ processIfd(const unsigned char *  const exifData,
         pm_message("Processing IFD at %p with %u entries",
                    ifdData, numDirEntries);
 
-    ifdP->thumbnailOffset = 0;      /* initial value */
-    ifdP->thumbnailLength = 0;      /* initial value */
-
     for (de = 0; de < numDirEntries && !*errorP; ++de) {
         const char * error;
         processDirEntry(DIR_ENTRY_ADDR(ifdData, de), exifData, exifLength,
@@ -875,11 +1013,11 @@ processIfd(const unsigned char *  const exifData,
                   DIR_ENTRY_ADDR(ifdData, numDirEntries),
                   nextIfdPP, errorP);
 
-    if (ifdP->thumbnailLength && ifdP->thumbnailOffset) {
-        if (ifdP->thumbnailOffset + ifdP->thumbnailLength <= exifLength) {
+    if (ifdP->thumbnailOffsetP && ifdP->thumbnailLengthP) {
+        if (*ifdP->thumbnailOffsetP + *ifdP->thumbnailLengthP <= exifLength) {
             /* The thumbnail pointer appears to be valid.  Store it. */
-            ifdP->thumbnail     = exifData + ifdP->thumbnailOffset;
-            ifdP->thumbnailSize = ifdP->thumbnailLength;
+            ifdP->thumbnail     = exifData + *ifdP->thumbnailOffsetP;
+            ifdP->thumbnailSize = *ifdP->thumbnailLengthP;
         }
     }
     if (wantTagTrace)
@@ -908,16 +1046,16 @@ exif_parse(const unsigned char * const exifData,
     *errorP = NULL;  /* initial assumption */
 
     if (wantTagTrace)
-        fprintf(stderr, "Exif header %u bytes long\n", length);
+        pm_message("Exif header %u bytes long", length);
 
     if (memeq(exifData + 0, "II" , 2)) {
         if (wantTagTrace)
-            fprintf(stderr, "Exif header in Intel order\n");
+            pm_message("Exif header in Intel order");
         byteOrder = ORDER_NORMAL;
     } else {
         if (memeq(exifData + 0, "MM", 2)) {
             if (wantTagTrace)
-                fprintf(stderr, "Exif header in Motorola order\n");
+                pm_message("Exif header in Motorola order");
             byteOrder = ORDER_MOTOROLA;
         } else {
             pm_asprintf(errorP, "Invalid alignment marker in Exif "
@@ -943,21 +1081,17 @@ exif_parse(const unsigned char * const exifData,
         firstOffset = get32u(exifData + 4, byteOrder);
         if (firstOffset < 8 || firstOffset > 16) {
             /* I used to ensure this was set to 8 (website I used
-               indicated its 8) but PENTAX Optio 230 has it set
+               indicated it's 8) but PENTAX Optio 230 has it set
                differently, and uses it as offset. (Sept 11 2002)
             */
             pm_message("Suspicious offset of first IFD value in Exif header");
         }
 
-        imageInfoP->mainImage.comments[0] = '\0';
-            /* Initial value - null string */
+        initializeIfd(&imageInfoP->mainImage);
+        initializeIfd(&imageInfoP->thumbnailImage);
 
-        imageInfoP->mainImage.focalPlaneXRes = 0;  /* Initial assumption */
-        imageInfoP->mainImage.focalPlaneUnits = 0;
-        imageInfoP->mainImage.imageWidth = 0;
-        imageInfoP->mainImage.imageLength = 0;
-
-        pm_message("Processing main image IFD (IFD0)");
+        if (wantTagTrace)
+            pm_message("Processing main image IFD (IFD0)");
 
         processIfd(exifData, length, exifData + firstOffset, byteOrder,
                    wantTagTrace,
@@ -969,10 +1103,14 @@ exif_parse(const unsigned char * const exifData,
             pm_strfree(error);
         }
 
+        pm_message("BRYAN: cameramake=%p, value ='%s'",
+                   imageInfoP->mainImage.cameraMake,
+                   imageInfoP->mainImage.cameraMake);
         if (nextIfdP) {
             const char * error;
 
-            pm_message("Processing thumbnail IFD (IFD1)");
+            if (wantTagTrace)
+                pm_message("Processing thumbnail IFD (IFD1)");
 
             processIfd(exifData, length, nextIfdP, byteOrder,
                        wantTagTrace,
@@ -993,22 +1131,22 @@ exif_parse(const unsigned char * const exifData,
         }
         if (!*errorP) {
             /* Compute the CCD width, in millimeters. */
-            if (imageInfoP->mainImage.focalPlaneXRes &&
-                imageInfoP->mainImage.focalPlaneUnits &&
-                imageInfoP->mainImage.imageWidth &&
-                imageInfoP->mainImage.imageLength) {
+            if (imageInfoP->mainImage.focalPlaneXResP &&
+                imageInfoP->mainImage.focalPlaneUnitsP &&
+                imageInfoP->mainImage.exifImageWidthP &&
+                imageInfoP->mainImage.exifImageLengthP) {
 
                 unsigned int const maxDim =
-                    MAX(imageInfoP->mainImage.imageWidth,
-                        imageInfoP->mainImage.imageLength);
+                    MAX(*imageInfoP->mainImage.exifImageWidthP,
+                        *imageInfoP->mainImage.exifImageLengthP);
 
-                imageInfoP->haveCCDWidth = true;
-                imageInfoP->ccdWidth =
+                MALLOCVAR_NOFAIL(imageInfoP->ccdWidthP);
+                *imageInfoP->ccdWidthP =
                     (float)(maxDim *
-                            imageInfoP->mainImage.focalPlaneUnits /
-                            imageInfoP->mainImage.focalPlaneXRes);
+                            *imageInfoP->mainImage.focalPlaneUnitsP /
+                            *imageInfoP->mainImage.focalPlaneXResP);
             } else
-                imageInfoP->haveCCDWidth = false;
+                imageInfoP->ccdWidthP = NULL;
         }
     }
 }
@@ -1018,58 +1156,66 @@ exif_parse(const unsigned char * const exifData,
 static void
 showIfd(const exif_ifd * const ifdP) {
 
-    if (ifdP->cameraMake[0]) {
+    if (ifdP->cameraMake)
         pm_message("Camera make  : %s", ifdP->cameraMake);
+
+    if (ifdP->cameraModel)
         pm_message("Camera model : %s", ifdP->cameraModel);
-    }
-    if (ifdP->dateTime[0])
+
+    if (ifdP->dateTime)
         pm_message("Date/Time    : %s", ifdP->dateTime);
 
-    pm_message("Resolution   : %f x %f",
-               ifdP->xResolution, ifdP->yResolution);
+    if (ifdP->xResolutionP && ifdP->yResolutionP)
+        pm_message("Resolution   : %f x %f",
+                   *ifdP->xResolutionP, *ifdP->yResolutionP);
 
-    if (ifdP->orientation > 1) {
+    if (ifdP->orientationP) {
         /* Note that orientation is usually understood to be the orientation
            of the camera, not of the image.  The top, bottom, left, and right
            sides of an image are defined in the JFIF format.
 
            But values such as "flip horizontal" make no sense for that.
         */
-        static const char * orientTab[9] = {
-            "Undefined",
-            "Normal",           /* 1 */
-            "flip horizontal",  /* left right reversed mirror */
-            "rotate 180",       /* 3 */
-            "flip vertical",    /* upside down mirror */
-            "transpose",    /* Flipped about top-left <--> bottom-right axis.*/
-            "rotate 90",        /* rotate 90 cw to right it. */
-            "transverse",   /* flipped about top-right <--> bottom-left axis */
-            "rotate 270",       /* rotate 270 to right it. */
-        };
 
-        pm_message("Camera orientation  : %s",
-                   orientTab[ifdP->orientation]);
+        const char * orientDisp;
+
+        switch (*ifdP->orientationP) {
+        case ORIENT_NORMAL:     orientDisp = "Normal";          break;
+        case ORIENT_FLIP_HORIZ: orientDisp = "Flip horizontal"; break;
+        case ORIENT_ROTATE_180: orientDisp = "Rotate 180";      break;
+        case ORIENT_FLIP_VERT:  orientDisp = "Flip vertical";   break;
+        case ORIENT_TRANSPOSE:  orientDisp = "Transpose";       break;
+        case ORIENT_ROTATE_90:  orientDisp = "Rotate 90";       break;
+        case ORIENT_TRANSVERSE: orientDisp = "Transverse";      break;
+        case ORIENT_ROTATE_270: orientDisp = "Rotate 270";      break;
+        }
+
+        pm_message("Orientation  : %s", orientDisp);
     }
 
-    if (ifdP->isColor == 0)
-        pm_message("Color/bw     : Black and white");
+    if (ifdP->isColorP)
+        pm_message("Color/bw     : %s",
+                   *ifdP->isColorP ? "Color" : "Black and white");
 
-    if (ifdP->flashUsed >= 0)
+    if (ifdP->flashP)
         pm_message("Flash used   : %s",
-                   ifdP->flashUsed ? "Yes" :"No");
+                   *ifdP->flashP ? "Yes" :"No");
 
-    if (ifdP->exposureTime) {
+    if (ifdP->exposureTimeP) {
         const char * timeDisp;
         const char * recipDisp;
 
-        if (ifdP->exposureTime < 0.010) {
-            pm_asprintf(&timeDisp, "%6.4f s", (double)ifdP->exposureTime);
+        if (*ifdP->exposureTimeP < 0.010) {
+            pm_asprintf(&timeDisp, "%6.4f s", *ifdP->exposureTimeP);
         } else {
-            pm_asprintf(&timeDisp, "%5.3f s", (double)ifdP->exposureTime);
+            pm_asprintf(&timeDisp, "%5.3f s", *ifdP->exposureTimeP);
         }
-        if (ifdP->exposureTime <= 0.5) {
+        /* We've seen the EXPOSURETIME tag be present but contain zero.
+           I don't know why.
+        */
+        if (*ifdP->exposureTimeP <= 0.5 && *ifdP->exposureTimeP > 0) {
             pm_asprintf(&recipDisp, " (1/%d)",
-                        (int)(0.5 + 1/ifdP->exposureTime));
+                        (int)(0.5 + 1 / *ifdP->exposureTimeP));
         } else
             recipDisp = pm_strdup("");
 
@@ -1078,26 +1224,29 @@ showIfd(const exif_ifd * const ifdP) {
         pm_strfree(recipDisp);
         pm_strfree(timeDisp);
     }
-    if (ifdP->apertureFNumber) {
-        pm_message("Aperture     : f/%3.1f", (double)ifdP->apertureFNumber);
+    if (ifdP->shutterSpeedP)
+        pm_message("Shutter speed: 1/%u", *ifdP->shutterSpeedP);
+
+    if (ifdP->apertureFNumberP) {
+        pm_message("Aperture     : f/%3.1f", *ifdP->apertureFNumberP);
     }
-    if (ifdP->distance) {
-        if (ifdP->distance < 0)
+    if (ifdP->distanceP) {
+        if (*ifdP->distanceP < 0)
             pm_message("Focus dist.  : Infinite");
         else
-            pm_message("Focus dist.  :%5.2fm", (double)ifdP->distance);
+            pm_message("Focus dist.  :%5.2fm", *ifdP->distanceP);
     }
 
-    if (ifdP->isoEquivalent)
-        pm_message("ISO equiv.   : %2d",(int)ifdP->isoEquivalent);
+    if (ifdP->isoEquivalentP)
+        pm_message("ISO equiv.   : %2d", *ifdP->isoEquivalentP);
 
-    if (ifdP->exposureBias)
-        pm_message("Exposure bias:%4.2f", (double)ifdP->exposureBias);
+    if (ifdP->exposureBiasP)
+        pm_message("Exposure bias: %4.2f", *ifdP->exposureBiasP);
 
-    if (ifdP->whiteBalance) {
+    if (ifdP->whiteBalanceP) {
         const char * whiteBalanceDisp;
 
-        switch(ifdP->whiteBalance) {
+        switch(*ifdP->whiteBalanceP) {
         case 1:  whiteBalanceDisp = "sunny";         break;
         case 2:  whiteBalanceDisp = "fluorescent";   break;
         case 3:  whiteBalanceDisp = "incandescent";  break;
@@ -1105,38 +1254,41 @@ showIfd(const exif_ifd * const ifdP) {
         }
         pm_message("Whitebalance : %s", whiteBalanceDisp);
     }
-    if (ifdP->meteringMode) {
+    if (ifdP->meteringModeP) {
         const char * meteringModeDisp;
 
-        switch(ifdP->meteringMode) {
-        case 2: meteringModeDisp = "center weight";  break;
-        case 3: meteringModeDisp = "spot";           break;
-        case 5: meteringModeDisp = "matrix";         break;
+        switch(*ifdP->meteringModeP) {
+        case 2:  meteringModeDisp = "center weight";  break;
+        case 3:  meteringModeDisp = "spot";           break;
+        case 5:  meteringModeDisp = "matrix";         break;
+        default: meteringModeDisp = "?";              break;
         }
         pm_message("Metering Mode: %s", meteringModeDisp);
     }
-    if (ifdP->exposureProgram) {
+    if (ifdP->exposureProgramP) {
         const char * exposureDisp;
 
-        switch(ifdP->exposureProgram) {
-        case 2: exposureDisp = "program (auto)";                break;
-        case 3: exposureDisp = "aperture priority (semi-auto)"; break;
-        case 4: exposureDisp = "shutter priority (semi-auto)";  break;
+        switch(*ifdP->exposureProgramP) {
+        case 2:  exposureDisp = "program (auto)";                break;
+        case 3:  exposureDisp = "aperture priority (semi-auto)"; break;
+        case 4:  exposureDisp = "shutter priority (semi-auto)";  break;
+        default: exposureDisp = "?";                              break;
         }
         pm_message("Exposure     : %s", exposureDisp);
     }
-    if (ifdP->compressionLevel) {
+    if (ifdP->compressionLevelP) {
         const char * jpegQualityDisp;
 
-        switch(ifdP->compressionLevel) {
-        case 1: jpegQualityDisp = "basic";  break;
-        case 2: jpegQualityDisp = "normal"; break;
-        case 4: jpegQualityDisp = "fine";   break;
+        switch(*ifdP->compressionLevelP) {
+        case 1:  jpegQualityDisp = "basic";  break;
+        case 2:  jpegQualityDisp = "normal"; break;
+        case 4:  jpegQualityDisp = "fine";   break;
+        default: jpegQualityDisp = "?";      break;
        }
         pm_message("Jpeg Quality  : %s", jpegQualityDisp);
     }
 
-    if (ifdP->comments[0]) {
+    if (ifdP->comments) {
         char * buffer;
 
         MALLOCARRAY(buffer, strlen(ifdP->comments) + 1);
@@ -1178,27 +1330,39 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP) {
    Show the collected image info, displaying camera F-stop and shutter
    speed in a consistent and legible fashion.
 --------------------------------------------------------------------------*/
+    pm_message("BRYAN: in showImageInfo, cameramake=%p, value ='%s'",
+               imageInfoP->mainImage.cameraMake,
+               imageInfoP->mainImage.cameraMake);
 
     showIfd(&imageInfoP->mainImage);
 
-    if (imageInfoP->mainImage.focalLength) {
+    if (imageInfoP->mainImage.focalLengthP) {
         const char * mm35equiv;
 
-        if (imageInfoP->haveCCDWidth) {
+        if (imageInfoP->ccdWidthP) {
             pm_asprintf(&mm35equiv, "  (35mm equivalent: %dmm)",
-                        (int) (imageInfoP->mainImage.focalLength /
-                               imageInfoP->ccdWidth*36 + 0.5));
+                        (int) (*imageInfoP->mainImage.focalLengthP /
+                               *imageInfoP->ccdWidthP * 36 + 0.5));
         } else
             mm35equiv = pm_strdup("");
 
         pm_message("Focal length : %4.1fmm %s",
-                   (double)imageInfoP->mainImage.focalLength, mm35equiv);
+                   *imageInfoP->mainImage.focalLengthP, mm35equiv);
 
         pm_strfree(mm35equiv);
     }
 
-    if (imageInfoP->haveCCDWidth)
-        pm_message("CCD width    : %2.4fmm", (double)imageInfoP->ccdWidth);
+    if (imageInfoP->ccdWidthP)
+        pm_message("CCD width    : %2.4fmm", *imageInfoP->ccdWidthP);
+}
+
+
+
+void
+exif_terminateImageInfo(exif_ImageInfo * const imageInfoP) {
+
+    terminateIfd(&imageInfoP->mainImage);
+    terminateIfd(&imageInfoP->thumbnailImage);
 }
 
 
