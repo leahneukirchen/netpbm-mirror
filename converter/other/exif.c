@@ -1103,9 +1103,6 @@ exif_parse(const unsigned char * const exifData,
             pm_strfree(error);
         }
 
-        pm_message("BRYAN: cameramake=%p, value ='%s'",
-                   imageInfoP->mainImage.cameraMake,
-                   imageInfoP->mainImage.cameraMake);
         if (nextIfdP) {
             const char * error;
 
@@ -1330,10 +1327,6 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP) {
    Show the collected image info, displaying camera F-stop and shutter
    speed in a consistent and legible fashion.
 --------------------------------------------------------------------------*/
-    pm_message("BRYAN: in showImageInfo, cameramake=%p, value ='%s'",
-               imageInfoP->mainImage.cameraMake,
-               imageInfoP->mainImage.cameraMake);
-
     showIfd(&imageInfoP->mainImage);
 
     if (imageInfoP->mainImage.focalLengthP) {
