@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.03.23 BJH  Release 11.01.03
+
+              Fix 'jpegtopnm' build failure introduced in previous release.
+
 23.03.22 BJH  Release 11.01.02
 
               jpegtopnm: Many fixes to -dumpexif.  Always broken.
