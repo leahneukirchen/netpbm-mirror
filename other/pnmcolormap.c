@@ -38,19 +38,39 @@ enum MethodForRep {REP_CENTER_BOX, REP_AVERAGE_COLORS, REP_AVERAGE_PIXELS};
 enum MethodForSplit {SPLIT_MAX_PIXELS, SPLIT_MAX_COLORS, SPLIT_MAX_SPREAD};
 
 struct Box {
-    unsigned int index;
+/*----------------------------------------------------------------------------
+   A box contains an extent of a color frequency table, i.e. the colors
+   with some consecutive index values in the color frequency table.
+-----------------------------------------------------------------------------*/
+    unsigned int startIndex;
+        /* First index in the extent */
     unsigned int colorCt;
+        /* Size of the extent (Number of colors in it -- at least 1) */
     unsigned int sum;
+        /* Number of pixels of all colors in the extent */
     unsigned int maxdim;
-        /* which dimension has the largest spread.  RGB plane number. */
+        /* Which dimension has the largest spread.  RGB plane number. */
+        /* Meaningless if box contains only 1 color */
     sample       spread;
         /* spread in dimension 'maxdim' */
+        /* Meaningless if box contains only 1 color */
 };
 
 struct BoxVector {
+    tupletable2 colorFreqTable;
+        /* The colors and their frequencies (number of pixels in the image of
+           that color), ordered into consecutive boxes, as defined by 'box'.
+        */
+    unsigned int colorDepth;
+        /* Number of planes in the tuples of 'colorFreqTable' */
     struct Box * box;  /* malloc'ed array */
+        /* An array of boxes that contain consecutive extents of
+           'colorFreqTable'.  The list covers the entire table.
+        */
     unsigned int boxCt;
+        /* Number of boxes in the above list */
     unsigned int capacity;
+        /* Number of boxes the array is capable of containing */
 };
 
 struct CmdlineInfo {
@@ -70,13 +90,14 @@ struct CmdlineInfo {
     unsigned int sort;
     unsigned int square;
     unsigned int verbose;
+    unsigned int debug;
 };
 
 
 
 static void
 parseCommandLine (int argc, const char ** argv,
-                  struct CmdlineInfo *cmdlineP) {
+                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -120,9 +141,11 @@ parseCommandLine (int argc, const char ** argv,
     OPTENT3(0, "sort",     OPT_FLAG,   NULL,
             &cmdlineP->sort,       0 );
     OPTENT3(0, "square",   OPT_FLAG,   NULL,
-            &cmdlineP->square,       0 );
+            &cmdlineP->square,     0 );
     OPTENT3(0, "verbose",   OPT_FLAG,   NULL,
-            &cmdlineP->verbose,       0 );
+            &cmdlineP->verbose,    0 );
+    OPTENT3(0, "debug",     OPT_FLAG,   NULL,
+            &cmdlineP->debug,      0 );
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -417,7 +440,7 @@ computeBoxSpread(const struct Box *    const boxP,
     MALLOCARRAY_NOFAIL(minval, depth);
     MALLOCARRAY_NOFAIL(maxval, depth);
 
-    findBoxBoundaries(colorFreqTable, depth, boxP->index, boxP->colorCt,
+    findBoxBoundaries(colorFreqTable, depth, boxP->startIndex, boxP->colorCt,
                       minval, maxval);
 
     switch (methodForLargest) {
@@ -460,15 +483,18 @@ newBoxVector(tupletable2           const colorFreqTable,
 
     struct BoxVector boxVector;
 
+    boxVector.colorFreqTable = colorFreqTable;
+    boxVector.colorDepth     = depth;
+
     MALLOCARRAY(boxVector.box, capacity);
 
     if (!boxVector.box)
         pm_error("out of memory allocating box vector table");
 
     /* Set up the initial box. */
-    boxVector.box[0].index   = 0;
-    boxVector.box[0].colorCt = colorCt;
-    boxVector.box[0].sum     = sum;
+    boxVector.box[0].startIndex = 0;
+    boxVector.box[0].colorCt    = colorCt;
+    boxVector.box[0].sum        = sum;
 
     computeBoxSpread(&boxVector.box[0], colorFreqTable, depth,
                      methodForLargest,
@@ -602,8 +628,6 @@ averagePixels(int          const boxStart,
 static tupletable2
 colormapFromBv(unsigned int      const colorCt,
                struct BoxVector  const boxVector,
-               tupletable2       const colorFreqTable,
-               unsigned int      const depth,
                enum MethodForRep const methodForRep) {
     /*
     ** Ok, we've got enough boxes.  Now choose a representative color for
@@ -616,26 +640,26 @@ colormapFromBv(unsigned int      const colorCt,
     tupletable2 colormap;
     unsigned int boxIdx;
 
-    colormap = newColorMap(colorCt, depth);
+    colormap = newColorMap(colorCt, boxVector.colorDepth);
 
     for (boxIdx = 0; boxIdx < boxVector.boxCt; ++boxIdx) {
         switch (methodForRep) {
         case REP_CENTER_BOX:
-            centerBox(boxVector.box[boxIdx].index,
+            centerBox(boxVector.box[boxIdx].startIndex,
                       boxVector.box[boxIdx].colorCt,
-                      colorFreqTable, depth,
+                      boxVector.colorFreqTable, boxVector.colorDepth,
                       colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_COLORS:
-            averageColors(boxVector.box[boxIdx].index,
+            averageColors(boxVector.box[boxIdx].startIndex,
                           boxVector.box[boxIdx].colorCt,
-                          colorFreqTable, depth,
+                          boxVector.colorFreqTable, boxVector.colorDepth,
                           colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_PIXELS:
-            averagePixels(boxVector.box[boxIdx].index,
+            averagePixels(boxVector.box[boxIdx].startIndex,
                           boxVector.box[boxIdx].colorCt,
-                          colorFreqTable, depth,
+                          boxVector.colorFreqTable, boxVector.colorDepth,
                           colormap.table[boxIdx]->tuple);
             break;
         default:
@@ -651,20 +675,17 @@ colormapFromBv(unsigned int      const colorCt,
 static void
 splitBox(struct BoxVector *    const boxVectorP,
          unsigned int          const boxIdx,
-         tupletable2           const colorFreqTable,
-         unsigned int          const depth,
          enum MethodForLargest const methodForLargest,
          enum MethodForSplit   const methodForSplit) {
 /*----------------------------------------------------------------------------
-   Split Box 'boxIdx' in the box vector 'boxVector' (so that bv contains one
-   more box than it did as input).  Split it so that each new box represents
-   about half of the pixels in the distribution given by 'colorFreqTable' for
-   the colors in the original box, but with distinct colors in each of the two
-   new boxes.
+   Split Box 'boxIdx' in the box vector 'boxVector' (so that 'boxVector'
+   contains one more box than it did as input).  Split it so that each new box
+   represents about half of the pixels in the image for the colors in the
+   original box, but with distinct colors in each of the two new boxes.
 
    Assume the box contains at least two colors.
 -----------------------------------------------------------------------------*/
-    unsigned int const boxStart = boxVectorP->box[boxIdx].index;
+    unsigned int const boxStart = boxVectorP->box[boxIdx].startIndex;
     unsigned int const boxSize  = boxVectorP->box[boxIdx].colorCt;
     unsigned int const sum      = boxVectorP->box[boxIdx].sum;
 
@@ -682,8 +703,8 @@ splitBox(struct BoxVector *    const boxVectorP,
        parameter to compareplane(), which is called by qsort().
     */
     compareplanePlane = boxVectorP->box[boxIdx].maxdim;
-    qsort((char*) &colorFreqTable.table[boxStart], boxSize,
-          sizeof(colorFreqTable.table[boxStart]),
+    qsort((char*) &boxVectorP->colorFreqTable.table[boxStart], boxSize,
+          sizeof(boxVectorP->colorFreqTable.table[boxStart]),
           compareplane);
 
     {
@@ -692,9 +713,10 @@ splitBox(struct BoxVector *    const boxVectorP,
         */
         unsigned int i;
 
-        lowerSum = colorFreqTable.table[boxStart]->value; /* initial value */
+        lowerSum = boxVectorP->colorFreqTable.table[boxStart]->value;
+            /* initial value */
         for (i = 1; i < boxSize - 1 && lowerSum < sum/2; ++i) {
-            lowerSum += colorFreqTable.table[boxStart + i]->value;
+            lowerSum += boxVectorP->colorFreqTable.table[boxStart + i]->value;
         }
         medianIndex = i;
     }
@@ -704,21 +726,59 @@ splitBox(struct BoxVector *    const boxVectorP,
 
         oldBoxP->colorCt = medianIndex;
         oldBoxP->sum     = lowerSum;
-        computeBoxSpread(oldBoxP, colorFreqTable, depth, methodForLargest,
+        computeBoxSpread(oldBoxP, boxVectorP->colorFreqTable,
+                         boxVectorP->colorDepth, methodForLargest,
                          &oldBoxP->maxdim, &oldBoxP->spread);
     }
     {
         struct Box * const newBoxP = &boxVectorP->box[boxVectorP->boxCt];
 
-        newBoxP->index   = boxStart + medianIndex;
-        newBoxP->colorCt = boxSize - medianIndex;
-        newBoxP->sum     = sum - lowerSum;
-        computeBoxSpread(newBoxP, colorFreqTable, depth, methodForLargest,
+        newBoxP->startIndex = boxStart + medianIndex;
+        newBoxP->colorCt    = boxSize - medianIndex;
+        newBoxP->sum        = sum - lowerSum;
+        computeBoxSpread(newBoxP, boxVectorP->colorFreqTable,
+                         boxVectorP->colorDepth, methodForLargest,
                          &newBoxP->maxdim, &newBoxP->spread);
         ++boxVectorP->boxCt;
     }
 
     sortBoxes(boxVectorP, methodForSplit);
+}
+
+
+
+static void
+reportBoxVector(struct BoxVector const boxVector) {
+
+    unsigned int i;
+
+    pm_message("All colors of image, sorted into %u boxes:", boxVector.boxCt);
+
+    for (i = 0; i < boxVector.boxCt; ++i) {
+        const struct Box * const boxP = &boxVector.box[i];
+
+        unsigned int j;
+
+        pm_message("Box %u, %u colors starting with index %u (%u pixels):",
+                   i, boxP->colorCt, boxP->startIndex, boxP->sum);
+        if (boxP->colorCt > 1)
+            pm_message("Largest spread is %lu, in plane %u",
+                       boxP->spread, boxP->maxdim);
+
+        for (j = 0; j < boxP->colorCt; ++j) {
+            unsigned int colorIdx = boxP->startIndex + j;
+
+            assert(colorIdx < boxVector.colorFreqTable.size);
+
+            tuple const color =
+                boxVector.colorFreqTable.table[colorIdx]->tuple;
+
+            pm_message("(%lu, %lu, %lu)",
+                       color[PAM_RED_PLANE],
+                       color[PAM_GRN_PLANE],
+                       color[PAM_BLU_PLANE]);
+        }
+    }
 }
 
 
@@ -730,13 +790,14 @@ mediancut(tupletable2           const colorFreqTable,
           enum MethodForLargest const methodForLargest,
           enum MethodForRep     const methodForRep,
           enum MethodForSplit   const methodForSplit,
+          bool                  const wantBvReport,
           tupletable2 *         const colormapP) {
 /*----------------------------------------------------------------------------
    Compute a set of only 'newColorCt' colors that best represent an
    image whose pixels are summarized by the histogram
    'colorFreqTable'.  Each tuple in that table has depth 'depth'.
    colorFreqTable.table[i] tells the number of pixels in the subject image
-   have a particular color.
+   that have a particular color.
 
    As a side effect, sort 'colorFreqTable'.
 -----------------------------------------------------------------------------*/
@@ -763,11 +824,16 @@ mediancut(tupletable2           const colorFreqTable,
         if (boxIdx >= boxVector.boxCt)
             multicolorBoxesExist = FALSE;
         else
-            splitBox(&boxVector, boxIdx, colorFreqTable, depth,
-                     methodForLargest, methodForSplit);
+            splitBox(&boxVector, boxIdx, methodForLargest, methodForSplit);
+                /* Side effect: sorts the extent of 'colorfreqTable' that is
+                   in the box
+                */
     }
-    *colormapP = colormapFromBv(newColorCt, boxVector, colorFreqTable,
-                                depth, methodForRep);
+
+    if (wantBvReport)
+        reportBoxVector(boxVector);
+
+    *colormapP = colormapFromBv(newColorCt, boxVector, methodForRep);
 
     destroyBoxVector(boxVector);
 }
@@ -900,6 +966,7 @@ computeColorMapFromInput(FILE *                const ifP,
                          enum MethodForLargest const methodForLargest,
                          enum MethodForRep     const methodForRep,
                          enum MethodForSplit   const methodForSplit,
+                         bool                  const wantBvReport,
                          int *                 const formatP,
                          struct pam *          const freqPamP,
                          tupletable2 *         const colormapP) {
@@ -923,6 +990,9 @@ computeColorMapFromInput(FILE *                const ifP,
    relevant to our colormap mission; just a fringe benefit).
 -----------------------------------------------------------------------------*/
     tupletable2 colorFreqTable;
+        /* Table of all colors in the image, with the number of pixels of
+           each color.
+        */
 
     computeHistogram(ifP, formatP, freqPamP, &colorFreqTable);
 
@@ -937,7 +1007,7 @@ computeColorMapFromInput(FILE *                const ifP,
             pm_message("choosing %u colors...", reqColors);
             mediancut(colorFreqTable, freqPamP->depth,
                       reqColors, methodForLargest, methodForRep,
-                      methodForSplit, colormapP);
+                      methodForSplit, wantBvReport, colormapP);
             pnm_freetupletable2(freqPamP, colorFreqTable);
         }
     }
@@ -1113,6 +1183,7 @@ main(int argc, const char * argv[] ) {
                              cmdline.methodForLargest,
                              cmdline.methodForRep,
                              cmdline.methodForSplit,
+                             cmdline.debug,
                              &format, &colormapPam, &colormap);
 
     pm_close(ifP);

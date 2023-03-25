@@ -1,10 +1,39 @@
 #! /bin/sh
 # This script tests: pnmcolormap
-# Also requires:
+# Also requires: ppmpat
+
+echo "Test 1."
 
 pnmcolormap -plain -sort 2 maze.pbm
+echo
 pnmcolormap -plain -sort -square 2 maze.pbm
+echo
 pnmcolormap -plain -sort all maze.pbm
+echo
+tmpdir=${tmpdir:-/tmp}
+tartan_ppm=${tmpdir}/tartan.ppm
+
+echo "Test 2."
+
+ppmpat -tartan -color="rgb:00/00/ff,rgb:00/80/ff,rgb:80/00/80" 20 20 |\
+    tee ${tartan_ppm} | pnmcolormap -plain -sort all
+echo
+pnmcolormap -plain -sort -square all ${tartan_ppm}
+rm ${tartan_ppm}
+echo
+echo "Test 3."
+# Explicitly specify default options.  Output should not vary.
+
+map=${tmpdir}/map.ppm
+
+pnmcolormap 64 testimg.ppm > ${map} && echo ok || echo bad
+test -s ${map} && echo ok || echo bad
+pnmcolormap -center 64 testimg.ppm | cmp -s ${map} - && echo ok || echo bad
+pnmcolormap -spreadbrightness 64 testimg.ppm | cmp -s ${map} - && echo ok || echo bad
+pnmcolormap -splitpixelct 64 testimg.ppm | cmp -s ${map} - && echo ok || echo bad
+rm ${map}
+echo
+echo "Test Invalid."
 
 echo 1>&2
 echo "Invalid command-line arguments." 1>&2

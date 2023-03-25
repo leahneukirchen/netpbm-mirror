@@ -24,7 +24,7 @@ pbmtextps -descent=2 ${text} | cmp -s - ${text_pbm}
 rm ${text_pbm}
 
 
-echo "Test 2.  Should print P1 1 1 0 three times"
+echo "Test 2.  Should print P1 1 1 0 five times"
 # blank images
 
 pbmtextps " " | pnmcrop -plain -blank-image=minimize |\
@@ -32,7 +32,11 @@ pbmtextps " " | pnmcrop -plain -blank-image=minimize |\
 pbmtextps -fontsize=12   " " | pnmcrop -plain -blank-image=minimize |\
   tr '\n' ' ' ; echo
 pbmtextps -resolution=50 " " | pnmcrop -plain -blank-image=minimize |\
-  tr '\n' ' ' ; echo 
+  tr '\n' ' ' ; echo
+pbmtextps -asciihex "20" | pnmcrop -plain -blank-image=minimize |\
+  tr '\n' ' ' ; echo
+pbmtextps -ascii85  "+9" | pnmcrop -plain -blank-image=minimize |\
+  tr '\n' ' ' ; echo
 
 
 
@@ -49,5 +53,3 @@ pbmtextps "+" | pnmcrop -left -right | pbmminkowski | grep "eulerchi"
 pbmtextps "+" | pnmcrop | pbmminkowski | grep "eulerchi"
 
 pbmtextps "o" | pnmcrop | pbmminkowski | grep "eulerchi"
-
-

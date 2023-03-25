@@ -4,22 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-23.03.23 BJH  Release 11.01.03
+23.03.25 BJH  Release 11.02.00
 
-              Fix 'jpegtopnm' build failure introduced in previous release.
+              jpegtopnm: Add -traceexif
 
-23.03.22 BJH  Release 11.01.02
+              pbmtextps: Add -asciihex, -ascii85.
+
+              pcdovtoppm: remove dependency on obsolete 'tempfile' program.
 
               jpegtopnm: Many fixes to -dumpexif.  Always broken.
               (-dumpexif was new in Netpbm 9.18 (September 2001))
 
-23.03.14 BJH  Release 11.01.01
-
               pamtopng: fix -chroma option: always rejected.  Always broken.
-              pamtopng was new in Netpbm 10.70 (June 2015).
+              (pamtopng was new in Netpbm 10.70 (June 2015)).
 
               pnmtopng: fix -rgb option: always rejected.  Always broken
-              -rgb was new in Netpbm 10.30 (October 2005).
+              (-rgb was new in Netpbm 10.30 (October 2005)).
+
+              build: change the way you add the separately distributed
+              'hpcdtoppm' code to the build.
 
 22.12.31 BJH  Release 11.01.00
 
