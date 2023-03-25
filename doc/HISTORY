@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.03.25 BJH  Release 10.86.38
+
+              jpegtopnm: Many fixes to -dumpexif.  Always broken.
+              (-dumpexif was new in Netpbm 9.18 (September 2001))
+
 23.03.14 BJH  Release 10.86.37
 
               pamtopng: fix -chroma option: always rejected.  Always broken.

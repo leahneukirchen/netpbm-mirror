@@ -666,7 +666,7 @@ print_exif_info(struct jpeg_marker_struct const marker) {
         pm_message("EXIF header is invalid.  %s", error);
         pm_strfree(error);
     } else
-        exif_showImageInfo(&imageInfo, stderr);
+        exif_showImageInfo(&imageInfo);
 }
 
 
