@@ -731,7 +731,9 @@ splitBox(struct BoxVector *    const boxVectorP,
                          &oldBoxP->maxdim, &oldBoxP->spread);
     }
     {
-        struct Box * const newBoxP = &boxVectorP->box[boxVectorP->boxCt];
+        struct Box * const newBoxP = &boxVectorP->box[boxVectorP->boxCt++];
+
+        assert(boxVectorP->boxCt <= boxVectorP->capacity);
 
         newBoxP->startIndex = boxStart + medianIndex;
         newBoxP->colorCt    = boxSize - medianIndex;
@@ -739,7 +741,6 @@ splitBox(struct BoxVector *    const boxVectorP,
         computeBoxSpread(newBoxP, boxVectorP->colorFreqTable,
                          boxVectorP->colorDepth, methodForLargest,
                          &newBoxP->maxdim, &newBoxP->spread);
-        ++boxVectorP->boxCt;
     }
 
     sortBoxes(boxVectorP, methodForSplit);
