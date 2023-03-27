@@ -42,6 +42,8 @@ struct Box {
    A box contains an extent of a color frequency table, i.e. the colors
    with some consecutive index values in the color frequency table.
 -----------------------------------------------------------------------------*/
+    unsigned int serialNum;
+        /* Unique identifier of this box; sequence number of creation. */
     unsigned int startIndex;
         /* First index in the extent */
     unsigned int colorCt;
@@ -138,14 +140,14 @@ parseCommandLine (int argc, const char ** argv,
             NULL,                       &splitcolorct,     0);
     OPTENT3(0,   "splitspread",      OPT_FLAG,
             NULL,                       &splitspread,      0);
-    OPTENT3(0, "sort",     OPT_FLAG,   NULL,
-            &cmdlineP->sort,       0 );
-    OPTENT3(0, "square",   OPT_FLAG,   NULL,
-            &cmdlineP->square,     0 );
-    OPTENT3(0, "verbose",   OPT_FLAG,   NULL,
-            &cmdlineP->verbose,    0 );
-    OPTENT3(0, "debug",     OPT_FLAG,   NULL,
-            &cmdlineP->debug,      0 );
+    OPTENT3(0, "sort",               OPT_FLAG,   NULL,
+            &cmdlineP->sort,                               0);
+    OPTENT3(0, "square",             OPT_FLAG,   NULL,
+            &cmdlineP->square,                             0);
+    OPTENT3(0, "verbose",            OPT_FLAG,   NULL,
+            &cmdlineP->verbose,                            0);
+    OPTENT3(0, "debug",              OPT_FLAG,   NULL,
+            &cmdlineP->debug,                              0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -220,28 +222,63 @@ parseCommandLine (int argc, const char ** argv,
 
 
 #ifndef LITERAL_FN_DEF_MATCH
-static qsort_comparison_fn compareplane;
+static qsort_comparison_fn compareColor;
 #endif
 
-static unsigned int compareplanePlane;
-    /* This is a parameter to compareplane().  We use this global variable
-       so that compareplane() can be called by qsort(), to compare two
-       tuples.  qsort() doesn't pass any arguments except the two tuples.
-    */
+static struct {
+/*----------------------------------------------------------------------------
+  This is a parameter to compareColor().  We use this global variable
+  so that compareColor() can be called by qsort(), to compare two
+  tuples.  qsort() doesn't pass any arguments except the two tuples.
+-----------------------------------------------------------------------------*/
+    unsigned int comparePlane;
+        /* The number of the plane to compare between the tuples */
+    unsigned int colorDepth;
+        /* Depth (number of planes) of the tuples */
+} compareColorParm;
+
 static int
-compareplane(const void * const arg1,
+compareColor(const void * const arg1,
              const void * const arg2) {
 
     const struct tupleint * const * const comparandPP  = arg1;
     const struct tupleint * const * const comparatorPP = arg2;
 
-    sample const comparandSample  = (*comparandPP) ->tuple[compareplanePlane];
-    sample const comparatorSample = (*comparatorPP)->tuple[compareplanePlane];
+    sample const comparandSample  =
+        (*comparandPP) ->tuple[compareColorParm.comparePlane];
+    sample const comparatorSample =
+        (*comparatorPP)->tuple[compareColorParm.comparePlane];
 
-    return
-        comparandSample < comparatorSample ? -1 :
-        comparandSample > comparatorSample ? 1 :
-        0;
+    int retval;
+
+    if (comparandSample < comparatorSample)
+        retval = -1;
+    else if (comparandSample > comparatorSample)
+        retval = +1;
+    else {
+        /* In the plane that matters, samples are equal, but we're going to
+           try to differentiate the colors anyway so as to make qsort put the
+           colors in a deterministic order so the boxes are deterministic.
+        */
+        unsigned int plane;
+        int bestDiffSoFar;  /* -1, 0, or 1, like our return value */
+        for (plane = 0, bestDiffSoFar = 0;
+             plane < compareColorParm.colorDepth && bestDiffSoFar == 0;
+             ++plane) {
+
+            sample const comparandSample  =
+                (*comparandPP) ->tuple[compareColorParm.comparePlane];
+            sample const comparatorSample =
+                (*comparatorPP)->tuple[compareColorParm.comparePlane];
+
+            if (comparandSample < comparatorSample)
+                bestDiffSoFar = -1;
+            else if (comparandSample > comparatorSample)
+                bestDiffSoFar = +1;
+        }
+        retval = bestDiffSoFar;
+    }
+    return retval;
 }
 
 
@@ -259,7 +296,9 @@ sumcompare(const void * const arg1,
 
     return
         comparatorP->sum < comparandP->sum ? -1 :
-        comparatorP->sum > comparandP->sum ? 1 :
+        comparatorP->sum > comparandP->sum ? +1 :
+        comparatorP->serialNum < comparandP->serialNum ? -1 :
+        comparatorP->serialNum > comparandP->serialNum ? +1 :
         0;
 }
 
@@ -279,6 +318,8 @@ colcompare(const void * const arg1,
     return
         comparatorP->colorCt < comparandP->colorCt ? -1 :
         comparatorP->colorCt > comparandP->colorCt ? 1 :
+        comparatorP->serialNum < comparandP->serialNum ? -1 :
+        comparatorP->serialNum > comparandP->serialNum ? +1 :
         0;
 }
 
@@ -298,6 +339,8 @@ spreadcompare(const void * const arg1,
     return
         comparatorP->spread < comparandP->spread ? -1 :
         comparatorP->spread > comparandP->spread ? 1 :
+        comparatorP->serialNum < comparandP->serialNum ? -1 :
+        comparatorP->serialNum > comparandP->serialNum ? +1 :
         0;
 }
 
@@ -673,6 +716,44 @@ colormapFromBv(unsigned int      const colorCt,
 
 
 static void
+setBox(struct Box *          const boxP,
+       unsigned int          const startIndex,
+       unsigned int          const colorCt,
+       unsigned int          const sum,
+       struct BoxVector *    const boxVectorP,
+       enum MethodForLargest const methodForLargest
+    ) {
+
+    boxP->startIndex = startIndex;
+    boxP->colorCt    = colorCt;
+    boxP->sum        = sum;
+
+    computeBoxSpread(boxP, boxVectorP->colorFreqTable,
+                     boxVectorP->colorDepth, methodForLargest,
+                     &boxP->maxdim, &boxP->spread);
+}
+
+
+
+static void
+makeNewBox(struct BoxVector *    const boxVectorP,
+           unsigned int          const startIndex,
+           unsigned int          const colorCt,
+           unsigned int          const sum,
+           enum MethodForLargest const methodForLargest) {
+
+    struct Box * const boxP = &boxVectorP->box[boxVectorP->boxCt++];
+
+    assert(boxVectorP->boxCt <= boxVectorP->capacity);
+
+    boxP->serialNum = boxVectorP->boxCt;
+
+    setBox(boxP, startIndex, colorCt, sum, boxVectorP, methodForLargest);
+}
+
+
+
+static void
 splitBox(struct BoxVector *    const boxVectorP,
          unsigned int          const boxIdx,
          enum MethodForLargest const methodForLargest,
@@ -693,19 +774,14 @@ splitBox(struct BoxVector *    const boxVectorP,
     unsigned int lowerSum;
         /* Number of pixels whose value is "less than" the median */
 
-
-    /* Perhaps this sort should go after creating a box, not before splitting.
-       Because you need the sort to use the REP_CENTER_BOX method of choosing
-       a color to represent the final boxes
+    /* Set the gross global variable 'compareColorParm' as a
+       parameter to compareColor(), which is called by qsort().
     */
-
-    /* Set the gross global variable 'compareplanePlane' as a
-       parameter to compareplane(), which is called by qsort().
-    */
-    compareplanePlane = boxVectorP->box[boxIdx].maxdim;
+    compareColorParm.comparePlane    = boxVectorP->box[boxIdx].maxdim;
+    compareColorParm.colorDepth      = boxVectorP->colorDepth;
     qsort((char*) &boxVectorP->colorFreqTable.table[boxStart], boxSize,
           sizeof(boxVectorP->colorFreqTable.table[boxStart]),
-          compareplane);
+          compareColor);
 
     {
         /* Find the median based on the counts, so that about half the pixels
@@ -720,28 +796,18 @@ splitBox(struct BoxVector *    const boxVectorP,
         }
         medianIndex = i;
     }
-    /* Split the box, and sort to bring the biggest boxes to the top.  */
-    {
-        struct Box * const oldBoxP = &boxVectorP->box[boxIdx];
+    /* Split the box, and sort to bring the biggest boxes to the top.  The old
+       box becomes the lower half; we make a new box for the upper half.
+    */
+    setBox(&boxVectorP->box[boxIdx],
+           boxStart, medianIndex,
+           lowerSum,
+           boxVectorP, methodForLargest);
 
-        oldBoxP->colorCt = medianIndex;
-        oldBoxP->sum     = lowerSum;
-        computeBoxSpread(oldBoxP, boxVectorP->colorFreqTable,
-                         boxVectorP->colorDepth, methodForLargest,
-                         &oldBoxP->maxdim, &oldBoxP->spread);
-    }
-    {
-        struct Box * const newBoxP = &boxVectorP->box[boxVectorP->boxCt++];
-
-        assert(boxVectorP->boxCt <= boxVectorP->capacity);
-
-        newBoxP->startIndex = boxStart + medianIndex;
-        newBoxP->colorCt    = boxSize - medianIndex;
-        newBoxP->sum        = sum - lowerSum;
-        computeBoxSpread(newBoxP, boxVectorP->colorFreqTable,
-                         boxVectorP->colorDepth, methodForLargest,
-                         &newBoxP->maxdim, &newBoxP->spread);
-    }
+    makeNewBox(boxVectorP,
+               boxStart + medianIndex, boxSize - medianIndex,
+               sum - lowerSum,
+               methodForLargest);
 
     sortBoxes(boxVectorP, methodForSplit);
 }
@@ -1184,7 +1250,7 @@ main(int argc, const char * argv[] ) {
                              cmdline.methodForLargest,
                              cmdline.methodForRep,
                              cmdline.methodForSplit,
-                             cmdline.debug,
+                             !!cmdline.debug,
                              &format, &colormapPam, &colormap);
 
     pm_close(ifP);

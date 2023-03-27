@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.03.00
 
+              pnmcolormap: make result independent of how system's qsort
+              orders records with equal keys.  Affects pnmquant.
+
 23.03.25 BJH  Release 11.02.00
 
               jpegtopnm: Add -traceexif
