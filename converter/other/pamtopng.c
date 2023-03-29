@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <png.h>
-/* setjmp.h needs to be included after png.h */
-#include <setjmp.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"

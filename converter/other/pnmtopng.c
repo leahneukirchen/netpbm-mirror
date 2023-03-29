@@ -60,10 +60,6 @@
 #include <string.h> /* strcat() */
 #include <limits.h>
 #include <png.h>
-/* Because of a design error in png.h, you must not #include <setjmp.h> before
-   <png.h>.  If you do, png.h won't compile.
-*/
-#include <setjmp.h>
 #include <zlib.h>
 
 #include "pm_c_util.h"
@@ -137,10 +133,6 @@ struct cmdlineInfo {
 
 
 
-typedef struct _jmpbuf_wrapper {
-  jmp_buf jmpbuf;
-} jmpbuf_wrapper;
-
 #ifndef NONE
 #  define NONE 0
 #endif
@@ -155,7 +147,6 @@ typedef struct _jmpbuf_wrapper {
 
 static bool verbose;
 
-static jmpbuf_wrapper pnmtopng_jmpbuf_struct;
 static int errorlevel;
 
 
@@ -2732,7 +2723,6 @@ convertpnm(struct cmdlineInfo const cmdline,
         /* The background color, with maxval equal to that of the input
            image.
         */
-    jmp_buf jmpbuf;
     struct pngx * pngxP;
 
     bool colorMapped;
@@ -2787,10 +2777,7 @@ convertpnm(struct cmdlineInfo const cmdline,
 
     errorlevel = 0;
 
-    if (setjmp(jmpbuf))
-        pm_error ("setjmp returns error condition");
-
-    pngx_create(&pngxP, PNGX_WRITE, &jmpbuf);
+    pngx_create(&pngxP, PNGX_WRITE, NULL);
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
     pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
@@ -2865,10 +2852,6 @@ convertpnm(struct cmdlineInfo const cmdline,
     /* now write the file */
 
     pngMaxval = pm_bitstomaxval(depth);
-
-    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
-        pm_error ("setjmp returns error condition (2)");
-    }
 
     doIhdrChunk(pngxP, cols, rows, depth, colorMapped, colorPng, alpha,
                 cmdline.interlace);
