@@ -1,9 +1,37 @@
-Test.  Should print 'match' eight times.
+Test.  Should print 'match' eighteen times.
+pnmcolormap 256
 match
+pnmcolormap 128
 match
+pnmcolormap 64
 match
+pnmcolormap -meancolor 256
 match
+pnmcolormap -meancolor 128
 match
+pnmcolormap -meancolor 64
 match
+pnmcolormap -meanpixel 256
 match
+pnmcolormap -meanpixel 128
+match
+pnmcolormap -meanpixel 64
+match
+pnmcolormap -spreadluminosity 256
+match
+pnmcolormap -spreadluminosity 128
+match
+pnmcolormap -spreadluminosity 64
+match
+pnmcolormap -splitcolorct 256
+match
+pnmcolormap -splitcolorct 128
+match
+pnmcolormap -splitcolorct 64
+match
+pnmcolormap -splitspread 256
+match
+pnmcolormap -splitspread 128
+match
+pnmcolormap -splitspread 64
 match
