@@ -77,13 +77,13 @@ With <b>-topmargin</b> and <b>-bottommargin</b>, that may not be the case.
      $ pbmtextps -font=Times-Roman -descent=20 \
           &quot;The soup is called&quot; &gt; a1.pbm
      $ pbmtextps -font=Itallic -descent=20 &quot;Goulash.&quot; &gt; a2.pbm
-     $ pnmcat -leftright -jbottom a1.pbm a2.pbm &gt; out.pbm
+     $ pamcat -leftright -jbottom a1.pbm a2.pbm &gt; out.pbm
 </kbd>
 </pre>
 
 <p>If you're using <b>-descent</b> to line up the segments of text you are
-  concatenating horizontally with <b>pnmcat</b>, use the <b>-jbottom</b>
-  (justify to bottom) option on <b>pnmcat</b> as in the example above.  If you
+  concatenating horizontally with <b>pamcat</b>, use the <b>-jbottom</b>
+  (justify to bottom) option on <b>pamcat</b> as in the example above.  If you
   use <b>-ascent</b>, use <b>-jtop</b> instead.
 
 <p>Similarly, if you render two lines of text (in separate invocations of
@@ -148,7 +148,7 @@ as if you specified <b>-leftmargin=</b><i>0.5*fontsize</i>.
 is as if you specified <b>-rightmargin=0</b>.
 
 
-<h3 id="input_text">Input Text</h2>
+<h3 id="input_text">Input Text</h3>
 
 <p>The simplest way to specify the text to render is just to specify it,
   in ASCII, as the sole argument of the command.  For example,
@@ -371,6 +371,7 @@ Copyright (C) 2002 by James McCann
 <li><a href="#description">DESCRIPTION</a>
   <ul>
   <li><a href="#margins">Margins</a>
+  <li><a href="#input_text">Input Text</a>
   </ul>
 <li><a href="#options">OPTIONS</a>
 <li><a href="#usage">USAGE</a>

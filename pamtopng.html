@@ -66,10 +66,10 @@ degree that probably doesn't make any difference in the modern world.
 <p>The main advantage <b>pamtopng</b> has over <b>pnmtopng</b> is that the
 former can use the transparency channel of a PAM image to generate the
 transparency information in the PNG.  In contrast, handling of the alpha
-channel is very cumbersome with <b>pnmotpng</b>.
+channel is very cumbersome with <b>pnmtopng</b>.
 
 <p>One difference that <em>does not</em> exist, that some people might
-incorrectly infer from the names is the possible input formats.  Both programs
+incorrectly infer from the names, is the possible input formats.  Both programs
 can take PBM, PGM, PPM, and PAM input.
 
 <p>Because <b>pnmtopng</b> has been around virtually forever, programs and
@@ -166,7 +166,7 @@ of those 3 primary illuminants and of white (i.e. full strength of
 all three).
 
 <p>The <i>chroma_list</i> value is a blank-separated list of 8 floating
-point decimal numbers.  The CIE-1931 X and Y chromaticities (in that
+point decimal numbers: the CIE-1931 X and Y chromaticities (in that
 order) of each of white, red, green, and blue, in that order.
 
 <p>This information goes into the PNG's cHRM chunk.

@@ -77,7 +77,7 @@ different colors.  Before Netpbm 10.31 (December 2005), <b>pnmcolormap</b>
 ignored any image after the first.
 
 <p>If you want to create a colormap without basing it on the colors in
-an input image, <b>pamseq</b>, <b>ppmmake</b>, and <b>pnmcat</b> can
+an input image, <b>pamseq</b>, <b>ppmmake</b>, and <b>pamcat</b> can
 be useful.
 
 <h2 id="parameters">PARAMETERS</h2>
@@ -192,9 +192,14 @@ luminosity of the color.  E.g. red is weighted much more than blue.  Select
 among these with the <b>-spreadbrightness</b> and <b>-spreadluminosity</b>
 options.  The default is <b>-spreadbrightness</b>.  Where there are multiple
 colors of the median magnitude, they are distributed arbitrarily among between
-the subboxes.  This arbitrary distribution depends upon what the system's
-<b>qsort</b> function does with multiple equal values, so <b>pnmcolormap</b>
-may produce slightly different results on different systems.
+the subboxes.
+
+This arbitrary distribution is repeatable, though, for a given Netpbm version
+-- every invocation of <b>pnmcolormap</b> generates the same color map.
+Before Netpbm 11.03 (June 2023), the distribution would depend upon what the
+system's <b>qsort</b> function does with multiple equal values, so
+<b>pnmcolormap</b> may produce slightly different results on different
+systems.
 
 <p><b>pnmcolormap</b> provides three ways of choosing a color to represent a
 box: 1) the center color - the color halfway between the greatest and least
@@ -234,7 +239,7 @@ SIGGRAPH '82 Proceedings, page 297.
 <b><a href="ppmdither.html">ppmdither</a></b>,
 <b><a href="pamseq.html">pamseq</a></b>,
 <b><a href="ppmmake.html">ppmmake</a></b>,
-<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pamcat.html">pamcat</a></b>,
 <b><a href="ppm.html">ppm</a></b>
 
 <h2 id="history">HISTORY</h2>

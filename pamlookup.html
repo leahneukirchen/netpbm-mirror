@@ -48,22 +48,22 @@ whole tuple with each possible ordered pair index.  Modifying the example
 above, the index value could be (23, 5) instead of 23.
 
 <p>With whole tuple indexing, the output thus has the same width and height as
-the index image, and tuple depth and type and maxval determined by the lookup
-table.
+the index image, and tuple depth and type and maxval are determined by the
+lookup table.
 
 <p>With whole tuple indexing, if the index image has depth 1, its sample
 values are single whole number indices.  If the index image has depth greater
 than 1, its tuples are ordered pair indices composed of the first and second
 sample in the tuple.
 
-<p>In by plane indexing, the index image contains whole number indices.
-The first sample of each tuple in the index image is the index.  The lookup
-table maps each whole number index to another whole number.
-<b>pamlookup</b> looks up each sample from the index image in the lookup table
-and uses the resulting whole number as the sample value for the same
-row, column, and plane in the output.
+<p>In by-plane indexing, the index image contains whole number indices.  Each
+sample in the index image is an index.  The lookup table maps each whole
+number index to another whole number.  <b>pamlookup</b> looks up the sample at
+each row, column, and plane in the index image in the lookup table and uses
+the resulting whole number as the sample value for the same row, column, and
+plane in the output.
 
-<p>With by plane indexing, the output thus has the same dimensions as the
+<p>With by-plane indexing, the output thus has the same dimensions as the
 index image an the same maxval as the lookup image.
 
 
@@ -105,7 +105,7 @@ rule applies to the height of the index image as to the width.
 lookup table image.  <b>-</b> means Standard Input.  It won't work if both the
 index image file and lookup table file are Standard Input.
 
-<p>You can use <b>ppmmake</b> and <b>pnmcat</b> to create a lookup table file.
+<p>You can use <b>ppmmake</b> and <b>pamcat</b> to create a lookup table file.
 
 
 <h3 id="wholetuple">Example - Whole Tuple Indexing</h3>
@@ -337,9 +337,9 @@ Now, we create a lookup table that we can index with those 4 values:
     ppmmake black 1 1 &gt;black.ppm
     ppmmake red   1 1 &gt;red.ppm
     ppmmake green 1 1 &gt;green.ppm
-    pnmcat -leftright black.ppm red.ppm   &gt;blackred.ppm
-    pnmcat -leftright green.ppm white.ppm &gt;greenwhite.ppm
-    pnmcat -topbottom blackred.ppm greenwhite.ppm &gt;lookup.ppm
+    pamcat -leftright black.ppm red.ppm   &gt;blackred.ppm
+    pamcat -leftright green.ppm white.ppm &gt;greenwhite.ppm
+    pamcat -topbottom blackred.ppm greenwhite.ppm &gt;lookup.ppm
 </kbd>
 </pre>
 
@@ -358,7 +358,7 @@ produce the output:
 <a href="pamunlookup.html">pamunlookup</a>,
 <a href="pnmremap.html">pnmremap</a>,
 <a href="ppmmake.html">ppmmake</a>,
-<a href="pnmcat.html">pnmcat</a>,
+<a href="pamcat.html">pamcat</a>,
 <a href="pamstack.html">pamstack</a>,
 <a href="pnm.html">pnm</a>,
 <a href="pam.html">pam</a>

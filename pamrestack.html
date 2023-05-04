@@ -103,7 +103,7 @@ Print information about the processing to Standard Error.
     this problem.
 
   <li><b>pamrestack</b> can be used with <b>pamdice</b>, <b>pamundice</b>,
-    <b>pnmcat</b>, etc. to divide and combine images in the process of
+    <b>pamcat</b>, etc. to divide and combine images in the process of
     interlacing.
   </ul>
 
@@ -124,7 +124,7 @@ pamseq 3 255 | pamrestack -width=4096
 
 <pre>
 <kbd>
-pnmcat -leftright oddrows.ppm evenrows.ppm | pamrestack -width=600
+pamcat -leftright oddrows.ppm evenrows.ppm | pamrestack -width=600
 </kbd>
 </pre>
 
@@ -135,7 +135,7 @@ pnmcat -leftright oddrows.ppm evenrows.ppm | pamrestack -width=600
 <pre>
 <kbd>
   pamflip -leftright evenrows.ppm |
-    pnmcat -leftright oddrows.ppm - |
+    pamcat -leftright oddrows.ppm - |
       pamrestack -width 600
 </kbd>
 </pre>
@@ -151,7 +151,7 @@ pnmcat -leftright oddrows.ppm evenrows.ppm | pamrestack -width=600
 <b><a href="pamdeinterlace.html">pamdeinterlace</a></b>,
 <b><a href="pamdice.html">pamdice</a></b>,
 <b><a href="pamundice.html">pamundice</a></b>,
-<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pamcat.html">pamcat</a></b>,
 <b><a href="pam.html">pam</a></b>
 
 

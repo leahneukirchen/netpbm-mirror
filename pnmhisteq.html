@@ -85,11 +85,10 @@ option allows you to save, as a PGM image, the luminosity map it
 computes from an image.  The <b>-rmap</b> option causes <b>pnmisteq</b>
 to use such an image as its luminosity map.
 
-<p>So you can run <b>pnmhisteq</b> with <b>-wmap</b> on a composite
-you created with <b>pnmcat</b> of the images you intend to process.
-Then, you can run <b>pnmisteq</b> with <b>-rmap</b> on each of the
-individual images, using the luminosity map you generated from the
-composite.
+<p>So you can run <b>pnmhisteq</b> with <b>-wmap</b> on a composite you
+created with <b>pamcat</b> of the images you intend to process.  Then, you can
+run <b>pnmisteq</b> with <b>-rmap</b> on each of the individual images, using
+the luminosity map you generated from the composite.
 
 <p>Use <b>pnmhistmap</b> to see the result.  Run a color image through
 <b>ppmtopgm</b> first so that you see a histogram of the luminosity instead of
@@ -190,7 +189,7 @@ identity operation), the only effect of passing the file through
 
 <b><a href="pnmnorm.html">pnmnorm</a></b>,
 
-<b><a href="pnmcat.html">pnmcat</a></b>,
+<b><a href="pamcat.html">pamcat</a></b>,
 
 <b><a href="pamdepth.html">pamdepth</a></b>,
 
