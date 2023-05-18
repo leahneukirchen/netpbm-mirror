@@ -23,15 +23,23 @@
 #define MAX_INPUTS 16
     /* The most input PAMs we allow user to specify */
 
+enum MaxvalScaling {
+    /* How to scale maxvals if the inputs don't all have the same maxval */
+    MAXVALSCALE_NONE,  /* Don't scale -- fail program */
+    MAXVALSCALE_FIRST, /* Scale everything to maxval of first input */
+    MAXVALSCALE_LCM    /* Scale everything to least common multiple */
+};
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *tupletype;       /* Tuple type for output PAM */
     unsigned int nInput;
         /* The number of input PAMs.  At least 1, at most 16. */
     const char * inputFileName[MAX_INPUTS];
         /* The PAM files to combine, in order. */
+    const char * tupletype;
+    enum MaxvalScaling maxvalScaling;
 };
 
 
@@ -50,13 +58,15 @@ parseCommandLine(int argc, const char ** argv,
     extern struct pam pam;  /* Just so we can look at field sizes */
 
     unsigned int option_def_index;
-    unsigned int tupletypeSpec;
+    unsigned int tupletypeSpec, firstmaxvalSpec, lcmmaxvalSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "tupletype",  OPT_STRING, &cmdlineP->tupletype,
+    OPTENT3(0, "tupletype",   OPT_STRING, &cmdlineP->tupletype,
             &tupletypeSpec, 0);
+    OPTENT3(0, "firstmaxval", OPT_FLAG, NULL, &firstmaxvalSpec, 0);
+    OPTENT3(0, "lcmmaxval",   OPT_FLAG, NULL, &lcmmaxvalSpec,   0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -72,6 +82,19 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("Tuple type name specified is too long.  Maximum of "
                      "%u characters allowed.",
                      (unsigned)sizeof(pam.tuple_type));
+
+    if (firstmaxvalSpec) {
+        if (lcmmaxvalSpec)
+            pm_error("Cannot specify both -lcmmaxval and -firstmaxval");
+        else
+            cmdlineP->maxvalScaling = MAXVALSCALE_FIRST;
+    } else if (lcmmaxvalSpec) {
+        if (firstmaxvalSpec)
+            pm_error("Cannot specify both -lcmmaxval and -firstmaxval");
+        else
+            cmdlineP->maxvalScaling = MAXVALSCALE_LCM;
+    } else
+        cmdlineP->maxvalScaling = MAXVALSCALE_NONE;
 
     cmdlineP->nInput = 0;  /* initial value */
     {
@@ -110,35 +133,44 @@ openAllStreams(unsigned int  const nInput,
 
 
 static void
-outputRaster(const struct pam       inpam[],
-             unsigned int     const nInput,
-             struct pam             outpam) {
+outputRaster(const struct pam * const inpam,  /* array */
+             unsigned int       const nInput,
+             struct pam         const outpam) {
+/*----------------------------------------------------------------------------
+   Write the raster of the output image according to 'outpam'.  Compose it
+   from the 'nInput' input images described by 'inpam'.
 
-    tuple *inrow;
-    tuple *outrow;
+   'outpam' may indicate a different maxval from some or all of the input
+   images.
+-----------------------------------------------------------------------------*/
+    tuple * inrow;
+    tuple * outrow;
 
     outrow = pnm_allocpamrow(&outpam);
-    inrow = pnm_allocpamrow(&outpam);
+    inrow  = pnm_allocpamrow(&outpam);
 
     {
-        int row;
+        unsigned int row;
 
-        for (row = 0; row < outpam.height; row++) {
+        for (row = 0; row < outpam.height; ++row) {
             unsigned int inputSeq;
-            int outplane;
-            outplane = 0;  /* initial value */
-            for (inputSeq = 0; inputSeq < nInput; ++inputSeq) {
+            unsigned int outPlane;
+
+            for (inputSeq = 0, outPlane = 0; inputSeq < nInput; ++inputSeq) {
                 struct pam thisInpam = inpam[inputSeq];
-                int col;
+                unsigned int col;
 
                 pnm_readpamrow(&thisInpam, inrow);
 
-                for (col = 0; col < outpam.width; col ++) {
-                    int inplane;
-                    for (inplane = 0; inplane < thisInpam.depth; ++inplane)
-                        outrow[col][outplane+inplane] = inrow[col][inplane];
+                pnm_scaletuplerow(&thisInpam, inrow, inrow, outpam.maxval);
+
+                for (col = 0; col < outpam.width; ++col) {
+                    unsigned int inPlane;
+                    for (inPlane = 0; inPlane < thisInpam.depth; ++inPlane) {
+                        outrow[col][outPlane+inPlane] = inrow[col][inPlane];
+                    }
                 }
-                outplane += thisInpam.depth;
+                outPlane += thisInpam.depth;
             }
             pnm_writepamrow(&outpam, outrow);
         }
@@ -150,11 +182,22 @@ outputRaster(const struct pam       inpam[],
 
 
 static void
-processOneImageInAllStreams(unsigned int const nInput,
-                            FILE *       const ifP[],
-                            FILE *       const ofP,
-                            const char * const tupletype) {
+processOneImageInAllStreams(unsigned int       const nInput,
+                            FILE *             const ifP[],
+                            FILE *             const ofP,
+                            const char *       const tupletype,
+                            enum MaxvalScaling const maxvalScaling) {
+/*----------------------------------------------------------------------------
+   Take one image from each of the 'nInput' open input streams ifP[]
+   and stack them into one output image on *ofP.
 
+   Take the images from the current positions of those streams and leave
+   the streams positioned after them.
+
+   Make the output image have tuple type 'tupletype'.
+
+   Scale input samples for output according to 'maxvalScaling'.
+-----------------------------------------------------------------------------*/
     struct pam inpam[MAX_INPUTS];   /* Input PAM images */
     struct pam outpam;  /* Output PAM image */
 
@@ -166,30 +209,61 @@ processOneImageInAllStreams(unsigned int const nInput,
 
     unsigned int outputDepth;
     outputDepth = 0;  /* initial value */
+    sample maxvalLcm;
+        /* Least common multiple of all maxvals or PNM_OVERALLMAXVAL if the
+           LCM is greater than that.
+        */
+    bool allImagesSameMaxval;
+        /* The images all have the same maxval */
 
-    for (inputSeq = 0; inputSeq < nInput; ++inputSeq) {
+    for (inputSeq = 0, allImagesSameMaxval = true, maxvalLcm = 1;
+         inputSeq < nInput;
+         ++inputSeq) {
 
         pnm_readpaminit(ifP[inputSeq], &inpam[inputSeq],
                         PAM_STRUCT_SIZE(tuple_type));
 
-        if (inputSeq > 0) {
-            /* All images, including this one, must be compatible with the
-               first image.
-            */
-            if (inpam[inputSeq].width != inpam[0].width)
-                pm_error("Image no. %u does not have the same width as "
-                         "Image 0.", inputSeq);
-            if (inpam[inputSeq].height != inpam[0].height)
-                pm_error("Image no. %u does not have the same height as "
-                         "Image 0.", inputSeq);
-            if (inpam[inputSeq].maxval != inpam[0].maxval)
-                pm_error("Image no. %u does not have the same maxval as "
-                         "Image 0.", inputSeq);
-        }
+        /* All images, including this one, must have same dimensions as
+           the first image.
+        */
+        if (inpam[inputSeq].width != inpam[0].width)
+            pm_error("Image no. %u does not have the same width as "
+                     "Image 0.", inputSeq);
+        if (inpam[inputSeq].height != inpam[0].height)
+            pm_error("Image no. %u does not have the same height as "
+                     "Image 0.", inputSeq);
+
+        if (inpam[inputSeq].maxval != inpam[0].maxval)
+            allImagesSameMaxval = false;
+
+        maxvalLcm = pm_lcm(maxvalLcm, inpam[inputSeq].maxval, 1,
+                           PAM_OVERALL_MAXVAL);
+
         outputDepth += inpam[inputSeq].depth;
     }
 
     outpam        = inpam[0];     /* Initial value */
+
+    switch (maxvalScaling) {
+    case MAXVALSCALE_NONE:
+        if (!allImagesSameMaxval)
+            pm_message("Inputs do not all have same maxval.  "
+                       "Consider -firstmaxval or -lcmmaxval");
+        outpam.maxval = inpam[0].maxval;
+        break;
+    case MAXVALSCALE_FIRST:
+        outpam.maxval = inpam[0].maxval;
+        if (!allImagesSameMaxval)
+            pm_message("Input maxvals vary; making output maxval %lu "
+                       "per -firstmaxval", outpam.maxval);
+        break;
+    case MAXVALSCALE_LCM:
+        outpam.maxval = maxvalLcm;
+        if (!allImagesSameMaxval)
+            pm_message("Input maxvals vary; making output maxval %lu "
+                       "per -lcmmaxval", outpam.maxval);
+        break;
+    }
     outpam.depth  = outputDepth;
     outpam.file   = ofP;
     outpam.format = PAM_FORMAT;
@@ -241,7 +315,7 @@ main(int argc, const char *argv[]) {
     eof = FALSE;
     while (!eof) {
         processOneImageInAllStreams(cmdline.nInput, ifP, stdout,
-                                    cmdline.tupletype);
+                                    cmdline.tupletype, cmdline.maxvalScaling);
 
         nextImageAllStreams(cmdline.nInput, ifP, &eof);
     }

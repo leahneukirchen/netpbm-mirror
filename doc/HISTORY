@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.03.00
 
+              pamstack: Add -firstmaxval, -lcmmaxval
+
               pnmcolormap: make result independent of how system's qsort
               orders records with equal keys.  Affects pnmquant.
 
