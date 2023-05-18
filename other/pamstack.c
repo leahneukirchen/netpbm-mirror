@@ -23,7 +23,7 @@
 #define MAX_INPUTS 16
     /* The most input PAMs we allow user to specify */
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -37,8 +37,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec strings we return are stored in the storage that
    was passed to us as the argv array.
@@ -53,16 +53,16 @@ parseCommandLine(int argc, char ** argv,
     unsigned int tupletypeSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "tupletype",  OPT_STRING, &cmdlineP->tupletype, 
+    OPTENT3(0, "tupletype",  OPT_STRING, &cmdlineP->tupletype,
             &tupletypeSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!tupletypeSpec)
@@ -74,11 +74,11 @@ parseCommandLine(int argc, char ** argv,
                      (unsigned)sizeof(pam.tuple_type));
 
     cmdlineP->nInput = 0;  /* initial value */
-    { 
+    {
         unsigned int argn;
         bool stdinUsed;
         for (argn = 1, stdinUsed = false; argn < argc; ++argn) {
-            if (cmdlineP->nInput >= MAX_INPUTS) 
+            if (cmdlineP->nInput >= MAX_INPUTS)
                 pm_error("You may not specify more than %u input images.",
                          MAX_INPUTS);
             cmdlineP->inputFileName[cmdlineP->nInput++] = argv[argn];
@@ -110,19 +110,19 @@ openAllStreams(unsigned int  const nInput,
 
 
 static void
-outputRaster(const struct pam       inpam[], 
+outputRaster(const struct pam       inpam[],
              unsigned int     const nInput,
              struct pam             outpam) {
 
     tuple *inrow;
     tuple *outrow;
-        
-    outrow = pnm_allocpamrow(&outpam);
-    inrow = pnm_allocpamrow(&outpam);      
 
-    { 
+    outrow = pnm_allocpamrow(&outpam);
+    inrow = pnm_allocpamrow(&outpam);
+
+    {
         int row;
-        
+
         for (row = 0; row < outpam.height; row++) {
             unsigned int inputSeq;
             int outplane;
@@ -135,7 +135,7 @@ outputRaster(const struct pam       inpam[],
 
                 for (col = 0; col < outpam.width; col ++) {
                     int inplane;
-                    for (inplane = 0; inplane < thisInpam.depth; ++inplane) 
+                    for (inplane = 0; inplane < thisInpam.depth; ++inplane)
                         outrow[col][outplane+inplane] = inrow[col][inplane];
                 }
                 outplane += thisInpam.depth;
@@ -144,7 +144,7 @@ outputRaster(const struct pam       inpam[],
         }
     }
     pnm_freepamrow(outrow);
-    pnm_freepamrow(inrow);        
+    pnm_freepamrow(inrow);
 }
 
 
@@ -166,14 +166,14 @@ processOneImageInAllStreams(unsigned int const nInput,
 
     unsigned int outputDepth;
     outputDepth = 0;  /* initial value */
-    
+
     for (inputSeq = 0; inputSeq < nInput; ++inputSeq) {
 
-        pnm_readpaminit(ifP[inputSeq], &inpam[inputSeq], 
+        pnm_readpaminit(ifP[inputSeq], &inpam[inputSeq],
                         PAM_STRUCT_SIZE(tuple_type));
 
         if (inputSeq > 0) {
-            /* All images, including this one, must be compatible with the 
+            /* All images, including this one, must be compatible with the
                first image.
             */
             if (inpam[inputSeq].width != inpam[0].width)
@@ -226,13 +226,13 @@ nextImageAllStreams(unsigned int const nInput,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP[MAX_INPUTS];
     bool eof;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -248,3 +248,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+
