@@ -49,7 +49,7 @@ parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -67,13 +67,13 @@ parseCommandLine(int argc, const char ** const argv,
     unsigned int dimSpec, redSpec, greenSpec, blueSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "dim",          OPT_UINT, 
+    OPTENT3(0, "dim",          OPT_UINT,
             &cmdlineP->dim,            &dimSpec,                  0);
-    OPTENT3(0, "red",          OPT_UINT, 
+    OPTENT3(0, "red",          OPT_UINT,
             &cmdlineP->colorRes.c[RED],   &redSpec,       0);
-    OPTENT3(0, "green",        OPT_UINT, 
+    OPTENT3(0, "green",        OPT_UINT,
             &cmdlineP->colorRes.c[GRN],   &greenSpec,     0);
     OPTENT3(0, "blue",         OPT_UINT,
             &cmdlineP->colorRes.c[BLU],   &blueSpec,      0);
@@ -94,7 +94,7 @@ parseCommandLine(int argc, const char ** const argv,
         pm_error("Dithering matrix power %u (-dim) is too large.  "
                  "Must be <= %u",
                  cmdlineP->dim, MAX_DITH_POWER);
-        
+
     if (redSpec) {
         if (cmdlineP->colorRes.c[RED] < 2)
             pm_error("-red must be at least 2.  You specified %u",
@@ -148,7 +148,7 @@ typedef struct {
            certain function (see scaler_scale()) of the input red, green, and
            blue values.
         */
-} scaler;    
+} scaler;
 
 
 
@@ -156,7 +156,7 @@ static tuple *
 allocScalerMap(unsigned int const size) {
     /* The tuple row data structure starts with 'size' pointers to
        the tuples, immediately followed by the 'size' tuples
-       themselves.  Each tuple consists of 3 samples.  
+       themselves.  Each tuple consists of 3 samples.
     */
 
     unsigned int const depth = 3;
@@ -165,14 +165,14 @@ allocScalerMap(unsigned int const size) {
     tuple * map;
 
     map = malloc(size * (sizeof(tuple *) + bytesPerTuple));
-                      
+
     if (map != NULL) {
         /* Now we initialize the pointers to the individual tuples
-           to make this a regulation C two dimensional array.  
+           to make this a regulation C two dimensional array.
         */
         char * p;
         unsigned int i;
-        
+
         p = (char*) (map + size);  /* location of Tuple 0 */
         for (i = 0; i < size; ++i) {
             map[i] = (tuple) p;
@@ -191,7 +191,7 @@ scaler_create(sample                 const outputMaxval,
 
     scaler * scalerP;
     unsigned int mapSize;
-    
+
     if (UINT_MAX / colorRes.c[RED] / colorRes.c[GRN] / colorRes.c[BLU] < 1)
         pm_error("red/green/blue dimensions %u/%u/%u is uncomputably large",
                  colorRes.c[RED], colorRes.c[GRN], colorRes.c[BLU]);
@@ -223,10 +223,10 @@ scaler_create(sample                 const outputMaxval,
                         (r * colorRes.c[GRN] + g)
                         * colorRes.c[BLU] + b;
                     tuple const t = scalerP->out[index];
-                         
+
                     t[PAM_RED_PLANE] =
                         r * outputMaxval / (colorRes.c[RED] - 1);
-                    t[PAM_GRN_PLANE] = 
+                    t[PAM_GRN_PLANE] =
                         g * outputMaxval / (colorRes.c[GRN] - 1);
                     t[PAM_BLU_PLANE] =
                         b * outputMaxval / (colorRes.c[BLU] - 1);
@@ -275,7 +275,7 @@ dither(sample       const p,
        unsigned int const ditheredMaxval,
        unsigned int const ditherMatrixArea) {
 /*----------------------------------------------------------------------------
-  Return the dithered brightness for a component of a pixel whose real 
+  Return the dithered brightness for a component of a pixel whose real
   brightness for that component is 'p' based on a maxval of 'maxval'.
   The returned brightness is based on a maxval of ditheredMaxval.
 
@@ -292,7 +292,7 @@ dither(sample       const p,
         /* This is the input intensity P expressed with a maxval of
            'ditherSquareMaxval'
         */
-    
+
     /* Now we scale the intensity back down to the 'ditheredMaxval', and
        as that will involve rounding, we round up or down based on the position
        in the dithered square, as determined by 'd'
@@ -306,7 +306,7 @@ dither(sample       const p,
 static unsigned int
 dithValue(unsigned int const yArg,
           unsigned int const xArg,
-          unsigned int const dithPower) { 
+          unsigned int const dithPower) {
 /*----------------------------------------------------------------------------
   Return the value of a dither matrix which is 2 ** dithPower elements
   square at Row x, Column y.
@@ -352,13 +352,13 @@ dithMatrix(unsigned int const dithPower) {
     assert(dithPower < sizeof(unsigned int) * 8);
 
     {
-        unsigned int const dithMatSize = 
+        unsigned int const dithMatSize =
             (dithDim * sizeof(*dithMat)) + /* pointers */
             (dithDim * dithDim * sizeof(**dithMat)); /* data */
-        
+
         dithMat = malloc(dithMatSize);
-        
-        if (dithMat == NULL) 
+
+        if (dithMat == NULL)
             pm_error("Out of memory.  "
                      "Cannot allocate %u bytes for dithering matrix.",
                      dithMatSize);
@@ -464,13 +464,13 @@ ditherImage(struct pam *           const inpamP,
 
     tuple * inrow;
     tuple ** outTuples;
-    unsigned int row; 
+    unsigned int row;
     struct pam ditherPam;
         /* Describes the tuples that ditherRow() sees */
 
     assert(dithPower < sizeof(unsigned int) * 8);
     assert(UINT_MAX / dithDim >= dithDim);
-    
+
     validateNoDitherOverflow(ditherMatrixArea, inpamP, colorRes);
 
     inrow = pnm_allocpamrow(inpamP);
@@ -517,7 +517,7 @@ main(int           argc,
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
 
     pnm_setminallocationdepth(&inpam, 3);
-    
+
     outpam.size               = sizeof(outpam);
     outpam.len                = PAM_STRUCT_SIZE(tuple_type);
     outpam.file               = stdout;
@@ -549,3 +549,5 @@ main(int           argc,
 
     return 0;
 }
+
+
