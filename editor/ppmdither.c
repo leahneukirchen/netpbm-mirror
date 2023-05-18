@@ -32,7 +32,7 @@ struct colorResolution {
 #define GRN PAM_GRN_PLANE
 #define BLU PAM_BLU_PLANE
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -46,7 +46,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -501,7 +501,7 @@ int
 main(int           argc,
      const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     tuple ** outTuples;        /* Output image */
     scaler * scalerP;
