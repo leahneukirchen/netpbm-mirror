@@ -2,7 +2,7 @@
 <html><head><title>Pamstack User Manual</title></head>
 <body>
 <h1>pamstack</h1>
-Updated: 10 January 2006
+Updated: 18 May 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -13,6 +13,7 @@ pamstack - stack planes of multiple PAM images into one PAM image
 
 <b>pamstack</b>
 [<b>-tupletype </b><i>tupletype</i>]
+[<b>-firstmaxval</b>,<b>-lcmmaxval</b>]
 [<i>inputfilespec</i> ...]
 
 <p>All options may be abbreviated to the shortest unique prefix.  You
@@ -29,15 +30,19 @@ produces a PAM image as output, consisting of all the planes
 
 <p>It can also just change the tuple type of a single PAM image.
   
-<p>For any one (but not more) of the input files, you may specify
-"-" to mean Standard Input.  If you specify no arguments at all,
-the input is one file: Standard Input.
+<p>For any one (but not more) of the input files, you may specify "-" to mean
+Standard Input.  If you specify no arguments at all, the input is one file:
+Standard Input.
 
-<p>The output is the same dimensions as the inputs, except that the
-depth is the sum of the depths of the inputs.  It has the same maxval.
-<b>pamstack</b> fails if the inputs are not all the same width, height,
-and maxval.  The tuple type is a null string unless you specify the
-<b>-tupletype</b> option.
+<p>The output is the same dimensions as the inputs, except that the depth is
+  the sum of the depths of the inputs.  The maxval is the same as the inputs
+  if they are all alike, and controlled by <b>-firstmaxval</b>
+  and <b>-lcmmaxval</b> if not.  The tuple type is a null string unless you
+  specify the <b>-tupletype</b> option.
+  
+<p> <b>pamstack</b> fails if the inputs are not all the same width and height.
+It also fails if they do not all have the same maxval, unless you specify
+<b>-firstmaxval</b> or <b>-lcmmaxval</b>.
 
 <p><b>pamstack</b> works with multi-image streams.  It stacks the 1st
 image in all the streams into one output image (the first one in the
@@ -86,6 +91,33 @@ command line option:
 This specifies the tuple type name to be recorded in the output.  You may
 use any string up to 255 characters.  Some programs recognize some names.
 If you omit this option, the default tuple type name is null.
+
+<dt><b>-firstmaxval</b>
+<dd>
+This says to make the maxval of the output the same as the maxval of the first
+image of the input; the program scales sample values of other images are as
+necessary.
+
+<p>By default, <b>pamstack</b> requires all the input images to have the same
+maxval.  If they don&apos;t, it fails.
+    
+<p>You cannot specify this with <b>-lcmmaxval</b>.
+
+<p>This option was new in Netpbm 11.03 (June 2023).
+  
+<dt><b>-lcmmaxval</b>
+<dd>
+This says to make the maxval of the output the least common multiple of the
+maxvals of the input images, limited to 65535 if the LCM is above that; the
+program scales sample values of other images are as necessary.
+
+<p>By default, <b>pamstack</b> requires all the input images to have the same
+maxval.  If they don&apos;t, it fails.
+    
+<p>You cannot specify this with <b>-firstmaxval</b>.
+
+<p>This option was new in Netpbm 11.03 (June 2023).
+
 </dl>
 
 <h2 id="seealso">SEE ALSO</h2>
