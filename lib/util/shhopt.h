@@ -4,7 +4,7 @@ HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 
 
 #include <shhopt.h>
-int 
+int
 main ( int argc, char **argv ) {
 
     /* initial values here are just to demonstrate what gets set and
@@ -18,19 +18,21 @@ main ( int argc, char **argv ) {
     int height=7;
     int verbose_flag=7;
     int debug_flag=7;
+    char ** methodlist;
     struct optNameValue * optlist;
-    
+
     optStruct3 opt;
     unsigned int option_def_index = 0;
     optEntry * option_def;
     MALLOCARRAY(option_def, 100);
 
-    OPTENT3(0,   "help",     OPT_FLAG,     &help_flag,    &help_spec,   0);
-    OPTENT3(0,   "height",   OPT_INT,      &height,       &height_spec, 0);
-    OPTENT3('n', "name",     OPT_STRING,   &name,         &name_spec,   0);
-    OPTENT3('v', "verbose",  OPT_FLAG,     &verbose_flag, NULL,         0);
-    OPTENT3('g', "debug",    OPT_FLAG,     &debug_flag,   NULL,         0);
-    OPTENT3(0,   "options",  OPT_NAMELIST, &optlist,      NULL,         0);
+    OPTENT3(0,   "help",     OPT_FLAG,       &help_flag,    &help_spec,   0);
+    OPTENT3(0,   "height",   OPT_INT,        &height,       &height_spec, 0);
+    OPTENT3('n', "name",     OPT_STRING,     &name,         &name_spec,   0);
+    OPTENT3('v', "verbose",  OPT_FLAG,       &verbose_flag, NULL,         0);
+    OPTENT3('g', "debug",    OPT_FLAG,       &debug_flag,   NULL,         0);
+    OPTENT3(0,   "methods",  OPT_STRINGLIST, &methodlist,   NULL,         0);
+    OPTENT3(0,   "options",  OPT_NAMELIST,   &optlist,      NULL,         0);
 
     opt.opt_table = option_def;
     opt.short_allowed = 1;
@@ -38,7 +40,7 @@ main ( int argc, char **argv ) {
 
 
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
-    
+
 
     printf("argc=%d\n", argc);
     printf("help_flag=%d\n", help_flag);
@@ -50,13 +52,24 @@ main ( int argc, char **argv ) {
     printf("verbose_flag=%d\n", verbose_flag);
     printf("debug_flag=%d\n", verbose_flag);
 
+    if (methodlist) {
+        unsigned int i;
+        printf("methods: ");
+        while (methodlist[i]) {
+            printf("'%s', ", methodlist[i]);
+            ++i;
+        }
+        free(methodlist);
+    } else
+        printf("No -options\n");
+
     if (optlist) {
         unsigned int i;
         while (optlist[i].name) {
             printf("option '%s' = '%s'\n", optlist[i].name, optlist[i].value);
             ++i;
         }
-        optDestroyNameValueList(optlist);
+        pm_optDestroyNameValueList(optlist);
     } else
         printf("No -options\n");
 }
@@ -116,7 +129,7 @@ typedef struct {
                             * or pointer to function if type == OPT_FUNC. */
     int        flags;      /* modifier flags. */
 } optStruct;
-    
+
 typedef struct {
     /* This structure describes a single program option in a form for
      use by the pm_optParseOptions3() function.
@@ -124,10 +137,10 @@ typedef struct {
     char       shortName;  /* short option name. */
     const char *longName;  /* long option name, not including '--' or '-' */
     optArgType type;       /* option type. */
-    void       *arg;       
+    void       *arg;
         /* pointer to variable in which to return option's argument (or TRUE
-           if it's a flag option), or pointer to function if 
-           type == OPT_FUNC.  If the option is specified multiple times, only 
+           if it's a flag option), or pointer to function if
+           type == OPT_FUNC.  If the option is specified multiple times, only
            the rightmost one affects this return value.
         */
     unsigned int *specified;
@@ -136,7 +149,7 @@ typedef struct {
         */
     int        flags;      /* modifier flags. */
 } optEntry;
-    
+
 
 typedef struct {
     /* This structure describes the options of a program in a form for
@@ -146,20 +159,20 @@ typedef struct {
         /* The syntax may include short (i.e. one-character) options.
            These options may be stacked within a single token (e.g.
            -abc = -a -b -c).  If this value is not true, the short option
-           member of the option table entry is meaningless and long 
+           member of the option table entry is meaningless and long
            options may have either one or two dashes.
            */
     unsigned char allowNegNum;  /* boolean */
         /* Anything that starts with - and then a digit is a numeric
-           parameter, not an option 
+           parameter, not an option
            */
     optStruct *opt_table;
 } optStruct2;
 
 typedef struct {
     /* Same as optStruct2, but for pm_optParseOptions3() */
-    unsigned char short_allowed;  
-    unsigned char allowNegNum;    
+    unsigned char short_allowed;
+    unsigned char allowNegNum;
     optEntry *opt_table;
 } optStruct3;
 
@@ -173,9 +186,9 @@ typedef struct {
        optStruct *option_def = malloc(100*sizeof(optStruct));
        OPTENTRY('h', "help",     OPT_FLAG, &help_flag, 0);
        OPTENTRY(0,   "alphaout", OPT_STRING, &alpha_filename, 0);
-*/   
+*/
 
-/* If you name your variables option_def and option_def_index like in the 
+/* If you name your variables option_def and option_def_index like in the
    example above, everything's easy.  If you want to use OPTENTRY with other
    variables, define macros OPTION_DEF and OPTION_DEF_INDEX before calling
    OPTENTRY.
@@ -217,7 +230,10 @@ typedef struct {
     OPTENTRY(shortvalue, longvalue, typevalue, outputvalue, flagvalue) \
     }
 
-#define OPTENTINIT OPTION_DEF[0].type = OPT_END
+#define OPTENTINIT \
+    do {OPTION_DEF_INDEX=0; \
+        OPTION_DEF[OPTION_DEF_INDEX].type = OPT_END; \
+    } while (0)
 
 
 struct optNameValue {
@@ -226,7 +242,7 @@ struct optNameValue {
 };
 
 
-        
+
 void
 pm_optSetFatalFunc(void (*f)(const char *, ...));
 
@@ -234,10 +250,10 @@ void
 pm_optParseOptions(int *argc, char *argv[],
                    optStruct opt[], int allowNegNum);
 void
-pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
+pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt,
                  const unsigned long flags);
 void
-pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
+pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
                  const unsigned int optStructSize, const unsigned long flags);
 
 void

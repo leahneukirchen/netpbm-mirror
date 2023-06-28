@@ -442,6 +442,18 @@ sub askAboutDjgpp() {
 
 
 
+sub askAboutMingw() {
+
+    print("Are you building for the MinGW environment?\n");
+    print("\n");
+    
+    my $retval = promptYesNo("n");
+
+    return $retval;
+}
+
+
+
 sub computePlatformDefault($) {
 
     my ($defaultP) = @_;
@@ -552,6 +564,29 @@ sub getPlatform() {
     }
 
     return($platform, $subplatform);
+}
+
+
+
+sub warnMingwXopenSource($) {
+    my ($subplatform) = @_;
+
+    if ($subplatform ne 'cygwin' && $subplatform ne 'djgpp') {
+        my $mingw = askAboutMingw();
+
+        if ($mingw) {
+            print << 'EOF';
+
+MinGW does not implement enough of the standard on which Netpbm relies to
+build out-of-the-box, but there is a trivial way to add the needed capability
+to MinGW.  See file doc/INSTALL for details.
+
+Press ENTER to continue.
+
+EOF
+            <STDIN>;
+        }
+    }
 }
 
 
@@ -1164,10 +1199,20 @@ sub getPngLibrary($@) {
 
     my ($pnglib, $pnghdr_dir);
 
-    if (commandExists('libpng-config')) {
-        # We don't need to ask where Libpng is; there's a 'libpng-config'
-        # That tells exactly how to access it, and the make files will use
-        # that.
+    if (system('pkg-config libpng --exists') == 0) {
+        # We don't need to ask where Libpng is; the Pkg-config database knows
+        # and the make files will use that.
+        #
+        # To limit the confusion when someone tries to use our result in
+        # spite of the fact that 'libpng-config' exists, we assign suggestive
+        # dummy values (just for use in human debugging).
+        $pnglib     = 'USE_PKG_CONFIG.a';
+        $pnghdr_dir = 'USE_PKG_CONFIG.a';
+    } elsif (commandExists('libpng-config')) {
+        # As with Pkg-config above, we can find out how to access the
+        # library by invoking a 'libpng-config' command.
+        $pnglib     = 'USE_LIBPNG-CONFIG.a';
+        $pnghdr_dir = 'USE_LIBPNG-CONFIG.a';
     } else {
         {
             my $default = "libpng" . libSuffix($platform);
@@ -1252,6 +1297,12 @@ sub getX11Library($@) {
     if (system('pkg-config x11 --exists') == 0) {
         # We don't need to ask where X libraries are; pkg-config knows and the
         # make files will use that.
+        #
+        # To limit the confusion when someone tries to use our result in
+        # spite of the fact that 'libpng-config' exists, we assign suggestive
+        # dummy values (just for use in human debugging).
+        $x11lib     = 'USE_PKGCONFIG.a';
+        $x11hdr_dir = 'USE_PKGCONFIG.a';
     } else {
         {
             my $default;
@@ -1456,14 +1507,52 @@ sub gnuOptimizeOpt($) {
 
 
 
+sub wnostrictoverflowWorks($) {
+    my ($gccCommandName) = @_;
+
+    my ($cFile, $cFileName) = tempFile(".c");
+
+    print $cFile "int x;";
+    
+    my $compileCommand =
+        "$gccCommandName -c -o /dev/null -Wno-strict-overflow $cFileName";
+    print("Doing test compile to see if -Wno-strict-overflow works: "
+          . "$compileCommand\n");
+    my $rc = system($compileCommand);
+    
+    unlink($cFileName);
+    close($cFile);
+
+    return ($rc == 0);
+}
+
+
+
 sub gnuCflags($) {
     my ($gccCommandName) = @_;
 
-    return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
-           " -pedantic -fno-common " . 
-           "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
-           "-Wwrite-strings -Wmissing-prototypes -Wundef " .
-           "-Wno-unknown-pragmas\n");
+    my $flags;
+
+    $flags = gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
+        " -pedantic -fno-common " . 
+        "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
+        "-Wwrite-strings -Wmissing-prototypes -Wundef " .
+        "-Wno-unknown-pragmas ";
+
+    if (wnostrictoverflowWorks($gccCommandName)) {
+        # The compiler generates some optimizations based on the assumption
+        # that you wouldn't code something that can arithmetically overflow,
+        # so adding a positive value to something can only make it bigger.
+        # E.g. if (x + y > x), where y is unsigned, is a no-op.  The compiler
+        # optionally warns when it makes that assumption.  Sometimes, the
+        # compiler is able to do that optimization because of inlining, so the
+        # code per se is not ridiculous, it just becomes superfluous in
+        # context.  That means you can't code around the warning.  Ergo, we
+        # must disable the warning.
+
+        $flags .= '-Wno-strict-overflow';
+    }
+    return("CFLAGS = $flags\n");
 }
 
 
@@ -2030,6 +2119,10 @@ if ($platform eq "NONE") {
     exit;
 }
 
+if ($platform eq 'WINDOWS') {
+    warnMingwXopenSource($subplatform);
+}
+
 getCompiler($platform, $subplatform, \my $compiler);
 
 getLinker($platform, $compiler, \my $baseLinker, \my $linkViaCompiler);
@@ -2142,8 +2235,8 @@ my ($linuxsvgalib, $linuxsvgahdr_dir) = getLinuxsvgaLibrary($platform);
 
 print("\n");
 
-# We should add the JBIG and URT libraries here too.  They're a little
-# more complicated because there are versions shipped with Netpbm.
+# We should add the URT, JBIG, and Jasper libraries here too.  They're a
+# little more complicated because there are versions shipped with Netpbm.
 
 
 #******************************************************************************

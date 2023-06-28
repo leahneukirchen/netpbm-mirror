@@ -1,20 +1,12 @@
 /* pbmtog3.c - read a PBM image and produce a Group 3 FAX file
-**
-** Copyright (C) 1989 by Paul Haeberli <paul@manray.sgi.com>.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
+
+   For specifications for Group 3 (G3) fax MH coding see ITU-T T.4:
+   Standardization of Group 3 facsimile terminals for document transmission
+   https://www.itu.int/rec/T-REC-T.4/en
+
+   This program generates only MH.
 */
 
-/*
-   For specifications for Group 3 (G3) fax MH coding see ITU-T T.4
-   This program generates only MH.  It is coded with future expansion for
-   MR and MMR in mind.
-*/
 
 #include <assert.h>
 
@@ -22,47 +14,24 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "bitreverse.h"
-#include "wordaccess.h"
-#include "wordintclz.h"
+#include "intcode.h"
 #include "g3.h"
+#include "g3ttable.h"
+#include "g3prefab.h"
 #include "pbm.h"
 
-#define TC_MC 64
+enum G3eol {EOL, ALIGN8, ALIGN16, NO_EOL, NO_RTC, NO_EOLRTC};
 
-static bool const pbmtorl = 
-#ifdef PBMTORL
-    TRUE;
-#else
-    FALSE;
-#endif
+struct OutStream;
 
-
-struct bitString {
-    /* A string of bits, up to as many fit in a word. */
-    unsigned int bitCount;
-        /* The length of the bit string */
-    wordint intBuffer;
-        /* The bits are in the 'bitCount' least significant bit positions 
-           of this number.  The rest of the bits of this number are always 
-           zero.
-        */
-
-    /* Example:  The bit string 010100, on a machine with a 32 bit word,
-       would be represented by bitCount = 6, intBuffer = 20
-       (N.B. 20 = 00000000 00000000 00000000 00010100 in binary)
-    */
+struct OutStream {
+    FILE * fp;
+    struct BitString buffer;
+    bool reverseBits;    /* Reverse bit order */
+    enum G3eol eolAlign; /* Omit EOL and/or RTC; align EOL to 8/16 bits */
+    void * data;         /* Reserved for future expansion */
 };
 
-
-
-struct outStream {
-    struct bitString buffer;
-
-    bool reverseBits;
-};
-
-/* This is a global variable for speed. */
-static struct outStream out;
 
 
 struct CmdlineInfo {
@@ -71,14 +40,15 @@ struct CmdlineInfo {
     */
     const char * inputFileName;
     unsigned int reversebits;
-    unsigned int nofixedwidth;
+    enum G3eol   align;
+    unsigned int desiredWidth;
     unsigned int verbose;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** const argv,
+parseCommandLine(int argc, const char ** const argv,
                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
@@ -87,6 +57,8 @@ parseCommandLine(int argc, char ** const argv,
     optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.  */
     optStruct3 opt;
+    unsigned int nofixedwidth;
+    unsigned int align8, align16;
 
     unsigned int option_def_index;
 
@@ -95,9 +67,13 @@ parseCommandLine(int argc, char ** const argv,
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "reversebits",      OPT_FLAG,  NULL, &cmdlineP->reversebits,
             0);
-    OPTENT3(0,   "nofixedwidth",     OPT_FLAG,  NULL, &cmdlineP->nofixedwidth,
+    OPTENT3(0,   "nofixedwidth",     OPT_FLAG,  NULL, &nofixedwidth,
             0);
-    OPTENT3(0,   "verbose",          OPT_FLAG,  NULL, &cmdlineP->verbose, 
+    OPTENT3(0,   "align8",           OPT_FLAG,  NULL, &align8,
+            0);
+    OPTENT3(0,   "align16",          OPT_FLAG,  NULL, &align16,
+            0);
+    OPTENT3(0,   "verbose",          OPT_FLAG,  NULL, &cmdlineP->verbose,
             0);
 
     /* TODO
@@ -105,15 +81,30 @@ parseCommandLine(int argc, char ** const argv,
     */
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = TRUE;  /* We may have parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = true;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free(option_def);
 
-    if (argc-1 == 0) 
+    if (align8) {
+        if (align16)
+            pm_error("You can't specify both -align8 and -align16");
+        else
+            cmdlineP->align = ALIGN8;
+    } else if (align16)
+        cmdlineP->align = ALIGN16;
+    else
+        cmdlineP->align = EOL;
+
+    if (nofixedwidth)
+        cmdlineP->desiredWidth = 0;
+    else
+        cmdlineP->desiredWidth = 1728;
+
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -125,31 +116,79 @@ parseCommandLine(int argc, char ** const argv,
 
 
 static void
-reversebuffer(unsigned char * const p, 
+reversebuffer(unsigned char * const p,
               unsigned int    const n) {
 
     unsigned int i;
+
     for (i = 0; i < n; ++i)
         p[i] = bitreverse[p[i]];
 }
 
 
 
-static struct bitString
-makeBs(wordint      const bits, 
-       unsigned int const bitCount) {
+static void
+flushBuffer(struct OutStream * const outP) {
+/*----------------------------------------------------------------------------
+  Flush the contents of the bit buffer
+-----------------------------------------------------------------------------*/
+    struct BitString const buffer = outP->buffer;
 
-    struct bitString retval;
-    retval.intBuffer = bits;
-    retval.bitCount  = bitCount;
+    assert (buffer.bitCount <= 32);
 
-    return retval;
+    if (buffer.bitCount > 0) {
+        unsigned int const fullBuffer = sizeof(buffer.intBuffer) * 8;
+        unsigned int const bytesToWrite = (buffer.bitCount+7)/8;
+        bigend32 outbytes;
+        size_t rc;
+
+        outbytes = pm_bigendFromUint32(
+                   buffer.intBuffer << (fullBuffer - buffer.bitCount));
+        if (outP->reverseBits)
+    	reversebuffer((unsigned char *)&outbytes, bytesToWrite);
+        rc = fwrite((unsigned char *)&outbytes, 1, bytesToWrite, outP->fp);
+        if (rc != bytesToWrite)
+            pm_error("Output error");
+    }
 }
 
 
+#if 1==0
+static void
+putbitsDump(struct OutStream * const outP,
+            struct BitString   const newBits) {
+/*----------------------------------------------------------------------------
+  Print the content of the bit put request, in human readable text form
+  For debugging.  Also good for studying how the coding scheme works.
 
-static __inline__ void
-putbits(struct bitString const newBits) {
+  By default the compiler ignores this function.
+  To turn on, remove the "#if" - "#endif" lines enclosing the function and
+  edit the output function name in putbits().
+-----------------------------------------------------------------------------*/
+    unsigned int const bitCount = newBits.bitCount;
+
+    unsigned int i;
+    char charBuff[128];
+
+    assert (bitCount >= 0 && bitCount < 32);
+    assert (sizeof(newBits.intBuffer) + 2 < 128);
+
+    for (i = 0; i < bitCount; ++i) {
+        unsigned int const n = bitCount - i - 1;
+        charBuff[i] = ((newBits.intBuffer >> n) & 0x01) + '0';
+    }
+
+    charBuff[bitCount]   = '\n';
+    charBuff[bitCount+1] = '\0';
+    fwrite(charBuff, 1, bitCount+1, outP->fp);
+}
+#endif
+
+
+
+static void
+putbitsBinary(struct OutStream * const outP,
+              struct BitString   const newBits) {
 /*----------------------------------------------------------------------------
    Push the bits 'newBits' onto the right end of output buffer
    out.buffer (moving the bits already in the buffer left).
@@ -158,334 +197,462 @@ putbits(struct bitString const newBits) {
 
    'newBits' must be shorter than a whole word.
 
-   N.B. the definition of struct bitString requires upper bits to be zero.
+   N.B. the definition of struct BitString requires upper bits to be zero.
 -----------------------------------------------------------------------------*/
-    unsigned int const spaceLeft = 
-        sizeof(out.buffer.intBuffer)*8 - out.buffer.bitCount;
+    unsigned int const fullBuffer = sizeof(outP->buffer.intBuffer) * 8;
+    unsigned int const spaceLeft = fullBuffer - outP->buffer.bitCount;
         /* Number of bits of unused space (at the high end) in buffer */
 
-    assert(newBits.bitCount < sizeof(out.buffer.intBuffer) * 8);
+    assert(newBits.bitCount < fullBuffer);
     assert(newBits.intBuffer >> newBits.bitCount == 0);
 
     if (spaceLeft > newBits.bitCount) {
         /* New bits fit with bits to spare */
-        out.buffer.intBuffer = 
-            out.buffer.intBuffer << newBits.bitCount | newBits.intBuffer;
-        out.buffer.bitCount += newBits.bitCount;
-    } else { 
+        outP->buffer.intBuffer =
+            outP->buffer.intBuffer << newBits.bitCount | newBits.intBuffer;
+        outP->buffer.bitCount += newBits.bitCount;
+    } else {
         /* New bits fill buffer.  We'll have to flush the buffer to stdout
            and put the rest of the bits in the new buffer.
         */
         unsigned int const nextBufBitCount = newBits.bitCount - spaceLeft;
+        unsigned int const bitMask = ((1<<nextBufBitCount) - 1);
 
-        wordintBytes outbytes;
-        size_t rc;
+        outP->buffer.intBuffer = ( (outP->buffer.intBuffer << spaceLeft)
+                                 | (newBits.intBuffer >> nextBufBitCount));
+        outP->buffer.bitCount  = fullBuffer;
+        flushBuffer(outP);
 
-        wordintToBytes(&outbytes, 
-                       (out.buffer.intBuffer << spaceLeft) 
-                       | (newBits.intBuffer >> nextBufBitCount));
-        if (out.reverseBits)
-            reversebuffer(outbytes, sizeof(outbytes));
-
-        rc = fwrite(outbytes, 1, sizeof(outbytes), stdout);
-        if (rc != sizeof(outbytes))
-            pm_error("Output error.  Unable to fwrite() to stdout");
-
-        out.buffer.intBuffer = newBits.intBuffer & ((1<<nextBufBitCount) - 1); 
-        out.buffer.bitCount = nextBufBitCount;
+        outP->buffer.intBuffer = newBits.intBuffer & bitMask;
+        outP->buffer.bitCount = nextBufBitCount;
     }
 }
 
 
 
-static void 
-initOutStream(bool const reverseBits) {
-    out.buffer.intBuffer = 0;
-    out.buffer.bitCount  = 0;
-    out.reverseBits = reverseBits;
+static void
+initOutStream(struct OutStream * const outP,
+              bool               const reverseBits,
+              enum G3eol         const eolAlign) {
+
+    outP->buffer.intBuffer = 0;
+    outP->buffer.bitCount  = 0;
+    outP->reverseBits      = reverseBits;
+    outP->fp               = stdout;
+    outP->eolAlign         = eolAlign;
 }
 
 
 
-static __inline__ void
-putcode(unsigned int const clr, 
-        unsigned int const ix) {
+static struct BitString
+tableEntryToBitString(G3TableEntry const tableEntry) {
 
-    /* Note that this requires ttable to be aligned white entry, black
-       entry, white, black, etc.  
+    struct BitString retval;
+
+    retval.intBuffer = tableEntry.code;
+    retval.bitCount  = tableEntry.length;
+
+    return retval;
+}
+
+
+
+static void
+putbits(struct OutStream * const outP,
+        struct BitString   const newBits) {
+
+    putbitsBinary(outP, newBits);
+    /* Change to putbitsDump() for human readable output */
+}
+
+
+
+static void
+putcodeShort(struct OutStream * const outP,
+             bit                const color,
+             unsigned int       const runLength) {
+
+    /* Note that this requires g3ttable_table to be aligned white entry, black
+       entry, white, black, etc.
     */
-    putbits(makeBs(ttable[ix * 2 + clr].code, ttable[ix * 2 + clr].length));
+    unsigned int index = runLength * 2 + color;
+    putbits(outP, tableEntryToBitString(g3ttable_table[index]));
 }
 
 
 
-static __inline__ void
-putcode2(int const clr,
-         int const ix) {
+static void
+putcodeLong(struct OutStream * const outP,
+            bit                const color,
+            unsigned int       const runLength) {
 /*----------------------------------------------------------------------------
    Output Make-up code and Terminating code at once.
 
-   For run lengths above TC_MC threshold (usually 64).
+   For run lengths which require both: length 64 and above
 
    The codes are combined here to avoid calculations in putbits()
-   wordint is usually wide enough, with 32 or 64 bits.
-   Provisions are made for 16 bit wordint (for debugging).
 
    Terminating code is max 12 bits, Make-up code is max 13 bits.
-   (See ttable, mtable entries in pbmtog3.h)
+   (See g3ttable_table, g3ttable_mtable entries in g3ttable.h)
 
    Also reduces object code size when putcode is compiled inline.
 -----------------------------------------------------------------------------*/
-    unsigned int const loIndex = ix % 64 * 2 + clr;
-    unsigned int const hiIndex = ix / 64 * 2 + clr;
+    unsigned int const loIndex = runLength % 64 * 2 + color;
+    unsigned int const hiIndex = runLength / 64 * 2 + color;
+    unsigned int const loLength = g3ttable_table[loIndex].length;
+    unsigned int const hiLength = g3ttable_mtable[hiIndex].length;
 
-    if (sizeof(wordint) * 8 > 24) {
-        unsigned int const l1 = ttable[loIndex].length;
+    struct BitString combinedCode;
 
-        putbits(
-            makeBs(mtable[hiIndex].code << l1 | ttable[loIndex].code,
-                   mtable[hiIndex].length + l1)
-            );
-    } else { /* typically 16 bit wordint used for debugging */
-        putbits(makeBs(mtable[hiIndex].code, mtable[hiIndex].length));
-        putbits(makeBs(ttable[loIndex].code, ttable[loIndex].length));
-    }
+    combinedCode.intBuffer = g3ttable_mtable[hiIndex].code << loLength |
+                             g3ttable_table[loIndex].code;
+    combinedCode.bitCount  = hiLength + loLength;
+
+    putbits(outP, combinedCode);
 }
 
 
 
-static __inline__ void
-putspan_normal(bit          const color, 
-               unsigned int const len) {
-
-    if (len < TC_MC)
-        putcode(color, len);
-    else if (len < 2624)
-        putcode2(color, len);
-    else {  /* len >= 2624 : rare */
-        unsigned int remainingLen;
-
-        for (remainingLen = len;
-             remainingLen >= 2624;
-             remainingLen -= 2623) {
-
-            putcode2(color, 2560+63);
-            putcode(!color, 0);
-        }
-        if (remainingLen < TC_MC)
-            putcode(color, remainingLen);
-        else  /* TC_MC <= len < 2624 */
-            putcode2(color, remainingLen);
-    }
-}
-
-
-
-static __inline__ void
-putspan(bit          const color, 
-        unsigned int const len) {
+static  void
+putcodeExtra(struct OutStream * const outP,
+             int                const color,
+             int                const runLength) {
 /*----------------------------------------------------------------------------
-   Put a span of 'len' pixels of color 'color' in the output.
+   Lengths over 2560.  This is rare.
+   According to the standard, the mark-up code for 2560 can be issued as
+   many times as necessary without terminal codes.
+   --------------------------------------------------------------------------*/
+    G3TableEntry const markUp2560 = g3ttable_mtable[2560/64*2];
+                              /* Same code for black and white */
+
+    unsigned int remainingLen;
+
+    for (remainingLen = runLength; remainingLen > 2560; remainingLen -= 2560)
+      putbits(outP, tableEntryToBitString(markUp2560));
+    /* after the above: 0 < remainingLen <= 2560 */
+
+    if (remainingLen >= 64)
+        putcodeLong(outP, color, remainingLen);
+    else
+        putcodeShort(outP, color, remainingLen);
+}
+
+
+
+static void
+putspan(struct OutStream * const outP,
+        bit                const color,
+        unsigned int       const runLength) {
+
+    if (runLength < 64)
+        putcodeShort(outP, color, runLength);
+    else if (runLength < 2560)
+        putcodeLong (outP, color, runLength);
+    else  /* runLength > 2560 : rare */
+        putcodeExtra(outP, color, runLength);
+}
+
+
+
+static void
+puteol(struct OutStream * const outP) {
+
+    switch (outP->eolAlign) {
+    case EOL: {
+        struct BitString const eol = { 1, 12 };
+
+        putbits(outP, eol);
+    } break;
+    case ALIGN8:  case ALIGN16: {
+        unsigned int const bitCount = outP->buffer.bitCount;
+        unsigned int const fillbits =
+            (outP->eolAlign == ALIGN8) ? (44 - bitCount) % 8
+            : (52 - bitCount) % 16;
+
+        struct BitString eol;
+
+        eol.bitCount = 12 + fillbits;     eol.intBuffer = 1;
+        putbits(outP, eol);
+    } break;
+    case NO_EOL: case NO_EOLRTC:
+        break;
+    case NO_RTC:
+        pm_error("INTERNAL ERROR: no-RTC EOL treatment not implemented");
+        break;
+    }
+}
+
+
+
+static void
+putrtc(struct OutStream * const outP) {
+
+    switch (outP->eolAlign) {
+    case NO_RTC: case NO_EOLRTC:
+        break;
+    default:
+        puteol(outP);    puteol(outP);    puteol(outP);
+        puteol(outP);    puteol(outP);    puteol(outP);
+    }
+}
+
+
+
+static void
+readOffSideMargins(unsigned char * const bitrow,
+                   unsigned int    const colChars,
+                   unsigned int  * const firstNonWhiteCharP,
+                   unsigned int  * const lastNonWhiteCharP,
+                   bool          * const blankRowP) {
+/*----------------------------------------------------------------------------
+  Determine the white margins on the left and right side of a row.
+  This is an enhancement: convertRowToG3() works without this.
 -----------------------------------------------------------------------------*/
-    if (pbmtorl) {
-        if (len > 0) 
-            printf("%c %d\n", color == PBM_WHITE ? 'W' : 'B', len);
-    } else 
-        putspan_normal(color, len);
+    unsigned int charCnt;
+    unsigned int firstChar;
+    unsigned int lastChar;
+    bool         blankRow;
+
+    assert(colChars > 0);
+
+    for (charCnt = 0; charCnt < colChars && bitrow[charCnt] == 0; ++charCnt);
+
+    if (charCnt >= colChars) {
+        /* Reached end of bitrow with no black pixels encountered */
+        firstChar = lastChar = 0;
+        blankRow  = true;
+    } else {
+        /* There is at least one black pixel in the row */
+        firstChar = charCnt;
+        blankRow = false;
+
+        charCnt = colChars - 1;
+
+        while (bitrow[charCnt--] == 0x00)
+            ;
+        lastChar = charCnt + 1;
+    }
+
+    *firstNonWhiteCharP = firstChar;
+    *lastNonWhiteCharP  = lastChar;
+    *blankRowP          = blankRow;
 }
 
 
 
 static void
-puteol(void) {
+setBlockBitsInFinalChar(unsigned char * const finalByteP,
+                        unsigned int    const cols) {
+/*----------------------------------------------------------------------------
+   If the char in the row is fractional, set it up so that the don't care
+   bits are the opposite color of the last valid pixel.
+----------------------------------------------------------------------------*/
+    unsigned char const finalByte  = *finalByteP;
+    unsigned int const silentBitCnt = 8 - cols % 8;
+    bit const rowEndColor = (finalByte >> silentBitCnt) & 0x01;
 
-    if (pbmtorl)
-        puts("EOL");
-    else {
-        struct bitString const eol = {12, 1};
+    if (rowEndColor == PBM_WHITE) {
+        unsigned char const blackMask = (0x01 << silentBitCnt) - 1;
 
-        putbits(eol);
+        *finalByteP = finalByte | blackMask;
     }
+    /* No adjustment required if the row ends with a black pixel.
+       pbm_cleanrowend_packed() takes care of this.
+    */
 }
 
 
 
-/*
-  PBM raw bitrow to inflection point array
+static void
+trimFinalChar(struct OutStream * const outP,
+              bit                const color,
+              int                const carryLength,
+              int                const existingCols,
+              int                const desiredWidth) {
+/*---------------------------------------------------------------------------
+   If the carry value from the last char in the row represents a valid
+   sequence, output it.
 
-  Write inflection (=color change) points into array milepost[].  
-  It is easy to calculate run length from this.
+   (1) If input row width is not a whole multiple of 8 and -nofixwidth
+       was specified, the final carry value represents inactive bits
+       at the row end.  Emit no code.  See setBlockBitsInFinalChar().
 
-  In milepost, a white-to-black (black-to-white) inflection point
-  always has an even (odd) index.  A line starting with black is
-  indicated by bitrow[0] == 0.
-
-  WWWWWWWBBWWWWWWW ... = 7,2,7, ...
-  BBBBBWBBBBBWBBBB ... = 0,5,1,5,1,4, ...
-
-  Return the number of milepost elements written.
-  Note that max number of entries into milepost = cols+1 .
-
-  The inflection points are calculated like this:
-
-   r1: 00000000000111111110011111000000
-   r2: c0000000000011111111001111100000 0->carry
-  xor: ?0000000000100000001010000100000
-
-  The 1 bits in the xor above are the inflection points.
-*/
-
-static __inline__ void
-convertRowToRunLengths(unsigned char * const bitrow, 
-                       int             const cols, 
-                       unsigned int *  const milepost,
-                       unsigned int *  const lengthP) {
-
-    unsigned int   const bitsPerWord  = sizeof(wordint) * 8;
-    wordint      * const bitrowByWord = (wordint *) bitrow;
-    int            const wordCount    = (cols + bitsPerWord - 1)/bitsPerWord; 
-        /* Number of full and partial words in the row */
-
-
-    if (cols % bitsPerWord != 0) {
-        /* Clean final word in row.  For loop simplicity */
-        wordint r1;
-        r1 = bytesToWordint((unsigned char *)&bitrowByWord[wordCount - 1]);
-        r1 >>= bitsPerWord - cols % bitsPerWord;
-        r1 <<= bitsPerWord - cols % bitsPerWord;
-        wordintToBytes((wordintBytes *)&bitrowByWord[wordCount - 1], r1);
-    }
-    {
-
-        wordint carry;
-        wordint r1, r2;
-        unsigned int n;
-        int i,c,k;
-
-        for (i = carry = n = 0; i < wordCount; ++i) {
-            r1 = r2 = bytesToWordint((unsigned char *)&bitrowByWord[i]);
-            r2 = r1 ^ (carry << (bitsPerWord-1) | r2 >> 1);
-            carry = r1 & 0x1;  k = 0;
-            while (r2 != 0) {
-                /* wordintClz(r2) reports most significant "1" bit of r2
-                   counting from MSB = position 0.
-                */
-                c = wordintClz(r2);
-                milepost[n++] = i * bitsPerWord + k + c;
-                r2 <<= c++; r2 <<= 1;  k += c; 
-            } 
+   (2) If there is white margin on the right side, the final carry value
+       is valid.  We add to it the margin width.  Right-side margin may
+       be added in main() to a narrow input image, detected in the
+       input row by readOffSideMargins() or both.  The same treatment
+       applies regardless of the nature of the right-side margin.
+----------------------------------------------------------------------------*/
+    if (existingCols == desiredWidth) {
+        if (existingCols % 8 == 0)
+            putspan(outP, color, carryLength);  /* Code up to byte boundary */
+        /* Emit nothing if existingCols is not a whole multiple of 8 */
+    } else if (existingCols < desiredWidth) {
+        if (color == 0) {       /* Last bit sequence in final char: white */
+            unsigned int const totalLength =
+                carryLength + (desiredWidth - existingCols);
+            putspan(outP, 0, totalLength);
+        } else {                 /* Black */
+            unsigned int const padLength = desiredWidth - existingCols;
+            putspan(outP, 1, carryLength);
+            putspan(outP, 0, padLength);
         }
-        if (n == 0 || milepost[n - 1] != cols) 
-            milepost[n++] = cols;
-        *lengthP = n;
     }
 }
 
 
 
 static void
-padToDesiredWidth(unsigned int * const milepost,
-                  unsigned int * const nRunP,
-                  int            const existingCols,
-                  int            const desiredCols) {
+convertRowToG3(struct OutStream * const outP,
+               unsigned char    * const bitrow,
+               unsigned int       const existingCols,
+               unsigned int       const desiredWidth) {
+/*----------------------------------------------------------------------------
+   Table based Huffman coding
 
-    if (existingCols < desiredCols) {
-        /* adjustment for narrow input in fixed width mode
-           nRun % 2 == 1 (0) means last (=rightmost) pixel is white (black)
-           if white, extend the last span to outwidth
-           if black, fill with a white span len (outwidth - readcols)
-        */
-        if (*nRunP % 2 == 0)
-            ++*nRunP;
-        milepost[*nRunP - 1] = desiredCols;
+   Normally Huffman code encoders count sequences of ones and zeros
+   and convert them to binary codes as they terminate.  This program
+   recognizes chains of pixels and converts them directly, reading
+   prefabricated code chains from an indexed table.
+
+   For example the 8-bit sequence 01100110 translates to
+   Huffman code: 000111 11 0111 11 000111.
+
+   In reality things are more complicated.  The leftmost 0 (MSB) may be
+   part of a longer sequence starting in the adjacent byte or perhaps
+   spanning several bytes.  Likewise for the rightmost 0.
+
+   So we first remove the sequence on the left side and compare its
+   color with the leftmost pixel of the adjacent byte and emit either
+   one code for a single sequence if they agree or two if they disagree.
+   Next the composite code for the central part (in the above example
+   110011 -> 11 0111 11) is emitted.  Finally we save the length and
+   color of the sequence on the right end as carry-over for the next
+   byte cycle.  Some 8-bit input sequences (00000000, 01111111,
+   00111111, etc.) have no central part: these are special cases.
+---------------------------------------------------------------------------*/
+    unsigned int const colChars = pbm_packed_bytes(existingCols);
+
+    unsigned int charCnt;
+    unsigned int firstActiveChar;
+    unsigned int lastActiveChar;
+    bool         blankRow;
+    bit          borderColor;
+
+    borderColor = PBM_WHITE; /* initial value */
+
+    if (existingCols == desiredWidth && (desiredWidth % 8) > 0)
+        setBlockBitsInFinalChar(&bitrow[colChars-1], desiredWidth);
+
+    readOffSideMargins(bitrow, colChars,
+                       &firstActiveChar, &lastActiveChar, &blankRow);
+
+    if (blankRow)
+        putspan(outP, PBM_WHITE, desiredWidth);
+    else {
+        unsigned int carryLength;
+
+        for (charCnt = firstActiveChar, carryLength = firstActiveChar * 8;
+             charCnt <=lastActiveChar;
+             ++charCnt) {
+
+            unsigned char const byte = bitrow[charCnt];
+            bit const rColor = !borderColor;
+
+            if (byte == borderColor * 0xFF) {
+                carryLength += 8;
+            } else if (byte == (unsigned char) ~(borderColor * 0xFF)) {
+                putspan(outP, borderColor, carryLength);
+                carryLength = 8;
+                borderColor = rColor;
+            } else {
+                struct PrefabCode const code = g3prefab_code[byte];
+                unsigned int const activeLength =
+                    8 - code.leadBits - code.trailBits;
+
+                if (borderColor == (byte >> 7)) {
+                    putspan(outP, borderColor, carryLength + code.leadBits);
+                } else {
+                    putspan(outP, borderColor, carryLength);
+                    putcodeShort(outP, rColor, code.leadBits);
+                }
+                if (activeLength > 0)
+                    putbits(outP, code.activeBits);
+
+                borderColor = byte & 0x01;
+                carryLength = code.trailBits;
+            }
+        }
+        trimFinalChar(outP, borderColor, carryLength,
+                      (lastActiveChar + 1) * 8, desiredWidth);
     }
+    puteol(outP);
 }
 
 
 
 int
-main(int    argc,
-     char * argv[]) {
+main(int          argc,
+     const char * argv[]) {
 
     struct CmdlineInfo cmdline;
     FILE * ifP;
     unsigned char * bitrow;
        /* This is the bits of the current row, as read from the input and
-           modified various ways at various points in the program.  It has
-           a word of zero padding on the high (right) end for the convenience
-           of code that accesses this buffer in word-size bites.
+          modified various ways at various points in the program.  It has
+          a word of zero padding on the high (right) end for the convenience
+          of code that accesses this buffer in word-size bites.
         */
 
     int rows;
     int cols;
-    int readcols;
-    int outwidth;
     int format;
-    int row;
-    unsigned int * milepost;
+    unsigned int existingCols;
+    unsigned int desiredWidth;
+    unsigned int row;
+    struct OutStream out;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
-    if (cmdline.nofixedwidth)
-        readcols = outwidth = cols;
+
+    if (cmdline.desiredWidth == 0)
+        desiredWidth = existingCols = cols;
     else {
-        readcols = MIN(cols, 1728);
-        outwidth = 1728;
+        if (cmdline.desiredWidth < cols)
+            existingCols = desiredWidth = cmdline.desiredWidth;
+        else {
+            existingCols = pbm_packed_bytes(cols) * 8;
+            desiredWidth = cmdline.desiredWidth;
+        }
     }
 
-    MALLOCARRAY_NOFAIL(bitrow, pbm_packed_bytes(cols) + sizeof(wordint));
+    MALLOCARRAY(bitrow, pbm_packed_bytes(cols) + sizeof(uint32_t));
 
-    MALLOCARRAY_NOFAIL(milepost, readcols + 2);
+    if (!bitrow)
+        pm_error("Failed to allocate a row buffer for %u columns", cols);
 
-    initOutStream(cmdline.reversebits);
-    puteol();
+    initOutStream(&out, cmdline.reversebits, cmdline.align);
+
+    puteol(&out);
 
     for (row = 0; row < rows; ++row) {
-        unsigned int nRun;  /* Number of runs in milepost[] */
-        unsigned int p;
-        unsigned int i;
-
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
-
-        convertRowToRunLengths(bitrow, readcols, milepost, &nRun);
-
-        padToDesiredWidth(milepost, &nRun, readcols, outwidth);
-
-        for (i = p = 0; i < nRun; p = milepost[i++])
-            putspan(i%2 == 0 ? PBM_WHITE : PBM_BLACK, milepost[i] - p);
-        /* TODO 2-dimensional coding MR, MMR */
-        puteol();
+        pbm_cleanrowend_packed(bitrow, cols);
+        convertRowToG3(&out, bitrow, existingCols, desiredWidth);
     }
 
-    free(milepost);
     pbm_freerow_packed(bitrow);
-
-    {
-        unsigned int i;  
-        for( i = 0; i < 6; ++i)
-            puteol();
-    }
-    if (out.buffer.bitCount > 0) {
-        /* flush final partial buffer */
-        unsigned int const bytesToWrite = (out.buffer.bitCount+7)/8;
-
-        unsigned char outbytes[sizeof(wordint)];
-        size_t rc;
-        wordintToBytes(&outbytes, 
-                       out.buffer.intBuffer << (sizeof(out.buffer.intBuffer)*8 
-                                                - out.buffer.bitCount));
-        if (out.reverseBits)
-            reversebuffer(outbytes, bytesToWrite);
-        rc = fwrite(outbytes, 1, bytesToWrite, stdout);
-        if (rc != bytesToWrite)
-            pm_error("Output error");
-    }
+    putrtc(&out);
+    flushBuffer(&out);
     pm_close(ifP);
 
     return 0;
 }
+
+
+

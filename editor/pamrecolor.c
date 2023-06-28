@@ -404,7 +404,7 @@ parseCommandLine(int argc, const char ** const argv,
             cmdlineP->color2gray.rfrac +
             cmdlineP->color2gray.gfrac +
             cmdlineP->color2gray.bfrac;
-        if (fabsf(1.0 - maxLuminance) > REAL_EPSILON)
+        if (fabsf(1.0f - maxLuminance) > REAL_EPSILON)
             pm_error("The values given for --rmult, --gmult, and --bmult must "
                      "sum to 1.0, not %.10g", maxLuminance);
     } else if (csSpec)

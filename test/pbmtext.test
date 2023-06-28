@@ -1,12 +1,94 @@
 #! /bin/bash
 # This script tests: pbmtext
-# Also requires:
+# Also requires: pamfile
+
+tmpdir=${tmpdir:-/tmp}
+
+# Test 1:
+
+# Should print 3898818212 967 twice
+
+pbmtext UNIX Philosophy: Do one thing and do it well. | cksum
+echo -n "UNIX Philosophy: Do one thing and do it well." | pbmtext | cksum
+
+# Should print 2506052117 1354 twice
+
+pbmtext -builtin fixed \
+    For truth is always strange. Stranger than fiction. Lord Byron | cksum
+echo -n "For truth is always strange. Stranger than fiction. Lord Byron" | \
+    pbmtext -builtin fixed | cksum
 
 
-for i in 0123456789 abcdefghijk lmnopqrst uzwxyz ABCDEFGHIJK LMNOPQRST UVWXYZ
+text="The quick brown fog jumps over the lazy docs."
+
+# Test 2:
+
+for flags in "" "-nomargins" "-builtin fixed"
 do
-for flags in "" "-nom" "-builtin fixed"
+echo ${text} | pbmtext ${flags} | cksum
+done
+
+temp_pbm=${tmpdir}/temp.pbm
+
+
+# Test 3: Check if image is produced unaltered when -width is specified
+# Should print 1028079028 967 twice, then 1305436978 1018 twice
+
+for flags in "" "-builtin fixed"
 do
-echo $i | pbmtext $flags | cksum
+pbmtext ${flags} ${text} | tee ${temp_pbm} | cksum
+width1=`pamfile ${temp_pbm} | awk '$2=="PBM" && NR==1 {w=$4}; END {print w}' `
+width2=`pbmtext ${flags} ${text} --dry-run | awk '{print $1}' `
+
+if [ ${width1} -eq ${width2} ]; then
+    pbmtext ${flags} -width=${width1} ${text} | cksum
+else
+    echo ${width1} ${width2}
+fi
+rm ${temp_pbm}
 done
-done
+
+
+# Test 4: Should print 1647614653 2027 three times
+# Note: backslashes inserted in 3 locations in the rectange to make
+# possible input as a here document.
+
+fontRectangle_txt=${tmpdir}/fontRectangle.txt
+font_pbm=${tmpdir}/font.pbm
+
+cat > ${fontRectangle_txt} << EOF
+M ",/^_[\`jpqy| M
+
+/  !"#$%&'()*+ /
+< ,-./01234567 <
+> 89:;<=>?@ABC >
+@ DEFGHIJKLMNO @
+_ PQRSTUVWXYZ[ _
+{ \\]^_\`abcdefg {
+} hijklmnopqrs }
+~ tuvwxyz{|}~  ~
+
+M ",/^_[\`jpqy| M
+EOF
+
+pbmtext -dump-sheet -builtin fixed | tee ${font_pbm}      | cksum
+cat ${fontRectangle_txt} | pbmtext -nom -builtin fixed    | cksum
+cat ${fontRectangle_txt} | pbmtext -nom -font ${font_pbm} | cksum
+rm ${fontRectangle_txt} ${font_pbm}
+
+
+# Test 5: Print all characters defined in the built-in bdf font
+
+# One long row
+# Should print 3233136020 4535
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i);
+             for (i=160;i<=255;++i) printf("%c",i); }' | \
+    pbmtext -builtin bdf | cksum
+
+# One tall column
+# Should print 1216262214 5711
+LC_ALL=C \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c\n",i);
+             for (i=160;i<=255;++i) printf("%c\n",i); }' | \
+    pbmtext -nomargins -builtin bdf | cksum

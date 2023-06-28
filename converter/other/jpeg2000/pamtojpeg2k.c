@@ -8,6 +8,7 @@
 
 *****************************************************************************/
 
+#define _DEFAULT_SOURCE 1 /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1    /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500 /* Make sure strdup() is in string.h */
     /* In 2014.09, this was _XOPEN_SOURCE 600, with a comment saying it was
@@ -97,7 +98,7 @@ parseCommandLine(int argc, char ** argv,
     char * modeOpt;
 
     unsigned int option_def_index;
-    
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
@@ -133,25 +134,25 @@ parseCommandLine(int argc, char ** argv,
             &numrlvlsSpec,       0);
     OPTENT3(0, "numgbits",     OPT_UINT,   &cmdlineP->numgbits,
             &numgbitsSpec,       0);
-    OPTENT3(0, "nomct",        OPT_FLAG,   NULL, 
+    OPTENT3(0, "nomct",        OPT_FLAG,   NULL,
             &cmdlineP->nomct,    0);
-    OPTENT3(0, "sop",          OPT_FLAG,   NULL, 
+    OPTENT3(0, "sop",          OPT_FLAG,   NULL,
             &cmdlineP->sop,      0);
-    OPTENT3(0, "eph",          OPT_FLAG,   NULL, 
+    OPTENT3(0, "eph",          OPT_FLAG,   NULL,
             &cmdlineP->eph,      0);
-    OPTENT3(0, "lazy",         OPT_FLAG,   NULL, 
+    OPTENT3(0, "lazy",         OPT_FLAG,   NULL,
             &cmdlineP->lazy,     0);
-    OPTENT3(0, "termall",      OPT_FLAG,   NULL, 
+    OPTENT3(0, "termall",      OPT_FLAG,   NULL,
             &cmdlineP->termall,  0);
-    OPTENT3(0, "segsym",       OPT_FLAG,   NULL, 
+    OPTENT3(0, "segsym",       OPT_FLAG,   NULL,
             &cmdlineP->segsym,    0);
-    OPTENT3(0, "vcausal",      OPT_FLAG,   NULL, 
+    OPTENT3(0, "vcausal",      OPT_FLAG,   NULL,
             &cmdlineP->vcausal,   0);
-    OPTENT3(0, "pterm",        OPT_FLAG,   NULL, 
+    OPTENT3(0, "pterm",        OPT_FLAG,   NULL,
             &cmdlineP->pterm,     0);
-    OPTENT3(0, "resetprob",    OPT_FLAG,   NULL, 
+    OPTENT3(0, "resetprob",    OPT_FLAG,   NULL,
             &cmdlineP->resetprob, 0);
-    OPTENT3(0, "verbose",      OPT_FLAG,   NULL, 
+    OPTENT3(0, "verbose",      OPT_FLAG,   NULL,
             &cmdlineP->verbose,   0);
     OPTENT3(0, "debuglevel",   OPT_UINT,   &cmdlineP->debuglevel,
             &debuglevelSpec,      0);
@@ -222,7 +223,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->inputFilename = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted\n"
                  "is the input file specification");
 
@@ -231,7 +232,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 static void
-createJasperRaster(struct pam *  const inpamP, 
+createJasperRaster(struct pam *  const inpamP,
                    jas_image_t * const jasperP) {
 /*----------------------------------------------------------------------------
    Create the raster in the *jasperP object, reading the raster from the
@@ -253,7 +254,7 @@ createJasperRaster(struct pam *  const inpamP,
         if (matrix[plane] == NULL)
             pm_error("Unable to create matrix for plane %u.  "
                      "jas_matrix_create() failed.", plane);
-    }   
+    }
     tuplerow = pnm_allocpamrow(inpamP);
 
     jasperMaxval = pm_bitstomaxval(pm_maxvaltobits(inpamP->maxval));
@@ -270,7 +271,7 @@ createJasperRaster(struct pam *  const inpamP,
                 unsigned int jasperSample;
 
                 if (oddMaxval)
-                    jasperSample = tuplerow[col][plane] * 
+                    jasperSample = tuplerow[col][plane] *
                         jasperMaxval / inpamP->maxval;
                 else
                     jasperSample = tuplerow[col][plane];
@@ -278,16 +279,16 @@ createJasperRaster(struct pam *  const inpamP,
                 jas_matrix_set(matrix[plane], 0, col, jasperSample);
             }
         }
-        { 
+        {
             unsigned int plane;
 
             for (plane = 0; plane < inpamP->depth; ++plane) {
                 int rc;
-                rc = jas_image_writecmpt(jasperP, plane, 0, row, 
+                rc = jas_image_writecmpt(jasperP, plane, 0, row,
                                          inpamP->width, 1,
                                          matrix[plane]);
                 if (rc != 0)
-                    pm_error("jas_image_writecmpt() of plane %u failed.", 
+                    pm_error("jas_image_writecmpt() of plane %u failed.",
                              plane);
             }
         }
@@ -296,14 +297,14 @@ createJasperRaster(struct pam *  const inpamP,
     pnm_freepamrow(tuplerow);
     for (plane = 0; plane < inpamP->depth; ++plane)
         jas_matrix_destroy(matrix[plane]);
-    
+
     free(matrix);
 }
 
 
 
 static void
-createJasperImage(struct pam *   const inpamP, 
+createJasperImage(struct pam *   const inpamP,
                   jas_image_t ** const jasperPP) {
 
 	jas_image_cmptparm_t * cmptparms;
@@ -321,7 +322,7 @@ createJasperImage(struct pam *   const inpamP,
         cmptparms[plane].prec = pm_maxvaltobits(inpamP->maxval);
         cmptparms[plane].sgnd = 0;
     }
-    *jasperPP = 
+    *jasperPP =
         jas_image_create(inpamP->depth, cmptparms, JAS_CLRSPC_UNKNOWN);
     if (*jasperPP == NULL)
         pm_error("Unable to create jasper image structure.  "
@@ -340,7 +341,7 @@ convertToJasperImage(struct pam *   const inpamP,
 
     createJasperImage(inpamP, &jasperP);
 
-    if (strncmp(inpamP->tuple_type, "RGB", 3) == 0) {
+    if (strneq(inpamP->tuple_type, "RGB", 3)) {
         if (inpamP->depth < 3)
             pm_error("Input tuple type is RGB*, but depth is only %d.  "
                      "It should be at least 3.", inpamP->depth);
@@ -354,8 +355,8 @@ convertToJasperImage(struct pam *   const inpamP,
                                   JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B));
         }
     } else {
-        if (strncmp(inpamP->tuple_type, "GRAYSCALE", 9) == 0 ||
-            strncmp(inpamP->tuple_type, "BLACKANDWHITE", 13) == 0) {
+        if (strneq(inpamP->tuple_type, "GRAYSCALE", 9) ||
+            strneq(inpamP->tuple_type, "BLACKANDWHITE", 13)) {
             jas_image_setclrspc(jasperP, JAS_CLRSPC_GENGRAY);
             jas_image_setcmpttype(jasperP, 0,
                                   JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_GRAY_Y));
@@ -370,7 +371,7 @@ convertToJasperImage(struct pam *   const inpamP,
 
 
 static void
-writeJpc(jas_image_t *      const jasperP, 
+writeJpc(jas_image_t *      const jasperP,
          struct cmdlineInfo const cmdline,
          FILE *             const ofP) {
 
@@ -382,8 +383,8 @@ writeJpc(jas_image_t *      const jasperP,
 
     /* Note: ilyrrates is a hack because we're too lazy to properly parse
        command line options to get the information and then compose
-       a proper input to Jasper.  So the user can screw things up by 
-       specifying garbage for the -ilyrrates option 
+       a proper input to Jasper.  So the user can screw things up by
+       specifying garbage for the -ilyrrates option
     */
     if (strlen(cmdline.ilyrrates) > 0)
         pm_asprintf(&ilyrratesOpt, "ilyrrates=%s", cmdline.ilyrrates);
@@ -409,7 +410,7 @@ writeJpc(jas_image_t *      const jasperP,
         */
         rateOpt[0] = '\0';
     }
-    pm_asprintf(&options, 
+    pm_asprintf(&options,
                 "imgareatlx=%u "
                 "imgareatly=%u "
                 "tilegrdtlx=%u "
@@ -427,7 +428,7 @@ writeJpc(jas_image_t *      const jasperP,
                 "numrlvls=%u "
                 "numgbits=%u "
                 "%s %s %s %s %s %s %s %s %s",
-                
+
                 cmdline.imgareatlx,
                 cmdline.imgareatly,
                 cmdline.tilegrdtlx,
@@ -470,8 +471,8 @@ writeJpc(jas_image_t *      const jasperP,
             pm_message("Using Jasper to encode to 'jpc' format with options "
                        "'%s'", options);
 
-        rc = jas_image_encode(jasperP, outStreamP, 
-                              jas_image_strtofmt((char*)"jpc"), 
+        rc = jas_image_encode(jasperP, outStreamP,
+                              jas_image_strtofmt((char*)"jpc"),
                               (char *)options);
         if (rc != 0)
             pm_error("jas_image_encode() failed to encode the JPEG 2000 "
@@ -483,11 +484,11 @@ writeJpc(jas_image_t *      const jasperP,
         int rc;
 
         rc = jas_stream_close(outStreamP);
-            
+
         if (rc != 0)
             pm_error("Failed to close output stream, "
                      "jas_stream_close() rc = %d", rc);
-    }                     
+    }
 
 	jas_image_clearfmts();
 
@@ -505,33 +506,33 @@ main(int argc, char **argv)
     jas_image_t * jasperP;
 
     pnm_init(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
-    
-    { 
+
+    {
         int rc;
-        
+
         rc = jas_init();
         if ( rc != 0 )
             pm_error("Failed to initialize Jasper library.  "
                      "jas_init() returns rc %d", rc );
     }
-    
+
     jas_setdbglevel(cmdline.debuglevel);
-    
+
     ifP = pm_openr(cmdline.inputFilename);
-    
+
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
-    
+
     convertToJasperImage(&inpam, &jasperP);
-    
+
     writeJpc(jasperP, cmdline, stdout);
-    
+
 	jas_image_destroy(jasperP);
 
     pm_close(ifP);
 
     pm_close(stdout);
-    
+
     return 0;
 }

@@ -177,7 +177,7 @@ calculateCropPad(struct CmdlineInfo         const cmdline,
             pm_message("Specified -bottom value %u is beyond edge of "
                        "input image", cmdline.bottom);
 
-            bottom = MIN3(cmdline.bottom, rows - 1, top + MACP_ROWS - 1);
+        bottom = MIN3(cmdline.bottom, rows - 1, top + MACP_ROWS - 1);
     } else
         bottom = MIN(rows - 1, top + MACP_ROWS - 1);
 
@@ -234,7 +234,7 @@ writeMacpRowUnpacked(const bit  * const imageBits,
     char const marginByte = 0x00;  /* White bits for margin */
     unsigned int const rightMarginCharCt =
         MACP_COLCHARS - leftMarginCharCt - imageColCharCt;
-    
+
     unsigned int i;
 
     fputc(MACP_COLCHARS - 1, ofP);
@@ -361,7 +361,7 @@ encodeRowsWithShift(bit *                    const bitrow,
 
     for (row = 0; row < cropPad.imageHeight; ++row) {
         pbm_readpbmrow_bitoffset(ifP, bitrow, inCols, format, offset);
-        
+
         /* Trim off fractional margin portion in first byte of image data */
         if (leftTrim > 0) {
             bitrow[startChar] <<= leftTrim;

@@ -9,6 +9,7 @@
   https://www.tug.org/TUGboat/tb06-1/tb11gf.pdf
 */
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 

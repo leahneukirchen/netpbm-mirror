@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <strings.h>  /* For strncasecmp */
 #include <ctype.h>
 
 #include "pm_c_util.h"
@@ -59,15 +60,21 @@ static __inline__ int
 memeq(const void * const comparand,
       const void * const comparator,
       size_t       const size) {
-    
+
     return memcmp(comparand, comparator, size) == 0;
 }
 
-/* The Standard C Library may not declare strcasecmp() if the including
-   source file doesn't request BSD functions, with _BSD_SOURCE.  So
-   we don't define functions that use strcasecmp() in that case.
+/* The Standard C Library may not declare strcasecmp() if the including source
+   file doesn't request BSD functions, with _BSD_SOURCE or SUSv2 function,
+   with _XOPEN_SOURCE >= 500.  So we don't define functions that use
+   strcasecmp() in that case.
+
+   (Actually, _XOPEN_SOURCE 500 is stronger than you need for strcasecmp -
+   _XOPEN_SOURCE_EXTENDED, which asks for XPG 4, would do, whereas
+   _XOPEN_SOURCE 500 asks for XPG 5, but for simplicity, we don't use
+   _XOPEN_SOURCE_EXTENDED in Netpbm.
 */
-#ifdef _BSD_SOURCE
+#if defined(_BSD_SOURCE) || (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE - 0) >= 500)
 static __inline__ int
 strcaseeq(const char * const comparand,
           const char * const comparator) {
@@ -85,7 +92,7 @@ strncaseeq(const char * const comparand,
 #endif
 
 
-/* The standard C library routines isdigit(), for some weird 
+/* The standard C library routines isdigit(), for some weird
    historical reason, does not take a character (type 'char') as its
    argument.  Instead it takes an integer.  When the integer is a whole
    number, it represents a character in the obvious way using the local
@@ -125,7 +132,7 @@ strncaseeq(const char * const comparand,
    Netpbm must include them in its own libraries, and because some
    standard C libraries have some of them, Netpbm must use different
    names for them.
-   
+
    The GNU C library has all of them.  All but the oldest standard C libraries
    have snprintf().
 
@@ -148,6 +155,10 @@ strncaseeq(const char * const comparand,
 */
 
 extern const char * const pm_strsol;
+
+size_t
+pm_strnlen(const char * const s,
+           size_t       const maxlen);
 
 int
 pm_snprintf(char *       const dest,
@@ -178,7 +189,7 @@ pm_vasprintf(const char ** const resultP,
 bool
 pm_vasprintf_knows_float(void);
 
-void 
+void
 pm_strfree(const char * const string);
 
 const char *
@@ -198,9 +209,9 @@ bool
 pm_strishex(const char * const subject);
 
 void
-pm_interpret_uint(const char *   const string,
-               unsigned int * const valueP,
-               const char **  const errorP);
+pm_string_to_uint(const char *   const string,
+                  unsigned int * const uintP,
+                  const char **  const errorP);
 
 #ifdef __cplusplus
 }

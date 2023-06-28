@@ -35,7 +35,7 @@ static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-  Convert program invocation arguments (argc,argv) into a format the 
+  Convert program invocation arguments (argc,argv) into a format the
   program can use easily, struct cmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
@@ -111,12 +111,23 @@ parseCommandLine(int argc, char ** argv,
 
 
 
+static int
+diffu(unsigned int const subtrahend,
+      unsigned int const subtractor) {
+
+    return (int)subtrahend - (int)subtractor;
+
+    /* (Not the conventional terminology, but better) */
+}
+
+
+
 int
 main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     gray *grayrow;
-    int rowso2, colso2;
+    unsigned int rowso2, colso2;
     unsigned int row;
 
     pgm_init( &argc, argv );
@@ -149,20 +160,17 @@ main(int argc, char *argv[]) {
                         MAX((float) cmdline.cols + cmdline.rows-2, 1);
                 break;
             case RT_RECT: {
-                float const r = fabs((int)(rowso2 - row)) / rowso2;
-                float const c = fabs((int)(colso2 - col)) / colso2;
+                float const r = fabs((float)diffu(rowso2, row)) / rowso2;
+                float const c = fabs((float)diffu(colso2, col)) / colso2;
                 grayrow[col] =
                     cmdline.maxval - (r + c) / 2.0 * cmdline.maxval;
             } break;
 
             case RT_ELLIP: {
-                float const r = fabs((int)(rowso2 - row)) / rowso2;
-                float const c = fabs((int)(colso2 - col)) / colso2;
-                float v;
+                float const r = fabs((float)diffu(rowso2, row)) / rowso2;
+                float const c = fabs((float)diffu(colso2, col)) / colso2;
+                float const v = MAX(0.0f, MIN(1.0f, SQR(r) + SQR(c)));
 
-                v = r * r + c * c;
-                if ( v < 0.0 ) v = 0.0;
-                else if ( v > 1.0 ) v = 1.0;
                 grayrow[col] = cmdline.maxval - v * cmdline.maxval;
             } break;
             }
@@ -174,3 +182,6 @@ main(int argc, char *argv[]) {
     pm_close(stdout);
     return 0;
 }
+
+
+

@@ -33,10 +33,20 @@ libopt.o: libopt.c
 typegen.o endiangen.o:%.o:%.c
 	$(CC_FOR_BUILD) -c -o $@ $(CFLAGS_FOR_BUILD) $<
 
+# genfontc is strange because it isn't really a build tool; it's a development
+# tool.  And it uses Netpbm.  So we don't even build it by default and the
+# developer who builds it explicitly may have to be careful.
+genfontc.o:%.o:%.c importinc
+	$(CC_FOR_BUILD) -c -o $@ $(CFLAGS_FOR_BUILD) \
+	  $(NETPBM_INCLUDES) \
+	  $<
+genfontc:%:%.o $(NETPBMLIB)
+	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD)  $< $(NETPBMLIB)
+
 $(BUILDPROGS):%:%.o
 	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD) $<
 
 distclean clean: cleanlocal
 .PHONY: cleanlocal
 cleanlocal:
-	rm -f $(BUILDPROGS)
+	rm -f $(BUILDPROGS) genfontc

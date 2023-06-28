@@ -1,14 +1,14 @@
 /* pbmtolj.c - read a portable bitmap and produce a LaserJet bitmap file
-**  
+**
 **  based on pbmtops.c
 **
 **  Michael Haberler HP Vienna mah@hpuviea.uucp
 **                 mcvax!tuvie!mah
-**  misfeatures: 
+**  misfeatures:
 **      no positioning
 **
 **      Bug fix Dec 12, 1988 :
-**              lines in putbit() reshuffled 
+**              lines in putbit() reshuffled
 **              now runs OK on HP-UX 6.0 with X10R4 and HP Laserjet II
 **      Bo Thide', Swedish Institute of Space Physics, Uppsala <bt@irfu.se>
 **
@@ -75,7 +75,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0,   "resolution",  OPT_UINT, &cmdlineP->dpi, 
+    OPTENT3(0,   "resolution",  OPT_UINT, &cmdlineP->dpi,
             &dpiSpec, 0);
     OPTENT3(0,   "copies",      OPT_UINT, &cmdlineP->copies,
             &copiesSpec, 0);
@@ -97,7 +97,7 @@ parseCommandLine(int argc, char ** argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFilename = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -246,7 +246,7 @@ packbits(void) {
           We drop out here after having found a [possibly empty]
           literal, followed by a [possibly degenerate] run of repeated
           bytes.  Degenerate runs can occur at the end of the scan line...
-          there may be a "repeat" of 1 byte (which can't actually be 
+          there may be a "repeat" of 1 byte (which can't actually be
           represented as a repeat) so we simply fold it into the previous
           literal.
         */
@@ -320,11 +320,11 @@ deltarow(void) {
             skip = 1;
         }
         if (mustBurst) {
-            burstCode = burstEnd - burstStart; 
+            burstCode = burstEnd - burstStart;
                 /* 0-7, means 1-8 bytes follow */
             code = (burstCode << 5) | skipped;
             deltaBuffer[deltaBufferIndex++] = (char) code;
-            memcpy(deltaBuffer+deltaBufferIndex, rowBuffer+burstStart, 
+            memcpy(deltaBuffer+deltaBufferIndex, rowBuffer+burstStart,
                    burstCode + 1);
             deltaBufferIndex += burstCode + 1;
             burstStart = -1;
@@ -369,7 +369,7 @@ convertRow(const bit *    const bitrow,
            bool *         const rowIsBlankP) {
 
     unsigned int rightmostBlackCol;
-        
+
     findRightmostBlackCol(bitrow, cols, rowIsBlankP, &rightmostBlackCol);
 
     if (!*rowIsBlankP) {
@@ -377,7 +377,7 @@ convertRow(const bit *    const bitrow,
             /* Number of columns excluding white right margin */
         unsigned int const rucols = ((nzcol + 7) / 8) * 8;
             /* 'nzcol' rounded up to nearest multiple of 8 */
-        
+
         unsigned int col;
 
         memset(rowBuffer, 0, rowBufferSize);
@@ -404,7 +404,7 @@ convertRow(const bit *    const bitrow,
 
         if (delta) {
             /* May need to temporarily bump the row buffer index up to
-               whatever the previous line's was - if this line is shorter 
+               whatever the previous line's was - if this line is shorter
                than the previous would otherwise leave dangling cruft.
             */
             unsigned int const savedRowBufferIndex = rowBufferIndex;
@@ -421,7 +421,7 @@ convertRow(const bit *    const bitrow,
 }
 
 
-    
+
 static void
 printBlankRows(unsigned int const count) {
 
@@ -430,12 +430,12 @@ printBlankRows(unsigned int const count) {
         /* The code used to be this, but Charles Howes reports that
            this escape sequence does not exist on his HP Laserjet IIP
            plus, so we use the following less elegant code instead.
-           
-           printf("\033*b%dY", (*blankRowsP)); 
+
+           printf("\033*b%dY", (*blankRowsP));
         */
-        for (x = 0; x < count; ++x) 
+        for (x = 0; x < count; ++x)
             printf("\033*b0W");
-        
+
         memset(prevRowBuffer, 0, rowBufferSize);
     }
 }
@@ -494,7 +494,7 @@ printRow(void) {
 
 
 static void
-doPage(FILE *             const ifP, 
+doPage(FILE *             const ifP,
        struct cmdlineInfo const cmdline) {
 
     bit * bitrow;
@@ -525,10 +525,10 @@ doPage(FILE *             const ifP,
         else {
             printBlankRows(blankRows);
             blankRows = 0;
-            
+
             printRow();
         }
-    }    
+    }
     printBlankRows(blankRows);
     blankRows = 0;
 
@@ -563,3 +563,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+

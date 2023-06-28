@@ -3,6 +3,7 @@
    Copyright and history information is at end of file
 */
 
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
@@ -81,14 +82,14 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->input_filespec = NULL;  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->input_filespec = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted\n"
                  "is the input file specification");
 
-    if (cmdlineP->alpha_filename && 
+    if (cmdlineP->alpha_filename &&
         streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = TRUE;
-    else 
+    else
         cmdlineP->alpha_stdout = FALSE;
 
 }
@@ -223,7 +224,7 @@ entryMatch(struct ColorNameHashTableEntry const entry,
 
     {
         unsigned int i;
-        
+
         for (i = 0; i < size; ++i) {
             if (name[i] != entry.colorName[i])
                 return false;
@@ -271,7 +272,7 @@ hash_find(const ColorNameHash *             const hashP,
     for (i = initialIndex;
          !entryMatch(hashP->table[i], name, hashP->nameSize);
          bumpIndex(&i, hashP->size, initialIndex));
-         
+
     *entryPP = &hashP->table[i];
 }
 
@@ -357,7 +358,7 @@ getLine(char * const line,
 
    If 'backup' is true, the "next line" is the previously read line, i.e.
    the one in that one-line buffer.  Otherwise, the "next line" is the next
-   line from the real file.  After reading the backed up line, we reset 
+   line from the real file.  After reading the backed up line, we reset
    'backup' to false.
 
    Return the line as a null terminated string in *line, which is an
@@ -370,7 +371,7 @@ getLine(char * const line,
                  "which is out of bounds");
 
     if (backup) {
-        strncpy(line, lastInputLine, size); 
+        strncpy(line, lastInputLine, size);
         backup = FALSE;
     } else {
         if (fgets(line, size, stream) == NULL)
@@ -397,7 +398,7 @@ getword(char * const output, char ** const cursorP) {
         strncpy(output, t1, t2 - t1);
     output[t2 - t1] = '\0';
     *cursorP = t2;
-}    
+}
 
 
 
@@ -437,7 +438,7 @@ validateColorName(const char * const name,
 
 static void
 interpretXpm3ColorTableLine(char               const line[],
-                            unsigned int       const seqNum, 
+                            unsigned int       const seqNum,
                             unsigned int       const charsPerPixel,
                             ColorNameHash *    const hashP) {
 /*----------------------------------------------------------------------------
@@ -457,22 +458,22 @@ interpretXpm3ColorTableLine(char               const line[],
 -----------------------------------------------------------------------------*/
     /* Note: this code seems to allow for multi-word color specifications,
        but I'm not aware that such are legal.  Ultimately, ppm_parsecolor()
-       interprets the name, and I believe it takes only single word 
+       interprets the name, and I believe it takes only single word
        color specifications.  -Bryan 2001.05.06.
     */
-    char str2[MAX_LINE+1];    
+    char str2[MAX_LINE+1];
     char * t1;
     char * t2;
     int endOfEntry;   /* boolean */
-    
+
     unsigned int curkey, key, highkey;  /* current color key */
-    bool lastwaskey;    
+    bool lastwaskey;
         /* The last token we processes was a key, and we have processed
            at least one token.
         */
     char curbuf[BUFSIZ];        /* current buffer */
     bool isTransparent;
-    
+
     const char * colorName;
         /* The 0-3 character name this color map line gives the color
            (i.e. the name that the raster uses).  This is NOT NUL-terminated.
@@ -484,20 +485,20 @@ interpretXpm3ColorTableLine(char               const line[],
     if (t1 == NULL)
         pm_error("A line that is supposed to be an entry in the color "
                  "table does not start with a quote.  The line is '%s'.  "
-                 "It is the %uth entry in the color table.", 
+                 "It is the %uth entry in the color table.",
                  line, seqNum);
     else
         ++t1;  /* Points now to first color number character */
-    
+
     validateColorName(t1, charsPerPixel);
     colorName = t1;
 
     t1 += charsPerPixel;
 
     /*
-     * read color keys and values 
+     * read color keys and values
      */
-    curkey = 0; 
+    curkey = 0;
     highkey = 1;
     lastwaskey = FALSE;
     t2 = t1;
@@ -511,8 +512,8 @@ interpretXpm3ColorTableLine(char               const line[],
             /* See if the word we got is a valid key (and get its key
                number if so)
             */
-            for (key = 1; 
-                 key <= NKEYS && !streq(xpmColorKeys[key - 1], str2); 
+            for (key = 1;
+                 key <= NKEYS && !streq(xpmColorKeys[key - 1], str2);
                  key++);
             isKey = (key <= NKEYS);
 
@@ -520,21 +521,21 @@ interpretXpm3ColorTableLine(char               const line[],
                 /* This word is a color specification (or "none" for
                    transparent).
                 */
-                if (!curkey) 
+                if (!curkey)
                     pm_error("Missing color key token in color table line "
                              "'%s' before '%s'.", line, str2);
-                if (!lastwaskey) 
+                if (!lastwaskey)
                     strcat(curbuf, " ");        /* append space */
-                if ( (strneq(str2, "None", 4)) 
+                if ( (strneq(str2, "None", 4))
                      || (strneq(str2, "none", 4)) ) {
                     /* This entry identifies the transparent color number */
                     strcat(curbuf, "#000000");  /* Make it black */
                     isTransparent = TRUE;
-                } else 
+                } else
                     strcat(curbuf, str2);       /* append buf */
                 lastwaskey = FALSE;
-            } else { 
-                /* This word is a key.  So we've seen the last of the 
+            } else {
+                /* This word is a key.  So we've seen the last of the
                    info for the previous key, and we must either put it
                    in the color map or ignore it if we already have a higher
                    color form in the colormap for this colormap entry.
@@ -560,7 +561,7 @@ interpretXpm3ColorTableLine(char               const line[],
         addToColorMap(hashP, colorName, curbuf, isTransparent);
         highkey = curkey;
     }
-    if (highkey == 1) 
+    if (highkey == 1)
         pm_error("C error scanning color table");
 }
 
@@ -587,10 +588,10 @@ readV3ColorTable(FILE *             const ifP,
         /* skip the comment line if any */
         if (strneq(line, "/*", 2))
             getLine(line, sizeof(line), ifP);
-            
+
         interpretXpm3ColorTableLine(line, seqNum, charsPerPixel,
                                     colorNameHashP);
-                                    
+
     }
     *colorNameHashPP = colorNameHashP;
 }
@@ -600,7 +601,7 @@ readV3ColorTable(FILE *             const ifP,
 static void
 readXpm3Header(FILE *             const ifP,
                unsigned int *     const widthP,
-               unsigned int *     const heightP, 
+               unsigned int *     const heightP,
                unsigned int *     const charsPerPixelP,
                ColorNameHash **   const colorNameHashPP) {
 /*----------------------------------------------------------------------------
@@ -619,14 +620,14 @@ readXpm3Header(FILE *             const ifP,
 -----------------------------------------------------------------------------*/
     char line[MAX_LINE+1];
     const char * xpm3_signature = "/* XPM */";
-    
+
     unsigned int width, height;
     unsigned int nColors;
     unsigned int charsPerPixel;
 
     /* Read the XPM signature comment */
     getLine(line, sizeof(line), ifP);
-    if (!strneq(line, xpm3_signature, strlen(xpm3_signature))) 
+    if (!strneq(line, xpm3_signature, strlen(xpm3_signature)))
         pm_error("Apparent XPM 3 file does not start with '/* XPM */'.  "
                  "First line is '%s'", xpm3_signature);
 
@@ -715,7 +716,7 @@ readV1ColorTable(FILE *           const ifP,
 static void
 readXpm1Header(FILE *           const ifP,
                unsigned int *   const widthP,
-               unsigned int *   const heightP, 
+               unsigned int *   const heightP,
                unsigned int *   const charsPerPixelP,
                ColorNameHash ** const colorNameHashPP) {
 /*----------------------------------------------------------------------------
@@ -723,11 +724,11 @@ readXpm1Header(FILE *           const ifP,
   getLine() stream is presently positioned to the beginning of the
   file and it is a Version 1 XPM file.  Leave the stream positioned
   after the header.
-  
+
   Return the information from the header the same as for readXpm3Header.
 -----------------------------------------------------------------------------*/
     int format, v;
-    bool processedStaticChar;  
+    bool processedStaticChar;
         /* We have read up to and interpreted the "static char..." line */
     char * t1;
     unsigned int nColors;
@@ -875,7 +876,7 @@ convertRow(char                  const line[],
                    "'%s'.  Ignoring this line.", line);
     } else {
         unsigned int col;
-    
+
         ++lineCursor; /* Skip to first character after quote */
 
         /* Handle pixels until a close quote, eol, or we've returned all
@@ -889,7 +890,7 @@ convertRow(char                  const line[],
 
             alpharow[col] = hash_isTransparent(colorNameHashP, lineCursor) ?
                 PBM_BLACK : PBM_WHITE;
-            
+
             lineCursor += charsPerPixel;
         }
         if (*lineCursor != '"')
@@ -902,7 +903,7 @@ convertRow(char                  const line[],
 static void
 convertRaster(FILE *                const ifP,
               unsigned int          const cols,
-              unsigned int          const rows, 
+              unsigned int          const rows,
               unsigned int          const charsPerPixel,
               const ColorNameHash * const colorNameHashP,
               FILE *                const imageOutFileP,
@@ -927,7 +928,7 @@ convertRaster(FILE *                const ifP,
         bool haveLine;
 
         for (haveLine = false; !haveLine; ) {
-            getLine(line, sizeof(line), ifP); 
+            getLine(line, sizeof(line), ifP);
 
             if (strneq(line, "/*", 2)) {
                 /* It's a comment.  Ignore it. */
@@ -938,22 +939,22 @@ convertRaster(FILE *                const ifP,
                    pixrow, alpharow);
 
         if (imageOutFileP)
-            ppm_writeppmrow(imageOutFileP, 
+            ppm_writeppmrow(imageOutFileP,
                             pixrow, cols, PPM_MAXMAXVAL, 0);
-            if (alphaOutFileP)
-                pbm_writepbmrow(alphaOutFileP, alpharow, cols, 0);
+        if (alphaOutFileP)
+            pbm_writepbmrow(alphaOutFileP, alpharow, cols, 0);
     }
 
     pbm_freerow(alpharow);
     ppm_freerow(pixrow);
 }
- 
+
 
 
 static void
 readXpmHeader(FILE *           const ifP,
               unsigned int *   const widthP,
-              unsigned int *   const heightP, 
+              unsigned int *   const heightP,
               unsigned int *   const charsPerPixelP,
               ColorNameHash ** const colorNameHashPP) {
 /*----------------------------------------------------------------------------
@@ -973,7 +974,7 @@ readXpmHeader(FILE *           const ifP,
     /* Read the header line */
     getLine(line, sizeof(line), ifP);
     backup = TRUE;  /* back up so next read reads this line again */
-    
+
     rc = sscanf(line, "/* %s */", str1);
     if (rc == 1 && strneq(str1, "XPM", 3)) {
         /* It's an XPM version 3 file */
@@ -986,7 +987,7 @@ readXpmHeader(FILE *           const ifP,
     *heightP        = height;
     *charsPerPixelP = charsPerPixel;
 }
- 
+
 
 
 int
@@ -1007,20 +1008,20 @@ main(int argc, char *argv[]) {
 
     verbose = cmdline.verbose;
 
-    if ( cmdline.input_filespec != NULL ) 
+    if ( cmdline.input_filespec != NULL )
         ifP = pm_openr( cmdline.input_filespec);
     else
         ifP = stdin;
 
     if (cmdline.alpha_stdout)
         alphaOutFileP = stdout;
-    else if (cmdline.alpha_filename == NULL) 
+    else if (cmdline.alpha_filename == NULL)
         alphaOutFileP = NULL;
     else {
         alphaOutFileP = pm_openw(cmdline.alpha_filename);
     }
 
-    if (cmdline.alpha_stdout) 
+    if (cmdline.alpha_stdout)
         imageOutFileP = NULL;
     else
         imageOutFileP = stdout;
@@ -1035,7 +1036,7 @@ main(int argc, char *argv[]) {
 
     convertRaster(ifP, cols, rows, charsPerPixel, colorNameHashP,
                   imageOutFileP, alphaOutFileP);
-    
+
     pm_close(ifP);
     if (imageOutFileP)
         pm_close(imageOutFileP);
@@ -1043,7 +1044,7 @@ main(int argc, char *argv[]) {
         pm_close(alphaOutFileP);
 
     hash_destroy(colorNameHashP);
-    
+
     return 0;
 }
 
@@ -1065,17 +1066,17 @@ main(int argc, char *argv[]) {
 **   Tue Apr 9 1991
 **
 ** Rainer Sinkwitz sinkwitz@ifi.unizh.ch - 21 Nov 91:
-**  - Bug fix, no advance of read ptr, would not read 
-**    colors like "ac c black" because it would find 
+**  - Bug fix, no advance of read ptr, would not read
+**    colors like "ac c black" because it would find
 **    the "c" of "ac" and then had problems with "c"
 **    as color.
-**    
+**
 **  - Now understands multiword X11 color names
-**  
+**
 **  - Now reads multiple color keys. Takes the color
 **    of the hightest available key. Lines no longer need
 **    to begin with key 'c'.
-**    
+**
 **  - expanded line buffer to from 500 to 2048 for bigger files
 */
 

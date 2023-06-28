@@ -168,7 +168,7 @@ optString(const optEntry opte, int lng)
 }
 
 
-    
+
 static optEntry
 optStructToEntry(const optStruct opt) {
 /*----------------------------------------------------------------------------
@@ -202,7 +202,7 @@ optStructTblToEntryTbl(const optStruct optStructTable[]) {
     int i;
 
     optEntry *optEntryTable;  /* malloc'ed array */
-    
+
     /* Count the entries in optStructTable[] */
     for (i = 0; optStructTable[i].type != OPT_END && i < 500; i++);
     count = i+1;
@@ -210,7 +210,7 @@ optStructTblToEntryTbl(const optStruct optStructTable[]) {
     optEntryTable = (optEntry *) malloc(count * sizeof(optEntry));
     if (optEntryTable) {
         int i;
-        for (i = 0; i < count; i++) 
+        for (i = 0; i < count; i++)
             optEntryTable[i] = optStructToEntry(optStructTable[i]);
     }
     return(optEntryTable);
@@ -284,7 +284,7 @@ getToken(const char *  const tokenStart,
    doesn't necessarily advance.
 -----------------------------------------------------------------------------*/
     const char * error;
-    
+
     pm_gettoken(tokenStart, delimiter, tokenP, nextP, &error);
 
     if (error)
@@ -383,7 +383,7 @@ parseStringList(const char *   const listText,
  |
  |  FUNCTION      Perform the action of an option.
  |
- |  INPUT         opt     element in array of defined options that 
+ |  INPUT         opt     element in array of defined options that
  |                        applies to this option
  |                arg     argument to option, if it applies.
  |                lng     was the option given as a long option?
@@ -411,7 +411,7 @@ optExecute(optEntry  const opt, char *arg, int lng)
     case OPT_LONG: {
         long tmp;
         char *e;
-	  
+
         if (arg == NULL)
             optFatal("internal error: optExecute() called with NULL argument "
                      "'%s'", optString(opt, lng));
@@ -429,12 +429,12 @@ optExecute(optEntry  const opt, char *arg, int lng)
                 *((long *) opt.arg) = tmp;
         }
     } break;
-	
+
     case OPT_UINT:
     case OPT_ULONG: {
         unsigned long tmp;
         char * tailPtr;
-        
+
         if (arg == NULL)
             optFatal("internal error: optExecute() called with NULL argument "
                      "'%s'", optString(opt, lng));
@@ -460,7 +460,7 @@ optExecute(optEntry  const opt, char *arg, int lng)
     case OPT_FLOAT: {
         float tmp;
         char *e;
-	  
+
         if (arg == NULL)
             optFatal("internal error: optExecute() called with NULL argument "
                      "'%s'", optString(opt, lng));
@@ -597,7 +597,7 @@ pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
             arg = NULL;
             if ((p = strchr(argv[ai], '=')) != NULL)
                 arg = p + 1;
-	    
+
             /* does this option take an argument? */
             optarg = -1;
             if (optNeedsArgument(opt_table[mi])) {
@@ -666,7 +666,7 @@ pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
 
 static void
 parse_short_option_token(char *argv[], const int argc, const int ai,
-                         const optEntry opt_table[], 
+                         const optEntry opt_table[],
                          int * const tokens_consumed_p) {
 /*----------------------------------------------------------------------------
    Parse a cluster of short options, e.g. -walne .
@@ -681,7 +681,7 @@ parse_short_option_token(char *argv[], const int argc, const int ai,
     char *arg;
     int mi;   /* index into option table */
     unsigned char processed_arg;  /* boolean */
-        /* We processed an argument to one of the one-character options. 
+        /* We processed an argument to one of the one-character options.
            This necessarily means there are no more options in this token
            to process.
            */
@@ -707,7 +707,7 @@ parse_short_option_token(char *argv[], const int argc, const int ai,
             (*tokens_consumed_p)++;
 		    }
 		    processed_arg = 1;
-		} else 
+		} else
             arg = NULL;
 		/* perform the action of this option. */
 		optExecute(opt_table[mi], arg, 0);
@@ -761,7 +761,7 @@ parse_long_option(char *   const argv[],
                   int      const argc,
                   int      const ai,
                   int      const namepos,
-                  optEntry const opt_table[], 
+                  optEntry const opt_table[],
                   int *    const tokens_consumed_p) {
 /*----------------------------------------------------------------------------
    Parse a long option, e.g. -verbose or --verbose.
@@ -788,11 +788,11 @@ parse_long_option(char *   const argv[],
         fatalUnrecognizedLongOption(argv[ai], opt_table);
 
     /* possibly locate the argument to this option. */
-    { 
+    {
         char *p;
         if ((p = strchr(argv[ai], '=')) != NULL)
             equals_arg = p + 1;
-        else 
+        else
             equals_arg = NULL;
     }
     /* does this option take an argument? */
@@ -812,7 +812,7 @@ parse_long_option(char *   const argv[],
             optFatal("option `%s' doesn't allow an argument, but you "
                      "have specified it in the form name=value",
                      optString(opt_table[mi], 1));
-        else 
+        else
             arg = NULL;
     }
     /* perform the action of this option. */
@@ -849,7 +849,7 @@ parse_long_option(char *   const argv[],
  |
  |                This differs from pm_optParseOptions in that it accepts
  |                long options with just one hyphen and doesn't accept
- |                any short options.  It also has accommodations for 
+ |                any short options.  It also has accommodations for
  |                future expansion.
  |
  |                Options and arguments used are removed from the argv-
@@ -858,11 +858,11 @@ parse_long_option(char *   const argv[],
  |                Any error leads to program abortion.
  */
 void
-pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
+pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt,
                  const unsigned long flags)
 /*----------------------------------------------------------------------------
    This does the same thing as pm_optParseOptions3(), except that there is no
-   "specified" return value.  
+   "specified" return value.
 
    This function exists for backward compatibility.
 -----------------------------------------------------------------------------*/
@@ -877,7 +877,7 @@ pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt,
     if (opt3.opt_table == NULL)
         optFatal("Memory allocation failed (trying to allocate space for "
                  "new-format option table)");
-    
+
     pm_optParseOptions3(argc_p, argv, opt3, sizeof(opt3), flags);
 
     free(opt3.opt_table);
@@ -914,13 +914,13 @@ zero_specified(optEntry opt_table[]) {
  |                        Size of "opt" (since the caller may be older
  |                        than this function, it may be using a structure
  |                        with fewer fields than exist today.  We use this
- |                        parameter to handle those older callers). 
+ |                        parameter to handle those older callers).
  |                flags   Result is undefined if not zero.
  |                        For future expansion.
  |
  |  OUTPUT        argc    new argument count.
  |                argv    array with arguments removed.
- |                
+ |
  |                Areas pointed to by pointers in 'opt' get updated with
  |                option values and counts.
  |
@@ -934,7 +934,7 @@ zero_specified(optEntry opt_table[]) {
  |
  |                This differs from pm_optParseOptions in that it accepts
  |                long options with just one hyphen and doesn't accept
- |                any short options.  It also has accommodations for 
+ |                any short options.  It also has accommodations for
  |                future expansion.
  |
  |                Options and arguments used are removed from the argv-
@@ -943,7 +943,7 @@ zero_specified(optEntry opt_table[]) {
  |                Any error leads to program abortion.
  */
 void
-pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
+pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
                  const unsigned int optStructSize, const unsigned long flags)
 {
     int  ai;        /* argv index. */
@@ -958,10 +958,10 @@ pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
      */
     no_more_options = 0;  /* initial value */
     for (ai = 0; ai < *argc_p; ) {
-        if (no_more_options) 
+        if (no_more_options)
             /* Can't be an option -- there aren't any more */
             ai++;
-        else if (argv[ai][0] != '-') 
+        else if (argv[ai][0] != '-')
             /* Can't be an option -- doesn't start with a dash */
             ai++;
         else {
@@ -980,7 +980,7 @@ pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
                     /* The entire thing is "--".  That means no more options */
                     tokens_consumed = 1;
                     no_more_options = 1;
-                } else 
+                } else
                     /* It's an option that starts with "--" */
                     parse_long_option(argv, *argc_p, ai, 2,
                                       opt.opt_table, &tokens_consumed);
@@ -994,7 +994,7 @@ pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
                     parse_long_option(argv, *argc_p, ai, 1,
                                       opt.opt_table, &tokens_consumed);
                 }
-            
+
             }
             /* remove option and any argument from the argv-array. */
             {

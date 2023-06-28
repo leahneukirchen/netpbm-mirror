@@ -170,7 +170,6 @@ int main( argc, argv )
     float pixsize=0.1;
     /* no verbose, calculating both sides                                */
     int verb = FALSE, left = TRUE, right = TRUE;
-    int nologo = FALSE;
     const char* const usage = "[-help] [-axis N] [-factor N] [-pixsize N] [-left|-right] [-verbose] [pgmfile]";
 
     pgm_init( &argc, argv );
@@ -211,10 +210,6 @@ int main( argc, argv )
            {
                 if ( right ) left = FALSE;
                 else pm_usage( usage );
-            }
-        else if ( pm_keymatch( argv[argn], "-nologo", 4 ) )
-            {
-                nologo = TRUE;
             }
         else
             pm_usage( usage );

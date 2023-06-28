@@ -41,6 +41,17 @@ enum MissingMethod {
     MISSING_CLOSE
 };
 
+enum InitRandom {
+    RANDOM_NONE,
+    RANDOM_WITHSEED,
+    RANDOM_NOSEED
+};
+
+struct Random {
+    enum InitRandom init;
+    unsigned int seed;
+};
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -48,9 +59,9 @@ struct CmdlineInfo {
     const char * inputFilespec;  /* Filespec of input file */
     const char * mapFilespec;    /* Filespec of colormap file */
     unsigned int floyd;   /* Boolean: -floyd/-fs option */
-    unsigned int norandom;
+    struct Random random;
     enum MissingMethod missingMethod;
-    char * missingcolor;      
+    char * missingcolor;
         /* -missingcolor value.  Null if not specified */
     unsigned int verbose;
 };
@@ -62,7 +73,7 @@ parseCommandLine (int argc, const char ** argv,
                   struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -78,28 +89,30 @@ parseCommandLine (int argc, const char ** argv,
     unsigned int option_def_index;
 
     unsigned int nofloyd, firstisdefault;
-    unsigned int missingSpec, mapfileSpec;
+    unsigned int missingSpec, mapfileSpec, norandomSpec, randomseedSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "floyd",          OPT_FLAG,   
+    OPTENT3(0,   "floyd",          OPT_FLAG,
             NULL,                       &cmdlineP->floyd,    0);
-    OPTENT3(0,   "fs",             OPT_FLAG,   
+    OPTENT3(0,   "fs",             OPT_FLAG,
             NULL,                       &cmdlineP->floyd,    0);
-    OPTENT3(0,   "nofloyd",        OPT_FLAG,   
+    OPTENT3(0,   "nofloyd",        OPT_FLAG,
             NULL,                       &nofloyd,            0);
-    OPTENT3(0,   "nofs",           OPT_FLAG,   
+    OPTENT3(0,   "nofs",           OPT_FLAG,
             NULL,                       &nofloyd,            0);
-    OPTENT3(0,   "norandom",       OPT_FLAG,   
-            NULL,                       &cmdlineP->norandom, 0);
-    OPTENT3(0,   "firstisdefault", OPT_FLAG,   
+    OPTENT3(0,   "norandom",       OPT_FLAG,
+            NULL,                       &norandomSpec,       0);
+    OPTENT3(0,   "randomseed",     OPT_UINT,
+            &cmdlineP->random.seed,     &randomseedSpec,     0);
+    OPTENT3(0,   "firstisdefault", OPT_FLAG,
             NULL,                       &firstisdefault,     0);
-    OPTENT3(0,   "mapfile",        OPT_STRING, 
+    OPTENT3(0,   "mapfile",        OPT_STRING,
             &cmdlineP->mapFilespec,    &mapfileSpec,         0);
-    OPTENT3(0,   "missingcolor",   OPT_STRING, 
+    OPTENT3(0,   "missingcolor",   OPT_STRING,
             &cmdlineP->missingcolor,   &missingSpec,         0);
-    OPTENT3(0, "verbose",          OPT_FLAG,   NULL,                  
+    OPTENT3(0, "verbose",          OPT_FLAG,   NULL,
             &cmdlineP->verbose,                              0);
 
     opt.opt_table = option_def;
@@ -107,12 +120,31 @@ parseCommandLine (int argc, const char ** argv,
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
     cmdlineP->missingcolor = NULL;  /* default value */
-    
+
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmdlineP->floyd && nofloyd)
         pm_error("You cannot specify both -floyd and -nofloyd options.");
+
+    if (cmdlineP->floyd) {
+        if (norandomSpec) {
+            if (randomseedSpec)
+                pm_error("You cannot specify both -norandom and -randomseed.");
+            else
+                cmdlineP->random.init = RANDOM_NONE;
+        } else {
+            if (randomseedSpec)
+                cmdlineP->random.init = RANDOM_WITHSEED;
+            else
+                cmdlineP->random.init = RANDOM_NOSEED;
+        }
+    } else {
+        if (norandomSpec)
+            pm_message("-floyd not specified.  -norandom has no effect.");
+        if (randomseedSpec)
+            pm_message("-floyd not specified.  Ignoring -randomseed value.");
+    }
 
     if (firstisdefault && missingSpec)
         pm_error("You cannot specify both -missing and -firstisdefault.");
@@ -176,7 +208,7 @@ grayscaleToDepth3(tuple const tuple) {
 static void
 adjustDepthTuple(tuple           const tuple,
                  depthAdjustment const adjustment) {
-    
+
     switch (adjustment) {
     case ADJUST_NONE:
         break;
@@ -194,7 +226,7 @@ adjustDepthTuple(tuple           const tuple,
 static void
 inverseAdjustDepthTuple(tuple           const tuple,
                         depthAdjustment const adjustment) {
-    
+
     switch (adjustment) {
     case ADJUST_NONE:
         break;
@@ -249,7 +281,7 @@ selectDepthAdjustment(const struct pam * const pamP,
 
    The only depth changes we know how to do are:
 
-     - from tuple type RGB, depth 3 to depth 1 
+     - from tuple type RGB, depth 3 to depth 1
 
        We change it to grayscale or black and white.
 
@@ -296,7 +328,7 @@ selectDepthAdjustment(const struct pam * const pamP,
                      "that I know how to convert to the map depth.  "
                      "I can convert RGB, GRAYSCALE, and BLACKANDWHITE.  "
                      "The input image is '%.*s'.",
-                     newDepth, pamP->depth, 
+                     newDepth, pamP->depth,
                      (int)sizeof(pamP->tuple_type), pamP->tuple_type);
         }
     }
@@ -305,8 +337,8 @@ selectDepthAdjustment(const struct pam * const pamP,
 
 
 static void
-computeColorMapFromMap(struct pam *   const mappamP, 
-                       tuple **       const maptuples, 
+computeColorMapFromMap(struct pam *   const mappamP,
+                       tuple **       const maptuples,
                        tupletable *   const colormapP,
                        unsigned int * const newcolorsP) {
 /*----------------------------------------------------------------------------
@@ -317,12 +349,12 @@ computeColorMapFromMap(struct pam *   const mappamP,
 
    Return the number of colors in the returned colormap as *newcolorsP.
 -----------------------------------------------------------------------------*/
-    unsigned int colors; 
+    unsigned int colors;
 
     if (mappamP->width == 0 || mappamP->height == 0)
         pm_error("colormap file contains no pixels");
 
-    *colormapP = 
+    *colormapP =
         pnm_computetuplefreqtable(mappamP, maptuples, MAXCOLORS, &colors);
     if (*colormapP == NULL)
         pm_error("too many colors in colormap!");
@@ -334,7 +366,7 @@ computeColorMapFromMap(struct pam *   const mappamP,
 
 #define FS_SCALE 1024
 
-struct fserr {
+struct Fserr {
     unsigned int width;
         /* Width of the image being dithered */
     long ** thiserr;
@@ -359,20 +391,26 @@ struct fserr {
 
 
 static void
-randomizeError(long **      const err,
-               unsigned int const width,
-               unsigned int const depth) {
+randomizeError(long **       const err,
+               unsigned int  const width,
+               unsigned int  const depth,
+               struct Random const random) {
 /*----------------------------------------------------------------------------
    Set a random error in the range [-1 .. 1] (normalized via FS_SCALE)
    in the error array err[][].
 -----------------------------------------------------------------------------*/
+    unsigned int const seed = (random.init == RANDOM_WITHSEED) ?
+        random.seed : pm_randseed();
+
     unsigned int col;
 
-    srand(pm_randseed());
+    assert(random.init != RANDOM_NONE);
+
+    srand(seed);
 
     for (col = 0; col < width; ++col) {
         unsigned int plane;
-        for (plane = 0; plane < depth; ++plane) 
+        for (plane = 0; plane < depth; ++plane)
             err[plane][col] = rand() % (FS_SCALE * 2) - FS_SCALE;
     }
 }
@@ -390,7 +428,7 @@ zeroError(long **      const err,
 
     for (col = 0; col < width; ++col) {
         unsigned int plane;
-        for (plane = 0; plane < depth; ++plane) 
+        for (plane = 0; plane < depth; ++plane)
             err[plane][col] = 0;
     }
 }
@@ -398,7 +436,7 @@ zeroError(long **      const err,
 
 
 static void
-fserrSetForward(struct fserr * const fserrP) {
+fserr_setForward(struct Fserr * const fserrP) {
 
     fserrP->fsForward = TRUE;
     fserrP->begCol = 0;
@@ -409,7 +447,7 @@ fserrSetForward(struct fserr * const fserrP) {
 
 
 static void
-fserrSetBackward(struct fserr * const fserrP) {
+fserr_setBackward(struct Fserr * const fserrP) {
 
     fserrP->fsForward = FALSE;
     fserrP->begCol = fserrP->width - 1;
@@ -420,9 +458,9 @@ fserrSetBackward(struct fserr * const fserrP) {
 
 
 static void
-initFserr(struct pam *   const pamP,
-          struct fserr * const fserrP,
-          bool           const initRandom) {
+fserr_init(struct pam *   const pamP,
+           struct Fserr * const fserrP,
+           struct Random  const random) {
 /*----------------------------------------------------------------------------
    Initialize the Floyd-Steinberg error vectors
 -----------------------------------------------------------------------------*/
@@ -440,7 +478,7 @@ initFserr(struct pam *   const pamP,
     if (fserrP->nexterr == NULL)
         pm_error("Out of memory allocating Floyd-Steinberg structures "
                  "for depth %u", pamP->depth);
-    
+
     for (plane = 0; plane < pamP->depth; ++plane) {
         MALLOCARRAY(fserrP->thiserr[plane], fserrSize);
         if (fserrP->thiserr[plane] == NULL)
@@ -452,24 +490,25 @@ initFserr(struct pam *   const pamP,
                      "for Plane %u, size %u", plane, fserrSize);
     }
 
-    if (initRandom)
-        randomizeError(fserrP->thiserr, fserrSize, pamP->depth);
+    if (random.init != RANDOM_NONE)
+        randomizeError(fserrP->thiserr, fserrSize, pamP->depth, random);
     else
         zeroError(fserrP->thiserr, fserrSize, pamP->depth);
 
-    fserrSetForward(fserrP);
+    fserr_setForward(fserrP);
 }
 
 
 
 static void
-floydInitRow(struct pam * const pamP, struct fserr * const fserrP) {
+floydInitRow(struct pam *   const pamP,
+             struct Fserr * const fserrP) {
 
-    int col;
-    
+    unsigned int col;
+
     for (col = 0; col < pamP->width + 2; ++col) {
         unsigned int plane;
-        for (plane = 0; plane < pamP->depth; ++plane) 
+        for (plane = 0; plane < pamP->depth; ++plane)
             fserrP->nexterr[plane][col] = 0;
     }
 }
@@ -477,10 +516,10 @@ floydInitRow(struct pam * const pamP, struct fserr * const fserrP) {
 
 
 static void
-floydAdjustColor(struct pam *   const pamP, 
-                 tuple          const intuple, 
-                 tuple          const outtuple, 
-                 struct fserr * const fserrP, 
+floydAdjustColor(struct pam *   const pamP,
+                 tuple          const intuple,
+                 tuple          const outtuple,
+                 struct Fserr * const fserrP,
                  int            const col) {
 /*----------------------------------------------------------------------------
   Use Floyd-Steinberg errors to adjust actual color.
@@ -497,10 +536,10 @@ floydAdjustColor(struct pam *   const pamP,
 
 
 static void
-floydPropagateErr(struct pam *   const pamP, 
-                  struct fserr * const fserrP, 
-                  int            const col, 
-                  tuple          const oldtuple, 
+floydPropagateErr(struct pam *   const pamP,
+                  struct Fserr * const fserrP,
+                  int            const col,
+                  tuple          const oldtuple,
                   tuple          const newtuple) {
 /*----------------------------------------------------------------------------
   Propagate Floyd-Steinberg error terms.
@@ -515,7 +554,7 @@ floydPropagateErr(struct pam *   const pamP,
         long const newSample = newtuple[plane];
         long const oldSample = oldtuple[plane];
         long const err = (oldSample - newSample) * FS_SCALE;
-            
+
         if (fserrP->fsForward) {
             fserrP->thiserr[plane][col + 2] += ( err * 7 ) / 16;
             fserrP->nexterr[plane][col    ] += ( err * 3 ) / 16;
@@ -533,7 +572,8 @@ floydPropagateErr(struct pam *   const pamP,
 
 
 static void
-floydSwitchDir(struct pam * const pamP, struct fserr * const fserrP) {
+floydSwitchDir(struct pam *   const pamP,
+               struct Fserr * const fserrP) {
 
     unsigned int plane;
 
@@ -544,9 +584,9 @@ floydSwitchDir(struct pam * const pamP, struct fserr * const fserrP) {
     }
 
     if (fserrP->fsForward)
-        fserrSetBackward(fserrP);
+        fserr_setBackward(fserrP);
     else
-        fserrSetForward(fserrP);
+        fserr_setForward(fserrP);
 }
 
 
@@ -567,7 +607,7 @@ struct colormapFinder {
         /* The value by which our intermediate distance calculations
            have to be divided to make sure we don't overflow our
            unsigned int data structure.
-           
+
            To the extent 'distanceDivider' is greater than 1, closest
            color results will be approximate -- there could
            conceivably be a closer one that we miss.
@@ -590,13 +630,13 @@ createColormapFinder(struct pam *             const pamP,
     colormapFinderP->colors = colors;
 
     {
-        unsigned int const maxHandleableSqrDiff = 
+        unsigned int const maxHandleableSqrDiff =
             (unsigned int)UINT_MAX / pamP->depth;
-        
+
         if (SQR(pamP->maxval) > maxHandleableSqrDiff)
             colormapFinderP->distanceDivider = (unsigned int)
                 (SQR(pamP->maxval) / maxHandleableSqrDiff + 0.1 + 1.0);
-                /* The 0.1 is a fudge factor to keep us out of rounding 
+                /* The 0.1 is a fudge factor to keep us out of rounding
                    trouble.  The 1.0 effects a round-up.
                 */
         else
@@ -664,8 +704,8 @@ searchColormapClose(struct pam *            const pamP,
         newdist = 0;
 
         for (plane=0; plane < pamP->depth; ++plane) {
-            newdist += 
-                SQR(tuple[plane] - colorFinderP->colormap[i]->tuple[plane]) 
+            newdist +=
+                SQR(tuple[plane] - colorFinderP->colormap[i]->tuple[plane])
                 / colorFinderP->distanceDivider;
         }
         if (newdist < dist) {
@@ -695,15 +735,15 @@ searchColormapExact(struct pam *            const pamP,
 -----------------------------------------------------------------------------*/
     unsigned int i;
     bool found;
-    
+
     found = FALSE;  /* initial value */
     for (i = 0; i < colorFinderP->colors && !found; ++i) {
         unsigned int plane;
         found = TRUE;  /* initial assumption */
-        for (plane=0; plane < pamP->depth; ++plane) 
-            if (tuple[plane] != colorFinderP->colormap[i]->tuple[plane]) 
+        for (plane=0; plane < pamP->depth; ++plane)
+            if (tuple[plane] != colorFinderP->colormap[i]->tuple[plane])
                 found = FALSE;
-        if (found) 
+        if (found)
             *colormapIndexP = i;
     }
     *foundP = found;
@@ -712,11 +752,11 @@ searchColormapExact(struct pam *            const pamP,
 
 
 static void
-lookupThroughHash(struct pam *            const pamP, 
-                  tuple                   const tuple, 
+lookupThroughHash(struct pam *            const pamP,
+                  tuple                   const tuple,
                   bool                    const needExactMatch,
                   struct colormapFinder * const colorFinderP,
-                  tuplehash               const colorhash,       
+                  tuplehash               const colorhash,
                   int *                   const colormapIndexP,
                   bool *                  const usehashP) {
 /*----------------------------------------------------------------------------
@@ -748,11 +788,11 @@ lookupThroughHash(struct pam *            const pamP,
                                 colormapIndexP, &found);
             if (!found)
                 *colormapIndexP = -1;
-        } else 
+        } else
             searchColormapClose(pamP, tuple, colorFinderP, colormapIndexP);
         if (*usehashP) {
             int fits;
-            pnm_addtotuplehash(pamP, colorhash, tuple, *colormapIndexP, 
+            pnm_addtotuplehash(pamP, colorhash, tuple, *colormapIndexP,
                                &fits);
             if (!fits) {
                 pm_message("out of memory adding to hash table; "
@@ -771,7 +811,7 @@ mapTuple(struct pam *            const pamP,
          tuple                   const defaultColor,
          tupletable              const colormap,
          struct colormapFinder * const colorFinderP,
-         tuplehash               const colorhash, 
+         tuplehash               const colorhash,
          bool *                  const usehashP,
          tuple                   const outTuple,
          bool *                  const missingP) {
@@ -781,7 +821,7 @@ mapTuple(struct pam *            const pamP,
            there is no usable color in the color map.
         */
 
-    lookupThroughHash(pamP, inTuple, !!defaultColor, colorFinderP, 
+    lookupThroughHash(pamP, inTuple, !!defaultColor, colorFinderP,
                       colorhash, &colormapIndex, usehashP);
 
     if (colormapIndex == -1) {
@@ -800,12 +840,12 @@ mapTuple(struct pam *            const pamP,
 
 static void
 convertRowStraight(struct pam *            const inpamP,
-                   struct pam *            const outpamP, 
+                   struct pam *            const outpamP,
                    tuple                         inrow[],
                    depthAdjustment         const depthAdjustment,
                    tupletable              const colormap,
                    struct colormapFinder * const colorFinderP,
-                   tuplehash               const colorhash, 
+                   tuplehash               const colorhash,
                    bool *                  const usehashP,
                    tuple                   const defaultColor,
                    tuple                         outrow[],
@@ -822,7 +862,7 @@ convertRowStraight(struct pam *            const inpamP,
 -----------------------------------------------------------------------------*/
     unsigned int col;
     unsigned int missingCount;
-    
+
     /* The following modify tuplerow, to make it consistent with
      *outpamP instead of *inpamP.
      */
@@ -833,7 +873,7 @@ convertRowStraight(struct pam *            const inpamP,
     adjustDepthRow(outrow, outpamP->width, depthAdjustment);
 
     missingCount = 0;  /* initial value */
-    
+
     for (col = 0; col < outpamP->width; ++col) {
         bool missing;
         mapTuple(outpamP, outrow[col], defaultColor,
@@ -856,10 +896,10 @@ convertRowDither(struct pam *            const inpamP,
                  depthAdjustment         const depthAdjustment,
                  tupletable              const colormap,
                  struct colormapFinder * const colorFinderP,
-                 tuplehash               const colorhash, 
+                 tuplehash               const colorhash,
                  bool *                  const usehashP,
                  tuple                   const defaultColor,
-                 struct fserr *          const fserrP,
+                 struct Fserr *          const fserrP,
                  tuple                         outrow[],
                  unsigned int *          const missingCountP) {
 /*----------------------------------------------------------------------------
@@ -885,7 +925,7 @@ convertRowDither(struct pam *            const inpamP,
     floydInitRow(inpamP, fserrP);
 
     missingCount = 0;  /* initial value */
-    
+
     for (col = fserrP->begCol; col != fserrP->endCol; col += fserrP->step) {
         bool missing;
 
@@ -929,11 +969,11 @@ convertRow(struct pam *            const inpamP,
            depthAdjustment               depthAdjustment,
            tupletable              const colormap,
            struct colormapFinder * const colorFinderP,
-           tuplehash               const colorhash, 
+           tuplehash               const colorhash,
            bool *                  const usehashP,
-           bool                    const floyd, 
+           bool                    const floyd,
            tuple                   const defaultColor,
-           struct fserr *          const fserrP,
+           struct Fserr *          const fserrP,
            tuple                         outrow[],
            unsigned int *          const missingCountP) {
 /*----------------------------------------------------------------------------
@@ -959,7 +999,7 @@ convertRow(struct pam *            const inpamP,
                          depthAdjustment, colormap, colorFinderP, colorhash,
                          usehashP, defaultColor,
                          fserrP, outrow, missingCountP);
-    else 
+    else
         convertRowStraight(inpamP, outpamP, inrow,
                            depthAdjustment, colormap, colorFinderP, colorhash,
                            usehashP, defaultColor,
@@ -969,14 +1009,14 @@ convertRow(struct pam *            const inpamP,
 
 
 static void
-copyRaster(struct pam *       const inpamP, 
-           struct pam *       const outpamP,
-           tupletable         const colormap, 
-           unsigned int       const colormapSize,
-           bool               const floyd, 
-           bool               const randomize,
-           tuple              const defaultColor, 
-           unsigned int *     const missingCountP) {
+copyRaster(struct pam *   const inpamP,
+           struct pam *   const outpamP,
+           tupletable     const colormap,
+           unsigned int   const colormapSize,
+           bool           const floyd,
+           struct Random  const random,
+           tuple          const defaultColor,
+           unsigned int * const missingCountP) {
 
     tuplehash const colorhash = pnm_createtuplehash();
 
@@ -992,7 +1032,7 @@ copyRaster(struct pam *       const inpamP,
     depthAdjustment depthAdjustment;
     struct colormapFinder * colorFinderP;
     bool usehash;
-    struct fserr fserr;
+    struct Fserr fserr;
     int row;
 
     workpam = *outpamP;
@@ -1017,7 +1057,7 @@ copyRaster(struct pam *       const inpamP,
     createColormapFinder(outpamP, colormap, colormapSize, &colorFinderP);
 
     if (floyd)
-        initFserr(inpamP, &fserr, randomize);
+        fserr_init(inpamP, &fserr, random);
 
     *missingCountP = 0;  /* initial value */
 
@@ -1030,9 +1070,9 @@ copyRaster(struct pam *       const inpamP,
                    depthAdjustment, colormap, colorFinderP, colorhash,
                    &usehash, floyd, defaultColor,
                    &fserr,  outrow, &missingCount);
-        
+
         *missingCountP += missingCount;
-        
+
         pnm_writepamrow(outpamP, outrow);
     }
     destroyColormapFinder(colorFinderP);
@@ -1046,10 +1086,10 @@ copyRaster(struct pam *       const inpamP,
 static void
 remap(FILE *             const ifP,
       const struct pam * const outpamCommonP,
-      tupletable         const colormap, 
+      tupletable         const colormap,
       unsigned int       const colormapSize,
       bool               const floyd,
-      bool               const randomize,
+      struct Random      const random,
       tuple              const defaultColor,
       bool               const verbose) {
 /*----------------------------------------------------------------------------
@@ -1075,7 +1115,7 @@ remap(FILE *             const ifP,
             */
 
         pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
-    
+
         outpam = *outpamCommonP;
         outpam.width  = inpam.width;
         outpam.height = inpam.height;
@@ -1086,13 +1126,13 @@ remap(FILE *             const ifP,
            convert the input to the output depth.
         */
         pnm_setminallocationdepth(&inpam, outpam.depth);
-    
+
         copyRaster(&inpam, &outpam, colormap, colormapSize, floyd,
-                   randomize, defaultColor, &missingCount);
-        
+                   random, defaultColor, &missingCount);
+
         if (verbose)
             pm_message("%u pixels not matched in color map", missingCount);
-        
+
         pnm_nextimage(ifP, &eof);
     }
 }
@@ -1130,7 +1170,7 @@ processMapFile(const char *   const mapFileName,
 
     pnm_freepamarray(maptuples, &mappam);
 
-    *outpamCommonP = mappam; 
+    *outpamCommonP = mappam;
     outpamCommonP->file = stdout;
 }
 
@@ -1142,7 +1182,7 @@ getSpecifiedMissingColor(struct pam * const pamP,
                          tuple *      const specColorP) {
 
     tuple specColor;
-                             
+
     specColor = pnm_allocpamtuple(pamP);
 
     if (colorName) {
@@ -1213,8 +1253,8 @@ main(int argc, const char * argv[] ) {
         break;
     }
 
-    remap(ifP, &outpamCommon, colormap, colormapSize, 
-          cmdline.floyd, !cmdline.norandom, defaultColor,
+    remap(ifP, &outpamCommon, colormap, colormapSize,
+          cmdline.floyd, cmdline.random, defaultColor,
           cmdline.verbose);
 
     pnm_freepamtuple(firstColor);

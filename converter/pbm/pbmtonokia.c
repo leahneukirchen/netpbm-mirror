@@ -4,6 +4,7 @@
    Copyright information is at end of file.
 */
 
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 #include <string.h>
@@ -321,10 +322,8 @@ convertToNol(bit **       const image,
     /* image */
     for (row = 0; row < rows; ++row) {
         unsigned int col;
-        unsigned int p;
-        unsigned int c;
 
-        for (p = 0, c = 0, col = 0; col < cols; ++col) {
+        for (col = 0; col < cols; ++col) {
             char const output = image[row][col] == PBM_BLACK ? '1' : '0';
 
             putc(output, ofP);
@@ -374,10 +373,8 @@ convertToNgg(bit **       const image,
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
-        unsigned int p;
-        unsigned int c;
 
-        for (p = 0, c = 0, col = 0; col < cols; ++col) {
+        for (col = 0; col < cols; ++col) {
             char const output = image[row][col] == PBM_BLACK ? '1' : '0';
 
             putc(output, ofP);

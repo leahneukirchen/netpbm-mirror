@@ -68,8 +68,8 @@ readCmuwmHeader(FILE *         const ifP,
 
 
 int
-main(int     argc,
-     char * argv[]) {
+main(int           argc,
+     const char ** argv) {
 
     FILE * ifP;
     unsigned char * bitrow;
@@ -78,7 +78,7 @@ main(int     argc,
 
     const char * inputFileName;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     if (argc-1 > 1)
         pm_error("Too many arguments (%u).  "
@@ -117,6 +117,7 @@ main(int     argc,
         pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
+    pbm_freerow_packed(bitrow);
     pm_close(ifP);
     pm_close(stdout);
 

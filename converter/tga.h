@@ -44,3 +44,16 @@ typedef char ImageIDField[IMAGEIDFIELDMAXSIZE];
 #define TGA_IL_Four 2
 
 enum TGAbaseImageType {TGA_MAP_TYPE, TGA_MONO_TYPE, TGA_RGB_TYPE};
+
+enum TGAmapType {
+    /* A type of Targa color map */
+    TGA_MAPTYPE_SHORT,
+        /* Each entry in the color map is 2 bytes: 5 bits each of
+           red, green, and blue, and one optional alpha bit.
+        */
+    TGA_MAPTYPE_LONG
+        /* Each entry in the color map is 3 bytes: red, green, and blue,
+           plus one optional alpha byte
+        */
+};
+

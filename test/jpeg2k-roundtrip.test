@@ -1,0 +1,7 @@
+#! /bin/bash
+# This script tests: pamtojpeg2k jpeg2ktopam
+# Also requires:
+
+# Should produce 1926073387 101484
+
+pamtojpeg2k testimg.ppm | jpeg2ktopam | cksum

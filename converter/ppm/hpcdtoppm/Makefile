@@ -14,7 +14,7 @@ MERGE_OBJECTS =
 
 include $(SRCDIR)/common.mk
 
-install: install.bin.local
+install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # In June 2002, pcdovtoppm replaced pcdindex

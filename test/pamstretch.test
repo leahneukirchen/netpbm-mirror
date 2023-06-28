@@ -1,0 +1,48 @@
+#! /bin/bash
+# This script tests: pamstretch
+# Also requires: pamcut pamfile
+
+# Test 1.  Should print 211995824 12277766
+echo test 1
+pamstretch 11 testimg.ppm | cksum
+
+# Test 2.  Should print 1361899 202953
+echo test 2
+
+pamstretch -xscale=2 -blackedge testimg.ppm | cksum
+
+# Test 3.  Should print 3427416462 301047
+echo test 3
+dropedge1_ppm=${tmpdir}/drop1.ppm
+pamstretch -yscale=3 -dropedge testimg.ppm | tee ${dropedge1_ppm} | cksum
+
+# Test 4. Should print 3681010585 802767
+echo test 4
+pamstretch -xscale=2 -yscale=4 -dropedge testimg.ppm | cksum
+
+# Test 5.  Should print 1926073387 101484 four times
+echo test 5
+pamstretch 1 testimg.ppm | cksum
+pamstretch -xscale=1 -yscale=1 testimg.ppm | cksum
+pamstretch 1 -dropedge testimg.ppm | cksum
+pamstretch 1 -blackedge testimg.ppm | cksum
+
+# Test 6.
+# Should print 3638965616 913236 , 598302847 913236 
+# followed by 3948746482 903111 four times and finally
+# -width=678 -height=444"
+
+echo test 6
+stretch_ppm=${tmpdir}/stretch.ppm
+dropedge_ppm=${tmpdir}/drop.ppm
+blackedge_ppm=${tmpdir}/black.ppm
+pamstretch 3 testimg.ppm | tee ${stretch_ppm} | cksum
+pamstretch 3 -blackedge testimg.ppm | tee ${blackedge_ppm} | cksum
+pamstretch -xscale=3 -dropedge ${dropedge1_ppm} | tee ${dropedge_ppm} | cksum
+width_height=`pamfile -size ${dropedge_ppm} | \
+              awk '{print "-width="$1, "-height="$2}'`
+pamcut -left=0 -top=0 ${width_height} ${stretch_ppm} | cksum
+pamcut -left=0 -top=0 ${width_height} ${blackedge_ppm} | cksum
+pamcut -left=0 -top=0 ${width_height} ${dropedge_ppm} | cksum
+
+rm ${stretch_ppm} ${dropedge_ppm} ${dropedge1_ppm} ${blackedge_ppm}

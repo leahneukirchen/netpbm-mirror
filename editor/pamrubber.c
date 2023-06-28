@@ -1405,7 +1405,7 @@ main(int argc, const char ** const argv) {
 
     setGlobalCP(cmdline);
 
-    srand(cmdline.randseedSpec ? cmdline.randseed : time(NULL));
+    srand(cmdline.randseedSpec ? cmdline.randseed : pm_randseed());
 
     ifP = pm_openr(cmdline.fileName);
 

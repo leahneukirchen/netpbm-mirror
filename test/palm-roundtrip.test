@@ -1,0 +1,39 @@
+#! /bin/bash
+# This script tests: pnmtopalm palmtopnm
+# Also requires: pamdepth pnmquant
+
+tmpdir=${tmpdir:-/tmp}
+test4bit_pgm=${tmpdir}/test4bit.pgm
+test256color_ppm=${tmpdir}/test256color.ppm
+
+# Test 1. Should print 584219238 236  5 times
+
+echo "Test 1"
+
+pamdepth 15 testgrid.pbm | tee ${test4bit_pgm} | cksum
+
+for flags in "" \
+             "-scanline_compression" \
+             "-rle_compression" \
+             "-packbits_compression"
+  do pnmtopalm $flags ${test4bit_pgm} | palmtopnm | cksum; done
+
+rm ${test4bit_pgm}
+
+
+# Test 2. Should print 0 4 times
+
+echo "Test 2"
+
+pnmquant 256 testimg.ppm > ${test256color_ppm} || echo "pnmquant failed"
+
+for flags in "" \
+             "-scanline_compression" \
+             "-rle_compression" \
+             "-packbits_compression" 
+  do pnmtopalm -colormap $flags ${test256color_ppm} | palmtopnm | \
+     cmp -s - ${test256color_ppm} > /dev/null
+     echo ${PIPESTATUS[@]} ":" $?
+  done
+
+rm ${test256color_ppm}

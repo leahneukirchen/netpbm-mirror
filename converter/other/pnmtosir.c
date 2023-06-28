@@ -1,5 +1,5 @@
 /* pnmtosir.c - read a portable anymap and produce a Solitaire Image Recorder
-**		file (MGI TYPE 11 or MGI TYPE 17)
+**      file (MGI TYPE 11 or MGI TYPE 17)
 **
 ** Copyright (C) 1991 by Marvin Landis
 **
@@ -11,67 +11,63 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
 #include "pnm.h"
 
 #define MAXCOLORS 256
 
-int main(int argc, char * argv[]) {
-    FILE* ifp;
-    xel** xels;
-    register xel* xP;
-    const char* dumpname;
-    int rows, cols, format, row, col;
-    int m, n;
-    int grayscale;
+
+
+int
+main(int argc, const char * argv[]) {
+    
+    FILE * ifP;
+    xel ** xels;
+    int rows, cols, format;
+    unsigned int n;
+    bool isGrayscale;
     xelval maxval;
-    const char* const usage = "[pnmfile]";
-    unsigned char ub;
     unsigned short Header[16];
     unsigned short LutHeader[16];
     unsigned short Lut[2048];
 
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    if ( argc > 2 )
-        pm_usage( usage );
+    if (argc-1 > 1)
+        pm_error("There is only one possible argument: the input file.  "
+                 "You specified %d", argc-1);
 
-    if ( argc == 2 )
-	{
-        dumpname = argv[1];
-        ifp = pm_openr( argv[1] );
-	}
-    else
-	{
-        dumpname = "Standard Input";
-        ifp = stdin;
-	}
+    if (argc-1 > 0) {
+        const char * const inputFileName = argv[1];
+        ifP = pm_openr(inputFileName);
+    }  else {
+        ifP = stdin;
+    }
     
-    xels = pnm_readpnm( ifp, &cols, &rows, &maxval, &format );
-    pm_close( ifp );
+    xels = pnm_readpnm(ifP, &cols, &rows, &maxval, &format);
     
     /* Figure out the colormap. */
-    switch ( PNM_FORMAT_TYPE(format) )
-	{
-	case PPM_TYPE:
-        grayscale = 0;
-        pm_message( "Writing a 24-bit SIR format (MGI TYPE 11)" );
+    switch (PNM_FORMAT_TYPE(format) ) {
+    case PPM_TYPE:
+        isGrayscale = false;
+        pm_message("Writing a 24-bit SIR format (MGI TYPE 11)");
         break;
 
     case PGM_TYPE:
-        grayscale = 1;
-        pm_message( "Writing a grayscale SIR format (MGI TYPE 17)" );
+        isGrayscale = true;
+        pm_message("Writing a grayscale SIR format (MGI TYPE 17)");
         break;
 
-	default:
-        grayscale = 1;
-        pm_message( "Writing a monochrome SIR format (MGI TYPE 17)" );
+    default:
+        isGrayscale = true;
+        pm_message("Writing a monochrome SIR format (MGI TYPE 17)");
         break;
-	}
+    }
 
     /* Set up the header. */
     Header[0] = 0x3a4f;
     Header[1] = 0;
-    if (grayscale)
+    if (isGrayscale)
         Header[2] = 17;
     else
         Header[2] = 11;
@@ -93,54 +89,65 @@ int main(int argc, char * argv[]) {
     LutHeader[2] = 5;
     LutHeader[3] = 256;
     LutHeader[4] = 256;
-    for (n = 0; n < 5; n++)
+    for (n = 0; n < 5; ++n)
         pm_writelittleshort(stdout,LutHeader[n]);
-    for (n = 5; n < 256; n++)
+    for (n = 5; n < 256; ++n)
         pm_writelittleshort(stdout,0);
  
-    for(n = 0; n < 3; n ++)
-        for (m = 0; m < 256; m++)
+    for (n = 0; n < 3; ++n) {
+        unsigned int m;
+        for (m = 0; m < 256; ++m)
             Lut[m * 4 + n] = m << 8;
-    for (n = 0; n < 1024; n++)
+    }
+    for (n = 0; n < 1024; ++n)
         pm_writelittleshort(stdout,Lut[n]);
  
     /* Finally, write out the data. */
-    switch ( PNM_FORMAT_TYPE(format) )
-    {
-	case PPM_TYPE:
-	    for ( row = 0; row < rows; ++row )
-            for ( col = 0, xP = xels[row]; col < cols; ++col, ++xP )
-            {
-                ub = (char) ( PPM_GETR( *xP ) * ( 255 / maxval ) ); 
-                fputc( ub, stdout );
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PPM_TYPE: {
+        unsigned int row;
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {
+                unsigned char const ub =
+                    (char) (PPM_GETR(xels[row][col]) * (255 / maxval)); 
+                fputc(ub, stdout);
             }
-        for ( row = 0; row < rows; ++row )
-            for ( col = 0, xP = xels[row]; col < cols; ++col, ++xP )
-            {  
-                ub = (char) ( PPM_GETG( *xP ) * ( 255 / maxval ) );
-                fputc( ub, stdout );
+        }
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {  
+                unsigned const char ub =
+                    (char) (PPM_GETG(xels[row][col]) * (255 / maxval));
+                fputc(ub, stdout);
             }
-        for ( row = 0; row < rows; ++row )
-            for ( col = 0, xP = xels[row]; col < cols; ++col, ++xP )
-            {  
-                ub = (char) ( PPM_GETB( *xP ) * ( 255 / maxval ) );
-                fputc( ub, stdout );
+        }
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {  
+                unsigned const char ub =
+                    (char) (PPM_GETB(xels[row][col]) * (255 / maxval));
+                fputc(ub, stdout);
             }
-	    break;
+        }
+    } break;
 
-    default:
-        for ( row = 0; row < rows; ++row )
-            for ( col = 0, xP = xels[row]; col < cols; ++col, ++xP )
-            {
-                register unsigned long val;
-
-                val = PNM_GET1( *xP );
-                ub = (char) ( val * ( 255 / maxval ) );
-                fputc( ub, stdout );
+    default: {
+        unsigned int row;
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {
+                unsigned long const val = PNM_GET1(xels[row][col]);
+                unsigned const char ub = (char) (val * (255 / maxval));
+                fputc(ub, stdout);
             }
-        break;
+        }
+    } break;
     }
+    
+    pm_close(ifP);
 
-    exit( 0 );
+    return 0;
 }
+
 

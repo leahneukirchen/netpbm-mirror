@@ -58,7 +58,7 @@ isMemberOfUintSet(const struct uintSet * const uintSetP,
     unsigned int i;
 
     retval = FALSE;  /* initial assumption */
-    
+
     for (i = 0; i < uintSetP->count; ++i) {
         if (uintSetP->list[i] == searchValue)
             retval = TRUE;
@@ -137,7 +137,7 @@ parseCommandLine(int argc, const char ** argv,
                 if (*endPtr != '\0')
                     pm_error("Garbage in sequence number argument '%s': '%s'",
                              argv[i+1], endPtr);
-                
+
                 if (strtolResult < 0)
                     pm_error("Image sequence number cannot be negative.  "
                              "You specified %d", strtolResult);
@@ -171,7 +171,7 @@ extractOneImage(FILE * const infileP,
     struct pam inpam;
     struct pam outpam;
     enum pm_check_code checkRetval;
-    
+
     unsigned int row;
     tuple * tuplerow;
 
@@ -222,13 +222,13 @@ main(int argc, const char *argv[]) {
     struct cmdlineInfo cmdline;
 
     int eof;  /* No more images in input */
-    unsigned int imageSeq;  
+    unsigned int imageSeq;
         /* Sequence of current image in input file.  First = 0 */
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     eof = FALSE;
     for (imageSeq = 0; !eof; ++imageSeq) {
         if (isMemberOfUintSet(&cmdline.imageSeqList, imageSeq)) {
@@ -247,6 +247,6 @@ main(int argc, const char *argv[]) {
 
     pm_close(stdin);
     pm_close(stdout);
-    
+
     return 0;
 }

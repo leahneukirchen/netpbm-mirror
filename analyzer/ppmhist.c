@@ -22,7 +22,7 @@ enum sort {SORT_BY_FREQUENCY, SORT_BY_RGB};
 
 enum ColorFmt {FMT_DECIMAL, FMT_HEX, FMT_FLOAT, FMT_PPMPLAIN};
 
-struct cmdline_info {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -38,7 +38,7 @@ struct cmdline_info {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdline_info * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -172,7 +172,7 @@ universalMaxval(pixval const maxval,
                 int    const format) {
 /*----------------------------------------------------------------------------
   A maxval that makes it impossible for a pixel to be invalid in an image that
-  states it maxval as 'maxval' and has format 'format'.
+  states its maxval as 'maxval' and has format 'format'.
 
   E.g. in a one-byte-per-sample image, it's not possible to read a sample
   value greater than 255, so a maxval of 255 makes it impossible for a sample
@@ -230,21 +230,21 @@ separateInvalidItems(colorhist_vector const chv,
                      unsigned int  *  const validColorCtP) {
 /*----------------------------------------------------------------------------
   Move invalid color entries from chv to chvInvalid.
-  Count how many color entries are valid. 
+  Count how many color entries are valid.
 -----------------------------------------------------------------------------*/
     unsigned int i;
     unsigned int validCt;
     unsigned int invalidCt;
- 
+
     for (i = 0, validCt = 0, invalidCt = 0; i < colorCt; ++i) {
         if (!colorIsValid(chv[i].color, maxval))
             chvInvalid[invalidCt++] = chv[i];
         else
             chv[validCt++] = chv[i];
-    } 
+    }
     *validColorCtP = validCt;
 }
-  
+
 
 
 static void
@@ -261,7 +261,7 @@ sortHistogramForensic(enum sort        const sortFn,
 
     {
         int (*compare_function)(const void *, const void *);
-    
+
         switch (sortFn) {
         case SORT_BY_FREQUENCY: compare_function = countcompare; break;
         case SORT_BY_RGB:       compare_function = rgbcompare;   break;
@@ -269,7 +269,7 @@ sortHistogramForensic(enum sort        const sortFn,
 
         qsort((void*) chv, validColorCt,
               sizeof(struct colorhist_item), compare_function);
-        
+
         qsort((void*) chvInvalid, colorCt - validColorCt,
               sizeof(struct colorhist_item), compare_function);
     }
@@ -295,20 +295,104 @@ sortHistogramNormal(enum sort        const sortFn,
 }
 
 
+typedef struct {
+    unsigned int nTotal;
+        /* Number of colors; sum of all the following */
+    unsigned int nBlack;
+        /* 1 if black is present; 0 otherwise */
+    unsigned int nWhite;
+        /* 1 if white is present; 0 otherwise */
+    unsigned int nGray;
+        /* Number of gray shades, not including black and white */
+    unsigned int nColor;
+        /* number of colors other than black, white, and gray */
+
+} ColorSummary;
+
+
+
+static ColorSummary
+colorSummary(colorhist_vector const chv,
+             unsigned int     const colorCt,
+             pixval           const maxval) {
+
+    ColorSummary retval;
+
+    unsigned int i;
+
+    retval.nTotal = colorCt;
+
+    for (i = 0,
+             retval.nBlack = 0,
+             retval.nWhite = 0,
+             retval.nGray = 0,
+             retval.nColor = 0;
+         i < colorCt;
+         ++i) {
+
+        pixel const color = chv[i].color;
+        pixval const r = PPM_GETR(color);
+        pixval const g = PPM_GETG(color);
+        pixval const b = PPM_GETB(color);
+
+        if (r == 0 && g == 0 && b == 0)
+            ++retval.nBlack;
+        else if (r == maxval && g == maxval && b == maxval)
+            ++retval.nWhite;
+        else if (r == g && r ==b)
+            ++retval.nGray;
+        else
+            ++retval.nColor;
+    }
+    assert(retval.nBlack + retval.nWhite + retval.nGray + retval.nColor ==
+           retval.nTotal);
+
+    return retval;
+}
+
+
+static void
+printColorSummary(ColorSummary const colorSummary,
+                  const char * const prefix) {
+
+    printf("%sSummary: %u colors: %u black, %u white, %u gray, %u color\n",
+           prefix,
+           colorSummary.nTotal,
+           colorSummary.nBlack,
+           colorSummary.nWhite,
+           colorSummary.nGray,
+           colorSummary.nColor);
+
+    printf("\n");
+}
+
+
+
+typedef struct {
+/*----------------------------------------------------------------------------
+   A map of color name to color.
+
+   The actual information is outside of this structure; we just point to it.
+-----------------------------------------------------------------------------*/
+    unsigned int  n;
+
+    pixel *       color;
+
+    const char ** name;
+} ColorDict;
+
+
 
 static const char *
-colornameLabel(pixel        const color,
-               pixval       const maxval,
-               unsigned int const nDictColor,
-               pixel        const dictColors[],
-               const char * const dictColornames[]) {
+colornameLabel(pixel     const color,
+               pixval    const maxval,
+               ColorDict const colorDict) {
 /*----------------------------------------------------------------------------
    Return the name of the color 'color' or the closest color in the
    dictionary to it.  If the name returned is not the exact color,
    prefix it with "*".  Otherwise, prefix it with " ".
 
-   'nDictColor', dictColors[], and dictColorNames[] are the color
-   dictionary.
+   'colorDict' is the color dictionary.
 
    Return the name in static storage within this subroutine.
 -----------------------------------------------------------------------------*/
@@ -322,16 +406,16 @@ colornameLabel(pixel        const color,
 
     PPM_DEPTH(color255, color, maxval, 255);
 
-    colorIndex = ppm_findclosestcolor(dictColors, nDictColor, &color255);
+    colorIndex = ppm_findclosestcolor(colorDict.color, colorDict.n, &color255);
 
-    assert(colorIndex >= 0 && colorIndex < nDictColor);
+    assert(colorIndex >= 0 && colorIndex < colorDict.n);
 
-    if (PPM_EQUAL(dictColors[colorIndex], color))
+    if (PPM_EQUAL(colorDict.color[colorIndex], color))
         STRSCPY(retval, " ");
     else
         STRSCPY(retval, "*");
 
-    STRSCAT(retval, dictColornames[colorIndex]);
+    STRSCAT(retval, colorDict.name[colorIndex]);
 
     return retval;
 }
@@ -343,13 +427,22 @@ printColors(colorhist_vector const chv,
             int              const colorCt,
             pixval           const maxval,
             enum ColorFmt    const colorFmt,
-            unsigned int     const nKnown,
-            pixel            const knownColors[],
-            const char *     const colornames[]) {
+            bool             const withColorName,
+            ColorDict        const colorDict) {
+/*----------------------------------------------------------------------------
+   Print to Standard Output the list of colors, one per line in 'chv',
+   of which there are 'colorCt'.
 
-    int i;
+   Print the color in format 'colorFmt'.
 
-    for (i = 0; i < colorCt; i++) {
+   If 'withColorName' is true, we add the name of each color to the line.
+   'oclorDict' is a list of known names of colors. If the color is not in the
+   list, we add the name of the color closest to it whose name we know,
+   prefixed by "*".
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+
+    for (i = 0; i < colorCt; ++i) {
         pixval       const r          = PPM_GETR(chv[i].color);
         pixval       const g          = PPM_GETG(chv[i].color);
         pixval       const b          = PPM_GETB(chv[i].color);
@@ -360,9 +453,8 @@ printColors(colorhist_vector const chv,
 
         const char * colornameValue;
 
-        if (colornames)
-            colornameValue = colornameLabel(chv[i].color, maxval,
-                                            nKnown, knownColors, colornames);
+        if (withColorName)
+            colornameValue = colornameLabel(chv[i].color, maxval, colorDict);
         else
             colornameValue = "";
 
@@ -387,6 +479,47 @@ printColors(colorhist_vector const chv,
                    r, g, b, intLum, count, colornameValue);
             break;
         }
+    }
+}
+
+
+
+static void
+printHistogram(colorhist_vector const chv,
+               unsigned int     const colorCt,
+               pixval           const maxval,
+               enum ColorFmt    const colorFmt,
+               bool             const wantHeader,
+               bool             const wantColorName) {
+
+    ColorDict colorDict;
+
+    if (colorFmt == FMT_PPMPLAIN)
+        printf("P3\n# color map\n%d 1\n%d\n", colorCt, maxval);
+
+    if (wantHeader) {
+        const char * commentDelim = colorFmt == FMT_PPMPLAIN ? "#" : " ";
+
+        printColorSummary(colorSummary(chv, colorCt, maxval), commentDelim);
+
+        printf("%s  r     g     b   \t lum \t count  %s\n",
+               commentDelim, wantColorName ? "name" : "");
+        printf("%s----- ----- ----- \t-----\t------- %s\n",
+               commentDelim, wantColorName ? "----" : "");
+    }
+    if (wantColorName) {
+        bool const mustOpenTrue = TRUE;
+        ppm_readcolordict(NULL, mustOpenTrue,
+                          &colorDict.n, &colorDict.name, &colorDict.color,
+                          NULL);
+    }
+
+    printColors(chv, colorCt, maxval,
+                colorFmt, wantColorName, colorDict);
+
+    if (wantColorName) {
+        free(colorDict.color);
+        free(colorDict.name);
     }
 }
 
@@ -430,7 +563,7 @@ printInvalidSamples(colorhist_vector const chv,
     unsigned long int invalidPixelCt;
 
     for (i = 0, validPixelCt = 0; i < validColorCt; ++i)
-        validPixelCt += chv[i].value; 
+        validPixelCt += chv[i].value;
 
     for (i = 0, invalidPixelCt = 0; i < invalidColorCt; ++i) {
         pixval       const r     = PPM_GETR(chvInvalid[i].color);
@@ -438,7 +571,7 @@ printInvalidSamples(colorhist_vector const chv,
         pixval       const b     = PPM_GETB(chvInvalid[i].color);
         unsigned int const count = chvInvalid[i].value;
 
-        invalidPixelCt += chvInvalid[i].value; 
+        invalidPixelCt += chvInvalid[i].value;
 
         switch(colorFmt) {
         case FMT_FLOAT:
@@ -470,7 +603,7 @@ printInvalidSamples(colorhist_vector const chv,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdline_info cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     colorhist_vector chv;
     colorhist_vector chvInvalid;
@@ -479,9 +612,6 @@ main(int argc, const char *argv[]) {
     pixval mmaxval;
     int format;
     int colorCt;
-    unsigned int dictColorCt;
-    const char ** dictColornames;
-    pixel * dictColors;
     unsigned int validColorCt;
 
     pm_proginit(&argc, argv);
@@ -512,37 +642,12 @@ main(int argc, const char *argv[]) {
         validColorCt = colorCt;
     }
 
-    /* And print the histogram. */
-    if (cmdline.colorFmt == FMT_PPMPLAIN)
-        printf("P3\n# color map\n%d 1\n%d\n", colorCt, maxval);
-
-    if (!cmdline.noheader) {
-        const char commentDelim = cmdline.colorFmt == FMT_PPMPLAIN ? '#' : ' ';
-        printf("%c  r     g     b   \t lum \t count  %s\n",
-               commentDelim, cmdline.colorname ? "name" : "");
-        printf("%c----- ----- ----- \t-----\t------- %s\n",
-               commentDelim, cmdline.colorname ? "----" : "");
-    }
-    if (cmdline.colorname) {
-        bool const mustOpenTrue = TRUE;
-        ppm_readcolordict(NULL, mustOpenTrue,
-                          &dictColorCt, &dictColornames, &dictColors, NULL);
-    } else {
-        dictColors = NULL;
-        dictColornames = NULL;
-    }
-
-    printColors(chv, validColorCt, maxval,
-                cmdline.colorFmt, dictColorCt, dictColors, dictColornames);
+    printHistogram(chv, validColorCt, maxval,
+                   cmdline.colorFmt, !cmdline.noheader, cmdline.colorname);
 
     if (colorCt > validColorCt)
         printInvalidSamples(chv, chvInvalid, colorCt, validColorCt,
                             maxval, cmdline.colorFmt);
-
-    if (dictColors)
-        free(dictColors);
-    if (dictColornames)
-        free(dictColornames);
 
     ppm_freecolorhist(chv);
 
@@ -551,6 +656,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
-
 
 

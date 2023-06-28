@@ -1,3 +1,5 @@
+Please cut and paste from below:
+---------------------------------------------------------------------------
 Contents
 ========
 
@@ -10,7 +12,7 @@ Contents
   1.6 Testing package in designated directory
   1.7 Pre-packaging check
   1.8 Post-install check
-  1.9 Skipping test items
+  1.9 Testing less than everything
   1.10 Valgrind
   
 2. Troubleshooting
@@ -68,14 +70,16 @@ appear at the end:
 =================
 
 The tests require the Bash command shell.  The script Execute-Tests has
-some expressions unique to bash.  Quite old versions work, at least back
-to bash v. 2.05b.
+some expressions unique to Bash.  Quite old versions work, at least back
+to Bash v. 2.05b.
 
-The tests also use the following utilities:
+Awk is also required, but the constructs are all simple.  Gawk, Mawk and
+BWK Awk (the "One True Awk") are all known to work. 
+
+The tests use the following utilities:
 
  - sh
  - awk
- - perl
 
  - cat
  - cksum
@@ -89,6 +93,7 @@ The tests also use the following utilities:
  - grep
  - file
  - head
+ - iconv
  - mkdir
  - mktemp
  - rm
@@ -141,8 +146,8 @@ packaging.  This feature is intended for developers.
 
 This test method is incompatible with merge build.
 
-Currently this test method reports several errors when Netpbm is compiled in a
-separate build directory.
+This works when Netpbm is compiled in the source tree and also when
+a separate build directory is used.
 
 
 
@@ -161,22 +166,27 @@ a non-standard location.  This must be an absolute path.
 
 
 
-1.9 Skipping test items
-=======================
+1.9 Testing less than everything
+================================
 
 The file test/Test-Order is a list of tests which are run.  If you want to
-skip any test, remove the line or comment it out with a "#".
+skip a test, remove the line or comment it out with a "#".
 
-The variable "target", a comma-separated list of Netpbm programs
-provides another way to run only select tests.  For example to run
-only the test scripts which examine giftopnm and pamtogif, do:
+If you want to run just a few of the tests, use the make variable "target", a
+comma-separated list of Netpbm programs.
 
   make check target=giftopnm,pamtogif
 
+    This runs only the tests of 'giftopnm' and 'pamtogif', in the package
+    (staging) directory.
+
+  make check-tree target=ppmbrighten
+
+    This runs only the tests of 'ppmbrighten', from the build tree.
 
 
 1.10 Valgrind
-============
+=============
 
 You can run the whole test under Valgrind.  This is an advanced feature
 intended for programmers who work on Netpbm code.
@@ -206,18 +216,23 @@ test/Execute-Tests:
 
   vg_command_base="valgrind --trace-children=yes"
 
-To run "valgrind --track-origins=yes", you must make two changes in
-config.mk:
+To get useful information from "--trace-origins=yes", you must make
+two changes to config.mk before compilation:
 
   - Add -g to CFLAGS
   - Turn stripping off: STRIPFLAG =
+
+Without these changes valgrind will report how many errors were
+detected, of what kind, and at what addresses (in binary).  With the
+above "-g" turned on during compilation valgrind reports source file
+and line numbers of detected problems.
 
 Valgrind significantly increases execution time.  If ordinary
 "make check" requires 10 seconds, "make check VALGRIND_TESTS=on"
 will require roughly 12 minutes, maybe more.  You should consider
 either setting "target=..." or paring down the items in Test-Order.
 In the latter case, you probably don't need to run "all-in-place.test"
-and "legacy-names.test".
+and "legacy-names.test"; consider commenting them out.
 
 The option "--trace-children-skip" is used to prevent valgrind from
 stepping into child processes that are not relevant.  This option
@@ -244,12 +259,20 @@ problem, such as a misconfigured dynamic library or a directory-wide
 permission issue.  This kind of failure is known to happen when N is
 set too high with "make -jN" (overambitious parallel make.) 
 
-The current test routines assume a typical build configuration - they are
-not aware of the actual configuration you chose.  If a choice you make
-during configure causes "make" to skip compilation of certain programs,
-the test routines won't know and will report failures.
+Configuration choices affect tests.  If a choice you make during configure
+causes "make" to skip compilation of certain programs, the corresponding
+test routines will be skipped and reported as NOT TESTABLE.  However,
+if you override a glitch with "make --keep-going" the test programs
+won't know and quite certainly you'll get failure messages.
 
-For details read 'Netpbm Library Prerequisites':
+If you run the tests as "make check-install" information about
+configuration choices is deliberately ignored.  This is because the
+post-install check is typically run on systems with multiple versions
+of Netpbm and in this case most users would want to get a clear idea
+of absent components.
+
+For details on the effects of missing libraries, read
+'Netpbm Library Prerequisites':
 http://netpbm.sourceforge.net/prereq.html .
 
 
@@ -270,6 +293,9 @@ When a test fails, a ".out" file will be produced in the
 /tmp/netpbm-test/ directory.  By comparing ".ok" and ".out" you
 can tell exactly what went wrong.  Often one does not need to
 go this far; the error messages tell enough.
+
+In some cases the ".ok" file is generated dynamically.  See "2.5
+System Dependent Issues."
 
 
 
@@ -335,22 +361,33 @@ the tests on installed Netpbm programs, regardless of the version:
    ./configure           # accept the defaults
    make check-install
 
+As of this writing (April 2018) Debian is working on resolving the
+fork.  A new version, tagged as "experimental", based on the Sourceforge
+line of source files is available.
+
+
 
 2.5 System dependent issues
 ===========================
 
-The tests have worked on x86 and x86_64 GNU/Linux systems, with several
-versions of GCC and Clang.  Reports from users of other systems including Mac
-OS, Sun SPARC and BSD and compilers other than GCC are highly welcome.
+The tests have worked on x86 and x86_64 GNU/Linux systems and with several
+versions of GCC and Clang and also Mac OS/Clang.  Reports from users of
+other systems including OS, Sun SPARC and BSD and compilers other than
+GCC are highly welcome.
 
 Floating point math precision seems to be an issue.  Some discrepancies
 have been observed between x86 32 bit and 64 bit; the tests are written to
 work around them as much as possible.  The use of the "--fast-math"
-flag by default may also be a factor.
+c compiler flag by default may also be a factor.
 
-The current test framework checks whether the random number generator
-is the one from glibc and skips certain tests if a different one is
-detected.
+Another cause of discrepancies is the qsort function.  The tests are
+written to circumvent this issue at some cost to accuracy and
+coverage.
+
+The test directory Makefile checks whether the random number generator
+is the one from glibc or Mac OS and automatically generates the proper
+".ok" files from master files with the suffix ".rand-ok".  If some other
+random number generator is detected the affected tests are skipped.
 
 
 
@@ -360,3 +397,7 @@ detected.
 When reporting problems with the tests, please give both
 the output of "make check" and the contents of the "netpbm-test"
 directory.
+
+
+
+

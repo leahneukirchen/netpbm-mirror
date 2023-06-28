@@ -23,6 +23,43 @@
 
 
 
+static unsigned int
+allocationDepth(const struct pam * const pamP) {
+
+    unsigned int retval;
+
+    if (pamP->len >= PAM_STRUCT_SIZE(allocation_depth)) {
+        if (pamP->allocation_depth == 0)
+            retval = pamP->depth;
+        else {
+            if (pamP->depth > pamP->allocation_depth)
+                pm_error("'allocationDepth' (%u) is smaller than 'depth' (%u)",
+                         pamP->allocation_depth, pamP->depth);
+            retval = pamP->allocation_depth;
+        }
+    } else
+        retval = pamP->depth;
+    return retval;
+}
+
+
+
+tuplen
+pnm_allocpamtuplen(const struct pam * const pamP) {
+
+    tuplen retval;
+
+    retval = malloc(allocationDepth(pamP) * sizeof(retval[0]));
+
+    if (retval == NULL)
+        pm_error("Out of memory allocating %u-plane normalized tuple",
+                 allocationDepth(pamP));
+
+    return retval;
+}
+
+
+
 static void
 allocpamrown(const struct pam * const pamP,
              tuplen **          const tuplerownP,
@@ -32,7 +69,8 @@ allocpamrown(const struct pam * const pamP,
    overflow will not occur in our calculations.  NOTE: pnm_readpaminit()
    ensures this assumption is valid.
 -----------------------------------------------------------------------------*/
-    int const bytes_per_tuple = pamP->depth * sizeof(samplen);
+    unsigned int const bytes_per_tuple =
+        allocationDepth(pamP) * sizeof(samplen);
 
     tuplen * tuplerown;
     const char * error;
@@ -47,15 +85,16 @@ allocpamrown(const struct pam * const pamP,
         pm_asprintf(&error, "Out of memory allocating space for a tuple row of"
                     "%u tuples by %u samples per tuple "
                     "by %u bytes per sample.",
-                    pamP->width, pamP->depth, (unsigned)sizeof(samplen));
+                    pamP->width, allocationDepth(pamP),
+                    (unsigned)sizeof(samplen));
     else {
         /* Now we initialize the pointers to the individual tuples to make this
            a regulation C two dimensional array.
         */
-        
+
         unsigned char * p;
         unsigned int i;
-        
+
         p = (unsigned char*) (tuplerown + pamP->width);
             /* location of Tuple 0 */
         for (i = 0; i < pamP->width; ++i) {
@@ -93,7 +132,7 @@ pnm_allocpamrown(const struct pam * const pamP) {
 
 
 static void
-readpbmrow(const struct pam * const pamP, 
+readpbmrow(const struct pam * const pamP,
            tuplen *           const tuplenrow) {
 
     bit * bitrow;
@@ -101,7 +140,7 @@ readpbmrow(const struct pam * const pamP,
     jmp_buf * origJmpbufP;
 
     bitrow = pbm_allocrow(pamP->width);
-    
+
     if (setjmp(jmpbuf) != 0) {
         pbm_freerow(bitrow);
         pm_setjmpbuf(origJmpbufP);
@@ -123,15 +162,15 @@ readpbmrow(const struct pam * const pamP,
 
 
 static void
-readpamrow(const struct pam * const pamP, 
+readpamrow(const struct pam * const pamP,
            tuplen *           const tuplenrow) {
 
     jmp_buf jmpbuf;
     jmp_buf * origJmpbufP;
     tuple * tuplerow;
-    
+
     tuplerow = pnm_allocpamrow(pamP);
-    
+
     if (setjmp(jmpbuf) != 0) {
         pnm_freepamrow(tuplerow);
         pm_setjmpbuf(origJmpbufP);
@@ -159,13 +198,13 @@ readpamrow(const struct pam * const pamP,
 
 
 
-void 
-pnm_readpamrown(const struct pam * const pamP, 
+void
+pnm_readpamrown(const struct pam * const pamP,
                 tuplen *           const tuplenrow) {
 
-    /* For speed, we don't check any of the inputs for consistency 
+    /* For speed, we don't check any of the inputs for consistency
        here (unless it's necessary to avoid crashing).  Any consistency
-       checking should have been done by a prior call to 
+       checking should have been done by a prior call to
        pnm_writepaminit().
     */
     assert(pamP->maxval != 0);
@@ -186,7 +225,7 @@ pnm_readpamrown(const struct pam * const pamP,
 
 
 static void
-writepbmrow(const struct pam * const pamP, 
+writepbmrow(const struct pam * const pamP,
             const tuplen *     const tuplenrow) {
 
     jmp_buf jmpbuf;
@@ -206,26 +245,26 @@ writepbmrow(const struct pam * const pamP,
 
         for (col = 0; col < pamP->width; ++col)
             bitrow[col] = tuplenrow[col][0] < 0.5 ? PBM_BLACK : PBM_WHITE;
-        pbm_writepbmrow(pamP->file, bitrow, pamP->width, 
+        pbm_writepbmrow(pamP->file, bitrow, pamP->width,
                         pamP->format == PBM_FORMAT);
 
         pm_setjmpbuf(origJmpbufP);
     }
     pbm_freerow(bitrow);
-} 
+}
 
 
 
 static void
-writepamrow(const struct pam * const pamP, 
+writepamrow(const struct pam * const pamP,
             const tuplen *     const tuplenrow) {
 
     jmp_buf jmpbuf;
     jmp_buf * origJmpbufP;
     tuple * tuplerow;
-    
+
     tuplerow = pnm_allocpamrow(pamP);
-    
+
     if (setjmp(jmpbuf) != 0) {
         pnm_freepamrow(tuplerow);
         pm_setjmpbuf(origJmpbufP);
@@ -240,7 +279,7 @@ writepamrow(const struct pam * const pamP,
             for (plane = 0; plane < pamP->depth; ++plane)
                 tuplerow[col][plane] = (sample)
                     (tuplenrow[col][plane] * pamP->maxval + 0.5);
-        }    
+        }
         pnm_writepamrow(pamP, tuplerow);
 
         pm_setjmpbuf(origJmpbufP);
@@ -250,13 +289,13 @@ writepamrow(const struct pam * const pamP,
 
 
 
-void 
-pnm_writepamrown(const struct pam * const pamP, 
+void
+pnm_writepamrown(const struct pam * const pamP,
                  const tuplen *     const tuplenrow) {
 
-    /* For speed, we don't check any of the inputs for consistency 
+    /* For speed, we don't check any of the inputs for consistency
        here (unless it's necessary to avoid crashing).  Any consistency
-       checking should have been done by a prior call to 
+       checking should have been done by a prior call to
        pnm_writepaminit().
     */
     assert(pamP->maxval != 0);
@@ -274,16 +313,16 @@ pnm_writepamrown(const struct pam * const pamP,
 
 tuplen **
 pnm_allocpamarrayn(const struct pam * const pamP) {
-    
+
     tuplen ** tuplenarray;
     const char * error;
 
     /* If the speed of this is ever an issue, it might be sped up a little
        by allocating one large chunk.
     */
-    
+
     MALLOCARRAY(tuplenarray, pamP->height);
-    if (tuplenarray == NULL) 
+    if (tuplenarray == NULL)
         pm_asprintf(&error,
                     "Out of memory allocating the row pointer section of "
                     "a %u row array", pamP->height);
@@ -317,7 +356,7 @@ pnm_allocpamarrayn(const struct pam * const pamP) {
 
 
 void
-pnm_freepamarrayn(tuplen **          const tuplenarray, 
+pnm_freepamarrayn(tuplen **          const tuplenarray,
                   const struct pam * const pamP) {
 
     int row;
@@ -329,9 +368,9 @@ pnm_freepamarrayn(tuplen **          const tuplenarray,
 
 
 
-tuplen** 
-pnm_readpamn(FILE *       const file, 
-             struct pam * const pamP, 
+tuplen**
+pnm_readpamn(FILE *       const file,
+             struct pam * const pamP,
              int          const size) {
 
     tuplen **tuplenarray;
@@ -339,9 +378,9 @@ pnm_readpamn(FILE *       const file,
     jmp_buf * origJmpbufP;
 
     pnm_readpaminit(file, pamP, size);
-    
+
     tuplenarray = pnm_allocpamarrayn(pamP);
-    
+
     if (setjmp(jmpbuf) != 0) {
         pnm_freepamarrayn(tuplenarray, pamP);
         pm_setjmpbuf(origJmpbufP);
@@ -351,7 +390,7 @@ pnm_readpamn(FILE *       const file,
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        for (row = 0; row < pamP->height; ++row) 
+        for (row = 0; row < pamP->height; ++row)
             pnm_readpamrown(pamP, tuplenarray[row]);
 
         pm_setjmpbuf(origJmpbufP);
@@ -361,19 +400,32 @@ pnm_readpamn(FILE *       const file,
 
 
 
-void 
-pnm_writepamn(struct pam * const pamP, 
+void
+pnm_writepamn(struct pam * const pamP,
               tuplen **    const tuplenarray) {
 
     unsigned int row;
 
     pnm_writepaminit(pamP);
-    
-    for (row = 0; row < pamP->height; ++row) 
+
+    for (row = 0; row < pamP->height; ++row)
         pnm_writepamrown(pamP, tuplenarray[row]);
 }
 
 
+
+samplen
+pnm_normalized_sample(struct pam * const pamP,
+                      sample       const sample) {
+    return (samplen)sample/pamP->maxval;
+}
+
+sample
+pnm_unnormalized_sample(struct pam * const pamP,
+                        samplen      const sampleVal) {
+    double const epsilon = 1e-6;
+    return (sample)((sampleVal + epsilon) * pamP->maxval + 0.5);
+}
 
 void
 pnm_normalizetuple(struct pam * const pamP,
@@ -382,8 +434,8 @@ pnm_normalizetuple(struct pam * const pamP,
 
     unsigned int plane;
 
-    for (plane = 0; plane < pamP->depth; ++plane) 
-        tuplen[plane] = (samplen)tuple[plane] / pamP->maxval;
+    for (plane = 0; plane < pamP->depth; ++plane)
+        tuplen[plane] = pnm_normalized_sample(pamP, tuple[plane]);
 }
 
 
@@ -395,8 +447,8 @@ pnm_unnormalizetuple(struct pam * const pamP,
 
     unsigned int plane;
 
-    for (plane = 0; plane < pamP->depth; ++plane) 
-        tuple[plane] = tuplen[plane] * pamP->maxval + 0.5;
+    for (plane = 0; plane < pamP->depth; ++plane)
+        tuple[plane] = pnm_unnormalized_sample(pamP, tuplen[plane]);
 }
 
 
@@ -412,7 +464,7 @@ pnm_normalizeRow(struct pam *             const pamP,
            once here so we can multiply many times later.
         */
     unsigned int plane;
-    
+
     for (plane = 0; plane < pamP->depth; ++plane) {
         if (transform && transform[plane]) {
             unsigned int col;
@@ -437,14 +489,14 @@ reversemap(samplen          const samplen,
 /*----------------------------------------------------------------------------
    Find the integer sample value that maps to the normalized samplen value
    'samplen' through the map 'transformMap'.  We interpret the map as
-   mapping the value N+1 to all the values transformMap[N] through 
+   mapping the value N+1 to all the values transformMap[N] through
    transformMap[N+1], and we expect transformMap[N+1] to be greater than
    transformMap[N] for all N.
 -----------------------------------------------------------------------------*/
     /* Do a binary search, since the values are in sorted (increasing)
        order
     */
-    
+
     sample low, high;
 
     low = 0; high = maxval;  /* Consider whole range to start */
@@ -471,18 +523,18 @@ pnm_unnormalizeRow(struct pam *             const pamP,
                    tuple *                  const tuplerow) {
 
     unsigned int plane;
-    
+
     for (plane = 0; plane < pamP->depth; ++plane) {
         if (transform && transform[plane]) {
             unsigned int col;
             for (col = 0; col < pamP->width; ++col)
-                tuplerow[col][plane] = 
-                    reversemap(tuplenrow[col][plane], 
+                tuplerow[col][plane] =
+                    reversemap(tuplenrow[col][plane],
                                transform[plane], pamP->maxval);
         } else {
             unsigned int col;
             for (col = 0; col < pamP->width; ++col)
-                tuplerow[col][plane] = 
+                tuplerow[col][plane] =
                     tuplenrow[col][plane] * pamP->maxval + 0.5;
         }
     }
@@ -500,13 +552,13 @@ gammaCommon(struct pam *  const pamP,
     unsigned int plane;
     unsigned int opacityPlane;
     int haveOpacity;
-    
+
     pnm_getopacity(pamP, &haveOpacity, &opacityPlane);
 
     for (plane = 0; plane < pamP->depth; ++plane) {
         if (haveOpacity && plane == opacityPlane) {
             /* It's an opacity (alpha) plane, which means there is
-               no gamma adjustment in it.  
+               no gamma adjustment in it.
             */
         } else {
             unsigned int col;
@@ -550,7 +602,7 @@ applyopacityCommon(enum applyUnapply const applyUnapply,
 -----------------------------------------------------------------------------*/
     unsigned int opacityPlane;
     int haveOpacity;
-    
+
     pnm_getopacity(pamP, &haveOpacity, &opacityPlane);
 
     if (haveOpacity) {
@@ -601,6 +653,63 @@ pnm_unapplyopacityrown(struct pam * const pamP,
                        tuplen *     const tuplenrow) {
 
     applyopacityCommon(OPACITY_UNAPPLY, pamP, tuplenrow);
+}
+
+
+
+void
+pnm_maketuplergbn(const struct pam * const pamP,
+                  tuplen             const tuple) {
+
+    if (allocationDepth(pamP) < 3)
+        pm_error("allocation depth %u passed to pnm_maketuplergb().  "
+                 "Must be at least 3.", allocationDepth(pamP));
+
+    if (pamP->depth < 3)
+        tuple[2] = tuple[1] = tuple[0];
+}
+
+
+
+void
+pnm_makerowrgbn(const struct pam * const pamP,
+                tuplen *           const tuplerow) {
+
+    if (pamP->depth < 3) {
+        unsigned int col;
+
+        if (allocationDepth(pamP) < 3)
+            pm_error("allocation depth %u passed to pnm_makerowrgb().  "
+                     "Must be at least 3.", allocationDepth(pamP));
+
+        for (col = 0; col < pamP->width; ++col) {
+            tuplen const thisTuple = tuplerow[col];
+            thisTuple[2] = thisTuple[1] = thisTuple[0];
+        }
+    }
+}
+
+
+
+void
+pnm_makearrayrgbn(const struct pam * const pamP,
+                  tuplen **          const tuples) {
+
+    if (pamP->depth < 3) {
+        unsigned int row;
+        if (allocationDepth(pamP) < 3)
+            pm_error("allocation depth %u passed to pnm_makearrayrgb().  "
+                     "Must be at least 3.", allocationDepth(pamP));
+
+        for (row = 0; row < pamP->height; ++row) {
+            tuplen * const tuplerow = tuples[row];
+            unsigned int col;
+            for (col = 0; col < pamP->width; ++col) {
+                tuplen const thisTuple = tuplerow[col];
+                thisTuple[2] = thisTuple[1] = thisTuple[0];
+            }
+        }
+    }
 }
 
 
@@ -657,7 +766,7 @@ createUngammaMapOffset(const struct pam * const pamP,
                     retval[plane] = NULL;
                 else
                     retval[plane] = ungammaTransformMap;
-            }            
+            }
             fillInMap(ungammaTransformMap, pamP->maxval, offset);
         } else {
             free(retval);

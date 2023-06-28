@@ -1,0 +1,34 @@
+#! /bin/bash
+# This script tests: pamenlarge pbmpscale pbmreduce
+# Also requires: pbmtext
+
+tmpdir=${tmpdir:-/tmp}
+xanadu_pbm=${tmpdir}/xanadu.pbm
+
+echo "In Xanadu did Kubla khan" | pbmtext > ${xanadu_pbm} 
+
+# Should print 2364818683 590
+
+cat ${xanadu_pbm} | cksum
+
+# Should print 2364818683 590 eight times
+
+for scale in 2 4 6 7
+  do
+  for flag in "-fs -randomseed=0" "-threshold -v 0.4"
+    do
+    pamenlarge ${scale} ${xanadu_pbm} | pbmreduce ${flag} ${scale} | cksum
+    done
+  done
+
+# Should print 2364818683 590 eight times
+
+for scale in 5 7 9 11
+  do
+  for flag in "-fs -randomseed=0" "-threshold"
+    do
+    pbmpscale ${scale} ${xanadu_pbm} | pbmreduce ${flag} ${scale} | cksum
+    done
+  done
+
+rm ${xanadu_pbm}

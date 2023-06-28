@@ -99,10 +99,9 @@ static bool debug = FALSE;
 
 
 static char *
-ID2string(id)
-    IFF_ID id;
-{
-    static char str[] = "abcd";
+ID2string(IFF_ID const id) {
+
+    static char str[4];
 
     str[0] = (char)(id >> 24 & 0xff);
     str[1] = (char)(id >> 16 & 0xff);
@@ -141,16 +140,15 @@ alloc_cmap(void) {
 
 
 static rawtype *
-alloc_rawrow(cols)
-    int cols;
-{
-    rawtype *r;
-    int i;
+alloc_rawrow(unsigned int const cols) {
+
+    rawtype * r;
+    unsigned int col;
 
     MALLOCARRAY_NOFAIL(r, cols);
 
-    for( i = 0; i < cols; i++ )
-        r[i] = 0;
+    for (col = 0; col < cols; ++col)
+        r[col] = 0;
 
     return r;
 }
@@ -161,15 +159,15 @@ alloc_rawrow(cols)
  ****************************************************************************/
 
 static void
-readerr(f, iffid)
-    FILE *f;
-    IFF_ID iffid;
-{
-    if( ferror(f) )
+readerr(FILE * const fP,
+        IFF_ID const iffId) {
+
+    if (ferror(fP))
         pm_error("read error");
     else
-        pm_error("premature EOF in %s chunk", ID2string(iffid));
+        pm_error("premature EOF in %s chunk", ID2string(iffId));
 }
+
 
 
 static void
@@ -191,21 +189,20 @@ read_bytes(FILE *          const ifP,
 
 
 static unsigned char
-get_byte(ifP, iffid, counter)
-    FILE* ifP;
-    IFF_ID iffid;
-    long *counter;
-{
+get_byte(FILE *          const ifP,
+         IFF_ID          const iffId,
+         unsigned long * const counterP) {
+
     int i;
 
-    if( counter ) {
-        if( *counter == 0 )
-            pm_error("insufficient data in %s chunk", ID2string(iffid));
-        --(*counter);
+    if (counterP) {
+        if (*counterP == 0 )
+            pm_error("insufficient data in %s chunk", ID2string(iffId));
+        --(*counterP);
     }
     i = getc(ifP);
-    if( i == EOF )
-        readerr(ifP, iffid);
+    if (i == EOF)
+        readerr(ifP, iffId);
 
     return (unsigned char) i;
 }
@@ -216,7 +213,7 @@ get_big_long(FILE *          const ifP,
              unsigned long * const counterP) {
 
     long l;
-    
+
     if (counterP) {
         if (*counterP < 4)
             pm_error("insufficient data in %s chunk", ID2string(iffid));
@@ -273,114 +270,117 @@ chunk_end(FILE *        const ifP,
 
 static void
 skip_chunk(FILE *        const ifP,
-           IFF_ID        const iffid,
-           unsigned long const chunksize) {
-    unsigned long remainingChunksize;
+           IFF_ID        const iffId,
+           unsigned long const chunkSize) {
 
-    remainingChunksize = chunksize;  /* initial value */
+    unsigned long remainingChunkSize;
 
-    while (remainingChunksize > 0)
-        get_byte(ifP, iffid, &remainingChunksize);
+    for (remainingChunkSize = chunkSize; remainingChunkSize > 0; )
+        get_byte(ifP, iffId, &remainingChunkSize);
 }
 
 
 
 static void
 display_chunk(FILE *        const ifP,
-              IFF_ID        const iffid,
-              unsigned long const chunksize) {
+              IFF_ID        const iffId,
+              unsigned long const chunkSize) {
 
     int byte;
-    unsigned long remainingChunksize;
+    unsigned long remainingChunkSize;
 
-    pm_message("contents of %s chunk:", ID2string(iffid));
+    pm_message("contents of %s chunk:", ID2string(iffId));
 
-    remainingChunksize = chunksize;  /* initial value */
-    byte = '\0';
+    for (remainingChunkSize = chunkSize, byte = '\0';
+         remainingChunkSize > 0; ) {
 
-    while (remainingChunksize > 0) {
-        byte = get_byte(ifP, iffid, &remainingChunksize);
+        byte = get_byte(ifP, iffId, &remainingChunkSize);
         if (fputc(byte, stderr) == EOF)
             pm_error("write error");
     }
-    if (byte != '\n')
-        if (fputc('\n', stderr) == EOF)
+    if (byte != '\n') {
+        int rc;
+        rc = fputc('\n', stderr);
+        if (rc == EOF)
             pm_error("write error");
-}
-
-
-static void
-read_cmap(FILE *     const ifP,
-          IFF_ID     const iffid,
-          long       const chunksize,
-          ColorMap * const cmap) {
-
-    long colors;
-
-    colors = chunksize / 3;
-    if( colors == 0 ) {
-        pm_error("warning - empty %s colormap", ID2string(iffid));
-        skip_chunk(ifP, iffid, chunksize);
-    } else {
-        unsigned int i;
-        if( cmap->color )               /* prefer CMAP-chunk over CMYK-chunk */
-            ppm_freerow(cmap->color);
-        cmap->color = ppm_allocrow(colors);
-        cmap->ncolors = colors;
-        
-        for( i = 0; i < colors; ++i ) {
-            int r, g, b;
-            r = get_byte(ifP, iffid, &chunksize);
-            g = get_byte(ifP, iffid, &chunksize);
-            b = get_byte(ifP, iffid, &chunksize);
-            PPM_ASSIGN(cmap->color[i], r, g, b);
-        }
-        chunk_end(ifP, iffid, chunksize);
     }
 }
 
 
 
 static void
-read_cmyk(FILE *     const ifP,
-          IFF_ID     const iffid,
-          long       const chunksize,
-          ColorMap * const cmap) {
+read_cmap(FILE *        const ifP,
+          IFF_ID        const iffId,
+          unsigned long const chunkSize,
+          ColorMap *    const cmapP) {
 
-    if( HAS_COLORMAP(cmap) ) {      /* prefer RGB color map */
-        skip_chunk(ifP, iffid, chunksize);
+    unsigned long const colorCt = chunkSize / 3;
+
+    if (colorCt == 0) {
+        pm_error("warning - empty %s colormap", ID2string(iffId));
+        skip_chunk(ifP, iffId, chunkSize);
     } else {
-        long const colors = chunksize/4;
-        if( colors == 0 ) {
-            pm_error("warning - empty %s colormap", ID2string(iffid));
-            skip_chunk(ifP, iffid, chunksize);
+        unsigned int i;
+        unsigned long remainingChunkSize;
+
+        if (cmapP->color)               /* prefer CMAP-chunk over CMYK-chunk */
+            ppm_freerow(cmapP->color);
+        cmapP->color   = ppm_allocrow(colorCt);
+        cmapP->ncolors = colorCt;
+
+        for (i = 0, remainingChunkSize = chunkSize; i < colorCt; ++i ) {
+            int const r = get_byte(ifP, iffId, &remainingChunkSize);
+            int const g = get_byte(ifP, iffId, &remainingChunkSize);
+            int const b = get_byte(ifP, iffId, &remainingChunkSize);
+            PPM_ASSIGN(cmapP->color[i], r, g, b);
+        }
+        chunk_end(ifP, iffId, remainingChunkSize);
+    }
+}
+
+
+
+static void
+read_cmyk(FILE *        const ifP,
+          IFF_ID        const iffId,
+          unsigned long const chunkSize,
+          ColorMap *    const cmapP) {
+
+    if (HAS_COLORMAP(cmapP)) {      /* prefer RGB color map */
+        skip_chunk(ifP, iffId, chunkSize);
+    } else {
+        unsigned long const colorCt = chunkSize / 4;
+        if (colorCt == 0 ) {
+            pm_error("warning - empty %s colormap", ID2string(iffId));
+            skip_chunk(ifP, iffId, chunkSize);
         } else {
             unsigned int i;
-            cmap->color = ppm_allocrow(colors);
-            cmap->ncolors = colors;
-            
-            for( i = 0; i < colors; ++i ) {
-                int c, m, y, k;
-                c = get_byte(ifP, iffid, &chunksize);
-                m = get_byte(ifP, iffid, &chunksize);
-                y = get_byte(ifP, iffid, &chunksize);
-                k = get_byte(ifP, iffid, &chunksize);
+            unsigned long remainingChunkSize;
+
+            cmapP->color   = ppm_allocrow(colorCt);
+            cmapP->ncolors = colorCt;
+
+            for (i = 0, remainingChunkSize = chunkSize; i < colorCt; ++i) {
+                int const c = get_byte(ifP, iffId, &remainingChunkSize);
+                int const m = get_byte(ifP, iffId, &remainingChunkSize);
+                int const y = get_byte(ifP, iffId, &remainingChunkSize);
+                int const k = get_byte(ifP, iffId, &remainingChunkSize);
 
                 {
-                    pixval const red = 
+                    pixval const red =
                         MAXCOLVAL - MIN(MAXCOLVAL,
-                                        c*(MAXCOLVAL-k)/MAXCOLVAL+k); 
-                    pixval const green = 
+                                        c * (MAXCOLVAL-k) / MAXCOLVAL+k);
+                    pixval const green =
                         MAXCOLVAL - MIN(MAXCOLVAL,
-                                        m*(MAXCOLVAL-k)/MAXCOLVAL+k);
-                    pixval const blue = 
+                                        m * (MAXCOLVAL-k) / MAXCOLVAL+k);
+                    pixval const blue =
                         MAXCOLVAL - MIN(MAXCOLVAL,
-                                        y*(MAXCOLVAL-k)/MAXCOLVAL+k);
+                                        y * (MAXCOLVAL-k) / MAXCOLVAL+k);
 
-                    PPM_ASSIGN(cmap->color[i], red, green, blue);
+                    PPM_ASSIGN(cmapP->color[i], red, green, blue);
                 }
             }
-            chunk_end(ifP, iffid, chunksize);
+            chunk_end(ifP, iffId, remainingChunkSize);
         }
     }
 }
@@ -389,45 +389,45 @@ read_cmyk(FILE *     const ifP,
 
 static void
 read_clut(FILE *        const ifP,
-          IFF_ID        const iffid,
-          unsigned long const chunksize,
-          ColorMap *    const cmap) {
+          IFF_ID        const iffId,
+          unsigned long const chunkSize,
+          ColorMap *    const cmapP) {
 
-    if (chunksize != CLUTSize) {
-        pm_message("invalid size for %s chunk - skipping it", 
-                   ID2string(iffid));
-        skip_chunk(ifP, iffid, chunksize);
+    if (chunkSize != CLUTSize) {
+        pm_message("invalid size for %s chunk - skipping it",
+                   ID2string(iffId));
+        skip_chunk(ifP, iffId, chunkSize);
     } else {
         long type;
         unsigned char * lut;
-        unsigned long remainingChunksize;
+        unsigned long remainingChunkSize;
         unsigned int i;
 
-        remainingChunksize = chunksize;  /* initial value */
+        remainingChunkSize = chunkSize;  /* initial value */
 
-        type = get_big_long(ifP, iffid, &remainingChunksize);
-        get_big_long(ifP, iffid, &remainingChunksize); /* skip reserved fld */
+        type = get_big_long(ifP, iffId, &remainingChunkSize);
+        get_big_long(ifP, iffId, &remainingChunkSize); /* skip reserved fld */
 
         MALLOCARRAY_NOFAIL(lut, 256);
         for( i = 0; i < 256; ++i )
-            lut[i] = get_byte(ifP, iffid, &remainingChunksize);
+            lut[i] = get_byte(ifP, iffId, &remainingChunkSize);
 
         switch( type ) {
         case CLUT_MONO:
-            cmap->monolut  = lut;
+            cmapP->monolut  = lut;
             break;
         case CLUT_RED:
-            cmap->redlut   = lut;
+            cmapP->redlut   = lut;
             break;
         case CLUT_GREEN:
-            cmap->greenlut = lut;
+            cmapP->greenlut = lut;
             break;
         case CLUT_BLUE:
-            cmap->bluelut  = lut;
+            cmapP->bluelut  = lut;
             break;
         default:
             pm_message("warning - %s type %ld not recognized",
-                       ID2string(iffid), type);
+                       ID2string(iffId), type);
             free(lut);
         }
     }
@@ -446,8 +446,8 @@ warnNonsquarePixels(uint8_t const xAspect,
             pm_message("%s; to fix do a 'pamscale -%cscale %g'",
                        baseMsg,
                        xAspect > yAspect ? 'x' : 'y',
-                       xAspect > yAspect ? 
-                       (float)xAspect/yAspect : 
+                       xAspect > yAspect ?
+                       (float)xAspect/yAspect :
                        (float)yAspect/xAspect);
         else
             pm_message("%s", baseMsg);
@@ -464,7 +464,7 @@ read_bmhd(FILE *        const ifP,
     BitMapHeader * bmhdP;
 
     if (chunksize != BitMapHeaderSize) {
-        pm_message("invalid size for %s chunk - skipping it", 
+        pm_message("invalid size for %s chunk - skipping it",
                    ID2string(iffid));
         skip_chunk(ifP, iffid, chunksize);
         bmhdP = NULL;
@@ -474,7 +474,7 @@ read_bmhd(FILE *        const ifP,
         MALLOCVAR_NOFAIL(bmhdP);
 
         remainingChunksize = chunksize;  /* initial value */
-        
+
         bmhdP->w = get_big_short(ifP, iffid, &remainingChunksize);
         bmhdP->h = get_big_short(ifP, iffid, &remainingChunksize);
         bmhdP->x = get_big_short(ifP, iffid, &remainingChunksize);
@@ -492,7 +492,7 @@ read_bmhd(FILE *        const ifP,
 
         if (verbose) {
             if (typeid == ID_ILBM)
-                pm_message("dimensions: %dx%d, %d planes", 
+                pm_message("dimensions: %dx%d, %d planes",
                            bmhdP->w, bmhdP->h, bmhdP->nPlanes);
             else
                 pm_message("dimensions: %dx%d", bmhdP->w, bmhdP->h);
@@ -509,11 +509,11 @@ read_bmhd(FILE *        const ifP,
                 case mskHasTransparentColor:
                     if (!maskfile)
                         pm_message("use '-maskfile <filename>' "
-                                   "to generate a PBM mask file from %s", 
+                                   "to generate a PBM mask file from %s",
                                    mskNAME[bmhdP->masking]);
                     break;
                 case mskLasso:
-                    pm_message("warning - masking type '%s' not recognized", 
+                    pm_message("warning - masking type '%s' not recognized",
                                mskNAME[bmhdP->masking]);
                     break;
                 default:
@@ -529,7 +529,7 @@ read_bmhd(FILE *        const ifP,
 
         /* fix aspect ratio */
         if (bmhdP->xAspect == 0 || bmhdP->yAspect == 0) {
-            pm_message("warning - illegal aspect ratio %d:%d, using 1:1", 
+            pm_message("warning - illegal aspect ratio %d:%d, using 1:1",
                        bmhdP->xAspect, bmhdP->yAspect);
             bmhdP->xAspect = bmhdP->yAspect = 1;
         }
@@ -647,7 +647,7 @@ decode_mask(FILE *          const ifP,
     case mskNone:
         break;
     case mskHasMask:        /* mask plane */
-        read_ilbm_plane(ifP, remainingChunksizeP, RowBytes(cols), 
+        read_ilbm_plane(ifP, remainingChunksizeP, RowBytes(cols),
                         bmhdP->compression);
         if (maskfile) {
             ilp = ilbmrow;
@@ -669,7 +669,7 @@ decode_mask(FILE *          const ifP,
     case mskHasTransparentColor:
         if (!chunkyrow)
             pm_error("decode_mask(): chunkyrow == NULL - can't happen");
-        
+
         if (maskfile) {
             for (col = 0; col < cols; ++col) {
                 if (chunkyrow[col] == bmhdP->transparentColor)
@@ -685,7 +685,7 @@ decode_mask(FILE *          const ifP,
         pm_error("This program does not know how to process Lasso masking");
         break;
     default:
-        pm_error("decode_mask(): unknown masking type %d - can't happen", 
+        pm_error("decode_mask(): unknown masking type %d - can't happen",
                  bmhdP->masking);
     }
 }
@@ -697,79 +697,82 @@ decode_mask(FILE *          const ifP,
 
 
 static void
-multi_adjust(cmap, row, palchange)
-    ColorMap *cmap;
-    int row;
-    PaletteChange *palchange;
-{
-    int i, reg;
+multi_adjust(ColorMap *            const cmapP,
+             unsigned int          const row,
+             const PaletteChange * const palchange) {
 
-    for( i = 0; palchange[i].reg != MP_REG_END; i++ ) {
-        reg = palchange[i].reg;
-        if( reg >= cmap->ncolors ) {
+    unsigned int i;
+
+    for (i = 0; palchange[i].reg != MP_REG_END; ++i) {
+        int const reg = palchange[i].reg;
+        if (reg >= cmapP->ncolors) {
             pm_message("warning - palette change register out of range");
-            pm_message("    row %d  change structure %d  reg=%d (max %d)", 
-                       row, i, reg, cmap->ncolors-1);
+            pm_message("    row %u  change structure %d  reg=%d (max %d)",
+                       row, i, reg, cmapP->ncolors-1);
             pm_message("    ignoring it...  "
                        "colors might get messed up from here");
-        }
-        else
-        if( reg != MP_REG_IGNORE ) {
-            PPM_ASSIGN(cmap->color[reg], 
-                       palchange[i].r, palchange[i].g, palchange[i].b);
+        } else {
+            if (reg != MP_REG_IGNORE) {
+                PPM_ASSIGN(cmapP->color[reg],
+                           palchange[i].r, palchange[i].g, palchange[i].b);
+            }
         }
     }
 }
 
-static void
-multi_init(cmap, viewportmodes)
-    ColorMap *cmap;
-    long viewportmodes;
-{
-    if( cmap->mp_init )
-        multi_adjust(cmap, -1, cmap->mp_init);
-    if( !(viewportmodes & vmLACE) )
-        cmap->mp_flags &= ~(MP_FLAGS_SKIPLACED);
-}
+
 
 static void
-multi_update(cmap, row)
-    ColorMap *cmap;
-    int row;
-{
-    if( cmap->mp_flags & MP_FLAGS_SKIPLACED ) {
-        if( ODD(row) )
+multi_init(ColorMap * const cmapP,
+           long       const viewportmodes) {
+
+    if (cmapP->mp_init)
+        multi_adjust(cmapP, -1, cmapP->mp_init);
+    if (!(viewportmodes & vmLACE) )
+        cmapP->mp_flags &= ~(MP_FLAGS_SKIPLACED);
+}
+
+
+
+static void
+multi_update(ColorMap *   const cmapP,
+             unsigned int const row) {
+
+    if (cmapP->mp_flags & MP_FLAGS_SKIPLACED) {
+        if (ODD(row))
             return;
-        if( row/2 < cmap->mp_rows && cmap->mp_change[row/2] )
-            multi_adjust(cmap, row, cmap->mp_change[row/2]);
-    }
-    else {
-        if( row < cmap->mp_rows && cmap->mp_change[row] )
-            multi_adjust(cmap, row, cmap->mp_change[row]);
+        if (row/2 < cmapP->mp_rows && cmapP->mp_change[row/2])
+            multi_adjust(cmapP, row, cmapP->mp_change[row/2]);
+    } else {
+        if (row < cmapP->mp_rows && cmapP->mp_change[row])
+            multi_adjust(cmapP, row, cmapP->mp_change[row]);
     }
 }
 
-static void
-multi_free(cmap)
-    ColorMap *cmap;
-{
-    int i;
 
-    if( cmap->mp_init ) {
-        free(cmap->mp_init);
-        cmap->mp_init = NULL;
+
+static void
+multi_free(ColorMap * const cmapP) {
+
+    if (cmapP->mp_init) {
+        free(cmapP->mp_init);
+        cmapP->mp_init = NULL;
     }
-    if( cmap->mp_change ) {
-        for( i = 0; i < cmap->mp_rows; i++ ) {
-            if( cmap->mp_change[i] )
-                free(cmap->mp_change[i]);
+
+    if (cmapP->mp_change) {
+        unsigned int i;
+
+        for (i = 0; i < cmapP->mp_rows; ++i) {
+            if (cmapP->mp_change[i])
+                free(cmapP->mp_change[i]);
         }
-        free(cmap->mp_change);
-        cmap->mp_change = NULL;
+        free(cmapP->mp_change);
+        cmapP->mp_change = NULL;
     }
-    cmap->mp_rows = 0;
-    cmap->mp_type = 0;
-    cmap->mp_flags = 0;
+
+    cmapP->mp_rows  = 0;
+    cmapP->mp_type  = 0;
+    cmapP->mp_flags = 0;
 }
 
 
@@ -788,7 +791,7 @@ analyzeCmapSamples(const ColorMap * const cmapP,
     pixval       maxSample;
     bool         shifted;
     unsigned int i;
-        
+
     for (i = 0, maxSample = 0, shifted = true; i < cmapP->ncolors; ++i) {
         pixval const r = PPM_GETR(cmapP->color[i]);
         pixval const g = PPM_GETG(cmapP->color[i]);
@@ -857,7 +860,7 @@ transpColor(const BitMapHeader * const bmhdP,
     pixel * transpColorP;
 
     if (bmhdP) {
-        if (bmhdP->masking == mskHasTransparentColor || 
+        if (bmhdP->masking == mskHasTransparentColor ||
             bmhdP->masking == mskLasso) {
             MALLOCVAR_NOFAIL(transpColorP);
 
@@ -909,80 +912,83 @@ prepareCmap(const BitMapHeader * const bmhdP,
 
 
 static pixval
-lookup_red(cmap, oldval)
-    ColorMap *cmap;
-    int oldval;
-{
-    if( cmap && cmap->redlut && oldval < 256 )
-        return cmap->redlut[oldval];
+lookup_red(ColorMap *   const cmapP,
+           unsigned int const oldval) {
+
+    if (cmapP && cmapP->redlut && oldval < 256)
+        return cmapP->redlut[oldval];
     else
         return oldval;
 }
 
+
+
 static pixval
-lookup_green(cmap, oldval)
-    ColorMap *cmap;
-    int oldval;
-{
-    if( cmap && cmap->greenlut && oldval < 256 )
-        return cmap->greenlut[oldval];
+lookup_green(ColorMap *   const cmapP,
+             unsigned int const oldval) {
+
+    if (cmapP && cmapP->greenlut && oldval < 256)
+        return cmapP->greenlut[oldval];
     else
         return oldval;
 }
 
+
+
 static pixval
-lookup_blue(cmap, oldval)
-    ColorMap *cmap;
-    int oldval;
-{
-    if( cmap && cmap->bluelut && oldval < 256 )
-        return cmap->bluelut[oldval];
+lookup_blue(ColorMap *   const cmapP,
+            unsigned int const oldval) {
+
+    if (cmapP && cmapP->bluelut && oldval < 256)
+        return cmapP->bluelut[oldval];
     else
         return oldval;
 }
 
+
+
 static pixval
-lookup_mono(cmap, oldval)
-    ColorMap *cmap;
-    int oldval;
-{
-    if( cmap && cmap->monolut && oldval < 256 )
-        return cmap->monolut[oldval];
+lookup_mono(ColorMap *   const cmapP,
+            unsigned int const oldval) {
+
+    if (cmapP && cmapP->monolut && oldval < 256)
+        return cmapP->monolut[oldval];
     else
         return oldval;
 }
+
+
 
 static ColorMap *
-ehbcmap(cmap)
-    ColorMap *cmap;
-{
-    pixel *tempcolor = NULL;
-    int i, col;
+ehbcmap(ColorMap * const cmapP) {
 
-    col = cmap->ncolors;
+    pixel * tempcolor;
+    unsigned int i;
 
-    tempcolor = ppm_allocrow(col * 2);
-    for( i = 0; i < col; i++ ) {
-        tempcolor[i] = cmap->color[i];
-        PPM_ASSIGN(tempcolor[col + i],  PPM_GETR(cmap->color[i]) / 2,
-                                        PPM_GETG(cmap->color[i]) / 2,
-                                        PPM_GETB(cmap->color[i]) / 2 );
+    tempcolor = ppm_allocrow(cmapP->ncolors * 2);
+
+    for (i = 0; i < cmapP->ncolors; ++i) {
+        tempcolor[i] = cmapP->color[i];
+        PPM_ASSIGN(tempcolor[cmapP->ncolors + i],
+                   PPM_GETR(cmapP->color[i]) / 2,
+                   PPM_GETG(cmapP->color[i]) / 2,
+                   PPM_GETB(cmapP->color[i]) / 2);
     }
-    ppm_freerow(cmap->color);
-    cmap->color = tempcolor;
-    cmap->ncolors *= 2;
+    ppm_freerow(cmapP->color);
+    cmapP->color = tempcolor;
+    cmapP->ncolors *= 2;
 
-    return cmap;
+    return cmapP;
 }
 
 
 
 static pixval
-lut_maxval(ColorMap * const cmap, 
+lut_maxval(ColorMap * const cmap,
            pixval     const maxval) {
 
     pixval retval;
-    
+
     if (maxval >= 255)
         retval = maxval;
     else {
@@ -993,16 +999,16 @@ lut_maxval(ColorMap * const cmap,
             unsigned char maxlut;
             maxlut = maxval;
             for( i = 0; i < maxval; i++ ) {
-                if( cmap->redlut   && cmap->redlut[i]   > maxlut ) 
+                if( cmap->redlut   && cmap->redlut[i]   > maxlut )
                     maxlut = cmap->redlut[i];
-                if( cmap->greenlut && cmap->greenlut[i] > maxlut ) 
+                if( cmap->greenlut && cmap->greenlut[i] > maxlut )
                     maxlut = cmap->greenlut[i];
-                if( cmap->bluelut  && cmap->bluelut[i]  > maxlut ) 
+                if( cmap->bluelut  && cmap->bluelut[i]  > maxlut )
                     maxlut = cmap->bluelut[i];
             }
             pm_message("warning - "
                        "%d-bit index into 8-bit color lookup table, "
-                       "table maxval=%d", 
+                       "table maxval=%d",
                        pm_maxvaltobits(maxval), maxlut);
             if( maxlut != maxval )
                 retval = 255;
@@ -1017,29 +1023,29 @@ lut_maxval(ColorMap * const cmap,
 
 
 static void
-get_color(cmap, idx, red, green, blue)
-    ColorMap *cmap;
-    int idx;
-    pixval *red, *green, *blue;
-{
-    if( HAS_COLORMAP(cmap) ) {
-        pixval r, g, b;
+get_color(ColorMap *   const cmapP,
+          unsigned int const idx,
+          pixval *     const redP,
+          pixval *     const greenP,
+          pixval *     const blueP) {
 
-        if( idx >= cmap->ncolors )
-            pm_error("color index out of range: %d (max %d)", 
-                     idx, cmap->ncolors);
-        r = PPM_GETR(cmap->color[idx]);
-        g = PPM_GETG(cmap->color[idx]);
-        b = PPM_GETB(cmap->color[idx]);
+    if (HAS_COLORMAP(cmapP)) {
+        if (idx >= cmapP->ncolors)
+            pm_error("color index out of range: %u (max %u)",
+                     idx, cmapP->ncolors);
+        else {
+            pixval const r = PPM_GETR(cmapP->color[idx]);
+            pixval const g = PPM_GETG(cmapP->color[idx]);
+            pixval const b = PPM_GETB(cmapP->color[idx]);
 
-        *red    = lookup_red(cmap, r);
-        *green  = lookup_green(cmap, g);
-        *blue   = lookup_blue(cmap, b);
-    }
-    else {
-        *red = *green = *blue = lookup_mono(cmap, idx);
-    }
+            *redP    = lookup_red   (cmapP, r);
+            *greenP  = lookup_green (cmapP, g);
+            *blueP   = lookup_blue  (cmapP, b);
+        }
+    } else
+        *redP = *greenP = *blueP = lookup_mono(cmapP, idx);
 }
+
 
 
 /****************************************************************************
@@ -1047,19 +1053,19 @@ get_color(cmap, idx, red, green, blue)
  ****************************************************************************/
 
 static void
-std_to_ppm(FILE *         const ifP, 
-           long           const chunksize, 
-           BitMapHeader * const bmhdP, 
-           ColorMap *     const cmap, 
+std_to_ppm(FILE *         const ifP,
+           long           const chunksize,
+           BitMapHeader * const bmhdP,
+           ColorMap *     const cmap,
            long           const viewportmodes);
 
 
 
 static void
-ham_to_ppm(FILE *         const ifP, 
-           long           const chunksize, 
-           BitMapHeader * const bmhdP, 
-           ColorMap *     const cmap, 
+ham_to_ppm(FILE *         const ifP,
+           long           const chunksize,
+           BitMapHeader * const bmhdP,
+           ColorMap *     const cmap,
            long           const viewportmodes) {
 
     int cols, rows, hambits, hammask, hamshift, hammask2, col, row;
@@ -1077,7 +1083,7 @@ ham_to_ppm(FILE *         const ifP,
     if( hambits > 8 || hambits < 1 ) {
         int const assumed_viewportmodes = viewportmodes & ~(vmHAM);
 
-        pm_message("%d-plane HAM?? - interpreting image as a normal ILBM", 
+        pm_message("%d-plane HAM?? - interpreting image as a normal ILBM",
                    bmhdP->nPlanes);
         std_to_ppm(ifP, chunksize, bmhdP, cmap, assumed_viewportmodes);
         return;
@@ -1085,8 +1091,8 @@ ham_to_ppm(FILE *         const ifP,
         unsigned long remainingChunksize;
         pixel * transpColorP;
 
-        pm_message("input is a %sHAM%d file", 
-                   HAS_MULTIPALETTE(cmap) ? "multipalette " : "", 
+        pm_message("input is a %sHAM%d file",
+                   HAS_MULTIPALETTE(cmap) ? "multipalette " : "",
                    bmhdP->nPlanes);
 
         if( HAS_COLORLUT(cmap) || HAS_MONOLUT(cmap) ) {
@@ -1095,7 +1101,7 @@ ham_to_ppm(FILE *         const ifP,
             if( cmap->greenlut )    free(cmap->greenlut);
             if( cmap->bluelut )     free(cmap->bluelut);
             if( cmap->monolut )     free(cmap->monolut);
-            cmap->redlut = cmap->greenlut = cmap->bluelut = 
+            cmap->redlut = cmap->greenlut = cmap->bluelut =
                 cmap->monolut = NULL;
         }
         if( !HAS_COLORMAP(cmap) ) {
@@ -1165,10 +1171,10 @@ ham_to_ppm(FILE *         const ifP,
 
 
 static void
-std_to_ppm(FILE *         const ifP, 
-           long           const chunksize, 
-           BitMapHeader * const bmhdP, 
-           ColorMap *     const cmap, 
+std_to_ppm(FILE *         const ifP,
+           long           const chunksize,
+           BitMapHeader * const bmhdP,
+           ColorMap *     const cmap,
            long           const viewportmodes) {
 
     if (viewportmodes & vmHAM) {
@@ -1213,7 +1219,7 @@ std_to_ppm(FILE *         const ifP,
         ppm_writeppminit( stdout, cols, rows, maxval, 0 );
 
         remainingChunksize = chunksize;  /* initial value */
-    
+
         for (row = 0; row < rows; ++row) {
 
             if( HAS_MULTIPALETTE(cmap) )
@@ -1240,9 +1246,9 @@ std_to_ppm(FILE *         const ifP,
 
 
 static void
-deep_to_ppm(FILE *         const ifP, 
-            long           const chunksize, 
-            BitMapHeader * const bmhdP, 
+deep_to_ppm(FILE *         const ifP,
+            long           const chunksize,
+            BitMapHeader * const bmhdP,
             ColorMap *     const cmap) {
 
     unsigned int const cols = bmhdP->w;
@@ -1259,9 +1265,9 @@ deep_to_ppm(FILE *         const ifP,
     if( planespercolor > MAXPLANES )
         pm_error("too many planes (max %d)", MAXPLANES * 3);
 
-    if( bmhdP->masking == mskHasTransparentColor || 
+    if( bmhdP->masking == mskHasTransparentColor ||
         bmhdP->masking == mskLasso ) {
-        pm_message("masking type '%s' in a deep ILBM?? - ignoring it", 
+        pm_message("masking type '%s' in a deep ILBM?? - ignoring it",
                    mskNAME[bmhdP->masking]);
         bmhdP->masking = mskNone;
     }
@@ -1271,7 +1277,7 @@ deep_to_ppm(FILE *         const ifP,
         pm_error("nPlanes is too large");
 
     transpColorP = transpColor(bmhdP, cmap, transpName, maxval);
-        
+
     Rrow = alloc_rawrow(cols);
     Grow = alloc_rawrow(cols);
     Brow = alloc_rawrow(cols);
@@ -1313,7 +1319,7 @@ dcol_to_ppm(FILE *         const ifP,
     unsigned int const redplanes   = dcol->r;
     unsigned int const greenplanes = dcol->g;
     unsigned int const blueplanes  = dcol->b;
-    
+
     int col, row;
     rawtype *Rrow, *Grow, *Brow;
     pixval maxval, redmaxval, greenmaxval, bluemaxval;
@@ -1324,16 +1330,16 @@ dcol_to_ppm(FILE *         const ifP,
     pm_message("input is a %d:%d:%d direct color ILBM",
                 redplanes, greenplanes, blueplanes);
 
-    if( redplanes > MAXPLANES || 
-        blueplanes > MAXPLANES || 
+    if( redplanes > MAXPLANES ||
+        blueplanes > MAXPLANES ||
         greenplanes > MAXPLANES )
         pm_error("too many planes (max %d per color component)", MAXPLANES);
 
     if( bmhdP->nPlanes != (redplanes + greenplanes + blueplanes) )
-        pm_error("%s/%s plane number mismatch", 
+        pm_error("%s/%s plane number mismatch",
                  ID2string(ID_BMHD), ID2string(ID_DCOL));
 
-    if( bmhdP->masking == mskHasTransparentColor || 
+    if( bmhdP->masking == mskHasTransparentColor ||
         bmhdP->masking == mskLasso ) {
         pm_message("masking type '%s' in a direct color ILBM?? - ignoring it",
                    mskNAME[bmhdP->masking]);
@@ -1356,7 +1362,7 @@ dcol_to_ppm(FILE *         const ifP,
 
     if( redmaxval != maxval || greenmaxval != maxval || bluemaxval != maxval )
         pm_message("scaling colors to %d bits", pm_maxvaltobits(maxval));
-    
+
     MALLOCARRAY_NOFAIL(redtable,   redmaxval   +1);
     MALLOCARRAY_NOFAIL(greentable, greenmaxval +1);
     MALLOCARRAY_NOFAIL(bluetable,  bluemaxval  +1);
@@ -1403,7 +1409,7 @@ dcol_to_ppm(FILE *         const ifP,
 
 static void
 cmapToPpm(FILE *     const ofP,
-            ColorMap * const cmapP) {
+          ColorMap * const cmapP) {
 
     ppm_colorrowtomapfile(ofP, cmapP->color, cmapP->ncolors, MAXCOLVAL);
 }
@@ -1425,11 +1431,11 @@ ipbm_to_ppm(FILE *         const ifP,
     unsigned long remainingChunksize;
     pixel * transpColorP;
 
-    pm_message("input is a %sPBM ", 
+    pm_message("input is a %sPBM ",
                HAS_MULTIPALETTE(cmap) ? "multipalette " : "");
 
     if( bmhdP->nPlanes != 8 )
-        pm_error("invalid number of planes for IFF-PBM: %d (must be 8)", 
+        pm_error("invalid number of planes for IFF-PBM: %d (must be 8)",
                  bmhdP->nPlanes);
 
     if( bmhdP->masking == mskHasMask )
@@ -1456,7 +1462,7 @@ ipbm_to_ppm(FILE *         const ifP,
     for( row = 0; row < rows; row++ ) {
         if( HAS_MULTIPALETTE(cmap) )
             multi_update(cmap, row);
-        
+
         read_ilbm_plane(ifP, &remainingChunksize, cols, bmhdP->compression);
 
         for( col = 0; col < cols; col++ ) {
@@ -1494,24 +1500,24 @@ rgbn_to_ppm(FILE *         const ifP,
     pm_message("input is a %d-bit RGB image", (typeid == ID_RGB8 ? 8 : 4));
 
     if (bmhdP->compression != 4)
-        pm_error("invalid compression mode for %s: %d (must be 4)", 
+        pm_error("invalid compression mode for %s: %d (must be 4)",
                  ID2string(typeid), bmhdP->compression);
-    
+
     switch (typeid) {
     case ID_RGBN:
         if (bmhdP->nPlanes != 13)
-            pm_error("invalid number of planes for %s: %d (must be 13)", 
+            pm_error("invalid number of planes for %s: %d (must be 13)",
                      ID2string(typeid), bmhdP->nPlanes);
         maxval = lut_maxval(cmap, 15);
         break;
     case ID_RGB8:
         if (bmhdP->nPlanes != 25)
-            pm_error("invalid number of planes for %s: %d (must be 25)", 
+            pm_error("invalid number of planes for %s: %d (must be 25)",
                      ID2string(typeid), bmhdP->nPlanes);
         maxval = 255;
         break;
     default:
-        pm_error("rgbn_to_ppm(): invalid IFF ID %s - can't happen", 
+        pm_error("rgbn_to_ppm(): invalid IFF ID %s - can't happen",
                  ID2string(typeid));
     }
 
@@ -1533,7 +1539,7 @@ rgbn_to_ppm(FILE *         const ifP,
             tries = 0;
             while (count == 0) {
                 if (typeid == ID_RGB8) {
-                    r = lookup_red(cmap,   get_byte(ifP, ID_BODY, 
+                    r = lookup_red(cmap,   get_byte(ifP, ID_BODY,
                                                     &remainingChunksize));
                     g = lookup_green(cmap, get_byte(ifP, ID_BODY,
                                                     &remainingChunksize));
@@ -1675,40 +1681,46 @@ read_4bit_mp(FILE *     const ifP,
 
 
 static void
-PCHG_DecompHuff(src, dest, tree, origsize)
-    unsigned char *src, *dest;
-    short *tree;
-    unsigned long origsize;
-{
-    unsigned long i = 0, bits = 0;
-    unsigned char thisbyte;
-    short *p;
+PCHG_DecompHuff(const unsigned char * const src,
+                unsigned char *       const dst,
+                short *               const tree,
+                unsigned long         const origsize) {
 
-    p = tree;
-    while( i < origsize ) {
-        if( bits == 0 ) {
-            thisbyte = *src++;
+    const unsigned char * srcCursor;
+    unsigned char * dstCursor;
+    unsigned long i;
+    unsigned long bits;
+    unsigned char thisbyte;
+    short * p;
+
+    srcCursor = &src[0];  /* initial value */
+    dstCursor = &dst[0];  /* initial value */
+    i = 0;     /* initial value */
+    bits = 0;  /* initial value */
+    p = tree;  /* initial value */
+
+    while (i < origsize) {
+        if (bits == 0)  {
+            thisbyte = *srcCursor++;
             bits = 8;
         }
-        if( thisbyte & (1 << 7) ) {
-            if( *p >= 0 ) {
-                *dest++ = (unsigned char)*p;
-                i++;
+        if (thisbyte & (1 << 7)) {
+            if (*p >= 0) {
+                *dstCursor++ = (unsigned char)*p;
+                ++i;
                 p = tree;
-            }
-            else
+            } else
                 p += (*p / 2);
-        }
-        else {
-            p--;
-            if( *p > 0 && (*p & 0x100) ) {
-                *dest++ = (unsigned char )*p;
-                i++;
+        } else {
+            --p;
+            if (*p > 0 && (*p & 0x100)) {
+                *dstCursor++ = (unsigned char )*p;
+                ++i;
                 p = tree;
             }
         }
         thisbyte <<= 1;
-        bits--;
+        --bits;
     }
 }
 
@@ -1743,9 +1755,9 @@ PCHG_Decompress(PCHGHeader *     const PCHG,
             hufftree[i] = pm_uintFromBigend16(bigendComptree[i]);
 
         /* decompress the change structure data */
-        PCHG_DecompHuff(compdata, data, &hufftree[huffsize-1], 
+        PCHG_DecompHuff(compdata, data, &hufftree[huffsize-1],
                         CompHdr->OriginalDataSize);
-        
+
         free(hufftree);
     } break;
         default:
@@ -1755,99 +1767,103 @@ PCHG_Decompress(PCHGHeader *     const PCHG,
 
 
 static void
-PCHG_ConvertSmall(PCHG, cmap, mask, datasize)
-    PCHGHeader *PCHG;
-    ColorMap *cmap;
-    unsigned char *mask;
-    unsigned long datasize;
-{
+PCHG_ConvertSmall(PCHGHeader *    const pchgP,
+                  ColorMap *      const cmapP,
+                  unsigned char * const mask,
+                  unsigned long   const dataSize) {
+
     unsigned char *data;
+    unsigned long remDataSize;
     unsigned char thismask;
     int bits, row, i, changes, masklen, reg;
     unsigned char ChangeCount16, ChangeCount32;
     unsigned short SmallChange;
-    unsigned long totalchanges = 0;
-    int changedlines = PCHG->ChangedLines;
+    unsigned long totalchanges;
+    int changedlines;
+    unsigned char * maskCursor;
 
-    masklen = 4 * MaskLongWords(PCHG->LineCount);
-    data = mask + masklen; datasize -= masklen;
+    totalchanges = 0;  /* initial value */
+    changedlines = pchgP->ChangedLines;  /* initial value */
+    masklen = 4 * MaskLongWords(pchgP->LineCount);
+    maskCursor = mask;
+    data = maskCursor + masklen; remDataSize = dataSize - masklen;
 
     bits = 0;
-    for( row = PCHG->StartLine; changedlines && row < 0; row++ ) {
-        if( bits == 0 ) {
-            if( masklen == 0 ) goto fail2;
-            thismask = *mask++;
+    for (row = pchgP->StartLine; changedlines && row < 0; ++row) {
+        if (bits == 0) {
+            if (masklen == 0) goto fail2;
+            thismask = *maskCursor++;
             --masklen;
             bits = 8;
         }
-        if( thismask & (1<<7) ) {
-            if( datasize < 2 ) goto fail;
+        if (thismask & (1<<7)) {
+            if (remDataSize < 2) goto fail;
             ChangeCount16 = *data++;
             ChangeCount32 = *data++;
-            datasize -= 2;
+            remDataSize -= 2;
 
             changes = ChangeCount16 + ChangeCount32;
-            for( i = 0; i < changes; i++ ) {
-                if( totalchanges >= PCHG->TotalChanges ) goto fail;
-                if( datasize < 2 ) goto fail;
-                SmallChange = BIG_WORD(data); data += 2; datasize -= 2;
-                reg = ((SmallChange & 0xf000) >> 12) + 
+            for (i = 0; i < changes; ++i) {
+                if (totalchanges >= pchgP->TotalChanges) goto fail;
+                if (remDataSize < 2) goto fail;
+                SmallChange = BIG_WORD(data); data += 2; remDataSize -= 2;
+                reg = ((SmallChange & 0xf000) >> 12) +
                     (i >= ChangeCount16 ? 16 : 0);
-                cmap->mp_init[reg - PCHG->MinReg].reg = reg;
-                cmap->mp_init[reg - PCHG->MinReg].r = 
+                cmapP->mp_init[reg - pchgP->MinReg].reg = reg;
+                cmapP->mp_init[reg - pchgP->MinReg].r =
                     ((SmallChange & 0x0f00) >> 8) * FACTOR_4BIT;
-                cmap->mp_init[reg - PCHG->MinReg].g = 
+                cmapP->mp_init[reg - pchgP->MinReg].g =
                     ((SmallChange & 0x00f0) >> 4) * FACTOR_4BIT;
-                cmap->mp_init[reg - PCHG->MinReg].b = 
+                cmapP->mp_init[reg - pchgP->MinReg].b =
                     ((SmallChange & 0x000f) >> 0) * FACTOR_4BIT;
                 ++totalchanges;
             }
             --changedlines;
         }
         thismask <<= 1;
-        bits--;
+        --bits;
     }
 
-    for( row = PCHG->StartLine; changedlines && row < cmap->mp_rows; row++ ) {
-        if( bits == 0 ) {
-            if( masklen == 0 ) goto fail2;
-            thismask = *mask++;
+    for (row = pchgP->StartLine; changedlines && row < cmapP->mp_rows; row++) {
+        if (bits == 0) {
+            if (masklen == 0) goto fail2;
+            thismask = *maskCursor++;
             --masklen;
             bits = 8;
         }
-        if( thismask & (1<<7) ) {
-            if( datasize < 2 ) goto fail;
+        if(thismask & (1<<7)) {
+            if (remDataSize < 2) goto fail;
             ChangeCount16 = *data++;
             ChangeCount32 = *data++;
-            datasize -= 2;
+            remDataSize -= 2;
 
             changes = ChangeCount16 + ChangeCount32;
-            MALLOCARRAY_NOFAIL(cmap->mp_change[row], changes + 1);
-            for( i = 0; i < changes; i++ ) {
-                if( totalchanges >= PCHG->TotalChanges ) goto fail;
-                if( datasize < 2 ) goto fail;
-                SmallChange = BIG_WORD(data); data += 2; datasize -= 2;
-                reg = ((SmallChange & 0xf000) >> 12) + 
+            MALLOCARRAY_NOFAIL(cmapP->mp_change[row], changes + 1);
+            for (i = 0; i < changes; ++i) {
+                if (totalchanges >= pchgP->TotalChanges) goto fail;
+                if (remDataSize < 2) goto fail;
+                SmallChange = BIG_WORD(data); data += 2; remDataSize -= 2;
+                reg = ((SmallChange & 0xf000) >> 12) +
                     (i >= ChangeCount16 ? 16 : 0);
-                cmap->mp_change[row][i].reg = reg;
-                cmap->mp_change[row][i].r = 
+                cmapP->mp_change[row][i].reg = reg;
+                cmapP->mp_change[row][i].r =
                     ((SmallChange & 0x0f00) >> 8) * FACTOR_4BIT;
-                cmap->mp_change[row][i].g = 
+                cmapP->mp_change[row][i].g =
                     ((SmallChange & 0x00f0) >> 4) * FACTOR_4BIT;
-                cmap->mp_change[row][i].b = 
+                cmapP->mp_change[row][i].b =
                     ((SmallChange & 0x000f) >> 0) * FACTOR_4BIT;
                 ++totalchanges;
             }
-            cmap->mp_change[row][changes].reg = MP_REG_END;
+            cmapP->mp_change[row][changes].reg = MP_REG_END;
             --changedlines;
         }
         thismask <<= 1;
-        bits--;
+        --bits;
     }
-    if( totalchanges != PCHG->TotalChanges )
+    if (totalchanges != pchgP->TotalChanges)
         pm_message("warning - got %ld change structures, "
-                   "chunk header reports %ld", 
-                   totalchanges, PCHG->TotalChanges);
+                   "chunk header reports %ld",
+                   totalchanges, pchgP->TotalChanges);
     return;
 fail:
     pm_error("insufficient data in SmallLineChanges structures");
@@ -1872,16 +1888,16 @@ PCHG_ConvertBig(PCHGHeader *    const PCHG,
     int reg;
     unsigned long totalchanges;
     int changedlines;
-    unsigned long dataRemaining;
+    unsigned long remDataSize;
     unsigned char * mask;
 
     mask = maskStart;  /* initial value */
-    dataRemaining = datasize;  /* initial value */
+    remDataSize = datasize;  /* initial value */
     changedlines = PCHG->ChangedLines;  /* initial value */
     totalchanges = 0;  /* initial value */
 
     masklen = 4 * MaskLongWords(PCHG->LineCount);
-    data = mask + masklen; dataRemaining -= masklen;
+    data = mask + masklen; remDataSize -= masklen;
 
     for (row = PCHG->StartLine, bits = 0; changedlines && row < 0; ++row) {
         if (bits == 0) {
@@ -1894,16 +1910,16 @@ PCHG_ConvertBig(PCHGHeader *    const PCHG,
         if (thismask & (1<<7)) {
             unsigned int i;
 
-            if (dataRemaining < 2)
+            if (remDataSize < 2)
                 pm_error("insufficient data in BigLineChanges structures");
 
-            changes = BIG_WORD(data); data += 2; dataRemaining -= 2;
+            changes = BIG_WORD(data); data += 2; remDataSize -= 2;
 
             for (i = 0; i < changes; ++i) {
                 if (totalchanges >= PCHG->TotalChanges)
                     pm_error("insufficient data in BigLineChanges structures");
 
-                if (dataRemaining < 6)
+                if (remDataSize < 6)
                     pm_error("insufficient data in BigLineChanges structures");
 
                 reg = BIG_WORD(data); data += 2;
@@ -1912,7 +1928,7 @@ PCHG_ConvertBig(PCHGHeader *    const PCHG,
                 cmap->mp_init[reg - PCHG->MinReg].r = *data++;
                 cmap->mp_init[reg - PCHG->MinReg].b = *data++;  /* yes, RBG */
                 cmap->mp_init[reg - PCHG->MinReg].g = *data++;
-                dataRemaining -= 6;
+                remDataSize -= 6;
                 ++totalchanges;
             }
             --changedlines;
@@ -1933,17 +1949,17 @@ PCHG_ConvertBig(PCHGHeader *    const PCHG,
         if (thismask & (1<<7)) {
             unsigned int i;
 
-            if (dataRemaining < 2)
+            if (remDataSize < 2)
                 pm_error("insufficient data in BigLineChanges structures");
 
-            changes = BIG_WORD(data); data += 2; dataRemaining -= 2;
+            changes = BIG_WORD(data); data += 2; remDataSize -= 2;
 
             MALLOCARRAY_NOFAIL(cmap->mp_change[row], changes + 1);
             for (i = 0; i < changes; ++i) {
                 if (totalchanges >= PCHG->TotalChanges)
                     pm_error("insufficient data in BigLineChanges structures");
 
-                if (dataRemaining < 6)
+                if (remDataSize < 6)
                     pm_error("insufficient data in BigLineChanges structures");
 
                 reg = BIG_WORD(data); data += 2;
@@ -1952,7 +1968,7 @@ PCHG_ConvertBig(PCHGHeader *    const PCHG,
                 cmap->mp_change[row][i].r = *data++;
                 cmap->mp_change[row][i].b = *data++;    /* yes, RBG */
                 cmap->mp_change[row][i].g = *data++;
-                dataRemaining -= 6;
+                remDataSize -= 6;
                 ++totalchanges;
             }
             cmap->mp_change[row][changes].reg = MP_REG_END;
@@ -1963,7 +1979,7 @@ PCHG_ConvertBig(PCHGHeader *    const PCHG,
     }
     if (totalchanges != PCHG->TotalChanges)
         pm_message("warning - got %ld change structures, "
-                   "chunk header reports %ld", 
+                   "chunk header reports %ld",
                    totalchanges, PCHG->TotalChanges);
 }
 
@@ -2027,7 +2043,7 @@ read_pchg(FILE *     const ifP,
 
             datasize = CompHdr.OriginalDataSize;
             MALLOCARRAY_NOFAIL(data, datasize);
-            PCHG_Decompress(&PCHG, &CompHdr, compdata, 
+            PCHG_Decompress(&PCHG, &CompHdr, compdata,
                             compsize, comptree, data);
 
             free(comptree);
@@ -2073,7 +2089,7 @@ read_pchg(FILE *     const ifP,
             }
             else
                 pm_error("unknown palette changes structure "
-                         "format in %s chunk", 
+                         "format in %s chunk",
                          ID2string(iffid));
         }
         free(data);
@@ -2101,7 +2117,7 @@ ignored_iffid(IFF_ID       const iffid,
 
 
 
-static void 
+static void
 process_body( FILE *          const ifP,
               long            const chunksize,
               BitMapHeader *  const bmhdP,
@@ -2111,9 +2127,9 @@ process_body( FILE *          const ifP,
               int             const isdeepopt,
               DirectColor *   const dcol,
               int *           const viewportmodesP) {
-    
+
     if (bmhdP == NULL)
-        pm_error("%s chunk without %s chunk", 
+        pm_error("%s chunk without %s chunk",
                  ID2string(ID_BODY), ID2string(ID_BMHD));
 
     prepareCmap(bmhdP, cmap);
@@ -2132,12 +2148,12 @@ process_body( FILE *          const ifP,
 
         if( isdeepopt > 0 && (bmhdP->nPlanes % 3 != 0) ) {
             pm_message("cannot interpret %d-plane image as 'deep' "
-                       "(# of planes must be divisible by 3)", 
+                       "(# of planes must be divisible by 3)",
                        bmhdP->nPlanes);
             isdeep = 0;
         } else
             isdeep = isdeepopt;
-        
+
         if (isdeep > 0)
             deep_to_ppm(ifP, chunksize, bmhdP, cmap);
         else if (dcol)
@@ -2151,7 +2167,7 @@ process_body( FILE *          const ifP,
                 /* will be interpreted as grayscale */
                 std_to_ppm(ifP, chunksize, bmhdP, cmap, *viewportmodesP);
             else
-                pm_error("don't know how to interpret %d-plane image", 
+                pm_error("don't know how to interpret %d-plane image",
                          bmhdP->nPlanes);
         } else
             std_to_ppm(ifP, chunksize, bmhdP, cmap, *viewportmodesP);
@@ -2163,7 +2179,7 @@ process_body( FILE *          const ifP,
 
 
 
-static void 
+static void
 processChunk(FILE *          const ifP,
              long            const formsize,
              IFF_ID          const ignorelist[],
@@ -2200,7 +2216,7 @@ processChunk(FILE *          const ifP,
     } else if (iffid == ID_END) {
         /* END chunks are not officially valid in IFF, but
            suggested as a future expansion for stream-writing,
-           see Amiga RKM Devices, 3rd Ed, page 376 
+           see Amiga RKM Devices, 3rd Ed, page 376
         */
         if (chunksize != 0 ) {
             pm_message("warning - non-0 %s chunk", ID2string(iffid));
@@ -2212,7 +2228,7 @@ processChunk(FILE *          const ifP,
                        ID2string(iffid), formsize, 0xffffffff);
         *endchunkP = 1;
     } else if (*bodyChunkProcessedP) {
-        pm_message("%s chunk found after %s chunk - skipping", 
+        pm_message("%s chunk found after %s chunk - skipping",
                    ID2string(iffid), ID2string(ID_BODY));
         skip_chunk(ifP, iffid, chunksize);
     } else
@@ -2251,11 +2267,11 @@ processChunk(FILE *          const ifP,
             (*dcolP)->b = get_byte(ifP, iffid, NULL);
             get_byte(ifP, iffid, NULL);       /* skip pad byte */
             break;
-        case ID_BODY: 
+        case ID_BODY:
             if (cmaponly || (*bmhdP && (*bmhdP)->nPlanes == 0))
                 skip_chunk(ifP, ID_BODY,  chunksize);
             else {
-                process_body(ifP, chunksize, *bmhdP, cmap, 
+                process_body(ifP, chunksize, *bmhdP, cmap,
                              maskfile, fakeviewport, isdeepopt, *dcolP,
                              viewportmodesP);
 
@@ -2280,11 +2296,11 @@ processChunk(FILE *          const ifP,
             x = get_big_short(ifP, ID_DPI, NULL);
             y = get_big_short(ifP, ID_DPI, NULL);
             if (verbose)
-                pm_message("%s chunk:  dpi_x = %d    dpi_y = %d", 
+                pm_message("%s chunk:  dpi_x = %d    dpi_y = %d",
                            ID2string(ID_DPI), x, y);
         } break;
         default:
-            pm_message("unknown chunk type %s - skipping", 
+            pm_message("unknown chunk type %s - skipping",
                        ID2string(iffid));
             skip_chunk(ifP, iffid, chunksize);
             break;
@@ -2295,7 +2311,7 @@ processChunk(FILE *          const ifP,
     if (ODD(chunksize)) {
         get_byte(ifP, iffid, NULL);
         bytesread += 1;
-    } 
+    }
     *bytesReadP = bytesread;
 }
 
@@ -2338,7 +2354,7 @@ maybeWriteColorMap(FILE *               const ofP,
             prepareCmap(bmhdP, cmapP);
             cmapToPpm(ofP, cmapP);
         } else
-            pm_error("ILBM has neither %s or %s chunk", 
+            pm_error("ILBM has neither %s or %s chunk",
                      ID2string(ID_BODY), ID2string(ID_CMAP));
     }
 }
@@ -2413,13 +2429,13 @@ main(int argc, char *argv[]) {
                          "as argument");
             if( ignorecount >= MAX_IGNORE )
                 pm_error("max %d chunk IDs to ignore", MAX_IGNORE);
-            ignorelist[ignorecount++] = 
-                MAKE_ID(argv[argn][0], argv[argn][1], argv[argn][2], 
+            ignorelist[ignorecount++] =
+                MAKE_ID(argv[argn][0], argv[argn][1], argv[argn][2],
                         argv[argn][3]);
         } else
             pm_usage(usage);
         ++argn;
-    }    
+    }
 
     if( argn < argc ) {
         ifP = pm_openr( argv[argn] );
@@ -2439,7 +2455,7 @@ main(int argc, char *argv[]) {
         pm_error("input is not a FORM type IFF file");
     formsize = get_big_long(ifP, ID_FORM, NULL);
     typeid = get_big_long(ifP, ID_FORM, NULL);
-    if (typeid != ID_ILBM && typeid != ID_RGBN && typeid != ID_RGB8 && 
+    if (typeid != ID_ILBM && typeid != ID_RGBN && typeid != ID_RGB8 &&
         typeid != ID_PBM)
         pm_error("input is not an ILBM, RGBN, RGB8 or PBM "
                  "type FORM IFF file");
@@ -2474,7 +2490,7 @@ main(int argc, char *argv[]) {
 
     {
         unsigned int skipped;
-        
+
         for (skipped = 0; fgetc(ifP) != EOF; ++skipped)
             ++bytesread;
 
@@ -2492,3 +2508,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

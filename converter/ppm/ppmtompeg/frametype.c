@@ -264,7 +264,7 @@ ComputeFrameTable(unsigned int const numFramesArg) {
   'numFrames' == 0 means number of frames is not known at this time.
 -----------------------------------------------------------------------------*/
     int index;
-    FrameTable	*lastI, *lastIP, *firstB, *secondIP;
+    FrameTable	*lastIP, *firstB, *secondIP;
     FrameTable	*ptr;
     char typ;
     int table_size;
@@ -278,7 +278,6 @@ ComputeFrameTable(unsigned int const numFramesArg) {
 
     MALLOCARRAY_NOFAIL(frameTable, 1 + table_size);
 
-    lastI = NULL;
     lastIP = NULL;
     firstB = NULL;
     secondIP = NULL;

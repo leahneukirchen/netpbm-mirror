@@ -1,0 +1,61 @@
+#! /bin/bash
+# This script tests: pamenlarge
+# Also requires: pbmmake pnmpad
+
+tmpdir=${tmpdir:-/tmp}
+complete256_pbm=${tmpdir}/complete256.pbm
+
+# works with gawk and mawk
+# produce all possible 8-bit patterns
+
+LC_ALL=C awk 'BEGIN { print "P4";         # header
+                      print "8 256";
+                      for (i=0;i<256;++i) # raster
+                           printf("%c",i) }' > ${complete256_pbm}
+
+# xscale factor should be tested to at least 21 (=13+8)
+
+# Test 1.
+echo "test 1"
+ 
+for xs in `seq 23`
+  do
+  pamenlarge -xscale=$xs ${complete256_pbm} | cksum
+  done
+
+# Test 2.
+echo "test 2"
+
+for xs1 in `seq 15`
+  do
+  xs2=$((30-$xs1))
+  pamenlarge -xscale=$xs1 ${complete256_pbm} | pamenlarge -xscale=$xs2 | cksum
+  if [ $xs1 != $xs2 ]; then
+  pamenlarge -xscale=$xs2 ${complete256_pbm} | pamenlarge -xscale=$xs1 | cksum
+  fi
+  pamenlarge -xscale=$(($xs1 * $xs2)) ${complete256_pbm} | cksum
+  done
+
+rm ${complete256_pbm}
+
+# Test 3.
+echo "test 3"
+
+test3_pbm=${tmpdir}/test3.pbm
+
+for width in `seq 16`
+  do
+  pbmmake -g ${width} 1 | pnmpad -top=1 -white | \
+      pnmpad -bottom=1 -black > ${test3_pbm}.${width}
+  done
+ 
+  for xscale in `seq 16`
+    do echo -n ${xscale} " "
+    for width in `seq 16`
+      do pamenlarge -xscale=${xscale} ${test3_pbm}.${width} ; done | cksum
+      #
+      # unlike most other tests we take the cksum of a composite PBM file
+      #
+    done
+
+rm ${test3_pbm}.[1-9]  ${test3_pbm}.1[1-6]

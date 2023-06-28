@@ -4,9 +4,12 @@
 # We test by actually running all the executables.
 
 # Failure message
-# See Netpbm Library Prerequisites
-# http://netpbm.sourceforge.net/prereq.html
-# if make succeeds but this test fails.
+## See Netpbm Library Prerequisites
+## http://netpbm.sourceforge.net/prereq.html
+## if make succeeds but this test fails
+##
+## If you run the "make test-install" on an older version, some executables
+## may be reported as missing because of missing features.
 
 function testExitStatus () {
 
@@ -50,6 +53,7 @@ ordinary_testprogs="\
   ddbugtopbm \
   escp2topbm \
   eyuvtoppm \
+  fiascotopnm \
   fitstopnm \
   fstopgm \
   g3topbm \
@@ -74,9 +78,11 @@ ordinary_testprogs="\
   neotoppm \
   palmtopnm \
   pamaddnoise \
+  pamaltsat \
   pamarith \
   pambackground \
   pambayer \
+  pambrighten \
   pamchannel \
   pamcomp \
   pamcrater \
@@ -90,14 +96,19 @@ ordinary_testprogs="\
   pamenlarge \
   pamexec \
   pamfile \
+  pamfind \
   pamfix \
   pamflip \
   pamfunc \
   pamgauss \
+  pamgetcolor \
   pamgradient \
+  pamhue \
+  pamlevels \
   pamlookup \
   pammasksharpen \
   pammixinterlace \
+  pammixmulti \
   pammosaicknit \
   pamoil \
   pampaintspill \
@@ -117,8 +128,10 @@ ordinary_testprogs="\
   pamstack \
   pamstereogram \
   pamstretch \
+  pamstretch-gen \
   pamsumm \
   pamsummcol \
+  pamtable \
   pamthreshold \
   pamtilt \
   pamtoavs \
@@ -142,6 +155,7 @@ ordinary_testprogs="\
   pamtouil \
   pamtowinicon \
   pamtoxvmini \
+  pamtris \
   pamundice \
   pamunlookup \
   pamvalidate \
@@ -234,6 +248,7 @@ ordinary_testprogs="\
   pnmhistmap \
   pnmindex \
   pnminvert \
+  pnmmargin \
   pnmmercator \
   pnmmontage \
   pnmnlfilt \
@@ -241,6 +256,8 @@ ordinary_testprogs="\
   pnmpad \
   pnmpaste \
   pnmpsnr \
+  pnmquant \
+  pnmquantall \
   pnmremap \
   pnmrotate \
   pnmscalefixed \
@@ -275,6 +292,7 @@ ordinary_testprogs="\
   ppmdither \
   ppmdmkfont \
   ppmdraw \
+  ppmfade \
   ppmflash \
   ppmforge \
   ppmglobe \
@@ -284,8 +302,10 @@ ordinary_testprogs="\
   ppmmix \
   ppmntsc \
   ppmpat \
+  ppmrainbow \
   ppmrelief \
   ppmrough \
+  ppmshadow \
   ppmshift \
   ppmspread \
   ppmtoacad \
@@ -356,74 +376,58 @@ ordinary_testprogs="\
   zeisstopnm \
 "
 
+
+# The string "fiascotopnm" has to be filtered out by fgrep for fiascotopnm
+# has a slightly different version report format.
+
+# Switch to control output from "program --version"
+#
+grepSwitch=1        # Initial value
+                    # Always 1 for check-install,
+                    # otherwise changes to 0 once a command succeeds.
+grepOption[0]="-v"  # Suppress output
+grepOption[1]=""    # Output --version message
+
 for i in $ordinary_testprogs
   do
-    $i --version  2>&1 | \
-    egrep -v \
-    "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \
-      1>&2;
-    testExitStatus $i 0 ${PIPESTATUS[0]}
+    # Stub out programs that aren't built.
+    Available-Testprog "$i"
+      if [ $? = 1 ]; then
+      echo "$i: program was not built" 1>&2
+      echo "$i: ok"
+      continue
+      fi
+
+
+    $i --version < /dev/null 2>&1 | \
+    # Older versions of pamstretch-gen and ppmshadow (encountered when
+    # one does "make check-install") get stuck when there is no input.
+    # Supply /dev/null as input to placate these programs.
+    
+    egrep -v -e "fiascotopnm" -e \
+    ": ((BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" | \
+    egrep ${grepOption[$grepSwitch]} -e \
+    ": (Using lib(net)?pbm|(Built (by|at)|Compiled ))" 1>&2;
+    # See showVersion() in lib/libpm.c for the above regular expressions.
+  
+    exitStatus=${PIPESTATUS[0]}
+    testExitStatus $i 0 ${exitStatus}
+
+    if [ ${CHECK_TYPE} != "install" ]
+      then grepSwitch=$((${grepSwitch} * ${exitStatus}==0 ? 0 : 1)) ;
+    fi
   done
 
 
-# Test fiascotopnm, which has a unique -v flag.
-fiascotopnm -v 2> /dev/null
-    testExitStatus fiascotopnm 2 $?
+# Anytopnm now supports --version but it delegates the report to pamtopnm.
+# It fails if pamtopnm is absent.
+# We consider anytopnm too important to test in an indirect manner.
+
+anytopnm testgrid.pbm > /dev/null 2> /dev/null;
+testExitStatus anytopnm 0 $?
 
 
-# Test manweb and pnmmargin, which have --help.
+# Test manweb which has --help.
+
 manweb --help > /dev/null
     testExitStatus manweb 0 $?
-
-pnmmargin --help 2> /dev/null
-    testExitStatus pnmmargin 1 $?
-
-
-# Test anytopnm, pnmnoraw, pnmquant, pnmquantall
-# ppmrainbow, ppmshadow, ppmtomap
-# with trivial input.
-
-$i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-tmpdir=${tmpdir:-/tmp}
-test_pbm=${tmpdir}/test.pbm
-
-cat > ${test_pbm} <<EOF
-P1
-1 1
-1
-EOF
-
-for i in anytopnm ppmtomap ppmshadow
-  do
-    $i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-    testExitStatus $i 0 $?
-  done
-
-for i in pnmquant pnmquantall
-  do
-    $i 2 ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-    testExitStatus $i 0 $?
-  done
-
-rm ${test_pbm}
-    ppmrainbow rgb:00/00/00 rgb:ff/ff/ff \
-    -tmpdir=${tmpdir} -width=2 -height=2 > /dev/null
-    testExitStatus ppmrainbow 0 $?
-
-
-# Test ppmfade with corrupt input.
-# Prevent the creation of output files by setting base to /dev/null.
-# Exit status should be 50.
-    ppmfade -f /dev/zero -base /dev/null > /dev/null 2> /dev/null
-    testExitStatus ppmfade 50 $?
-
-
-# Test pamstretch-gen and pcdovtoppm with no input.
-# These two programs write a usage message on standout in this case.
-# Exit status should be 1.
-
-for i in pamstretch-gen pcdovtoppm
-  do
-     $i > /dev/null
-     testExitStatus $i 1 $?
-  done

@@ -40,116 +40,130 @@ work.
  */
 
 #include <stdio.h>
+
+#include "mallocvar.h"
 #include "pbm.h"
 
-FILE *input ;
-
-#ifndef print
-#define print(s)        fputs (s, stdout)
-#define fprint(f, s)    fputs (s, f)
-#endif
 
 
-static void 
-output_sixel_record (unsigned char * record, int width) {
+static void
+outputSixelRecord(unsigned char * const record,
+                  unsigned int    const width) {
 
-   int i, j, k ;
-   unsigned char last_char ;
-   int start_repeat = 0 ;
-   int repeated ;
-   char repeated_str[16] ;
-   char *p ;
+    unsigned int i, j;
+    unsigned char lastChar;
+    int startRepeat;
+    char repeatedStr[16];
 
-   /* Do RLE */
-   last_char = record[0] ;
-   j = 0 ;
+    /* Do RLE */
+    lastChar = record[0];
+    j = 0;
 
-   /* This will make the following loop complete */
-   record[width] = '\0' ;
+    /* This will make the following loop complete */
+    record[width] = '\0' ;
 
-   for (i = 1 ; i <= width ; i++) {
+    for (i = 1, startRepeat = 0; i <= width; ++i) {
+        unsigned int const repeated = i - startRepeat;
 
-      repeated = i - start_repeat ;
+        if (record[i] != lastChar || repeated >= 32766) {
 
-      if (record[i] != last_char || repeated >= 32766) {
+            /* Repeat has ended */
 
-         /* Repeat has ended */
+            if (repeated > 3) {
+                /* Do an encoding */
+                char * p;
+                record[j++] = '!' ;
+                sprintf(repeatedStr, "%u", i - startRepeat);
+                for (p = repeatedStr; *p; ++p)
+                    record[j++] = *p;
+                record[j++] = lastChar;
+            } else {
+                unsigned int k;
 
-         if (repeated > 3) {
+                for (k = 0; k < repeated; ++k)
+                    record[j++] = lastChar;
+            }
 
-            /* Do an encoding */
-            record[j++] = '!' ;
-            sprintf (repeated_str, "%d", i - start_repeat) ;
-            for (p = repeated_str ; *p ; p++)
-               record[j++] = *p ;
-               record[j++] = last_char ; }
+            startRepeat = i ;
+            lastChar = record[i];
+        }
+    }
 
-         else {
-            for (k = 0 ; k < repeated ; k++)
-               record[j++] = last_char ; }
-
-         start_repeat = i ;
-         last_char = record[i] ; }
-      }
-
-   fwrite ((char *) record, j, 1, stdout) ;
-   putchar ('-') ;      /* DECGNL (graphics new-line) */
-   putchar ('\n') ;
-   }
+    fwrite((char *) record, j, 1, stdout) ;
+    putchar('-') ;      /* DECGNL (graphics new-line) */
+    putchar('\n') ;
+}
 
 
-static void 
-convert (int width, int height, int format) {
 
-   int i ;
-   unsigned char *sixel ;               /* A row of sixels */
-   int sixel_row ;
+static void
+convert(FILE *       const ifP,
+        unsigned int const width,
+        unsigned int const height,
+        unsigned int const format) {
 
-   bit *row = pbm_allocrow (width) ;
+    unsigned char * sixel;  /* A row of sixels */
+    unsigned int sixelRow;
+    bit * bitrow;
+    unsigned int remainingHeight;
 
-   sixel = (unsigned char *) malloc (width + 2) ;
+    bitrow = pbm_allocrow(width);
 
-   sixel_row = 0 ;
-   while (height--) {
-      pbm_readpbmrow (input, row, width, format) ;
-      switch (sixel_row) {
-         case 0 :
-           for (i = 0 ; i < width ; i++)
-              sixel[i] = row[i] ;
-           break ;
-         case 1 :
-           for (i = 0 ; i < width ; i++)
-              sixel[i] += row[i] << 1 ;
-           break ;
-         case 2 :
-           for (i = 0 ; i < width ; i++)
-              sixel[i] += row[i] << 2 ;
-           break ;
-         case 3 :
-           for (i = 0 ; i < width ; i++)
-              sixel[i] += row[i] << 3 ;
-           break ;
-         case 4 :
-           for (i = 0 ; i < width ; i++)
-              sixel[i] += row[i] << 4 ;
-           break ;
-         case 5 :
-           for (i = 0 ; i < width ; i++)
-              sixel[i] += (row[i] << 5) + 077 ;
-           output_sixel_record (sixel, width) ;
-           break ; }
-      if (sixel_row == 5)
-         sixel_row = 0 ;
-      else
-         sixel_row++ ;
-      }
+    MALLOCARRAY(sixel, width + 2);
+    if (!sixel)
+        pm_error("Unable to allocation %u bytes for a row buffer", width + 2);
 
-   if (sixel_row > 0) {
-      /* Incomplete sixel record needs to be output */
-      for (i = 0 ; i < width ; i++)
-         sixel[i] += 077 ;
-      output_sixel_record (sixel, width) ; }
-   }
+    for (remainingHeight = height, sixelRow = 0;
+         remainingHeight > 0;
+         --remainingHeight) {
+
+        unsigned int i;
+
+        pbm_readpbmrow(ifP, bitrow, width, format);
+
+        switch (sixelRow) {
+        case 0 :
+            for (i = 0; i < width; ++i)
+                sixel[i] = bitrow[i] ;
+            break ;
+        case 1 :
+            for (i = 0; i < width; ++i)
+                sixel[i] += bitrow[i] << 1;
+            break ;
+        case 2 :
+            for (i = 0; i < width; ++i)
+                sixel[i] += bitrow[i] << 2;
+            break ;
+        case 3 :
+            for (i = 0; i < width; ++i)
+                sixel[i] += bitrow[i] << 3;
+            break ;
+        case 4 :
+            for (i = 0; i < width; ++i)
+                sixel[i] += bitrow[i] << 4;
+            break ;
+        case 5 :
+            for (i = 0; i < width; ++i)
+                sixel[i] += (bitrow[i] << 5) + 077;
+            outputSixelRecord(sixel, width);
+            break ; }
+        if (sixelRow == 5)
+            sixelRow = 0;
+        else
+            ++sixelRow;
+    }
+
+    if (sixelRow > 0) {
+        /* Incomplete sixel record needs to be output */
+        unsigned int i;
+        for (i = 0; i < width; ++i)
+            sixel[i] += 077;
+        outputSixelRecord(sixel, width);
+    }
+
+    pbm_freerow(bitrow);
+    free(sixel);
+}
 
 
 
@@ -169,6 +183,7 @@ main (int argc, char **argv) {
    const char *opt_bottom_margin = "3400";
    const char *opt_form_length = opt_bottom_margin;
 
+   FILE * ifP;
    int width, height, format ;
 
    pbm_init (&argc_copy, argv_copy) ;
@@ -210,16 +225,16 @@ main (int argc, char **argv) {
    }
 
    if( argn < argc ) {
-      input = pm_openr( argv[argn] );
+      ifP = pm_openr( argv[argn] );
       argn++;
    }
    else
-      input = stdin;
+      ifP = stdin;
 
    if( argn != argc )
       pm_usage(usage);
 
-   pbm_readpbminit (input, &width, &height, &format) ;
+   pbm_readpbminit (ifP, &width, &height, &format) ;
 
 /*
  * In explanation of the sequence below:
@@ -241,10 +256,10 @@ main (int argc, char **argv) {
       opt_form_length);
 
    /* Convert data */
-   convert (width, height, format) ;
+   convert (ifP, width, height, format) ;
 
    /* Terminate sixel data */
-   print ("\033\\\n") ;
+   puts ("\033\\") ;
 
    /* If the program failed, it previously aborted with nonzero completion
       code, via various function calls.

@@ -41,6 +41,19 @@ exec perl -w -x -S -- "$0" "$@"
 ##############################################################################
 use strict;
 
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('ppmmix', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
+
+
 my $SPREAD =  1;
 my $SHIFT =   2;
 my $RELIEF =  3;
@@ -59,6 +72,7 @@ my $base_name = "fade";		# default base name of output files
 my $image = "ppm";		# default output storage format
 my $mode = $SPREAD;		# default fading mode
 
+doVersionHack(\@ARGV);
 
 my $n;  # argument number
 
@@ -98,8 +112,6 @@ for ($n = 0; $n < @ARGV; $n++) {
         $mode = $BLOCK;
     } elsif ("$ARGV[$n]" eq "-mix") {
         $mode = $MIX;
-    } elsif ($ARGV[$n] eq "-help" || $ARGV[$n] eq "-h") {
-        usage();
     } else {
         print "Unknown argument: $ARGV[$n]\n";
         exit 100;

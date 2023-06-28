@@ -1,0 +1,19 @@
+#! /bin/bash
+# This script tests: pnmtojpeg jpegtopnm
+# Also requires: pnmpsnr
+
+# TODO: threshold has been determined without much thought.
+# Observed pnmpsnr output: 56.20 58.26 49.38
+# On another system:       54.73 49.41 44.52
+# A small margin has been added to the above numbers.
+
+# Should print "match" three times
+
+pnmtojpeg testimg.ppm | jpegtopnm | \
+  pnmpsnr -target1=54 -target2=49 -target3=44 - testimg.ppm
+
+pnmtojpeg testimg.ppm -opt | jpegtopnm | \
+  pnmpsnr -target1=54 -target2=49 -target3=44 - testimg.ppm
+
+pnmtojpeg testimg.ppm -progressive | jpegtopnm | \
+  pnmpsnr -target1=54 -target2=49 -target3=44 - testimg.ppm

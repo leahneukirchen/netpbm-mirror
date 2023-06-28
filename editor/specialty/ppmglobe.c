@@ -9,7 +9,7 @@
  */
 
 
-#define _XOPEN_SOURCE  /* get M_PI in math.h */
+#define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

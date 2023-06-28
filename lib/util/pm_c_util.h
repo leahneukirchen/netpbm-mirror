@@ -20,6 +20,13 @@
 #define ROUND(X) (((X) >= 0) ? (int)((X)+0.5) : (int)((X)-0.5))
 #undef ROUNDU
 #define ROUNDU(X) ((unsigned int)((X)+0.5))
+    /* Note that imprecision in floating point arithmetic can make an exact
+       half fractional part round down instead of up.  What should be
+       1000.5 might actually be 1000.49999999999.
+
+       Use 'pnm_unnormalized_sample' instead of ROUNDU(samplen*maxval) to get
+       consistent rounding up when you are unnormalizing sample values.
+    */
 
 /* ROUNDUP rounds up to a specified multiple.  E.g. ROUNDUP(22, 8) == 24 */
 
@@ -53,9 +60,11 @@
 #else
   /* The test for __STDC__ is paranoid.  It is there just in case some
      nonstandard compiler defines __STDC_VERSION__ in an arbitrary manner.
+
+     We know GCC 2.95.3 has stdbool; not sure about earlier GCC 2.
   */
-  #if ( defined(__GNUC__) && (__GNUC__ >= 3) ) || \
-      ( defined(__STDC__) && (__STDC__ ==1) && \
+  #if ( defined(__GNUC__) && (__GNUC__ >= 2) ) || \
+      ( defined(__STDC__) && (__STDC__ == 1) && \
         defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) ) 
     #include <stdbool.h>
   #else

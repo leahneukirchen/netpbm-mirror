@@ -2149,7 +2149,6 @@ DecodeServer(int          const numInputFiles,
     int     otherSock;
     int     decodePortNum;
     int     frameReady;
-    boolean *ready;
     int     *waitMachine;
     int     *waitPort;
     int     *waitList;
@@ -2162,7 +2161,6 @@ DecodeServer(int          const numInputFiles,
 
     /* should keep list of port numbers to notify when frames become ready */
 
-    ready = (boolean *) calloc(numInputFiles, sizeof(boolean));
     waitMachine = (int *) calloc(numInputFiles, sizeof(int));
     waitPort = (int *) malloc(numMachines*sizeof(int));
     waitList = (int *) calloc(numMachines, sizeof(int));

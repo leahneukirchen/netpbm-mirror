@@ -31,11 +31,14 @@ endif
 MATHBINARIES =	pbmtopk
 BINARIES =	$(PORTBINARIES) $(MATHBINARIES)
 SCRIPTS =       pbmtox10bm
+EXTRA_OBJECTS = g3ttable.o g3prefab.o
 
-OBJECTS = $(BINARIES:%=%.o)
+OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 
 MERGEBINARIES = $(BINARIES)
-MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
+MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
+
+HAVE_MERGE_COMPAT=YES
 
 SUBDIRS=pbmtoppa
 
@@ -73,7 +76,7 @@ thinkjettopbm.c:%.c:%.c1 $(SRCDIR)/lib/util/lexheader
 	  grep -v "^[[:space:]]*int yywrap(void);" \
 	  >$@
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
@@ -81,7 +84,17 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pbmtosunicon$(EXE) pbmtoicon$(EXE)
 
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"pbmtoicon\",   main_pbmtosunicon);"     >>$@
+
 thisdirclean: localclean
 .PHONY: localclean
 localclean:
 	-rm -f thinkjettopbm.c
+
+pbmtog3: g3ttable.o g3prefab.o
+pbmtog3: ADDL_OBJECTS = g3ttable.o g3prefab.o
+
+g3topbm: g3ttable.o
+g3topbm: ADDL_OBJECTS = g3ttable.o

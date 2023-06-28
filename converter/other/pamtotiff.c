@@ -22,7 +22,6 @@
 */
 
 #define _XOPEN_SOURCE    /* Make sure stdio.h contains fileno() */
-#define _BSD_SOURCE      /* Make sure string.h contains strcasecmp() */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -135,6 +134,44 @@ validateTagList(struct optNameValue const taglist[]) {
 
 
 static void
+parseIndexbits(bool          const indexbitsSpec,
+               char **       const indexbits,
+               CmdlineInfo * const cmdlineP) {
+
+    if (indexbitsSpec) {
+        unsigned int i;
+
+        /* Set initial values */
+        cmdlineP->indexsizeAllowed.b1 = false;
+        cmdlineP->indexsizeAllowed.b2 = false;
+        cmdlineP->indexsizeAllowed.b4 = false;
+        cmdlineP->indexsizeAllowed.b8 = false;
+
+        for (i = 0; indexbits[i]; ++i) {
+            const char * const thisItem = indexbits[i];
+            if (streq(thisItem, "1"))
+                cmdlineP->indexsizeAllowed.b1 = true;
+            else if (streq(thisItem, "2"))
+                cmdlineP->indexsizeAllowed.b2 = true;
+            else if (streq(thisItem, "4"))
+                cmdlineP->indexsizeAllowed.b4 = true;
+            else if (streq(thisItem, "8"))
+                cmdlineP->indexsizeAllowed.b8 = true;
+            else
+                pm_error("Invalid item in -indexbits list: '%s'.  "
+                         "We recognize only 1, 2, 4, and 8", thisItem);
+        }
+    } else {
+        cmdlineP->indexsizeAllowed.b1 = false;
+        cmdlineP->indexsizeAllowed.b2 = false;
+        cmdlineP->indexsizeAllowed.b4 = false;
+        cmdlineP->indexsizeAllowed.b8 = true;
+    }
+}
+
+
+
+static void
 parseCommandLine(int                 argc,
                  const char ** const argv,
                  CmdlineInfo * const cmdlineP) {
@@ -148,7 +185,7 @@ parseCommandLine(int                 argc,
 
     unsigned int none, packbits, lzw, g3, g4, msb2lsb, lsb2msb, opt_2d, fill;
     unsigned int flate, adobeflate;
-    char * indexbits;
+    char ** indexbits;
     char * resolutionunit;
 
     unsigned int appendSpec, outputSpec, predictorSpec, rowsperstripSpec,
@@ -191,13 +228,13 @@ parseCommandLine(int                 argc,
             &yresolutionSpec,  0);
     OPTENT3(0, "resolutionunit", OPT_STRING, &resolutionunit,
             &resolutionunitSpec,    0);
-    OPTENT3(0, "indexbits",    OPT_STRING,   &indexbits,
+    OPTENT3(0, "indexbits",    OPT_STRINGLIST, &indexbits,
             &indexbitsSpec,    0);
     OPTENT3(0, "tag",          OPT_NAMELIST, &cmdlineP->taglist, &tagSpec, 0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -301,35 +338,16 @@ parseCommandLine(int                 argc,
     } else
         cmdlineP->resolutionunit = RESUNIT_INCH;
 
-    if (indexbitsSpec) {
-        if (strstr(indexbits, "1"))
-            cmdlineP->indexsizeAllowed.b1 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b1 = FALSE;
-        if (strstr(indexbits, "2"))
-            cmdlineP->indexsizeAllowed.b2 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b2 = FALSE;
-        if (strstr(indexbits, "4"))
-            cmdlineP->indexsizeAllowed.b4 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b4 = FALSE;
-        if (strstr(indexbits, "8"))
-            cmdlineP->indexsizeAllowed.b8 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b8 = FALSE;
-    } else {
-        cmdlineP->indexsizeAllowed.b1 = FALSE;
-        cmdlineP->indexsizeAllowed.b2 = FALSE;
-        cmdlineP->indexsizeAllowed.b4 = FALSE;
-        cmdlineP->indexsizeAllowed.b8 = TRUE;
-    }
+    parseIndexbits(indexbitsSpec, indexbits, cmdlineP);
+
+    if (indexbitsSpec)
+        free(indexbits);
 
     if (tagSpec)
         validateTagList(cmdlineP->taglist);
     else {
         MALLOCARRAY_NOFAIL(cmdlineP->taglist, 1);
-        cmdlineP->taglist[0].name = NULL;
+        cmdlineP->taglist[0].name  = NULL;
         cmdlineP->taglist[0].value = NULL;
     }
 
@@ -340,6 +358,14 @@ parseCommandLine(int                 argc,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFileName = argv[1];
+}
+
+
+
+static void
+freeCmdline(CmdlineInfo const cmdline) {
+
+    pm_optDestroyNameValueList(cmdline.taglist);
 }
 
 
@@ -517,7 +543,7 @@ writeScanLines(struct pam *   const pamP,
 
        The samples form pixel values according to the pixel format indicated
        by the TIFF photometric.  E.g. if it is MINISWHITE, then a pixel is
-       one sample and a value of 0 for that sample means white.
+       grayscale, composed of one sample where a value of 0 means white.
     */
     MALLOCARRAY(buf, bytesperrow);
 
@@ -577,14 +603,14 @@ analyzeColorsInRgbInput(struct pam *   const pamP,
                         CmdlineInfo    const cmdline,
                         int            const maxcolors,
                         tupletable *   const chvP,
-                        unsigned int * const colorsP,
+                        unsigned int * const colorCtP,
                         bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Same as analyzeColors(), except assuming input image has R/G/B tuples.
 -----------------------------------------------------------------------------*/
     if (cmdline.color && cmdline.truecolor) {
         *chvP = NULL;
-        *grayscaleP = FALSE;
+        *grayscaleP = false;
     } else {
         tupletable chv;
         bool grayscale;
@@ -592,17 +618,17 @@ analyzeColorsInRgbInput(struct pam *   const pamP,
         pm_message("computing colormap...");
         chv = pnm_computetuplefreqtable2(pamP, NULL, maxcolors,
                                          pamP->maxval,
-                                         colorsP);
+                                         colorCtP);
         if (chv == NULL) {
-            grayscale = FALSE;
+            grayscale = false;
         } else {
             unsigned int i;
             pm_message("%u color%s found",
-                       *colorsP, *colorsP == 1 ? "" : "s");
-            grayscale = TRUE;  /* initial assumption */
-            for (i = 0; i < *colorsP && grayscale; ++i) {
+                       *colorCtP, *colorCtP == 1 ? "" : "s");
+            grayscale = true;  /* initial assumption */
+            for (i = 0; i < *colorCtP && grayscale; ++i) {
                 if (!pnm_rgbtupleisgray(chv[i]->tuple))
-                    grayscale = FALSE;
+                    grayscale = false;
             }
         }
         *grayscaleP = grayscale;
@@ -634,20 +660,21 @@ analyzeColors(struct pam *   const pamP,
               CmdlineInfo    const cmdline,
               int            const maxcolors,
               tupletable *   const chvP,
-              unsigned int * const colorsP,
+              unsigned int * const colorCtP,
               bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Analyze the colors in the input image described by 'pamP', whose file
    is positioned to the raster.
 
-   If the colors, combined with command line options 'cmdline', indicate
-   a colormapped TIFF should be generated, return as *chvP the address
-   of a color map (in newly malloc'ed space).  If a colormapped TIFF is
-   not indicated, return *chvP == NULL.
-
    Return *grayscaleP == true iff the image should be stored as a grayscale
    image (which means the image is monochromatic and the user doesn't
    insist on color format).
+
+   If *grayscaleP is false and the colors, combined with command line options
+   'cmdline', indicate a colormapped TIFF should be generated, return as *chvP
+   the address of a color map (in newly malloc'ed space) and the number of
+   colors in it as *colorCtP.  If a colormapped color TIFF is not indicated,
+   return *chvP == NULL and nothing as *colorCtP.
 
    Leave the file position undefined.
 -----------------------------------------------------------------------------*/
@@ -656,10 +683,28 @@ analyzeColors(struct pam *   const pamP,
            (tuple type RGB or RGB_ALPHA)
         */
         analyzeColorsInRgbInput(pamP, cmdline, maxcolors,
-                                chvP, colorsP, grayscaleP);
+                                chvP, colorCtP, grayscaleP);
     else {
         *chvP = NULL;
-        *grayscaleP = TRUE;
+        *grayscaleP = true;
+    }
+}
+
+
+
+static void
+reportTiffType(bool const grayscale,
+               bool const colormapped,
+               unsigned int const colorCt,
+               bool const verbose) {
+
+    if (verbose) {
+        pm_message("Generating %s TIFF", grayscale ? "grayscale" : "color");
+
+        if (colormapped)
+            pm_message("TIFF will have palette of %u colors", colorCt);
+        else
+            pm_message("TIFF will be truecolor (24 bit RGB)");
     }
 }
 
@@ -668,7 +713,7 @@ analyzeColors(struct pam *   const pamP,
 static void
 computeRasterParm(struct pam *     const pamP,
                   tupletable       const chv,
-                  int              const colors,
+                  int              const colorCt,
                   bool             const grayscale,
                   int              const compression,
                   bool             const minisblack,
@@ -682,7 +727,7 @@ computeRasterParm(struct pam *     const pamP,
    Compute the parameters of the raster portion of the TIFF image.
 
    'minisblack' and 'miniswhite' mean the user requests the corresponding
-   photometric.  Both FALSE means user has no explicit requirement.
+   photometric.  Both false means user has no explicit requirement.
 -----------------------------------------------------------------------------*/
     unsigned short defaultPhotometric;
     /* The photometric we use if the user specified no preference */
@@ -709,14 +754,14 @@ computeRasterParm(struct pam *     const pamP,
         if (chv) {
             *samplesperpixelP = 1;  /* Pixel is just the one index value */
             *bitspersampleP =
-                colors <=   2 && indexsizeAllowed.b1 ? 1 :
-                colors <=   4 && indexsizeAllowed.b2 ? 2 :
-                colors <=  16 && indexsizeAllowed.b4 ? 4 :
-                colors <= 256 && indexsizeAllowed.b8 ? 8 :
+                colorCt <=   2 && indexsizeAllowed.b1 ? 1 :
+                colorCt <=   4 && indexsizeAllowed.b2 ? 2 :
+                colorCt <=  16 && indexsizeAllowed.b4 ? 4 :
+                colorCt <= 256 && indexsizeAllowed.b8 ? 8 :
                 0;
             if (*bitspersampleP == 0)
                 pm_error("Your -indexbits option is insufficient for the "
-                         "%d colors in this image.", colors);
+                         "%d colors in this image.", colorCt);
 
             defaultPhotometric = PHOTOMETRIC_PALETTE;
         } else {
@@ -736,11 +781,15 @@ computeRasterParm(struct pam *     const pamP,
         }
     }
 
-    if (miniswhite)
+    if (miniswhite) {
+        if (!grayscale)
+            pm_error("Image is color, so -miniswhite is invalid");
         *photometricP = PHOTOMETRIC_MINISWHITE;
-    else if (minisblack)
+    } else if (minisblack) {
+        if (!grayscale)
+            pm_error("Image is color, so -minisblack is invalid");
         *photometricP = PHOTOMETRIC_MINISBLACK;
-    else
+    } else
         *photometricP = defaultPhotometric;
 
     {
@@ -764,9 +813,9 @@ computeRasterParm(struct pam *     const pamP,
 /*----------------------------------------------------------------------------
   WRITE MODES
   -----------
-  
+
   The Tiff library does all output.  There are several issues:
-  
+
     1) The manner of output is opaque to the library client.  I.e.  we cannot
        see or control it.
 
@@ -777,22 +826,22 @@ computeRasterParm(struct pam *     const pamP,
 
     4) The Tiff library produces unhelpful error messages when the above
        conditions are not met.
-  
+
   We provide two modes for output:
-  
+
   1. Tmpfile mode (default)
-  
+
      We have the Tiff library direct output to an unnamed temporary file we
      create which is seekable and readable.  When output is complete, we copy
      the file's contents to Standard Output.
-  
+
   2. Direct mode (specified with -output)
-  
+
      We have the Tiff library write output to the specified file.  As the Tiff
      library requires taht it be be seekable and readable, we fail the program
      rather than ask the Tiff library to use the file if it does not meet
      these requirements.
-  
+
      Direct mode is further divided into append and create.  They are the same
      except that in append mode, we insist that the file already exist,
      whereas with create mode, we create it if necessary.  In either case, if
@@ -972,9 +1021,9 @@ copyBufferToStdout(int const tmpfileFd) {
 
 
 static void
-destroyTiffGenerator(WriteMethod const writeMethod,
-                     TIFF *      const tifP,
-                     int         const ofd) {
+closeTiffGenerator(WriteMethod const writeMethod,
+                   TIFF *      const tifP,
+                   int         const ofd) {
 
     TIFFFlushData(tifP);
 
@@ -994,7 +1043,7 @@ static void
 createTiffColorMap(struct pam *       const pamP,
                    unsigned int       const bitspersample,
                    tupletable         const chv,
-                   unsigned int       const colors,
+                   unsigned int       const colorCt,
                    unsigned short *** const tiffColorMapP) {
 
     unsigned int const colorMapSize = 1 << bitspersample;
@@ -1009,7 +1058,7 @@ createTiffColorMap(struct pam *       const pamP,
     for (i = 0; i < colorMapSize; ++i) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
-            if (i < colors)
+            if (i < colorCt)
                 tiffColorMap[plane][i] =
                     chv[i]->tuple[plane] * 65535L / pamP->maxval;
             else
@@ -1136,7 +1185,7 @@ convertImage(FILE *       const ifP,
     tuplehash cht;
     unsigned short ** tiffColorMap;  /* malloc'ed */
     struct pam pam;
-    unsigned int colors;
+    unsigned int colorCt;
     bool grayscale;
     unsigned short photometric;
     unsigned short samplesperpixel;
@@ -1152,14 +1201,16 @@ convertImage(FILE *       const ifP,
 
     pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
 
-    analyzeColors(&pam, cmdline, MAXCOLORS, &chv, &colors, &grayscale);
+    analyzeColors(&pam, cmdline, MAXCOLORS, &chv, &colorCt, &grayscale);
+
+    reportTiffType(grayscale, chv != NULL, colorCt, cmdline.verbose);
 
     /* Go back to beginning of raster */
     pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
     /* Figure out TIFF parameters. */
 
-    computeRasterParm(&pam, chv, colors, grayscale,
+    computeRasterParm(&pam, chv, colorCt, grayscale,
                       cmdline.compression,
                       cmdline.minisblack, cmdline.miniswhite,
                       cmdline.indexsizeAllowed,
@@ -1172,10 +1223,10 @@ convertImage(FILE *       const ifP,
         cht = NULL;
         tiffColorMap = NULL;
     } else {
-        createTiffColorMap(&pam, bitspersample, chv, colors, &tiffColorMap);
+        createTiffColorMap(&pam, bitspersample, chv, colorCt, &tiffColorMap);
 
         /* Convert color vector to color hash table, for fast lookup. */
-        cht = pnm_computetupletablehash(&pam, chv, colors);
+        cht = pnm_computetupletablehash(&pam, chv, colorCt);
         pnm_freetupletable(&pam, chv);
     }
 
@@ -1193,9 +1244,6 @@ convertImage(FILE *       const ifP,
 
 
 
-
-
-
 int
 main(int argc, const char *argv[]) {
     CmdlineInfo cmdline;
@@ -1205,7 +1253,7 @@ main(int argc, const char *argv[]) {
     int ofd;
     int eof;
     unsigned int imageSeq;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -1229,7 +1277,7 @@ main(int argc, const char *argv[]) {
         break;
     }
 
-    eof = FALSE;  /* initial assumption */
+    eof = false;  /* initial assumption */
     imageSeq = 0;
 
     while (!eof) {
@@ -1254,8 +1302,10 @@ main(int argc, const char *argv[]) {
         }
     }
 
-    destroyTiffGenerator(cmdline.writeMethod, tifP, ofd);
+    closeTiffGenerator(cmdline.writeMethod, tifP, ofd);
     pm_close(ifP);
+
+    freeCmdline(cmdline);
 
     return 0;
 }

@@ -1,0 +1,169 @@
+#! /bin/bash
+# This script tests: pbmtext
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+
+font_bdf=${tmpdir}/font.bdf
+font_corrupt=${tmpdir}/fontcorrupt
+
+# Though this BDF font file defines only three letters, it is valid.
+
+cat > ${font_bdf} << EOF
+STARTFONT 2.1
+COMMENT simple font for pbmtext test
+COMMENT derived from: $XFree86: xc/fonts/bdf/misc/micro.bdf,v 1.1 1999/09/25 14:36:34 dawes Exp $
+FONT test
+SIZE 4 75 75
+FONTBOUNDINGBOX 4 5 0 0
+STARTPROPERTIES 5
+FONT_DESCENT 0
+FONT_ASCENT 5
+CHARSET_REGISTRY "ISO88591"
+CHARSET_ENCODING "1"
+COPYRIGHT "Public domain font.  Share and enjoy."
+ENDPROPERTIES
+CHARS 3
+STARTCHAR A
+ENCODING 65
+SWIDTH 1000 0
+DWIDTH 4 0
+BBX 4 5 0 0
+BITMAP
+e0
+a0
+e0
+a0
+a0
+ENDCHAR
+STARTCHAR B
+ENCODING 66
+SWIDTH 1000 0
+DWIDTH 4 0
+BBX 4 5 0 0
+BITMAP
+e0
+a0
+c0
+a0
+e0
+ENDCHAR
+STARTCHAR C
+ENCODING 67
+SWIDTH 1000 0
+DWIDTH 4 0
+BBX 4 5 0 0
+BITMAP
+e0
+80
+80
+80
+e0
+ENDCHAR
+ENDFONT
+EOF
+
+# Test 1
+# This should succeed and produce 386826492 35
+pbmtext -font ${font_bdf} ABC | cksum
+
+
+# Test 2
+# These should all fail.  Writes 1 eightteen times.
+
+echo "Test whether corrupted BDF font files are properly handled." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pbmtext -font ${font_bdf} BCD
+echo $?
+
+for token in "STARTPROPERTIES" "CHARS" "STARTCHAR" "ENCODING" "DWIDTH"
+do
+  font_corrupt_bdf=${font_corrupt}.naked_${token}.bdf
+  sed 's/^'${token}' .*$/'${token}'/' \
+    ${font_bdf} >  ${font_corrupt_bdf}
+  pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+  echo $?
+  rm ${font_corrupt_bdf}
+done
+
+font_corrupt_bdf=${font_corrupt}.fbbx_narrow.bdf
+sed 's/FONTBOUNDINGBOX 4 5 0 0/FONTBOUNDINGBOX 4 4 0 0/' \
+  ${font_bdf} > ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+font_corrupt_bdf=${font_corrupt}.fbbx_low.bdf
+sed 's/FONTBOUNDINGBOX 4 5 0 0/FONTBOUNDINGBOX 3 5 0 0/' \
+  ${font_bdf} >  ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+font_corrupt_bdf=${font_corrupt}.bbx_only3fields.bdf
+sed 's/BBX 4 5 0 0/BBX 4 5 0/' \
+  ${font_bdf} >  ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+font_corrupt_bdf=${font_corrupt}.bbx_wide.bdf
+sed 's/BBX 4 5 0 0/BBX 9 5 0 0/' \
+  ${font_bdf} >  ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+font_corrupt_bdf=${font_corrupt}.bbx_zerowidth.bdf
+sed 's/BBX 4 5 0 0/BBX 0 5 0 0/' \
+  ${font_bdf} >  ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+font_corrupt_bdf=${font_corrupt}.bbx_tall.bdf
+sed 's/BBX 4 5 0 0/BBX 4 6 0 0/' \
+  ${font_bdf} >  ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+font_corrupt_bdf=${font_corrupt}.bbx_low.bdf
+sed 's/BBX 4 5 0 0/BBX 4 1 0 0/' \
+  ${font_bdf} >  ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+font_corrupt_bdf=${font_corrupt}.bbx_zeroheight.bdf
+sed 's/BBX 4 5 0 0/BBX 4 0 0 0/' \
+  ${font_bdf} >  ${font_corrupt_bdf}
+pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+echo $?
+rm ${font_corrupt_bdf}
+
+for delete_line in 14 16 18 20
+  do
+  font_corrupt_bdf=${font_corrupt}.del${delete_line}.pdf
+  sed "${delete_line}"d ${font_bdf} >  ${font_corrupt_bdf}
+  pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+  echo $?
+  rm ${font_corrupt_bdf}
+  done
+
+
+# Test 2
+# These should succeed.  Warning messages will be displayed.
+# Writes 1 two times.
+
+for token in "CHARSET_ENCODING" "CHARSET_REGISTRY"
+do
+  font_corrupt_bdf=${font_corrupt}.naked_${token}.bdf
+  sed 's/^'${token}' .*$/'${token}'/' \
+    ${font_bdf} >  ${font_corrupt_bdf}
+  pbmtext -font ${font_corrupt_bdf} ABC > /dev/null
+  echo $?
+  rm ${font_corrupt_bdf}
+done

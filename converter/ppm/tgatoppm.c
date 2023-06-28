@@ -12,6 +12,7 @@
 ** implied warranty.
 */
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
@@ -29,7 +30,6 @@ static int mapped, rlencoded;
 
 static pixel ColorMap[MAXCOLORS];
 static gray AlphaMap[MAXCOLORS];
-static int RLE_count = 0, RLE_flag = 0;
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -78,14 +78,14 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->input_filename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->input_filename = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
     if (alpha_spec &&
         streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = 1;
-    else 
+    else
         cmdlineP->alpha_stdout = 0;
 
     if (!alpha_spec)
@@ -102,89 +102,111 @@ getbyte(FILE * const ifP) {
 
     if ( fread( (char*) &c, 1, 1, ifP ) != 1 )
         pm_error( "EOF / read error" );
-    
+
     return c;
 }
 
 
 
+static int RLE_count = 0, RLE_flag = 0;
+
+
+
 static void
-get_pixel(FILE * const ifP, pixel * dest, int Size, gray *alpha_p) {
+handleRun(FILE * const ifP,
+          bool * const repeatP) {
 
-    static pixval Red, Grn, Blu;
-    static pixval Alpha;
-    unsigned char j, k;
+    if (rlencoded) {
+        if (RLE_count == 0) {
+            /* Have to restart run. */
+            unsigned char i;
+            i = getbyte(ifP);
+            RLE_flag = (i & 0x80);
+            if (RLE_flag == 0) {
+                /* Stream of unencoded pixels. */
+                RLE_count = i + 1;
+            } else {
+                /* Single pixel replicated. */
+                RLE_count = i - 127;
+            }
+            /* Decrement count & get pixel. */
+            --RLE_count;
+            *repeatP = false;
+        } else {
+            /* Have already read count & (at least) first pixel. */
+            --RLE_count;
+            if (RLE_flag != 0) {
+                /* Replicated pixels. */
+                *repeatP = true;
+            } else
+                *repeatP = false;
+        }
+    } else
+        *repeatP = false;
+}
+
+
+
+static void
+getPixel(FILE *  const ifP,
+         pixel * const dest,
+         int     const size,
+         gray *  const alphaP) {
+
+    static pixval red, grn, blu;
+    static pixval alpha;
     static unsigned int l;
+    unsigned char j, k;
+    bool repeat;
+        /* Next pixel is just a repeat (from an encoded run) */
 
-    /* Check if run length encoded. */
-    if ( rlencoded )
-	{
-	if ( RLE_count == 0 )
-	    { /* Have to restart run. */
-	    unsigned char i;
-	    i = getbyte( ifP );
-	    RLE_flag = ( i & 0x80 );
-	    if ( RLE_flag == 0 )
-		/* Stream of unencoded pixels. */
-		RLE_count = i + 1;
-	    else
-		/* Single pixel replicated. */
-		RLE_count = i - 127;
-	    /* Decrement count & get pixel. */
-	    --RLE_count;
-	    }
-	else
-	    { /* Have already read count & (at least) first pixel. */
-	    --RLE_count;
-	    if ( RLE_flag != 0 )
-		/* Replicated pixels. */
-		goto PixEncode;
-	    }
-	}
-    /* Read appropriate number of bytes, break into RGB. */
-    switch ( Size )
-	{
-	case 8:				/* Grayscale, read and triplicate. */
-	Red = Grn = Blu = l = getbyte( ifP );
-    Alpha = 0;
-	break;
+    handleRun(ifP, &repeat);
 
-	case 16:			/* 5 bits each of red green and blue. */
-	case 15:			/* Watch byte order. */
-	j = getbyte( ifP );
-	k = getbyte( ifP );
-	l = ( (unsigned int) k << 8 ) + j;
-	Red = ( k & 0x7C ) >> 2;
-	Grn = ( ( k & 0x03 ) << 3 ) + ( ( j & 0xE0 ) >> 5 );
-	Blu = j & 0x1F;
-    Alpha = 0;
-	break;
-
-	case 32:            /* 8 bits each of blue, green, red, and alpha */
-	case 24:			/* 8 bits each of blue, green, and red. */
-	Blu = getbyte( ifP );
-	Grn = getbyte( ifP );
-	Red = getbyte( ifP );
-	if ( Size == 32 )
-	    Alpha = getbyte( ifP );
-    else
-        Alpha = 0;
-	l = 0;
-	break;
-
-	default:
-	pm_error( "unknown pixel size (#2) - %d", Size );
-	}
-
-PixEncode:
-    if ( mapped ) {
-        *dest = ColorMap[l];
-        *alpha_p = AlphaMap[l];
+    if (repeat) {
+        /* Use red, grn, blu, alpha, and l from prior call to getPixel */
     } else {
-        PPM_ASSIGN( *dest, Red, Grn, Blu );
-        *alpha_p = Alpha;
+        /* Read appropriate number of bytes, break into RGB. */
+        switch (size) {
+        case 8:             /* Grayscale, read and triplicate. */
+            red = grn = blu = l = getbyte(ifP);
+            alpha = 0;
+            break;
+
+        case 16:            /* 5 bits each of red green and blue. */
+        case 15:            /* Watch byte order. */
+            j = getbyte(ifP);
+            k = getbyte(ifP);
+            l = ((unsigned int)k << 8) + j;
+            red = (k & 0x7C) >> 2;
+            grn = ((k & 0x03) << 3) + ((j & 0xE0) >> 5);
+            blu = j & 0x1F;
+            alpha = 0;
+            break;
+
+        case 32:            /* 8 bits each of blue, green, red, and alpha */
+        case 24:            /* 8 bits each of blue, green, and red. */
+            blu = getbyte(ifP);
+            grn = getbyte(ifP);
+            red = getbyte(ifP);
+            if (size == 32)
+                alpha = getbyte(ifP);
+            else
+                alpha = 0;
+            l = 0;
+            break;
+
+        default:
+            pm_error("unknown pixel size (#2) - %d", size);
+        }
     }
+    if (mapped) {
+        *dest = ColorMap[l];
+        *alphaP = AlphaMap[l];
+    } else {
+        PPM_ASSIGN(*dest, red, grn, blu);
+        *alphaP = alpha;
     }
+}
 
 
 
@@ -216,7 +238,7 @@ readtga(FILE * const ifP, struct ImageHeader * tgaP) {
     tgaP->Rsrvd = ( flags & 0x10 ) >> 4;
     tgaP->OrgBit = ( flags & 0x20 ) >> 5;
     tgaP->IntrLve = ( flags & 0xc0 ) >> 6;
-    
+
     if ( tgaP->IdLength != 0 )
         fread( junk, 1, (int) tgaP->IdLength, ifP );
 }
@@ -230,14 +252,14 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
 
     /* Read appropriate number of bytes, break into rgb & put in map. */
     switch ( Size )
-	{
-	case 8:				/* Grayscale, read and triplicate. */
+    {
+    case 8:             /* Grayscale, read and triplicate. */
         r = g = b = getbyte( ifP );
         a = 0;
         break;
-        
-	case 16:			/* 5 bits each of red green and blue. */
-	case 15:			/* Watch for byte order. */
+
+    case 16:            /* 5 bits each of red green and blue. */
+    case 15:            /* Watch for byte order. */
         j = getbyte( ifP );
         k = getbyte( ifP );
         r = ( k & 0x7C ) >> 2;
@@ -245,21 +267,21 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
         b = j & 0x1F;
         a = 0;
         break;
-        
-	case 32:            /* 8 bits each of blue, green, red, and alpha */
-	case 24:			/* 8 bits each of blue green and red. */
+
+    case 32:            /* 8 bits each of blue, green, red, and alpha */
+    case 24:            /* 8 bits each of blue green and red. */
         b = getbyte( ifP );
         g = getbyte( ifP );
         r = getbyte( ifP );
         if ( Size == 32 )
             a = getbyte( ifP );
-        else 
+        else
             a = 0;
         break;
-        
-	default:
+
+    default:
         pm_error( "unknown colormap pixel size (#2) - %d", Size );
-	}
+    }
     PPM_ASSIGN( *Value, r, g, b );
     *Alpha = a;
 }
@@ -325,84 +347,89 @@ main(int argc, char * argv[]) {
 
     if (cmdline.alpha_stdout)
         alpha_file = stdout;
-    else if (cmdline.alpha_filename == NULL) 
+    else if (cmdline.alpha_filename == NULL)
         alpha_file = NULL;
     else
         alpha_file = pm_openw(cmdline.alpha_filename);
-    
-    if (cmdline.alpha_stdout) 
+
+    if (cmdline.alpha_stdout)
         imageout_file = NULL;
     else
         imageout_file = stdout;
-    
+
     /* Read the Targa file header. */
     readtga(ifP, &tga_head);
 
-    if (cmdline.headerdump) 
+    if (cmdline.headerdump)
         dumpHeader(tga_head);
 
     rows = ((int) tga_head.Height_lo) + ((int) tga_head.Height_hi) * 256;
     cols = ((int) tga_head.Width_lo)  + ((int) tga_head.Width_hi)  * 256;
 
     switch (tga_head.ImgType) {
-	case TGA_Map:
-	case TGA_RGB:
-	case TGA_Mono:
-	case TGA_RLEMap:
-	case TGA_RLERGB:
-	case TGA_RLEMono:
+    case TGA_Map:
+    case TGA_RGB:
+    case TGA_Mono:
+    case TGA_RLEMap:
+    case TGA_RLERGB:
+    case TGA_RLEMono:
         break;
-	default:
+    case TGA_CompMap:
+    case TGA_CompMap4:
+        pm_error("Targa image type %d (compressed color-mapped data). "
+                 "Cannot handle this format.", tga_head.ImgType);
+        break;
+    default:
         pm_error("unknown Targa image type %d", tga_head.ImgType);
-	}
-    
+    }
+
     if (tga_head.ImgType == TGA_Map ||
         tga_head.ImgType == TGA_RLEMap ||
         tga_head.ImgType == TGA_CompMap ||
         tga_head.ImgType == TGA_CompMap4)
-	{ /* Color-mapped image */
+    { /* Color-mapped image */
         if (tga_head.CoMapType != 1)
-            pm_error( 
+            pm_error(
                 "mapped image (type %d) with color map type != 1",
                 tga_head.ImgType );
         mapped = true;
         /* Figure maxval from CoSize. */
         switch (tga_head.CoSize) {
-	    case 8:
-	    case 24:
-	    case 32:
+        case 8:
+        case 24:
+        case 32:
             maxval = 255;
             break;
 
-	    case 15:
-	    case 16:
+        case 15:
+        case 16:
             maxval = 31;
             break;
 
-	    default:
-	    pm_error(
-		"unknown colormap pixel size - %d", tga_head.CoSize );
-	    }
-	} else { 
+        default:
+        pm_error(
+        "unknown colormap pixel size - %d", tga_head.CoSize );
+        }
+    } else {
         /* Not colormap, so figure maxval from PixelSize. */
         mapped = false;
         switch ( tga_head.PixelSize ) {
-	    case 8:
-	    case 24:
-	    case 32:
+        case 8:
+        case 24:
+        case 32:
             maxval = 255;
             break;
-            
-	    case 15:
-	    case 16:
+
+        case 15:
+        case 16:
             maxval = 31;
             break;
-            
-	    default:
+
+        default:
             pm_error("unknown pixel size - %d", tga_head.PixelSize);
-	    }
-	}
-    
+        }
+    }
+
     /* If required, read the color map information. */
     if ( tga_head.CoMapType != 0 ) {
         unsigned int i;
@@ -415,7 +442,7 @@ main(int argc, char * argv[]) {
         for (i = temp1; i < (temp1 + temp2); ++i)
             get_map_entry(ifP, &ColorMap[i], (int) tga_head.CoSize,
                           &AlphaMap[i]);
-	}
+    }
 
     /* Check run-length encoding. */
     if (tga_head.ImgType == TGA_RLEMap ||
@@ -424,7 +451,7 @@ main(int argc, char * argv[]) {
         rlencoded = 1;
     else
         rlencoded = 0;
-    
+
     /* Read the Targa file body and convert to portable format. */
     pixels = ppm_allocarray( cols, rows );
     alpha = pgm_allocarray( cols, rows );
@@ -436,10 +463,10 @@ main(int argc, char * argv[]) {
         realrow = truerow;
         if (tga_head.OrgBit == 0)
             realrow = rows - realrow - 1;
-        
+
         for (col = 0; col < cols; ++col)
-            get_pixel(ifP, &(pixels[realrow][col]), (int) tga_head.PixelSize,
-                      &(alpha[realrow][col]));
+            getPixel(ifP, &(pixels[realrow][col]), (int) tga_head.PixelSize,
+                     &(alpha[realrow][col]));
         if (tga_head.IntrLve == TGA_IL_Four)
             truerow += 4;
         else if (tga_head.IntrLve == TGA_IL_Two)
@@ -448,17 +475,20 @@ main(int argc, char * argv[]) {
             ++truerow;
         if (truerow >= rows)
             truerow = ++baserow;
-	}
+    }
     pm_close(ifP);
-    
-    if (imageout_file) 
+
+    if (imageout_file)
         ppm_writeppm(imageout_file, pixels, cols, rows, (pixval) maxval, 0);
     if (alpha_file)
         pgm_writepgm(alpha_file, alpha, cols, rows, (pixval) maxval, 0);
-    if (imageout_file) 
+    if (imageout_file)
         pm_close(imageout_file);
     if (alpha_file)
         pm_close(alpha_file);
 
     return 0;
 }
+
+
+

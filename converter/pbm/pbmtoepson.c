@@ -11,6 +11,7 @@
 ** implied warranty.
 */
 
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 #include <stdio.h>
 

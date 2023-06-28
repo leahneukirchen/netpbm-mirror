@@ -82,8 +82,10 @@ Resize_Array_Width(uint8 ** const inarray,
     int out_total;
     uint8 *inptr;
     uint8 *outptr;
+#ifdef DOING_INTERPOLATION
     uint8 pointA,pointB;
-    /* double slope,diff; */
+    double slope,diff;
+#endif
     
     for (i = 0; i < in_y; ++i) {     /* For each row */
         unsigned int j;
@@ -105,11 +107,15 @@ Resize_Array_Width(uint8 ** const inarray,
                     --inptr;
                 }
             } else {  
+#ifdef DOING_INTERPOLATION
                 pointA = *inptr;
+#endif
                 ++inptr;
+#ifdef DOING_INTERPOLATION
                 pointB = *inptr;
+#endif
                 --inptr;
-#if 0
+#ifdef DOING_INTERPOLATION
                 /*Interpolative solution */
                 slope = ((double)(pointB -pointA))/((double)(out_x));
                 diff = (((double)(out_total - in_total)));
@@ -159,8 +165,10 @@ Resize_Array_Height(uint8 ** const inarray,
     for(i=0; i < in_x; ++i){    /* for each column */
         int in_total;
         int out_total;
+#ifdef DOING_INTERPOLATION
         uint8 pointA, pointB;
         double slope, diff;
+#endif
         unsigned int j;
         int k;
 
@@ -180,15 +188,17 @@ Resize_Array_Height(uint8 ** const inarray,
                     --k;
                 }
             } else {  
+#ifdef DOING_INTERPOLATION
                 pointA = inarray[k][i];
-                if (k != (in_y -1)) {
+                if (k != (in_y - 1)) {
                     pointB = inarray[k+1][i];
                 } else
                     pointB = pointA;
                 /* Interpolative case */
                 slope = ((double)(pointB -pointA))/(double)(out_y);
                 diff = (double)(out_total - in_total);
-                /*  outarray[j][i] = (inarray[k][i] + (uint8)(slope*diff)); */
+                outarray[j][i] = (inarray[k][i] + (uint8)(slope*diff));
+#endif
                 /* Non-Interpolative case */
                 outarray[j][i] = inarray[k][i];
                 out_total = out_total + in_y;

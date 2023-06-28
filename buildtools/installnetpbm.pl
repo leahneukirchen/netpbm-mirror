@@ -8,6 +8,7 @@ use strict;
 use English;
 use Fcntl;
 use File::Basename;
+use Cwd qw(getcwd);
 
 my ($TRUE, $FALSE) = (1,0);
 
@@ -46,12 +47,54 @@ sub prompt($$) {
 
 
 
+sub fsObjPrompt($$) {
+    my ($prompt, $default) = @_;
+#-----------------------------------------------------------------------------
+#  Prompt for a filesystem object name and accept glob pattern such as
+#  ~/mydir and /usr/lib/net* .
+#
+#  If there are zero or multiple filesystem object names that match the
+#  pattern the user gave, ask again.  If there is only one possible name
+#  consistent with the user's response, return that even if no filesystem
+#  object by that name exists.
+#-----------------------------------------------------------------------------
+    my $globbedResponse;
+
+    while (!$globbedResponse) {
+        my $response = prompt($prompt, $default);
+
+        my @matchList = glob($response);
+
+        if (@matchList == 0) {
+            print("No filesystem object matches that pattern\n");
+        } elsif (@matchList > 1) {
+            print("Multiple filesystem objects match that pattern\n");
+        } else {
+            $globbedResponse = $matchList[0];
+        }
+    }
+    return $globbedResponse;
+}
+
+
+
 sub getPkgdir() {
 #-----------------------------------------------------------------------------
 #  Find out from the user where the Netpbm package is (i.e. where
 #  'make package' put it).
 #-----------------------------------------------------------------------------
     my $pkgdir;
+
+    # We allow the user to respond with a shell filename pattern.  This seems
+    # like a lot of complexity for a barely useful feature, but we actually
+    # saw a problem where a user typed ~/mypackage without realizing that ~ is
+    # a globbing thing and was stumped when we said no such file exists, while
+    # shell commands said it does.
+
+    # Note that glob() of something that has no wildcard/substitution
+    # characters just returns its argument, whether a filesystem object by
+    # that name exists or not.  But for a wildcard pattern that doesn't match
+    # any existing files, glob() returns an empty list.
 
     while (!$pkgdir) {
     
@@ -61,13 +104,32 @@ sub getPkgdir() {
         
         my $response = prompt("package directory", $default);
 
-        if (!-f("$response/pkginfo")) {
-            print("This does not appear to be a Netpbm install package. \n");
-            print("A file named $response/pkginfo does not exist.\n");
-            print("\n");
+        my @matchList = glob($response);
+
+        if (@matchList == 0) {
+            print("No filesystem object matches that pattern\n");
+        } elsif (@matchList > 1) {
+            print("Multiple filesystem objects match that pattern\n");
         } else {
-            $pkgdir = $response;
+            my $fsObjNm = $matchList[0];
+            
+            if (!-e($fsObjNm)) {
+                print("No filesystem object named '$fsObjNm' exists.\n");
+            } else {
+                if (!-d($fsObjNm)) {
+                    print("'$fsObjNm' is not a directory\n");
+                } else {
+                    if (!-f("$fsObjNm/pkginfo")) {
+                        print("Directory '$fsObjNm' does not appear to be " .
+                              "a Netpbm install package. \n");
+                        print("It does not contain a file named 'pkginfo'.\n");
+                    } else {
+                        $pkgdir = $fsObjNm;
+                    }
+                }
+            }
         }
+        print("\n");
     }
     print("\n");
     return $pkgdir;
@@ -80,8 +142,8 @@ sub makePrefixDirectory($) {
     my ($prefixDir) = @_;
 
     if ($prefixDir ne "" and !-d($prefixDir)) {
-        print("No directory named '$prefixDir' exists.  Do you want " .
-              "to create it?\n");
+        print("No directory named '$prefixDir' exists.  " .
+              "Do you want to create it?\n");
 
         my $done;
         while (!$done) {
@@ -97,6 +159,7 @@ sub makePrefixDirectory($) {
                 $done = $TRUE;
             } 
         }
+        print("\n");
     }
 }
 
@@ -123,7 +186,7 @@ sub getPrefix() {
         $default = "/usr/local/netpbm";
     }
 
-    my $response = prompt("install prefix", $default);
+    my $response = fsObjPrompt("install prefix", $default);
 
     my $prefix;
 
@@ -185,7 +248,7 @@ sub getBinDir($) {
     while (!$binDir) {
         my $default = "$prefix/bin";
 
-        my $response = prompt("program directory", $default);
+        my $response = fsObjPrompt("program directory", $default);
         
         if (-d($response)) {
             $binDir = $response;
@@ -243,7 +306,7 @@ sub getLibDir($) {
     while (!$libDir) {
         my $default = "$prefix/lib";
 
-        my $response = prompt("shared library directory", $default);
+        my $response = fsObjPrompt("shared library directory", $default);
         
         if (-d($response)) {
             $libDir = $response;
@@ -559,9 +622,194 @@ sub installSharedLib($$$) {
 
 
 
-sub getLinkDir($) {
+sub getSharedLinkDir($) {
 #-----------------------------------------------------------------------------
-#  Find out from the user where he wants the link-edit libraries installed and
+#  Find out from the user where he wants the shared library stubs installed
+#  and return that.
+#-----------------------------------------------------------------------------
+    my ($prefix) = @_;
+
+    print("Where do you want the shared library stub (used to link-edit\n" .
+          "programs to use the shared lirary) installed?\n");
+    print("\n");
+
+    my $linkDir;
+
+    while (!$linkDir) {
+        my $default = "$prefix/lib";
+
+        my $response = fsObjPrompt("shared library stub directory", $default);
+        
+        if (-d($response)) {
+            $linkDir = $response;
+        } else {
+            my $succeeded = mkdir($response, 0777);
+            
+            if (!$succeeded) {
+                print("Unable to create directory '$response'.  " .
+                      "Error=$ERRNO\n");
+            } else {
+                $linkDir = $response;
+            }
+        }
+    }
+    print("\n");
+
+    return $linkDir;
+}
+
+
+
+sub removeDotDirs($) {
+
+    my ($readDirResultR) = @_;
+
+    my @dirContents;
+
+    foreach (@{$readDirResultR}) {
+        if ($_ ne '.' && $_ ne '..') {
+            push(@dirContents, $_);
+        }
+    }
+
+    return \@dirContents;
+}
+
+
+
+sub readDirContents($$$) {
+    my ($dirName, $contentsRR, $errorR) = @_;
+#-----------------------------------------------------------------------------
+#  Return the contents of the directory named $dirName, excluding the
+#  fake . and .. entries.
+#-----------------------------------------------------------------------------
+    my $dirContentsR;
+    my $error;
+
+    my $success = opendir(DIR, $dirName);
+
+    if (!$success) {
+        $error = "Unable to open directory '$dirName' with opendir()";
+    } else {
+        my @readDirResult = readdir(DIR);
+
+        $dirContentsR = removeDotDirs(\@readDirResult);
+
+        closedir(DIR);
+    }
+
+    $$contentsRR = $dirContentsR;
+
+    if ($errorR) {
+        $$errorR = $error;
+    }
+}
+
+
+
+sub dirContents($) {
+    my ($dirName) = @_;
+#-----------------------------------------------------------------------------
+#  Return the contents of the directory named $dirName, excluding the
+#  fake . and .. entries.
+#-----------------------------------------------------------------------------
+
+    readDirContents($dirName, \my $contentsR, \my $error);
+
+    if ($error) {
+        die($error);
+    }
+    return @{$contentsR};
+}
+
+
+
+sub fixSharedStubSymlink($$) {
+#-----------------------------------------------------------------------------
+#  This is a hack to install a shared library link on a GNU system.
+#
+# On systems that use the GNU dynamic linker, the shared library stub (the
+# file one uses at link-edit time to tell the linker what it needs to know
+# about the shared library that the code will use at run time) is just a
+# symbolic link to a copy of the actual shared library.  In the Netpbm
+# package, this is a relative symbolic link to the shared library in the
+# package.
+
+# Assuming Caller just copied the contents of the 'sharedlink' directory
+# straight from the package to the install target system, that symbolic link
+# isn't necessarily correct, and even if it is, it's probably messy.  (In the
+# normal case, the link value is ../lib/libnetpbm.so.<MAJ>).
+
+# So what we do is just detect and patch up that case.  If the stub is a
+# symbolic link to something in the shared library directory of the package,
+# we replace it with a symbolic link to the same thing in the shared library
+# directory of the install target system.
+# -----------------------------------------------------------------------------
+    my ($linkDir, $shlibDir) = @_;
+
+    my $oldCwd = getcwd();
+    chdir($linkDir);
+
+    foreach my $fsObjNm (dirContents('.')) {
+        if (-l("$fsObjNm")) {
+            if (readlink($fsObjNm) =~ m{^\.\./lib/(.*)$}) {
+                my $shlibNm = $1;
+
+                unlink($fsObjNm) or
+                    die("Failed to delete symlink copied from package " .
+                        "in order to replace it with a proper symlink " .
+                        "for this installation");
+
+                if ($linkDir eq $shlibDir) {
+                    symlink($shlibNm, $fsObjNm) or
+                        die("Failed to create symlink as shared library stub");
+                } else {
+                    symlink("$shlibDir/$shlibNm", $fsObjNm) or
+                        die("Failed to create symlink as shared library stub");
+                }
+                    
+                print("Linked $shlibDir/$shlibNm from $linkDir/$fsObjNm");
+            }
+        }
+    }
+    chdir($oldCwd);
+}
+
+
+
+sub installSharedStub($$$$) {
+
+    my ($pkgdir, $prefix, $shlibDir, $linkdirR) = @_;
+
+    if (-d("$pkgdir/sharedlink")) {
+        my $linkDir = getSharedLinkDir($prefix);
+
+        print("Installing shared library stubs.\n");
+
+        my $rc = system("$cpCommand $pkgdir/sharedlink/* $linkDir/");
+
+        if ($rc != 0) {
+            print("Copy of files from $pkgdir/sharedlink " .
+                  "to $linkDir failed.\n");
+            print("cp return code is $rc\n");
+        } else {
+            fixSharedStubSymlink($linkDir, $shlibDir);
+
+            print("done.\n");
+        }
+        $$linkdirR = $linkDir;
+    } else {
+        print("You did not build a shared library, so I will not " .
+              "install a stub \n");
+        $$linkdirR = undef;
+    }
+}
+
+
+
+sub getStaticLinkDir($) {
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the static  libraries installed and
 #  return that.
 #-----------------------------------------------------------------------------
     my ($prefix) = @_;
@@ -574,7 +822,7 @@ sub getLinkDir($) {
     while (!$linkDir) {
         my $default = "$prefix/lib";
 
-        my $response = prompt("static library directory", $default);
+        my $response = fsObjPrompt("static library directory", $default);
         
         if (-d($response)) {
             $linkDir = $response;
@@ -600,15 +848,16 @@ sub installStaticLib($$$) {
 
     my ($pkgdir, $prefix, $linkdirR) = @_;
 
-    if (-d("$pkgdir/link")) {
-        my $linkDir = getLinkDir($prefix);
+    if (-d("$pkgdir/staticlink")) {
+        my $linkDir = getStaticLinkDir($prefix);
 
-        print("Installing link libraries.\n");
+        print("Installing static link libraries.\n");
 
-        my $rc = system("$cpCommand $pkgdir/link/* $linkDir/");
+        my $rc = system("$cpCommand $pkgdir/staticlink/* $linkDir/");
 
         if ($rc != 0) {
-            print("Copy of files from $pkgdir/link to $linkDir failed.\n");
+            print("Copy of files from $pkgdir/staticlink " .
+                  "to $linkDir failed.\n");
             print("cp return code is $rc\n");
         } else {
             print("done.\n");
@@ -617,6 +866,7 @@ sub installStaticLib($$$) {
     } else {
         print("You did not build a static library, so I will not " .
               "install one \n");
+        $$linkdirR = undef;
     }
 }
 
@@ -637,7 +887,7 @@ sub getDataDir($) {
     while (!$dataDir) {
         my $default = "$prefix/lib";
 
-        my $response = prompt("data file directory", $default);
+        my $response = fsObjPrompt("data file directory", $default);
         
         if (-d($response)) {
             $dataDir = $response;
@@ -674,7 +924,7 @@ sub getHdrDir($) {
     while (!$hdrDir) {
         my $default = "$prefix/include";
 
-        my $response = prompt("header directory", $default);
+        my $response = fsObjPrompt("header directory", $default);
         
         if (-d($response)) {
             $hdrDir = $response;
@@ -752,228 +1002,6 @@ sub installHeader($$$) {
 
 
 
-sub getManDir($) {
-#-----------------------------------------------------------------------------
-#  Find out from the user where he wants the pointer man pages
-#  installed and return that.
-#-----------------------------------------------------------------------------
-    my ($prefix) = @_;
-
-    print("Where do you want the man pages installed?\n");
-
-    print("\n");
-
-    my $manDir;
-
-    while (!$manDir) {
-        my $default = "$prefix/man";
-
-        my $response = prompt("man page directory", $default);
-
-        if (-d($response)) {
-            $manDir = $response;
-        } else {
-            my $succeeded = mkdir($response, 0777);
-            
-            if (!$succeeded) {
-                print("Unable to create directory '$response'.  " .
-                      "Error=$ERRNO\n");
-            } else {
-                $manDir = $response;
-            }
-        }
-    }
-    print("\n");
-
-    return $manDir;
-}
-
-
-
-sub removeObsoleteManPage($) {
-
-    my ($mandir) = @_;
-
-    unlink("$mandir/man1/pgmoil");
-    unlink("$mandir/man1/pgmnorm");
-    unlink("$mandir/man1/ppmtojpeg");
-    unlink("$mandir/man1/bmptoppm");
-    unlink("$mandir/man1/ppmtonorm");
-    unlink("$mandir/man1/ppmtouil");
-    unlink("$mandir/man1/pnmnoraw");
-    unlink("$mandir/man1/gemtopbm");
-    unlink("$mandir/man1/pnminterp");
-}
-
-
-
-sub tryToCreateManwebConf($) {
-
-    my ($manweb_conf_filename) = $@;
-
-    print("You don't have a /etc/manweb.conf, which is the " .
-          "configuration\n");
-    print("file for the 'manweb' program, which is a quick way to " .
-          "get to Netpbm\n");
-    print("documentation.  Would you like to create one now?\n");
-        
-    my $done;
-    
-    while (!$done) {
-        my $response = prompt("create /etc/manweb.conf", "Y");
-        
-        if (uc($response) eq "Y") {
-            my $successful = open(MANWEB_CONF, ">/etc/manweb.conf");
-            if (!$successful) {
-                print("Unable to create file /etc/manweb.conf.  " .
-                          "error = $ERRNO\n");
-            } else {
-                print(MANWEB_CONF "#Configuration file for Manweb\n");
-                print(MANWEB_CONF "webdir=/usr/man/web\n");
-                close(MANWEB_CONF);
-                $done = $TRUE;
-            }
-        } else {
-            $done = $TRUE;
-        }
-    }
-}
-
-
-
-sub getWebdir($) {
-    my ($manweb_conf_filename) = @_;
-#-----------------------------------------------------------------------------
-#  Return the value of the Manweb "web directory," as indicated by the
-#  Manweb configuration file $manweb_conf_filename.
-#
-#  If that file doesn't exist, or doesn't have a 'webdir' value, or
-#  the 'webdir' value is a chain of directories instead of just one,
-#  we return an undefined value.
-#-----------------------------------------------------------------------------
-    my $webdir;
-
-    my $success = open(MANWEB_CONF, "<$manweb_conf_filename");
-    if (!$success) {
-        print("Unable to open file '$manweb_conf_filename' for reading.  " .
-              "error is $ERRNO\n");
-    } else {
-        while (<MANWEB_CONF>) {
-            chomp();
-            if (/^\s*#/) {
-                #It's comment - ignore
-            } elsif (/^\s*$/) {
-                #It's a blank line - ignore
-            } elsif (/\s*(\S+)\s*=\s*(\S+)/) {
-                #It looks like "keyword=value"
-                my ($keyword, $value) = ($1, $2);
-                if ($keyword eq "webdir") {
-                    # We can't handle a multi-directory path; we're looking
-                    # only for a webdir statement naming a sole directory.
-                    if ($value !~ m{:}) {
-                        $webdir = $value;
-                    }
-                }
-            }
-        }
-        close(MANWEB_CONF);
-    }              
-
-    return $webdir
-}
-
-
-
-sub userWantsManwebSymlink($$) {
-
-    my ($webdir, $netpbmWebdir) = @_;
-
-    print("Your manweb.conf file says top level documentation " .
-          "is in $webdir, \n");
-    print("but you installed netpbm.url in $netpbmWebdir.\n");
-    print("Do you want to create a symlink in $webdir now?\n");
-
-    my $wants;
-    my $done;
-    
-    while (!$done) {
-        my $response = prompt("create symlink (Y/N)", "Y");
-        
-        if (uc($response) eq "Y") {
-            $wants = $TRUE;
-            $done = $TRUE;
-        } elsif (uc($response) eq "N") {
-            $wants = $FALSE;
-            $done = $TRUE;
-        }
-    }
-    return $wants;
-}
-
-
-
-sub makeInManwebPath($) {
-
-    my ($netpbmWebdir) = @_;
-
-    # Now we need /etc/manweb.conf to point to the directory in which we
-    # just installed netpbm.url.
-
-    if (!-f("/etc/manweb.conf")) {
-        tryToCreateManwebConf("/etc/manweb.conf");
-    }
-    if (-f("/etc/manweb.conf")) {
-        my $webdir = getWebdir("/etc/manweb.conf");
-        if (defined($webdir)) {
-            if ($webdir ne $netpbmWebdir) {
-                if (userWantsManwebSymlink($webdir, $netpbmWebdir)) {
-                    my $old = "$netpbmWebdir/netpbm.url";
-                    my $new = "$webdir/netpbm.url";
-                    mkdir($webdir, 0777);
-                    my $success = symlink($old, $new);
-                    if (!$success) {
-                        print("Failed to create symbolic link from $new to " .
-                              "$old.  Error is $ERRNO\n");
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-
-sub installManPage($$$) {
-
-
-# Note: This installs the pointer man pages and the netpbm.url file for Manweb.
-
-    my ($pkgdir, $prefix, $mandirR) = @_;
-
-    my $manDir = getManDir($prefix);
-
-    print("Installing man pages...\n");
-
-    my $rc = system("$cpCommand $pkgdir/man/* $manDir/");
-
-    if ($rc != 0) {
-        print("copy of man pages from $pkgdir/man to $manDir failed.\n");
-        print("cp exit code is $rc\n");
-    } else {
-        print("done.\n");
-    }
-
-    print("\n");
-
-    removeObsoleteManPage($manDir);
-
-    makeInManwebPath("$manDir/web");
-    
-    $$mandirR = $manDir;
-}
-
-
-
 sub netpbmVersion($) {
     my ($pkgdir) = @_;
 
@@ -1029,9 +1057,6 @@ processTemplate($$$) {
             }
             if (defined($infoR->{INCLUDEDIR})) {
                 s/\@INCLUDEDIR@/$infoR->{INCLUDEDIR}/;
-            }
-            if (defined($infoR->{MANDIR})) {
-                s/\@MANDIR@/$infoR->{MANDIR}/;
             }
             push(@output, $_);
         }
@@ -1102,7 +1127,7 @@ sub getPkgconfigDir($) {
     while (!$pkgconfigDir) {
         my $default = "$prefix/lib/pkgconfig";
 
-        my $response = prompt("Pkg-config directory", $default);
+        my $response = fsObjPrompt("Pkg-config directory", $default);
         
         if (-d($response)) {
             $pkgconfigDir = $response;
@@ -1184,7 +1209,13 @@ print("\n");
 
 my $pkgdir = getPkgdir();
 
+print("Installing from package directory '$pkgdir'\n");
+print("\n");
+
 my $prefix = getPrefix();
+
+print("Using prefix '$prefix'\n");
+print("\n");
 
 $cpCommand = getCpCommand();
 
@@ -1194,7 +1225,10 @@ print("\n");
 installSharedLib($pkgdir, $prefix, \my $libdir);
 print("\n");
 
-installStaticLib($pkgdir, $prefix, \my $linkdir);
+installSharedStub($pkgdir, $prefix, $libdir, \my $sharedlinkdir);
+print("\n");
+
+installStaticLib($pkgdir, $prefix, \my $staticlinkdir);
 print("\n");
 
 installDataFile($pkgdir, $prefix, \my $datadir);
@@ -1203,8 +1237,7 @@ print("\n");
 installHeader($pkgdir, $prefix, \my $includedir);
 print("\n");
 
-installManPage($pkgdir, $prefix, \my $mandir);
-print("\n");
+my $linkdir = defined($sharedlinkdir) ? $sharedlinkdir : $staticlinkdir;
 
 my $templateSubsR =
     {VERSION    => netpbmVersion($pkgdir),
@@ -1213,7 +1246,7 @@ my $templateSubsR =
      LINKDIR    => $linkdir,
      DATADIR    => $datadir,
      INCLUDEDIR => $includedir,
-     MANDIR     => $mandir};
+    };
 
 installConfig($bindir, $templateSubsR);
 

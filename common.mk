@@ -150,10 +150,7 @@ IMPORTINC_LIB_HEADERS := \
 IMPORTINC_LIB_UTIL_HEADERS := \
   bitarith.h bitio.h bitreverse.h filename.h intcode.h floatcode.h io.h \
   matrix.h mallocvar.h \
-  nsleep.h nstring.h pm_c_util.h runlength.h shhopt.h token.h \
-  wordaccess.h  wordaccess_generic.h wordaccess_64_le.h \
-  wordaccess_be_aligned.h wordaccess_be_unaligned.h \
-  wordintclz.h
+  nsleep.h nstring.h pm_c_util.h runlength.h shhopt.h token.h
 
 IMPORTINC_HEADERS := \
   $(IMPORTINC_ROOT_HEADERS) \
@@ -275,24 +272,24 @@ $(OBJECTS): %.o: %.c importinc
 LIBOPT = $(BUILDDIR)/buildtools/libopt
 
 ifneq ($(OMIT_BUILDTOOL_RULE),1)
-$(LIBOPT) $(TYPEGEN): $(BUILDDIR)/buildtools
+$(LIBOPT) $(TYPEGEN): $(BUILDDIR)/buildtools FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/buildtools/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
 
 ifneq ($(OMIT_LIBRARY_RULE),1)
-$(NETPBMLIB): $(BUILDDIR)/lib
+$(NETPBMLIB): $(BUILDDIR)/lib FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
 
 ifneq ($(OMIT_URT_RULE),1)
-$(BUNDLED_URTLIB): $(BUILDDIR)/urt
+$(BUNDLED_URTLIB): $(BUILDDIR)/urt FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/urt/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
 
-$(BUILDDIR)/icon/netpbm.o: $(BUILDDIR)/icon
+$(BUILDDIR)/icon/netpbm.o: $(BUILDDIR)/icon FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/icon/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 
@@ -403,14 +400,29 @@ $(PORTBINARIES) $(MATHBINARIES): %: %.o \
 	  "-Dmain=main_$*" \
           $(CFLAGS_MERGE) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
-# The "merge try list" is a file full of TRY macro invocations, one for
-# each Netpbm program in this directory or any subdirectory that can be
-# invoked via the merged Netpbm program.  You will find it #included in
-# netpbm.c.
+# The "merge try list" is a file full of TRY macro invocations, one for each
+# Netpbm program in this directory or any subdirectory that can be invoked via
+# the merged Netpbm program.  There are additional TRYs for backward
+# compatility program names (e.g. 'pnmcomp' for 'pamcomp').  You will find the
+# merge try list #included in netpbm.c.
+
+# The file 'mergecomptrylist' contains the backward compatibility TRYs for the
+# current directory.  Just the current directory itself - not subdirectories.
+# Only directories that contain programs with backward compatibility names
+# have a 'mergecomptrylist'.  The make file for a directory that has
+# 'mergecomptrylist' sets make variable HAVE_MERGE_COMPAT to "YES".
+
+ifeq ($(HAVE_MERGE_COMPAT),YES)
+mergetrylist: mergecomptrylist
+endif
 
 mergetrylist: $(SUBDIRS:%=%/mergetrylist) 
 	cat /dev/null $(SUBDIRS:%=%/mergetrylist) >$@
 	$(SRCDIR)/buildtools/make_merge.sh $(MERGEBINARIES) >>$@
+ifeq ($(HAVE_MERGE_COMPAT),YES)
+	echo "/* Backward compatibility names from mergecomptrylist: */" >>$@
+	cat mergecomptrylist >>$@
+endif
 
 # The "merge list" is a list of all the object files from this directory and
 # any subdirectories that have to be linked into the merged Netpbm program.
@@ -470,7 +482,7 @@ endif
 
 PKGMANSUBDIRS = man1 man3 man5 web
 
-PKGSUBDIRS = bin include include/netpbm lib link misc \
+PKGSUBDIRS = bin include include/netpbm lib sharedlink staticlink misc \
   $(PKGMANSUBDIRS:%=$(PKGMANDIR)/%)
 
 $(PKGSUBDIRS:%=$(PKGDIR)/%):
@@ -508,36 +520,6 @@ $(DATAFILES:%=%_installdata): $(PKGDIR)/misc
 	$(INSTALL) -c -m $(INSTALL_PERM_DATA) \
 	  $(SRCDIR)/$(SUBDIR)/$(@:%_installdata=%) $<
 
-
-.PHONY: install.man install.man1 install.man3 install.man5
-install.man: install.man1 install.man3 install.man5 \
-	$(SUBDIRS:%=%/install.man)
-
-MANUALS1 = $(BINARIES) $(SCRIPTS)
-
-install.man1: $(MANUALS1:%=%_installman1)
-
-install.man3: $(MANUALS3:%=%_installman3)
-
-install.man5: $(MANUALS5:%=%_installman5)
-
-install.manweb: $(MANUALS1:%=%_installmanweb) $(SUBDIRS:%=%/install.manweb)
-
-%_installman1: $(PKGDIR)/$(PKGMANDIR)/man1
-	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman1=%) \
-          $(NETPBM_DOCURL) $< 1 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
-
-%_installman3: $(PKGDIR)/$(PKGMANDIR)/man3
-	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman3=%) \
-          $(NETPBM_DOCURL) $< 3 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
-
-%_installman5: $(PKGDIR)/$(PKGMANDIR)/man5
-	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman5=%) \
-          $(NETPBM_DOCURL) $< 5 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
-
-%_installmanweb: $(PKGDIR)/$(PKGMANDIR)/web
-	echo $(NETPBM_DOCURL)$(@:%_installmanweb=%).html \
-	  >$</$(@:%_installmanweb=%).url
 
 .PHONY: clean
 
@@ -579,12 +561,6 @@ endif
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.lib:
-	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
-	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
-%/install.man:
-	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
-	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
-%/install.manweb:
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.data:

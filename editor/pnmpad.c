@@ -2,6 +2,7 @@
    ** AJCD 4/9/90
  */
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -315,8 +316,10 @@ computePadSizeBeforeMult(unsigned int   const unpaddedSize,
                 (unpaddedSize + endPadReq);
         } else {
             if (sizeReq > unpaddedSize) {
+                assert(align <= 1.0 && align >= 0.0);
                 *begPadP = ROUNDU((sizeReq - unpaddedSize) * align);
                 *endPadP = sizeReq - unpaddedSize - *begPadP;
+                assert(*begPadP + unpaddedSize + *endPadP == sizeReq);
             } else {
                 *begPadP = 0;
                 *endPadP = 0;

@@ -7,12 +7,12 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-TEST_PKGCONFIG_LIBXML2 = if pkg-config libxml-2.0; then echo exists; fi
+TEST_PKGCONFIG_LIBXML2 = if $(PKG_CONFIG) libxml-2.0; then echo exists; fi
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBXML2)),)
   # pkg-config libxml2 works on this system
-  XML2_LIBS = $(shell pkg-config libxml-2.0 --libs)
-  XML2_CFLAGS = $(shell pkg-config libxml-2.0 --cflags)
+  XML2_LIBS = $(shell $(PKG_CONFIG) libxml-2.0 --libs)
+  XML2_CFLAGS = $(shell $(PKG_CONFIG) libxml-2.0 --cflags)
 else
   ifeq ($(shell xml2-config --version),)
     XML2_LIBS=NONE
@@ -34,12 +34,12 @@ ifneq ($(TIFFLIB),NONE)
   endif
 endif
 
-TEST_PKGCONFIG_LIBPNG = if pkg-config libpng$(PNGVER); then echo exists; fi
+TEST_PKGCONFIG_LIBPNG = if $(PKG_CONFIG) libpng$(PNGVER); then echo exists; fi
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
   HAVE_PNGLIB = Y
-  EXTERN_INCLUDES += $(shell pkg-config libpng$(PNGVER) --cflags)
+  EXTERN_INCLUDES += $(shell $(PKG_CONFIG) libpng$(PNGVER) --cflags)
 else
   ifneq ($(shell libpng$(PNGVER)-config --version),)
     # No pkg-config, but we have libpng-config on this system
@@ -166,6 +166,8 @@ endif
 OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
+HAVE_MERGE_COMPAT=YES
+
 pnmtops.o pnmtops.o2: CFLAGS_TARGET=$(PNMTOPS_NOFLATE_OPT)
 
 SCRIPTS = anytopnm pnmtoplainpnm
@@ -192,7 +194,7 @@ tifftopnm pamtotiff pnmtotiffcmyk: \
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
-  PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --libs)
+  PNGLIB_LIBOPTS = $(shell $(PKG_CONFIG) libpng$(PNGVER) --libs)
 else
   ifneq ($(shell libpng$(PNGVER)-config --version),)
     # No pkg-config, but we have libpng-config on this system
@@ -248,7 +250,7 @@ bmptopnm.o bmptopnm.o2: bmp.h
 
 pamtotga.o pamtotga.o2: tga.h
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
@@ -295,4 +297,26 @@ ifeq ($(HAVE_PNGLIB),Y)
 # In June 2015, pamtopng replaced pamrgbapng
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamtopng$(EXE) pamrgbatopng$(EXE)
+endif
+
+mergecomptrylist:
+	cat /dev/null >$@
+	echo "TRY(\"bmptoppm\",     main_bmptopnm);"     >>$@
+	echo "TRY(\"gemtopbm\",     main_gemtopnm);"     >>$@
+ifneq ($(JPEGLIB),NONE)
+	echo "TRY(\"ppmtojpeg\",    main_pnmtojpeg);"    >>$@
+endif
+	echo "TRY(\"ppmtouil\",     main_pamtouil);"     >>$@
+	echo "TRY(\"ppmtotga\",     main_pamtotga);"     >>$@
+	echo "TRY(\"pnmtopnm\",     main_pamtopnm);"     >>$@
+	echo "TRY(\"pnmtofits\",    main_pamtofits);"    >>$@
+ifneq ($(TIFF_PREREQ_MISSING),Y)
+	echo "TRY(\"pnmtotiff\",    main_pamtotiff);"    >>$@
+endif
+ifeq ($(HAVE_PNGLIB),Y)
+	echo "TRY(\"pngtopnm\",     main_pngtopam);"     >>$@
+endif
+	echo "TRY(\"icontopbm\",    main_sunicontopnm);" >>$@
+ifeq ($(HAVE_PNGLIB),Y)
+	echo "TRY(\"pamrgbatopng\", main_pamtopng);"     >>$@
 endif

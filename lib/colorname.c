@@ -12,6 +12,7 @@
 ** implied warranty.
 */
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
@@ -20,8 +21,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <math.h>
 
 #include "netpbm/nstring.h"
+#include "netpbm/mallocvar.h"
 
 #include "colorname.h"
 
@@ -29,7 +32,7 @@ static int lineNo;
 
 
 
-void 
+void
 pm_canonstr(char * const arg) {
 /*----------------------------------------------------------------------------
    Modify string 'arg' to canonical form: lower case, no white space.
@@ -90,7 +93,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
    environment variable whose name is RGB_ENV (e.g. "RGBDEF").  Except
    if that environment variable is not set, it is the first file found,
    if any, in the search path RGB_DB_PATH.
-   
+
    'must_open' is a logical: we must get the file open or die.  If
    'must_open' is true and we can't open the file (e.g. it doesn't
    exist), exit the program with an error message.  If 'must_open' is
@@ -108,7 +111,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
                          "named %s, per the %s environment variable.  "
                          "errno = %d (%s)",
                          rgbdef, RGBENV, errno, strerror(errno));
-        } else {            
+        } else {
             /* The environment variable isn't set, so try the hardcoded
                default color name dictionary locations.
             */
@@ -119,7 +122,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
                          "path '%s' "
                          "and Environment variable %s not set.  Set %s to "
                          "the pathname of your rgb.txt file or don't use "
-                         "color names.", 
+                         "color names.",
                          RGB_DB_PATH, RGBENV, RGBENV);
             }
         }
@@ -128,7 +131,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
         if (f == NULL && must_open)
             pm_error("Can't open the color names dictionary file '%s'.  "
                      "errno = %d (%s)", fileName, errno, strerror(errno));
-        
+
     }
     lineNo = 0;
     return(f);
@@ -151,7 +154,7 @@ pm_colorget(FILE * const f) {
     bool eof;
     struct colorfile_entry retval;
     char * rc;
-    
+
     gotOne = FALSE;  /* initial value */
     eof = FALSE;
     while (!gotOne && !eof) {
@@ -162,15 +165,15 @@ pm_colorget(FILE * const f) {
         else {
             if (buf[0] != '#' && buf[0] != '\n' && buf[0] != '!' &&
                 buf[0] != '\0') {
-                if (sscanf(buf, "%ld %ld %ld %[^\n]", 
-                           &retval.r, &retval.g, &retval.b, colorname) 
+                if (sscanf(buf, "%ld %ld %ld %[^\n]",
+                           &retval.r, &retval.g, &retval.b, colorname)
                     == 4 )
                     gotOne = TRUE;
                 else {
                     if (buf[strlen(buf)-1] == '\n')
                         buf[strlen(buf)-1] = '\0';
                     pm_message("can't parse color names dictionary Line %d:  "
-                               "'%s'", 
+                               "'%s'",
                                lineNo, buf);
                 }
             }
@@ -186,65 +189,83 @@ pm_colorget(FILE * const f) {
 
 
 void
-pm_parse_dictionary_name(char    const colorname[], 
-                         pixval  const maxval,
-                         int     const closeOk,
-                         pixel * const colorP) {
+pm_parse_dictionary_namen(char   const colorname[],
+                          tuplen const color) {
 
-    FILE* f;
+    FILE * fP;
     bool gotit;
     bool colorfileExhausted;
-    struct colorfile_entry colorfile_entry;
+    struct colorfile_entry colorfileEntry;
     char * canoncolor;
-    pixval r,g,b;
 
-    f = pm_openColornameFile(NULL, TRUE);  /* exits if error */
-    canoncolor = pm_strdup(colorname);
+    fP = pm_openColornameFile(NULL, TRUE);  /* exits if error */
+    canoncolor = strdup(colorname);
 
     if (!canoncolor)
         pm_error("Failed to allocate memory for %u-byte color name",
                  (unsigned)strlen(colorname));
 
     pm_canonstr(canoncolor);
-    gotit = FALSE;
-    colorfileExhausted = FALSE;
-    while (!gotit && !colorfileExhausted) {
-        colorfile_entry = pm_colorget(f);
-        if (colorfile_entry.colorname) {
-            pm_canonstr(colorfile_entry.colorname);
-            if (strcmp( canoncolor, colorfile_entry.colorname) == 0)
+
+    for(gotit = FALSE, colorfileExhausted = FALSE;
+        !gotit && !colorfileExhausted; ) {
+
+        colorfileEntry = pm_colorget(fP);
+        if (colorfileEntry.colorname) {
+            pm_canonstr(colorfileEntry.colorname);
+            if (streq(canoncolor, colorfileEntry.colorname))
                 gotit = TRUE;
         } else
             colorfileExhausted = TRUE;
     }
-    fclose(f);
-    
+    fclose(fP);
+
     if (!gotit)
         pm_error("unknown color '%s'", colorname);
-    
-    /* Rescale from [0..255] if necessary. */
-    if (maxval != 255) {
-        r = colorfile_entry.r * maxval / 255;
-        g = colorfile_entry.g * maxval / 255;
-        b = colorfile_entry.b * maxval / 255;
 
-        if (!closeOk) {
-            if (r * 255 / maxval != colorfile_entry.r ||
-                g * 255 / maxval != colorfile_entry.g ||
-                b * 255 / maxval != colorfile_entry.b)
+    color[PAM_RED_PLANE] = (samplen)colorfileEntry.r / PAM_COLORFILE_MAXVAL;
+    color[PAM_GRN_PLANE] = (samplen)colorfileEntry.g / PAM_COLORFILE_MAXVAL;
+    color[PAM_BLU_PLANE] = (samplen)colorfileEntry.b / PAM_COLORFILE_MAXVAL;
+
+    free(canoncolor);
+}
+
+
+
+void
+pm_parse_dictionary_name(char    const colorname[],
+                         pixval  const maxval,
+                         int     const closeOk,
+                         pixel * const colorP) {
+
+    double const epsilon = 1.0/65536.0;
+
+    tuplen color;
+    pixval r, g, b;
+
+    MALLOCARRAY_NOFAIL(color, 3);
+
+    pm_parse_dictionary_namen(colorname, color);
+
+    r = ppm_unnormalize(color[PAM_RED_PLANE], maxval);
+    g = ppm_unnormalize(color[PAM_GRN_PLANE], maxval);
+    b = ppm_unnormalize(color[PAM_BLU_PLANE], maxval);
+
+    if (!closeOk) {
+        if (maxval != PAM_COLORFILE_MAXVAL) {
+            if (fabs((double)r / maxval - color[PAM_RED_PLANE]) > epsilon ||
+                fabs((double)g / maxval - color[PAM_GRN_PLANE]) > epsilon ||
+                fabs((double)b / maxval - color[PAM_BLU_PLANE]) > epsilon) {
                 pm_message("WARNING: color '%s' cannot be represented "
                            "exactly with a maxval of %u.  "
                            "Approximating as (%u,%u,%u).  "
-                           "The color dictionary uses maxval 255, so that "
-                           "maxval will always work.",
-                           colorname, maxval, r, g, b);
+                           "(The color dictionary uses maxval %u, so that "
+                           "maxval will always work).",
+                           colorname, maxval, r, g, b,
+                           PAM_COLORFILE_MAXVAL);
+            }
         }
-    } else {
-        r = colorfile_entry.r;
-        g = colorfile_entry.g;
-        b = colorfile_entry.b;
     }
-    free(canoncolor);
 
     PPM_ASSIGN(*colorP, r, g, b);
 }

@@ -48,7 +48,7 @@ enum DataOrg {
 };
 
 enum DataSource {
-    eDefault = 0
+    eDefaultDataSource = 0
 };
 
 enum DataType {
@@ -58,9 +58,9 @@ enum DataType {
     eSint16 = 3
 };
 
-enum DitherMatrix {  
+enum DitherMatrix {
     eDeviceBest = 0
-}; 
+};
 
 
 enum DuplexPageMode {
@@ -109,7 +109,7 @@ enum Measure {
 };
 
 enum MediaSource {
-    eDefaultSource = 0,
+    eDefaultMediaSource = 0,
     eAutoSelect = 1,
     eManualFeed = 2,
     eMultiPurposeTray = 3,
@@ -246,7 +246,7 @@ enum Attribute {
     aYSpacingData        = 176,
     aCharBoldValue       = 177
 };
-                                          
+
 enum Operator {
     oBeginSession        = 0x41,
     oEndSession          = 0x42,
@@ -317,7 +317,7 @@ enum Operator {
     oPiePath             = 0x9f,
     oRectangle           = 0xa0,
     oRectanglePath       = 0xa1,
-    oRoundRectangle      = 0xa2,  
+    oRoundRectangle      = 0xa2,
     oRoundRectanglePath  = 0xa3,
     oText                = 0xa8,
     oTextPath            = 0xa9,
@@ -384,7 +384,7 @@ struct sPaperFormat {
 enum {
     eSTART,
     eRLE,
-    eLIT 
+    eLIT
 } RLEstates;
 
 #endif

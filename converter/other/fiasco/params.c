@@ -4,8 +4,8 @@
  *  Written by:		Stefan Frank
  *			Ullrich Hafner
  *		
- *  This file is part of FIASCO («F»ractal «I»mage «A»nd «S»equence «CO»dec)
- *  Copyright (C) 1994-2000 Ullrich Hafner <hafner@bigfoot.de>
+ *  This file is part of FIASCO (Fractal Image And Sequence COdec)
+ *  Copyright (C) 1994-2000 Ullrich Hafner
  */
 
 /*
@@ -15,6 +15,7 @@
  *  $State: Exp $
  */
 
+#define _DEFAULT_SOURCE 1 /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1
     /* Make sure strdup() is in string.h and strcaseeq() is in nstring.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
@@ -325,8 +326,17 @@ parseargs (param_t *usr_params,
 		      NO, sys_path, usr_file_name);
 	    else if (streq (params [param_index].name, "version"))
 	    {
-	       fprintf (stderr, "%s " VERSION "\n", argv [0]);
-	       exit (2);
+           fprintf (stderr, "%s " VERSION "\n", argv [0]);
+           {
+              /* Kludge for standard Netpbm version announcement */
+              char * modified_argv[2];
+              int argc;
+              modified_argv[0] = argv[0];
+              modified_argv[1] = (char *) "--version";
+              argc = 2;
+              pm_proginit(&argc, (const char **) modified_argv);
+           }
+           exit (2);
 	    }
 	    else if (streq (params [param_index].name, "verbose"))
 	       fiasco_set_verbosity (

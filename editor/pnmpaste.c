@@ -19,7 +19,7 @@
 #include "pnm.h"
 
 
-enum boolOp {REPLACE, AND, OR, XOR /*, NAND, NOR, NXOR */ };
+enum boolOp {REPLACE, AND, OR, XOR, NAND, NOR, NXOR};
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -47,7 +47,7 @@ parseCommandLine(int argc, const char ** argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
-    unsigned int replaceOpt, andOpt, orOpt, xorOpt;
+    unsigned int replaceOpt, andOpt, orOpt, xorOpt, nandOpt, norOpt, nxorOpt;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -60,6 +60,12 @@ parseCommandLine(int argc, const char ** argv,
             &orOpt,                0);
     OPTENT3(0,   "xor",         OPT_FLAG,    NULL,
             &xorOpt,               0);
+    OPTENT3(0,   "nand",        OPT_FLAG,    NULL,
+            &nandOpt,              0);
+    OPTENT3(0,   "nor",         OPT_FLAG,    NULL,
+            &norOpt,               0);
+    OPTENT3(0,   "nxor",        OPT_FLAG,    NULL,
+            &nxorOpt,              0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -68,16 +74,20 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof opt, 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (replaceOpt + andOpt + orOpt + xorOpt > 1)
-        pm_error("You may specify only one of -replace, -and, -or, and -xor");
+    if (replaceOpt + andOpt + orOpt + xorOpt + nandOpt + norOpt + nxorOpt > 1)
+        pm_error("You may specify only one of -replace, -and, -or, "
+                 "-xor, -nand, -nor and -nxor");
 
     cmdlineP->operation =
         replaceOpt ? REPLACE :
         andOpt     ? AND     :
         orOpt      ? OR      :
         xorOpt     ? XOR     :
+        nandOpt    ? NAND    :
+        norOpt     ? NOR     :
+        nxorOpt    ? NXOR    :
         replaceOpt;
-        
+
 
     if (argc-1 >= 3) {
         cmdlineP->insetFilename = argv[1];
@@ -168,11 +178,9 @@ insertDirect(FILE *          const ifP,
             case AND: destrow[i] |= buffer[i]; break;
             case OR : destrow[i] &= buffer[i]; break;
             case XOR: destrow[i]  = ~( destrow[i] ^ buffer[i] ) ; break;
-            /*
             case NAND: destrow[i] = ~( destrow[i] | buffer[i] ) ; break;
             case NOR : destrow[i] = ~( destrow[i] & buffer[i] ) ; break;
             case NXOR: destrow[i] ^= buffer[i]  ; break;
-            */
             case REPLACE: assert(false); break;
             }
         }
@@ -229,11 +237,9 @@ insertShift(FILE *          const ifP,
         case AND:     destrow[i] |= t; break;
         case OR :     destrow[i] &= t; break;
         case XOR:     destrow[i] = ~ (destrow[i] ^ t); break;
-        /*
         case NAND:    destrow[i] = ~ (destrow[i] | t); break;
         case NOR :    destrow[i] = ~ (destrow[i] & t); break;
         case NXOR:    destrow[i] ^= t; break;
-        */
         }
     }
 
@@ -244,7 +250,7 @@ insertShift(FILE *          const ifP,
 
     destrow[0] = leftBits(origLeft, offset) |
         rightBits(destrow[0], 8-offset);
-   
+
     if (padOffset % 8 > 0)
         destrow[last] = leftBits(destrow[last], padOffset) |
             rightBits(origRight , 8-padOffset);
@@ -279,7 +285,7 @@ pastePbm(FILE *       const fpInset,
 
     for (row = 0; row < baseRows; ++row) {
         pbm_readpbmrow_packed(fpBase, baserow, baseCols, baseFormat);
-        
+
         if (row >= insertRow && row < insertRow + insetRows) {
             if (shiftOffset == 0)
                 insertDirect(fpInset, &baserow[shiftByteCt], insetCols,
@@ -316,7 +322,7 @@ pasteNonPbm(FILE *       const fpInset,
             unsigned int const insertCol,
             unsigned int const insertRow) {
 
-    /* Logic works for PBM, but cannot do bitwise operations */             
+    /* Logic works for PBM, but cannot do bitwise operations */
 
     xelval const newmaxval = MAX(maxvalInset, maxvalBase);
 
@@ -344,7 +350,7 @@ pasteNonPbm(FILE *       const fpInset,
         }
         pnm_writepnmrow(stdout, xelrowBase, colsBase, newmaxval, newformat, 0);
     }
-    
+
     pnm_freerow(xelrowBase);
     pnm_freerow(xelrowInset);
 }

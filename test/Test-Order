@@ -1,4 +1,4 @@
-# General test
+# General tests
 
 all-in-place.test
 legacy-names.test
@@ -12,23 +12,29 @@ pamseq.test
 
 pbmpage.test
 pbmtext.test
+pbmtext-bdf.test
+pbmtext-iso88591.test
+pbmtext-utf8.test
 pbmupc.test
 pgmramp.test
-ppmgauss.test
+pamgauss.test
 ppmcie.test
 ppmwheel.test
 pamcrater.test
+ppmpat.test
 
 # Generators with random components
 
 pgmnoise.test
-ppmpat.test
+ppmpat-random.test
 ppmforge.test
 ppmrough.test
 
 # Analyzer tests
 
 pamfile.test
+pamfind.test
+pamtable.test
 pgmhist.test
 ppmhist.test
 pamsumm.test
@@ -53,15 +59,16 @@ pamcut.test
 pnmcat.test
 pamflip1.test
 pamflip2.test
-pamenlarge.test
 pnminvert.test
 pamchannel.test
 ppmchange.test
 pambackground.test
+pnmpaste-pbm.test
 
 pbmpscale.test
 pnmremap1.test
 pnmremap2.test
+pnmquantall.test
 pnmtile.test
 ppmbrighten.test
 ppmdither.test
@@ -71,7 +78,19 @@ ppmdim.test
 pnmshear.test
 pgmbentley.test
 
+pamenlarge.test
+pamenlarge-pbm.test
+
+pamscale-reportonly.test
+pamscale-filters1.test
+pamscale-filters2.test
+pamscale-filters3.test
+pamenlarge-pamscale-point.test
+
+pamstretch.test
+
 ppmmix.test
+pammixmulti-identity.test
 
 # Symmetry test
 
@@ -79,6 +98,7 @@ symmetry.test
 
 # Format converter tests
 
+pamtopdbimg.test
 pbmtog3.test
 411toppm.test
 eyuvtoppm.test
@@ -103,6 +123,8 @@ ppmchange-roundtrip.test
 pamdice-roundtrip.test
 pamslice-roundtrip.test
 lookup-roundtrip.test
+enlarge-reduce-roundtrip.test
+cut-cat-roundtrip.test
 
 # Round-trip tests : lossless converters
 
@@ -111,6 +133,7 @@ atari-roundtrip.test
 atk-roundtrip.test
 avs-roundtrip.test
 bmp-roundtrip.test
+bmp-quant-roundtrip.test
 cis-roundtrip.test
 cmuw-roundtrip.test
 facesaver-roundtrip.test
@@ -122,18 +145,23 @@ gif-quant-roundtrip.test
 hdiff-roundtrip.test
 ilbm-roundtrip.test
 jbig-roundtrip.test
+jpeg2k-roundtrip.test
 leaf-roundtrip.test
 macp-roundtrip.test
 mda-roundtrip.test
 mgr-roundtrip.test
 mrf-roundtrip.test
+palm-roundtrip.test
+palm-roundtrip2.test
 pcx-roundtrip.test
+pdb-roundtrip.test
 pfm-roundtrip.test
 pi3-roundtrip.test
 pict-roundtrip.test
 png-roundtrip.test
 png-roundtrip2.test
 ps-roundtrip.test
+ps-flate-roundtrip.test
 ps-alt-roundtrip.test
 sgi-roundtrip.test
 sbig-roundtrip.test
@@ -142,6 +170,7 @@ sunicon-roundtrip.test
 sunrast-roundtrip.test
 targa-roundtrip.test
 tiff-roundtrip.test
+tiff-flate-lzw-roundtrip.test
 utahrle-roundtrip.test
 wbmp-roundtrip.test
 winicon-roundtrip.test
@@ -150,6 +179,9 @@ xpm-roundtrip.test
 xv-roundtrip.test
 xwd-roundtrip.test
 
-# Round-trip tests : lossy converter
+# Round-trip tests : lossy converters
 
+fiasco-roundtrip.test
+jpeg-roundtrip.test
+tiffcmyk-roundtrip.test
 yuv-roundtrip.test

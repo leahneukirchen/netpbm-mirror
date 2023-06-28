@@ -110,10 +110,10 @@ extern int pm_plain_output;
     */
 extern const char * pm_progname;
 
-void 
+void
 pm_init(const char * const progname, unsigned int const flags);
 
-void 
+void
 pm_proginit(int * const argcP, const char * argv[]);
 
 void
@@ -122,7 +122,7 @@ pm_setMessage(int const newState, int * const oldStateP);
 int
 pm_getMessage(void);
 
-FILE * 
+FILE *
 pm_tmpfile(void);
 
 int
@@ -141,22 +141,22 @@ pm_nextimage(FILE * const file, int * const eofP);
 
 /* Variable-sized arrays definitions. */
 
-char** 
+char**
 pm_allocarray (int const cols, int const rows, int const size );
 
-void * 
+void *
 pm_allocrow(unsigned int const cols,
             unsigned int const size);
 
-void 
+void
 pm_freearray (char** const its, int const rows);
 
-void 
+void
 pm_freerow(void * const row);
 
 
 /* Obsolete -- use shhopt instead */
-int 
+int
 pm_keymatch(const char * const str,
             const char * const keyword,
             int          const minchars);
@@ -169,7 +169,7 @@ int PURE_FN_ATTR
 pm_bitstomaxval(int const bits);
 
 unsigned int PURE_FN_ATTR
-pm_lcm (unsigned int const x, 
+pm_lcm (unsigned int const x,
         unsigned int const y,
         unsigned int const z,
         unsigned int const limit);
@@ -211,37 +211,37 @@ void
 pm_setusererrormsgfn(pm_usererrormsgfn * fn);
 
 void PM_GNU_PRINTF_ATTR(1,2)
-pm_message (const char format[], ...);     
+pm_message (const char format[], ...);
 
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_errormsg(const char format[], ...);
 
 void PM_GNU_PRINTF_ATTR(1,2)
-pm_error (const char reason[], ...);       
+pm_error (const char reason[], ...);
 
 int
 pm_have_float_format(void);
 
 /* Obsolete - use shhopt and user's manual instead */
-void 
-pm_usage (const char usage[]);             
+void
+pm_usage (const char usage[]);
 
-FILE* 
+FILE*
 pm_openr (const char* const name);
-         
-FILE*    
+
+FILE*
 pm_openw (const char* const name);
-         
+
 FILE *
 pm_openr_seekable(const char name[]);
 
-void     
+void
 pm_close (FILE* const f);
 
-void 
+void
 pm_closer (FILE* const f);
-          
-void      
+
+void
 pm_closew (FILE* const f);
 
 
@@ -267,11 +267,11 @@ pm_writecharu(FILE *        const ofP,
 }
 
 int
-pm_readbigshort(FILE *  const ifP, 
+pm_readbigshort(FILE *  const ifP,
                 short * const sP);
 
 static __inline__ int
-pm_readbigshortu(FILE*            const ifP, 
+pm_readbigshortu(FILE*            const ifP,
                  unsigned short * const sP) {
     return pm_readbigshort(ifP, (short *) sP);
 }
@@ -287,7 +287,7 @@ pm_writebigshortu(FILE *          const ofP,
 }
 
 int
-pm_readbiglong(FILE * const ifP, 
+pm_readbiglong(FILE * const ifP,
                long * const lP);
 
 static __inline__ int
@@ -297,7 +297,7 @@ pm_readbiglongu(FILE *          const ifP,
 }
 
 int
-pm_readbiglong2(FILE * const ifP, 
+pm_readbiglong2(FILE * const ifP,
                 int32_t * const lP);
 
 static __inline__ int
@@ -366,12 +366,19 @@ pm_writelittlelongu(FILE *        const ofP,
     return pm_writelittlelong(ofP, (long) l);
 }
 
-int 
+int
 pm_readmagicnumber(FILE * const ifP);
 
-char* 
-pm_read_unknown_size(FILE * const ifP, 
+char*
+pm_read_unknown_size(FILE * const ifP,
                      long * const buf);
+
+void
+pm_getline(FILE *   const ifP,
+           char **  const bufferP,
+           size_t * const bufferSzP,
+           int *    const eofP,
+           size_t * const lineLenP);
 
 short
 pm_bs_short(short const s);
@@ -383,12 +390,12 @@ unsigned int
 pm_tell(FILE * const fileP);
 
 void
-pm_tell2(FILE *       const fileP, 
+pm_tell2(FILE *       const fileP,
          void *       const fileposP,
          unsigned int const fileposSize);
 
 void
-pm_seek2(FILE *             const fileP, 
+pm_seek2(FILE *             const fileP,
          const pm_filepos * const fileposP,
          unsigned int       const fileposSize);
 
@@ -408,8 +415,8 @@ enum pm_check_type {
 };
 
 void
-pm_check(FILE *               const file, 
-         enum pm_check_type   const check_type, 
+pm_check(FILE *               const file,
+         enum pm_check_type   const check_type,
          pm_filepos           const need_raster_size,
          enum pm_check_code * const retval_p);
 

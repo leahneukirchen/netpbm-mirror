@@ -3,8 +3,8 @@
  *
  *  Adapted by:		Ullrich Hafner
  *		
- *  This file is part of FIASCO («F»ractal «I»mage «A»nd «S»equence «CO»dec)
- *  Copyright (C) 1994-2000 Ullrich Hafner <hafner@bigfoot.de>
+ *  This file is part of FIASCO (Fractal Image And Sequence COdec)
+ *  Copyright (C) 1994-2000 Ullrich Hafner
  */
 
 /*
@@ -713,15 +713,11 @@ display_24_bit_bgr (const struct fiasco_renderer *this, unsigned char *ximage,
       word_t 	   *cbptr, *crptr;	/* pointer to chroma bands */
       word_t 	   *yptr;		/* pointers to lumincance band */
       int 	   *Cr_r_tab, *Cr_g_tab, *Cb_g_tab, *Cb_b_tab;
-      unsigned int *r_table, *g_table, *b_table;
 
       Cr_g_tab = private->Cr_g_tab;
       Cr_r_tab = private->Cr_r_tab;
       Cb_b_tab = private->Cb_b_tab;
       Cb_g_tab = private->Cb_g_tab;
-      r_table  = private->r_table;
-      g_table  = private->g_table;
-      b_table  = private->b_table;
       yptr     = image->pixels [Y];
       cbptr    = image->pixels [Cb];
       crptr    = image->pixels [Cr];
@@ -1044,9 +1040,7 @@ display_24_bit_bgr (const struct fiasco_renderer *this, unsigned char *ximage,
    {
       unsigned int *dst;		/* pointer to dithered pixels */
       word_t	   *src;		/* current pixel of frame */
-      unsigned int *y_table;
 
-      y_table = private->y_table;
       dst     = (unsigned int *) out;
       src     = image->pixels [GRAY];
 
@@ -1164,15 +1158,11 @@ display_24_bit_rgb (const struct fiasco_renderer *this, unsigned char *ximage,
       word_t 	   *cbptr, *crptr;	/* pointer to chroma bands */
       word_t 	   *yptr;		/* pointers to lumincance band */
       int 	   *Cr_r_tab, *Cr_g_tab, *Cb_g_tab, *Cb_b_tab;
-      unsigned int *r_table, *g_table, *b_table;
 
       Cr_g_tab = private->Cr_g_tab;
       Cr_r_tab = private->Cr_r_tab;
       Cb_b_tab = private->Cb_b_tab;
       Cb_g_tab = private->Cb_g_tab;
-      r_table  = private->r_table;
-      g_table  = private->g_table;
-      b_table  = private->b_table;
       yptr     = image->pixels [Y];
       cbptr    = image->pixels [Cb];
       crptr    = image->pixels [Cr];
@@ -1495,9 +1485,7 @@ display_24_bit_rgb (const struct fiasco_renderer *this, unsigned char *ximage,
    {
       unsigned int *dst;		/* pointer to dithered pixels */
       word_t	   *src;		/* current pixel of frame */
-      unsigned int *y_table;
 
-      y_table = private->y_table;
       dst     = (unsigned int *) out;
       src     = image->pixels [GRAY];
 

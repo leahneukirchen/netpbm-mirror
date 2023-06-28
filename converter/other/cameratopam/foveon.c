@@ -1,6 +1,6 @@
 /* This code is licensed to the public by its copyright owners under GPL. */
 
-#define _XOPEN_SOURCE   /* get M_PI */
+#define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
 #include <stdio.h>
 #include <assert.h>

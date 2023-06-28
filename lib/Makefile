@@ -27,7 +27,9 @@ endif
 
 LIBOBJECTS = libpm.o pmfileio.o fileio.o colorname.o \
 	libpamd.o \
-	libpbm1.o libpbm2.o libpbm3.o libpbmfont.o \
+	libpbm1.o libpbm2.o libpbm3.o \
+	libpbmfont0.o libpbmfont1.o libpbmfont2.o \
+	pbmfontdata0.o pbmfontdata1.o pbmfontdata2.o \
 	libpgm1.o libpgm2.o \
 	libppm1.o libppm2.o libppmcmap.o libppmcolor.o libppmfuzzy.o \
 	libppmd.o ppmdfont.o standardppmdfont.o path.o \
@@ -55,7 +57,7 @@ MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam
 
 INTERFACE_HEADERS = colorname.h \
-	pam.h pamdraw.h pammap.h pbm.h pbmfont.h \
+	pam.h pamdraw.h pammap.h pbm.h pbmfont.h pbmfontdata.h \
 	pgm.h pm.h pm_gamma.h pm_system.h pnm.h \
 	ppm.h ppmcmap.h ppmdfont.h ppmdraw.h ppmfloyd.h \
 	util/mallocvar.h util/runlength.h util/shhopt.h \
@@ -219,7 +221,7 @@ libpm.o: compile.h
 .PHONY: install.lib
 ifeq ($(NETPBMLIBTYPE),unixshared)
 # install a Unix-style shared library
-install.lib: $(PKGDIR)/lib $(PKGDIR)/link
+install.lib: $(PKGDIR)/lib $(PKGDIR)/sharedlink
 	cd $(PKGDIR)/lib ; rm -f libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ).*
 	$(INSTALL) -c -m $(INSTALL_PERM_LIBD) \
 	  libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ).$(MIN)  $(PKGDIR)/lib/
@@ -261,26 +263,27 @@ $(INTERFACE_HEADERS:%=%_installhdr): $(PKGDIR)/include/netpbm
 	  $(SRCDIR)/lib/$(@:%_installhdr=%) $(PKGDIR)/include/netpbm/
 
 .PHONY: install.staticlib
-install.staticlib: $(PKGDIR)/link
+install.staticlib: $(PKGDIR)/staticlink
 	$(INSTALL) -c -m $(INSTALL_PERM_LIBS) libnetpbm.$(STATICLIBSUFFIX) \
-	  $(PKGDIR)/link
+	  $(PKGDIR)/staticlink
 
 # Install a shared library stub -- the ".so" file used at link time to
 # prepare a program for dynamically linking a library at run time 
 .PHONY: install.sharedlibstub
-install.sharedlibstub: $(PKGDIR)/link
+install.sharedlibstub: $(PKGDIR)/sharedlink
 ifeq ($(NETPBMLIBTYPE),unixshared)
 # install the link-time (.so) links to the runtime libraries
-	cd $(PKGDIR)/link ; \
+	cd $(PKGDIR)/sharedlink ; \
           rm -f libnetpbm.$(NETPBMLIBSUFFIX); \
           $(SYMLINK) ../lib/libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ) \
             libnetpbm.$(NETPBMLIBSUFFIX)
 endif
 ifeq ($(NETPBMLIBTYPE),dll)
-	$(INSTALL) -c -m $(INSTALL_PERM_LIBS) libnetpbm.dll.a $(PKGDIR)/link
+	$(INSTALL) -c -m $(INSTALL_PERM_LIBS) libnetpbm.dll.a \
+	  $(PKGDIR)/sharedlink
 endif
 ifeq ($(NETPBMLIBTYPE),dylib)
-	cd $(PKGDIR)/link/ ; \
+	cd $(PKGDIR)/sharedlink/ ; \
           rm -f libnetpbm.dylib; \
 	$(SYMLINK) ../lib/libnetpbm.$(MAJ).$(MIN).dylib libnetpbm.dylib
 endif

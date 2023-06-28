@@ -12,8 +12,8 @@
   documentation.  This software is provided "as is" without express or implied
   warranty.
 
-  Functions pm_rlenc_byte() and pm_rlenc_word() are based on algorithm
-  originally by Robert A. Knop (rknop@mop.caltech.edu).
+  Functions pm_rlenc_compressbyte() and pm_rlenc_compressword() are based
+  on algorithm originally by Robert A. Knop (rknop@mop.caltech.edu).
 
   Those who wish to incorporate the code herein into their own programs are
   strongly discouraged from removing the comments within borders consisting
@@ -22,9 +22,9 @@
 
 ===============================================================================
 
-  Packbits is a simple yet efficient simple run-length compression method.  It
-  has a provision for uncompressed sequences which allows efficient encoding
-  of noisy input.
+  Packbits is a simple yet efficient simple run-length compression method.
+  It has a provision for uncompressed sequences which allows efficient
+  encoding of noisy input.
 
   A survey of netpbm source code in 2015 found Packbits encoding in the
   following Netpbm programs: pbmtoescp2, pbmtomacp, pnmtopalm, pnmtopclxl,
@@ -34,19 +34,20 @@
   images that use Packbits compression, but does so via code in the TIFF
   library (not part of Netpbm).
 
-  Variants of Packbits are employed in pnmtosgi,  pamtopdbimg,  pbmtoppa
-  and  pbmtogo.
+  Variants of Packbits are employed in pnmtosgi, pamtopdbimg, pbmtoppa
+  pbmtogo and pamtotga.
 
   All the above programs formerly did the same compression through different
   code.  This redundancy bloated the Netpbm package and made maintenance
   difficult.  This maintenance difficulty surfaced as an issue when tests with
   valgrind revealed multiple memory-related problems in the above programs.
-  Indeed, just determining which programs do this compression by this method
+  Indeed, just determining which programs do compression by this method
   was not simple because of differences in terminology.  "Packbits" is often
   called "run length encoding."  In ppmtoilbm the name is "byterun1."
 
-  Today, all Netpbm programs that do Packbits compression use the facilities
-  in this file for it.
+  Today, all Netpbm programs that do Packbits compression with the exception
+  of pamtotiff, pbmtoppa, pbmtogo and pamtotga use the facilities in this
+  file for it.  
 =============================================================================*/
 
 #include <string.h>
@@ -68,11 +69,11 @@ static const char * const errorUndefinedMode =
 
    In this simple run-length encoding scheme, compressed and uncompressed
    strings follow a single index or "flag" byte N.  There are several
-   variations, differing in the format of the flag byte, maximum string length
-   and element size (byte or word).
+   variations, differing in the format of the flag byte, maximum string
+   length and element size (byte or word).
    
-   In the most widely used version, Packbits, the meaning of the flag byte N
-   is defined as follows:
+   In the most widely used version, Packbits, the meaning of the flag byte
+   N is defined as follows:
 
     0-127 means the next N+1 bytes are uncompressed.
     129-255 means the next byte is to be repeated 257-N times.
@@ -99,7 +100,7 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
   Always encode 3-byte repeat sequences.
 
   Encode 2-byte repeat sequences only when they are at the start of the block.
-  This ensures that the output is never unnecessary bloated.
+  This ensures that the output is never unnecessarily bloated.
 
   Original algorithm by Robert A. Knop (rknop@mop.caltech.edu)
 -----------------------------------------------------------------------------*/
@@ -107,8 +108,17 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
 
     size_t inCurs, outCurs;
 
-    if (mode != PM_RLE_PACKBITS)
-        pm_error(errorUndefinedMode, mode);
+    int packBase;
+    int packSign;
+ 
+    switch (mode) {
+    case PM_RLE_PACKBITS:
+        packBase = 257 ; packSign = -1; break;
+    case PM_RLE_PALMPDB:
+        packBase = 127 ; packSign = +1; break;
+    default:
+         pm_error(errorUndefinedMode, mode);
+    }
 
     for (inCurs = 0, outCurs = 0; inCurs < inSize; ) {
         if ((inCurs < inSize - 1) && (inbuf[inCurs] == inbuf[inCurs+1])) {
@@ -121,8 +131,7 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
                      count < maxRun; 
                  ++inCurs, ++count)
                 ;
-
-            outbuf[outCurs++] = (unsigned char)(257 - count);
+            outbuf[outCurs++] = (unsigned char) (packBase + packSign * count);
             outbuf[outCurs++] = inbuf[hold];
         } else {
             /*Do a non-run*/
@@ -176,11 +185,11 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
                       size_t             const inSize,
                       size_t           * const outputSizeP) {
 /*---------------------------------------------------------------------------
-   Similar to pm_rlenc_byte(), but this works with two-byte elements.  The
-   difference between SGI16 and PALM16 is the size of the flag.  SGI16 : 16
-   bits; PALM16 : 8 bits
+   Similar to pm_rlenc_compressbyte(), but this works with two-byte elements.
+   The difference between SGI16 and PALM16 is the size of the flag.
+   SGI16 : 16 bits; PALM16 : 8 bits
 
-   'inSize' is a number of words,but *outputSizeP is a number of bytes.
+   'inSize' is a number of words, but *outputSizeP is a number of bytes.
 -----------------------------------------------------------------------------*/
     size_t inCurs, outCurs;
     size_t flagSz;
@@ -258,6 +267,8 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
    number of flag bytes.  The worst case happens when there are no repeat
    sequences in the input.
 
+   The encoder in this file is an efficient one.
+
    The key to an efficient encoder is correct handling of short, inefficient
    sequences.  The following algorithm (not actually used in this file)
    describes the idea.
@@ -267,9 +278,9 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
    different from its neighbors.
 
    A compressed block is one that encodes a sequence of identical values
-   (which could be a run or just part of a run) as a value and a count.
-   count.  An uncompressed block is one that encodes a sequence of any values
-   by listing the values individually.
+   (which could be a run or just part of a very long run) as a value and
+   a count.  An uncompressed block is one that encodes a sequence of any
+   values by listing the values individually.
 
    Start by encoding the entire input as uncompressed blocks.  Seek runs that
    can be encoded with compressed blocks, but only if doing so doesn't make
@@ -288,6 +299,16 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
 
      - Whenever savings are larger than the added overhead, encode the run
        as a compressed block.
+
+   -----------------------------------------------------------------------
+
+   MS-DOS/Windows BMP format note
+
+   The compression method for BMP is a variant of packbits.
+   We could support the 8-bit version with some modifications to functions
+   in this file.  Determining the worst-case output size of an efficient
+   coder is rather complicated because uncompressed blocks may not be less
+   than three bytes long and are indicated by two-byte flags.
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 
@@ -310,23 +331,31 @@ pm_rlenc_maxbytes(size_t          const inSize,  /* number of elements */
    /* The upper limit could be raised above INT_MAX, but no program needs that
       today.
    */
-    size_t blockSize;
-    size_t flagSize;
-    size_t itemSize;
-    size_t miscSize;
-    size_t overhead;
+    size_t blockSize;  /* Number of items in data block */
+    size_t flagSize;   /* Size of flag, in bytes */
+    size_t itemSize;   /* Size of item, in bytes */
+    size_t miscSize;   /* Size of other elements such as term code, in bytes */
+    size_t overhead;   /* Worst-case overhead, in bytes */
+    /* return value:      Worst-case output size, in bytes */ 
 
     switch (mode) {
     case PM_RLE_PACKBITS:
-        blockSize = 128; flagSize = 1; itemSize = 1; miscSize = 0; break;
+    case PM_RLE_PALMPDB:
+        blockSize = 128; flagSize = 1; itemSize = 1; miscSize = 0;
+        break;
     case PM_RLE_SGI8:
-        blockSize = 127; flagSize = 1; itemSize = 1; miscSize = 0; break;
-    case PM_RLE_GRAPHON:  case PM_RLE_PPA:
-        blockSize =  64; flagSize = 1; itemSize = 1; miscSize = 0; break;
+        blockSize = 127; flagSize = 1; itemSize = 1; miscSize = 0;
+        break;
+    case PM_RLE_GRAPHON:
+    case PM_RLE_PPA:
+        blockSize =  64; flagSize = 1; itemSize = 1; miscSize = 0;
+        break;
     case PM_RLE_SGI16:
-        blockSize = 127; flagSize = 2; itemSize = 2; miscSize = 2; break;
+        blockSize = 127; flagSize = 2; itemSize = 2; miscSize = 2;
+        break;
     case PM_RLE_PALM16:
-        blockSize = 128; flagSize = 1; itemSize = 2; miscSize = 0; break;
+        blockSize = 128; flagSize = 1; itemSize = 2; miscSize = 0;
+        break;
     default:
         pm_error(errorUndefinedMode, mode);
     }

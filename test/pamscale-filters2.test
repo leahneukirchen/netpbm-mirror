@@ -1,0 +1,97 @@
+#! /bin/bash
+# This script tests: pamscale pamstretch pamstretch-gen
+# Also requires: pamvalidate pnmpsnr
+
+tmpdir=${tmpdir:-/tmp}
+stretch_ppm=${tmpdir}/stretch.ppm
+
+width_height=`pamfile -size testimg.ppm | \
+                awk '{print "-width="$1, "-height="$2}'`
+
+pamstretch -xscale=4 -yscale=3 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo -xscale=4 -yscale=3 mitchell:  
+pamscale -xscale=4 -yscale=3 -filter=mitchell testimg.ppm | \
+  pnmpsnr -target1=34.15 -target2=46.95 -target3=41.02 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=mitchell ${stretch_ppm} | \
+  pnmpsnr -target1=33.36 -target2=46.74 -target3=40.79 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch -xscale=3 -yscale=4 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo -xscale=3 -yscale=4 gauss:  
+pamscale -xscale=3 -yscale=4 -filter=gauss testimg.ppm | \
+  pnmpsnr -target1=34.4 -target2=46.98 -target3=41.07 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=gauss ${stretch_ppm} | \
+  pnmpsnr -target1=33.1 -target2=46.61 -target3=40.64 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch -xscale=2 -yscale=2 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo -xscale=2 -yscale=2 sinc:  
+pamscale -xscale=2 -yscale=2 -filter=sinc testimg.ppm | \
+  pnmpsnr -target1=36.27 -target2=49.39 -target3=43.62 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=sinc ${stretch_ppm} | \
+  pnmpsnr -target1=36.23 -target2=49.47 -target3=43.69 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch -xscale=2 -yscale=4 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo -xscale=2 -yscale=4 bessel:  
+pamscale -xscale=2 -yscale=4 -filter=bessel testimg.ppm | \
+  pnmpsnr -target1=35.09 -target2=47.77 -target3=41.88 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=bessel ${stretch_ppm} | \
+  pnmpsnr -target1=33.99 -target2=47.47 -target3=41.55 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch -xscale=3 -yscale=3 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo -xscale=3 -yscale=3 hanning:  
+pamscale -xscale=3 -yscale=3 -filter=hanning testimg.ppm | \
+  pnmpsnr -target1=34.73 -target2=47.42 -target3=41.54 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=hanning ${stretch_ppm} | \
+  pnmpsnr -target1=33.86 -target2=47.24 -target3=41.29 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch -xscale=5 -yscale=5 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo -xscale=5 -yscale=5 hamming:  
+pamscale -xscale=5 -yscale=5 -filter=hamming testimg.ppm | \
+  pnmpsnr -target1=33.4 -target2=46.02 -target3=40.07 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=hamming ${stretch_ppm} | \
+  pnmpsnr -target1=32.49 -target2=45.81 -target3=39.8 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch-gen 5.85 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo 5.85 blackman:  
+pamscale 5.85 -filter=blackman testimg.ppm | \
+  pnmpsnr -target1=34.29 -target2=48.78 -target3=42.75 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=blackman ${stretch_ppm} | \
+  pnmpsnr -target1=33.69 -target2=48.83 -target3=42.72 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}
+
+pamstretch-gen 5.10 testimg.ppm | pamvalidate > ${stretch_ppm}
+echo 5.10 kaiser:  
+pamscale 5.10 -filter=kaiser testimg.ppm | \
+  pnmpsnr -target1=34.58 -target2=49.03 -target3=43.01 - ${stretch_ppm} || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+
+pamscale ${width_height} -filter=blackman ${stretch_ppm} | \
+  pnmpsnr -target1=33.69 -target2=48.83 -target3=42.72 testimg.ppm - || \
+  echo failure ${PIPESTATUS[@]} ":" $?
+rm ${stretch_ppm}

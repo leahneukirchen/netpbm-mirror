@@ -16,142 +16,245 @@
 #include <string.h>
 #include <math.h>
 
+#include "pm_c_util.h"
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "ppm.h"
 
 #ifndef PI
 #define PI  3.14159265358979323846
 #endif
 
-#ifndef ABS
-#define ABS(a) ((a) < 0 ? -(a) : (a))
-#endif
 
-static void 
-hsv_rgb(double const in_h, double const in_s, double const in_v, 
-        double * const r, double * const g, double * const b) {
+
+typedef enum {WT_HUE_VAL, WT_HUE_SAT, WT_PPMCIRC} WheelType;
+
+
+struct CmdlineInfo {
+    unsigned int diameter;
+    WheelType    wheelType;
+    pixval       maxval;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char **argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-   This is a stripped down hsv->rgb converter that works only for
-   Saturation of zero.
+  Convert program invocation arguments (argc,argv) into a format the
+  program can use easily, struct CmdlineInfo.  Validate arguments along
+  the way and exit program with message if invalid.
+
+  Note that some string information we return as *cmdlineP is in the storage
+  argv[] points to.
 -----------------------------------------------------------------------------*/
-    double h, s, v;
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
 
-    h = in_h < 0.0 ? 0.0 : in_h > 360.0 ? 360.0 : in_h;
+    unsigned int maxvalSpec, huevalueSpec, huesaturationSpec;
+    unsigned int option_def_index;
 
-    v = in_v < 0.0 ? 0.0 : in_v > 1.0 ? 1.0 : in_v;
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
-    s = in_s < 0.0 ? 0.0 : in_s > 1.0 ? 1.0 : in_s;
+    option_def_index = 0;
+    OPTENT3(0, "maxval",         OPT_UINT,
+            &cmdlineP->maxval, &maxvalSpec,        0);
+    OPTENT3(0, "huevalue",       OPT_FLAG,
+            NULL,              &huevalueSpec,      0);
+    OPTENT3(0, "huesaturation",  OPT_FLAG,
+            NULL,              &huesaturationSpec, 0);
 
-    if (s != 0.0)
-        pm_error("Internal error: non-zero saturation");
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    if (h <= 60.0) {          /* from red to yellow */
-        *r = 1.0;
-        *g = h / 60.0;
-        *b = 0.0;
-    } else if ( h <= 120.0 ) {   /* from yellow to green */
-        *r = 1.0 - (h - 60.0) / 60.0;
-        *g = 1.0;
-        *b = 0.0;
-    } else if ( h <= 180.0 ) {   /* from green to cyan */
-        *r = 0.0;
-        *g = 1.0;
-        *b = (h - 120.0) / 60.0;
-    } else if ( h <= 240.0 ) {    /* from cyan to blue */
-        *r = 0.0;
-        *g = 1.0 - (h - 180.0) / 60.0;
-        *b = 1.0;
-    } else if ( h <= 300.0) {    /* from blue to magenta */
-        *r = (h - 240.0) / 60.0;
-        *g = 0.0;
-        *b = 1.0;
-    } else {                      /* from magenta to red */
-        *r = 1.0;
-        *g = 0.0;
-        *b = 1.0 - (h - 300.0) / 60.0;
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!maxvalSpec)
+        cmdlineP->maxval = PPM_MAXMAXVAL;
+    else {
+        if (cmdlineP->maxval > PPM_OVERALLMAXVAL)
+            pm_error("The value you specified for -maxval (%u) is too big.  "
+                     "Max allowed is %u", cmdlineP->maxval,
+                     PPM_OVERALLMAXVAL);
+
+        if (cmdlineP->maxval < 1)
+            pm_error("You cannot specify 0 for -maxval");
     }
 
-    if ( v >= 0.5) {
-        v = 2.0 - 2.0 * v;
-        v = sqrt (v);
-        *r = 1.0 + v * (*r - 1.0);
-        *g = 1.0 + v * (*g - 1.0);
-        *b = 1.0 + v * (*b - 1.0);
+    if (huevalueSpec + huesaturationSpec > 1)
+        pm_error("You may specify at most one of "
+                 "-huevalue and -huesaturation");
+
+    cmdlineP->wheelType =
+        huevalueSpec      ? WT_HUE_VAL :
+        huesaturationSpec ? WT_HUE_SAT :
+        WT_PPMCIRC;
+
+    if (argc-1 != 1) {
+        pm_error("Need 1 argument diameter of the wheel in pixels");
     } else {
-        v *= 2.0;
-        v = sqrt (sqrt ( sqrt (v)));
-        *r *= v;
-        *g *= v;
-        *b *= v;
+        const char * const diameterArg = argv[1];
+
+        if (strlen(diameterArg) == 0)
+            pm_error("Diameter argument is a null string");
+        else {
+            long argNumber;
+            char * tailptr;
+            argNumber = strtol(diameterArg, &tailptr, 10);
+
+            if (*tailptr != '\0')
+                pm_error("You specified an invalid number as diameter: '%s'",
+                         diameterArg);
+            if (argNumber <= 0)
+                pm_error("Diameter must be positive.  You specified %ld.",
+                         argNumber);
+            if (argNumber < 4)
+                pm_error("Diameter must be at least 4.  You specified %ld",
+                         argNumber);
+
+            cmdlineP->diameter = argNumber;
+        }
     }
+    free(option_def);
 }
 
 
-int
-main(int argc, char *argv[]) {
-    pixel *orow;
-    int rows, cols;
-    pixval maxval;
+
+
+
+
+
+static pixel
+ppmcircColor(pixel  const normalColor,
+             pixval const maxval,
+             double const d) {
+/*----------------------------------------------------------------------------
+   The color that Ppmcirc (by Peter Kirchgessner, not part of Netpbm) puts at
+   'd' units from the center where the normal color in a hue-value color wheel
+   is 'normalColor'.
+
+   We have no idea what the point of this is.
+-----------------------------------------------------------------------------*/
+    pixel retval;
+
+    if (d >= 0.5) {
+        double const scale = sqrt(2.0 - 2.0 * d);
+
+        PPM_ASSIGN(retval,
+                   maxval - scale * (maxval - normalColor.r/d),
+                   maxval - scale * (maxval - normalColor.g/d),
+                   maxval - scale * (maxval - normalColor.b/d));
+    } else if (d == 0.0) {
+        PPM_ASSIGN(retval, 0, 0, 0);
+    } else {
+        double const scale = sqrt(sqrt(sqrt(2.0 * d)))/d;
+        PPM_ASSIGN(retval,
+                   normalColor.r * scale,
+                   normalColor.g * scale,
+                   normalColor.b * scale);
+    }
+    return retval;
+}
+
+
+
+static pixel
+wheelColor(WheelType const wheelType,
+           double    const dx,
+           double    const dy,
+           double    const radius,
+           pixval    const maxval) {
+
+    double const dist = sqrt(SQR(dx) + SQR(dy));
+
+    pixel retval;
+
+    if (dist > radius) {
+        retval = ppm_whitepixel(maxval);
+    } else {
+        double const hue90 = atan2(dx, dy) / PI * 180.0;
+        struct hsv hsv;
+
+        hsv.h = hue90 < 0.0 ? 360.0 + hue90 : hue90;
+
+        switch (wheelType) {
+        case WT_HUE_SAT:
+            hsv.v = 1.0;
+            hsv.s = dist / radius;
+            retval = ppm_color_from_hsv(hsv, maxval);
+            break;
+        case WT_HUE_VAL:
+            hsv.s = 1.0;
+            hsv.v = dist / radius;
+            retval = ppm_color_from_hsv(hsv, maxval);
+            break;
+        case WT_PPMCIRC:
+            hsv.s = 1.0;
+            hsv.v = dist / radius;
+            {
+                pixel const hvColor = ppm_color_from_hsv(hsv, maxval);
+                retval = ppmcircColor(hvColor, maxval, dist/radius);
+            }
+            break;
+        }
+    }
+    return retval;
+}
+
+
+
+static void
+ppmwheel(WheelType    const wheelType,
+         unsigned int const diameter,
+         pixval       const maxval,
+         FILE *       const ofP) {
+
+    unsigned int const cols   = diameter;
+    unsigned int const rows   = diameter;
+    unsigned int const radius = diameter/2 - 1;
+    unsigned int const xcenter = cols / 2;
+    unsigned int const ycenter = rows / 2;
+
     unsigned int row;
-    unsigned int xcenter, ycenter, radius;
-    long diameter;
-    char * tailptr;
+    pixel * orow;
 
-    ppm_init( &argc, argv );
-
-    if (argc-1 != 1)
-        pm_error("Program takes one argument:  diameter of color wheel");
-
-    diameter = strtol(argv[1], &tailptr, 10);
-    if (strlen(argv[1]) == 0 || *tailptr != '\0')
-        pm_error("You specified an invalid diameter: '%s'", argv[1]);
-    if (diameter <= 0)
-        pm_error("Diameter must be positive.  You specified %ld.", diameter);
-    if (diameter < 4)
-        pm_error("Diameter must be at least 4.  You specified %ld", diameter);
-
-    cols = rows = diameter;
-    
     orow = ppm_allocrow(cols);
 
-    maxval = PPM_MAXMAXVAL;
-    ppm_writeppminit(stdout, cols, rows, maxval, 0);
-
-    radius = diameter/2 - 1;
-
-    xcenter = cols / 2;
-    ycenter = rows / 2;
+    ppm_writeppminit(ofP, cols, rows, maxval, 0);
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
             double const dx = (int)col - (int)xcenter;
             double const dy = (int)row - (int)ycenter;
-            double const dist = sqrt(dx*dx + dy*dy);
 
-            pixval r, g, b;
-
-            if (dist > radius) {
-                r = g = b = maxval;
-            } else {
-                double hue, sat, val;
-                double dr, dg, db;
-
-                hue = atan2(dx, dy) / PI * 180.0;
-                if (hue < 0.0) 
-                    hue = 360.0 + hue;
-                sat = 0.0;
-                val = dist / radius;
-
-                hsv_rgb(hue, sat, val, &dr, &dg, &db);
-
-                r = (pixval)(maxval * dr);
-                g = (pixval)(maxval * dg);
-                b = (pixval)(maxval * db);
-            }
-            PPM_ASSIGN (orow[col], r, g, b );
+            orow[col] = wheelColor(wheelType, dx, dy, radius, maxval);
         }
-        ppm_writeppmrow(stdout, orow, cols, maxval, 0);
+        ppm_writeppmrow(ofP, orow, cols, maxval, 0);
     }
-    pm_close(stdout);
-    exit(0);
+    ppm_freerow(orow);
 }
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    struct CmdlineInfo cmdline;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ppmwheel(cmdline.wheelType, cmdline.diameter, cmdline.maxval, stdout);
+
+    pm_close(stdout);
+    return 0;
+}
+
+

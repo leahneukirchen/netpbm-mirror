@@ -7,9 +7,9 @@
 #include "pgm.h"
 
 void
-pnm_readpaminitrestaspnm(FILE * const fileP, 
-                         int *  const colsP, 
-                         int *  const rowsP, 
+pnm_readpaminitrestaspnm(FILE * const fileP,
+                         int *  const colsP,
+                         int *  const rowsP,
                          gray * const maxvalP,
                          int *  const formatP);
 

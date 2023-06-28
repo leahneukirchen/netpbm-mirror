@@ -2,7 +2,6 @@
 # This script tests: pbmtog3
 # Also requires: pbmmake
 
-
 # Test 1.  Should print 3697098186 144
 pbmtog3 testgrid.pbm | cksum
 # Test 2.  Should print 1248301383 122
@@ -18,12 +17,9 @@ pbmmake -w 10 10 | \
   pbmtog3 -nofixedwidth | cksum
 # Test 7.  Should print 28792587 47
 pbmmake -w 10000 10 | pbmtog3 | cksum
-# Test 8.  Should print 871281767 162
-pbmmake -w 10000 10 | \
-  pbmtog3 -nofixedwidth | cksum
-# Test 9.  Should print 3736247115 62
+# Test 8.  Should print 3736247115 62
 pbmmake -b 10 10 | pbmtog3 | cksum
-# Test 10.  Should print 2820255307 2191856
+# Test 9.  Should print 2820255307 2191856
 pbmmake -g 1700 2286 | pbmtog3 | cksum
-# Test 11.  Should print 4159089282 2226575
+# Test 10.  Should print 4159089282 2226575
 pbmmake -g 1800 2286 | pbmtog3 | cksum

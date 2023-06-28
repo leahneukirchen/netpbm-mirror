@@ -271,12 +271,11 @@ computeInputFileName(const char *  const pattern,
                      const char ** const fileNameP) {
 
     struct buffer buffer;
-    unsigned int inCursor, outCursor;
+    unsigned int inCursor;
 
     buffer_init(&buffer);
 
     inCursor = 0;
-    outCursor = 0;
 
     while (pattern[inCursor] != '\0') {
         if (pattern[inCursor] == '%') {

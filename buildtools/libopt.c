@@ -65,6 +65,7 @@
   handle explicit file names.
 
 -----------------------------------------------------------------------------*/
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in stdio.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
@@ -497,21 +498,20 @@ main(int argc, char **argv) {
 
     bool error;
     bool runtime;  /* -runtime option has been seen */
-    bool quiet;    /* -quiet option has been seen */
     int retval;
     unsigned int arg;  /* Index into argv[] of argument we're processing */
     char outputLine[1024];
 
     strcpy(outputLine, "");  /* initial value */
     runtime = FALSE;  /* initial value */
-    quiet = FALSE;   /* initial value */
     error = FALSE;  /* no error yet */
+
     for (arg = 1; arg < argc && !error; arg++) {
         if (strcmp(argv[arg], "-runtime") == 0)
             runtime = TRUE;
-        else if (strcmp(argv[arg], "-quiet") == 0)
-            quiet = TRUE;
-        else {
+        else if (strcmp(argv[arg], "-quiet") == 0) {
+            /* Doesn't do anything today */
+        } else {
             const char * options;
             processOneLibrary(argv[arg], runtime, explicit, 
                               &options, &error);

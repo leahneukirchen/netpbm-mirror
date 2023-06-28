@@ -37,6 +37,26 @@ use strict;
 
 use Getopt::Long;
 
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('pamcrater', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
+
+##############################################################################
+#
+#  MAINLINE
+#
+##############################################################################
+
+doVersionHack(\@ARGV);
+
 my @pgmcraterArgv = @ARGV;
 
 my $validOptions = GetOptions(

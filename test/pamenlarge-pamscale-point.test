@@ -1,0 +1,36 @@
+#! /bin/bash
+# This script tests: pamenlarge pamscale
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+enlarge_ppm=${tmpdir}/enlarge.ppm
+
+# When scale factor is an integer and the pamscale filter is point (default)
+# pamenlarge and pamscale should produce identical output
+
+for option in 1 "2 -filter=point" "3 -linear" "4 -nomix" 5
+  do
+  scale=${option% *}
+  pamenlarge $scale testimg.ppm > ${enlarge_ppm}
+  pamscale   $option testimg.ppm | cmp -s - ${enlarge_ppm}  
+  echo $option ${PIPESTATUS[@]} ":" $?
+  rm  ${enlarge_ppm}  
+  done
+
+
+pamenlarge -xscale=7 -yscale=7 testimg.ppm > ${enlarge_ppm}
+pamscale   -xscale=7 -yscale=7 testimg.ppm | cmp -s - ${enlarge_ppm}  
+echo 7 ${PIPESTATUS[@]} ":" $?
+rm  ${enlarge_ppm}
+
+
+enlarge_pbm=${tmpdir}/enlarge.pbm
+
+for option in "6 -nomix" "15 -nomix -linear" "24 -nomix"
+  do
+  scale=${option%% *}
+  pamenlarge $scale testgrid.pbm > ${enlarge_pbm}
+  pamscale   $option testgrid.pbm | cmp -s - ${enlarge_pbm}  
+  echo $option ${PIPESTATUS[@]} ":" $?
+  rm  ${enlarge_pbm}
+  done
