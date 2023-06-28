@@ -207,7 +207,7 @@ void ppa_init_job(ppa_stat* prn)
     scp3_put (prn->fptr, 0x018f, sizeof(init3), 7, 2, 4, init3);
     break;
   default:
-    fprintf(stderr,"ppa_init_job(): unknown printer verson\n");
+    fprintf(stderr,"ppa_init_job(): unknown printer version\n");
   }
 }
 
@@ -238,7 +238,7 @@ void ppa_init_page(ppa_stat* prn)
     scp3_put (prn->fptr, 0x0183, sizeof(pageA), 5, 1, 0, pageA);
     break;
   default:
-    fprintf(stderr,"ppa_init_page(): unknown printer verson\n");
+    fprintf(stderr,"ppa_init_page(): unknown printer version\n");
   }
 }
 
@@ -260,7 +260,7 @@ void ppa_load_page(ppa_stat* prn)
     scp3_put (prn->fptr, 0x0181, sizeof(loadC), 7, 1, 0, loadC);
     break;
   default:
-    fprintf(stderr,"ppa_load_page(): unknown printer verson\n");
+    fprintf(stderr,"ppa_load_page(): unknown printer version\n");
   }
 }
 
@@ -282,7 +282,7 @@ void ppa_eject_page(ppa_stat* prn)
     scp3_put (prn->fptr, 0x0181, sizeof(loadC), 7, 1, 0, loadC);
     break;
   default:
-    fprintf(stderr,"ppa_eject_page(): unknown printer verson\n");
+    fprintf(stderr,"ppa_eject_page(): unknown printer version\n");
   }
 }
 
@@ -440,7 +440,7 @@ void ppa_print_sweep(ppa_stat* prn,ppa_sweep_data* data)
     MF=1;
     break;
   default:
-    fprintf(stderr,"ppa_print_sweep(): unknown printer verson\n");
+    fprintf(stderr,"ppa_print_sweep(): unknown printer version\n");
     return;
   }
 

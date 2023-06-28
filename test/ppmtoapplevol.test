@@ -1,0 +1,30 @@
+#! /bin/sh
+# This script tests: ppmtoapplevol 
+# Also requires: ppmmake pbmmake
+
+echo "Test: should print 1518149010 3065"
+ppmmake rgb:0/0/0 255 12 | ppmtoapplevol | cksum
+
+echo "Invalid input." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+pbmmake 10 11 | ppmtoapplevol > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+ 
+pbmmake 10 13 | ppmtoapplevol > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+ 
+pbmmake 256 12 | ppmtoapplevol > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

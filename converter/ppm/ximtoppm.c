@@ -22,7 +22,9 @@
 #include "shhopt.h"
 #include "nstring.h"
 
-struct cmdlineInfo {
+
+
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -34,8 +36,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -50,14 +52,14 @@ parseCommandLine(int argc, char ** argv,
     unsigned int alphaoutSpec;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "alphaout",   OPT_STRING, 
+    OPTENT3(0,   "alphaout",   OPT_STRING,
             &cmdlineP->alpha_filename, &alphaoutSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 
     if (!alphaoutSpec)
@@ -67,21 +69,21 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->input_filename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->input_filename = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
-    if (cmdlineP->alpha_filename && 
+    if (cmdlineP->alpha_filename &&
         streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = TRUE;
-    else 
+    else
         cmdlineP->alpha_stdout = FALSE;
 }
 
 
 
 /* The subroutines are excerpted and slightly modified from the
-   X.V11R4 version of xim_io.c. 
+   X.V11R4 version of xim_io.c.
 */
 
 static int
@@ -100,6 +102,11 @@ ReadXimHeader(FILE *     const in_fp,
         pm_message("ReadXimHeader: unable to read file header" );
         return(0);
     }
+    /* Force broken ASCIIZ strings to at least be valid ASCIIZ */
+    a_head.author [sizeof(a_head.author)  - 1] = '\0';
+    a_head.date   [sizeof(a_head.date)    - 1] = '\0';
+    a_head.program[sizeof(a_head.program) - 1] = '\0';
+
     if (atoi(a_head.header_size) != sizeof(ImageHeader)) {
         pm_message("ReadXimHeader: header size mismatch" );
         return(0);
@@ -113,14 +120,16 @@ ReadXimHeader(FILE *     const in_fp,
     header->ncolors = atoi(a_head.num_colors);
     header->nchannels = atoi(a_head.num_channels);
     header->bytes_per_line = atoi(a_head.bytes_per_line);
-/*    header->npics = atoi(a_head.num_pictures);
-*/
+#if 0
+    header->npics = atoi(a_head.num_pictures);
+#endif
     header->bits_channel = atoi(a_head.bits_per_channel);
     header->alpha_flag = atoi(a_head.alpha_channel);
     header->author = pm_strdup(a_head.author);
     header->date = pm_strdup(a_head.date);
     header->program = pm_strdup(a_head.program);
-    /* Do double checking for bakwards compatibility */
+
+    /* Do double checking for backwards compatibility */
     if (header->npics == 0)
         header->npics = 1;
     if (header->bits_channel == 0)
@@ -130,7 +139,7 @@ ReadXimHeader(FILE *     const in_fp,
         header->bits_channel = 8;
     }
     if ((int)header->bytes_per_line == 0)
-        header->bytes_per_line = 
+        header->bytes_per_line =
             (header->bits_channel == 1 && header->nchannels == 1) ?
                 (header->width + 7) / 8 :
                 header->width;
@@ -186,9 +195,10 @@ ReadImageChannel(FILE *         const infp,
             }
             marker += i;
         }
-        /* return to the beginning of the next image's bufffer */
+        /* return to the beginning of the next image's buffer */
         if (fseek(infp, marker, 0) == -1) {
-            pm_message("ReadImageChannel: can't fseek to location in image buffer" );
+            pm_message("ReadImageChannel: can't fseek to location "
+                       "in image buffer");
             return(0);
         }
         free((char *)line);
@@ -271,7 +281,7 @@ ReadXimImage(FILE *     const in_fp,
 *  Author: Philip Thompson
 *  $Date: 89/11/01 10:14:23 $
 *  $Revision: 1.14 $
-*  Purpose: General xim libray of utililities
+*  Purpose: General xim library of utililities
 *  Copyright (c) 1988  Philip R. Thompson
 *                Computer Resource Laboratory (CRL)
 *                Dept. of Architecture and Planning
@@ -297,28 +307,26 @@ ReadXimImage(FILE *     const in_fp,
 ***********************************************************************/
 
 static int
-ReadXim(in_fp, xim)
-    FILE *in_fp;
-    XimImage *xim;
-{
+ReadXim(FILE *     const in_fp,
+        XimImage * const xim) {
+
     if (!ReadXimHeader(in_fp, xim)) {
         pm_message("can't read xim header" );
-    return(0);
-    }
-    if (!ReadXimImage(in_fp, xim)) {
+        return 0;
+    } else if (!ReadXimImage(in_fp, xim)) {
         pm_message("can't read xim data" );
-    return(0);
-    }
-    return(1);
+        return 0;
+    } else
+        return 1;
 }
 
 
 
 int
-main(int argc,
-     char *argv[]) {
+main(int          argc,
+     const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE *ifP, *imageout_file, *alpha_file;
     XimImage xim;
     pixel *pixelrow, colormap[256];
@@ -330,24 +338,24 @@ main(int argc,
     pixval maxval;
     bool success;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.input_filename);
-    
+
     if (cmdline.alpha_stdout)
         alpha_file = stdout;
-    else if (cmdline.alpha_filename == NULL) 
+    else if (cmdline.alpha_filename == NULL)
         alpha_file = NULL;
     else
         alpha_file = pm_openw(cmdline.alpha_filename);
-    
-    if (cmdline.alpha_stdout) 
+
+    if (cmdline.alpha_stdout)
         imageout_file = NULL;
     else
         imageout_file = stdout;
-    
+
     success = ReadXim(ifP, &xim);
     if (!success)
         pm_error("can't read Xim file");
@@ -374,7 +382,7 @@ main(int argc,
             "unknown Xim file type, nchannels == %d, bits_channel == %d",
             xim.nchannels, xim.bits_channel);
 
-    if (imageout_file) 
+    if (imageout_file)
         ppm_writeppminit(imageout_file, cols, rows, maxval, 0);
     if (alpha_file)
         pgm_writepgminit(alpha_file, cols, rows, maxval, 0);
@@ -386,8 +394,8 @@ main(int argc,
         if (mapped) {
             byte * const ximrow = xim.data + row * xim.bytes_per_line;
             unsigned int col;
-            
-            for (col = 0; col < cols; ++col) 
+
+            for (col = 0; col < cols; ++col)
                 pixelrow[col] = colormap[ximrow[col]];
             alpharow[col] = 0;
         } else {
@@ -403,11 +411,11 @@ main(int argc,
                            redrow[col], grnrow[col], blurow[col]);
                 if (xim.nchannels > 3)
                     alpharow[col] = othrow[col];
-                else 
+                else
                     alpharow[col] = 0;
             }
         }
-        if (imageout_file) 
+        if (imageout_file)
             ppm_writeppmrow(imageout_file, pixelrow, cols, maxval, 0);
         if (alpha_file)
             pgm_writepgmrow(alpha_file, alpharow, cols, maxval, 0);
@@ -420,3 +428,6 @@ main(int argc,
 
     return 0;
 }
+
+
+

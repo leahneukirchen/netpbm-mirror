@@ -1,0 +1,202 @@
+#! /bin/sh
+# This script tests: pamundice
+# Also requires: pamfile pgmmake pnmtile pamcat
+
+tmpdir=${tmpdir:-/tmp}
+fname_stem=${tmpdir}/part
+
+echo "Test 1.  Should print 2096818803 2818 twice"
+
+for x in 0 1 2
+  do for y in 0 1 2 3 4
+    do
+    pgmmake "."$(( x* 25 + y )) 11 17 > ${fname_stem}_${y}_${x}.pgm
+    done
+  done
+
+pamundice -across=3 -down=5 ${fname_stem}"_%1d_%1a".pgm | cksum
+
+ls ${fname_stem}_?_?.pgm | \
+    pamundice -across=3 -down=5 -listfile=- | cksum
+
+echo "Test 2.  Should print 2096818803 2818 twice"
+
+tempfile=${tmpdir}/temp
+
+for y in 0 1 2 3 4
+  do
+  pamundice -across=3 ${fname_stem}"_"$y"_%1a".pgm > ${tempfile}_"$y"
+  done
+
+pamcat -tb ${tempfile}_[01234] | cksum
+rm ${tempfile}_[01234]
+
+# Note: the following 2 are valid.  There should not be warning messages.
+
+for x in 0 1 2
+  do
+  pamundice -down=5 ${fname_stem}"_%1d_"$x.pgm > ${tempfile}"_"$x
+  done
+
+pamcat -lr ${tempfile}_[012] | cksum
+rm ${tempfile}_[012]
+
+rm ${fname_stem}_?_?.pgm
+
+echo "Test 3.  Should print 2096818803 2818 twice"
+
+for x in 0 1
+  do for y in 0 1 2 3 4
+    do
+    pgmmake "."$(( x* 25 + y )) 12 17 > ${fname_stem}_${y}_${x}.pgm
+    done
+  done
+
+for x in 2
+  do for y in 0 1 2 3 4
+    do
+    pgmmake "."$(( x* 25 + y )) 11 17 > ${fname_stem}_${y}_${x}.pgm
+    done
+  done
+
+pamundice -across=3 -down=5 \
+  -hoverlap=1 ${fname_stem}"_%1d_%1a".pgm | cksum
+
+rm ${fname_stem}_?_?.pgm
+
+for x in 0 1 2
+  do for y in 0 1 2 3
+    do
+    pgmmake "."$(( x* 25 + y )) 11 18 > ${fname_stem}_${y}_${x}.pgm
+    done
+  done
+
+for x in 0 1 2
+  do for y in 4
+    do
+    pgmmake "."$(( x* 25 + y )) 11 17 > ${fname_stem}_${y}_${x}.pgm
+    done
+  done
+
+pamundice -across=3 -down=5 \
+  -voverlap=1 ${fname_stem}"_%1d_%1a".pgm | cksum
+
+rm ${fname_stem}_?_?.pgm
+
+
+# Test 4.
+echo "Test 4.  Should print 2434390296 4436 four times"
+
+msize=$(pamfile -size maze.pbm)
+mw=$(echo ${msize} | cut -d " " -f 1)
+mh=$(echo ${msize} | cut -d " " -f 2)
+
+pnmtile $((${mw} * 2)) $((${mh} * 5)) maze.pbm | cksum
+
+for x in 0 1
+  do for y in 0 1 2 3 4
+    do cp maze.pbm ${fname_stem}_${y}_${x}.pbm; done
+  done
+
+for i in 0 1 2 3 4 5 6 7 8 9
+  do
+  echo maze.pbm
+  done | pamundice -down=5 -across=2 -listfile=- | cksum
+
+pamundice -down=5 -across=2 ${fname_stem}_"%1d"_"%1a".pbm | cksum
+
+echo "A warning message should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamundice -down=5 -across=2 maze.pbm | cksum
+
+
+# Test Invalid.
+echo "Test Invalid"
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+# No input file pattern specified
+pamundice -down=5 -across=2 > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# -down=0
+pamundice -down=0 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# -across=0
+pamundice -down=5 -across=0 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# -down too large
+pamundice -down=6 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# -across too large
+pamundice -down=5 -across=3 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# precision does not match
+pamundice -down=5 -across=2 ${fname_stem}_"%2d"_"%2a".pbm > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# precision set to zero
+pamundice -down=5 -across=2 ${fname_stem}_"%0d"_"%0a".pbm > ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# no precision
+pamundice -down=5 -across=2 ${fname_stem}_"%d"_"%a".pbm > ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# -hoverlap too large
+pamundice -down=5 -across=2 -hoverlap=$((${mw}+1)) \
+  ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# -voverlap too large
+pamundice -down=5 -across=2 -voverlap=$((${mh}+1)) \
+  ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# corrupt listfile : file names do not exist
+for i in 0 1 2 3 4 5 6 7 8 9
+  do
+  mktemp -u XXXXXXXXXX.${i} || echo ":::::::::::"${i}":::::::::::"
+  done | pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
+  printf "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# listfile with insufficient lines (insufficient file entries)
+ls ${fname_stem}_*_*.pbm | head -n 9 | \
+  pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
+  printf "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+rm ${fname_stem}*.pbm

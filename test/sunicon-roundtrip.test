@@ -1,8 +1,26 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtosunicon sunicontopnm
-# Also requires: pamcut
+# Also requires: pbmnoise
 
-# Width of Sun icons are multiples of 8.
+# Width of a Sun icon is always a multiple of 8.
 
-# Test.  Should print: 2425386270 41
-pbmtosunicon testgrid.pbm | sunicontopnm | pamcut 1 0 14 16 | cksum
+tmpdir=${tmpdir:-/tmp}
+
+noise16_pbm=${tmpdir}/noise16.pbm
+noise32_pbm=${tmpdir}/noise32.pbm
+noise64_pbm=${tmpdir}/noise64.pbm
+
+echo "Test.  Should print 0 three times"
+pbmnoise -randomseed=1 16 16 > ${noise16_pbm} && \
+  pbmtosunicon ${noise16_pbm} | sunicontopnm | cmp -s - ${noise16_pbm}
+  echo $?
+
+pbmnoise -randomseed=1 32 32 > ${noise32_pbm} && \
+  pbmtosunicon ${noise32_pbm} | sunicontopnm | cmp -s - ${noise32_pbm}
+  echo $?
+
+pbmnoise -randomseed=1 64 64 > ${noise64_pbm} && \
+  pbmtosunicon ${noise64_pbm} | sunicontopnm | cmp -s - ${noise64_pbm}
+  echo $?
+
+rm ${noise16_pbm} ${noise32_pbm} ${noise64_pbm}

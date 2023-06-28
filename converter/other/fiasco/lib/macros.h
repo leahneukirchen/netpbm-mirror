@@ -34,8 +34,6 @@
   
 *****************************************************************************/
 
-#define streq(str1, str2)	(strcmp ((str1), (str2)) == 0)
-#define strneq(str1, str2)	(strcmp ((str1), (str2)) != 0)
 #define square(x)		((x) * (x))
 #define first_band(color)	((unsigned) ((color) ? Y  : GRAY))
 #define last_band(color)        ((unsigned) ((color) ? Cr : GRAY))

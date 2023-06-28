@@ -1,16 +1,39 @@
+Test 1
 3898818212 967
 3898818212 967
 2506052117 1354
 2506052117 1354
+Test 2
 1028079028 967
 1888680721 445
 1305436978 1018
+Test 3
 1028079028 967
 1028079028 967
 1305436978 1018
 1305436978 1018
+Test 4
 1647614653 2027
 1647614653 2027
 1647614653 2027
+Test 5
 2547645687 4564
 1174281741 5741
+Test 6 Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Test 7
+text length: 4999
+1854691667 52512
+1854691667 52512
+Test 8 Invalid
+text length: 5000
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1

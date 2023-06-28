@@ -33,7 +33,6 @@ LIBOBJECTS = libpm.o pmfileio.o fileio.o colorname.o \
 	libpgm1.o libpgm2.o \
 	libppm1.o libppm2.o libppmcmap.o libppmcolor.o libppmfuzzy.o \
 	libppmd.o ppmdfont.o standardppmdfont.o path.o \
-	libppmfloyd.o \
 	libpnm1.o libpnm2.o libpnm3.o \
 	libpam.o libpamread.o libpamwrite.o \
 	libpamn.o libpammap.o libpamcolor.o \
@@ -48,6 +47,10 @@ LIBOBJECTS_X = \
   util/matrix.o \
   util/nsleep.o \
   util/nstring.o \
+  util/rand.o \
+  util/randsysrand.o \
+  util/randsysrandom.o \
+  util/randmersenne.o \
   util/runlength.o \
   util/shhopt.o \
   util/token.o \
@@ -59,7 +62,7 @@ MANUALS5 = pbm pgm ppm pnm pam
 INTERFACE_HEADERS = colorname.h \
 	pam.h pamdraw.h pammap.h pbm.h pbmfont.h pbmfontdata.h \
 	pgm.h pm.h pm_gamma.h pm_system.h pnm.h \
-	ppm.h ppmcmap.h ppmdfont.h ppmdraw.h ppmfloyd.h \
+	ppm.h ppmcmap.h ppmdfont.h ppmdraw.h \
 	util/mallocvar.h util/runlength.h util/shhopt.h \
 
 DATAFILES = rgb.txt
@@ -96,8 +99,30 @@ libpbm3.o: CFLAGS_TARGET+=$(CFLAGS_SSE)
 $(LIBOBJECTS): %.o: %.c importinc
 	$(CC) -c $(INCLUDES) $(CFLAGS_ALL) -o $@ $<
 
-MAJ = 11
-MIN = $(NETPBM_MINOR_RELEASE)
+# The major number increases when there is a non-backward-compatible change
+# to the library at the binary level, meaning any client of the library needs
+# to keep using the old library until it has been recompiled for the new
+# library.  We try very hard never to lose backward compatibility at the
+# source level, which would mean the client source code has to be modified
+# before it can use the new library.
+#
+# The major number might seem like it corresponds to the major version number
+# of Netpbm, but it does not.  It is independent.
+#
+# Adding functions is backward compatible, so does not require a major number
+# change.
+#
+# The minor number must always increase within a major number.
+#
+# It is convenient to have the minor number equal to the minor version number
+# of Netpbm, but when we changed the Netpbm major version number from 10 to 11
+# just to keep the minor version number 2 digits, we had to continue
+# increasing the library minor number, so we went to 100 + minor version
+# number.  If we ever increase the major number to 12, we can go back to using
+# the minor version number for the library minor number.
+
+MAJ := 11
+$(eval MIN:=$(shell echo $$((100+$(NETPBM_MINOR_RELEASE)))))
 
 SONAME = libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ)
 

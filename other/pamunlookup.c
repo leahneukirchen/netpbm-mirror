@@ -19,7 +19,6 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
-#include "pm_system.h"
 #include "nstring.h"
 #include "pam.h"
 #include "pammap.h"
@@ -49,13 +48,13 @@ parseCommandLine(int argc, const char ** const argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
-    
+
     unsigned int lookupfileSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "lookupfile",     OPT_STRING, &cmdlineP->lookupfile,  
+    OPTENT3(0, "lookupfile",     OPT_STRING, &cmdlineP->lookupfile,
             &lookupfileSpec, 0);
 
     opt.opt_table = option_def;
@@ -74,17 +73,17 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->inputFileName = argv[1];
 
     free(option_def);
-}        
+}
 
 
 
 static void
-getLookup(const char * const lookupFileName, 
+getLookup(const char * const lookupFileName,
           tuple ***    const lookupP,
           struct pam * const lookuppamP) {
 /*----------------------------------------------------------------------------
    Get the lookup image (the one that maps integers to tuples, e.g. a
-   color index / color map / palette) from the file named 
+   color index / color map / palette) from the file named
    'lookupFileName'.
 
    Return the image as *lookupP and *lookuppamP.
@@ -95,14 +94,14 @@ getLookup(const char * const lookupFileName,
     tuple ** inputLookup;
 
     lookupfileP = pm_openr(lookupFileName);
-    inputLookup = pnm_readpam(lookupfileP, 
+    inputLookup = pnm_readpam(lookupfileP,
                               &inputLookuppam, PAM_STRUCT_SIZE(tuple_type));
 
     pm_close(lookupfileP);
-    
+
     if (inputLookuppam.height != 1)
         pm_error("The lookup table image must be one row.  "
-                 "Yours is %u rows.", 
+                 "Yours is %u rows.",
                  inputLookuppam.height);
 
     *lookupP = inputLookup;
@@ -129,7 +128,7 @@ makeReverseLookupHash(struct pam * const lookuppamP,
 
     for (col = 0; col < lookuppamP->width; ++col) {
         tuple const thisValue = lookup[0][col];
-        
+
         int found;
         int priorValue;
 
@@ -181,7 +180,7 @@ doUnlookup(struct pam * const inpamP,
 
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
-        
+
         pnm_readpamrow(inpamP, inrow);
 
         for (col = 0; col < inpamP->width; ++col) {
@@ -214,7 +213,7 @@ main(int argc, const char ** const argv) {
     tuple ** lookup;
 
     tuplehash lookupHash;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -230,7 +229,7 @@ main(int argc, const char ** const argv) {
                  "has depth %u.  They must be the same",
                  lookuppam.depth, inpam.depth);
     if (!streq(inpam.tuple_type, lookuppam.tuple_type))
-        pm_error("The lookup image has tupel type '%s', "
+        pm_error("The lookup image has tuple type '%s', "
                  "but the input image "
                  "has tuple type '%s'.  They must be the same",
                  lookuppam.tuple_type, inpam.tuple_type);
@@ -243,7 +242,7 @@ main(int argc, const char ** const argv) {
 
     pnm_destroytuplehash(lookupHash);
     pnm_freepamarray(lookup, &lookuppam);
-    
+
     return 0;
 }
 

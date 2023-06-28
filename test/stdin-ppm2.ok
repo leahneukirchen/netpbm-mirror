@@ -1,0 +1,11 @@
+ppmtoacad: 0 0 0 0
+ppmtoapplevol: 0 0 0 0
+ppmtoascii: 0 0 0 0
+ppmtoicr -windowname testimage: 0 0 0 0
+ppmtolj: 0 0 0 0
+ppmtomitsu: 0 0 0 0
+ppmtopgm: 0 0 0 0
+ppmtopuzz: 0 0 0 0
+ppmtosixel: 0 0 0 0
+ppmtoterm: 0 0 0 0
+ppmtoyuvsplit: 0 0 0 0

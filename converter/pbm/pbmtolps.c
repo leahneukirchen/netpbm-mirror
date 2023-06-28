@@ -1,181 +1,253 @@
-/*
- * pbmtolps -- convert a Portable BitMap into Postscript.  The
- * output Postscript uses lines instead of the image operator to
- * generate a (device dependent) picture which will be imaged
- * much faster.
- *
- * The Postscript path length is constrained to be less that 1000
- * points so that no limits are overrun on the Apple Laserwriter
- * and (presumably) no other printers.
- *
- * To do:
- *      make sure encapsulated format is correct
- *      repitition of black-white strips
- *      make it more device independent (is this possible?)
- *
- * Author:
- *      George Phillips <phillips@cs.ubc.ca>
- *      Department of Computer Science
- *      University of British Columbia
- */
+/*=============================================================================
+                             pbmtolps
+===============================================================================
 
-#include <string.h>
-#include <stdio.h>
+  Convert a PBM image to Postscript.  The output Postscript uses lines instead
+  of the image operator to generate a (device dependent) picture which will be
+  imaged much faster.
 
+  The Postscript path length is constrained to be at most 1000 vertices so that
+  no limits are overrun on the Apple Laserwriter and (presumably) no other
+  printers.  The typical limit is 1500.  See "4.4 Path Construction" and
+  "Appendix B: Implementation Limits" in: PostScript Language Reference Manual
+  https://www.adobe.com/content/dam/acom/en/devnet/actionscript/
+  articles/psrefman.pdf
+
+  To do:
+       make sure encapsulated format is correct
+       repetition of black-white strips
+       make it more device independent (is this possible?)
+
+  Author:
+       George Phillips <phillips@cs.ubc.ca>
+       Department of Computer Science
+       University of British Columbia
+=============================================================================*/
+#include <stdbool.h>
+
+#include "pm_c_util.h"
+#include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
 #include "pbm.h"
 
 
-static int prev_white = -1;
-static int prev_black = -1;
-static char cmd = '\0';
-static int pointcount = 2;
+static float        const MAX_DPI           = 5000;
+static float        const MIN_DPI           = 10;
+static unsigned int const MAX_PATH_VERTICES = 1000;
 
-#ifdef RUN
-static int run = 1;
-#endif
 
-static char 
-morepoints(char cmd, int howmany_pbmtolps) {
-    pointcount += 2;
-    if (pointcount > 1000) {
-        pointcount = 2;
-        cmd += 'm' - 'a';
-    }
-    return(cmd);
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line, in a form
+       easy for the program to use.
+    */
+    const char * inputFileName;  /* File name of input file */
+    unsigned int inputFileSpec;  /* Input file name specified */
+    float        lineWidth;      /* Line width, if specified */
+    unsigned int lineWidthSpec;  /* Line width specified */
+    float        dpi;            /* Resolution in DPI, if specified */
+    unsigned int dpiSpec;        /* Resolution specified */
+};
+
+
+
+static void
+validateDpi(float const dpi) {
+
+    if (dpi > MAX_DPI || dpi < MIN_DPI)
+        pm_error("Specified DPI value out of range (%f)", dpi);
 }
 
 
 
-static void 
-addstrip(int const white, 
-         int const black) {
+static void
+parseCommandLine(int                        argc,
+                 const char **        const argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;  /* malloc'ed */
+        /* Instructions to OptParseOptions3 on how to parse our options.  */
+    optStruct3 opt;
 
-    if (cmd) {
-#ifdef RUN
-        if (white == prev_white && black == prev_black)
-            run++;
-        else {
-            if (run == 1)
-#endif
-                printf("%d %d %c ", 
-                       prev_black, prev_white, morepoints(cmd, 2));
-#ifdef RUN
-            else
-                                /* of course, we need to give a new command */
-                printf("%d %d %d %c ",
-                       prev_white, prev_black, run,
-                       morepoints(cmd + 'f' - 'a', 2 * run));
-            run = 1;
-        }
-#endif
-    }
+    unsigned int option_def_index;
 
-    prev_white = white;
-    prev_black = black;
-    cmd = 'a';
-}
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0, "linewidth", OPT_FLOAT, &cmdlineP->lineWidth,
+                            &cmdlineP->lineWidthSpec,    0);
+    OPTENT3(0, "dpi",       OPT_FLOAT,  &cmdlineP->dpi,
+                            &cmdlineP->dpiSpec,          0);
 
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-static void 
-nextline(void) {
-    /* need to check run, should have an outcommand */
-    if (cmd)
-        printf("%d %d %c\n", prev_black, prev_white, morepoints('c', 3));
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (cmdlineP->dpiSpec)
+        validateDpi(cmdlineP->dpi);
     else
-        printf("%c\n", morepoints('b', 1));
-    cmd = '\0';
+        cmdlineP->dpi = 300;
+
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else {
+        if (argc-1 > 1)
+            pm_error("Program takes zero or one argument (filename).  You "
+                     "specified %u", argc-1);
+        else
+            cmdlineP->inputFileName = argv[1];
+    }
+
+    if (cmdlineP->inputFileName[0] == '-' &&
+        cmdlineP->inputFileName[1] == '\0')
+        cmdlineP->inputFileSpec = false;
+    else
+        cmdlineP->inputFileSpec = true;
+
+    free(option_def);
+}
+
+
+
+static void
+validateLineWidth(float const scCols,
+                  float const scRows,
+                  float const lineWidth) {
+
+    if (lineWidth >= scCols || lineWidth >= scRows)
+        pm_error("Absurdly large -linewidth value (%f)", lineWidth);
+}
+
+
+
+static void
+doRaster(FILE *       const ifP,
+         unsigned int const cols,
+         unsigned int const rows,
+         int          const format,
+         FILE *       const ofP) {
+
+    bit *        bitrow;
+    unsigned int row;
+    unsigned int vertexCt;
+        /* Number of vertices drawn since last stroke command */
+
+    bitrow = pbm_allocrow(cols);
+
+    for (row = 0, vertexCt = 0; row < rows; ++row) {
+        unsigned int col;
+        bool firstRun;
+
+        firstRun = true;  /* initial value */
+
+        pbm_readpbmrow(ifP, bitrow, cols, format);
+
+        /* output white-strip + black-strip sequences */
+
+        for (col = 0; col < cols; ) {
+            unsigned int whiteCt;
+            unsigned int blackCt;
+
+            for (whiteCt = 0; col < cols && bitrow[col] == PBM_WHITE; ++col)
+                ++whiteCt;
+            for (blackCt = 0; col < cols && bitrow[col] == PBM_BLACK; ++col)
+                ++blackCt;
+
+            if (blackCt > 0) {
+                if (vertexCt > MAX_PATH_VERTICES) {
+                    printf("m ");
+                    vertexCt = 0;
+                }
+
+                if (firstRun) {
+                    printf("%u %u moveto %u 0 rlineto\n",
+                           whiteCt, row, blackCt);
+                    firstRun = false;
+                } else
+                    printf("%u %u a\n", blackCt, whiteCt);
+
+                vertexCt += 2;
+            }
+        }
+    }
+    pbm_freerow(bitrow);
+}
+
+
+
+static void
+pbmtolps(FILE *             const ifP,
+         FILE *             const ofP,
+         struct CmdlineInfo const cmdline) {
+
+    const char * const psName =
+        cmdline.inputFileSpec ? cmdline.inputFileName : "noname";
+
+    int          rows;
+    int          cols;
+    int          format;
+    float        scRows, scCols;
+        /* Dimensions of the printed image in points */
+
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    scRows = (float) rows / (cmdline.dpi / 72.0);
+    scCols = (float) cols / (cmdline.dpi / 72.0);
+
+    if (cmdline.lineWidthSpec)
+        validateLineWidth(scCols, scRows, cmdline.lineWidth);
+
+    fputs("%!PS-Adobe-2.0 EPSF-2.0\n", ofP);
+    fputs("%%Creator: pbmtolps\n", ofP);
+    fprintf(ofP, "%%%%Title: %s\n", psName);
+    fprintf(ofP, "%%%%BoundingBox: %d %d %d %d\n",
+           (int)(305.5 - scCols / 2.0),
+           (int)(395.5 - scRows / 2.0),
+           (int)(306.5 + scCols / 2.0),
+           (int)(396.5 + scRows / 2.0));
+    fputs("%%EndComments\n", ofP);
+    fputs("%%EndProlog\n", ofP);
+    fputs("gsave\n", ofP);
+
+    fprintf(ofP, "%f %f translate\n",
+            306.0 - scCols / 2.0, 396.0 + scRows / 2.0);
+    fprintf(ofP, "72 %f div dup neg scale\n", cmdline.dpi);
+
+    if (cmdline.lineWidthSpec)
+        fprintf(ofP, "%f setlinewidth\n", cmdline.lineWidth);
+
+    fputs("/a { 0 rmoveto 0 rlineto } def\n", ofP);
+    fputs("/m { currentpoint stroke newpath moveto } def\n", ofP);
+    fputs("newpath 0 0 moveto\n", ofP);
+
+    doRaster(ifP, cols, rows, format, ofP);
+
+    fputs("stroke grestore showpage\n", ofP);
+    fputs("%%Trailer\n", ofP);
 }
 
 
 
 int
-main(int argc, char ** argv) {
-    FILE*   fp;
-    bit*    bits;
-    int             row;
-    int             col;
-    int         rows;
-    int             cols;
-    int             format;
-    int             white;
-    int             black;
-    const char*   name;
-    float   dpi = 300.0;
-    float   sc_rows;
-    float   sc_cols;
-    int             i;
-    const char*   const usage = "[ -dpi n ] [ pbmfile ]";
+main(int argc, const char *argv[]) {
+    FILE *  ifP;
+    struct CmdlineInfo cmdline;
 
+    pm_proginit(&argc, argv);
 
-	pbm_init(&argc, argv);
+    parseCommandLine(argc, argv, &cmdline);
 
-    i = 1;
-    if (i < argc && streq(argv[i], "-dpi")) {
-        if (i == argc - 1)
-            pm_usage(usage);
-        sscanf(argv[i + 1], "%f", &dpi);
-        i += 2;
-    }
+    ifP = pm_openr(cmdline.inputFileName);
 
-    if (i < argc - 1)
-        pm_usage(usage);
+    pbmtolps(ifP, stdout, cmdline);
 
-    if (i == argc) {
-        name = "noname";
-        fp = stdin;
-    } else {
-        name = argv[i];
-        fp = pm_openr(name);
-    }
-    pbm_readpbminit(fp, &cols, &rows, &format);
-    bits = pbm_allocrow(cols);
+    pm_close(ifP);
 
-    sc_rows = (float)rows / dpi * 72.0;
-    sc_cols = (float)cols / dpi * 72.0;
-
-    puts("%!PS-Adobe-2.0 EPSF-2.0");
-    puts("%%Creator: pbmtolps");
-    printf("%%%%Title: %s\n", name);
-    printf("%%%%BoundingBox: %d %d %d %d\n",
-           (int)(305.5 - sc_cols / 2.0),
-           (int)(395.5 - sc_rows / 2.0),
-           (int)(306.5 + sc_cols / 2.0),
-           (int)(396.5 + sc_rows / 2.0));
-    puts("%%EndComments");
-    puts("%%EndProlog");
-    puts("gsave");
-
-    printf("%f %f translate\n", 306.0 - sc_cols / 2.0, 396.0 + sc_rows / 2.0);
-    printf("72 %f div dup neg scale\n", dpi);
-    puts("/a { 0 rmoveto 0 rlineto } def");
-    puts("/b { 0 row 1 add dup /row exch def moveto } def");
-    puts("/c { a b } def");
-    puts("/m { currentpoint stroke newpath moveto a } def");
-    puts("/n { currentpoint stroke newpath moveto b } def");
-    puts("/o { currentpoint stroke newpath moveto c } def");
-    puts("/row 0 def");
-    puts("newpath 0 0 moveto");
-
-    for (row = 0; row < rows; row++) {
-        pbm_readpbmrow(fp, bits, cols, format);
-        /* output white-strip+black-strip sequences */
-        for (col = 0; col < cols; ) {
-            for (white = 0; col < cols && bits[col] == PBM_WHITE; col++)
-                white++;
-            for (black = 0; col < cols && bits[col] == PBM_BLACK; col++)
-                black++;
-
-            if (black != 0)
-                addstrip(white, black);
-        }
-        nextline();
-    }
-    puts("stroke grestore showpage");
-    puts("%%Trailer");
-
-    pm_close(fp);
-
-    exit(0);
+    return 0;
 }

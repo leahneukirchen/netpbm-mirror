@@ -29,7 +29,7 @@ typedef struct image
  *  Image data
  */
 {
-   char      id [7];
+   char      id [8];         /* NUL-terminated "IFIASCO" */
    unsigned  reference_count;
    unsigned  width;			/* Width of the image */
    unsigned  height;			/* Height of the image */

@@ -1,3 +1,4 @@
+
 /* ----------------------------------------------------------------------
  *
  * Replace every pixel in an image with one of equal luminance
@@ -32,6 +33,7 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 
@@ -42,7 +44,7 @@
 #define CLAMPxy(N, A, B) MAX(MIN((float)(N), (float)(B)), (float)(A))
 
 
-struct rgbfrac {
+struct Rgbfrac {
     /* This structure represents red, green, and blue, each expressed
        as a fraction from 0.0 to 1.0.
     */
@@ -51,19 +53,19 @@ struct rgbfrac {
     float bfrac;
 };
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* This structure represents all of the information the user
        supplied in the command line but in a form that's easy for the
        program to use.
     */
     const char *    inputFileName;  /* '-' if stdin */
     const char *    colorfile;      /* NULL if unspecified */
-    struct rgbfrac  color2gray;
+    struct Rgbfrac  color2gray;
         /* colorspace/rmult/gmult/bmult options.  Negative numbers if
            unspecified.
         */
     unsigned int    targetcolorSpec;
-    struct rgbfrac  targetcolor;
+    struct Rgbfrac  targetcolor;
     unsigned int    randomseed;
     unsigned int    randomseedSpec;
 };
@@ -71,7 +73,7 @@ struct cmdlineInfo {
 
 
 static float
-rgb2gray(struct rgbfrac * const color2grayP,
+rgb2gray(struct Rgbfrac * const color2grayP,
          float            const red,
          float            const grn,
          float            const blu) {
@@ -122,7 +124,7 @@ getColorRow(struct pam  * const pamP,
 
 static void
 convertRowToGray(struct pam     * const pamP,
-                 struct rgbfrac * const color2gray,
+                 struct Rgbfrac * const color2gray,
                  tuplen         * const tupleRow,
                  samplen        * const grayRow) {
 /*----------------------------------------------------------------------
@@ -160,7 +162,7 @@ convertRowToGray(struct pam     * const pamP,
 static void
 explicitlyColorRow(struct pam *   const pamP,
                    tuplen *       const rowData,
-                   struct rgbfrac const tint) {
+                   struct Rgbfrac const tint) {
 
     unsigned int col;
 
@@ -175,17 +177,25 @@ explicitlyColorRow(struct pam *   const pamP,
 
 static void
 randomlyColorRow(struct pam *   const pamP,
-                 tuplen *       const rowData) {
+                 tuplen *       const rowData,
+                 bool           const randomseedSpec,
+                 unsigned int   const randomseed) {
 /*----------------------------------------------------------------------
   Assign each tuple in a row a random color.
 ------------------------------------------------------------------------*/
     unsigned int col;
+    struct pm_randSt randSt;
+
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, randomseedSpec, randomseed);
 
     for (col = 0; col < pamP->width; ++col) {
-        rowData[col][PAM_RED_PLANE] = rand() / (float)RAND_MAX;
-        rowData[col][PAM_GRN_PLANE] = rand() / (float)RAND_MAX;
-        rowData[col][PAM_BLU_PLANE] = rand() / (float)RAND_MAX;
+        rowData[col][PAM_RED_PLANE] = pm_drand(&randSt);
+        rowData[col][PAM_GRN_PLANE] = pm_drand(&randSt);
+        rowData[col][PAM_BLU_PLANE] = pm_drand(&randSt);
     }
+
+    pm_randterm(&randSt);
 }
 
 
@@ -193,7 +203,7 @@ randomlyColorRow(struct pam *   const pamP,
 static void
 recolorRow(struct pam     * const inPamP,
            tuplen         * const inRow,
-           struct rgbfrac * const color2grayP,
+           struct Rgbfrac * const color2grayP,
            tuplen         * const colorRow,
            struct pam     * const outPamP,
            tuplen         * const outRow) {
@@ -293,10 +303,10 @@ recolorRow(struct pam     * const inPamP,
 
 
 
-static struct rgbfrac
+static struct Rgbfrac
 color2GrayFromCsName(const char * const csName) {
 
-    struct rgbfrac retval;
+    struct Rgbfrac retval;
 
     /* Thanks to
        http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
@@ -352,7 +362,7 @@ color2GrayFromCsName(const char * const csName) {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP ) {
+                 struct CmdlineInfo * const cmdlineP ) {
 
     optEntry     * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options */
@@ -445,7 +455,7 @@ parseCommandLine(int argc, const char ** const argv,
 
 int
 main(int argc, const char *argv[]) {
-    struct cmdlineInfo cmdline;          /* Command-line parameters */
+    struct CmdlineInfo cmdline;          /* Command-line parameters */
     struct pam         inPam;
     struct pam         outPam;
     struct pam         colorPam;
@@ -462,8 +472,6 @@ main(int argc, const char *argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
-
     ifP = pm_openr(cmdline.inputFileName);
     inPam.comment_p = &comments;
     pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(comment_p));
@@ -474,7 +482,6 @@ main(int argc, const char *argv[]) {
     outPam.depth = 4 - (inPam.depth % 2);
     outPam.allocation_depth = outPam.depth;
     strcpy(outPam.tuple_type, PAM_PPM_TUPLETYPE);
-    pnm_writepaminit(&outPam);
 
     if (cmdline.colorfile) {
         colorfP = pm_openr(cmdline.colorfile);
@@ -492,6 +499,8 @@ main(int argc, const char *argv[]) {
 
     colorRowBuffer = pnm_allocpamrown(&outPam);
 
+    pnm_writepaminit(&outPam);
+
     for (row = 0; row < inPam.height; ++row) {
         tuplen * colorRow;
 
@@ -505,7 +514,8 @@ main(int argc, const char *argv[]) {
             if (cmdline.targetcolorSpec)
                 explicitlyColorRow(&colorPam, colorRow, cmdline.targetcolor);
             else
-                randomlyColorRow(&colorPam, colorRow);
+                randomlyColorRow(&colorPam, colorRow,
+                                 cmdline.randomseedSpec, cmdline.randomseed);
         }
         recolorRow(&inPam, inRow,
                    &cmdline.color2gray, colorRow,

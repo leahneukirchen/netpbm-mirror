@@ -1,3 +1,4 @@
+Test 1
 227 149 3.000000 3.000000 681 447
 227 149 5.000000 5.000000 1135 745
 227 149 2.682819 2.684564 609 400
@@ -10,9 +11,10 @@
 227 149 2.819383 2.000000 640 298
 227 149 1.400881 2.684564 318 400
 227 149 1.000000 1.000000 227 149
-expected error
-expected error
-expected error
-expected error
-expected error
-expected error
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1

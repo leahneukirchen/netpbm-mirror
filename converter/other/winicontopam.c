@@ -1,3 +1,25 @@
+/*=============================================================================
+                             winicontopam
+===============================================================================
+  Convert from Windows icon format to PAM
+=============================================================================*/
+
+/*
+  Here are some references for the Windows icon format:
+
+  ICO (file format) - Wikipedia
+  https://en.wikipedia.org/wiki/ICO_(file_format)
+
+  ICO - Just Solve the File Format Problem
+  http://fileformats.archiveteam.org/wiki/ICO
+  (Has links to example icon file collections)
+
+  GFF Format Summary: Microsoft Windows Cursor and Icon
+  https://web.archive.org/web/20050421161512/http:/www.oreilly.com/www/centers/gff/formats/miccur/index.htm
+
+
+*/
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,7 +47,7 @@ static bool verbose;
 
 
 struct CmdlineInfo {
-    
+
     const char * inputFileName;
     unsigned int allimages;
     unsigned int imageSpec;
@@ -78,13 +100,13 @@ parseCommandLine(int argc, const char **argv,
             pm_error("Too many arguments.  The only possible "
                      "non-option argument is the input file name");
     }
-        
+
     free(option_def);
 }
 
 
 
-static unsigned char const pngHeader[] = PNG_HEADER;
+static unsigned char const pngSignature[] = PNG_SIGNATURE;
 
 
 
@@ -93,7 +115,7 @@ struct File {
     FILE *       fileP;
     const char * name;
     pm_filepos   pos;
-    
+
 };
 
 
@@ -122,7 +144,7 @@ static uint32_t
 u32_le(const unsigned char * const buf,
        size_t                const offset) {
 
-    return 
+    return
         ((uint32_t)buf[offset + 0] <<  0) +
         ((uint32_t)buf[offset + 1] <<  8) +
         ((uint32_t)buf[offset + 2] << 16) +
@@ -135,7 +157,7 @@ static uint32_t
 s32_le(const unsigned char * const buf,
        size_t                const offset) {
 
-    return 
+    return
         ((uint32_t)buf[offset + 0] <<  0) +
         ((uint32_t)buf[offset + 1] <<  8) +
         ((uint32_t)buf[offset + 2] << 16) +
@@ -156,8 +178,8 @@ u8_be(const unsigned char * const buf,
 static uint32_t
 u32_be(const unsigned char * const buf,
        size_t                const offset) {
-    
-    return 
+
+    return
         ((uint32_t)buf[offset + 0] << 24) +
         ((uint32_t)buf[offset + 1] << 16) +
         ((uint32_t)buf[offset + 2] <<  8) +
@@ -225,7 +247,7 @@ dumpIconDir(const struct IconDir * const dirP) {
     }
 }
 
-            
+
 
 static struct IconDir *
 readIconDir(struct File * const fP,
@@ -246,7 +268,7 @@ readIconDir(struct File * const fP,
     MALLOCVAR(dirP);
 
     if (dirP == NULL)
-        pm_error("Could't allocate memory for Icon directory");
+        pm_error("Couldn't allocate memory for Icon directory");
 
     MALLOCARRAY(dirP->entries, head.count);
 
@@ -271,7 +293,7 @@ readIconDir(struct File * const fP,
 
         pm_readcharu(fP->fileP, &heightField);
         dirEntryP->height = (heightField == 0 ? 256 : heightField);
-        
+
         pm_readcharu(fP->fileP, &dirEntryP->color_count);
 
         pm_readcharu(fP->fileP, &dirEntryP->zero);
@@ -290,7 +312,7 @@ readIconDir(struct File * const fP,
     }
 
     /* The following is paranoia code only:
-     
+
        I've never seen a windows icon file in the wild with having the entries
        in the directory stored in a different order than the images
        themselves.  However, the file format allows for it ...
@@ -301,7 +323,7 @@ readIconDir(struct File * const fP,
         pm_message("%s icon directory (%u image%s):",
                    fP->name,
                    dirP->count, dirP->count == 1 ? "" : "s");
-        
+
         for (imageIndex = 0; imageIndex < dirP->count; ++imageIndex) {
             const struct IconDirEntry * const dirEntryP =
                 &dirP->entries[imageIndex];
@@ -355,7 +377,7 @@ readImage(struct File *         const fP,
 
     /*  Don't try to read an image that is smaller than the
         BITMAPINFOHEADER of BMP images (40 bytes).
-     
+
         PNG compressed images can't be smaller than that either, as the
         PNG header plus the mandantory IHDR and IEND chunks already take
         8 + 25 + 12 = 35 bytes, and there is to be a IDAT chunk too.
@@ -369,7 +391,7 @@ readImage(struct File *         const fP,
                  dirEntryP->index);
 
     /* The following is paranoia code only:
-     
+
        I've never seen a windows icon file in the wild with gaps between
        the images, but the file format allows for it, and Microsoft
        expects the user to fseek() to the start of each image.
@@ -472,11 +494,11 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
     uint32_t    bytesPerRow;
     const unsigned char * bitmapCursor;
     uint32_t sizeRemaining;
-  
+
     uint8_t (*getIdx) (const unsigned char * bitmap,
                        uint32_t rowOffset,
                        int16_t col);
-  
+
     if (hdrP->compression_method != BI_RGB)
         pm_error("image %2u: invalid compression method %u.",
                  index, hdrP->compression_method);
@@ -518,7 +540,7 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
     if (sizeRemaining < paletteSize)
         pm_error("image %2u: "
                  "reading palette: image truncated.", index);
-    
+
     palette = (const PaletteEntry *) bitmapCursor;
 
     if (needHeaderDump)
@@ -562,7 +584,7 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
 
                 /*  The palette is an array of little-endian 32-bit values,
                     where the RGB value is encoded as follows:
-                 
+
                     red:   bits 2^16..2^23
                     green: bits 2^8 ..2^15
                     blue:  bits 2^0 ..2^7
@@ -591,7 +613,10 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                  uint16_t                  const index,
                  bool *                    const haveAlphaP,
                  uint32_t *                const bytesConsumedP) {
-
+/*----------------------------------------------------------------------------
+   Return as *haveAlphaP whether the Xor mask indicates the pixels are
+   anything but fully opaque.
+-----------------------------------------------------------------------------*/
     uint32_t   bitfields[4];
     uint8_t    shift    [4];
     sample     maxval   [4];
@@ -758,12 +783,21 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
     bytesConsumed += truncatedXorSize;
 
     /*  A fully transparent alpha channel (all zero) in XOR mask is
-        defined to be void by Microsoft, and a fully opaque alpha
-        channel (all maxval) is trivial and will be dropped.
+        defined to be void by Microsoft.
     */
+    if (verbose) {
+        if (allTransparent)
+            pm_message("image %2u: All pixels are nominally coded in the "
+                       "transparency map as fully transparent, "
+                       "which is defined by the format to mean they "
+                       "are all opaque", index);
+        if (allOpaque)
+            pm_message("image %2u: All pixels are fully opaque "
+                       "in the transparency map", index);
+    }
     *haveAlphaP = !allTransparent && !allOpaque;
 
-    if (!allTransparent && verbose) {
+    if (!allTransparent && ! allOpaque && verbose) {
         unsigned int i;
         unsigned int c;
 
@@ -787,7 +821,16 @@ readAnd(struct BitmapInfoHeader * const hdrP,
         uint16_t                  const index,
         unsigned int              const plane,
         sample                    const maxval) {
+/*----------------------------------------------------------------------------
+  Fill in plane 'plane' of the tuple array 'tuples' according to the and
+  mask of a Windows icon.  Where the and mask for a pixel is 1, set the
+  plane to 'maxval'; where it is zero, set it to zero.
 
+  'bitmap' is the and mask, in a format describe dby *hdrP.
+
+  'index' is the position of the icon in question in the Windows icon file --
+  the first image in the file is 0, second is 1, etc.
+-----------------------------------------------------------------------------*/
     int16_t  row;
     uint32_t bytesConsumed;
     uint32_t bytesPerRow;
@@ -823,7 +866,7 @@ readAnd(struct BitmapInfoHeader * const hdrP,
 
         if (offset + bytesPerRow <= sizeRemaining) {
             unsigned int col;
-            
+
             for (col = 0; col < hdrP->bm_width; ++col) {
                 tuples[row][col][plane] =
                     ((u8_le(bitmap, offset + col/8)
@@ -916,7 +959,13 @@ readXorMask(struct BitmapInfoHeader * const hdrP,
             uint32_t *                const bytesConsumedP) {
 /*----------------------------------------------------------------------------
    Read the so-called XOR mask (for non-monochrome images, this is the
-   color pixmap)
+   color pixmap, which may include transparency).
+
+   Return the pixels as 'tuples', an array whose width and height are
+   given by *hdrP and depth is 4.
+
+   Return as *haveAlphaP whether the Xor mask indicates the pixels are
+   anything but fully opaque.
 -----------------------------------------------------------------------------*/
     /*  preset the PAM with fully opaque black (just in case the image
         is truncated and not all pixels are filled in below).
@@ -952,7 +1001,7 @@ reportImage(unsigned int            const imageIndex,
             struct BitmapInfoHeader const hdr,
             bool                    const haveAlpha) {
 
-    const char * const style = 
+    const char * const style =
         haveAlpha ? "RGB +alpha" :
         hdr.bits_per_pixel < 16 ? "RGB/palette" :
         "RGB"
@@ -973,7 +1022,7 @@ convertBmp(const unsigned char * const image,
            struct IconDirEntry * const dirEntryP,
            bool                  const needHeaderDump,
            bool                  const wantAndMaskPlane) {
-    
+
     struct BitmapInfoHeader hdr;
     uint32_t                offset;
     bool                    haveAlpha;
@@ -1024,7 +1073,7 @@ convertBmp(const unsigned char * const image,
 
     tuples = pnm_allocpamarray(&outpam);
 
-    readXorMask(&hdr, &image[offset], 
+    readXorMask(&hdr, &image[offset],
                 dirEntryP->size - offset,
                 tuples, dirEntryP->index, needHeaderDump,
                 &haveAlpha, &xorByteCt);
@@ -1032,9 +1081,9 @@ convertBmp(const unsigned char * const image,
     offset += xorByteCt;
 
     {
-        /* If there is no alpha channel in XOR mask, store the AND mask to
-           the transparency plane.  Else, here are two transparency
-           maps. If requested, store the AND mask to a fifth PAM plane
+        /* If there is no alpha channel in the XOR mask, use the AND mask as
+           the transparency plane.  Else, there are two transparency
+           maps. If requested, return the AND mask as a fifth PAM plane.
         */
         bool haveAnd;
         unsigned int andPlane;
@@ -1070,18 +1119,18 @@ convertBmp(const unsigned char * const image,
 static void
 reportPngInfo(const unsigned char * const image,
               struct IconDirEntry * const dirEntryP) {
-    
+
     struct PngIhdr ihdr;
 
-    ihdr.length      = u32_be (image, sizeof(pngHeader)  +0);
-    ihdr.signature   = u32_xx (image, sizeof(pngHeader)  +4);
-    ihdr.width       = u32_be (image, sizeof(pngHeader)  +8);
-    ihdr.height      = u32_be (image, sizeof(pngHeader) +12);
-    ihdr.bit_depth   = u8_be  (image, sizeof(pngHeader) +16);
-    ihdr.color_type  = u8_be  (image, sizeof(pngHeader) +17);
-    ihdr.compression = u8_be  (image, sizeof(pngHeader) +18);
-    ihdr.filter      = u8_be  (image, sizeof(pngHeader) +19);
-    ihdr.interlace   = u8_be  (image, sizeof(pngHeader) +20);
+    ihdr.length      = u32_be (image, sizeof(pngSignature)  +0);
+    ihdr.signature   = u32_xx (image, sizeof(pngSignature)  +4);
+    ihdr.width       = u32_be (image, sizeof(pngSignature)  +8);
+    ihdr.height      = u32_be (image, sizeof(pngSignature) +12);
+    ihdr.bit_depth   = u8_be  (image, sizeof(pngSignature) +16);
+    ihdr.color_type  = u8_be  (image, sizeof(pngSignature) +17);
+    ihdr.compression = u8_be  (image, sizeof(pngSignature) +18);
+    ihdr.filter      = u8_be  (image, sizeof(pngSignature) +19);
+    ihdr.interlace   = u8_be  (image, sizeof(pngSignature) +20);
 
     if ((ihdr.length != 13)
         || ihdr.signature != *(uint32_t*)"IHDR") {
@@ -1148,14 +1197,16 @@ convertPng(const unsigned char * const image,
            FILE *                const ofP,
            struct IconDirEntry * const dirEntryP) {
 
-    struct bufferDesc imageBuffer;
+    pm_bufferDesc imageBuffer;
 
     reportPngInfo(image, dirEntryP);
 
-    imageBuffer.size = dirEntryP->size;
-    imageBuffer.buffer = (unsigned char *)image;
+    imageBuffer.size              = dirEntryP->size;
+    imageBuffer.buffer            = (unsigned char *)image;
+    imageBuffer.bytesTransferredP = NULL;
 
-    fflush (stdout);
+    fflush(stdout);
+
     pm_system_lp("pngtopam", pm_feed_from_memory, &imageBuffer,
                  NULL /* stdout accepter */, NULL,
                  "pngtopam", "-alphapam", NULL);
@@ -1174,7 +1225,7 @@ bestImage(struct IconDir * const dirP) {
     bestPixelCt = 0;  /* initial value */
     bestColorCt = 0;  /* initial value */
     best        = 0;  /* initial value */
-    
+
     for (imageIndex = 0; dirP->count > imageIndex; ++imageIndex) {
         struct IconDirEntry * const dirEntryP = &dirP->entries[imageIndex];
 
@@ -1183,7 +1234,7 @@ bestImage(struct IconDir * const dirP) {
         uint32_t colorCt;
 
         /*  32-bit icons have 24 bit color information only.
-         
+
             Since NT 5.1 (aka WinXP), it is allowed to place 8-bit
             transparency information in the remaining bits (to check,
             you have to read all these bits in the image!), so I prefer
@@ -1222,7 +1273,7 @@ convertImage(struct File *         const icoP,
 
     image = readImage(icoP, dirEntryP);
 
-    if (MEMEQ(image, pngHeader, sizeof (pngHeader)))
+    if (memeq(image, pngSignature, sizeof (pngSignature)))
         convertPng(image, ofP, dirEntryP);
     else
         convertBmp(image, ofP, dirEntryP, needHeaderDump, wantAndMaskPlane);
@@ -1273,7 +1324,7 @@ main (int argc, const char *argv []) {
         convertImage(&ico, &dirP->entries[bestImage(dirP)], stdout,
                      cmdline.headerdump, cmdline.andmasks);
     }
-    
+
     freeIconDir(dirP);
 
     if (ico.fileP != stdin)

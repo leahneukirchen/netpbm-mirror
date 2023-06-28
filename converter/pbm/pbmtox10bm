@@ -37,6 +37,16 @@ exec perl -w -x -S -- "$0" "$@"
 use strict;
 use File::Basename;
 use Cwd 'abs_path';
+use IO::Handle;
+
+
+
+sub pm_message($) {
+    STDERR->print("pbmtox10bm: $_[0]\n");
+}
+
+
+
 
 sub doVersionHack($) {
     my ($argvR) = @_;
@@ -56,13 +66,12 @@ my $infile;
 foreach (@ARGV) {
     if (/^-/) {
         # It's an option.  But Pbmtox10bm didn't have any options.
-        print(STDERR "Invalid option '$_'\n");
+        pm_message("Invalid option '$_'");
         exit(10);
     } else {
         # It's a parameter
         if (defined($infile)) {
-            print(STDERR
-                  "You may specify at most one non-option parameter.\n");
+            pm_message("You may specify at most one non-option parameter.");
             exit(10);
         } else {
             $infile = $_;

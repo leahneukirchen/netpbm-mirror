@@ -1,30 +1,24 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: bmptopnm ppmtobmp
 # Also requires: pamchannel pamtopnm pamseq
 
 tmpdir=${tmpdir:-/tmp}
 
-# Test 1.  Should print 2425386270 41 four times
-
-echo PBM
+echo "Test 1 PBM.  Should print 281226646 481 four times"
 
 for mode in "" "-bpp=1" "-windows" "-os2"
   do
-  ppmtobmp ${mode} testgrid.pbm | bmptopnm | cksum
+  ppmtobmp ${mode} maze.pbm | bmptopnm | cksum
   done
 
-# Test 2.  Should print 1926073387 101484 four times
-
-echo PPM
+echo "Test 2 PPM.  Should print 1926073387 101484 four times"
 
 for mode in "" "-bpp=24" "-windows" "-os2"
   do
   ppmtobmp ${mode} testimg.ppm | bmptopnm | cksum
   done
 
-# Test 3.  Should print 1571496937 33838 nine times
-
-echo PGM
+echo "Test 3 PGM.  Should print 1571496937 33838 nine times"
 
 red_pgm=${tmpdir}/red.pgm
 mapfile_pgm=${tmpdir}/mapfile.pgm

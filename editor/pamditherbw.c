@@ -14,11 +14,13 @@
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "dithers.h"
+#include "rand.h"
 #include "mallocvar.h"
 #include "shhopt.h"
+#include "pam.h"
+#include "dithers.h"
 #include "pm_gamma.h"
+
 
 enum halftone {QT_FS,
                QT_ATKINSON,
@@ -42,7 +44,7 @@ struct cmdlineInfo {
     enum halftone halftone;
     unsigned int  clumpSize;
         /* Defined only for halftone == QT_HILBERT */
-    unsigned int  clusterRadius;  
+    unsigned int  clusterRadius;
         /* Defined only for halftone == QT_CLUSTER */
     float         threshval;
     unsigned int  randomseed;
@@ -85,9 +87,9 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "c4",        OPT_FLAG,  NULL, &cluster4Opt,  0);
     OPTENT3(0, "cluster8",  OPT_FLAG,  NULL, &cluster8Opt,  0);
     OPTENT3(0, "c8",        OPT_FLAG,  NULL, &cluster8Opt,  0);
-    OPTENT3(0, "value",     OPT_FLOAT, &cmdlineP->threshval, 
+    OPTENT3(0, "value",     OPT_FLOAT, &cmdlineP->threshval,
             &valueSpec, 0);
-    OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize, 
+    OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize,
             &clumpSpec, 0);
     OPTENT3(0,   "randomseed",   OPT_UINT,    &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec,      0);
@@ -101,10 +103,10 @@ parseCommandLine(int argc, char ** argv,
 
     free(option_def);
 
-    if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt + 
+    if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt == 0)
         cmdlineP->halftone = QT_FS;
-    else if (floydOpt + atkinsonOpt + thresholdOpt + dither8Opt + 
+    else if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt > 1)
         pm_error("Cannot specify more than one halftoning type");
     else {
@@ -135,7 +137,7 @@ parseCommandLine(int argc, char ** argv,
         } else if (cluster8Opt) {
             cmdlineP->halftone = QT_CLUSTER;
             cmdlineP->clusterRadius = 8;
-        } else 
+        } else
             pm_error("INTERNAL ERROR.  No halftone option");
     }
 
@@ -190,152 +192,211 @@ makeOutputPam(unsigned int const width,
 
 /* Hilbert curve tracer */
 
-#define MAXORD 18
+typedef struct {
+    unsigned int x;
+    unsigned int y;
+} Point;
 
-struct Hil {
-    int order;
-    int ord;
+
+
+typedef struct {
+    bool firstPointDone;
+    unsigned int order;
+    unsigned int ord;
+        /* Meaningful only when 'firstPointDone' is true */
     int turn;
     int dx;
     int dy;
     int x;
     int y;
-    int stage[MAXORD];
-    int width;
-    int height;
-};
+    int stage[sizeof(unsigned int)*8];
+        /* One entry for every bit in the height or width, each of which
+           is an unsigned int
+        */
+    unsigned int width;
+    unsigned int height;
+} Hilbert;
 
-static void 
-initHilbert(int          const w, 
-            int          const h,
-            struct Hil * const hilP) {
+static void
+hilbert_init(Hilbert *    const hilP,
+             unsigned int const width,
+             unsigned int const height) {
 /*----------------------------------------------------------------------------
-  Initialize the Hilbert curve tracer 
+  Initialize the Hilbert curve tracer
 -----------------------------------------------------------------------------*/
-    int big, ber;
-    hilP->width = w;
-    hilP->height = h;
-    big = w > h ? w : h;
-    for (ber = 2, hilP->order = 1; ber < big; ber <<= 1, hilP->order++);
-    if (hilP->order > MAXORD)
-        pm_error("Sorry, hilbert order is too large");
-    hilP->ord = hilP->order;
-    hilP->order--;
+    unsigned int const maxDim = MAX(width, height);
+
+    unsigned int order;
+
+    hilP->width  = width;
+    hilP->height = height;
+    {
+        unsigned int ber;
+        for (ber = 2, order = 0; ber < maxDim; ber <<= 1, ++order);
+    }
+    assert(order + 1 <= ARRAY_SIZE(hilP->stage));
+    hilP->order = order;
+    hilP->firstPointDone = false;
 }
 
 
 
-static bool
-hilbert(int *        const px,
-        int *        const py,
-        struct Hil * const hilP) {
-/*----------------------------------------------------------------------------
-  Return non-zero if got another point
------------------------------------------------------------------------------*/
-    int temp;
-    if (hilP->ord > hilP->order) {
-        /* have to do first point */
+static void
+hilbert_doFirstPoint(Hilbert * const hilbertP,
+                     bool *    const gotPointP,
+                     Point *   const pointP) {
 
-        hilP->ord--;
-        hilP->stage[hilP->ord] = 0;
-        hilP->turn = -1;
-        hilP->dy = 1;
-        hilP->dx = hilP->x = hilP->y = 0;
-        *px = *py = 0;
-        return true;
-    }
+    hilbertP->ord = hilbertP->order;
+    hilbertP->stage[hilbertP->ord] = 0;
+    hilbertP->turn = -1;
+    hilbertP->dy = 1;
+    hilbertP->dx = hilbertP->x = hilbertP->y = 0;
+    hilbertP->firstPointDone = true;
 
-    /* Operate the state machine */
+    pointP->x = 0; pointP->y = 0;
+    *gotPointP = true;
+}
+
+
+
+static void
+hilbert_advanceStateMachine(Hilbert * const hilbertP,
+                            bool *    const gotPointP,
+                            Point *   const pointP) {
+
     for(;;)  {
-        switch (hilP->stage[hilP->ord]) {
-        case 0:
-            hilP->turn = -hilP->turn;
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            if (hilP->ord > 0) {
-                hilP->stage[hilP->ord] = 1;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
+        switch (hilbertP->stage[hilbertP->ord]) {
+        case 0: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->turn = -hilbertP->turn;
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            if (hilbertP->ord > 0) {
+                hilbertP->stage[hilbertP->ord] = 1;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
                 continue;
             }
-        case 1:
-            hilP->x += hilP->dx;
-            hilP->y += hilP->dy;
-            if (hilP->x < hilP->width && hilP->y < hilP->height) {
-                hilP->stage[hilP->ord] = 2;
-                *px = hilP->x;
-                *py = hilP->y;
-                return true;
+        }
+        case 1: {
+            hilbertP->x += hilbertP->dx;
+            hilbertP->y += hilbertP->dy;
+            if (hilbertP->x < hilbertP->width &&
+                hilbertP->y < hilbertP->height) {
+
+                hilbertP->stage[hilbertP->ord] = 2;
+
+                pointP->x = hilbertP->x;
+                pointP->y = hilbertP->y;
+                *gotPointP = true;
+                return;
             }
-        case 2:
-            hilP->turn = -hilP->turn;
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            if (hilP->ord > 0) { 
+        }
+        case 2: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->turn = -hilbertP->turn;
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            if (hilbertP->ord > 0) {
                 /* recurse */
 
-                hilP->stage[hilP->ord] = 3;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
+                hilbertP->stage[hilbertP->ord] = 3;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
                 continue;
             }
-        case 3:
-            hilP->x += hilP->dx;
-            hilP->y += hilP->dy;
-            if (hilP->x < hilP->width && hilP->y < hilP->height) {
-                hilP->stage[hilP->ord] = 4;
-                *px = hilP->x;
-                *py = hilP->y;
-                return true;
+        }
+        case 3: {
+            hilbertP->x += hilbertP->dx;
+            hilbertP->y += hilbertP->dy;
+            if (hilbertP->x < hilbertP->width &&
+                hilbertP->y < hilbertP->height) {
+
+                hilbertP->stage[hilbertP->ord] = 4;
+
+                pointP->x = hilbertP->x;
+                pointP->y = hilbertP->y;
+                *gotPointP = true;
+                return;
             }
-        case 4:
-            if (hilP->ord > 0) {
+        }
+        case 4: {
+            if (hilbertP->ord > 0) {
                 /* recurse */
-                hilP->stage[hilP->ord] = 5;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
+                hilbertP->stage[hilbertP->ord] = 5;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
                 continue;
             }
-        case 5:
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            hilP->turn = -hilP->turn;
-            hilP->x += hilP->dx;
-            hilP->y += hilP->dy;
-            if (hilP->x < hilP->width && hilP->y < hilP->height) {
-                hilP->stage[hilP->ord] = 6;
-                *px = hilP->x;
-                *py = hilP->y;
-                return true;
+        }
+        case 5: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            hilbertP->turn = -hilbertP->turn;
+            hilbertP->x += hilbertP->dx;
+            hilbertP->y += hilbertP->dy;
+            if (hilbertP->x < hilbertP->width &&
+                hilbertP->y < hilbertP->height) {
+
+                hilbertP->stage[hilbertP->ord] = 6;
+
+                pointP->x = hilbertP->x;
+                pointP->y = hilbertP->y;
+                *gotPointP = true;
+                return;
             }
-        case 6:
-            if (hilP->ord > 0) {
+        }
+        case 6: {
+            if (hilbertP->ord > 0) {
                 /* recurse */
-                hilP->stage[hilP->ord] = 7;
-                hilP->ord--;
-                hilP->stage[hilP->ord]=0;
+                hilbertP->stage[hilbertP->ord] = 7;
+                --hilbertP->ord;
+                hilbertP->stage[hilbertP->ord]=0;
                 continue;
             }
-        case 7:
-            temp = hilP->dy;
-            hilP->dy = -hilP->turn * hilP->dx;
-            hilP->dx = hilP->turn * temp;
-            hilP->turn = -hilP->turn;
+        }
+        case 7: {
+            int const origDy = hilbertP->dy;
+
+            hilbertP->dy = -hilbertP->turn * hilbertP->dx;
+            hilbertP->dx = hilbertP->turn * origDy;
+            hilbertP->turn = -hilbertP->turn;
             /* Return from a recursion */
-            if (hilP->ord < hilP->order)
-                hilP->ord++;
-            else
-                return false;
+            if (hilbertP->ord < hilbertP->order)
+                ++hilbertP->ord;
+            else {
+                *gotPointP = false;
+                return;
+            }
+        }
         }
     }
 }
 
 
 
-static void 
+static void
+hilbert_trace(Hilbert * const hilbertP,
+              bool *    const gotPointP,
+              Point *   const pointP) {
+/*----------------------------------------------------------------------------
+  ...
+  Return *gotPointP true iff we got another point
+-----------------------------------------------------------------------------*/
+    if (!hilbertP->firstPointDone) {
+        hilbert_doFirstPoint(hilbertP, gotPointP, pointP);
+    } else {
+        hilbert_advanceStateMachine(hilbertP, gotPointP, pointP);
+    }
+}
+
+
+
+static void
 doHilbert(FILE *       const ifP,
           unsigned int const clumpSize) {
 /*----------------------------------------------------------------------------
@@ -356,10 +417,10 @@ doHilbert(FILE *       const ifP,
     tuple ** grays;
     tuple ** bits;
 
-    struct Hil hil;
+    Hilbert hilbert;
 
     int end;
-    int *x,*y;
+    Point * point;
     int sum;
 
     grays = pnm_readpam(ifP, &graypam, PAM_STRUCT_SIZE(tuple_type));
@@ -368,11 +429,11 @@ doHilbert(FILE *       const ifP,
 
     bits = pnm_allocpamarray(&bitpam);
 
-    MALLOCARRAY(x, clumpSize);
-    MALLOCARRAY(y, clumpSize);
-    if (x == NULL  || y == NULL)
-        pm_error("out of memory");
-    initHilbert(graypam.width, graypam.height, &hil);
+    MALLOCARRAY(point, clumpSize);
+    if (!point)
+        pm_error("Unable to get memory for clump of %u points", clumpSize);
+
+    hilbert_init(&hilbert, graypam.width, graypam.height);
 
     sum = 0;
     end = clumpSize;
@@ -380,19 +441,20 @@ doHilbert(FILE *       const ifP,
     while (end == clumpSize) {
         unsigned int i;
         /* compute the next cluster co-ordinates along hilbert path */
-        for (i = 0; i < end; i++) {
+        for (i = 0; i < end; ++i) {
             bool gotPoint;
-            gotPoint = hilbert(&x[i], &y[i], &hil);
+            hilbert_trace(&hilbert, &gotPoint, &point[i]);
             if (!gotPoint)
                 end = i;    /* we reached the end */
         }
         /* sum levels */
-        for (i = 0; i < end; i++)
-            sum += grays[y[i]][x[i]][0];
+        for (i = 0; i < end; ++i)
+            sum += grays[point[i].y][point[i].x][0];
         /* dither half and half along path */
-        for (i = 0; i < end; i++) {
-            unsigned int const row = y[i];
-            unsigned int const col = x[i];
+        for (i = 0; i < end; ++i) {
+            unsigned int const row = point[i].y;
+            unsigned int const col = point[i].x;
+
             if (sum >= graypam.maxval) {
                 bits[row][col][0] = 1;
                 sum -= graypam.maxval;
@@ -400,7 +462,7 @@ doHilbert(FILE *       const ifP,
                 bits[row][col][0] = 0;
         }
     }
-    free(x);    free(y); 
+    free(point);
     pnm_writepam(&bitpam, bits);
 
     pnm_freepamarray(bits, &bitpam);
@@ -412,7 +474,7 @@ doHilbert(FILE *       const ifP,
 struct converter {
     void (*convertRow)(struct converter * const converterP,
                        unsigned int       const row,
-                       tuplen                   grayrow[], 
+                       tuplen                   grayrow[],
                        tuple                    bitrow[]);
     void (*destroy)(struct converter * const converterP);
     unsigned int cols;
@@ -423,11 +485,11 @@ struct converter {
 
 struct fsState {
     float * thiserr;
-        /* thiserr[N] is the power from previous pixels to include in 
+        /* thiserr[N] is the power from previous pixels to include in
            future column N of the current row.
         */
     float * nexterr;
-        /* nexterr[N] is the power from previous pixels to include in 
+        /* nexterr[N] is the power from previous pixels to include in
            future column N of the next row.
         */
     bool fs_forward;
@@ -455,7 +517,7 @@ fsConvertRow(struct converter * const converterP,
 
     unsigned int limitcol;
     unsigned int col;
-    
+
     for (col = 0; col < converterP->cols + 2; ++col)
         nexterr[col] = 0.0;
 
@@ -494,18 +556,18 @@ fsConvertRow(struct converter * const converterP,
             nexterr[col    ] += (accum * 3) / 16;
             nexterr[col + 1] += (accum * 5) / 16;
             nexterr[col + 2] += (accum * 1) / 16;
-            
+
             ++col;
         } else {
             thiserr[col    ] += (accum * 7) / 16;
             nexterr[col + 2] += (accum * 3) / 16;
             nexterr[col + 1] += (accum * 5) / 16;
             nexterr[col    ] += (accum * 1) / 16;
-            
+
             --col;
         }
     } while (col != limitcol);
-    
+
     stateP->thiserr = nexterr;
     stateP->nexterr = thiserr;
     stateP->fs_forward = ! stateP->fs_forward;
@@ -528,7 +590,9 @@ fsDestroy(struct converter * const converterP) {
 
 static struct converter
 createFsConverter(struct pam * const graypamP,
-                  float        const threshFraction) {
+                  float        const threshFraction,
+                  bool         const randomseedSpec,
+                  unsigned int const randomseed) {
 
     struct fsState * stateP;
     struct converter converter;
@@ -545,9 +609,17 @@ createFsConverter(struct pam * const graypamP,
 
     {
         /* (random errors in [-1/8 .. 1/8]) */
+
         unsigned int col;
+        struct pm_randSt randSt;
+
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomseedSpec, randomseed);
+
         for (col = 0; col < graypamP->width + 2; ++col)
-            stateP->thiserr[col] = ((float)rand()/RAND_MAX - 0.5) / 4;
+            stateP->thiserr[col] = (pm_drand(&randSt) - 0.5) / 4;
+
+        pm_randterm(&randSt);
     }
 
     stateP->halfWhite = threshFraction;
@@ -584,7 +656,7 @@ struct atkinsonState {
 
 static void
 moveAtkinsonErrorWindowDown(struct converter * const converterP) {
-                            
+
     struct atkinsonState * const stateP = converterP->stateP;
 
     float * const oldError0 = stateP->error[0];
@@ -628,7 +700,7 @@ atkinsonConvertRow(struct converter * const converterP,
             accum -= stateP->white;
         } else
             bitrow[col] = blackTuple;
-        
+
         /* Forward to future output pixels 3/4 of the power from current
            input pixel and the power forwarded from previous input
            pixels to the current pixel, less any power we put into the
@@ -642,7 +714,7 @@ atkinsonConvertRow(struct converter * const converterP,
         error[1][col+1] += accum/8;
         error[2][col  ] += accum/8;
     }
-    
+
     moveAtkinsonErrorWindowDown(converterP);
 }
 
@@ -665,12 +737,14 @@ atkinsonDestroy(struct converter * const converterP) {
 
 static struct converter
 createAtkinsonConverter(struct pam * const graypamP,
-                        float        const threshFraction) {
+                        float        const threshFraction,
+                        bool         const randomseedSpec,
+                        unsigned int const randomseed) {
 
     struct atkinsonState * stateP;
     struct converter converter;
     unsigned int relRow;
-    
+
     converter.cols       = graypamP->width;
     converter.convertRow = &atkinsonConvertRow;
     converter.destroy    = &atkinsonDestroy;
@@ -683,11 +757,18 @@ createAtkinsonConverter(struct pam * const graypamP,
     {
         /* (random errors in [-1/8 .. 1/8]) */
         unsigned int col;
+        struct pm_randSt randSt;
+
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomseedSpec, randomseed);
+
         for (col = 0; col < graypamP->width + 2; ++col) {
-            stateP->error[0][col] = ((float)rand()/RAND_MAX - 0.5) / 4;
+            stateP->error[0][col] = (pm_drand(&randSt) - 0.5) / 4;
             stateP->error[1][col] = 0.0;
             stateP->error[2][col] = 0.0;
         }
+
+        pm_randterm(&randSt);
     }
 
     stateP->halfWhite = threshFraction;
@@ -710,7 +791,7 @@ threshConvertRow(struct converter * const converterP,
                  unsigned int       const row,
                  tuplen                   grayrow[],
                  tuple                    bitrow[]) {
-    
+
     struct threshState * const stateP = converterP->stateP;
 
     unsigned int col;
@@ -740,7 +821,7 @@ createThreshConverter(struct pam * const graypamP,
     converter.cols       = graypamP->width;
     converter.convertRow = &threshConvertRow;
     converter.destroy    = &threshDestroy;
-    
+
     stateP->threshval    = threshFraction;
     converter.stateP     = stateP;
 
@@ -768,7 +849,7 @@ clusterConvertRow(struct converter * const converterP,
     unsigned int col;
 
     for (col = 0; col < converterP->cols; ++col) {
-        float const threshold = 
+        float const threshold =
             stateP->clusterMatrix[row % diameter][col % diameter];
         bitrow[col] =
             grayrow[col][0] > threshold ? whiteTuple : blackTuple;
@@ -789,7 +870,7 @@ clusterDestroy(struct converter * const converterP) {
         free(stateP->clusterMatrix[row]);
 
     free(stateP->clusterMatrix);
-    
+
     free(stateP);
 }
 
@@ -799,14 +880,14 @@ static struct converter
 createClusterConverter(struct pam *    const graypamP,
                        enum ditherType const ditherType,
                        unsigned int    const radius) {
-    
+
     /* TODO: We create a floating point normalized, gamma-adjusted
-       dither matrix from the old integer dither matrices that were 
+       dither matrix from the old integer dither matrices that were
        developed for use with integer arithmetic.  We really should
        just change the literal values in dither.h instead of computing
        the matrix from the integer literal values here.
     */
-    
+
     int const clusterNormalizer = radius * radius * 2;
     unsigned int const diameter = 2 * radius;
 
@@ -827,16 +908,16 @@ createClusterConverter(struct pam *    const graypamP,
         unsigned int col;
 
         MALLOCARRAY_NOFAIL(stateP->clusterMatrix[row], diameter);
-        
+
         for (col = 0; col < diameter; ++col) {
             switch (ditherType) {
-            case DT_REGULAR: 
+            case DT_REGULAR:
                 switch (radius) {
-                case 8: 
-                    stateP->clusterMatrix[row][col] = 
+                case 8:
+                    stateP->clusterMatrix[row][col] =
                         pm_gamma709((float)dither8[row][col] / 256);
                     break;
-                default: 
+                default:
                     pm_error("INTERNAL ERROR: invalid radius");
                 }
                 break;
@@ -849,13 +930,13 @@ createClusterConverter(struct pam *    const graypamP,
                 default:
                     pm_error("INTERNAL ERROR: invalid radius");
                 }
-                stateP->clusterMatrix[row][col] = 
+                stateP->clusterMatrix[row][col] =
                     pm_gamma709((float)val / clusterNormalizer);
             }
             break;
             }
         }
-    }            
+    }
 
     converter.stateP = stateP;
 
@@ -874,8 +955,6 @@ main(int argc, char *argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
-
     ifP = pm_openr(cmdline.inputFilespec);
 
     if (cmdline.halftone == QT_HILBERT)
@@ -891,28 +970,32 @@ main(int argc, char *argv[]) {
         pnm_readpaminit(ifP, &graypam, PAM_STRUCT_SIZE(tuple_type));
 
         bitpam = makeOutputPam(graypam.width, graypam.height);
-        
+
         pnm_writepaminit(&bitpam);
 
         switch (cmdline.halftone) {
         case QT_FS:
-            converter = createFsConverter(&graypam, cmdline.threshval);
+            converter = createFsConverter(&graypam, cmdline.threshval,
+                                          cmdline.randomseedSpec,
+                                          cmdline.randomseed);
             break;
         case QT_ATKINSON:
-            converter = createAtkinsonConverter(&graypam, cmdline.threshval);
+            converter = createAtkinsonConverter(&graypam, cmdline.threshval,
+                                                cmdline.randomseedSpec,
+                                                cmdline.randomseed);
             break;
         case QT_THRESH:
             converter = createThreshConverter(&graypam, cmdline.threshval);
             break;
-        case QT_DITHER8: 
-            converter = createClusterConverter(&graypam, DT_REGULAR, 8); 
+        case QT_DITHER8:
+            converter = createClusterConverter(&graypam, DT_REGULAR, 8);
             break;
-        case QT_CLUSTER: 
-            converter = createClusterConverter(&graypam, 
-                                               DT_CLUSTER, 
+        case QT_CLUSTER:
+            converter = createClusterConverter(&graypam,
+                                               DT_CLUSTER,
                                                cmdline.clusterRadius);
             break;
-        case QT_HILBERT: 
+        case QT_HILBERT:
                 pm_error("INTERNAL ERROR: halftone is QT_HILBERT where it "
                          "shouldn't be.");
                 break;
@@ -925,7 +1008,7 @@ main(int argc, char *argv[]) {
             pnm_readpamrown(&graypam, grayrow);
 
             converter.convertRow(&converter, row, grayrow, bitrow);
-            
+
             pnm_writepamrow(&bitpam, bitrow);
         }
         free(bitrow);

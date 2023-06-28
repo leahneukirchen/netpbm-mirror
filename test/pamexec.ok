@@ -1,0 +1,10 @@
+Test 1 : Should print 10 stdin: PBM RAW 21 24 1 1 BLACKANDWHITE twice
+10 stdin: PBM RAW 21 24 1 1 BLACKANDWHITE
+10 stdin: PBM RAW 21 24 1 1 BLACKANDWHITE
+Test 2: Should print 1791121103 989 twice
+1791121103 989
+1791121103 989
+Test 3: Should print 2983705297 810 twice
+2983705297 810
+2983705297 810
+Test Invalid: Should not print anything

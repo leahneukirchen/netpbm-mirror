@@ -33,6 +33,211 @@
 #include "pbm.h"
 
 /*----------------------------------------------------------------------------
+  Font selector routines
+
+  The selector is a device consisting of a bitmap, min value, max value and
+  count.  It is used here to specify necessary fonts and record what entries
+  are valid in the glyph array.
+
+  This device may be used for other purposes.  In that case the code should
+  be put into an independent source file in the lib/util subdirectory.
+-----------------------------------------------------------------------------*/
+
+static void
+allocRecord(struct pm_selector * const selectorP,
+            unsigned int         const max) {
+
+    unsigned int const size = (max + 8) / 8;
+
+    MALLOCARRAY(selectorP->localRecord, size);
+
+    if (!selectorP->localRecord)
+        pm_error("Failed to allocate %u bytes of memory for font selector "
+                 "bitmap", size);
+
+    selectorP->record = selectorP->localRecord;
+}
+
+
+
+void
+pm_selector_create(unsigned int          const max,
+                   struct pm_selector ** const selectorPP) {
+
+    struct pm_selector * selectorP;
+
+    MALLOCVAR_NOFAIL(selectorP);
+
+    allocRecord(selectorP, max);
+
+    {
+        unsigned int byteIndex;
+        for (byteIndex = 0; byteIndex <= max/8; ++byteIndex)
+            selectorP->localRecord[byteIndex]= 0x00;
+    }
+
+    selectorP->maxmax = selectorP->min = max;
+    selectorP->max = 0;
+    selectorP->count = 0;
+
+    *selectorPP = selectorP;
+}
+
+
+
+void
+pm_selector_create_fixed(const unsigned char * const record,
+                         unsigned int          const min,
+                         unsigned int          const max,
+                         unsigned int          const count,
+                         struct pm_selector ** const selectorPP) {
+
+    struct pm_selector * selectorP;
+
+    MALLOCVAR_NOFAIL(selectorP);
+
+    selectorP->localRecord = NULL;
+    selectorP->record      = record;
+    selectorP->min         = min;
+    selectorP->max         = max;
+    selectorP->maxmax      = max;
+    selectorP->count       = count;
+
+    *selectorPP = selectorP;
+}
+
+
+
+void
+pm_selector_destroy(struct pm_selector * const selectorP) {
+
+    if (selectorP->localRecord)
+        free(selectorP->localRecord);
+
+    free(selectorP);
+}
+
+
+
+void
+pm_selector_copy(unsigned int               const max,
+                 const struct pm_selector * const srcSelectorP,
+                 struct pm_selector      ** const destSelectorPP) {
+
+    /* Create a new selector and copy into it the content of another */
+
+    struct pm_selector * destSelectorP;
+
+    if (max < srcSelectorP->max)
+        pm_error("internal error: attempt to copy a selector as "
+                 "another with a smaller max value %u -> %u",
+                 srcSelectorP->max, max);
+
+    MALLOCVAR_NOFAIL(destSelectorP);
+
+    destSelectorP->maxmax     = max;
+    destSelectorP->max        = srcSelectorP->max;
+    destSelectorP->min        = srcSelectorP->min;
+    destSelectorP->count      = srcSelectorP->count;
+
+    allocRecord(destSelectorP, max);
+
+    {
+        unsigned int const minByteIndex = srcSelectorP->min / 8;
+        unsigned int const maxByteIndex = srcSelectorP->max / 8;
+        unsigned int const maxmaxByteIndex = max / 8;
+
+        unsigned int byteIndex;
+
+        for (byteIndex = 0 ; byteIndex < minByteIndex; ++byteIndex)
+            destSelectorP->localRecord[byteIndex] = 0x00;
+        for (byteIndex = maxByteIndex + 1 ; byteIndex <= maxmaxByteIndex;
+             ++byteIndex)
+            destSelectorP->localRecord[byteIndex] = 0x00;
+        for (byteIndex = minByteIndex; byteIndex <= maxByteIndex; ++byteIndex)
+            destSelectorP->localRecord[byteIndex] =
+                srcSelectorP->record[byteIndex];
+    }
+
+    *destSelectorPP = destSelectorP;
+}
+
+
+
+void
+pm_selector_mark(struct pm_selector * const selectorP,
+                 unsigned int         const index) {
+/*----------------------------------------------------------------------------
+   Mark index 'index'.
+-----------------------------------------------------------------------------*/
+    unsigned int  byteIndex = index / 8;
+    unsigned int  bitIndex  = index % 8;
+    unsigned char mask = (0x01 <<7) >> bitIndex;
+
+    /* set bit on to indicate presence of this index */
+
+    if (!selectorP->localRecord)
+        pm_error("INTERNAL ERROR: attempt to mark in a fixed pm_selector");
+
+    if ((selectorP->localRecord[byteIndex] & mask) == 0x00) {
+        /* if bit is not already set */
+
+        selectorP->localRecord[byteIndex] |= mask;
+        ++selectorP->count;  /* increment count */
+
+        /* reset min and max */
+        if (selectorP->min > index)
+            selectorP->min = index;
+        if (selectorP->max < index)
+            selectorP->max = index;
+    }
+}
+
+
+
+/* There is no function for erasing a marked bit */
+
+
+
+int  /* boolean */
+pm_selector_is_marked(const struct pm_selector * const selectorP,
+                      unsigned int               const index) {
+/*----------------------------------------------------------------------------
+  Index 'index' is marked.
+-----------------------------------------------------------------------------*/
+    bool retval;
+
+    if (selectorP) {
+        unsigned int  const byteIndex = index / 8;
+        unsigned int  const bitIndex  = index % 8;
+        unsigned char const mask = (0x01 <<7) >> bitIndex;
+
+        if ( index < selectorP->min || index > selectorP->max)
+            retval = false;
+        else if ((selectorP->record[byteIndex] & mask) != 0x00)
+            retval = true;
+        else
+            retval = false;
+    } else {
+        /* All entries are set to "exist" */
+        retval = true;
+    }
+    return retval ? 1 : 0;
+}
+
+
+
+unsigned int
+pm_selector_marked_ct(const struct pm_selector * const selectorP) {
+/*----------------------------------------------------------------------------
+   Number of indices that are marked.
+-----------------------------------------------------------------------------*/
+    return selectorP->count;
+}
+
+
+
+/*----------------------------------------------------------------------------
   Routines for loading a BDF font file
 -----------------------------------------------------------------------------*/
 
@@ -110,14 +315,13 @@ tokenize(char *         const s,
 
     while (*p) {
         if (!ISGRAPH(*p)) {
-            if(!ISSPACE(*p)) {
-              /* Control chars excluding 09 - 0d (space), 80-ff */
-            pm_message("Warning: non-ASCII character '%x' in "
-                       "BDF font file", *p);
+            if (!ISSPACE(*p)) {
+                /* Control chars excluding 09 - 0d (space), 80-ff */
+                pm_message("Warning: non-ASCII character '%x' in "
+                           "BDF font file", *p);
             }
             *p++ = '\0';
-        }
-        else {
+        } else {
             words[n++] = p;
             if (n >= wordsSz - 1)
                 break;
@@ -193,6 +397,7 @@ parseBitmapRow(const char *    const hex,
                         glyphWidth, hex);
         else {
             char const hdig = *p++;
+
             unsigned int hdigValue;
 
             if (hdig >= '0' && hdig <= '9')
@@ -315,7 +520,7 @@ static void
 validateWordCount(Readline *    const readlineP,
                   unsigned int  const nWords) {
 
-    if( readlineP->wordCt != nWords )
+    if (readlineP->wordCt != nWords)
         pm_error("Wrong number of arguments in '%s' line in BDF font file",
                  readlineP->arg[0]);
 
@@ -334,7 +539,6 @@ readExpectedStatement(Readline *    const readlineP,
   beginning of the line is that, e.g. "STARTFONT").  Check for the number
   of words: 'nWords'.  If either condition is not met, fail the program.
 -----------------------------------------------------------------------------*/
-
     bool eof;
 
     readline_read(readlineP, &eof);
@@ -354,21 +558,22 @@ readExpectedStatement(Readline *    const readlineP,
 static void
 skipCharacter(Readline * const readlineP) {
 /*----------------------------------------------------------------------------
-  In the BDF font file being read by readline object *readlineP, skip through
-  the end of the character we are presently in.
+  In the BDF font file being read by readline object *readlineP, skip
+  through to the end of the data for the character we are presently in.
+
+  At entry the stream must be positioned at the end of the ENCODING line.
 -----------------------------------------------------------------------------*/
-    bool endChar;
+    char * rc;
+    do {
+        rc = fgets(readlineP->line, MAXBDFLINE+1, readlineP->ifP);
+        readlineP->line[7] = '\0';
 
-    endChar = FALSE;
+    } while (rc != NULL && !streq(readlineP->line, "ENDCHAR"));
 
-    while (!endChar) {
-        bool eof;
-        readline_read(readlineP, &eof);
-        if (eof)
-            pm_error("End of file in the middle of a character (before "
-                     "ENDCHAR) in BDF font file.");
-        endChar = streq(readlineP->arg[0], "ENDCHAR");
-    }
+    if (rc == NULL)
+        pm_error("End of file in the middle of a character (before "
+                 "ENDCHAR) in BDF font file.");
+
 }
 
 
@@ -425,16 +630,21 @@ interpEncoding(const char **  const arg,
     bool badCodepoint;
     unsigned int codepoint;
 
+    gotCodepoint = false;  /* initial value */
+
     if (wordToInt(arg[1]) >= 0) {
         codepoint = wordToInt(arg[1]);
         gotCodepoint = true;
     } else {
-      if (wordToInt(arg[1]) == -1 && arg[2] != NULL) {
-            codepoint = wordToInt(arg[2]);
-            gotCodepoint = true;
-        } else
-            gotCodepoint = false;
+        if (wordToInt(arg[1]) == -1 && arg[2] != NULL) {
+            int const codepoint0 = wordToInt(arg[2]);
+            if (codepoint0 >= 0) {
+                codepoint = codepoint0;
+                gotCodepoint = true;
+            }
+        }
     }
+
     if (gotCodepoint) {
         if (codepoint > maxmaxglyph)
             badCodepoint = true;
@@ -455,8 +665,9 @@ readEncoding(Readline *     const readlineP,
              bool *         const badCodepointP,
              PM_WCHAR       const maxmaxglyph) {
 
+    const char * const expected = "ENCODING";
+
     bool eof;
-    const char * expected = "ENCODING";
 
     readline_read(readlineP, &eof);
 
@@ -465,7 +676,7 @@ readEncoding(Readline *     const readlineP,
     else if (!streq(readlineP->arg[0], expected))
         pm_error("Statement of type '%s' where '%s' expected in BDF font file",
                  readlineP->arg[0], expected);
-    else if(readlineP->wordCt != 2 &&  readlineP->wordCt != 3)
+    else if (readlineP->wordCt != 2 &&  readlineP->wordCt != 3)
         pm_error("Wrong number of arguments in '%s' line in BDF font file",
                  readlineP->arg[0]);
 
@@ -538,6 +749,75 @@ validateGlyphLimits(const struct font2 * const font2P,
 
 
 static void
+readStartchar(Readline * const readlineP,
+              const char ** charNameP) {
+
+        const char * charName;
+        bool eof;
+
+        readline_read(readlineP, &eof);
+        if (eof)
+            pm_error("End of file after CHARS reading BDF font file");
+
+        while (streq(readlineP->arg[0], "COMMENT")) {
+            readline_read(readlineP, &eof);
+            if (eof)
+                 pm_error("End of file after CHARS reading BDF font file");
+            /* ignore */
+        }
+
+        if (!streq(readlineP->arg[0], "STARTCHAR"))
+            pm_error("%s detected where \'STARTCHAR\' expected "
+                     "in BDF font file", readlineP->arg[0] );
+        else if (readlineP->wordCt < 2)
+            pm_error("Wrong number of arguments in STARTCHAR line "
+                      "in BDF font file");
+            /* Character name may contain spaces: there may be more than
+               three words in the line.
+             */
+        else
+            charName = pm_strdup(readlineP->arg[1]);
+
+        *charNameP = charName;
+}
+
+
+
+static void
+readGlyph(Readline * const readlineP,
+          const char * const charName,
+          const struct font2 * const font2P,
+          struct glyph ** const glyphPP) {
+
+    struct glyph * glyphP;
+
+    MALLOCVAR(glyphP);
+    if (glyphP == NULL)
+        pm_error("no memory for font glyph for '%s' character",
+             charName);
+
+    readExpectedStatement(readlineP, "SWIDTH", 3);
+
+    readExpectedStatement(readlineP, "DWIDTH", 3);
+    glyphP->xadd = wordToInt(readlineP->arg[1]);
+
+    readExpectedStatement(readlineP, "BBX", 5);
+    glyphP->width  = wordToInt(readlineP->arg[1]);
+    glyphP->height = wordToInt(readlineP->arg[2]);
+    glyphP->x      = wordToInt(readlineP->arg[3]);
+    glyphP->y      = wordToInt(readlineP->arg[4]);
+
+    validateGlyphLimits(font2P, glyphP, charName);
+
+    createBmap(glyphP->width, glyphP->height, readlineP, charName,
+               &glyphP->bmap);
+
+    *glyphPP = glyphP;
+}
+
+
+
+static void
 processChars(Readline *     const readlineP,
              struct font2 * const font2P) {
 /*----------------------------------------------------------------------------
@@ -546,104 +826,71 @@ processChars(Readline *     const readlineP,
    contents to *font2P.
 -----------------------------------------------------------------------------*/
     unsigned int const nCharacters = wordToInt(readlineP->arg[1]);
+    unsigned int const nCharsWanted = (font2P->selectorP != NULL) ?
+        font2P->selectorP->count : nCharacters;
 
-    unsigned int nCharsDone;
-    unsigned int nCharsValid;
+    unsigned int nCharsEncountered;
+    unsigned int nCharsLoaded;
 
-    for (nCharsDone = 0, nCharsValid = 0;
-         nCharsDone < nCharacters; ) {
+    for (nCharsEncountered = 0, nCharsLoaded = 0;
+         nCharsEncountered < nCharacters && nCharsLoaded < nCharsWanted;
+         ++nCharsEncountered ) {
 
-        bool eof;
+        const char * charName;
+        unsigned int codepoint;
+        bool badCodepoint;
 
-        readline_read(readlineP, &eof);
-        if (eof)
-            pm_error("End of file after CHARS reading BDF font file");
+        readStartchar(readlineP, &charName);
 
-        if (streq(readlineP->arg[0], "COMMENT")) {
-            /* ignore */
-        } else if (!streq(readlineP->arg[0], "STARTCHAR"))
-            pm_error("%s detected where \'STARTCHAR\' expected "
-                     "in BDF font file", readlineP->arg[0] );
-        else {
-            const char * charName;
-
-            struct glyph * glyphP;
-            unsigned int codepoint;
-            bool badCodepoint;
-
-            if (readlineP->wordCt < 2)
-                pm_error("Wrong number of arguments in STARTCHAR line "
-                         "in BDF font file");
-            /* Character name may contain spaces: there may be more than
-               three words in the line.
-             */
-            charName = pm_strdup(readlineP->arg[1]);
-
-            assert(streq(readlineP->arg[0], "STARTCHAR"));
-
-            MALLOCVAR(glyphP);
-
-            if (glyphP == NULL)
-                pm_error("no memory for font glyph for '%s' character",
-                         charName);
-
-            readEncoding(readlineP, &codepoint, &badCodepoint,
+        readEncoding(readlineP, &codepoint, &badCodepoint,
                          font2P->maxmaxglyph);
 
-            if (badCodepoint)
-                skipCharacter(readlineP);
-            else {
-                if (codepoint < font2P->maxglyph) {
-                    if (font2P->glyph[codepoint] != NULL)
-                        pm_error("Multiple definition of code point %u "
-                                 "in BDF font file", (unsigned int) codepoint);
-                    else
-                        pm_message("Reverse order detected in BDF file. "
-                                   "Code point %u defined after %u",
-                                    (unsigned int) codepoint,
-                                    (unsigned int) font2P->maxglyph);
-                } else {
-                    /* Initialize all characters in the gap to nonexistent */
-                    unsigned int i;
-                    unsigned int const oldMaxglyph = font2P->maxglyph;
-                    unsigned int const newMaxglyph = codepoint;
-
-                    for (i = oldMaxglyph + 1; i < newMaxglyph; ++i)
-                        font2P->glyph[i] = NULL;
-
-                    font2P->maxglyph = newMaxglyph;
-                    }
-
-                readExpectedStatement(readlineP, "SWIDTH", 3);
-
-                readExpectedStatement(readlineP, "DWIDTH", 3);
-                glyphP->xadd = wordToInt(readlineP->arg[1]);
-
-                readExpectedStatement(readlineP, "BBX", 5);
-                glyphP->width  = wordToInt(readlineP->arg[1]);
-                glyphP->height = wordToInt(readlineP->arg[2]);
-                glyphP->x      = wordToInt(readlineP->arg[3]);
-                glyphP->y      = wordToInt(readlineP->arg[4]);
-
-                validateGlyphLimits(font2P, glyphP, charName);
-
-                createBmap(glyphP->width, glyphP->height, readlineP, charName,
-                           &glyphP->bmap);
-
-                readExpectedStatement(readlineP, "ENDCHAR", 1);
-
-                assert(codepoint <= font2P->maxmaxglyph);
-                /* Ensured by readEncoding() */
-
-                font2P->glyph[codepoint] = glyphP;
-                pm_strfree(charName);
-
-                ++nCharsValid;
+        if ( badCodepoint ) {
+            skipCharacter(readlineP);
+            pm_strfree (charName);
             }
-            ++nCharsDone;
+        else if (!pm_selector_is_marked(font2P->selectorP, codepoint) ) {
+            skipCharacter(readlineP);
+            pm_strfree (charName);
+            font2P->maxglyph = codepoint;
+            }
+        else {
+            if (codepoint < font2P->maxglyph) {
+                if (font2P->glyph[codepoint] != NULL )
+                       pm_error("Multiple definition of code point %u "
+                                "in BDF font file", (unsigned int) codepoint);
+                else
+                       pm_message("Reverse order detected in BDF file. "
+                                  "Code point %u defined after %u",
+                                   (unsigned int) codepoint,
+                                   (unsigned int) font2P->maxglyph);
+            }
+
+            {
+            struct glyph * glyphP;
+
+            readGlyph(readlineP, charName, font2P, &glyphP);
+            readExpectedStatement(readlineP, "ENDCHAR", 1);
+
+            assert(codepoint <= font2P->maxmaxglyph);
+            /* Ensured by readEncoding() */
+
+            font2P->glyph[codepoint] = glyphP;
+            pm_strfree(charName);
+
+            font2P->maxglyph = codepoint;
+            ++nCharsLoaded;
+            }
         }
     }
-    font2P->chars = nCharsValid;
+
+    /* Note that BDF file may have reached end before the largest entry
+       in selector was checked.  */
+    /*
+    if (font2P->selectorP->max > font2P->maxglyph)
+       font2P->maxglyph = font2P->selectorP->max;
+    */
+    font2P->chars       = nCharsLoaded;
     font2P->total_chars = nCharacters;
 }
 
@@ -715,7 +962,6 @@ loadCharsetString(const char *  const registry,
     dest[outCt] = '\0';
     *charsetStringP = dest;
 }
-
 
 
 
@@ -904,6 +1150,9 @@ processBdfFontLine(Readline     * const readlineP,
       else {
         validateWordCount(readlineP, 2);  /* CHARS n */
         processChars(readlineP, font2P);
+        if (font2P->selectorP != NULL &&
+            font2P->selectorP->count == font2P->chars)
+               *endOfFontP = true;
       }
     } else {
         /* ignore */
@@ -913,9 +1162,38 @@ processBdfFontLine(Readline     * const readlineP,
 
 
 
+static void
+initializeGlyphArray(struct font2 * const font2P,
+                     unsigned int   const maxmaxglyph) {
+/*----------------------------------------------------------------------------
+  Initialize glyph array based on entries in selector.
+  Note that only valid codepoints are set to NULL.
+  Entries for unused glyphs are left untouched.
+-----------------------------------------------------------------------------*/
+    const struct pm_selector * const selectorP = font2P->selectorP;
+    unsigned int const min = (selectorP == NULL) ? 0 : selectorP->min;
+    unsigned int const max =
+        (selectorP == NULL) ? font2P->maxglyph : selectorP->max;
+
+    unsigned int codepoint;
+
+    for (codepoint = min; codepoint <= max ; ++codepoint)
+        if (pm_selector_is_marked(selectorP, codepoint) == true)
+             font2P->glyph[codepoint] = NULL;
+
+    font2P->glyph[L' '] = NULL;
+        /* Clear the slot for space character.
+           It may not be defined in the font, but the program may try
+           to use space as a substitute char
+        */
+}
+
+
+
 struct font2 *
-pbm_loadbdffont2(const char * const filename,
-                 PM_WCHAR     const maxmaxglyph) {
+pbm_loadbdffont2select(const char *               const filename,
+                       PM_WCHAR                   const maxmaxglyph,
+                       const struct pm_selector * const selectorP) {
 /*----------------------------------------------------------------------------
    Read a BDF font file "filename" as a 'font2' structure.  A 'font2'
    structure is more expressive than a 'font' structure, most notably in that
@@ -925,8 +1203,10 @@ pbm_loadbdffont2(const char * const filename,
 
    The returned object is in new malloc'ed storage, in many pieces.
    When done with, destroy with pbm_destroybdffont2().
------------------------------------------------------------------------------*/
 
+   The returned object refers to *selectorP, so that must continue to exist
+   until you call pbm_destroybdffont2().
+-----------------------------------------------------------------------------*/
     FILE *         ifP;
     Readline       readline;
     struct font2 * font2P;
@@ -943,8 +1223,14 @@ pbm_loadbdffont2(const char * const filename,
 
     font2P->maxglyph = 0;
         /* Initial value.  Increases as new characters are loaded */
-    font2P->glyph[0] = NULL;
-        /* Initial value.  Overwrite later if codepoint 0 is defined. */
+
+    if (font2P->selectorP == NULL) {
+        PM_WCHAR i;
+
+        for (i = 0; i <= maxmaxglyph; ++i)
+            font2P->glyph[i] = NULL;
+            /* Initial value.  Overwrite later if codepoint i is defined. */
+    }
 
     font2P->maxmaxglyph = maxmaxglyph;
 
@@ -955,6 +1241,9 @@ pbm_loadbdffont2(const char * const filename,
     font2P->chars = font2P->total_chars = 0;
     font2P->default_char = 0;
     font2P->default_char_defined = FALSE;
+    font2P->selectorP = (struct pm_selector * const) selectorP;
+
+    initializeGlyphArray(font2P, maxmaxglyph);
 
     readExpectedStatement(&readline, "STARTFONT", 2);
 
@@ -970,9 +1259,13 @@ pbm_loadbdffont2(const char * const filename,
     }
     fclose(ifP);
 
-    if(font2P->chars == 0)
+    if (font2P->total_chars == 0)
         pm_error("No glyphs found in BDF font file "
                  "in codepoint range 0 - %u", (unsigned int) maxmaxglyph);
+    if (font2P->chars == 0)
+        pm_error("Not any requested glyphs found in BDF font file "
+                 "in codepoint range 0 - %u", (unsigned int) maxmaxglyph);
+
 
     REALLOCARRAY(font2P->glyph, font2P->maxglyph + 1);
 
@@ -986,10 +1279,21 @@ pbm_loadbdffont2(const char * const filename,
 }
 
 
+
+struct font2 *
+pbm_loadbdffont2(const char * const filename,
+                 PM_WCHAR     const maxmaxglyph) {
+
+    return pbm_loadbdffont2select(filename, maxmaxglyph, NULL);
+}
+
+
+
 static struct font *
 font2ToFont(const struct font2 * const font2P) {
-            struct font  * fontP;
-            unsigned int   codePoint;
+
+    struct font  * fontP;
+    unsigned int   codePoint;
 
     MALLOCVAR(fontP);
     if (fontP == NULL)
@@ -1001,18 +1305,10 @@ font2ToFont(const struct font2 * const font2P) {
     fontP->x = font2P->x;
     fontP->y = font2P->y;
 
-    for (codePoint = 0; codePoint <= font2P->maxglyph; ++codePoint)
-        fontP->glyph[codePoint] = font2P->glyph[codePoint];
-
-    /* font2P->maxglyph is typically 255 (PM_FONT_MAXGLYPH) or larger.
-       But in some rare cases it is smaller.
-       If an ASCII-only font is read, it will be 126 or 127.
-
-       Set remaining codepoints up to PM_FONT_MAXGLYPH, if any, to NULL
-    */
-
-    for ( ; codePoint <= PM_FONT_MAXGLYPH; ++codePoint)
-        fontP->glyph[codePoint] = NULL;
+    for (codePoint = 0; codePoint <= PM_FONT_MAXGLYPH; ++codePoint)
+        fontP->glyph[codePoint] =
+             pm_selector_is_marked(font2P->selectorP, codePoint) ?
+             font2P->glyph[codePoint] : NULL;
 
     /* Give values to legacy fields */
     fontP->oldfont = font2P->oldfont;

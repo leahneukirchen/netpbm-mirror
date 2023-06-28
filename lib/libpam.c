@@ -90,7 +90,12 @@ validateComputableSize(struct pam * const pamP) {
    the size of a tuple row, in bytes, can be represented by an 'int'.
 
    Another common operation is adding 1 or 2 to the highest row, column,
-   or plane number in the image, so we make sure that's possible.
+   or plane number in the image, so we make sure that's possible.  And in
+   bitmap images, rounding up to multiple of 8 is common, so we provide for
+   that too.
+
+   Note that it's still the programmer's responsibility to ensure that his
+   code, using values known to have been validated here, cannot overflow.
 -----------------------------------------------------------------------------*/
     if (pamP->width == 0)
         pm_error("Width is zero.  Image must be at least one pixel wide");
@@ -111,10 +116,10 @@ validateComputableSize(struct pam * const pamP) {
 
         if (depth > INT_MAX - 2)
             pm_error("image depth (%u) too large to be processed", depth);
-        if (pamP->width > INT_MAX - 2)
+        if (pamP->width > INT_MAX - 10)
             pm_error("image width (%u) too large to be processed",
                      pamP->width);
-        if (pamP->height > INT_MAX - 2)
+        if (pamP->height > INT_MAX - 10)
             pm_error("image height (%u) too large to be processed",
                      pamP->height);
     }
@@ -207,6 +212,24 @@ pnm_createBlackTuple(const struct pam * const pamP,
 
     for (i = 0; i < pamP->depth; ++i)
         (*blackTupleP)[i] = 0;
+}
+
+
+
+void
+pnm_createWhiteTuple(const struct pam * const pamP,
+                     tuple *            const whiteTupleP) {
+/*----------------------------------------------------------------------------
+   Create a "white" tuple.  By that we mean a tuple all of whose elements are
+   the maxval.  If it's an RGB, grayscale, or b&w pixel, that means it's
+   white.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+
+    *whiteTupleP = pnm_allocpamtuple(pamP);
+
+    for (i = 0; i < pamP->depth; ++i)
+        (*whiteTupleP)[i] = pamP->maxval;
 }
 
 
@@ -405,9 +428,9 @@ pnm_setpamrow(const struct pam * const pamP,
               tuple *            const tuplerow,
               sample             const value) {
 
-    int col;
+    unsigned int col;
     for (col = 0; col < pamP->width; ++col) {
-        int plane;
+        unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
             tuplerow[col][plane] = value;
     }
@@ -416,46 +439,72 @@ pnm_setpamrow(const struct pam * const pamP,
 
 
 
+static void
+setSeekableAndRasterPos(struct pam * const pamP) {
+
+    if (pamP->size >= PAM_STRUCT_SIZE(is_seekable))
+        pamP->is_seekable = pm_is_seekable(pamP->file);
+
+    if (pamP->size >= PAM_STRUCT_SIZE(raster_pos)) {
+        if (pamP->is_seekable)
+            pm_tell2(pamP->file, &pamP->raster_pos, sizeof(pamP->raster_pos));
+    }
+}
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+
 #define MAX_LABEL_LENGTH 8
 #define MAX_VALUE_LENGTH 255
 
 static void
-parseHeaderLine(const char buffer[],
-                char label[MAX_LABEL_LENGTH+1],
-                char value[MAX_VALUE_LENGTH+1]) {
+parseHeaderLine(const char * const buffer,
+                char *       const label,
+                char *       const value) {
+/*----------------------------------------------------------------------------
+   We truncate the label to MAX_LABEL_LENGTH and the value to
+   MAX_VALUE_LENGTH.  There must be at least that much space (plus space
+   for a terminating NUL) at 'label' and 'value', respectively.
+-----------------------------------------------------------------------------*/
+    unsigned int bufferCurs;
 
-    int buffer_curs;
-
-    buffer_curs = 0;
     /* Skip initial white space */
-    while (ISSPACE(buffer[buffer_curs])) buffer_curs++;
+    for (bufferCurs = 0; ISSPACE(buffer[bufferCurs]); ++bufferCurs) {}
 
     {
         /* Read off label, put as much as will fit into label[] */
-        int label_curs;
-        label_curs = 0;
-        while (!ISSPACE(buffer[buffer_curs]) && buffer[buffer_curs] != '\0') {
-            if (label_curs < MAX_LABEL_LENGTH)
-                label[label_curs++] = buffer[buffer_curs];
-            buffer_curs++;
+        unsigned int labelCurs;
+
+        for (labelCurs = 0;
+             !ISSPACE(buffer[bufferCurs]) && buffer[bufferCurs] != '\0';
+             ++bufferCurs) {
+            if (labelCurs < MAX_LABEL_LENGTH)
+                label[labelCurs++] = buffer[bufferCurs];
         }
-        label[label_curs] = '\0';  /* null terminate it */
+        label[labelCurs] = '\0';  /* null terminate it */
     }
 
     /* Skip white space between label and value */
-    while (ISSPACE(buffer[buffer_curs])) buffer_curs++;
+    while (ISSPACE(buffer[bufferCurs]))
+        ++bufferCurs;
 
-    /* copy value into value[] */
-    strncpy(value, buffer+buffer_curs, MAX_VALUE_LENGTH+1);
+    /* copy value into value[], truncating as necessary */
+    strncpy(value, buffer+bufferCurs, MAX_VALUE_LENGTH);
+    value[MAX_VALUE_LENGTH] = '\0';
 
     {
         /* Remove trailing white space from value[] */
-        int value_curs;
-        value_curs = strlen(value)-1;
-        while (value_curs >= 0 && ISSPACE(value[value_curs]))
-            value[value_curs--] = '\0';
+        unsigned int valueCurs;
+
+        for (valueCurs = strlen(value);
+             valueCurs > 0 && ISSPACE(value[valueCurs-1]);
+             --valueCurs);
+
+        value[valueCurs] = '\0';
     }
 }
+#pragma GCC diagnostic pop
 
 
 
@@ -936,6 +985,8 @@ pnm_readpaminit(FILE *       const file,
     pamP->plainformat = FALSE;
         /* See below for complex explanation of why this is FALSE. */
 
+    setSeekableAndRasterPos(pamP);
+
     interpretTupleType(pamP);
 
     validateComputableSize(pamP);
@@ -1044,8 +1095,6 @@ pnm_writepaminit(struct pam * const pamP) {
 
     interpretTupleType(pamP);
 
-    pamP->len = MIN(pamP->size, PAM_STRUCT_SIZE(opacity_plane));
-
     switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE:
         /* See explanation below of why we ignore 'pm_plain_output' here. */
@@ -1104,6 +1153,10 @@ pnm_writepaminit(struct pam * const pamP) {
         pm_error("Invalid format passed to pnm_writepaminit(): %d",
                  pamP->format);
     }
+
+    setSeekableAndRasterPos(pamP);
+
+    pamP->len = MIN(pamP->size, PAM_STRUCT_SIZE(raster_pos));
 }
 
 
@@ -1385,6 +1438,66 @@ pnm_backgroundtuple(struct pam *  const pamP,
 
 
 
+tuple
+pnm_backgroundtuplerow(const struct pam * const pamP,
+                       tuple            * const tuplerow) {
+/*-----------------------------------------------------------------------------
+  Guess a good background color for an image that contains row 'tuplerow'
+  (probably top or bottom edge), described by *pamP.
+
+  This function was copied from libpnm3.c's pnm_backgroundxelrow() and
+  modified to use tuples instead of xels.
+-----------------------------------------------------------------------------*/
+    tuple bgtuple;
+
+    bgtuple = pnm_allocpamtuple(pamP);
+
+    assert(pamP->width > 0);
+
+    if (pamP->width == 1)
+        pnm_assigntuple(pamP, bgtuple, tuplerow[0]);
+    else {
+        tuple const l = tuplerow[0];
+        tuple const r = tuplerow[pamP->width-1];
+
+        if (pnm_tupleequal(pamP, l, r)) {
+            /* Both corners are same color, so that's the background color,
+               without any extra computation.
+            */
+            pnm_assigntuple(pamP, bgtuple, l);
+        } else {
+            /* Corners are different */
+
+            if (pamP->depth == 1 && pamP->maxval == 1) {
+                /* It's black and white, with one corner black, the other
+                   white.  We consider whichever color is most prevalent in
+                   the row the background color.
+                */
+                unsigned int col;
+                unsigned int blackCt;
+
+                for (col = 0, blackCt = 0; col < pamP->width; ++col) {
+                    if (tuplerow[col] == 0)
+                        ++blackCt;
+                }
+                if (blackCt > pamP->width / 2)
+                    bgtuple[0] = 0;
+                else
+                    bgtuple[0] = pamP->maxval;
+            } else {
+                /* Use the cartesian mean of the two corner colors */
+                unsigned int plane;
+
+                for (plane = 0; plane < pamP->depth; ++plane)
+                    bgtuple[plane] = (l[plane] + r[plane])/2;
+            }
+        }
+    }
+    return bgtuple;
+}
+
+
+
 /*=============================================================================
    pm_system() Standard Input feeder and Standard Output accepter functions.
 =============================================================================*/
@@ -1424,3 +1537,6 @@ pm_accept_to_pamtuples(int    const pipeToSuckFd,
 
     pm_close(inpamP->file);
 }
+
+
+

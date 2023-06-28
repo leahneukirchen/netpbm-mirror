@@ -24,6 +24,18 @@
 #   The default target is either "merge" or "nonmerge", as determined by
 #   the DEFAULT_TARGET variable set by config.mk.
 
+# Debugging techniques:
+#
+#   To build so you can easily debug with a debugger such as Gdb:
+#
+#     make CFLAGS="-g -O0"
+#
+#   To debug libnetpbm, link it statically into the using program:
+#
+#     make NETPBMLIBTYPE=unixstatic pamcut
+#
+#     (Then 'ldd ./pamcut' to make sure it worked)
+#
 # About the "merge" target: Normally the Makefiles build separate
 # executables for each program.  However, on some systems (especially
 # those without shared libraries) this can mean a lot of space.  In
@@ -51,6 +63,11 @@
 # named in -C, not the directory the make file you are reading is
 # running in.  The -f option is necessary in order to have separate
 # source and object directories.
+
+# For the check targets, results go in a results directory, which you'll need
+# if a test fails to find out how it failed.  The default is
+# RESULTDIR_DEFAULT in config.mk.  Override it with
+# 'make resultdir=/tmp/myresultdir .
 
 ifeq ($(CURDIR)x,x)
 all package install:
@@ -266,7 +283,14 @@ init_package:
 	echo "Netpbm install package made by 'make package'" \
 	    >$(PKGDIR)/pkginfo
 	date >>$(PKGDIR)/pkginfo
-	echo Netpbm $(MAJOR).$(MINOR).$(POINT) >$(PKGDIR)/VERSION
+# For many years, the version string was "Netpbm x.y.z" instead of just
+# "x.y.z".  This was probably related to the fact that when you ask a Netpbm
+# program its version, it says "Netpbm x.y.z" to let you know it's the version
+# of the whole package, not just that program.  And also to distinguish from
+# the Pbmplus version of the program.  But this is highly unconventional in
+# pkg-config or config files, so we removed the "Netpbm" in Netpbm 10.90
+# (March 2020).
+	echo $(MAJOR).$(MINOR).$(POINT) >$(PKGDIR)/VERSION
 	$(INSTALL) -c -m 664 $(SRCDIR)/buildtools/README.pkg $(PKGDIR)/README
 	$(INSTALL) -c -m 664 $(SRCDIR)/buildtools/config_template \
 	  $(PKGDIR)/config_template
@@ -310,8 +334,8 @@ ifneq ($(LINUXSVGALIB),NONE)
   MERGELIBS += $(LINUXSVGALIB)
 endif
 
-ifneq ($(shell pkg-config --modversion libpng$(PNGVER)),)
-  PNGLD = $(shell pkg-config --libs libpng$(PNGVER))
+ifneq ($(shell $(PKG_CONFIG) --modversion libpng$(PNGVER)),)
+  PNGLD = $(shell $(PKG_CONFIG) --libs libpng$(PNGVER))
 else
   ifneq ($(shell libpng$(PNGVER)-config --version),)
     PNGLD = $(shell libpng$(PNGVER)-config --ldflags)
@@ -320,8 +344,8 @@ else
   endif
 endif
 
-ifneq ($(shell pkg-config --modversion libxml-2.0),)
-  XML2LD=$(shell pkg-config --libs libxml-2.0)
+ifneq ($(shell $(PKG_CONFIG) --modversion libxml-2.0),)
+  XML2LD=$(shell $(PKG_CONFIG) --libs libxml-2.0)
 else
   ifneq ($(shell xml2-config --version),)
     XML2LD=$(shell xml2-config --libs)
@@ -330,8 +354,8 @@ else
   endif
 endif
 
-ifneq ($(shell pkg-config x11 --libs),)
-  X11LD = $(shell pkg-config x11 --libs)
+ifneq ($(shell $(PKG_CONFIG) x11 --libs),)
+  X11LD = $(shell $(PKG_CONFIG) x11 --libs)
 else
   X11LD = $(shell $(LIBOPT) $(LIBOPTR) $(X11LIB))
 endif
@@ -349,7 +373,7 @@ endif
 #   1) Each directory produces an object file merge.o containing all the code
 #      in that directory and its descendants that needs to go into the 'netpbm'
 #      program.  The make files do this recursively, via a link command that
-#      combines multiple relocateable object files into one.  All we do here
+#      combines multiple relocatable object files into one.  All we do here
 #      at the top level is make merge.o and link it with netpbm.o and the
 #      libraries.
 #
@@ -449,6 +473,7 @@ CHECK_VARS = \
 	JASPERLIB="$(JASPERLIB)" \
 	JBIGLIB="$(JBIGLIB)" \
 	JPEGLIB="$(JPEGLIB)" \
+	LINUXSVGALIB="$(LINUXSVGALIB)" \
 	PNGLIB="$(PNGLIB)" \
 	TIFFLIB="$(TIFFLIB)" \
 	URTLIB="$(URTLIB)" \

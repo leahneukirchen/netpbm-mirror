@@ -30,9 +30,9 @@
 
 
 static void
-ReadIconFileHeader(FILE * const file, 
-                   int *  const widthP, 
-                   int *  const heightP, 
+ReadIconFileHeader(FILE * const file,
+                   int *  const widthP,
+                   int *  const heightP,
                    int *  const depthP,
                    int *  const bitsPerItemP) {
 
@@ -51,7 +51,7 @@ ReadIconFileHeader(FILE * const file,
                 ch == ' ')
             ;
         for (i = 0;
-             ch != '=' && ch != ',' && ch != '\n' && ch != '\t' && 
+             ch != '=' && ch != ',' && ch != '\n' && ch != '\t' &&
                  ch != ' ' && (i < (sizeof(variable) - 1));
              ++i) {
             variable[i] = ch;
@@ -84,7 +84,7 @@ ReadIconFileHeader(FILE * const file,
         } else if (streq(variable, "Valid_bits_per_item")) {
             if (value != 16 && value !=32)
                 pm_error("invalid Valid_bits_per_item");
-            *bitsPerItemP = value; 
+            *bitsPerItemP = value;
             ++fieldCt;
         }
     }
@@ -165,7 +165,7 @@ main(int argc, const char ** argv) {
                 else
                     grayrow[colChar] = data;
             } else
-                pm_error("error scanning bits item %u" , colChar);
+                pm_error("error scanning bits item %u", colChar);
         }
 
         /* output row */

@@ -1,12 +1,41 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmbrighten
-# Also requires:
+# Also requires: pnmnorm pambrighten pamsumm 
 
 # Failure message
 ## Ppmbrighten is sensitive to subtle differences in floating point math.
 ## If this test fails, please run the program and visually examine
 ## the output.
 
+echo "Test 1: Should print 1969633344 101484"
+
 ppmbrighten -v 100 testimg.ppm | cksum
-ppmbrighten -v 100 -normalize testimg.ppm | cksum
+
+echo "Test 2: Should print 295150171 101484"
+
 ppmbrighten -s 100 -v -50 testimg.ppm | cksum
+
+echo "Test 3: Should print 1"
+
+ppmbrighten -v 100 -normalize testimg.ppm | pamsumm --mean | \
+ awk '{print ($NF > 132.0) && ($NF < 132.2)}'
+
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test Error: Should print 1 four times"
+
+tmpdir=${tmpdir:-/tmp}
+output_ppm=${tmpdir}/output.ppm
+
+pambrighten -v -120 testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+pambrighten -s -120 testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+
+rm ${output_ppm}

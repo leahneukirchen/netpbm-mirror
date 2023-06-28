@@ -1,4 +1,28 @@
+Test: simple threshold
 1316122660 33894
+Test: Hilbert
 3342429190 33894
+2905156049 33894
+339841328 33894
+1633267750 33894
+Test: Dither-8
 3325147568 33894
+Test: Cluster-3
 4124728025 33894
+Test: Cluster-4
+4124728025 33894
+Test: Cluster-8
+3493215477 33894
+Test: Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1
+Expected failure 10 1
+Expected failure 11 1
+Expected failure 12 1

@@ -1,5 +1,3 @@
-Please cut and paste from below:
----------------------------------------------------------------------------
 Contents
 ========
 
@@ -7,6 +5,8 @@ Contents
   1.1 Standard test procedure
   1.2 Summary report
   1.3 Prerequisites
+    1.3.1 Required programs
+    1.3.2 Required locales
   1.4 Repeatability
   1.5 Execution time
   1.6 Testing package in designated directory
@@ -69,6 +69,9 @@ appear at the end:
 1.3 Prerequisites
 =================
 
+1.3.1 Required programs
+-----------------------
+
 The tests require the Bash command shell.  The script Execute-Tests has
 some expressions unique to Bash.  Quite old versions work, at least back
 to Bash v. 2.05b.
@@ -81,28 +84,54 @@ The tests use the following utilities:
  - sh
  - awk
 
+ - basename
  - cat
  - cksum
  - cmp
+ - comm
  - cp
  - cut
  - date
  - dirname
  - egrep
  - fgrep
- - grep
  - file
+ - grep
+ - gs
  - head
  - iconv
  - mkdir
  - mktemp
+ - perl
  - rm
  - sed
  - seq
+ - sh
+ - sort
  - tee
  - tr
  - uniq
+ - wc
 
+
+1.3.2 Required locales
+----------------------
+
+For full covereage the following locales must be available:
+
+  en_US.iso88591, en_US.utf8
+
+To check whether they are available, execute the following and see if they
+are reported:
+
+  locale -a | grep en_US
+
+The output should contain these lines:
+
+  en_US.iso88591
+  en_US.utf8
+
+If these locales are absent some pbmtext tests will be skipped.
 
 
 1.4 Repeatability

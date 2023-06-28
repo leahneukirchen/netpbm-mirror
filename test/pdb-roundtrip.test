@@ -1,37 +1,31 @@
 #! /bin/bash
 # This script tests: pamtopdbimg pdbimgtopam
-# Also requires: pnmtile pgmramp pamtopnm
+# Also requires: pbmnoise pgmramp pamtopnm pamdepth
 
 tmpdir=${tmpdir:-/tmp}
-tiled_pbm=${tmpdir}/tiled.pbm
+noise_pbm=${tmpdir}/noise.pbm
 ellipse_pgm=${tmpdir}/ellipse.pgm
 
 
-# Test 1. Should produce 2224198737 25671
-# 3 times 
-echo pbm grid
+echo "Test 1: pbm grid : Should print 2224198737 25671 three times"
 for flag in "-compressed" "-maybecompressed" "-uncompressed"
    do
    pamtopdbimg ${flag} testgrid.pbm | pdbimgtopam | cksum
    done
 
 
-# Test 2. Should produce 0 0 0
-# 4 times 
-echo pbm tiled
-pnmtile 160 160 testgrid.pbm > ${tiled_pbm}
+echo "Test 2: pbmnoise : Should print 0 0 0 0 : 0 four times" 
+pbmnoise -randomseed=1 160 160 > ${noise_pbm}
 for flag in "" "-compressed" "-maybecompressed" "-uncompressed"
   do
-  pamtopdbimg ${flag} ${tiled_pbm} | pdbimgtopam | pamtopnm | \
-    cmp -s - ${tiled_pbm}
+  pamtopdbimg ${flag} ${noise_pbm} | pdbimgtopam | pamtopnm | \
+    cmp -s - ${noise_pbm}
   echo ${PIPESTATUS[@]} ":" $?
   done
-rm ${tiled_pbm}
+rm ${noise_pbm}
 
 
-# Test 3. Should produce 0 0 0
-# 4 times
-echo pgm ellipse
+echo "Test 3: pgm ellipse : Should print 0 0 0 0 0 : 0 four times"
 pgmramp -ellipse 160 160 -maxval=3 > ${ellipse_pgm}
 for flag in "" "-compressed" "-maybecompressed" "-uncompressed"
     do
@@ -42,9 +36,7 @@ for flag in "" "-compressed" "-maybecompressed" "-uncompressed"
 rm ${ellipse_pgm}
 
 
-# Test 3. Should produce 0 0 0
-# 3 times 
-echo pgm ellipse -4depth
+echo "Test 4: pgm ellipse -4depth : Should print 0 0 0 0 0 : 0 three times"
 pgmramp -ellipse 160 160 -maxval=15 > ${ellipse_pgm}
 for flag in "-compressed" "-maybecompressed" "-uncompressed"
     do

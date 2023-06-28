@@ -1,14 +1,15 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamenlarge
 # Also requires: pamchannel pamseq pamtopnm
 
-
-# Test 1.  Should print 3424505894 913236
+echo "Test 1.  Should print 3424505894 913236"
 pamenlarge 3 testimg.ppm | cksum
-# Test 2.  Should print 3763267672 304422
+echo "Test 2.  Should print 3763267672 304422"
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
   pamenlarge 3 | cksum
-# Test 3.  Should print 3342398172 297
-pamenlarge 3 testgrid.pbm | cksum
-# Test 4.  Should print 398497872 6806
+echo "Test 3.  Should print 3748791794 3905"
+pamenlarge 3 maze.pbm | cksum
+echo "Test 4.  Should print 1618994486 1194"
+pamenlarge -xscale=21 -yscale=2 testgrid.pbm | cksum
+echo "Test 5.  Should print 398497872 6806"
 pamseq 3 4 | pamtopnm -assume | pamenlarge 3 -plain | cksum

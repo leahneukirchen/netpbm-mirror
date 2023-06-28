@@ -9,7 +9,7 @@
 
          We use methods we learned from Dirk Krause's program Bmeps.
          Previous versions used raster encoding code based on Bmeps
-         code.  This program does not used any code from Bmeps.
+         code.  This program does not use any code from Bmeps.
 
       2) Use our own filters and redefine /readstring .  This is aboriginal
          Netpbm code, from when Postscript was young.  The filters are
@@ -125,8 +125,8 @@ static bool verbose;
 
 
 static void
-parseDpi(const char *   const dpiOpt, 
-         unsigned int * const dpiXP, 
+parseDpi(const char *   const dpiOpt,
+         unsigned int * const dpiXP,
          unsigned int * const dpiYP) {
 
     char *dpistr2;
@@ -253,9 +253,9 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "showpage",    OPT_FLAG,  NULL, &showpage,                0);
     OPTENT3(0, "verbose",     OPT_FLAG,  NULL, &cmdlineP->verbose,       0);
     OPTENT3(0, "debug",       OPT_FLAG,  NULL, &cmdlineP->debug,         0);
-    OPTENT3(0, "level",       OPT_UINT, &cmdlineP->level, 
+    OPTENT3(0, "level",       OPT_UINT, &cmdlineP->level,
             &cmdlineP->levelSpec,              0);
-    
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
@@ -293,7 +293,7 @@ parseCommandLine(int argc, const char ** argv,
 
     validateCompDimension(width, 72, "-width value");
     validateCompDimension(height, 72, "-height value");
-    
+
     cmdlineP->width  = width * 72;
     cmdlineP->height = height * 72;
 
@@ -318,7 +318,7 @@ parseCommandLine(int argc, const char ** argv,
     if (cmdlineP->bitspersampleSpec)
         validateBps_1_2_4_8_12(cmdlineP->bitspersample);
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -326,7 +326,7 @@ parseCommandLine(int argc, const char ** argv,
     else
         cmdlineP->inputFileName = argv[1];
 
-    free(option_def); 
+    free(option_def);
 }
 
 
@@ -432,7 +432,7 @@ addToPidList(pid_t * const pidList,
 /*===========================================================================
   The output encoder
   ===========================================================================*/
-    
+
 enum OutputType {AsciiHex, Ascii85};
 
 typedef struct {
@@ -453,7 +453,7 @@ bytesPerRow (unsigned int const cols,
 -----------------------------------------------------------------------------*/
     unsigned int retval;
 
-    assert(bitsPerSample==1 || bitsPerSample==2 || bitsPerSample==4 || 
+    assert(bitsPerSample==1 || bitsPerSample==2 || bitsPerSample==4 ||
            bitsPerSample==8 || bitsPerSample==12);
 
     switch (bitsPerSample) {
@@ -519,7 +519,7 @@ typedef void FilterFn(FILE *          const ifP,
     /* This is a function that can be run in a separate process to do
        arbitrary modifications of the raster data stream.
     */
-       
+
 
 
 #ifndef NOFLATE
@@ -545,7 +545,7 @@ initZlib(z_stream * const strmP) {
 
 static FilterFn flateFilter;
 
-static void 
+static void
 flateFilter(FILE *          const ifP,
             FILE *          const ofP,
             OutputEncoder * const oeP) {
@@ -600,12 +600,12 @@ flateFilter(FILE *          const ifP,
     } while (flush != Z_FINISH);
 
     free(in);
-    free(out); 
+    free(out);
     deflateEnd(&strm);
     fclose(ifP);
     fclose(ofP);
 #else
-    assert(false);    /* filter is never used */ 
+    assert(false);    /* filter is never used */
 #endif
 }
 
@@ -687,7 +687,7 @@ asciiHexFilter(FILE *          const ifP,
             unsigned int i;
 
             for (i = 0; i < readCt; ++i) {
-                int const item = inbuff[i]; 
+                int const item = inbuff[i];
                 outbuff[i*2]   = hexits[item >> 4];
                 outbuff[i*2+1] = hexits[item & 15];
             }
@@ -736,7 +736,7 @@ ascii85Filter(FILE *          const ifP,
                 ++outcount;
                 count = 0;
             } else if (count == 4) {
-                outbuff[4] = value % 85 + 33;  value/=85; 
+                outbuff[4] = value % 85 + 33;  value/=85;
                 outbuff[3] = value % 85 + 33;  value/=85;
                 outbuff[2] = value % 85 + 33;  value/=85;
                 outbuff[1] = value % 85 + 33;
@@ -745,7 +745,7 @@ ascii85Filter(FILE *          const ifP,
                 writeFileChar(outbuff, count + 1, "ASCII 85 filter", ofP);
 
                 count = value = 0;
-                outcount += 5; 
+                outcount += 5;
             }
 
             if (outcount > 75) {
@@ -794,9 +794,9 @@ closeAllBut(int const saveFd0,
    'saveFd1', and 'saveFd2'.
 
    This is helpful because even if this process doesn't touch other file
-   desriptors, its very existence will keep the files open.
+   descriptors, its very existence will keep the files open.
 -----------------------------------------------------------------------------*/
-    
+
     /* Unix provides no good way to do this; we just assume file descriptors
        above 9 are not used in this program; Caller must ensure that is true.
     */
@@ -829,15 +829,15 @@ spawnFilter(FILE *          const ofP,
     pid_t rc;
 
     makePipe(pipeFd);
-    
+
     rc = fork();
 
     if (rc == (pid_t)-1)
-        pm_error("fork() of filter process failed.  errno=%d (%s)", 
+        pm_error("fork() of filter process failed.  errno=%d (%s)",
                  errno, strerror(errno));
     else if (rc == 0) {
         /* This is the child process */
- 
+
         FILE * ifP;
 
         ifP = fdopen(pipeFd[0], "r");
@@ -892,11 +892,11 @@ addFilter(const char *    const description,
     pid_t pid;
 
     spawnFilter(oldFeedFileP, filter, oeP, &newFeedFileP, &pid);
-            
+
     if (verbose)
         pm_message("%s filter spawned: pid %u",
                    description, (unsigned)pid);
-    
+
     if (debug) {
         int const outFd    = fileno(oldFeedFileP);
         int const supplyFd = fileno(newFeedFileP);
@@ -971,7 +971,7 @@ waitForChildren(const pid_t * const pidList) {
        signal is the default), the process' children do not become
        zombies.  Consequently, waitpid() always fails with ECHILD - but
        nonetheless waits for the child to exit.
-    
+
        We expect the process not to have the action for SIGCHLD set that
        way.
     */
@@ -1004,9 +1004,9 @@ waitForChildren(const pid_t * const pidList) {
 
 
 static void
-validateComputableBoundingBox(float const scols, 
+validateComputableBoundingBox(float const scols,
                               float const srows,
-                              float const llx, 
+                              float const llx,
                               float const lly) {
 
     float const bbWidth  = llx + scols + 0.5;
@@ -1036,22 +1036,22 @@ warnUserRescaling(float const scale) {
 
 
 static void
-computeImagePosition(int     const dpiX, 
-                     int     const dpiY, 
-                     int     const icols, 
+computeImagePosition(int     const dpiX,
+                     int     const dpiY,
+                     int     const icols,
                      int     const irows,
                      bool    const mustturn,
                      bool    const canturn,
                      bool    const center,
-                     int     const pagewid, 
-                     int     const pagehgt, 
+                     int     const pagewid,
+                     int     const pagehgt,
                      float   const requestedScale,
                      float   const imagewidth,
                      float   const imageheight,
                      bool    const equalpixels,
                      float * const scolsP,
                      float * const srowsP,
-                     float * const llxP, 
+                     float * const llxP,
                      float * const llyP,
                      bool *  const turnedP ) {
 /*----------------------------------------------------------------------------
@@ -1091,7 +1091,7 @@ computeImagePosition(int     const dpiX,
        rotated if applicable
     */
     bool shouldturn;  /* The image fits the page better if we turn it */
-    
+
     if (icols > irows && pagehgt > pagewid)
         shouldturn = TRUE;
     else if (irows > icols && pagewid > pagehgt)
@@ -1120,27 +1120,27 @@ computeImagePosition(int     const dpiX,
             scale = (float) imagewidth/cols;
         else
             scale = MIN((float)imagewidth/cols, (float)imageheight/rows);
-    
+
         *scolsP = cols*scale;
         *srowsP = rows*scale;
     } else {
         /* He didn't give us a bounding box for the image so figure
            out output image size from other inputs.
         */
-        const int devpixX = dpiX / 72.0 + 0.5;        
-        const int devpixY = dpiY / 72.0 + 0.5;        
+        const int devpixX = dpiX / 72.0 + 0.5;
+        const int devpixY = dpiY / 72.0 + 0.5;
         /* How many device pixels make up 1/72 inch, rounded to
            nearest integer */
         const float pixfacX = 72.0 / dpiX * devpixX;  /* 1, approx. */
         const float pixfacY = 72.0 / dpiY * devpixY;  /* 1, approx. */
         float scale;
 
-        scale = MIN(requestedScale, 
+        scale = MIN(requestedScale,
                     MIN((float)pagewid/cols, (float)pagehgt/rows));
 
         *scolsP = scale * cols * pixfacX;
         *srowsP = scale * rows * pixfacY;
-    
+
         if (scale != requestedScale)
             warnUserRescaling(scale);
 
@@ -1236,7 +1236,7 @@ defineReadstring(bool const rle) {
 static void
 setupReadstringNative(bool         const rle,
                       bool         const color,
-                      unsigned int const icols, 
+                      unsigned int const icols,
                       unsigned int const bitsPerSample) {
 /*----------------------------------------------------------------------------
   Write to Standard Output statements to define /readstring and also
@@ -1247,7 +1247,7 @@ setupReadstringNative(bool         const rle,
         /* Size of row buffer, padded up to byte boundary. */
 
     defineReadstring(rle);
-    
+
     if (color) {
         printf("/rpicstr %d string def\n", bytesPerRow);
         printf("/gpicstr %d string def\n", bytesPerRow);
@@ -1266,18 +1266,18 @@ putFilters(unsigned int const postscriptLevel,
            bool         const color) {
 
     assert(postscriptLevel > 1);
-    
+
     /* We say to decode flate, then rle, so Caller must ensure it encodes
-       rel, then flate.
+       rle, then flate.
     */
 
     if (ascii85)
         printf("/ASCII85Decode filter ");
-    else 
+    else
         printf("/ASCIIHexDecode filter ");
     if (flate)
         printf("/FlateDecode filter ");
-    if (rle) 
+    if (rle)
         printf("/RunLengthDecode filter ");
 }
 
@@ -1311,7 +1311,7 @@ putSetup(unsigned int const dictSize,
     if (dictSize > 0)
         /* inputf {r,g,b,}pictsr readstring readrlestring rlestring */
         printf("%u dict begin\n", dictSize);
-    
+
     if (!psFilter)
         setupReadstringNative(rle, color, icols, bitsPerSample);
 
@@ -1353,7 +1353,7 @@ putInitPsFilter(unsigned int const postscriptLevel,
     putFilters(postscriptLevel, rle, flate, ascii85, color);
 
     putImage(filterTrue, color);
-    
+
     printf(" } exec");
 }
 
@@ -1365,7 +1365,7 @@ putInitReadstringNative(bool const color) {
     bool const filterFalse = FALSE;
 
     putReadstringNative(color);
-    
+
     putImage(filterFalse, color);
 }
 
@@ -1373,18 +1373,18 @@ putInitReadstringNative(bool const color) {
 
 static void
 putInit(unsigned int const postscriptLevel,
-        char         const name[], 
-        int          const icols, 
-        int          const irows, 
-        float        const scols, 
+        char         const name[],
+        int          const icols,
+        int          const irows,
+        float        const scols,
         float        const srows,
-        float        const llx, 
+        float        const llx,
         float        const lly,
         int          const bitsPerSample,
-        int          const pagewid, 
+        int          const pagewid,
         int          const pagehgt,
-        bool         const color, 
-        bool         const turned, 
+        bool         const color,
+        bool         const turned,
         bool         const rle,
         bool         const flate,
         bool         const ascii85,
@@ -1438,7 +1438,7 @@ putInit(unsigned int const postscriptLevel,
 
 
 static void
-putEnd(bool         const showpage, 
+putEnd(bool         const showpage,
        bool         const psFilter,
        bool         const ascii85,
        unsigned int const dictSize,
@@ -1486,7 +1486,7 @@ validateBpsRequest(unsigned int const bitsPerSampleReq,
                  "-psfilter, the maximum is 8", bitsPerSampleReq);
 }
 
-    
+
 
 static unsigned int
 bpsFromInput(unsigned int const bitsRequiredByMaxval,
@@ -1553,7 +1553,7 @@ warnUserAboutReducedDepth(unsigned int const bitsGot,
 
 static void
 computeDepth(xelval         const inputMaxval,
-             unsigned int   const postscriptLevel, 
+             unsigned int   const postscriptLevel,
              bool           const psFilter,
              unsigned int   const bitsPerSampleReq,
              unsigned int * const bitsPerSampleP) {
@@ -1584,7 +1584,7 @@ computeDepth(xelval         const inputMaxval,
                    "%u bits per sample, so maxval = %u",
                    inputMaxval, *bitsPerSampleP, psMaxval);
     }
-}    
+}
 
 
 
@@ -1643,7 +1643,7 @@ ba_add(BitAccumulator * const baP,
 /*----------------------------------------------------------------------------
   Combine bit sequences that do not fit into a byte.
 
-  Used when bitsPerSample =1, 2, 4.  
+  Used when bitsPerSample =1, 2, 4.
   Logic also works for bitsPerSample = 8, 16.
 
   The accumulator, baP->value is unsigned int (usually 32 bits), but
@@ -1725,7 +1725,7 @@ flushOutput(BitAccumulator * const baP,
 
   convertRowNative and convertRowPsFilter are the general converters.
   They are quite similar, the differences being:
-  (1) Native output separates the color planes: 
+  (1) Native output separates the color planes:
   (RRR...RRR GGG...GGG BBB...BBB),
   whereas psFilter does not:
   (RGB RGB RGB RGB ......... RGB).
@@ -1765,10 +1765,10 @@ convertRowPbm(struct pam *     const pamP,
 
 
 static void
-convertRowNative(struct pam *     const pamP, 
-                 tuple *                tuplerow, 
+convertRowNative(struct pam *     const pamP,
+                 tuple *                tuplerow,
                  unsigned int     const bitsPerSample,
-                 FILE           * const fP) { 
+                 FILE           * const fP) {
 
     unsigned int const psMaxval = pm_bitstomaxval(bitsPerSample);
 
@@ -1795,7 +1795,7 @@ static void
 convertRowPsFilter(struct pam *     const pamP,
                    tuple *                tuplerow,
                    unsigned int     const bitsPerSample,
-                   FILE           * const fP) { 
+                   FILE           * const fP) {
 
     unsigned int const psMaxval = pm_bitstomaxval(bitsPerSample);
 
@@ -1828,7 +1828,7 @@ selectPostscriptLevel(bool           const levelIsGiven,
                       bool           const psFilter,
                       unsigned int * const postscriptLevelP) {
 
-    unsigned int const maxPermittedLevel = 
+    unsigned int const maxPermittedLevel =
         levelIsGiven ? levelGiven : UINT_MAX;
     unsigned int minPossibleLevel;
 
@@ -1877,7 +1877,7 @@ convertRaster(struct pam * const inpamP,
    Read the raster described by *inpamP, and write a bit stream of samples
    to *fP.  This stream has to be compressed and converted to text before it
    can be part of a Postscript program.
-   
+
    'psFilter' means to do the conversion using built in Postscript filters, as
    opposed to our own filters via /readstring.
 
@@ -1897,7 +1897,7 @@ convertRaster(struct pam * const inpamP,
     } else  {
         tuple *tuplerow;
         unsigned int row;
-        
+
         tuplerow = pnm_allocpamrow(inpamP);
 
         for (row = 0; row < inpamP->height; ++row) {
@@ -1920,31 +1920,31 @@ convertRaster(struct pam * const inpamP,
    pipe but this program's output, then we don't want it closed when the
    filter terminates because we'll need it to be open for the next image
    the program converts (with a whole new chain of filters).
-   
-   To prevent the progam output file from getting closed, we pass a
+
+   To prevent the program output file from getting closed, we pass a
    duplicate of it to spawnFilters() and keep the original open.
 */
 
 
 
 static void
-convertPage(FILE *       const ifP, 
-            int          const turnflag, 
-            int          const turnokflag, 
+convertPage(FILE *       const ifP,
+            int          const turnflag,
+            int          const turnokflag,
             bool         const psFilter,
-            bool         const rle, 
+            bool         const rle,
             bool         const flate,
             bool         const ascii85,
             bool         const setpage,
             bool         const showpage,
-            bool         const center, 
+            bool         const center,
             float        const scale,
-            int          const dpiX, 
-            int          const dpiY, 
-            int          const pagewid, 
+            int          const dpiX,
+            int          const dpiY,
+            int          const pagewid,
             int          const pagehgt,
-            int          const imagewidth, 
-            int          const imageheight, 
+            int          const imagewidth,
+            int          const imageheight,
             bool         const equalpixels,
             unsigned int const bitsPerSampleReq,
             char         const name[],
@@ -1952,7 +1952,7 @@ convertPage(FILE *       const ifP,
             bool         const vmreclaim,
             bool         const levelIsGiven,
             unsigned int const levelGiven) {
-    
+
     struct pam inpam;
     float scols, srows;
     float llx, lly;
@@ -1960,7 +1960,7 @@ convertPage(FILE *       const ifP,
     bool color;
     unsigned int postscriptLevel;
     unsigned int bitsPerSample;
-    unsigned int dictSize;  
+    unsigned int dictSize;
         /* Size of Postscript dictionary we should define */
     OutputEncoder oe;
     pid_t filterPidList[MAX_FILTER_CT + 1];
@@ -1974,19 +1974,19 @@ convertPage(FILE *       const ifP,
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     validateCompDimension(inpam.width, 16, "Input image width");
-    
+
     if (!STRSEQ(inpam.tuple_type, PAM_PBM_TUPLETYPE) &&
         !STRSEQ(inpam.tuple_type, PAM_PGM_TUPLETYPE) &&
         !STRSEQ(inpam.tuple_type, PAM_PPM_TUPLETYPE))
         pm_error("Unrecognized tuple type %s.  This program accepts only "
-                 "PBM, PGM, PPM, and equivalent PAM input images", 
+                 "PBM, PGM, PPM, and equivalent PAM input images",
                  inpam.tuple_type);
 
     color = STRSEQ(inpam.tuple_type, PAM_PPM_TUPLETYPE);
-    
-    selectPostscriptLevel(levelIsGiven, levelGiven, color, 
+
+    selectPostscriptLevel(levelIsGiven, levelGiven, color,
                           dict, flate, ascii85, psFilter, &postscriptLevel);
-    
+
     if (color)
         pm_message("generating color Postscript program.");
 
@@ -1996,16 +1996,16 @@ convertPage(FILE *       const ifP,
     /* In positioning/scaling the image, we treat the input image as if
        it has a density of 72 pixels per inch.
     */
-    computeImagePosition(dpiX, dpiY, inpam.width, inpam.height, 
+    computeImagePosition(dpiX, dpiY, inpam.width, inpam.height,
                          turnflag, turnokflag, center,
                          pagewid, pagehgt, scale, imagewidth, imageheight,
                          equalpixels,
                          &scols, &srows, &llx, &lly, &turned);
 
     determineDictionaryRequirement(dict, psFilter, &dictSize);
-    
-    putInit(postscriptLevel, name, inpam.width, inpam.height, 
-            scols, srows, llx, lly, bitsPerSample, 
+
+    putInit(postscriptLevel, name, inpam.width, inpam.height,
+            scols, srows, llx, lly, bitsPerSample,
             pagewid, pagehgt, color,
             turned, rle, flate, ascii85, setpage, psFilter, dictSize);
 
@@ -2017,7 +2017,7 @@ convertPage(FILE *       const ifP,
         /* spawnFilters() closes this.  See FILE MANAGEMENT above */
 
     spawnFilters(filterChainOfP, &oe, &feedFileP, filterPidList);
- 
+
     convertRaster(&inpam, bitsPerSample, psFilter, feedFileP);
 
     fflush(feedFileP);
@@ -2081,17 +2081,17 @@ main(int argc, const char * argv[]) {
 
         eof = FALSE;  /* There is always at least one image */
         for (imageSeq = 0; !eof; ++imageSeq) {
-            convertPage(ifP, cmdline.mustturn, cmdline.canturn, 
+            convertPage(ifP, cmdline.mustturn, cmdline.canturn,
                         cmdline.psfilter,
-                        cmdline.rle, cmdline.flate, cmdline.ascii85, 
+                        cmdline.rle, cmdline.flate, cmdline.ascii85,
                         cmdline.setpage, cmdline.showpage,
                         cmdline.center, cmdline.scale,
                         cmdline.dpiX, cmdline.dpiY,
-                        cmdline.width, cmdline.height, 
-                        cmdline.imagewidth, cmdline.imageheight, 
+                        cmdline.width, cmdline.height,
+                        cmdline.imagewidth, cmdline.imageheight,
                         cmdline.equalpixels,
                         cmdline.bitspersampleSpec ? cmdline.bitspersample : 0,
-                        name, 
+                        name,
                         cmdline.dict, cmdline.vmreclaim,
                         cmdline.levelSpec, cmdline.level);
             pnm_nextimage(ifP, &eof);
@@ -2121,7 +2121,7 @@ main(int argc, const char * argv[]) {
 **  wrzl@gup.uni-linz.ac.at.
 **
 ** July 2011 afu
-** row convertors rewritten, fast PBM-only row convertor added,
+** row converters rewritten, fast PBM-only row converter added,
 ** rle compression slightly modified, flate compression added
 ** ascii85 output end added.
 **

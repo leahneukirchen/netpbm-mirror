@@ -30,7 +30,17 @@
 #include "pbm.h"
 #include "pbmfont.h"
 
-#define  MAXLINECHARS 5000
+
+/* Max length of input text.  Valid for text which is part of the
+   command line and also for text fed from standard input.
+   Note that newline is counted as a character.
+*/
+#define  MAXLINECHARS 4999
+
+/* We add one slot for the terminating NULL charter
+   and another slot as a margin to detect overruns.
+*/
+#define  LINEBUFSIZE  (MAXLINECHARS + 2)
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -46,6 +56,7 @@ struct CmdlineInfo {
     unsigned int nomargins;  /* -nomargins option specified  */
     unsigned int dryrun;     /* -dry-run option specified */
     unsigned int textdump;   /* -text-dump option specified */
+    unsigned int entirefont; /* -load-entire-font option specified */
     unsigned int verbose;    /* -verbose option specified */
         /* undocumented option */
     unsigned int dumpsheet; /* font data sheet in PBM format for -font */
@@ -61,7 +72,7 @@ textFmCmdLine(int argc, const char ** argv) {
     unsigned int i;
     unsigned int totaltextsize;
 
-    MALLOCARRAY(text, MAXLINECHARS+1);
+    MALLOCARRAY(text, LINEBUFSIZE);
 
     if (!text)
         pm_error("Unable to allocate memory for a buffer of up to %u "
@@ -69,13 +80,15 @@ textFmCmdLine(int argc, const char ** argv) {
 
     text[0] = '\0';
 
-    for (i = 1, totaltextsize = 1; i < argc; ++i) {
+    for (i = 1, totaltextsize = 0; i < argc; ++i) {
         if (i > 1) {
             strcat(text, " ");
         }
-        totaltextsize += strlen(argv[i]) + 1;
+        totaltextsize += strlen(argv[i]) + (i > 1 ? 1 : 0);
         if (totaltextsize > MAXLINECHARS)
-            pm_error("input text too long");
+           pm_error("Input text is %u characters.  "
+                    "Cannot process longer than %u",
+                    totaltextsize, (unsigned int) MAXLINECHARS);
         strcat(text, argv[i]);
     }
     MALLOCARRAY(wtext, totaltextsize * sizeof(PM_WCHAR));
@@ -84,7 +97,7 @@ textFmCmdLine(int argc, const char ** argv) {
         pm_error("Unable to allocate memory for a buffer of up to %u "
                  "wide characters of text", totaltextsize);
 
-    for (i = 0; i < totaltextsize; ++i)
+    for (i = 0; i < totaltextsize + 1; ++i)
         wtext[i] = (PM_WCHAR) text[i];
 
     free(text);
@@ -122,6 +135,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "dry-run",    OPT_FLAG,   NULL, &cmdlineP->dryrun,    0);
     OPTENT3(0, "text-dump",  OPT_FLAG,   NULL, &cmdlineP->textdump,  0);
     OPTENT3(0, "dump-sheet", OPT_FLAG,   NULL, &cmdlineP->dumpsheet, 0);
+    OPTENT3(0, "load-entire-font", OPT_FLAG,   NULL, &cmdlineP->entirefont, 0);
 
     /* Set the defaults */
     cmdlineP->font    = NULL;
@@ -153,6 +167,11 @@ parseCommandLine(int argc, const char ** argv,
     else if (cmdlineP->lspace < -pbm_maxfontheight())
         pm_error("negative -lspace value too large");
 
+    if (cmdlineP->font != NULL && cmdlineP->builtin != NULL)
+        pm_error("You cannot specify both -font and -builtin");
+    else if (cmdlineP->font == NULL && cmdlineP->entirefont)
+        pm_error("You cannot specify -load-entire-font without -font");
+
     if (cmdlineP->textdump) {
         if (cmdlineP->dryrun)
             pm_error("You cannot specify both -dry-run and -text-dump");
@@ -170,9 +189,8 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("-wchar is not valid when text is from command line");
 
         cmdlineP->text = textFmCmdLine(argc, argv);
-
-
     }
+
     free(option_def);
 }
 
@@ -193,12 +211,10 @@ reportFont(const struct font2 * const fontP) {
 
 
 
-
-
-
 static struct font2 *
-font2FromFile(const char * const fileName,
-              PM_WCHAR     const maxmaxglyph) {
+font2FromFile(const char *               const fileName,
+              PM_WCHAR                   const maxmaxglyph,
+              const struct pm_selector * const selectorP) {
 
     struct font2 * font2P;
 
@@ -211,7 +227,7 @@ font2FromFile(const char * const fileName,
         /* This is the normal program flow */
         pm_setjmpbuf(&jmpbuf);
 
-        font2P = pbm_loadfont2(fileName, maxmaxglyph);
+        font2P = pbm_loadfont2select(fileName, maxmaxglyph, selectorP);
 
         pm_setjmpbuf(NULL);
     } else {
@@ -228,23 +244,176 @@ font2FromFile(const char * const fileName,
 
 
 
+static bool
+codepointIsValid(struct font2 * const fontP,
+                 PM_WCHAR       const codepoint) {
+/*----------------------------------------------------------------------------
+  'codepoint' is a valid entry in the font indicated by 'fontP'.
+-----------------------------------------------------------------------------*/
+    bool retval;
+
+    assert(pm_selector_is_marked(fontP->selectorP, codepoint));
+
+    if (codepoint > fontP->maxglyph || fontP->glyph[codepoint] == NULL)
+        retval = false;
+    else retval = true;
+
+    return (retval);
+
+}
+
+
+
+static const char *
+charDescription(PM_WCHAR const codepoint) {
+/*----------------------------------------------------------------------------
+   Descriptive string for codepoint 'codepoint'.
+
+   Certain codepoints appear frequently in text files and cause problems when
+   missing in the font set, so we give those descriptions.  For other
+   codepoint, we just return a null string.
+-----------------------------------------------------------------------------*/
+
+  const char * name;
+
+  switch (codepoint) {
+  case '\r' : name="carriage return";  break;
+  case '\n' : name="line feed";        break; /* for future use */
+  case '\t' : name="tab";              break; /* for future use */
+  case ' '  : name="space";            break;
+  case 0xFEFF: name="byte order mark"; break;
+  default : name=""; break;
+  }
+
+  return name;
+}
+
+
+
+enum FixMode {SILENT, /* convert silently */
+              WARN,   /* output message to stderr */
+              QUIT    /* abort */ };
+
+
+
 static void
-computeFont(struct CmdlineInfo const cmdline,
-            struct font2 **    const fontPP) {
+reportAbsentGlyphs(bool                       const wchar,
+                   struct font2 *             const fontP,
+                   const struct pm_selector * const textSelectorP,
+                   unsigned int *             const missingCharCtP) {
+/*----------------------------------------------------------------------------
+   Compare the glyph entries in *fontP with the requests in *textSelectorP.
 
-    struct font2 * font2P;
+   Note that we may need the space character as a substitute for missing
+   glyphs while the input text has no spaces.  In rare cases the font may not
+   have a space character.
 
-    if (cmdline.font)
-        font2P = font2FromFile(cmdline.font,
-                               cmdline.wchar ? PM_FONT2_MAXGLYPH :
-                                               PM_FONT_MAXGLYPH);
-    else if (cmdline.builtin)
+   Currently, this program reads the font file only once.  A future version
+   may opt to read it a second time to load the substitute glyph.
+-----------------------------------------------------------------------------*/
+    PM_WCHAR     codepoint;
+    unsigned int missingCharCt;
+
+    for (codepoint = textSelectorP->min, missingCharCt = 0;
+         codepoint <= textSelectorP->max; ++codepoint) {
+
+        if (pm_selector_is_marked(textSelectorP, codepoint) &&
+            !codepointIsValid(fontP, codepoint)) {
+            ++missingCharCt;
+            if (missingCharCt == 1)  { /* initial */
+                pm_message("failed to load glyph data for these code points "
+                           "in input:");
+            }
+
+            pm_message(wchar ? "+%05X %s" : "%02X %s",
+                       (unsigned int) codepoint,
+                       charDescription(codepoint));
+        }
+    }
+
+    *missingCharCtP = missingCharCt;
+}
+
+
+
+static void
+validateFont(bool                       const wchar,
+             struct font2 *             const fontP,
+             const struct pm_selector * const textSelectorP,
+             enum   FixMode             const fixmode,
+             bool                       const verbose,
+             bool *                     const hasAllCharsP) {
+/*----------------------------------------------------------------------------
+   If any glyphs required by the text indicated by *textSelectorP are missing
+   from font *fontP, issue a warning message or abort the program according to
+   'fixmode'.
+
+   Abort the program if one or more characters are missing and the space
+   character is one of them.
+
+   Return (if we return) as *hasAllCharsP whether the font has all the glyphs.
+-----------------------------------------------------------------------------*/
+    unsigned int missingCharCt;
+
+    assert (textSelectorP != NULL);
+    assert(pm_selector_marked_ct(textSelectorP) >= 0);
+
+    reportAbsentGlyphs(wchar, fontP, textSelectorP, &missingCharCt);
+
+    if (missingCharCt > 0) {
+        if (verbose)
+            pm_message("%u characters absent in font", missingCharCt);
+
+        if (fixmode == QUIT)
+            pm_error("aborting");
+        else if (!codepointIsValid(fontP, L' '))
+            pm_error ("replacement character (space) absent; aborting");
+        else
+            pm_message("undefined code points will be converted to space");
+    }
+
+    *hasAllCharsP = (missingCharCt == 0);
+}
+
+
+
+static void
+computeFont(struct CmdlineInfo         const cmdline,
+            struct font2 **            const fontPP,
+            const struct pm_selector * const textSelectorP,
+            enum   FixMode             const fixmode,
+            bool *                     const fontHasAllCharsP) {
+
+    struct font2 *       font2P;
+    struct pm_selector * fontSelectorP;
+
+    if (cmdline.font) {
+        if(cmdline.entirefont)
+            fontSelectorP = NULL;
+        else if(!pm_selector_is_marked(textSelectorP, L' ')) {
+            pm_selector_copy(MAX(textSelectorP->max, L' '),
+                             textSelectorP, &fontSelectorP);
+            pm_selector_mark(fontSelectorP, L' ');
+        } else
+            fontSelectorP = (struct pm_selector *) textSelectorP;
+
+        font2P = font2FromFile(cmdline.font, cmdline.wchar ?
+                               PM_FONT2_MAXGLYPH : PM_FONT_MAXGLYPH,
+                               fontSelectorP);
+    } else if (cmdline.builtin)
         font2P = pbm_defaultfont2(cmdline.builtin);
     else
         font2P = pbm_defaultfont2(cmdline.wchar ? "bdf" : "bdf");
 
-    if (cmdline.verbose)
+    if (cmdline.verbose) {
         reportFont(font2P);
+        pm_message("%u code points found in text",
+                   pm_selector_marked_ct(textSelectorP));
+    }
+
+    validateFont(cmdline.wchar, font2P, textSelectorP, fixmode,
+                 cmdline.verbose,
+                 fontHasAllCharsP);
 
     *fontPP = font2P;
 }
@@ -253,9 +422,6 @@ computeFont(struct CmdlineInfo const cmdline,
 
 struct Text {
     PM_WCHAR **  textArray;  /* malloc'ed */
-        /* This is strictly characters that are in user's font - no control
-           characters, no undefined code points.
-        */
     unsigned int allocatedLineCount;
     unsigned int lineCount;
 };
@@ -296,28 +462,19 @@ freeTextArray(struct Text const text) {
 
 
 
-enum FixMode {SILENT, /* convert silently */
-              WARN,   /* output message to stderr */
-              QUIT    /* abort */ };
-
 
 static void
-fixControlChars(const PM_WCHAR  * const input,
-                struct font2    * const fontP,
-                const PM_WCHAR ** const outputP,
-                enum FixMode      const fixMode) {
+setupSelector(const PM_WCHAR *     const input,
+              const PM_WCHAR **    const outputP,
+              struct pm_selector * const selectorP) {
 /*----------------------------------------------------------------------------
-   Return a translation of input[] that can be rendered as glyphs in
-   the font 'fontP'.  Return it as newly malloced *outputP.
+   Read through input[] and record the codepoints encountered.  Return it as
+   newly malloced *outputP.
 
    Expand tabs to spaces.
 
    Remove any trailing newline.  (But leave intermediate ones as line
    delimiters).
-
-   Depending on value of fixMode, turn anything that isn't a code point
-   in the font to a single space (which isn't guaranteed to be in the
-   font either, of course).
 -----------------------------------------------------------------------------*/
     /* We don't know in advance how big the output will be because of the
        tab expansions.  So we make sure before processing each input
@@ -357,33 +514,19 @@ fixControlChars(const PM_WCHAR  * const input,
             unsigned int const nextTabStop =
                 (outCursor + tabSize) / tabSize * tabSize;
 
-            if (fontP->glyph[L' '] == NULL)
-                pm_error("space character not defined in font");
-
             while (outCursor < nextTabStop)
                 output[outCursor++] = L' ';
-        } else if (currentChar > fontP->maxglyph ||
-                   !fontP->glyph[currentChar]) {
-            if (currentChar > PM_FONT2_MAXGLYPH)
+
+            pm_selector_mark(selectorP, L' ');
+
+        } else if (currentChar > PM_FONT2_MAXGLYPH)
                 pm_message("code point %X is beyond what this program "
                            "can handle.  Max=%X",
                            (unsigned int)currentChar, PM_FONT2_MAXGLYPH);
-
-            /* Turn this unknown char into a single space. */
-            if (fontP->glyph[L' '] == NULL)
-                pm_error("space character not defined in font");
-            else if (fixMode == QUIT)
-                pm_error("code point %X not defined in font",
-                         (unsigned int) currentChar );
-            else {
-                if (fixMode == WARN)
-                    pm_message("converting code point %X to space",
-                               (unsigned int) currentChar );
-                output[outCursor++] = ' ';
-            }
-        } else
+        else {
             output[outCursor++] = input[inCursor];
-
+            pm_selector_mark(selectorP, currentChar);
+        }
         assert(outCursor <= outputSize);
     }
     output[outCursor++] = L'\0';
@@ -424,7 +567,8 @@ getEdges(double               const currentPosition,
     double rightEdge;
 
     if (glyphP == NULL)
-        pm_error("Unrenderable char: %04X", (unsigned int) currentChar);
+        pm_error("encountered unrenderable char: %04X",
+                  (unsigned int) currentChar);
     else {
         leftEdge  =  (int) MIN(currentPosition + glyphP->x, currLeftEdge);
         rightEdge =  MAX(currentPosition + glyphP->x + glyphP->width,
@@ -462,8 +606,8 @@ advancePosition(double               const currentPosition,
             pm_error("Negative -space value too large");
         else
             pm_error("Abnormal horizontal advance value %d "
-                     "for code point 0x%lx.",
-                     glyphP->xadd, (unsigned long int) currentChar);
+                     "for code point +%05X",
+                     glyphP->xadd, (unsigned int) currentChar);
     }
     else if (currentPosition + advance > INT_MAX)
         pm_error("Image is too wide");
@@ -522,8 +666,8 @@ getLineDimensions(PM_WCHAR             const line[],
 
     for (cursor = 0; line[cursor] != L'\0'; ++cursor) {
         PM_WCHAR          const currentChar = line[cursor];
-        unsigned long int const glyphIndex  = (unsigned long int) currentChar;
-        struct glyph *    const glyphP      = fontP->glyph[glyphIndex];
+        unsigned int      const index       = (unsigned int) currentChar;
+        struct glyph *    const glyphP      = fontP->glyph[index];
 
         getEdges(currentPosition, currentChar, glyphP, leftEdge, rightEdge,
                  &leftEdge, &rightEdge);
@@ -580,9 +724,8 @@ getCharsWithinWidth(PM_WCHAR             const line[],
              currentWidth <= targetWidth && line[cursor] != L'\0';
              ++cursor) {
             PM_WCHAR const currentChar = line[cursor];
-            unsigned long int const glyphIndex =
-              (unsigned long int) currentChar;
-            struct glyph * const glyphP = fontP->glyph[glyphIndex];
+            unsigned int const index = (unsigned int) currentChar;
+            struct glyph * const glyphP = fontP->glyph[index];
 
             getEdges(currentPosition, currentChar, glyphP, leftEdge, rightEdge,
                      &leftEdge, &rightEdge);
@@ -597,7 +740,7 @@ getCharsWithinWidth(PM_WCHAR             const line[],
         if (currentWidth > targetWidth) {
             if (cursor == 1)
                 pm_error("-width value too small "
-                         "to accomodate single character");
+                         "to accommodate single character");
             else
                 *charCountP = cursor - 1;
         } else
@@ -681,9 +824,8 @@ insertCharacters(bit **         const bits,
 
         for (cursor = 0; lp.textArray[line][cursor] != '\0'; ++cursor) {
             PM_WCHAR const currentChar = lp.textArray[line][cursor];
-            unsigned long int const glyphIndex =
-                (unsigned long int)currentChar;
-            struct glyph * const glyphP = fontP->glyph[glyphIndex];
+            unsigned int const index = (unsigned int) currentChar;
+            struct glyph * const glyphP = fontP->glyph[index];
             int const toprow =
                 row + fontP->maxheight + fontP->y - glyphP->height - glyphP->y;
                 /* row number in image of top row in glyph */
@@ -798,7 +940,7 @@ fgetWideString(PM_WCHAR *    const widestring,
     wchar_t * rc;
 
     assert(widestring);
-    assert(size > 0);
+    assert(size > 1);
 
     rc = fgetws(widestring, size, ifP);
 
@@ -836,7 +978,7 @@ fgetNarrowString(PM_WCHAR *    const widestring,
     assert(widestring);
     assert(size > 0);
 
-    MALLOCARRAY_NOFAIL(bufNarrow, MAXLINECHARS+1);
+    MALLOCARRAY_NOFAIL(bufNarrow, LINEBUFSIZE);
 
     rc = fgets(bufNarrow, size, ifP);
 
@@ -869,7 +1011,8 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
                      bool *        const eofP,
                      const char ** const errorP) {
 /*----------------------------------------------------------------------------
-  Return the next line from file *ifP, as *widestring.
+  Return the next line from file *ifP, as *widestring, a buffer 'size'
+  characters long.
 
   Lines are delimited by newline characters and EOF.
 
@@ -929,10 +1072,9 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
 
 
 static void
-getText(PM_WCHAR       const cmdlineText[],
-        struct font2 * const fontP,
-        struct Text  * const inputTextP,
-        enum FixMode   const fixMode) {
+getText(PM_WCHAR             const cmdlineText[],
+        struct Text *        const inputTextP,
+        struct pm_selector * const selectorP) {
 /*----------------------------------------------------------------------------
    Get as *inputTextP the text to format, given that the text on the
    command line (one word per command line argument, separated by spaces),
@@ -955,14 +1097,16 @@ getText(PM_WCHAR       const cmdlineText[],
         MALLOCARRAY_NOFAIL(inputText.textArray, 1);
         inputText.allocatedLineCount = 1;
         inputText.lineCount = 1;
-        fixControlChars(cmdlineText, fontP,
-                        (const PM_WCHAR**)&inputText.textArray[0], fixMode);
+        setupSelector(cmdlineText, (const PM_WCHAR**) &inputText.textArray[0],
+                      selectorP);
         free((void *) cmdlineText);
     } else {
         /* Read text from stdin. */
 
+        unsigned int const lineBufTerm = LINEBUFSIZE - 1;
+
         unsigned int maxlines;
-            /* Maximum number of lines for which we presently have space in
+            /* Maximum number of lines for which we currently have space in
                the text array
             */
         PM_WCHAR *   buf;
@@ -970,11 +1114,13 @@ getText(PM_WCHAR       const cmdlineText[],
         unsigned int lineCount;
         bool         eof;
 
-        MALLOCARRAY(buf, MAXLINECHARS+1);
+        MALLOCARRAY(buf, LINEBUFSIZE);
 
         if (!buf)
             pm_error("Unable to allocate memory for up to %u characters of "
                      "text", MAXLINECHARS);
+        buf[lineBufTerm] = L'\1';  /* Initialize to non-zero value */
+                                   /* to detect input overrun */
 
         maxlines = 50;  /* initial value */
         MALLOCARRAY(textArray, maxlines);
@@ -985,27 +1131,27 @@ getText(PM_WCHAR       const cmdlineText[],
 
         for (lineCount = 0, eof = false; !eof; ) {
             const char * error;
-            fgetNarrowWideString(buf, MAXLINECHARS, stdin, &eof, &error);
+            fgetNarrowWideString(buf, LINEBUFSIZE, stdin, &eof, &error);
             if (error)
                 pm_error("Unable to read line %u from file.  %s",
                          lineCount, error);
             else {
                 if (!eof) {
-                    if (wcslen(buf) + 1 >= MAXLINECHARS)
+                    if (buf[lineBufTerm] == L'\0') /* overrun */
                         pm_error(
                             "Line %u (starting at zero) of input text "
-                            "is longer than %u characters."
+                            "is longer than %u characters. "
                             "Cannot process",
-                            lineCount, (unsigned int) MAXLINECHARS-1);
+                            lineCount, (unsigned int) MAXLINECHARS);
                     if (lineCount >= maxlines) {
                         maxlines *= 2;
                         REALLOCARRAY(textArray, maxlines);
                         if (textArray == NULL)
                             pm_error("out of memory");
                     }
-                    fixControlChars(buf, fontP,
-                                    (const PM_WCHAR **)&textArray[lineCount],
-                                    fixMode);
+                    setupSelector(buf,
+                                  (const PM_WCHAR **) &textArray[lineCount],
+                                  selectorP);
                     if (textArray[lineCount] == NULL)
                         pm_error("out of memory");
                     ++lineCount;
@@ -1040,6 +1186,33 @@ computeMargins(struct CmdlineInfo const cmdline,
             *vmarginP = fontP->maxheight;
             *hmarginP = 2 * fontP->maxwidth;
         }
+    }
+}
+
+
+
+static void
+refineText(struct Text        const inputText,
+           struct font2 *     const fontP) {
+/*----------------------------------------------------------------------------
+   Replace missing characters with space
+
+   A future version of this program may provide various alternatives
+   here including simply deleting the offending character, based on a
+   command-line option
+-----------------------------------------------------------------------------*/
+    PM_WCHAR ** const textArray = inputText.textArray;
+
+    unsigned int lineNum;
+
+    for (lineNum = 0; lineNum < inputText.lineCount; ++lineNum) {
+        PM_WCHAR * const line = textArray[lineNum];
+
+        unsigned int cursor;
+
+        for (cursor = 0; line[cursor] != L'\0'; ++cursor)
+            if ( !codepointIsValid(fontP, line[cursor]) )
+                line[cursor] = L' ';
     }
 }
 
@@ -1109,6 +1282,8 @@ computeImageWidth(struct Text          const formattedText,
                   unsigned int *       const colsP,
                   unsigned int *       const maxleftbP) {
 
+    assert (pbm_maxfontwidth() < (INT_MAX - 10) / LINEBUFSIZE);
+
     if (intercharacterSpace < 0 && fontP->maxwidth < -intercharacterSpace)
         pm_error("negative -space value %.2f exceeds font width",
                  intercharacterSpace);
@@ -1173,7 +1348,7 @@ renderText(unsigned int   const cols,
                      space, cols, rows, lspace, fixedAdvance);
 
     /* Free all font data */
-    pbm_destroybdffont2(fontP); 
+    pbm_destroybdffont2(fontP);
 
     {
         unsigned int row;
@@ -1206,36 +1381,31 @@ L"M \",/^_[`jpqy| M" };
 
 
 static void
-validateText(const PM_WCHAR ** const textArray,
-             struct font2    * const fontP) {
-/*----------------------------------------------------------------------------
-   Abort the program if there are characters in 'textArray' which cannot be
-   rendered in font *fontP.
------------------------------------------------------------------------------*/
-    const PM_WCHAR * output;
-    unsigned int textRow;
+renderSheet(struct CmdlineInfo const cmdline,
+            FILE *             const ofP) {
 
-    for (textRow = 0; textRow < 12; ++textRow)
-        fixControlChars(textArray[textRow], fontP, &output, QUIT);
-
-    free((PM_WCHAR *)output);
-}
-
-
-
-static void
-renderSheet(struct font2 * const fontP,
-            FILE *         const ofP) {
-
-    int const cols  = fontP->maxwidth  * 16;
-    int const rows  = fontP->maxheight * 12;
     struct Text const sheetText =
         { (PM_WCHAR ** const) sheetTextArray, 12, 12};
+    static unsigned char const sheetRequestArray[16] = {
+         0x00, 0x00, 0x00, 0x00,  0xff, 0xff, 0xff, 0xff,
+         0xff, 0xff, 0xff, 0xff,  0xff, 0xff, 0xff, 0xfe};
 
-    validateText(sheetTextArray, fontP);
+    struct pm_selector * selectorP;
+    struct font2 *       fontP;
+    bool                 fontIsComplete;
 
-    renderText(cols, rows, fontP, 0, 0, sheetText, MAX(-(fontP->x),0),
-               0.0, 0, TRUE, ofP);
+    pm_selector_create_fixed(sheetRequestArray, 32, 126,95, &selectorP);
+
+    computeFont(cmdline, &fontP, selectorP, QUIT, &fontIsComplete);
+
+    {
+        unsigned int const cols  = fontP->maxwidth  * 16;
+        unsigned int const rows  = fontP->maxheight * 12;
+
+        renderText(cols, rows, fontP, 0, 0, sheetText, MAX(-(fontP->x),0),
+                   0.0, 0, TRUE, ofP);
+    }
+    pm_selector_destroy(selectorP);
 }
 
 
@@ -1286,8 +1456,8 @@ textDumpOutput(struct Text   const lp,
 
 static void
 pbmtext(struct CmdlineInfo const cmdline,
-        struct font2 *     const fontP,
-        FILE *             const ofP) {
+        FILE *             const ofP,
+        bool               const wchar) {
 
     unsigned int rows, cols;
         /* Dimensions in pixels of the output image */
@@ -1297,18 +1467,29 @@ pbmtext(struct CmdlineInfo const cmdline,
     unsigned int hmargin0;
     struct Text inputText;
     struct Text formattedText;
+    struct font2 * fontP;
+    struct pm_selector * selectorP;
     unsigned int maxleftb, maxleftb0;
+    bool fontIsComplete;
 
-    getText(cmdline.text, fontP, &inputText,
-            cmdline.verbose ? WARN : SILENT);
+    pm_selector_create(wchar ? PM_FONT2_MAXGLYPH : PM_FONT_MAXGLYPH,
+                       &selectorP);
+
+    getText(cmdline.text, &inputText, selectorP);
+
+    if (pm_selector_marked_ct(selectorP) == 0)
+        pm_error("No input text.  Aborting.");
+
+    computeFont(cmdline, &fontP, selectorP, cmdline.verbose ? WARN : SILENT,
+                &fontIsComplete);
 
     computeMargins(cmdline, inputText, fontP, &vmargin, &hmargin0);
 
+    if (!fontIsComplete)
+        refineText(inputText, fontP);
+
     formatText(cmdline, inputText, fontP, hmargin0,
                &formattedText, &maxleftb0);
-
-    if (formattedText.lineCount == 0)
-        pm_error("No input text");
 
     computeImageHeight(formattedText, fontP, cmdline.lspace, vmargin, &rows);
 
@@ -1343,6 +1524,8 @@ pbmtext(struct CmdlineInfo const cmdline,
                    maxleftb, cmdline.space, cmdline.lspace, FALSE, ofP);
 
     freeTextArray(formattedText);
+
+    pm_selector_destroy(selectorP);
 }
 
 
@@ -1351,7 +1534,6 @@ int
 main(int argc, const char *argv[]) {
 
     struct CmdlineInfo cmdline;
-    struct font2 * fontP;
 
     pm_proginit(&argc, argv);
 
@@ -1371,12 +1553,10 @@ main(int argc, const char *argv[]) {
     if (cmdline.verbose)
         pm_message("LC_CTYPE is set to '%s'", setlocale(LC_CTYPE, NULL) );
 
-    computeFont(cmdline, &fontP);
-
     if (cmdline.dumpsheet)
-        renderSheet(fontP, stdout);
+        renderSheet(cmdline, stdout);
     else
-        pbmtext(cmdline, fontP, stdout);
+        pbmtext(cmdline, stdout, cmdline.wchar);
 
     pm_close(stdout);
 

@@ -1,0 +1,64 @@
+#! /bin/sh
+# This script tests: pamcat
+# Also requires: pbmmake pamflip
+
+tmpdir=${tmpdir:-/tmp}
+dotw_pbm=${tmpdir}/dotw.pbm
+dotb_pbm=${tmpdir}/dotb.pbm
+check5x5_pbm=${tmpdir}/check5x5.pbm
+dot_ppm=${tmpdir}/dot.ppm
+
+echo "Test 1."
+pbmmake -w 1 1 | tee ${dotw_pbm} | pamcat -tb -plain
+pamcat -lr -plain ${dotw_pbm}
+pbmmake -b 1 1 | tee ${dotb_pbm} | pamcat -tb -plain
+pamcat -tb -plain ${dotw_pbm}
+
+echo "Test 2."
+
+pbmmake -w 5 5 > ${check5x5_pbm}
+
+pamcat -lr -jt -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+pamcat -lr -jc -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+pamcat -lr -jb -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+pamcat -lr     -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+
+pamcat -tb -jl -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+pamcat -tb -jc -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+pamcat -tb -jr -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+pamcat -tb     -black ${dotw_pbm} ${check5x5_pbm} ${dotw_pbm} -plain
+
+rm ${dotw_pbm}
+
+echo "Test 3."
+pbmmake -b 1 1 > ${dotb_pbm}
+
+pamcat -lr -jt -white ${dotb_pbm} ${check5x5_pbm} ${dotb_pbm} | cksum
+pamcat -lr -jb -white ${dotb_pbm} ${check5x5_pbm} ${dotb_pbm} |\
+  pamflip -tb | cksum
+pamcat -tb -jl -white ${dotb_pbm} ${check5x5_pbm} ${dotb_pbm} |\
+  pamflip -ccw | cksum
+pamcat -tb -jr -white ${dotb_pbm} ${check5x5_pbm} ${dotb_pbm} |\
+  pamflip -cw | cksum
+
+rm ${dotb_pbm}
+rm ${check5x5_pbm}
+
+
+echo "Test 4."
+ppmmake rgb:20/40/d0 1 1 | tee ${dot_ppm} | pamcat -lr | cksum
+pamcat -tb  ${dot_ppm} | cksum
+
+echo "Test 5."
+for just in -jtop -jcenter -jbottom
+do
+pamcat -lr ${just} ${dot_ppm} maze.pbm ${dot_ppm} | cksum
+done
+
+for just in -jleft -jcenter -jright
+do
+pamcat -tb ${just} ${dot_ppm} maze.pbm ${dot_ppm} | cksum
+done
+
+rm ${dot_ppm}
+

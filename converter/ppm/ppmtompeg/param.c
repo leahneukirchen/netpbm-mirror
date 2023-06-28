@@ -1,8 +1,8 @@
 /*===========================================================================*
- * param.c              
- *                      
- *  Procedures to read in parameter file  
- *                                    
+ * param.c
+ *
+ *  Procedures to read in parameter file
+ *
  *===========================================================================*/
 
 /* COPYRIGHT INFORMATION IS AT THE END OF THIS FILE */
@@ -10,9 +10,9 @@
 #define _DEFAULT_SOURCE 1
     /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE 500
-    /* This makes sure popen() is in stdio.h.  In GNU libc 2.1.3, 
+    /* This makes sure popen() is in stdio.h.  In GNU libc 2.1.3,
      _POSIX_C_SOURCE = 2 is sufficient, but on AIX 4.3, the higher level
-     _XOPEN_SOURCE is required.  2000.09.09 
+     _XOPEN_SOURCE is required.  2000.09.09
 
      This also makes sure strdup() is in string.h.
     */
@@ -125,11 +125,6 @@ int mult_seq_headers = 0;  /* 0 for none, N for header/N GOPs */
 
 extern char currentPath[MAXPATHLEN];
 
-static const char * const optionText[LAST_OPTION+1] = { 
-    "GOP_SIZE", "PATTERN", "PIXEL", "PQSCALE",
-    "OUTPUT", "RANGE", "PSEARCH_ALG", "IQSCALE", "INPUT_DIR",
-    "INPUT_CONVERT", "INPUT", "BQSCALE", "BASE_FILE_FORMAT",
-    "SLICES_PER_FRAME", "BSEARCH_ALG", "REFERENCE_FRAME"};
 static bool optionSeen[NUM_OPTIONS+1];
     /* optionSeen[x] means we have seen option x in the parameter file we've
        been reading.
@@ -250,7 +245,7 @@ ReadMachineNames(FILE * const fpointer)
  *
  * GetFrameRate
  *
- * take a character string with the input frame rate 
+ * take a character string with the input frame rate
  * and return the correct frame rate code for use in the Sequence header
  *
  * RETURNS: frame rate code as per MPEG-I spec
@@ -292,7 +287,7 @@ mergeInputSource(struct inputSource *       const baseSourceP,
     unsigned int i;
 
     baseSourceP->ifArraySize += addedSourceP->numInputFileEntries;
-    REALLOCARRAY_NOFAIL(baseSourceP->inputFileEntries, 
+    REALLOCARRAY_NOFAIL(baseSourceP->inputFileEntries,
                         baseSourceP->ifArraySize);
     for (i = 0; i < addedSourceP->numInputFileEntries; ++i)
         baseSourceP->inputFileEntries[baseSourceP->numInputFileEntries++] =
@@ -303,7 +298,7 @@ mergeInputSource(struct inputSource *       const baseSourceP,
 
 /* Forward declaration for recursively called function */
 static void
-ReadInputFileNames(FILE *               const fpointer, 
+ReadInputFileNames(FILE *               const fpointer,
                    const char *         const endInput,
                    struct inputSource * const inputSourceP);
 
@@ -355,11 +350,11 @@ expandBackTickLine(const char *         const input,
 
 
 static void
-ReadInputFileNames(FILE *               const fpointer, 
+ReadInputFileNames(FILE *               const fpointer,
                    const char *         const endInput,
                    struct inputSource * const inputSourceP) {
 /*----------------------------------------------------------------------------
-   Read a list of input file names from the parameter file.  Add 
+   Read a list of input file names from the parameter file.  Add
    the information to *inputSourceP.
 
    If inputSourceP == NULL, read off the list, but ignore it.
@@ -384,7 +379,7 @@ ReadInputFileNames(FILE *               const fpointer,
         else {
             if (strncmp(input, endInput, strlen(endInput)) == 0)
                 endStatementRead = TRUE;
-            else if ((input[0] == '#') || (input[0] == '\n')) { 
+            else if ((input[0] == '#') || (input[0] == '\n')) {
                 /* It's a comment or blank line.  Ignore it */
             } else if (input[0] == '`' ) {
                 expandBackTickLine(input, inputSourceP);
@@ -405,7 +400,7 @@ static void
 initOptionSeen(void) {
 
     unsigned int index;
-    
+
     for (index = FIRST_OPTION; index < NUM_OPTIONS; ++index)
         optionSeen[index] = FALSE;
 }
@@ -477,7 +472,7 @@ verifyNoMissingCombineFramesOption(void) {
 static void
 verifyNoMissingOption(int  const function) {
 /*----------------------------------------------------------------------------
-  Verify that the parameter file contains every option it is supposed to. 
+  Verify that the parameter file contains every option it is supposed to.
   Abort program if not.
 -----------------------------------------------------------------------------*/
     switch(function) {
@@ -515,7 +510,7 @@ processIqtable(FILE * const fpointer) {
                         &qtable[row*8+2],  &qtable[row*8+3],
                         &qtable[row*8+4],  &qtable[row*8+5],
                         &qtable[row*8+6],  &qtable[row*8+7])) {
-            pm_error("Line %d of IQTABLE doesn't have 8 elements!", 
+            pm_error("Line %d of IQTABLE doesn't have 8 elements!",
                      row);
         }
         for (col = 0; col < 8; ++col) {
@@ -528,7 +523,7 @@ processIqtable(FILE * const fpointer) {
             }
         }
     }
-            
+
     if (qtable[0] != 8) {
         pm_message("Warning:  IQTable Element 1,1 reset to 8, "
                    "since it must be 8.");
@@ -593,15 +588,15 @@ removeTrailingWhite(const char *  const rawLine,
         pm_error("Unable to get memory to process parameter file");
 
     p = buffer + strlen(buffer) - 1;  /* Point to last character */
-    
+
     /* Position p to just before the trailing white space (might be one
        character before beginning of string!)
     */
     while (p >= buffer && isspace(*p))
         --p;
-    
+
     ++p;  /* Move to first trailing whitespace character */
-    
+
     *p = '\0';  /* Chop off all the trailing whitespace */
 
     *editedLineP = buffer;
@@ -622,7 +617,7 @@ readNiqTable(FILE * const fpointer) {
                         &niqtable[row*8+2],  &niqtable[row*8+3],
                         &niqtable[row*8+4],  &niqtable[row*8+5],
                         &niqtable[row*8+6],  &niqtable[row*8+7])) {
-            pm_error("Line %d of NIQTABLE doesn't have 8 elements!", 
+            pm_error("Line %d of NIQTABLE doesn't have 8 elements!",
                      row);
         }
         for ( col = 0; col < 8; col++ ) {
@@ -675,7 +670,7 @@ processParamLine(char const input[],
             optionSeen[OPTION_ASPECT_RATIO] = TRUE;
         }
         break;
-        
+
     case 'B':
         if (strneq(input, "BQSCALE", 7)) {
             SetBQScale(atoi(SkipSpacesTabs(&input[7])));
@@ -694,7 +689,7 @@ processParamLine(char const input[],
             optionSeen[OPTION_BIT_RATE] = TRUE;
         } else if (strneq(input, "BUFFER_SIZE", 11)) {
             setBufferSize(SkipSpacesTabs(&input[11]));
-            optionSeen[OPTION_BUFFER_SIZE] = TRUE;                  
+            optionSeen[OPTION_BUFFER_SIZE] = TRUE;
         }
         break;
 
@@ -717,8 +712,8 @@ processParamLine(char const input[],
 
             strcpy(currentFramePath, arg);
         } else if (strneq(input, "FRAME_INPUT", 11)) {
-            ReadInputFileNames(fpointer, "FRAME_END_INPUT", 
-                               frameInputSourceP->stdinUsed ? 
+            ReadInputFileNames(fpointer, "FRAME_END_INPUT",
+                               frameInputSourceP->stdinUsed ?
                                NULL : frameInputSourceP);
             optionSeen[OPTION_FRAME_INPUT] = TRUE;
         } else if (strneq(input, "FORCE_I_ALIGN", 13)) {
@@ -726,7 +721,7 @@ processParamLine(char const input[],
         } else if (strneq(input, "FORCE_ENCODE_LAST_FRAME", 23)) {
             /* NO-OP.  We used to drop trailing B frames by default and you
                needed this option to change the last frame to I so you could
-               encode all the frames.  Now we just do that all the time.  
+               encode all the frames.  Now we just do that all the time.
                Why wouldn't we?
             */
         } else if (strneq(input, "FRAME_RATE", 10)) {
@@ -737,7 +732,7 @@ processParamLine(char const input[],
             optionSeen[OPTION_FRAME_RATE] = TRUE;
         }
         break;
-        
+
     case 'G':
         if (strneq(input, "GOP_SIZE", 8)) {
             SetGOPSize(atoi(SkipSpacesTabs(&input[8])));
@@ -749,8 +744,8 @@ processParamLine(char const input[],
 
             strcpy(currentGOPPath, arg);
         } else if (strneq(input, "GOP_INPUT", 9)) {
-            ReadInputFileNames(fpointer, "GOP_END_INPUT", 
-                               gopInputSourceP->stdinUsed ? 
+            ReadInputFileNames(fpointer, "GOP_END_INPUT",
+                               gopInputSourceP->stdinUsed ?
                                NULL : gopInputSourceP);
             optionSeen[OPTION_GOP_INPUT] = TRUE;
         } else if (strneq(input, "GAMMA", 5)) {
@@ -759,7 +754,7 @@ processParamLine(char const input[],
             optionSeen[OPTION_GAMMA] = TRUE;
         }
         break;
-        
+
     case 'I':
         if (strneq(input, "IQSCALE", 7)) {
             SetIQScale(atoi(SkipSpacesTabs(&input[7])));
@@ -774,7 +769,7 @@ processParamLine(char const input[],
             strcpy(inputConversion, SkipSpacesTabs(&input[13]));
             optionSeen[OPTION_INPUT_CONVERT] = TRUE;
         } else if (streq(input, "INPUT")) {
-            ReadInputFileNames(fpointer, "END_INPUT", 
+            ReadInputFileNames(fpointer, "END_INPUT",
                                inputSourceP->stdinUsed ?
                                NULL : inputSourceP);
             optionSeen[OPTION_INPUT] = TRUE;
@@ -792,7 +787,7 @@ processParamLine(char const input[],
         if (strneq(input, "KEEP_TEMP_FILES", 15))
             keepTempFiles = TRUE;
         break;
-        
+
     case 'N':
       if (strneq(input, "NIQTABLE", 8)) {
           readNiqTable(fpointer);
@@ -808,11 +803,11 @@ processParamLine(char const input[],
                 strcpy(outputFileName, arg);
             else
                 sprintf(outputFileName, "%s.gop.%d", arg, whichGOP);
-            
+
             optionSeen[OPTION_OUTPUT] = TRUE;
         }
         break;
-        
+
     case 'P':
         if (strneq(input, "PATTERN", 7)) {
             SetFramePattern(SkipSpacesTabs(&input[7]));
@@ -842,7 +837,7 @@ processParamLine(char const input[],
             optionSeen[OPTION_PARALLEL] = TRUE;
         }
         break;
-        
+
     case 'R':
         if (strneq(input, "RANGE", 5)) {
             processRanges(SkipSpacesTabs(&input[5]));
@@ -900,14 +895,14 @@ processParamLine(char const input[],
             optionSeen[OPTION_USER_DATA] = TRUE;
         }
         break;
-        
+
     case 'W':
         if (strneq(input, "WARN_UNDERFLOW", 14))
             paramP->warnUnderflow = TRUE;
         if (strneq(input, "WARN_OVERFLOW", 13))
             paramP->warnOverflow = TRUE;
         break;
-        
+
     case 'Y':
         if (strneq(input, "YUV_SIZE", 8)) {
             const char * const arg = SkipSpacesTabs(&input[8]);
@@ -934,7 +929,7 @@ processParamLine(char const input[],
 
 
 void
-ReadParamFile(const char *         const fileName, 
+ReadParamFile(const char *         const fileName,
               majorProgramFunction const function,
               struct params *      const paramP) {
 /*----------------------------------------------------------------------------
@@ -1014,7 +1009,7 @@ ReadParamFile(const char *         const fileName,
   if (yuvUsed) {
       if (!optionSeen[OPTION_YUV_SIZE])
           pm_error("YUV format used but YUV_SIZE not given");
-      
+
       if (!optionSeen[OPTION_YUV_FORMAT]) {
           strcpy (yuvConversion, "EYUV");
           pm_message("WARNING:  YUV format not specified; "
@@ -1031,7 +1026,7 @@ ReadParamFile(const char *         const fileName,
   if (optionSeen[OPTION_IO_CONVERT] != optionSeen[OPTION_SLAVE_CONVERT])
       pm_error("Must have either both IO_SERVER_CONVERT and SLAVE_CONVERT "
                "or neither");
-      
+
   if (optionSeen[OPTION_DEFS_SPECIFICS] && !optionSeen[OPTION_SPECIFICS])
       pm_error("Does not make sense to define Specifics file options, "
                "but no specifics file!");

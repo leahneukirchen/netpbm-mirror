@@ -990,7 +990,7 @@ sub installHeader($$$) {
         my $rc = system("cd $hdrDir; ln -s netpbm/* .");
 
         if ($rc != 0) {
-            print("Failed to create backward compatibilty symlinks from " .
+            print("Failed to create backward compatibility symlinks from " .
                   "$hdrDir into $hdrDir/netpbm\n");
             print("ln exit code is $rc\n");
         } else {

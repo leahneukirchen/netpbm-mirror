@@ -99,7 +99,7 @@ typedef struct IconInfo_ {
 typedef struct IconHeader_ { /* 20 bytes */
     unsigned char pad0[4];        /* Padding (always seems to be zero) */
     unsigned char iconWidth[2];   /* Width (usually equal to Gadget width) */
-    unsigned char iconHeight[2];  
+    unsigned char iconHeight[2];
     /* Height (usually equal to Gadget height -1) */
     unsigned char bpp[2];         /* Bits per pixel */
     unsigned char pad1[10];       /* ??? */
@@ -134,7 +134,7 @@ parseCommandLine( int              argc,
     unsigned int numColorArgs,  /* Number of arguments for overriding colors */
         colorIdx,      /* Color index */
         i;             /* Argument index */
-    const char  * const colors[4] = { 
+    const char  * const colors[4] = {
         /* Pixel colors based on original Amiga colors */
         "#0055AA",    /*   Blue      0,  85, 170 */
         "#FFFFFF",    /*   White   255, 255, 255 */
@@ -147,7 +147,7 @@ parseCommandLine( int              argc,
     optStruct3    opt;
     unsigned int  option_def_index;
     unsigned int numColorsSpec, forceColorSpec, selectedSpec;
-  
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     /* Set command line options */
@@ -166,7 +166,7 @@ parseCommandLine( int              argc,
     infoP->depth = 0;
     infoP->icon = NULL;
     for ( colorIdx = 0; colorIdx < 4; colorIdx++ )
-        infoP->colors[colorIdx] = 
+        infoP->colors[colorIdx] =
             ppm_parsecolor( (char*) colors[colorIdx], 0xFF );
 
     /* Initialize option structure */
@@ -258,7 +258,7 @@ getDiskObject( IconInfo * const infoP ) {
 
 
 
-static void 
+static void
 getIconHeader(IconInfo * const infoP) {
 /*-------------------------------------------------------------------------
  * Get fields from icon header portion of info file
@@ -277,7 +277,7 @@ getIconHeader(IconInfo * const infoP) {
                  "Only read 0x%X of 0x%X bytes",
                  infoP->name, (unsigned)bytesRead, (unsigned)sizeof(ihead));
 
-    /* Get icon width, heigh, and bitplanes */
+    /* Get icon width, height, and bitplanes */
     infoP->width  = (ihead.iconWidth[0]  << 8) + ihead.iconWidth[1];
     infoP->height = (ihead.iconHeight[0] << 8) + ihead.iconHeight[1];
     infoP->depth  = (ihead.bpp[0]        << 8) + ihead.bpp[1];
@@ -299,7 +299,7 @@ addBitplane(unsigned char * const icon,
 -----------------------------------------------------------------------------*/
     unsigned int i;
     unsigned int j;
-    
+
     for (i = j = 0; i < bpsize; ++i, j += 8) {
         icon[j+0] = (icon[j+0] << 1) | ((buff[i] >> 0) & 0x01);
         icon[j+1] = (icon[j+1] << 1) | ((buff[i] >> 1) & 0x01);
@@ -317,7 +317,7 @@ addBitplane(unsigned char * const icon,
 static void
 readIconData(FILE *           const fileP,
              unsigned int     const width,
-             unsigned int     const height, 
+             unsigned int     const height,
              unsigned int     const depth,
              unsigned char ** const iconP) {
 /*-------------------------------------------------------------------------
@@ -330,7 +330,7 @@ readIconData(FILE *           const fileP,
     unsigned int const bpsize = height * (((width + 15) / 16) * 2);
         /* Bitplane size in bytes, with padding */
 
-  
+
     MALLOCARRAY(buff, bpsize);
     if ( buff == NULL )
         pm_error( "Cannot allocate memory to hold icon pixels" );
@@ -350,10 +350,10 @@ readIconData(FILE *           const fileP,
      * points to the next byte in buff to fill in.  When the inner
      * loop is done, bp points to the end of buff.
      *
-     * After reading in the entire bitplane, the second inner loop splits the 
-     * eight pixels in each byte of the bitplane into eight separate bytes in 
-     * the icon buffer.  The existing contents of each byte in icon are left 
-     * shifted by one to make room for the next bit. 
+     * After reading in the entire bitplane, the second inner loop splits the
+     * eight pixels in each byte of the bitplane into eight separate bytes in
+     * the icon buffer.  The existing contents of each byte in icon are left
+     * shifted by one to make room for the next bit.
      *
      * Each byte in the completed icon contains a value from 0 to
      * 2^depth (0 to 1 for depth of 1 and 0 to 3 for a depth of 3).
@@ -363,7 +363,7 @@ readIconData(FILE *           const fileP,
         /* Read bitplane into buffer */
         int toread;   /* Number of bytes left to read */
         unsigned char * buffp;    /* Buffer point for reading data */
-       
+
         toread = bpsize; buffp = &buff[0];
 
         while (toread > 0) {
@@ -378,7 +378,7 @@ readIconData(FILE *           const fileP,
                 pm_error("Premature end-of-file.  "
                          "Still have 0x%X bytes to read",
                          toread );
-            
+
             toread -= bytesRead;
             buffp  += bytesRead;
         }
@@ -542,3 +542,6 @@ main( int argc,
 
     return 0;
 }
+
+
+

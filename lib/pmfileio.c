@@ -31,6 +31,7 @@
     /* This makes the the x64() functions available on AIX */
 
 #include "netpbm/pm_config.h"
+#include <stdbool.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
@@ -451,6 +452,35 @@ pm_tmpfile_fd(void) {
 }
 
 
+static bool
+isSeekable(FILE * const fP) {
+/*----------------------------------------------------------------------------
+   The file is seekable -- we can set its read/write position to anything we
+   want.
+
+   If we can't tell if it is seekable, we return false.
+-----------------------------------------------------------------------------*/
+    int statRc;
+    struct stat statbuf;
+
+    /* I would use fseek() to determine if the file is seekable and
+       be a little more general than checking the type of file, but I
+       don't have reliable information on how to do that.  I have seen
+       streams be partially seekable -- you can, for example seek to
+       0 if the file is positioned at 0 but you can't actually back up
+       to 0.  I have seen documentation that says the errno for an
+       unseekable stream is EBADF and in practice seen ESPIPE.
+
+       On the other hand, regular files are always seekable and even if
+       some other file is, it doesn't hurt much to assume it isn't.
+    */
+
+    statRc = fstat(fileno(fP), &statbuf);
+
+    return statRc == 0 && S_ISREG(statbuf.st_mode);
+}
+
+
 
 FILE *
 pm_openr_seekable(const char name[]) {
@@ -465,61 +495,42 @@ pm_openr_seekable(const char name[]) {
   We use a file that the operating system recognizes as temporary, so
   it picks the filename and deletes the file when Caller closes it.
 -----------------------------------------------------------------------------*/
-    int stat_rc;
-    int seekable;  /* logical: file is seekable */
-    struct stat statbuf;
-    FILE * original_file;
-    FILE * seekable_file;
+    FILE * originalFileP;
+    FILE * seekableFileP;
 
-    original_file = pm_openr((char *) name);
+    originalFileP = pm_openr((char *) name);
 
-    /* I would use fseek() to determine if the file is seekable and
-       be a little more general than checking the type of file, but I
-       don't have reliable information on how to do that.  I have seen
-       streams be partially seekable -- you can, for example seek to
-       0 if the file is positioned at 0 but you can't actually back up
-       to 0.  I have seen documentation that says the errno for an
-       unseekable stream is EBADF and in practice seen ESPIPE.
-
-       On the other hand, regular files are always seekable and even if
-       some other file is, it doesn't hurt much to assume it isn't.
-    */
-
-    stat_rc = fstat(fileno(original_file), &statbuf);
-    if (stat_rc == 0 && S_ISREG(statbuf.st_mode))
-        seekable = TRUE;
-    else
-        seekable = FALSE;
-
-    if (seekable) {
-        seekable_file = original_file;
+    if (isSeekable(originalFileP)) {
+        seekableFileP = originalFileP;
     } else {
-        seekable_file = pm_tmpfile();
+        seekableFileP = pm_tmpfile();
 
         /* Copy the input into the temporary seekable file */
-        while (!feof(original_file) && !ferror(original_file)
-               && !ferror(seekable_file)) {
+        while (!feof(originalFileP) && !ferror(originalFileP)
+               && !ferror(seekableFileP)) {
             char buffer[4096];
-            int bytes_read;
-            bytes_read = fread(buffer, 1, sizeof(buffer), original_file);
-            fwrite(buffer, 1, bytes_read, seekable_file);
+            size_t nBytesRead;
+
+            nBytesRead = fread(buffer, 1, sizeof(buffer), originalFileP);
+            fwrite(buffer, 1, nBytesRead, seekableFileP);
         }
-        if (ferror(original_file))
+        if (ferror(originalFileP))
             pm_error("Error reading input file into temporary file.  "
                      "Errno = %s (%d)", strerror(errno), errno);
-        if (ferror(seekable_file))
+        if (ferror(seekableFileP))
             pm_error("Error writing input into temporary file.  "
                      "Errno = %s (%d)", strerror(errno), errno);
-        pm_close(original_file);
+        pm_close(originalFileP);
         {
-            int seek_rc;
-            seek_rc = fseek(seekable_file, 0, SEEK_SET);
-            if (seek_rc != 0)
+            int seekRc;
+
+            seekRc = fseek(seekableFileP, 0, SEEK_SET);
+            if (seekRc != 0)
                 pm_error("fseek() failed to rewind temporary file.  "
                          "Errno = %s (%d)", strerror(errno), errno);
         }
     }
-    return seekable_file;
+    return seekableFileP;
 }
 
 
@@ -799,48 +810,50 @@ pm_readmagicnumber(FILE * const ifP) {
    Oliver Trepte, oliver@fysik4.kth.se, 930613
 */
 
-#define PM_BUF_SIZE 16384      /* First try this size of the buffer, then
-                                  double this until we reach PM_MAX_BUF_INC */
-#define PM_MAX_BUF_INC 65536   /* Don't allocate more memory in larger blocks
-                                  than this. */
+static size_t const initBufSz = 16384;
+  /* First try this size of the buffer, then
+     double this until we reach 'maxBufInc' */
+static size_t const maxBufInc = 65536;
+    /* Don't allocate more memory in larger blocks than this. */
 
 char *
-pm_read_unknown_size(FILE * const file,
-                     long * const nread) {
-    long nalloc;
+pm_read_unknown_size(FILE * const ifP,
+                     long * const nReadP) {
+    size_t nAlloc;
     char * buf;
+    size_t nRead;
     bool eof;
 
-    *nread = 0;
-    nalloc = PM_BUF_SIZE;
-    MALLOCARRAY(buf, nalloc);
+    nAlloc = initBufSz;   /* initial value */
+
+    MALLOCARRAY(buf, nAlloc);
 
     if (!buf)
-        pm_error("Failed to allocate %lu bytes for read buffer",
-                 (unsigned long) nalloc);
+        pm_error("Failed to allocate %lu bytes for read buffer", nAlloc);
 
-    eof = FALSE;  /* initial value */
-
-    while(!eof) {
+    for (eof = false, nRead = 0; !eof; ) {
         int val;
 
-        if (*nread >= nalloc) { /* We need a larger buffer */
-            if (nalloc > PM_MAX_BUF_INC)
-                nalloc += PM_MAX_BUF_INC;
+        if (nRead >= nAlloc) { /* We need a larger buffer */
+            if (nAlloc > maxBufInc)
+                nAlloc += maxBufInc;
             else
-                nalloc += nalloc;
-            REALLOCARRAY(buf, nalloc);
+                nAlloc += nAlloc;
+            REALLOCARRAY(buf, nAlloc);
             if (!buf)
                 pm_error("Failed to allocate %lu bytes for read buffer",
-                         (unsigned long) nalloc);
+                         nAlloc);
         }
 
-        val = getc(file);
+        val = getc(ifP);
         if (val == EOF)
-            eof = TRUE;
+            eof = true;
         else
-            buf[(*nread)++] = val;
+            buf[nRead++] = val;
     }
+
+    *nReadP = (long)nRead;
+
     return buf;
 }
 
@@ -926,6 +939,72 @@ pm_getline(FILE *   const ifP,
 
 
 
+void
+pm_readfile(FILE *                 const fileP,
+            const unsigned char ** const bytesP,
+            size_t *               const szP) {
+
+    unsigned char * buf;
+    size_t allocatedSz;
+    size_t szSoFar;
+    size_t chunkSz;
+    bool eof;
+
+    for (szSoFar = 0, buf = NULL, allocatedSz = 0, chunkSz = 4096,
+             eof = false;
+         !eof; ) {
+
+        size_t bytesReadCt;
+
+        if (szSoFar + chunkSz > allocatedSz) {
+            allocatedSz = szSoFar + chunkSz;
+            REALLOCARRAY(buf, allocatedSz);
+
+            if (!buf) {
+                pm_error("Failed to get memory for %lu byte input buffer",
+                         allocatedSz);
+            }
+        }
+        bytesReadCt = fread(buf + szSoFar, 1, chunkSz, fileP);
+
+        if (ferror(fileP))
+            pm_error("Failed to read input from file");
+
+        szSoFar += bytesReadCt;
+
+        if (bytesReadCt < chunkSz)
+            eof = true;
+        else {
+            /* Double buffer and read size up to 1 MiB */
+            if (szSoFar <= 1024*1024)
+                chunkSz = szSoFar;
+        }
+    }
+
+    *bytesP = buf;
+    *szP    = szSoFar;
+}
+
+
+
+void
+pm_writefile(FILE *                const fileP,
+             const unsigned char * const bytes,
+             size_t                const sz) {
+
+    size_t bytesWrittenCt;
+
+    bytesWrittenCt = fwrite(bytes, 1, sz, fileP);
+
+    if (bytesWrittenCt != sz) {
+        pm_error("Failed to write %lu bytes to Standard Output.  "
+                 "%lu bytes successfully written",
+                 sz, bytesWrittenCt);
+    }
+}
+
+
+
 union cheat {
     uint32_t l;
     short s;
@@ -962,6 +1041,20 @@ pm_bs_long(long const l) {
     u.c[2] = t;
     return u.l;
 }
+
+
+
+int
+pm_is_seekable(FILE * const fP) {
+
+    return isSeekable(fP) ? 1 : 0;
+}
+
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wduplicated-cond"
 
 
 
@@ -1005,6 +1098,10 @@ pm_tell2(FILE *       const fileP,
 
 
 
+#pragma GCC diagnostic pop
+
+
+
 unsigned int
 pm_tell(FILE * const fileP) {
 
@@ -1014,6 +1111,12 @@ pm_tell(FILE * const fileP) {
 
     return filepos;
 }
+
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wduplicated-cond"
 
 
 
@@ -1041,6 +1144,10 @@ pm_seek2(FILE *             const fileP,
                  fileposSize, (unsigned int)sizeof(pm_filepos),
                  (unsigned int) sizeof(long));
 }
+
+
+
+#pragma GCC diagnostic pop
 
 
 

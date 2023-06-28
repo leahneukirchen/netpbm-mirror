@@ -1,0 +1,150 @@
+Test 1.  Should print 15135078 29, then 0 fourteen times
+15135078 29
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Test 2.  Should print 1957849403 59, 0 six times, 1 once
+1957849403 59
+0
+0
+0
+0
+0
+0
+1
+Test 3.  Should print 2673197404 69, 0 six times, 1 once
+2673197404 69
+0
+0
+0
+0
+0
+0
+1
+Test 4.  Should print 2285402562 36, then 0 twelve times
+2285402562 36
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Test 5.  Should print 1836757613 62, 0 six times, 1 once
+1836757613 62
+0
+0
+0
+0
+0
+0
+1
+Test 6.  Should print 3601245348 137, 0 six times, 1 once
+3601245348 137
+0
+0
+0
+0
+0
+0
+1
+Test 7.  Should print 1572996771 71, then 0 twelve times
+1572996771 71
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Test 8.  Should print 270413826 252, 0 six times, 1 once
+270413826 252
+0
+0
+0
+0
+0
+0
+1
+Test 9.  Should print 2942772630 192, 0 six times, 1 once
+2942772630 192
+0
+0
+0
+0
+0
+0
+1
+Test 10.  Should print 2700536985 95, then 0 twelve times
+2700536985 95
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Test 11.  Should print 2193235886 195, 0 eight times, 1 once
+2193235886 195
+0
+0
+0
+0
+0
+0
+0
+0
+1
+Test 12.  Should print 2773166369 245, 0 nine times, 1 once
+2773166369 245
+0
+0
+0
+0
+0
+0
+0
+0
+0
+1
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1
+Expected failure 10 1
+Expected failure 11 1
+Expected failure 12 1
+Expected failure 13 1
+Expected failure 14 1

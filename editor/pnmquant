@@ -37,8 +37,15 @@ use Getopt::Long;
 use File::Spec;
 #use Fcntl ":seek";  # not available in Perl 5.00503
 use Fcntl;  # gets open flags
+use IO::Handle;
 
 my ($TRUE, $FALSE) = (1,0);
+
+sub pm_message($) {
+    STDERR->print("pnmquant: $_[0]\n");
+}
+
+
 
 my ($SEEK_SET, $SEEK_CUR, $SEEK_END) = (0, 1, 2);
 
@@ -59,16 +66,17 @@ sub doVersionHack($) {
 
 sub tempFile($) {
 
+    my ($suffix) = @_;
+
     # We trust Perl's File::Temp to do a better job of creating the temp
     # file, but it doesn't exist before Perl 5.6.1.
 
     if (eval { require File::Temp; 1 }) {
         return File::Temp::tempfile("pnmquant_XXXX", 
-                                    SUFFIX=>".pnm", 
+                                    SUFFIX=>$suffix, 
                                     DIR=>File::Spec->tmpdir(),
                                     UNLINK=>$TRUE);
     } else {
-        my ($suffix) = @_;
         my $fileName;
         local *file;  # For some inexplicable reason, must be local, not my
         my $i;
@@ -89,7 +97,7 @@ sub parseCommandLine(@) {
 
     my %cmdline;
 
-    my $validOptions = GetOptions(\%cmdline,
+    my $optsAreValid = GetOptions(\%cmdline,
                                   "center",
                                   "meancolor",
                                   "meanpixel",
@@ -101,18 +109,17 @@ sub parseCommandLine(@) {
                                   "quiet",
                                   "plain");
 
-    if (!$validOptions) {
-        print(STDERR "Invalid option syntax.\n");
+    if (!$optsAreValid) {
+        pm_message("Invalid option syntax");
         exit(1);
     }
     if (@ARGV > 2) {
-        print(STDERR "This program takes at most 2 arguments.  You specified ",
-              scalar(@ARGV), "\n");
+        pm_message("This program takes at most 2 arguments.  You specified " .
+                   scalar(@ARGV));
         exit(1);
     } 
     elsif (@ARGV < 1) {
-        print(STDERR 
-              "You must specify the number of colors as an argument.\n");
+        pm_message("You must specify the number of colors as an argument.");
         exit(1);
     }
     my $infile;
@@ -120,9 +127,8 @@ sub parseCommandLine(@) {
     
     if (!($cmdline{ncolors} =~ m{ ^[[:digit:]]+$ }x ) || 
         $cmdline{ncolors} == 0) {
-        print(STDERR 
-              "Number of colors argument '$cmdline{ncolors}' " .
-              "is not a positive integer.\n");
+        pm_message("Number of colors argument '$cmdline{ncolors}' " .
+                   "is not a positive integer.");
         exit(1);
     }
 
@@ -199,10 +205,10 @@ sub openSeekableAsStdin($) {
 
 
 
-sub makeColormap($$$$$) {
+sub makeColormap($$$$$$$) {
 
-    my ($ncolors, $opt_meanpixel, $opt_meancolor, $opt_spreadluminosity,
-        $opt_quiet) = @_;
+    my ($ncolors, $opt_center, $opt_meanpixel, $opt_meancolor,
+        $opt_spreadbrightness, $opt_spreadluminosity, $opt_quiet) = @_;
 
     # Make a colormap of $ncolors colors from the image on Standard Input.
     # Put it in a temporary file and return its name.
@@ -210,18 +216,39 @@ sub makeColormap($$$$$) {
     my ($mapfileFh, $mapfileSpec) = tempFile(".pnm");
 
     if (!defined($mapfileFh)) {
-        print(STDERR "Unable to create temporary file for colormap.  " .
-              "errno = $ERRNO\n");
+        pm_message("Unable to create temporary file for colormap.  " .
+                   "errno = $ERRNO");
         exit(1);
     }
-
+       
     my $averageOpt;
+
+    my $colorSummaryOptCt =
+        (defined($opt_meanpixel) ? 1 : 0) +
+        (defined($opt_meancolor) ? 1 : 0) +
+        (defined($opt_center)    ? 1 : 0);
+
+    if ($colorSummaryOptCt > 1) {
+        pm_message("You can specify only one of " .
+                   "-meanpixel, -meancolor, and -center");
+        exit(1);
+    }
     if (defined($opt_meanpixel)) {
         $averageOpt = "-meanpixel";
     } elsif (defined($opt_meancolor)) {
         $averageOpt = "-meancolor";
     } else {
         $averageOpt = "-center";
+    }
+
+    my $spreadOptCt =
+        (defined($opt_spreadluminosity) ? 1 : 0) +
+        (defined($opt_spreadbrightness) ? 1 : 0);
+
+    if ($spreadOptCt > 1) {
+        pm_message("You can specify only one of " .
+                   "-spreadluminosity and -spreadbrightness");
+        exit(1);
     }
 
     my $spreadOpt;
@@ -242,7 +269,7 @@ sub makeColormap($$$$$) {
     my $maprc = system("pnmcolormap", $ncolors, @options);
 
     if ($maprc != 0) {
-        print(STDERR "pnmcolormap failed, rc=$maprc\n");
+        pm_message("pnmcolormap failed, rc=$maprc");
         exit(1);
     } 
     return $mapfileSpec;
@@ -265,12 +292,16 @@ sub remap($$$$$$) {
         push(@options, "-floyd");
     }
     if ($opt_norandom) {
+        if (defined($opt_randomseed)) {
+             pm_message("You cannot specify -randomseed with -norandom");
+             exit(1);
+        }
         push(@options, "-norandom");
     }
     if (defined($opt_randomseed)) {
         if ($opt_randomseed < 0) {
-             print(STDERR "-randomseed value must not be negative.  " .
-                   "You specified $opt_randomseed\n");
+             pm_message("-randomseed value must not be negative.  " .
+                        "You specified $opt_randomseed");
              exit(10);
         }
         push(@options, "-randomseed=$opt_randomseed");
@@ -285,7 +316,7 @@ sub remap($$$$$$) {
     my $remaprc = system("pnmremap", "-mapfile=$mapfileSpec", @options);
     
     if ($remaprc != 0) {
-        print(STDERR "pnmremap failed, rc=$remaprc\n");
+        pm_message("pnmremap failed, rc=$remaprc");
         exit(1);
     }
 }
@@ -308,8 +339,10 @@ select(OLDOUT);  # avoids Perl bug where it says we never use OLDOUT
 
 
 my $mapfileSpec = makeColormap($cmdlineR->{ncolors}, 
+                               $cmdlineR->{center}, 
                                $cmdlineR->{meanpixel}, 
                                $cmdlineR->{meancolor}, 
+                               $cmdlineR->{spreadbrightness},
                                $cmdlineR->{spreadluminosity},
                                $cmdlineR->{quiet});
 

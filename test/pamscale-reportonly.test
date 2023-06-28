@@ -1,6 +1,8 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamscale
 # Also requires:
+
+echo "Test 1"
 
 pamscale -reportonly 3 testimg.ppm
 pamscale -reportonly 5 testimg.ppm
@@ -15,21 +17,50 @@ pamscale -reportonly -width=640 -yscale=2 testimg.ppm
 pamscale -reportonly -xscale=1.4 -height=400 testimg.ppm
 pamscale -reportonly -pixels=45000 testimg.ppm
 
-# expected error cases
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+# Expected failure cases
+
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
-pamscale -reportonly -xsize=640 -ysize=400 -xscale=2 testimg.ppm || \
-  echo expected error
-pamscale -reportonly -xsize=640 -xscale=2 -yscale=3 testimg.ppm || \
-  echo expected error
-pamscale -reportonly -xsize=640 -ysize=400 -pixels=200000 testimg.ppm || \
-  echo expected error
-pamscale -reportonly -xsize=640 -ysize=400 -xysize 640 400 testimg.ppm || \
-  echo expected error
-pamscale -reportonly -xsize=640 -ysize=400 -xyfit  640 400 testimg.ppm || \
-  echo expected error
-pamscale -reportonly -xsize=640 -ysize=400 -xyfill 640 400 testimg.ppm || \
-  echo expected error
 
+pamscale -reportonly -xsize=640 -ysize=400 -xscale=2 testimg.ppm > \
+  ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamscale -reportonly -xsize=640 -xscale=2 -yscale=3 testimg.ppm > \
+  ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamscale -reportonly -xsize=640 -ysize=400 -pixels=200000 testimg.ppm \
+  > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamscale -reportonly -xsize=640 -ysize=400 -xysize 640 400 testimg.ppm \
+  > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamscale -reportonly -xsize=640 -ysize=400 -xyfit  640 400 testimg.ppm \
+  > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamscale -reportonly -xsize=640 -ysize=400 -xyfill 640 400 testimg.ppm \
+  > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

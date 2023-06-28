@@ -1,0 +1,74 @@
+#! /bin/sh
+# This script tests: pamflip
+# Also requires: pbmmake pbmnoise
+
+tmpdir=${tmpdir:-/tmp}
+dot_pbm=${tmpdir}/dot.pbm
+noise_pbm=${tmpdir}/noise.pbm
+
+echo "Test 1.  Should print 281226646 481 seven times"
+
+pamflip -null maze.pbm | cksum
+pamflip -lr maze.pbm | pamflip -lr | cksum
+pamflip -tb maze.pbm | pamflip -tb | cksum
+pamflip -r180 maze.pbm | pamflip -r180 | cksum
+pamflip -xy maze.pbm | pamflip -xy | cksum
+pamflip -r90 maze.pbm | pamflip -r90 | pamflip -r90 | pamflip -r90 | cksum
+pamflip -r270 maze.pbm | pamflip -r270 | pamflip -r270 | pamflip -r270 | cksum
+
+echo "Test 2.  Should print 1576602925 8 fourteen times"
+
+pbmmake -b 1 1 | tee ${dot_pbm} | cksum
+pamflip -null ${dot_pbm} | cksum
+
+# the next six aren't round-trip
+pamflip -lr ${dot_pbm} | cksum
+pamflip -tb ${dot_pbm} | cksum
+pamflip -r180 ${dot_pbm} | cksum
+pamflip -xy ${dot_pbm} | cksum
+pamflip -r90 ${dot_pbm} | cksum
+pamflip -r270 ${dot_pbm} | cksum
+
+pamflip -lr ${dot_pbm} | pamflip -lr | cksum
+pamflip -tb ${dot_pbm} | pamflip -tb | cksum
+pamflip -r180 ${dot_pbm} | pamflip -r180 | cksum
+pamflip -xy ${dot_pbm} | pamflip -xy | cksum
+pamflip -r90 ${dot_pbm} | pamflip -r90 | pamflip -r90 | pamflip -r90 | cksum
+pamflip -r270 ${dot_pbm} | pamflip -r270 | \
+    pamflip -r270 | pamflip -r270 | cksum
+
+rm ${dot_pbm}
+
+echo "Test 3.  Should print N : 0 thirty-two times"
+
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
+         20 21 22 23 24 25 26 27 28 29 30 31 32 
+  do
+  pbmnoise -randomseed=${i} -pack ${i} 3 > ${noise_pbm} && \
+    pamflip -lr ${noise_pbm} | pamflip -lr | cmp -s - ${noise_pbm}
+  echo $i : $?
+  rm ${noise_pbm}
+  done
+
+echo "Test 4.  Should print N : 0 thirty-two times"
+
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
+         20 21 22 23 24 25 26 27 28 29 30 31 32 
+  do
+  pbmnoise -randomseed=${i} -pack 7 ${i} > ${noise_pbm} && \
+    pamflip -tb ${noise_pbm} | pamflip -tb | cmp -s - ${noise_pbm}
+  echo $i : $?
+  rm ${noise_pbm}
+  done
+
+
+echo "Test 5.  Should print N : 0 thirty-two times"
+
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
+         20 21 22 23 24 25 26 27 28 29 30 31 32 
+  do
+  pbmnoise -randomseed=${i} -pack ${i} ${i} > ${noise_pbm} && \
+    pamflip -xy ${noise_pbm} | pamflip -xy | cmp -s - ${noise_pbm}
+  echo $i : $?
+  rm ${noise_pbm}
+  done

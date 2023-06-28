@@ -1,13 +1,13 @@
 /*===========================================================================*
- * readframe.c                    
- *                                
- *  procedures to read in frames  
- *                                
- * EXPORTED PROCEDURES:           
- *  ReadFrame                     
- *  SetFileType                   
- *  SetFileFormat                 
- *                                
+ * readframe.c
+ *
+ *  procedures to read in frames
+ *
+ * EXPORTED PROCEDURES:
+ *  ReadFrame
+ *  SetFileType
+ *  SetFileFormat
+ *
  *===========================================================================*/
 
 /* COPYRIGHT INFORMATION IS AT THE END OF THIS FILE */
@@ -62,7 +62,7 @@ struct YuvLine {
 #ifdef __OS2__
   #define popen _popen
 #endif
-   
+
 
 /*==================*
  * Global VARIABLES *
@@ -100,7 +100,7 @@ static void DoKillDim (MpegFrame *mf, int w, int h);
 
 
 
-void    
+void
 SetResize(bool const set) {
     resizeFrame = set;
 }
@@ -134,7 +134,7 @@ ReadPNM(MpegFrame * const mpegFrameP,
 static void
 openFile(struct inputSource * const inputSourceP,
          unsigned int         const frameNumber,
-         const char *         const conversion, 
+         const char *         const conversion,
          FILE **              const ifPP) {
 
     if (inputSourceP->stdinUsed) {
@@ -145,24 +145,24 @@ openFile(struct inputSource * const inputSourceP,
                 "INPUT_CONVERTER * in the parameter file or supply the "
                 "frames in files by specifying a directory with "
                 "INPUT_DIRECTORY in the parameter file.");
-        
+
         *ifPP = stdin;
     } else {
         const char * fileName;
         const char * fullFileName;
-        
+
         GetNthInputFileName(inputSourceP, frameNumber, &fileName);
-        
+
         pm_asprintf(&fullFileName, "%s/%s", currentPath, fileName);
-        
+
         CurrFile = fullFileName;
-        
+
         if (fileType == ANY_FILE_TYPE) {
             char command[1024];
             const char * convertPtr;
             char * commandPtr;
             const char * charPtr;
-            
+
             /* replace every occurrence of '*' with fullFileName */
             convertPtr = conversion;
             commandPtr = command;
@@ -172,7 +172,7 @@ openFile(struct inputSource * const inputSourceP,
                     ++commandPtr;
                     ++convertPtr;
                 }
-                
+
                 if (*convertPtr == '*') {
                     /* copy fullFileName */
                     charPtr = fullFileName;
@@ -185,7 +185,7 @@ openFile(struct inputSource * const inputSourceP,
                 }
             }
             *commandPtr = '\0';
-            
+
             *ifPP = popen(command, "r");
             if (*ifPP == NULL) {
                 pm_message(
@@ -201,7 +201,7 @@ openFile(struct inputSource * const inputSourceP,
             *ifPP = fopen(fullFileName, "rb");
             if (*ifPP == NULL)
                 pm_error("Couldn't open input file '%s'", fullFileName);
-            
+
             if (baseFormat == JMOVIE_FILE_TYPE)
                 unlink(fullFileName);
         }
@@ -238,7 +238,7 @@ fileIsAtEnd(FILE * const ifP) {
 
     c = getc(ifP);
     if (c == EOF) {
-        if (feof(ifP)) 
+        if (feof(ifP))
             eof = TRUE;
         else
             pm_error("File error on getc() to position to image");
@@ -248,7 +248,7 @@ fileIsAtEnd(FILE * const ifP) {
         eof = FALSE;
 
         rc = ungetc(c, ifP);
-        if (rc == EOF) 
+        if (rc == EOF)
             pm_error("File error doing ungetc() to position to image.");
     }
     return eof;
@@ -262,14 +262,11 @@ ReadFrameFile(MpegFrame *  const frameP,
               const char * const conversion,
               bool *       const eofP) {
 /*----------------------------------------------------------------------------
-   Read a frame from the file 'ifP'.
+   Read a frame from the file 'ifP', doing adjustments as indicated.
 
    Return *eofP == TRUE iff we encounter EOF before we can get the
    frame.
 -----------------------------------------------------------------------------*/
-    MpegFrame   tempFrame;
-    MpegFrame * framePtr;
-
     /* To make this code fit Netpbm properly, we should remove handling
        of all types except PNM and use pm_nextimage() to handle sensing
        of end of stream.
@@ -278,53 +275,59 @@ ReadFrameFile(MpegFrame *  const frameP,
     if (fileIsAtEnd(ifP))
         *eofP = TRUE;
     else {
+        MpegFrame   preResizeFrame;
+            /* The frame object that holds the frame before resizing */
+        MpegFrame * rawFrameP;
+            /* The frame object with which we read in the raw frame */
+
         *eofP = FALSE;
 
         if (resizeFrame) {
-            tempFrame.inUse = FALSE;
-            tempFrame.orig_y = NULL;
-            tempFrame.y_blocks = NULL;
-            tempFrame.decoded_y = NULL;
-            tempFrame.halfX = NULL;
-            framePtr = &tempFrame;
+            preResizeFrame.inUse = FALSE;
+            preResizeFrame.orig_y = NULL;
+            preResizeFrame.y_blocks = NULL;
+            preResizeFrame.decoded_y = NULL;
+            preResizeFrame.halfX = NULL;
+            rawFrameP = &preResizeFrame;
         } else
-            framePtr = frameP;
+            rawFrameP = frameP;
 
         switch(baseFormat) {
         case YUV_FILE_TYPE:
 
             /* Encoder YUV */
             if ((strncmp (yuvConversion, "EYUV", 4) == 0) ||
-                (strncmp (yuvConversion, "UCB", 3) == 0)) 
+                (strncmp (yuvConversion, "UCB", 3) == 0))
 
-                ReadEYUV(framePtr, ifP, realWidth, realHeight);
+                ReadEYUV(rawFrameP, ifP, realWidth, realHeight);
 
             else
                 /* Abekas-type (interlaced) YUV */
-                ReadAYUV(framePtr, ifP, realWidth, realHeight);
+                ReadAYUV(rawFrameP, ifP, realWidth, realHeight);
 
             break;
         case Y_FILE_TYPE:
-            ReadY(framePtr, ifP, realWidth, realHeight);
+            ReadY(rawFrameP, ifP, realWidth, realHeight);
             break;
         case PNM_FILE_TYPE:
-            ReadPNM(framePtr, ifP);
+            ReadPNM(rawFrameP, ifP);
             break;
         case SUB4_FILE_TYPE:
-            ReadSub4(framePtr, ifP, yuvWidth, yuvHeight);
+            ReadSub4(rawFrameP, ifP, yuvWidth, yuvHeight);
             break;
         case JPEG_FILE_TYPE:
         case JMOVIE_FILE_TYPE:
-            ReadJPEG(framePtr, ifP);
+            ReadJPEG(rawFrameP, ifP);
             break;
         default:
             break;
         }
 
-        if (resizeFrame)
-            Frame_Resize(frameP, &tempFrame, Fsize_x, Fsize_y, 
+        if (resizeFrame) {
+            assert(rawFrameP == &preResizeFrame);
+            Frame_Resize(frameP, &preResizeFrame, Fsize_x, Fsize_y,
                          outputWidth, outputHeight);
-    
+        }
         if (GammaCorrection)
             DoGamma(frameP, Fsize_x, Fsize_y);
 
@@ -338,7 +341,7 @@ ReadFrameFile(MpegFrame *  const frameP,
 
 
 void
-ReadFrame(MpegFrame *          const frameP, 
+ReadFrame(MpegFrame *          const frameP,
           struct inputSource * const inputSourceP,
           unsigned int         const frameNumber,
           const char *         const conversion,
@@ -693,7 +696,7 @@ SeparateLine(fpointer, lineptr, width)
         fprintf(stderr, "       or any even-length string consisting of the letters U, V, and Y.\n");
             exit(1);
         }
-    
+
     }
 
 }
@@ -738,7 +741,7 @@ ReadY(mf, fpointer, width, height)
     for (y = Fsize_y; y < height; y++) {
     safe_fread(junk, 1, width, fpointer);
     }
-    
+
     for (y = 0 ; y < (Fsize_y >> 1); y++) {
       memset(mf->orig_cb[y], 128, (Fsize_x>>1));
       memset(mf->orig_cr[y], 128, (Fsize_x>>1));
@@ -830,7 +833,7 @@ int w,h;
   int i,j;
 
   if (!init_done) {
-    for(i=0; i<256; i++) 
+    for(i=0; i<256; i++)
       GammaVal[i]=(unsigned char) (pow(((double) i)/255.0,GammaValue)*255.0+0.5);
     init_done=TRUE;
   }
@@ -871,7 +874,7 @@ int w,h;
                         ^ kill_dim_break
                              ^kill_dim_end
               kill_dim_slope gives the slope (y = kill_dim_slope * x +0)
-              from 0 to kill_dim_break                      
+              from 0 to kill_dim_break
  *
  *===========================================================================*/
 
@@ -930,7 +933,7 @@ int w,h;
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/RCS/readframe.c,v 1.27 1995/08/14 22:31:40 smoot Exp $
  *  $Log: readframe.c,v $
  *  Revision 1.27  1995/08/14 22:31:40  smoot

@@ -31,11 +31,11 @@ static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-  Convert program invocation arguments (argc,argv) into a format the 
+  Convert program invocation arguments (argc,argv) into a format the
   program can use easily, struct cmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
-  Note that some string information we return as *cmdlineP is in the storage 
+  Note that some string information we return as *cmdlineP is in the storage
   argv[] points to.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
@@ -46,7 +46,7 @@ parseCommandLine(int argc, char ** argv,
     unsigned int maxvalSpec;
     unsigned int option_def_index;
 
-    MALLOCARRAY(option_def, 100);
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "maxval",    OPT_UINT, &cmdlineP->maxval, &maxvalSpec,    0);

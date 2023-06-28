@@ -47,6 +47,19 @@ pbm_allocrow(unsigned int const cols);
   ((bit**) pm_allocarray(cols, rows, sizeof(bit)))
 #define pbm_freearray(bits, rows) pm_freearray((char**) bits, rows)
 #define pbm_freerow(bitrow) pm_freerow((char*) bitrow)
+
+/* Beware of arithmetic overflows when using pbm_packed_bytes(),
+   pbm_allocrow_packed() and pbm_allocarray_packed().
+
+   When cols is signed int, pbm_packed_bytes(cols + 8) overflows
+   with large values.   Same with pamP->width which is always signed int.
+
+   Function validateComputableSize() called by pbm_readpbminit()
+   provides a margin of 10, but the "+7" uses much of it.
+
+   To prevent overflows, cast cols or pamP->width to unsigned int
+   like this: pbm_packed_bytes((unsigned int) cols +8))
+*/
 #define pbm_packed_bytes(cols) (((cols)+7)/8)
 #define pbm_allocrow_packed(cols) \
     ((unsigned char *) pm_allocrow(pbm_packed_bytes(cols), \
@@ -75,14 +88,14 @@ pbm_readpbmrow(FILE * const file,
                int    const format);
 
 void
-pbm_readpbmrow_packed(FILE *          const file, 
+pbm_readpbmrow_packed(FILE *          const file,
                       unsigned char * const packedBits,
-                      int             const cols, 
+                      int             const cols,
                       int             const format);
 
 void
 pbm_readpbmrow_bitoffset(FILE *          const fileP,
-                         unsigned char * const packedBits, 
+                         unsigned char * const packedBits,
                          int             const cols,
                          int             const format,
                          unsigned int    const offset);
@@ -92,28 +105,28 @@ pbm_cleanrowend_packed(unsigned char * const packedBits,
                        unsigned int    const cols);
 
 void
-pbm_writepbminit(FILE * const fileP, 
-                 int    const cols, 
-                 int    const rows, 
+pbm_writepbminit(FILE * const fileP,
+                 int    const cols,
+                 int    const rows,
                  int    const forceplain);
 
 void
-pbm_writepbm(FILE * const fileP, 
-             bit ** const bits, 
-             int    const cols, 
-             int    const rows, 
+pbm_writepbm(FILE * const fileP,
+             bit ** const bits,
+             int    const cols,
+             int    const rows,
              int    const forceplain);
 
 void
-pbm_writepbmrow(FILE *      const fileP, 
-                const bit * const bitrow, 
-                int         const cols, 
+pbm_writepbmrow(FILE *      const fileP,
+                const bit * const bitrow,
+                int         const cols,
                 int         const forceplain);
 
 void
-pbm_writepbmrow_packed(FILE *                const fileP, 
+pbm_writepbmrow_packed(FILE *                const fileP,
                        const unsigned char * const packed_bits,
-                       int                   const cols, 
+                       int                   const cols,
                        int                   const forceplain);
 
 void
@@ -124,7 +137,7 @@ pbm_writepbmrow_bitoffset(FILE *          const ifP,
                           unsigned int    const offset);
 
 void
-pbm_check(FILE * file, const enum pm_check_type check_type, 
+pbm_check(FILE * file, const enum pm_check_type check_type,
           const int format, const int cols, const int rows,
           enum pm_check_code * const retval_p);
 

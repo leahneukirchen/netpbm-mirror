@@ -1,8 +1,35 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmpage
 # Also requires:
 
+echo "Test 1"
 
-pbmpage 1 | cksum
-pbmpage 2 | cksum
-pbmpage 3 | cksum
+pbmpage 1     | cksum
+pbmpage 2     | cksum
+pbmpage 3     | cksum
+pbmpage -a4 2 | cksum
+
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+pbmpage -a3 1 > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmpage 0 > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmpage 4 > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

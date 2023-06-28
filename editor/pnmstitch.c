@@ -20,7 +20,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * Any restrictions or encumberances added to this source code or derivitives,
+ * Any restrictions or encumberances added to this source code or derivatives,
  * is prohibited.
  *
  *  Name: pnmstitch.c
@@ -1116,7 +1116,7 @@ OutputAlloc(Output     * const me,
 static void
 StraightThroughDeAlloc(Output * me)
 {
-    /* Trick the proper freeing of resouces on the Output Image */
+    /* Trick the proper freeing of resources on the Output Image */
     me->image->pam.height = 1;
     OutputDeAlloc(me);
 } /* StraightThroughDeAlloc() - end */
@@ -1131,7 +1131,7 @@ StraightThroughAlloc(Output     * const me,
     if (OutputAlloc(me, file, width, height, prototype) == FALSE) {
         StraightThroughDeAlloc(me);
     }
-    /* Trick the proper allocation of resouces on the Output Image */
+    /* Trick the proper allocation of resources on the Output Image */
     me->image->pam.height = 1;
     me->image->tuple = pnm_allocpamarray(&me->image->pam);
     if (me->image->tuple == (tuple **)NULL) {
@@ -1322,10 +1322,10 @@ Output OutputMethods[] = {
 /* Stitcher Methods */
 
 /* These names are for the 8 parameters of a stitch, in any of the 3
-   methods this program presently implements.  Each is a subscript in
+   methods this program currently implements.  Each is a subscript in
    the parms[] array for the Stitcher object that represents a linear
-   stitching method.  
-   
+   stitching method.
+
    There are also other sets of names for the 8 parameters, such as
    Rotate_a.  I don't know why.  Maybe historical.
 */

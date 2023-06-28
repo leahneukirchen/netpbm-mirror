@@ -1,0 +1,28 @@
+#! /bin/sh
+# This script tests: ppmspread
+# Also requires: pamfile ppmtopgm pgmtopbm
+
+# Input/output size does not change
+
+echo "Test 1."
+cat testimg.ppm | pamfile -machine
+ppmspread -randomseed=100 20 testimg.ppm | pamfile -machine
+
+echo "Test 2."
+pamfile -size maze.pbm
+ppmspread -randomseed=100 20 maze.pbm | pamfile -size
+
+# No change when spread distance value is 0
+
+echo "Test 3. Should print 281226646 481"
+ppmspread -randomseed=1 0 maze.pbm | ppmtopgm | pgmtopbm | cksum
+
+# The following tests will fail when changes are made to the random
+# number generator
+
+echo "Test 4. Should print 639729144 101484"
+ppmspread -randomseed=1 10 testimg.ppm | cksum
+
+echo "Test 5. Should print 3278353642 685"
+ppmspread -randomseed=1 1 testgrid.pbm | cksum
+

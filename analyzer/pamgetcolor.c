@@ -37,7 +37,7 @@ typedef struct {
     uint         regN;      /* number of regions                             */
     uint         maxLbLen;  /* maximum label length                          */
     RegSpec *    regSpecs;
-        /* list of points to sample, dymamically allocated*/
+        /* list of points to sample, dynamically allocated*/
     const char * formatStr; /* output color format as string                 */
     uint         formatId;  /* the Id of the selected color format           */
     uint         formatArg; /* the argument to the color formatting function */
@@ -45,9 +45,9 @@ typedef struct {
 } CmdLineInfo;
 
 /* Generic pointer to a color-formatting function. Returns the textual
-   representation of the color <tuple> in terms of the image pointed-to
+   representation of the color <tuple> in terms of the image pointed to
    by <pamP>. <param> is a generic integer parameter that depends on the
-   specific funcion and may denote precison or maxval.
+   specific function and may denote precision or maxval.
 */
 typedef const char *
 (*FormatColor)(struct pam * const pamP,

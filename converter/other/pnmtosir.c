@@ -20,16 +20,16 @@
 
 int
 main(int argc, const char * argv[]) {
-    
+
     FILE * ifP;
     xel ** xels;
     int rows, cols, format;
     unsigned int n;
     bool isGrayscale;
     xelval maxval;
-    unsigned short Header[16];
-    unsigned short LutHeader[16];
-    unsigned short Lut[2048];
+    unsigned short Header[10];
+    unsigned short LutHeader[5];
+    unsigned short Lut[1024];
 
     pm_proginit(&argc, argv);
 
@@ -43,9 +43,9 @@ main(int argc, const char * argv[]) {
     }  else {
         ifP = stdin;
     }
-    
+
     xels = pnm_readpnm(ifP, &cols, &rows, &maxval, &format);
-    
+
     /* Figure out the colormap. */
     switch (PNM_FORMAT_TYPE(format) ) {
     case PPM_TYPE:
@@ -93,15 +93,19 @@ main(int argc, const char * argv[]) {
         pm_writelittleshort(stdout,LutHeader[n]);
     for (n = 5; n < 256; ++n)
         pm_writelittleshort(stdout,0);
- 
-    for (n = 0; n < 3; ++n) {
+
+    for (n = 0; n < 256; ++n) {
         unsigned int m;
-        for (m = 0; m < 256; ++m)
-            Lut[m * 4 + n] = m << 8;
+        for (m = 0; m < 3; ++m)
+            Lut[n * 4 + m] = n << 8;
+
+        Lut[n * 4 + 3] = 0;
+            /* Clear to ensure repeatable output, suppress Valgrind error */
     }
+
     for (n = 0; n < 1024; ++n)
         pm_writelittleshort(stdout,Lut[n]);
- 
+
     /* Finally, write out the data. */
     switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE: {
@@ -110,13 +114,13 @@ main(int argc, const char * argv[]) {
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 unsigned char const ub =
-                    (char) (PPM_GETR(xels[row][col]) * (255 / maxval)); 
+                    (char) (PPM_GETR(xels[row][col]) * (255 / maxval));
                 fputc(ub, stdout);
             }
         }
         for (row = 0; row < rows; ++row) {
             unsigned int col;
-            for (col = 0; col < cols; ++col) {  
+            for (col = 0; col < cols; ++col) {
                 unsigned const char ub =
                     (char) (PPM_GETG(xels[row][col]) * (255 / maxval));
                 fputc(ub, stdout);
@@ -124,7 +128,7 @@ main(int argc, const char * argv[]) {
         }
         for (row = 0; row < rows; ++row) {
             unsigned int col;
-            for (col = 0; col < cols; ++col) {  
+            for (col = 0; col < cols; ++col) {
                 unsigned const char ub =
                     (char) (PPM_GETB(xels[row][col]) * (255 / maxval));
                 fputc(ub, stdout);
@@ -144,10 +148,11 @@ main(int argc, const char * argv[]) {
         }
     } break;
     }
-    
+
     pm_close(ifP);
 
     return 0;
 }
+
 
 

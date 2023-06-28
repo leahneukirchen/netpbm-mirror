@@ -1,7 +1,6 @@
-/******************************************************************************
-                               pnmcolormap.c
-*******************************************************************************
-
+/*=============================================================================
+                               pnmcolormap
+===============================================================================
   Create a colormap file (a PPM image containing one pixel of each of a set
   of colors).  Base the set of colors on an input image.
 
@@ -20,9 +19,8 @@
   copyright notice and this permission notice appear in supporting
   documentation.  This software is provided "as is" without express or
   implied warranty.
-
-******************************************************************************/
-
+=============================================================================*/
+#include <assert.h>
 #include <math.h>
 
 #include "pm_config.h"
@@ -33,39 +31,73 @@
 #include "pam.h"
 #include "pammap.h"
 
-enum methodForLargest {LARGE_NORM, LARGE_LUM};
+enum MethodForLargest {LARGE_NORM, LARGE_LUM};
 
-enum methodForRep {REP_CENTER_BOX, REP_AVERAGE_COLORS, REP_AVERAGE_PIXELS};
+enum MethodForRep {REP_CENTER_BOX, REP_AVERAGE_COLORS, REP_AVERAGE_PIXELS};
 
-typedef struct box* boxVector;
-struct box {
-    int ind;
-    int colors;
-    int sum;
+enum MethodForSplit {SPLIT_MAX_PIXELS, SPLIT_MAX_COLORS, SPLIT_MAX_SPREAD};
+
+struct Box {
+/*----------------------------------------------------------------------------
+   A box contains an extent of a color frequency table, i.e. the colors
+   with some consecutive index values in the color frequency table.
+-----------------------------------------------------------------------------*/
+    unsigned int startIndex;
+        /* First index in the extent */
+    unsigned int colorCt;
+        /* Size of the extent (Number of colors in it -- at least 1) */
+    unsigned int sum;
+        /* Number of pixels of all colors in the extent */
+    unsigned int maxdim;
+        /* Which dimension has the largest spread.  RGB plane number. */
+        /* Meaningless if box contains only 1 color */
+    sample       spread;
+        /* spread in dimension 'maxdim' */
+        /* Meaningless if box contains only 1 color */
 };
 
-struct cmdlineInfo {
+struct BoxVector {
+    tupletable2 colorFreqTable;
+        /* The colors and their frequencies (number of pixels in the image of
+           that color), ordered into consecutive boxes, as defined by 'box'.
+        */
+    unsigned int colorDepth;
+        /* Number of planes in the tuples of 'colorFreqTable' */
+    struct Box * box;  /* malloc'ed array */
+        /* An array of boxes that contain consecutive extents of
+           'colorFreqTable'.  The list covers the entire table.
+        */
+    unsigned int boxCt;
+        /* Number of boxes in the above list */
+    unsigned int capacity;
+        /* Number of boxes the array is capable of containing */
+};
+
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
+    const char * inputFileNm;  /* Name of input file */
     unsigned int allcolors;  /* boolean: select all colors from the input */
     unsigned int newcolors;
         /* Number of colors argument; meaningless if allcolors true */
-    enum methodForLargest methodForLargest;
+    enum MethodForLargest methodForLargest;
         /* -spreadintensity/-spreadluminosity options */
-    enum methodForRep methodForRep;
+    enum MethodForRep methodForRep;
         /* -center/-meancolor/-meanpixel options */
+    enum MethodForSplit methodForSplit;
+        /* -splitpixelct/-splitcolorct/-splitspread options */
     unsigned int sort;
     unsigned int square;
     unsigned int verbose;
+    unsigned int debug;
 };
 
 
 
 static void
-parseCommandLine (int argc, char ** argv,
-                  struct cmdlineInfo *cmdlineP) {
+parseCommandLine (int argc, const char ** argv,
+                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -85,6 +117,7 @@ parseCommandLine (int argc, char ** argv,
 
     unsigned int spreadbrightness, spreadluminosity;
     unsigned int center, meancolor, meanpixel;
+    unsigned int splitpixelct, splitcolorct, splitspread;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -99,18 +132,26 @@ parseCommandLine (int argc, char ** argv,
             NULL,                       &meancolor,        0);
     OPTENT3(0,   "meanpixel",        OPT_FLAG,
             NULL,                       &meanpixel,        0);
+    OPTENT3(0,   "splitpixelct",     OPT_FLAG,
+            NULL,                       &splitpixelct,     0);
+    OPTENT3(0,   "splitcolorct",     OPT_FLAG,
+            NULL,                       &splitcolorct,     0);
+    OPTENT3(0,   "splitspread",      OPT_FLAG,
+            NULL,                       &splitspread,      0);
     OPTENT3(0, "sort",     OPT_FLAG,   NULL,
             &cmdlineP->sort,       0 );
     OPTENT3(0, "square",   OPT_FLAG,   NULL,
-            &cmdlineP->square,       0 );
+            &cmdlineP->square,     0 );
     OPTENT3(0, "verbose",   OPT_FLAG,   NULL,
-            &cmdlineP->verbose,       0 );
+            &cmdlineP->verbose,    0 );
+    OPTENT3(0, "debug",     OPT_FLAG,   NULL,
+            &cmdlineP->debug,      0 );
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
 
@@ -132,15 +173,24 @@ parseCommandLine (int argc, char ** argv,
     else
         cmdlineP->methodForRep = REP_CENTER_BOX;
 
+    if (splitpixelct)
+        cmdlineP->methodForSplit = SPLIT_MAX_PIXELS;
+    else if (splitcolorct)
+        cmdlineP->methodForSplit = SPLIT_MAX_COLORS;
+    else if (splitspread)
+        cmdlineP->methodForSplit = SPLIT_MAX_SPREAD;
+    else
+        cmdlineP->methodForSplit = SPLIT_MAX_PIXELS;
+
     if (argc-1 > 2)
         pm_error("Program takes at most two arguments: number of colors "
                  "and input file specification.  "
                  "You specified %d arguments.", argc-1);
     else {
         if (argc-1 < 2)
-            cmdlineP->inputFilespec = "-";
+            cmdlineP->inputFileNm = "-";
         else
-            cmdlineP->inputFilespec = argv[2];
+            cmdlineP->inputFileNm = argv[2];
 
         if (argc-1 < 1)
             pm_error("You must specify the number of colors in the "
@@ -185,8 +235,13 @@ compareplane(const void * const arg1,
     const struct tupleint * const * const comparandPP  = arg1;
     const struct tupleint * const * const comparatorPP = arg2;
 
-    return (*comparandPP)->tuple[compareplanePlane] -
-        (*comparatorPP)->tuple[compareplanePlane];
+    sample const comparandSample  = (*comparandPP) ->tuple[compareplanePlane];
+    sample const comparatorSample = (*comparatorPP)->tuple[compareplanePlane];
+
+    return
+        comparandSample < comparatorSample ? -1 :
+        comparandSample > comparatorSample ? 1 :
+        0;
 }
 
 
@@ -196,10 +251,73 @@ static qsort_comparison_fn sumcompare;
 #endif
 
 static int
-sumcompare(const void * const b1, const void * const b2) {
-    return(((boxVector)b2)->sum - ((boxVector)b1)->sum);
+sumcompare(const void * const arg1,
+           const void * const arg2) {
+
+    struct Box * const comparandP  = (struct Box *)arg1;
+    struct Box * const comparatorP = (struct Box *)arg2;
+
+    return
+        comparatorP->sum < comparandP->sum ? -1 :
+        comparatorP->sum > comparandP->sum ? 1 :
+        0;
 }
 
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn colcompare;
+#endif
+
+static int
+colcompare(const void * const arg1,
+           const void * const arg2) {
+
+    struct Box * const comparandP  = (struct Box *)arg1;
+    struct Box * const comparatorP = (struct Box *)arg2;
+
+    return
+        comparatorP->colorCt < comparandP->colorCt ? -1 :
+        comparatorP->colorCt > comparandP->colorCt ? 1 :
+        0;
+}
+
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn spreadcompare;
+#endif
+
+static int
+spreadcompare(const void * const arg1,
+              const void * const arg2) {
+
+    struct Box * const comparandP  = (struct Box *)arg1;
+    struct Box * const comparatorP = (struct Box *)arg2;
+
+    return
+        comparatorP->spread < comparandP->spread ? -1 :
+        comparatorP->spread > comparandP->spread ? 1 :
+        0;
+}
+
+
+
+static void
+sortBoxes(struct BoxVector *  const boxVectorP,
+          enum MethodForSplit const methodForSplit) {
+
+    qsort_comparison_fn * comparisonFn;
+
+    switch (methodForSplit){
+    case SPLIT_MAX_PIXELS: comparisonFn = &sumcompare;    break;
+    case SPLIT_MAX_COLORS: comparisonFn = &colcompare;    break;
+    case SPLIT_MAX_SPREAD: comparisonFn = &spreadcompare; break;
+    }
+
+    qsort((char*) &boxVectorP->box[0], boxVectorP->boxCt, sizeof(struct Box),
+          comparisonFn);
+}
 
 
 
@@ -209,71 +327,29 @@ sumcompare(const void * const b1, const void * const b2) {
 ** Display", SIGGRAPH '82 Proceedings, page 297.
 */
 
-static tupletable2
-newColorMap(unsigned int const newcolors,
-            unsigned int const depth) {
-
-    tupletable2 colormap;
-    unsigned int i;
-    struct pam pam;
-
-    pam.depth = depth;
-
-    colormap.table = pnm_alloctupletable(&pam, newcolors);
-
-    for (i = 0; i < newcolors; ++i) {
-        unsigned int plane;
-        for (plane = 0; plane < depth; ++plane)
-            colormap.table[i]->tuple[plane] = 0;
-    }
-    colormap.size = newcolors;
-
-    return colormap;
-}
-
-
-
-static boxVector
-newBoxVector(int const colors, int const sum, int const newcolors) {
-
-    boxVector bv;
-    MALLOCARRAY(bv, newcolors);
-    if (bv == NULL)
-        pm_error("out of memory allocating box vector table");
-
-    /* Set up the initial box. */
-    bv[0].ind = 0;
-    bv[0].colors = colors;
-    bv[0].sum = sum;
-
-    return bv;
-}
-
-
-
 static void
-findBoxBoundaries(tupletable2  const colorfreqtable,
+findBoxBoundaries(tupletable2  const colorFreqTable,
                   unsigned int const depth,
                   unsigned int const boxStart,
                   unsigned int const boxSize,
                   sample             minval[],
                   sample             maxval[]) {
 /*----------------------------------------------------------------------------
-  Go through the box finding the minimum and maximum of each
-  component - the boundaries of the box.
+  Go through the box finding the minimum and maximum of each component - the
+  boundaries of the box.
 -----------------------------------------------------------------------------*/
     unsigned int plane;
     unsigned int i;
 
     for (plane = 0; plane < depth; ++plane) {
-        minval[plane] = colorfreqtable.table[boxStart]->tuple[plane];
+        minval[plane] = colorFreqTable.table[boxStart]->tuple[plane];
         maxval[plane] = minval[plane];
     }
 
     for (i = 1; i < boxSize; ++i) {
         unsigned int plane;
         for (plane = 0; plane < depth; ++plane) {
-            sample const v = colorfreqtable.table[boxStart + i]->tuple[plane];
+            sample const v = colorFreqTable.table[boxStart + i]->tuple[plane];
             if (v < minval[plane]) minval[plane] = v;
             if (v > maxval[plane]) maxval[plane] = v;
         }
@@ -282,57 +358,161 @@ findBoxBoundaries(tupletable2  const colorfreqtable,
 
 
 
-static unsigned int
-largestByNorm(sample minval[], sample maxval[], unsigned int const depth) {
+static void
+findPlaneWithLargestSpreadByNorm(sample         const minval[],
+                                 sample         const maxval[],
+                                 unsigned int   const depth,
+                                 unsigned int * const planeP,
+                                 sample *       const spreadP) {
 
-    unsigned int largestDimension;
+    unsigned int planeWithLargest;
+    sample       largestSpreadSoFar;
     unsigned int plane;
 
-    sample largestSpreadSoFar = 0;
-    largestDimension = 0;
-    for (plane = 0; plane < depth; ++plane) {
+    for (plane = 0, largestSpreadSoFar = 0; plane < depth; ++plane) {
+
         sample const spread = maxval[plane]-minval[plane];
         if (spread > largestSpreadSoFar) {
-            largestDimension = plane;
             largestSpreadSoFar = spread;
+            planeWithLargest   = plane;
         }
     }
-    return largestDimension;
+    *planeP  = planeWithLargest;
+    *spreadP = largestSpreadSoFar;
 }
 
 
 
-static unsigned int
-largestByLuminosity(sample minval[], sample maxval[],
-                    unsigned int const depth) {
+static void
+findPlaneWithLargestSpreadByLuminosity(sample         const minval[],
+                                       sample         const maxval[],
+                                       unsigned int   const depth,
+                                       unsigned int * const planeP,
+                                       sample *       const spreadP) {
 /*----------------------------------------------------------------------------
    This subroutine presumes that the tuple type is either
    BLACKANDWHITE, GRAYSCALE, or RGB (which implies pamP->depth is 1 or 3).
    To save time, we don't actually check it.
 -----------------------------------------------------------------------------*/
-    unsigned int retval;
-
-    if (depth == 1)
-        retval = 0;
-    else {
+    if (depth == 1){
+        *planeP  = 0;
+        *spreadP = 0;
+    } else {
         /* An RGB tuple */
-        unsigned int largestDimension;
+        unsigned int planeWithLargest;
+        sample       largestSpreadSoFar;
         unsigned int plane;
-        double largestSpreadSoFar;
 
-        largestSpreadSoFar = 0.0;
+        assert(depth >= 3);
 
-        for (plane = 0; plane < 3; ++plane) {
+        for (plane = 0, largestSpreadSoFar = 0; plane < 3; ++plane) {
             double const spread =
                 pnm_lumin_factor[plane] * (maxval[plane]-minval[plane]);
             if (spread > largestSpreadSoFar) {
-                largestDimension = plane;
                 largestSpreadSoFar = spread;
+                planeWithLargest   = plane;
             }
         }
-        retval = largestDimension;
+        *planeP  = planeWithLargest;
+        *spreadP = largestSpreadSoFar;
     }
-    return retval;
+}
+
+
+
+static void
+computeBoxSpread(const struct Box *    const boxP,
+                 tupletable2           const colorFreqTable,
+                 unsigned int          const depth,
+                 enum MethodForLargest const methodForLargest,
+                 unsigned int *        const planeWithLargestP,
+                 sample *              const spreadP
+                 ) {
+/*----------------------------------------------------------------------------
+  Find the spread in the dimension in which it is greatest.
+
+  Return as *planeWithLargestP the number of that plane and as *spreadP the
+  spread in that plane.
+-----------------------------------------------------------------------------*/
+    sample * minval;  /* malloc'ed array */
+    sample * maxval;  /* malloc'ed array */
+
+    MALLOCARRAY_NOFAIL(minval, depth);
+    MALLOCARRAY_NOFAIL(maxval, depth);
+
+    findBoxBoundaries(colorFreqTable, depth, boxP->startIndex, boxP->colorCt,
+                      minval, maxval);
+
+    switch (methodForLargest) {
+    case LARGE_NORM:
+        findPlaneWithLargestSpreadByNorm(minval, maxval, depth,
+                                         planeWithLargestP, spreadP);
+        break;
+    case LARGE_LUM:
+        findPlaneWithLargestSpreadByLuminosity(minval, maxval, depth,
+                                               planeWithLargestP, spreadP);
+        break;
+    }
+    free(minval); free(maxval);
+}
+
+
+
+static unsigned int
+freqTotal(tupletable2 const freqTable) {
+
+    unsigned int i;
+    unsigned int sum;
+
+    for (i = 0, sum = 0; i < freqTable.size; ++i)
+        sum += freqTable.table[i]->value;
+
+    return sum;
+}
+
+
+
+static struct BoxVector
+newBoxVector(tupletable2           const colorFreqTable,
+             unsigned int          const capacity,
+             unsigned int          const depth,
+             enum MethodForLargest const methodForLargest) {
+
+    unsigned int const colorCt = colorFreqTable.size;
+    unsigned int const sum     = freqTotal(colorFreqTable);
+
+    struct BoxVector boxVector;
+
+    boxVector.colorFreqTable = colorFreqTable;
+    boxVector.colorDepth     = depth;
+
+    MALLOCARRAY(boxVector.box, capacity);
+
+    if (!boxVector.box)
+        pm_error("out of memory allocating box vector table");
+
+    /* Set up the initial box. */
+    boxVector.box[0].startIndex = 0;
+    boxVector.box[0].colorCt    = colorCt;
+    boxVector.box[0].sum        = sum;
+
+    computeBoxSpread(&boxVector.box[0], colorFreqTable, depth,
+                     methodForLargest,
+                     &boxVector.box[0].maxdim,
+                     &boxVector.box[0].spread);
+
+    boxVector.boxCt    = 1;
+    boxVector.capacity = capacity;
+
+    return boxVector;
+}
+
+
+
+static void
+destroyBoxVector(struct BoxVector const boxVector) {
+
+    free(boxVector.box);
 }
 
 
@@ -340,7 +520,7 @@ largestByLuminosity(sample minval[], sample maxval[],
 static void
 centerBox(int          const boxStart,
           int          const boxSize,
-          tupletable2  const colorfreqtable,
+          tupletable2  const colorFreqTable,
           unsigned int const depth,
           tuple        const newTuple) {
 
@@ -350,10 +530,10 @@ centerBox(int          const boxStart,
         int minval, maxval;
         unsigned int i;
 
-        minval = maxval = colorfreqtable.table[boxStart]->tuple[plane];
+        minval = maxval = colorFreqTable.table[boxStart]->tuple[plane];
 
         for (i = 1; i < boxSize; ++i) {
-            int const v = colorfreqtable.table[boxStart + i]->tuple[plane];
+            int const v = colorFreqTable.table[boxStart + i]->tuple[plane];
             minval = MIN( minval, v);
             maxval = MAX( maxval, v);
         }
@@ -363,10 +543,34 @@ centerBox(int          const boxStart,
 
 
 
+static tupletable2
+newColorMap(unsigned int const colorCt,
+            unsigned int const depth) {
+
+    tupletable2 colormap;
+    unsigned int i;
+    struct pam pam;
+
+    pam.depth = depth;
+
+    colormap.table = pnm_alloctupletable(&pam, colorCt);
+
+    for (i = 0; i < colorCt; ++i) {
+        unsigned int plane;
+        for (plane = 0; plane < depth; ++plane)
+            colormap.table[i]->tuple[plane] = 0;
+    }
+    colormap.size = colorCt;
+
+    return colormap;
+}
+
+
+
 static void
 averageColors(int          const boxStart,
               int          const boxSize,
-              tupletable2  const colorfreqtable,
+              tupletable2  const colorFreqTable,
               unsigned int const depth,
               tuple        const newTuple) {
 
@@ -379,7 +583,7 @@ averageColors(int          const boxStart,
         sum = 0;
 
         for (i = 0; i < boxSize; ++i)
-            sum += colorfreqtable.table[boxStart+i]->tuple[plane];
+            sum += colorFreqTable.table[boxStart+i]->tuple[plane];
 
         newTuple[plane] = ROUNDDIV(sum, boxSize);
     }
@@ -390,7 +594,7 @@ averageColors(int          const boxStart,
 static void
 averagePixels(int          const boxStart,
               int          const boxSize,
-              tupletable2  const colorfreqtable,
+              tupletable2  const colorFreqTable,
               unsigned int const depth,
               tuple        const newTuple) {
 
@@ -402,7 +606,7 @@ averagePixels(int          const boxStart,
     /* Count the tuples in question */
     n = 0;  /* initial value */
     for (i = 0; i < boxSize; ++i)
-        n += colorfreqtable.table[boxStart + i]->value;
+        n += colorFreqTable.table[boxStart + i]->value;
 
 
     for (plane = 0; plane < depth; ++plane) {
@@ -412,8 +616,8 @@ averagePixels(int          const boxStart,
         sum = 0;
 
         for (i = 0; i < boxSize; ++i)
-            sum += colorfreqtable.table[boxStart+i]->tuple[plane]
-                * colorfreqtable.table[boxStart+i]->value;
+            sum += colorFreqTable.table[boxStart+i]->tuple[plane]
+                * colorFreqTable.table[boxStart+i]->value;
 
         newTuple[plane] = ROUNDDIV(sum, n);
     }
@@ -422,12 +626,9 @@ averagePixels(int          const boxStart,
 
 
 static tupletable2
-colormapFromBv(unsigned int      const newcolors,
-               boxVector         const bv,
-               unsigned int      const boxes,
-               tupletable2       const colorfreqtable,
-               unsigned int      const depth,
-               enum methodForRep const methodForRep) {
+colormapFromBv(unsigned int      const colorCt,
+               struct BoxVector  const boxVector,
+               enum MethodForRep const methodForRep) {
     /*
     ** Ok, we've got enough boxes.  Now choose a representative color for
     ** each box.  There are a number of possible ways to make this choice.
@@ -437,23 +638,29 @@ colormapFromBv(unsigned int      const newcolors,
     ** method is to average all the pixels in the box.
     */
     tupletable2 colormap;
-    unsigned int bi;
+    unsigned int boxIdx;
 
-    colormap = newColorMap(newcolors, depth);
+    colormap = newColorMap(colorCt, boxVector.colorDepth);
 
-    for (bi = 0; bi < boxes; ++bi) {
+    for (boxIdx = 0; boxIdx < boxVector.boxCt; ++boxIdx) {
         switch (methodForRep) {
         case REP_CENTER_BOX:
-            centerBox(bv[bi].ind, bv[bi].colors, colorfreqtable, depth,
-                      colormap.table[bi]->tuple);
+            centerBox(boxVector.box[boxIdx].startIndex,
+                      boxVector.box[boxIdx].colorCt,
+                      boxVector.colorFreqTable, boxVector.colorDepth,
+                      colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_COLORS:
-            averageColors(bv[bi].ind, bv[bi].colors, colorfreqtable, depth,
-                          colormap.table[bi]->tuple);
+            averageColors(boxVector.box[boxIdx].startIndex,
+                          boxVector.box[boxIdx].colorCt,
+                          boxVector.colorFreqTable, boxVector.colorDepth,
+                          colormap.table[boxIdx]->tuple);
             break;
         case REP_AVERAGE_PIXELS:
-            averagePixels(bv[bi].ind, bv[bi].colors, colorfreqtable, depth,
-                          colormap.table[bi]->tuple);
+            averagePixels(boxVector.box[boxIdx].startIndex,
+                          boxVector.box[boxIdx].colorCt,
+                          boxVector.colorFreqTable, boxVector.colorDepth,
+                          colormap.table[boxIdx]->tuple);
             break;
         default:
             pm_error("Internal error: invalid value of methodForRep: %d",
@@ -465,153 +672,170 @@ colormapFromBv(unsigned int      const newcolors,
 
 
 
-static unsigned int
-freqTotal(tupletable2 const freqtable) {
-
-    unsigned int i;
-    unsigned int sum;
-
-    sum = 0;
-
-    for (i = 0; i < freqtable.size; ++i)
-        sum += freqtable.table[i]->value;
-
-    return sum;
-}
-
-
 static void
-splitBox(boxVector             const bv,
-         unsigned int *        const boxesP,
-         unsigned int          const bi,
-         tupletable2           const colorfreqtable,
-         unsigned int          const depth,
-         enum methodForLargest const methodForLargest) {
+splitBox(struct BoxVector *    const boxVectorP,
+         unsigned int          const boxIdx,
+         enum MethodForLargest const methodForLargest,
+         enum MethodForSplit   const methodForSplit) {
 /*----------------------------------------------------------------------------
-   Split Box 'bi' in the box vector bv (so that bv contains one more box
-   than it did as input).  Split it so that each new box represents about
-   half of the pixels in the distribution given by 'colorfreqtable' for
-   the colors in the original box, but with distinct colors in each of the
-   two new boxes.
+   Split Box 'boxIdx' in the box vector 'boxVector' (so that 'boxVector'
+   contains one more box than it did as input).  Split it so that each new box
+   represents about half of the pixels in the image for the colors in the
+   original box, but with distinct colors in each of the two new boxes.
 
    Assume the box contains at least two colors.
 -----------------------------------------------------------------------------*/
-    unsigned int const boxStart = bv[bi].ind;
-    unsigned int const boxSize  = bv[bi].colors;
-    unsigned int const sm       = bv[bi].sum;
+    unsigned int const boxStart = boxVectorP->box[boxIdx].startIndex;
+    unsigned int const boxSize  = boxVectorP->box[boxIdx].colorCt;
+    unsigned int const sum      = boxVectorP->box[boxIdx].sum;
 
-    sample * minval;  /* malloc'ed array */
-    sample * maxval;  /* malloc'ed array */
-
-    unsigned int largestDimension;
-        /* number of the plane with the largest spread */
     unsigned int medianIndex;
-    int lowersum;
+    unsigned int lowerSum;
         /* Number of pixels whose value is "less than" the median */
 
-    MALLOCARRAY_NOFAIL(minval, depth);
-    MALLOCARRAY_NOFAIL(maxval, depth);
 
-    findBoxBoundaries(colorfreqtable, depth, boxStart, boxSize,
-                      minval, maxval);
-
-    /* Find the largest dimension, and sort by that component.  I have
-       included two methods for determining the "largest" dimension;
-       first by simply comparing the range in RGB space, and second by
-       transforming into luminosities before the comparison.
-    */
-    switch (methodForLargest) {
-    case LARGE_NORM:
-        largestDimension = largestByNorm(minval, maxval, depth);
-        break;
-    case LARGE_LUM:
-        largestDimension = largestByLuminosity(minval, maxval, depth);
-        break;
-    }
-
-    /* TODO: I think this sort should go after creating a box,
-       not before splitting.  Because you need the sort to use
-       the REP_CENTER_BOX method of choosing a color to
-       represent the final boxes
+    /* Perhaps this sort should go after creating a box, not before splitting.
+       Because you need the sort to use the REP_CENTER_BOX method of choosing
+       a color to represent the final boxes
     */
 
     /* Set the gross global variable 'compareplanePlane' as a
        parameter to compareplane(), which is called by qsort().
     */
-    compareplanePlane = largestDimension;
-    qsort((char*) &colorfreqtable.table[boxStart], boxSize,
-          sizeof(colorfreqtable.table[boxStart]),
+    compareplanePlane = boxVectorP->box[boxIdx].maxdim;
+    qsort((char*) &boxVectorP->colorFreqTable.table[boxStart], boxSize,
+          sizeof(boxVectorP->colorFreqTable.table[boxStart]),
           compareplane);
 
     {
-        /* Now find the median based on the counts, so that about half
-           the pixels (not colors, pixels) are in each subdivision.  */
-
+        /* Find the median based on the counts, so that about half the pixels
+           (not colors, pixels) are in each subdivision.
+        */
         unsigned int i;
 
-        lowersum = colorfreqtable.table[boxStart]->value; /* initial value */
-        for (i = 1; i < boxSize - 1 && lowersum < sm/2; ++i) {
-            lowersum += colorfreqtable.table[boxStart + i]->value;
+        lowerSum = boxVectorP->colorFreqTable.table[boxStart]->value;
+            /* initial value */
+        for (i = 1; i < boxSize - 1 && lowerSum < sum/2; ++i) {
+            lowerSum += boxVectorP->colorFreqTable.table[boxStart + i]->value;
         }
         medianIndex = i;
     }
     /* Split the box, and sort to bring the biggest boxes to the top.  */
+    {
+        struct Box * const oldBoxP = &boxVectorP->box[boxIdx];
 
-    bv[bi].colors = medianIndex;
-    bv[bi].sum = lowersum;
-    bv[*boxesP].ind = boxStart + medianIndex;
-    bv[*boxesP].colors = boxSize - medianIndex;
-    bv[*boxesP].sum = sm - lowersum;
-    ++(*boxesP);
-    qsort((char*) bv, *boxesP, sizeof(struct box), sumcompare);
+        oldBoxP->colorCt = medianIndex;
+        oldBoxP->sum     = lowerSum;
+        computeBoxSpread(oldBoxP, boxVectorP->colorFreqTable,
+                         boxVectorP->colorDepth, methodForLargest,
+                         &oldBoxP->maxdim, &oldBoxP->spread);
+    }
+    {
+        struct Box * const newBoxP = &boxVectorP->box[boxVectorP->boxCt];
 
-    free(minval); free(maxval);
+        newBoxP->startIndex = boxStart + medianIndex;
+        newBoxP->colorCt    = boxSize - medianIndex;
+        newBoxP->sum        = sum - lowerSum;
+        computeBoxSpread(newBoxP, boxVectorP->colorFreqTable,
+                         boxVectorP->colorDepth, methodForLargest,
+                         &newBoxP->maxdim, &newBoxP->spread);
+        ++boxVectorP->boxCt;
+    }
+
+    sortBoxes(boxVectorP, methodForSplit);
 }
 
 
 
 static void
-mediancut(tupletable2           const colorfreqtable,
+reportBoxVector(struct BoxVector const boxVector) {
+
+    unsigned int i;
+
+    pm_message("All colors of image, sorted into %u boxes:", boxVector.boxCt);
+
+    for (i = 0; i < boxVector.boxCt; ++i) {
+        const struct Box * const boxP = &boxVector.box[i];
+
+        unsigned int j;
+
+        pm_message("Box %u, %u colors starting with index %u (%u pixels):",
+                   i, boxP->colorCt, boxP->startIndex, boxP->sum);
+        if (boxP->colorCt > 1)
+            pm_message("Largest spread is %lu, in plane %u",
+                       boxP->spread, boxP->maxdim);
+
+        for (j = 0; j < boxP->colorCt; ++j) {
+            unsigned int colorIdx = boxP->startIndex + j;
+
+            assert(colorIdx < boxVector.colorFreqTable.size);
+
+            tuple const color =
+                boxVector.colorFreqTable.table[colorIdx]->tuple;
+
+            pm_message("(%lu, %lu, %lu)",
+                       color[PAM_RED_PLANE],
+                       color[PAM_GRN_PLANE],
+                       color[PAM_BLU_PLANE]);
+        }
+    }
+}
+
+
+
+static void
+mediancut(tupletable2           const colorFreqTable,
           unsigned int          const depth,
-          int                   const newcolors,
-          enum methodForLargest const methodForLargest,
-          enum methodForRep     const methodForRep,
+          unsigned int          const newColorCt,
+          enum MethodForLargest const methodForLargest,
+          enum MethodForRep     const methodForRep,
+          enum MethodForSplit   const methodForSplit,
+          bool                  const wantBvReport,
           tupletable2 *         const colormapP) {
 /*----------------------------------------------------------------------------
-   Compute a set of only 'newcolors' colors that best represent an
+   Compute a set of only 'newColorCt' colors that best represent an
    image whose pixels are summarized by the histogram
-   'colorfreqtable'.  Each tuple in that table has depth 'depth'.
-   colorfreqtable.table[i] tells the number of pixels in the subject image
-   have a particular color.
+   'colorFreqTable'.  Each tuple in that table has depth 'depth'.
+   colorFreqTable.table[i] tells the number of pixels in the subject image
+   that have a particular color.
 
-   As a side effect, sort 'colorfreqtable'.
+   As a side effect, sort 'colorFreqTable'.
 -----------------------------------------------------------------------------*/
-    boxVector bv;
-    unsigned int bi;
-    unsigned int boxes;
+    struct BoxVector boxVector;
     bool multicolorBoxesExist;
         /* There is at least one box that contains at least 2 colors; ergo,
            there is more splitting we can do.
         */
 
-    bv = newBoxVector(colorfreqtable.size, freqTotal(colorfreqtable),
-                      newcolors);
-    boxes = 1;
-    multicolorBoxesExist = (colorfreqtable.size > 1);
+    boxVector = newBoxVector(colorFreqTable, newColorCt, depth,
+                             methodForLargest);
 
-    /* Main loop: split boxes until we have enough. */
-    while (boxes < newcolors && multicolorBoxesExist) {
-        /* Find the first splittable box. */
-        for (bi = 0; bi < boxes && bv[bi].colors < 2; ++bi);
-        if (bi >= boxes)
+    multicolorBoxesExist = (colorFreqTable.size > 1);
+
+    /* Split boxes until we have enough. */
+    while (boxVector.boxCt < newColorCt && multicolorBoxesExist) {
+        unsigned int boxIdx;
+
+        for (boxIdx = 0;
+             boxIdx < boxVector.boxCt && boxVector.box[boxIdx].colorCt < 2;
+             ++boxIdx);
+            /* Find the first splittable box. */
+
+        if (boxIdx >= boxVector.boxCt)
             multicolorBoxesExist = FALSE;
         else
-            splitBox(bv, &boxes, bi, colorfreqtable, depth, methodForLargest);
+            splitBox(&boxVector, boxIdx, methodForLargest, methodForSplit);
+                /* Side effect: sorts the extent of 'colorfreqTable' that is
+                   in the box
+                */
     }
-    *colormapP = colormapFromBv(newcolors, bv, boxes, colorfreqtable, depth,
-                                methodForRep);
 
-    free(bv);
+    if (wantBvReport)
+        reportBoxVector(boxVector);
+
+    *colormapP = colormapFromBv(newColorCt, boxVector, methodForRep);
+
+    destroyBoxVector(boxVector);
 }
 
 
@@ -673,7 +897,7 @@ static void
 computeHistogram(FILE *         const ifP,
                  int *          const formatP,
                  struct pam *   const freqPamP,
-                 tupletable2 *  const colorfreqtableP) {
+                 tupletable2 *  const colorFreqTableP) {
 /*----------------------------------------------------------------------------
   Make a histogram of the colors in the image stream in the file '*ifP'.
 
@@ -715,13 +939,13 @@ computeHistogram(FILE *         const ifP,
 
         pnm_nextimage(ifP, &eof);
     }
-    colorfreqtableP->table =
+    colorFreqTableP->table =
         pnm_tuplehashtotable(&firstPam, tuplehash, colorCount);
-    colorfreqtableP->size = colorCount;
+    colorFreqTableP->size = colorCount;
 
     pnm_destroytuplehash(tuplehash);
 
-    pm_message("%u colors found", colorfreqtableP->size);
+    pm_message("%u colors found", colorFreqTableP->size);
 
     freqPamP->size   = sizeof(*freqPamP);
     freqPamP->len    = PAM_STRUCT_SIZE(tuple_type);
@@ -738,9 +962,11 @@ computeHistogram(FILE *         const ifP,
 static void
 computeColorMapFromInput(FILE *                const ifP,
                          bool                  const allColors,
-                         int                   const reqColors,
-                         enum methodForLargest const methodForLargest,
-                         enum methodForRep     const methodForRep,
+                         unsigned int          const reqColors,
+                         enum MethodForLargest const methodForLargest,
+                         enum MethodForRep     const methodForRep,
+                         enum MethodForSplit   const methodForSplit,
+                         bool                  const wantBvReport,
                          int *                 const formatP,
                          struct pam *          const freqPamP,
                          tupletable2 *         const colormapP) {
@@ -763,23 +989,26 @@ computeColorMapFromInput(FILE *                const ifP,
    *formatP and *freqPamP.  (This information is not really
    relevant to our colormap mission; just a fringe benefit).
 -----------------------------------------------------------------------------*/
-    tupletable2 colorfreqtable;
+    tupletable2 colorFreqTable;
+        /* Table of all colors in the image, with the number of pixels of
+           each color.
+        */
 
-    computeHistogram(ifP, formatP, freqPamP, &colorfreqtable);
+    computeHistogram(ifP, formatP, freqPamP, &colorFreqTable);
 
     if (allColors) {
-        *colormapP = colorfreqtable;
+        *colormapP = colorFreqTable;
     } else {
-        if (colorfreqtable.size <= reqColors) {
-            pm_message("Image already has few enough colors (<=%d).  "
+        if (colorFreqTable.size <= reqColors) {
+            pm_message("Image already has few enough colors (<=%u).  "
                        "Keeping same colors.", reqColors);
-            *colormapP = colorfreqtable;
+            *colormapP = colorFreqTable;
         } else {
-            pm_message("choosing %d colors...", reqColors);
-            mediancut(colorfreqtable, freqPamP->depth,
+            pm_message("choosing %u colors...", reqColors);
+            mediancut(colorFreqTable, freqPamP->depth,
                       reqColors, methodForLargest, methodForRep,
-                      colormapP);
-            pnm_freetupletable2(freqPamP, colorfreqtable);
+                      methodForSplit, wantBvReport, colormapP);
+            pnm_freetupletable2(freqPamP, colorFreqTable);
         }
     }
 }
@@ -933,9 +1162,9 @@ colormapToImage(int                const format,
 
 
 int
-main(int argc, char * argv[] ) {
+main(int argc, const char * argv[] ) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int format;
     struct pam colormapPam;
@@ -943,16 +1172,18 @@ main(int argc, char * argv[] ) {
     tuple ** colormapRaster;
     tupletable2 colormap;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileNm);
 
     computeColorMapFromInput(ifP,
                              cmdline.allcolors, cmdline.newcolors,
                              cmdline.methodForLargest,
                              cmdline.methodForRep,
+                             cmdline.methodForSplit,
+                             cmdline.debug,
                              &format, &colormapPam, &colormap);
 
     pm_close(ifP);

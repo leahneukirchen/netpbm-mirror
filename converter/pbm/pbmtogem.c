@@ -26,7 +26,7 @@
 *  changed header length to count words to conform with Atari ST documentation
 *  removed rounding of the imagewidth to the next word boundary
 *  removed arbitrary limit to imagewidth
-*  changed pattern length to 1 to simplify locating of compressable parts
+*  changed pattern length to 1 to simplify locating of compressible parts
 *       in real world images
 *  add solid run and pattern run compression
 *

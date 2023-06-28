@@ -2,11 +2,11 @@
  *  cwfa.c:     FIASCO coder
  *
  *  Written by:     Ullrich Hafner
- *      
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
- 
+
 /*
  *  $Date: 2000/10/28 17:39:29 $
  *  $Author: hafner $
@@ -33,7 +33,7 @@
 /*****************************************************************************
 
                  local variables
-  
+
 *****************************************************************************/
 
 static param_t params [] =
@@ -107,7 +107,7 @@ static param_t params [] =
    "Set domain pool of r-lc to `%s'."},
   {"coeff", "NAME", '\0', PSTR, {0}, "adaptive",
    "Set coefficients model to `%s'."},
-  /*  DELTA APPROXIATION  */
+  /*  DELTA APPROXIMATION  */
   {"d-domain-pool", "NAME", '\0', PSTR, {0}, "rle",
    "Set domain pool of d-lc to `%s'."},
   {"d-coeff", "NAME", '\0', PSTR, {0}, "adaptive",
@@ -132,36 +132,36 @@ static param_t params [] =
    "Smooth frames by factor `%s' (0.5 - 1.0)"},
   {"reference-frame", "FILE", '\0', PSTR, {0}, NULL,
    "Use PPM/PGM image `%s' as reference frame."},
-#endif  
+#endif
   {NULL, NULL, 0, PSTR, {0}, NULL, NULL }
 };
 
 /*****************************************************************************
 
                 prototypes
-  
+
 *****************************************************************************/
 
-static void 
+static void
 checkargs (int argc, char **argv, char const ***image_template,
        char **wfa_name, float *quality, fiasco_c_options_t **options);
 
 /*****************************************************************************
 
                 public code
-  
+
 *****************************************************************************/
- 
-int 
+
+int
 main (int argc, char **argv)
 {
    char const         **image_template; /* template for input image files */
    char                *wfa_name;   /* filename of output WFA */
    float            quality;    /* approximation quality */
    fiasco_c_options_t  *options;    /* additional coder options */
-   
+
    pnm_init(&argc, argv);
-   
+
    init_error_handling (argv [0]);
 
    checkargs (argc, argv, &image_template, &wfa_name, &quality, &options);
@@ -179,10 +179,10 @@ main (int argc, char **argv)
 /*****************************************************************************
 
                 private code
-  
+
 *****************************************************************************/
 
-static void 
+static void
 checkargs (int argc, char **argv, char const ***image_template,
            char **wfa_name, float *quality, fiasco_c_options_t **options)
 /*
@@ -191,7 +191,7 @@ checkargs (int argc, char **argv, char const ***image_template,
  *  Return value:
  *  1 on success
  *  0 otherwise
- *  
+ *
  *
  *  Side effects:
  *  'image_template', 'wfa_name', 'quality' and 'options' are set.
@@ -200,7 +200,7 @@ checkargs (int argc, char **argv, char const ***image_template,
     int   optind;            /* last processed commandline param */
     char *image_name;            /* filename given by option '--input_name' */
     int   i;             /* counter */
-   
+
     optind = parseargs (params, argc, argv,
                         "Compress raw PPM/PGM image FILEs to a FIASCO file.",
                         "With no image FILE, or if FILE is -, "
@@ -220,7 +220,7 @@ checkargs (int argc, char **argv, char const ***image_template,
     /*
      *  Default options ...
      */
-    image_name = (char *) parameter_value (params, "image-name"); 
+    image_name = (char *) parameter_value (params, "image-name");
     *wfa_name  = (char *) parameter_value (params, "output-name");
     for (;;)
     {
@@ -233,7 +233,7 @@ checkargs (int argc, char **argv, char const ***image_template,
         ask_and_set (params, "quality",
                      "Please enter coding quality 'q' ('q' > 0): ");
     }
-   
+
     if (optind < argc)           /* Additional command line param */
     {
         if (image_name)
@@ -260,7 +260,7 @@ checkargs (int argc, char **argv, char const ***image_template,
      */
     {
         *options = fiasco_c_options_new ();
-      
+
         {
             char *pattern = (char *) parameter_value (params, "pattern");
 
@@ -270,7 +270,7 @@ checkargs (int argc, char **argv, char const ***image_template,
 
         {
             char *basis = (char *) parameter_value (params, "basis-name");
-     
+
             if (!fiasco_c_options_set_basisfile (*options, basis))
                 error (fiasco_get_error_message ());
         }
@@ -278,41 +278,41 @@ checkargs (int argc, char **argv, char const ***image_template,
         {
             int   n = * (int *) parameter_value (params, "chroma-dictionary");
             float q = * (float *) parameter_value (params, "chroma-qfactor");
-      
+
             if (!fiasco_c_options_set_chroma_quality (*options, q, MAX(0, n)))
                 error (fiasco_get_error_message ());
         }
-      
+
         {
             int n = *((int *) parameter_value (params, "smooth"));
-     
+
             if (!fiasco_c_options_set_smoothing (*options, MAX(0, n)))
                 error (fiasco_get_error_message ());
         }
-      
+
         {
             int n = * (int *) parameter_value (params, "progress-meter");
-            fiasco_progress_e type = (n < 0) ? 
+            fiasco_progress_e type = (n < 0) ?
                 FIASCO_PROGRESS_NONE : (fiasco_progress_e) n;
-      
+
             if (!fiasco_c_options_set_progress_meter (*options, type))
                 error (fiasco_get_error_message ());
         }
-      
+
         {
             char *t = (char *) parameter_value (params, "title");
-     
+
             if (strlen (t) > 0 && !fiasco_c_options_set_title (*options, t))
                 error (fiasco_get_error_message ());
         }
-      
+
         {
             char *c = (char *) parameter_value (params, "comment");
 
             if (strlen (c) > 0 && !fiasco_c_options_set_comment (*options, c))
                 error (fiasco_get_error_message ());
         }
-      
+
         {
             fiasco_tiling_e method = FIASCO_TILING_VARIANCE_DSC;
             int   e  = * (int *) parameter_value (params, "tiling-exponent");
@@ -332,7 +332,7 @@ checkargs (int argc, char **argv, char const ***image_template,
             if (!fiasco_c_options_set_tiling (*options, method, MAX(0, e)))
                 error (fiasco_get_error_message ());
         }
-      
+
         {
             int M/*  = * (int *) parameter_value (params, "max-level") */;
             int m/*  = * (int *) parameter_value (params, "min-level") */;
@@ -354,7 +354,7 @@ checkargs (int argc, char **argv, char const ***image_template,
                 m = 4;
                 N = 5;
             }
-     
+
             if (!fiasco_c_options_set_optimizations (*options, m, M, N,
                                                      MAX(0, D), o))
                 error (fiasco_get_error_message ());
@@ -363,7 +363,7 @@ checkargs (int argc, char **argv, char const ***image_template,
             int M = * (int *) parameter_value (params, "max-level");
             int m = * (int *) parameter_value (params, "min-level");
             int p = * (int *) parameter_value (params, "prediction");
-     
+
             if (!fiasco_c_options_set_prediction (*options,
                                                   p, MAX(0, m), MAX(0, M)))
                 error (fiasco_get_error_message ());
@@ -374,7 +374,7 @@ checkargs (int argc, char **argv, char const ***image_template,
             int   m    = * (int *)  parameter_value(params, "rpf-mantissa");
             int   dc_m = * (int *)  parameter_value(params, "dc-rpf-mantissa");
             fiasco_rpf_range_e range, dc_range;
-     
+
             if (r < 1)
                 range = FIASCO_RPF_RANGE_0_75;
             else if (r < 1.5)
@@ -383,7 +383,7 @@ checkargs (int argc, char **argv, char const ***image_template,
                 range = FIASCO_RPF_RANGE_1_50;
             else
                 range = FIASCO_RPF_RANGE_2_00;
-        
+
             if (dc_r < 1)
                 dc_range = FIASCO_RPF_RANGE_0_75;
             else if (dc_r < 1.5)
@@ -392,7 +392,7 @@ checkargs (int argc, char **argv, char const ***image_template,
                 dc_range = FIASCO_RPF_RANGE_1_50;
             else
                 dc_range = FIASCO_RPF_RANGE_2_00;
-        
+
             if (!fiasco_c_options_set_quantization (*options,
                                                     MAX(0, m), range,
                                                     MAX(0, dc_m), dc_range))
@@ -402,4 +402,7 @@ checkargs (int argc, char **argv, char const ***image_template,
         if (fiasco_get_verbosity () == FIASCO_ULTIMATE_VERBOSITY)
             write_parameters (params, stderr);
     }
-}   
+}
+
+
+

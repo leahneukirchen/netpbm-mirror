@@ -25,9 +25,6 @@
 
 #include "pam.h"
 
-static const char * const copyright = 
-  "(c) Robert Tinsley 2003 (http://www.thepoacher.net/contact)";
-
 static const char *usagestr = "pnmfile|- xtiles ytiles xdelta ydelta";
 
 int main(int argc, char *argv[])

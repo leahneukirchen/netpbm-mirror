@@ -6,11 +6,9 @@ tmpdir=${tmpdir:-/tmp}
 test4bit_pgm=${tmpdir}/test4bit.pgm
 test256color_ppm=${tmpdir}/test256color.ppm
 
-# Test 1. Should print 584219238 236  5 times
+echo "Test 1. Should print 2067616594 3375 five times"
 
-echo "Test 1"
-
-pamdepth 15 testgrid.pbm | tee ${test4bit_pgm} | cksum
+pamdepth 15 maze.pbm | tee ${test4bit_pgm} | cksum
 
 for flags in "" \
              "-scanline_compression" \
@@ -21,9 +19,7 @@ for flags in "" \
 rm ${test4bit_pgm}
 
 
-# Test 2. Should print 0 4 times
-
-echo "Test 2"
+echo "Test 2. Should print 0 0 0  : 0 four times"
 
 pnmquant 256 testimg.ppm > ${test256color_ppm} || echo "pnmquant failed"
 

@@ -124,6 +124,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "netpbm/nstring.h"
+
 #include "jasper/jas_fix.h"
 #include "jasper/jas_stream.h"
 #include "jasper/jas_math.h"
@@ -138,817 +140,871 @@
 *
 \******************************************************************************/
 
-static int jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile, jpc_dec_tcomp_t *tcomp, jpc_dec_band_t *band,
-  jpc_dec_cblk_t *cblk, int dopartial, int maxlyrs);
-static int dec_sigpass(jpc_dec_t *dec, jpc_mqdec_t *mqdec, int bitpos, int orient,
-  int vcausalflag, jas_matrix_t *flags, jas_matrix_t *data);
-static int dec_rawsigpass(jpc_dec_t *dec, jpc_bitstream_t *in, int bitpos,
-  int vcausalflag, jas_matrix_t *flags, jas_matrix_t *data);
-static int dec_refpass(jpc_dec_t *dec, jpc_mqdec_t *mqdec, int bitpos, int vcausalflag,
-  jas_matrix_t *flags, jas_matrix_t *data);
-static int dec_rawrefpass(jpc_dec_t *dec, jpc_bitstream_t *in, int bitpos,
-  int vcausalflag, jas_matrix_t *flags, jas_matrix_t *data);
-static int dec_clnpass(jpc_dec_t *dec, jpc_mqdec_t *mqdec, int bitpos, int orient,
-  int vcausalflag, int segsymflag, jas_matrix_t *flags, jas_matrix_t *data);
-
 #if defined(DEBUG)
 static long t1dec_cnt = 0;
 #endif
 
 #if !defined(DEBUG)
-#define	JPC_T1D_GETBIT(mqdec, v, passtypename, symtypename) \
-	((v) = jpc_mqdec_getbit(mqdec))
+#define JPC_T1D_GETBIT(mqdec, v, passtypename, symtypename) \
+    ((v) = jpc_mqdec_getbit(mqdec))
 #else
-#define	JPC_T1D_GETBIT(mqdec, v, passtypename, symtypename) \
+#define JPC_T1D_GETBIT(mqdec, v, passtypename, symtypename) \
 { \
-	(v) = jpc_mqdec_getbit(mqdec); \
-	if (jas_getdbglevel() >= 100) { \
-		fprintf(stderr, "index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
-		++t1dec_cnt; \
-	} \
+    (v) = jpc_mqdec_getbit(mqdec); \
+    if (jas_getdbglevel() >= 100) { \
+        fprintf(stderr, "index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
+        ++t1dec_cnt; \
+    } \
 }
 #endif
-#define	JPC_T1D_GETBITNOSKEW(mqdec, v, passtypename, symtypename) \
-	JPC_T1D_GETBIT(mqdec, v, passtypename, symtypename)
+#define JPC_T1D_GETBITNOSKEW(mqdec, v, passtypename, symtypename) \
+    JPC_T1D_GETBIT(mqdec, v, passtypename, symtypename)
 
 #if !defined(DEBUG)
-#define	JPC_T1D_RAWGETBIT(bitstream, v, passtypename, symtypename) \
-	((v) = jpc_bitstream_getbit(bitstream))
+#define JPC_T1D_RAWGETBIT(bitstream, v, passtypename, symtypename) \
+    ((v) = jpc_bitstream_getbit(bitstream))
 #else
-#define	JPC_T1D_RAWGETBIT(bitstream, v, passtypename, symtypename) \
+#define JPC_T1D_RAWGETBIT(bitstream, v, passtypename, symtypename) \
 { \
-	(v) = jpc_bitstream_getbit(bitstream); \
-	if (jas_getdbglevel() >= 100) { \
-		fprintf(stderr, "index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
-		++t1dec_cnt; \
-	} \
+    (v) = jpc_bitstream_getbit(bitstream); \
+    if (jas_getdbglevel() >= 100) { \
+        fprintf(stderr, "index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
+        ++t1dec_cnt; \
+    } \
 }
 #endif
 
-/******************************************************************************\
-* Code.
-\******************************************************************************/
 
-int jpc_dec_decodecblks(jpc_dec_t *dec, jpc_dec_tile_t *tile)
-{
-	jpc_dec_tcomp_t *tcomp;
-	int compcnt;
-	jpc_dec_rlvl_t *rlvl;
-	int rlvlcnt;
-	jpc_dec_band_t *band;
-	int bandcnt;
-	jpc_dec_prc_t *prc;
-	int prccnt;
-	jpc_dec_cblk_t *cblk;
-	int cblkcnt;
-
-	for (compcnt = dec->numcomps, tcomp = tile->tcomps; compcnt > 0;
-	  --compcnt, ++tcomp) {
-		for (rlvlcnt = tcomp->numrlvls, rlvl = tcomp->rlvls;
-		  rlvlcnt > 0; --rlvlcnt, ++rlvl) {
-			if (!rlvl->bands) {
-				continue;
-			}
-			for (bandcnt = rlvl->numbands, band = rlvl->bands;
-			  bandcnt > 0; --bandcnt, ++band) {
-				if (!band->data) {
-					continue;
-				}
-				for (prccnt = rlvl->numprcs, prc = band->prcs;
-				  prccnt > 0; --prccnt, ++prc) {
-					if (!prc->cblks) {
-						continue;
-					}
-					for (cblkcnt = prc->numcblks,
-					  cblk = prc->cblks; cblkcnt > 0;
-					  --cblkcnt, ++cblk) {
-						if (jpc_dec_decodecblk(dec, tile, tcomp,
-						  band, cblk, 1, JPC_MAXLYRS)) {
-							return -1;
-						}
-					}
-				}
-
-			}
-		}
-	}
-
-	return 0;
-}
-
-static int jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile, jpc_dec_tcomp_t *tcomp, jpc_dec_band_t *band,
-  jpc_dec_cblk_t *cblk, int dopartial, int maxlyrs)
-{
-	jpc_dec_seg_t *seg;
-	int i;
-	int bpno;
-	int passtype;
-	int ret;
-	int compno;
-	int filldata;
-	int fillmask;
-	jpc_dec_ccp_t *ccp;
-
-	compno = tcomp - tile->tcomps;
-
-	if (!cblk->flags) {
-		/* Note: matrix is assumed to be zeroed */
-		if (!(cblk->flags = jas_matrix_create(jas_matrix_numrows(cblk->data) +
-		  2, jas_matrix_numcols(cblk->data) + 2))) {
-			return -1;
-		}
-	}
-
-	seg = cblk->segs.head;
-	while (seg && (seg != cblk->curseg || dopartial) && (maxlyrs < 0 ||
-	  seg->lyrno < maxlyrs)) {
-		assert(seg->numpasses >= seg->maxpasses || dopartial);
-		assert(seg->stream);
-		jas_stream_rewind(seg->stream);
-		jas_stream_setrwcount(seg->stream, 0);
-		if (seg->type == JPC_SEG_MQ) {
-			if (!cblk->mqdec) {
-				if (!(cblk->mqdec = jpc_mqdec_create(JPC_NUMCTXS, 0))) {
-					return -1;
-				}
-				jpc_mqdec_setctxs(cblk->mqdec, JPC_NUMCTXS, jpc_mqctxs);
-			}
-			jpc_mqdec_setinput(cblk->mqdec, seg->stream);
-			jpc_mqdec_init(cblk->mqdec);
-		} else {
-			assert(seg->type == JPC_SEG_RAW);
-			if (!cblk->nulldec) {
-				if (!(cblk->nulldec = jpc_bitstream_sopen(seg->stream, "r"))) {
-					assert(0);
-				}
-			}
-		}
-
-
-		for (i = 0; i < seg->numpasses; ++i) {
-			if (cblk->numimsbs > band->numbps) {
-				ccp = &tile->cp->ccps[compno];
-				if (ccp->roishift <= 0) {
-					fprintf(stderr, "warning: corrupt code stream\n");
-				} else {
-					if (cblk->numimsbs < ccp->roishift - band->numbps) {
-						fprintf(stderr, "warning: corrupt code stream\n");
-					}
-				}
-			}
-			bpno = band->roishift + band->numbps - 1 - (cblk->numimsbs +
-			  (seg->passno + i - cblk->firstpassno + 2) / 3);
-if (bpno < 0) {
-	goto premature_exit;
-}
-#if 1
-			passtype = (seg->passno + i + 2) % 3;
-#else
-			passtype = JPC_PASSTYPE(seg->passno + i + 2);
-#endif
-			assert(bpno >= 0 && bpno < 31);
-			switch (passtype) {
-			case JPC_SIGPASS:
-				ret = (seg->type == JPC_SEG_MQ) ? dec_sigpass(dec,
-				  cblk->mqdec, bpno, band->orient,
-				  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
-				  cblk->flags, cblk->data) :
-				  dec_rawsigpass(dec, cblk->nulldec, bpno,
-				  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
-				  cblk->flags, cblk->data);
-				break;
-			case JPC_REFPASS:
-				ret = (seg->type == JPC_SEG_MQ) ?
-				  dec_refpass(dec, cblk->mqdec, bpno,
-				  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
-				  cblk->flags, cblk->data) :
-				  dec_rawrefpass(dec, cblk->nulldec, bpno,
-				  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
-				  cblk->flags, cblk->data);
-				break;
-			case JPC_CLNPASS:
-				assert(seg->type == JPC_SEG_MQ);
-				ret = dec_clnpass(dec, cblk->mqdec, bpno,
-				  band->orient, (tile->cp->ccps[compno].cblkctx &
-				  JPC_COX_VSC) != 0, (tile->cp->ccps[compno].cblkctx &
-				  JPC_COX_SEGSYM) != 0, cblk->flags,
-				  cblk->data);
-				break;
-			default:
-				ret = -1;
-				break;
-			}
-			/* Do we need to reset after each coding pass? */
-			if (tile->cp->ccps[compno].cblkctx & JPC_COX_RESET) {
-				jpc_mqdec_setctxs(cblk->mqdec, JPC_NUMCTXS, jpc_mqctxs);
-			}
-
-			if (ret) {
-				fprintf(stderr, "coding pass failed passtype=%d segtype=%d\n", passtype, seg->type);
-				return -1;
-			}
-
-		}
-
-		if (seg->type == JPC_SEG_MQ) {
-/* Note: dont destroy mq decoder because context info will be lost */
-		} else {
-			assert(seg->type == JPC_SEG_RAW);
-			if (tile->cp->ccps[compno].cblkctx & JPC_COX_PTERM) {
-				fillmask = 0x7f;
-				filldata = 0x2a;
-			} else {
-				fillmask = 0;
-				filldata = 0;
-			}
-			if ((ret = jpc_bitstream_inalign(cblk->nulldec, fillmask,
-			  filldata)) < 0) {
-				return -1;
-			} else if (ret > 0) {
-				fprintf(stderr, "warning: bad termination pattern detected\n");
-			}
-			jpc_bitstream_close(cblk->nulldec);
-			cblk->nulldec = 0;
-		}
-
-		cblk->curseg = seg->next;
-		jpc_seglist_remove(&cblk->segs, seg);
-		jpc_seg_destroy(seg);
-		seg = cblk->curseg;
-	}
-
-	assert(dopartial ? (!cblk->curseg) : 1);
-
-premature_exit:
-	return 0;
-}
 
 /******************************************************************************\
 * Code for significance pass.
 \******************************************************************************/
 
-#define	jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf, orient, mqdec, vcausalflag) \
+#define jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf, orient, mqdec, vcausalflag) \
 { \
-	int f; \
-	int v; \
-	f = *(fp); \
-	if ((f & JPC_OTHSIGMSK) && !(f & (JPC_SIG | JPC_VISIT))) { \
-		jpc_mqdec_setcurctx((mqdec), JPC_GETZCCTXNO(f, (orient))); \
-		JPC_T1D_GETBIT((mqdec), v, "SIG", "ZC"); \
-		if (v) { \
-			jpc_mqdec_setcurctx((mqdec), JPC_GETSCCTXNO(f)); \
-			JPC_T1D_GETBIT((mqdec), v, "SIG", "SC"); \
-			v ^= JPC_GETSPB(f); \
-			JPC_UPDATEFLAGS4((fp), (frowstep), v, (vcausalflag)); \
-			*(fp) |= JPC_SIG; \
-			*(dp) = (v) ? (-(oneplushalf)) : (oneplushalf); \
-		} \
-		*(fp) |= JPC_VISIT; \
-	} \
+    int f; \
+    int v; \
+    f = *(fp); \
+    if ((f & JPC_OTHSIGMSK) && !(f & (JPC_SIG | JPC_VISIT))) { \
+        jpc_mqdec_setcurctx((mqdec), JPC_GETZCCTXNO(f, (orient))); \
+        JPC_T1D_GETBIT((mqdec), v, "SIG", "ZC"); \
+        if (v) { \
+            jpc_mqdec_setcurctx((mqdec), JPC_GETSCCTXNO(f)); \
+            JPC_T1D_GETBIT((mqdec), v, "SIG", "SC"); \
+            v ^= JPC_GETSPB(f); \
+            JPC_UPDATEFLAGS4((fp), (frowstep), v, (vcausalflag)); \
+            *(fp) |= JPC_SIG; \
+            *(dp) = (v) ? (-(oneplushalf)) : (oneplushalf); \
+        } \
+        *(fp) |= JPC_VISIT; \
+    } \
 }
 
-static int dec_sigpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos, int orient,
-  int vcausalflag, jas_matrix_t *flags, jas_matrix_t *data)
-{
-	int i;
-	int j;
-	int one;
-	int half;
-	int oneplushalf;
-	int vscanlen;
-	int width;
-	int height;
-	jpc_fix_t *fp;
-	int frowstep;
-	int fstripestep;
-	jpc_fix_t *fstripestart;
-	jpc_fix_t *fvscanstart;
-	jpc_fix_t *dp;
-	int drowstep;
-	int dstripestep;
-	jpc_fix_t *dstripestart;
-	jpc_fix_t *dvscanstart;
-	int k;
-
-	width = jas_matrix_numcols(data);
-	height = jas_matrix_numrows(data);
-	frowstep = jas_matrix_rowstep(flags);
-	drowstep = jas_matrix_rowstep(data);
-	fstripestep = frowstep << 2;
-	dstripestep = drowstep << 2;
-
-	one = 1 << bitpos;
-	half = one >> 1;
-	oneplushalf = one | half;
-
-	fstripestart = jas_matrix_getref(flags, 1, 1);
-	dstripestart = jas_matrix_getref(data, 0, 0);
-	for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
-	  dstripestart += dstripestep) {
-		fvscanstart = fstripestart;
-		dvscanstart = dstripestart;
-		vscanlen = JAS_MIN(i, 4);
-		for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
-			fp = fvscanstart;
-			dp = dvscanstart;
-			k = vscanlen;
-
-			/* Process first sample in vertical scan. */
-			jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
-			  orient, mqdec, vcausalflag);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
-
-			/* Process second sample in vertical scan. */
-			jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
-			  orient, mqdec, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
-
-			/* Process third sample in vertical scan. */
-			jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
-			  orient, mqdec, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
-
-			/* Process fourth sample in vertical scan. */
-			jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
-			  orient, mqdec, 0);
-		}
-	}
-	return 0;
-}
-
-#define	jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf, in, vcausalflag) \
+#define jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf, in, vcausalflag) \
 { \
-	jpc_fix_t f = *(fp); \
-	jpc_fix_t v; \
-	if ((f & JPC_OTHSIGMSK) && !(f & (JPC_SIG | JPC_VISIT))) { \
-		JPC_T1D_RAWGETBIT(in, v, "SIG", "ZC"); \
-		if (v < 0) { \
-			return -1; \
-		} \
-		if (v) { \
-			JPC_T1D_RAWGETBIT(in, v, "SIG", "SC"); \
-			if (v < 0) { \
-				return -1; \
-			} \
-			JPC_UPDATEFLAGS4((fp), (frowstep), v, (vcausalflag)); \
-			*(fp) |= JPC_SIG; \
-			*(dp) = v ? (-oneplushalf) : (oneplushalf); \
-		} \
-		*(fp) |= JPC_VISIT; \
-	} \
+    jpc_fix_t f = *(fp); \
+    jpc_fix_t v; \
+    if ((f & JPC_OTHSIGMSK) && !(f & (JPC_SIG | JPC_VISIT))) { \
+        JPC_T1D_RAWGETBIT(in, v, "SIG", "ZC"); \
+        if (v < 0) { \
+            return -1; \
+        } \
+        if (v) { \
+            JPC_T1D_RAWGETBIT(in, v, "SIG", "SC"); \
+            if (v < 0) { \
+                return -1; \
+            } \
+            JPC_UPDATEFLAGS4((fp), (frowstep), v, (vcausalflag)); \
+            *(fp) |= JPC_SIG; \
+            *(dp) = v ? (-oneplushalf) : (oneplushalf); \
+        } \
+        *(fp) |= JPC_VISIT; \
+    } \
 }
 
-static int dec_rawsigpass(jpc_dec_t *dec, jpc_bitstream_t *in, int bitpos, int vcausalflag,
-  jas_matrix_t *flags, jas_matrix_t *data)
+
+
+static int
+dec_sigpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos,
+            int orient,
+            int vcausalflag, jas_matrix_t *flags, jas_matrix_t *data)
 {
-	int i;
-	int j;
-	int k;
-	int one;
-	int half;
-	int oneplushalf;
-	int vscanlen;
-	int width;
-	int height;
-	jpc_fix_t *fp;
-	int frowstep;
-	int fstripestep;
-	jpc_fix_t *fstripestart;
-	jpc_fix_t *fvscanstart;
-	jpc_fix_t *dp;
-	int drowstep;
-	int dstripestep;
-	jpc_fix_t *dstripestart;
-	jpc_fix_t *dvscanstart;
+    int i;
+    int j;
+    int one;
+    int half;
+    int oneplushalf;
+    int vscanlen;
+    int width;
+    int height;
+    jpc_fix_t *fp;
+    int frowstep;
+    int fstripestep;
+    jpc_fix_t *fstripestart;
+    jpc_fix_t *fvscanstart;
+    jpc_fix_t *dp;
+    int drowstep;
+    int dstripestep;
+    jpc_fix_t *dstripestart;
+    jpc_fix_t *dvscanstart;
+    int k;
 
-	width = jas_matrix_numcols(data);
-	height = jas_matrix_numrows(data);
-	frowstep = jas_matrix_rowstep(flags);
-	drowstep = jas_matrix_rowstep(data);
-	fstripestep = frowstep << 2;
-	dstripestep = drowstep << 2;
+    width = jas_matrix_numcols(data);
+    height = jas_matrix_numrows(data);
+    frowstep = jas_matrix_rowstep(flags);
+    drowstep = jas_matrix_rowstep(data);
+    fstripestep = frowstep << 2;
+    dstripestep = drowstep << 2;
 
-	one = 1 << bitpos;
-	half = one >> 1;
-	oneplushalf = one | half;
+    one = 1 << bitpos;
+    half = one >> 1;
+    oneplushalf = one | half;
 
-	fstripestart = jas_matrix_getref(flags, 1, 1);
-	dstripestart = jas_matrix_getref(data, 0, 0);
-	for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
-	  dstripestart += dstripestep) {
-		fvscanstart = fstripestart;
-		dvscanstart = dstripestart;
-		vscanlen = JAS_MIN(i, 4);
-		for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
-			fp = fvscanstart;
-			dp = dvscanstart;
-			k = vscanlen;
+    fstripestart = jas_matrix_getref(flags, 1, 1);
+    dstripestart = jas_matrix_getref(data, 0, 0);
+    for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
+      dstripestart += dstripestep) {
+        fvscanstart = fstripestart;
+        dvscanstart = dstripestart;
+        vscanlen = JAS_MIN(i, 4);
+        for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
+            fp = fvscanstart;
+            dp = dvscanstart;
+            k = vscanlen;
 
-			/* Process first sample in vertical scan. */
-			jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
-			  in, vcausalflag);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process first sample in vertical scan. */
+            jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
+              orient, mqdec, vcausalflag);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process second sample in vertical scan. */
-			jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
-			  in, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process second sample in vertical scan. */
+            jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
+              orient, mqdec, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process third sample in vertical scan. */
-			jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
-			  in, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process third sample in vertical scan. */
+            jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
+              orient, mqdec, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process fourth sample in vertical scan. */
-			jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
-			  in, 0);
-
-		}
-	}
-	return 0;
+            /* Process fourth sample in vertical scan. */
+            jpc_sigpass_step(fp, frowstep, dp, bitpos, oneplushalf,
+              orient, mqdec, 0);
+        }
+    }
+    return 0;
 }
+
+
+
+static int
+dec_rawsigpass(jpc_dec_t *dec, jpc_bitstream_t *in, int bitpos,
+               int vcausalflag,
+               jas_matrix_t *flags, jas_matrix_t *data)
+{
+    int i;
+    int j;
+    int k;
+    int one;
+    int half;
+    int oneplushalf;
+    int vscanlen;
+    int width;
+    int height;
+    jpc_fix_t *fp;
+    int frowstep;
+    int fstripestep;
+    jpc_fix_t *fstripestart;
+    jpc_fix_t *fvscanstart;
+    jpc_fix_t *dp;
+    int drowstep;
+    int dstripestep;
+    jpc_fix_t *dstripestart;
+    jpc_fix_t *dvscanstart;
+
+    width = jas_matrix_numcols(data);
+    height = jas_matrix_numrows(data);
+    frowstep = jas_matrix_rowstep(flags);
+    drowstep = jas_matrix_rowstep(data);
+    fstripestep = frowstep << 2;
+    dstripestep = drowstep << 2;
+
+    one = 1 << bitpos;
+    half = one >> 1;
+    oneplushalf = one | half;
+
+    fstripestart = jas_matrix_getref(flags, 1, 1);
+    dstripestart = jas_matrix_getref(data, 0, 0);
+    for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
+      dstripestart += dstripestep) {
+        fvscanstart = fstripestart;
+        dvscanstart = dstripestart;
+        vscanlen = JAS_MIN(i, 4);
+        for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
+            fp = fvscanstart;
+            dp = dvscanstart;
+            k = vscanlen;
+
+            /* Process first sample in vertical scan. */
+            jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
+              in, vcausalflag);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
+
+            /* Process second sample in vertical scan. */
+            jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
+              in, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
+
+            /* Process third sample in vertical scan. */
+            jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
+              in, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
+
+            /* Process fourth sample in vertical scan. */
+            jpc_rawsigpass_step(fp, frowstep, dp, oneplushalf,
+              in, 0);
+
+        }
+    }
+    return 0;
+}
+
+
 
 /******************************************************************************\
 * Code for refinement pass.
 \******************************************************************************/
 
-#define	jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, vcausalflag) \
+#define jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, vcausalflag) \
 { \
-	int v; \
-	int t; \
-	if (((*(fp)) & (JPC_SIG | JPC_VISIT)) == JPC_SIG) { \
-		jpc_mqdec_setcurctx((mqdec), JPC_GETMAGCTXNO(*(fp))); \
-		JPC_T1D_GETBITNOSKEW((mqdec), v, "REF", "MR"); \
-		t = (v ? (poshalf) : (neghalf)); \
-		*(dp) += (*(dp) < 0) ? (-t) : t; \
-		*(fp) |= JPC_REFINE; \
-	} \
+    int v; \
+    int t; \
+    if (((*(fp)) & (JPC_SIG | JPC_VISIT)) == JPC_SIG) { \
+        jpc_mqdec_setcurctx((mqdec), JPC_GETMAGCTXNO(*(fp))); \
+        JPC_T1D_GETBITNOSKEW((mqdec), v, "REF", "MR"); \
+        t = (v ? (poshalf) : (neghalf)); \
+        *(dp) += (*(dp) < 0) ? (-t) : t; \
+        *(fp) |= JPC_REFINE; \
+    } \
 }
 
-static int dec_refpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos,
-  int vcausalflag, jas_matrix_t *flags, jas_matrix_t *data)
+
+
+static int
+dec_refpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos,
+            int vcausalflag, jas_matrix_t *flags, jas_matrix_t *data)
 {
-	int i;
-	int j;
-	int vscanlen;
-	int width;
-	int height;
-	int one;
-	int poshalf;
-	int neghalf;
-	jpc_fix_t *fp;
-	int frowstep;
-	int fstripestep;
-	jpc_fix_t *fstripestart;
-	jpc_fix_t *fvscanstart;
-	jpc_fix_t *dp;
-	int drowstep;
-	int dstripestep;
-	jpc_fix_t *dstripestart;
-	jpc_fix_t *dvscanstart;
-	int k;
+    int i;
+    int j;
+    int vscanlen;
+    int width;
+    int height;
+    int one;
+    int poshalf;
+    int neghalf;
+    jpc_fix_t *fp;
+    int frowstep;
+    int fstripestep;
+    jpc_fix_t *fstripestart;
+    jpc_fix_t *fvscanstart;
+    jpc_fix_t *dp;
+    int drowstep;
+    int dstripestep;
+    jpc_fix_t *dstripestart;
+    jpc_fix_t *dvscanstart;
+    int k;
 
-	width = jas_matrix_numcols(data);
-	height = jas_matrix_numrows(data);
-	frowstep = jas_matrix_rowstep(flags);
-	drowstep = jas_matrix_rowstep(data);
-	fstripestep = frowstep << 2;
-	dstripestep = drowstep << 2;
+    width = jas_matrix_numcols(data);
+    height = jas_matrix_numrows(data);
+    frowstep = jas_matrix_rowstep(flags);
+    drowstep = jas_matrix_rowstep(data);
+    fstripestep = frowstep << 2;
+    dstripestep = drowstep << 2;
 
-	one = 1 << bitpos;
-	poshalf = one >> 1;
-	neghalf = (bitpos > 0) ? (-poshalf) : (-1);
+    one = 1 << bitpos;
+    poshalf = one >> 1;
+    neghalf = (bitpos > 0) ? (-poshalf) : (-1);
 
-	fstripestart = jas_matrix_getref(flags, 1, 1);
-	dstripestart = jas_matrix_getref(data, 0, 0);
-	for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
-	  dstripestart += dstripestep) {
-		fvscanstart = fstripestart;
-		dvscanstart = dstripestart;
-		vscanlen = JAS_MIN(i, 4);
-		for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
-			fp = fvscanstart;
-			dp = dvscanstart;
-			k = vscanlen;
+    fstripestart = jas_matrix_getref(flags, 1, 1);
+    dstripestart = jas_matrix_getref(data, 0, 0);
+    for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
+      dstripestart += dstripestep) {
+        fvscanstart = fstripestart;
+        dvscanstart = dstripestart;
+        vscanlen = JAS_MIN(i, 4);
+        for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
+            fp = fvscanstart;
+            dp = dvscanstart;
+            k = vscanlen;
 
-			/* Process first sample in vertical scan. */
-			jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec,
-			  vcausalflag);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process first sample in vertical scan. */
+            jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec,
+              vcausalflag);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process second sample in vertical scan. */
-			jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process second sample in vertical scan. */
+            jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process third sample in vertical scan. */
-			jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process third sample in vertical scan. */
+            jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process fourth sample in vertical scan. */
-			jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, 0);
-		}
-	}
+            /* Process fourth sample in vertical scan. */
+            jpc_refpass_step(fp, dp, poshalf, neghalf, mqdec, 0);
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
-#define	jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, vcausalflag) \
+#define jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, vcausalflag) \
 { \
-	jpc_fix_t v; \
-	jpc_fix_t t; \
-	if (((*(fp)) & (JPC_SIG | JPC_VISIT)) == JPC_SIG) { \
-		JPC_T1D_RAWGETBIT(in, v, "REF", "MAGREF"); \
-		if (v < 0) { \
-			return -1; \
-		} \
-		t = (v ? poshalf : neghalf); \
-		*(dp) += (*(dp) < 0) ? (-t) : t; \
-		*(fp) |= JPC_REFINE; \
-	} \
+    jpc_fix_t v; \
+    jpc_fix_t t; \
+    if (((*(fp)) & (JPC_SIG | JPC_VISIT)) == JPC_SIG) { \
+        JPC_T1D_RAWGETBIT(in, v, "REF", "MAGREF"); \
+        if (v < 0) { \
+            return -1; \
+        } \
+        t = (v ? poshalf : neghalf); \
+        *(dp) += (*(dp) < 0) ? (-t) : t; \
+        *(fp) |= JPC_REFINE; \
+    } \
 }
 
-static int dec_rawrefpass(jpc_dec_t *dec, jpc_bitstream_t *in, int bitpos, int vcausalflag,
-  jas_matrix_t *flags, jas_matrix_t *data)
+
+
+static int
+dec_rawrefpass(jpc_dec_t *dec, jpc_bitstream_t *in, int bitpos,
+               int vcausalflag,
+               jas_matrix_t *flags, jas_matrix_t *data)
 {
-	int i;
-	int j;
-	int k;
-	int vscanlen;
-	int width;
-	int height;
-	int one;
-	int poshalf;
-	int neghalf;
-	jpc_fix_t *fp;
-	int frowstep;
-	int fstripestep;
-	jpc_fix_t *fstripestart;
-	jpc_fix_t *fvscanstart;
-	jpc_fix_t *dp;
-	int drowstep;
-	int dstripestep;
-	jpc_fix_t *dstripestart;
-	jpc_fix_t *dvscanstart;
+    int i;
+    int j;
+    int k;
+    int vscanlen;
+    int width;
+    int height;
+    int one;
+    int poshalf;
+    int neghalf;
+    jpc_fix_t *fp;
+    int frowstep;
+    int fstripestep;
+    jpc_fix_t *fstripestart;
+    jpc_fix_t *fvscanstart;
+    jpc_fix_t *dp;
+    int drowstep;
+    int dstripestep;
+    jpc_fix_t *dstripestart;
+    jpc_fix_t *dvscanstart;
 
-	width = jas_matrix_numcols(data);
-	height = jas_matrix_numrows(data);
-	frowstep = jas_matrix_rowstep(flags);
-	drowstep = jas_matrix_rowstep(data);
-	fstripestep = frowstep << 2;
-	dstripestep = drowstep << 2;
+    width = jas_matrix_numcols(data);
+    height = jas_matrix_numrows(data);
+    frowstep = jas_matrix_rowstep(flags);
+    drowstep = jas_matrix_rowstep(data);
+    fstripestep = frowstep << 2;
+    dstripestep = drowstep << 2;
 
-	one = 1 << bitpos;
-	poshalf = one >> 1;
-	neghalf = (bitpos > 0) ? (-poshalf) : (-1);
+    one = 1 << bitpos;
+    poshalf = one >> 1;
+    neghalf = (bitpos > 0) ? (-poshalf) : (-1);
 
-	fstripestart = jas_matrix_getref(flags, 1, 1);
-	dstripestart = jas_matrix_getref(data, 0, 0);
-	for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
-	  dstripestart += dstripestep) {
-		fvscanstart = fstripestart;
-		dvscanstart = dstripestart;
-		vscanlen = JAS_MIN(i, 4);
-		for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
-			fp = fvscanstart;
-			dp = dvscanstart;
-			k = vscanlen;
+    fstripestart = jas_matrix_getref(flags, 1, 1);
+    dstripestart = jas_matrix_getref(data, 0, 0);
+    for (i = height; i > 0; i -= 4, fstripestart += fstripestep,
+      dstripestart += dstripestep) {
+        fvscanstart = fstripestart;
+        dvscanstart = dstripestart;
+        vscanlen = JAS_MIN(i, 4);
+        for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
+            fp = fvscanstart;
+            dp = dvscanstart;
+            k = vscanlen;
 
-			/* Process first sample in vertical scan. */
-			jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in,
-			  vcausalflag);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process first sample in vertical scan. */
+            jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in,
+              vcausalflag);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process second sample in vertical scan. */
-			jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process second sample in vertical scan. */
+            jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process third sample in vertical scan. */
-			jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process third sample in vertical scan. */
+            jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process fourth sample in vertical scan. */
-			jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, 0);
-		}
-	}
-	return 0;
+            /* Process fourth sample in vertical scan. */
+            jpc_rawrefpass_step(fp, dp, poshalf, neghalf, in, 0);
+        }
+    }
+    return 0;
 }
+
+
 
 /******************************************************************************\
 * Code for cleanup pass.
 \******************************************************************************/
 
-#define	jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient, mqdec, flabel, plabel, vcausalflag) \
+#define jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient, mqdec, flabel, plabel, vcausalflag) \
 { \
-	int v; \
+    int v; \
 flabel \
-	if (!((f) & (JPC_SIG | JPC_VISIT))) { \
-		jpc_mqdec_setcurctx((mqdec), JPC_GETZCCTXNO((f), (orient))); \
-		JPC_T1D_GETBIT((mqdec), v, "CLN", "ZC"); \
-		if (v) { \
+    if (!((f) & (JPC_SIG | JPC_VISIT))) { \
+        jpc_mqdec_setcurctx((mqdec), JPC_GETZCCTXNO((f), (orient))); \
+        JPC_T1D_GETBIT((mqdec), v, "CLN", "ZC"); \
+        if (v) { \
 plabel \
-			/* Coefficient is significant. */ \
-			jpc_mqdec_setcurctx((mqdec), JPC_GETSCCTXNO(f)); \
-			JPC_T1D_GETBIT((mqdec), v, "CLN", "SC"); \
-			v ^= JPC_GETSPB(f); \
-			*(dp) = (v) ? (-(oneplushalf)) : (oneplushalf); \
-			JPC_UPDATEFLAGS4((fp), (frowstep), v, (vcausalflag)); \
-			*(fp) |= JPC_SIG; \
-		} \
-	} \
-	/* XXX - Is this correct?  Can aggregation cause some VISIT bits not to be reset?  Check. */ \
-	*(fp) &= ~JPC_VISIT; \
+            /* Coefficient is significant. */ \
+            jpc_mqdec_setcurctx((mqdec), JPC_GETSCCTXNO(f)); \
+            JPC_T1D_GETBIT((mqdec), v, "CLN", "SC"); \
+            v ^= JPC_GETSPB(f); \
+            *(dp) = (v) ? (-(oneplushalf)) : (oneplushalf); \
+            JPC_UPDATEFLAGS4((fp), (frowstep), v, (vcausalflag)); \
+            *(fp) |= JPC_SIG; \
+        } \
+    } \
+    /* XXX - Is this correct?  Can aggregation cause some VISIT bits not to be reset?  Check. */ \
+    *(fp) &= ~JPC_VISIT; \
 }
 
-static int dec_clnpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos, int orient,
-  int vcausalflag, int segsymflag, jas_matrix_t *flags, jas_matrix_t *data)
+static int
+dec_clnpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos,
+            int orient, int vcausalflag, int segsymflag, jas_matrix_t *flags,
+            jas_matrix_t *data)
 {
-	int i;
-	int j;
-	int k;
-	int vscanlen;
-	int v;
-	int half;
-	int runlen;
-	int f;
-	int width;
-	int height;
-	int one;
-	int oneplushalf;
+    int i;
+    int j;
+    int k;
+    int vscanlen;
+    int v;
+    int half;
+    int runlen;
+    int f;
+    int width;
+    int height;
+    int one;
+    int oneplushalf;
 
-	jpc_fix_t *fp;
-	int frowstep;
-	int fstripestep;
-	jpc_fix_t *fstripestart;
-	jpc_fix_t *fvscanstart;
+    jpc_fix_t *fp;
+    int frowstep;
+    int fstripestep;
+    jpc_fix_t *fstripestart;
+    jpc_fix_t *fvscanstart;
 
-	jpc_fix_t *dp;
-	int drowstep;
-	int dstripestep;
-	jpc_fix_t *dstripestart;
-	jpc_fix_t *dvscanstart;
+    jpc_fix_t *dp;
+    int drowstep;
+    int dstripestep;
+    jpc_fix_t *dstripestart;
+    jpc_fix_t *dvscanstart;
 
-	one = 1 << bitpos;
-	half = one >> 1;
-	oneplushalf = one | half;
+    one = 1 << bitpos;
+    half = one >> 1;
+    oneplushalf = one | half;
 
-	width = jas_matrix_numcols(data);
-	height = jas_matrix_numrows(data);
+    width = jas_matrix_numcols(data);
+    height = jas_matrix_numrows(data);
 
-	frowstep = jas_matrix_rowstep(flags);
-	drowstep = jas_matrix_rowstep(data);
-	fstripestep = frowstep << 2;
-	dstripestep = drowstep << 2;
+    frowstep = jas_matrix_rowstep(flags);
+    drowstep = jas_matrix_rowstep(data);
+    fstripestep = frowstep << 2;
+    dstripestep = drowstep << 2;
 
-	fstripestart = jas_matrix_getref(flags, 1, 1);
-	dstripestart = jas_matrix_getref(data, 0, 0);
-	for (i = 0; i < height; i += 4, fstripestart += fstripestep,
-	  dstripestart += dstripestep) {
-		fvscanstart = fstripestart;
-		dvscanstart = dstripestart;
-		vscanlen = JAS_MIN(4, height - i);
-		for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
-			fp = fvscanstart;
-			if (vscanlen >= 4 && (!((*fp) & (JPC_SIG | JPC_VISIT |
-			  JPC_OTHSIGMSK))) && (fp += frowstep, !((*fp) & (JPC_SIG |
-			  JPC_VISIT | JPC_OTHSIGMSK))) && (fp += frowstep, !((*fp) &
-			  (JPC_SIG | JPC_VISIT | JPC_OTHSIGMSK))) && (fp += frowstep,
-			  !((*fp) & (JPC_SIG | JPC_VISIT | JPC_OTHSIGMSK)))) {
+    fstripestart = jas_matrix_getref(flags, 1, 1);
+    dstripestart = jas_matrix_getref(data, 0, 0);
+    for (i = 0; i < height; i += 4, fstripestart += fstripestep,
+      dstripestart += dstripestep) {
+        fvscanstart = fstripestart;
+        dvscanstart = dstripestart;
+        vscanlen = JAS_MIN(4, height - i);
+        for (j = width; j > 0; --j, ++fvscanstart, ++dvscanstart) {
+            fp = fvscanstart;
+            if (vscanlen >= 4 && (!((*fp) & (JPC_SIG | JPC_VISIT |
+              JPC_OTHSIGMSK))) && (fp += frowstep, !((*fp) & (JPC_SIG |
+              JPC_VISIT | JPC_OTHSIGMSK))) && (fp += frowstep, !((*fp) &
+              (JPC_SIG | JPC_VISIT | JPC_OTHSIGMSK))) && (fp += frowstep,
+              !((*fp) & (JPC_SIG | JPC_VISIT | JPC_OTHSIGMSK)))) {
 
-				jpc_mqdec_setcurctx(mqdec, JPC_AGGCTXNO);
-				JPC_T1D_GETBIT(mqdec, v, "CLN", "AGG");
-				if (!v) {
-					continue;
-				}
-				jpc_mqdec_setcurctx(mqdec, JPC_UCTXNO);
-				JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "RL");
-				runlen = v;
-				JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "RL");
-				runlen = (runlen << 1) | v;
-				f = *(fp = fvscanstart + frowstep * runlen);
-				dp = dvscanstart + drowstep * runlen;
-				k = vscanlen - runlen;
-				switch (runlen) {
-				case 0:
-					goto clnpass_partial0;
-					break;
-				case 1:
-					goto clnpass_partial1;
-					break;
-				case 2:
-					goto clnpass_partial2;
-					break;
-				case 3:
-					goto clnpass_partial3;
-					break;
-				}
-			} else {
-				f = *(fp = fvscanstart);
-				dp = dvscanstart;
-				k = vscanlen;
-				goto clnpass_full0;
-			}
+                jpc_mqdec_setcurctx(mqdec, JPC_AGGCTXNO);
+                JPC_T1D_GETBIT(mqdec, v, "CLN", "AGG");
+                if (!v) {
+                    continue;
+                }
+                jpc_mqdec_setcurctx(mqdec, JPC_UCTXNO);
+                JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "RL");
+                runlen = v;
+                JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "RL");
+                runlen = (runlen << 1) | v;
+                f = *(fp = fvscanstart + frowstep * runlen);
+                dp = dvscanstart + drowstep * runlen;
+                k = vscanlen - runlen;
+                switch (runlen) {
+                case 0:
+                    goto clnpass_partial0;
+                    break;
+                case 1:
+                    goto clnpass_partial1;
+                    break;
+                case 2:
+                    goto clnpass_partial2;
+                    break;
+                case 3:
+                    goto clnpass_partial3;
+                    break;
+                }
+            } else {
+                f = *(fp = fvscanstart);
+                dp = dvscanstart;
+                k = vscanlen;
+                goto clnpass_full0;
+            }
 
-			/* Process first sample in vertical scan. */
-			jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
-			  mqdec, clnpass_full0:, clnpass_partial0:,
-			  vcausalflag);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process first sample in vertical scan. */
+            jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
+              mqdec, clnpass_full0:, clnpass_partial0:,
+              vcausalflag);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process second sample in vertical scan. */
-			f = *fp;
-			jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
-				mqdec, ;, clnpass_partial1:, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process second sample in vertical scan. */
+            f = *fp;
+            jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
+                mqdec, ;, clnpass_partial1:, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process third sample in vertical scan. */
-			f = *fp;
-			jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
-				mqdec, ;, clnpass_partial2:, 0);
-			if (--k <= 0) {
-				continue;
-			}
-			fp += frowstep;
-			dp += drowstep;
+            /* Process third sample in vertical scan. */
+            f = *fp;
+            jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
+                mqdec, ;, clnpass_partial2:, 0);
+            if (--k <= 0) {
+                continue;
+            }
+            fp += frowstep;
+            dp += drowstep;
 
-			/* Process fourth sample in vertical scan. */
-			f = *fp;
-			jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
-				mqdec, ;, clnpass_partial3:, 0);
-		}
-	}
+            /* Process fourth sample in vertical scan. */
+            f = *fp;
+            jpc_clnpass_step(f, fp, frowstep, dp, oneplushalf, orient,
+                mqdec, ;, clnpass_partial3:, 0);
+        }
+    }
 
-	if (segsymflag) {
-		int segsymval;
-		segsymval = 0;
-		jpc_mqdec_setcurctx(mqdec, JPC_UCTXNO);
-		JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
-		segsymval = (segsymval << 1) | (v & 1);
-		JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
-		segsymval = (segsymval << 1) | (v & 1);
-		JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
-		segsymval = (segsymval << 1) | (v & 1);
-		JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
-		segsymval = (segsymval << 1) | (v & 1);
-		if (segsymval != 0xa) {
-			fprintf(stderr, "warning: bad segmentation symbol\n");
-		}
-	}
+    if (segsymflag) {
+        int segsymval;
+        segsymval = 0;
+        jpc_mqdec_setcurctx(mqdec, JPC_UCTXNO);
+        JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
+        segsymval = (segsymval << 1) | (v & 1);
+        JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
+        segsymval = (segsymval << 1) | (v & 1);
+        JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
+        segsymval = (segsymval << 1) | (v & 1);
+        JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
+        segsymval = (segsymval << 1) | (v & 1);
+        if (segsymval != 0xa) {
+            fprintf(stderr, "warning: bad segmentation symbol\n");
+        }
+    }
 
-	return 0;
+    return 0;
 }
+
+
+
+static void
+jpc_dec_decodecblk(jpc_dec_t *       const dec,
+                   jpc_dec_tile_t *  const tile,
+                   jpc_dec_tcomp_t * const tcomp,
+                   jpc_dec_band_t *  const band,
+                   jpc_dec_cblk_t *  const cblk,
+                   int               const dopartial,
+                   int               const maxlyrs,
+                   const char **     const errorP) {
+
+    jpc_dec_seg_t *seg;
+    int i;
+    int bpno;
+    int passtype;
+    int ret;
+    int compno;
+    int filldata;
+    int fillmask;
+    jpc_dec_ccp_t *ccp;
+
+    compno = tcomp - tile->tcomps;
+
+    if (!cblk->flags) {
+        /* Note: matrix is assumed to be zeroed */
+        unsigned int const nrow = jas_matrix_numrows(cblk->data) + 2;
+        unsigned int const ncol = jas_matrix_numcols(cblk->data) + 2;
+        cblk->flags = jas_matrix_create(nrow, ncol);
+        if (!cblk->flags) {
+            pm_asprintf(errorP, "Out of memory allocating a flags matrix of "
+                        "%u rows by %u columns", nrow, ncol);
+            return;
+        }
+    }
+
+    seg = cblk->segs.head;
+    while (seg && (seg != cblk->curseg || dopartial) && (maxlyrs < 0 ||
+      seg->lyrno < maxlyrs)) {
+        assert(seg->numpasses >= seg->maxpasses || dopartial);
+        assert(seg->stream);
+        jas_stream_rewind(seg->stream);
+        jas_stream_setrwcount(seg->stream, 0);
+        if (seg->type == JPC_SEG_MQ) {
+            if (!cblk->mqdec) {
+                if (!(cblk->mqdec = jpc_mqdec_create(JPC_NUMCTXS, 0))) {
+                    pm_asprintf(errorP, "jpc_mqdec_create failed");
+                    return;
+                }
+                jpc_mqdec_setctxs(cblk->mqdec, JPC_NUMCTXS, jpc_mqctxs);
+            }
+            jpc_mqdec_setinput(cblk->mqdec, seg->stream);
+            jpc_mqdec_init(cblk->mqdec);
+        } else {
+            assert(seg->type == JPC_SEG_RAW);
+            if (!cblk->nulldec) {
+                if (!(cblk->nulldec = jpc_bitstream_sopen(seg->stream, "r"))) {
+                    assert(0);
+                }
+            }
+        }
+
+
+        for (i = 0; i < seg->numpasses; ++i) {
+            if (cblk->numimsbs > band->numbps) {
+                ccp = &tile->cp->ccps[compno];
+                if (ccp->roishift <= 0) {
+                    fprintf(stderr, "warning: corrupt code stream\n");
+                } else {
+                    if (cblk->numimsbs < ccp->roishift - band->numbps) {
+                        fprintf(stderr, "warning: corrupt code stream\n");
+                    }
+                }
+            }
+            bpno = band->roishift + band->numbps - 1 - (cblk->numimsbs +
+              (seg->passno + i - cblk->firstpassno + 2) / 3);
+            if (bpno < 0) {
+                goto exit;
+            }
+#if 1
+            passtype = (seg->passno + i + 2) % 3;
+#else
+            passtype = JPC_PASSTYPE(seg->passno + i + 2);
+#endif
+            assert(bpno >= 0 && bpno < 31);
+            switch (passtype) {
+            case JPC_SIGPASS:
+                ret = (seg->type == JPC_SEG_MQ) ? dec_sigpass(dec,
+                  cblk->mqdec, bpno, band->orient,
+                  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
+                  cblk->flags, cblk->data) :
+                  dec_rawsigpass(dec, cblk->nulldec, bpno,
+                  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
+                  cblk->flags, cblk->data);
+                break;
+            case JPC_REFPASS:
+                ret = (seg->type == JPC_SEG_MQ) ?
+                  dec_refpass(dec, cblk->mqdec, bpno,
+                  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
+                  cblk->flags, cblk->data) :
+                  dec_rawrefpass(dec, cblk->nulldec, bpno,
+                  (tile->cp->ccps[compno].cblkctx & JPC_COX_VSC) != 0,
+                  cblk->flags, cblk->data);
+                break;
+            case JPC_CLNPASS:
+                assert(seg->type == JPC_SEG_MQ);
+                ret = dec_clnpass(dec, cblk->mqdec, bpno,
+                  band->orient, (tile->cp->ccps[compno].cblkctx &
+                  JPC_COX_VSC) != 0, (tile->cp->ccps[compno].cblkctx &
+                  JPC_COX_SEGSYM) != 0, cblk->flags,
+                  cblk->data);
+                break;
+            default:
+                ret = -1;
+                break;
+            }
+            /* Do we need to reset after each coding pass? */
+            if (tile->cp->ccps[compno].cblkctx & JPC_COX_RESET) {
+                jpc_mqdec_setctxs(cblk->mqdec, JPC_NUMCTXS, jpc_mqctxs);
+            }
+
+            if (ret) {
+                pm_asprintf(errorP,
+                            "coding pass failed passtype=%d segtype=%d",
+                            passtype, seg->type);
+                return;
+            }
+
+        }
+
+        if (seg->type == JPC_SEG_MQ) {
+            /* Note: dont destroy mq decoder because context info will be
+               lost
+            */
+        } else {
+            assert(seg->type == JPC_SEG_RAW);
+            if (tile->cp->ccps[compno].cblkctx & JPC_COX_PTERM) {
+                fillmask = 0x7f;
+                filldata = 0x2a;
+            } else {
+                fillmask = 0;
+                filldata = 0;
+            }
+            if ((ret = jpc_bitstream_inalign(cblk->nulldec, fillmask,
+              filldata)) < 0) {
+                pm_asprintf(errorP, "jpc_bitstream_inalign failed");
+                return;
+            } else if (ret > 0) {
+                pm_message("warning: bad termination pattern detected");
+            }
+            jpc_bitstream_close(cblk->nulldec);
+            cblk->nulldec = 0;
+        }
+
+        cblk->curseg = seg->next;
+        jpc_seglist_remove(&cblk->segs, seg);
+        jpc_seg_destroy(seg);
+        seg = cblk->curseg;
+    }
+
+    assert(dopartial ? (!cblk->curseg) : 1);
+
+exit:
+    *errorP = NULL;
+}
+
+
+
+void
+jpc_dec_decodecblks(jpc_dec_t *      const decP,
+                    jpc_dec_tile_t * const tileP,
+                    const char **    const errorP) {
+/*----------------------------------------------------------------------------
+  Decode all of the code blocks for a particular tile
+-----------------------------------------------------------------------------*/
+    unsigned int compcnt;
+    jpc_dec_tcomp_t * tcompP;
+
+    for (compcnt = 0, tcompP = tileP->tcomps;
+         compcnt < decP->numcomps;
+         ++compcnt, ++tcompP) {
+
+        unsigned int rlvlcnt;
+        jpc_dec_rlvl_t * rlvlP;
+
+        for (rlvlcnt = 0, rlvlP = tcompP->rlvls;
+             rlvlcnt < tcompP->numrlvls;
+             ++rlvlcnt, ++rlvlP) {
+
+            if (rlvlP->bands) {
+                unsigned int bandcnt;
+                jpc_dec_band_t * bandP;
+
+                for (bandcnt = 0, bandP = rlvlP->bands;
+                     bandcnt < rlvlP->numbands;
+                     ++bandcnt, ++bandP) {
+
+                    if (bandP->data) {
+                        unsigned int prccnt;
+                        jpc_dec_prc_t * prcP;
+
+                        for (prccnt = 0, prcP = bandP->prcs;
+                             prccnt < rlvlP->numprcs;
+                             ++prccnt, ++prcP) {
+
+                            if (prcP->cblks) {
+                                unsigned int cblkcnt;
+                                jpc_dec_cblk_t * cblkP;
+
+                                for (cblkcnt = 0, cblkP = prcP->cblks;
+                                     cblkcnt < prcP->numcblks;
+                                     ++cblkcnt, ++cblkP) {
+
+                                    const char * error;
+
+                                    jpc_dec_decodecblk(decP, tileP, tcompP,
+                                                       bandP, cblkP, 1,
+                                                       JPC_MAXLYRS, &error);
+                                    if (error) {
+                                        pm_asprintf(errorP,
+                                                    "jpc_dec_decodecblk "
+                                                    "failed on component %u, "
+                                                    "resolution level %u, "
+                                                    "band %u, prc %u, "
+                                                    "code block %u.  %s",
+                                                    compcnt, rlvlcnt, bandcnt,
+                                                    prccnt, cblkcnt, error);
+                                        pm_strfree(error);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    *errorP = NULL;
+}
+

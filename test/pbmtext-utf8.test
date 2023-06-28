@@ -2,68 +2,101 @@
 # This script tests: pbmtext
 # Also requires:
 
-# This test requires the en_US.utf8 locale
-# Skip this test if it is not available
+LANG=C
+LC_ALL=C
+export LANG LC_ALL
+
+
+# This test requires a working UTF-8 locale
+# Skip this test if it is are not available
 
 iconv /dev/null
 if [ $? -ne 0  ]
   then echo "iconv command not available." 1>&2
        echo "Skipping." 1>&2
-  exit 80;
+       exit 80;
 fi
 
-echo "A" | LC_ALL=en_US.utf8 pbmtext -wchar > /dev/null
-if [ $? -ne 0  ]
-  then echo "LC_ALL could not be set to en_US.utf8." 1>&2
+tmpdir=${tmpdir:-/tmp}
+utf_locale_list=${tmpdir}/utf_locale_list
+
+locale_to_test="en_US.utf8"  # Initial value
+# Edit the above value if necessary
+
+# Make a list of available locales which end in "utf8"
+locale -a | grep "\.utf8$" > ${utf_locale_list}
+
+# Hunt for a valid utf8 locale
+# Submit each candidate to a trial pbmtext run until one that works is
+# encountered
+
+i=0
+until [ -z ${locale_to_test} ] || \
+  echo "A" | LC_ALL=${locale_to_test} pbmtext -wchar > /dev/null
+    do
+      let i=$(($i+1));
+      locale_to_test=`sed "$i"p -n  ${utf_locale_list}`;
+    done;
+
+rm ${utf_locale_list};
+if [ -z  ${locale_to_test} ]
+  then echo "No utf-8 locale available." 1>&2
        echo "Skipping." 1>&2
-  exit 80;
-fi
+       exit 80;
+  else
+       echo "Testing with locale set to ${locale_to_test}" 1>&2
+fi;
+
+locale_for_test=${locale_to_test}
+
 
 # Test 1.
 # Two rows
 # Should print 2066913605 5110 twice
-LC_ALL=C \
+
+echo "Test 1"
+
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); }' | \
     pbmtext -builtin bdf | cksum
 
-LC_ALL=C \
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=161;i<=255;++i) printf("%c",i);  }' | \
-    iconv -f iso8859-1 -t utf-8 | \
-    LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar | cksum
+             for (i=161;i<=191;++i) printf("%c%c",194,i);     \
+             for (i=128;i<=191;++i) printf("%c%c",195,i); }' | \
+    LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
 
 
 # Test 2.
 # One row
 # Should print 2920616515 2301 twice
-LC_ALL=C \
+
+echo "Test 2"
+
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print "" }' | \
     pbmtext -builtin bdf | cksum
 
-LC_ALL=C \
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i);  print ""}' | \
-    LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar | cksum
+    LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
 
-
-tmpdir=${tmpdir:-/tmp}
 output=${tmpdir}/output
 
 
 # Test 3.
 # Two rows
-# Output may be affected by locale.  Compare with cmp.
-# Should print 0
-LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
-    iconv -f iso8859-1 -t utf-8 > ${output}
+# Compare with cmp.
+# Should print 0 0 0 : 0
 
-LC_ALL=C \
+echo "Test 3"
+
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
-    iconv -f iso8859-1 -t utf-8 | \
-    LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump | \
+             for (i=161;i<=191;++i) printf("%c%c",194,i);      \
+             for (i=128;i<=191;++i) printf("%c%c",195,i); print ""}' \
+    > ${output}
+
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=191;++i) printf("%c%c",194,i);      \
+             for (i=128;i<=191;++i) printf("%c%c",195,i); print ""}' | \
+    LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar -text-dump | \
     cmp --quiet - ${output}
 
 echo ${PIPESTATUS[@]} ":" $?
@@ -71,25 +104,106 @@ rm ${output}
 
 
 # Test 4.
-# One row
+# One row  ASCII 7-bit range
 # Should print the following twice:
 # !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
-LC_ALL=C \
+
+echo "Test 4"
+
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print "" } '
 
-LC_ALL=C \
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""}' | \
-        LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump
-
-
-echo "Invalid utf-8 sequence as input." 1>&2
-echo "An error message should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+        LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar -text-dump
 
 # Test 5.
-# Invalid utf-8 sequence
-# Should print 1
-LC_ALL=C \
-awk 'BEGIN { for (i=128; i<=129;++i) printf("%c",i);  print ""}' | \
-        LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump
-echo ${PIPESTATUS[@]} ":" $?
+# Long input text
+
+
+echo "Test 5 Invalid"
+
+long_txt=${tmpdir}/long.txt
+test_out=${tmpdir}/test_out
+
+head -c 4999 /dev/zero | sed 's@\x00@\xc2\xbe@g' > ${long_txt}
+cat ${long_txt} | wc -c | tr -d ' '
+
+cat ${long_txt} | \
+  LC_ALL=${locale_for_test} pbmtext -nomargins -builtin fixed -wchar | cksum
+
+echo 1>&2
+echo "Test input text which exceeds length limit" 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+printf "z" >> ${long_txt}
+cat ${long_txt} | wc -c | tr -d ' '
+
+cat ${long_txt} | \
+  LC_ALL=${locale_for_test} \
+  pbmtext -nomargins -builtin fixed -wchar > ${test_out} || \
+  printf "Expected failure 1";
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+cat ${long_txt} | \
+  LC_ALL=${locale_for_test} \
+  pbmtext -nomargins -builtin fixed -wchar > ${test_out} || \
+  printf "Expected failure 2";
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+rm ${long_txt}
+
+
+# Test 6.
+# Invalid utf-8 sequences
+# For each case output should be:
+# 6-x : 0 1 : 1 1
+
+echo "Invalid utf-8 sequences as input." 1>&2
+echo "Errors message should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test 6 Invalid"
+
+awk 'BEGIN { printf("%c%c",128,129);  print ""}' | \
+        LC_ALL=${locale_for_test} \
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
+  printf "6-1: ${PIPESTATUS[*]} : $?"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+awk 'BEGIN { printf("ABC%c%c",192, 193);  print ""}' | \
+        LC_ALL=${locale_for_test} \
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
+  printf "6-2: ${PIPESTATUS[*]} : $?"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+awk 'BEGIN { printf("abcde%c%c", 254, 253);  print ""}' | \
+        LC_ALL=${locale_for_test} \
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
+  printf "6-3: ${PIPESTATUS[*]} : $?"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+awk 'BEGIN { printf("abcdefg%c%c", 195, 15);  print ""}' | \
+        LC_ALL=${locale_for_test} \
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
+  printf "6-4: ${PIPESTATUS[*]} : $?"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+awk 'BEGIN { printf("123456789%c%c%c", 224, 143 ,0);  print ""}' | \
+        LC_ALL=${locale_for_test} \
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
+  printf "6-5: ${PIPESTATUS[*]} : $?"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+awk 'BEGIN { printf("abcdefg123ABCDEFG%c%c%c%c",247, 135, 135, 7);  print ""}' | \
+        LC_ALL=${locale_for_test} \
+        pbmtext -builtin bdf -wchar -text-dump > ${test_out}
+  printf "6-6: ${PIPESTATUS[*]} : $?"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

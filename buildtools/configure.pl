@@ -9,15 +9,15 @@ use Cwd 'abs_path';
 use Fcntl;
 use Config;
 #use File::Temp "tempfile";   Not available before Perl 5.6.1
-    
+
 
 my ($TRUE, $FALSE) = (1,0);
 
 # This program generates config.mk, which is included by all of the
-# Netpbm makefiles.  You run this program as the first step in building 
+# Netpbm makefiles.  You run this program as the first step in building
 # Netpbm.  (The second step is 'make').
 
-# This program is only a convenience.  It is supported to create 
+# This program is only a convenience.  It is supported to create
 # config.mk any way you want.  In fact, an easy way is to copy
 # config.mk.in and follow the instructions in the comments therein
 # to uncomment certain lines and make other changes.
@@ -28,7 +28,7 @@ my ($TRUE, $FALSE) = (1,0);
 # user, but it isn't the normal build process.
 
 # The argument to this program is the filepath of the config.mk.in
-# file.  If unspecified, the default is 'config.mk.in' in the 
+# file.  If unspecified, the default is 'config.mk.in' in the
 # Netpbm source directory.
 
 # For explanations of the stuff we put in the make files, see the comments
@@ -105,7 +105,7 @@ sub promptYesNo($) {
 
     while (!defined($retval)) {
         my $response = prompt("(y)es or (n)o", $default);
-        
+
         if (uc($response) =~ m{ ^ (Y|YES) $ }x)  {
             $retval = $TRUE;
         } elsif (uc($response) =~ m{ ^ (N|NO) $ }x)  {
@@ -125,17 +125,17 @@ sub flow($) {
     my ($unflowed) = @_;
 #-----------------------------------------------------------------------------
 #  Return the text $unflowed, split with newlines into 72 character lines.
-#  We assum $unflowed is pure text, without any kind of formatting characters
+#  We assume $unflowed is pure text, without any kind of formatting characters
 #  such as newlines.
 #-----------------------------------------------------------------------------
     my $retval;
 
     my @words = split(m{\s+}, $unflowed);
-    
+
     my $currentLine;
-    
+
     $currentLine = "";
-    
+
     foreach my $word (@words) {
         my $mustSpill;
         if (length($currentLine) == 0) {
@@ -148,7 +148,7 @@ sub flow($) {
             } else {
                 $separator = " ";
             }
-                
+
             if (length($currentLine) + length($separator) + length($word)
                 <= 72) {
                 $currentLine .= $separator;
@@ -194,7 +194,7 @@ sub tmpdir() {
 # basic Perl some time after Perl 5.005_03.
 
     my $retval;
-    
+
     if ($ENV{'TMPDIR'}) {
         $retval = $ENV{'TMPDIR'};
     } elsif ($ENV{'TEMP'}) {
@@ -217,8 +217,8 @@ sub tempFile($) {
 
 # Here's what we'd do if we could expect Perl 5.6.1 or later, instead
 # of calling this subroutine:
-#    my ($cFile, $cFileName) = tempfile("netpbmXXXX", 
-#                                       SUFFIX=>".c", 
+#    my ($cFile, $cFileName) = tempfile("netpbmXXXX",
+#                                       SUFFIX=>".c",
 #                                       DIR=>File::Spec->tmpdir(),
 #                                       UNLINK=>0);
     my ($suffix) = @_;
@@ -275,7 +275,7 @@ sub commandExists($) {
 # from system() a lot different than if system() were to try to
 # execute the program directly.
 
-    return(system("$command 1</dev/null 1>/dev/null 2>/dev/null")/256 != 127); 
+    return(system("$command 1</dev/null 1>/dev/null 2>/dev/null")/256 != 127);
 }
 
 
@@ -304,20 +304,20 @@ sub testCflags() {
 
     my $cflags;
 
-    $cflags = "";  # initial value 
-    
+    $cflags = "";  # initial value
+
     if ($ENV{"CPPFLAGS"}) {
         $cflags = $ENV{"CPPFLAGS"};
     } else {
         $cflags = "";
     }
-    
+
     if ($ENV{"CFLAGS"}) {
         $cflags .= " " . $ENV{"CFLAGS"};
     }
-    
+
     return $cflags;
-}    
+}
 
 
 
@@ -325,21 +325,21 @@ sub testCompile($$$) {
     my ($cflags, $cSourceCodeR, $successR) = @_;
 #-----------------------------------------------------------------------------
 #  Do a test compile of the program in @{$cSourceCodeR}.
-#  
+#
 #  Return $$successR == $TRUE iff the compile succeeds (exit code 0).
 #-----------------------------------------------------------------------------
     my ($cFile, $cFileName) = tempFile(".c");
 
     print $cFile @{$cSourceCodeR};
-    
+
     my ($oFile, $oFileName) = tempFile(".o");
     # Note: we tried using /dev/null for the output file and got complaints
     # from the Sun compiler that it has the wrong suffix.  2002.08.09.
-    
+
     my $compileCommand = "$testCc -c -o $oFileName $cflags $cFileName";
     print ("Doing test compile: $compileCommand\n");
     my $rc = system($compileCommand);
-    
+
     unlink($oFileName);
     close($oFile);
     unlink($cFileName);
@@ -354,22 +354,22 @@ sub testCompileLink($$$) {
     my ($flags, $cSourceCodeR, $successR) = @_;
 #-----------------------------------------------------------------------------
 #  Do a test compile and link of the program in @{$cSourceCodeR}.
-#  
+#
 #  Return $$successR == $TRUE iff the compile succeeds (exit code 0).
 #-----------------------------------------------------------------------------
     my ($cFile, $cFileName) = tempFile('.c');
 
     print $cFile @{$cSourceCodeR};
-    
+
     my ($oFile, $oFileName) = tempFile('');
 
     # Note that $flags may contain -l options, which where static linking
     # is involved have to go _after_ the base object file ($oFileName).
-    
+
     my $compileCommand = "$testCc -o $oFileName $cFileName $flags";
     print ("Doing test compile/link: $compileCommand\n");
     my $rc = system($compileCommand);
-    
+
     unlink($oFileName);
     close($oFile);
     unlink($cFileName);
@@ -410,14 +410,14 @@ sub askAboutCygwin() {
 
     print("Are you building in/for the Cygwin environment?\n");
     print("\n");
-    
+
     my $default;
     if ($OSNAME eq "cygwin") {
         $default = "y";
     } else {
         $default = "n";
     }
-    
+
     my $retval = promptYesNo($default);
 
     return $retval;
@@ -429,14 +429,14 @@ sub askAboutDjgpp() {
 
     print("Are you building in/for the DJGPP environment?\n");
     print("\n");
-    
+
     my $default;
     if ($OSNAME eq "dos") {
         $default = "y";
     } else {
         $default = "n";
     }
-    
+
     my $retval = promptYesNo($default);
 }
 
@@ -446,7 +446,7 @@ sub askAboutMingw() {
 
     print("Are you building for the MinGW environment?\n");
     print("\n");
-    
+
     my $retval = promptYesNo("n");
 
     return $retval;
@@ -488,7 +488,7 @@ sub getPlatform() {
     computePlatformDefault(\$default);
 
     print("Which of the following best describes your platform?\n");
- 
+
     print("gnu      GNU/Linux\n");
     print("win      Windows/DOS (Cygwin, DJGPP, Mingw32)\n");
     print("sun      Solaris or SunOS\n");
@@ -658,7 +658,7 @@ sub getCompiler($$$) {
 #    make variable (e.g. make CC=gcc2).
 #
 #  - Configure needs to do test compiles.  The test is best if it uses
-#    the same compiler that the build eventually will use, but it's 
+#    the same compiler that the build eventually will use, but it's
 #    useful even if not.
 #
 # The value this subroutine returns is NOT the command name to invoke the
@@ -714,11 +714,11 @@ sub gccLinker() {
     # First, we assume that the compiler calls 'collect2' as the linker
     # front end.  The specs file might specify some other program, but
     # it usually says 'collect2'.
-    
+
     my $retval;
 
     my $collect2 = qx{gcc --print-prog-name=collect2};
-    
+
     if (defined($collect2)) {
         chomp($collect2);
         my $linker = qx{$collect2 -v 2>&1};
@@ -749,14 +749,14 @@ sub getLinker($$$$) {
             print("\n");
 
             my $default;
-            
+
             if ($compiler eq "gcc") {
                 $default = gccLinker();
             } else {
                 $default = "sun";
             }
             my $response = prompt("sun or gnu", $default);
-            
+
             if ($response eq "gnu") {
                 $$baseLinkerR = "GNU";
             } elsif ($response eq "sun") {
@@ -811,11 +811,11 @@ sub getLibTypes($$$$$$$$) {
 
     my $default = ($default_target eq "merge") ? "static" : "shared";
 
-    my ($netpbmlibtype, $netpbmlibsuffix, $shlibprefixlist, 
+    my ($netpbmlibtype, $netpbmlibsuffix, $shlibprefixlist,
         $willBuildShared, $staticlib_too);
-    
+
     my $response = prompt("static or shared", $default);
-    
+
     if ($response eq "shared") {
         $willBuildShared = $TRUE;
         if ($platform eq "WINDOWS") {
@@ -823,7 +823,7 @@ sub getLibTypes($$$$$$$$) {
             $netpbmlibsuffix = "dll";
             if ($subplatform eq "cygwin") {
                 $shlibprefixlist = "cyg lib";
-            } 
+            }
         } elsif ($platform eq "DARWIN") {
             $netpbmlibtype = "dylib";
             $netpbmlibsuffix = "dylib";
@@ -846,7 +846,7 @@ sub getLibTypes($$$$$$$$) {
         $netpbmlibtype = "unixstatic";
         $netpbmlibsuffix = "a";
         # targets, but needed for building
-        # libopt 
+        # libopt
     } else {
         print("'$response' isn't one of the choices.  \n" .
               "You must choose 'static' or 'shared'.\n");
@@ -857,18 +857,18 @@ sub getLibTypes($$$$$$$$) {
 
     # Note that we can't do both a static and shared library for AIX, because
     # they both have the same name: libnetpbm.a.
-    
-    if (($netpbmlibtype eq "unixshared" or 
-         $netpbmlibtype eq "irixshared" or 
+
+    if (($netpbmlibtype eq "unixshared" or
+         $netpbmlibtype eq "irixshared" or
          $netpbmlibtype eq "dll") and $netpbmlibsuffix ne "a") {
         print("Do you want to build static libraries too (for linking to \n");
         print("programs not in the Netpbm package?\n");
         print("\n");
-        
+
         my $default = "y";
-        
+
         my $response = prompt("(y)es or (n)o", $default);
-        
+
         if (uc($response) =~ /^(Y|YES)$/)  {
             $staticlib_too = "Y";
         } elsif (uc($response) =~ /^(N|NO)$/)  {
@@ -919,16 +919,16 @@ sub inttypesDefault() {
 
         my @candidateList = ("<inttypes.h>", "<sys/inttypes.h>",
                              "<types.h>", "<sys/types.h>");
-        
+
         for (my $i = 0; $i < @candidateList && !$works; ++$i) {
             my $candidate = $candidateList[$i];
             my @cSourceCode = (
                                "#include $candidate\n",
                                "int_fast32_t testvar;\n"
                                );
-            
+
             testCompile($cflags, \@cSourceCode, \my $success);
-            
+
             if ($success) {
                 $works = $candidate;
             }
@@ -961,7 +961,7 @@ sub getInttypes($) {
     print("\n");
 
     my $default = inttypesDefault();
-    
+
     while (!$gotit) {
         my $response = prompt("'#include' argument or NONE", $default);
 
@@ -1000,9 +1000,9 @@ sub getInt64($$) {
                            "#include $inttypes_h\n",
                            "int64_t testvar;\n"
                            );
-            
+
         testCompile($cflags, \@cSourceCode, \my $success);
-            
+
         if ($success) {
             print("You do.\n");
             $$haveInt64R = 'Y';
@@ -1034,9 +1034,9 @@ sub determineSseCapability($) {
         my @cSourceCode = (
                            "#include <emmintrin.h>\n",
                            );
-            
+
         testCompile($cflags, \@cSourceCode, \my $success);
-            
+
         if ($success) {
             print("It does.\n");
             $$haveEmmintrinR = $TRUE;
@@ -1115,9 +1115,9 @@ sub getTiffLibrary($@) {
         my $default = "libtiff" . libSuffix($platform);
 
         print("What is your TIFF (graphics format) library?\n");
-        
+
         my $response = prompt("library filename or 'none'", $default);
-        
+
         if ($response ne "none") {
             $tifflib = $response;
         }
@@ -1137,9 +1137,9 @@ sub getTiffLibrary($@) {
             $default = "default";
         }
         print("Where are the interface headers for it?\n");
-        
+
         my $response = prompt("TIFF header directory", $default);
-        
+
         if ($response ne "default") {
             $tiffhdr_dir = $response;
         }
@@ -1161,9 +1161,9 @@ sub getJpegLibrary($@) {
         my $default = "libjpeg" . libSuffix($platform);
 
         print("What is your JPEG (graphics format) library?\n");
-        
+
         my $response = prompt("library filename or 'none'", $default);
-        
+
         if ($response ne "none") {
             $jpeglib = $response;
         }
@@ -1178,9 +1178,9 @@ sub getJpegLibrary($@) {
             $default = "default";
         }
         print("Where are the interface headers for it?\n");
-        
+
         my $response = prompt("JPEG header directory", $default);
-        
+
         if ($response ne "default") {
             $jpeghdr_dir = $response;
         }
@@ -1218,9 +1218,9 @@ sub getPngLibrary($@) {
             my $default = "libpng" . libSuffix($platform);
 
             print("What is your PNG (graphics format) library?\n");
-            
+
             my $response = prompt("library filename or 'none'", $default);
-            
+
             if ($response ne "none") {
                 $pnglib = $response;
             }
@@ -1233,9 +1233,9 @@ sub getPngLibrary($@) {
             } else {
                 $default = "default";
             }
-            
+
             print("Where are the interface headers for it?\n");
-            
+
             my $response = prompt("PNG header directory", $default);
 
             if ($response ne "default") {
@@ -1258,9 +1258,9 @@ sub getZLibrary($@) {
         my $default = "libz" . libSuffix($platform);
 
         print("What is your Z (compression) library?\n");
-        
+
         my $response = prompt("library filename or 'none'", $default);
-        
+
         if ($response ne "none") {
             $zlib = $response;
         }
@@ -1273,11 +1273,11 @@ sub getZLibrary($@) {
         } else {
             $default = "default";
         }
-        
+
         print("Where are the interface headers for it?\n");
-        
+
         my $response = prompt("Z header directory", $default);
-        
+
         if ($response ne "default") {
             $zhdr_dir = $response;
         }
@@ -1315,9 +1315,9 @@ sub getX11Library($@) {
                 $default = "libX11" . libSuffix($platform);
             }
             print("What is your X11 (X client) library?\n");
-            
+
             my $response = prompt("library filename or 'none'", $default);
-            
+
             if ($response ne "none") {
                 $x11lib = $response;
             }
@@ -1328,9 +1328,9 @@ sub getX11Library($@) {
             $default = "default";
 
             print("Where are the interface headers for it?\n");
-            
+
             my $response = prompt("X11 header directory", $default);
-            
+
             if ($response ne "default") {
                 $x11hdr_dir = $response;
             }
@@ -1371,27 +1371,27 @@ sub getLinuxsvgaLibrary($@) {
         } else {
             $default = 'none';
         }
-            
+
         print("What is your Svgalib library?\n");
-        
+
         my $response = prompt("library filename or 'none'", $default);
-            
+
         if ($response ne 'none') {
             $svgalib = $response;
         }
     }
     if (defined($svgalib) && $svgalib ne 'none') {
         my $default;
-        
+
         if (-d('/usr/include/svgalib')) {
             $default = '/usr/include/svgalib';
         } else {
             $default = "default";
         }
         print("Where are the interface headers for it?\n");
-        
+
         my $response = prompt("Svgalib header directory", $default);
-        
+
         if ($response ne "default") {
             $svgalibhdr_dir = $response;
         }
@@ -1414,13 +1414,13 @@ sub symlink_command() {
     # simulation via a "ln" command, but have a "cp" command which works
     # in a pinch.  Some Windows environments have "ln", but it won't do
     # symbolic links.
-    
+
     if (commandExists("ln")) {
         # We assume if Perl can do symbolic links, so can Ln, and vice
         # versa.
 
         my $symlink_exists = eval { symlink("",""); 1 };
-        
+
         if ($symlink_exists) {
             $retval = "ln -s";
         } else {
@@ -1459,7 +1459,7 @@ sub gnuOptimizeOpt($) {
 #  that causes -O3 to generate incorrect code (symptom: pnmtojpeg --quality=95
 #  generates a syntax error message from shhopt).
 #-----------------------------------------------------------------------------
-# I don't know what are exactly the cases that Gcc is broken.  I know 
+# I don't know what are exactly the cases that Gcc is broken.  I know
 # Red Hat 7.1 and 7.2 and Mandrake 8.2, running gcc 2.96.1, commonly have
 # the problem.  But it may be limited to a certain subrelease level or
 # CPU type or other environment.  People who have reported the problem have
@@ -1472,7 +1472,7 @@ sub gnuOptimizeOpt($) {
     my @gccVerboseResp = `$gccCommandName --verbose 2>&1`;
 
     my $brokenCompiler;
-    
+
     if (@gccVerboseResp ==2) {
         if ($gccVerboseResp[1] =~ m{gcc version 2.96}) {
             $brokenCompiler = $TRUE;
@@ -1513,13 +1513,13 @@ sub wnostrictoverflowWorks($) {
     my ($cFile, $cFileName) = tempFile(".c");
 
     print $cFile "int x;";
-    
+
     my $compileCommand =
         "$gccCommandName -c -o /dev/null -Wno-strict-overflow $cFileName";
     print("Doing test compile to see if -Wno-strict-overflow works: "
           . "$compileCommand\n");
     my $rc = system($compileCommand);
-    
+
     unlink($cFileName);
     close($cFile);
 
@@ -1534,7 +1534,7 @@ sub gnuCflags($) {
     my $flags;
 
     $flags = gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
-        " -pedantic -fno-common " . 
+        " -pedantic -fno-common " .
         "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
         "-Wwrite-strings -Wmissing-prototypes -Wundef " .
         "-Wno-unknown-pragmas ";
@@ -1577,7 +1577,7 @@ sub findProcessManagement($) {
     my @cSourceCode = (
                        "#include <sys/wait.h>\n",
                        );
-    
+
     testCompile($cflags, \@cSourceCode, \my $success);
 
     if (!$success) {
@@ -1637,7 +1637,7 @@ sub testCompileJpeglibH($$) {
                        "#include <stdio.h>\n",
                        "#include <jpeglib.h>\n",
                        );
-    
+
     testCompile($cflags, \@cSourceCode, $successR);
 }
 
@@ -1646,7 +1646,7 @@ sub testCompileJpeglibH($$) {
 sub testCompileJpegMarkerStruct($$) {
     my ($cflags, $successR) = @_;
 #-----------------------------------------------------------------------------
-#  Do a test compile to see if struct jpeg_marker_struct is defined in 
+#  Do a test compile to see if struct jpeg_marker_struct is defined in
 #  jpeglib.h.  Assume it is already established that the compiler works
 #  and can find jpeglib.h.
 #-----------------------------------------------------------------------------
@@ -1668,7 +1668,7 @@ sub printMissingHdrWarning($$) {
 
     warnUser("You said the compile-time part of the $name library " .
              "(the header files) is in " .
-             
+
              (defined($hdr_dir) ?
               "directory '$hdr_dir', " :
               "the compiler's default search path, ") .
@@ -1719,7 +1719,7 @@ sub testJpegHdr($) {
         } else {
             # We can get to something named jpeglib.h, but maybe it's an old
             # version we can't use.  Check it out.
-            testCompileJpegMarkerStruct("$generalCflags $jpegIOpt", 
+            testCompileJpegMarkerStruct("$generalCflags $jpegIOpt",
                                         \my $success);
             if (!$success) {
                 print("\n");
@@ -1789,7 +1789,7 @@ sub testCompileZlibH($$) {
     my @cSourceCode = (
                        "#include <zlib.h>\n",
                        );
-    
+
     testCompile($cflags, \@cSourceCode, $successR);
 }
 
@@ -1804,7 +1804,7 @@ sub testCompilePngH($$) {
     my @cSourceCode = (
                        "#include <png.h>\n",
                        );
-    
+
     testCompile($cflags, \@cSourceCode, $successR);
 }
 
@@ -1829,7 +1829,7 @@ sub testPngHdr($$) {
         } else {
             my $pngIOpt = $pnghdr_dir ? "-I$pnghdr_dir" : "";
 
-            testCompilePngH("$generalCflags $zlibIOpt $pngIOpt", 
+            testCompilePngH("$generalCflags $zlibIOpt $pngIOpt",
                             \my $success);
 
             if (!$success) {
@@ -1903,10 +1903,10 @@ sub testLinkPnglib($$) {
     } else {
         my $pngLdflags = qx{libpng-config --ldflags};
         chomp($pngLdflags);
-        
+
         testCompileLink("$generalCflags $pngCflags $pngLdflags",
                         \@cSourceCode, \my $success);
-        
+
         if (!$success) {
             testCompileLink("$generalCflags $pngCflags $pngLdflags -lz -lm",
                         \@cSourceCode, \my $lzLmSuccess);
@@ -1947,7 +1947,7 @@ sub testCompileXmlreaderH($$) {
     my @cSourceCode = (
                        "#include <libxml/xmlreader.h>\n",
                        );
-    
+
     testCompile($cflags, \@cSourceCode, $successR);
 }
 
@@ -1979,7 +1979,7 @@ sub testCompileXmlReaderTypes($$) {
                        "#include <libxml/xmlreader.h>\n",
                        "xmlReaderTypes dummy;\n",
                        );
-    
+
     testCompile($cflags, \@cSourceCode, $successR);
 }
 
@@ -2083,7 +2083,7 @@ if (@ARGV > 0) {
         } else {
             die("Unrecognized option: $ARGV[0]");
         }
-    } 
+    }
     $configInPathArg = $ARGV[0];
 }
 
@@ -2161,7 +2161,7 @@ print("\n");
 {
     my $default = "regular";
     my $response = prompt("regular or merge", $default);
-    
+
     if ($response eq "regular") {
         $default_target = "nonmerge";
     } elsif ($response eq "merge") {
@@ -2220,44 +2220,23 @@ my ($jpeglib, $jpeghdr_dir) = getJpegLibrary($platform);
 print("\n");
 my ($tifflib, $tiffhdr_dir) = getTiffLibrary($platform, $jpeghdr_dir);
 print("\n");
-my ($pnglib, $pnghdr_dir)   = getPngLibrary($platform, 
+my ($pnglib, $pnghdr_dir)   = getPngLibrary($platform,
                                             $tiffhdr_dir, $jpeghdr_dir);
 print("\n");
-my ($zlib, $zhdr_dir)       = getZLibrary($platform, 
+my ($zlib, $zhdr_dir)       = getZLibrary($platform,
                                           $pnghdr_dir,
                                           $tiffhdr_dir,
                                           $jpeghdr_dir);
 print("\n");
-my ($x11lib, $x11hdr_dir) = getX11Library($platform); 
+my ($x11lib, $x11hdr_dir) = getX11Library($platform);
 
 print("\n");
-my ($linuxsvgalib, $linuxsvgahdr_dir) = getLinuxsvgaLibrary($platform); 
+my ($linuxsvgalib, $linuxsvgahdr_dir) = getLinuxsvgaLibrary($platform);
 
 print("\n");
 
 # We should add the URT, JBIG, and Jasper libraries here too.  They're a
 # little more complicated because there are versions shipped with Netpbm.
-
-
-#******************************************************************************
-#
-#  CONFIGURE DOCUMENTATION
-#
-#*****************************************************************************
-
-print("What URL will you use for the main Netpbm documentation page?\n");
-print("This information does not get built into any programs or libraries.\n");
-print("It does not make anything actually install that web page.\n");
-print("It is just for including in legacy man pages.\n");
-print("\n");
-
-my $default = "http://netpbm.sourceforge.net/doc/";
-
-my $netpbm_docurl = prompt("Documentation URL", $default);
-
-print("\n");
-
-
 
 
 #******************************************************************************
@@ -2295,7 +2274,7 @@ if (-f("GNUmakefile")) {
     while (!$done) {
         print("Where is the Netpbm source code?\n");
 
-        $srcdir = prompt("Netpbm source directory", 
+        $srcdir = prompt("Netpbm source directory",
                          abs_path(dirname($0) . "/.."));
 
         if (-f("$srcdir/GNUmakefile")) {
@@ -2304,7 +2283,7 @@ if (-f("GNUmakefile")) {
             print("That doesn't appear to contain Netpbm source code.\n");
             print("There is no file named 'GNUmakefile' in it.\n");
             print("\n");
-        }    
+        }
     }
     unlink("GNUmakefile");
     symlink("$srcdir/GNUmakefile", "GNUmakefile");
@@ -2314,7 +2293,7 @@ if (-f("GNUmakefile")) {
     open(SRCDIR, ">srcdir.mk");
     print(SRCDIR "SRCDIR = $srcdir\n");
     close(SRCDIR);
-    
+
     $defaultConfigInPath = "$srcdir/config.mk.in";
 }
 
@@ -2341,7 +2320,7 @@ open (CONFIG_IN,"<$configInPath") or
 
 @config_mk = <CONFIG_IN>;
 
-unshift(@config_mk, 
+unshift(@config_mk,
         "####This file was automatically created by 'configure.'\n",
         "####Many variables are set twice -- a generic setting, then \n",
         "####a system-specific override at the bottom of the file.\n",
@@ -2381,7 +2360,7 @@ if ($platform eq "GNU") {
         push(@config_mk, gnuCflags('cc'));
     }
 # The merged programs have a main_XXX subroutine instead of main(),
-# which would cause a warning with -Wmissing-declarations or 
+# which would cause a warning with -Wmissing-declarations or
 # -Wmissing-prototypes.
     push(@config_mk, "CFLAGS_MERGE = " .
          "-Wno-missing-declarations -Wno-missing-prototypes\n");
@@ -2397,7 +2376,7 @@ if ($platform eq "GNU") {
     } else {
         makeCompilerGcc(\@config_mk);
     }
-    # Before Netpbm 10.20 (January 2004), we set this to -R for 
+    # Before Netpbm 10.20 (January 2004), we set this to -R for
     # $compiler == cc and -rpath otherwise.  But now we know that the GNU
     # compiler can also invoke a linker that needs -R, so we're more flexible.
     if ($baseLinker eq "GNU") {
@@ -2437,7 +2416,7 @@ if ($platform eq "GNU") {
              "-L/usr/local/lib\n");
         push(@config_mk, "LDSHLIB = -shared -expect_unresolved \"*\"\n");
     } else {
-        # We've never tested this.  This is just here to give a user a 
+        # We've never tested this.  This is just here to give a user a
         # headstart on submitting to us the necessary information.  2002.07.04.
         push(@config_mk, "CC = gcc\n");
         push(@config_mk, 'CFLAGS = -O3', "\n");
@@ -2473,7 +2452,7 @@ if ($platform eq "GNU") {
 #    }
     push(@config_mk, 'SYMLINK = ', symlink_command(), "\n");
     push(@config_mk, 'DLLVER=$(NETPBM_MAJOR_RELEASE)', "\n");
-    push(@config_mk, "LDSHLIB = " . 
+    push(@config_mk, "LDSHLIB = " .
          '-shared -Wl,--image-base=0x10000000 -Wl,--enable-auto-import', "\n");
     if ($subplatform ne "cygwin") {
         push(@config_mk, "MSVCRT = Y\n");
@@ -2484,7 +2463,7 @@ if ($platform eq "GNU") {
 } elsif ($platform eq "BEOS") {
     push(@config_mk, "LDSHLIB = -nostart\n");
 } elsif ($platform eq "OPENBSD") {
-    # vedge@vedge.com.ar says on 2001.04.29 that there are a ton of 
+    # vedge@vedge.com.ar says on 2001.04.29 that there are a ton of
     # undefined symbols in the Fiasco stuff on OpenBSD.  So we'll just
     # cut it out of the build until someone feels like fixing it.
     push(@config_mk, "BUILD_FIASCO = N\n");
@@ -2503,13 +2482,21 @@ if ($platform eq "GNU") {
         push(@config_mk, "SHLIB_CLIB =\n");
     } else {
         makeCompilerGcc(\@config_mk);
-        push(@config_mk, "LDSHLIB = -shared\n"); 
+        push(@config_mk, "LDSHLIB = -shared\n");
     }
     push(@config_mk, "NETWORKLD = -lsocket -lresolve\n");
 } elsif ($platform eq "DARWIN") {
     push(@config_mk, "CC = cc -no-cpp-precomp\n");
     push(@config_mk, gnuCflags('cc'));
     push(@config_mk, 'CFLAGS_SHLIB = -fno-common', "\n");
+    # -D_DARWIN_SOURCE is a hack.  We've seen build fail on MacOS because the
+    # C library erroneously neglects to include 'sprintf' and 'vasprintf' in
+    # <stdio.h> under the conditions under which Netpbm includes it.
+    # -D_DARWIN_SOURCE makes it include them.  *_SOURCE macros are supposed to
+    # be defined in the source code to which they apply, but since this is
+    # just a hack, we prefer to do it with a compiler option and leave the
+    # source code unsullied.
+    push(@config_mk, "CFLAGS += -D_DARWIN_SOURCE\n");
 
     my $installNameOpt;
     if ($netpbmlib_runtime_path eq '') {
@@ -2541,7 +2528,7 @@ if (!$flex_result) {
         print("You do not appear to have the 'flex' or 'lex' pattern \n");
         print("matcher generator on your system, so we will not build \n");
         print("programs that need it (Thinkjettopbm)\n");
-        
+
         print("\n");
         print("Press ENTER to continue.\n");
         my $key = <STDIN>;
@@ -2555,7 +2542,7 @@ if (!$flex_result) {
         print("find 'flex' on your system.\n");
         print("\n");
 
-        push(@config_mk, "LEX = lex\n"); 
+        push(@config_mk, "LEX = lex\n");
     }
 }
 
@@ -2605,10 +2592,6 @@ if (defined($linuxsvgalib)) {
     push(@config_mk, "LINUXSVGALIB = $linuxsvgalib\n");
 }
 
-if (defined($netpbm_docurl)) {
-    push(@config_mk, "NETPBM_DOCURL = $netpbm_docurl\n");
-}
-
 if ($inttypesHeaderFile ne '<inttypes.h>') {
     push(@config_mk, "INTTYPES_H = $inttypesHeaderFile\n");
 }
@@ -2653,4 +2636,4 @@ if ($warned) {
 print("\n");
 
 
-exit 0;          
+exit 0;

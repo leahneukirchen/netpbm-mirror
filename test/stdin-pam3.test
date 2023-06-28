@@ -1,0 +1,75 @@
+#! /bin/sh
+# This script tests: pamtoavs avstopam
+# This script tests: pamtohdiff hdifftopam
+# This script tests: pamtojpeg2k jpeg2ktopam
+# This script tests: pamtopdbimg pdbimgtopam
+# This script tests: pamtopfm pfmtopam
+# This script tests: pamtopng pngtopam
+# This script tests: pamtoqoi qoitopam
+# This script tests: pamtosrf srftopam
+# This script tests: pamtosvg svgtopam
+# This script tests: pamtowinicon winicontopam
+# This script tests: pamtotga tgatoppm
+# This script tests: pamtoxvmini xvminitoppm
+# This script tests: pamtofits fitstopnm
+# This script tests: pamtogif giftopnm
+# This script tests: pamtotiff tifftopnm
+# Also requires: pgmmake
+
+tmpdir=${tmpdir:-/tmp}
+test_pgm=${tmpdir}/test.pgm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+pgmmake -maxval 3 0.25 32 32 > ${test_pgm}
+
+echo "Test.  Should print (command): 0 0 0 0"
+echo "The following are exceptions: should print (command): 0 0 0 1"
+echo "pamtotga, pamtotiff"
+echo
+
+for fmt in \
+    avs \
+    hdiff \
+    jpeg2k \
+    pdbimg \
+    pfm \
+    png \
+    qoi \
+    srf \
+    svg \
+    winicon \
+    tga \
+    xvmini \
+    fits \
+    gif \
+    tiff
+  do
+
+  if [ ${fmt} = pdbimg ]
+      then testprog1="pamtopdbimg -fixedtime";
+      else testprog1="pamto"${fmt};
+  fi
+
+  case $fmt in
+      "tga" | "xvmini")        testprog2=${fmt}"toppm";;
+      "fits" | "gif" | "tiff") testprog2=${fmt}"topnm";;
+      *) testprog2=${fmt}"topam";
+  esac
+
+  ${testprog1} ${test_pgm} > ${out1};      status1=$?
+  ${testprog1} < ${test_pgm} > ${out2};    status2=$?
+  test -s ${out1};                         status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog1}": "${status1} ${status2} ${status3} $?
+
+  ${testprog2} ${out1} > ${out3};      status4=$?
+  ${testprog2} < ${out1} > ${out4};    status5=$?
+  test -s ${out3};                     status6=$?
+  cmp -s ${out3} ${out4}
+  echo ${testprog2}": "${status4} ${status5} ${status6} $?
+  done
+
+rm ${test_pgm} ${out1} ${out2} ${out3} ${out4}

@@ -41,6 +41,7 @@ pamarith: ok
 pambackground: ok
 pambayer: ok
 pambrighten: ok
+pamcat: ok
 pamchannel: ok
 pamcomp: ok
 pamcrater: ok
@@ -61,6 +62,7 @@ pamfunc: ok
 pamgauss: ok
 pamgetcolor: ok
 pamgradient: ok
+pamhomography: ok
 pamhue: ok
 pamlevels: ok
 pamlookup: ok
@@ -74,12 +76,14 @@ pamperspective: ok
 pampick: ok
 pampop9: ok
 pamrecolor: ok
+pamrestack: ok
 pamrubber: ok
 pamscale: ok
 pamseq: ok
 pamshadedrelief: ok
 pamsharpmap: ok
 pamsharpness: ok
+pamshuffle: ok
 pamsistoaglyph: ok
 pamslice: ok
 pamsplit: ok
@@ -106,6 +110,7 @@ pamtopdbimg: ok
 pamtopfm: ok
 pamtopng: ok
 pamtopnm: ok
+pamtoqoi: ok
 pamtosrf: ok
 pamtosvg: ok
 pamtotga: ok
@@ -124,6 +129,7 @@ pbmlife: ok
 pbmmake: ok
 pbmmask: ok
 pbmminkowski: ok
+pbmnoise: ok
 pbmpage: ok
 pbmpscale: ok
 pbmreduce: ok
@@ -197,7 +203,6 @@ pjtoppm: ok
 pktopbm: ok
 pngtopam: ok
 pnmalias: ok
-pnmcat: ok
 pnmcolormap: ok
 pnmconvol: ok
 pnmcrop: ok
@@ -238,11 +243,9 @@ pnmtosir: ok
 pnmtotiffcmyk: ok
 pnmtoxwd: ok
 ppm3d: ok
-ppmbrighten: ok
 ppmchange: ok
 ppmcie: ok
 ppmcolormask: ok
-ppmcolors: ok
 ppmdcfont: ok
 ppmddumpfont: ok
 ppmdim: ok
@@ -266,6 +269,7 @@ ppmrough: ok
 ppmshadow: ok
 ppmshift: ok
 ppmspread: ok
+ppmsvgalib: ok
 ppmtoacad: ok
 ppmtoapplevol: ok
 ppmtoarbtxt: ok
@@ -276,6 +280,7 @@ ppmtoicr: ok
 ppmtoilbm: ok
 ppmtoleaf: ok
 ppmtolj: ok
+ppmtompeg: ok
 ppmtomitsu: ok
 ppmtoneo: ok
 ppmtopcx: ok
@@ -298,6 +303,7 @@ ppmtv: ok
 ppmwheel: ok
 psidtopgm: ok
 pstopnm: ok
+qoitopam: ok
 qrttoppm: ok
 rasttopnm: ok
 rawtopgm: ok

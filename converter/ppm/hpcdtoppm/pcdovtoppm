@@ -19,12 +19,16 @@
 # Rewritten in sh by Steve McIntyre <93sam@debian.org>, 2001
 
 # You may want to change the default values in the next 6 lines:
-maxwidth=1152   # maximum width of the index image
-size=192                # make the images about this big
-across=6                # show this many images per row
-colors="noquant"        # maximum amount of colors or noquant (no quantization)
-back="-black"   # default background color
-font=" "                # default font or none (pbmtext's internal font)
+maxwidth=1152     # maximum width of the index image
+size=192          # make the images about this big
+across=6          # show this many images per row
+colors="noquant"  # maximum amount of colors or noquant (no quantization)
+back="-black"     # default background color
+font=" "          # default font or none (pbmtext's internal font)
+
+plainopt=""       # output plain ppm
+quietopt=""       # quiet operation (currently no effect)
+versionopt=0
 
 usage ()
 {
@@ -47,79 +51,108 @@ usage ()
     exit 1
 }
 
+version ()
+{
+    # report version using pnmscale
+    pnmscale -version $quietopt
+    exit 0
+}
+
 # Parse the options
 while :; do
     case "$1" in 
-        -m*)
+        -m|-ma|-max|-maxw|-maxwi|-maxwid|-maxwidt|-maxwidth )
              if [ $# -lt 2 ] ; then usage; fi
              maxwidth="$2"
              shift
              shift
              ;;
 
-        -s*)
+        -s|-si|-siz|-size )
              if [ $# -lt 2 ] ; then usage; fi
              size="$2"
              shift
              shift
              ;;
 
-            -a*)
-                if [ $# -lt 2 ] ; then usage; fi
-                across="$2"
-                shift
-                shift
-                ;;
+         -a|-ac|-acr|-acro|-acros|-across )
+             if [ $# -lt 2 ] ; then usage; fi
+             across="$2"
+             shift
+             shift
+             ;;
 
-            -c*)
-                if [ $# -lt 2 ] ; then usage; fi
-                colors="$2"
-                shift
-                shift
-                ;;
+         -c|-co|-col|-colo|-color|-colors )
+             if [ $# -lt 2 ] ; then usage; fi
+             colors="$2"
+             shift
+             shift
+             ;;
 
-            -f*)
-                if [ $# -lt 2 ] ; then usage; fi
-                font="-font $2"
-                shift
-                shift
-                ;;
+         -f|-fo|-fon|-font )
+             if [ $# -lt 2 ] ; then usage; fi
+             font="-font $2"
+             shift
+             shift
+             ;;
 
-            -b*)
-                back="-black"
-                shift
-                ;;
+         -b|-bl|-bla|-blac|-black )
+             back="-black"
+             shift
+             ;;
 
-            -w*)
-                back="-white"
-                shift
-                ;;
+         -w|-wh|-whi|-whit|-white )
+             back="-white"
+             shift
+             ;;
+             
+         -p|-pl|-pla|-plai|-plain )
+             plainopt="-plain"
+             shift
+             ;;
+            
+         -q|-qu|-qui|-quie|-quiet )
+             quietopt="-quiet"
+             shift
+             ;;
+             
+         -v|-ve|-ver|-vers|-versi|-versio|-version )
+             versionopt="1"
+             shift
+             ;;
+                    
+         -*)
+             echo "$0 : Unknown option $1" 1>&2
+             echo " " 1>&2
+             usage
+             ;;
 
-            -*)
-                echo "$0 : Unknown option $1"
-                echo " "
-                usage
-                ;;
-
-            *)
-                break
-                ;;
+         *)
+             break
+             ;;
 
     esac
 done
 
-if [ $# = 0 ]; then
+if [ $versionopt -eq 1 ] ; then
+    version
+elif [ $# -eq 0 ] ; then
     usage
 fi
 
-tmpfile=`tempfile -p pi -m 600`
+tempdir=$(mktemp -d "${TMPDIR:-/tmp}/pcdovtoppm.XXXXXXXX") ||
+    { echo "Could not create temporary file. Exiting." 1>&2; exit 1; }
+trap 'rm -rf $tempdir' 0
+
+tmpfile=$(mktemp --tmpdir piXXXXXX)
 
 # Convert the PCD overview file to many PPM images
 if [ -f $1 ] ; then
-    hpcdtoppm -Overview $1 $tmpfile
+    hpcdtoppm -Overview $1 $tmpfile ||
+        { echo "$0: Hpcdtoppm failed. Exiting" 1>&2 ; exit 1; }
 else
-    echo "$0 : Could not access $1"
-    echo " "
+    echo "$0 : Could not access $1" 1>&2
+    echo " " 1>&2
     usage
 fi
 
@@ -145,16 +178,17 @@ do
             fi
         fi
     fi
-    imagefile=pi.${row}.${col}.$$
+    imagefile=${tempdir}/pi.${row}.${col}
     rm -f $imagefile
     ttext="$i:t"
 
     if [ "$back" = "-white" ] ; then
-        pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2| \
-        pnmcat $back -tb $tmpfile - > $imagefile
+        pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2 | \
+        pamcat $back -topbottom $tmpfile - > $imagefile
     else
         pbmtext $font "$ttext" | pnmcrop -quiet | pnmmargin -white 2 | \
-        pnminvert | pnmcat $back -tb $tmpfile - > $imagefile
+          pnminvert | \
+          pamcat $back -topbottom $tmpfile - > $imagefile
     fi
 
     rm -f $tmpfile
@@ -163,12 +197,12 @@ do
     imagefiles="$imagefiles $imagefile"
 
     if [ $col -ge $across -o $width -gt $maxwidth ] ; then
-        rowfile=pi.${row}.$$
+        rowfile=${tempdir}/pi.${row}
         rm -f $rowfile
     if [ "$colors" = "n" ] ; then
-        pnmcat $back -lr -jbottom $imagefiles > $rowfile
+        pamcat $back -leftright -jbottom $imagefiles > $rowfile
     else
-        pnmcat $back -lr -jbottom $imagefiles | \
+        pamcat $back -leftright -jbottom $imagefiles | \
         ppmquant -quiet $colors > $rowfile
     fi
     rm -f $imagefiles
@@ -183,32 +217,32 @@ do
 done
 
 if [ -n $imagefiles ] ; then
-    rowfile=pi.${row}.$$
+    rowfile=${tempdir}/pi.${row}
     rm -f $rowfile
     if [ "$colors" = "n" ] ; then
-        pnmcat $back -lr -jbottom $imagefiles > $rowfile
+        pamcat $back -leftright -jbottom $imagefiles > $rowfile
     else
-        pnmcat $back -lr -jbottom $imagefiles | \
-        ppmquant -quiet $colors > $rowfile
+        pamcat $back -leftright -jbottom $imagefiles | \
+          ppmquant -quiet $colors > $rowfile
     fi
     rm -f $imagefiles
     rowfiles="$rowfiles $rowfile"
 fi
 
 if [ $(echo $rowfiles|wc -w) -eq 1 ] ; then
-    cat $rowfiles
+    ppmtoppm $plainopt < $rowfiles
 else
     if [ "$colors" = "n" ] ; then
-        pnmcat $back -tb $rowfiles
+        pamcat $back -topbottom $rowfiles | \
+          ppmtoppm $plainopt
     else
-        pnmcat $back -tb $rowfiles | ppmquant -quiet $colors
+        pamcat $back -tb $rowfiles | \
+          ppmquant $plainopt -quiet $colors
     fi
 fi
 
 rm -f $rowfiles
 
 exit 0
-
-
 
 

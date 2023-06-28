@@ -29,8 +29,8 @@ enlarge_pbm=${tmpdir}/enlarge.pbm
 for option in "6 -nomix" "15 -nomix -linear" "24 -nomix"
   do
   scale=${option%% *}
-  pamenlarge $scale testgrid.pbm > ${enlarge_pbm}
-  pamscale   $option testgrid.pbm | cmp -s - ${enlarge_pbm}  
+  pamenlarge $scale maze.pbm > ${enlarge_pbm}
+  pamscale   $option maze.pbm | cmp -s - ${enlarge_pbm}  
   echo $option ${PIPESTATUS[@]} ":" $?
   rm  ${enlarge_pbm}
   done

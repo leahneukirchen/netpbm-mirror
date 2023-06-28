@@ -1,0 +1,55 @@
+#! /bin/sh
+# This script tests: pnmcolormap
+# Also requires: pnmremap pnmpsnr
+
+tmpdir=${tmpdir:-/tmp}
+map=${tmpdir}/map.ppm
+
+echo "Test.  Should print 'match' eight times."
+# Threshold values (targetN=xx.xx) here were produced by calculating
+# the S/N ratio with reduced colors.
+
+# colors in following tests / colors for calculating threshold
+# 100 /  90
+# 200 / 180
+#  30 /  25
+
+pnmcolormap 100 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=33.42 -target2=35.14 -target3=34.35 testimg.ppm -
+rm ${map}
+
+pnmcolormap -meancolor 100 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=34.91 -target2=36.86 -target3=35.84 testimg.ppm -
+rm ${map}
+
+pnmcolormap -meanpixel 100 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=34.95 -target2=36.77 -target3=35.81 testimg.ppm -
+rm ${map}
+
+pnmcolormap -spreadluminosity 100 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=33.71 -target2=32.91 -target3=33.93 testimg.ppm -
+rm ${map}
+
+pnmcolormap -splitcolorct 100 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=33.97 -target2=35.34 -target3=34.23 testimg.ppm -
+rm ${map}
+
+pnmcolormap -splitspread 100 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=32.98 -target2=35.06 -target3=33.19 testimg.ppm -
+rm ${map}
+
+pnmcolormap 200 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=36.14 -target2=36.87 -target3=36.79 testimg.ppm -
+rm ${map}
+
+pnmcolormap 30 testimg.ppm > ${map}
+pnmremap -mapfile=${map} testimg.ppm |\
+  pnmpsnr -target1=28.53 -target2=31.62 -target3=29.99 testimg.ppm -
+rm ${map}

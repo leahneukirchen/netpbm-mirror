@@ -1,3 +1,4 @@
+Test 1
 P2
 4 4
 6
@@ -33,8 +34,16 @@ P2
 1 2 3 4
 2 3 4 5
 3 4 5 6
+Test 2
 1777787286 65551
 2046889993 65551
 1975520432 65551
 807973067 65551
+Test 3
 886972785 131087
+Test Invalid
+Expected failure: -lr -tb 1
+Expected failure: -lr -rectangle 1
+Expected failure: -rectangle -ellipse 1
+Expected failure: insufficient parameters 1
+Expected failure: excessive parameters 1

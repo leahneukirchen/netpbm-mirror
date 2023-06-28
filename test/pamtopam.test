@@ -1,10 +1,25 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamtopam
-# Also requires:
+# Also requires: pgmmake pamseq
 
+echo "Test 1. Should print five PAM headers"
 
-pamtopam < testimg.ppm  | sed '/ENDHDR/q'
 pamtopam < testgrid.pbm | sed '/ENDHDR/q'
+pgmmake 0.5 1 1 | pamtopam | sed '/ENDHDR/q'
+pamtopam < testimg.ppm  | sed '/ENDHDR/q'
+pamseq -tupletype="GRAYSCALE_ALPHA" 2 7 | pamtopam | sed '/ENDHDR/q'
+pamseq -tupletype="RGB_ALPHA" 4 1 | pamtopam | sed '/ENDHDR/q'
 
-pamtopam < testimg.ppm   | cksum
+echo "Test 2. Should print 2260748250 293"
 pamtopam < testgrid.pbm  | cksum
+
+echo "Test 3. Should print 1873848880 101532"
+pamtopam < testimg.ppm   | cksum
+
+echo "Test 4. Should print 1475247910 3432 twice"
+pamtopam < maze.pbm  | cksum
+pamtopam < maze.pbm  | pamtopam | cksum
+
+echo "Test 5. Should print 2347274358 101825 twice"
+cat testgrid.pbm testimg.ppm | pamtopam | cksum
+( pamtopam  < testgrid.pbm; pamtopam < testimg.ppm ) | cksum

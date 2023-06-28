@@ -161,7 +161,7 @@ main(int argc, const char ** argv) {
                 switch (c) {
                 case 'M':   /* transmission mode */
                     if (val != 0 && val != 1)
-                        pm_error("unimplemented trasmission mode %d", val);
+                        pm_error("unimplemented transmission mode %d", val);
                     mode = val;
                     modeIsSet = true;
                     break;

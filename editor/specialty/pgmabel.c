@@ -44,7 +44,7 @@ static const char* const version="$VER: pgmabel 1.009 (24 Jan 2002)";
 #include "pgm.h"
 
 #ifndef PID2          /*  PI/2 (on AMIGA always defined) */
-#define PID2    1.57079632679489661923  
+#define PID2    1.57079632679489661923
 #endif
 
 
@@ -59,7 +59,7 @@ static double *aldl, *ardl;                /* pointer for weighting factors */
 **      xr    <-  array of the calculated elements of the row
 **      adl   <-  pre-calculated surface coefficient for each segment
 */
-static double 
+static double
 Sum ( int n, double *xr, int N, double *adl)
 {
     int k;
@@ -79,7 +79,7 @@ Sum ( int n, double *xr, int N, double *adl)
 **      R, N  <-  indizes of the coefficient
 **      r     <-  radial position of the center of the surface
 */
-static double 
+static double
 dr ( int R, double r,  int N)
 {
     double a;
@@ -95,7 +95,7 @@ dr ( int R, double r,  int N)
 **        N    <-  width of the array
 **        adl  <-  array with pre-calculated weighting factors
 */
-static void 
+static void
 abel ( float *y, int N, double *adl)
 {
     register int n;
@@ -126,7 +126,7 @@ abel ( float *y, int N, double *adl)
 /* ----------------------------------------------------------------------------
 ** printing a help message if Option -h(elp) is chosen
 */
-static void 
+static void
 help()
 {
     pm_message("-----------------------------------------------------------------");
@@ -142,7 +142,7 @@ help()
     pm_message("|   verbose : output of useful data                             |");
     pm_message("|   pgmfile : Name of a pgmfile (optional)                      |");
     pm_message("|                                                               |");
-    pm_message("| for further information please contact the manpage            |"); 
+    pm_message("| for further information please contact the manpage            |");
     pm_message("-----------------------------------------------------------------");
     pm_message("%s",version);     /* telling the version      */
     exit(-1);                     /* retur-code for no result */
@@ -267,11 +267,11 @@ int main( argc, argv )
     }
     for (col = 0; col < (cols-midcol); ++col)      /* factors for right side */
     {
-        for (tc = 0; tc < (cols-midcol); ++tc) 
+        for (tc = 0; tc < (cols-midcol); ++tc)
             ardl[col*(cols-midcol)+tc] = dr(col,tc+0.5,cols-midcol);
     }
 
-    /* abel-transformation for each row splitted in right and left side      */
+    /* abel-transformation for each row split into right and left side      */
     for ( row = 0; row < rows ; ++row )
     {
         pgm_readpgmrow( ifp, grayorig, cols, maxval, format );
@@ -307,4 +307,6 @@ int main( argc, argv )
     free(ardl);                      /* all used memory freed (i hope)       */
     exit( 0 );                       /* end of procedure                     */
 }
+
+
 

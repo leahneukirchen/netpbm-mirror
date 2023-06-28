@@ -17,19 +17,23 @@
 #include "pgm.h"
 #include "dithers.h"
 #include "mallocvar.h"
+#include "rand.h"
 
 enum halftone {QT_FS, QT_THRESH, QT_DITHER8, QT_CLUSTER, QT_HILBERT};
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char *  inputFilespec;
     enum halftone halftone;
     unsigned int  clumpSize;
-    unsigned int  clusterRadius;  
+    unsigned int  clusterRadius;
         /* Defined only for halftone == QT_CLUSTER */
+    unsigned int  randomSeed;
+    unsigned int  randomSeedSpec;
+        /* Defined only for halftone == QT_FS */
     float         threshval;
 };
 
@@ -37,8 +41,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -68,22 +72,24 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "c4",        OPT_FLAG,  NULL, &cluster4Opt,  0);
     OPTENT3(0, "cluster8",  OPT_FLAG,  NULL, &cluster8Opt,  0);
     OPTENT3(0, "c8",        OPT_FLAG,  NULL, &cluster8Opt,  0);
-    OPTENT3(0, "value",     OPT_FLOAT, &cmdlineP->threshval, 
+    OPTENT3(0, "value",     OPT_FLOAT, &cmdlineP->threshval,
             &valueSpec, 0);
-    OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize, 
+    OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize,
             &clumpSpec, 0);
+    OPTENT3(0, "randomseed", OPT_UINT,  &cmdlineP->randomSeed,
+            &cmdlineP->randomSeedSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (floydOpt + thresholdOpt + hilbertOpt + dither8Opt + 
+    if (floydOpt + thresholdOpt + hilbertOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt == 0)
         cmdlineP->halftone = QT_FS;
-    else if (floydOpt + thresholdOpt + dither8Opt + 
+    else if (floydOpt + thresholdOpt + dither8Opt +
         cluster3Opt + cluster4Opt + cluster8Opt > 1)
         pm_error("No cannot specify more than one halftoning type");
     else {
@@ -104,7 +110,7 @@ parseCommandLine(int argc, char ** argv,
         } else if (cluster8Opt) {
             cmdlineP->halftone = QT_CLUSTER;
             cmdlineP->clusterRadius = 8;
-        } else 
+        } else
             pm_error("INTERNAL ERROR.  No halftone option");
     }
 
@@ -118,7 +124,7 @@ parseCommandLine(int argc, char ** argv,
             pm_error("-value cannot be greater than one.  You specified %f",
                      cmdlineP->threshval);
     }
-            
+
     if (!clumpSpec)
         cmdlineP->clumpSize = 5;
     else {
@@ -126,6 +132,10 @@ parseCommandLine(int argc, char ** argv,
             pm_error("-clump must be at least 2.  You specified %u",
                      cmdlineP->clumpSize);
     }
+
+    if (cmdlineP->halftone != QT_FS && cmdlineP->randomSeedSpec)
+        pm_message ("Ignoring -randomseed value "
+                    "(meaningful only with Floyd-Steinberg)");
 
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  There is at most one "
@@ -150,11 +160,11 @@ static int hil_x,hil_y;
 static int hil_stage[MAXORD];
 static int hil_width,hil_height;
 
-static void 
-init_hilbert(int const w, 
+static void
+init_hilbert(int const w,
              int const h) {
 /*----------------------------------------------------------------------------
-  Initialize the Hilbert curve tracer 
+  Initialize the Hilbert curve tracer
 -----------------------------------------------------------------------------*/
     int big,ber;
     hil_width = w;
@@ -169,7 +179,7 @@ init_hilbert(int const w,
 
 
 
-static int 
+static int
 hilbert(int * const px, int * const py) {
 /*----------------------------------------------------------------------------
   Return non-zero if got another point
@@ -215,7 +225,7 @@ hilbert(int * const px, int * const py) {
             temp = hil_dy;
             hil_dy = -hil_turn * hil_dx;
             hil_dx = hil_turn * temp;
-            if (hil_ord > 0) { 
+            if (hil_ord > 0) {
                 /* recurse */
 
                 hil_stage[hil_ord] = 3;
@@ -338,7 +348,7 @@ static void doHilbert(FILE *       const ifP,
 struct converter {
     void (*convertRow)(struct converter * const converterP,
                        unsigned int       const row,
-                       gray                     grayrow[], 
+                       gray                     grayrow[],
                        bit                      bitrow[]);
     void (*destroy)(struct converter * const converterP);
     unsigned int cols;
@@ -379,7 +389,7 @@ fsConvertRow(struct converter * const converterP,
 
     unsigned int limitcol;
     unsigned int col;
-    
+
     for (col = 0; col < converterP->cols + 2; ++col)
         nexterr[col] = 0;
     if (stateP->fs_forward) {
@@ -395,20 +405,20 @@ fsConvertRow(struct converter * const converterP,
     }
     do {
         long sum;
-        sum = ((long) *gP * fs_scale) / converterP->maxval + 
+        sum = ((long) *gP * fs_scale) / converterP->maxval +
             thiserr[col + 1];
         if (sum >= stateP->threshval) {
             *bP = PBM_WHITE;
             sum = sum - stateP->threshval - half_fs_scale;
         } else
             *bP = PBM_BLACK;
-        
+
         if (stateP->fs_forward) {
             thiserr[col + 2] += (sum * 7) / 16;
             nexterr[col    ] += (sum * 3) / 16;
             nexterr[col + 1] += (sum * 5) / 16;
             nexterr[col + 2] += (sum    ) / 16;
-            
+
             ++col;
             ++gP;
             ++bP;
@@ -417,13 +427,13 @@ fsConvertRow(struct converter * const converterP,
             nexterr[col + 2] += (sum * 3) / 16;
             nexterr[col + 1] += (sum * 5) / 16;
             nexterr[col    ] += (sum    ) / 16;
-            
+
             --col;
             --gP;
             --bP;
         }
     } while (col != limitcol);
-    
+
     stateP->thiserr = nexterr;
     stateP->nexterr = thiserr;
     stateP->fs_forward = ! stateP->fs_forward;
@@ -439,9 +449,11 @@ fsDestroy(struct converter * const converterP) {
 
 
 static struct converter
-createFsConverter(unsigned int const cols, 
+createFsConverter(unsigned int const cols,
                   gray         const maxval,
-                  float        const threshFraction) {
+                  float        const threshFraction,
+                  unsigned int const randomSeedSpec,
+                  unsigned int const randomSeed) {
 
     struct fsState * stateP;
     struct converter converter;
@@ -451,14 +463,19 @@ createFsConverter(unsigned int const cols,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, cols + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, cols + 2);
-    srand(pm_randseed());
 
     {
         /* (random errors in [-fs_scale/8 .. fs_scale/8]) */
         unsigned int col;
+        struct pm_randSt randSt;
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomSeedSpec, randomSeed);
+
         for (col = 0; col < cols + 2; ++col)
-            stateP->thiserr[col] = 
-                (long)(rand() % fs_scale - half_fs_scale) / 4;
+            stateP->thiserr[col] =
+                (long)(pm_rand(&randSt) % fs_scale - half_fs_scale) / 4;
+
+        pm_randterm(&randSt);
     }
 
     stateP->fs_forward = TRUE;
@@ -488,7 +505,7 @@ threshConvertRow(struct converter * const converterP,
                  unsigned int       const row,
                  gray                     grayrow[],
                  bit                      bitrow[]) {
-    
+
     struct threshState * const stateP = converterP->stateP;
 
     unsigned int col;
@@ -509,7 +526,7 @@ threshDestroy(struct converter * const converterP) {
 
 
 static struct converter
-createThreshConverter(unsigned int const cols, 
+createThreshConverter(unsigned int const cols,
                       gray         const maxval,
                       float        const threshFraction) {
 
@@ -571,7 +588,7 @@ dither8Destroy(struct converter * const converterP) {
 
 
 static struct converter
-createDither8Converter(unsigned int const cols, 
+createDither8Converter(unsigned int const cols,
                        gray         const maxval) {
 
     struct converter converter;
@@ -642,7 +659,7 @@ clusterDestroy(struct converter * const converterP) {
         free(stateP->clusterMatrix[row]);
 
     free(stateP->clusterMatrix);
-    
+
     free(stateP);
 }
 
@@ -650,9 +667,9 @@ clusterDestroy(struct converter * const converterP) {
 
 static struct converter
 createClusterConverter(unsigned int const radius,
-                       unsigned int const cols, 
+                       unsigned int const cols,
                        gray         const maxval) {
-    
+
     int const clusterNormalizer = radius * radius * 2;
     unsigned int const diameter = 2 * radius;
 
@@ -674,7 +691,7 @@ createClusterConverter(unsigned int const radius,
         unsigned int col;
 
         MALLOCARRAY_NOFAIL(stateP->clusterMatrix[row], diameter);
-        
+
         for (col = 0; col < diameter; ++col) {
             int val;
             switch (radius) {
@@ -686,7 +703,7 @@ createClusterConverter(unsigned int const radius,
             }
             stateP->clusterMatrix[row][col] = val * maxval / clusterNormalizer;
         }
-    }            
+    }
 
     converter.stateP = stateP;
 
@@ -696,14 +713,14 @@ createClusterConverter(unsigned int const radius,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
-    FILE* ifP;
-    gray* grayrow;
-    bit* bitrow;
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    gray * grayrow;
+    bit *  bitrow;
 
-    pgm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -719,24 +736,26 @@ main(int argc, char *argv[]) {
         int row;
 
         pgm_readpgminit(ifP, &cols, &rows, &maxval, &format);
-        
+
         pbm_writepbminit(stdout, cols, rows, 0);
 
         switch (cmdline.halftone) {
         case QT_FS:
-            converter = createFsConverter(cols, maxval, cmdline.threshval);
+            converter = createFsConverter(cols, maxval, cmdline.threshval,
+                                          cmdline.randomSeedSpec,
+                                          cmdline.randomSeed);
             break;
         case QT_THRESH:
             converter = createThreshConverter(cols, maxval, cmdline.threshval);
             break;
-        case QT_DITHER8: 
-            converter = createDither8Converter(cols, maxval); 
+        case QT_DITHER8:
+            converter = createDither8Converter(cols, maxval);
             break;
-        case QT_CLUSTER: 
-            converter = 
+        case QT_CLUSTER:
+            converter =
                 createClusterConverter(cmdline.clusterRadius, cols, maxval);
             break;
-        case QT_HILBERT: 
+        case QT_HILBERT:
                 pm_error("INTERNAL ERROR: halftone is QT_HILBERT where it "
                          "shouldn't be.");
                 break;
@@ -749,7 +768,7 @@ main(int argc, char *argv[]) {
             pgm_readpgmrow(ifP, grayrow, cols, maxval, format);
 
             converter.convertRow(&converter, row, grayrow, bitrow);
-            
+
             pbm_writepbmrow(stdout, bitrow, cols, 0);
         }
         pbm_freerow(bitrow);
@@ -763,3 +782,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

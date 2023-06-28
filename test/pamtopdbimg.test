@@ -21,7 +21,7 @@ echo high compression
 pgmmake 0.5 -maxval=15 160 160 > ${mono_pgm}
 for flag in "-compressed" "-maybecompressed" "-uncompressed"
    do
-   pamtopdbimg $flag ${mono_pgm} | wc -c
+   pamtopdbimg $flag ${mono_pgm} | wc -c | tr -d ' '
    done  | uniq -c | awk '{print $1}'
 rm ${mono_pgm}
 
@@ -82,13 +82,13 @@ awk 'BEGIN { ABC="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 head -c 65533 ${text65597} > ${text65533}
 head -c 65534 ${text65597} > ${text65534}
-pamtopdbimg -uncompressed testgrid.pbm | \
+pamtopdbimg -uncompressed maze.pbm | \
   wc -c | tr -d ' '
   echo ${PIPESTATUS[0]}
-pamtopdbimg -uncompressed -notefile=${text65533} testgrid.pbm | \
+pamtopdbimg -uncompressed -notefile=${text65533} maze.pbm | \
   wc -c | tr -d ' '
   echo ${PIPESTATUS[0]}
-pamtopdbimg -uncompressed -notefile=${text65534} testgrid.pbm | \
+pamtopdbimg -uncompressed -notefile=${text65534} maze.pbm | \
   wc -c | tr -d ' '
   echo ${PIPESTATUS[0]}
 

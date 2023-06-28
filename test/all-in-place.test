@@ -83,6 +83,7 @@ ordinary_testprogs="\
   pambackground \
   pambayer \
   pambrighten \
+  pamcat \
   pamchannel \
   pamcomp \
   pamcrater \
@@ -103,6 +104,7 @@ ordinary_testprogs="\
   pamgauss \
   pamgetcolor \
   pamgradient \
+  pamhomography \
   pamhue \
   pamlevels \
   pamlookup \
@@ -116,12 +118,14 @@ ordinary_testprogs="\
   pampick \
   pampop9 \
   pamrecolor \
+  pamrestack \
   pamrubber \
   pamscale \
   pamseq \
   pamshadedrelief \
   pamsharpmap \
   pamsharpness \
+  pamshuffle \
   pamsistoaglyph \
   pamslice \
   pamsplit \
@@ -148,6 +152,7 @@ ordinary_testprogs="\
   pamtopfm \
   pamtopng \
   pamtopnm \
+  pamtoqoi \
   pamtosrf \
   pamtosvg \
   pamtotga \
@@ -166,6 +171,7 @@ ordinary_testprogs="\
   pbmmake \
   pbmmask \
   pbmminkowski \
+  pbmnoise \
   pbmpage \
   pbmpscale \
   pbmreduce \
@@ -239,7 +245,6 @@ ordinary_testprogs="\
   pktopbm \
   pngtopam \
   pnmalias \
-  pnmcat \
   pnmcolormap \
   pnmconvol \
   pnmcrop \
@@ -280,11 +285,9 @@ ordinary_testprogs="\
   pnmtotiffcmyk \
   pnmtoxwd \
   ppm3d \
-  ppmbrighten \
   ppmchange \
   ppmcie \
   ppmcolormask \
-  ppmcolors \
   ppmdcfont \
   ppmddumpfont \
   ppmdim \
@@ -308,6 +311,7 @@ ordinary_testprogs="\
   ppmshadow \
   ppmshift \
   ppmspread \
+  ppmsvgalib \
   ppmtoacad \
   ppmtoapplevol \
   ppmtoarbtxt \
@@ -318,6 +322,7 @@ ordinary_testprogs="\
   ppmtoilbm \
   ppmtoleaf \
   ppmtolj \
+  ppmtompeg \
   ppmtomitsu \
   ppmtoneo \
   ppmtopcx \
@@ -340,6 +345,7 @@ ordinary_testprogs="\
   ppmwheel \
   psidtopgm \
   pstopnm \
+  qoitopam \
   qrttoppm \
   rasttopnm \
   rawtopgm \
@@ -431,3 +437,5 @@ testExitStatus anytopnm 0 $?
 
 manweb --help > /dev/null
     testExitStatus manweb 0 $?
+
+# We do not test vidtoppm.

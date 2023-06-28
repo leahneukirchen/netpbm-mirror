@@ -19,7 +19,7 @@ static short const ybmMagic = ( ( '!' << 8 ) | '!' );
 
 
 static void
-getinit(FILE *  const ifP,
+getinit(FILE *         const ifP,
         unsigned int * const colsP,
         unsigned int * const rowsP,
         int *          const depthP) {
@@ -80,7 +80,7 @@ main(int argc, const char * argv[]) {
     getinit(ifP, &cols, &rows, &depth);
     if (depth != 1)
         pm_error("YBM file has depth of %u, must be 1", (unsigned int) depth);
-    
+
     pbm_writepbminit(stdout, cols, rows, 0);
 
     bitrow = pbm_allocrow_packed(cols + 8);
@@ -95,7 +95,7 @@ main(int argc, const char * argv[]) {
         for (i = 0; i < itemCt; ++i) {
             short int item;
             pm_readbigshort(ifP, &item);
-            itemrow[i] = (uint16_t) item; 
+            itemrow[i] = (uint16_t) item;
         }
 
         for (i = 0; i < pbm_packed_bytes(cols); ++i)

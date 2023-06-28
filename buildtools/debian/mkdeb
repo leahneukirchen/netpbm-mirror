@@ -3,7 +3,7 @@
 #                                mkdeb
 ###############################################################################
 #
-#  This generates a Debian packge file (.deb) to install Sourceforge
+#  This generates a Debian package file (.deb) to install Sourceforge
 #  Netpbm on a Debian system.
 #
 #  This is especially useful because Debian does not have a good Debian
@@ -89,13 +89,7 @@ sub netpbmVersion($) {
     } else {
         my $version = <VERSION>;
         chomp($version);
-
-        if ($version =~ m{^Netpbm (\S*)}) {
-            my ($versionNumber) = ($1);
-            $retval = $versionNumber;
-        } else {
-            die("Can't understand format of '$versionFileName': '$version'");
-        }
+        $retval = $version;
         close(VERSION);
     }
 
@@ -112,12 +106,30 @@ sub netpbmVersion($) {
 
 sub control($$) {
     my ($release, $architecture) = @_;
+#-----------------------------------------------------------------------------
+#  The contents for the package control file, as a hash reference.  In the
+#  referenced hash, there is one key for each line of the control file.  The
+#  key and value in the hash are the key and value for the line of the control
+#  file.
+#-----------------------------------------------------------------------------
 
-# The Debian packaging system doesn't provide a way to express Netpbm's actual
-# prerequisites.  For example, Netpbm needs Version 6.2 or better of Libjpeg,
-# but there is no way to state that here.  Instead, we state Libjpeg 6.2
-# exactly.  This makes the Netpbm package less useful.
+    # Because developers of some of the dependent libraries frequently switch
+    # to distributing versions not backward compatible with what they
+    # previously distributed, and Debian always packages the currently
+    # distributed version, it is virtually impossible to produce a Netpbm
+    # package that works in multiple Debian versions.  This program is coded
+    # to create a package that works on the Debian system the Netpbm
+    # maintainer currently uses to build the Debian packages he distributes.
+    # If you are building for any other version of Debian, you'll have to
+    # modify this code.
 
+    # Note that the backward incompatibility is usually only at a binary
+    # level, not source level.  And sometimes the only incompatibility for
+    # Netpbm purposes is that the soname has changed so that Linux will refuse
+    # to run a Netpbm program built for Debian N on Debian N-1.
+
+    # The following is for Debian 9.
+    
     my %control;
 
     my $debianNativeNetpbm = 
@@ -138,7 +150,7 @@ sub control($$) {
     $control{'Depends'} =
         'libc6, ' .
         'libjpeg62, ' .
-        'libpng12-0 | libpng16-16, ' .
+        'libpng16-16, ' .
         'libtiff5, ' .
         'libx11-6, ' .
         'libxml2, ' .
@@ -148,6 +160,8 @@ sub control($$) {
         'perl-base, ' .
         'bash'
         ;
+    # Note: Instead of libjpeg62, Debian 10 has libjpeg62-turbo and Ubuntu 18
+    # has libjpeg-turbo8.
     $control{'Conflicts'} = $debianNativeNetpbm;
     $control{'Replaces'} = $debianNativeNetpbm;
     $control{'Provides'} = 

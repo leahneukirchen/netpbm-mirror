@@ -1,7 +1,7 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtogem gemtopnm
 # Also requires:
 
 
-# Should print 2425386270 41, cksum of testgrid.pbm
-pbmtogem testgrid.pbm | gemtopnm | cksum
+# Should print 281226646 481, cksum of maze.pbm
+pbmtogem maze.pbm | gemtopnm | cksum

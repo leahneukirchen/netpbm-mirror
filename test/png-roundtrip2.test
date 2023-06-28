@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pngtopam pamtopng
 # Also requires:
 
@@ -15,8 +15,8 @@ for flags in "" -gamma=.45
   pamtopng testimg.ppm $flags | pngtopam | cksum
   done
 
-# Test 2.  Should print 2425386270 41 twice
+# Test 2.  Should print 281226646 481 twice
 for flags in "" -gamma=.45
   do
-  pamtopng testgrid.pbm $flags | pngtopam | cksum
+  pamtopng maze.pbm $flags | pngtopam | cksum
   done

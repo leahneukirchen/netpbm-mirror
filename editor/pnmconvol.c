@@ -1314,7 +1314,7 @@ computeInitialColumnSums(struct pam *              const pamP,
                          sample **                 const convColumnSum) {
 /*----------------------------------------------------------------------------
   Add up the sum of each column of window[][], whose rows are described
-  by *inpamP.  The window's height is that of tthe convolution kernel
+  by *inpamP.  The window's height is that of the convolution kernel
   *convKernelP.
 
   Return it as convColumnSum[][].
@@ -1854,7 +1854,7 @@ convolveHorizontalRowPlane(struct pam *              const pamP,
                            pamP->maxval);
         } else if (col == ccolso2) {
             unsigned int const leftcol = 0;
-                /* Window is up againt left edge of image */
+                /* Window is up against left edge of image */
 
             {
                 unsigned int ccol;
@@ -2019,7 +2019,7 @@ convolveVerticalRowPlane(struct pam *              const pamP,
 
             if (col == ccolso2) {
                 unsigned int const leftcol = 0;
-                    /* Convolution window is againt left edge of image */
+                    /* Convolution window is against left edge of image */
 
                 unsigned int ccol;
 

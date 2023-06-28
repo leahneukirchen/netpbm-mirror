@@ -2,7 +2,7 @@
  *  subdivide.c:	Recursive subdivision of range images
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -56,10 +56,10 @@ init_range (range_t *range, const image_t *image, unsigned band,
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
-real_t 
+real_t
 subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	   wfa_t *wfa, coding_t *c, bool_t prediction, bool_t delta)
 /*
@@ -71,7 +71,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
  *  If 'prediction' is TRUE then also test motion compensation or
  *  nondeterministic approximation.
  *  If 'delta' is TRUE then current range is already predicted.
- *  
+ *
  *  Return value:
  *	costs of the best approximation or MAXCOSTS if costs exceed 'max_costs'
  *
@@ -82,7 +82,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
  */
 {
    real_t    subdivide_costs;        /* Costs arising from approx. the current
-				       range with two childs */
+				       range with two children */
    real_t    lincomb_costs;          /* Costs arising from approx. the current
 				       range with a linear combination */
    int	     new_y_state [MAXLABELS];	/* Corresponding state of Y */
@@ -91,7 +91,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    bool_t    try_nd;			/* YES: try ND prediction */
    unsigned  states;			/* Number of states before the
 					   recursive subdivision starts */
-   void     *domain_model;		/* copy of domain pool model */      
+   void     *domain_model;		/* copy of domain pool model */
    void     *d_domain_model;		/* copy of delta domain pool model */
    void     *lc_domain_model;		/* copy of domain pool model */
    void     *lc_d_domain_model;		/* copy of delta domain pool model */
@@ -103,17 +103,17 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    tree_t    p_tree_model;		/* copy of pred. tree model */
    range_t   lrange;			/* range of lin. comb. approx. */
    range_t   rrange;			/* range of recursive approx. */
-   range_t   child [MAXLABELS];		/* new childs of the current range */
+   range_t   child [MAXLABELS];		/* new children of the current range */
    static unsigned percent = 0;		/* status of progress meter */
 
    if (wfa->wfainfo->level == range->level)
       percent = 0;
-   
+
    range->into [0] = NO_EDGE;		/* default approximation: empty */
    range->tree     = RANGE;
 
    if (range->level < 3)		/* Don't process small ranges */
-      return MAXCOSTS;	
+      return MAXCOSTS;
 
    /*
     *  If image permutation (tiling) is performed and the tiling level
@@ -123,7 +123,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
        && range->level == wfa->wfainfo->level - c->tiling->exponent)
    {
       unsigned width, height;		/* size of range (dummies)*/
-      
+
       if (c->tiling->vorder [range->global_address] < 0)
 	 return 0;			/* nothing to do */
       else
@@ -140,7 +140,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
     *  Check whether prediction is allowed or not
     *  mc == motion compensation, nd == nondeterminism
     */
-   try_mc = (prediction && c->mt->frame_type != I_FRAME			
+   try_mc = (prediction && c->mt->frame_type != I_FRAME
 	     && range->level >= wfa->wfainfo->p_min_level
 	     && range->level <= wfa->wfainfo->p_max_level
 	     && (range->x + width_of_level (range->level)
@@ -155,21 +155,21 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    if (try_mc)
       clear_norms_table (range->level, wfa->wfainfo, c->mt);
 
-   
+
    /*
     *  Check if current range must be initialized. I.e. range pixels must
     *  be copied from entire image to bintree pixel buffer. Moreover,
     *  all inner products tables must be initialized.
     */
-   if (range->level == c->options.lc_max_level)	
+   if (range->level == c->options.lc_max_level)
       init_range (range, c->mt->original, band, wfa, c);
-   
+
    price = c->price;
-   if (band != Y)			
+   if (band != Y)
       price *= c->options.chroma_decrease; /* less quality for chroma bands */
 
    /*
-    *  Compute childs of corresponding state in Y band
+    *  Compute children of corresponding state in Y band
     */
    if (band != Y)			/* Cb and Cr bands only */
    {
@@ -183,7 +183,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    }
    else
       new_y_state [0] = new_y_state [1] = RANGE;
-   
+
    /*
     *  Store contents of all models that may get modified during recursion
     */
@@ -193,8 +193,8 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    d_coeff_model  = c->d_coeff->model_duplicate (c->d_coeff, c->d_coeff->model);
    tree_model     = c->tree;
    p_tree_model   = c->p_tree;
-   states         = wfa->states;	
-   
+   states         = wfa->states;
+
    /*
     *  First alternative of range approximation:
     *  Compute costs of linear combination.
@@ -208,10 +208,10 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
       lrange.weights_bits    = 0;
       lrange.mv_tree_bits    = try_mc ? 1 : 0; /* mc allowed but not used */
       lrange.mv_coord_bits   = 0;
-      lrange.nd_tree_bits    = 0;	
-      lrange.nd_weights_bits = 0;	
+      lrange.nd_tree_bits    = 0;
+      lrange.nd_weights_bits = 0;
       lrange.prediction	     = NO;
-      
+
       lincomb_costs
 	 = approximate_range (max_costs, price, c->options.max_elements,
 			      y_state, &lrange,
@@ -219,7 +219,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 			      (delta ? c->d_coeff : c->coeff), wfa, c);
    }
    else
-      lincomb_costs = MAXCOSTS;		
+      lincomb_costs = MAXCOSTS;
 
    /*
     *  Store contents of models that have been modified
@@ -237,7 +237,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    c->coeff->model         = c->coeff->model_duplicate (c->coeff, coeff_model);
    c->d_coeff->model       = c->d_coeff->model_duplicate (c->d_coeff,
 							  d_coeff_model);
-   
+
    /*
     *  Second alternative of range approximation:
     *  Compute costs of recursive subdivision.
@@ -245,8 +245,8 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    if (range->level > c->options.lc_min_level) /* range is large enough */
    {
       unsigned label;
-      
-      memset (&child [0], 0, 2 * sizeof (range_t)); /* initialize childs */
+
+      memset (&child [0], 0, 2 * sizeof (range_t)); /* initialize children */
 
       /*
        *  Initialize a new range for recursive approximation
@@ -260,7 +260,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
       rrange.mv_coord_bits   = 0;
       rrange.nd_tree_bits    = try_nd ?
 			       tree_bits (CHILD, lrange.level, &c->p_tree): 0;
-      rrange.nd_weights_bits = 0;	
+      rrange.nd_weights_bits = 0;
       rrange.prediction	     = NO;
 
       /*
@@ -271,11 +271,11 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 			 + rrange.matrix_bits + rrange.mv_tree_bits
 			 + rrange.mv_coord_bits + rrange.nd_tree_bits
 			 + rrange.nd_weights_bits) * price;
-      
-      for (label = 0; label < MAXLABELS; label++) 
+
+      for (label = 0; label < MAXLABELS; label++)
       {
 	 real_t remaining_costs;	/* upper limit for next recursion */
-	 
+
 	 child[label].image          = rrange.image * MAXLABELS + label + 1;
 	 child[label].address        = rrange.address * MAXLABELS + label;
 	 child[label].global_address = rrange.global_address * MAXLABELS
@@ -289,8 +289,8 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 			  ? (rrange.y
 			     + label * height_of_level (rrange.level - 1))
 			  : rrange.y;
-	 
-	 /* 
+
+	 /*
 	  *  If necessary compute the inner products of the new states
 	  *  (generated during the recursive approximation of child [0])
 	  */
@@ -298,7 +298,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	    compute_ip_images_state (child[label].image, child[label].address,
 				     child[label].level, 1, states, wfa, c);
 	 /*
-	  *  Call subdivide() for both childs. 
+	  *  Call subdivide() for both children.
 	  *  Abort the recursion if 'subdivide_costs' exceed 'lincomb_costs'
 	  *  or 'max_costs'.
 	  */
@@ -315,10 +315,10 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	    fill_norms_table (child[label].x, child[label].y,
 			      child[label].level, wfa->wfainfo, c->mt);
 	 }
-	 
+
 	 if (try_mc)
 	    update_norms_table (rrange.level, wfa->wfainfo, c->mt);
-	 
+
 	 /*
 	  *  Update of progress meter
 	  */
@@ -327,7 +327,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	    if (c->options.progress_meter == FIASCO_PROGRESS_PERCENT)
 	    {
 	       unsigned	new_percent; 	/* new status of progress meter */
-	 
+
 	       new_percent = (child[label].global_address + 1) * 100.0
 			     / (1 << (wfa->wfainfo->level - child[label].level));
 	       if (new_percent > percent)
@@ -339,7 +339,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	    else if (c->options.progress_meter == FIASCO_PROGRESS_BAR)
 	    {
 	       unsigned	new_percent;	/* new status of progress meter */
-	 
+
 	       new_percent = (child[label].global_address + 1) * 50.0
 			     / (1 << (wfa->wfainfo->level
 				      - child[label].level));
@@ -349,15 +349,15 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	       }
 	    }
 	 }
-   
+
 	 /*
-	  *  If costs of subdivision exceed costs of linear combination 
+	  *  If costs of subdivision exceed costs of linear combination
 	  *  then abort recursion.
 	  */
-	 if (subdivide_costs >= MIN(lincomb_costs, max_costs)) 
+	 if (subdivide_costs >= MIN(lincomb_costs, max_costs))
 	 {
 	    subdivide_costs = MAXCOSTS;
-	    break; 
+	    break;
 	 }
 	 rrange.err             += child [label].err;
 	 rrange.tree_bits       += child [label].tree_bits;
@@ -379,8 +379,8 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 
    /*
     *  Third alternative of range approximation:
-    *  Predict range via motion compensation or nondeterminism and 
-    *  approximate delta image. 
+    *  Predict range via motion compensation or nondeterminism and
+    *  approximate delta image.
     */
    if (try_mc || try_nd)		/* try prediction */
    {
@@ -403,7 +403,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
            c->d_coeff->model_free (d_coeff_model);
            c->coeff->model_free (lc_coeff_model);
            c->d_coeff->model_free (lc_d_coeff_model);
-	 
+
            return prediction_costs;
        }
    }
@@ -423,25 +423,25 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
       c->d_coeff->model_free (c->d_coeff->model);
       c->coeff->model_free (lc_coeff_model);
       c->d_coeff->model_free (lc_d_coeff_model);
-	 
+
       c->domain_pool->model   = domain_model;
       c->d_domain_pool->model = d_domain_model;
       c->coeff->model	      = coeff_model;
       c->d_coeff->model	      = d_coeff_model;
       c->tree                 = tree_model;
       c->p_tree               = p_tree_model;
-      
+
       if (wfa->states != states)
 	 remove_states (states, wfa);
 
       return MAXCOSTS;
    }
-   else if (lincomb_costs < subdivide_costs) 
+   else if (lincomb_costs < subdivide_costs)
    {
       /*
        *  Use the linear combination: The factors of the linear combination
        *  are stored already in 'range', so revert the probability models
-       *  only. 
+       *  only.
        */
       c->domain_pool->model_free (c->domain_pool->model);
       c->d_domain_pool->model_free (c->d_domain_pool->model);
@@ -452,7 +452,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
       c->d_coeff->model_free (c->d_coeff->model);
       c->coeff->model_free (coeff_model);
       c->d_coeff->model_free (d_coeff_model);
-      
+
       c->domain_pool->model   = lc_domain_model;
       c->d_domain_pool->model = lc_d_domain_model;
       c->coeff->model	      = lc_coeff_model;
@@ -461,7 +461,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
       c->p_tree               = p_tree_model;
 
       *range = lrange;
-      
+
       if (wfa->states != states)
 	 remove_states (states, wfa);
 
@@ -474,8 +474,8 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
        *  given in child[].
        *  Don't use state in linear combinations in any of the following cases:
        *  - if color component is Cb or Cr
-       *  - if level of state > tiling level 
-       *  - if state is (partially) outside image geometry 
+       *  - if level of state > tiling level
+       *  - if state is (partially) outside image geometry
        */
       if (band > Y
 	  || (c->tiling->exponent
@@ -545,7 +545,7 @@ cut_to_bintree (real_t *dst, const word_t *src,
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static void
@@ -558,7 +558,7 @@ init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
  *  If flag 'delta' is set then state represents a delta image (prediction via
  *  nondeterminism or motion compensation).
  *  'range' the current range image,
- *   'child []' the left and right childs of 'range'.
+ *   'child []' the left and right children of 'range'.
  *
  *  No return value.
  *
@@ -583,11 +583,11 @@ init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
    }
    else
       state_is_domain = NO;
-   
+
    range->into [0] = NO_EDGE;
    range->tree     = wfa->states;
-   
-   for (label = 0; label < MAXLABELS; label++) 
+
+   for (label = 0; label < MAXLABELS; label++)
    {
       wfa->tree [wfa->states][label]       = child [label].tree;
       wfa->y_state [wfa->states][label]    = y_state [label];
@@ -605,7 +605,7 @@ init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
       warning ("Negative image norm: %f, %f", child [0].err, child [1].err);
 
 /*    state_is_domain = YES; */
-   
+
    append_state (!state_is_domain,
 		 compute_final_distribution (wfa->states, wfa),
 		 range->level, wfa, c);
@@ -621,13 +621,13 @@ init_range (range_t *range, const image_t *image, unsigned band,
  *  No return value.
  *
  *  Side effects:
- *	'c->pixels' are filled with pixel values of image block 
- *	'c->ip_images_state' are computed with respect to new image block 
+ *	'c->pixels' are filled with pixel values of image block
+ *	'c->ip_images_state' are computed with respect to new image block
  *	'range->address' and 'range->image' are initialized with zero
  */
 {
    unsigned state;
-   
+
    /*
     *  Clear already computed products
     */
@@ -640,7 +640,7 @@ init_range (range_t *range, const image_t *image, unsigned band,
 		   image->width, image->height,
 		   range->x, range->y, width_of_level (range->level),
 		   height_of_level (range->level));
-   
+
    range->address = range->image = 0;
    compute_ip_images_state (0, 0, range->level, 1, 0, wfa, c);
 }

@@ -57,8 +57,15 @@ use warnings;
 use English;
 use Fcntl;  # gets open flags
 use File::Copy;
+use IO::Handle;
 
 my $TRUE=1; my $FALSE = 0;
+
+
+
+sub pm_message($) {
+    STDERR->print("pnmquantall: $_[0]\n");
+}
 
 
 
@@ -84,7 +91,7 @@ sub parseArgs($$$$) {
 
     if (@argv > 0 && $argv[0] eq "-ext") {
         if (@argv < 2) {
-            print STDERR ("-ext requires a value\n");
+            pm_message("-ext requires a value");
         exit(100);
         } else {
             $$extR = $argv[1];
@@ -96,8 +103,8 @@ sub parseArgs($$$$) {
     }
 
     if (@argv < $firstArgPos + 2) {
-        print STDERR ("Not enough arguments.  You need at least the number " .
-                      "of colors and one file name\n");
+        pm_message("Not enough arguments.  You need at least the number " .
+                      "of colors and one file name");
         exit(100);
     }
     
@@ -110,16 +117,17 @@ sub parseArgs($$$$) {
 
 sub tempFile($) {
 
+    my ($suffix) = @_;
+
     # We trust Perl's File::Temp to do a better job of creating the temp
     # file, but it doesn't exist before Perl 5.6.1.
 
     if (eval { require File::Temp; 1 }) {
         return File::Temp::tempfile("pnmquant_XXXX", 
-                                    SUFFIX=>".pnm", 
+                                    SUFFIX=>$suffix, 
                                     DIR=>File::Spec->tmpdir(),
                                     UNLINK=>$TRUE);
     } else {
-        my ($suffix) = @_;
         my $fileName;
         local *file;  # For some inexplicable reason, must be local, not my
         my $i;
@@ -137,11 +145,11 @@ sub tempFile($) {
 sub makeColorMap($$$$) {
     my ($fileNamesR, $newColorCt, $colorMapFileName, $errorR) = @_;
 
-    my $pnmcatCmd = "pnmcat -topbottom -white -jleft @{$fileNamesR}";
+    my $pamcatCmd = "pamcat -topbottom -white -jleft @{$fileNamesR}";
 
     my $pnmcolormapCmd = "pnmcolormap $newColorCt";
 
-    my $makeMapCmd = "$pnmcatCmd | $pnmcolormapCmd >$colorMapFileName";
+    my $makeMapCmd = "$pamcatCmd | $pnmcolormapCmd >$colorMapFileName";
 
     my $termStatus = system($makeMapCmd);
 
@@ -212,7 +220,7 @@ if (!$progError) {
 my $exitStatus;
 
 if ($progError) {
-    print STDERR ("Failed.  $progError\n");
+    pm_message("Failed.  $progError");
     $exitStatus = 1;
 } else {
     $exitStatus = 0;

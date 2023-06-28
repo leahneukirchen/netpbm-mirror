@@ -27,7 +27,6 @@
 #include "pbmfont.h"
 #include "pbmfontdata.h"
 
-
 struct font *
 pbm_defaultfont(const char * const name) {
 /*----------------------------------------------------------------------------
@@ -77,11 +76,12 @@ pbm_defaultfont2(const char * const requestedFontName) {
 
 
 static void
-selectFontType(const    char * const filename,
-               PM_WCHAR        const maxmaxglyph,
-               unsigned int    const isWide,
-               struct font  ** const fontPP,
-               struct font2 ** const font2PP) {
+selectFontType(const    char *            const filename,
+               PM_WCHAR                   const maxmaxglyph,
+               unsigned int               const isWide,
+               struct font  **            const fontPP,
+               struct font2 **            const font2PP,
+               const struct pm_selector * const selectorP) {
 
     FILE * fileP;
     struct font  * fontP  = NULL; /* initial value */
@@ -106,7 +106,7 @@ selectFontType(const    char * const filename,
 
     } else if (!strncmp(line, "STARTFONT", 9)) {
         if (isWide == TRUE)
-            font2P = pbm_loadbdffont2(filename, maxmaxglyph);
+            font2P = pbm_loadbdffont2select(filename, maxmaxglyph, selectorP);
         else
             fontP = pbm_loadbdffont(filename);
         if (fontP == NULL && font2P == NULL)
@@ -128,25 +128,49 @@ selectFontType(const    char * const filename,
 
 
 struct font *
-pbm_loadfont(const    char * const filename) {
-
+pbm_loadfont(const char * const filename) {
+/*----------------------------------------------------------------------------
+   Load font file named 'filename'.
+   Font file may be either a PBM sheet or BDF.
+   Supports 8 bit codepoints.
+-----------------------------------------------------------------------------*/
     struct font  * fontP;
     struct font2 * font2P;
 
-    selectFontType(filename, PM_FONT_MAXGLYPH, FALSE, &fontP, &font2P);
+    selectFontType(filename, PM_FONT_MAXGLYPH, FALSE, &fontP, &font2P, NULL);
     return fontP;
 }
 
 
 
 struct font2 *
-pbm_loadfont2(const    char * const filename,
-              PM_WCHAR        const maxmaxglyph) {
-
+pbm_loadfont2(const char * const filename,
+              PM_WCHAR     const maxmaxglyph) {
+/*----------------------------------------------------------------------------
+   Load font file named 'filename'.
+   Font file may be either a PBM sheet or BDF.
+   Supports codepoints above 256.
+-----------------------------------------------------------------------------*/
     struct font  * fontP;
     struct font2 * font2P;
 
-    selectFontType(filename, maxmaxglyph, TRUE, &fontP, &font2P);
+    selectFontType(filename, maxmaxglyph, TRUE, &fontP, &font2P, NULL);
+    return font2P;
+}
+
+
+struct font2 *
+pbm_loadfont2select(const  char *              const filename,
+                    PM_WCHAR                   const maxmaxglyph,
+                    const struct pm_selector * const selectorP) {
+/*----------------------------------------------------------------------------
+   Same as pbm_loadfont2(), but load only glyphs indicated by *selectorP
+-----------------------------------------------------------------------------*/
+    struct font  * fontP;
+    struct font2 * font2P;
+
+    selectFontType(filename, maxmaxglyph, TRUE, &fontP, &font2P, selectorP);
+
     return font2P;
 }
 
@@ -173,7 +197,7 @@ pbm_createbdffont2_base(struct font2 ** const font2PP,
     /*  Caller should overwrite following fields as necessary */
     font2P->oldfont = NULL;
     font2P->fcols = font2P->frows = 0;
-    font2P->selector = NULL;
+    font2P->selectorP = NULL;
     font2P->default_char = 0;
     font2P->default_char_defined = FALSE;
     font2P->total_chars = font2P->chars = 0;
@@ -187,23 +211,32 @@ pbm_createbdffont2_base(struct font2 ** const font2PP,
 
 
 static void
-destroyGlyphData(struct glyph ** const glyph,
-                 PM_WCHAR        const maxglyph) {
+destroyGlyphData(struct glyph **            const glyph,
+                 PM_WCHAR                   const maxglyph,
+                 const struct pm_selector * const selectorP) {
 /*----------------------------------------------------------------------------
   Free glyph objects and bitmap objects.
 
   This does not work when an object is "shared" through multiple pointers
   referencing an identical address and thus pointing to a common glyph
   or bitmap object.
+
+  If 'selectorP' is NULL, free all glyph and bitmap objects in the range
+  0 ... maxglyph.  If not, free only the objects which the selector
+  indicates as present.
 -----------------------------------------------------------------------------*/
+
+    PM_WCHAR const min = (selectorP != NULL) ? selectorP->min : 0;
+    PM_WCHAR const max =
+        (selectorP != NULL) ? MIN(selectorP->max, maxglyph) : maxglyph;
 
     PM_WCHAR i;
 
-    for(i = 0; i <= maxglyph; ++i) {
-        if (glyph[i]!=NULL) {
+    for (i = min; i <= max; ++i) {
+        if (pm_selector_is_marked(selectorP, i) && glyph[i]) {
             free((void *) (glyph[i]->bmap));
             free(glyph[i]);
-      }
+        }
     }
 }
 
@@ -214,17 +247,16 @@ pbm_destroybdffont2_base(struct font2 * const font2P) {
   Free font2 structure, but not the glyph data
 ---------------------------------------------------------------------------- */
 
-    free(font2P->selector);
-
     pm_strfree(font2P->name);
+
     pm_strfree(font2P->charset_string);
+
     free(font2P->glyph);
 
-    if (font2P->oldfont !=NULL)
+    if (font2P->oldfont)
        pbm_freearray(font2P->oldfont, font2P->frows);
 
-    free((void *)font2P);
-
+    free(font2P);
 }
 
 
@@ -239,7 +271,7 @@ pbm_destroybdffont2(struct font2 * const font2P) {
 ---------------------------------------------------------------------------- */
 
     if (font2P->load_fn != FIXED_DATA) {
-        destroyGlyphData(font2P->glyph, font2P->maxglyph);
+        destroyGlyphData(font2P->glyph, font2P->maxglyph, font2P->selectorP);
         pbm_destroybdffont2_base(font2P);
     }
 }
@@ -254,7 +286,7 @@ pbm_destroybdffont(struct font * const fontP) {
   For freeing a structure created by pbm_loadbdffont() or pbm_loadpbmfont().
 ---------------------------------------------------------------------------- */
 
-    destroyGlyphData(fontP->glyph, PM_FONT_MAXGLYPH);
+    destroyGlyphData(fontP->glyph, PM_FONT_MAXGLYPH, NULL);
 
     if (fontP->oldfont !=NULL)
        pbm_freearray(fontP->oldfont, fontP->frows);
@@ -326,8 +358,7 @@ pbm_expandbdffont(const struct font * const fontP) {
     font2P->bit_format = PBM_FORMAT;
     font2P->total_chars = font2P->chars = nCharacters;
     font2P->load_fn = CONVERTED_TYPE1_FONT;
-    /* Caller should be overwrite the above to a more descriptive
-       value */
+    /* Caller should overwrite the above to a more descriptive value */
     return font2P;
 }
 

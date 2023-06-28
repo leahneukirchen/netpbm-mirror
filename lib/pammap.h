@@ -20,14 +20,14 @@ extern "C" {
 #endif
 
 struct tupleint {
-    /* An ordered pair of a tuple value and an integer, such as you 
+    /* An ordered pair of a tuple value and an integer, such as you
        would find in a tuple table or tuple hash.
 
        Note that this is a variable length structure.
     */
     int value;
-    sample tuple[1];  
-        /* This is actually a variable size array -- its size is the 
+    sample tuple[1];
+        /* This is actually a variable size array -- its size is the
            depth of the tuple in question.  Some compilers do not let us
            declare a variable length array.
         */
@@ -52,20 +52,20 @@ pnm_hashtuple(struct pam * const pamP, tuple const tuple);
 
 void
 pnm_addtotuplehash(struct pam *   const pamP,
-                   tuplehash      const tuplehash, 
+                   tuplehash      const tuplehash,
                    tuple          const tuple,
                    int            const value,
                    int *          const fitsP);
 
 void
 pnm_addtuplefreqoccurrence(struct pam *   const pamP,
-                           tuple          const value, 
+                           tuple          const value,
                            tuplehash      const tuplefreqhash,
                            int *          const firstOccurrenceP);
 
 void
-pnm_lookuptuple(struct pam * const pamP, const tuplehash tuplehash, 
-                const tuple searchval, 
+pnm_lookuptuple(struct pam * const pamP, const tuplehash tuplehash,
+                const tuple searchval,
                 int * const foundP, int * const retvalP);
 
 tupletable
@@ -113,7 +113,7 @@ pnm_computetuplefreqhash(struct pam *   const pamP,
                          unsigned int * const sizeP);
 
 tuplehash
-pnm_computetupletablehash(struct pam * const pamP, 
+pnm_computetupletablehash(struct pam * const pamP,
                           tupletable   const tupletable,
                           unsigned int const tupletableSize);
 
@@ -123,8 +123,8 @@ pnm_tuplehashtotable(const struct pam * const pamP,
                      unsigned int       const maxsize);
 
 char*
-pam_colorname(struct pam *         const pamP, 
-              tuple                const color, 
+pam_colorname(struct pam *         const pamP,
+              tuple                const color,
               enum colornameFormat const format);
 
 #ifdef __cplusplus

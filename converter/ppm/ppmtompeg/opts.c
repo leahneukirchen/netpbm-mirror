@@ -1,29 +1,29 @@
 /*===========================================================================*
- * opts.c								     *
- *									     *
+ * opts.c                                                                    *
+ *                                                                           *
  *      Special C code to handle TUNEing options                             *
- *									     *
- * EXPORTED PROCEDURES:							     *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
  *      Tune_Init                                                            *
  *      CollectQuantStats                                                    *
- *									     *
+ *                                                                           *
  *===========================================================================*/
 
 
 /*
  * Copyright (c) 1995 The Regents of the University of California.
  * All rights reserved.
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice and the following
  * two paragraphs appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
  * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -95,9 +95,9 @@ boolean BSkipBlocks = TRUE;
  *
  * SkipSpacesTabs
  *
- *	skip all spaces and tabs
+ *      skip all spaces and tabs
  *
- * RETURNS:	point to next character not a space or tab
+ * RETURNS:     point to next character not a space or tab
  *
  * SIDE EFFECTS:    none
  *
@@ -120,12 +120,12 @@ SkipSpacesTabs(const char * const start) {
  *
  *     Setup variables to collect statistics on quantization values
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets collect_quant and collect_quant_fp
  *
  *===========================================================================*/
-static void 
+static void
 SetupCollectQuantStats(const char * const charPtr)
 {
   char fname[256];
@@ -164,23 +164,23 @@ SetupCollectQuantStats(const char * const charPtr)
  *
  *     Do a transform on small lum values
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets kill_dim, kill_dim_break, kill_dim_end
  *
  *===========================================================================*/
-static void 
+static void
 SetupKillDimAreas(const char * const charPtr)
 {
   int items_scanned;
 
   kill_dim = TRUE;
-  items_scanned = sscanf(charPtr, "%d %d %f", 
-			 &kill_dim_break, &kill_dim_end, &kill_dim_slope);
+  items_scanned = sscanf(charPtr, "%d %d %f",
+                         &kill_dim_break, &kill_dim_end, &kill_dim_slope);
   if (items_scanned != 3) {
     kill_dim_slope = 0.25;
-    items_scanned = sscanf(charPtr, "%d %d", 
-			   &kill_dim_break, &kill_dim_end);
+    items_scanned = sscanf(charPtr, "%d %d",
+                           &kill_dim_break, &kill_dim_end);
     if (items_scanned != 2) {
       /* Use defaults */
       kill_dim_break = 20;
@@ -206,12 +206,12 @@ SetupKillDimAreas(const char * const charPtr)
  *
  *     Setup encoder to squash small changes in Y or Cr/Cb values
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
- * SIDE EFFECTS:    sets squash_max_differences SquashMaxLum SquashMaxChr 
+ * SIDE EFFECTS:    sets squash_max_differences SquashMaxLum SquashMaxChr
  *
  *===========================================================================*/
-static void 
+static void
 SetupSquashSmall(const char * const charPtr)
 {
   squash_small_differences = TRUE;
@@ -229,13 +229,13 @@ SetupSquashSmall(const char * const charPtr)
  *
  *     Setup encoder to use DCT for rate-distortion estimat ein Psearches
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets SearchCompareMode and
  *                        can change LocalDCTRateScale, LocalDCTDistortScale
  *
  *===========================================================================*/
-static void 
+static void
 SetupLocalDCT(const char * const charPtr)
 {
   int num_scales=0;
@@ -260,12 +260,12 @@ SetupLocalDCT(const char * const charPtr)
  *
  *     Setup encoder to find distribution for I-frames, and use for -snr
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    sets DoLaplace, L1, L2, and Lambdas
  *
  *===========================================================================*/
-static void 
+static void
 SetupLaplace()
 {
   int i;
@@ -339,18 +339,18 @@ SetupWriteDistortions(const char * const charPtr)
     default:
       fprintf(stderr, "Unknown TUNE parameter setting format %s\n", cp);
     }}
-}  
+}
 
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
 
-void 
+void
 CalcLambdas(void) {
 
   int i,j,n;
   double var;
-  
+
   n = LaplaceNum;
   for (i = 0;   i < 3;  i++) {
     for (j = 0;  j < 64;  j++) {
@@ -365,10 +365,10 @@ CalcLambdas(void) {
  *
  * Mpost_UnQuantZigBlockLaplace
  *
- *	unquantize and zig-zag (decode) a single block, using the distrib to get vals
+ *      unquantize and zig-zag (decode) a single block, using the distrib to get vals
  *      Iblocks only now
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -381,22 +381,22 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
     boolean iblock;
 {
     register int index;
-    int	    position;
-    register int	    qentry;
-    int	    level, coeff;
+    int     position;
+    register int            qentry;
+    int     level, coeff;
     double low, high;
     double mid,lam;
 
     /* qtable[0] must be 8 */
     out[0][0] = (int16)(in[0] * 8);
-    
+
     for ( index = 1;  index < DCTSIZE_SQ;  index++ ) {
       position = ZAG[index];
       level = in[index];
-      
+
       if (level == 0) {
-	((int16 *)out)[position] = 0;
-	continue;
+        ((int16 *)out)[position] = 0;
+        continue;
       }
       qentry = qtable[position] * qscale;
       coeff = (level*qentry)/8;
@@ -406,25 +406,25 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
       mid = (1.0/lam) * log(0.5*(exp(-lam*low)+exp(-lam*high)));
       mid = ABS(mid);
       if (mid - floor(mid) > .4999) {
-	mid = ceil(mid);
+        mid = ceil(mid);
       } else {
-	mid = floor(mid);
+        mid = floor(mid);
       }
       if (level<0) {mid = -mid;}
 /*printf("(%2.1lf-%2.1lf): old: %d vs %d\n",low,high,coeff,(int) mid);*/
       coeff = mid;
       if ( (coeff & 1) == 0 ) {
-	if ( coeff < 0 ) {
-	  coeff++;
-	} else if ( coeff > 0 ) {
-	  coeff--;
-	}
+        if ( coeff < 0 ) {
+          coeff++;
+        } else if ( coeff > 0 ) {
+          coeff--;
+        }
       }
       ((int16 *)out)[position] = coeff;
     }
 }
 
-int 
+int
 mse(Block blk1, Block blk2)
 {
   register int index, error, tmp;
@@ -449,7 +449,7 @@ mse(Block blk1, Block blk2)
  *
  *     Do any setup needed before coding stream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:  varies
  *
@@ -458,7 +458,7 @@ void Tune_Init()
 {
   int i;
 
-  /* Just check for each, and do whats needed */
+  /* Just check for each, and do what's needed */
   if (collect_quant) {
     if (!pureDCT) {
       pureDCT = TRUE;
@@ -467,14 +467,14 @@ void Tune_Init()
     }
     fprintf(collect_quant_fp, "# %s\n", outputFileName);
     fprintf(collect_quant_fp, "#");
-    for (i=0; i<64; i++) 
+    for (i=0; i<64; i++)
       fprintf(collect_quant_fp, " %d", qtable[i]);
     fprintf(collect_quant_fp, "\n#");
-    for (i=0; i<64; i++) 
+    for (i=0; i<64; i++)
       fprintf(collect_quant_fp, " %d", niqtable[i]);
-    fprintf(collect_quant_fp, "\n# %d %d %d\n\n", 
-	    GetIQScale(), GetPQScale(), GetBQScale());
-    
+    fprintf(collect_quant_fp, "\n# %d %d %d\n\n",
+            GetIQScale(), GetPQScale(), GetBQScale());
+
   }
 
   if (DoLaplace) {
@@ -486,7 +486,7 @@ void Tune_Init()
     decodeRefFrames = TRUE;
     printSNR = TRUE;
   }
-    
+
 }
 
 /*===========================================================================*
@@ -495,7 +495,7 @@ void Tune_Init()
  *
  *     Handle the strings following TUNE
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:  varies
  *
@@ -503,7 +503,7 @@ void Tune_Init()
 void ParseTuneParam(const char * const charPtr)
 {
   switch (ASCII_TOUPPER(*charPtr)) {
-  case 'B': 
+  case 'B':
     if (1 != sscanf(charPtr+2, "%d", &block_bound)) {
       fprintf(stderr, "Invalid tuning parameter (b) in parameter file.\n");
     }

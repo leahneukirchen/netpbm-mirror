@@ -1,0 +1,55 @@
+#! /bin/sh
+# This script tests: pbmtextps pbmminkowski
+# Also requires: gs pnmcrop
+
+tmpdir=${tmpdir:-/tmp}
+text_pbm=${tmpdir}/text.pbm
+
+text="Do one thing and do it well."
+
+echo "Test 1.  Should print 0 five times."
+# -ascent -descent values too small to have effect
+
+pbmtextps -descent=1 ${text} > ${text_pbm}
+  echo $?
+  test -s ${text_pbm}
+  echo $?
+pbmtextps -ascent=10 -descent=1 ${text} | cmp -s - ${text_pbm}
+  echo $?
+pbmtextps -ascent=1 -descent=1 ${text}  | cmp -s - ${text_pbm}
+  echo $?
+pbmtextps -descent=2 ${text} | cmp -s - ${text_pbm}
+  echo $?
+
+rm ${text_pbm}
+
+
+echo "Test 2.  Should print P1 1 1 0 five times"
+# blank images
+
+pbmtextps " " | pnmcrop -plain -blank-image=minimize |\
+  tr '\n' ' ' ; echo
+pbmtextps -fontsize=12   " " | pnmcrop -plain -blank-image=minimize |\
+  tr '\n' ' ' ; echo
+pbmtextps -resolution=50 " " | pnmcrop -plain -blank-image=minimize |\
+  tr '\n' ' ' ; echo
+pbmtextps -asciihex "20" | pnmcrop -plain -blank-image=minimize |\
+  tr '\n' ' ' ; echo
+pbmtextps -ascii85  "+9" | pnmcrop -plain -blank-image=minimize |\
+  tr '\n' ' ' ; echo
+
+
+
+echo "Test 3.  Should print eulerchi: N"
+# Test with characters known to produce stable eulerchi values
+# accross various fonts
+
+pbmtextps " " | pbmminkowski | grep "eulerchi"
+
+pbmtextps "+" | pbmminkowski | grep "eulerchi"
+
+pbmtextps "+" | pnmcrop -left -right | pbmminkowski | grep "eulerchi"
+
+pbmtextps "+" | pnmcrop | pbmminkowski | grep "eulerchi"
+
+pbmtextps "o" | pnmcrop | pbmminkowski | grep "eulerchi"

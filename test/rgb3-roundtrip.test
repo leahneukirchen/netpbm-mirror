@@ -10,37 +10,45 @@
 tmpdir=${tmpdir:-/tmp}
 
 # Test 1.  PPM (color) input
-testimg_ppm=${tmpdir}/testimg.ppm
-testimg_red=${tmpdir}/testimg.red
-testimg_grn=${tmpdir}/testimg.grn
-testimg_blu=${tmpdir}/testimg.blu
+echo "Test 1.  Should print 1926073387 101484"
+rose_ppm=${tmpdir}/rose.ppm
+rose_red=${tmpdir}/rose.red
+rose_grn=${tmpdir}/rose.grn
+rose_blu=${tmpdir}/rose.blu
 
-cp testimg.ppm ${tmpdir} &&
-ppmtorgb3 ${testimg_ppm} &&
-rgb3toppm ${testimg_red} ${testimg_grn} ${testimg_blu} | cksum
+cp testimg.ppm ${rose_ppm} &&
+ppmtorgb3 ${rose_ppm} &&
+rgb3toppm ${rose_red} ${rose_grn} ${rose_blu} | cksum
 
-cat ${testimg_red} ${testimg_grn} ${testimg_blu} | cksum
+# Simple cat of three planes
+echo "Test 2.  Should print 3744829044 101514"
+cat ${rose_red} ${rose_grn} ${rose_blu} | cksum
 
-rm ${testimg_ppm} ${testimg_red} ${testimg_grn} ${testimg_blu}
+rm ${rose_ppm} ${rose_red} ${rose_grn} ${rose_blu}
 
-# Test 2.  PBM (monochrome) input
-testgrid_pbm=${tmpdir}/testgrid.pbm
-testgrid_red=${tmpdir}/testgrid.red
-testgrid_grn=${tmpdir}/testgrid.grn
-testgrid_blu=${tmpdir}/testgrid.blu
+# Test 3.  PBM (monochrome) input
+echo "Test 3.  Should print 281226646 481 twice"
+maze_pbm=${tmpdir}/maze.pbm
+maze_red=${tmpdir}/maze.red
+maze_grn=${tmpdir}/maze.grn
+maze_blu=${tmpdir}/maze.blu
 
-cp testgrid.pbm ${tmpdir} &&
-ppmtorgb3 ${testgrid_pbm} &&
-rgb3toppm ${testgrid_red} ${testgrid_grn} ${testgrid_blu} | \
+cp maze.pbm ${tmpdir} &&
+ppmtorgb3 ${maze_pbm} &&
+rgb3toppm ${maze_red} ${maze_grn} ${maze_blu} | \
   ppmtopgm | pgmtopbm -th -val=0.5 | cksum
+pgmtopbm -th -val=0.5 ${maze_red} | cksum
 
-# Test 3.
+# Test 4.
 # With PGM or PBM input, the three monochrome planes should be
 # identical.  Test for this.
 
-cmp -s ${testgrid_red} ${testgrid_grn} ; echo $?
-cmp -s ${testgrid_grn} ${testgrid_blu} ; echo $?
-pgmtopgm < testgrid.pbm | cmp -s - ${testgrid_red}
+echo "Test 4.  Should print 0 twice"
+cmp -s ${maze_red} ${maze_grn} ; echo $?
+cmp -s ${maze_grn} ${maze_blu} ; echo $?
+
+echo "Test 5.  Should print 0 0 : 0"
+pgmtopgm < maze.pbm | cmp -s - ${maze_red}
   echo ${PIPESTATUS[@]} ":" $?
 
-rm ${testgrid_pbm} ${testgrid_red} ${testgrid_grn} ${testgrid_blu}
+rm ${maze_pbm} ${maze_red} ${maze_grn} ${maze_blu}

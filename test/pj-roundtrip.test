@@ -1,0 +1,26 @@
+#! /bin/bash
+# This script tests: ppmtopj pjtoppm
+# Also requires: pamseq pnmremap pamtopnm pamdepth ppmtoppm
+
+echo "Test 1. Should print:  0 0 0 0 : 0"
+
+tmpdir=${tmpdir:-/tmp}
+test8_ppm=${tmpdir}/testimg8.ppm
+
+pamseq 3 1 | pnmremap -map - testimg.ppm | pamtopnm -assume > ${test8_ppm}
+
+ppmtopj ${test8_ppm} | pjtoppm | pamdepth 1 | \
+  cmp -s - ${test8_ppm} > /dev/null
+  echo ${PIPESTATUS[@]} ":" $?
+
+rm ${test8_ppm}
+
+echo "Test 2. Should print:  0 0 : 0"
+
+testout_ppm=${tmpdir}/testout.ppm
+
+ppmtopj maze.pbm | pjtoppm > ${testout_ppm}
+  ppmtoppm < maze.pbm | cmp -s - ${testout_ppm} > /dev/null
+  echo ${PIPESTATUS[@]} ":" $?
+
+rm ${testout_ppm}

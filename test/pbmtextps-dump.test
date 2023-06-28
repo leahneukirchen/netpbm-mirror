@@ -1,0 +1,136 @@
+#! /bin/sh
+# This script tests: pbmtextps
+# Also requires:
+
+# Dump several variants of the ps file and compare against default.
+# Ghostscript is not required.
+
+tmpdir=${tmpdir:-/tmp}
+text1_ps=${tmpdir}/text1.ps
+text2_ps=${tmpdir}/text2.ps
+
+text="UNIX Philosophy: Do one thing and do it well."
+
+# Test 1:
+echo "Test 1"
+
+pbmtextps -dump-ps ${text} > ${text1_ps}
+
+# Font name is random sequence of alphanumerical characters.
+# Should not match any real name.
+
+for flag in \
+  "-font=ZQUEl8eS38RlsvEahHGNfnrbSswrcJKFwvlCdEttwcheuXvCN49MvWmndqj4" \
+  "-fontsize 2000" \
+  "-resolution 7200" \
+  "-leftmargin=15" \
+  "-rightmargin=20" \
+  "-topmargin=10" \
+  "-bottommargin=14" \
+  "-ascent=30" \
+  "-descent=20" \
+  "-pad" \
+  "-crop" \
+  "-stroke 1"
+  do
+  echo ${flag}
+  pbmtextps -dump-ps ${flag} ${text} | diff ${text1_ps} - | grep "^[<>]"
+  done
+
+rm ${text1_ps}
+
+
+# Test 2:
+echo "Test 2"
+
+pbmtextps -dump-ps "012 ABC-xyz." > ${text2_ps}
+
+for hextext in \
+  "30 31 32  20	 41 42 43  2d	78 79 7a  2e" \
+  "303132204142432d78797a2e" \
+  "<303132 20 414243 2d 78797a 2e>" 
+  do
+  echo ${hextext}
+  pbmtextps -dump-ps -asciihex ${hextext} | diff ${text2_ps} - | grep "^[<>]"
+  echo $?
+  done
+
+rm ${text2_ps}
+
+
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command line arguments" 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+test_out=${tmpdir}/test.out
+
+n=1
+
+for error_flag in \
+  "-fontsize" \
+  "-fontsize 0" \
+  "-resolution" \
+  "-resolution=0" \
+  "-leftmargin" \
+  "-leftmargin -1" \
+  "-rightmargin" \
+  "-rightmargin -1" \
+  "-topmargin" \
+  "-topmargin -1" \
+  "-bottommargin" \
+  "-bottommargin -1" \
+  "-ascent" \
+  "-ascent -1" \
+  "-descent" \
+  "-descent -1" \
+  "-stroke=A" \
+  "-pad -crop"
+  do
+    pbmtextps ${error_flag} -dump-ps ${text} >${test_out} || \
+    printf "Expected failure $n (${error_flag})";
+    test -s ${test_out}; echo " "$?
+    rm -f ${test_out}
+    n=$((n + 1))
+  done
+
+for asciihex_string in \
+  "<a>" \
+  "" \
+  "<53756c667572" \
+  "53756c667572>" \
+  "<5375<6c667572>" \
+  "<53756c>667572>"
+  do
+    pbmtextps -dump-ps -asciihex ${asciihex_string} >${test_out} || \
+    printf "Expected failure $n (-asciihex ${asciihex_string})";
+    test -s ${test_out}; echo " "$?
+    rm -f ${test_out}
+    n=$((n + 1))
+  done
+
+for ascii85_string in \
+  '<~@<6O!FD5W(~'\
+  '~@<6O!FD5W(~>'\
+  "<~@<6O<~!FD5W(~>"\
+  "<~@<6O~>!FD5W(~>"\
+  "<~@<6O!FD5W(~~>"\
+  "v"\
+  "y"\
+  "1z"\
+  "z1z"\
+  "<~0123z~>"
+  do
+    pbmtextps -dump-ps -ascii85 ${ascii85_string} >${test_out} || \
+    printf "Expected failure $n (-ascii85 ${ascii85_string})";
+    test -s ${test_out}; echo " "$?
+    rm -f ${test_out}
+    n=$((n + 1))
+  done
+
+  pbmtextps -font="" -dump-ps ${text} >${test_out} || \
+  printf "Expected failure $n (-font=\"\")";
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

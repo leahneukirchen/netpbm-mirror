@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmtofiasco fiascotopnm
 # Also requires: pnmpad pnmpsnr
 

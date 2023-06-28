@@ -6,7 +6,7 @@
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2010 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2010-2021 Scott Pakin <scott+pbm@pakin.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,10 +45,10 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 #include "pammap.h"
-
 
 static time_t const timeUpdateDelta = 30;
     /* Seconds between progress updates */
@@ -67,6 +67,10 @@ struct cmdlineInfo {
     unsigned int all;
     float        power;
     unsigned int downsample;
+    unsigned int randomseedSpec;
+    unsigned int randomseed;
+    unsigned int nearSpec;
+    unsigned int near;
 };
 
 struct coords {
@@ -98,16 +102,20 @@ parseCommandLine(int argc, const char ** const argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
     option_def_index = 0;          /* Incremented by OPTENTRY */
 
-    OPTENT3(0, "bgcolor",    OPT_STRING, &cmdlineP->bgcolor,    
+    OPTENT3(0, "bgcolor",    OPT_STRING, &cmdlineP->bgcolor,
             &bgcolorSpec, 0);
     OPTENT3(0, "wrap",       OPT_FLAG,   NULL,
             &cmdlineP->wrap,       0);
     OPTENT3(0, "all",        OPT_FLAG,   NULL,
             &cmdlineP->all,        0);
-    OPTENT3(0, "power",      OPT_FLOAT,  &cmdlineP->power,      
+    OPTENT3(0, "power",      OPT_FLOAT,  &cmdlineP->power,
             &powerSpec, 0);
-    OPTENT3(0, "downsample", OPT_UINT,   &cmdlineP->downsample, 
+    OPTENT3(0, "downsample", OPT_UINT,   &cmdlineP->downsample,
             &downsampleSpec, 0);
+    OPTENT3(0, "randomseed", OPT_UINT,   &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec, 0);
+    OPTENT3(0, "near",       OPT_UINT,   &cmdlineP->near,
+            &cmdlineP->nearSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = 0;
@@ -123,6 +131,11 @@ parseCommandLine(int argc, const char ** const argv,
 
     if (!downsampleSpec)
         cmdlineP->downsample = 0;
+
+    if (cmdlineP->nearSpec) {
+        if (cmdlineP->near == 0)
+            pm_error("The -near option requires a positive argument");
+    }
 
     if (argc-1 < 1)
         cmdlineP->inputFilename = "-";
@@ -223,7 +236,9 @@ locatePaintSources(struct pam *            const pamP,
                    tuple **                const tuples,
                    tuple                   const bgColor,
                    unsigned int            const downsample,
-                   struct paintSourceSet * const paintSourcesP) {
+                   struct paintSourceSet * const paintSourcesP,
+                   bool                    const randomseedSpec,
+                   unsigned int            const randomseed) {
 /*--------------------------------------------------------------------
   Construct a list of all pixel coordinates in the input image that
   represent a non-background color.
@@ -248,21 +263,24 @@ locatePaintSources(struct pam *            const pamP,
     pm_message("Image contains %u background + %u non-background pixels",
                pamP->width * pamP->height - paintSources.size,
                paintSources.size);
-    
+
     /* Reduce the number of paint sources to reduce execution time. */
     if (downsample > 0 && downsample < paintSources.size) {
+        struct pm_randSt randSt;
         unsigned int i;
 
-        srand(pm_randseed());
+        pm_randinit(&randSt);
+        pm_srand2(&randSt, randomseedSpec, randomseed);
 
         for (i = 0; i < downsample; ++i) {
             unsigned int const swapIdx =
-                i + rand() % (paintSources.size - i);
+                i + pm_rand(&randSt) % (paintSources.size - i);
             struct coords const swapVal = paintSources.list[i];
 
             paintSources.list[i] = paintSources.list[swapIdx];
             paintSources.list[swapIdx] = swapVal;
         }
+        pm_randterm(&randSt);
         paintSources.size = downsample;
     }
 
@@ -281,7 +299,7 @@ euclideanDistanceSqr(const struct coords * const p0,
                      unsigned int          const width,
                      unsigned int          const height) {
 /*----------------------------------------------------------------------------
-   Return the square of the Euclidian distance between p0 and p1.
+   Return the square of the Euclidean distance between p0 and p1.
 -----------------------------------------------------------------------------*/
     double const deltax = (double) (int) (p1->x - p0->x);
     double const deltay = (double) (int) (p1->y - p0->y);
@@ -299,7 +317,7 @@ euclideanDistanceTorusSqr(const struct coords * const p0,
                           unsigned int          const width,
                           unsigned int          const height) {
 /*----------------------------------------------------------------------------
-   Return the square of the Euclidian distance between p0 and p1, assuming
+   Return the square of the Euclidean distance between p0 and p1, assuming
    it's a toroidal surface on which the top row curves around to meet the
    bottom and the left column to the right.
 -----------------------------------------------------------------------------*/
@@ -356,6 +374,70 @@ reportProgress(unsigned int const rowsComplete,
 
 
 
+struct distanceList {
+    struct coords * sources;  /* malloc'ed */
+        /* The list of places in the image from which paint comes */
+    double * distSqrs;        /* malloc'ed */
+        /* The list of squared distances from the current point */
+    unsigned int size;
+        /* Number of entries in sources[] */
+};
+
+
+
+static void
+computeDistances(struct pam *           const pamP,
+                 struct coords          const target,
+                 struct paintSourceSet  const paintSources,
+                 distFunc_t *           const distFunc,
+                 bool                   const nearOnly,
+                 unsigned int           const numNear,
+                 struct distanceList *  const distancesP) {
+
+    unsigned int ps;
+
+    /* Acquire a list of all distances. */
+    distancesP->size = 0;
+    for (ps = 0; ps < paintSources.size; ++ps) {
+        struct coords const source = paintSources.list[ps];
+        double const distSqr =
+            (*distFunc)(&target, &source,
+                        pamP->width, pamP->height);
+        distancesP->sources[distancesP->size]  = source;
+        distancesP->distSqrs[distancesP->size] = distSqr;
+        ++distancesP->size;
+    }
+
+    /* If requested, truncate the list to the smallest numNear distances. */
+    if (nearOnly && numNear < distancesP->size) {
+        unsigned int i;
+
+        /* Perform a partial sort -- just enough to identify the numNear
+           smallest distances.  For performance reasons we assume that
+           numNear is much less than paintSources.size (say, less than
+           log2(paintSources.size)).
+        */
+        for (i = 0; i < numNear; ++i) {
+            unsigned int j;
+            for (j = i + 1; j < distancesP->size; ++j) {
+                if (distancesP->distSqrs[i] > distancesP->distSqrs[j]) {
+                    /* Swap elements i and j. */
+                    struct coords const src   = distancesP->sources[i];;
+                    double        const dist2 = distancesP->distSqrs[i];
+
+                    distancesP->sources[i]  = distancesP->sources[j];
+                    distancesP->distSqrs[i] = distancesP->distSqrs[j];
+                    distancesP->sources[j]  = src;
+                    distancesP->distSqrs[j] = dist2;
+                }
+            }
+        }
+        distancesP->size = numNear;
+    }
+}
+
+
+
 static void
 spillOnePixel(struct pam *          const pamP,
               struct coords         const target,
@@ -363,37 +445,38 @@ spillOnePixel(struct pam *          const pamP,
               distFunc_t *          const distFunc,
               double                const distPower,
               tuple                 const outTuple,
-              double *              const newColor) {
+              double *              const newColor,
+              bool                  const nearOnly,
+              unsigned int          const numNear,
+              struct distanceList * const distancesP) {
 
     unsigned int plane;
-    unsigned int ps;
+    unsigned int d;
     double       totalWeight;
 
     for (plane = 0; plane < pamP->depth; ++plane)
         newColor[plane] = 0.0;
+    computeDistances(pamP, target, paintSources, distFunc,
+                     nearOnly, numNear, distancesP);
     totalWeight = 0.0;
-    for (ps = 0; ps < paintSources.size; ++ps) {
-        struct coords const source = paintSources.list[ps];
-        double const distSqr =
-            (*distFunc)(&target, &source,
-                        pamP->width, pamP->height);
+    for (d = 0; d < distancesP->size; ++d) {
+        double        const distSqr = distancesP->distSqrs[d];
+        struct coords const source  = distancesP->sources[d];
 
-        if (distSqr > 0.0) {
-            /* We do special cases for some common cases with code
-               that is much faster than pow().
-            */
-            double const weight =
-                distPower == -2.0 ? 1.0 / distSqr :
-                distPower == -1.0 ? 1.0 / sqrt(distSqr):
-                pow(distSqr, distPower/2);
+        /* We do special cases for some common cases with code
+           that is much faster than pow().
+        */
+        double const weight =
+            distPower == -2.0 ? 1.0 / distSqr :
+            distPower == -1.0 ? 1.0 / sqrt(distSqr):
+            pow(distSqr, distPower/2);
 
-            unsigned int plane;
+        unsigned int plane;
 
-            for (plane = 0; plane < pamP->depth; ++plane)
-                newColor[plane] += weight * source.color[plane];
+        for (plane = 0; plane < pamP->depth; ++plane)
+            newColor[plane] += weight * source.color[plane];
 
-            totalWeight += weight;
-        }
+        totalWeight += weight;
     }
     for (plane = 0; plane < pamP->depth; ++plane)
         outTuple[plane] = (sample) (newColor[plane] / totalWeight);
@@ -409,6 +492,8 @@ produceOutputImage(struct pam *          const pamP,
                    distFunc_t *          const distFunc,
                    double                const distPower,
                    bool                  const all,
+                   bool                  const nearOnly,
+                   unsigned int          const numNear,
                    tuple ***             const outtuplesP) {
 /*--------------------------------------------------------------------
   Color each background pixel (or, if allPixels is 1, all pixels)
@@ -424,10 +509,14 @@ produceOutputImage(struct pam *          const pamP,
     rowsComplete = 0;
     #pragma omp parallel for
     for (row = 0; row < pamP->height; ++row) {
-        struct coords   target;
-        double        * newColor;
-        
+        struct coords         target;
+        double *              newColor;   /* malloc'ed */
+        struct distanceList * distancesP; /* malloc'ed */
+
         MALLOCARRAY(newColor, pamP->depth);
+        MALLOCVAR_NOFAIL(distancesP);
+        MALLOCARRAY_NOFAIL(distancesP->sources,  paintSources.size);
+        MALLOCARRAY_NOFAIL(distancesP->distSqrs, paintSources.size);
 
         target.y = row;
         for (target.x = 0; target.x < pamP->width; ++target.x) {
@@ -436,13 +525,17 @@ produceOutputImage(struct pam *          const pamP,
 
             if (all || tupleEqualColor(pamP, targetTuple, bgColor))
                 spillOnePixel(pamP, target, paintSources, distFunc, distPower,
-                              outputTuple, newColor);
+                              outputTuple, newColor, nearOnly, numNear,
+                              distancesP);
             else
                 pnm_assigntuple(pamP,  outputTuple, targetTuple);
         }
         #pragma omp critical (rowTally)
         reportProgress(++rowsComplete, pamP->height);
 
+        free(distancesP->distSqrs);
+        free(distancesP->sources);
+        free(distancesP);
         free(newColor);
     }
     *outtuplesP = outtuples;
@@ -484,10 +577,12 @@ main(int argc, const char *argv[]) {
                pnm_colorname(&inPam, bgColor, PAM_COLORNAME_HEXOK));
 
     locatePaintSources(&inPam, inTuples, bgColor, cmdline.downsample,
-                       &paintSources);
+                       &paintSources,
+                       cmdline.randomseedSpec, cmdline.randomseed);
 
     produceOutputImage(&inPam, inTuples, bgColor, paintSources, distFunc,
-                       cmdline.power, cmdline.all, &outTuples);
+                       cmdline.power, cmdline.all,
+                       cmdline.nearSpec, cmdline.near, &outTuples);
 
     outPam = inPam;
     outPam.file = stdout;
@@ -498,3 +593,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
+

@@ -1,0 +1,67 @@
+#! /bin/sh
+# This script tests: pamshuffle
+# Also requires: pamseq pamrestack pgmhist ppmhist pnmpsnr
+
+tmpdir=${tmpdir:-/tmp}
+seq_pam=${tmpdir}/seq.pam
+seq16_pam=${tmpdir}/seq16.pam
+
+out1_pam=${tmpdir}/out1.pam
+
+echo "Test 1.  Should print 1081361896 1432 five times"
+
+pgmhist -machine maze.pbm | cksum
+pamshuffle -randomseed=1 maze.pbm | pgmhist -machine | cksum
+pamshuffle -randomseed=2 maze.pbm | pgmhist -machine | cksum
+pamshuffle -column -randomseed=3 maze.pbm | pgmhist -machine | cksum
+pamrestack maze.pbm | pamshuffle -randomseed=3 | pgmhist -machine | cksum
+
+echo "Test 2.  Should print 1936883899 143517 four times"
+
+pamseq -tupletype="RGB" 3 15 > ${seq_pam}
+
+ppmhist -map ${seq_pam} | cksum
+pamshuffle -randomseed=2 ${seq_pam} | ppmhist -map | cksum
+pamrestack -width=16 -trim=abort ${seq_pam} | tee ${seq16_pam} | \
+  ppmhist -map | cksum
+pamshuffle -column -randomseed=3 ${seq16_pam} | ppmhist -map | cksum
+
+echo "Test 3.  Should print nomatch three times"
+
+pamshuffle -randomseed=$((100 +i)) ${seq16_pam} > ${out1_pam}
+pamshuffle -randomseed=${i} ${seq16_pam} | \
+pnmpsnr -target=14.0 ${out1_pam} -
+rm ${seq_pam} ${seq16_pam} ${out1_pam}
+
+pamshuffle -randomseed=$((100 +i)) testimg.ppm > ${out1_pam}
+pamshuffle -randomseed=${i} testimg.ppm | \
+  pnmpsnr -target=14.0 ${out1_pam} -
+rm ${out1_pam}
+
+pamshuffle -randomseed=$((100 +i)) -column testimg.ppm > ${out1_pam}
+pamshuffle -randomseed=${i} -column testimg.ppm | \
+  pnmpsnr -target=14.0 ${out1_pam} -
+rm ${out1_pam}
+
+test_out=${tmpdir}/test_out
+echo "Test Invalid."
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamshuffle testimg.ppm testgrid.pbm > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamshuffle -randomseed -column testgrid.pbm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamshuffle -randomseed=null testgrid.pbm > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

@@ -54,7 +54,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "noantialias",      OPT_FLAG,  NULL, &cmdlineP->noantialias, 0);
     OPTENT3(0, "background",       OPT_STRING, &cmdlineP->background,
             &backgroundSpec, 0);
-    
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;
     opt.allowNegNum = TRUE;
@@ -106,21 +106,21 @@ makeNewXel(xel *  const outputXelP,
     switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE:
         PPM_ASSIGN(*outputXelP,
-                   (fracnew0 * PPM_GETR(prevXel) 
-                    + omfracnew0 * PPM_GETR(curXel) 
+                   (fracnew0 * PPM_GETR(prevXel)
+                    + omfracnew0 * PPM_GETR(curXel)
                     + HALFSCALE) / SCALE,
-                   (fracnew0 * PPM_GETG(prevXel) 
-                    + omfracnew0 * PPM_GETG(curXel) 
+                   (fracnew0 * PPM_GETG(prevXel)
+                    + omfracnew0 * PPM_GETG(curXel)
                     + HALFSCALE) / SCALE,
-                   (fracnew0 * PPM_GETB(prevXel) 
-                    + omfracnew0 * PPM_GETB(curXel) 
+                   (fracnew0 * PPM_GETB(prevXel)
+                    + omfracnew0 * PPM_GETB(curXel)
                     + HALFSCALE) / SCALE );
         break;
-        
+
     default:
         PNM_ASSIGN1(*outputXelP,
-                    (fracnew0 * PNM_GET1(prevXel) 
-                     + omfracnew0 * PNM_GET1(curXel) 
+                    (fracnew0 * PNM_GET1(prevXel)
+                     + omfracnew0 * PNM_GET1(curXel)
                      + HALFSCALE) / SCALE );
         break;
     }
@@ -130,9 +130,9 @@ makeNewXel(xel *  const outputXelP,
 
 static void
 shearRow(xel *        const xelrow,
-         unsigned int const cols, 
+         unsigned int const cols,
          xel *        const newxelrow,
-         unsigned int const newcols, 
+         unsigned int const newcols,
          double       const shearCols,
          int          const format,
          xel          const bgxel,
@@ -140,7 +140,7 @@ shearRow(xel *        const xelrow,
 /*----------------------------------------------------------------------------
    Shear the row 'xelrow' by 'shearCols' columns, and return the result as
    'newxelrow'.  They are 'cols' and 'newcols' columns wide, respectively.
-   
+
    Fill in the part of the output row that doesn't contain image data with
    'bgxel'.
 
@@ -152,14 +152,14 @@ shearRow(xel *        const xelrow,
     unsigned int const intShearCols = (unsigned int) shearCols;
 
     assert(shearCols >= 0.0);
-        
+
     if (antialias) {
         const long fracnew0 = (shearCols - intShearCols) * SCALE;
         const long omfracnew0 = SCALE - fracnew0;
 
         unsigned int col;
         xel prevXel;
-            
+
         for (col = 0; col < newcols; ++col)
             newxelrow[col] = bgxel;
 
@@ -170,7 +170,7 @@ shearRow(xel *        const xelrow,
                        format);
             prevXel = xelrow[col];
         }
-        if (fracnew0 > 0) 
+        if (fracnew0 > 0)
             /* Need to add a column for what's left over */
             makeNewXel(&newxelrow[intShearCols + cols],
                        bgxel, prevXel, fracnew0, omfracnew0, format);
@@ -197,7 +197,7 @@ backgroundColor(const char * const backgroundColorName,
 
     if (backgroundColorName) {
         retval = pnm_parsecolorxel(backgroundColorName, maxval, format);
-    } else 
+    } else
         retval = pnm_backgroundxelrow(topRow, cols, maxval, format);
 
     return retval;
@@ -212,10 +212,13 @@ main(int argc, const char * argv[]) {
     xel * xelrow;
     xel * newxelrow;
     xel bgxel;
-    int rows, cols, format; 
-    int newformat, newcols; 
-    int row;
-    xelval maxval, newmaxval;
+    int rows, cols;
+    int format;
+    unsigned int newcols;
+    int newformat;
+    unsigned int row;
+    xelval maxval;
+    xelval newmaxval;
     double shearfac;
     double newcolsD;
 
@@ -230,6 +233,16 @@ main(int argc, const char * argv[]) {
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
     xelrow = pnm_allocrow(cols);
 
+    shearfac = tan(cmdline.angle);
+
+    newcolsD = (double) rows * fabs(shearfac) + cols + 0.999999;
+    if (newcolsD > INT_MAX-2)
+        pm_error("angle is too close to +/-90 degrees; "
+                 "output image too wide for computation");
+    else
+        newcols = (unsigned int) newcolsD;
+
+
     /* Promote PBM files to PGM. */
     if (!cmdline.noantialias && PNM_FORMAT_TYPE(format) == PBM_TYPE) {
         newformat = PGM_TYPE;
@@ -241,18 +254,9 @@ main(int argc, const char * argv[]) {
         newmaxval = maxval;
     }
 
-    shearfac = fabs(tan(cmdline.angle));
-
-    newcolsD = (double) rows * shearfac + cols + 0.999999;
-    if (newcolsD > INT_MAX-2)
-        pm_error("angle is too close to +/-90 degrees; "
-                 "output image too wide for computation");
-    else
-        newcols = (int) newcolsD;
-
     pnm_writepnminit(stdout, newcols, rows, newmaxval, newformat, 0);
     newxelrow = pnm_allocrow(newcols);
-    
+
     for (row = 0; row < rows; ++row) {
         double shearCols;
 
@@ -262,17 +266,17 @@ main(int argc, const char * argv[]) {
             bgxel = backgroundColor(cmdline.background,
                                     xelrow, cols, newmaxval, format);
 
-        if (cmdline.angle > 0.0)
+        if (shearfac > 0.0)
             shearCols = row * shearfac;
         else
-            shearCols = (rows - row) * shearfac;
+            shearCols = (rows - row) * -shearfac;
 
-        shearRow(xelrow, cols, newxelrow, newcols, 
+        shearRow(xelrow, cols, newxelrow, newcols,
                  shearCols, format, bgxel, !cmdline.noantialias);
 
         pnm_writepnmrow(stdout, newxelrow, newcols, newmaxval, newformat, 0);
     }
-    
+
     pm_close(ifP);
     pm_close(stdout);
 

@@ -177,15 +177,15 @@ parseInteger(const char * const colorname,
 
     if (r > maxval)
         pm_error("Red value in color specification '%s' is %u, "
-                 "whcih is invalid because the specified maxval is %u",
+                 "which is invalid because the specified maxval is %u",
                  colorname, r, maxval);
     if (g > maxval)
         pm_error("Green value in color specification '%s' is %u, "
-                 "whcih is invalid because the specified maxval is %u",
+                 "which is invalid because the specified maxval is %u",
                  colorname, g, maxval);
     if (b > maxval)
         pm_error("Blue value in color specification '%s' is %u, "
-                 "whcih is invalid because the specified maxval is %u",
+                 "which is invalid because the specified maxval is %u",
                  colorname, b, maxval);
 
     color[PAM_RED_PLANE] = (float)r/maxval;

@@ -1,0 +1,27 @@
+Test 1.  Should print 2096818803 2818 twice
+2096818803 2818
+2096818803 2818
+Test 2.  Should print 2096818803 2818 twice
+2096818803 2818
+2096818803 2818
+Test 3.  Should print 2096818803 2818 twice
+2096818803 2818
+2096818803 2818
+Test 4.  Should print 2434390296 4436 four times
+2434390296 4436
+2434390296 4436
+2434390296 4436
+2434390296 4436
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1
+Expected failure 10 1
+Expected failure 11 1
+Expected failure 12 1

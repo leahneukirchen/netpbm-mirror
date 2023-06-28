@@ -1,0 +1,55 @@
+#! /bin/sh
+# This script tests: pnmcrop
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+test_pgm=${tmpdir}/test.pgm
+
+cat > ${test_pgm} << EOF
+P2
+5 5
+200
+0 1 2 3 4
+5 199 199 199 9
+6 199 199 199 10
+7 199 199 199 11
+8 12 13 14 15
+EOF
+
+# Test 1
+# Test color detection; none of the sides are cropped
+
+echo Test 1
+
+for option in "" "-sides"
+  do
+  echo ${option}
+  pnmcrop -reportfull ${option} ${test_pgm} || echo fail1
+  done
+
+# Test 2
+# Test color detection; none of the sides are cropped
+echo Test 2
+
+for corner in topleft topright bottomleft bottomright
+  do
+  echo ${corner}
+  pnmcrop -reportfull -bg-corner=${corner} ${test_pgm} || echo fail2
+  done
+
+# Test 3
+# Left edge   is cropped at closeness 2% and above
+# Top  edge   is cropped at closeness 3% and above
+# All  edges are cropped at closeness 5% and above
+
+echo Test 3
+
+for closeness in 0 1 2 3 4 5 6  # for closeness in `seq 0 6`
+  do
+  echo ${closeness}
+  pnmcrop -reportfull -bg-corner=topleft -closeness=${closeness} ${test_pgm} \
+    || echo fail3
+  done
+
+rm ${test_pgm}
+

@@ -705,7 +705,7 @@ main(int argc, char * argv[]) {
         for (row = 0; row < rows; ++row)
             ppm_readppmrow(ifP, pixels[row], cols, maxval, format);
 
-        /* first check wether we can use the lut transfer */
+        /* first check whether we can use the lut transfer */
 
         table = ppm_computecolorhist(pixels, cols, rows, MAXLUTCOL+1,
                                      &nColor);

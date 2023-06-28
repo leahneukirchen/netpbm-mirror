@@ -1,22 +1,139 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pgmtoppm
-# Also requires: pamseq pamtopnm pgmramp
-
+# Also requires: pamtopnm pnminvert pamseq pgmramp
 
 tmpdir=${tmpdir:-/tmp}
 
+echo "Test 1.  Should print 1767073524 779 twice, then 1676700883 779"
+
 test_pgm=${tmpdir}/test.pgm
-palette=${tmpdir}/palette
+palette_pam=${tmpdir}/palette.pam
+palette_ppm=${tmpdir}/palette.ppm
 
-pgmramp -maxval=5 -lr 256 1 >${test_pgm}
-pamseq 3 5 -tupletype=RGB | pamtopnm \
-  >${palette}
+pgmramp -maxval=5 -lr 256 1 > ${test_pgm}
 
-# Test 1.
 pgmtoppm green ${test_pgm} | cksum
-
+pgmtoppm black-green ${test_pgm} | cksum
 pgmtoppm yellow-blue ${test_pgm} | cksum
 
-pgmtoppm -map=${palette} ${test_pgm} | cksum
 
-rm ${test_pgm} ${palette}
+echo "Test 2.  Should print 718580145 779 twice"
+pamseq 3 5 -tupletype=RGB | tee ${palette_pam} | pamtopnm > ${palette_ppm}
+pgmtoppm -map=${palette_pam} ${test_pgm} | cksum
+pgmtoppm -map=${palette_ppm} ${test_pgm} | cksum
+
+rm ${palette_pam}
+
+echo "Test 3.  Should print 718580145 779 twice"
+
+pgmtoppm white-black ${test_pgm} | pnminvert | cksum
+pnminvert ${test_pgm} | pgmtoppm white-black | cksum
+
+rm ${test_pgm}
+
+echo "Test 4.  Should print 829921912 685 seven times"
+
+pgmtoppm white testgrid.pbm | cksum
+pgmtoppm black-white testgrid.pbm | cksum
+pgmtoppm rgb:ff/ff/ff testgrid.pbm | cksum
+pgmtoppm -white=rgb-255:255/255/255 testgrid.pbm | cksum
+pgmtoppm rgb:00/00/00-rgb:ff/ff/ff testgrid.pbm | cksum
+pgmtoppm rgbi:0/0/0-rgbi:1/1/1 testgrid.pbm | cksum
+pgmtoppm -black=rgb-255:0/0/0 -white=rgb-255:255/255/255 testgrid.pbm | cksum
+
+echo "Test 5.  Should print 934505096 685 four times"
+
+pgmtoppm white-black testgrid.pbm | cksum
+pgmtoppm white testgrid.pbm | pnminvert| cksum
+pnminvert testgrid.pbm | pgmtoppm black-white | cksum
+pnminvert testgrid.pbm | pgmtoppm white | cksum
+
+echo "Test 6. Should print 3083028153 685 three times"
+
+pgmtoppm black testgrid.pbm | cksum
+pgmtoppm black-black testgrid.pbm | cksum
+pgmtoppm rgbi:0/0/0-rgbi:0/0/0 testgrid.pbm | cksum
+
+echo "Test 7 Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pgmtoppm white testimg.ppm > \
+  ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm -map=/dev/null testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm black white testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm hwite testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm off-color testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm rgb-255:7/7/7 testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm -black=black -white=white white testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm -black=rgb:0/0/0 -map=${palette_ppm} testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm -white=rgb:ff/ff/ff -map=${palette_ppm} testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm rgb:ff/ff/ff -map=${palette_ppm} testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmtoppm rgb:00/00/00-rgb:ff/ff/ff -map=${palette_ppm} testgrid.pbm > \
+  ${test_out} || \
+  printf "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+#pgmtoppm rgb-255:7/7/7 testgrid.pbm > \
+#  ${test_out} || \
+#  printf "Expected failure 12"
+#  test -s ${test_out}; echo " "$?
+#  rm -f ${test_out}
+
+rm -f ${palette_ppm}

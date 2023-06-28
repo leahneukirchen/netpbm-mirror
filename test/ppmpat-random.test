@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmpat
 # Also requires:
 
@@ -7,16 +7,22 @@
 
 # These tests require random numbers.
 
-# Test 1. Should print: 2219119109 36015 (glibc)
-#                       3606254242 36015 (MAC OS)
+echo "Test 1. Should print: 1366170000 36015" # Mersenne Twister
+#                           2219119109 36015 (glibc rand())
+#                           3606254242 36015 (MAC OS rand())
+
 ppmpat --randomseed=0 -camo 100 120 | cksum
 
-# Test 2. Should print: 3436846137 16813 (glibc)
-#                       3615722579 16813 (MAC OS)
+echo "Test 2. Should print: 4073196212 16813" # Mersenne Twister
+#                       3436846137 16813 (glibc)
+#                       3615722579 16813 (MAC OS rand())
+
 ppmpat --randomseed=0 -anticamo 80 70 | cksum
 
-# Test 3. Should print: 908097729 16813 (glibc)
-#                       1756684515 16813 (MAC OS)
+echo "Test 3. Should print: 2292015301 16813" # Mersenne Twister 
+#                       908097729 16813 (glibc rand())
+#                       1756684515 16813 (MAC OS rand())
+
 ppmpat --randomseed=0 --color \
   rgb:55/c0/34,rgb:0/ff/0,rgb:0/ee/0,rgb:0/cd/0,rgb:0/8b/0,rgb:4f/4f/2f \
   -camo 80 70 | cksum

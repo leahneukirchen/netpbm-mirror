@@ -1,7 +1,7 @@
-/* 
+/*
  * rle_open_f.c - Open a file with defaults.
- * 
- * Author :     Jerry Winters 
+ *
+ * Author :     Jerry Winters
  *      EECS Dept.
  *      University of Michigan
  * Date:    11/14/89
@@ -37,8 +37,8 @@
 
 
 static FILE *
-my_popen(const char * const cmd, 
-         const char * const mode, 
+my_popen(const char * const cmd,
+         const char * const mode,
          int  *       const pid) {
 
     FILE *retfile;
@@ -55,7 +55,7 @@ my_popen(const char * const cmd,
 
     if (pm_pipe(pipefd) < 0 )
         return NULL;
-    
+
     /* Flush known files. */
     fflush(stdout);
     fflush(stderr);
@@ -86,7 +86,7 @@ my_popen(const char * const cmd,
         if ( execl("/bin/sh", "sh", "-c", cmd, NULL) < 0 )
             exit(127);
         /* NOTREACHED */
-    }   
+    }
 
     /* Close file descriptors, and gen up a FILE ptr */
     if ( *mode == 'r' )
@@ -173,10 +173,10 @@ dealWithSubprocess(const char *  const file_name,
 
     /*  Real file, not stdin or stdout.  If name ends in ".Z",
      *  pipe from/to un/compress (depending on r/w mode).
-     *  
+     *
      *  If it starts with "|", popen that command.
      */
-        
+
     cp = file_name + strlen(file_name) - 2;
     /* Pipe case. */
     if (file_name[0] == '|') {
@@ -198,14 +198,14 @@ dealWithSubprocess(const char *  const file_name,
         const char * command;
 
         *noSubprocessP = FALSE;
-        
+
         if (*mode == 'w')
             pm_asprintf(&command, "compress > %s", file_name);
         else if (*mode == 'a')
             pm_asprintf(&command, "compress >> %s", file_name);
         else
             pm_asprintf(&command, "compress -d < %s", file_name);
-        
+
         *fpP = my_popen(command, mode, &thepid);
 
         if (*fpP == NULL)
@@ -227,8 +227,8 @@ dealWithSubprocess(const char *  const file_name,
 
 
 
-/* 
- *  Purpose : Open a file for input or ouput as controlled by the mode
+/*
+ *  Purpose : Open a file for input or output as controlled by the mode
  *  parameter.  If no file name is specified (ie. file_name is null) then
  *  a pointer to stdin or stdout will be returned.  The calling routine may
  *  call this routine with a file name of "-".  For this case rle_open_f
@@ -246,11 +246,11 @@ dealWithSubprocess(const char *  const file_name,
  *
  *   output:
  *     a file pointer
- * 
+ *
  */
 FILE *
-rle_open_f_noexit(const char * const prog_name, 
-                  const char * const file_name, 
+rle_open_f_noexit(const char * const prog_name,
+                  const char * const file_name,
                   const char * const mode ) {
 
     FILE * retval;
@@ -265,12 +265,12 @@ rle_open_f_noexit(const char * const prog_name,
         fp = stdout;     /* Set the default value */
     else
         fp = stdin;
-    
+
     if (file_name != NULL && !streq(file_name, "-")) {
         bool noSubprocess;
         dealWithSubprocess(file_name, mode, &catching_children, pids,
                            &fp, &noSubprocess, &err_str);
-        
+
         if (!err_str) {
             if (noSubprocess) {
                 /* Ordinary, boring file case. */
@@ -286,7 +286,7 @@ rle_open_f_noexit(const char * const prog_name,
                 mode_string[0] = mode[0];
                 mode_string[1] = 'b';
                 strcpy( mode_string + 2, mode + 1 );
-        
+
                 fp = fopen(file_name, mode_string);
                 if (fp == NULL )
                     err_str = "%s: can't open %s for %s: ";
@@ -322,28 +322,3 @@ rle_open_f(const char * prog_name, const char * file_name, const char * mode)
     return fp;
 }
 
-
-/*****************************************************************
- * TAG( rle_close_f )
- * 
- * Close a file opened by rle_open_f.  If the file is stdin or stdout,
- * it will not be closed.
- * Inputs:
- *  fd: File to close.
- * Outputs:
- *  None.
- * Assumptions:
- *  fd is open.
- * Algorithm:
- *  If fd is NULL, just return.
- *  If fd is stdin or stdout, don't close it.  Otherwise, call fclose.
- */
-void
-rle_close_f( fd )
-    FILE *fd;
-{
-    if ( fd == NULL || fd == stdin || fd == stdout )
-        return;
-    else
-        fclose( fd );
-}

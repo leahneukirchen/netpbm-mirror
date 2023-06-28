@@ -1,20 +1,62 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamtable
-# Also requires: pamgradient pamseq pamdepth
+# Also requires: pamseq pamrestack pamdepth pbmmake ppmrainbow
 
+echo "Test 1"
 pamtable testgrid.pbm
+
 echo
+echo "Test 2"
 pamseq 3 2 -tupletype=RGB | pamtable
+
 echo
+echo "Test 3"
 pamseq 4 1 -tupletype=RGBA | pamtable
+
 echo
+echo "Test 4"
+pbmmake -gray 5 1 | pamtable -tuple
+
+echo
+echo "Test 5"
+pbmmake -gray 1 10 | pamtable -tuple
+
+echo
+echo "Test 6"
+pamseq 3 3 -tupletype=RGB | pamrestack -width=3 | pamtable -tuple
+
+echo
+echo "Test 7"
+pamseq 2 255 -max=50,255 -step=10,17 | pamrestack -width=8 | \
+  pamtable -hex
+
+echo
+echo "Test 8"
 for maxval in 9 10 9999 10000 65535
-  do pbmmake -g 2 2 | pamdepth $maxval | pamtable
-     echo
-     ppmrainbow -width=3 -height=2 -norepeat black white | \
-     pamdepth $maxval | pamtable
-     echo
-     ppmrainbow -width=4 -height=2 -norepeat red blue green | \
-     pamdepth $maxval | pamtable
-     echo
+  do
+  pbmmake -g 2 2 | pamdepth ${maxval} | pamtable
+  echo
+  ppmrainbow -width=3 -height=2 -norepeat black white | \
+    pamdepth ${maxval} | pamtable
+  echo
+  ppmrainbow -width=4 -height=2 -norepeat red blue green | \
+    pamdepth ${maxval} | pamtable
+  echo
   done
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test.out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Should print: Expected failure 1"
+
+pamseq -tupletype="void" 1 1 | pamtable -tuple -hex > \
+  ${test_out} || \
+  printf "Expected failure"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

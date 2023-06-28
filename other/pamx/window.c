@@ -1,8 +1,8 @@
 /*
    Functions to allocate and deallocate structures and structure data
- 
+
    By Jim Frost 1989.10.03, Bryan Henderson 2006.03.25.
- 
+
    See COPYRIGHT file for copyright information.
 */
 
@@ -80,10 +80,10 @@ static void
 setDeleteWindow(viewer * const viewerP) {
 
     Atom const protoAtom = XInternAtom(viewerP->dispP, "WM_PROTOCOLS", False);
-    
+
     viewerP->deleteAtom = XInternAtom(viewerP->dispP,
                                       "WM_DELETE_WINDOW", False);
-    
+
     if ((protoAtom != None) && (viewerP->deleteAtom != None))
         XChangeProperty(viewerP->dispP, viewerP->viewportWin,
                         protoAtom, XA_ATOM, 32, PropModeReplace,
@@ -139,7 +139,7 @@ createViewer(viewer **     const viewerPP,
              bool          const fullscreen) {
 
     viewer * viewerP;
-    
+
     XSetWindowAttributes  swa_view;
 
     MALLOCVAR_NOFAIL(viewerP);
@@ -164,7 +164,7 @@ createViewer(viewer **     const viewerPP,
         ButtonPressMask | Button1MotionMask | KeyPressMask |
         StructureNotifyMask | EnterWindowMask | LeaveWindowMask;
     swa_view.save_under       = FALSE;
-    
+
     viewerP->viewportWin =
         XCreateWindow(dispP, RootWindow(dispP, scrn),
                       viewerP->xpos, viewerP->ypos,
@@ -176,7 +176,7 @@ createViewer(viewer **     const viewerPP,
                       &swa_view);
 
     setXloadimageClassHint(viewerP->dispP, viewerP->viewportWin);
-    
+
     setDeleteWindow(viewerP);
 
     viewerP->blank = TRUE;
@@ -192,7 +192,7 @@ determineRepaintStrategy(viewer  *    const viewerP,
                          bool         const verbose,
                          XImageInfo * const ximageinfoP,
                          Pixmap *     const pixmapP) {
-                        
+
     /* Decide how we're going to handle repaints.  We have three modes:
        use backing-store, use background pixmap, and use exposures.
        If the server allows backing-store, we enable it and use it.
@@ -200,7 +200,7 @@ determineRepaintStrategy(viewer  *    const viewerP,
        server does not have backing-store, we try to send the image to
        a pixmap and use that as backing-store.  If that fails, we use
        exposures to blit the image (which is ugly but it works).
-       
+
        'use_pixmap' forces background pixmap mode, which may improve
        performance.
     */
@@ -303,7 +303,7 @@ createImageWindow(viewer *      const viewerP,
 
 static void
 destroyImageWindow(viewer * const viewerP) {
-    
+
     if (viewerP->imageWin) {
         if (viewerP->imageColormap &&
             (viewerP->imageColormap != DefaultColormap(viewerP->dispP, viewerP->scrn)))
@@ -311,7 +311,7 @@ destroyImageWindow(viewer * const viewerP) {
         XDestroyWindow(viewerP->dispP, viewerP->imageWin);
     }
 }
-                       
+
 
 
 static void
@@ -348,12 +348,32 @@ placeImage(viewer * const viewerP,
            int      const height,
            int *    const rxP,     /* input and output */
            int *    const ryP) {   /* input and output */
+/*----------------------------------------------------------------------------
+   Move the X window of *viewerP on the right place on the display to contain
+   an image whose dimensions are 'width' by 'height'.
 
+   As input *rxP and *ryP are the current location of the window (offset from
+   the top left corner of the display of the top left corner of the window).
+   We update them with the new location.
+
+   If the image is narrower than the display, center it.
+
+   Otherwise, either left-justify it or right-justify it depending upon the
+   current position of the window:
+
+      If in the current position, the right edge of the image is within the
+      display, right-justify.
+
+      Otherwise left-justify.
+
+
+   Do the analogous thing for vertical placement.
+-----------------------------------------------------------------------------*/
     int pixx, pixy;
-    
+
     pixx = *rxP;
     pixy = *ryP;
-    
+
     if (viewerP->width > width)
         pixx = (viewerP->width - width) / 2;
     else {
@@ -434,10 +454,10 @@ destroyViewer(viewer * const viewerP) {
     if (viewerP->imageWin)
         XDestroyWindow(viewerP->dispP, viewerP->imageWin);
     viewerP->imageWin = 0;
-    
+
     if (viewerP->viewportWin)
         XDestroyWindow(viewerP->dispP, viewerP->viewportWin);
-    
+
     viewerP->viewportWin = 0;
 
     XFreeCursor(viewerP->dispP, viewerP->cursor);
@@ -459,12 +479,12 @@ setViewportColormap(viewer *  const viewerP,
 
     if (cmap_atom == None)
         cmap_atom = XInternAtom(viewerP->dispP, "WM_COLORMAP_WINDOWS", False);
-    
+
     /* If the visual we're using is the same as the default visual (used by
        the viewport window) then we can set the viewport window to use the
        image's colormap.  This keeps most window managers happy.
     */
-    
+
     if (visualP == DefaultVisual(viewerP->dispP, viewerP->scrn)) {
         swa.colormap = viewerP->imageColormap;
         XChangeWindowAttributes(viewerP->dispP, viewerP->viewportWin,
@@ -507,11 +527,11 @@ iconName(const char * const s) {
         t = strchr(buf, ' ');
         if (t)
             *t = '\0';
-    
+
         /* Strip off leading path.  if you don't use unix-style paths,
            You might want to change this.
         */
-    
+
         t= strrchr(buf, '/');
         if (t) {
             char * p;
@@ -557,7 +577,7 @@ visualClassFromName(const char * const name) {
     unsigned int a;
     int class;
     bool found;
-    
+
     for (a = 0, found = FALSE; VisualClassName[a].name; ++a) {
         if (strcaseeq(VisualClassName[a].name, name)) {
             /* Check for uniqueness.  We special-case StaticGray
@@ -674,10 +694,10 @@ bestVisual(Display *      const disp,
         pm_message("bestVisual: didn't find any depths?!?");
         depth = DefaultDepth(disp, scrn);
     }
-    
+
     /* given this depth, find the best possible visual
      */
-    
+
     default_visualP = DefaultVisual(disp, scrn);
     switch (imageP->type) {
     case ITRUE: {
@@ -697,7 +717,7 @@ bestVisual(Display *      const disp,
                 visualP = bestVisualOfClassAndDepth(disp, scrn, TrueColor,
                                                     depth);
         }
-        
+
         if (!visualP || ((depth <= 8) &&
                          bestVisualOfClassAndDepth(disp, scrn, PseudoColor,
                                                    depth)))
@@ -711,7 +731,7 @@ bestVisual(Display *      const disp,
         if (!visualP)
             visualP = bestVisualOfClassAndDepth(disp, scrn, StaticGray, depth);
     } break;
-        
+
     case IRGB: {
         /* if it's an RGB image, we want PseudoColor if we can get it */
 
@@ -814,7 +834,7 @@ getImageDispDimensions(viewer *       const viewerP,
         *widthP  = viewerP->width;
         *heightP = viewerP->height;
     } else {
-        unsigned int const displayWidth = 
+        unsigned int const displayWidth =
             DisplayWidth(viewerP->dispP, viewerP->scrn);
         unsigned int const displayHeight =
             DisplayHeight(viewerP->dispP, viewerP->scrn);
@@ -878,9 +898,9 @@ getVisualAndDepth(Image *        const imageP,
 static void
 setNormalSizeHints(viewer *     const viewerP,
                    Image *      const imageP) {
-    
+
     XSizeHints sh;
-    
+
     sh.width  = viewerP->width;
     sh.height = viewerP->height;
     if (viewerP->fullscreen) {
@@ -984,7 +1004,7 @@ run(viewer *     const viewerP,
             KeySym ks;
             XComposeStatus status;
             Status rc;
-            
+
             rc = XLookupString(&event.key, buf, 128, &ks, &status);
             if (rc == 1) {
                 char const ret = buf[0];
@@ -1093,7 +1113,7 @@ static void
 resizeViewer(viewer *     const viewerP,
              unsigned int const newWidth,
              unsigned int const newHeight) {
-    
+
     if (viewerP->width != newWidth || viewerP->height != newHeight) {
         XResizeWindow(viewerP->dispP, viewerP->viewportWin,
                       newWidth, newHeight);
@@ -1116,7 +1136,7 @@ displayInViewer(viewer *       const viewerP,
                 const char *   const title,
                 bool           const verbose,
                 int *          const retvalP) {
-    
+
     XImageInfo *     ximageInfoP;
     Visual *         visual;
     unsigned int     depth;
@@ -1134,7 +1154,7 @@ displayInViewer(viewer *       const viewerP,
     getVisualAndDepth(imageP, viewerP->dispP, viewerP->scrn,
                       fit, visualSpec, visualClass,
                       &visual, &depth);
-    
+
     if (verbose && (visual != DefaultVisual(viewerP->dispP, viewerP->scrn)))
         pm_message("Using %s visual", nameOfVisualClass(visual->class));
 
@@ -1211,3 +1231,6 @@ displayInViewer(viewer *       const viewerP,
 
     *retvalP = retvalueFromExitReason(exitReason);
 }
+
+
+

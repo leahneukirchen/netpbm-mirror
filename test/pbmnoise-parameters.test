@@ -1,0 +1,143 @@
+#! /bin/sh
+# This script tests: pbmnoise
+# Also requires:
+
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test_out
+
+# Invalid -ratio arguments
+
+pbmnoise -ratio       100 100 > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio 0     1  100 > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=1.1   100 100 > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+  
+pbmnoise -ratio=-1    100 100 > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=half  100 100 > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=0/1/1 100 100 > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=-1/2  100 100 > ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=1/0   100 100 > ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=/2    100 100 > ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=4/2   100 100 > ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=6/    100 100 > ${test_out} || \
+  printf "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=1.0/2.0 100 100 > ${test_out} || \
+  printf "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# denominator must be power of 2  
+pbmnoise -ratio=3/9   100 100 > ${test_out} || \
+  printf "Expected failure 13"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=a/2   100 100 > ${test_out} || \
+  printf "Expected failure 14"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+
+pbmnoise -ratio=2/a  100 100 > ${test_out} || \
+        printf "Expected failure 15"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=1/-2  100 100 > ${test_out} || \
+        printf "Expected failure 16"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# Denominator must be 65536 or less
+pbmnoise -ratio=1/65537 100 100 > ${test_out} || \
+  printf "Expected failure 17"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -ratio=1/131072 100 100 > ${test_out} || \
+  printf "Expected failure 17"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -endian=large 100 100 > ${test_out} || \
+  printf "Expected failure 18"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -randomseed 100 100 > ${test_out} || \
+  printf "Expected failure 19"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -randomseed=-1 100 100 > ${test_out} || \
+  printf "Expected failure 20"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise -randomseed=0.1 100 100 > ${test_out} || \
+  printf "Expected failure 21"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise > ${test_out} || \
+  printf "Expected failure 22"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise 100 > ${test_out} || \
+  printf "Expected failure 23"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmnoise 100 200 300 > ${test_out} || \
+  printf "Expected failure 24"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+  

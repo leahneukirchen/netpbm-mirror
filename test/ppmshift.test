@@ -1,0 +1,42 @@
+#! /bin/bash
+# This script tests: ppmshift
+# Also requires: pgmtoppm
+
+echo "Test 1. Should print: 3705777303 101484"
+ppmshift -seed=1 10 testimg.ppm | cksum
+
+echo "Test 2. Should print: 202790723 685"
+ppmshift -seed=1 1 testgrid.pbm | cksum
+
+echo "Test 3. Should print: 0 0 : 0"
+ppmshift -seed=1 0 testimg.ppm | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+tmpdir=${tmpdir:-/tmp}
+test0_ppm=${tmpdir}/test0.ppm
+test14_ppm=${tmpdir}/test14.ppm
+
+pgmtoppm < maze.pbm > ${test0_ppm}
+
+echo "Test 4.  Should print: 0 0 : 0"
+  ppmshift -seed=2 0 maze.pbm | cmp -s - ${test0_ppm}
+    echo ${PIPESTATUS[@]} ":" $?
+
+ppmshift -seed=2 14 maze.pbm > ${test14_ppm}
+
+for i in 1 15 16 20 1000
+  do
+  echo "Test 5. ("$i") Should print: 1 twice"
+  ppmshift -seed=2 $i maze.pbm | cmp -s - ${test0_ppm}
+    echo $?
+  ppmshift -seed=2 $i maze.pbm | cmp -s - ${test14_ppm}
+    echo $?
+  done
+
+# In Test 5 the image files are not supposed to match.
+# When cmp finds a difference, it may terminate and stop reading input from
+# the pipe at that point.  This may cause a "broken pipe" exception; however
+# this does not always happen.  The broken pipe shows up as a non-zero value
+# for ${PIPESTATUS[0]}.
+
+rm ${test0_ppm} ${test14_ppm}

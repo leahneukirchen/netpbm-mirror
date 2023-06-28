@@ -94,7 +94,7 @@ else
 
     case "$color" in
         -gofigure )
-        pnmcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
+        pamcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
         ;;
         -white | -black )
         pnmpad $plainopt $color \
@@ -108,8 +108,8 @@ else
     pamflip -rotate90 $tmp2 > $tmp3
 
     # Cat things together.
-    pnmcat -lr $tmp2 $tmp1 $tmp2 > $tmp4
-    pnmcat -tb $plainopt $tmp3 $tmp4 $tmp3
+    pamcat -leftright $tmp2 $tmp1 $tmp2 > $tmp4
+    pamcat -topbottom $plainopt $tmp3 $tmp4 $tmp3
 fi
 
 

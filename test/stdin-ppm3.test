@@ -1,0 +1,75 @@
+o#! /bin/sh
+# This script tests: ppmtobmp bmptopnm
+# This script tests: ppmtoilbm ilbmtoppm
+# This script tests: ppmtoleaf leaftoppm
+# This script tests: ppmtoneo neotoppm
+# This script tests: ppmtopcx pcxtoppm
+# This script tests: ppmtopi1 pi1toppm
+# This script tests: ppmtopict picttoppm
+# This script tests: ppmtopj pjtoppm
+# This script tests: ppmtospu sputoppm
+# This script tests: ppmtoxpm xpmtoppm
+# Also requires: ppmmake
+
+tmpdir=${tmpdir:-/tmp}
+small_ppm=${tmpdir}/small.ppm
+large_ppm=${tmpdir}/large.ppm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+ppmmake -maxval 65535 rgb:00/00/00 8 3 > ${small_ppm}
+ppmmake -maxval 7 rgb:00/00/00 320 200 > ${large_ppm}
+
+for fmt in \
+        bmp \
+        ilbm \
+        leaf \
+        neo \
+        pcx \
+        pi1 \
+        pict \
+        pj \
+        spu \
+        xpm
+do
+  if [ ${fmt} = "xpm" ]
+    then testprog1="ppmto${fmt} -name small";
+  else 	 testprog1="ppmto${fmt}";
+  fi
+  if [ ${fmt} = "bmp" ]
+    then testprog2=${fmt}"topnm";
+  else   testprog2=${fmt}"toppm";
+  fi
+
+  if [ ${fmt} = "spu" ]
+    then test_ppm=${large_ppm};
+  else   test_ppm=${small_ppm};
+  fi
+
+  ${testprog1} ${test_ppm} > ${out1};    status1=$?
+  ${testprog1} < ${test_ppm} > ${out2};  status2=$?
+  test -s ${out1};                       status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog1}": "${status1} ${status2} ${status3} $?
+  rm ${out2}
+
+  ${testprog2} ${out1} > ${out3};      status4=$?
+  ${testprog2} < ${out1} > ${out4};    status5=$?
+  test -s ${out1};                     status6=$?
+  cmp -s ${out3} ${out4}
+  echo ${testprog2}": "${status4} ${status5} ${status6} $?
+  rm ${out1} ${out3} ${out4}
+  done
+
+rm ${small_ppm} ${large_ppm}
+
+# ppmtopict width must be 8 or more
+
+# ppmtospu sputoppm width=320 height=200 fixed
+
+# Eyuvtoppm, Yuvtoppm width, height are mandatory
+
+# Ppmtowinicon Winicontoppm legacy
+# Winicontoppm max size 255 255

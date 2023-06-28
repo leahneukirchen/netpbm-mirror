@@ -103,6 +103,10 @@ if [ ! -f ./testgrid.pbm ]
   then cp -v ${srcdir}/testgrid.pbm ./testgrid.pbm
 fi
 
+if [ ! -f ./maze.pbm ]
+  then cp -v ${srcdir}/maze.pbm ./maze.pbm
+fi
+
 if [ ! -f ./testimg.ppm ]
   then cp -v ${srcdir}/testimg.ppm  ./testimg.ppm 
 fi
@@ -178,12 +182,15 @@ elif [ $VALGRIND_TESTS = "on" ]
   mkdir $valdir
  
   vg_command_base="valgrind --trace-children=yes";
+  # You may want to add --track-origins=yes to the above.
 
-  for i in awk cat cksum cmp cp cut date dirname egrep fgrep file grep gs \
-    head iconv mkdir mktemp perl rm sed seq sh tee testrandom tr uniq \
-    Available-Testprog
+  for i in awk basename cat cksum cmp comm cp cut date dirname \
+           egrep fgrep file grep gs head iconv ls mkdir mktemp perl \
+           printf rm sed seq sh sort tail tee tr uniq wc \
+           testrandom Available-Testprog
 
     # Tell valgrind not to probe execution of the above programs.
+    # You may add programs in Netpbm to the above to speed up tests.
 
     do vg_skip=$vg_skip"/*/"$i","; done;
 
@@ -237,13 +244,15 @@ if [ $VALGRIND_TESTS = "on" ]
 fi
 
 # Execute a single test and test its result.
-# But first check if the .ok file exists.  (Some .ok files are
-# dynamically created.)  Then see if target programs and requirements
-# are in place.  If either of these conditions are not met, do
-# not execute the test and report "Not Testable".
+# But first check if the .ok file exists.
+# (In past versions certain .ok files were dynamically created.)
+# Then see if target programs and requirements are in place.  If
+# either of these conditions are not met, do not execute the test and
+# report "Not Testable".
 
 if [ ! -s ${srcdir}/${tname%.test}.ok ]
 then
+  echo "${tname%.test}.ok does not exist"
   let result=4;
 else
   ${srcdir}/Available-Testprog \
@@ -295,7 +304,7 @@ fi
 # (Do not erase them if we are working from the source directory.)
 
 if [ ! $PWD -ef ${srcdir} ]
-    then rm ./testimg.ppm ./testgrid.pbm
+    then rm ./testimg.ppm ./testgrid.pbm ./maze.pbm
 fi
 
 

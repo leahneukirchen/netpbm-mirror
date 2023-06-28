@@ -1,6 +1,47 @@
+Test 1. Should print: 4008533639 781
 4008533639 781
+Test 2. Should print: 738714211 781
+738714211 781
+Test 3. Should print: 3805937800 9613
 3805937800 9613
+Test 4. Should print: 1586690955 9613
+1586690955 9613
+Test 5. Should print: 2698433077 1549
 2698433077 1549
+Test 6. Should print: 1526189097 1549
+1526189097 1549
+Test 7. Should print: 3705929501 781
 3705929501 781
+Test 8. Should print: 1996587666 781
+1996587666 781
+Test 9. Should print: 3057513592 661
 3057513592 661
+Test 10. Should print: 1861389287 661
 1861389287 661
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1
+Expected failure 6 1
+Expected failure 7 1
+Expected failure 8 1
+Expected failure 9 1
+Expected failure 10 1
+Expected failure 11 1
+Expected failure 12 1
+Expected failure 13 1
+Expected failure 14 1
+Expected failure 15 1
+Expected failure 16 1
+Expected failure 17 1
+Expected failure 18 1
+Expected failure 19 1
+Expected failure 20 1
+Expected failure 21 1
+Expected failure 22 1
+Expected failure 23 1
+Expected failure 24 1
+Expected failure 25 1
+Expected failure 26 1

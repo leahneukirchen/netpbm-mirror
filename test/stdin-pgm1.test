@@ -1,0 +1,47 @@
+#! /bin/sh
+# This script tests: pgmabel pgmbentley pgmdeshadow pgmenhance pgmhist
+# This script tests: pgmmedian pgmminkowski pgmtexture pgmtopbm pgmtoppm
+# This script tests: rawtopgm
+# Also requires: pgmmake
+
+tmpdir=${tmpdir:-/tmp}
+small_pgm=${tmpdir}/small.pgm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+pgmmake 0.5 3 3 > ${small_pgm}
+
+for testprog in  \
+        pgmabel \
+        pgmbentley \
+        pgmdeshadow \
+        pgmenhance \
+        pgmhist \
+        pgmmedian \
+        pgmminkowski \
+        pgmtexture \
+        "pgmtopbm -th " \
+        "pgmtoppm rgb:00/00/00 " \
+	"rawtopgm -headerskip 11 3 3 "
+  do
+  ${testprog} ${small_pgm} > ${out1};      status1=$?
+  ${testprog} < ${small_pgm} > ${out2};    status2=$?
+  test -s ${out1};                         status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog}": "${status1} ${status2} ${status3} $?
+  rm ${out1} ${out2}
+  done
+
+rm ${small_pgm}
+
+
+# Pgmtopgm accepts input only from stdin
+
+# These three programs are legacy
+# Pgmedge
+# Pgmnorm
+# Pgmoil
+
+# Pgmmorphconv needs template file

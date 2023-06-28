@@ -30,9 +30,7 @@ extern "C" {
 #define STRSEQ(A, B) \
 	(strneq((A), (B), sizeof(A)))
 
-#define MEMEQ(a,b,c) (memcmp(a, b, c) == 0)
-
-#define MEMSEQ(a,b) (memeq(a, b, sizeof(*(a))) == 0)
+#define MEMSEQ(a,b) (memeq(a, b, sizeof(*(a))))
 
 #define MEMSSET(a,b) (memset(a, b, sizeof(*(a))))
 
@@ -126,12 +124,9 @@ strncaseeq(const char * const comparand,
 #define TOUPPER(C) ((char)toupper((unsigned char)(C)))
 
 
-/* These are all private versions of commonly available standard C
-   library subroutines whose names are the same except with the N at
-   the end.  Because not all standard C libraries have them all,
-   Netpbm must include them in its own libraries, and because some
-   standard C libraries have some of them, Netpbm must use different
-   names for them.
+/* Most of these are private versions of commonly available standard C library
+   subroutines whose names are similar.  They're here because not all standard
+   C libraries have them.
 
    The GNU C library has all of them.  All but the oldest standard C libraries
    have snprintf().
@@ -146,7 +141,7 @@ strncaseeq(const char * const comparand,
 
      - If the function can't get the memory, it returns 'pm_strsol',
        which is a string that is in static memory that contains text
-       indicating an out of memory failure has occurred, intead of
+       indicating an out of memory failure has occurred, instead of
        NULL.  This makes it much easier for programs to ignore this
        possibility.
 
@@ -162,13 +157,13 @@ pm_strnlen(const char * const s,
 
 int
 pm_snprintf(char *       const dest,
-            size_t       const str_m,
+            size_t       const maxSize,
             const char * const fmt,
             ...) PM_GNU_PRINTF_ATTR(3,4);
 
 void
 pm_vsnprintf(char *       const str,
-             size_t       const str_m,
+             size_t       const maxSize,
              const char * const fmt,
              va_list            ap,
              size_t *     const sizeP);
@@ -207,6 +202,16 @@ pm_memmem(const void * const haystackArg,
 
 bool
 pm_strishex(const char * const subject);
+
+void
+pm_string_to_long(const char *   const string,
+                  long *         const longP,
+                  const char **  const errorP);
+
+void
+pm_string_to_int(const char *   const string,
+                 int *          const intP,
+                 const char **  const errorP);
 
 void
 pm_string_to_uint(const char *   const string,

@@ -1,4 +1,4 @@
-/* 
+/*
 ** Version 1.0  September 28, 1996
 **
 ** Copyright (C) 1996 by Mike Burns <burns@cac.psu.edu>
@@ -15,16 +15,17 @@
 
 /* References
 ** ----------
-** The select k'th value implementation is based on Algorithm 489 by 
+** The select k'th value implementation is based on Algorithm 489 by
 ** Robert W. Floyd from the "Collected Algorithms from ACM" Volume II.
 **
 ** The histogram sort is based is described in the paper "A Fast Two-
-** Dimensional Median Filtering Algorithm" in "IEEE Transactions on 
+** Dimensional Median Filtering Algorithm" in "IEEE Transactions on
 ** Acoustics, Speech, and Signal Processing" Vol. ASSP-27, No. 1, February
 ** 1979.  The algorithm I more closely followed is found in "Digital
 ** Image Processing Algorithms" by Ioannis Pitas.
 */
 
+#include <assert.h>
 
 #include "pm_c_util.h"
 #include "pgm.h"
@@ -32,10 +33,10 @@
 #include "mallocvar.h"
 #include "nstring.h"
 
-enum medianMethod {MEDIAN_UNSPECIFIED, SELECT_MEDIAN, HISTOGRAM_SORT_MEDIAN};
+enum MedianMethod {MEDIAN_UNSPECIFIED, SELECT_MEDIAN, HISTOGRAM_SORT_MEDIAN};
 #define MAX_MEDIAN_TYPES      2
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -43,24 +44,28 @@ struct cmdlineInfo {
     unsigned int width;
     unsigned int height;
     unsigned int cutoff;
-    enum medianMethod type;
+    enum MedianMethod type;
 };
 
 
-/* Global variables common to each median sort routine. */
 static int const forceplain = 0;
-static int format;
-static gray maxval;
-static gray **grays;
-static gray *grayrow;
-static int ccolso2, crowso2;
-static int row;
+
+
+
+/* Global variables common to each median sort routine. */
+static gray ** grays;
+    /* The convolution buffer.  This is a circular buffer that contains the
+       rows of the input image that are being convolved into the current 
+       output row.
+    */
+static gray * grayrow;
+    /* A buffer for building the current output row */
 
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -91,13 +96,21 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (!widthSpec)
+    if (widthSpec) {
+        if (cmdlineP->width < 1)
+            pm_error("-width must be at least 1");
+    } else
         cmdlineP->width = 3;
-    if (!heightSpec)
+
+    if (heightSpec) {
+        if (cmdlineP->height < 1)
+            pm_error("-height must be at least 1");
+    } else
         cmdlineP->height = 3;
+
     if (!cutoffSpec)
         cmdlineP->cutoff = 250;
 
@@ -120,6 +133,32 @@ parseCommandLine(int argc, char ** argv,
             pm_error ("Too many arguments.  The only argument is "
                       "the optional input file name");
     }
+}
+
+
+
+static void
+setWindow(gray **      const convBuffer,
+          unsigned int const crows,
+          gray **      const cgrayrow,
+          unsigned int const lastRow) {
+/*----------------------------------------------------------------------------
+   Set 'cgrayrow' so it points into the circular buffer 'convBuffer' such
+   that cgrayrow[0] is the topmost row in the buffer, given that the
+   bottommost row in the buffer is row number 'lastRow'.
+-----------------------------------------------------------------------------*/
+    unsigned int const windowTopRow = (lastRow + 1) % crows;
+
+    unsigned int bufferRow;
+    unsigned int wrow;
+
+    wrow = 0;
+
+    for (bufferRow = windowTopRow; bufferRow < crows; ++wrow, ++bufferRow)
+        cgrayrow[wrow] = grays[bufferRow];
+
+    for (bufferRow = 0; bufferRow < windowTopRow; ++wrow, ++bufferRow)
+        cgrayrow[wrow] = grays[bufferRow];
 }
 
 
@@ -184,54 +223,53 @@ selectMedian(FILE *       const ifP,
              unsigned int const crows,
              unsigned int const cols,
              unsigned int const rows,
-             unsigned int const median) {
+             int          const format,
+             gray         const maxval,
+             unsigned int const median,
+             unsigned int const firstRow) {
+
+    unsigned int const ccolso2 = ccols / 2;
+    unsigned int const crowso2 = crows / 2;
 
     unsigned int const numValues = crows * ccols;
 
     unsigned int col;
-    gray * garray;
-        /* Array of the currenty gray values */
+    gray * garray;  /* Array of the currently gray values */
     int * parray;
     int * subcol;
-    gray ** rowptr;
-    
+    gray ** cgrayrow;
+    unsigned int row;
+
     garray = pgm_allocrow(numValues);
 
-    MALLOCARRAY(rowptr, crows);
+    MALLOCARRAY(cgrayrow, crows);
     MALLOCARRAY(parray, numValues);
     MALLOCARRAY(subcol, cols);
 
-    if (rowptr == NULL || parray == NULL || subcol == NULL)
+    if (cgrayrow == NULL || parray == NULL || subcol == NULL)
         pm_error("Unable to allocate memory");
 
     for (col = 0; col < cols; ++col)
         subcol[col] = (col - (ccolso2 + 1)) % ccols;
 
     /* Apply median to main part of image. */
-    for ( ; row < rows; ++row) {
-        int crow;
-        int rownum, irow, temprow;
+    for (row = firstRow; row < rows; ++row) {
+        unsigned int crow;
         unsigned int col;
-    
+
         pgm_readpgmrow(ifP, grays[row % crows], cols, maxval, format);
 
-        /* Rotate pointers to rows, so rows can be accessed in order. */
-        temprow = (row + 1) % crows;
-        rownum = 0;
-        for (irow = temprow; irow < crows; ++rownum, ++irow)
-            rowptr[rownum] = grays[irow];
-        for (irow = 0; irow < temprow; ++rownum, ++irow)
-            rowptr[rownum] = grays[irow];
+        setWindow(grays, crows, cgrayrow, row);
 
         for (col = 0; col < cols; ++col) {
             if (col < ccolso2 || col >= cols - ccolso2) {
-                grayrow[col] = rowptr[crowso2][col];
+                grayrow[col] = cgrayrow[crowso2][col];
             } else if (col == ccolso2) {
                 unsigned int const leftcol = col - ccolso2;
                 unsigned int i;
                 i = 0;
                 for (crow = 0; crow < crows; ++crow) {
-                    gray * const temprptr = rowptr[crow] + leftcol;
+                    gray * const temprptr = cgrayrow[crow] + leftcol;
                     unsigned int ccol;
                     for (ccol = 0; ccol < ccols; ++ccol) {
                         garray[i] = *(temprptr + ccol);
@@ -246,23 +284,16 @@ selectMedian(FILE *       const ifP,
                 unsigned int crow;
                 unsigned int tsum;
                 for (crow = 0, tsum = 0; crow < crows; ++crow, tsum += ccols)
-                    garray[tsum + subcol[col]] = *(rowptr[crow] + addcol );
+                    garray[tsum + subcol[col]] = *(cgrayrow[crow] + addcol );
                 select489( garray, parray, numValues, median );
                 grayrow[col] = garray[parray[median]];
             }
         }
         pgm_writepgmrow( stdout, grayrow, cols, maxval, forceplain );
     }
-
-    {
-        unsigned int irow;
-        /* Write out remaining unchanged rows. */
-        for (irow = crowso2 + 1; irow < crows; ++irow)
-            pgm_writepgmrow(stdout, rowptr[irow], cols, maxval, forceplain);
-    }
     free(subcol);
     free(parray);
-    free(rowptr);
+    free(cgrayrow);
     pgm_freerow(garray);
 }
 
@@ -274,31 +305,40 @@ histogramSortMedian(FILE *       const ifP,
                     unsigned int const crows,
                     unsigned int const cols,
                     unsigned int const rows,
-                    unsigned int const median) {
+                    int          const format,
+                    gray         const maxval,
+                    unsigned int const median,
+                    unsigned int const firstRow) {
 
+    unsigned int const ccolso2 = ccols / 2;
+    unsigned int const crowso2 = crows / 2;
     unsigned int const histmax = maxval + 1;
 
     unsigned int * hist;
     unsigned int mdn, ltmdn;
     gray * leftCol;
     gray * rghtCol;
-    gray ** rowptr;
+    gray ** cgrayrow;
+        /* The window of the image currently being convolved, with
+           cgrayrow[0] being the top row of the window.  Pointers into grays[]
+        */
+    unsigned int row;
+        /* Row number in input -- bottommost row in the window we're currently
+           convolving
+        */
 
-    MALLOCARRAY(rowptr, crows);
+    MALLOCARRAY(cgrayrow, crows);
     MALLOCARRAY(hist, histmax);
 
-    if (rowptr == NULL || hist == NULL)
+    if (cgrayrow == NULL || hist == NULL)
         pm_error("Unable to allocate memory");
 
     leftCol = pgm_allocrow(crows);
     rghtCol = pgm_allocrow(crows);
 
     /* Apply median to main part of image. */
-    for ( ; row < rows; ++row) {
+    for (row = firstRow; row < rows; ++row) {
         unsigned int col;
-        unsigned int temprow;
-        unsigned int rownum;
-        unsigned int irow;
         unsigned int i;
         /* initialize hist[] */
         for (i = 0; i < histmax; ++i)
@@ -306,24 +346,18 @@ histogramSortMedian(FILE *       const ifP,
 
         pgm_readpgmrow(ifP, grays[row % crows], cols, maxval, format);
 
-        /* Rotate pointers to rows, so rows can be accessed in order. */
-        temprow = (row + 1) % crows;
-        rownum = 0;
-        for (irow = temprow; irow < crows; ++rownum, ++irow)
-            rowptr[rownum] = grays[irow];
-        for (irow = 0; irow < temprow; ++rownum, ++irow)
-            rowptr[rownum] = grays[irow];
+        setWindow(grays, crows, cgrayrow, row);
 
         for (col = 0; col < cols; ++col) {
             if (col < ccolso2 || col >= cols - ccolso2)
-                grayrow[col] = rowptr[crowso2][col];
+                grayrow[col] = cgrayrow[crowso2][col];
             else if (col == ccolso2) {
-                unsigned int crow;
                 unsigned int const leftcol = col - ccolso2;
+                unsigned int crow;
                 i = 0;
                 for (crow = 0; crow < crows; ++crow) {
                     unsigned int ccol;
-                    gray * const temprptr = rowptr[crow] + leftcol;
+                    gray * const temprptr = cgrayrow[crow] + leftcol;
                     for (ccol = 0; ccol < ccols; ++ccol) {
                         gray const g = *(temprptr + ccol);
                         ++hist[g];
@@ -334,17 +368,17 @@ histogramSortMedian(FILE *       const ifP,
                 for (mdn = 0; ltmdn <= median; ++mdn)
                     ltmdn += hist[mdn];
                 --mdn;
-                if (ltmdn > median) 
+                if (ltmdn > median)
                     ltmdn -= hist[mdn];
 
                 grayrow[col] = mdn;
             } else {
-                unsigned int crow;
                 unsigned int const subcol = col - (ccolso2 + 1);
                 unsigned int const addcol = col + ccolso2;
+                unsigned int crow;
                 for (crow = 0; crow < crows; ++crow) {
-                    leftCol[crow] = *(rowptr[crow] + subcol);
-                    rghtCol[crow] = *(rowptr[crow] + addcol);
+                    leftCol[crow] = *(cgrayrow[crow] + subcol);
+                    rghtCol[crow] = *(cgrayrow[crow] + addcol);
                 }
                 for (crow = 0; crow < crows; ++crow) {
                     {
@@ -374,7 +408,7 @@ histogramSortMedian(FILE *       const ifP,
                         ++mdn;
                     }
                     --mdn;
-                    if (ltmdn > median) 
+                    if (ltmdn > median)
                         ltmdn -= hist[mdn];
                 }
                 grayrow[col] = mdn;
@@ -382,84 +416,127 @@ histogramSortMedian(FILE *       const ifP,
         }
         pgm_writepgmrow(stdout, grayrow, cols, maxval, forceplain);
     }
-
-    {
-        /* Write out remaining unchanged rows. */
-        unsigned int irow;
-        for (irow = crowso2 + 1; irow < crows; ++irow)
-            pgm_writepgmrow(stdout, rowptr[irow], cols, maxval, forceplain);
-    }
     pgm_freerow(leftCol);
     pgm_freerow(rghtCol);
     free(hist);
-    free(rowptr);
+    free(cgrayrow);
+}
+
+
+
+static void
+convolve(FILE *            const ifP,
+         unsigned int      const cols,
+         unsigned int      const rows,
+         gray              const maxval,
+         int               const format,
+         unsigned int      const ccols,
+         unsigned int      const crows,
+         enum MedianMethod const medianMethod,
+         unsigned int      const median) {
+
+    unsigned int const crowso2 = crows / 2;
+
+    unsigned int row;
+
+    /* An even-size convolution window is biased toward the top and left.  So
+       if it is 8 rows, the window covers 4 rows above the target row and 3
+       rows below it, plus the target row itself.  'crowso2' is the number of
+       the target row within the window.  There are always 'crowso2' rows
+       above it and either crowso2 or crowso2-1 rows below it.
+    */
+
+    /* Allocate space for number of rows in mask size. */
+    grays = pgm_allocarray(cols, crows);
+    grayrow = pgm_allocrow(cols);
+
+    /* Prime the convolution window -- fill it except the last row */
+    for (row = 0; row < crows - 1; ++row)
+        pgm_readpgmrow(ifP, grays[row], cols, maxval, format);
+
+    /* Copy the top half out verbatim, since convolution kernel for these rows
+       runs off the top of the image.
+    */
+    for (row = 0; row < crowso2; ++row)
+        pgm_writepgmrow(stdout, grays[row], cols, maxval, forceplain);
+
+    switch (medianMethod) {
+    case SELECT_MEDIAN:
+        selectMedian(ifP, ccols, crows, cols, rows, format, maxval,
+                     median, crows-1);
+        break;
+
+    case HISTOGRAM_SORT_MEDIAN:
+        histogramSortMedian(ifP, ccols, crows, cols, rows, format, maxval,
+                            median, crows-1);
+        break;
+    case MEDIAN_UNSPECIFIED:
+        pm_error("INTERNAL ERROR: median unspecified");
+    }
+
+    /* Copy the bottom half of the remaining convolution window verbatim,
+       since convolution kernel for these rows runs off the bottom of the
+       image.
+    */
+    assert(crows >= crowso2 + 1);
+
+    for (row = rows - (crows-crowso2-1); row < rows; ++row)
+        pgm_writepgmrow(stdout, grays[row % crows], cols, maxval,
+                        forceplain);
+
+    pgm_freearray(grays, crows);
+    pgm_freerow(grayrow);
 }
 
 
 
 int
-main(int    argc,
-     char * argv[]) {
+main(int          argc,
+     const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int cols, rows;
-    int median;
-    enum medianMethod medianMethod;
+    int format;
+    gray maxval;
+    unsigned int ccols, crows;
+    unsigned int median;
+    enum MedianMethod medianMethod;
 
-    pgm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.inputFileName);
 
-    ccolso2 = cmdline.width / 2;
-    crowso2 = cmdline.height / 2;
+    assert(cmdline.height > 0 && cmdline.width > 0);
 
     pgm_readpgminit(ifP, &cols, &rows, &maxval, &format);
+
+    ccols = MIN(cmdline.width,  cols+1);
+    crows = MIN(cmdline.height, rows+1);
+
     pgm_writepgminit(stdout, cols, rows, maxval, forceplain);
 
-    /* Allocate space for number of rows in mask size. */
-    grays = pgm_allocarray(cols, cmdline.height);
-    grayrow = pgm_allocrow(cols);
-
-    /* Read in and write out initial rows that won't get changed. */
-    for (row = 0; row < cmdline.height - 1; ++row) {
-        pgm_readpgmrow(ifP, grays[row], cols, maxval, format);
-        /* Write out the unchanged row. */
-        if (row < crowso2)
-            pgm_writepgmrow(stdout, grays[row], cols, maxval, forceplain);
-    }
-
-    median = (cmdline.height * cmdline.width) / 2;
+    median = (crows * ccols) / 2;
 
     /* Choose which sort to run. */
     if (cmdline.type == MEDIAN_UNSPECIFIED) {
-        if ((maxval / ((cmdline.width * cmdline.height) - 1)) < cmdline.cutoff)
+        if ((maxval / ((ccols * crows) - 1)) < cmdline.cutoff)
             medianMethod = HISTOGRAM_SORT_MEDIAN;
         else
             medianMethod = SELECT_MEDIAN;
     } else
         medianMethod = cmdline.type;
 
-    switch (medianMethod) {
-    case SELECT_MEDIAN:
-        selectMedian(ifP, cmdline.width, cmdline.height, cols, rows, median);
-        break;
-        
-    case HISTOGRAM_SORT_MEDIAN:
-        histogramSortMedian(ifP, cmdline.width, cmdline.height,
-                            cols, rows, median);
-        break;
-    case MEDIAN_UNSPECIFIED:
-        pm_error("INTERNAL ERROR: median unspecified");
-    }
-    
+
+    convolve(ifP, cols, rows, maxval, format, ccols, crows, medianMethod,
+             median);
+
     pm_close(ifP);
     pm_close(stdout);
 
-    pgm_freearray(grays, cmdline.height);
-    pgm_freerow(grayrow);
-
     return 0;
 }
+
+

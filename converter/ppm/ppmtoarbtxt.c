@@ -1079,7 +1079,7 @@ readSkeletonFile(const char *      const filename,
                 int rc;
                 rc = getc(sklfileP);
                 if (rc == EOF) {
-                    /* Not a replacement sequence, just an escape caharacter
+                    /* Not a replacement sequence, just an escape character
                        at the end of the file.
                     */
                     Buffer_add(&buffer, escape);

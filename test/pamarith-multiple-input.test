@@ -1,0 +1,61 @@
+#! /bin/sh
+# This script tests: pamarith
+# Also requires: pgmmake ppmpat pamfunc
+
+tmpdir=${tmpdir:-/tmp}
+
+input1_pgm=${tmpdir}/input1.pgm
+
+
+echo "Test 1"
+# Compare pamarith addition with pamfunc multiplication"
+
+pgmmake -maxval=99 0.01 16 11 > ${input1_pgm}
+
+add_command="pamarith -add "${input1_pgm}
+
+for i in 1 2 3 4 5 6 7 8 9 # for i in `seq 9`
+  do
+  echo ${i}":"
+  add_command=${add_command}" "${input1_pgm}
+  ${add_command} | cksum
+  pamfunc -multiplier=$((i+1)) ${input1_pgm} | cksum
+  done
+
+rm ${input1_pgm}
+
+g2_ppm=${tmpdir}/g2.ppm
+g3_ppm=${tmpdir}/g3.ppm
+
+# Produce test input images with ppmpat
+ppmpat -g2 -color=rgb:00/00/00,rgb:ff/ff/ff 17 21 > ${g2_ppm}
+ppmpat -g3 -color=rgb:ff/00/00,rgb:00/ff/00,rgb:00/00/ff 17 21 > ${g3_ppm}
+
+echo "Test 2"
+
+cat ${g2_ppm} | cksum
+echo "-or"
+pamarith -or   ${g2_ppm} ${g2_ppm} | cksum
+pamarith -or   ${g2_ppm} ${g2_ppm} ${g2_ppm} | cksum
+pamarith -or   ${g2_ppm} ${g2_ppm} ${g2_ppm} ${g2_ppm} | cksum
+echo "-and"
+pamarith -and  ${g2_ppm} ${g2_ppm} | cksum
+pamarith -and  ${g2_ppm} ${g2_ppm} ${g2_ppm} | cksum
+pamarith -and  ${g2_ppm} ${g2_ppm} ${g2_ppm} ${g2_ppm} | cksum
+echo "-xor"
+pamarith -xor  ${g2_ppm} ${g2_ppm} ${g2_ppm} | cksum
+pamarith -xor  ${g2_ppm} ${g2_ppm} ${g2_ppm} ${g2_ppm} ${g2_ppm} | cksum
+
+
+echo "Test 3"
+# Order does not matter
+
+for function in "-add" "-and" "-or" "-xor" "-nand" "-nor"
+  do
+  echo ${function}
+  pamarith ${function} ${g2_ppm} ${g2_ppm} ${g3_ppm} | cksum
+  pamarith ${function} ${g3_ppm} ${g2_ppm} ${g2_ppm} | cksum
+  pamarith ${function} ${g2_ppm} ${g3_ppm} ${g2_ppm} | cksum
+  done
+
+rm ${g2_ppm} ${g3_ppm}

@@ -10,14 +10,12 @@ main ( int argc, char **argv ) {
     /* initial values here are just to demonstrate what gets set and
        what doesn't by the code below.
     */
-    int help_flag = 7;
-    unsigned int help_spec =7;
-    unsigned int height_spec =7;
-    unsigned int name_spec= 7;
+    unsigned int heightSpec =7;
+    unsigned int nameSpec= 7;
     char *name= "initial";
     int height=7;
-    int verbose_flag=7;
-    int debug_flag=7;
+    int verboseFlag=7;
+    int debugFlag=7;
     char ** methodlist;
     struct optNameValue * optlist;
 
@@ -26,13 +24,12 @@ main ( int argc, char **argv ) {
     optEntry * option_def;
     MALLOCARRAY(option_def, 100);
 
-    OPTENT3(0,   "help",     OPT_FLAG,       &help_flag,    &help_spec,   0);
-    OPTENT3(0,   "height",   OPT_INT,        &height,       &height_spec, 0);
-    OPTENT3('n', "name",     OPT_STRING,     &name,         &name_spec,   0);
-    OPTENT3('v', "verbose",  OPT_FLAG,       &verbose_flag, NULL,         0);
-    OPTENT3('g', "debug",    OPT_FLAG,       &debug_flag,   NULL,         0);
-    OPTENT3(0,   "methods",  OPT_STRINGLIST, &methodlist,   NULL,         0);
-    OPTENT3(0,   "options",  OPT_NAMELIST,   &optlist,      NULL,         0);
+    OPTENT3(0,   "height",   OPT_INT,        &height,       &heightSpec,  0);
+    OPTENT3('n', "name",     OPT_STRING,     &name,         &nameSpec,    0);
+    OPTENT3('v', "verbose",  OPT_FLAG,       &verboseFlag,  NULL,         0);
+    OPTENT3('g', "debug",    OPT_FLAG,       &debugFlag,    NULL,         0);
+    OPTENT3(0,   "methods",  OPT_STRINGLIST, &methodlist,   &methodSpec,  0);
+    OPTENT3(0,   "options",  OPT_NAMELIST,   &optlist,      &optSpec,     0);
 
     opt.opt_table = option_def;
     opt.short_allowed = 1;
@@ -43,16 +40,14 @@ main ( int argc, char **argv ) {
 
 
     printf("argc=%d\n", argc);
-    printf("help_flag=%d\n", help_flag);
-    printf("help_spec=%d\n", help_spec);
     printf("height=%d\n", height);
-    printf("height_spec=%d\n", height_spec);
+    printf("height_spec=%d\n", heightSpec);
     printf("name='%s'\n", name);
-    printf("name_spec=%d\n", name_spec);
-    printf("verbose_flag=%d\n", verbose_flag);
-    printf("debug_flag=%d\n", verbose_flag);
+    printf("name_spec=%d\n", nameSpec);
+    printf("verbose_flag=%d\n", verboseFlag);
+    printf("debug_flag=%d\n", verboseFlag);
 
-    if (methodlist) {
+    if (methodSpec) {
         unsigned int i;
         printf("methods: ");
         while (methodlist[i]) {
@@ -63,7 +58,7 @@ main ( int argc, char **argv ) {
     } else
         printf("No -options\n");
 
-    if (optlist) {
+    if (optSpec) {
         unsigned int i;
         while (optlist[i].name) {
             printf("option '%s' = '%s'\n", optlist[i].name, optlist[i].value);
@@ -76,7 +71,7 @@ main ( int argc, char **argv ) {
 
 Now run this program with something like
 
-  myprog -vg --name=Bryan --hei 4 "My first argument" --help
+  myprog -vg --name=Bryan --hei 4 "My first argument" --verbose
 
   or do it with opt.short_allowed=0 and
 
@@ -87,6 +82,7 @@ Now run this program with something like
   you need an OPTENTINIT call to establish the empty option table:
 
     optEntry * option_def;
+    unsigned int option_def_index;
     MALLOCARRAY(option_def, 1);
     OPTENTINIT;
 
@@ -144,8 +140,8 @@ typedef struct {
            the rightmost one affects this return value.
         */
     unsigned int *specified;
-        /* pointer to variable in which to return the number of times that
-           the option was specified.  If NULL, don't return anything.
+        /* pointer to variable in which to return 1 if the option was
+           specified and 0 if it was not.  If NULL, don't return anything.
         */
     int        flags;      /* modifier flags. */
 } optEntry;
@@ -184,7 +180,7 @@ typedef struct {
 
        unsigned int option_def_index = 0;
        optStruct *option_def = malloc(100*sizeof(optStruct));
-       OPTENTRY('h', "help",     OPT_FLAG, &help_flag, 0);
+       OPTENTRY('h', "verbose",  OPT_FLAG, &verbose_flag, 0);
        OPTENTRY(0,   "alphaout", OPT_STRING, &alpha_filename, 0);
 */
 
@@ -213,15 +209,23 @@ typedef struct {
 /* OPTENT3 is the same as OPTENTRY except that it also sets the "specified"
    element of the table entry (so it assumes OPTION_DEF is a table of optEntry
    instead of optStruct).  This is a pointer to a variable that the parser
-   will set to the number of times that the option appears in the command
-   line.
+   will set to an indication of whether the option appears in the command
+   line.  1 for yes; 0 for no.
+
+   HISTORICAL NOTE: Until 2019, this was the number of times the option was
+   specified, but much Netpbm code assumed it was never more than 1, and no
+   Netpbm code has ever given semantics to specifying the same option class
+   multiple times.
 
    Here is an example:
 
        unsigned int option_def_index = 0;
+       unsigned int verbose_flag;
+       const char * alpha_filename
+       unsigned int alpha_spec;
        MALLOCARRAY_NOFAIL(option_def, 100);
-       OPTENT3('h', "help",     OPT_FLAG, &help_flag, 0);
-       OPTENT3(0,   "alphaout", OPT_STRING, &alpha_filename, 0);
+       OPTENT3('h', "verbose",  OPT_FLAG,   &verbose_flag,   NULL,        0);
+       OPTENT3(0,   "alphaout", OPT_STRING, &alpha_filename, &alpha_spec, 0);
 */
 
 #define OPTENT3(shortvalue,longvalue,typevalue,outputvalue,specifiedvalue, \

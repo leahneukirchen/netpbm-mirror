@@ -89,7 +89,7 @@ sub imageDimensions($) {
 sub backgroundColor($) {
     my ($fileName) = @_;
 #-----------------------------------------------------------------------------
-#  Return the color of the backround of the image in the file named $fileName.
+#  Return the color of the background of the image in the file named $fileName.
 #-----------------------------------------------------------------------------
     # We call the color of the top left pixel the background color.
 
@@ -198,7 +198,7 @@ if ($keeptemp) {
     mkdir($ourtmp, 0777) or
         die("Unable to create directory for temporary files '$ourtmp");
 } else {
-    $ourtmp = File::Temp::tempdir("$tmpdir/ppmshadowXXXX", UNLINK=>1);
+    $ourtmp = File::Temp::tempdir("$tmpdir/ppmshadowXXXX", CLEANUP=>1);
 }
 
 #   Apply defaults for arguments not specified

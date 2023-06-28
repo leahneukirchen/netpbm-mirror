@@ -24,9 +24,13 @@ endif
 # build.
 
 PORTBINARIES = pamarith pambayer pamchannel pamdepth \
-	pamendian pamexec pamfix pamlookup pampick pamsplit \
+	pamendian pamfix pamlookup pampick pamsplit \
 	pamstack pamsummcol pamunlookup pamvalidate pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
+
+ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
+  PORTBINARIES += pamexec
+endif
 
 ifneq ($(LINUXSVGALIB),NONE)
   PORTBINARIES += ppmsvgalib

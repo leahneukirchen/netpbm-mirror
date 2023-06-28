@@ -1,0 +1,82 @@
+Test 1
+file: maze.pbm option: 
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -white
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -black
+0 0 0 -2 71 73 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -sides
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -top
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -bottom
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -left
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -right
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -top -bottom
+0 0 -7 0 71 68 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -bottom -bg-corner=bottomright
+0 0 0 -2 71 73 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -right -bg-corner=bottomright
+0 0 0 0 71 75 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -bg-color=white
+0 0 0 0 71 75 rgb-1:1/1/1 0.000000
+file: maze.pbm option: -bg-color=black
+0 0 0 -2 71 73 rgb-1:0/0/0 0.000000
+file: maze.pbm option: -bg-color=red
+0 0 0 0 71 75 rgb-1:0/0/0 0.000000
+file: rose.ppm option: 
+0 0 0 0 250 161 rgb-255:127/127/127 0.000000
+file: rose.ppm option: -white
+-6 0 0 0 244 161 rgb-255:255/255/255 0.000000
+file: rose.ppm option: -black
+0 -11 0 0 239 161 rgb-255:0/0/0 0.000000
+file: rose.ppm option: -sides
+-6 0 0 0 244 161 rgb-255:255/255/255 0.000000
+file: rose.ppm option: -top
+0 0 0 0 250 161 rgb-255:127/127/127 0.000000
+file: rose.ppm option: -bottom
+0 0 0 0 250 161 rgb-255:127/127/127 0.000000
+file: rose.ppm option: -left
+0 0 0 0 250 161 rgb-255:127/127/127 0.000000
+file: rose.ppm option: -right
+0 0 0 0 250 161 rgb-255:127/127/127 0.000000
+file: rose.ppm option: -top -bottom
+0 0 0 0 250 161 rgb-255:127/127/127 0.000000
+file: rose.ppm option: -bottom -bg-corner=bottomright
+0 0 0 0 250 161 rgb-255:0/0/0 0.000000
+file: rose.ppm option: -right -bg-corner=bottomright
+0 -11 0 0 239 161 rgb-255:0/0/0 0.000000
+file: rose.ppm option: -bg-color=white
+-6 0 0 0 244 161 rgb-255:255/255/255 0.000000
+file: rose.ppm option: -bg-color=black
+0 -11 0 0 239 161 rgb-255:0/0/0 0.000000
+file: rose.ppm option: -bg-color=red
+0 0 0 0 250 161 rgb-255:255/0/0 0.000000
+Test 2.  Should print 0 six times
+file: maze.pbm option:
+0
+file: maze.pbm option: -white
+0
+file: maze.pbm option: -top
+0
+file: rose.ppm option:
+0
+file: rose.ppm option: -white
+0
+file: rose.ppm option: -top
+0
+Test Invalid
+Expected failure:  -reportfull -reportsize 1
+Expected failure:  -reportfull -borderfile=testgrid.pbm 1
+Expected failure:  -reportsize -borderfile=testgrid.pbm 1
+Expected failure:  -black -white 1
+Expected failure:  -black -sides 1
+Expected failure:  -white -bg-color=red 1
+Expected failure:  -white -bg-corner=topleft 1
+Expected failure:  -white -bg-corner=top 1
+Expected failure:  -blank-image=pasturize 1
+Expected failure:  -bg-color=black -closeness=-1 1
+Expected failure:  -bg-color=black -closeness=101 1

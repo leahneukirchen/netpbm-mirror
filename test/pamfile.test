@@ -1,16 +1,46 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamfile
 # Also requires: pamchannel pamtopnm
 
+echo "Test 1"
 
 pamfile testimg.ppm
 pamfile testgrid.pbm
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | pamfile
 pamchannel -tupletype="GRAYSCALE" -infile=testimg.ppm 0 | pamfile
 
+echo "Test 2"
+
 cat testgrid.pbm testgrid.pbm testgrid.pbm | pamfile -count
 cat testgrid.pbm testgrid.pbm testgrid.pbm | pamfile -allimages
+
+echo "Test 3"
 
 pamfile -size testimg.ppm
 pamfile -machine testimg.ppm
 cat testgrid.pbm testimg.ppm testgrid.pbm | pamfile -machine
+
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamfile -size -machine  testimg.ppm > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamfile -count -machine testimg.ppm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+head -n1 testimg.ppm | pamfile > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmchange
 # Also requires: ppmrainbow pgmramp ppmhist
 

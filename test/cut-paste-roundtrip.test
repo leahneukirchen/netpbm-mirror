@@ -1,7 +1,8 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamcut pnmpaste
 # Also requires: pbmmake pnmpad
 
+tmpdir=${tmpdir:-/tmp}
 base_ppm=${tmpdir}/base.ppm
 
 # Test 1. Should produce 2999529086 101484

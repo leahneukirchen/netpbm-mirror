@@ -1,11 +1,11 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmtops pstopnm
 # Also requires: pamtopnm gs zlib
 
 # This script tests the optional flate (zlib) compression feature of
 # pstopnm.
 # Flate compression allows you to make smaller output (.ps) files:
-# it is useful, but not essential.  Flate compression is not neccessary for
+# it is useful, but not essential.  Flate compression is not necessary for
 # printing pages with postscript printers - which is why many people need
 # pnmtops on their systems.
 
@@ -17,7 +17,7 @@ tmpdir=${tmpdir:-/tmp}
 # pstopnm does not use libnetpbm functions for output.
 # Output is filtered through pamtopnm.
 
-# Test 1.  Should print: 1926073387 101484 twice
+echo "Test 1.  Should print: 1926073387 101484 twice"
 test1_ps=${tmpdir}/testimg1.ps
 
 for flag in "-ps -flate" "-ps -rle -ascii -flate"
@@ -32,16 +32,17 @@ for flag in "-ps -flate" "-ps -rle -ascii -flate"
 
 rm ${test1_ps}
 
-# Test 2. Should print: 1386192571 507420
+echo "Test 2. Should print 1831481505 608904"
 # See comments in ps-roundtrip.test
 
 test3_ps=${tmpdir}/testimg3.ps
 flag="-ps -bitspersample=12 -flate -rle -vmreclaim"
-cat testimg.ppm testimg.ppm testimg.ppm testgrid.pbm testgrid.pbm | \
-pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage ${flag} \
-  > ${test3_ps} &&
+cat testimg.ppm testimg.ppm testimg.ppm maze.pbm \
+  testgrid.pbm testgrid.pbm | \
+  pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage ${flag} \
+    > ${test3_ps} &&
 xysize3=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5 ; exit}' \
-  ${test3_ps}` &&
+    ${test3_ps}` &&
 pstopnm -portrait -xborder=0 -yborder=0 $xysize3 -stdout  ${test3_ps} | \
   pamtopnm | cksum
 

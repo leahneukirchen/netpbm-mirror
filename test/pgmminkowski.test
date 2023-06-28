@@ -1,0 +1,10 @@
+#! /bin/sh
+# This script tests: pgmminkowski
+# Also requires: pbmmake pgmmake pnmpad
+
+pgmmake .5 1 1 | pnmpad -black -top=1 -left=1 -bottom=1 -right=1 | \
+  pgmminkowski
+echo
+pbmmake -g 3 3 | pgmminkowski
+echo
+pgmminkowski testgrid.pbm

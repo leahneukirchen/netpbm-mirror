@@ -18,7 +18,18 @@ extern "C" {
 
 
 typedef pixel xel;
+    /* Xels come in three types: PBM, PGM, and PPM; the user of an Xel has to
+       know which as a matter of context (and like a pixel, the user also has
+       to interpret an xel in the context of a certain maxval).  Though the
+       structure is identical to 'pixel', the values are the same only for PPM
+       xels.  For a PGM xel, the 'r' and 'g' components of the 'xel' structure
+       are zero and the 'b' component is the gray level.  For a PBM xel, the
+       'r' and 'g' components are zero and the 'b' component is 0 for black
+       or maxval for white.
+    */
+
 typedef pixval xelval;
+
 #define PNM_OVERALLMAXVAL PPM_OVERALLMAXVAL
 #define PNM_MAXMAXVAL PPM_MAXMAXVAL
 #define pnm_unnormalize ppm_unnormalize

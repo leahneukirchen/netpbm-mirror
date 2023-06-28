@@ -8,17 +8,15 @@ The real 'hpcdtoppm' is a program that converts an image from Photo CD format
 to PPM format.  The program you are running now just issues the message you
 are reading.
 
-Please get a copy of Hpcdtoppm from 
-
-  http://terasaur.org/item/show/hpcdtoppm-netpbm-convert-photo-cd/4967
-
-and replace this stand-in program with the real one.
+Instructions for getting the 'hpcdtoppm' source code and building it into
+Netpbm are in the file converter/ppm/hpcdtoppm/README in the distributed
+Netpbm source tree.
 
 The point of this is that this stand-in 'hpcdtoppm' is distributed with Netpbm
-on Sourceforge.  Hpcdtoppm does not meet the requirements to be distributed on
-Sourceforge because a copyright holder does not permit people to sell copies.
-At one time, the real Hpcdtoppm was distributed with Netpbm on Sourceforge by
-mistake.
+on Sourceforge.  'hpcdtoppm' does not meet the requirements to be distributed
+on Sourceforge because a copyright holder does not permit people to sell
+copies.  At one time, the real 'hpcdtoppm' was distributed with Netpbm on
+Sourceforge by mistake.
 
 EOF
 

@@ -1,0 +1,40 @@
+#! /bin/bash
+# This script tests: pamdepth
+# Also requires: pbmtopgm pamtopam pamfile
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+# Test 1
+echo "Test 1"
+pamdepth 1 testgrid.pbm | tee ${test_out} | cksum
+  cat ${test_out} | pamfile -machine
+pbmtopgm 1 1 testgrid.pbm | pamdepth 1 | tee ${test_out} | cksum
+  cat ${test_out} | pamfile -machine
+pamdepth 1 testgrid.pbm | pamtopam | tee ${test_out} | cksum
+  cat ${test_out} | pamfile -machine
+pbmtopgm 1 1 testgrid.pbm | pamtopam | pamdepth 1 | tee ${test_out} | cksum
+  cat ${test_out} | pamfile -machine
+
+# Test 2
+echo "Test 2"
+pamdepth 255 testimg.ppm | cmp -s - testimg.ppm
+  echo ${PIPESTATUS[@]} ":" $?
+
+# Test Invalid
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamdepth 0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamdepth 65536 testimg.ppm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

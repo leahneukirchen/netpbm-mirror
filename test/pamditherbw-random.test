@@ -1,0 +1,23 @@
+#! /bin/sh
+# This script tests: pamditherbw
+# Also requires: pamchannel pamtopnm
+
+tmpdir=${tmpdir:-/tmp}
+test_red=${tmpdir}/testimg.red
+
+# Test 1.  Floyd-Steinberg
+echo "Test: Floyd-Steinberg"
+echo "Should print 3849876047 33894"
+
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
+  tee ${test_red} | \
+  pamditherbw -fs -randomseed=1 | cksum
+
+
+# Test 2. Atkinson
+echo "Test: Atkinson"
+echo "Should print 2887295695 33894"
+
+pamditherbw -atkinson -randomseed=1 ${test_red} | cksum
+
+rm ${test_red}

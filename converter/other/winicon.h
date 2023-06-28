@@ -65,8 +65,7 @@ typedef enum {
 
 } BiCompression;
 
-/*  PNG image structures  */
-#define PNG_HEADER { 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A /* ^Z */, '\n' }
+#define PNG_SIGNATURE { 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A /* ^Z */, '\n' }
 
 struct PngIhdr {
     uint32_t length;              /* 13 */

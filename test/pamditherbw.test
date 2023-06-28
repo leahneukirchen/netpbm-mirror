@@ -1,32 +1,109 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamditherbw
 # Also requires: pamchannel pamtopnm
-
 
 tmpdir=${tmpdir:-/tmp}
 test_red=${tmpdir}/testimg.red
 
 # Test 1.  Simple threshold
+echo "Test: simple threshold"
+
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
   tee ${test_red} | \
   pamditherbw -threshold -val=0.5 | cksum
 
-# Test 2.  Floyd-Steinberg
-#pamditherbw -floyd -val=0.5 ${test_red} | cksum
 
-# Test 3. Atkinson
-#pamditherbw -atkinson -val=0.5 ${test_red} | cksum
-
-# Test 4. Hilbert
+# Test 2. Hilbert
+echo "Test: Hilbert"
 pamditherbw -hilbert ${test_red} | cksum
+pamditherbw -hilbert -clump=4   ${test_red} | cksum
+pamditherbw -hilbert -clump=16  ${test_red} | cksum
+pamditherbw -hilbert -clump=100 ${test_red} | cksum
 
-# Test 5. Dither-8
+# Test 3. Dither-8
+echo "Test: Dither-8"
 pamditherbw -dither8 ${test_red} | cksum
 
-# Test 6. Cluster4
+# Test 4. Cluster-3
+echo "Test: Cluster-3"
 pamditherbw -cluster4 ${test_red} | cksum
 
-# Test 7. Atkinson
-#pamditherbw -atkinson -val=0.5 ${test_red} | cksum
+# Test 5. Cluster-4
+echo "Test: Cluster-4"
+pamditherbw -cluster4 ${test_red} | cksum
+
+# Test 6. Cluster-8
+echo "Test: Cluster-8"
+pamditherbw -cluster8 ${test_red} | cksum
+
+
+echo "Test: Invalid"
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pamditherbw -fs -atkinson       ${test_red} > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -floyd -atkinson    ${test_red} > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -dither8  -cluster3 ${test_red} > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -cluster3 -cluster4 ${test_red} > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -cluster3 -cluster8 ${test_red} > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -cluster4 -cluster8 ${test_red} > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -hilbert -threshold ${test_red} > ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -clump=8            ${test_red} > ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -fs -clump=8        ${test_red} > ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -hilbert -clump=1   ${test_red} > ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -th -value=-1       ${test_red} > ${test_out} || \
+  printf "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamditherbw -th -value=1.1      ${test_red} > ${test_out} || \
+  printf "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
 
 rm ${test_red}

@@ -1,0 +1,34 @@
+#! /bin/sh
+# This script tests: pamchannel pamstack
+# Also requires: pamtopam pamtopnm
+
+tmpdir=${tmpdir:-/tmp}
+r_pam=${tmpdir}/testimg_r.pam
+g_pam=${tmpdir}/testimg_g.pam
+b_pam=${tmpdir}/testimg_b.pam
+rgb_pam=${tmpdir}/testimg_rgb.pam
+
+echo "Test 1: should print 1873848880 101532 twice, then 0"
+
+pamchannel -tupletype="GRAYSCALE" -infile testimg.ppm 0 > ${r_pam}
+pamchannel -tupletype="GRAYSCALE" -infile testimg.ppm 1 > ${g_pam}
+pamchannel -tupletype="GRAYSCALE" -infile testimg.ppm 2 > ${b_pam}
+
+pamtopam < testimg.ppm | pamstack -tupletype="RGB" - | cksum
+pamstack ${r_pam} ${g_pam} | \
+pamstack -tupletype="RGB" - ${b_pam} | cksum
+pamstack ${r_pam} | \
+pamstack -tupletype="RGB" - ${g_pam} ${b_pam} | cksum
+pamstack ${r_pam} ${b_pam} ${g_pam} ${b_pam} ${b_pam} ${b_pam} | \
+  pamchannel -tupletype="RGB" 0 2 4 | cksum 
+pamstack -tupletype="RGB" ${r_pam} ${g_pam} ${b_pam} | tee ${rgb_pam} | cksum
+pamtopnm ${rgb_pam} | cmp - testimg.ppm
+echo $?
+
+echo "Test 2: Should print 447072062 33892 three times"
+
+cat ${r_pam} | cksum
+pamstack -tupletype="GRAYSCALE" ${r_pam} | cksum
+pamstack ${r_pam} | pamchannel -tupletype="GRAYSCALE" 0 | cksum
+
+rm ${r_pam} ${g_pam} ${b_pam} ${rgb_pam}

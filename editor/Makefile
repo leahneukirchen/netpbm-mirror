@@ -16,23 +16,24 @@ SUBDIRS = pamflip specialty
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamaddnoise pamaltsat pambackground pambrighten pamcomp pamcut \
-	       pamdice pamditherbw pamedge \
-	       pamenlarge \
-	       pamfunc pamhue pamlevels pammasksharpen pammixmulti \
-	       pamperspective pamrecolor pamrubber \
-	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
-	       pamwipeout \
+PORTBINARIES = pamaddnoise pamaltsat pambackground pambrighten \
+	       pamcat pamcomp pamcut \
+	       pamdice pamditherbw pamedge pamenlarge \
+	       pamfunc pamhomography pamhue pamlevels \
+	       pammasksharpen pammixmulti \
+	       pamperspective pamrecolor pamrestack pamrubber \
+	       pamscale pamshuffle pamsistoaglyph pamstretch pamthreshold \
+	       pamundice pamwipeout \
 	       pbmclean pbmmask pbmpscale pbmreduce \
 	       pgmdeshadow pgmenhance \
 	       pgmmedian \
-	       pnmalias pnmcat pnmconvol pnmcrop \
+	       pnmalias pnmconvol pnmcrop \
 	       pnmgamma \
 	       pnmhisteq pnminvert pnmmontage \
 	       pnmnlfilt pnmnorm pnmpad pnmpaste \
 	       pnmremap pnmrotate \
 	       pnmscalefixed pnmshear pnmsmooth pnmstitch pnmtile \
-	       ppmbrighten ppmchange ppmcolormask \
+	       ppmchange ppmcolormask \
 	       ppmdim ppmdist ppmdither ppmdraw \
 	       ppmflash ppmlabel ppmmix \
 
@@ -44,7 +45,7 @@ NOMERGEBINARIES =
 MERGEBINARIES = $(PORTBINARIES)
 
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
-SCRIPTS = pnmflip ppmfade ppmquant ppmshadow \
+SCRIPTS = ppmbrighten pnmflip ppmfade ppmquant ppmshadow \
 	  pamstretch-gen pnmmargin pnmquant pnmquantall 
 
 OBJECTS = $(BINARIES:%=%.o)
@@ -63,10 +64,15 @@ install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
-# backward compatibility: program used to be pnminterp
+
+# In December 2001, pamstretch replaced pnminterp and pamstretch-getn
+# replaced pnminterp-gen
 	cd $(PKGDIR)/bin ; \
 	rm -f pnminterp$(EXE); \
 	$(SYMLINK) pamstretch$(EXE) pnminterp$(EXE)
+	cd $(PKGDIR)/bin ; \
+	rm -f pnminterp-gen$(EXE); \
+	$(SYMLINK) pamstretch-gen$(EXE) pnminterp-gen$(EXE)
 # In March 2002, pnmnorm replaced ppmnorm and pgmnorm
 	cd $(PKGDIR)/bin ; \
 	rm -f ppmnorm$(EXE) ; \
@@ -100,6 +106,10 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmcomp$(EXE) ; \
 	$(SYMLINK) pamcomp$(EXE) pnmcomp$(EXE)
+# In August 2022, pamcat replaced pnmcat
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmcat$(EXE) ; \
+	$(SYMLINK) pamcat$(EXE) pnmcat$(EXE)
 
 mergecomptrylist:
 	cat /dev/null >$@
@@ -111,4 +121,5 @@ mergecomptrylist:
 	echo "TRY(\"pnmcut\",     main_pamcut);"     >>$@
 	echo "TRY(\"pnmscale\",   main_pamscale);"   >>$@
 	echo "TRY(\"pnmcomp\",    main_pamcomp);"    >>$@
+	echo "TRY(\"pnmcat\",     main_pamcomp);"    >>$@
 

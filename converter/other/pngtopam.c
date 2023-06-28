@@ -22,7 +22,7 @@
 #include <math.h>
 #include <float.h>
 #include <png.h>
-/* Becaues of a design error in png.h, you must not #include <setjmp.h> before
+/* Because of a design error in png.h, you must not #include <setjmp.h> before
    <png.h>.  If you do, png.h won't compile.
 */
 #include <setjmp.h>
@@ -668,10 +668,16 @@ dumpPngInfo(struct pngx * const pngxP) {
                    background.blue);
     }
 
-    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS))
-        pm_message("tRNS chunk (transparency): %u entries",
-                   pngx_trns(pngxP).numTrans);
-    else
+    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
+        struct pngx_trns const trns = pngx_trns(pngxP);
+
+        pm_message("tRNS chunk (transparency):");
+        pm_message("  %u palette entries", trns.numTrans);
+        pm_message("  transparent color = (%u,%u,%u)",
+                   trns.transColor.red,
+                   trns.transColor.green,
+                   trns.transColor.blue);
+    } else
         pm_message("tRNS chunk (transparency): not present");
 
     if (pngx_chunkIsPresent(pngxP, PNG_INFO_gAMA))
@@ -868,17 +874,17 @@ paletteHasPartialTransparency(struct pngx * const pngxP) {
         if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
             struct pngx_trns const trans = pngx_trns(pngxP);
 
-            bool foundGray;
+            bool foundPartial;
             unsigned int i;
 
-            for (i = 0, foundGray = FALSE;
-                 i < trans.numTrans && !foundGray;
+            for (i = 0, foundPartial = FALSE;
+                 i < trans.numTrans && !foundPartial;
                  ++i) {
                 if (trans.trans[i] != 0 && trans.trans[i] != pngxP->maxval) {
-                    foundGray = TRUE;
+                    foundPartial = TRUE;
                 }
             }
-            retval = foundGray;
+            retval = foundPartial;
         } else
             retval = FALSE;
     } else

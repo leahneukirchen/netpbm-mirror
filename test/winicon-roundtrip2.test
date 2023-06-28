@@ -1,0 +1,154 @@
+#! /bin/sh
+# This script tests: pamtowinicon winicontopam
+# Also requires: pamchannel pamdepth pamstack pamtopam pbmmake ppmpat
+# Also requires: pngtopam pnmtopng
+
+tmpdir=${tmpdir:-/tmp}
+test_pam=${tmpdir}/testimg.pam
+test1_pam=${tmpdir}/testimg1.pam
+test2_pam=${tmpdir}/testimg2.pam
+
+test4_pam=${tmpdir}/testimg4.pam
+test5_pam=${tmpdir}/testimg5.pam
+black_pam=${tmpdir}/black.pam
+white_pam=${tmpdir}/white.pam
+gray_pam=${tmpdir}/gray.pam
+
+# classic: 16 24 32 48 64
+# full: 16 32 48 256
+
+for sizes in "16 24 32 48 64" "16 32 48 256"
+  do
+  if  echo $sizes | awk '{exit !($NF==64)}' ;
+  then echo "Should print: former checksum values";
+  else echo "Should print: latter checksum values";
+  fi
+
+  for size in ${sizes}
+    do
+    ppmpat -tartan -color=rgb:1f/1f/1f,rgb:7f/ff/00,rgb:00/ff/3f \
+      ${size} ${size}
+    done | pamtopam > ${test_pam}
+
+  for size in ${sizes}
+    do
+    pbmmake -black ${size} ${size} | pamdepth 255
+    done | pamtopam > ${black_pam}
+
+  for size in ${sizes}
+    do
+    pbmmake -white ${size} ${size} | pamdepth 255
+    done | pamtopam > ${white_pam}
+
+  for size in ${sizes}
+    do
+    pbmmake -gray ${size} ${size} | pamdepth 255
+    done | pamtopam > ${gray_pam}
+
+# 1 plane
+
+  echo ${sizes} ": 1 plane"
+  echo "Should print 2588356089 8591 or 3783949470 69390 four times"
+
+  pamchannel -tupletype="GRAYSCALE" 0 < ${test_pam} | \
+    tee ${test1_pam} | cksum
+  pamtowinicon ${test1_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="GRAYSCALE" 0 | cksum
+  pamtowinicon -pngthreshold=300 ${test1_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="GRAYSCALE" 0 | cksum
+  pamtowinicon -pngthreshold=1   ${test1_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="GRAYSCALE" 0 | cksum
+
+  rm ${test1_pam}
+
+# 2 planes
+
+  echo ${sizes} ": 2 planes"
+  echo "Should print 3357739334 16877 or 3331485515 138534 four times"
+
+  pamstack ${gray_pam} ${gray_pam} | \
+  pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | tee ${test2_pam} | cksum
+  pamtowinicon ${test2_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | pamdepth 255 | cksum
+  pamtowinicon -pngthreshold=300 ${test2_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | cksum
+  pamtowinicon -pngthreshold=1   ${test2_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="GRAYSCALE_ALPHA" 0 1 | pamdepth 255 | cksum
+
+  rm ${test2_pam}
+
+# 3 planes
+
+  echo ${sizes} ": 3 planes"
+  echo "Should print 3734212737 25073 or 56221695 207606 four times"
+
+  pamchannel -tupletype="RGB" 0 1 2 < ${test_pam} | cksum
+  pamtowinicon ${test_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="RGB" 0 1 2 | cksum
+  pamtowinicon -pngthreshold=300 ${test_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="RGB" 0 1 2 | cksum
+  pamtowinicon -pngthreshold=1   ${test_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="RGB" 0 1 2 | cksum
+  
+# 4 planes
+
+  echo ${sizes} ": 4 planes"
+  echo "Should print 1294260080 33359 or 732184466 276750 four times"
+
+  pamdepth 255 ${black_pam} | pamstack ${test_pam} - | \
+  pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | tee ${test4_pam} | cksum
+  pamtowinicon ${test4_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | cksum
+  pamtowinicon -pngthreshold=300 ${test4_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | cksum
+  pamtowinicon -pngthreshold=1   ${test4_pam} | winicontopam -allimages | \
+    pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | cksum
+
+  rm ${test4_pam}
+
+# 5 planes
+
+  echo ${sizes} ": 5 planes: output 3"
+  echo "Should print 3734212737 25073 or 56221695 207606 four times"
+
+  pamstack ${test_pam} ${gray_pam} ${white_pam} | \
+  pamchannel -tupletype="RGB" 0 1 2 | \
+    tee ${test5_pam} | cksum
+  pamtowinicon ${test5_pam} | winicontopam -allimages -andmasks | \
+    pamchannel -tupletype="RGB" 0 1 2 | cksum
+  pamtowinicon -pngthreshold=300 ${test5_pam} | \
+    winicontopam -allimages -andmasks | \
+    pamchannel -tupletype="RGB" 0 1 2 | cksum
+  pamtowinicon -pngthreshold=1   ${test5_pam} | \
+    winicontopam -allimages -andmasks | \
+    pamchannel -tupletype="RGB" 0 1 2 | cksum
+    
+  echo ${sizes} ": 5 planes : output 4"
+  echo "Should print 2704877198 33359 or 1699833476 276750 four times"
+
+  pamstack ${test_pam} ${gray_pam} ${white_pam} | \
+  pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | \
+    tee ${test5_pam} | cksum
+  pamtowinicon ${test5_pam} | winicontopam -allimages -andmasks | \
+    pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | cksum
+  pamtowinicon -pngthreshold=300 ${test5_pam} | \
+    winicontopam -allimages -andmasks  | \
+    pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | cksum
+  pamtowinicon -pngthreshold=1   ${test5_pam} | \
+    winicontopam -allimages -andmasks | \
+    pamchannel -tupletype="RGB_ALPHA" 0 1 2 3 | cksum
+    
+  echo ${sizes} ": 5 planes : output 5"
+  echo "Should print 2567279592 41655 or 4154838752 345902 twice"
+
+  pamstack ${test_pam} ${gray_pam} ${white_pam} | \
+  pamchannel -tupletype="RGB_ALPHA_ANDMASK" 0 1 2 3 4 | \
+    tee ${test5_pam} | cksum
+  pamtowinicon -pngthreshold=300 ${test5_pam} | \
+    winicontopam -allimages -andmasks  | \
+    pamchannel -tupletype="RGB_ALPHA_ANDMASK" 0 1 2 3 4 | cksum
+    
+  rm ${test5_pam}
+
+  rm ${test_pam} ${gray_pam} ${white_pam} ${black_pam}
+done

@@ -35,7 +35,7 @@ enum compmode {COMPMODE_INTEGER, COMPMODE_REAL};
 
 enum progression {PROG_LRCP, PROG_RLCP, PROG_RPCL, PROG_PCRL, PROG_CPRL};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -53,6 +53,8 @@ struct cmdlineInfo {
     enum compmode compmode;
     unsigned int compressionSpec;
     float        compression;
+    unsigned int size;
+    unsigned int sizeSpec;
     char *       ilyrrates;
     enum progression progression;
     unsigned int numrlvls;
@@ -73,10 +75,10 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
-   *cmdline_p structure are actually in the supplied argv array.  And
+   *cmdlineP structure are actually in the supplied argv array.  And
    sometimes, one of these strings is actually just a suffix of an entry
    in argv!
 -----------------------------------------------------------------------------*/
@@ -126,6 +128,8 @@ parseCommandLine(int argc, char ** argv,
             &modeSpec,           0);
     OPTENT3(0, "compression",  OPT_FLOAT,  &cmdlineP->compression,
             &cmdlineP->compressionSpec,    0);
+    OPTENT3(0, "size",         OPT_UINT,   &cmdlineP->size,
+            &cmdlineP->sizeSpec,           0);
     OPTENT3(0, "ilyrrates",    OPT_STRING, &cmdlineP->ilyrrates,
             &ilyrratesSpec,      0);
     OPTENT3(0, "progression",  OPT_STRING, &progressionOpt,
@@ -218,6 +222,9 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->numgbits = 2;
     if (!debuglevelSpec)
         cmdlineP->debuglevel = 0;
+
+    if (cmdlineP->compressionSpec && cmdlineP->sizeSpec)
+        pm_error("You cannot specify by -compression and -size");
 
     if (argc - 1 == 0)
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
@@ -372,9 +379,11 @@ convertToJasperImage(struct pam *   const inpamP,
 
 static void
 writeJpc(jas_image_t *      const jasperP,
-         struct cmdlineInfo const cmdline,
-         FILE *             const ofP) {
-
+         struct CmdlineInfo const cmdline,
+         int                const ofd) {
+/*----------------------------------------------------------------------------
+   Write the image *jasperP to open file 'ofd'.
+-----------------------------------------------------------------------------*/
     jas_stream_t * outStreamP;
     const char * options;
     const char * ilyrratesOpt;
@@ -403,6 +412,8 @@ writeJpc(jas_image_t *      const jasperP,
 
     if (cmdline.compressionSpec)
         sprintf(rateOpt, "rate=%1.9f", 1.0/cmdline.compression);
+    else if (cmdline.sizeSpec)
+        sprintf(rateOpt, "rate=%uB", cmdline.size);
     else {
         /* No 'rate' option.  This means there is no constraint on the image
            size, so the encoder will compress losslessly.  Note that the
@@ -459,7 +470,7 @@ writeJpc(jas_image_t *      const jasperP,
     pm_strfree(ilyrratesOpt);
 
     /* Open the output image file (Standard Output) */
-    outStreamP = jas_stream_fdopen(fileno(ofP), "w+b");
+    outStreamP = jas_stream_fdopen(ofd, "w+b");
     if (outStreamP == NULL)
         pm_error("Unable to open output stream.  jas_stream_fdopen() "
                  "failed");
@@ -500,7 +511,7 @@ writeJpc(jas_image_t *      const jasperP,
 int
 main(int argc, char **argv)
 {
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam;
     jas_image_t * jasperP;
@@ -526,7 +537,7 @@ main(int argc, char **argv)
 
     convertToJasperImage(&inpam, &jasperP);
 
-    writeJpc(jasperP, cmdline, stdout);
+    writeJpc(jasperP, cmdline, fileno(stdout));
 
 	jas_image_destroy(jasperP);
 

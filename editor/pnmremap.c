@@ -28,6 +28,7 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 #include "ppm.h"
@@ -399,20 +400,21 @@ randomizeError(long **       const err,
    Set a random error in the range [-1 .. 1] (normalized via FS_SCALE)
    in the error array err[][].
 -----------------------------------------------------------------------------*/
-    unsigned int const seed = (random.init == RANDOM_WITHSEED) ?
-        random.seed : pm_randseed();
-
     unsigned int col;
+    struct pm_randSt randSt;
 
     assert(random.init != RANDOM_NONE);
 
-    srand(seed);
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, random.init == RANDOM_WITHSEED, random.seed);
 
     for (col = 0; col < width; ++col) {
         unsigned int plane;
         for (plane = 0; plane < depth; ++plane)
-            err[plane][col] = rand() % (FS_SCALE * 2) - FS_SCALE;
+            err[plane][col] = pm_rand(&randSt) % (FS_SCALE * 2) - FS_SCALE;
     }
+
+    pm_randterm(&randSt);
 }
 
 
@@ -1043,13 +1045,6 @@ copyRaster(struct pam *   const inpamP,
     inrow  = pnm_allocpamrow(inpamP);
     outrow = pnm_allocpamrow(&workpam);
 
-    if (outpamP->maxval != inpamP->maxval && defaultColor)
-        pm_error("The maxval of the colormap (%u) is not equal to the "
-                 "maxval of the input image (%u).  This is allowable only "
-                 "if you are doing an approximate mapping (i.e. you don't "
-                 "specify -firstisdefault or -missingcolor)",
-                 (unsigned int)outpamP->maxval, (unsigned int)inpamP->maxval);
-
     selectDepthAdjustment(inpamP, outpamP->depth, &depthAdjustment);
 
     usehash = TRUE;
@@ -1119,6 +1114,13 @@ remap(FILE *             const ifP,
         outpam = *outpamCommonP;
         outpam.width  = inpam.width;
         outpam.height = inpam.height;
+
+        if (outpam.maxval != inpam.maxval && defaultColor)
+            pm_error("The maxval of the colormap (%u) is not equal to the "
+                     "maxval of the input image (%u).  This is allowable only "
+                     "if you are doing an approximate mapping (i.e. you don't "
+                     "specify -firstisdefault or -missingcolor)",
+                     (unsigned int)outpam.maxval, (unsigned int)inpam.maxval);
 
         pnm_writepaminit(&outpam);
 

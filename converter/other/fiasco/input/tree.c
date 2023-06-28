@@ -2,7 +2,7 @@
  *  tree.c:		Input of bintree partitioning
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -31,7 +31,7 @@
 /*****************************************************************************
 
 				prototypes
-  
+
 *****************************************************************************/
 
 static unsigned
@@ -39,14 +39,14 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
 			   unsigned y, unsigned *dst_state,
 			   word_t (*bfo_tree)[MAXLABELS],
 			   wfa_t *wfa, tiling_t *tiling);
-static void 
+static void
 decode_tree (bitfile_t *input, byte_t *data, unsigned n_data, unsigned scaling,
 	     u_word_t sum0, u_word_t sum1);
 
 /*****************************************************************************
 
 				public code
-  
+
 *****************************************************************************/
 
 void
@@ -64,7 +64,7 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
 {
    byte_t *bitstring;			/* the encoded data */
    word_t (*bfo_tree)[MAXLABELS];	/* node numbers in BFO */
-      
+
    /*
     *  Read WFA tree stored in breadth first order
     */
@@ -75,7 +75,7 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
       bitstring = Calloc (total, sizeof (byte_t));
       decode_tree (input, bitstring, total, scale, 1, 11);
    }
-   
+
    /*
     *  Generate tree using a breadth first traversal
     */
@@ -84,7 +84,7 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
       unsigned 	state;
       unsigned 	label;
       byte_t   *buffer = bitstring;	/* pointer to decoded data */
-      
+
       bfo_tree = Calloc (wfa->states * MAXLABELS, sizeof (word_t));
       for (state = 0, next = 1; state < next; state++)
 	 for (label = 0; label < MAXLABELS; label++)
@@ -110,7 +110,7 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
 /*****************************************************************************
 
 				private code
-  
+
 *****************************************************************************/
 
 static unsigned
@@ -119,13 +119,13 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
 			   word_t (*bfo_tree)[MAXLABELS],
 			   wfa_t *wfa, tiling_t *tiling)
 /*
- *  Map state 'src_state' (breadth first order) 
+ *  Map state 'src_state' (breadth first order)
  *  to state '*dst_state' (depth first order)
  *  Add a tree edge 'state' --> 'child' with label and weight 1.0
  *  if required.
  *  'x', 'y' give the coordinates of the current state in the 'color' image
- *  of size 'image_level'. 'tiling' defines the image partitioning. 
- *  
+ *  of size 'image_level'. 'tiling' defines the image partitioning.
+ *
  *  Return value:
  *	new node number in depth first order
  *
@@ -134,8 +134,8 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
  *      are filled with decoded values.
  */
 {
-   unsigned newx [MAXLABELS];		/* x coordinate of childs */
-   unsigned newy [MAXLABELS];		/* y coordinate of childs */
+   unsigned newx [MAXLABELS];		/* x coordinate of children */
+   unsigned newy [MAXLABELS];		/* y coordinate of children */
    unsigned x0, y0;			/* NW corner of image tile */
    unsigned width, height;		/* size of image tile */
 
@@ -145,7 +145,7 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
    if (tiling->exponent && level == wfa->wfainfo->level - tiling->exponent)
    {
       unsigned tile;
-      
+
       for (tile = 0; tile < 1U << tiling->exponent; tile++)
       {
 	 locate_subimage (wfa->wfainfo->level, level, tile,
@@ -159,7 +159,7 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
       }
    }
    /*
-    *  Coordinates of childs 0 and 1
+    *  Coordinates of children 0 and 1
     */
    if (wfa->wfainfo->color && level == wfa->wfainfo->level + 1)
       newx[0] = newy[0] = newx[1] = newy[1] = 0;
@@ -170,12 +170,12 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
       newx[1] = level & 1 ? x : x + width_of_level (level - 1);
       newy[1] = level & 1 ? y + height_of_level (level - 1) : y;
    }
-   
+
    /*
     *  Remap node numbers
     */
    {
-      int      child [MAXLABELS];	/* childs of current node (state) */
+      int      child [MAXLABELS];	/* children of current node (state) */
       int      domain;			/* current domain */
       unsigned label;
 
@@ -196,17 +196,17 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
       }
       wfa->level_of_state [*dst_state] = level;
    }
-   
+
    return (*dst_state)++;
-}	
+}
 
 /****************************************************************************
 
                  Binary adaptive arithmetic compression
- 
+
 ****************************************************************************/
 
-static void 
+static void
 decode_tree (bitfile_t *input, byte_t *data, unsigned n_data, unsigned scaling,
 	     u_word_t sum0, u_word_t sum1)
 /*
@@ -235,11 +235,11 @@ decode_tree (bitfile_t *input, byte_t *data, unsigned n_data, unsigned scaling,
    low  = 0;
    high = 0xffff;
 
-   for (n = n_data; n; n--) 
+   for (n = n_data; n; n--)
    {
       unsigned count;			/* Current interval count */
       unsigned range;			/* Current interval range */
-      
+
       count = (((code - low) + 1) * sum1 - 1) / ((high - low) + 1);
       if (count < sum0)
       {

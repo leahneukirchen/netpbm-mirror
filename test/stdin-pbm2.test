@@ -1,0 +1,78 @@
+#! /bin/sh
+# This script tests: atktopbm pbmtoatk
+# This script tests: cistopbm pbmtocis
+# This script tests: cmuwmtopbm pbmtocmuwm
+# This script tests: escp2topbm pbmtoescp2
+# This script tests: g3topbm pbmtog3
+# This script tests: gemtopnm pbmtogem
+# This script tests: macptopbm pbmtomacp
+# This script tests: mdatopbm pbmtomda
+# This script tests: mgrtopbm pbmtomgr
+# This script tests: mrftopbm pbmtomrf
+# This script tests: pi3topbm pbmtopi3
+# This script tests: sunicontopnm pbmtosunicon
+# This script tests: wbmptopbm pbmtowbmp
+# This script tests: ybmtopbm pbmtoybm
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+
+for fmt in  \
+        atk \
+        cis \
+        cmuwm \
+        escp2 \
+        g3 \
+        gem \
+        macp \
+        mda \
+        mgr \
+        mrf \
+        pi3 \
+        sunicon \
+        wbmp \
+        ybm
+  do
+  testprog1="pbmto"${fmt}
+
+  if [ ${fmt} = "sunicon" -o ${fmt} = "gem" ];
+    then testprog2=${fmt}"topnm";
+    else testprog2=${fmt}"topbm";
+  fi
+
+  ${testprog1} testgrid.pbm > ${out1};     status1=$?
+  ${testprog1} < testgrid.pbm > ${out2};   status2=$?
+  test -s ${out1};                         status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog1}": "${status1} ${status2} ${status3} $?
+  rm ${out2}
+
+  ${testprog2} ${out1} > ${out3};      status3=$?
+  ${testprog2} < ${out1} > ${out4};    status4=$?
+
+  if [ ${fmt} = "xbm" ];
+    then sed -i '3s/noname/testgrid/' ${out3};
+  fi
+
+  test -s ${out3};                         status5=$?
+  cmp -s ${out3} ${out4}
+  echo ${testprog2}": "${status3} ${status4} ${status5} $?
+  rm ${out1} ${out3} ${out4}
+  done
+
+# We don't test Pbmtopgm Pgmtopbm Asciitopbm Asciitopgm here
+
+# Pbmtopk Pktopbm require resolution output pk file, tk file
+#            some conditions apply to input image dimensions
+
+# These three programs embed the input file name in the output
+# If the input is from stdin, "noname"
+# Pbmtolps tested in lps-roundtrip.test
+# Pbmtoxbm           xbm-roundtrip.test
+# Pbmtozinc          pbm-misc-converters.test
+
+# Icontopbm Pbmtoicon Pbmtox10bm are legacy

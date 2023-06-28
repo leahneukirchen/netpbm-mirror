@@ -21,3 +21,11 @@ vertices:	224
     area:	56
 perimeter:	224
  eulerchi:	56
+
+   tiles:	1627
+ x-edges:	2479
+ y-edges:	2427
+vertices:	3376
+    area:	1627
+perimeter:	3304
+ eulerchi:	97

@@ -25,6 +25,13 @@ at appropriate places within the package.  A slightly out of date
 summary of all the copyrights is in the file 'doc/copyright_summary'
 in the Netpbm source tree.
 
+Each component is a package of code and documentation; e.g. the 'pamcomp'
+program and the pamcomp user manual go together and are licensed to the public
+as a package.  The Netpbm manual is just a hyperlinked collection of such
+component manuals.  Parts of the manual that are not tied to a particular
+component of code and do not carry a copyright notice are in the public
+domain.
+
 As with most public open source software, no one really knows for sure
 where the code came from.  It is possible that a contributor copied it
 without license to do so.  That might mean any user of the code owes
@@ -35,6 +42,6 @@ maintainer's knowledge."
 
 
 Netpbm may practice valid patents, which would mean that you owe someone
-royalties if you use the code.  This is a miniscule risk, though.
+royalties if you use the code.  This is a minuscule risk, though.
 What is known about patents related to Netpbm is in the file
 'doc/patent_summary' in the Netpbm source tree.

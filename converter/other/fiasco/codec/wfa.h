@@ -2,7 +2,7 @@
  *  wfa.h
  *
  *  Written by:		Ullrich Hafner
- *		
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -20,7 +20,7 @@
 #define MAXEDGES  5
 #define MAXSTATES 6000
 #define MAXLABELS 2			/* only bintree possible anymore */
-#define MAXLEVEL  22 
+#define MAXLEVEL  22
 
 #define FIASCO_BINFILE_RELEASE   2
 #define FIASCO_MAGIC	         "FIASCO" /* FIASCO magic number */
@@ -85,7 +85,7 @@ typedef struct wfa_info
    char	    *basis_name;		/* filename of the initial basis */
    char     *title;			/* title of FIASCO stream */
    char     *comment;			/* comment for FIASCO stream */
-   
+
    unsigned  max_states;		/* max. cardinality of domain pool */
    unsigned  chroma_max_states;		/* max. cardinality of domain pool for
 					   chroma band coding */
@@ -111,7 +111,7 @@ typedef struct wfa_info
 
 typedef struct wfa
 /*
- *  Used to store all informations and data structures of a WFA
+ *  Used to store all information and data structures of a WFA
  */
 {
    wfa_info_t	*wfainfo;		/* misc. information about the WFA */

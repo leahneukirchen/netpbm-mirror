@@ -1,7 +1,128 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pgmnoise
-# Also requires:
+# Also requires: pgmhist pamvalidate pamfile
 
-# Should print: 1663614689 10015 (Glibc)
-#               3516404574 10015 (MAC OS)
+echo "Test 1."
+echo "Should print: 2132901423 10015" # (Mersenne Twister)
+#                   1663614689 10015 (Glibc rand())
+#                   3516404574 10015 (MAC OS rand())
 pgmnoise --randomseed=0 100 100 | cksum
+
+
+echo "Test 2."
+# Output is similar to that of Test 2. of random-generator.test
+# The lowest four decimal digits are printed.
+
+pgmnoise --randomseed=5489 -maxval=9999 -plain 5 20
+
+
+echo "Test 3."
+for maxval in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 255 65535
+  do
+  echo ${maxval}
+  pgmnoise -maxval=${maxval} -randomseed=1 -plain 16 1 | tr '\n' ' '
+  done
+echo
+
+echo "Test 4."
+# Check for maxval violation
+for maxval in  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 \
+               30 31 32 254 255 256 65534 65535
+  do
+  printf "%d  " ${maxval}
+  pgmnoise -maxval=${maxval} -randomseed=1 -plain ${maxval} 10 | \
+    pamvalidate | pamfile
+  done
+
+echo "Test 5."
+echo "Should print four identical lines"
+# width height values do not affect random number sequence
+for xysize in "1 10000" "100 100" "250 40" "1000 10"
+  do pgmnoise --randomseed=0 ${xysize} | pgmhist -mach | cksum
+  done
+
+
+tmpdir=${tmpdir:-/tmp}
+outfile=${tmpdir}/out
+
+echo "Test 6."
+echo "First column should be 2^n - 1.  Last column should be 'pool'."
+# The "pool" method of generating pixvals is used iff maxval is
+# a power of 2 minus 1: 1, 3, 7, 15, 31 ...
+
+    
+for maxval in \
+    1 2 3 4 5 6 7 8 9 \
+    10 11 12 13 14 15 16 17 18 19 \
+    20 21 22 23 24 25 26 27 28 29 \
+    30 31 32 33  60 61 62 63 64 65 \
+    127 255 511 1023  65535 \
+    129 142 186 219 677 1068 1788 1820 2067 2154 2301 2317 \
+    5180 5321 5596 6304 7565 9525 \
+    10501 14178 25797 27451 28653
+    do
+    pgmnoise -maxval=${maxval} -plain -randomseed=1 -verbose 1 1 \
+		 > /dev/null 2> ${outfile}
+    awk -v mval=${maxval} '/method/ && /pool/ { print mval, $0 }' ${outfile}
+    rm ${outfile}
+    done
+
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line arguments." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pgmnoise 0 0  > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise 0 1  > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise 1 0  > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise      > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise 1    > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise 100 -1 > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise -randomseed=-1 100 100  > ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise -maxval=-1 100 100  > ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise -maxval=0 100 100  > ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pgmnoise -maxval=$((256 * 256 * 256 * 256)) 10 10 > ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

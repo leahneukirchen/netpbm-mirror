@@ -2,6 +2,7 @@
 
 all-in-place.test
 legacy-names.test
+random-generator.test
 
 # Generator tests
 
@@ -15,6 +16,8 @@ pbmtext.test
 pbmtext-bdf.test
 pbmtext-iso88591.test
 pbmtext-utf8.test
+pbmtextps-dump.test
+pbmtextps.test
 pbmupc.test
 pgmramp.test
 pamgauss.test
@@ -22,10 +25,15 @@ ppmcie.test
 ppmwheel.test
 pamcrater.test
 ppmpat.test
+ppmforge-parameters.test
 
 # Generators with random components
 
+pbmnoise1.test
+pbmnoise2.test
+pbmnoise-parameters.test
 pgmnoise.test
+pgmnoise-parameters.test
 ppmpat-random.test
 ppmforge.test
 ppmrough.test
@@ -40,10 +48,15 @@ ppmhist.test
 pamsumm.test
 pnmpsnr.test
 pbmminkowski.test
+pgmminkowski.test
+
+pnmcolormap.test
+pnmcolormap2.test
 
 # Basic (internal) converter tests
 
 pamtopam.test
+pbmtopgm.test
 pgmtopgm.test
 ppmtoppm.test
 pgmtoppm.test
@@ -52,24 +65,43 @@ pnmtopnm-plain.test
 
 # Editor tests
 
+pamdepth.test
+
 pamditherbw.test
+pamditherbw-random.test
+pamhue.test
 
 pbmclean.test
 pamcut.test
+pamcat1.test
+pamcat2.test
+pamcat3.test
 pnmcat.test
+pamdice.test
+pamundice.test
+
 pamflip1.test
 pamflip2.test
 pnminvert.test
 pamchannel.test
 ppmchange.test
 pambackground.test
+pnmpad-reportonly.test
 pnmpaste-pbm.test
 
+pamrestack.test
+pamshuffle.test
+ppmshift.test
+ppmspread.test
+
 pbmpscale.test
+pamrecolor.test
 pnmremap1.test
 pnmremap2.test
+pnmquant.test
 pnmquantall.test
 pnmtile.test
+pambrighten.test
 ppmbrighten.test
 ppmdither.test
 ppmrelief.test
@@ -77,6 +109,11 @@ pamedge.test
 ppmdim.test
 pnmshear.test
 pgmbentley.test
+
+pamfunc.test
+pamarith.test
+pamarith-compare-equal.test
+pamarith-multiple-input.test
 
 pamenlarge.test
 pamenlarge-pbm.test
@@ -89,6 +126,11 @@ pamenlarge-pamscale-point.test
 
 pamstretch.test
 
+pnmcrop1.test
+pnmcrop2.test
+pnmcrop3.test
+pnmcrop-blank.test
+
 ppmmix.test
 pammixmulti-identity.test
 
@@ -96,18 +138,41 @@ pammixmulti-identity.test
 
 symmetry.test
 
+# Standard input tests
+
+stdin-pbm1.test
+stdin-pbm2.test
+stdin-pgm1.test
+stdin-pgm2.test
+stdin-ppm1.test
+stdin-ppm2.test
+stdin-ppm3.test
+stdin-pnm1.test
+stdin-pnm2.test
+stdin-pam1.test
+stdin-pam2.test
+stdin-pam3.test
+
+pbm-misc-converters.test
+
 # Format converter tests
 
 pamtopdbimg.test
 pbmtog3.test
+ppmtoapplevol.test
 411toppm.test
 eyuvtoppm.test
+rawtoppm.test
 
-pbm-misc-converters.test
+gif-transparent1.test
 
 # Miscellaneous utility tests
 
 ppmdfont.test
+pamfix.test
+pamvalidate.test
+pamexec.test
+pbmlife.test
 
 # Round-trip tests : editors
 
@@ -115,8 +180,10 @@ pnm-plain-roundtrip.test
 pnm-pam-roundtrip.test
 pnminvert-roundtrip.test
 pamflip-roundtrip.test
+pamflip-pbm-roundtrip.test
 pamdepth-roundtrip.test
 pad-crop-roundtrip.test
+pbm-ppm-roundtrip.test
 cut-paste-roundtrip.test
 rgb3-roundtrip.test
 ppmchange-roundtrip.test
@@ -125,6 +192,13 @@ pamslice-roundtrip.test
 lookup-roundtrip.test
 enlarge-reduce-roundtrip.test
 cut-cat-roundtrip.test
+pamhue-roundtrip.test
+
+# Round-trip tests: miscellaneous utilities
+
+pamendian-roundtrip.test
+pamexec-roundtrip.test
+channel-stack-roundtrip.test
 
 # Round-trip tests : lossless converters
 
@@ -160,9 +234,11 @@ pi3-roundtrip.test
 pict-roundtrip.test
 png-roundtrip.test
 png-roundtrip2.test
+pj-roundtrip.test
 ps-roundtrip.test
 ps-flate-roundtrip.test
 ps-alt-roundtrip.test
+qoi-roundtrip.test
 sgi-roundtrip.test
 sbig-roundtrip.test
 st4-roundtrip.test
@@ -174,6 +250,7 @@ tiff-flate-lzw-roundtrip.test
 utahrle-roundtrip.test
 wbmp-roundtrip.test
 winicon-roundtrip.test
+winicon-roundtrip2.test
 xbm-roundtrip.test
 xpm-roundtrip.test
 xv-roundtrip.test
@@ -183,5 +260,6 @@ xwd-roundtrip.test
 
 fiasco-roundtrip.test
 jpeg-roundtrip.test
+lps-roundtrip.test
 tiffcmyk-roundtrip.test
 yuv-roundtrip.test

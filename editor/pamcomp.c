@@ -208,31 +208,26 @@ parseCommandLine(int                        argc,
 
 
 
-static int
-commonFormat(int const formatA,
-             int const formatB) {
-/*----------------------------------------------------------------------------
-   Return a viable format for the result of composing the two formats
-   'formatA' and 'formatB'.
------------------------------------------------------------------------------*/
-    int retval;
+static void
+initAlphaFile(struct CmdlineInfo const cmdline,
+              struct pam *       const overlayPamP,
+              FILE **            const filePP,
+              struct pam *       const pamP) {
 
-    int const typeA = PAM_FORMAT_TYPE(formatA);
-    int const typeB = PAM_FORMAT_TYPE(formatB);
+    FILE * fileP;
 
-    if (typeA == PAM_TYPE || typeB == PAM_TYPE)
-        retval = PAM_FORMAT;
-    else if (typeA == PPM_TYPE || typeB == PPM_TYPE)
-        retval = PPM_FORMAT;
-    else if (typeA == PGM_TYPE || typeB == PGM_TYPE)
-        retval = PGM_FORMAT;
-    else if (typeA == PBM_TYPE || typeB == PBM_TYPE)
-        retval = PBM_FORMAT;
-    else {
-        /* Results are undefined for this case, so we do a hail Mary. */
-        retval = formatA;
-    }
-    return retval;
+    if (cmdline.alphaFilespec) {
+        fileP = pm_openr(cmdline.alphaFilespec);
+        pamP->comment_p = NULL;
+        pnm_readpaminit(fileP, pamP, PAM_STRUCT_SIZE(opacity_plane));
+
+        if (overlayPamP->width != pamP->width ||
+            overlayPamP->height != pamP->height)
+            pm_error("Opacity map and overlay image are not the same size");
+    } else
+        fileP = NULL;
+
+    *filePP = fileP;
 }
 
 
@@ -241,84 +236,21 @@ typedef enum { TT_BLACKANDWHITE, TT_GRAYSCALE, TT_RGB } BaseTupletype;
 
 
 
-static BaseTupletype
-commonTupletype(const char * const tupletypeA,
-                const char * const tupletypeB) {
-
-    if (strneq(tupletypeA, "RGB", 3) ||
-        strneq(tupletypeB, "RGB", 3))
-        return TT_RGB;
-    else if (strneq(tupletypeA, "GRAYSCALE", 9) ||
-             strneq(tupletypeB, "GRAYSCALE", 9))
-        return TT_GRAYSCALE;
-    else if (strneq(tupletypeA, "BLACKANDWHITE", 13) ||
-             strneq(tupletypeB, "BLACKANDWHITE", 13))
-        return TT_BLACKANDWHITE;
-    else
-        /* Results are undefined for this case, so we do a hail Mary. */
-        return TT_RGB;
-}
-
-
-
 static void
-determineOutputTupleType(BaseTupletype const baseTupletype,
-                         bool          const underlayHaveOpacity,
-                         char *        const tupleType,
-                         size_t        const size) {
+validateComputableHeight(int const originTop,
+                         int const overRows) {
 
-    char buffer[80];
-
-    switch (baseTupletype) {
-    case TT_BLACKANDWHITE:
-        STRSCPY(buffer, "RGB");
-        break;
-    case TT_GRAYSCALE:
-        STRSCPY(buffer, "GRAYSCALE");
-        break;
-    case TT_RGB:
-        STRSCPY(buffer, "RGB");
-        break;
+    if (originTop < 0) {
+        if (originTop < -INT_MAX)
+            pm_error("Overlay starts too far above the underlay image to be "
+                     "computable.  Overlay can be at most %d rows above "
+                     "the underlay.", INT_MAX);
+    } else {
+        if (INT_MAX - originTop <= overRows)
+            pm_error("Too many total rows involved to be computable.  "
+                     "You must have a shorter overlay image or compose it "
+                     "higher on the underlay image.");
     }
-
-    if (underlayHaveOpacity)
-        STRSCAT(buffer, "_ALPHA");
-
-    strncpy(tupleType, buffer, size);
-}
-
-
-
-static void
-determineOutputType(const struct pam * const underlayPamP,
-                    const struct pam * const overlayPamP,
-                    struct pam *       const composedPamP) {
-
-    BaseTupletype const baseTupletype =
-        commonTupletype(underlayPamP->tuple_type, overlayPamP->tuple_type);
-
-    composedPamP->height = underlayPamP->height;
-    composedPamP->width  = underlayPamP->width;
-
-    composedPamP->format = commonFormat(underlayPamP->format,
-                                        overlayPamP->format);
-    composedPamP->plainformat = FALSE;
-
-    composedPamP->maxval = pm_lcm(underlayPamP->maxval, overlayPamP->maxval,
-                                  1, PNM_OVERALLMAXVAL);
-
-    composedPamP->visual = true;
-    composedPamP->color_depth = (baseTupletype == TT_RGB ? 3 : 1);
-    composedPamP->have_opacity = underlayPamP->have_opacity;
-    composedPamP->opacity_plane = (baseTupletype == TT_RGB ? 3 : 1);
-
-    composedPamP->depth =
-        (baseTupletype == TT_RGB ? 3 : 1) +
-        (underlayPamP->have_opacity ? 1 : 0);
-
-    determineOutputTupleType(baseTupletype, underlayPamP->have_opacity,
-                             composedPamP->tuple_type,
-                             sizeof(composedPamP->tuple_type));
 }
 
 
@@ -357,25 +289,6 @@ warnOutOfFrame(int const originLeft,
                    "It will not be visible in the result.  The vertical "
                    "overlay position you selected is %d and the overlay is "
                    "only %d pixels high.", originTop, overRows);
-}
-
-
-
-static void
-validateComputableHeight(int const originTop,
-                         int const overRows) {
-
-    if (originTop < 0) {
-        if (originTop < -INT_MAX)
-            pm_error("Overlay starts too far above the underlay image to be "
-                     "computable.  Overlay can be at most %d rows above "
-                     "the underlay.", INT_MAX);
-    } else {
-        if (INT_MAX - originTop <= overRows)
-            pm_error("Too many total rows involved to be computable.  "
-                     "You must have a shorter overlay image or compose it "
-                     "higher on the underlay image.");
-    }
 }
 
 
@@ -480,6 +393,194 @@ computeOverlayPosition(int                const underCols,
    function composeComponents() computes the above formula.
 
 -----------------------------------------------------------------------------*/
+
+
+
+static BaseTupletype
+commonTupletype(const char * const tupletypeA,
+                const char * const tupletypeB) {
+
+    if (strneq(tupletypeA, "RGB", 3) ||
+        strneq(tupletypeB, "RGB", 3))
+        return TT_RGB;
+    else if (strneq(tupletypeA, "GRAYSCALE", 9) ||
+             strneq(tupletypeB, "GRAYSCALE", 9))
+        return TT_GRAYSCALE;
+    else if (strneq(tupletypeA, "BLACKANDWHITE", 13) ||
+             strneq(tupletypeB, "BLACKANDWHITE", 13))
+        return TT_BLACKANDWHITE;
+    else
+        /* Results are undefined for this case, so we do a hail Mary. */
+        return TT_RGB;
+}
+
+
+
+static int
+commonFormat(int const formatA,
+             int const formatB) {
+/*----------------------------------------------------------------------------
+   Return a viable format for the result of composing the two formats
+   'formatA' and 'formatB'.
+-----------------------------------------------------------------------------*/
+    int retval;
+
+    int const typeA = PAM_FORMAT_TYPE(formatA);
+    int const typeB = PAM_FORMAT_TYPE(formatB);
+
+    if (typeA == PAM_TYPE || typeB == PAM_TYPE)
+        retval = PAM_FORMAT;
+    else if (typeA == PPM_TYPE || typeB == PPM_TYPE)
+        retval = PPM_FORMAT;
+    else if (typeA == PGM_TYPE || typeB == PGM_TYPE)
+        retval = PGM_FORMAT;
+    else if (typeA == PBM_TYPE || typeB == PBM_TYPE)
+        retval = PBM_FORMAT;
+    else {
+        /* Results are undefined for this case, so we do a hail Mary. */
+        retval = formatA;
+    }
+    return retval;
+}
+
+
+
+static void
+determineOutputTupleType(BaseTupletype const baseTupletype,
+                         bool          const underlayHaveOpacity,
+                         char *        const tupleType,
+                         size_t        const size) {
+
+    char buffer[80];
+
+    switch (baseTupletype) {
+    case TT_BLACKANDWHITE:
+        STRSCPY(buffer, "RGB");
+        break;
+    case TT_GRAYSCALE:
+        STRSCPY(buffer, "GRAYSCALE");
+        break;
+    case TT_RGB:
+        STRSCPY(buffer, "RGB");
+        break;
+    }
+
+    if (underlayHaveOpacity)
+        STRSCAT(buffer, "_ALPHA");
+
+    strncpy(tupleType, buffer, size);
+}
+
+
+
+static void
+determineOutputType(const struct pam * const underlayPamP,
+                    const struct pam * const overlayPamP,
+                    struct pam *       const composedPamP) {
+
+    BaseTupletype const baseTupletype =
+        commonTupletype(underlayPamP->tuple_type, overlayPamP->tuple_type);
+
+    composedPamP->height = underlayPamP->height;
+    composedPamP->width  = underlayPamP->width;
+
+    composedPamP->format = commonFormat(underlayPamP->format,
+                                        overlayPamP->format);
+    composedPamP->plainformat = FALSE;
+
+    composedPamP->maxval = pm_lcm(underlayPamP->maxval, overlayPamP->maxval,
+                                  1, PNM_OVERALLMAXVAL);
+
+    composedPamP->visual = true;
+    composedPamP->color_depth = (baseTupletype == TT_RGB ? 3 : 1);
+    composedPamP->have_opacity = underlayPamP->have_opacity;
+    composedPamP->opacity_plane = (baseTupletype == TT_RGB ? 3 : 1);
+
+    composedPamP->depth =
+        (baseTupletype == TT_RGB ? 3 : 1) +
+        (underlayPamP->have_opacity ? 1 : 0);
+
+    determineOutputTupleType(baseTupletype, underlayPamP->have_opacity,
+                             composedPamP->tuple_type,
+                             sizeof(composedPamP->tuple_type));
+}
+
+
+
+static void
+determineInputAdaptations(const struct pam * const underlayPamP,
+                          const struct pam * const overlayPamP,
+                          const struct pam * const composedPamP,
+                          struct pam *       const adaptUnderlayPamP,
+                          struct pam *       const adaptOverlayPamP) {
+/*----------------------------------------------------------------------------
+   For easy of computation, this program reads a tuple row from one of the
+   input files, then transforms it something similar to the format of the
+   eventual output tuple row.  E.g. if the input is grayscale and the
+   output color, it converts the depth 1 row read from the file to a depth
+   3 row for use in computations.
+
+   This function determines what the result of that transformation should be.
+   It's not as simple as it sounds because of opacity.  The overlay may have
+   an opacity plane that has to be kept for the computations, while the output
+   has no opacity plane.
+
+   Our output PAMs are meaningless except in the fields that pertain to a
+   row of tuples.  E.g. the file descriptor and image height members are
+   meaningless.
+-----------------------------------------------------------------------------*/
+    /* We make the underlay row identical to the composed (output) row,
+       except for its width.
+    */
+
+    *adaptUnderlayPamP = *composedPamP;
+    adaptUnderlayPamP->width = underlayPamP->width;
+
+    /* Same for the overlay row, except that it retains is original
+       opacity.
+    */
+
+    adaptOverlayPamP->width = overlayPamP->width;
+    adaptOverlayPamP->tuple_type[0] = '\0';  /* a hack; this doesn't matter */
+    adaptOverlayPamP->visual = true;
+    adaptOverlayPamP->color_depth = composedPamP->color_depth;
+    adaptOverlayPamP->have_opacity = overlayPamP->have_opacity;
+    adaptOverlayPamP->opacity_plane = composedPamP->color_depth;
+    adaptOverlayPamP->depth =
+        composedPamP->color_depth +
+        (overlayPamP->have_opacity ? 1 : 0);
+    adaptOverlayPamP->maxval = composedPamP->maxval;
+    adaptOverlayPamP->bytes_per_sample = composedPamP->bytes_per_sample;
+    adaptOverlayPamP->allocation_depth = overlayPamP->allocation_depth;
+}
+
+
+
+static void
+adaptRowFormat(struct pam * const inpamP,
+               struct pam * const outpamP,
+               tuple *      const tuplerow) {
+/*----------------------------------------------------------------------------
+   Convert the row in 'tuplerow', which is in a format described by
+   *inpamP, to the format described by *outpamP.
+
+   'tuplerow' must have enough allocated depth to do this.
+-----------------------------------------------------------------------------*/
+    assert(outpamP->visual);
+    assert(inpamP->visual);
+
+    pnm_scaletuplerow(inpamP, tuplerow, tuplerow, outpamP->maxval);
+
+    if (outpamP->color_depth == 3) {
+        if (outpamP->have_opacity)
+            pnm_makerowrgba(inpamP, tuplerow);
+        else
+            pnm_makerowrgb(inpamP, tuplerow);
+    } else {
+        if (outpamP->have_opacity)
+            pnm_addopacityrow(inpamP, tuplerow);
+    }
+}
 
 
 
@@ -680,34 +781,6 @@ overlayPixel(tuple            const overlayTuple,
 
 
 static void
-adaptRowFormat(struct pam * const inpamP,
-               struct pam * const outpamP,
-               tuple *      const tuplerow) {
-/*----------------------------------------------------------------------------
-   Convert the row in 'tuplerow', which is in a format described by
-   *inpamP, to the format described by *outpamP.
-
-   'tuplerow' must have enough allocated depth to do this.
------------------------------------------------------------------------------*/
-    assert(outpamP->visual);
-    assert(inpamP->visual);
-
-    pnm_scaletuplerow(inpamP, tuplerow, tuplerow, outpamP->maxval);
-
-    if (outpamP->color_depth == 3) {
-        if (outpamP->have_opacity)
-            pnm_makerowrgba(inpamP, tuplerow);
-        else
-            pnm_makerowrgb(inpamP, tuplerow);
-    } else {
-        if (outpamP->have_opacity)
-            pnm_addopacityrow(inpamP, tuplerow);
-    }
-}
-
-
-
-static void
 composeRow(int              const originleft,
            struct pam *     const underlayPamP,
            struct pam *     const overlayPamP,
@@ -746,55 +819,6 @@ composeRow(int              const originleft,
             pnm_assigntuple(composedPamP, composedTuplerow[col],
                             underlayTuplerow[col]);
     }
-}
-
-
-
-static void
-determineInputAdaptations(const struct pam * const underlayPamP,
-                          const struct pam * const overlayPamP,
-                          const struct pam * const composedPamP,
-                          struct pam *       const adaptUnderlayPamP,
-                          struct pam *       const adaptOverlayPamP) {
-/*----------------------------------------------------------------------------
-   For easy of computation, this program reads a tuple row from one of the
-   input files, then transforms it something similar to the format of the
-   eventual output tuple row.  E.g. if the input is grayscale and the
-   output color, it converts the depth 1 row read from the file to a depth
-   3 row for use in computations.
-
-   This function determines what the result of that transformation should be.
-   It's not as simple as it sounds because of opacity.  The overlay may have
-   an opacity plane that has to be kept for the computations, while the output
-   has no opacity plane.
-
-   Our output PAMs are meaningless except in the fields that pertain to a
-   row of tuples.  E.g. the file descriptor and image height members are
-   meaningless.
------------------------------------------------------------------------------*/
-    /* We make the underlay row identical to the composed (output) row,
-       except for its width.
-    */
-
-    *adaptUnderlayPamP = *composedPamP;
-    adaptUnderlayPamP->width = underlayPamP->width;
-
-    /* Same for the overlay row, except that it retains is original
-       opacity.
-    */
-
-    adaptOverlayPamP->width = overlayPamP->width;
-    adaptOverlayPamP->tuple_type[0] = '\0';  /* a hack; this doesn't matter */
-    adaptOverlayPamP->visual = true;
-    adaptOverlayPamP->color_depth = composedPamP->color_depth;
-    adaptOverlayPamP->have_opacity = overlayPamP->have_opacity;
-    adaptOverlayPamP->opacity_plane = composedPamP->color_depth;
-    adaptOverlayPamP->depth =
-        composedPamP->color_depth +
-        (overlayPamP->have_opacity ? 1 : 0);
-    adaptOverlayPamP->maxval = composedPamP->maxval;
-    adaptOverlayPamP->bytes_per_sample = composedPamP->bytes_per_sample;
-    adaptOverlayPamP->allocation_depth = overlayPamP->allocation_depth;
 }
 
 
@@ -895,30 +919,6 @@ composite(int          const originleft,
     pnm_freepamrow(overlayTuplerow);
     if (alphaPamP)
         pnm_freepamrown(alphaTuplerown);
-}
-
-
-
-static void
-initAlphaFile(struct CmdlineInfo const cmdline,
-              struct pam *       const overlayPamP,
-              FILE **            const filePP,
-              struct pam *       const pamP) {
-
-    FILE * fileP;
-
-    if (cmdline.alphaFilespec) {
-        fileP = pm_openr(cmdline.alphaFilespec);
-        pamP->comment_p = NULL;
-        pnm_readpaminit(fileP, pamP, PAM_STRUCT_SIZE(opacity_plane));
-
-        if (overlayPamP->width != pamP->width ||
-            overlayPamP->height != pamP->height)
-            pm_error("Opacity map and overlay image are not the same size");
-    } else
-        fileP = NULL;
-
-    *filePP = fileP;
 }
 
 

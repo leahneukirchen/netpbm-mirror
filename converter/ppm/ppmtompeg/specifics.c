@@ -41,6 +41,7 @@
 
 #include "netpbm/mallocvar.h"
 #include "netpbm/nstring.h"
+#include "netpbm/pm_system.h"
 
 #include "all.h"
 #include "mtypes.h"
@@ -67,7 +68,7 @@ void Parse_Specifics_File_v1 (FILE *fp);
 void Parse_Specifics_File_v2 (FILE *fp);
 FrameSpecList *MakeFslEntry (void);
 void AddSlc (FrameSpecList *c,int snum, int qs);
-Block_Specifics *AddBs (FrameSpecList *c,int bnum, 
+Block_Specifics *AddBs (FrameSpecList *c,int bnum,
 				    boolean rel, int qs);
 FrameSpecList *MakeFslEntry (void);
 #define my_upper(c) (((c>='a') && (c<='z')) ? (c-'a'+'A') : c)
@@ -144,7 +145,7 @@ static char version = -1;
  *   Cpp's and reads in the specifics file.  Creates fsl data structure.
  *
  *   Returns: nothing
- * 
+ *
  *   Modifies: fsl, file specificsFile".cpp"
  *
  *================================================================
@@ -152,38 +153,37 @@ static char version = -1;
 void
 Specifics_Init() {
 
-    FILE *specificsFP;
-  
+    /* 'specificsFile' is a global variable whose value is the name of the
+       specifics file, given by the parameter file.
+    */
+
+    FILE *       specificsFP;
+    const char * preprocessedFileNm;
+
+    pm_message("Specifics file: %s", specificsFile);
+
+    pm_asprintf(&preprocessedFileNm, "%s.cpp", specificsFile);
+
+    pm_system_lp("rm", NULL, NULL, NULL, NULL, "-f", preprocessedFileNm);
+
     {
         const char * command;
-        pm_asprintf(&command, "rm -f %s.cpp", specificsFile);
-        system(command);
+        pm_asprintf(&command, "cpp -P %s '%s' -o '%s'",
+                    specificsDefines, specificsFile, preprocessedFileNm);
+        pm_system(NULL, NULL, NULL, NULL, command);
         pm_strfree(command);
     }
-    {
-        const char * command;
-        pm_asprintf(&command, "cpp -P %s %s %s.cpp",
-                    specificsDefines, specificsFile, specificsFile);
-        system(command);
-        pm_strfree(command);
-    }
-    strcat(specificsFile, ".cpp");
-    if ((specificsFP = fopen(specificsFile, "r")) == NULL) {
-        fprintf(stderr, "Error with specifics file, cannot open %s\n",
-                specificsFile);
-        exit(1);
-    }
-    printf("Specifics file: %s\n", specificsFile);
+
+    specificsFP = pm_openr(preprocessedFileNm);
+
+    pm_system_lp("rm", NULL, NULL, NULL, NULL, "-f", preprocessedFileNm);
 
     Parse_Specifics_File(specificsFP);
-    {
-        const char * command;
-        pm_asprintf(&command, "rm -f %s.cpp", specificsFile);
-        system(command);
-        pm_strfree(command);
-    }
-}
 
+    pm_close(specificsFP);
+
+    pm_strfree(preprocessedFileNm);
+}
 
 
 
@@ -244,7 +244,7 @@ FILE *fp;
       fprintf(stderr, "Specifics file: What? *%s*\n", line);
       break;
     }}
-  
+
 }
 
 /* Version 1 */
@@ -253,7 +253,7 @@ FILE *fp;
 {
   char line[1024],*lp;
   FrameSpecList *current, *new;
-  char typ; 
+  char typ;
   int fnum,snum, bnum, qs, newqs;
 
   fsl = MakeFslEntry();
@@ -301,7 +301,7 @@ FILE *fp;
       fprintf(stderr," What? *%s*\n", line);
       break;
     }}
-  
+
 }
 
 
@@ -382,7 +382,7 @@ Parse_Specifics_File_v2(FILE * const fP) {
                 } else {
                     numScanned =
                         2 + sscanf(lp, "%s %d %d %d %d",
-                                   kind, &fx, &fy, &sx, &sy); 
+                                   kind, &fx, &fy, &sx, &sy);
                 }
 
                 qs = newqs;
@@ -573,7 +573,7 @@ int start_qs;
   FrameSpecList *tmp;
   boolean found_it;
   static int leftovers = 0;  /* Used in case of forced movement into 1..31 range */
-  
+
   *info = (BlockMV * )NULL;
   if (last == (FrameSpecList *) NULL){
     /* No cache, try to find number fn */
@@ -590,7 +590,7 @@ int start_qs;
   } else {
     if (last->framenum != fn) { /* cache miss! */
       /* first check if it is next */
-      if ((last->next != (FrameSpecList *) NULL) && 
+      if ((last->next != (FrameSpecList *) NULL) &&
 	  (last->next->framenum == fn)) {
 	last = last->next;
       } else {
@@ -617,13 +617,13 @@ int start_qs;
     fprintf(stderr, "PROGRAMMER ERROR: last has wrong number!\n");
     return -1; /* no data on it */
   }
-  
+
   switch(typ) {
   case 0: /* Frame: num is ignored */
     leftovers = 0;
 #ifdef BLEAH
     printf("QSchange frame %d to %d\n", fn, last->qscale);
-#endif 
+#endif
     return last->qscale;
     break;
 
@@ -683,8 +683,8 @@ int start_qs;
   /* no luck */
   return -1;
 }
-     
-    
+
+
 /*================================================================
  *
  *  SpecTypeLookup

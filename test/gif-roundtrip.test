@@ -7,7 +7,8 @@ tmpdir=${tmpdir:-/tmp}
 # Test 1. Break up input image into three monochrome planes,
 # maxval 255.  Transform each plane to gif and back to pgm.
 # Reassemble the planes.  Result should be identical to input.
-# Should print 1926073387 101484
+
+echo "Test 1. Should print 1926073387 101484"
 
 test_ppm=${tmpdir}/testimg.ppm
 
@@ -29,13 +30,11 @@ pamtogif ${test_blu} | giftopnm | \
 
 rm ${test_ppm} ${test_grn} ${test_blu} ${out_red} ${out_grn}
 
-
-# Test 2. Should produce 1571496937 33838
-# which is the result of cksum testimg.red
-# five times
+echo "Test 2. Should produce 1571496937 33838 six times"
 
 test_gif=${tmpdir}/testimg.gif
 
+cat ${test_red} | cksum
 pamtogif ${test_red} | giftopnm | cksum
 pamtogif -interlace ${test_red} | giftopnm | cksum
 pamtogif -noclear ${test_red} | giftopnm | cksum
@@ -46,22 +45,23 @@ echo "junk" >> ${test_gif} && \
 
 rm  ${test_gif} ${test_red}
 
+echo "Test 3. Should produce 281226646 481 six times"
+# maze.pbm is too small for -noclear to take effect 
 
-# Test 3. Should produce 2425386270 41 five times.
-# testgrid.pbm is too small for -noclear to take effect 
-
-pamtogif testgrid.pbm | giftopnm | cksum
-pamtogif -nolzw testgrid.pbm | giftopnm | cksum
-pamtogif -transparent=black testgrid.pbm | giftopnm | cksum
-pamtogif -alpha=testgrid.pbm testgrid.pbm | giftopnm | cksum
-pamtogif -transparent=white testgrid.pbm | giftopnm -alpha=- | \
+cat maze.pbm | cksum
+pamtogif maze.pbm | giftopnm | cksum
+pamtogif -nolzw maze.pbm | giftopnm | cksum
+pamtogif -transparent=black maze.pbm | giftopnm | cksum
+pamtogif -alpha=maze.pbm maze.pbm | giftopnm | cksum
+pamtogif -transparent=white maze.pbm | giftopnm -alpha=- | \
   pnminvert | cksum
 
 
 # Test 4.
 # In this gif file the code length changes after the last image data.
 # Image data: 3 bits, end code 4 bits.
-# Should produce P1 4 1 0 1 0 1
+
+echo "Test 4. Should produce P1 4 1 0101"
 
 pbmmake -g 4 1 | \
   pamtogif -verbose | giftopnm -plain | \
@@ -71,25 +71,18 @@ echo ""
 
 # Test 5.
 # Test whether saturated code tables are handled correctly.
-# Test input images which most use up the string code table or
+# Test input images which use up the string code table or
 # come close to doing so.
 
-# Should produce:
-# 4030 0 , 4030 0
-# 4031 0 , 4031 0
-# 4097 0 , 4097 0
-# 238 0 , 238 0
-# 239 0 , 239 0
-# 240 0 , 240 0
-# 241 0 , 241 0
-# 255 0 , 255 0
-# 256 0 , 256 0
-# 257 0 , 257 0
 
-test4097_pgm=${tmpdir}/testimg4097.pgm
+echo "Test 5. Should produce: N : 0 0 0 0 : 0 , N : 0 0 0 0 : 0"
+echo "(N=238, 239, 240, 241, 255, 256, 257, 4030, 4031, 4097)"
+
 test_pgm=${tmpdir}/testimg.pgm
 
-# The following awk script produces a PGM file with no repeated sequences.
+# The following awk scripts produce a PGM file with no repeated
+# sequences.  Obviously this cannot be compressed at all; the codes
+# are consumed without ever being used.  
 # Here is a smaller example with the same property:
 # P2
 # 8 8
@@ -102,6 +95,38 @@ test_pgm=${tmpdir}/testimg.pgm
 # 2 6 2 7 3 4 3 5
 # 3 6 3 7 4 5 4 6
 # 4 7 5 6 5 7 6 7
+
+test257_pgm=${tmpdir}/testimg257.pgm
+
+maxval=15
+awk -v maxval=${maxval} 'BEGIN \
+{ print "P2"
+         print "1 "(maxval+1) * (maxval+1) +1
+         print maxval
+         print 0 
+         for (j=i+1; j<=maxval; ++j)
+	    {print 0; print j; print j }
+         for (i=1; i<=maxval; ++i)
+             for (j=i+1; j<=maxval; ++j)
+                 {print i; print j }
+         print 0
+}' >  ${test257_pgm}
+
+for size in 238 239 240 241 255 256 257
+  do
+  pamcut -height=${size} ${test257_pgm} > ${test_pgm} &&
+  pamtogif -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  printf "${size} : ${PIPESTATUS[*]} : $? , "
+  pamtogif -nolzw -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
+    cmp - ${test_pgm}
+  printf "${size} : ${PIPESTATUS[*]} : $?\n"
+  rm ${test_pgm}
+  done 
+
+rm ${test257_pgm}
+
+test4097_pgm=${tmpdir}/testimg4097.pgm
 
 maxval=63
 awk -v maxval=${maxval} 'BEGIN \
@@ -124,40 +149,11 @@ for size in 4030 4031 4097
     cmp - ${test_pgm}
   # pamdepth ${maxval} is necessary because
   # giftopnm output is maxval 255
-  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
+  printf "${size} : ${PIPESTATUS[*]} : $? , "
   pamtogif -nolzw ${test_pgm} | giftopnm | pamdepth ${maxval} | \
     cmp - ${test_pgm}
-  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
+  printf "${size} : ${PIPESTATUS[*]} : $?\n"
   rm ${test_pgm}
   done 
 
 rm ${test4097_pgm}
-test257_pgm=${tmpdir}/testimg257.pgm
-
-maxval=15
-awk -v maxval=${maxval} 'BEGIN \
-{ print "P2"
-         print "1 "(maxval+1) * (maxval+1) +1
-         print maxval
-         print 0 
-         for (j=i+1; j<=maxval; ++j)
-	    {print 0; print j; print j }
-         for (i=1; i<=maxval; ++i)
-             for (j=i+1; j<=maxval; ++j)
-                 {print i; print j }
-         print 0
-}' >  ${test257_pgm}
-
-for size in 238 239 240 241 255 256 257
-  do
-  pamcut -height=${size} ${test257_pgm} > ${test_pgm} &&
-  pamtogif -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
-    cmp - ${test_pgm}
-  echo -n ${size} ":" ${PIPESTATUS[@]} ":" $? ", "
-  pamtogif -nolzw -verbose ${test_pgm} | giftopnm | pamdepth ${maxval} | \
-    cmp - ${test_pgm}
-  echo ${size} ":" ${PIPESTATUS[@]} ":" $?
-  rm ${test_pgm}
-  done 
-
-rm ${test257_pgm}

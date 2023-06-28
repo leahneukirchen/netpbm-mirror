@@ -1,7 +1,7 @@
 /*
  * This is derived from the file of the same name dated June 5, 1995,
  * copied from the Army High Performance Computing Research Center's
- * media-tools.tar.gz package, received from 
+ * media-tools.tar.gz package, received from
  * http://www.arc.umn.edu/gvl-software/media-tools.tar.gz on 2000.04.13.
  *
  * This software is copyrighted as noted below.  It may be freely copied,
@@ -29,8 +29,8 @@
  *              Minnesota Supercomputer Center, Inc.
  * Date:        March 30, 1994
  * Copyright (c) Minnesota Supercomputer Center 1994
- * 
- * 2000.04.13 adapted for Netpbm by Bryan Henderson.  Quieted compiler 
+ *
+ * 2000.04.13 adapted for Netpbm by Bryan Henderson.  Quieted compiler
  *            warnings.  Added --alpha option.  Accept input on stdin
  *
  */
@@ -105,11 +105,11 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3('h', "headerdump", OPT_FLAG,   
+    OPTENT3('h', "headerdump", OPT_FLAG,
             NULL,                      &cmdlineP->headerdump,     0);
-    OPTENT3('v', "verbose",    OPT_FLAG,   
+    OPTENT3('v', "verbose",    OPT_FLAG,
             NULL,                      &cmdlineP->verbose,        0);
-    OPTENT3(0,   "alphaout",   OPT_STRING, 
+    OPTENT3(0,   "alphaout",   OPT_STRING,
             &cmdlineP->alphaout, &alphaoutSpec,                   0);
 
     opt.opt_table = option_def;
@@ -127,16 +127,16 @@ parseCommandLine(int argc, char ** argv,
     else if (argc - 1 == 1) {
         if (streq(argv[1], "-"))
             cmdlineP->inputFilename = NULL;  /* he wants stdin */
-        else 
+        else
             cmdlineP->inputFilename = strdup(argv[1]);
-    } else 
+    } else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
-    if (cmdlineP->alphaout && 
+    if (cmdlineP->alphaout &&
         streq(cmdlineP->alphaout, "-"))
         cmdlineP->alphaStdout = TRUE;
-    else 
+    else
         cmdlineP->alphaStdout = FALSE;
 }
 
@@ -144,7 +144,7 @@ parseCommandLine(int argc, char ** argv,
 
 static void
 reportRleGetSetupError(int const rleGetSetupRc) {
-    
+
     switch (rleGetSetupRc) {
     case -1:
         pm_error("According to the URT library, the input is not "
@@ -168,7 +168,7 @@ reportRleGetSetupError(int const rleGetSetupRc) {
 
 
 
-static void 
+static void
 readRleHeader(FILE * const ifP,
               bool   const headerDump) {
 
@@ -256,7 +256,7 @@ readRleHeader(FILE * const ifP,
 
 
 
-static void 
+static void
 writePpmRaster(FILE * const imageoutFileP,
                FILE * const alphaFileP) {
 
@@ -264,7 +264,7 @@ writePpmRaster(FILE * const imageoutFileP,
     pixval r, g, b;
     pixel *pixelrow;
     gray *alpharow;
-   
+
     int scan;
     int x;
     /*
@@ -274,11 +274,15 @@ writePpmRaster(FILE * const imageoutFileP,
     alpharow = pgm_allocrow(width);
 
     MALLOCARRAY(scanlines, height);
-    RLE_CHECK_ALLOC( hdr.cmd, scanlines, "scanline pointers" );
+    if (!scanlines)
+        pm_error("Failed to allocate memory for %u scanline pointers", height);
 
-    for ( scan = 0; scan < height; scan++ )
-        RLE_CHECK_ALLOC( hdr.cmd, (rle_row_alloc(&hdr, &scanlines[scan]) >= 0),
-                         "pixel memory" );
+    for (scan = 0; scan < height; ++scan) {
+        int rc;
+        rc = rle_row_alloc(&hdr, &scanlines[scan]);
+        if (rc < 0)
+            pm_error("Failed to allocate memory for a scanline");
+    }
     /*
      * Loop through those scan lines.
      */
@@ -295,7 +299,7 @@ writePpmRaster(FILE * const imageoutFileP,
                 PPM_ASSIGN(pixelrow[x], r, g, b);
                 if (hdr.alpha)
                     alpharow[x] = scanline[-1][x];
-                else 
+                else
                     alpharow[x] = 0;
             }
             break;
@@ -305,7 +309,7 @@ writePpmRaster(FILE * const imageoutFileP,
                 g = colormap[scanline[1][x]+256]>>8;
                 b = colormap[scanline[2][x]+512]>>8;
                 PPM_ASSIGN(pixelrow[x], r, g, b);
-                if (hdr.alpha) 
+                if (hdr.alpha)
                     alpharow[x] = colormap[scanline[-1][x]];
                 else
                     alpharow[x] = 0;
@@ -329,7 +333,7 @@ writePpmRaster(FILE * const imageoutFileP,
                 g = colormap[scanline[0][x]+256]>>8;
                 b = colormap[scanline[0][x]+512]>>8;
                 PPM_ASSIGN(pixelrow[x], r, g, b);
-                if (hdr.alpha) 
+                if (hdr.alpha)
                     alpharow[x] = colormap[scanline[-1][x]];
                 else
                     alpharow[x] = 0;
@@ -341,7 +345,7 @@ writePpmRaster(FILE * const imageoutFileP,
         /*
          * Write the scan line.
          */
-        if (imageoutFileP) 
+        if (imageoutFileP)
             ppm_writeppmrow(imageoutFileP, pixelrow, width, RLE_MAXVAL, 0);
         if (alphaFileP)
             pgm_writepgmrow(alphaFileP, alpharow, width, RLE_MAXVAL, 0);
@@ -358,7 +362,7 @@ writePpmRaster(FILE * const imageoutFileP,
 
 
 
-static void 
+static void
 writePgmRaster(FILE * const imageoutFileP,
                FILE * const alphaFileP) {
 /*----------------------------------------------------------------------------
@@ -375,11 +379,15 @@ writePgmRaster(FILE * const imageoutFileP,
     alpharow = pgm_allocrow(width);
 
     MALLOCARRAY(scanlines, height);
-    RLE_CHECK_ALLOC( hdr.cmd, scanlines, "scanline pointers" );
+    if (!scanlines)
+        pm_error("Failed to allocate memory for %u scanline pointers", height);
 
-    for (scan = 0; scan < height; ++scan)
-        RLE_CHECK_ALLOC(hdr.cmd, (rle_row_alloc(&hdr, &scanlines[scan]) >= 0),
-                        "pixel memory" );
+    for (scan = 0; scan < height; ++scan) {
+        int rc;
+        rc = rle_row_alloc(&hdr, &scanlines[scan]);
+        if (rc < 0)
+            pm_error("Failed to allocate memory for a scanline");
+    }
     /*
      * Loop through those scan lines.
      */
@@ -391,12 +399,12 @@ writePgmRaster(FILE * const imageoutFileP,
         scanline = scanlines[scan];
         for (x = 0; x < width; ++x) {
             pixelrow[x] = scanline[0][x];
-            if (hdr.alpha) 
+            if (hdr.alpha)
                 alpharow[x] = scanline[1][x];
             else
                 alpharow[x] = 0;
         }
-        if (imageoutFileP) 
+        if (imageoutFileP)
             pgm_writepgmrow(imageoutFileP, pixelrow, width, RLE_MAXVAL, 0);
         if (alphaFileP)
             pgm_writepgmrow(alphaFileP, alpharow, width, RLE_MAXVAL, 0);
@@ -428,20 +436,20 @@ main(int argc, char ** argv) {
 
     fname = NULL;  /* initial value */
 
-    if (cmdline.inputFilename != NULL ) 
+    if (cmdline.inputFilename != NULL )
         ifP = pm_openr(cmdline.inputFilename);
     else
         ifP = stdin;
 
     if (cmdline.alphaStdout)
         alphaFileP = stdout;
-    else if (cmdline.alphaout == NULL) 
+    else if (cmdline.alphaout == NULL)
         alphaFileP = NULL;
     else {
         alphaFileP = pm_openw(cmdline.alphaout);
     }
 
-    if (cmdline.alphaStdout) 
+    if (cmdline.alphaStdout)
         imageoutFileP = NULL;
     else
         imageoutFileP = stdout;
@@ -461,7 +469,7 @@ main(int argc, char ** argv) {
     if (cmdline.headerdump)
         exit(0);
 
-    /* 
+    /*
      * Write the alpha file header
      */
     if (alphaFileP)
@@ -486,9 +494,9 @@ main(int argc, char ** argv) {
         writePpmRaster(imageoutFileP, alphaFileP);
         break;
     }
-   
+
     pm_close(ifP);
-    if (imageoutFileP) 
+    if (imageoutFileP)
         pm_close(imageoutFileP);
     if (alphaFileP)
         pm_close(alphaFileP);

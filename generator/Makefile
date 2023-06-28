@@ -18,7 +18,7 @@ SUBDIRS = pamtris
 
 PORTBINARIES = pamcrater pamgauss pamgradient \
 	       pamseq pamshadedrelief pamstereogram \
-	       pbmpage pbmmake pbmtext pbmupc \
+	       pbmpage pbmmake pbmnoise pbmtext pbmupc \
 	       pgmkernel pgmmake pgmnoise pgmramp \
 	       ppmcie ppmcolors ppmforge ppmmake ppmpat ppmrough ppmwheel \
 

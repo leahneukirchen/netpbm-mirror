@@ -38,7 +38,7 @@
 
 enum brightMethod {BRIGHT_LUMINOSITY, BRIGHT_COLORVALUE, BRIGHT_SATURATION};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -70,7 +70,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -265,7 +265,12 @@ buildHistogram(FILE *   const ifp,
 static xelval
 minimumValue(const unsigned int * const hist,
              unsigned int         const highest) {
+/*----------------------------------------------------------------------------
+   The minimum brightness in the image, according to histogram 'hist',
+   which goes up to 'highest'.
 
+   Abort the program if there are no pixels of any brightness.
+-----------------------------------------------------------------------------*/
     xelval i;
     bool foundOne;
 
@@ -274,7 +279,8 @@ minimumValue(const unsigned int * const hist,
             foundOne = true;
         else {
             if (i == highest)
-                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+                pm_error("INTERNAL ERROR in function 'minimumValue'.  "
+                         "No pixels");
             else
                 ++i;
         }
@@ -287,7 +293,12 @@ minimumValue(const unsigned int * const hist,
 static xelval
 maximumValue(const unsigned int * const hist,
              unsigned int         const highest) {
+/*----------------------------------------------------------------------------
+   The maximum brightness in the image, according to histogram 'hist',
+   which goes up to 'highest'.
 
+   Abort the program if there are no pixels of any brightness.
+-----------------------------------------------------------------------------*/
     xelval i;
     bool foundOne;
 
@@ -296,7 +307,8 @@ maximumValue(const unsigned int * const hist,
             foundOne = true;
         else {
             if (i == 0)
-                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+                pm_error("INTERNAL ERROR in function 'maximumValue'.  "
+                         "No pixels");
             else
                 --i;
         }
@@ -306,12 +318,32 @@ maximumValue(const unsigned int * const hist,
 
 
 
+static unsigned int
+brightnessCount(const unsigned int * const hist,
+                unsigned int         const highest) {
+/*----------------------------------------------------------------------------
+   The number of distinct brightnesses in the image according to
+   histogram 'hist', which goes up to brightness 'highest'.
+-----------------------------------------------------------------------------*/
+    xelval i;
+    unsigned int nonzeroCount;
+
+    for (i = 0, nonzeroCount = 0; i <= highest; ++i) {
+        if (hist[i] > 0)
+            ++nonzeroCount;
+    }
+
+    return nonzeroCount;
+}
+
+
+
 static void
-computeBottomPercentile(unsigned int         hist[],
-                        unsigned int   const highest,
-                        unsigned int   const total,
-                        float          const percent,
-                        unsigned int * const percentileP) {
+computeBottomPercentile(const unsigned int * const hist,
+                        unsigned int         const highest,
+                        unsigned int         const total,
+                        float                const percent,
+                        unsigned int *       const percentileP) {
 /*----------------------------------------------------------------------------
    Compute the lowest index of hist[] such that the sum of the hist[]
    values with that index and lower represent at least 'percent' per cent of
@@ -339,11 +371,11 @@ computeBottomPercentile(unsigned int         hist[],
 
 
 static void
-computeTopPercentile(unsigned int         hist[],
-                     unsigned int   const highest,
-                     unsigned int   const total,
-                     float          const percent,
-                     unsigned int * const percentileP) {
+computeTopPercentile(const unsigned int * const hist,
+                     unsigned int         const highest,
+                     unsigned int         const total,
+                     float                const percent,
+                     unsigned int *       const percentileP) {
 /*----------------------------------------------------------------------------
    Compute the highest index of hist[] such that the sum of the hist[]
    values with that index and higher represent 'percent' per cent of
@@ -494,13 +526,68 @@ disOverlap(xelval   const reqBvalue,
 
 
 
+static xelval
+resolvedPctBvalue(const unsigned int * const hist,
+                  unsigned int         const totalPixelCt,
+                  xelval               const maxval,
+                  struct CmdlineInfo   const cmdline) {
+
+    xelval retval;
+
+    if (cmdline.bsingle)
+        retval = minimumValue(hist, maxval);
+    else if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
+        retval = cmdline.bvalue;
+    } else {
+        xelval percentBvalue;
+
+        computeBottomPercentile(hist, maxval, totalPixelCt, cmdline.bpercent,
+                                &percentBvalue);
+        if (cmdline.bvalueSpec)
+            retval = MIN(percentBvalue, cmdline.bvalue);
+        else
+            retval = percentBvalue;
+    }
+    return retval;
+}
+
+
+
+static xelval
+resolvedPctWvalue(const unsigned int * const hist,
+                  unsigned int         const totalPixelCt,
+                  xelval               const maxval,
+                  struct CmdlineInfo   const cmdline) {
+
+    xelval retval;
+
+    if (cmdline.wsingle)
+        retval = maximumValue(hist, maxval);
+    else if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
+        retval = cmdline.wvalue;
+    } else {
+        xelval percentWvalue;
+
+        computeTopPercentile(hist, maxval, totalPixelCt, cmdline.wpercent,
+                             &percentWvalue);
+        if (cmdline.wvalueSpec)
+            retval = MAX(percentWvalue, cmdline.wvalue);
+        else
+            retval = percentWvalue;
+    }
+
+    return retval;
+}
+
+
+
 static void
 resolvePercentParams(FILE *             const ifP,
                      unsigned int       const cols,
                      unsigned int       const rows,
                      xelval             const maxval,
                      int                const format,
-                     struct cmdlineInfo const cmdline,
+                     struct CmdlineInfo const cmdline,
                      xelval *           const bvalueP,
                      xelval *           const wvalueP) {
 /*----------------------------------------------------------------------------
@@ -521,32 +608,17 @@ resolvePercentParams(FILE *             const ifP,
         buildHistogram(ifP, cols, rows, maxval, format, hist,
                        cmdline.brightMethod);
 
-        if (cmdline.bsingle)
-            *bvalueP = minimumValue(hist, maxval);
-        else if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
-            *bvalueP = cmdline.bvalue;
+        if (!cmdline.bvalueSpec && !cmdline.wvalueSpec &&
+            brightnessCount(hist, maxval) < 2) {
+            /* Special case - you can't stretch a single brightness to both
+               ends.  So just don't stretch at all.
+            */
+            *bvalueP = 0;
+            *wvalueP = maxval;
         } else {
-            xelval percentBvalue;
-            computeBottomPercentile(hist, maxval, cols*rows, cmdline.bpercent,
-                                    &percentBvalue);
-            if (cmdline.bvalueSpec)
-                *bvalueP = MIN(percentBvalue, cmdline.bvalue);
-            else
-                *bvalueP = percentBvalue;
-        }
+            *bvalueP = resolvedPctBvalue(hist, cols * rows, maxval, cmdline);
 
-        if (cmdline.wsingle)
-            *wvalueP = maximumValue(hist, maxval);
-        else if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
-            *wvalueP = cmdline.wvalue;
-        } else {
-            xelval percentWvalue;
-            computeTopPercentile(hist, maxval, cols*rows, cmdline.wpercent,
-                                 &percentWvalue);
-            if (cmdline.wvalueSpec)
-                *wvalueP = MAX(percentWvalue, cmdline.wvalue);
-            else
-                *wvalueP = percentWvalue;
+            *wvalueP = resolvedPctWvalue(hist, cols * rows, maxval, cmdline);
         }
         free(hist);
     }
@@ -560,7 +632,7 @@ computeEndValues(FILE *             const ifP,
                  int                const rows,
                  xelval             const maxval,
                  int                const format,
-                 struct cmdlineInfo const cmdline,
+                 struct CmdlineInfo const cmdline,
                  xelval *           const bvalueP,
                  xelval *           const wvalueP,
                  bool *             const quadraticP,
@@ -627,7 +699,7 @@ computeLinearTransfer(xelval   const bvalue,
     unsigned int val;
     /* The following for structure is a hand optimization of this one:
        for (i = bvalue; i <= wvalue; ++i)
-       newBrightness[i] = (i-bvalue)*maxval/range);
+           newBrightness[i] = (i-bvalue)*maxval/range);
        (with proper rounding)
     */
     for (i = bvalue, val = range/2;
@@ -935,8 +1007,8 @@ reportTransferParm(bool   const quadratic,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
-    FILE *ifP;
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
     pm_filepos imagePos;
     xelval maxval;
     int rows, cols, format;

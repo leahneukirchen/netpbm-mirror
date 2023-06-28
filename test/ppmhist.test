@@ -1,11 +1,15 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmhist
 # Also requires: pgmramp pamtopnm pbmmake pamseq ppmpat
+
+echo "Test 1"
 
 pgmramp -maxval=8 -lr 8 2 | ppmhist -sort=rgb -noheader
 ppmhist -map -sort=rgb -noheader testimg.ppm | pamtopnm | cksum
 
 # Test summary header
+
+echo "Test 2"
 
 pbmmake -b 2 1 | ppmhist   | head -n1
 pbmmake -w 2 1 | ppmhist   | head -n1
@@ -20,3 +24,28 @@ ppmpat -madras --color=rgb:00/00/00,rgb:31/58/a3,rgb:e9/5e/d4 25 25 | \
   ppmhist | head -n1
 ppmpat -madras --color=rgb:00/00/00,rgb:31/58/a3,rgb:ff/ff/ff 25 25 | \
   ppmhist | head -n1
+
+echo "Test Invalid"
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+ppmhist -hexcolor -float testimg.ppm > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+ppmhist -hexcolor -map   testimg.ppm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+ppmhist -float    -map   testimg.ppm > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

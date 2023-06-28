@@ -29,7 +29,7 @@
   A survey of netpbm source code in 2015 found Packbits encoding in the
   following Netpbm programs: pbmtoescp2, pbmtomacp, pnmtopalm, pnmtopclxl,
   pnmtops, ppmtoilbm and ppmtopjxl.
- 
+
   Packbits is an option in the TIFF standard; pamtotiff can generate TIFF
   images that use Packbits compression, but does so via code in the TIFF
   library (not part of Netpbm).
@@ -47,7 +47,7 @@
 
   Today, all Netpbm programs that do Packbits compression with the exception
   of pamtotiff, pbmtoppa, pbmtogo and pamtotga use the facilities in this
-  file for it.  
+  file for it.
 =============================================================================*/
 
 #include <string.h>
@@ -71,7 +71,7 @@ static const char * const errorUndefinedMode =
    strings follow a single index or "flag" byte N.  There are several
    variations, differing in the format of the flag byte, maximum string
    length and element size (byte or word).
-   
+
    In the most widely used version, Packbits, the meaning of the flag byte
    N is defined as follows:
 
@@ -110,7 +110,7 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
 
     int packBase;
     int packSign;
- 
+
     switch (mode) {
     case PM_RLE_PACKBITS:
         packBase = 257 ; packSign = -1; break;
@@ -128,7 +128,7 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
             for (count = 0;
                  inCurs < inSize &&
                      inbuf[inCurs] == inbuf[hold] &&
-                     count < maxRun; 
+                     count < maxRun;
                  ++inCurs, ++count)
                 ;
             outbuf[outCurs++] = (unsigned char) (packBase + packSign * count);
@@ -139,7 +139,7 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
             size_t count;
             ++outCurs;
             count = 0;
-            while(((inCurs + 2 >= inSize) && (inCurs < inSize) ) || 
+            while(((inCurs + 2 >= inSize) && (inCurs < inSize) ) ||
                   ((inCurs + 2 <  inSize) &&
                    ((inbuf[inCurs] != inbuf[inCurs+1]  )
                     || (inbuf[inCurs] != inbuf[inCurs+2]  ) ) )    ) {
@@ -242,7 +242,7 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
             outCurs += count * 2;
         }
     }
-    
+
     if (mode == PM_RLE_SGI16) {
         * (uint16_t *) &outbuf[outCurs] = 0;     /* terminator */
         outCurs += 2;
@@ -336,7 +336,7 @@ pm_rlenc_maxbytes(size_t          const inSize,  /* number of elements */
     size_t itemSize;   /* Size of item, in bytes */
     size_t miscSize;   /* Size of other elements such as term code, in bytes */
     size_t overhead;   /* Worst-case overhead, in bytes */
-    /* return value:      Worst-case output size, in bytes */ 
+    /* return value:      Worst-case output size, in bytes */
 
     switch (mode) {
     case PM_RLE_PACKBITS:
@@ -359,7 +359,7 @@ pm_rlenc_maxbytes(size_t          const inSize,  /* number of elements */
     default:
         pm_error(errorUndefinedMode, mode);
     }
-    
+
     overhead = miscSize +
         (inSize / blockSize + (inSize % blockSize > 0 ? 1 : 0) ) * flagSize;
 

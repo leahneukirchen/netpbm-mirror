@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmtoarbtxt
 # Also requires: pnminvert pamtopnm
 
@@ -30,5 +30,4 @@ ppmtoarbtxt ${bodyskl} -hd ${headskl} testimg.ppm | tee ${inv_ppm} |
 
 cat ${inv_ppm} | ppmtoarbtxt ${bodyskl} -hd ${headskl} | pamtopnm | cksum
 
-
-rm ${bodyskl} ${headskl}
+rm ${inv_ppm} ${bodyskl} ${headskl}

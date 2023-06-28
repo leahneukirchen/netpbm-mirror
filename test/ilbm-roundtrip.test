@@ -1,28 +1,58 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: ppmtoilbm ilbmtoppm
-# Also requires: pamseq pamdepth pamtopnm pnmremap
+# Also requires: pamseq pamdepth pamtopnm pnmremap pnmcolormap
 
-#Test. 1  Should produce 829921912 685 four times
-#Output is PPM raw, 14 by 16  maxval 255
-ppmtoilbm testgrid.pbm | ilbmtoppm | cksum
-ppmtoilbm -aga testgrid.pbm | ilbmtoppm | cksum
-ppmtoilbm -ham6 testgrid.pbm | ilbmtoppm | cksum
-ppmtoilbm -ham8 testgrid.pbm | ilbmtoppm | cksum
+echo "Test 1.  Should produce 669206373 10102 four times"
+#Output is PPM raw, 57 by 59  maxval 255
+
+ppmtoilbm maze.pbm | ilbmtoppm | cksum
+ppmtoilbm -aga maze.pbm | ilbmtoppm | cksum
+ppmtoilbm -ham6 maze.pbm | ilbmtoppm | cksum
+ppmtoilbm -ham8 maze.pbm | ilbmtoppm | cksum
 
 
-#Test. 2  Should produce 1926073387 101484 three times
+echo "Test 2.  Should produce 1926073387 101484 three times"
 ppmtoilbm testimg.ppm | ilbmtoppm | cksum
 ppmtoilbm -24force testimg.ppm | ilbmtoppm | cksum
 ppmtoilbm -dcbits 8 8 8 -nocompress testimg.ppm | ilbmtoppm | cksum
 
+tmpdir=${tmpdir:-/tmp}
 
-#Test. 3  Should print 984199586 101484
-pamseq 3 5 -tupletype=RGB | pamdepth 255 | pamtopnm | \
+echo "Test 3.  Should print 984199586 101484"
+test_ppm=${tmpdir}/test.ppm
+pamseq 3 5 -tupletype=RGB | pamdepth 255 | pamtopnm | tee ${test_ppm} | \
   pnmremap -mapfile=- testimg.ppm | ppmtoilbm | ilbmtoppm | cksum
 
 
-#Test. 4 Should print 2059976475 661 twice
-pamseq 3 5 -tupletype=RGB | pamtopnm | \
-  ppmtoilbm -compress | ilbmtoppm | cksum
-pamseq 3 5 -tupletype=RGB | pamtopnm | \
-  ppmtoilbm -nocompress | ilbmtoppm | cksum
+echo "Test 4.  Should print 2059976475 661 three times"
+cat ${test_ppm} | cksum
+ppmtoilbm -compress ${test_ppm} | ilbmtoppm | cksum
+ppmtoilbm -nocompress ${test_ppm} | ilbmtoppm | cksum
+
+rm ${test_ppm}
+
+echo "Test 5.  Should print 482756572 101484 twice"
+mapfile=${tmpdir}/mapfile
+
+# The following was produced by running "pnmcolormap -plain 32 testimg.ppm"
+# We use a prefabricated mapfile because pnmcolormap is known to
+# produce slightly different output on different systems.
+
+cat > ${mapfile} << EOF
+P3
+32 1
+255
+106 82 80 46 43 34 128 62 46 189 68 63 209 41 43 209 65 46 241 62 72
+ 240 189 195 
+122 142 103 92 131 68 159 129 188 177 205 195 96 132 107 193 150 107
+ 242 253 238 241 73 108 
+121 75 67 182 67 47 98 88 48 237 36 47 66 45 42 68 84 43 182 45 41
+ 70 77 67 
+96 45 45 237 62 47 150 59 41 189 76 103 48 69 31 52 68 52 48 45 51
+ 105 80 130 
+EOF
+
+ppmtoilbm -map ${mapfile} testimg.ppm | ilbmtoppm | tee ${test_ppm} | cksum
+ppmtoilbm -map ${mapfile} ${test_ppm} | ilbmtoppm | cksum
+
+rm ${mapfile} ${test_ppm}

@@ -71,8 +71,6 @@ parseCommandLine(int argc, const char **argv,
 
 static bool verbose;
 
-static unsigned char const pngHeader[] = PNG_HEADER;
-
 
 
 struct Palette {
@@ -285,10 +283,10 @@ writeBmpImageHeader(unsigned int const width,
 /*----------------------------------------------------------------------------
 
   Write BMP image header
-    
+
   Note: bm_height is sum of rows in XOR mask and AND mask, while
   image_size is the size of the AND mask only.
-    
+
   image_size does not include the sizes of the (optional) palette
   and the (mandatory) AND mask.
 -----------------------------------------------------------------------------*/
@@ -319,8 +317,8 @@ write32BitBmp(const struct pam *   const pamP,
   Write a 32-bit BMP encoded image to file *ofP.
 -----------------------------------------------------------------------------*/
     int row;
-    
-    writeBmpImageHeader(pamP->width, pamP->height, 32, 
+
+    writeBmpImageHeader(pamP->width, pamP->height, 32,
                         pamP->width * 4 * pamP->height, ofP);
 
     /*  write "XOR mask" */
@@ -336,7 +334,7 @@ write32BitBmp(const struct pam *   const pamP,
                 + ((uint32_t) pixel[PAM_GRN_PLANE] <<  8)
                 + ((uint32_t) pixel[PAM_BLU_PLANE] <<  0)
                 ;
-            
+
             if (haveAlpha)
                 val += (uint32_t) tuples[row][col][alphaPlane] << 24;
 
@@ -362,7 +360,7 @@ writeBmpPalette(const struct Palette * const paletteP,
                             +(paletteP->color[i][PAM_RED_PLANE] << 16)
                             +(paletteP->color[i][PAM_GRN_PLANE] <<  8)
                             +(paletteP->color[i][PAM_BLU_PLANE] <<  0));
-    
+
     for (; i < maxColors; ++i)
         pm_writelittlelongu(ofP, 0);
 }
@@ -384,7 +382,7 @@ writeXorMask(const struct pam *     const pamP,
     unsigned int const maxCol = ((pamP->width * bpp + 31) & ~31) / bpp;
 
     int row;
-                 
+
     for (row = pamP->height - 1; row >= 0; --row) {
         uint8_t  val;
         uint16_t mask;
@@ -502,7 +500,7 @@ writeAndMask(const struct pam * const pamP,
             mask <<= 1;
             val  <<= 1;
 
-            if (!andMakesOpaque(pamP, tuples, row, col, 
+            if (!andMakesOpaque(pamP, tuples, row, col,
                                 haveAlpha, alphaPlane, haveAnd, andPlane))
                 val |= 0x1;
 
@@ -539,7 +537,7 @@ makeAlphaFile(const struct pam * const imagePamP,
     struct pam alphaPam;
     tuple ** alphaTuples;
     unsigned int row;
-    
+
     pm_make_tmpfile(&alphaFileP, alphaFileNameP);
 
     alphaPam.size   = sizeof(alphaPam);
@@ -640,7 +638,7 @@ writePng(const struct pam * const pamP,
 
     acceptParm.ofP = ofP;
     acceptParm.writeCtP = &pngSize;
-    
+
     if (haveAlpha || haveAnd) {
         const char * alphaFileName;
         const char * alphaOpt;
@@ -652,15 +650,15 @@ writePng(const struct pam * const pamP,
 
         strcpy (pam.tuple_type,
                 pam.depth == 3 ? PAM_PPM_TUPLETYPE: PAM_PGM_TUPLETYPE);
-        
+
         pm_asprintf(&alphaOpt, "-alpha=%s", alphaFileName);
 
         pm_system_lp("pnmtopng", pm_feed_from_pamtuples, &pamTuples,
                      acceptToFile, &acceptParm,
                      "pnmtopng", alphaOpt, NULL);
-    
+
         pm_strfree(alphaOpt);
-    
+
         unlink(alphaFileName);
     } else {
         pm_system_lp("pnmtopng", pm_feed_from_pamtuples, &pamTuples,
@@ -908,19 +906,19 @@ writeIconAndCreateDirEntry(const struct pam *     const pamP,
             if (paletteP->colorCt <= 2) {
                 dirEntryP->color_count    = paletteP->colorCt;
                 dirEntryP->bits_per_pixel = 1;
-                    
+
                 writePaletteBmp(1, pamP, tuples, getPixel, paletteP,
                                 ofP, &bmpSize);
             } else if (paletteP->colorCt <= 16) {
                 dirEntryP->color_count    = paletteP->colorCt;
                 dirEntryP->bits_per_pixel = 4;
-                    
+
                 writePaletteBmp(4, pamP, tuples, getPixel,paletteP,
                                 ofP, &bmpSize);
             } else {
                 dirEntryP->color_count    = 0;
                 dirEntryP->bits_per_pixel = 8;
-                    
+
                 writePaletteBmp(8, pamP, tuples, getPixel, paletteP,
                                 ofP, &bmpSize);
             }
@@ -952,7 +950,7 @@ convertOneImage(unsigned int     const imageNum,
     GetPixelFn *        getPixel;
     struct Palette      palette;
     bool                doingPng;
-        
+
     /*  Output:
      *
      *  threshold^2 pixels or more:
@@ -975,6 +973,10 @@ convertOneImage(unsigned int     const imageNum,
     tuples = pnm_allocpamarray(&pam);
 
     doingPng = pam.width * pam.height >= pngThreshold;
+
+    if (verbose)
+        pm_message("Image %2u: encoding as %s",
+                   imageNum, doingPng ? "PNG" : "BMP");
 
     readAndScalePam(&pam, doingPng, tuples);
 
@@ -1018,7 +1020,7 @@ convert(FILE *           const ifP,
 -----------------------------------------------------------------------------*/
     unsigned int imageNum;
     int eof;
-    
+
     for (imageNum = 0, eof = false; !eof; ++imageNum) {
         convertOneImage(imageNum, ifP, pngThreshold, mustBlackenXor,
                         ofP, dirP);
@@ -1032,14 +1034,14 @@ convert(FILE *           const ifP,
 static void
 writeIconDirEntry(const struct IconDirEntry * const dirEntryP,
                   FILE *                      const ofP) {
-        
+
     pm_writecharu        (ofP, dirEntryP->width);
     pm_writecharu        (ofP, dirEntryP->height);
     pm_writecharu        (ofP, dirEntryP->color_count);
     pm_writecharu        (ofP, dirEntryP->zero);
     pm_writelittleshortu (ofP, dirEntryP->color_planes);
     pm_writelittleshortu (ofP, dirEntryP->bits_per_pixel);
-    pm_writelittlelongu  (ofP, dirEntryP->size); 
+    pm_writelittlelongu  (ofP, dirEntryP->size);
     pm_writelittlelongu  (ofP, dirEntryP->offset);
 }
 
@@ -1067,7 +1069,7 @@ writeIconDirectory(const struct IconDir * const dirP,
          ++imageNum) {
 
         struct IconDirEntry * const dirEntryP = &dirP->entries[imageNum];
-        
+
         pm_message("image %2u: %3u x %3u x %2u",
                    imageNum,
                    dirEntryP->width,
@@ -1089,7 +1091,7 @@ copyFile(FILE * const ifP,
          FILE * const ofP) {
 
     bool eof;
-    
+
     for (eof = false; !eof; ) {
         unsigned char buffer[1024];
         size_t bytesRead;

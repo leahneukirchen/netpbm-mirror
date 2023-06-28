@@ -24,7 +24,7 @@ errorHandler(png_structp     const png_ptr,
 
     jmp_buf * jmpbufP;
 
-    /* this function, aside from the extra step of retrieving the "error
+    /* This function, aside from the extra step of retrieving the "error
        pointer" (below) and the fact that it exists within the application
        rather than within libpng, is essentially identical to libpng's
        default error handler.  The second point is critical:  since both
@@ -416,6 +416,26 @@ void
 pngx_setFilter(struct pngx * const pngxP,
                int           const filterSet) {
 
+    /* This sets the allowed filters in the compressor.  The filters, and thus
+       the interpretation of 'filterSet', is specific to a filter method (aka
+       filter type), which you set with pngx_setIhdr.  There is only one
+       filter method defined today, though (PNG_FILTER_TYPE_BASE).
+
+       For filter method Base, 'filterSet' is the OR of the following masks,
+       each one allowing the compressor to use one filter.  Not that  the
+       compressor decides on a row-by-row basis what filter to use.
+
+         PNG_FILTER_NONE
+         PNG_FILTER_SUB
+         PNG_FILTER_UP
+         PNG_FILTER_AVG
+         PNG_FILTER_PAETH
+
+       There are also
+
+         PNG_NO_FILTERS
+         PNG_ALL_FILTERS
+    */
     png_set_filter(pngxP->png_ptr, 0, filterSet);
 }
 

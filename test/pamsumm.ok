@@ -1,8 +1,20 @@
+Test 1.  Should print in order: 56, 0, 1, 0.250000
 56
 0
 1
 0.250000
+Test 2.  Should print in order: 1627, 0, 1, 0.483794
+1627
+0
+1
+0.483794
+Test 3.  Should print in order: 10772432, 15, 255, 106.164760
 10772432
 15
 255
 106.164760
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1

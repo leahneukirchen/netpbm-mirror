@@ -7,19 +7,20 @@ The file LICENSE.TXT in this directory contains the license (the
 Artistic License) under which Bryan took and redistributed Shhopt and
 the license under which Bryan offers the modified Shhopt to others.
 
-Bryan made the following changes to shhopt for Netpbm.  It is fully
-backward compatible with the original.
+Bryan made the following changes to shhopt for Netpbm.  
 
 - OPT_FLOAT (floating point number) data type added
 
-- optParseOptions2() added.  Advantages over optParseOptions(): You
+- symbols prefixed with "pm_".
+
+- pm_optParseOptions2() added.  Advantages over pm_optParseOptions(): You
   can have a syntax where there is no such thing as a short option
   (e.g. -a.  Maybe stacked like -tanp).  Then the long options can
   have either 1 or 2 dashes (e.g. -width or --width).  Of course, -w
   could be an abbreviation of -width; that's not the same thing as a
   short option.
 
-- optParseOptions3() added.  Advantages over optParseOptions2(): 
+- pm_optParseOptions3() added.  Advantages over pm_optParseOptions2(): 
   Tells you whether (how many times, actually) an option was
   specified - no need to play games with defaults.  Also, no need
   to initialize an option value variable.
@@ -33,6 +34,15 @@ backward compatible with the original.
 
 - replace isdigit() with ISDIGIT() from Netpbm nstring.h so weird 
   8-bit characters don't cause incorrect results.
+
+- OPT_NAMELIST and OPT_STRINGLIST added.
+
+WARNING: pm_optParseOptionsX modify their argv argument (the array of
+pointers, not the the things to which they point).
+
+WARNING: The option values returned by pm_optParseOptionsX for options of type
+OPT_STRING reside in the program's argument space (the memory addressed by the
+program's argv array).
 
 ------------------------------------------------------------------------------
 

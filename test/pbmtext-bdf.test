@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtext
 # Also requires:
 
@@ -65,8 +65,10 @@ EOF
 
 # Test 1
 # This should succeed and produce 386826492 35
-pbmtext -font ${font_bdf} ABC | cksum
 
+echo "Test 1"
+
+pbmtext -font ${font_bdf} ABC | cksum
 
 # Test 2
 # These should all fail.  Writes 1 eightteen times.
@@ -74,6 +76,8 @@ pbmtext -font ${font_bdf} ABC | cksum
 echo "Test whether corrupted BDF font files are properly handled." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
+
+echo "Test 2"
 
 pbmtext -font ${font_bdf} BCD
 echo $?
@@ -154,9 +158,11 @@ for delete_line in 14 16 18 20
   done
 
 
-# Test 2
+# Test 3
 # These should succeed.  Warning messages will be displayed.
 # Writes 1 two times.
+
+echo "Test 3"
 
 for token in "CHARSET_ENCODING" "CHARSET_REGISTRY"
 do
@@ -167,3 +173,5 @@ do
   echo $?
   rm ${font_corrupt_bdf}
 done
+
+rm ${font_bdf}

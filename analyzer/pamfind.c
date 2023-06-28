@@ -1,4 +1,6 @@
+#include <assert.h>
 #include <nstring.h>
+
 #include <pam.h>
 
 #include "pm_c_util.h"
@@ -9,9 +11,11 @@
 typedef struct {
     unsigned int * target;
     unsigned int   targetDepth;
+    unsigned int   machine;
     const char *   color;  /* NULL means not specified */
     const char *   inputFileName;
 } CmdLineInfo;
+
 
 
 static CmdLineInfo
@@ -33,9 +37,10 @@ parsedCommandLine(int                 argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "target",  OPT_STRINGLIST, &target,         &targetSpec, 0);
-    OPTENT3(0,   "color",   OPT_STRING,     &cmdLine.color,  &colorSpec,  0);
-    OPTENT3(0,  0,          OPT_END,        NULL,            NULL,        0);
+    OPTENT3(0,   "target",  OPT_STRINGLIST, &target,          &targetSpec, 0);
+    OPTENT3(0,   "color",   OPT_STRING,     &cmdLine.color,   &colorSpec,  0);
+    OPTENT3(0,   "machine", OPT_FLAG,       NULL,       &cmdLine.machine,  0);
+    OPTENT3(0,  0,          OPT_END,        NULL,             NULL,        0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -43,35 +48,37 @@ parsedCommandLine(int                 argc,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
-    if (targetSpec) {
-        if (colorSpec)
-            pm_error("You cannot specify both -target and -color");
-        else {
-            unsigned int i;
+    if (targetSpec + colorSpec > 1)
+        pm_error("You cannot specify both -target and -color");
 
-            cmdLine.color = NULL;
+    else if (targetSpec + colorSpec == 0)
+        pm_error("You must specify either -target or -color");
 
-            cmdLine.target = NULL;  /* initial value */
+    else if (targetSpec) {
+        unsigned int i;
 
-            for (i = 0, cmdLine.targetDepth = 0; target[i]; ++i) {
-                unsigned int sampleVal;
-                const char * error;
+        cmdLine.color = NULL;
 
-                pm_string_to_uint(target[i], &sampleVal, &error);
-                if (error) {
-                    pm_error("Invalid sample value in -target option: '%s'.  "
-                             "%s", target[i], error);
-                }
+        cmdLine.target = NULL;  /* initial value */
 
-                REALLOCARRAY(cmdLine.target, i+1);
+        for (i = 0, cmdLine.targetDepth = 0; target[i]; ++i) {
+            unsigned int sampleVal;
+            const char * error;
 
-                cmdLine.target[cmdLine.targetDepth++] = sampleVal;
+            pm_string_to_uint(target[i], &sampleVal, &error);
+            if (error) {
+                pm_error("Invalid sample value in -target option: '%s'.  "
+                         "%s", target[i], error);
             }
 
-            free(target);
+            REALLOCARRAY(cmdLine.target, i+1);
+
+            cmdLine.target[cmdLine.targetDepth++] = sampleVal;
         }
-    } else if (!colorSpec)
-        pm_error("You must specify either -target or -color");
+
+        free(target);
+    } else
+        assert (colorSpec == 1);
 
     if (argc-1 < 1)
         cmdLine.inputFileName = "-";
@@ -118,7 +125,7 @@ targetValue(CmdLineInfo  const cmdLine,
     } else {
         if (cmdLine.targetDepth != inpamP->depth)
             pm_error("You specified a %u-tuple for -target, "
-                     "but the input image of of depth %u",
+                     "but the input image is of depth %u",
                      cmdLine.targetDepth, inpamP->depth);
         else {
             unsigned int i;
@@ -161,6 +168,29 @@ printHeader(FILE *       const ofP,
 
 
 
+static unsigned int
+decimalDigitCt(unsigned int const n) {
+/*----------------------------------------------------------------------------
+   Minimum number of digits needed to display 'n' in decimal.
+-----------------------------------------------------------------------------*/
+    unsigned int digitCt;
+
+    if (n == 0)
+        digitCt = 1;
+    else {
+        unsigned int x;
+
+        for (digitCt = 0, x = n; x > 0;) {
+            ++digitCt;
+            x /= 10;
+        }
+        assert(digitCt > 0);
+    }
+    return digitCt;
+}
+
+
+
 static void
 pamfind(FILE *       const ifP,
         struct pam * const inpamP,
@@ -174,8 +204,16 @@ pamfind(FILE *       const ifP,
         tuple   const target   = targetValue(cmdLine, inpamP);
 
         unsigned int row;
+        const char * fmt;
 
-        printHeader(ofP, inpamP, target);
+        if (cmdLine.machine) {
+            pm_asprintf(&fmt, "%%0%uu %%0%uu\n",
+                        decimalDigitCt(inpamP->height-1),
+                        decimalDigitCt(inpamP->width-1));
+        } else {
+            printHeader(ofP, inpamP, target);
+            fmt = pm_strdup("(%u, %u)\n");
+        }
 
         for (row = 0; row < inpamP->height; ++row) {
             unsigned int col;
@@ -185,10 +223,11 @@ pamfind(FILE *       const ifP,
             for (col = 0; col < inpamP->width; ++col) {
 
                 if (pnm_tupleequal(inpamP, target, inputRow[col])) {
-                    fprintf(ofP, "(%u, %u)\n", row, col);
+                    fprintf(ofP, fmt, row, col);
                 }
             }
         }
+        pm_strfree(fmt);
         pnm_freepamtuple(target);
         pnm_freepamrow(inputRow);
     }

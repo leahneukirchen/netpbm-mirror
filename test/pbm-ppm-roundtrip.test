@@ -1,0 +1,34 @@
+#! /bin/sh
+# This script tests: pgmtoppm ppmtopgm ppmtoppm pgmtopbm
+# Also requires: pbmmake ppmcolormask pnminvert
+
+echo "Test 1.  Should print 281226646 481 five times."
+
+cat maze.pbm | cksum
+pgmtoppm black-white maze.pbm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 | cksum
+pgmtoppm white-black maze.pbm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 | pnminvert | cksum
+pgmtoppm white-black maze.pbm | ppmcolormask white | cksum
+ppmtoppm < maze.pbm | ppmtopgm | pgmtopbm -th -val=0.5 | cksum
+
+echo "Test 2.  Should print three all-white, then three all-black PBM images"
+
+pbmmake -w 7 3  -plain
+echo
+
+pbmmake -w 7 3 | pgmtoppm black-white | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain
+echo
+pbmmake -w 7 3 | ppmtoppm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain
+echo
+
+pbmmake -b 17 2 -plain
+echo
+
+pbmmake -b 17 2 | pgmtoppm black-white | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain
+echo
+pbmmake -b 17 2 | ppmtoppm | ppmtopgm | \
+  pgmtopbm -th -val=0.5 -plain

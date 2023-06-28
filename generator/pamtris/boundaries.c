@@ -120,7 +120,7 @@ gen_triangle_boundaries(Xy              const xy,
     }
 
     if (xy._[0][1] == xy._[1][1] && xy._[1][1] == xy._[2][1]) {
-        /* Triangle is degenarate: its visual representation consists only of
+        /* Triangle is degenerate: its visual representation consists only of
            a horizontal straight line.
         */
 

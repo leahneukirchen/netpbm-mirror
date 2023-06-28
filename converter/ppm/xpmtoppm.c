@@ -544,7 +544,7 @@ interpretXpm3ColorTableLine(char               const line[],
                     addToColorMap(hashP, colorName, curbuf, isTransparent);
                     highkey = curkey;
                 }
-                /* intialize state to process this new key */
+                /* initialize state to process this new key */
                 curkey = key;
                 curbuf[0] = '\0';
                 isTransparent = FALSE;
@@ -606,7 +606,7 @@ readXpm3Header(FILE *             const ifP,
                ColorNameHash **   const colorNameHashPP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream *ifP.  Assume the
-  getLine() stream is presently positioned to the beginning of the
+  getLine() stream is currently positioned to the beginning of the
   file and it is a Version 3 XPM file.  Leave the stream positioned
   after the header.
 
@@ -721,7 +721,7 @@ readXpm1Header(FILE *           const ifP,
                ColorNameHash ** const colorNameHashPP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream *ifP.  Assume the
-  getLine() stream is presently positioned to the beginning of the
+  getLine() stream is currently positioned to the beginning of the
   file and it is a Version 1 XPM file.  Leave the stream positioned
   after the header.
 
@@ -1074,7 +1074,7 @@ main(int argc, char *argv[]) {
 **  - Now understands multiword X11 color names
 **
 **  - Now reads multiple color keys. Takes the color
-**    of the hightest available key. Lines no longer need
+**    of the highest available key. Lines no longer need
 **    to begin with key 'c'.
 **
 **  - expanded line buffer to from 500 to 2048 for bigger files

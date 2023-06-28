@@ -1,8 +1,8 @@
 /*
-** 
-** Add gaussian, multiplicative gaussian, impulse, laplacian or 
-** poisson noise to a portable anymap.
-** 
+**
+** Add gaussian, multiplicative gaussian, impulse, laplacian or
+** poisson noise to a Netpbm image
+**
 ** Version 1.0  November 1995
 **
 ** Copyright (C) 1995 by Mike Burns (burns@cac.psu.edu)
@@ -28,33 +28,198 @@
 
 #define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
+#include <assert.h>
 #include <math.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
+#include "rand.h"
+#include "shhopt.h"
+#include "pm_gamma.h"
 #include "pam.h"
 
-#define RANDOM_MASK 0x7FFF  /* only compare lower 15 bits.  Stupid PCs. */
-
 static double const EPSILON = 1.0e-5;
-static double const arand = 32767.0;      /* 2^15-1 in case stoopid computer */
+static double const SALT_RATIO = 0.5;
 
-enum noiseType {
-    GAUSSIAN,
-    IMPULSE,  /* aka salt and pepper noise */
-    LAPLACIAN,
-    MULTIPLICATIVE_GAUSSIAN,
-    POISSON,
-    MAX_NOISE_TYPES
+
+
+static double
+rand1(struct pm_randSt * const randStP) {
+
+    return (double)pm_rand(randStP)/RAND_MAX;
+}
+
+
+
+enum NoiseType {
+    NOISETYPE_GAUSSIAN,
+    NOISETYPE_IMPULSE,  /* aka salt and pepper noise */
+    NOISETYPE_LAPLACIAN,
+    NOISETYPE_MULTIPLICATIVE_GAUSSIAN,
+    NOISETYPE_POISSON
 };
 
 
 
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+
+    enum NoiseType noiseType;
+
+    unsigned int seedSpec;
+    unsigned int seed;
+
+    float lambda;
+    float lsigma;
+    float mgsigma;
+    float sigma1;
+    float sigma2;
+    float tolerance;
+};
+
+
+
+static enum NoiseType
+typeFmName(const char * const name) {
+
+    enum NoiseType retval;
+
+    if (false)
+        assert(false);
+    else if (pm_keymatch(name, "gaussian", 1))
+        retval = NOISETYPE_GAUSSIAN;
+    else if (pm_keymatch(name, "impulse", 1))
+        retval = NOISETYPE_IMPULSE;
+    else if (pm_keymatch(name, "laplacian", 1))
+        retval = NOISETYPE_LAPLACIAN;
+    else if (pm_keymatch(name, "multiplicative_gaussian", 1))
+        retval = NOISETYPE_MULTIPLICATIVE_GAUSSIAN;
+    else if (pm_keymatch(name, "poisson", 1))
+        retval = NOISETYPE_POISSON;
+    else
+        pm_error("Unrecognized -type value '%s'.  "
+                 "We recognize 'gaussian', 'impulse', 'laplacian', "
+                 "'multiplicative_gaussian', and 'poisson'", name);
+
+    return retval;
+}
+
+
+
 static void
-gaussian_noise(sample   const maxval,
-               sample   const origSample,
-               sample * const newSampleP,
-               float    const sigma1,
-               float    const sigma2) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options. */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    unsigned int typeSpec, lambdaSpec, lsigmaSpec, mgsigmaSpec,
+        sigma1Spec, sigma2Spec, toleranceSpec;
+
+    const char * type;
+
+    MALLOCARRAY(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "type",            OPT_STRING,   &type,
+            &typeSpec,           0);
+    OPTENT3(0,   "seed",            OPT_UINT,     &cmdlineP->seed,
+            &cmdlineP->seedSpec, 0);
+    OPTENT3(0,   "lambda",          OPT_FLOAT,    &cmdlineP->lambda,
+            &lambdaSpec,         0);
+    OPTENT3(0,   "lsigma",          OPT_FLOAT,    &cmdlineP->lsigma,
+            &lsigmaSpec,         0);
+    OPTENT3(0,   "mgsigma",         OPT_FLOAT,    &cmdlineP->mgsigma,
+            &mgsigmaSpec,        0);
+    OPTENT3(0,   "sigma1",          OPT_FLOAT,    &cmdlineP->sigma1,
+            &sigma1Spec,         0);
+    OPTENT3(0,   "sigma2",          OPT_FLOAT,    &cmdlineP->sigma2,
+            &sigma2Spec,         0);
+    OPTENT3(0,   "tolerance",       OPT_FLOAT,    &cmdlineP->tolerance,
+            &toleranceSpec,      0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!typeSpec)
+        cmdlineP->noiseType = NOISETYPE_GAUSSIAN;
+    else
+        cmdlineP->noiseType = typeFmName(type);
+
+    if (sigma1Spec && cmdlineP->noiseType != NOISETYPE_GAUSSIAN)
+        pm_error("-sigma1 is valid only with -type=gaussian");
+
+    if (sigma2Spec && cmdlineP->noiseType != NOISETYPE_GAUSSIAN)
+        pm_error("-sigma2 is valid only with -type=gaussian");
+
+    if (mgsigmaSpec &&
+        cmdlineP->noiseType != NOISETYPE_MULTIPLICATIVE_GAUSSIAN)
+        pm_error("-mgsigma is valid only with -type=multiplicative_guassian");
+
+    if (toleranceSpec && cmdlineP->noiseType != NOISETYPE_IMPULSE)
+        pm_error("-tolerance is valid only with -type=impulse");
+
+    if (lsigmaSpec && cmdlineP->noiseType != NOISETYPE_LAPLACIAN)
+        pm_error("-lsigma is valid only with -type=laplacian");
+
+    if (lambdaSpec && cmdlineP->noiseType != NOISETYPE_POISSON)
+        pm_error("-lambda is valid only with -type=poisson");
+
+    if (!lambdaSpec)
+        cmdlineP->lambda = 12.0;
+
+    if (!lsigmaSpec)
+        cmdlineP->lsigma = 10.0;
+
+    if (!mgsigmaSpec)
+        cmdlineP->mgsigma = 0.5;
+
+    if (!sigma1Spec)
+        cmdlineP->sigma1 = 4.0;
+
+    if (!sigma2Spec)
+        cmdlineP->sigma2 = 20.0;
+
+    if (!toleranceSpec)
+        cmdlineP->tolerance = 0.10;
+
+    if (!cmdlineP->seedSpec)
+        cmdlineP->seed = pm_randseed();
+
+    if (argc-1 > 1)
+        pm_error("Too many arguments (%u).  File spec is the only argument.",
+                 argc-1);
+
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else
+        cmdlineP->inputFileName = argv[1];
+
+    free(option_def);
+}
+
+
+
+static void
+addGaussianNoise(sample             const maxval,
+                 sample             const origSample,
+                 sample *           const newSampleP,
+                 float              const sigma1,
+                 float              const sigma2,
+                 struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add Gaussian noise.
 
@@ -64,14 +229,14 @@ gaussian_noise(sample   const maxval,
     double x1, x2, xn, yn;
     double rawNewSample;
 
-    x1 = (rand() & RANDOM_MASK) / arand; 
+    x1 = rand1(randStP);
 
     if (x1 == 0.0)
         x1 = 1.0;
-    x2 = (rand() & RANDOM_MASK) / arand;
+    x2 = rand1(randStP);
     xn = sqrt(-2.0 * log(x1)) * cos(2.0 * M_PI * x2);
     yn = sqrt(-2.0 * log(x1)) * sin(2.0 * M_PI * x2);
-    
+
     rawNewSample =
         origSample + (sqrt((double) origSample) * sigma1 * xn) + (sigma2 * yn);
 
@@ -81,41 +246,43 @@ gaussian_noise(sample   const maxval,
 
 
 static void
-impulse_noise(sample   const maxval,
-              sample   const origSample,
-              sample * const newSampleP,
-              float    const tolerance) {
+addImpulseNoise(sample             const maxval,
+                sample             const origSample,
+                sample *           const newSampleP,
+                float              const tolerance,
+                double             const saltRatio,
+                struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add impulse (salt and pepper) noise
 -----------------------------------------------------------------------------*/
 
-    double const low_tol  = tolerance / 2.0;
-    double const high_tol = 1.0 - (tolerance / 2.0);
-    double const sap = (rand() & RANDOM_MASK) / arand; 
+    double const pepperRatio = 1.0 - saltRatio;
+    double const loTolerance = tolerance * pepperRatio;
+    double const hiTolerance = 1.0 - tolerance * saltRatio;
+    double const sap         = rand1(randStP);
 
-    if (sap < low_tol) 
-        *newSampleP = 0;
-    else if ( sap >= high_tol )
-        *newSampleP = maxval;
-    else
-        *newSampleP = origSample;
+    *newSampleP =
+        sap < loTolerance ? 0 :
+        sap >= hiTolerance? maxval :
+        origSample;
 }
 
 
 
 static void
-laplacian_noise(sample   const maxval,
-                double   const infinity,
-                sample   const origSample,
-                sample * const newSampleP,
-                float    const lsigma) {
+addLaplacianNoise(sample             const maxval,
+                  double             const infinity,
+                  sample             const origSample,
+                  sample *           const newSampleP,
+                  float              const lsigma,
+                  struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add Laplacian noise
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double const u = (rand() & RANDOM_MASK) / arand; 
-                
+    double const u = rand1(randStP);
+
     double rawNewSample;
 
     if (u <= 0.5) {
@@ -136,11 +303,12 @@ laplacian_noise(sample   const maxval,
 
 
 static void
-multiplicative_gaussian_noise(sample   const maxval,
-                              double   const infinity,
-                              sample   const origSample,
-                              sample * const newSampleP,
-                              float    const mgsigma) {
+addMultiplicativeGaussianNoise(sample             const maxval,
+                               double             const infinity,
+                               sample             const origSample,
+                               sample *           const newSampleP,
+                               float              const mgsigma,
+                               struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Add multiplicative Gaussian noise
 
@@ -150,14 +318,14 @@ multiplicative_gaussian_noise(sample   const maxval,
     double rawNewSample;
 
     {
-        double const uniform = (rand() & RANDOM_MASK) / arand; 
+        double const uniform = rand1(randStP);
         if (uniform <= EPSILON)
             rayleigh = infinity;
         else
             rayleigh = sqrt(-2.0 * log( uniform));
     }
     {
-        double const uniform = (rand() & RANDOM_MASK) / arand; 
+        double const uniform = rand1(randStP);
         gauss = rayleigh * cos(2.0 * M_PI * uniform);
     }
     rawNewSample = origSample + (origSample * mgsigma * gauss);
@@ -166,262 +334,106 @@ multiplicative_gaussian_noise(sample   const maxval,
 }
 
 
-
-static void
-poisson_noise(sample   const maxval,
-              sample   const origSample,
-              sample * const newSampleP,
-              float    const lambda) {
+static double
+poissonPmf(double       const lambda,
+           unsigned int const k) {
 /*----------------------------------------------------------------------------
-   Add Poisson noise
+   This is the probability mass function (PMF) of a discrete random variable
+   with lambda 'lambda'.
+
+   I.e. it gives the probability that a value sampled from a Poisson
+   distribution with lambda 'lambda' has the value 'k'.
+
+   That means it's the probability that in a Poisson stream of events in which
+   the mean number of events in an interval of a certains size is 'lambda' that
+   'k' events happen.
 -----------------------------------------------------------------------------*/
-    double const x  = lambda * origSample;
-    double const x1 = exp(-x);
+    double x;
+    unsigned int i;
 
-    double rawNewSample;
-    float rr;
-    unsigned int k;
+    /* We're computing the formula
 
-    rr = 1.0;  /* initial value */
-    k = 0;     /* initial value */
-    rr = rr * ((rand() & RANDOM_MASK) / arand);
-    while (rr > x1) {
-        ++k;
-        rr = rr * ((rand() & RANDOM_MASK) / arand);
+         (pow(lamda, k) * exp(-lambda)) / fact(k).
+
+       Note that k is ordinarily quite small.
+    */
+
+    x = exp(-lambda);
+
+    for (i = 1; i <= k; ++i) {
+        x *= lambda;
+        x /= i;
     }
-    rawNewSample = k / lambda;
-
-    *newSampleP = MIN(MAX((int)rawNewSample, 0), maxval);
+    return x;
 }
 
 
 
-int 
-main(int argc, char * argv[]) {
+static void
+addPoissonNoise(struct pam *       const pamP,
+                sample             const origSample,
+                sample *           const newSampleP,
+                float              const lambdaOfMaxval,
+                struct pm_randSt * const randStP) {
+/*----------------------------------------------------------------------------
+   Add Poisson noise
+-----------------------------------------------------------------------------*/
+    samplen const origSamplen = pnm_normalized_sample(pamP, origSample);
+
+    float const origSampleIntensity = pm_ungamma709(origSamplen);
+
+    double const lambda  = origSampleIntensity * lambdaOfMaxval;
+
+    double const u = rand1(randStP);
+
+    /* We now apply the inverse CDF (cumulative distribution function) of the
+       Poisson distribution to uniform random variable 'u' to get a Poisson
+       random variable.  Unfortunately, we have no algebraic equation for the
+       inverse of the CDF, but the random variable is discrete, so we can just
+       iterate.
+    */
+
+    unsigned int k;
+    double cumProb;
+
+    for (k = 0, cumProb = 0.0; k < lambdaOfMaxval; ++k) {
+
+        cumProb += poissonPmf(lambda, k);
+
+        if (cumProb >= u)
+            break;
+    }
+
+    {
+        samplen const newSamplen = pm_gamma709(k/lambdaOfMaxval);
+
+        *newSampleP = pnm_unnormalized_sample(pamP, newSamplen);
+    }
+}
+
+
+
+int
+main(int argc, const char ** argv) {
 
     FILE * ifP;
+    struct CmdlineInfo cmdline;
     struct pam inpam;
     struct pam outpam;
     tuple * tuplerow;
     const tuple * newtuplerow;
     unsigned int row;
     double infinity;
+    struct pm_randSt randSt;
 
-    int argn;
-    const char * inputFilename;
-    int noise_type;
-    unsigned int seed;
-    int i;
-    const char * const usage = "[-type noise_type] [-lsigma x] [-mgsigma x] "
-        "[-sigma1 x] [-sigma2 x] [-lambda x] [-seed n] "
-        "[-tolerance ratio] [pgmfile]";
+    pm_proginit(&argc, argv);
 
-    const char * const noise_name[] = { 
-        "gaussian",
-        "impulse",
-        "laplacian",
-        "multiplicative_gaussian",
-        "poisson"
-    };
-    int const noise_id[] = { 
-        GAUSSIAN,
-        IMPULSE,
-        LAPLACIAN,
-        MULTIPLICATIVE_GAUSSIAN,
-        POISSON
-    };
-    /* minimum number of characters to match noise name for pm_keymatch() */
-    int const noise_compare[] = {
-        1,
-        1,
-        1,
-        1,
-        1
-    };
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* define default values for configurable options */
-    float lambda = 0.05;        
-    float lsigma = 10.0;
-    float mgsigma = 0.5;
-    float sigma1 = 4.0;
-    float sigma2 = 20.0;
-    float tolerance = 0.10;
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, cmdline.seedSpec, cmdline.seed);
 
-    pnm_init(&argc, argv);
-
-    seed = pm_randseed();
-    noise_type = GAUSSIAN;
-
-    argn = 1;
-    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-    {
-        if ( pm_keymatch( argv[argn], "-lambda", 3 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( 
-                    "incorrect number of arguments for -lambda option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -lambda option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            lambda = atof( argv[argn] );
-        }
-        else if ( pm_keymatch( argv[argn], "-lsigma", 3 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( 
-                    "incorrect number of arguments for -lsigma option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -lsigma option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            lsigma = atof( argv[argn] );
-        }
-        else if ( pm_keymatch( argv[argn], "-mgsigma", 2 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( 
-                    "incorrect number of arguments for -mgsigma option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -mgsigma option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            mgsigma = atof( argv[argn] );
-        }
-        else if ( pm_keymatch( argv[argn], "-seed", 3 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( "incorrect number of arguments for -seed option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -seed option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            seed = atoi(argv[argn]);
-        }
-        else if ( pm_keymatch( argv[argn], "-sigma1", 7 ) ||
-                  pm_keymatch( argv[argn], "-s1", 3 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( 
-                    "incorrect number of arguments for -sigma1 option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -sigma1 option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            sigma1 = atof( argv[argn] );
-        }
-        else if ( pm_keymatch( argv[argn], "-sigma2", 7 ) ||
-                  pm_keymatch( argv[argn], "-s2", 3 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( 
-                    "incorrect number of arguments for -sigma2 option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -sigma2 option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            sigma2 = atof( argv[argn] );
-        }
-        else if ( pm_keymatch( argv[argn], "-tolerance", 3 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( 
-                    "incorrect number of arguments for -tolerance option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -tolerance option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            tolerance = atof( argv[argn] );
-        }
-        else if ( pm_keymatch( argv[argn], "-type", 3 ) )
-        {
-            ++argn;
-            if ( argn >= argc )
-            {
-                pm_message( "incorrect number of arguments for -type option" );
-                pm_usage( usage );
-            }
-            else if ( argv[argn][0] == '-' )
-            {
-                pm_message( "invalid argument to -type option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            /* search through list of valid noise types and compare */
-            i = 0;
-            while ( ( i < MAX_NOISE_TYPES ) && 
-                    !pm_keymatch( argv[argn], 
-                                  noise_name[i], noise_compare[i] ) )
-                ++i;
-            if ( i >= MAX_NOISE_TYPES )
-            {
-                pm_message( "invalid argument to -type option: %s", 
-                            argv[argn] );
-                pm_usage( usage );
-            }
-            noise_type = noise_id[i];
-        }
-        else
-            pm_usage( usage );
-        ++argn;
-    }
-
-    if ( argn < argc )
-    {
-        inputFilename = argv[argn];
-        argn++;
-    }
-    else
-        inputFilename = "-";
-
-    if ( argn != argc )
-        pm_usage( usage );
-
-    srand(seed);
-
-    ifP = pm_openr(inputFilename);
+    ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -430,50 +442,56 @@ main(int argc, char * argv[]) {
 
     pnm_writepaminit(&outpam);
 
-    tuplerow = pnm_allocpamrow(&inpam);
+    tuplerow    = pnm_allocpamrow(&inpam);
     newtuplerow = pnm_allocpamrow(&inpam);
+
     infinity = (double) inpam.maxval;
-    
+
     for (row = 0; row < inpam.height; ++row) {
         unsigned int col;
         pnm_readpamrow(&inpam, tuplerow);
         for (col = 0; col < inpam.width; ++col) {
             unsigned int plane;
             for (plane = 0; plane < inpam.depth; ++plane) {
-                switch (noise_type) {
-                case GAUSSIAN:
-                    gaussian_noise(inpam.maxval,
-                                   tuplerow[col][plane],
-                                   &newtuplerow[col][plane],
-                                   sigma1, sigma2);
+                switch (cmdline.noiseType) {
+                case NOISETYPE_GAUSSIAN:
+                    addGaussianNoise(inpam.maxval,
+                                     tuplerow[col][plane],
+                                     &newtuplerow[col][plane],
+                                     cmdline.sigma1, cmdline.sigma2,
+                                     &randSt);
                     break;
-                    
-                case IMPULSE:
-                    impulse_noise(inpam.maxval,
-                                  tuplerow[col][plane],
-                                  &newtuplerow[col][plane],
-                                  tolerance);
-                   break;
-                    
-                case LAPLACIAN:
-                    laplacian_noise(inpam.maxval, infinity,
+
+                case NOISETYPE_IMPULSE:
+                    addImpulseNoise(inpam.maxval,
                                     tuplerow[col][plane],
                                     &newtuplerow[col][plane],
-                                    lsigma);
+                                    cmdline.tolerance, SALT_RATIO,
+                                    &randSt);
+                   break;
+
+                case NOISETYPE_LAPLACIAN:
+                    addLaplacianNoise(inpam.maxval, infinity,
+                                      tuplerow[col][plane],
+                                      &newtuplerow[col][plane],
+                                      cmdline.lsigma,
+                                      &randSt);
                     break;
-                    
-                case MULTIPLICATIVE_GAUSSIAN:
-                    multiplicative_gaussian_noise(inpam.maxval, infinity,
-                                                  tuplerow[col][plane],
-                                                  &newtuplerow[col][plane],
-                                                  mgsigma);
+
+                case NOISETYPE_MULTIPLICATIVE_GAUSSIAN:
+                    addMultiplicativeGaussianNoise(inpam.maxval, infinity,
+                                                   tuplerow[col][plane],
+                                                   &newtuplerow[col][plane],
+                                                   cmdline.mgsigma,
+                                                   &randSt);
                     break;
-                    
-                case POISSON:
-                    poisson_noise(inpam.maxval,
-                                  tuplerow[col][plane],
-                                  &newtuplerow[col][plane],
-                                  lambda);
+
+                case NOISETYPE_POISSON:
+                    addPoissonNoise(&inpam,
+                                    tuplerow[col][plane],
+                                    &newtuplerow[col][plane],
+                                    cmdline.lambda,
+                                    &randSt);
                     break;
 
                 }
@@ -481,8 +499,12 @@ main(int argc, char * argv[]) {
         }
         pnm_writepamrow(&outpam, newtuplerow);
     }
+    pm_randterm(&randSt);
     pnm_freepamrow(newtuplerow);
     pnm_freepamrow(tuplerow);
 
     return 0;
 }
+
+
+

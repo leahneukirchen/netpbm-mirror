@@ -1,0 +1,38 @@
+#! /bin/sh
+# This script tests: pbmnoise
+#
+
+# Assumes that the random number generator is Mersenne Twister
+
+echo "Test 1.  Should print 242292858 962 five times"
+
+for arg in "" "-ratio=1/2" "-ratio=256/512" "-ratio=32768/65536" "-pack" 
+    do
+    pbmnoise -endian=big -randomseed=1 1088 7 ${arg} | cksum
+done
+
+echo "Test 2."
+
+for i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 \
+	 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 
+         # for i in `seq 0 32`
+  do
+  pbmnoise -endian=little -randomseed=11 -ratio=$i/32 -plain 32 1 | \
+  tr '\n' ' ';  echo
+done
+
+echo "Test 3.  Should print 126142586 1218 four times"
+
+pbmnoise -endian=big -pack -randomseed=12 -plain 19 64 | sed 2d | tr -d '\n' | cksum
+pbmnoise -endian=big -pack -randomseed=12 -plain 152 8 | sed 2d | tr -d '\n' | cksum
+pbmnoise -endian=big -pack -randomseed=12 -plain 64 19 | sed 2d | tr -d '\n' | cksum
+pbmnoise -endian=big       -randomseed=12 -plain 64 19 | sed 2d | tr -d '\n' | cksum
+
+echo "Test 4."
+
+   pbmnoise -endian=big    -randomseed=23 64 1 -plain | tr '\n' ' '; echo
+(  pbmnoise -endian=native -randomseed=23 64 1 -plain | tr '\n' ' '; echo 
+   pbmnoise -endian=swap   -randomseed=23 64 1 -plain | tr '\n' ' '; echo
+)  | sort -nr
+   pbmnoise -endian=little -randomseed=23 64 1 -plain | tr '\n' ' '; echo
+

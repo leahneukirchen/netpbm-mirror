@@ -1,13 +1,15 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtomda mdatopbm
-# Also requires: pbmmake pnmpad pamcut
+# Also requires: pbmmake pnmpad pamcut pamfile
 
 
 # Pbmtomda requires input width and height to be multiples of 8.
 
-# Test 1.  Should print 1757803444 169
+echo "Test 1.  Should print 1757803444 169 twice"
+pbmmake -g 32 40 | cksum
 pbmmake -g 32 40 | pbmtomda | mdatopbm | cksum
 
-# Test 2.  Should print 2425386270 41
-pnmpad -right 2 testgrid.pbm | \
-  pbmtomda | mdatopbm | pamcut 0 0 14 16 | cksum
+echo "Test 2.  Should print 281226646 481"
+size=$(pamfile -size maze.pbm | awk '{print "-width="$1,"-height="$2}')
+pnmpad -mwidth=8 -halign=0 -mheight=8 -valign=0 ${size} maze.pbm | \
+    pbmtomda | mdatopbm | pamcut -left=0 -top=0 ${size} | cksum

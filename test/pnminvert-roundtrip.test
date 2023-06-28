@@ -1,7 +1,7 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnminvert
 # Also requires:
 
 
 pnminvert testimg.ppm | pnminvert | cksum
-pnminvert testgrid.pbm | pnminvert | cksum
+pnminvert maze.pbm | pnminvert | cksum

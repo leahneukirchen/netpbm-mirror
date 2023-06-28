@@ -1,0 +1,58 @@
+#! /bin/sh
+# This script tests: ppmtoacad ppmtoapplevol ppmtoascii ppmtolj ppmtomitsu
+# This script tests: ppmtopgm ppmtopuzz ppmtosixel ppmtoterm
+# This script tests: ppmtoicr ppmtoyuvsplit
+# Also requires: ppmpat
+
+tmpdir=${tmpdir:-/tmp}
+test_ppm=${tmpdir}/test.ppm
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+
+ppmpat -g2 -color=rgb:00/00/ff,rgb:ff/00/00 -mesh 12 12 > ${test_ppm}
+
+# These converters do not have counterparts in the reverse direction
+
+for testprog in  \
+        ppmtoacad \
+        ppmtoapplevol \
+        ppmtoascii \
+        "ppmtoicr -windowname testimage" \
+        ppmtolj \
+        ppmtomitsu \
+        ppmtopgm \
+        ppmtopuzz \
+        ppmtosixel \
+        ppmtoterm
+  do
+  ${testprog} ${test_ppm} > ${out1};      status1=$?
+  ${testprog} < ${test_ppm} > ${out2};    status2=$?
+  test -s ${out1};                        status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog}": "${status1} ${status2} ${status3} $?
+  rm ${out1} ${out2}
+  done
+
+rm ${test_ppm}
+
+testprog=ppmtoyuvsplit
+
+# Produces three output files
+
+  ${testprog} ${tmpdir}/base testgrid.pbm;     status1=$?
+  cat ${tmpdir}/base.Y  ${tmpdir}/base.U  ${tmpdir}/base.V > ${out1}
+  rm ${tmpdir}/base.Y  ${tmpdir}/base.U  ${tmpdir}/base.V
+
+  ${testprog} ${tmpdir}/base < testgrid.pbm;   status2=$?
+  cat ${tmpdir}/base.Y  ${tmpdir}/base.U  ${tmpdir}/base.V > ${out2}
+  rm ${tmpdir}/base.Y  ${tmpdir}/base.U  ${tmpdir}/base.V
+  test -s ${out1};                             status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog}": "${status1} ${status2} ${status3} $?
+  rm ${out1} ${out2}
+
+# Ppmtoppm input is from standard input
+
+# Ppmtoapplevol height must be 12
+# Ppmtoarbtxt needs body template file
+# Ppmtompeg parameter file must be given

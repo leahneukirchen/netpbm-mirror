@@ -867,7 +867,7 @@ termStack(struct Stack * const stackP) {
 
    What we call 'dataWidth', others call the "minimum code size," which is a
    misnomer, because the minimum code size in a stream must be at least one
-   more than 'dataWidth', to accomodate the clear and end codes.
+   more than 'dataWidth', to accommmodate the clear and end codes.
 -----------------------------------------------------------------------------*/
 
 static int const maxLzwCodeCt = (1<<MAX_LZW_BITS);
@@ -1722,7 +1722,7 @@ readImageData(FILE *       const ifP,
         pm_error("Invalid data width (bits for a true data item) "
                  "in image data: %u.  "
                  "Maximum allowable code size in GIF is %u, "
-                 "and a code has to be wide enough to accomodate both "
+                 "and a code has to be wide enough to accommodate both "
                  "all possible data values and two control codes",
                  lzwDataWidth, MAX_LZW_BITS);
 

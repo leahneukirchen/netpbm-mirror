@@ -2,7 +2,7 @@
  *  coder.c:        WFA coder toplevel functions
  *
  *  Written by:     Ullrich Hafner
- *      
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -56,7 +56,7 @@
 /*****************************************************************************
 
                 global variables
-  
+
 *****************************************************************************/
 
 const real_t MAXCOSTS = 1e20;
@@ -64,7 +64,7 @@ const real_t MAXCOSTS = 1e20;
 /*****************************************************************************
 
                 private code
-  
+
 *****************************************************************************/
 
 static char *
@@ -109,44 +109,44 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
 
             strcpy (prefix, template);
             prefix [s - template] = '\0';
-   
+
             for (s2 = ++s, n_digits = 0; ISDIGIT (*s2); s2++, n_digits++)
                 ;
             if (sscanf (s, "%d", &dummy) == 0 || dummy < 0)
                 error ("Input name template conversion failure.\n"
                        "Check spelling of template.");
             first = (unsigned) dummy;
-     
+
             if (*s2++ != '-')
                 error ("Input name template conversion failure.\n"
                        "Check spelling of template.");
-   
+
             for (s = s2; ISDIGIT (*s2); s2++)
                 ;
             if (sscanf (s, "%d", &dummy) == 0 || dummy < 0)
                 error ("Input name template conversion failure.\n"
                        "Check spelling of template.");
             last = (unsigned) dummy;
-     
-            if (*s2 == '+' || *s2 == '-') 
+
+            if (*s2 == '+' || *s2 == '-')
             {
                 for (s = s2++; ISDIGIT (*s2); s2++)
                     ;
                 if (sscanf (s, "%d", &increment) == 0)
                     error ("Input name template conversion failure.\n"
                            "Check spelling of template.");
-            }   
+            }
             if (*s2 != ']')
                 error ("Input name template conversion failure.\n"
                        "Check spelling of template.");
             suffix = s2 + 1;
-   
+
             image_num = first + increment * ith_image;
             if (image_num < 0)
                 error ("Input name template conversion failure.\n"
                        "Check spelling of template.");
-     
-            if ((increment >  0 && (unsigned) image_num > last) || 
+
+            if ((increment >  0 && (unsigned) image_num > last) ||
                 (increment <= 0 && (unsigned) image_num < last))
             {
                 /* TODO: check this */
@@ -158,7 +158,7 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
                     /* format string for image filename */
                 char image_name [MAXSTRLEN];
                     /* image file name to be composed */
-        
+
                 strcpy (formatstr, "%s%0?d%s");
                 formatstr [4] = '0' + (char) n_digits;
                 sprintf (image_name, formatstr, prefix, image_num, suffix);
@@ -167,7 +167,7 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
         }
     }
     return NULL;
-}   
+}
 
 
 
@@ -191,7 +191,7 @@ alloc_coder (char const * const * const inputname,
     coding_t * c;
 
     c = NULL;  /* initial value */
-   
+
    /*
     *  Check whether all specified image frames are readable and of same type
     */
@@ -200,7 +200,7 @@ alloc_coder (char const * const * const inputname,
         int     width, w = 0, height, h = 0;
         bool_t  color, c = NO;
         unsigned    n;
-      
+
         for (n = 0; (filename = get_input_image_name (inputname, n)); n++)
         {
             xelval maxval;
@@ -220,7 +220,7 @@ alloc_coder (char const * const * const inputname,
                 pm_close(file);
             }
             color = (PNM_FORMAT_TYPE(format) == PPM_FORMAT) ? TRUE: FALSE;
-                
+
             if (n > 0)
             {
                 if (w != width || h != height || c != color)
@@ -249,13 +249,13 @@ alloc_coder (char const * const * const inputname,
     */
     {
         unsigned lx, ly;
-      
+
         lx = (unsigned) (log2 (wi->width - 1) + 1);
         ly = (unsigned) (log2 (wi->height - 1) + 1);
-      
+
         wi->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
     }
-   
+
     c = Calloc (1, sizeof (coding_t));
 
     c->options             = *options;
@@ -278,10 +278,10 @@ alloc_coder (char const * const * const inputname,
                  c->options.lc_max_level, wi->level - c->tiling->exponent - 1);
         c->options.lc_max_level = wi->level - c->tiling->exponent - 1;
     }
-   
+
     if (c->options.lc_min_level > c->options.lc_max_level)
         c->options.lc_min_level = c->options.lc_max_level;
-   
+
     /*
      *  p_min_level, p_max_level min and max level for ND/MC prediction
      *  [p_min_level, p_max_level] must be a subset of [min_level, max_level] !
@@ -293,7 +293,7 @@ alloc_coder (char const * const * const inputname,
 
     c->options.images_level = MIN(c->options.images_level,
                                   c->options.lc_max_level - 1);
-   
+
     c->products_level  = MAX(0, ((signed int) c->options.lc_max_level
                                  - (signed int) c->options.images_level - 1));
     c->pixels         = Calloc (size_of_level (c->options.lc_max_level),
@@ -301,7 +301,7 @@ alloc_coder (char const * const * const inputname,
     c->images_of_state = Calloc (MAXSTATES, sizeof (real_t *));
     c->ip_images_state = Calloc (MAXSTATES, sizeof (real_t *));
     c->ip_states_state = Calloc (MAXSTATES * MAXLEVEL, sizeof (real_t *));
-   
+
     debug_message ("Imageslevel :%d, Productslevel :%d",
                    c->options.images_level, c->products_level);
     debug_message ("Memory : (%d + %d + %d * 'states') * 'states' + %d",
@@ -309,7 +309,7 @@ alloc_coder (char const * const * const inputname,
                    size_of_tree (c->products_level) * 4,
                    (c->options.lc_max_level - c->options.images_level),
                    size_of_level (c->options.lc_max_level));
-   
+
     /*
     *  Domain pools ...
     */
@@ -333,7 +333,7 @@ alloc_coder (char const * const * const inputname,
      */
     wi->title   = strdup (options->title);
     wi->comment = strdup (options->comment);
-   
+
     /*
      *  Reduced precision format
      */
@@ -345,7 +345,7 @@ alloc_coder (char const * const * const inputname,
         = alloc_rpf (options->d_rpf_mantissa, options->d_rpf_range);
     wi->d_dc_rpf
         = alloc_rpf (options->d_dc_rpf_mantissa, options->d_dc_rpf_range);
-   
+
     /*
      *  Color image options ...
      */
@@ -361,7 +361,7 @@ alloc_coder (char const * const * const inputname,
     wi->cross_B_search = options->half_pixel_prediction;
     wi->B_as_past_ref  = options->B_as_past_ref;
     wi->smoothing      = options->smoothing;
-   
+
     c->mt = alloc_motion (wi);
 
     return c;
@@ -383,7 +383,7 @@ free_coder (coding_t *c)
 {
    free_tiling (c->tiling);
    free_motion (c->mt);
-   
+
    Free (c->pixels);
    Free (c->images_of_state);
    Free (c->ip_images_state);
@@ -424,13 +424,13 @@ print_statistics (char c, real_t costs, const wfa_t *wfa, const image_t *image,
           const range_t *range)
 {
    unsigned max_level, min_level, state, label, lincomb;
-   
+
    for (max_level = 0, min_level = MAXLEVEL, state = wfa->basis_states;
     state < wfa->states; state++)
    {
       for (lincomb = 0, label = 0; label < MAXLABELS; label++)
      lincomb += isrange(wfa->tree[state][label]) ? 1 : 0;
-     
+
       if (lincomb)
       {
      max_level = MAX(max_level,
@@ -483,10 +483,10 @@ print_statistics (char c, real_t costs, const wfa_t *wfa, const image_t *image,
 
 
 
-static void 
+static void
 frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
 /*
- * 
+ *
  *  WFA Coding of next frame.  All important coding parameters are
  *  stored in 'c'.  The generated 'wfa' is written to stream 'output'
  *  immediately after coding.
@@ -499,11 +499,11 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
    real_t   costs;          /* total costs (minimized quantity) */
    unsigned bits;           /* number of bits written on disk */
    clock_t  ptimer;
-   
+
    prg_timer (&ptimer, START);
 
    bits = bits_processed (output);
-   
+
    init_tree_model (&c->tree);
    init_tree_model (&c->p_tree);
 
@@ -552,9 +552,9 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
        int     YCb_node = -1;
        int     tree [3];         /* 3 root states of each color comp. */
        color_e band;
-      
+
        /*
-        *  When compressing color images, the three color components (YCbCr) 
+        *  When compressing color images, the three color components (YCbCr)
         *  are copied into a large image:
         *  [  Y  Cr ]
         *  [  Cb 0  ]
@@ -573,14 +573,14 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
                c->domain_pool->chroma (wfa->wfainfo->chroma_max_states, wfa,
                                        c->domain_pool->model);
                /*
-                *  Don't use a finer partioning for the chrominancy bands than
-                *  for the luminancy band.
+                *  Don't use a finer partitioning for the chrominancy bands
+                *  than for the luminancy band.
                 */
                for (min_level = MAXLEVEL, state = wfa->basis_states;
                     state < wfa->states; state++)
                {
                    unsigned lincomb, label;
-           
+
                    for (lincomb = 0, label = 0; label < MAXLABELS; label++)
                        lincomb += isrange (wfa->tree [state][label]) ? 1 : 0;
                    if (lincomb)
@@ -596,23 +596,23 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
 
            memset (&range, 0, sizeof (range_t));
            range.level = wfa->wfainfo->level;
-     
+
            costs = subdivide (MAXCOSTS, band, tree [Y], &range, wfa, c,
                               c->mt->frame_type != I_FRAME && band == Y, NO);
            if (c->options.progress_meter != FIASCO_PROGRESS_NONE)
                message ("");
            {
                char colors [] = {'Y', 'B', 'R'};
-        
+
                print_statistics (colors [band], costs, wfa,
                                  c->mt->original, &range);
            }
-     
+
            if (isrange (range.tree))  /* whole image is approx. by a l.c. */
                error ("No root state generated for color component %d!", band);
            else
                tree[band] = range.tree;
-     
+
            if (band == Cb)
            {
                wfa->tree [wfa->states][0] = tree[Y];
@@ -623,13 +623,13 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
            }
       }
       /*
-       *  generate two virtual states (*) 
+       *  generate two virtual states (*)
        *
        *              *
        *            /   \
        *           +     *
-       *          / \   /  
-       *         Y   CbCr 
+       *          / \   /
+       *         Y   CbCr
        */
       wfa->tree [wfa->states][0] = tree[Cr];
       wfa->tree [wfa->states][1] = RANGE;
@@ -646,7 +646,7 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
    for (state = wfa->basis_states; state < MAXSTATES; state++)
    {
       unsigned level;
-      
+
       if (c->images_of_state [state])
       {
      Free (c->images_of_state [state]);
@@ -665,12 +665,12 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
         Free (c->ip_states_state [state][level]);
         c->ip_states_state [state][level] = NULL;
      }
-      
+
    }
-   
+
    locate_delta_images (wfa);
    write_next_wfa (wfa, c, output);
-   
+
    bits = bits_processed (output) - bits;
    debug_message ("Total number of bits written: %d (%d bytes, %5.3f bpp)",
           bits, bits >> 3,
@@ -712,7 +712,7 @@ video_coder(char const * const * const image_template,
         /* image name of current frame.  File name or "-" for Standard Input */
     image_t  *reconst      = NULL;   /* decoded reference image */
     bool_t    future_frame = NO;     /* YES if last frame was in future */
-   
+
     debug_message ("Generating %d WFA's ...", wfa->wfainfo->frames);
 
     future_display = -1;
@@ -722,7 +722,7 @@ video_coder(char const * const * const image_template,
     while ((image_name = get_input_image_name (image_template, display)))
     {
         frame_type_e type;        /* current frame type: I, B, P */
-      
+
         /*
          *  Determine type of next frame.
          *  Skip already coded frames (future reference!)
@@ -731,7 +731,7 @@ video_coder(char const * const * const image_template,
             type = I_FRAME;        /* Force first frame to be intra */
         else
             type = pattern2type (display, c->options.pattern);
-      
+
         if (type != I_FRAME && c->options.reference_filename)
             /* Load reference from disk */
         {
@@ -741,12 +741,12 @@ video_coder(char const * const * const image_template,
             c->options.reference_filename = NULL;
         }
         if ((int) display == future_display)
-        {             
+        {
             /* Skip already coded future ref */
             display++;
             continue;
-        }   
-        else if (type == B_FRAME && (int) display > future_display) 
+        }
+        else if (type == B_FRAME && (int) display > future_display)
         {
             unsigned i = display;
             /*
@@ -758,7 +758,7 @@ video_coder(char const * const * const image_template,
 
                 i++;
                 name = get_input_image_name (image_template, i);
-        
+
                 if (!name)          /* Force last valid frame to be 'P' */
                 {
                     future_display = i - 1;
@@ -766,7 +766,7 @@ video_coder(char const * const * const image_template,
                 }
                 else
                 {
-                    future_display = i;    
+                    future_display = i;
                     image_name     = name;
                     type           = pattern2type (i, c->options.pattern);
                 }
@@ -781,7 +781,7 @@ video_coder(char const * const * const image_template,
 
         debug_message ("Coding \'%s\' [%c-frame].", image_name,
                        type == I_FRAME ? 'I' : (type == P_FRAME ? 'P' : 'B'));
-       
+
         /*
          *  Depending on current frame type update past and future frames
          *  which are needed as reference frames.
@@ -846,10 +846,10 @@ video_coder(char const * const * const image_template,
             c->mt->original = read_image_stream(stdin,
                                                 stdinwidth, stdinheight,
                                                 stdinmaxval, stdinformat);
-        else 
+        else
             c->mt->original = read_image_file(image_name);
 
-        if (c->tiling->exponent && type == I_FRAME) 
+        if (c->tiling->exponent && type == I_FRAME)
             perform_tiling (c->mt->original, c->tiling);
 
         frame_coder (wfa, c, output);
@@ -869,7 +869,7 @@ video_coder(char const * const * const image_template,
         if (c->mt->original)
             free_image (c->mt->original);
         c->mt->original = NULL;
-      
+
         remove_states (wfa->basis_states, wfa); /* Clear WFA structure */
     }
 
@@ -927,7 +927,7 @@ read_stdin_header(const char * const * const template,
 /*****************************************************************************
 
                 public code
-  
+
 *****************************************************************************/
 
 int
@@ -957,7 +957,7 @@ fiasco_coder (char const * const *inputname, const char *outputname,
             unsigned int stdinheight, stdinwidth;
             xelval stdinmaxval;
             int stdinformat;
-      
+
             /*
              *  Check parameters
              */
@@ -965,7 +965,7 @@ fiasco_coder (char const * const *inputname, const char *outputname,
                 template = default_input;
             else
                 template = inputname;
-      
+
             if (quality <= 0)
             {
                 set_error (_("Compression quality has to be positive."));
@@ -1013,20 +1013,20 @@ fiasco_coder (char const * const *inputname, const char *outputname,
                     coding_t *c   = alloc_coder(template, cop, wfa->wfainfo,
                                                 stdinwidth, stdinheight,
                                                 stdinmaxval, stdinformat);
-     
+
                     read_basis (cop->basis_name, wfa);
                     append_basis_states (wfa->basis_states, wfa, c);
-     
+
                     c->price = 128 * 64 / quality;
-     
+
                     video_coder (template, output, wfa, c,
                                  stdinwidth, stdinheight, stdinmaxval,
                                  stdinformat);
-     
+
                     close_bitfile (output);
                     free_wfa (wfa);
                     free_coder (c);
-     
+
                     if (default_options)
                         fiasco_c_options_delete (default_options);
                 }

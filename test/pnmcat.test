@@ -1,10 +1,184 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmcat
-# Also requires:
+# Also requires: pbmmake pgmramp ppmtoppm pamcat
 
+if [ ${CHECK_TYPE} = tree ]
+  then echo "Skipping." 1>&2
+       echo "Running \"make package; make check\" is recommended." 1>&2
+  exit 80;
+fi
 
-pnmcat -lr testgrid.pbm testgrid.pbm | cksum
-pnmcat -tb testgrid.pbm testgrid.pbm | cksum
+tmpdir=${tmpdir:-/tmp}
+check2x2_pbm=${tmpdir}/check2x2.pbm
+maze2lr_pbm=${tmpdir}/maze2lr.pbm
+maze2tb_pbm=${tmpdir}/maze2tb.pbm
+diag_pgm=${tmpdir}/diag.pgm
+diag_ppm=${tmpdir}/diag.ppm
+diag2lr_ppm=${tmpdir}/diag2lr.ppm
+diag2tb_ppm=${tmpdir}/diag2tb.ppm
 
-pnmcat -lr testimg.ppm testimg.ppm | cksum
-pnmcat -tb testimg.ppm testimg.ppm | cksum
+echo "Test 1.  Should print a simple PBM image five times"
+# Check input from stdin and from designated input file
+# Similar to tests in stdin-p?m.test
+
+pbmmake -g 2 2 | tee ${check2x2_pbm} | pnmcat -lr -plain
+pnmcat -tb -plain ${check2x2_pbm}
+pnmcat -tb -plain < ${check2x2_pbm}
+pnmcat -lr -black -plain ${check2x2_pbm}
+cat ${check2x2_pbm} | pnmcat -tb -white -plain
+
+rm ${check2x2_pbm}
+
+echo "Test 2.  Should print 2197356643 895 twice"
+pnmcat -lr -white maze.pbm maze.pbm | tee ${maze2lr_pbm} | cksum
+cat maze.pbm | pnmcat -lr -black maze.pbm - | cksum
+
+echo "Test 3.  Should print 3313353797 954"
+pnmcat -tb maze.pbm maze.pbm | tee ${maze2tb_pbm} | cksum
+
+echo "Test 4.  Should print 1731660895 1308 three times"
+pnmcat -lr maze.pbm maze.pbm maze.pbm | cksum
+pnmcat -lr ${maze2lr_pbm} maze.pbm | cksum
+cat ${maze2lr_pbm} | pnmcat -lr - maze.pbm | cksum
+
+echo "Test 5.  Should print 2985957591 1426 three times"
+pnmcat -tb maze.pbm maze.pbm maze.pbm | cksum
+pnmcat -tb maze.pbm ${maze2tb_pbm} | cksum
+cat maze.pbm | pnmcat -tb - ${maze2tb_pbm} | cksum
+
+rm ${maze2lr_pbm} ${maze2tb_pbm}
+
+echo "Test 6.  Should print a simple PGM image three times"
+# Use sed to scrape off space at line end for compatibility
+# with older versions of pnmcat
+
+pgmramp -diag 4 4 -maxval=3 | tee ${diag_pgm} | pnmcat -lr -plain |\
+  sed 's/ *$//'
+pnmcat -tb -plain ${diag_pgm} | sed 's/ *$//'
+cat ${diag_pgm} | pnmcat -tb -plain | sed 's/ *$//'
+
+rm ${diag_pgm}
+
+pgmramp -diag 8 8 -maxval 7 | ppmtoppm > ${diag_ppm} 
+
+echo "Test 7.  Should print 2097565808 394 twice"
+pnmcat -lr -black ${diag_ppm} ${diag_ppm} | tee ${diag2lr_ppm} | cksum
+cat ${diag_ppm} | pnmcat -lr -white ${diag_ppm} - | cksum
+
+echo "Test 8.  Should print 3086569577 394"
+pnmcat -tb ${diag_ppm} ${diag_ppm} | tee ${diag2tb_ppm} | cksum
+
+echo "Test 9.  Should print 4288335051 586 three times"
+pnmcat -lr ${diag_ppm} ${diag_ppm} ${diag_ppm} | cksum
+pnmcat -lr ${diag_ppm}  ${diag2lr_ppm} | cksum 
+cat ${diag2lr_ppm} | pnmcat -lr - ${diag_ppm} | cksum
+
+echo "Test 10.  Should print 642720605 586 three times"
+pnmcat -tb ${diag_ppm} ${diag_ppm} ${diag_ppm} | cksum
+pnmcat -tb ${diag2tb_ppm} ${diag_ppm} | cksum
+cat ${diag_ppm} | pnmcat -tb ${diag2tb_ppm} - | cksum
+
+rm ${diag2lr_ppm} ${diag2tb_ppm}
+
+echo "Test 11.  Should print 3622741282 1019 twice"
+pnmcat -tb -white testgrid.pbm ${diag_ppm} | cksum
+pnmcat -tb -jcenter -white testgrid.pbm ${diag_ppm} | cksum
+echo "Test 12.  Should print 1401081637 1019"
+pnmcat -tb -jleft -white testgrid.pbm ${diag_ppm}  | cksum
+echo "Test 13.  Should print 2756501917 1019"
+pnmcat -tb -jright -white testgrid.pbm ${diag_ppm} | cksum
+
+echo "Test 14. Should print 587933655 107742 twice"
+pnmcat -lr -black testgrid.pbm testimg.ppm | cksum
+pnmcat -lr -jcenter -black testgrid.pbm testimg.ppm | cksum
+echo "Test 15.  Should print 3948141157 107742"
+pnmcat -lr -jtop -black testgrid.pbm testimg.ppm | cksum
+echo "Test 16.  Should print 3910239002 107742"
+pnmcat -lr -jbottom -black testgrid.pbm testimg.ppm | cksum
+
+rm ${diag_ppm}
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test_out
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+# direction not specified
+pnmcat testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# both directions specified
+pnmcat -topbottom -leftright testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# both pad colors specified
+pnmcat -topbottom -white -black testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# justification parameters overspecified
+pnmcat -lr -jtop -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -lr -jtop -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -lr -jcenter -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -tb -jleft -jright testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -tb -jleft -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -tb -jcenter -jright testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 9"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# justification parameter in the wrong direction
+pnmcat -lr -jleft    testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 10"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -lr -jright   testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 11"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -tb -jtop     testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 12"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pnmcat -tb -jbottom  testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 13"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+# more than one input image from standard input
+cat testgrid.pbm | pnmcat -lr - - testimg.ppm > ${test_out} || \
+  printf "Expected failure 14"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

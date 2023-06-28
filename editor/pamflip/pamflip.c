@@ -1007,7 +1007,7 @@ stitchCellsToOutput(outputMap *  const outputMapP,
                 outCol += outCellPamP->width;
             }
 
-            assert(outCol = outpamP->width);
+            assert(outCol == outpamP->width);
 
             pnm_writepamrow(outpamP, tupleRow);
         }

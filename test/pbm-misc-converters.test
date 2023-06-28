@@ -1,8 +1,8 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmto10x pbmto4425 pbmtoascii pbmtobbnbg
 # This script tests: pbmtodjvurle pbmtoepson pbmtogo pbmtoibm23xx
 # This script tests: pbmtolj pbmtoln03 pbmtomatrixorbital pbmtonokia
-# This script tests: pbmtoplot pbmtoptx pbmtozinc
+# This script tests: pbmtoplot pbmtoppa pbmtoptx pbmtozinc
 # Also requires: pbmpage
 
 # Note: one-way test.
@@ -10,31 +10,89 @@
 # direction.  We check whether the output is unchanged from older
 # versions.
 
-pbmto10x             testgrid.pbm | cksum
-pbmto4425            testgrid.pbm | cksum
-pbmtoascii           testgrid.pbm | cksum
-pbmtoascii -2x4      testgrid.pbm | cksum
-pbmtobbnbg         < testgrid.pbm | cksum
-pbmtodjvurle         testgrid.pbm | cksum
-pbmtoepson           testgrid.pbm | cksum
-pbmtoepson -protocol=escp   testgrid.pbm | cksum
-pbmtoepson -protocol=escp9  testgrid.pbm | cksum
-pbmtoepson -nonadjacent     testgrid.pbm | cksum
-pbmtogo              testgrid.pbm | cksum
-pbmtoibm23xx -xres=60 -yres=60 testgrid.pbm | cksum
-pbmtolj              testgrid.pbm | cksum
-pbmtolj  -packbits   testgrid.pbm | cksum
-pbmtolj  -compress   testgrid.pbm | cksum
-pbmtoln03            testgrid.pbm | cksum
-pbmtomatrixorbital < testgrid.pbm | cksum
-pbmtonokia -fmt HEX_NOL testgrid.pbm | cksum
-pbmtonokia -fmt HEX_NGG testgrid.pbm | cksum
-pbmtonokia -fmt HEX_NPM testgrid.pbm | cksum
-pbmtonokia -fmt NOL  testgrid.pbm | cksum
-pbmtonokia -fmt NGG  testgrid.pbm | cksum
-pbmtonokia -fmt NPM  testgrid.pbm | cksum
-pbmtoplot            testgrid.pbm | cksum
-pbmtoptx             testgrid.pbm | cksum
-pbmtozinc            testgrid.pbm | cksum
+echo "pbmto10x"
+pbmto10x               maze.pbm | cksum
+pbmto10x             < maze.pbm | cksum
 
-(pbmpage 1; pbmpage 2; pbmpage 3) | pbmtoppa | cksum
+echo "pbmto4425"
+pbmto4425              maze.pbm | cksum
+pbmto4425            < maze.pbm | cksum
+
+# Asciitopgm works in the opposite direction, but the round-trip is not accurate
+
+echo "pbmtoascii"
+pbmtoascii             maze.pbm | cksum
+pbmtoascii           < maze.pbm | cksum
+pbmtoascii -2x4        maze.pbm | cksum
+
+echo "pbmtodjvurle"
+pbmtodjvurle           maze.pbm | cksum
+pbmtodjvurle         < maze.pbm | cksum
+
+echo "pbmtoepson"
+pbmtoepson             maze.pbm | cksum
+pbmtoepson           < maze.pbm | cksum
+pbmtoepson -protocol=escp   maze.pbm | cksum
+pbmtoepson -protocol=escp9  maze.pbm | cksum
+pbmtoepson -nonadjacent     maze.pbm | cksum
+
+echo "pbmtogo"
+pbmtogo                maze.pbm | cksum
+pbmtogo              < maze.pbm | cksum
+
+echo "pbmtoibm23xx"
+pbmtoibm23xx -xres=60 -yres=60    maze.pbm | cksum
+pbmtoibm23xx -xres=60 -yres=60  < maze.pbm | cksum
+
+echo "pbmtolj"
+pbmtolj                maze.pbm | cksum
+pbmtolj              < maze.pbm | cksum
+pbmtolj  -packbits     maze.pbm | cksum
+pbmtolj  -compress     maze.pbm | cksum
+
+echo "pbmtoln03"
+pbmtoln03              maze.pbm | cksum
+pbmtoln03            < maze.pbm | cksum
+
+echo "pbmtomatrixorbital"
+pbmtomatrixorbital     maze.pbm | cksum
+pbmtomatrixorbital   < maze.pbm | cksum
+
+echo "pbmtonokia"
+pbmtonokia -fmt HEX_NOL   maze.pbm | cksum
+pbmtonokia -fmt HEX_NOL < maze.pbm | cksum
+pbmtonokia -fmt HEX_NGG   maze.pbm | cksum
+pbmtonokia -fmt HEX_NPM   maze.pbm | cksum
+pbmtonokia -fmt NOL       maze.pbm | cksum
+pbmtonokia -fmt NGG       maze.pbm | cksum
+pbmtonokia -fmt NPM       maze.pbm | cksum
+
+echo "pbmtoplot"
+pbmtoplot              maze.pbm | cksum
+pbmtoplot            < maze.pbm | cksum
+
+echo "pbmtoptx"
+pbmtoptx               maze.pbm | cksum
+pbmtoptx             < maze.pbm | cksum
+
+# pbmtozinc embeds input filename in the output
+
+echo "pbmtozinc"
+pbmtozinc   maze.pbm | cksum
+pbmtozinc < maze.pbm | sed 's/noname/maze/' | cksum
+
+# pbmtobbnbg input must be from stdin
+
+echo "pbmtobbnbg"
+pbmtobbnbg < maze.pbm | cksum
+
+# pbmtoppa has constraints on what can be accepted as input; maze.pbm is not accepted
+# pbmpage produces suitable input
+
+tmpdir=${tmpdir:-/tmp}
+testpage_pbm=${tmpdir}/testpage.pbm
+
+echo "pbmtoppa"
+(pbmpage 1; pbmpage 2; pbmpage 3) | tee ${testpage_pbm} | pbmtoppa | cksum
+pbmtoppa ${testpage_pbm} | cksum
+rm ${testpage_pbm}

@@ -201,43 +201,40 @@ const char *
 ipdb_err(int error);
 
 size_t
-ipdb_img_size(IMAGE * const imgP);
+ipdb_imgSize(IMAGE * const imgP);
 
 unsigned int
-ipdb_img_ppb(IMAGE * const imgP);
+ipdb_imgPpb(IMAGE * const imgP);
 
 uint8_t *
-ipdb_img_row(IMAGE *      const imgP,
+ipdb_imgRow(IMAGE *      const imgP,
              unsigned int const row);
 
 void
 ipdb_free(IPDB *);
 
 IPDB *
-ipdb_alloc(const char *);
-
-void
-ipdb_clear(IPDB * const pdbP);
+ipdb_alloc(void);
 
 PDBHEAD *
-ipdb_pdbhead_alloc(const char * const name);
+ipdb_pdbheadAlloc(void);
 
 void
-ipdb_pdbhead_free(PDBHEAD * const headP);
+ipdb_pdbheadFree(PDBHEAD * const headP);
 
 IMAGE *
-ipdb_image_alloc(const char * const name,
+ipdb_imageCreate(const char * const name,
                  int          const type,
                  int          const w,
                  int          const h);
 
 void
-ipdb_image_free(IMAGE * const imgP);
+ipdb_imageFree(IMAGE * const imgP);
 
 void
-ipdb_text_free(TEXT * const textP);
+ipdb_textFree(TEXT * const textP);
 
 TEXT *
-ipdb_text_alloc(const char * const content);
+ipdb_textAlloc(void);
 
 #endif

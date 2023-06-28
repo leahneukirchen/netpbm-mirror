@@ -1,46 +1,69 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtext
 # Also requires:
 
-# This test requires the following locale:
-#   LC_ALL en_US.iso88591
+# This test requires an iso-8859-1 locale
 # Skip this test if it is not available
 
-iconv /dev/null
-if [ $? -ne 0  ]
-  then echo "iconv command not available." 1>&2
-       echo "Skipping." 1>&2
-  exit 80;
-fi
+LANG=C
+LC_ALL=C
+export LANG LC_ALL
 
-echo "A" | LC_ALL=en_US.iso88591 pbmtext -wchar > /dev/null
-if [ $? -ne 0  ]
-  then echo "LC_ALL could not be set to en_US.iso88591" 1>&2
+tmpdir=${tmpdir:-/tmp}
+iso88591_locale_list=${tmpdir}/iso88591_locale_list
+
+
+locale_to_test="en_US.iso88591"  # Initial value
+# Edit the above value if necessary
+  
+# Make a list of available locales which end in "iso88591"
+locale -a | grep "\.iso88591$" > ${iso88591_locale_list}
+
+# Hunt for a valid iso-8859-1 locale  
+# Submit each candidate to a trial pbmtext run until one that works is
+# encountered
+
+i=0
+until [ -z ${locale_to_test} ] || \
+  echo "A" | LC_ALL=${locale_to_test} pbmtext -wchar > /dev/null
+  do
+    let i=$(($i+1));
+    locale_to_test=`sed "$i"p -n  ${iso88591_locale_list}`;
+  done;
+
+rm ${iso88591_locale_list};
+if [ -z  ${locale_to_test} ]
+  then echo "No iso-8859-1 locale available." 1>&2
        echo "Skipping." 1>&2
-  exit 80;
-fi
+       exit 80;
+else
+       echo "Testing with locale set to ${locale_to_test}" 1>&2
+fi;
+
+locale_for_test=${locale_to_test};
+
 
 # Two rows
-# Should print 3806607098 5110 twice
-LC_ALL=C \
+# Should print 2066913605 5110 twice
+echo "Test 1"
+
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=160;i<=255;++i) printf("%c",i); }' | \
+             for (i=161;i<=255;++i) printf("%c",i); }' | \
     pbmtext -builtin bdf | cksum
 
-
-LC_ALL=C \
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=160;i<=255;++i) printf("%c",i); }' | \
-    LC_ALL=en_US.iso88591 pbmtext -builtin bdf -wchar | cksum
+             for (i=161;i<=255;++i) printf("%c",i); }' | \
+    LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
 
 
 # Two rows
 # Should print 2858870527 192 twice
-LC_ALL=C \
+
+echo "Test 2"
+
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); print "" }' | cksum
 
-LC_ALL=C \
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); print ""}' | \
-    LC_ALL=en_US.iso88591 pbmtext -builtin bdf -wchar -text-dump | cksum
+    LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar -text-dump | cksum

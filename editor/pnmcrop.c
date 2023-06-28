@@ -454,7 +454,9 @@ backgroundColor(FILE *         const ifP,
    *ifP, which is described by 'cols', 'rows', 'maxval', and 'format'.
 
    'backgroundChoice' is the method we are to use in determining the
-   background color.
+   background color.  'colorName' is the color we are to assume is
+   background in the case that 'backgroundChoice' says to use a particular
+   color and meangingless otherwise.
 
    Expect the file to be positioned to the start of the raster, and leave
    it positioned arbitrarily.
@@ -484,9 +486,6 @@ backgroundColor(FILE *         const ifP,
         background =
             background1Corner(ifP, rows, cols, maxval, format, corner);
         break;
-
-    default:
-        pm_error("internal error");
     }
 
     return background;
@@ -1124,63 +1123,135 @@ noCrops(struct CmdlineInfo const cmdline) {
 
 
 
+static void
+divideAllBackgroundIntoBorders(unsigned int   const totalSz,
+                               bool           const wantCropSideA,
+                               bool           const wantCropSideB,
+                               unsigned int   const wantMargin,
+                               unsigned int * const sideASzP,
+                               unsigned int * const sideBSzP) {
+/*----------------------------------------------------------------------------
+   Divide up an all-background space into fictional borders (that can be
+   trimmed or padded).
+
+   If there is to be a margin, those borders touch - the entire image is
+   borders.  But if there is not to be a margin, there has to be one pixel,
+   row, or column between the borders so that there is something left after we
+   crop off those borders (because there's no such thing as a zero-pixel
+   image).
+
+   This function does the borders in one direction - top and bottom or left
+   and right.  Top or left is called "Side A"; bottom or right is called "Side
+   B".  'totalSz' is the width of the image in the top/bottom case and the
+   height of the image in the left/right case.
+-----------------------------------------------------------------------------*/
+    unsigned int sideASz, sideBSz;
+
+    if (wantCropSideA && wantCropSideB) {
+        sideASz = totalSz/2;
+        if (wantMargin)
+            sideBSz = totalSz - sideASz;
+        else
+            sideBSz = totalSz - sideASz - 1;
+    } else if (wantCropSideA) {
+        if (wantMargin)
+            sideASz = totalSz;
+        else
+            sideASz = totalSz - 1;
+        sideBSz = 0;
+    } else if (wantCropSideB) {
+        sideASz = 0;
+        if (wantMargin)
+            sideBSz = totalSz;
+        else
+            sideBSz = totalSz - 1;
+    } else {
+        sideASz = 0;
+        sideBSz = 0;
+    }
+    *sideASzP = sideASz;
+    *sideBSzP = sideBSz;
+}
+
+
+
+static CropOp
+oneSideCrop(bool         const wantCrop,
+            unsigned int const borderSz,
+            unsigned int const margin) {
+
+    CropOp retval;
+
+    if (wantCrop) {
+        if (borderSz >= margin) {
+            retval.removeSize = borderSz - margin;
+            retval.padSize    = 0;
+        } else {
+            retval.removeSize = 0;
+            retval.padSize    = margin - borderSz;
+        }
+    } else {
+        retval.removeSize = 0;
+        retval.padSize    = 0;
+    }
+
+    return retval;
+}
+
+
+
 static CropSet
 extremeCrops(struct CmdlineInfo const cmdline,
              unsigned int       const cols,
              unsigned int       const rows) {
 /*----------------------------------------------------------------------------
-   Crops that crop as much as possible, reducing output to a single pixel.
+   Crops that crop as much as possible, reducing output to a single
+   row, column, or pixel, plus margins.
 -----------------------------------------------------------------------------*/
     CropSet retval;
+
+    unsigned int leftBorderSz, rghtBorderSz;
+    unsigned int topBorderSz, botBorderSz;
 
     if (cmdline.verbose)
         pm_message("Input image has no distinction between "
                    "border and content");
 
-    /* We can't just pick a representive pixel, say top-left corner.
-       If -top and/or -bottom was specified but not -left and -right,
-       the output should be one row, not a single pixel.
+    /* Note that the "entirely background" image may have several colors: this
+       happens when -closeness was specified.  That means we can't just build
+       up an image from background color - we actually have to preserve some
+       of the original image.
 
-       The "entirely background" image may have several colors: this
-       happens when -closeness was specified.
+       We divide the background into individual borders, with a foreground of
+       either nothing at all or a single row, column, or pixel, then crop
+       those fictional borders the same as if they were real.  The "nothing
+       at all" case is feasible only when there is to be a margin, because
+       otherwise cropping the borders would leave nothing.
     */
 
-    if (cmdline.wantCrop[LEFT] && cmdline.wantCrop[RIGHT]) {
-        retval.op[LEFT ].removeSize = cols / 2;
-        retval.op[RIGHT].removeSize = cols - retval.op[LEFT].removeSize -1;
-    } else if (cmdline.wantCrop[LEFT]) {
-        retval.op[LEFT ].removeSize = cols - 1;
-        retval.op[RIGHT].removeSize = 0;
-    } else if (cmdline.wantCrop[RIGHT]) {
-        retval.op[LEFT ].removeSize = 0;
-        retval.op[RIGHT].removeSize = cols - 1;
-    } else {
-        retval.op[LEFT ].removeSize = 0;
-        retval.op[RIGHT].removeSize = 0;
-    }
+    divideAllBackgroundIntoBorders(cols,
+                                   cmdline.wantCrop[LEFT],
+                                   cmdline.wantCrop[RIGHT],
+                                   cmdline.margin > 0,
+                                   &leftBorderSz,
+                                   &rghtBorderSz);
 
-    if (cmdline.wantCrop[TOP] && cmdline.wantCrop[BOTTOM]) {
-        retval.op[ TOP  ].removeSize = rows / 2;
-        retval.op[BOTTOM].removeSize = rows - retval.op[TOP].removeSize -1;
-    } else if (cmdline.wantCrop[TOP]) {
-        retval.op[ TOP  ].removeSize = rows - 1;
-        retval.op[BOTTOM].removeSize = 0;
-    } else if (cmdline.wantCrop[BOTTOM]) {
-        retval.op[ TOP  ].removeSize = 0;
-        retval.op[BOTTOM].removeSize = rows - 1;
-    } else {
-        retval.op[ TOP  ].removeSize = 0;
-        retval.op[BOTTOM].removeSize = 0;
-    }
+    divideAllBackgroundIntoBorders(rows,
+                                   cmdline.wantCrop[TOP],
+                                   cmdline.wantCrop[BOTTOM],
+                                   cmdline.margin > 0,
+                                   &topBorderSz,
+                                   &botBorderSz);
 
-    if (cmdline.margin > 0)
-        pm_message ("-margin value %u ignored", cmdline.margin);
+    retval.op[LEFT  ] =
+        oneSideCrop(cmdline.wantCrop[LEFT  ], leftBorderSz, cmdline.margin);
+    retval.op[RIGHT ] =
+        oneSideCrop(cmdline.wantCrop[RIGHT ], rghtBorderSz, cmdline.margin);
+    retval.op[TOP   ] =
+        oneSideCrop(cmdline.wantCrop[TOP   ], topBorderSz,  cmdline.margin);
+    retval.op[BOTTOM] =
+        oneSideCrop(cmdline.wantCrop[BOTTOM], botBorderSz,  cmdline.margin);
 
-    {
-        EdgeLocation i;
-        for (i = 0; i < ARRAY_SIZE(retval.op); ++i)
-            retval.op[i].padSize = 0;
-    }
     return retval;
 }
 
@@ -1265,9 +1336,9 @@ cropOneImage(struct CmdlineInfo const cmdline,
              FILE *             const bdfP,
              FILE *             const ofP) {
 /*----------------------------------------------------------------------------
-   Crop the image to which the stream *ifP is presently positioned
+   Crop the image to which the stream *ifP is currently positioned
    and write the results to *ofP.  If bdfP is non-null, use the image
-   to which stream *bdfP is presently positioned as the borderfile
+   to which stream *bdfP is currently positioned as the borderfile
    (the file that tells us where the existing borders are in the input
    image).  Leave *ifP and *bdfP positioned after the image.
 
@@ -1330,12 +1401,9 @@ cropOneImage(struct CmdlineInfo const cmdline,
             pm_error("The image is entirely background; "
                      "there is nothing to crop.");
             break;
-        case BLANK_PASS:
-            crop = noCrops(cmdline);                   break;
-        case BLANK_MINIMIZE:
-            crop = extremeCrops(cmdline, cols, rows);  break;
-        case BLANK_MAXCROP:
-            crop = maxcropReport(cmdline, cols, rows); break;
+        case BLANK_PASS:     crop = noCrops(cmdline);                   break;
+        case BLANK_MINIMIZE: crop = extremeCrops(cmdline, cols, rows);  break;
+        case BLANK_MAXCROP:  crop = maxcropReport(cmdline, cols, rows); break;
         }
     } else {
         crop = crops(cmdline, oldBorder);

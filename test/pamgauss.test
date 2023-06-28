@@ -1,12 +1,53 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamgauss
-# Also requires:
+# Also requires: pamfile
+
+echo "Test 1"
+
+for i in 3 4 5 6 7 8 9 10 11    # for i in `seq 3 11`
+  do
+  for s in 1 2 3 4 5 6 7 8 9    # for s in `seq 9`
+    do
+    pamgauss ${i} ${i} -oversample=1 -sigma=.${s} | cksum
+    done
+  done
+
+echo "Test 2"
+
+pamgauss 3 3 -sigma=0.5 -tupletype="GRAYSCALE" | pamfile
 
 
-for i in `seq 3 11`
-do
-for s in `seq 1 9`
-do
-pamgauss $i $i -oversample=1 -sigma=.$s | cksum
-done
-done
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+pamgauss 3 3               > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamgauss 3 3   -sigma=0    > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamgauss 3 3   -sigma=-1.5 > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamgauss 3     -sigma=0.5  > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pamgauss 3 3 3 -sigma=0.5  > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

@@ -1,20 +1,18 @@
-/*----------------------------------------------------------------------------*/
+/*=============================================================================
+                              pamrubber
+===============================================================================
+  Transform images using Rubber Sheeting algorithm
+  See: http://www.schaik.com/netpbm/rubber/
 
-/* pamrubber.c - transform images using Rubber Sheeting algorithm
-**               see: http://www.schaik.com/netpbm/rubber/
-**
-** Copyright (C) 2011 by Willem van Schaik (willem@schaik.com)
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
+  Copyright (C) 2011 by Willem van Schaik (willem@schaik.com)
 
-/*----------------------------------------------------------------------------*/
-
+  Permission to use, copy, modify, and distribute this software and its
+  documentation for any purpose and without fee is hereby granted, provided
+  that the above copyright notice appear in all copies and that both that
+  copyright notice and this permission notice appear in supporting
+  documentation.  This software is provided "as is" without express or
+  implied warranty.
+=============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,10 +23,10 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "rand.h"
 #include "shhopt.h"
 #include "pam.h"
 #include "pamdraw.h"
-
 
 
 typedef struct {
@@ -54,7 +52,7 @@ typedef struct {
     point br;  /* bottom right */
 } quadrilateral;
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     unsigned int nCP;
     point        oldCP[4];
     point        newCP[4];
@@ -64,14 +62,14 @@ struct cmdlineInfo {
     unsigned int frame;
     unsigned int linear;
     unsigned int verbose;
-    unsigned int randseedSpec;
-    unsigned int randseed;
+    unsigned int randomseedSpec;
+    unsigned int randomseed;
 };
 
 
 static void
 parseCmdline(int argc, const char ** argv,
-             struct cmdlineInfo * const cmdlineP) {
+             struct CmdlineInfo * const cmdlineP) {
 
 /* parse all parameters from the command line */
 
@@ -83,7 +81,7 @@ parseCmdline(int argc, const char ** argv,
     /* instructions to optParseOptions3 on how to parse our options. */
     optEntry * option_def;
     optStruct3 opt;
-    
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
@@ -92,10 +90,10 @@ parseCmdline(int argc, const char ** argv,
     OPTENT3(0, "frame",    OPT_FLAG, NULL, &cmdlineP->frame,    0);
     OPTENT3(0, "linear",   OPT_FLAG, NULL, &cmdlineP->linear,   0);
     OPTENT3(0, "verbose",  OPT_FLAG, NULL, &cmdlineP->verbose,  0);
-    OPTENT3(0, "randseed", OPT_UINT, &cmdlineP->randseed,
-            &cmdlineP->randseedSpec, 0);
-    OPTENT3(0, "randomseed", OPT_UINT, &cmdlineP->randseed,
-            &cmdlineP->randseedSpec, 0);
+    OPTENT3(0, "randseed", OPT_UINT, &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec, 0);
+    OPTENT3(0, "randomseed", OPT_UINT, &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* we have no short (old-fashioned) options */
@@ -195,38 +193,39 @@ makeline(point const p1,
 
 
 
-static bool
-intersect(line *  const l1P,
-          line *  const l2P,
-          point * const pP) {
+static void
+findIntersection(const line *  const l1P,
+                 const line *  const l2P,
+                 bool *        const theyIntersectP,
+                 point *       const intersectionP) {
 
-    bool cross;
+    bool theyIntersect;
 
     if (((l2P->p2.y - l2P->p1.y) * (l1P->p2.x - l1P->p1.x) -
          (l2P->p2.x - l2P->p1.x) * (l1P->p2.y - l1P->p1.y)) == 0) {
         /* parallel lines */
 
-        cross = false;
+        theyIntersect = false;
 
         if ((l1P->p1.x == l1P->p2.x) && (l2P->p1.x == l2P->p2.x)) {
             /* two vertical lines */
-            pP->x = (l1P->p1.x + l2P->p1.x) / 2.0;
-            pP->y = 1e10;
+            intersectionP->x = (l1P->p1.x + l2P->p1.x) / 2.0;
+            intersectionP->y = 1e10;
         } else if ((l1P->p1.y == l1P->p2.y) && (l2P->p1.y == l2P->p2.y)) {
             /* two horizontal lines */
-            pP->x = 1e10;
-            pP->y = (l1P->p1.y + l2P->p1.y) / 2.0;
+            intersectionP->x = 1e10;
+            intersectionP->y = (l1P->p1.y + l2P->p1.y) / 2.0;
         } else {
             if (fabs(l1P->p2.y - l1P->p1.y) > fabs(l1P->p2.x - l1P->p1.x)) {
                 /* steep slope */
-                pP->y = 1e10;
-                pP->x = (l1P->p2.x - l1P->p1.x) / (l1P->p2.y - l1P->p1.y)
-                    * 1e10;
+                intersectionP->y = 1e10;
+                intersectionP->x =
+                    (l1P->p2.x - l1P->p1.x) / (l1P->p2.y - l1P->p1.y) * 1e10;
             } else {
                 /* even slope */
-                pP->x = 1e10;
-                pP->y = (l1P->p2.y - l1P->p1.y) / (l1P->p2.x - l1P->p1.x)
-                    * 1e10;
+                intersectionP->x = 1e10;
+                intersectionP->y =
+                    (l1P->p2.y - l1P->p1.y) / (l1P->p2.x - l1P->p1.x) * 1e10;
             }
         }
     } else {
@@ -244,16 +243,16 @@ intersect(line *  const l1P,
                * (l1P->p2.x - l1P->p1.x) - (l2P->p2.x - l2P->p1.x)
                * (l1P->p2.y - l1P->p1.y));
 
-        pP->x = l1P->p1.x + ua * (l1P->p2.x - l1P->p1.x);
-        pP->y = l1P->p1.y + ua * (l1P->p2.y - l1P->p1.y);
+        intersectionP->x = l1P->p1.x + ua * (l1P->p2.x - l1P->p1.x);
+        intersectionP->y = l1P->p1.y + ua * (l1P->p2.y - l1P->p1.y);
 
         if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0))
-            cross = true;
+            theyIntersect = true;
         else
-            cross = false;
+            theyIntersect = false;
     }
-
-    return cross;
+    if (theyIntersectP)
+        *theyIntersectP = theyIntersect;
 }
 
 
@@ -268,7 +267,7 @@ maketriangle(point const p1,
     retval.p1 = p1;
     retval.p2 = p2;
     retval.p3 = p3;
-    
+
     return retval;
 }
 
@@ -309,28 +308,29 @@ insidetri(triangle * const triP,
 
 
 static bool
-windtriangle(triangle * const tP,
+windtriangle(triangle * const triP,
              point      const p1,
              point      const p2,
              point      const p3) {
     point f, c;
-    line le, lv;
     bool cw;
 
     /* find cross of vertical through p3 and the edge p1-p2 */
     f.x = p3.x;
     f.y = -1.0;
-    lv = makeline(p3, f);
-    le = makeline(p1, p2);
-    intersect(&le, &lv, &c);
+    {
+        line const lv = makeline(p3, f);
+        line const le = makeline(p1, p2);
+        findIntersection(&le, &lv, NULL, &c);
+    }
 
     /* check for clockwise winding triangle */
     if (((p1.x > p2.x) && (p3.y < c.y)) ||
         ((p1.x < p2.x) && (p3.y > c.y))) {
-        *tP = maketriangle(p1, p2, p3);
+        *triP = maketriangle(p1, p2, p3);
         cw = true;
     } else { /* p1/2/3 were counter clockwise */
-        *tP = maketriangle(p1, p3, p2);
+        *triP = maketriangle(p1, p3, p2);
         cw = false;
     }
     return cw;
@@ -339,28 +339,29 @@ windtriangle(triangle * const tP,
 
 
 static double
-tiny(void) {
+tiny(struct pm_randSt * const randStP) {
 
-    if (rand() % 2)
-        return +1E-6 * (double) ((rand() % 90) + 9);
+    if (pm_rand(randStP) % 2)
+        return +1E-6 * (double) ((pm_rand(randStP) % 90) + 9);
     else
-        return -1E-6 * (double) ((rand() % 90) + 9);
+        return -1E-6 * (double) ((pm_rand(randStP) % 90) + 9);
 }
 
 
 
 static void
 angle(point * const p1P,
-      point * const p2P) {
+      point * const p2P,
+      struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
    Move *p2P slightly if necessary to make sure the line (*p1P, *p2P)
    is not horizontal or vertical.
 -----------------------------------------------------------------------------*/
     if (p1P->x == p2P->x) { /* vertical line */
-        p2P->x += tiny();
+        p2P->x += tiny(randStP);
     }
     if (p1P->y == p2P->y) { /* horizontal line */
-        p2P->y += tiny();
+        p2P->y += tiny(randStP);
     }
 }
 
@@ -382,11 +383,11 @@ sideTriangleVerticalEdge(unsigned int const n,
                          point        const p24,
                          point        const r21,
                          point        const r22) {
-                                   
+
     if (((n >= 4) && (r11.x < p11.x)
          && (p14.x < p13.x) && (p14.x < p12.x)
          && (p14.x < p11.x)) /* left edge */
-        || 
+        ||
         ((n >= 4) && (r11.x > p11.x)
          && (p14.x > p13.x) && (p14.x > p12.x)
          && (p14.x > p11.x))) /* right edge */ {
@@ -394,7 +395,7 @@ sideTriangleVerticalEdge(unsigned int const n,
         *trig2P = maketriangle(r21, r22, p24);
     } else if (((n >= 3) && (r11.x < p11.x) && (p13.x < p12.x)
                 && (p13.x < p11.x)) /* left edge */
-               || 
+               ||
                ((n >= 3) && (r11.x > p11.x) && (p13.x > p12.x)
                 && (p13.x > p11.x))) /* right edge */ {
         *trig1P = maketriangle(r11, r12, p13);
@@ -403,7 +404,7 @@ sideTriangleVerticalEdge(unsigned int const n,
                 && (p12.x < p11.x)) /* left edge */
                ||
                ((n >= 2) && (r11.x > p11.x)
-                && (p12.x > p11.x))) /* right edge */ { 
+                && (p12.x > p11.x))) /* right edge */ {
         *trig1P = maketriangle(r11, r12, p12);
         *trig2P = maketriangle(r21, r22, p22);
     } else if (n >= 1) {
@@ -430,24 +431,24 @@ sideTriangleHorizontalEdge(unsigned int const n,
                            point        const p24,
                            point        const r21,
                            point        const r22) {
-                                   
+
     if (((n >= 4) && (r11.y < p11.y) && (p14.y < p13.y)
          && (p14.y < p12.y) && (p14.y < p11.y)) /* top edge */
-        || 
+        ||
         ((n >= 4) && (r11.y > p11.y) && (p14.y > p13.y)
          && (p14.y > p12.y) && (p14.y > p11.y))) /* bottom edge */ {
         *trig1P = maketriangle(r11, r12, p14);
         *trig2P = maketriangle(r21, r22, p24);
     } else if (((n >= 3) && (r11.y < p11.y) && (p13.y < p12.y)
                 && (p13.y < p11.y)) /* top edge */
-               || 
+               ||
                ((n >= 3) && (r11.y > p11.y) && (p13.y > p12.y)
                 && (p13.y > p11.y))) /* bottom edge */ {
         *trig1P = maketriangle(r11, r12, p13);
         *trig2P = maketriangle(r21, r22, p23);
     } else if (((n >= 2) && (r11.y < p11.y)
                 && (p12.y < p11.y)) /* top edge */
-               || 
+               ||
                ((n >= 2) && (r11.y > p11.y)
                 && (p12.y > p11.y))) /* bottom edge */ {
         *trig1P = maketriangle(r11, r12, p12);
@@ -505,7 +506,7 @@ edgeTriangle(triangle * const trig1P,
              point      const tr2,
              point      const bl2,
              point      const br2) {
-             
+
     if ((p11.x < p12.x) && (p11.y < p12.y)) {
         /* up/left to down/right */
         *trig1P = maketriangle(tr1, p12, p11);
@@ -613,12 +614,16 @@ quadCorner(point           const p0,
 
     /* p0-p1 and p2-p3 are the diagonals */
 
+    triangle tri;
+
     if (fabs(p0.x - p1.x) + fabs(p0.y - p1.y) >=
         fabs(p2.x - p3.x) + fabs(p2.y - p3.y)) {
-        quadCornerSized(p0, p1, p2, p3, mid, quadP, triP);
+        quadCornerSized(p0, p1, p2, p3, mid, quadP, &tri);
     } else {
-        quadCornerSized(p2, p3, p0, p1, mid, quadP, triP);
+        quadCornerSized(p2, p3, p0, p1, mid, quadP, &tri);
     }
+    if (triP)
+        *triP = tri;
 }
 
 
@@ -633,7 +638,7 @@ frameDrawproc (tuple **     const tuples,
                sample       const maxval,
                pamd_point   const p,
                const void * const clientdata) {
-    
+
     int yy;
 
     for (yy = p.y - 1; yy <= p.y + 1; ++yy) {
@@ -688,14 +693,14 @@ clippedPoint(const struct pam * const pamP,
         clippedX = pamP->width - 2;
     else
         clippedX = roundedX;
-        
+
     if (roundedY <= 0)
         clippedY = 1;
     else if (roundedY > pamP->height - 1)
         clippedY = pamP->height - 2;
     else
         clippedY = roundedY;
-        
+
     return pamd_makePoint(clippedX, clippedY);
 }
 
@@ -720,8 +725,10 @@ static void drawClippedTriangle(const struct pam * const pamP,
 
 
 static void
-prepTrig(int const wd,
-         int const ht) {
+prepTrig(int          const wd,
+         int          const ht,
+         bool         const randomseedSpec,
+         unsigned int const randomseed) {
 
 /* create triangles using control points */
 
@@ -729,18 +736,21 @@ prepTrig(int const wd,
     point rtl2, rtr2, rbl2, rbr2;
     point c1p1, c1p2, c1p3, c1p4;
     point c2p1, c2p2, c2p3, c2p4;
-    line l1, l2;
     point p0;
+    struct pm_randSt randSt;
 
-    rtl1 = makepoint(0.0 + tiny(),               0.0 + tiny());
-    rtr1 = makepoint((double) wd - 1.0 + tiny(), 0.0 + tiny());
-    rbl1 = makepoint(0.0 + tiny(),               (double) ht - 1.0 + tiny());
-    rbr1 = makepoint((double) wd - 1.0 + tiny(), (double) ht - 1.0 + tiny());
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, randomseedSpec, randomseed);
 
-    rtl2 = makepoint(0.0 + tiny(),               0.0 + tiny());
-    rtr2 = makepoint((double) wd - 1.0 + tiny(), 0.0 + tiny());
-    rbl2 = makepoint(0.0 + tiny(),               (double) ht - 1.0 + tiny());
-    rbr2 = makepoint((double) wd - 1.0 + tiny(), (double) ht - 1.0 + tiny());
+    rtl1 = makepoint(0.0 + tiny(&randSt),               0.0 + tiny(&randSt));
+    rtr1 = makepoint((double) wd - 1.0 + tiny(&randSt), 0.0 + tiny(&randSt));
+    rbl1 = makepoint(0.0 + tiny(&randSt),               (double) ht - 1.0 + tiny(&randSt));
+    rbr1 = makepoint((double) wd - 1.0 + tiny(&randSt), (double) ht - 1.0 + tiny(&randSt));
+
+    rtl2 = makepoint(0.0 + tiny(&randSt),               0.0 + tiny(&randSt));
+    rtr2 = makepoint((double) wd - 1.0 + tiny(&randSt), 0.0 + tiny(&randSt));
+    rbl2 = makepoint(0.0 + tiny(&randSt),               (double) ht - 1.0 + tiny(&randSt));
+    rbr2 = makepoint((double) wd - 1.0 + tiny(&randSt), (double) ht - 1.0 + tiny(&randSt));
 
     if (nCP == 1) {
         c1p1 = oldCP[0];
@@ -749,19 +759,19 @@ prepTrig(int const wd,
         /* connect control point to all corners to get 4 triangles */
         /* left side triangle */
         sideTriangle(nCP,
-                     &tri1s[0], c1p1, p0, p0, p0, rbl1, rtl1, 
+                     &tri1s[0], c1p1, p0, p0, p0, rbl1, rtl1,
                      &tri2s[0], c2p1, p0, p0, p0, rbl2, rtl2);
         /* top side triangle */
         sideTriangle(nCP,
-                     &tri1s[1], c1p1, p0, p0, p0, rtl1, rtr1, 
+                     &tri1s[1], c1p1, p0, p0, p0, rtl1, rtr1,
                      &tri2s[1], c2p1, p0, p0, p0, rtl2, rtr2);
         /* right side triangle */
         sideTriangle(nCP,
-                     &tri1s[2], c1p1, p0, p0, p0, rtr1, rbr1, 
+                     &tri1s[2], c1p1, p0, p0, p0, rtr1, rbr1,
                      &tri2s[2], c2p1, p0, p0, p0, rtr2, rbr2);
         /* bottom side triangle */
         sideTriangle(nCP,
-                     &tri1s[3], c1p1, p0, p0, p0, rbr1, rbl1, 
+                     &tri1s[3], c1p1, p0, p0, p0, rbr1, rbl1,
                      &tri2s[3], c2p1, p0, p0, p0, rbr2, rbl2);
 
         nTri = 4;
@@ -772,25 +782,25 @@ prepTrig(int const wd,
         c2p2 = newCP[1];
 
         /* check for hor/ver edges */
-        angle (&c1p1, &c1p2);
-        angle (&c2p1, &c2p2);
+        angle (&c1p1, &c1p2, &randSt);
+        angle (&c2p1, &c2p2, &randSt);
 
         /* connect two control points to corners to get 6 triangles */
         /* left side */
         sideTriangle(nCP,
-                     &tri1s[0], c1p1, c1p2, p0, p0, rbl1, rtl1, 
+                     &tri1s[0], c1p1, c1p2, p0, p0, rbl1, rtl1,
                      &tri2s[0], c2p1, c2p2, p0, p0, rbl2, rtl2);
         /* top side */
-        sideTriangle(nCP, 
-                     &tri1s[1], c1p1, c1p2, p0, p0, rtl1, rtr1, 
+        sideTriangle(nCP,
+                     &tri1s[1], c1p1, c1p2, p0, p0, rtl1, rtr1,
                      &tri2s[1], c2p1, c2p2, p0, p0, rtl2, rtr2);
         /* right side */
-        sideTriangle(nCP, 
-                     &tri1s[2], c1p1, c1p2, p0, p0, rtr1, rbr1, 
+        sideTriangle(nCP,
+                     &tri1s[2], c1p1, c1p2, p0, p0, rtr1, rbr1,
                      &tri2s[2], c2p1, c2p2, p0, p0, rtr2, rbr2);
         /* bottom side */
-        sideTriangle(nCP, 
-                     &tri1s[3], c1p1, c1p2, p0, p0, rbr1, rbl1, 
+        sideTriangle(nCP,
+                     &tri1s[3], c1p1, c1p2, p0, p0, rbr1, rbl1,
                      &tri2s[3], c2p1, c2p2, p0, p0, rbr2, rbl2);
 
         /* edge to corner triangles */
@@ -803,7 +813,7 @@ prepTrig(int const wd,
         c1p1 = oldCP[0];
         c1p2 = oldCP[1];
         c1p3 = oldCP[2];
-         
+
         c2p1 = newCP[0];
         c2p2 = newCP[1];
         c2p3 = newCP[2];
@@ -811,13 +821,13 @@ prepTrig(int const wd,
         /* Move vertices slightly if necessary to make sure no edge is
            horizontal or vertical.
         */
-        angle(&c1p1, &c1p2);
-        angle(&c1p2, &c1p3);
-        angle(&c1p3, &c1p1);
+        angle(&c1p1, &c1p2, &randSt);
+        angle(&c1p2, &c1p3, &randSt);
+        angle(&c1p3, &c1p1, &randSt);
 
-        angle(&c2p1, &c2p2);
-        angle(&c2p2, &c2p3);
-        angle(&c2p3, &c2p1);
+        angle(&c2p1, &c2p2, &randSt);
+        angle(&c2p2, &c2p3, &randSt);
+        angle(&c2p3, &c2p1, &randSt);
 
         if (windtriangle(&tri1s[0], c1p1, c1p2, c1p3)) {
             tri2s[0] = maketriangle(c2p1, c2p2, c2p3);
@@ -828,7 +838,7 @@ prepTrig(int const wd,
         c1p1 = tri1s[0].p1;
         c1p2 = tri1s[0].p2;
         c1p3 = tri1s[0].p3;
-         
+
         c2p1 = tri2s[0].p1;
         c2p2 = tri2s[0].p2;
         c2p3 = tri2s[0].p3;
@@ -836,19 +846,19 @@ prepTrig(int const wd,
         /* point to side triangles */
         /* left side */
         sideTriangle(nCP,
-                     &tri1s[1], c1p1, c1p2, c1p3, p0, rbl1, rtl1, 
+                     &tri1s[1], c1p1, c1p2, c1p3, p0, rbl1, rtl1,
                      &tri2s[1], c2p1, c2p2, c2p3, p0, rbl2, rtl2);
         /* top side */
-        sideTriangle(nCP, 
-                     &tri1s[2], c1p1, c1p2, c1p3, p0, rtl1, rtr1, 
+        sideTriangle(nCP,
+                     &tri1s[2], c1p1, c1p2, c1p3, p0, rtl1, rtr1,
                      &tri2s[2], c2p1, c2p2, c2p3, p0, rtl2, rtr2);
         /* right side */
-        sideTriangle(nCP, 
-                     &tri1s[3], c1p1, c1p2, c1p3, p0, rtr1, rbr1, 
+        sideTriangle(nCP,
+                     &tri1s[3], c1p1, c1p2, c1p3, p0, rtr1, rbr1,
                      &tri2s[3], c2p1, c2p2, c2p3, p0, rtr2, rbr2);
         /* bottom side */
-        sideTriangle(nCP, 
-                     &tri1s[4], c1p1, c1p2, c1p3, p0, rbr1, rbl1, 
+        sideTriangle(nCP,
+                     &tri1s[4], c1p1, c1p2, c1p3, p0, rbr1, rbl1,
                      &tri2s[4], c2p1, c2p2, c2p3, p0, rbr2, rbl2);
 
         /* edge to corner triangles */
@@ -864,26 +874,26 @@ prepTrig(int const wd,
         c1p2 = oldCP[1];
         c1p3 = oldCP[2];
         c1p4 = oldCP[3];
-         
+
         c2p1 = newCP[0];
         c2p2 = newCP[1];
         c2p3 = newCP[2];
         c2p4 = newCP[3];
 
         /* check for hor/ver edges */
-        angle (&c1p1, &c1p2);
-        angle (&c1p2, &c1p3);
-        angle (&c1p3, &c1p4);
-        angle (&c1p4, &c1p1);
-        angle (&c1p1, &c1p3);
-        angle (&c1p2, &c1p4);
+        angle (&c1p1, &c1p2, &randSt);
+        angle (&c1p2, &c1p3, &randSt);
+        angle (&c1p3, &c1p4, &randSt);
+        angle (&c1p4, &c1p1, &randSt);
+        angle (&c1p1, &c1p3, &randSt);
+        angle (&c1p2, &c1p4, &randSt);
 
-        angle (&c2p1, &c2p2);
-        angle (&c2p2, &c2p3);
-        angle (&c2p3, &c2p4);
-        angle (&c2p4, &c2p1);
-        angle (&c2p1, &c2p3);
-        angle (&c2p2, &c2p4);
+        angle (&c2p1, &c2p2, &randSt);
+        angle (&c2p2, &c2p3, &randSt);
+        angle (&c2p3, &c2p4, &randSt);
+        angle (&c2p4, &c2p1, &randSt);
+        angle (&c2p1, &c2p3, &randSt);
+        angle (&c2p2, &c2p4, &randSt);
 
         /*-------------------------------------------------------------------*/
         /*        -1-      -2-        -3-      -4-        -5-      -6-       */
@@ -892,47 +902,58 @@ prepTrig(int const wd,
         /*       3   4    2   4      4   3    2   3      4   2    3   2      */
         /*-------------------------------------------------------------------*/
 
-        /* center two triangles */
-        l1 = makeline(c1p1, c1p4);
-        l2 = makeline(c1p2, c1p3);
-        if (intersect(&l1, &l2, &p0)) {
-            if (windtriangle(&tri1s[0], c1p1, c1p2, c1p3)) {
-                tri1s[1] = maketriangle(c1p4, c1p3, c1p2);
-                tri2s[0] = maketriangle(c2p1, c2p2, c2p3);
-                tri2s[1] = maketriangle(c2p4, c2p3, c2p2);
-            } else {
-                tri1s[1] = maketriangle(c1p4, c1p2, c1p3);
-                tri2s[0] = maketriangle(c2p1, c2p3, c2p2);
-                tri2s[1] = maketriangle(c2p4, c2p2, c2p3);
+        {
+            /* center two triangles */
+            line const l1 = makeline(c1p1, c1p4);
+            line const l2 = makeline(c1p2, c1p3);
+            bool theyIntersect;
+            findIntersection(&l1, &l2, &theyIntersect, &p0);
+            if (theyIntersect) {
+                if (windtriangle(&tri1s[0], c1p1, c1p2, c1p3)) {
+                    tri1s[1] = maketriangle(c1p4, c1p3, c1p2);
+                    tri2s[0] = maketriangle(c2p1, c2p2, c2p3);
+                    tri2s[1] = maketriangle(c2p4, c2p3, c2p2);
+                } else {
+                    tri1s[1] = maketriangle(c1p4, c1p2, c1p3);
+                    tri2s[0] = maketriangle(c2p1, c2p3, c2p2);
+                    tri2s[1] = maketriangle(c2p4, c2p2, c2p3);
+                }
             }
         }
-        l1 = makeline(c1p1, c1p3);
-        l2 = makeline(c1p2, c1p4);
-        if (intersect(&l1, &l2, &p0)) {
-            if (windtriangle(&tri1s[0], c1p1, c1p2, c1p4)) {
-                tri1s[1] = maketriangle(c1p3, c1p4, c1p2);
-                tri2s[0] = maketriangle(c2p1, c2p2, c2p4);
-                tri2s[1] = maketriangle(c2p3, c2p4, c2p2);
-            } else {
-                tri1s[1] = maketriangle(c1p3, c1p2, c1p4);
-                tri2s[0] = maketriangle(c2p1, c2p4, c2p2);
-                tri2s[1] = maketriangle(c2p3, c2p2, c2p4);
+        {
+            line const l1 = makeline(c1p1, c1p3);
+            line const l2 = makeline(c1p2, c1p4);
+            bool theyIntersect;
+            findIntersection(&l1, &l2, &theyIntersect, &p0);
+            if (theyIntersect) {
+                if (windtriangle(&tri1s[0], c1p1, c1p2, c1p4)) {
+                    tri1s[1] = maketriangle(c1p3, c1p4, c1p2);
+                    tri2s[0] = maketriangle(c2p1, c2p2, c2p4);
+                    tri2s[1] = maketriangle(c2p3, c2p4, c2p2);
+                } else {
+                    tri1s[1] = maketriangle(c1p3, c1p2, c1p4);
+                    tri2s[0] = maketriangle(c2p1, c2p4, c2p2);
+                    tri2s[1] = maketriangle(c2p3, c2p2, c2p4);
+                }
             }
         }
-        l1 = makeline(c1p1, c1p2);
-        l2 = makeline(c1p3, c1p4);
-        if (intersect(&l1, &l2, &p0)) {
-            if (windtriangle(&tri1s[0], c1p1, c1p3, c1p4)) {
-                tri1s[1] = maketriangle(c1p2, c1p4, c1p3);
-                tri2s[0] = maketriangle(c2p1, c2p3, c2p4);
-                tri2s[1] = maketriangle(c2p2, c2p4, c2p3);
-            } else {
-                tri1s[1] = maketriangle(c1p2, c1p3, c1p4);
-                tri2s[0] = maketriangle(c2p1, c2p4, c2p3);
-                tri2s[1] = maketriangle(c2p2, c2p3, c2p4);
+        {
+            line const l1 = makeline(c1p1, c1p2);
+            line const l2 = makeline(c1p3, c1p4);
+            bool theyIntersect;
+            findIntersection(&l1, &l2, &theyIntersect, &p0);
+            if (theyIntersect) {
+                if (windtriangle(&tri1s[0], c1p1, c1p3, c1p4)) {
+                    tri1s[1] = maketriangle(c1p2, c1p4, c1p3);
+                    tri2s[0] = maketriangle(c2p1, c2p3, c2p4);
+                    tri2s[1] = maketriangle(c2p2, c2p4, c2p3);
+                } else {
+                    tri1s[1] = maketriangle(c1p2, c1p3, c1p4);
+                    tri2s[0] = maketriangle(c2p1, c2p4, c2p3);
+                    tri2s[1] = maketriangle(c2p2, c2p3, c2p4);
+                }
             }
         }
-
         /* control points in correct orientation */
         c1p1 = tri1s[0].p1;
         c1p2 = tri1s[0].p2;
@@ -945,20 +966,20 @@ prepTrig(int const wd,
 
         /* triangle from triangle point to side of image */
         /* left side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[2], c1p1, c1p2, c1p3, c1p4, rbl1, rtl1, 
+        sideTriangle(nCP,
+                     &tri1s[2], c1p1, c1p2, c1p3, c1p4, rbl1, rtl1,
                      &tri2s[2], c2p1, c2p2, c2p3, c2p4, rbl2, rtl2);
         /* top side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[3], c1p1, c1p2, c1p3, c1p4, rtl1, rtr1, 
+        sideTriangle(nCP,
+                     &tri1s[3], c1p1, c1p2, c1p3, c1p4, rtl1, rtr1,
                      &tri2s[3], c2p1, c2p2, c2p3, c2p4, rtl2, rtr2);
         /* right side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[4], c1p1, c1p2, c1p3, c1p4, rtr1, rbr1, 
+        sideTriangle(nCP,
+                     &tri1s[4], c1p1, c1p2, c1p3, c1p4, rtr1, rbr1,
                      &tri2s[4], c2p1, c2p2, c2p3, c2p4, rtr2, rbr2);
         /* bottom side triangle */
-        sideTriangle(nCP, 
-                     &tri1s[5], c1p1, c1p2, c1p3, c1p4, rbr1, rbl1, 
+        sideTriangle(nCP,
+                     &tri1s[5], c1p1, c1p2, c1p3, c1p4, rbr1, rbl1,
                      &tri2s[5], c2p1, c2p2, c2p3, c2p4, rbr2, rbl2);
 
         /*-------------------------------------------------------------------*/
@@ -979,6 +1000,8 @@ prepTrig(int const wd,
                      &tri2s[9], c2p3, c2p1, rtl2, rtr2, rbl2, rbr2);
         nTri = 10;
     }
+
+    pm_randterm(&randSt);
 }
 
 
@@ -987,11 +1010,6 @@ static void
 prepQuad(void) {
 
 /* order quad control points */
-
-    double d01, d12, d20;
-    line l1, l2;
-    point mid;
-    triangle tri;
 
     if (nCP == 1) {
         /* create a rectangle from top-left corner of image and control
@@ -1014,7 +1032,7 @@ prepQuad(void) {
             /* bottom-right and top-left */
             quad1 = quadRect(oldCP[1].x, oldCP[0].x, oldCP[1].y, oldCP[0].y);
         }
-        
+
         if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* top-left and bottom-right */
             quad2 = quadRect(newCP[0].x, newCP[1].x, newCP[0].y, newCP[1].y);
@@ -1034,10 +1052,10 @@ prepQuad(void) {
             /* diagonal of the parallelogram is the two control points
                furthest apart
             */
-            
-            d01 = distance(newCP[0], newCP[1]);
-            d12 = distance(newCP[1], newCP[2]);
-            d20 = distance(newCP[2], newCP[0]);
+
+            double const d01 = distance(newCP[0], newCP[1]);
+            double const d12 = distance(newCP[1], newCP[2]);
+            double const d20 = distance(newCP[2], newCP[0]);
 
             if ((d01 > d12) && (d01 > d20)) {
                 oldCP[3].x = oldCP[0].x + oldCP[1].x - oldCP[2].x;
@@ -1067,51 +1085,72 @@ prepQuad(void) {
 
         /* nCP = 3 or 4 */
 
-        /* find the intersection of the diagonals */
-        l1 = makeline(oldCP[0], oldCP[1]);
-        l2 = makeline(oldCP[2], oldCP[3]);
-        if (intersect(&l1, &l2, &mid)) {
-            quadCorner(oldCP[0], oldCP[1], oldCP[2], oldCP[3],
-                       mid, &quad1, &tri);
-        } else {
-            l1 = makeline(oldCP[0], oldCP[2]);
-            l2 = makeline(oldCP[1], oldCP[3]);
-            if (intersect(&l1, &l2, &mid))
-                quadCorner(oldCP[0], oldCP[2], oldCP[1], oldCP[3],
-                           mid, &quad1, &tri);
+        {
+            /* find the intersection of the diagonals */
+            line const l1 = makeline(oldCP[0], oldCP[1]);
+            line const l2 = makeline(oldCP[2], oldCP[3]);
+            bool theyIntersect;
+            point mid;
+            findIntersection(&l1, &l2, &theyIntersect, &mid);
+            if (theyIntersect)
+                quadCorner(oldCP[0], oldCP[1], oldCP[2], oldCP[3],
+                           mid, &quad1, NULL);
             else {
-                l1 = makeline(oldCP[0], oldCP[3]);
-                l2 = makeline(oldCP[1], oldCP[2]);
-                if (intersect(&l1, &l2, &mid))
-                    quadCorner(oldCP[0], oldCP[3],
-                               oldCP[1], oldCP[2], mid, &quad1, &tri);
-                else
-                    pm_error("The four old control points don't seem "
-                             "to be corners.");
+                line const l1 = makeline(oldCP[0], oldCP[2]);
+                line const l2 = makeline(oldCP[1], oldCP[3]);
+                bool theyIntersect;
+                point mid;
+                findIntersection(&l1, &l2, &theyIntersect, &mid);
+                if (theyIntersect)
+                    quadCorner(oldCP[0], oldCP[2], oldCP[1], oldCP[3],
+                               mid, &quad1, NULL);
+                else {
+                    line const l1 = makeline(oldCP[0], oldCP[3]);
+                    line const l2 = makeline(oldCP[1], oldCP[2]);
+                    bool theyIntersect;
+                    point mid;
+                    findIntersection(&l1, &l2, &theyIntersect, &mid);
+                    if (theyIntersect)
+                        quadCorner(oldCP[0], oldCP[3],
+                                   oldCP[1], oldCP[2], mid, &quad1, NULL);
+                    else
+                        pm_error("The four old control points don't seem "
+                                 "to be corners.");
+                }
             }
         }
-
-        /* repeat for the "to-be" control points */
-        l1 = makeline(newCP[0], newCP[1]);
-        l2 = makeline(newCP[2], newCP[3]);
-        if (intersect(&l1, &l2, &mid))
-            quadCorner(newCP[0], newCP[1], newCP[2], newCP[3],
-                       mid, &quad2, &tri);
-        else {
-            l1 = makeline(newCP[0], newCP[2]);
-            l2 = makeline(newCP[1], newCP[3]);
-            if (intersect(&l1, &l2, &mid))
-                quadCorner(newCP[0], newCP[2], newCP[1], newCP[3],
-                           mid, &quad2, &tri);
+        {
+            /* repeat for the "to-be" control points */
+            line const l1 = makeline(newCP[0], newCP[1]);
+            line const l2 = makeline(newCP[2], newCP[3]);
+            bool theyIntersect;
+            point mid;
+            findIntersection(&l1, &l2, &theyIntersect, &mid);
+            if (theyIntersect)
+                quadCorner(newCP[0], newCP[1], newCP[2], newCP[3],
+                           mid, &quad2, NULL);
             else {
-                l1 = makeline(newCP[0], newCP[3]);
-                l2 = makeline(newCP[1], newCP[2]);
-                if (intersect(&l1, &l2, &mid))
-                    quadCorner(newCP[0], newCP[3],
-                               newCP[1], newCP[2], mid, &quad2, &tri);
-                else
-                    pm_error("The four new control points don't seem "
-                             "to be corners.");
+                line const l1 = makeline(newCP[0], newCP[2]);
+                line const l2 = makeline(newCP[1], newCP[3]);
+                bool theyIntersect;
+                point mid;
+                findIntersection(&l1, &l2, &theyIntersect, &mid);
+                if (theyIntersect)
+                    quadCorner(newCP[0], newCP[2], newCP[1], newCP[3],
+                               mid, &quad2, NULL);
+                else {
+                    line const l1 = makeline(newCP[0], newCP[3]);
+                    line const l2 = makeline(newCP[1], newCP[2]);
+                    bool theyIntersect;
+                    point mid;
+                    findIntersection(&l1, &l2, &theyIntersect, &mid);
+                    if (theyIntersect)
+                        quadCorner(newCP[0], newCP[3],
+                                   newCP[1], newCP[2], mid, &quad2, NULL);
+                    else
+                        pm_error("The four new control points don't seem "
+                                 "to be corners.");
+                }
             }
         }
     }
@@ -1127,14 +1166,11 @@ warpTrig(point   const p2,
 
     point e1p1, e1p2, e1p3;
     point e2p1, e2p2, e2p3;
-    line lp, le;
-    line l1, l2, l3;
-    double d1, d2, d3;
-    int i;
+    unsigned int i;
 
     /* find in which triangle p2 lies */
-    for (i = 0; i < nTri; i++) {
-        if (insidetri (&tri2s[i], p2))
+    for (i = 0; i < nTri; ++i) {
+        if (insidetri(&tri2s[i], p2))
             break;
     }
 
@@ -1142,28 +1178,36 @@ warpTrig(point   const p2,
         *p1P = makepoint(0.0, 0.0);
     else {
         /* where in triangle is point */
-        d1 = fabs (p2.x - tri2s[i].p1.x) + fabs (p2.y - tri2s[i].p1.y);
-        d2 = fabs (p2.x - tri2s[i].p2.x) + fabs (p2.y - tri2s[i].p2.y);
-        d3 = fabs (p2.x - tri2s[i].p3.x) + fabs (p2.y - tri2s[i].p3.y);
+        double const d1 =
+            fabs (p2.x - tri2s[i].p1.x) + fabs (p2.y - tri2s[i].p1.y);
+        double const d2 =
+            fabs (p2.x - tri2s[i].p2.x) + fabs (p2.y - tri2s[i].p2.y);
+        double const d3 =
+            fabs (p2.x - tri2s[i].p3.x) + fabs (p2.y - tri2s[i].p3.y);
 
-        /* line through p1 and p intersecting with edge p2-p3 */
-        lp = makeline(tri2s[i].p1, p2);
-        le = makeline(tri2s[i].p2, tri2s[i].p3);
-        intersect (&lp, &le, &e2p1);
+        {
+            /* line through p1 and p intersecting with edge p2-p3 */
+            line const lp = makeline(tri2s[i].p1, p2);
+            line const le = makeline(tri2s[i].p2, tri2s[i].p3);
+            findIntersection(&lp, &le, NULL, &e2p1);
+        }
 
-        /* line through p2 and p intersecting with edge p3-p1 */
-        lp = makeline(tri2s[i].p2, p2);
-        le = makeline(tri2s[i].p3, tri2s[i].p1);
-        intersect (&lp, &le, &e2p2);
+        {
+            /* line through p2 and p intersecting with edge p3-p1 */
+            line const lp = makeline(tri2s[i].p2, p2);
+            line const le = makeline(tri2s[i].p3, tri2s[i].p1);
+            findIntersection(&lp, &le, NULL, &e2p2);
+        }
 
-        /* line through p3 and p intersecting with edge p1-p2 */
-        lp = makeline(tri2s[i].p3, p2);
-        le = makeline(tri2s[i].p1, tri2s[i].p2);
-        intersect (&lp, &le, &e2p3);
-
+        {
+            /* line through p3 and p intersecting with edge p1-p2 */
+            line const lp = makeline(tri2s[i].p3, p2);
+            line const le = makeline(tri2s[i].p1, tri2s[i].p2);
+            findIntersection(&lp, &le, NULL, &e2p3);
+        }
         /* map target control points to source control points */
         e1p1.x = tri1s[i].p2.x
-            + (e2p1.x - tri2s[i].p2.x)/(tri2s[i].p3.x - tri2s[i].p2.x) 
+            + (e2p1.x - tri2s[i].p2.x)/(tri2s[i].p3.x - tri2s[i].p2.x)
             * (tri1s[i].p3.x - tri1s[i].p2.x);
         e1p1.y = tri1s[i].p2.y
             + (e2p1.y - tri2s[i].p2.y)/(tri2s[i].p3.y - tri2s[i].p2.y)
@@ -1181,17 +1225,19 @@ warpTrig(point   const p2,
             + (e2p3.y - tri2s[i].p1.y)/(tri2s[i].p2.y - tri2s[i].p1.y)
             * (tri1s[i].p2.y - tri1s[i].p1.y);
 
-        /* intersect grid lines in source */
-        l1 = makeline(tri1s[i].p1, e1p1);
-        l2 = makeline(tri1s[i].p2, e1p2);
-        l3 = makeline(tri1s[i].p3, e1p3);
+        {
+            /* intersect grid lines in source */
+            line const l1 = makeline(tri1s[i].p1, e1p1);
+            line const l2 = makeline(tri1s[i].p2, e1p2);
+            line const l3 = makeline(tri1s[i].p3, e1p3);
 
-        if ((d1 < d2) && (d1 < d3))
-            intersect (&l2, &l3, p1P);
-        else if (d2 < d3)
-            intersect (&l1, &l3, p1P);
-        else
-            intersect (&l1, &l2, p1P);
+            if ((d1 < d2) && (d1 < d3))
+                findIntersection(&l2, &l3, NULL, p1P);
+            else if (d2 < d3)
+                findIntersection(&l1, &l3, NULL, p1P);
+            else
+                findIntersection(&l1, &l2, NULL, p1P);
+        }
     }
 }
 
@@ -1208,37 +1254,38 @@ warpQuad(point   const p2,
     point c2tl, c2tr, c2bl, c2br;
     point e1t, e1b, e1l, e1r;
     point e2t, e2b, e2l, e2r;
-    line l2t, l2b, l2l, l2r;
-    line lh, lv;
 
     c1tl = quad1.tl;
     c1tr = quad1.tr;
     c1bl = quad1.bl;
     c1br = quad1.br;
-       
+
     c2tl = quad2.tl;
     c2tr = quad2.tr;
     c2bl = quad2.bl;
     c2br = quad2.br;
 
-    l2t = makeline(c2tl, c2tr);
-    l2b = makeline(c2bl, c2br);
-    l2l = makeline(c2tl, c2bl);
-    l2r = makeline(c2tr, c2br);
+    {
+        line const l2t = makeline(c2tl, c2tr);
+        line const l2b = makeline(c2bl, c2br);
+        line const l2l = makeline(c2tl, c2bl);
+        line const l2r = makeline(c2tr, c2br);
 
-    /* find intersections of lines through control points */
-    intersect (&l2t, &l2b, &h2);
-    intersect (&l2l, &l2r, &v2);
+        /* find intersections of lines through control points */
+        findIntersection(&l2t, &l2b, NULL, &h2);
+        findIntersection(&l2l, &l2r, NULL, &v2);
 
-    /* find intersections of axes through P with control point box */
-    lv = makeline(p2, v2);
-    intersect (&l2t, &lv, &e2t);
-    intersect (&l2b, &lv, &e2b);
+        {
+            /* find intersections of axes through P with control point box */
+            line const lv = makeline(p2, v2);
+            line const lh = makeline(p2, h2);
 
-    lh = makeline(p2, h2);
-    intersect (&l2l, &lh, &e2l);
-    intersect (&l2r, &lh, &e2r);
-
+            findIntersection(&l2t, &lv, NULL, &e2t);
+            findIntersection(&l2b, &lv, NULL, &e2b);
+            findIntersection(&l2l, &lh, NULL, &e2l);
+            findIntersection(&l2r, &lh, NULL, &e2r);
+        }
+    }
     /* map target control points to source control points */
     e1t.x = c1tl.x + (e2t.x - c2tl.x)/(c2tr.x - c2tl.x) * (c1tr.x - c1tl.x);
     if (c1tl.y == c1tr.y)
@@ -1268,16 +1315,18 @@ warpQuad(point   const p2,
             = c1tr.x + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.x - c1tr.x);
     e1r.y = c1tr.y + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.y - c1tr.y);
 
-    /* intersect grid lines in source */
-    lv = makeline(e1t, e1b);
-    lh = makeline(e1l, e1r);
-    intersect (&lh, &lv, p1P);
+    {
+        /* intersect grid lines in source */
+        line const lv = makeline(e1t, e1b);
+        line const lh = makeline(e1l, e1r);
+        findIntersection(&lh, &lv, NULL, p1P);
+    }
 }
 
 
 
 static void
-setGlobalCP(struct cmdlineInfo const cmdline) {
+setGlobalCP(struct CmdlineInfo const cmdline) {
 
     unsigned int i;
 
@@ -1364,22 +1413,22 @@ pix(tuple **     const tuples,
         pix = 0.0;
         if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
             ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
-            pix += (1.0 - rx) * (1.0 - ry) 
+            pix += (1.0 - rx) * (1.0 - ry)
                 * tuples[(int) floor(p.y)][(int) floor(p.x)][plane];
         }
         if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
             ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
-            pix += rx * (1.0 - ry) 
+            pix += rx * (1.0 - ry)
                 * tuples[(int) floor(p.y)][(int) floor(p.x) + 1][plane];
         }
         if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
             ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
-            pix += (1.0 - rx) * ry 
+            pix += (1.0 - rx) * ry
                 * tuples[(int) floor(p.y) + 1][(int) floor(p.x)][plane];
         }
         if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
             ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
-            pix += rx * ry 
+            pix += rx * ry
                 * tuples[(int) floor(p.y) + 1][(int) floor(p.x) + 1][plane];
         }
     }
@@ -1392,20 +1441,18 @@ pix(tuple **     const tuples,
 int
 main(int argc, const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam, outpam;
     tuple ** inTuples;
     tuple ** outTuples;
     unsigned int p2y;
-  
+
     pm_proginit(&argc, argv);
 
     parseCmdline(argc, argv, &cmdline);
 
     setGlobalCP(cmdline);
-
-    srand(cmdline.randseedSpec ? cmdline.randseed : pm_randseed());
 
     ifP = pm_openr(cmdline.fileName);
 
@@ -1421,7 +1468,8 @@ main(int argc, const char ** const argv) {
     makeAllWhite(&outpam, outTuples);
 
     if (cmdline.tri)
-        prepTrig(inpam.width, inpam.height);
+        prepTrig(inpam.width, inpam.height,
+                 cmdline.randomseedSpec, cmdline.randomseed);
     if (cmdline.quad)
         prepQuad();
 

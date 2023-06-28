@@ -7,10 +7,28 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-all: hpcdtoppm
+SCRIPTS =  pcdovtoppm
 
-SCRIPTS = hpcdtoppm pcdovtoppm
+ifeq ($(file <hpcdtoppm-import/Makefile)x,x)
+  # The file does not exist, which means user did not augment the
+  # Netpbm source tree by adding hpcdtoppm source code.
+  #
+  # Therefore, we package the dummy 'hpcdtoppm' program that just tells the
+  # user how to get the real one.
+  #
+  # See README in this directory.
+  #
+  # (Note that empty file and nonexistent file look the same with
+  # $(file)).
+  SCRIPTS += hpcdtoppm
+else
+  SUBDIRS += hpcdtoppm-import
+endif
+
 MERGE_OBJECTS =
+
+.PHONY: all
+all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 include $(SRCDIR)/common.mk
 

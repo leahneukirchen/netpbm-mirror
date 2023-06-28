@@ -44,6 +44,7 @@
 #include <string.h>
 #include <float.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include "pm_config.h"
 #include "pm_c_util.h"
@@ -74,12 +75,12 @@ struct CmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, const char ** argv, 
+static void
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -140,7 +141,7 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
-        
+
         if (argc-1 > 1)
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
@@ -150,29 +151,25 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
-struct FITS_Header {
-  int simple;       /* basic format or not */
-  int bitpix;
-      /* number of bits per pixel, positive for integer, negative 
-         for floating point
-      */
-  int naxis;        /* number of axes */
-  int naxis1;       /* number of points on axis 1 */
-  int naxis2;       /* number of points on axis 2 */
-  int naxis3;       /* number of points on axis 3 */
-  double datamin;   /* min # (Physical value!) */
-  double datamax;   /* max #     "       "     */
-  double bzer;      /* Physical value = Array value*bscale + bzero */
-  double bscale;
-};
-
-
 typedef enum {
     VF_CHAR, VF_SHORT, VF_LONG, VF_FLOAT, VF_DOUBLE
-} valFmt;
+} ValFmt;
 
-struct fitsRasterInfo {
-    valFmt valFmt;
+struct FITS_Header {
+    bool simple;      /* basic format */
+    ValFmt valFmt;    /* format of values -- bits per pixel, integer/float */
+    unsigned int naxis;  /* number of axes */
+    unsigned int naxis1;       /* number of points on axis 1 */
+    unsigned int naxis2;       /* number of points on axis 2 */
+    unsigned int naxis3;       /* number of points on axis 3 */
+    double datamin;   /* min # (Physical value!) */
+    double datamax;   /* max #     "       "     */
+    double bzer;      /* Physical value = Array value*bscale + bzero */
+    double bscale;
+};
+
+struct FitsRasterInfo {
+    ValFmt valFmt;
     double bzer;
     double bscale;
 };
@@ -296,7 +293,7 @@ readFitsDouble(FILE *   const ifP,
 
 
 
-static valFmt
+static ValFmt
 valFmtFromBitpix(int const bitpix) {
 /*----------------------------------------------------------------------------
    Return the format of a "value" in the FITS file, given the value
@@ -323,7 +320,7 @@ valFmtFromBitpix(int const bitpix) {
 
 static void
 readVal(FILE *   const ifP,
-        valFmt   const fmt,
+        ValFmt   const fmt,
         double * const vP) {
 
     switch (fmt) {
@@ -334,15 +331,15 @@ readVal(FILE *   const ifP,
     case VF_SHORT:
         readFitsShort(ifP, vP);
         break;
-      
+
     case VF_LONG:
         readFitsLong(ifP, vP);
         break;
-      
+
     case VF_FLOAT:
         readFitsFloat(ifP, vP);
         break;
-      
+
     case VF_DOUBLE:
         readFitsDouble(ifP, vP);
         break;
@@ -364,46 +361,129 @@ readCard(FILE * const ifP,
 
 
 
+
+static void
+processNaxisN(unsigned int   const n,
+              int            const value,
+              bool           const gotNaxis,
+              unsigned int   const naxis,
+              bool *         const gotNaxisNP,
+              unsigned int * const naxisNP) {
+
+    if (*gotNaxisNP)
+        pm_error("Invalid FITS header: two NAXIS%u keywords", n);
+    else {
+        *gotNaxisNP = true;
+
+        if (!gotNaxis)
+            pm_error("Invalid FITS header: NAXIS must precede NAXIS%u", n);
+        else if (naxis < n)
+            pm_error("Invalid FITS header: NAXIS%u for image with "
+                     "only %u axes", n, naxis);
+        else if (value < 0)
+            pm_error("Invalid NAXIS%u value %d in FITS header:  "
+                     "Must not be negative", n, value);
+        else
+            *naxisNP = value;
+    }
+}
+
+
+
 static void
 readFitsHeader(FILE *               const ifP,
                struct FITS_Header * const hP) {
 
-    int seenEnd;
-  
-    seenEnd = 0;
+
+    bool gotEmpty, gotSimple, gotNaxis, gotN1, gotN2, gotN3, gotBitpix, gotEnd;
+
+    gotEmpty  = false;  /* initial value */    
+    gotSimple = false;  /* initial value */
+    gotNaxis  = false;  /* initial value */
+    gotN1     = false;  /* initial value */
+    gotN2     = false;  /* initial value */
+    gotN3     = false;  /* initial value */
+    gotBitpix = false;  /* initial value */
+    gotEnd    = false;  /* initial value */
+
     /* Set defaults */
-    hP->simple  = 0;
     hP->bzer    = 0.0;
     hP->bscale  = 1.0;
     hP->datamin = - DBL_MAX;
     hP->datamax = DBL_MAX;
-  
-    while (!seenEnd) {
+
+    while (!gotEnd) {
         unsigned int i;
 
         for (i = 0; i < 36; ++i) {
             char buf[81];
             char c;
+            int n;
 
             readCard(ifP, buf); /* Reads into first 80 elements of buf[] */
-    
+
             buf[80] = '\0'; /* Make ASCIIZ string */
 
-            if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
+            if (sscanf(buf, " %c", &c) < 1) {
+                gotEmpty = true;
+            } else if (sscanf(buf, "SIMPLE = %c", &c) == 1) {
+                if (gotSimple)
+                    pm_error("FITS header has two SIMPLE keywords");
+                gotSimple = true;
                 if (c == 'T' || c == 't')
-                    hP->simple = 1;
-            } else if (sscanf(buf, "BITPIX = %d", &(hP->bitpix)) == 1);
-            else if (sscanf(buf, "NAXIS = %d", &(hP->naxis)) == 1);
-            else if (sscanf(buf, "NAXIS1 = %d", &(hP->naxis1)) == 1);
-            else if (sscanf(buf, "NAXIS2 = %d", &(hP->naxis2)) == 1);
-            else if (sscanf(buf, "NAXIS3 = %d", &(hP->naxis3)) == 1);
-            else if (sscanf(buf, "DATAMIN = %lf", &(hP->datamin)) == 1);
-            else if (sscanf(buf, "DATAMAX = %lf", &(hP->datamax)) == 1);
-            else if (sscanf(buf, "BZERO = %lf", &(hP->bzer)) == 1);
-            else if (sscanf(buf, "BSCALE = %lf", &(hP->bscale)) == 1);
-            else if (strncmp(buf, "END ", 4 ) == 0) seenEnd = 1;
+                    hP->simple = true;
+                else if (c == 'F' || c == 'f')
+                    hP->simple = false;
+                else
+                    pm_error("Invalid SIMPLE value '%c'.  Only 'T' and 'F' "
+                             "are recognized", c);
+            } else if (sscanf(buf, "BITPIX = %d", &n) == 1) {
+                if (gotBitpix)
+                    pm_error("FITS header has two NAXIS keywords");
+                gotBitpix = true;
+                hP->valFmt = valFmtFromBitpix(n);
+            } else if (sscanf(buf, "NAXIS = %d", &n) == 1) {
+                gotNaxis = true;
+                if (n < 0)
+                    pm_error("Invalid value %d for NAXIS in FITS header.  "
+                             "Value must not be negative", n);
+                else
+                    hP->naxis = n;
+            } else if (sscanf(buf, "NAXIS1 = %d", &n) == 1) {
+                processNaxisN(1, n, gotNaxis, hP->naxis, &gotN1, &hP->naxis1);
+            } else if (sscanf(buf, "NAXIS2 = %d", &n) == 1) {
+                processNaxisN(2, n, gotNaxis, hP->naxis, &gotN2, &hP->naxis2);
+            } else if (sscanf(buf, "NAXIS3 = %d", &n) == 1) {
+                processNaxisN(3, n, gotNaxis, hP->naxis, &gotN3, &hP->naxis3);
+            } else if (sscanf(buf, "DATAMIN = %lf", &(hP->datamin)) == 1) {
+            } else if (sscanf(buf, "DATAMAX = %lf", &(hP->datamax)) == 1) {
+            } else if (sscanf(buf, "BZERO = %lf", &(hP->bzer)) == 1) {
+            } else if (sscanf(buf, "BSCALE = %lf", &(hP->bscale)) == 1) {
+            } else if (strncmp(buf, "END ", 4 ) == 0) {
+                gotEnd = true;
+                if (gotEmpty == true)
+                    pm_message("Blank card(s) were encountered before "
+			       "END in header");
+            }
         }
     }
+    if (!gotSimple)
+        pm_error("FITS header missing the SIMPLE keyword");
+    if (!gotBitpix)
+        pm_error("FITS header missing the BITPIX keyword");
+    if (!gotNaxis)
+        pm_error("FITS header missing the NAXIS keyword");
+
+    if (hP->naxis > 3)
+        pm_error("FITS file has %u axes; this program can handle "
+                 "no more than 3", hP->naxis);
+
+    if (hP->naxis > 0 && !gotN1)
+        pm_error("FITS header missing NAXIS1 keyword");
+    if (hP->naxis > 1 && !gotN2)
+        pm_error("FITS header missing NAXIS1 keyword");
+    if (hP->naxis > 2 && !gotN3)
+        pm_error("FITS header missing NAXIS3 keyword");
 }
 
 
@@ -424,7 +504,7 @@ interpretPlanes(struct FITS_Header const fitsHeader,
         if (imageRequest) {
             if (imageRequest > fitsHeader.naxis3)
                 pm_error("Only %u plane%s in this file.  "
-                         "You requested image %u", 
+                         "You requested image %u",
                          fitsHeader.naxis3, fitsHeader.naxis3 > 1 ? "s" : "",
                          imageRequest);
             else {
@@ -449,7 +529,7 @@ interpretPlanes(struct FITS_Header const fitsHeader,
         }
     }
     if (verbose) {
-        
+
         pm_message("FITS stream is %smultiplane", *multiplaneP ? "" : "not ");
         pm_message("We will take image %u (1 is first) of %u "
                    "in the FITS stream",
@@ -464,7 +544,7 @@ scanImageForMinMax(FILE *       const ifP,
                    unsigned int const images,
                    int          const cols,
                    int          const rows,
-                   valFmt       const valFmt,
+                   ValFmt       const valFmt,
                    double       const bscale,
                    double       const bzer,
                    unsigned int const imagenum,
@@ -479,7 +559,7 @@ scanImageForMinMax(FILE *       const ifP,
     unsigned int image;
     pm_filepos rasterPos;
     double fmaxval;
-    
+
     pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
 
     pm_message("Scanning file for scaling parameters");
@@ -557,7 +637,7 @@ computeMinMax(FILE *             const ifP,
     if (datamin == -DBL_MAX || datamax == DBL_MAX) {
         double scannedDatamin, scannedDatamax;
         scanImageForMinMax(ifP, images, cols, rows,
-                           valFmtFromBitpix(h.bitpix), h.bscale, h.bzer,
+                           h.valFmt, h.bscale, h.bzer,
                            imagenum, multiplane,
                            &scannedDatamin, &scannedDatamax);
 
@@ -574,12 +654,12 @@ computeMinMax(FILE *             const ifP,
 
 static xelval
 determineMaxval(struct CmdlineInfo const cmdline,
-                valFmt             const valFmt,
+                ValFmt             const valFmt,
                 double             const datamax,
                 double             const datamin) {
 
     xelval retval;
-                
+
     if (cmdline.omaxvalSpec)
         retval = cmdline.omaxval;
     else {
@@ -615,11 +695,11 @@ convertPgmRaster(FILE *                const ifP,
                  xelval                const maxval,
                  unsigned int          const desiredImage,
                  unsigned int          const imageCount,
-                 struct fitsRasterInfo const rasterInfo,
+                 struct FitsRasterInfo const rasterInfo,
                  double                const scale,
                  double                const datamin,
                  xel **                const xels) {
-        
+
     /* Note: the FITS specification does not give the association between
        file position and image position (i.e. is the first pixel in the
        file the top left, bottom left, etc.).  We use the common sense,
@@ -651,7 +731,7 @@ convertPgmRaster(FILE *                const ifP,
                 }
             }
         }
-    } 
+    }
 }
 
 
@@ -661,7 +741,7 @@ convertPpmRaster(FILE *                const ifP,
                  unsigned int          const cols,
                  unsigned int          const rows,
                  xelval                const maxval,
-                 struct fitsRasterInfo const rasterInfo,
+                 struct FitsRasterInfo const rasterInfo,
                  double                const scale,
                  double                const datamin,
                  xel **                const xels) {
@@ -711,7 +791,7 @@ convertRaster(FILE *                const ifP,
               bool                  const multiplane,
               unsigned int          const desiredImage,
               unsigned int          const imageCount,
-              struct fitsRasterInfo const rasterInfo,
+              struct FitsRasterInfo const rasterInfo,
               double                const scale,
               double                const datamin) {
 
@@ -746,7 +826,7 @@ main(int argc, const char * argv[]) {
     double scale;
     double datamin, datamax;
     struct FITS_Header fitsHeader;
-    struct fitsRasterInfo rasterInfo;
+    struct FitsRasterInfo rasterInfo;
 
     unsigned int imageCount;
     unsigned int desiredImage;
@@ -757,15 +837,15 @@ main(int argc, const char * argv[]) {
         /* This is a one-image multiplane stream; 'desiredImage'
            is undefined
         */
-  
+
     pm_proginit(&argc, argv);
-  
+
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
 
     readFitsHeader(ifP, &fitsHeader);
-  
+
     if (!fitsHeader.simple)
         pm_error("FITS file is not in simple format, can't read");
 
@@ -777,7 +857,7 @@ main(int argc, const char * argv[]) {
 
     rasterInfo.bscale = fitsHeader.bscale;
     rasterInfo.bzer   = fitsHeader.bzer;
-    rasterInfo.valFmt = valFmtFromBitpix(fitsHeader.bitpix);
+    rasterInfo.valFmt = fitsHeader.valFmt;
 
     interpretPlanes(fitsHeader, cmdline.image, cmdline.verbose,
                     &imageCount, &multiplane, &desiredImage);

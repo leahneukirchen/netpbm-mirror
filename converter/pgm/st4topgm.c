@@ -69,11 +69,11 @@ writeRaster(FILE *       const ifP,
         unsigned int col;
 
         for (col = 0; col < st4Width; ++col) {
-            char c;
+            unsigned char c;
 
-            pm_readchar(ifP, &c);
+            pm_readcharu(ifP, &c);
 
-            tuplerow[col][0] = (unsigned char)c;
+            tuplerow[col][0] = c;
         }
         pnm_writepamrow(pamP, tuplerow);
     }
@@ -149,7 +149,7 @@ readFooter(FILE *             const ifP,
        109  10 Calibration factor
        119  73 Reserved
 
-       Note tha the footer is the same length as a raster row.
+       Note that the footer is the same length as a raster row.
     */
 
     bytesReadCt = fread(buffer, 1, sizeof(buffer), ifP);

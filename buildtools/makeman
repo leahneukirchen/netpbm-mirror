@@ -2,17 +2,24 @@
 #
 # makeman -- compile netpbm's stereotyped HTML to troff markup
 #
-# This approach works because we control the entire document universe 
+# Example:
+#
+#    $ makeman pamcut.html pamcomp.html
+#
+#    $ makeman -v -d /tmp/inputdir pamcut.html
+#
+# The output troff file is in the same directory as the input HTML file, named
+# the same except with .1 extension.
+
+# This approach works because we control the entire document universe
 # this is going to convert and can reinforce useful stereotypes.
 #
 # The output of this tool uses cliches parseable by doclifter,
 # which should thus be able to recover all the semantic information
 # it looks like this thing is losing.
 #
-# Known bugs:
-#  * Ordered lists are smashed into unordered lists
-#
 # Limitations:
+#  * Ordered lists are smashed into unordered lists
 #  * IMG tags are issued as .IMG preceded by a bolded caption containing
 #    the alt content.  This will only work if the page is formatted with
 #    mwww macros.
@@ -29,7 +36,7 @@
 # Version 1.1, February 11 2016
 #
 #   Added ability to process &mdash; &minus;
-#   Added footer message to clarify original source. 
+#   Added footer message to clarify original source.
 #
 
 import os, sys, re
@@ -110,7 +117,7 @@ def makeman(name, file, indoc):
     indoc = ('.TH "%s" %d "%s" "%s"\n' % (title,section,date,source)) + indoc
     # Literal layout
     indoc = re.sub("(?i)\n *<PRE>", "\n.nf", indoc)
-    indoc = re.sub("(?i)\n *</PRE>", "\n.fi", indoc)
+    indoc = re.sub("(?i) *</PRE>\n", "\n.fi\n", indoc)
     indoc = re.sub("(?i)\n *<BLOCKQUOTE>", "\n.RS", indoc)
     indoc = re.sub("(?i)\n *</BLOCKQUOTE>", "\n.RE", indoc)
     # Highlight processing
@@ -151,8 +158,8 @@ def makeman(name, file, indoc):
     indoc = "\n".join(lines)
     indoc = re.sub(r"\s*\.sp", "\n.sp", indoc)
     # Format email addresses as italic
-    indoc = re.sub('(?i)<A[ \n]+HREF="mailto:[^>]+">([^<]+)</A>', r'\\fI\1\\fP', indoc)    
-    # Format manual crossreferences
+    indoc = re.sub('(?i)<A[ \n]+HREF="mailto:[^>]+">([^<]+)</A>', r'\\fI\1\\fP', indoc)
+    # Format manual cross-references
     def xrefmatch(match):
         xrefto = match.group(2)
         xrefurl = match.group(1)
@@ -200,7 +207,8 @@ def makeman(name, file, indoc):
     indoc = re.sub('(?i)<H2>([^><]*)</H2>', ".SH \\1", indoc)
     indoc = re.sub('(?i)<H3>([^><]*)</H3>', ".SS \\1", indoc)
     indoc = re.sub('(?i)<H4>([^><]*)</H4>', ".B \\1", indoc)
-    # 
+    indoc = re.sub('(?i)<H5>([^><]*)</H5>', ".B \\1", indoc)
+    #
     # Process definition lists -- just turn them into .TPs
     indoc = re.sub("(?i) *<DL *(COMPACT)?>", "", indoc)
     indoc = re.sub("(?i) *</DL>", "", indoc)
@@ -221,6 +229,15 @@ def makeman(name, file, indoc):
     # Acronyms
     indoc = re.sub('<acronym [a-zA-Z0-9:= \n"]*>', "", indoc)
     indoc = re.sub("</acronym>", "", indoc)
+    # Abbreviation - just erase tags
+    indoc = re.sub('<abbr [^>]+>', '', indoc)
+    indoc = re.sub('</abbr>', '', indoc)
+    # Subscript - just erase tags
+    indoc = re.sub('(?i)<sub [^>]+>', '', indoc)
+    indoc = re.sub('(?i)</sub>', '', indoc)
+    # Span - just erase tags
+    indoc = re.sub('(?i)<span [^>]+>', '', indoc)
+    indoc = re.sub('(?i)</span>', '', indoc)
     # Image tags
     indoc = re.sub(' *<img src="([^"]*)" alt="([^"]*)"( *[a-z]*="?[0-9]*"?)*>', ".B \\2\n.IMG -C \\1", indoc)
     # Special characters
@@ -236,7 +253,7 @@ def makeman(name, file, indoc):
     indoc = re.sub("(?i) *</table>.*", ".TE", indoc)
     # First the single-line case
     indoc = re.sub("(?i)</td> *<td>", "\t", indoc)
-    indoc = re.sub("(?i)<tr> *<td>", "", indoc)
+    indoc = re.sub("(?i)<tr> *<td( [^>]*)?>", "", indoc)
     indoc = re.sub("(?i)</td> *</tr>", "", indoc)
     # Then the multiline case
     indoc = re.sub(r'(?i)\s*<t[hd][^>]*>([^<\n]*)</t[dh]>\s*', '\t\\1', indoc)
@@ -248,6 +265,9 @@ def makeman(name, file, indoc):
     # Debugging
     #sys.stderr.write("Name: %s, Title: %s, Date: %s\n" % (name, title, date))
     # Time for error checking now
+    # We replaced every HTML tag we could above, so any remaining in
+    #   'indoc' represent material we don't know how to convert, which we call
+    #   bad lines.
     badlines = []
     for line in indoc.split("\n"):
         if "<" in line or ">" in line.replace(" >", "") or re.search(r'(?<!^\\)&.*;', line):
@@ -279,13 +299,15 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
         elif switch == '-v':	# Enable verbose error reporting
             verbosity += 1
     try:
-        # First pass: gather locations for crossreferences:
+        # First pass: gather locations for cross-references:
         sectmap = {}
         for file in arguments:
-            try: 
-                infp = open(os.path.join(dirprefix, file))
+            fullfilenm = os.path.join(dirprefix, file)
+            try:
+                infp = open(fullfilenm)
             except:
-                sys.stderr.write("makeman: can't open %s\n" % file)
+                sys.stderr.write(
+                    "makeman: can't open input file '%s'\n" % fullfilenm)
                 continue
             indoc = infp.read()
             infp.close()
@@ -313,10 +335,12 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
                 LiftException("%s has two <HR> tags!" % file)
         # Second pass: do formatting
         for file in arguments:
-            try: 
-                infp = open(os.path.join(dirprefix, file))
+            fullfilenm = os.path.join(dirprefix, file)
+            try:
+                infp = open(fullfilenm)
             except:
-                sys.stderr.write("makeman: can't open %s\n" % file)
+                sys.stderr.write(
+                    "makeman: can't open output file '%s'\n" % fullfilenm)
                 continue
             indoc = infp.read()
             infp.close()

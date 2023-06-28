@@ -1,12 +1,12 @@
 #! /bin/bash
 # This script tests: pamscale pamstretch pamstretch-gen
-# Also requires: pamvalidate pnmpsnr
+# Also requires: pamfile pamvalidate pnmpsnr
 
 tmpdir=${tmpdir:-/tmp}
 stretch_ppm=${tmpdir}/stretch.ppm
 
-width_height=`pamfile -size testimg.ppm | \
-                awk '{print "-width="$1, "-height="$2}'`
+width_height=$(pamfile -size testimg.ppm | \
+               awk '{print "-width="$1, "-height="$2}')
 
 pamstretch -xscale=4 -yscale=3 testimg.ppm | pamvalidate > ${stretch_ppm}
 echo -xscale=4 -yscale=3 mitchell:  

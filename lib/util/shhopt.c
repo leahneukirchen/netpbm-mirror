@@ -6,7 +6,7 @@
  |                  or passed to functions as specified.
  |
  |  REQUIREMENTS    Some systems lack the ANSI C -function strtoul. If your
- |                  system is one of those, you'll ned to write one yourself,
+ |                  system is one of those, you'll need to write one yourself,
  |                  or get the GNU liberty-library (from prep.ai.mit.edu).
  |
  |  WRITTEN BY      Sverre H. Huseby <sverrehu@online.no>
@@ -92,51 +92,71 @@ optStructCount(const optEntry opt[])
 
 
 
-static int
-optMatch(optEntry     const opt[],
-         const char * const s,
-         int          const lng) {
+enum Shortlong {SL_SHORT, SL_LONG};
+
+
+static void
+optMatch(optEntry       const opt[],
+         const char *   const targetOpt,
+         enum Shortlong const shortLong,
+         bool *         const foundP,
+         int *          const optIndexP) {
 /*------------------------------------------------------------------------
  |  FUNCTION      Find a matching option.
  |
- |  INPUT         opt     array of possible options.
- |                s       string to match, without `-' or `--'.
- |                lng     match long option, otherwise short.
+ |  INPUT         opt        array of valid option names.
+ |                targetOpt  option string to match, without `-' or `--'.
+ |                           e.g. "verbose" or "height=5"
+ |                shortLong  whether to match short option or long
  |
- |  RETURNS       Index to the option if found, -1 if not found.
+ |  RETURNS       *foundP     there is a matching option class the table
+ !                *optIndexP  index in the option class table
+ |                            meaningless if *foundP is false
  |
  |  DESCRIPTION   Short options are matched from the first character in
  |                the given string.
+ |
+ |                Where multiple entries in opt[] match, return the first.
  */
 
-    unsigned int const nopt = optStructCount(opt);
+    unsigned int const optCt = optStructCount(opt);
 
     unsigned int q;
     unsigned int matchlen;
-    const char * p;
+    bool found;
+    unsigned int optIndex;
 
-    matchlen = 0;  /* initial value */
-
-    if (lng) {
-        if ((p = strchr(s, '=')) != NULL)
-            matchlen = p - s;
+    if (shortLong == SL_LONG) {
+        const char * const equalPos = strchr(targetOpt, '=');
+        if (equalPos)
+            matchlen = equalPos - &targetOpt[0];
         else
-            matchlen = strlen(s);
-    }
-    for (q = 0; q < nopt; ++q) {
-        if (lng) {
+            matchlen = strlen(targetOpt);
+    } else
+        matchlen = 0;
+
+    for (q = 0, found = false; q < optCt && !found; ++q) {
+        switch (shortLong) {
+        case SL_LONG: {
             if (opt[q].longName) {
-                if (strncmp(s, opt[q].longName, matchlen) == 0)
-                    return q;
-            }
-        } else {
-            if (opt[q].shortName) {
-                if (s[0] == opt[q].shortName)
-                    return q;
+                if (strneq(targetOpt, opt[q].longName, matchlen)) {
+                    found = true;
+                    optIndex = q;
+                }
             }
         }
+        case SL_SHORT: {
+            if (opt[q].shortName) {
+                if (targetOpt[0] == opt[q].shortName) {
+                    found = true;
+                    optIndex = q;
+                }
+            }
+        }
+        }
     }
-    return -1;
+    *foundP    = found;
+    *optIndexP = optIndex;
 }
 
 
@@ -394,7 +414,7 @@ static void
 optExecute(optEntry  const opt, char *arg, int lng)
 {
     if (opt.specified)
-        (*(opt.specified))++;
+        *opt.specified = 1;
 
     switch (opt.type) {
     case OPT_FLAG:
@@ -556,13 +576,12 @@ pm_optSetFatalFunc(void (*f)(const char *, ...)) {
 void
 pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
 {
-    int  ai,        /* argv index. */
-         optarg,    /* argv index of option argument, or -1 if none. */
-         mi,        /* Match index in opt. */
-         done;
-    char *arg,      /* Pointer to argument to an option. */
-         *o,        /* pointer to an option character */
-         *p;
+    int ai;        /* argv index. */
+    int optarg;    /* argv index of option argument, or -1 if none. */
+    int done;
+    char * arg;      /* Pointer to argument to an option. */
+    char * o;        /* pointer to an option character */
+    char * p;
 
     optEntry *opt_table;  /* malloc'ed array */
 
@@ -579,7 +598,7 @@ pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
          *  "--" indicates that the rest of the argv-array does not
          *  contain options.
          */
-        if (strcmp(argv[ai], "--") == 0) {
+        if (streq(argv[ai], "--")) {
             argvRemove(argc, argv, ai);
             break;
         }
@@ -587,10 +606,13 @@ pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
         if (allowNegNum && argv[ai][0] == '-' && ISDIGIT(argv[ai][1])) {
             ++ai;
             continue;
-        } else if (strncmp(argv[ai], "--", 2) == 0) {
+        } else if (strneq(argv[ai], "--", 2)) {
+            bool found;
+            int mi;
             /* long option */
             /* find matching option */
-            if ((mi = optMatch(opt_table, argv[ai] + 2, 1)) < 0)
+            optMatch(opt_table, argv[ai] + 2, SL_LONG, &found, &mi);
+            if (!found)
                 optFatal("unrecognized option `%s'", argv[ai]);
 
             /* possibly locate the argument to this option. */
@@ -629,8 +651,11 @@ pm_optParseOptions(int *argc, char *argv[], optStruct opt[], int allowNegNum)
             done = 0;
             optarg = -1;
             while (*o && !done) {
+                bool found;
+                int mi;
                 /* find matching option */
-                if ((mi = optMatch(opt_table, o, 0)) < 0)
+                optMatch(opt_table, o, SL_SHORT, &found, &mi);
+                if (!found)
                     optFatal("unrecognized option `-%c'", *o);
 
                 /* does this option take an argument? */
@@ -679,7 +704,6 @@ parse_short_option_token(char *argv[], const int argc, const int ai,
 -----------------------------------------------------------------------------*/
     char *o;  /* A short option character */
     char *arg;
-    int mi;   /* index into option table */
     unsigned char processed_arg;  /* boolean */
         /* We processed an argument to one of the one-character options.
            This necessarily means there are no more options in this token
@@ -691,8 +715,11 @@ parse_short_option_token(char *argv[], const int argc, const int ai,
     o = argv[ai] + 1;
     processed_arg = 0;  /* initial value */
     while (*o && !processed_arg) {
+        bool found;
+        int mi;   /* index into option table */
 		/* find matching option */
-		if ((mi = optMatch(opt_table, o, 0)) < 0)
+		optMatch(opt_table, o, SL_SHORT, &found, &mi);
+		if (!found)
 		    optFatal("unrecognized option `-%c'", *o);
 
 		/* does this option take an argument? */
@@ -721,7 +748,7 @@ static void
 fatalUnrecognizedLongOption(const char * const optionName,
                             optEntry     const optTable[]) {
 
-    unsigned int const nopt = optStructCount(optTable);
+    unsigned int const optCt = optStructCount(optTable);
 
     unsigned int q;
 
@@ -730,7 +757,7 @@ fatalUnrecognizedLongOption(const char * const optionName,
     optList[0] = '\0';  /* initial value */
 
     for (q = 0;
-         q < nopt && strlen(optList) + 1 <= sizeof(optList);
+         q < optCt && strlen(optList) + 1 <= sizeof(optList);
          ++q) {
 
         const optEntry * const optEntryP = &optTable[q];
@@ -777,6 +804,7 @@ parse_long_option(char *   const argv[],
          "=".  NULL if no "=" in the token.
          */
     char *arg;     /* The argument of an option; NULL if none */
+    bool found;
     int mi;    /* index into option table */
 
     /* The current token is an option, and its name starts at
@@ -784,7 +812,8 @@ parse_long_option(char *   const argv[],
     */
     *tokens_consumed_p = 1;  /* initial assumption */
     /* find matching option */
-    if ((mi = optMatch(opt_table, &argv[ai][namepos], 1)) < 0)
+    optMatch(opt_table, &argv[ai][namepos], SL_LONG, &found, &mi);
+    if (!found)
         fatalUnrecognizedLongOption(argv[ai], opt_table);
 
     /* possibly locate the argument to this option. */

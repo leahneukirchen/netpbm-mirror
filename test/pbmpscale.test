@@ -1,12 +1,51 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmpscale
-# Also requires: pamenlarge pbmtext
+# Also requires: pbmtext
 
+echo "Test 1.  Should print \"abc\" rendered in PBM plain format"
+pbmtext -nomargin "abc" | pbmpscale 1 -plain
+echo "Test 2.  \"ABC\" in PBM plain format"
+pbmtext -nomargin "ABC" | pbmpscale 2 -plain
+echo "Test 3.  \"D.!\" in PBM plain format"
+pbmtext -nomargin "D.!" | pbmpscale 3 -plain
+echo "Test 3.  \"E,?\" in PBM plain format"
+pbmtext -nomargin "E,?" | pbmpscale 4 -plain
 
-pbmtext -nomargin "F" | pbmpscale 3 -plain
+echo "Test 5.  Should print 576003211 10631"
+pbmpscale 5 maze.pbm | cksum
 
-for i in 2 3 4
-do
-pamenlarge 2 testgrid.pbm | \
-  pbmpscale $i | cksum
-done
+echo "Test 6.  Should print 3501321825 369"
+pbmtext -nomargin "6" | pbmpscale 6 | cksum
+echo "Test 7.  Should print 1588181271 535"
+pbmtext -nomargin "7" | pbmpscale 7 | cksum
+echo "Test 8.  Should print 2843090781 610"
+pbmtext -nomargin "8" | pbmpscale 8 | cksum
+echo "Test 9.  Should print 146160766 820"
+pbmtext -nomargin "9" | pbmpscale 9 | cksum
+echo "Test 10. Should print 3327221668 2111"
+pbmtext -nomargin "10" | pbmpscale 10 | cksum
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+pbmpscale testgrid.pbm > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmpscale 0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmpscale 2 3 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

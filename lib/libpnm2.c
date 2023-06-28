@@ -23,11 +23,11 @@
 
 
 void
-pnm_writepnminit(FILE * const fileP, 
-                 int    const cols, 
-                 int    const rows, 
-                 xelval const maxval, 
-                 int    const format, 
+pnm_writepnminit(FILE * const fileP,
+                 int    const cols,
+                 int    const rows,
+                 xelval const maxval,
+                 int    const format,
                  int    const forceplain) {
 
     bool const plainFormat = forceplain || pm_plain_output;
@@ -47,7 +47,7 @@ pnm_writepnminit(FILE * const fileP,
 
     default:
         pm_error("invalid format argument received by pnm_writepnminit(): %d"
-                 "PNM_FORMAT_TYPE(format) must be %d, %d, or %d", 
+                 "PNM_FORMAT_TYPE(format) must be %d, %d, or %d",
                  format, PBM_TYPE, PGM_TYPE, PPM_TYPE);
     }
 }
@@ -55,19 +55,19 @@ pnm_writepnminit(FILE * const fileP,
 
 
 static void
-writepgmrow(FILE *       const fileP, 
-            const xel *  const xelrow, 
-            unsigned int const cols, 
-            xelval       const maxval, 
-            int          const format, 
+writepgmrow(FILE *       const fileP,
+            const xel *  const xelrow,
+            unsigned int const cols,
+            xelval       const maxval,
+            int          const format,
             bool         const plainFormat) {
-    
+
     jmp_buf jmpbuf;
     jmp_buf * origJmpbufP;
     gray * grayrow;
-    
+
     grayrow = pgm_allocrow(cols);
-    
+
     if (setjmp(jmpbuf) != 0) {
         pgm_freerow(grayrow);
         pm_setjmpbuf(origJmpbufP);
@@ -76,10 +76,10 @@ writepgmrow(FILE *       const fileP,
         unsigned int col;
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
-        
+
         for (col = 0; col < cols; ++col)
             grayrow[col] = PNM_GET1(xelrow[col]);
-    
+
         pgm_writepgmrow(fileP, grayrow, cols, (gray) maxval, plainFormat);
 
         pm_setjmpbuf(origJmpbufP);
@@ -100,7 +100,7 @@ writepbmrow(FILE *       const fileP,
     bit * bitrow;
 
     bitrow = pbm_allocrow(cols);
-    
+
     if (setjmp(jmpbuf) != 0) {
         pbm_freerow(bitrow);
         pm_setjmpbuf(origJmpbufP);
@@ -112,29 +112,29 @@ writepbmrow(FILE *       const fileP,
 
         for (col = 0; col < cols; ++col)
             bitrow[col] = PNM_GET1(xelrow[col]) == 0 ? PBM_BLACK : PBM_WHITE;
-    
+
         pbm_writepbmrow(fileP, bitrow, cols, plainFormat);
 
         pm_setjmpbuf(origJmpbufP);
     }
     pbm_freerow(bitrow);
-}    
+}
 
 
 
 void
-pnm_writepnmrow(FILE *      const fileP, 
-                const xel * const xelrow, 
-                int         const cols, 
-                xelval      const maxval, 
-                int         const format, 
+pnm_writepnmrow(FILE *      const fileP,
+                const xel * const xelrow,
+                int         const cols,
+                xelval      const maxval,
+                int         const format,
                 int         const forceplain) {
 
     bool const plainFormat = forceplain || pm_plain_output;
-    
+
     switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE:
-        ppm_writeppmrow(fileP, (pixel*) xelrow, cols, (pixval) maxval, 
+        ppm_writeppmrow(fileP, (pixel*) xelrow, cols, (pixval) maxval,
                         plainFormat);
         break;
 
@@ -145,10 +145,10 @@ pnm_writepnmrow(FILE *      const fileP,
     case PBM_TYPE:
         writepbmrow(fileP, xelrow, cols, plainFormat);
         break;
-    
+
     default:
         pm_error("invalid format argument received by pnm_writepnmrow(): %d"
-                 "PNM_FORMAT_TYPE(format) must be %d, %d, or %d", 
+                 "PNM_FORMAT_TYPE(format) must be %d, %d, or %d",
                  format, PBM_TYPE, PGM_TYPE, PPM_TYPE);
     }
 }
@@ -167,7 +167,10 @@ pnm_writepnm(FILE * const fileP,
     unsigned int row;
 
     pnm_writepnminit(fileP, cols, rows, maxval, format, forceplain);
-    
+
     for (row = 0; row < rows; ++row)
         pnm_writepnmrow(fileP, xels[row], cols, maxval, format, forceplain);
 }
+
+
+

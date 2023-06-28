@@ -1,18 +1,73 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmmake
 # Also requires:
 
+echo "Test 1"
 
-for i in `seq 1 8`
-do
-for color in -w -b -g
-do
-pbmmake -plain $color $i $i | tr -d '\n'; echo
-done
-done
-for i in `seq 8 5 98`
-do
- ( pbmmake -w $i $i ;
-  pbmmake -b $i $i ;
-  pbmmake  -g $i $i ) | cksum
-done
+for size in 1 2 3 4 5 6 7 8             # for size in `seq 8`
+  do
+  for color in -white -black -gray
+    do
+    pbmmake -plain ${color} ${size} ${size} | tr -d '\n'; echo
+    done
+  done
+
+echo "Test 2"
+
+for size in 8 13 18 23 28 33 38 43 48 53 58 63 68 73 78 83 88 93 98
+	    # for size in `seq 8 5 98`
+  do
+  ( pbmmake -w ${size} ${size} ;
+    pbmmake -b ${size} ${size} ;
+    pbmmake -g ${size} ${size} ) | cksum
+  done
+
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+pbmmake -b -w -plain 1 1 > ${test_out} || \
+  printf "Expected failure 1"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmmake -b -g -plain 1 1 > ${test_out} || \
+  printf "Expected failure 2"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmmake -white -gray -plain 1 1 > ${test_out} || \
+  printf "Expected failure 3"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmmake -white -plain   > ${test_out} || \
+  printf "Expected failure 4"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmmake -white -plain 1 > ${test_out} || \
+  printf "Expected failure 5"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmmake -white -plain 1 0 > ${test_out} || \
+  printf "Expected failure 6"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmmake -white -plain 0 1 > ${test_out} || \
+  printf "Expected failure 7"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}
+
+pbmmake -white -plain 1 1 1 > ${test_out} || \
+  printf "Expected failure 8"
+  test -s ${test_out}; echo " "$?
+  rm -f ${test_out}

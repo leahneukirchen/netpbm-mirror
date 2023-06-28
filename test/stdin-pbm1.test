@@ -1,0 +1,45 @@
+#! /bin/sh
+# This script tests: pbmclean pbmlife pbmmask pbmminkowski pbmtoepsi
+# This script tests: pbmtopsg3 pbmpscale pbmreduce pbmtopgm
+# Also requires: pbmmake
+
+# Tests whether output is unchanged when
+# (1) input is a named file: pbm-command input-file
+# (2) input is from stdin:   pbm-command < input-file
+
+tmpdir=${tmpdir:-/tmp}
+out1=${tmpdir}/out1
+out2=${tmpdir}/out2
+out3=${tmpdir}/out3
+out4=${tmpdir}/out4
+small_pbm=${tmpdir}/small.pbm
+
+pbmmake -b 3 3 > ${small_pbm}
+
+for testprog in \
+        pbmclean \
+        pbmlife \
+        pbmmask \
+        pbmminkowski \
+        pbmtoepsi \
+        pbmtopsg3 \
+        "pbmpscale 1 " \
+        "pbmreduce -threshold 2 " \
+        "pbmtopgm 2 2 "
+  do
+  ${testprog} ${small_pbm} > ${out1};      status1=$?
+  ${testprog} < ${small_pbm} > ${out2};    status2=$?
+  test -s ${out1};                         status3=$?
+  cmp -s ${out1} ${out2}
+  echo ${testprog}": "${status1} ${status2} ${status3} $?
+  rm ${out1} ${out2}
+  done
+
+rm ${small_pbm}
+
+# For Pbm converters not tested here see pbm-misc-converters.test
+
+# These programs do not have a converter in the opposite direction:
+# Brushtopbm
+# Ddbugtopbm
+# Thinkjettopbm (?)

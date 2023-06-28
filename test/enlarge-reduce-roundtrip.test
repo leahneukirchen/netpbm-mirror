@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamenlarge pbmpscale pbmreduce
 # Also requires: pbmtext
 

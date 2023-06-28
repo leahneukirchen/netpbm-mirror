@@ -1,3 +1,4 @@
+Test 1
 3712518499 55
 3712518499 55
 1147844094 55
@@ -79,3 +80,12 @@
 4102007360 169
 3022719594 169
 1769176609 169
+Test 2
+stdin:	PAM, 3 by 3 by 1 maxval 255
+    Tuple type: GRAYSCALE
+Test Invalid
+Expected failure 1 1
+Expected failure 2 1
+Expected failure 3 1
+Expected failure 4 1
+Expected failure 5 1

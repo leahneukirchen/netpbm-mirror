@@ -1,0 +1,9 @@
+pbmclean: 0 0 0 0
+pbmlife: 0 0 0 0
+pbmmask: 0 0 0 0
+pbmminkowski: 0 0 0 0
+pbmtoepsi: 0 0 0 0
+pbmtopsg3: 0 0 0 0
+pbmpscale 1 : 0 0 0 0
+pbmreduce -threshold 2 : 0 0 0 0
+pbmtopgm 2 2 : 0 0 0 0

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamtotiff tifftopnm
 # Also requires: ppmpat pampick ppmtopgm
 
@@ -13,9 +13,8 @@ argylegray_ppm=${tmpdir}/argyle2.ppm
 multiimage_tiff=${tmpdir}/multiimage.ppm
 
 # PPM image
-# Should print 1926073387 101484 five times
 
-echo PPM-rose
+echo "Test 1:PPM-rose  Should print 1926073387 101484 five times"
 pamtotiff testimg.ppm | tifftopnm -headerdump | cksum
 pamtotiff -truecolor testimg.ppm -output ${multiimage_tiff} && \
   tifftopnm ${multiimage_tiff} -byrow | cksum
@@ -25,9 +24,8 @@ pamtotiff -truecolor -lsb2msb  testimg.ppm | \
   tifftopnm -respectfillorder | cksum
 
 # PPM image with six colors
-# Should print 1646869394 29498 four times
 
-echo PPM-6
+echo "Test 2:PPM-6  Should print 1646869394 29498 four times"
 ppmpat -tartan -color=rgb:0/8/8,rgb:8/f/8,rgb:f/f/0 108 91 | \
   tee ${tartan_ppm} | cksum
 pamtotiff -truecolor ${tartan_ppm} | tifftopnm | cksum
@@ -37,12 +35,12 @@ pamtotiff ${tartan_ppm} -append -output ${multiimage_tiff} && \
 
 
 # PPM image with two colors
-# Should print 3743909631 14836 four times
 
-echo PPM-2
+echo "Test 3:PPM-2  Should print 3743909631 14836 four times"
 ppmpat -argyle2 -color=rgb:0/0/0,rgb:f/8/f,rgb:0/0/0 61 81 | \
   tee ${argylecolor_ppm} | cksum
-pamtotiff -indexbits=2 ${argylecolor_ppm} -append -output ${multiimage_tiff} && \
+pamtotiff -indexbits=2 ${argylecolor_ppm} -append \
+  -output ${multiimage_tiff} && \
   tifftopnm ${multiimage_tiff} | pampick 2 | cksum
 pamtotiff -indexbits=1 ${argylecolor_ppm} | tifftopnm | cksum
 pamtotiff -indexbits=1 -g4 ${argylecolor_ppm} | tifftopnm | cksum
@@ -51,9 +49,8 @@ pamtotiff -indexbits=1 -g4 ${argylecolor_ppm} | tifftopnm | cksum
 # pamtotiff detects the absence of colors and produces a grayscale
 # tiff image unless -color is specified
 # Pipeline output is PGM unless -color is specified
-# Should print 603974118 4954 six times
 
-echo PPM-gray
+echo "Test 4:PPM-gray  Should print 603974118 4954 six times"
 ppmpat -gingham3 -color=rgb:0/0/0,rgb:ff/ff/ff,rgb:0/0/0 61 81 | \
   tee ${gingham_ppm} | ppmtopgm | cksum
 pamtotiff -color ${gingham_ppm} | tifftopnm | cksum
@@ -67,9 +64,8 @@ pamtotiff -mb ${gingham_ppm} -append -output ${multiimage_tiff} && \
 # pamtotiff detects the absence of colors and produces a grayscale
 # tiff image unless -color is specified
 # Pipeline output is PGM unless -color is specified
-# Should print 1001018459 4954 four times
 
-echo PPM-bilevel-black-white
+echo "Test 5:PPM-bilevel-black-white  Should print 1001018459 4954 four times"
 ppmpat -argyle2 -color=rgb:0/0/0,rgb:ff/ff/ff,rgb:0/0/0 61 81 | \
   tee ${argylegray_ppm} | ppmtopgm | cksum
 pamtotiff -color -fill ${argylegray_ppm} | tifftopnm | cksum
@@ -78,17 +74,17 @@ pamtotiff -mb ${argylegray_ppm} -append -output ${multiimage_tiff} && \
   tifftopnm ${multiimage_tiff} | pampick 4 | cksum
 
 # PBM image
-# Should print 2425386270 41 three times
 
-echo PBM
-pamtotiff testgrid.pbm | tifftopnm | cksum
-pamtotiff -g3 -fill testgrid.pbm | tifftopnm | cksum
-pamtotiff -g4 -mb testgrid.pbm -append -output ${multiimage_tiff} && \
+
+echo "Test 6:PBM  Should print 281226646 481 three times"
+pamtotiff maze.pbm | tifftopnm | cksum
+pamtotiff -g3 -fill maze.pbm | tifftopnm | cksum
+pamtotiff -g4 -mb maze.pbm -append -output ${multiimage_tiff} && \
   tifftopnm ${multiimage_tiff} | pampick 5 | cksum
 
 # Extract individual images from multi-image tiff file
 
-echo "Extract from multi-image TIFF"
+echo "Test 7:Extract from multi-image TIFF"
 tifftopnm ${multiimage_tiff} | pampick 0 | cksum
 tifftopnm ${multiimage_tiff} | pampick 1 | cksum
 tifftopnm ${multiimage_tiff} | pampick 2 | cksum

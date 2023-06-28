@@ -167,6 +167,16 @@
 #define lstat stat
 #endif
 
+/* Mingw provides much of POSIX, but does not provide 'random' (and a
+   discussion on the Mingw mailing list in March 2021 shows that the
+   developers want it that way).  MSVCRT itself has a sufficient 'rand',
+   though, so we use that for 'random'.
+*/
+#if MSVCRT
+#define random rand
+#define srandom srand
+#endif
+
 /*  CONFIGURE: Netpbm uses __inline__ to declare functions that should
     be compiled as inline code.  GNU C recognizes the __inline__ keyword.
     If your compiler recognizes any other keyword for this, you can set

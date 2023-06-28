@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmtorle rletopnm
 # Also requires: pamchannel pamtopnm
 

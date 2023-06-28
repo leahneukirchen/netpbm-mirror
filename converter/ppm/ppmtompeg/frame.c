@@ -12,7 +12,7 @@
  *  Frame_AllocYCC                               *
  *  Frame_AllocDecoded                           *
  *  Frame_AllocHalf                                  *
- *  Frame_Resize                                     * 
+ *  Frame_Resize                                     *
  *                                       *
  *===========================================================================*/
 
@@ -52,7 +52,7 @@
  *===========*/
 
 /* The maximum number of B-Frames allowed between reference frames. */
-#define  B_FRAME_RUN  16    
+#define  B_FRAME_RUN  16
 
 /*==================*
  * GLOBAL VARIABLES *
@@ -64,13 +64,13 @@ static unsigned int numOfFrames;
 
 /*====================================================
 * Resize_Array_Width
-*    
+*
 *   This function will resize any array width up
 * or down in size.  The algorithm is based on the
 * least common multiple approach more commonly
 * used in audio frequency adjustments.
 *=====================================================*/
-static void 
+static void
 Resize_Array_Width(uint8 ** const inarray,
                    int      const in_x,
                    int      const in_y,
@@ -86,7 +86,7 @@ Resize_Array_Width(uint8 ** const inarray,
     uint8 pointA,pointB;
     double slope,diff;
 #endif
-    
+
     for (i = 0; i < in_y; ++i) {     /* For each row */
         unsigned int j;
         inptr = &inarray[i][0];
@@ -106,7 +106,7 @@ Resize_Array_Width(uint8 ** const inarray,
                     in_total = in_total - out_x;
                     --inptr;
                 }
-            } else {  
+            } else {
 #ifdef DOING_INTERPOLATION
                 pointA = *inptr;
 #endif
@@ -124,10 +124,10 @@ Resize_Array_Width(uint8 ** const inarray,
                 } else {
                     *outptr = (pointB -
                                (uint8)(slope*(((float)(out_x)) - diff)));
-                } 
+                }
 #endif
                 /* Non-Interpolative solution */
-                *outptr = *inptr;  
+                *outptr = *inptr;
 
                 ++outptr;
                 out_total = out_total + in_x;
@@ -153,7 +153,7 @@ Resize_Array_Width(uint8 ** const inarray,
 * Same as Resize_array_Width except pointer
 * manipulation must change.
 *===============================*/
-static void 
+static void
 Resize_Array_Height(uint8 ** const inarray,
                     int      const in_x,
                     int      const in_y,
@@ -176,7 +176,7 @@ Resize_Array_Height(uint8 ** const inarray,
         out_total = 0;
         k = 0;
         for(j=0; j < out_y; ++j){  /* for each output value */
-            if (in_total == out_total) {  
+            if (in_total == out_total) {
                 outarray[j][i] = inarray[k][i];
                 out_total=out_total+in_y;
                 while(in_total < out_total){
@@ -187,7 +187,7 @@ Resize_Array_Height(uint8 ** const inarray,
                     in_total = in_total - out_y;
                     --k;
                 }
-            } else {  
+            } else {
 #ifdef DOING_INTERPOLATION
                 pointA = inarray[k][i];
                 if (k != (in_y - 1)) {
@@ -210,7 +210,7 @@ Resize_Array_Height(uint8 ** const inarray,
                     in_total = in_total - out_y;
                     --k;
                 }
-            } 
+            }
         }
     }
 }
@@ -220,7 +220,7 @@ Resize_Array_Height(uint8 ** const inarray,
 /*========================================================
 * Resize_Width
 *======================================================*/
-static void  
+static void
 Resize_Width(MpegFrame * const omfrw,
              MpegFrame * const mfrw,
              int         const in_x,
@@ -274,12 +274,12 @@ Resize_Width(MpegFrame * const omfrw,
             free(mfrw->orig_y[i]);
         }
         free(mfrw->orig_y);
-        
+
         for (i = 0; i < in_y / 2; ++i) {
             free(mfrw->orig_cr[i]);
         }
         free(mfrw->orig_cr);
-        
+
         for (i = 0; i < in_y / 2; ++i) {
             free(mfrw->orig_cb[i]);
         }
@@ -300,9 +300,9 @@ Resize_Height(MpegFrame * const omfrh,
               int         const in_x,
               int         const in_y,
               int         const out_y) {
-    
-    unsigned int y; 
-    
+
+    unsigned int y;
+
     Fsize_y = out_y;
 
     /* Allocate new frame memory */
@@ -347,12 +347,12 @@ Resize_Height(MpegFrame * const omfrh,
             free(mfrh->orig_y[i]);
         }
         free(mfrh->orig_y);
-        
+
     for (i = 0; i < in_y / 2; ++i) {
         free(mfrh->orig_cr[i]);
     }
     free(mfrh->orig_cr);
-    
+
     for (i = 0; i < in_y / 2; ++i) {
         free(mfrh->orig_cb[i]);
     }
@@ -386,8 +386,8 @@ Frame_Init(unsigned int const numOfFramesRequested) {
     for (idx = 0; idx < numOfFrames; ++idx) {
         MALLOCVAR(frameMemory[idx]);
         frameMemory[idx]->inUse = FALSE;
-        frameMemory[idx]->orig_y = NULL;    
-        frameMemory[idx]->y_blocks = NULL; 
+        frameMemory[idx]->orig_y = NULL;
+        frameMemory[idx]->y_blocks = NULL;
         frameMemory[idx]->decoded_y = NULL;
         frameMemory[idx]->halfX = NULL;
         frameMemory[idx]->next = NULL;
@@ -458,11 +458,11 @@ FreeFrame(MpegFrame * const frameP) {
             for ( i = 0; i < Fsize_y; ++i )
                 free(frameP->halfX[i]);
             free(frameP->halfX);
-            
+
             for (i = 0; i < Fsize_y-1; ++i)
                 free(frameP->halfY[i]);
             free(frameP->halfY);
-            
+
             for (i = 0; i < Fsize_y-1; ++i)
                 free(frameP->halfBoth[i]);
             free(frameP->halfBoth);
@@ -542,7 +542,7 @@ GetUnusedFrame() {
                 "See the man page for help.\n");
         exit(1);
     }
-    return frameMemory[idx]; 
+    return frameMemory[idx];
 }
 
 
@@ -638,7 +638,7 @@ Frame_AllocBlocks(MpegFrame * const frameP) {
             MALLOCARRAY(frameP->y_blocks[i], dctx);
             ERRCHK(frameP->y_blocks[i], "malloc");
         }
-    
+
         MALLOCARRAY(frameP->cr_blocks, dcty / 2);
         ERRCHK(frameP->cr_blocks, "malloc");
         MALLOCARRAY(frameP->cb_blocks, dcty / 2);
@@ -672,7 +672,7 @@ Frame_AllocYCC(MpegFrame * const frameP) {
         /* already allocated */
     } else {
         unsigned int y;
-    
+
         DBG_PRINT(("ycc_calc:\n"));
         /*
          * first, allocate tons of memory
@@ -755,7 +755,7 @@ Frame_AllocHalf(MpegFrame * const frameP) {
  *
  *  allocate memory for decoded frame for the given frame, if required
  *  if makeReference == TRUE, then makes it reference frame
- * 
+ *
  * RETURNS: nothing
  *
  * SIDE EFFECTS:    none
@@ -781,14 +781,14 @@ Frame_AllocDecoded(MpegFrame * const frameP,
             MALLOCARRAY(frameP->decoded_y[y], Fsize_x);
             ERRCHK(frameP->decoded_y[y], "malloc");
         }
-        
+
         MALLOCARRAY(frameP->decoded_cr, Fsize_y / 2);
         ERRCHK(frameP->decoded_cr, "malloc");
         for (y = 0; y < (Fsize_y / 2); ++y) {
             MALLOCARRAY(frameP->decoded_cr[y], Fsize_x / 2);
             ERRCHK(frameP->decoded_cr[y], "malloc");
         }
-        
+
         MALLOCARRAY(frameP->decoded_cb, Fsize_y / 2);
         ERRCHK(frameP->decoded_cb, "malloc");
         for (y = 0; y < (Fsize_y / 2); ++y) {
@@ -810,7 +810,7 @@ Frame_AllocDecoded(MpegFrame * const frameP,
  *
  * Frame_Resize                  by James Boucher
  *                Boston University Multimedia Communications Lab
- *  
+ *
  *     This function takes the mf input frame, read in READFrame(),
  * and resizes all the input component arrays to the output
  * dimensions specified in the parameter file as OUT_SIZE.
@@ -828,11 +828,11 @@ Frame_Resize(MpegFrame * const omf,
     MpegFrame * frameAP;  /* intermediate frame */
 
     MALLOCVAR_NOFAIL(frameAP);
-    
+
     if (insize_x != outsize_x && insize_y != outsize_y) {
         Resize_Width(frameAP, mf, insize_x, insize_y, outsize_x);
         Resize_Height(omf, frameAP, outsize_x, insize_y, outsize_y);
-    } else 
+    } else
         if (insize_x ==outsize_x && insize_y != outsize_y) {
             Resize_Height(omf, mf, insize_x, insize_y, outsize_y);
         } else
@@ -843,3 +843,5 @@ Frame_Resize(MpegFrame * const omf,
 
     free(frameAP);
 }
+
+

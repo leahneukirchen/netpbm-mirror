@@ -798,10 +798,12 @@ readRleRow(FILE *          const ifP,
         if (incount == 0)
             pm_error("Invalid (zero) count in RLE compression.");
         if (j + incount > bytesPerRow)
-            pm_error("Bytes in RLE compressed row exceed bytes per row.  "
-                     "Bytes per row is %u.  A run length of %u bytes "
-                     "pushes the bytes in this row up to %u bytes (and then "
-                     "we gave up).", bytesPerRow, incount, j + incount);
+            pm_error("Invalid Palm image input.  Header says %u bytes "
+                     "per row after uncompressing from RLE, "
+                     "but we encountered a row with a run length of %u bytes "
+                     "that pushes the bytes in the row up to %u bytes "
+                     "(and we didn't look at the rest of the row)",
+                     bytesPerRow, incount, j + incount);
         pm_readcharu(ifP, &inval);
         memset(palmrow + j, inval, incount);
         j += incount;
@@ -867,10 +869,11 @@ readPackBitsRow16(FILE *          const ifP,
             j += nonrunlength;
         }
         if (j > bytesPerRow)
-            pm_error("Bytes in PackBits compressed row exceed bytes per row.  "
-                     "Bytes per row is %u.  "
-                     "The bytes in this row were pushed up to %u bytes "
-                     "(and then we gave up).", bytesPerRow, j);
+            pm_error("Invalid Palm image input.  Header says %u bytes "
+                     "per row after uncompressing from 16-bit Packbits at, "
+                     "but we counted %u bytes in a row, "
+                     "before we stopped processing the row",
+                     bytesPerRow, j);
     }
 }
 
@@ -915,10 +918,11 @@ readPackBitsRow(FILE *          const ifP,
             j += nonrunlength;
         }
         if (j > bytesPerRow)
-            pm_error("Bytes in PackBits compressed row exceed bytes per row.  "
-                     "Bytes per row is %u.  "
-                     "The bytes in this row were pushed up to %u bytes "
-                     "(and then we gave up).", bytesPerRow, j);
+            pm_error("Invalid Palm image input.  Header says %u bytes "
+                     "per row after uncompressing from 8-bit Packbits, "
+                     "but we counted %u bytes in a row, "
+                     "before we stopped processing the row",
+                     bytesPerRow, j);
     }
 }
 

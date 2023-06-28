@@ -804,7 +804,7 @@ static void determine_world_parallelogram (world_data *const world,
   yw_lr = world->yi_lr * zw_lr;
 
   /* Now we introduce the margin. There are several ways the margin can be
-     defined. margin_spec keeps track of wether one of them has yet been
+     defined. margin_spec keeps track of whether one of them has yet been
      used. As long as margin_spec==FALSE, the variables top_margin to
      bottom_margin are not initialized! */
 

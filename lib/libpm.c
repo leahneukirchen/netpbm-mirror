@@ -368,7 +368,7 @@ pm_freearray(char ** const rowIndex,
 /* Case-insensitive keyword matcher. */
 
 int
-pm_keymatch(const char *       const strarg,
+pm_keymatch(const char * const strarg,
             const char * const keywordarg,
             int          const minchars) {
     int len;
@@ -770,10 +770,10 @@ extractAfterLastSlash(const char * const fullPath,
     slashPos = strrchr(fullPath, '/');
 
     if (slashPos == NULL) {
-        strncpy(retval, fullPath, retvalSize);
+        strncpy(retval, fullPath, retvalSize-1);
         retval[retvalSize-1] = '\0';
     } else {
-        strncpy(retval, slashPos +1, retvalSize);
+        strncpy(retval, slashPos + 1, retvalSize-1);
         retval[retvalSize-1] = '\0';
     }
 }
@@ -844,6 +844,9 @@ pm_parse_width(const char * const arg) {
    Return the image width represented by the decimal ASCIIZ string
    'arg'.  Fail if it doesn't validly represent a width or represents
    a width that can't be conveniently used in computation.
+
+   See comments at 'validateComputableSize' in libpam.c for details on
+   the purpose of these validations.
 -----------------------------------------------------------------------------*/
     unsigned int width;
     const char * error;

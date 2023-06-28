@@ -1,0 +1,99 @@
+#! /bin/sh
+# This script tests: pambrighten
+# Also requires: pgmramp
+
+tmpdir=${tmpdir:-/tmp}
+
+input_ppm=${tmpdir}/input.ppm
+
+cat > ${input_ppm} << EOF
+P3
+8 1
+255
+0 0 0 0 0 100 0 100 0 0 100 100 100 0 0 100 0 100 100 100 0 100 100 100 
+EOF
+
+# Test 1
+
+echo "Test 1"
+pambrighten -v   0 -plain ${input_ppm}
+pambrighten -v +10 -plain ${input_ppm}
+pambrighten -v -10 -plain ${input_ppm}
+pambrighten -v +100 -plain ${input_ppm}
+pambrighten -v +200 -plain ${input_ppm}
+pambrighten -v -100 -plain ${input_ppm}
+
+echo "Test 2"
+pambrighten -s -10 -plain ${input_ppm}
+pambrighten -s -100 -plain ${input_ppm}
+
+echo "Test 3: Output invariant"
+pambrighten         -plain ${input_ppm}
+pambrighten -v   0  -plain ${input_ppm}
+pambrighten -s   0  -plain ${input_ppm}
+pambrighten -s +10  -plain ${input_ppm}
+pambrighten -s +100 -plain ${input_ppm}
+pambrighten -s +200 -plain ${input_ppm}
+
+rm ${input_ppm}
+
+echo "Test 4: Should print 3990234518 268 six times"
+
+input_pgm=${tmpdir}/input.pgm
+
+pgmramp -lr 255 1 | tee ${input_pgm} | cksum
+pambrighten -s -100 ${input_pgm} | cksum
+pambrighten -s -10  ${input_pgm} | cksum
+pambrighten -s +10  ${input_pgm} | cksum
+pambrighten -s +100 ${input_pgm} | cksum
+pambrighten -s +200 ${input_pgm} | cksum
+
+rm ${input_pgm}
+
+
+# Test 2
+# These should all fail.
+
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+echo "Test Error: Should print 1 six times"
+
+output_ppm=${tmpdir}/output.ppm
+
+pambrighten -v -120 testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+pambrighten -s -120 testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+pambrighten 10 testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+
+
+echo "Test Error: Should print 99 followed by 1, four times"
+
+pambrighten -s 1.20 testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+pambrighten -v 10.5 testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+pambrighten -v testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+pambrighten -s testimg.ppm > ${output_ppm}
+echo $?
+test -s ${output_ppm}
+echo $?
+
+
+rm -f ${output_ppm}
