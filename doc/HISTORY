@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.06.28 BJH  Release 11.03.00
+
+              pamstack: Add -firstmaxval, -lcmmaxval
+
+              pnmcolormap: make result independent of how system's qsort
+              orders records with equal keys.  Affects pnmquant.
+
+              pamtopng: fix typo in error message about -chroma option.
+
+              pamtopng, pnmtopng, pngtopam: fix error message when something
+              fails in libpng.  Always broken (the programs were new in Netpbm
+              8.1 (March 2000)).
+
 23.03.25 BJH  Release 11.02.00
 
               jpegtopnm: Add -traceexif

@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <png.h>
-/* setjmp.h needs to be included after png.h */
-#include <setjmp.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -85,7 +83,7 @@ parseChromaOpt(const char *         const chromaOpt,
                    &chromaP->bx, &chromaP->by);
 
     if (count != 8)
-        pm_error("Invalid syntax for the -rgb option value '%s'.  "
+        pm_error("Invalid syntax for the -chroma option value '%s'.  "
                  "Should be 8 floating point numbers: "
                  "x and y for each of white, red, green, and blue",
                  chromaOpt);

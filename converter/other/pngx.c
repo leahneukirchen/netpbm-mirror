@@ -1,6 +1,10 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <png.h>
+/* Because of a design error in png.h, you must not #include <setjmp.h> before
+   <png.h>.  If you do, png.h won't compile.
+*/
+#include <setjmp.h>
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
@@ -34,16 +38,14 @@ errorHandler(png_structp     const png_ptr,
        been defined.
     */
 
-    pm_message("fatal libpng error: %s", msg);
+    pm_errormsg("fatal libpng error: %s", msg);
 
     jmpbufP = png_get_error_ptr(png_ptr);
 
-    if (!jmpbufP) {
-        /* we are completely hosed now */
-        pm_error("EXTREMELY fatal error: jmpbuf unrecoverable; terminating.");
-    }
-
-    longjmp(*jmpbufP, 1);
+    if (!jmpbufP)
+        pm_longjmp();
+    else
+        longjmp(*jmpbufP, 1);
 }
 
 

@@ -22,10 +22,6 @@
 #include <math.h>
 #include <float.h>
 #include <png.h>
-/* Because of a design error in png.h, you must not #include <setjmp.h> before
-   <png.h>.  If you do, png.h won't compile.
-*/
-#include <setjmp.h>
 #include <zlib.h>
 
 
@@ -1465,15 +1461,11 @@ convertpng(FILE *             const ifP,
     pngcolor bgColor;
     GammaCorrection gamma;
     struct pam pam;
-    jmp_buf jmpbuf;
     struct pngx * pngxP;
 
     *errorLevelP = 0;
 
-    if (setjmp(jmpbuf))
-        pm_error ("setjmp returns error condition");
-
-    pngx_create(&pngxP, PNGX_READ, &jmpbuf);
+    pngx_create(&pngxP, PNGX_READ, NULL);
 
     pngx_readStart(pngxP, ifP);
 

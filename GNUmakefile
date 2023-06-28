@@ -26,6 +26,9 @@
 
 # Debugging techniques:
 #
+#   When a test (make check ...) fails, the incorrect output is in the file
+#   TESTNAME.out in /tmp/netpbm-test/ .
+#
 #   To build so you can easily debug with a debugger such as Gdb:
 #
 #     make CFLAGS="-g -O0"
