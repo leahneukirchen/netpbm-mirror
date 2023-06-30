@@ -648,12 +648,12 @@ typedef struct {
         /* Try to continue when we detect a line size error, as opposed to
            aborting the program.
         */
-} lineSizeAnalyzer;
+} LineSizeAnalyzer;
 
 
 
 static void
-initializeLineSizeAnalyzer(lineSizeAnalyzer * const analyzerP,
+initializeLineSizeAnalyzer(LineSizeAnalyzer * const analyzerP,
                            unsigned int       const expectedLineSize,
                            bool               const tolerateErrors) {
 
@@ -667,7 +667,7 @@ initializeLineSizeAnalyzer(lineSizeAnalyzer * const analyzerP,
 
 
 static void
-analyzeLineSize(lineSizeAnalyzer * const analyzerP,
+analyzeLineSize(LineSizeAnalyzer * const analyzerP,
                 unsigned int       const thisLineSize) {
 
     const char * error;
@@ -722,7 +722,7 @@ readFax(struct BitStream * const bitStreamP,
         unsigned int *     const colsP,
         unsigned int *     const rowsP) {
 
-    lineSizeAnalyzer lineSizeAnalyzer;
+    LineSizeAnalyzer lineSizeAnalyzer;
     unsigned char ** packedBits;
     const char * error;
     bool eof;
