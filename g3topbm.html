@@ -2,7 +2,7 @@
 <html><head><title>G3topbm User Manual</title></head>
 <body>
 <h1>g3topbm</h1>
-Updated: 03 December 2008
+Updated: 02 July 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -12,11 +12,12 @@ g3topbm - convert a Group 3 fax file into a PBM image
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>g3topbm</b>
-[<b>-kludge</b>]
 [<b>-reversebits</b>]
 [<b>-stretch</b>]
 [<b>-width=</b><i>pixels</i> | paper_size={A3|A4|A5|A6|B4}]
 [<b>-stop_error</b>]
+[<b>-correctlong</b>]
+[<b>-kludge</b>]
 [<i>g3file</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -64,11 +65,6 @@ Common Options</a>), <b>g3topbm</b> recognizes the following
 command line options:
 
 <dl compact>
-<dt><b>-kludge</b>
-
-<dd>Tells <b>g3topbm</b> to ignore the first few lines of the file;
-sometimes fax files have some junk at the beginning.
-
 <dt><b>-reversebits</b>
 
 <dd>Tells <b>g3topbm</b> to interpret bits least-significant first,
@@ -125,6 +121,40 @@ input errors.
 <p>This option was new in Netpbm 10.24 (August 2004).  Before that,
 <b>g3topbm</b> always failed when it encountered premature EOF and
 never failed when it encountered other problems.
+
+<dd><b>-correctlong</b>
+
+<p>This option helps with certain corrupted input files.  Faxes often are
+corrupted because of communication line errors.  A particularly annoying
+corruption causes a line to be much longer than it is supposed to be.  One way
+that can happen is where an End of Line marker is missing, so two consecutive
+lines turn into one.
+
+<p>Without this option, <b>g3topbm</b> faithfully renders the document as
+coded, so the output PBM image simply contains that long line.  This is an
+especially problematic corruption because it makes the entire out image about
+twice as wide as it is supposed to be.  But with <b>-correctlong</b>,
+<b>g3topbm</b> truncates that line so the overall effect of the input
+corruption is that a line is missing rather than that the image is twice as
+wide as it is supposed to be.
+
+<p>Specifically, with <b>-correctlong</b>, the program looks at the lengths of
+all the lines (which would all be the same length in an uncorrupted G3 image)
+and considers the line length that occurs the most to be the intended image
+width.  It truncates every line that is longer than that.
+
+<p>The program warns you when corruption has causes the input image to have
+lines of more than one length, whether you specify <b>-correctlong</b> or not.
+  
+<p>Note that there is no point to specifying <b>-correctlong</b> if you also
+specify <b>-stop_error</b>.
+  
+<P>This option was new in Netpbm 11.04 (September 2023).
+    
+<dt><b>-kludge</b>
+
+<dd>Tells <b>g3topbm</b> to ignore the first few lines of the file; sometimes
+fax files have some junk at the beginning.
 
 </dl>
 
