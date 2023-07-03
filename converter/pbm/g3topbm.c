@@ -21,6 +21,8 @@
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE   /* Make nstring.h define strcaseeq() */
 
+#include <assert.h>
+
 #include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
@@ -81,6 +83,7 @@ struct CmdlineInfo {
     unsigned int stretch;
     unsigned int stop_error;
     unsigned int expectedLineSize;
+    unsigned int correctlong;
 };
 
 
@@ -116,6 +119,8 @@ parseCommandLine(int argc, const char ** const argv,
             &widthSpec,                0);
     OPTENT3(0, "paper_size",       OPT_STRING, &paperSize,
             &paper_sizeSpec,           0);
+    OPTENT3(0, "correctlong",      OPT_FLAG,  NULL, &cmdlineP->correctlong,
+            0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -660,9 +665,14 @@ typedef struct {
         */
     bool warned;
         /* We have warned the user that he has a line length problem */
+
     bool tolerateErrors;
         /* Try to continue when we detect a line size error, as opposed to
            aborting the program.
+        */
+    unsigned int lineSizeCt[MAXCOLS+1];
+        /* Histogram of line sizes in image -- lineSizeCt[i] is the number
+           of lines we've seen of size i.
         */
 } LineSizeAnalyzer;
 
@@ -678,6 +688,13 @@ initializeLineSizeAnalyzer(LineSizeAnalyzer * const analyzerP,
 
     analyzerP->maxLineSize = 0;
     analyzerP->warned      = FALSE;
+
+    {
+        unsigned int i;
+
+        for (i = 0; i < MAXCOLS; ++i)
+            analyzerP->lineSizeCt[i] = 0;
+    }
 }
 
 
@@ -716,6 +733,45 @@ analyzeLineSize(LineSizeAnalyzer * const analyzerP,
         pm_strfree(error);
     }
     analyzerP->maxLineSize = MAX(thisLineSize, analyzerP->maxLineSize);
+
+    assert(thisLineSize <= MAXCOLS);
+    ++analyzerP->lineSizeCt[thisLineSize];
+}
+
+
+
+static unsigned int
+imageLineSize(const LineSizeAnalyzer * const lineSizeAnalyzerP,
+              bool                     const mustCorrectLongLine) {
+/*----------------------------------------------------------------------------
+   The width of the fax in pixels, based on the analysis of the image
+   *lineSizeAnalyzerP.
+
+   Zero if the fax contains no lines.
+-----------------------------------------------------------------------------*/
+    unsigned int retval;
+
+    if (mustCorrectLongLine) {
+        /* Assume that long lines are actually concatenation of two
+           lines because the EOL code that was supposed to separate them
+           got lost.
+
+           Assume the most common line length in the image is the correct line
+           length for the image and that other line lengths are due to
+           corruption
+        */
+        unsigned int modeSoFar;
+        unsigned int i;
+
+        for (i = 0, modeSoFar = 0; i <= MAXCOLS; ++i) {
+            if (lineSizeAnalyzerP->lineSizeCt[i] > modeSoFar)
+                modeSoFar = i;
+        }
+        retval = modeSoFar;
+    } else {
+        retval = lineSizeAnalyzerP->maxLineSize;
+    }
+    return retval;
 }
 
 
@@ -733,7 +789,8 @@ static void
 readFax(struct BitStream * const bitStreamP,
         bool               const stretch,
         unsigned int       const expectedLineSize,
-        bool               const tolerateErrors,
+        bool               const mustTolerateErrors,
+        bool               const mustCorrectLongLine,
         BwHash *           const bwHashP,
         unsigned char ***  const packedBitsP,
         unsigned int *     const colsP,
@@ -748,7 +805,7 @@ readFax(struct BitStream * const bitStreamP,
     MALLOCARRAY_NOFAIL(packedBits, MAXROWS);
 
     initializeLineSizeAnalyzer(&lineSizeAnalyzer,
-                               expectedLineSize, tolerateErrors);
+                               expectedLineSize, mustTolerateErrors);
 
     eof = FALSE;
     error = NULL;
@@ -767,7 +824,7 @@ readFax(struct BitStream * const bitStreamP,
             readFaxRow(bitStreamP, packedBits[row], bwHashP,
                        &lineSize, &exception, &error);
 
-            handleRowException(exception, error, row, tolerateErrors);
+            handleRowException(exception, error, row, mustTolerateErrors);
 
             if (!error) {
                 if (lineSize == 0) {
@@ -791,7 +848,8 @@ readFax(struct BitStream * const bitStreamP,
         }
     }
     *rowsP        = row;
-    *colsP        = lineSizeAnalyzer.maxLineSize;
+    *colsP        = imageLineSize(&lineSizeAnalyzer, mustCorrectLongLine);
+
     *packedBitsP  = packedBits;
 }
 
@@ -826,7 +884,7 @@ main(int argc, const char * argv[]) {
     bwHashP = newBwHash();
 
     readFax(&bitStream, cmdline.stretch, cmdline.expectedLineSize,
-            !cmdline.stop_error, bwHashP,
+            !cmdline.stop_error, !!cmdline.correctlong, bwHashP,
             &packedBits, &cols, &rows);
 
     pm_close(ifP);

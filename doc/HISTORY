@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.04.00
 
+              g3topbm: Add -correctlong
+
 23.06.28 BJH  Release 11.03.00
 
               pamstack: Add -firstmaxval, -lcmmaxval
