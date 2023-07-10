@@ -109,8 +109,8 @@ If you use the 'configure' program, be sure to edit config.mk _after_ you
 run 'configure', since 'configure' generates config.mk.
 
 
-COMPILED-IN BUILD DATETIME
---------------------------
+COMPILED-IN BUILD DATETIME AND USER
+-----------------------------------
 
 By default, the Netpbm build system builds the datetime that you built it
 into libnetpbm, so the --version global command line option can display it.
@@ -136,6 +136,13 @@ the --version global option causes a different message.
 The name and meaning of the environment variable is taken from a standard
 described at https://reproducible-builds.org/specs/source-date-epoch/ on March
 16, 2017.
+
+Likewise, the Netpbm build system builds the identity of the party who did the
+build in libnetpbm.  This is normally a userid, the output of the 'whoami'
+program, unless overridden by USER or LOGNAME environment variables.  You can
+also override 'whoami', USER, and LOGNAME with the COMPILED_BY environment
+variable.  This value is just for display, so it need not be a userid; any
+single word that does not contain quotation marks is acceptable.
 
 
 AUTOMATING THE BUILD
