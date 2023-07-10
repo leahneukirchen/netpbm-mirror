@@ -8,6 +8,10 @@ not yet  BJH  Release 11.04.00
 
               g3topbm: Add -correctlong
 
+              build: add COMPILED_BY environment variable to control the
+              "compiled by" value from --version common option.  This helps
+              with creating reproducible builds.
+
 23.06.28 BJH  Release 11.03.00
 
               pamstack: Add -firstmaxval, -lcmmaxval
