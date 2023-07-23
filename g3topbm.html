@@ -132,8 +132,8 @@ lines turn into one.
 
 <p>Without this option, <b>g3topbm</b> faithfully renders the document as
 coded, so the output PBM image simply contains that long line.  This is an
-especially problematic corruption because it makes the entire out image about
-twice as wide as it is supposed to be.  But with <b>-correctlong</b>,
+especially problematic corruption because it makes the entire output image
+about twice as wide as it is supposed to be.  But with <b>-correctlong</b>,
 <b>g3topbm</b> truncates that line so the overall effect of the input
 corruption is that a line is missing rather than that the image is twice as
 wide as it is supposed to be.
@@ -143,7 +143,7 @@ all the lines (which would all be the same length in an uncorrupted G3 image)
 and considers the line length that occurs the most to be the intended image
 width.  It truncates every line that is longer than that.
 
-<p>The program warns you when corruption has causes the input image to have
+<p>The program warns you when corruption has caused the input image to have
 lines of more than one length, whether you specify <b>-correctlong</b> or not.
   
 <p>Note that there is no point to specifying <b>-correctlong</b> if you also
