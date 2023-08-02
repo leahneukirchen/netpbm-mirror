@@ -12,6 +12,12 @@ not yet  BJH  Release 11.04.00
               "compiled by" value from --version common option.  This helps
               with creating reproducible builds.
 
+              pamstack: fix bug: acts like -firstmaxval specified when it
+              wasn't.  Introduced in Netpbm 11.03 (June 2023).
+
+              pamstack: fix -lcmmaxval: chooses wrong maxval.  Always
+              broken (-lcmmaxval was new in Netpbm 11.03 (June 2023)).
+
 23.06.28 BJH  Release 11.03.00
 
               pamstack: Add -firstmaxval, -lcmmaxval

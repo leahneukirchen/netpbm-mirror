@@ -236,8 +236,8 @@ processOneImageInAllStreams(unsigned int       const nInput,
         if (inpam[inputSeq].maxval != inpam[0].maxval)
             allImagesSameMaxval = false;
 
-        maxvalLcm = pm_lcm(maxvalLcm, inpam[inputSeq].maxval, 1,
-                           PAM_OVERALL_MAXVAL);
+        maxvalLcm = pm_lcm(maxvalLcm + 1, inpam[inputSeq].maxval + 1, 1,
+                           PAM_OVERALL_MAXVAL) - 1;
 
         outputDepth += inpam[inputSeq].depth;
     }
@@ -247,9 +247,8 @@ processOneImageInAllStreams(unsigned int       const nInput,
     switch (maxvalScaling) {
     case MAXVALSCALE_NONE:
         if (!allImagesSameMaxval)
-            pm_message("Inputs do not all have same maxval.  "
-                       "Consider -firstmaxval or -lcmmaxval");
-        outpam.maxval = inpam[0].maxval;
+            pm_error("Inputs do not all have same maxval.  "
+                     "Consider -firstmaxval or -lcmmaxval");
         break;
     case MAXVALSCALE_FIRST:
         outpam.maxval = inpam[0].maxval;
