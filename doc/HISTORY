@@ -8,14 +8,16 @@ not yet  BJH  Release 11.04.00
 
               g3topbm: Add -correctlong
 
-              build: add COMPILED_BY environment variable to control the
+              build: Add COMPILED_BY environment variable to control the
               "compiled by" value from --version common option.  This helps
               with creating reproducible builds.
 
-              pamstack: fix bug: acts like -firstmaxval specified when it
+              pammixmulti: Remove disclaimer of patent license.
+
+              pamstack: Fix bug: acts like -firstmaxval specified when it
               wasn't.  Introduced in Netpbm 11.03 (June 2023).
 
-              pamstack: fix -lcmmaxval: chooses wrong maxval.  Always
+              pamstack: Fix -lcmmaxval: chooses wrong maxval.  Always
               broken (-lcmmaxval was new in Netpbm 11.03 (June 2023)).
 
 23.06.28 BJH  Release 11.03.00
