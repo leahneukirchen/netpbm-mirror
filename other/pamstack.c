@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------*/
 
 #include <string.h>
+#include <assert.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -236,8 +237,10 @@ processOneImageInAllStreams(unsigned int       const nInput,
         if (inpam[inputSeq].maxval != inpam[0].maxval)
             allImagesSameMaxval = false;
 
+        assert(PAM_OVERALL_MAXVAL <= UINT_MAX-1);
+
         maxvalLcm = pm_lcm(maxvalLcm + 1, inpam[inputSeq].maxval + 1, 1,
-                           PAM_OVERALL_MAXVAL) - 1;
+                           PAM_OVERALL_MAXVAL + 1) - 1;
 
         outputDepth += inpam[inputSeq].depth;
     }
