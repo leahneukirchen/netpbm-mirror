@@ -242,6 +242,11 @@ processOneImageInAllStreams(unsigned int       const nInput,
         maxvalLcm = pm_lcm(maxvalLcm + 1, inpam[inputSeq].maxval + 1, 1,
                            PAM_OVERALL_MAXVAL + 1) - 1;
 
+        if (inpam[inputSeq].depth > UINT_MAX - outputDepth)
+            pm_error("Total number of planes is too large to compute "
+                     "(at least %u plus %u)",
+                     outputDepth, inpam[inputSeq].depth);
+
         outputDepth += inpam[inputSeq].depth;
     }
 

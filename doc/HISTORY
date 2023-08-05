@@ -20,6 +20,10 @@ not yet  BJH  Release 11.04.00
               pamstack: Fix -lcmmaxval: chooses wrong maxval.  Always
               broken (-lcmmaxval was new in Netpbm 11.03 (June 2023)).
 
+              pamstack: Fail gracefully when total number of planes is too
+              large for unsigned integer.  Always broken (Pamstack was new in
+              Netpbm 10.0 (June 2002).
+
 23.06.28 BJH  Release 11.03.00
 
               pamstack: Add -firstmaxval, -lcmmaxval
