@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.08.05 BJH  Release 11.02.01
+
+              pamstack: Fail gracefully when total number of planes is too
+              large for unsigned integer.  Always broken (Pamstack was new in
+              Netpbm 10.0 (June 2002).
+
 23.03.25 BJH  Release 11.02.00
 
               jpegtopnm: Add -traceexif

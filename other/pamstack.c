@@ -186,6 +186,11 @@ processOneImageInAllStreams(unsigned int const nInput,
                 pm_error("Image no. %u does not have the same maxval as "
                          "Image 0.", inputSeq);
         }
+        if (inpam[inputSeq].depth > UINT_MAX - outputDepth)
+            pm_error("Total number of planes is too large to compute "
+                     "(at least %u plus %u)",
+                     outputDepth, inpam[inputSeq].depth);
+
         outputDepth += inpam[inputSeq].depth;
     }
 
