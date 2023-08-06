@@ -89,6 +89,7 @@ pambackground.test
 pnmpad-reportonly.test
 pnmpaste-pbm.test
 
+pamstack.test
 pamrestack.test
 pamshuffle.test
 ppmshift.test
