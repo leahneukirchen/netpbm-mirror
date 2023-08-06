@@ -53,10 +53,10 @@ echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-echo "Should print: Expected failure 1"
+echo "Should print: Expected failure (no output)"
 
 pamseq -tupletype="void" 1 1 | pamtable -tuple -hex > \
   ${test_out} || \
-  printf "Expected failure"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

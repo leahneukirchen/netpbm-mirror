@@ -17,18 +17,18 @@ Test 3.  Should print 3.N 0 0
 3.3 0 0
 3.4 0 0
 Test Invalid
-Should print: Expected failure N 1
-Expected failure 1 1
-Expected failure 2 1
-Expected failure 3 1
-Expected failure 4 1
-Expected failure 5 1
-Expected failure 6 1
-Expected failure 7 1
-Expected failure 8 1
+Should print: Expected failure N (no output)
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
 ------------------------------
-Should print: Expected failure N 0
-Expected failure 9 0
-Expected failure 10 0
-Expected failure 11 0
-Expected failure 12 0
+Should print: Expected failure N (output produced)
+Expected failure 9 (output produced)
+Expected failure 10 (output produced)
+Expected failure 11 (output produced)
+Expected failure 12 (output produced)

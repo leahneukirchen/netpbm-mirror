@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pammasksharpen pammixmulti pamdice
 # This script tests: pamlookup pamunlookup
 # Also requires: pbmmake

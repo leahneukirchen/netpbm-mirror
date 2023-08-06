@@ -3,9 +3,9 @@ Test 1. Should produce 3500040755 101532
 Test 2. Should produce 3500040755 101532 twice
 3500040755 101532
 3500040755 101532
-Expected failure 1 1
-Expected failure 2 1
-Expected failure 3 1
-Expected failure 4 1
-Expected failure 5 1
-Expected failure 6 1
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)

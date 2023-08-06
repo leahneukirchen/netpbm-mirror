@@ -44,7 +44,7 @@ printf "P2\n3 3\n7\n0 1 2\n3 4 8\n0 0 0\n" |\
 
 # Test Invalid
 
-echo "Test invalid"
+echo "Test Invalid"
 
 test_out=${tmpdir}/test_out
 
@@ -54,16 +54,16 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 printf "P2\n3 2\n7\n0 1 2\n6 7 8\n" | pamfix -change -clip > ${test_out} || \
-  printf "Expected failure 1";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 printf "P1\n5 5\n" | pamfix -truncate -plain > ${test_out} || \
-  printf "Expected failure 2";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 printf "P2\n3 3\255\n" | pamfix -truncate -plain > ${test_out} || \
-  printf "Expected failure 3";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

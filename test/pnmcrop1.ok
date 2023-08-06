@@ -69,14 +69,14 @@ file: rose.ppm option: -white
 file: rose.ppm option: -top
 0
 Test Invalid
-Expected failure:  -reportfull -reportsize 1
-Expected failure:  -reportfull -borderfile=testgrid.pbm 1
-Expected failure:  -reportsize -borderfile=testgrid.pbm 1
-Expected failure:  -black -white 1
-Expected failure:  -black -sides 1
-Expected failure:  -white -bg-color=red 1
-Expected failure:  -white -bg-corner=topleft 1
-Expected failure:  -white -bg-corner=top 1
-Expected failure:  -blank-image=pasturize 1
-Expected failure:  -bg-color=black -closeness=-1 1
-Expected failure:  -bg-color=black -closeness=101 1
+Expected failure:  -reportfull -reportsize (no output)
+Expected failure:  -reportfull -borderfile=testgrid.pbm (no output)
+Expected failure:  -reportsize -borderfile=testgrid.pbm (no output)
+Expected failure:  -black -white (no output)
+Expected failure:  -black -sides (no output)
+Expected failure:  -white -bg-color=red (no output)
+Expected failure:  -white -bg-corner=topleft (no output)
+Expected failure:  -white -bg-corner=top (no output)
+Expected failure:  -blank-image=pasturize (no output)
+Expected failure:  -bg-color=black -closeness=-1 (no output)
+Expected failure:  -bg-color=black -closeness=101 (no output)

@@ -43,6 +43,6 @@ echo "An error message should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pamhue testimg.ppm  > ${test_out} || \
-  printf "Expected failure 1"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

@@ -173,6 +173,6 @@ Test 9.  Should print 146160766 820
 Test 10. Should print 3327221668 2111
 3327221668 2111
 Test Invalid
-Expected failure 1 1
-Expected failure 2 1
-Expected failure 3 1
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)

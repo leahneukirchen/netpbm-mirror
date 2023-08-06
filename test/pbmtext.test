@@ -112,43 +112,43 @@ echo "Test 6 Invalid"
 test_out=${tmpdir}/test_out
 
 pbmtext -font=testgrid.pbm foo > ${test_out} || \
-  printf "Expected failure 1";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pbmtext -font=testimg.ppm  foo > ${test_out} || \
-  printf "Expected failure 2";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pbmtext -builtin=void      foo > ${test_out} || \
-  printf "Expected failure 3";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pbmtext -font=${font_pbm} -builtin=fixed foo > ${test_out}  || \
-  printf "Expected failure 4";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 4 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pbmtext -dry-run    -text-dump  foo > ${test_out} || \
-  printf "Expected failure 5";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 5 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pbmtext -dump-sheet -text-dump  foo > ${test_out} || \
-  printf "Expected failure 6";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 6 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pbmtext -dry-run    -dump-sheet foo > ${test_out} || \
-  printf "Expected failure 7";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 7 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pbmtext -wchar foo > ${test_out} || \
-  printf "Expected failure 8";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 8 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 rm ${font_pbm}
@@ -177,19 +177,19 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 pbmtext -nomargins -builtin fixed `cat ${long_txt}` > ${test_out}  || \
-  printf "Expected failure 1";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 cat ${long_txt} | pbmtext -nomargins -builtin fixed > ${test_out}  || \
-  printf "Expected failure 2";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 cat ${long_txt} | \
   LC_ALL=C pbmtext -nomargins -builtin fixed -wchar > ${test_out}  || \
-  printf "Expected failure 3";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 rm ${long_txt}

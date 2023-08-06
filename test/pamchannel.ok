@@ -7,6 +7,6 @@ Test 3:blue-channel  Should produce 3164158573 33838
 Test 4:single-channel  Should produce 281226646 481
 281226646 481
 Test Invalid
-Expected failure 1 1
-Expected failure 2 1
-Expected failure 3 1
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)

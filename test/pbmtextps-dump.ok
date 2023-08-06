@@ -51,38 +51,38 @@ Test 2
 <303132 20 414243 2d 78797a 2e>
 1
 Test Invalid
-Expected failure 1 (-fontsize) 1
-Expected failure 2 (-fontsize 0) 1
-Expected failure 3 (-resolution) 1
-Expected failure 4 (-resolution=0) 1
-Expected failure 5 (-leftmargin) 1
-Expected failure 6 (-leftmargin -1) 1
-Expected failure 7 (-rightmargin) 1
-Expected failure 8 (-rightmargin -1) 1
-Expected failure 9 (-topmargin) 1
-Expected failure 10 (-topmargin -1) 1
-Expected failure 11 (-bottommargin) 1
-Expected failure 12 (-bottommargin -1) 1
-Expected failure 13 (-ascent) 1
-Expected failure 14 (-ascent -1) 1
-Expected failure 15 (-descent) 1
-Expected failure 16 (-descent -1) 1
-Expected failure 17 (-stroke=A) 1
-Expected failure 18 (-pad -crop) 1
-Expected failure 19 (-asciihex <a>) 1
-Expected failure 20 (-asciihex ) 1
-Expected failure 21 (-asciihex <53756c667572) 1
-Expected failure 22 (-asciihex 53756c667572>) 1
-Expected failure 23 (-asciihex <5375<6c667572>) 1
-Expected failure 24 (-asciihex <53756c>667572>) 1
-Expected failure 25 (-ascii85 <~@<6O!FD5W(~) 1
-Expected failure 26 (-ascii85 ~@<6O!FD5W(~>) 1
-Expected failure 27 (-ascii85 <~@<6O<~!FD5W(~>) 1
-Expected failure 28 (-ascii85 <~@<6O~>!FD5W(~>) 1
-Expected failure 29 (-ascii85 <~@<6O!FD5W(~~>) 1
-Expected failure 30 (-ascii85 v) 1
-Expected failure 31 (-ascii85 y) 1
-Expected failure 32 (-ascii85 1z) 1
-Expected failure 33 (-ascii85 z1z) 1
-Expected failure 34 (-ascii85 <~0123z~>) 1
-Expected failure 35 (-font="") 1
+Expected failure 1 (-fontsize) (no output)
+Expected failure 2 (-fontsize 0) (no output)
+Expected failure 3 (-resolution) (no output)
+Expected failure 4 (-resolution=0) (no output)
+Expected failure 5 (-leftmargin) (no output)
+Expected failure 6 (-leftmargin -1) (no output)
+Expected failure 7 (-rightmargin) (no output)
+Expected failure 8 (-rightmargin -1) (no output)
+Expected failure 9 (-topmargin) (no output)
+Expected failure 10 (-topmargin -1) (no output)
+Expected failure 11 (-bottommargin) (no output)
+Expected failure 12 (-bottommargin -1) (no output)
+Expected failure 13 (-ascent) (no output)
+Expected failure 14 (-ascent -1) (no output)
+Expected failure 15 (-descent) (no output)
+Expected failure 16 (-descent -1) (no output)
+Expected failure 17 (-stroke=A) (no output)
+Expected failure 18 (-pad -crop) (no output)
+Expected failure 19 (-asciihex <a>) (no output)
+Expected failure 20 (-asciihex ) (no output)
+Expected failure 21 (-asciihex <53756c667572) (no output)
+Expected failure 22 (-asciihex 53756c667572>) (no output)
+Expected failure 23 (-asciihex <5375<6c667572>) (no output)
+Expected failure 24 (-asciihex <53756c>667572>) (no output)
+Expected failure 25 (-ascii85 <~@<6O!FD5W(~) (no output)
+Expected failure 26 (-ascii85 ~@<6O!FD5W(~>) (no output)
+Expected failure 27 (-ascii85 <~@<6O<~!FD5W(~>) (no output)
+Expected failure 28 (-ascii85 <~@<6O~>!FD5W(~>) (no output)
+Expected failure 29 (-ascii85 <~@<6O!FD5W(~~>) (no output)
+Expected failure 30 (-ascii85 v) (no output)
+Expected failure 31 (-ascii85 y) (no output)
+Expected failure 32 (-ascii85 1z) (no output)
+Expected failure 33 (-ascii85 z1z) (no output)
+Expected failure 34 (-ascii85 <~0123z~>) (no output)
+Expected failure 35 (-font="") (no output)
