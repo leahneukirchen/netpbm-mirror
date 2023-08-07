@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.04.00
 
+              ppmtosixel: Add -7bit, so it works on more terminals, including
+              xterms.  Thanks Scott Pakin.
+
               g3topbm: Add -correctlong
 
               build: Add COMPILED_BY environment variable to control the
