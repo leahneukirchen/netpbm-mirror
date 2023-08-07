@@ -2,7 +2,7 @@
 <html><head><title>Ppmtosixel User Manual</title></head>
 <body>
 <h1>ppmtosixel</h1>
-Updated: 26 April 1991
+Updated: 1 August 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -18,6 +18,8 @@ ppmtosixel - convert a PPM image to DEC sixel format
 
 [<b>-margin</b>]
 
+[<b>-7bit</b>]
+
 [<i>ppmfile</i>]
 
 <h2 id="description">DESCRIPTION</h2>
@@ -25,8 +27,9 @@ ppmtosixel - convert a PPM image to DEC sixel format
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtosixel</b> reads a PPM image as input and produces sixel
-commands (SIX) as output.  The output is formatted for color printing,
-e.g. for a DEC LJ250 color inkjet printer.
+commands (SIX) as output.  The output is formatted for color printing
+(e.g. for a DEC LJ250 color inkjet printer) or for color display on
+DEC VT terminals and terminal emulators (VT240 and beyond).
 
 <p>If RGB values from the PPM file do not have maxval=100,
 <b>ppmtosixel</b> rescales them to maxval 100.  A printer control
@@ -53,9 +56,22 @@ magnitude larger than a compressed file and prints much slower.
 <dt><b>-margin</b>
 
 <dd>If you don't specify <b>-margin</b>, the image will start at the
-left margin (of the window, paper, or whatever).  If you <em>do</em>
+left margin (of the window, paper, or whatever).  If you do
 specify <b>-margin</b>, a 1.5 inch left margin will offset the image.
 
+<dt><b>-7bit</b>
+
+<dd>If you don't specify <b>-7bit</b>, each control code will be
+expressed as a single, 8-bit "C1" character.  If you do
+specify <b>-7bit</b>, each control code will be expressed using two,
+7-bit "C0" characters.
+(See <a href="https://en.wikipedia.org/wiki/C0_and_C1_control_codes">C0
+and C1 control codes</a> for more information.)  In other
+words, <b>-7bit</b> produces more portable sixel files, and its
+absence produces smaller sixel files.
+
+<p>This option was new in Netpbm 11.04 (September 2023).
+  
 </dl>
 
 <h2 id="printing">PRINTING</h2>
