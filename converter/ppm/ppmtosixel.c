@@ -1,4 +1,4 @@
-/* ppmtosix.c - read a portable pixmap and produce a color sixel file
+/* ppmtosix.c - read a PPM and produce a color sixel file
 **
 ** Copyright (C) 1991 by Rick Vinci.
 **
@@ -14,8 +14,10 @@
 
 #include "ppm.h"
 
-#define MAXVAL 100
-#define MAXCOLORS 256
+static unsigned int const SIXEL_MAXVAL = 100;
+static unsigned int const MAXCOLORCT = 256;
+
+static const char * const sixel = "@ACGO_";
 
 /* Named escape sequences */
 static struct {
@@ -56,38 +58,42 @@ initEscapeSequences(const int nbits) {
 
 static void
 writePackedImage(colorhash_table const cht,
-                 int             const rows,
-                 int             const cols) {
+                 unsigned int    const rows,
+                 unsigned int    const cols) {
 
-    int rownum, colnum, b, repeat, thiscolor, nextcolor;
-    const char* sixel = "@ACGO_";
-    pixel* pP;
+    unsigned int row;
 
-    for (rownum = 0; rownum < rows; ++rownum) {
+    for (row = 0; row < rows; ++row) {
 
-        b = rownum % 6;
+        unsigned int const b = row % 6;
 
-        repeat = 1;
+        unsigned int repeatCt;
+        unsigned int col;
 
-        for (colnum = 0, pP = pixels[rownum]; colnum < cols; ++colnum, ++pP) {
+        repeatCt = 1;
 
-            thiscolor = ppm_lookupcolor(cht, pP);
+        for (col = 0; col < cols; ++col) {
+            const pixel * const thisRow = pixels[row];
 
-            if (colnum == cols -1)   /* last pixel in row */
-                if (repeat == 1)
-                    printf("#%d%c", thiscolor, sixel[b]);
+            unsigned int const thisColorIdx =
+                ppm_lookupcolor(cht, &thisRow[col]);
+
+            if (col == cols - 1)   /* last pixel in row */
+                if (repeatCt == 1)
+                    printf("#%d%c", thisColorIdx, sixel[b]);
                 else
-                    printf("#%d!%d%c", thiscolor, repeat, sixel[b]);
+                    printf("#%d!%d%c", thisColorIdx, repeatCt, sixel[b]);
             else {  /* not last pixel in row */
-                nextcolor =  ppm_lookupcolor(cht, pP+1);
-                if (thiscolor == nextcolor)
-                    ++repeat;
+                unsigned int const nextColorIdx =
+                    ppm_lookupcolor(cht, &thisRow[col+1]);
+                if (thisColorIdx == nextColorIdx)
+                    ++repeatCt;
                 else {
-                    if (repeat == 1)
-                        printf( "#%d%c", thiscolor, sixel[b] );
+                    if (repeatCt == 1)
+                        printf("#%d%c", thisColorIdx, sixel[b]);
                     else {
-                        printf( "#%d!%d%c", thiscolor, repeat, sixel[b] );
-                        repeat = 1;
+                        printf("#%d!%d%c", thisColorIdx, repeatCt, sixel[b]);
+                        repeatCt = 1;
                     }
                 }
             }
@@ -105,52 +111,59 @@ static void
 writeHeader() {
 
     if (margin == 1)
-        printf( "%s%d;%ds", eseqs.CSI, 14, 72 );
+        printf("%s%d;%ds", eseqs.CSI, 14, 72);
 
-    printf( "%s", eseqs.DCS );  /* start with Device Control String */
+    printf("%s", eseqs.DCS);  /* start with Device Control String */
 
-    printf( "0;0;8q" );   /* Horizontal Grid Size at 1/90" and graphics On */
+    printf("0;0;8q");   /* Horizontal Grid Size at 1/90" and graphics On */
 
-    printf( "\"1;1\n" );  /* set aspect ratio 1:1 */
+    printf("\"1;1\n");  /* set aspect ratio 1:1 */
 }
 
 
 
 static void
 writeColorMap(colorhist_vector const chv,
-              int              const colors,
+              unsigned int     const colorCt,
               pixval           const maxval) {
 
-    int colornum;
-    pixel p;
+    unsigned int colorIdx;
 
-    for (colornum = 0; colornum < colors ; ++colornum) {
-        p = chv[colornum].color;
-        if (maxval != MAXVAL)
-            PPM_DEPTH( p, p, maxval, MAXVAL );
-        printf( "#%d;2;%d;%d;%d", colornum,
-                (int) PPM_GETR(p), (int) PPM_GETG(p), (int) PPM_GETB(p));
+    for (colorIdx = 0; colorIdx < colorCt ; ++colorIdx) {
+        pixel const p = chv[colorIdx].color;
+
+        pixel scaledColor;
+
+        if (maxval == SIXEL_MAXVAL)
+            scaledColor = p;
+        else
+            PPM_DEPTH(scaledColor, p, maxval, SIXEL_MAXVAL);
+
+        printf("#%d;2;%d;%d;%d", colorIdx,
+               PPM_GETR(scaledColor),
+               PPM_GETG(scaledColor),
+               PPM_GETB(scaledColor));
     }
-    printf( "\n" );
+    printf("\n");
 }
 
 
 
 static void
 writeRawImage(colorhash_table const cht,
-              int             const rows,
-              int             const cols) {
+              unsigned int    const rows,
+              unsigned int    const cols) {
 
-    int rownum, colnum, b;
-    const char * sixel = "@ACGO_";
-    pixel * pP;
+    unsigned int row;
 
-    for (rownum = 0; rownum < rows; ++rownum) {
+    for (row = 0; row < rows; ++row) {
+        pixel * const thisRow = pixels[row];
+        unsigned int const b = row % 6;
 
-        b = rownum % 6;
+        unsigned int col;
 
-        for (colnum = 0, pP = pixels[rownum]; colnum < cols; ++colnum, ++pP)
-            printf( "#%d%c", ppm_lookupcolor(cht, pP), sixel[b] );
+        for (col = 0; col < cols; ++col)
+            printf("#%d%c", ppm_lookupcolor(cht, &thisRow[col]), sixel[b]);
 
         printf("$\n");   /* Carriage Return */
 
@@ -167,7 +180,7 @@ writeEnd() {
     if (margin == 1)
         printf ("%s%d;%ds", eseqs.CSI, 1, 80);
 
-    printf( "%s\n", eseqs.ST );
+    printf("%s\n", eseqs.ST);
 }
 
 
@@ -176,7 +189,8 @@ int
 main(int argc, const char ** argv) {
 
     FILE * ifp;
-    int argn, rows, cols, colors;
+    int colorCt;
+    int argn, rows, cols;
     int raw;
     int nbits;
     pixval maxval;
@@ -220,24 +234,25 @@ main(int argc, const char ** argv) {
     pm_close(ifp);
 
     /* Print a warning if we could lose accuracy when rescaling colors. */
-    if (maxval > MAXVAL)
+    if (maxval > SIXEL_MAXVAL)
         pm_message(
-            "maxval is not %d - automatically rescaling colors", MAXVAL);
+            "maxval of input is not the sixel maxval (%u) - "
+            "automatically rescaling colors", SIXEL_MAXVAL);
 
     /* Figure out the colormap. */
     pm_message("computing colormap...");
-    chv = ppm_computecolorhist( pixels, cols, rows, MAXCOLORS, &colors );
+    chv = ppm_computecolorhist( pixels, cols, rows, MAXCOLORCT, &colorCt);
     if (chv == (colorhist_vector) 0)
-        pm_error( "too many colors - try doing a 'pnmquant %d'", MAXCOLORS );
+        pm_error("too many colors - try 'pnmquant %u'", MAXCOLORCT);
 
-    pm_message( "%d colors found", colors );
+    pm_message("%d colors found", colorCt);
 
     /* Make a hash table for fast color lookup. */
-    cht = ppm_colorhisttocolorhash( chv, colors );
+    cht = ppm_colorhisttocolorhash(chv, colorCt);
 
     initEscapeSequences(nbits);
     writeHeader();
-    writeColorMap(chv, colors, maxval);
+    writeColorMap(chv, colorCt, maxval);
     if (raw == 1)
         writeRawImage(cht, rows, cols);
     else
