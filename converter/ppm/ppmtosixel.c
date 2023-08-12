@@ -32,9 +32,6 @@ typedef struct {
 
 
 
-static pixel** pixels;   /* stored ppm pixmap input */
-
-
 enum Charwidth {CHARWIDTH_8BIT, CHARWIDTH_7BIT};
 
 struct CmdlineInfo {
@@ -124,9 +121,10 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-writePackedImage(colorhash_table const cht,
+writePackedImage(pixel **        const pixels,
                  unsigned int    const rows,
-                 unsigned int    const cols) {
+                 unsigned int    const cols,
+                 colorhash_table const cht) {
 
     unsigned int row;
 
@@ -218,9 +216,10 @@ writeColorMap(colorhist_vector const chv,
 
 
 static void
-writeRawImage(colorhash_table const cht,
+writeRawImage(pixel **        const pixels,
               unsigned int    const rows,
-              unsigned int    const cols) {
+              unsigned int    const cols,
+              colorhash_table const cht) {
 
     unsigned int row;
 
@@ -262,6 +261,7 @@ main(int argc, const char ** argv) {
     int rows, cols;
     pixval maxval;
     int colorCt;
+    pixel ** pixels;
     colorhist_vector chv;
         /* List of colors in the image, indexed by colormap index */
     colorhash_table cht;
@@ -299,9 +299,9 @@ main(int argc, const char ** argv) {
     writeColorMap(chv, colorCt, maxval);
 
     if (cmdline.raw)
-        writeRawImage(cht, rows, cols);
+        writeRawImage(pixels, rows, cols, cht);
     else
-        writePackedImage(cht, rows, cols);
+        writePackedImage(pixels, rows, cols, cht);
 
     writeEnd(!!cmdline.margin, eseqs);
 
