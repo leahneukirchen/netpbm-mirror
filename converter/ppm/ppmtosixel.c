@@ -23,12 +23,12 @@ static unsigned int const MAXCOLORCT = 256;
 static const char * const sixel = "@ACGO_";
 
 /* Named escape sequences */
-static struct {
+typedef struct {
   const char * DCS;   /* Device Control String */
   const char * ST;    /* String Terminator */
   const char * CSI;   /* Control String Introducer */
   const char * ESC;   /* Escape character */
-} eseqs;
+} EscapeSequenceSet;
 
 
 
@@ -49,8 +49,10 @@ struct CmdlineInfo {
 
 
 
-static void
-initEscapeSequences(enum Charwidth const charWidth) {
+static EscapeSequenceSet
+escapeSequenceSet(enum Charwidth const charWidth) {
+
+    EscapeSequenceSet eseqs;
 
     switch (charWidth) {
     case CHARWIDTH_8BIT: {
@@ -66,6 +68,7 @@ initEscapeSequences(enum Charwidth const charWidth) {
         eseqs.ESC = "\033";
     } break;
     }
+    return eseqs;
 }
 
 
@@ -172,7 +175,8 @@ writePackedImage(colorhash_table const cht,
 
 
 static void
-writeHeader(bool const wantMargin) {
+writeHeader(bool              const wantMargin,
+            EscapeSequenceSet const eseqs) {
 
     if (wantMargin)
         printf("%s%d;%ds", eseqs.CSI, 14, 72);
@@ -239,7 +243,8 @@ writeRawImage(colorhash_table const cht,
 
 
 static void
-writeEnd(bool const wantMargin) {
+writeEnd(bool              const wantMargin,
+         EscapeSequenceSet const eseqs) {
 
     if (wantMargin)
         printf ("%s%d;%ds", eseqs.CSI, 1, 80);
@@ -258,9 +263,11 @@ main(int argc, const char ** argv) {
     pixval maxval;
     int colorCt;
     colorhist_vector chv;
-       /* List of colors in the image, indexed by colormap index */
+        /* List of colors in the image, indexed by colormap index */
     colorhash_table cht;
-       /* Hash table for fast colormap index lookup */
+        /* Hash table for fast colormap index lookup */
+    EscapeSequenceSet eseqs;
+        /* The escape sequences we use in our output for various functions */
 
     pm_proginit(&argc, argv);
 
@@ -285,9 +292,9 @@ main(int argc, const char ** argv) {
 
     cht = ppm_colorhisttocolorhash(chv, colorCt);
 
-    initEscapeSequences(cmdline.charWidth);
+    eseqs = escapeSequenceSet(cmdline.charWidth);
 
-    writeHeader(!!cmdline.margin);
+    writeHeader(!!cmdline.margin, eseqs);
 
     writeColorMap(chv, colorCt, maxval);
 
@@ -296,7 +303,7 @@ main(int argc, const char ** argv) {
     else
         writePackedImage(cht, rows, cols);
 
-    writeEnd(!!cmdline.margin);
+    writeEnd(!!cmdline.margin, eseqs);
 
     /* If the program failed, it previously aborted with nonzero completion
        code, via various function calls.
