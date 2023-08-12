@@ -12,6 +12,9 @@
 ** "-7bit" option added August 2023 by Scott Pakin <scott+pbm@pakin.org>.
 */
 
+#include "pm_c_util.h"
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "ppm.h"
 
 static unsigned int const SIXEL_MAXVAL = 100;
@@ -30,28 +33,89 @@ static struct {
 
 
 static pixel** pixels;   /* stored ppm pixmap input */
-static colorhash_table cht;
 
 
-int margin;
+enum Charwidth {CHARWIDTH_8BIT, CHARWIDTH_7BIT};
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line, in a form
+       easy for the program to use.
+    */
+    const char *   inputFileName;
+    unsigned int   raw;
+    unsigned int   margin;
+    enum Charwidth charWidth;
+};
 
 
 
 static void
-initEscapeSequences(const int nbits) {
+initEscapeSequences(enum Charwidth const charWidth) {
 
-    if (nbits == 8) {
+    switch (charWidth) {
+    case CHARWIDTH_8BIT: {
         eseqs.DCS = "\220";
         eseqs.ST  = "\234";
         eseqs.CSI = "\233";
         eseqs.ESC = "\033";
-    } else if (nbits == 7) {
+    } break;
+    case CHARWIDTH_7BIT: {
         eseqs.DCS = "\033P";
         eseqs.ST  = "\033\\";
         eseqs.CSI = "\033[";
         eseqs.ESC = "\033";
-    } else
-        pm_error("internal error: bad bit count");
+    } break;
+    }
+}
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Parse the program arguments (given by argc and argv) into a form
+   the program can deal with more easily -- a cmdline_info structure.
+   If the syntax is invalid, issue a message and exit the program via
+   pm_error().
+
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;  /* malloc'ed */
+    optStruct3 opt;  /* set by OPTENT3 */
+    unsigned int option_def_index;
+
+    unsigned int opt7Bit;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "raw",      OPT_FLAG,
+            NULL,                       &cmdlineP->raw, 0);
+    OPTENT3(0,   "margin",   OPT_FLAG,
+            NULL,                       &cmdlineP->margin, 0);
+    OPTENT3(0,   "7bit",     OPT_FLAG,
+            NULL,                       &opt7Bit, 0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = false; /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;   /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    cmdlineP->charWidth = opt7Bit ? CHARWIDTH_7BIT : CHARWIDTH_8BIT;
+
+    if (argc-1 == 0)
+        cmdlineP->inputFileName = "-";
+    else if (argc-1 != 1)
+        pm_error("Program takes zero or one argument (filename).  You "
+                 "specified %d", argc-1);
+    else
+        cmdlineP->inputFileName = argv[1];
+
+    free(option_def);
 }
 
 
@@ -108,9 +172,9 @@ writePackedImage(colorhash_table const cht,
 
 
 static void
-writeHeader() {
+writeHeader(bool const wantMargin) {
 
-    if (margin == 1)
+    if (wantMargin)
         printf("%s%d;%ds", eseqs.CSI, 14, 72);
 
     printf("%s", eseqs.DCS);  /* start with Device Control String */
@@ -175,9 +239,9 @@ writeRawImage(colorhash_table const cht,
 
 
 static void
-writeEnd() {
+writeEnd(bool const wantMargin) {
 
-    if (margin == 1)
+    if (wantMargin)
         printf ("%s%d;%ds", eseqs.CSI, 1, 80);
 
     printf("%s\n", eseqs.ST);
@@ -188,76 +252,51 @@ writeEnd() {
 int
 main(int argc, const char ** argv) {
 
-    FILE * ifp;
-    int colorCt;
-    int argn, rows, cols;
-    int raw;
-    int nbits;
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    int rows, cols;
     pixval maxval;
+    int colorCt;
     colorhist_vector chv;
-    const char* const usage = "[-raw] [-margin] [ppmfile]";
+       /* List of colors in the image, indexed by colormap index */
+    colorhash_table cht;
+       /* Hash table for fast colormap index lookup */
 
     pm_proginit(&argc, argv);
 
-    argn = 1;
-    raw = 0;
-    margin = 0;
-    nbits = 8;
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* Parse args. */
-    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-        {
-        if ( pm_keymatch( argv[argn], "-raw", 2 ) )
-            raw = 1;
-        else if ( pm_keymatch( argv[argn], "-margin", 2 ) )
-            margin = 1;
-        else if ( pm_keymatch( argv[argn], "-7bit", 2 ) )
-            nbits = 7;
-        else
-            pm_usage( usage );
-        ++argn;
-        }
+    ifP = pm_openr(cmdline.inputFileName);
 
-    if ( argn < argc )
-        {
-        ifp = pm_openr( argv[argn] );
-        ++argn;
-        }
-    else
-        ifp = stdin;
+    pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
 
-    if ( argn != argc )
-        pm_usage( usage );
-
-    /* Read in the whole ppmfile. */
-    pixels = ppm_readppm(ifp, &cols, &rows, &maxval);
-    pm_close(ifp);
-
-    /* Print a warning if we could lose accuracy when rescaling colors. */
-    if (maxval > SIXEL_MAXVAL)
+    if (maxval > SIXEL_MAXVAL) {
         pm_message(
             "maxval of input is not the sixel maxval (%u) - "
-            "automatically rescaling colors", SIXEL_MAXVAL);
+            "rescaling to fewer colors", SIXEL_MAXVAL);
+    }
 
-    /* Figure out the colormap. */
     pm_message("computing colormap...");
-    chv = ppm_computecolorhist( pixels, cols, rows, MAXCOLORCT, &colorCt);
-    if (chv == (colorhist_vector) 0)
+    chv = ppm_computecolorhist(pixels, cols, rows, MAXCOLORCT, &colorCt);
+    if (!chv)
         pm_error("too many colors - try 'pnmquant %u'", MAXCOLORCT);
 
     pm_message("%d colors found", colorCt);
 
-    /* Make a hash table for fast color lookup. */
     cht = ppm_colorhisttocolorhash(chv, colorCt);
 
-    initEscapeSequences(nbits);
-    writeHeader();
+    initEscapeSequences(cmdline.charWidth);
+
+    writeHeader(!!cmdline.margin);
+
     writeColorMap(chv, colorCt, maxval);
-    if (raw == 1)
+
+    if (cmdline.raw)
         writeRawImage(cht, rows, cols);
     else
         writePackedImage(cht, rows, cols);
-    writeEnd();
+
+    writeEnd(!!cmdline.margin);
 
     /* If the program failed, it previously aborted with nonzero completion
        code, via various function calls.
