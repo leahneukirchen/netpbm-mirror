@@ -1,9 +1,9 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pbmtext
 # Also requires:
 
 # This test requires an iso-8859-1 locale
-# Skip this test if it is not available
+# Skip this test if none are available
 
 LANG=C
 LC_ALL=C
@@ -12,26 +12,29 @@ export LANG LC_ALL
 tmpdir=${tmpdir:-/tmp}
 iso88591_locale_list=${tmpdir}/iso88591_locale_list
 
-
-locale_to_test="en_US.iso88591"  # Initial value
+locale_to_test="en_US.iso88591"  # Initial value; this
+# does not have to be present in
 # Edit the above value if necessary
-  
-# Make a list of available locales which end in "iso88591"
-locale -a | grep "\.iso88591$" > ${iso88591_locale_list}
 
-# Hunt for a valid iso-8859-1 locale  
+# Make a list of available locales which end in "iso88591"
+# If none are found, abort test
+
+locale -a | grep "\.iso88591$" > ${iso88591_locale_list} ||\
+    locale_to_test=""
+
+# Hunt for a valid iso-8859-1 locale
 # Submit each candidate to a trial pbmtext run until one that works is
 # encountered
 
-i=0
 until [ -z ${locale_to_test} ] || \
   echo "A" | LC_ALL=${locale_to_test} pbmtext -wchar > /dev/null
   do
-    let i=$(($i+1));
-    locale_to_test=`sed "$i"p -n  ${iso88591_locale_list}`;
+      # Read first line of file
+      locale_to_test=`head -n 1 ${iso88591_locale_list}`;
+      # then erase the line
+      sed -i 1d ${iso88591_locale_list};
   done;
 
-rm ${iso88591_locale_list};
 if [ -z  ${locale_to_test} ]
   then echo "No iso-8859-1 locale available." 1>&2
        echo "Skipping." 1>&2
@@ -41,7 +44,6 @@ else
 fi;
 
 locale_for_test=${locale_to_test};
-
 
 # Two rows
 # Should print 2066913605 5110 twice

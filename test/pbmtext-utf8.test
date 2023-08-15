@@ -6,9 +6,8 @@ LANG=C
 LC_ALL=C
 export LANG LC_ALL
 
-
 # This test requires a working UTF-8 locale
-# Skip this test if it is are not available
+# Skip this test if none are available
 
 iconv /dev/null
 if [ $? -ne 0  ]
@@ -20,25 +19,29 @@ fi
 tmpdir=${tmpdir:-/tmp}
 utf_locale_list=${tmpdir}/utf_locale_list
 
-locale_to_test="en_US.utf8"  # Initial value
+locale_to_test="en_US.utf8"  # Initial value; this
+# does not have to be present in  following list
 # Edit the above value if necessary
 
 # Make a list of available locales which end in "utf8"
-locale -a | grep "\.utf8$" > ${utf_locale_list}
+# If none are found, abort test
+
+locale -a | grep "\.utf8$" > ${utf_locale_list} ||\
+    locale_to_test=""
 
 # Hunt for a valid utf8 locale
 # Submit each candidate to a trial pbmtext run until one that works is
 # encountered
 
-i=0
 until [ -z ${locale_to_test} ] || \
   echo "A" | LC_ALL=${locale_to_test} pbmtext -wchar > /dev/null
     do
-      let i=$(($i+1));
-      locale_to_test=`sed "$i"p -n  ${utf_locale_list}`;
+      # Read first line of file
+      locale_to_test=`head -n 1 ${utf_locale_list}`;
+      # then erase the line
+      sed -i 1d ${utf_locale_list};
     done;
 
-rm ${utf_locale_list};
 if [ -z  ${locale_to_test} ]
   then echo "No utf-8 locale available." 1>&2
        echo "Skipping." 1>&2
@@ -115,9 +118,9 @@ awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print "" } '
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""}' | \
         LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar -text-dump
 
+
 # Test 5.
 # Long input text
-
 
 echo "Test 5 Invalid"
 
