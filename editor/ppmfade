@@ -212,84 +212,84 @@ for ($i = 1; $i <= $nframes; $i++) {
             $n = $spline20[$i] * 100;
             system("ppmshift $n $tmpdir/junk1.ppm >$tmpdir/junk1a.ppm");
             $n = (1-$spline20[$i-10])*100;
-            system("ppmshift $n junk2.ppm >junk2a.ppm");
+            system("ppmshift $n $tmpdir/junk2.ppm >$tmpdir/junk2a.ppm");
             $n = $spline10[$i-10];
-            system("ppmmix $n junk1a.ppm junk2a.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1a.ppm $tmpdir/junk2a.ppm >$tmpdir/junk3.ppm");
         } else {
             my $n = (1-$spline20[$i-10]) * 100;
-            system("ppmshift $n junk2.ppm >junk3.ppm");
+            system("ppmshift $n $tmpdir/junk2.ppm >$tmpdir/junk3.ppm");
         }
     } elsif ($mode eq $RELIEF) {
         if ($i == 1) {
-            system("ppmrelief junk1.ppm >junk1r.ppm");
+            system("ppmrelief $tmpdir/junk1.ppm >$tmpdir/junk1r.ppm");
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n junk1.ppm junk1r.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1.ppm $tmpdir/junk1r.ppm >$tmpdir/junk3.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1r.ppm junk2r.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1r.ppm $tmpdir/junk2r.ppm >$tmpdir/junk3.ppm");
         } else {
             my $n = $spline10[$i-20];
-            system("ppmmix $n junk2r.ppm junk2.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk2r.ppm $tmpdir/junk2.ppm >$tmpdir/junk3.ppm");
         }
         if ($i == 10) {
-            system("ppmrelief junk2.ppm >junk2r.ppm");
+            system("ppmrelief $tmpdir/junk2.ppm >$tmpdir/junk2r.ppm");
         }
     } elsif ($mode eq $OIL) {
         if ($i == 1) {
-            system("ppmtopgm junk1.ppm | pgmoil >junko.ppm");
-            system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
-                   ">junk1o.ppm");
+            system("ppmtopgm $tmpdir/junk1.ppm | pgmoil >$tmpdir/junko.ppm");
+            system("rgb3toppm $tmpdir/junko.ppm $tmpdir/junko.ppm $tmpdir/junko.ppm " .
+                   ">$tmpdir/junk1o.ppm");
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n junk1.ppm junk1o.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1.ppm $tmpdir/junk1o.ppm >$tmpdir/junk3.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1o.ppm junk2o.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1o.ppm $tmpdir/junk2o.ppm >$tmpdir/junk3.ppm");
         } else {
             my $n = $spline10[$i-20];
-            system("ppmmix $n junk2o.ppm junk2.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk2o.ppm $tmpdir/junk2.ppm >$tmpdir/junk3.ppm");
         }
         if ($i == 10) {
-            system("ppmtopgm junk2.ppm | pgmoil >junko.ppm");
-            system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
-                   ">junk2o.ppm");
+            system("ppmtopgm $tmpdir/junk2.ppm | pgmoil >$tmpdir/junko.ppm");
+            system("rgb3toppm $tmpdir/junko.ppm $tmpdir/junko.ppm $tmpdir/junko.ppm " .
+                   ">$tmpdir/junk2o.ppm");
         }
     } elsif ($mode eq $EDGE) {
         if ($i == 1) {
-            system("ppmtopgm junk1.ppm | pgmedge >junko.ppm");
-            system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
-                   ">junk1o.ppm");
+            system("ppmtopgm $tmpdir/junk1.ppm | pgmedge >$tmpdir/junko.ppm");
+            system("rgb3toppm $tmpdir/junko.ppm $tmpdir/junko.ppm $tmpdir/junko.ppm " .
+                   ">$tmpdir/junk1o.ppm");
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n junk1.ppm junk1o.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1.ppm $tmpdir/junk1o.ppm >$tmpdir/junk3.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1o.ppm junk2o.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1o.ppm $tmpdir/junk2o.ppm >$tmpdir/junk3.ppm");
         } else {
             my $n = $spline10[$i-20];
-            system("ppmmix $n junk2o.ppm junk2.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk2o.ppm $tmpdir/junk2.ppm >$tmpdir/junk3.ppm");
         }
         if ($i == 10) {
-            system("ppmtopgm junk2.ppm | pgmedge >junko.ppm");
-            system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
-                   ">junk2o.ppm");
+            system("ppmtopgm $tmpdir/junk2.ppm | pgmedge >$tmpdir/junko.ppm");
+            system("rgb3toppm $tmpdir/junko.ppm $tmpdir/junko.ppm $tmpdir/junko.ppm " .
+                   ">$tmpdir/junk2o.ppm");
         } 
     } elsif ($mode eq $BENTLEY) {
         if ($i == 1) {
-            system("ppmtopgm junk1.ppm | pgmbentley >junko.ppm");
-            system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
-                   ">junk1o.ppm");
+            system("ppmtopgm $tmpdir/junk1.ppm | pgmbentley >$tmpdir/junko.ppm");
+            system("rgb3toppm $tmpdir/junko.ppm $tmpdir/junko.ppm $tmpdir/junko.ppm " .
+                   ">$tmpdir/junk1o.ppm");
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n junk1.ppm junk1o.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1.ppm $tmpdir/junk1o.ppm >$tmpdir/junk3.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1o.ppm junk2o.ppm >junk3.ppm");
+            system("ppmmix $n $tmpdir/junk1o.ppm $tmpdir/junk2o.ppm >$tmpdir/junk3.ppm");
         } else {
             my $n = $spline10[$i-20];
             system("ppmmix $n $tmpdir/junk2o.ppm $tmpdir/junk2.ppm " .
@@ -308,6 +308,12 @@ for ($i = 1; $i <= $nframes; $i++) {
             system("pamscale $n $tmpdir/junk1.ppm | " .
                    "pamscale -width $width -height $height " .
                    ">$tmpdir/junk3.ppm");
+            if ($i == 10) {
+                   system("cp", "$tmpdir/junk3.ppm", "$tmpdir/junk1a.ppm");
+                   system("pamscale $n $tmpdir/junk2.ppm | " .
+                          "pamscale -width $width -height $height " .
+                          ">$tmpdir/junk2a.ppm");
+               }
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
             system("ppmmix $n $tmpdir/junk1a.ppm $tmpdir/junk2a.ppm " .
@@ -318,12 +324,6 @@ for ($i = 1; $i <= $nframes; $i++) {
                    "pamscale -width $width -height $height " .
                    ">$tmpdir/junk3.ppm");
         }
-        if ($i == 10) {
-            system("cp", "$tmpdir/junk3.ppm", "$tmpdir/junk1a.ppm");
-            system("pamscale $n $tmpdir/junk2.ppm | " .
-                   "pamscale -width $width -height $height " .
-                   ">$tmpdir/junk2a.ppm");
-        }    
     } elsif ($mode eq $MIX) {
         my $fade_factor = sqrt(1/($nframes-$i+1));
         system("ppmmix $fade_factor $tmpdir/junk1.ppm $tmpdir/junk2.ppm " .

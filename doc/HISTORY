@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.08.18 BJH  Release 11.02.02
+
+              ppmfade: fix "file not found" crash for most fade modes.
+              Introduced in Netpbm 10.98 (March 2022).
+
+              ppmfade: fix incorrect block mode fade.  Always broken
+              (ppmfade was new in Netpbm 8.4 (April 2000)).
+
 23.08.05 BJH  Release 11.02.01
 
               pamstack: Fail gracefully when total number of planes is too
