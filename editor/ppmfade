@@ -93,7 +93,10 @@ sub commandLineArgs() {
             $mode = 'MIX';
         } else {
             if (substr($arg, 0, 1) eq '-') {
-                print STDERR ("Unknown option '$arg'\n");
+                   print STDERR ("Unknown option '$arg'.  " .
+                                 "We understand -f, -l, -base, " .
+                                 "-spread, -shift, -relief, -oil, -edge, " .
+                                 "-bentley, -block, and -mix\n");
             } else {
                 print STDERR ("There are no non-option arguments possible.  " .
                               "You specified '$arg'\n");
