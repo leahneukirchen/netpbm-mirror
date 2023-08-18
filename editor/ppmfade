@@ -35,7 +35,7 @@ exec perl -w -x -S -- "$0" "$@"
 #
 #  Inspired by the program Pbmfade by Wesley C. Barris of AHPCRC,
 #  Minnesota Supercomputer Center, Inc. January 7, 1994.  Pbmfade does
-#  much the same thing, but handles non-Netpbm formats too, and is 
+#  much the same thing, but handles non-Netpbm formats too, and is
 #  implemented in a more primitive language.
 #
 ##############################################################################
@@ -66,107 +66,142 @@ my $EDGE =    5;
 my $BENTLEY = 6;
 my $BLOCK =   7;
 my $MIX =     8;
-#
-#  Set some defaults.
-#
-my $nFrame = 30;                # total number of files created (1 sec)
-my $firstFileNm = "undefined";
-my $lastFileNm = "undefined";
-my $baseNm = "fade";            # default base name of output files
-my $mode = $SPREAD;             # default fading mode
+
+sub commandLineArgs() {
+
+    my ($firstFileNm, $lastFileNm);
+    #
+    #  Set some defaults.
+    #
+    my $baseNm = "fade";            # default base name of output files
+    my $mode = $SPREAD;             # default fading mode
+
+    my $n;  # argument number
+
+    for ($n = 0; $n < @ARGV; $n++) {
+        if ("$ARGV[$n]" eq "-f") {
+            $n++;
+            $firstFileNm = $ARGV[$n];
+        } elsif ($ARGV[$n] eq "-l") {
+            $n++;
+            $lastFileNm = $ARGV[$n];
+        } elsif ($ARGV[$n] eq "-base") {
+            $n++;
+            $baseNm = $ARGV[$n];
+        } elsif ($ARGV[$n] eq "-spread") {
+            $mode = $SPREAD;
+        } elsif ($ARGV[$n] eq "-shift") {
+            $mode = $SHIFT;
+        } elsif ($ARGV[$n] eq "-relief") {
+            $mode = $RELIEF;
+        } elsif ($ARGV[$n] eq "-oil") {
+            $mode = $OIL;
+        } elsif ("$ARGV[$n]" eq "-edge") {
+            $mode = $EDGE;
+        } elsif ("$ARGV[$n]" eq "-bentley") {
+            $mode = $BENTLEY;
+        } elsif ("$ARGV[$n]" eq "-block") {
+            $mode = $BLOCK;
+        } elsif ("$ARGV[$n]" eq "-mix") {
+            $mode = $MIX;
+        } else {
+            print "Unknown argument: $ARGV[$n]\n";
+            exit 100;
+        }
+    }
+
+    if (!defined($firstFileNm) && !defined($lastFileNm)) {
+        print STDERR ("You must specify -f or -l (or both)\n");
+        exit 90;
+    }
+
+    return $mode, $firstFileNm, $lastFileNm, $baseNm;
+}
+
+
+
+sub imageDimensions($$) {
+    my ($firstFileNm, $lastFileNm) = @_;
+
+    my ($width, $height);
+
+    if (defined($firstFileNm)) {
+        if ((`pnmfile $firstFileNm` =~ m{\b(\d+)\sby\s(\d+)} )) {
+            $width = $1; $height = $2;
+        } else {
+            print STDERR
+                ("Unrecognized results from pnmfile on $firstFileNm.\n");
+            exit(50);
+        }
+    } else {
+        # $lastFileNm is defined
+        if ((`pnmfile $lastFileNm` =~ m{\b(\d+)\sby\s(\d+)} )) {
+            $width = $1; $height = $2;
+        } else {
+            print STDERR
+                ("Unrecognized results from pnmfile on $firstFileNm.\n");
+            exit(50);
+        }
+    }
+    return $width, $height;
+}
+
+
+
+#-----------------------------------------------------------------------------
+#  MAINLINE
+#-----------------------------------------------------------------------------
+
+my $nFrame = 30;
+    # Number of images in created sequence, including the fade-from and
+    # fade-to images.  In standard video, 30 frames is one second.
 
 doVersionHack(\@ARGV);
 
-my $n;  # argument number
+my ($mode, $firstFileNm, $lastFileNm, $baseNm) = commandLineArgs();
 
-for ($n = 0; $n < @ARGV; $n++) {
-    if ("$ARGV[$n]" eq "-f") {
-        $n++;
-        $firstFileNm = $ARGV[$n];
-        if (-e $firstFileNm) {
-        } else {
-            print "I can't find first file '$firstFileNm'\n";
-            exit 20;
-        }
-    } elsif ($ARGV[$n] eq "-l") {
-        $n++;
-        $lastFileNm = $ARGV[$n];
-        if (-e $lastFileNm) {
-        } else {
-            print "I can't find last file '$lastFileNm'\n";
-            exit 20;
-        }
-    } elsif ($ARGV[$n] eq "-base") {
-        $n++;
-        $baseNm = $ARGV[$n];
-    } elsif ($ARGV[$n] eq "-spread") {
-        $mode = $SPREAD;
-    } elsif ($ARGV[$n] eq "-shift") {
-        $mode = $SHIFT;
-    } elsif ($ARGV[$n] eq "-relief") {
-        $mode = $RELIEF;
-    } elsif ($ARGV[$n] eq "-oil") {
-        $mode = $OIL;
-    } elsif ("$ARGV[$n]" eq "-edge") {
-        $mode = $EDGE;
-    } elsif ("$ARGV[$n]" eq "-bentley") {
-        $mode = $BENTLEY;
-    } elsif ("$ARGV[$n]" eq "-block") {
-        $mode = $BLOCK;
-    } elsif ("$ARGV[$n]" eq "-mix") {
-        $mode = $MIX;
-    } else {
-        print "Unknown argument: $ARGV[$n]\n";
-        exit 100;
-    } 
+if (defined($firstFileNm) && !-e($firstFileNm)) {
+    print STDERR ("First file '$firstFileNm' does not exist\n");
+    exit 20;
 }
+
+if (defined($lastFileNm) && !-e($lastFileNm)) {
+    print STDERR ("Last file '$lastFileNm' does not exist\n");
+    exit 20;
+}
+
 #
 #  Define a couple linear ramps.
 #
 # We don't use element 0 of these arrays.
 my @spline10 = (0, 0, 0.11, 0.22, 0.33, 0.44, 0.55, 0.66, 0.77, 0.88, 1.0);
-my @spline20 = (0, 0, 0.05, 0.11, 0.16, 0.21, 0.26, 0.32, 0.37, 0.42, 0.47, 
+my @spline20 = (0, 0, 0.05, 0.11, 0.16, 0.21, 0.26, 0.32, 0.37, 0.42, 0.47,
                 0.53, 0.58, 0.63, 0.69, 0.74, 0.79, 0.84, 0.89, 0.95, 1.0);
-#
-#  Just what are we supposed to do?
-#
-my ($height, $width);    # width and height of our frames
-if ($firstFileNm ne "undefined") {
-    if ((`pnmfile $firstFileNm` =~ m{\b(\d+)\sby\s(\d+)} )) { 
-        $width = $1; $height = $2;
-    } else {
-        print("Unrecognized results from pnmfile on $firstFileNm.\n");
-        exit(50);
-    }
-} elsif ($lastFileNm ne "undefined") {
-    if ((`pnmfile $lastFileNm` =~ m{\b(\d+)\sby\s(\d+)} )) { 
-        $width = $1; $height = $2;
-    } else {
-        print("Unrecognized results from pnmfile on $firstFileNm.\n");
-        exit(50);
-    }
-} else {
-    print("ppmfade:  You must specify -f or -l (or both)\n");
-    exit(90);
-}
+
+
+
+my ($width, $height) = imageDimensions($firstFileNm, $lastFileNm);
+
+    # width and height of our frames in pixels
 
 print("Frames are " . $width . "W x " . $height . "H\n");
 
-if ($firstFileNm eq "undefined") {
-    print "Fading from black to ";
+my $fromDesc = defined($firstFileNm) ? "'$firstFileNm'" : "black";
+my $toDesc   = defined($lastFileNm)  ? "'$lastFileNm'"  : "black";
+
+if (!defined($firstFileNm)) {
     system("ppmmake \\#000 $width $height >$tmpdir/junk1.ppm");
 } else {
-    print "Fading from $firstFileNm to ";
     system("cp", $firstFileNm, "$tmpdir/junk1.ppm");
 }
 
-if ($lastFileNm eq "undefined") {
-    print "black.\n";
+if (!defined($lastFileNm)) {
     system("ppmmake \\#000 $width $height >$tmpdir/junk2.ppm");
 } else {
-    print "$lastFileNm\n";
     system("cp", $lastFileNm, "$tmpdir/junk2.ppm");
 }
+
+print("Fading from $fromDesc to $toDesc\n");
 
 #
 #  Perform the fade.
@@ -175,10 +210,10 @@ if ($lastFileNm eq "undefined") {
 # Here's what our temporary files are:
 #   junk1.ppm: The original (fade-from) image
 #   junk2.ppm: The target (fade-from) image
-#   junk3.ppm: The frame of the fade for the current iteration of the 
+#   junk3.ppm: The frame of the fade for the current iteration of the
 #              the for loop.
 #   junk1a.ppm: If the fade involves a ppmmix sequence from one intermediate
-#               image to another, this is the first frame of that 
+#               image to another, this is the first frame of that
 #               sequence.
 #   junk2a.ppm: This is the last frame of the above-mentioned ppmmix sequence
 
@@ -276,7 +311,7 @@ for ($i = 1; $i <= $nFrame; $i++) {
             system("ppmtopgm junk2.ppm | pgmedge >junko.ppm");
             system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
                    ">junk2o.ppm");
-        } 
+        }
     } elsif ($mode eq $BENTLEY) {
         if ($i == 1) {
             system("ppmtopgm junk1.ppm | pgmbentley >junko.ppm");
@@ -307,6 +342,12 @@ for ($i = 1; $i <= $nFrame; $i++) {
             system("pamscale $n $tmpdir/junk1.ppm | " .
                    "pamscale -width $width -height $height " .
                    ">$tmpdir/junk3.ppm");
+            if ($i == 10) {
+                system("cp", "$tmpdir/junk3.ppm", "$tmpdir/junk1a.ppm");
+                system("pamscale $n $tmpdir/junk2.ppm | " .
+                       "pamscale -width $width -height $height " .
+                       ">$tmpdir/junk2a.ppm");
+            }
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
             system("ppmmix $n $tmpdir/junk1a.ppm $tmpdir/junk2a.ppm " .
@@ -317,12 +358,6 @@ for ($i = 1; $i <= $nFrame; $i++) {
                    "pamscale -width $width -height $height " .
                    ">$tmpdir/junk3.ppm");
         }
-        if ($i == 10) {
-            system("cp", "$tmpdir/junk3.ppm", "$tmpdir/junk1a.ppm");
-            system("pamscale $n $tmpdir/junk2.ppm | " .
-                   "pamscale -width $width -height $height " .
-                   ">$tmpdir/junk2a.ppm");
-        }    
     } elsif ($mode eq $MIX) {
         my $fadeFactor = sqrt(1/($nFrame-$i+1));
         system("ppmmix $fadeFactor $tmpdir/junk1.ppm $tmpdir/junk2.ppm " .
