@@ -69,12 +69,11 @@ my $MIX =     8;
 #
 #  Set some defaults.
 #
-my $nframes = 30;			# total number of files created (1 sec)
-my $first_file = "undefined";
-my $last_file = "undefined";
-my $base_name = "fade";		# default base name of output files
-my $image = "ppm";		# default output storage format
-my $mode = $SPREAD;		# default fading mode
+my $nFrame = 30;                # total number of files created (1 sec)
+my $firstFileNm = "undefined";
+my $lastFileNm = "undefined";
+my $baseNm = "fade";            # default base name of output files
+my $mode = $SPREAD;             # default fading mode
 
 doVersionHack(\@ARGV);
 
@@ -83,23 +82,23 @@ my $n;  # argument number
 for ($n = 0; $n < @ARGV; $n++) {
     if ("$ARGV[$n]" eq "-f") {
         $n++;
-        $first_file = $ARGV[$n];
-        if (-e $first_file) {
+        $firstFileNm = $ARGV[$n];
+        if (-e $firstFileNm) {
         } else {
-            print "I can't find first file '$first_file'\n";
+            print "I can't find first file '$firstFileNm'\n";
             exit 20;
         }
     } elsif ($ARGV[$n] eq "-l") {
         $n++;
-        $last_file = $ARGV[$n];
-        if (-e $last_file) {
+        $lastFileNm = $ARGV[$n];
+        if (-e $lastFileNm) {
         } else {
-            print "I can't find last file '$last_file'\n";
+            print "I can't find last file '$lastFileNm'\n";
             exit 20;
         }
     } elsif ($ARGV[$n] eq "-base") {
         $n++;
-        $base_name = $ARGV[$n];
+        $baseNm = $ARGV[$n];
     } elsif ($ARGV[$n] eq "-spread") {
         $mode = $SPREAD;
     } elsif ($ARGV[$n] eq "-shift") {
@@ -132,18 +131,18 @@ my @spline20 = (0, 0, 0.05, 0.11, 0.16, 0.21, 0.26, 0.32, 0.37, 0.42, 0.47,
 #  Just what are we supposed to do?
 #
 my ($height, $width);    # width and height of our frames
-if ($first_file ne "undefined") {
-    if ((`pnmfile $first_file` =~ m{\b(\d+)\sby\s(\d+)} )) { 
+if ($firstFileNm ne "undefined") {
+    if ((`pnmfile $firstFileNm` =~ m{\b(\d+)\sby\s(\d+)} )) { 
         $width = $1; $height = $2;
     } else {
-        print("Unrecognized results from pnmfile on $first_file.\n");
+        print("Unrecognized results from pnmfile on $firstFileNm.\n");
         exit(50);
     }
-} elsif ($last_file ne "undefined") {
-    if ((`pnmfile $last_file` =~ m{\b(\d+)\sby\s(\d+)} )) { 
+} elsif ($lastFileNm ne "undefined") {
+    if ((`pnmfile $lastFileNm` =~ m{\b(\d+)\sby\s(\d+)} )) { 
         $width = $1; $height = $2;
     } else {
-        print("Unrecognized results from pnmfile on $first_file.\n");
+        print("Unrecognized results from pnmfile on $firstFileNm.\n");
         exit(50);
     }
 } else {
@@ -153,20 +152,20 @@ if ($first_file ne "undefined") {
 
 print("Frames are " . $width . "W x " . $height . "H\n");
 
-if ($first_file eq "undefined") {
+if ($firstFileNm eq "undefined") {
     print "Fading from black to ";
     system("ppmmake \\#000 $width $height >$tmpdir/junk1.ppm");
 } else {
-    print "Fading from $first_file to ";
-    system("cp", $first_file, "$tmpdir/junk1.ppm");
+    print "Fading from $firstFileNm to ";
+    system("cp", $firstFileNm, "$tmpdir/junk1.ppm");
 }
 
-if ($last_file eq "undefined") {
+if ($lastFileNm eq "undefined") {
     print "black.\n";
     system("ppmmake \\#000 $width $height >$tmpdir/junk2.ppm");
 } else {
-    print "$last_file\n";
-    system("cp", $last_file, "$tmpdir/junk2.ppm");
+    print "$lastFileNm\n";
+    system("cp", $lastFileNm, "$tmpdir/junk2.ppm");
 }
 
 #
@@ -184,8 +183,8 @@ if ($last_file eq "undefined") {
 #   junk2a.ppm: This is the last frame of the above-mentioned ppmmix sequence
 
 my $i;    # Frame number
-for ($i = 1; $i <= $nframes; $i++) {
-    print("Creating $i of $nframes...\n");
+for ($i = 1; $i <= $nFrame; $i++) {
+    print("Creating $i of $nFrame...\n");
     if ($mode eq $SPREAD) {
         if ($i <= 10) {
             my $n = $spline20[$i] * 100;
@@ -325,15 +324,15 @@ for ($i = 1; $i <= $nframes; $i++) {
                    ">$tmpdir/junk2a.ppm");
         }    
     } elsif ($mode eq $MIX) {
-        my $fade_factor = sqrt(1/($nframes-$i+1));
-        system("ppmmix $fade_factor $tmpdir/junk1.ppm $tmpdir/junk2.ppm " .
+        my $fadeFactor = sqrt(1/($nFrame-$i+1));
+        system("ppmmix $fadeFactor $tmpdir/junk1.ppm $tmpdir/junk2.ppm " .
                ">$tmpdir/junk3.ppm");
     } else {
         print("Internal error: impossible mode value '$mode'\n");
     }
 
-    my $outfile = sprintf("%s.%04d.ppm", $base_name, $i);
-    system("cp", "$tmpdir/junk3.ppm", $outfile);
+    my $outFileNm = sprintf("%s.%04d.ppm", $baseNm, $i);
+    system("cp", "$tmpdir/junk3.ppm", $outFileNm);
 }
 
 exit(0);
