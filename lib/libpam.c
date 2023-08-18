@@ -739,7 +739,7 @@ readpaminitrest(struct pam * const pamP) {
     if (pamP->maxval == 0)
         pm_error("MAXVAL value is zero in PAM header");
     if (pamP->maxval > PAM_OVERALL_MAXVAL)
-        pm_error("MAXVAL value (%lu) in PAM header is greater than %u",
+        pm_error("MAXVAL value (%lu) in PAM header is greater than %lu",
                  pamP->maxval, PAM_OVERALL_MAXVAL);
 }
 
@@ -1074,7 +1074,7 @@ pnm_writepaminit(struct pam * const pamP) {
 
     if (pamP->maxval > PAM_OVERALL_MAXVAL)
         pm_error("maxval (%lu) passed to pnm_writepaminit() "
-                 "is greater than %u", pamP->maxval, PAM_OVERALL_MAXVAL);
+                 "is greater than %lu", pamP->maxval, PAM_OVERALL_MAXVAL);
 
     if (pamP->len < PAM_STRUCT_SIZE(tuple_type)) {
         tupleType = "";
