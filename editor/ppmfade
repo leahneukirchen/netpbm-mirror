@@ -58,54 +58,46 @@ my $tmpdir;
 
 $tmpdir = File::Temp::tempdir("ppmfade.XXXXXX", CLEANUP => 1);
 
-my $SPREAD =  1;
-my $SHIFT =   2;
-my $RELIEF =  3;
-my $OIL =     4;
-my $EDGE =    5;
-my $BENTLEY = 6;
-my $BLOCK =   7;
-my $MIX =     8;
-
 sub commandLineArgs() {
 
-    my ($firstFileNm, $lastFileNm);
-    #
-    #  Set some defaults.
-    #
-    my $baseNm = "fade";            # default base name of output files
-    my $mode = $SPREAD;             # default fading mode
+    my ($firstFileNm, $lastFileNm, $mode, $baseNm);
 
-    my $n;  # argument number
+    for (my $i = 0; $i < @ARGV; ++$i) {
+        my $arg = $ARGV[$i];
 
-    for ($n = 0; $n < @ARGV; $n++) {
-        if ("$ARGV[$n]" eq "-f") {
-            $n++;
-            $firstFileNm = $ARGV[$n];
-        } elsif ($ARGV[$n] eq "-l") {
-            $n++;
-            $lastFileNm = $ARGV[$n];
-        } elsif ($ARGV[$n] eq "-base") {
-            $n++;
-            $baseNm = $ARGV[$n];
-        } elsif ($ARGV[$n] eq "-spread") {
-            $mode = $SPREAD;
-        } elsif ($ARGV[$n] eq "-shift") {
-            $mode = $SHIFT;
-        } elsif ($ARGV[$n] eq "-relief") {
-            $mode = $RELIEF;
-        } elsif ($ARGV[$n] eq "-oil") {
-            $mode = $OIL;
-        } elsif ("$ARGV[$n]" eq "-edge") {
-            $mode = $EDGE;
-        } elsif ("$ARGV[$n]" eq "-bentley") {
-            $mode = $BENTLEY;
-        } elsif ("$ARGV[$n]" eq "-block") {
-            $mode = $BLOCK;
-        } elsif ("$ARGV[$n]" eq "-mix") {
-            $mode = $MIX;
+        if (0) {
+        } elsif ($arg eq "-f") {
+            ++$i;
+            $firstFileNm = $ARGV[$i];
+        } elsif ($arg eq "-l") {
+            ++$i;
+            $lastFileNm = $ARGV[$i];
+        } elsif ($arg eq "-base") {
+            ++$i;
+            $baseNm = $ARGV[$i];
+        } elsif ($arg eq "-spread") {
+            $mode = 'SPREAD';
+        } elsif ($arg eq "-shift") {
+            $mode = 'SHIFT';
+        } elsif ($arg eq "-relief") {
+            $mode = 'RELIEF';
+        } elsif ($arg eq "-oil") {
+            $mode = 'OIL';
+        } elsif ($arg eq "-edge") {
+            $mode = 'EDGE';
+        } elsif ($arg eq "-bentley") {
+            $mode ='BENTLEY';
+        } elsif ($arg eq "-block") {
+            $mode = 'BLOCK';
+        } elsif ($arg eq "-mix") {
+            $mode = 'MIX';
         } else {
-            print "Unknown argument: $ARGV[$n]\n";
+            if (substr($arg, 0, 1) eq '-') {
+                print STDERR ("Unknown option '$arg'\n");
+            } else {
+                print STDERR ("There are no non-option arguments possible.  " .
+                              "You specified '$arg'\n");
+            }
             exit 100;
         }
     }
@@ -113,6 +105,14 @@ sub commandLineArgs() {
     if (!defined($firstFileNm) && !defined($lastFileNm)) {
         print STDERR ("You must specify -f or -l (or both)\n");
         exit 90;
+    }
+
+    if (!defined($mode)) {
+        $mode = 'SPREAD';
+    }
+
+    if (!defined($baseNm)) {
+        $baseNm = 'fade';
     }
 
     return $mode, $firstFileNm, $lastFileNm, $baseNm;
@@ -210,20 +210,22 @@ print("Fading from $fromDesc to $toDesc\n");
 # Here's what our temporary files are:
 #   first.ppm: The original (fade-from) image
 #   last.ppm: The target (fade-from) image
-#   junk3.ppm: The frame of the fade for the current iteration of the
-#              the for loop.
+#   this.ppm: The frame of the fade for the current iteration of the
+#             the for loop.
 #   junk1a.ppm: If the fade involves a ppmmix sequence from one intermediate
 #               image to another, this is the first frame of that
 #               sequence.
 #   junk2a.ppm: This is the last frame of the above-mentioned ppmmix sequence
 
 my $i;    # Frame number
-for ($i = 1; $i <= $nFrame; $i++) {
-    print("Creating $i of $nFrame...\n");
-    if ($mode eq $SPREAD) {
+for ($i = 1; $i <= $nFrame; ++$i) {
+
+    print("Creating Frame $i of $nFrame...\n");
+
+    if ($mode eq 'SPREAD') {
         if ($i <= 10) {
             my $n = $spline20[$i] * 100;
-            system("ppmspread $n $tmpdir/first.ppm >$tmpdir/junk3.ppm");
+            system("ppmspread $n $tmpdir/first.ppm >$tmpdir/this.ppm");
         } elsif ($i <= 20) {
             my $n;
             $n = $spline20[$i] * 100;
@@ -232,15 +234,15 @@ for ($i = 1; $i <= $nFrame; $i++) {
             system("ppmspread $n $tmpdir/last.ppm >$tmpdir/junk2a.ppm");
             $n = $spline10[$i-10];
             system("ppmmix $n $tmpdir/junk1a.ppm $tmpdir/junk2a.ppm " .
-                   ">$tmpdir/junk3.ppm");
+                   ">$tmpdir/this.ppm");
         } else {
             my $n = (1-$spline20[$i-10])*100;
-            system("ppmspread $n $tmpdir/last.ppm >$tmpdir/junk3.ppm");
+            system("ppmspread $n $tmpdir/last.ppm >$tmpdir/this.ppm");
         }
-    } elsif ($mode eq $SHIFT) {
+    } elsif ($mode eq 'SHIFT') {
         if ($i <= 10) {
             my $n = $spline20[$i] * 100;
-            system("ppmshift $n $tmpdir/first.ppm >$tmpdir/junk3.ppm");
+            system("ppmshift $n $tmpdir/first.ppm >$tmpdir/this.ppm");
         } elsif ($i <= 20) {
             my $n;
             $n = $spline20[$i] * 100;
@@ -248,29 +250,29 @@ for ($i = 1; $i <= $nFrame; $i++) {
             $n = (1-$spline20[$i-10])*100;
             system("ppmshift $n last.ppm >junk2a.ppm");
             $n = $spline10[$i-10];
-            system("ppmmix $n junk1a.ppm junk2a.ppm >junk3.ppm");
+            system("ppmmix $n junk1a.ppm junk2a.ppm >this.ppm");
         } else {
             my $n = (1-$spline20[$i-10]) * 100;
-            system("ppmshift $n last.ppm >junk3.ppm");
+            system("ppmshift $n last.ppm >this.ppm");
         }
-    } elsif ($mode eq $RELIEF) {
+    } elsif ($mode eq 'RELIEF') {
         if ($i == 1) {
             system("ppmrelief first.ppm >junk1r.ppm");
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n first.ppm junk1r.ppm >junk3.ppm");
+            system("ppmmix $n first.ppm junk1r.ppm >this.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1r.ppm junk2r.ppm >junk3.ppm");
+            system("ppmmix $n junk1r.ppm junk2r.ppm >this.ppm");
         } else {
             my $n = $spline10[$i-20];
-            system("ppmmix $n junk2r.ppm last.ppm >junk3.ppm");
+            system("ppmmix $n junk2r.ppm last.ppm >this.ppm");
         }
         if ($i == 10) {
             system("ppmrelief last.ppm >junk2r.ppm");
         }
-    } elsif ($mode eq $OIL) {
+    } elsif ($mode eq 'OIL') {
         if ($i == 1) {
             system("ppmtopgm first.ppm | pgmoil >junko.ppm");
             system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
@@ -278,20 +280,20 @@ for ($i = 1; $i <= $nFrame; $i++) {
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n first.ppm junk1o.ppm >junk3.ppm");
+            system("ppmmix $n first.ppm junk1o.ppm >this.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1o.ppm junk2o.ppm >junk3.ppm");
+            system("ppmmix $n junk1o.ppm junk2o.ppm >this.ppm");
         } else {
             my $n = $spline10[$i-20];
-            system("ppmmix $n junk2o.ppm last.ppm >junk3.ppm");
+            system("ppmmix $n junk2o.ppm last.ppm >this.ppm");
         }
         if ($i == 10) {
             system("ppmtopgm last.ppm | pgmoil >junko.ppm");
             system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
                    ">junk2o.ppm");
         }
-    } elsif ($mode eq $EDGE) {
+    } elsif ($mode eq 'EDGE') {
         if ($i == 1) {
             system("ppmtopgm first.ppm | pgmedge >junko.ppm");
             system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
@@ -299,20 +301,20 @@ for ($i = 1; $i <= $nFrame; $i++) {
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n first.ppm junk1o.ppm >junk3.ppm");
+            system("ppmmix $n first.ppm junk1o.ppm >this.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1o.ppm junk2o.ppm >junk3.ppm");
+            system("ppmmix $n junk1o.ppm junk2o.ppm >this.ppm");
         } else {
             my $n = $spline10[$i-20];
-            system("ppmmix $n junk2o.ppm last.ppm >junk3.ppm");
+            system("ppmmix $n junk2o.ppm last.ppm >this.ppm");
         }
         if ($i == 10) {
             system("ppmtopgm last.ppm | pgmedge >junko.ppm");
             system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
                    ">junk2o.ppm");
         }
-    } elsif ($mode eq $BENTLEY) {
+    } elsif ($mode eq 'BENTLEY') {
         if ($i == 1) {
             system("ppmtopgm first.ppm | pgmbentley >junko.ppm");
             system("rgb3toppm junko.ppm junko.ppm junko.ppm " .
@@ -320,14 +322,14 @@ for ($i = 1; $i <= $nFrame; $i++) {
         }
         if ($i <= 10) {
             my $n = $spline10[$i];
-            system("ppmmix $n first.ppm junk1o.ppm >junk3.ppm");
+            system("ppmmix $n first.ppm junk1o.ppm >this.ppm");
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
-            system("ppmmix $n junk1o.ppm junk2o.ppm >junk3.ppm");
+            system("ppmmix $n junk1o.ppm junk2o.ppm >this.ppm");
         } else {
             my $n = $spline10[$i-20];
             system("ppmmix $n $tmpdir/junk2o.ppm $tmpdir/last.ppm " .
-                   ">$tmpdir/junk3.ppm");
+                   ">$tmpdir/this.ppm");
         }
         if ($i == 10) {
                system("ppmtopgm $tmpdir/last.ppm | pgmbentley " .
@@ -336,14 +338,14 @@ for ($i = 1; $i <= $nFrame; $i++) {
                    "$tmpdir/junko.ppm " .
                    ">$tmpdir/junk2o.ppm");
         }
-    } elsif ($mode eq $BLOCK) {
+    } elsif ($mode eq 'BLOCK') {
         if ($i <= 10) {
             my $n = 1 - 1.9*$spline20[$i];
             system("pamscale $n $tmpdir/first.ppm | " .
                    "pamscale -width $width -height $height " .
-                   ">$tmpdir/junk3.ppm");
+                   ">$tmpdir/this.ppm");
             if ($i == 10) {
-                system("cp", "$tmpdir/junk3.ppm", "$tmpdir/junk1a.ppm");
+                system("cp", "$tmpdir/this.ppm", "$tmpdir/junk1a.ppm");
                 system("pamscale $n $tmpdir/last.ppm | " .
                        "pamscale -width $width -height $height " .
                        ">$tmpdir/junk2a.ppm");
@@ -351,23 +353,23 @@ for ($i = 1; $i <= $nFrame; $i++) {
         } elsif ($i <= 20) {
             my $n = $spline10[$i-10];
             system("ppmmix $n $tmpdir/junk1a.ppm $tmpdir/junk2a.ppm " .
-                   ">$tmpdir/junk3.ppm");
+                   ">$tmpdir/this.ppm");
         } else {
             my $n = 1 - 1.9*$spline20[31-$i];
             system("pamscale $n $tmpdir/last.ppm | " .
                    "pamscale -width $width -height $height " .
-                   ">$tmpdir/junk3.ppm");
+                   ">$tmpdir/this.ppm");
         }
-    } elsif ($mode eq $MIX) {
+    } elsif ($mode eq 'MIX') {
         my $fadeFactor = sqrt(1/($nFrame-$i+1));
         system("ppmmix $fadeFactor $tmpdir/first.ppm $tmpdir/last.ppm " .
-               ">$tmpdir/junk3.ppm");
+               ">$tmpdir/this.ppm");
     } else {
-        print("Internal error: impossible mode value '$mode'\n");
+        print("INTERNAL ERROR: impossible mode value '$mode'\n");
     }
 
     my $outFileNm = sprintf("%s.%04d.ppm", $baseNm, $i);
-    system("cp", "$tmpdir/junk3.ppm", $outFileNm);
+    system("cp", "$tmpdir/this.ppm", $outFileNm);
 }
 
 exit(0);
