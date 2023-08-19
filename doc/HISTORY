@@ -33,6 +33,10 @@ not yet  BJH  Release 11.04.00
               ppmfade: fix incorrect block mode fade.  Always broken
               (ppmfade was new in Netpbm 8.4 (April 2000)).
 
+              pgmtexture: Fix buffer overflow with maxval > 255.  Always
+              broken.  Maxvals > 255 were possible starting in Netpbm 9.0
+              (April 2000).
+
               library: add check of maxval for computable size.
 
               Build: Include LDFLAGS in link of shared library.

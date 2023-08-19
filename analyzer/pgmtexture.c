@@ -570,6 +570,43 @@ f5_idm (float **     const p,
 }
 
 
+static double *
+newPxpy2(unsigned int const ng) {
+
+    double * pxpy;
+
+    if (ng > UINT_MAX-1)
+        pm_error("Too many gray levels (%u) to do computations", ng);
+
+    MALLOCARRAY(pxpy, ng+1);
+
+    if (!pxpy)
+        pm_error("Unable to allocate %u entries for the pxpy table",
+                 ng+1);
+
+    return pxpy;
+}
+
+
+
+static float *
+newPxpy(unsigned int const ng) {
+
+    float * pxpy;
+
+    if (ng > (UINT_MAX-1)/2 -1)
+        pm_error("Too many gray levels (%u) to do computations", ng);
+
+    MALLOCARRAY(pxpy, 2 * (ng+1) + 1);
+
+    if (!pxpy)
+        pm_error("Unable to allocate %u entries for the pxpy table",
+                 2* (ng+1) + 1);
+
+    return pxpy;
+}
+
+
 
 static float
 f6_savg (float **     const p,
@@ -577,11 +614,10 @@ f6_savg (float **     const p,
 /*----------------------------------------------------------------------------
    Sum Average
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
+    float * const pxpy = newPxpy(ng);
+
     unsigned int i;
     float savg;
-
-    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0.0;
@@ -593,6 +629,8 @@ f6_savg (float **     const p,
     }
     for (i = 2, savg = 0.0; i <= 2 * ng; ++i)
         savg += i * pxpy[i];
+
+    free(pxpy);
 
     return savg;
 }
@@ -606,11 +644,10 @@ f7_svar (float **     const p,
 /*----------------------------------------------------------------------------
    Sum Variance
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
+    float * const pxpy = newPxpy(ng);
+
     unsigned int i;
     float var;
-
-    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
@@ -623,6 +660,8 @@ f7_svar (float **     const p,
     for (i = 2, var = 0.0; i <= 2 * ng; ++i)
         var += (i - s) * (i - s) * pxpy[i];
 
+    free(pxpy);
+
     return var;
 }
 
@@ -634,11 +673,10 @@ f8_sentropy (float **     const p,
 /*----------------------------------------------------------------------------
    Sum Entropy
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
+    float * const pxpy = newPxpy(ng);
+
     unsigned int i;
     float sentropy;
-
-    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
@@ -650,6 +688,8 @@ f8_sentropy (float **     const p,
     }
     for (i = 2, sentropy = 0.0; i <= 2 * ng; ++i)
         sentropy -= pxpy[i] * log10(pxpy[i] + EPSILON);
+
+    free(pxpy);
 
     return sentropy;
 }
@@ -681,14 +721,13 @@ f10_dvar(float **     const p,
 /*----------------------------------------------------------------------------
    Difference Variance
 -----------------------------------------------------------------------------*/
-    double pxpy[PGM_MAXMAXVAL + 1];
+    double * const pxpy = newPxpy2(ng);
+
     unsigned int i;
     double sqrNg;  /* Square of 'ng' */
     double sum;
     double sumSqr;
     double var;
-
-    assert(ng <= ARRAY_SIZE(pxpy));
 
     for (i = 0; i < ng; ++i)
         pxpy[i] = 0;
@@ -706,6 +745,8 @@ f10_dvar(float **     const p,
     sqrNg = SQR(ng);
     var = (sqrNg * sumSqr - SQR(sum)) / SQR(sqrNg);
 
+    free(pxpy);
+
     return var;
 }
 
@@ -717,11 +758,10 @@ f11_dentropy (float **     const p,
 /*----------------------------------------------------------------------------
    Difference Entropy
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
+    float * const pxpy = newPxpy(ng);
+
     unsigned int i;
     float sum;
-
-    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
@@ -733,6 +773,8 @@ f11_dentropy (float **     const p,
     }
     for (i = 0, sum = 0.0; i < ng; ++i)
         sum += pxpy[i] * log10(pxpy[i] + EPSILON);
+
+    free(pxpy);
 
     return -sum;
 }
@@ -896,7 +938,7 @@ main (int argc, const char ** argv) {
 
     FILE * ifP;
     gray ** grays;
-    unsigned int tone[PGM_MAXMAXVAL+1];
+    unsigned int * tone;  /* malloced array */
     unsigned int r0, r45, r90;
     unsigned int d;
     unsigned int x, y;
@@ -947,31 +989,33 @@ main (int argc, const char ** argv) {
     grays = pgm_readpgm(ifP, &cols, &rows, &maxval);
     pm_close (ifP);
 
+    MALLOCARRAY(tone, maxval+1);
+
     /* Determine the number of different gray scales (not maxval) */
-    for (i = 0; i <= PGM_MAXMAXVAL; ++i)
+    for (i = 0; i <= maxval; ++i)
         tone[i] = -1;
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col)
             tone[grays[row][col]] = grays[row][col];
     }
-    for (i = 0, toneCt = 0; i <= PGM_MAXMAXVAL; ++i) {
+    for (i = 0, toneCt = 0; i <= maxval; ++i) {
         if (tone[i] != -1)
             ++toneCt;
     }
     pm_message("(Image has %u gray levels.)", toneCt);
 
     /* Collapse array, taking out all zero values */
-    for (row = 0, itone = 0; row <= PGM_MAXMAXVAL; ++row)
+    for (row = 0, itone = 0; row <= maxval; ++row)
         if (tone[row] != -1)
             tone[itone++] = tone[row];
     /* Now array contains only the gray levels present (in ascending order) */
 
     /* Allocate memory for gray-tone spatial dependence matrix */
-    p_matrix0   = matrix (0, toneCt, 0, toneCt);
-    p_matrix45  = matrix (0, toneCt, 0, toneCt);
-    p_matrix90  = matrix (0, toneCt, 0, toneCt);
-    p_matrix135 = matrix (0, toneCt, 0, toneCt);
+    p_matrix0   = matrix(0, toneCt, 0, toneCt);
+    p_matrix45  = matrix(0, toneCt, 0, toneCt);
+    p_matrix90  = matrix(0, toneCt, 0, toneCt);
+    p_matrix135 = matrix(0, toneCt, 0, toneCt);
 
     for (row = 0; row < toneCt; ++row) {
         unsigned int col;
