@@ -127,6 +127,28 @@ validateComputableSize(struct pam * const pamP) {
 
 
 
+static void
+validateComputableMaxval(const struct pam * const pamP) {
+/*----------------------------------------------------------------------------
+  This is similar to validateComputableSize, but for the maxval.
+-----------------------------------------------------------------------------*/
+    /* Code sometimes allocates an array indexed by sample values and
+       represents the size of that array as an INT.  (UNSIGNED INT would be
+       more proper, but there's no need to be that permissive).
+
+       Code also sometimes iterates through sample values and quits when the
+       value is greater than the maxval.
+    */
+
+    if (pamP->maxval == 0)
+        pm_error("Maxval is zero.  Must be at least one.");
+
+    if (pamP->maxval > INT_MAX-1)
+        pm_error("Maxval (%lu) is too large to be processed", pamP->maxval);
+}
+
+
+
 tuple
 pnm_allocpamtuple(const struct pam * const pamP) {
 
@@ -990,6 +1012,8 @@ pnm_readpaminit(FILE *       const file,
     interpretTupleType(pamP);
 
     validateComputableSize(pamP);
+
+    validateComputableMaxval(pamP);
 }
 
 

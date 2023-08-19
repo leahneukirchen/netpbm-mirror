@@ -33,6 +33,8 @@ not yet  BJH  Release 11.04.00
               ppmfade: fix incorrect block mode fade.  Always broken
               (ppmfade was new in Netpbm 8.4 (April 2000)).
 
+              library: add check of maxval for computable size.
+
               Build: Include LDFLAGS in link of shared library.
 
 23.06.28 BJH  Release 11.03.00
