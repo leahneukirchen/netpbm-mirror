@@ -957,6 +957,8 @@ main (int argc, const char ** argv) {
 
     pm_proginit(&argc, argv);
 
+    d = 1;
+
     argn = 1;
 
     /* Check for flags. */
@@ -983,8 +985,6 @@ main (int argc, const char ** argv) {
 
     if ( argn != argc )
         pm_usage( usage );
-
-    d = 1;
 
     grays = pgm_readpgm(ifP, &cols, &rows, &maxval);
     pm_close (ifP);
