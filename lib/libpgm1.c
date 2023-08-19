@@ -14,7 +14,7 @@
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
-#define _LARGE_FILES  
+#define _LARGE_FILES
 
 #include <string.h>
 #include <stdio.h>
@@ -47,7 +47,7 @@ pgm_allocrow(unsigned int const cols) {
 
 
 
-void 
+void
 pgm_init(int *   const argcP,
          char ** const argv) {
 
@@ -65,13 +65,13 @@ pgm_nextimage(FILE * const file,
 
 
 void
-pgm_readpgminitrest(FILE * const fileP, 
-                    int *  const colsP, 
-                    int *  const rowsP, 
+pgm_readpgminitrest(FILE * const fileP,
+                    int *  const colsP,
+                    int *  const rowsP,
                     gray * const maxvalP) {
 
     gray maxval;
-    
+
     /* Read size. */
     *colsP = (int)pm_getuint(fileP);
     *rowsP = (int)pm_getuint(fileP);
@@ -80,7 +80,7 @@ pgm_readpgminitrest(FILE * const fileP,
     maxval = pm_getuint(fileP);
     if (maxval > PGM_OVERALLMAXVAL)
         pm_error("maxval of input image (%u) is too large.  "
-                 "The maximum allowed by PGM is %u.", 
+                 "The maximum allowed by PGM is %u.",
                  maxval, PGM_OVERALLMAXVAL);
     if (maxval == 0)
         pm_error("maxval of input image is zero.");
@@ -117,7 +117,7 @@ validateComputableSize(unsigned int const cols,
 
 void
 pgm_readpgminit(FILE * const fileP,
-                int *  const colsP, 
+                int *  const colsP,
                 int *  const rowsP,
                 gray * const maxvalP,
                 int *  const formatP) {
@@ -130,7 +130,7 @@ pgm_readpgminit(FILE * const fileP,
     case PBM_TYPE:
         *formatP = realFormat;
         pbm_readpbminitrest(fileP, colsP, rowsP);
-        
+
         /* Mathematically, it makes the most sense for the maxval of a PBM
            file seen as a PGM to be 1.  But we tried this for a while and
            found that it causes unexpected results and frequent need for a
@@ -139,14 +139,14 @@ pgm_readpgminit(FILE * const fileP,
            there's no in-between value to use when maxval is 1.  It's really
            hard even to discover that your lack of Pnmdepth is your problem.
            So we pick 255, which is the most common PGM maxval, and the highest
-           resolution you can get without increasing the size of the PGM 
+           resolution you can get without increasing the size of the PGM
            image.
 
            So this means some programs that are capable of exploiting the
            bi-level nature of a PBM file must be PNM programs instead of PGM
            programs.
         */
-        
+
         *maxvalP = PGM_MAXMAXVAL;
         break;
 
@@ -154,7 +154,7 @@ pgm_readpgminit(FILE * const fileP,
         *formatP = realFormat;
         pgm_readpgminitrest(fileP, colsP, rowsP, maxvalP);
         break;
-        
+
     case PPM_TYPE:
         pm_error("Input file is a PPM, which this program cannot process.  "
                  "You may want to convert it to PGM with 'ppmtopgm'");
@@ -177,12 +177,12 @@ pgm_readpgminit(FILE * const fileP,
 
 
 static void
-validateRpgmRow(gray *         const grayrow, 
+validateRpgmRow(gray *         const grayrow,
                 unsigned int   const cols,
                 gray           const maxval,
                 const char **  const errorP) {
 /*----------------------------------------------------------------------------
-  Check for sample values above maxval in input.  
+  Check for sample values above maxval in input.
 
   Note: a program that wants to deal with invalid sample values itself can
   simply make sure it uses a sufficiently high maxval on the read function
@@ -205,23 +205,23 @@ validateRpgmRow(gray *         const grayrow,
         }
         *errorP = NULL;
     }
-}  
+}
 
 
 
 static void
 readRpgmRow(FILE * const fileP,
-            gray * const grayrow, 
+            gray * const grayrow,
             int    const cols,
             gray   const maxval,
             int    const format) {
 
     unsigned int const bytesPerSample = maxval < 256 ? 1 : 2;
     int          const bytesPerRow    = cols * bytesPerSample;
-    
+
     unsigned char * rowBuffer;
     const char * error;
-    
+
     MALLOCARRAY(rowBuffer, bytesPerRow);
     if (rowBuffer == NULL)
         pm_asprintf(&error, "Unable to allocate memory for row buffer "
@@ -243,19 +243,19 @@ readRpgmRow(FILE * const fileP,
             } else {
                 unsigned int bufferCursor;
                 unsigned int col;
-                
+
                 bufferCursor = 0;  /* Start at beginning of rowBuffer[] */
-                
+
                 for (col = 0; col < cols; ++col) {
                     gray g;
-                    
+
                     g = rowBuffer[bufferCursor++] << 8;
                     g |= rowBuffer[bufferCursor++];
-                    
+
                     grayrow[col] = g;
                 }
             }
-            validateRpgmRow(grayrow, cols, maxval, &error); 
+            validateRpgmRow(grayrow, cols, maxval, &error);
         }
         free(rowBuffer);
     }
@@ -264,13 +264,13 @@ readRpgmRow(FILE * const fileP,
         pm_strfree(error);
         pm_longjmp();
     }
-} 
+}
 
 
 
 static void
 readPbmRow(FILE * const fileP,
-           gray * const grayrow, 
+           gray * const grayrow,
            int    const cols,
            gray   const maxval,
            int    const format) {
@@ -278,7 +278,7 @@ readPbmRow(FILE * const fileP,
     jmp_buf jmpbuf;
     jmp_buf * origJmpbufP;
     bit * bitrow;
-    
+
     bitrow = pbm_allocrow_packed(cols);
     if (setjmp(jmpbuf) != 0) {
         pbm_freerow(bitrow);
@@ -306,7 +306,7 @@ readPbmRow(FILE * const fileP,
 
 void
 pgm_readpgmrow(FILE * const fileP,
-               gray * const grayrow, 
+               gray * const grayrow,
                int    const cols,
                gray   const maxval,
                int    const format) {
@@ -322,16 +322,16 @@ pgm_readpgmrow(FILE * const fileP,
         }
     }
     break;
-        
+
     case RPGM_FORMAT:
         readRpgmRow(fileP, grayrow, cols, maxval, format);
         break;
-    
+
     case PBM_FORMAT:
     case RPBM_FORMAT:
         readPbmRow(fileP, grayrow, cols, maxval, format);
         break;
-        
+
     default:
         pm_error("can't happen");
     }
@@ -342,7 +342,7 @@ pgm_readpgmrow(FILE * const fileP,
 gray **
 pgm_readpgm(FILE * const fileP,
             int *  const colsP,
-            int *  const rowsP, 
+            int *  const rowsP,
             gray * const maxvalP) {
 
     gray ** grays;
@@ -353,7 +353,7 @@ pgm_readpgm(FILE * const fileP,
     jmp_buf * origJmpbufP;
 
     pgm_readpgminit(fileP, &cols, &rows, &maxval, &format);
-    
+
     grays = pgm_allocarray(cols, rows);
 
     if (setjmp(jmpbuf) != 0) {
@@ -362,7 +362,7 @@ pgm_readpgm(FILE * const fileP,
         pm_longjmp();
     } else {
         unsigned int row;
-    
+
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
         for (row = 0; row < rows; ++row)
@@ -379,11 +379,11 @@ pgm_readpgm(FILE * const fileP,
 
 
 void
-pgm_check(FILE *               const file, 
-          enum pm_check_type   const checkType, 
-          int                  const format, 
-          int                  const cols, 
-          int                  const rows, 
+pgm_check(FILE *               const file,
+          enum pm_check_type   const checkType,
+          int                  const format,
+          int                  const cols,
+          int                  const rows,
           gray                 const maxval,
           enum pm_check_code * const retvalP) {
 
@@ -391,7 +391,7 @@ pgm_check(FILE *               const file,
         pm_error("Invalid number of rows passed to pgm_check(): %d", rows);
     if (cols < 0)
         pm_error("Invalid number of columns passed to pgm_check(): %d", cols);
-    
+
     if (checkType != PM_CHECK_BASIC) {
         if (retvalP)
             *retvalP = PM_CHECK_UNKNOWN_TYPE;
@@ -400,10 +400,13 @@ pgm_check(FILE *               const file,
     } else if (format != RPGM_FORMAT) {
         if (retvalP)
             *retvalP = PM_CHECK_UNCHECKABLE;
-    } else {        
+    } else {
         pm_filepos const bytesPerRow    = cols * (maxval > 255 ? 2 : 1);
         pm_filepos const needRasterSize = rows * bytesPerRow;
-        
+
         pm_check(file, checkType, needRasterSize, retvalP);
     }
 }
+
+
+
