@@ -9,25 +9,64 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
 #include "pgm.h"
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+     * in a form easy for the program to use.
+     */
+    const char * inputFileName;  /* Filespec of input file */
+    unsigned int d;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+    unsigned int option_def_index;
+
+    unsigned int dSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "d",          OPT_UINT,   &cmdlineP->d,  &dSpec,      0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = TRUE;  /* We may have parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!dSpec)
+        cmdlineP->d = 1;
+
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else if (argc-1 == 1)
+        cmdlineP->inputFileName = argv[1];
+    else
+        pm_error("Program takes at most 1 parameter: the file name.  "
+                 "You specified %u", argc-1);
+}
+
+
 
 #define RADIX 2.0
 #define EPSILON 0.000000001
 #define BL  "Angle                 "
-#define F1  "Angular Second Moment "
-#define F2  "Contrast              "
-#define F3  "Correlation           "
-#define F4  "Variance              "
-#define F5  "Inverse Diff Moment   "
-#define F6  "Sum Average           "
-#define F7  "Sum Variance          "
-#define F8  "Sum Entropy           "
-#define F9  "Entropy               "
-#define F10 "Difference Variance   "
-#define F11 "Difference Entropy    "
-#define F12 "Meas of Correlation-1 "
-#define F13 "Meas of Correlation-2 "
-#define F14 "Max Correlation Coeff "
 
 #define SWAP(a,b) do {float const y=(a);(a)=(b);(b)=y;} while (0)
 
@@ -39,10 +78,6 @@ sign(float const x,
 
     return y < 0 ? -fabs(x) : fabs(x);
 }
-
-
-
-static bool const sortit = FALSE;
 
 
 
@@ -69,7 +104,7 @@ vector(unsigned int const nl,
     if (v == NULL)
         pm_error("Unable to allocate memory for a vector.");
 
-    for(i = 0; i < nh - nl +1; ++i)
+    for (i = 0; i < nh - nl +1; ++i)
         v[i] = 0;
     return v - nl;
 }
@@ -84,48 +119,61 @@ matrix (unsigned int const nrl,
 /*----------------------------------------------------------------------------
   Allocate a float matrix with range [nrl..nrh][ncl..nch]
 
-  We do some seedy C here, subtracting an arbitrary integer from a pointer and
-  calling the result a pointer.  It normally works because the only way we'll
-  use that pointer is by adding that same integer or something greater to it.
-
-  The point of this is not to allocate memory for matrix elements that will
-  never be referenced (row < nrl or column < ncl).
+  Return value is a pointer to array of pointers to rows
 -----------------------------------------------------------------------------*/
+    /* We do some seedy C here, subtracting an arbitrary integer from a
+       pointer and calling the result a pointer.  It normally works because
+       the only way we'll use that pointer is by adding that same integer or
+       something greater to it.
+
+       The point of this is not to allocate memory for matrix elements that
+       will never be referenced (row < nrl or column < ncl).
+    */
+
     unsigned int i;
-    float ** m;
+    float ** matrix;  /* What we are creating */
 
     assert(nrh >= nrl);
 
     /* allocate pointers to rows */
-    MALLOCARRAY(m, (unsigned) (nrh - nrl + 1));
-    if (m == NULL)
+    MALLOCARRAY(matrix, (unsigned) (nrh - nrl + 1));
+    if (matrix == NULL)
         pm_error("Unable to allocate memory for a matrix.");
 
-    m -= ncl;
+    matrix -= ncl;
 
     assert (nch >= ncl);
 
     /* allocate rows and set pointers to them */
     for (i = nrl; i <= nrh; ++i) {
-        MALLOCARRAY(m[i], (unsigned) (nch - ncl + 1));
-        if (m[i] == NULL)
+        MALLOCARRAY(matrix[i], (unsigned) (nch - ncl + 1));
+        if (!matrix[i])
             pm_error("Unable to allocate memory for a matrix row.");
-        m[i] -= ncl;
+        matrix[i] -= ncl;
     }
 
-    /* return pointer to array of pointers to rows */
-    return m;
+    return matrix;
 }
 
 
 
 static void
-results (const char *  const name,
-         const float * const a) {
+printHeader() {
+
+    fprintf(stdout,
+            "%-22.22s %10.10s %10.10s %10.10s %10.10s %10.10s\n",
+            "Angle", "0", "45", "90", "135", "Avg");
+}
+
+
+
+static void
+printResults(const char *  const name,
+             const float * const a) {
 
     unsigned int i;
 
-    fprintf(stdout, "%s", name);
+    fprintf(stdout, "%-22.22s ", name);
 
     for (i = 0; i < 4; ++i)
         fprintf(stdout, "% 1.3e ", a[i]);
@@ -136,24 +184,105 @@ results (const char *  const name,
 
 
 static void
-simplesrt (unsigned int  const n,
-           float *       const arr) {
+makeGrayToneSpatialDependenceMatrix(gray **        const grays,
+                                    unsigned int   const rows,
+                                    unsigned int   const cols,
+                                    unsigned int   const d,
+                                    unsigned int * const tone,
+                                    unsigned int   const toneCt,
+                                    float *** const pmatrix0P,
+                                    float *** const pmatrix45P,
+                                    float *** const pmatrix90P,
+                                    float *** const pmatrix135P) {
 
-    unsigned int j;
-    float a;
+    float ** pmatrix0, ** pmatrix45, ** pmatrix90, ** pmatrix135;
+    unsigned int row;
 
-    for (j = 2; j <= n; ++j) {
-        unsigned int i;
+    pm_message("Computing spatial dependence matrix...");
 
-        a = arr[j];
-        i = j;
+    /* Allocate memory */
+    pmatrix0   = matrix(0, toneCt, 0, toneCt);
+    pmatrix45  = matrix(0, toneCt, 0, toneCt);
+    pmatrix90  = matrix(0, toneCt, 0, toneCt);
+    pmatrix135 = matrix(0, toneCt, 0, toneCt);
 
-        while (i > 1 && arr[i-1] > a) {
-            arr[i] = arr[i-1];
-            --i;
+    for (row = 0; row < toneCt; ++row) {
+        unsigned int col;
+        for (col = 0; col < toneCt; ++col) {
+            pmatrix0 [row][col] = pmatrix45 [row][col] = 0;
+            pmatrix90[row][col] = pmatrix135[row][col] = 0;
         }
-        arr[i] = a;
     }
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            unsigned int angle;
+            unsigned int x;
+            for (angle = 0, x = 0; angle <= 135; angle += 45) {
+                while (tone[x] != grays[row][col])
+                    ++x;
+                if (angle == 0 && col + d < cols) {
+                    unsigned int y;
+                    y = 0;
+                    while (tone[y] != grays[row][col + d])
+                        ++y;
+                    ++pmatrix0[x][y];
+                    ++pmatrix0[y][x];
+                }
+                if (angle == 90 && row + d < rows) {
+                    unsigned int y;
+                    y = 0;
+                    while (tone[y] != grays[row + d][col])
+                        ++y;
+                    ++pmatrix90[x][y];
+                    ++pmatrix90[y][x];
+                }
+                if (angle == 45 && row + d < rows && col >= d) {
+                    unsigned int y;
+                    y = 0;
+                    while (tone[y] != grays[row + d][col - d])
+                        ++y;
+                    ++pmatrix45[x][y];
+                    ++pmatrix45[y][x];
+                }
+                if (angle == 135 && row + d < rows && col + d < cols) {
+                    unsigned int y;
+                    y = 0;
+                    while (tone[y] != grays[row + d][col + d])
+                        ++y;
+                    ++pmatrix135[x][y];
+                    ++pmatrix135[y][x];
+                }
+            }
+        }
+    }
+    /* Gray-tone spatial dependence matrices are complete */
+
+    {
+    /* Find normalizing constants */
+    unsigned int const r0  = 2 * rows * (cols - d);
+    unsigned int const r45 = 2 * (rows - d) * (cols - d);
+    unsigned int const r90 = 2 * (rows - d) * cols;
+
+    unsigned int i;
+
+    /* Normalize gray-tone spatial dependence matrix */
+    for (i = 0; i < toneCt; ++i) {
+        unsigned int j;
+        for (j = 0; j < toneCt; ++j) {
+            pmatrix0  [i][j] /= r0;
+            pmatrix45 [i][j] /= r45;
+            pmatrix90 [i][j] /= r90;
+            pmatrix135[i][j] /= r45;
+        }
+    }
+    }
+    pm_message(" ...done.");
+
+    *pmatrix0P   = pmatrix0;
+    *pmatrix45P  = pmatrix45;
+    *pmatrix90P  = pmatrix90;
+    *pmatrix135P = pmatrix135;
 }
 
 
@@ -209,8 +338,8 @@ mkbalanced (float **     const a,
 
 
 static void
-reduction (float **     const a,
-           unsigned int const n) {
+reduction(float **     const a,
+          unsigned int const n) {
 
     unsigned int m;
 
@@ -327,7 +456,7 @@ hessenberg(float **     const a,
                     float p, q, r;
                     if (its == 30)
                         pm_error("Too many iterations to required "
-                                 "to find %s.  Giving up", F14);
+                                 "to find max correlation coefficient");
                     if (its == 10 || its == 20) {
                         int i;
                         float s;
@@ -921,8 +1050,6 @@ f14_maxcorr (float **     const p,
     reduction(q, ng);
     /* Finding eigenvalue for nonsymetric matrix using QR algorithm */
     hessenberg(q, ng, x, iy);
-    if (sortit)
-        simplesrt(ng, x);
 
     /* Return the sqrt of the second largest eigenvalue of q */
     for (i = 2, tmp = x[1]; i <= ng; ++i)
@@ -933,61 +1060,301 @@ f14_maxcorr (float **     const p,
 
 
 
+static void
+printAngularSecondMom(float **     const pmatrix0,
+                      float **     const pmatrix45,
+                      float **     const pmatrix90,
+                      float **     const pmatrix135,
+                      unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f1_a2m(pmatrix0,   toneCt);
+    res[1] = f1_a2m(pmatrix45,  toneCt);
+    res[2] = f1_a2m(pmatrix90,  toneCt);
+    res[3] = f1_a2m(pmatrix135, toneCt);
+
+    printResults("Angular Second Moment", res);
+}
+
+
+
+static void
+printContrast(float **     const pmatrix0,
+              float **     const pmatrix45,
+              float **     const pmatrix90,
+              float **     const pmatrix135,
+              unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f2_contrast(pmatrix0,   toneCt);
+    res[1] = f2_contrast(pmatrix45,  toneCt);
+    res[2] = f2_contrast(pmatrix90,  toneCt);
+    res[3] = f2_contrast(pmatrix135, toneCt);
+
+    printResults("Contrast", res);
+}
+
+
+
+static void
+printCorrelation(float **     const pmatrix0,
+                 float **     const pmatrix45,
+                 float **     const pmatrix90,
+                 float **     const pmatrix135,
+                 unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f3_corr(pmatrix0,   toneCt);
+    res[1] = f3_corr(pmatrix45,  toneCt);
+    res[2] = f3_corr(pmatrix90,  toneCt);
+    res[3] = f3_corr(pmatrix135, toneCt);
+
+    printResults("Correlation", res);
+}
+
+
+
+static void
+printVariance(float **     const pmatrix0,
+              float **     const pmatrix45,
+              float **     const pmatrix90,
+              float **     const pmatrix135,
+              unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f4_var(pmatrix0,   toneCt);
+    res[1] = f4_var(pmatrix45,  toneCt);
+    res[2] = f4_var(pmatrix90,  toneCt);
+    res[3] = f4_var(pmatrix135, toneCt);
+
+    printResults("Variance", res);
+}
+
+
+
+static void
+printInverseDiffMoment(float **     const pmatrix0,
+                       float **     const pmatrix45,
+                       float **     const pmatrix90,
+                       float **     const pmatrix135,
+                       unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f5_idm(pmatrix0,   toneCt);
+    res[1] = f5_idm(pmatrix45,  toneCt);
+    res[2] = f5_idm(pmatrix90,  toneCt);
+    res[3] = f5_idm(pmatrix135, toneCt);
+
+    printResults("Inverse Diff Moment", res);
+}
+
+
+
+static void
+printSumAverage(float **     const pmatrix0,
+                float **     const pmatrix45,
+                float **     const pmatrix90,
+                float **     const pmatrix135,
+                unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f6_savg(pmatrix0,  toneCt);
+    res[1] = f6_savg(pmatrix45,  toneCt);
+    res[2] = f6_savg(pmatrix90,  toneCt);
+    res[3] = f6_savg(pmatrix135, toneCt);
+
+    printResults("Sum Average", res);
+}
+
+
+
+static void
+printSumVariance(float **     const pmatrix0,
+                 float **     const pmatrix45,
+                 float **     const pmatrix90,
+                 float **     const pmatrix135,
+                 unsigned int const toneCt) {
+
+    float res[4];
+    float savg[4];
+
+    savg[0] = f6_savg(pmatrix0,   toneCt);
+    savg[1] = f6_savg(pmatrix45,  toneCt);
+    savg[2] = f6_savg(pmatrix90,  toneCt);
+    savg[3] = f6_savg(pmatrix135, toneCt);
+
+    res[0] = f7_svar(pmatrix0,   toneCt, savg[0]);
+    res[1] = f7_svar(pmatrix45,  toneCt, savg[1]);
+    res[2] = f7_svar(pmatrix90,  toneCt, savg[2]);
+    res[3] = f7_svar(pmatrix135, toneCt, savg[3]);
+
+    printResults("Sum Variance", res);
+}
+
+
+
+static void
+printSumVarianceEnt(float **     const pmatrix0,
+                    float **     const pmatrix45,
+                    float **     const pmatrix90,
+                    float **     const pmatrix135,
+                    unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f8_sentropy(pmatrix0,   toneCt);
+    res[1] = f8_sentropy(pmatrix45,  toneCt);
+    res[2] = f8_sentropy(pmatrix90,  toneCt);
+    res[3] = f8_sentropy(pmatrix135, toneCt);
+
+    printResults("Sum Entropy", res);
+}
+
+
+
+static void
+printEntropy(float **     const pmatrix0,
+             float **     const pmatrix45,
+             float **     const pmatrix90,
+             float **     const pmatrix135,
+             unsigned int const toneCt) {
+
+    float res[4];
+
+
+    res[0] = f9_entropy(pmatrix0,   toneCt);
+    res[1] = f9_entropy(pmatrix45,  toneCt);
+    res[2] = f9_entropy(pmatrix90,  toneCt);
+    res[3] = f9_entropy(pmatrix135, toneCt);
+
+    printResults("Entropy", res);
+}
+
+
+
+static void
+printDiffVariance(float **     const pmatrix0,
+                  float **     const pmatrix45,
+                  float **     const pmatrix90,
+                  float **     const pmatrix135,
+                  unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f10_dvar(pmatrix0,   toneCt);
+    res[1] = f10_dvar(pmatrix45,  toneCt);
+    res[2] = f10_dvar(pmatrix90,  toneCt);
+    res[3] = f10_dvar(pmatrix135, toneCt);
+
+    printResults("Difference Variance", res);
+}
+
+
+
+static void
+printDiffEntropy(float **     const pmatrix0,
+                 float **     const pmatrix45,
+                 float **     const pmatrix90,
+                 float **     const pmatrix135,
+                 unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f11_dentropy(pmatrix0,   toneCt);
+    res[1] = f11_dentropy(pmatrix45,  toneCt);
+    res[2] = f11_dentropy(pmatrix90,  toneCt);
+    res[3] = f11_dentropy(pmatrix135, toneCt);
+
+    printResults ("Difference Entropy", res);
+}
+
+
+
+static void
+printCorrelation1(float **     const pmatrix0,
+                  float **     const pmatrix45,
+                  float **     const pmatrix90,
+                  float **     const pmatrix135,
+                  unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f12_icorr(pmatrix0,   toneCt);
+    res[1] = f12_icorr(pmatrix45,  toneCt);
+    res[2] = f12_icorr(pmatrix90,  toneCt);
+    res[3] = f12_icorr(pmatrix135, toneCt);
+
+    printResults("Meas of Correlation-1", res);
+}
+
+
+
+static void
+printCorrelation2(float **     const pmatrix0,
+                  float **     const pmatrix45,
+                  float **     const pmatrix90,
+                  float **     const pmatrix135,
+                  unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f13_icorr(pmatrix0,   toneCt);
+    res[1] = f13_icorr(pmatrix45,  toneCt);
+    res[2] = f13_icorr(pmatrix90,  toneCt);
+    res[3] = f13_icorr(pmatrix135, toneCt);
+
+    printResults("Meas of Correlation2", res);
+}
+
+
+
+static void
+printCorrelationMax(float **     const pmatrix0,
+                    float **     const pmatrix45,
+                    float **     const pmatrix90,
+                    float **     const pmatrix135,
+                    unsigned int const toneCt) {
+
+    float res[4];
+
+    res[0] = f14_maxcorr(pmatrix0,   toneCt);
+    res[1] = f14_maxcorr(pmatrix45,  toneCt);
+    res[2] = f14_maxcorr(pmatrix90,  toneCt);
+    res[3] = f14_maxcorr(pmatrix135, toneCt);
+
+    printResults("Max Correlation Coeff", res);
+}
+
+
+
 int
 main (int argc, const char ** argv) {
 
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     gray ** grays;
     unsigned int * tone;  /* malloced array */
-    unsigned int r0, r45, r90;
-    unsigned int d;
-    unsigned int x, y;
+    unsigned int toneCt;
     unsigned int row;
     int rows, cols;
-    int argn;
     unsigned int itone;
-    unsigned int toneCt;
-    float ** p_matrix0, ** p_matrix45, ** p_matrix90, ** p_matrix135;
-    float a2m[4], contrast[4], corr[4], var[4], idm[4], savg[4];
-    float sentropy[4], svar[4], entropy[4], dvar[4], dentropy[4];
-    float icorr[4], maxcorr[4];
+    float ** pmatrix0, ** pmatrix45, ** pmatrix90, ** pmatrix135;
     gray maxval;
     unsigned int i;
-    const char * const usage = "[-d <d>] [pgmfile]";
 
     pm_proginit(&argc, argv);
 
-    d = 1;
+    parseCommandLine(argc, argv, &cmdline);
 
-    argn = 1;
-
-    /* Check for flags. */
-    if ( argn < argc && argv[argn][0] == '-' )
-    {
-        if ( argv[argn][1] == 'd' )
-        {
-            ++argn;
-            if ( argn == argc || sscanf( argv[argn], "%u", &d ) != 1 )
-                pm_usage( usage );
-        }
-        else
-            pm_usage( usage );
-        ++argn;
-    }
-
-    if ( argn < argc )
-    {
-        ifP = pm_openr( argv[argn] );
-        ++argn;
-    }
-    else
-        ifP = stdin;
-
-    if ( argn != argc )
-        pm_usage( usage );
+    ifP = pm_openr(cmdline.inputFileName);
 
     grays = pgm_readpgm(ifP, &cols, &rows, &maxval);
-    pm_close (ifP);
 
     MALLOCARRAY(tone, maxval+1);
 
@@ -1011,176 +1378,51 @@ main (int argc, const char ** argv) {
             tone[itone++] = tone[row];
     /* Now array contains only the gray levels present (in ascending order) */
 
-    /* Allocate memory for gray-tone spatial dependence matrix */
-    p_matrix0   = matrix(0, toneCt, 0, toneCt);
-    p_matrix45  = matrix(0, toneCt, 0, toneCt);
-    p_matrix90  = matrix(0, toneCt, 0, toneCt);
-    p_matrix135 = matrix(0, toneCt, 0, toneCt);
-
-    for (row = 0; row < toneCt; ++row) {
-        unsigned int col;
-        for (col = 0; col < toneCt; ++col) {
-            p_matrix0 [row][col] = p_matrix45 [row][col] = 0;
-            p_matrix90[row][col] = p_matrix135[row][col] = 0;
-        }
-    }
-    if (d > cols)
+    if (cmdline.d > cols)
         pm_error("Image is narrower (%u columns) "
-                 "than specified distance (%u)", cols, d);
+                 "than specified distance (%u)", cols, cmdline.d);
 
-    /* Find gray-tone spatial dependence matrix */
-    pm_message("Computing spatial dependence matrix...");
-    for (row = 0; row < rows; ++row) {
-        unsigned int col;
-        for (col = 0; col < cols; ++col) {
-            unsigned int angle;
-            for (angle = 0, x = 0; angle <= 135; angle += 45) {
-                while (tone[x] != grays[row][col])
-                    ++x;
-                if (angle == 0 && col + d < cols) {
-                    y = 0;
-                    while (tone[y] != grays[row][col + d])
-                        ++y;
-                    ++p_matrix0[x][y];
-                    ++p_matrix0[y][x];
-                }
-                if (angle == 90 && row + d < rows) {
-                    y = 0;
-                    while (tone[y] != grays[row + d][col])
-                        ++y;
-                    ++p_matrix90[x][y];
-                    ++p_matrix90[y][x];
-                }
-                if (angle == 45 && row + d < rows && col >= d) {
-                    y = 0;
-                    while (tone[y] != grays[row + d][col - d])
-                        ++y;
-                    ++p_matrix45[x][y];
-                    ++p_matrix45[y][x];
-                }
-                if (angle == 135 && row + d < rows && col + d < cols) {
-                    y = 0;
-                    while (tone[y] != grays[row + d][col + d])
-                        ++y;
-                    ++p_matrix135[x][y];
-                    ++p_matrix135[y][x];
-                }
-            }
-        }
-    }
-    /* Gray-tone spatial dependence matrices are complete */
-
-    /* Find normalizing constants */
-    r0  = 2 * rows * (cols - d);
-    r45 = 2 * (rows - d) * (cols - d);
-    r90 = 2 * (rows - d) * cols;
-
-    /* Normalize gray-tone spatial dependence matrix */
-    for (itone = 0; itone < toneCt; ++itone) {
-        unsigned int jtone;
-        for (jtone = 0; jtone < toneCt; ++jtone) {
-            p_matrix0[itone][jtone]   /= r0;
-            p_matrix45[itone][jtone]  /= r45;
-            p_matrix90[itone][jtone]  /= r90;
-            p_matrix135[itone][jtone] /= r45;
-        }
-    }
-    pm_message(" ...done.");
+    makeGrayToneSpatialDependenceMatrix(
+        grays, rows, cols, cmdline.d, tone, toneCt,
+        &pmatrix0, &pmatrix45, &pmatrix90, &pmatrix135);
 
     pm_message("Computing textural features ...");
 
     fprintf(stdout, "\n");
-    fprintf(stdout,
-            "%s         0         45         90        135        Avg\n",
-            BL);
 
-    a2m[0] = f1_a2m(p_matrix0,   toneCt);
-    a2m[1] = f1_a2m(p_matrix45,  toneCt);
-    a2m[2] = f1_a2m(p_matrix90,  toneCt);
-    a2m[3] = f1_a2m(p_matrix135, toneCt);
-    results(F1, a2m);
+    printHeader();
 
-    contrast[0] = f2_contrast(p_matrix0,   toneCt);
-    contrast[1] = f2_contrast(p_matrix45,  toneCt);
-    contrast[2] = f2_contrast(p_matrix90,  toneCt);
-    contrast[3] = f2_contrast(p_matrix135, toneCt);
-    results(F2, contrast);
+    printAngularSecondMom (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
+    printContrast         (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    corr[0] = f3_corr(p_matrix0,   toneCt);
-    corr[1] = f3_corr(p_matrix45,  toneCt);
-    corr[2] = f3_corr(p_matrix90,  toneCt);
-    corr[3] = f3_corr(p_matrix135, toneCt);
-    results(F3, corr);
+    printCorrelation      (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    var[0] = f4_var(p_matrix0,   toneCt);
-    var[1] = f4_var(p_matrix45,  toneCt);
-    var[2] = f4_var(p_matrix90,  toneCt);
-    var[3] = f4_var(p_matrix135, toneCt);
-    results(F4, var);
+    printVariance         (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
+    printInverseDiffMoment(pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    idm[0] = f5_idm(p_matrix0,   toneCt);
-    idm[1] = f5_idm(p_matrix45,  toneCt);
-    idm[2] = f5_idm(p_matrix90,  toneCt);
-    idm[3] = f5_idm(p_matrix135, toneCt);
-    results(F5, idm);
+    printSumAverage       (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    savg[0] = f6_savg(p_matrix0,  toneCt);
-    savg[1] = f6_savg(p_matrix45,  toneCt);
-    savg[2] = f6_savg(p_matrix90,  toneCt);
-    savg[3] = f6_savg(p_matrix135, toneCt);
-    results(F6, savg);
+    printSumVariance      (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    svar[0] = f7_svar(p_matrix0,   toneCt, savg[0]);
-    svar[1] = f7_svar(p_matrix45,  toneCt, savg[1]);
-    svar[2] = f7_svar(p_matrix90,  toneCt, savg[2]);
-    svar[3] = f7_svar(p_matrix135, toneCt, savg[3]);
-    results(F7, svar);
+    printSumVarianceEnt   (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    sentropy[0] = f8_sentropy(p_matrix0,   toneCt);
-    sentropy[1] = f8_sentropy(p_matrix45,  toneCt);
-    sentropy[2] = f8_sentropy(p_matrix90,  toneCt);
-    sentropy[3] = f8_sentropy(p_matrix135, toneCt);
-    results(F8, sentropy);
+    printEntropy          (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    entropy[0] = f9_entropy(p_matrix0,   toneCt);
-    entropy[1] = f9_entropy(p_matrix45,  toneCt);
-    entropy[2] = f9_entropy(p_matrix90,  toneCt);
-    entropy[3] = f9_entropy(p_matrix135, toneCt);
-    results(F9, entropy);
+    printDiffVariance     (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    dvar[0] = f10_dvar(p_matrix0,   toneCt);
-    dvar[1] = f10_dvar(p_matrix45,  toneCt);
-    dvar[2] = f10_dvar(p_matrix90,  toneCt);
-    dvar[3] = f10_dvar(p_matrix135, toneCt);
-    results(F10, dvar);
+    printDiffEntropy      (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    dentropy[0] = f11_dentropy(p_matrix0,   toneCt);
-    dentropy[1] = f11_dentropy(p_matrix45,  toneCt);
-    dentropy[2] = f11_dentropy(p_matrix90,  toneCt);
-    dentropy[3] = f11_dentropy(p_matrix135, toneCt);
-    results (F11, dentropy);
+    printCorrelation1     (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    icorr[0] = f12_icorr(p_matrix0,   toneCt);
-    icorr[1] = f12_icorr(p_matrix45,  toneCt);
-    icorr[2] = f12_icorr(p_matrix90,  toneCt);
-    icorr[3] = f12_icorr(p_matrix135, toneCt);
-    results(F12, icorr);
+    printCorrelation2     (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
-    icorr[0] = f13_icorr(p_matrix0,   toneCt);
-    icorr[1] = f13_icorr(p_matrix45,  toneCt);
-    icorr[2] = f13_icorr(p_matrix90,  toneCt);
-    icorr[3] = f13_icorr(p_matrix135, toneCt);
-    results(F13, icorr);
-
-    maxcorr[0] = f14_maxcorr(p_matrix0,   toneCt);
-    maxcorr[1] = f14_maxcorr(p_matrix45,  toneCt);
-    maxcorr[2] = f14_maxcorr(p_matrix90,  toneCt);
-    maxcorr[3] = f14_maxcorr(p_matrix135, toneCt);
-    results(F14, maxcorr);
+    printCorrelationMax   (pmatrix0, pmatrix45, pmatrix90, pmatrix135, toneCt);
 
     pm_message(" ...done.");
+
+    pm_close (ifP);
 
     return 0;
 }
