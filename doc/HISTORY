@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.04.00
 
+              pamaddnoise: add -salt.
+
+              pamaddnoise: reject options that aren't meaningful for the type
+              of noise specified rather than just ignore them.
+
               ppmtosixel: Add -7bit, so it works on more terminals, including
               xterms.  Thanks Scott Pakin.
 
@@ -32,6 +37,9 @@ not yet  BJH  Release 11.04.00
 
               ppmfade: fix incorrect block mode fade.  Always broken
               (ppmfade was new in Netpbm 8.4 (April 2000)).
+
+              pamaddnoise: fix very incorrect noise added for all types.
+              Introduced in Netpbm 10.94 (March 2021).
 
               pgmtexture: Fix buffer overflow with maxval > 255.  Always
               broken.  Maxvals > 255 were possible starting in Netpbm 9.0
@@ -380,7 +388,7 @@ not yet  BJH  Release 11.04.00
               ppmshift: Add -seed .
 
               pamaddnoise: Fix incorrect output for -type poisson.  Always
-              broken.  (pamaddnoise's precursor pnmaddnoies was new to Netpbm
+              broken.  (pamaddnoise's precursor pnmaddnoise was new to Netpbm
               in Netpbm 10.29 (August 2005)).
 
               pamaddnoise: fix bug: garbage output with -type impulse.  Always

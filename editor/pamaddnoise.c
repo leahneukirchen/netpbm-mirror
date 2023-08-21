@@ -39,16 +39,14 @@
 #include "pam.h"
 
 static double const EPSILON = 1.0e-5;
-static double const SALT_RATIO = 0.5;
 
-
-
-static double
-rand1(struct pm_randSt * const randStP) {
-
-    return (double)pm_rand(randStP)/RAND_MAX;
-}
-
+static double const SIGMA1_DEFAULT  = 4.0;
+static double const SIGMA2_DEFAULT  = 20.0;
+static double const MGSIGMA_DEFAULT = 0.5;
+static double const LSIGMA_DEFAULT  = 10.0;
+static double const TOLERANCE_DEFAULT  = 0.10;
+static double const SALT_RATIO_DEFAULT = 0.5;
+static double const LAMBDA_DEFAULT  = 12.0;
 
 
 enum NoiseType {
@@ -78,6 +76,7 @@ struct CmdlineInfo {
     float sigma1;
     float sigma2;
     float tolerance;
+    float saltRatio;
 };
 
 
@@ -123,7 +122,7 @@ parseCommandLine(int argc, const char ** const argv,
     unsigned int option_def_index;
 
     unsigned int typeSpec, lambdaSpec, lsigmaSpec, mgsigmaSpec,
-        sigma1Spec, sigma2Spec, toleranceSpec;
+      sigma1Spec, sigma2Spec, toleranceSpec, saltRatioSpec;
 
     const char * type;
 
@@ -146,6 +145,8 @@ parseCommandLine(int argc, const char ** const argv,
             &sigma2Spec,         0);
     OPTENT3(0,   "tolerance",       OPT_FLOAT,    &cmdlineP->tolerance,
             &toleranceSpec,      0);
+    OPTENT3(0,   "salt",            OPT_FLOAT,    &cmdlineP->saltRatio,
+            &saltRatioSpec,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -159,42 +160,82 @@ parseCommandLine(int argc, const char ** const argv,
     else
         cmdlineP->noiseType = typeFmName(type);
 
-    if (sigma1Spec && cmdlineP->noiseType != NOISETYPE_GAUSSIAN)
-        pm_error("-sigma1 is valid only with -type=gaussian");
+    if (sigma1Spec) {
+        if (cmdlineP->noiseType != NOISETYPE_GAUSSIAN)
+            pm_error("-sigma1 is valid only with -type=gaussian");
+        else if (cmdlineP->sigma1 < 0)
+            pm_error("-sigma1 value must be non-negative.  You specified %f",
+                     cmdlineP->sigma1);
+    }
 
-    if (sigma2Spec && cmdlineP->noiseType != NOISETYPE_GAUSSIAN)
-        pm_error("-sigma2 is valid only with -type=gaussian");
+    if (sigma2Spec) {
+        if (cmdlineP->noiseType != NOISETYPE_GAUSSIAN)
+            pm_error("-sigma2 is valid only with -type=gaussian");
+        else if (cmdlineP->sigma2 < 0)
+            pm_error("-sigma2 value must be non-negative.  You specified %f",
+                     cmdlineP->sigma2);
+    }
 
-    if (mgsigmaSpec &&
-        cmdlineP->noiseType != NOISETYPE_MULTIPLICATIVE_GAUSSIAN)
-        pm_error("-mgsigma is valid only with -type=multiplicative_guassian");
+    if (mgsigmaSpec) {
+        if (cmdlineP->noiseType != NOISETYPE_MULTIPLICATIVE_GAUSSIAN)
+            pm_error("-mgsigma is valid only with -type=multiplicative_guassian");
+        else if (cmdlineP->mgsigma < 0)
+            pm_error("-mgsigma value must be non-negative.  You specified %f",
+                     cmdlineP->mgsigma);
+    }
 
-    if (toleranceSpec && cmdlineP->noiseType != NOISETYPE_IMPULSE)
-        pm_error("-tolerance is valid only with -type=impulse");
+    if (toleranceSpec) {
+        if (cmdlineP->noiseType != NOISETYPE_IMPULSE)
+            pm_error("-tolerance is valid only with -type=impulse");
+        else if (cmdlineP->tolerance < 0 || cmdlineP->tolerance > 1.0)
+            pm_error("-tolerance value must be between 0.0 and 1.0.  "
+                     "You specified %f",  cmdlineP->tolerance);
+    }
 
-    if (lsigmaSpec && cmdlineP->noiseType != NOISETYPE_LAPLACIAN)
+    if (saltRatioSpec) {
+        if (cmdlineP->noiseType != NOISETYPE_IMPULSE)
+            pm_error("-salt is valid only with -type=impulse");
+        else if (cmdlineP->saltRatio < 0 || cmdlineP->saltRatio > 1.0)
+            pm_error("-salt value must be between 0.0 and 1.0.  "
+                     "You specified %f",  cmdlineP->saltRatio);
+    }
+
+    if (lsigmaSpec) {
+        if (cmdlineP->noiseType != NOISETYPE_LAPLACIAN)
         pm_error("-lsigma is valid only with -type=laplacian");
+        else if (cmdlineP->lsigma <= 0)
+            pm_error("-lsigma value must be positive.  You specified %f",
+                     cmdlineP->lsigma);
+    }
 
-    if (lambdaSpec && cmdlineP->noiseType != NOISETYPE_POISSON)
+    if (lambdaSpec) {
+        if (cmdlineP->noiseType != NOISETYPE_POISSON)
         pm_error("-lambda is valid only with -type=poisson");
+        else if (cmdlineP->lambda <= 0)
+            pm_error("-lambda value must be positive.  You specified %f",
+                     cmdlineP->lambda);
+    }
 
     if (!lambdaSpec)
-        cmdlineP->lambda = 12.0;
+        cmdlineP->lambda = LAMBDA_DEFAULT;
 
     if (!lsigmaSpec)
-        cmdlineP->lsigma = 10.0;
+        cmdlineP->lsigma = LSIGMA_DEFAULT;
 
     if (!mgsigmaSpec)
-        cmdlineP->mgsigma = 0.5;
+        cmdlineP->mgsigma = MGSIGMA_DEFAULT;
 
     if (!sigma1Spec)
-        cmdlineP->sigma1 = 4.0;
+        cmdlineP->sigma1 = SIGMA1_DEFAULT;
 
     if (!sigma2Spec)
-        cmdlineP->sigma2 = 20.0;
+        cmdlineP->sigma2 = SIGMA2_DEFAULT;
 
     if (!toleranceSpec)
-        cmdlineP->tolerance = 0.10;
+        cmdlineP->tolerance = TOLERANCE_DEFAULT;
+
+    if (!saltRatioSpec)
+        cmdlineP->saltRatio = SALT_RATIO_DEFAULT;
 
     if (!cmdlineP->seedSpec)
         cmdlineP->seed = pm_randseed();
@@ -226,19 +267,13 @@ addGaussianNoise(sample             const maxval,
    Based on Kasturi/Algorithms of the ACM
 -----------------------------------------------------------------------------*/
 
-    double x1, x2, xn, yn;
+    double grnd1, grnd2; /* Gaussian random numbers.  mean=0 sigma=1 */
     double rawNewSample;
 
-    x1 = rand1(randStP);
-
-    if (x1 == 0.0)
-        x1 = 1.0;
-    x2 = rand1(randStP);
-    xn = sqrt(-2.0 * log(x1)) * cos(2.0 * M_PI * x2);
-    yn = sqrt(-2.0 * log(x1)) * sin(2.0 * M_PI * x2);
+    pm_gaussrand2(randStP, &grnd1, &grnd2);
 
     rawNewSample =
-        origSample + (sqrt((double) origSample) * sigma1 * xn) + (sigma2 * yn);
+      origSample + (sqrt((double) origSample) * sigma1 * grnd1) + (sigma2 * grnd2);
 
     *newSampleP = MAX(MIN((int)rawNewSample, maxval), 0);
 }
@@ -259,7 +294,7 @@ addImpulseNoise(sample             const maxval,
     double const pepperRatio = 1.0 - saltRatio;
     double const loTolerance = tolerance * pepperRatio;
     double const hiTolerance = 1.0 - tolerance * saltRatio;
-    double const sap         = rand1(randStP);
+    double const sap         = pm_drand(randStP);
 
     *newSampleP =
         sap < loTolerance ? 0 :
@@ -281,7 +316,7 @@ addLaplacianNoise(sample             const maxval,
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double const u = rand1(randStP);
+    double const u = pm_drand(randStP);
 
     double rawNewSample;
 
@@ -314,21 +349,10 @@ addMultiplicativeGaussianNoise(sample             const maxval,
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double rayleigh, gauss;
+
     double rawNewSample;
 
-    {
-        double const uniform = rand1(randStP);
-        if (uniform <= EPSILON)
-            rayleigh = infinity;
-        else
-            rayleigh = sqrt(-2.0 * log( uniform));
-    }
-    {
-        double const uniform = rand1(randStP);
-        gauss = rayleigh * cos(2.0 * M_PI * uniform);
-    }
-    rawNewSample = origSample + (origSample * mgsigma * gauss);
+    rawNewSample = origSample + (origSample * mgsigma * pm_gaussrand(randStP));
 
     *newSampleP = MIN(MAX((int)rawNewSample, 0), maxval);
 }
@@ -384,7 +408,7 @@ addPoissonNoise(struct pam *       const pamP,
 
     double const lambda  = origSampleIntensity * lambdaOfMaxval;
 
-    double const u = rand1(randStP);
+    double const u = pm_drand(randStP);
 
     /* We now apply the inverse CDF (cumulative distribution function) of the
        Poisson distribution to uniform random variable 'u' to get a Poisson
@@ -466,7 +490,7 @@ main(int argc, const char ** argv) {
                     addImpulseNoise(inpam.maxval,
                                     tuplerow[col][plane],
                                     &newtuplerow[col][plane],
-                                    cmdline.tolerance, SALT_RATIO,
+                                    cmdline.tolerance, cmdline.saltRatio,
                                     &randSt);
                    break;
 
