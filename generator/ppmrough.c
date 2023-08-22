@@ -97,6 +97,15 @@ parseCommandLine(int argc, const char ** argv,
     if (!varSpec)
         cmdlineP->var = 10;
 
+    if (cmdlineP->topSpec && cmdlineP->top > cmdlineP->height)
+        pm_error("-top value too large.  Max is %u", cmdlineP->height);
+    if (cmdlineP->bottomSpec && cmdlineP->bottom > cmdlineP->height)
+        pm_error("-bottom value too large.  Max is %u", cmdlineP->height);
+    if (cmdlineP->leftSpec && cmdlineP->left > cmdlineP->width)
+        pm_error("-left value too large.  Max is %u", cmdlineP->width);
+    if (cmdlineP->rightSpec && cmdlineP->right > cmdlineP->width)
+        pm_error("-right value too large.  Max is %u", cmdlineP->width);
+
     if (argc-1 != 0)
         pm_error("There are no arguments.  You specified %d.", argc-1);
 
@@ -159,6 +168,7 @@ procLeft(pixel **           const pixels,
          int                const r2,
          int                const c1,
          int                const c2,
+         unsigned int       const width,
          unsigned int       const var,
          pixel              const bgcolor,
          struct pm_randSt * const randStP) {
@@ -166,15 +176,15 @@ procLeft(pixel **           const pixels,
     if (r1 + 1 != r2) {
         int const rm = (r1 + r2) >> 1;
         int const cm = ((c1 + c2) >> 1) +
-            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
+            (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
-        int c;
+        unsigned int c;
 
-        for (c = 0; c < cm; c++)
+        for (c = 0; c < MIN(width, MAX(0, cm)); c++)
             pixels[rm][c] = bgcolor;
 
-        procLeft(pixels, r1, rm, c1, cm, var, bgcolor, randStP);
-        procLeft(pixels, rm, r2, cm, c2, var, bgcolor, randStP);
+        procLeft(pixels, r1, rm, c1, cm, width, var, bgcolor, randStP);
+        procLeft(pixels, rm, r2, cm, c2, width, var, bgcolor, randStP);
     }
 }
 
@@ -194,11 +204,11 @@ procRight(pixel **           const pixels,
     if (r1 + 1 != r2) {
         int const rm = (r1 + r2) >> 1;
         int const cm = ((c1 + c2) >> 1) +
-            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
+            (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
-        int c;
+        unsigned int c;
 
-        for (c = cm; c < width; c++)
+        for (c = MAX(0, cm); c < width; c++)
             pixels[rm][c] = bgcolor;
 
         procRight(pixels, r1, rm, c1, cm, width, var, bgcolor, randStP);
@@ -214,6 +224,7 @@ procTop(pixel **           const pixels,
         int                const c2,
         int                const r1,
         int                const r2,
+        unsigned int       const height,        
         unsigned int       const var,
         pixel              const bgcolor,
         struct pm_randSt * const randStP) {
@@ -221,15 +232,15 @@ procTop(pixel **           const pixels,
     if (c1 + 1 != c2) {
         int const cm = (c1 + c2) >> 1;
         int const rm = ((r1 + r2) >> 1) +
-            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
+            (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
-        int r;
+        unsigned int r;
 
-        for (r = 0; r < rm; r++)
+        for (r = 0; r < MIN(height, MAX(0, rm)); r++)
             pixels[r][cm] = bgcolor;
 
-        procTop(pixels, c1, cm, r1, rm, var, bgcolor, randStP);
-        procTop(pixels, cm, c2, rm, r2, var, bgcolor, randStP);
+        procTop(pixels, c1, cm, r1, rm, height, var, bgcolor, randStP);
+        procTop(pixels, cm, c2, rm, r2, height, var, bgcolor, randStP);
     }
 }
 
@@ -249,11 +260,11 @@ procBottom(pixel **           const pixels,
     if (c1 + 1 != c2) {
         int const cm = (c1 + c2) >> 1;
         int const rm = ((r1 + r2) >> 1) +
-            (int)floor(((float)pm_rand(randStP) / RAND_MAX - 0.5) * var + 0.5);
+            (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
-        int r;
+        unsigned int r;
 
-        for (r = rm; r < height; ++r)
+        for (r = MAX(0, rm); r < height; ++r)
             pixels[r][cm] = bgcolor;
 
         procBottom(pixels, c1, cm, r1, rm, height, var, bgcolor, randStP);
@@ -286,7 +297,7 @@ makeRaggedLeftBorder(pixel **           const pixels,
         for (col = 0; col < leftC2; ++col)
             pixels[leftR2][col] = bgcolor;
 
-        procLeft(pixels, leftR1, leftR2, leftC1, leftC2, var,
+        procLeft(pixels, leftR1, leftR2, leftC1, leftC2, cols, var,
                  bgcolor, randStP);
     }
 }
@@ -347,7 +358,8 @@ makeRaggedTopBorder(pixel **           const pixels,
         for (row = 0; row < topR2; ++row)
             pixels[row][topC2] = bgcolor;
 
-        procTop(pixels, topC1, topC2, topR1, topR2, var, bgcolor, randStP);
+        procTop(pixels, topC1, topC2, topR1, topR2, rows,
+                var, bgcolor, randStP);
     }
 }
 

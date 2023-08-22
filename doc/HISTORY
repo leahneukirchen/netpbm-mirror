@@ -41,6 +41,12 @@ not yet  BJH  Release 11.04.00
               pamaddnoise: fix very incorrect noise added for all types.
               Introduced in Netpbm 10.94 (March 2021).
 
+              ppmrough: fix buffer overrun.  Always broken (Ppmrough was new
+              in Netpbm 10.9 (September 2002).
+
+              ppmrough: fix excessive roughness.  Introduced in Netpbm 10.94
+              (March 2021).
+
               pgmtexture: Fix buffer overflow with maxval > 255.  Always
               broken.  Maxvals > 255 were possible starting in Netpbm 9.0
               (April 2000).
