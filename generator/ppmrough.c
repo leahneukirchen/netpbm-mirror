@@ -114,6 +114,15 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
+static int
+mean(int const a,
+     int const b) {
+
+    return (a + b) / 2;
+}
+
+
+
 static void
 reportParameters(struct CmdlineInfo const cmdline,
                  pixel              const bgcolor,
@@ -174,13 +183,13 @@ procLeft(pixel **           const pixels,
          struct pm_randSt * const randStP) {
 
     if (r1 + 1 != r2) {
-        int const rm = (r1 + r2) >> 1;
-        int const cm = ((c1 + c2) >> 1) +
+        int const rm = mean(r1, r2);
+        int const cm = mean(c1, c2) +
             (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
         unsigned int c;
 
-        for (c = 0; c < MIN(width, MAX(0, cm)); c++)
+        for (c = 0; c < MIN(width, MAX(0, cm)); ++c)
             pixels[rm][c] = bgcolor;
 
         procLeft(pixels, r1, rm, c1, cm, width, var, bgcolor, randStP);
@@ -202,13 +211,13 @@ procRight(pixel **           const pixels,
           struct pm_randSt * const randStP) {
 
     if (r1 + 1 != r2) {
-        int const rm = (r1 + r2) >> 1;
-        int const cm = ((c1 + c2) >> 1) +
+        int const rm = mean(r1, r2);
+        int const cm = mean(c1, c2) +
             (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
         unsigned int c;
 
-        for (c = MAX(0, cm); c < width; c++)
+        for (c = MAX(0, cm); c < width; ++c)
             pixels[rm][c] = bgcolor;
 
         procRight(pixels, r1, rm, c1, cm, width, var, bgcolor, randStP);
@@ -224,19 +233,19 @@ procTop(pixel **           const pixels,
         int                const c2,
         int                const r1,
         int                const r2,
-        unsigned int       const height,        
+        unsigned int       const height,
         unsigned int       const var,
         pixel              const bgcolor,
         struct pm_randSt * const randStP) {
 
     if (c1 + 1 != c2) {
-        int const cm = (c1 + c2) >> 1;
-        int const rm = ((r1 + r2) >> 1) +
+        int const cm = mean(c1, c2);
+        int const rm = mean(r1, r2) +
             (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
         unsigned int r;
 
-        for (r = 0; r < MIN(height, MAX(0, rm)); r++)
+        for (r = 0; r < MIN(height, MAX(0, rm)); ++r)
             pixels[r][cm] = bgcolor;
 
         procTop(pixels, c1, cm, r1, rm, height, var, bgcolor, randStP);
@@ -258,8 +267,8 @@ procBottom(pixel **           const pixels,
            struct pm_randSt * const randStP) {
 
     if (c1 + 1 != c2) {
-        int const cm = (c1 + c2) >> 1;
-        int const rm = ((r1 + r2) >> 1) +
+        int const cm = mean(c1, c2);
+        int const rm = mean(r1, r2) +
             (int)floor(((float)pm_drand(randStP) - 0.5) * var + 0.5);
 
         unsigned int r;
