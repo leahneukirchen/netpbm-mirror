@@ -45,7 +45,7 @@ main(int argc, char *argv[]) {
 
     if (width > cols)
         pm_error("You specified a sample width (%u columns) which is greater "
-                 "than the image width (%u columns)", height, rows);
+                 "than the image width (%u columns)", width, cols);
     if (height > rows)
         pm_error("You specified a sample height (%u rows) which is greater "
                  "than the image height (%u rows)", height, rows);

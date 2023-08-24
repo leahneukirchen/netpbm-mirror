@@ -54,6 +54,8 @@ not yet  BJH  Release 11.04.00
               pgmtexture: Fix bug: ignores -d.  Introduced in Netpbm 10.56
               (September 2011).
 
+              pbmtopgm: Fix error message for excessive -width.
+
               library: add check of maxval for computable size.
 
               Build: Include LDFLAGS in link of shared library.
