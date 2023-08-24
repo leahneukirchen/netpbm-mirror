@@ -97,7 +97,7 @@ vector(unsigned int const nl,
     float * v;
     unsigned int i;
 
-    assert(nh >= nl);
+    assert(nh >= nl); assert(nh <= UINT_MAX-1);
 
     MALLOCARRAY(v, (unsigned) (nh - nl + 1));
 
@@ -133,7 +133,7 @@ matrix (unsigned int const nrl,
     unsigned int i;
     float ** matrix;  /* What we are creating */
 
-    assert(nrh >= nrl);
+    assert(nrh >= nrl); assert(nrh <= UINT_MAX-1);
 
     /* allocate pointers to rows */
     MALLOCARRAY(matrix, (unsigned) (nrh - nrl + 1));
@@ -142,7 +142,7 @@ matrix (unsigned int const nrl,
 
     matrix -= ncl;
 
-    assert (nch >= ncl);
+    assert (nch >= ncl); assert(nch <= UINT_MAX-1);
 
     /* allocate rows and set pointers to them */
     for (i = nrl; i <= nrh; ++i) {
