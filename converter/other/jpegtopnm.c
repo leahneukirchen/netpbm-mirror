@@ -827,11 +827,17 @@ convertRaster(struct jpeg_decompress_struct * const cinfoP,
 
     xel * pnmbuffer;      /* Output buffer */
 
-    jpegbuffer = ((*cinfoP->mem->alloc_sarray)
-                  ((j_common_ptr) cinfoP, JPOOL_IMAGE,
-                   cinfoP->output_width * cinfoP->output_components,
-                   (JDIMENSION) 1)
-        )[0];
+    if (cinfoP->output_width > UINT_MAX/cinfoP->output_components)
+        pm_error("Image is too wide (%u columns) for computations",
+                 cinfoP->output_width);
+
+    MALLOCARRAY(jpegbuffer,
+                cinfoP->output_width * cinfoP->output_components);
+
+    if (!jpegbuffer)
+        pm_error("Failed to allocated a buffer for a row of %u columns "
+                 "of %u samples each",
+                 cinfoP->output_width, cinfoP->output_components);
 
     pnmbuffer = pnm_allocrow(cinfoP->output_width);
 
@@ -846,6 +852,8 @@ convertRaster(struct jpeg_decompress_struct * const cinfoP,
                             maxval, format, false);
         }
     }
+
+    free(jpegbuffer);
     pnm_freerow(pnmbuffer);
 }
 
