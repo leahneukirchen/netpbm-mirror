@@ -1,0 +1,337 @@
+#! /bin/sh
+# This script tests: pamaddnoise
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+test_out=/${tmpdir}/test.out
+
+# Test Invalid
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+# type gaussian implied
+
+pamaddnoise -sigma1=-4.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -sigma2=-20.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -mgsigma=0.5 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -lsigma=10.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 4 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -tolerance=0.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 5 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -salt=0.50 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 6 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -lambda=12.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 7 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+# type gaussian explicitly stated
+
+pamaddnoise -type gaussian -sigma1=-0.01 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 8 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -sigma2=-0.01 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 9 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -mgsigma=0.5 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 10 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -lsigma=10.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 11 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -tolerance=0.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 12 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -salt=0.50 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 13 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -lambda=12.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 14 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+# type multiplicative gaussian
+
+pamaddnoise -type multiplicative_gaussian -sigma1=4.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 15 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+  
+pamaddnoise -type multiplicative_gaussian -sigma2=20.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 16 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type multiplicative_gaussian -mgsigma=-0.5 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 17 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type multiplicative_gaussian -lsigma=10.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 18 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type multiplicative_gaussian -tolerance=0.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 19 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type multiplicative_gaussian -salt=0.50 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 20 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type multiplicative_gaussian -lambda=12.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 21 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+# type laplacian
+
+pamaddnoise -type laplacian -sigma1=4.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 22 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type laplacian -sigma2=20.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 23 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type laplacian -mgsigma=0.5 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 24 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type laplacian -lsigma=-10.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 25 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type laplacian -tolerance=0.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 26 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type laplacian -salt=0.50 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 27 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type laplacian -lambda=12.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 28 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+ 
+
+# type impulse
+
+pamaddnoise -type impulse -sigma1=4.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 29 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -sigma2=20.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 30 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -mgsigma=0.5 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 31 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -lsigma=10.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 32 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -tolerance=-0.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 33 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -tolerance=1.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 34 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -salt=-0.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 35 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -salt=+1.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 36 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impulse -lambda=12.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 37 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+# type poisson
+
+pamaddnoise -type poisson -sigma1=4.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 38 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type poisson -sigma2=20.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 39 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type poisson -mgsigma=0.5 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 40 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type poisson -lsigma=10.0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 41 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type poisson -tolerance=0.10 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 42 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type poisson -salt=0.50 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 43 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type poisson -lambda=0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 44 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+# Missing or invalid numerical parameters
+
+pamaddnoise -sigma1 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 45 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -sigma1 Z testgrid.pbm > ${test_out} || \
+  printf "Expected failure 46 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -sigma2 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 47 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type gaussian -sigma2 sigma testgrid.pbm > ${test_out} || \
+  printf "Expected failure 48 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type mult -mgsigma testgrid.pbm > ${test_out} || \
+  printf "Expected failure 49 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type mult -mgsigma 10,0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 50 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type lapl -lsigma 1..0 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 51 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type lapl -lsigma lsigma testgrid.pbm > ${test_out} || \
+  printf "Expected failure 52 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impul -tolerance testgrid.pbm > ${test_out} || \
+  printf "Expected failure 53 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impul -tolerance t testgrid.pbm > ${test_out} || \
+  printf "Expected failure 54 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impul -salt testgrid.pbm > ${test_out} || \
+  printf "Expected failure 55 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type impul -salt pepper testgrid.pbm > ${test_out} || \
+  printf "Expected failure 56 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type pois -lambda testgrid.pbm > ${test_out} || \
+  printf "Expected failure 57 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -type pois -lambda L testgrid.pbm > ${test_out} || \
+  printf "Expected failure 58 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -seed -1 testgrid.pbm > ${test_out} || \
+  printf "Expected failure 59 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamaddnoise -seed random testgrid.pbm > ${test_out} || \
+  printf "Expected failure 60 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+  
+# no type specified
+
+pamaddnoise -type testgrid.pbm > ${test_out} || \
+  printf "Expected failure 61 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}

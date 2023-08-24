@@ -37,6 +37,7 @@ pgmnoise-parameters.test
 ppmpat-random.test
 ppmforge.test
 ppmrough.test
+ppmrough-parameters.test
 
 # Analyzer tests
 
@@ -89,7 +90,6 @@ pambackground.test
 pnmpad-reportonly.test
 pnmpaste-pbm.test
 
-pamstack.test
 pamrestack.test
 pamshuffle.test
 ppmshift.test
@@ -134,6 +134,8 @@ pnmcrop-blank.test
 
 ppmmix.test
 pammixmulti-identity.test
+
+pamaddnoise-parameters.test
 
 # Symmetry test
 
