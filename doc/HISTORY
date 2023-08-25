@@ -20,6 +20,8 @@ not yet  BJH  Release 11.04.00
               "compiled by" value from --version common option.  This helps
               with creating reproducible builds.
 
+              pnmtojpeg: minor improvement to error messages about bad files.
+
               pammixmulti: Remove disclaimer of patent license.
 
               pamstack: Fix bug: acts like -firstmaxval specified when it

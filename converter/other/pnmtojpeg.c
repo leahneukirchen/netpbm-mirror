@@ -538,7 +538,7 @@ read_scan_script(j_compress_ptr const cinfo,
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
-        pm_message("Can't open scan definition file %s", filename);
+        pm_message("Can't open scan definition file '%s'", filename);
         return FALSE;
     }
     nscans = 0;
@@ -546,7 +546,7 @@ read_scan_script(j_compress_ptr const cinfo,
     while (read_scan_integer(fp, &val, &termchar)) {
         ++nscans;  /* We got another scan */
         if (nscans > MAX_SCANS) {
-            pm_message("Too many scans defined in file %s", filename);
+            pm_message("Too many scans defined in file '%s'", filename);
             fclose(fp);
             return FALSE;
         }
@@ -554,7 +554,7 @@ read_scan_script(j_compress_ptr const cinfo,
         ncomps = 1;
         while (termchar == ' ') {
             if (ncomps >= MAX_COMPS_IN_SCAN) {
-                pm_message("Too many components in one scan in file %s",
+                pm_message("Too many components in one scan in file '%s'",
                            filename);
                 fclose(fp);
                 return FALSE;
@@ -587,14 +587,14 @@ read_scan_script(j_compress_ptr const cinfo,
         }
         if (termchar != ';' && termchar != EOF) {
         bogus:
-            pm_message("Invalid scan entry format in file %s", filename);
+            pm_message("Invalid scan entry format in file '%s'", filename);
             fclose(fp);
             return FALSE;
         }
     }
 
     if (termchar != EOF) {
-        pm_message("Non-numeric data in file %s", filename);
+        pm_message("Non-numeric data in file '%s'", filename);
         fclose(fp);
         return FALSE;
     }
@@ -639,7 +639,7 @@ read_quant_tables (j_compress_ptr cinfo, char * filename,
 
     fp = fopen(filename, "rb");
     if (fp == NULL) {
-        pm_message("Can't open table file %s", filename);
+        pm_message("Can't open table file '%s'", filename);
         retval = FALSE;
     } else {
         boolean eof, error;
@@ -654,7 +654,7 @@ read_quant_tables (j_compress_ptr cinfo, char * filename,
             if (gotOne) {
                 /* read 1st element of table */
                 if (tblno >= NUM_QUANT_TBLS) {
-                    pm_message("Too many tables in file %s", filename);
+                    pm_message("Too many tables in file '%s'", filename);
                     error = TRUE;
                 } else {
                     unsigned int table[DCTSIZE2];
@@ -663,7 +663,7 @@ read_quant_tables (j_compress_ptr cinfo, char * filename,
                     table[0] = (unsigned int) val;
                     for (i = 1; i < DCTSIZE2 && !error; ++i) {
                         if (! readTextInteger(fp, &val, &termchar)) {
-                            pm_message("Invalid table data in file %s",
+                            pm_message("Invalid table data in file '%s'",
                                        filename);
                             error = TRUE;
                         } else
@@ -677,7 +677,7 @@ read_quant_tables (j_compress_ptr cinfo, char * filename,
                 if (termchar == EOF)
                     eof = TRUE;
                 else {
-                    pm_message("Non-numeric data in file %s", filename);
+                    pm_message("Non-numeric data in file '%s'", filename);
                     error = TRUE;
                 }
             }
