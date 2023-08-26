@@ -489,9 +489,9 @@ readTextInteger(FILE * const fileP,
 
 
 static bool
-readScanInteger (FILE * const fileP,
-                 long * const resultP,
-                 int *  const termcharP) {
+readScanInteger(FILE * const fileP,
+                long * const resultP,
+                int *  const termcharP) {
 /*----------------------------------------------------------------------------
   Variant of readTextInteger that always looks for a non-space termchar;
   this simplifies parsing of punctuation in scan scripts.
@@ -523,114 +523,194 @@ readScanInteger (FILE * const fileP,
 
 
 
-static bool
-readScanScript(j_compress_ptr const cinfo,
-               const char *   const fileNm) {
+static void
+readScanScriptComponents(FILE *           const fP,
+                         jpeg_scan_info * const scanP,
+                         int *            const termcharP,
+                         long *           const valP,
+                         const char **    const errorP) {
+/*----------------------------------------------------------------------------
+   Set component table in *scanP, i.e. scanP->component_index and
+   scanP->comps_in_scan.
+
+   *termcharP and *valP at entry are for the value we already read from the
+   file; at exit, they are the value beyond the component table.
+-----------------------------------------------------------------------------*/
+    unsigned int compCt;
+
+    *errorP = NULL;  /* initial value */
+
+    /* First component is value we already read: */
+    scanP->component_index[0] = (int) *valP;
+    compCt = 1;
+
+    /* Rest of components follow, until termchar other than ' ': */
+    while (*termcharP == ' ' && !*errorP) {
+        if (compCt >= MAX_COMPS_IN_SCAN) {
+            pm_asprintf(errorP, "Too many components in one scan "
+                        "(Max allowed is %u)", MAX_COMPS_IN_SCAN);
+        }
+        if (! readScanInteger(fP, valP, termcharP)) {
+            pm_asprintf(errorP, "Invalid scan entry format");
+        } else {
+            scanP->component_index[compCt++] = (int) *valP;
+        }
+    }
+    scanP->comps_in_scan = compCt;
+}
+
+
+
+static void
+readScanScriptProg(FILE *           const fP,
+                   jpeg_scan_info * const scanP,
+                   int *            const termcharP,
+                   long *           const valP,
+                   const char **    const errorP) {
+
+    if (! readScanInteger(fP, valP, termcharP) || *termcharP != ' ')
+        pm_asprintf(errorP, "Error in Ss");
+    else {
+        scanP->Ss = (int) *valP;
+        if (! readScanInteger(fP, valP, termcharP) || *termcharP != ' ')
+            pm_asprintf(errorP, "Error in Se");
+        else {
+            scanP->Se = (int) *valP;
+            if (! readScanInteger(fP, valP, termcharP) || *termcharP != ' ')
+                pm_asprintf(errorP, "Error in Ah");
+            else {
+                scanP->Ah = (int) *valP;
+                if (! readScanInteger(fP, valP, termcharP))
+                    pm_asprintf(errorP, "Error in Al");
+                else {
+                    scanP->Al = (int) *valP;
+                    *errorP = NULL;
+                }
+            }
+        }
+    }
+}
+
+
+
+static void
+setScanScriptNonProgressive(jpeg_scan_info * const scanP) {
+
+    scanP->Ss = 0;
+    scanP->Se = DCTSIZE2-1;
+    scanP->Ah = 0;
+    scanP->Al = 0;
+}
+
+
+
+static void
+readScanScript1(FILE *           const fP,
+                jpeg_scan_info * const scanP,
+                int *            const termcharP,
+                long *           const valP,
+                const char **    const errorP) {
+
+    const char * error;
+
+    readScanScriptComponents(fP, scanP, termcharP, valP, &error);
+
+    if (error) {
+        pm_asprintf(errorP, "Error in component table.  %s", error);
+        pm_strfree(error);
+    } else {
+        if (*termcharP == ':') {
+            const char * error;
+
+            readScanScriptProg(fP, scanP, termcharP, valP, &error);
+
+            if (error) {
+                pm_asprintf(errorP, "Invalid progressive parameters.  %s",
+                            error);
+                pm_strfree(error);
+            }
+        } else
+            setScanScriptNonProgressive(scanP);
+
+        if (*termcharP != ';' && *termcharP != EOF) {
+            pm_asprintf(errorP, "Expected ';' or EOF");
+        }
+    }
+}
+
+
+
+static void
+readScanScript(j_compress_ptr const cinfoP,
+               const char *   const fileNm,
+               const char **  const errorP) {
 /*----------------------------------------------------------------------------
   Read a scan script from the specified text file.
+
   Each entry in the file defines one scan to be emitted.
+
   Entries are separated by semicolons ';'.
-  An entry contains one to four component indexes,
-  optionally followed by a colon ':' and four progressive-JPEG parameters.
-  The component indexes denote which component(s) are to be transmitted
-  in the current scan.  The first component has index 0.
+
+  An entry contains one to four component indexes, optionally followed by a
+  colon ':' and four progressive-JPEG parameters.  The indexes and parameters
+  are separated by spaces.
+
+  The component indexes identify the color components to be transmitted in the
+  current scan.  The first component has index 0.
+
   Sequential JPEG is used if the progressive-JPEG parameters are omitted.
-  The file is free format text: any whitespace may appear between numbers
-  and the ':' and ';' punctuation marks.  Also, other punctuation (such
-  as commas or dashes) can be placed between numbers if desired.
+
+  Any whitespace may appear between numbers and the ':' and ';' punctuation
+  marks.  Also, other punctuation (such as commas or dashes) may be placed
+  between numbers.
+
   Comments preceded by '#' may be included in the file.
-  Note: we do very little validity checking here;
-  jcmaster.c will validate the script parameters.
+
+  Note: we do very little validity checking here; libjpeg will validate the
+  script parameters.
+
+  The data goes into newly malloc'ed memory pointed to by cinfo->scan_info,
+  with its size as cinfo->num_scans.  If there isn't any scan script,
+  cinfo->scan_info is null.
 -----------------------------------------------------------------------------*/
-    FILE * fp;
-    unsigned int nscans;
-    unsigned int ncomps;
-    int termchar;
-    long val;
-#define MAX_SCANS  100      /* quite arbitrary limit */
-    jpeg_scan_info scans[MAX_SCANS];
+    FILE * fP;
 
-    fp = fopen(fileNm, "r");
-    if (fp == NULL) {
-        pm_message("Can't open scan definition file '%s'", fileNm);
-        return false;
-    }
-    nscans = 0;
+    fP = fopen(fileNm, "r");
+    if (!fP)
+        pm_asprintf(errorP, "Can't open file");
+    else {
+        unsigned int scanCt;
+        int termchar;
+        long val;
+        jpeg_scan_info * scan;  /* malloc'ed array */
+            /* Index 0 in this array is called "Entry 1" by libjpeg messages */
 
-    while (readScanInteger(fp, &val, &termchar)) {
-        ++nscans;  /* We got another scan */
-        if (nscans > MAX_SCANS) {
-            pm_message("Too many scans defined in file '%s'", fileNm);
-            fclose(fp);
-            return false;
+        *errorP = NULL;  /* initial assumption */
+        scanCt = 0; scan = NULL;  /* initial values */
+
+        while (readScanInteger(fP, &val, &termchar) && !*errorP) {
+            ++scanCt;  /* We got another scan */
+
+            REALLOCARRAY(scan, scanCt);
+
+            if (!scan)
+                pm_error("Unable to allocate memory for scan table");
+
+            readScanScript1(fP, &scan[scanCt-1], &termchar, &val, errorP);
         }
-        scans[nscans-1].component_index[0] = (int) val;
-        ncomps = 1;
-        while (termchar == ' ') {
-            if (ncomps >= MAX_COMPS_IN_SCAN) {
-                pm_message("Too many components in one scan in file '%s'",
-                           fileNm);
-                fclose(fp);
-                return FALSE;
-            }
-            if (! readScanInteger(fp, &val, &termchar))
-                goto bogus;
-            scans[nscans-1].component_index[ncomps] = (int) val;
-            ++ncomps;
-        }
-        scans[nscans-1].comps_in_scan = ncomps;
-        if (termchar == ':') {
-            if (! readScanInteger(fp, &val, &termchar) || termchar != ' ')
-                goto bogus;
-            scans[nscans-1].Ss = (int) val;
-            if (! readScanInteger(fp, &val, &termchar) || termchar != ' ')
-                goto bogus;
-            scans[nscans-1].Se = (int) val;
-            if (! readScanInteger(fp, &val, &termchar) || termchar != ' ')
-                goto bogus;
-            scans[nscans-1].Ah = (int) val;
-            if (! readScanInteger(fp, &val, &termchar))
-                goto bogus;
-            scans[nscans-1].Al = (int) val;
+        if (!*errorP && termchar != EOF)
+            pm_asprintf(errorP, "Non-numeric data in file '%s'", fileNm);
+
+        if (*errorP) {
+            if (scan)
+                free(scan);
+            cinfoP->scan_info = NULL;
         } else {
-            /* set non-progressive parameters */
-            scans[nscans-1].Ss = 0;
-            scans[nscans-1].Se = DCTSIZE2-1;
-            scans[nscans-1].Ah = 0;
-            scans[nscans-1].Al = 0;
+            cinfoP->scan_info = scanCt > 0 ? scan : NULL;
+            cinfoP->num_scans = scanCt;
         }
-        if (termchar != ';' && termchar != EOF) {
-        bogus:
-            pm_message("Invalid scan entry format in file '%s'", fileNm);
-            fclose(fp);
-            return false;
-        }
+        fclose(fP);
     }
-
-    if (termchar != EOF) {
-        pm_message("Non-numeric data in file '%s'", fileNm);
-        fclose(fp);
-        return false;
-    }
-
-    if (nscans > 0) {
-        /* Stash completed scan list in cinfo structure.  NOTE: in
-           this program, JPOOL_IMAGE is the right lifetime for this
-           data, but if you want to compress multiple images you'd
-           want JPOOL_PERMANENT.
-        */
-        unsigned int const scanInfoSz = nscans * sizeof(jpeg_scan_info);
-        jpeg_scan_info * const scanInfo =
-            (jpeg_scan_info *)
-            (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-                                        scanInfoSz);
-        memcpy(scanInfo, scans, scanInfoSz);
-        cinfo->scan_info = scanInfo;
-        cinfo->num_scans = nscans;
-    }
-
-    fclose(fp);
-    return true;
 }
 
 
@@ -883,10 +963,14 @@ setupJpeg(struct jpeg_compress_struct * const cinfoP,
         setupJpegDensity(cinfoP, cmdline.density);
 
     if (cmdline.scans != NULL) {
-        if (! readScanScript(cinfoP, cmdline.scans)) {
-            pm_message("Error in scan script '%s'.", cmdline.scans);
+        const char * error;
+        readScanScript(cinfoP, cmdline.scans, &error);
+        if (error) {
+            pm_message("Error in scan script '%s'.  %s", cmdline.scans, error);
+            pm_strfree(error);
         }
-    }
+    } else
+        cinfoP->scan_info = NULL;
 
     /* Specify data destination for compression */
     jpeg_stdio_dest(cinfoP, ofP);
@@ -1136,6 +1220,11 @@ main(int           argc,
     /* Finish compression and release memory */
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
+
+    if (cinfo.scan_info) {
+        free((void*)cinfo.scan_info);
+        cinfo.scan_info = NULL;
+    }
 
     /* Close files, if we opened them */
     if (ifP != stdin)
