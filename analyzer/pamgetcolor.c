@@ -1,4 +1,8 @@
+#define _C99_SOURCE  /* Make sure snprintf() is in stdio.h */
+
 #include <string.h>
+#include <stdio.h>
+
 #include <nstring.h>
 #include <pm_gamma.h>
 #include <pam.h>
@@ -526,7 +530,7 @@ printColors(struct pam *    const pamP,
 
     tup = pnm_allocpamtuple(pamP);
 
-    pm_snprintf(fmt, sizeof(fmt), "%%%is: %%s\n", cmdLine.maxLbLen);
+    snprintf(fmt, sizeof(fmt), "%%%is: %%s\n", cmdLine.maxLbLen);
 
     for (r = 0; r < cmdLine.regN; ++r) {
         RegSpec      spec;

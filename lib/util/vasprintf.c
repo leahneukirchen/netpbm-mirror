@@ -1,9 +1,11 @@
+#define _C99_SOURCE  /* Make sure snprintf() is in stdio.h */
 #define _GNU_SOURCE
    /* Because of conditional compilation, this is GNU source only if the C
       library is GNU.
    */
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "pm_config.h"
 #include "pm_c_util.h"
@@ -36,7 +38,7 @@ pm_vasprintf(const char ** const resultP,
        simply make two copies of the va_list variable in normal C
        fashion, but on others you need va_copy, which is a relatively
        recent invention.  In particular, the simple va_list copy
-       failed on an AMD64 Gcc Linux system in March 2006.  
+       failed on an AMD64 Gcc Linux system in March 2006.
 
        So instead, we just allocate 4K and truncate or waste as
        necessary.
@@ -49,14 +51,14 @@ pm_vasprintf(const char ** const resultP,
     */
     size_t const allocSize = 4096;
     result = malloc(allocSize);
-    
+
     if (result == NULL)
         *resultP = pm_strsol;
     else {
         size_t realLen;
 
-        pm_vsnprintf(result, allocSize, format, varargs, &realLen);
-        
+        realLen = vsnprintf(result, allocSize, format, varargs);
+
         if (realLen >= allocSize)
             strcpy(result + allocSize - 15, "<<<TRUNCATED");
 
@@ -75,3 +77,6 @@ pm_vasprintf_knows_float(void) {
     return false;
 #endif
 }
+
+
+

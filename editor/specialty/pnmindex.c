@@ -15,12 +15,14 @@
 ============================================================================*/
 
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
+#define _C99_SOURCE  /* Make sure snprintf() is in stdio.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE   /* Make sure strdup is in string.h */
 
 #include <assert.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <errno.h>
 #include <sys/stat.h>
 
@@ -61,7 +63,7 @@ systemf(const char * const fmt,
 
     va_start(varargs, fmt);
 
-    pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
+    dryRunLen = vsnprintf(NULL, 0, fmt, varargs);
 
     va_end(varargs);
 
@@ -82,7 +84,7 @@ systemf(const char * const fmt,
 
             va_start(varargs, fmt);
 
-            pm_vsnprintf(shellCommand, allocSize, fmt, varargs, &realLen);
+            realLen = vsnprintf(shellCommand, allocSize, fmt, varargs);
 
             assert(realLen == dryRunLen);
             va_end(varargs);
