@@ -445,8 +445,9 @@ textGetc (FILE * fileP) {
 
 
 
-static boolean
+static void
 readTextInteger(FILE * const fileP,
+                bool * const gotOneP,
                 long * const resultP,
                 int *  const termcharP) {
 /*----------------------------------------------------------------------------
@@ -458,10 +459,9 @@ readTextInteger(FILE * const fileP,
    If there is no character after the integer, return *termcharP == EOF.
 
    Iff the next thing in the file is not a valid unsigned decimal integer,
-   return FALSE.
+   return *gotOneP false.
 -----------------------------------------------------------------------------*/
     int ch;
-    boolean retval;
 
     /* Skip any leading whitespace, detect EOF */
     do {
@@ -469,7 +469,7 @@ readTextInteger(FILE * const fileP,
     } while (isspace(ch));
 
     if (!isdigit(ch))
-        retval = FALSE;
+        *gotOneP = false;
     else {
         long val;
         val = ch - '0';  /* initial value */
@@ -480,45 +480,45 @@ readTextInteger(FILE * const fileP,
             val += ch - '0';
         }
         *resultP = val;
-        retval = TRUE;
+        *gotOneP = true;
     }
     *termcharP = ch;
-    return retval;
 }
 
 
 
-static bool
+static void
 readScanInteger(FILE * const fileP,
+                bool * const gotOneP,
                 long * const resultP,
                 int *  const termcharP) {
 /*----------------------------------------------------------------------------
-  Variant of readTextInteger that always looks for a non-space termchar;
+  Variant of readTextInteger that always looks for a non-space termchar.
   this simplifies parsing of punctuation in scan scripts.
 -----------------------------------------------------------------------------*/
-    int ch;
+    readTextInteger(fileP, gotOneP, resultP, termcharP);
 
-    if (! readTextInteger(fileP, resultP, termcharP))
-        return false;
+    if (*gotOneP) {
+        int ch;
 
-    ch = *termcharP;  /* initial value */
+        ch = *termcharP;  /* initial value */
 
-    while (ch != EOF && isspace(ch))
-        ch = textGetc(fileP);
+        while (ch != EOF && isspace(ch))
+            ch = textGetc(fileP);
 
-    if (isdigit(ch)) {		/* oops, put it back */
-        if (ungetc(ch, fileP) == EOF)
-            return false;
-        ch = ' ';
-    } else {
-        /* Any separators other than ';' and ':' are ignored;
-         * this allows user to insert commas, etc, if desired.
-         */
-        if (ch != EOF && ch != ';' && ch != ':')
+        if (isdigit(ch)) {		/* oops, put it back */
+            if (ungetc(ch, fileP) == EOF)
+                pm_error("Unexpected failure of ungetc");
             ch = ' ';
+        } else {
+            /* Any separators other than ';' and ':' are ignored;
+             * this allows user to insert commas, etc, if desired.
+             */
+            if (ch != EOF && ch != ';' && ch != ':')
+                ch = ' ';
+        }
+        *termcharP = ch;
     }
-    *termcharP = ch;
-    return true;
 }
 
 
@@ -546,15 +546,16 @@ readScanScriptComponents(FILE *           const fP,
 
     /* Rest of components follow, until termchar other than ' ': */
     while (*termcharP == ' ' && !*errorP) {
+        bool gotOne;
         if (compCt >= MAX_COMPS_IN_SCAN) {
             pm_asprintf(errorP, "Too many components in one scan "
                         "(Max allowed is %u)", MAX_COMPS_IN_SCAN);
         }
-        if (! readScanInteger(fP, valP, termcharP)) {
+        readScanInteger(fP, &gotOne, valP, termcharP);
+        if (!gotOne)
             pm_asprintf(errorP, "Invalid scan entry format");
-        } else {
+        else
             scanP->component_index[compCt++] = (int) *valP;
-        }
     }
     scanP->comps_in_scan = compCt;
 }
@@ -568,19 +569,27 @@ readScanScriptProg(FILE *           const fP,
                    long *           const valP,
                    const char **    const errorP) {
 
-    if (! readScanInteger(fP, valP, termcharP) || *termcharP != ' ')
+    bool gotOne;
+    readScanInteger(fP, &gotOne, valP, termcharP);
+    if (!gotOne || *termcharP != ' ')
         pm_asprintf(errorP, "Error in Ss");
     else {
+        bool gotOne;
         scanP->Ss = (int) *valP;
-        if (! readScanInteger(fP, valP, termcharP) || *termcharP != ' ')
+        readScanInteger(fP, &gotOne, valP, termcharP);
+        if (!gotOne || *termcharP != ' ')
             pm_asprintf(errorP, "Error in Se");
         else {
+            bool gotOne;
             scanP->Se = (int) *valP;
-            if (! readScanInteger(fP, valP, termcharP) || *termcharP != ' ')
+            readScanInteger(fP, &gotOne, valP, termcharP);
+            if (!gotOne || *termcharP != ' ')
                 pm_asprintf(errorP, "Error in Ah");
             else {
+                bool gotOne;
                 scanP->Ah = (int) *valP;
-                if (! readScanInteger(fP, valP, termcharP))
+                readScanInteger(fP, &gotOne, valP, termcharP);
+                if (!gotOne)
                     pm_asprintf(errorP, "Error in Al");
                 else {
                     scanP->Al = (int) *valP;
@@ -679,24 +688,27 @@ readScanScript(j_compress_ptr const cinfoP,
     if (!fP)
         pm_asprintf(errorP, "Can't open file");
     else {
+        bool notEof;
         unsigned int scanCt;
         int termchar;
         long val;
         jpeg_scan_info * scan;  /* malloc'ed array */
             /* Index 0 in this array is called "Entry 1" by libjpeg messages */
 
-        *errorP = NULL;  /* initial assumption */
-        scanCt = 0; scan = NULL;  /* initial values */
+        for (notEof = true, *errorP = NULL, scanCt = 0, scan = NULL;
+             notEof && !*errorP;
+            ) {
+            readScanInteger(fP, &notEof, &val, &termchar);
+            if (notEof && !*errorP) {
+                ++scanCt;  /* We got another scan */
 
-        while (readScanInteger(fP, &val, &termchar) && !*errorP) {
-            ++scanCt;  /* We got another scan */
+                REALLOCARRAY(scan, scanCt);
 
-            REALLOCARRAY(scan, scanCt);
+                if (!scan)
+                    pm_error("Unable to allocate memory for scan table");
 
-            if (!scan)
-                pm_error("Unable to allocate memory for scan table");
-
-            readScanScript1(fP, &scan[scanCt-1], &termchar, &val, errorP);
+                readScanScript1(fP, &scan[scanCt-1], &termchar, &val, errorP);
+            }
         }
         if (!*errorP && termchar != EOF)
             pm_asprintf(errorP, "Non-numeric data in file '%s'", fileNm);
@@ -744,9 +756,9 @@ readQuantTables(j_compress_ptr const cinfo,
         for (tblno = 0, eof = false, error = false; !eof && !error; ++tblno) {
             long val;
             int termchar;
-            boolean gotOne;
+            bool gotOne;
 
-            gotOne = readTextInteger(fp, &val, &termchar);
+            readTextInteger(fp, &gotOne, &val, &termchar);
             if (gotOne) {
                 /* read 1st element of table */
                 if (tblno >= NUM_QUANT_TBLS) {
@@ -758,7 +770,9 @@ readQuantTables(j_compress_ptr const cinfo,
 
                     table[0] = (unsigned int) val;
                     for (i = 1; i < DCTSIZE2 && !error; ++i) {
-                        if (! readTextInteger(fp, &val, &termchar)) {
+                        bool gotOne;
+                        readTextInteger(fp, &gotOne, &val, &termchar);
+                        if (!gotOne) {
                             pm_message("Invalid table data in file '%s'",
                                        fileNm);
                             error = true;
