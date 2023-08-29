@@ -43,7 +43,7 @@ parseCommandLine(int                  const argc,
         if (argc-1 >= 3)
             cmdlineP->inputFileName = argv[3];
         else {
-            cmdlineP->inputFileName = "'";
+            cmdlineP->inputFileName = "-";
 
             if (argc-1 > 3)
                 pm_error("Too many arguments (%d).  The most possible are "
