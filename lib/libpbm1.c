@@ -14,7 +14,7 @@
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
-#define _LARGE_FILES  
+#define _LARGE_FILES
 
 #include <stdio.h>
 
@@ -59,7 +59,7 @@ pbm_nextimage(FILE *file, int * const eofP) {
 
 void
 pbm_check(FILE *               const fileP,
-          enum pm_check_type   const checkType, 
+          enum pm_check_type   const checkType,
           int                  const format,
           int                  const cols,
           int                  const rows,
@@ -69,14 +69,14 @@ pbm_check(FILE *               const fileP,
         pm_error("Invalid number of rows passed to pbm_check(): %d", rows);
     if (cols < 0)
         pm_error("Invalid number of columns passed to pbm_check(): %d", cols);
-    
+
     if (checkType != PM_CHECK_BASIC) {
         if (retvalP)
             *retvalP = PM_CHECK_UNKNOWN_TYPE;
     } else if (format != RPBM_FORMAT) {
         if (retvalP)
             *retvalP = PM_CHECK_UNCHECKABLE;
-    } else {        
+    } else {
         pm_filepos const bytesPerRow    = (cols+7)/8;
         pm_filepos const needRasterSize = rows * bytesPerRow;
         pm_check(fileP, checkType, needRasterSize, retvalP);
@@ -179,3 +179,6 @@ pbm_backgroundbitrow(unsigned const char * const packedBits,
     }
     return retval;
 }
+
+
+
