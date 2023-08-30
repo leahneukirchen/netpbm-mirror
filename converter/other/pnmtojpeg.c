@@ -1068,11 +1068,13 @@ computeRescalingArray(JSAMPLE **                  const rescaleP,
     JSAMPLE * rescale;
     long val;
 
-    rescale = (JSAMPLE *)
-        (cinfo.mem->alloc_small) ((j_common_ptr) &cinfo, JPOOL_IMAGE,
-                                  (size_t) (((long) maxval + 1L) *
-                                            sizeof(JSAMPLE)));
-    for (val = 0; val <= maxval; val++) {
+    MALLOCARRAY(rescale, maxval + 1);
+
+    if (!rescale)
+        pm_error("Failed to get memory for map of %u possible sample values",
+                 maxval + 1);
+
+    for (val = 0; val <= maxval; ++val) {
         /* The multiplication here must be done in 32 bits to avoid overflow */
         rescale[val] = (JSAMPLE) ((val*MAXJSAMPLE + halfMaxval)/maxval);
     }
@@ -1138,20 +1140,19 @@ convertScanLines(struct jpeg_compress_struct * const cinfoP,
   values through the table xlateTable[].
 -----------------------------------------------------------------------------*/
     xel * pnmBuffer;
-        /* contains the row of the input image currently being processed,
-           in pnm_readpnmrow format
+        /* This malloc'ed array contains the row of the input image currently
+           being processed, in pnm_readpnmrow format.
         */
-    JSAMPARRAY buffer;
-        /* Row 0 of this array contains the row of the output image currently
-           being processed, in JPEG compressor input format.  The array has
-           only that one row.
+    JSAMPLE * jpegBuffer;
+        /* This malloc'ed array contains the row of the output image currently
+           being processed, in JPEG compressor input format.
         */
 
-    /* Allocate the libpnm output and compressor input buffers */
-    buffer = (*cinfoP->mem->alloc_sarray)
-        ((j_common_ptr) cinfoP, JPOOL_IMAGE,
-         (unsigned int) cinfoP->image_width * cinfoP->input_components,
-         (unsigned int) 1);
+    MALLOCARRAY(jpegBuffer, cinfoP->image_width * cinfoP->input_components);
+    if (!jpegBuffer)
+        pm_error("Unable to allocate buffer for a row of %u pixels, "
+                 "%u samples each",
+                 cinfoP->image_width, cinfoP->input_components);
 
     pnmBuffer = pnm_allocrow(cinfoP->image_width);
 
@@ -1162,16 +1163,14 @@ convertScanLines(struct jpeg_compress_struct * const cinfoP,
                        maxval, inputFmt);
         translateRow(pnmBuffer,
                      cinfoP->image_width, cinfoP->input_components,
-                     xlateTable,  buffer[0]);
-        jpeg_write_scanlines(cinfoP, buffer, 1);
+                     xlateTable,  jpegBuffer);
+        jpeg_write_scanlines(cinfoP, &jpegBuffer, 1);
         if (cinfoP->err->trace_level > 1)
             pm_message("Done.");
     }
 
     pnm_freerow(pnmBuffer);
-    /* Don't worry about the compressor input buffer; it gets freed
-       automatically
-    */
+    free(jpegBuffer);
 }
 
 
@@ -1239,6 +1238,7 @@ main(int           argc,
         free((void*)cinfo.scan_info);
         cinfo.scan_info = NULL;
     }
+    free(rescale);
 
     /* Close files, if we opened them */
     if (ifP != stdin)
