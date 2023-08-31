@@ -10,86 +10,148 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
+#include <assert.h>
+
+#include "mallocvar.h"
 #include "pnm.h"
 
-int main( argc, argv )
-int argc;
-char* argv[];
-{
-    FILE *ifp;
-    xel *xelrow, *xP;
-    unsigned char *sirarray;
-    int rows, cols, row, format, picsize, planesize;
-    register int col, i;
+
+
+static void
+readSirHeader(FILE *         const ifP,
+              int *          const formatP,
+              unsigned int * const rowsP,
+              unsigned int * const colsP) {
+
     short info;
 
-    pnm_init( &argc, argv );
+    pm_readlittleshort(ifP, &info);
+    if (info != 0x3a4f)
+        pm_error( "Input file is not a Solitaire file");
 
-    if ( argc > 2 )
-	pm_usage( "[sirfile]" );
+    pm_readlittleshort(ifP, &info);
 
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
+    pm_readlittleshort(ifP, &info);
+    if (info == 17)
+        *formatP = PGM_TYPE;
+    else if (info == 11)
+        *formatP = PPM_TYPE;
     else
-	ifp = stdin;
+        pm_error( "Input is not MGI TYPE 11 or MGI TYPE 17" );
 
-    pm_readlittleshort( ifp, &info );
-    if ( info != 0x3a4f)
-	pm_error( "Input file is not a Solitaire file" );
-    pm_readlittleshort( ifp, &info );
-    pm_readlittleshort( ifp, &info );
-    if ( info == 17 )
+    pm_readlittleshort(ifP, &info);
+    *colsP = info;
+
+    pm_readlittleshort(ifP, &info);
+    *rowsP = info;
+
     {
-	format = PGM_TYPE;
+        unsigned int i;
+        for (i = 1; i < 1531; ++i)
+            pm_readlittleshort(ifP, &info);
     }
-    else if ( info == 11 )
-    {
-	format = PPM_TYPE;
+}
+
+
+
+static void
+convertPgm(FILE *       const ifP,
+           FILE *       const ofP,
+           unsigned int const rows,
+           unsigned int const cols,
+           xel *        const xelrow) {
+
+    unsigned int row;
+
+    pm_message("Writing a PGM file");
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            PNM_ASSIGN1(xelrow[col], fgetc(ifP));
+
+        pnm_writepnmrow(ofP, xelrow, cols, 255, PGM_TYPE, 0);
     }
+}
+
+
+
+static void
+convertPpm(FILE *       const ifP,
+           FILE *       const ofP,
+           unsigned int const rows,
+           unsigned int const cols,
+           xel *        const xelrow) {
+
+    unsigned int const picsize = cols * rows * 3;
+    unsigned int const planesize = cols * rows;
+
+    unsigned char * sirarray;  /* malloc'ed array */
+    unsigned int row;
+
+    MALLOCARRAY(sirarray, picsize);
+
+    if (!sirarray)
+        pm_error( "Not enough memory to load %u x %u x %u SIR file",
+                  cols, rows, 3);
+
+    if (fread(sirarray, 1, picsize, ifP) != picsize)
+        pm_error("Error reading SIR file");
+
+    pm_message("Writing a PPM file");
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < cols; col++)
+            PPM_ASSIGN(xelrow[col], sirarray[row*cols+col],
+                       sirarray[planesize + (row*cols+col)],
+                       sirarray[2*planesize + (row*cols+col)]);
+
+        pnm_writepnmrow(ofP, xelrow, cols, 255, PPM_TYPE, 0);
+    }
+    free(sirarray);
+}
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    xel * xelrow;
+    unsigned int rows, cols;
+    int format;
+
+    pm_proginit(&argc, argv);
+
+    if (argc-1 > 1)
+        pm_error ("Too many arguments.  The only possible argument is "
+                  "the input file name");
+    else if (argc-1 >= 1)
+        ifP = pm_openr(argv[1]);
     else
-	pm_error( "Input is not MGI TYPE 11 or MGI TYPE 17" );
-    pm_readlittleshort( ifp, &info );
-    cols = (int) ( info );
-    pm_readlittleshort( ifp, &info );
-    rows = (int) ( info );
-    for ( i = 1; i < 1531; i++ )
-	pm_readlittleshort( ifp, &info );
+        ifP = stdin;
 
-    pnm_writepnminit( stdout, cols, rows, 255, format, 0 );
-    xelrow = pnm_allocrow( cols );
-    switch ( PNM_FORMAT_TYPE(format) )
-    {
-	case PGM_TYPE:
-            pm_message( "Writing a PGM file" );
-	    for ( row = 0; row < rows; ++row )
-	    {
-	        for ( col = 0, xP = xelrow; col < cols; col++, xP++ )
-	        	PNM_ASSIGN1( *xP, fgetc( ifp ) );
-	        pnm_writepnmrow( stdout, xelrow, cols, 255, format, 0 );
-	    }
-	    break;
-	case PPM_TYPE:
-	    picsize = cols * rows * 3;
-	    planesize = cols * rows;
-            if ( !( sirarray = (unsigned char*) malloc( picsize ) ) ) 
-	        pm_error( "Not enough memory to load SIR file" );
-	    if ( fread( sirarray, 1, picsize, ifp ) != picsize )
-	        pm_error( "Error reading SIR file" );
-            pm_message( "Writing a PPM file" );
-            for ( row = 0; row < rows; row++ )
-	    {
-	        for ( col = 0, xP = xelrow; col < cols; col++, xP++ )
-        	    PPM_ASSIGN( *xP, sirarray[row*cols+col],
-				 sirarray[planesize + (row*cols+col)],
-				 sirarray[2*planesize + (row*cols+col)] );
-                pnm_writepnmrow( stdout, xelrow, cols, 255, format, 0 );
-	    }
-	    break;
-	default:
-	    pm_error( "Shouldn't happen" );
+    readSirHeader(ifP, &format, &rows, &cols);
+
+    pnm_writepnminit(stdout, cols, rows, 255, format, 0);
+
+    xelrow = pnm_allocrow(cols);
+
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PGM_TYPE:
+        convertPgm(ifP, stdout, rows, cols, xelrow);
+        break;
+    case PPM_TYPE:
+        convertPpm(ifP, stdout, rows, cols, xelrow);
+        break;
+    default:
+        assert(false);
     }
+    pnm_freerow(xelrow);
 
-    pm_close( ifp );
+    pm_close(ifP);
 
-    exit( 0 );
+    exit(0);
 }
