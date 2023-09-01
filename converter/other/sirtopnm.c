@@ -90,6 +90,10 @@ convertPpm(FILE *       const ifP,
     unsigned char * sirarray;  /* malloc'ed array */
     unsigned int row;
 
+    if (UINT_MAX/cols/rows < 3)
+        pm_error("Image is too large (%u x %u x %u) for computation",
+                 cols, rows, 3);
+
     MALLOCARRAY(sirarray, picsize);
 
     if (!sirarray)
