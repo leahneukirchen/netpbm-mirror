@@ -915,6 +915,8 @@ main (int argc, const char ** argv) {
 
     pm_proginit(&argc, argv);
 
+    d = 1;
+
     argn = 1;
 
     /* Check for flags. */
@@ -942,10 +944,12 @@ main (int argc, const char ** argv) {
     if ( argn != argc )
         pm_usage( usage );
 
-    d = 1;
-
     grays = pgm_readpgm(ifP, &cols, &rows, &maxval);
     pm_close (ifP);
+
+    if (maxval > PGM_MAXMAXVAL)
+        pm_error("Maxval %u is too high.  We can handle only up to %u",
+                 maxval, PGM_MAXMAXVAL);
 
     /* Determine the number of different gray scales (not maxval) */
     for (i = 0; i <= PGM_MAXMAXVAL; ++i)
