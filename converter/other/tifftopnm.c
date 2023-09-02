@@ -1372,6 +1372,9 @@ convertRasterByRows(pnmOut *       const pnmOutP,
     if (scanbuf == NULL)
         pm_error("can't allocate memory for scanline buffer");
 
+    if (UINT_MAX/cols < spp)
+        pm_error("Image is too wide/deep (%u x %u) for computations",
+                 cols, spp);
     MALLOCARRAY(samplebuf, cols * spp);
     if (samplebuf == NULL)
         pm_error("can't allocate memory for row buffer");
