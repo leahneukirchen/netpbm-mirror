@@ -209,6 +209,14 @@ processX10Header(X10WDFileHeader *  const h10P,
         }
     }
 
+    if (h10P->pixmap_width < 0)
+        pm_error("XWD header says pixmap_width is negative: %d",
+                 h10P->pixmap_width);
+    if (h10P->pixmap_width > UINT_MAX/8 - 15)
+        pm_error("XWD header says pixmap_width is %d, "
+                 "which is too large for this program to compute",
+                 h10P->pixmap_width);
+
     if (h10P->display_planes == 1) {
         *formatP = PBM_TYPE;
         *visualclassP = StaticGray;
@@ -609,7 +617,7 @@ processX11Header(const X11WDFileHeader *  const h11P,
     } else if (*visualclassP == StaticGray && h11FixedP->bits_per_pixel == 1) {
         *formatP = PBM_TYPE;
         *maxvalP = 1;
-        *colorsP = pnm_allocrow( 2 );
+        *colorsP = pnm_allocrow(2);
         PNM_ASSIGN1((*colorsP)[0], *maxvalP);
         PNM_ASSIGN1((*colorsP)[1], 0);
     } else if (*visualclassP == StaticGray) {
@@ -645,8 +653,25 @@ processX11Header(const X11WDFileHeader *  const h11P,
         *maxvalP = 65535;
     }
 
+    if (h11FixedP->pixmap_width < 1)
+        pm_error("XWD header states zero width");
+
     *colsP = h11FixedP->pixmap_width;
+
+    if (h11FixedP->pixmap_height < 1)
+        pm_error("XWD header states zero height");
+
     *rowsP = h11FixedP->pixmap_height;
+
+    if (h11FixedP->bytes_per_line > UINT_MAX/8)
+        pm_error("XWD header says bytes per line is %u, "
+                 "which is too large for this program to compute",
+                 h11FixedP->bytes_per_line);
+    if (h11FixedP->pixmap_width > UINT_MAX/h11FixedP->bits_per_pixel)
+        pm_error("XWD header says there are %u pixels per row and "
+                 "%u bits per pixel, which is too many for this program "
+                 "to compute",
+                 h11FixedP->pixmap_width, h11FixedP->bits_per_pixel);
     *padrightP =
         h11FixedP->bytes_per_line * 8 -
         h11FixedP->pixmap_width * h11FixedP->bits_per_pixel;
@@ -691,7 +716,7 @@ processX11Header(const X11WDFileHeader *  const h11P,
            says LSBFirst and it's a lie.  And Xwud renders it correctly.
         */
         *byteOrderP = MSBFirst;
-        *bitOrderP = MSBFirst;
+        *bitOrderP  = MSBFirst;
     } else {
         *byteOrderP = (enum byteorder) h11FixedP->byte_order;
         *bitOrderP  = (enum byteorder) h11FixedP->bitmap_bit_order;
