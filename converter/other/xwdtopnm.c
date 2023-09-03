@@ -68,19 +68,20 @@ static unsigned int pixelCount = 0;
 /* Byte-swapping junk. */
 
 static int
-zeroBits(const unsigned long mask) {
+zeroBits(unsigned long const mask) {
 /*----------------------------------------------------------------------------
    Return the number of consecutive zero bits at the least significant end
    of the binary representation of 'mask'.  E.g. if mask == 0x00fff800,
    we would return 11.
 -----------------------------------------------------------------------------*/
-    int i;
+    unsigned int i;
     unsigned long shiftedMask;
 
-    for (i=0, shiftedMask = mask;
+    for (i = 0, shiftedMask = mask;
          i < sizeof(mask)*8 && (shiftedMask & 0x00000001) == 0;
-         i++, shiftedMask >>= 1 );
-    return(i);
+         ++i, shiftedMask >>= 1 );
+
+    return i;
 }
 
 
@@ -146,9 +147,14 @@ processX10Header(X10WDFileHeader *  const h10P,
                  struct CompMask *  const compMaskP,
                  enum byteorder *   const byteOrderP,
                  enum byteorder *   const bitOrderP) {
+/*----------------------------------------------------------------------------
+  *h10P is a mapping of the raw bytes of the header.  Interpret and validate
+  it and return the information as *colsP, etc.
 
-    int i;
-    X10Color* x10colors;
+  As a side effect, destroy *h10P.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+    X10Color * x10colors;
     bool grayscale;
     bool bytesSwapped;
 
@@ -267,8 +273,8 @@ processX10Header(X10WDFileHeader *  const h10P,
 
 
 static void
-fixH11ByteOrder(X11WDFileHeader *  const h11P,
-                X11WDFileHeader ** const h11FixedPP) {
+fixH11ByteOrder(const X11WDFileHeader * const h11P,
+                X11WDFileHeader **      const h11FixedPP) {
 
     X11WDFileHeader * h11FixedP;
 
@@ -325,7 +331,7 @@ static void
 readX11Colormap(FILE *       const file,
                 unsigned int const nColors,
                 bool         const byteSwap,
-                bool         const cmapDump,
+                bool         const mustDumpCmap,
                 X11XColor**  const x11colorsP) {
 
     X11XColor * x11colors;
@@ -346,7 +352,7 @@ readX11Colormap(FILE *       const file,
             x11colors[i].blue  = pm_bs_short(x11colors[i].blue);
         }
     }
-    if (cmapDump)
+    if (mustDumpCmap)
         dumpX11Cmap(nColors, x11colors);
 
     *x11colorsP = x11colors;
@@ -517,23 +523,26 @@ computeComponentMasks(X11WDFileHeader * const h11P,
 
 
 static void
-processX11Header(X11WDFileHeader *  const h11P,
-                 FILE *             const fileP,
-                 bool               const cmapDump,
-                 int *              const colsP,
-                 int *              const rowsP,
-                 unsigned int *     const padrightP,
-                 xelval *           const maxvalP,
-                 enum visualclass * const visualclassP,
-                 int *              const formatP,
-                 xel **             const colorsP,
-                 int *              const bitsPerPixelP,
-                 int *              const bitsPerItemP,
-                 struct CompMask *  const compMaskP,
-                 enum byteorder *   const byteOrderP,
-                 enum byteorder *   const bitOrderP) {
-
-    int i;
+processX11Header(const X11WDFileHeader *  const h11P,
+                 FILE *                   const fileP,
+                 bool                     const mustDumpCmap,
+                 int *                    const colsP,
+                 int *                    const rowsP,
+                 unsigned int *           const padrightP,
+                 xelval *                 const maxvalP,
+                 enum visualclass *       const visualclassP,
+                 int *                    const formatP,
+                 xel **                   const colorsP,
+                 int *                    const bitsPerPixelP,
+                 int *                    const bitsPerItemP,
+                 struct CompMask *        const compMaskP,
+                 enum byteorder *         const byteOrderP,
+                 enum byteorder *         const bitOrderP) {
+/*----------------------------------------------------------------------------
+  *h11P is a mapping of the raw bytes of the header.  Interpret and validate
+   it and return the information as *colsP, etc.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
     X11XColor * x11colors;
     bool grayscale;
     bool const bytesSwapped = (h11P->file_version != X11WD_FILE_VERSION);
@@ -567,7 +576,7 @@ processX11Header(X11WDFileHeader *  const h11P,
                  h11FixedP->bitmap_unit);
 
     if (h11FixedP->ncolors > 0) {
-        readX11Colormap(fileP, h11FixedP->ncolors, bytesSwapped, cmapDump,
+        readX11Colormap(fileP, h11FixedP->ncolors, bytesSwapped, mustDumpCmap,
                         &x11colors);
         grayscale = colormapAllGray(x11colors, h11FixedP->ncolors);
     } else
@@ -695,21 +704,21 @@ processX11Header(X11WDFileHeader *  const h11P,
 
 
 static void
-getinit(FILE *             const ifP,
-        int *              const colsP,
-        int *              const rowsP,
-        unsigned int *     const padrightP,
-        xelval *           const maxvalP,
-        enum visualclass * const visualclassP,
-        int *              const formatP,
-        xel **             const colorsP,
-        int *              const bitsPerPixelP,
-        int *              const bitsPerItemP,
-        struct CompMask *  const compMaskP,
-        enum byteorder *   const byteOrderP,
-        enum byteorder *   const bitOrderP,
-        bool               const headerDump,
-        bool               const cmapDump) {
+readXwdHeader(FILE *             const ifP,
+              int *              const colsP,
+              int *              const rowsP,
+              unsigned int *     const padrightP,
+              xelval *           const maxvalP,
+              enum visualclass * const visualclassP,
+              int *              const formatP,
+              xel **             const colorsP,
+              int *              const bitsPerPixelP,
+              int *              const bitsPerItemP,
+              struct CompMask *  const compMaskP,
+              enum byteorder *   const byteOrderP,
+              enum byteorder *   const bitOrderP,
+              bool               const headerDump,
+              bool               const mustDumpCmap) {
 /*----------------------------------------------------------------------------
    Read the header from the XWD image in input stream 'ifP'.  Leave
    the stream positioned to the beginning of the raster.
@@ -771,13 +780,14 @@ getinit(FILE *             const ifP,
         if (headerDump)
             dumpX11Header(h11P);
 
-        processX11Header(h11P, ifP, cmapDump,
+        processX11Header(h11P, ifP, mustDumpCmap,
                          colsP, rowsP, padrightP, maxvalP,
                          visualclassP, formatP,
                          colorsP, bitsPerPixelP, bitsPerItemP,
                          compMaskP, byteOrderP, bitOrderP);
     } else
-        pm_error("unknown XWD file version: %u", h11P->file_version);
+        pm_error("unknown XWD file version: %u.  "
+                 "Probably not an XWD file", h11P->file_version);
 }
 
 
@@ -1366,10 +1376,10 @@ main(int argc, const char ** argv) {
     else
         ifP = stdin;
 
-    getinit(ifP, &cols, &rows, &padright, &maxval, &visualclass, &format,
-            &colors, &bitsPerPixel, &bitsPerItem,
-            &compMask, &byteOrder, &bitOrder,
-            cmdline.headerdump, cmdline.cmapdump);
+    readXwdHeader(ifP, &cols, &rows, &padright, &maxval, &visualclass, &format,
+                  &colors, &bitsPerPixel, &bitsPerItem,
+                  &compMask, &byteOrder, &bitOrder,
+                  cmdline.headerdump, cmdline.cmapdump);
 
     warn16Bit(maxval);
 
