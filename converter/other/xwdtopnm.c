@@ -39,14 +39,14 @@
 #include "x10wd.h"
 #include "x11wd.h"
 
-struct compMask {
+struct CompMask {
     unsigned long red;
     unsigned long grn;
     unsigned long blu;
 };
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -62,32 +62,32 @@ static bool debug;
 static bool verbose;
 
 #ifdef DEBUG_PIXEL
-static unsigned int pixel_count = 0;
+static unsigned int pixelCount = 0;
 #endif
 
 /* Byte-swapping junk. */
 
 static int
-zero_bits(const unsigned long mask) {
+zeroBits(const unsigned long mask) {
 /*----------------------------------------------------------------------------
    Return the number of consecutive zero bits at the least significant end
    of the binary representation of 'mask'.  E.g. if mask == 0x00fff800,
    we would return 11.
 -----------------------------------------------------------------------------*/
     int i;
-    unsigned long shifted_mask;
+    unsigned long shiftedMask;
 
-    for (i=0, shifted_mask = mask;
-         i < sizeof(mask)*8 && (shifted_mask & 0x00000001) == 0;
-         i++, shifted_mask >>= 1 );
+    for (i=0, shiftedMask = mask;
+         i < sizeof(mask)*8 && (shiftedMask & 0x00000001) == 0;
+         i++, shiftedMask >>= 1 );
     return(i);
 }
 
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdline_p structure are actually in the supplied argv array.  And
@@ -114,7 +114,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **) argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc - 1 == 0)
@@ -125,7 +125,7 @@ parseCommandLine(int argc, char ** argv,
         else
             cmdlineP->inputFilename = strdup(argv[1]);
     } else
-        pm_error("Too many arguments.  The only argument accepted\n"
+        pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 }
 
@@ -141,19 +141,19 @@ processX10Header(X10WDFileHeader *  const h10P,
                  enum visualclass * const visualclassP,
                  int *              const formatP,
                  xel **             const colorsP,
-                 int *              const bits_per_pixelP,
-                 int *              const bits_per_itemP,
-                 struct compMask *  const compMaskP,
-                 enum byteorder *   const byte_orderP,
-                 enum byteorder *   const bit_orderP) {
+                 int *              const bitsPerPixelP,
+                 int *              const bitsPerItemP,
+                 struct CompMask *  const compMaskP,
+                 enum byteorder *   const byteOrderP,
+                 enum byteorder *   const bitOrderP) {
 
     int i;
     X10Color* x10colors;
     bool grayscale;
-    bool byte_swap;
+    bool bytesSwapped;
 
     if (h10P->file_version != X10WD_FILE_VERSION) {
-        byte_swap = TRUE;
+        bytesSwapped = true;
         h10P->header_size     = pm_bs_long(h10P->header_size);
         h10P->file_version    = pm_bs_long(h10P->file_version);
         h10P->display_type    = pm_bs_long(h10P->display_type);
@@ -168,7 +168,7 @@ processX10Header(X10WDFileHeader *  const h10P,
         h10P->window_bdrwidth = pm_bs_short(h10P->window_bdrwidth);
         h10P->window_ncolors  = pm_bs_short(h10P->window_ncolors);
     } else
-        byte_swap = FALSE;
+        bytesSwapped = false;
 
     for (i = 0; i < h10P->header_size - sizeof(*h10P); ++i)
         if (getc(file) == EOF)
@@ -192,7 +192,7 @@ processX10Header(X10WDFileHeader *  const h10P,
             bytesRead = fread(&x10colors[i], sizeof(X10Color), 1, file);
             if (bytesRead != 1)
                 pm_error("couldn't read X10 XWD colormap");
-            if (byte_swap) {
+            if (bytesSwapped) {
                 x10colors[i].red   = pm_bs_short(x10colors[i].red);
                 x10colors[i].green = pm_bs_short(x10colors[i].green);
                 x10colors[i].blue  = pm_bs_short(x10colors[i].blue);
@@ -212,8 +212,8 @@ processX10Header(X10WDFileHeader *  const h10P,
         PNM_ASSIGN1((*colorsP)[1], *maxvalP);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
-        *bits_per_itemP = 16;
-        *bits_per_pixelP = 1;
+        *bitsPerItemP = 16;
+        *bitsPerPixelP = 1;
     } else if (h10P->window_ncolors == 0) {
         /* Must be grayscale. */
         unsigned int i;
@@ -233,8 +233,8 @@ processX10Header(X10WDFileHeader *  const h10P,
             PNM_ASSIGN1((*colorsP)[i], i);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
-        *bits_per_itemP = 16;
-        *bits_per_pixelP = 1;
+        *bitsPerItemP = 16;
+        *bitsPerPixelP = 1;
     } else {
         *maxvalP = 65535;
 
@@ -255,13 +255,13 @@ processX10Header(X10WDFileHeader *  const h10P,
         }
 
         *padrightP = (h10P->pixmap_width & 1) * 8;
-        *bits_per_itemP = 8;
-        *bits_per_pixelP = 8;
+        *bitsPerItemP  = 8;
+        *bitsPerPixelP = 8;
     }
     *colsP = h10P->pixmap_width;
     *rowsP = h10P->pixmap_height;
-    *byte_orderP = MSBFirst;
-    *bit_orderP = LSBFirst;
+    *byteOrderP = MSBFirst;
+    *bitOrderP  = LSBFirst;
 }
 
 
@@ -467,7 +467,7 @@ reverseBits(unsigned long arg,
 
 static void
 computeComponentMasks(X11WDFileHeader * const h11P,
-                      struct compMask * const compMaskP) {
+                      struct CompMask * const compMaskP) {
 /*----------------------------------------------------------------------------
    You'd think the component (red, green, blue) masks in the header
    would just be right.  But we've seen a direct color image which has
@@ -527,21 +527,21 @@ processX11Header(X11WDFileHeader *  const h11P,
                  enum visualclass * const visualclassP,
                  int *              const formatP,
                  xel **             const colorsP,
-                 int *              const bits_per_pixelP,
-                 int *              const bits_per_itemP,
-                 struct compMask *  const compMaskP,
-                 enum byteorder *   const byte_orderP,
-                 enum byteorder *   const bit_orderP) {
+                 int *              const bitsPerPixelP,
+                 int *              const bitsPerItemP,
+                 struct CompMask *  const compMaskP,
+                 enum byteorder *   const byteOrderP,
+                 enum byteorder *   const bitOrderP) {
 
     int i;
-    X11XColor* x11colors;
+    X11XColor * x11colors;
     bool grayscale;
-    bool const byte_swap = (h11P->file_version != X11WD_FILE_VERSION);
+    bool const bytesSwapped = (h11P->file_version != X11WD_FILE_VERSION);
     X11WDFileHeader * h11FixedP;
 
     fixH11ByteOrder(h11P, &h11FixedP);
 
-    if (byte_swap && verbose)
+    if (bytesSwapped && verbose)
         pm_message("Header is different endianness from this machine.");
 
     for (i = 0; i < h11FixedP->header_size - sizeof(*h11FixedP); ++i)
@@ -567,11 +567,11 @@ processX11Header(X11WDFileHeader *  const h11P,
                  h11FixedP->bitmap_unit);
 
     if (h11FixedP->ncolors > 0) {
-        readX11Colormap(fileP, h11FixedP->ncolors, byte_swap, cmapDump,
+        readX11Colormap(fileP, h11FixedP->ncolors, bytesSwapped, cmapDump,
                         &x11colors);
         grayscale = colormapAllGray(x11colors, h11FixedP->ncolors);
     } else
-        grayscale = TRUE;
+        grayscale = true;
 
     *visualclassP = (enum visualclass) h11FixedP->visual_class;
     if (*visualclassP == DirectColor) {
@@ -674,18 +674,18 @@ processX11Header(X11WDFileHeader *  const h11P,
        We still don't see any logic in these fields at all, but we
        figure whichever one is greater (assuming both are meaningful)
        has to be the item size.  */
-    *bits_per_itemP  = MAX(h11FixedP->bitmap_pad, h11FixedP->bitmap_unit);
-    *bits_per_pixelP = h11FixedP->bits_per_pixel;
+    *bitsPerItemP  = MAX(h11FixedP->bitmap_pad, h11FixedP->bitmap_unit);
+    *bitsPerPixelP = h11FixedP->bits_per_pixel;
 
     if (*visualclassP == DirectColor) {
         /* Strange, but we've seen a Direct Color 24/32 image that
            says LSBFirst and it's a lie.  And Xwud renders it correctly.
         */
-        *byte_orderP = MSBFirst;
-        *bit_orderP = MSBFirst;
+        *byteOrderP = MSBFirst;
+        *bitOrderP = MSBFirst;
     } else {
-        *byte_orderP = (enum byteorder) h11FixedP->byte_order;
-        *bit_orderP  = (enum byteorder) h11FixedP->bitmap_bit_order;
+        *byteOrderP = (enum byteorder) h11FixedP->byte_order;
+        *bitOrderP  = (enum byteorder) h11FixedP->bitmap_bit_order;
     }
     computeComponentMasks(h11FixedP, compMaskP);
 
@@ -703,11 +703,11 @@ getinit(FILE *             const ifP,
         enum visualclass * const visualclassP,
         int *              const formatP,
         xel **             const colorsP,
-        int *              const bits_per_pixelP,
-        int *              const bits_per_itemP,
-        struct compMask *  const compMaskP,
-        enum byteorder *   const byte_orderP,
-        enum byteorder *   const bit_orderP,
+        int *              const bitsPerPixelP,
+        int *              const bitsPerItemP,
+        struct CompMask *  const compMaskP,
+        enum byteorder *   const byteOrderP,
+        enum byteorder *   const bitOrderP,
         bool               const headerDump,
         bool               const cmapDump) {
 /*----------------------------------------------------------------------------
@@ -718,20 +718,20 @@ getinit(FILE *             const ifP,
 
    Return as *padrightP the number of additional bits of padding are
    at the end of each line of input.  This says the input stream
-   contains *colsP pixels of image data (at *bits_per_pixelP bits each)
+   contains *colsP pixels of image data (at *bitsPerPixelP bits each)
    plus *padrightP bits of padding.
 -----------------------------------------------------------------------------*/
     /* Assume X11 headers are larger than X10 ones. */
     unsigned char header[sizeof(X11WDFileHeader)];
-    X10WDFileHeader* h10P;
-    X11WDFileHeader* h11P;
+    X10WDFileHeader * h10P;
+    X11WDFileHeader * h11P;
     int rc;
 
     h10P = (X10WDFileHeader*) header;
     h11P = (X11WDFileHeader*) header;
     if ( sizeof(*h10P) > sizeof(*h11P) )
         pm_error("ARGH!  On this machine, X10 headers are larger than "
-                 "X11 headers!\n    You will have to re-write xwdtopnm." );
+                 "X11 headers!  You will have to re-write xwdtopnm." );
 
     /* We read an X10 header's worth of data from the file, then look
        at it to see if it looks like an X10 header.  If so we process
@@ -752,8 +752,8 @@ getinit(FILE *             const ifP,
             pm_message("Input is X10");
         processX10Header(h10P, ifP, colsP, rowsP, padrightP, maxvalP,
                          visualclassP, formatP,
-                         colorsP, bits_per_pixelP, bits_per_itemP,
-                         compMaskP, byte_orderP, bit_orderP);
+                         colorsP, bitsPerPixelP, bitsPerItemP,
+                         compMaskP, byteOrderP, bitOrderP);
     } else if (h11P->file_version == X11WD_FILE_VERSION ||
                pm_bs_long(h11P->file_version) == X11WD_FILE_VERSION) {
 
@@ -774,8 +774,8 @@ getinit(FILE *             const ifP,
         processX11Header(h11P, ifP, cmapDump,
                          colsP, rowsP, padrightP, maxvalP,
                          visualclassP, formatP,
-                         colorsP, bits_per_pixelP, bits_per_itemP,
-                         compMaskP, byte_orderP, bit_orderP);
+                         colorsP, bitsPerPixelP, bitsPerItemP,
+                         compMaskP, byteOrderP, bitOrderP);
     } else
         pm_error("unknown XWD file version: %u", h11P->file_version);
 }
@@ -970,7 +970,7 @@ readItem(pixelReader * const rdrP) {
     }
         break;
     default:
-        pm_error("INTERNAL ERROR: impossible bits_per_item");
+        pm_error("INTERNAL ERROR: impossible bitsPerItem");
     }
 }
 
@@ -1069,21 +1069,21 @@ pixelReader_getpix(pixelReader * const rdrP) {
    pure binary cipher, with the first bit the most significant bit.
 
    The basic unit of storage in the input file is an "item."  An item
-   can be 1, 2, or 4 bytes, and 'bits_per_item' tells us which.  Each
+   can be 1, 2, or 4 bytes, and 'bitsPerItem' tells us which.  Each
    item can have its bytes stored in forward or reverse order, and
-   'byte_order' tells us which.  We have seen a Direct Color 24 bpp/32 bpi
-   image which said 'byte_order' == LSBFirst, but the byte order is
+   'byteOrder' tells us which.  We have seen a Direct Color 24 bpp/32 bpi
+   image which said 'byteOrder' == LSBFirst, but the byte order is
    nonetheless MSB first.
 
    Each item can contain one or more pixels, and may contain
-   fractional pixels.  'bits_per_pixel' tells us how many bits each
-   pixel has, and 'bits_per_pixel' is always less than or equal to
-   'bits_per_item', but not necessarily a factor of it.  Within an item,
+   fractional pixels.  'bitsPerPixel' tells us how many bits each
+   pixel has, and 'bitsPerPixel' is always less than or equal to
+   'bitsPerItem', but not necessarily a factor of it.  Within an item,
    after taking care of the endianness of its storage format, the pixels
-   may be arranged from left to right or right to left.  'bit_order' tells
+   may be arranged from left to right or right to left.  'bitOrder' tells
    us which.  We have also seen images in which the pixels are arranged
    from left to right within the items, but the RGB components within
-   each pixel are right to left and 'bit_order' is LSBFirst.
+   each pixel are right to left and 'bitOrder' is LSBFirst.
 
    But it's not that simple.  Sometimes dummy bits are added to the
    right edge of the image in order to make an integral number of
@@ -1112,15 +1112,15 @@ reportInfo(int              const cols,
            xelval           const maxval,
            enum visualclass const visualclass,
            int              const format,
-           int              const bits_per_pixel,
-           int              const bits_per_item,
-           struct compMask  const compMask,
-           enum byteorder   const byte_order,
-           enum byteorder   const bit_order) {
+           int              const bitsPerPixel,
+           int              const bitsPerItem,
+           struct CompMask  const compMask,
+           enum byteorder   const byteOrder,
+           enum byteorder   const bitOrder) {
 
     const char *visualclass_name;
-    const char *byte_order_name;
-    const char *bit_order_name;
+    const char *byteOrder_name;
+    const char *bitOrder_name;
     switch (visualclass) {
     case StaticGray:  visualclass_name="StaticGray";  break;
     case GrayScale:   visualclass_name="Grayscale";   break;
@@ -1130,25 +1130,25 @@ reportInfo(int              const cols,
     case DirectColor: visualclass_name="DirectColor"; break;
     default:          visualclass_name="(invalid)";    break;
     }
-    switch (byte_order) {
-    case MSBFirst: byte_order_name = "MSBFirst";  break;
-    case LSBFirst: byte_order_name = "LSBFirst";  break;
-    default:       byte_order_name = "(invalid)"; break;
+    switch (byteOrder) {
+    case MSBFirst: byteOrder_name = "MSBFirst";  break;
+    case LSBFirst: byteOrder_name = "LSBFirst";  break;
+    default:       byteOrder_name = "(invalid)"; break;
     }
-    switch (bit_order) {
-    case MSBFirst: bit_order_name = "MSBFirst";  break;
-    case LSBFirst: bit_order_name = "LSBFirst";  break;
-    default:       bit_order_name = "(invalid)"; break;
+    switch (bitOrder) {
+    case MSBFirst: bitOrder_name = "MSBFirst";  break;
+    case LSBFirst: bitOrder_name = "LSBFirst";  break;
+    default:       bitOrder_name = "(invalid)"; break;
     }
     pm_message("%d rows of %d columns with maxval %d",
                rows, cols, maxval);
     pm_message("padright=%u bits.  visualclass = %s.  format=%d (%c%c)",
                padright, visualclass_name,
                format, format/256, format%256);
-    pm_message("bits_per_pixel=%d; bits_per_item=%d",
-               bits_per_pixel, bits_per_item);
-    pm_message("byte_order=%s; bit_order=%s",
-               byte_order_name, bit_order_name);
+    pm_message("bitsPerPixel=%d; bitsPerItem=%d",
+               bitsPerPixel, bitsPerItem);
+    pm_message("byteOrder=%s; bitOrder=%s",
+               byteOrder_name, bitOrder_name);
     pm_message("component mask: red=0x%.8lx; grn=0x%.8lx; blu=0x%.8lx",
                compMask.red, compMask.grn, compMask.blu);
 }
@@ -1194,7 +1194,7 @@ static void
 convertRowDirect(pixelReader *   const pixelReaderP,
                  int             const cols,
                  const xel *     const colors,
-                 struct compMask const compMask,
+                 struct CompMask const compMask,
                  xel *           const xelrow) {
 
     unsigned int col;
@@ -1204,20 +1204,20 @@ convertRowDirect(pixelReader *   const pixelReaderP,
             /* This is a triplet of indices into the color map, packed
                into this bit string according to compMask
             */
-        unsigned int red_index, grn_index, blu_index;
+        unsigned int redIndex, grnIndex, bluIndex;
             /* These are indices into the color map, unpacked from 'pixel'.
              */
 
         pixel = pixelReader_getpix(pixelReaderP);
 
-        red_index = (pixel & compMask.red) >> zero_bits(compMask.red);
-        grn_index = (pixel & compMask.grn) >> zero_bits(compMask.grn);
-        blu_index = (pixel & compMask.blu) >> zero_bits(compMask.blu);
+        redIndex = (pixel & compMask.red) >> zeroBits(compMask.red);
+        grnIndex = (pixel & compMask.grn) >> zeroBits(compMask.grn);
+        bluIndex = (pixel & compMask.blu) >> zeroBits(compMask.blu);
 
         PPM_ASSIGN(xelrow[col],
-                   PPM_GETR(colors[red_index]),
-                   PPM_GETG(colors[grn_index]),
-                   PPM_GETB(colors[blu_index])
+                   PPM_GETR(colors[redIndex]),
+                   PPM_GETG(colors[grnIndex]),
+                   PPM_GETB(colors[bluIndex])
             );
     }
 }
@@ -1229,16 +1229,16 @@ convertRowTrueColor(pixelReader *   const pixelReaderP,
                     int             const cols,
                     pixval          const maxval,
                     const xel *     const colors,
-                    struct compMask const compMask,
+                    struct CompMask const compMask,
                     xel *           const xelrow) {
 
     unsigned int col;
     unsigned int red_shift, grn_shift, blu_shift;
     unsigned int red_maxval, grn_maxval, blu_maxval;
 
-    red_shift = zero_bits(compMask.red);
-    grn_shift = zero_bits(compMask.grn);
-    blu_shift = zero_bits(compMask.blu);
+    red_shift = zeroBits(compMask.red);
+    grn_shift = zeroBits(compMask.grn);
+    blu_shift = zeroBits(compMask.blu);
 
     red_maxval = compMask.red >> red_shift;
     grn_maxval = compMask.grn >> grn_shift;
@@ -1270,7 +1270,7 @@ convertRow(pixelReader *    const pixelReaderP,
            int              const cols,
            xelval           const maxval,
            int              const format,
-           struct compMask  const compMask,
+           struct CompMask  const compMask,
            const xel*       const colors,
            enum visualclass const visualclass) {
 /*----------------------------------------------------------------------------
@@ -1337,9 +1337,9 @@ reportOutputType(int const format) {
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int rows, cols, format;
     unsigned int padright;
@@ -1347,14 +1347,14 @@ main(int argc, char *argv[]) {
     unsigned int row;
     int bitsPerPixel;
     int bitsPerItem;
-    struct compMask compMask;
+    struct CompMask compMask;
     xelval maxval;
     enum visualclass visualclass;
     enum byteorder byteOrder, bitOrder;
     xel * colors;  /* the color map */
     pixelReader pixelReader;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -1413,7 +1413,7 @@ main(int argc, char *argv[]) {
    doesn't match these hard-coded shift amounts, so we have replaced
    this whole switch thing.  -Bryan 00.03.01
 
-   switch (bits_per_pixel) {
+   switch (bitsPerPixel) {
 
    case 16:
        PPM_ASSIGN( *xP,
