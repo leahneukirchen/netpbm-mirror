@@ -41,83 +41,103 @@
 
 #define CUBE(x) ((x) * (x) * (x))
 
+typedef enum {LINEEND_BEG, LINEEND_END} LineEnd;
+
+static LineEnd
+otherEnd(LineEnd const thisEnd) {
+    switch (thisEnd) {
+    case LINEEND_BEG: return LINEEND_END;
+    case LINEEND_END: return LINEEND_BEG;
+    }
+    assert(false);  /* All cases handled above */
+    return LINEEND_BEG;  /* silence bogus compiler warning */
+}
+
+
+
 /* We need to manipulate lists of array indices.  */
 
-typedef struct index_list
-{
+typedef struct IndexList {
   unsigned *data;
   unsigned length;
-} index_list_type;
+} IndexList;
 
 /* The usual accessor macros.  */
 #define GET_INDEX(i_l, n)  ((i_l).data[n])
-#define INDEX_LIST_LENGTH(i_l)  ((i_l).length)
-#define GET_LAST_INDEX(i_l)  ((i_l).data[INDEX_LIST_LENGTH (i_l) - 1])
+#define INDEX_LIST_LENGTH(iL)  ((iL).length)
+#define GET_LAST_INDEX(iL)  ((iL).data[INDEX_LIST_LENGTH(iL) - 1])
 
 
 
 
 static pm_pixelcoord
-real_to_int_coord(float_coord const real_coord) {
+intCoordFmReal(float_coord const realCoord) {
 /*----------------------------------------------------------------------------
   Turn an real point into a integer one.
 -----------------------------------------------------------------------------*/
 
-    pm_pixelcoord int_coord;
+    pm_pixelcoord intCoord;
 
-    int_coord.col = ROUND(real_coord.x);
-    int_coord.row = ROUND(real_coord.y);
+    intCoord.col = ROUND(realCoord.x);
+    intCoord.row = ROUND(realCoord.y);
 
-    return int_coord;
+    return intCoord;
 }
 
 
 /* Lists of array indices (well, that is what we use it for).  */
 
-static index_list_type
-new_index_list (void)
-{
-  index_list_type index_list;
+static IndexList
+indexList_new(void) {
 
-  index_list.data = NULL;
-  INDEX_LIST_LENGTH (index_list) = 0;
+    IndexList indexList;
 
-  return index_list;
+    indexList.data = NULL;
+    INDEX_LIST_LENGTH(indexList) = 0;
+
+  return indexList;
 }
 
+
+
 static void
-free_index_list (index_list_type *index_list)
-{
-  if (INDEX_LIST_LENGTH (*index_list) > 0)
-    {
-      free (index_list->data);
-      index_list->data = NULL;
-      INDEX_LIST_LENGTH (*index_list) = 0;
+indexList_free(IndexList * const indexListP) {
+
+    if (INDEX_LIST_LENGTH(*indexListP) > 0) {
+        free(indexListP->data);
+        indexListP->data = NULL;
+        INDEX_LIST_LENGTH(*indexListP) = 0;
     }
 }
 
+
+
 static void
-append_index (index_list_type *list, unsigned new_index)
-{
-  INDEX_LIST_LENGTH (*list)++;
-  REALLOCARRAY_NOFAIL(list->data, INDEX_LIST_LENGTH(*list));
-  list->data[INDEX_LIST_LENGTH (*list) - 1] = new_index;
+indexList_append(IndexList *  const listP,
+                 unsigned int const  newIndex) {
+
+    INDEX_LIST_LENGTH(*listP)++;
+    REALLOCARRAY_NOFAIL(listP->data, INDEX_LIST_LENGTH(*listP));
+    listP->data[INDEX_LIST_LENGTH(*listP) - 1] = newIndex;
 }
 
 
-/* Return the Euclidean distance between P1 and P2.  */
 
 static float
-distance (float_coord p1, float_coord p2)
-{
-  float x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z;
-  return (float) sqrt (SQR(x) + SQR(y) + SQR(z));
+distance(float_coord const p1,
+         float_coord const p2) {
+/*----------------------------------------------------------------------------
+  Return the Euclidean distance between 'p1' and 'p2'.
+-----------------------------------------------------------------------------*/
+    float const x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z;
+
+    return (float) sqrt(SQR(x) + SQR(y) + SQR(z));
 }
 
 
 
 static void
-appendCorner(index_list_type *  const cornerListP,
+appendCorner(IndexList       *  const cornerListP,
              unsigned int       const pixelSeq,
              pixel_outline_type const outline,
              float              const angle,
@@ -125,47 +145,47 @@ appendCorner(index_list_type *  const cornerListP,
 
     pm_pixelcoord const coord = O_COORDINATE(outline, pixelSeq);
 
-    append_index(cornerListP, pixelSeq);
+    indexList_append(cornerListP, pixelSeq);
     LOG4(" (%d,%d)%c%.3f", coord.col, coord.row, logType, angle);
 }
 
 
 
 static void
-find_vectors(unsigned int       const test_index,
-             pixel_outline_type const outline,
-             vector_type *      const in,
-             vector_type *      const out,
-             unsigned int       const corner_surround) {
+findVectors(unsigned int       const testIndex,
+            pixel_outline_type const outline,
+            vector_type *      const inP,
+            vector_type *      const outP,
+            unsigned int       const cornerSurround) {
 /*----------------------------------------------------------------------------
   Return the difference vectors coming in and going out of the outline
   OUTLINE at the point whose index is TEST_INDEX.  In Phoenix,
   Schneider looks at a single point on either side of the point we're
   considering.  That works for him because his points are not touching.
   But our points *are* touching, and so we have to look at
-  `corner_surround' points on either side, to get a better picture of
+  'cornerSurround' points on either side, to get a better picture of
   the outline's shape.
 -----------------------------------------------------------------------------*/
-    int i;
-    unsigned n_done;
-    pm_pixelcoord const candidate = O_COORDINATE(outline, test_index);
+    pm_pixelcoord const candidate = O_COORDINATE(outline, testIndex);
 
-    in->dx  = in->dy  = in->dz  = 0.0;
-    out->dx = out->dy = out->dz = 0.0;
+    unsigned int i;
+    unsigned int doneCt;
 
-    /* Add up the differences from p of the `corner_surround' points
-       before p.
+    inP->dx  = inP->dy  = inP->dz  = 0.0;
+    outP->dx = outP->dy = outP->dz = 0.0;
+
+    /* Add up the differences from p of the `corner_surround' points before p.
     */
-    for (i = O_PREV(outline, test_index), n_done = 0;
-         n_done < corner_surround;
-         i = O_PREV(outline, i), ++n_done)
-        *in = Vadd(*in, IPsubtract(O_COORDINATE(outline, i), candidate));
+    for (i = O_PREV(outline, testIndex), doneCt = 0;
+         doneCt < cornerSurround;
+         i = O_PREV(outline, i), ++doneCt)
+        *inP = Vadd(*inP, IPsubtract(O_COORDINATE(outline, i), candidate));
 
     /* And the points after p. */
-    for (i = O_NEXT (outline, test_index), n_done = 0;
-         n_done < corner_surround;
-         i = O_NEXT(outline, i), ++n_done)
-        *out = Vadd(*out, IPsubtract(O_COORDINATE(outline, i), candidate));
+    for (i = O_NEXT(outline, testIndex), doneCt = 0;
+         doneCt < cornerSurround;
+         i = O_NEXT(outline, i), ++doneCt)
+        *outP = Vadd(*outP, IPsubtract(O_COORDINATE(outline, i), candidate));
 }
 
 
@@ -179,8 +199,8 @@ lookAheadForBetterCorner(pixel_outline_type  const outline,
                          unsigned int *      const highestExaminedP,
                          float *             const bestCornerAngleP,
                          unsigned int *      const bestCornerIndexP,
-                         index_list_type *   const equallyGoodListP,
-                         index_list_type *   const cornerListP,
+                         IndexList *         const equallyGoodListP,
+                         IndexList *         const cornerListP,
                          at_exception_type * const exceptionP) {
 /*----------------------------------------------------------------------------
    'basePixelSeq' is the sequence position within 'outline' of a pixel
@@ -201,14 +221,14 @@ lookAheadForBetterCorner(pixel_outline_type  const outline,
 -----------------------------------------------------------------------------*/
     float bestCornerAngle;
     unsigned bestCornerIndex;
-    index_list_type equallyGoodList;
+    IndexList equallyGoodList;
     unsigned int q;
     unsigned int i;
 
     bestCornerIndex = basePixelSeq;     /* initial assumption */
     bestCornerAngle = baseCornerAngle;    /* initial assumption */
 
-    equallyGoodList = new_index_list();
+    equallyGoodList = indexList_new();
 
     q = basePixelSeq;
     i = basePixelSeq + 1;  /* Start with the next pixel */
@@ -223,7 +243,7 @@ lookAheadForBetterCorner(pixel_outline_type  const outline,
         /* Check the angle.  */
 
         q = i % O_LENGTH(outline);
-        find_vectors(q, outline, &inVector, &outVector, cornerSurround);
+        findVectors(q, outline, &inVector, &outVector, cornerSurround);
         cornerAngle = Vangle(inVector, outVector, exceptionP);
         if (!at_exception_got_fatal(exceptionP)) {
             /* Perhaps the angle is sufficiently small that we want to
@@ -236,15 +256,15 @@ lookAheadForBetterCorner(pixel_outline_type  const outline,
                 appendCorner(cornerListP, q, outline, cornerAngle, '\\');
 
             if (epsilon_equal(cornerAngle, bestCornerAngle))
-                append_index(&equallyGoodList, q);
+                indexList_append(&equallyGoodList, q);
             else if (cornerAngle < bestCornerAngle) {
                 bestCornerAngle = cornerAngle;
                 /* We want to check `cornerSurround' pixels beyond the
                    new best corner.
                 */
                 i = bestCornerIndex = q;
-                free_index_list(&equallyGoodList);
-                equallyGoodList = new_index_list();
+                indexList_free(&equallyGoodList);
+                equallyGoodList = indexList_new();
             }
             ++i;
         }
@@ -279,10 +299,10 @@ establishCornerSearchLimits(pixel_outline_type  const outline,
 
 
 static void
-remove_adjacent_corners(index_list_type *   const list,
-                        unsigned int        const last_index,
-                        bool                const remove_adj_corners,
-                        at_exception_type * const exception) {
+removeAdjacentCorners(IndexList *         const listP,
+                      unsigned int        const lastIndex,
+                      bool                const mustRemoveAdjCorners,
+                      at_exception_type * const exception) {
 /*----------------------------------------------------------------------------
    Remove adjacent points from the index list LIST.  We do this by first
    sorting the list and then running through it.  Since these lists are
@@ -294,57 +314,60 @@ remove_adjacent_corners(index_list_type *   const list,
    We need to do this because the adjacent corners turn into
    two-pixel-long curves, which can be fit only by straight lines.
 -----------------------------------------------------------------------------*/
-  unsigned int j;
-  unsigned int last;
-  index_list_type new_list = new_index_list ();
+    unsigned int j;
+    unsigned int last;
+    IndexList newList;
 
-  for (j = INDEX_LIST_LENGTH (*list) - 1; j > 0; j--)
-    {
-      unsigned search;
-      unsigned temp;
-      /* Find maximal element below `j'.  */
-      unsigned max_index = j;
+    newList = indexList_new();  /* initial value */
 
-      for (search = 0; search < j; search++)
-        if (GET_INDEX (*list, search) > GET_INDEX (*list, max_index))
-          max_index = search;
+    for (j = INDEX_LIST_LENGTH (*listP) - 1; j > 0; --j) {
+        unsigned int search;
+        unsigned int maxIndex;
+            /* We find maximal element below `j' */
 
-      if (max_index != j)
-        {
-          temp = GET_INDEX (*list, j);
-          GET_INDEX (*list, j) = GET_INDEX (*list, max_index);
-          GET_INDEX (*list, max_index) = temp;
+        for (search = 0, maxIndex = j; search < j; ++search)
+            if (GET_INDEX (*listP, search) > GET_INDEX (*listP, maxIndex))
+                maxIndex = search;
+
+        if (maxIndex != j) {
+            unsigned int const temp = GET_INDEX (*listP, j);
+            GET_INDEX (*listP, j) = GET_INDEX (*listP, maxIndex);
+            GET_INDEX (*listP, maxIndex) = temp;
         }
     }
 
-  /* The list is sorted.  Now look for adjacent entries.  Each time
-     through the loop we insert the current entry and, if appropriate,
-     the next entry.  */
-  for (j = 0; j < INDEX_LIST_LENGTH (*list) - 1; j++)
-    {
-      unsigned current = GET_INDEX (*list, j);
-      unsigned next = GET_INDEX (*list, j + 1);
+    /* The list is sorted.  Now look for adjacent entries.  Each time through
+       the loop we insert the current entry and, if appropriate, the next
+       entry.
+    */
+    for (j = 0; j < INDEX_LIST_LENGTH(*listP) - 1; ++j) {
+        unsigned int const current = GET_INDEX(*listP, j);
+        unsigned int const next    = GET_INDEX(*listP, j + 1);
 
-      /* We should never have inserted the same element twice.  */
-      /* assert (current != next); */
+        /* We should never have inserted the same element twice.  */
+        /* assert (current != next); */
 
-      if ((remove_adj_corners) && ((next == current + 1) || (next == current)))
-        j++;
+        if ((mustRemoveAdjCorners) && ((next == current + 1) ||
+                                       (next == current)))
+            ++j;
 
-      append_index (&new_list, current);
+        indexList_append(&newList, current);
     }
 
-  /* Don't append the last element if it is 1) adjacent to the previous
-     one; or 2) adjacent to the very first one.  */
-  last = GET_LAST_INDEX (*list);
-  if (INDEX_LIST_LENGTH (new_list) == 0
-      || !(last == GET_LAST_INDEX (new_list) + 1
-           || (last == last_index && GET_INDEX (*list, 0) == 0)))
-    append_index (&new_list, last);
+    /* Don't append the last element if it is 1) adjacent to the previous one;
+       or 2) adjacent to the very first one.
+    */
+    last = GET_LAST_INDEX(*listP);
+    if (INDEX_LIST_LENGTH(newList) == 0
+        || !(last == GET_LAST_INDEX(newList) + 1
+             || (last == lastIndex && GET_INDEX(*listP, 0) == 0)))
+        indexList_append(&newList, last);
 
-  free_index_list (list);
-  *list = new_list;
+    indexList_free(listP);
+    *listP = newList;
 }
+
+
 
 /* A ``knee'' is a point which forms a ``right angle'' with its
    predecessor and successor.  See the documentation (the `Removing
@@ -396,17 +419,16 @@ remove_knee_points(curve * const curveP,
     unsigned int i;
 
     if (!CURVE_CYCLIC(curveP))
-        append_pixel(trimmedCurveP,
-                     real_to_int_coord(CURVE_POINT(curveP, 0)));
+        append_pixel(trimmedCurveP, intCoordFmReal(CURVE_POINT(curveP, 0)));
 
-    previous = real_to_int_coord(CURVE_POINT(curveP,
-                                             CURVE_PREV(curveP, offset)));
+    previous = intCoordFmReal(CURVE_POINT(curveP,
+                                          CURVE_PREV(curveP, offset)));
 
     for (i = offset; i < CURVE_LENGTH(curveP) - offset; ++i) {
         pm_pixelcoord const current =
-            real_to_int_coord(CURVE_POINT(curveP, i));
+            intCoordFmReal(CURVE_POINT(curveP, i));
         pm_pixelcoord const next =
-            real_to_int_coord(CURVE_POINT(curveP, CURVE_NEXT(curveP, i)));
+            intCoordFmReal(CURVE_POINT(curveP, CURVE_NEXT(curveP, i)));
         vector_type const prev_delta = IPsubtract(previous, current);
         vector_type const next_delta = IPsubtract(next, current);
 
@@ -423,7 +445,7 @@ remove_knee_points(curve * const curveP,
 
     if (!CURVE_CYCLIC(curveP))
         append_pixel(trimmedCurveP,
-                     real_to_int_coord(LAST_CURVE_POINT(curveP)));
+                     intCoordFmReal(LAST_CURVE_POINT(curveP)));
 
     if (CURVE_LENGTH(trimmedCurveP) == CURVE_LENGTH(curveP))
         LOG(" (none)");
@@ -556,7 +578,7 @@ filter(curve *             const curveP,
 
 
 static void
-removeAdjacent(index_list_type *   const cornerListP,
+removeAdjacent(IndexList *         const cornerListP,
                pixel_outline_type  const outline,
                fitting_opts_type * const fittingOptsP,
                at_exception_type * const exception) {
@@ -567,7 +589,7 @@ removeAdjacent(index_list_type *   const cornerListP,
     */
 
     if (INDEX_LIST_LENGTH(*cornerListP) > 0)
-        remove_adjacent_corners(
+        removeAdjacentCorners(
             cornerListP,
             O_LENGTH(outline) - (outline.open ? 2 : 1),
             fittingOptsP->remove_adjacent_corners,
@@ -576,10 +598,10 @@ removeAdjacent(index_list_type *   const cornerListP,
 
 
 
-static index_list_type
-find_corners(pixel_outline_type  const outline,
-             fitting_opts_type * const fittingOptsP,
-             at_exception_type * const exceptionP) {
+static IndexList
+findCorners(pixel_outline_type  const outline,
+            fitting_opts_type * const fittingOptsP,
+            at_exception_type * const exceptionP) {
 
     /* We consider a point to be a corner if (1) the angle defined by
        the `corner_surround' points coming into it and going out from
@@ -589,9 +611,9 @@ find_corners(pixel_outline_type  const outline,
     */
     unsigned int p;
     unsigned int firstPixelSeq, lastPixelSeq;
-    index_list_type cornerList;
+    IndexList cornerList;
 
-    cornerList = new_index_list();
+    cornerList = indexList_new();
 
     if (O_LENGTH(outline) <= fittingOptsP->corner_surround * 2 + 1)
         return cornerList;
@@ -605,7 +627,7 @@ find_corners(pixel_outline_type  const outline,
         float cornerAngle;
 
         /* Check if the angle is small enough.  */
-        find_vectors(p, outline, &inVector, &outVector,
+        findVectors(p, outline, &inVector, &outVector,
                      fittingOptsP->corner_surround);
         cornerAngle = Vangle(inVector, outVector, exceptionP);
         if (at_exception_got_fatal(exceptionP))
@@ -624,7 +646,7 @@ find_corners(pixel_outline_type  const outline,
             */
             float bestCornerAngle;
             unsigned bestCornerIndex;
-            index_list_type equallyGoodList;
+            IndexList equallyGoodList;
             unsigned int q;
 
             if (cornerAngle <= fittingOptsP->corner_always_threshold)
@@ -663,7 +685,7 @@ find_corners(pixel_outline_type  const outline,
                     appendCorner(&cornerList, GET_INDEX(equallyGoodList, j),
                                  outline, bestCornerAngle, '@');
             }
-            free_index_list(&equallyGoodList);
+            indexList_free(&equallyGoodList);
 
             /* If we wrapped around in our search, we're done;
                otherwise, we move on to the pixel after the highest
@@ -713,7 +735,7 @@ makeOutlineOneCurve(pixel_outline_type const outline,
 
 static void
 addCurveStartingAtCorner(pixel_outline_type const outline,
-                         index_list_type    const cornerList,
+                         IndexList          const cornerList,
                          unsigned int       const cornerSeq,
                          curve_list_type *  const curveListP,
                          curve **           const curCurvePP) {
@@ -763,7 +785,7 @@ addCurveStartingAtCorner(pixel_outline_type const outline,
 
 static void
 divideOutlineWithCorners(pixel_outline_type const outline,
-                         index_list_type    const cornerList,
+                         IndexList          const cornerList,
                          curve_list_type *  const curveListP) {
 /*----------------------------------------------------------------------------
    Divide the outline 'outline' into curves at the corner points
@@ -842,15 +864,15 @@ divideOutlineWithCorners(pixel_outline_type const outline,
 
 
 static curve_list_array_type
-split_at_corners(pixel_outline_list_type const pixel_list,
-                 fitting_opts_type *     const fitting_opts,
+split_at_corners(pixel_outline_list_type const pixelList,
+                 fitting_opts_type *     const fittingOptsP,
                  at_exception_type *     const exception) {
 /*----------------------------------------------------------------------------
-   Find the corners in PIXEL_LIST, the list of points.  (Presumably we
+   Find the corners in 'pixelList', the list of points.  (Presumably we
    can't fit a single spline around a corner.)  The general strategy
    is to look through all the points, remembering which we want to
    consider corners.  Then go through that list, producing the
-   curve_list.  This is dictated by the fact that PIXEL_LIST does not
+   curve_list.  This is dictated by the fact that 'pixelList' does not
    necessarily start on a corner---it just starts at the character's
    first outline pixel, going left-to-right, top-to-bottom.  But we
    want all our splines to start and end on real corners.
@@ -860,41 +882,41 @@ split_at_corners(pixel_outline_list_type const pixel_list,
                      ***********
                   ******************
 
-   PIXEL_LIST will start at the pixel below the `x'.  If we considered
+   'pixelList' will start at the pixel below the `x'.  If we considered
    this pixel a corner, we would wind up matching a very small segment
    from there to the end of the line, probably as a straight line, which
    is certainly not what we want.
 
-   PIXEL_LIST has one element for each closed outline on the character.
+   'pixelList' has one element for each closed outline on the character.
    To preserve this information, we return an array of curve_lists, one
    element (which in turn consists of several curves, one between each
-   pair of corners) for each element in PIXEL_LIST.
+   pair of corners) for each element in 'pixelList'.
 
    The curves we return do not have beginning and ending slope
    information.
 -----------------------------------------------------------------------------*/
     unsigned outlineSeq;
-    curve_list_array_type curve_array;
+    curve_list_array_type curveArray;
 
-    curve_array = new_curve_list_array();
+    curveArray = new_curve_list_array();
 
     LOG("\nFinding corners:\n");
 
     for (outlineSeq = 0;
-         outlineSeq < O_LIST_LENGTH(pixel_list);
+         outlineSeq < O_LIST_LENGTH(pixelList);
          ++outlineSeq) {
 
         pixel_outline_type const outline =
-            O_LIST_OUTLINE(pixel_list, outlineSeq);
+            O_LIST_OUTLINE(pixelList, outlineSeq);
 
-        index_list_type corner_list;
-        curve_list_type curve_list;
+        IndexList       cornerList;
+        curve_list_type curveList;
 
-        curve_list = new_curve_list();
+        curveList = new_curve_list();
 
-        CURVE_LIST_CLOCKWISE(curve_list) = O_CLOCKWISE(outline);
-        curve_list.color = outline.color;
-        curve_list.open  = outline.open;
+        CURVE_LIST_CLOCKWISE(curveList) = O_CLOCKWISE(outline);
+        curveList.color = outline.color;
+        curveList.open  = outline.open;
 
         LOG1("#%u:", outlineSeq);
 
@@ -904,37 +926,37 @@ split_at_corners(pixel_outline_list_type const pixel_list,
            either side of a point before it is conceivable that we might
            want another corner.
         */
-        if (O_LENGTH(outline) > fitting_opts->corner_surround * 2 + 2)
-            corner_list = find_corners(outline, fitting_opts, exception);
+        if (O_LENGTH(outline) > fittingOptsP->corner_surround * 2 + 2)
+            cornerList = findCorners(outline, fittingOptsP, exception);
 
         else {
             int const surround = (O_LENGTH(outline) - 3) / 2;
             if (surround >= 2) {
-                unsigned int const save_corner_surround =
-                    fitting_opts->corner_surround;
-                fitting_opts->corner_surround = surround;
-                corner_list = find_corners(outline, fitting_opts, exception);
-                fitting_opts->corner_surround = save_corner_surround;
+                unsigned int const oldCornerSurround =
+                    fittingOptsP->corner_surround;
+                fittingOptsP->corner_surround = surround;
+                cornerList = findCorners(outline, fittingOptsP, exception);
+                fittingOptsP->corner_surround = oldCornerSurround;
             } else {
-                corner_list.length = 0;
-                corner_list.data = NULL;
+                cornerList.length = 0;
+                cornerList.data = NULL;
             }
         }
 
-        if (corner_list.length == 0)
+        if (cornerList.length == 0)
             /* No corners.  Use all of the pixel outline as the one curve. */
-            makeOutlineOneCurve(outline, &curve_list);
+            makeOutlineOneCurve(outline, &curveList);
         else
-            divideOutlineWithCorners(outline, corner_list, &curve_list);
+            divideOutlineWithCorners(outline, cornerList, &curveList);
 
-        LOG1(" [%u].\n", corner_list.length);
-        free_index_list(&corner_list);
+        LOG1(" [%u].\n", cornerList.length);
+        indexList_free(&cornerList);
 
         /* And now add the just-completed curve list to the array.  */
-        append_curve_list(&curve_array, curve_list);
+        append_curve_list(&curveArray, curveList);
     }
 
-    return curve_array;
+    return curveArray;
 }
 
 
@@ -949,6 +971,7 @@ removeKnees(curve_list_type const curveList) {
     unsigned int curveSeq;
 
     LOG("\nRemoving knees:\n");
+
     for (curveSeq = 0; curveSeq < curveList.length; ++curveSeq) {
         LOG1("#%u:", curveSeq);
         remove_knee_points(CURVE_LIST_ELT(curveList, curveSeq),
@@ -1049,118 +1072,134 @@ logSplinesForCurve(unsigned int     const curveSeq,
 
 
 static void
-change_bad_lines(spline_list_type *        const spline_list,
-                 const fitting_opts_type * const fitting_opts) {
+changeBadLines(spline_list_type *        const splineListP,
+               const fitting_opts_type * const fittingOptsP) {
 
-/* Unfortunately, we cannot tell in isolation whether a given spline
-   should be changed to a line or not.  That can only be known after the
-   entire curve has been fit to a list of splines.  (The curve is the
-   pixel outline between two corners.)  After subdividing the curve, a
-   line may very well fit a portion of the curve just as well as the
-   spline---but unless a spline is truly close to being a line, it
-   should not be combined with other lines.  */
+  /* Unfortunately, we cannot tell in isolation whether a given spline
+     should be changed to a line or not.  That can only be known after the
+     entire curve has been fit to a list of splines.  (The curve is the
+     pixel outline between two corners.)  After subdividing the curve, a
+     line may very well fit a portion of the curve just as well as the
+     spline---but unless a spline is truly close to being a line, it
+     should not be combined with other lines.
+  */
 
-  unsigned this_spline;
-  bool found_cubic = false;
-  unsigned length = SPLINE_LIST_LENGTH (*spline_list);
+    unsigned int const length = SPLINE_LIST_LENGTH(*splineListP);
 
-  LOG1 ("\nChecking for bad lines (length %u):\n", length);
+    unsigned int thisSpline;
+    bool foundCubic;
 
-  /* First see if there are any splines in the fitted shape.  */
-  for (this_spline = 0; this_spline < length; this_spline++)
-    {
-      if (SPLINE_DEGREE (SPLINE_LIST_ELT (*spline_list, this_spline)) ==
-       CUBICTYPE)
-        {
-          found_cubic = true;
-          break;
+    LOG1("\nChecking for bad lines (length %u):\n", length);
+
+    /* First see if there are any splines in the fitted shape.  */
+    for (thisSpline = 0, foundCubic = false;
+         thisSpline < length;
+         ++thisSpline) {
+        if (SPLINE_DEGREE(SPLINE_LIST_ELT(*splineListP, thisSpline)) ==
+            CUBICTYPE) {
+            foundCubic = true;
+            break;
         }
     }
 
-  /* If so, change lines back to splines (we haven't done anything to
-     their control points, so we only have to change the degree) unless
-     the spline is close enough to being a line.  */
-  if (found_cubic)
-    for (this_spline = 0; this_spline < length; this_spline++)
-      {
-        spline_type s = SPLINE_LIST_ELT (*spline_list, this_spline);
+    /* If so, change lines back to splines (we haven't done anything to
+       their control points, so we only have to change the degree) unless
+       the spline is close enough to being a line.
+    */
+    if (foundCubic) {
+        unsigned int thisSpline;
 
-        if (SPLINE_DEGREE (s) == LINEARTYPE)
-          {
-            LOG1 ("  #%u: ", this_spline);
-            if (SPLINE_LINEARITY (s) > fitting_opts->line_reversion_threshold)
-              {
-                LOG ("reverted, ");
-                SPLINE_DEGREE (SPLINE_LIST_ELT (*spline_list, this_spline))
-                  = CUBICTYPE;
-              }
-            LOG1 ("linearity %.3f.\n", SPLINE_LINEARITY (s));
-          }
-      }
-    else
-      LOG ("  No lines.\n");
+        for (thisSpline = 0; thisSpline < length; ++thisSpline) {
+            spline_type const s = SPLINE_LIST_ELT(*splineListP, thisSpline);
+
+            if (SPLINE_DEGREE(s) == LINEARTYPE) {
+                LOG1("  #%u: ", thisSpline);
+                if (SPLINE_LINEARITY(s) >
+                    fittingOptsP->line_reversion_threshold) {
+                    LOG("reverted, ");
+                    SPLINE_DEGREE(SPLINE_LIST_ELT(*splineListP, thisSpline))
+                        = CUBICTYPE;
+                }
+                LOG1("linearity %.3f.\n", SPLINE_LINEARITY(s));
+            }
+        }
+    } else
+        LOG("  No lines.\n");
 }
 
 
 
 static bool
-spline_linear_enough(spline_type *             const spline,
-                     curve_type                const curve,
-                     const fitting_opts_type * const fitting_opts) {
+splineLinearEnough(spline_type *             const splineP,
+                   curve_type                const curve,
+                   const fitting_opts_type * const fittingOptsP) {
 
-/* Supposing that we have accepted the error, another question arises:
-   would we be better off just using a straight line?  */
+    /* Supposing that we have accepted the error, another question arises:
+       would we be better off just using a straight line?
+    */
 
-  float A, B, C;
-  unsigned this_point;
-  float dist = 0.0, start_end_dist, threshold;
+    float A, B, C;
+    unsigned int thisPoint;
+    float dist;
+    float startEndDist;
+    float threshold;
 
-  LOG ("Checking linearity:\n");
+    LOG ("Checking linearity:\n");
 
-  A = END_POINT(*spline).x - START_POINT(*spline).x;
-  B = END_POINT(*spline).y - START_POINT(*spline).y;
-  C = END_POINT(*spline).z - START_POINT(*spline).z;
+    A = END_POINT(*splineP).x - START_POINT(*splineP).x;
+    B = END_POINT(*splineP).y - START_POINT(*splineP).y;
+    C = END_POINT(*splineP).z - START_POINT(*splineP).z;
 
-  start_end_dist = (float) (SQR(A) + SQR(B) + SQR(C));
-  LOG1 ("start_end_distance is %.3f.\n", sqrt(start_end_dist));
+    startEndDist = (float) (SQR(A) + SQR(B) + SQR(C));
+    LOG1("start_end_distance is %.3f.\n", sqrt(startEndDist));
 
-  LOG3 ("  Line endpoints are (%.3f, %.3f, %.3f) and ", START_POINT(*spline).x, START_POINT(*spline).y, START_POINT(*spline).z);
-  LOG3 ("(%.3f, %.3f, %.3f)\n", END_POINT(*spline).x, END_POINT(*spline).y, END_POINT(*spline).z);
+    LOG3("  Line endpoints are (%.3f, %.3f, %.3f) and ",
+         START_POINT(*splineP).x,
+         START_POINT(*splineP).y,
+         START_POINT(*splineP).z);
+    LOG3("(%.3f, %.3f, %.3f)\n",
+         END_POINT(*splineP).x, END_POINT(*splineP).y, END_POINT(*splineP).z);
 
-  /* LOG3 ("  Line is %.3fx + %.3fy + %.3f = 0.\n", A, B, C); */
+    /* LOG3("  Line is %.3fx + %.3fy + %.3f = 0.\n", A, B, C); */
 
-  for (this_point = 0; this_point < CURVE_LENGTH (curve); this_point++)
-    {
-      float a, b, c, w;
-      float t = CURVE_T (curve, this_point);
-      float_coord spline_point = evaluate_spline (*spline, t);
+    for (thisPoint = 0, dist = 0.0;
+         thisPoint < CURVE_LENGTH(curve);
+         ++thisPoint) {
 
-      a = spline_point.x - START_POINT(*spline).x;
-      b = spline_point.y - START_POINT(*spline).y;
-      c = spline_point.z - START_POINT(*spline).z;
-      w = (A*a + B*b + C*c) / start_end_dist;
+        float       const t           = CURVE_T(curve, thisPoint);
+        float_coord const splinePoint = evaluate_spline(*splineP, t);
 
-      dist += (float)sqrt(SQR(a-A*w) + SQR(b-B*w) + SQR(c-C*w));
+        float const a = splinePoint.x - START_POINT(*splineP).x;
+        float const b = splinePoint.y - START_POINT(*splineP).y;
+        float const c = splinePoint.z - START_POINT(*splineP).z;
+
+        float const w = (A*a + B*b + C*c) / startEndDist;
+
+        dist += (float)sqrt(SQR(a-A*w) + SQR(b-B*w) + SQR(c-C*w));
     }
-  LOG1 ("  Total distance is %.3f, ", dist);
+    LOG1("  Total distance is %.3f, ", dist);
 
-  dist /= (CURVE_LENGTH (curve) - 1);
-  LOG1 ("which is %.3f normalized.\n", dist);
+    dist /= (CURVE_LENGTH (curve) - 1);
 
-  /* We want reversion of short curves to splines to be more likely than
-     reversion of long curves, hence the second division by the curve
-     length, for use in `change_bad_lines'.  */
-  SPLINE_LINEARITY (*spline) = dist;
-  LOG1 ("  Final linearity: %.3f.\n", SPLINE_LINEARITY (*spline));
-  if (start_end_dist * (float) 0.5 > fitting_opts->line_threshold)
-    threshold = fitting_opts->line_threshold;
-  else
-    threshold = start_end_dist * (float) 0.5;
-  LOG1 ("threshold is %.3f .\n", threshold);
-  if (dist < threshold)
-    return true;
-  else
-    return false;
+    LOG1 ("which is %.3f normalized.\n", dist);
+
+    /* We want reversion of short curves to splines to be more likely than
+       reversion of long curves, hence the second division by the curve
+       length, for use in `change_bad_lines'.
+    */
+    SPLINE_LINEARITY(*splineP) = dist;
+    LOG1("  Final linearity: %.3f.\n", SPLINE_LINEARITY (*splineP));
+
+    if (startEndDist * (float) 0.5 > fittingOptsP->line_threshold)
+        threshold = fittingOptsP->line_threshold;
+    else
+        threshold = startEndDist * (float) 0.5;
+    LOG1("threshold is %.3f .\n", threshold);
+
+    if (dist < threshold)
+        return true;
+    else
+        return false;
 }
 
 
@@ -1254,10 +1293,9 @@ fitOneSpline(curve *             const curveP,
     };
     struct vectorPair tang;
 
-    float X_Cend_det, Cbeg_X_det, C_det;
     spline_type spline;
     vector_type begVector, endVector;
-    unsigned i;
+    unsigned int i;
     struct vectorPair * A;  /* malloc'ed array */
         /* I don't know the meaning of this array, but it is one entry for
            each point in the curve (A[i] is for the ith point in the curve).
@@ -1312,22 +1350,25 @@ fitOneSpline(curve *             const curveP,
 
     C.end.beg = C.beg.end;
 
-    X_Cend_det  = X.beg * C.end.end - X.end * C.beg.end;
-    Cbeg_X_det  = C.beg.beg * X.end - C.beg.end * X.beg;
-    C_det = C.beg.beg * C.end.end - C.end.beg * C.beg.end;
-    if (C_det == 0.0) {
-        LOG("zero determinant of C matrix");
-        at_exception_fatal(exceptionP, "zero determinant of C matrix");
-    } else {
-        struct { float beg; float end; } alpha;  /* constant */
-        alpha.beg = X_Cend_det / C_det;
-        alpha.end = Cbeg_X_det / C_det;
+    {
+        float const XCendDet  = X.beg * C.end.end - X.end * C.beg.end;
+        float const CbegXDet  = C.beg.beg * X.end - C.beg.end * X.beg;
+        float const CDet = C.beg.beg * C.end.end - C.end.beg * C.beg.end;
 
-        CONTROL1(spline) = Vadd_point(BEG_POINT(spline),
-                                      Vmult_scalar(tang.beg, alpha.beg));
-        CONTROL2(spline) = Vadd_point(END_POINT(spline),
-                                      Vmult_scalar(tang.end, alpha.end));
-        SPLINE_DEGREE(spline) = CUBICTYPE;
+        if (CDet == 0.0) {
+            LOG("zero determinant of C matrix");
+            at_exception_fatal(exceptionP, "zero determinant of C matrix");
+        } else {
+            struct { float beg; float end; } alpha;  /* constant */
+            alpha.beg = XCendDet / CDet;
+            alpha.end = CbegXDet / CDet;
+
+            CONTROL1(spline) = Vadd_point(BEG_POINT(spline),
+                                          Vmult_scalar(tang.beg, alpha.beg));
+            CONTROL2(spline) = Vadd_point(END_POINT(spline),
+                                          Vmult_scalar(tang.end, alpha.end));
+            SPLINE_DEGREE(spline) = CUBICTYPE;
+        }
     }
     return spline;
 }
@@ -1344,7 +1385,7 @@ logSplineFit(spline_type const spline) {
 
     if (log_file) {
         LOG ("    ");
-        print_spline (log_file, spline);
+        print_spline(log_file, spline);
     }
 }
 
@@ -1354,19 +1395,21 @@ static vector_type
 findHalfTangentBeg(curve *      const curveP,
                    unsigned int const tangentSurround) {
 /*----------------------------------------------------------------------------
-  Find the slope in the vicinity of the beginning of the curve
-  *curveP.
+  Find the slope in the vicinity of the beginning of the curve *curveP.
 
   To wit, this is the mean slope between the first point on the curve and
   each of the 'tangentSurround' following points, up to half the curve.
 
-  For example, if 'tangentSurround' is 3 and the curve is 10 points
-  long, we imagine a line through Point 0 and Point 1, another through
-  Point 0 and Point 2, and a third through Point 0 and Point 3.  We
-  return the mean of the slopes of those 3 lines.
+  For example, if 'tangentSurround' is 3 and the curve is 10 points long, we
+  imagine a line through Point 0 and Point 1, another through Point 0 and
+  Point 2, and a third through Point 0 and Point 3.  We return the mean of the
+  slopes of those 3 lines.
+
+  'tangentSurround' must be at least 1 and *curveP must have at least
+  two points.
 -----------------------------------------------------------------------------*/
-    float_coord const tangentPoint = CURVE_POINT(curveP, 0);
-    vector_type const zeroZero = { 0.0, 0.0 };
+    float_coord  const tangentPoint = CURVE_POINT(curveP, 0);
+    vector_type  const zeroZero = { 0.0, 0.0 };
     unsigned int const surround =
         MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
 
@@ -1374,6 +1417,10 @@ findHalfTangentBeg(curve *      const curveP,
     vector_type sum;
     vector_type mean;
     unsigned int n;
+
+    assert(CURVE_LENGTH(curveP) > 0);
+    assert(tangentSurround > 0);
+    assert(surround > 0);
 
     for (p = 0, n = 0, sum = zeroZero; p < surround; ++p) {
         unsigned int const thisIndex = p + 1;
@@ -1388,6 +1435,8 @@ findHalfTangentBeg(curve *      const curveP,
 
     mean = Vmult_scalar(sum, 1.0 / n);
 
+    assert(n != 0);  /* because surround > 0 */
+
     return mean;
 }
 
@@ -1397,8 +1446,7 @@ static vector_type
 findHalfTangentEnd(curve *      const curveP,
                    unsigned int const tangentSurround) {
 /*----------------------------------------------------------------------------
-  Find the slope in the vicinity of the end of the curve
-  *curveP.
+  Find the slope in the vicinity of the end of the curve *curveP.
 
   This is analogous to findHalfTangentBeg(), but at the other end of the
   curve.
@@ -1410,9 +1458,13 @@ findHalfTangentEnd(curve *      const curveP,
         MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
 
     unsigned int p;
-    vector_type sum;
-    vector_type mean;
+    vector_type  sum;
+    vector_type  mean;
     unsigned int n;
+
+    assert(CURVE_LENGTH(curveP)/2 > 0);
+    assert(tangentSurround > 0);
+    assert(surround > 0);
 
     for (p = 0, n = 0, sum = zeroZero; p < surround; ++p) {
         unsigned int const thisIndex = CURVE_LENGTH(curveP) - 1 - p;
@@ -1422,6 +1474,8 @@ findHalfTangentEnd(curve *      const curveP,
         ++n;
     }
 
+    assert(n != 0);  /* because surround > 0 */
+
     mean = Vmult_scalar(sum, 1.0 / n);
 
     return mean;
@@ -1430,33 +1484,48 @@ findHalfTangentEnd(curve *      const curveP,
 
 
 static vector_type
-findHalfTangent(bool         const toStartPoint,
+findHalfTangent(LineEnd      const toWhichEnd,
                 curve *      const curveP,
                 unsigned int const tangentSurround) {
 
-    if (toStartPoint)
+    switch (toWhichEnd) {
+    case LINEEND_BEG:
         return findHalfTangentBeg(curveP, tangentSurround);
-    else
+    case LINEEND_END:
         return findHalfTangentEnd(curveP, tangentSurround);
+    }
+    assert(false);  /* All cases handled above */
+    {
+        vector_type const dummyVector = {0.0, 0,0};
+        return dummyVector;  /* silence bogus compiler warning */
+    }
 }
 
 
 
 static void
 findTangent(curve *       const curveP,
-            bool          const toStartPoint,
+            LineEnd       const toWhichEnd,
             curve *       const adjacentCurveP,
-            unsigned int  const tangentSurroundArg,
+            unsigned int  const tangentSurroundReq,
             vector_type * const tangentP) {
 /*----------------------------------------------------------------------------
   Find an approximation to the slope of *curveP (i.e. slope of tangent
-  line) at an endpoint (the first point if 'toStartPoint' is true,
-  else the last).
+  line) at an endpoint (per 'toWhichEnd').
+
+  This approximation is the mean of the slopes between the end of the curve
+  and the 'tangentSurroundReq' points leading up to it (but not beyond the
+  midpoint of the curve).  Note that the curve may loop.  We detect this only
+  in the case that the endpoint itself appears among those adjacent points.
+  In that case, we consider only the points up to that.
+
+  IF THE VERY NEXT POINT IS THE ENDPOINT AGAIN, WE CRASH WITH AN ASSERTION
+  FAILURE (AND IF NO ASSERTION CHECKING, INFINITE LOOP).  WE NEED TO FIX THAT.
 
   If 'adjacentCurveP' is non-null, consider points on the adjacent
   curve to *curveP.  The adjacent curve is *adjacentCurveP.  Adjacent
   means the previous curve in the outline chain for the slope at the
-  start point ('toStartPoint' == true), the next curve otherwise.
+  start point ('toWhichEnd' == LINEEND_BEG), the next curve otherwise.
   If *curveP is cyclic, then it is its own adjacent curve.
 
   It is important to compute an accurate approximation, because the
@@ -1468,21 +1537,23 @@ findTangent(curve *       const curveP,
     unsigned int tangentSurround;
 
     LOG2("  tangent to %s of curve %lx: ",
-         toStartPoint ? "start" : "end", (unsigned long)curveP);
+         toWhichEnd == LINEEND_BEG ? "start" : "end", (unsigned long)curveP);
 
-    tangentSurround = tangentSurroundArg;  /* initial value */
+    tangentSurround = tangentSurroundReq;  /* initial value */
     do {
-        slope = findHalfTangent(toStartPoint, curveP, tangentSurround);
+        slope = findHalfTangent(toWhichEnd, curveP, tangentSurround);
 
         if (adjacentCurveP) {
             vector_type const slopeAdj =
-                findHalfTangent(!toStartPoint, adjacentCurveP,
+                findHalfTangent(otherEnd(toWhichEnd),
+                                adjacentCurveP,
                                 tangentSurround);
 
             LOG3("(adjacent curve half tangent (%.3f,%.3f,%.3f)) ",
                  slopeAdj.dx, slopeAdj.dy, slopeAdj.dz);
             slope = Vmult_scalar(Vadd(slope, slopeAdj), 0.5);
         }
+        assert(tangentSurround > 0);
         --tangentSurround;
     } while (slope.dx == 0.0 && slope.dy == 0.0);
 
@@ -1649,7 +1720,7 @@ subdivideCurve(curve *                   const curveP,
        point to compute the slope, hence we use adjacentCurveP.
     */
     findTangent(leftCurveP,
-                /* toStartPoint: */   false,
+                LINEEND_END,
                 /* adjacentCurveP: */ rghtCurveP,
                 fittingOptsP->tangent_surround, joinSlopeP);
 
@@ -1831,7 +1902,7 @@ fitWithLeastSquares(curve *                   const curveP,
                see if the "curve" that was fit should really just be a
                straight line.
             */
-            if (spline_linear_enough(&spline, curveP, fittingOptsP)) {
+            if (splineLinearEnough(&spline, curveP, fittingOptsP)) {
                 SPLINE_DEGREE(spline) = LINEARTYPE;
                 LOG("Changed to line.\n");
             }
@@ -1916,11 +1987,11 @@ fitCurves(curve_list_type           const curveList,
         LOG2("\nFitting curve #%u (%lx):\n", curveSeq, (unsigned long)curveP);
 
         LOG("Finding tangents:\n");
-        findTangent(curveP, /* toStart */ true,
+        findTangent(curveP, LINEEND_BEG,
                     CURVE_CYCLIC(curveP) ? curveP : NULL,
                     fittingOptsP->tangent_surround,
                     &begSlope);
-        findTangent(curveP, /* toStart */ false,
+        findTangent(curveP, LINEEND_END,
                     CURVE_CYCLIC(curveP) ? curveP : NULL,
                     fittingOptsP->tangent_surround, &endSlope);
 
@@ -1937,7 +2008,7 @@ fitCurves(curve_list_type           const curveList,
                    back to curves, because they are in a list with other
                    curves.
                 */
-                change_bad_lines(curveSplinesP, fittingOptsP);
+                changeBadLines(curveSplinesP, fittingOptsP);
 
                 concat_spline_lists(&curveListSplines, *curveSplinesP);
                 free_spline_list(*curveSplinesP);
