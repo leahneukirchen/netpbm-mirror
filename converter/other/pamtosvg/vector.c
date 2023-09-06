@@ -70,7 +70,7 @@ normalize(vector_type const v) {
         new_v.dy = v.dy;
         new_v.dz = v.dz;
     }
-    
+
     return new_v;
 }
 
@@ -120,7 +120,7 @@ Vmult_scalar(vector_type const v,
 */
 
 float
-Vangle(vector_type         const in_vector, 
+Vangle(vector_type         const in_vector,
        vector_type         const out_vector,
        at_exception_type * const exP) {
 
@@ -170,7 +170,7 @@ Vadd_int_point(pm_pixelcoord const c,
 
     a.col = ROUND ((float) c.col + v.dx);
     a.row = ROUND ((float) c.row + v.dy);
-    
+
     return a;
 }
 
@@ -257,7 +257,7 @@ IPsubtract(pm_pixelcoord const coord1,
     v.dx = (int) (coord1.col - coord2.col);
     v.dy = (int) (coord1.row - coord2.row);
     v.dz = 0.0;
-    
+
     return v;
 }
 
@@ -288,3 +288,19 @@ acos_d(float               const v,
 
     return retval;
 }
+
+
+
+vector_type
+Vhorizontal(void) {
+
+    vector_type retval;
+
+    retval.dx = 1.0;
+    retval.dy = 0.0;
+    retval.dz = 0.0;
+
+    return retval;
+}
+
+

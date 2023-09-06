@@ -34,6 +34,8 @@ not yet  BJH  Release 11.04.00
               large for unsigned integer.  Always broken (Pamstack was new in
               Netpbm 10.0 (June 2002).
 
+              pamtosvg: fix hang.
+
               ppmfade: fix "file not found" crash for most fade modes.
               Introduced in Netpbm 10.98 (March 2022).
 

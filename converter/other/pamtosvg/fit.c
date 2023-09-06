@@ -41,16 +41,16 @@
 
 #define CUBE(x) ((x) * (x) * (x))
 
-typedef enum {LINEEND_BEG, LINEEND_END} LineEnd;
+typedef enum {LINEEND_INIT, LINEEND_TERM} LineEnd;
 
 static LineEnd
 otherEnd(LineEnd const thisEnd) {
     switch (thisEnd) {
-    case LINEEND_BEG: return LINEEND_END;
-    case LINEEND_END: return LINEEND_BEG;
+    case LINEEND_INIT: return LINEEND_TERM;
+    case LINEEND_TERM: return LINEEND_INIT;
     }
     assert(false);  /* All cases handled above */
-    return LINEEND_BEG;  /* silence bogus compiler warning */
+    return LINEEND_INIT;  /* silence bogus compiler warning */
 }
 
 
@@ -1392,113 +1392,55 @@ logSplineFit(spline_type const spline) {
 
 
 static vector_type
-findHalfTangentBeg(curve *      const curveP,
-                   unsigned int const tangentSurround) {
-/*----------------------------------------------------------------------------
-  Find the slope in the vicinity of the beginning of the curve *curveP.
-
-  To wit, this is the mean slope between the first point on the curve and
-  each of the 'tangentSurround' following points, up to half the curve.
-
-  For example, if 'tangentSurround' is 3 and the curve is 10 points long, we
-  imagine a line through Point 0 and Point 1, another through Point 0 and
-  Point 2, and a third through Point 0 and Point 3.  We return the mean of the
-  slopes of those 3 lines.
-
-  'tangentSurround' must be at least 1 and *curveP must have at least
-  two points.
------------------------------------------------------------------------------*/
-    float_coord  const tangentPoint = CURVE_POINT(curveP, 0);
-    vector_type  const zeroZero = { 0.0, 0.0 };
-    unsigned int const surround =
-        MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
-
-    unsigned int p;
-    vector_type sum;
-    vector_type mean;
-    unsigned int n;
-
-    assert(CURVE_LENGTH(curveP) > 0);
-    assert(tangentSurround > 0);
-    assert(surround > 0);
-
-    for (p = 0, n = 0, sum = zeroZero; p < surround; ++p) {
-        unsigned int const thisIndex = p + 1;
-        float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
-
-        /* Perhaps we should weight the tangent from `thisPoint' by some
-           factor dependent on the distance from the tangent point.
-        */
-        sum = Vadd(sum, Pdirection(thisPoint, tangentPoint));
-        ++n;
-    }
-
-    mean = Vmult_scalar(sum, 1.0 / n);
-
-    assert(n != 0);  /* because surround > 0 */
-
-    return mean;
-}
-
-
-
-static vector_type
-findHalfTangentEnd(curve *      const curveP,
-                   unsigned int const tangentSurround) {
-/*----------------------------------------------------------------------------
-  Find the slope in the vicinity of the end of the curve *curveP.
-
-  This is analogous to findHalfTangentBeg(), but at the other end of the
-  curve.
------------------------------------------------------------------------------*/
-    float_coord const tangentPoint =
-        CURVE_POINT(curveP, CURVE_LENGTH(curveP) - 1);
-    vector_type const zeroZero = { 0.0, 0.0 };
-    unsigned int const surround =
-        MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
-
-    unsigned int p;
-    vector_type  sum;
-    vector_type  mean;
-    unsigned int n;
-
-    assert(CURVE_LENGTH(curveP)/2 > 0);
-    assert(tangentSurround > 0);
-    assert(surround > 0);
-
-    for (p = 0, n = 0, sum = zeroZero; p < surround; ++p) {
-        unsigned int const thisIndex = CURVE_LENGTH(curveP) - 1 - p;
-        float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
-
-        sum = Vadd(sum, Pdirection(tangentPoint, thisPoint));
-        ++n;
-    }
-
-    assert(n != 0);  /* because surround > 0 */
-
-    mean = Vmult_scalar(sum, 1.0 / n);
-
-    return mean;
-}
-
-
-
-static vector_type
 findHalfTangent(LineEnd      const toWhichEnd,
                 curve *      const curveP,
                 unsigned int const tangentSurround) {
+/*----------------------------------------------------------------------------
+  Find the slope in the vicinity of one of the ends of the curve *curveP,
+  as specified by 'toWhichEnd'.
 
-    switch (toWhichEnd) {
-    case LINEEND_BEG:
-        return findHalfTangentBeg(curveP, tangentSurround);
-    case LINEEND_END:
-        return findHalfTangentEnd(curveP, tangentSurround);
+  To wit, this is the mean slope between the end point and each of the
+  'tangentSurround' adjacent points, up to half the curve.
+
+  For example, if 'toWhichEnd' is LINEEND_INIT and 'tangentSurround' is 3 and
+  the curve is 10 points long, we imagine a line through Point 0 and Point 1,
+  another through Point 0 and Point 2, and a third through Point 0 and Point
+  3.  We return the mean of the slopes of those 3 lines.
+
+  Don't consider points that are identical to the end point (as there could
+  be no slope between those points) -- they're part of the count, but don't
+  contribute to the slope.  If _all_ of the points to be considered are
+  identical to the end point, arbitrarily return a horizontal slope.
+-----------------------------------------------------------------------------*/
+    float_coord  const tangentPoint =
+        CURVE_POINT(curveP,
+                    toWhichEnd == LINEEND_INIT ? 0 : CURVE_LENGTH(curveP) - 1);
+    vector_type  const zeroZero = { 0.0, 0.0 };
+    unsigned int const surroundCt =
+        MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
+
+    unsigned int i;
+    vector_type sum;
+    unsigned int n;
+    vector_type mean;
+
+    for (i = 0, n = 0, sum = zeroZero; i < surroundCt; ++i) {
+        unsigned int const thisIndex =
+            toWhichEnd == LINEEND_INIT ? i + 1 :  CURVE_LENGTH(curveP) - 1 - i;
+        float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
+
+        if (!pointsEqual(thisPoint, tangentPoint)) {
+            /* Perhaps we should weight the tangent from `thisPoint' by some
+               factor dependent on the distance from the tangent point.
+            */
+            sum = Vadd(sum, Pdirection(thisPoint, tangentPoint));
+            ++n;
+        }
     }
-    assert(false);  /* All cases handled above */
-    {
-        vector_type const dummyVector = {0.0, 0,0};
-        return dummyVector;  /* silence bogus compiler warning */
-    }
+
+    mean = n > 0 ? Vmult_scalar(sum, 1.0 / n) : Vhorizontal();
+
+    return mean;
 }
 
 
@@ -1507,60 +1449,54 @@ static void
 findTangent(curve *       const curveP,
             LineEnd       const toWhichEnd,
             curve *       const adjacentCurveP,
-            unsigned int  const tangentSurroundReq,
+            unsigned int  const tangentSurround,
             vector_type * const tangentP) {
 /*----------------------------------------------------------------------------
   Find an approximation to the slope of *curveP (i.e. slope of tangent
   line) at an endpoint (per 'toWhichEnd').
 
   This approximation is the mean of the slopes between the end of the curve
-  and the 'tangentSurroundReq' points leading up to it (but not beyond the
-  midpoint of the curve).  Note that the curve may loop.  We detect this only
-  in the case that the endpoint itself appears among those adjacent points.
-  In that case, we consider only the points up to that.
+  and the 'tangentSurround' points leading up to it (but not more than one
+  point beyond the midpoint of the curve).  Note that the curve may loop.
+  Since there is no slope between two identical points, we ignore points that
+  are identical to the endpoint.  They count toward the limit; they just
+  aren't included in the result.  If none of the points to be considered are
+  distinct from the endpoint, we arbitrarily consider the curve to be
+  horizontal there.
 
-  IF THE VERY NEXT POINT IS THE ENDPOINT AGAIN, WE CRASH WITH AN ASSERTION
-  FAILURE (AND IF NO ASSERTION CHECKING, INFINITE LOOP).  WE NEED TO FIX THAT.
-
-  If 'adjacentCurveP' is non-null, consider points on the adjacent
-  curve to *curveP.  The adjacent curve is *adjacentCurveP.  Adjacent
-  means the previous curve in the outline chain for the slope at the
-  start point ('toWhichEnd' == LINEEND_BEG), the next curve otherwise.
-  If *curveP is cyclic, then it is its own adjacent curve.
+  If 'adjacentCurveP' is non-null, average this slope with the slope of the
+  other end of curve *adjacentCurveP, which we assume is adjacent.  Adjacent
+  means the previous curve in the outline chain for the slope at the start
+  point ('toWhichEnd' == LINEEND_BEG), the next curve otherwise.  If *curveP
+  is cyclic, then it is its own adjacent curve.
 
   It is important to compute an accurate approximation, because the
   control points that we eventually decide upon to fit the curve will
   be placed on the half-lines defined by the slopes and endpoints, and
   we never recompute the tangent after this.
 -----------------------------------------------------------------------------*/
-    vector_type slope;
-    unsigned int tangentSurround;
+    vector_type const slopeThisCurve =
+        findHalfTangent(toWhichEnd, curveP, tangentSurround);
 
     LOG2("  tangent to %s of curve %lx: ",
-         toWhichEnd == LINEEND_BEG ? "start" : "end", (unsigned long)curveP);
+         toWhichEnd == LINEEND_INIT ? "start" : "end", (unsigned long)curveP);
 
-    tangentSurround = tangentSurroundReq;  /* initial value */
-    do {
-        slope = findHalfTangent(toWhichEnd, curveP, tangentSurround);
+    LOG3("(this curve half tangent (%.3f,%.3f,%.3f)) ",
+         slopeThisCurve.dx, slopeThisCurve.dy, slopeThisCurve.dz);
 
-        if (adjacentCurveP) {
-            vector_type const slopeAdj =
-                findHalfTangent(otherEnd(toWhichEnd),
-                                adjacentCurveP,
-                                tangentSurround);
+    if (adjacentCurveP) {
+        vector_type const slopeAdjCurve =
+            findHalfTangent(otherEnd(toWhichEnd),
+                            adjacentCurveP,
+                            tangentSurround);
 
-            LOG3("(adjacent curve half tangent (%.3f,%.3f,%.3f)) ",
-                 slopeAdj.dx, slopeAdj.dy, slopeAdj.dz);
-            slope = Vmult_scalar(Vadd(slope, slopeAdj), 0.5);
-        }
-        assert(tangentSurround > 0);
-        --tangentSurround;
-    } while (slope.dx == 0.0 && slope.dy == 0.0);
+        LOG3("(adjacent curve half tangent (%.3f,%.3f,%.3f)) ",
+             slopeAdjCurve.dx, slopeAdjCurve.dy, slopeAdjCurve.dz);
+        *tangentP = Vmult_scalar(Vadd(slopeThisCurve, slopeAdjCurve), 0.5);
+    } else
+        *tangentP = slopeThisCurve;
 
-    *tangentP = slope;
-
-    LOG3("(%.3f,%.3f,%.3f).\n",
-         tangentP->dx, tangentP->dy, tangentP->dz);
+    LOG3("(%.3f,%.3f,%.3f).\n", tangentP->dx, tangentP->dy, tangentP->dz);
 }
 
 
@@ -1720,7 +1656,7 @@ subdivideCurve(curve *                   const curveP,
        point to compute the slope, hence we use adjacentCurveP.
     */
     findTangent(leftCurveP,
-                LINEEND_END,
+                LINEEND_TERM,
                 /* adjacentCurveP: */ rghtCurveP,
                 fittingOptsP->tangent_surround, joinSlopeP);
 
@@ -1987,11 +1923,11 @@ fitCurves(curve_list_type           const curveList,
         LOG2("\nFitting curve #%u (%lx):\n", curveSeq, (unsigned long)curveP);
 
         LOG("Finding tangents:\n");
-        findTangent(curveP, LINEEND_BEG,
+        findTangent(curveP, LINEEND_INIT,
                     CURVE_CYCLIC(curveP) ? curveP : NULL,
                     fittingOptsP->tangent_surround,
                     &begSlope);
-        findTangent(curveP, LINEEND_END,
+        findTangent(curveP, LINEEND_TERM,
                     CURVE_CYCLIC(curveP) ? curveP : NULL,
                     fittingOptsP->tangent_surround, &endSlope);
 

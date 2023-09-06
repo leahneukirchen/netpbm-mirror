@@ -100,4 +100,7 @@ float_coord
 Pmult_scalar(float_coord const,
              float       const);
 
+vector_type
+Vhorizontal(void);
+
 #endif
