@@ -43,14 +43,6 @@ static double const SALT_RATIO = 0.5;
 
 
 
-static double
-rand1(struct pm_randSt * const randStP) {
-
-    return (double)pm_rand(randStP)/RAND_MAX;
-}
-
-
-
 enum NoiseType {
     NOISETYPE_GAUSSIAN,
     NOISETYPE_IMPULSE,  /* aka salt and pepper noise */
@@ -226,19 +218,13 @@ addGaussianNoise(sample             const maxval,
    Based on Kasturi/Algorithms of the ACM
 -----------------------------------------------------------------------------*/
 
-    double x1, x2, xn, yn;
+    double grnd1, grnd2; /* Gaussian random numbers.  mean=0 sigma=1 */
     double rawNewSample;
 
-    x1 = rand1(randStP);
-
-    if (x1 == 0.0)
-        x1 = 1.0;
-    x2 = rand1(randStP);
-    xn = sqrt(-2.0 * log(x1)) * cos(2.0 * M_PI * x2);
-    yn = sqrt(-2.0 * log(x1)) * sin(2.0 * M_PI * x2);
+    pm_gaussrand2(randStP, &grnd1, &grnd2);
 
     rawNewSample =
-        origSample + (sqrt((double) origSample) * sigma1 * xn) + (sigma2 * yn);
+      origSample + (sqrt((double) origSample) * sigma1 * grnd1) + (sigma2 * grnd2);
 
     *newSampleP = MAX(MIN((int)rawNewSample, maxval), 0);
 }
@@ -259,7 +245,7 @@ addImpulseNoise(sample             const maxval,
     double const pepperRatio = 1.0 - saltRatio;
     double const loTolerance = tolerance * pepperRatio;
     double const hiTolerance = 1.0 - tolerance * saltRatio;
-    double const sap         = rand1(randStP);
+    double const sap         = pm_drand(randStP);
 
     *newSampleP =
         sap < loTolerance ? 0 :
@@ -281,7 +267,7 @@ addLaplacianNoise(sample             const maxval,
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double const u = rand1(randStP);
+    double const u = pm_drand(randStP);
 
     double rawNewSample;
 
@@ -314,21 +300,10 @@ addMultiplicativeGaussianNoise(sample             const maxval,
 
    From Pitas' book.
 -----------------------------------------------------------------------------*/
-    double rayleigh, gauss;
+
     double rawNewSample;
 
-    {
-        double const uniform = rand1(randStP);
-        if (uniform <= EPSILON)
-            rayleigh = infinity;
-        else
-            rayleigh = sqrt(-2.0 * log( uniform));
-    }
-    {
-        double const uniform = rand1(randStP);
-        gauss = rayleigh * cos(2.0 * M_PI * uniform);
-    }
-    rawNewSample = origSample + (origSample * mgsigma * gauss);
+    rawNewSample = origSample + (origSample * mgsigma * pm_gaussrand(randStP));
 
     *newSampleP = MIN(MAX((int)rawNewSample, 0), maxval);
 }
@@ -384,7 +359,7 @@ addPoissonNoise(struct pam *       const pamP,
 
     double const lambda  = origSampleIntensity * lambdaOfMaxval;
 
-    double const u = rand1(randStP);
+    double const u = pm_drand(randStP);
 
     /* We now apply the inverse CDF (cumulative distribution function) of the
        Poisson distribution to uniform random variable 'u' to get a Poisson

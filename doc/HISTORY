@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.09.06 BJH  Release 11.03.05
+
+              pamtosvg: fix hang.
+
+              pamaddnoise: fix very incorrect noise added for all types.
+              Introduced in Netpbm 10.94 (March 2021).
+
+              ppmrough: fix buffer overrun.  Always broken (Ppmrough was new
+              in Netpbm 10.9 (September 2002).
+
+              ppmrough: fix excessive roughness.  Introduced in Netpbm 10.94
+              (March 2021).
+
 23.08.20 BJH  Release 11.03.04
 
               pgmtexture: Fix buffer overflow with maxval > 255.  Always

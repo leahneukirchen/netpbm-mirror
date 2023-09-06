@@ -1379,14 +1379,26 @@ findHalfTangentBeg(curve *      const curveP,
         unsigned int const thisIndex = p + 1;
         float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
 
-        /* Perhaps we should weight the tangent from `thisPoint' by some
-           factor dependent on the distance from the tangent point.
-        */
-        sum = Vadd(sum, Pdirection(thisPoint, tangentPoint));
-        ++n;
+        if (epsilon_equal(thisPoint.x, tangentPoint.x) &&
+            epsilon_equal(thisPoint.y, tangentPoint.y) &&
+            epsilon_equal(thisPoint.z, tangentPoint.z)) {
+            /* It's the same point; can't compute a slope */
+        } else {
+            /* Perhaps we should weight the tangent from `thisPoint' by some
+               factor dependent on the distance from the tangent point.
+            */
+            sum = Vadd(sum, Pdirection(thisPoint, tangentPoint));
+            ++n;
+        }
     }
 
-    mean = Vmult_scalar(sum, 1.0 / n);
+    if (n >= 1)
+        mean = Vmult_scalar(sum, 1.0 / n);
+    else {
+        mean.dx = 1.0;
+        mean.dy = 0.0;
+        mean.dz = 0.0;
+    }
 
     return mean;
 }
@@ -1418,11 +1430,23 @@ findHalfTangentEnd(curve *      const curveP,
         unsigned int const thisIndex = CURVE_LENGTH(curveP) - 1 - p;
         float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
 
-        sum = Vadd(sum, Pdirection(tangentPoint, thisPoint));
-        ++n;
+        if (epsilon_equal(thisPoint.x, tangentPoint.x) &&
+            epsilon_equal(thisPoint.y, tangentPoint.y) &&
+            epsilon_equal(thisPoint.z, tangentPoint.z)) {
+            /* It's the same point; can't compute a slope */
+        } else {
+            sum = Vadd(sum, Pdirection(tangentPoint, thisPoint));
+            ++n;
+        }
     }
 
-    mean = Vmult_scalar(sum, 1.0 / n);
+    if (n >= 1)
+        mean = Vmult_scalar(sum, 1.0 / n);
+    else {
+        mean.dx = 1.0;
+        mean.dy = 0.0;
+        mean.dz = 0.0;
+    }
 
     return mean;
 }
