@@ -304,3 +304,28 @@ Vhorizontal(void) {
 }
 
 
+vector_type
+Vzero(void) {
+
+    vector_type retval;
+
+    retval.dx = 0.0;
+    retval.dy = 0.0;
+    retval.dz = 0.0;
+
+    return retval;
+}
+
+
+bool
+Vequal(vector_type const comparand,
+       vector_type const comparator) {
+
+    return
+        epsilon_equal(comparand.dx, comparator.dx)
+        &&
+        epsilon_equal(comparand.dy, comparator.dy)
+        &&
+        epsilon_equal(comparand.dz, comparator.dz)
+        ;
+}

@@ -103,4 +103,11 @@ Pmult_scalar(float_coord const,
 vector_type
 Vhorizontal(void);
 
+vector_type
+Vzero(void);
+
+bool
+Vequal(vector_type const,
+       vector_type const);
+
 #endif

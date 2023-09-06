@@ -1411,34 +1411,58 @@ findHalfTangent(LineEnd      const toWhichEnd,
   be no slope between those points) -- they're part of the count, but don't
   contribute to the slope.  If _all_ of the points to be considered are
   identical to the end point, arbitrarily return a horizontal slope.
+
+  Return the slope as an unnormalized vector.  (I don't know if that was
+  intended by the designer, since it isn't sensible unless it's a
+  computational efficiency thing; it's just how I found the code).
+
+  It is possible for the mean described above to be the zero vector, because
+  the mean of a vector pointing left and one pointing right is the zero
+  vector.  In that case, we use fewer "tangentSurround" points.
 -----------------------------------------------------------------------------*/
     float_coord  const tangentPoint =
         CURVE_POINT(curveP,
                     toWhichEnd == LINEEND_INIT ? 0 : CURVE_LENGTH(curveP) - 1);
     vector_type  const zeroZero = { 0.0, 0.0 };
-    unsigned int const surroundCt =
-        MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
 
-    unsigned int i;
-    vector_type sum;
-    unsigned int n;
-    vector_type mean;
+    unsigned int surroundCt;
+    bool         gotNonzero;
+    vector_type  mean;
 
-    for (i = 0, n = 0, sum = zeroZero; i < surroundCt; ++i) {
-        unsigned int const thisIndex =
-            toWhichEnd == LINEEND_INIT ? i + 1 :  CURVE_LENGTH(curveP) - 1 - i;
-        float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
+    for (surroundCt = MIN(CURVE_LENGTH(curveP) / 2, tangentSurround),
+             gotNonzero = false;
+         !gotNonzero;
+         --surroundCt) {
 
-        if (!pointsEqual(thisPoint, tangentPoint)) {
-            /* Perhaps we should weight the tangent from `thisPoint' by some
-               factor dependent on the distance from the tangent point.
-            */
-            sum = Vadd(sum, Pdirection(thisPoint, tangentPoint));
-            ++n;
+        unsigned int i;
+        vector_type sum;
+        unsigned int n;
+
+        for (i = 0, n = 0, sum = zeroZero; i < surroundCt; ++i) {
+            unsigned int const thisIndex =
+                toWhichEnd == LINEEND_INIT ?
+                    i + 1 :  CURVE_LENGTH(curveP) - 1 - i;
+            float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
+
+            if (!pointsEqual(thisPoint, tangentPoint)) {
+                /* Perhaps we should weight the tangent from `thisPoint' by
+                   some factor dependent on the distance from the tangent
+                   point.
+                */
+                sum = Vadd(sum, Pdirection(thisPoint, tangentPoint));
+                ++n;
+            }
         }
-    }
+        mean = n > 0 ? Vmult_scalar(sum, 1.0 / n) : Vhorizontal();
 
-    mean = n > 0 ? Vmult_scalar(sum, 1.0 / n) : Vhorizontal();
+        if (Vequal(mean, Vzero())) {
+            /* We have points on multiple sides of the endpoint whose vectors
+               happen to add up to zero, which is not usable.
+            */
+            assert(surroundCt > 0);
+        } else
+            gotNonzero = true;
+    }
 
     return mean;
 }
