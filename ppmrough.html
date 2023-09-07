@@ -2,12 +2,13 @@
 <html><head><title>Ppmrough User Manual</title></head>
 <body>
 <h1>ppmrough</h1>
-Updated: 28 January 2022
+Updated: 20 August 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
-ppmrough - create PPM image of two colors with a ragged border between them
+ppmrough - create PPM image of a single color rectangle with ragged edges on a
+different color background
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
@@ -43,37 +44,27 @@ name and its value with white space instead of an equals sign.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>ppmrough</b> generates a PPM image of the specified width, height, and
-colors.  <b>ppmrough</b> tiles the image into semi-rectangular regions with a
-ragged borders between them.  It calculates the fluctuations with
-pseudo-random numbers.
+<p><b>ppmrough</b> generates a PPM image of the specified width and height.
+  The image consists of a rectangle of the specified foreground color
+  surrounded by borders of the specified size and background color, except
+  that the boundary between the foreground rectangle and the borders is
+  ragged.  The ragged effect is random.
 
 <p><b>ppmrough</b> writes the PPM image to Standard Output.
 
 <p>The maxval of the output image is 255 (You can change this with
 <b>pamdepth</b>).
 
-<p>Use the options <b>-left</b> or <b>-right</b>, respectively, to
-make vertical borders, and <b>-top</b> or <b>-bottom</b>,
-respectively, to generate horizontal borders inside the image.  Each of
-these options needs an integer value <i>pixels</i> that determines the
-average distance of the interior border to the related edge of the
-image.  You may combine the <b>-left</b>, <b>-right</b>, <b>-top</b>,
-and <b>-bottom</b> options to generate an image with more than one
-border.  The algorithm ensures that you can concatenate two images
-produced with the same (i.e. <b>-left</b>) value without dislocations.
+<p>Use the options <b>-left</b> or <b>-right</b>, respectively, to make
+vertical borders, and <b>-top</b> or <b>-bottom</b>, respectively, to generate
+horizontal borders inside the image.  The value of each of these options is
+the minimum width of the border on that edge.  Beyond that minimum, the width
+at any given location on that edge is random, varying along the edge in a
+fractal kind of way.
 
-<p>You specify the dimensions of the generated image with the
-<b>-width</b> and <b>-height</b> options.
-
-<p>Use the <b>-bg</b> and <b>-fg</b> options to set the background
-(margin) color and the foreground (interior) color, respectively.  If
-you don't specify any of the <b>-left</b>, <b>-right</b>, <b>-top</b>,
-and <b>-bottom</b> options, all pixels are set to foreground color.
-The defaults are white foreground and black background.
-
+  
 <p>Use the <b>-var</b> option to control the "raggedness" of
-the border.  The less its value is the smoother the border is.  You
+the border.  The lower its value, the smoother the border is.  You
 can initialize the pseudo-random generator with the <b>-init</b>
 option.
 
@@ -88,51 +79,46 @@ Common Options</a>), <b>ppmrough</b> recognizes the following
 command line options:
 
 <dl compact>
-<dt><b>-left=</b><i>pixels</i>
-
-<dd> Specifies the mean distance of the border from the left margin
-(default: no border).
-
-<dt><b>-right=</b><i>pixels</i>
-
-<dd>Specifies the mean distance of the border from the right margin
-(default: no border).
-
-<dt><b>-top=</b><i>pixels</i>
-
-<dd>Specifies the mean distance of the border from the top margin
-(default: no border).
-
-<dt><b>-bottom=</b><i>pixels</i>
-
-<dd>Specifies the mean distance of the border from the bottom margin
-(default: no border).
 
 <dt><b>-width=</b><i>pixels</i>
 
-<dd>Specifies the width of the image (default: 100).
+<dd>This specifies the width of the image in pixels (default: 100).
 
 <dt><b>-height=</b><i>pixels</i>
 
-<dd>Specifies the height of the image (default: 100).
+<dd>This specifies the height of the image in pixels (default: 100).
+
+<dt><b>-left=</b><i>pixels</i>
+<dt><b>-right=</b><i>pixels</i>
+<dt><b>-top=</b><i>pixels</i>
+<dt><b>-bottom=</b><i>pixels</i>
+
+<dd>This option causes the program to create a left, right, top, or bottom
+border, respectively, at least <i>pixels</i> pixels wide, varying randomly
+beyond that.  You may specify any combination of these.
 
 <dt><b>-bg=</b><i>colorspec</i>
 
-<dd>Background color.  <i>colorspec</i> is as described for the
+<dd>This is the background color, i.e. the color of the
+borders.  <i>colorspec</i> is as described for the
 <a href="libnetpbm_image.html#colorname">argument of the
 <b>pnm_parsecolor()</b> library routine</a>.  Default is black.
 
 <dt><b>-fg=</b><i>color</i>
 
-<dd>Foreground color.  <i>colorspec</i> is as described for the
+<dd>This specifies the foreground color, i.e. the color of the center of the
+mage -- everything but the borders.  <i>colorspec</i> is as described for the
 <a href="libnetpbm_image.html#colorname">argument of the
 <b>pnm_parsecolor()</b> library routine</a>.  Default is white.
 
 <dt><b>-var=</b><i>pixels</i>
 
-<dd> Specifies the variance of the ragged border (default: 10). Must
-be a positive integer.  Set <i>pixels</i> to 1 to get a straight
-border.
+<dd>This specifies how ragged the borders are -- how much and how quickly its
+width varies along the image edge.  Its specific meaning is complex, but the
+larger it is, the more the border varies.  Zero means it does not vary at all
+-- the edge of the foreground is straight.
+
+<p>This must be a nonnegative integer.  The default is 10.
 
 <dt><b>-randomseed=</b><i>seed</i>
 

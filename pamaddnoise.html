@@ -2,7 +2,7 @@
 <html><head><title>Pamaddnoise User Manual</title></head>
 <body>
 <h1>pamaddnoise</h1>
-Updated: 12 December 2020
+Updated: 21 August 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -81,45 +81,6 @@ Common Options</a>), <b>pamaddnoise</b> recognizes the following
 command line options:
 
 <dl compact>
-<dt><b>-lambda</b> <i>value</i>
-
-<dd>This is the expected value of the Poisson distribution for a sample value
-  of mximum intensity.  The expected value for other intensities is
-  proportional; e.g. for half intensity, it is half this value.
-
-<p>This is meaningful only with <b>-type=poisson</b>.
-
-<p>The default value is 12.
-
-<dt><b>-lsigma</b> <i>value</i>
-
-<dd>Used for laplacian noise only.  The default value is 10.0.
-
-<dt><b>-mgsigma</b> <i>value</i>
-
-<dd>Used for multiplicative gaussian noise only.  The default value is
-0.5.
-
-<dt><b>-seed</b> <i>int</i>
-
-<dd>Used for all noise types.  Set the initial random number generator
-seed value.
-
-<dt><b>-sigma1</b> <i>value</i>
-
-<dd>Used for gaussian noise only.  The default value is 4.0.
-
-<dt><b>-sigma2</b> <i>value</i>
-
-<dd>Used for gaussian noise only.  The default value is 20.0.
-
-<dt><b>-tolerance</b> <i>ratio</i>
-
-<dd>
-Used for impulse noise only.  The default value is 0.10.  This means
-that 5% of all pixel values will be set to 0 and 5% will be set to
-the maxval
-
 <dt><b>-type</b> <i>noise_type</i>
 
 <dd>
@@ -128,13 +89,89 @@ available: gaussian, multiplicative_gaussian, impulse, laplacian,
 poisson.  Only enough letters to be unique are required for the noise
 type option.  The default noise type is <b>gaussian</b>.
 
-<ul>
-<li><b>gaussian</b>
-<li><b>multiplicative_gaussian</b>
-<li><b>impulse</b>
-<li><b>laplacian</b>
-<li><b>poisson</b>
-</ul>
+<dl>
+<dt><b>gaussian</b>
+  <dd>To each sample value is added the value of a two Gaussian random variables.
+    The variance of one is independent of the sample value, while the variance
+    of the other is proportional to the sample value.  You control these
+    variances with options <b>-sigma1</b> and <b>-sigma2</b> (and can eliminate
+    either by setting the variance to 0).  The mean of the Gaussian
+    distributions is 0.
+
+<dt><b>multiplicative_gaussian</b>
+<dt><b>impulse</b>
+  <dd>This is &quot;salt and pepper&quot; noise.  Samples are changed randomly
+    to zero or full brightness or left alone.  This is also know as salt and
+    pepper noise, as in a grayscale picture, it adds white pixels and black
+    pixels, which look like salt and pepper, respectively.  Control this with
+    options <b>-tolerance</b> and <b>-salt</b>.
+
+<dt><b>laplacian</b>
+
+<dt><b>poisson</b>
+</dl>
+
+<dt><b>-lambda</b> <i>value</i>
+
+<dd>
+This is valid only with <b>-type=poisson</b>.  It is the expected value
+of the Poisson distribution for a sample value of mximum intensity.  The
+expected value for other intensities is proportional; e.g. for half intensity,
+it is half this value.
+
+<p>The default value is 12.
+
+<dt><b>-lsigma</b> <i>value</i>
+
+<dd>This is menaingful only for laplacian noise.
+
+<p>The default value is 10.0.
+
+<dt><b>-mgsigma</b> <i>value</i>
+
+<dd>This is valid only for multiplicative gaussian noise.
+
+<p>The default value is 0.5.
+
+<dt><b>-seed</b> <i>int</i>
+
+<dd>This is the random number generator seed value.  Use this to get
+  repeatable results.
+
+<dt><b>-sigma1</b> <i>value</i>
+
+<dd>This is valid only for gaussian noise.  It is the standard deviation
+  of the Gaussian random variable that is multiplied by the square root of
+  each sample value and added to that sample value.
+<p>
+    The default value is 4.0.
+
+<dt><b>-sigma2</b> <i>value</i>
+
+<dd>This is valid only for gaussian noise.
+  It is the standard deviation of the Gaussian random variable that is
+  added directly to each sample value.
+<p>
+The default value is 20.0.
+
+<dt><b>-tolerance</b> <i>fraction</i>
+
+<dd>This is valid only for impulse noise.
+  <i>fraction</i> is the fraction of samples that are changed
+  in the output.  Whether each is changed to salt or pepper is controlled by
+  <b>-salt</b>.
+
+<p>The default value is 0.10.
+
+<dt><b>-salt=<i>fraction</i></b>
+  <dd>This is valid only for impulse noise.  <i>fraction</i> is the
+    fraction of the pixels that are changed that are changed to salt (maxval);
+    the rest are changed to pepper (0).
+
+<p>The default is 0.5 (half salt, half pepper).
+
+<p>This option was new in Netpbm 11.04 (September 2023).  Before that, the
+  noise is always half salt and half pepper.
 
 </dl>
 
