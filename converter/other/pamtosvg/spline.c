@@ -34,7 +34,7 @@ print_spline (FILE *f, spline_type s)
    of de Casteljau's algorithm.  See Schneider's thesis, p.37.
    The variable names are taken from there.  */
 
-float_coord
+Point
 evaluate_spline (spline_type s, float t)
 {
   spline_type V[4];    /* We need degree+1 splines, but assert degree <= 3.  */
@@ -52,9 +52,9 @@ evaluate_spline (spline_type s, float t)
   for (j = 1; j <= degree; j++)
     for (i = 0; i <= degree - j; i++)
       {
-        float_coord t1 = Pmult_scalar (V[j - 1].v[i], one_minus_t);
-        float_coord t2 = Pmult_scalar (V[j - 1].v[i + 1], t);
-        float_coord temp = Padd (t1, t2);
+        Point t1 = point_scaled(V[j - 1].v[i], one_minus_t);
+        Point t2 = point_scaled(V[j - 1].v[i + 1], t);
+        Point temp = point_sum(t1, t2);
         V[j].v[i].x = temp.x;
         V[j].v[i].y = temp.y;
         V[j].v[i].z = temp.z;
@@ -76,7 +76,7 @@ new_spline_list (void)
   return answer;
 }
 
-spline_list_type 
+spline_list_type
 empty_spline_list (void)
 {
   spline_list_type answer;
@@ -192,4 +192,3 @@ append_spline_list (spline_list_array_type *l, spline_list_type s)
                       SPLINE_LIST_ARRAY_LENGTH(*l));
   LAST_SPLINE_LIST_ARRAY_ELT (*l) = s;
 }
-

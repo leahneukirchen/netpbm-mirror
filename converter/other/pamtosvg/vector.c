@@ -12,260 +12,9 @@
 #include "message.h"
 #include "epsilon-equal.h"
 
-static float acos_d (float, at_exception_type * excep);
-
-
-/* Given the point COORD, return the corresponding vector.  */
-
-vector_type
-make_vector(float_coord const c) {
-
-    vector_type v;
-
-    v.dx = c.x;
-    v.dy = c.y;
-    v.dz = c.z;
-
-    return v;
-}
-
-
-
-/* And the converse: given a vector, return the corresponding point.  */
-
-float_coord
-vector_to_point(vector_type const v) {
-
-    float_coord coord;
-
-    coord.x = v.dx;
-    coord.y = v.dy;
-    coord.z = v.dz;
-
-    return coord;
-}
-
-
-
-float
-magnitude(vector_type const v) {
-
-    return sqrt(SQR(v.dx) + SQR(v.dy) + SQR(v.dz));
-}
-
-
-
-vector_type
-normalize(vector_type const v) {
-
-    vector_type new_v;
-    float const m = magnitude(v);
-
-    if (m > 0.0) {
-        new_v.dx = v.dx / m;
-        new_v.dy = v.dy / m;
-        new_v.dz = v.dz / m;
-    } else {
-        new_v.dx = v.dx;
-        new_v.dy = v.dy;
-        new_v.dz = v.dz;
-    }
-
-    return new_v;
-}
-
-
-
-vector_type
-Vadd(vector_type const v1,
-     vector_type const v2) {
-
-    vector_type new_v;
-
-    new_v.dx = v1.dx + v2.dx;
-    new_v.dy = v1.dy + v2.dy;
-    new_v.dz = v1.dz + v2.dz;
-
-    return new_v;
-}
-
-
-
-float
-Vdot(vector_type const v1,
-     vector_type const v2) {
-
-    return v1.dx * v2.dx + v1.dy * v2.dy + v1.dz * v2.dz;
-}
-
-
-
-vector_type
-Vmult_scalar(vector_type const v,
-             float       const r) {
-
-    vector_type new_v;
-
-    new_v.dx = v.dx * r;
-    new_v.dy = v.dy * r;
-    new_v.dz = v.dz * r;
-
-    return new_v;
-}
-
-
-
-/* Given the IN_VECTOR and OUT_VECTOR, return the angle between them in
-   degrees, in the range zero to 180.
-*/
-
-float
-Vangle(vector_type         const in_vector,
-       vector_type         const out_vector,
-       at_exception_type * const exP) {
-
-    vector_type const v1 = normalize(in_vector);
-    vector_type const v2 = normalize(out_vector);
-
-    return acos_d(Vdot(v2, v1), exP);
-}
-
-
-
-float_coord
-Vadd_point(float_coord const c,
-           vector_type const v) {
-
-    float_coord new_c;
-
-    new_c.x = c.x + v.dx;
-    new_c.y = c.y + v.dy;
-    new_c.z = c.z + v.dz;
-
-    return new_c;
-}
-
-
-
-float_coord
-Vsubtract_point(float_coord const c,
-                vector_type const v) {
-
-    float_coord new_c;
-
-    new_c.x = c.x - v.dx;
-    new_c.y = c.y - v.dy;
-    new_c.z = c.z - v.dz;
-
-    return new_c;
-}
-
-
-
-pm_pixelcoord
-Vadd_int_point(pm_pixelcoord const c,
-               vector_type   const v) {
-
-    pm_pixelcoord a;
-
-    a.col = ROUND ((float) c.col + v.dx);
-    a.row = ROUND ((float) c.row + v.dy);
-
-    return a;
-}
-
-
-
-vector_type
-Vabs(vector_type const v) {
-
-    vector_type new_v;
-
-    new_v.dx = (float) fabs (v.dx);
-    new_v.dy = (float) fabs (v.dy);
-    new_v.dz = (float) fabs (v.dz);
-
-    return new_v;
-}
-
-
-
-/* Operations on points.  */
-
-float_coord
-Padd(float_coord const coord1,
-     float_coord const coord2) {
-
-    float_coord sum;
-
-    sum.x = coord1.x + coord2.x;
-    sum.y = coord1.y + coord2.y;
-    sum.z = coord1.z + coord2.z;
-
-    return sum;
-}
-
-
-
-float_coord
-Pmult_scalar(float_coord const coord,
-             float       const r) {
-
-    float_coord answer;
-
-    answer.x = coord.x * r;
-    answer.y = coord.y * r;
-    answer.z = coord.z * r;
-
-    return answer;
-}
-
-
-
-vector_type
-Psubtract(float_coord const c1,
-          float_coord const c2) {
-
-    vector_type v;
-
-    v.dx = c1.x - c2.x;
-    v.dy = c1.y - c2.y;
-    v.dz = c1.z - c2.z;
-
-    return v;
-}
-
-
-
-vector_type
-Pdirection(float_coord const final,
-           float_coord const initial) {
-
-    return normalize(Psubtract(final, initial));
-}
-
-
-
-/* Operations on integer points.  */
-
-vector_type
-IPsubtract(pm_pixelcoord const coord1,
-           pm_pixelcoord const coord2) {
-
-    vector_type v;
-
-    v.dx = (int) (coord1.col - coord2.col);
-    v.dy = (int) (coord1.row - coord2.row);
-    v.dz = 0.0;
-
-    return v;
-}
-
-
-
 static float
-acos_d(float               const v,
-       at_exception_type * const excepP) {
+acosD(float               const v,
+      at_exception_type * const excepP) {
 
     float vAdj;
     float a;
@@ -291,10 +40,228 @@ acos_d(float               const v,
 
 
 
-vector_type
-Vhorizontal(void) {
+Vector
+vector_fromPoint(Point const c) {
+/* Vector corresponding to point 'c', taken as a vector from the origin.  */
 
-    vector_type retval;
+    Vector v;
+
+    v.dx = c.x;
+    v.dy = c.y;
+    v.dz = c.z;
+
+    return v;
+}
+
+
+
+Vector
+vector_fromTwoPoints(Point const c1,
+                     Point const c2) {
+
+    Vector retval;
+
+    retval.dx = c1.x - c2.x;
+    retval.dy = c1.y - c2.y;
+    retval.dz = c1.z - c2.z;
+
+    return retval;
+}
+
+
+
+/* And the converse: given a vector, return the corresponding point.  */
+
+Point
+vector_toPoint_point(Vector const v) {
+/* vector as a point, i.e., a displacement from the origin.  */
+
+    Point coord;
+
+    coord.x = v.dx;
+    coord.y = v.dy;
+    coord.z = v.dz;
+
+    return coord;
+}
+
+
+
+float
+vector_magnitude(Vector const v) {
+
+    return sqrt(SQR(v.dx) + SQR(v.dy) + SQR(v.dz));
+}
+
+
+
+Vector
+vector_normalized(Vector const v) {
+
+    Vector new_v;
+    float const m = vector_magnitude(v);
+
+    if (m > 0.0) {
+        new_v.dx = v.dx / m;
+        new_v.dy = v.dy / m;
+        new_v.dz = v.dz / m;
+    } else {
+        new_v.dx = v.dx;
+        new_v.dy = v.dy;
+        new_v.dz = v.dz;
+    }
+
+    return new_v;
+}
+
+
+
+Vector
+vector_sum(Vector const addend,
+           Vector const adder) {
+
+    Vector retval;
+
+    retval.dx = addend.dx + adder.dx;
+    retval.dy = addend.dy + adder.dy;
+    retval.dz = addend.dz + adder.dz;
+
+    return retval;
+}
+
+
+
+float
+vector_dotProduct(Vector const v1,
+                  Vector const v2) {
+
+    return v1.dx * v2.dx + v1.dy * v2.dy + v1.dz * v2.dz;
+}
+
+
+
+Vector
+vector_scaled(Vector const v,
+              float  const r) {
+
+    Vector retval;
+
+    retval.dx = v.dx * r;
+    retval.dy = v.dy * r;
+    retval.dz = v.dz * r;
+
+    return retval;
+}
+
+
+
+float
+vector_angle(Vector              const inVector,
+             Vector              const outVector,
+             at_exception_type * const exP) {
+
+/* The angle between 'inVector' and 'outVector' in degrees, in the range zero
+   to 180.
+*/
+
+    Vector const v1 = vector_normalized(inVector);
+    Vector const v2 = vector_normalized(outVector);
+
+    return acosD(vector_dotProduct(v2, v1), exP);
+}
+
+
+
+Point
+vector_sumPoint(Point const c,
+                Vector      const v) {
+
+    Point retval;
+
+    retval.x = c.x + v.dx;
+    retval.y = c.y + v.dy;
+    retval.z = c.z + v.dz;
+
+    return retval;
+}
+
+
+
+Point
+vector_diffPoint(Point  const c,
+                 Vector const v) {
+
+    Point retval;
+
+    retval.x = c.x - v.dx;
+    retval.y = c.y - v.dy;
+    retval.z = c.z - v.dz;
+
+    return retval;
+}
+
+
+
+Vector
+vector_IPointDiff(pm_pixelcoord const coord1,
+                  pm_pixelcoord const coord2) {
+
+    Vector retval;
+
+    retval.dx = (int) (coord1.col - coord2.col);
+    retval.dy = (int) (coord1.row - coord2.row);
+    retval.dz = 0.0;
+
+    return retval;
+}
+
+
+
+pm_pixelcoord
+vector_sumIntPoint(pm_pixelcoord const c,
+                   Vector        const v) {
+
+/* This returns the rounded sum.  */
+
+    pm_pixelcoord retval;
+
+    retval.col = ROUND ((float) c.col + v.dx);
+    retval.row = ROUND ((float) c.row + v.dy);
+
+    return retval;
+}
+
+
+
+Vector
+vector_abs(Vector const v) {
+
+/* First-quadrant mirror of 'v' (both components unsigned) */
+
+    Vector retval;
+
+    retval.dx = (float) fabs (v.dx);
+    retval.dy = (float) fabs (v.dy);
+    retval.dz = (float) fabs (v.dz);
+
+    return retval;
+}
+
+
+
+Vector
+vector_pointDirection(Point const final,
+                      Point const initial) {
+
+    return vector_normalized(vector_fromTwoPoints(final, initial));
+}
+
+
+
+Vector
+vector_horizontal(void) {
+
+    Vector retval;
 
     retval.dx = 1.0;
     retval.dy = 0.0;
@@ -304,10 +271,10 @@ Vhorizontal(void) {
 }
 
 
-vector_type
-Vzero(void) {
+Vector
+vector_zero(void) {
 
-    vector_type retval;
+    Vector retval;
 
     retval.dx = 0.0;
     retval.dy = 0.0;
@@ -318,8 +285,8 @@ Vzero(void) {
 
 
 bool
-Vequal(vector_type const comparand,
-       vector_type const comparator) {
+vector_equal(Vector const comparand,
+             Vector const comparator) {
 
     return
         epsilon_equal(comparand.dx, comparator.dx)
@@ -329,3 +296,6 @@ Vequal(vector_type const comparand,
         epsilon_equal(comparand.dz, comparator.dz)
         ;
 }
+
+
+

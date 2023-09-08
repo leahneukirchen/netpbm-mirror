@@ -46,12 +46,12 @@ typedef struct _at_spline_list_array_type at_spline_list_array_type;
 /* Third degree is the highest we deal with.  */
 typedef enum _at_polynomial_degree
 {
-  AT_LINEARTYPE = 1, 
-  AT_QUADRATICTYPE = 2, 
-  AT_CUBICTYPE = 3, 
+  AT_LINEARTYPE = 1,
+  AT_QUADRATICTYPE = 2,
+  AT_CUBICTYPE = 3,
   AT_PARALLELELLIPSETYPE = 4,
-  AT_ELLIPSETYPE = 5, 
-  AT_CIRCLETYPE = 6 
+  AT_ELLIPSETYPE = 5,
+  AT_CIRCLETYPE = 6
   /* not the real number of points to define a
      circle but to distinguish between a cubic spline */
 } at_polynomial_degree;
@@ -63,7 +63,7 @@ typedef enum _at_polynomial_degree
    straight line defined by the endpoints.  */
 struct _at_spline_type
 {
-  float_coord v[4];	/* The control points.  */
+  Point v[4];   /* The control points.  */
   at_polynomial_degree degree;
   float linearity;
 };
@@ -88,8 +88,8 @@ struct _at_spline_list_array_type
 
   /* splines bbox */
   unsigned short height, width;
-  
-  /* the values for following members are inherited from 
+
+  /* the values for following members are inherited from
      at_fitting_opts_type */
   bool backgroundSpec;
   pixel background_color;
@@ -101,7 +101,7 @@ struct _at_spline_list_array_type
 
 
 /* Fitting option.
-   With using at_fitting_opts_doc macro, the description of 
+   With using at_fitting_opts_doc macro, the description of
    each option could be get. e.g. at_fitting_opts_doc(background_color) */
 struct _at_fitting_opts_type {
     bool backgroundSpec;
@@ -122,7 +122,7 @@ struct _at_fitting_opts_type {
 
 struct _at_output_opts_type
 {
-  int dpi;			/* DPI is used only in MIF output.*/
+  int dpi;          /* DPI is used only in MIF output.*/
 };
 
 struct _at_bitmap_type
@@ -144,16 +144,16 @@ void (* at_msg_func) (const char * const msg,
                       at_msg_type  const msg_type,
                       void *       const client_data);
 
-typedef 
+typedef
 int (*at_output_write_func) (FILE *                          const file,
                              const char *                    const name,
                              int                             const llx,
-                             int                             const lly, 
+                             int                             const lly,
                              int                             const urx,
                              int                             const ury,
                              at_output_opts_type *           const opts,
                              at_spline_list_array_type       const shape,
-                             at_msg_func                           msg_func, 
+                             at_msg_func                           msg_func,
                              void *                          const msg_data);
 
 /*
@@ -181,7 +181,7 @@ bool (*at_testcancel_func) (void * const client_data);
  * TODO: internal data access, copy
  * --------------------------------------------------------------------- */
 at_fitting_opts_type * at_fitting_opts_new(void);
-at_fitting_opts_type * at_fitting_opts_copy (at_fitting_opts_type * original); 
+at_fitting_opts_type * at_fitting_opts_copy (at_fitting_opts_type * original);
 void at_fitting_opts_free(at_fitting_opts_type * opts);
 
 /* TODO: Gettextize */
@@ -206,8 +206,8 @@ void at_output_opts_free(at_output_opts_type * opts);
    args:
 
    NOTIFY_PROGRESS is called repeatedly inside at_splines_new_full
-   to notify the progress of the execution. This might be useful for 
-   interactive applications. NOTIFY_PROGRESS is called following 
+   to notify the progress of the execution. This might be useful for
+   interactive applications. NOTIFY_PROGRESS is called following
    format:
 
    NOTIFY_PROGRESS (percentage, progress_data);
@@ -215,27 +215,27 @@ void at_output_opts_free(at_output_opts_type * opts);
    test_cancel is called repeatedly inside at_splines_new_full
    to test whether the execution is canceled or not.
    If test_cancel returns TRUE, execution of at_splines_new_full
-   is stopped as soon as possible and returns NULL. If test_cancel 
+   is stopped as soon as possible and returns NULL. If test_cancel
    returns FALSE, nothing happens. test_cancel  is called following
    format:
 
    TEST_CANCEL (testcancel_data);
-   
-   NULL is valid value for notify_progress and/or test_cancel if 
-   you don't need to know the progress of the execution and/or 
-   cancel the execution */ 
 
-at_spline_list_array_type * 
+   NULL is valid value for notify_progress and/or test_cancel if
+   you don't need to know the progress of the execution and/or
+   cancel the execution */
+
+at_spline_list_array_type *
 at_splines_new_full(at_bitmap_type *       const bitmap,
                     at_fitting_opts_type * const opts,
-                    at_msg_func                  msg_func, 
+                    at_msg_func                  msg_func,
                     void *                 const msg_data,
                     at_progress_func             notify_progress,
                     void *                 const progress_data,
                     at_testcancel_func           test_cancel,
                     void *                 const testcancel_data);
 
-void 
+void
 at_splines_write(at_output_write_func                  output_writer,
                  FILE *                          const writeto,
                  at_output_opts_type *           const opts,

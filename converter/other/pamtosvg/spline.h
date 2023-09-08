@@ -28,10 +28,10 @@ typedef at_spline_type spline_type;
 
 #ifndef _IMPORTING
 /* Print a spline on the given file.  */
-extern void print_spline (FILE *, spline_type);
+void print_spline (FILE *, spline_type);
 
 /* Evaluate SPLINE at the given T value.  */
-extern float_coord evaluate_spline (spline_type spline, float t);
+Point evaluate_spline (spline_type spline, float t);
 #endif
 
 /* Each outline in a character is typically represented by many

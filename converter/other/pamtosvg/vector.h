@@ -11,103 +11,79 @@
 typedef struct
 {
   float dx, dy, dz;
-} vector_type;
+} Vector;
 
 
-/* Consider a point as a vector from the origin.  */
-vector_type
-make_vector(float_coord const);
+Vector
+vector_fromPoint(Point const c);
 
-/* And a vector as a point, i.e., a displacement from the origin.  */
-float_coord
-vector_to_point(vector_type const);
+Vector
+vector_fromTwoPoints(Point const c1,
+                     Point const c2);
+
+Point
+vector_toPoint_point(Vector const v);
 
 
 /* Definitions for these common operations can be found in any decent
-   linear algebra book, and most calculus books.  */
+   linear algebra book, and most calculus books.
+*/
 
 float
-magnitude(vector_type const);
+vector_magnitude(Vector const v);
 
-vector_type
-normalize(vector_type const);
+Vector
+vector_normalized(Vector const v);
 
-vector_type
-Vadd(vector_type const,
-     vector_type const);
-
-float
-Vdot(vector_type const,
-     vector_type const);
-
-vector_type
-Vmult_scalar(vector_type const,
-             float       const);
+Vector
+vector_sum(Vector const addend,
+           Vector const adder);
 
 float
-Vangle(vector_type         const in,
-       vector_type         const out,
-       at_exception_type * const exP);
+vector_dotProduct(Vector const v1,
+                  Vector const v2);
 
-/* These operations could have been named `P..._vector' just as well as
-   V..._point, so we may as well allow both names.  */
+Vector
+vector_scaled(Vector const v,
+              float  const r);
 
-#define Padd_vector Vadd_point
+float
+vector_angle(Vector              const inVector,
+             Vector              const outVector,
+             at_exception_type * const exP);
 
-float_coord
-Vadd_point(float_coord const,
-           vector_type const);
+Point
+vector_sumPoint(Point  const c,
+                Vector const v);
 
-#define Psubtract_vector Vsubtract_point
-
-float_coord
-Vsubtract_point(float_coord const,
-                vector_type const);
-
-vector_type
-Pdirection(float_coord const final,
-           float_coord const initial);
-
-/* This returns the rounded sum.  */
-#define IPadd_vector Vadd_int_point
+Point
+vector_diffPoint(Point  const c,
+                 Vector const v);
 
 pm_pixelcoord
-Vadd_int_point(pm_pixelcoord const c,
-               vector_type   const v);
+vector_sumIntPoint(pm_pixelcoord const c,
+                   Vector        const v);
 
-/* Take the absolute value of both components.  */
-vector_type
-Vabs(vector_type const);
+Vector
+vector_abs(Vector const v);
 
-/* Operations on points with real coordinates.  It is not orthogonal,
-   but more convenient, to have the subtraction operator return a
-   vector, and the addition operator return a point.  */
-vector_type
-Psubtract(float_coord const,
-          float_coord const);
+Vector
+vector_pointDirection(Point const final,
+                      Point const initial);
 
-vector_type
-IPsubtract(pm_pixelcoord const coord1,
-           pm_pixelcoord const coord2);
 
-/* These are heavily used in spline fitting.  */
+Vector
+vector_IPointDiff(pm_pixelcoord const coord1,
+                  pm_pixelcoord const coord2);
 
-float_coord
-Padd(float_coord const,
-     float_coord const);
+Vector
+vector_horizontal(void);
 
-float_coord
-Pmult_scalar(float_coord const,
-             float       const);
-
-vector_type
-Vhorizontal(void);
-
-vector_type
-Vzero(void);
+Vector
+vector_zero(void);
 
 bool
-Vequal(vector_type const,
-       vector_type const);
+vector_equal(Vector const comparand,
+             Vector const comparator);
 
 #endif

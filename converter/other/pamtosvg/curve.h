@@ -14,7 +14,7 @@
    i.e., integers, after filtering they are reals.  */
 
 typedef struct {
-    float_coord coord;
+    Point coord;
     float       t;
 } point_type;
 
@@ -89,7 +89,7 @@ free_curve(curve * const curveP);
 /* Like `append_pixel', for a point in real coordinates.  */
 void
 append_point(curve_type  const curve,
-             float_coord const coord);
+             Point       const coord);
 
 /* Append the point P to the end of C's list.  */
 void
@@ -98,11 +98,11 @@ append_pixel(curve_type    const c,
 
 /* Write some or all, respectively, of the curve C in human-readable
    form to the log file, if logging is enabled.  */
-extern void log_curve (curve_type c, bool print_t);
-extern void log_entire_curve (curve_type c);
+void log_curve (curve_type c, bool print_t);
+void log_entire_curve (curve_type c);
 
 /* Display the curve C online, if displaying is enabled.  */
-extern void display_curve (curve_type);
+void display_curve (curve_type);
 
 
 
@@ -134,12 +134,12 @@ typedef struct {
 #define CURVE_LIST_CLOCKWISE(c_l) ((c_l).clockwise)
 
 
-extern curve_list_type new_curve_list (void);
+curve_list_type new_curve_list (void);
 
 void
 free_curve_list(curve_list_type * const curve_list);
 
-extern void append_curve (curve_list_type *, curve_type);
+void append_curve (curve_list_type *, curve_type);
 
 /* And a character is a list of outlines.  I named this
    `curve_list_array_type' because `curve_list_list_type' seemed pretty
@@ -161,7 +161,7 @@ new_curve_list_array(void);
 
 void
 free_curve_list_array(const curve_list_array_type * const curve_list_array,
-                      at_progress_func                    notify_progress, 
+                      at_progress_func                    notify_progress,
                       void *                        const client_data);
 
 void
@@ -169,4 +169,3 @@ append_curve_list(curve_list_array_type * const curve_list_array,
                   curve_list_type         const curve_list);
 
 #endif
-

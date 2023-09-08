@@ -5,15 +5,23 @@
 
 typedef struct {
   float x, y, z;
-} float_coord;
+} Point;
 
-float_coord
-makePoint(float const x,
-          float const y,
-          float const z);
+Point
+point_make(float const x,
+           float const y,
+           float const z);
 
 bool
-pointsEqual(float_coord const comparand,
-            float_coord const comparator);
+point_equal(Point const comparand,
+            Point const comparator);
+
+Point
+point_sum(Point const coord1,
+          Point const coord2);
+
+Point
+point_scaled(Point const coord,
+             float const r);
 
 #endif
