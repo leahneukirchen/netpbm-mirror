@@ -1,4 +1,3 @@
-
 /***************************************************************************
 
     MDATOPBM: Convert Microdesign area to portable bitmap
@@ -47,7 +46,8 @@ getbyte(void) {
 
     b = fgetc(infile);
 
-    if (b == EOF) pm_error("Unexpected end of MDA file\n");
+    if (b == EOF)
+        pm_error("Unexpected end of MDA file");
 
     return (mdbyte)b;
 }
@@ -55,51 +55,57 @@ getbyte(void) {
 
 
 static void
-render_byte(int *col, int *xp, int *yp, int b) {
+renderByte(unsigned int * const colP,
+           unsigned int * const xP,
+           unsigned int * const yP,
+           int            const b) {
+/*----------------------------------------------------------------------------
+  Convert a byte to 8 cells in the destination bitmap
 
-/* Convert a byte to 8 cells in the destination bitmap
- *
- * *col = source column
- * *xp  = destination column
- * *yp  = destination row
- *  b   = byte to draw
- *
- * Will update *col, *xp and *yp to point to the next bit of the row.
- */
+  As input
 
-    int mask = 0x80;
-    int n;
-    int y3 = *yp;
+    *colP = source column
+    *xP  = destination column
+    *yP  = destination row
+    b    = byte to draw
 
-    if (bScale) y3 *= 2;
+  As output, update *colP, *xP and *yP to point to the next bit of the row.
+-----------------------------------------------------------------------------*/
+    int const y3 =  bScale ? *yP * 2 : *yP;
 
-    if (y3 >= nOutRows) return;
+    if (y3 < nOutRows) {
+        unsigned int n;
+        int mask;
 
-    for (n = 0; n < 8; ++n) {
-        if (bInvert) data[y3][*xp] = (b & mask) ? PBM_BLACK : PBM_WHITE;
-        else         data[y3][*xp] = (b & mask) ? PBM_WHITE : PBM_BLACK;
-        mask = mask >> 1;
-        if (bScale) data[y3+1][*xp] = data[y3][*xp];
-        ++(*xp);
-    }
-    ++(*col);       /* Next byte */
-    if ((*col) >= nInCols) {
-        /* Onto next line? */
-        *col = 0;
-        *xp = 0;
-        ++(*yp);
+        for (n = 0, mask = 0x80; n < 8; ++n) {
+            if (bInvert) data[y3][*xP] = (b & mask) ? PBM_BLACK : PBM_WHITE;
+            else         data[y3][*xP] = (b & mask) ? PBM_WHITE : PBM_BLACK;
+            mask = mask >> 1;
+            if (bScale)
+                data[y3+1][*xP] = data[y3][*xP];
+            ++(*xP);
+        }
+        ++(*colP);       /* Next byte */
+        if ((*colP) >= nInCols) {
+            /* Onto next line? */
+            *colP = 0;
+            *xP = 0;
+            ++(*yP);
+        }
     }
 }
 
 
-static void
-md2_trans(void) {
-    /* Convert a MicroDesign 2 area to PBM */
-    /* MD2 has RLE encoding that may go over */
 
-    int x1, y1, col;    /* multiple lines. */
+static void
+md2Trans(void) {
+/*----------------------------------------------------------------------------
+   Convert a MicroDesign 2 area to PBM
+
+   MD2 has RLE encoding that may go over
+-----------------------------------------------------------------------------*/
+    unsigned int x1, y1, col;    /* multiple lines. */
     mdbyte b;
-    int c;
 
     x1 = y1 = col = 0;
 
@@ -108,47 +114,55 @@ md2_trans(void) {
 
         if (b == 0 || b == 0xFF) {
             /* RLE sequence */
+            int c;
             c = getbyte();
-            if (c == 0) c = 256;
+            if (c == 0)
+                c = 256;
             while (c > 0) {
-                render_byte(&col, &x1, &y1, b);
+                renderByte(&col, &x1, &y1, b);
                 --c;
             }
-        }
-        else
-            render_byte(&col, &x1, &y1, b);    /* Not RLE */
+        } else
+            renderByte(&col, &x1, &y1, b);    /* Not RLE */
     }
 }
 
 
 
 static void
-md3_trans(void) {
-    /* Convert MD3 file. MD3 are encoded as rows, and
-       there are three types.
-    */
-    int x1, y1, col;
-    mdbyte b;
-    int c, d, n;
+md3Trans(void) {
+/*----------------------------------------------------------------------------
+   Convert MD3 file. MD3 are encoded as rows, and there are three types.
+-----------------------------------------------------------------------------*/
+    unsigned int y1;
 
     for (y1 = 0; y1 < nInRows; ++y1) {
+        mdbyte b;
+
         b = getbyte();   /* Row type */
         switch(b)  {
-        case 0: /* All the same byte */
+        case 0: {  /* All the same byte */
+            int c;
+            unsigned int i;
             c = getbyte();
-            for (n = 0; n < nInCols; n++)
-                mdrow[n] = c;
-            break;
+            for (i = 0; i < nInCols; ++i)
+                mdrow[i] = c;
+        } break;
 
         case 1:      /* Encoded data */
-        case 2: col = 0; /* Encoded as XOR with previous row */
+        case 2: {     /* Encoded as XOR with previous row */
+            unsigned int col;
+            col = 0;
             while (col < nInCols) {
+                int c;
                 c = getbyte();
                 if (c >= 129) {
                     /* RLE sequence */
+                    unsigned int i;
+                    int d;
                     c = 257 - c;
                     d = getbyte();
-                    for (n = 0; n < c; ++n) {
+                    for (i = 0; i < c; ++i) {
                         if (b == 1)
                             mdrow[col++] = d;
                         else
@@ -156,22 +170,31 @@ md3_trans(void) {
                     }
                 } else {
                     /* not RLE sequence */
-                        ++c;
-                        for (n = 0; n < c; ++n) {
-                            d = getbyte();
-                            if (b == 1)
-                                mdrow[col++] = d;
-                            else
-                                mdrow[col++] ^= d;
-                        }
+                    unsigned int i;
+                    ++c;
+                    for (i = 0; i < c; ++i) {
+                        int d;
+                        d = getbyte();
+                        if (b == 1)
+                            mdrow[col++] = d;
+                        else
+                            mdrow[col++] ^= d;
+                    }
                 }
             }
+        } break;
         }
-        /* Row loaded. Convert it. */
-        x1 = 0; col = 0;
-        for (n = 0; n < nInCols; ++n) {
-            d  = y1;
-            render_byte(&col, &x1, &d, mdrow[n]);
+        {
+            /* Row loaded. Convert it. */
+            unsigned int x1;
+            unsigned int col;
+            unsigned int i;
+
+            for (i = 0, x1 = 0, col = 0; i < nInCols; ++i) {
+                unsigned int d;
+                d = y1;
+                renderByte(&col, &x1, &d, mdrow[i]);
+            }
         }
     }
 }
@@ -255,9 +278,9 @@ main(int argc, char **argv) {
     MALLOCARRAY_NOFAIL(mdrow, nInCols);
 
     if (header[21] == '0')
-        md2_trans();
+        md2Trans();
     else
-        md3_trans();
+        md3Trans();
 
     pbm_writepbm(stdout, data, nInCols*8, nOutRows, bAscii);
 
