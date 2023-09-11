@@ -40,7 +40,7 @@ static int bAscii  = 0;     /* Output ASCII PBM? */
 static int nInRows, nInCols;        /* Height, width of input (rows x bytes) */
 static int nOutCols, nOutRows;      /* Height, width of output (rows x bytes) */
 
-static mdbyte 
+static mdbyte
 getbyte(void) {
     /* Read a byte from the input stream, with error trapping */
     int b;
@@ -48,16 +48,16 @@ getbyte(void) {
     b = fgetc(infile);
 
     if (b == EOF) pm_error("Unexpected end of MDA file\n");
-    
+
     return (mdbyte)b;
 }
 
 
 
-static void 
+static void
 render_byte(int *col, int *xp, int *yp, int b) {
 
-/* Convert a byte to 8 cells in the destination bitmap 
+/* Convert a byte to 8 cells in the destination bitmap
  *
  * *col = source column
  * *xp  = destination column
@@ -92,7 +92,7 @@ render_byte(int *col, int *xp, int *yp, int b) {
 }
 
 
-static void 
+static void
 md2_trans(void) {
     /* Convert a MicroDesign 2 area to PBM */
     /* MD2 has RLE encoding that may go over */
@@ -105,27 +105,27 @@ md2_trans(void) {
 
     while (y1 < nInRows) {
         b = getbyte();
-    
+
         if (b == 0 || b == 0xFF) {
             /* RLE sequence */
             c = getbyte();
             if (c == 0) c = 256;
-            while (c > 0) { 
-                render_byte(&col, &x1, &y1, b); 
-                --c; 
+            while (c > 0) {
+                render_byte(&col, &x1, &y1, b);
+                --c;
             }
         }
-        else 
+        else
             render_byte(&col, &x1, &y1, b);    /* Not RLE */
     }
 }
 
 
 
-static void 
+static void
 md3_trans(void) {
-    /* Convert MD3 file. MD3 are encoded as rows, and 
-       there are three types. 
+    /* Convert MD3 file. MD3 are encoded as rows, and
+       there are three types.
     */
     int x1, y1, col;
     mdbyte b;
@@ -136,10 +136,10 @@ md3_trans(void) {
         switch(b)  {
         case 0: /* All the same byte */
             c = getbyte();
-            for (n = 0; n < nInCols; n++) 
+            for (n = 0; n < nInCols; n++)
                 mdrow[n] = c;
             break;
-            
+
         case 1:      /* Encoded data */
         case 2: col = 0; /* Encoded as XOR with previous row */
             while (col < nInCols) {
@@ -149,26 +149,26 @@ md3_trans(void) {
                     c = 257 - c;
                     d = getbyte();
                     for (n = 0; n < c; ++n) {
-                        if (b == 1) 
+                        if (b == 1)
                             mdrow[col++] = d;
-                        else 
+                        else
                             mdrow[col++] ^= d;
-                    }   
+                    }
                 } else {
                     /* not RLE sequence */
                         ++c;
                         for (n = 0; n < c; ++n) {
                             d = getbyte();
-                            if (b == 1) 
+                            if (b == 1)
                                 mdrow[col++] = d;
                             else
                                 mdrow[col++] ^= d;
                         }
-                } 
+                }
             }
         }
         /* Row loaded. Convert it. */
-        x1 = 0; col = 0; 
+        x1 = 0; col = 0;
         for (n = 0; n < nInCols; ++n) {
             d  = y1;
             render_byte(&col, &x1, &d, mdrow[n]);
@@ -178,8 +178,8 @@ md3_trans(void) {
 
 
 
-static void 
-usage(char *s) {        
+static void
+usage(char *s) {
     printf("mdatopbm v1.00, Copyright (C) 1999 "
            "John Elliott <jce@seasip.demon.co.uk>\n"
            "This program is redistributable under the terms of "
@@ -197,7 +197,7 @@ usage(char *s) {
 
 
 
-int 
+int
 main(int argc, char **argv) {
     int n, optstop = 0;
     char *fname = NULL;
@@ -207,7 +207,7 @@ main(int argc, char **argv) {
     /* Parse options */
 
     for (n = 1; n < argc; ++n) {
-        if (argv[n][0] == '-' && !optstop) {   
+        if (argv[n][0] == '-' && !optstop) {
             if (argv[n][1] == 'a' || argv[n][1] == 'A') bAscii = 1;
             if (argv[n][1] == 'd' || argv[n][1] == 'D') bScale = 1;
             if (argv[n][1] == 'i' || argv[n][1] == 'I') bInvert = 1;
@@ -225,7 +225,7 @@ main(int argc, char **argv) {
         }
     }
 
-    if (fname) 
+    if (fname)
         infile = pm_openr(fname);
     else
         infile = stdin;
@@ -235,7 +235,7 @@ main(int argc, char **argv) {
     if (fread(header, 1, 128, infile) < 128)
         pm_error("Not a .MDA file\n");
 
-    if (strncmp((char*) header, ".MDA", 4) && 
+    if (strncmp((char*) header, ".MDA", 4) &&
         strncmp((char*) header, ".MDP", 4))
         pm_error("Not a .MDA file\n");
 
@@ -244,24 +244,24 @@ main(int argc, char **argv) {
         pm_readlittleshort(infile, &yy); nInRows = yy;
         pm_readlittleshort(infile, &yy); nInCols = yy;
     }
-    
+
     nOutCols = 8 * nInCols;
     nOutRows = nInRows;
-    if (bScale) 
+    if (bScale)
         nOutRows *= 2;
 
     data = pbm_allocarray(nOutCols, nOutRows);
-    
+
     MALLOCARRAY_NOFAIL(mdrow, nInCols);
 
-    if (header[21] == '0') 
+    if (header[21] == '0')
         md2_trans();
     else
         md3_trans();
 
     pbm_writepbm(stdout, data, nInCols*8, nOutRows, bAscii);
 
-    if (infile != stdin) 
+    if (infile != stdin)
         pm_close(infile);
     fflush(stdout);
     pbm_freearray(data, nOutRows);
@@ -269,3 +269,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
+
+
+
