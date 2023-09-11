@@ -282,7 +282,7 @@ main(int argc, char **argv) {
     else
         md3Trans();
 
-    pbm_writepbm(stdout, data, nInCols*8, nOutRows, bAscii);
+    pbm_writepbm(stdout, data, nOutCols, nOutRows, bAscii);
 
     if (infile != stdin)
         pm_close(infile);
