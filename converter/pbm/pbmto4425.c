@@ -1,178 +1,151 @@
+#include <assert.h>
 #include <string.h>
 
 #include "nstring.h"
+#include "mallocvar.h"
 #include "pbm.h"
 
-static char bit_table[2][3] = {
-{1, 4, 0x10},
-{2, 8, 0x40}
+static char const bit_table[2][3] = {
+    {1, 4, 0x10},
+    {2, 8, 0x40}
 };
 
-static int vmap_width;
-static int vmap_height;
+static unsigned int const vmapWidth  = 132;
+static unsigned int const vmapHeight = 23;
 
-static int xres;
-static int yres;
-
-static char *vmap;
 
 
 static void
-init_map()
-{
-    int x, y;
+initMap(unsigned char * const vmap) {
 
+    unsigned int col;
 
-    for(x = 0; x < vmap_width; ++x)
-    {
-        for(y = 0; y < vmap_height; ++y)
-        {
-            vmap[y*(vmap_width) + x] = 0x20;
-        }
+    for (col = 0; col < vmapWidth; ++col) {
+        unsigned int row;
+
+        for (row = 0; row < vmapHeight; ++row)
+            vmap[row * vmapWidth + col] = 0x20;
     }
 }
 
 
 
 static void
-set_vmap(x, y)
-    int x, y;
-{
-    int ix, iy;
+setVmap(unsigned char * const vmap,
+        unsigned int    const x,
+        unsigned int    const y) {
 
-    ix = x/2;
-    iy = y/3;
+    unsigned int const ix = x/2;
+    unsigned int const iy = y/3;
 
-    vmap[iy*(vmap_width) + ix] |= bit_table[x % 2][y % 3];
+    assert(ix < vmapWidth);
+    assert(iy < vmapHeight);
+
+    vmap[iy * vmapWidth + ix] |= bit_table[x % 2][y % 3];
 }
 
 
 
 static void
-fill_map(pbmfp)
-    FILE *pbmfp;
-{
-    bit **pbm_image;
+fillMap(FILE *          const pbmFileP,
+        unsigned char * const vmap) {
+
+    unsigned int const xres = vmapWidth  * 2;
+    unsigned int const yres = vmapHeight * 3;
+
+    bit ** pbmImage;
     int cols;
     int rows;
-    int x;
-    int y;
+    unsigned int row;
 
-    pbm_image = pbm_readpbm(pbmfp, &cols, &rows);
-    for(y = 0; y < rows && y < yres; ++y)
-    {
-        for(x = 0; x < cols && x < xres; ++x)
-        {
-            if(pbm_image[y][x] == PBM_WHITE)
-            {
-                set_vmap(x, y);
-            }
+    pbmImage = pbm_readpbm(pbmFileP, &cols, &rows);
+
+    for (row = 0; row < rows && row < yres; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < cols && col < xres; ++col) {
+            if (pbmImage[row][col] == PBM_WHITE)
+                setVmap(vmap, col, row);
         }
     }
 }
 
 
+
 static void
-print_map()
-{
-    int x, y;
-    int last_byte;
+printMap(unsigned char * const vmap,
+         FILE *          const ofP) {
 
-#ifdef BUFFERED
-    char *iobuf;
-    iobuf = (char *)malloc(BUFSIZ);
-    if(iobuf == NULL)
-    {
-        pm_message( "Can't allocate space for I/O buffer.  "
-                    "Using unbuffered I/O...\n" );
-        setbuf(stdout, NULL);
-    }
-    else
-    {
-        setbuf(stdout, iobuf);
-    }
-#endif
+    unsigned int row;
 
-    fputs("\033[H\033[J", stdout);	/* clear screen */
-    fputs("\033[?3h", stdout);	/* 132 column mode */
-    fputs("\033)}\016", stdout);	/* mosaic mode */
+    fputs("\033[H\033[J", ofP);  /* clear screen */
+    fputs("\033[?3h",     ofP);  /* 132 column mode */
+    fputs("\033)}\016",   ofP);  /* mosaic mode */
 
-    for(y = 0; y < vmap_height; ++y)
-    {
-        for(last_byte = vmap_width - 1;
-            last_byte >= 0
-                && vmap[y * vmap_width + last_byte] == 0x20;
-            --last_byte)
+    for (row = 0; row < vmapHeight; ++row) {
+        unsigned int endCol;
+            /* Column number just past the non-space data in the row;
+               (i.e. spaces on the right are padding; not data
+            */
+        unsigned int col;
+
+        for (endCol = vmapWidth;
+             endCol > 0 && vmap[row * vmapWidth + (endCol-1)] == 0x20;
+             --endCol)
             ;
 
-        for(x = 0; x <= last_byte; ++x)
-        {
-            fputc(vmap[y*(vmap_width) + x], stdout);
-        }
-        fputc('\n', stdout);
+        for (col = 0; col < endCol; ++col)
+            fputc(vmap[row * vmapWidth + col], ofP);
+
+        fputc('\n', ofP);
     }
 
-    fputs("\033(B\017", stdout);
+    fputs("\033(B\017", ofP);
 }
 
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char ** argv) {
+
     int argn;
-    const char *pbmfile;
-    FILE *pbmfp;
-    const char *usage="[pbmfile]";
+    const char * inputFileNm;
+    FILE * ifP;
 
-    pbm_init( &argc, argv );
-    for(argn = 1;
-        argn < argc && argv[argn][0] == '-' && strlen(argv[argn]) > 1;
-        ++argn)
-    {
-        pm_usage(usage);
+    unsigned char * vmap;
+
+    pm_proginit(&argc, argv);
+
+    for (argn = 1;
+         argn < argc && argv[argn][0] == '-' && strlen(argv[argn]) > 1;
+         ++argn) {
+        pm_error("Unrecognized option '%s'", argv[argn]);
     }
 
-    if(argn >= argc)
-    {
-        pbmfile = "-";
-    }
-    else if(argc - argn != 1)
-    {
-        pm_usage(usage);
-    }
-    else
-    {
-        pbmfile = argv[argn];
+    if (argn >= argc) {
+        inputFileNm = "-";
+    } else if(argc - argn != 1) {
+        pm_error("Too many arguments.  At most one argument is allowed: "
+                 "Name of the input file");
+    } else {
+        inputFileNm = argv[argn];
     }
 
-    if(streq(pbmfile, "-"))
-    {
-        pbmfp = stdin;
-    }
-    else
-    {
-        pbmfp = pm_openr( argv[argn] );
-    }
+    ifP = pm_openr(inputFileNm);
 
-    vmap_width = 132;
-    vmap_height = 23;
+    MALLOCARRAY(vmap, vmapWidth * vmapHeight);
+    if (!vmap)
+        pm_error("Cannot allocate memory for %u x %u pixels",
+                 vmapWidth, vmapHeight);
 
-    xres = vmap_width * 2;
-    yres = vmap_height * 3;
+    initMap(vmap);
+    fillMap(ifP, vmap);
+    printMap(vmap, stdout);
 
-    vmap = malloc(vmap_width * vmap_height * sizeof(char));
-    if(vmap == NULL)
-	{
-        pm_error( "Cannot allocate memory" );
-	}
-
-    init_map();
-    fill_map(pbmfp);
-    print_map();
     /* If the program failed, it previously aborted with nonzero completion
        code, via various function calls.
     */
-    return 0; 
+    return 0;
 }
 
 
