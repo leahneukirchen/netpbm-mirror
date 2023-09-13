@@ -16,7 +16,7 @@ static unsigned int const vmapHeight = 23;
 
 
 static void
-initMap(unsigned char * const vmap) {
+initMap(char * const vmap) {
 
     unsigned int col;
 
@@ -24,16 +24,16 @@ initMap(unsigned char * const vmap) {
         unsigned int row;
 
         for (row = 0; row < vmapHeight; ++row)
-            vmap[row * vmapWidth + col] = 0x20;
+            vmap[row * vmapWidth + col] = ' ';
     }
 }
 
 
 
 static void
-setVmap(unsigned char * const vmap,
-        unsigned int    const x,
-        unsigned int    const y) {
+setVmap(char *       const vmap,
+        unsigned int const x,
+        unsigned int const y) {
 
     unsigned int const ix = x/2;
     unsigned int const iy = y/3;
@@ -47,8 +47,8 @@ setVmap(unsigned char * const vmap,
 
 
 static void
-fillMap(FILE *          const pbmFileP,
-        unsigned char * const vmap) {
+fillMap(FILE * const pbmFileP,
+        char * const vmap) {
 
     unsigned int const xres = vmapWidth  * 2;
     unsigned int const yres = vmapHeight * 3;
@@ -73,8 +73,8 @@ fillMap(FILE *          const pbmFileP,
 
 
 static void
-printMap(unsigned char * const vmap,
-         FILE *          const ofP) {
+printMap(char * const vmap,
+         FILE * const ofP) {
 
     unsigned int row;
 
@@ -90,7 +90,7 @@ printMap(unsigned char * const vmap,
         unsigned int col;
 
         for (endCol = vmapWidth;
-             endCol > 0 && vmap[row * vmapWidth + (endCol-1)] == 0x20;
+             endCol > 0 && vmap[row * vmapWidth + (endCol-1)] == ' ';
              --endCol)
             ;
 
@@ -108,11 +108,11 @@ printMap(unsigned char * const vmap,
 int
 main(int argc, const char ** argv) {
 
-    int argn;
+    unsigned int argn;
     const char * inputFileNm;
     FILE * ifP;
 
-    unsigned char * vmap;
+    char * vmap;  /* malloced */
 
     pm_proginit(&argc, argv);
 
@@ -133,6 +133,8 @@ main(int argc, const char ** argv) {
 
     ifP = pm_openr(inputFileNm);
 
+    assert(vmapWidth < UINT_MAX/vmapHeight);
+
     MALLOCARRAY(vmap, vmapWidth * vmapHeight);
     if (!vmap)
         pm_error("Cannot allocate memory for %u x %u pixels",
@@ -141,6 +143,8 @@ main(int argc, const char ** argv) {
     initMap(vmap);
     fillMap(ifP, vmap);
     printMap(vmap, stdout);
+
+    free(vmap);
 
     /* If the program failed, it previously aborted with nonzero completion
        code, via various function calls.
