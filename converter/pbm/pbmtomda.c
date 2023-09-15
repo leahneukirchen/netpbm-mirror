@@ -21,6 +21,7 @@
 ******************************************************************************/
 
 #include <stdbool.h>
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -106,34 +107,34 @@ encode(bit ** const bits,
 
 
 static void
-doTranslation(bit ** const bits,
-              int    const nOutCols,
-              int    const nOutRows,
-              int    const nInRows,
-              bool   const mustInvert,
-              bool   const mustScale) {
+doTranslation(bit **       const bits,
+              unsigned int const nOutCols,
+              unsigned int const nOutRows,
+              unsigned int const nInRows,
+              bool         const mustInvert,
+              bool         const mustScale) {
 /*----------------------------------------------------------------------------
   Translate a pbm to MD2 format, one row at a time
 -----------------------------------------------------------------------------*/
-    int row;
-    Mdbyte *mdrow;  /* malloc'ed */
+    unsigned int const step = mustScale ? 2 : 1;
 
-    int const step = mustScale ? 2 : 1;
+    unsigned int row;
+    Mdbyte * mdrow;  /* malloc'ed */
 
     MALLOCARRAY(mdrow, nOutCols);
 
     if (mdrow == NULL)
-        pm_error("Not enough memory for conversion.");
+        pm_error("Unable to allocate memory for %u columns", nOutCols);
 
-    for (row = 0; row < nOutRows; row+=step) {
-        int col;
+    for (row = 0; row < nOutRows; row += step) {
+        unsigned int col;
 
         /* Encode image into non-compressed bitmap */
         for (col = 0; col < nOutCols; ++col) {
             Mdbyte b;
 
             if (row < nInRows)
-                b = encode(bits, row, col*8);
+                b = encode(bits, row, col * 8);
             else
                 b = 0xff;  /* All black */
 
@@ -151,12 +152,14 @@ doTranslation(bit ** const bits,
             } else {
                 /* RLE a run of 0s or 0xFFs */
 
-                int x1;
+                unsigned int x1;
 
                 for (x1 = col; x1 < nOutCols; ++x1) {
                     if (mdrow[x1] != b) break;
+                    assert(x1 >= col);
                     if (x1 - col > 256) break;
                 }
+                assert(x1 >= col);
                 x1 -= col;    /* x1 = no. of repeats */
                 if (x1 == 256) x1 = 0;
                 putchar(b);
@@ -173,12 +176,12 @@ doTranslation(bit ** const bits,
 int
 main(int argc, const char ** argv) {
 
-    const char * const headerValue = ".MDAMicroDesignPCWv1.00\r\npbm2mda\r\n"; 
+    const char * const headerValue = ".MDAMicroDesignPCWv1.00\r\npbm2mda\r\n";
 
     struct CmdlineInfo cmdline;
     FILE * ifP;
-    int nOutRowsUnrounded;  /* Before rounding up to multiple of 4 */
-    int nOutCols, nOutRows;
+    unsigned int nOutRowsUnrounded;  /* Before rounding up to multiple of 4 */
+    unsigned int nOutCols, nOutRows;
     int nInCols, nInRows;
     bit ** bits;
     Mdbyte header[128];
