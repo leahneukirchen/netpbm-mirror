@@ -35,7 +35,7 @@
 #include "nstring.h"
 
 
-enum xbmVersion { X10, X11 };
+enum XbmVersion { X10, X11 };
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -43,7 +43,7 @@ struct CmdlineInfo {
     */
     const char *    inputFileName;
     const char *    name;
-    enum xbmVersion xbmVersion;
+    enum XbmVersion xbmVersion;
 };
 
 static void
@@ -167,27 +167,36 @@ generateName(char          const filenameArg[],
 
 
 
-static unsigned short int itemBuff[22];
-static int itemCnt;    /* takes values 0 to 15 (x11) or 21 (x10) */
-static enum xbmVersion itemVersion;
+typedef struct {
+    unsigned short int buff[22];
+    int cnt;    /* takes values 0 to 15 (x11) or 21 (x10) */
+    enum XbmVersion version;
+} ItemWriter;
+
+static ItemWriter itemWriter;
 
 
 
 static void
 putitemX10(unsigned char const item) {
 
-    if (itemCnt == 22) {
+    if (itemWriter.cnt == 22) {
         /* Buffer is full.  Write out one line. */
         int rc;
         rc = printf(" 0x%02x%02x,0x%02x%02x,0x%02x%02x,0x%02x%02x,"
                     "0x%02x%02x,0x%02x%02x,0x%02x%02x,0x%02x%02x,"
                     "0x%02x%02x,0x%02x%02x,0x%02x%02x,\n",
-                    itemBuff[ 1], itemBuff[ 0], itemBuff[ 3], itemBuff[ 2],
-                    itemBuff[ 5], itemBuff[ 4], itemBuff[ 7], itemBuff[ 6],
-                    itemBuff[ 9], itemBuff[ 8], itemBuff[11], itemBuff[10],
-                    itemBuff[13], itemBuff[12], itemBuff[15], itemBuff[14],
-                    itemBuff[17], itemBuff[16], itemBuff[19], itemBuff[18],
-                    itemBuff[21], itemBuff[20]
+                    itemWriter.buff[ 1], itemWriter.buff[ 0],
+                    itemWriter.buff[ 3], itemWriter.buff[ 2],
+                    itemWriter.buff[ 5], itemWriter.buff[ 4],
+                    itemWriter.buff[ 7], itemWriter.buff[ 6],
+                    itemWriter.buff[ 9], itemWriter.buff[ 8],
+                    itemWriter.buff[11], itemWriter.buff[10],
+                    itemWriter.buff[13], itemWriter.buff[12],
+                    itemWriter.buff[15], itemWriter.buff[14],
+                    itemWriter.buff[17], itemWriter.buff[16],
+                    itemWriter.buff[19], itemWriter.buff[18],
+                    itemWriter.buff[21], itemWriter.buff[20]
             );
 
         if (rc < 0)
@@ -195,9 +204,9 @@ putitemX10(unsigned char const item) {
                      "printf() failed with errno %d (%s)",
                      errno, strerror(errno));
 
-        itemCnt = 0;
+        itemWriter.cnt = 0;
     }
-    itemBuff[itemCnt++] = bitreverse[item];
+    itemWriter.buff[itemWriter.cnt++] = bitreverse[item];
 }
 
 
@@ -205,26 +214,30 @@ putitemX10(unsigned char const item) {
 static void
 putitemX11(unsigned char const item) {
 
-    if (itemCnt == 15 ) {
+    if (itemWriter.cnt == 15 ) {
         /* Buffer is full.  Write out one line. */
         int rc;
         rc = printf(" 0x%02x,0x%02x,0x%02x,0x%02x,"
                     "0x%02x,0x%02x,0x%02x,0x%02x,"
                     "0x%02x,0x%02x,0x%02x,0x%02x,"
                     "0x%02x,0x%02x,0x%02x,\n",
-                    itemBuff[0], itemBuff[1], itemBuff[2], itemBuff[3],
-                    itemBuff[4], itemBuff[5], itemBuff[6], itemBuff[7],
-                    itemBuff[8], itemBuff[9], itemBuff[10],itemBuff[11],
-                    itemBuff[12],itemBuff[13],itemBuff[14]
+                    itemWriter.buff[ 0], itemWriter.buff[ 1],
+                    itemWriter.buff[ 2], itemWriter.buff[ 3],
+                    itemWriter.buff[ 4], itemWriter.buff[ 5],
+                    itemWriter.buff[ 6], itemWriter.buff[ 7],
+                    itemWriter.buff[ 8], itemWriter.buff[ 9],
+                    itemWriter.buff[10], itemWriter.buff[11],
+                    itemWriter.buff[12], itemWriter.buff[13],
+                    itemWriter.buff[14]
             );
         if (rc < 0)
             pm_error("Error writing X11 bitmap raster item.  "
                      "printf() failed with errno %d (%s)",
                      errno, strerror(errno));
 
-        itemCnt = 0;
+        itemWriter.cnt = 0;
     }
-    itemBuff[itemCnt++] = bitreverse[item];
+    itemWriter.buff[itemWriter.cnt++] = bitreverse[item];
 }
 
 
@@ -232,7 +245,7 @@ putitemX11(unsigned char const item) {
 static void
 putitem(unsigned char const item) {
 
-    switch (itemVersion) {
+    switch (itemWriter.version) {
     case X10: putitemX10(item); break;
     case X11: putitemX11(item); break;
     }
@@ -245,18 +258,18 @@ puttermX10(void) {
 
     unsigned int i;
 
-    assert(itemCnt % 2 == 0);
+    assert(itemWriter.cnt % 2 == 0);
 
-    for (i = 0; i < itemCnt; i += 2) {
+    for (i = 0; i < itemWriter.cnt; i += 2) {
         int rc;
 
-        assert(i + 1 < itemCnt);
+        assert(i + 1 < itemWriter.cnt);
 
         rc = printf("%s0x%02x%02x%s",
                     (i == 0) ? " " : "",
-                    itemBuff[i+1],
-                    itemBuff[i],
-                    (i + 2 >= itemCnt) ? "" : ",");
+                    itemWriter.buff[i+1],
+                    itemWriter.buff[i],
+                    (i + 2 >= itemWriter.cnt) ? "" : ",");
         if (rc < 0)
             pm_error("Error writing Item %u at end of X10 bitmap raster.  "
                      "printf() failed with errno %d (%s)",
@@ -271,13 +284,13 @@ puttermX11(void) {
 
     unsigned int i;
 
-    for (i = 0; i < itemCnt; ++i) {
+    for (i = 0; i < itemWriter.cnt; ++i) {
         int rc;
 
         rc = printf("%s0x%02x%s",
                     (i == 0)  ? " " : "",
-                    itemBuff[i],
-                    (i + 1 >= itemCnt) ? "" : ",");
+                    itemWriter.buff[i],
+                    (i + 1 >= itemWriter.cnt) ? "" : ",");
 
         if (rc < 0)
             pm_error("Error writing Item %u at end of X11 bitmap raster.  "
@@ -289,10 +302,10 @@ puttermX11(void) {
 
 
 static void
-putinit(enum xbmVersion const xbmVersion) {
+putinit(enum XbmVersion const xbmVersion) {
 
-    itemCnt = 0;
-    itemVersion = xbmVersion;
+    itemWriter.cnt = 0;
+    itemWriter.version = xbmVersion;
 }
 
 
@@ -300,7 +313,7 @@ putinit(enum xbmVersion const xbmVersion) {
 static void
 putterm(void) {
 
-    switch (itemVersion) {
+    switch (itemWriter.version) {
     case X10: puttermX10(); break;
     case X11: puttermX11(); break;
     }
@@ -320,7 +333,7 @@ putterm(void) {
 
 
 static void
-writeXbmHeader(enum xbmVersion const xbmVersion,
+writeXbmHeader(enum XbmVersion const xbmVersion,
                const char *    const name,
                unsigned int    const width,
                unsigned int    const height,
@@ -341,7 +354,7 @@ convertRaster(FILE *          const ifP,
               unsigned int    const rows,
               int             const format,
               FILE *          const ofP,
-              enum xbmVersion const xbmVersion) {
+              enum XbmVersion const xbmVersion) {
 
     unsigned int const bitsPerUnit = xbmVersion == X10 ? 16 : 8;
     unsigned int const padright = ROUNDUP(cols, bitsPerUnit) - cols;
