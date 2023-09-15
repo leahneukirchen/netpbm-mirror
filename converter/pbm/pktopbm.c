@@ -11,155 +11,275 @@
   compile with: cc -lpbm -o pktopbm pktopbm.c
   */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "pm_c_util.h"
 #include "nstring.h"
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "pbm.h"
 
 #define NAMELENGTH 80
 #define MAXROWWIDTH 3200
 #define MAXPKCHAR 256
 
-typedef int integer ;
-typedef unsigned char quarterword ;
-typedef char boolean ;
-typedef quarterword eightbits ;
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileNm;
+    unsigned int outputFileCt;
+        /* The number of output files */
+    const char * outputFileNm[MAXPKCHAR];
+        /* The output file name, in order */
+    unsigned int character;
+    unsigned int xSpec;
+    unsigned int x;
+    unsigned int ySpec;
+    unsigned int y;
+    unsigned int debug;
+};
 
-static FILE *pkfile ;
-static char pkname[NAMELENGTH+1] ;
-static integer pktopbm_pkloc = 0;
-static char *filename[MAXPKCHAR] ;
-static bit **bitmap = NULL ;
-static integer dynf ;
-static eightbits inputbyte ;
-static eightbits bitweight ;
-static integer repeatcount ;
-static integer flagbyte ;
-static integer debug=0;
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec strings we return are stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+    unsigned int characterSpec;
+    unsigned int firstOutputArgNm;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0, "character",   OPT_UINT, &cmdlineP->character,
+            &characterSpec, 0);
+    OPTENT3(0, "x",   OPT_UINT, &cmdlineP->x,
+            &cmdlineP->xSpec, 0);
+    OPTENT3(0, "X",   OPT_UINT, &cmdlineP->x,
+            &cmdlineP->xSpec, 0);
+    OPTENT3(0, "y",   OPT_UINT, &cmdlineP->y,
+            &cmdlineP->ySpec, 0);
+    OPTENT3(0, "Y",   OPT_UINT, &cmdlineP->y,
+            &cmdlineP->ySpec, 0);
+    OPTENT3(0, "debug",   OPT_UINT, NULL,
+            &cmdlineP->debug, 0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (characterSpec) {
+        if (cmdlineP->character >= MAXPKCHAR)
+            pm_error("Character number (-character) must be in range 0 to %u",
+                     MAXPKCHAR-1);
+    } else
+        cmdlineP->character = 0;
+
+    if (argc-1 < 1) {
+        cmdlineP->inputFileNm = "-";
+        firstOutputArgNm = 1;
+    } else {
+        cmdlineP->inputFileNm = argv[1];
+        firstOutputArgNm = 2;
+    }
+
+    cmdlineP->outputFileCt = 0;  /* initial value */
+    {
+        unsigned int argn;
+        bool stdoutUsed;
+        for (argn = firstOutputArgNm, stdoutUsed = false;
+             argn < argc;
+             ++argn) {
+            if (cmdlineP->outputFileCt >= MAXPKCHAR)
+                pm_error("You may not specify more than %u output files.",
+                         MAXPKCHAR);
+            cmdlineP->outputFileNm[cmdlineP->outputFileCt++] = argv[argn];
+            if (streq(argv[argn], "-")) {
+                if (stdoutUsed)
+                    pm_error("You cannot specify Standard Output ('-') "
+                             "for more than one output file");
+                stdoutUsed = true;
+            }
+        }
+    }
+    if (cmdlineP->outputFileCt < 1)
+        cmdlineP->outputFileNm[cmdlineP->outputFileCt++] = "-";
+
+    if (cmdlineP->character + cmdlineP->outputFileCt >= MAXPKCHAR)
+        pm_error("Number of output files (%u) "
+                 "plus -character value (%u) exceeds "
+                 "the maximum number of characters is a PK font file (%u)",
+                 cmdlineP->character, cmdlineP->outputFileCt, MAXPKCHAR);
+}
+
+
+
+typedef unsigned char eightbits ;
+
+static FILE * ifP;
+static int pkLoc = 0;
+static const char * fileName[MAXPKCHAR];
+static int dynf ;
+static eightbits inputByte ;
+static eightbits bitWeight ;
+static int repeatCount ;
+static int flagByte ;
+static int debug = 0;
 
 #define dprintf(s,d) if (debug) printf(s,d)
 #define dprintf0(s) if (debug) printf(s)
 
-/* add a suffix to a filename in an allocated space */
-static void
-pktopbm_add_suffix(char *       const name,
-                   const char * const suffix) {
-
-    char * const slash = strrchr(name, '/');
-    char * const dot   = strrchr(name, '.');
-
-    if ((dot && slash ? dot < slash : !dot) && !streq(name, "-"))
-        strcat(name, suffix);
-}
-
-
-
-/* get a byte from the PK file */
 static eightbits
-pktopbm_pkbyte(void) {
-   pktopbm_pkloc++ ;
-   return(getc(pkfile)) ;
+pkByte() {
+/*----------------------------------------------------------------------------
+  Get a byte from the PK file
+-----------------------------------------------------------------------------*/
+    ++pkLoc;
+
+    return getc(ifP);
 }
 
 
 
-/* get a 16-bit half word from the PK file */
-static integer
-get16(void) {
-   integer const a = pktopbm_pkbyte() ;
-   return((a<<8) + pktopbm_pkbyte()) ;
+static int
+get16() {
+/*----------------------------------------------------------------------------
+  Get a 16-bit half word from the PK file
+-----------------------------------------------------------------------------*/
+    int const a = pkByte() ;
+
+    return (a<<8) + pkByte();
 }
 
 
 
-/* get a 32-bit word from the PK file */
-static integer get32(void) {
-    integer a;
-    a = get16() ;
-    if (a > 32767) a -= 65536 ;
-    return((a<<16) + get16()) ;
+static int
+get32() {
+/*----------------------------------------------------------------------------
+  Get a 32-bit word from the PK file
+-----------------------------------------------------------------------------*/
+    int a;
+
+    a = get16();  /* initial value */
+
+    if (a > 32767)
+        a -= 65536;
+
+    return (a << 16) + get16();
 }
 
 
 
-/* get a nibble from current input byte, or new byte if no current byte */
-static integer
-getnyb(void) {
+static int
+getNybble() {
+/*----------------------------------------------------------------------------
+  Get a nibble from current input byte, or new byte if no current byte
+-----------------------------------------------------------------------------*/
     eightbits temp;
-    if (bitweight == 0) {
-        inputbyte = pktopbm_pkbyte() ;
-        bitweight = 16 ;
+
+    if (bitWeight == 0) {
+        inputByte = pkByte() ;
+        bitWeight = 16 ;
     }
-    temp = inputbyte / bitweight ;
-    inputbyte -= temp * bitweight ;
-    bitweight >>= 4 ;
-    return(temp) ;
+    temp = inputByte / bitWeight ;
+    inputByte -= temp * bitWeight ;
+    bitWeight >>= 4 ;
+
+    return temp;
 }
 
 
 
-/* get a bit from the current input byte, or a new byte if no current byte */
 static bool
-getbit(void) {
+getBit() {
+/*----------------------------------------------------------------------------
+  Get a bit from the current input byte, or a new byte if no current byte
+-----------------------------------------------------------------------------*/
     bool temp ;
-    bitweight >>= 1 ;
-    if (bitweight == 0) {
-        inputbyte = pktopbm_pkbyte() ;
-        bitweight = 128 ;
+
+    bitWeight >>= 1 ;
+    if (bitWeight == 0) {
+        inputByte = pkByte();
+        bitWeight = 128 ;
     }
-    temp = (inputbyte >= bitweight) ;
-    if (temp) inputbyte -= bitweight ;
-    return(temp) ;
+    temp = (inputByte >= bitWeight);
+    if (temp)
+        inputByte -= bitWeight;
+
+    return temp;
 }
 
 
 
-/* unpack a dynamically packed number. dynf is dynamic packing threshold  */
-static integer
-pkpackednum(void) {
-    integer i, j ;
-    i = getnyb() ;
+static int
+pkPackedNum() {
+/*----------------------------------------------------------------------------
+  Unpack a dynamically packed number. dynf is dynamic packing threshold
+-----------------------------------------------------------------------------*/
+    int i, j ;
+
+    i = getNybble() ;
+
     if (i == 0) {           /* large run count, >= 3 nibbles */
         do {
-            j = getnyb() ;          /* count extra nibbles */
+            j = getNybble() ;          /* count extra nibbles */
             i++ ;
         } while (j == 0) ;
         while (i > 0) {
-            j = (j<<4) + getnyb() ; /* add extra nibbles */
+            j = (j<<4) + getNybble() ; /* add extra nibbles */
             i-- ;
         }
         return (j - 15 +((13 - dynf)<<4) + dynf) ;
     } else if (i <= dynf) return (i) ;  /* number > 0 and <= dynf */
-    else if (i < 14) return (((i - dynf - 1)<<4) + getnyb() + dynf + 1) ;
+    else if (i < 14) return (((i - dynf - 1)<<4) + getNybble() + dynf + 1) ;
     else {
-        if (i == 14) repeatcount = pkpackednum() ;  /* get repeat count */
-        else repeatcount = 1 ;      /* value 15 indicates repeat count 1 */
-        return(pkpackednum()) ;
+        if (i == 14)
+            repeatCount = pkPackedNum() ;  /* get repeat count */
+        else
+            repeatCount = 1 ;      /* value 15 indicates repeat count 1 */
+
+        return pkPackedNum();
     }
 }
 
 
 
-/* skip specials in PK files, inserted by Metafont or some other program */
 static void
-skipspecials(void) {
-    integer i, j;
+skipSpecials() {
+/*----------------------------------------------------------------------------
+  Skip specials in PK files, inserted by Metafont or some other program
+-----------------------------------------------------------------------------*/
     do {
-        flagbyte = pktopbm_pkbyte() ;
-        if (flagbyte >= 240)
-            switch(flagbyte) {
+        flagByte = pkByte() ;
+        if (flagByte >= 240)
+            switch(flagByte) {
             case 240:           /* specials of size 1-4 bytes */
             case 241:
             case 242:
-            case 243:
+            case 243: {
+                int i, j;
+
                 i = 0 ;
-                for (j = 240 ; j <= flagbyte ; ++j)
-                    i = (i<<8) + pktopbm_pkbyte() ;
+                for (j = 240 ; j <= flagByte ; ++j)
+                    i = (i<<8) + pkByte() ;
                 for (j = 1 ; j <= i ; ++j)
-                    pktopbm_pkbyte() ;  /* ignore special */
-                break ;
+                    pkByte() ;  /* ignore special */
+            } break ;
             case 244:           /* no-op, parameters to specials */
                 get32() ;
             case 245:           /* start of postamble */
@@ -174,273 +294,371 @@ skipspecials(void) {
             case 253:
             case 254:
             case 255:
-                pm_error("unexpected flag byte %d", flagbyte) ;
+                pm_error("unexpected flag byte %d", flagByte) ;
             }
-    } while (!(flagbyte < 240 || flagbyte == 245)) ;
+    } while (!(flagByte < 240 || flagByte == 245)) ;
 }
 
 
 
-/* ignore character packet */
 static void
-ignorechar(integer const car,
-           integer const endofpacket) {
+ignoreChar(int const car,
+           int const endofpacket) {
+/*----------------------------------------------------------------------------
+   ignore character packet
+-----------------------------------------------------------------------------*/
+   while (pkLoc != endofpacket)
+       pkByte();
 
-   while (pktopbm_pkloc != endofpacket) pktopbm_pkbyte() ;
    if (car < 0 || car >= MAXPKCHAR)
       pm_message("Character %d out of range", car) ;
-   skipspecials() ;
+
+   skipSpecials() ;
 }
 
 
 
-int
-main(int argc, char *argv[]) {
-    integer x;
-    integer endofpacket ;
-    boolean turnon ;
-    integer i, j;
-    integer car ;
-    integer bmx=0, bmy=0;
-    integer set_bmx=0, set_bmy=0;
-    bit row[MAXROWWIDTH+1] ;
-    const char * const usage =
-        "pkfile[.pk] [-d] [[-x width] [-y height] [-c num] pbmfile]...";
+static void
+readHeader() {
+/*----------------------------------------------------------------------------
+   Read the header of the input file.
 
-    pbm_init(&argc, argv);
-    for (i = 0 ; i < MAXPKCHAR ; i ++) filename[i] = NULL ;
+   Surprisingly, nothing in the header is useful to this program, so we're
+   just reading past it and doing some validation.
 
-    pm_message("This is PKtoPBM, version 2.5") ;
+   We read through the first flag byte and update the global variable
+   'flagByte'.
+-----------------------------------------------------------------------------*/
+    unsigned int commentSz;
+    unsigned int i;
 
-    if (--argc < 1) pm_usage(usage) ;
-
-    ++argv;
-    if(strlen(*argv) + 4 > NAMELENGTH)
-        pm_error("pkname is too long");
-    strcpy(pkname, *argv) ;
-    pktopbm_add_suffix(pkname, ".pk") ;
-
-    car = 0 ;
-    /* urg: use getopt */
-    while (++argv, --argc) {
-        if (argv[0][0] == '-' && argv[0][1])
-            switch (argv[0][1]) {
-            case 'X':
-            case 'x':
-                if (argv[0][2]) bmx = atoi(*argv+2) ;
-                else if (++argv, --argc) set_bmx = atoi(*argv) ;
-                else pm_usage(usage) ;
-                continue ;
-            case 'Y':
-            case 'y':
-                if (argv[0][2]) bmy = atoi(*argv+2) ;
-                else if (++argv, --argc) set_bmy = atoi(*argv) ;
-                else pm_usage(usage) ;
-                continue ;
-            case 'C':
-            case 'c':
-                if (argv[0][2]) car = atoi(*argv+2) ;
-                else if (++argv, --argc) car = atoi(*argv) ;
-                else pm_usage(usage) ;
-                break ;
-            case 'd':
-                debug=1;
-                break ;
-            default:
-                pm_usage(usage) ;
-            } else if (car < 0 || car >= MAXPKCHAR) {
-                pm_error("character must be in range 0 to %d (-c)",
-                         MAXPKCHAR-1) ;
-            } else filename[car++] = *argv ;
-    }
-
-    pkfile = pm_openr(pkname);
-    if (pktopbm_pkbyte() != 247)
+    if (pkByte() != 247)
         pm_error("bad PK file (pre command missing)") ;
-    if (pktopbm_pkbyte() != 89)
+
+    if (pkByte() != 89)
         pm_error("wrong version of packed file") ;
-    j = pktopbm_pkbyte() ;              /* get header comment size */
-    for (i = 1 ; i <= j ; i ++) pktopbm_pkbyte() ;  /* ignore header comment */
+
+    commentSz = pkByte() ;              /* get header comment size */
+
+    for (i = 1 ; i <= commentSz ; ++i)
+        pkByte() ;  /* ignore header comment */
+
     get32() ;                   /* ignore designsize */
     get32() ;                   /* ignore checksum */
     if (get32() != get32())         /* h & v pixels per point */
         pm_message("Warning: aspect ratio not 1:1") ;
-    skipspecials() ;
-    while (flagbyte != 245) {           /* not at postamble */
-        integer cheight, cwidth ;
-        integer xoffs=0, yoffs=0;
-        FILE *ofp;
 
-        bmx=set_bmx;
-        bmy=set_bmy;
-        dynf = (flagbyte>>4) ;          /* get dynamic packing value */
-        flagbyte &= 15 ;
-        turnon = (flagbyte >= 8) ;      /* black or white initially? */
-        if (turnon) flagbyte &= 7 ;     /* long or short form */
-        if (flagbyte == 7) {            /* long form preamble */
-            integer packetlength = get32() ;    /* character packet length */
-            car = get32() ;         /* character number */
-            endofpacket = packetlength + pktopbm_pkloc;
-                /* calculate end of packet */
-            if ((car >= MAXPKCHAR) || !filename[car]) {
-                ignorechar(car, endofpacket);
-                continue;
-            }
-            dprintf0 ("flagbyte7\n");
-            dprintf ("car: %d\n", car);
-            get32() ;               /* ignore tfmwidth */
-            x=get32() ;             /* ignore horiz escapement */
-            x=get32() ;             /* ignore vert escapement */
-            dprintf ("horiz esc %d\n", x);
-            dprintf ("vert esc %d\n", x);
-            cwidth = get32() ;          /* bounding box width */
-            cheight = get32() ;         /* bounding box height */
-            dprintf ("cwidth %d\n", cwidth);
-            dprintf ("cheight %d\n", cheight);
-            if (cwidth < 0 || cheight < 0 ||
-                cwidth > 65535 || cheight > 65535) {
-                ignorechar(car, endofpacket);
-                continue;
-            }
-            xoffs= get32() ;              /* horiz offset */
-            yoffs= get32() ;              /* vert offset */
-            dprintf ("xoffs %d\n", xoffs);
-            dprintf ("yoffs %d\n", yoffs);
-        } else if (flagbyte > 3) {      /* extended short form */
-            integer packetlength = ((flagbyte - 4)<<16) + get16() ;
-            /* packet length */
-            car = pktopbm_pkbyte() ;            /* char number */
-            endofpacket = packetlength + pktopbm_pkloc ;
-                /* calculate end of packet */
-            if ((car >= MAXPKCHAR) || !filename[car]) {
-                ignorechar(car, endofpacket);
-                continue;
-            }
-            dprintf0 ("flagbyte>3\n");
-            dprintf ("car: %d\n", car);
-            pktopbm_pkbyte() ;              /* ignore tfmwidth (3 bytes) */
-            get16() ;               /* ignore tfmwidth (3 bytes) */
-            get16() ;               /* ignore horiz escapement */
-            cwidth = get16() ;          /* bounding box width */
-            cheight = get16() ;         /* bounding box height */
-            dprintf ("cwidth %d\n", cwidth);
-            dprintf ("cheight %d\n", cheight);
-            xoffs=get16();                         /* horiz offset */
-            if (xoffs >= 32768)
-                xoffs-= 65536;
-            yoffs=get16();                         /* vert offset */
-            if (yoffs >= 32768)
-                yoffs-= 65536;
-            dprintf ("xoffs %d\n", xoffs);
-            dprintf ("yoffs %d\n", yoffs);
-        } else {                    /* short form preamble */
-            integer packetlength = (flagbyte<<8) + pktopbm_pkbyte() ;
-            /* packet length */
-            car = pktopbm_pkbyte() ;            /* char number */
-            endofpacket = packetlength + pktopbm_pkloc ;
-                /* calculate end of packet */
-            if ((car >= MAXPKCHAR) || !filename[car]) {
-                ignorechar(car, endofpacket);
-                continue;
-            }
-            dprintf0 ("flagbyte<=3\n");
-            dprintf ("car: %d\n", car);
-            pktopbm_pkbyte() ;          /* ignore tfmwidth (3 bytes) */
-            get16() ;               /* ignore tfmwidth (3 bytes) */
-            x = pktopbm_pkbyte() ;  /* ignore horiz escapement */
-            dprintf ("horiz esc %d\n", x);
-            cwidth = pktopbm_pkbyte() ;            /* bounding box width */
-            cheight = pktopbm_pkbyte() ;           /* bounding box height */
-            dprintf ("cwidth %d\n", cwidth);
-            dprintf ("cheight %d\n", cheight);
-            xoffs=pktopbm_pkbyte ();               /* horiz offset */
-            if (xoffs >= 128)
-                xoffs-=256;
-            yoffs=pktopbm_pkbyte ();               /* vert offset */
-            if (yoffs >= 128)
-                yoffs-=256;
-            dprintf ("xoffs %d\n", xoffs);
-            dprintf ("yoffs %d\n", yoffs);
-        }
-        if (filename[car]) {
-            if (!bmx) bmx= cwidth;
-            if (!bmy) bmy= cheight;
-            bitmap = pbm_allocarray(bmx, bmy) ;
-            if (bitmap == NULL)
-                pm_error("out of memory allocating bitmap") ;
+    skipSpecials();
+}
+
+
+
+static void
+readCharacterHeader(int *  const carP,
+                    int *  const endOfPacketP,
+                    bool * const mustIgnoreP,
+                    int *  const cheightP,
+                    int *  const cwidthP,
+                    int *  const xoffsP,
+                    int *  const yoffsP,
+                    bool * const turnonP) {
+
+    int cheight, cwidth ;
+    int xoffs=0, yoffs=0;
+    bool turnon ;
+    int x;
+
+    dynf = (flagByte >> 4);          /* get dynamic packing value */
+    flagByte &= 15;
+    turnon = (flagByte >= 8) ;      /* black or white initially? */
+    if (turnon)
+        flagByte &= 7;     /* long or short form */
+
+    if (flagByte == 7) {            /* long form preamble */
+        int packetLength;    /* character packet length */
+
+        packetLength  = get32();
+        *carP         = get32();         /* character number */
+        *endOfPacketP = packetLength + pkLoc;
+
+        dprintf0("flagByte7\n");
+        dprintf("car: %d\n", *carP);
+        get32();               /* ignore tfmwidth */
+        x=get32();             /* ignore horiz escapement */
+        dprintf("horiz esc %d\n", x);
+        x=get32();             /* ignore vert escapement */
+        dprintf("vert esc %d\n", x);
+        cwidth = get32();          /* bounding box width */
+        cheight = get32();         /* bounding box height */
+        dprintf("cwidth %d\n", cwidth);
+        dprintf("cheight %d\n", cheight);
+        if (cwidth < 0 || cheight < 0 ||
+            cwidth > 65535 || cheight > 65535) {
+            *mustIgnoreP = true;
         } else {
-            ignorechar(car, endofpacket);
-            continue;
+            *mustIgnoreP = false;
+            xoffs = get32() ;              /* horiz offset */
+            yoffs = get32() ;              /* vert offset */
+            dprintf ("xoffs %d\n", xoffs);
+            dprintf ("yoffs %d\n", yoffs);
         }
-        bitweight = 0 ;
-        for (i = 0 ; i < bmy ; i ++)           /* make it blank */
-            for (j = 0 ; j < bmx ; j ++)
-                bitmap[i][j]= PBM_WHITE;
+    } else if (flagByte > 3) {      /* extended short form */
+        int const packetLength = ((flagByte - 4)<<16) + get16() ;
+
+        *carP = pkByte() ;            /* char number */
+        *endOfPacketP = packetLength + pkLoc ;
+
+        *mustIgnoreP = false;
+
+        dprintf0("flagByte>3\n");
+        dprintf("car: %d\n", *carP);
+        pkByte();              /* ignore tfmwidth (3 bytes) */
+        get16();               /* ignore tfmwidth (3 bytes) */
+        get16();               /* ignore horiz escapement */
+        cwidth = get16();          /* bounding box width */
+        cheight = get16();         /* bounding box height */
+        dprintf("cwidth %d\n", cwidth);
+        dprintf("cheight %d\n", cheight);
+        xoffs = get16();                         /* horiz offset */
+        if (xoffs >= 32768)
+            xoffs -= 65536;
+        yoffs = get16();                         /* vert offset */
+        if (yoffs >= 32768)
+            yoffs -= 65536;
+        dprintf("xoffs %d\n", xoffs);
+        dprintf("yoffs %d\n", yoffs);
+    } else {                    /* short form preamble */
+        int packetLength;
+
+        packetLength  = (flagByte << 8) + pkByte();
+        *carP         = pkByte();            /* char number */
+        *endOfPacketP = packetLength + pkLoc;
+
+        *mustIgnoreP = false;
+
+        dprintf0("flagByte<=3\n");
+        dprintf("car: %d\n", *carP);
+        pkByte();          /* ignore tfmwidth (3 bytes) */
+        get16();               /* ignore tfmwidth (3 bytes) */
+        x = pkByte() ;  /* ignore horiz escapement */
+        dprintf("horiz esc %d\n", x);
+        cwidth = pkByte();            /* bounding box width */
+        cheight = pkByte() ;           /* bounding box height */
+        dprintf("cwidth %d\n", cwidth);
+        dprintf("cheight %d\n", cheight);
+        xoffs = pkByte();               /* horiz offset */
+        if (xoffs >= 128)
+            xoffs -=256;
+        yoffs = pkByte();               /* vert offset */
+        if (yoffs >= 128)
+            yoffs -= 256;
+        dprintf("xoffs %d\n", xoffs);
+        dprintf("yoffs %d\n", yoffs);
+    }
+    *cheightP = cheight;
+    *cwidthP  = cwidth;
+    *xoffsP   = xoffs;
+    *yoffsP   = yoffs;
+    *turnonP  = turnon;
+}
+
+
+
+static void
+readOneCharacter(bool           const bmxOverrideSpec,
+                 int            const bmxOverride,
+                 bool           const bmyOverrideSpec,
+                 int            const bmyOverride,
+                 unsigned int * const carP,
+                 bool *         const mustIgnoreP,
+                 bit ***        const bitmapP,
+                 unsigned int * const bmxP,
+                 unsigned int * const bmyP) {
+
+    int car;
+    int endOfPacket;
+    bool mustIgnore;
+    int cheight, cwidth;
+    int xoffs, yoffs;
+    bool turnon;
+    bit row[MAXROWWIDTH+1];
+
+    readCharacterHeader(&car, &endOfPacket, &mustIgnore,
+                        &cheight, &cwidth, &xoffs, &yoffs, &turnon);
+
+    *carP = car;
+
+    if (mustIgnore || !fileName[car]) {
+        /* Ignore this character in the font */
+        ignoreChar(car, endOfPacket);
+        *mustIgnoreP = true;
+    } else {
+        bit ** bitmap;
+        unsigned int i;
+
+        int const bmx = bmxOverrideSpec ? bmxOverride : cwidth;
+        int const bmy = bmyOverrideSpec ? bmyOverride : cheight;
+
+        *mustIgnoreP = false;
+
+        bitmap = pbm_allocarray(bmx, bmy);
+
+        bitWeight = 0 ;
+        for (i = 0 ; i < bmy ; ++i) {
+            /* make it blank */
+            unsigned int j;
+
+            for (j = 0 ; j < bmx ; ++j)
+                bitmap[i][j] = PBM_WHITE;
+        }
         if (dynf == 14) {               /* bitmapped character */
-            dprintf ("bmy: %d\n ", bmy);
-            dprintf ("y: %d\n ", bmy-yoffs-1);
-            for (i = 0 ; i < cheight ; i ++) {
-                int yi= i+(bmy-yoffs-1);
-                for (j = 0 ; j < cwidth ; j ++) {
-                    int xj= j-xoffs;
-                    if (getbit() && 0<=xj && xj<bmx && 0<=yi && yi<bmy)
+            dprintf("bmy: %d\n ", bmy);
+            dprintf("y: %d\n ", bmy - yoffs - 1);
+            for (i = 0 ; i < cheight ; ++i) {
+                unsigned int const yi = i + (bmy - yoffs - 1);
+                unsigned int j;
+                for (j = 0 ; j < cwidth ; ++j) {
+                    unsigned int const xj = j - xoffs;
+                    if (getBit() && 0 <= xj && xj < bmx && 0 <= yi && yi < bmy)
                         bitmap[yi][xj] = PBM_BLACK ;
                 }
             }
         } else {                    /* dynamically packed char */
-            integer rowsleft = cheight ;
-            integer hbit = cwidth ;
-            integer rp = 0;
-            repeatcount = 0 ;
-            dprintf ("bmy: %d\n ", bmy);
-            dprintf ("y: %d\n", cheight-rowsleft+(bmy-2*yoffs-1));
+            int rowsleft = cheight ;
+            int hbit = cwidth ;
+            int rp = 0;
+            repeatCount = 0 ;
+            dprintf("bmy: %d\n ", bmy);
+            dprintf("y: %d\n", cheight-rowsleft+(bmy-2*yoffs-1));
             while (rowsleft > 0) {
-                integer count = pkpackednum() ; /* get current color count */
+                int count = pkPackedNum() ; /* get current color count */
                 while (count > 0) {
                     if (count < hbit) {     /* doesn't extend past row */
                         hbit -= count ;
                         while (count--)
                             row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
                     } else {                /* reaches end of row */
-                        count -= hbit ;
+                        count -= hbit;
                         while (hbit--)
                             row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
-                        for (i = 0; i <= repeatcount; i++) {  /* fill row */
-                            int yi= i+cheight-rowsleft-1;
-                            if (0<=yi && yi < bmy)
+                        for (i = 0; i <= repeatCount; i++) {  /* fill row */
+                            unsigned int const yi = i + cheight - rowsleft - 1;
+                            if (0 <= yi && yi < bmy) {
+                                unsigned int j;
                                 for (j = 0; j < cwidth; j++) {
-                                    int xj= j-xoffs;
-                                    if (0<=xj && xj<bmx)
+                                    unsigned int const xj= j - xoffs;
+                                    if (0 <= xj && xj < bmx)
                                         bitmap[yi][xj] = row[j] ;
                                 }
+                            }
                         }
-                        rowsleft -= repeatcount + 1;
-                        repeatcount = rp = 0 ;
-                        hbit = cwidth ;
+                        rowsleft -= repeatCount + 1;
+                        repeatCount = rp = 0;
+                        hbit = cwidth;
                     }
                 }
-                turnon = !turnon ;
+                turnon = !turnon;
             }
             if (rowsleft != 0 || hbit != cwidth)
                 pm_error("bad pk file (more bits than required)") ;
         }
-        if (endofpacket != pktopbm_pkloc)
+        if (endOfPacket != pkLoc)
             pm_error("bad pk file (bad packet length)") ;
-
-        ofp = pm_openw(filename[car]);
-        filename[car] = NULL;
-        pbm_writepbm(ofp, bitmap, bmx, bmy, 0) ;
-        pbm_freearray(bitmap, bmy) ;
-        pm_close(ofp) ;
-        skipspecials() ;
+        *bitmapP = bitmap;
+        *bmxP    = bmx;
+        *bmyP    = bmy;
     }
-    while (! feof(pkfile)) pktopbm_pkbyte() ;       /* skip trailing junk */
-    pm_close(pkfile);
-    for (car = 0; car < MAXPKCHAR; car++)
-        if (filename[car])
+}
+
+
+
+static void
+generatePbmFile(const char * const fileNm,
+                bit **       const bitmap,
+                unsigned int const cols,
+                unsigned int const rows) {
+
+    FILE * ofP;
+
+    ofP = pm_openw(fileNm);
+
+    pbm_writepbm(ofP, bitmap, cols, rows, 0);
+
+    pm_close(ofP);
+}
+
+
+
+static void
+warnMissingCodePoint() {
+
+    unsigned int car;
+
+    for (car = 0; car < MAXPKCHAR; ++car) {
+        if (fileName[car])
             pm_message("Warning: No character in position %d (file %s).",
-                       car, filename[car]) ;
-    pm_message("%d bytes read from packed file.", pktopbm_pkloc-1) ;
+                       car, fileName[car]) ;
+    }
+}
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    struct CmdlineInfo cmdline;
+    unsigned int i;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    debug = cmdline.debug;
+
+    for (i = 0; i < cmdline.character; ++i)
+        fileName[i] = NULL;
+    for (i = 0; i < cmdline.outputFileCt; ++i)
+        fileName[cmdline.character + i] = cmdline.outputFileNm[i];
+    for (i = cmdline.character + cmdline.outputFileCt;
+         i < MAXPKCHAR;
+         ++i)
+        fileName[i] = NULL;
+
+    ifP = pm_openr(cmdline.inputFileNm);
+
+    readHeader();
+
+    while (flagByte != 245) {  /* not at postamble */
+
+        unsigned int car;
+        bool mustIgnore;
+        bit ** bitmap;
+        unsigned int cols, rows;
+
+        readOneCharacter(!!cmdline.xSpec, cmdline.x,
+                         !!cmdline.ySpec, cmdline.y,
+                         &car, &mustIgnore, &bitmap, &cols, &rows);
+
+        if (!mustIgnore) {
+            generatePbmFile(fileName[car], bitmap, cols, rows);
+
+            pbm_freearray(bitmap, rows) ;
+        }
+
+        fileName[car] = NULL;
+
+        skipSpecials();
+    }
+
+    while (!feof(ifP))
+        pkByte() ;       /* skip trailing junk */
+
+    pm_close(ifP);
+
+    warnMissingCodePoint();
+
+    pm_message("%u bytes read from packed file.", pkLoc-1) ;
+
     return 0;
 }
 
