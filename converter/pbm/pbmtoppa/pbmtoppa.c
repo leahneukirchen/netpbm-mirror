@@ -14,6 +14,8 @@
 #include <unistd.h>
 
 #include "pbm.h"
+#include "nstring.h"
+
 #include "ppa.h"
 #include "ppapbm.h"
 #include "cutswath.h"
@@ -41,7 +43,7 @@ int Pwidth;     /* width in bytes */
 ppa_stat printer;
 
 static int
-print_pbm(FILE * const in) {
+printPbm(FILE * const ifP) {
 
     char line[1024];
     pbm_stat pbm;
@@ -51,7 +53,7 @@ print_pbm(FILE * const in) {
 
     ppa_init_job(&printer);
 
-    while(make_pbm_stat(&pbm, in)) {
+    while(make_pbm_stat(&pbm, ifP)) {
         if (pbm.width != Width || pbm.height != Height)
             pm_error("print_pbm(): Input image is not the size "
                     "of a page for Page %d.  "
@@ -123,7 +125,7 @@ print_pbm(FILE * const in) {
 
         /* eat any remaining whitespace */
         if(pbm.version==P1)
-            fgets (line, 1024, in);
+            fgets (line, 1024, ifP);
 
         ++numpages;
     }
@@ -142,10 +144,12 @@ print_pbm(FILE * const in) {
 
 
 static void
-set_printer_specific_defaults()
-{
-    switch(printer.version)
-    {
+setPrinterSpecificDefaults() {
+
+    switch(printer.version) {
+    case HP710:
+        pm_error("Don't know how to drive HP 710");
+        break;
     case HP720:
         printer.marg_diff     = HP720_MARG_DIFF;
         printer.bufsize       = HP720_BUFSIZE;
@@ -179,8 +183,6 @@ set_printer_specific_defaults()
         printer.right_margin  = HP1000_RIGHT_MARGIN;
         printer.bottom_margin = HP1000_BOTTOM_MARGIN;
         break;
-    default:
-        pm_error("set_printer_defaults(): unknown printer version");
     }
 }
 
@@ -221,8 +223,8 @@ show_usage(const char* const prog)
 
 
 static void
-parm_version(char* arg)
-{
+parmVersion(char * const arg) {
+
     if(!strcasecmp(arg,"hp720") || !strcmp(arg,"720"))
         printer.version=HP720;
     else if(!strcasecmp(arg,"hp820") || !strcmp(arg,"820"))
@@ -231,39 +233,39 @@ parm_version(char* arg)
         printer.version=HP1000;
     else
         pm_error("parm_version(): unknown printer version '%s'",arg);
-    set_printer_specific_defaults();
+    setPrinterSpecificDefaults();
 }
 
 
 
 static void
-parm_iversion(int arg)
-{
+parmIversion(int const arg) {
+
     switch(arg)
     {
     case 720:
-        printer.version=HP720;
+        printer.version = HP720;
         break;
     case 820:
-        printer.version=HP820;
+        printer.version = HP820;
         break;
     case 1000:
-        printer.version=HP1000;
+        printer.version = HP1000;
         break;
     default:
-        pm_error("parm_iversion(): unknown printer version '%d'", arg);
+        pm_error("parmIversion(): unknown printer version '%d'", arg);
     }
-    set_printer_specific_defaults();
+    setPrinterSpecificDefaults();
 }
 
 
 
 static void
-dump_config()
-{
+dumpConfig() {
+
     printf("version:  ");
-    switch(printer.version)
-    {
+
+    switch(printer.version) {
     case HP710:  printf("HP710\n");  break;
     case HP720:  printf("HP720\n");  break;
     case HP820:  printf("HP820\n");  break;
@@ -279,55 +281,55 @@ dump_config()
 
 
 static void
-read_config_file(const char* const fname)
-{
-    FILE* cfgfile=fopen(fname,"r");
-    char line[1024],key[14],buf[10];
-    int len,value,lineno=1;
+readConfigFile(const char * const fname) {
 
-    if(!cfgfile)
+    FILE * cfgFileP;
+    char line[1024];
+    char key[14];
+    char buf[10];
+    int len;
+    int value;
+    int lineno;
+
+    cfgFileP = fopen(fname, "r");
+
+    lineno = 1;  /* initial value */
+
+    if (!cfgFileP)
         pm_error("read_config_file(): couldn't open file '%s'", fname);
 
-    while(fgets(line,1024,cfgfile))
-    {
-        if(strchr(line,'#'))
-            *strchr(line,'#')=0;
-        switch(sscanf(line,"%13s%9s",key,buf))
-        {
+    while (fgets(line, 1024, cfgFileP)) {
+        if (strchr(line, '#'))
+            *strchr(line, '#')=0;
+        switch(sscanf(line, "%13s%9s", key, buf)) {
         case 2:
-            value=atoi(buf);
-            len=strlen(key);
-            if(!strncmp(key,"version",len))
-                parm_iversion(value);
-            else if(!strncmp(key,"xoffset",len))
-                printer.x_offset=value;
-            else if(!strncmp(key,"yoffset",len))
-                printer.y_offset=value;
-            else if(!strncmp(key,"topmargin",len))
-                printer.top_margin=value;
-            else if(!strncmp(key,"leftmargin",len))
-                printer.left_margin=value;
-            else if(!strncmp(key,"rightmargin",len))
-                printer.right_margin=value;
-            else if(!strncmp(key,"bottommargin",len))
-                printer.bottom_margin=value;
-            else if(!strncmp(key,"papersize",len))
-            {
-                if(!strcmp(buf,"us"))
-                {
-                    Width = USWIDTH;
+            value = atoi(buf);
+            len   = strlen(key);
+            if (strneq(key, "version",           len))
+                parmIversion(value);
+            else if (strneq(key, "xoffset",      len))
+                printer.x_offset = value;
+            else if (strneq(key, "yoffset",      len))
+                printer.y_offset = value;
+            else if(strneq(key,  "topmargin",    len))
+                printer.top_margin = value;
+            else if(strneq(key,  "leftmargin",   len))
+                printer.left_margin = value;
+            else if(strneq(key,  "rightmargin",  len))
+                printer.right_margin = value;
+            else if(strneq(key,  "bottommargin", len))
+                printer.bottom_margin = value;
+            else if(strneq(key,  "papersize"   , len)) {
+                if(streq(buf, "us")) {
+                    Width  = USWIDTH;
                     Height = USHEIGHT;
-                }
-                else if(!strcmp(buf,"a4"))
-                {
-                    Width = A4WIDTH;
+                } else if (streq(buf, "a4")) {
+                    Width  = A4WIDTH;
                     Height = A4HEIGHT;
-                }
-                else
+                } else
                     pm_error("read_config_file(): unknown paper size %s", buf);
-            }
-            else if(!strcmp(key,"dump"))
-                dump_config();
+            } else if(!strcmp(key,"dump"))
+                dumpConfig();
             else
                 pm_error("read_config_file(): unrecognized parameter '%s' "
                          "(line %d)", key, lineno);
@@ -338,21 +340,18 @@ read_config_file(const char* const fname)
             pm_error("read_config_file(): error parsing config file "
                      "(line %d)", lineno);
         }
-        lineno++;
+        ++lineno;
     }
 
-    if(feof(cfgfile))
-    {
-        fclose(cfgfile);
-        return;
-    }
-
-    pm_error("read_config_file(): error parsing config file");
+    if (feof(cfgFileP)) {
+        fclose(cfgFileP);
+    } else
+        pm_error("read_config_file(): error parsing config file");
 }
 
 
 
-const char* const defaultcfgfile="/etc/pbmtoppa.conf";
+const char * const defaultCfgFileNm = "/etc/pbmtoppa.conf";
 
 
 
@@ -361,7 +360,8 @@ main(int argc, char *argv[]) {
 
     int argn;
     int got_in=0, got_out=0, do_continue=1;
-    FILE *in=stdin, *out=stdout;
+    FILE * ifP;
+    FILE * ofP;
     struct stat tmpstat;
 
     pbm_init(&argc, argv);
@@ -374,12 +374,15 @@ main(int argc, char *argv[]) {
     printer.right_margin  = DEFAULT_RIGHT_MARGIN;
     printer.bottom_margin = DEFAULT_BOTTOM_MARGIN;
     printer.DPI           = DEFAULT_DPI;
-    Width = USWIDTH;
+    Width  = USWIDTH;
     Height = USHEIGHT;
-    set_printer_specific_defaults();
+    setPrinterSpecificDefaults();
 
-    if(!stat(defaultcfgfile,&tmpstat))
-        read_config_file(defaultcfgfile);
+    if (!stat(defaultCfgFileNm, &tmpstat))
+        readConfigFile(defaultCfgFileNm);
+
+    ifP = stdin;  /* initial value */
+    ofP = stdout;  /* initial value */
 
     for(argn=1; argn<argc; argn++)
     {
@@ -389,12 +392,12 @@ main(int argc, char *argv[]) {
             return 0;
         }
         else if(!strcmp(argv[argn],"-d"))
-            dump_config();
+            dumpConfig();
         else if(argn+1<argc)
         {
             do_continue=1;
             if(!strcmp(argv[argn],"-v"))
-                parm_version(argv[++argn]);
+                parmVersion(argv[++argn]);
             else if(!strcmp(argv[argn],"-x"))
                 printer.x_offset+=atoi(argv[++argn]);
             else if(!strcmp(argv[argn],"-y"))
@@ -426,7 +429,7 @@ main(int argc, char *argv[]) {
                     pm_error("unknown paper size %s",argv[argn]);
             }
             else if(!strcmp(argv[argn],"-f"))
-                read_config_file(argv[++argn]);
+                readConfigFile(argv[++argn]);
             else do_continue=0;
             if(do_continue) continue;
         }
@@ -434,8 +437,8 @@ main(int argc, char *argv[]) {
         if(!got_in)
         {
             if (strcmp (argv[argn], "-") == 0)
-                in = stdin;
-            else if ((in = fopen (argv[argn], "rb")) == NULL)
+                ifP = stdin;
+            else if ((ifP = fopen (argv[argn], "rb")) == NULL)
                 pm_error("main(): couldn't open file '%s'",
                          argv[argn]);
             got_in=1;
@@ -443,8 +446,8 @@ main(int argc, char *argv[]) {
         else if(!got_out)
         {
             if (strcmp (argv[argn], "-") == 0)
-                out = stdout;
-            else if ((out = fopen (argv[argn], "wb")) == NULL)
+                ofP = stdout;
+            else if ((ofP = fopen (argv[argn], "wb")) == NULL)
                 pm_error("main(): couldn't open file '%s'",
                          argv[argn]);
             got_out=1;
@@ -453,10 +456,10 @@ main(int argc, char *argv[]) {
             pm_error("main(): unrecognized parameter '%s'", argv[argn]);
     }
 
-    Pwidth=(Width+7)/8;
-    printer.fptr=out;
+    Pwidth = (Width+7)/8;
+    printer.fptr = ofP;
 
-    return print_pbm (in);
+    return printPbm(ifP);
 }
 
 
