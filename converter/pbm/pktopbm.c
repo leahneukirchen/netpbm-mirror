@@ -7,7 +7,7 @@
      * fix bitmap y placement of dynamically packed char
      * skip char early if no output file allocated
      - added debug output
-  
+
   compile with: cc -lpbm -o pktopbm pktopbm.c
   */
 
@@ -44,12 +44,12 @@ static integer debug=0;
 
 /* add a suffix to a filename in an allocated space */
 static void
-pktopbm_add_suffix(char *       const name, 
+pktopbm_add_suffix(char *       const name,
                    const char * const suffix) {
 
     char * const slash = strrchr(name, '/');
     char * const dot   = strrchr(name, '.');
-    
+
     if ((dot && slash ? dot < slash : !dot) && !streq(name, "-"))
         strcat(name, suffix);
 }
@@ -57,7 +57,7 @@ pktopbm_add_suffix(char *       const name,
 
 
 /* get a byte from the PK file */
-static eightbits 
+static eightbits
 pktopbm_pkbyte(void) {
    pktopbm_pkloc++ ;
    return(getc(pkfile)) ;
@@ -66,7 +66,7 @@ pktopbm_pkbyte(void) {
 
 
 /* get a 16-bit half word from the PK file */
-static integer 
+static integer
 get16(void) {
    integer const a = pktopbm_pkbyte() ;
    return((a<<8) + pktopbm_pkbyte()) ;
@@ -85,7 +85,7 @@ static integer get32(void) {
 
 
 /* get a nibble from current input byte, or new byte if no current byte */
-static integer 
+static integer
 getnyb(void) {
     eightbits temp;
     if (bitweight == 0) {
@@ -117,7 +117,7 @@ getbit(void) {
 
 
 /* unpack a dynamically packed number. dynf is dynamic packing threshold  */
-static integer 
+static integer
 pkpackednum(void) {
     integer i, j ;
     i = getnyb() ;
@@ -155,9 +155,9 @@ skipspecials(void) {
             case 242:
             case 243:
                 i = 0 ;
-                for (j = 240 ; j <= flagbyte ; ++j) 
+                for (j = 240 ; j <= flagbyte ; ++j)
                     i = (i<<8) + pktopbm_pkbyte() ;
-                for (j = 1 ; j <= i ; ++j) 
+                for (j = 1 ; j <= i ; ++j)
                     pktopbm_pkbyte() ;  /* ignore special */
                 break ;
             case 244:           /* no-op, parameters to specials */
@@ -183,7 +183,7 @@ skipspecials(void) {
 
 /* ignore character packet */
 static void
-ignorechar(integer const car, 
+ignorechar(integer const car,
            integer const endofpacket) {
 
    while (pktopbm_pkloc != endofpacket) pktopbm_pkbyte() ;
@@ -204,9 +204,9 @@ main(int argc, char *argv[]) {
     integer bmx=0, bmy=0;
     integer set_bmx=0, set_bmy=0;
     bit row[MAXROWWIDTH+1] ;
-    const char * const usage = 
+    const char * const usage =
         "pkfile[.pk] [-d] [[-x width] [-y height] [-c num] pbmfile]...";
-   
+
     pbm_init(&argc, argv);
     for (i = 0 ; i < MAXPKCHAR ; i ++) filename[i] = NULL ;
 
@@ -249,7 +249,7 @@ main(int argc, char *argv[]) {
             default:
                 pm_usage(usage) ;
             } else if (car < 0 || car >= MAXPKCHAR) {
-                pm_error("character must be in range 0 to %d (-c)", 
+                pm_error("character must be in range 0 to %d (-c)",
                          MAXPKCHAR-1) ;
             } else filename[car++] = *argv ;
     }
@@ -297,7 +297,7 @@ main(int argc, char *argv[]) {
             cheight = get32() ;         /* bounding box height */
             dprintf ("cwidth %d\n", cwidth);
             dprintf ("cheight %d\n", cheight);
-            if (cwidth < 0 || cheight < 0 || 
+            if (cwidth < 0 || cheight < 0 ||
                 cwidth > 65535 || cheight > 65535) {
                 ignorechar(car, endofpacket);
                 continue;
@@ -310,7 +310,7 @@ main(int argc, char *argv[]) {
             integer packetlength = ((flagbyte - 4)<<16) + get16() ;
             /* packet length */
             car = pktopbm_pkbyte() ;            /* char number */
-            endofpacket = packetlength + pktopbm_pkloc ; 
+            endofpacket = packetlength + pktopbm_pkloc ;
                 /* calculate end of packet */
             if ((car >= MAXPKCHAR) || !filename[car]) {
                 ignorechar(car, endofpacket);
@@ -337,7 +337,7 @@ main(int argc, char *argv[]) {
             integer packetlength = (flagbyte<<8) + pktopbm_pkbyte() ;
             /* packet length */
             car = pktopbm_pkbyte() ;            /* char number */
-            endofpacket = packetlength + pktopbm_pkloc ;    
+            endofpacket = packetlength + pktopbm_pkloc ;
                 /* calculate end of packet */
             if ((car >= MAXPKCHAR) || !filename[car]) {
                 ignorechar(car, endofpacket);
@@ -443,3 +443,6 @@ main(int argc, char *argv[]) {
     pm_message("%d bytes read from packed file.", pktopbm_pkloc-1) ;
     return 0;
 }
+
+
+
