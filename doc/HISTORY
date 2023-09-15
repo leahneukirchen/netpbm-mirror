@@ -62,6 +62,8 @@ not yet  BJH  Release 11.04.00
 
               pbmtopgm: Fix error message for excessive -width.
 
+              pbmtoxbm: Fix spurious output with really wide rows.
+
               tifftopnm: Fix incorrect output with really wide/deep rows.
 
               library: add check of maxval for computable size.
