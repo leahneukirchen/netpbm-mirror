@@ -26,7 +26,7 @@
 #include "pbm.h"
 #include "mallocvar.h"
 
-/* I'm being somewhat conservative in the PBM -> MDA translation. I output 
+/* I'm being somewhat conservative in the PBM -> MDA translation. I output
  * only the MD2 format and don't allow RLE over the ends of lines.
  */
 
@@ -39,7 +39,7 @@ static int bScale  = 0;
 
 /* Encode 8 pixels as a byte */
 
-static mdbyte 
+static mdbyte
 encode(bit ** const bits, int const row, int const col)
 {
     int n;
@@ -58,9 +58,9 @@ encode(bit ** const bits, int const row, int const col)
 
 /* Translate a pbm to MD2 format, one row at a time */
 
-static void 
-do_translation(bit ** const bits, 
-               int    const nOutCols, 
+static void
+do_translation(bit ** const bits,
+               int    const nOutCols,
                int    const nOutRows,
                int    const nInRows)
 {
@@ -112,8 +112,8 @@ do_translation(bit ** const bits,
                 if (x1 == 256) x1 = 0;
                 putchar(b);
                 putchar(x1);
-                col += x1;        
-            }   
+                col += x1;
+            }
         }
     }
     free(mdrow);
@@ -121,7 +121,7 @@ do_translation(bit ** const bits,
 
 
 static void usage(char *s)
-{        
+{
     printf("pbmtomda v1.01, Copyright (C) 1999,2004 John Elliott <jce@seasip.demon.co.uk>\n"
          "This program is redistributable under the terms of the GNU General Public\n"
                  "License, version 2 or later.\n\n"
@@ -148,15 +148,15 @@ int main(int argc, char **argv)
     pbm_init(&argc, argv);
 
     /* Output v2-format MDA images. Simulate MDA header...
-     * 2004-01-11: Hmm. Apparently some (but not all) MDA-reading 
-     * programs insist on the program identifier being exactly 
+     * 2004-01-11: Hmm. Apparently some (but not all) MDA-reading
+     * programs insist on the program identifier being exactly
      * 'MicroDesignPCW'. The spec does not make this clear. */
     strcpy((char*) header, ".MDAMicroDesignPCWv1.00\r\npbm2mda\r\n");
 
     for (n = 1; n < argc; n++)
     {
         if (argv[n][0] == '-' && !optstop)
-        {   
+        {
             if (argv[n][1] == 'd' || argv[n][1] == 'D') bScale = 1;
             if (argv[n][1] == 'i' || argv[n][1] == 'I') bInvert = 1;
             if (argv[n][1] == 'h' || argv[n][1] == 'H') usage(argv[0]);
@@ -176,11 +176,11 @@ int main(int argc, char **argv)
     else       infile = stdin;
 
     bits = pbm_readpbm(infile, &nInCols, &nInRows);
-    
+
     nOutRowsUnrounded = bScale ? nInRows/2 : nInRows;
 
     nOutRows = ((nOutRowsUnrounded + 3) / 4) * 4;
-        /* MDA wants rows a multiple of 4 */   
+        /* MDA wants rows a multiple of 4 */
     nOutCols = nInCols / 8;
 
     rc = fwrite(header, 1, 128, stdout);
@@ -196,6 +196,9 @@ int main(int argc, char **argv)
     pm_close(infile);
     fflush(stdout);
     pbm_freearray(bits, nInRows);
-    
+
     return 0;
 }
+
+
+
