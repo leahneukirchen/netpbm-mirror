@@ -10,10 +10,10 @@
 ** implied warranty.
 */
 
-/* 2006.10 (afu)   
+/* 2006.10 (afu)
    Changed bitrow from plain to raw, read function from pbm_readpbmrow() to
    pbm_readpbmrow_packed().  Retired bitwise transformation functions.
- 
+
    Output function putitem rewritten to handle both X10 and X11.
 
    Added -name option.  There is no check for the string thus given.
@@ -47,12 +47,12 @@ struct CmdlineInfo {
 };
 
 static void
-parseCommandLine(int                 argc, 
+parseCommandLine(int                 argc,
                  const char **       argv,
                  struct CmdlineInfo *cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -96,19 +96,19 @@ parseCommandLine(int                 argc,
                 pm_error("Image name '%s' contains invalid character (%c).",
                          cmdlineP->name, cmdlineP->name[i]);
     }
-    
+
     if (x10 && x11)
         pm_error("You can't specify both -x10 and -x11");
     else if (x10)
         cmdlineP->xbmVersion = X10;
-    else 
+    else
         cmdlineP->xbmVersion = X11;
-        
-    if (argc-1 < 1) 
+
+    if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
-        
+
         if (argc-1 > 1)
             pm_error("Program takes zero or one argument (filename).  You "
                      "specified %u", argc-1);
@@ -141,22 +141,22 @@ generateName(char          const filenameArg[],
         /* indices into the input and output buffers */
 
         /* Start just after the rightmost slash, or at beginning if no slash */
-        if (strrchr(filenameArg, '/') == 0) 
+        if (strrchr(filenameArg, '/') == 0)
             argIndex = 0;
         else argIndex = strrchr(filenameArg, '/') - filenameArg + 1;
 
-        if (filenameArg[argIndex] == '\0') 
+        if (filenameArg[argIndex] == '\0')
             *nameP = strdup("noname");
         else {
             char * name;
             nameIndex = 0;  /* Start at beginning of name buffer */
 
             name = malloc(strlen(filenameArg));
-    
-            while (filenameArg[argIndex] != '\0' 
+
+            while (filenameArg[argIndex] != '\0'
                    && filenameArg[argIndex] != '.') {
                 const char filenameChar = filenameArg[argIndex++];
-                name[nameIndex++] = 
+                name[nameIndex++] =
                     ISALNUM(filenameChar) ? filenameChar : '_';
             }
             name[nameIndex] = '\0';
@@ -190,11 +190,11 @@ putitemX10(unsigned char const item) {
                     itemBuff[21], itemBuff[20]
             );
 
-        if (rc < 0)        
+        if (rc < 0)
             pm_error("Error writing X10 bitmap raster item.  "
                      "printf() failed with errno %d (%s)",
                      errno, strerror(errno));
-        
+
         itemCnt = 0;
     }
     itemBuff[itemCnt++] = bitreverse[item];
@@ -217,11 +217,11 @@ putitemX11(unsigned char const item) {
                     itemBuff[8], itemBuff[9], itemBuff[10],itemBuff[11],
                     itemBuff[12],itemBuff[13],itemBuff[14]
             );
-        if (rc < 0)        
+        if (rc < 0)
             pm_error("Error writing X11 bitmap raster item.  "
                      "printf() failed with errno %d (%s)",
                      errno, strerror(errno));
-        
+
         itemCnt = 0;
     }
     itemBuff[itemCnt++] = bitreverse[item];
@@ -255,9 +255,9 @@ puttermX10(void) {
         rc = printf("%s0x%02x%02x%s",
                     (i == 0) ? " " : "",
                     itemBuff[i+1],
-                    itemBuff[i], 
+                    itemBuff[i],
                     (i + 2 >= itemCnt) ? "" : ",");
-        if (rc < 0)        
+        if (rc < 0)
             pm_error("Error writing Item %u at end of X10 bitmap raster.  "
                      "printf() failed with errno %d (%s)",
                      i, errno, strerror(errno));
@@ -279,7 +279,7 @@ puttermX11(void) {
                     itemBuff[i],
                     (i + 1 >= itemCnt) ? "" : ",");
 
-        if (rc < 0)        
+        if (rc < 0)
             pm_error("Error writing Item %u at end of X11 bitmap raster.  "
                      "printf() failed with errno %d (%s)",
                      i, errno, strerror(errno));
@@ -310,7 +310,7 @@ putterm(void) {
 
         rc = printf("};\n");
 
-        if (rc < 0)        
+        if (rc < 0)
             pm_error("Error writing end of X11 bitmap raster.  "
                      "printf() failed with errno %d (%s)",
                      errno, strerror(errno));
@@ -342,10 +342,10 @@ convertRaster(FILE *          const ifP,
               int             const format,
               FILE *          const ofP,
               enum xbmVersion const xbmVersion) {
-              
-    unsigned int const bitsPerUnit = xbmVersion == X10 ? 16 : 8;   
+
+    unsigned int const bitsPerUnit = xbmVersion == X10 ? 16 : 8;
     unsigned int const padright = ROUNDUP(cols, bitsPerUnit) - cols;
-        /* Amount of padding to round cols up to the nearest multiple of 
+        /* Amount of padding to round cols up to the nearest multiple of
            8 (if x11) or 16 (if x10).
         */
     unsigned int const bitrowBytes = (cols + padright) / 8;
@@ -356,7 +356,7 @@ convertRaster(FILE *          const ifP,
     putinit(xbmVersion);
 
     bitrow = pbm_allocrow_packed(cols + padright);
-    
+
     for (row = 0; row < rows; ++row) {
         unsigned int i;
 
@@ -382,7 +382,7 @@ int
 main(int           argc,
      const char ** argv) {
 
-    struct CmdlineInfo cmdline; 
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int rows, cols, format;
     const char * name;
@@ -390,15 +390,15 @@ main(int           argc,
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    if (cmdline.name == NULL) 
+    if (cmdline.name == NULL)
         generateName(cmdline.inputFileName, &name);
     else
         name = strdup(cmdline.name);
 
     ifP = pm_openr(cmdline.inputFileName);
-    
+
     pbm_readpbminit(ifP, &cols, &rows, &format);
-    
+
     writeXbmHeader(cmdline.xbmVersion, name, cols, rows, stdout);
 
     convertRaster(ifP, cols, rows, format, stdout, cmdline.xbmVersion);
