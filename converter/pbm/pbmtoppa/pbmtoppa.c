@@ -40,7 +40,7 @@ int Pwidth;     /* width in bytes */
 
 ppa_stat printer;
 
-static int 
+static int
 print_pbm(FILE * const in) {
 
     char line[1024];
@@ -52,7 +52,7 @@ print_pbm(FILE * const in) {
     ppa_init_job(&printer);
 
     while(make_pbm_stat(&pbm, in)) {
-        if (pbm.width != Width || pbm.height != Height) 
+        if (pbm.width != Width || pbm.height != Height)
             pm_error("print_pbm(): Input image is not the size "
                     "of a page for Page %d.  "
                     "The input is %dW x %dH, "
@@ -141,7 +141,7 @@ print_pbm(FILE * const in) {
 
 
 
-static void 
+static void
 set_printer_specific_defaults()
 {
     switch(printer.version)
@@ -186,7 +186,7 @@ set_printer_specific_defaults()
 
 
 
-static void 
+static void
 show_usage(const char* const prog)
 {
     printf("usage: %s [ options ] [ <infile> [ <outfile> ] ]\n\n",prog);
@@ -220,7 +220,7 @@ show_usage(const char* const prog)
 
 
 
-static void 
+static void
 parm_version(char* arg)
 {
     if(!strcasecmp(arg,"hp720") || !strcmp(arg,"720"))
@@ -236,7 +236,7 @@ parm_version(char* arg)
 
 
 
-static void 
+static void
 parm_iversion(int arg)
 {
     switch(arg)
@@ -258,7 +258,7 @@ parm_iversion(int arg)
 
 
 
-static void 
+static void
 dump_config()
 {
     printf("version:  ");
@@ -278,7 +278,7 @@ dump_config()
 
 
 
-static void 
+static void
 read_config_file(const char* const fname)
 {
     FILE* cfgfile=fopen(fname,"r");
@@ -328,11 +328,11 @@ read_config_file(const char* const fname)
             }
             else if(!strcmp(key,"dump"))
                 dump_config();
-            else 
+            else
                 pm_error("read_config_file(): unrecognized parameter '%s' "
                          "(line %d)", key, lineno);
         case EOF:
-        case 0: 
+        case 0:
             break;
         default:
             pm_error("read_config_file(): error parsing config file "
@@ -356,7 +356,7 @@ const char* const defaultcfgfile="/etc/pbmtoppa.conf";
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
 
     int argn;
@@ -436,7 +436,7 @@ main(int argc, char *argv[]) {
             if (strcmp (argv[argn], "-") == 0)
                 in = stdin;
             else if ((in = fopen (argv[argn], "rb")) == NULL)
-                pm_error("main(): couldn't open file '%s'", 
+                pm_error("main(): couldn't open file '%s'",
                          argv[argn]);
             got_in=1;
         }
@@ -445,7 +445,7 @@ main(int argc, char *argv[]) {
             if (strcmp (argv[argn], "-") == 0)
                 out = stdout;
             else if ((out = fopen (argv[argn], "wb")) == NULL)
-                pm_error("main(): couldn't open file '%s'", 
+                pm_error("main(): couldn't open file '%s'",
                          argv[argn]);
             got_out=1;
         }
@@ -458,4 +458,6 @@ main(int argc, char *argv[]) {
 
     return print_pbm (in);
 }
+
+
 
