@@ -1177,7 +1177,7 @@ splineLinearEnough(spline_type *             const splineP,
          thisPoint < CURVE_LENGTH(curve);
          ++thisPoint) {
 
-        float       const t           = CURVE_T(curve, thisPoint);
+        float const t           = CURVE_T(curve, thisPoint);
         Point const splinePoint = evaluate_spline(*splineP, t);
 
         float const a = splinePoint.x - BEG_POINT(*splineP).x;
@@ -1263,12 +1263,12 @@ fitWithLine(curve * const curveP) {
 
 static spline_type
 fitOneSpline(curve *             const curveP,
-             Vector         const begSlope,
-             Vector         const endSlope,
+             Vector              const begSlope,
+             Vector              const endSlope,
              at_exception_type * const exceptionP) {
 /*----------------------------------------------------------------------------
-  Return a spline that fits the points of curve *curveP,
-  with slope 'begSlope' at its beginning and 'endSlope' at its end.
+  Return a spline that fits the points of curve *curveP, with slope 'begSlope'
+  at its beginning and 'endSlope' at its end (both are unit vectors).
 
   Make it a cubic spline.
 -----------------------------------------------------------------------------*/
@@ -1285,7 +1285,8 @@ fitOneSpline(curve *             const curveP,
        least-square error in approximating *curveP with the spline.
 
        How we do that is a complete mystery to me, but the original author
-       said to see pp. 57-59 of the Phoenix thesis.  I haven't seen that.
+       said to see pp. 57-59 of the Phoenix thesis.  Whatever that is, I
+       haven't seen it.
 
        In our expression of the math here, we use a struct with "beg" and
        "end" members where the paper uses a matrix with "1" and "2"
@@ -1296,18 +1297,22 @@ fitOneSpline(curve *             const curveP,
        The Bernstein polynomials of degree n are defined by
        B_i^n(t) = { n \choose i } t^i (1-t)^{n-i}, i = 0..n
     */
-    struct VectorPair {
+    struct VectorBegEndPair {
         Vector beg;
         Vector end;
     };
-    struct VectorPair tang;
+    struct VectorBegEndPair tang;
 
     spline_type spline;
     Vector begVector, endVector;
     unsigned int i;
-    struct VectorPair * A;  /* malloc'ed array */
+    struct VectorBegEndPair * A;  /* malloc'ed array */
         /* I don't know the meaning of this array, but it is one entry for
            each point in the curve (A[i] is for the ith point in the curve).
+           In each entry, the first vector of the pair is a vector in the
+           direction of the beginning slope of the curve and the other is
+           in the direction of the end slope of the curve.  Their magnitudes
+           are functions of the ith point.
         */
     struct {
         struct { float beg; float end; } beg;
@@ -1334,13 +1339,12 @@ fitOneSpline(curve *             const curveP,
     X.beg = 0.0; X.end = 0.0; /* initial value */
 
     for (i = 0; i < CURVE_LENGTH(curveP); ++i) {
-        struct VectorPair * const AP = &A[i];
+        struct VectorBegEndPair * const AP = &A[i];
         Vector temp, temp0, temp1, temp2, temp3;
 
         C.beg.beg += vector_dotProduct(AP->beg, AP->beg);
         C.beg.end += vector_dotProduct(AP->beg, AP->end);
-        /* C.end.beg = vector_dotProduct(AP->end, AP->beg)
-           is done outside of loop */
+        C.end.beg += vector_dotProduct(AP->end, AP->beg);
         C.end.end += vector_dotProduct(AP->end, AP->end);
 
         /* Now the right-hand side of the equation in the paper.  */
@@ -1360,8 +1364,6 @@ fitOneSpline(curve *             const curveP,
     }
     free(A);
 
-    C.end.beg = C.beg.end;
-
     {
         float const XCendDet  = X.beg * C.end.end - X.end * C.beg.end;
         float const CbegXDet  = C.beg.beg * X.end - C.beg.end * X.beg;
@@ -1371,14 +1373,14 @@ fitOneSpline(curve *             const curveP,
             LOG("zero determinant of C matrix");
             at_exception_fatal(exceptionP, "zero determinant of C matrix");
         } else {
-            struct { float beg; float end; } alpha;  /* constant */
-            alpha.beg = XCendDet / CDet;
-            alpha.end = CbegXDet / CDet;
+            /* See above for meaning of "alpha */
+            float const alphaBeg = XCendDet / CDet;
+            float const alphaEnd = CbegXDet / CDet;
 
             CONTROL1(spline) = vector_sumPoint(
-                BEG_POINT(spline), vector_scaled(tang.beg, alpha.beg));
+                BEG_POINT(spline), vector_scaled(tang.beg, alphaBeg));
             CONTROL2(spline) = vector_sumPoint(
-                END_POINT(spline), vector_scaled(tang.end, alpha.end));
+                END_POINT(spline), vector_scaled(tang.end, alphaEnd));
             SPLINE_DEGREE(spline) = CUBICTYPE;
         }
     }
@@ -1568,10 +1570,10 @@ findError(curve *             const curveP,
     worstPoint = 0;
 
     for (thisPoint = 0; thisPoint < CURVE_LENGTH(curveP); ++thisPoint) {
-        Point const curvePoint = CURVE_POINT(curveP, thisPoint);
-        float const t = CURVE_T(curveP, thisPoint);
+        Point const curvePoint  = CURVE_POINT(curveP, thisPoint);
+        float const t           = CURVE_T(curveP, thisPoint);
         Point const splinePoint = evaluate_spline(spline, t);
-        float const thisError = distance(curvePoint, splinePoint);
+        float const thisError   = distance(curvePoint, splinePoint);
         if (thisError >= worstError) {
             worstPoint = thisPoint;
             worstError = thisError;
@@ -1599,23 +1601,22 @@ findError(curve *             const curveP,
 
 
 static void
-setInitialParameterValues(curve * const curveP) {
+setCurvePointDistance(curve * const curveP) {
 /*----------------------------------------------------------------------------
    Fill in the 't' values in *curveP.
 
-   The t value for point P on a curve is the distance P is along the
-   curve from the initial point, normalized so the entire curve is
-   length 1.0 (i.e. t of the initial point is 0.0; t of the final
-   point is 1.0).
+   The t value for point P on a curve is the distance P is along the curve
+   from the initial point, normalized so the entire curve is length 1.0
+   (i.e. t of the initial point is 0.0; t of the final point is 1.0).
 
    There are a lot of curves that pass through the points indicated by
-   *curveP, but for practical computation of t, we just take the
-   piecewise linear locus that runs through all of them.  That means
-   we can just step through *curveP, adding up the distance from one
-   point to the next to get the t value for each point.
+   *curveP, but for practical computation of t, we just take the piecewise
+   linear locus that runs through all of them.  That means we can just step
+   through *curveP, adding up the distance from one point to the next to get
+   the t value for each point.
 
-   This is the "chord-length parameterization" method, which is
-   described in Plass & Stone.
+   This is the "chord-length parameterization" method, which is described in
+   Plass & Stone.
 -----------------------------------------------------------------------------*/
     unsigned int p;
 
@@ -1844,12 +1845,12 @@ fitWithLeastSquares(curve *                   const curveP,
 
     LOG("\nFitting with least squares:\n");
 
-    /* Phoenix reduces the number of points with a "linear spline
-       technique."  But for fitting letterforms, that is
-       inappropriate.  We want all the points we can get.
+    /* Phoenix reduces the number of points with a "linear spline technique."
+       But for fitting letterforms, that is inappropriate.  We want all the
+       points we can get.
     */
 
-    setInitialParameterValues(curveP);
+    setCurvePointDistance(curveP);
 
     if (CURVE_CYCLIC(curveP) && CURVE_LENGTH(curveP) < 4) {
         unsigned i;
