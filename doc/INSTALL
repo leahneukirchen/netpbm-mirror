@@ -169,6 +169,12 @@ contents.  You can also run Configure interactively and use its output
 as an example.
 
 
+COMPILER REQUIREMENTS
+---------------------
+
+The compiler must be able to compile C99 code.
+
+
 THE PREREQUISITE LIBRARIES
 --------------------------
 
