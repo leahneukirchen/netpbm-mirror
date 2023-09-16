@@ -24,17 +24,17 @@
 #include "curve.h"
 
 
-static float_coord
+static Point
 int_to_real_coord(pm_pixelcoord const int_coord) {
 /*----------------------------------------------------------------------------
   Turn an integer point into a real one.
 -----------------------------------------------------------------------------*/
-    float_coord real_coord;
+    Point real_coord;
 
     real_coord.x = int_coord.col;
     real_coord.y = int_coord.row;
     real_coord.z = 0.0;
-    
+
     return real_coord;
 }
 
@@ -76,13 +76,13 @@ void
 move_curve(curve * const dstP,
            curve * const srcP) {
 
-    /* Move ownership of dynamically allocated memory from source 
+    /* Move ownership of dynamically allocated memory from source
        to destination; destroy source.
     */
 
    if (CURVE_LENGTH(dstP) > 0)
        free(dstP->point_list);
-    
+
    *dstP = *srcP;
 
    free(srcP);
@@ -106,8 +106,8 @@ free_curve(curve * const curveP) {
 
 
 void
-append_point(curve_type  const curve,
-             float_coord const coord) {
+append_point(curve_type const curve,
+             Point      const coord) {
 
     CURVE_LENGTH(curve)++;
     REALLOCARRAY_NOFAIL(curve->point_list, CURVE_LENGTH(curve));
@@ -159,7 +159,7 @@ log_curve(curve * const curveP,
     /* If the curve is short enough, don't use ellipses.  */
     if (CURVE_LENGTH(curveP) <= NUM_TO_PRINT * 2) {
         unsigned int thisPoint;
-    
+
         for (thisPoint = 0; thisPoint < CURVE_LENGTH(curveP); ++thisPoint) {
             LOG_CURVE_POINT(curveP, thisPoint, print_t);
             LOG(" ");
@@ -276,7 +276,7 @@ new_curve_list_array (void)
 
 void
 free_curve_list_array(const curve_list_array_type * const curve_list_array,
-                      at_progress_func                    notify_progress, 
+                      at_progress_func                    notify_progress,
                       void *                        const client_data) {
 
   unsigned this_list;
@@ -290,7 +290,7 @@ free_curve_list_array(const curve_list_array_type * const curve_list_array,
                           client_data);
       free_curve_list(&CURVE_LIST_ARRAY_ELT (*curve_list_array, this_list));
   }
-  
+
   /* If the character was empty, it won't have any curves.  */
   if (curve_list_array->data != NULL)
       free(curve_list_array->data);
@@ -308,6 +308,3 @@ append_curve_list(curve_list_array_type * const curve_list_array,
                       CURVE_LIST_ARRAY_LENGTH(*curve_list_array));
   LAST_CURVE_LIST_ARRAY_ELT (*curve_list_array) = curve_list;
 }
-
-
-

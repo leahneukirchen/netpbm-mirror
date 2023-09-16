@@ -1,6 +1,6 @@
 #include <stdbool.h>
 
-#include "epsilon-equal.h"
+#include "epsilon.h"
 
 #include "point.h"
 

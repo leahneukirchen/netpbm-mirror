@@ -20,7 +20,7 @@ ADDL_OBJECTS = \
 	curve.o \
 	point.o \
 	vector.o \
-	epsilon-equal.o \
+	epsilon.o \
 	autotrace.o \
 	pxl-outline.o \
 	bitmap.o \

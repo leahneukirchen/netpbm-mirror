@@ -1,5 +1,3 @@
-/* epsilon-equal.c: define a error resist compare. */
-
 #include <math.h>
 
 #include "epsilon.h"

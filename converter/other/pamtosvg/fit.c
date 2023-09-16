@@ -38,7 +38,7 @@
 #include "vector.h"
 #include "curve.h"
 #include "pxl-outline.h"
-#include "epsilon-equal.h"
+#include "epsilon.h"
 
 #define CUBE(x) ((x) * (x) * (x))
 
@@ -1157,17 +1157,17 @@ splineLinearEnough(spline_type *             const splineP,
 
     LOG ("Checking linearity:\n");
 
-    A = END_POINT(*splineP).x - START_POINT(*splineP).x;
-    B = END_POINT(*splineP).y - START_POINT(*splineP).y;
-    C = END_POINT(*splineP).z - START_POINT(*splineP).z;
+    A = END_POINT(*splineP).x - BEG_POINT(*splineP).x;
+    B = END_POINT(*splineP).y - BEG_POINT(*splineP).y;
+    C = END_POINT(*splineP).z - BEG_POINT(*splineP).z;
 
     startEndDist = (float) (SQR(A) + SQR(B) + SQR(C));
     LOG1("start_end_distance is %.3f.\n", sqrt(startEndDist));
 
     LOG3("  Line endpoints are (%.3f, %.3f, %.3f) and ",
-         START_POINT(*splineP).x,
-         START_POINT(*splineP).y,
-         START_POINT(*splineP).z);
+         BEG_POINT(*splineP).x,
+         BEG_POINT(*splineP).y,
+         BEG_POINT(*splineP).z);
     LOG3("(%.3f, %.3f, %.3f)\n",
          END_POINT(*splineP).x, END_POINT(*splineP).y, END_POINT(*splineP).z);
 
@@ -1180,9 +1180,9 @@ splineLinearEnough(spline_type *             const splineP,
         float       const t           = CURVE_T(curve, thisPoint);
         Point const splinePoint = evaluate_spline(*splineP, t);
 
-        float const a = splinePoint.x - START_POINT(*splineP).x;
-        float const b = splinePoint.y - START_POINT(*splineP).y;
-        float const c = splinePoint.z - START_POINT(*splineP).z;
+        float const a = splinePoint.x - BEG_POINT(*splineP).x;
+        float const b = splinePoint.y - BEG_POINT(*splineP).y;
+        float const c = splinePoint.z - BEG_POINT(*splineP).z;
 
         float const w = (A*a + B*b + C*c) / startEndDist;
 
@@ -1240,7 +1240,7 @@ fitWithLine(curve * const curveP) {
     LOG("Fitting with straight line:\n");
 
     SPLINE_DEGREE(line) = LINEARTYPE;
-    START_POINT(line)   = CONTROL1(line) = CURVE_POINT(curveP, 0);
+    BEG_POINT(line)     = CONTROL1(line) = CURVE_POINT(curveP, 0);
     END_POINT(line)     = CONTROL2(line) = LAST_CURVE_POINT(curveP);
 
     /* Make sure that this line is never changed to a cubic.  */
@@ -1272,31 +1272,29 @@ fitOneSpline(curve *             const curveP,
 
   Make it a cubic spline.
 -----------------------------------------------------------------------------*/
-    /* We already have the start and end points of the spline, so all
-      we need are the control points.  And we know in what direction
-      each control point is from its respective end point, so all we
-      need to figure out is its distance.  (The control point's
-      distance from the end point is an indication of how long the
-      curve goes in its direction).
+    /* We already have the start and end points of the spline, so all we need
+       are the control points.  And we know in what direction each control
+       point is from its respective end point, so all we need to figure out is
+       its distance.  (The control point's distance from the end point is an
+       indication of how long the curve goes in its direction).
 
-      We call the distance from an end point to the associated control
-      point "alpha".
+       We call the distance from an end point to the associated control point
+       "alpha".
 
-      We want to find starting and ending alpha that minimize the
-      least-square error in approximating *curveP with the spline.
+       We want to find starting and ending alpha that minimize the
+       least-square error in approximating *curveP with the spline.
 
-      How we do that is a complete mystery to me, but the original author
-      said to see pp.57--59 of the Phoenix thesis.  I haven't seen that.
+       How we do that is a complete mystery to me, but the original author
+       said to see pp. 57-59 of the Phoenix thesis.  I haven't seen that.
 
-      In our expression of the math here, we use a struct with "beg" and
-      "end" members where the paper uses a matrix with "1" and "2"
-      subscripts, respectively.  A C array is a closer match to a math
-      matrix, but we think the struct is easier to read.
+       In our expression of the math here, we use a struct with "beg" and
+       "end" members where the paper uses a matrix with "1" and "2"
+       subscripts, respectively.  A C array is a closer match to a math
+       matrix, but we think the struct is easier to read.
 
-      The B?(t) here corresponds to B_i^3(U_i) there.
-      The Bernstein polynomials of degree n are defined by
-      B_i^n(t) = { n \choose i } t^i (1-t)^{n-i}, i = 0..n
-
+       The B?(t) here corresponds to B_i^3(U_i) there.
+       The Bernstein polynomials of degree n are defined by
+       B_i^n(t) = { n \choose i } t^i (1-t)^{n-i}, i = 0..n
     */
     struct VectorPair {
         Vector beg;

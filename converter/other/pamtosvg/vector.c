@@ -10,7 +10,7 @@
 
 #include "vector.h"
 #include "message.h"
-#include "epsilon-equal.h"
+#include "epsilon.h"
 
 static float
 acosD(float               const v,

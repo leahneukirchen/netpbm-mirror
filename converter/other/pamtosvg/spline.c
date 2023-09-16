@@ -18,15 +18,15 @@ print_spline (FILE *f, spline_type s)
 
   if (SPLINE_DEGREE (s) == LINEARTYPE)
     fprintf (f, "(%.3f,%.3f)--(%.3f,%.3f).\n",
-                START_POINT (s).x, START_POINT (s).y,
+                BEG_POINT (s).x, BEG_POINT (s).y,
                 END_POINT (s).x, END_POINT (s).y);
 
   else if (SPLINE_DEGREE (s) == CUBICTYPE)
     fprintf (f, "(%.3f,%.3f)..ctrls(%.3f,%.3f)&(%.3f,%.3f)..(%.3f,%.3f).\n",
-                START_POINT (s).x, START_POINT (s).y,
-                CONTROL1 (s).x, CONTROL1 (s).y,
-                CONTROL2 (s).x, CONTROL2 (s).y,
-                END_POINT (s).x, END_POINT (s).y);
+             BEG_POINT (s).x, BEG_POINT (s).y,
+             CONTROL1  (s).x, CONTROL1  (s).y,
+             CONTROL2  (s).x, CONTROL2  (s).y,
+             END_POINT (s).x, END_POINT (s).y);
 }
 
 
