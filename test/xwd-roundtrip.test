@@ -1,15 +1,22 @@
 #! /bin/sh
 # This script tests: pnmtoxwd xwdtopnm
-# Also requires: pamchannel pamtopnm pamdepth
+# Also requires: pamchannel pamtopnm pamdepth ppmtopgm
 
-echo "Test 1.  Should produce 1571496937 33838, cksum of testimg.red"
+echo "Test 1.  Should produce 1571496937 33838, cksum of testimg.red twice"
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
   pnmtoxwd | xwdtopnm | pamdepth 255 | cksum
+
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
+  pnmtoxwd -direct | xwdtopnm -quiet | pamdepth 255 | ppmtopgm | cksum
 
 echo "Test 2.  Should produce 1926073387 101484"
 pnmtoxwd --quiet testimg.ppm | \
   xwdtopnm --quiet | pamdepth 255 | cksum
 
-echo "Test 3.  Should produce 281226646 481"
-pnmtoxwd --quiet maze.pbm | \
-  xwdtopnm | cksum
+echo "Test 3.  Should produce 281226646 481 three times"
+pnmtoxwd --quiet maze.pbm | xwdtopnm | cksum
+
+pnmtoxwd --quiet -pseudodepth 1 maze.pbm | xwdtopnm | cksum
+
+pnmtoxwd --quiet -pseudodepth 16 maze.pbm | xwdtopnm | cksum
+

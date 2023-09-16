@@ -1,6 +1,9 @@
-Test 1.  Should produce 1571496937 33838, cksum of testimg.red
+Test 1.  Should produce 1571496937 33838, cksum of testimg.red twice
+1571496937 33838
 1571496937 33838
 Test 2.  Should produce 1926073387 101484
 1926073387 101484
-Test 3.  Should produce 281226646 481
+Test 3.  Should produce 281226646 481 three times
+281226646 481
+281226646 481
 281226646 481

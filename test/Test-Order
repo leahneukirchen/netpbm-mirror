@@ -27,6 +27,8 @@ pamcrater.test
 ppmpat.test
 ppmforge-parameters.test
 
+pamstereogram.test
+
 # Generators with random components
 
 pbmnoise1.test
@@ -137,6 +139,8 @@ pammixmulti-identity.test
 
 pamaddnoise-parameters.test
 
+pamstack.test
+
 # Symmetry test
 
 symmetry.test
@@ -161,8 +165,10 @@ pbm-misc-converters.test
 # Format converter tests
 
 pamtopdbimg.test
+pamtosvg.test
 pbmtog3.test
 ppmtoapplevol.test
+ppmtomitsu.test
 411toppm.test
 eyuvtoppm.test
 rawtoppm.test
