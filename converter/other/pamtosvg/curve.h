@@ -5,27 +5,34 @@
 
 #include "autotrace.h"
 #include "point.h"
-#include "vector.h"
 
 /* We are simultaneously manipulating two different representations of
    the same outline: one based on (x,y) positions in the plane, and one
    based on parametric splines.  (We are trying to match the latter to
    the former.)  Although the original (x,y)'s are pixel positions,
-   i.e., integers, after filtering they are reals.  */
+   i.e., integers, after filtering they are reals.
+*/
 
 typedef struct {
+/*----------------------------------------------------------------------------
+   A point in a curve (i.e. a component of a curve).
+-----------------------------------------------------------------------------*/
     Point coord;
-    float       t;
-} point_type;
+        /* Location in space of the point */
+    float distance;
+        /* Distance point is along the curve, as a fraction of the
+           curve length
+        */
+} CurvePoint;
 
 
 
-typedef struct curve {
+typedef struct Curve {
 /*----------------------------------------------------------------------------
   An ordered list of contiguous points in the raster, with no corners
   in it.  I.e. something that could reasonably be fit to a spline.
 -----------------------------------------------------------------------------*/
-    point_type *   point_list;
+    CurvePoint *   pointList;
         /* Array of the points in the curve.  Malloc'ed.  Size is 'length'.
            if 'length' is zero, this is meaningless and no memory is
            allocated.
@@ -38,17 +45,15 @@ typedef struct curve {
        a chain of all curves in an outline.  The chain is a cycle for a
        closed outline and linear for an open outline.
     */
-    struct curve * previous;
-    struct curve * next;
-} curve;
-
-typedef struct curve * curve_type;
+    struct Curve * previous;
+    struct Curve * next;
+} Curve;
 
 /* Get at the coordinates and the t values.  */
-#define CURVE_POINT(c, n) ((c)->point_list[n].coord)
-#define LAST_CURVE_POINT(c) ((c)->point_list[(c)->length-1].coord)
-#define CURVE_T(c, n) ((c)->point_list[n].t)
-#define LAST_CURVE_T(c) ((c)->point_list[(c)->length-1].t)
+#define CURVE_POINT(c, n) ((c)->pointList[n].coord)
+#define LAST_CURVE_POINT(c) ((c)->pointList[(c)->length-1].coord)
+#define CURVE_DIST(c, n) ((c)->pointList[n].distance)
+#define LAST_CURVE_DIST(c) ((c)->pointList[(c)->length-1].distance)
 
 /* This is the length of `point_list'.  */
 #define CURVE_LENGTH(c)  ((c)->length)
@@ -73,44 +78,38 @@ typedef struct curve * curve_type;
 #define NEXT_CURVE(c) ((c)->next)
 
 
-/* Return an entirely empty curve.  */
-extern curve_type new_curve (void);
+Curve *
+curve_new(void);
 
-/* Return a curve the same as C, except without any points.  */
-extern curve_type copy_most_of_curve (curve_type c);
-
-void
-move_curve(curve * const dstP,
-           curve * const srcP);
+Curve *
+curve_copyMost(Curve * const curveP);
 
 void
-free_curve(curve * const curveP);
+curve_move(Curve * const dstP,
+           Curve * const srcP);
 
-/* Like `append_pixel', for a point in real coordinates.  */
 void
-append_point(curve_type  const curve,
-             Point       const coord);
+curve_free(Curve * const curveP);
 
-/* Append the point P to the end of C's list.  */
 void
-append_pixel(curve_type    const c,
-             pm_pixelcoord const p);
+curve_appendPoint(Curve * const curveP,
+                  Point   const coord);
 
-/* Write some or all, respectively, of the curve C in human-readable
-   form to the log file, if logging is enabled.  */
-void log_curve (curve_type c, bool print_t);
-void log_entire_curve (curve_type c);
+void
+curve_appendPixel(Curve *       const curveP,
+                  pm_pixelcoord const p);
 
-/* Display the curve C online, if displaying is enabled.  */
-void display_curve (curve_type);
-
-
+void
+curve_log(Curve * const curveP,
+          bool    const print_t);
+void
+curve_logEntire(Curve * const curveP);
 
 typedef struct {
 /*----------------------------------------------------------------------------
    An ordered list of contiguous curves of a particular color.
 -----------------------------------------------------------------------------*/
-    curve ** data;
+    Curve ** data;
         /* data[i] is the handle of the ith curve in the list */
     unsigned length;
     bool     clockwise;
@@ -119,7 +118,7 @@ typedef struct {
         /* The curve list does not form a closed shape;  i.e. the last
            curve doesn't end where the first one starts.
         */
-} curve_list_type;
+} CurveList;
 
 /* Number of curves in the list.  */
 #define CURVE_LIST_LENGTH(c_l)  ((c_l).length)
@@ -134,21 +133,23 @@ typedef struct {
 #define CURVE_LIST_CLOCKWISE(c_l) ((c_l).clockwise)
 
 
-curve_list_type new_curve_list (void);
+CurveList
+curve_newList(void);
 
 void
-free_curve_list(curve_list_type * const curve_list);
+curve_freeList(CurveList * const curveListP);
 
-void append_curve (curve_list_type *, curve_type);
+void
+curve_appendList(CurveList * const curveListP,
+                 Curve *     const curveP);
 
 /* And a character is a list of outlines.  I named this
    `curve_list_array_type' because `curve_list_list_type' seemed pretty
    monstrous.  */
-typedef struct
-{
-  curve_list_type *data;
-  unsigned length;
-} curve_list_array_type;
+typedef struct {
+  CurveList * data;
+  unsigned    length;
+} CurveListArray;
 
 /* Turns out we can use the same definitions for lists of lists as for
    just lists.  But we define the usual names, just in case.  */
@@ -156,16 +157,16 @@ typedef struct
 #define CURVE_LIST_ARRAY_ELT CURVE_LIST_ELT
 #define LAST_CURVE_LIST_ARRAY_ELT LAST_CURVE_LIST_ELT
 
-curve_list_array_type
-new_curve_list_array(void);
+CurveListArray
+curve_newListArray(void);
 
 void
-free_curve_list_array(const curve_list_array_type * const curve_list_array,
-                      at_progress_func                    notify_progress,
-                      void *                        const client_data);
+curve_freeListArray(const CurveListArray * const curveListArrayP,
+                    at_progress_func             notify_progress,
+                    void *                 const client_data);
 
 void
-append_curve_list(curve_list_array_type * const curve_list_array,
-                  curve_list_type         const curve_list);
+curve_appendArray(CurveListArray * const curveListArrayP,
+                  CurveList        const curveList);
 
 #endif
