@@ -132,7 +132,7 @@ parseCommandLine(int argc, const char ** argv,
 typedef unsigned char eightbits ;
 
 static FILE * ifP;
-static int pkLoc = 0;
+static unsigned int pkLoc;
 static const char * fileName[MAXPKCHAR];
 static int dynf ;
 static eightbits inputByte ;
@@ -302,12 +302,12 @@ skipSpecials() {
 
 
 static void
-ignoreChar(int const car,
-           int const endofpacket) {
+ignoreChar(int          const car,
+           unsigned int const endOfPacket) {
 /*----------------------------------------------------------------------------
    ignore character packet
 -----------------------------------------------------------------------------*/
-   while (pkLoc != endofpacket)
+   while (pkLoc != endOfPacket)
        pkByte();
 
    if (car < 0 || car >= MAXPKCHAR)
@@ -354,16 +354,19 @@ readHeader() {
 
 
 static void
-readCharacterHeader(int *  const carP,
-                    int *  const endOfPacketP,
-                    bool * const mustIgnoreP,
-                    int *  const cheightP,
-                    int *  const cwidthP,
-                    int *  const xoffsP,
-                    int *  const yoffsP,
-                    bool * const turnonP) {
+readCharacterHeader(int *          const carP,
+                    unsigned int * const endOfPacketP,
+                    bool *         const mustIgnoreP,
+                    int *          const cheightP,
+                    int *          const cwidthP,
+                    int *          const xoffsP,
+                    int *          const yoffsP,
+                    bool *         const turnonP) {
 
-    int cheight, cwidth ;
+    int packetLength;
+        /* character packet length field value */
+    int cheight, cwidth;
+        /* bounding box height, width field values */
     int xoffs=0, yoffs=0;
     bool turnon ;
     int x;
@@ -375,11 +378,8 @@ readCharacterHeader(int *  const carP,
         flagByte &= 7;     /* long or short form */
 
     if (flagByte == 7) {            /* long form preamble */
-        int packetLength;    /* character packet length */
-
         packetLength  = get32();
         *carP         = get32();         /* character number */
-        *endOfPacketP = packetLength + pkLoc;
 
         dprintf0("flagByte7\n");
         dprintf("car: %d\n", *carP);
@@ -403,10 +403,9 @@ readCharacterHeader(int *  const carP,
             dprintf ("yoffs %d\n", yoffs);
         }
     } else if (flagByte > 3) {      /* extended short form */
-        int const packetLength = ((flagByte - 4)<<16) + get16() ;
+        packetLength = ((flagByte - 4)<<16) + get16() ;
 
         *carP = pkByte() ;            /* char number */
-        *endOfPacketP = packetLength + pkLoc ;
 
         *mustIgnoreP = false;
 
@@ -428,11 +427,8 @@ readCharacterHeader(int *  const carP,
         dprintf("xoffs %d\n", xoffs);
         dprintf("yoffs %d\n", yoffs);
     } else {                    /* short form preamble */
-        int packetLength;
-
         packetLength  = (flagByte << 8) + pkByte();
         *carP         = pkByte();            /* char number */
-        *endOfPacketP = packetLength + pkLoc;
 
         *mustIgnoreP = false;
 
@@ -455,6 +451,13 @@ readCharacterHeader(int *  const carP,
         dprintf("xoffs %d\n", xoffs);
         dprintf("yoffs %d\n", yoffs);
     }
+    if (packetLength < 0)
+        pm_error("Invalid character header - negative packet length");
+    if (packetLength > UINT_MAX - pkLoc)
+        pm_error("Invalid character header - excessive packet lenght");
+
+    *endOfPacketP = packetLength + pkLoc;
+
     *cheightP = cheight;
     *cwidthP  = cwidth;
     *xoffsP   = xoffs;
@@ -476,7 +479,7 @@ readOneCharacter(bool           const bmxOverrideSpec,
                  unsigned int * const bmyP) {
 
     int car;
-    int endOfPacket;
+    unsigned int endOfPacket;
     bool mustIgnore;
     int cheight, cwidth;
     int xoffs, yoffs;
@@ -626,6 +629,8 @@ main(int argc, const char ** argv) {
 
     ifP = pm_openr(cmdline.inputFileNm);
 
+    pkLoc = 0;
+
     readHeader();
 
     while (flagByte != 245) {  /* not at postamble */
@@ -657,7 +662,7 @@ main(int argc, const char ** argv) {
 
     warnMissingCodePoint();
 
-    pm_message("%u bytes read from packed file.", pkLoc-1) ;
+    pm_message("%u bytes read from packed file.", pkLoc);
 
     return 0;
 }
