@@ -1,4 +1,3 @@
-
 /*********************************************************************/
 /* ppmshift -  shift lines of a picture left or right by x pixels    */
 /* Frank Neumann, October 1993                                       */

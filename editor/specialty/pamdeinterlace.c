@@ -2,7 +2,7 @@
                              pamdeinterlace
 *******************************************************************************
   De-interlace an image, i.e. select every 2nd row.
-   
+
   By Bryan Henderson, San Jose, CA 2001.11.11.
 
   Contributed to the public domain.
@@ -81,7 +81,7 @@ main(int argc, char *argv[]) {
     tuple * tuplerow;   /* Row from input image */
     unsigned int row;
     struct cmdlineInfo cmdline;
-    struct pam inpam;  
+    struct pam inpam;
     struct pam outpam;
 
     pnm_init( &argc, argv );
@@ -89,7 +89,7 @@ main(int argc, char *argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
-    
+
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     if (inpam.height < 2 && cmdline.rowsToTake == ODD)
@@ -133,7 +133,7 @@ main(int argc, char *argv[]) {
     pnm_freepamrow(tuplerow);
     pm_close(inpam.file);
     pm_close(outpam.file);
-    
+
     return 0;
 }
 

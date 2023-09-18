@@ -27,16 +27,16 @@
 
 /* The pnm library allows us to code this program without branching cases for
    PGM and PPM, but we do the branch anyway to speed up processing of PGM
-   images. 
+   images.
 */
 
 
 
-struct cmdlineInfo 
+struct cmdlineInfo
 {
     /*
     All the information the user supplied in the command line,
-    in a form easy for the program to use. 
+    in a form easy for the program to use.
     */
 
     const char * input_filespec;  /* Filespecs of input files */
@@ -50,14 +50,14 @@ struct cmdlineInfo
 
 
 static void
-parseCommandLine(int                        argc, 
+parseCommandLine(int                        argc,
                  const char **              argv,
                  struct cmdlineInfo * const cmdlineP ) {
 
     optEntry * option_def;
     optStruct3 opt;
         /* Instructions to pm_optParseOptions3 on how to parse our options. */
-    
+
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -85,9 +85,9 @@ parseCommandLine(int                        argc,
 
 
 static void
-computeOutputDimensions(const struct cmdlineInfo cmdline, 
+computeOutputDimensions(const struct cmdlineInfo cmdline,
                         const int rows, const int cols,
-                        int * newrowsP, int * newcolsP) 
+                        int * newrowsP, int * newcolsP)
 {
     *newcolsP = cols;
     if (!cmdline.inverse)
@@ -106,7 +106,7 @@ computeOutputDimensions(const struct cmdlineInfo cmdline,
             pm_message("Creating Degrees map, new size is %dx%d",
                        *newcolsP, *newrowsP);
     }
-}        
+}
 
 
 
@@ -117,15 +117,15 @@ transformWithMixing(FILE * const ifP,
                     int const newcols, int const newrows,
                     xelval const newmaxval, int const newformat,
                     bool const inverse,
-                    bool const verbose, bool const vverbose) 
+                    bool const verbose, bool const vverbose)
 {
-    /* 
-    Transform the map image on input file 'ifP' (which is described by 
+    /*
+    Transform the map image on input file 'ifP' (which is described by
     'cols', 'rows', 'format', and 'maxval') to a Mercator projection
-    and write the result to standard output as format 'newformat' and 
+    and write the result to standard output as format 'newformat' and
     with maxval 'newmaxval'.
 
-    We'll blend colors from subsequent rows in the output pixels. 
+    We'll blend colors from subsequent rows in the output pixels.
     */
 
     xel* oddxelrow;  /* an input row */
@@ -142,14 +142,14 @@ transformWithMixing(FILE * const ifP,
     double fLatRad;
     double fLatMerc;
 
-    oddxelrow = pnm_allocrow(cols); 
-    evenxelrow = pnm_allocrow(cols); 
+    oddxelrow = pnm_allocrow(cols);
+    evenxelrow = pnm_allocrow(cols);
     rowInXelrow = 0;
 
     newxelrow = pnm_allocrow(newcols);
 
     for (row = 0; row < newrows; ++row) {
-        
+
         fRow = (double)row + 0.5; /* center on half the pixel */
         if (!inverse) {
             /* the result is mercator, calculate back to degrees */
@@ -207,7 +207,7 @@ transformWithMixing(FILE * const ifP,
             }
         }
 
-        while ((rowInXelrow <= inputRow + 1) && 
+        while ((rowInXelrow <= inputRow + 1) &&
                (rowInXelrow < rows)) {
             /* we need to read one row ahead */
             if (rowInXelrow % 2 == 0) {
@@ -268,16 +268,16 @@ transformNoneMixing(FILE * const ifP,
                    int const newcols, int const newrows,
                    xelval const newmaxval, int const newformat,
                    bool const inverse,
-                   bool const verbose, bool const vverbose) 
+                   bool const verbose, bool const vverbose)
 {
     /*
-    Transform the map image on input file 'ifP' (which is described by 
+    Transform the map image on input file 'ifP' (which is described by
     'cols', 'rows', 'format', and 'maxval') to a Mercator projection and
-    write the result to standard output as format 'newformat' and with 
+    write the result to standard output as format 'newformat' and with
     maxval 'newmaxval'.
 
     Don't mix colors from different input pixels together in the output
-    pixels.  Each output pixel is an exact copy of some corresponding 
+    pixels.  Each output pixel is an exact copy of some corresponding
     input pixel.
     */
 
@@ -293,13 +293,13 @@ transformNoneMixing(FILE * const ifP,
     double fLatRad;
     double fLatMerc;
 
-    xelrow = pnm_allocrow(cols); 
+    xelrow = pnm_allocrow(cols);
     rowInXelrow = 0;
 
     newxelrow = pnm_allocrow(newcols);
 
     for (row = 0; row < newrows; ++row) {
-        
+
         fRow = (double)row + 0.5; /* center on half the pixel */
         if (!inverse) {
             /* the result is mercator, calculate back to degrees */
@@ -377,7 +377,7 @@ transformNoneMixing(FILE * const ifP,
 
 
 int
-main(int argc, const char ** argv ) 
+main(int argc, const char ** argv )
 {
     struct cmdlineInfo cmdline;
     FILE* ifP;
@@ -413,18 +413,18 @@ main(int argc, const char ** argv )
         if (verbose)
             pm_message("Transforming map without mixing/blending colors");
         transformNoneMixing(ifP, cols, rows, maxval, format,
-                            newcols, newrows, newmaxval, newformat, 
+                            newcols, newrows, newmaxval, newformat,
                             cmdline.inverse, verbose, cmdline.vverbose);
     } else {
         if (verbose)
             pm_message("Transforming map while using intermediate colors");
         transformWithMixing(ifP, cols, rows, maxval, format,
-                            newcols, newrows, newmaxval, newformat, 
+                            newcols, newrows, newmaxval, newformat,
                             cmdline.inverse, verbose, cmdline.vverbose);
     }
 
     pm_close(ifP);
     pm_close(stdout);
-    
+
     return 0;
 }

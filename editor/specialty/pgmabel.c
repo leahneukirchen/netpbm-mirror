@@ -117,7 +117,7 @@ abel ( float *y, int N, double *adl)
     for (n=0 ; n<N ; n++)
         {
             if (( n>=1 )&&( n<N-1 ))
-	       (*y++) = ((rho[n-1]*0.5+rho[n]+rho[n+1]*0.5)/2.0);/*1D median filter*/
+               (*y++) = ((rho[n-1]*0.5+rho[n]+rho[n+1]*0.5)/2.0);/*1D median filter*/
             else (*y++) = rho[n];
         }
     free(rho);

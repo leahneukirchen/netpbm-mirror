@@ -41,7 +41,7 @@ main(int argc, const char * argv[]) {
             pm_error("There are no options and only one argument.  "
                      "You specified %u", argc-1);
     }
-	ifP = pm_openr(inputFileName);
+        ifP = pm_openr(inputFileName);
 
     gin = pgm_readpgm(ifP, &cols, &rows, &maxval);
 
@@ -62,9 +62,9 @@ main(int argc, const char * argv[]) {
             unsigned int const brow = MIN(rows-1, row + gin[row][col] / N);
 
             gout[brow][col] = gin[row][col];
-	    }
+            }
     }
-     
+
     pgm_writepgm(stdout, gout, cols, rows, maxval, 0);
 
     pm_close(stdout);

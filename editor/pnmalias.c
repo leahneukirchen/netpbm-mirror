@@ -43,23 +43,23 @@ main(int argc, char * argv[] ) {
 
     while ( argn < argc && argv[argn][0] == '-' )
         {
-        if ( pm_keymatch( argv[argn], "-fgcolor", 3 ) ) 
+        if ( pm_keymatch( argv[argn], "-fgcolor", 3 ) )
         {
-        if ( ++argn >= argc ) 
+        if ( ++argn >= argc )
         pm_usage( usage );
-        else 
+        else
         fgcolorppm = ppm_parsecolor( argv[argn], PPM_MAXMAXVAL );
         }
-        else if ( pm_keymatch( argv[argn], "-bgcolor", 3 ) ) 
+        else if ( pm_keymatch( argv[argn], "-bgcolor", 3 ) )
         {
-        if ( ++argn >= argc ) 
+        if ( ++argn >= argc )
         pm_usage( usage );
-        else 
+        else
         bgcolorppm = ppm_parsecolor( argv[argn], PPM_MAXMAXVAL );
         }
-        else if ( pm_keymatch( argv[argn], "-weight", 2 ) ) 
+        else if ( pm_keymatch( argv[argn], "-weight", 2 ) )
         {
-        if ( ++argn >= argc ) 
+        if ( ++argn >= argc )
         pm_usage( usage );
         else if ( sscanf( argv[argn], "%lf", &weight ) != 1 )
             pm_usage( usage );
@@ -103,7 +103,7 @@ main(int argc, char * argv[] ) {
     fmask[5] = fmask[6] = fmask[7] = fmask[8] = ( 1.0 - weight ) / 8.0;
 
     pnm_readpnminit( ifp, &cols, &rows, &maxval, &format );
-   
+
     xelrow[0] = pnm_allocrow( cols );
     xelrow[1] = pnm_allocrow( cols );
     xelrow[2] = pnm_allocrow( cols );
@@ -120,29 +120,29 @@ main(int argc, char * argv[] ) {
     }
 
     /* Figure out foreground pixel value if none was given */
-    if (PPM_GETR(fgcolorppm) == 0 && PPM_GETG(fgcolorppm) == 0 && 
+    if (PPM_GETR(fgcolorppm) == 0 && PPM_GETG(fgcolorppm) == 0 &&
         PPM_GETB(fgcolorppm) == 0 ) {
         if ( PNM_FORMAT_TYPE(newformat) == PGM_TYPE )
             PNM_ASSIGN1( fgcolor, newmaxval );
-        else 
+        else
             PPM_ASSIGN( fgcolor, newmaxval, newmaxval, newmaxval );
     } else {
         if ( PNM_FORMAT_TYPE(newformat) == PGM_TYPE )
             PNM_ASSIGN1( fgcolor, PPM_GETR( fgcolorppm ) );
-        else 
+        else
             fgcolor = fgcolorppm;
     }
 
-    if (PPM_GETR(bgcolorppm) != 0 || PPM_GETG(bgcolorppm) != 0 || 
+    if (PPM_GETR(bgcolorppm) != 0 || PPM_GETG(bgcolorppm) != 0 ||
         PPM_GETB(bgcolorppm) != 0 ) {
         if ( PNM_FORMAT_TYPE(newformat) == PGM_TYPE )
             PNM_ASSIGN1( bgcolor, PPM_GETR( bgcolorppm) );
-        else 
+        else
             bgcolor = bgcolorppm;
     } else {
         if ( PNM_FORMAT_TYPE(newformat) == PGM_TYPE )
             PNM_ASSIGN1( bgcolor, 0 );
-        else 
+        else
             PPM_ASSIGN( bgcolor, 0, 0, 0 );
     }
 
@@ -158,9 +158,9 @@ main(int argc, char * argv[] ) {
 
         pnm_readpnmrow( ifp, xelrow[(row+1)%3], cols, newmaxval, format );
         newxelrow[0] = xelrow[row%3][0];
-        
+
         for ( col = 1, xpP = (xelrow[(row-1)%3] + 1), xP = (xelrow[row%3] + 1),
-                  xnP = (xelrow[(row+1)%3] + 1), nxP = (newxelrow+1); 
+                  xnP = (xelrow[(row+1)%3] + 1), nxP = (newxelrow+1);
               col < cols - 1; ++col, ++xpP, ++xP, ++xnP, ++nxP ) {
 
             int fgflag, bgflag;
@@ -168,28 +168,28 @@ main(int argc, char * argv[] ) {
             /* Reset flags if anti-aliasing is to be done on foreground
              * or background pixels only */
             if ( ( bgonly && PNM_EQUAL( *xP, fgcolor ) ) ||
-                 ( fgonly && PNM_EQUAL( *xP, bgcolor ) ) ) 
+                 ( fgonly && PNM_EQUAL( *xP, bgcolor ) ) )
                 bgflag = fgflag = 0;
             else {
                 /* Do anti-aliasing here: see if pixel is at the border of a
                  * background or foreground stepwise side */
-                bgflag = 
+                bgflag =
                     (PNM_EQUAL(*xpP,bgcolor) && PNM_EQUAL(*(xP+1),bgcolor)) ||
                     (PNM_EQUAL(*(xP+1),bgcolor) && PNM_EQUAL(*xnP,bgcolor)) ||
                     (PNM_EQUAL(*xnP,bgcolor) && PNM_EQUAL(*(xP-1),bgcolor)) ||
                     (PNM_EQUAL(*(xP-1),bgcolor) && PNM_EQUAL(*xpP,bgcolor));
-                fgflag = 
+                fgflag =
                     (PNM_EQUAL(*xpP,fgcolor) && PNM_EQUAL(*(xP+1),fgcolor)) ||
                     (PNM_EQUAL(*(xP+1),fgcolor) && PNM_EQUAL(*xnP,fgcolor)) ||
                     (PNM_EQUAL(*xnP,fgcolor) && PNM_EQUAL(*(xP-1),fgcolor)) ||
-                    (PNM_EQUAL(*(xP-1),fgcolor) && PNM_EQUAL(*xpP,fgcolor)); 
+                    (PNM_EQUAL(*(xP-1),fgcolor) && PNM_EQUAL(*xpP,fgcolor));
             }
-            if ( ( bgflag && bgalias ) || ( fgflag && fgalias ) || 
+            if ( ( bgflag && bgalias ) || ( fgflag && fgalias ) ||
                  ( bgflag && fgflag ) )
-                switch( PNM_FORMAT_TYPE( newformat ) ) {   
+                switch( PNM_FORMAT_TYPE( newformat ) ) {
                 case PGM_TYPE:
                     value = PNM_GET1(*(xpP-1)) * fmask[0] +
-                        PNM_GET1(*(xpP  )) * fmask[1] + 
+                        PNM_GET1(*(xpP  )) * fmask[1] +
                         PNM_GET1(*(xpP+1)) * fmask[2] +
                         PNM_GET1(*(xP -1)) * fmask[3] +
                         PNM_GET1(*(xP   )) * fmask[4] +
@@ -202,7 +202,7 @@ main(int argc, char * argv[] ) {
                     break;
                 default:
                     valuer= PPM_GETR(*(xpP-1)) * fmask[0] +
-                        PPM_GETR(*(xpP  )) * fmask[1] + 
+                        PPM_GETR(*(xpP  )) * fmask[1] +
                         PPM_GETR(*(xpP+1)) * fmask[2] +
                         PPM_GETR(*(xP -1)) * fmask[3] +
                         PPM_GETR(*(xP   )) * fmask[4] +
@@ -212,7 +212,7 @@ main(int argc, char * argv[] ) {
                         PPM_GETR(*(xnP+1)) * fmask[8] +
                         0.5;
                     valueg= PPM_GETG(*(xpP-1)) * fmask[0] +
-                        PPM_GETG(*(xpP  )) * fmask[1] + 
+                        PPM_GETG(*(xpP  )) * fmask[1] +
                         PPM_GETG(*(xpP+1)) * fmask[2] +
                         PPM_GETG(*(xP -1)) * fmask[3] +
                         PPM_GETG(*(xP   )) * fmask[4] +
@@ -222,7 +222,7 @@ main(int argc, char * argv[] ) {
                         PPM_GETG(*(xnP+1)) * fmask[8] +
                         0.5;
                     valueb= PPM_GETB(*(xpP-1)) * fmask[0] +
-                        PPM_GETB(*(xpP  )) * fmask[1] + 
+                        PPM_GETB(*(xpP  )) * fmask[1] +
                         PPM_GETB(*(xpP+1)) * fmask[2] +
                         PPM_GETB(*(xP -1)) * fmask[3] +
                         PPM_GETB(*(xP   )) * fmask[4] +
@@ -241,9 +241,9 @@ main(int argc, char * argv[] ) {
         newxelrow[cols-1] = xelrow[row%3][cols-1];
         pnm_writepnmrow( stdout, newxelrow, cols, newmaxval, newformat, 0 );
     }
-        
+
     pnm_writepnmrow( stdout, xelrow[row%3], cols, newmaxval, newformat, 0 );
-    
+
     pm_close( ifp );
     exit ( 0 );
 }

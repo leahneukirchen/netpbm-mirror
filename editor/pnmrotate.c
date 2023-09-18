@@ -40,7 +40,7 @@ struct cmdlineInfo {
 enum rotationDirection {CLOCKWISE, COUNTERCLOCKWISE};
 
 struct shearParm {
-    /* These numbers tell how to shear a pixel, but I haven't figured out 
+    /* These numbers tell how to shear a pixel, but I haven't figured out
        yet exactly what each means.
     */
     long fracnew0;
@@ -67,13 +67,13 @@ parseCommandLine(int argc, char ** const argv,
     unsigned int option_def_index;
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "background",  OPT_STRING, &cmdlineP->background, 
+    OPTENT3(0, "background",  OPT_STRING, &cmdlineP->background,
             &backgroundSpec,        0);
-    OPTENT3(0, "noantialias", OPT_FLAG,   NULL, 
+    OPTENT3(0, "noantialias", OPT_FLAG,   NULL,
             &cmdlineP->noantialias, 0);
-    OPTENT3(0, "keeptemp",    OPT_FLAG,   NULL, 
+    OPTENT3(0, "keeptemp",    OPT_FLAG,   NULL,
             &cmdlineP->keeptemp,    0);
-    OPTENT3(0, "verbose",     OPT_FLAG,   NULL, 
+    OPTENT3(0, "verbose",     OPT_FLAG,   NULL,
             &cmdlineP->verbose,     0);
 
     opt.opt_table = option_def;
@@ -110,7 +110,7 @@ parseCommandLine(int argc, char ** const argv,
                 cmdlineP->inputFilespec = "-";
             else {
                 cmdlineP->inputFilespec = argv[2];
-                
+
                 if (argc-1 > 2)
                     pm_error("Program takes at most two arguments "
                              "(angle and filename).  You specified %d",
@@ -139,10 +139,10 @@ storeImage(const char * const fileName,
     pm_close(ofP);
 }
 
-  
+
 
 static void
-computeNewFormat(bool     const antialias, 
+computeNewFormat(bool     const antialias,
                  int      const format,
                  xelval   const maxval,
                  int *    const newformatP,
@@ -172,7 +172,7 @@ backgroundColor(const char * const backgroundColorName,
 
     if (backgroundColorName) {
         retval = pnm_parsecolorxel(backgroundColorName, maxval, format);
-    } else 
+    } else
         retval = pnm_backgroundxelrow(topRow, cols, maxval, format);
 
     return retval;
@@ -190,9 +190,9 @@ reportBackground(xel const bgColor) {
 
 
 static void
-shearX(xel * const inRow, 
-       xel * const outRow, 
-       int   const cols, 
+shearX(xel * const inRow,
+       xel * const outRow,
+       int   const cols,
        int   const format,
        xel   const bgxel,
        bool  const antialias,
@@ -210,9 +210,9 @@ shearX(xel * const inRow,
    We shift the row on a background of color 'bgxel'.
 
    The output row has the same format and maxval as the input.
-   
+
    'shiftAmount' may not be negative.
-   
+
    'shiftAmount' can be fractional, so we either just go by the
    nearest integer value or mix pixels to achieve the shift, depending
    on 'antialias'.
@@ -230,7 +230,7 @@ shearX(xel * const inRow,
 
         for (col = 0; col < newcols; ++col)
             outRow[col] = bgxel;
-            
+
         prevxel = bgxel;
         for (col = 0, nxP = &(outRow[shiftWhole]);
              col < cols; ++col, ++nxP) {
@@ -240,21 +240,21 @@ shearX(xel * const inRow,
             switch (PNM_FORMAT_TYPE(format)) {
             case PPM_TYPE:
                 PPM_ASSIGN(*nxP,
-                           (fracShift * PPM_GETR(prevxel) 
-                            + omfracShift * PPM_GETR(p) 
+                           (fracShift * PPM_GETR(prevxel)
+                            + omfracShift * PPM_GETR(p)
                             + HALFSCALE) / SCALE,
-                           (fracShift * PPM_GETG(prevxel) 
-                            + omfracShift * PPM_GETG(p) 
+                           (fracShift * PPM_GETG(prevxel)
+                            + omfracShift * PPM_GETG(p)
                             + HALFSCALE) / SCALE,
-                           (fracShift * PPM_GETB(prevxel) 
-                            + omfracShift * PPM_GETB(p) 
+                           (fracShift * PPM_GETB(prevxel)
+                            + omfracShift * PPM_GETB(p)
                             + HALFSCALE) / SCALE );
                 break;
-                
+
             default:
                 PNM_ASSIGN1(*nxP,
-                            (fracShift * PNM_GET1(prevxel) 
-                             + omfracShift * PNM_GET1(p) 
+                            (fracShift * PNM_GET1(prevxel)
+                             + omfracShift * PNM_GET1(p)
                              + HALFSCALE) / SCALE );
                 break;
             }
@@ -264,21 +264,21 @@ shearX(xel * const inRow,
             switch (PNM_FORMAT_TYPE(format)) {
             case PPM_TYPE:
                 PPM_ASSIGN(*nxP,
-                           (fracShift * PPM_GETR(prevxel) 
-                            + omfracShift * PPM_GETR(bgxel) 
+                           (fracShift * PPM_GETR(prevxel)
+                            + omfracShift * PPM_GETR(bgxel)
                             + HALFSCALE) / SCALE,
-                           (fracShift * PPM_GETG(prevxel) 
-                            + omfracShift * PPM_GETG(bgxel) 
+                           (fracShift * PPM_GETG(prevxel)
+                            + omfracShift * PPM_GETG(bgxel)
                             + HALFSCALE) / SCALE,
-                           (fracShift * PPM_GETB(prevxel) 
-                            + omfracShift * PPM_GETB(bgxel) 
+                           (fracShift * PPM_GETB(prevxel)
+                            + omfracShift * PPM_GETB(bgxel)
                             + HALFSCALE) / SCALE );
                 break;
-                    
+
             default:
                 PNM_ASSIGN1(*nxP,
-                            (fracShift * PNM_GET1(prevxel) 
-                             + omfracShift * PNM_GET1(bgxel) 
+                            (fracShift * PNM_GET1(prevxel)
+                             + omfracShift * PNM_GET1(bgxel)
                              + HALFSCALE) / SCALE );
                 break;
             }
@@ -289,14 +289,14 @@ shearX(xel * const inRow,
         unsigned int outcol;
 
         outcol = 0;  /* initial value */
-        
+
         for (col = 0; col < shiftCols; ++col)
             outRow[outcol++] = bgxel;
         for (col = 0; col < cols; ++col)
             outRow[outcol++] = inRow[col];
         for (col = shiftCols + cols; col < newcols; ++col)
             outRow[outcol++] = bgxel;
-        
+
         assert(outcol == newcols);
     }
 }
@@ -332,7 +332,7 @@ shearXFromInputFile(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     unsigned int const maxShear = (rows - 0.5) * xshearfac + 0.5;
     unsigned int const newcols = cols + maxShear;
-    
+
     xel ** shearedXels;
     xel * xelrow;
     xel bgColor;
@@ -348,13 +348,13 @@ shearXFromInputFile(FILE *                 const ifP,
            the right pixel.  We use the distance of the center of this
            pixel from the relevant edge to compute shift amount:
         */
-        float const xDistance = 
+        float const xDistance =
             (direction == COUNTERCLOCKWISE ? row + 0.5 : (rows-0.5 - row));
         float const shiftAmount = xshearfac * xDistance;
 
         pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
 
-        pnm_promoteformatrow(xelrow, cols, maxval, format, 
+        pnm_promoteformatrow(xelrow, cols, maxval, format,
                              newmaxval, newformat);
 
         if (row == 0)
@@ -375,7 +375,7 @@ shearXFromInputFile(FILE *                 const ifP,
 
 
 
-static void 
+static void
 shearYNoAntialias(xel **           const inxels,
                   xel **           const outxels,
                   int              const cols,
@@ -421,7 +421,7 @@ shearYNoAntialias(xel **           const inxels,
 
 
 static void
-shearYColAntialias(xel ** const inxels, 
+shearYColAntialias(xel ** const inxels,
                    xel ** const outxels,
                    int    const col,
                    int    const inrows,
@@ -435,12 +435,12 @@ shearYColAntialias(xel ** const inxels,
     long const fracnew0   = shearParm[col].fracnew0;
     long const omfracnew0 = shearParm[col].omfracnew0;
     int  const shiftWhole = shearParm[col].shiftWhole;
-        
+
     int outrow;
 
     xel prevxel;
     int inrow;
-        
+
     /* Initialize everything to background color */
     for (outrow = 0; outrow < outrows; ++outrow)
         outxels[outrow][col] = bgxel;
@@ -455,21 +455,21 @@ shearYColAntialias(xel ** const inxels,
             switch ( PNM_FORMAT_TYPE(format) ) {
             case PPM_TYPE:
                 PPM_ASSIGN(*nxP,
-                           (fracnew0 * PPM_GETR(prevxel) 
-                            + omfracnew0 * PPM_GETR(x) 
+                           (fracnew0 * PPM_GETR(prevxel)
+                            + omfracnew0 * PPM_GETR(x)
                             + HALFSCALE) / SCALE,
-                           (fracnew0 * PPM_GETG(prevxel) 
-                            + omfracnew0 * PPM_GETG(x) 
+                           (fracnew0 * PPM_GETG(prevxel)
+                            + omfracnew0 * PPM_GETG(x)
                             + HALFSCALE) / SCALE,
-                           (fracnew0 * PPM_GETB(prevxel) 
-                            + omfracnew0 * PPM_GETB(x) 
+                           (fracnew0 * PPM_GETB(prevxel)
+                            + omfracnew0 * PPM_GETB(x)
                             + HALFSCALE) / SCALE );
                 break;
-                        
+
             default:
                 PNM_ASSIGN1(*nxP,
-                            (fracnew0 * PNM_GET1(prevxel) 
-                             + omfracnew0 * PNM_GET1(x) 
+                            (fracnew0 * PNM_GET1(prevxel)
+                             + omfracnew0 * PNM_GET1(x)
                              + HALFSCALE) / SCALE );
                 break;
             }
@@ -481,26 +481,26 @@ shearYColAntialias(xel ** const inxels,
         switch (PNM_FORMAT_TYPE(format)) {
         case PPM_TYPE:
             PPM_ASSIGN(*nxP,
-                       (fracnew0 * PPM_GETR(prevxel) 
-                        + omfracnew0 * PPM_GETR(bgxel) 
+                       (fracnew0 * PPM_GETR(prevxel)
+                        + omfracnew0 * PPM_GETR(bgxel)
                         + HALFSCALE) / SCALE,
-                       (fracnew0 * PPM_GETG(prevxel) 
-                        + omfracnew0 * PPM_GETG(bgxel) 
+                       (fracnew0 * PPM_GETG(prevxel)
+                        + omfracnew0 * PPM_GETG(bgxel)
                         + HALFSCALE) / SCALE,
-                       (fracnew0 * PPM_GETB(prevxel) 
-                        + omfracnew0 * PPM_GETB(bgxel) 
+                       (fracnew0 * PPM_GETB(prevxel)
+                        + omfracnew0 * PPM_GETB(bgxel)
                         + HALFSCALE) / SCALE);
             break;
-                
+
         default:
             PNM_ASSIGN1(*nxP,
-                        (fracnew0 * PNM_GET1(prevxel) 
-                         + omfracnew0 * PNM_GET1(bgxel) 
+                        (fracnew0 * PNM_GET1(prevxel)
+                         + omfracnew0 * PNM_GET1(bgxel)
                          + HALFSCALE) / SCALE);
             break;
         }
     }
-} 
+}
 
 
 
@@ -516,14 +516,14 @@ shearImageY(xel **                 const inxels,
             int                    const yshearjunk,
             xel ***                const outxelsP,
             unsigned int *         const outrowsP) {
-    
+
     unsigned int const maxShear = (cols - 0.5) * yshearfac + 0.5;
     unsigned int const outrows = inrows + maxShear - 2 * yshearjunk;
 
     struct shearParm * shearParm;  /* malloc'ed */
     int col;
     xel ** outxels;
-    
+
     outxels = pnm_allocarray(cols, outrows);
 
     MALLOCARRAY(shearParm, cols);
@@ -536,7 +536,7 @@ shearImageY(xel **                 const inxels,
            the bottom pixel.  We use the distance of the center of this
            pixel from the relevant edge to compute shift amount:
         */
-        float const yDistance = 
+        float const yDistance =
             (direction == CLOCKWISE ? col + 0.5 : (cols-0.5 - col));
         float const shiftAmount = yshearfac * yDistance;
 
@@ -552,12 +552,12 @@ shearImageY(xel **                 const inxels,
         /* TODO: do this row-by-row, same as for noantialias, to save
            real memory.
         */
-        for (col = 0; col < cols; ++col) 
-            shearYColAntialias(inxels, outxels, col, inrows, outrows, format, 
+        for (col = 0; col < cols; ++col)
+            shearYColAntialias(inxels, outxels, col, inrows, outrows, format,
                                bgxel, shearParm);
     }
     free(shearParm);
-    
+
     *outxelsP = outxels;
     *outrowsP = outrows;
 }
@@ -565,9 +565,9 @@ shearImageY(xel **                 const inxels,
 
 
 static void
-shearFinal(xel * const inRow, 
-           xel * const outRow, 
-           int   const incols, 
+shearFinal(xel * const inRow,
+           xel * const outRow,
+           int   const incols,
            int   const outcols,
            int   const format,
            xel   const bgxel,
@@ -585,8 +585,8 @@ shearFinal(xel * const inRow,
     }
 
     if (antialias) {
-        long const fracnew0   = (shiftAmount - (int) shiftAmount) * SCALE; 
-        long const omfracnew0 = SCALE - fracnew0; 
+        long const fracnew0   = (shiftAmount - (int) shiftAmount) * SCALE;
+        long const omfracnew0 = SCALE - fracnew0;
         unsigned int const shiftWhole = (int)shiftAmount - x2shearjunk;
 
         xel prevxel;
@@ -601,21 +601,21 @@ shearFinal(xel * const inRow,
                 switch (PNM_FORMAT_TYPE(format)) {
                 case PPM_TYPE:
                     PPM_ASSIGN(*nxP,
-                               (fracnew0 * PPM_GETR(prevxel) 
-                                + omfracnew0 * PPM_GETR(x) 
+                               (fracnew0 * PPM_GETR(prevxel)
+                                + omfracnew0 * PPM_GETR(x)
                                 + HALFSCALE) / SCALE,
-                               (fracnew0 * PPM_GETG(prevxel) 
-                                + omfracnew0 * PPM_GETG(x) 
+                               (fracnew0 * PPM_GETG(prevxel)
+                                + omfracnew0 * PPM_GETG(x)
                                 + HALFSCALE) / SCALE,
-                               (fracnew0 * PPM_GETB(prevxel) 
-                                + omfracnew0 * PPM_GETB(x) 
+                               (fracnew0 * PPM_GETB(prevxel)
+                                + omfracnew0 * PPM_GETB(x)
                                 + HALFSCALE) / SCALE);
                     break;
-                    
+
                 default:
                     PNM_ASSIGN1(*nxP,
-                                (fracnew0 * PNM_GET1(prevxel) 
-                                 + omfracnew0 * PNM_GET1(x) 
+                                (fracnew0 * PNM_GET1(prevxel)
+                                 + omfracnew0 * PNM_GET1(x)
                                  + HALFSCALE) / SCALE );
                     break;
                 }
@@ -627,21 +627,21 @@ shearFinal(xel * const inRow,
             switch (PNM_FORMAT_TYPE(format)) {
             case PPM_TYPE:
                 PPM_ASSIGN(*nxP,
-                           (fracnew0 * PPM_GETR(prevxel) 
-                            + omfracnew0 * PPM_GETR(bgxel) 
+                           (fracnew0 * PPM_GETR(prevxel)
+                            + omfracnew0 * PPM_GETR(bgxel)
                             + HALFSCALE) / SCALE,
-                           (fracnew0 * PPM_GETG(prevxel) 
-                            + omfracnew0 * PPM_GETG(bgxel) 
+                           (fracnew0 * PPM_GETG(prevxel)
+                            + omfracnew0 * PPM_GETG(bgxel)
                             + HALFSCALE) / SCALE,
-                           (fracnew0 * PPM_GETB(prevxel) 
-                            + omfracnew0 * PPM_GETB(bgxel) 
+                           (fracnew0 * PPM_GETB(prevxel)
+                            + omfracnew0 * PPM_GETB(bgxel)
                             + HALFSCALE) / SCALE);
                 break;
-                
+
             default:
                 PNM_ASSIGN1(*nxP,
-                            (fracnew0 * PNM_GET1(prevxel) 
-                             + omfracnew0 * PNM_GET1(bgxel) 
+                            (fracnew0 * PNM_GET1(prevxel)
+                             + omfracnew0 * PNM_GET1(bgxel)
                              + HALFSCALE) / SCALE );
                 break;
             }
@@ -664,7 +664,7 @@ shearFinal(xel * const inRow,
 static void
 shearXToOutputFile(FILE *                 const ofP,
                    xel **                 const xels,
-                   unsigned int           const cols, 
+                   unsigned int           const cols,
                    unsigned int           const rows,
                    xelval                 const maxval,
                    int                    const format,
@@ -688,7 +688,7 @@ shearXToOutputFile(FILE *                 const ofP,
 
     unsigned int row;
     xel * xelrow;
-    
+
     pnm_writepnminit(ofP, newcols, rows, maxval, format, 0);
 
     xelrow = pnm_allocrow(newcols);
@@ -699,11 +699,11 @@ shearXToOutputFile(FILE *                 const ofP,
            the right pixel.  We use the distance of the center of this
            pixel from the relevant edge to compute shift amount:
         */
-        float const xDistance = 
+        float const xDistance =
             (direction == COUNTERCLOCKWISE ? row + 0.5 : (rows-0.5 - row));
         float const shiftAmount = xshearfac * xDistance;
 
-        shearFinal(xels[row], xelrow, cols, newcols, format, 
+        shearFinal(xels[row], xelrow, cols, newcols, format,
                    bgColor, antialias, shiftAmount, x2shearjunk);
 
         pnm_writepnmrow(ofP, xelrow, newcols, maxval, format, 0);
@@ -714,7 +714,7 @@ shearXToOutputFile(FILE *                 const ofP,
 
 
 int
-main(int argc, char *argv[]) { 
+main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -738,8 +738,8 @@ main(int argc, char *argv[]) {
     ifP = pm_openr(cmdline.inputFilespec);
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
-    
-    computeNewFormat(!cmdline.noantialias, format, maxval, 
+
+    computeNewFormat(!cmdline.noantialias, format, maxval,
                      &newformat, &newmaxval);
 
     xshearfac = fabs(tan(cmdline.angle / 2.0));
@@ -755,7 +755,7 @@ main(int argc, char *argv[]) {
                         newmaxval, newformat,
                         !cmdline.noantialias, cmdline.background,
                         &shear1xels, &shear1Cols, &bgColor);
-    
+
     pm_close(ifP);
 
     if (cmdline.verbose)
@@ -777,16 +777,16 @@ main(int argc, char *argv[]) {
     pnm_freearray(shear1xels, rows);
 
     if (cmdline.keeptemp)
-        storeImage("pnmrotate_stage2.pnm", shear2xels, shear1Cols, newrows, 
+        storeImage("pnmrotate_stage2.pnm", shear2xels, shear1Cols, newrows,
                    newmaxval, newformat);
 
     shearXToOutputFile(stdout, shear2xels, shear1Cols, newrows,
                        newmaxval, newformat,
-                       direction, xshearfac, x2shearjunk, 
+                       direction, xshearfac, x2shearjunk,
                        bgColor, !cmdline.noantialias);
 
     pnm_freearray(shear2xels, newrows);
     pm_close(stdout);
-    
+
     return 0;
 }

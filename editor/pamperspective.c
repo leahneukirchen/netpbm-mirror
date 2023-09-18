@@ -154,7 +154,7 @@ typedef struct {
 
 
 /* The collection of properties that correspond to the four specified
-   vertices 
+   vertices
 */
 
 typedef struct {
@@ -172,18 +172,18 @@ typedef struct {
      center of projection, that is the pixel the camera "looks at".  It
      turned out, maybe surprisingly, that this does not have any
      effect. So now this center is moved to (0,0).
-     
+
      Another original plan was to correct the output parameters
      depending on the lengths of the paralellograms sides or its
      angles.  This is, however, not possible without knowing something
      like the camera angle or focal length (in pixels).
   */
-  
+
   /* The coefficients for the map from output to world coordinates.
 
      The actual mapping is
      u,v -> (ax+bx*u+cx*v, ay+by*u+cy*v, az+bz*u+cz*v)
-  */     
+  */
   number ax,bx,cx, ay,by,cy, az,bz,cz;
 
 } world_data;
@@ -331,7 +331,7 @@ parseFloat(const char * const text) {
     char * end;
     number num;
     char * buffer;
-    
+
     buffer = strdup(text);
     if (!buffer)
         pm_error("Out of memory");
@@ -432,7 +432,7 @@ static void parse_include_points(const char * const include_opt,
              sem_seek++);
 
         hit_end = (*sem_seek == '\0');
-            
+
         *sem_seek = '\0';
         parse_include_point(cursor, include_pointsP);
 
@@ -735,15 +735,15 @@ static void determine_world_parallelogram (world_data *const world,
                                            const option *const options)
 /*----------------------------------------------------------------------------
   Construct xw_ul,...,zw_lr from xi_ul,...,yi_lr
-     
+
   This is a solution of a linear equation system.
-  
+
   We first solve 4 equations for 4 variables (the 4 z-coordinates):
   Each z-coordinate determines the corresponding x- and y-coordinates
   in a linear fashion, where the coefficients are taken from the image
   coordinates.  This corresponds to the fact that a point of an image
   determines a line in the world.
-  
+
   3 equations state that the 4 points form a parallelogram.  The 4th
   equation is for normalization and states that the center of the
   parallelogram has a z-coordinate of 1.
@@ -948,7 +948,7 @@ static number norm_side (number const x1, number const y1, number const z1,
   This is similar to norm_vector. But now the norm of the derivative
   is computed at both endpoints of the movement and the maximum is
   returned.
-  
+
   Why do we do this? The return value n is in fact the maximum of the
   norm of the derivative ALONG the movement. So we know that if we
   divide the movement into at least n steps, we will encounter every
@@ -1022,7 +1022,7 @@ static void determine_coefficients_lattice (world_data *const world,
                                             const option *const options)
 /*----------------------------------------------------------------------------
   Constructs ax,...,cz from xw_ul,...,zw_lr
-     
+
   The calculations assume lattice coordinates, that is the point ul
   corresponds to the upper left corner of the pixel (0,0) and the
   point lr corresponds to the lower left corner of the pixel
@@ -1052,7 +1052,7 @@ static void determine_coefficients_pixel (world_data *const world,
                                           const option *const options)
 /*----------------------------------------------------------------------------
   Constructs ax,...,cz from xw_ul,...,zw_lr
-     
+
   The calculations assume pixel coordinates, that is the point ul
   corresponds to the center of the pixel (0,0) and the point lr
   corresponds to the center of the pixel (width-1,height-1)
@@ -1086,7 +1086,7 @@ static void determine_coefficients_pixel (world_data *const world,
 
 static void
 outpixelToInPos(int                const outCol,
-                int                const outRow, 
+                int                const outRow,
                 number *           const inColP,
                 number *           const inRowP,
                 const world_data * const worldP) {
@@ -1149,7 +1149,7 @@ boundedRow(int                const unboundedRow,
    It doesn't work because the actual image generation produces rows
    in the middle that are derived from lines in the input quadrilateral
    with greater slope than either the top or bottom edge.  I.e. to
-   compute one output row, it needs more rows of input than this 
+   compute one output row, it needs more rows of input than this
    calculation provides.
 
    I don't know if that means the computation of the output is wrong
@@ -1162,7 +1162,7 @@ boundedRow(int                const unboundedRow,
 
    - Bryan Henderson 08.07.27.
 */
-   
+
 
 static unsigned int
 windowHeight(const world_data * const worldP,
@@ -1177,7 +1177,7 @@ windowHeight(const world_data * const worldP,
     yur = outpixelToInRow(outpamP->width-1, 0, worldP);
     yll = outpixelToInRow(0, outpamP->height-1, worldP);
     ylr = outpixelToInRow(outpamP->width-1, outpamP->height-1, worldP);
-    
+
     y_min = MIN(MIN(yul, yur), MIN(yll, ylr));
     numRows = MAX(MAX(diff(yul, yur),
                       diff(yll, ylr)),
@@ -1210,7 +1210,7 @@ windowHeight(const world_data * const worldP,
 
     unsigned int outRow;
     unsigned int maxRowWindowHeight;
-    
+
     maxRowWindowHeight = 1;  /* initial value */
 
     for (outRow = 0; outRow < outpamP->height; ++outRow) {
@@ -1220,12 +1220,12 @@ windowHeight(const world_data * const worldP,
             boundedRow(outpixelToInRow(leftCol, outRow, worldP), outpamP);
         unsigned int const rghtInRow =
             boundedRow(outpixelToInRow(rghtCol, outRow, worldP), outpamP);
-        
+
         unsigned int const rowWindowHeight = distance(leftInRow, rghtInRow);
 
         maxRowWindowHeight = MAX(maxRowWindowHeight, rowWindowHeight);
     }
-    
+
     /* We add 2 for rounding */
 
     return maxRowWindowHeight + 2;
@@ -1297,7 +1297,7 @@ buffer_getRow(buffer *     const bufferP,
     n = bufferP->nextImageRow - imageRow;
 
     assert(n <= bufferP->numRows);
-    
+
     if (n <= bufferP->nextBufferRow)
         bufferRow = bufferP->nextBufferRow - n;
     else
@@ -1328,7 +1328,7 @@ buffer_term(buffer * const bufferP) {
 
     for (i = 0; i < bufferP->numRows; ++i)
         pnm_freepamrow(bufferP->rows[i]);
-    
+
     free(bufferP->rows);
 }
 
@@ -1412,7 +1412,7 @@ takeNearest(tuple  const dest,
 
 
 static void
-linearInterpolation(tuple  const dest, 
+linearInterpolation(tuple  const dest,
                     number const x,
                     number const y) {
 

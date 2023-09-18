@@ -80,13 +80,13 @@ interpretOldArguments(int                  const argc,
         cmdlineP->ggamma = atof(argv[2]);
         cmdlineP->bgamma = atof(argv[3]);
         cmdlineP->filespec = argv[4];
-    } else 
+    } else
         pm_error("Wrong number of arguments.  "
                  "You may have 0, 1, or 3 gamma values "
                  "plus zero or one filename");
-        
-    if (cmdlineP->rgamma <= 0.0 || 
-        cmdlineP->ggamma <= 0.0 || 
+
+    if (cmdlineP->rgamma <= 0.0 ||
+        cmdlineP->ggamma <= 0.0 ||
         cmdlineP->bgamma <= 0.0 )
         pm_error("Invalid gamma value.  Must be positive floating point "
                  "number.");
@@ -106,7 +106,7 @@ getGammaFromOpts(struct cmdlineInfo * const cmdlineP,
     if (gammaSpec)
         if (gammaOpt < 0.0)
             pm_error("Invalid gamma value %f.  Must be positive.", gammaOpt);
-    
+
     if (rgammaSpec) {
         if (cmdlineP->rgamma < 0.0)
             pm_error("Invalid red gamma value %f.  Must be positive.",
@@ -114,17 +114,17 @@ getGammaFromOpts(struct cmdlineInfo * const cmdlineP,
     } else {
         if (gammaSpec)
             cmdlineP->rgamma = gammaOpt;
-        else 
+        else
             cmdlineP->rgamma = defaultGamma;
     }
     if (ggammaSpec) {
-        if (cmdlineP->ggamma < 0.0) 
+        if (cmdlineP->ggamma < 0.0)
             pm_error("Invalid green gamma value %f.  Must be positive.",
                      cmdlineP->ggamma);
     } else {
         if (gammaSpec)
             cmdlineP->ggamma = gammaOpt;
-        else 
+        else
             cmdlineP->ggamma = defaultGamma;
     }
     if (bgammaSpec) {
@@ -142,7 +142,7 @@ getGammaFromOpts(struct cmdlineInfo * const cmdlineP,
 
 
 static void
-parseCommandLine(int argc, char ** argv, 
+parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 
     optEntry *option_def;
@@ -189,7 +189,7 @@ parseCommandLine(int argc, char ** argv,
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = TRUE; 
+    opt.allowNegNum = TRUE;
 
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
@@ -295,7 +295,7 @@ buildPowGamma(xelval       table[],
               double const gamma) {
 /*----------------------------------------------------------------------------
    Build a gamma table of size maxval+1 for the given gamma value.
-  
+
    This function depends on pow(3m).  If you don't have it, you can
    simulate it with '#define pow(x,y) exp((y)*log(x))' provided that
    you have the exponential function exp(3m) and the natural logarithm
@@ -310,7 +310,7 @@ buildPowGamma(xelval       table[],
             /* Xel sample value normalized to 0..1 */
         double const v = pow(normalized, oneOverGamma);
 
-        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);  
+        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);
             /* denormalize, round and clip */
     }
 }
@@ -337,17 +337,17 @@ buildBt709Gamma(xelval       table[],
        unlike the popular pure exponential gamma transfer function.
     */
     xelval const linearCutoff = (xelval) (maxval * 0.018 + 0.5);
-    double const linearExpansion = 
+    double const linearExpansion =
         (1.099 * pow(0.018, oneOverGamma) - 0.099) / 0.018;
     double const maxvalScaler = (double)newMaxval/maxval;
 
-    for (i = 0; i <= linearCutoff; ++i) 
+    for (i = 0; i <= linearCutoff; ++i)
         table[i] = i * linearExpansion * maxvalScaler + 0.5;
     for (; i <= maxval; ++i) {
         double const normalized = ((double) i) / maxval;
             /* Xel sample value normalized to 0..1 */
         double const v = 1.099 * pow(normalized, oneOverGamma) - 0.099;
-        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);  
+        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);
             /* denormalize, round, and clip */
     }
 }
@@ -375,18 +375,18 @@ buildBt709GammaInverse(xelval       table[],
     */
 
     xelval const linearCutoff = (xelval) (maxval * 0.018 + 0.5);
-    double const linearCompression = 
+    double const linearCompression =
         0.018 / (1.099 * pow(0.018, oneOverGamma) - 0.099);
     double const maxvalScaler = (double)newMaxval/maxval;
 
-    for (i = 0; i <= linearCutoff / linearCompression; ++i) 
+    for (i = 0; i <= linearCutoff / linearCompression; ++i)
         table[i] = i * linearCompression * maxvalScaler + 0.5;
 
     for (; i <= maxval; ++i) {
         double const normalized = ((double) i) / maxval;
             /* Xel sample value normalized to 0..1 */
         double const v = pow((normalized + 0.099) / 1.099, gamma);
-        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);  
+        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);
             /* denormalize, round, and clip */
     }
 }
@@ -413,17 +413,17 @@ buildSrgbGamma(xelval       table[],
        unlike the popular pure exponential gamma transfer function.
     */
     xelval const linearCutoff = (xelval) maxval * 0.0031308 + 0.5;
-    double const linearExpansion = 
+    double const linearExpansion =
         (1.055 * pow(0.0031308, oneOverGamma) - 0.055) / 0.0031308;
     double const maxvalScaler = (double)newMaxval/maxval;
 
-    for (i = 0; i <= linearCutoff; ++i) 
+    for (i = 0; i <= linearCutoff; ++i)
         table[i] = i * linearExpansion * maxvalScaler + 0.5;
     for (; i <= maxval; ++i) {
         double const normalized = ((double) i) / maxval;
             /* Xel sample value normalized to 0..1 */
         double const v = 1.055 * pow(normalized, oneOverGamma) - 0.055;
-        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);  
+        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);
             /* denormalize, round, and clip */
     }
 }
@@ -450,17 +450,17 @@ buildSrgbGammaInverse(xelval       table[],
        unlike the popular pure exponential gamma transfer function.
     */
     xelval const linearCutoff = (xelval) maxval * 0.0031308 + 0.5;
-    double const linearCompression = 
+    double const linearCompression =
         0.0031308 / (1.055 * pow(0.0031308, oneOverGamma) - 0.055);
     double const maxvalScaler = (double)newMaxval/maxval;
 
-    for (i = 0; i <= linearCutoff / linearCompression; ++i) 
+    for (i = 0; i <= linearCutoff / linearCompression; ++i)
         table[i] = i * linearCompression * maxvalScaler + 0.5;
     for (; i <= maxval; ++i) {
         double const normalized = ((double) i) / maxval;
             /* Xel sample value normalized to 0..1 */
         double const v = pow((normalized + 0.055) / 1.055, gamma);
-        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);  
+        table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);
             /* denormalize, round, and clip */
     }
 }
@@ -491,11 +491,11 @@ buildBt709ToSrgbGamma(xelval       table[],
     */
 
     xelval const linearCutoff709 = (xelval) (maxval * 0.018 + 0.5);
-    double const linearCompression709 = 
+    double const linearCompression709 =
         0.018 / (1.099 * pow(0.018, oneOverGamma709) - 0.099);
 
     double const linearCutoffSrgb = 0.0031308;
-    double const linearExpansionSrgb = 
+    double const linearExpansionSrgb =
         (1.055 * pow(0.0031308, oneOverGammaSrgb) - 0.055) / 0.0031308;
 
     xelval i;
@@ -549,11 +549,11 @@ buildSrgbToBt709Gamma(xelval       table[],
        unlike the popular pure exponential gamma transfer function.
     */
     xelval const linearCutoffSrgb = (xelval) maxval * 0.0031308 + 0.5;
-    double const linearCompressionSrgb = 
+    double const linearCompressionSrgb =
         0.0031308 / (1.055 * pow(0.0031308, oneOverGammaSrgb) - 0.055);
 
     xelval const linearCutoff709 = (xelval) (maxval * 0.018 + 0.5);
-    double const linearExpansion709 = 
+    double const linearExpansion709 =
         (1.099 * pow(0.018, oneOverGamma709) - 0.099) / 0.018;
 
     xelval i;
@@ -588,8 +588,8 @@ static void
 createGammaTables(enum transferFunction const transferFunction,
                   xelval                const maxval,
                   xelval                const newMaxval,
-                  double                const rgamma, 
-                  double                const ggamma, 
+                  double                const rgamma,
+                  double                const ggamma,
                   double                const bgamma,
                   xelval **             const rtableP,
                   xelval **             const gtableP,
@@ -677,7 +677,7 @@ convertRaster(FILE *   const ifP,
     for (row = 0; row < rows; ++row) {
         pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
 
-        pnm_promoteformatrow(xelrow, cols, maxval, format, 
+        pnm_promoteformatrow(xelrow, cols, maxval, format,
                              maxval, outputFormat);
 
         switch (PNM_FORMAT_TYPE(outputFormat)) {
@@ -730,10 +730,10 @@ main(int argc, char *argv[]) {
 
     if (PNM_FORMAT_TYPE(format) == PPM_TYPE)
         outputFormat = PPM_TYPE;
-    else if (cmdline.rgamma != cmdline.ggamma 
-             || cmdline.ggamma != cmdline.bgamma) 
+    else if (cmdline.rgamma != cmdline.ggamma
+             || cmdline.ggamma != cmdline.bgamma)
         outputFormat = PPM_TYPE;
-    else 
+    else
         outputFormat = PGM_TYPE;
 
     if (PNM_FORMAT_TYPE(format) != outputFormat) {

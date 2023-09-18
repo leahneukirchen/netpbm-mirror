@@ -1,4 +1,3 @@
-
 /* ----------------------------------------------------------------------
  *
  * Replace every pixel in an image with one of equal luminance

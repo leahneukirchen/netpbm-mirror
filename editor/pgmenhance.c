@@ -77,7 +77,7 @@ main(int argc, char * argv[] ) {
         thisrow = nextrow;
         nextrow = temprow;
         pgm_readpgmrow( ifp, nextrow, cols, maxval, format );
-        
+
         newrow[0] = thisrow[0];
         for (col = 1; col < cols - 1; col++) {
             /* Compute the sum of the neighborhood. */
@@ -102,7 +102,7 @@ main(int argc, char * argv[] ) {
         pgm_writepgmrow( stdout, newrow, cols, maxval, 0 );
     }
     pm_close( ifp );
-    
+
     /* Last row. */
     pgm_writepgmrow( stdout, nextrow, cols, maxval, 0 );
 

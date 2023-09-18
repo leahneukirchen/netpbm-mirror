@@ -1,9 +1,9 @@
-/* pgmmorphconv.c - morphological convolutions on a graymap: dilation and 
+/* pgmmorphconv.c - morphological convolutions on a graymap: dilation and
 ** erosion
 **
 ** Copyright (C) 2000 by Luuk van Dijk/Mind over Matter
 **
-** Based on 
+** Based on
 ** pnmconvol.c - general MxN convolution on a portable anymap
 **
 ** Copyright (C) 1989, 1991 by Jef Poskanzer.
@@ -95,7 +95,7 @@ parseCommandLine(int argc, const char ** const argv,
             cmdlineP->inputFileName = "-";
         else {
             cmdlineP->inputFileName = argv[2];
-            
+
             if (argc-1 > 2)
                 pm_error("Too many arguments: %u.  "
                          "The only possible arguments "
@@ -146,7 +146,7 @@ setAllPixel(gray **      const image,
     for (col = 0; col < cols; ++col) {
         unsigned int row;
         for (row = 0; row < rows; ++row)
-            image[row][col] = value; 
+            image[row][col] = value;
     }
 }
 
@@ -155,9 +155,9 @@ setAllPixel(gray **      const image,
 static void
 dilate(bit **         const template,
        int            const trowso2,
-       int            const tcolso2, 
+       int            const tcolso2,
        gray **        const inImage,
-       gray **        const outImage, 
+       gray **        const outImage,
        unsigned int   const rows,
        unsigned int   const cols,
        unsigned int * const templateCountP) {
@@ -198,9 +198,9 @@ dilate(bit **         const template,
 static void
 erode(bit **         const template,
       int            const trowso2,
-      int            const tcolso2, 
+      int            const tcolso2,
       gray **        const inImage,
-      gray **        const outImage, 
+      gray **        const outImage,
       unsigned int   const rows,
       unsigned int   const cols,
       unsigned int * const templateCountP) {
@@ -227,10 +227,10 @@ erode(bit **         const template,
                     for (c = ((tc > 0) ? 0 : -tc);
                          c < ((tc > 0) ? (cols-tc) : cols);
                          ++c) {
-                        
+
                         gray const source = inImage[r+tr][c+tc];
                         outImage[r][c] = MIN(source, outImage[r][c]);
-      
+
                     }
                 }
             }
@@ -244,9 +244,9 @@ erode(bit **         const template,
 static void
 openMorph(bit **         const template,
           int            const trowso2,
-          int            const tcolso2, 
+          int            const tcolso2,
           gray **        const inputImage,
-          gray **        const outputImage, 
+          gray **        const outputImage,
           unsigned int   const rows,
           unsigned int   const cols,
           unsigned int * const templateCountP) {
@@ -255,11 +255,11 @@ openMorph(bit **         const template,
     unsigned int erodedTemplateCount;
 
     erodedImage = pgm_allocarray(cols, rows);
-    
-    erode(template, trowso2, tcolso2, 
+
+    erode(template, trowso2, tcolso2,
           inputImage, erodedImage, rows, cols, &erodedTemplateCount);
 
-    dilate(template, trowso2, tcolso2, 
+    dilate(template, trowso2, tcolso2,
            erodedImage, outputImage, rows, cols, templateCountP);
 
     pgm_freearray(erodedImage, rows);
@@ -270,9 +270,9 @@ openMorph(bit **         const template,
 static void
 closeMorph(bit **         const template,
            int            const trowso2,
-           int            const tcolso2, 
+           int            const tcolso2,
            gray **        const inputImage,
-           gray **        const outputImage, 
+           gray **        const outputImage,
            unsigned int   const rows,
            unsigned int   const cols,
            unsigned int * const templateCountP) {
@@ -282,10 +282,10 @@ closeMorph(bit **         const template,
 
     dilatedImage = pgm_allocarray(cols, rows);
 
-    dilate(template, trowso2, tcolso2, 
+    dilate(template, trowso2, tcolso2,
            inputImage, dilatedImage, rows, cols, &dilatedTemplateCount);
 
-    erode(template, trowso2, tcolso2, 
+    erode(template, trowso2, tcolso2,
           dilatedImage, outputImage, rows, cols, templateCountP);
 
     pgm_freearray(dilatedImage, rows);
@@ -296,7 +296,7 @@ closeMorph(bit **         const template,
 static void
 subtract(gray **      const subtrahendImage,
          gray **      const subtractorImage,
-         gray **      const outImage, 
+         gray **      const outImage,
          unsigned int const rows,
          unsigned int const cols ) {
 
@@ -318,9 +318,9 @@ subtract(gray **      const subtrahendImage,
 static void
 gradient(bit **         const template,
          int            const trowso2,
-         int            const tcolso2, 
+         int            const tcolso2,
          gray **        const inputImage,
-         gray **        const outputImage, 
+         gray **        const outputImage,
          unsigned int   const rows,
          unsigned int   const cols,
          unsigned int * const templateCountP) {
@@ -328,14 +328,14 @@ gradient(bit **         const template,
     gray ** dilatedImage;
     gray ** erodedImage;
     unsigned int dilatedTemplateCount;
-    
+
     dilatedImage = pgm_allocarray(cols, rows);
     erodedImage = pgm_allocarray(cols, rows);
 
-    dilate(template, trowso2, tcolso2, 
+    dilate(template, trowso2, tcolso2,
            inputImage, dilatedImage, rows, cols, &dilatedTemplateCount);
 
-    erode(template, trowso2, tcolso2, 
+    erode(template, trowso2, tcolso2,
           inputImage, erodedImage, rows, cols, templateCountP);
 
     subtract(dilatedImage, erodedImage, outputImage, rows, cols);
@@ -369,14 +369,14 @@ main(int argc, const char ** argv) {
                        &template, &templateRows, &templateCols);
 
     /* Template coords run from -templateCols/2 .. 0 .. + templateCols/2 */
-  
+
     inputImage = pgm_readpgm(ifP, &cols, &rows, &maxval);
 
     if (cols < templateCols || rows < templateRows)
         pm_error("the image is smaller than the convolution matrix" );
-  
+
     outputImage = pgm_allocarray(cols, rows);
-  
+
     switch (cmdline.operation) {
     case DILATE:
         dilate(template, templateRows/2, templateCols/2,

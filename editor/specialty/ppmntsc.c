@@ -6,21 +6,21 @@
    The derivation was done by Bryan Henderson on 2000.04.21 to convert
    it from operating on the RLE format to operating on the PPM format
    and to rewrite it in a cleaner style, taking advantage of modern C
-   compiler technology.  
+   compiler technology.
 */
 
 
 /*
  * This software is copyrighted as noted below.  It may be freely copied,
- * modified, and redistributed, provided that the copyright notice is 
+ * modified, and redistributed, provided that the copyright notice is
  * preserved on all copies.
- * 
+ *
  * There is no warranty or other guarantee of fitness for this software,
  * it is provided solely "as is".  Bug reports or fixes may be sent
  * to the author, who may or may not act on them as he desires.
  *
  * You may not include this software in a program or other software product
- * without supplying the source, or without informing the end-user that the 
+ * without supplying the source, or without informing the end-user that the
  * source is available for no extra charge.
  *
  * If you modify this software, you should include a notice giving the
@@ -28,12 +28,12 @@
  * and the reason for such modification.
  */
 
-/* 
+/*
  * rlelegal.c - Make RGB colors legal in the YIQ or YUV color systems.
- * 
- * Author:	Wes Barris
- * 		Minnesota Supercomputer Center, Inc.
- * Date:	Fri Oct 15, 1993
+ *
+ * Author:      Wes Barris
+ *              Minnesota Supercomputer Center, Inc.
+ * Date:        Fri Oct 15, 1993
  * @Copyright, Research Equipment Inc., d/b/a Minnesota Supercomputer
  * Center, Inc., 1993
 
@@ -104,32 +104,32 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFilename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->inputFilename = argv[1];
-    else 
+    else
         pm_error("Too many arguments.  The only arguments accepted "
                  "are the mask color and optional input file specification");
 
     if (legalonly + illegalonly + correctedonly > 1)
         pm_error("--legalonly, --illegalonly, and --correctedonly are "
                  "conflicting options.  Specify at most one of these.");
-        
-    if (legalonly) 
+
+    if (legalonly)
         cmdlineP->output = LEGAL_ONLY;
-    else if (illegalonly) 
+    else if (illegalonly)
         cmdlineP->output = ILLEGAL_ONLY;
-    else if (correctedonly) 
+    else if (correctedonly)
         cmdlineP->output = CORRECTED_ONLY;
-    else 
+    else
         cmdlineP->output = ALL;
 }
 
 
 
-static void 
-rgbtoyiq(const int r, const int g, const int b, 
-         double * const y_p, 
-         double * const i_p, 
+static void
+rgbtoyiq(const int r, const int g, const int b,
+         double * const y_p,
+         double * const i_p,
          double * const q_p) {
-    
+
     *y_p = .299*(r/255.0) + .587*(g/255.0) + .114*(b/255.0);
     *i_p = .596*(r/255.0) - .274*(g/255.0) - .322*(b/255.0);
     *q_p = .211*(r/255.0) - .523*(g/255.0) + .312*(b/255.0);
@@ -137,8 +137,8 @@ rgbtoyiq(const int r, const int g, const int b,
 
 
 
-static void 
-yiqtorgb(const double y, const double i, const double q, 
+static void
+yiqtorgb(const double y, const double i, const double q,
          int * const r_p, int * const g_p, int * const b_p) {
     *r_p = 255.0*(1.00*y + .9562*i + .6214*q);
     *g_p = 255.0*(1.00*y - .2727*i - .6468*q);
@@ -147,10 +147,10 @@ yiqtorgb(const double y, const double i, const double q,
 
 
 
-static void 
-rgbtoyuv(const int r, const int g, const int b, 
-         double * const y_p, 
-         double * const u_p, 
+static void
+rgbtoyuv(const int r, const int g, const int b,
+         double * const y_p,
+         double * const u_p,
          double * const v_p) {
     *y_p =  .299*(r/255.0) + .587*(g/255.0) + .114*(b/255.0);
     *u_p = -.147*(r/255.0) - .289*(g/255.0) + .437*(b/255.0);
@@ -159,10 +159,10 @@ rgbtoyuv(const int r, const int g, const int b,
 
 
 
-static void 
-yuvtorgb(const double y, const double u, const double v, 
+static void
+yuvtorgb(const double y, const double u, const double v,
          int * const r_p, int * const g_p, int * const b_p) {
-    
+
     *r_p = 255.0*(1.00*y + .0000*u +1.1398*v);
     *g_p = 255.0*(1.00*y - .3938*u - .5805*v);
     *b_p = 255.0*(1.00*y +2.0279*u + .0000*v);
@@ -173,12 +173,12 @@ yuvtorgb(const double y, const double u, const double v,
 static void
 makeLegalYiq(double          const y,
              double          const i,
-             double          const q, 
-             double *        const yNewP, 
-             double *        const iNewP, 
+             double          const q,
+             double *        const yNewP,
+             double *        const iNewP,
              double *        const qNewP,
              enum legalize * const actionP) {
-    
+
     double satOld, satNew;
     /*
      * I and Q are legs of a right triangle.  Saturation is the hypotenuse.
@@ -209,13 +209,13 @@ makeLegalYiq(double          const y,
 
 
 static void
-make_legal_yuv(const double y, const double u, const double v, 
-               double * const y_new_p, 
-               double * const u_new_p, 
+make_legal_yuv(const double y, const double u, const double v,
+               double * const y_new_p,
+               double * const u_new_p,
                double * const v_new_p,
                enum legalize * const action_p
     ) {
-    
+
     double sat_old, sat_new;
     /*
      * U and V are legs of a right triangle.  Saturation is the hypotenuse.
@@ -246,13 +246,13 @@ make_legal_yuv(const double y, const double u, const double v,
 
 
 static void
-make_legal_yiq_i(const int r_in, const int g_in, const int b_in, 
-                 int * const r_out_p, 
-                 int * const g_out_p, 
+make_legal_yiq_i(const int r_in, const int g_in, const int b_in,
+                 int * const r_out_p,
+                 int * const g_out_p,
                  int * const b_out_p,
                  enum legalize * const action_p
     ) {
-    
+
     double y, i, q;
     double y_new, i_new, q_new;
     /*
@@ -276,15 +276,15 @@ make_legal_yiq_i(const int r_in, const int g_in, const int b_in,
 
 
 static void
-make_legal_yuv_i(const int r_in, const int g_in, const int b_in, 
-                 int * const r_out_p, 
-                 int * const g_out_p, 
+make_legal_yuv_i(const int r_in, const int g_in, const int b_in,
+                 int * const r_out_p,
+                 int * const g_out_p,
                  int * const b_out_p,
                  enum legalize * const action_p
     ){
-    
+
     double y, u, v;
-    double y_new, u_new, v_new;  
+    double y_new, u_new, v_new;
     /*
      * Convert to YUV and compute the new saturation.
      */
@@ -305,7 +305,7 @@ make_legal_yuv_i(const int r_in, const int g_in, const int b_in,
 
 
 
-static void 
+static void
 make_legal_yiq_b(const pixel input,
                  pixel * const output_p,
                  enum legalize * const action_p) {
@@ -313,7 +313,7 @@ make_legal_yiq_b(const pixel input,
 
     int ir_in, ig_in, ib_in;
     int ir_out, ig_out, ib_out;
-    
+
     ir_in = (int)PPM_GETR(input);
     ig_in = (int)PPM_GETG(input);
     ib_in = (int)PPM_GETB(input);
@@ -327,14 +327,14 @@ make_legal_yiq_b(const pixel input,
 
 
 
-static void 
+static void
 make_legal_yuv_b(const pixel input,
                  pixel * const output_p,
                  enum legalize * const action_p) {
 
     int ir_in, ig_in, ib_in;
     int ir_out, ig_out, ib_out;
-    
+
     ir_in = (int)PPM_GETR(input);
     ig_in = (int)PPM_GETG(input);
     ib_in = (int)PPM_GETB(input);
@@ -347,7 +347,7 @@ make_legal_yuv_b(const pixel input,
 
 
 
-static void 
+static void
 reportMapping(pixel const oldPixel,
               pixel const newPixel) {
 /*----------------------------------------------------------------------------
@@ -358,7 +358,7 @@ reportMapping(pixel const oldPixel,
     static pixel lastChangedPixel;
     static bool firstTime = true;
 
-    if (!PPM_EQUAL(oldPixel, newPixel) && 
+    if (!PPM_EQUAL(oldPixel, newPixel) &&
         (firstTime || PPM_EQUAL(oldPixel, lastChangedPixel))) {
         pm_message("Mapping %u %u %u -> %u %u %u\n",
                    PPM_GETR(oldPixel),
@@ -371,14 +371,14 @@ reportMapping(pixel const oldPixel,
 
         lastChangedPixel = oldPixel;
         firstTime = false;
-    }    
+    }
 }
 
 
 
 static void
 convertOneImage(FILE *             const ifP,
-                struct cmdlineInfo const cmdline, 
+                struct cmdlineInfo const cmdline,
                 unsigned int *     const hiCountP,
                 unsigned int *     const loCountP) {
 
@@ -419,8 +419,8 @@ convertOneImage(FILE *             const ifP,
                         make_legal_yiq_b(inputRow[col],
                                          &corrected,
                                          &action);
-                        
-                    if (action == LOWER_SAT) 
+
+                    if (action == LOWER_SAT)
                         ++*hiCountP;
                     if (action == RAISE_SAT)
                         ++*loCountP;
@@ -456,7 +456,7 @@ convertOneImage(FILE *             const ifP,
 
 int
 main(int argc, const char **argv) {
-    
+
     struct cmdlineInfo cmdline;
     FILE * ifP;
     unsigned int totalHiCount, totalLoCount;
@@ -469,7 +469,7 @@ main(int argc, const char **argv) {
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilename);
-    
+
     imageCount = 0;    /* initial value */
     totalHiCount = 0;  /* initial value */
     totalLoCount = 0;  /* initial value */
@@ -488,14 +488,14 @@ main(int argc, const char **argv) {
     }
 
 
-	if (cmdline.verbose) {
+        if (cmdline.verbose) {
         pm_message("%u images processed.", imageCount);
-        pm_message("%u pixels were above the saturation limit.", 
+        pm_message("%u pixels were above the saturation limit.",
                    totalHiCount);
-        pm_message("%u pixels were below the saturation limit.", 
+        pm_message("%u pixels were below the saturation limit.",
                    totalLoCount);
     }
-    
+
     pm_close(ifP);
 
     return 0;

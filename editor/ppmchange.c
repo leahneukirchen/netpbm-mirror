@@ -33,8 +33,8 @@ struct CmdlineInfo {
         /* colors user wants replaced */
     const char * newcolorname[TCOLS];
         /* colors with which he wants them replaced */
-    float closeness;    
-    const char * remainder_colorname;  
+    float closeness;
+    const char * remainder_colorname;
       /* Color user specified for -remainder.  Null pointer if he didn't
          specify -remainder.
       */
@@ -87,8 +87,8 @@ parseCommandLine(int argc, const char ** const argv,
     if (cmdlineP->closeness > 100)
         pm_error("-closeness value %f is more than 100%%",
                  cmdlineP->closeness);
-    
-    if ((argc-1) % 2 == 0) 
+
+    if ((argc-1) % 2 == 0)
         cmdlineP->input_filespec = "-";
     else
         cmdlineP->input_filespec = argv[argc-1];
@@ -96,8 +96,8 @@ parseCommandLine(int argc, const char ** const argv,
     {
         int argn;
         cmdlineP->ncolors = 0;  /* initial value */
-        for (argn = 1; 
-             argn+1 < argc && cmdlineP->ncolors < TCOLS; 
+        for (argn = 1;
+             argn+1 < argc && cmdlineP->ncolors < TCOLS;
              argn += 2) {
             cmdlineP->oldcolorname[cmdlineP->ncolors] = argv[argn];
             cmdlineP->newcolorname[cmdlineP->ncolors] = argv[argn+1];
@@ -109,8 +109,8 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 static bool
-colorMatches(pixel        const comparand, 
-             pixel        const comparator, 
+colorMatches(pixel        const comparand,
+             pixel        const comparator,
              unsigned int const allowableDiff) {
 /*----------------------------------------------------------------------------
    The colors 'comparand' and 'comparator' are within 'allowableDiff'
@@ -126,21 +126,21 @@ colorMatches(pixel        const comparand,
 
 
 static void
-changeRow(const pixel * const inrow, 
-          pixel *       const outrow, 
+changeRow(const pixel * const inrow,
+          pixel *       const outrow,
           int           const cols,
-          int           const ncolors, 
-          const pixel         colorfrom[], 
+          int           const ncolors,
+          const pixel         colorfrom[],
           const pixel         colorto[],
-          bool          const remainder_specified, 
-          pixel         const remainder_color, 
+          bool          const remainder_specified,
+          pixel         const remainder_color,
           unsigned int  const allowableDiff) {
 /*----------------------------------------------------------------------------
-   Replace the colors in a single row.  There are 'ncolors' colors to 
+   Replace the colors in a single row.  There are 'ncolors' colors to
    replace.  The to-replace colors are in the array colorfrom[], and the
    replace-with colors are in corresponding elements of colorto[].
    Iff 'remainder_specified' is true, replace all colors not mentioned
-   in colorfrom[] with 'remainder_color'.  
+   in colorfrom[] with 'remainder_color'.
 
    Consider the color in inrow[] to match a color in colorfrom[] if it is
    within 'allowableDiff' color levels of it, in cartesian distance (e.g.
@@ -155,7 +155,7 @@ changeRow(const pixel * const inrow,
     for (col = 0; col < cols; ++col) {
         unsigned int i;
         bool haveMatch; /* logical: It's a color user said to change */
-        pixel newcolor;  
+        pixel newcolor;
         /* Color to which we must change current pixel.  Undefined unless
            'haveMatch' is true.
         */
@@ -205,7 +205,7 @@ main(int argc, const char ** const argv) {
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.input_filespec);
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
@@ -213,7 +213,7 @@ main(int argc, const char ** const argv) {
     if (cmdline.remainder_colorname)
         remainder_color = ppm_parsecolor2(cmdline.remainder_colorname, maxval,
                                           cmdline.closeok);
-    { 
+    {
         int i;
         for (i = 0; i < cmdline.ncolors; ++i) {
             oldcolor[i] = ppm_parsecolor2(cmdline.oldcolorname[i], maxval,
@@ -223,7 +223,7 @@ main(int argc, const char ** const argv) {
         }
     }
     allowableDiff = ROUNDU(sqrt3 * maxval * cmdline.closeness/100);
-    
+
     ppm_writeppminit( stdout, cols, rows, maxval, 0 );
     inrow = ppm_allocrow(cols);
     outrow = ppm_allocrow(cols);

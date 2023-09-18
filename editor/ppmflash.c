@@ -1,4 +1,3 @@
-
 /*********************************************************************/
 /* ppmflash -  brighten a picture up to total whiteout               */
 /* Frank Neumann, August 1993                                        */
@@ -89,12 +88,12 @@ int main(argc, argv)
         pP2 = destrow;
 
         for (j = 0; j < cols; j++) {
-            PPM_ASSIGN(*pP2, 
-                       PPM_GETR(*pP) + 
+            PPM_ASSIGN(*pP2,
+                       PPM_GETR(*pP) +
                        (((maxval - PPM_GETR(*pP)) * longfactor) >> 16),
-                       PPM_GETG(*pP) + 
+                       PPM_GETG(*pP) +
                        (((maxval - PPM_GETG(*pP)) * longfactor) >> 16),
-                       PPM_GETB(*pP) + 
+                       PPM_GETB(*pP) +
                        (((maxval - PPM_GETB(*pP)) * longfactor) >> 16));
 
             pP++;

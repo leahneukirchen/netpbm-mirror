@@ -38,18 +38,18 @@ invertPbm(FILE * const ifP,
 -----------------------------------------------------------------------------*/
     int const colChars = pbm_packed_bytes(cols);
 
-    unsigned char * bitrow; 
+    unsigned char * bitrow;
     unsigned int row;
-    
+
     bitrow = pbm_allocrow_packed(cols);
-    
+
     for (row = 0; row < rows; ++row) {
         unsigned int colChar;
-        
+
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
         for (colChar = 0; colChar < colChars; ++colChar)
             bitrow[colChar] = ~ bitrow[colChar];
-        
+
         /* Clean off remainder of fractional last character and write */
         pbm_cleanrowend_packed(bitrow, cols);
         pbm_writepbmrow_packed(ofP, bitrow, cols, 0);
@@ -69,15 +69,15 @@ invertPnm(FILE * const ifP,
 
     xel * xelrow;
     unsigned int row;
-    
+
     xelrow = pnm_allocrow(cols);
-    
+
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
         for (col = 0; col < cols; ++col)
             pnm_invertxel(&xelrow[col], maxval, format);
-        
+
         pnm_writepnmrow(ofP, xelrow, cols, maxval, format, 0);
     }
     pnm_freerow(xelrow);
@@ -103,7 +103,7 @@ main(int argc, char * argv[]) {
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
     pnm_writepnminit(stdout, cols, rows, maxval, format, 0);
-    
+
     if (PNM_FORMAT_TYPE(format) == PBM_TYPE)
         /* Take fast path */
         invertPbm(ifP, stdout, cols, rows, format);
@@ -113,7 +113,7 @@ main(int argc, char * argv[]) {
 
     pm_close(ifP);
     pm_close(stdout);
-    
+
     return 0;
 }
 

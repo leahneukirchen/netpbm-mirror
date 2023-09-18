@@ -70,7 +70,7 @@ parseCommandLine(int argc, const char ** argv,
                 pm_error("There are at most three arguments: "
                          "width, height, file name.  You specified %u",
                          argc-1);
-        } else 
+        } else
             cmdlineP->inputFileName = "-";
     }
 }

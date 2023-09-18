@@ -18,7 +18,7 @@
 #include "pam.h"
 #include "mallocvar.h"
 
-static void 
+static void
 convertRow(struct pam const inpam, tuple ** const tuples,
            tuple * const tuplerow, int const row, int const smearFactor,
            int * const hist) {
@@ -34,7 +34,7 @@ convertRow(struct pam const inpam, tuple ** const tuples,
                    of the pixel being examined
                 */
 
-            /* Compute hist[] - frequencies, in the neighborhood, of each 
+            /* Compute hist[] - frequencies, in the neighborhood, of each
                sample value
             */
             for (i = 0; i <= inpam.maxval; ++i) hist[i] = 0;
@@ -42,8 +42,8 @@ convertRow(struct pam const inpam, tuple ** const tuples,
             for (drow = row - smearFactor; drow <= row + smearFactor; ++drow) {
                 if (drow >= 0 && drow < inpam.height) {
                     int dcol;
-                    for (dcol = col - smearFactor; 
-                         dcol <= col + smearFactor; 
+                    for (dcol = col - smearFactor;
+                         dcol <= col + smearFactor;
                          ++dcol) {
                         if ( dcol >= 0 && dcol < inpam.width )
                             ++hist[tuples[drow][dcol][sample]];

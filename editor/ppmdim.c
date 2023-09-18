@@ -1,4 +1,3 @@
-
 /*********************************************************************/
 /* ppmdim -  dim a picture down to total blackness                   */
 /* Frank Neumann, October 1993                                       */
@@ -29,84 +28,84 @@ int main(argc, argv)
 int argc;
 char *argv[];
 {
-	FILE* ifp;
-	int argn, rows, cols, format, i = 0, j = 0;
-	pixel *srcrow, *destrow;
-	pixel *pP = NULL, *pP2 = NULL;
-	pixval maxval;
-	double dimfactor;
-	long longfactor;
-	const char * const usage = "dimfactor [ppmfile]\n        dimfactor: 0.0 = total blackness, 1.0 = original picture\n";
+        FILE* ifp;
+        int argn, rows, cols, format, i = 0, j = 0;
+        pixel *srcrow, *destrow;
+        pixel *pP = NULL, *pP2 = NULL;
+        pixval maxval;
+        double dimfactor;
+        long longfactor;
+        const char * const usage = "dimfactor [ppmfile]\n        dimfactor: 0.0 = total blackness, 1.0 = original picture\n";
 
-	/* parse in 'default' parameters */
-	ppm_init(&argc, argv);
+        /* parse in 'default' parameters */
+        ppm_init(&argc, argv);
 
-	argn = 1;
+        argn = 1;
 
-	/* parse in dim factor */
-	if (argn == argc)
-		pm_usage(usage);
-	if (sscanf(argv[argn], "%lf", &dimfactor) != 1)
-		pm_usage(usage);
-	if (dimfactor < 0.0 || dimfactor > 1.0)
-		pm_error("dim factor must be in the range from 0.0 to 1.0 ");
-	++argn;
+        /* parse in dim factor */
+        if (argn == argc)
+                pm_usage(usage);
+        if (sscanf(argv[argn], "%lf", &dimfactor) != 1)
+                pm_usage(usage);
+        if (dimfactor < 0.0 || dimfactor > 1.0)
+                pm_error("dim factor must be in the range from 0.0 to 1.0 ");
+        ++argn;
 
-	/* parse in filename (if present, stdin otherwise) */
-	if (argn != argc)
-	{
-		ifp = pm_openr(argv[argn]);
-		++argn;
-	}
-	else
-		ifp = stdin;
+        /* parse in filename (if present, stdin otherwise) */
+        if (argn != argc)
+        {
+                ifp = pm_openr(argv[argn]);
+                ++argn;
+        }
+        else
+                ifp = stdin;
 
-	if (argn != argc)
-		pm_usage(usage);
+        if (argn != argc)
+                pm_usage(usage);
 
-	/* read first data from file */
-	ppm_readppminit(ifp, &cols, &rows, &maxval, &format);
+        /* read first data from file */
+        ppm_readppminit(ifp, &cols, &rows, &maxval, &format);
 
-	/* no error checking required here, ppmlib does it all for us */
-	srcrow = ppm_allocrow(cols);
+        /* no error checking required here, ppmlib does it all for us */
+        srcrow = ppm_allocrow(cols);
 
-	longfactor = (long)(dimfactor * 65536);
+        longfactor = (long)(dimfactor * 65536);
 
-	/* allocate a row of pixel data for the new pixels */
-	destrow = ppm_allocrow(cols);
+        /* allocate a row of pixel data for the new pixels */
+        destrow = ppm_allocrow(cols);
 
-	ppm_writeppminit(stdout, cols, rows, maxval, 0);
+        ppm_writeppminit(stdout, cols, rows, maxval, 0);
 
-	/** now do the dim'ing **/
-	/* the 'float' parameter for dimming is sort of faked - in fact, we */
-	/* convert it to a range from 0 to 65536 for integer math. Shouldn't */
-	/* be something you'll have to worry about, though. */
+        /** now do the dim'ing **/
+        /* the 'float' parameter for dimming is sort of faked - in fact, we */
+        /* convert it to a range from 0 to 65536 for integer math. Shouldn't */
+        /* be something you'll have to worry about, though. */
 
-	for (i = 0; i < rows; i++)
-	{
-		ppm_readppmrow(ifp, srcrow, cols, maxval, format);
+        for (i = 0; i < rows; i++)
+        {
+                ppm_readppmrow(ifp, srcrow, cols, maxval, format);
 
-		pP = srcrow;
-		pP2 = destrow;
+                pP = srcrow;
+                pP2 = destrow;
 
-		for (j = 0; j < cols; j++)
-		{
-			PPM_ASSIGN(*pP2, (PPM_GETR(*pP) * longfactor) >> 16,
-							 (PPM_GETG(*pP) * longfactor) >> 16,
-							 (PPM_GETB(*pP) * longfactor) >> 16);
+                for (j = 0; j < cols; j++)
+                {
+                        PPM_ASSIGN(*pP2, (PPM_GETR(*pP) * longfactor) >> 16,
+                                                         (PPM_GETG(*pP) * longfactor) >> 16,
+                                                         (PPM_GETB(*pP) * longfactor) >> 16);
 
-			pP++;
-			pP2++;
-		}
+                        pP++;
+                        pP2++;
+                }
 
-		/* write out one line of graphic data */
-		ppm_writeppmrow(stdout, destrow, cols, maxval, 0);
-	}
+                /* write out one line of graphic data */
+                ppm_writeppmrow(stdout, destrow, cols, maxval, 0);
+        }
 
-	pm_close(ifp);
-	ppm_freerow(srcrow);
-	ppm_freerow(destrow);
+        pm_close(ifp);
+        ppm_freerow(srcrow);
+        ppm_freerow(destrow);
 
-	exit(0);
+        exit(0);
 }
 

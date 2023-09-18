@@ -30,7 +30,7 @@ writeBlackRow(struct pam * const pamP) {
             tuplerow[col][plane] = 0;
     }
     pnm_writepamrow(pamP, tuplerow);
-} 
+}
 
 
 
@@ -92,12 +92,12 @@ computeOneRow(struct pam * const inpamP,
         orow[0][plane] = 0;
 
         for (col = 1; col < inpamP->width - 1; ++col) {
-            double const grad1 = 
+            double const grad1 =
                 1 * horizGradient(row0, col, plane) +
                 2 * horizGradient(row1, col, plane) +
                 1 * horizGradient(row2, col, plane);
 
-            double const grad2 = 
+            double const grad2 =
                 horizAvg(row2, col, plane) - horizAvg(row0, col, plane);
 
             double const gradient = sqrt(SQR(grad1) + SQR(grad2));
@@ -163,7 +163,7 @@ main(int argc, const char ** argv) {
 
     pm_proginit(&argc, argv);
 
-    if (argc-1 == 1) 
+    if (argc-1 == 1)
         ifP = pm_openr(argv[1]);
     else if (argc-1 == 0)
         ifP = stdin;
