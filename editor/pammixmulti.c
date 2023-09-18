@@ -307,29 +307,6 @@ blendTuplesAverage(struct ProgramState * const stateP,
 
 
 
-#if 0
-static void
-randomNormal2(double *           const r1P,
-              double *           const r2P,
-              struct pm_randSt * const randStP) {
-/*----------------------------------------------------------------------------
-  Return two normally distributed random numbers.
------------------------------------------------------------------------------*/
-    double u1, u2;
-
-    do {
-        u1 = drand48(randStP);
-        u2 = drand48(randStP);
-    }
-    while (u1 <= DBL_EPSILON);
-
-    *r1P = sqrt(-2.0*log(u1)) * cos(2.0*M_PI*u2);
-    *r2P = sqrt(-2.0*log(u1)) * sin(2.0*M_PI*u2);
-}
-#endif
-
-
-
 static void
 precomputeImageWeights(struct ProgramState * const stateP,
                        double                const sigma) {
