@@ -10,6 +10,8 @@
 ** implied warranty.
 */
 
+#include <limits.h>
+
 #include "pm.h"
 #include "pbm.h"
 #include "bitreverse.h"
@@ -80,6 +82,9 @@ main(int argc, const char * argv[]) {
     getinit(ifP, &cols, &rows, &depth);
     if (depth != 1)
         pm_error("YBM file has depth of %u, must be 1", (unsigned int) depth);
+    if (cols > INT_MAX - 15)
+        pm_error("YBM file has uncomputably large width %d", cols);
+
 
     pbm_writepbminit(stdout, cols, rows, 0);
 

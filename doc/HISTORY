@@ -66,6 +66,10 @@ not yet  BJH  Release 11.04.00
 
               tifftopnm: Fix incorrect output with really wide/deep rows.
 
+              thinkjettopbm: Fix incorrect output with really wide rows
+
+              ybmtopbm: Fix incorrect output with really wide rows
+
               library: add check of maxval for computable size.
 
               Build: Include LDFLAGS in link of shared library.
