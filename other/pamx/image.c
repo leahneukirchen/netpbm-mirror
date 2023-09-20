@@ -1,8 +1,8 @@
 /*
    Functions to allocate and deallocate structures and structure data
- 
+
    By Jim Frost 1989.09.29, Bryan Henderson 2006.03.25.
- 
+
    See COPYRIGHT file for copyright information.
 */
 
@@ -156,7 +156,7 @@ Image *
 newRGBImage(unsigned int const width,
             unsigned int const height,
             unsigned int const depth) {
-    
+
     unsigned int const pixlen = depth > 0 ? (depth + 7) / 8 : 1;
         /* Special case for "zero" depth image, which is sometimes
            interpreted as "one color"
@@ -164,7 +164,7 @@ newRGBImage(unsigned int const width,
     unsigned int const numcolors = depthToColors(depth);
 
     Image * imageP;
-    
+
     MALLOCVAR_NOFAIL(imageP);
     imageP->type   = IRGB;
     newRGBMapData(&imageP->rgb, numcolors);
@@ -191,7 +191,7 @@ newTrueImage(unsigned int const width,
              unsigned int const height) {
 
     unsigned int const pixlen = 3;
-    
+
     Image * imageP;
 
     MALLOCVAR_NOFAIL(imageP);

@@ -63,7 +63,7 @@ static unsigned char char37[] =
   250, 244, 252, 244, 254, 245, 1, 246, 4, 246, 7, 245, 9, 244,
   192, 0, 5, 2, 3, 3, 2, 5, 2, 7, 4, 9, 6, 9, 8, 8, 9, 6, 9, 4, 7,
   2, 5, 2 };
-  
+
 static unsigned char char38[] =
 { 34, 243, 13,
   10, 253, 10, 252, 9, 251, 8, 251, 7, 252, 6, 254, 4,
@@ -155,7 +155,7 @@ static unsigned char char54[] =
 static unsigned char char55[] =
 { 5, 246, 10,
   7, 244, 253, 9, 192, 0, 249, 244, 7, 244 };
-    
+
 static unsigned char char56[] =
 { 29, 246, 10,
   254, 244, 251, 245, 250, 247, 250, 249, 251, 251,
@@ -169,12 +169,12 @@ static unsigned char char57[] =
   254, 249, 251, 249, 250, 250, 247, 252, 245, 255, 244, 0, 244, 3,
   245, 5, 247, 6, 251, 6, 0, 5, 5, 3, 8, 0, 9, 254, 9, 251, 8, 250,
   6 };
-      
+
 static unsigned char char58[] =
 { 11, 251, 5,
   0, 251, 255, 252, 0, 253, 1, 252, 0, 251, 192, 0, 0,
   7, 255, 8, 0, 9, 1, 8, 0, 7 };
-                                
+
 static unsigned char char59[] =
 { 14, 251, 5,
   0, 251, 255, 252, 0, 253, 1, 252, 0, 251, 192, 0, 1,
@@ -208,7 +208,7 @@ static unsigned char char64[] =
   248, 247, 250, 246, 253, 246, 0, 247, 3, 248, 5, 250, 7, 252, 8,
   255, 9, 2, 9, 5, 8, 7, 7, 8, 6, 192, 0, 6, 249, 5, 1, 5, 3, 6, 4
 };
-  
+
 static unsigned char char65[] =
 { 8, 247, 9,
   0, 244, 248, 9, 192, 0, 0, 244, 8, 9, 192, 0, 251, 2,
@@ -266,7 +266,7 @@ static unsigned char char75[] =
   249, 244, 249, 9, 192, 0, 7, 244, 249, 2, 192, 0,
   254, 253, 7, 9 };
 
-static unsigned char char76[] = 
+static unsigned char char76[] =
 { 3, 246, 7,
   250, 244, 250, 9, 6, 9 };
 
@@ -274,12 +274,12 @@ static unsigned char char77[] =
 { 11, 244, 12,
   248, 244, 248, 9, 192, 0, 248, 244, 0, 9, 192, 0, 8,
   244, 0, 9, 192, 0, 8, 244, 8, 9 };
-                                               
+
 static unsigned char char78[] =
 { 8, 245, 11,
   249, 244, 249, 9, 192, 0, 249, 244, 7, 9, 192, 0, 7,
   244, 7, 9 };
-                         
+
 static unsigned char char79[] =
 { 21, 245, 11,
   254, 244, 252, 245, 250, 247, 249, 249, 248, 252,
@@ -297,7 +297,7 @@ static unsigned char char81[] =
   248, 1, 249, 4, 250, 6, 252, 8, 254, 9, 2, 9, 4, 8, 6, 6, 7, 4,
   8, 1, 8, 252, 7, 249, 6, 247, 4, 245, 2, 244, 254, 244, 192, 0,
   1, 5, 7, 11 };
-                           
+
 static unsigned char char82[] =
 { 16, 245, 10,
   249, 244, 249, 9, 192, 0, 249, 244, 2, 244, 5, 245,
@@ -372,13 +372,13 @@ static unsigned char char97[] =
   6, 251, 6, 9, 192, 0, 6, 254, 4, 252, 2, 251, 255,
   251, 253, 252, 251, 254, 250, 1, 250, 3, 251, 6, 253, 8, 255, 9,
   2, 9, 4, 8, 6, 6 };
-                                
+
 static unsigned char char98[] =
 { 17, 246, 9,
   250, 244, 250, 9, 192, 0, 250, 254, 252, 252, 254,
   251, 1, 251, 3, 252, 5, 254, 6, 1, 6, 3, 5, 6, 3, 8, 1, 9, 254,
   9, 252, 8, 250, 6 };
-                                 
+
 static unsigned char char99[] =
 { 14, 247, 9,
   6, 254, 4, 252, 2, 251, 255, 251, 253, 252, 251, 254,
@@ -389,7 +389,7 @@ static unsigned char char100[] =
   6, 244, 6, 9, 192, 0, 6, 254, 4, 252, 2, 251, 255,
   251, 253, 252, 251, 254, 250, 1, 250, 3, 251, 6, 253, 8, 255, 9,
   2, 9, 4, 8, 6, 6 };
-                                 
+
 static unsigned char char101[] =
 { 17, 247, 9,
   250, 1, 6, 1, 6, 255, 5, 253, 4, 252, 2, 251, 255,
@@ -429,7 +429,7 @@ static unsigned char char107[] =
 static unsigned char char108[] =
 { 2, 252, 4,
   0, 244, 0, 9 };
-                                        
+
 static unsigned char char109[] =
 { 18, 241, 15,
   245, 251, 245, 9, 192, 0, 245, 255, 248, 252, 250,
@@ -458,12 +458,12 @@ static unsigned char char113[] =
   6, 251, 6, 16, 192, 0, 6, 254, 4, 252, 2, 251, 255,
   251, 253, 252, 251, 254, 250, 1, 250, 3, 251, 6, 253, 8, 255, 9,
   2, 9, 4, 8, 6, 6 };
-                                 
+
 static unsigned char char114[] =
 { 8, 249, 6,
   253, 251, 253, 9, 192, 0, 253, 1, 254, 254, 0, 252,
   2, 251, 5, 251 };
-                               
+
 static unsigned char char115[] =
 { 17, 248, 9,
   6, 254, 5, 252, 2, 251, 255, 251, 252, 252, 251,
@@ -482,7 +482,7 @@ static unsigned char char117[] =
 static unsigned char char118[] =
 { 5, 248, 8,
   250, 251, 0, 9, 192, 0, 6, 251, 0, 9 };
-                                                                
+
 static unsigned char char119[] =
 { 11, 245, 11,
   248, 251, 252, 9, 192, 0, 0, 251, 252, 9, 192, 0,
@@ -496,7 +496,7 @@ static unsigned char char121[] =
 { 9, 248, 8,
   250, 251, 0, 9, 192, 0, 6, 251, 0, 9, 254, 13, 252,
   15, 250, 16, 249, 16 };
-                                     
+
 static unsigned char char122[] =
 { 8, 248, 9,
   6, 251, 251, 9, 192, 0, 251, 251, 6, 251, 192, 0,
@@ -554,7 +554,7 @@ writeGlyphCommand(FILE *                   const ofP,
     fputc(glyphCommand.verb, ofP);
     fputc(glyphCommand.x, ofP);
     fputc(glyphCommand.y, ofP);
-}    
+}
 
 
 
@@ -563,11 +563,11 @@ writeMovePen(FILE *                const ofP,
              const unsigned char * const glyphData) {
 
     struct ppmd_glyphCommand glyphCommand;
-            
+
     glyphCommand.verb = CMD_MOVEPEN;
     glyphCommand.x = glyphData[0];
     glyphCommand.y = glyphData[1];
-    
+
     writeGlyphCommand(ofP, glyphCommand);
 }
 
@@ -578,13 +578,13 @@ writeMovePenNoop(FILE *                const ofP,
                  const unsigned char * const glyphData) {
 
     struct ppmd_glyphCommand glyphCommand;
-            
+
     glyphCommand.verb = CMD_MOVEPEN;
     glyphCommand.x = glyphData[0];
     glyphCommand.y = glyphData[1];
-    
+
     writeGlyphCommand(ofP, glyphCommand);
-                
+
     glyphCommand.verb = CMD_NOOP;
     glyphCommand.x = 0;
     glyphCommand.y = 0;
@@ -603,10 +603,10 @@ writeDrawLine(FILE *                const ofP,
     glyphCommand.verb = CMD_DRAWLINE;
     glyphCommand.x = glyphData[0];
     glyphCommand.y = glyphData[1];
-    
+
     writeGlyphCommand(ofP, glyphCommand);
 }
-            
+
 
 
 static void
@@ -616,7 +616,7 @@ writeGlyphHeader(FILE *                  const ofP,
     fputc(glyphHeader.commandCount, ofP);
     fputc(glyphHeader.skipBefore, ofP);
     fputc(glyphHeader.skipAfter, ofP);
-}    
+}
 
 
 
@@ -638,7 +638,7 @@ writeBuiltinCharacter(FILE *       const ofP,
     commandNum = 0;
 
     while (commandNum < glyphHeader.commandCount) {
-            
+
         if (commandNum == 0) {
             writeMovePen(ofP, &glyphData[3 + commandNum * 2]);
             commandNum += 1;
@@ -700,6 +700,6 @@ main(int argc, char **argv) {
     ppm_init(&argc, argv);
 
     writeBuiltinFont(stdout);
-    
+
     return 0;
 }

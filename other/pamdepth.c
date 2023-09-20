@@ -124,7 +124,7 @@ transformRaster(struct pam * const inpamP,
                 tuplerow[col][plane] = sampleMap[tuplerow[col][plane]];
         }
         pnm_writepamrow(outpamP, tuplerow);
-	}
+        }
 
     pnm_freepamrow(tuplerow);
 

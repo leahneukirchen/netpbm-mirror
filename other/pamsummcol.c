@@ -68,18 +68,18 @@ parseCommandLine(int argc, char ** const argv,
         cmdlineP->function = FN_MIN;
     } else if (maxSpec) {
         cmdlineP->function = FN_MAX;
-    } else 
+    } else
         pm_error("You must specify one of -sum, -min, or -max");
-        
+
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  File spec is the only argument.",
                  argc-1);
 
     if (argc-1 < 1)
         cmdlineP->inputFilespec = "-";
-    else 
+    else
         cmdlineP->inputFilespec = argv[1];
-    
+
 }
 
 
@@ -98,7 +98,7 @@ createAccumulator(enum function    const function,
                   unsigned int     const cols,
                   unsigned int     const planes,
                   struct accum *** const accumulatorP) {
-    
+
     struct accum ** accumulator;
     unsigned int col;
 
@@ -115,7 +115,7 @@ createAccumulator(enum function    const function,
             case FN_MEAN: accumulator[col][plane].u.sum = 0;        break;
             case FN_MIN:  accumulator[col][plane].u.min = UINT_MAX; break;
             case FN_MAX:  accumulator[col][plane].u.max = 0;        break;
-            } 
+            }
         }
     }
     *accumulatorP = accumulator;
@@ -148,14 +148,14 @@ aggregate(struct pam *    const inpamP,
         unsigned int plane;
         for (plane = 0; plane < inpamP->depth; ++plane) {
             switch(function) {
-            case FN_ADD:  
-            case FN_MEAN: 
-                if (accumulator[col][plane].u.sum > 
+            case FN_ADD:
+            case FN_MEAN:
+                if (accumulator[col][plane].u.sum >
                     UINT_MAX - tupleRow[col][plane])
                     pm_error("Numerical overflow in Column %u", col);
                 accumulator[col][plane].u.sum += tupleRow[col][plane];
             break;
-            case FN_MIN:  
+            case FN_MIN:
                 if (tupleRow[col][plane] < accumulator[col][plane].u.min)
                     accumulator[col][plane].u.min = tupleRow[col][plane];
                 break;
@@ -163,7 +163,7 @@ aggregate(struct pam *    const inpamP,
                 if (tupleRow[col][plane] > accumulator[col][plane].u.min)
                     accumulator[col][plane].u.min = tupleRow[col][plane];
                 break;
-            } 
+            }
         }
     }
 }
@@ -176,31 +176,31 @@ makeSummaryRow(struct accum ** const accumulator,
                struct pam *  const   pamP,
                enum function const   function,
                tuple *       const   tupleRow) {
-    
+
     unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
             switch(function) {
-            case FN_ADD:  
-                tupleRow[col][plane] = 
+            case FN_ADD:
+                tupleRow[col][plane] =
                     MIN(accumulator[col][plane].u.sum, pamP->maxval);
                 break;
-            case FN_MEAN: 
-                tupleRow[col][plane] = 
+            case FN_MEAN:
+                tupleRow[col][plane] =
                     ROUNDU((double)accumulator[col][plane].u.sum / count);
                 break;
-            case FN_MIN:  
-                tupleRow[col][plane] = 
+            case FN_MIN:
+                tupleRow[col][plane] =
                     accumulator[col][plane].u.min;
                 break;
             case FN_MAX:
-                tupleRow[col][plane] = 
+                tupleRow[col][plane] =
                     accumulator[col][plane].u.max;
                 break;
             }
-        } 
+        }
     }
 }
 
@@ -226,7 +226,7 @@ main(int argc, char *argv[]) {
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    createAccumulator(cmdline.function, inpam.width, inpam.depth, 
+    createAccumulator(cmdline.function, inpam.width, inpam.depth,
                       &accumulator);
 
     inputRow = pnm_allocpamrow(&inpam);
@@ -244,7 +244,7 @@ main(int argc, char *argv[]) {
 
         aggregate(&inpam, inputRow, cmdline.function, accumulator);
     }
-    makeSummaryRow(accumulator, inpam.height, &outpam, cmdline.function, 
+    makeSummaryRow(accumulator, inpam.height, &outpam, cmdline.function,
                    outputRow);
     pnm_writepamrow(&outpam, outputRow);
 
@@ -253,6 +253,6 @@ main(int argc, char *argv[]) {
     destroyAccumulator(accumulator, inpam.width);
     pm_close(inpam.file);
     pm_close(outpam.file);
-    
+
     return 0;
 }

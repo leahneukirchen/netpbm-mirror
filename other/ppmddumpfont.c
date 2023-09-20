@@ -19,7 +19,7 @@ untwos(unsigned char const arg) {
 
 static void
 dumpHeader(struct ppmd_fontHeader const fontHeader) {
-    
+
     pm_message("Font has %u characters", fontHeader.characterCount);
     pm_message("Font has code points %u through %u",
                fontHeader.firstCodePoint,
@@ -34,7 +34,7 @@ dumpGlyph(struct ppmd_glyph const glyph) {
     unsigned int commandNum;
 
     pm_message("  skip before: %u pixels; skip after: %u pixels; "
-               "%u commands:", 
+               "%u commands:",
                glyph.header.skipBefore,
                glyph.header.skipAfter,
                glyph.header.commandCount);
@@ -42,10 +42,10 @@ dumpGlyph(struct ppmd_glyph const glyph) {
     for (commandNum = 0;
          commandNum < glyph.header.commandCount;
          ++commandNum) {
-         
+
         struct ppmd_glyphCommand const glyphCommand =
             glyph.commandList[commandNum];
-        
+
         const char * verbDisp;
 
         switch (glyphCommand.verb) {
@@ -84,6 +84,6 @@ main(int argc, char **argv) {
     }
 
     ppmd_free_font(fontP);
-    
+
     return 0;
 }

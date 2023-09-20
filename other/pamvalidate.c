@@ -74,7 +74,7 @@ main(int argc, const char * argv[]) {
 
         if (ferror(tmpfile))
             pm_error("Error reading from temporary file.  "
-                     "Incomplete output.  "    
+                     "Incomplete output.  "
                      "Errno = %s (%d)", strerror(errno), errno);
         else
             fwrite(buffer, 1, bytesReadCt, stdout);

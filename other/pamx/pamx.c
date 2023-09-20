@@ -1,4 +1,4 @@
-/* By Bryan Henderson 2006.03.25 
+/* By Bryan Henderson 2006.03.25
 
    Copyright information is in the file COPYRIGHT
 */
@@ -52,13 +52,13 @@ struct cmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
+static void
+parseCommandLine(int argc,
+                 char ** argv,
                  struct cmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -69,7 +69,7 @@ parseCommandLine(int argc,
     optEntry *option_def;
         /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
-  
+
     unsigned int option_def_index;
 
     unsigned int displaySpec, titleSpec, foregroundSpec, backgroundSpec,
@@ -111,7 +111,7 @@ parseCommandLine(int argc,
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
-    
+
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
@@ -194,7 +194,7 @@ fillRow(struct pam *     const pamP,
    for its contents, according to 'depth'.
 -----------------------------------------------------------------------------*/
     unsigned int col;
-    
+
     for (col = 0; col < pamP->width; ++col) {
         /* Truecolor image data has 3 bytes per pixel, one each for
            red, green, and blue.
@@ -238,7 +238,7 @@ loadPamImage(FILE *   const ifP,
 
     for (row = 0; row < pam.height; ++row) {
         pnm_readpamrow(&pam, tuplerow);
-        
+
         /* This semantically wasteful code allows a dumb compiler
            optimizer to recognize that the depth is constant and
            therefore not generate code that checks the depth every
@@ -288,7 +288,7 @@ processImage(Image *            const imageP,
             imageP->rgb.grn[FOREGROUND_IDX] = color.green;
             imageP->rgb.blu[FOREGROUND_IDX] = color.blue;
         }
-    }    
+    }
 }
 
 
@@ -296,9 +296,9 @@ processImage(Image *            const imageP,
 static void
 determineTitle(struct cmdlineInfo const cmdline,
                const char **      const titleP) {
-    
+
     const char * title;
-    
+
     if (cmdline.title)
         title = strdup(cmdline.title);
     else {
@@ -332,7 +332,7 @@ main(int     argc,
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
-    
+
     dispP = XOpenDisplay(cmdline.display);
     if (!dispP)
         pm_error("Cannot open display '%s'", XDisplayName(cmdline.display));

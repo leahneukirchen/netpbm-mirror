@@ -6,7 +6,7 @@
    By Bryan Henderson, San Jose CA 2002.01.06.
 
    Contributed to the public domain.
-   
+
 ******************************************************************************/
 
 #define _XOPEN_SOURCE    /* Make sure modern signal stuff is in signal.h */
@@ -37,7 +37,7 @@ parseCommandLine (int argc, char ** argv,
                   struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -83,10 +83,10 @@ parseCommandLine (int argc, char ** argv,
 
 
 static void
-displayImage(FILE * const ifP, 
-             int    const cols, 
+displayImage(FILE * const ifP,
+             int    const cols,
              int    const rows,
-             pixval const maxval, 
+             pixval const maxval,
              int    const format,
              int    const originCol,
              int    const originRow) {
@@ -107,7 +107,7 @@ displayImage(FILE * const ifP,
 
     pixelrow = ppm_allocrow(cols);
 
-    /* Implementation note:  It might be faster to use 
+    /* Implementation note:  It might be faster to use
        vga_drawscansegment() instead of vga_drawpixel()
     */
 
@@ -143,13 +143,13 @@ sigintHandler(int const signal) {
 
 
 
-static void 
+static void
 waitforSigint(void) {
 
     struct sigaction oldsigaction;
     struct sigaction newsigaction;
     int rc;
-    
+
     newsigaction.sa_handler = &sigintHandler;
     sigemptyset(&newsigaction.sa_mask);
     newsigaction.sa_flags = 0;
@@ -166,19 +166,19 @@ waitforSigint(void) {
 
 
 static void
-display(FILE * const ifP, 
-        int    const cols, 
-        int    const rows, 
-        pixval const maxval, 
-        int    const format, 
-        int    const videoMode, 
+display(FILE * const ifP,
+        int    const cols,
+        int    const rows,
+        pixval const maxval,
+        int    const format,
+        int    const videoMode,
         bool   const verbose) {
 
     int xmax, ymax;
     vga_modeinfo *modeinfo;
 
     modeinfo = vga_getmodeinfo(videoMode);
-    
+
     if (verbose) {
         pm_message("Screen Width: %d  Height: %d  Colors: %d",
                    modeinfo->width,
@@ -193,18 +193,18 @@ display(FILE * const ifP,
     if (modeinfo->colors <= 256)
         pm_error("This video mode has %d or fewer colors, which means "
                  "it is colormapped (aka paletted, aka pseudocolor).  "
-                 "This program cannot drive colormapped modes.", 
+                 "This program cannot drive colormapped modes.",
                  modeinfo->colors);
 
     if (cols > modeinfo->width)
         pm_error("Image is too wide (%d columns) for screen (%d columns).  "
-                 "Use Pamcut to select part to display.", 
+                 "Use Pamcut to select part to display.",
                  cols, modeinfo->width);
     if (rows > modeinfo->height)
         pm_error("Image is too tall (%d rows) for screen (%d rows).  "
                  "Use Pamcut to select part to display.",
                  rows, modeinfo->height);
-    
+
     /* The program must not terminate after we set the video mode and before
        we reset it to text mode.  Note that vga_setmode() sets up handlers
        for signals such as SIGINT that attempt to restore modes and then exit
@@ -241,7 +241,7 @@ display(FILE * const ifP,
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
 
     FILE * ifP;
@@ -261,7 +261,7 @@ main(int argc, char *argv[]) {
 
     {
         enum pm_check_code checkResult;
-        ppm_check(ifP, PM_CHECK_BASIC, format, cols, rows, maxval, 
+        ppm_check(ifP, PM_CHECK_BASIC, format, cols, rows, maxval,
                   &checkResult);
     }
 
@@ -274,7 +274,7 @@ main(int argc, char *argv[]) {
         pm_error("Svgalib unable to allocate a virtual console.");
 
     if (vga_hasmode(cmdline.mode))
-        display(ifP, cols, rows, maxval, format, 
+        display(ifP, cols, rows, maxval, format,
                 cmdline.mode, cmdline.verbose);
     else {
         pm_error("Svgalib video mode #%d not available.  Either the "

@@ -1,8 +1,8 @@
-/* 
+/*
    fill an image area with a particular pixel value
- 
+
    By Jim Frost 1989.10.02, Bryan Henderson 2006.03.25.
- 
+
    See COPYRIGHT file for copyright information.
 */
 
@@ -52,7 +52,7 @@ fill(Image * const imageP,
             }
         }
     } break;
-        
+
   case IRGB:
     case ITRUE: {
         unsigned int const linelen= imageP->width * imageP->pixlen;
