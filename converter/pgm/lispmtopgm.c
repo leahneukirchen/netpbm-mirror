@@ -17,6 +17,7 @@
 */
 
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -51,13 +52,13 @@ wordSizeFmDepth(unsigned int const depth) {
 
 
 static void
-getinit(FILE *  const ifP,
-        short * const colsP,
-        short * const rowsP,
-        short * const depthP,
-        short * const padrightP) {
+getinit(FILE *         const ifP,
+        unsigned int * const colsP,
+        unsigned int * const rowsP,
+        unsigned int * const depthP,
+        unsigned int * const padrightP) {
 
-    short cols32;
+    short cols, rows, cols32;
     char magic[sizeof(LISPM_MAGIC)];
     unsigned int i;
 
@@ -69,14 +70,19 @@ getinit(FILE *  const ifP,
     if (!streq(LISPM_MAGIC, magic))
         pm_error("bad id string in Lispm file");
 
-    pm_readlittleshort(ifP, colsP);
-    pm_readlittleshort(ifP, rowsP);
+    pm_readlittleshort(ifP, &cols);
+    pm_readlittleshort(ifP, &rows);
     pm_readlittleshort(ifP, &cols32);
+
+    *colsP = cols;
+    *rowsP = rows;
 
     *depthP = getc(ifP);
 
     if (*depthP == 0)
         *depthP = 1;    /* very old file */
+
+    assert(*colsP < UINT_MAX - 31);
 
     *padrightP = ROUNDUP(*colsP, 32) - *colsP;
 
@@ -136,7 +142,7 @@ main(int argc, const char ** argv) {
 
     FILE * ifP;
     gray * grayrow;
-    short rows, cols, depth, padright;
+    unsigned int rows, cols, depth, padright;
     unsigned int row;
     gray maxval;
 
@@ -154,8 +160,6 @@ main(int argc, const char ** argv) {
 
     getinit(ifP, &cols, &rows, &depth, &padright);
 
-    if (depth < 0)
-        pm_error("Invalid negative depth %d", depth);
     if (depth > 16)
         pm_error("Invalid depth (%u bits).  Maximum is 15", depth);
 
