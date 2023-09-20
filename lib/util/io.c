@@ -32,7 +32,7 @@ pm_freadline(FILE *        const fileP,
 
     bufferSize = 1024;  /* initial value */
     *errorP = NULL; /* initial value */
-    
+
     MALLOCARRAY(buffer, bufferSize);
 
     for (cursor = 0, gotLine = false, eof = false;
@@ -53,7 +53,7 @@ pm_freadline(FILE *        const fileP,
                         (unsigned int)bufferSize);
         else {
             int const rc = getc(fileP);
-        
+
             if (rc < 0) {
                 if (feof(fileP))
                     eof = true;

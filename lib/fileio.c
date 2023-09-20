@@ -25,7 +25,7 @@ pm_getc(FILE * const fileP) {
     if (ich == EOF)
         pm_error("EOF / read error reading a byte");
     ch = (char) ich;
-    
+
     if (ch == '#') {
         do {
             ich = getc(fileP);
@@ -88,7 +88,7 @@ pm_getuint(FILE * const ifP) {
         if (i > INT_MAX/10)
             pm_error("ASCII decimal integer in file is "
                      "too large to be processed.  ");
-        
+
         i *= 10;
 
         if (i > INT_MAX - digitVal)
@@ -106,7 +106,7 @@ pm_getuint(FILE * const ifP) {
 
 
 unsigned int
-pm_getraw(FILE *       const file, 
+pm_getraw(FILE *       const file,
           unsigned int const bytes) {
 
     unsigned int value;  /* our return value */
@@ -129,11 +129,11 @@ pm_getraw(FILE *       const file,
         int n_read;
 
         n_read = fread(inval, bytes, 1, file);
-        if (n_read < 1) 
+        if (n_read < 1)
             pm_error("EOF/error reading %d byte sample from file.", bytes);
         value = 0;  /* initial value */
         cursor = 0;
-        for (shift = (bytes-1)*8; shift >= 0; shift-=8) 
+        for (shift = (bytes-1)*8; shift >= 0; shift-=8)
             value += inval[cursor++] << shift;
     }
     return(value);
@@ -142,8 +142,8 @@ pm_getraw(FILE *       const file,
 
 
 void
-pm_putraw(FILE *       const file, 
-          unsigned int const value, 
+pm_putraw(FILE *       const file,
+          unsigned int const value,
           unsigned int const bytes) {
 
     if (bytes == 1) {
@@ -169,7 +169,7 @@ pm_putraw(FILE *       const file,
             outval[cursor++] = (value >> shift) & 0xFF;
         }
         n_written = fwrite(&outval, bytes, 1, file);
-        if (n_written == 0) 
+        if (n_written == 0)
             pm_error("Error writing %d byte sample to file.", bytes);
     }
 }

@@ -13,7 +13,7 @@
 #undef ABS
 #define ABS(a) ((a) >= 0 ? (a) : -(a))
 #undef SGN
-#define SGN(a)		(((a)<0) ? -1 : 1)
+#define SGN(a)          (((a)<0) ? -1 : 1)
 #undef ODD
 #define ODD(n) ((n) & 1)
 #undef ROUND

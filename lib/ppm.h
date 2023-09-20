@@ -185,9 +185,9 @@ ppm_freecolornames(const char ** const colornames);
 
 #define PPM_DEPTH(newp,p,oldmaxval,newmaxval) \
     PPM_ASSIGN( (newp), \
-	( (int) PPM_GETR(p) * (newmaxval) + (oldmaxval) / 2 ) / (oldmaxval), \
-	( (int) PPM_GETG(p) * (newmaxval) + (oldmaxval) / 2 ) / (oldmaxval), \
-	( (int) PPM_GETB(p) * (newmaxval) + (oldmaxval) / 2 ) / (oldmaxval) )
+        ( (int) PPM_GETR(p) * (newmaxval) + (oldmaxval) / 2 ) / (oldmaxval), \
+        ( (int) PPM_GETG(p) * (newmaxval) + (oldmaxval) / 2 ) / (oldmaxval), \
+        ( (int) PPM_GETB(p) * (newmaxval) + (oldmaxval) / 2 ) / (oldmaxval) )
 
 #define PPM_SQR(x) (x)*(x)
 

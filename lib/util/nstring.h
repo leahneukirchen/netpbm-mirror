@@ -22,13 +22,13 @@ extern "C" {
    array.
 */
 #define STRSCPY(A,B) \
-	(strncpy((A), (B), sizeof(A)), *((A)+sizeof(A)-1) = '\0')
+        (strncpy((A), (B), sizeof(A)), *((A)+sizeof(A)-1) = '\0')
 #define STRSCMP(A,B) \
-	(strncmp((A), (B), sizeof(A)))
+        (strncmp((A), (B), sizeof(A)))
 #define STRSCAT(A,B) \
     (strncpy(A+strlen(A), B, sizeof(A)-strlen(A)), *((A)+sizeof(A)-1) = '\0')
 #define STRSEQ(A, B) \
-	(strneq((A), (B), sizeof(A)))
+        (strneq((A), (B), sizeof(A)))
 
 #define MEMSEQ(a,b) (memeq(a, b, sizeof(*(a))))
 

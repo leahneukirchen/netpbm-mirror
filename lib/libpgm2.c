@@ -20,29 +20,29 @@
 
 
 void
-pgm_writepgminit(FILE * const fileP, 
-                 int    const cols, 
-                 int    const rows, 
-                 gray   const maxval, 
+pgm_writepgminit(FILE * const fileP,
+                 int    const cols,
+                 int    const rows,
+                 gray   const maxval,
                  int    const forceplain) {
 
     bool const plainFormat = forceplain || pm_plain_output;
 
-    if (maxval > PGM_OVERALLMAXVAL && !plainFormat) 
+    if (maxval > PGM_OVERALLMAXVAL && !plainFormat)
         pm_error("too-large maxval passed to ppm_writepgminit(): %d.\n"
                  "Maximum allowed by the PGM format is %d.",
                  maxval, PGM_OVERALLMAXVAL);
 
-    fprintf(fileP, "%c%c\n%d %d\n%d\n", 
-            PGM_MAGIC1, 
-            plainFormat || maxval >= 1<<16 ? PGM_MAGIC2 : RPGM_MAGIC2, 
+    fprintf(fileP, "%c%c\n%d %d\n%d\n",
+            PGM_MAGIC1,
+            plainFormat || maxval >= 1<<16 ? PGM_MAGIC2 : RPGM_MAGIC2,
             cols, rows, maxval );
 }
 
 
 
 static void
-putus(unsigned short const n, 
+putus(unsigned short const n,
       FILE *         const fileP) {
 
     if (n >= 10)
@@ -85,7 +85,7 @@ format2bpsRow(const gray    * const grayrow,
 
     for (col = 0; col < cols; ++col) {
         gray const val = grayrow[col];
-        
+
         rowBuffer[bufferCursor++] = val >> 8;
         rowBuffer[bufferCursor++] = (unsigned char) val;
     }
@@ -134,8 +134,8 @@ writepgmrowraw(FILE *       const fileP,
 
 static void
 writepgmrowplain(FILE *       const fileP,
-                 const gray * const grayrow, 
-                 unsigned int const cols, 
+                 const gray * const grayrow,
+                 unsigned int const cols,
                  gray         const maxval) {
 
     int col, charcount;
@@ -163,10 +163,10 @@ writepgmrowplain(FILE *       const fileP,
 
 
 void
-pgm_writepgmrow(FILE *       const fileP, 
-                const gray * const grayrow, 
-                int          const cols, 
-                gray         const maxval, 
+pgm_writepgmrow(FILE *       const fileP,
+                const gray * const grayrow,
+                int          const cols,
+                gray         const maxval,
                 int          const forceplain) {
 
     if (forceplain || pm_plain_output || maxval >= 1<<16)

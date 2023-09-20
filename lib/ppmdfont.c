@@ -63,7 +63,7 @@ readCharacter(FILE *              const ifP,
 static void
 readFontHeader(FILE *                   const ifP,
                struct ppmd_fontHeader * const fontHeaderP) {
-    
+
     size_t rc;
 
     rc = fread(&fontHeaderP->signature, 1, sizeof(fontHeaderP->signature),
@@ -135,7 +135,7 @@ ppmd_free_font(const struct ppmd_font * const fontP) {
     for (relativeCodePoint = 0;
          relativeCodePoint < fontP->header.characterCount;
          ++relativeCodePoint) {
-        
+
         free((void*)fontP->glyphTable[relativeCodePoint].commandList);
     }
     free((void*)fontP->glyphTable);

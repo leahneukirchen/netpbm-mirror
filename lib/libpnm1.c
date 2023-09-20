@@ -244,7 +244,7 @@ pnm_readpnmrow(FILE * const fileP,
     case PGM_TYPE:
         readpgmrow(fileP, xelrow, cols, maxval, format);
         break;
-        
+
     case PBM_TYPE:
         readpbmrow(fileP, xelrow, cols, maxval, format);
         break;
@@ -300,7 +300,7 @@ pnm_readpnm(FILE *   const fileP,
 
 void
 pnm_check(FILE *               const fileP,
-          enum pm_check_type   const check_type, 
+          enum pm_check_type   const check_type,
           int                  const format,
           int                  const cols,
           int                  const rows,
@@ -311,7 +311,7 @@ pnm_check(FILE *               const fileP,
     case PBM_TYPE:
         pbm_check(fileP, check_type, format, cols, rows, retvalP);
         break;
-    case PGM_TYPE: 
+    case PGM_TYPE:
         pgm_check(fileP, check_type, format, cols, rows, maxval, retvalP);
         break;
     case PPM_TYPE:

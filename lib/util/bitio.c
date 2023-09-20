@@ -6,7 +6,7 @@
  * Works for (sizeof(unsigned long)-1)*8 bits.
  *
  * Copyright (C) 1992 by David W. Sanderson.
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and
@@ -89,7 +89,7 @@ pm_bitinit(FILE * const f, const char * const mode) {
  * pm_bitfini() - deallocate the given struct bitstream *.
  *
  * You must call this after you are done with the struct bitstream *.
- * 
+ *
  * It may flush some bits left in the buffer.
  *
  * Returns the number of bytes written, -1 on error.
@@ -137,13 +137,13 @@ pm_bitfini(b)
 
 /*
  * pm_bitread() - read the next nbits into *val from the given file.
- * 
+ *
  * The last pm_bitread() must be followed by a call to pm_bitfini().
- * 
+ *
  * Returns the number of bytes read, -1 on error.
  */
 
-int 
+int
 pm_bitread(b, nbits, val)
     struct bitstream *b;
     unsigned long   nbits;
@@ -172,9 +172,9 @@ pm_bitread(b, nbits, val)
 
 /*
  * pm_bitwrite() - write the low nbits of val to the given file.
- * 
+ *
  * The last pm_bitwrite() must be followed by a call to pm_bitfini().
- * 
+ *
  * Returns the number of bytes written, -1 on error.
  */
 

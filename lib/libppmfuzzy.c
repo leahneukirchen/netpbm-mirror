@@ -62,7 +62,7 @@ memberTrapez(fzLog const x1,
              fzLog const x) {
 
     fzLog retval;
-    
+
     if (x <= x1 || x > x4)
         retval = 0;
     else if (x > x1 && x <= x2)
@@ -301,7 +301,7 @@ matchBk(pixel     const color,
 
     (*bkMatchP)[BKCOLOR_WHITE]  =
         fzAnd(satVeryLow, valVeryHigh);
-    
+
     (*bkMatchP)[BKCOLOR_RED]    =
         fzAnd(fzAnd(fzOr(hueAround000, hueAround360), fzNot(satVeryLow)),
               fzOr(valMedium, valHigh)
@@ -342,7 +342,7 @@ matchBk(pixel     const color,
              fzAnd(fzOr(hueAround015, hueAround360),
                    fzAnd(fzNot(satVeryLow), fzOr(valLow, valMedium))),
              fzAnd(hueAround015, satLow)
-	    );
+            );
 }
 
 

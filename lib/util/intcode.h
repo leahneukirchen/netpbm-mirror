@@ -108,7 +108,7 @@ pm_uintFromBigend32(bigend32 const arg) {
 
 #if HAVE_GCC_BSWAP
     case LITTLE_ENDIAN: {
-        /* Use GCC built-in */  
+        /* Use GCC built-in */
         union {
             bigend32 bigend;
             uint32_t native;
@@ -117,7 +117,7 @@ pm_uintFromBigend32(bigend32 const arg) {
         retval = __builtin_bswap32(converter.native);
     } break;
 #endif
-    
+
     default:
         retval =
             (arg.bytes[0] << 24) |
@@ -146,9 +146,9 @@ pm_bigendFromUint32(uint32_t const arg) {
         retval = converter.bigend;
     } break;
 
-#if HAVE_GCC_BSWAP    
+#if HAVE_GCC_BSWAP
     case LITTLE_ENDIAN: {
-        /* Use GCC built-in */  
+        /* Use GCC built-in */
         union {
             bigend32 bigend;
             uint32_t native;
@@ -156,7 +156,7 @@ pm_bigendFromUint32(uint32_t const arg) {
         converter.native = __builtin_bswap32(arg);
         retval = converter.bigend;
     } break;
-#endif    
+#endif
 
     default: {
         uint32_t shift;
@@ -208,9 +208,9 @@ pm_uintFromBigend64(bigend64 const arg) {
         retval = converter.native;
     } break;
 
-#if HAVE_GCC_BSWAP    
+#if HAVE_GCC_BSWAP
     case LITTLE_ENDIAN: {
-        /* Use GCC built-in */  
+        /* Use GCC built-in */
         union {
             bigend64 bigend;
             uint64_t native;
@@ -249,7 +249,7 @@ pm_bigendFromUint64(uint64_t const arg) {
 #if HAVE_GCC_BSWAP
     case LITTLE_ENDIAN: {
 
-        /* Use GCC built-in */  
+        /* Use GCC built-in */
         union {
             bigend64 bigend;
             uint64_t native;
@@ -258,7 +258,7 @@ pm_bigendFromUint64(uint64_t const arg) {
         retval = converter.bigend;
     } break;
 #endif
-    
+
     default: {
         uint64_t shift;
         shift = arg;
