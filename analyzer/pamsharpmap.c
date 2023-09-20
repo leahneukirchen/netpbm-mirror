@@ -14,7 +14,7 @@
    No warranty. See file 'artistic.license' for more details.
 
    boris@13thmonkey.org
-   www.13thmonkey.org/~boris/photopnmtools/ 
+   www.13thmonkey.org/~boris/photopnmtools/
 -----------------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -40,7 +40,7 @@ parseCommandLine ( int argc, char ** argv,
                    struct cmdlineInfo *cmdlineP ) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -58,7 +58,7 @@ parseCommandLine ( int argc, char ** argv,
     unsigned int contextSpec;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "context",       OPT_UINT,   &cmdlineP->context,       
+    OPTENT3(0, "context",       OPT_UINT,   &cmdlineP->context,
             &contextSpec,         0 );
 
     opt.opt_table = option_def;
@@ -92,7 +92,7 @@ makeSharpnessPixel(struct pam * const pamP,
 
     unsigned int plane;
     for (plane = 0; plane < pamP->depth; ++plane)
-        sharpnessTuple[plane] = 
+        sharpnessTuple[plane] =
             (sample)(sharpness[plane] * pamP->maxval + 0.5);
 }
 
@@ -132,20 +132,20 @@ main(int argc, char **argv) {
     int row;
     float * sharpness;
 
-	pnm_init(&argc, argv);
+        pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
 
-	tuplenarray = pnm_readpamn(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+        tuplenarray = pnm_readpamn(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     mappam = inpam;
     mappam.file = stdout;
     mappam.maxval = 255;
 
     MALLOCARRAY_NOFAIL(sharpness, inpam.depth);
-            
+
     map = pnm_allocpamarray(&mappam);
     makeBlackRown(&inpam, tuplenarray[0]);
     for (row = 1; row < inpam.height-1; ++row) {
@@ -154,7 +154,7 @@ main(int argc, char **argv) {
         for (col = 1; col < inpam.width-1; ++col) {
             int dy;
             unsigned int plane;
-            
+
             for (plane = 0; plane < inpam.depth; ++plane)
                 sharpness[plane] = 0.0;
 
@@ -164,9 +164,9 @@ main(int argc, char **argv) {
                     if (dx != 0 || dy != 0) {
                         unsigned int plane;
                         for (plane = 0; plane < inpam.depth; ++plane) {
-                            samplen const sampleval = 
+                            samplen const sampleval =
                                 tuplenarray[row][col][plane];
-                            samplen const sampleval2 = 
+                            samplen const sampleval2 =
                                 tuplenarray[row+dy][col+dx][plane];
                             sharpness[plane] += fabs(sampleval - sampleval2);
                         }
@@ -179,11 +179,11 @@ main(int argc, char **argv) {
     }
     makeBlackRown(&inpam, tuplenarray[inpam.height-1]);
     free(sharpness);
-    
+
     pnm_writepam(&mappam, map);
 
     pnm_freepamarray(map, &mappam);
-	pnm_freepamarrayn(tuplenarray, &inpam);
+        pnm_freepamarrayn(tuplenarray, &inpam);
 
-	return 0;
+        return 0;
 }

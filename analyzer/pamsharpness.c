@@ -14,7 +14,7 @@
    No warranty. See file 'artistic.license' for more details.
 
    boris@13thmonkey.org
-   www.13thmonkey.org/~boris/photopnmtools/ 
+   www.13thmonkey.org/~boris/photopnmtools/
 -----------------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -40,7 +40,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -60,7 +60,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "context",       OPT_UINT,   &cmdlineP->context,       
+    OPTENT3(0, "context",       OPT_UINT,   &cmdlineP->context,
             &contextSpec,         0 );
 
     opt.opt_table = option_def;
@@ -96,7 +96,7 @@ computeSharpness(struct pam * const inpamP,
 
     unsigned int row;
     double totsharp;
-    
+
     totsharp = 0.0;
 
     for (row = 1; row < inpamP->height-1; ++row) {
@@ -109,18 +109,18 @@ computeSharpness(struct pam * const inpamP,
                     if (dx != 0 || dy != 0) {
                         unsigned int plane;
                         for (plane = 0; plane < inpamP->depth; ++plane) {
-                            samplen const sampleval = 
+                            samplen const sampleval =
                                 tuplenarray[row][col][plane];
-                            samplen const sampleval2 = 
+                            samplen const sampleval2 =
                                 tuplenarray[row+dy][col+dx][plane];
                             totsharp += fabs(sampleval - sampleval2);
                         }
                     }
                 }
             }
-		}
-	}
-    *sharpnessP = 
+                }
+        }
+    *sharpnessP =
         totsharp / (inpamP->width * inpamP->height * inpamP->depth * 8);
         /* The 8 above is for the 8 neighbors to which we compare each pixel */
 }
@@ -136,13 +136,13 @@ main(int argc, char **argv) {
     struct pam inpam;
     double sharpness;
 
-	pnm_init(&argc, argv);
+        pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
 
-	tuplenarray = pnm_readpamn(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+        tuplenarray = pnm_readpamn(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     if (inpam.height < 3 || inpam.width < 3)
         pm_error("sharpness is undefined for an image less than 3 pixels "
@@ -153,8 +153,8 @@ main(int argc, char **argv) {
 
     printf("Sharpness = %f\n", sharpness);
 
-	pnm_freepamarrayn(tuplenarray, &inpam);
+        pnm_freepamarrayn(tuplenarray, &inpam);
     pm_close(ifP);
 
-	return 0;
+        return 0;
 }
