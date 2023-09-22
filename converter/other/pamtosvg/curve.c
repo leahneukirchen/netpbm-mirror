@@ -18,6 +18,8 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
+#include <assert.h>
+
 #include "mallocvar.h"
 
 #include "logreport.h"
@@ -129,6 +131,61 @@ curve_appendPixel(Curve *       const curveP,
   Append the point 'coord' to the end of *curveP's list.
 -----------------------------------------------------------------------------*/
     curve_appendPoint(curveP, realCoordFromInt(coord));
+}
+
+
+
+void
+curve_setDistance(Curve * const curveP) {
+/*----------------------------------------------------------------------------
+   Fill in the distance values in *curveP.
+
+   The distance value for point P on a curve is the distance P is along the
+   curve from the initial point, normalized so the entire curve is length 1.0
+   (i.e. t of the initial point is 0.0; t of the final point is 1.0).
+
+   There are a lot of curves that pass through the points indicated by
+   *curveP, but for practical computation of t, we just take the piecewise
+   linear locus that runs through all of them.  That means we can just step
+   through *curveP, adding up the distance from one point to the next to get
+   the t value for each point.
+
+   This is the "chord-length parameterization" method, which is described in
+   Plass & Stone.
+-----------------------------------------------------------------------------*/
+    unsigned int p;
+
+    LOG("\nAssigning initial t values:\n  ");
+
+    /* Algorithm: We do a pass through the curve establishing how far each
+       point is along the curve in absolute terms, and then another pass
+       to normalize those distances to the fraction of the curve (i.e.
+       if the curve is 5 units long and Point P is 2 units in, we record
+       2 units for Point P in the first pass, and then compute 0.2 as the
+       fraction of the curve length in the second pass.
+
+       In the first pass, we abuse the distance property of the CurvePoint
+       object to remember the unnormalized distances.
+    */
+
+    CURVE_DIST(curveP, 0) = 0.0;
+
+    for (p = 1; p < CURVE_LENGTH(curveP); ++p) {
+        Point const point      = CURVE_POINT(curveP, p);
+        Point const previous_p = CURVE_POINT(curveP, p - 1);
+        float const d          = point_distance(point, previous_p);
+        CURVE_DIST(curveP, p)  = CURVE_DIST(curveP, p - 1) + d;
+    }
+
+    assert(LAST_CURVE_DIST(curveP) != 0.0);
+
+    /* Normalize to a curve length of 1.0 */
+
+    for (p = 1; p < CURVE_LENGTH(curveP); ++p)
+        CURVE_DIST(curveP, p) =
+            CURVE_DIST(curveP, p) / LAST_CURVE_DIST(curveP);
+
+    curve_logEntire(curveP);
 }
 
 

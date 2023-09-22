@@ -21,7 +21,8 @@ typedef struct {
         /* Location in space of the point */
     float distance;
         /* Distance point is along the curve, as a fraction of the
-           curve length
+           curve length.  This is invalid until after someone has called
+           curve_updateDistance() on the curve.
         */
 } CurvePoint;
 
@@ -37,9 +38,12 @@ typedef struct Curve {
            if 'length' is zero, this is meaningless and no memory is
            allocated.
         */
-    unsigned       length;
+    unsigned int   length;
         /* Number of points in the curve */
     bool           cyclic;
+       /* The curve is cyclic, i.e. it didn't have any corners, after all, so
+          the last point is adjacent to the first.
+       */
 
     /* 'previous' and 'next' links are for the doubly linked list which is
        a chain of all curves in an outline.  The chain is a cycle for a
@@ -49,17 +53,12 @@ typedef struct Curve {
     struct Curve * next;
 } Curve;
 
-/* Get at the coordinates and the t values.  */
 #define CURVE_POINT(c, n) ((c)->pointList[n].coord)
 #define LAST_CURVE_POINT(c) ((c)->pointList[(c)->length-1].coord)
 #define CURVE_DIST(c, n) ((c)->pointList[n].distance)
 #define LAST_CURVE_DIST(c) ((c)->pointList[(c)->length-1].distance)
-
-/* This is the length of `point_list'.  */
 #define CURVE_LENGTH(c)  ((c)->length)
 
-/* A curve is ``cyclic'' if it didn't have any corners, after all, so
-   the last point is adjacent to the first.  */
 #define CURVE_CYCLIC(c)  ((c)->cyclic)
 
 /* If the curve is cyclic, the next and previous points should wrap
@@ -98,6 +97,9 @@ curve_appendPoint(Curve * const curveP,
 void
 curve_appendPixel(Curve *       const curveP,
                   pm_pixelcoord const p);
+
+void
+curve_setDistance(Curve * const curveP);
 
 void
 curve_log(Curve * const curveP,

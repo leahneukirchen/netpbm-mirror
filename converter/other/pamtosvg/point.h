@@ -24,4 +24,8 @@ Point
 point_scaled(Point const coord,
              float const r);
 
+float
+point_distance(Point const p1,
+               Point const p2);
+
 #endif

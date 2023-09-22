@@ -125,19 +125,6 @@ indexList_append(IndexList *  const listP,
 
 
 
-static float
-distance(Point const p1,
-         Point const p2) {
-/*----------------------------------------------------------------------------
-  Return the Euclidean distance between 'p1' and 'p2'.
------------------------------------------------------------------------------*/
-    float const x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z;
-
-    return (float) sqrt(SQR(x) + SQR(y) + SQR(z));
-}
-
-
-
 static void
 appendCorner(IndexList       *  const cornerListP,
              unsigned int       const pixelSeq,
@@ -1089,14 +1076,14 @@ static void
 changeBadLines(spline_list_type *        const splineListP,
                const fitting_opts_type * const fittingOptsP) {
 
-  /* Unfortunately, we cannot tell in isolation whether a given spline
-     should be changed to a line or not.  That can only be known after the
-     entire curve has been fit to a list of splines.  (The curve is the
-     pixel outline between two corners.)  After subdividing the curve, a
-     line may very well fit a portion of the curve just as well as the
-     spline---but unless a spline is truly close to being a line, it
-     should not be combined with other lines.
-  */
+    /* Unfortunately, we cannot tell in isolation whether a given spline
+       should be changed to a line or not.  That be known only after the
+       entire curve has been fit to a list of splines.  (The curve is the
+       pixel outline between two corners.)  After subdividing the curve, a
+       line may very well fit a portion of the curve just as well as the
+       spline---but unless a spline is truly close to being a line, it should
+       not be combined with other lines.
+    */
 
     unsigned int const length = SPLINE_LIST_LENGTH(*splineListP);
 
@@ -1259,10 +1246,86 @@ fitWithLine(Curve * const curveP) {
 
 
 
-#define B0(t) CUBE ((float) 1.0 - (t))
-#define B1(t) ((float) 3.0 * (t) * SQR ((float) 1.0 - (t)))
-#define B2(t) ((float) 3.0 * SQR (t) * ((float) 1.0 - (t)))
-#define B3(t) CUBE (t)
+static float
+b2(float const fracCurveDist) {
+/*----------------------------------------------------------------------------
+   Some mysterious weighting function
+
+   'fracCurveDist' is a fraction (range [0.0-1.0]) of the distance along
+   a curve that a point on the curve is.
+-----------------------------------------------------------------------------*/
+    return 3.0 * SQR(fracCurveDist) * (1.0 - fracCurveDist);
+}
+
+
+
+struct Mat22 {
+    struct { float beg; float end; } beg;
+    struct { float beg; float end; } end;
+};
+
+struct Mat2 { float beg; float end; };
+
+struct VectorBegEndPair {
+    Vector beg;
+    Vector end;
+};
+
+
+static void
+computeCX(Curve *                 const curveP,
+          struct VectorBegEndPair const tang,
+          struct Mat22 *          const cP,
+          struct Mat2 *           const xP) {
+
+    Vector const begVector = vector_fromPoint(CURVE_POINT(curveP, 0));
+    Vector const endVector = vector_fromPoint(LAST_CURVE_POINT(curveP));
+
+    unsigned int pointSeq;
+
+    cP->beg.beg = 0.0; cP->beg.end = 0.0; cP->end.end = 0.0;/* initial value */
+
+    xP->beg = 0.0; xP->end = 0.0; /* initial value */
+
+    for (pointSeq = 0; pointSeq < CURVE_LENGTH(curveP); ++pointSeq) {
+        float const curveDistFmBeg = CURVE_DIST(curveP, pointSeq);
+        float const curveDistToEnd = 1.0 - curveDistFmBeg;
+        struct VectorBegEndPair a;  /* constant */
+            /* I don't know the meaning of this, but the vectors of the pair
+               are in the direction of the beginning and points of the curve,
+               respectively, with magnitude a function of the fractional
+               distance from their respective endpoints of the current point.
+               "Fractional distance" means e.g. "this point is 20% of the way
+               to the end of the curve from its beginning".  The function is
+
+                 3 * <fracdistance> * SQR(1-<fracdistance>) .
+            */
+        Vector temp, temp0, temp1;
+
+        a.beg = vector_scaled(tang.beg, b2(curveDistToEnd));
+        a.end = vector_scaled(tang.end, b2(curveDistFmBeg));
+
+        cP->beg.beg += vector_dotProduct(a.beg, a.beg);
+        cP->beg.end += vector_dotProduct(a.beg, a.end);
+        cP->end.beg += vector_dotProduct(a.end, a.beg);
+        cP->end.end += vector_dotProduct(a.end, a.end);
+
+        /* Now the right-hand side of the equation in the paper.  */
+        temp0 = vector_scaled(begVector,
+                              CUBE(curveDistToEnd) + b2(curveDistToEnd));
+        temp1 = vector_scaled(endVector,
+                              CUBE(curveDistFmBeg) + b2(curveDistFmBeg));
+
+        temp = vector_fromPoint(
+            vector_diffPoint(
+                CURVE_POINT(curveP, pointSeq), vector_sum(temp0, temp1)));
+
+        xP->beg += vector_dotProduct(temp, a.beg);
+        xP->end += vector_dotProduct(temp, a.end);
+    }
+}
+
+
 
 static spline_type
 fitOneSpline(Curve *             const curveP,
@@ -1270,8 +1333,9 @@ fitOneSpline(Curve *             const curveP,
              Vector              const endSlope,
              at_exception_type * const exceptionP) {
 /*----------------------------------------------------------------------------
-  Return a spline that fits the points of curve *curveP, with slope 'begSlope'
-  at its beginning and 'endSlope' at its end (both are unit vectors).
+  Return a spline that best fits the points of curve *curveP, passing through
+  the endpoints of *curveP and having slope 'begSlope' at its beginning and
+  'endSlope' at its end (both are unit vectors).
 
   Make it a cubic spline.
 -----------------------------------------------------------------------------*/
@@ -1300,72 +1364,14 @@ fitOneSpline(Curve *             const curveP,
        The Bernstein polynomials of degree n are defined by
        B_i^n(t) = { n \choose i } t^i (1-t)^{n-i}, i = 0..n
     */
-    struct VectorBegEndPair {
-        Vector beg;
-        Vector end;
-    };
     struct VectorBegEndPair tang;
-
     spline_type spline;
-    Vector begVector, endVector;
-    unsigned int i;
-    struct VectorBegEndPair * A;  /* malloc'ed array */
-        /* I don't know the meaning of this array, but it is one entry for
-           each point in the curve (A[i] is for the ith point in the curve).
-           In each entry, the first vector of the pair is a vector in the
-           direction of the beginning slope of the curve and the other is
-           in the direction of the end slope of the curve.  Their magnitudes
-           are functions of the ith point.
-        */
-    struct {
-        struct { float beg; float end; } beg;
-        struct { float beg; float end; } end;
-    } C;
-    struct { float beg; float end; } X;
+    struct Mat22 C;
+    struct Mat2  X;
 
     tang.beg = begSlope; tang.end = endSlope;
 
-    MALLOCARRAY_NOFAIL(A, CURVE_LENGTH(curveP));
-
-    BEG_POINT(spline) = CURVE_POINT(curveP, 0);
-    END_POINT(spline) = LAST_CURVE_POINT(curveP);
-    begVector = vector_fromPoint(BEG_POINT(spline));
-    endVector = vector_fromPoint(END_POINT(spline));
-
-    for (i = 0; i < CURVE_LENGTH(curveP); ++i) {
-        A[i].beg = vector_scaled(tang.beg, B1(CURVE_DIST(curveP, i)));
-        A[i].end = vector_scaled(tang.end, B2(CURVE_DIST(curveP, i)));
-    }
-
-    C.beg.beg = 0.0; C.beg.end = 0.0; C.end.end = 0.0;  /* initial value */
-
-    X.beg = 0.0; X.end = 0.0; /* initial value */
-
-    for (i = 0; i < CURVE_LENGTH(curveP); ++i) {
-        struct VectorBegEndPair * const AP = &A[i];
-        Vector temp, temp0, temp1, temp2, temp3;
-
-        C.beg.beg += vector_dotProduct(AP->beg, AP->beg);
-        C.beg.end += vector_dotProduct(AP->beg, AP->end);
-        C.end.beg += vector_dotProduct(AP->end, AP->beg);
-        C.end.end += vector_dotProduct(AP->end, AP->end);
-
-        /* Now the right-hand side of the equation in the paper.  */
-        temp0 = vector_scaled(begVector, B0(CURVE_DIST(curveP, i)));
-        temp1 = vector_scaled(begVector, B1(CURVE_DIST(curveP, i)));
-        temp2 = vector_scaled(endVector, B2(CURVE_DIST(curveP, i)));
-        temp3 = vector_scaled(endVector, B3(CURVE_DIST(curveP, i)));
-
-        temp = vector_fromPoint(
-            vector_diffPoint(
-                CURVE_POINT(curveP, i),
-                vector_sum(temp0, vector_sum(temp1,
-                                             vector_sum(temp2, temp3)))));
-
-        X.beg += vector_dotProduct(temp, AP->beg);
-        X.end += vector_dotProduct(temp, AP->end);
-    }
-    free(A);
+    computeCX(curveP, tang, &C, &X);
 
     {
         float const XCendDet  = X.beg * C.end.end - X.end * C.beg.end;
@@ -1380,6 +1386,8 @@ fitOneSpline(Curve *             const curveP,
             float const alphaBeg = XCendDet / CDet;
             float const alphaEnd = CbegXDet / CDet;
 
+            BEG_POINT(spline) = CURVE_POINT(curveP, 0);
+            END_POINT(spline) = LAST_CURVE_POINT(curveP);
             CONTROL1(spline) = vector_sumPoint(
                 BEG_POINT(spline), vector_scaled(tang.beg, alphaBeg));
             CONTROL2(spline) = vector_sumPoint(
@@ -1576,7 +1584,7 @@ findError(Curve *             const curveP,
         Point const curvePoint  = CURVE_POINT(curveP, thisPoint);
         float const t           = CURVE_DIST(curveP, thisPoint);
         Point const splinePoint = evaluate_spline(spline, t);
-        float const thisError   = distance(curvePoint, splinePoint);
+        float const thisError   = point_distance(curvePoint, splinePoint);
         if (thisError >= worstError) {
             worstPoint = thisPoint;
             worstError = thisError;
@@ -1604,56 +1612,12 @@ findError(Curve *             const curveP,
 
 
 static void
-setCurvePointDistance(Curve * const curveP) {
-/*----------------------------------------------------------------------------
-   Fill in the 't' values in *curveP.
-
-   The t value for point P on a curve is the distance P is along the curve
-   from the initial point, normalized so the entire curve is length 1.0
-   (i.e. t of the initial point is 0.0; t of the final point is 1.0).
-
-   There are a lot of curves that pass through the points indicated by
-   *curveP, but for practical computation of t, we just take the piecewise
-   linear locus that runs through all of them.  That means we can just step
-   through *curveP, adding up the distance from one point to the next to get
-   the t value for each point.
-
-   This is the "chord-length parameterization" method, which is described in
-   Plass & Stone.
------------------------------------------------------------------------------*/
-    unsigned int p;
-
-    LOG("\nAssigning initial t values:\n  ");
-
-    CURVE_DIST(curveP, 0) = 0.0;
-
-    for (p = 1; p < CURVE_LENGTH(curveP); ++p) {
-        Point const point      = CURVE_POINT(curveP, p);
-        Point const previous_p = CURVE_POINT(curveP, p - 1);
-        float const d = distance(point, previous_p);
-        CURVE_DIST(curveP, p) = CURVE_DIST(curveP, p - 1) + d;
-    }
-
-    assert(LAST_CURVE_DIST(curveP) != 0.0);
-
-    /* Normalize to a curve length of 1.0 */
-
-    for (p = 1; p < CURVE_LENGTH(curveP); ++p)
-        CURVE_DIST(curveP, p) =
-            CURVE_DIST(curveP, p) / LAST_CURVE_DIST(curveP);
-
-    curve_logEntire(curveP);
-}
-
-
-
-static void
 subdivideCurve(Curve *                   const curveP,
                unsigned int              const subdivisionIndex,
                const fitting_opts_type * const fittingOptsP,
                Curve **                  const leftCurvePP,
                Curve **                  const rghtCurvePP,
-               Vector *             const joinSlopeP) {
+               Vector *                  const joinSlopeP) {
 /*----------------------------------------------------------------------------
   Split curve *curveP into two, at 'subdivisionIndex'.  (Actually,
   leave *curveP alone, but return as *leftCurvePP and *rghtCurvePP
@@ -1854,7 +1818,7 @@ fitWithLeastSquares(Curve *                   const curveP,
        points we can get.
     */
 
-    setCurvePointDistance(curveP);
+    curve_setDistance(curveP);
 
     if (CURVE_CYCLIC(curveP) && CURVE_LENGTH(curveP) < 4) {
         unsigned i;

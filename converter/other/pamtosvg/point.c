@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <math.h>
 
 #include "epsilon.h"
 
@@ -70,6 +71,19 @@ point_scaled(Point const coord,
     retval.z = coord.z * r;
 
     return retval;
+}
+
+
+
+float
+point_distance(Point const p1,
+               Point const p2) {
+/*----------------------------------------------------------------------------
+  Return the Euclidean distance between 'p1' and 'p2'.
+-----------------------------------------------------------------------------*/
+    float const x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z;
+
+    return (float) sqrt(SQR(x) + SQR(y) + SQR(z));
 }
 
 
