@@ -1,9 +1,17 @@
+/*=============================================================================
+                                 ilbm.h
+===============================================================================
+  Facilities for processign IFF ILBM files
+=============================================================================*/
 #ifndef ILBM_H_INCLUDED
 #define ILBM_H_INCLUDED
 
-/* ilbm.h - definitions for IFF ILBM files */
+static __inline__ unsigned int
+ilbm_rowByteCt(unsigned int const cols) {
 
-#define RowBytes(cols)          ((((cols) + 15) / 16) * 2)
+    return (cols / 16 + (cols % 16 == 0 ? 0 : 1)) * 2;
+}
+
 
 
 /* definitions for BMHD */

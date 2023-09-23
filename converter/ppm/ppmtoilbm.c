@@ -483,7 +483,7 @@ encodeRow(FILE *    const outfile,
     int plane, bytes;
     long retbytes = 0;
 
-    bytes = RowBytes(cols);
+    bytes = ilbm_rowByteCt(cols);
 
     /* Encode and write raw bytes in plane-interleaved form. */
     for( plane = 0; plane < nPlanes; plane++ ) {
@@ -1145,7 +1145,7 @@ ppmToHam(FILE *  const ifP,
     nPlanes = hamplanes;
     cmapsize = colors * 3;
 
-    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
+    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * ilbm_rowByteCt(cols);
     if( DO_COMPRESS ) {
         bodysize = doHamBody(ifP, NULL, cols, rows, maxval,
                                hammaxval, nPlanes, colormap, colors);
@@ -1276,7 +1276,7 @@ ppmToDeep(FILE * const ifP,
 
     nPlanes = 3*bitspercolor;
 
-    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
+    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * ilbm_rowByteCt(cols);
     if( DO_COMPRESS ) {
         bodysize = doDeepBody(ifP, NULL, cols, rows, maxval, bitspercolor);
         if( bodysize > oldsize )
@@ -1389,7 +1389,7 @@ ppmToDcol(FILE *        const ifP,
 
     nPlanes = dcol->r + dcol->g + dcol->b;
 
-    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
+    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * ilbm_rowByteCt(cols);
     if( DO_COMPRESS ) {
         bodysize = doDcolBody(ifP, NULL, cols, rows, maxval, dcol);
         if( bodysize > oldsize )
@@ -1563,7 +1563,7 @@ ppmToStd(FILE *  const ifP,
     if( sortcmap )
         ppm_sortcolorrow(colormap, colors, PPM_STDSORT);
 
-    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
+    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * ilbm_rowByteCt(cols);
     if( DO_COMPRESS ) {
         bodysize = doStdBody(ifP, NULL, cols, rows, maxval, colormap,
                              colors, nPlanes);
@@ -2274,11 +2274,13 @@ main(int argc, char ** argv) {
 
     if (mode != MODE_CMAP) {
         unsigned int i;
-        MALLOCARRAY_NOFAIL(coded_rowbuf, RowBytes(cols));
-        for (i = 0; i < RowBytes(cols); ++i)
+        MALLOCARRAY_NOFAIL(coded_rowbuf, ilbm_rowByteCt(cols));
+        for (i = 0; i < ilbm_rowByteCt(cols); ++i)
             coded_rowbuf[i] = 0;
         if (DO_COMPRESS)
-            pm_rlenc_allocoutbuf(&compr_rowbuf, RowBytes(cols), PM_RLE_PACKBITS);
+            pm_rlenc_allocoutbuf(&compr_rowbuf,
+                                 ilbm_rowByteCt(cols),
+                                 PM_RLE_PACKBITS);
     }
 
     switch (mode) {
