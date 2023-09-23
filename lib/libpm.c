@@ -442,10 +442,18 @@ pm_maxvaltobits(int const maxval) {
     assert(false);
 }
 
+
+
 int
-pm_bitstomaxval(int const bits) {
-    return ( 1 << bits ) - 1;
+pm_bitstomaxval(int const bitCt) {
+
+    if (bitCt > 16)
+        pm_error("Bits per sample %u too large.  16 is maximum acceptable",
+                 bitCt);
+
+    return (1 << bitCt) - 1;
 }
+
 
 
 unsigned int PURE_FN_ATTR
