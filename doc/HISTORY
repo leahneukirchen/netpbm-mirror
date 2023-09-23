@@ -58,7 +58,9 @@ not yet  BJH  Release 11.04.00
               pgmtexture: Fix bug: ignores -d.  Introduced in Netpbm 10.56
               (September 2011).
 
-              xwdtopnm: Fix spurious output with really wide/deep rows.
+              xwdtopnm Fix spurious output with really wide/deep rows.
+
+              imgtoppm: Fix spurious output with really wide/deep rows.
 
               pbmtopgm: Fix error message for excessive -width.
 

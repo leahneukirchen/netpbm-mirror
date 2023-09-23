@@ -13,9 +13,10 @@
 */
 
 #include <stdbool.h>
+#include <limits.h>
 #include <string.h>
-#include "nstring.h"
 
+#include "nstring.h"
 #include "ppm.h"
 
 
@@ -30,7 +31,6 @@ main(int argc, const char ** argv) {
     unsigned int rows;
     pixval maxval;
     unsigned int cmaplen;
-    int len;
     bool gotAt, gotCm, gotPd;
     unsigned char buf[4096];
 
@@ -42,7 +42,7 @@ main(int argc, const char ** argv) {
         ifP = stdin;
 
     if (argc-1 > 1)
-        pm_error("Too many arguments (%d).  "
+        pm_error("Too many arguments (%u).  "
                  "The only possible argument is the input file name", argc-1);
 
     /* Get signature. */
@@ -55,6 +55,8 @@ main(int argc, const char ** argv) {
     gotPd = false; /* initial value */
     while (fread( buf, 2, 1, ifP) == 1) {
         if (strneq((char*) buf, "AT", 2)) {
+            unsigned int len;
+
             if (fread(buf, 8, 1, ifP) != 1)
                 pm_error("bad attributes header");
             buf[8] = '\0';
@@ -63,10 +65,18 @@ main(int argc, const char ** argv) {
                 pm_error("bad attributes buf");
             buf[len] = '\0';
             sscanf((char*) buf, "%4u%4u%4u", &cols, &rows, &cmaplen);
+            if (cols > UINT_MAX/rows)
+                pm_message("height (%u) and width (%u) in header are "
+                           "uncomputably large", rows, cols);
+            if (cmaplen > UINT_MAX/3)
+                pm_message("colormap length (%u) in header is "
+                           "uncomputably large", cmaplen);
             maxval = 255;
             gotAt = true;
         } else if (strneq((char*) buf, "CM", 2)) {
             unsigned int i;
+            unsigned int len;
+
             if (!gotAt)
                 pm_error("missing attributes header");
             if (fread(buf, 8, 1, ifP) != 1)
@@ -75,19 +85,20 @@ main(int argc, const char ** argv) {
             len = atoi((char*) buf);
             if (fread(buf, len, 1, ifP) != 1)
                 pm_error("bad colormap buf");
-            if (cmaplen * 3 != len) {
+            if (len != cmaplen * 3) {
                 pm_message(
-                    "cmaplen (%d) and colormap buf length (%d) do not match",
+                    "cmaplen (%u) and colormap buf length (%u) do not match",
                     cmaplen, len);
-                if (cmaplen * 3 < len)
+                if (len > cmaplen * 3)
                     len = cmaplen * 3;
-                else if (cmaplen * 3 > len)
+                else
                     cmaplen = len / 3;
             }
             for (i = 0; i < len; i += 3)
                 PPM_ASSIGN(colormap[i / 3], buf[i], buf[i + 1], buf[i + 2]);
             gotCm = true;
         } else if (strneq((char*) buf, "PD", 2)) {
+            unsigned int len;
             unsigned int row;
 
             if (fread(buf, 8, 1, ifP) != 1)
@@ -96,7 +107,7 @@ main(int argc, const char ** argv) {
             len = atoi((char*) buf);
             if (len != cols * rows)
                 pm_message(
-                    "pixel data length (%d) does not match image size (%d)",
+                    "pixel data length (%u) does not match image size (%u)",
                     len, cols * rows);
 
             ppm_writeppminit(stdout, cols, rows, maxval, 0);
@@ -128,3 +139,6 @@ main(int argc, const char ** argv) {
     */
     return 0;
 }
+
+
+
