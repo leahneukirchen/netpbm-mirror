@@ -320,7 +320,7 @@ draw_span(uint32_t           const base,
         fbi->z.buffer[j] = (fbi->z.buffer[j] & ~d_mask) | (d & d_mask);
 
         for (l = 0; l < z; l++) {
-	    varying const newval = multiply_varyings(attribs[l], inverse_w);
+            varying const newval = multiply_varyings(attribs[l], inverse_w);
 
             fbi->img.buffer[k + l] =
                 (fbi->img.buffer[k + l] & ~d_mask) |

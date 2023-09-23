@@ -52,31 +52,31 @@ main( argc, argv )
 
     /* Check for flags. */
     while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-	{
-	if ( pm_keymatch( argv[argn], "-s1", 3 ) )
-	    style = 1;
-	else if ( pm_keymatch( argv[argn], "-s2", 3 ) )
-	    style = 2;
-	else
-	    pm_usage( usage );
-	argn++;
-	}
+        {
+        if ( pm_keymatch( argv[argn], "-s1", 3 ) )
+            style = 1;
+        else if ( pm_keymatch( argv[argn], "-s2", 3 ) )
+            style = 2;
+        else
+            pm_usage( usage );
+        argn++;
+        }
 
     if ( argn + 3 < argc )
-	pm_usage( usage );
+        pm_usage( usage );
     typecode = argv[argn];
     manufcode = argv[argn + 1];
     prodcode = argv[argn + 2];
     argn += 3;
 
     if ( argn != argc )
-	pm_usage( usage );
+        pm_usage( usage );
 
     if ( strlen( typecode ) != 1 || ( ! alldig( typecode ) ) ||
-	 strlen( manufcode ) != 5 || ( ! alldig ( manufcode ) ) ||
-	 strlen( prodcode ) != 5 || ( ! alldig ( prodcode ) ) )
-	pm_error(
-	    "type code must be one digit, and\n    manufacturer and product codes must be five digits" );
+         strlen( manufcode ) != 5 || ( ! alldig ( manufcode ) ) ||
+         strlen( prodcode ) != 5 || ( ! alldig ( prodcode ) ) )
+        pm_error(
+            "type code must be one digit, and\n    manufacturer and product codes must be five digits" );
     p = typecode[0] - '0';
     lc0 = manufcode[0] - '0';
     lc1 = manufcode[1] - '0';
@@ -95,17 +95,17 @@ main( argc, argv )
     bits = pbm_allocarray( cols, rows );
 
     (void) rect( bits, 0, 0, rows, cols, PBM_WHITE );
-    
+
     row = MARGIN;
     digrow = row + SHORT_HEIGHT;
     col = MARGIN;
     digcolofs = ( LINES_WIDTH - DIGIT_WIDTH ) / 2;
 
     if ( style == 1 )
-	putdigit( p, bits, digrow, col - DIGIT_WIDTH - LINE1_WIDTH );
+        putdigit( p, bits, digrow, col - DIGIT_WIDTH - LINE1_WIDTH );
     else if ( style == 2 )
-	putdigit(
-	    p, bits, row + SHORT_HEIGHT / 2, col - DIGIT_WIDTH - LINE1_WIDTH );
+        putdigit(
+            p, bits, row + SHORT_HEIGHT / 2, col - DIGIT_WIDTH - LINE1_WIDTH );
     col = rect( bits, row, col, TALL_HEIGHT, LINE1_WIDTH, PBM_BLACK );
     col = rect( bits, row, col, TALL_HEIGHT, LINE1_WIDTH, PBM_WHITE );
     col = rect( bits, row, col, TALL_HEIGHT, LINE1_WIDTH, PBM_BLACK );
@@ -140,7 +140,7 @@ main( argc, argv )
     col = rect( bits, row, col, TALL_HEIGHT, LINE1_WIDTH, PBM_WHITE );
     col = rect( bits, row, col, TALL_HEIGHT, LINE1_WIDTH, PBM_BLACK );
     if ( style == 1 )
-	putdigit( sum, bits, digrow, col + LINE1_WIDTH );
+        putdigit( sum, bits, digrow, col + LINE1_WIDTH );
 
     pbm_writepbm( stdout, bits, cols, rows, 0 );
     pm_close( stdout );
@@ -153,8 +153,8 @@ alldig( cp )
     char* cp;
     {
     for ( ; *cp != '\0'; cp++ )
-	if ( *cp < '0' || *cp > '9' )
-	    return 0;
+        if ( *cp < '0' || *cp > '9' )
+            return 0;
     return 1;
     }
 
@@ -399,7 +399,7 @@ putdigit( d, bits, row0, col0 )
             {0,0,0,1,1,1,1,1,1,1,1,0,0,0},
             {0,0,0,0,0,0,0,0,0,0,0,0,0,0},
             {0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-        }, 
+        },
         /* 9 */
         {
             {0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -425,92 +425,92 @@ putdigit( d, bits, row0, col0 )
             {0,0,0,0,0,1,1,0,0,0,0,0,0,0},
             {0,0,0,0,0,0,0,0,0,0,0,0,0,0},
             {0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-        } 
+        }
     };
 
     for ( row = 0; row < DIGIT_HEIGHT; row++ )
-	for ( col = 0; col < DIGIT_WIDTH; col++ )
-	    bits[row0 + row][col0 + col] = digits[d][row][col];
+        for ( col = 0; col < DIGIT_WIDTH; col++ )
+            bits[row0 + row][col0 + col] = digits[d][row][col];
     }
 
 static int
 addlines( int d, bit** bits, int row0, int col0, int height, bit color )
     {
     switch ( d )
-	{
-	case 0:
-	col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	break;
+        {
+        case 0:
+        col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        break;
 
-	case 1:
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	break;
+        case 1:
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        break;
 
-	case 2:
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	break;
+        case 2:
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        break;
 
-	case 3:
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE4_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	break;
+        case 3:
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE4_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        break;
 
-	case 4:
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	break;
+        case 4:
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        break;
 
-	case 5:
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	break;
+        case 5:
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        break;
 
-	case 6:
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE4_WIDTH, 1 - color );
-	break;
+        case 6:
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE4_WIDTH, 1 - color );
+        break;
 
-	case 7:
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE3_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	break;
+        case 7:
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE3_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        break;
 
-	case 8:
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE3_WIDTH, 1 - color );
-	break;
+        case 8:
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE3_WIDTH, 1 - color );
+        break;
 
-	case 9:
-	col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
-	col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
-	col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
-	break;
+        case 9:
+        col0 = rect( bits, row0, col0, height, LINE3_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, 1 - color );
+        col0 = rect( bits, row0, col0, height, LINE1_WIDTH, color );
+        col0 = rect( bits, row0, col0, height, LINE2_WIDTH, 1 - color );
+        break;
 
-	default:
-	pm_error( "can't happen" );
-	}
+        default:
+        pm_error( "can't happen" );
+        }
 
     return col0;
     }
@@ -521,7 +521,7 @@ rect( bit** bits, int row0, int col0, int height, int width, bit color )
     int row, col;
 
     for ( row = row0; row < row0 + height; row++ )
-	for ( col = col0; col < col0 + width; col++ )
-	    bits[row][col] = color;
+        for ( col = col0; col < col0 + width; col++ )
+            bits[row][col] = color;
     return col0 + width;
     }

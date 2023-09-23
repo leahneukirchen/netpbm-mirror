@@ -31,11 +31,11 @@ static void
 parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-  Convert program invocation arguments (argc,argv) into a format the 
+  Convert program invocation arguments (argc,argv) into a format the
   program can use easily, struct cmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
-  Note that some string information we return as *cmdlineP is in the storage 
+  Note that some string information we return as *cmdlineP is in the storage
   argv[] points to.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
@@ -49,11 +49,11 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0,   "tupletype",  OPT_STRING, &cmdlineP->tupletype, 
+    OPTENT3(0,   "tupletype",  OPT_STRING, &cmdlineP->tupletype,
             &tupletypeSpec,      0);
-    OPTENT3(0,   "maxval",     OPT_UINT,   &cmdlineP->maxval, 
+    OPTENT3(0,   "maxval",     OPT_UINT,   &cmdlineP->maxval,
             &maxvalSpec,         0);
-    OPTENT3(0,   "sigma",      OPT_FLOAT,  &cmdlineP->sigma, 
+    OPTENT3(0,   "sigma",      OPT_FLOAT,  &cmdlineP->sigma,
             &sigmaSpec,          0);
     OPTENT3(0,   "maximize",   OPT_FLAG,   NULL,
             &cmdlineP->maximize, 0);
@@ -75,12 +75,12 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("The tuple type you specified is too long.  "
                      "Maximum %u characters.",
                      (unsigned)sizeof(pam.tuple_type)-1);
-    }        
+    }
 
     if (!sigmaSpec)
         pm_error("You must specify the -sigma option.");
     else if (cmdlineP->sigma <= 0.0)
-        pm_error("-sigma must be positive.  You specified %f", 
+        pm_error("-sigma must be positive.  You specified %f",
                  cmdlineP->sigma);
 
     if (!maxvalSpec)
@@ -91,7 +91,7 @@ parseCommandLine(int argc, const char ** argv,
                      "Maximum is %u", cmdlineP->maxval, PNM_OVERALLMAXVAL);
         if (cmdlineP->maxval < 1)
             pm_error("-maxval must be at least 1");
-    }    
+    }
 
     if (oversampleSpec) {
         if (cmdlineP->oversample < 1)
@@ -164,7 +164,7 @@ pixelValue(unsigned int const width,
   The gaussian function has standard deviation 'sigma' and amplitude 1.
 -----------------------------------------------------------------------------*/
     double const offset = 1.0 / (subpixDivision * 2);
-    double const y0     = (double)row + offset; 
+    double const y0     = (double)row + offset;
     double const x0     = (double)col + offset;
 
     double const subpixSize = 1.0 / subpixDivision;
@@ -236,7 +236,7 @@ maximumKernelValue(double **    const kernel,
        we know the maximum value is at the center.
     */
     return kernel[height/2][width/2];
-}        
+}
 
 
 
@@ -250,13 +250,13 @@ totalKernelValue(double **    const kernel,
 
     for (row = 0, total = 0.0; row < height; ++row) {
         unsigned int col;
-        
+
         for (col = 0; col < width; ++col)
             total += kernel[row][col];
     }
 
     return total;
-}        
+}
 
 
 
@@ -311,7 +311,7 @@ writePam(double **    const kernel,
         unsigned int col;
         for (col = 0; col < pam.width; ++col) {
             tuplerown[col][0] = kernel[row][col] / normalizer;
-        
+
             assert(tuplerown[col][0] <= 1.0);
         }
         pnm_writepamrown(&pam, tuplerown);
@@ -319,7 +319,7 @@ writePam(double **    const kernel,
 
     pnm_freepamrown(tuplerown);
 }
-    
+
 
 
 int
@@ -327,7 +327,7 @@ main(int argc, const char **argv) {
     struct CmdlineInfo cmdline;
     double ** kernel;
     double    normalizer;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -344,6 +344,6 @@ main(int argc, const char **argv) {
              normalizer, stdout);
 
     pm_freearray2((void **)kernel);
-    
+
     return 0;
 }
