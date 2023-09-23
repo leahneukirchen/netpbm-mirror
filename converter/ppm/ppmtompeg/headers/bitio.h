@@ -1,8 +1,8 @@
 /*===========================================================================*
- * bitio.h								     *
- *									     *
- *	bitwise input/output						     *
- *									     *
+ * bitio.h                                                                   *
+ *                                                                           *
+ *      bitwise input/output                                                 *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -26,7 +26,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/charlie-brown/project/mm/mpeg/mpeg_dist/mpeg_encode/headers/RCS/bitio.h,v 1.8 1995/01/19 23:54:37 eyhung Exp $
  *  $Log: bitio.h,v $
  * Revision 1.8  1995/01/19  23:54:37  eyhung
@@ -70,9 +70,9 @@
  *===========*/
 
 #define WORDS_PER_BUCKET 128
-#define MAXBITS_PER_BUCKET	(WORDS_PER_BUCKET * 32)
-#define	MAX_BUCKETS	128
-#define MAX_BITS	MAX_BUCKETS*MAXBITS_PER_BUCKET
+#define MAXBITS_PER_BUCKET      (WORDS_PER_BUCKET * 32)
+#define MAX_BUCKETS     128
+#define MAX_BITS        MAX_BUCKETS*MAXBITS_PER_BUCKET
 
 
 /*=======================*
@@ -87,8 +87,8 @@ typedef struct bitBucket {
 
 typedef struct _BitBucket {
     int totalbits;
-    int	cumulativeBits;
-    int	bitsWritten;
+    int cumulativeBits;
+    int bitsWritten;
     FILE    *filePtr;
     ActualBucket *firstPtr;
     ActualBucket *lastPtr;
@@ -99,20 +99,20 @@ typedef struct _BitBucket {
  * MACROS *
  *========*/
 
-#define	SET_ITH_BIT(bits, i)	(bits |= (1 << (i)))
-#define	GET_ITH_BIT(bits, i)	(bits & (1 << (i)))
+#define SET_ITH_BIT(bits, i)    (bits |= (1 << (i)))
+#define GET_ITH_BIT(bits, i)    (bits & (1 << (i)))
 
 
 /*===============================*
  * EXTERNAL PROCEDURE prototypes *
  *===============================*/
 
-void	    
+void
 Bitio_Free(BitBucket * const bbPtr);
 
 void
-Bitio_Write(BitBucket * const bbPtr, 
-            uint32      const bits, 
+Bitio_Write(BitBucket * const bbPtr,
+            uint32      const bits,
             int         const nbits);
 
 void
@@ -131,7 +131,7 @@ void
 Bitio_Close(BitBucket * const bbPtr);
 
 void
-Bitio_WriteToSocket(BitBucket * const bbPtr, 
+Bitio_WriteToSocket(BitBucket * const bbPtr,
                     int         const socket);
 
 #endif /* BIT_IO_INCLUDED */

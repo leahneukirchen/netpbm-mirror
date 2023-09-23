@@ -106,10 +106,10 @@ Dump(BitBucket * const bbPtr) {
         for (i = 0; i <= ptr->currword; ++i)
             buffer[i] = pm_bigendFromUint32(ptr->bits[i]);
 
-        nitems = fwrite(buffer, sizeof(buffer[0]), ptr->currword + 1, 
+        nitems = fwrite(buffer, sizeof(buffer[0]), ptr->currword + 1,
                         bbPtr->filePtr);
         if (nitems != ptr->currword+1) {
-            fprintf(stderr, 
+            fprintf(stderr,
                     "Whoa!  Trouble writing %u words (wrote %u words)!  "
                     "Game over, dude!\n",
                     ptr->currword+1, nitems);
@@ -170,7 +170,7 @@ Bitio_New(FILE * const filePtr) {
     bbPtr->firstPtr->bitsleft = MAXBITS_PER_BUCKET;
     bbPtr->firstPtr->bitsleftcur = 32;
     bbPtr->firstPtr->currword = 0;
-    memset((char *)bbPtr->firstPtr->bits, 0, 
+    memset((char *)bbPtr->firstPtr->bits, 0,
            sizeof(uint32) * WORDS_PER_BUCKET);
 
     return bbPtr;
@@ -182,7 +182,7 @@ BitBucket *
 Bitio_New_Filename(const char * const fileName) {
 
     FILE * outputFile;
-    
+
     outputFile = fopen(fileName, "wb");
     if (outputFile == NULL)
         pm_error("Could not open output file '%s'.  "
@@ -232,14 +232,14 @@ Bitio_Free(BitBucket * const bbPtr) {
  *
  *===========================================================================*/
 void
-Bitio_Write(BitBucket * const bbPtr, 
-            uint32      const bits_arg, 
+Bitio_Write(BitBucket * const bbPtr,
+            uint32      const bits_arg,
             int         const nbits) {
 
     register struct bitBucket *lastPtr, *newPtr;
     register int delta;
     uint32 bits;
-    
+
     bits=bits_arg;
     assert(nbits <= 32 && nbits >= 0);
 
@@ -261,7 +261,7 @@ Bitio_Write(BitBucket * const bbPtr,
          * there's not enough room in the current bucket, so we're
          * going to have to allocate another bucket
          */
-        newPtr = lastPtr->nextPtr = (struct bitBucket *) 
+        newPtr = lastPtr->nextPtr = (struct bitBucket *)
             malloc(sizeof(struct bitBucket));
         ERRCHK(newPtr, "malloc");
         newPtr->nextPtr = NULL;
@@ -302,7 +302,7 @@ Bitio_Write(BitBucket * const bbPtr,
              */
             lastPtr->bits[lastPtr->currword] |= (bits >> delta);
             lastPtr->currword++;
-            lastPtr->bits[lastPtr->currword] = 
+            lastPtr->bits[lastPtr->currword] =
                 (bits & lower_mask[delta]) << (32 - delta);
             lastPtr->bitsleftcur = 32 - delta;
         } else {
@@ -371,12 +371,12 @@ Bitio_Flush(BitBucket * const bbPtr) {
             if (nitems != numWords) {
                 if (ferror(bbPtr->filePtr))
                     pm_error("Error writing %u words to flush a bit bucket.  "
-                             "fwrite() gives errno %d (%s)", 
+                             "fwrite() gives errno %d (%s)",
                              numWords, errno, strerror(errno));
                 else
                     pm_error("Problem writing %u words "
                              "to flush a bit bucket.  "
-                             "Only %d words transferred.", 
+                             "Only %d words transferred.",
                              numWords, nitems);
             }
 
@@ -439,7 +439,7 @@ Bitio_Close(BitBucket * const bbPtr) {
  *
  *===========================================================================*/
 void
-Bitio_WriteToSocket(BitBucket * const bbPtr, 
+Bitio_WriteToSocket(BitBucket * const bbPtr,
                     int         const socket) {
 
     struct bitBucket *ptr, *tempPtr;

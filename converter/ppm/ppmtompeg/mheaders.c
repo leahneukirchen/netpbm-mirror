@@ -1,17 +1,17 @@
 /*===========================================================================*
- * mheaders.c								     *
- *									     *
- *	Procedures to generate MPEG headers				     *
- *									     *
- * EXPORTED PROCEDURES:							     *
- *	Mhead_GenPictureHeader						     *
- *	Mhead_GenSequenceHeader						     *
- *	Mhead_GenSequenceEnder						     *
- *	Mhead_GenGOPHeader						     *
- *	Mhead_GenSliceHeader						     *
- *	Mhead_GenSliceEnder						     *
- *	Mhead_GenMBHeader						     *
- *									     *
+ * mheaders.c                                                                *
+ *                                                                           *
+ *      Procedures to generate MPEG headers                                  *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
+ *      Mhead_GenPictureHeader                                               *
+ *      Mhead_GenSequenceHeader                                              *
+ *      Mhead_GenSequenceEnder                                               *
+ *      Mhead_GenGOPHeader                                                   *
+ *      Mhead_GenSliceHeader                                                 *
+ *      Mhead_GenSliceEnder                                                  *
+ *      Mhead_GenMBHeader                                                    *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -254,7 +254,7 @@ static uint32 mbPatTable[][2] = {
     {0x4, 8},
     {0x4, 9},
     {0x7, 3},
-    {0xa, 5},	/* grrr... 61, 62, 63 added - Kevin */
+    {0xa, 5},   /* grrr... 61, 62, 63 added - Kevin */
     {0x8, 5},
     {0xc, 6}
 };
@@ -270,9 +270,9 @@ static uint32 mbPatTable[][2] = {
 #define PICT_START_CODE 0x00000100
 #define SLICE_BASE_CODE 0x00000100
 
-#define SEQ_END_CODE	0x000001b7
+#define SEQ_END_CODE    0x000001b7
 
-/* not static anymore because information is used for computing frame rate 
+/* not static anymore because information is used for computing frame rate
  * and for statistics */
 const double VidRateNum[9]={1.0, 23.976, 24.0, 25.0, 29.97, 30.0,
                              50.0 ,59.94, 60.0};
@@ -286,10 +286,10 @@ const double VidRateNum[9]={1.0, 23.976, 24.0, 25.0, 29.97, 30.0,
  *
  * GenMBType
  *
- *	generate macroblock type with given attributes
- *	append result to the specified bitstream
+ *      generate macroblock type with given attributes
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -433,10 +433,10 @@ GenMBType(bbPtr, pict_code_type, mb_quant, motion_forw, motion_back,
  *
  * GenMotionCode
  *
- *	generate motion vector output with given value
- *	append result to the specified bitstream
+ *      generate motion vector output with given value
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -463,10 +463,10 @@ GenMotionCode(BitBucket * const bbPtr,
  *
  * GenBlockPattern
  *
- *	generate macroblock pattern output
- *	append result to the specified bitstream
+ *      generate macroblock pattern output
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -489,10 +489,10 @@ GenBlockPattern(bbPtr, mb_pattern)
  *
  * GenMBAddrIncr
  *
- *	generate macroblock address increment output
- *	append result to the specified bitstream
+ *      generate macroblock address increment output
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -516,10 +516,10 @@ GenMBAddrIncr(bbPtr, addr_incr)
  *
  * GenPictHead
  *
- *	generate picture header with given attributes
- *	append result to the specified bitstream
+ *      generate picture header with given attributes
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -557,7 +557,7 @@ GenPictHead(bbPtr, temp_ref, code_type, vbv_delay, full_pel_forw_flag,
     Bitio_Write(bbPtr, code_type, 3);
 
     /* vbv_delay. */
-    vbv_delay = 0xffff;		    /* see page 36 (section 2.4.3.4) */
+    vbv_delay = 0xffff;             /* see page 36 (section 2.4.3.4) */
     Bitio_Write(bbPtr, vbv_delay, 16);
 
     if ((code_type == 2) || (code_type == 3)) {
@@ -633,9 +633,9 @@ GenPictHead(bbPtr, temp_ref, code_type, vbv_delay, full_pel_forw_flag,
  *
  * SetGOPStartTime
  *
- *	sets the start frame of the GOP; to be used with GenPictureHeader
+ *      sets the start frame of the GOP; to be used with GenPictureHeader
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -653,10 +653,10 @@ SetGOPStartTime(index)
  *
  * Mhead_GenPictureHeader
  *
- *	generate picture header with given frame type and picture count
- *	append result to the specified bitstream
+ *      generate picture header with given frame type and picture count
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -668,23 +668,23 @@ Mhead_GenPictureHeader(bbPtr, frameType, pictCount, f_code)
     int pictCount;
     int f_code;
 {
-    int	    temporalRef;
+    int     temporalRef;
 
     if ( pictCount >= gopStartFrame ) {
-	temporalRef = (pictCount-gopStartFrame);
+        temporalRef = (pictCount-gopStartFrame);
     } else {
-	temporalRef = (pictCount-lastGOPStart);
+        temporalRef = (pictCount-lastGOPStart);
     }
     temporalRef = (temporalRef % 1024);
-	
+
     DBG_PRINT(("Picture Header\n"));
     GenPictHead(bbPtr, temporalRef, frameType,
-		0 /* vbv_delay */,
-		pixelFullSearch /* full_pel_forw_flag */,
-		f_code /* forw_f_code */,
-		pixelFullSearch /* full_pel_back_flag */,
-		f_code /* back_f_code */,
-		NULL, 0, NULL, 0, NULL, 0);
+                0 /* vbv_delay */,
+                pixelFullSearch /* full_pel_forw_flag */,
+                f_code /* forw_f_code */,
+                pixelFullSearch /* full_pel_back_flag */,
+                f_code /* back_f_code */,
+                NULL, 0, NULL, 0, NULL, 0);
 }
 
 
@@ -692,27 +692,27 @@ Mhead_GenPictureHeader(bbPtr, frameType, pictCount, f_code)
  *
  * Mhead_GenSequenceHeader
  *
- *	generate sequence header with given attributes
- *	append result to the specified bitstream
+ *      generate sequence header with given attributes
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
 void
-Mhead_GenSequenceHeader(BitBucket *   const bbPtr, 
-                        uint32        const hsize, 
+Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
+                        uint32        const hsize,
                         uint32        const vsize,
-                        int32         const pratio, 
-                        int32         const pict_rate, 
+                        int32         const pratio,
+                        int32         const pict_rate,
                         int32         const bit_rate_arg,
-                        int32         const buf_size_arg, 
-                        int32         const c_param_flag_arg, 
-                        const int32 * const iq_matrix, 
+                        int32         const buf_size_arg,
+                        int32         const c_param_flag_arg,
+                        const int32 * const iq_matrix,
                         const int32 * const niq_matrix,
-                        uint8 *       const ext_data, 
-                        int32         const ext_data_size, 
+                        uint8 *       const ext_data,
+                        int32         const ext_data_size,
                         uint8 *       const user_data,
                         int32         const user_data_size) {
 
@@ -774,7 +774,7 @@ Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
         buf_size = buf_size_arg;
 
     buf_size = (buf_size + (16*1024 - 1)) / (16*1024);
-    if (buf_size>=0x400) 
+    if (buf_size>=0x400)
         buf_size=0x3ff;
     Bitio_Write(bbPtr, buf_size, 10);
 
@@ -853,10 +853,10 @@ Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
  *
  * Mhead_GenSequenceEnder
  *
- *	generate sequence ender
- *	append result to the specified bitstream
+ *      generate sequence ender
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -873,18 +873,18 @@ Mhead_GenSequenceEnder(bbPtr)
  *
  * Mhead_GenGOPHeader
  *
- *	generate GOP header with specified attributes
- *	append result to the specified bitstream
+ *      generate GOP header with specified attributes
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
 void
 Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
-		   closed_gop, broken_link, ext_data, ext_data_size,
-		   user_data, user_data_size)
+                   closed_gop, broken_link, ext_data, ext_data_size,
+                   user_data, user_data_size)
     BitBucket *bbPtr;
     int32 drop_frame_flag;
     int32 tc_hrs;
@@ -903,13 +903,13 @@ Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
     /* Write gop start code. */
     Bitio_Write(bbPtr, GOP_START_CODE, 32);
 
-		/* Construct and write timecode. */
+                /* Construct and write timecode. */
 
     /* Drop frame flag. */
     if (drop_frame_flag) {
-	Bitio_Write(bbPtr, 0x01, 1);
+        Bitio_Write(bbPtr, 0x01, 1);
     } else {
-	Bitio_Write(bbPtr, 0x00, 1);
+        Bitio_Write(bbPtr, 0x00, 1);
     }
 
     /* Time code hours. */
@@ -930,16 +930,16 @@ Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
 
     /* Closed gop flag. */
     if (closed_gop) {
-	Bitio_Write(bbPtr, 0x01, 1);
+        Bitio_Write(bbPtr, 0x01, 1);
     } else {
-	Bitio_Write(bbPtr, 0x00, 1);
+        Bitio_Write(bbPtr, 0x00, 1);
     }
 
     /* Broken link flag. */
     if (broken_link) {
-	Bitio_Write(bbPtr, 0x01, 1);
+        Bitio_Write(bbPtr, 0x01, 1);
     } else {
-	Bitio_Write(bbPtr, 0x00, 1);
+        Bitio_Write(bbPtr, 0x00, 1);
     }
 
     /* next start code */
@@ -948,21 +948,21 @@ Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
     /* Write ext data if present. */
 
     if (ext_data != NULL) {
-	Bitio_Write(bbPtr, EXT_START_CODE, 32);
+        Bitio_Write(bbPtr, EXT_START_CODE, 32);
 
-	for (i = 0; i < ext_data_size; i++) {
-	    Bitio_Write(bbPtr, ext_data[i], 8);
-	}
-	Bitio_BytePad(bbPtr);
+        for (i = 0; i < ext_data_size; i++) {
+            Bitio_Write(bbPtr, ext_data[i], 8);
+        }
+        Bitio_BytePad(bbPtr);
     }
     /* Write user data if present. */
     if (user_data != NULL) {
-	Bitio_Write(bbPtr, USER_START_CODE, 32);
+        Bitio_Write(bbPtr, USER_START_CODE, 32);
 
-	for (i = 0; i < user_data_size; i++) {
-	    Bitio_Write(bbPtr, user_data[i], 8);
-	}
-	Bitio_BytePad(bbPtr);
+        for (i = 0; i < user_data_size; i++) {
+            Bitio_Write(bbPtr, user_data[i], 8);
+        }
+        Bitio_BytePad(bbPtr);
     }
 }
 
@@ -971,10 +971,10 @@ Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
  *
  * Mhead_GenSliceHeader
  *
- *	generate slice header with specified attributes
- *	append result to the specified bitstream
+ *      generate slice header with specified attributes
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -999,10 +999,10 @@ Mhead_GenSliceHeader(bbPtr, verticalPos, qscale, extra_info, extra_info_size)
     /* Extra bit slice info. */
 
     if (extra_info != NULL) {
-	for (i = 0; i < extra_info_size; i++) {
-	    Bitio_Write(bbPtr, 0x01, 1);
-	    Bitio_Write(bbPtr, extra_info[i], 8);
-	}
+        for (i = 0; i < extra_info_size; i++) {
+            Bitio_Write(bbPtr, 0x01, 1);
+            Bitio_Write(bbPtr, extra_info[i], 8);
+        }
     }
 
     /* extra_bit_slice */
@@ -1014,10 +1014,10 @@ Mhead_GenSliceHeader(bbPtr, verticalPos, qscale, extra_info, extra_info_size)
  *
  * Mhead_GenSliceEnder
  *
- *	generate slice ender
- *	append result to the specified bitstream
+ *      generate slice ender
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -1034,20 +1034,20 @@ Mhead_GenSliceEnder(bbPtr)
  *
  * Mhead_GenMBHeader
  *
- *	generate macroblock header with given attributes
- *	append result to the specified bitstream
+ *      generate macroblock header with given attributes
+ *      append result to the specified bitstream
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
 void
 Mhead_GenMBHeader(bbPtr, pict_code_type, addr_incr, q_scale,
-		  forw_f_code, back_f_code, horiz_forw_r, vert_forw_r,
-		  horiz_back_r, vert_back_r, motion_forw, m_horiz_forw,
-		  m_vert_forw, motion_back, m_horiz_back, m_vert_back,
-		  mb_pattern, mb_intra)
+                  forw_f_code, back_f_code, horiz_forw_r, vert_forw_r,
+                  horiz_back_r, vert_back_r, motion_forw, m_horiz_forw,
+                  m_vert_forw, motion_back, m_horiz_back, m_vert_back,
+                  mb_pattern, mb_intra)
     BitBucket *bbPtr;
     uint32 pict_code_type;
     uint32 addr_incr;
@@ -1077,8 +1077,8 @@ if ( addr_incr != 1 )
 #endif
 
     while (addr_incr > 33) {
-	Bitio_Write(bbPtr, 0x008, 11);
-	addr_incr -= 33;
+        Bitio_Write(bbPtr, 0x008, 11);
+        addr_incr -= 33;
     }
 
     /* Generate addr incr code. */
@@ -1098,62 +1098,62 @@ if ( addr_incr != 1 )
 
     /* MB quant. */
     if (mb_quant) {
-	Bitio_Write(bbPtr, q_scale, 5);
+        Bitio_Write(bbPtr, q_scale, 5);
     }
     /* Forward predictive vector stuff. */
 
     if (motion_forw) {
-	int forw_f, forw_r_size;
+        int forw_f, forw_r_size;
 
-	forw_r_size = forw_f_code - 1;
-	forw_f = 1 << forw_r_size;	/* 1 > 0 */
-	if ((m_horiz_forw > 16*forw_f-1) || (m_horiz_forw < -16*forw_f)) {
-	  fprintf(stderr, "Illegal motion? %d %d\n", m_horiz_forw, 16*forw_f);
-	}
-	if ((m_vert_forw > 16*forw_f-1) || (m_vert_forw < -16*forw_f)) {
-	  fprintf(stderr, "Illegal motion? %d %d\n", m_vert_forw, 16*forw_f);
-	}
-	GenMotionCode(bbPtr, m_horiz_forw);
+        forw_r_size = forw_f_code - 1;
+        forw_f = 1 << forw_r_size;      /* 1 > 0 */
+        if ((m_horiz_forw > 16*forw_f-1) || (m_horiz_forw < -16*forw_f)) {
+          fprintf(stderr, "Illegal motion? %d %d\n", m_horiz_forw, 16*forw_f);
+        }
+        if ((m_vert_forw > 16*forw_f-1) || (m_vert_forw < -16*forw_f)) {
+          fprintf(stderr, "Illegal motion? %d %d\n", m_vert_forw, 16*forw_f);
+        }
+        GenMotionCode(bbPtr, m_horiz_forw);
 
-	if ((forw_f != 1) && (m_horiz_forw != 0)) {
-	    Bitio_Write(bbPtr, horiz_forw_r, forw_r_size);
-	}
-	GenMotionCode(bbPtr, m_vert_forw);
+        if ((forw_f != 1) && (m_horiz_forw != 0)) {
+            Bitio_Write(bbPtr, horiz_forw_r, forw_r_size);
+        }
+        GenMotionCode(bbPtr, m_vert_forw);
 
-	if ((forw_f != 1) && (m_vert_forw != 0)) {
-	    Bitio_Write(bbPtr, vert_forw_r, forw_r_size);
-	}
+        if ((forw_f != 1) && (m_vert_forw != 0)) {
+            Bitio_Write(bbPtr, vert_forw_r, forw_r_size);
+        }
     }
     /* Back predicted vector stuff. */
 
     if (motion_back) {
-	int back_f, back_r_size;
+        int back_f, back_r_size;
 
-	back_r_size = back_f_code - 1;
-	back_f = 1 << back_r_size;	/* 1 > 0 */
+        back_r_size = back_f_code - 1;
+        back_f = 1 << back_r_size;      /* 1 > 0 */
 
-	if ((m_horiz_back > 16*back_f-1) || (m_horiz_back < -16*back_f)) {
-	  fprintf(stderr, "Illegal motion? %d %d\n", m_horiz_back, 16*back_f);
-	}
-	if ((m_vert_back > 16*back_f-1) || (m_vert_back < -16*back_f)) {
-	  fprintf(stderr, "Illegal motion? %d %d\n", m_vert_back, 16*back_f);
-	}
+        if ((m_horiz_back > 16*back_f-1) || (m_horiz_back < -16*back_f)) {
+          fprintf(stderr, "Illegal motion? %d %d\n", m_horiz_back, 16*back_f);
+        }
+        if ((m_vert_back > 16*back_f-1) || (m_vert_back < -16*back_f)) {
+          fprintf(stderr, "Illegal motion? %d %d\n", m_vert_back, 16*back_f);
+        }
 
-	GenMotionCode(bbPtr, m_horiz_back);
+        GenMotionCode(bbPtr, m_horiz_back);
 
-	if ((back_f != 1) && (m_horiz_back != 0)) {
-	    Bitio_Write(bbPtr, horiz_back_r, back_r_size);
-	}
-	GenMotionCode(bbPtr, m_vert_back);
+        if ((back_f != 1) && (m_horiz_back != 0)) {
+            Bitio_Write(bbPtr, horiz_back_r, back_r_size);
+        }
+        GenMotionCode(bbPtr, m_vert_back);
 
-	if ((back_f != 1) && (m_vert_back != 0)) {
-	    Bitio_Write(bbPtr, vert_back_r, back_r_size);
-	}
+        if ((back_f != 1) && (m_vert_back != 0)) {
+            Bitio_Write(bbPtr, vert_back_r, back_r_size);
+        }
     }
     /* MB pattern. */
 
     if (mb_pattern) {
-	GenBlockPattern(bbPtr, mb_pattern);
+        GenBlockPattern(bbPtr, mb_pattern);
     }
 }
 

@@ -1,8 +1,8 @@
 /*===========================================================================*
- * mheaders.h								     *
- *									     *
- *	MPEG headers							     *
- *									     *
+ * mheaders.h                                                                *
+ *                                                                           *
+ *      MPEG headers                                                         *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -26,7 +26,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mm/mpeg/mpeg_dist/mpeg_encode/headers/RCS/mheaders.h,v 1.4 1995/03/27 19:29:24 smoot Exp $
  *  $Log: mheaders.h,v $
  * Revision 1.4  1995/03/27  19:29:24  smoot
@@ -61,40 +61,40 @@
  * EXTERNAL PROCEDURE prototypes *
  *===============================*/
 
-void	SetGOPStartTime (int index);
+void    SetGOPStartTime (int index);
 
 void
-Mhead_GenSequenceHeader(BitBucket *   const bbPtr, 
-                        uint32        const hsize, 
+Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
+                        uint32        const hsize,
                         uint32        const vsize,
-                        int32         const pratio, 
-                        int32         const pict_rate, 
+                        int32         const pratio,
+                        int32         const pict_rate,
                         int32         const bit_rate_arg,
-                        int32         const buf_size_arg, 
-                        int32         const c_param_flag_arg, 
-                        const int32 * const iq_matrix, 
+                        int32         const buf_size_arg,
+                        int32         const c_param_flag_arg,
+                        const int32 * const iq_matrix,
                         const int32 * const niq_matrix,
-                        uint8 *       const ext_data, 
-                        int32         const ext_data_size, 
+                        uint8 *       const ext_data,
+                        int32         const ext_data_size,
                         uint8 *       const user_data,
                         int32         const user_data_size);
 
-void	Mhead_GenSequenceEnder (BitBucket *bbPtr);
-void	Mhead_GenGOPHeader (BitBucket *bbPtr,
-	   int32 drop_frame_flag,
+void    Mhead_GenSequenceEnder (BitBucket *bbPtr);
+void    Mhead_GenGOPHeader (BitBucket *bbPtr,
+           int32 drop_frame_flag,
            int32 tc_hrs, int32 tc_min,
            int32 tc_sec, int32 tc_pict,
            int32 closed_gop, int32 broken_link,
            uint8 *ext_data, int32 ext_data_size,
            uint8 *user_data, int32 user_data_size);
-void	Mhead_GenPictureHeader (BitBucket *bbPtr, int frameType,
-					    int pictCount, int f_code);
-void	Mhead_GenSliceHeader (BitBucket *bbPtr, uint32 slicenum,
-					  uint32 qscale, uint8 *extra_info,
-					  uint32 extra_info_size);
-void	Mhead_GenSliceEnder (BitBucket *bbPtr);
-void	Mhead_GenMBHeader (BitBucket *bbPtr,
-	  uint32 pict_code_type, uint32 addr_incr,
+void    Mhead_GenPictureHeader (BitBucket *bbPtr, int frameType,
+                                            int pictCount, int f_code);
+void    Mhead_GenSliceHeader (BitBucket *bbPtr, uint32 slicenum,
+                                          uint32 qscale, uint8 *extra_info,
+                                          uint32 extra_info_size);
+void    Mhead_GenSliceEnder (BitBucket *bbPtr);
+void    Mhead_GenMBHeader (BitBucket *bbPtr,
+          uint32 pict_code_type, uint32 addr_incr,
           uint32 q_scale,
           uint32 forw_f_code, uint32 back_f_code,
           uint32 horiz_forw_r, uint32 vert_forw_r,

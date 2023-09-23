@@ -17,14 +17,14 @@ static int qtable[][8] = {
  *
  * mp_quant_block --
  *
- *	Quantizes a block -- removing information
- *	It's safe for out == in.
+ *      Quantizes a block -- removing information
+ *      It's safe for out == in.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Modifies the out block.
+ *      Modifies the out block.
  *
  *--------------------------------------------------------------
  */
@@ -32,13 +32,13 @@ void mp_quant_block(Block in, Block out) {
     int i;
 
     for(i=0;i<8;i++) {
-	out[i][0] = in[i][0] / qtable[i][0];
-	out[i][1] = in[i][1] / qtable[i][1];
-	out[i][2] = in[i][2] / qtable[i][2];
-	out[i][3] = in[i][3] / qtable[i][3];
-	out[i][4] = in[i][4] / qtable[i][4];
-	out[i][5] = in[i][5] / qtable[i][5];
-	out[i][6] = in[i][6] / qtable[i][6];
-	out[i][7] = in[i][7] / qtable[i][7];
+        out[i][0] = in[i][0] / qtable[i][0];
+        out[i][1] = in[i][1] / qtable[i][1];
+        out[i][2] = in[i][2] / qtable[i][2];
+        out[i][3] = in[i][3] / qtable[i][3];
+        out[i][4] = in[i][4] / qtable[i][4];
+        out[i][5] = in[i][5] / qtable[i][5];
+        out[i][6] = in[i][6] / qtable[i][6];
+        out[i][7] = in[i][7] / qtable[i][7];
     }
 }

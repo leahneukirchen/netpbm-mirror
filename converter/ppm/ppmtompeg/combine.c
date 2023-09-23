@@ -112,7 +112,7 @@ appendSpecifiedGopFiles(struct inputSource * const inputSourceP,
 
             ifP = fopen(fileName, "rb");
             if (ifP == NULL)
-                pm_message("ERROR:  Couldn't read file '%s'.  retry %u", 
+                pm_message("ERROR:  Couldn't read file '%s'.  retry %u",
                            fileName, nAttempts);
         }
         if (ifP) {
@@ -125,7 +125,7 @@ appendSpecifiedGopFiles(struct inputSource * const inputSourceP,
         pm_strfree(fileName);
         pm_strfree(inputFileName);
     }
-} 
+}
 
 
 
@@ -135,20 +135,20 @@ appendDefaultGopFiles(const char * const outputFileName,
 
     unsigned int fileSeq;
     bool endOfFiles;
-    
+
     for (fileSeq = 0, endOfFiles = FALSE; !endOfFiles; ++fileSeq) {
         const char * fileName;
         FILE * ifP;
 
         pm_asprintf(&fileName, "%s.gop.%u", outputFileName, fileSeq);
-        
+
         ifP = fopen(fileName, "rb");
         if (ifP == NULL)
             endOfFiles = TRUE;
         else {
             if (!realQuiet)
                 pm_message("appending file:  %s", fileName);
-            
+
             AppendFile(ofP, ifP);
         }
         pm_strfree(fileName);
@@ -159,7 +159,7 @@ appendDefaultGopFiles(const char * const outputFileName,
 
 void
 GOPsToMPEG(struct inputSource * const inputSourceP,
-           const char *         const outputFileName, 
+           const char *         const outputFileName,
            FILE *               const ofP) {
 /*----------------------------------------------------------------------------
    Combine individual GOPs (one per file) into a single MPEG sequence file.
@@ -174,13 +174,13 @@ GOPsToMPEG(struct inputSource * const inputSourceP,
         if (Fsize_x == 0 || Fsize_y == 0)
             Fsize_Note(0, x, y);
     }
-    
+
     bb = Bitio_New(ofP);
 
     Mhead_GenSequenceHeader(bb, Fsize_x, Fsize_y, /* pratio */ aspectRatio,
                             /* pict_rate */ frameRate, /* bit_rate */ -1,
                             /* buf_size */ -1, /*c_param_flag */ 1,
-                            /* iq_matrix */ customQtable, 
+                            /* iq_matrix */ customQtable,
                             /* niq_matrix */ customNIQtable,
                             /* ext_data */ NULL, /* ext_data_size */ 0,
                             /* user_data */ NULL, /* user_data_size */ 0);
@@ -228,16 +228,16 @@ makeGOPHeader(FILE *       const outputFileP,
                        tc_hrs, tc_min, tc_sec, tc_pict,
                        closed, /* broken_link */ 0,
                        /* ext_data */ NULL, /* ext_data_size */ 0,
-                       /* user_data */ NULL, 
+                       /* user_data */ NULL,
                        /* user_data_size */ 0);
     Bitio_Flush(bbP);
     SetGOPStartTime(frameNumber);
-}        
+}
 
 
 
 void
-FramesToMPEG(FILE *               const outputFile, 
+FramesToMPEG(FILE *               const outputFile,
              void *               const inputHandle,
              fileAcquisitionFn          acquireInputFile,
              fileDispositionFn          disposeInputFile) {
@@ -292,7 +292,7 @@ FramesToMPEG(FILE *               const outputFile,
     frameNumber = 0;
 
     makeGOPHeader(outputFile, totalFramesSent, frameNumber, seqWithinGop);
-    
+
     while (inputLeft) {
         if (FType_Type(frameNumber) != 'b') {
             pastRefNum = futureRefNum;
@@ -318,7 +318,7 @@ FramesToMPEG(FILE *               const outputFile,
                 /* now, output the B-frames */
                 if (pastRefNum != -1) {
                     unsigned int bNum;
-                    
+
                     for (bNum = pastRefNum+1; bNum < futureRefNum; ++bNum) {
                         acquireInputFile(inputHandle, bNum, &inputFile);
 
@@ -326,7 +326,7 @@ FramesToMPEG(FILE *               const outputFile,
                             AppendFile(outputFile, inputFile);
 
                             disposeInputFile(inputHandle, bNum);
-            
+
                             ++seqWithinGop;
                             IncrementTCTime();
                         }

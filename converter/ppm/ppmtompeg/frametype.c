@@ -1,18 +1,18 @@
 /*===========================================================================*
- * frametype.c								     *
- *									     *
- *	procedures to keep track of frame types (I, P, B)		     *
- *									     *
- * EXPORTED PROCEDURES:							     *
- *	FType_Type						             *
- *	FType_FutureRef						             *
- *	FType_PastRef						             *
- *									     *
- * SYNOPSIS								     *
- *	FType_Type	returns the type of the given numbered frame	     *
- *	FType_FutureRef	returns the number of the future reference frame     *
- *	FType_PastRef	returns the number of the past reference frame	     *
- *									     *
+ * frametype.c                                                               *
+ *                                                                           *
+ *      procedures to keep track of frame types (I, P, B)                    *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
+ *      FType_Type                                                           *
+ *      FType_FutureRef                                                      *
+ *      FType_PastRef                                                        *
+ *                                                                           *
+ * SYNOPSIS                                                                  *
+ *      FType_Type      returns the type of the given numbered frame         *
+ *      FType_FutureRef returns the number of the future reference frame     *
+ *      FType_PastRef   returns the number of the past reference frame       *
+ *                                                                           *
  * 00.12.07 change malloc from frameTable to calloc to fix bug
  *===========================================================================*/
 
@@ -72,9 +72,9 @@ extern char * framePattern;
  *
  * FType_Type
  *
- *	returns the type of the given numbered frame
+ *      returns the type of the given numbered frame
  *
- * RETURNS:	the type
+ * RETURNS:     the type
  *
  * SIDE EFFECTS:    none
  *
@@ -161,9 +161,9 @@ FType_FutureRef(unsigned int const currFrameNum) {
  *
  * FType_PastRef
  *
- *	returns the number of the past reference frame
+ *      returns the number of the past reference frame
  *
- * RETURNS:	the number
+ * RETURNS:     the number
  *
  * SIDE EFFECTS:    none
  *
@@ -172,8 +172,8 @@ int
 FType_PastRef(currFrameNum)
     int currFrameNum;
 {
-    int	    index;
-    int	    pastIndex;
+    int     index;
+    int     pastIndex;
 
     if (use_cache) {
       return frameTable[currFrameNum].prev->number;
@@ -182,7 +182,7 @@ FType_PastRef(currFrameNum)
       pastIndex = frameTable[index].prev->number;
 
       return currFrameNum -
-	(((index-pastIndex)+framePatternLen) % framePatternLen);
+        (((index-pastIndex)+framePatternLen) % framePatternLen);
     }
 }
 
@@ -191,9 +191,9 @@ FType_PastRef(currFrameNum)
  *
  * SetFramePattern
  *
- *	set the IPB pattern; calls ComputeFrameTable to set up table
+ *      set the IPB pattern; calls ComputeFrameTable to set up table
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    framePattern, framePatternLen, frameTable
  *
@@ -264,8 +264,8 @@ ComputeFrameTable(unsigned int const numFramesArg) {
   'numFrames' == 0 means number of frames is not known at this time.
 -----------------------------------------------------------------------------*/
     int index;
-    FrameTable	*lastIP, *firstB, *secondIP;
-    FrameTable	*ptr;
+    FrameTable  *lastIP, *firstB, *secondIP;
+    FrameTable  *ptr;
     char typ;
     int table_size;
 
@@ -286,14 +286,14 @@ ComputeFrameTable(unsigned int const numFramesArg) {
         typ = FType_Type(index);
         frameTable[index].typ = typ;
         switch( typ ) {
-	    case 'i':
+            case 'i':
             ptr = firstB;
             while ( ptr != NULL ) {
                 ptr->next = &(frameTable[index]);
                 ptr = ptr->nextOutput;
             }
             frameTable[index].nextOutput = firstB;
-            frameTable[index].prev = lastIP;	/* for freeing */
+            frameTable[index].prev = lastIP;    /* for freeing */
             if ( lastIP != NULL ) {
                 lastIP->next = &(frameTable[index]);
                 if ( secondIP == NULL ) {
@@ -303,7 +303,7 @@ ComputeFrameTable(unsigned int const numFramesArg) {
             lastIP = &(frameTable[index]);
             firstB = NULL;
             break;
-	    case 'p':
+            case 'p':
             ptr = firstB;
             while ( ptr != NULL ) {
                 ptr->next = &(frameTable[index]);
@@ -320,7 +320,7 @@ ComputeFrameTable(unsigned int const numFramesArg) {
             lastIP = &(frameTable[index]);
             firstB = NULL;
             break;
-	    case 'b':
+            case 'b':
             if ( (index+1 == framePatternLen) ||
                  (FType_Type(index+1) != 'b') ) {
                 frameTable[index].nextOutput = NULL;
@@ -332,11 +332,11 @@ ComputeFrameTable(unsigned int const numFramesArg) {
                 firstB = &(frameTable[index]);
             }
             break;
-	    default:
-	        fprintf(stderr, "Programmer Error in ComputeFrameTable (%d)\n",
+            default:
+                fprintf(stderr, "Programmer Error in ComputeFrameTable (%d)\n",
                     framePattern[index]);
-	        exit(1);
-	        break;
+                exit(1);
+                break;
         }
     }
 

@@ -1,8 +1,8 @@
 /*===========================================================================*
- * frames.h                                  
- *                                       
- *  stuff dealing with frames                        
- *                                       
+ * frames.h
+ *
+ *  stuff dealing with frames
+ *
  *===========================================================================*/
 
 #ifndef FRAMES_INCLUDED
@@ -72,7 +72,7 @@ typedef struct FrameTableStruct {
     int number;
 
     int bFrameNumber;       /* actual frame number, if a b-frame */
-    
+
 } FrameTable;
 
 
@@ -234,13 +234,13 @@ float
 BFrameTotalTime(void);
 
 void
-ShowPFrameSummary(unsigned int const inputFrameBits, 
-                  unsigned int const totalBits, 
+ShowPFrameSummary(unsigned int const inputFrameBits,
+                  unsigned int const totalBits,
                   FILE *       const fpointer);
 
 void
-ShowBFrameSummary(unsigned int const inputFrameBits, 
-                  unsigned int const totalBits, 
+ShowBFrameSummary(unsigned int const inputFrameBits,
+                  unsigned int const totalBits,
                   FILE *       const fpointer);
 
 /*==================*
@@ -291,7 +291,7 @@ extern int TIME_RATE;
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/headers/RCS/frames.h,v 1.13 1995/08/15 23:43:04 smoot Exp $
  *  $Log: frames.h,v $
  *  Revision 1.13  1995/08/15 23:43:04  smoot

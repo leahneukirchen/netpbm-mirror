@@ -1,17 +1,17 @@
 /*===========================================================================*
- * fsize.c								     *
- *									     *
- *	procedures to keep track of frame size				     *
- *									     *
- * EXPORTED PROCEDURES:							     *
- *	Fsize_Reset							     *
- *	Fsize_Note							     *
- *	Fsize_Validate							     *
- *									     *
- * EXPORTED VARIABLES:							     *
- *	Fsize_x								     *
- *	Fsize_y								     *
- *									     *
+ * fsize.c                                                                   *
+ *                                                                           *
+ *      procedures to keep track of frame size                               *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
+ *      Fsize_Reset                                                          *
+ *      Fsize_Note                                                           *
+ *      Fsize_Validate                                                       *
+ *                                                                           *
+ * EXPORTED VARIABLES:                                                       *
+ *      Fsize_x                                                              *
+ *      Fsize_y                                                              *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -60,9 +60,9 @@ int Fsize_y = 0;
  *
  * Fsize_Reset
  *
- *	reset the frame size to 0
+ *      reset the frame size to 0
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    Fsize_x, Fsize_y
  *
@@ -78,9 +78,9 @@ Fsize_Reset(void) {
  *
  * Fsize_Validate
  *
- *	make sure that the x, y values are 16-pixel aligned
+ *      make sure that the x, y values are 16-pixel aligned
  *
- * RETURNS:	modifies the x, y values to 16-pixel alignment
+ * RETURNS:     modifies the x, y values to 16-pixel alignment
  *
  * SIDE EFFECTS:    none
  *
@@ -98,9 +98,9 @@ Fsize_Validate(int * const xP,
  *
  * Fsize_Note
  *
- *	note the given frame size and modify the global values as appropriate
+ *      note the given frame size and modify the global values as appropriate
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    Fsize_x, Fsize_y
  *
@@ -122,13 +122,13 @@ Fsize_Note(int          const id,
 
 #ifdef BLEAH
     if (Fsize_x == 0) {
-	Fsize_x = width;
-	Fsize_y = height;
-	Fsize_Validate(&Fsize_x, &Fsize_y);
+        Fsize_x = width;
+        Fsize_y = height;
+        Fsize_Validate(&Fsize_x, &Fsize_y);
     } else if (width < Fsize_x || height < Fsize_y) {
-	fprintf(stderr, "Frame %d: wrong size: (%d,%d).  Should be greater or equal to: (%d,%d)\n",
-		id, width, height, Fsize_x, Fsize_y);
-	exit(1);
+        fprintf(stderr, "Frame %d: wrong size: (%d,%d).  Should be greater or equal to: (%d,%d)\n",
+                id, width, height, Fsize_x, Fsize_y);
+        exit(1);
     }
 #endif
 }

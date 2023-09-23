@@ -1,8 +1,8 @@
 /*===========================================================================*
- * readframe.h								     *
- *									     *
- *	stuff dealing with reading frames				     *
- *									     *
+ * readframe.h                                                               *
+ *                                                                           *
+ *      stuff dealing with reading frames                                    *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -32,15 +32,15 @@
  * CONSTANTS *
  *===========*/
 
-#define	PPM_FILE_TYPE	    0
-#define YUV_FILE_TYPE	    2
-#define ANY_FILE_TYPE	    3
-#define BASE_FILE_TYPE	    4
-#define PNM_FILE_TYPE	    5
-#define SUB4_FILE_TYPE	    6
-#define JPEG_FILE_TYPE	    7
+#define PPM_FILE_TYPE       0
+#define YUV_FILE_TYPE       2
+#define ANY_FILE_TYPE       3
+#define BASE_FILE_TYPE      4
+#define PNM_FILE_TYPE       5
+#define SUB4_FILE_TYPE      6
+#define JPEG_FILE_TYPE      7
 #define JMOVIE_FILE_TYPE    8
-#define Y_FILE_TYPE	    9
+#define Y_FILE_TYPE         9
 
 
 struct inputSource;
@@ -52,7 +52,7 @@ ReadFrameFile(MpegFrame *  const frameP,
               bool *       const eofP);
 
 void
-ReadFrame(MpegFrame *          const frameP, 
+ReadFrame(MpegFrame *          const frameP,
           struct inputSource * const inputSourceP,
           unsigned int         const frameNumber,
           const char *         const conversion,
@@ -62,8 +62,8 @@ FILE *
 ReadIOConvert(struct inputSource * const inputSourceP,
               unsigned int         const frameNumber);
 
-extern void	SetFileType(const char * const conversion);
-extern void	SetFileFormat(const char * const format);
-extern void	SetResize(bool const set);
+extern void     SetFileType(const char * const conversion);
+extern void     SetFileFormat(const char * const format);
+extern void     SetResize(bool const set);
 
-extern int	baseFormat;
+extern int      baseFormat;

@@ -1,22 +1,22 @@
 /*===========================================================================*
- * pframe.c                                  
- *                                       
- *  Procedures concerned with generation of P-frames             
- *                                       
- * EXPORTED PROCEDURES:                              
- *  GenPFrame                                
- *  ResetPFrameStats                             
- *  ShowPFrameSummary                            
- *  EstimateSecondsPerPFrame                         
- *  ComputeHalfPixelData                             
- *  SetPQScale                               
- *  GetPQScale                               
- *                                                                           
- * NOTE:  when motion vectors are passed as arguments, they are passed as    
- *        twice their value.  In other words, a motion vector of (3,4) will  
- *        be passed as (6,8).  This allows half-pixel motion vectors to be   
- *        passed as integers.  This is true throughout the program.          
- *                                       
+ * pframe.c
+ *
+ *  Procedures concerned with generation of P-frames
+ *
+ * EXPORTED PROCEDURES:
+ *  GenPFrame
+ *  ResetPFrameStats
+ *  ShowPFrameSummary
+ *  EstimateSecondsPerPFrame
+ *  ComputeHalfPixelData
+ *  SetPQScale
+ *  GetPQScale
+ *
+ * NOTE:  when motion vectors are passed as arguments, they are passed as
+ *        twice their value.  In other words, a motion vector of (3,4) will
+ *        be passed as (6,8).  This allows half-pixel motion vectors to be
+ *        passed as integers.  This is true throughout the program.
+ *
  *===========================================================================*/
 
 /*==============*
@@ -101,7 +101,7 @@ ZeroMotionBetter(const LumBlock * const currentBlockP,
     int bestDiff;
     int CompareMode;
 
-    /* Junk needed to adapt for TUNEing */ 
+    /* Junk needed to adapt for TUNEing */
     CompareMode = SearchCompareMode;
     SearchCompareMode = DEFAULT_SEARCH;
     bestDiff = LumMotionError(currentBlockP, prev, by, bx, m, 0x7fffffff);
@@ -158,14 +158,14 @@ DoIntraCode(const LumBlock * const currentBlockP,
         for (x = 0; x < 16; ++x) {
             currPixel = currentBlockP->l[y][x];
             prevPixel = motionBlock.l[y][x];
-            
+
             sum += currPixel;
             varc += currPixel*currPixel;
-            
+
             vard += SQR(currPixel - prevPixel);
         }
     }
-    
+
     vard /= 256;     /* divide by 256; assumes mean is close to zero */
     varc = (varc/256) - (sum/256) * (sum/256);
 
@@ -217,11 +217,11 @@ ZeroMotionSufficient(const LumBlock * const currentBlockP,
 
     return (zeroDiff <= 256);
 }
-                 
 
 
-static void 
-computeCurrentBlock(MpegFrame * const current, 
+
+static void
+computeCurrentBlock(MpegFrame * const current,
                     int         const y,
                     int         const x,
                     LumBlock *  const currentBlockP) {
@@ -232,7 +232,7 @@ computeCurrentBlock(MpegFrame * const current,
     for ( iy = 0; iy < 16; iy++ ) {
         int ix;
         for ( ix = 0; ix < 16; ix++ ) {
-            currentBlockP->l[iy][ix] = 
+            currentBlockP->l[iy][ix] =
                 (int16)current->orig_y[fy+iy][fx+ix];
         }
     }
@@ -241,17 +241,17 @@ computeCurrentBlock(MpegFrame * const current,
 
 
 static void
-computeMotionVectors(bool             const specificsOn, 
+computeMotionVectors(bool             const specificsOn,
                      bool             const IntraPBAllowed,
-                     MpegFrame *      const current, 
+                     MpegFrame *      const current,
                      MpegFrame *      const prev,
                      int              const mbAddress,
                      BlockMV **       const infoP,
-                     int              const QScale, 
+                     int              const QScale,
                      const LumBlock * const currentBlockP,
-                     int              const y, 
+                     int              const y,
                      int              const x,
-                     bool *           const useMotionP, 
+                     bool *           const useMotionP,
                      vector *         const motionP) {
 
     bool useCached;
@@ -260,7 +260,7 @@ computeMotionVectors(bool             const specificsOn,
     /* See if we have a cached answer */
     if (specificsOn) {
         SpecLookup(current->id, 2, mbAddress, &info, QScale);
-        if (info != (BlockMV*)NULL) 
+        if (info != (BlockMV*)NULL)
             useCached = TRUE;
         else
             useCached = FALSE;
@@ -293,7 +293,7 @@ computeMotionVectors(bool             const specificsOn,
                 motionP->x = 0;
             } else
                 *motionP = motion;
-            if (IntraPBAllowed) 
+            if (IntraPBAllowed)
                 *useMotionP = !DoIntraCode(currentBlockP, prev, y, x, motion);
             else
                 *useMotionP = TRUE;
@@ -305,12 +305,12 @@ computeMotionVectors(bool             const specificsOn,
 
 
 static void
-calculateForwardDcts(MpegFrame * const current, 
+calculateForwardDcts(MpegFrame * const current,
                      int const y, int const x,
                      Block ** const dct) {
 
     /* calculate forward dct's */
-    if (collect_quant && (collect_quant_detailed & 1)) 
+    if (collect_quant && (collect_quant_detailed & 1))
         fprintf(collect_quant_fp, "l\n");
 
     mp_fwd_dct_block2(current->y_blocks[y][x], dct[y][x]);
@@ -318,7 +318,7 @@ calculateForwardDcts(MpegFrame * const current,
     mp_fwd_dct_block2(current->y_blocks[y+1][x], dct[y+1][x]);
     mp_fwd_dct_block2(current->y_blocks[y+1][x+1], dct[y+1][x+1]);
 
-    if (collect_quant && (collect_quant_detailed & 1)) 
+    if (collect_quant && (collect_quant_detailed & 1))
         fprintf(collect_quant_fp, "c\n");
 
     mp_fwd_dct_block2(current->cb_blocks[y/2][x/2], dctb[y/2][x/2]);
@@ -348,7 +348,7 @@ computeMotionAndDct(int         const lastBlockY,
     int mbAddress;
     int y;
 
-    mbAddress = 0;                        
+    mbAddress = 0;
 
     for (y = 0; y < lastBlockY; y += 2) {
         int x;
@@ -416,7 +416,7 @@ computeMotionAndDct(int         const lastBlockY,
  *===========================================================================*/
 void
 GenPFrame(BitBucket * const bb,
-          MpegFrame * const current, 
+          MpegFrame * const current,
           MpegFrame * const prev) {
 
     extern int **pmvHistogram;
@@ -469,12 +469,12 @@ GenPFrame(BitBucket * const bb,
     if (bitstreamMode == FIXED_RATE) {
         targetRateControl(current);
     }
- 
+
     Mhead_GenPictureHeader(bb, P_FRAME, current->id, fCodeP);
-    /* Check for Qscale change */  
+    /* Check for Qscale change */
     if (specificsOn) {
         /* Set a Qscale for this frame? */
-        newQScale = 
+        newQScale =
             SpecLookup(current->id, 0, 0 /* junk */, &info /*junk*/, QScale);
         if (newQScale != -1) {
             QScale = newQScale;
@@ -515,9 +515,9 @@ GenPFrame(BitBucket * const bb,
 
     computeMotionAndDct(lastBlockY, lastBlockX,
                         specificsOn, IntraPBAllowed, current, prev,
-                        &info, QScale, searchRangeP, dct, 
+                        &info, QScale, searchRangeP, dct,
                         &numPBlocks, &numIBlocks, pmvHistogram);
-    
+
     mbAddress = 0;
     for (y = 0; y < lastBlockY; y += 2) {
         for (x = 0; x < lastBlockX; x += 2) {
@@ -526,7 +526,7 @@ GenPFrame(BitBucket * const bb,
             if ( (slicePos == 0) && (mbAddress != 0) ) {
                 if (specificsOn) {
                     /* Make sure no slice Qscale change */
-                    newQScale = 
+                    newQScale =
                         SpecLookup(current->id, 1, mbAddress/blocksPerSlice,
                                    &info /*junk*/, QScale);
                     if (newQScale != -1) QScale = newQScale;
@@ -541,7 +541,7 @@ GenPFrame(BitBucket * const bb,
 
                 mbAddrInc = 1+(x>>1);
             }
-        
+
             /*  Determine if new Qscale needed for Rate Control purposes  */
             if (bitstreamMode == FIXED_RATE) {
                 rc_blockStart =  bb->cumulativeBits;
@@ -554,10 +554,10 @@ GenPFrame(BitBucket * const bb,
                     QScale = newQScale;
                 }
             }
-        
+
             /* Check for Qscale change */
             if (specificsOn) {
-                newQScale = 
+                newQScale =
                     SpecLookup(current->id, 2, mbAddress, &info, QScale);
                 if (newQScale != -1) {
                     QScale = newQScale;
@@ -607,7 +607,7 @@ GenPFrame(BitBucket * const bb,
                 motion.y = dct_data[y][x].fmotionY;
 
 #ifdef BLEAH
-                ComputeAndPrintPframeMAD(currentBlock, prev, y, x, motion, 
+                ComputeAndPrintPframeMAD(currentBlock, prev, y, x, motion,
                                          mbAddress);
 #endif
 
@@ -625,11 +625,11 @@ GenPFrame(BitBucket * const bb,
 
 #ifdef BLEAH
                 if ( (motion.x != 0) || (motion.y != 0) ) {
-                    fprintf(stdout, "FRAME (y, x)  %d, %d (block %d)\n", 
+                    fprintf(stdout, "FRAME (y, x)  %d, %d (block %d)\n",
                             y, x, mbAddress);
-                    fprintf(stdout, "motion.x = %d, motion.y = %d\n", 
+                    fprintf(stdout, "motion.x = %d, motion.y = %d\n",
                             motion.x, motion.y);
-                    fprintf(stdout, 
+                    fprintf(stdout,
                             "    mxq, mxr = %d, %d    myq, myr = %d, %d\n",
                             motionQuot.x, motionRem.x,
                             motionQuot.y, motionRem.y);
@@ -656,7 +656,7 @@ GenPFrame(BitBucket * const bb,
                 if ( decodeRefFrames) {
                     for ( index = 0; index < 6; index++ ) {
                         if ( pattern & (1 << (5-index))) {
-                            Mpost_UnQuantZigBlock(fba[index], dec[index], 
+                            Mpost_UnQuantZigBlock(fba[index], dec[index],
                                                   QScale, FALSE);
                             mpeg_jrevdct((int16 *)dec[index]);
                         } else {
@@ -671,7 +671,7 @@ GenPFrame(BitBucket * const bb,
                     AddMotionBlock(dec[3], prev->decoded_y, y+1, x+1, motion);
                     AddMotionBlock(dec[4], prev->decoded_cb, y/2, x/2,
                                    halfVector(motion));
-                    AddMotionBlock(dec[5], prev->decoded_cr, y/2, x/2, 
+                    AddMotionBlock(dec[5], prev->decoded_cr, y/2, x/2,
                                    halfVector(motion));
 
                     /* now, unblockify */
@@ -681,7 +681,7 @@ GenPFrame(BitBucket * const bb,
                     BlockToData(current->decoded_y, dec[3], y+1, x+1);
                     BlockToData(current->decoded_cb, dec[4], y/2, x/2);
                     BlockToData(current->decoded_cr, dec[5], y/2, x/2);
-                } 
+                }
 
                 if ((motion.x == 0) && (motion.y == 0)) {
                     if ( pattern == 0 ) {
@@ -698,65 +698,65 @@ GenPFrame(BitBucket * const bb,
                             numSkipped++;
                             numPBlocks--;
                         } else {        /* first/last macroblock */
-                            Mhead_GenMBHeader(bb, 2 /* pict_code_type */, 
+                            Mhead_GenMBHeader(bb, 2 /* pict_code_type */,
                                               mbAddrInc /* addr_incr */,
                                               QScale /* q_scale */,
-                                              fCode /* forw_f_code */, 
+                                              fCode /* forw_f_code */,
                                               1 /* back_f_code */,
-                                              motionRem.x /* horiz_forw_r */, 
+                                              motionRem.x /* horiz_forw_r */,
                                               motionRem.y /* vert_forw_r */,
-                                              0 /* horiz_back_r */, 
+                                              0 /* horiz_back_r */,
                                               0 /* vert_back_r */,
-                                              1 /* motion_forw */, 
+                                              1 /* motion_forw */,
                                               motionQuot.x /* m_horiz_forw */,
-                                              motionQuot.y /* m_vert_forw */, 
+                                              motionQuot.y /* m_vert_forw */,
                                               0 /* motion_back */,
-                                              0 /* m_horiz_back */, 
+                                              0 /* m_horiz_back */,
                                               0 /* m_vert_back */,
-                                              0 /* mb_pattern */, 
+                                              0 /* mb_pattern */,
                                               0 /* mb_intra */);
                             mbAddrInc = 1;
                         }
                     } else {
                         DBG_PRINT(("MB Header(%d,%d)\n", x, y));
-                        Mhead_GenMBHeader(bb, 2 /* pict_code_type */, 
+                        Mhead_GenMBHeader(bb, 2 /* pict_code_type */,
                                           mbAddrInc /* addr_incr */,
                                           QScale /* q_scale */,
-                                          fCode /* forw_f_code */, 
+                                          fCode /* forw_f_code */,
                                           1 /* back_f_code */,
-                                          0 /* horiz_forw_r */, 
+                                          0 /* horiz_forw_r */,
                                           0 /* vert_forw_r */,
-                                          0 /* horiz_back_r */, 
+                                          0 /* horiz_back_r */,
                                           0 /* vert_back_r */,
-                                          0 /* motion_forw */, 
+                                          0 /* motion_forw */,
                                           0 /* m_horiz_forw */,
-                                          0 /* m_vert_forw */, 
+                                          0 /* m_vert_forw */,
                                           0 /* motion_back */,
-                                          0 /* m_horiz_back */, 
+                                          0 /* m_horiz_back */,
                                           0 /* m_vert_back */,
-                                          pattern /* mb_pattern */, 
+                                          pattern /* mb_pattern */,
                                           0 /* mb_intra */);
                         mbAddrInc = 1;
                     }
                 } else {
                     /*      DBG_PRINT(("MB Header(%d,%d)\n", x, y));  */
-          
-                    Mhead_GenMBHeader(bb, 2 /* pict_code_type */, 
+
+                    Mhead_GenMBHeader(bb, 2 /* pict_code_type */,
                                       mbAddrInc /* addr_incr */,
                                       QScale /* q_scale */,
-                                      fCode /* forw_f_code */, 
+                                      fCode /* forw_f_code */,
                                       1 /* back_f_code */,
-                                      motionRem.x /* horiz_forw_r */, 
+                                      motionRem.x /* horiz_forw_r */,
                                       motionRem.y /* vert_forw_r */,
-                                      0 /* horiz_back_r */, 
+                                      0 /* horiz_back_r */,
                                       0 /* vert_back_r */,
-                                      1 /* motion_forw */, 
+                                      1 /* motion_forw */,
                                       motionQuot.x /* m_horiz_forw */,
-                                      motionQuot.y /* m_vert_forw */, 
+                                      motionQuot.y /* m_vert_forw */,
                                       0 /* motion_back */,
-                                      0 /* m_horiz_back */, 
+                                      0 /* m_horiz_back */,
                                       0 /* m_vert_back */,
-                                      pattern /* mb_pattern */, 
+                                      pattern /* mb_pattern */,
                                       0 /* mb_intra */);
                     mbAddrInc = 1;
                 }
@@ -832,7 +832,7 @@ GenPFrame(BitBucket * const bb,
     if ( frameSummary && (! realQuiet) ) {
         fprintf(stdout, "FRAME %d (P):  I BLOCKS:  %d;  "
                 "P BLOCKS:  %d   SKIPPED:  %d  (%ld seconds)\n",
-                current->id, numIBlocks, numPBlocks, numSkipped, 
+                current->id, numIBlocks, numPBlocks, numSkipped,
                 (long)(endTime-startTime)/TIME_RATE);
         if ( printSNR ) {
             fprintf(stdout, "FRAME %d:  SNR:  %.1f\t%.1f\t%.1f\t"
@@ -921,8 +921,8 @@ PFrameTotalTime(void) {
 
 
 void
-ShowPFrameSummary(unsigned int const inputFrameBits, 
-                  unsigned int const totalBits, 
+ShowPFrameSummary(unsigned int const inputFrameBits,
+                  unsigned int const totalBits,
                   FILE *       const fpointer) {
 
     if (numFrames > 0) {

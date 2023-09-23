@@ -106,7 +106,7 @@ ComputeDiffDCTs(MpegFrame * const current,
                 int         const bx,
                 vector      const m,
                 int *       const patternP) {
-    
+
     Block motionBlock;
 
     if (collect_quant && (collect_quant_detailed & 1))
@@ -203,14 +203,14 @@ computePrevFyFx(MpegFrame * const prevFrame,
         if (yHalf) {
             if (m.y < 0)
                 --*fyP;
-        
+
             *prevP = prevFrame->halfBoth;
         } else
             *prevP = prevFrame->halfX;
     } else if (yHalf) {
         if (m.y < 0)
             --*fyP;
-        
+
         *prevP = prevFrame->halfY;
     } else
         *prevP = prevFrame->ref_y;
@@ -263,7 +263,7 @@ ComputeMotionBlock(uint8 ** const prev,
 
         if (m.x < 0)
             --fx;
-    
+
         for (y = 0; y < 8; ++y) {
             int16 * const destPtr = (*motionBlockP)[y];
             uint8 * const srcPtr  = &(prev[fy+y][fx]);
@@ -278,7 +278,7 @@ ComputeMotionBlock(uint8 ** const prev,
         unsigned int y;
         if (m.x < 0)
             --fx;
-        
+
         for (y = 0; y < 8; ++y) {
             int16 * const destPtr = (*motionBlockP)[y];
             uint8 * const srcPtr  = &(prev[fy+y][fx]);
@@ -410,7 +410,7 @@ LumBlockMAD(const LumBlock * const currentBlockP,
  *  return the MAD of the currentBlock and the motion-compensated block
  *      (without TUNEing)
  *
- *  (by, bx) is the location of the block in the frame 
+ *  (by, bx) is the location of the block in the frame
  *  (block number coordinates).  'm' is the motion of the block in pixels.
  *  The moved block must be wholly within the frame.
  *
@@ -452,7 +452,7 @@ LumMotionError(const LumBlock * const currentBlockP,
             const int32 * const cacross = currentBlockP->l[y];
             uint8 *       const across  = &prev[fy+y][fx];
             unsigned int x;
-            
+
             for (x = 0; x < 16; ++x) {
                 int32 const localDiff = across[x]-cacross[x];
                 diff += ABS(localDiff);
@@ -461,14 +461,14 @@ LumMotionError(const LumBlock * const currentBlockP,
                 return diff;
         }
         break;
-      
+
     case LOCAL_DCT: {
         Block     dctdiff[4], dctquant[4];
         FlatBlock quant;
         int x, i, tmp;
         int distortion=0, datarate=0;
         int pq = GetPQScale();
-      
+
         for (y = 0;  y < 16;  ++y) {
             const int32 * const cacross = currentBlockP->l[y];
             uint8 * const across = &(prev[fy+y][fx]);
@@ -489,7 +489,7 @@ LumMotionError(const LumBlock * const currentBlockP,
                 datarate += CalcRLEHuffLength(quant);
             }
         }
-      
+
         /* Calculate distortion */
         for (y = 0;  y < 16;  ++y) {
             const int32 * const cacross = currentBlockP->l[y];
@@ -510,12 +510,12 @@ LumMotionError(const LumBlock * const currentBlockP,
         extern int32 niqtable[];
         int pq = niqtable[0]*GetPQScale();
         unsigned int y;
-        
+
         for (y = 0; y < 16; ++y) {
             const int32 * const cacross = currentBlockP->l[y];
             uint8 * const across = &(prev[fy+y][fx]);
             unsigned int x;
-            
+
             for (x = 0; x < 16; ++x) {
                 int32 const localDiff = across[x]-cacross[x];
                 diff += localDiff;
@@ -598,7 +598,7 @@ LumAddMotionError(const LumBlock * const currentBlockP,
         if (diff > bestSoFar)
             return diff;
     }
-    
+
     /* This is what's happening:
      *
      *  ComputeMotionLumBlock(prevFrame, by, bx, my, mx, lumMotionBlock);
@@ -855,7 +855,7 @@ BlockifyFrame(MpegFrame * const frameP) {
  * but leave it here anyway for clarity
  *
  * (startY, startX) = (0,0) for A....(0,1) for B...(1,0) for C...(1,1) for D
- *  
+ *
  */
 void
 ComputeSubSampledMotionLumBlock(MpegFrame * const prevFrame,
@@ -889,7 +889,7 @@ ComputeSubSampledMotionLumBlock(MpegFrame * const prevFrame,
         if ( my < 0 ) {
         fy--;
         }
-        
+
         prev = prevFrame->halfBoth;
     } else {
         prev = prevFrame->halfX;
@@ -974,7 +974,7 @@ LumMotionErrorSubSampled(LumBlock    const currentBlock,
         if ( my < 0 ) {
         fy--;
         }
-        
+
         prev = prevFrame->halfBoth;
     } else {
         prev = prevFrame->halfX;

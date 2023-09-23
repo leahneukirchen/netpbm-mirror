@@ -1,13 +1,13 @@
 /*===========================================================================*
- * moutput.c								     *
- *									     *
- *	Procedures concerned with quantization and RLE			     *
- *									     *
- * EXPORTED PROCEDURES:							     *
- *	mp_quant_zig_block						     *
- *	mp_rle_huff_block						     *
- *	mp_rle_huff_pblock						     *
- *									     *
+ * moutput.c                                                                 *
+ *                                                                           *
+ *      Procedures concerned with quantization and RLE                       *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
+ *      mp_quant_zig_block                                                   *
+ *      mp_rle_huff_block                                                    *
+ *      mp_rle_huff_pblock                                                   *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -121,48 +121,48 @@ static int qtable[] =
  *=====================*/
 
 
-void	UnQuantZig(FlatBlock in, Block out, int qscale, boolean iblock)
+void    UnQuantZig(FlatBlock in, Block out, int qscale, boolean iblock)
 {
     register int index;
-    int	    start;
-    int	    position;
-    register int	    qentry;
-    int	    level, coeff;
+    int     start;
+    int     position;
+    register int            qentry;
+    int     level, coeff;
     register int16 temp;
 
     if ( iblock )
     {
-	((int16 *)out)[0] = (int16)(in[0]*qtable[0]);
+        ((int16 *)out)[0] = (int16)(in[0]*qtable[0]);
 
-	start = 1;
+        start = 1;
     }
     else
-	start = 0;
+        start = 0;
 
     for ( index = start; index < DCTSIZE_SQ; index++ )
     {
-	position = ZAG[index];
+        position = ZAG[index];
 
-	if (iblock)
-	    qentry = qtable[position] * qscale;
-	else
-	    qentry = 16 * qscale;
+        if (iblock)
+            qentry = qtable[position] * qscale;
+        else
+            qentry = 16 * qscale;
 
-	level = in[index];
+        level = in[index];
         coeff = (level * qentry) >> 3;
         if (level < 0) {
             coeff += (coeff & 1);
-	} else {
+        } else {
             coeff -= (coeff & 1);
-	}
+        }
 
-	((int16 *)out)[position] = coeff;
+        ((int16 *)out)[position] = coeff;
     }
 
 #ifdef BLEAH
     for ( index = 0; index < 64; index++ )
-	fprintf(stdout, "DCT[%d] = %d\n", index, 
-		((int16 *)out)[index]);
+        fprintf(stdout, "DCT[%d] = %d\n", index,
+                ((int16 *)out)[index]);
 #endif
 }
 
@@ -175,7 +175,7 @@ void	UnQuantZig(FlatBlock in, Block out, int qscale, boolean iblock)
  * Quantizes and zigzags a block -- removing information
  *
  * Results: TRUE iff resulting 'out' is non-zero, FALSE if all
- *	    zero
+ *          zero
  *
  * Side effects: Modifies the out block.
  *
@@ -192,56 +192,56 @@ boolean mp_quant_zig_block(Block in, FlatBlock out, int qscale, int iblock)
 
     DBG_PRINT(("mp_quant_zig_block...\n"));
     if (iblock) {
-	/*
-	 * the DC coefficient is handled specially -- it's not
-	 * sensitive to qscale, but everything else is
-	 */
-	temp = ((int16 *) in)[ZAG[0]];
-	qentry = qtable[ZAG[0]];
-	if (temp < 0) {
-	    temp = -temp;
-	    temp += qentry >> 1;
-	    temp /= qentry;
-	    temp = -temp;
-	} else {
-	    temp += qentry >> 1;
-	    temp /= qentry;
-	}
-	if ( temp != 0 )
-	    nonZero = TRUE;
-	out[0] = temp;
-	start = 1;
+        /*
+         * the DC coefficient is handled specially -- it's not
+         * sensitive to qscale, but everything else is
+         */
+        temp = ((int16 *) in)[ZAG[0]];
+        qentry = qtable[ZAG[0]];
+        if (temp < 0) {
+            temp = -temp;
+            temp += qentry >> 1;
+            temp /= qentry;
+            temp = -temp;
+        } else {
+            temp += qentry >> 1;
+            temp /= qentry;
+        }
+        if ( temp != 0 )
+            nonZero = TRUE;
+        out[0] = temp;
+        start = 1;
     } else
-	start = 0;
+        start = 0;
 
     for (i = start; i < DCTSIZE_SQ; i++) {
-	x = ZAG[i] % 8;
-	y = ZAG[i] / 8;
-	temp = in[y][x];
-	DBG_PRINT(("    in[%d][%d] = %d;  ", y, x, temp));
+        x = ZAG[i] % 8;
+        y = ZAG[i] / 8;
+        temp = in[y][x];
+        DBG_PRINT(("    in[%d][%d] = %d;  ", y, x, temp));
 
-	if (iblock)
-	    qentry = qtable[ZAG[i]] * qscale;
-	else
-	    qentry = 16 * qscale;
+        if (iblock)
+            qentry = qtable[ZAG[i]] * qscale;
+        else
+            qentry = 16 * qscale;
 
-	DBG_PRINT(("quantized with %d = ", qentry));
+        DBG_PRINT(("quantized with %d = ", qentry));
 
-	if (temp < 0) {
-	    temp = -temp;
-	    temp *= 8;
-	    temp += qentry >> 1;
-	    temp /= qentry;
-	    temp = -temp;
-	} else {
-	    temp *= 8;
-	    temp += qentry >> 1;
-	    temp /= qentry;
-	}
-	if ( temp != 0 )
-	    nonZero = TRUE;
-	out[i] = temp;
-	DBG_PRINT(("%d\n", temp));
+        if (temp < 0) {
+            temp = -temp;
+            temp *= 8;
+            temp += qentry >> 1;
+            temp /= qentry;
+            temp = -temp;
+        } else {
+            temp *= 8;
+            temp += qentry >> 1;
+            temp /= qentry;
+        }
+        if ( temp != 0 )
+            nonZero = TRUE;
+        out[i] = temp;
+        DBG_PRINT(("%d\n", temp));
     }
 
     return nonZero;
@@ -263,7 +263,7 @@ boolean mp_quant_zig_block(Block in, FlatBlock out, int qscale, int iblock)
  * --------------------------------------------------------------
  */
 
-void	mp_rle_huff_block(FlatBlock in, BitBucket *out)
+void    mp_rle_huff_block(FlatBlock in, BitBucket *out)
 {
     register int i;
     register int nzeros = 0;
@@ -277,61 +277,61 @@ void	mp_rle_huff_block(FlatBlock in, BitBucket *out)
      * specially, elsewhere.  Not here.
      */
     for (i = 1; i < DCTSIZE_SQ; i++) {
-	cur = in[i];
-	acur = ABS(cur);
-	if (cur) {
-	    if (nzeros < HUFF_MAXRUN && acur < huff_maxlevel[nzeros]) {
-	        /*
-		 * encode using the Huffman tables
-		 */
+        cur = in[i];
+        acur = ABS(cur);
+        if (cur) {
+            if (nzeros < HUFF_MAXRUN && acur < huff_maxlevel[nzeros]) {
+                /*
+                 * encode using the Huffman tables
+                 */
 
-		DBG_PRINT(("rle_huff %02d: Run %02d, Level %02d\n", i, nzeros, cur));
-		assert(cur);
+                DBG_PRINT(("rle_huff %02d: Run %02d, Level %02d\n", i, nzeros, cur));
+                assert(cur);
 
-		code = (huff_table[nzeros])[acur];
-		nbits = (huff_bits[nzeros])[acur];
+                code = (huff_table[nzeros])[acur];
+                nbits = (huff_bits[nzeros])[acur];
 
-		assert(nbits);
+                assert(nbits);
 
-		if (cur < 0)
-		    code |= 1;	/* the sign bit */
-		Bitio_Write(out, code, nbits);
-	    } else {
-		/*
-		 * encode using the escape code
-		 */
-		DBG_PRINT(("Escape\n"));
-		Bitio_Write(out, 0x1, 6);	/* ESCAPE */
-		DBG_PRINT(("Run Length\n"));
-		Bitio_Write(out, nzeros, 6);	/* Run-Length */
+                if (cur < 0)
+                    code |= 1;  /* the sign bit */
+                Bitio_Write(out, code, nbits);
+            } else {
+                /*
+                 * encode using the escape code
+                 */
+                DBG_PRINT(("Escape\n"));
+                Bitio_Write(out, 0x1, 6);       /* ESCAPE */
+                DBG_PRINT(("Run Length\n"));
+                Bitio_Write(out, nzeros, 6);    /* Run-Length */
 
-		assert(cur != 0);
+                assert(cur != 0);
 
-		/*
-	         * this shouldn't happen, but the other
-	         * choice is to bomb out and dump core...
-	         */
-		if (cur < -255)
-		    cur = -255;
-		else if (cur > 255)
-		    cur = 255;
+                /*
+                 * this shouldn't happen, but the other
+                 * choice is to bomb out and dump core...
+                 */
+                if (cur < -255)
+                    cur = -255;
+                else if (cur > 255)
+                    cur = 255;
 
-		DBG_PRINT(("Level\n"));
-		if (acur < 128) {
-		    Bitio_Write(out, cur, 8);
-		} else {
-		    if (cur < 0) {
-			Bitio_Write(out, 0x8001 + cur + 255, 16);
-		    } else
-			Bitio_Write(out, cur, 16);
-		}
-	    }
-	    nzeros = 0;
-	} else
-	    nzeros++;
+                DBG_PRINT(("Level\n"));
+                if (acur < 128) {
+                    Bitio_Write(out, cur, 8);
+                } else {
+                    if (cur < 0) {
+                        Bitio_Write(out, 0x8001 + cur + 255, 16);
+                    } else
+                        Bitio_Write(out, cur, 16);
+                }
+            }
+            nzeros = 0;
+        } else
+            nzeros++;
     }
     DBG_PRINT(("End of block\n"));
-    Bitio_Write(out, 0x2, 2);	/* end of block marker */
+    Bitio_Write(out, 0x2, 2);   /* end of block marker */
 }
 
 
@@ -349,7 +349,7 @@ void	mp_rle_huff_block(FlatBlock in, BitBucket *out)
  * --------------------------------------------------------------
  */
 
-void	mp_rle_huff_pblock(FlatBlock in, BitBucket *out)
+void    mp_rle_huff_pblock(FlatBlock in, BitBucket *out)
 {
     register int i;
     register int nzeros = 0;
@@ -363,80 +363,80 @@ void	mp_rle_huff_pblock(FlatBlock in, BitBucket *out)
      * yes, Virginia, we start at 0.
      */
     for (i = 0; i < DCTSIZE_SQ; i++) {
-	cur = in[i];
-	acur = ABS(cur);
-	if (cur) {
-	    if (nzeros < HUFF_MAXRUN && acur < huff_maxlevel[nzeros]) {
-	        /*
-		 * encode using the Huffman tables
-		 */
+        cur = in[i];
+        acur = ABS(cur);
+        if (cur) {
+            if (nzeros < HUFF_MAXRUN && acur < huff_maxlevel[nzeros]) {
+                /*
+                 * encode using the Huffman tables
+                 */
 
-		DBG_PRINT(("rle_huff %02d: Run %02d, Level %02d\n", i, nzeros, cur));
-		assert(cur);
+                DBG_PRINT(("rle_huff %02d: Run %02d, Level %02d\n", i, nzeros, cur));
+                assert(cur);
 
-		if ( first_dct && (nzeros == 0) && (acur == 1) )
-		{
-		    /* actually, only needs = 0x2 */
-		    code = (cur == 1) ? 0x2 : 0x3;
-		    nbits = 2;
-		}
-		else
-		{
-		    code = (huff_table[nzeros])[acur];
-		    nbits = (huff_bits[nzeros])[acur];
-		}
+                if ( first_dct && (nzeros == 0) && (acur == 1) )
+                {
+                    /* actually, only needs = 0x2 */
+                    code = (cur == 1) ? 0x2 : 0x3;
+                    nbits = 2;
+                }
+                else
+                {
+                    code = (huff_table[nzeros])[acur];
+                    nbits = (huff_bits[nzeros])[acur];
+                }
 
-		assert(nbits);
+                assert(nbits);
 
-		if (cur < 0)
-		    code |= 1;	/* the sign bit */
-		Bitio_Write(out, code, nbits);
-		first_dct = FALSE;
-	    } else {
-		/*
-		 * encode using the escape code
-		 */
-		DBG_PRINT(("Escape\n"));
-		Bitio_Write(out, 0x1, 6);	/* ESCAPE */
-		DBG_PRINT(("Run Length\n"));
-		Bitio_Write(out, nzeros, 6);	/* Run-Length */
+                if (cur < 0)
+                    code |= 1;  /* the sign bit */
+                Bitio_Write(out, code, nbits);
+                first_dct = FALSE;
+            } else {
+                /*
+                 * encode using the escape code
+                 */
+                DBG_PRINT(("Escape\n"));
+                Bitio_Write(out, 0x1, 6);       /* ESCAPE */
+                DBG_PRINT(("Run Length\n"));
+                Bitio_Write(out, nzeros, 6);    /* Run-Length */
 
-		assert(cur != 0);
+                assert(cur != 0);
 
-		/*
-	         * this shouldn't happen, but the other
-	         * choice is to bomb out and dump core...
-	         */
-		if (cur < -255)
-		    cur = -255;
-		else if (cur > 255)
-		    cur = 255;
+                /*
+                 * this shouldn't happen, but the other
+                 * choice is to bomb out and dump core...
+                 */
+                if (cur < -255)
+                    cur = -255;
+                else if (cur > 255)
+                    cur = 255;
 
-		DBG_PRINT(("Level\n"));
-		if (acur < 128) {
-		    Bitio_Write(out, cur, 8);
-		} else {
-		    if (cur < 0) {
-			Bitio_Write(out, 0x8001 + cur + 255, 16);
-		    } else
-			Bitio_Write(out, cur, 16);
-		}
+                DBG_PRINT(("Level\n"));
+                if (acur < 128) {
+                    Bitio_Write(out, cur, 8);
+                } else {
+                    if (cur < 0) {
+                        Bitio_Write(out, 0x8001 + cur + 255, 16);
+                    } else
+                        Bitio_Write(out, cur, 16);
+                }
 
-		first_dct = FALSE;
-	    }
-	    nzeros = 0;
-	} else
-	    nzeros++;
+                first_dct = FALSE;
+            }
+            nzeros = 0;
+        } else
+            nzeros++;
     }
 
     /* actually, should REALLY return FALSE and not use this! */
-    if ( first_dct )	/* have to give a first_dct even if all 0's */
+    if ( first_dct )    /* have to give a first_dct even if all 0's */
     {
-	fprintf(stdout, "HUFF called with all-zero coefficients\n");
-	fprintf(stdout, "exiting...\n");
-	exit(1);
+        fprintf(stdout, "HUFF called with all-zero coefficients\n");
+        fprintf(stdout, "exiting...\n");
+        exit(1);
     }
 
     DBG_PRINT(("End of block\n"));
-    Bitio_Write(out, 0x2, 2);	/* end of block marker */
+    Bitio_Write(out, 0x2, 2);   /* end of block marker */
 }

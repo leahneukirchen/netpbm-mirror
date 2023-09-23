@@ -1,15 +1,15 @@
 /*===========================================================================*
- * postdct.c								     *
- *									     *
- *	Procedures concerned with MPEG post-DCT processing:		     *
- *	    quantization and RLE Huffman encoding			     *
- *									     *
- * EXPORTED PROCEDURES:							     *
- *	Mpost_QuantZigBlock						     *
- *	Mpost_RLEHuffIBlock						     *
- *	Mpost_RLEHuffPBlock						     *
- *	Mpost_UnQuantZigBlock						     *
- *									     *
+ * postdct.c                                                                 *
+ *                                                                           *
+ *      Procedures concerned with MPEG post-DCT processing:                  *
+ *          quantization and RLE Huffman encoding                            *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
+ *      Mpost_QuantZigBlock                                                  *
+ *      Mpost_RLEHuffIBlock                                                  *
+ *      Mpost_RLEHuffPBlock                                                  *
+ *      Mpost_UnQuantZigBlock                                                *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -164,8 +164,8 @@ int32 niqtable[] = {
      16, 16, 16, 16, 16, 16, 16, 16
 };
 
-int32	*customQtable = NULL;
-int32	*customNIQtable = NULL;
+int32   *customQtable = NULL;
+int32   *customNIQtable = NULL;
 
 /*==================*
  * GLOBAL VARIABLES *
@@ -181,10 +181,10 @@ extern boolean realQuiet;
  *
  * Mpost_UnQuantZigBlock
  *
- *	unquantize and zig-zag (decode) a single block
- *	see section 2.4.4.1 of MPEG standard
+ *      unquantize and zig-zag (decode) a single block
+ *      see section 2.4.4.1 of MPEG standard
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -197,66 +197,66 @@ Mpost_UnQuantZigBlock(in, out, qscale, iblock)
     boolean iblock;
 {
     register int index;
-    int	    start;
-    int	    position;
-    register int	    qentry;
-    int	    level, coeff;
-    
-    if ( iblock ) {
-	/* qtable[0] must be 8 */
-	out[0][0] = (int16)(in[0] * 8);
+    int     start;
+    int     position;
+    register int            qentry;
+    int     level, coeff;
 
-	/* don't need to do anything fancy here, because we saved orig
-	    value, not encoded dc value */
-	start = 1;
+    if ( iblock ) {
+        /* qtable[0] must be 8 */
+        out[0][0] = (int16)(in[0] * 8);
+
+        /* don't need to do anything fancy here, because we saved orig
+            value, not encoded dc value */
+        start = 1;
     } else {
-	start = 0;
+        start = 0;
     }
 
     for ( index = start;  index < DCTSIZE_SQ;  index++ ) {
-	position = ZAG[index];
-	level = in[index];
+        position = ZAG[index];
+        level = in[index];
 
-	if (level == 0) {
-	  ((int16 *)out)[position] = 0;
-	  continue;
-	}
-
-
-	if ( iblock ) {
-	    qentry = qtable[position] * qscale;
-	    coeff = (level*qentry)/8;
-	    if ( (coeff & 1) == 0 ) {
-		if ( coeff < 0 ) {
-		    coeff++;
-		} else if ( coeff > 0 ) {
-		    coeff--;
-		}
-	    }
-	} else {
-	    qentry = niqtable[position] * qscale;
-	    if ( level == 0 ) {
-		coeff = 0;
-	    } else if ( level < 0 ) {
-		coeff = (((2*level)-1)*qentry) / 16;
-		if ( (coeff & 1) == 0 ) {
-		    coeff++;
-		}
-	    } else {
-		coeff = (((2*level)+1)*qentry) >> 4;
-		if ( (coeff & 1) == 0 ) {
-		    coeff--;
-		}
-	    }
-
-	    if ( coeff > 2047 ) {
-		coeff = 2047;
-	    } else if ( coeff < -2048 ) {
-		coeff = -2048;
-	    }
+        if (level == 0) {
+          ((int16 *)out)[position] = 0;
+          continue;
         }
 
-	((int16 *)out)[position] = coeff;
+
+        if ( iblock ) {
+            qentry = qtable[position] * qscale;
+            coeff = (level*qentry)/8;
+            if ( (coeff & 1) == 0 ) {
+                if ( coeff < 0 ) {
+                    coeff++;
+                } else if ( coeff > 0 ) {
+                    coeff--;
+                }
+            }
+        } else {
+            qentry = niqtable[position] * qscale;
+            if ( level == 0 ) {
+                coeff = 0;
+            } else if ( level < 0 ) {
+                coeff = (((2*level)-1)*qentry) / 16;
+                if ( (coeff & 1) == 0 ) {
+                    coeff++;
+                }
+            } else {
+                coeff = (((2*level)+1)*qentry) >> 4;
+                if ( (coeff & 1) == 0 ) {
+                    coeff--;
+                }
+            }
+
+            if ( coeff > 2047 ) {
+                coeff = 2047;
+            } else if ( coeff < -2048 ) {
+                coeff = -2048;
+            }
+        }
+
+        ((int16 *)out)[position] = coeff;
     }
 }
 
@@ -265,9 +265,9 @@ Mpost_UnQuantZigBlock(in, out, qscale, iblock)
  *
  * Mpost_QuantZigBlock
  *
- *	quantize and zigzags a block
+ *      quantize and zigzags a block
  *
- * RETURNS:	MPOST_OVERFLOW if a generated value is outside |255|
+ * RETURNS:     MPOST_OVERFLOW if a generated value is outside |255|
  *              MPOST_ZERO     if all coeffs are zero
  *              MPOST_NON_ZERO otherwisw
  *
@@ -287,7 +287,7 @@ Mpost_QuantZigBlock(in, out, qscale, iblock)
   register int position;
   boolean nonZero = FALSE;
   boolean overflow = FALSE;
-  
+
   DBG_PRINT(("Mpost_QuantZigBlock...\n"));
   if (iblock) {
     /*
@@ -296,7 +296,7 @@ Mpost_QuantZigBlock(in, out, qscale, iblock)
      */
     temp = ((int16 *) in)[ZAG[0]];
     qentry = qtable[ZAG[0]];
-    
+
     if (temp < 0) {
       temp = -temp;
       temp += (qentry >> 1);
@@ -310,60 +310,60 @@ Mpost_QuantZigBlock(in, out, qscale, iblock)
       nonZero = TRUE;
     }
     out[0] = temp;
-    
+
     for (i = 1; i < DCTSIZE_SQ; i++) {
       position = ZAG[i];
       temp = ((int16 *) in)[position];
       qentry = qtable[position] * qscale;
-      
+
       /* see 1993 MPEG doc, section D.6.3.4 */
       if (temp < 0) {
-	temp = -temp;
-	temp = (temp << 3);	/* temp > 0 */
-	temp += (qentry >> 1);
-	temp /= qentry;
-	temp = -temp;
+        temp = -temp;
+        temp = (temp << 3);     /* temp > 0 */
+        temp += (qentry >> 1);
+        temp /= qentry;
+        temp = -temp;
       } else {
-	temp = (temp << 3);	/* temp > 0 */
-	temp += (qentry >> 1);
-	temp /= qentry;
+        temp = (temp << 3);     /* temp > 0 */
+        temp += (qentry >> 1);
+        temp /= qentry;
       }
-      
+
       if ( temp != 0 ) {
-	nonZero = TRUE;
-	out[i] = temp;
-	if (temp < -255) {
-	  temp = -255;
-	  overflow = TRUE;
-	} else if (temp > 255) {
-	  temp = 255;
-	  overflow = TRUE;
-	}
+        nonZero = TRUE;
+        out[i] = temp;
+        if (temp < -255) {
+          temp = -255;
+          overflow = TRUE;
+        } else if (temp > 255) {
+          temp = 255;
+          overflow = TRUE;
+        }
       } else out[i]=0;
     }
   } else {
     for (i = 0; i < DCTSIZE_SQ; i++) {
       position = ZAG[i];
       temp = ((int16 *) in)[position];
-      
+
       /* multiply by non-intra qtable */
       qentry = qscale * niqtable[position];
-      
+
       /* see 1993 MPEG doc, D.6.4.5 */
       temp *= 8;
-      temp /= qentry;	    /* truncation toward 0 -- correct */
-      
+      temp /= qentry;       /* truncation toward 0 -- correct */
+
       if ( temp != 0 ) {
-	nonZero = TRUE;
-	out[i] = temp;
-	if (temp < -255) {
-	  temp = -255;
-	  overflow = TRUE;
-	} else if (temp > 255) {
-	  temp = 255;
-	  overflow = TRUE;
-	}
-	
+        nonZero = TRUE;
+        out[i] = temp;
+        if (temp < -255) {
+          temp = -255;
+          overflow = TRUE;
+        } else if (temp > 255) {
+          temp = 255;
+          overflow = TRUE;
+        }
+
       } else out[i]=0;
     }
   }
@@ -379,9 +379,9 @@ Mpost_QuantZigBlock(in, out, qscale, iblock)
  *
  * Mpost_RLEHuffIBlock
  *
- *	generate the huffman bits from an I-block
+ *      generate the huffman bits from an I-block
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -403,60 +403,60 @@ Mpost_RLEHuffIBlock(in, out)
      * specially, elsewhere.  Not here.
      */
     for (i = 1; i < DCTSIZE_SQ; i++) {
-	cur = in[i];
-	acur = ABS(cur);
-	if (cur) {
-	    if ( (nzeros < HUFF_MAXRUN) && (acur < huff_maxlevel[nzeros])) {
-	        /*
-		 * encode using the Huffman tables
-		 */
+        cur = in[i];
+        acur = ABS(cur);
+        if (cur) {
+            if ( (nzeros < HUFF_MAXRUN) && (acur < huff_maxlevel[nzeros])) {
+                /*
+                 * encode using the Huffman tables
+                 */
 
-		DBG_PRINT(("rle_huff %02d.%02d: Run %02d, Level %4d\n", i,  ZAG[i], nzeros, cur));
-		code = (huff_table[nzeros])[acur];
-		nbits = (huff_bits[nzeros])[acur];
+                DBG_PRINT(("rle_huff %02d.%02d: Run %02d, Level %4d\n", i,  ZAG[i], nzeros, cur));
+                code = (huff_table[nzeros])[acur];
+                nbits = (huff_bits[nzeros])[acur];
 
-		if (cur < 0) {
-		    code |= 1;	/* the sign bit */
-		}
-		Bitio_Write(out, code, nbits);
-	    } else {
-		/*
-		 * encode using the escape code
-		 */
-		DBG_PRINT(("Escape\n"));
-		Bitio_Write(out, 0x1, 6);	/* ESCAPE */
-		DBG_PRINT(("Run Length\n"));
-		Bitio_Write(out, nzeros, 6);	/* Run-Length */
+                if (cur < 0) {
+                    code |= 1;  /* the sign bit */
+                }
+                Bitio_Write(out, code, nbits);
+            } else {
+                /*
+                 * encode using the escape code
+                 */
+                DBG_PRINT(("Escape\n"));
+                Bitio_Write(out, 0x1, 6);       /* ESCAPE */
+                DBG_PRINT(("Run Length\n"));
+                Bitio_Write(out, nzeros, 6);    /* Run-Length */
 
-		/*
-	         * this shouldn't happen, but the other
-	         * choice is to bomb out and dump core...
-		 * Hmmm, seems to happen with small Qtable entries (1) -srs
-	         */
-		if (cur < -255) {
-		    cur = -255;
-		} else if (cur > 255) {
-		    cur = 255;
-		}
+                /*
+                 * this shouldn't happen, but the other
+                 * choice is to bomb out and dump core...
+                 * Hmmm, seems to happen with small Qtable entries (1) -srs
+                 */
+                if (cur < -255) {
+                    cur = -255;
+                } else if (cur > 255) {
+                    cur = 255;
+                }
 
-		DBG_PRINT(("Level\n"));
-		if (acur < 128) {
-		    Bitio_Write(out, cur, 8);
-		} else {
-		    if (cur < 0) {
-			Bitio_Write(out, 0x8001 + cur + 255, 16);
-		    } else {
-			Bitio_Write(out, cur, 16);
-		    }
-		}
-	    }
-	    nzeros = 0;
-	} else {
-	    nzeros++;
-	}
+                DBG_PRINT(("Level\n"));
+                if (acur < 128) {
+                    Bitio_Write(out, cur, 8);
+                } else {
+                    if (cur < 0) {
+                        Bitio_Write(out, 0x8001 + cur + 255, 16);
+                    } else {
+                        Bitio_Write(out, cur, 16);
+                    }
+                }
+            }
+            nzeros = 0;
+        } else {
+            nzeros++;
+        }
     }
     DBG_PRINT(("End of block\n"));
-    Bitio_Write(out, 0x2, 2);	/* end of block marker */
+    Bitio_Write(out, 0x2, 2);   /* end of block marker */
 }
 
 
@@ -464,9 +464,9 @@ Mpost_RLEHuffIBlock(in, out)
  *
  * Mpost_RLEHuffPBlock
  *
- *	generate the huffman bits from an P-block
+ *      generate the huffman bits from an P-block
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -488,80 +488,80 @@ Mpost_RLEHuffPBlock(in, out)
      * yes, Virginia, we start at 0.
      */
     for (i = 0; i < DCTSIZE_SQ; i++) {
-	cur = in[i];
-	acur = ABS(cur);
-	if (cur) {
-	    if ((nzeros < HUFF_MAXRUN) && (acur < huff_maxlevel[nzeros])) {
-	        /*
-		 * encode using the Huffman tables
-		 */
+        cur = in[i];
+        acur = ABS(cur);
+        if (cur) {
+            if ((nzeros < HUFF_MAXRUN) && (acur < huff_maxlevel[nzeros])) {
+                /*
+                 * encode using the Huffman tables
+                 */
 
-		DBG_PRINT(("rle_huff %02d.%02d: Run %02d, Level %4d\n", i, ZAG[i], nzeros, cur));
-		if ( first_dct && (nzeros == 0) && (acur == 1) ) {
-		    /* actually, only needs = 0x2 */
-		    code = (cur == 1) ? 0x2 : 0x3;
-		    nbits = 2;
-		} else {
-		    code = (huff_table[nzeros])[acur];
-		    nbits = (huff_bits[nzeros])[acur];
-		  }
+                DBG_PRINT(("rle_huff %02d.%02d: Run %02d, Level %4d\n", i, ZAG[i], nzeros, cur));
+                if ( first_dct && (nzeros == 0) && (acur == 1) ) {
+                    /* actually, only needs = 0x2 */
+                    code = (cur == 1) ? 0x2 : 0x3;
+                    nbits = 2;
+                } else {
+                    code = (huff_table[nzeros])[acur];
+                    nbits = (huff_bits[nzeros])[acur];
+                  }
 
-		assert(nbits);
+                assert(nbits);
 
-		if (cur < 0) {
-		    code |= 1;	/* the sign bit */
-		}
-		Bitio_Write(out, code, nbits);
-		first_dct = FALSE;
-	    } else {
-		/*
-		 * encode using the escape code
-		 */
-		DBG_PRINT(("Escape\n"));
-		Bitio_Write(out, 0x1, 6);	/* ESCAPE */
-		DBG_PRINT(("Run Length\n"));
-		Bitio_Write(out, nzeros, 6);	/* Run-Length */
+                if (cur < 0) {
+                    code |= 1;  /* the sign bit */
+                }
+                Bitio_Write(out, code, nbits);
+                first_dct = FALSE;
+            } else {
+                /*
+                 * encode using the escape code
+                 */
+                DBG_PRINT(("Escape\n"));
+                Bitio_Write(out, 0x1, 6);       /* ESCAPE */
+                DBG_PRINT(("Run Length\n"));
+                Bitio_Write(out, nzeros, 6);    /* Run-Length */
 
-		/*
-	         * this shouldn't happen, but the other
-	         * choice is to bomb out and dump core...
-		 * Hmmm, seems to happen with small Qtable entries (1) -srs
-	         */
-		if (cur < -255) {
-		  cur = -255;
-		} else if (cur > 255) {
-		  cur = 255;
-		}
+                /*
+                 * this shouldn't happen, but the other
+                 * choice is to bomb out and dump core...
+                 * Hmmm, seems to happen with small Qtable entries (1) -srs
+                 */
+                if (cur < -255) {
+                  cur = -255;
+                } else if (cur > 255) {
+                  cur = 255;
+                }
 
-		DBG_PRINT(("Level\n"));
-		if (acur < 128) {
-		    Bitio_Write(out, cur, 8);
-		} else {
-		    if (cur < 0) {
-			Bitio_Write(out, 0x8001 + cur + 255, 16);
-		    } else {
-			Bitio_Write(out, cur, 16);
-		    }
-		}
+                DBG_PRINT(("Level\n"));
+                if (acur < 128) {
+                    Bitio_Write(out, cur, 8);
+                } else {
+                    if (cur < 0) {
+                        Bitio_Write(out, 0x8001 + cur + 255, 16);
+                    } else {
+                        Bitio_Write(out, cur, 16);
+                    }
+                }
 
-		first_dct = FALSE;
-	    }
-	    nzeros = 0;
-	} else {
-	    nzeros++;
-	}
+                first_dct = FALSE;
+            }
+            nzeros = 0;
+        } else {
+            nzeros++;
+        }
     }
 
     /* actually, should REALLY return FALSE and not use this! */
 
-    if ( first_dct ) {	/* have to give a first_dct even if all 0's */
-	fprintf(stderr, "HUFF called with all-zero coefficients\n");
-	fprintf(stderr, "exiting...\n");
-	exit(1);
+    if ( first_dct ) {  /* have to give a first_dct even if all 0's */
+        fprintf(stderr, "HUFF called with all-zero coefficients\n");
+        fprintf(stderr, "exiting...\n");
+        exit(1);
     }
 
     DBG_PRINT(("End of block\n"));
-    Bitio_Write(out, 0x2, 2);	/* end of block marker */
+    Bitio_Write(out, 0x2, 2);   /* end of block marker */
 }
 
 
@@ -569,9 +569,9 @@ Mpost_RLEHuffPBlock(in, out)
  *
  * CalcRLEHuffLength
  *
- *	count the huffman bits for an P-block
+ *      count the huffman bits for an P-block
  *
- * RETURNS:	number of bits
+ * RETURNS:     number of bits
  *
  * SIDE EFFECTS:    none
  *
@@ -587,40 +587,40 @@ CalcRLEHuffLength(in)
   register int nbits;
   register int countbits=0;
   boolean first_dct = TRUE;
-  
+
   for (i = 0; i < DCTSIZE_SQ; i++) {
     cur = in[i];
     acur = ABS(cur);
     if (cur) {
       if ((nzeros < HUFF_MAXRUN) && (acur < huff_maxlevel[nzeros])) {
-	/*
-	 * encode using the Huffman tables
-	 */
+        /*
+         * encode using the Huffman tables
+         */
 
-	if ( first_dct && (nzeros == 0) && (acur == 1) ) {
-	  nbits = 2;
-	} else {
-	  nbits = (huff_bits[nzeros])[acur];
-	}
-	countbits += nbits;
-	first_dct = FALSE;
+        if ( first_dct && (nzeros == 0) && (acur == 1) ) {
+          nbits = 2;
+        } else {
+          nbits = (huff_bits[nzeros])[acur];
+        }
+        countbits += nbits;
+        first_dct = FALSE;
       } else {
-	countbits += 12;	/* ESCAPE + runlength */
+        countbits += 12;        /* ESCAPE + runlength */
 
-	if (acur < 128) {
-	  countbits += 8;
-	} else {
-	  countbits += 16;
-	}
+        if (acur < 128) {
+          countbits += 8;
+        } else {
+          countbits += 16;
+        }
 
-	first_dct = FALSE;
+        first_dct = FALSE;
       }
       nzeros = 0;
     } else {
       nzeros++;
     }
   }
-  
+
   countbits += 2; /* end of block marker */
   return countbits;
 }

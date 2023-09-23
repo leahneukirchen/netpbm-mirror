@@ -44,28 +44,28 @@
  *
  */
 
-long	totalMemory = 0;
-long	maxMemory = 0;
+long    totalMemory = 0;
+long    maxMemory = 0;
 
 
-char	*MemAlloc(size_t size)
+char    *MemAlloc(size_t size)
 {
     totalMemory += (long)size;
     if ( totalMemory > maxMemory )
     {
-	maxMemory = totalMemory;
+        maxMemory = totalMemory;
     }
 
     return malloc(size);
 }
 
-void	MemFree(char *ptr, long bytes)
+void    MemFree(char *ptr, long bytes)
 {
     totalMemory -= bytes;
     free(ptr);
 }
 
-void	PrintMaxMemory(void)
+void    PrintMaxMemory(void)
 {
     fprintf(stdout, "MMMMM-----MAX MEMORY-----MMMMM = %ld\n", maxMemory);
 }

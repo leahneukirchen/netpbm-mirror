@@ -53,23 +53,23 @@ compute_mult_tables(const pixval maxval) {
 
     /* For speed, we do the arithmetic with eight tables that reduce a
        bunch of multiplications and divisions to a simple table lookup.
-       
+
        Because a large maxval could require a significant amount of
        table space, we allocate the space dynamically.
 
-       If we had to compute the tables for every frame, it wouldn't be 
+       If we had to compute the tables for every frame, it wouldn't be
        fast at all, but since all the frames normally have the same
        maxval, we only need to compute them once.  But just in case,
        we check each frame to see if it has a different maxval and
        recompute the tables if so.
     */
-    
+
     if (table_maxval != maxval) {
         /* We need to compute or re-compute the multiplication tables */
         if (table_maxval != 0) {
             free(mult299); free(mult587); free(mult114); free(mult16874);
-            free(mult33126); free(mult5); free(mult41869); free(mult08131);  
-        } 
+            free(mult33126); free(mult5); free(mult41869); free(mult08131);
+        }
         table_maxval = maxval;
 
         mult299   = malloc((table_maxval+1)*sizeof(float));
@@ -83,18 +83,18 @@ compute_mult_tables(const pixval maxval) {
 
         if (mult299 == NULL || mult587 == NULL || mult114 == NULL ||
             mult16874 == NULL || mult33126 == NULL || mult5 == NULL ||
-            mult41869 == NULL || mult08131 == NULL) 
+            mult41869 == NULL || mult08131 == NULL)
             pm_error("Unable to allocate storage for arithmetic tables.  "
                      "We need %d bytes, which is the maxval of the input "
                      "image, plus 1, "
-                     "times the storage size of a floating point value.", 
+                     "times the storage size of a floating point value.",
                      (unsigned)(8 * (table_maxval+1)*sizeof(float)));
 
         {
             int index;
 
             for (index = 0; index <= table_maxval; index++ ) {
-                mult299[index]   = index*0.29900  * 255 / table_maxval; 
+                mult299[index]   = index*0.29900  * 255 / table_maxval;
                 mult587[index]   = index*0.58700  * 255 / table_maxval;
                 mult114[index]   = index*0.11400  * 255 / table_maxval;
                 mult16874[index] = -0.16874*index * 255 / table_maxval;
@@ -195,9 +195,9 @@ PNMtoYUV(MpegFrame *  const frameP,
                      mult41869[PPM_GETG(src1[1])] +
                      mult08131[PPM_GETB(src1[1])]) / 4) + 128;
 
-            DBG_PRINT(("%3d,%3d: (%3d,%3d,%3d) --> (%3d,%3d,%3d)\n", 
-                       x, y, 
-                       PPM_GETR(*src0), PPM_GETG(*src0), PPM_GETB(*src0), 
+            DBG_PRINT(("%3d,%3d: (%3d,%3d,%3d) --> (%3d,%3d,%3d)\n",
+                       x, y,
+                       PPM_GETR(*src0), PPM_GETG(*src0), PPM_GETB(*src0),
                        *dy0, *dcb, *dcr));
         }
     }

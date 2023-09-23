@@ -1,8 +1,8 @@
 /*===========================================================================*
- * byteorder.h								     *
- *									     *
- *	stuff to handle different byte order				     *
- *									     *
+ * byteorder.h                                                               *
+ *                                                                           *
+ *      stuff to handle different byte order                                 *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -26,7 +26,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /u/smoot/md/mpeg_encode/headers/RCS/byteorder.h,v 1.3 1995/01/19 23:54:39 eyhung Exp $
  *  $Log: byteorder.h,v $
  * Revision 1.3  1995/01/19  23:54:39  eyhung
@@ -60,17 +60,17 @@
      * constant; thus, this is not for general use, but works with bitio.c
      */
 #define htonl(x)    \
-    ((((unsigned char *)(&x))[0] << 24) |	\
-     (((unsigned char *)(&x))[1] << 16) |	\
-     (((unsigned char *)(&x))[2] << 8) |	\
+    ((((unsigned char *)(&x))[0] << 24) |       \
+     (((unsigned char *)(&x))[1] << 16) |       \
+     (((unsigned char *)(&x))[2] << 8) |        \
      (((unsigned char *)(&x))[3]))
 #define ntohl(x)    htonl(x)
 #define htons(x)    \
-    ((((unsigned char *)(&x))[0] << 8) |	\
+    ((((unsigned char *)(&x))[0] << 8) |        \
      ((unsigned char *)(&x))[1])
 #define ntohs(x)    htons(x)
 #else
-    /* let in.h handle it, if possible */		   
+    /* let in.h handle it, if possible */
 #include <sys/types.h>
 #if !defined(WIN32) || defined(__CYGWIN__)
 #include <netinet/in.h>

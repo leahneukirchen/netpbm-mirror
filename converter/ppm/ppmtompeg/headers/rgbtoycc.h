@@ -1,8 +1,8 @@
 /*===========================================================================*
- * rgbtoycc.h								     *
- *									     *
- *	Procedures to convert from RGB space to YUV space		     *
- *									     *
+ * rgbtoycc.h                                                                *
+ *                                                                           *
+ *      Procedures to convert from RGB space to YUV space                    *
+ *                                                                           *
  *===========================================================================*/
 
 /*

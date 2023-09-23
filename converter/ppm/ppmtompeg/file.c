@@ -121,7 +121,7 @@ ChangeDirectory(ClientData nulldata, Tcl_Interp *interp, int argc,
         fprintf(stderr, "can't open '%s'\n", currentPath);
         return TCL_OK;  /* shouldn't, really */
     }
-    
+
     return TCL_OK;
 }
 
@@ -164,7 +164,7 @@ ListDirectory(ClientData nulldata, Tcl_Interp *interp, int argc,
     while ((dp = readdir(dfd)) != NULL) {
         strcpy(restPtr, dp->d_name);
         stat(fullName, &stbuf);
-        
+
         if (dp->d_name[0] != '.') {
             if (S_ISDIR(stbuf.st_mode)) {
                 sprintf(fileName[fileCount], "%s/", dp->d_name);
@@ -263,7 +263,7 @@ SetBrowseGlob(ClientData nulldata, Tcl_Interp *interp,
         return TCL_OK;
     }
 
-    Tcl_AppendResult(interp, 
+    Tcl_AppendResult(interp,
                      "wrong args: should be \"", argv[0]," string\"",
                      NULL);
     return TCL_ERROR;

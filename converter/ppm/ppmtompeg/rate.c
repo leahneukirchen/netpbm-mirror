@@ -1,9 +1,9 @@
 /*============================================================================*
- * rate.c								      *
- *									      *
- *	Procedures concerned with rate control                                *
- *									      *
- * EXPORTED PROCEDURES:							      *
+ * rate.c                                                                     *
+ *                                                                            *
+ *      Procedures concerned with rate control                                *
+ *                                                                            *
+ * EXPORTED PROCEDURES:                                                       *
  *      initRatecontrol()                                                     *
  *      targetRateControl()                                                   *
  *      updateRateControl()                                                   *
@@ -11,7 +11,7 @@
  *      needQScaleChange()                                                    *
  *      incNumBlocks()                                                        *
  *      incQuant()                                                            *
- *	incMacroBlockBits()                                                   *
+ *      incMacroBlockBits()                                                   *
  *      setPictureRate()                                                      *
  *      setBitRate()                                                          *
  *      getBitRate()                                                          *
@@ -19,7 +19,7 @@
  *      getBufferSize()                                                       *
  *                                                                            *
  * NOTES:                                                                     *
- *	Naming conventions follow those of MPEG-2 draft algorithm (chap. 10)  *
+ *      Naming conventions follow those of MPEG-2 draft algorithm (chap. 10)  *
  *============================================================================*/
 
 
@@ -73,7 +73,7 @@
  * GLOBAL VARIABLES *
  *==================*/
 
-#define MAX_BIT_RATE 104857600		/* 18 digit number in units of 400 */
+#define MAX_BIT_RATE 104857600          /* 18 digit number in units of 400 */
 #define MAX_BUFFER_SIZE 16760832        /* 10 digit number in units of 16k */
 #define DEFAULT_BUFFER_SIZE 327680      /* maximum for "constrained" bitstream */
 #define DEFAULT_VBV_FULLNESS 3          /* wait till 1/3 full */
@@ -82,9 +82,9 @@
 #define MAX_VBV_DELAY 32768             /* 16 digits */
 
 
-/*	  Variables from Parameter File */
+/*        Variables from Parameter File */
 
-static int	RateControlMode = VARIABLE_RATE;
+static int      RateControlMode = VARIABLE_RATE;
 static int32 buffer_size = DEFAULT_BUFFER_SIZE;
 static int32 bit_rate = -1;
 
@@ -94,9 +94,9 @@ static bool wantVbvOverflowWarning;
 /*   Variables for the VBV buffer defined in MPEG specs */
 static unsigned int VBV_remainingDelay;
     /* delay in units of 1/90000 seconds */
-static int32 VBV_buffer = 0;	  /* fullness of the theoretical VBV buffer */
+static int32 VBV_buffer = 0;      /* fullness of the theoretical VBV buffer */
 static int32 bufferFillRate = 0;    /* constant rate at which buffer filled */
-static int32 frameDelayIncrement = 0;	/* number of "delay" units/Frame */
+static int32 frameDelayIncrement = 0;   /* number of "delay" units/Frame */
 
 /*  Global complexity measure variables */
 static int Xi, Xp, Xb;  /*  Global complexity measure  */
@@ -108,7 +108,7 @@ static float Qi, Qp, Qb; /* avg quantizaton for last picture of type  */
 /*  Target bit allocations for each type of picture*/
 int Ti, Tp, Tb;
 
-int current_Tx;	/* allocation for current frame */
+int current_Tx; /* allocation for current frame */
 
 /*  Count of number of pictures of each type remaining */
 int GOP_X;
@@ -131,7 +131,7 @@ int rc_totalFrameBits;
 int rc_totalOverheadBits = 0;
 
 
-/*	Want to print out Macroblock info every Nth MB */
+/*      Want to print out Macroblock info every Nth MB */
 int RC_MB_SAMPLE_RATE = 0;
 
 static float Ki = .7;
@@ -150,23 +150,23 @@ static int d0_b;
 static int lastFrameVirtBuf;   /* fullness after last frame of this type */
 static int currentVirtBuf;     /* fullness during current encoding*/
 
-static int MB_cnt = -1;	       /* Number of MB's in picture */
+static int MB_cnt = -1;        /* Number of MB's in picture */
 
 static int rc_Q;               /* reference quantization parameter */
 
 static int reactionParameter;  /*  Reaction parameter */
 
-/*	Adaptive Quantization variables */
+/*      Adaptive Quantization variables */
 static int act_j;              /*  spatial activity measure */
 static float N_act;            /*  Normalized spacial activity */
-static int avg_act;	   /*  average activity value in last picture encoded */
-static int total_act_j;	       /*  Sum of activity values in current frame */
+static int avg_act;        /*  average activity value in last picture encoded */
+static int total_act_j;        /*  Sum of activity values in current frame */
 
-static int var_sblk;	       /* sub-block activity */
-static int P_mean;	       /* Mean value of pixels in 8x8 sub-block */
+static int var_sblk;           /* sub-block activity */
+static int P_mean;             /* Mean value of pixels in 8x8 sub-block */
 
-static int mquant;	       /* Raw Quantization value */
-static int Qscale;	       /* Clipped, truncated quantization value */
+static int mquant;             /* Raw Quantization value */
+static int Qscale;             /* Clipped, truncated quantization value */
 
 
 
@@ -177,7 +177,7 @@ static FILE *RC_FILE;
 
 static char rc_buffer[101];
 
-/*	EXTERNAL Variables  */
+/*      EXTERNAL Variables  */
 extern char *framePattern;
 extern int framePatternLen;
 
@@ -230,9 +230,9 @@ analyzePattern(const char *  const framePattern,
  *
  * initRateControl
  *
- *	initialize the allocation parameters.
+ *      initialize the allocation parameters.
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:   many global variables
  *
@@ -292,11 +292,11 @@ initRateControl(bool const wantUnderflowWarning,
     d0_p = (Kp * d0_i);
     d0_b = (Kb * d0_i);
 
-    lastFrameVirtBuf = d0_i;	/*  start with I Frame */
+    lastFrameVirtBuf = d0_i;    /*  start with I Frame */
     rc_Q = lastFrameVirtBuf  * 31 / reactionParameter;
 
     /*   init spatial activity measures */
-    avg_act = 400;		/* Suggested initial value */
+    avg_act = 400;              /* Suggested initial value */
     N_act = 1;
 
     mquant = rc_Q * N_act;
@@ -320,10 +320,10 @@ initRateControl(bool const wantUnderflowWarning,
  *
  * initGOPRateControl
  *
- *		(re)-initialize the RC for the a new Group of Pictures.
- *	New bit allocation, but carry over complexity measures.
+ *              (re)-initialize the RC for the a new Group of Pictures.
+ *      New bit allocation, but carry over complexity measures.
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:   many global variables
  *
@@ -585,9 +585,9 @@ updateRateControl(int const type) {
  * MB_RateOut
  *
  *      Prints out sampling of MB rate control data.  Every "nth" block
- *	stats are printed, with "n" controlled by global RC_MB_SAMPLE_RATE
- *	(NB. "skipped" blocks do not go through this function and thus do not
- *		show up in the sample )
+ *      stats are printed, with "n" controlled by global RC_MB_SAMPLE_RATE
+ *      (NB. "skipped" blocks do not go through this function and thus do not
+ *              show up in the sample )
  *
  * RETURNS:     nothing
  *
@@ -612,8 +612,8 @@ int type;
   pctUsed = (totalBits *100/current_Tx);
 
   sprintf(rc_buffer, "%3d  %5d %2d %3d %6d  %3d %6d   %2.2f   %6d %4d    %3d   %3d\n",
-	  (rc_numBlocks - 1), bitsThisMB, Qscale, mquant, currentVirtBuf,
-	  rc_Q, act_j, N_act, totalBits, bitsPerMB, pctUsed, pctDone);
+          (rc_numBlocks - 1), bitsThisMB, Qscale, mquant, currentVirtBuf,
+          rc_Q, act_j, N_act, totalBits, bitsPerMB, pctUsed, pctDone);
 #ifdef RC_STATS_FILE
   fprintf(RC_FILE, "%s", rc_buffer);
   fflush(RC_FILE);
@@ -651,7 +651,7 @@ void incNumBlocks(num)
  *
  * incMacroBlockBits()
  *
- *	Increments the number of Macro Block bits and the total of Frame
+ *      Increments the number of Macro Block bits and the total of Frame
  *  bits by the number passed.
  *
  * RETURNS:   nothing
@@ -672,7 +672,7 @@ void incMacroBlockBits(num)
 
 /*===========================================================================*
  *
- *   	needQScaleChange(current Q scale, 4 luminance blocks)
+ *      needQScaleChange(current Q scale, 4 luminance blocks)
  *
  *
  * RETURNS:     new Qscale
@@ -689,7 +689,7 @@ int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
 {
 
   /*   One more MacroBlock seen */
-  rc_numBlocks++;		/* this notes each block num in MB */
+  rc_numBlocks++;               /* this notes each block num in MB */
 
   checkBufferFullness(oldQScale);
 
@@ -712,7 +712,7 @@ int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
  * determineMBCount()
  *
  *      Determines number of Macro Blocks in frame from the frame sizes
- *	passed.
+ *      passed.
  *
  * RETURNS:     nothing
  *
@@ -766,7 +766,7 @@ void checkBufferFullness (oldQScale)
  * void checkSpatialActivity()
  *
  *      Calculates the spatial activity for the four luminance blocks of the
- *	macroblock.  Along with the normalized reference quantization parameter
+ *      macroblock.  Along with the normalized reference quantization parameter
  *  (rc_Q) , it determines the quantization factor for the next macroblock.
  *
  * RETURNS:     nothing
@@ -796,18 +796,18 @@ void checkSpatialActivity(blk0, blk1, blk2, blk3)
   blkArray[3] = (int16 *) blk3;
 
 
-  for (i =0; i < 4; i++) {	/* Compute the activity in each block */
+  for (i =0; i < 4; i++) {      /* Compute the activity in each block */
     curBlock = blkArray[i];
     blk_ptr = curBlock;
     P_mean = 0;
     /*  Find the mean pixel value */
     for (j=0; j < DCTSIZE_SQ; j ++) {
       P_mean += *(blk_ptr++);
-      /*			P_mean += curBlock[j];
-				if (curBlock[j] != *(blk_ptr++)) {
-				printf("ARRAY ERROR: block %d\n", j);
-				}
-				*/
+      /*                        P_mean += curBlock[j];
+                                if (curBlock[j] != *(blk_ptr++)) {
+                                printf("ARRAY ERROR: block %d\n", j);
+                                }
+                                */
     }
     P_mean /= DCTSIZE_SQ;
 
@@ -818,7 +818,7 @@ void checkSpatialActivity(blk0, blk1, blk2, blk3)
     for (j=0; j < DCTSIZE_SQ; j++) {
 #ifdef notdef
       if (curBlock[j] != *(blk_ptr++)) {
-	printf("ARRAY ERROR: block %d\n", j);
+        printf("ARRAY ERROR: block %d\n", j);
       }
       temp = curBlock[j] - P_mean;
 #endif
@@ -870,13 +870,13 @@ int getRateMode()
  *
  *      Checks the string parsed from the parameter file.  Verifies
  *  number and sets global values. MPEG standard specifies that bit rate
- *	be rounded up to nearest 400 bits/sec.
+ *      be rounded up to nearest 400 bits/sec.
  *
  * RETURNS:     nothing
  *
  * SIDE EFFECTS:   global variables
  *
- * NOTES:	Should this be in the 400-bit units used in sequence header?
+ * NOTES:       Should this be in the 400-bit units used in sequence header?
  *
  *===========================================================================*/
 void setBitRate (const char * const charPtr)
@@ -888,7 +888,7 @@ void setBitRate (const char * const charPtr)
     RateControlMode = FIXED_RATE;
   } else {
     printf("Parameter File Error:  invalid BIT_RATE: \"%s\", defaults to Variable ratemode\n",
-	   charPtr);
+           charPtr);
     RateControlMode = VARIABLE_RATE;
     bit_rate = -1;
   }
@@ -933,7 +933,7 @@ int getBitRate ()
  *
  * SIDE EFFECTS:   buffer_size global variable.
  *
- * NOTES:	The global is in bits, NOT the 16kb units used in sequence header
+ * NOTES:       The global is in bits, NOT the 16kb units used in sequence header
  *
  *===========================================================================*/
 void setBufferSize (const char * const charPtr)
@@ -948,7 +948,7 @@ void setBufferSize (const char * const charPtr)
   } else {
     buffer_size = DEFAULT_BUFFER_SIZE;
     printf("Parameter File Error:  invalid BUFFER_SIZE: \"%s\", defaults to : %d\n",
-	   charPtr, buffer_size);
+           charPtr, buffer_size);
   }
   DBG_PRINT(("Buffer size is: %d\n", buffer_size));
 }

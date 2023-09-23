@@ -94,7 +94,7 @@ extern Block **dct, **dctr, **dctb;
 
 static void
 zeroMotion(motion * const motionP) {
-    
+
     motionP->fwd.y = motionP->fwd.x = motionP->bwd.y = motionP->bwd.x = 0;
 }
 
@@ -218,14 +218,14 @@ ComputeBDiffDCTs(MpegFrame * const current,
                  int *       const patternP) {
 
     Block motionBlock;
-    
+
     if (*patternP & 0x20) {
         boolean significantDiff;
         ComputeBMotionBlock(prev, next, by, bx, mode, motion,
                             &motionBlock, LUM_BLOCK);
         ComputeDiffDCTBlock(current->y_blocks[by][bx], dct[by][bx],
                             motionBlock, &significantDiff);
-        if (!significantDiff) 
+        if (!significantDiff)
             *patternP ^=  0x20;
     }
 
@@ -235,7 +235,7 @@ ComputeBDiffDCTs(MpegFrame * const current,
                             &motionBlock, LUM_BLOCK);
         ComputeDiffDCTBlock(current->y_blocks[by][bx+1], dct[by][bx+1],
                             motionBlock, &significantDiff);
-        if (!significantDiff) 
+        if (!significantDiff)
             *patternP ^=  0x10;
     }
 
@@ -348,7 +348,7 @@ ComputeBlockColorDiff(Block current,
 
     unsigned int y;
     int diffTotal;
-    
+
     diffTotal = 0;
 
     for (y = 0; y < 8; ++y) {
@@ -433,7 +433,7 @@ MotionSufficient(MpegFrame *      const curr,
                         &mColorBlock, CB_BLOCK);
     colorErr += ComputeBlockColorDiff(curr->cr_blocks[by/2][bx/2],
                                       mColorBlock);
-    
+
     return (colorErr < 256); /* lumErr checked above */
 }
 
@@ -464,7 +464,7 @@ initializeStats(struct stats * const statsP) {
 
 
 static void
-checkSpecifics(MpegFrame *      const curr, 
+checkSpecifics(MpegFrame *      const curr,
                int              const mbAddress,
                int              const QScale,
                boolean *        const skipItP,
@@ -519,9 +519,9 @@ checkSpecifics(MpegFrame *      const curr,
 
 static void
 makeNonSkipBlock(int              const y,
-                 int              const x, 
-                 MpegFrame *      const curr, 
-                 MpegFrame *      const prev, 
+                 int              const x,
+                 MpegFrame *      const curr,
+                 MpegFrame *      const prev,
                  MpegFrame *      const next,
                  bool             const specificsOn,
                  int              const mbAddress,
@@ -556,7 +556,7 @@ makeNonSkipBlock(int              const y,
                                  &motion, mode);
         }
         /* STEP 2:  INTRA OR NON-INTRA CODING */
-        if (IntraPBAllowed && 
+        if (IntraPBAllowed &&
             DoBIntraCode(curr, prev, next, y, x, mode, motion)) {
             /* output I-block inside a B-frame */
             ++statsP->IBlocks;
@@ -565,7 +565,7 @@ makeNonSkipBlock(int              const y,
             dct_data[y][x].useMotion = NO_MOTION;
             *oldModeP = MOTION_FORWARD;
             /* calculate forward dct's */
-            if (collect_quant && (collect_quant_detailed & 1)) 
+            if (collect_quant && (collect_quant_detailed & 1))
                 fprintf(collect_quant_fp, "l\n");
             mp_fwd_dct_block2(curr->y_blocks[y][x], dct[y][x]);
             mp_fwd_dct_block2(curr->y_blocks[y][x+1], dct[y][x+1]);
@@ -574,9 +574,9 @@ makeNonSkipBlock(int              const y,
             if (collect_quant && (collect_quant_detailed & 1)) {
                 fprintf(collect_quant_fp, "c\n");
             }
-            mp_fwd_dct_block2(curr->cb_blocks[y>>1][x>>1], 
+            mp_fwd_dct_block2(curr->cb_blocks[y>>1][x>>1],
                               dctb[y>>1][x>>1]);
-            mp_fwd_dct_block2(curr->cr_blocks[y>>1][x>>1], 
+            mp_fwd_dct_block2(curr->cr_blocks[y>>1][x>>1],
                               dctr[y>>1][x>>1]);
 
         } else { /* dct P/Bi/B block */
@@ -608,9 +608,9 @@ makeNonSkipBlock(int              const y,
             default:
                 pm_error("INTERNAL ERROR:  Illegal mode: %d", mode);
             }
-        
+
             ComputeBDiffDCTs(curr, prev, next, y, x, mode, motion, &pattern);
-        
+
             dct_data[y][x].pattern = pattern;
             dct_data[y][x].useMotion = MOTION;
             if ( computeMVHist ) {
@@ -622,7 +622,7 @@ makeNonSkipBlock(int              const y,
                 assert(motion.bwd.y + searchRangeB + 1 >= 0);
                 assert(motion.bwd.x + searchRangeB + 1 <= 2*searchRangeB + 2);
                 assert(motion.bwd.y + searchRangeB + 1 <= 2*searchRangeB + 2);
-                
+
                 ++bfmvHistogram[motion.fwd.x + searchRangeB + 1]
                     [motion.fwd.y + searchRangeB + 1];
                 ++bbmvHistogram[motion.bwd.x + searchRangeB + 1]
@@ -649,9 +649,9 @@ makeNonSkipBlock(int              const y,
  *
  *===========================================================================*/
 void
-GenBFrame(BitBucket * const bb, 
-          MpegFrame * const curr, 
-          MpegFrame * const prev, 
+GenBFrame(BitBucket * const bb,
+          MpegFrame * const curr,
+          MpegFrame * const prev,
           MpegFrame * const next) {
 
     FlatBlock fba[6], fb[6];
@@ -704,7 +704,7 @@ GenBFrame(BitBucket * const bb,
     if (bitstreamMode == FIXED_RATE) {
         targetRateControl(curr);
     }
- 
+
     QScale = GetBQScale();
     Mhead_GenPictureHeader(bb, B_FRAME, curr->id, fCodeB);
     /* Check for Qscale change */
@@ -751,7 +751,7 @@ GenBFrame(BitBucket * const bb,
     mbAddress = 0;
 
     /* Start with zero motion assumption */
-    zeroMotion(&motion); 
+    zeroMotion(&motion);
     zeroMotion(&oldMotion);
     zeroMotion(&motionRem);
     zeroMotion(&motionQuot);
@@ -759,7 +759,7 @@ GenBFrame(BitBucket * const bb,
     /* find motion vectors and do dcts */
     /* In this first loop, all MVs are in half-pixel scope, (if FULL
        is set then they will be multiples of 2).  This is not true in
-       the second loop. 
+       the second loop.
     */
     for (y = 0;  y < lastBlockY;  y += 2) {
         for (x = 0;  x < lastBlockX;  x += 2) {
@@ -772,14 +772,14 @@ GenBFrame(BitBucket * const bb,
                     currentBlock.l[iy][ix] = (int16)curr->orig_y[fy+iy][fx+ix];
                 }
             }
-        
+
             if (slicePos == 0) {
                 zeroMotion(&oldMotion);
                 oldMode = MOTION_FORWARD;
                 lastIntra = TRUE;
             }
 
-            /* STEP 1:  Select Forward, Backward, or Interpolated motion 
+            /* STEP 1:  Select Forward, Backward, or Interpolated motion
                vectors */
             /* see if old motion is good enough */
             /* but force last block to be non-skipped */
@@ -795,7 +795,7 @@ GenBFrame(BitBucket * const bb,
                  (! lastIntra) &&
                  (BSkipBlocks) ) {
                 make_skip_block =
-                    MotionSufficient(curr, &currentBlock, 
+                    MotionSufficient(curr, &currentBlock,
                                      prev, next, y, x, oldMode, oldMotion);
             } else
                 make_skip_block = FALSE;
@@ -830,7 +830,7 @@ GenBFrame(BitBucket * const bb,
     if ( (slicePos == 0) && (mbAddress != 0) ) {
       if (specificsOn) {
         /* Make sure no slice Qscale change */
-        newQScale = 
+        newQScale =
             SpecLookup(curr->id,1,mbAddress/blocksPerSlice, &info, QScale);
         if (newQScale != -1) QScale = newQScale;
       }
@@ -858,7 +858,7 @@ GenBFrame(BitBucket * const bb,
         QScale = newQScale;
       }
     }
- 
+
     if (specificsOn) {
       newQScale = SpecLookup(curr->id, 2, mbAddress, &info, QScale);
       if (newQScale != -1) {
@@ -871,12 +871,12 @@ GenBFrame(BitBucket * const bb,
       mbAddrInc = 1;
       stats.IBits += (bb->cumulativeBits - stats.totalBits);
       stats.totalBits = bb->cumulativeBits;
-          
+
       /* reset because intra-coded */
       zeroMotion(&oldMotion);
       oldMode = MOTION_FORWARD;
       lastIntra = TRUE;
-          
+
       if ( printSNR ) {
         /* need to decode block we just encoded */
         /* and reverse the DCT transform */
@@ -896,14 +896,14 @@ GenBFrame(BitBucket * const bb,
     } else if (dct_data[y][x].useMotion == SKIP) {
       ++stats.Skipped;
       mbAddrInc++;
-          
+
       /* decode skipped block */
       if (printSNR) {
           struct motion motion;
-        
+
           for (idx = 0; idx < 6; ++idx)
-              memset((char *)dec[idx], 0, sizeof(Block)); 
-        
+              memset((char *)dec[idx], 0, sizeof(Block));
+
           if (pixelFullSearch) {
               motion.fwd.y = 2 * oldMotion.fwd.y;
               motion.fwd.x = 2 * oldMotion.fwd.x;
@@ -911,7 +911,7 @@ GenBFrame(BitBucket * const bb,
               motion.bwd.x = 2 * oldMotion.bwd.x;
           } else
               motion = oldMotion;
-          
+
           /* now add the motion block */
           AddBMotionBlock(dec[0], prev->decoded_y,
                           next->decoded_y, y, x, mode, motion);
@@ -927,7 +927,7 @@ GenBFrame(BitBucket * const bb,
           AddBMotionBlock(dec[5], prev->decoded_cr,
                           next->decoded_cr, y/2, x/2, mode,
                           halfMotion(motion));
-        
+
           /* now, unblockify */
           BlockToData(curr->decoded_y, dec[0], y, x);
           BlockToData(curr->decoded_y, dec[1], y, x+1);
@@ -937,9 +937,9 @@ GenBFrame(BitBucket * const bb,
           BlockToData(curr->decoded_cr, dec[5], y/2, x/2);
       }
     } else   /* B block */ {
-        int const fCode = fCodeB;   
+        int const fCode = fCodeB;
         int pattern;
-        
+
         pattern = dct_data[y][x].pattern;
         motion.fwd.y = dct_data[y][x].fmotionY;
         motion.fwd.x = dct_data[y][x].fmotionX;
@@ -948,7 +948,7 @@ GenBFrame(BitBucket * const bb,
 
         if (pixelFullSearch)
             motion = halfMotion(motion);
-          
+
         /* create flat blocks and update pattern if necessary */
     calc_blocks:
         /* Note DoQuant references QScale, overflowChange, overflowValue,
@@ -962,7 +962,7 @@ GenBFrame(BitBucket * const bb,
 
         motionForward  = (dct_data[y][x].mode != MOTION_BACKWARD);
         motionBackward = (dct_data[y][x].mode != MOTION_FORWARD);
-        
+
         /* Encode Vectors */
         if (motionForward) {
             /* transform the fMotion vector into the appropriate values */
@@ -974,7 +974,7 @@ GenBFrame(BitBucket * const bb,
                                FORW_F, fCode);
             oldMotion.fwd = motion.fwd;
         }
-          
+
         if (motionBackward) {
             /* transform the bMotion vector into the appropriate values */
             offsetY = motion.bwd.y - oldMotion.bwd.y;
@@ -984,9 +984,9 @@ GenBFrame(BitBucket * const bb,
                                BACK_F, fCode);
             oldMotion.bwd = motion.bwd;
         }
-          
+
         oldMode = dct_data[y][x].mode;
-          
+
         if (printSNR) { /* Need to decode */
             if (pixelFullSearch) {
                 motion.fwd.x *= 2; motion.fwd.y *= 2;
@@ -1030,7 +1030,7 @@ GenBFrame(BitBucket * const bb,
         y_dc_pred = cr_dc_pred = cb_dc_pred = 128;
         lastIntra = FALSE;
         mode = dct_data[y][x].mode;
-        
+
         /*      DBG_PRINT(("MB Header(%d,%d)\n", x, y));  */
         Mhead_GenMBHeader(
             bb, 3 /* pict_code_type */, mbAddrInc /* addr_incr */,
@@ -1049,7 +1049,7 @@ GenBFrame(BitBucket * const bb,
             pattern /* mb_pattern */, FALSE /* mb_intra */);
 
         mbAddrInc = 1;
-          
+
         /* now output the difference */
         {
             unsigned int x;
@@ -1058,7 +1058,7 @@ GenBFrame(BitBucket * const bb,
                     Mpost_RLEHuffPBlock(fba[x], bb);
             }
         }
-          
+
         switch (mode) {
         case MOTION_FORWARD:
             bframeStats.BFOBits += (bb->cumulativeBits - stats.totalBits);
@@ -1072,10 +1072,10 @@ GenBFrame(BitBucket * const bb,
         default:
             pm_error("PROGRAMMER ERROR:  Illegal mode: %d", mode);
       }
-      
+
       stats.BBits += (bb->cumulativeBits - stats.totalBits);
       stats.totalBits = bb->cumulativeBits;
-    
+
       if (overflowChange) {
         /* undo an overflow-caused Qscale change */
         overflowChange = FALSE;
@@ -1091,7 +1091,7 @@ GenBFrame(BitBucket * const bb,
       rc_blockStart = bb->cumulativeBits;
       MB_RateOut(TYPE_BFRAME);
     }
-    
+
       }
     }
 
@@ -1100,22 +1100,22 @@ GenBFrame(BitBucket * const bb,
       totalSNR += snr[0];
       totalPSNR += psnr[0];
     }
-    
+
     Mhead_GenSliceEnder(bb);
     /*   Rate Control  */
     if (bitstreamMode == FIXED_RATE) {
       updateRateControl(TYPE_BFRAME);
     }
-    
+
     endTime = time_elapsed();
     totalTime += (endTime-startTime);
-    
+
     if ( showBitRatePerFrame ) {
       /* ASSUMES 30 FRAMES PER SECOND */
       fprintf(bitRateFile, "%5d\t%8d\n", curr->id,
           30*(bb->cumulativeBits-totalFrameBits));
     }
-    
+
     if ( frameSummary && !realQuiet) {
       fprintf(stdout, "FRAME %d (B):  "
               "I BLOCKS: %5d;  B BLOCKS: %5d   SKIPPED: %5d (%ld seconds)\n",
@@ -1127,7 +1127,7 @@ GenBFrame(BitBucket * const bb,
             curr->id, snr[0], snr[1], snr[2],
             psnr[0], psnr[1], psnr[2]);
     }
-    
+
     bframeStats.FrameBits += (bb->cumulativeBits-totalFrameBits);
     bframeStats.BIBlocks += stats.IBlocks;
     bframeStats.BBBlocks += stats.BBlocks;
@@ -1208,8 +1208,8 @@ BFrameTotalTime(void) {
 
 
 void
-ShowBFrameSummary(unsigned int const inputFrameBits, 
-                  unsigned int const totalBits, 
+ShowBFrameSummary(unsigned int const inputFrameBits,
+                  unsigned int const totalBits,
                   FILE *       const fpointer) {
 
     if (bframeStats.Frames > 0) {
@@ -1234,13 +1234,13 @@ ShowBFrameSummary(unsigned int const inputFrameBits,
                     "  B types:   %5d     (%4d bpb) "
                     "forw  %5d (%4d bpb) back   %5d (%4d bpb) bi\n",
                     bframeStats.BFOBlocks,
-                    (bframeStats.BFOBlocks==0) ? 
+                    (bframeStats.BFOBlocks==0) ?
                         0 : bframeStats.BFOBits/bframeStats.BFOBlocks,
                     bframeStats.BBABlocks,
-                    (bframeStats.BBABlocks==0) ? 
+                    (bframeStats.BBABlocks==0) ?
                         0 : bframeStats.BBABits/bframeStats.BBABlocks,
                     bframeStats.BINBlocks,
-                    (bframeStats.BINBlocks==0) ? 
+                    (bframeStats.BINBlocks==0) ?
                         0 : bframeStats.BINBits/bframeStats.BINBlocks);
         } else
             fprintf(fpointer, "  B Blocks:  %5d\n", 0);
@@ -1251,7 +1251,7 @@ ShowBFrameSummary(unsigned int const inputFrameBits,
                 "(%5d bpf)     (%2.1f%% of total)\n",
                 bframeStats.Frames, bframeStats.FrameBits,
                 bframeStats.FrameBits/bframeStats.Frames,
-                100.0*(float)bframeStats.FrameBits/(float)totalBits);        
+                100.0*(float)bframeStats.FrameBits/(float)totalBits);
         fprintf(fpointer, "  Compression:  %3d:1     (%9.4f bpp)\n",
                 bframeStats.Frames*inputFrameBits/bframeStats.FrameBits,
                 24.0*(float)bframeStats.FrameBits/
@@ -1312,7 +1312,7 @@ ComputeBMotionLumBlock(MpegFrame * const prev,
 
         ComputeMotionLumBlock(prev, by, bx, motion.fwd, &prevBlock);
         ComputeMotionLumBlock(next, by, bx, motion.bwd, &nextBlock);
-        
+
         for (y = 0; y < 16; ++y) {
             unsigned int x;
             for (x = 0; x < 16; ++x)

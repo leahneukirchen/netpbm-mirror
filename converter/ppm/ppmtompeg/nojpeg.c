@@ -1,12 +1,12 @@
 /*===========================================================================*
- * nojpeg.c								     *
- *									     *
- *	procedures to deal with JPEG files				     *
- *									     *
- * EXPORTED PROCEDURES:							     *
- *	JMovie2JPEG							     *
- *      ReadJPEG							     *
- *									     *
+ * nojpeg.c                                                                  *
+ *                                                                           *
+ *      procedures to deal with JPEG files                                   *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
+ *      JMovie2JPEG                                                          *
+ *      ReadJPEG                                                             *
+ *                                                                           *
  *===========================================================================*/
 
 /*

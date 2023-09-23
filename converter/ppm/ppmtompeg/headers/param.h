@@ -33,7 +33,7 @@ struct params {
 
 
 void
-ReadParamFile(const char *         const fileName, 
+ReadParamFile(const char *         const fileName,
               majorProgramFunction const function,
               struct params *      const paramP);
 
