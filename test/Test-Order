@@ -175,6 +175,8 @@ rawtoppm.test
 
 gif-transparent1.test
 
+pnmtojpeg-scans.test
+
 # Miscellaneous utility tests
 
 ppmdfont.test
@@ -264,6 +266,7 @@ xbm-roundtrip.test
 xpm-roundtrip.test
 xv-roundtrip.test
 xwd-roundtrip.test
+ybm-roundtrip.test
 
 # Round-trip tests : lossy converters
 

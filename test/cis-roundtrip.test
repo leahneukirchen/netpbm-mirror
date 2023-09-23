@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pbmtocis cistopbm
-# Also requires: pbmmake pamcut pamfile
+# Also requires: pbmmake pamcut pamfile pnmcrop
 
 tmpdir=${tmpdir:-/tmp}
 test_pbm=${tmpdir}/test.pbm
@@ -13,8 +13,11 @@ echo "Test 1. Should print 2631579683 1546 twice"
 pbmmake -g 128 96 | tee ${test_pbm} | cksum
 pbmtocis ${test_pbm} | cistopbm | cksum
 
-echo "Test 2. Should print 281226646 481, cksum of maze.pbm"
-size=$(pamfile -size maze.pbm | awk '{print "-width="$1,"-height="$2}')
-pbmtocis maze.pbm | cistopbm | pamcut -left=0 -top=0 ${size} | cksum
-
 rm ${test_pbm}
+
+echo "Test 2. Should print 281226646 481, cksum of maze.pbm four times"
+size=$(pamfile -size maze.pbm | awk '{print "-width="$1,"-height="$2}')
+pbmtocis    maze.pbm | cistopbm    | pamcut -left=0 -top=0 ${size} | cksum
+pbmtocis -i maze.pbm | cistopbm -i | pamcut -left=0 -top=0 ${size} | cksum
+pbmtocis    maze.pbm | cistopbm    | pnmcrop -black -right -bottom | cksum
+pbmtocis -w maze.pbm | cistopbm    | pnmcrop -white -right -bottom | cksum

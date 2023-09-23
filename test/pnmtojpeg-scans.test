@@ -1,0 +1,32 @@
+#! /bin/bash
+# This script tests: pnmtojpeg
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+test_jpegscan=${tmpdir}/test.jpegscan
+err_out=${tmpdir}/err.out
+
+cat > ${test_jpegscan} << EOF
+# This is a example of a scan script to be used by 'pnmtojpeg' with -scan .
+# It should work with any color image.
+
+#Interleaved DC scan for Y, Cb, Cr:
+0, 1, 2: 0-0, 0, 0 ;
+
+# AC scans:
+0:  1- 2, 0, 0 ;
+0:  3- 5, 0, 0 ;
+1:  1-63, 0, 0 ;
+2:  1-63, 0, 0 ;
+0:  6- 9, 0, 0 ;
+0: 10-63, 0, 0 ;
+EOF
+
+pnmtojpeg testimg.ppm -scans=${test_jpegscan} -verbose \
+ > /dev/null 2> ${err_out} && echo "success" || echo "failure"
+
+cat ${err_out}
+
+rm ${err_out} ${test_jpegscan}
+
+# TODO test invalid scan script
