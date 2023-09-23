@@ -12,129 +12,117 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
 #include <string.h>
+#include "nstring.h"
+
 #include "ppm.h"
 
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
-    FILE* ifp;
-    pixel* pixelrow;
+    FILE * ifP;
+    pixel * pixelrow;
     pixel colormap[256];
-    register pixel* pP;
     unsigned int cols;
     unsigned int rows;
-    int argn, row, i;
-    int col;
     pixval maxval;
     unsigned int cmaplen;
-    int len, gotAT, gotCM, gotPD;
+    int len;
+    bool gotAt, gotCm, gotPd;
     unsigned char buf[4096];
-    unsigned char* bP;
 
+    pm_proginit(&argc, argv);
 
-    ppm_init( &argc, argv );
-
-    argn = 1;
-
-    if ( argn < argc )
-    {
-        ifp = pm_openr( argv[argn] );
-        argn++;
-    }
+    if (argc-1 >= 1)
+        ifP = pm_openr(argv[1]);
     else
-        ifp = stdin;
+        ifP = stdin;
 
-    if ( argn != argc )
-        pm_usage( "[imgfile]" );
+    if (argc-1 > 1)
+        pm_error("Too many arguments (%d).  "
+                 "The only possible argument is the input file name", argc-1);
 
     /* Get signature. */
-    fread( buf, 8, 1, ifp );
+    fread(buf, 8, 1, ifP);
     buf[8] = '\0';
 
     /* Get entries. */
-    gotAT = 0;
-    gotCM = 0;
-    gotPD = 0;
-    while ( fread( buf, 2, 1, ifp ) == 1 )
-    {
-        if ( strncmp( (char*) buf, "AT", 2 ) == 0 )
-        {
-            if ( fread( buf, 8, 1, ifp ) != 1 )
-                pm_error( "bad attributes header" );
+    gotAt = false; /* initial value */
+    gotCm = false; /* initial value */
+    gotPd = false; /* initial value */
+    while (fread( buf, 2, 1, ifP) == 1) {
+        if (strneq((char*) buf, "AT", 2)) {
+            if (fread(buf, 8, 1, ifP) != 1)
+                pm_error("bad attributes header");
             buf[8] = '\0';
-            len = atoi( (char*) buf );
-            if ( fread( buf, len, 1, ifp ) != 1 )
-                pm_error( "bad attributes buf" );
+            len = atoi((char*) buf);
+            if (fread(buf, len, 1, ifP) != 1)
+                pm_error("bad attributes buf");
             buf[len] = '\0';
-            sscanf( (char*) buf, "%4u%4u%4u", &cols, &rows, &cmaplen );
+            sscanf((char*) buf, "%4u%4u%4u", &cols, &rows, &cmaplen);
             maxval = 255;
-            gotAT = 1;
-        }
-
-        else if ( strncmp( (char*) buf, "CM", 2 ) == 0 )
-        {
-            if ( ! gotAT )
-                pm_error( "missing attributes header" );
-            if ( fread( buf, 8, 1, ifp ) != 1 )
-                pm_error( "bad colormap header" );
+            gotAt = true;
+        } else if (strneq((char*) buf, "CM", 2)) {
+            unsigned int i;
+            if (!gotAt)
+                pm_error("missing attributes header");
+            if (fread(buf, 8, 1, ifP) != 1)
+                pm_error("bad colormap header");
             buf[8] = '\0';
-            len = atoi((char*) buf );
-            if ( fread( buf, len, 1, ifp ) != 1 )
-                pm_error( "bad colormap buf" );
-            if ( cmaplen * 3 != len )
-            {
+            len = atoi((char*) buf);
+            if (fread(buf, len, 1, ifP) != 1)
+                pm_error("bad colormap buf");
+            if (cmaplen * 3 != len) {
                 pm_message(
                     "cmaplen (%d) and colormap buf length (%d) do not match",
-                    cmaplen, len );
-                if ( cmaplen * 3 < len )
+                    cmaplen, len);
+                if (cmaplen * 3 < len)
                     len = cmaplen * 3;
-                else if ( cmaplen * 3 > len )
+                else if (cmaplen * 3 > len)
                     cmaplen = len / 3;
             }
-            for ( i = 0; i < len; i += 3 )
-                PPM_ASSIGN( colormap[i / 3], buf[i], buf[i + 1], buf[i + 2] );
-            gotCM = 1;
-        }
+            for (i = 0; i < len; i += 3)
+                PPM_ASSIGN(colormap[i / 3], buf[i], buf[i + 1], buf[i + 2]);
+            gotCm = true;
+        } else if (strneq((char*) buf, "PD", 2)) {
+            unsigned int row;
 
-        else if ( strncmp( (char*) buf, "PD", 2 ) == 0 )
-        {
-            if ( fread( buf, 8, 1, ifp ) != 1 )
-                pm_error( "bad pixel data header" );
+            if (fread(buf, 8, 1, ifP) != 1)
+                pm_error("bad pixel data header");
             buf[8] = '\0';
-            len = atoi((char*) buf );
-            if ( len != cols * rows )
+            len = atoi((char*) buf);
+            if (len != cols * rows)
                 pm_message(
                     "pixel data length (%d) does not match image size (%d)",
-                    len, cols * rows );
+                    len, cols * rows);
 
-            ppm_writeppminit( stdout, cols, rows, maxval, 0 );
-            pixelrow = ppm_allocrow( cols );
+            ppm_writeppminit(stdout, cols, rows, maxval, 0);
+            pixelrow = ppm_allocrow(cols);
 
-            for ( row = 0; row < rows; row++ )
-            {
-                if ( fread( buf, 1, cols, ifp ) != cols )
-                    pm_error( "EOF / read error" );
-                for ( col = 0, pP = pixelrow, bP = buf;
-                      col < cols; col++, pP++, bP++ )
-                {
-                    if ( gotCM )
-                        *pP = colormap[*bP];
+            for (row = 0; row < rows; ++row) {
+                unsigned int col;
+
+                if (fread(buf, 1, cols, ifP) != cols)
+                    pm_error("EOF / read error");
+                for (col = 0; col < cols; ++col) {
+                    if (gotCm)
+                        pixelrow[col] = colormap[buf[col]];
                     else
-                        PPM_ASSIGN( *pP, *bP, *bP, *bP );
+                        PPM_ASSIGN(pixelrow[col],
+                                   buf[col], buf[col], buf[col]);
                 }
-                ppm_writeppmrow( stdout, pixelrow, cols, maxval, 0 );
+                ppm_writeppmrow(stdout, pixelrow, cols, maxval, 0);
             }
-            gotPD = 1;
-
+            gotPd = true;
         }
     }
-    if ( ! gotPD )
-        pm_error( "missing pixel data header" );
+    if (!gotPd)
+        pm_error("missing pixel data header");
 
-    pm_close( ifp );
+    pm_close(ifP);
     /* If the program failed, it previously aborted with nonzero completion
        code, via various function calls.
     */
