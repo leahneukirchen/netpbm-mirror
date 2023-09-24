@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.09.24 BJH  Release 11.02.04
+
+              pamtosvg: fix hang.
+
+              pbmtoxbm: Fix spurious output with really wide rows.
+
 23.09.02 BJH  Release 11.02.03
 
               pamaddnoise: fix very incorrect noise added for all types.

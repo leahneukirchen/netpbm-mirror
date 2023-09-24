@@ -353,6 +353,10 @@ convertRaster(FILE *          const ifP,
     unsigned char * bitrow;
     unsigned int row;
 
+    if (cols > UINT_MAX - bitsPerUnit)
+        pm_error("Image is too wide (%u columns) for computations",
+                 cols);
+
     putinit(xbmVersion);
 
     bitrow = pbm_allocrow_packed(cols + padright);
