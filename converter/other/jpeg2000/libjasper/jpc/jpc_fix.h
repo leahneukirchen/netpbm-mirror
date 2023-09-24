@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -141,7 +141,7 @@ typedef int_fast32_t jpc_fix_t;
 typedef int_fast64_t jpc_fix_big_t;
 
 /* The number of bits used for the fractional part of a fixed-point number. */
-#define JPC_FIX_FRACBITS	13
+#define JPC_FIX_FRACBITS        13
 
 /******************************************************************************\
 * Instantiations of the generic fixed-point number macros for the
@@ -150,44 +150,44 @@ typedef int_fast64_t jpc_fix_big_t;
 * corresponding macros in the jasper/jas_fix.h header file.
 \******************************************************************************/
 
-#define	JPC_FIX_ZERO	JAS_FIX_ZERO(jpc_fix_t, JPC_FIX_FRACBITS)
-#define	JPC_FIX_ONE		JAS_FIX_ONE(jpc_fix_t, JPC_FIX_FRACBITS)
-#define	JPC_FIX_HALF	JAS_FIX_HALF(jpc_fix_t, JPC_FIX_FRACBITS)
+#define JPC_FIX_ZERO    JAS_FIX_ZERO(jpc_fix_t, JPC_FIX_FRACBITS)
+#define JPC_FIX_ONE             JAS_FIX_ONE(jpc_fix_t, JPC_FIX_FRACBITS)
+#define JPC_FIX_HALF    JAS_FIX_HALF(jpc_fix_t, JPC_FIX_FRACBITS)
 
-#define jpc_inttofix(x)	JAS_INTTOFIX(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define jpc_fixtoint(x)	JAS_FIXTOINT(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define jpc_fixtodbl(x)	JAS_FIXTODBL(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define jpc_dbltofix(x)	JAS_DBLTOFIX(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_inttofix(x) JAS_INTTOFIX(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fixtoint(x) JAS_FIXTOINT(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fixtodbl(x) JAS_FIXTODBL(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_dbltofix(x) JAS_DBLTOFIX(jpc_fix_t, JPC_FIX_FRACBITS, x)
 
-#define	jpc_fix_add(x, y)	JAS_FIX_ADD(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
-#define	jpc_fix_sub(x, y)	JAS_FIX_SUB(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
-#define	jpc_fix_mul(x, y) \
-	JAS_FIX_MUL(jpc_fix_t, JPC_FIX_FRACBITS, jpc_fix_big_t, x, y)
-#define	jpc_fix_mulbyint(x, y) \
-	JAS_FIX_MULBYINT(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
-#define	jpc_fix_div(x, y) \
-	JAS_FIX_DIV(jpc_fix_t, JPC_FIX_FRACBITS, jpc_fix_big_t, x, y)
-#define	jpc_fix_neg(x)		JAS_FIX_NEG(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define	jpc_fix_asl(x, n)	JAS_FIX_ASL(jpc_fix_t, JPC_FIX_FRACBITS, x, n)
-#define	jpc_fix_asr(x, n)	JAS_FIX_ASR(jpc_fix_t, JPC_FIX_FRACBITS, x, n)
+#define jpc_fix_add(x, y)       JAS_FIX_ADD(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
+#define jpc_fix_sub(x, y)       JAS_FIX_SUB(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
+#define jpc_fix_mul(x, y) \
+        JAS_FIX_MUL(jpc_fix_t, JPC_FIX_FRACBITS, jpc_fix_big_t, x, y)
+#define jpc_fix_mulbyint(x, y) \
+        JAS_FIX_MULBYINT(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
+#define jpc_fix_div(x, y) \
+        JAS_FIX_DIV(jpc_fix_t, JPC_FIX_FRACBITS, jpc_fix_big_t, x, y)
+#define jpc_fix_neg(x)          JAS_FIX_NEG(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fix_asl(x, n)       JAS_FIX_ASL(jpc_fix_t, JPC_FIX_FRACBITS, x, n)
+#define jpc_fix_asr(x, n)       JAS_FIX_ASR(jpc_fix_t, JPC_FIX_FRACBITS, x, n)
 
-#define jpc_fix_pluseq(x, y)	JAS_FIX_PLUSEQ(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
-#define jpc_fix_minuseq(x, y)	JAS_FIX_MINUSEQ(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
-#define	jpc_fix_muleq(x, y)	\
-	JAS_FIX_MULEQ(jpc_fix_t, JPC_FIX_FRACBITS, jpc_fix_big_t, x, y)
+#define jpc_fix_pluseq(x, y)    JAS_FIX_PLUSEQ(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
+#define jpc_fix_minuseq(x, y)   JAS_FIX_MINUSEQ(jpc_fix_t, JPC_FIX_FRACBITS, x, y)
+#define jpc_fix_muleq(x, y)     \
+        JAS_FIX_MULEQ(jpc_fix_t, JPC_FIX_FRACBITS, jpc_fix_big_t, x, y)
 
-#define	jpc_fix_abs(x)		JAS_FIX_ABS(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define	jpc_fix_isint(x)	JAS_FIX_ISINT(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define jpc_fix_sgn(x)		JAS_FIX_SGN(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define	jpc_fix_round(x)	JAS_FIX_ROUND(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define	jpc_fix_floor(x)	JAS_FIX_FLOOR(jpc_fix_t, JPC_FIX_FRACBITS, x)
-#define jpc_fix_trunc(x)	JAS_FIX_TRUNC(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fix_abs(x)          JAS_FIX_ABS(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fix_isint(x)        JAS_FIX_ISINT(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fix_sgn(x)          JAS_FIX_SGN(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fix_round(x)        JAS_FIX_ROUND(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fix_floor(x)        JAS_FIX_FLOOR(jpc_fix_t, JPC_FIX_FRACBITS, x)
+#define jpc_fix_trunc(x)        JAS_FIX_TRUNC(jpc_fix_t, JPC_FIX_FRACBITS, x)
 
 /******************************************************************************\
 * Extra macros for convenience.
 \******************************************************************************/
 
 /* Compute the sum of three fixed-point numbers. */
-#define jpc_fix_add3(x, y, z)	jpc_fix_add(jpc_fix_add(x, y), z)
+#define jpc_fix_add3(x, y, z)   jpc_fix_add(jpc_fix_add(x, y), z)
 
 #endif

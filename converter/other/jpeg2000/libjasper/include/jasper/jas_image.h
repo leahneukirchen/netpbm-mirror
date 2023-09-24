@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -140,36 +140,36 @@ extern "C" {
  */
 
 /* The threshold at which image data is no longer stored in memory. */
-#define JAS_IMAGE_INMEMTHRESH	(16 * 1024 * 1024)
+#define JAS_IMAGE_INMEMTHRESH   (16 * 1024 * 1024)
 
 /*
  * Color models.
  */
 
-#define JAS_IMAGE_CS_UNKNOWN	0	/* Unknown */
-#define	JAS_IMAGE_CS_GRAY	1	/* Standard Gray */
-#define	JAS_IMAGE_CS_RGB	2	/* Standard RGB */
-#define	JAS_IMAGE_CS_YCBCR	3	/* Standard YCC */
+#define JAS_IMAGE_CS_UNKNOWN    0       /* Unknown */
+#define JAS_IMAGE_CS_GRAY       1       /* Standard Gray */
+#define JAS_IMAGE_CS_RGB        2       /* Standard RGB */
+#define JAS_IMAGE_CS_YCBCR      3       /* Standard YCC */
 #if 0
-#define	JAS_IMAGE_CM_ICC	4	/* ICC Profile */
+#define JAS_IMAGE_CM_ICC        4       /* ICC Profile */
 #endif
 /*
  * Component types
  */
 
-#define	JAS_IMAGE_CT_UNKNOWN	0x10000
-#define	JAS_IMAGE_CT_COLOR(n)	((n) & 0x7fff)
-#define	JAS_IMAGE_CT_OPACITY	0x08000
+#define JAS_IMAGE_CT_UNKNOWN    0x10000
+#define JAS_IMAGE_CT_COLOR(n)   ((n) & 0x7fff)
+#define JAS_IMAGE_CT_OPACITY    0x08000
 
-#define	JAS_IMAGE_CT_RGB_R	0
-#define	JAS_IMAGE_CT_RGB_G	1
-#define	JAS_IMAGE_CT_RGB_B	2
+#define JAS_IMAGE_CT_RGB_R      0
+#define JAS_IMAGE_CT_RGB_G      1
+#define JAS_IMAGE_CT_RGB_B      2
 
-#define	JAS_IMAGE_CT_YCBCR_Y	0
-#define	JAS_IMAGE_CT_YCBCR_CB	1
-#define	JAS_IMAGE_CT_YCBCR_CR	2
+#define JAS_IMAGE_CT_YCBCR_Y    0
+#define JAS_IMAGE_CT_YCBCR_CB   1
+#define JAS_IMAGE_CT_YCBCR_CR   2
 
-#define	JAS_IMAGE_CT_GRAY_Y	0
+#define JAS_IMAGE_CT_GRAY_Y     0
 
 /*****************************************************************************\
 * Image class and supporting classes.
@@ -179,40 +179,40 @@ extern "C" {
 
 typedef struct {
 
-	uint_fast32_t tlx_;
-	/* The x-coordinate of the top-left corner of the component. */
+        uint_fast32_t tlx_;
+        /* The x-coordinate of the top-left corner of the component. */
 
-	uint_fast32_t tly_;
-	/* The y-coordinate of the top-left corner of the component. */
+        uint_fast32_t tly_;
+        /* The y-coordinate of the top-left corner of the component. */
 
-	uint_fast32_t hstep_;
-	/* The horizontal sampling period in units of the reference grid. */
+        uint_fast32_t hstep_;
+        /* The horizontal sampling period in units of the reference grid. */
 
-	uint_fast32_t vstep_;
-	/* The vertical sampling period in units of the reference grid. */
+        uint_fast32_t vstep_;
+        /* The vertical sampling period in units of the reference grid. */
 
-	uint_fast32_t width_;
-	/* The component width in samples. */
+        uint_fast32_t width_;
+        /* The component width in samples. */
 
-	uint_fast32_t height_;
-	/* The component height in samples. */
+        uint_fast32_t height_;
+        /* The component height in samples. */
 
-	uint_fast16_t prec_;
-	/* The precision of the sample data (i.e., the number of bits per
-	sample).  If the samples are signed values, this quantity
-	includes the sign bit. */
+        uint_fast16_t prec_;
+        /* The precision of the sample data (i.e., the number of bits per
+        sample).  If the samples are signed values, this quantity
+        includes the sign bit. */
 
-	uint_fast8_t sgnd_;
-	/* The signedness of the sample data. */
+        uint_fast8_t sgnd_;
+        /* The signedness of the sample data. */
 
-	jas_stream_t *stream_;
-	/* The stream containing the component data. */
+        jas_stream_t *stream_;
+        /* The stream containing the component data. */
 
-	int cps_;
-	/* The number of characters per sample in the stream. */
+        int cps_;
+        /* The number of characters per sample in the stream. */
 
-	uint_fast32_t type_;
-	/* The type of component (e.g., opacity, red, green, blue, luma). */
+        uint_fast32_t type_;
+        /* The type of component (e.g., opacity, red, green, blue, luma). */
 
 } jas_image_cmpt_t;
 
@@ -220,40 +220,40 @@ typedef struct {
 
 typedef struct {
 
-	uint_fast32_t tlx_;
-	/* The x-coordinate of the top-left corner of the image bounding box. */
+        uint_fast32_t tlx_;
+        /* The x-coordinate of the top-left corner of the image bounding box. */
 
-	uint_fast32_t tly_;
-	/* The y-coordinate of the top-left corner of the image bounding box. */
+        uint_fast32_t tly_;
+        /* The y-coordinate of the top-left corner of the image bounding box. */
 
-	uint_fast32_t brx_;
-	/* The x-coordinate of the bottom-right corner of the image bounding
-	  box (plus one). */
+        uint_fast32_t brx_;
+        /* The x-coordinate of the bottom-right corner of the image bounding
+          box (plus one). */
 
-	uint_fast32_t bry_;
-	/* The y-coordinate of the bottom-right corner of the image bounding
-	  box (plus one). */
+        uint_fast32_t bry_;
+        /* The y-coordinate of the bottom-right corner of the image bounding
+          box (plus one). */
 
-	uint_fast16_t numcmpts_;
-	/* The number of components. */
+        uint_fast16_t numcmpts_;
+        /* The number of components. */
 
-	uint_fast16_t maxcmpts_;
-	/* The maximum number of components that this image can have (i.e., the
-	  allocated size of the components array). */
+        uint_fast16_t maxcmpts_;
+        /* The maximum number of components that this image can have (i.e., the
+          allocated size of the components array). */
 
-	jas_image_cmpt_t **cmpts_;
-	/* Per-component information. */
+        jas_image_cmpt_t **cmpts_;
+        /* Per-component information. */
 
-	int colorspace_;
-	/* The color space used (e.g., RGB, YCbCr, gray).  This field is only
-	of particular relevance in the case of a multi-component image. */
+        int colorspace_;
+        /* The color space used (e.g., RGB, YCbCr, gray).  This field is only
+        of particular relevance in the case of a multi-component image. */
 
-	unsigned char *iccp_;
-	/* ICC profile information. */
+        unsigned char *iccp_;
+        /* ICC profile information. */
 
-	int iccplen_;
+        int iccplen_;
 
-	bool inmem_;
+        bool inmem_;
 
 } jas_image_t;
 
@@ -263,29 +263,29 @@ typedef struct {
 
 typedef struct {
 
-	uint_fast32_t tlx;
-	/* The x-coordinate of the top-left corner of the component. */
+        uint_fast32_t tlx;
+        /* The x-coordinate of the top-left corner of the component. */
 
-	uint_fast32_t tly;
-	/* The y-coordinate of the top-left corner of the component. */
+        uint_fast32_t tly;
+        /* The y-coordinate of the top-left corner of the component. */
 
-	uint_fast32_t hstep;
-	/* The horizontal sampling period in units of the reference grid. */
+        uint_fast32_t hstep;
+        /* The horizontal sampling period in units of the reference grid. */
 
-	uint_fast32_t vstep;
-	/* The vertical sampling period in units of the reference grid. */
+        uint_fast32_t vstep;
+        /* The vertical sampling period in units of the reference grid. */
 
-	uint_fast32_t width;
-	/* The width of the component in samples. */
+        uint_fast32_t width;
+        /* The width of the component in samples. */
 
-	uint_fast32_t height;
-	/* The height of the component in samples. */
+        uint_fast32_t height;
+        /* The height of the component in samples. */
 
-	uint_fast16_t prec;
-	/* The precision of the component sample data. */
+        uint_fast16_t prec;
+        /* The precision of the component sample data. */
 
-	bool sgnd;
-	/* The signedness of the component sample data. */
+        bool sgnd;
+        /* The signedness of the component sample data. */
 
 } jas_image_cmptparm_t;
 
@@ -293,24 +293,24 @@ typedef struct {
 * File format related classes.
 \******************************************************************************/
 
-#define	JAS_IMAGE_MAXFMTS	32
+#define JAS_IMAGE_MAXFMTS       32
 /* The maximum number of image data formats we can handle. */
 
 /* Image format-dependent operations. */
 
 typedef struct {
 
-	void (*decode)(jas_stream_t * const in,
-				   const char *   const opts,
-				   jas_image_t ** const imagePP,
-				   const char **  const errorP);
-	/* Decode image data from a stream. */
+        void (*decode)(jas_stream_t * const in,
+                                   const char *   const opts,
+                                   jas_image_t ** const imagePP,
+                                   const char **  const errorP);
+        /* Decode image data from a stream. */
 
-	int (*encode)(jas_image_t *image, jas_stream_t *out, char *opts);
-	/* Encode image data to a stream. */
+        int (*encode)(jas_image_t *image, jas_stream_t *out, char *opts);
+        /* Encode image data to a stream. */
 
-	int (*validate)(jas_stream_t *in);
-	/* Determine if stream data is in a particular format. */
+        int (*validate)(jas_stream_t *in);
+        /* Determine if stream data is in a particular format. */
 
 } jas_image_fmtops_t;
 
@@ -318,20 +318,20 @@ typedef struct {
 
 typedef struct {
 
-	int id;
-	/* The ID for this format. */
+        int id;
+        /* The ID for this format. */
 
-	char *name;
-	/* The name by which this format is identified. */
+        char *name;
+        /* The name by which this format is identified. */
 
-	char *ext;
-	/* The file name extension associated with this format. */
+        char *ext;
+        /* The file name extension associated with this format. */
 
-	char *desc;
-	/* A brief description of the format. */
+        char *desc;
+        /* A brief description of the format. */
 
-	jas_image_fmtops_t ops;
-	/* The operations for this format. */
+        jas_image_fmtops_t ops;
+        /* The operations for this format. */
 
 } jas_image_fmtinfo_t;
 
@@ -354,92 +354,92 @@ void jas_image_destroy(jas_image_t *image);
 
 /* Get the width of the image in units of the image reference grid. */
 #define jas_image_width(image) \
-	((image)->brx_ - (image)->tlx_)
+        ((image)->brx_ - (image)->tlx_)
 
 /* Get the height of the image in units of the image reference grid. */
-#define	jas_image_height(image) \
-	((image)->bry_ - (image)->tly_)
+#define jas_image_height(image) \
+        ((image)->bry_ - (image)->tly_)
 
 /* Get the x-coordinate of the top-left corner of the image bounding box
   on the reference grid. */
 #define jas_image_tlx(image) \
-	((image)->tlx_)
+        ((image)->tlx_)
 
 /* Get the y-coordinate of the top-left corner of the image bounding box
   on the reference grid. */
 #define jas_image_tly(image) \
-	((image)->tly_)
+        ((image)->tly_)
 
 /* Get the x-coordinate of the bottom-right corner of the image bounding box
   on the reference grid (plus one). */
 #define jas_image_brx(image) \
-	((image)->brx_)
+        ((image)->brx_)
 
 /* Get the y-coordinate of the bottom-right corner of the image bounding box
   on the reference grid (plus one). */
 #define jas_image_bry(image) \
-	((image)->bry_)
+        ((image)->bry_)
 
 /* Get the number of image components. */
-#define	jas_image_numcmpts(image) \
-	((image)->numcmpts_)
+#define jas_image_numcmpts(image) \
+        ((image)->numcmpts_)
 
 /* Get the color model used by the image. */
-#define	jas_image_colorspace(image) \
-	((image)->colorspace_)
+#define jas_image_colorspace(image) \
+        ((image)->colorspace_)
 
 /* Set the color model for an image. */
 #define jas_image_setcolorspace(image, colorspace) \
-	((image)->colorspace_ = (colorspace))
+        ((image)->colorspace_ = (colorspace))
 
 #define jas_image_cmpttype(image, cmptno) \
-	((image)->cmpts_[(cmptno)]->type_)
+        ((image)->cmpts_[(cmptno)]->type_)
 #define jas_image_setcmpttype(image, cmptno, type) \
-	((image)->cmpts_[(cmptno)]->type_ = (type))
+        ((image)->cmpts_[(cmptno)]->type_ = (type))
 
 /* Get the width of a component. */
-#define	jas_image_cmptwidth(image, cmptno) \
-	((image)->cmpts_[cmptno]->width_)
+#define jas_image_cmptwidth(image, cmptno) \
+        ((image)->cmpts_[cmptno]->width_)
 
 /* Get the height of a component. */
-#define	jas_image_cmptheight(image, cmptno) \
-	((image)->cmpts_[cmptno]->height_)
+#define jas_image_cmptheight(image, cmptno) \
+        ((image)->cmpts_[cmptno]->height_)
 
 /* Get the signedness of the sample data for a component. */
-#define	jas_image_cmptsgnd(image, cmptno) \
-	((image)->cmpts_[cmptno]->sgnd_)
+#define jas_image_cmptsgnd(image, cmptno) \
+        ((image)->cmpts_[cmptno]->sgnd_)
 
 /* Get the precision of the sample data for a component. */
-#define	jas_image_cmptprec(image, cmptno) \
-	((image)->cmpts_[cmptno]->prec_)
+#define jas_image_cmptprec(image, cmptno) \
+        ((image)->cmpts_[cmptno]->prec_)
 
 /* Get the horizontal subsampling factor for a component. */
-#define	jas_image_cmpthstep(image, cmptno) \
-	((image)->cmpts_[cmptno]->hstep_)
+#define jas_image_cmpthstep(image, cmptno) \
+        ((image)->cmpts_[cmptno]->hstep_)
 
 /* Get the vertical subsampling factor for a component. */
-#define	jas_image_cmptvstep(image, cmptno) \
-	((image)->cmpts_[cmptno]->vstep_)
+#define jas_image_cmptvstep(image, cmptno) \
+        ((image)->cmpts_[cmptno]->vstep_)
 
 /* Get the x-coordinate of the top-left corner of a component. */
-#define	jas_image_cmpttlx(image, cmptno) \
-	((image)->cmpts_[cmptno]->tlx_)
+#define jas_image_cmpttlx(image, cmptno) \
+        ((image)->cmpts_[cmptno]->tlx_)
 
 /* Get the y-coordinate of the top-left corner of a component. */
-#define	jas_image_cmpttly(image, cmptno) \
-	((image)->cmpts_[cmptno]->tly_)
+#define jas_image_cmpttly(image, cmptno) \
+        ((image)->cmpts_[cmptno]->tly_)
 
 /* Get the x-coordinate of the bottom-right corner of a component
   (plus "one"). */
-#define	jas_image_cmptbrx(image, cmptno) \
-	((image)->cmpts_[cmptno]->tlx_ + (image)->cmpts_[cmptno]->width_ * \
-	  (image)->cmpts_[cmptno]->hstep_)
+#define jas_image_cmptbrx(image, cmptno) \
+        ((image)->cmpts_[cmptno]->tlx_ + (image)->cmpts_[cmptno]->width_ * \
+          (image)->cmpts_[cmptno]->hstep_)
 
 /* Get the y-coordinate of the bottom-right corner of a component
   (plus "one"). */
-#define	jas_image_cmptbry(image, cmptno) \
-	((image)->cmpts_[cmptno]->tly_ + (image)->cmpts_[cmptno]->height_ * \
-	  (image)->cmpts_[cmptno]->vstep_)
+#define jas_image_cmptbry(image, cmptno) \
+        ((image)->cmpts_[cmptno]->tly_ + (image)->cmpts_[cmptno]->height_ * \
+          (image)->cmpts_[cmptno]->vstep_)
 
 /* Get the raw size of an image (i.e., the nominal size of the image without
   any compression. */
@@ -449,10 +449,10 @@ uint_fast32_t jas_image_rawsize(jas_image_t *image);
 
 void
 pmjas_image_decode(jas_stream_t * const in,
-				   int            const fmt,
-				   const char *   const optstr,
-				   jas_image_t ** const imagePP,
-				   const char **  const errorP);
+                                   int            const fmt,
+                                   const char *   const optstr,
+                                   jas_image_t ** const imagePP,
+                                   const char **  const errorP);
 
 /* Write an image to a stream in a specified format. */
 int jas_image_encode(jas_image_t *image, jas_stream_t *out, int fmt,
@@ -486,13 +486,13 @@ int_fast64_t jas_image_readcmpt1(jas_image_t *image, uint_fast16_t cmptno,
   uint_fast32_t x, uint_fast32_t y);
 #endif
 
-#define	JAS_IMAGE_CDT_GETSGND(dtype) (((dtype) >> 7) & 1)
-#define	JAS_IMAGE_CDT_SETSGND(dtype) (((dtype) & 1) << 7)
-#define	JAS_IMAGE_CDT_GETPREC(dtype) ((dtype) & 0x7f)
-#define	JAS_IMAGE_CDT_SETPREC(dtype) ((dtype) & 0x7f)
+#define JAS_IMAGE_CDT_GETSGND(dtype) (((dtype) >> 7) & 1)
+#define JAS_IMAGE_CDT_SETSGND(dtype) (((dtype) & 1) << 7)
+#define JAS_IMAGE_CDT_GETPREC(dtype) ((dtype) & 0x7f)
+#define JAS_IMAGE_CDT_SETPREC(dtype) ((dtype) & 0x7f)
 
-#define	jas_image_cmptdtype(image, cmptno) \
-	(JAS_IMAGE_CDT_SETSGND((image)->cmpts_[cmptno]->sgnd_) | JAS_IMAGE_CDT_SETPREC((image)->cmpts_[cmptno]->prec_))
+#define jas_image_cmptdtype(image, cmptno) \
+        (JAS_IMAGE_CDT_SETSGND((image)->cmpts_[cmptno]->sgnd_) | JAS_IMAGE_CDT_SETPREC((image)->cmpts_[cmptno]->prec_))
 
 void jas_image_dump(jas_image_t *image, FILE *out);
 
@@ -513,7 +513,7 @@ int jas_image_getcmptbytype(jas_image_t *image, int ctype);
 void jas_image_clearfmts(void);
 
 /* Add entry to table of image formats. */
-int jas_image_addfmt(int id, const char *name, const char *ext, 
+int jas_image_addfmt(int id, const char *name, const char *ext,
   const char *desc,
   jas_image_fmtops_t *ops);
 
@@ -578,9 +578,9 @@ int bmp_validate(jas_stream_t *in);
 /* Format-dependent operations for JP2 capability. */
 void
 jp2_decode(jas_stream_t * const in,
-		   const char *   const optstr,
-		   jas_image_t ** const imagePP,
-		   const char **  const errorP);
+                   const char *   const optstr,
+                   jas_image_t ** const imagePP,
+                   const char **  const errorP);
 int jp2_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int jp2_validate(jas_stream_t *in);
 #endif

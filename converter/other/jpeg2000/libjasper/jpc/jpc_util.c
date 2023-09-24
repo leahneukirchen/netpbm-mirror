@@ -139,32 +139,32 @@
 
 static unsigned int
 countOfTokens(const char * const s,
-			  const char * const delim) {
+                          const char * const delim) {
 
-	unsigned int n;
-	char buf[4096];
-	const char * cp;
+        unsigned int n;
+        char buf[4096];
+        const char * cp;
 
-	strncpy(buf, s, sizeof(buf));
-	buf[sizeof(buf) - 1] = '\0';
-	n = 0;  /* initial value */
-	if ((cp = strtok(buf, delim))) {
-		++n;
-		while ((cp = strtok(0, delim))) {
-			if (cp[0] != '\0') {
-				++n;
-			}
-		}
-	}
-	return n;
+        strncpy(buf, s, sizeof(buf));
+        buf[sizeof(buf) - 1] = '\0';
+        n = 0;  /* initial value */
+        if ((cp = strtok(buf, delim))) {
+                ++n;
+                while ((cp = strtok(0, delim))) {
+                        if (cp[0] != '\0') {
+                                ++n;
+                        }
+                }
+        }
+        return n;
 }
 
 
 
 int
 jpc_atoaf(const char * const s,
-		  int *        const numvaluesP,
-		  double **    const valuesP) {
+                  int *        const numvaluesP,
+                  double **    const valuesP) {
 /*----------------------------------------------------------------------------
    Parse a string like "3.2,9,-5".  Return as *numvaluesP the number of
    values in the string and as *valuesP a malloced array of the values.
@@ -173,96 +173,96 @@ jpc_atoaf(const char * const s,
 
    Delimiters can be comma as in the example or space, tab, or newline.
 -----------------------------------------------------------------------------*/
-	char const delim[] = ", \t\n";
+        char const delim[] = ", \t\n";
 
-	unsigned int const valueCt = countOfTokens(s, delim);
+        unsigned int const valueCt = countOfTokens(s, delim);
 
-	if (valueCt > 0) {
-		unsigned int i;
-		double * vs;
-		const char * cp;
-		char buf[4096];
+        if (valueCt > 0) {
+                unsigned int i;
+                double * vs;
+                const char * cp;
+                char buf[4096];
 
-		if (!(vs = jas_malloc(valueCt * sizeof(double)))) {
-			return -1;
-		}
+                if (!(vs = jas_malloc(valueCt * sizeof(double)))) {
+                        return -1;
+                }
 
-		strncpy(buf, s, sizeof(buf));
-		buf[sizeof(buf) - 1] = '\0';
-		i = 0;
-		if ((cp = strtok(buf, delim))) {
-			vs[i] = atof(cp);
-			++i;
-			while ((cp = strtok(0, delim))) {
-				if (cp[0] != '\0') {
-					vs[i] = atof(cp);
-					++i;
-				}
-			}
-		}
-		assert(i == valueCt);
-		*numvaluesP = valueCt;
-		*valuesP    = vs;
-	} else {
-		*valuesP    = NULL;
-		*numvaluesP = 0;
-	}
-	return 0;
+                strncpy(buf, s, sizeof(buf));
+                buf[sizeof(buf) - 1] = '\0';
+                i = 0;
+                if ((cp = strtok(buf, delim))) {
+                        vs[i] = atof(cp);
+                        ++i;
+                        while ((cp = strtok(0, delim))) {
+                                if (cp[0] != '\0') {
+                                        vs[i] = atof(cp);
+                                        ++i;
+                                }
+                        }
+                }
+                assert(i == valueCt);
+                *numvaluesP = valueCt;
+                *valuesP    = vs;
+        } else {
+                *valuesP    = NULL;
+                *numvaluesP = 0;
+        }
+        return 0;
 }
 
 jas_seq_t *jpc_seq_upsample(jas_seq_t *x, int m)
 {
-	jas_seq_t *z;
-	int i;
+        jas_seq_t *z;
+        int i;
 
-	if (!(z = jas_seq_create(jas_seq_start(x) * m, (jas_seq_end(x) - 1) * m + 1)))
-		return 0;
-	for (i = jas_seq_start(z); i < jas_seq_end(z); i++) {
-		*jas_seq_getref(z, i) = (!JAS_MOD(i, m)) ? jas_seq_get(x, i / m) :
-		  jpc_inttofix(0);
-	}
+        if (!(z = jas_seq_create(jas_seq_start(x) * m, (jas_seq_end(x) - 1) * m + 1)))
+                return 0;
+        for (i = jas_seq_start(z); i < jas_seq_end(z); i++) {
+                *jas_seq_getref(z, i) = (!JAS_MOD(i, m)) ? jas_seq_get(x, i / m) :
+                  jpc_inttofix(0);
+        }
 
-	return z;
+        return z;
 }
 
 jpc_fix_t jpc_seq_norm(jas_seq_t *x)
 {
-	jpc_fix_t s;
-	int i;
+        jpc_fix_t s;
+        int i;
 
-	s = jpc_inttofix(0);
-	for (i = jas_seq_start(x); i < jas_seq_end(x); i++) {
-		s = jpc_fix_add(s, jpc_fix_mul(jas_seq_get(x, i), jas_seq_get(x, i)));
-	}
+        s = jpc_inttofix(0);
+        for (i = jas_seq_start(x); i < jas_seq_end(x); i++) {
+                s = jpc_fix_add(s, jpc_fix_mul(jas_seq_get(x, i), jas_seq_get(x, i)));
+        }
 
-	return jpc_dbltofix(sqrt(jpc_fixtodbl(s)));
+        return jpc_dbltofix(sqrt(jpc_fixtodbl(s)));
 }
 
 jas_seq_t *jpc_seq_conv(jas_seq_t *x, jas_seq_t *y)
 {
-	int i;
-	int j;
-	int k;
-	jas_seq_t *z;
-	jpc_fix_t s;
-	jpc_fix_t v;
+        int i;
+        int j;
+        int k;
+        jas_seq_t *z;
+        jpc_fix_t s;
+        jpc_fix_t v;
 
-	z = jas_seq_create(jas_seq_start(x) + jas_seq_start(y),
-	  jas_seq_end(x) + jas_seq_end(y) - 1);
-	assert(z);
-	for (i = jas_seq_start(z); i < jas_seq_end(z); i++) {
-		s = jpc_inttofix(0);
-		for (j = jas_seq_start(y); j < jas_seq_end(y); j++) {
-			k = i - j;
-			if (k < jas_seq_start(x) || k >= jas_seq_end(x)) {
-				v = JPC_FIX_ZERO;
-			} else {
-				v = jas_seq_get(x, k);
-			}
-			s = jpc_fix_add(s, jpc_fix_mul(jas_seq_get(y, j), v));
-		}
-		*jas_seq_getref(z, i) = s;
-	}
+        z = jas_seq_create(jas_seq_start(x) + jas_seq_start(y),
+          jas_seq_end(x) + jas_seq_end(y) - 1);
+        assert(z);
+        for (i = jas_seq_start(z); i < jas_seq_end(z); i++) {
+                s = jpc_inttofix(0);
+                for (j = jas_seq_start(y); j < jas_seq_end(y); j++) {
+                        k = i - j;
+                        if (k < jas_seq_start(x) || k >= jas_seq_end(x)) {
+                                v = JPC_FIX_ZERO;
+                        } else {
+                                v = jas_seq_get(x, k);
+                        }
+                        s = jpc_fix_add(s, jpc_fix_mul(jas_seq_get(y, j), v));
+                }
+                *jas_seq_getref(z, i) = s;
+        }
 
-	return z;
+        return z;
 }

@@ -1,7 +1,7 @@
 /*
- *  tree.c:		Input of bintree partitioning
+ *  tree.c:             Input of bintree partitioning
  *
- *  Written by:		Ullrich Hafner
+ *  Written by:         Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -30,22 +30,22 @@
 
 /*****************************************************************************
 
-				prototypes
+                                prototypes
 
 *****************************************************************************/
 
 static unsigned
 restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
-			   unsigned y, unsigned *dst_state,
-			   word_t (*bfo_tree)[MAXLABELS],
-			   wfa_t *wfa, tiling_t *tiling);
+                           unsigned y, unsigned *dst_state,
+                           word_t (*bfo_tree)[MAXLABELS],
+                           wfa_t *wfa, tiling_t *tiling);
 static void
 decode_tree (bitfile_t *input, byte_t *data, unsigned n_data, unsigned scaling,
-	     u_word_t sum0, u_word_t sum1);
+             u_word_t sum0, u_word_t sum1);
 
 /*****************************************************************************
 
-				public code
+                                public code
 
 *****************************************************************************/
 
@@ -58,12 +58,12 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
  *  No return value.
  *
  *  Side effects:
- *	'wfa->tree', 'wfa->x', 'wfa->y', 'wfa->level_of_state'
+ *      'wfa->tree', 'wfa->x', 'wfa->y', 'wfa->level_of_state'
  *      are filled with decoded values.
  */
 {
-   byte_t *bitstring;			/* the encoded data */
-   word_t (*bfo_tree)[MAXLABELS];	/* node numbers in BFO */
+   byte_t *bitstring;                   /* the encoded data */
+   word_t (*bfo_tree)[MAXLABELS];       /* node numbers in BFO */
 
    /*
     *  Read WFA tree stored in breadth first order
@@ -80,15 +80,15 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
     *  Generate tree using a breadth first traversal
     */
    {
-      unsigned 	next;			/* next free node number of the tree */
-      unsigned 	state;
-      unsigned 	label;
-      byte_t   *buffer = bitstring;	/* pointer to decoded data */
+      unsigned  next;                   /* next free node number of the tree */
+      unsigned  state;
+      unsigned  label;
+      byte_t   *buffer = bitstring;     /* pointer to decoded data */
 
       bfo_tree = Calloc (wfa->states * MAXLABELS, sizeof (word_t));
       for (state = 0, next = 1; state < next; state++)
-	 for (label = 0; label < MAXLABELS; label++)
-	    bfo_tree [state][label] = *buffer++ ? next++ : RANGE;
+         for (label = 0; label < MAXLABELS; label++)
+            bfo_tree [state][label] = *buffer++ ? next++ : RANGE;
    }
 
    /*
@@ -98,9 +98,9 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
       unsigned dst_state = wfa->basis_states;
 
       wfa->root_state
-	 = restore_depth_first_order (0, (wfa->wfainfo->level
-					  + (wfa->wfainfo->color ? 2 : 0)),
-				      0, 0, &dst_state, bfo_tree, wfa, tiling);
+         = restore_depth_first_order (0, (wfa->wfainfo->level
+                                          + (wfa->wfainfo->color ? 2 : 0)),
+                                      0, 0, &dst_state, bfo_tree, wfa, tiling);
    }
 
    Free (bitstring);
@@ -109,15 +109,15 @@ read_tree (wfa_t *wfa, tiling_t *tiling, bitfile_t *input)
 
 /*****************************************************************************
 
-				private code
+                                private code
 
 *****************************************************************************/
 
 static unsigned
 restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
-			   unsigned y, unsigned *dst_state,
-			   word_t (*bfo_tree)[MAXLABELS],
-			   wfa_t *wfa, tiling_t *tiling)
+                           unsigned y, unsigned *dst_state,
+                           word_t (*bfo_tree)[MAXLABELS],
+                           wfa_t *wfa, tiling_t *tiling)
 /*
  *  Map state 'src_state' (breadth first order)
  *  to state '*dst_state' (depth first order)
@@ -127,17 +127,17 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
  *  of size 'image_level'. 'tiling' defines the image partitioning.
  *
  *  Return value:
- *	new node number in depth first order
+ *      new node number in depth first order
  *
  *  Side effects:
- *	'wfa->tree', 'wfa->x', 'wfa->y', 'wfa->level_of_state'
+ *      'wfa->tree', 'wfa->x', 'wfa->y', 'wfa->level_of_state'
  *      are filled with decoded values.
  */
 {
-   unsigned newx [MAXLABELS];		/* x coordinate of children */
-   unsigned newy [MAXLABELS];		/* y coordinate of children */
-   unsigned x0, y0;			/* NW corner of image tile */
-   unsigned width, height;		/* size of image tile */
+   unsigned newx [MAXLABELS];           /* x coordinate of children */
+   unsigned newy [MAXLABELS];           /* y coordinate of children */
+   unsigned x0, y0;                     /* NW corner of image tile */
+   unsigned width, height;              /* size of image tile */
 
    /*
     *  If tiling is performed then replace current coordinates
@@ -148,14 +148,14 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
 
       for (tile = 0; tile < 1U << tiling->exponent; tile++)
       {
-	 locate_subimage (wfa->wfainfo->level, level, tile,
-			  &x0, &y0, &width, &height);
-	 if (x0 == x && y0 == y) /* matched ! */
-	 {
-	    locate_subimage (wfa->wfainfo->level, level, tiling->vorder[tile],
-			     &x, &y, &width, &height);
-	    break;
-	 }
+         locate_subimage (wfa->wfainfo->level, level, tile,
+                          &x0, &y0, &width, &height);
+         if (x0 == x && y0 == y) /* matched ! */
+         {
+            locate_subimage (wfa->wfainfo->level, level, tiling->vorder[tile],
+                             &x, &y, &width, &height);
+            break;
+         }
       }
    }
    /*
@@ -175,24 +175,24 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
     *  Remap node numbers
     */
    {
-      int      child [MAXLABELS];	/* children of current node (state) */
-      int      domain;			/* current domain */
+      int      child [MAXLABELS];       /* children of current node (state) */
+      int      domain;                  /* current domain */
       unsigned label;
 
       for (label = 0; label < MAXLABELS; label++)
-	 if (!isrange (domain = bfo_tree [src_state][label]))
-	    child [label] = restore_depth_first_order (domain, level - 1,
-						       newx [label],
-						       newy [label], dst_state,
-						       bfo_tree, wfa, tiling);
-	 else
-	    child [label] = RANGE;
+         if (!isrange (domain = bfo_tree [src_state][label]))
+            child [label] = restore_depth_first_order (domain, level - 1,
+                                                       newx [label],
+                                                       newy [label], dst_state,
+                                                       bfo_tree, wfa, tiling);
+         else
+            child [label] = RANGE;
 
       for (label = 0; label < MAXLABELS; label++)
       {
-	 wfa->tree [*dst_state][label] = child [label];
-	 wfa->x [*dst_state][label]    = newx [label];
-	 wfa->y [*dst_state][label]    = newy [label];
+         wfa->tree [*dst_state][label] = child [label];
+         wfa->x [*dst_state][label]    = newx [label];
+         wfa->y [*dst_state][label]    = newy [label];
       }
       wfa->level_of_state [*dst_state] = level;
    }
@@ -208,26 +208,26 @@ restore_depth_first_order (unsigned src_state, unsigned level, unsigned x,
 
 static void
 decode_tree (bitfile_t *input, byte_t *data, unsigned n_data, unsigned scaling,
-	     u_word_t sum0, u_word_t sum1)
+             u_word_t sum0, u_word_t sum1)
 /*
  *  Decode bintree partitioning using adaptive binary arithmetic decoding.
- *  'input'	input stream,
- *  'data'	buffer for decoded szmbols,
- *  'n_data'	number of symbols to decode,
- *  'scaling'	rescale probability models if range > 'scaling'
- *  'sum0'	initial totals of symbol '0'
- *  'sum1'	initial totals of symbol '1'
+ *  'input'     input stream,
+ *  'data'      buffer for decoded szmbols,
+ *  'n_data'    number of symbols to decode,
+ *  'scaling'   rescale probability models if range > 'scaling'
+ *  'sum0'      initial totals of symbol '0'
+ *  'sum1'      initial totals of symbol '1'
  *
  *  No return value.
  *
  *  Side effects:
- *	'data []' is filled with the decoded bitstring
+ *      'data []' is filled with the decoded bitstring
  */
 {
-   u_word_t code;			/* The present input code value */
-   u_word_t low;			/* Start of the current code range */
-   u_word_t high;			/* End of the current code range */
-   unsigned n;				/* Data counter */
+   u_word_t code;                       /* The present input code value */
+   u_word_t low;                        /* Start of the current code range */
+   u_word_t high;                       /* End of the current code range */
+   unsigned n;                          /* Data counter */
 
    assert (data);
 
@@ -237,64 +237,64 @@ decode_tree (bitfile_t *input, byte_t *data, unsigned n_data, unsigned scaling,
 
    for (n = n_data; n; n--)
    {
-      unsigned count;			/* Current interval count */
-      unsigned range;			/* Current interval range */
+      unsigned count;                   /* Current interval count */
+      unsigned range;                   /* Current interval range */
 
       count = (((code - low) + 1) * sum1 - 1) / ((high - low) + 1);
       if (count < sum0)
       {
-	 /*
-	  *  Decode a '0' symbol
-	  *  First, the range is expanded to account for the symbol removal.
-	  */
-	 range = (high - low) + 1;
-	 high = low + (u_word_t) ((range * sum0) / sum1 - 1 );
+         /*
+          *  Decode a '0' symbol
+          *  First, the range is expanded to account for the symbol removal.
+          */
+         range = (high - low) + 1;
+         high = low + (u_word_t) ((range * sum0) / sum1 - 1 );
 
-	 RESCALE_INPUT_INTERVAL;
+         RESCALE_INPUT_INTERVAL;
 
-	 *data++ = 0;
-	 /*
-	  *  Update the frequency counts
-	  */
-	 sum0++;
-	 sum1++;
-	 if (sum1 > scaling) /* scale the symbol frequencies */
-	 {
-	    sum0 >>= 1;
-	    sum1 >>= 1;
-	    if (!sum0)
-	       sum0 = 1;
-	    if (sum0 >= sum1)
-	       sum1 = sum0 + 1;
-	 }
+         *data++ = 0;
+         /*
+          *  Update the frequency counts
+          */
+         sum0++;
+         sum1++;
+         if (sum1 > scaling) /* scale the symbol frequencies */
+         {
+            sum0 >>= 1;
+            sum1 >>= 1;
+            if (!sum0)
+               sum0 = 1;
+            if (sum0 >= sum1)
+               sum1 = sum0 + 1;
+         }
 
       }
       else
       {
-	 /*
-	  *  Decode a '1' symbol
-	  *  First, the range is expanded to account for the symbol removal.
-	  */
-	 range = (high - low) + 1;
-	 high = low + (u_word_t) ((range * sum1) / sum1 - 1);
-	 low  = low + (u_word_t) ((range * sum0) / sum1);
+         /*
+          *  Decode a '1' symbol
+          *  First, the range is expanded to account for the symbol removal.
+          */
+         range = (high - low) + 1;
+         high = low + (u_word_t) ((range * sum1) / sum1 - 1);
+         low  = low + (u_word_t) ((range * sum0) / sum1);
 
-	 RESCALE_INPUT_INTERVAL;
+         RESCALE_INPUT_INTERVAL;
 
-	 *data++ = 1;
-	 /*
-	  *  Update the frequency counts
-	  */
-	 sum1++;
-	 if (sum1 > scaling) /* scale the symbol frequencies */
-	 {
-	    sum0 >>= 1;
-	    sum1 >>= 1;
-	    if (!sum0)
-	       sum0 = 1;
-	    if (sum0 >= sum1)
-	       sum1 = sum0 + 1;
-	 }
+         *data++ = 1;
+         /*
+          *  Update the frequency counts
+          */
+         sum1++;
+         if (sum1 > scaling) /* scale the symbol frequencies */
+         {
+            sum0 >>= 1;
+            sum1 >>= 1;
+            if (!sum0)
+               sum0 = 1;
+            if (sum0 >= sum1)
+               sum1 = sum0 + 1;
+         }
       }
    }
    INPUT_BYTE_ALIGN (input);

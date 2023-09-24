@@ -1,11 +1,11 @@
 /*
- *  error.c:		Error handling
+ *  error.c:            Error handling
  *
- *  Written by:		Stefan Frank
- *			Ullrich Hafner
- *  
- *  Credits:	Modelled after variable argument routines from Jef
- *		Poskanzer's pbmplus package. 
+ *  Written by:         Stefan Frank
+ *                      Ullrich Hafner
+ *
+ *  Credits:    Modelled after variable argument routines from Jef
+ *              Poskanzer's pbmplus package.
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -29,16 +29,16 @@
 #include <stdio.h>
 
 #if STDC_HEADERS
-#	include <stdarg.h>
-#	define VA_START(args, lastarg) va_start(args, lastarg)
+#       include <stdarg.h>
+#       define VA_START(args, lastarg) va_start(args, lastarg)
 #else  /* not STDC_HEADERS */
-#	include <varargs.h>
-#	define VA_START(args, lastarg) va_start(args)
+#       include <varargs.h>
+#       define VA_START(args, lastarg) va_start(args)
 #endif /* not STDC_HEADERS */
 #include <string.h>
 
 #if HAVE_SETJMP_H
-#	include <setjmp.h>
+#       include <setjmp.h>
 #endif /* HAVE_SETJMP_H */
 
 #include "fiasco.h"
@@ -46,8 +46,8 @@
 
 /*****************************************************************************
 
-			     global variables
-  
+                             global variables
+
 *****************************************************************************/
 
 int   error_line = 0;
@@ -55,16 +55,16 @@ const char *error_file = NULL;
 
 /*****************************************************************************
 
-			     local variables
-  
+                             local variables
+
 *****************************************************************************/
 
 static const char *executable = "(name not initialized)";
 
 /*****************************************************************************
 
-			       public code
-  
+                               public code
+
 *****************************************************************************/
 
 void
@@ -87,12 +87,12 @@ _error (const char *format, ...)
  *  No return value.
  */
 {
-   va_list	args;
+   va_list      args;
 
    VA_START (args, format);
 
    fprintf (stderr, "%s: %s: line %d:\nError: ",
-	    executable, error_file, error_line);
+            executable, error_file, error_line);
    vfprintf (stderr, format, args);
    fputc ('\n', stderr);
    va_end(args);
@@ -109,13 +109,13 @@ _file_error (const char *filename)
  */
 {
    fprintf (stderr, "%s: %s: line %d:\nError: ",
-	    executable, error_file, error_line);
+            executable, error_file, error_line);
    perror (filename);
 
    exit (2);
 }
 
-void 
+void
 _warning (const char *format, ...)
 /*
  *  Issue a warning and continue execution.
@@ -128,7 +128,7 @@ _warning (const char *format, ...)
    VA_START (args, format);
 
    fprintf (stderr, "%s: %s: line %d:\nWarning: ",
-	    executable, error_file, error_line);
+            executable, error_file, error_line);
    vfprintf (stderr, format, args);
    fputc ('\n', stderr);
 

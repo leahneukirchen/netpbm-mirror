@@ -1,11 +1,11 @@
 /*
- *  error.c:		Error handling
+ *  error.c:            Error handling
  *
- *  Written by:		Stefan Frank
- *			Ullrich Hafner
+ *  Written by:         Stefan Frank
+ *                      Ullrich Hafner
  *
- *  Credits:	Modelled after variable argument routines from Jef
- *		Poskanzer's pbmplus package.
+ *  Credits:    Modelled after variable argument routines from Jef
+ *              Poskanzer's pbmplus package.
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -24,7 +24,7 @@
 #include <string.h>
 
 #if HAVE_SETJMP_H
-#	include <setjmp.h>
+#       include <setjmp.h>
 #endif /* HAVE_SETJMP_H */
 
 #include "types.h"
@@ -36,12 +36,12 @@
 
 /*****************************************************************************
 
-			     local variables
+                             local variables
 
 *****************************************************************************/
 
 static fiasco_verbosity_e  verboselevel  = FIASCO_SOME_VERBOSITY;
-static char 	      	  *error_message = NULL;
+static char               *error_message = NULL;
 
 #if HAVE_SETJMP_H
 jmp_buf env;
@@ -49,7 +49,7 @@ jmp_buf env;
 
 /*****************************************************************************
 
-			       public code
+                               public code
 
 *****************************************************************************/
 
@@ -195,7 +195,7 @@ warning(const char * const format, ...) {
 /*----------------------------------------------------------------------------
   Issue a warning.
 -----------------------------------------------------------------------------*/
-    va_list	args;
+    va_list     args;
 
     VA_START (args, format);
 

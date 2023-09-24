@@ -1,8 +1,8 @@
 /*
  *  dither.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -19,9 +19,9 @@
 
 typedef struct renderer_private
 {
-   int 	       	*Cr_r_tab, *Cr_g_tab, *Cb_g_tab, *Cb_b_tab;
+   int          *Cr_r_tab, *Cr_g_tab, *Cb_g_tab, *Cb_b_tab;
    unsigned int *r_table, *g_table, *b_table, *y_table;
-   bool_t	double_resolution;
+   bool_t       double_resolution;
 } renderer_private_t;
 
 #endif /* _DITHER_H */

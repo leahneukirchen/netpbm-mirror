@@ -1,9 +1,9 @@
 /*
  *  mwfa.h
  *
- *  Written by:		Michael Unger
- *			Ullrich Hafner
- *		
+ *  Written by:         Michael Unger
+ *                      Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -25,16 +25,16 @@
 
 void
 fill_norms_table (unsigned x0, unsigned y0, unsigned level,
-		  const wfa_info_t *wi, motion_t *mt);
+                  const wfa_info_t *wi, motion_t *mt);
 void
 find_B_frame_mc (word_t *mcpe, real_t price, range_t *range,
-		 const wfa_info_t *wi, const motion_t *mt);
+                 const wfa_info_t *wi, const motion_t *mt);
 void
 find_P_frame_mc (word_t *mcpe, real_t price, range_t *range,
-		 const wfa_info_t *wi, const motion_t *mt);
+                 const wfa_info_t *wi, const motion_t *mt);
 void
 subtract_mc (image_t *image, const image_t *past, const image_t *future,
-	     const wfa_t *wfa);
+             const wfa_t *wfa);
 void
 free_motion (motion_t *mt);
 motion_t *

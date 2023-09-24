@@ -3,11 +3,11 @@
  *
  *  Written by:     Ullrich Hafner
  *          Michael Unger
- *      
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
- 
+
 /*
  *  $Date: 2000/10/28 17:39:29 $
  *  $Author: hafner $
@@ -50,10 +50,10 @@ static x11_info_t *xinfo = NULL;
 /*****************************************************************************
 
                 prototypes
-  
+
 *****************************************************************************/
 
-static int 
+static int
 checkargs (int argc, char **argv, bool_t *double_resolution, bool_t *panel,
            int *fps, char **image_name, fiasco_d_options_t **options);
 static void
@@ -75,10 +75,10 @@ show_stored_frames (unsigned char * const *frame_buffer, int last_frame,
 /*****************************************************************************
 
                 public code
-  
+
 *****************************************************************************/
 
-int 
+int
 main (int argc, char **argv)
 {
     char               *image_name        = NULL; /* output filename */
@@ -92,7 +92,7 @@ main (int argc, char **argv)
 
     last_arg = checkargs (argc, argv, &double_resolution, &panel, &fps,
                           &image_name, &options);
-   
+
     if (last_arg >= argc)
         video_decoder ("-", image_name, panel, double_resolution, fps, options);
     else
@@ -106,7 +106,7 @@ main (int argc, char **argv)
 /*****************************************************************************
 
                 private code
-  
+
 *****************************************************************************/
 
 static param_t params [] =
@@ -133,7 +133,7 @@ static param_t params [] =
     {NULL, NULL, 0, 0, {0}, NULL, NULL }
 };
 
-static int 
+static int
 checkargs (int argc, char **argv, bool_t *double_resolution, bool_t *panel,
            int *fps, char **image_name, fiasco_d_options_t **options)
 /*
@@ -180,21 +180,21 @@ checkargs (int argc, char **argv, bool_t *double_resolution, bool_t *panel,
 
     {
         int const n = *((int *) parameter_value (params, "smoothing"));
-      
+
         if (!fiasco_d_options_set_smoothing (*options, MAX(-1, n)))
             error (fiasco_get_error_message ());
     }
 
     {
         int const n = *((int *) parameter_value (params, "magnify"));
-      
+
         if (!fiasco_d_options_set_magnification (*options, n))
             error (fiasco_get_error_message ());
     }
-   
+
     {
         bool_t const n = *((bool_t *) parameter_value (params, "fast"));
-      
+
         if (!fiasco_d_options_set_4_2_0_format (*options, n > 0 ? YES : NO))
             error (fiasco_get_error_message ());
     }
@@ -211,7 +211,7 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
     unsigned char     **frame_buffer = NULL;
     binfo_t            *binfo        = NULL; /* buttons info */
 #endif /* not X_DISPLAY_MISSING */
-   
+
     do
     {
         unsigned      width, height, frames, n;
@@ -220,23 +220,23 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
         char             *basename;   /* basename of decoded frame */
         char             *suffix;     /* suffix of decoded frame */
         unsigned      frame_time;
-      
+
         if (!(decoder_state = fiasco_decoder_new (wfa_name, options)))
             error (fiasco_get_error_message ());
-   
-        if (fps <= 0)         /* then use value of FIASCO file */ 
+
+        if (fps <= 0)         /* then use value of FIASCO file */
             fps = fiasco_decoder_get_rate (decoder_state);
         frame_time = fps ? (1000 / fps) : (1000 / 25);
 
         if (!(width = fiasco_decoder_get_width (decoder_state)))
             error (fiasco_get_error_message ());
-      
+
         if (!(height = fiasco_decoder_get_height (decoder_state)))
             error (fiasco_get_error_message ());
 
         if (!(frames = fiasco_decoder_get_length (decoder_state)))
             error (fiasco_get_error_message ());
-      
+
         get_output_template (image_name, wfa_name,
                              fiasco_decoder_is_color (decoder_state),
                              &basename, &suffix);
@@ -249,9 +249,9 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
         for (n = 0; n < frames; n++)
         {
             clock_t fps_timer;     /* frames per second timer struct */
-     
+
             prg_timer (&fps_timer, START);
-     
+
             if (image_name)        /* just write frame to disk */
             {
                 if (frames == 1)        /* just one image */
@@ -277,23 +277,23 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
             else
             {
                 fiasco_image_t *frame;
-        
+
                 if (!(frame = fiasco_decoder_get_frame (decoder_state)))
                     error (fiasco_get_error_message ());
-        
+
                 if (frames == 1)
                     panel = NO;
 
                 if (xinfo == NULL)      /* initialize X11 window */
                 {
-                    const char * const title = 
+                    const char * const title =
                         fiasco_decoder_get_title (decoder_state);
                     char        titlename [MAXSTRLEN];
 
-           
+
                     sprintf (titlename, "dfiasco " VERSION ": %s",
                              strlen (title) > 0 ? title : wfa_name);
-                    xinfo = 
+                    xinfo =
                         open_window (titlename, "dfiasco",
                                      (width  << (double_resolution ? 1 : 0)),
                                      (height << (double_resolution ? 1 : 0))
@@ -302,7 +302,7 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
                                   height << (double_resolution ? 1 : 0));
                     if (panel)       /* initialize button panel */
                         binfo = init_buttons (xinfo, n, frames, 30, 10);
-                    renderer = 
+                    renderer =
                         fiasco_renderer_new (xinfo->ximage->red_mask,
                                              xinfo->ximage->green_mask,
                                              xinfo->ximage->blue_mask,
@@ -313,7 +313,7 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
                 }
                 renderer->render (renderer, xinfo->pixels, frame);
                 frame->delete (frame);
-        
+
                 if (frame_buffer != NULL) /* store next frame */
                 {
                     size_t size = (width  << (double_resolution ? 1 : 0))
@@ -343,17 +343,17 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
                 else if (panel)
                 {
                     check_events (xinfo, binfo, n, frames);
-                    if (binfo->pressed [QUIT_BUTTON]) 
+                    if (binfo->pressed [QUIT_BUTTON])
                         /* start from beginning */
                         break;
-                    if (binfo->pressed [STOP_BUTTON]) 
+                    if (binfo->pressed [STOP_BUTTON])
                         /* start from beginning */
                         n = frames;
-           
+
                     if (binfo->pressed [RECORD_BUTTON] && frame_buffer == NULL)
                     {
                         n = frames;
-                        frame_buffer = 
+                        frame_buffer =
                             calloc (frames, sizeof (unsigned char *));
                         if (!frame_buffer)
                             error ("Out of memory.");
@@ -364,17 +364,17 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
             }
 #else
             if (frame_time) {/* defeat compiler warning */}
-#endif /* not X_DISPLAY_MISSING */   
+#endif /* not X_DISPLAY_MISSING */
         }
         free (filename);
-   
+
         fiasco_decoder_delete (decoder_state);
     } while (panel
 
 #ifndef X_DISPLAY_MISSING
              && !binfo->pressed [QUIT_BUTTON]
 #endif /* not X_DISPLAY_MISSING */
-        
+
         );
 
 #ifndef X_DISPLAY_MISSING
@@ -408,7 +408,7 @@ get_output_template (const char *image_name, const char *wfa_name,
  */
 {
     if (!wfa_name || streq (wfa_name, "-"))
-        wfa_name = "stdin";       
+        wfa_name = "stdin";
     /*
      *  Generate filename template
      */
@@ -422,7 +422,7 @@ get_output_template (const char *image_name, const char *wfa_name,
         *basename = strdup (image_name);
         *suffix   = strrchr (*basename, '.');
     }
-    
+
     if (*suffix)         /* found name 'basename.suffix' */
     {
         **suffix = 0;         /* remove dot */
@@ -450,13 +450,13 @@ show_stored_frames (unsigned char * const *frame_buffer, int last_frame,
  */
 {
     int n = last_frame;          /* frame number */
-   
+
     while (1)
     {
         clock_t fps_timer;        /* frames per second timer struct */
-      
+
         prg_timer (&fps_timer, START);
-      
+
         display_image (0, 0, xinfo);
         check_events (xinfo, binfo, n, last_frame + 1);
 

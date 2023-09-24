@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -136,8 +136,8 @@
  * Termination modes.
  */
 
-#define	JPC_MQENC_DEFTERM	0	/* default termination */
-#define	JPC_MQENC_PTERM		1	/* predictable termination */
+#define JPC_MQENC_DEFTERM       0       /* default termination */
+#define JPC_MQENC_PTERM         1       /* predictable termination */
 
 /******************************************************************************\
 * Types.
@@ -147,53 +147,53 @@
 
 typedef struct {
 
-	/* The C register. */
-	uint_fast32_t creg;
+        /* The C register. */
+        uint_fast32_t creg;
 
-	/* The A register. */
-	uint_fast32_t areg;
+        /* The A register. */
+        uint_fast32_t areg;
 
-	/* The CT register. */
-	uint_fast32_t ctreg;
+        /* The CT register. */
+        uint_fast32_t ctreg;
 
-	/* The maximum number of contexts. */
-	int maxctxs;
+        /* The maximum number of contexts. */
+        int maxctxs;
 
-	/* The per-context information. */
-	jpc_mqstate_t **ctxs;
+        /* The per-context information. */
+        jpc_mqstate_t **ctxs;
 
-	/* The current context. */
-	jpc_mqstate_t **curctx;
+        /* The current context. */
+        jpc_mqstate_t **curctx;
 
-	/* The stream for encoder output. */
-	jas_stream_t *out;
+        /* The stream for encoder output. */
+        jas_stream_t *out;
 
-	/* The byte buffer (i.e., the B variable in the standard). */
-	int_fast16_t outbuf;
+        /* The byte buffer (i.e., the B variable in the standard). */
+        int_fast16_t outbuf;
 
-	/* The last byte output. */
-	int_fast16_t lastbyte;
+        /* The last byte output. */
+        int_fast16_t lastbyte;
 
-	/* The error indicator. */
-	int err;
-	
+        /* The error indicator. */
+        int err;
+       
 } jpc_mqenc_t;
 
 /* MQ arithmetic encoder state information. */
 
 typedef struct {
 
-	/* The A register. */
-	unsigned areg;
+        /* The A register. */
+        unsigned areg;
 
-	/* The C register. */
-	unsigned creg;
+        /* The C register. */
+        unsigned creg;
 
-	/* The CT register. */
-	unsigned ctreg;
+        /* The CT register. */
+        unsigned ctreg;
 
-	/* The last byte output by the encoder. */
-	int lastbyte;
+        /* The last byte output by the encoder. */
+        int lastbyte;
 
 } jpc_mqencstate_t;
 
@@ -219,7 +219,7 @@ void jpc_mqenc_init(jpc_mqenc_t *enc);
 \******************************************************************************/
 
 /* Set the current context. */
-#define	jpc_mqenc_setcurctx(enc, ctxno) \
+#define jpc_mqenc_setcurctx(enc, ctxno) \
         ((enc)->curctx = &(enc)->ctxs[ctxno]);
 
 /* Set the state information for a particular context. */
@@ -233,8 +233,8 @@ void jpc_mqenc_setctxs(jpc_mqenc_t *enc, int numctxs, jpc_mqctx_t *ctxs);
 \******************************************************************************/
 
 /* Get the error state of a MQ encoder. */
-#define	jpc_mqenc_error(enc) \
-	((enc)->err)
+#define jpc_mqenc_error(enc) \
+        ((enc)->err)
 
 /* Get the current encoder state. */
 void jpc_mqenc_getstate(jpc_mqenc_t *enc, jpc_mqencstate_t *state);
@@ -248,9 +248,9 @@ int jpc_mqenc_flush(jpc_mqenc_t *enc, int termmode);
 
 /* Encode a bit. */
 #if !defined(DEBUG)
-#define	jpc_mqenc_putbit(enc, bit)	jpc_mqenc_putbit_macro(enc, bit)
+#define jpc_mqenc_putbit(enc, bit)      jpc_mqenc_putbit_macro(enc, bit)
 #else
-#define	jpc_mqenc_putbit(enc, bit)	jpc_mqenc_putbit_func(enc, bit)
+#define jpc_mqenc_putbit(enc, bit)      jpc_mqenc_putbit_func(enc, bit)
 #endif
 
 /******************************************************************************\
@@ -265,12 +265,12 @@ int jpc_mqenc_dump(jpc_mqenc_t *mqenc, FILE *out);
 
 /* Note: This macro is included only to satisfy the needs of
   the mqenc_putbit macro. */
-#define	jpc_mqenc_putbit_macro(enc, bit) \
-	(((*((enc)->curctx))->mps == (bit)) ? \
-	  (((enc)->areg -= (*(enc)->curctx)->qeval), \
-	  ((!((enc)->areg & 0x8000)) ? (jpc_mqenc_codemps2(enc)) : \
-	  ((enc)->creg += (*(enc)->curctx)->qeval))) : \
-	  jpc_mqenc_codelps(enc))
+#define jpc_mqenc_putbit_macro(enc, bit) \
+        (((*((enc)->curctx))->mps == (bit)) ? \
+          (((enc)->areg -= (*(enc)->curctx)->qeval), \
+          ((!((enc)->areg & 0x8000)) ? (jpc_mqenc_codemps2(enc)) : \
+          ((enc)->creg += (*(enc)->curctx)->qeval))) : \
+          jpc_mqenc_codelps(enc))
 
 /* Note: These function prototypes are included only to satisfy the
   needs of the mqenc_putbit_macro macro.  Do not call any of these

@@ -1,8 +1,8 @@
 /*
  *  coeff.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -23,23 +23,23 @@
 
 typedef struct coeff
 {
-   rpf_t    *rpf;			/* reduced precision format */
-   rpf_t    *dc_rpf;			/* RPF of DC (state 0) component */
-   unsigned min_level, max_level;	/* allocate memory for [min,..,max] */
-   void	    *model;			/* generic pointer to prob. model */
+   rpf_t    *rpf;                       /* reduced precision format */
+   rpf_t    *dc_rpf;                    /* RPF of DC (state 0) component */
+   unsigned min_level, max_level;       /* allocate memory for [min,..,max] */
+   void     *model;                     /* generic pointer to prob. model */
    real_t (*bits) (const real_t *used_coeff, const word_t *used_domains,
-		   unsigned level, const struct coeff *coeff);
+                   unsigned level, const struct coeff *coeff);
    /*
     *  Compute bit-rate of a range approximation with coefficients given by
     *  -1 terminated list 'used_domains'.
     */
    void   (*update) (const real_t *used_coeff, const word_t *used_domains,
-		       unsigned level, struct coeff *coeff);
+                       unsigned level, struct coeff *coeff);
    /*
     *  Update the probability model according to the chosen approximation.
     *  (given by the -1 terminated list 'used_domains').
     */
-   void	  (*free) (struct coeff *coeff);
+   void   (*free) (struct coeff *coeff);
    /*
     *  Discard the given coefficients struct.
     */
@@ -55,7 +55,7 @@ typedef struct coeff
 
 coeff_t *
 alloc_coeff_model (const char *coeff_model_name, rpf_t *rpf, rpf_t *dc_rpf,
-		   unsigned min_level, unsigned max_level);
+                   unsigned min_level, unsigned max_level);
 
 #endif /* not _COEFF_H */
 

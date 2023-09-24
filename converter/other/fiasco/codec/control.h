@@ -1,8 +1,8 @@
 /*
  *  control.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -20,14 +20,14 @@
 #include "cwfa.h"
 #include "types.h"
 
-void 
+void
 append_transitions (unsigned state, unsigned label, const real_t *weight,
-		    const word_t *into, wfa_t *wfa);
-void 
+                    const word_t *into, wfa_t *wfa);
+void
 append_basis_states (unsigned basis_states, wfa_t *wfa, coding_t *c);
-void    
+void
 append_state (bool_t auxiliary_state, real_t final, unsigned level_of_state,
-	      wfa_t *wfa, coding_t *c);
+              wfa_t *wfa, coding_t *c);
 
 #endif /* not _CONTROL_H */
 

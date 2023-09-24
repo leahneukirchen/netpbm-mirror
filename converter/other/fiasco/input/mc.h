@@ -2,8 +2,8 @@
  *  mc.h
  *
  *  written by: Michael Unger
- *		Ullrich Hafner
- 
+ *              Ullrich Hafner
+
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */

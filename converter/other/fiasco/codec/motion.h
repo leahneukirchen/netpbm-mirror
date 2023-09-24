@@ -1,9 +1,9 @@
 /*
  *  motion.h
  *
- *  Written by:		Ullrich Hafner
- *			Michael Unger
- *		
+ *  Written by:         Ullrich Hafner
+ *                      Michael Unger
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -24,12 +24,12 @@
 
 void
 restore_mc (int enlarge_factor, image_t *image, const image_t *past,
-	    const image_t *future, const wfa_t *wfa);
+            const image_t *future, const wfa_t *wfa);
 void
 extract_mc_block (word_t *mcblock, unsigned width, unsigned height,
-		  const word_t *reference, unsigned ref_width,
-		  bool_t half_pixel, unsigned xo, unsigned yo,
-		  unsigned mx, unsigned my);
+                  const word_t *reference, unsigned ref_width,
+                  bool_t half_pixel, unsigned xo, unsigned yo,
+                  unsigned mx, unsigned my);
 
 #endif /* not _MOTION_H */
 

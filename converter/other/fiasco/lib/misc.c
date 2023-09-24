@@ -1,11 +1,11 @@
 /*
- *  misc.c:		Some useful functions, that don't fit in one of 
- *			the other files and that are needed by at least
- *			two modules. 
+ *  misc.c:             Some useful functions, that don't fit in one of
+ *                      the other files and that are needed by at least
+ *                      two modules.
  *
- *  Written by:		Stefan Frank
- *			Ullrich Hafner
- *		
+ *  Written by:         Stefan Frank
+ *                      Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -23,14 +23,14 @@
 #include <ctype.h>
 
 #ifdef TIME_WITH_SYS_TIME
-#	include <sys/time.h>
-#	include <time.h>
+#       include <sys/time.h>
+#       include <time.h>
 #else  /* not TIME_WITH_SYS_TIME */
-#	if HAVE_SYS_TIME_H
-#		include <sys/time.h>
-#	else /* not HAVE_SYS_TIME_H */
-#		include <time.h>
-#	endif /* not HAVE_SYS_TIME_H */
+#       if HAVE_SYS_TIME_H
+#               include <sys/time.h>
+#       else /* not HAVE_SYS_TIME_H */
+#               include <time.h>
+#       endif /* not HAVE_SYS_TIME_H */
 #endif /* not TIME_WITH_SYS_TIME */
 
 #include <stdlib.h>
@@ -47,8 +47,8 @@
 
 /*****************************************************************************
 
-				prototypes
-  
+                                prototypes
+
 *****************************************************************************/
 
 static void
@@ -56,8 +56,8 @@ remove_comments (FILE *file);
 
 /*****************************************************************************
 
-				public code
-  
+                                public code
+
 *****************************************************************************/
 
 void *
@@ -66,14 +66,14 @@ Calloc (size_t n, size_t size)
  *  Allocate memory like calloc ().
  *
  *  Return value: Pointer to the new block of memory on success,
- *		  otherwise the program is terminated.
+ *                otherwise the program is terminated.
  */
 {
-   void	*ptr;				/* pointer to the new memory block */
+   void *ptr;                           /* pointer to the new memory block */
 
    if (n <= 0 || size <= 0)
       error ("Can't allocate memory for %d items of size %d",
-	     (int) n, (int) size);
+             (int) n, (int) size);
 
    ptr = calloc (n, size);
    if (!ptr)
@@ -100,20 +100,20 @@ unsigned
 prg_timer (clock_t *last_timer, enum action_e action)
 /*
  *  If 'action' == START then store current value of system timer.
- *  If 'action' == STOP	 then compute number of elapsed micro seconds since
- *			 the last time 'prg_timer' was called
- *			 with 'action' == START.
+ *  If 'action' == STOP  then compute number of elapsed micro seconds since
+ *                       the last time 'prg_timer' was called
+ *                       with 'action' == START.
  *
  *  Return value:
- *	Number of elapsed micro seconds if 'action' == STOP
- *	0				if 'action' == START
+ *      Number of elapsed micro seconds if 'action' == STOP
+ *      0                               if 'action' == START
  *
  *  Side effects:
- *	last_timer is set to current timer if action == START
+ *      last_timer is set to current timer if action == START
  */
 {
    assert (last_timer);
-   
+
    if (action == START)
    {
       *last_timer = clock ();
@@ -123,19 +123,19 @@ prg_timer (clock_t *last_timer, enum action_e action)
       return (clock () - *last_timer) / (CLOCKS_PER_SEC / 1000.0);
 }
 
-real_t 
+real_t
 read_real (FILE *infile)
-/* 
+/*
  *  Read one real value from the given input stream 'infile'.
- *  
+ *
  *  Return value:
- *	real value on success
+ *      real value on success
  */
 {
    float input;
 
    assert (infile);
-   
+
    remove_comments (infile);
    if (fscanf(infile, "%f", &input) != 1)
       error("Can't read float value!");
@@ -143,26 +143,26 @@ read_real (FILE *infile)
    return (real_t) input;
 }
 
-int 
+int
 read_int (FILE *infile)
-/* 
+/*
  *  Read one integer value from the given input stream 'infile'.
  *
  *  Return value:
- *	integer value on success
+ *      integer value on success
  */
 {
-   int input;				/* integer */
+   int input;                           /* integer */
 
    assert (infile);
-   
+
    remove_comments (infile);
    if (fscanf(infile, "%d", &input) != 1)
       error("Can't read integer value!");
 
    return input;
 }
-   
+
 static void
 remove_comments (FILE *file)
 /*
@@ -171,27 +171,27 @@ remove_comments (FILE *file)
  *  No return value.
  */
 {
-   int c;				/* current character */
-   
+   int c;                               /* current character */
+
    assert (file);
-   
+
    do
    {
       while (isspace(c = getc (file)))
-	 ;
+         ;
       if (c == EOF)
-	 error ("EOF reached, input seems to be truncated!");
+         error ("EOF reached, input seems to be truncated!");
       if (c == '#')
       {
-	 int dummy;
-	 
-	 while (((dummy = getc (file)) != '\n') && dummy != EOF)
-	    ;
-	 if (dummy == EOF)
-	    error ("EOF reached, input seems to be truncated!");
+         int dummy;
+
+         while (((dummy = getc (file)) != '\n') && dummy != EOF)
+            ;
+         if (dummy == EOF)
+            error ("EOF reached, input seems to be truncated!");
       }
-      else 
-	 ungetc (c, file);
+      else
+         ungetc (c, file);
    } while (c == '#');
 }
 
@@ -203,10 +203,10 @@ write_rice_code (unsigned value, unsigned rice_k, bitfile_t *output)
  *  No return value.
  */
 {
-   unsigned unary;			/* unary part of Rice Code */
+   unsigned unary;                      /* unary part of Rice Code */
 
    assert (output);
-   
+
    for (unary = value >> rice_k; unary; unary--)
       put_bit (output, 1);
    put_bit (output, 0);
@@ -219,13 +219,13 @@ read_rice_code (unsigned rice_k, bitfile_t *input)
  *  Read a Rice encoded integer (base 'rice_k') from the stream 'input'.
  *
  *  Return value:
- *	decoded integer
+ *      decoded integer
  */
 {
-   unsigned unary;			/* unary part of Rice code */
-   
+   unsigned unary;                      /* unary part of Rice code */
+
    assert (input);
-   
+
    for (unary = 0; get_bit (input); unary++) /* unary part */
       ;
 
@@ -243,15 +243,15 @@ write_bin_code (unsigned value, unsigned maxval, bitfile_t *output)
 {
    unsigned k;
    unsigned r;
-   
+
    assert (output && maxval && value <= maxval);
 
    k = log2 (maxval + 1);
    r = (maxval + 1) % (1 << k);
 
-   if (value < maxval + 1 - 2 * r)	/* 0, ... , maxval - 2r */
+   if (value < maxval + 1 - 2 * r)      /* 0, ... , maxval - 2r */
       put_bits (output, value, k);
-   else					/* maxval - 2r + 1, ..., maxval */
+   else                                 /* maxval - 2r + 1, ..., maxval */
       put_bits (output, value + maxval + 1 - 2 * r, k + 1);
 }
 
@@ -261,13 +261,13 @@ read_bin_code (unsigned maxval, bitfile_t *input)
  *  Read a bincode encoded integer from the stream 'input'.
  *
  *  Return value:
- *	decoded integer
+ *      decoded integer
  */
 {
    unsigned k;
    unsigned r;
    unsigned value;
-   
+
    assert (input);
 
    k = log2 (maxval + 1);
@@ -280,7 +280,7 @@ read_bin_code (unsigned maxval, bitfile_t *input)
    {
       value <<= 1;
       if (get_bit (input))
-	 value++;
+         value++;
       return value - maxval - 1 + 2 * r;
    }
 }
@@ -292,12 +292,12 @@ bits_rice_code (unsigned value, unsigned rice_k)
  *  with given Rice code 'rice_k'.
  *
  *  Return value:
- *	number of bits
+ *      number of bits
  */
 {
    unsigned unary;
    unsigned bits = 0;
-   
+
    for (unary = value >> rice_k; unary; unary--)
       bits++;
    bits += rice_k + 1;
@@ -312,7 +312,7 @@ bits_bin_code (unsigned value, unsigned maxval)
  *  with adjusted binary code of given maximum value 'maxval'.
  *
  *  Return value:
- *	number of bits
+ *      number of bits
  */
 {
    unsigned k;
@@ -332,30 +332,30 @@ init_clipping (void)
  *  Initialize the clipping tables
  *
  *  Return value:
- *	pointer to clipping table
+ *      pointer to clipping table
  */
 {
-   static unsigned *gray_clip = NULL;	/* clipping array */
+   static unsigned *gray_clip = NULL;   /* clipping array */
 
-   if (gray_clip == NULL)		/* initialize clipping table */
+   if (gray_clip == NULL)               /* initialize clipping table */
    {
-      int i;				/* counter */
+      int i;                            /* counter */
 
       gray_clip  = calloc (256 * 3, sizeof (unsigned));
       if (!gray_clip)
       {
-	 set_error (_("Out of memory."));
-	 return NULL;
+         set_error (_("Out of memory."));
+         return NULL;
       }
       gray_clip += 256;
 
       for (i = -256; i < 512; i++)
-	 if (i < 0)
-	    gray_clip [i] = 0;
-	 else if (i > 255)
-	    gray_clip [i] = 255;
-	 else
-	    gray_clip [i] = i;
+         if (i < 0)
+            gray_clip [i] = 0;
+         else if (i > 255)
+            gray_clip [i] = 255;
+         else
+            gray_clip [i] = i;
    }
 
    return gray_clip;
@@ -369,29 +369,29 @@ memmove (void *v_dst, const void *v_src, size_t n)
  *  The memory areas may overlap.
  *
  *  Return value:
- *	pointer 'dest'
+ *      pointer 'dest'
  */
 {
-   byte_t	*to, *dst = (byte_t *) v_dst;
-   const byte_t	*from, *src = (byte_t *) v_src;
-   
+   byte_t       *to, *dst = (byte_t *) v_dst;
+   const byte_t *from, *src = (byte_t *) v_src;
+
    assert (v_dst && v_src);
-   
+
    if (dst <= src)
    {
       from = src;
       to   = dst;
       for (; n; n--)
-	 *to++ = *from++;
+         *to++ = *from++;
    }
    else
-   { 
+   {
       from = src + (n - 1);
       to   = dst + (n - 1);
       for (; n; n--)
-	 *to-- = *from--;
+         *to-- = *from--;
    }
-   
+
    return v_dst;
 }
 #endif /* not HAVE_MEMMOVE */
@@ -405,7 +405,7 @@ double
 Log2 (double x)
 /*
  *  Return value:
- *	base-2 logarithm of 'x'
+ *      base-2 logarithm of 'x'
  */
 {
    return log (x) / 0.69314718;
@@ -413,32 +413,32 @@ Log2 (double x)
 
 real_t
 variance (const word_t *pixels, unsigned x0, unsigned y0,
-	  unsigned width, unsigned height, unsigned cols)
+          unsigned width, unsigned height, unsigned cols)
 /*
- *  Compute variance of subimage ('x0', y0', 'width', 'height') of 
+ *  Compute variance of subimage ('x0', y0', 'width', 'height') of
  *  the image data given by 'pixels' ('cols' is the number of pixels
  *  in one row of the image).
  *
  *  Return value:
- *	variance
+ *      variance
  */
 {
-   real_t   average;			/* average of pixel values */
-   real_t   variance;			/* variance of pixel values */
-   unsigned x, y;			/* pixel counter */
-   unsigned n;				/* number of pixels */
+   real_t   average;                    /* average of pixel values */
+   real_t   variance;                   /* variance of pixel values */
+   unsigned x, y;                       /* pixel counter */
+   unsigned n;                          /* number of pixels */
 
    assert (pixels);
-   
+
    for (average = 0, n = 0, y = y0; y < y0 + height; y++)
       for (x = x0; x < MIN(x0 + width, cols); x++, n++)
-	 average += pixels [y * cols + x] / 16;
+         average += pixels [y * cols + x] / 16;
 
    average /= n;
 
    for (variance = 0, y = y0; y < y0 + height; y++)
       for (x = x0; x < MIN(x0 + width, cols); x++)
-	 variance += square ((pixels [y * cols + x] / 16) - average);
+         variance += square ((pixels [y * cols + x] / 16) - average);
 
    return variance;
 }
@@ -482,7 +482,7 @@ sort_asc_pair (const void *value1, const void *value2)
 {
    word_t v1 = ((pair_t *) value1)->key;
    word_t v2 = ((pair_t *) value2)->key;
-   
+
    if (v1 < v2)
       return -1;
    else if (v1 > v2)

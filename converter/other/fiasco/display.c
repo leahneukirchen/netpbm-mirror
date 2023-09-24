@@ -1,11 +1,11 @@
 /*
- *  display.c:		X11 display of frames
+ *  display.c:          X11 display of frames
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
- *		
+ *
  *  Based on mpeg2decode, (C) 1994, MPEG Software Simulation Group
  *  and      mpeg2play,   (C) 1994 Stefan Eckart
  *                                 <stefan@lis.e-technik.tu-muenchen.de>
@@ -37,8 +37,8 @@
 
 /*****************************************************************************
 
-	       shared memory functions (if USE_SHM is defined)
-  
+               shared memory functions (if USE_SHM is defined)
+
 *****************************************************************************/
 
 #ifdef USE_SHM
@@ -64,16 +64,16 @@ InstallXErrorHandler (x11_info_t *xinfo);
 static void
 DeInstallXErrorHandler (x11_info_t *xinfo);
 
-static int		shmem_flag;
-static XShmSegmentInfo	shminfo1, shminfo2;
-static int		gXErrorFlag;
-static int		CompletionType = -1;
+static int              shmem_flag;
+static XShmSegmentInfo  shminfo1, shminfo2;
+static int              gXErrorFlag;
+static int              CompletionType = -1;
 
 static int
 HandleXError (Display *dpy, XErrorEvent *event)
 {
    gXErrorFlag = 1;
-   
+
    return 0;
 }
 
@@ -95,21 +95,21 @@ DeInstallXErrorHandler (x11_info_t *xinfo)
 
 /*****************************************************************************
 
-				public code
-  
+                                public code
+
 *****************************************************************************/
 
 void
 display_image (unsigned x0, unsigned y0, x11_info_t *xinfo)
 /*
  *  Display 'image' at pos ('x0', 'y0') in the current window
- *  (given by 'xinfo->window'). 
+ *  (given by 'xinfo->window').
  *
  *  No return value.
  */
 {
    int byte_order_check = 1;
-   
+
    /*
     *  Always work in native bit and byte order. This tells Xlib to
     *  reverse bit and byte order if necessary when crossing a
@@ -125,28 +125,28 @@ display_image (unsigned x0, unsigned y0, x11_info_t *xinfo)
    {
       xinfo->ximage->byte_order       = MSBFirst;
       xinfo->ximage->bitmap_bit_order = MSBFirst;
-   }    
+   }
 
    /* Display dithered image */
 #ifdef USE_SHM
    if (shmem_flag)
    {
       XEvent xev;
-      
+
       XShmPutImage (xinfo->display, xinfo->window, xinfo->gc, xinfo->ximage,
-		    0, 0, x0, y0, xinfo->ximage->width, xinfo->ximage->height,
-		    True);
+                    0, 0, x0, y0, xinfo->ximage->width, xinfo->ximage->height,
+                    True);
       XFlush (xinfo->display);
-      
+
       while (!XCheckTypedEvent (xinfo->display, CompletionType, &xev))
-	 ;
+         ;
    }
-   else 
+   else
 #endif /* USE_SHM */
    {
-      xinfo->ximage->data = (char *) xinfo->pixels; 
+      xinfo->ximage->data = (char *) xinfo->pixels;
       XPutImage (xinfo->display, xinfo->window, xinfo->gc, xinfo->ximage, 0, 0,
-		 x0, y0, xinfo->ximage->width, xinfo->ximage->height);
+                 x0, y0, xinfo->ximage->width, xinfo->ximage->height);
    }
 }
 
@@ -177,7 +177,7 @@ close_window (x11_info_t *xinfo)
 
 x11_info_t *
 open_window (const char *titlename, const char *iconname,
-	     unsigned width, unsigned height)
+             unsigned width, unsigned height)
 /*
  *  Open a X11 window of size 'width'x'height'.
  *  If 'color' is false then allocate a colormap with grayscales.
@@ -185,20 +185,20 @@ open_window (const char *titlename, const char *iconname,
  *  respectively.
  *
  *  Return value:
- *	X11 info struct containing display, gc, window ID and colormap.
+ *      X11 info struct containing display, gc, window ID and colormap.
  */
 {
-   XVisualInfo		visual_template; /* template for XGetVisualInfo() */
-   XVisualInfo		visual_info;	/* return value of XGetVisualInfo() */
-   int			visual_n;	/* # of matches of XGetVisualInfo */
-   XEvent		xev;		
-   XSizeHints		hint;		
-   XSetWindowAttributes xswa;		
-   unsigned int		fg, bg;		/* foreground and background color */
-   unsigned int		mask;		/* event mask */
-   x11_info_t		*xinfo = calloc (1, sizeof (x11_info_t));
+   XVisualInfo          visual_template; /* template for XGetVisualInfo() */
+   XVisualInfo          visual_info;    /* return value of XGetVisualInfo() */
+   int                  visual_n;       /* # of matches of XGetVisualInfo */
+   XEvent               xev;
+   XSizeHints           hint;
+   XSetWindowAttributes xswa;
+   unsigned int         fg, bg;         /* foreground and background color */
+   unsigned int         mask;           /* event mask */
+   x11_info_t           *xinfo = calloc (1, sizeof (x11_info_t));
    long                 visual_mask;
-   
+
    if (!xinfo)
       error ("Out of memory");
    /*
@@ -207,32 +207,32 @@ open_window (const char *titlename, const char *iconname,
    xinfo->display = XOpenDisplay (NULL);
    if (xinfo->display == NULL)
       error ("Can't open display.\n"
-	     "Make sure that your environment variable DISPLAY "
-	     "is set correctly.");
+             "Make sure that your environment variable DISPLAY "
+             "is set correctly.");
 
    xinfo->screen = DefaultScreen (xinfo->display);
    xinfo->gc     = DefaultGC (xinfo->display, xinfo->screen);
 
    {
-      unsigned   depth [] 	= {32, 24, 16};
-      int        class [] 	= {TrueColor, PseudoColor};
+      unsigned   depth []       = {32, 24, 16};
+      int        class []       = {TrueColor, PseudoColor};
       const char *class_text [] = {"TrueColor", "PseudoColor"};
-      Status     found 		= 0;
+      Status     found          = 0;
       unsigned   d, c;
 
       for (d = 0; !found && d < sizeof (depth) / sizeof (unsigned); d++)
-	 for (c = 0; !found && c < sizeof (class) / sizeof (int); c++)
-	 {
-	    found = XMatchVisualInfo (xinfo->display, xinfo->screen,
-				      depth [d], class [c], &visual_info);
-	    if (found)
-	       fprintf (stderr, "%s : %d bit colordepth.\n",
-			class_text [c], depth [d]);
-	 }
+         for (c = 0; !found && c < sizeof (class) / sizeof (int); c++)
+         {
+            found = XMatchVisualInfo (xinfo->display, xinfo->screen,
+                                      depth [d], class [c], &visual_info);
+            if (found)
+               fprintf (stderr, "%s : %d bit colordepth.\n",
+                        class_text [c], depth [d]);
+         }
       if (!found && fiasco_get_verbosity ())
-	 error ("Can't find a 16/24/32 bit TrueColor/DirectColor display");
+         error ("Can't find a 16/24/32 bit TrueColor/DirectColor display");
    }
-   
+
    /* Width and height of the display window */
    hint.x = hint.y = 0;
    hint.min_width  = hint.max_width  = hint.width  = width;
@@ -249,22 +249,22 @@ open_window (const char *titlename, const char *iconname,
    {
       mask |= CWColormap;
       xswa.colormap = XCreateColormap (xinfo->display,
-				       DefaultRootWindow (xinfo->display),
-				       visual_info.visual, AllocNone);
+                                       DefaultRootWindow (xinfo->display),
+                                       visual_info.visual, AllocNone);
    }
    xswa.background_pixel = bg;
    xswa.border_pixel     = fg;
    xinfo->window = XCreateWindow (xinfo->display,
-				  DefaultRootWindow (xinfo->display), 0, 0,
-				  width, height, 1, visual_info.depth,
-				  InputOutput, visual_info.visual,
-				  mask, &xswa);
+                                  DefaultRootWindow (xinfo->display), 0, 0,
+                                  width, height, 1, visual_info.depth,
+                                  InputOutput, visual_info.visual,
+                                  mask, &xswa);
 
    XSelectInput (xinfo->display, xinfo->window, StructureNotifyMask);
 
    /* Tell other applications about this window */
    XSetStandardProperties (xinfo->display, xinfo->window, titlename, iconname,
-			   None, NULL, 0, &hint);
+                           None, NULL, 0, &hint);
 
    /* Map window. */
    XMapWindow (xinfo->display, xinfo->window);
@@ -290,23 +290,23 @@ alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height)
  *  No return value.
  *
  *  Side effects:
- *	'ximage->ximage' and 'ximage->pixels' are set to useful values.
+ *      'ximage->ximage' and 'ximage->pixels' are set to useful values.
  */
 {
    char dummy;
-   
+
 #ifdef USE_SHM
    if (XShmQueryExtension(xinfo->display))
    {
       if (fiasco_get_verbosity ())
-	 fprintf (stderr, "Trying shared memory.\n");
+         fprintf (stderr, "Trying shared memory.\n");
       shmem_flag = 1;
    }
    else
    {
       shmem_flag = 0;
       if (fiasco_get_verbosity ())
-	 fprintf (stderr,
+         fprintf (stderr,
               "Shared memory does not work on this system\n"
               "Reverting to normal Xlib.\n");
    }
@@ -319,34 +319,34 @@ alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height)
    if (shmem_flag)
    {
       xinfo->ximage = XShmCreateImage (xinfo->display,
-				       DefaultVisual (xinfo->display,
-						      xinfo->screen),
-				       DefaultDepth (xinfo->display,
-						     xinfo->screen), ZPixmap,
-				       NULL, &shminfo1, width, height);
+                                       DefaultVisual (xinfo->display,
+                                                      xinfo->screen),
+                                       DefaultDepth (xinfo->display,
+                                                     xinfo->screen), ZPixmap,
+                                       NULL, &shminfo1, width, height);
 
       /* If no go, then revert to normal Xlib calls. */
 
       if (xinfo->ximage == NULL)
       {
-	 if (fiasco_get_verbosity ())
-	    fprintf (stderr,
-		     "Shared memory error, disabling (Ximage error).\n");
-	 goto shmemerror;
+         if (fiasco_get_verbosity ())
+            fprintf (stderr,
+                     "Shared memory error, disabling (Ximage error).\n");
+         goto shmemerror;
       }
 
       /* Success here, continue. */
 
       shminfo1.shmid = shmget (IPC_PRIVATE, xinfo->ximage->bytes_per_line
-			       * xinfo->ximage->height, IPC_CREAT | 0777);
+                               * xinfo->ximage->height, IPC_CREAT | 0777);
 
       if (shminfo1.shmid < 0)
       {
-	 XDestroyImage (xinfo->ximage);
-	 if (fiasco_get_verbosity ())
-	    fprintf (stderr,
-		     "Shared memory error, disabling (seg id error).\n");
-	 goto shmemerror;
+         XDestroyImage (xinfo->ximage);
+         if (fiasco_get_verbosity ())
+            fprintf (stderr,
+                     "Shared memory error, disabling (seg id error).\n");
+         goto shmemerror;
       }
 
       shminfo1.shmaddr = (char *) shmat (shminfo1.shmid, 0, 0);
@@ -354,13 +354,13 @@ alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height)
 
       if (shminfo1.shmaddr == ((char *) -1))
       {
-	 XDestroyImage (xinfo->ximage);
-	 if (shminfo1.shmaddr != ((char *) -1))
-	    shmdt (shminfo1.shmaddr);
-	 if (fiasco_get_verbosity ())
-	    fprintf (stderr,
-		     "Shared memory error, disabling (address error).\n");
-	 goto shmemerror;
+         XDestroyImage (xinfo->ximage);
+         if (shminfo1.shmaddr != ((char *) -1))
+            shmdt (shminfo1.shmaddr);
+         if (fiasco_get_verbosity ())
+            fprintf (stderr,
+                     "Shared memory error, disabling (address error).\n");
+         goto shmemerror;
       }
 
       xinfo->ximage->data = shminfo1.shmaddr;
@@ -372,18 +372,18 @@ alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height)
 
       if (gXErrorFlag)
       {
-	 /* Ultimate failure here. */
-	 XDestroyImage (xinfo->ximage);
-	 shmdt (shminfo1.shmaddr);
-	 if (fiasco_get_verbosity ())
-	    fprintf (stderr, "Shared memory error, disabling.\n");
-	 gXErrorFlag = 0;
-	 goto shmemerror;
+         /* Ultimate failure here. */
+         XDestroyImage (xinfo->ximage);
+         shmdt (shminfo1.shmaddr);
+         if (fiasco_get_verbosity ())
+            fprintf (stderr, "Shared memory error, disabling.\n");
+         gXErrorFlag = 0;
+         goto shmemerror;
       }
       else
-	 shmctl (shminfo1.shmid, IPC_RMID, 0);
+         shmctl (shminfo1.shmid, IPC_RMID, 0);
       if (fiasco_get_verbosity ())
-	 fprintf (stderr, "Sharing memory.\n");
+         fprintf (stderr, "Sharing memory.\n");
    }
    else
    {
@@ -392,19 +392,19 @@ alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height)
 #endif /* USE_SHM */
 
       xinfo->ximage = XCreateImage (xinfo->display,
-				    DefaultVisual (xinfo->display,
-						   xinfo->screen),
-				    DefaultDepth (xinfo->display,
-						  xinfo->screen),
-				    ZPixmap, 0, &dummy, width, height, 8, 0);
+                                    DefaultVisual (xinfo->display,
+                                                   xinfo->screen),
+                                    DefaultDepth (xinfo->display,
+                                                  xinfo->screen),
+                                    ZPixmap, 0, &dummy, width, height, 8, 0);
       xinfo->pixels = calloc (width * height,
-			      xinfo->ximage->depth <= 8
-			      ? sizeof (byte_t)
-			      : (xinfo->ximage->depth <= 16
-				 ? sizeof (u_word_t) : sizeof (unsigned int)));
+                              xinfo->ximage->depth <= 8
+                              ? sizeof (byte_t)
+                              : (xinfo->ximage->depth <= 16
+                                 ? sizeof (u_word_t) : sizeof (unsigned int)));
       if (!xinfo->pixels)
-	 error ("Out of memory.");
-    
+         error ("Out of memory.");
+
 #ifdef USE_SHM
    }
 

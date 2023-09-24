@@ -1,7 +1,7 @@
 /*
- *  ip.c:		Computation of inner products
+ *  ip.c:               Computation of inner products
  *
- *  Written by:		Ullrich Hafner
+ *  Written by:         Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -26,29 +26,29 @@
 
 /*****************************************************************************
 
-				prototypes
+                                prototypes
 
 *****************************************************************************/
 
 static real_t
 standard_ip_image_state (unsigned address, unsigned level, unsigned domain,
-			 const coding_t *c);
+                         const coding_t *c);
 static real_t
 standard_ip_state_state (unsigned domain1, unsigned domain2, unsigned level,
-			 const coding_t *c);
+                         const coding_t *c);
 
 /*****************************************************************************
 
-				public code
+                                public code
 
 *****************************************************************************/
 
 real_t
 get_ip_image_state (unsigned image, unsigned address, unsigned level,
-		    unsigned domain, const coding_t *c)
+                    unsigned domain, const coding_t *c)
 /*
  *  Return value:
- *	Inner product between 'image' ('address') and
+ *      Inner product between 'image' ('address') and
  *      'domain' at given 'level'
  */
 {
@@ -71,8 +71,8 @@ get_ip_image_state (unsigned image, unsigned address, unsigned level,
 
 void
 compute_ip_images_state (unsigned image, unsigned address, unsigned level,
-			 unsigned n, unsigned from,
-			 const wfa_t *wfa, coding_t *c)
+                         unsigned n, unsigned from,
+                         const wfa_t *wfa, coding_t *c)
 /*
  *  Compute the inner products between all states
  *  'from', ... , 'wfa->max_states' and the range images 'image'
@@ -81,84 +81,84 @@ compute_ip_images_state (unsigned image, unsigned address, unsigned level,
  *  No return value.
  *
  *  Side effects:
- *	inner product tables 'c->ip_images_states' are updated
+ *      inner product tables 'c->ip_images_states' are updated
  */
 {
    if (level > c->options.images_level)
    {
       unsigned state, label;
 
-      if (level > c->options.images_level + 1)	/* recursive computation */
-	 compute_ip_images_state (MAXLABELS * image + 1, address * MAXLABELS,
-				  level - 1, MAXLABELS * n, from, wfa, c);
+      if (level > c->options.images_level + 1)  /* recursive computation */
+         compute_ip_images_state (MAXLABELS * image + 1, address * MAXLABELS,
+                                  level - 1, MAXLABELS * n, from, wfa, c);
 
       /*
        *  Compute inner product <f, Phi_i>
        */
       for (label = 0; label < MAXLABELS; label++)
-	 for (state = from; state < wfa->states; state++)
-	    if (need_image (state, wfa))
-	    {
-	       unsigned  edge, count;
-	       int     	 domain;
-	       real_t 	*dst, *src;
+         for (state = from; state < wfa->states; state++)
+            if (need_image (state, wfa))
+            {
+               unsigned  edge, count;
+               int       domain;
+               real_t   *dst, *src;
 
-	       if (ischild (domain = wfa->tree [state][label]))
-	       {
-		  if (level > c->options.images_level + 1)
-		  {
-		     dst = c->ip_images_state [state] + image;
-		     src = c->ip_images_state [domain]
-			   + image * MAXLABELS + label + 1;
-		     for (count = n; count; count--, src += MAXLABELS)
-			*dst++ += *src;
-		  }
-		  else
-		  {
-		     unsigned newadr = address * MAXLABELS + label;
+               if (ischild (domain = wfa->tree [state][label]))
+               {
+                  if (level > c->options.images_level + 1)
+                  {
+                     dst = c->ip_images_state [state] + image;
+                     src = c->ip_images_state [domain]
+                           + image * MAXLABELS + label + 1;
+                     for (count = n; count; count--, src += MAXLABELS)
+                        *dst++ += *src;
+                  }
+                  else
+                  {
+                     unsigned newadr = address * MAXLABELS + label;
 
-		     dst = c->ip_images_state [state] + image;
+                     dst = c->ip_images_state [state] + image;
 
-		     for (count = n; count; count--, newadr += MAXLABELS)
-			*dst++ += standard_ip_image_state (newadr, level - 1,
-							   domain, c);
-		  }
-	       }
-	       for (edge = 0; isedge (domain = wfa->into [state][label][edge]);
-		    edge++)
-	       {
-		  real_t weight = wfa->weight [state][label][edge];
+                     for (count = n; count; count--, newadr += MAXLABELS)
+                        *dst++ += standard_ip_image_state (newadr, level - 1,
+                                                           domain, c);
+                  }
+               }
+               for (edge = 0; isedge (domain = wfa->into [state][label][edge]);
+                    edge++)
+               {
+                  real_t weight = wfa->weight [state][label][edge];
 
-		  if (level > c->options.images_level + 1)
-		  {
-		     dst = c->ip_images_state [state] + image;
-		     src = c->ip_images_state [domain]
-			   + image * MAXLABELS + label + 1;
-		     for (count = n; count; count--, src += MAXLABELS)
-			*dst++ += *src * weight;
-		  }
-		  else
-		  {
-		     unsigned newadr = address * MAXLABELS + label;
+                  if (level > c->options.images_level + 1)
+                  {
+                     dst = c->ip_images_state [state] + image;
+                     src = c->ip_images_state [domain]
+                           + image * MAXLABELS + label + 1;
+                     for (count = n; count; count--, src += MAXLABELS)
+                        *dst++ += *src * weight;
+                  }
+                  else
+                  {
+                     unsigned newadr = address * MAXLABELS + label;
 
-		     dst = c->ip_images_state [state] + image;
+                     dst = c->ip_images_state [state] + image;
 
-		     for (count = n; count; count--, newadr += MAXLABELS)
-			*dst++ += weight *
-				  standard_ip_image_state (newadr, level - 1,
-							   domain, c);
-		  }
-	       }
-	    }
+                     for (count = n; count; count--, newadr += MAXLABELS)
+                        *dst++ += weight *
+                                  standard_ip_image_state (newadr, level - 1,
+                                                           domain, c);
+                  }
+               }
+            }
    }
 }
 
 real_t
 get_ip_state_state (unsigned domain1, unsigned domain2, unsigned level,
-		    const coding_t *c)
+                    const coding_t *c)
 /*
  *  Return value:
- *	Inner product between 'domain1' and 'domain2' at given 'level'.
+ *      Inner product between 'domain1' and 'domain2' at given 'level'.
  */
 {
    if (level <= c->options.images_level)
@@ -175,15 +175,15 @@ get_ip_state_state (unsigned domain1, unsigned domain2, unsigned level,
        *  Use already computed inner products stored in 'ip_images_states'
        */
       if (domain2 < domain1)
-	 return c->ip_states_state [domain1][level][domain2];
+         return c->ip_states_state [domain1][level][domain2];
       else
-	 return c->ip_states_state [domain2][level][domain1];
+         return c->ip_states_state [domain2][level][domain1];
    }
 }
 
 void
 compute_ip_states_state (unsigned from, unsigned to,
-			 const wfa_t *wfa, coding_t *c)
+                         const wfa_t *wfa, coding_t *c)
 /*
  *  Computes the inner products between the current state 'state1' and the
  *  old states 0,...,'state1'-1
@@ -191,7 +191,7 @@ compute_ip_states_state (unsigned from, unsigned to,
  *  No return value.
  *
  *  Side effects:
- *	inner product tables 'c->ip_states_state' are computed.
+ *      inner product tables 'c->ip_states_state' are computed.
  */
 {
    unsigned level;
@@ -202,72 +202,72 @@ compute_ip_states_state (unsigned from, unsigned to,
     */
 
    for (level = c->options.images_level + 1;
-	level <= c->options.lc_max_level; level++)
+        level <= c->options.lc_max_level; level++)
       for (state1 = from; state1 <= to; state1++)
-	 for (state2 = 0; state2 <= state1; state2++)
-	    if (need_image (state2, wfa))
-	    {
-	       unsigned	label;
-	       real_t	ip = 0;
+         for (state2 = 0; state2 <= state1; state2++)
+            if (need_image (state2, wfa))
+            {
+               unsigned label;
+               real_t   ip = 0;
 
-	       for (label = 0; label < MAXLABELS; label++)
-	       {
-		  int	   domain1, domain2;
-		  unsigned edge1, edge2;
-		  real_t   sum, weight2;
+               for (label = 0; label < MAXLABELS; label++)
+               {
+                  int      domain1, domain2;
+                  unsigned edge1, edge2;
+                  real_t   sum, weight2;
 
-		  if (ischild (domain1 = wfa->tree [state1][label]))
-		  {
-		     sum = 0;
-		     if (ischild (domain2 = wfa->tree [state2][label]))
-			sum = get_ip_state_state (domain1, domain2,
-						  level - 1, c);
+                  if (ischild (domain1 = wfa->tree [state1][label]))
+                  {
+                     sum = 0;
+                     if (ischild (domain2 = wfa->tree [state2][label]))
+                        sum = get_ip_state_state (domain1, domain2,
+                                                  level - 1, c);
 
-		     for (edge2 = 0;
-			  isedge (domain2 = wfa->into [state2][label][edge2]);
-			  edge2++)
-		     {
-			weight2 = wfa->weight [state2][label][edge2];
-			sum += weight2 * get_ip_state_state (domain1, domain2,
-							     level - 1, c);
-		     }
-		     ip += sum;
-		  }
-		  for (edge1 = 0;
-		       isedge (domain1 = wfa->into [state1][label][edge1]);
-		       edge1++)
-		  {
-		     real_t weight1 = wfa->weight [state1][label][edge1];
+                     for (edge2 = 0;
+                          isedge (domain2 = wfa->into [state2][label][edge2]);
+                          edge2++)
+                     {
+                        weight2 = wfa->weight [state2][label][edge2];
+                        sum += weight2 * get_ip_state_state (domain1, domain2,
+                                                             level - 1, c);
+                     }
+                     ip += sum;
+                  }
+                  for (edge1 = 0;
+                       isedge (domain1 = wfa->into [state1][label][edge1]);
+                       edge1++)
+                  {
+                     real_t weight1 = wfa->weight [state1][label][edge1];
 
-		     sum = 0;
-		     if (ischild (domain2 = wfa->tree [state2][label]))
-			sum = get_ip_state_state (domain1, domain2,
-						  level - 1, c);
+                     sum = 0;
+                     if (ischild (domain2 = wfa->tree [state2][label]))
+                        sum = get_ip_state_state (domain1, domain2,
+                                                  level - 1, c);
 
-		     for (edge2 = 0;
-			  isedge (domain2 = wfa->into [state2][label][edge2]);
-			  edge2++)
-		     {
-			weight2 = wfa->weight [state2][label][edge2];
-			sum += weight2 * get_ip_state_state (domain1, domain2,
-							     level - 1, c);
-		     }
-		     ip += weight1 * sum;
-		  }
-	       }
-	       c->ip_states_state [state1][level][state2] = ip;
-	    }
+                     for (edge2 = 0;
+                          isedge (domain2 = wfa->into [state2][label][edge2]);
+                          edge2++)
+                     {
+                        weight2 = wfa->weight [state2][label][edge2];
+                        sum += weight2 * get_ip_state_state (domain1, domain2,
+                                                             level - 1, c);
+                     }
+                     ip += weight1 * sum;
+                  }
+               }
+               c->ip_states_state [state1][level][state2] = ip;
+            }
 }
 
 /*****************************************************************************
 
-				private code
+                                private code
 
 *****************************************************************************/
 
 static real_t
 standard_ip_image_state (unsigned address, unsigned level, unsigned domain,
-			 const coding_t *c)
+                         const coding_t *c)
 /*
  *  Returns the inner product between the subimage 'address' and the
  *  state image 'domain' at given 'level'.  The stored state images
@@ -275,7 +275,7 @@ standard_ip_image_state (unsigned address, unsigned level, unsigned domain,
  *  standard way by multiplying the corresponding pixel values.
  *
  *  Return value:
- *	computed inner product
+ *      computed inner product
  */
 {
    unsigned i;
@@ -296,7 +296,7 @@ standard_ip_image_state (unsigned address, unsigned level, unsigned domain,
 
 static real_t
 standard_ip_state_state (unsigned domain1, unsigned domain2, unsigned level,
-			 const coding_t *c)
+                         const coding_t *c)
 /*
  *  Returns the inner product between the subimage 'address' and the
  *  state image 'state' at given 'level'.  The stored state images are
@@ -304,7 +304,7 @@ standard_ip_state_state (unsigned domain1, unsigned domain2, unsigned level,
  *  multiplying the corresponding pixel values.
  *
  *  Return value:
- *	computed inner product
+ *      computed inner product
  */
 {
    unsigned i;

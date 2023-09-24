@@ -1,8 +1,8 @@
 /*
  *  dfiasco.h
- *		
- *  Written by:		Ullrich Hafner
- *		
+ *              
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -29,7 +29,7 @@ typedef struct dfiasco
    wfa_t     *wfa;
    video_t   *video;
    bitfile_t *input;
-   int	      enlarge_factor;
+   int        enlarge_factor;
    int        smoothing;
    format_e   image_format;
 } dfiasco_t;

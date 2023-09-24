@@ -4,7 +4,7 @@
  *  Written by:     Stefan Frank
  *          Richard Krampfl
  *          Ullrich Hafner
- *      
+ *
  *  This file is part of FIASCO («F»ractal «I»mage «A»nd «S»equence «CO»dec)
  *  Copyright (C) 1994-2000 Ullrich Hafner <hafner@bigfoot.de>
  */
@@ -32,7 +32,7 @@ int const RPF_ZERO = -1;
 /*****************************************************************************
 
                    private code
-  
+
 *****************************************************************************/
 
 
@@ -62,25 +62,25 @@ rtob (real_t        const f,
  *  Convert real number 'f' into fixed point format.
  *  The real number in [-'range'; +'range'] is scaled to [-1 ; +1].
  *  Sign and the first 'precision' - 1 bits of the mantissa are
- *  packed into one integer.  
+ *  packed into one integer.
  *
  *  Return value:
  *  real value in reduced precision format
  */
-{  
+{
     /*
      *  Extract mantissa (23 Bits), exponent (8 Bits) and sign (1 Bit)
      */
 
     double const normalized = f / rpfP->range;
-        /* 'f' scaled to [-1,+1] */    
+        /* 'f' scaled to [-1,+1] */
     FracExp const fracExp = fracExpFromDouble(normalized);
     unsigned int const signedMantissa =
         (unsigned int) (fracExp.fraction * (1<<23));
 
     unsigned int mantissa;
     unsigned int sign;  /* 0 for positive; 1 for negative */
-    
+
     if (signedMantissa < 0) {
         mantissa = -signedMantissa;
         sign = 1;
@@ -92,16 +92,16 @@ rtob (real_t        const f,
     /*
      *  Generate reduced precision mantissa.
      */
-    if (fracExp.exponent > 0) 
+    if (fracExp.exponent > 0)
         mantissa <<= fracExp.exponent;
     else
-        mantissa >>= -fracExp.exponent;  
-    
+        mantissa >>= -fracExp.exponent;
+
     mantissa >>= (23 - rpfP->mantissa_bits - 1);
 
     mantissa +=  1;          /* Round last bit. */
     mantissa >>= 1;
-   
+
     if (mantissa == 0)           /* close to zero */
         return RPF_ZERO;
     else if (mantissa >= (1U << rpfP->mantissa_bits)) /* overflow */
@@ -126,7 +126,7 @@ btor (int           const binary,
     unsigned int mantissa;
     float sign;
     float f;
- 
+
     if (binary == RPF_ZERO)
         return 0;
 
@@ -137,16 +137,16 @@ btor (int           const binary,
      *  Restore IEEE float format:
      *  mantissa (23 Bits), exponent (8 Bits) and sign (1 Bit)
      */
-   
+
     sign       = (binary & 0x1) == 0 ? 1.0 : -1.0;
-    mantissa   = (binary & ((0x1 << (rpfP->mantissa_bits + 1)) - 1)) >> 1; 
+    mantissa   = (binary & ((0x1 << (rpfP->mantissa_bits + 1)) - 1)) >> 1;
     mantissa <<= (23 - rpfP->mantissa_bits);
 
-    if (mantissa == 0) 
+    if (mantissa == 0)
         f = sign;
     else
         f =  sign * (float) mantissa / 8388608;
-   
+
     return f * rpfP->range;       /* expand [ -1 ; +1 ] to
                                      [ -range ; +range ] */
 }
@@ -163,7 +163,7 @@ alloc_rpf (unsigned           const mantissa,
  *  Number of mantissa bits is given by `mantissa'.
  *  The range of the real values is in the interval [-`range', +`range'].
  *  In case of invalid parameters, a structure with default values is
- *  returned. 
+ *  returned.
  *
  *  Return value
  *  pointer to the new rpf structure
@@ -172,7 +172,7 @@ alloc_rpf (unsigned           const mantissa,
     rpf_t * rpfP;
 
     MALLOCVAR(rpfP);
-   
+
     if (mantissa < 2) {
         warning (_("Size of RPF mantissa has to be in the interval [2,8]. "
                    "Using minimum value 2.\n"));

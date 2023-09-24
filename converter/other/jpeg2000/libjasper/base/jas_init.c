@@ -4,14 +4,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -19,22 +19,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -54,17 +54,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -104,7 +104,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -123,78 +123,78 @@
 /* Initialize the image format table. */
 int jas_init()
 {
-	jas_image_fmtops_t fmtops;
-	int fmtid;
+        jas_image_fmtops_t fmtops;
+        int fmtid;
 
-	fmtid = 0;
+        fmtid = 0;
 
 #if !defined(EXCLUDE_MIF_SUPPORT)
-	fmtops.decode = mif_decode;
-	fmtops.encode = mif_encode;
-	fmtops.validate = mif_validate;
-	jas_image_addfmt(fmtid, "mif", "mif", "My Image Format (MIF)", &fmtops);
-	++fmtid;
+        fmtops.decode = mif_decode;
+        fmtops.encode = mif_encode;
+        fmtops.validate = mif_validate;
+        jas_image_addfmt(fmtid, "mif", "mif", "My Image Format (MIF)", &fmtops);
+        ++fmtid;
 #endif
 
 #if !defined(EXCLUDE_PNM_SUPPORT)
-	fmtops.decode = pnm_decode;
-	fmtops.encode = pnm_encode;
-	fmtops.validate = pnm_validate;
-	jas_image_addfmt(fmtid, "pnm", "pnm", "Portable Graymap/Pixmap (PNM)",
-	  &fmtops);
-	jas_image_addfmt(fmtid, "pnm", "pgm", "Portable Graymap/Pixmap (PNM)",
-	  &fmtops);
-	jas_image_addfmt(fmtid, "pnm", "ppm", "Portable Graymap/Pixmap (PNM)",
-	  &fmtops);
-	++fmtid;
+        fmtops.decode = pnm_decode;
+        fmtops.encode = pnm_encode;
+        fmtops.validate = pnm_validate;
+        jas_image_addfmt(fmtid, "pnm", "pnm", "Portable Graymap/Pixmap (PNM)",
+          &fmtops);
+        jas_image_addfmt(fmtid, "pnm", "pgm", "Portable Graymap/Pixmap (PNM)",
+          &fmtops);
+        jas_image_addfmt(fmtid, "pnm", "ppm", "Portable Graymap/Pixmap (PNM)",
+          &fmtops);
+        ++fmtid;
 #endif
 
 #if !defined(EXCLUDE_BMP_SUPPORT)
-	fmtops.decode = bmp_decode;
-	fmtops.encode = bmp_encode;
-	fmtops.validate = bmp_validate;
-	jas_image_addfmt(fmtid, "bmp", "bmp", "Microsoft Bitmap (BMP)", &fmtops);
-	++fmtid;
+        fmtops.decode = bmp_decode;
+        fmtops.encode = bmp_encode;
+        fmtops.validate = bmp_validate;
+        jas_image_addfmt(fmtid, "bmp", "bmp", "Microsoft Bitmap (BMP)", &fmtops);
+        ++fmtid;
 #endif
 
 #if !defined(EXCLUDE_RAS_SUPPORT)
-	fmtops.decode = ras_decode;
-	fmtops.encode = ras_encode;
-	fmtops.validate = ras_validate;
-	jas_image_addfmt(fmtid, "ras", "ras", "Sun Rasterfile (RAS)", &fmtops);
-	++fmtid;
+        fmtops.decode = ras_decode;
+        fmtops.encode = ras_encode;
+        fmtops.validate = ras_validate;
+        jas_image_addfmt(fmtid, "ras", "ras", "Sun Rasterfile (RAS)", &fmtops);
+        ++fmtid;
 #endif
 
 #if !defined(EXCLUDE_JP2_SUPPORT)
-	fmtops.decode = jp2_decode;
-	fmtops.encode = jp2_encode;
-	fmtops.validate = jp2_validate;
-	jas_image_addfmt(fmtid, "jp2", "jp2",
-	  "JPEG-2000 JP2 File Format Syntax (ISO/IEC 15444-1)", &fmtops);
-	++fmtid;
-	fmtops.decode = jpc_decode;
-	fmtops.encode = jpc_encode;
-	fmtops.validate = jpc_validate;
-	jas_image_addfmt(fmtid, "jpc", "jpc",
-	  "JPEG-2000 Code Stream Syntax (ISO/IEC 15444-1)", &fmtops);
-	++fmtid;
+        fmtops.decode = jp2_decode;
+        fmtops.encode = jp2_encode;
+        fmtops.validate = jp2_validate;
+        jas_image_addfmt(fmtid, "jp2", "jp2",
+          "JPEG-2000 JP2 File Format Syntax (ISO/IEC 15444-1)", &fmtops);
+        ++fmtid;
+        fmtops.decode = jpc_decode;
+        fmtops.encode = jpc_encode;
+        fmtops.validate = jpc_validate;
+        jas_image_addfmt(fmtid, "jpc", "jpc",
+          "JPEG-2000 Code Stream Syntax (ISO/IEC 15444-1)", &fmtops);
+        ++fmtid;
 #endif
 
 #if !defined(EXCLUDE_JPG_SUPPORT)
-	fmtops.decode = jpg_decode;
-	fmtops.encode = jpg_encode;
-	fmtops.validate = jpg_validate;
-	jas_image_addfmt(fmtid, "jpg", "jpg", "JPEG (ISO/IEC 10918-1)", &fmtops);
-	++fmtid;
+        fmtops.decode = jpg_decode;
+        fmtops.encode = jpg_encode;
+        fmtops.validate = jpg_validate;
+        jas_image_addfmt(fmtid, "jpg", "jpg", "JPEG (ISO/IEC 10918-1)", &fmtops);
+        ++fmtid;
 #endif
 
 #if !defined(EXCLUDE_PGX_SUPPORT)
-	fmtops.decode = pgx_decode;
-	fmtops.encode = pgx_encode;
-	fmtops.validate = pgx_validate;
-	jas_image_addfmt(fmtid, "pgx", "pgx", "JPEG-2000 VM Format (PGX)", &fmtops);
-	++fmtid;
+        fmtops.decode = pgx_decode;
+        fmtops.encode = pgx_encode;
+        fmtops.validate = pgx_validate;
+        jas_image_addfmt(fmtid, "pgx", "pgx", "JPEG-2000 VM Format (PGX)", &fmtops);
+        ++fmtid;
 #endif
 
-	return 0;
+        return 0;
 }

@@ -1,8 +1,8 @@
 /*
  *  approx.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -21,10 +21,10 @@
 #include "cwfa.h"
 #include "domain-pool.h"
 
-real_t 
+real_t
 approximate_range (real_t max_costs, real_t price, int max_edges,
-		   int y_state, range_t *range, domain_pool_t *domain_pool,
-		   coeff_t *coeff, const wfa_t *wfa, const coding_t *c);
+                   int y_state, range_t *range, domain_pool_t *domain_pool,
+                   coeff_t *coeff, const wfa_t *wfa, const coding_t *c);
 
 #endif /* not _APPROX_H */
 

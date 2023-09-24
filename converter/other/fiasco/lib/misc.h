@@ -1,9 +1,9 @@
 /*
  *  misc.h
  *
- *  Written by:		Stefan Frank
- *			Ullrich Hafner
- *		
+ *  Written by:         Stefan Frank
+ *                      Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -21,14 +21,14 @@
 #include "config.h"
 
 #if TIME_WITH_SYS_TIME
-#	include <sys/time.h>
-#	include <time.h>
+#       include <sys/time.h>
+#       include <time.h>
 #else  /* not TIME_WITH_SYS_TIME */
-#	if HAVE_SYS_TIME_H
-#		include <sys/time.h>
-#	else /* not HAVE_SYS_TIME_H */
-#		include <time.h>
-#	endif /* not HAVE_SYS_TIME_H */
+#       if HAVE_SYS_TIME_H
+#               include <sys/time.h>
+#       else /* not HAVE_SYS_TIME_H */
+#               include <time.h>
+#       endif /* not HAVE_SYS_TIME_H */
 #endif /* not TIME_WITH_SYS_TIME */
 
 #include <stdio.h>
@@ -43,9 +43,9 @@ void
 Free (void *memory);
 unsigned
 prg_timer (clock_t *ptimer, enum action_e action);
-int 
+int
 read_int(FILE *infile);
-real_t 
+real_t
 read_real(FILE *infile);
 unsigned
 read_rice_code (unsigned rice_k, bitfile_t *input);
@@ -63,7 +63,7 @@ unsigned *
 init_clipping (void);
 real_t
 variance (const word_t *pixels, unsigned x0, unsigned y0,
-	  unsigned width, unsigned height, unsigned cols);
+          unsigned width, unsigned height, unsigned cols);
 
 #ifndef HAVE_MEMMOVE
 void *

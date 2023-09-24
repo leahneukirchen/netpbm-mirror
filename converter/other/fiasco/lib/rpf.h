@@ -1,10 +1,10 @@
 /*
  *  rpf.h
  *
- *  Written by:		Stefan Frank
- *			Richard Krampfl
- *			Ullrich Hafner
- *		
+ *  Written by:         Stefan Frank
+ *                      Richard Krampfl
+ *                      Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -24,14 +24,14 @@
 
 typedef struct rpf
 {
-   unsigned    	      mantissa_bits;	/* number of bits used for mantissa */
-   real_t      	      range;		/* scale value to [-range, +range] */
+   unsigned           mantissa_bits;    /* number of bits used for mantissa */
+   real_t             range;            /* scale value to [-range, +range] */
    fiasco_rpf_range_e range_e;
 } rpf_t;
 
 int
 rtob (real_t real, const rpf_t *rpf);
-real_t 
+real_t
 btor (int b, const rpf_t *rpf);
 rpf_t *
 alloc_rpf (unsigned mantissa, fiasco_rpf_range_e range);

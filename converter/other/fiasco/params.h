@@ -3,7 +3,7 @@
  *
  *  Written by:     Stefan Frank
  *          Ullrich Hafner
- *      
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -43,13 +43,13 @@ typedef struct param_t
 } param_t;
 
 int
-parseargs (param_t *usr_params, 
-           int argc, char **argv, 
+parseargs (param_t *usr_params,
+           int argc, char **argv,
            const char *synopsis,
-           const char *comment, 
-           const char *non_opt_string, 
+           const char *comment,
+           const char *non_opt_string,
            const char *path,
-           const char *sys_file_name, 
+           const char *sys_file_name,
            const char *usr_file_name);
 void
 write_parameters (const param_t *params, FILE *output);

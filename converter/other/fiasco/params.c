@@ -1,8 +1,8 @@
 /*
- *  params.c:		Parameter file and command line parsing
+ *  params.c:           Parameter file and command line parsing
  *
- *  Written by:		Stefan Frank
- *			Ullrich Hafner
+ *  Written by:         Stefan Frank
+ *                      Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -24,12 +24,12 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <math.h>			/* strtod() on SUN sparc */
+#include <math.h>                       /* strtod() on SUN sparc */
 
 #include <stdlib.h>
 #include <string.h>
 
-#include <getopt.h>			/* system or ../lib */
+#include <getopt.h>                     /* system or ../lib */
 
 #include "pm_c_util.h"
 #include "nstring.h"
@@ -46,7 +46,7 @@
 
 /*****************************************************************************
 
-				prototypes
+                                prototypes
 
 *****************************************************************************/
 
@@ -64,7 +64,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
 
 /*****************************************************************************
 
-				public code
+                                public code
 
 *****************************************************************************/
 
@@ -84,29 +84,29 @@ parseargs (param_t *usr_params,
  *  'synopsis' contains a brief description of the program and
  *  'comment' may contain some additional advice.
  *  Initialization order of parameters:
- *	1.) Default values given by the param_t struct
- *	2.) System parameter-file ('path'/'sys_file_name')
- *	3.) User parameter-file ($HOME/'usr_file_name')
- *	4.) Command line parameters
- *	5.) Parameter-file forced by option -f (--config-file)
+ *      1.) Default values given by the param_t struct
+ *      2.) System parameter-file ('path'/'sys_file_name')
+ *      3.) User parameter-file ($HOME/'usr_file_name')
+ *      4.) Command line parameters
+ *      5.) Parameter-file forced by option -f (--config-file)
  *
  *  Return value:
- *	index in ARGV of the first ARGV-element that is not an option.
+ *      index in ARGV of the first ARGV-element that is not an option.
  *
  *  Side effects:
- *	the elements of ARGV are permuted
+ *      the elements of ARGV are permuted
  *      usr_params [].value is modified
  */
 {
-   extern int optind;			/* index in ARGV of the 1st element
-					   that is not an option */
-   bool_t     detailed_help = NO;	/* NO if all parameters can be modified
-					   with short options too */
-   unsigned   n1;			/* number of user parameters */
-   unsigned   n2;			/* number of system parameters */
-   bool_t     read_config_file = NO;	/* will override command line */
-   param_t    *params;			/* array of user and system params */
-   param_t    *sys_params;		/* array of system parameters */
+   extern int optind;                   /* index in ARGV of the 1st element
+                                           that is not an option */
+   bool_t     detailed_help = NO;       /* NO if all parameters can be modified
+                                           with short options too */
+   unsigned   n1;                       /* number of user parameters */
+   unsigned   n2;                       /* number of system parameters */
+   bool_t     read_config_file = NO;    /* will override command line */
+   param_t    *params;                  /* array of user and system params */
+   param_t    *sys_params;              /* array of system parameters */
    param_t    detailed_sys_params [] =  /* detailed system parameters */
    {
       {"version", NULL, 'v', PFLAG, {0}, NULL,
@@ -121,7 +121,7 @@ parseargs (param_t *usr_params,
        "Print detailed help, then exit."},
       {NULL, NULL, 0, PSTR, {0}, NULL, NULL }
    };
-   param_t    short_sys_params [] =	/* short system parameters */
+   param_t    short_sys_params [] =     /* short system parameters */
    {
       {"version", NULL, 'v', PFLAG, {0}, NULL,
        "Print program version number, then exit."},
@@ -133,10 +133,10 @@ parseargs (param_t *usr_params,
        "Print this help, then exit."},
       {NULL, NULL, 0, PSTR, {0}, NULL, NULL }
    };
-   char *sys_path;			/* path to system config file */
+   char *sys_path;                      /* path to system config file */
 
    sys_path = calloc (strlen (path) + strlen (sys_file_name) + 2,
-		      sizeof (char));
+                      sizeof (char));
    if (!sys_path)
       error ("Out of memory.");
    sprintf (sys_path, "%s/%s", path, sys_file_name);
@@ -179,12 +179,12 @@ parseargs (param_t *usr_params,
       FILE *parameter_file = open_file (sys_path, NULL, READ_ACCESS);
       if (parameter_file == NULL)
 /*
-	 warning ("No system resource file found.");
+         warning ("No system resource file found.");
 */ {}
       else
       {
-	 read_parameter_file (params, parameter_file);
-	 fclose (parameter_file);
+         read_parameter_file (params, parameter_file);
+         fclose (parameter_file);
       }
    }
    /*
@@ -194,138 +194,138 @@ parseargs (param_t *usr_params,
       FILE *parameter_file = open_file (usr_file_name, "HOME", READ_ACCESS);
       if (parameter_file != NULL)
       {
-	 read_parameter_file (params, parameter_file);
-	 fclose (parameter_file);
+         read_parameter_file (params, parameter_file);
+         fclose (parameter_file);
       }
    }
    /*
     *  Parse command line options
     */
    {
-      extern char   *optarg;		/* argument of current option */
-      struct option *long_options;	/* array of long options */
-      int	     option_index = 0;
-      char	     optstr [MAXSTRLEN]; /* string containing the legitimate
-					    option characters */
-      int	     optchar;		/* found option character */
+      extern char   *optarg;            /* argument of current option */
+      struct option *long_options;      /* array of long options */
+      int            option_index = 0;
+      char           optstr [MAXSTRLEN]; /* string containing the legitimate
+                                            option characters */
+      int            optchar;           /* found option character */
 
       /*
        *  Build short option string for getopt_long ().
        */
       {
-	 param_t *p;			/* counter */
-	 char	 *ptr_optstr;		/* pointer to position in string */
+         param_t *p;                    /* counter */
+         char    *ptr_optstr;           /* pointer to position in string */
 
-	 ptr_optstr = optstr;
-	 for (p = params; p->name != NULL; p++)
-	    if (p->optchar != '\0')
-	    {
-	       *ptr_optstr++ = p->optchar;
-	       if (p->type == POSTR)
-	       {
-		  *ptr_optstr++ = ':';
-		  *ptr_optstr++ = ':';
-	       }
-	       else if (p->type != PFLAG)
-		  *ptr_optstr++ = ':';
-	    }
-	 *ptr_optstr = '\0';
+         ptr_optstr = optstr;
+         for (p = params; p->name != NULL; p++)
+            if (p->optchar != '\0')
+            {
+               *ptr_optstr++ = p->optchar;
+               if (p->type == POSTR)
+               {
+                  *ptr_optstr++ = ':';
+                  *ptr_optstr++ = ':';
+               }
+               else if (p->type != PFLAG)
+                  *ptr_optstr++ = ':';
+            }
+         *ptr_optstr = '\0';
       }
 
       /*
        *  Build long option string for getopt_long ().
        */
       {
-	 int i;
+         int i;
 
-	 long_options = calloc (n1 + n2 + 1, sizeof (struct option));
-	 if (!long_options)
-	    error ("Out of memory.");
-	 for (i = 0; params [i].name != NULL; i++)
-	 {
-	    long_options [i].name    = params [i].name;
-	    switch (params [i].type)
-	    {
-	       case PFLAG:
-		  long_options [i].has_arg = 0;
-		  break;
-	       case POSTR:
-		  long_options [i].has_arg = 2;
-		  break;
-	       case PINT:
-	       case PSTR:
-	       case PFLOAT:
-	       default:
-		  long_options [i].has_arg = 1;
-		  break;
-	    }
-	    long_options [i].has_arg = params [i].type != PFLAG;
-	    long_options [i].flag    = NULL;
-	    long_options [i].val     = 0;
-	 }
+         long_options = calloc (n1 + n2 + 1, sizeof (struct option));
+         if (!long_options)
+            error ("Out of memory.");
+         for (i = 0; params [i].name != NULL; i++)
+         {
+            long_options [i].name    = params [i].name;
+            switch (params [i].type)
+            {
+               case PFLAG:
+                  long_options [i].has_arg = 0;
+                  break;
+               case POSTR:
+                  long_options [i].has_arg = 2;
+                  break;
+               case PINT:
+               case PSTR:
+               case PFLOAT:
+               default:
+                  long_options [i].has_arg = 1;
+                  break;
+            }
+            long_options [i].has_arg = params [i].type != PFLAG;
+            long_options [i].flag    = NULL;
+            long_options [i].val     = 0;
+         }
       }
 
       /*
        *  Parse command line
        */
       while ((optchar = getopt_long (argc, argv, optstr, long_options,
-				     &option_index)) != EOF)
+                                     &option_index)) != EOF)
       {
-	 int param_index = -1;
+         int param_index = -1;
 
-	 switch (optchar)
-	 {
-	    case 0:
-	       param_index = option_index;
-	       break;
-	    case ':':
-	       if (detailed_help)
-		  fprintf (stderr,
-			   "Try `%s -h' or `%s --help' for "
-			   "more information.\n",
-			   argv [0], argv [0]);
-	       else
-		  fprintf (stderr, "Try `%s --help' for more information.\n",
-			   argv [0]);
-	       exit (2);
-	       break;
-	    case '?':
-	       if (detailed_help)
-		  fprintf (stderr,
-			   "Try `%s -h' or `%s --help' "
-			   "for more information.\n",
-			   argv [0], argv [0]);
-	       else
-		  fprintf (stderr, "Try `%s --help' for more information.\n",
-			   argv [0]);
-	       exit (2);
-	       break;
-	    default:
-	       {
-		  int i;
+         switch (optchar)
+         {
+            case 0:
+               param_index = option_index;
+               break;
+            case ':':
+               if (detailed_help)
+                  fprintf (stderr,
+                           "Try `%s -h' or `%s --help' for "
+                           "more information.\n",
+                           argv [0], argv [0]);
+               else
+                  fprintf (stderr, "Try `%s --help' for more information.\n",
+                           argv [0]);
+               exit (2);
+               break;
+            case '?':
+               if (detailed_help)
+                  fprintf (stderr,
+                           "Try `%s -h' or `%s --help' "
+                           "for more information.\n",
+                           argv [0], argv [0]);
+               else
+                  fprintf (stderr, "Try `%s --help' for more information.\n",
+                           argv [0]);
+               exit (2);
+               break;
+            default:
+               {
+                  int i;
 
-		  for (i = 0; params [i].name != NULL; i++)
-		     if (params [i].optchar == optchar)
-		     {
-			param_index = i;
-			break;
-		     }
-	       }
-	 }
-	 /*
-	  *  Check for system options
-	  */
-	 if (param_index >= 0)
-	 {
-	    set_parameter (params + param_index, optarg ? optarg : "");
-	    if (streq (params [param_index].name, "help"))
-	       usage (params, argv [0], synopsis, comment, non_opt_string,
-		      YES, sys_path, usr_file_name);
-	    else if (streq (params [param_index].name, "info"))
-	       usage (params, argv [0], synopsis, comment, non_opt_string,
-		      NO, sys_path, usr_file_name);
-	    else if (streq (params [param_index].name, "version"))
-	    {
+                  for (i = 0; params [i].name != NULL; i++)
+                     if (params [i].optchar == optchar)
+                     {
+                        param_index = i;
+                        break;
+                     }
+               }
+         }
+         /*
+          *  Check for system options
+          */
+         if (param_index >= 0)
+         {
+            set_parameter (params + param_index, optarg ? optarg : "");
+            if (streq (params [param_index].name, "help"))
+               usage (params, argv [0], synopsis, comment, non_opt_string,
+                      YES, sys_path, usr_file_name);
+            else if (streq (params [param_index].name, "info"))
+               usage (params, argv [0], synopsis, comment, non_opt_string,
+                      NO, sys_path, usr_file_name);
+            else if (streq (params [param_index].name, "version"))
+            {
            fprintf (stderr, "%s " VERSION "\n", argv [0]);
            {
               /* Kludge for standard Netpbm version announcement */
@@ -337,15 +337,15 @@ parseargs (param_t *usr_params,
               pm_proginit(&argc, (const char **) modified_argv);
            }
            exit (2);
-	    }
-	    else if (streq (params [param_index].name, "verbose"))
-	       fiasco_set_verbosity (
+            }
+            else if (streq (params [param_index].name, "verbose"))
+               fiasco_set_verbosity (
                * (fiasco_verbosity_e *) parameter_value (params,
                                                          "verbose"));
-	    else if (streq (params [param_index].name, "config"))
-	       read_config_file = YES;
-	    param_index = -1;		/* clear index flag */
-	 }
+            else if (streq (params [param_index].name, "config"))
+               read_config_file = YES;
+            param_index = -1;           /* clear index flag */
+         }
       }
 
       free (long_options);
@@ -360,21 +360,21 @@ parseargs (param_t *usr_params,
 
       if ((filename = (char *) parameter_value (params, "config")) != NULL)
       {
-	 FILE *parameter_file;		/* input file */
+         FILE *parameter_file;          /* input file */
 
-	 warning ("Options set in file `%s' will override"
-		  " command line options.", filename);
-	 parameter_file = open_file (filename, NULL, READ_ACCESS);
-	 if (parameter_file != NULL)
-	 {
-	    read_parameter_file (params, parameter_file);
-	    fclose (parameter_file);
-	 }
-	 else
-	    file_error (filename);
+         warning ("Options set in file `%s' will override"
+                  " command line options.", filename);
+         parameter_file = open_file (filename, NULL, READ_ACCESS);
+         if (parameter_file != NULL)
+         {
+            read_parameter_file (params, parameter_file);
+            fclose (parameter_file);
+         }
+         else
+            file_error (filename);
       }
       else
-	 error ("Invalid config filename.");
+         error ("Invalid config filename.");
    }
 
    memcpy (usr_params, params, n1 * sizeof (param_t)); /* fill user struct */
@@ -389,7 +389,7 @@ parameter_value (const param_t *params, const char *name)
  *  Extract value of parameter 'name.' of the given parameters 'params'.
  *
  *  Return value:
- *	value of given parameter
+ *      value of given parameter
  */
 {
    int pind = get_parameter_index (params, name);
@@ -412,7 +412,7 @@ ask_and_set (param_t *params, const char *name, const char *msg)
  *  No return value.
  *
  *  Side effects:
- *	'params ['name'].value' is changed
+ *      'params ['name'].value' is changed
  */
 {
    char answer [MAXSTRLEN];
@@ -426,18 +426,18 @@ ask_and_set (param_t *params, const char *name, const char *msg)
 
    switch (params [index].type)
    {
-      case PFLAG:			/* Unusual, at least. */
-	 warning ("Flags should be initialized and set on demand, "
-		  "not request");
+      case PFLAG:                       /* Unusual, at least. */
+         warning ("Flags should be initialized and set on demand, "
+                  "not request");
       case PINT:
       case PSTR:
       case POSTR:
       case PFLOAT:
-	 scanf (MAXSTRLEN_SCANF, answer);
-	 set_parameter (&params [index], answer);
-	 break;
+         scanf (MAXSTRLEN_SCANF, answer);
+         set_parameter (&params [index], answer);
+         break;
       default:
-	 error ("Invalid parameter type for %s", name);
+         error ("Invalid parameter type for %s", name);
    }
 }
 
@@ -459,22 +459,22 @@ write_parameters (const param_t *params, FILE *output)
       fprintf (output, "# %s = ", params [pind].name);
       switch (params [pind].type)
       {
-	 case PFLAG:
-	    fprintf (output, "%s\n", params [pind].value.b ? "TRUE" : "FALSE");
-	    break;
-	 case PINT:
-	    fprintf (output, "%d\n", params [pind].value.i);
-	    break;
-	 case PFLOAT:
-	    fprintf (output, "%.4f\n", (double) params [pind].value.f);
-	    break;
-	 case PSTR:
-	 case POSTR:
-	    fprintf (output, "%s\n", params [pind].value.s);
-	    break;
-	 default:
-	    error ("Invalid type %d for parameter %s",
-		   params [pind].type, params [pind].name);
+         case PFLAG:
+            fprintf (output, "%s\n", params [pind].value.b ? "TRUE" : "FALSE");
+            break;
+         case PINT:
+            fprintf (output, "%d\n", params [pind].value.i);
+            break;
+         case PFLOAT:
+            fprintf (output, "%.4f\n", (double) params [pind].value.f);
+            break;
+         case PSTR:
+         case POSTR:
+            fprintf (output, "%s\n", params [pind].value.s);
+            break;
+         default:
+            error ("Invalid type %d for parameter %s",
+                   params [pind].type, params [pind].name);
       }
    }
    fputc ('\n', output);
@@ -482,7 +482,7 @@ write_parameters (const param_t *params, FILE *output)
 
 /*****************************************************************************
 
-				private code
+                                private code
 
 *****************************************************************************/
 
@@ -494,7 +494,7 @@ set_parameter (param_t *parameter, const char *value)
  *  No return value.
  *
  *  Side effects:
- *	'parameter.value' is changed accordingly
+ *      'parameter.value' is changed accordingly
  */
 {
    assert (parameter);
@@ -502,61 +502,61 @@ set_parameter (param_t *parameter, const char *value)
    switch (parameter->type)
    {
       case PFLAG:
-	 if (value != NULL && *value != '\0')
-	 {
-	    if (strcaseeq (value, "TRUE"))
-	       parameter->value.b = YES;
-	    else if (strcaseeq (value, "FALSE"))
-	       parameter->value.b = NO;
-	    else if (strcaseeq (value, "YES"))
-	       parameter->value.b = YES;
-	    else if (strcaseeq (value, "NO"))
-	       parameter->value.b = NO;
-	    else
-	    {
-	       long int	data;
-	       char	*endptr;
+         if (value != NULL && *value != '\0')
+         {
+            if (strcaseeq (value, "TRUE"))
+               parameter->value.b = YES;
+            else if (strcaseeq (value, "FALSE"))
+               parameter->value.b = NO;
+            else if (strcaseeq (value, "YES"))
+               parameter->value.b = YES;
+            else if (strcaseeq (value, "NO"))
+               parameter->value.b = NO;
+            else
+            {
+               long int data;
+               char     *endptr;
 
-	       data = strtol (value, &endptr, 0);
-	       if (*endptr != '\0' || endptr == value)
-		  warning ("Invalid value `%s' converted to %d",
-			   value, (int) data);
-	       parameter->value.b = data ? YES : NO;
-	    }
-	 }
-	 else
-	    parameter->value.b = !parameter->value.b;
-	 break;
+               data = strtol (value, &endptr, 0);
+               if (*endptr != '\0' || endptr == value)
+                  warning ("Invalid value `%s' converted to %d",
+                           value, (int) data);
+               parameter->value.b = data ? YES : NO;
+            }
+         }
+         else
+            parameter->value.b = !parameter->value.b;
+         break;
       case PINT:
-	 {
-	    long int  data;
-	    char     *endptr;
+         {
+            long int  data;
+            char     *endptr;
 
-	    data = strtol (value, &endptr, 0);
-	    if (*endptr != '\0' || endptr == value)
-	       warning ("Invalid value `%s' converted to %d",
-			value, (int) data);
-	    parameter->value.i = data;
-	 }
-	 break;
+            data = strtol (value, &endptr, 0);
+            if (*endptr != '\0' || endptr == value)
+               warning ("Invalid value `%s' converted to %d",
+                        value, (int) data);
+            parameter->value.i = data;
+         }
+         break;
       case PFLOAT:
-	 {
-	    double	data;
-	    char	*endptr;
+         {
+            double      data;
+            char        *endptr;
 
-	    data = strtod (value, &endptr);
-	    if (*endptr != '\0' || endptr == value)
-	       warning ("Invalid value `%s' converted to %f",
-			value, (double) data);
-	    parameter->value.f = data;
-	 }
-	 break;
+            data = strtod (value, &endptr);
+            if (*endptr != '\0' || endptr == value)
+               warning ("Invalid value `%s' converted to %f",
+                        value, (double) data);
+            parameter->value.f = data;
+         }
+         break;
       case PSTR:
       case POSTR:
-	 parameter->value.s = value ? strdup (value) : NULL;
-	 break;
+         parameter->value.s = value ? strdup (value) : NULL;
+         break;
       default:
-	 error ("Invalid parameter type for %s", parameter->name);
+         error ("Invalid parameter type for %s", parameter->name);
    }
 }
 
@@ -566,7 +566,7 @@ get_parameter_index (const param_t *params, const char *search_string)
  *  Search for parameter with name 'search_string' in parameter struct.
  *
  *  Return value:
- *	index of parameter or -1 if no matching parameter has been found
+ *      index of parameter or -1 if no matching parameter has been found
  */
 {
    int n;
@@ -577,8 +577,8 @@ get_parameter_index (const param_t *params, const char *search_string)
    for (n = 0; params [n].name != NULL; n++)
       if (strcaseeq (params [n].name, search_string))
       {
-	 index = n;
-	 break;
+         index = n;
+         break;
       }
 
    return index;
@@ -592,7 +592,7 @@ read_parameter_file (param_t *params, FILE *file)
  *  No return value.
  *
  *  Side effects:
- *	'params [].value' are changed if specified in 'file'
+ *      'params [].value' are changed if specified in 'file'
  */
 {
    char buffer [MAXSTRLEN];
@@ -602,41 +602,41 @@ read_parameter_file (param_t *params, FILE *file)
 
    while (fgets (buffer, MAXSTRLEN, file) != NULL)
    {
-      char *b;				/* temporary variable */
-      char *name;			/* parameter name */
-      char *value;			/* parameter value */
-      int   pind;			/* current argument number */
+      char *b;                          /* temporary variable */
+      char *name;                       /* parameter name */
+      char *value;                      /* parameter value */
+      int   pind;                       /* current argument number */
 
       b = strchr (buffer, '#');
-      if (b != NULL)			/* Strip comments. */
-	 *b = '\0';
+      if (b != NULL)                    /* Strip comments. */
+         *b = '\0';
 
       b = strchr (buffer, '=');
-      if (b == NULL)			/* Strip lines that contain no '=' */
-	 continue;
-      *b = '\0';			/* Replace '=' by string terminator */
+      if (b == NULL)                    /* Strip lines that contain no '=' */
+         continue;
+      *b = '\0';                        /* Replace '=' by string terminator */
 
       /*
        *  Extract value of parameter
        */
       for (value = b + 1; ISSPACE (*value); value++)
-	 ;				/* Delete leading spaces */
+         ;                              /* Delete leading spaces */
 
       for (b = value + strlen (value) - 1; b >= value && ISSPACE (*b); b--)
-	 *b = '\0';			/* Delete trailing spaces. */
+         *b = '\0';                     /* Delete trailing spaces. */
 
       /*
        *  Extract parameter name
        */
       for (name = buffer; ISSPACE (*name); name++)
-	 ;				/* Delete leading spaces */
+         ;                              /* Delete leading spaces */
 
       for (b = name + strlen (name) - 1; b >= name && ISSPACE (*b); b--)
-	 *b = '\0';			/* Delete trailing spaces. */
+         *b = '\0';                     /* Delete trailing spaces. */
 
       pind = get_parameter_index (params, name);
       if (pind >= 0)
-	 set_parameter (&params [pind], value);
+         set_parameter (&params [pind], value);
 
       n++;
    }
@@ -660,7 +660,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
  *  No return value.
  */
 {
-    int	  i;
+    int   i;
     size_t width = 0;
 
     fprintf (stderr, "Usage: %s [OPTION]...%s\n", progname,

@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -133,13 +133,13 @@
 \******************************************************************************/
 
 /* The maximum number of resolution levels. */
-#define	JPC_MAXRLVLS	33
+#define JPC_MAXRLVLS    33
 
 /* The maximum number of bands. */
-#define	JPC_MAXBANDS	(3 * JPC_MAXRLVLS + 1)
+#define JPC_MAXBANDS    (3 * JPC_MAXRLVLS + 1)
 
 /* The maximum number of layers. */
-#define JPC_MAXLYRS	16384
+#define JPC_MAXLYRS     16384
 
 /**************************************\
 * Code stream.
@@ -150,15 +150,15 @@
  */
 
 /* Initial. */
-#define	JPC_CS_INIT	0
+#define JPC_CS_INIT     0
 /* Main header. */
-#define	JPC_CS_MHDR	1
+#define JPC_CS_MHDR     1
 /* Tile-part header. */
-#define	JPC_CS_THDR	2
+#define JPC_CS_THDR     2
 /* Main trailer. */
-#define	JPC_CS_MTLR	3
+#define JPC_CS_MTLR     3
 /* Tile-part data. */
-#define	JPC_CS_TDATA	4
+#define JPC_CS_TDATA    4
 
 /*
  * Unfortunately, the code stream syntax was not designed in such a way that
@@ -174,8 +174,8 @@
 
 typedef struct {
 
-	/* The number of components. */
-	int numcomps;
+        /* The number of components. */
+        int numcomps;
 
 } jpc_cstate_t;
 
@@ -185,18 +185,18 @@ typedef struct {
 
 typedef struct {
 
-	/* The tile number. */
-	uint_fast16_t tileno;
+        /* The tile number. */
+        uint_fast16_t tileno;
 
-	/* The combined length of the marker segment and its auxiliary data
-	  (i.e., packet data). */
-	uint_fast32_t len;
+        /* The combined length of the marker segment and its auxiliary data
+          (i.e., packet data). */
+        uint_fast32_t len;
 
-	/* The tile-part instance. */
-	uint_fast8_t partno;
+        /* The tile-part instance. */
+        uint_fast8_t partno;
 
-	/* The number of tile-parts. */
-	uint_fast8_t numparts;
+        /* The number of tile-parts. */
+        uint_fast8_t numparts;
 
 } jpc_sot_t;
 
@@ -208,19 +208,19 @@ typedef struct {
 
 typedef struct {
 
-	/* The precision of the samples. */
-	uint_fast8_t prec;
+        /* The precision of the samples. */
+        uint_fast8_t prec;
 
-	/* The signedness of the samples. */
-	uint_fast8_t sgnd;
+        /* The signedness of the samples. */
+        uint_fast8_t sgnd;
 
-	/* The horizontal separation of samples with respect to the reference
-	  grid. */
-	uint_fast8_t hsamp;
+        /* The horizontal separation of samples with respect to the reference
+          grid. */
+        uint_fast8_t hsamp;
 
-	/* The vertical separation of samples with respect to the reference
-	  grid. */
-	uint_fast8_t vsamp;
+        /* The vertical separation of samples with respect to the reference
+          grid. */
+        uint_fast8_t vsamp;
 
 } jpc_sizcomp_t;
 
@@ -228,42 +228,42 @@ typedef struct {
 
 typedef struct {
 
-	/* The code stream capabilities. */
-	uint_fast16_t caps;
+        /* The code stream capabilities. */
+        uint_fast16_t caps;
 
-	/* The width of the image in units of the reference grid. */
-	uint_fast32_t width;
+        /* The width of the image in units of the reference grid. */
+        uint_fast32_t width;
 
-	/* The height of the image in units of the reference grid. */
-	uint_fast32_t height;
+        /* The height of the image in units of the reference grid. */
+        uint_fast32_t height;
 
-	/* The horizontal offset from the origin of the reference grid to the
-	  left side of the image area. */
-	uint_fast32_t xoff;
+        /* The horizontal offset from the origin of the reference grid to the
+          left side of the image area. */
+        uint_fast32_t xoff;
 
-	/* The vertical offset from the origin of the reference grid to the
-	  top side of the image area. */
-	uint_fast32_t yoff;
+        /* The vertical offset from the origin of the reference grid to the
+          top side of the image area. */
+        uint_fast32_t yoff;
 
-	/* The nominal width of a tile in units of the reference grid. */
-	uint_fast32_t tilewidth;
+        /* The nominal width of a tile in units of the reference grid. */
+        uint_fast32_t tilewidth;
 
-	/* The nominal height of a tile in units of the reference grid. */
-	uint_fast32_t tileheight;
+        /* The nominal height of a tile in units of the reference grid. */
+        uint_fast32_t tileheight;
 
-	/* The horizontal offset from the origin of the reference grid to the
-	  left side of the first tile. */
-	uint_fast32_t tilexoff;
+        /* The horizontal offset from the origin of the reference grid to the
+          left side of the first tile. */
+        uint_fast32_t tilexoff;
 
-	/* The vertical offset from the origin of the reference grid to the
-	  top side of the first tile. */
-	uint_fast32_t tileyoff;
+        /* The vertical offset from the origin of the reference grid to the
+          top side of the first tile. */
+        uint_fast32_t tileyoff;
 
-	/* The number of components. */
-	uint_fast16_t numcomps;
+        /* The number of components. */
+        uint_fast16_t numcomps;
 
-	/* The per-component information. */
-	jpc_sizcomp_t *comps;
+        /* The per-component information. */
+        jpc_sizcomp_t *comps;
 
 } jpc_siz_t;
 
@@ -276,11 +276,11 @@ typedef struct {
  */
 
 /* Precincts may be used. */
-#define	JPC_COX_PRT	0x01
+#define JPC_COX_PRT     0x01
 /* SOP marker segments may be used. */
-#define	JPC_COD_SOP	0x02
+#define JPC_COD_SOP     0x02
 /* EPH marker segments may be used. */
-#define	JPC_COD_EPH	0x04
+#define JPC_COD_EPH     0x04
 
 /*
  * Progression order constants.
@@ -288,50 +288,50 @@ typedef struct {
 
 /* Layer-resolution-component-precinct progressive
   (i.e., progressive by fidelity). */
-#define	JPC_COD_LRCPPRG	0
+#define JPC_COD_LRCPPRG 0
 /* Resolution-layer-component-precinct progressive
   (i.e., progressive by resolution). */
-#define	JPC_COD_RLCPPRG	1
+#define JPC_COD_RLCPPRG 1
 /* Resolution-precinct-component-layer progressive. */
-#define	JPC_COD_RPCLPRG	2
+#define JPC_COD_RPCLPRG 2
 /* Precinct-component-resolution-layer progressive. */
-#define	JPC_COD_PCRLPRG	3
+#define JPC_COD_PCRLPRG 3
 /* Component-position-resolution-layer progressive. */
-#define	JPC_COD_CPRLPRG	4
+#define JPC_COD_CPRLPRG 4
 
 /*
  * Code block style constants.
  */
 
-#define	JPC_COX_LAZY	0x01 /* Selective arithmetic coding bypass. */
-#define	JPC_COX_RESET	0x02 /* Reset context probabilities. */
-#define	JPC_COX_TERMALL	0x04 /* Terminate all coding passes. */
-#define	JPC_COX_VSC		0x08 /* Vertical stripe causal context formation. */
-#define	JPC_COX_PTERM	0x10 /* Predictable termination. */
-#define	JPC_COX_SEGSYM	0x20 /* Use segmentation symbols. */
+#define JPC_COX_LAZY    0x01 /* Selective arithmetic coding bypass. */
+#define JPC_COX_RESET   0x02 /* Reset context probabilities. */
+#define JPC_COX_TERMALL 0x04 /* Terminate all coding passes. */
+#define JPC_COX_VSC             0x08 /* Vertical stripe causal context formation. */
+#define JPC_COX_PTERM   0x10 /* Predictable termination. */
+#define JPC_COX_SEGSYM  0x20 /* Use segmentation symbols. */
 
 /* Transform constants. */
-#define	JPC_COX_INS	0x00 /* Irreversible 9/7. */
-#define	JPC_COX_RFT	0x01 /* Reversible 5/3. */
+#define JPC_COX_INS     0x00 /* Irreversible 9/7. */
+#define JPC_COX_RFT     0x01 /* Reversible 5/3. */
 
 /* Multicomponent transform constants. */
-#define	JPC_COD_NOMCT	0x00 /* No multicomponent transform. */
-#define	JPC_COD_MCT		0x01 /* Multicomponent transform. */
+#define JPC_COD_NOMCT   0x00 /* No multicomponent transform. */
+#define JPC_COD_MCT             0x01 /* Multicomponent transform. */
 
 /* Get the code block size value from the code block size exponent. */
-#define	JPC_COX_CBLKSIZEEXPN(x)		((x) - 2)
+#define JPC_COX_CBLKSIZEEXPN(x)         ((x) - 2)
 /* Get the code block size exponent from the code block size value. */
-#define	JPC_COX_GETCBLKSIZEEXPN(x)	((x) + 2)
+#define JPC_COX_GETCBLKSIZEEXPN(x)      ((x) + 2)
 
 /* Per resolution-level information. */
 
 typedef struct {
 
-	/* The packet partition width. */
-	uint_fast8_t parwidthval;
+        /* The packet partition width. */
+        uint_fast8_t parwidthval;
 
-	/* The packet partition height. */
-	uint_fast8_t parheightval;
+        /* The packet partition height. */
+        uint_fast8_t parheightval;
 
 } jpc_coxrlvl_t;
 
@@ -339,29 +339,29 @@ typedef struct {
 
 typedef struct {
 
-	/* The coding style. */
-	uint_fast8_t csty;
+        /* The coding style. */
+        uint_fast8_t csty;
 
-	/* The number of decomposition levels. */
-	uint_fast8_t numdlvls;
+        /* The number of decomposition levels. */
+        uint_fast8_t numdlvls;
 
-	/* The nominal code block width specifier. */
-	uint_fast8_t cblkwidthval;
+        /* The nominal code block width specifier. */
+        uint_fast8_t cblkwidthval;
 
-	/* The nominal code block height specifier. */
-	uint_fast8_t cblkheightval;
+        /* The nominal code block height specifier. */
+        uint_fast8_t cblkheightval;
 
-	/* The style of coding passes. */
-	uint_fast8_t cblksty;
+        /* The style of coding passes. */
+        uint_fast8_t cblksty;
 
-	/* The QMFB employed. */
-	uint_fast8_t qmfbid;
+        /* The QMFB employed. */
+        uint_fast8_t qmfbid;
 
-	/* The number of resolution levels. */
-	int numrlvls;
+        /* The number of resolution levels. */
+        int numrlvls;
 
-	/* The per-resolution-level information. */
-	jpc_coxrlvl_t rlvls[JPC_MAXRLVLS];
+        /* The per-resolution-level information. */
+        jpc_coxrlvl_t rlvls[JPC_MAXRLVLS];
 
 } jpc_coxcp_t;
 
@@ -369,20 +369,20 @@ typedef struct {
 
 typedef struct {
 
-	/* The general coding style. */
-	uint_fast8_t csty;
+        /* The general coding style. */
+        uint_fast8_t csty;
 
-	/* The progression order. */
-	uint_fast8_t prg;
+        /* The progression order. */
+        uint_fast8_t prg;
 
-	/* The number of layers. */
-	uint_fast16_t numlyrs;
+        /* The number of layers. */
+        uint_fast16_t numlyrs;
 
-	/* The multicomponent transform. */
-	uint_fast8_t mctrans;
+        /* The multicomponent transform. */
+        uint_fast8_t mctrans;
 
-	/* Component-related parameters. */
-	jpc_coxcp_t compparms;
+        /* Component-related parameters. */
+        jpc_coxcp_t compparms;
 
 } jpc_cod_t;
 
@@ -390,11 +390,11 @@ typedef struct {
 
 typedef struct {
 
-	/* The component number. */
-	uint_fast16_t compno;
+        /* The component number. */
+        uint_fast16_t compno;
 
-	/* Component-related parameters. */
-	jpc_coxcp_t compparms;
+        /* Component-related parameters. */
+        jpc_coxcp_t compparms;
 
 } jpc_coc_t;
 
@@ -403,18 +403,18 @@ typedef struct {
 \**************************************/
 
 /* The maxshift ROI style. */
-#define	JPC_RGN_MAXSHIFT	0x00
+#define JPC_RGN_MAXSHIFT        0x00
 
 typedef struct {
 
-	/* The component to which the marker applies. */
-	uint_fast16_t compno;
+        /* The component to which the marker applies. */
+        uint_fast16_t compno;
 
-	/* The ROI style. */
-	uint_fast8_t roisty;
+        /* The ROI style. */
+        uint_fast8_t roisty;
 
-	/* The ROI shift value. */
-	uint_fast8_t roishift;
+        /* The ROI shift value. */
+        uint_fast8_t roishift;
 
 } jpc_rgn_t;
 
@@ -426,34 +426,34 @@ typedef struct {
  * Quantization style constants.
  */
 
-#define	JPC_QCX_NOQNT	0 /* No quantization. */
-#define	JPC_QCX_SIQNT	1 /* Scalar quantization, implicit. */
-#define	JPC_QCX_SEQNT	2 /* Scalar quantization, explicit. */
+#define JPC_QCX_NOQNT   0 /* No quantization. */
+#define JPC_QCX_SIQNT   1 /* Scalar quantization, implicit. */
+#define JPC_QCX_SEQNT   2 /* Scalar quantization, explicit. */
 
 /*
  * Stepsize manipulation macros.
  */
 
-#define	JPC_QCX_GETEXPN(x)	((x) >> 11)
-#define	JPC_QCX_GETMANT(x)	((x) & 0x07ff)
-#define	JPC_QCX_EXPN(x)		(assert(!((x) & (~0x1f))), (((x) & 0x1f) << 11))
-#define	JPC_QCX_MANT(x)		(assert(!((x) & (~0x7ff))), ((x) & 0x7ff))
+#define JPC_QCX_GETEXPN(x)      ((x) >> 11)
+#define JPC_QCX_GETMANT(x)      ((x) & 0x07ff)
+#define JPC_QCX_EXPN(x)         (assert(!((x) & (~0x1f))), (((x) & 0x1f) << 11))
+#define JPC_QCX_MANT(x)         (assert(!((x) & (~0x7ff))), ((x) & 0x7ff))
 
 /* Per component information. */
 
 typedef struct {
 
-	/* The quantization style. */
-	uint_fast8_t qntsty;
+        /* The quantization style. */
+        uint_fast8_t qntsty;
 
-	/* The number of step sizes. */
-	int numstepsizes;
+        /* The number of step sizes. */
+        int numstepsizes;
 
-	/* The step sizes. */
-	uint_fast16_t *stepsizes;
+        /* The step sizes. */
+        uint_fast16_t *stepsizes;
 
-	/* The number of guard bits. */
-	uint_fast8_t numguard;
+        /* The number of guard bits. */
+        uint_fast8_t numguard;
 
 } jpc_qcxcp_t;
 
@@ -461,11 +461,11 @@ typedef struct {
 
 typedef struct {
 
-	/* The component associated with this marker segment. */
-	uint_fast16_t compno;
+        /* The component associated with this marker segment. */
+        uint_fast16_t compno;
 
-	/* The parameters. */
-	jpc_qcxcp_t compparms;
+        /* The parameters. */
+        jpc_qcxcp_t compparms;
 
 } jpc_qcc_t;
 
@@ -473,8 +473,8 @@ typedef struct {
 
 typedef struct {
 
-	/* The parameters. */
-	jpc_qcxcp_t compparms;
+        /* The parameters. */
+        jpc_qcxcp_t compparms;
 
 } jpc_qcd_t;
 
@@ -484,28 +484,28 @@ typedef struct {
 
 typedef struct {
 
-	/* The progression order. */
-	uint_fast8_t prgord;
+        /* The progression order. */
+        uint_fast8_t prgord;
 
-	/* The lower bound (inclusive) on the resolution level for the
-	  progression order volume. */
-	uint_fast8_t rlvlnostart;
+        /* The lower bound (inclusive) on the resolution level for the
+          progression order volume. */
+        uint_fast8_t rlvlnostart;
 
-	/* The upper bound (exclusive) on the resolution level for the
-	  progression order volume. */
-	uint_fast8_t rlvlnoend;
+        /* The upper bound (exclusive) on the resolution level for the
+          progression order volume. */
+        uint_fast8_t rlvlnoend;
 
-	/* The lower bound (inclusive) on the component for the progression
-	  order volume. */
-	uint_fast16_t compnostart;
+        /* The lower bound (inclusive) on the component for the progression
+          order volume. */
+        uint_fast16_t compnostart;
 
-	/* The upper bound (exclusive) on the component for the progression
-	  order volume. */
-	uint_fast16_t compnoend;
+        /* The upper bound (exclusive) on the component for the progression
+          order volume. */
+        uint_fast16_t compnoend;
 
-	/* The upper bound (exclusive) on the layer for the progression
-	  order volume. */
-	uint_fast16_t lyrnoend;
+        /* The upper bound (exclusive) on the layer for the progression
+          order volume. */
+        uint_fast16_t lyrnoend;
 
 } jpc_pocpchg_t;
 
@@ -516,11 +516,11 @@ typedef jpc_pocpchg_t jpc_pchg_t;
 
 typedef struct {
 
-	/* The number of progression order changes. */
-	int numpchgs;
+        /* The number of progression order changes. */
+        int numpchgs;
 
-	/* The per-progression-order-change information. */
-	jpc_pocpchg_t *pchgs;
+        /* The per-progression-order-change information. */
+        jpc_pocpchg_t *pchgs;
 
 } jpc_poc_t;
 
@@ -532,14 +532,14 @@ typedef struct {
 
 typedef struct {
 
-	/* The index. */
-	uint_fast8_t ind;
+        /* The index. */
+        uint_fast8_t ind;
 
-	/* The length. */
-	uint_fast16_t len;
+        /* The length. */
+        uint_fast16_t len;
 
-	/* The data. */
-	unsigned char *data;
+        /* The data. */
+        unsigned char *data;
 
 } jpc_ppm_t;
 
@@ -547,14 +547,14 @@ typedef struct {
 
 typedef struct {
 
-	/* The index. */
-	uint_fast8_t ind;
+        /* The index. */
+        uint_fast8_t ind;
 
-	/* The length. */
-	uint_fast32_t len;
+        /* The length. */
+        uint_fast32_t len;
 
-	/* The data. */
-	unsigned char *data;
+        /* The data. */
+        unsigned char *data;
 
 } jpc_ppt_t;
 
@@ -566,19 +566,19 @@ typedef struct {
  * Registration IDs.
  */
 
-#define	JPC_COM_BIN		0x00
-#define	JPC_COM_LATIN	0x01
+#define JPC_COM_BIN             0x00
+#define JPC_COM_LATIN   0x01
 
 typedef struct {
 
-	/* The registration ID. */
-	uint_fast16_t regid;
+        /* The registration ID. */
+        uint_fast16_t regid;
 
-	/* The length of the data in bytes. */
-	uint_fast16_t len;
+        /* The length of the data in bytes. */
+        uint_fast16_t len;
 
-	/* The data. */
-	unsigned char *data;
+        /* The data. */
+        unsigned char *data;
 
 } jpc_com_t;
 
@@ -588,8 +588,8 @@ typedef struct {
 
 typedef struct {
 
-	/* The sequence number. */
-	uint_fast16_t seqno;
+        /* The sequence number. */
+        uint_fast16_t seqno;
 
 } jpc_sop_t;
 
@@ -601,21 +601,21 @@ typedef struct {
 
 typedef struct {
 
-	/* The horizontal offset. */
-	uint_fast16_t hoff;
+        /* The horizontal offset. */
+        uint_fast16_t hoff;
 
-	/* The vertical offset. */
-	uint_fast16_t voff;
+        /* The vertical offset. */
+        uint_fast16_t voff;
 
 } jpc_crgcomp_t;
 
 typedef struct {
 
-	/* The number of components. */
-	int numcomps;
+        /* The number of components. */
+        int numcomps;
 
-	/* Per component information. */
-	jpc_crgcomp_t *comps;
+        /* Per component information. */
+        jpc_crgcomp_t *comps;
 
 } jpc_crg_t;
 
@@ -625,11 +625,11 @@ typedef struct {
 
 typedef struct {
 
-	/* The data. */
-	unsigned char *data;
+        /* The data. */
+        unsigned char *data;
 
-	/* The length. */
-	uint_fast16_t len;
+        /* The length. */
+        uint_fast16_t len;
 
 } jpc_unk_t;
 
@@ -638,26 +638,26 @@ typedef struct {
 \**************************************/
 
 typedef union {
-	int soc;	/* unused */
-	jpc_sot_t sot;
-	int sod;	/* unused */
-	int eoc;	/* unused */
-	jpc_siz_t siz;
-	jpc_cod_t cod;
-	jpc_coc_t coc;
-	jpc_rgn_t rgn;
-	jpc_qcd_t qcd;
-	jpc_qcc_t qcc;
-	jpc_poc_t poc;
-	/* jpc_plm_t plm; */
-	/* jpc_plt_t plt; */
-	jpc_ppm_t ppm;
-	jpc_ppt_t ppt;
-	jpc_sop_t sop;
-	int eph;	/* unused */
-	jpc_com_t com;
-	jpc_crg_t crg;
-	jpc_unk_t unk;
+        int soc;        /* unused */
+        jpc_sot_t sot;
+        int sod;        /* unused */
+        int eoc;        /* unused */
+        jpc_siz_t siz;
+        jpc_cod_t cod;
+        jpc_coc_t coc;
+        jpc_rgn_t rgn;
+        jpc_qcd_t qcd;
+        jpc_qcc_t qcc;
+        jpc_poc_t poc;
+        /* jpc_plm_t plm; */
+        /* jpc_plt_t plt; */
+        jpc_ppm_t ppm;
+        jpc_ppt_t ppt;
+        jpc_sop_t sop;
+        int eph;        /* unused */
+        jpc_com_t com;
+        jpc_crg_t crg;
+        jpc_unk_t unk;
 } jpc_msparms_t;
 
 /**************************************\
@@ -667,47 +667,47 @@ typedef union {
 /* Marker segment IDs. */
 
 /* The smallest valid marker value. */
-#define	JPC_MS_MIN	0xff00
+#define JPC_MS_MIN      0xff00
 
 /* The largest valid marker value. */
-#define	JPC_MS_MAX	0xffff
+#define JPC_MS_MAX      0xffff
 
 /* The minimum marker value that cannot occur within packet data. */
-#define	JPC_MS_INMIN	0xff80
+#define JPC_MS_INMIN    0xff80
 /* The maximum marker value that cannot occur within packet data. */
-#define	JPC_MS_INMAX	0xffff
+#define JPC_MS_INMAX    0xffff
 
 /* Delimiting marker segments. */
-#define	JPC_MS_SOC	0xff4f /* Start of code stream (SOC). */
-#define	JPC_MS_SOT	0xff90 /* Start of tile-part (SOT). */
-#define	JPC_MS_SOD	0xff93 /* Start of data (SOD). */
-#define	JPC_MS_EOC	0xffd9 /* End of code stream (EOC). */
+#define JPC_MS_SOC      0xff4f /* Start of code stream (SOC). */
+#define JPC_MS_SOT      0xff90 /* Start of tile-part (SOT). */
+#define JPC_MS_SOD      0xff93 /* Start of data (SOD). */
+#define JPC_MS_EOC      0xffd9 /* End of code stream (EOC). */
 
 /* Fixed information marker segments. */
-#define	JPC_MS_SIZ	0xff51 /* Image and tile size (SIZ). */
+#define JPC_MS_SIZ      0xff51 /* Image and tile size (SIZ). */
 
 /* Functional marker segments. */
-#define	JPC_MS_COD	0xff52 /* Coding style default (COD). */
-#define JPC_MS_COC	0xff53 /* Coding style component (COC). */
-#define	JPC_MS_RGN	0xff5e /* Region of interest (RGN). */
-#define JPC_MS_QCD	0xff5c /* Quantization default (QCD). */
-#define JPC_MS_QCC	0xff5d /* Quantization component (QCC). */
-#define JPC_MS_POC	0xff5f /* Progression order default (POC). */
+#define JPC_MS_COD      0xff52 /* Coding style default (COD). */
+#define JPC_MS_COC      0xff53 /* Coding style component (COC). */
+#define JPC_MS_RGN      0xff5e /* Region of interest (RGN). */
+#define JPC_MS_QCD      0xff5c /* Quantization default (QCD). */
+#define JPC_MS_QCC      0xff5d /* Quantization component (QCC). */
+#define JPC_MS_POC      0xff5f /* Progression order default (POC). */
 
 /* Pointer marker segments. */
-#define	JPC_MS_TLM	0xff55 /* Tile-part lengths, main header (TLM). */
-#define	JPC_MS_PLM	0xff57 /* Packet length, main header (PLM). */
-#define	JPC_MS_PLT	0xff58 /* Packet length, tile-part header (PLT). */
-#define	JPC_MS_PPM	0xff60 /* Packed packet headers, main header (PPM). */
-#define	JPC_MS_PPT	0xff61 /* Packet packet headers, tile-part header (PPT). */
+#define JPC_MS_TLM      0xff55 /* Tile-part lengths, main header (TLM). */
+#define JPC_MS_PLM      0xff57 /* Packet length, main header (PLM). */
+#define JPC_MS_PLT      0xff58 /* Packet length, tile-part header (PLT). */
+#define JPC_MS_PPM      0xff60 /* Packed packet headers, main header (PPM). */
+#define JPC_MS_PPT      0xff61 /* Packet packet headers, tile-part header (PPT). */
 
 /* In bit stream marker segments. */
-#define	JPC_MS_SOP	0xff91	/* Start of packet (SOP). */
-#define	JPC_MS_EPH	0xff92	/* End of packet header (EPH). */
+#define JPC_MS_SOP      0xff91  /* Start of packet (SOP). */
+#define JPC_MS_EPH      0xff92  /* End of packet header (EPH). */
 
 /* Informational marker segments. */
-#define	JPC_MS_CRG	0xff63 /* Component registration (CRG). */
-#define JPC_MS_COM	0xff64 /* Comment (COM). */
+#define JPC_MS_CRG      0xff63 /* Component registration (CRG). */
+#define JPC_MS_COM      0xff64 /* Comment (COM). */
 
 /* Forward declaration. */
 struct jpc_msops_s;
@@ -716,20 +716,20 @@ struct jpc_msops_s;
 
 typedef struct {
 
-	/* The type of marker segment. */
-	uint_fast16_t id;
+        /* The type of marker segment. */
+        uint_fast16_t id;
 
-	/* The length of the marker segment. */
-	uint_fast16_t len;
+        /* The length of the marker segment. */
+        uint_fast16_t len;
 
-	/* The starting offset within the stream. */
-	uint_fast32_t off;
+        /* The starting offset within the stream. */
+        uint_fast32_t off;
 
-	/* The parameters of the marker segment. */
-	jpc_msparms_t parms;
+        /* The parameters of the marker segment. */
+        jpc_msparms_t parms;
 
-	/* The marker segment operations. */
-	struct jpc_msops_s *ops;
+        /* The marker segment operations. */
+        struct jpc_msops_s *ops;
 
 } jpc_ms_t;
 
@@ -737,17 +737,17 @@ typedef struct {
 
 typedef struct jpc_msops_s {
 
-	/* Destroy the marker segment parameters. */
-	void (*destroyparms)(jpc_ms_t *ms);
+        /* Destroy the marker segment parameters. */
+        void (*destroyparms)(jpc_ms_t *ms);
 
-	/* Get the marker segment parameters from a stream. */
-	int (*getparms)(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *in);
+        /* Get the marker segment parameters from a stream. */
+        int (*getparms)(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *in);
 
-	/* Put the marker segment parameters to a stream. */
-	int (*putparms)(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *out);
+        /* Put the marker segment parameters to a stream. */
+        int (*putparms)(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *out);
 
-	/* Dump the marker segment parameters (for debugging). */
-	int (*dumpparms)(jpc_ms_t *ms, FILE *out);
+        /* Dump the marker segment parameters (for debugging). */
+        int (*dumpparms)(jpc_ms_t *ms, FILE *out);
 
 } jpc_msops_t;
 
@@ -768,13 +768,13 @@ jpc_ms_t *jpc_ms_create(int type);
 void jpc_ms_destroy(jpc_ms_t *ms);
 
 /* Does a marker segment have parameters? */
-#define	JPC_MS_HASPARMS(x) \
-	(!((x) == JPC_MS_SOC || (x) == JPC_MS_SOD || (x) == JPC_MS_EOC || \
-	  (x) == JPC_MS_EPH || ((x) >= 0xff30 && (x) <= 0xff3f)))
+#define JPC_MS_HASPARMS(x) \
+        (!((x) == JPC_MS_SOC || (x) == JPC_MS_SOD || (x) == JPC_MS_EOC || \
+          (x) == JPC_MS_EPH || ((x) >= 0xff30 && (x) <= 0xff3f)))
 
 /* Get the marker segment type. */
-#define	jpc_ms_gettype(ms) \
-	((ms)->id)
+#define jpc_ms_gettype(ms) \
+        ((ms)->id)
 
 /* Read a marker segment from a stream. */
 jpc_ms_t *jpc_getms(jas_stream_t *in, jpc_cstate_t *cstate);

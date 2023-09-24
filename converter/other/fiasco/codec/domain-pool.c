@@ -2,7 +2,7 @@
  *  domain-pool.c:  Domain pool management (probability model)
  *
  *  Written by:     Ullrich Hafner
- *      
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -34,9 +34,9 @@
 /*
  *  Domain pool model interface:
  *  Implementing the domain pool model interface requires the
- *  following steps: 
+ *  following steps:
  *  - Add a constructor that initializes the domain_pool_t structure
- *  - Allocate new model with default_alloc() 
+ *  - Allocate new model with default_alloc()
  *  - Fill the dp_array_t domain_pools array with constructor and name
  *  - Write code for methods bits() and generate()
  *  - Either use default functions for remaining methods or override them
@@ -44,9 +44,9 @@
  */
 
 /*****************************************************************************
-                                          
+
                   local variables
-                  
+
 *****************************************************************************/
 
 static real_t *matrix_0 = NULL;
@@ -174,7 +174,7 @@ default_alloc (void);
 /*****************************************************************************
 
                 public code
-  
+
 *****************************************************************************/
 
 typedef struct dp_array
@@ -185,7 +185,7 @@ typedef struct dp_array
 } dp_array_t;
 
 dp_array_t const domain_pools[] = {{"adaptive", alloc_qac_domain_pool},
-                                   {"constant",   alloc_const_domain_pool}, 
+                                   {"constant",   alloc_const_domain_pool},
                                    {"basis",      alloc_basis_domain_pool},
                                    {"uniform",    alloc_uniform_domain_pool},
                                    {"rle",        alloc_rle_domain_pool},
@@ -199,8 +199,8 @@ alloc_domain_pool (const char *domain_pool_name, unsigned max_domains,
  *  Allocate a new domain pool identified by the string
  *  'domain_pool_name'.  Maximum number of domain images (each one
  *  represented by one state of the given 'wfa') is specified by
- *  'max_domains'. 
- * 
+ *  'max_domains'.
+ *
  *  Return value:
  *  pointer to the allocated domain pool
  *
@@ -209,16 +209,16 @@ alloc_domain_pool (const char *domain_pool_name, unsigned max_domains,
  */
 {
     unsigned n;
-   
+
     if (!max_domains)
     {
         warning ("Can't generate empty domain pool. "
                  "Using at least DC component.");
         max_domains = 1;
     }
-   
+
     for (n = 0; domain_pools [n].identifier; n++) /* step through all id's */
-        if (strcaseeq (domain_pools [n].identifier, domain_pool_name)) 
+        if (strcaseeq (domain_pools [n].identifier, domain_pool_name))
             return domain_pools [n].function (max_domains, max_edges, wfa);
 
     warning ("Can't initialize domain pool '%s'. Using default value '%s'.",
@@ -230,7 +230,7 @@ alloc_domain_pool (const char *domain_pool_name, unsigned max_domains,
 /*****************************************************************************
 
                 private code
-  
+
 *****************************************************************************/
 
 /*****************************************************************************
@@ -256,7 +256,7 @@ alloc_qac_domain_pool (unsigned max_domains, unsigned max_edges,
 {
     domain_pool_t *pool;
     unsigned   state;
-   
+
     pool                  = default_alloc ();
     pool->model           = qac_model_alloc (max_domains);
     pool->generate        = qac_generate;
@@ -266,7 +266,7 @@ alloc_qac_domain_pool (unsigned max_domains, unsigned max_edges,
     pool->chroma      = qac_chroma;
     pool->model_free      = qac_model_free;
     pool->model_duplicate = qac_model_duplicate;
-   
+
     for (state = 0; state < wfa->basis_states; state++)
         if (usedomain (state, wfa))
             qac_append (state, -1, wfa, pool->model);
@@ -308,7 +308,7 @@ qac_model_duplicate (const void *src)
     qdst      = qac_model_alloc (qsrc->max_domains);
     qdst->y_index = qsrc->y_index;
     qdst->n       = qsrc->n;
-   
+
     memcpy (qdst->index, qsrc->index, qsrc->n * sizeof (word_t));
     memcpy (qdst->states, qsrc->states, qsrc->n * sizeof (word_t));
 
@@ -325,14 +325,14 @@ qac_generate (unsigned level, int y_state, const wfa_t *wfa, const void *model)
 
     if (y_state >= 0 && !usedomain (y_state, wfa)) /* don't use y-state */
         y_state = -1;
-   
+
     domains = Calloc (qac_model->n + 2, sizeof (word_t));
 
     memcpy (domains, qac_model->states, qac_model->n * sizeof (word_t));
 
     for (n = 0; n < qac_model->n; n++)
         if (domains [n] == y_state)   /* match */
-            y_state_is_domain = YES;       
+            y_state_is_domain = YES;
 
     if (y_state_is_domain)
         domains [qac_model->n] = -1;  /* end marker */
@@ -361,11 +361,11 @@ qac_bits (const word_t *domains, const word_t *used_domains,
             bits += matrix_0 [qac_model->index [domain]];
     if (y_state >= 0)
         bits += matrix_0 [qac_model->y_index];
-   
+
     if (used_domains != NULL)
     {
         unsigned edge;
-      
+
         for (edge = 0; isedge (domain = used_domains [edge]); edge++)
             if (domains [domain] == y_state)
             {
@@ -377,8 +377,8 @@ qac_bits (const word_t *domains, const word_t *used_domains,
                 bits -= matrix_0 [qac_model->index [domain]];
                 bits += matrix_1 [qac_model->index [domain]];
             }
-    } 
-   
+    }
+
     return bits;
 }
 
@@ -391,7 +391,7 @@ qac_update (const word_t *domains, const word_t *used_domains,
     bool_t   used_y_state      = NO;
     qac_model_t *qac_model     = (qac_model_t *) model;
     bool_t   y_state_is_domain = NO;
-   
+
     if (y_state >= 0 && !usedomain (y_state, wfa)) /* don't use y-state */
         y_state = -1;
 
@@ -399,9 +399,9 @@ qac_update (const word_t *domains, const word_t *used_domains,
     {
         qac_model->index [domain]++;  /* mark domains unused. */
         if (qac_model->states [domain] == y_state) /* match */
-            y_state_is_domain = YES;       
+            y_state_is_domain = YES;
     }
-   
+
     for (edge = 0; isedge (domain = used_domains [edge]); edge++)
         if (domains [domain] == y_state) /* chroma coding */
         {
@@ -413,24 +413,24 @@ qac_update (const word_t *domains, const word_t *used_domains,
         else              /* luminance coding */
         {
             qac_model->index [used_domains [edge]]--; /* undo */
-            qac_model->index [used_domains [edge]] >>= 1;      
+            qac_model->index [used_domains [edge]] >>= 1;
         }
 
     if (y_state >= 0 && !used_y_state)
         qac_model->y_index++;     /* update y-state model */
-   
+
     for (domain = 0; domain < qac_model->n; domain++)
         if (qac_model->index [domain] > 1020) /* check for overflow */
-            qac_model->index [domain] = 1020; 
+            qac_model->index [domain] = 1020;
     if (qac_model->y_index > 1020)   /* check for overflow */
-        qac_model->y_index = 1020; 
+        qac_model->y_index = 1020;
 }
 
 static bool_t
 qac_append (unsigned new_state, unsigned level, const wfa_t *wfa, void *model)
 {
     qac_model_t  *qac_model = (qac_model_t *) model; /* probability model */
-   
+
     if (qac_model->n >= qac_model->max_domains)
         return NO;            /* don't use state in domain pool */
     else
@@ -448,14 +448,14 @@ static void
 qac_chroma (unsigned max_domains, const wfa_t *wfa, void *model)
 {
     qac_model_t *qac_model = (qac_model_t *) model; /* probability model */
-   
+
     if (max_domains < qac_model->n)  /* choose most probable domains */
     {
         word_t   *domains;
         unsigned  n, new, old;
         word_t   *states = Calloc (max_domains, sizeof (word_t));
         word_t   *index  = Calloc (max_domains, sizeof (word_t));
-   
+
         domains = compute_hits (wfa->basis_states, wfa->states - 1,
                                 max_domains, wfa);
         for (n = 0; n < max_domains && domains [n] >= 0; n++)
@@ -491,11 +491,11 @@ alloc_const_domain_pool (unsigned max_domains, unsigned max_edges,
  */
 {
     domain_pool_t *pool;
-   
-    pool           = default_alloc ();   
+
+    pool           = default_alloc ();
     pool->generate = const_generate;
     pool->bits     = const_bits;
-   
+
     return pool;
 }
 
@@ -504,10 +504,10 @@ const_generate (unsigned level, int y_state, const wfa_t *wfa,
                 const void *model)
 {
     word_t *domains = Calloc (2, sizeof (word_t));
-   
+
     domains [0] = 0;
     domains [1] = -1;
-   
+
     return domains;
 }
 
@@ -548,11 +548,11 @@ alloc_uniform_domain_pool (unsigned max_domains, unsigned max_edges,
  */
 {
     domain_pool_t *pool;
-   
-    pool           = default_alloc ();   
+
+    pool           = default_alloc ();
     pool->generate = uniform_generate;
     pool->bits     = uniform_bits;
-   
+
     return pool;
 }
 
@@ -567,17 +567,17 @@ uniform_generate (unsigned level, int y_state, const wfa_t *wfa,
         if (usedomain (state, wfa))
             domains [n++] = state;
     domains [n] = -1;
-   
+
     return domains;
 }
- 
+
 static real_t
 uniform_bits (const word_t *domains, const word_t *used_domains,
               unsigned level, int y_state, const wfa_t *wfa, const void *model)
 {
     unsigned state, n;
     real_t   bits = 0;
-   
+
     for (state = 0, n = 0; state < wfa->states; state++)
         if (usedomain (state, wfa))
             n++;
@@ -587,7 +587,7 @@ uniform_bits (const word_t *domains, const word_t *used_domains,
     if (used_domains != NULL)
     {
         int edge;
-      
+
         for (edge = 0; isedge (used_domains [edge]); edge++)
             bits -= log2 (1.0 / n);
     }
@@ -615,13 +615,13 @@ alloc_rle_domain_pool (unsigned max_domains, unsigned max_edges,
                        const wfa_t *wfa)
 /*
  *  Domain pool with state images {0, ..., 'max_domains').
- *  Underlying probability model: rle 
+ *  Underlying probability model: rle
  */
 {
     domain_pool_t *pool;
     unsigned   state;
-   
-    pool                  = default_alloc ();    
+
+    pool                  = default_alloc ();
     pool->model           = rle_model_alloc (max_domains);
     pool->model_free      = rle_model_free;
     pool->model_duplicate = rle_model_duplicate;
@@ -643,7 +643,7 @@ rle_model_alloc (unsigned max_domains)
 {
     unsigned m;
     rle_model_t *model = Calloc (1, sizeof (rle_model_t));
-   
+
     for (m = model->total = 0; m < MAXEDGES + 1; m++, model->total++)
         model->count [m] = 1;
 
@@ -652,7 +652,7 @@ rle_model_alloc (unsigned max_domains)
     model->n       = 0;
     model->y_index     = 0;
     model->max_domains = max_domains;
-   
+
     return model;
 }
 
@@ -676,12 +676,12 @@ rle_model_duplicate (const void *src)
     model->states      = Calloc (model->max_domains, sizeof (word_t));
     model->total       = rle_src->total;
     model->y_index     = rle_src->y_index;
-   
+
     memcpy (model->states, rle_src->states,
             model->max_domains * sizeof (word_t));
     memcpy (model->count, rle_src->count,
             (MAXEDGES + 1) * sizeof (word_t));
-   
+
     return model;
 }
 
@@ -692,17 +692,17 @@ rle_generate (unsigned level, int y_state, const wfa_t *wfa, const void *model)
     unsigned n;
     rle_model_t *rle_model     = (rle_model_t *) model;
     bool_t   y_state_is_domain = NO;
-   
+
     if (y_state >= 0 && !usedomain (y_state, wfa)) /* don't use y-state */
         y_state = -1;
-   
+
     domains = Calloc (rle_model->n + 2, sizeof (word_t));
 
     memcpy (domains, rle_model->states, rle_model->n * sizeof (word_t));
 
     for (n = 0; n < rle_model->n; n++)
         if (domains [n] == y_state)   /* match */
-            y_state_is_domain = YES;       
+            y_state_is_domain = YES;
 
     if (y_state_is_domain)
         domains [rle_model->n] = -1;  /* end marker */
@@ -726,17 +726,17 @@ rle_bits (const word_t *domains, const word_t *used_domains,
     rle_model_t *rle_model = (rle_model_t *) model;
     unsigned last;
     int      into;
-   
+
     if (y_state >= 0 && !usedomain (y_state, wfa)) /* don't use y-state */
         y_state = -1;
 
     if (used_domains)
     {
         word_t domain;
-      
+
         if (y_state >= 0)
             bits += matrix_0 [rle_model->y_index];
-      
+
         for (edge = n = 0; isedge (domain = used_domains [edge]); edge++)
             if (domains [domain] != y_state)
                 sorted [n++] = used_domains [edge];
@@ -745,7 +745,7 @@ rle_bits (const word_t *domains, const word_t *used_domains,
                 bits -= matrix_0 [rle_model->y_index];
                 bits += matrix_1 [rle_model->y_index];
             }
-      
+
         if (n > 1)
             qsort (sorted, n, sizeof (word_t), sort_asc_word);
     }
@@ -761,7 +761,7 @@ rle_bits (const word_t *domains, const word_t *used_domains,
         word_t array0 [2] = {NO_EDGE};
         bits += qac_bits (array0, array0, level, y_state, wfa, rle_model->domain_0);
     }
-   
+
     last = 1;
     for (edge = 0; edge < n; edge++)
         if ((into = sorted [edge]) && rle_model->n - 1 - last)
@@ -769,7 +769,7 @@ rle_bits (const word_t *domains, const word_t *used_domains,
             bits += bits_bin_code (into - last, rle_model->n - 1 - last);
             last  = into + 1;
         }
-   
+
     return bits;
 }
 
@@ -781,21 +781,21 @@ rle_update (const word_t *domains, const word_t *used_domains,
     bool_t   state_0    = NO, state_y = NO;
     word_t   array0 [2] = {0, NO_EDGE};
     unsigned     edge = 0;
-   
+
     if (y_state >= 0 && !usedomain (y_state, wfa)) /* don't use y-state */
         y_state = -1;
 
     if (used_domains)
     {
         word_t   domain;
-      
+
         for (edge = 0; isedge (domain = used_domains [edge]); edge++)
             if (domains [domain] == 0)
                 state_0 = YES;
             else if (domains [domain] == y_state)
                 state_y = YES;
     }
-   
+
     rle_model->count [edge]++;
     rle_model->total++;
 
@@ -807,14 +807,14 @@ rle_update (const word_t *domains, const word_t *used_domains,
     else
         rle_model->y_index++;
     if (rle_model->y_index > 1020)   /* check for overflow */
-        rle_model->y_index = 1020; 
+        rle_model->y_index = 1020;
 }
 
 static bool_t
 rle_append (unsigned new_state, unsigned level, const wfa_t *wfa, void *model)
 {
     rle_model_t *rle_model = (rle_model_t *) model; /* probability model */
-   
+
     if (rle_model->n >= rle_model->max_domains)
         return NO;            /* don't use state in domain pool */
     else
@@ -827,7 +827,7 @@ rle_append (unsigned new_state, unsigned level, const wfa_t *wfa, void *model)
             assert (rle_model->n == 1);
             qac_append (0, -1, wfa, rle_model->domain_0);
         }
-      
+
         return YES;           /* state will be used in domain pool */
     }
 }
@@ -836,14 +836,14 @@ static void
 rle_chroma (unsigned max_domains, const wfa_t *wfa, void *model)
 {
     rle_model_t *rle_model = (rle_model_t *) model; /* probability model */
-   
+
     if (max_domains < rle_model->n)  /* choose most probable domains */
     {
         unsigned  n;
         word_t   *states  = Calloc (max_domains, sizeof (word_t));
         word_t   *domains = compute_hits (wfa->basis_states, wfa->states - 1,
                                           max_domains, wfa);
-      
+
         for (n = 0; n < max_domains && domains [n] >= 0; n++)
             states [n] = domains [n];
 
@@ -868,12 +868,12 @@ alloc_rle_no_chroma_domain_pool (unsigned max_domains, unsigned max_edges,
                                  const wfa_t *wfa)
 /*
  *  Domain pool with state images {0, ..., 'max_domains').
- *  Underlying probability model: rle 
+ *  Underlying probability model: rle
  *  Domain pool is not changed for chroma bands
  */
 {
     domain_pool_t *pool = alloc_rle_domain_pool (max_domains, max_edges, wfa);
-   
+
     pool->chroma = default_chroma;
 
     return pool;
@@ -898,7 +898,7 @@ default_alloc (void)
     pool->free            = default_free;
     pool->model_free      = default_model_free;
     pool->model_duplicate = default_model_duplicate;
-   
+
     return pool;
 }
 
@@ -964,12 +964,12 @@ init_matrix_probabilities (void)
 {
     if (matrix_0 == NULL || matrix_1 == NULL)
     {
-        unsigned index;           
+        unsigned index;
         unsigned n, exp;
-      
+
         matrix_0 = Calloc (1 << (MAX_PROB + 1), sizeof (real_t));
         matrix_1 = Calloc (1 << (MAX_PROB + 1), sizeof (real_t));
-   
+
         for (index = 0, n = MIN_PROB; n <= MAX_PROB; n++)
             for (exp = 0; exp < (unsigned) 1 << n; exp++, index++)
             {

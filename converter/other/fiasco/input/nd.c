@@ -1,7 +1,7 @@
 /*
- *  nd.c:		Input of prediction tree
+ *  nd.c:               Input of prediction tree
  *
- *  Written by:		Ullrich Hafner
+ *  Written by:         Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -30,7 +30,7 @@
 
 /*****************************************************************************
 
-				prototypes
+                                prototypes
 
 *****************************************************************************/
 
@@ -41,7 +41,7 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input);
 
 /*****************************************************************************
 
-				public code
+                                public code
 
 *****************************************************************************/
 
@@ -52,7 +52,7 @@ read_nd (wfa_t *wfa, bitfile_t *input)
  *  ND is used only at levels {'wfa->p_min_level', ... , 'wfa->p_max_level'}.
  *
  *  Side effects:
- *	'wfa->into' and 'wfa->weights' are filled with the decoded values
+ *      'wfa->into' and 'wfa->weights' are filled with the decoded values
  */
 {
    unsigned total = decode_nd_tree (wfa, input);
@@ -63,7 +63,7 @@ read_nd (wfa_t *wfa, bitfile_t *input)
 
 /*****************************************************************************
 
-				private code
+                                private code
 
 *****************************************************************************/
 
@@ -75,16 +75,16 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input)
  *  No return value.
  *
  *  Side effects:
- *	'wfa->into' is filled with the decoded values
+ *      'wfa->into' is filled with the decoded values
  */
 {
-   lqueue_t *queue;			/* queue of states */
-   int       next, state;		/* state and its current child */
-   unsigned  total = 0;			/* total number of predicted states */
-   u_word_t  sum0, sum1;		/* Probability model */
-   u_word_t  code;			/* The present input code value */
-   u_word_t  low;			/* Start of the current code range */
-   u_word_t  high;			/* End of the current code range */
+   lqueue_t *queue;                     /* queue of states */
+   int       next, state;               /* state and its current child */
+   unsigned  total = 0;                 /* total number of predicted states */
+   u_word_t  sum0, sum1;                /* Probability model */
+   u_word_t  code;                      /* The present input code value */
+   u_word_t  low;                       /* Start of the current code range */
+   u_word_t  high;                      /* End of the current code range */
 
    /*
     *  Initialize arithmetic decoder
@@ -108,78 +108,78 @@ decode_nd_tree (wfa_t *wfa, bitfile_t *input)
 
       if (wfa->level_of_state [next] > wfa->wfainfo->p_max_level + 1)
       {
-	 /*
-	  *  Nondetermismn is not allowed at levels larger than
-	  *  'wfa->wfainfo->p_max_level'.
-	  */
-	 for (label = 0; label < MAXLABELS; label++)
-	    if (ischild (state = wfa->tree [next][label]))
-	       queue_append (queue, &state); /* continue with children */
+         /*
+          *  Nondetermismn is not allowed at levels larger than
+          *  'wfa->wfainfo->p_max_level'.
+          */
+         for (label = 0; label < MAXLABELS; label++)
+            if (ischild (state = wfa->tree [next][label]))
+               queue_append (queue, &state); /* continue with children */
       }
       else if (wfa->level_of_state [next] > wfa->wfainfo->p_min_level)
       {
-	 for (label = 0; label < MAXLABELS; label++)
-	    if (ischild (state = wfa->tree [next][label]))
-	    {
-	       unsigned count;		/* Current interval count */
-	       unsigned range;		/* Current interval range */
+         for (label = 0; label < MAXLABELS; label++)
+            if (ischild (state = wfa->tree [next][label]))
+            {
+               unsigned count;          /* Current interval count */
+               unsigned range;          /* Current interval range */
 
-	       count = (((code - low) + 1) * sum1 - 1) / ((high - low) + 1);
-	       if (count < sum0)
-	       {
-		  /*
-		   *  Decode a '0' symbol
-		   *  First, the range is expanded to account for the
-		   *  symbol removal.
-		   */
-		  range = (high - low) + 1;
-		  high = low + (u_word_t) ((range * sum0) / sum1 - 1 );
-		  RESCALE_INPUT_INTERVAL;
-		  /*
-		   *  Update the frequency counts
-		   */
-		  sum0++;
-		  sum1++;
-		  if (sum1 > 50) /* scale the symbol frequencies */
-		  {
-		     sum0 >>= 1;
-		     sum1 >>= 1;
-		     if (!sum0)
-			sum0 = 1;
-		     if (sum0 >= sum1)
-			sum1 = sum0 + 1;
-		  }
-		  if (wfa->level_of_state [state] > wfa->wfainfo->p_min_level)
-		     queue_append (queue, &state);
-	       }
-	       else
-	       {
-		  /*
-		   *  Decode a '1' symbol
-		   *  First, the range is expanded to account for the
-		   *  symbol removal.
-		   */
-		  range = (high - low) + 1;
-		  high = low + (u_word_t) ((range * sum1) / sum1 - 1);
-		  low  = low + (u_word_t) ((range * sum0) / sum1);
-		  RESCALE_INPUT_INTERVAL;
-		  /*
-		   *  Update the frequency counts
-		   */
-		  sum1++;
-		  if (sum1 > 50) /* scale the symbol frequencies */
-		  {
-		     sum0 >>= 1;
-		     sum1 >>= 1;
-		     if (!sum0)
-			sum0 = 1;
-		     if (sum0 >= sum1)
-			sum1 = sum0 + 1;
-		  }
-		  append_edge (next, 0, -1, label, wfa);
-		  total++;
-	       }
-	    }
+               count = (((code - low) + 1) * sum1 - 1) / ((high - low) + 1);
+               if (count < sum0)
+               {
+                  /*
+                   *  Decode a '0' symbol
+                   *  First, the range is expanded to account for the
+                   *  symbol removal.
+                   */
+                  range = (high - low) + 1;
+                  high = low + (u_word_t) ((range * sum0) / sum1 - 1 );
+                  RESCALE_INPUT_INTERVAL;
+                  /*
+                   *  Update the frequency counts
+                   */
+                  sum0++;
+                  sum1++;
+                  if (sum1 > 50) /* scale the symbol frequencies */
+                  {
+                     sum0 >>= 1;
+                     sum1 >>= 1;
+                     if (!sum0)
+                        sum0 = 1;
+                     if (sum0 >= sum1)
+                        sum1 = sum0 + 1;
+                  }
+                  if (wfa->level_of_state [state] > wfa->wfainfo->p_min_level)
+                     queue_append (queue, &state);
+               }
+               else
+               {
+                  /*
+                   *  Decode a '1' symbol
+                   *  First, the range is expanded to account for the
+                   *  symbol removal.
+                   */
+                  range = (high - low) + 1;
+                  high = low + (u_word_t) ((range * sum1) / sum1 - 1);
+                  low  = low + (u_word_t) ((range * sum0) / sum1);
+                  RESCALE_INPUT_INTERVAL;
+                  /*
+                   *  Update the frequency counts
+                   */
+                  sum1++;
+                  if (sum1 > 50) /* scale the symbol frequencies */
+                  {
+                     sum0 >>= 1;
+                     sum1 >>= 1;
+                     if (!sum0)
+                        sum0 = 1;
+                     if (sum0 >= sum1)
+                        sum1 = sum0 + 1;
+                  }
+                  append_edge (next, 0, -1, label, wfa);
+                  total++;
+               }
+            }
       }
    }
    free_queue (queue);
@@ -199,21 +199,21 @@ decode_nd_coefficients (unsigned total, wfa_t *wfa, bitfile_t *input)
  *  No return value.
  *
  *  Side effects:
- *	'wfa->weights' is filled with the decoded values.
+ *      'wfa->weights' is filled with the decoded values.
  */
 {
-   unsigned *coefficients;		/* array of factors to encode */
-   unsigned *ptr;			/* pointer to current factor */
+   unsigned *coefficients;              /* array of factors to encode */
+   unsigned *ptr;                       /* pointer to current factor */
 
    /*
     *  Decode array of coefficients stored with arithmetic coding
     */
    {
-      const int	scaling  = 50;		/* scaling factor of prob. model */
+      const int scaling  = 50;          /* scaling factor of prob. model */
       unsigned  c_symbols = 1 << (wfa->wfainfo->dc_rpf->mantissa_bits + 1);
 
       ptr = coefficients = decode_array (input, NULL, &c_symbols, 1,
-					 total, scaling);
+                                         total, scaling);
    }
 
    /*
@@ -223,15 +223,15 @@ decode_nd_coefficients (unsigned total, wfa_t *wfa, bitfile_t *input)
       unsigned state, label;
 
       for (state = wfa->basis_states; state < wfa->states; state++)
-	 for (label = 0; label < MAXLABELS; label++)
-	    if (ischild (wfa->tree [state][label])
-		&& isedge (wfa->into [state][label][0]))
-	    {
-	       wfa->weight [state][label][0] = btor (*ptr++,
-						     wfa->wfainfo->dc_rpf);
-	       wfa->int_weight [state][label][0]
-		  = wfa->weight [state][label][0] * 512 + 0.5;
-	    }
+         for (label = 0; label < MAXLABELS; label++)
+            if (ischild (wfa->tree [state][label])
+                && isedge (wfa->into [state][label][0]))
+            {
+               wfa->weight [state][label][0] = btor (*ptr++,
+                                                     wfa->wfainfo->dc_rpf);
+               wfa->int_weight [state][label][0]
+                  = wfa->weight [state][label][0] * 512 + 0.5;
+            }
    }
    Free (coefficients);
 }

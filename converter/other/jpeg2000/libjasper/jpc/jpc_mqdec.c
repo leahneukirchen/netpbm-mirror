@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -136,10 +136,10 @@
 \******************************************************************************/
 
 #if defined(DEBUG)
-#define	MQDEC_CALL(n, x) \
-	((jas_getdbglevel() >= (n)) ? ((void)(x)) : ((void)0))
+#define MQDEC_CALL(n, x) \
+        ((jas_getdbglevel() >= (n)) ? ((void)(x)) : ((void)0))
 #else
-#define	MQDEC_CALL(n, x)
+#define MQDEC_CALL(n, x)
 #endif
 
 /******************************************************************************\
@@ -155,49 +155,49 @@ static void jpc_mqdec_bytein(jpc_mqdec_t *mqdec);
 /* Create a MQ decoder. */
 jpc_mqdec_t *jpc_mqdec_create(int maxctxs, jas_stream_t *in)
 {
-	jpc_mqdec_t *mqdec;
+        jpc_mqdec_t *mqdec;
 
-	/* There must be at least one context. */
-	assert(maxctxs > 0);
+        /* There must be at least one context. */
+        assert(maxctxs > 0);
 
-	/* Allocate memory for the MQ decoder. */
-	if (!(mqdec = jas_malloc(sizeof(jpc_mqdec_t)))) {
-		goto error;
-	}
-	mqdec->in = in;
-	mqdec->maxctxs = maxctxs;
-	/* Allocate memory for the per-context state information. */
-	if (!(mqdec->ctxs = jas_malloc(mqdec->maxctxs * sizeof(jpc_mqstate_t *)))) {
-		goto error;
-	}
-	/* Set the current context to the first context. */
-	mqdec->curctx = mqdec->ctxs;
+        /* Allocate memory for the MQ decoder. */
+        if (!(mqdec = jas_malloc(sizeof(jpc_mqdec_t)))) {
+                goto error;
+        }
+        mqdec->in = in;
+        mqdec->maxctxs = maxctxs;
+        /* Allocate memory for the per-context state information. */
+        if (!(mqdec->ctxs = jas_malloc(mqdec->maxctxs * sizeof(jpc_mqstate_t *)))) {
+                goto error;
+        }
+        /* Set the current context to the first context. */
+        mqdec->curctx = mqdec->ctxs;
 
-	/* If an input stream has been associated with the MQ decoder,
-	  initialize the decoder state from the stream. */
-	if (mqdec->in) {
-		jpc_mqdec_init(mqdec);
-	}
-	/* Initialize the per-context state information. */
-	jpc_mqdec_setctxs(mqdec, 0, 0);
+        /* If an input stream has been associated with the MQ decoder,
+          initialize the decoder state from the stream. */
+        if (mqdec->in) {
+                jpc_mqdec_init(mqdec);
+        }
+        /* Initialize the per-context state information. */
+        jpc_mqdec_setctxs(mqdec, 0, 0);
 
-	return mqdec;
+        return mqdec;
 
 error:
-	/* Oops...  Something has gone wrong. */
-	if (mqdec) {
-		jpc_mqdec_destroy(mqdec);
-	}
-	return 0;
+        /* Oops...  Something has gone wrong. */
+        if (mqdec) {
+                jpc_mqdec_destroy(mqdec);
+        }
+        return 0;
 }
 
 /* Destroy a MQ decoder. */
 void jpc_mqdec_destroy(jpc_mqdec_t *mqdec)
 {
-	if (mqdec->ctxs) {
-		jas_free(mqdec->ctxs);
-	}
-	jas_free(mqdec);
+        if (mqdec->ctxs) {
+                jas_free(mqdec->ctxs);
+        }
+        jas_free(mqdec);
 }
 
 /******************************************************************************\
@@ -208,59 +208,59 @@ void jpc_mqdec_destroy(jpc_mqdec_t *mqdec)
 
 void jpc_mqdec_init(jpc_mqdec_t *mqdec)
 {
-	int c;
+        int c;
 
-	mqdec->eof = 0;
-	mqdec->creg = 0;
-	/* Get the next byte from the input stream. */
-	if ((c = jas_stream_getc(mqdec->in)) == EOF) {
-		/* We have encountered an I/O error or EOF. */
-		c = 0xff;
-		mqdec->eof = 1;
-	}
-	mqdec->inbuffer = c;
-	mqdec->creg += mqdec->inbuffer << 16;
-	jpc_mqdec_bytein(mqdec);
-	mqdec->creg <<= 7;
-	mqdec->ctreg -= 7;
-	mqdec->areg = 0x8000;
+        mqdec->eof = 0;
+        mqdec->creg = 0;
+        /* Get the next byte from the input stream. */
+        if ((c = jas_stream_getc(mqdec->in)) == EOF) {
+                /* We have encountered an I/O error or EOF. */
+                c = 0xff;
+                mqdec->eof = 1;
+        }
+        mqdec->inbuffer = c;
+        mqdec->creg += mqdec->inbuffer << 16;
+        jpc_mqdec_bytein(mqdec);
+        mqdec->creg <<= 7;
+        mqdec->ctreg -= 7;
+        mqdec->areg = 0x8000;
 }
 
 /* Set the input stream for a MQ decoder. */
 
 void jpc_mqdec_setinput(jpc_mqdec_t *mqdec, jas_stream_t *in)
 {
-	mqdec->in = in;
+        mqdec->in = in;
 }
 
 /* Initialize one or more contexts. */
 
 void jpc_mqdec_setctxs(jpc_mqdec_t *mqdec, int numctxs, jpc_mqctx_t *ctxs)
 {
-	jpc_mqstate_t **ctx;
-	int n;
+        jpc_mqstate_t **ctx;
+        int n;
 
-	ctx = mqdec->ctxs;
-	n = JAS_MIN(mqdec->maxctxs, numctxs);
-	while (--n >= 0) {
-		*ctx = &jpc_mqstates[2 * ctxs->ind + ctxs->mps];
-		++ctx;
-		++ctxs;
-	}
-	n = mqdec->maxctxs - numctxs;
-	while (--n >= 0) {
-		*ctx = &jpc_mqstates[0];
-		++ctx;
-	}
+        ctx = mqdec->ctxs;
+        n = JAS_MIN(mqdec->maxctxs, numctxs);
+        while (--n >= 0) {
+                *ctx = &jpc_mqstates[2 * ctxs->ind + ctxs->mps];
+                ++ctx;
+                ++ctxs;
+        }
+        n = mqdec->maxctxs - numctxs;
+        while (--n >= 0) {
+                *ctx = &jpc_mqstates[0];
+                ++ctx;
+        }
 }
 
 /* Initialize a context. */
 
 void jpc_mqdec_setctx(jpc_mqdec_t *mqdec, int ctxno, jpc_mqctx_t *ctx)
 {
-	jpc_mqstate_t **ctxi;
-	ctxi = &mqdec->ctxs[ctxno];
-	*ctxi = &jpc_mqstates[2 * ctx->ind + ctx->mps];
+        jpc_mqstate_t **ctxi;
+        ctxi = &mqdec->ctxs[ctxno];
+        *ctxi = &jpc_mqstates[2 * ctx->ind + ctx->mps];
 }
 
 /******************************************************************************\
@@ -271,36 +271,36 @@ void jpc_mqdec_setctx(jpc_mqdec_t *mqdec, int ctxno, jpc_mqctx_t *ctx)
 
 int jpc_mqdec_getbit_func(register jpc_mqdec_t *mqdec)
 {
-	int bit;
-	JAS_DBGLOG(100, ("jpc_mqdec_getbit_func(%p)\n", mqdec));
-	MQDEC_CALL(100, jpc_mqdec_dump(mqdec, stderr));
-	bit = jpc_mqdec_getbit_macro(mqdec);
-	MQDEC_CALL(100, jpc_mqdec_dump(mqdec, stderr));
-	JAS_DBGLOG(100, ("ctx = %d, decoded %d\n", mqdec->curctx -
-	  mqdec->ctxs, bit));
-	return bit;
+        int bit;
+        JAS_DBGLOG(100, ("jpc_mqdec_getbit_func(%p)\n", mqdec));
+        MQDEC_CALL(100, jpc_mqdec_dump(mqdec, stderr));
+        bit = jpc_mqdec_getbit_macro(mqdec);
+        MQDEC_CALL(100, jpc_mqdec_dump(mqdec, stderr));
+        JAS_DBGLOG(100, ("ctx = %d, decoded %d\n", mqdec->curctx -
+          mqdec->ctxs, bit));
+        return bit;
 }
 
 /* Apply MPS_EXCHANGE algorithm (with RENORMD). */
 int jpc_mqdec_mpsexchrenormd(register jpc_mqdec_t *mqdec)
 {
-	int ret;
-	register jpc_mqstate_t *state = *mqdec->curctx;
-	jpc_mqdec_mpsexchange(mqdec->areg, state->qeval, mqdec->curctx, ret);
-	jpc_mqdec_renormd(mqdec->areg, mqdec->creg, mqdec->ctreg, mqdec->in,
-	  mqdec->eof, mqdec->inbuffer);
-	return ret;
+        int ret;
+        register jpc_mqstate_t *state = *mqdec->curctx;
+        jpc_mqdec_mpsexchange(mqdec->areg, state->qeval, mqdec->curctx, ret);
+        jpc_mqdec_renormd(mqdec->areg, mqdec->creg, mqdec->ctreg, mqdec->in,
+          mqdec->eof, mqdec->inbuffer);
+        return ret;
 }
 
 /* Apply LPS_EXCHANGE algorithm (with RENORMD). */
 int jpc_mqdec_lpsexchrenormd(register jpc_mqdec_t *mqdec)
 {
-	int ret;
-	register jpc_mqstate_t *state = *mqdec->curctx;
-	jpc_mqdec_lpsexchange(mqdec->areg, state->qeval, mqdec->curctx, ret);
-	jpc_mqdec_renormd(mqdec->areg, mqdec->creg, mqdec->ctreg, mqdec->in,
-	  mqdec->eof, mqdec->inbuffer);
-	return ret;
+        int ret;
+        register jpc_mqstate_t *state = *mqdec->curctx;
+        jpc_mqdec_lpsexchange(mqdec->areg, state->qeval, mqdec->curctx, ret);
+        jpc_mqdec_renormd(mqdec->areg, mqdec->creg, mqdec->ctreg, mqdec->in,
+          mqdec->eof, mqdec->inbuffer);
+        return ret;
 }
 
 /******************************************************************************\
@@ -310,30 +310,30 @@ int jpc_mqdec_lpsexchrenormd(register jpc_mqdec_t *mqdec)
 /* Apply the BYTEIN algorithm. */
 static void jpc_mqdec_bytein(jpc_mqdec_t *mqdec)
 {
-	int c;
-	unsigned char prevbuf;
+        int c;
+        unsigned char prevbuf;
 
-	if (!mqdec->eof) {
-		if ((c = jas_stream_getc(mqdec->in)) == EOF) {
-			mqdec->eof = 1;
-			c = 0xff;
-		}
-		prevbuf = mqdec->inbuffer;
-		mqdec->inbuffer = c;
-		if (prevbuf == 0xff) {
-			if (c > 0x8f) {
-				mqdec->creg += 0xff00;
-				mqdec->ctreg = 8;
-			} else {
-				mqdec->creg += c << 9;
-				mqdec->ctreg = 7;
-			}
-		} else {
-			mqdec->creg += c << 8;
-			mqdec->ctreg = 8;
-		}
-	} else {
-		mqdec->creg += 0xff00;
-		mqdec->ctreg = 8;
-	}
+        if (!mqdec->eof) {
+                if ((c = jas_stream_getc(mqdec->in)) == EOF) {
+                        mqdec->eof = 1;
+                        c = 0xff;
+                }
+                prevbuf = mqdec->inbuffer;
+                mqdec->inbuffer = c;
+                if (prevbuf == 0xff) {
+                        if (c > 0x8f) {
+                                mqdec->creg += 0xff00;
+                                mqdec->ctreg = 8;
+                        } else {
+                                mqdec->creg += c << 9;
+                                mqdec->ctreg = 7;
+                        }
+                } else {
+                        mqdec->creg += c << 8;
+                        mqdec->ctreg = 8;
+                }
+        } else {
+                mqdec->creg += 0xff00;
+                mqdec->ctreg = 8;
+        }
 }
