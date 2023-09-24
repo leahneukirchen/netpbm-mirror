@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.09.24 BJH  Release 11.03.06
+
+              pbmtoxbm: Fix spurious output with really wide rows.
+
 23.09.06 BJH  Release 11.03.05
 
               pamtosvg: fix hang.
