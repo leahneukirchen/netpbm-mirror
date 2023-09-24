@@ -32,6 +32,7 @@
  *    now checks if it contains only a single color
  */
 #include <stdbool.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -357,20 +358,20 @@ pcxUnpackPixels(unsigned char * const pixels,
 
 static void
 pcxPlanesToPixels(unsigned char * const pixels,
-                  unsigned char * const bitplanes,
-                  unsigned int    const bytesperline,
+                  unsigned char * const bitPlanes,
+                  unsigned int    const bytesPerLine,
                   unsigned int    const planes,
-                  unsigned int    const bitsperpixel) {
+                  unsigned int    const bitsPerPixel) {
 /*----------------------------------------------------------------------------
    Convert multi-plane format into 1 pixel per byte.
 -----------------------------------------------------------------------------*/
-    unsigned int const npixels = (bytesperline * 8) / bitsperpixel;
+    unsigned int const npixels = (bytesPerLine * 8) / bitsPerPixel;
 
     unsigned int  i;
 
     if (planes > 4)
         pm_error("can't handle more than 4 planes");
-    if (bitsperpixel != 1)
+    if (bitsPerPixel != 1)
         pm_error("can't handle more than 1 bit per pixel");
 
     /* Clear the pixel buffer - initial value */
@@ -382,8 +383,8 @@ pcxPlanesToPixels(unsigned char * const pixels,
 
         unsigned int j;
 
-        for (j = 0; j < bytesperline; ++j) {
-            unsigned int const bits = bitplanes[j];
+        for (j = 0; j < bytesPerLine; ++j) {
+            unsigned int const bits = bitPlanes[j];
 
             unsigned int mask;
             unsigned int k;
@@ -397,32 +398,45 @@ pcxPlanesToPixels(unsigned char * const pixels,
 
 
 
-static void
-pcx16ColToPpm(FILE *       const ifP,
-              unsigned int const headerCols,
-              unsigned int const rows,
-              unsigned int const BytesPerLine,
-              unsigned int const BitsPerPixel,
-              unsigned int const Planes,
-              pixel *      const cmap) {
+static bool
+paletteIsOk(const pixel * const cmap,
+            unsigned int  const colorCt) {
 
-    unsigned int const colors = (1 << BitsPerPixel) * (1 << Planes);
-
-    unsigned int cols;
-    int row, col, rawcols;
-    unsigned char * pcxrow;
-    unsigned char * rawrow;
-    pixel * ppmrow;
     bool paletteOk;
+    unsigned int col;
 
     paletteOk = false;  /* initial assumption */
 
     /* check if palette is ok  */
-    for (col = 0; col < colors - 1; ++col) {
+    for (col = 0; col < colorCt - 1; ++col) {
         if (!PPM_EQUAL(cmap[col], cmap[col+1])) {
             paletteOk = true;
         }
     }
+    return paletteOk;
+}
+
+
+
+static void
+pcx16ColToPpm(FILE *       const ifP,
+              unsigned int const headerCols,
+              unsigned int const rows,
+              unsigned int const bytesPerLine,
+              unsigned int const bitsPerPixel,
+              unsigned int const planes,
+              pixel *      const cmap) {
+
+    unsigned int const colors = (1 << bitsPerPixel) * (1 << planes);
+    bool const paletteOk = paletteIsOk(cmap, colors);
+
+    unsigned int cols;
+    unsigned int row;
+    unsigned int rawcols;
+    unsigned char * pcxrow;
+    unsigned char * rawrow;
+    pixel * ppmrow;
+
     if (!paletteOk) {
         unsigned int col;
 
@@ -433,21 +447,25 @@ pcx16ColToPpm(FILE *       const ifP,
             PPM_ASSIGN(cmap[col], StdRed[col], StdGreen[col], StdBlue[col]);
     }
 
-    /*  BytesPerLine should be >= BitsPerPixel * cols / 8  */
-    rawcols = BytesPerLine * 8 / BitsPerPixel;
+    if (bytesPerLine > UINT_MAX/8)
+        pm_error("Image too wide to compute (%u bytes per line)",
+                 bytesPerLine);
+
+    /*  bytesPerLine should be >= bBitsPerPixel * cols / 8  */
+    rawcols = bytesPerLine * 8 / bitsPerPixel;
 
     if (headerCols > rawcols) {
-        pm_message("warning - BytesPerLine = %d, "
-                   "truncating image to %d pixels",
-                   BytesPerLine, rawcols);
+        pm_message("warning - BytesPerLine = %u, "
+                   "truncating image to %u pixels",
+                   bytesPerLine, rawcols);
         cols = rawcols;
     } else
         cols = headerCols;
 
-    MALLOCARRAY(pcxrow, Planes * BytesPerLine);
+    MALLOCARRAY(pcxrow, planes * bytesPerLine);
     if (pcxrow == NULL)
-        pm_error("Can't get memor for %u planes, %u bytes per line",
-                 Planes, BytesPerLine);
+        pm_error("Can't get memory for %u planes, %u bytes per line",
+                 planes, bytesPerLine);
     MALLOCARRAY(rawrow, rawcols);
     if (rawrow == NULL)
         pm_error("Can't get memory for %u columns", rawcols);
@@ -457,14 +475,14 @@ pcx16ColToPpm(FILE *       const ifP,
     for (row = 0; row < rows; ++row) {
         unsigned int col;
 
-        getPCXRow(ifP, pcxrow, Planes * BytesPerLine);
+        getPCXRow(ifP, pcxrow, planes * bytesPerLine);
 
-        if (Planes == 1)
-            pcxUnpackPixels(rawrow, pcxrow, BytesPerLine,
-                            Planes, BitsPerPixel);
+        if (planes == 1)
+            pcxUnpackPixels(rawrow, pcxrow, bytesPerLine,
+                            planes, bitsPerPixel);
         else
-            pcxPlanesToPixels(rawrow, pcxrow, BytesPerLine,
-                                 Planes, BitsPerPixel);
+            pcxPlanesToPixels(rawrow, pcxrow, bytesPerLine,
+                              planes, bitsPerPixel);
 
         for (col = 0; col < cols; ++col)
             ppmrow[col] = cmap[rawrow[col]];
@@ -482,7 +500,7 @@ static void
 pcx256ColToPpm(FILE *       const ifP,
                unsigned int const headerCols,
                unsigned int const rows,
-               unsigned int const BytesPerLine) {
+               unsigned int const bytesPerLine) {
 
     unsigned int cols;
     pixel colormap[256];
@@ -491,18 +509,18 @@ pcx256ColToPpm(FILE *       const ifP,
     unsigned char colormapSignature;
     unsigned int row;
 
-    if (headerCols > BytesPerLine) {
+    if (headerCols > bytesPerLine) {
         pm_message("warning - BytesPerLine = %u, "
                    "truncating image to %u pixels",
-                   BytesPerLine,  BytesPerLine);
-        cols = BytesPerLine;
+                   bytesPerLine,  bytesPerLine);
+        cols = bytesPerLine;
     } else
         cols = headerCols;
 
-    MALLOCARRAY2(image, rows, BytesPerLine);
+    MALLOCARRAY2(image, rows, bytesPerLine);
 
     for (row = 0; row < rows; ++row)
-        getPCXRow(ifP, image[row], BytesPerLine);
+        getPCXRow(ifP, image[row], bytesPerLine);
 
     /*
      * 256 color images have their color map at the end of the file
@@ -544,36 +562,36 @@ static void
 pcxTruecolToPpm(FILE *       const ifP,
                 unsigned int const headerCols,
                 unsigned int const rows,
-                unsigned int const BytesPerLine,
-                unsigned int const Planes) {
+                unsigned int const bytesPerLine,
+                unsigned int const planes) {
 
-    unsigned int cols;
+    unsigned int    cols;
     unsigned char * redrow;
     unsigned char * grnrow;
     unsigned char * blurow;
     unsigned char * intensityrow;
-    pixel * ppmrow;
-    unsigned int row;
+    pixel *         ppmrow;
+    unsigned int    row;
 
-    if (headerCols > BytesPerLine) {
+    if (headerCols > bytesPerLine) {
         pm_message("warning - BytesPerLine = %u, "
                    "truncating image to %u pixels",
-                   BytesPerLine,  BytesPerLine);
-        cols = BytesPerLine;
+                   bytesPerLine, bytesPerLine);
+        cols = bytesPerLine;
     } else
         cols = headerCols;
 
-    MALLOCARRAY(redrow, BytesPerLine);
-    MALLOCARRAY(grnrow, BytesPerLine);
-    MALLOCARRAY(blurow, BytesPerLine);
+    MALLOCARRAY(redrow, bytesPerLine);
+    MALLOCARRAY(grnrow, bytesPerLine);
+    MALLOCARRAY(blurow, bytesPerLine);
 
     if (redrow == NULL || grnrow == NULL || blurow == NULL)
-        pm_error("out of memory");
+        pm_error("Can't get memory for %u-byte row buffer", bytesPerLine);
 
-    if (Planes == 4) {
-        MALLOCARRAY(intensityrow, BytesPerLine);
+    if (planes == 4) {
+        MALLOCARRAY(intensityrow, bytesPerLine);
         if (intensityrow == NULL)
-            pm_error("out of memory");
+            pm_error("Can't get memory for %u-byte row buffer", bytesPerLine);
     } else
         intensityrow = NULL;
 
@@ -581,11 +599,11 @@ pcxTruecolToPpm(FILE *       const ifP,
     for (row = 0; row < rows; ++row) {
         unsigned int col;
 
-        getPCXRow(ifP, redrow, BytesPerLine);
-        getPCXRow(ifP, grnrow, BytesPerLine);
-        getPCXRow(ifP, blurow, BytesPerLine);
+        getPCXRow(ifP, redrow, bytesPerLine);
+        getPCXRow(ifP, grnrow, bytesPerLine);
+        getPCXRow(ifP, blurow, bytesPerLine);
         if (intensityrow)
-            getPCXRow(ifP, intensityrow, BytesPerLine);
+            getPCXRow(ifP, intensityrow, bytesPerLine);
 
         for (col = 0; col < cols; ++col) {
             unsigned int const r = redrow[col];
