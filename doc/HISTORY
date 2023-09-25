@@ -66,11 +66,13 @@ not yet  BJH  Release 11.04.00
 
               pbmtoxbm: Fix spurious output with really wide rows.
 
-              tifftopnm: Fix incorrect output with really wide/deep rows.
+              tifftopnm: Fix incorrect output with insanely wide/deep rows.
 
-              thinkjettopbm: Fix incorrect output with really wide rows
+              thinkjettopbm: Fix incorrect output with insanely wide rows.
 
-              ybmtopbm: Fix incorrect output with really wide rows
+              ybmtopbm: Fix incorrect output with insanely wide rows.
+
+              pjtoppm: Fix incorrect output with insanely large number of rows.
 
               library: add check of maxval for computable size.
 

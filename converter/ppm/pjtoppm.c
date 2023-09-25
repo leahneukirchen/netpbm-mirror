@@ -46,6 +46,56 @@ egetc(FILE * const ifP) {
 
 
 static void
+modifyImageMode1(unsigned int     const rows,
+                 unsigned int     const planes,
+                 const int *      const imlen,
+                 unsigned char ** const image,
+                 unsigned int *   const colsP) {
+
+    unsigned int const newcols = 10240;
+    /* It could not be larger than that! */
+
+    unsigned int cols;
+    unsigned int row;
+
+    for (row = 0, cols = 0; row < rows; ++row) {
+        unsigned int plane;
+        if (image[row * planes]) {
+            for (plane = 0; plane < planes; ++plane) {
+                unsigned int i;
+                unsigned int col;
+                unsigned char * buf;
+
+                MALLOCARRAY(buf, newcols);
+                if (buf == NULL)
+                    pm_error("out of memory");
+                for (i = 0, col = 0;
+                     col < imlen[row * planes + plane];
+                     col += 2) {
+                    int cmd, val;
+                    for (cmd = image[row * planes + plane][col],
+                             val = image[plane + row * planes][col+1];
+                         cmd >= 0 && i < newcols; --cmd, ++i)
+                        buf[i] = val;
+                }
+                cols = MAX(cols, i);
+                free(image[row * planes + plane]);
+
+                /*
+                 * This is less than what we have so it realloc should
+                 * not return null. Even if it does, tough! We will
+                 * lose a line, and probably die on the next line anyway
+                 */
+                image[row * planes + plane] = realloc(buf, i);
+            }
+        }
+    }
+    *colsP = cols * 8;
+}
+
+
+
+static void
 writePpm(FILE *           const ofP,
          unsigned int     const cols,
          unsigned int     const rows,
@@ -57,17 +107,15 @@ writePpm(FILE *           const ofP,
     pixel * pixrow;
     unsigned int row;
 
-    ppm_writeppminit(stdout, cols, rows, (pixval) 255, 0);
+    ppm_writeppminit(stdout, cols, rows, 255, 0);
     pixrow = ppm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        if (image[row * planes] == NULL) {
+        if (image[row * planes + 0] == NULL) {
             unsigned int col;
             for (col = 0; col < cols; ++col)
                 PPM_ASSIGN(pixrow[col], 0, 0, 0);
-            continue;
-        }
-        {
+        } else {
             unsigned int col;
             unsigned int cmd;
             for (cmd = 0, col = 0; col < cols; col += 8, ++cmd) {
@@ -88,8 +136,8 @@ writePpm(FILE *           const ofP,
                     PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
                 }
             }
+            ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
         }
-        ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
     }
 }
 
@@ -100,19 +148,19 @@ main(int argc, const char ** argv) {
 
     int cmd, val;
     char buffer[BUFSIZ];
-    int planes = 3;
+    unsigned int planes;
     unsigned int rows;
     unsigned int rowsX;
     unsigned int cols;
     bool colsIsSet;
-    unsigned char **image = NULL;
-    int *imlen;
+    unsigned char ** image;  /* malloc'ed */
+    int * imlen;  /* malloc'ed */
     FILE * ifP;
     int mode;
     bool modeIsSet;
     int c;
-    int plane;
-    int row;
+    unsigned int plane;
+    unsigned int row;
 
     pm_proginit(&argc, argv);
 
@@ -130,6 +178,8 @@ main(int argc, const char ** argv) {
     modeIsSet = false;  /* initial value */
     colsIsSet = false;  /* initial value */
     rowsX = 0;  /* initial value */
+    image = NULL;  /* initial value */
+    planes = 3;  /* initial value */
 
     while ((c = fgetc(ifP)) != -1) {
         if (c != '\033')
@@ -216,13 +266,8 @@ main(int argc, const char ** argv) {
                     if (row >= rowsX || image == NULL) {
                         if (row >= rowsX)
                             rowsX += 100;
-                        if (image == NULL) {
-                            MALLOCARRAY(image, uintProduct(rowsX, planes));
-                            MALLOCARRAY(imlen, uintProduct(rowsX, planes));
-                        } else {
-                            REALLOCARRAY(image, uintProduct(rowsX, planes));
-                            REALLOCARRAY(imlen, uintProduct(rowsX, planes));
-                        }
+                        REALLOCARRAY(image, uintProduct(rowsX, planes));
+                        REALLOCARRAY(imlen, uintProduct(rowsX, planes));
                     }
                     if (image == NULL || imlen == NULL)
                         pm_error("out of memory");
@@ -242,6 +287,9 @@ main(int argc, const char ** argv) {
                         ++plane;
                     else {
                         plane = 0;
+                        if (row > UINT_MAX/planes-100)
+                            pm_error("Too many rows (more than %u) "
+                                     "for computation", row);
                         ++row;
                     }
                     break;
@@ -287,41 +335,10 @@ main(int argc, const char ** argv) {
         pm_error("Input does not contain a 'bM' transmission mode order");
 
     rows = row;
+
     if (mode == 1) {
-        unsigned int const newcols = 10240;
-            /* It could not be larger than that! */
+        modifyImageMode1(rows, planes, imlen, image, &cols);
 
-        unsigned char * buf;
-        unsigned int row;
-
-        for (row = 0, cols = 0; row < rows; ++row) {
-            unsigned int plane;
-            if (image[row * planes] == NULL)
-                continue;
-            for (plane = 0; plane < planes; ++plane) {
-                unsigned int i;
-                unsigned int col;
-                MALLOCARRAY(buf, newcols);
-                if (buf == NULL)
-                    pm_error("out of memory");
-                for (i = 0, col = 0;
-                     col < imlen[plane + row * planes];
-                     col += 2)
-                    for (cmd = image[plane + row * planes][col],
-                             val = image[plane + row * planes][col+1];
-                         cmd >= 0 && i < newcols; cmd--, i++)
-                        buf[i] = val;
-                cols = MAX(cols, i);
-                free(image[plane + row * planes]);
-                /*
-                 * This is less than what we have so it realloc should
-                 * not return null. Even if it does, tough! We will
-                 * lose a line, and probably die on the next line anyway
-                 */
-                image[plane + row * planes] = realloc(buf, i);
-            }
-        }
-        cols *= 8;
     }
 
     writePpm(stdout, cols, rows, planes, image, mode, imlen);
