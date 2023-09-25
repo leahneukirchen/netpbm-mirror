@@ -1,4 +1,4 @@
-/* pjtoppm.c - convert an HP PainJetXL image to a portable pixmap file
+/* pjtoppm.c - convert an HP PainJetXL image to a PPM
 **
 ** Copyright (C) 1990 by Christos Zoulas (christos@ee.cornell.edu)
 **
@@ -11,12 +11,11 @@
 */
 
 #include <stdbool.h>
+#include <assert.h>
 
 #include "ppm.h"
 #include "pm_c_util.h"
 #include "mallocvar.h"
-
-static char usage[] =  "[paintjetfile]";
 
 
 
@@ -46,6 +45,56 @@ egetc(FILE * const ifP) {
 
 
 
+static void
+writePpm(FILE *           const ofP,
+         unsigned int     const cols,
+         unsigned int     const rows,
+         unsigned int     const planes,
+         unsigned char ** const image,
+         int              const mode,
+         const int *      const imlen) {
+
+    pixel * pixrow;
+    unsigned int row;
+
+    ppm_writeppminit(stdout, cols, rows, (pixval) 255, 0);
+    pixrow = ppm_allocrow(cols);
+
+    for (row = 0; row < rows; ++row) {
+        if (image[row * planes] == NULL) {
+            unsigned int col;
+            for (col = 0; col < cols; ++col)
+                PPM_ASSIGN(pixrow[col], 0, 0, 0);
+            continue;
+        }
+        {
+            unsigned int col;
+            unsigned int cmd;
+            for (cmd = 0, col = 0; col < cols; col += 8, ++cmd) {
+                unsigned int i;
+                for (i = 0; i < 8 && col + i < cols; ++i) {
+                    unsigned int plane;
+                    unsigned char bf[3];
+
+                    assert(planes == 3);
+
+                    for (plane = 0; plane < planes; ++plane) {
+                        if (mode == 0 && cmd >= imlen[row * planes + plane])
+                            bf[plane] = 0;
+                        else
+                            bf[plane] = (image[row * planes + plane][cmd] &
+                                     (1 << (7 - i))) ? 255 : 0;
+                    }
+                    PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
+                }
+            }
+        }
+        ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
+    }
+}
+
+
+
 int
 main(int argc, const char ** argv) {
 
@@ -61,23 +110,20 @@ main(int argc, const char ** argv) {
     FILE * ifP;
     int mode;
     bool modeIsSet;
-    int argn;
-    unsigned char bf[3];
-    pixel * pixrow;
     int c;
-    int row;
     int plane;
+    int row;
 
     pm_proginit(&argc, argv);
 
-    argn = 1;
-    if (argn != argc)
-        ifP = pm_openr(argv[argn++]);
+    if (argc-1 > 0)
+        ifP = pm_openr(argv[1]);
     else
         ifP = stdin;
 
-    if (argn != argc)
-        pm_usage(usage);
+    if (argc-1 > 2)
+        pm_error("Too many arguments (%u).  Only possible argument is "
+                 "input file name", argc-1);
 
     row = 0;  /* initial value */
     plane = 0;  /* initial value */
@@ -278,35 +324,8 @@ main(int argc, const char ** argv) {
         cols *= 8;
     }
 
-    ppm_writeppminit(stdout, cols, rows, (pixval) 255, 0);
-    pixrow = ppm_allocrow(cols);
+    writePpm(stdout, cols, rows, planes, image, mode, imlen);
 
-    for (row = 0; row < rows; ++row) {
-        if (image[row * planes] == NULL) {
-            unsigned int col;
-            for (col = 0; col < cols; ++col)
-                PPM_ASSIGN(pixrow[col], 0, 0, 0);
-            continue;
-        }
-        {
-            unsigned int col;
-            unsigned int cmd;
-            for (cmd = 0, col = 0; col < cols; col += 8, ++cmd) {
-                unsigned int i;
-                for (i = 0; i < 8 && col + i < cols; ++i) {
-                    unsigned int plane;
-                    for (plane = 0; plane < planes; ++plane)
-                        if (mode == 0 && cmd >= imlen[row * planes + plane])
-                            bf[plane] = 0;
-                        else
-                            bf[plane] = (image[row * planes + plane][cmd] &
-                                     (1 << (7 - i))) ? 255 : 0;
-                    PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
-                }
-            }
-        }
-        ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
-    }
     pm_close(stdout);
 
     return 0;
