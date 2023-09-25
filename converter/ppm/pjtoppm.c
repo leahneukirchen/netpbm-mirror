@@ -90,7 +90,7 @@ modifyImageMode1(unsigned int     const rows,
             }
         }
     }
-    *colsP = cols * 8;
+    *colsP = cols * 8;  assert(cols < UINT_MAX/8);
 }
 
 
