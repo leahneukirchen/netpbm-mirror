@@ -1,8 +1,8 @@
 /*===========================================================================*
- * dct.h								     *
- *									     *
- *	DCT procedures							     *
- *									     *
+ * dct.h                                                                     *
+ *                                                                           *
+ *      DCT procedures                                                       *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -43,7 +43,7 @@ typedef DCTELEM DCTBLOCK[DCTSIZE2];
 typedef DCTELEM DCTBLOCK_2D[DCTSIZE][DCTSIZE];
 
 
-/*  
+/*
  *  from mfwddct.c:
  */
 void init_fdct (void);

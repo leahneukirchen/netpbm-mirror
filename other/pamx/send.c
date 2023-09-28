@@ -1,10 +1,10 @@
 /*
- 
+
   Send an Image to an X pixmap
 
 
   By Jim Frost 1989.10.02, Bryan Henderson 2006.03.25.
- 
+
   Copyright 1989, 1990, 1991 Jim Frost.
   See COPYRIGHT file for copyright information.
 */
@@ -59,7 +59,7 @@ ximageToPixmap(Display *    const disp,
 
     XErrorHandler old_handler;
     Pixmap        pixmap;
-  
+
     GotError = FALSE;
     old_handler = XSetErrorHandler(pixmapErrorTrap);
     XSync(disp, False);
@@ -114,7 +114,7 @@ bitsPerPixelAtDepth(Display *    const disp,
   fprintf(stderr, "bitsPerPixelAtDepth: Can't find pixmap depth info!\n");
   exit(1);
 }
-     
+
 
 
 static void
@@ -130,7 +130,7 @@ findColors(const Image *   const imageP,
 
     for (color = 0; color < 32768; ++color)
         pixelCt[color] = 0;  /* initial value */
-  
+
     for (y = 0, pixel = imageP->data; y < imageP->height; ++y) {
         unsigned int x;
         for (x = 0; x < imageP->width; ++x) {
@@ -184,7 +184,7 @@ pseudoColorImageFromItrue(Image *      const imageP,
 
             /* Put the color in the color map */
             newImageP->rgb.red[colorCt] = red<<11;
-            newImageP->rgb.grn[colorCt] = grn<<11; 
+            newImageP->rgb.grn[colorCt] = grn<<11;
             newImageP->rgb.blu[colorCt] = blu<<11;
 
             /* Reverse-index it */
@@ -192,9 +192,9 @@ pseudoColorImageFromItrue(Image *      const imageP,
 
             ++colorCt;
         }
-    }    
+    }
     newImageP->rgb.used = colorCt;
-    
+
     for (y = 0, pixel  = imageP->data, dpixel = newImageP->data;
          y < imageP->height;
          ++y) {
@@ -241,7 +241,7 @@ makeUsableVisual(Image *      const origImageP,
                      visualP->class);
         }
         break;
-        
+
     case IRGB:
         switch(visualP->class) {
         case TrueColor:
@@ -253,13 +253,13 @@ makeUsableVisual(Image *      const origImageP,
             pm_error("INTERNAL ERROR: impossible visual class %u",
                      visualP->class);
         }
-        
+
     case IBITMAP:
         /* no processing ever needs to be done for bitmaps */
         *newImagePP = origImageP;
         break;
     }
-}    
+}
 
 
 
@@ -271,7 +271,7 @@ makeColorMap1(Display *  const disp,
               Pixel **   const redvalueP,
               Pixel **   const grnvalueP,
               Pixel **   const bluvalueP) {
-    
+
     Pixel * redvalue;
     Pixel * grnvalue;
     Pixel * bluvalue;
@@ -281,22 +281,22 @@ makeColorMap1(Display *  const disp,
     unsigned int redbottom, grnbottom, blubottom;
     unsigned int redtop, grntop, blutop;
     unsigned int a;
-            
+
     MALLOCARRAY_NOFAIL(redvalue, 256);
     MALLOCARRAY_NOFAIL(grnvalue, 256);
     MALLOCARRAY_NOFAIL(bluvalue, 256);
-            
+
     if (visualP == DefaultVisual(disp, scrn))
         *cmapP = DefaultColormap(disp, scrn);
     else
         *cmapP = XCreateColormap(disp, RootWindow(disp, scrn),
                                  visualP, AllocNone);
-            
+
  retry_direct: /* tag we hit if a DirectColor allocation fails on
                 * default colormap */
-            
+
     /* calculate number of distinct colors in each band */
-            
+
     redcolors = grncolors = blucolors = 1;
     for (pixval = 1; pixval; pixval <<= 1) {
         if (pixval & visualP->red_mask)
@@ -306,16 +306,16 @@ makeColorMap1(Display *  const disp,
         if (pixval & visualP->blue_mask)
             blucolors <<= 1;
     }
-            
+
     /* sanity check */
-            
+
     if ((redcolors > visualP->map_entries) ||
         (grncolors > visualP->map_entries) ||
         (blucolors > visualP->map_entries)) {
         pm_message("Warning: inconsistency in color information "
                    "(this may be ugly)");
     }
-            
+
     redstep= 256 / redcolors;
     grnstep= 256 / grncolors;
     blustep= 256 / blucolors;
@@ -329,7 +329,7 @@ makeColorMap1(Display *  const disp,
             grntop = grnbottom + grnstep;
         if (blubottom < 256)
             blutop = blubottom + blustep;
-                
+
         xcolor.flags = DoRed | DoGreen | DoBlue;
         xcolor.red   = (redtop - 1) << 8;
         xcolor.green = (grntop - 1) << 8;
@@ -347,15 +347,15 @@ makeColorMap1(Display *  const disp,
                                          visualP, AllocNone);
                 goto retry_direct;
             }
-                    
+
             /* something completely unexpected happened */
-                    
+
             pm_error("INTERNAL ERROR: XAllocColor failed on a "
                      "TrueColor/Directcolor visual");
         }
-                
+
         /* fill in pixel values for each band at this intensity */
-                
+
         while ((redbottom < 256) && (redbottom < redtop))
             redvalue[redbottom++] = xcolor.pixel & visualP->red_mask;
         while ((grnbottom < 256) && (grnbottom < grntop))
@@ -369,7 +369,7 @@ makeColorMap1(Display *  const disp,
 }
 
 
- 
+
 static void
 allocColorCells(Display *      const disp,
                 Colormap       const cmap,
@@ -379,7 +379,7 @@ allocColorCells(Display *      const disp,
 
     bool outOfCells;
     unsigned int cellCount;
-    
+
     outOfCells = false;  /* initial value */
     cellCount = 0;       /* initial value */
     while (cellCount < colorCount && !outOfCells) {
@@ -392,7 +392,7 @@ allocColorCells(Display *      const disp,
     *cellCountP = cellCount;
 }
 
-    
+
 
 
 static void
@@ -412,9 +412,9 @@ makeColorMap2(Display *  const disp,
     Pixel * colorIndex;
 
     MALLOCARRAY_NOFAIL(colorIndex, rgb.used);
-        
+
     /* 'privateCmap' is invalid if not a dynamic visual */
-        
+
     switch (visualP->class) {
     case StaticColor:
     case StaticGray:
@@ -422,9 +422,9 @@ makeColorMap2(Display *  const disp,
     default:
         privateCmap = userWantsPrivateCmap;
     }
-        
+
     /* get the colormap to use. */
-        
+
     if (privateCmap) { /* user asked us to use a private cmap */
         newmap = TRUE;
         fit = FALSE;
@@ -433,7 +433,7 @@ makeColorMap2(Display *  const disp,
                (visualP->class == StaticColor) ||
                (visualP->class == TrueColor) ||
                (visualP->class == DirectColor)) {
-            
+
         unsigned int a;
 
         fit = userWantsFit;
@@ -442,16 +442,16 @@ makeColorMap2(Display *  const disp,
            shareable.  otherwise we're using a static visual and
            should treat it accordingly.
         */
-            
+
         if (visualP == DefaultVisual(disp, scrn))
             *cmapP = DefaultColormap(disp, scrn);
         else
             *cmapP = XCreateColormap(disp, RootWindow(disp, scrn),
                                      visualP, AllocNone);
         newmap = FALSE;
-            
+
         /* allocate colors shareable (if we can) */
-            
+
         for (a = 0; a < rgb.used; ++a) {
             Status rc;
             XColor  xcolor;
@@ -484,7 +484,7 @@ makeColorMap2(Display *  const disp,
         newmap = TRUE;
         fit    = FALSE;
     }
-        
+
     if (newmap) {
         /* Either create a new colormap or fit the image into the
            one we have.  To create a new one, we create a private
@@ -497,10 +497,10 @@ makeColorMap2(Display *  const disp,
            4. reduce the depth of the image to fit.
            5. allocate the colors again shareable.
            6. ungrab the server and continue on our way.
-               
+
            Someone should shoot the people who designed X color allocation.
         */
-            
+
         unsigned int a;
 
         if (fit) {
@@ -510,13 +510,13 @@ makeColorMap2(Display *  const disp,
         } else {
             if (verbose)
                 pm_message("Using private colormap");
-                
+
             /* create new colormap */
-                
+
             *cmapP = XCreateColormap(disp, RootWindow(disp, scrn),
                                      visualP, AllocNone);
         }
-            
+
         allocColorCells(disp, *cmapP, colorIndex, rgb.used, &a);
 
         if (fit) {
@@ -525,10 +525,10 @@ makeColorMap2(Display *  const disp,
             if (a <= 2)
                 pm_error("Cannot fit into default colormap");
         }
-            
+
         if (a == 0)
             pm_error("Color allocation failed!");
-            
+
         if (fit) {
             unsigned int a;
             for (a = 0; a < rgb.used; ++a) {
@@ -537,7 +537,7 @@ makeColorMap2(Display *  const disp,
                 xcolor.red   = rgb.red[a];
                 xcolor.green = rgb.grn[a];
                 xcolor.blue  = rgb.blu[a];
-                
+
                 if (!XAllocColor(disp, *cmapP, &xcolor))
                     pm_error("XAllocColor failed while fitting colormap!");
                 colorIndex[a] = xcolor.pixel;
@@ -574,7 +574,7 @@ doColorAllocation(XImageInfo * const ximageinfoP,
                   Pixel **     const redvalP,
                   Pixel **     const grnvalP,
                   Pixel **     const bluvalP) {
-    
+
     if ((visualP->class == TrueColor || visualP->class == DirectColor) &&
         !BITMAPP(imageP)) {
         makeColorMap1(disp, scrn, visualP, &ximageinfoP->cmap,
@@ -584,11 +584,11 @@ doColorAllocation(XImageInfo * const ximageinfoP,
         makeColorMap2(disp, scrn, visualP, imageP->rgb,
                       userWantsPrivateCmap, userWantsFit, verbose,
                       &ximageinfoP->cmap, colorIndexP);
-        
+
         *redvalP = *grnvalP = *bluvalP = NULL;
     }
 }
-    
+
 
 
 
@@ -637,19 +637,19 @@ makeXImage(XImageInfo * const ximageinfoP,
     case IRGB:
     case ITRUE: {
         /* Modify image data to match visual and colormap */
-        
+
         unsigned int const dbits = bitsPerPixelAtDepth(disp, scrn, ddepth);
         unsigned int const dpixlen = (dbits + 7) / 8;
 
         ximageinfoP->depth = ddepth;
-        
+
         switch (visualP->class) {
         case DirectColor:
         case TrueColor: {
             unsigned char * data;
             unsigned char * destptr;
             unsigned char * srcptr;
-        
+
             ximageinfoP->ximageP =
                 XCreateImage(disp, visualP, ddepth, ZPixmap, 0,
                              NULL, imageP->width, imageP->height, 8, 0);
@@ -702,7 +702,7 @@ makeXImage(XImageInfo * const ximageinfoP,
         } break;
 
         default: {
-            
+
             /* only IRGB images make it this far. */
 
             /* If our XImage doesn't have modulus 8 bits per pixel,
@@ -734,7 +734,7 @@ makeXImage(XImageInfo * const ximageinfoP,
                 ximageinfoP->ximageP->byte_order = MSBFirst;
                 for (a= 0; a < dbits; ++a) {
                     Pixel const pixmask = 1 << a;
-                    unsigned char * const destdata = 
+                    unsigned char * const destdata =
                         data + ((ddepth - a - 1) * imageP->height * linelen);
 
                     unsigned int y;
@@ -792,7 +792,7 @@ makeXImage(XImageInfo * const ximageinfoP,
                 }
             }
         } break;
-        }   
+        }
     } break;
     }
     if (verbose)
@@ -819,7 +819,7 @@ imageToXImage(Display *    const disp,
     Pixel * bluvalue;
 
     assertGoodImage(origImageP);
-  
+
     MALLOCVAR_NOFAIL(ximageinfoP);
     ximageinfoP->disp = disp;
     ximageinfoP->scrn = scrn;
@@ -828,7 +828,7 @@ imageToXImage(Display *    const disp,
     ximageinfoP->foreground = ximageinfoP->background = 0;
     ximageinfoP->gc = NULL;
     ximageinfoP->ximageP = NULL;
-  
+
     makeUsableVisual(origImageP, visualP, ddepth, &imageP);
 
     assertGoodImage(imageP);
@@ -849,7 +849,7 @@ imageToXImage(Display *    const disp,
     }
     if (imageP != origImageP)
         freeImage(imageP);
-    
+
     return ximageinfoP;
 }
 
@@ -870,7 +870,7 @@ sendXImage(XImageInfo * const ximageinfoP,
     XGCValues gcv;
 
     /* build and cache the GC */
-    
+
     if (!ximageinfoP->gc) {
         gcv.function = GXcopy;
         if (ximageinfoP->ximageP->depth == 1) {
@@ -885,7 +885,7 @@ sendXImage(XImageInfo * const ximageinfoP,
                 XCreateGC(ximageinfoP->disp, ximageinfoP->drawable,
                           GCFunction, &gcv);
     }
-    
+
     XPutImage(ximageinfoP->disp, ximageinfoP->drawable, ximageinfoP->gc,
               ximageinfoP->ximageP, src_x, src_y, dst_x, dst_y, w, h);
 }

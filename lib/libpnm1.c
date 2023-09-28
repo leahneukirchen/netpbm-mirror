@@ -83,6 +83,28 @@ validateComputableSize(unsigned int const cols,
 
 
 
+static void
+validateComputableMaxval(pixval const maxval) {
+/*----------------------------------------------------------------------------
+  This is similar to validateComputableSize, but for the maxval.
+-----------------------------------------------------------------------------*/
+    /* Code sometimes allocates an array indexed by sample values and
+       represents the size of that array as an INT.  (UNSIGNED INT would be
+       more proper, but there's no need to be that permissive).
+
+       Code also sometimes iterates through sample values and quits when the
+       value is greater than the maxval.
+    */
+
+    if (maxval == 0)
+        pm_error("Maxval is zero.  Must be at least one.");
+
+    if (maxval > INT_MAX-1)
+        pm_error("Maxval (%u) is too large to be processed", maxval);
+}
+
+
+
 void
 pnm_readpnminit(FILE *   const fileP,
                 int *    const colsP,
@@ -130,6 +152,8 @@ pnm_readpnminit(FILE *   const fileP,
                  realFormat);
     }
     validateComputableSize(*colsP, *rowsP);
+
+    validateComputableMaxval(*maxvalP);
 }
 
 
@@ -220,7 +244,7 @@ pnm_readpnmrow(FILE * const fileP,
     case PGM_TYPE:
         readpgmrow(fileP, xelrow, cols, maxval, format);
         break;
-        
+
     case PBM_TYPE:
         readpbmrow(fileP, xelrow, cols, maxval, format);
         break;
@@ -276,7 +300,7 @@ pnm_readpnm(FILE *   const fileP,
 
 void
 pnm_check(FILE *               const fileP,
-          enum pm_check_type   const check_type, 
+          enum pm_check_type   const check_type,
           int                  const format,
           int                  const cols,
           int                  const rows,
@@ -287,7 +311,7 @@ pnm_check(FILE *               const fileP,
     case PBM_TYPE:
         pbm_check(fileP, check_type, format, cols, rows, retvalP);
         break;
-    case PGM_TYPE: 
+    case PGM_TYPE:
         pgm_check(fileP, check_type, format, cols, rows, maxval, retvalP);
         break;
     case PPM_TYPE:

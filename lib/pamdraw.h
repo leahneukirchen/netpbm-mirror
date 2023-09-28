@@ -65,7 +65,7 @@ typedef struct {
 -----------------------------------------------------------------------------*/
     unsigned int version;
         /* Must be zero.  For future expansion. */
-    pamd_point   begPoint;  
+    pamd_point   begPoint;
     unsigned int legCount;
         /* Number of legs in the path; i.e. size of 'legs' array */
     size_t       legSize;
@@ -111,7 +111,7 @@ pamd_drawproc pamd_point_drawproc;
 
 /* Outline drawing routines.  Lines, splines, circles, etc. */
 
-int 
+int
 pamd_setlinetype(int const type);
 
 #define PAMD_LINETYPE_NORMAL 0
@@ -132,11 +132,11 @@ pamd_setlineclip(int const clip);
 */
 
 void
-pamd_line(tuple **      const tuples, 
-          int           const cols, 
-          int           const rows, 
-          int           const depth, 
-          sample        const maxval, 
+pamd_line(tuple **      const tuples,
+          int           const cols,
+          int           const rows,
+          int           const depth,
+          sample        const maxval,
           pamd_point    const p0,
           pamd_point    const p1,
           pamd_drawproc       drawProc,
@@ -145,11 +145,11 @@ pamd_line(tuple **      const tuples,
     /* Draws a line from p0 to p1.  */
 
 void
-pamd_spline3(tuple **      const tuples, 
-             int           const cols, 
-             int           const rows, 
-             int           const depth, 
-             sample        const maxval, 
+pamd_spline3(tuple **      const tuples,
+             int           const cols,
+             int           const rows,
+             int           const depth,
+             sample        const maxval,
              pamd_point    const p0,
              pamd_point    const p1,
              pamd_point    const p2,
@@ -158,15 +158,15 @@ pamd_spline3(tuple **      const tuples,
 
     /* Draws a three-point spline from p0 to p2, with p1
        as the control point.  All drawing is done via pamd_line(),
-       so the routines that control it control pamd_spline3p() as well. 
+       so the routines that control it control pamd_spline3p() as well.
     */
 
 void
-pamd_polyspline(tuple **      const tuples, 
-                unsigned int  const cols, 
-                unsigned int  const rows, 
-                unsigned int  const depth, 
-                sample        const maxval, 
+pamd_polyspline(tuple **      const tuples,
+                unsigned int  const cols,
+                unsigned int  const rows,
+                unsigned int  const depth,
+                sample        const maxval,
                 pamd_point    const p0,
                 unsigned int  const nc,
                 pamd_point *  const c,
@@ -180,11 +180,11 @@ pamd_polyspline(tuple **      const tuples,
     */
 
 void
-pamd_spline4(tuple **      const tuples, 
-             unsigned int  const cols, 
-             unsigned int  const rows, 
-             unsigned int  const depth, 
-             sample        const maxval, 
+pamd_spline4(tuple **      const tuples,
+             unsigned int  const cols,
+             unsigned int  const rows,
+             unsigned int  const depth,
+             sample        const maxval,
              pamd_point    const endPt0,
              pamd_point    const endPt1,
              pamd_point    const ctlPt0,
@@ -193,13 +193,13 @@ pamd_spline4(tuple **      const tuples,
              const void *  const clientdata);
 
 void
-pamd_circle(tuple **      const tuples, 
-            unsigned int  const cols, 
-            unsigned int  const rows, 
-            unsigned int  const depth, 
-            sample        const maxval, 
+pamd_circle(tuple **      const tuples,
+            unsigned int  const cols,
+            unsigned int  const rows,
+            unsigned int  const depth,
+            sample        const maxval,
             pamd_point    const center,
-            unsigned int  const radius, 
+            unsigned int  const radius,
             pamd_drawproc       drawProc,
             const void *  const clientData);
     /* Draws a circle centered at 'center' with radius 'radius' */
@@ -207,25 +207,25 @@ pamd_circle(tuple **      const tuples,
 /* Simple filling routines.  */
 
 void
-pamd_filledrectangle(tuple **      const tuples, 
-                     int           const cols, 
-                     int           const rows, 
-                     int           const depth, 
-                     sample        const maxval, 
-                     int           const left, 
-                     int           const top, 
-                     int           const width, 
-                     int           const height, 
+pamd_filledrectangle(tuple **      const tuples,
+                     int           const cols,
+                     int           const rows,
+                     int           const depth,
+                     sample        const maxval,
+                     int           const left,
+                     int           const top,
+                     int           const width,
+                     int           const height,
                      pamd_drawproc       drawProc,
                      const void *  const clientdata);
     /* Fills in the rectangle [left, top, width, height]. */
 
 
 void
-pamd_fill_path(tuple **      const tuples, 
-               int           const cols, 
-               int           const rows, 
-               int           const depth, 
+pamd_fill_path(tuple **      const tuples,
+               int           const cols,
+               int           const rows,
+               int           const depth,
                sample        const maxval,
                pamd_path *   const pathP,
                tuple         const color);
@@ -248,11 +248,11 @@ void
 pamd_fill_destroy(struct fillobj * fillObjP);
 
 void
-pamd_fill_drawproc(tuple **     const tuples, 
-                   unsigned int const cols, 
-                   unsigned int const rows, 
-                   unsigned int const depth, 
-                   sample       const maxval, 
+pamd_fill_drawproc(tuple **     const tuples,
+                   unsigned int const cols,
+                   unsigned int const rows,
+                   unsigned int const depth,
+                   sample       const maxval,
                    pamd_point   const p,
                    const void * const clientdata);
     /* Use this drawproc to trace the outline you want filled.  Use
@@ -260,11 +260,11 @@ pamd_fill_drawproc(tuple **     const tuples,
     */
 
 void
-pamd_fill(tuple **         const tuples, 
-          int              const cols, 
-          int              const rows, 
-          int              const depth, 
-          sample           const maxval, 
+pamd_fill(tuple **         const tuples,
+          int              const cols,
+          int              const rows,
+          int              const depth,
+          sample           const maxval,
           struct fillobj * const fillObjP,
           pamd_drawproc          drawProc,
           const void *     const clientdata);
@@ -277,15 +277,15 @@ pamd_fill(tuple **         const tuples,
 /* Text drawing routines. */
 
 void
-pamd_text(tuple**       const tuples, 
-          int           const cols, 
-          int           const rows, 
-          int           const depth, 
-          sample        const maxval, 
+pamd_text(tuple**       const tuples,
+          int           const cols,
+          int           const rows,
+          int           const depth,
+          sample        const maxval,
           pamd_point    const pos,
-          int           const height, 
-          int           const angle, 
-          const char *  const sArg, 
+          int           const height,
+          int           const angle,
+          const char *  const sArg,
           pamd_drawproc       drawProc,
           const void *  const clientdata);
 
@@ -297,12 +297,12 @@ pamd_text(tuple**       const tuples,
     */
 
 void
-pamd_text_box(int          const height, 
-              int          const angle, 
-              const char * const s, 
-              int *        const leftP, 
-              int *        const topP, 
-              int *        const rightP, 
+pamd_text_box(int          const height,
+              int          const angle,
+              const char * const s,
+              int *        const leftP,
+              int *        const topP,
+              int *        const rightP,
               int *        const bottomP);
     /* Calculates the extents box for text drawn by pamd_text with the given
        string, size, and orientation.  Most extent box calculations should use

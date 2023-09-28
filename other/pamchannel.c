@@ -54,9 +54,9 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "infile",     OPT_STRING, &cmdlineP->inputFileName, 
+    OPTENT3(0, "infile",     OPT_STRING, &cmdlineP->inputFileName,
             &infileSpec, 0);
-    OPTENT3(0, "tupletype",  OPT_STRING, &cmdlineP->tupletype, 
+    OPTENT3(0, "tupletype",  OPT_STRING, &cmdlineP->tupletype,
             &tupletypeSpec, 0);
 
     opt.opt_table = option_def;
@@ -78,16 +78,16 @@ parseCommandLine(int argc, const char ** argv,
                      (unsigned)sizeof(pam.tuple_type));
 
     cmdlineP->n_channel = 0;  /* initial value */
-    { 
+    {
         int argn;
         for (argn = 1; argn < argc; argn++) {
             int n;
             char *endptr;
 
-            if (cmdlineP->n_channel >= MAX_CHANNELS) 
+            if (cmdlineP->n_channel >= MAX_CHANNELS)
                 pm_error("You may not specify more than %d channels.",
                          MAX_CHANNELS);
-            
+
             n = strtol(argv[argn], &endptr, 10);
             if (n < 0)
                 pm_error("Channel numbers cannot be negative.  "
@@ -95,7 +95,7 @@ parseCommandLine(int argc, const char ** argv,
             if (endptr == NULL)
                 pm_error("non-numeric channel number argument: '%s'",
                          argv[argn]);
-            
+
             cmdlineP->channel_to_extract[cmdlineP->n_channel++] = n;
         }
     }
@@ -106,13 +106,13 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-validateChannels(int          const n_channel, 
-                 unsigned int const channels[], 
+validateChannels(int          const n_channel,
+                 unsigned int const channels[],
                  int          const depth) {
 
     int i;
 
-    for (i = 0; i < n_channel; i++) 
+    for (i = 0; i < n_channel; i++)
         if (channels[i] > depth-1)
             pm_error("You specified channel number %d.  The highest numbered\n"
                      "channel in the input image is %d.",
@@ -140,18 +140,18 @@ doOneImage(FILE *       const ifP,
     outpam.depth  = nChannel;
     outpam.format = PAM_FORMAT;
     strcpy(outpam.tuple_type, tupletype);
-    
+
     pnm_writepaminit(&outpam);
 
     {
         tuple * inrow;
         tuple * outrow;
-        
-        inrow  = pnm_allocpamrow(&inpam);      
+
+        inrow  = pnm_allocpamrow(&inpam);
         outrow = pnm_allocpamrow(&outpam);
-        { 
+        {
             unsigned int row;
-            
+
             for (row = 0; row < inpam.height; ++row) {
                 unsigned int col;
 
@@ -159,15 +159,15 @@ doOneImage(FILE *       const ifP,
 
                 for (col = 0; col < inpam.width; ++col) {
                     unsigned int plane;
-                    for (plane = 0; plane < nChannel; ++plane) 
-                        outrow[col][plane] = 
+                    for (plane = 0; plane < nChannel; ++plane)
+                        outrow[col][plane] =
                             inrow[col][channelToExtract[plane]];
                 }
                 pnm_writepamrow(&outpam, outrow);
             }
         }
         pnm_freepamrow(outrow);
-        pnm_freepamrow(inrow);        
+        pnm_freepamrow(inrow);
     }
 }
 
@@ -183,7 +183,7 @@ main(int argc, const char *argv[]) {
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.inputFileName);
 
     eof = FALSE;

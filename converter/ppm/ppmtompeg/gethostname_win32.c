@@ -90,13 +90,13 @@ get_string_version(push_string_t *str)
     if( !(bOsVersionInfoEx = GetVersionEx ((OSVERSIONINFO *) &osvi)) )
     {
         osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-        if (! GetVersionEx ( (OSVERSIONINFO *) &osvi) ) 
+        if (! GetVersionEx ( (OSVERSIONINFO *) &osvi) )
             return FALSE;
     }
 
     /* Call GetNativeSystemInfo if available; GetSystemInfo otherwise. */
     pGNSI = (PGNSI)
-            GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), 
+            GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")),
             "GetNativeSystemInfo");
     if (NULL != pGNSI)
         pGNSI(&si);
@@ -254,7 +254,7 @@ get_string_version(push_string_t *str)
             pushString(str, "Microsoft Windows 2000 ");
             if (osvi.wProductType == VER_NT_WORKSTATION)
                 pushString(str, "Professional ");
-            else 
+            else
             if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
                 pushString(str, "Datacenter Server ");
             else
@@ -288,7 +288,7 @@ get_string_version(push_string_t *str)
             }
         }
         /* Test for specific product on Windows NT 4.0 SP5 and earlier */
-        else  
+        else
         {
             HKEY hKey;
             TCHAR szProductType[BUFSIZE];
@@ -321,9 +321,9 @@ get_string_version(push_string_t *str)
         }
 
         /* Display service pack (if any) and build number. */
-        if (osvi.dwMajorVersion == 4 && 
+        if (osvi.dwMajorVersion == 4 &&
             lstrcmpi(osvi.szCSDVersion, TEXT("Service Pack 6")) == 0)
-        { 
+        {
             HKEY hKey;
             LONG lRet;
 
@@ -332,7 +332,7 @@ get_string_version(push_string_t *str)
                 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Hotfix\\Q246009"),
                 0, KEY_QUERY_VALUE, &hKey );
             if( lRet == ERROR_SUCCESS )
-                pushString(str, "Service Pack 6a (Build %d)\n", osvi.dwBuildNumber & 0xFFFF );         
+                pushString(str, "Service Pack 6a (Build %d)\n", osvi.dwBuildNumber & 0xFFFF );
             else
                 /* Windows NT 4.0 prior to SP6a */
                 pushString(str, "%s (Build %d)\n", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
@@ -358,7 +358,7 @@ get_string_version(push_string_t *str)
             pushString(str, "Microsoft Windows 98");
             if (osvi.szCSDVersion[1]=='A' || osvi.szCSDVersion[1]=='B')
                 pushString(str, " SE");
-        } 
+        }
         else
         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90)
             pushString(str, "Microsoft Windows Millennium Edition\n");
@@ -368,7 +368,7 @@ get_string_version(push_string_t *str)
         pushString(str, "Microsoft Win32s\n");
         break;
     }
-    return TRUE; 
+    return TRUE;
 }
 
 const char *

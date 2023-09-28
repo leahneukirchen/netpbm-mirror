@@ -26,7 +26,7 @@ static pixel rgbcolor, backcolor;
 /*  DRAWTEXT  --  Draw text at current location and advance to
           start of next line.  */
 
-static void 
+static void
 drawtext(const char * const text) {
 
     if (!transparent && strlen(text) > 0) {
@@ -38,10 +38,10 @@ drawtext(const char * const text) {
         double sina, cosa;
 
         handle = ppmd_fill_create();
-        
+
         ppmd_text_box(size, 0, text, &left, &top, &right, &bottom);
 
-        /* Displacement vector */ 
+        /* Displacement vector */
 
         lx = right;
         ly = -(top - bottom);

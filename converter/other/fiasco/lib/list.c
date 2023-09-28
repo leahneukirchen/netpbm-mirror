@@ -1,8 +1,8 @@
 /*
- *  list.c:		List operations	
+ *  list.c:             List operations
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -27,8 +27,8 @@
 
 /*****************************************************************************
 
-				public code
-  
+                                public code
+
 *****************************************************************************/
 
 list_t *
@@ -39,15 +39,15 @@ alloc_list (size_t size_of_element)
  *  Size of list element values is given by 'size_of_element'.
  *
  *  Return value:
- *	pointer to an empty list
+ *      pointer to an empty list
  */
 {
    list_t *new_list = Calloc (1, sizeof (list_t));
 
    assert (size_of_element > 0);
 
-   new_list->head 	     = NULL;
-   new_list->tail 	     = NULL;
+   new_list->head            = NULL;
+   new_list->tail            = NULL;
    new_list->size_of_element = size_of_element;
 
    return new_list;
@@ -62,11 +62,11 @@ free_list (list_t *list)
  *  No return value.
  *
  *  Side effects:
- *	struct 'list' is discarded
+ *      struct 'list' is discarded
  */
 {
    assert (list);
-   
+
    while (list_remove (list, HEAD, NULL))
       ;
    Free (list);
@@ -76,7 +76,7 @@ void
 list_insert (list_t *list, pos_e pos, const void *data)
 /*
  *  Insert a new 'list' element at head ('pos' = HEAD) or
- *  tail ('pos' = TAIL) of 'list'. 
+ *  tail ('pos' = TAIL) of 'list'.
  *  'data' is a pointer to a memory segment of size
  *  'list'->size_of_element containing the value to store.
  *  The value is directly copied - no references are stored.
@@ -84,14 +84,14 @@ list_insert (list_t *list, pos_e pos, const void *data)
  *  No return value.
  *
  *  Side effects:
- *	lists current tail or head is replaced by the new element
+ *      lists current tail or head is replaced by the new element
  */
 {
    node_t *element;
 
    assert (list && data);
 
-   element 	  = Calloc (1, sizeof (node_t));
+   element        = Calloc (1, sizeof (node_t));
    element->value = Calloc (1, list->size_of_element);
    memcpy (element->value, data, list->size_of_element);
 
@@ -100,20 +100,20 @@ list_insert (list_t *list, pos_e pos, const void *data)
       element->next = NULL;
       element->prev = list->tail;
       if (list->tail)
-	 list->tail->next = element;
+         list->tail->next = element;
       list->tail = element;
       if (!list->head)
-	 list->head = element;
+         list->head = element;
    }
-   else					/* pos == HEAD */
+   else                                 /* pos == HEAD */
    {
       element->prev = NULL;
       element->next = list->head;
       if (list->head)
-	 list->head->prev = element;
+         list->head->prev = element;
       list->head = element;
       if (!list->tail)
-	 list->tail = element;
+         list->tail = element;
    }
 }
 
@@ -123,57 +123,57 @@ list_remove (list_t *list, pos_e pos, void *data)
  *  Remove 'list' element from head or tail of 'list'.
  *
  *  Return value:
- *	TRUE on success,
- *	FALSE if list is empty or
- *	      if list value data is NULL
+ *      TRUE on success,
+ *      FALSE if list is empty or
+ *            if list value data is NULL
  *
  *  Side effects:
- *	lists current head or tail is removed
- *	value of the removed list element (if not NULL) is copied to
+ *      lists current head or tail is removed
+ *      value of the removed list element (if not NULL) is copied to
  *      'data' (if 'data' is not NULL)
  */
 {
    node_t *element;
-   void	  *valueptr;
+   void   *valueptr;
 
    assert (list);
-   
+
    if (pos == TAIL)
    {
       element = list->tail;
       if (element)
       {
-	 list->tail = element->prev;
-	 valueptr   = element->value;
-	 Free (element);
+         list->tail = element->prev;
+         valueptr   = element->value;
+         Free (element);
       }
       else
-	 valueptr = NULL;
-      if (!list->tail)			/* 'element' was last node */
-	 list->head = NULL;
+         valueptr = NULL;
+      if (!list->tail)                  /* 'element' was last node */
+         list->head = NULL;
    }
-   else					/* pos == HEAD */
+   else                                 /* pos == HEAD */
    {
       element = list->head;
       if (element)
       {
-	 list->head = element->next;
-	 valueptr   = element->value;
-	 Free (element);
+         list->head = element->next;
+         valueptr   = element->value;
+         Free (element);
       }
       else
-	 valueptr = NULL;
-      if (!list->head)			/* 'element' was last node */
-	 list->tail = NULL;
+         valueptr = NULL;
+      if (!list->head)                  /* 'element' was last node */
+         list->tail = NULL;
    }
 
-   if (valueptr)			/* copy value of node */
+   if (valueptr)                        /* copy value of node */
    {
-      if (data)				
-	 memcpy (data, valueptr, list->size_of_element);
+      if (data)
+         memcpy (data, valueptr, list->size_of_element);
       Free (valueptr);
    }
-   
+
    return valueptr ? TRUE : FALSE;
 }
 
@@ -184,27 +184,27 @@ list_element_n (const list_t *list, pos_e pos, unsigned n, void *data)
  *  (First element is list head if 'pos' == HEAD
  *                 or list tail if 'pos' == TAIL.
  *   Accordingly, traverse the list in ascending or descending order).
- *  
+ *
  *  Return value:
- *	TRUE on success, FALSE if there is no element 'n'
+ *      TRUE on success, FALSE if there is no element 'n'
  *
  *  Side effects:
- *	value of list element 'n' is copied to 'data' 
+ *      value of list element 'n' is copied to 'data'
  */
 {
    node_t *element;
 
    assert (list && data);
-   
+
    if (pos == HEAD)
       for (element = list->head; element != NULL && n;
-	   element = element->next, n--)
-	 ;
+           element = element->next, n--)
+         ;
    else
       for (element = list->tail; element != NULL && n;
-	   element = element->prev, n--)
-	 ;
-      
+           element = element->prev, n--)
+         ;
+
    if (element)
    {
       memcpy (data, element->value, list->size_of_element);
@@ -220,14 +220,14 @@ list_sizeof (const list_t *list)
  *  Count number of 'list' elements.
  *
  *  Return value:
- *	number of 'list' elements.
+ *      number of 'list' elements.
  */
 {
    node_t   *element;
    unsigned  n = 0;
 
    assert (list);
-   
+
    for (element = list->head; element != NULL; element = element->next)
       n++;
 
@@ -247,7 +247,7 @@ list_foreach (const list_t *list, void (*function)(void *, void *), void *data)
    node_t *element;
 
    assert (list && function && data);
-   
+
    for (element = list->head; element; element = element->next)
       function (element->value, data);
 }

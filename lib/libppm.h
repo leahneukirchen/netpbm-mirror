@@ -7,9 +7,9 @@
 #include "ppm.h"
 
 void
-ppm_readppminitrest(FILE *   const file, 
-                    int *    const colsP, 
-                    int *    const rowsP, 
+ppm_readppminitrest(FILE *   const file,
+                    int *    const colsP,
+                    int *    const rowsP,
                     pixval * const maxvalP);
 
 #endif

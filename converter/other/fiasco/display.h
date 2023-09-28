@@ -1,8 +1,8 @@
 /*
  *  display.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -27,10 +27,10 @@
 typedef struct x11_info
 {
    Display *display;
-   int	    screen;			/* default screen number */
-   Window   window;			
+   int      screen;                     /* default screen number */
+   Window   window;                     
    XImage  *ximage;
-   GC	    gc;
+   GC       gc;
    byte_t  *pixels;
 } x11_info_t;
 
@@ -40,7 +40,7 @@ void
 close_window (x11_info_t *xinfo);
 x11_info_t *
 open_window (const char *titlename, const char *iconname,
-	     unsigned width, unsigned height);
+             unsigned width, unsigned height);
 void
 alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height);
 

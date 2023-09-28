@@ -1,22 +1,22 @@
 /*===========================================================================*
- * rate.h								     *
- *									     *
- *	Procedures concerned with rate control
- *									     *
- * EXPORTED PROCEDURES:							     *
+ * rate.h                                                                    *
+ *                                                                           *
+ *      Procedures concerned with rate control
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
  *  getRateMode()
  *  setBitRate()
  *  getBitRate()
  *  setBufferSize()
  *  getBufferSize()
- *	initRateControl()
- *	targetRateControl()
- * 	updateRateControl()
- *	MB_RateOut()
- *									     *
+ *      initRateControl()
+ *      targetRateControl()
+ *      updateRateControl()
+ *      MB_RateOut()
+ *                                                                           *
  *===========================================================================*/
 
-/* 	COPYRIGHT INFO HERE	*/
+/*      COPYRIGHT INFO HERE     */
 
 #define VARIABLE_RATE 0
 #define FIXED_RATE 1
@@ -41,7 +41,7 @@ extern int rc_quantOverride;
  *
  * initRateControl
  *
- *	initialize the allocation parameters.
+ *      initialize the allocation parameters.
  *===========================================================================*/
 int
 initRateControl(bool const wantUnderflowWarning,
@@ -64,7 +64,7 @@ targetRateControl(MpegFrame * const frameP);
  * MB_RateOut
  *
  *      Prints out sampling of MB rate control data.  Every "nth" block
- *	stats are printed, with "n" controlled by global RC_MB_SAMPLE_RATE
+ *      stats are printed, with "n" controlled by global RC_MB_SAMPLE_RATE
  *
  * RETURNS:     nothing
  *===========================================================================*/
@@ -137,7 +137,7 @@ extern void SetRateControl (char *charPtr);
  *
  * RETURNS:     nothing
  *===========================================================================*/
-extern void 
+extern void
 setBufferSize(const char * const charPtr);
 
 
@@ -164,7 +164,7 @@ extern int getBufferSize (void);
  *
  * SIDE EFFECTS:   global variables
  *===========================================================================*/
-extern void 
+extern void
 setBitRate(const char * const charPtr);
 
 

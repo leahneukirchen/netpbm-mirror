@@ -18,71 +18,75 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
+#include <assert.h>
+
 #include "mallocvar.h"
 
 #include "logreport.h"
 #include "curve.h"
 
 
-static float_coord
-int_to_real_coord(pm_pixelcoord const int_coord) {
+static Point
+realCoordFromInt(pm_pixelcoord const int_coord) {
 /*----------------------------------------------------------------------------
   Turn an integer point into a real one.
 -----------------------------------------------------------------------------*/
-    float_coord real_coord;
+    Point real_coord;
 
     real_coord.x = int_coord.col;
     real_coord.y = int_coord.row;
     real_coord.z = 0.0;
-    
+
     return real_coord;
 }
 
 
 
-/* Return an entirely empty curve.  */
+Curve *
+curve_new(void) {
+/*----------------------------------------------------------------------------
+  A new, entirely empty curve.
+-----------------------------------------------------------------------------*/
+    Curve * curveP;
 
-curve *
-new_curve(void) {
-  curve * curveP;
+    MALLOCVAR_NOFAIL(curveP);
 
-  MALLOCVAR_NOFAIL(curveP);
+    curveP->pointList       = NULL;
+    CURVE_LENGTH(curveP)    = 0;
+    CURVE_CYCLIC(curveP)    = false;
+    PREVIOUS_CURVE(curveP)  = NULL;
+    NEXT_CURVE(curveP)      = NULL;
 
-  curveP->point_list = NULL;
-  CURVE_LENGTH(curveP) = 0;
-  CURVE_CYCLIC(curveP) = false;
-  PREVIOUS_CURVE(curveP)  = NULL;
-  NEXT_CURVE(curveP)      = NULL;
-
-  return curveP;
+    return curveP;
 }
 
 
-/* Don't copy the points or tangents, but copy everything else.  */
+Curve *
+curve_copyMost(Curve * const oldCurveP) {
+/*----------------------------------------------------------------------------
+  New curve that is the same as *curveP, except without any points.
 
-curve_type
-copy_most_of_curve (curve_type old_curve)
-{
-  curve_type curve = new_curve ();
+  Don't copy the points or tangents, but copy everything else.
+-----------------------------------------------------------------------------*/
+    Curve * curveP = curve_new();
 
-  CURVE_CYCLIC (curve) = CURVE_CYCLIC (old_curve);
-  PREVIOUS_CURVE (curve) = PREVIOUS_CURVE (old_curve);
-  NEXT_CURVE (curve) = NEXT_CURVE (old_curve);
+    CURVE_CYCLIC(curveP)   = CURVE_CYCLIC(oldCurveP);
+    PREVIOUS_CURVE(curveP) = PREVIOUS_CURVE(oldCurveP);
+    NEXT_CURVE(curveP)     = NEXT_CURVE(oldCurveP);
 
-  return curve;
+    return curveP;
 }
 
 void
-move_curve(curve * const dstP,
-           curve * const srcP) {
-
-    /* Move ownership of dynamically allocated memory from source 
-       to destination; destroy source.
-    */
-
+curve_move(Curve * const dstP,
+           Curve * const srcP) {
+/*----------------------------------------------------------------------------
+  Move ownership of dynamically allocated memory from source to destination;
+  destroy source.
+-----------------------------------------------------------------------------*/
    if (CURVE_LENGTH(dstP) > 0)
-       free(dstP->point_list);
-    
+       free(dstP->pointList);
+
    *dstP = *srcP;
 
    free(srcP);
@@ -90,62 +94,124 @@ move_curve(curve * const dstP,
 
 
 
-/* The length of CURVE will be zero if we ended up not being able to fit
-   it (which in turn implies a problem elsewhere in the program, but at
-   any rate, we shouldn't try here to free the nonexistent curve).  */
-
 void
-free_curve(curve * const curveP) {
+curve_free(Curve * const curveP) {
 
-   if (CURVE_LENGTH(curveP) > 0)
-       free(curveP->point_list);
+    /* The length of CURVE will be zero if we ended up not being able to fit
+       it (which in turn implies a problem elsewhere in the program, but at
+       any rate, we shouldn't try here to free the nonexistent curve).
+    */
 
-   free(curveP);
+     if (CURVE_LENGTH(curveP) > 0)
+         free(curveP->pointList);
+
+     free(curveP);
 }
 
 
 
 void
-append_point(curve_type  const curve,
-             float_coord const coord) {
-
-    CURVE_LENGTH(curve)++;
-    REALLOCARRAY_NOFAIL(curve->point_list, CURVE_LENGTH(curve));
-    LAST_CURVE_POINT(curve) = coord;
+curve_appendPoint(Curve * const curveP,
+                  Point   const coord) {
+/*----------------------------------------------------------------------------
+  Like `append_pixel', for a point in real coordinates.
+-----------------------------------------------------------------------------*/
+    CURVE_LENGTH(curveP)++;
+    REALLOCARRAY_NOFAIL(curveP->pointList, CURVE_LENGTH(curveP));
+    LAST_CURVE_POINT(curveP) = coord;
     /* The t value does not need to be set.  */
 }
 
 
-void
-append_pixel(curve_type    const curve,
-             pm_pixelcoord const coord) {
 
-    append_point(curve, int_to_real_coord(coord));
+void
+curve_appendPixel(Curve *       const curveP,
+                  pm_pixelcoord const coord) {
+/*----------------------------------------------------------------------------
+  Append the point 'coord' to the end of *curveP's list.
+-----------------------------------------------------------------------------*/
+    curve_appendPoint(curveP, realCoordFromInt(coord));
 }
 
 
-/* Print a curve in human-readable form.  It turns out we never care
-   about most of the points on the curve, and so it is pointless to
-   print them all out umpteen times.  What matters is that we have some
-   from the end and some from the beginning.  */
+
+void
+curve_setDistance(Curve * const curveP) {
+/*----------------------------------------------------------------------------
+   Fill in the distance values in *curveP.
+
+   The distance value for point P on a curve is the distance P is along the
+   curve from the initial point, normalized so the entire curve is length 1.0
+   (i.e. t of the initial point is 0.0; t of the final point is 1.0).
+
+   There are a lot of curves that pass through the points indicated by
+   *curveP, but for practical computation of t, we just take the piecewise
+   linear locus that runs through all of them.  That means we can just step
+   through *curveP, adding up the distance from one point to the next to get
+   the t value for each point.
+
+   This is the "chord-length parameterization" method, which is described in
+   Plass & Stone.
+-----------------------------------------------------------------------------*/
+    unsigned int p;
+
+    LOG("\nAssigning initial t values:\n  ");
+
+    /* Algorithm: We do a pass through the curve establishing how far each
+       point is along the curve in absolute terms, and then another pass
+       to normalize those distances to the fraction of the curve (i.e.
+       if the curve is 5 units long and Point P is 2 units in, we record
+       2 units for Point P in the first pass, and then compute 0.2 as the
+       fraction of the curve length in the second pass.
+
+       In the first pass, we abuse the distance property of the CurvePoint
+       object to remember the unnormalized distances.
+    */
+
+    CURVE_DIST(curveP, 0) = 0.0;
+
+    for (p = 1; p < CURVE_LENGTH(curveP); ++p) {
+        Point const point      = CURVE_POINT(curveP, p);
+        Point const previous_p = CURVE_POINT(curveP, p - 1);
+        float const d          = point_distance(point, previous_p);
+        CURVE_DIST(curveP, p)  = CURVE_DIST(curveP, p - 1) + d;
+    }
+
+    assert(LAST_CURVE_DIST(curveP) != 0.0);
+
+    /* Normalize to a curve length of 1.0 */
+
+    for (p = 1; p < CURVE_LENGTH(curveP); ++p)
+        CURVE_DIST(curveP, p) =
+            CURVE_DIST(curveP, p) / LAST_CURVE_DIST(curveP);
+
+    curve_logEntire(curveP);
+}
+
+
 
 #define NUM_TO_PRINT 3
 
-#define LOG_CURVE_POINT(c, p, print_t)					\
-  do									\
-    {									\
-      LOG2 ("(%.3f,%.3f)", CURVE_POINT (c, p).x, CURVE_POINT (c, p).y);	\
-      if (print_t)							\
-        LOG1 ("/%.2f", CURVE_T (c, p));					\
-    }									\
+#define LOG_CURVE_POINT(c, p, printDistance) \
+    do  \
+    {                                   \
+      LOG2 ("(%.3f,%.3f)", CURVE_POINT (c, p).x, CURVE_POINT (c, p).y); \
+      if (printDistance) \
+        LOG1 ("/%.2f", CURVE_DIST(c, p)); \
+    } \
   while (0)
 
 
 
 void
-log_curve(curve * const curveP,
-          bool    const print_t) {
-
+curve_log(Curve * const curveP,
+          bool    const printDistance) {
+/*----------------------------------------------------------------------------
+  Print a curve in human-readable form.  It turns out we never care
+  about most of the points on the curve, and so it is pointless to
+  print them all out umpteen times.  What matters is that we have some
+  from the end and some from the beginning.
+-----------------------------------------------------------------------------*/
     if (!log_file)
         return;
 
@@ -159,9 +225,9 @@ log_curve(curve * const curveP,
     /* If the curve is short enough, don't use ellipses.  */
     if (CURVE_LENGTH(curveP) <= NUM_TO_PRINT * 2) {
         unsigned int thisPoint;
-    
+
         for (thisPoint = 0; thisPoint < CURVE_LENGTH(curveP); ++thisPoint) {
-            LOG_CURVE_POINT(curveP, thisPoint, print_t);
+            LOG_CURVE_POINT(curveP, thisPoint, printDistance);
             LOG(" ");
 
             if (thisPoint != CURVE_LENGTH(curveP) - 1
@@ -173,7 +239,7 @@ log_curve(curve * const curveP,
         for (thisPoint = 0;
              thisPoint < NUM_TO_PRINT && thisPoint < CURVE_LENGTH(curveP);
              ++thisPoint) {
-            LOG_CURVE_POINT(curveP, thisPoint, print_t);
+            LOG_CURVE_POINT(curveP, thisPoint, printDistance);
             LOG(" ");
         }
 
@@ -183,18 +249,19 @@ log_curve(curve * const curveP,
              thisPoint < CURVE_LENGTH(curveP);
              ++thisPoint) {
             LOG(" ");
-            LOG_CURVE_POINT(curveP, thisPoint, print_t);
+            LOG_CURVE_POINT(curveP, thisPoint, printDistance);
         }
     }
     LOG(".\n");
 }
 
 
-/* Like `log_curve', but write the whole thing.  */
 
 void
-log_entire_curve(curve * const curveP) {
-
+curve_logEntire(Curve * const curveP) {
+/*----------------------------------------------------------------------------
+  Like `log_curve', but write the whole thing.
+-----------------------------------------------------------------------------*/
     unsigned int thisPoint;
 
     if (!log_file)
@@ -218,95 +285,105 @@ log_entire_curve(curve * const curveP) {
 
 
 
-/* Return an initialized but empty curve list.  */
 
-curve_list_type
-new_curve_list (void)
-{
-  curve_list_type curve_list;
+CurveList
+curve_newList(void) {
+/*----------------------------------------------------------------------------
+  A new initialized but empty curve list.
+-----------------------------------------------------------------------------*/
+    CurveList curveList;
 
-  curve_list.length = 0;
-  curve_list.data = NULL;
+    curveList.length = 0;
+    curveList.data   = NULL;
 
-  return curve_list;
+    return curveList;
 }
 
 
-/* Free a curve list and all the curves it contains.  */
 
 void
-free_curve_list(curve_list_type * const curveListP) {
-
+curve_freeList(CurveList * const curveListP) {
+/*----------------------------------------------------------------------------
+  Free curve list and all the curves it contains.
+-----------------------------------------------------------------------------*/
     unsigned int thisCurve;
 
     for (thisCurve = 0; thisCurve < curveListP->length; ++thisCurve)
-        free_curve(curveListP->data[thisCurve]);
+        curve_free(curveListP->data[thisCurve]);
 
     /* If the character was empty, it won't have any curves.  */
     if (curveListP->data != NULL)
-        free (curveListP->data);
+        free(curveListP->data);
 }
 
 
-/* Add an element to a curve list.  */
 
 void
-append_curve (curve_list_type *curve_list, curve_type curve)
-{
-  curve_list->length++;
-  REALLOCARRAY_NOFAIL(curve_list->data, curve_list->length);
-  curve_list->data[curve_list->length - 1] = curve; }
-
-
-/* Return an initialized but empty curve list array.  */
-
-curve_list_array_type
-new_curve_list_array (void)
-{
-  curve_list_array_type curve_list_array;
-
-  CURVE_LIST_ARRAY_LENGTH (curve_list_array) = 0;
-  curve_list_array.data = NULL;
-
-  return curve_list_array;
+curve_appendList(CurveList * const curveListP,
+                 Curve *     const curveP) {
+/*----------------------------------------------------------------------------
+  Add an element to a curve list.
+-----------------------------------------------------------------------------*/
+    ++curveListP->length;
+    REALLOCARRAY_NOFAIL(curveListP->data, curveListP->length);
+    curveListP->data[curveListP->length - 1] = curveP;
 }
 
 
-/* Free a curve list array and all the curve lists it contains.  */
+
+CurveListArray
+curve_newListArray(void) {
+/*----------------------------------------------------------------------------
+    An initialized but empty curve list array.
+-----------------------------------------------------------------------------*/
+    CurveListArray curveListArray;
+
+    CURVE_LIST_ARRAY_LENGTH(curveListArray) = 0;
+    curveListArray.data = NULL;
+
+    return curveListArray;
+}
+
+
 
 void
-free_curve_list_array(const curve_list_array_type * const curve_list_array,
-                      at_progress_func                    notify_progress, 
-                      void *                        const client_data) {
+curve_freeListArray(const CurveListArray * const curveListArrayP,
+                    at_progress_func             notify_progress,
+                    void *                 const clientData) {
+/*----------------------------------------------------------------------------
+  Free all the curve lists curveListArray contains.
+-----------------------------------------------------------------------------*/
+    unsigned int thisList;
 
-  unsigned this_list;
+    for (thisList = 0;
+         thisList < CURVE_LIST_ARRAY_LENGTH(*curveListArrayP);
+         ++thisList) {
 
-  for (this_list = 0; this_list < CURVE_LIST_ARRAY_LENGTH(*curve_list_array);
-       this_list++) {
       if (notify_progress)
-          notify_progress(((float)this_list)/
-                          (CURVE_LIST_ARRAY_LENGTH(*curve_list_array) *
+          notify_progress(((float)thisList)/
+                          (CURVE_LIST_ARRAY_LENGTH(*curveListArrayP) *
                            (float)3.0)+(float)0.666 ,
-                          client_data);
-      free_curve_list(&CURVE_LIST_ARRAY_ELT (*curve_list_array, this_list));
-  }
-  
-  /* If the character was empty, it won't have any curves.  */
-  if (curve_list_array->data != NULL)
-      free(curve_list_array->data);
+                          clientData);
+      curve_freeList(&CURVE_LIST_ARRAY_ELT(*curveListArrayP, thisList));
+    }
+
+    /* If the character was empty, it won't have any curves.  */
+    if (curveListArrayP->data)
+        free(curveListArrayP->data);
 }
 
 
-/* Add an element to a curve list array.  */
 
 void
-append_curve_list(curve_list_array_type * const curve_list_array,
-                  curve_list_type         const curve_list) {
-
-  CURVE_LIST_ARRAY_LENGTH (*curve_list_array)++;
-  REALLOCARRAY_NOFAIL(curve_list_array->data,
-                      CURVE_LIST_ARRAY_LENGTH(*curve_list_array));
-  LAST_CURVE_LIST_ARRAY_ELT (*curve_list_array) = curve_list;
+curve_appendArray(CurveListArray * const curveListArrayP,
+                  CurveList        const curveList) {
+/*----------------------------------------------------------------------------
+  Add an element to *curveListArrayP.
+-----------------------------------------------------------------------------*/
+    CURVE_LIST_ARRAY_LENGTH(*curveListArrayP)++;
+    REALLOCARRAY_NOFAIL(curveListArrayP->data,
+                        CURVE_LIST_ARRAY_LENGTH(*curveListArrayP));
+    LAST_CURVE_LIST_ARRAY_ELT(*curveListArrayP) = curveList;
 }
 
 

@@ -93,121 +93,121 @@ echo "Test Invalid"
 test_out=${tmpdir}/test_out
 
 pamfunc -multiplier testimg.ppm > ${test_out} || \
-  printf "Expected failure 1"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -multiplier=-1 testimg.ppm > ${test_out} || \
-  printf "Expected failure 2"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -divisor testimg.ppm > ${test_out} || \
-  printf "Expected failure 3"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -divisor=-20 testimg.ppm > ${test_out} || \
-  printf "Expected failure 4"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 4 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -adder testimg.ppm > ${test_out} || \
-  printf "Expected failure 5"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 5 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -adder 0.5 testimg.ppm > ${test_out} || \
-  printf "Expected failure 6"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 6 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -subtractor testimg.ppm > ${test_out} || \
-  printf "Expected failure 7"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 7 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -subtractor 0.1 testimg.ppm > ${test_out} || \
-  printf "Expected failure 8"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 8 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -multiplier=1 -divisor=2 testimg.ppm > ${test_out} || \
-  printf "Expected failure 9"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 9 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -adder=2 -subtractor=3 testimg.ppm > ${test_out} || \
-  printf "Expected failure 10"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 10 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -min testimg.ppm > ${test_out} || \
-  printf "Expected failure 11"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 11 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -max testimg.ppm > ${test_out} || \
-  printf "Expected failure 12"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 12 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -andmask testimg.ppm > ${test_out} || \
-  printf "Expected failure 13"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 13 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -ormask testimg.ppm > ${test_out} || \
-  printf "Expected failure 14"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 14 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -xormask testimg.ppm > ${test_out} || \
-  printf "Expected failure 15"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 15 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -not 1 testimg.ppm > ${test_out} || \
-  printf "Expected failure 16"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 16 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -min=1 -max=2 testimg.ppm > ${test_out} || \
-  printf "Expected failure 17"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 17 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -andmask=1 -ormask=0 testimg.ppm > ${test_out} || \
-  printf "Expected failure 18"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 18 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -andmask=0xffff testimg.ppm > ${test_out} || \
-  printf "Expected failure 19"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 19 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -shiftleft testimg.ppm > ${test_out} || \
-  printf "Expected failure 20"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 20 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -shiftright testimg.ppm > ${test_out} || \
-  printf "Expected failure 21"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 21 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -changemaxval testimg.ppm > ${test_out} || \
-  printf "Expected failure 22"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 22 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -shiftleft=1 -shiftright=1 testimg.ppm > ${test_out} || \
-  printf "Expected failure 23"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 23 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pamfunc -multiplier=0.5 -changemaxval=65535 testimg.ppm > ${test_out} || \
-  printf "Expected failure 24"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 24 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

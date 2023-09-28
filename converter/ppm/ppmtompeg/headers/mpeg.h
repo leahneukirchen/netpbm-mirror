@@ -1,8 +1,8 @@
 /*===========================================================================*
- * mpeg.h								     *
- *									     *
- *	no comment							     *
- *									     *
+ * mpeg.h                                                                    *
+ *                                                                           *
+ *      no comment                                                           *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -47,13 +47,13 @@ enum frameContext {CONTEXT_WHOLESTREAM, CONTEXT_GOP, CONTEXT_JUSTFRAMES};
 
 void
 GenMPEGStream(struct inputSource * const inputSourceP,
-              enum frameContext    const context, 
-              unsigned int         const frameStart, 
-              unsigned int         const frameEnd, 
-              int32                const qtable[], 
-              int32                const niqtable[], 
+              enum frameContext    const context,
+              unsigned int         const frameStart,
+              unsigned int         const frameEnd,
+              int32                const qtable[],
+              int32                const niqtable[],
               bool                 const childProcess,
-              FILE *               const ofp, 
+              FILE *               const ofp,
               const char *         const outputFileName,
               bool                 const wantVbvUnderflowWarning,
               bool                 const wantVbvOverflowWarning,
@@ -61,38 +61,38 @@ GenMPEGStream(struct inputSource * const inputSourceP,
               unsigned int *       const totalBitsP);
 
 void
-PrintStartStats(time_t               const startTime, 
+PrintStartStats(time_t               const startTime,
                 bool                 const specificFrames,
-                unsigned int         const firstFrame, 
+                unsigned int         const firstFrame,
                 unsigned int         const lastFrame,
                 struct inputSource * const inputSourceP);
 
 void
 PrintEndStats(time_t       const startTime,
               time_t       const endTime,
-              unsigned int const inputFrameBits, 
+              unsigned int const inputFrameBits,
               unsigned int const totalBits);
 
 void
-ComputeGOPFrames(int            const whichGOP, 
-                 unsigned int * const firstFrameP, 
-                 unsigned int * const lastFrameP, 
+ComputeGOPFrames(int            const whichGOP,
+                 unsigned int * const firstFrameP,
+                 unsigned int * const lastFrameP,
                  unsigned int   const numFrames);
 
-extern void	IncrementTCTime (void);
+extern void     IncrementTCTime (void);
 void SetReferenceFrameType(const char * const type);
 
 boolean
 NonLocalRefFrame(int     const id);
 
 void
-ReadDecodedRefFrame(MpegFrame *  const frameP, 
+ReadDecodedRefFrame(MpegFrame *  const frameP,
                     unsigned int const frameNumber);
 
 void
 SetBitRateFileName(const char * const fileName);
 
-extern void	SetFrameRate (void);
+extern void     SetFrameRate (void);
 
 
 /*==================*
@@ -100,11 +100,11 @@ extern void	SetFrameRate (void);
  *==================*/
 
 extern MpegFrame *frameMemory[3];
-extern int32	  tc_hrs, tc_min, tc_sec, tc_pict, tc_extra;
-extern int	  totalFramesSent;
-extern int	  gopSize;
-extern char	 *framePattern;
-extern int	  framePatternLen;
+extern int32      tc_hrs, tc_min, tc_sec, tc_pict, tc_extra;
+extern int        totalFramesSent;
+extern int        gopSize;
+extern char      *framePattern;
+extern int        framePatternLen;
 extern int32 qtable[];
 extern int32 niqtable[];
 extern int32 *customQtable;

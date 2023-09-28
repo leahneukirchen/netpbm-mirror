@@ -113,7 +113,7 @@ parseCommandLine(int argc, const char ** argv,
     if (!heightSpec)
         cmdlineP->height = 200;
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFilespec = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -202,7 +202,7 @@ pgmHist(FILE *       const ifP,
     unsigned int * ghist;
     double vscale;
     unsigned int hmax;
-    
+
     MALLOCARRAY(ghist, histWidth);
     if (ghist == NULL)
         pm_error("Not enough memory for histogram array (%u bytes)",
@@ -231,7 +231,7 @@ pgmHist(FILE *       const ifP,
         pm_message("finding max. slot height...");
     if (clipSpec)
         hmax = clipCount;
-    else 
+    else
         hmax = maxSlotCount(ghist, histWidth, no_white, no_black);
 
     assert(hmax > 0);
@@ -275,10 +275,10 @@ maxSlotCountAll(unsigned int *       const hist[3],
 
     for (color = 0; color < 3; ++color)
         if (hist[color])
-            hmax = MAX(hmax, 
-                       maxSlotCount(hist[color], 
+            hmax = MAX(hmax,
+                       maxSlotCount(hist[color],
                                     histWidth, no_white, no_black));
-    
+
     return hmax;
 }
 
@@ -418,7 +418,7 @@ ppmHist(FILE *       const ifP,
         pm_message("finding max. slot height...");
     if (clipSpec)
         hmax = clipCount;
-    else 
+    else
         hmax = maxSlotCountAll(hist, histWidth, no_white, no_black);
 
     assert(hmax > 0);
@@ -427,7 +427,7 @@ ppmHist(FILE *       const ifP,
 
     vscale = (double) histHeight / hmax;
     if (verbose && pm_have_float_format())
-        pm_message("Done: height = %u, vertical scale factor = %g", 
+        pm_message("Done: height = %u, vertical scale factor = %g",
                    hmax, vscale);
 
     for (i = 0; i < histWidth; ++i) {
@@ -435,8 +435,8 @@ ppmHist(FILE *       const ifP,
             unsigned int j;
             bool plotted;
             plotted = FALSE;
-            for (j = histHeight - (int)(vscale * hist[WANT_RED][i]); 
-                 j < histHeight && !plotted; 
+            for (j = histHeight - (int)(vscale * hist[WANT_RED][i]);
+                 j < histHeight && !plotted;
                  ++j) {
                 PPM_PUTR(pixels[j][i], maxval);
                 plotted = dots;
@@ -446,8 +446,8 @@ ppmHist(FILE *       const ifP,
             unsigned int j;
             bool plotted;
             plotted = FALSE;
-            for (j = histHeight - (int)(vscale * hist[WANT_GRN][i]); 
-                 j < histHeight && !plotted; 
+            for (j = histHeight - (int)(vscale * hist[WANT_GRN][i]);
+                 j < histHeight && !plotted;
                  ++j) {
                 PPM_PUTG(pixels[j][i], maxval);
                 plotted = dots;
@@ -457,8 +457,8 @@ ppmHist(FILE *       const ifP,
             unsigned int j;
             bool plotted;
             plotted = FALSE;
-            for (j = histHeight - (int)(vscale * hist[WANT_BLU][i]); 
-                 j < histHeight && !plotted; 
+            for (j = histHeight - (int)(vscale * hist[WANT_BLU][i]);
+                 j < histHeight && !plotted;
                  ++j) {
                 PPM_PUTB(pixels[j][i], maxval);
                 plotted = dots;

@@ -10,7 +10,7 @@
 #include "exception.h"
 
 /* See fit.c for descriptions of these variables, all of which can be
-   set using options. 
+   set using options.
 */
 typedef at_fitting_opts_type fitting_opts_type;
 
@@ -21,7 +21,7 @@ fit_outlines_to_splines(pixel_outline_list_type  const pixelOutlineList,
                         unsigned short           const width,
                         unsigned short           const height,
                         at_exception_type *      const exception,
-                        at_progress_func               notifyProgress, 
+                        at_progress_func               notifyProgress,
                         void *                   const progressData,
                         at_testcancel_func             testCancel,
                         void *                   const testcancelData,

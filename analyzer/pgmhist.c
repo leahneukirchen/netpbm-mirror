@@ -211,8 +211,8 @@ findQuantiles(unsigned int      const n,
     cumCt = hist[0];  /* initial value */
 
     for (quantSeq = 1; quantSeq <= n; ++quantSeq) {
-        unsigned long int const q = totalCt / n; 
-        unsigned long int const r = totalCt % n;  
+        unsigned long int const q = totalCt / n;
+        unsigned long int const r = totalCt % n;
         unsigned long int const quantCt = q*quantSeq + (r*quantSeq + n - 1)/n;
        /* This is how many pixels are (ignoring quantization) in the
           quantile.  E.g. for the 3rd quartile, it is 3/4 of the pixels
@@ -419,7 +419,7 @@ summarizeInvalidPixels(unsigned long int const hist[],
   Print total count of valid and invalid pixels, if there are any
   invalid ones.
 -----------------------------------------------------------------------------*/
-    unsigned long int const invalidPixelCt = 
+    unsigned long int const invalidPixelCt =
         mmaxval > maxval ? rcount[maxval+1] : 0;
 
     if (invalidPixelCt > 0) {

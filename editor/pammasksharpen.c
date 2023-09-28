@@ -7,8 +7,8 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFilespec;  
-    const char * maskFilespec;  
+    const char * inputFilespec;
+    const char * maskFilespec;
     unsigned int verbose;
     float        sharpness;
     float        threshold;
@@ -31,7 +31,7 @@ parseCommandLine(int argc, const char ** const argv,
     unsigned int option_def_index;
 
     unsigned int sharpSpec, thresholdSpec;
-    
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
@@ -75,13 +75,13 @@ parseCommandLine(int argc, const char ** const argv,
             cmdlineP->inputFilespec = "-";
         else {
             cmdlineP->inputFilespec = argv[2];
-        
+
             if (argc-1 > 2)
                 pm_error("There are at most two arguments:  mask file name "
                          "and input file name.  You specified %d", argc-1);
         }
     }
-}        
+}
 
 
 
@@ -98,7 +98,7 @@ sharpened(sample const inputSample,
 
     if (abs(edgeness) > threshold) {
         float const rawResult = inputSample + edgeness * sharpness;
-        
+
         retval = MIN(maxval, (unsigned)MAX(0, (int)(rawResult+0.5)));
     } else
         retval = inputSample;
@@ -125,9 +125,9 @@ main(int argc, const char * *argv) {
         /* Magnitude of difference between image and unsharp mask below
            which they will be considered identical.
         */
-    
+
     pm_proginit(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
@@ -136,7 +136,7 @@ main(int argc, const char * *argv) {
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
     pnm_readpaminit(maskfP, &maskpam, PAM_STRUCT_SIZE(tuple_type));
 
-    if (inpam.width  != maskpam.width || 
+    if (inpam.width  != maskpam.width ||
         inpam.height != maskpam.height ||
         inpam.depth  != maskpam.depth)
         pm_error("The mask image must be the same dimensions as the "
@@ -165,10 +165,10 @@ main(int argc, const char * *argv) {
         unsigned int col;
         pnm_readpamrow(&inpam,   inputTuplerow);
         pnm_readpamrow(&maskpam, maskTuplerow);
-        
+
         for (col = 0; col < outpam.width; ++col) {
             unsigned int plane;
-            
+
             for (plane = 0; plane < outpam.depth; ++plane) {
                 outputTuplerow[col][plane] =
                     sharpened(inputTuplerow[col][plane],
@@ -187,6 +187,6 @@ main(int argc, const char * *argv) {
     pnm_freepamrow(inputTuplerow);
     pnm_freepamrow(maskTuplerow);
     pnm_freepamrow(outputTuplerow);
-    
+
     return 0;
 }

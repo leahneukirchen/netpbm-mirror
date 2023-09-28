@@ -19,24 +19,38 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/charlie-brown/project/mm/mpeg/mpeg_dist/mpeg_encode/RCS/huff.c,v 1.6 1995/01/19 23:07:39 eyhung Exp $
  */
 
-/*  
+/*
  *  THIS FILE WAS ORIGINALLY MACHINE GENERATED
  */
 #include "general.h"
 #include "mtypes.h"
 #include "huff.h"
 
-int huff_maxlevel[32] = { 41, 19, 6, 5, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+int huff_maxlevel[32] = { 41, 19, 6, 5, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3,
+                           3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                           2, 2, 2 };
 
-uint32 huff_table0[41] = { 0x0, 0x6, 0x8, 0xa, 0xc, 0x4c, 0x42, 0x14, 0x3a, 0x30, 0x26, 0x20, 0x34, 0x32, 0x30, 0x2e, 0x3e, 0x3c, 0x3a, 0x38, 0x36, 0x34, 0x32, 0x30, 0x2e, 0x2c, 0x2a, 0x28, 0x26, 0x24, 0x22, 0x20, 0x30, 0x2e, 0x2c, 0x2a, 0x28, 0x26, 0x24, 0x22, 0x20 };
-int huff_bits0[41] = { 0, 3, 5, 6, 8, 9, 9, 11, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16 };
+uint32 huff_table0[41] = { 0x0, 0x6, 0x8, 0xa, 0xc, 0x4c, 0x42, 0x14,
+                           0x3a, 0x30, 0x26, 0x20, 0x34, 0x32, 0x30,
+                           0x2e, 0x3e, 0x3c, 0x3a, 0x38, 0x36, 0x34,
+                           0x32, 0x30, 0x2e, 0x2c, 0x2a, 0x28, 0x26,
+                           0x24, 0x22, 0x20, 0x30, 0x2e, 0x2c, 0x2a,
+                           0x28, 0x26, 0x24, 0x22, 0x20 };
 
-uint32 huff_table1[19] = { 0x0, 0x6, 0xc, 0x4a, 0x18, 0x36, 0x2c, 0x2a, 0x3e, 0x3c, 0x3a, 0x38, 0x36, 0x34, 0x32, 0x26, 0x24, 0x22, 0x20 };
-int huff_bits1[19] = { 0, 4, 7, 9, 11, 13, 14, 14, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17 };
+int huff_bits0[41] = { 0, 3, 5, 6, 8, 9, 9, 11, 13, 13, 13, 13, 14, 14,
+                      14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                      15, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16 };
+
+uint32 huff_table1[19] = { 0x0, 0x6, 0xc, 0x4a, 0x18, 0x36, 0x2c,
+                          0x2a, 0x3e, 0x3c, 0x3a, 0x38, 0x36, 0x34,
+                          0x32, 0x26, 0x24, 0x22, 0x20 };
+
+int huff_bits1[19] = { 0, 4, 7, 9, 11, 13, 14, 14, 16, 16, 16, 16, 16,
+                      16, 16, 17, 17, 17, 17 };
 
 uint32 huff_table2[6] = { 0x0, 0xa, 0x8, 0x16, 0x28, 0x28 };
 int huff_bits2[6] = { 0, 5, 8, 11, 13, 14 };
@@ -128,5 +142,18 @@ int huff_bits30[2] = { 0, 17 };
 uint32 huff_table31[2] = { 0x0, 0x36 };
 int huff_bits31[2] = { 0, 17 };
 
-uint32 *huff_table[32] = { huff_table0, huff_table1, huff_table2, huff_table3, huff_table4, huff_table5, huff_table6, huff_table7, huff_table8, huff_table9, huff_table10, huff_table11, huff_table12, huff_table13, huff_table14, huff_table15, huff_table16, huff_table17, huff_table18, huff_table19, huff_table20, huff_table21, huff_table22, huff_table23, huff_table24, huff_table25, huff_table26, huff_table27, huff_table28, huff_table29, huff_table30, huff_table31 };
-int *huff_bits[32] = { huff_bits0, huff_bits1, huff_bits2, huff_bits3, huff_bits4, huff_bits5, huff_bits6, huff_bits7, huff_bits8, huff_bits9, huff_bits10, huff_bits11, huff_bits12, huff_bits13, huff_bits14, huff_bits15, huff_bits16, huff_bits17, huff_bits18, huff_bits19, huff_bits20, huff_bits21, huff_bits22, huff_bits23, huff_bits24, huff_bits25, huff_bits26, huff_bits27, huff_bits28, huff_bits29, huff_bits30, huff_bits31 };
+uint32 *huff_table[32] = { huff_table0, huff_table1, huff_table2,
+    huff_table3, huff_table4, huff_table5, huff_table6, huff_table7,
+    huff_table8, huff_table9, huff_table10, huff_table11, huff_table12,
+    huff_table13, huff_table14, huff_table15, huff_table16, huff_table17,
+    huff_table18, huff_table19, huff_table20, huff_table21, huff_table22,
+    huff_table23, huff_table24, huff_table25, huff_table26, huff_table27,
+    huff_table28, huff_table29, huff_table30, huff_table31 };
+
+int *huff_bits[32] = { huff_bits0, huff_bits1, huff_bits2, huff_bits3,
+    huff_bits4, huff_bits5, huff_bits6, huff_bits7, huff_bits8, huff_bits9,
+    huff_bits10, huff_bits11, huff_bits12, huff_bits13, huff_bits14,
+    huff_bits15, huff_bits16, huff_bits17, huff_bits18, huff_bits19,
+    huff_bits20, huff_bits21, huff_bits22, huff_bits23, huff_bits24,
+    huff_bits25, huff_bits26, huff_bits27, huff_bits28, huff_bits29,
+    huff_bits30, huff_bits31 };

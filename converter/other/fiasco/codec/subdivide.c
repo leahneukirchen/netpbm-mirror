@@ -1,7 +1,7 @@
 /*
- *  subdivide.c:	Recursive subdivision of range images
+ *  subdivide.c:        Recursive subdivision of range images
  *
- *  Written by:		Ullrich Hafner
+ *  Written by:         Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -41,27 +41,27 @@
 
 /*****************************************************************************
 
-				prototypes
+                                prototypes
 
 *****************************************************************************/
 
 static void
 init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
-		const range_t *child, const int *y_state,
-		wfa_t *wfa, coding_t *c);
+                const range_t *child, const int *y_state,
+                wfa_t *wfa, coding_t *c);
 static void
 init_range (range_t *range, const image_t *image, unsigned band,
-	    const wfa_t *wfa, coding_t *c);
+            const wfa_t *wfa, coding_t *c);
 
 /*****************************************************************************
 
-				public code
+                                public code
 
 *****************************************************************************/
 
 real_t
 subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
-	   wfa_t *wfa, coding_t *c, bool_t prediction, bool_t delta)
+           wfa_t *wfa, coding_t *c, bool_t prediction, bool_t delta)
 /*
  *  Subdivide the current 'range' recursively and decide whether
  *  a linear combination, a recursive subdivision, or a prediction is
@@ -73,46 +73,46 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
  *  If 'delta' is TRUE then current range is already predicted.
  *
  *  Return value:
- *	costs of the best approximation or MAXCOSTS if costs exceed 'max_costs'
+ *      costs of the best approximation or MAXCOSTS if costs exceed 'max_costs'
  *
  *  Side effects:
- *	'range'	factors and costs of linear combination are modified
- *      'wfa'	new transitions and prediction coefficients are added
- *	'c'	pixels and inner products are updated
+ *      'range' factors and costs of linear combination are modified
+ *      'wfa'   new transitions and prediction coefficients are added
+ *      'c'     pixels and inner products are updated
  */
 {
    real_t    subdivide_costs;        /* Costs arising from approx. the current
-				       range with two children */
+                                       range with two children */
    real_t    lincomb_costs;          /* Costs arising from approx. the current
-				       range with a linear combination */
-   int	     new_y_state [MAXLABELS];	/* Corresponding state of Y */
-   real_t    price;			/* Approximation costs multiplier */
-   bool_t    try_mc;			/* YES: try MC prediction */
-   bool_t    try_nd;			/* YES: try ND prediction */
-   unsigned  states;			/* Number of states before the
-					   recursive subdivision starts */
-   void     *domain_model;		/* copy of domain pool model */
-   void     *d_domain_model;		/* copy of delta domain pool model */
-   void     *lc_domain_model;		/* copy of domain pool model */
-   void     *lc_d_domain_model;		/* copy of delta domain pool model */
-   void	    *coeff_model;	        /* copy of coefficients model */
-   void	    *d_coeff_model;		/* copy of delta coefficients model */
-   void	    *lc_coeff_model;	        /* copy of coefficients model */
-   void	    *lc_d_coeff_model;		/* copy of delta coefficients model */
-   tree_t    tree_model;		/* copy of tree model */
-   tree_t    p_tree_model;		/* copy of pred. tree model */
-   range_t   lrange;			/* range of lin. comb. approx. */
-   range_t   rrange;			/* range of recursive approx. */
-   range_t   child [MAXLABELS];		/* new children of the current range */
-   static unsigned percent = 0;		/* status of progress meter */
+                                       range with a linear combination */
+   int       new_y_state [MAXLABELS];   /* Corresponding state of Y */
+   real_t    price;                     /* Approximation costs multiplier */
+   bool_t    try_mc;                    /* YES: try MC prediction */
+   bool_t    try_nd;                    /* YES: try ND prediction */
+   unsigned  states;                    /* Number of states before the
+                                           recursive subdivision starts */
+   void     *domain_model;              /* copy of domain pool model */
+   void     *d_domain_model;            /* copy of delta domain pool model */
+   void     *lc_domain_model;           /* copy of domain pool model */
+   void     *lc_d_domain_model;         /* copy of delta domain pool model */
+   void     *coeff_model;               /* copy of coefficients model */
+   void     *d_coeff_model;             /* copy of delta coefficients model */
+   void     *lc_coeff_model;            /* copy of coefficients model */
+   void     *lc_d_coeff_model;          /* copy of delta coefficients model */
+   tree_t    tree_model;                /* copy of tree model */
+   tree_t    p_tree_model;              /* copy of pred. tree model */
+   range_t   lrange;                    /* range of lin. comb. approx. */
+   range_t   rrange;                    /* range of recursive approx. */
+   range_t   child [MAXLABELS];         /* new children of the current range */
+   static unsigned percent = 0;         /* status of progress meter */
 
    if (wfa->wfainfo->level == range->level)
       percent = 0;
 
-   range->into [0] = NO_EDGE;		/* default approximation: empty */
+   range->into [0] = NO_EDGE;           /* default approximation: empty */
    range->tree     = RANGE;
 
-   if (range->level < 3)		/* Don't process small ranges */
+   if (range->level < 3)                /* Don't process small ranges */
       return MAXCOSTS;
 
    /*
@@ -122,35 +122,35 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    if (c->tiling->exponent
        && range->level == wfa->wfainfo->level - c->tiling->exponent)
    {
-      unsigned width, height;		/* size of range (dummies)*/
+      unsigned width, height;           /* size of range (dummies)*/
 
       if (c->tiling->vorder [range->global_address] < 0)
-	 return 0;			/* nothing to do */
+         return 0;                      /* nothing to do */
       else
-	 locate_subimage (wfa->wfainfo->level, range->level,
-			  c->tiling->vorder [range->global_address],
-			  &range->x, &range->y, &width, &height);
+         locate_subimage (wfa->wfainfo->level, range->level,
+                          c->tiling->vorder [range->global_address],
+                          &range->x, &range->y, &width, &height);
    }
 
    if (range->x >= c->mt->original->width ||
        range->y >= c->mt->original->height)
-      return 0;				/* range is not visible */
+      return 0;                         /* range is not visible */
 
    /*
     *  Check whether prediction is allowed or not
     *  mc == motion compensation, nd == nondeterminism
     */
    try_mc = (prediction && c->mt->frame_type != I_FRAME
-	     && range->level >= wfa->wfainfo->p_min_level
-	     && range->level <= wfa->wfainfo->p_max_level
-	     && (range->x + width_of_level (range->level)
-		 <= c->mt->original->width)
-	     && (range->y + height_of_level (range->level)
-		 <= c->mt->original->height));
+             && range->level >= wfa->wfainfo->p_min_level
+             && range->level <= wfa->wfainfo->p_max_level
+             && (range->x + width_of_level (range->level)
+                 <= c->mt->original->width)
+             && (range->y + height_of_level (range->level)
+                 <= c->mt->original->height));
 
    try_nd = (prediction && c->mt->frame_type == I_FRAME
-	     && range->level >= wfa->wfainfo->p_min_level
-	     && range->level <= wfa->wfainfo->p_max_level);
+             && range->level >= wfa->wfainfo->p_min_level
+             && range->level <= wfa->wfainfo->p_max_level);
 
    if (try_mc)
       clear_norms_table (range->level, wfa->wfainfo, c->mt);
@@ -171,15 +171,15 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    /*
     *  Compute children of corresponding state in Y band
     */
-   if (band != Y)			/* Cb and Cr bands only */
+   if (band != Y)                       /* Cb and Cr bands only */
    {
       unsigned label;
 
       for (label = 0; label < MAXLABELS; label++)
-	 if (ischild (y_state))
-	    new_y_state [label] = wfa->tree [y_state][label];
-	 else
-	    new_y_state [label] = RANGE;
+         if (ischild (y_state))
+            new_y_state [label] = wfa->tree [y_state][label];
+         else
+            new_y_state [label] = RANGE;
    }
    else
       new_y_state [0] = new_y_state [1] = RANGE;
@@ -210,13 +210,13 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
       lrange.mv_coord_bits   = 0;
       lrange.nd_tree_bits    = 0;
       lrange.nd_weights_bits = 0;
-      lrange.prediction	     = NO;
+      lrange.prediction      = NO;
 
       lincomb_costs
-	 = approximate_range (max_costs, price, c->options.max_elements,
-			      y_state, &lrange,
-			      (delta ? c->d_domain_pool : c->domain_pool),
-			      (delta ? c->d_coeff : c->coeff), wfa, c);
+         = approximate_range (max_costs, price, c->options.max_elements,
+                              y_state, &lrange,
+                              (delta ? c->d_domain_pool : c->domain_pool),
+                              (delta ? c->d_coeff : c->coeff), wfa, c);
    }
    else
       lincomb_costs = MAXCOSTS;
@@ -236,7 +236,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
    c->d_domain_pool->model = c->d_domain_pool->model_duplicate (d_domain_model);
    c->coeff->model         = c->coeff->model_duplicate (c->coeff, coeff_model);
    c->d_coeff->model       = c->d_coeff->model_duplicate (c->d_coeff,
-							  d_coeff_model);
+                                                          d_coeff_model);
 
    /*
     *  Second alternative of range approximation:
@@ -256,122 +256,122 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
       rrange.matrix_bits     = 0;
       rrange.weights_bits    = 0;
       rrange.err             = 0;
-      rrange.mv_tree_bits    = try_mc ? 1 : 0;	/* mc allowed but not used */
+      rrange.mv_tree_bits    = try_mc ? 1 : 0;  /* mc allowed but not used */
       rrange.mv_coord_bits   = 0;
       rrange.nd_tree_bits    = try_nd ?
-			       tree_bits (CHILD, lrange.level, &c->p_tree): 0;
+                               tree_bits (CHILD, lrange.level, &c->p_tree): 0;
       rrange.nd_weights_bits = 0;
-      rrange.prediction	     = NO;
+      rrange.prediction      = NO;
 
       /*
        *  Initialize the cost function and subdivide the current range.
        *  Every child is approximated by a recursive call of subdivide()
        */
       subdivide_costs = (rrange.tree_bits + rrange.weights_bits
-			 + rrange.matrix_bits + rrange.mv_tree_bits
-			 + rrange.mv_coord_bits + rrange.nd_tree_bits
-			 + rrange.nd_weights_bits) * price;
+                         + rrange.matrix_bits + rrange.mv_tree_bits
+                         + rrange.mv_coord_bits + rrange.nd_tree_bits
+                         + rrange.nd_weights_bits) * price;
 
       for (label = 0; label < MAXLABELS; label++)
       {
-	 real_t remaining_costs;	/* upper limit for next recursion */
+         real_t remaining_costs;        /* upper limit for next recursion */
 
-	 child[label].image          = rrange.image * MAXLABELS + label + 1;
-	 child[label].address        = rrange.address * MAXLABELS + label;
-	 child[label].global_address = rrange.global_address * MAXLABELS
-				       + label;
-	 child[label].level          = rrange.level - 1;
-	 child[label].x	= rrange.level & 1
-			  ? rrange.x
-			  : (rrange.x
-			     + label * width_of_level (rrange.level - 1));
-	 child[label].y = rrange.level & 1
-			  ? (rrange.y
-			     + label * height_of_level (rrange.level - 1))
-			  : rrange.y;
+         child[label].image          = rrange.image * MAXLABELS + label + 1;
+         child[label].address        = rrange.address * MAXLABELS + label;
+         child[label].global_address = rrange.global_address * MAXLABELS
+                                       + label;
+         child[label].level          = rrange.level - 1;
+         child[label].x = rrange.level & 1
+                          ? rrange.x
+                          : (rrange.x
+                             + label * width_of_level (rrange.level - 1));
+         child[label].y = rrange.level & 1
+                          ? (rrange.y
+                             + label * height_of_level (rrange.level - 1))
+                          : rrange.y;
 
-	 /*
-	  *  If necessary compute the inner products of the new states
-	  *  (generated during the recursive approximation of child [0])
-	  */
-	 if (label && rrange.level <= c->options.lc_max_level)
-	    compute_ip_images_state (child[label].image, child[label].address,
-				     child[label].level, 1, states, wfa, c);
-	 /*
-	  *  Call subdivide() for both children.
-	  *  Abort the recursion if 'subdivide_costs' exceed 'lincomb_costs'
-	  *  or 'max_costs'.
-	  */
-	 remaining_costs = MIN(lincomb_costs, max_costs) - subdivide_costs;
+         /*
+          *  If necessary compute the inner products of the new states
+          *  (generated during the recursive approximation of child [0])
+          */
+         if (label && rrange.level <= c->options.lc_max_level)
+            compute_ip_images_state (child[label].image, child[label].address,
+                                     child[label].level, 1, states, wfa, c);
+         /*
+          *  Call subdivide() for both children.
+          *  Abort the recursion if 'subdivide_costs' exceed 'lincomb_costs'
+          *  or 'max_costs'.
+          */
+         remaining_costs = MIN(lincomb_costs, max_costs) - subdivide_costs;
 
-	 if (remaining_costs > 0)	/* still a way for improvement */
-	 {
-	    subdivide_costs += subdivide (remaining_costs, band,
-					  new_y_state [label], &child [label],
-					  wfa, c, prediction, delta);
-	 }
-	 else if (try_mc && child[label].level >= wfa->wfainfo->p_min_level)
-	 {
-	    fill_norms_table (child[label].x, child[label].y,
-			      child[label].level, wfa->wfainfo, c->mt);
-	 }
+         if (remaining_costs > 0)       /* still a way for improvement */
+         {
+            subdivide_costs += subdivide (remaining_costs, band,
+                                          new_y_state [label], &child [label],
+                                          wfa, c, prediction, delta);
+         }
+         else if (try_mc && child[label].level >= wfa->wfainfo->p_min_level)
+         {
+            fill_norms_table (child[label].x, child[label].y,
+                              child[label].level, wfa->wfainfo, c->mt);
+         }
 
-	 if (try_mc)
-	    update_norms_table (rrange.level, wfa->wfainfo, c->mt);
+         if (try_mc)
+            update_norms_table (rrange.level, wfa->wfainfo, c->mt);
 
-	 /*
-	  *  Update of progress meter
-	  */
-	 if (c->options.progress_meter != FIASCO_PROGRESS_NONE)
-	 {
-	    if (c->options.progress_meter == FIASCO_PROGRESS_PERCENT)
-	    {
-	       unsigned	new_percent; 	/* new status of progress meter */
+         /*
+          *  Update of progress meter
+          */
+         if (c->options.progress_meter != FIASCO_PROGRESS_NONE)
+         {
+            if (c->options.progress_meter == FIASCO_PROGRESS_PERCENT)
+            {
+               unsigned new_percent;    /* new status of progress meter */
 
-	       new_percent = (child[label].global_address + 1) * 100.0
-			     / (1 << (wfa->wfainfo->level - child[label].level));
-	       if (new_percent > percent)
-	       {
-		  percent = new_percent;
-		  info ("%3d%%  \r", percent);
-	       }
-	    }
-	    else if (c->options.progress_meter == FIASCO_PROGRESS_BAR)
-	    {
-	       unsigned	new_percent;	/* new status of progress meter */
+               new_percent = (child[label].global_address + 1) * 100.0
+                             / (1 << (wfa->wfainfo->level - child[label].level));
+               if (new_percent > percent)
+               {
+                  percent = new_percent;
+                  info ("%3d%%  \r", percent);
+               }
+            }
+            else if (c->options.progress_meter == FIASCO_PROGRESS_BAR)
+            {
+               unsigned new_percent;    /* new status of progress meter */
 
-	       new_percent = (child[label].global_address + 1) * 50.0
-			     / (1 << (wfa->wfainfo->level
-				      - child[label].level));
-	       for (; new_percent > percent; percent++)
-	       {
-		  info ("#");
-	       }
-	    }
-	 }
+               new_percent = (child[label].global_address + 1) * 50.0
+                             / (1 << (wfa->wfainfo->level
+                                      - child[label].level));
+               for (; new_percent > percent; percent++)
+               {
+                  info ("#");
+               }
+            }
+         }
 
-	 /*
-	  *  If costs of subdivision exceed costs of linear combination
-	  *  then abort recursion.
-	  */
-	 if (subdivide_costs >= MIN(lincomb_costs, max_costs))
-	 {
-	    subdivide_costs = MAXCOSTS;
-	    break;
-	 }
-	 rrange.err             += child [label].err;
-	 rrange.tree_bits       += child [label].tree_bits;
-	 rrange.matrix_bits     += child [label].matrix_bits;
-	 rrange.weights_bits    += child [label].weights_bits;
-	 rrange.mv_tree_bits    += child [label].mv_tree_bits;
-	 rrange.mv_coord_bits   += child [label].mv_coord_bits;
-	 rrange.nd_weights_bits += child [label].nd_weights_bits;
-	 rrange.nd_tree_bits    += child [label].nd_tree_bits;
+         /*
+          *  If costs of subdivision exceed costs of linear combination
+          *  then abort recursion.
+          */
+         if (subdivide_costs >= MIN(lincomb_costs, max_costs))
+         {
+            subdivide_costs = MAXCOSTS;
+            break;
+         }
+         rrange.err             += child [label].err;
+         rrange.tree_bits       += child [label].tree_bits;
+         rrange.matrix_bits     += child [label].matrix_bits;
+         rrange.weights_bits    += child [label].weights_bits;
+         rrange.mv_tree_bits    += child [label].mv_tree_bits;
+         rrange.mv_coord_bits   += child [label].mv_coord_bits;
+         rrange.nd_weights_bits += child [label].nd_weights_bits;
+         rrange.nd_tree_bits    += child [label].nd_tree_bits;
 
-	 tree_update (ischild (child [label].tree) ? CHILD : LEAF,
-		      child [label].level, &c->tree);
-	 tree_update (child [label].prediction ? LEAF : CHILD,
-		      child [label].level, &c->p_tree);
+         tree_update (ischild (child [label].tree) ? CHILD : LEAF,
+                      child [label].level, &c->tree);
+         tree_update (child [label].prediction ? LEAF : CHILD,
+                      child [label].level, &c->p_tree);
       }
    }
    else
@@ -382,9 +382,9 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
     *  Predict range via motion compensation or nondeterminism and
     *  approximate delta image.
     */
-   if (try_mc || try_nd)		/* try prediction */
+   if (try_mc || try_nd)                /* try prediction */
    {
-       real_t prediction_costs;	/* Costs arising from approx. the current
+       real_t prediction_costs; /* Costs arising from approx. the current
                                    range with prediction */
 
        prediction_costs
@@ -393,7 +393,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
                             price, range, wfa, c, band, y_state, states,
                             &tree_model, &p_tree_model, domain_model,
                             d_domain_model, coeff_model, d_coeff_model);
-       if (prediction_costs < MAXCOSTS)	/* prediction has smallest costs */
+       if (prediction_costs < MAXCOSTS) /* prediction has smallest costs */
        {
            c->domain_pool->model_free (domain_model);
            c->d_domain_pool->model_free (d_domain_model);
@@ -426,13 +426,13 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 
       c->domain_pool->model   = domain_model;
       c->d_domain_pool->model = d_domain_model;
-      c->coeff->model	      = coeff_model;
-      c->d_coeff->model	      = d_coeff_model;
+      c->coeff->model         = coeff_model;
+      c->d_coeff->model       = d_coeff_model;
       c->tree                 = tree_model;
       c->p_tree               = p_tree_model;
 
       if (wfa->states != states)
-	 remove_states (states, wfa);
+         remove_states (states, wfa);
 
       return MAXCOSTS;
    }
@@ -455,15 +455,15 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 
       c->domain_pool->model   = lc_domain_model;
       c->d_domain_pool->model = lc_d_domain_model;
-      c->coeff->model	      = lc_coeff_model;
-      c->d_coeff->model	      = lc_d_coeff_model;
+      c->coeff->model         = lc_coeff_model;
+      c->d_coeff->model       = lc_d_coeff_model;
       c->tree                 = tree_model;
       c->p_tree               = p_tree_model;
 
       *range = lrange;
 
       if (wfa->states != states)
-	 remove_states (states, wfa);
+         remove_states (states, wfa);
 
       return lincomb_costs;
    }
@@ -478,15 +478,15 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
        *  - if state is (partially) outside image geometry
        */
       if (band > Y
-	  || (c->tiling->exponent
-	      && rrange.level > wfa->wfainfo->level - c->tiling->exponent)
-	  || (range->x + width_of_level (range->level)
-	      > c->mt->original->width)
-	  || (range->y + height_of_level (range->level)
-	      > c->mt->original->height))
-	 init_new_state (YES, delta, &rrange, child, new_y_state, wfa, c);
+          || (c->tiling->exponent
+              && rrange.level > wfa->wfainfo->level - c->tiling->exponent)
+          || (range->x + width_of_level (range->level)
+              > c->mt->original->width)
+          || (range->y + height_of_level (range->level)
+              > c->mt->original->height))
+         init_new_state (YES, delta, &rrange, child, new_y_state, wfa, c);
       else
-	 init_new_state (NO, delta, &rrange, child, new_y_state, wfa, c);
+         init_new_state (NO, delta, &rrange, child, new_y_state, wfa, c);
 
       *range = rrange;
 
@@ -505,8 +505,8 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 
 void
 cut_to_bintree (real_t *dst, const word_t *src,
-		unsigned src_width, unsigned src_height,
-		unsigned x0, unsigned y0, unsigned width, unsigned height)
+                unsigned src_width, unsigned src_height,
+                unsigned x0, unsigned y0, unsigned width, unsigned height)
 /*
  *  Cut region ('x0', 'y0', 'width', 'height') of the pixel array 'src'.
  *  Size of image is given by 'src_width' x 'src_height'.
@@ -515,15 +515,15 @@ cut_to_bintree (real_t *dst, const word_t *src,
  *  No return value.
  *
  *  Side effects:
- *	'dst []' is filled with corresponding region.
+ *      'dst []' is filled with corresponding region.
  */
 {
    const unsigned mask01      = 0x555555; /* binary ...010101010101 */
    const unsigned mask10      = 0xaaaaaa; /* binary ...101010101010 */
    const unsigned mask01plus1 = mask01 + 1; /* binary ...010101010110 */
    const unsigned mask10plus1 = mask10 + 1; /* binary ...101010101011 */
-   unsigned  	  x, y;			/* pixel coordinates */
-   unsigned  	  xmask, ymask;		/* address conversion */
+   unsigned       x, y;                 /* pixel coordinates */
+   unsigned       xmask, ymask;         /* address conversion */
 
    if (width != height && width != (height >> 1))
       error ("Bintree cutting requires special type of images.");
@@ -534,24 +534,24 @@ cut_to_bintree (real_t *dst, const word_t *src,
       xmask = 0;
       for (x = x0; x < x0 + width; x++, xmask = (xmask + mask01plus1) & mask10)
       {
-	 if (y >= src_height || x >= src_width)
-	    dst [xmask | ymask] = 0;
-	 else
-	    dst [xmask | ymask] = src [y * src_width + x] / 16;
+         if (y >= src_height || x >= src_width)
+            dst [xmask | ymask] = 0;
+         else
+            dst [xmask | ymask] = src [y * src_width + x] / 16;
       }
    }
 }
 
 /*****************************************************************************
 
-				private code
+                                private code
 
 *****************************************************************************/
 
 static void
 init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
-		const range_t *child, const int *y_state,
-		wfa_t *wfa, coding_t *c)
+                const range_t *child, const int *y_state,
+                wfa_t *wfa, coding_t *c)
 /*
  *  Initializes a new state with all parameters needed for the encoding step.
  *  If flag 'auxiliary_state' is set then don't insert state into domain pools.
@@ -563,7 +563,7 @@ init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
  *  No return value.
  *
  *  Side effects:
- *	New state is appended to 'wfa' (and also its inner products and images
+ *      New state is appended to 'wfa' (and also its inner products and images
  *      are computed and stored in 'c')
  */
 {
@@ -573,13 +573,13 @@ init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
    if (!auxiliary_state)
    {
       if (!delta || c->options.delta_domains)
-	 state_is_domain = c->domain_pool->append (wfa->states, range->level,
-						   wfa, c->domain_pool->model);
+         state_is_domain = c->domain_pool->append (wfa->states, range->level,
+                                                   wfa, c->domain_pool->model);
       if (delta || c->options.normal_domains)
-	 state_is_domain = c->d_domain_pool->append (wfa->states, range->level,
-						     wfa,
-						     c->d_domain_pool->model)
-			   || state_is_domain;
+         state_is_domain = c->d_domain_pool->append (wfa->states, range->level,
+                                                     wfa,
+                                                     c->d_domain_pool->model)
+                           || state_is_domain;
    }
    else
       state_is_domain = NO;
@@ -597,7 +597,7 @@ init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
       wfa->prediction [wfa->states][label] = child [label].prediction;
 
       append_transitions (wfa->states, label, child [label].weight,
-			  child [label].into, wfa);
+                          child [label].into, wfa);
    }
    wfa->delta_state [wfa->states] = delta;
 
@@ -607,13 +607,13 @@ init_new_state (bool_t auxiliary_state, bool_t delta, range_t *range,
 /*    state_is_domain = YES; */
 
    append_state (!state_is_domain,
-		 compute_final_distribution (wfa->states, wfa),
-		 range->level, wfa, c);
+                 compute_final_distribution (wfa->states, wfa),
+                 range->level, wfa, c);
 }
 
 static void
 init_range (range_t *range, const image_t *image, unsigned band,
-	    const wfa_t *wfa, coding_t *c)
+            const wfa_t *wfa, coding_t *c)
 /*
  *  Read a new 'range' of the image 'image_name' (current color component
  *  is 'band') and compute the new inner product arrays.
@@ -621,9 +621,9 @@ init_range (range_t *range, const image_t *image, unsigned band,
  *  No return value.
  *
  *  Side effects:
- *	'c->pixels' are filled with pixel values of image block
- *	'c->ip_images_state' are computed with respect to new image block
- *	'range->address' and 'range->image' are initialized with zero
+ *      'c->pixels' are filled with pixel values of image block
+ *      'c->ip_images_state' are computed with respect to new image block
+ *      'range->address' and 'range->image' are initialized with zero
  */
 {
    unsigned state;
@@ -633,13 +633,13 @@ init_range (range_t *range, const image_t *image, unsigned band,
     */
    for (state = 0; state < wfa->states; state++)
       if (need_image (state, wfa))
-	 memset (c->ip_images_state[state], 0,
-		 size_of_tree (c->products_level) * sizeof(real_t));
+         memset (c->ip_images_state[state], 0,
+                 size_of_tree (c->products_level) * sizeof(real_t));
 
    cut_to_bintree (c->pixels, image->pixels [band],
-		   image->width, image->height,
-		   range->x, range->y, width_of_level (range->level),
-		   height_of_level (range->level));
+                   image->width, image->height,
+                   range->x, range->y, width_of_level (range->level),
+                   height_of_level (range->level));
 
    range->address = range->image = 0;
    compute_ip_images_state (0, 0, range->level, 1, 0, wfa, c);

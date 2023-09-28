@@ -1,6 +1,6 @@
 /*
  *  error.h
- *  
+ *
  *  Written by:     Stefan Frank
  *          Ullrich Hafner
  *
@@ -19,11 +19,11 @@ void
 file_error (const char *filename);
 void
 message (const char *format, ...);
-void 
+void
 debug_message (const char *format, ...);
 void
 warning (const char *format, ...);
-void 
+void
 info (const char *format, ...);
 const char *
 get_system_error (void);

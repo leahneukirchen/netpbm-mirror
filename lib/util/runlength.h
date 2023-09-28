@@ -14,12 +14,12 @@ extern "C" {
 
 
 enum pm_RleMode { PM_RLE_PACKBITS,          /* most common mode */
-                  PM_RLE_GRAPHON,           /* reserved */ 
+                  PM_RLE_GRAPHON,           /* reserved */
                   PM_RLE_PPA,               /* reserved */
                   PM_RLE_SGI8,              /* reserved */
                   PM_RLE_SGI16,
                   PM_RLE_PALM16,
-                  PM_RLE_PALMPDB  
+                  PM_RLE_PALMPDB
                 };
 
 size_t

@@ -247,6 +247,7 @@ def makeman(name, file, indoc):
     indoc = indoc.replace("&mdash;", "-")
     indoc = indoc.replace("&mu;", "mu")
     indoc = indoc.replace("&sigma;", "sigma")
+    indoc = indoc.replace("&apos;", "'")
     # Tables
     # This will not handle rowspan
     indoc = re.sub('(?i) *<table[^>]*>.*', ".TS", indoc)

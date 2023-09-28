@@ -27,12 +27,14 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
+#include <assert.h>
+#include <string.h>
+
 #include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
-#include <string.h>
-#include <assert.h>
 
 static char *rowBuffer, *prevRowBuffer, *packBuffer, *deltaBuffer;
 static int rowBufferSize, rowBufferIndex, prevRowBufferIndex;
@@ -43,7 +45,7 @@ static int item, bitsperitem, bitshift;
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -58,8 +60,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -91,10 +93,10 @@ parseCommandLine(int argc, char ** argv,
             &compressSpec, 0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)
@@ -144,7 +146,7 @@ freeBuffers(void) {
 
 
 static void
-putinit(struct cmdlineInfo const cmdline) {
+putinit(struct CmdlineInfo const cmdline) {
     if (!cmdline.noreset) {
         /* Printer reset. */
         printf("\033E");
@@ -352,9 +354,9 @@ findRightmostBlackCol(const bit *    const bitrow,
     for (i = cols - 1; i >= 0 && bitrow[i] == PBM_WHITE; --i);
 
     if (i < 0)
-        *allWhiteP = TRUE;
+        *allWhiteP = true;
     else {
-        *allWhiteP = FALSE;
+        *allWhiteP = false;
         *blackColP = i;
     }
 }
@@ -495,7 +497,7 @@ printRow(void) {
 
 static void
 doPage(FILE *             const ifP,
-       struct cmdlineInfo const cmdline) {
+       struct CmdlineInfo const cmdline) {
 
     bit * bitrow;
     int rows, cols, format, row;
@@ -541,19 +543,19 @@ doPage(FILE *             const ifP,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int eof;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilename);
 
-    eof = FALSE;
+    eof = false;
     while (!eof) {
         doPage(ifP, cmdline);
         pbm_nextimage(ifP, &eof);

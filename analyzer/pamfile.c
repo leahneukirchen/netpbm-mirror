@@ -92,30 +92,30 @@ dumpHeaderHuman(struct pam const pam) {
         printf("    Tuple type: %s\n", pam.tuple_type);
         break;
 
-	case PBM_FORMAT:
+        case PBM_FORMAT:
         printf("PBM plain, %d by %d\n", pam.width, pam.height );
         break;
 
-	case RPBM_FORMAT:
+        case RPBM_FORMAT:
         printf("PBM raw, %d by %d\n", pam.width, pam.height);
         break;
 
-	case PGM_FORMAT:
+        case PGM_FORMAT:
         printf("PGM plain, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
 
-	case RPGM_FORMAT:
+        case RPGM_FORMAT:
         printf("PGM raw, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
 
-	case PPM_FORMAT:
+        case PPM_FORMAT:
         printf("PPM plain, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
 
-	case RPPM_FORMAT:
+        case RPPM_FORMAT:
         printf("PPM raw, %d by %d  maxval %ld\n",
                pam.width, pam.height, pam.maxval);
         break;
@@ -136,32 +136,32 @@ dumpHeaderMachine(struct pam const pam) {
         plain = false;
         break;
 
-	case PBM_FORMAT:
+        case PBM_FORMAT:
         formatString = "PBM";
         plain = TRUE;
         break;
 
-	case RPBM_FORMAT:
+        case RPBM_FORMAT:
         formatString = "PBM";
         plain = false;
         break;
 
-	case PGM_FORMAT:
+        case PGM_FORMAT:
         formatString = "PGM";
         plain = TRUE;
         break;
 
-	case RPGM_FORMAT:
+        case RPGM_FORMAT:
         formatString = "PGM";
         plain = false;
         break;
 
-	case PPM_FORMAT:
+        case PPM_FORMAT:
         formatString = "PPM";
         plain = TRUE;
         break;
 
-	case RPPM_FORMAT:
+        case RPPM_FORMAT:
         formatString = "PPM";
         plain = false;        break;
     }
@@ -340,8 +340,8 @@ main(int argc, const char *argv[]) {
                             cmdline.comments);
 
             pm_close(ifP);
-	    }
-	}
+            }
+        }
 
     return 0;
 }

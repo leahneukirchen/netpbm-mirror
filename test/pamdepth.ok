@@ -10,5 +10,5 @@ stdin: PAM RAW 14 16 1 1 GRAYSCALE
 Test 2
 0 0 : 0
 Test Invalid
-Expected failure 1 1
-Expected failure 2 1
+Expected failure 1 (no output)
+Expected failure 2 (no output)

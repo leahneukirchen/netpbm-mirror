@@ -1,0 +1,145 @@
+#! /bin/sh
+# This script tests: ppmrough
+# Also requires:
+
+tmpdir=${tmpdir:-/tmp}
+test_out=${tmpdir}/test_out
+
+
+# Test Invalid
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+ppmrough -h 10 -w 10 -top -1 > ${test_out} || \
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -h 10 -w 100 -top 11 > ${test_out} || \
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+ppmrough -h 10 -w 10 -bottom -1 > ${test_out} || \
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -h 10 -w 1000 -bottom 11 > ${test_out} || \
+  printf "Expected failure 4 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -h 10 -w 10 -left -1 > ${test_out} || \
+  printf "Expected failure 5 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -h 10 -w 100 -left 101 > ${test_out} || \
+  printf "Expected failure 6 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+ppmrough -h 10 -w 10 -right -1 > ${test_out} || \
+  printf "Expected failure 7 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -h 10 -w 1000 -right 1001 > ${test_out} || \
+  printf "Expected failure 8 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+ppmrough -width 0.1 > ${test_out} || \
+  printf "Expected failure 9 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -width -1 > ${test_out} || \
+  printf "Expected failure 10 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -width > ${test_out} || \
+  printf "Expected failure 11 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+ppmrough -height 0.1 > ${test_out} || \
+  printf "Expected failure 12 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -height -1 > ${test_out} || \
+  printf "Expected failure 13 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -height > ${test_out} || \
+  printf "Expected failure 14 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+ppmrough -randomseed 0.1 > ${test_out} || \
+  printf "Expected failure 15 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -randomseed -1 > ${test_out} || \
+  printf "Expected failure 16 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -randomseed > ${test_out} || \
+  printf "Expected failure 17 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+
+ppmrough -var A > ${test_out} || \
+  printf "Expected failure 20 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -var -1 > ${test_out} || \
+  printf "Expected failure 18 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -var > ${test_out} || \
+  printf "Expected failure 19 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+ppmrough -bg redmint > ${test_out} || \
+  printf "Expected failure 20 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -bg > ${test_out} || \
+  printf "Expected failure 21 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+
+ppmrough -fg redmint > ${test_out} || \
+  printf "Expected failure 22 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+ppmrough -fg > ${test_out} || \
+  printf "Expected failure 23 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+

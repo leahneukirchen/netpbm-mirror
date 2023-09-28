@@ -67,14 +67,14 @@ computePrevFyFx(MpegFrame * const prevFrame,
         if (yHalf) {
             if (m.y < 0)
                 --*fyP;
-        
+
             *prevP = prevFrame->halfBoth;
         } else
             *prevP = prevFrame->halfX;
     } else if (yHalf) {
         if (m.y < 0)
             --*fyP;
-        
+
         *prevP = prevFrame->halfY;
     } else
         *prevP = prevFrame->ref_y;
@@ -185,7 +185,7 @@ LumMotionErrorB(const LumBlock * const currentBlockP,
     computePrevFyFx(prevFrame, by, bx, m, &prev, &fy, &fx);
 
     diff = 0;  /* initial value */
-    
+
     for (rowNumber = 0; rowNumber < 16; rowNumber +=2) {
         uint8 *       const macross    = &(prev[fy + rowNumber][fx]);
         const int32 * const currentRow = currentBlockP->l[rowNumber];
@@ -226,7 +226,7 @@ LumMotionErrorC(const LumBlock * const currentBlockP,
     computePrevFyFx(prevFrame, by, bx, m, &prev, &fy, &fx);
 
     diff = 0;  /* initial value */
-    
+
     for (rowNumber = 1; rowNumber < 16; rowNumber +=2) {
         uint8 *       const macross    = &(prev[fy + rowNumber][fx]);
         const int32 * const currentRow = currentBlockP->l[rowNumber];

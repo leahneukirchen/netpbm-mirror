@@ -22,13 +22,13 @@ extern "C" {
    array.
 */
 #define STRSCPY(A,B) \
-	(strncpy((A), (B), sizeof(A)), *((A)+sizeof(A)-1) = '\0')
+        (strncpy((A), (B), sizeof(A)), *((A)+sizeof(A)-1) = '\0')
 #define STRSCMP(A,B) \
-	(strncmp((A), (B), sizeof(A)))
+        (strncmp((A), (B), sizeof(A)))
 #define STRSCAT(A,B) \
     (strncpy(A+strlen(A), B, sizeof(A)-strlen(A)), *((A)+sizeof(A)-1) = '\0')
 #define STRSEQ(A, B) \
-	(strneq((A), (B), sizeof(A)))
+        (strneq((A), (B), sizeof(A)))
 
 #define MEMSEQ(a,b) (memeq(a, b, sizeof(*(a))))
 
@@ -128,8 +128,7 @@ strncaseeq(const char * const comparand,
    subroutines whose names are similar.  They're here because not all standard
    C libraries have them.
 
-   The GNU C library has all of them.  All but the oldest standard C libraries
-   have snprintf().
+   The GNU C library has all of them.
 
    There are slight differences between the asprintf() family and that
    found in other libraries:
@@ -154,19 +153,6 @@ extern const char * const pm_strsol;
 size_t
 pm_strnlen(const char * const s,
            size_t       const maxlen);
-
-int
-pm_snprintf(char *       const dest,
-            size_t       const maxSize,
-            const char * const fmt,
-            ...) PM_GNU_PRINTF_ATTR(3,4);
-
-void
-pm_vsnprintf(char *       const str,
-             size_t       const maxSize,
-             const char * const fmt,
-             va_list            ap,
-             size_t *     const sizeP);
 
 const char *
 pm_strdup(const char * const arg);

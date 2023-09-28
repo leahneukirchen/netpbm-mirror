@@ -127,7 +127,7 @@ parseArgs(int     const argc,
     cmdlineP->outputFrames = 0;
     cmdlineP->maxMachines = MAXINT;
     cmdlineP->specificFrames = FALSE;
-    
+
     /* parse the arguments */
     idx = 1;
     while (idx < argc-1) {
@@ -143,10 +143,10 @@ parseArgs(int     const argc,
             } else
                 pm_error("Invalid -stat option");
         } else if (streq(argv[idx], "-gop")) {
-            if (cmdlineP->function != ENCODE_FRAMES || 
+            if (cmdlineP->function != ENCODE_FRAMES ||
                 cmdlineP->specificFrames)
                 pm_error("Invalid -gop option");
-            
+
             if (idx+1 < argc-1) {
                 whichGOP = atoi(argv[idx+1]);
                 idx += 2;
@@ -170,12 +170,12 @@ parseArgs(int     const argc,
                 cmdlineP->specificFrames = TRUE;
                 cmdlineP->frameStart = frameStart;
                 cmdlineP->frameEnd   = frameEnd;
-                
+
                 idx += 3;
             } else
                 pm_error("-frames needs to be followed by two values");
         } else if (streq(argv[idx], "-combine_gops")) {
-            if (cmdlineP->function != ENCODE_FRAMES || whichGOP != -1 || 
+            if (cmdlineP->function != ENCODE_FRAMES || whichGOP != -1 ||
                 cmdlineP->specificFrames) {
                 pm_error("Invalid -combine_gops option");
             }
@@ -345,7 +345,7 @@ announceJob(enum frameContext const context,
             combineDest = strdup("for delivery to combine server");
         else
             combineDest = strdup("");
-    
+
         pm_message("%s:  ENCODING FRAMES %u-%u to %s %s",
                    hostname, frameStart, frameEnd, outputDest, combineDest);
 
@@ -359,7 +359,7 @@ announceJob(enum frameContext const context,
 static void
 encodeSomeFrames(struct inputSource * const inputSourceP,
                  boolean              const childProcess,
-                 enum frameContext    const context, 
+                 enum frameContext    const context,
                  unsigned int         const frameStart,
                  unsigned int         const frameEnd,
                  int32                const qtable[],
@@ -370,7 +370,7 @@ encodeSomeFrames(struct inputSource * const inputSourceP,
                  bool                 const wantVbvOverflowWarning,
                  boolean              const printStats,
                  unsigned int *       const encodeTimeP) {
-    
+
     time_t framesTimeStart, framesTimeEnd;
     unsigned int inputFrameBits;
     unsigned int totalBits;
@@ -383,7 +383,7 @@ encodeSomeFrames(struct inputSource * const inputSourceP,
                         frameStart, frameEnd, inputSourceP);
 
     GenMPEGStream(inputSourceP, context, frameStart, frameEnd,
-                  qtable, niqtable, childProcess, ofp, outputFileName, 
+                  qtable, niqtable, childProcess, ofp, outputFileName,
                   wantVbvUnderflowWarning, wantVbvOverflowWarning,
                   &inputFrameBits, &totalBits);
 
@@ -396,7 +396,7 @@ encodeSomeFrames(struct inputSource * const inputSourceP,
                    hostname, frameStart, frameEnd, *encodeTimeP);
 
     if (printStats)
-        PrintEndStats(framesTimeStart, framesTimeEnd, 
+        PrintEndStats(framesTimeStart, framesTimeEnd,
                       inputFrameBits, totalBits);
 }
 
@@ -422,14 +422,14 @@ encodeFrames(struct inputSource * const inputSourceP,
   Encode the stream.  If 'specificFrames' is true, then encode frames
   'whichFrameStart' through 'whichFrameEnd' individually.  Otherwise,
   encode the entire input stream as a complete MPEG stream.
-  
+
   'childProcess' means to do it as a child process that is under the
   supervision of a master process and is possibly doing only part of
   a larger batch.
-  
+
   (If we had proper modularity, we wouldn't care, but parallel operation
   was glued on to this program after it was complete).
-  
+
   One thing we don't do when running as a child process is print
   statistics; our master will do that for the whole job.
 ----------------------------------------------------------------------------*/
@@ -442,7 +442,7 @@ encodeFrames(struct inputSource * const inputSourceP,
 
     if (whichGOP != -1) {
         /* He wants just one particular GOP from the middle of the movie. */
-        ComputeGOPFrames(whichGOP, &frameStart, &frameEnd, 
+        ComputeGOPFrames(whichGOP, &frameStart, &frameEnd,
                          inputSourceP->numInputFiles);
         context = CONTEXT_GOP;
     } else if (specificFrames) {
@@ -465,36 +465,36 @@ encodeFrames(struct inputSource * const inputSourceP,
         frameEnd   = inputSourceP->numInputFiles - 1;
         context = CONTEXT_WHOLESTREAM;
     }
-    
+
     printStats = !childProcess;
-    
+
     encodeSomeFrames(inputSourceP, childProcess, context, frameStart, frameEnd,
                      customQtable, customNIQtable,
-                     ofp, outputFileName, 
+                     ofp, outputFileName,
                      wantVbvUnderflowWarning, wantVbvOverflowWarning,
                      printStats,
                      &lastEncodeTime);
 
     if (childProcess) {
         boolean moreWorkToDo;
-        
+
         /* A child is not capable of generating GOP or stream headers */
         assert(context == CONTEXT_JUSTFRAMES);
-        
+
         moreWorkToDo = TRUE;  /* initial assumption */
         while (moreWorkToDo) {
             int nextFrameStart, nextFrameEnd;
 
-            NotifyMasterDone(masterHostname, masterPortNumber, machineNumber, 
+            NotifyMasterDone(masterHostname, masterPortNumber, machineNumber,
                              lastEncodeTime, &moreWorkToDo,
                              &nextFrameStart, &nextFrameEnd);
             if (moreWorkToDo)
-                encodeSomeFrames(inputSourceP, childProcess, 
-                                 CONTEXT_JUSTFRAMES, 
+                encodeSomeFrames(inputSourceP, childProcess,
+                                 CONTEXT_JUSTFRAMES,
                                  nextFrameStart, nextFrameEnd,
                                  customQtable, customNIQtable,
-                                 NULL, outputFileName, 
-                                 wantVbvUnderflowWarning, 
+                                 NULL, outputFileName,
+                                 wantVbvUnderflowWarning,
                                  wantVbvOverflowWarning,
                                  FALSE,
                                  &lastEncodeTime);
@@ -527,13 +527,13 @@ static void
 getUserFrameFile(void *       const handle,
                  unsigned int const frameNumber,
                  FILE **      const ifPP) {
-    
+
     struct inputSource * const inputSourceP = (struct inputSource *) handle;
 
     if (inputSourceP->stdinUsed)
         pm_error("You cannot combine frames from Standard Input.");
             /* Because Caller detects end of frames by EOF */
-    
+
     if (frameNumber >= inputSourceP->numInputFiles)
         *ifPP = NULL;
     else {
@@ -541,14 +541,14 @@ getUserFrameFile(void *       const handle,
         const char * inputFileName;
 
         GetNthInputFileName(inputSourceP, frameNumber, &inputFileName);
-        
+
         pm_asprintf(&fileName, "%s/%s", currentFramePath, inputFileName);
-        
+
         *ifPP = fopen(fileName, "rb");
         if (*ifPP == NULL)
             pm_error("Unable to open file '%s'.  Errno = %d (%s)",
                      fileName, errno, strerror(errno));
-        
+
         pm_strfree(inputFileName);
         pm_strfree(fileName);
     }
@@ -585,11 +585,11 @@ framePoolSize(bool const sequentialInput) {
         for ( idx = 0, bcount = 0; idx < strlen(framePattern); idx++) {
 
             /* counts the maximum number of B frames between two reference
-             * frames. 
+             * frames.
              */
-            
+
             switch( framePattern[idx] ) {
-            case 'b': 
+            case 'b':
                 bcount++;
                 break;
             case 'i':
@@ -599,12 +599,12 @@ framePoolSize(bool const sequentialInput) {
                 bcount = 0;
                 break;
             }
-            
+
             /* add 2 to hold the forward and past reference frames in addition
-             * to the maximum number of B's 
+             * to the maximum number of B's
              */
         }
-        
+
         numOfFrames += 2;
 
     } else {
@@ -656,22 +656,22 @@ main(int argc, char **argv) {
     Tune_Init();
     Frame_Init(framePoolSize(params.inputSourceP->stdinUsed));
 
-    if (specificsOn) 
+    if (specificsOn)
         Specifics_Init();
 
-    ComputeFrameTable(params.inputSourceP->stdinUsed ? 
+    ComputeFrameTable(params.inputSourceP->stdinUsed ?
                       0 : params.inputSourceP->numInputFiles);
 
     if (ioServer) {
-        IoServer(params.inputSourceP, cmdline.masterHostname, 
+        IoServer(params.inputSourceP, cmdline.masterHostname,
                  cmdline.masterPortNumber);
         return 0;
     } else if (outputServer) {
-        CombineServer(cmdline.outputFrames, 
+        CombineServer(cmdline.outputFrames,
                       cmdline.masterHostname, cmdline.masterPortNumber,
                       outputFileName);
     } else if (decodeServer) {
-        DecodeServer(cmdline.outputFrames, outputFileName, 
+        DecodeServer(cmdline.outputFrames, outputFileName,
                      cmdline.masterHostname, cmdline.masterPortNumber);
     } else {
         if (!cmdline.specificFrames &&
@@ -681,18 +681,18 @@ main(int argc, char **argv) {
                 pm_error("Could not open output file!");
         } else
             ofP = NULL;
-        
+
         if (cmdline.function == ENCODE_FRAMES) {
             if (numMachines == 0 || cmdline.specificFrames) {
                 encodeFrames(params.inputSourceP,
-                             cmdline.childProcess, 
+                             cmdline.childProcess,
                              cmdline.masterHostname, cmdline.masterPortNumber,
                              whichGOP, cmdline.specificFrames,
                              cmdline.frameStart, cmdline.frameEnd,
                              customQtable, customNIQtable,
                              ofP, outputFileName,
                              params.warnUnderflow, params.warnOverflow);
-                
+
             } else
                 runMaster(params.inputSourceP,
                           cmdline.paramFileName, outputFileName);
@@ -701,9 +701,9 @@ main(int argc, char **argv) {
         else if (cmdline.function == COMBINE_FRAMES)
             FramesToMPEG(ofP, params.inputSourceP,
                          &getUserFrameFile, &nullDisposeFile);
-    } 
+    }
     Frame_Exit();
-        
+
     pm_strfree(hostname);
 
     return 0;

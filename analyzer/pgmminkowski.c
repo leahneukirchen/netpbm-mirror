@@ -1,9 +1,9 @@
-/* pgmminkowsky.c - read a portable graymap and calculate the Minkowski 
+/* pgmminkowsky.c - read a portable graymap and calculate the Minkowski
 ** Integrals as a function of the threshold.
 **
 ** Copyright (C) 2000 by Luuk van Dijk/Mind over Matter
 **
-** Based on pgmhist.c, 
+** Based on pgmhist.c,
 ** Copyright (C) 1989 by Jef Poskanzer.
 **
 ** Permission to use, copy, modify, and distribute this software and its
@@ -22,7 +22,7 @@
 #define MAX4(a,b,c,d) MAX2( MAX2((a),(b)), MAX2((c),(d)) )
 
 int main( int argc, char** argv ){
-  
+
   FILE *ifp;
 
   gray maxval;
@@ -31,11 +31,11 @@ int main( int argc, char** argv ){
   gray* prevrow;
   gray* thisrow;
   gray* tmprow;
-  
-  int* countTile;   
-  int* countEdgeX;  
-  int* countEdgeY; 
-  int* countVertex; 
+
+  int* countTile;
+  int* countEdgeX;
+  int* countEdgeY;
+  int* countVertex;
 
   int i, col, row;
 
@@ -46,12 +46,12 @@ int main( int argc, char** argv ){
 
   /*
    * parse arg and initialize
-   */ 
+   */
 
   pgm_init( &argc, argv );
 
   if ( argc > 2 ) pm_usage( "[pgmfile]" );
-  
+
   if ( argc == 2 )
     ifp = pm_openr( argv[1] );
   else
@@ -62,19 +62,19 @@ int main( int argc, char** argv ){
    */
 
   pgm_readpgminit( ifp, &cols, &rows, &maxval, &format );
-  
+
   prevrow = pgm_allocrow( cols );
   thisrow = pgm_allocrow( cols );
-  
+
   MALLOCARRAY(countTile   , maxval + 1 );
   MALLOCARRAY(countEdgeX  , maxval + 1 );
   MALLOCARRAY(countEdgeY  , maxval + 1 );
   MALLOCARRAY(countVertex , maxval + 1 );
- 
+
   if (countTile == NULL || countEdgeX == NULL || countEdgeY == NULL ||
       countVertex == NULL)
       pm_error( "out of memory" );
-  
+
   for ( i = 0; i <= maxval; i++ ) countTile[i]   = 0;
   for ( i = 0; i <= maxval; i++ ) countEdgeX[i]  = 0;
   for ( i = 0; i <= maxval; i++ ) countEdgeY[i]  = 0;
@@ -89,84 +89,84 @@ int main( int argc, char** argv ){
 
   /* tiles */
 
-  for ( col = 0; col < cols; ++col ) ++countTile[thisrow[col]]; 
-  
+  for ( col = 0; col < cols; ++col ) ++countTile[thisrow[col]];
+
   /* y-edges */
 
-  for ( col = 0; col < cols; ++col ) ++countEdgeY[thisrow[col]]; 
+  for ( col = 0; col < cols; ++col ) ++countEdgeY[thisrow[col]];
 
   /* x-edges */
 
   ++countEdgeX[thisrow[0]];
 
-  for ( col = 0; col < cols-1; ++col ) 
+  for ( col = 0; col < cols-1; ++col )
     ++countEdgeX[ MAX2(thisrow[col], thisrow[col+1]) ];
-  
+
   ++countEdgeX[thisrow[cols-1]];
-  
+
   /* shortcut: for the first row, countVertex == countEdgeX */
-  
+
   ++countVertex[thisrow[0]];
 
-  for ( col = 0; col < cols-1; ++col ) 
+  for ( col = 0; col < cols-1; ++col )
     ++countVertex[ MAX2(thisrow[col], thisrow[col+1]) ];
 
   ++countVertex[thisrow[cols-1]];
 
-  
 
-  for ( row = 1; row < rows; ++row ){  
-    
-    tmprow = prevrow; 
+
+  for ( row = 1; row < rows; ++row ){
+
+    tmprow = prevrow;
     prevrow = thisrow;
     thisrow = tmprow;
- 
+
     pgm_readpgmrow( ifp, thisrow, cols, maxval, format );
-  
+
     /* tiles */
 
-    for ( col = 0; col < cols; ++col ) ++countTile[thisrow[col]]; 
-    
+    for ( col = 0; col < cols; ++col ) ++countTile[thisrow[col]];
+
     /* y-edges */
-    
-    for ( col = 0; col < cols; ++col ) 
+
+    for ( col = 0; col < cols; ++col )
       ++countEdgeY[ MAX2(thisrow[col], prevrow[col]) ];
     /* x-edges */
-    
+
     ++countEdgeX[thisrow[0]];
-    
-    for ( col = 0; col < cols-1; ++col ) 
+
+    for ( col = 0; col < cols-1; ++col )
       ++countEdgeX[ MAX2(thisrow[col], thisrow[col+1]) ];
-    
+
     ++countEdgeX[thisrow[cols-1]];
-    
+
     /* vertices */
 
     ++countVertex[ MAX2(thisrow[0],prevrow[0]) ];
 
-    for ( col = 0; col < cols-1; ++col ) 
+    for ( col = 0; col < cols-1; ++col )
       ++countVertex[
         MAX4(thisrow[col], thisrow[col+1], prevrow[col], prevrow[col+1])
       ];
-    
+
     ++countVertex[ MAX2(thisrow[cols-1],prevrow[cols-1]) ];
-    
+
   } /* for row */
-  
+
   /* now thisrow contains the top row*/
 
   /* tiles and x-edges have been counted, now upper
      y-edges and top vertices remain */
-  
+
   /* y-edges */
 
   for ( col = 0; col < cols; ++col ) ++countEdgeY[ thisrow[col] ];
 
   /* vertices */
-  
+
   ++countVertex[thisrow[0]];
 
-  for ( col = 0; col < cols-1; ++col ) 
+  for ( col = 0; col < cols-1; ++col )
     ++countVertex[ MAX2(thisrow[col],thisrow[col+1]) ];
 
   ++countVertex[ thisrow[cols-1] ];
@@ -178,7 +178,7 @@ int main( int argc, char** argv ){
   maxedgex =  rows    * (cols+1);
   maxedgey = (rows+1) *  cols;
   maxvertex= (rows+1) * (cols+1);
-  
+
   l2inv = 1.0/maxtiles;
   linv  = 0.5/(rows+cols);
 
@@ -187,14 +187,14 @@ int main( int argc, char** argv ){
   printf( "#---------\t -----\t-------\t-------\t--------\n" );
   for ( i = 0; i <= maxval; i++ ){
 
-    if( !(countTile[i] || countEdgeX[i] || countEdgeY[i] || countVertex[i] ) ) 
+    if( !(countTile[i] || countEdgeX[i] || countEdgeY[i] || countVertex[i] ) )
       continue; /* skip empty slots */
 
     area      = maxtiles;
     perimeter = 2*maxedgex + 2*maxedgey - 4*maxtiles;
     eulerchi  = maxtiles - maxedgex - maxedgey + maxvertex;
 
-    printf( "%f\t%6d\t%7d\t%7d\t%8d\t%g\t%g\t%6d\n", (float) i/(1.0*maxval), 
+    printf( "%f\t%6d\t%7d\t%7d\t%8d\t%g\t%g\t%6d\n", (float) i/(1.0*maxval),
         maxtiles, maxedgex, maxedgey, maxvertex,
         area*l2inv, perimeter*linv, eulerchi
         );
@@ -210,13 +210,13 @@ int main( int argc, char** argv ){
   }
 
   /* these should be zero: */
-  printf( "#  check:\t%6d\t%7d\t%7d\t%8d\n", 
+  printf( "#  check:\t%6d\t%7d\t%7d\t%8d\n",
           maxtiles, maxedgex, maxedgey, maxvertex );
 
   pm_close( ifp );
-  
+
   exit( 0 );
-  
+
 } /*main*/
 
 

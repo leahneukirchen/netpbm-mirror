@@ -65,7 +65,7 @@ pm_gettoken(const char *  const tokenStart,
                 token[charCount++] = *cursor++;
             }
             token[charCount] = '\0';
-            
+
             *tokenP = token;
             *nextP = cursor;
         }

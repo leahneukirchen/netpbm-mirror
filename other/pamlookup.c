@@ -4,7 +4,7 @@
 
   Look up integers or ordered pairs from an index image in a lookup table and
   produce a corresponding image containing the results of the lookups.
-  
+
   The index image and lookup table are PAM images.  The output image is
   a PAM image with the width and height of the index image and tuples of
   the kind in the lookup table.
@@ -26,7 +26,7 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * indexFilespec;  
+    const char * indexFilespec;
     char *       lookupFilespec;
     char *       missingcolor;  /* null if not specified */
     unsigned int fit;
@@ -48,19 +48,19 @@ parseCommandLine(int argc, const char ** const argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
-    
+
     unsigned int lookupfileSpec, missingcolorSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "lookupfile",     OPT_STRING, &cmdlineP->lookupFilespec,  
+    OPTENT3(0, "lookupfile",     OPT_STRING, &cmdlineP->lookupFilespec,
             &lookupfileSpec, 0);
-    OPTENT3(0,   "missingcolor", OPT_STRING, 
+    OPTENT3(0,   "missingcolor", OPT_STRING,
             &cmdlineP->missingcolor,   &missingcolorSpec, 0);
-    OPTENT3(0,   "fit", OPT_FLAG, 
+    OPTENT3(0,   "fit", OPT_FLAG,
             NULL,   &cmdlineP->fit, 0);
-    OPTENT3(0,   "byplane", OPT_FLAG, 
+    OPTENT3(0,   "byplane", OPT_FLAG,
             NULL,   &cmdlineP->byplane, 0);
 
     opt.opt_table = option_def;
@@ -85,12 +85,12 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->indexFilespec = argv[1];
 
     free(option_def);
-}        
+}
 
 
 
 static void
-fitLookup(tuple **     const inputLookup, 
+fitLookup(tuple **     const inputLookup,
           struct pam   const inputLookuppam,
           tuple ***    const fitLookupP,
           struct pam * const fitLookuppamP,
@@ -115,7 +115,7 @@ fitLookup(tuple **     const inputLookup,
     inPamtuples.tuplesP = (tuple ***) &inputLookup;
     outPamtuples.pamP = fitLookuppamP;
     outPamtuples.tuplesP = fitLookupP;
-    
+
     pm_system_lp("pamscale",
                  &pm_feed_from_pamtuples, &inPamtuples,
                  &pm_accept_to_pamtuples, &outPamtuples,
@@ -128,7 +128,7 @@ fitLookup(tuple **     const inputLookup,
 
 
 static void
-getLookup(const char * const lookupFileName, 
+getLookup(const char * const lookupFileName,
           unsigned int const indexDegree,
           unsigned int const indexMaxval,
           tuple ***    const lookupP,
@@ -136,7 +136,7 @@ getLookup(const char * const lookupFileName,
           bool         const fit) {
 /*----------------------------------------------------------------------------
    Get the lookup image (the one that maps integers to tuples, e.g. a
-   color index / color map / palette) from the file named 
+   color index / color map / palette) from the file named
    'lookupFileName'.
 
    Interpret the lookup image for use with indices that are ntuples of size
@@ -154,25 +154,25 @@ getLookup(const char * const lookupFileName,
     tuple ** inputLookup;
 
     lookupfileP = pm_openr(lookupFileName);
-    inputLookup = pnm_readpam(lookupfileP, 
+    inputLookup = pnm_readpam(lookupfileP,
                               &inputLookuppam, PAM_STRUCT_SIZE(tuple_type));
 
     pm_close(lookupfileP);
-    
+
     if (fit) {
         fitLookup(inputLookup, inputLookuppam, lookupP, lookuppamP,
-                  indexMaxval + 1, 
+                  indexMaxval + 1,
                   indexDegree > 1 ? indexMaxval + 1 : 1);
         pnm_freepamarray(inputLookup, &inputLookuppam);
     } else {
         *lookupP = inputLookup;
         *lookuppamP = inputLookuppam;
     }
-        
+
     if (indexDegree == 1 && lookuppamP->height != 1)
         pm_error("Your index image has integer indices, "
                  "so the lookup table image must be one row.  "
-                 "Yours is %d rows.", 
+                 "Yours is %d rows.",
                  lookuppamP->height);
 
     if (lookuppamP->width - 1 > indexMaxval)
@@ -190,9 +190,9 @@ getLookup(const char * const lookupFileName,
 
 
 static void
-computeDefaultTuple(struct CmdlineInfo const cmdline, 
+computeDefaultTuple(struct CmdlineInfo const cmdline,
                     tuple **           const lookup,
-                    struct pam *       const lookuppamP, 
+                    struct pam *       const lookuppamP,
                     tuple *            const defaultTupleP) {
 
     tuple retval;
@@ -204,10 +204,10 @@ computeDefaultTuple(struct CmdlineInfo const cmdline,
        lookup table.  We should probably check here for a lookup file
        that has a visual image tuple type, but we don't out of
        laziness.  The program probably ought to have a generic
-       "missing tuple type" option too.  
+       "missing tuple type" option too.
     */
     if (cmdline.missingcolor) {
-        pixel const color = 
+        pixel const color =
             ppm_parsecolor(cmdline.missingcolor, lookuppamP->maxval);
 
         if (lookuppamP->depth >= 3) {
@@ -224,7 +224,7 @@ computeDefaultTuple(struct CmdlineInfo const cmdline,
             else
                 retval[0] = PPM_GETR(color);
         }
-    } else 
+    } else
         pnm_assigntuple(lookuppamP, retval, lookup[0][0]);
 
     *defaultTupleP = retval;
@@ -261,7 +261,7 @@ doLookupByPlane(struct pam const indexpam,
     outpam = indexpam;  /* initial value */
     outpam.maxval = lookuppam.maxval;
     outpam.file = ofP;
-    
+
     tuplerowIndex = pnm_allocpamrow(&indexpam);
     tuplerowOut = pnm_allocpamrow(&outpam);
 
@@ -273,7 +273,7 @@ doLookupByPlane(struct pam const indexpam,
     for (row = 0; row < indexpam.height; ++row) {
         unsigned int col;
         pnm_readpamrow(&indexpam, tuplerowIndex);
-        
+
         for (col = 0; col < indexpam.width; ++col) {
             unsigned int plane;
 
@@ -320,7 +320,7 @@ doLookupWholeTuple(struct pam const indexpam,
     outpam.height = indexpam.height;
     outpam.width = indexpam.width;
     outpam.file = ofP;
-    
+
     tuplerowIndex = pnm_allocpamrow(&indexpam);
     tuplerowOut = pnm_allocpamrow(&outpam);
 
@@ -329,11 +329,11 @@ doLookupWholeTuple(struct pam const indexpam,
     for (row = 0; row < outpam.height; ++row) {
         unsigned int col;
         pnm_readpamrow(&indexpam, tuplerowIndex);
-        
+
         for (col = 0; col < outpam.width; ++col) {
             unsigned int indexRow, indexCol;
             tuple v;
-            
+
             if (indexpam.depth < 2) {
                 indexRow = 0;
                 indexCol = tuplerowIndex[col][0];
@@ -368,7 +368,7 @@ main(int argc, const char ** const argv) {
     tuple ** lookup;
 
     tuple defaultTuple;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -385,7 +385,7 @@ main(int argc, const char ** const argv) {
 
     indexDegree = cmdline.byplane ? 1 : indexpam.depth;
 
-    getLookup(cmdline.lookupFilespec, indexDegree, indexpam.maxval, 
+    getLookup(cmdline.lookupFilespec, indexDegree, indexpam.maxval,
               &lookup, &lookuppam, cmdline.fit || cmdline.byplane);
 
     computeDefaultTuple(cmdline, lookup, &lookuppam, &defaultTuple);
@@ -399,7 +399,7 @@ main(int argc, const char ** const argv) {
 
     pnm_freepamtuple(defaultTuple);
     pnm_freepamarray(lookup, &lookuppam);
-    
+
     return 0;
 }
 

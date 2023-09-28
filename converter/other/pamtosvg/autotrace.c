@@ -56,7 +56,7 @@ at_fitting_opts_copy (at_fitting_opts_type * original)
   return new_opts;
 }
 
-void 
+void
 at_fitting_opts_free(at_fitting_opts_type * opts)
 {
   free(opts);
@@ -88,10 +88,10 @@ at_output_opts_free(at_output_opts_type * opts)
 /* at_splines_new_full modifies its 'bitmap' argument
    when it does the thin_image thing.
 */
-at_spline_list_array_type * 
+at_spline_list_array_type *
 at_splines_new_full(at_bitmap_type *       const bitmap,
                     at_fitting_opts_type * const opts,
-                    at_msg_func                  msg_func, 
+                    at_msg_func                  msg_func,
                     void *                 const msg_data,
                     at_progress_func             notify_progress,
                     void *                 const progress_data,
@@ -128,20 +128,20 @@ at_splines_new_full(at_bitmap_type *       const bitmap,
         if (opts->centerline) {
             pixel background_color;
 
-            if (opts->backgroundSpec) 
+            if (opts->backgroundSpec)
                 background_color = opts->background_color;
             else
                 PPM_ASSIGN(background_color, 255, 255, 255);
-            
+
             pixelOutlineList =
-                find_centerline_pixels(*bitmap, background_color, 
+                find_centerline_pixels(*bitmap, background_color,
                                        notify_progress, progress_data,
                                        test_cancel, testcancel_data, &exp);
         } else
             pixelOutlineList =
                 find_outline_pixels(*bitmap,
                                     opts->backgroundSpec,
-                                    opts->background_color, 
+                                    opts->background_color,
                                     notify_progress, progress_data,
                                     test_cancel, testcancel_data, &exp);
 
@@ -150,8 +150,8 @@ at_splines_new_full(at_bitmap_type *       const bitmap,
             retval = NULL;
         else {
             at_spline_list_array_type * splinesP;
-        
-            MALLOCVAR_NOFAIL(splinesP); 
+
+            MALLOCVAR_NOFAIL(splinesP);
             fit_outlines_to_splines(pixelOutlineList, opts,
                                     haveDistMap ? &distanceMap : NULL,
                                     image_header.width,
@@ -180,7 +180,7 @@ at_splines_new_full(at_bitmap_type *       const bitmap,
 
 
 
-void 
+void
 at_splines_write(at_output_write_func                  outputWriter,
                  FILE *                          const writeto,
                  at_output_opts_type *           const optsArg,
@@ -195,7 +195,7 @@ at_splines_write(at_output_write_func                  outputWriter,
     lly = 0;
     urx = splinesP->width;
     ury = splinesP->height;
-    
+
     if (optsArg == NULL) {
         newOpts = true;
         optsP   = at_output_opts_new();
@@ -212,9 +212,12 @@ at_splines_write(at_output_write_func                  outputWriter,
 
 
 
-void 
+void
 at_splines_free(at_spline_list_array_type * const splines) {
 
     free_spline_list_array(splines);
     free(splines);
 }
+
+
+

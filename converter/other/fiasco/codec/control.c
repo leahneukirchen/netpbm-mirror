@@ -1,8 +1,8 @@
 /*
- *  control.c:		Control unit of WFA structure
+ *  control.c:          Control unit of WFA structure
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -17,7 +17,7 @@
 #include "config.h"
 
 #include <string.h>
- 
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -30,24 +30,24 @@
 
 /*****************************************************************************
 
-				prototypes
-  
+                                prototypes
+
 *****************************************************************************/
 
-static void 
+static void
 clear_or_alloc (real_t **ptr, size_t size);
-static void 
+static void
 compute_images (unsigned from, unsigned to, const wfa_t *wfa, coding_t *c);
 
 /*****************************************************************************
 
-				public code
-  
+                                public code
+
 *****************************************************************************/
 
-void    
+void
 append_state (bool_t auxiliary_state, real_t final, unsigned level_of_state,
-	      wfa_t *wfa, coding_t *c)
+              wfa_t *wfa, coding_t *c)
 /*
  *  Append a 'wfa' state. If 'auxiliary_state' == YES then
  *  allocate memory for inner products and state images.  'final' is
@@ -57,13 +57,13 @@ append_state (bool_t auxiliary_state, real_t final, unsigned level_of_state,
  *  No return value.
  *
  *  Side effects:
- *	The WFA information are updated in structure 'wfa'
- *	State images are computed and inner products are cleared (in 'c')
+ *      The WFA information are updated in structure 'wfa'
+ *      State images are computed and inner products are cleared (in 'c')
  */
 {
    wfa->final_distribution [wfa->states] = final;
    wfa->level_of_state [wfa->states]     = level_of_state;
-   
+
    if (!auxiliary_state)
    {
       unsigned level;
@@ -74,63 +74,63 @@ append_state (bool_t auxiliary_state, real_t final, unsigned level_of_state,
        *  Allocate memory for inner products and for state images
        */
       clear_or_alloc (&c->images_of_state [wfa->states],
-		      size_of_tree (c->options.images_level));
-	 
+                      size_of_tree (c->options.images_level));
+
       for (level = c->options.images_level + 1;
-	   level <= c->options.lc_max_level; level++)
-	 clear_or_alloc (&c->ip_states_state [wfa->states][level],
-			 wfa->states + 1);
+           level <= c->options.lc_max_level; level++)
+         clear_or_alloc (&c->ip_states_state [wfa->states][level],
+                         wfa->states + 1);
 
       clear_or_alloc (&c->ip_images_state [wfa->states],
-		      size_of_tree (c->products_level));
+                      size_of_tree (c->products_level));
 
       /*
        *  Compute the images of the current state at level 0,..,'imageslevel'
        */
-      
+
       c->images_of_state [wfa->states][0] = final;
-      compute_images (wfa->states, wfa->states, wfa, c);  
+      compute_images (wfa->states, wfa->states, wfa, c);
 
       /*
        *  Compute the inner products between the current state and the
        *  old states 0,...,'states'-1
-       */ 
-      
+       */
+
       compute_ip_states_state (wfa->states, wfa->states, wfa, c);
    }
    else
    {
       unsigned level;
-      
+
       wfa->domain_type [wfa->states] = 0;
-	    
+
       /*
        *  Free the allocated memory
        */
       if (c->images_of_state [wfa->states] != NULL)
       {
-	 Free (c->images_of_state [wfa->states]);
-	 c->images_of_state [wfa->states] = NULL;
+         Free (c->images_of_state [wfa->states]);
+         c->images_of_state [wfa->states] = NULL;
       }
       for (level = 0; level <= c->options.lc_max_level; level++)
-	 if (c->ip_states_state [wfa->states][level])
-	 {
-	    Free (c->ip_states_state [wfa->states][level]);
-	    c->ip_states_state [wfa->states][level] = NULL;
-	 }
+         if (c->ip_states_state [wfa->states][level])
+         {
+            Free (c->ip_states_state [wfa->states][level]);
+            c->ip_states_state [wfa->states][level] = NULL;
+         }
       if (c->ip_images_state [wfa->states])
       {
-	 Free (c->ip_images_state [wfa->states]);
-	 c->ip_images_state [wfa->states] = NULL;
+         Free (c->ip_images_state [wfa->states]);
+         c->ip_images_state [wfa->states] = NULL;
       }
    }
-   
+
    wfa->states++;
-   if (wfa->states >= MAXSTATES) 
+   if (wfa->states >= MAXSTATES)
       error ("Maximum number of states reached!");
-}	
- 
-void 
+}
+
+void
 append_basis_states (unsigned basis_states, wfa_t *wfa, coding_t *c)
 /*
  *  Append the WFA basis states 0, ... , ('basis_states' - 1).
@@ -138,8 +138,8 @@ append_basis_states (unsigned basis_states, wfa_t *wfa, coding_t *c)
  *  No return value.
  *
  *  Side effects:
- *	The WFA information are updated in structure 'wfa'
- *	State images and inner products are computed (in 'c')
+ *      The WFA information are updated in structure 'wfa'
+ *      State images and inner products are computed (in 'c')
  */
 {
    unsigned level, state;
@@ -151,30 +151,30 @@ append_basis_states (unsigned basis_states, wfa_t *wfa, coding_t *c)
    for (state = 0; state < basis_states; state++)
    {
       clear_or_alloc (&c->images_of_state [state],
-		      size_of_tree (c->options.images_level));
+                      size_of_tree (c->options.images_level));
 
       for (level = c->options.images_level + 1;
-	   level <= c->options.lc_max_level; level++)
-	 clear_or_alloc (&c->ip_states_state [state][level], state + 1);
+           level <= c->options.lc_max_level; level++)
+         clear_or_alloc (&c->ip_states_state [state][level], state + 1);
 
       clear_or_alloc (&c->ip_images_state [state],
-		      size_of_tree (c->products_level));
+                      size_of_tree (c->products_level));
 
       c->images_of_state [state][0] = wfa->final_distribution [state];
       wfa->level_of_state [state]   = -1;
    }
-   
-   compute_images (0, basis_states - 1, wfa, c);  
+
+   compute_images (0, basis_states - 1, wfa, c);
    compute_ip_states_state (0, basis_states - 1, wfa, c);
    wfa->states = basis_states;
-   
-   if (wfa->states >= MAXSTATES) 
+
+   if (wfa->states >= MAXSTATES)
       error ("Maximum number of states reached!");
-}	
- 
-void 
+}
+
+void
 append_transitions (unsigned state, unsigned label, const real_t *weight,
-		    const word_t *into, wfa_t *wfa)
+                    const word_t *into, wfa_t *wfa)
 /*
  *  Append the 'wfa' transitions (given by the arrays 'weight' and 'into')
  *  of the range ('state','label').
@@ -182,7 +182,7 @@ append_transitions (unsigned state, unsigned label, const real_t *weight,
  *  No return value.
  *
  *  Side effects:
- *	new 'wfa' edges are appended
+ *      new 'wfa' edges are appended
  */
 {
    unsigned edge;
@@ -192,81 +192,81 @@ append_transitions (unsigned state, unsigned label, const real_t *weight,
    {
       append_edge (state, into [edge], weight [edge], label, wfa);
       if (into [edge] == wfa->y_state [state][label])
-	 wfa->y_column [state][label] = 1;
+         wfa->y_column [state][label] = 1;
    }
 }
 
 /*****************************************************************************
 
-				private code
-  
+                                private code
+
 *****************************************************************************/
 
-static void 
+static void
 compute_images (unsigned from, unsigned to, const wfa_t *wfa, coding_t *c)
 /*
- *  Computes the images of the given states 'from', ... , 'to' 
+ *  Computes the images of the given states 'from', ... , 'to'
  *  at level 0,...,'c->imagelevel'.
  *  Uses the fact that each state image is a linear combination of state
  *  images, i.e. s_i := c_0 s_0 + ... + c_i s_i.
  */
 {
    unsigned label, level, state;
-   
+
    /*
     *  Compute the images Phi(state)
-    *  #		level = 0
-    *  ##		level = 1
-    *  ####		level = 2
-    *  ########    	level = 3
+    *  #                level = 0
+    *  ##               level = 1
+    *  ####             level = 2
+    *  ########         level = 3
     *  ...
     *  ########...##    level = imageslevel
     */
-   
+
    for (level = 1; level <= c->options.images_level; level++)
       for (state = from; state <= to; state++)
-	 for (label = 0; label < MAXLABELS; label++)
-	 {
-	    real_t   *dst, *src;
-	    unsigned  edge;
-	    int	      domain;		/* current domain */
-	    
-	    if (ischild (domain = wfa->tree[state][label]))
-	    {
-	       dst = c->images_of_state [state] + address_of_level (level) +
-		     label * size_of_level (level - 1);
-	       src = c->images_of_state [domain]
-		     + address_of_level (level - 1);
-	       memcpy (dst, src, size_of_level (level - 1) * sizeof (real_t));
-	    }
-	    for (edge = 0; isedge (domain = wfa->into[state][label][edge]);
-		 edge++)
-	    {
-	       unsigned n;
-	       real_t 	weight = wfa->weight [state][label][edge];
-	       
-	       dst = c->images_of_state [state] + address_of_level (level) +
-		     label * size_of_level (level - 1);
-	       src = c->images_of_state [domain]
-		     + address_of_level (level - 1);
-		  
-	       for (n = size_of_level (level - 1); n; n--)
-		  *dst++ += *src++ * weight;
-	    }
-	 }
+         for (label = 0; label < MAXLABELS; label++)
+         {
+            real_t   *dst, *src;
+            unsigned  edge;
+            int       domain;           /* current domain */
+
+            if (ischild (domain = wfa->tree[state][label]))
+            {
+               dst = c->images_of_state [state] + address_of_level (level) +
+                     label * size_of_level (level - 1);
+               src = c->images_of_state [domain]
+                     + address_of_level (level - 1);
+               memcpy (dst, src, size_of_level (level - 1) * sizeof (real_t));
+            }
+            for (edge = 0; isedge (domain = wfa->into[state][label][edge]);
+                 edge++)
+            {
+               unsigned n;
+               real_t   weight = wfa->weight [state][label][edge];
+
+               dst = c->images_of_state [state] + address_of_level (level) +
+                     label * size_of_level (level - 1);
+               src = c->images_of_state [domain]
+                     + address_of_level (level - 1);
+
+               for (n = size_of_level (level - 1); n; n--)
+                  *dst++ += *src++ * weight;
+            }
+         }
 
 }
 
-static void 
+static void
 clear_or_alloc (real_t **ptr, size_t size)
 /*
- *  if *ptr == NULL 	allocate memory with Calloc 
- *  otherwise 		fill the real_t-array ptr[] with 0
+ *  if *ptr == NULL     allocate memory with Calloc
+ *  otherwise           fill the real_t-array ptr[] with 0
  */
 {
-   if (*ptr == NULL) 
+   if (*ptr == NULL)
       *ptr = Calloc (size, sizeof (real_t));
-   else 
+   else
       memset (*ptr, 0, size * sizeof (real_t));
-    
+
 }

@@ -21,6 +21,8 @@
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE   /* Make nstring.h define strcaseeq() */
 
+#include <assert.h>
+
 #include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
@@ -71,10 +73,6 @@ The receiver may be less patient.  It may opt to disconnect if one row
 is not received within 5 seconds.
 */
 
-static G3TableEntry * whash[HASHSIZE];
-static G3TableEntry * bhash[HASHSIZE];
-
-
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -85,6 +83,7 @@ struct CmdlineInfo {
     unsigned int stretch;
     unsigned int stop_error;
     unsigned int expectedLineSize;
+    unsigned int correctlong;
 };
 
 
@@ -120,6 +119,8 @@ parseCommandLine(int argc, const char ** const argv,
             &widthSpec,                0);
     OPTENT3(0, "paper_size",       OPT_STRING, &paperSize,
             &paper_sizeSpec,           0);
+    OPTENT3(0, "correctlong",      OPT_FLAG,  NULL, &cmdlineP->correctlong,
+            0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -162,6 +163,11 @@ parseCommandLine(int argc, const char ** const argv,
 }
 
 
+
+typedef struct {
+    const G3TableEntry * whash[HASHSIZE];
+    const G3TableEntry * bhash[HASHSIZE];
+} BwHash;
 
 struct BitStream {
 
@@ -275,16 +281,16 @@ skipToNextLine(struct BitStream * const bitStreamP) {
 
 
 static void
-addtohash(G3TableEntry *     hash[],
-          G3TableEntry       table[],
-          unsigned int const n,
-          int          const a,
-          int          const b) {
+addtohash(const G3TableEntry ** const hash,
+          const G3TableEntry *  const table,
+          unsigned int          const n,
+          int                   const a,
+          int                   const b) {
 
     unsigned int i;
 
     for (i = 0; i < n; ++i) {
-        G3TableEntry * const teP = &table[i*2];
+        const G3TableEntry * const teP = &table[i*2];
         unsigned int const pos =
             ((teP->length + a) * (teP->code + b)) % HASHSIZE;
         if (hash[pos])
@@ -295,38 +301,51 @@ addtohash(G3TableEntry *     hash[],
 
 
 
-static G3TableEntry *
-hashfind(G3TableEntry *       hash[],
-         int            const length,
-         int            const code,
-         int            const a,
-         int            const b) {
+static const G3TableEntry *
+hashfind(const G3TableEntry * const * const hash,
+         unsigned int                 const length,
+         int                          const code,
+         int                          const a,
+         int                          const b) {
 
-    unsigned int pos;
-    G3TableEntry * te;
+    unsigned int         const pos = ((length + a) * (code + b)) % HASHSIZE;
+    const G3TableEntry * const teP = hash[pos];
 
-    pos = ((length + a) * (code + b)) % HASHSIZE;
-    te = hash[pos];
-    return ((te && te->length == length && te->code == code) ? te : NULL);
+    return ((teP && teP->length == length && teP->code == code) ? teP : NULL);
+}
+
+
+
+static BwHash *
+newBwHash() {
+
+    BwHash * bwHashP;
+
+    MALLOCVAR(bwHashP);
+
+    if (!bwHashP)
+        pm_error("Unable to allocate memory for hashes");
+    else {
+        unsigned int i;
+        /* Initialize */
+        for (i = 0; i < HASHSIZE; ++i)
+            bwHashP->whash[i] = bwHashP->bhash[i] = NULL;
+
+        addtohash(bwHashP->whash, &g3ttable_table [0], 64, WHASHA, WHASHB);
+        addtohash(bwHashP->whash, &g3ttable_mtable[2], 40, WHASHA, WHASHB);
+
+        addtohash(bwHashP->bhash, &g3ttable_table [1], 64, BHASHA, BHASHB);
+        addtohash(bwHashP->bhash, &g3ttable_mtable[3], 40, BHASHA, BHASHB);
+    }
+    return bwHashP;
 }
 
 
 
 static void
-buildHashes(G3TableEntry * (*whashP)[HASHSIZE],
-            G3TableEntry * (*bhashP)[HASHSIZE]) {
+freeBwHash(BwHash * const bwHashP) {
 
-    unsigned int i;
-
-    for (i = 0; i < HASHSIZE; ++i)
-        (*whashP)[i] = (*bhashP)[i] = NULL;
-
-    addtohash(*whashP, &g3ttable_table[0], 64, WHASHA, WHASHB);
-    addtohash(*whashP, &g3ttable_mtable[2], 40, WHASHA, WHASHB);
-
-    addtohash(*bhashP, &g3ttable_table[1], 64, BHASHA, BHASHB);
-    addtohash(*bhashP, &g3ttable_mtable[3], 40, BHASHA, BHASHB);
-
+    free(bwHashP);
 }
 
 
@@ -342,10 +361,11 @@ makeRowWhite(unsigned char * const packedBitrow,
 
 
 
-static G3TableEntry *
-g3code(unsigned int const curcode,
-       unsigned int const curlen,
-       bit          const color) {
+static const G3TableEntry *
+g3code(unsigned int   const curcode,
+       unsigned int   const curlen,
+       bit            const color,
+       const BwHash * const bwHashP) {
 /*----------------------------------------------------------------------------
    Return the position in the code tables mtable and ttable of the
    G3 code which is the 'curlen' bits long with value 'curcode'.
@@ -353,20 +373,20 @@ g3code(unsigned int const curcode,
    Note that it is the _position_ in the table that determines the meaning
    of the code.  The contents of the table entry do not.
 -----------------------------------------------------------------------------*/
-    G3TableEntry * retval;
+    const G3TableEntry * retval;
 
     switch (color) {
     case PBM_WHITE:
         if (curlen < 4)
             retval = NULL;
         else
-            retval = hashfind(whash, curlen, curcode, WHASHA, WHASHB);
+            retval = hashfind(bwHashP->whash, curlen, curcode, WHASHA, WHASHB);
         break;
     case PBM_BLACK:
         if (curlen < 2)
             retval = NULL;
         else
-            retval = hashfind(bhash, curlen, curcode, BHASHA, BHASHB);
+            retval = hashfind(bwHashP->bhash, curlen, curcode, BHASHA, BHASHB);
         break;
     default:
         pm_error("INTERNAL ERROR: color is not black or white");
@@ -481,6 +501,7 @@ formatBadCodeException(const char ** const exceptionP,
 static void
 readFaxRow(struct BitStream * const bitStreamP,
            unsigned char *    const packedBitrow,
+           BwHash *           const bwHashP,
            unsigned int *     const lineLengthP,
            const char **      const exceptionP,
            const char **      const errorP) {
@@ -561,7 +582,7 @@ readFaxRow(struct BitStream * const bitStreamP,
                     done = TRUE;
                 } else if (curcode != 0) {
                     const G3TableEntry * const teP =
-                        g3code(curcode, curlen, currentColor);
+                        g3code(curcode, curlen, currentColor, bwHashP);
                         /* Address of structure that describes the
                            current G3 code.  Null means 'curcode' isn't
                            a G3 code yet (probably just the beginning of one)
@@ -644,16 +665,21 @@ typedef struct {
         */
     bool warned;
         /* We have warned the user that he has a line length problem */
+
     bool tolerateErrors;
         /* Try to continue when we detect a line size error, as opposed to
            aborting the program.
         */
-} lineSizeAnalyzer;
+    unsigned int lineSizeCt[MAXCOLS+1];
+        /* Histogram of line sizes in image -- lineSizeCt[i] is the number
+           of lines we've seen of size i.
+        */
+} LineSizeAnalyzer;
 
 
 
 static void
-initializeLineSizeAnalyzer(lineSizeAnalyzer * const analyzerP,
+initializeLineSizeAnalyzer(LineSizeAnalyzer * const analyzerP,
                            unsigned int       const expectedLineSize,
                            bool               const tolerateErrors) {
 
@@ -662,12 +688,19 @@ initializeLineSizeAnalyzer(lineSizeAnalyzer * const analyzerP,
 
     analyzerP->maxLineSize = 0;
     analyzerP->warned      = FALSE;
+
+    {
+        unsigned int i;
+
+        for (i = 0; i < MAXCOLS; ++i)
+            analyzerP->lineSizeCt[i] = 0;
+    }
 }
 
 
 
 static void
-analyzeLineSize(lineSizeAnalyzer * const analyzerP,
+analyzeLineSize(LineSizeAnalyzer * const analyzerP,
                 unsigned int       const thisLineSize) {
 
     const char * error;
@@ -700,6 +733,45 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
         pm_strfree(error);
     }
     analyzerP->maxLineSize = MAX(thisLineSize, analyzerP->maxLineSize);
+
+    assert(thisLineSize <= MAXCOLS);
+    ++analyzerP->lineSizeCt[thisLineSize];
+}
+
+
+
+static unsigned int
+imageLineSize(const LineSizeAnalyzer * const lineSizeAnalyzerP,
+              bool                     const mustCorrectLongLine) {
+/*----------------------------------------------------------------------------
+   The width of the fax in pixels, based on the analysis of the image
+   *lineSizeAnalyzerP.
+
+   Zero if the fax contains no lines.
+-----------------------------------------------------------------------------*/
+    unsigned int retval;
+
+    if (mustCorrectLongLine) {
+        /* Assume that long lines are actually concatenation of two
+           lines because the EOL code that was supposed to separate them
+           got lost.
+
+           Assume the most common line length in the image is the correct line
+           length for the image and that other line lengths are due to
+           corruption
+        */
+        unsigned int modeSoFar;
+        unsigned int i;
+
+        for (i = 0, modeSoFar = 0; i <= MAXCOLS; ++i) {
+            if (lineSizeAnalyzerP->lineSizeCt[i] > modeSoFar)
+                modeSoFar = i;
+        }
+        retval = modeSoFar;
+    } else {
+        retval = lineSizeAnalyzerP->maxLineSize;
+    }
+    return retval;
 }
 
 
@@ -717,12 +789,14 @@ static void
 readFax(struct BitStream * const bitStreamP,
         bool               const stretch,
         unsigned int       const expectedLineSize,
-        bool               const tolerateErrors,
+        bool               const mustTolerateErrors,
+        bool               const mustCorrectLongLine,
+        BwHash *           const bwHashP,
         unsigned char ***  const packedBitsP,
         unsigned int *     const colsP,
         unsigned int *     const rowsP) {
 
-    lineSizeAnalyzer lineSizeAnalyzer;
+    LineSizeAnalyzer lineSizeAnalyzer;
     unsigned char ** packedBits;
     const char * error;
     bool eof;
@@ -731,7 +805,7 @@ readFax(struct BitStream * const bitStreamP,
     MALLOCARRAY_NOFAIL(packedBits, MAXROWS);
 
     initializeLineSizeAnalyzer(&lineSizeAnalyzer,
-                               expectedLineSize, tolerateErrors);
+                               expectedLineSize, mustTolerateErrors);
 
     eof = FALSE;
     error = NULL;
@@ -747,10 +821,10 @@ readFax(struct BitStream * const bitStreamP,
             const char * exception;
 
             packedBits[row] = pbm_allocrow_packed(MAXCOLS);
-            readFaxRow(bitStreamP, packedBits[row],
+            readFaxRow(bitStreamP, packedBits[row], bwHashP,
                        &lineSize, &exception, &error);
 
-            handleRowException(exception, error, row, tolerateErrors);
+            handleRowException(exception, error, row, mustTolerateErrors);
 
             if (!error) {
                 if (lineSize == 0) {
@@ -774,7 +848,8 @@ readFax(struct BitStream * const bitStreamP,
         }
     }
     *rowsP        = row;
-    *colsP        = lineSizeAnalyzer.maxLineSize;
+    *colsP        = imageLineSize(&lineSizeAnalyzer, mustCorrectLongLine);
+
     *packedBitsP  = packedBits;
 }
 
@@ -788,6 +863,7 @@ main(int argc, const char * argv[]) {
     struct BitStream bitStream;
     unsigned int rows, cols;
     unsigned char ** packedBits;
+    BwHash * bwHashP;
 
     pm_proginit(&argc, argv);
 
@@ -805,10 +881,10 @@ main(int argc, const char * argv[]) {
     }
     skipToNextLine(&bitStream);
 
-    buildHashes(&whash, &bhash);
+    bwHashP = newBwHash();
 
     readFax(&bitStream, cmdline.stretch, cmdline.expectedLineSize,
-            !cmdline.stop_error,
+            !cmdline.stop_error, !!cmdline.correctlong, bwHashP,
             &packedBits, &cols, &rows);
 
     pm_close(ifP);
@@ -825,5 +901,10 @@ main(int argc, const char * argv[]) {
 
     freeBits(packedBits, rows, cmdline.stretch);
 
+    freeBwHash(bwHashP);
+
     return 0;
 }
+
+
+

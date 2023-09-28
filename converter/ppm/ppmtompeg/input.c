@@ -1,16 +1,16 @@
 /*===========================================================================*
- * input.c              
- *                      
+ * input.c
+ *
  *  Stuff for getting the raw frame input for the program
- *                                    
+ *
  *===========================================================================*/
 
 /* COPYRIGHT INFORMATION IS AT THE END OF THIS FILE */
 
 #define _XOPEN_SOURCE 1
-    /* This makes sure popen() is in stdio.h.  In GNU libc 2.1.3, 
+    /* This makes sure popen() is in stdio.h.  In GNU libc 2.1.3,
      _POSIX_C_SOURCE = 2 is sufficient, but on AIX 4.3, the higher level
-     _XOPEN_SOURCE is required.  2000.09.09 
+     _XOPEN_SOURCE is required.  2000.09.09
     */
 
 
@@ -31,7 +31,7 @@
 #include "jpeg.h"
 #include "input.h"
 
-extern boolean realQuiet;	/* TRUE = no messages to stdout */
+extern boolean realQuiet;       /* TRUE = no messages to stdout */
 
 struct InputFileEntry {
     char    left[256];
@@ -57,11 +57,11 @@ GetNthInputFileName(struct inputSource * const inputSourceP,
 /*----------------------------------------------------------------------------
    Return the file name of the Nth input file.
 -----------------------------------------------------------------------------*/
-    static int	lastN = 0, lastMapN = 0, lastSoFar = 0;
-    int	    mapN;
+    static int  lastN = 0, lastMapN = 0, lastSoFar = 0;
+    int     mapN;
     int     index;
-    int	    soFar;
-    int	    numPadding;
+    int     soFar;
+    int     numPadding;
     struct InputFileEntry * mapNEntryP;
 
     assert(!inputSourceP->stdinUsed);
@@ -84,7 +84,7 @@ GetNthInputFileName(struct inputSource * const inputSourceP,
     }
 
     mapN = index;
-    
+
     mapNEntryP = inputSourceP->inputFileEntries[mapN];
 
     index = mapNEntryP->startID + mapNEntryP->skip*(n - soFar);
@@ -93,7 +93,7 @@ GetNthInputFileName(struct inputSource * const inputSourceP,
 
     if (numPadding != -1) {
         char    numBuffer[33];
-        int	    loop;
+        int         loop;
 
         sprintf(numBuffer, "%32d", index);
         for (loop = 32-numPadding; loop < 32; ++loop) {
@@ -159,26 +159,26 @@ ReadNthFrame(struct inputSource * const inputSourceP,
 void
 JM2JPEG(struct inputSource * const inputSourceP) {
     char full_path[1024];
-    char inter_file[1024]; 
+    char inter_file[1024];
     int ci;
-    
+
     for(ci = 0; ci < inputSourceP->numInputFileEntries; ci++) {
         inter_file[0] = '\0';
         full_path[0] = '\0';
         strcpy(full_path, currentPath);
-    
+
         if (!inputSource.stdinUsed) {
             strcat(full_path, "/");
             strcat(full_path, inputSourceP->inputFileEntries[ci]->left);
             strcpy(inter_file,full_path);
-    
+
             if (!realQuiet)
                 fprintf(stdout, "Extracting JPEG's in the JMOVIE from %s\n",
                         full_path);
-    
+
             JMovie2JPEG(full_path,
                         inter_file,
-                        inputSourceP->inputFileEntries[ci]->startID, 
+                        inputSourceP->inputFileEntries[ci]->startID,
                         inputSourceP->inputFileEntries[ci]->endID);
         } else
             pm_error("ERROR: Cannot use JMovie format on Standard Input");
@@ -200,7 +200,7 @@ SkipSpacesTabs(const char * const start) {
 
 
 static void
-processGlob(const char *            const input, 
+processGlob(const char *            const input,
             struct InputFileEntry * const inputFileEntryP) {
 
     const char *globPtr;
@@ -208,10 +208,10 @@ processGlob(const char *            const input,
     char    left[256], right[256];
     char    leftNumText[256], rightNumText[256];
     char    skipNumText[256];
-    int	    leftNum, rightNum;
-    int	    skipNum;
+    int     leftNum, rightNum;
+    int     skipNum;
     boolean padding;
-    int	    numPadding = 0;
+    int     numPadding = 0;
 
     inputFileEntryP->glob = TRUE;
     inputFileEntryP->repeat = FALSE;
@@ -229,13 +229,13 @@ processGlob(const char *            const input,
     *charPtr = '\0';
 
     if (*globPtr == '\0') {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "WARNING: expanding non-star regular expression\n");
         inputFileEntryP->repeat = TRUE;
         globPtr = input;
         charPtr = left;
         /* recopy left of whitespace */
-        while ( (*globPtr != '\0') && (*globPtr != '*') && 
+        while ( (*globPtr != '\0') && (*globPtr != '*') &&
                 (*globPtr != ' ')  && (*globPtr != '\t')) {
             *charPtr = *globPtr;
             charPtr++;
@@ -256,11 +256,11 @@ processGlob(const char *            const input,
         }
         *charPtr = '\0';
     }
-      
+
     globPtr = SkipSpacesTabs(globPtr);
 
     if ( *globPtr != '[' ) {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "ERROR:  "
                 "Invalid input file expansion expression (no '[')\n");
         exit(1);
@@ -277,7 +277,7 @@ processGlob(const char *            const input,
     *charPtr = '\0';
 
     if ( *globPtr != '-' ) {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "ERROR:  "
                 "Invalid input file expansion expression (no '-')\n");
         exit(1);
@@ -293,7 +293,7 @@ processGlob(const char *            const input,
     }
     *charPtr = '\0';
     if ( atoi(rightNumText) < atoi(leftNumText) ) {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "ERROR:  "
                 "Beginning of input range is higher than end.\n");
         exit(1);
@@ -302,7 +302,7 @@ processGlob(const char *            const input,
 
     if ( *globPtr != ']' ) {
         if ( *globPtr != '+' ) {
-            fprintf(stderr, 
+            fprintf(stderr,
                     "ERROR:  "
                     "Invalid input file expansion expression "
                     "(no ']')\n");
@@ -320,7 +320,7 @@ processGlob(const char *            const input,
         *charPtr = '\0';
 
         if ( *globPtr != ']' ) {
-            fprintf(stderr, 
+            fprintf(stderr,
                     "ERROR:  Invalid input file expansion expression "
                     "(no ']')\n");
             exit(1);
@@ -344,7 +344,7 @@ processGlob(const char *            const input,
     inputFileEntryP->startID = leftNum;
     inputFileEntryP->endID = rightNum;
     inputFileEntryP->skip = skipNum;
-    inputFileEntryP->numFiles = 
+    inputFileEntryP->numFiles =
         (rightNum-leftNum+1)/skipNum;
     strcpy(inputFileEntryP->left, left);
     strcpy(inputFileEntryP->right, right);
@@ -357,7 +357,7 @@ processGlob(const char *            const input,
 
 
 
-static void processJmovie(const char *            const input, 
+static void processJmovie(const char *            const input,
                           struct InputFileEntry * const inputFileEntryP) {
     FILE    *jmovie;
     char    full_path[1024];
@@ -365,19 +365,19 @@ static void processJmovie(const char *            const input,
     inputFileEntryP->glob = TRUE;
     full_path[0] = '\0';
     strcpy(full_path, currentPath);
-    
+
     strcat(full_path, "/");
     strcat(full_path, input);
-    jmovie = fopen(input, "rb"); 
-    
+    jmovie = fopen(input, "rb");
+
     if (jmovie == NULL) {
-        perror (input); 
+        perror (input);
         exit (1);
     }
-    
+
     fseek (jmovie, (8*sizeof(char)), 0);
     fseek (jmovie, (2*sizeof(int)), 1);
-    
+
     if (fread(&(inputFileEntryP->numFiles),
               sizeof(int), 1, jmovie) != 1) {
         perror ("Error in reading number of frames in JMOVIE");
@@ -391,11 +391,11 @@ static void processJmovie(const char *            const input,
     inputFileEntryP->endID = (inputFileEntryP->numFiles-1);
     inputFileEntryP->skip = 1;
     if (! realQuiet) {
-        fprintf (stdout, 
-                 "Encoding all %d frames from JMOVIE.\n", 
+        fprintf (stdout,
+                 "Encoding all %d frames from JMOVIE.\n",
                  inputFileEntryP->endID);
     }
-} 
+}
 
 
 
@@ -428,19 +428,19 @@ AddInputFiles(struct inputSource * const inputSourceP,
     if (currentIndex >= inputSourceP->ifArraySize) {
         /* Get more space */
         inputSourceP->ifArraySize += INPUT_ENTRY_BLOCK_SIZE;
-        REALLOCARRAY_NOFAIL(inputSourceP->inputFileEntries, 
+        REALLOCARRAY_NOFAIL(inputSourceP->inputFileEntries,
                             inputSourceP->ifArraySize);
     }
     MALLOCVAR_NOFAIL(inputSourceP->inputFileEntries[currentIndex]);
     currentEntryP = inputSourceP->inputFileEntries[currentIndex];
 
-    if (input[strlen(input)-1] == ']') 
+    if (input[strlen(input)-1] == ']')
         processGlob(input, currentEntryP);
     else {
         strcpy(currentEntryP->left, input);
-        if (baseFormat == JMOVIE_FILE_TYPE) 
+        if (baseFormat == JMOVIE_FILE_TYPE)
             processJmovie(input, currentEntryP);
-        else 
+        else
             processSimpleFileName(input, currentEntryP);
     }
     inputSourceP->numInputFiles += currentEntryP->numFiles;
@@ -472,7 +472,7 @@ CreateInputSource(struct inputSource ** const inputSourcePP) {
     inputSourceP->ifArraySize = 1;
     inputSourceP->numInputFiles = 0;
     MALLOCARRAY_NOFAIL(inputSourceP->inputFileEntries, 1);
-    
+
     *inputSourcePP = inputSourceP;
 }
 

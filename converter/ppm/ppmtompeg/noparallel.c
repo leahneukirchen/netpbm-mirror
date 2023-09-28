@@ -70,7 +70,7 @@ time_t  IOtime = 0;
 
 void
 IoServer(struct inputSource * const inputSourceP,
-         const char *         const parallelHostName, 
+         const char *         const parallelHostName,
          int                  const portNum) {
 
     pm_error("This version of Ppmtompeg cannot run an I/O server because "
@@ -102,7 +102,7 @@ SetRemoteShell(const char * const shell) {
 void
 NoteFrameDone(int const frameStart,
               int const frameEnd) {
-    fprintf(stdout, 
+    fprintf(stdout,
             "ERROR:  (NoteFrameDone) "
             "This machine can NOT run parallel version\n");
     exit(1);
@@ -151,7 +151,7 @@ WaitForOutputFile(int const number) {
 
 void
 MasterServer(struct inputSource * const inputSourceP,
-             const char *         const paramFileName, 
+             const char *         const paramFileName,
              const char *         const outputFileName) {
 
     pm_error("This version of Ppmtompeg cannot run a master server because "
@@ -161,8 +161,8 @@ MasterServer(struct inputSource * const inputSourceP,
 
 
 void
-CombineServer(int          const numFrames, 
-              const char * const masterHostName, 
+CombineServer(int          const numFrames,
+              const char * const masterHostName,
               int          const masterPortNum,
               const char*  const outputFileName) {
 
@@ -173,9 +173,9 @@ CombineServer(int          const numFrames,
 
 
 void
-DecodeServer(int          const numInputFiles, 
-             const char * const decodeFileName, 
-             const char * const masterHostName, 
+DecodeServer(int          const numInputFiles,
+             const char * const decodeFileName,
+             const char * const masterHostName,
              int          const masterPortNum) {
 
     pm_error("This version of Ppmtompeg cannot run a decode server because "
@@ -185,9 +185,9 @@ DecodeServer(int          const numInputFiles,
 
 
 void
-NotifyMasterDone(const char * const hostName, 
-                 int          const portNum, 
-                 int          const machineNumber, 
+NotifyMasterDone(const char * const hostName,
+                 int          const portNum,
+                 int          const machineNumber,
                  unsigned int const seconds,
                  boolean *    const moreWorkToDoP,
                  int *        const frameStartP,

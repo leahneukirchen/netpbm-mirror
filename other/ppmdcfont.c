@@ -30,10 +30,10 @@ generateGlyphCommand(struct ppmd_glyphCommand const glyphCommand) {
     case CMD_DRAWLINE: verb = "CMD_DRAWLINE"; break;
     case CMD_MOVEPEN:  verb = "CMD_MOVEPEN";  break;
     }
-    
+
     fprintf(stdout, "  {/* glyphCommand */ %s, %u, %u }\n",
             verb, glyphCommand.x, glyphCommand.y);
-    
+
 }
 
 
@@ -76,7 +76,7 @@ generateCommandTables(const struct ppmd_font * const fontP,
             pm_asprintf(&commandTableVariableName, "%s_cmd_%u",
                         glyphTableVariableName,
                         fontP->header.firstCodePoint + relativeCodePoint);
-            
+
             generateCommandTable(fontP->glyphTable[relativeCodePoint],
                                  commandTableVariableName);
 
@@ -133,7 +133,7 @@ generateGlyphTable(const struct ppmd_font * const fontP,
         pm_asprintf(&commandTableVariableName, "%s_cmd_%u",
                     variableName,
                     fontP->header.firstCodePoint + relativeCodePoint);
-        
+
         generateGlyph(fontP->glyphTable[relativeCodePoint],
                       commandTableVariableName);
 
@@ -154,7 +154,7 @@ generateFont(const struct ppmd_font * const fontP,
              const char *             const glyphTableVariableName) {
 
     fprintf(stdout, "struct ppmd_font const %s = {\n", fontVariableName);
-    
+
     generateHeader(fontP->header);
 
     fprintf(stdout, "  ,\n");
@@ -189,12 +189,12 @@ main(int argc, char **argv) {
     generateGlyphTable(fontP, glyphTableVariableName);
 
     fprintf(stdout, "\n");
-        
+
     generateFont(fontP, fontVariableName, glyphTableVariableName);
 
     pm_strfree(glyphTableVariableName);
 
     ppmd_free_font(fontP);
-    
+
     return 0;
 }

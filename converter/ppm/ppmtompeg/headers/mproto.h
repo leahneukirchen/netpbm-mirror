@@ -1,8 +1,8 @@
 /*===========================================================================*
- * mproto.h								     *
- *									     *
- *	basically a lot of miscellaneous prototypes			     *
- *									     *
+ * mproto.h                                                                  *
+ *                                                                           *
+ *      basically a lot of miscellaneous prototypes                          *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -26,7 +26,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mm/mpeg/mpeg_dist/mpeg_encode/headers/RCS/mproto.h,v 1.12 1995/03/29 20:14:29 smoot Exp $
  *  $Log: mproto.h,v $
  * Revision 1.12  1995/03/29  20:14:29  smoot
@@ -82,7 +82,7 @@ typedef DCTELEM DCTBLOCK[DCTSIZE2];
  * EXTERNAL PROCEDURE prototypes *
  *===============================*/
 
-/*  
+/*
  *  from mbasic.c:
  */
 void mp_reset (void);
@@ -90,13 +90,13 @@ void mp_free (MpegFrame *mf);
 MpegFrame *mp_new (int fnumber, char type, MpegFrame *oldFrame);
 void mp_ycc_calc (MpegFrame *mf);
 void mp_dct_blocks (MpegFrame *mf);
-void	AllocDecoded (MpegFrame *frame);
+void    AllocDecoded (MpegFrame *frame);
 
-/*  
+/*
  *  from moutput.c:
  */
 boolean mp_quant_zig_block (Block in, FlatBlock out, int qscale, int iblock);
-void	UnQuantZig (FlatBlock in, Block out, int qscale, boolean iblock);
+void    UnQuantZig (FlatBlock in, Block out, int qscale, boolean iblock);
 void mp_rle_huff_block (FlatBlock in, BitBucket *out);
 void mp_rle_huff_pblock (FlatBlock in, BitBucket *out);
 void mp_create_blocks (MpegFrame *mf);
@@ -104,12 +104,12 @@ void mp_create_blocks (MpegFrame *mf);
 
 
 
-void	ReadEYUV (MpegFrame * mf, FILE *fpointer, int width,
-			    int height);
-boolean	ReadPPM (MpegFrame *mf, FILE *fpointer);
+void    ReadEYUV (MpegFrame * mf, FILE *fpointer, int width,
+                            int height);
+boolean ReadPPM (MpegFrame *mf, FILE *fpointer);
 void PPMtoYCC (MpegFrame * mf);
 
-void	ComputeHalfPixelData (MpegFrame *frame);
+void    ComputeHalfPixelData (MpegFrame *frame);
 void mp_validate_size (int *x, int *y);
 void AllocYCC (MpegFrame * mf);
 

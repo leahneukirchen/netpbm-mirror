@@ -27,6 +27,8 @@ pamcrater.test
 ppmpat.test
 ppmforge-parameters.test
 
+pamstereogram.test
+
 # Generators with random components
 
 pbmnoise1.test
@@ -37,6 +39,7 @@ pgmnoise-parameters.test
 ppmpat-random.test
 ppmforge.test
 ppmrough.test
+ppmrough-parameters.test
 
 # Analyzer tests
 
@@ -134,6 +137,10 @@ pnmcrop-blank.test
 ppmmix.test
 pammixmulti-identity.test
 
+pamaddnoise-parameters.test
+
+pamstack.test
+
 # Symmetry test
 
 symmetry.test
@@ -158,13 +165,17 @@ pbm-misc-converters.test
 # Format converter tests
 
 pamtopdbimg.test
+pamtosvg.test
 pbmtog3.test
 ppmtoapplevol.test
+ppmtomitsu.test
 411toppm.test
 eyuvtoppm.test
 rawtoppm.test
 
 gif-transparent1.test
+
+pnmtojpeg-scans.test
 
 # Miscellaneous utility tests
 
@@ -255,6 +266,7 @@ xbm-roundtrip.test
 xpm-roundtrip.test
 xv-roundtrip.test
 xwd-roundtrip.test
+ybm-roundtrip.test
 
 # Round-trip tests : lossy converters
 

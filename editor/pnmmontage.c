@@ -42,7 +42,7 @@ parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -59,7 +59,7 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int q[10];
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-  
+
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3( 0,  "data",    OPT_STRING, &cmdlineP->data, &dataSpec, 0);
     OPTENT3( 0,  "header",  OPT_STRING, &cmdlineP->header, &headerSpec, 0);
@@ -93,7 +93,7 @@ parseCommandLine(int argc, const char ** argv,
     if (!qualitySpec)
         cmdlineP->quality = 200;
 
-    
+
     /* cmdlineP->quality2 is the greatest number from the --1, --2, etc.
        options, or 5 if none of those are specified.
     */
@@ -150,7 +150,7 @@ lr(Rectangle const r) {
 
 
 
-static Factorset 
+static Factorset
 factor(unsigned int const arg) {
 /*----------------------------------------------------------------------------
    The prime factors of 'arg'.
@@ -177,7 +177,7 @@ factor(unsigned int const arg) {
 
 
 
-static int 
+static int
 gcf(unsigned int const n,
     unsigned int const m) {
 /*----------------------------------------------------------------------------
@@ -236,12 +236,12 @@ collides(Rectangle         const test,
 
 
 
-static void 
+static void
 recursefindpack(Rectangle *    const current,
                 Coord          const currentsz,
                 Coord *        const best,
                 unsigned int   const minarea,
-                unsigned int * const maxareaP, 
+                unsigned int * const maxareaP,
                 unsigned int   const depth,
                 unsigned int   const n,
                 unsigned int   const xinc,
@@ -295,7 +295,7 @@ recursefindpack(Rectangle *    const current,
 
 
 
-static void 
+static void
 findpack(struct pam * const imgs,
          unsigned int const imgCt,
          Coord **     const coordsP,
@@ -312,7 +312,7 @@ findpack(struct pam * const imgs,
     Coord c;
 
     MALLOCARRAY(coords, imgCt);
-  
+
     if (!coords)
         pm_error("Out of memory allocating %u-element coords array", imgCt);
 
@@ -356,12 +356,12 @@ findpack(struct pam * const imgs,
 
 
 
-static void 
+static void
 adjustDepth(tuple *            const tuplerow,
             const struct pam * const inpamP,
             const struct pam * const outpamP,
             Coord              const coord) {
-    
+
     if (inpamP->depth < outpamP->depth) {
         unsigned int i;
         for (i = coord.x; i < coord.x + inpamP->width; ++i) {
@@ -374,7 +374,7 @@ adjustDepth(tuple *            const tuplerow,
 
 
 
-static void 
+static void
 adjustMaxval(tuple *            const tuplerow,
              const struct pam * const inpamP,
              const struct pam * const outpamP,
@@ -420,14 +420,14 @@ writePam(struct pam *       const outpamP,
 -----------------------------------------------------------------------------*/
     tuple * tuplerow;
     unsigned int row;  /* Row number in the output image */
-  
+
     pnm_writepaminit(outpamP);
 
     tuplerow = pnm_allocpamrow(outpamP);
 
     for (row = 0; row < outpamP->height; ++row) {
         unsigned int imgIdx;
-        
+
         makeRowBlack(outpamP, tuplerow);  /* initial value */
 
         for (imgIdx = 0; imgIdx < imgCt; ++imgIdx) {
@@ -494,13 +494,13 @@ writeHeader(FILE * const headerFileP,
         struct pam const img = imgs[i];
 
         unsigned int j;
-        
+
         *strchr(buffer, '.') = 0;
         for (j = 0; buffer[j]; ++j) {
             if (ISLOWER(buffer[j]))
                 buffer[j] = TOUPPER(buffer[j]);
         }
-        fprintf(headerFileP, "#define %s%sX %u\n", 
+        fprintf(headerFileP, "#define %s%sX %u\n",
                 prefix, buffer, coord.x);
 
         fprintf(headerFileP, "#define %s%sY %u\n",
@@ -538,7 +538,7 @@ sortImagesByArea(unsigned int  const nfiles,
 
                 struct pam p;
                 const char * c;
-                
+
                 p = imgs[i]; imgs[i] = imgs[j]; imgs[j] = p;
                 c = names[i]; names[i] = names[j]; names[j] = c;
             }
@@ -600,7 +600,7 @@ computeOutputDimensions(int *              const widthP,
 
     widthGuess  = 0;  /* initial value */
     heightGuess = 0;  /* initial value */
-    
+
     for (i = 0; i < nfiles; ++i) {
         widthGuess  = MAX(widthGuess,  imgs[i].width  + coords[i].x);
         heightGuess = MAX(heightGuess, imgs[i].height + coords[i].y);
@@ -622,8 +622,8 @@ qfactorFromQuality(unsigned int const quality,
     case 0: case 1:
         qfactor = quality;
         break;
-    case 2: case 3: case 4: case 5: case 6: 
-        qfactor = 100 * (8 - quality2); 
+    case 2: case 3: case 4: case 5: case 6:
+        qfactor = 100 * (8 - quality2);
         break;
     case 7: qfactor = 150; break;
     case 8: qfactor = 125; break;
@@ -709,7 +709,7 @@ closeFiles(const struct pam * const imgPam,
 
 
 
-int 
+int
 main(int argc, const char **argv) {
 
     struct CmdlineInfo cmdline;
@@ -749,7 +749,7 @@ main(int argc, const char **argv) {
     pnm_setminallocationdepth(&outimg, outimg.depth);
     outimg.plainformat = false;
     outimg.file = stdout;
- 
+
     writePam(&outimg, fileCt, coords, imgPam);
 
     if (dataFileP)

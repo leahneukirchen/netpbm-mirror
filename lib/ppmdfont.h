@@ -10,10 +10,10 @@
         struct ppmd_glyphHeader glyphHeader;
         struct ppmd_glyphCommand glyphCommand[N];
     } glyph[M]
-    
+
     Where:
         M is fontHeader.characterCount
-        N is glyphHeader.commandCount   
+        N is glyphHeader.commandCount
 
     glyph[i] is the glyph for code point Q,
       where i = Q - fontHeader.firstCodePoint

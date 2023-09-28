@@ -1,8 +1,8 @@
 /*
- *  mc.c:	Input of motion compensation
+ *  mc.c:       Input of motion compensation
  *
  *  written by: Michael Unger
- *		Ullrich Hafner
+ *              Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -31,27 +31,27 @@
 
 /*****************************************************************************
 
-			     local variables
+                             local variables
 
 *****************************************************************************/
 
 typedef struct huff_node
 {
-   int		     code_index;	/* leaf if index >= 0 */
-   struct huff_node *left;		/* follow if '0' bit read */
-   struct huff_node *right;		/* follow if '1' bit read */
-   int		     index_set [34];
+   int               code_index;        /* leaf if index >= 0 */
+   struct huff_node *left;              /* follow if '0' bit read */
+   struct huff_node *right;             /* follow if '1' bit read */
+   int               index_set [34];
 } huff_node_t;
 
 /*****************************************************************************
 
-				prototypes
+                                prototypes
 
 *****************************************************************************/
 
 static void
 decode_mc_tree (frame_type_e frame_type, unsigned max_state,
-		wfa_t *wfa, bitfile_t *input);
+                wfa_t *wfa, bitfile_t *input);
 static void
 decode_mc_coords (unsigned max_state, wfa_t *wfa, bitfile_t *input);
 static int
@@ -63,7 +63,7 @@ create_huff_node (huff_node_t *hn, int bits_processed);
 
 /*****************************************************************************
 
-				public code
+                                public code
 
 *****************************************************************************/
 
@@ -76,12 +76,12 @@ read_mc (frame_type_e frame_type, wfa_t *wfa, bitfile_t *input)
  *  No return value.
  *
  *  Side effects:
- *	'wfa->mv_tree' is filled with the decoded values.
+ *      'wfa->mv_tree' is filled with the decoded values.
  */
 {
    unsigned max_state = wfa->wfainfo->color
-			? wfa->tree [wfa->tree [wfa->root_state][0]][0]
-			: wfa->states;
+                        ? wfa->tree [wfa->tree [wfa->root_state][0]][0]
+                        : wfa->states;
 
    decode_mc_tree (frame_type, max_state, wfa, input);
    decode_mc_coords (max_state, wfa, input);
@@ -89,13 +89,13 @@ read_mc (frame_type_e frame_type, wfa_t *wfa, bitfile_t *input)
 
 /*****************************************************************************
 
-				private code
+                                private code
 
 *****************************************************************************/
 
 static void
 decode_mc_tree (frame_type_e frame_type, unsigned max_state,
-		wfa_t *wfa, bitfile_t *input)
+                wfa_t *wfa, bitfile_t *input)
 /*
  *  Read tree of motion compensation decisions of the 'input' stream.
  *  Depending on 'frame_type' different decoding methods are used.
@@ -104,13 +104,13 @@ decode_mc_tree (frame_type_e frame_type, unsigned max_state,
  *  No return value.
  *
  *  Side effects:
- *	'wfa->mv_tree' is filled with decoded values.
+ *      'wfa->mv_tree' is filled with decoded values.
  */
 {
-   unsigned  state;			/* current state */
-   unsigned *queue;			/* states in breadth first order */
-   unsigned  last;			/* last node
-					   (update for each new node) */
+   unsigned  state;                     /* current state */
+   unsigned *queue;                     /* states in breadth first order */
+   unsigned  last;                      /* last node
+                                           (update for each new node) */
 
    /*
     *  Traverse tree in breadth first order (starting at level
@@ -120,68 +120,68 @@ decode_mc_tree (frame_type_e frame_type, unsigned max_state,
    queue = Calloc (MAXSTATES, sizeof (unsigned));
    for (last = 0, state = wfa->basis_states; state < max_state; state++)
       if (wfa->level_of_state [state] - 1 == (int) wfa->wfainfo->p_max_level)
-	 queue [last++] = state;	/* init level 'p_max_level' */
+         queue [last++] = state;        /* init level 'p_max_level' */
 
    if (frame_type == P_FRAME)
    {
-      unsigned label;			/* current label */
-      unsigned current;			/* current node to process */
+      unsigned label;                   /* current label */
+      unsigned current;                 /* current node to process */
 
       for (current = 0; current < last; current++)
-	 for (label = 0; label < MAXLABELS; label++)
-	 {
-	    state = queue[current];
-	    if (wfa->x [state][label]	/* process visible states only */
-		+  width_of_level (wfa->level_of_state [state] - 1)
-		<= wfa->wfainfo->width
-		&&
-		wfa->y [state][label]
-		+  height_of_level (wfa->level_of_state [state] - 1)
-		<= wfa->wfainfo->height)
-	    {
-	       wfa->mv_tree [state][label].type
-		  = get_bit (input) ? NONE : FORWARD;
-	    }
-	    else
-	       wfa->mv_tree [state][label].type = NONE;
-	    if (wfa->mv_tree [state][label].type == NONE &&
-		!isrange (wfa->tree [state][label]) &&
-		wfa->level_of_state [state] - 1 >=
-		(int) wfa->wfainfo->p_min_level)
-	       queue [last++] = wfa->tree [state][label]; /* append child  */
-	 }
+         for (label = 0; label < MAXLABELS; label++)
+         {
+            state = queue[current];
+            if (wfa->x [state][label]   /* process visible states only */
+                +  width_of_level (wfa->level_of_state [state] - 1)
+                <= wfa->wfainfo->width
+                &&
+                wfa->y [state][label]
+                +  height_of_level (wfa->level_of_state [state] - 1)
+                <= wfa->wfainfo->height)
+            {
+               wfa->mv_tree [state][label].type
+                  = get_bit (input) ? NONE : FORWARD;
+            }
+            else
+               wfa->mv_tree [state][label].type = NONE;
+            if (wfa->mv_tree [state][label].type == NONE &&
+                !isrange (wfa->tree [state][label]) &&
+                wfa->level_of_state [state] - 1 >=
+                (int) wfa->wfainfo->p_min_level)
+               queue [last++] = wfa->tree [state][label]; /* append child  */
+         }
    }
    else
    {
-      unsigned label;			/* current label */
-      unsigned current;			/* current node to process */
+      unsigned label;                   /* current label */
+      unsigned current;                 /* current node to process */
 
       for (current = 0; current < last; current++)
-	 for (label = 0; label < MAXLABELS; label++)
-	 {
-	    state = queue[current];
-	    if (wfa->x [state][label]	/* process visible states only */
-		+ width_of_level (wfa->level_of_state [state] - 1)
-		> wfa->wfainfo->width
-		||
-		wfa->y [state][label]
-		+ height_of_level (wfa->level_of_state [state] - 1)
-		> wfa->wfainfo->height)
-	       wfa->mv_tree[state][label].type = NONE;
-	    else if (get_bit (input))	/* 1   */
-	       wfa->mv_tree[state][label].type = NONE;
-	    else if (get_bit (input))	/* 01  */
-	       wfa->mv_tree[state][label].type = INTERPOLATED;
-	    else if (get_bit (input))	/* 001 */
-	       wfa->mv_tree[state][label].type = BACKWARD;
-	    else			/* 000 */
-	       wfa->mv_tree[state][label].type = FORWARD;
-	    if (wfa->mv_tree[state][label].type == NONE &&
-		!isrange (wfa->tree[state][label]) &&
-		wfa->level_of_state[state] - 1
-		>= (int) wfa->wfainfo->p_min_level)
-	       queue[last++] = wfa->tree[state][label]; /* append child  */
-	 }
+         for (label = 0; label < MAXLABELS; label++)
+         {
+            state = queue[current];
+            if (wfa->x [state][label]   /* process visible states only */
+                + width_of_level (wfa->level_of_state [state] - 1)
+                > wfa->wfainfo->width
+                ||
+                wfa->y [state][label]
+                + height_of_level (wfa->level_of_state [state] - 1)
+                > wfa->wfainfo->height)
+               wfa->mv_tree[state][label].type = NONE;
+            else if (get_bit (input))   /* 1   */
+               wfa->mv_tree[state][label].type = NONE;
+            else if (get_bit (input))   /* 01  */
+               wfa->mv_tree[state][label].type = INTERPOLATED;
+            else if (get_bit (input))   /* 001 */
+               wfa->mv_tree[state][label].type = BACKWARD;
+            else                        /* 000 */
+               wfa->mv_tree[state][label].type = FORWARD;
+            if (wfa->mv_tree[state][label].type == NONE &&
+                !isrange (wfa->tree[state][label]) &&
+                wfa->level_of_state[state] - 1
+                >= (int) wfa->wfainfo->p_min_level)
+               queue[last++] = wfa->tree[state][label]; /* append child  */
+         }
    }
 
    INPUT_BYTE_ALIGN (input);
@@ -198,12 +198,12 @@ decode_mc_coords (unsigned max_state, wfa_t *wfa, bitfile_t *input)
  *  No return value.
  *
  *  Side effects:
- *	'wfa->mv_tree' is filled with decoded values.
+ *      'wfa->mv_tree' is filled with decoded values.
  */
 {
-   unsigned	       label;		/* current label */
-   unsigned	       state;		/* current state */
-   mv_t		      *mv;		/* current motion vector */
+   unsigned            label;           /* current label */
+   unsigned            state;           /* current state */
+   mv_t               *mv;              /* current motion vector */
    static huff_node_t *huff_mv_root = NULL; /* root of huffman tree */
 
    if (huff_mv_root == NULL)
@@ -212,26 +212,26 @@ decode_mc_coords (unsigned max_state, wfa_t *wfa, bitfile_t *input)
    for (state = wfa->basis_states; state < max_state; state++)
       for (label = 0; label < MAXLABELS; label++)
       {
-	 mv = &wfa->mv_tree[state][label];
-	 switch (mv->type)
-	 {
-	    case NONE:
-	       break;
-	    case FORWARD:
-	       mv->fx = get_mv (1, huff_mv_root, input);
-	       mv->fy = get_mv (1, huff_mv_root, input);
-	       break;
-	    case BACKWARD:
-	       mv->bx = get_mv (1, huff_mv_root, input);
-	       mv->by = get_mv (1, huff_mv_root, input);
-	       break;
-	    case INTERPOLATED:
-	       mv->fx = get_mv (1, huff_mv_root, input);
-	       mv->fy = get_mv (1, huff_mv_root, input);
-	       mv->bx = get_mv (1, huff_mv_root, input);
-	       mv->by = get_mv (1, huff_mv_root, input);
-	       break;
-	 }
+         mv = &wfa->mv_tree[state][label];
+         switch (mv->type)
+         {
+            case NONE:
+               break;
+            case FORWARD:
+               mv->fx = get_mv (1, huff_mv_root, input);
+               mv->fy = get_mv (1, huff_mv_root, input);
+               break;
+            case BACKWARD:
+               mv->bx = get_mv (1, huff_mv_root, input);
+               mv->by = get_mv (1, huff_mv_root, input);
+               break;
+            case INTERPOLATED:
+               mv->fx = get_mv (1, huff_mv_root, input);
+               mv->fy = get_mv (1, huff_mv_root, input);
+               mv->bx = get_mv (1, huff_mv_root, input);
+               mv->by = get_mv (1, huff_mv_root, input);
+               break;
+         }
       }
 
    INPUT_BYTE_ALIGN (input);
@@ -249,11 +249,11 @@ get_mv (int f_code, huff_node_t *hn, bitfile_t *input)
    while (hn->code_index < 0)
    {
       if (hn->code_index == -2)
-	 error ("wrong huffman code !");
+         error ("wrong huffman code !");
       if (get_bit (input))
-	 hn = hn->right;
+         hn = hn->right;
       else
-	 hn = hn->left;
+         hn = hn->left;
    }
    vlc_code = hn->code_index - 16;
    if (vlc_code == 0 || f_code == 1)
@@ -275,7 +275,7 @@ create_huff_tree (void)
  *  Construct huffman tree from code table
  */
 {
-   unsigned	i;
+   unsigned     i;
    huff_node_t *huff_root = Calloc (1, sizeof (huff_node_t));
 
    /*
@@ -286,7 +286,7 @@ create_huff_tree (void)
 
    for (i = 0; i < 33; i++)
       huff_root->index_set [i] = i;
-   huff_root->index_set [i] = -1;	/* end marker */
+   huff_root->index_set [i] = -1;       /* end marker */
 
    create_huff_node (huff_root, 0);
 
@@ -299,14 +299,14 @@ create_huff_node (huff_node_t *hn, int bits_processed)
  *  Create one node in the huffman tree
  */
 {
-   int lind = 0;			/* next index of left huff_node */
-   int rind = 0;			/* next index of right huff_node */
+   int lind = 0;                        /* next index of left huff_node */
+   int rind = 0;                        /* next index of right huff_node */
    int code_len, i, ind;
 
    hn->code_index = -1;
-   if (hn->index_set [0] < 0)		/* empty index set ? */
+   if (hn->index_set [0] < 0)           /* empty index set ? */
    {
-      hn->code_index = -2;		/* error */
+      hn->code_index = -2;              /* error */
       return;
    }
    hn->left  = Calloc (1, sizeof (huff_node_t));
@@ -315,19 +315,19 @@ create_huff_node (huff_node_t *hn, int bits_processed)
    for (i = 0; (ind = hn->index_set[i]) >= 0; i++)
    {
       code_len = mv_code_table[ind][1];
-      if (code_len == bits_processed)	/* generate leaf */
+      if (code_len == bits_processed)   /* generate leaf */
       {
-	 hn->code_index = ind;
-	 Free (hn->left);
-	 Free (hn->right);
-	 return;
+         hn->code_index = ind;
+         Free (hn->left);
+         Free (hn->right);
+         return;
       }
       if (mv_code_table[ind][0] & (1 << (code_len - 1 - bits_processed)))
-	 hn->right->index_set[rind++] = ind;
+         hn->right->index_set[rind++] = ind;
       else
-	 hn->left->index_set[lind++] = ind;
+         hn->left->index_set[lind++] = ind;
    }
-   hn->right->index_set[rind] = -1;	/* set end markers */
+   hn->right->index_set[rind] = -1;     /* set end markers */
    hn->left->index_set[lind]  = -1;
    create_huff_node (hn->left, bits_processed + 1);
    create_huff_node (hn->right, bits_processed + 1);

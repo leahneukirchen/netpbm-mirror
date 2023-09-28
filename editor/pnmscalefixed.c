@@ -15,10 +15,10 @@
 **               - added -reduce N to allow scaling by integer value
 **                 in this case, scale_comp becomes 1/N and x/yscale
 **                 get set as they should
-**    
+**
 **
 */
- 
+
 #include <math.h>
 
 #include "pm_c_util.h"
@@ -27,12 +27,12 @@
 #include "pnm.h"
 
 /* The pnm library allows us to code this program without branching cases
-   for PGM and PPM, but we do the branch anyway to speed up processing of 
+   for PGM and PPM, but we do the branch anyway to speed up processing of
    PGM images.
 */
 
 /* We do all our arithmetic in integers.  In order not to get killed by the
-   rounding, we scale every number up by the factor SCALE, do the 
+   rounding, we scale every number up by the factor SCALE, do the
    arithmetic, then scale it back down.
    */
 #define SCALE 4096
@@ -118,16 +118,16 @@ parse_command_line(int argc, char ** argv,
         pm_error("Cannot specify both -xsize/width and -xscale.");
     if (ysize != -1 && yscale != -1)
         pm_error("Cannot specify both -ysize/height and -yscale.");
-    
-    if (xysize && 
-        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1 || 
+
+    if (xysize &&
+        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1 ||
          reduce != -1 || pixels != -1) )
         pm_error("Cannot specify -xysize with other dimension options.");
-    if (pixels != -1 && 
+    if (pixels != -1 &&
         (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1 ||
          reduce != -1) )
         pm_error("Cannot specify -pixels with other dimension options.");
-    if (reduce != -1 && 
+    if (reduce != -1 &&
         (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1) )
         pm_error("Cannot specify -reduce with other dimension options.");
 
@@ -148,7 +148,7 @@ parse_command_line(int argc, char ** argv,
         else {
             cmdline_p->xbox = atoi(argv[1]);
             cmdline_p->ybox = atoi(argv[2]);
-            
+
             if (argc-1 < 3)
                 cmdline_p->input_filespec = "-";
             else
@@ -157,7 +157,7 @@ parse_command_line(int argc, char ** argv,
     } else {
         cmdline_p->xbox = 0;
         cmdline_p->ybox = 0;
-        
+
         if (xsize == -1 && xscale == -1 && ysize == -1 && yscale == -1
             && pixels == -1 && reduce == -1) {
             /* parameters are scale factor and optional filespec */
@@ -187,7 +187,7 @@ parse_command_line(int argc, char ** argv,
 
             if (reduce != -1) {
                 scale_parm = ((double) 1.0) / ((double) reduce);
-                pm_message("reducing by %d gives scale factor of %f.", 
+                pm_message("reducing by %d gives scale factor of %f.",
                            reduce, scale_parm);
             } else
                 scale_parm = 0.0;
@@ -210,7 +210,7 @@ parse_command_line(int argc, char ** argv,
 
 
 static void
-compute_output_dimensions(const struct cmdline_info cmdline, 
+compute_output_dimensions(const struct cmdline_info cmdline,
                           const int rows, const int cols,
                           int * newrowsP, int * newcolsP) {
 
@@ -226,9 +226,9 @@ compute_output_dimensions(const struct cmdline_info cmdline,
         }
     } else if (cmdline.xbox) {
         const double aspect_ratio = (float) cols / (float) rows;
-        const double box_aspect_ratio = 
+        const double box_aspect_ratio =
             (float) cmdline.xbox / (float) cmdline.ybox;
-        
+
         if (box_aspect_ratio > aspect_ratio) {
             *newrowsP = cmdline.ybox;
             *newcolsP = *newrowsP * aspect_ratio + 0.5;
@@ -254,24 +254,24 @@ compute_output_dimensions(const struct cmdline_info cmdline,
             *newrowsP = rows * ((float) cmdline.xsize/cols) +.5;
         else
             *newrowsP = rows;
-    }    
+    }
 
-    /* If the calculations above yielded (because of rounding) a zero 
+    /* If the calculations above yielded (because of rounding) a zero
        dimension, we fudge it up to 1.  We do this rather than considering
-       it a specification error (and dying) because it's friendlier to 
+       it a specification error (and dying) because it's friendlier to
        automated processes that work on arbitrary input.  It saves them
        having to check their numbers to avoid catastrophe.
     */
 
     if (*newcolsP < 1) *newcolsP = 1;
     if (*newrowsP < 1) *newrowsP = 1;
-}        
+}
 
 
 
 static void
-horizontal_scale(const xel inputxelrow[], xel newxelrow[], 
-                 const int cols, const int newcols, const long sxscale, 
+horizontal_scale(const xel inputxelrow[], xel newxelrow[],
+                 const int cols, const int newcols, const long sxscale,
                  const int format, const xelval maxval,
                  int * stretchP) {
 /*----------------------------------------------------------------------------
@@ -282,14 +282,14 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
    'format' and 'maxval' describe the Netpbm format of the both input and
    output rows.
 
-   *stretchP is the number of columns (could be fractional) on the right 
+   *stretchP is the number of columns (could be fractional) on the right
    that we had to fill by stretching because of rounding problems.
 -----------------------------------------------------------------------------*/
     long r, g, b;
     long fraccoltofill, fraccolleft;
     unsigned int col;
     unsigned int newcol;
-    
+
     newcol = 0;
     fraccoltofill = SCALE;  /* Output column is "empty" now */
     r = g = b = 0;          /* initial value */
@@ -302,7 +302,7 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
         */
         while (fraccolleft >= fraccoltofill) {
             /* Generate one output pixel in 'newxelrow'.  It will consist
-               of anything accumulated from prior input pixels in 'r','g', 
+               of anything accumulated from prior input pixels in 'r','g',
                and 'b', plus a fraction of the current input pixel.
             */
             switch (PNM_FORMAT_TYPE(format)) {
@@ -332,7 +332,7 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
             fraccoltofill = SCALE;
             r = g = b = 0;
         }
-        /* There's not enough left in the current input pixel to fill up 
+        /* There's not enough left in the current input pixel to fill up
            a whole output column, so just accumulate the remainder of the
            pixel into the current output column.
         */
@@ -343,7 +343,7 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
                 g += fraccolleft * PPM_GETG(inputxelrow[col]);
                 b += fraccolleft * PPM_GETB(inputxelrow[col]);
                 break;
-                    
+
             default:
                 g += fraccolleft * PNM_GET1(inputxelrow[col]);
                 break;
@@ -356,7 +356,7 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
     while (newcol < newcols) {
         /* We ran out of input columns before we filled up the output
            columns.  This would be because of rounding down.  For small
-           images, we're probably missing only a tiny fraction of a column, 
+           images, we're probably missing only a tiny fraction of a column,
            but for large images, it could be multiple columns.
 
            So we fake the remaining output columns by copying the rightmost
@@ -382,7 +382,7 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
             if ( b > maxval ) b = maxval;
             PPM_ASSIGN(newxelrow[newcol], r, g, b );
             break;
-                
+
         default:
             g += fraccoltofill * PNM_GET1(inputxelrow[cols-1]);
             g += HALFSCALE;  /* for rounding */
@@ -416,7 +416,7 @@ main(int argc, char **argv ) {
     long* gs;
     long* bs;
     int vertical_stretch;
-        /* The number of rows we had to fill by stretching because of 
+        /* The number of rows we had to fill by stretching because of
            rounding error, which made us run out of input rows before we
            had filled up the output rows.
            */
@@ -434,7 +434,7 @@ main(int argc, char **argv ) {
         newformat = PGM_TYPE;
         newmaxval = PGM_MAXMAXVAL;
         pm_message( "promoting from PBM to PGM" );
-	}  else {
+        }  else {
         newformat = format;
         newmaxval = maxval;
     }
@@ -450,14 +450,14 @@ main(int argc, char **argv ) {
     syscale = SCALE * newrows / rows;
 
     if (cmdline.verbose) {
-        pm_message("Scaling by %ld/%d = %f horizontally to %d columns.", 
+        pm_message("Scaling by %ld/%d = %f horizontally to %d columns.",
                    sxscale, SCALE, (float) sxscale/SCALE, newcols );
-        pm_message("Scaling by %ld/%d = %f vertically to %d rows.", 
+        pm_message("Scaling by %ld/%d = %f vertically to %d rows.",
                    syscale, SCALE, (float) syscale/SCALE, newrows);
     }
 
     xelrow = pnm_allocrow(cols);
-    if (newrows == rows)	/* shortcut Y scaling if possible */
+    if (newrows == rows)        /* shortcut Y scaling if possible */
         tempxelrow = xelrow;
     else
         tempxelrow = pnm_allocrow( cols );
@@ -468,18 +468,18 @@ main(int argc, char **argv ) {
     fracrowleft = syscale;
     needtoreadrow = 1;
     for ( col = 0; col < cols; ++col )
-	rs[col] = gs[col] = bs[col] = HALFSCALE;
+        rs[col] = gs[col] = bs[col] = HALFSCALE;
     fracrowtofill = SCALE;
     vertical_stretch = 0;
-    
+
     pnm_writepnminit( stdout, newcols, newrows, newmaxval, newformat, 0 );
     newxelrow = pnm_allocrow( newcols );
-    
+
     for ( row = 0; row < newrows; ++row ) {
         /* First scale vertically from xelrow into tempxelrow. */
         if ( newrows == rows ) { /* shortcut vertical scaling if possible */
             pnm_readpnmrow( ifp, xelrow, cols, newmaxval, format );
-	    } else {
+            } else {
             while ( fracrowleft < fracrowtofill ) {
                 if ( needtoreadrow )
                     if ( rowsread < rows ) {
@@ -513,8 +513,8 @@ main(int argc, char **argv ) {
                 } else {
                     /* We need another input row to fill up this output row,
                        but there aren't any more.  That's because of rounding
-                       down on our scaling arithmetic.  So we go ahead with 
-                       the data from the last row we read, which amounts to 
+                       down on our scaling arithmetic.  So we go ahead with
+                       the data from the last row we read, which amounts to
                        stretching out the last output row.
                     */
                     vertical_stretch += fracrowtofill;
@@ -544,7 +544,7 @@ main(int argc, char **argv ) {
                 for ( col = 0, xP = xelrow, nxP = tempxelrow;
                       col < cols; ++col, ++xP, ++nxP ) {
                     register long g;
-                    
+
                     g = gs[col] + fracrowtofill * PNM_GET1( *xP );
                     g /= SCALE;
                     if ( g > newmaxval ) g = newmaxval;
@@ -559,37 +559,37 @@ main(int argc, char **argv ) {
                 needtoreadrow = 1;
             }
             fracrowtofill = SCALE;
-	    }
+            }
 
         /* Now scale tempxelrow horizontally into newxelrow & write it out. */
 
-        if (newcols == cols)	/* shortcut X scaling if possible */
-            pnm_writepnmrow(stdout, tempxelrow, newcols, 
+        if (newcols == cols)    /* shortcut X scaling if possible */
+            pnm_writepnmrow(stdout, tempxelrow, newcols,
                             newmaxval, newformat, 0);
         else {
             int stretch;
 
-            horizontal_scale(tempxelrow, newxelrow, cols, newcols, sxscale, 
+            horizontal_scale(tempxelrow, newxelrow, cols, newcols, sxscale,
                              format, newmaxval, &stretch);
-            
+
             if (cmdline.verbose && row == 0 && stretch != 0)
                 pm_message("%d/%d = %f right columns filled by stretching "
-                           "because of arithmetic imprecision", 
+                           "because of arithmetic imprecision",
                            stretch, SCALE, (float) stretch/SCALE);
-            
-            pnm_writepnmrow(stdout, newxelrow, newcols, 
+
+            pnm_writepnmrow(stdout, newxelrow, newcols,
                             newmaxval, newformat, 0 );
         }
-	}
+        }
 
     if (cmdline.verbose && vertical_stretch != 0)
         pm_message("%d/%d = %f bottom rows filled by stretching due to "
-                   "arithmetic imprecision", 
-                   vertical_stretch, SCALE, 
+                   "arithmetic imprecision",
+                   vertical_stretch, SCALE,
                    (float) vertical_stretch/SCALE);
-    
+
     pm_close( ifp );
     pm_close( stdout );
-    
+
     exit( 0 );
 }

@@ -36,16 +36,16 @@ echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
 ppmhist -hexcolor -float testimg.ppm > ${test_out} || \
-  printf "Expected failure 1"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 ppmhist -hexcolor -map   testimg.ppm > ${test_out} || \
-  printf "Expected failure 2"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 ppmhist -float    -map   testimg.ppm > ${test_out} || \
-  printf "Expected failure 3"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

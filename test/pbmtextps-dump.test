@@ -90,8 +90,8 @@ for error_flag in \
   "-pad -crop"
   do
     pbmtextps ${error_flag} -dump-ps ${text} >${test_out} || \
-    printf "Expected failure $n (${error_flag})";
-    test -s ${test_out}; echo " "$?
+    printf "Expected failure $n (${error_flag}) "
+    test -s ${test_out} && echo "unexpected output" || echo "(no output)"
     rm -f ${test_out}
     n=$((n + 1))
   done
@@ -105,8 +105,8 @@ for asciihex_string in \
   "<53756c>667572>"
   do
     pbmtextps -dump-ps -asciihex ${asciihex_string} >${test_out} || \
-    printf "Expected failure $n (-asciihex ${asciihex_string})";
-    test -s ${test_out}; echo " "$?
+    printf "Expected failure $n (-asciihex ${asciihex_string}) "
+    test -s ${test_out} && echo "unexpected output" || echo "(no output)"
     rm -f ${test_out}
     n=$((n + 1))
   done
@@ -124,13 +124,13 @@ for ascii85_string in \
   "<~0123z~>"
   do
     pbmtextps -dump-ps -ascii85 ${ascii85_string} >${test_out} || \
-    printf "Expected failure $n (-ascii85 ${ascii85_string})";
-    test -s ${test_out}; echo " "$?
+	printf "Expected failure $n (-ascii85 ${ascii85_string}) "
+    test -s ${test_out} && echo "unexpected output" || echo "(no output)"
     rm -f ${test_out}
     n=$((n + 1))
   done
 
   pbmtextps -font="" -dump-ps ${text} >${test_out} || \
-  printf "Expected failure $n (-font=\"\")";
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure $n (-font=\"\") "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

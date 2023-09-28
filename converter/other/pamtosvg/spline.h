@@ -18,20 +18,19 @@ typedef at_spline_type spline_type;
 #define ELLIPSETYPE         AT_ELLIPSETYPE
 #define CIRCLETYPE          AT_CIRCLETYPE
 
-#define START_POINT(spl)        ((spl).v[0])
+#define BEG_POINT(spl)          ((spl).v[0])
 #define CONTROL1(spl)           ((spl).v[1])
 #define CONTROL2(spl)           ((spl).v[2])
-#define BEG_POINT(spl)          ((spl).v[0])
 #define END_POINT(spl)          ((spl).v[3])
 #define SPLINE_DEGREE(spl)      ((spl).degree)
 #define SPLINE_LINEARITY(spl)   ((spl).linearity)
 
 #ifndef _IMPORTING
 /* Print a spline on the given file.  */
-extern void print_spline (FILE *, spline_type);
+void print_spline (FILE *, spline_type);
 
 /* Evaluate SPLINE at the given T value.  */
-extern float_coord evaluate_spline (spline_type spline, float t);
+Point evaluate_spline (spline_type spline, float t);
 #endif
 
 /* Each outline in a character is typically represented by many

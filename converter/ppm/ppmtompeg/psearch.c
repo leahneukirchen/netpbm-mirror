@@ -1,8 +1,8 @@
 /*===========================================================================*
- * psearch.c                                     
- *                                       
- *  Procedures concerned with the P-frame motion search          
- *                                       
+ * psearch.c
+ *
+ *  Procedures concerned with the P-frame motion search
+ *
  *===========================================================================*/
 
 /*==============*
@@ -79,10 +79,10 @@ int psearchAlg;
  *
  *===========================================================================*/
 void
-PMotionSearch(const LumBlock * const currentBlockP, 
-              MpegFrame *      const prev, 
+PMotionSearch(const LumBlock * const currentBlockP,
+              MpegFrame *      const prev,
               int              const by,
-              int              const bx, 
+              int              const bx,
               vector *         const motionP) {
 
     /* CALL SEARCH PROCEDURE */
@@ -92,14 +92,14 @@ PMotionSearch(const LumBlock * const currentBlockP,
         PSubSampleSearch(currentBlockP, prev, by, bx, motionP, searchRangeP);
         break;
     case PSEARCH_EXHAUSTIVE:
-        PLocalSearch(currentBlockP, prev, by, bx, 
+        PLocalSearch(currentBlockP, prev, by, bx,
                      motionP, INT_MAX, searchRangeP);
         break;
     case PSEARCH_LOGARITHMIC:
         PLogarithmicSearch(currentBlockP, prev, by, bx, motionP, searchRangeP);
         break;
     case PSEARCH_TWOLEVEL:
-        PTwoLevelSearch(currentBlockP, prev, by, bx, 
+        PTwoLevelSearch(currentBlockP, prev, by, bx,
                         motionP, INT_MAX, searchRangeP);
         break;
     default:
@@ -122,7 +122,7 @@ PMotionSearch(const LumBlock * const currentBlockP,
  *===========================================================================*/
 void
 SetPixelSearch(const char * const searchType) {
-    if ( (strcmp(searchType, "FULL") == 0 ) || 
+    if ( (strcmp(searchType, "FULL") == 0 ) ||
          ( strcmp(searchType, "WHOLE") == 0 )) {
         pixelFullSearch = TRUE;
     } else if ( strcmp(searchType, "HALF") == 0 ) {
@@ -216,16 +216,16 @@ SetSearchRange(int const pixelsP, int const pixelsB) {
         int const max_search = max(searchRangeP, searchRangeB);
 
         int index;
-    
+
         pmvHistogram = (int **) malloc((2*searchRangeP+3)*sizeof(int *));
         bbmvHistogram = (int **) malloc((2*searchRangeB+3)*sizeof(int *));
         bfmvHistogram = (int **) malloc((2*searchRangeB+3)*sizeof(int *));
         for ( index = 0; index < 2*max_search+3; index++ ) {
-            pmvHistogram[index] = 
+            pmvHistogram[index] =
                 (int *) calloc(2*searchRangeP+3, sizeof(int));
-            bbmvHistogram[index] = 
+            bbmvHistogram[index] =
                 (int *) calloc(2*searchRangeB+3, sizeof(int));
-            bfmvHistogram[index] = 
+            bfmvHistogram[index] =
                 (int *) calloc(2*searchRangeB+3, sizeof(int));
         }
     }
@@ -269,12 +269,12 @@ MotionSearchPreComputation(MpegFrame * const frameP) {
  *===========================================================================*/
 int
 PSubSampleSearch(const LumBlock * const currentBlockP,
-                 MpegFrame *      const prev, 
+                 MpegFrame *      const prev,
                  int              const by,
                  int              const bx,
                  vector *         const motionP,
                  int              const searchRange) {
-    
+
     int my, mx;
     int bestBestDiff;
     int stepSize;
@@ -311,7 +311,7 @@ PSubSampleSearch(const LumBlock * const currentBlockP,
                     m.y = my; m.x = mx;
                     diff = LumMotionErrorA(currentBlockP, prev, by, bx, m,
                                            bestDiff[0]);
-                    
+
                     if (diff < bestDiff[0]) {
                         bestMY[0] = my;
                         bestMX[0] = mx;
@@ -330,9 +330,9 @@ PSubSampleSearch(const LumBlock * const currentBlockP,
                     int diff;
                     vector m;
                     m.y = my; m.x = mx;
-                    diff = LumMotionErrorB(currentBlockP, prev, by, bx, m, 
+                    diff = LumMotionErrorB(currentBlockP, prev, by, bx, m,
                                            bestDiff[1]);
-                    
+
                     if (diff < bestDiff[1]) {
                         bestMY[1] = my;
                         bestMX[1] = mx;
@@ -353,7 +353,7 @@ PSubSampleSearch(const LumBlock * const currentBlockP,
                     m.y = my; m.x = mx;
                     diff = LumMotionErrorC(currentBlockP, prev, by, bx, m,
                                            bestDiff[2]);
-                    
+
                     if (diff < bestDiff[2]) {
                         bestMY[2] = my;
                         bestMX[2] = mx;
@@ -374,7 +374,7 @@ PSubSampleSearch(const LumBlock * const currentBlockP,
                     m.y = my; m.x = mx;
                     diff = LumMotionErrorD(currentBlockP, prev, by, bx, m,
                                            bestDiff[3]);
-                    
+
                     if (diff < bestDiff[3]) {
                         bestMY[3] = my;
                         bestMX[3] = mx;
@@ -388,7 +388,7 @@ PSubSampleSearch(const LumBlock * const currentBlockP,
     /* first check old motion */
     if ((motionP->y >= leftMY) && (motionP->y < rightMY) &&
         (motionP->x >= leftMX) && (motionP->x < rightMX)) {
-        bestBestDiff = LumMotionError(currentBlockP, prev, by, bx, 
+        bestBestDiff = LumMotionError(currentBlockP, prev, by, bx,
                                       *motionP, INT_MAX);
     } else
         bestBestDiff = INT_MAX;
@@ -417,15 +417,15 @@ findBestSpaced(int              const minMY,
                int              const maxMY,
                int              const maxMX,
                int              const spacing,
-               const LumBlock * const currentBlockP, 
+               const LumBlock * const currentBlockP,
                MpegFrame *      const prev,
                int              const by,
                int              const bx,
-               int *            const bestDiffP, 
+               int *            const bestDiffP,
                vector *         const centerP) {
 /*----------------------------------------------------------------------------
-   Examine every 'spacing'th half-pixel within the rectangle 
-   ('minBoundX', 'minBoundY', 'maxBoundX', 'maxBoundY'), 
+   Examine every 'spacing'th half-pixel within the rectangle
+   ('minBoundX', 'minBoundY', 'maxBoundX', 'maxBoundY'),
 
    If one of the half-pixels examined has a lower "LumMotionError" value
    than *bestDiffP, update *bestDiffP to that value and update
@@ -446,9 +446,9 @@ findBestSpaced(int              const minMY,
             vector m;
 
             m.y = my; m.x = mx;
-            
+
             diff = LumMotionError(currentBlockP, prev, by, bx, m, *bestDiffP);
-            
+
             if (diff < *bestDiffP) {
                 *centerP   = m;
                 *bestDiffP = diff;
@@ -474,9 +474,9 @@ findBestSpaced(int              const minMY,
  *===========================================================================*/
 int
 PLogarithmicSearch(const LumBlock * const currentBlockP,
-                   MpegFrame *      const prev, 
+                   MpegFrame *      const prev,
                    int              const by,
-                   int              const bx, 
+                   int              const bx,
                    vector *         const motionP,
                    int              const searchRange) {
 
@@ -493,7 +493,7 @@ PLogarithmicSearch(const LumBlock * const currentBlockP,
         /* The difference between the current block and the block offset
            'motion' from it.
         */
-    
+
     COMPUTE_MOTION_BOUNDARY(by, bx, stepSize, minMY, minMX, maxMY, maxMX);
     minMX = max(minMX, - searchRange);
     minMY = max(minMY, - searchRange);
@@ -510,20 +510,20 @@ PLogarithmicSearch(const LumBlock * const currentBlockP,
 
     for (spacing = searchRange; spacing >= stepSize;) {
         if (stepSize == 2) {  /* make sure spacing is even */
-            if (spacing == 2) 
+            if (spacing == 2)
                 spacing = 0;
             else {
                 spacing = (spacing+1)/2;
-                if (spacing % 2 != 0) 
+                if (spacing % 2 != 0)
                     --spacing;
             }
         } else {
             if (spacing == 1) {
                 spacing = 0;
-            } else 
+            } else
                 spacing = (spacing + 1) / 2;
         }
-        if (spacing >= stepSize) 
+        if (spacing >= stepSize)
             findBestSpaced(minMY, minMX, maxMY, maxMX,
                            spacing, currentBlockP, prev, by, bx,
                            &bestDiff, &motion);
@@ -534,14 +534,14 @@ PLogarithmicSearch(const LumBlock * const currentBlockP,
         /* check old motion -- see if it's better */
         if ((motionP->y >= minMY) && (motionP->y < maxMY) &&
             (motionP->x >= minMX) && (motionP->x < maxMX)) {
-            diff = LumMotionError(currentBlockP, prev, by, bx, 
+            diff = LumMotionError(currentBlockP, prev, by, bx,
                                   *motionP, bestDiff);
-        } else 
+        } else
             diff = INT_MAX;
-        
+
         if (bestDiff < diff)
             *motionP = motion;
-        else 
+        else
             bestDiff = diff;
     }
 
@@ -563,7 +563,7 @@ PLogarithmicSearch(const LumBlock * const currentBlockP,
  *===========================================================================*/
 int
 PLocalSearch(const LumBlock * const currentBlockP,
-             MpegFrame *      const prev, 
+             MpegFrame *      const prev,
              int              const by,
              int              const bx,
              vector *         const motionP,
@@ -584,7 +584,7 @@ PLocalSearch(const LumBlock * const currentBlockP,
 
     /* try old motion vector first */
     if (VALID_MOTION(*motionP)) {
-        bestDiff = LumMotionError(currentBlockP, prev, by, bx, 
+        bestDiff = LumMotionError(currentBlockP, prev, by, bx,
                                   *motionP, bestSoFar);
 
         if (bestSoFar < bestDiff)
@@ -594,7 +594,7 @@ PLocalSearch(const LumBlock * const currentBlockP,
         bestDiff = bestSoFar;
     }
 
-    /* try a spiral pattern */    
+    /* try a spiral pattern */
     for (distance = stepSize; distance <= searchRange; distance += stepSize) {
         tempRightMY = MIN(distance, rightMY);
         tempRightMX = MIN(distance, rightMX);
@@ -607,11 +607,11 @@ PLocalSearch(const LumBlock * const currentBlockP,
                     if (mx >= leftMX) {
                         int diff;
                         vector m;
-                        
+
                         m.y = my; m.x = mx;
-                        diff = LumMotionError(currentBlockP, prev, by, bx, m, 
+                        diff = LumMotionError(currentBlockP, prev, by, bx, m,
                                               bestDiff);
-                        
+
                         if (diff < bestDiff) {
                             *motionP = m;
                             bestDiff = diff;
@@ -635,7 +635,7 @@ PLocalSearch(const LumBlock * const currentBlockP,
                         m.y = my; m.x = mx;
                         diff = LumMotionError(currentBlockP, prev, by, bx, m,
                                               bestDiff);
-                        
+
                         if (diff < bestDiff) {
                             *motionP = m;
                             bestDiff = diff;
@@ -664,9 +664,9 @@ PLocalSearch(const LumBlock * const currentBlockP,
  *===========================================================================*/
 int
 PTwoLevelSearch(const LumBlock * const currentBlockP,
-                MpegFrame *      const prev, 
+                MpegFrame *      const prev,
                 int              const by,
-                int              const bx, 
+                int              const bx,
                 vector *         const motionP,
                 int              const bestSoFar,
                 int              const searchRange) {
@@ -702,7 +702,7 @@ PTwoLevelSearch(const LumBlock * const currentBlockP,
 
     /* try old motion vector first */
     if (VALID_MOTION(*motionP)) {
-        bestDiff = LumMotionError(currentBlockP, prev, by, bx, 
+        bestDiff = LumMotionError(currentBlockP, prev, by, bx,
                                   *motionP, bestSoFar);
 
         if ( bestSoFar < bestDiff ) {
@@ -716,7 +716,7 @@ PTwoLevelSearch(const LumBlock * const currentBlockP,
     ++rightMY;
     ++rightMX;
 
-    /* try a spiral pattern */    
+    /* try a spiral pattern */
     for ( distance = 2; distance <= searchRange; distance += 2 ) {
         tempRightMY = MIN(distance, rightMY);
         tempRightMX = MIN(distance, rightMX);
@@ -729,9 +729,9 @@ PTwoLevelSearch(const LumBlock * const currentBlockP,
                     if (mx >= leftMX) {
                         vector m;
                         m.y = my; m.x = mx;
-                        diff = LumMotionError(currentBlockP, prev, by, bx, m, 
+                        diff = LumMotionError(currentBlockP, prev, by, bx, m,
                                               bestDiff);
-                        
+
                         if (diff < bestDiff) {
                             *motionP = m;
                             bestDiff = diff;
@@ -750,9 +750,9 @@ PTwoLevelSearch(const LumBlock * const currentBlockP,
                         int diff;
                         vector m;
                         m.y = my; m.x = mx;
-                        diff = LumMotionError(currentBlockP, prev, by, bx, m, 
+                        diff = LumMotionError(currentBlockP, prev, by, bx, m,
                                               bestDiff);
-                        
+
                         if ( diff < bestDiff ) {
                             *motionP = m;
                             bestDiff = diff;
@@ -952,7 +952,7 @@ ShowBFMVHistogram(fpointer)
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /u/smoot/md/mpeg_encode/RCS/psearch.c,v 1.9 1995/01/19 23:09:12 eyhung Exp $
  *  $Log: psearch.c,v $
  * Revision 1.9  1995/01/19  23:09:12  eyhung

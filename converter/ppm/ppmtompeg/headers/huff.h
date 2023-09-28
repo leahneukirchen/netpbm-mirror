@@ -19,18 +19,18 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/charlie-brown/project/mm/mpeg/mpeg_dist/mpeg_encode/headers/RCS/huff.h,v 1.3 1995/01/19 23:54:51 eyhung Exp $
  */
 
-/*  
+/*
  *  THIS FILE WAS ORIGINALLY MACHINE GENERATED
  */
 
 #include "general.h"
 
-#define HUFF_MAXRUN	32
-#define HUFF_MAXLEVEL	41
+#define HUFF_MAXRUN     32
+#define HUFF_MAXLEVEL   41
 
 extern int huff_maxlevel[];
 extern uint32 *huff_table[];

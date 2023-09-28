@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: qoitopam pamtoqoi
 # Also requires: pamdepth pamfile pamseq pamstack pamtopnm pbmmake
 # Also requires: pgmnoise ppmpat ppmtopgm
@@ -155,19 +155,19 @@ echo "Invalid command-line argument combinations." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-echo "Should print: Expected failure N 1"
+echo "Should print: Expected failure N (no output)"
 
 pamseq -tupletype="void" 1 1 | pamtoqoi > \
   ${test_out} || \
-  printf "Expected failure 1"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 ( echo "P1"; echo "400000001 1" ;
   head -c 400000001 /dev/zero ) | pamtoqoi > \
   ${test_out} || \
-  printf "Expected failure 2"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # Replace fields in the qoi file header with invalid values
@@ -175,24 +175,24 @@ pamseq -tupletype="void" 1 1 | pamtoqoi > \
 ( printf "qojf"
   tail -c +5 ${maze_qoi} ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 3"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 ( head -c 4 ${maze_qoi}
   head -c 4 /dev/zero
   tail -c +9 ${maze_qoi} ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 4"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 4 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 ( head -c 8 ${maze_qoi}
   head -c 4 /dev/zero
   tail -c +13 ${maze_qoi} ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 5"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 5 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # Following sed construct means: "replace first 8 bytes of input
@@ -204,51 +204,51 @@ pamseq -tupletype="void" 1 1 | pamtoqoi > \
   tail -c +5 ${maze_qoi} | \
   sed '1s/^......../\x00\x00\x4F\xFF\x00\x00\x4F\xFF/' ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 6"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 6 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 ( head -c 12 ${maze_qoi}
   tail -c +13 ${maze_qoi} | sed '1s/^./\x01/' ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 7"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 7 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 ( head -c 13 ${maze_qoi}
   tail -c +14 ${maze_qoi} | sed '1s/^./\x02/' ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 8"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 8 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 echo "------------------------------"
-echo "Should print: Expected failure N 0"
+echo "Should print: Expected failure N (output produced)"
 
 ( head -c $(( ${maze_qoi_size} - 9 )) ${maze_qoi}
   tail -c 9 ${maze_qoi} |   sed '1s/^./\xfd/' ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 9"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 9 "
+  test -s ${test_out} && echo "(output produced)"|| echo "no output"
   rm -f ${test_out}
 
 head -c $(( ${maze_qoi_size} - 1 )) ${maze_qoi} | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 10"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 10 "
+  test -s ${test_out} && echo "(output produced)"|| echo "no output"
   rm -f ${test_out}
 
 ( head -c $(( ${maze_qoi_size} - 1 )) ${maze_qoi}
   printf '1' ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 11"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 11 "
+  test -s ${test_out} && echo "(output produced)"|| echo "no output"
   rm -f ${test_out}
 
 ( cat ${maze_qoi}; printf '1' ) | qoitopam > \
   ${test_out} || \
-  printf "Expected failure 12"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 12 "
+  test -s ${test_out} && echo "(output produced)"|| echo "no output"
   rm -f ${test_out}
 
 rm ${maze_qoi}

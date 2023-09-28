@@ -53,7 +53,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "background",     OPT_STRING, &cmdlineP->background, 
+    OPTENT3(0, "background",     OPT_STRING, &cmdlineP->background,
             &backgroundSpec, 0);
     OPTENT3(0, "closeok",        OPT_FLAG, NULL,
             &cmdlineP->closeok, 0);
@@ -68,21 +68,21 @@ parseCommandLine(int argc, char ** argv,
     if (!backgroundSpec)
         cmdlineP->background = NULL;
 
-    if (argc - 1 < 1) 
+    if (argc - 1 < 1)
         pm_error("You must specify at least one argument:  the strip count");
     else {
         int const stripcount = atoi(argv[1]);
         if (stripcount <= 0)
             pm_error("The strip count must be positive.  You specified %d",
                      stripcount);
-            
+
         cmdlineP->stripcount = stripcount;
 
         if (argc-1 < 2)
             cmdlineP->inputFileName = "-";
         else
             cmdlineP->inputFileName = argv[2];
-    
+
         if (argc - 1 > 2)
             pm_error("There are at most two arguments: strip count "
                      "and input file name.  "
@@ -113,9 +113,9 @@ main(int argc, char *argv[]) {
     ppm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.inputFileName);
-    
+
     srcPixels = ppm_readppm(ifP, &srcCols, &srcRows, &srcMaxval);
 
     pm_close(ifP);
@@ -139,7 +139,7 @@ main(int argc, char *argv[]) {
                                  &backgroundColor);
 
     dstPixels = ppm_allocarray(dstCols, dstRows);
-    
+
     for (row = 0; row < dstRows; ++row) {
         double const factor = sin(M_PI * row / dstRows);
             /* Amount by which we squeeze the foreground image of each

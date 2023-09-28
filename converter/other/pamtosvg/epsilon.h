@@ -1,7 +1,7 @@
 /* epsilon-equal.h: define an error resist compare. */
 
-#ifndef EPSILON_EQUAL_H
-#define EPSILON_EQUAL_H
+#ifndef EPSILON_H
+#define EPSILON_H
 
 #include "pm_c_util.h"
 
@@ -16,5 +16,5 @@ bool epsilon_equal(float const v1,
 
 #define REAL_EPSILON 0.00001
 
-#endif /* not EPSILON_EQUAL_H */
+#endif
 

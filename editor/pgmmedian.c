@@ -55,7 +55,7 @@ static int const forceplain = 0;
 /* Global variables common to each median sort routine. */
 static gray ** grays;
     /* The convolution buffer.  This is a circular buffer that contains the
-       rows of the input image that are being convolved into the current 
+       rows of the input image that are being convolved into the current
        output row.
     */
 static gray * grayrow;

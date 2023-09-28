@@ -1,8 +1,8 @@
 /*===========================================================================*
- * parallel.h          
- *                     
- *  parallel encoding  
- *                     
+ * parallel.h
+ *
+ *  parallel encoding
+ *
  *===========================================================================*/
 
 /*
@@ -42,33 +42,33 @@ struct inputSource;
 
 void
 MasterServer(struct inputSource * const inputSourceP,
-             const char *         const paramFileName, 
+             const char *         const paramFileName,
              const char *         const outputFileName);
 
 void
-NotifyMasterDone(const char * const hostName, 
-                 int          const portNum, 
-                 int          const machineNumber, 
-                 unsigned int const seconds, 
+NotifyMasterDone(const char * const hostName,
+                 int          const portNum,
+                 int          const machineNumber,
+                 unsigned int const seconds,
                  boolean *    const moreWorkToDoP,
                  int *        const frameStartP,
                  int *        const frameEndP);
 
 void
 IoServer(struct inputSource * const inputSourceP,
-         const char *         const parallelHostName, 
+         const char *         const parallelHostName,
          int                  const portNum);
 
 void
-CombineServer(int          const numInputFiles, 
-              const char * const masterHostName, 
+CombineServer(int          const numInputFiles,
+              const char * const masterHostName,
               int          const masterPortNum,
               const char*  const outputFileName);
 
 void
-DecodeServer(int          const numInputFiles, 
-             const char * const decodeFileName, 
-             const char * const parallelHostName, 
+DecodeServer(int          const numInputFiles,
+             const char * const decodeFileName,
+             const char * const parallelHostName,
              int          const portNum);
 
 void
@@ -91,20 +91,20 @@ SetIOConvert(boolean const separate);
 void
 SetRemoteShell(const char * const shell);
 
-void 
+void
 NotifyDecodeServerReady(int const id);
 
-void 
+void
 WaitForDecodedFrame(int id);
 
-void 
+void
 SendDecodedFrame(MpegFrame * const frameP);
 
-void 
+void
 GetRemoteDecodedRefFrame(MpegFrame * const frameP,
                          int         const frameNumber);
 
-void 
+void
 SetParallelPerfect(boolean val);
 
 

@@ -12,6 +12,11 @@
 # SOURCE_DATE_EPOCH is an environment variable as described here:
 # https://reproducible-builds.org/specs/source-date-epoch/ on 2017.03.16.
 
+# COMPILED_BY is a similar environment variable whose value is some
+# description of who is doing the build.  If it is not set, we use the
+# value of LOGNAME; if that is not set, we use the value of User; if that
+# is not set, we use the output of program 'whoami'.
+
 SOURCE_DATE_OR_NONE=${SOURCE_DATE_EPOCH:-NONE}
 
 NOW_FROM_DATE_PGM=$(date +%s)
@@ -24,9 +29,12 @@ else
 fi
 
 LOGNAME_OR_UNKNOWN=${LOGNAME:-UNKNOWN}
-USER=${USER:-$LOGNAME_OR_UNKNOWN}
-if [ "$USER" = "UNKNOWN" ]; then
-    USER=$(whoami)
+USER_OR_UNKNOWN=${USER:-$LOGNAME_OR_UNKNOWN}
+COMPILED_BY_OR_UNKNOWN=${COMPILED_BY:-$USER_OR_UNKNOWN}
+if [ "$COMPILED_BY_OR_UNKNOWN" = "UNKNOWN" ]; then
+    COMPILED_BY=$(whoami)
+else
+    COMPILED_BY=$COMPILED_BY_OR_UNKNOWN
 fi
 
 echo "/* This file tells some facts about the building of the package */"
@@ -36,4 +44,4 @@ if [ "$SOURCE_DATE_OR_NONE" != "NONE" ]; then
   echo "#define SOURCE_DATETIME $SOURCE_DATE_OR_NONE"
 fi
 echo "#define BUILD_DATETIME $BUILD_DATETIME"
-echo "#define COMPILED_BY \"$USER\""
+echo "#define COMPILED_BY \"$COMPILED_BY\""

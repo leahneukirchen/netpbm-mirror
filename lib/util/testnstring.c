@@ -12,7 +12,7 @@ int
 main(int argc, char **argv) {
 
     char snprintfNResult[80];
-    const char * asprintfNResult; 
+    const char * asprintfNResult;
 
     printf("Hello world.\n");
 
@@ -20,7 +20,7 @@ main(int argc, char **argv) {
 
     printf("snprintfN result='%s'\n", snprintfNResult);
 
-    asprintfN(&asprintfNResult, "asprintf'ed string %d %u %s", 
+    asprintfN(&asprintfNResult, "asprintf'ed string %d %u %s",
               5, 89, "substring");
 
     printf("asprintfN result='%s'\n", asprintfNResult);

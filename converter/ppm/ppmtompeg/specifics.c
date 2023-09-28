@@ -1,13 +1,13 @@
 /*===========================================================================*
- * specifics.c								     *
- *									     *
- *	basic procedures to deal with the specifics file                     *
- *									     *
- * EXPORTED PROCEDURES:							     *
- *	Specifics_Init							     *
+ * specifics.c                                                               *
+ *                                                                           *
+ *      basic procedures to deal with the specifics file                     *
+ *                                                                           *
+ * EXPORTED PROCEDURES:                                                      *
+ *      Specifics_Init                                                       *
  *      Spec_Lookup                                                          *
  *      SpecTypeLookup                                                       *
- *									     *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -69,7 +69,7 @@ void Parse_Specifics_File_v2 (FILE *fp);
 FrameSpecList *MakeFslEntry (void);
 void AddSlc (FrameSpecList *c,int snum, int qs);
 Block_Specifics *AddBs (FrameSpecList *c,int bnum,
-				    boolean rel, int qs);
+                                    boolean rel, int qs);
 FrameSpecList *MakeFslEntry (void);
 #define my_upper(c) (((c>='a') && (c<='z')) ? (c-'a'+'A') : c)
 #define CvtType(x) ReallyCvt(my_upper(x))
@@ -221,24 +221,24 @@ FILE *fp;
     case 'V':
       lp += 7;
       if (1 != sscanf(lp, "%d", &vers)) {
-	fprintf(stderr," Improper version line in specs file: %s\n", line);
+        fprintf(stderr," Improper version line in specs file: %s\n", line);
       } else {
-	switch (vers) {
-	case 1:
-	  version = vers;
-	  Parse_Specifics_File_v1(fp);
-	  break;
-	case 2:
-	  version = vers;
-	  Parse_Specifics_File_v2(fp);
-	  break;
-	default:
-	  fprintf(stderr, "Improper version line in specs file: %s\n", line);
-	  fprintf(stderr, "\tSpecifics file will be IGNORED.\n");
-	  specificsOn = FALSE;
-	  return;
-	  break;
-	}}
+        switch (vers) {
+        case 1:
+          version = vers;
+          Parse_Specifics_File_v1(fp);
+          break;
+        case 2:
+          version = vers;
+          Parse_Specifics_File_v2(fp);
+          break;
+        default:
+          fprintf(stderr, "Improper version line in specs file: %s\n", line);
+          fprintf(stderr, "\tSpecifics file will be IGNORED.\n");
+          specificsOn = FALSE;
+          return;
+          break;
+        }}
       break;
     default:
       fprintf(stderr, "Specifics file: What? *%s*\n", line);
@@ -271,9 +271,9 @@ FILE *fp;
       lp += 6;
       sscanf(lp, "%d %c %d", &fnum, &typ, &qs);
       if (current->framenum != -1) {
-	new=MakeFslEntry();
-	current->next = new;
-	current = new;
+        new=MakeFslEntry();
+        current->next = new;
+        current = new;
       }
       current->framenum = fnum;
       current->frametype = CvtType(typ);
@@ -581,8 +581,8 @@ int start_qs;
     found_it = FALSE;
     while (tmp != (FrameSpecList *) NULL) {
       if (tmp->framenum == fn) {
-	found_it = TRUE;
-	break;
+        found_it = TRUE;
+        break;
       } else tmp = tmp->next;
     }
     if (!found_it) return -1;
@@ -591,20 +591,20 @@ int start_qs;
     if (last->framenum != fn) { /* cache miss! */
       /* first check if it is next */
       if ((last->next != (FrameSpecList *) NULL) &&
-	  (last->next->framenum == fn)) {
-	last = last->next;
+          (last->next->framenum == fn)) {
+        last = last->next;
       } else {
-	/* if not next, check from the start.
-	   (this allows people to put frames out of order,even
-	   though the spec doesn't allow it.) */
-	tmp = fsl;
-	found_it = FALSE;
-	while (tmp != (FrameSpecList *) NULL) {
-	  if (tmp->framenum==fn) {found_it = TRUE; break;}
-	  tmp = tmp->next;
-	}
-	if (!found_it) return -1;
-	last = tmp;
+        /* if not next, check from the start.
+           (this allows people to put frames out of order,even
+           though the spec doesn't allow it.) */
+        tmp = fsl;
+        found_it = FALSE;
+        while (tmp != (FrameSpecList *) NULL) {
+          if (tmp->framenum==fn) {found_it = TRUE; break;}
+          tmp = tmp->next;
+        }
+        if (!found_it) return -1;
+        last = tmp;
       }
     }
   }
@@ -634,10 +634,10 @@ int start_qs;
     for (sptr = last->slc; sptr != (Slice_Specifics *) NULL; sptr = sptr->next) {
       if (sptr->num == num) {
 #ifdef BLEAH
-	printf("QSchange Slice %d.%d to %d\n", fn, num, sptr->qscale);
+        printf("QSchange Slice %d.%d to %d\n", fn, num, sptr->qscale);
 #endif
-	if (sptr->qscale == 0) return -1;
-	return sptr->qscale;
+        if (sptr->qscale == 0) return -1;
+        return sptr->qscale;
       }
     }
     break;
@@ -649,30 +649,30 @@ int start_qs;
     }
     for (bptr=last->bs; bptr != (Block_Specifics *) NULL; bptr=bptr->next) {
       if (bptr->num == num) {
-	int new_one;
+        int new_one;
 #ifdef BLEAH
-	printf("QSchange Block %d.%d to %d\n", fn, num, bptr->qscale);
+        printf("QSchange Block %d.%d to %d\n", fn, num, bptr->qscale);
 #endif
-	*info = bptr->mv;
-	if (bptr->relative) {
-	  if (bptr->qscale == 0) {
-	    /* Do nothing! */
-	    new_one = start_qs;
-	  } else {
-	    new_one = start_qs + bptr->qscale + leftovers;
-	    if (new_one < 1) {
-	      leftovers = new_one - 1;
-	      new_one = 1;
-	    } else if (new_one > 31) {
-	      leftovers = new_one - 31;
-	      new_one = 31;
-	    } else leftovers = 0;
-	  }}
-	else {
-	  new_one = bptr->qscale;
-	  leftovers = 0;
-	}
-	return new_one;
+        *info = bptr->mv;
+        if (bptr->relative) {
+          if (bptr->qscale == 0) {
+            /* Do nothing! */
+            new_one = start_qs;
+          } else {
+            new_one = start_qs + bptr->qscale + leftovers;
+            if (new_one < 1) {
+              leftovers = new_one - 1;
+              new_one = 1;
+            } else if (new_one > 31) {
+              leftovers = new_one - 31;
+              new_one = 31;
+            } else leftovers = 0;
+          }}
+        else {
+          new_one = bptr->qscale;
+          leftovers = 0;
+        }
+        return new_one;
       }
     }
     break;

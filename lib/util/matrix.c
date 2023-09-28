@@ -201,7 +201,7 @@ pm_solvelineareq(double **     const aArg,
             /* Work from the bottom up to solve for the unknowns x[], from
                the a and c rows in question and all the x[] below it
             */
-            
+
             unsigned int k;
             for (k = 0; k < n; ++k) {
                 unsigned int const m = n - k - 1;
@@ -210,7 +210,7 @@ pm_solvelineareq(double **     const aArg,
 
                 for (j = m+1, xwork = c[m]; j < n; ++j)
                     xwork -= a[m][j] * x[j];
-                    
+
                 x[m] = xwork / a[m][m];
             }
         }

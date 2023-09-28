@@ -42,41 +42,41 @@ tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
 pnmquant 0 testimg.ppm   > ${test_out} || \
-  printf "Expected failure 1"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pnmquant testimg.ppm  > ${test_out} || \
-  printf "Expected failure 2"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pnmquant 10.5 testimg.ppm > ${test_out} || \
-  printf "Expected failure 3"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pnmquant -center -meancolor 16 testimg.ppm > ${test_out} || \
-  printf "Expected failure 4"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 4 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pnmquant -center -meanpixel 16 testimg.ppm    > ${test_out} || \
-  printf "Expected failure 5"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 5 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pnmquant -meancolor -meanpixel 16 testimg.ppm > ${test_out} || \
-  printf "Expected failure 6"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 6 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pnmquant -spreadbrightness -spreadluminosity 16 testimg.ppm > ${test_out} || \
-  printf "Expected failure 7"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 7 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 pnmquant -randomseed 1 -norandom 10 testimg.ppm > ${test_out} || \
-  printf "Expected failure 8"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 8 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

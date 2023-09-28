@@ -1,8 +1,8 @@
 /*===========================================================================*
- * all.h								     *
- *									     *
- *	stuff included from ALL source files				     *
- *									     *
+ * all.h                                                                     *
+ *                                                                           *
+ *      stuff included from ALL source files                                 *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -26,7 +26,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /u/smoot/md/mpeg_encode/headers/RCS/all.h,v 1.9 1995/06/05 21:11:06 smoot Exp $
  *  $Log: all.h,v $
  * Revision 1.9  1995/06/05  21:11:06  smoot

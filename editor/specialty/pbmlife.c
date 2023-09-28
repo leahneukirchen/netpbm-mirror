@@ -31,12 +31,12 @@ char* argv[];
     pbm_init( &argc, argv );
 
     if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
+        pm_usage( "[pbmfile]" );
 
     if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
+        ifp = pm_openr( argv[1] );
     else
-	ifp = stdin;
+        ifp = stdin;
 
     pbm_readpbminit( ifp, &cols, &rows, &format );
     prevrow = pbm_allocrow( cols );
@@ -49,63 +49,63 @@ char* argv[];
     pbm_readpbmrow( ifp, nextrow, cols, format );
 
     for ( row = 0; row < rows; ++row )
-	{
-	temprow = prevrow;
-	prevrow = thisrow;
-	thisrow = nextrow;
-	nextrow = temprow;
-	if ( row < rows - 1 )
-	    pbm_readpbmrow( ifp, nextrow, cols, format );
+        {
+        temprow = prevrow;
+        prevrow = thisrow;
+        thisrow = nextrow;
+        nextrow = temprow;
+        if ( row < rows - 1 )
+            pbm_readpbmrow( ifp, nextrow, cols, format );
 
         for ( col = 0; col < cols; ++col )
-	    {
-	    /* Check the neighborhood, with an unrolled double loop. */
-	    count = 0;
-	    if ( row > 0 )
-		{
-		/* upper left */
-		if ( col > 0 && prevrow[col - 1] == PBM_WHITE )
-		    ++count;
-		/* upper center */
-		if ( prevrow[col] == PBM_WHITE )
-		    ++count;
-		/* upper right */
-		if ( col < cols - 1 && prevrow[col + 1] == PBM_WHITE )
-		    ++count;
-		}
-	    /* left */
-	    if ( col > 0 && thisrow[col - 1] == PBM_WHITE )
-		++count;
-	    /* right */
-	    if ( col < cols - 1 && thisrow[col + 1] == PBM_WHITE )
-		++count;
-	    if ( row < rows - 1 )
-		{
-		/* lower left */
-		if ( col > 0 && nextrow[col - 1] == PBM_WHITE )
-		    ++count;
-		/* lower center */
-		if ( nextrow[col] == PBM_WHITE )
-		    ++count;
-		/* lower right */
-		if ( col < cols - 1 && nextrow[col + 1] == PBM_WHITE )
-		    ++count;
-		}
+            {
+            /* Check the neighborhood, with an unrolled double loop. */
+            count = 0;
+            if ( row > 0 )
+                {
+                /* upper left */
+                if ( col > 0 && prevrow[col - 1] == PBM_WHITE )
+                    ++count;
+                /* upper center */
+                if ( prevrow[col] == PBM_WHITE )
+                    ++count;
+                /* upper right */
+                if ( col < cols - 1 && prevrow[col + 1] == PBM_WHITE )
+                    ++count;
+                }
+            /* left */
+            if ( col > 0 && thisrow[col - 1] == PBM_WHITE )
+                ++count;
+            /* right */
+            if ( col < cols - 1 && thisrow[col + 1] == PBM_WHITE )
+                ++count;
+            if ( row < rows - 1 )
+                {
+                /* lower left */
+                if ( col > 0 && nextrow[col - 1] == PBM_WHITE )
+                    ++count;
+                /* lower center */
+                if ( nextrow[col] == PBM_WHITE )
+                    ++count;
+                /* lower right */
+                if ( col < cols - 1 && nextrow[col + 1] == PBM_WHITE )
+                    ++count;
+                }
 
-	    /* And compute the new value. */
-	    if ( thisrow[col] == PBM_WHITE )
-		if ( count == 2 || count == 3 )
-		    newrow[col] = PBM_WHITE;
-		else
-		    newrow[col] = PBM_BLACK;
-	    else
-		if ( count == 3 )
-		    newrow[col] = PBM_WHITE;
-		else
-		    newrow[col] = PBM_BLACK;
-	    }
-	pbm_writepbmrow( stdout, newrow, cols, 0 );
-	}
+            /* And compute the new value. */
+            if ( thisrow[col] == PBM_WHITE )
+                if ( count == 2 || count == 3 )
+                    newrow[col] = PBM_WHITE;
+                else
+                    newrow[col] = PBM_BLACK;
+            else
+                if ( count == 3 )
+                    newrow[col] = PBM_WHITE;
+                else
+                    newrow[col] = PBM_BLACK;
+            }
+        pbm_writepbmrow( stdout, newrow, cols, 0 );
+        }
 
     pm_close( ifp );
     pm_close( stdout );

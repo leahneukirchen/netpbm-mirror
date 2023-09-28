@@ -66,7 +66,7 @@ parseCommandLine(int argc, const char ** argv,
     if (!padnameSpec)
         cmdlineP->padname = 0;
 
-    if (argc - 1 < 1) 
+    if (argc - 1 < 1)
         cmdlineP->inputFileName = "-";
     else
         cmdlineP->inputFileName = argv[1];
@@ -91,7 +91,7 @@ extractOneImage(FILE * const infileP,
     struct pam inpam;
     struct pam outpam;
     enum pm_check_code checkRetval;
-    
+
     unsigned int row;
     tuple * tuplerow;
 
@@ -115,7 +115,7 @@ extractOneImage(FILE * const infileP,
 
 
 static void
-computeOutputName(char          const outputFilePattern[], 
+computeOutputName(char          const outputFilePattern[],
                   unsigned int  const padCount,
                   unsigned int  const imageSeq,
                   const char ** const outputNameP) {
@@ -157,13 +157,13 @@ main(int argc, const char *argv[]) {
 
     FILE * ifP;
     int eof;  /* No more images in input */
-    unsigned int imageSeq;  
+    unsigned int imageSeq;
         /* Sequence of current image in input file.  First = 0 */
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     ifP = pm_openr(cmdline.inputFileName);
 
     eof = FALSE;
@@ -171,7 +171,7 @@ main(int argc, const char *argv[]) {
         FILE * ofP;
         const char * outputFileName;  /* malloc'ed */
 
-        computeOutputName(cmdline.outputFilePattern, cmdline.padname, 
+        computeOutputName(cmdline.outputFilePattern, cmdline.padname,
                           imageSeq,
                           &outputFileName);
         pm_message("WRITING %s", outputFileName);
@@ -185,7 +185,7 @@ main(int argc, const char *argv[]) {
         pnm_nextimage(ifP, &eof);
     }
     pm_close(ifP);
-    
+
     return 0;
 }
 

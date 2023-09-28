@@ -86,5 +86,5 @@ P1
 1111111111111
 -3 -1 -1 -1 9 13
 544280424 101484
-Expected failure 1 1
-Expected failure 2 1
+Expected failure 1 (no output)
+Expected failure 2 (no output)

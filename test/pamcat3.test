@@ -36,59 +36,59 @@ echo "-----------------------------------------------------------" 1>&2
 
 # listfile not specified
 pamcat -lr -listfile > ${test_out} || \
-  printf "Expected failure 1"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # listfile does not exist
 pamcat -lr -listfile=`mktemp -u` > ${test_out} || \
-  printf "Expected failure 2"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # listfile empty
 pamcat -lr -listfile=/dev/null > ${test_out} || \
-  printf "Expected failure 3"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # listfile from stdin, empty
 cat /dev/null | pamcat -lr -listfile=- > ${test_out} || \
-  printf "Expected failure 4"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 4 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # Files provided from command line in addition to listfile
 pamcat -lr -listfile=${list} testgrid.pbm testgrid.pbm > ${test_out} || \
-  printf "Expected failure 5"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 5 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # "-" (stdin) provided from command line in addition to listfile
 pamcat -lr -listfile=${list} - > ${test_out} || \
-  printf "Expected failure 6"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 6 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}
 
 # listfile has nothing but blank lines
 sed 's/^.*$//' ${list3} > ${liste1}  
 pamcat -lr -listfile=${liste1} > ${test_out} || \
-  printf "Expected failure 7"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 7 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out} ${liste1}
 
 # Non-existing file in listfile
 ( cat ${list} ; mktemp -u ) > ${liste2}
 pamcat -lr -listfile=${liste2} > ${test_out} || \
-  printf "Expected failure 8"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 8 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out} ${liste2}
 
 # Multiple instances of "-" in listfile
 ( echo "-"; cat ${list}; echo "-"; echo "-" ) > ${liste3}
 pamcat -lr -listfile=${liste3} > ${test_out} || \
-  printf "Expected failure 9"
-  test -s ${test_out}; echo " "$?
+  printf "Expected failure 9 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out} ${liste3}
 
 

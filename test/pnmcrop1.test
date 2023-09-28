@@ -1,4 +1,4 @@
- #! /bin/sh
+#! /bin/sh
 # This script tests: pnmcrop
 # Also requires: pnmpad pnmmargin pamcut
 
@@ -78,7 +78,7 @@ for option in "-reportfull -reportsize" \
               "-bg-color=black -closeness=101"
     do
     pnmcrop -reportfull ${option} testgrid.pbm > ${test_out} || \
-        printf "Expected failure:  %s" "${option}"
-        test -s ${test_out}; echo " "$?
+        printf "Expected failure:  %s" "${option} "
+        test -s ${test_out} && echo "unexpected output" || echo "(no output)"	
         rm ${test_out}
     done

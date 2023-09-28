@@ -1,4 +1,3 @@
-
 /*
  * mfwddct.c (derived from jfwddct.c, which carries the following info)
  *
@@ -51,10 +50,10 @@
 #ifdef EIGHT_BIT_SAMPLES
 #define LG2_DCT_SCALE 16
 #else
-#define LG2_DCT_SCALE 15	/* lose a little precision to avoid overflow */
+#define LG2_DCT_SCALE 15        /* lose a little precision to avoid overflow */
 #endif
 
-#define ONE	((int32) 1)
+#define ONE     ((int32) 1)
 
 #define DCT_SCALE (ONE << LG2_DCT_SCALE)
 
@@ -66,7 +65,7 @@
 #define OVERSHIFT(x)  ((x) <<= LG2_OVERSCALE)
 
 /* Scale a fractional constant by DCT_SCALE */
-#define FIX(x)	((int32) ((x) * DCT_SCALE + 0.5))
+#define FIX(x)  ((int32) ((x) * DCT_SCALE + 0.5))
 
 /* Scale a fractional constant by DCT_SCALE/OVERSCALE */
 /* Such a constant can be multiplied with an overscaled input */
@@ -81,7 +80,7 @@
 
 /* Take a value scaled by DCT_SCALE and round to integer scaled by OVERSCALE */
 #define UNFIXO(x)  RIGHT_SHIFT((x) + (ONE << (LG2_DCT_SCALE-1-LG2_OVERSCALE)),\
-			       LG2_DCT_SCALE-LG2_OVERSCALE)
+                               LG2_DCT_SCALE-LG2_OVERSCALE)
 
 /* Here are the constants we need */
 /* SIN_i_j is sine of i*pi/j, scaled by DCT_SCALE */
@@ -162,11 +161,11 @@ Block block, dest;
         s += trans_coef[i][k] * tmp[8*k+j];
 
       if (collect_quant) {
-	fprintf(collect_quant_fp, "%d %f\n", 8*i+j, s);
-      } 
+        fprintf(collect_quant_fp, "%d %f\n", 8*i+j, s);
+      }
       if (DoLaplace) {
-	L1[LaplaceCnum][i*8+j] += s*s;
-	L2[LaplaceCnum][i*8+j] += s;
+        L1[LaplaceCnum][i*8+j] += s*s;
+        L2[LaplaceCnum][i*8+j] += s;
       }
 
 
@@ -206,8 +205,8 @@ mp_fwd_dct_fast(data2d, dest2d)
  */
 
 {
-    int16 *data = (int16 *) data2d;	/* this algorithm wants
-					 * a 1-d array */
+    int16 *data = (int16 *) data2d;     /* this algorithm wants
+                                         * a 1-d array */
     int16 *dest = (int16 *) dest2d;
     int pass, rowctr;
     register int16 *inptr, *outptr;
@@ -216,15 +215,15 @@ mp_fwd_dct_fast(data2d, dest2d)
 
 #ifdef ndef
     {
-	int y;
+        int y;
 
-	printf("fwd_dct (beforehand):\n");
-	for (y = 0; y < 8; y++)
-	    printf("%4d %4d %4d %4d %4d %4d %4d %4d\n",
-		   data2d[y][0], data2d[y][1],
-		   data2d[y][2], data2d[y][3],
-		   data2d[y][4], data2d[y][5],
-		   data2d[y][6], data2d[y][7]);
+        printf("fwd_dct (beforehand):\n");
+        for (y = 0; y < 8; y++)
+            printf("%4d %4d %4d %4d %4d %4d %4d %4d\n",
+                   data2d[y][0], data2d[y][1],
+                   data2d[y][2], data2d[y][3],
+                   data2d[y][4], data2d[y][5],
+                   data2d[y][6], data2d[y][7]);
     }
 #endif
 
@@ -238,90 +237,90 @@ mp_fwd_dct_fast(data2d, dest2d)
      * array indexing.
      */
 
-    inptr = data;		/* initialize pointers for first pass */
+    inptr = data;               /* initialize pointers for first pass */
     outptr = workspace;
     for (pass = 1; pass >= 0; pass--) {
-	for (rowctr = DCTSIZE - 1; rowctr >= 0; rowctr--) {
-	    /*
-	     * many tmps have nonoverlapping lifetime -- flashy
-	     * register colorers should be able to do this lot
-	     * very well
-	     */
-	    int32 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-	    int32 tmp10, tmp11, tmp12, tmp13;
-	    int32 tmp14, tmp15, tmp16, tmp17;
-	    int32 tmp25, tmp26;
-	    /* SHIFT_TEMPS */
+        for (rowctr = DCTSIZE - 1; rowctr >= 0; rowctr--) {
+            /*
+             * many tmps have nonoverlapping lifetime -- flashy
+             * register colorers should be able to do this lot
+             * very well
+             */
+            int32 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+            int32 tmp10, tmp11, tmp12, tmp13;
+            int32 tmp14, tmp15, tmp16, tmp17;
+            int32 tmp25, tmp26;
+            /* SHIFT_TEMPS */
 
-	    /* temp0 through tmp7:  -512 to +512 */
-	    /* if I-block, then -256 to +256 */
-	    tmp0 = inptr[7] + inptr[0];
-	    tmp1 = inptr[6] + inptr[1];
-	    tmp2 = inptr[5] + inptr[2];
-	    tmp3 = inptr[4] + inptr[3];
-	    tmp4 = inptr[3] - inptr[4];
-	    tmp5 = inptr[2] - inptr[5];
-	    tmp6 = inptr[1] - inptr[6];
-	    tmp7 = inptr[0] - inptr[7];
+            /* temp0 through tmp7:  -512 to +512 */
+            /* if I-block, then -256 to +256 */
+            tmp0 = inptr[7] + inptr[0];
+            tmp1 = inptr[6] + inptr[1];
+            tmp2 = inptr[5] + inptr[2];
+            tmp3 = inptr[4] + inptr[3];
+            tmp4 = inptr[3] - inptr[4];
+            tmp5 = inptr[2] - inptr[5];
+            tmp6 = inptr[1] - inptr[6];
+            tmp7 = inptr[0] - inptr[7];
 
-	    /* tmp10 through tmp13:  -1024 to +1024 */
-	    /* if I-block, then -512 to +512 */
-	    tmp10 = tmp3 + tmp0;
-	    tmp11 = tmp2 + tmp1;
-	    tmp12 = tmp1 - tmp2;
-	    tmp13 = tmp0 - tmp3;
+            /* tmp10 through tmp13:  -1024 to +1024 */
+            /* if I-block, then -512 to +512 */
+            tmp10 = tmp3 + tmp0;
+            tmp11 = tmp2 + tmp1;
+            tmp12 = tmp1 - tmp2;
+            tmp13 = tmp0 - tmp3;
 
-	    outptr[0] = (int16) UNFIXH((tmp10 + tmp11) * SIN_1_4);
-	    outptr[DCTSIZE * 4] =
+            outptr[0] = (int16) UNFIXH((tmp10 + tmp11) * SIN_1_4);
+            outptr[DCTSIZE * 4] =
             (int16) UNFIXH((tmp10 - tmp11) * COS_1_4);
-	    outptr[DCTSIZE * 2] =
+            outptr[DCTSIZE * 2] =
             (int16) UNFIXH(tmp13 * COS_1_8 + tmp12 * SIN_1_8);
-	    outptr[DCTSIZE * 6] =
+            outptr[DCTSIZE * 6] =
             (int16) UNFIXH(tmp13 * SIN_1_8 - tmp12 * COS_1_8);
 
-	    tmp16 = UNFIXO((tmp6 + tmp5) * SIN_1_4);
-	    tmp15 = UNFIXO((tmp6 - tmp5) * COS_1_4);
+            tmp16 = UNFIXO((tmp6 + tmp5) * SIN_1_4);
+            tmp15 = UNFIXO((tmp6 - tmp5) * COS_1_4);
 
-	    OVERSHIFT(tmp4);
-	    OVERSHIFT(tmp7);
+            OVERSHIFT(tmp4);
+            OVERSHIFT(tmp7);
 
-	    /*
-	     * tmp4, tmp7, tmp15, tmp16 are overscaled by
-	     * OVERSCALE
-	     */
+            /*
+             * tmp4, tmp7, tmp15, tmp16 are overscaled by
+             * OVERSCALE
+             */
 
-	    tmp14 = tmp4 + tmp15;
-	    tmp25 = tmp4 - tmp15;
-	    tmp26 = tmp7 - tmp16;
-	    tmp17 = tmp7 + tmp16;
+            tmp14 = tmp4 + tmp15;
+            tmp25 = tmp4 - tmp15;
+            tmp26 = tmp7 - tmp16;
+            tmp17 = tmp7 + tmp16;
 
-	    outptr[DCTSIZE] =
+            outptr[DCTSIZE] =
             (int16) UNFIXH(tmp17 * OCOS_1_16 + tmp14 * OSIN_1_16);
-	    outptr[DCTSIZE * 7] =
+            outptr[DCTSIZE * 7] =
             (int16) UNFIXH(tmp17 * OCOS_7_16 - tmp14 * OSIN_7_16);
-	    outptr[DCTSIZE * 5] =
+            outptr[DCTSIZE * 5] =
             (int16) UNFIXH(tmp26 * OCOS_5_16 + tmp25 * OSIN_5_16);
-	    outptr[DCTSIZE * 3] =
+            outptr[DCTSIZE * 3] =
             (int16) UNFIXH(tmp26 * OCOS_3_16 - tmp25 * OSIN_3_16);
 
-	    inptr += DCTSIZE;	/* advance inptr to next row */
-	    outptr++;		/* advance outptr to next column */
-	}
-	/* end of pass; in case it was pass 1, set up for pass 2 */
-	inptr = workspace;
-	outptr = dest;
+            inptr += DCTSIZE;   /* advance inptr to next row */
+            outptr++;           /* advance outptr to next column */
+        }
+        /* end of pass; in case it was pass 1, set up for pass 2 */
+        inptr = workspace;
+        outptr = dest;
     }
 #ifdef ndef
     {
-	int y;
+        int y;
 
-	printf("fwd_dct (afterward):\n");
-	for (y = 0; y < 8; y++)
-	    printf("%4d %4d %4d %4d %4d %4d %4d %4d\n",
-		   dest2d[y][0], dest2d[y][1],
-		   dest2d[y][2], dest2d[y][3],
-		   dest2d[y][4], dest2d[y][5],
-		   dest2d[y][6], dest2d[y][7]);
+        printf("fwd_dct (afterward):\n");
+        for (y = 0; y < 8; y++)
+            printf("%4d %4d %4d %4d %4d %4d %4d %4d\n",
+                   dest2d[y][0], dest2d[y][1],
+                   dest2d[y][2], dest2d[y][3],
+                   dest2d[y][4], dest2d[y][5],
+                   dest2d[y][6], dest2d[y][7]);
     }
 #endif
 }

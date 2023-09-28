@@ -22,7 +22,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * 
+ *
  *  If you want to use this program under different license conditions,
  *  then contact the author for an arrangement.
  */
@@ -106,7 +106,7 @@ static unsigned char nlpstab[113] = {
 void arith_encode_init(struct jbg_arenc_state *s, int reuse_st)
 {
   int i;
-  
+
   if (!reuse_st)
     for (i = 0; i < 4096; s->st[i++] = 0) ;
   s->c = 0;
@@ -114,7 +114,7 @@ void arith_encode_init(struct jbg_arenc_state *s, int reuse_st)
   s->sc = 0;
   s->ct = 11;
   s->buffer = -1;    /* empty */
-  
+
   return;
 }
 
@@ -136,15 +136,15 @@ void arith_encode_flush(struct jbg_arenc_state *s)
     if (s->buffer >= 0) {
       s->byte_out(s->buffer + 1, s->file);
       if (s->buffer + 1 == MARKER_ESC)
-	s->byte_out(MARKER_STUFF, s->file);
+        s->byte_out(MARKER_STUFF, s->file);
     }
     /* output 0x00 bytes only when more non-0x00 will follow */
     if (s->c & 0x7fff800L)
       for (; s->sc; --s->sc)
-	s->byte_out(0x00, s->file);
+        s->byte_out(0x00, s->file);
   } else {
     if (s->buffer >= 0)
-      s->byte_out(s->buffer, s->file); 
+      s->byte_out(s->buffer, s->file);
     /* T.82 figure 30 says buffer+1 for the above line! Typo? */
     for (; s->sc; --s->sc) {
       s->byte_out(0xff, s->file);
@@ -159,7 +159,7 @@ void arith_encode_flush(struct jbg_arenc_state *s)
     if (s->c & 0x7f800L) {
       s->byte_out((s->c >> 11) & 0xff, s->file);
       if (((s->c >> 11) & 0xff) == MARKER_ESC)
-	s->byte_out(MARKER_STUFF, s->file);
+        s->byte_out(MARKER_STUFF, s->file);
     }
   }
 
@@ -167,7 +167,7 @@ void arith_encode_flush(struct jbg_arenc_state *s)
 }
 
 
-void arith_encode(struct jbg_arenc_state *s, int cx, int pix) 
+void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
 {
   register unsigned lsz, ss;
   register unsigned char *st;
@@ -181,9 +181,9 @@ void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
 
 #if 0
   fprintf(stderr, "pix = %d, cx = %d, mps = %d, st = %3d, lsz = 0x%04x, "
-	  "a = 0x%05lx, c = 0x%08lx, ct = %2d, buf = 0x%02x\n",
-	  pix, cx, !!(s->st[cx] & 0x80), ss, lsz, s->a, s->c, s->ct,
-	  s->buffer);
+          "a = 0x%05lx, c = 0x%08lx, ct = %2d, buf = 0x%02x\n",
+          pix, cx, !!(s->st[cx] & 0x80), ss, lsz, s->a, s->c, s->ct,
+          s->buffer);
 #endif
 
   if (((pix << 7) ^ s->st[cx]) & 0x80) {
@@ -225,36 +225,36 @@ void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
       /* another byte is ready for output */
       temp = s->c >> 19;
       if (temp & 0xffffff00L) {
-	/* handle overflow over all buffered 0xff bytes */
-	if (s->buffer >= 0) {
-	  ++s->buffer;
-	  s->byte_out(s->buffer, s->file);
-	  if (s->buffer == MARKER_ESC)
-	    s->byte_out(MARKER_STUFF, s->file);
-	}
-	for (; s->sc; --s->sc)
-	  s->byte_out(0x00, s->file);
-	s->buffer = temp & 0xff;  /* new output byte, might overflow later */
-	assert(s->buffer != 0xff);
-	/* can s->buffer really never become 0xff here? */
+        /* handle overflow over all buffered 0xff bytes */
+        if (s->buffer >= 0) {
+          ++s->buffer;
+          s->byte_out(s->buffer, s->file);
+          if (s->buffer == MARKER_ESC)
+            s->byte_out(MARKER_STUFF, s->file);
+        }
+        for (; s->sc; --s->sc)
+          s->byte_out(0x00, s->file);
+        s->buffer = temp & 0xff;  /* new output byte, might overflow later */
+        assert(s->buffer != 0xff);
+        /* can s->buffer really never become 0xff here? */
       } else if (temp == 0xff) {
-	/* buffer 0xff byte (which might overflow later) */
-	++s->sc;
+        /* buffer 0xff byte (which might overflow later) */
+        ++s->sc;
       } else {
-	/* output all buffered 0xff bytes, they will not overflow any more */
-	if (s->buffer >= 0)
-	  s->byte_out(s->buffer, s->file);
-	for (; s->sc; --s->sc) {
-	  s->byte_out(0xff, s->file);
-	  s->byte_out(MARKER_STUFF, s->file);
-	}
-	s->buffer = temp;   /* buffer new output byte (can still overflow) */
+        /* output all buffered 0xff bytes, they will not overflow any more */
+        if (s->buffer >= 0)
+          s->byte_out(s->buffer, s->file);
+        for (; s->sc; --s->sc) {
+          s->byte_out(0xff, s->file);
+          s->byte_out(MARKER_STUFF, s->file);
+        }
+        s->buffer = temp;   /* buffer new output byte (can still overflow) */
       }
       s->c &= 0x7ffffL;
       s->ct = 8;
     }
   } while (s->a < 0x8000);
- 
+
   return;
 }
 
@@ -262,7 +262,7 @@ void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
 void arith_decode_init(struct jbg_ardec_state *s, int reuse_st)
 {
   int i;
-  
+
   if (!reuse_st)
     for (i = 0; i < 4096; s->st[i++] = 0) ;
   s->c = 0;
@@ -295,7 +295,7 @@ void arith_decode_init(struct jbg_ardec_state *s, int reuse_st)
  *   decoded.
  *
  * s->pscd_ptr == s->pscd_end - 1:
- * 
+ *
  *   The decoder has used up all provided PSCD bytes except for the
  *   very last byte, because that has the value 0xff. The decoder can
  *   at this point not yet tell whether this 0xff belongs to a
@@ -336,27 +336,27 @@ int arith_decode(struct jbg_ardec_state *s, int cx)
     while (s->ct <= 8 && s->ct >= 0) {
       /* first we can move a new byte into s->c */
       if (s->pscd_ptr >= s->pscd_end) {
-	return -1;  /* more bytes needed */
+        return -1;  /* more bytes needed */
       }
-      if (*s->pscd_ptr == 0xff) 
-	if (s->pscd_ptr + 1 >= s->pscd_end) {
-	  return -1; /* final 0xff byte not processed */
-	} else {
-	  if (*(s->pscd_ptr + 1) == MARKER_STUFF) {
-	    s->c |= 0xffL << (8 - s->ct);
-	    s->ct += 8;
-	    s->pscd_ptr += 2;
-	  } else {
-	    s->ct = -1; /* start padding with zero bytes */
-	    if (s->nopadding) {
-	      s->nopadding = 0;
-	      return -2; /* subsequent symbols might depend on zero padding */
-	    }
-	  }
-	}
+      if (*s->pscd_ptr == 0xff)
+        if (s->pscd_ptr + 1 >= s->pscd_end) {
+          return -1; /* final 0xff byte not processed */
+        } else {
+          if (*(s->pscd_ptr + 1) == MARKER_STUFF) {
+            s->c |= 0xffL << (8 - s->ct);
+            s->ct += 8;
+            s->pscd_ptr += 2;
+          } else {
+            s->ct = -1; /* start padding with zero bytes */
+            if (s->nopadding) {
+              s->nopadding = 0;
+              return -2; /* subsequent symbols might depend on zero padding */
+            }
+          }
+        }
       else {
-	s->c |= (long)*(s->pscd_ptr++) << (8 - s->ct);
-	s->ct += 8;
+        s->c |= (long)*(s->pscd_ptr++) << (8 - s->ct);
+        s->ct += 8;
       }
     }
     s->c <<= 1;
@@ -373,8 +373,8 @@ int arith_decode(struct jbg_ardec_state *s, int cx)
 
 #if 0
   fprintf(stderr, "cx = %d, mps = %d, st = %3d, lsz = 0x%04x, a = 0x%05lx, "
-	  "c = 0x%08lx, ct = %2d\n",
-	  cx, !!(s->st[cx] & 0x80), ss, lsz, s->a, s->c, s->ct);
+          "c = 0x%08lx, ct = %2d\n",
+          cx, !!(s->st[cx] & 0x80), ss, lsz, s->a, s->c, s->ct);
 #endif
 
   if ((s->c >> 16) < (s->a -= lsz))
@@ -383,15 +383,15 @@ int arith_decode(struct jbg_ardec_state *s, int cx)
     else {
       /* MPS_EXCHANGE */
       if (s->a < lsz) {
-	pix = 1 - (*st >> 7);
-	/* Check whether MPS/LPS exchange is necessary
-	 * and chose next probability estimator status */
-	*st &= 0x80;
-	*st ^= nlpstab[ss];
+        pix = 1 - (*st >> 7);
+        /* Check whether MPS/LPS exchange is necessary
+         * and chose next probability estimator status */
+        *st &= 0x80;
+        *st ^= nlpstab[ss];
       } else {
-	pix = *st >> 7;
-	*st &= 0x80;
-	*st |= nmpstab[ss];
+        pix = *st >> 7;
+        *st &= 0x80;
+        *st |= nmpstab[ss];
       }
     }
   else {

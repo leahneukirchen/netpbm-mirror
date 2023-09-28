@@ -1,8 +1,8 @@
 /*===========================================================================*
- * frame.h								     *
- *									     *
- *	basic frames procedures						     *
- *									     *
+ * frame.h                                                                   *
+ *                                                                           *
+ *      basic frames procedures                                              *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -40,9 +40,9 @@
 /*===========*
  * CONSTANTS *
  *===========*/
-#define TYPE_IFRAME	2
-#define TYPE_PFRAME	3
-#define TYPE_BFRAME	4
+#define TYPE_IFRAME     2
+#define TYPE_PFRAME     3
+#define TYPE_BFRAME     4
 
 
 /*=======================*
@@ -54,11 +54,11 @@ typedef struct mpegFrame {
     char    inputFileName[256];
     int id;           /* the frame number -- starts at 0 */
     bool inUse;
-	   /* this frame is currently being used (if not, any data here can be
+           /* this frame is currently being used (if not, any data here can be
           thrashed)
        */
 
-    /*  
+    /*
      *  now, the YCrCb data.  All pixel information is stored in unsigned
      *  8-bit pieces.  We separate y, cr, and cb because cr and cb are
      *  subsampled by a factor of 2.
@@ -68,16 +68,16 @@ typedef struct mpegFrame {
     uint8_t **orig_y, **orig_cr, **orig_cb;
 
     /* now, the decoded data -- relevant only if
-     *	    referenceFrame == DECODED_FRAME
+     *      referenceFrame == DECODED_FRAME
      *
-     * if decoded_y is NULL, then decoded_cr, decoded_cb are undefined 
+     * if decoded_y is NULL, then decoded_cr, decoded_cb are undefined
      */
     uint8_t **decoded_y, **decoded_cr, **decoded_cb;
 
     /* reference data */
     uint8_t **ref_y, **ref_cr, **ref_cb;
 
-    /*  
+    /*
      *  these are the Blocks which will ultimately compose MacroBlocks.
      *  A Block is in a format that mp_fwddct() can crunch.
      *  if y_blocks is NULL, then cr_blocks, cb_blocks are undefined
@@ -92,8 +92,8 @@ typedef struct mpegFrame {
     bool   halfComputed;        /* TRUE iff half-pixels already computed */
 
     struct mpegFrame *next;  /* points to the next B-frame to be encoded, if
-		       * stdin is used as the input. 
-		       */
+                       * stdin is used as the input.
+                       */
 } MpegFrame;
 
 

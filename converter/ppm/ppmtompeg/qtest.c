@@ -19,7 +19,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/charlie-brown/project/mm/mpeg/mpeg_dist/mpeg_encode/RCS/qtest.c,v 1.5 1995/01/19 23:09:15 eyhung Exp $
  *  $Log: qtest.c,v $
  * Revision 1.5  1995/01/19  23:09:15  eyhung
@@ -50,14 +50,14 @@ main()
     bb = new_bitbucket();
 
     for (i = 0; i < 8; i++)
-	for (j = 0; j < 8; j++)
-	    a[i][j] = rand() % 100;
+        for (j = 0; j < 8; j++)
+            a[i][j] = rand() % 100;
     mp_quant_zig_block(a, b, 1, 1);
     for (i = 0; i < 64; i++)
-	printf("%6d ", b[i]);
+        printf("%6d ", b[i]);
     printf("\n");
 
-    mp_rle_huff_block(b, bb);	/* intuititve names, huh? */
+    mp_rle_huff_block(b, bb);   /* intuititve names, huh? */
 
     printf("Huffman output is %d bits\n", bb->totalbits);
 }

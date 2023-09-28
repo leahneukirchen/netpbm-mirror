@@ -85,7 +85,7 @@ main(int argc, const char * argv[]) {
         for (col = 0; col < cols - 2; ++col) {
             pixel const inputA = inputbuf[rowa][col];
             pixel const inputB = inputbuf[rowb][col + 2];
-            
+
             pixval const r =
                 clip(PPM_GETR(inputA) + (mv2 - PPM_GETR(inputB)), maxval);
             pixval const g =

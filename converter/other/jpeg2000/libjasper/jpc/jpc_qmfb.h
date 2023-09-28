@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -130,17 +130,17 @@
 \******************************************************************************/
 
 /* The maximum number of channels for a QMF bank. */
-#define	JPC_QMFB1D_MAXCHANS	2
+#define JPC_QMFB1D_MAXCHANS     2
 
 /* Select reversible integer-to-integer mode. */
-#define	JPC_QMFB1D_RITIMODE	1
+#define JPC_QMFB1D_RITIMODE     1
 
 /* Vertical filtering. */
-#define	JPC_QMFB1D_VERT	0x10000
+#define JPC_QMFB1D_VERT 0x10000
 
 /* QMFB IDs. */
-#define	JPC_QMFB1D_FT	1	/* 5/3 */
-#define	JPC_QMFB1D_NS	2	/* 9/7 */
+#define JPC_QMFB1D_FT   1       /* 5/3 */
+#define JPC_QMFB1D_NS   2       /* 9/7 */
 
 /******************************************************************************\
 * Types.
@@ -153,17 +153,17 @@ struct jpc_qmfb1dops_s;
 
 typedef struct {
 
-	/* The starting index for the band in the downsampled domain. */
-	int start;
+        /* The starting index for the band in the downsampled domain. */
+        int start;
 
-	/* The ending index for the band in the downsampled domain. */
-	int end;
+        /* The ending index for the band in the downsampled domain. */
+        int end;
 
-	/* The location of the start of the band. */
-	int locstart;
+        /* The location of the start of the band. */
+        int locstart;
 
-	/* The location of the end of the band. */
-	int locend;
+        /* The location of the end of the band. */
+        int locend;
 
 } jpc_qmfb1dband_t;
 
@@ -171,8 +171,8 @@ typedef struct {
 
 typedef struct {
 
-	/* The operations for this QMFB. */
-	struct jpc_qmfb1dops_s *ops;
+        /* The operations for this QMFB. */
+        struct jpc_qmfb1dops_s *ops;
 
 } jpc_qmfb1d_t;
 
@@ -180,20 +180,20 @@ typedef struct {
 
 typedef struct jpc_qmfb1dops_s {
 
-	/* The number of channels in the QMFB. */
-	int (*getnumchans)(jpc_qmfb1d_t *qmfb);
+        /* The number of channels in the QMFB. */
+        int (*getnumchans)(jpc_qmfb1d_t *qmfb);
 
-	/* Get the analysis filters for this QMFB. */
-	int (*getanalfilters)(jpc_qmfb1d_t *qmfb, int len, jas_seq2d_t **filters);
+        /* Get the analysis filters for this QMFB. */
+        int (*getanalfilters)(jpc_qmfb1d_t *qmfb, int len, jas_seq2d_t **filters);
 
-	/* Get the synthesis filters for this QMFB. */
-	int (*getsynfilters)(jpc_qmfb1d_t *qmfb, int len, jas_seq2d_t **filters);
+        /* Get the synthesis filters for this QMFB. */
+        int (*getsynfilters)(jpc_qmfb1d_t *qmfb, int len, jas_seq2d_t **filters);
 
-	/* Do analysis. */
-	void (*analyze)(jpc_qmfb1d_t *qmfb, int flags, jas_seq2d_t *x);
+        /* Do analysis. */
+        void (*analyze)(jpc_qmfb1d_t *qmfb, int flags, jas_seq2d_t *x);
 
-	/* Do synthesis. */
-	void (*synthesize)(jpc_qmfb1d_t *qmfb, int flags, jas_seq2d_t *x);
+        /* Do synthesis. */
+        void (*synthesize)(jpc_qmfb1d_t *qmfb, int flags, jas_seq2d_t *x);
 
 } jpc_qmfb1dops_t;
 

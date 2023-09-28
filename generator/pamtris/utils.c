@@ -61,7 +61,7 @@ multiply_varying_array_by_varying(varying * const vars,
 
     for (i = 0; i < elements; i++) {
         vars[i].v *= multiplier.v;
-	vars[i].s  = 0.0;
+        vars[i].s  = 0.0;
     }
 }
 
@@ -77,7 +77,7 @@ divide_varying_array_by_varying(varying * const vars,
 
     for (i = 0; i < elements; i++) {
         vars[i].v *= inverse_divisor;
-	vars[i].s  = 0.0;
+        vars[i].s  = 0.0;
     }
 }
 

@@ -3,7 +3,7 @@
 *******************************************************************************
   Generate a color map containing all the colors representable with a certain
   maxval.
-  
+
   THIS PROGRAM IS OBSOLETE.  USE PAMSEQ INSTEAD.  WE KEEP THIS AROUND
   FOR BACKWARD COMPATIBILITY.
 
@@ -18,7 +18,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    unsigned int maxval;   
+    unsigned int maxval;
 };
 
 
@@ -34,9 +34,9 @@ parseCommandLine(int argc, char ** argv, struct cmdlineInfo *cmdlineP) {
     unsigned int option_def_index;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "maxval",       OPT_UINT,   
+    OPTENT3(0,   "maxval",       OPT_UINT,
             &cmdlineP->maxval,  NULL, 0);
-    
+
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -76,7 +76,7 @@ main(int argc, char *argv[]) {
 
     rc = system(cmd);
 
-    if (rc != 0) 
+    if (rc != 0)
         pm_error("pamseq|pamtopnm pipeline failed.  system() rc = %d", rc);
 
     pm_strfree(cmd);

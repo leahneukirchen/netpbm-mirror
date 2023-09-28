@@ -1,8 +1,8 @@
 /*
  *  tiling.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -22,17 +22,17 @@
 
 typedef struct tiling
 {
-   unsigned    	    exponent;		/* Image is split in 2^exp tiles */
-   fiasco_tiling_e  method;		/* Method of Image tiling */
-   int	      	   *vorder;		/* Block permutation (size = 2^exp)
-					   -1 indicates empty block */
+   unsigned         exponent;           /* Image is split in 2^exp tiles */
+   fiasco_tiling_e  method;             /* Method of Image tiling */
+   int             *vorder;             /* Block permutation (size = 2^exp)
+                                           -1 indicates empty block */
 } tiling_t;
 
 void
 perform_tiling (const image_t *image, tiling_t *tiling);
 tiling_t *
 alloc_tiling (fiasco_tiling_e method, unsigned tiling_exponent,
-	      unsigned image_level);
+              unsigned image_level);
 void
 free_tiling (tiling_t *tiling);
 

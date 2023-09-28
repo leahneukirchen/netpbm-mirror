@@ -1,0 +1,38 @@
+test 0: Should print 1652911383 4046
+1652911383 4046
+test 1: Should print 1398841785 13544 three times
+1398841785 13544
+1398841785 13544
+1398841785 13544
+test 2: Should print 210239904 3186 five times
+210239904 3186
+210239904 3186
+210239904 3186
+210239904 3186
+210239904 3186
+test 3: maxval should be 65535
+stdin:	PAM, 14 by 16 by 6 maxval 65535
+    Tuple type: 
+stdin:	PAM, 14 by 16 by 6 maxval 65535
+    Tuple type: 
+stdin:	PAM, 14 by 16 by 5 maxval 65535
+    Tuple type: 
+stdin:	PAM, 14 by 16 by 2 maxval 65535
+    Tuple type: 
+test 4: maxval should be 255 then 767
+stdin:	PAM, 14 by 16 by 2 maxval 255
+    Tuple type: 
+stdin:	PAM, 14 by 16 by 2 maxval 767
+    Tuple type: 
+test 5: Should print 2741208386 719 twice
+2741208386 719
+2741208386 719
+test 6: Should print true four times
+true
+true
+true
+true
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)

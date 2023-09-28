@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * This program (Pamslice) was derived by Bryan Henderson in July 2002
  * from Pgmslice by Jos Dingjan.  Pgmslice did the same thing, but
@@ -10,10 +10,10 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -77,12 +77,12 @@ parseCommandLine(int argc, char ** const argv,
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  Only argument is filename.",
                  argc-1);
-    else if (argc-1 == 1) 
+    else if (argc-1 == 1)
         cmdlineP->inputFilespec = argv[1];
     else
         cmdlineP->inputFilespec = "-";
 
-    if (rowSpec) 
+    if (rowSpec)
         cmdlineP->orientation = ROW;
     else if (colSpec)
         cmdlineP->orientation = COLUMN;
@@ -121,7 +121,7 @@ printSlice(FILE *       const outfile,
         else
             fprintf(stdout,"@    type  nxy\n");
     }
-    
+
     count = 0;
     for (row = rowstart; row < rowend; ++row) {
         unsigned int col;
@@ -137,7 +137,7 @@ printSlice(FILE *       const outfile,
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
@@ -177,7 +177,7 @@ main(int argc, char *argv[]) {
 
         break;
     }
-    
+
     if (cmdline.onePlane) {
         if (cmdline.plane >= inpam.depth)
             pm_error("You specified plane %u, but there are only %u planes "
@@ -189,12 +189,12 @@ main(int argc, char *argv[]) {
         planeend = inpam.depth;
     }
 
-    printSlice(stdout, tuples, 
+    printSlice(stdout, tuples,
                rowstart, rowend, colstart, colend, planestart, planeend,
                cmdline.xmgr);
 
     pm_close(ifP);
     pm_close(stdout);
-        
+
     exit(0);
 }

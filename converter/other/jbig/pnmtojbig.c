@@ -1,6 +1,6 @@
 /*
     pnmtojbig - PNM to JBIG converter
-  
+
     This program was derived from pbmtojbg.c in Markus Kuhn's
     JBIG-KIT package by Bryan Henderson on 2000.05.11
 
@@ -34,7 +34,7 @@
      bits in it.
 
 */
-  
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -44,7 +44,7 @@
 #include "mallocvar.h"
 #include "pnm.h"
 
-static unsigned long total_length = 0;  
+static unsigned long total_length = 0;
   /* used for determining output file length */
 
 /*
@@ -54,12 +54,12 @@ static void
 *checkedmalloc(size_t n)
 {
   void *p;
-  
+
   if ((p = malloc(n)) == NULL) {
     fprintf(stderr, "Sorry, not enough memory available!\n");
     exit(1);
   }
-  
+
   return p;
 }
 
@@ -92,13 +92,13 @@ readPbm(FILE *            const fin,
     int row;
     bitmap = (unsigned char **) checkedmalloc(sizeof(unsigned char *));
     bitmap[0] = (unsigned char *) checkedmalloc(bytes_per_line * rows);
-    
+
     for (row = 0; row < rows; row++)
         pbm_readpbmrow_packed(fin, &bitmap[0][row*bytes_per_line],
                               cols, RPBM_FORMAT);
 
     *bitmapP = bitmap;
-} 
+}
 
 
 
@@ -121,7 +121,7 @@ readImage(FILE * const fin,
            pixel.  The 'bpp' bytes for each pixel are arranged MSB first
            and its numerical value is the value from the PNM input.
            The pixels are laid out in row-major format in this rectangle.
-           
+
            The point of this data structure is it is what jbg_split_planes()
            wants for input.
         */
@@ -130,7 +130,7 @@ readImage(FILE * const fin,
 
     pnm_row = pnm_allocrow(cols);  /* row buffer */
     MALLOCARRAY_NOFAIL(image, cols * rows * bpp);
-    
+
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         pnm_readpnmrow(fin, pnm_row, cols, maxval, format);
@@ -145,7 +145,7 @@ readImage(FILE * const fin,
     pnm_freerow(pnm_row);
     *imageP = image;
 }
-      
+
 
 
 static void
@@ -154,12 +154,12 @@ convertImageToBitmap(unsigned char *   const image,
                      unsigned int      const encode_planes,
                      unsigned int      const bytes_per_line,
                      unsigned int      const lines) {
-    
+
     /* Convert image[] into bitmap[]  */
-    
+
     unsigned char ** bitmap;
     unsigned int i;
-    
+
     MALLOCARRAY_NOFAIL(bitmap, encode_planes);
     for (i = 0; i < encode_planes; ++i)
         MALLOCARRAY_NOFAIL(bitmap[i], bytes_per_line * lines);
@@ -193,10 +193,10 @@ readPnm(FILE *            const fin,
     jbg_split_planes(cols, rows, planes, encode_planes, image, bitmap,
                      use_graycode);
     free(image);
-    
+
     /* Invert the image if it is just one plane.  See top of this file
        for an explanation why.  Because of the separate handling of PBM,
-       this is for exceptional PGM files.  
+       this is for exceptional PGM files.
     */
 
     if (encode_planes == 1) {
@@ -206,7 +206,7 @@ readPnm(FILE *            const fin,
             for (i = 0; i < bytes_per_line; i++)
                 bitmap[0][(row*bytes_per_line) + i] ^= 0xff;
 
-            if (cols % 8 > 0) {   
+            if (cols % 8 > 0) {
                 bitmap[0][ (row+1)*bytes_per_line  -1] >>= 8-cols%8;
                 bitmap[0][ (row+1)*bytes_per_line  -1] <<= 8-cols%8;
             }
@@ -230,7 +230,7 @@ main(int argc, char **argv) {
     unsigned char **bitmap;
     /* This is an array of the planes of the image.  Each plane is a
        two-dimensional array of pixels laid out in row-major format.
-       format with each pixel being one bit.  A byte in the array 
+       format with each pixel being one bit.  A byte in the array
        contains 8 pixels left to right, msb to lsb.
     */
 
@@ -372,8 +372,8 @@ main(int argc, char **argv) {
     /* In a JBIG file, maxvals are determined only by the number of planes,
        so must be a power of 2 minus 1
     */
-  
-    if ((1UL << planes)-1 != maxval) 
+
+    if ((1UL << planes)-1 != maxval)
         pm_error("Input image has unacceptable maxval: %d.  JBIG files must "
                  "have a maxval which is a power of 2 minus 1.  Use "
                  "Ppmdepth to adjust the image's maxval", maxval);
@@ -386,8 +386,8 @@ main(int argc, char **argv) {
     if (bpp == 1 && PNM_FORMAT_TYPE(format) == PBM_TYPE)
         readPbm(fin, cols, rows, &bitmap);
     else
-        readPnm(fin, cols, rows, maxval, format, bpp, 
-                planes, encode_planes, use_graycode, 
+        readPnm(fin, cols, rows, maxval, format, bpp,
+                planes, encode_planes, use_graycode,
                 &bitmap);
 
     /* Apply JBIG algorithm and write BIE to output file */

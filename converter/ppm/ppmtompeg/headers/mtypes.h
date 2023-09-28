@@ -1,7 +1,7 @@
 /*===========================================================================*
  * mtypes.h
  *
- *	MPEG data types
+ *      MPEG data types
  *
  *===========================================================================*/
 
@@ -18,12 +18,12 @@
  * CONSTANTS *
  *===========*/
 
-#define TYPE_BOGUS	0   /* for the header of the circular list */
-#define TYPE_VIRGIN	1
+#define TYPE_BOGUS      0   /* for the header of the circular list */
+#define TYPE_VIRGIN     1
 
-#define STATUS_EMPTY	0
-#define STATUS_LOADED	1
-#define STATUS_WRITTEN	2
+#define STATUS_EMPTY    0
+#define STATUS_LOADED   1
+#define STATUS_WRITTEN  2
 
 
 typedef struct vector {
@@ -40,15 +40,15 @@ typedef struct motion {
  * TYPE DEFINITIONS *
  *==================*/
 
-/*  
+/*
  *  your basic Block type
  */
 typedef int16_t Block[DCTSIZE][DCTSIZE];
 typedef int16_t FlatBlock[DCTSIZE_SQ];
-typedef	struct {
+typedef struct {
     int32_t l[2*DCTSIZE][2*DCTSIZE];
 } LumBlock;
-typedef	int32_t ChromBlock[DCTSIZE][DCTSIZE];
+typedef int32_t ChromBlock[DCTSIZE][DCTSIZE];
 
 /*========*
  * MACROS *

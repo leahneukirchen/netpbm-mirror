@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include "pm_c_util.h"
 #include "pgm.h"
 
 
@@ -36,19 +37,20 @@ gethexit(FILE * const ifp) {
 
 
 int
-main(int     argc,
-     char ** argv) {
+main(int           argc,
+     const char ** argv) {
 
     FILE * ifP;
     gray * grayrow;
-    int argn, row;
+    unsigned int argn;
+    unsigned int row;
     gray maxval;
     int rows, cols, bitspersample;
 
-    pgm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-    argn = 1;
-    
+    argn = 1;  /* initial value */
+
     if (argn + 3 > argc)
         pm_error("Too few arguments");
 
@@ -78,7 +80,9 @@ main(int     argc,
         pm_error("bits/sample (%d) is too large.", bitspersample);
 
     pgm_writepgminit(stdout, cols, rows, maxval, 0);
-    grayrow = pgm_allocrow((cols + 7) / 8 * 8);
+
+    grayrow = pgm_allocrow(ROUNDUP(cols, 8));
+
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ) {
@@ -115,10 +119,10 @@ main(int     argc,
 
             default:
                 pm_error("This program does not know how to interpret a"
-                         "%d bitspersample image", bitspersample );
+                         "%d bitspersample image", bitspersample);
             }
         }
-        pgm_writepgmrow(stdout, grayrow, cols, (gray) maxval, 0);
+        pgm_writepgmrow(stdout, grayrow, cols, maxval, 0);
     }
     pgm_freerow(grayrow);
     pm_close(ifP);
@@ -126,3 +130,5 @@ main(int     argc,
 
     return 0;
 }
+
+

@@ -33,7 +33,7 @@
    visited that row, and then remove that entry from the stack.  Note
    that because we go one point at a time, the entry on the stack for
    the row we're at now will always be on the top of stack.
-   
+
    Note that the points on the stack always have consecutive row
    numbers, monotonically increasing or decreasing, whichever is the
    direction we started out in.
@@ -131,7 +131,7 @@ ppmd_pathbuilder_setLegArray(ppmd_pathbuilder * const pathBuilderP,
         pm_error("Leg array pointer is null");
 
     pathBuilderP->legsAreAutoAllocated = false;
-    
+
     pathBuilderP->legsAllocSize = legCount;
 
     pathBuilderP->path.legs = legs;
@@ -164,7 +164,7 @@ ppmd_pathbuilder_setBegPoint(ppmd_pathbuilder * const pathBuilderP,
                              ppmd_point         const begPoint) {
 
     pathBuilderP->path.begPoint = begPoint;
-    
+
     pathBuilderP->begIsSet = true;
 }
 
@@ -183,11 +183,11 @@ ppmd_pathbuilder_addLineLeg(ppmd_pathbuilder * const pathBuilderP,
             pathBuilderP->legsAllocSize =
                 MAX(16, pathBuilderP->legsAllocSize * 2);
 
-            REALLOCARRAY(pathBuilderP->path.legs, 
+            REALLOCARRAY(pathBuilderP->path.legs,
                          pathBuilderP->legsAllocSize);
 
             if (pathBuilderP->path.legs == NULL)
-                pm_error("Unable to allocate memory for %u legs", 
+                pm_error("Unable to allocate memory for %u legs",
                          pathBuilderP->legsAllocSize);
         } else
             pm_error("Out of space in user-supplied legs array "
@@ -252,7 +252,7 @@ isOnLineSeg(ppmd_point const here,
         here.y <= MAX(begPoint.y, endPoint.y) &&
         here.x >= MIN(begPoint.x, endPoint.x) &&
         here.x <= MAX(begPoint.x, endPoint.x);
-}    
+}
 
 
 
@@ -496,13 +496,13 @@ fillPoint(fillStack * const stackP,
     } else {
         if (againstStackDirection(stackP, point))
             popStack(stackP);
-        
+
         if (stackIsEmpty(stackP)) {
             reverseStackDirection(stackP);
             pushStack(stackP, point);
         } else {
             assert(isLateralFromTopOfStack(stackP, point));
-            
+
             drawFillLine(topOfStack(stackP), point, pixels, color);
             replaceTopOfStack(stackP, point);
         }
@@ -539,7 +539,7 @@ fillLeg(ppmd_point  const begPoint,
         ppmd_point here;
 
         here = begPoint;
-    
+
         while (here.y != endPoint.y) {
             here.y += step;
             here.x = ROUNDU(begPoint.x + vertDisp(begPoint, here) * invSlope);
@@ -554,9 +554,9 @@ fillLeg(ppmd_point  const begPoint,
 
 
 void
-ppmd_fill_path(pixel **          const pixels, 
-               int               const cols, 
-               int               const rows, 
+ppmd_fill_path(pixel **          const pixels,
+               int               const cols,
+               int               const rows,
                pixval            const maxval,
                const ppmd_path * const pathP,
                pixel             const color) {

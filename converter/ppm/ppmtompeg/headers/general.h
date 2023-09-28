@@ -1,8 +1,8 @@
 /*===========================================================================*
- * general.h								     *
- *									     *
- *	very general stuff						     *
- *									     *
+ * general.h                                                                 *
+ *                                                                           *
+ *      very general stuff                                                   *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -26,7 +26,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/headers/RCS/general.h,v 1.7 1995/08/04 23:34:13 smoot Exp $
  *  $Log: general.h,v $
  *  Revision 1.7  1995/08/04 23:34:13  smoot
@@ -62,7 +62,7 @@
  * if your /usr/include headers do not have these, then pass -DMISSING_PROTOS
  * to your compiler
  *
- */ 
+ */
 #ifdef MISSING_PROTOS
 int fprintf();
 int fwrite();
@@ -114,7 +114,7 @@ int pclose();
 typedef int boolean;
 
 /* In the following, we need the "signed" in order to make these typedefs
-   match those in AIX system header files.  Otherwise, compile fails on 
+   match those in AIX system header files.  Otherwise, compile fails on
    AIX.  2000.09.11.
 */
 typedef unsigned char uint8;
@@ -139,10 +139,10 @@ typedef signed short int16;
 */
 
     /* LONG_32 should only be defined iff
-     *	    1) long's are 32 bits and
-     *	    2) int's are not
+     *      1) long's are 32 bits and
+     *      2) int's are not
      */
-#ifdef LONG_32		
+#ifdef LONG_32
 typedef unsigned long uint32;
 typedef long int32;
 #else

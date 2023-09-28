@@ -136,7 +136,7 @@ PERLPROG = print "sgi$(MAJ)." . join(":sgi$(MAJ) . ", (0..$(MIN))) . "\n"
 
 $(SONAME): \
     $(LIBOBJECTS) $(LIBOBJECTS_X) 
-	$(LD) $(LDSHLIB) -o $@ $(LIBOBJECTS) $(LIBOBJECTS_X) \
+	$(LD) $(LDSHLIB) $(LDFLAGS) -o $@ $(LIBOBJECTS) $(LIBOBJECTS_X) \
           -lc \
 	  -soname libnetpbm.$(NETPBMLIBSUFFIX) \
 	  -set_version $(shell perl -e '$(PERLPROG)') \
@@ -155,7 +155,7 @@ $(SONAME): libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ).$(MIN)
 	rm -f $@
 	$(SYMLINK) $< $@
 libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ).$(MIN): $(LIBOBJECTS) $(LIBOBJECTS_X)
-	$(LD) $(LDSHLIB) -o $@ $(LIBOBJECTS) $(LIBOBJECTS_X) \
+	$(LD) $(LDSHLIB) $(LDFLAGS) -o $@ $(LIBOBJECTS) $(LIBOBJECTS_X) \
           $(SHLIB_CLIB) -lm $(LADD)
 endif
 
@@ -165,10 +165,10 @@ $(NETPBMSHLIBPREFIX)netpbm$(DLLVER).dll: $(LIBOBJECTS) $(LIBOBJECTS_X) libnetpbm
 else
 $(NETPBMSHLIBPREFIX)netpbm$(DLLVER).dll: $(LIBOBJECTS) $(LIBOBJECTS_X)
 endif
-	$(LD) $(LDSHLIB) -Wl,--export-all-symbols \
+	$(LD) $(LDSHLIB) $(LDFLAGS) -Wl,--export-all-symbols \
             -Wl,-soname,$(NETPBMSHLIBPREFIX)netpbm$(DLLVER).dll \
 	    -Wl,--output-def,$(NETPBMSHLIBPREFIX)netpbm$(DLLVER).def \
-            -Wl,--out-implib,libnetpbm.dll.a -o $@ $(LDFLAGS) \
+            -Wl,--out-implib,libnetpbm.dll.a -o $@ \
             $(LIBOBJECTS) $(LIBOBJECTS_X) $(LDLIBS) $(LADD) 
 endif
 
@@ -182,7 +182,7 @@ libnetpbm.$(MAJ).dylib: libnetpbm.$(MAJ).$(MIN).dylib
 	$(SYMLINK) $< $@
 
 libnetpbm.$(MAJ).$(MIN).dylib: $(LIBOBJECTS) $(LIBOBJECTS_X) 
-	$(LD) $(LDSHLIB) -o $@ $(LIBOBJECTS) $(LIBOBJECTS_X) \
+	$(LD) $(LDSHLIB) $(LDFLAGS) -o $@ $(LIBOBJECTS) $(LIBOBJECTS_X) \
            -lc $(LADD)
 endif
 

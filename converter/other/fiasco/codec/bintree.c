@@ -1,8 +1,8 @@
 /*
- *  bintree.c:		Bintree model of WFA tree	
+ *  bintree.c:          Bintree model of WFA tree
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -28,8 +28,8 @@
 
 /*****************************************************************************
 
-				public code
-  
+                                public code
+
 *****************************************************************************/
 
 void
@@ -40,7 +40,7 @@ tree_update (bool_t child, unsigned level, tree_t *model)
  *  No return value.
  *
  *  Side effects:
- *	tree model is changed.
+ *      tree model is changed.
  */
 {
    if (!child)
@@ -59,7 +59,7 @@ tree_bits (bool_t child, unsigned level, const tree_t *model)
  *  For each 'level' a different context is used.
  *
  *  Return value:
- *	# bits
+ *      # bits
  */
 {
    real_t prob = model->counts [level] / (real_t) model->total [level];
@@ -80,13 +80,13 @@ init_tree_model (tree_t *tree_model)
 {
    unsigned level;
    unsigned counts_0 [MAXLEVEL] = {20, 17, 15, 10, 5,  4,  3,
-				   2,  1,  1,  1,  1,  1,  1,  1,
-				   1,  1,  1,  1 , 1,  1,  1};
+                                   2,  1,  1,  1,  1,  1,  1,  1,
+                                   1,  1,  1,  1 , 1,  1,  1};
    unsigned counts_1 [MAXLEVEL] = {1 , 1,  1,  1,  1,  1,  1,
-				   1,  1,  2,  3,  5,  10, 15, 20,
-				   25, 30, 35, 60, 60, 60, 60};
-   
-   for (level = 0; level < MAXLEVEL ; level++) 
+                                   1,  1,  2,  3,  5,  10, 15, 20,
+                                   25, 30, 35, 60, 60, 60, 60};
+
+   for (level = 0; level < MAXLEVEL ; level++)
    {
       tree_model->counts [level] = counts_1 [level];
       tree_model->total [level]  = counts_0 [level] + counts_1 [level];

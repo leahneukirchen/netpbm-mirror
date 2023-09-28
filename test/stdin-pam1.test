@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamaddnoise pamaltsat pambackground pambayer
 # This script tests: pambrighten pamcat pamcut pamdeinterlace pamdepth pamditherbw
 # This script tests: pamedge pamexec pamfile pamfind pamfix pamflip

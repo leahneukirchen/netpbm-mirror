@@ -1,7 +1,7 @@
 /*
  *  bit-io.h
  *
- *  Written by:		Ullrich Hafner
+ *  Written by:         Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -27,14 +27,14 @@ typedef enum {READ_ACCESS, WRITE_ACCESS} openmode_e;
 
 typedef struct bitfile
 {
-   FILE	      *file;			/* associated filepointer */
-   char	      *filename;		/* corresponding filename */
-   byte_t     *buffer;			/* stream buffer */
-   byte_t     *ptr;			/* pointer to current buffer pos */
-   unsigned    bytepos;			/* current I/O byte */
-   unsigned    bitpos;			/* current I/O bit */
-   unsigned    bits_processed;		/* number of bits already processed */
-   openmode_e  mode;			/* access mode */
+   FILE       *file;                    /* associated filepointer */
+   char       *filename;                /* corresponding filename */
+   byte_t     *buffer;                  /* stream buffer */
+   byte_t     *ptr;                     /* pointer to current buffer pos */
+   unsigned    bytepos;                 /* current I/O byte */
+   unsigned    bitpos;                  /* current I/O bit */
+   unsigned    bits_processed;          /* number of bits already processed */
+   openmode_e  mode;                    /* access mode */
 } bitfile_t;
 
 FILE *
@@ -47,7 +47,7 @@ void
 put_bits (bitfile_t *bitfile, unsigned value, unsigned bits);
 bool_t
 get_bit (bitfile_t *bitfile);
-unsigned 
+unsigned
 get_bits (bitfile_t *bitfile, unsigned bits);
 void
 close_bitfile (bitfile_t *bitfile);

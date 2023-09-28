@@ -152,7 +152,7 @@ typedef struct stitcher {
     bool      (* Match)(struct stitcher *me, Image * Left, Image * Right);
         /* Determine the transformation parameters for the stitching.
            I.e. determine the parameters that affect future invocations
-           of the transformation methods below.  You must execute a 
+           of the transformation methods below.  You must execute a
            'Match' before executing any of the transformation methods.
         */
     /*-----------------------------------------------------------------------
@@ -162,7 +162,7 @@ typedef struct stitcher {
 
       If there is no pixel in the left image that contributes to the output
       pixel in question, the methods return column or row numbers outside
-      the bounds of the left image (possibly negative).  Likewise for the 
+      the bounds of the left image (possibly negative).  Likewise for the
       right image.
     */
     float     (* XLeft)(struct stitcher *me, int x, int y);
@@ -225,7 +225,7 @@ parseCommandLine ( int argc, char ** argv,
 {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -241,25 +241,25 @@ parseCommandLine ( int argc, char ** argv,
     unsigned int option_def_index;
 
     char *outputOpt;
-    unsigned int widthSpec, heightSpec, outputSpec, 
+    unsigned int widthSpec, heightSpec, outputSpec,
         xrightposSpec, yrightposSpec, stitcherSpec, filterSpec;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "width",       OPT_UINT,   &cmdlineP->width, 
+    OPTENT3(0, "width",       OPT_UINT,   &cmdlineP->width,
             &widthSpec,         0);
-    OPTENT3(0, "height",      OPT_UINT,   &cmdlineP->height, 
+    OPTENT3(0, "height",      OPT_UINT,   &cmdlineP->height,
             &heightSpec,        0);
-    OPTENT3(0, "verbose",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "verbose",     OPT_FLAG,   NULL,
             &cmdlineP->verbose, 0 );
-    OPTENT3(0, "output",      OPT_STRING, &outputOpt, 
+    OPTENT3(0, "output",      OPT_STRING, &outputOpt,
             &outputSpec,        0);
-    OPTENT3(0, "xrightpos",   OPT_UINT,   &cmdlineP->xrightpos, 
+    OPTENT3(0, "xrightpos",   OPT_UINT,   &cmdlineP->xrightpos,
             &xrightposSpec,     0);
-    OPTENT3(0, "yrightpos",   OPT_UINT,   &cmdlineP->yrightpos, 
+    OPTENT3(0, "yrightpos",   OPT_UINT,   &cmdlineP->yrightpos,
             &yrightposSpec,     0);
-    OPTENT3(0, "stitcher",    OPT_STRING, &cmdlineP->stitcher, 
+    OPTENT3(0, "stitcher",    OPT_STRING, &cmdlineP->stitcher,
             &stitcherSpec,      0);
-    OPTENT3(0, "filter",      OPT_STRING, &cmdlineP->filter, 
+    OPTENT3(0, "filter",      OPT_STRING, &cmdlineP->filter,
             &filterSpec,        0);
 
     opt.opt_table = option_def;
@@ -333,14 +333,14 @@ main (int argc, char **argv)
 
     verbose = cmdline.verbose;
 
-    return pnmstitch (cmdline.leftFilespec, 
-                      cmdline.rightFilespec, 
-                      cmdline.outputFilespec, 
-                      cmdline.xrightpos, 
-                      cmdline.yrightpos, 
-                      cmdline.width, 
-                      cmdline.height, 
-                      cmdline.stitcher, 
+    return pnmstitch (cmdline.leftFilespec,
+                      cmdline.rightFilespec,
+                      cmdline.outputFilespec,
+                      cmdline.xrightpos,
+                      cmdline.yrightpos,
+                      cmdline.width,
+                      cmdline.height,
+                      cmdline.stitcher,
                       cmdline.filter);
 } /* main() - end */
 
@@ -353,10 +353,10 @@ static Image *
 allocate_image(void)
 {
     Image * retVal;
-    
+
     MALLOCVAR(retVal);
 
-    if (retVal != NULL) 
+    if (retVal != NULL)
         memset (retVal, 0, (unsigned)sizeof(Image));
 
     return retVal;
@@ -372,11 +372,11 @@ free_image(Image * image)
 {
     if (image->name) {
         pm_strfree(image->name);
-        image->name = NULL;     
+        image->name = NULL;
     }
     if (image->tuple) {
         pnm_freepamarray(image->tuple, &image->pam);
-        image->tuple = NULL; 
+        image->tuple = NULL;
     }
     if (image->pam.file) {
         fclose (image->pam.file);
@@ -393,8 +393,8 @@ openWithPossibleExtension(const char *  const baseName,
                           const char ** const filenameP) {
 
     /* list of possible extensions for input file */
-    const char * const extlist[] = { 
-        "", ".pnm", ".pam", ".pgm", ".pbm", ".ppm" 
+    const char * const extlist[] = {
+        "", ".pnm", ".pam", ".pgm", ".pbm", ".ppm"
     };
 
     FILE * ifP;
@@ -403,23 +403,23 @@ openWithPossibleExtension(const char *  const baseName,
     ifP = NULL;   /* initial value -- no file opened yet */
 
     for (extIndex = 0; extIndex < ARRAY_SIZE(extlist) && !ifP; ++extIndex) {
-        
+
         const char * trialName;
-        
+
         pm_asprintf(&trialName, "%s%s", baseName, extlist[extIndex]);
-        
+
         ifP = fopen(trialName, "rb");
-        
+
         if (ifP)
             *filenameP = trialName;
         else
             pm_strfree(trialName);
     }
-    if (!ifP) 
+    if (!ifP)
         pm_error ("Failed to open input file named '%s' "
-                  "or '%s' with one of various common extensions.", 
+                  "or '%s' with one of various common extensions.",
                   baseName, baseName);
-    
+
     *ifPP = ifP;
 }
 
@@ -435,7 +435,7 @@ readinit(const char * const name)
     Image * const image = allocate_image();
     Image * retVal;
 
-    if (image == NULL) 
+    if (image == NULL)
         retVal = NULL;
     else {
         FILE * ifP;
@@ -446,7 +446,7 @@ readinit(const char * const name)
         } else {
             openWithPossibleExtension(name, &ifP, &image->name);
         }
-        image->tuple = pnm_readpam(ifP, &(image->pam), 
+        image->tuple = pnm_readpam(ifP, &(image->pam),
                                    PAM_STRUCT_SIZE(tuple_type));
         fclose (ifP);
         image->pam.file = NULL;
@@ -507,7 +507,7 @@ regionDifference(Image * left,
 {
     unsigned long total;
     unsigned      row;
-    
+
     total = 0;  /* initial value */
 
     for (row = 0; row < height; ++row) {
@@ -830,7 +830,7 @@ stitchOnePixel(Image *    const Left,
                int        const right_column,
                unsigned * const firstRightP,
                tuple      const outPixel) {
-               
+
     unsigned plane;
 
     for (plane = 0; plane < outpam.depth; ++plane) {
@@ -848,7 +848,7 @@ stitchOnePixel(Image *    const Left,
         rightPixel = 0;
         if (right_column >= 0) {
             rightPixel = Right->tuple[right_row][right_column][plane];
-            if ((rightPixel > 0) && (*firstRightP == 0)) 
+            if ((rightPixel > 0) && (*firstRightP == 0))
                 *firstRightP = column;
         }
         if (leftPixel == 0) {
@@ -869,7 +869,7 @@ stitchOnePixel(Image *    const Left,
             } else {
                 int const v = w * 4;
                 leftPixel = (sample)(
-                    ((leftPixel 
+                    ((leftPixel
                       * (unsigned long)(Left->pam.width - column))
                      + (rightPixel
                         * (unsigned long)(column - Left->pam.width + v)))
@@ -929,22 +929,22 @@ stitchOneRow(Image *    const Left,
                 right_column = -1;
                 right_row    = -1;
             }
-        } else 
+        } else
             right_column = -1;
 
         /* Create the pixel at column 'column' of row 'row' of the
            output 'Out': Row[column].
         */
-        stitchOnePixel(Left, Right, Out->image->pam, row, column, y, 
+        stitchOnePixel(Left, Right, Out->image->pam, row, column, y,
                        right_row, right_column, &firstRight, Row[column]);
     }
 }
 
 
 
-static void 
-stitchit(Image *      const Left, 
-         Image *      const Right, 
+static void
+stitchit(Image *      const Left,
+         Image *      const Right,
          const char * const outfilename,
          const char * const filter,
          Stitcher *   const Stitch,
@@ -954,8 +954,8 @@ stitchit(Image *      const Left,
                                     sizeof(OutputMethods[0]));
     unsigned   row;
     int        xp[8], yp[8], x, y, width, height;
-    
-    if ((Out == (Output *)NULL) || (Out->Name == (char *)NULL)) 
+
+    if ((Out == (Output *)NULL) || (Out->Name == (char *)NULL))
         *retvalP = -2;
     else {
         if (verbose)
@@ -966,13 +966,13 @@ stitchit(Image *      const Left,
         determineMaskCorners(Stitch, Left, Right, xp, yp);
 
         /* Output the combined images */
-                
+
         /* Calculate generic x,y left top corner, and the width and height */
         calculateXyWidthHeight(xp, yp, &x, &y, &width, &height);
-                
-        if (verbose) 
+
+        if (verbose)
             printPlan(xp, yp, Left, Right);
-    
+
         if (!(*(Out->Alloc))(Out, outfilename, width, height, &Left->pam))
             *retvalP = -9;
         else {
@@ -989,7 +989,7 @@ stitchit(Image *      const Left,
             }
             (*(Out->FlushImage))(Out);
             (*(Out->DeAlloc))(Out);
-        
+
             *retvalP = 0;
         }
     }
@@ -1014,10 +1014,10 @@ pnmstitch(const char * const leftfilename,
     Image    * Right;
     int        retval;
 
-    if ((Stitch == (Stitcher *)NULL) || (Stitch->Name == (char *)NULL)) 
+    if ((Stitch == (Stitcher *)NULL) || (Stitch->Name == (char *)NULL))
         retval = -1;
     else {
-        if (verbose) 
+        if (verbose)
             fprintf (stderr, "Selected %s stitcher algorithm\n",
                      Stitch->Name);
 
@@ -1034,7 +1034,7 @@ pnmstitch(const char * const leftfilename,
                 if (Left->pam.depth != Right->pam.depth) {
                     fprintf(stderr, "Images should have matching depth.  "
                             "The left image has depth %d, "
-                            "while the right has depth %d.", 
+                            "while the right has depth %d.",
                             Left->pam.depth, Right->pam.depth);
                     retval = -5;
                 } else if (Left->pam.maxval != Right->pam.maxval) {
@@ -1042,19 +1042,19 @@ pnmstitch(const char * const leftfilename,
                              "Images should have matching maxval.  "
                              "The left image has maxval %u, "
                              "while the right has maxval %u.",
-                             (unsigned)Left->pam.maxval, 
+                             (unsigned)Left->pam.maxval,
                              (unsigned)Right->pam.maxval);
                     retval = -6;
-                } else if ((*(Stitch->Alloc))(Stitch) == FALSE) 
+                } else if ((*(Stitch->Alloc))(Stitch) == FALSE)
                     retval = -7;
                 else {
-                    (*(Stitch->Constrain))(Stitch, reqx, reqy, 
+                    (*(Stitch->Constrain))(Stitch, reqx, reqy,
                                            reqWidth, reqHeight);
 
-                    if ((*(Stitch->Match))(Stitch, Left, Right) == FALSE) 
+                    if ((*(Stitch->Match))(Stitch, Left, Right) == FALSE)
                         retval = -8;
-                    else 
-                        stitchit(Left, Right, outfilename, filter, Stitch, 
+                    else
+                        stitchit(Left, Right, outfilename, filter, Stitch,
                                  &retval);
                 }
                 free_image(Right);
@@ -1356,7 +1356,7 @@ LinearAlloc(Stitcher * me)
     bool retval;
 
     MALLOCARRAY(me->parms, 8);
-    if (me->parms == NULL) 
+    if (me->parms == NULL)
         retval = FALSE;
     else {
         /* Constraints unset */
@@ -1478,7 +1478,7 @@ LinearConstrain(Stitcher * me, int x, int y, int width, int height)
 /* Following global variables are for use by SliverMatch() */
 static unsigned long starPeriod;
     /* The number of events between printing of a "*" progress
-       indicator.  
+       indicator.
     */
 static unsigned long starCount;
     /* The number of events until the next * progress indicator needs to be
@@ -1487,7 +1487,7 @@ static unsigned long starCount;
 
 static void
 starEvent() {
-    
+
     if (--starCount == 0) {
         starCount = starPeriod;
         fprintf (stderr, "*");
@@ -1521,7 +1521,7 @@ findBestMatches(Image *  const Left,
                 unsigned const Xmax,
                 int      const Ymin,
                 int      const Ymax,
-                Best           best[NUM_BEST]) { 
+                Best           best[NUM_BEST]) {
 /*----------------------------------------------------------------------------
   Compare the rectangle 'width' columns by 'height' rows with upper
   left corner at Column 'x', Row y+offY in image 'Right' to a bunch of
@@ -1562,8 +1562,8 @@ allocate_best_array(Best *** const bestP, unsigned const bestSize) {
     MALLOCARRAY(best, bestSize);
     if (best == NULL)
         pm_error("No memory for Best array");
-    
-    for (i = 0; i < bestSize; ++i) 
+
+    for (i = 0; i < bestSize; ++i)
         best[i] = allocate_best();
     *bestP = best;
 }
@@ -1577,7 +1577,7 @@ static void determineXYRange(Stitcher * const me,
                              unsigned * const XmaxP,
                              int *      const YminP,
                              int *      const YmaxP) {
-    
+
     if (me->x == INT_MAX) {
         *XmaxP = Left->pam.width - me->width;
         /* I can't bring myself to go half way */
@@ -1594,7 +1594,7 @@ static void determineXYRange(Stitcher * const me,
         *YminP = me->y;
         *YmaxP = me->y + 1;
     }
-    if (verbose) 
+    if (verbose)
         pm_message("Test %d<x<%d %d<y<%d", *XminP, *XmaxP, *YminP, *YmaxP);
 }
 
@@ -1609,7 +1609,7 @@ SliverMatch(Stitcher * me, Image * Left, Image * Right,
             unsigned image_portion, unsigned skip_sliver)
 {
     /* up/down 3/10, make sure has an odd number of members */
-    unsigned const bestSize = 
+    unsigned const bestSize =
         1 + 2 * ((image_portion * 3) / (10 * skip_sliver));
     Best       ** best; /* malloc'ed array of Best * */
     float         sumydotx, sumx, sumydot, sum;
@@ -1681,8 +1681,8 @@ SliverMatch(Stitcher * me, Image * Left, Image * Right,
             }
             for (X = x; X < (x + me->width); ++X) {
                 for (Y = y + offY; Y < (y + offY + me->height); ++Y) {
-                    for (plane = 0; 
-                         plane < MIN(Right->pam.depth,3); 
+                    for (plane = 0;
+                         plane < MIN(Right->pam.depth,3);
                          ++plane) {
                         sample point = Right->tuple[Y][X][plane];
                         SUM[plane]   += point;
@@ -1693,7 +1693,7 @@ SliverMatch(Stitcher * me, Image * Left, Image * Right,
             /* How many features */
             features[in] = 0.0;
             for (plane = 0; plane < MIN(Right->pam.depth,3); ++plane) {
-                features[in] += SUMSQ[plane] - 
+                features[in] += SUMSQ[plane] -
                     (SUM[plane]*SUM[plane]/(float)(me->width*me->height));
             }
             if ((minf == 0.0) || (features[in] < minf)) {
@@ -1733,12 +1733,12 @@ SliverMatch(Stitcher * me, Image * Left, Image * Right,
             }
             if ((verbose == 1) || (verbose == 2))
                 for (X = Xmin; X < Xmax; ++X) {
-                    for (Y = Ymin; Y < Ymax; ++Y) 
+                    for (Y = Ymin; Y < Ymax; ++Y)
                         starEvent();
                 }
             continue;
         }
-        findBestMatches(Left, Right, x, y, me->width, me->height, 
+        findBestMatches(Left, Right, x, y, me->width, me->height,
                         offY, Xmin, Xmax, Ymin, Ymax,
                         best[in]);
         /* slop (noise in NUM_BEST) */
@@ -1980,7 +1980,7 @@ SliverMatch(Stitcher * me, Image * Left, Image * Right,
 static bool
 LinearMatch(Stitcher * me, Image * Left, Image * Right)
 {
-    if (SliverMatch(me, Left, Right, IMAGE_PORTION, SKIP_SLIVER * 8) 
+    if (SliverMatch(me, Left, Right, IMAGE_PORTION, SKIP_SLIVER * 8)
         == FALSE) {
         return FALSE;
     }
@@ -1989,7 +1989,7 @@ LinearMatch(Stitcher * me, Image * Left, Image * Right)
     me->y = - (me->parms[Sliver_yp] + me->parms[Sliver_ypp]
           + (1 - Left->pam.height)) / 2;
 
-    if (verbose) 
+    if (verbose)
         pm_message("LinearMatch translation parameters are (%d,%d)",
                    me->x, me->y);
 

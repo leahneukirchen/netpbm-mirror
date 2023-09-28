@@ -1,8 +1,8 @@
 /*
  *  image.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -31,11 +31,11 @@ typedef struct image
 {
    char      id [8];         /* NUL-terminated "IFIASCO" */
    unsigned  reference_count;
-   unsigned  width;			/* Width of the image */
-   unsigned  height;			/* Height of the image */
-   bool_t    color;			/* Color or grayscale image */
-   format_e  format;			/* Pixel format 4:4:4 or 4:2:0 */
-   word_t   *pixels [3];		/* Pixels in short format */
+   unsigned  width;                     /* Width of the image */
+   unsigned  height;                    /* Height of the image */
+   bool_t    color;                     /* Color or grayscale image */
+   format_e  format;                    /* Pixel format 4:4:4 or 4:2:0 */
+   word_t   *pixels [3];                /* Pixels in short format */
 } image_t;
 
 image_t *
@@ -48,7 +48,7 @@ void
 free_image (image_t *image);
 FILE *
 read_pnmheader (const char *image_name, unsigned *width, unsigned *height,
-		bool_t *color);
+                bool_t *color);
 
 image_t *
 read_image_stream(FILE *       const ifP,

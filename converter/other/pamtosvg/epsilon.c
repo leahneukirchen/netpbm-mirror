@@ -1,8 +1,6 @@
-/* epsilon-equal.c: define a error resist compare. */
-
 #include <math.h>
 
-#include "epsilon-equal.h"
+#include "epsilon.h"
 
 /* Numerical errors sometimes make a floating point number just slightly
    larger or smaller than its true value.  When it matters, we need to

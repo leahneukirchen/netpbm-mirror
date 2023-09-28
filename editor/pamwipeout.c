@@ -34,12 +34,12 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int                        argc, 
+parseCommandLine(int                        argc,
                  const char **              argv,
                  struct cmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -59,9 +59,9 @@ parseCommandLine(int                        argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "lr",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "lr",     OPT_FLAG,   NULL,
             &lr,       0);
-    OPTENT3(0, "tb",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "tb",     OPT_FLAG,   NULL,
             &tb,       0);
 
     opt.opt_table = option_def;
@@ -75,7 +75,7 @@ parseCommandLine(int                        argc,
         pm_error("You must specify either -lr or -tb");
     else if (lr && tb)
         pm_error("You may not specify both -lr and -tb");
-    else 
+    else
         cmdlineP->direction = lr ? DIR_LR : DIR_TB;
 
 
@@ -93,8 +93,8 @@ parseCommandLine(int                        argc,
 
 
 
-static void 
-wipeImgByRow (struct pam const inpam, 
+static void
+wipeImgByRow (struct pam const inpam,
               tuple **   const tuples) {
 
     double const h = (double) inpam.height;
@@ -120,9 +120,9 @@ wipeImgByRow (struct pam const inpam,
 
 
 
-static void 
-wipeRowByCol(struct pam const inpam, 
-             tuple **   const tuples, 
+static void
+wipeRowByCol(struct pam const inpam,
+             tuple **   const tuples,
              tuple *    const tuplerow) {
 
     double const w = (double) inpam.width;
@@ -153,16 +153,16 @@ wipeoutTb(FILE * const ifP,
 
     struct pam inpam, outpam;
     tuple ** tuples;
-    
+
     tuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    outpam = inpam; 
+    outpam = inpam;
     outpam.file = ofP;
 
     wipeImgByRow(inpam, tuples);
 
     pnm_writepam(&outpam, tuples);
-       
+
     pnm_freepamarray(tuples, &inpam);
 }
 
@@ -171,7 +171,7 @@ wipeoutTb(FILE * const ifP,
 static void
 wipeoutLr(FILE * const ifP,
           FILE * const ofP) {
-    
+
     /* left-right we can read row-by-row */
 
     struct pam inpam, outpam;

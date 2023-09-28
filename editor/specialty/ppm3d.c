@@ -33,7 +33,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -64,7 +64,7 @@ parseCommandLine(int argc, char ** argv,
 
     pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-    
+
     if (argc-1 < 2)
         pm_error("You must specify at least two arguments: left and right "
                  "input file names.  You specified %u", argc-1);
@@ -122,7 +122,7 @@ compute3dRowMono(gray *       const lGrayrow,
                  pixel *      const pixelrow,
                  unsigned int const cols,
                  int          const offset) {
-    
+
     unsigned int col;
     gray *  lgP;
     gray *  rgP;
@@ -133,7 +133,7 @@ compute3dRowMono(gray *       const lGrayrow,
     for (col = 0, pP = pixelrow, lgP = lGrayrow, rgP = rGrayrow;
          col < cols + offset;
          ++col) {
-            
+
         if ((int)col < offset/2)
             ++lgP;
         else if ((int)col < offset) {
@@ -154,7 +154,7 @@ compute3dRowMono(gray *       const lGrayrow,
             ++rgP;
         }
     }
-}    
+}
 
 
 
@@ -164,7 +164,7 @@ compute3dRowColor(pixel *      const lPixelrow,
                   pixel *      const pixelrow,
                   unsigned int const cols,
                   unsigned int const offset) {
-    
+
     unsigned int col;
     pixel * lP;
     pixel * rP;
@@ -175,7 +175,7 @@ compute3dRowColor(pixel *      const lPixelrow,
     for (col = 0, pP = pixelrow, lP = lPixelrow, rP = rPixelrow;
          col < cols + offset;
          ++col) {
-            
+
         if ((int)col < offset/2)
             ++lP;
         else if ((int)col < offset) {
@@ -196,7 +196,7 @@ compute3dRowColor(pixel *      const lPixelrow,
             ++rP;
         }
     }
-}    
+}
 
 
 
@@ -265,11 +265,11 @@ main(int argc, char *argv[]) {
     int lRows, lCols;
     int lFormat;
     pixval lMaxval;
-   
+
     int rRows, rCols;
     int rFormat;
     pixval rMaxval;
-   
+
     ppm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -279,12 +279,12 @@ main(int argc, char *argv[]) {
 
     ppm_readppminit(lIfP, &lCols, &lRows, &lMaxval, &lFormat);
     ppm_readppminit(rIfP, &rCols, &rRows, &rMaxval, &rFormat);
-    
-    if ((lCols != rCols) || (lRows != rRows) || 
-        (lMaxval != rMaxval) || 
+
+    if ((lCols != rCols) || (lRows != rRows) ||
+        (lMaxval != rMaxval) ||
         (PPM_FORMAT_TYPE(lFormat) != PPM_FORMAT_TYPE(rFormat)))
         pm_error ("Pictures are not of same size and format");
-    
+
     cols   = lCols;
     rows   = lRows;
     maxval = lMaxval;
@@ -293,7 +293,7 @@ main(int argc, char *argv[]) {
         pm_error("Magnitude of -offset (%u columns) is not less than "
                  "width of images "
                  "(%u columns)", abs(cmdline.offset), cols);
-   
+
     ppm_writeppminit(stdout, cols, rows, maxval, 0);
 
     write3dRaster(stdout, lIfP, rIfP, cols, rows, maxval,

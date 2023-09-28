@@ -46,19 +46,19 @@ dirname(const char * const fileName) {
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFileName;  /* Name of input file */
-    const char *alpha_filespec; /* Filespec of alpha file; NULL if none */
-    const char *alphacolor;     /* -alphacolor option value or default */
-    unsigned int interlace;     /* -interlace option value */
-    unsigned int sort;          /* -sort option value */
-    const char *mapfile;        /* -mapfile option value.  NULL if none. */
-    const char *transparent;    /* -transparent option value.  NULL if none. */
-    const char *comment;        /* -comment option value; NULL if none */
-    unsigned int nolzw;         /* -nolzw option */
+    const char * inputFileName;  /* Name of input file */
+    const char * alpha_filespec; /* Filespec of alpha file; NULL if none */
+    const char * alphacolor;     /* -alphacolor option value or default */
+    unsigned int interlace;      /* -interlace option value */
+    unsigned int sort;           /* -sort option value */
+    const char * mapfile;        /* -mapfile option value.  NULL if none. */
+    const char * transparent;    /* -transparent option value.  NULL if none.*/
+    const char * comment;        /* -comment option value; NULL if none */
+    unsigned int nolzw;          /* -nolzw option */
     unsigned int verbose;
 };
 
@@ -78,8 +78,8 @@ handleLatex2htmlHack(void) {
 
   So we issue a special error message just to trick latex2html into
   deciding that we have -interlace and -transparent options.  The function
-  is not documented in the man page.  We would like to see Latex2html 
-  either stop checking or check like configure programs usually do -- 
+  is not documented in the man page.  We would like to see Latex2html
+  either stop checking or check like configure programs usually do --
   try the option and see if you get success or failure.
 
   -Bryan 2001.11.14
@@ -93,7 +93,7 @@ handleLatex2htmlHack(void) {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Parse the program arguments (given by argc and argv) into a form
    the program can deal with more easily -- a cmdline_info structure.
@@ -112,33 +112,33 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "interlace",   OPT_FLAG,   
+    OPTENT3(0,   "interlace",   OPT_FLAG,
             NULL,                       &cmdlineP->interlace, 0);
-    OPTENT3(0,   "sort",        OPT_FLAG,   
+    OPTENT3(0,   "sort",        OPT_FLAG,
             NULL,                       &cmdlineP->sort, 0);
-    OPTENT3(0,   "nolzw",       OPT_FLAG,   
+    OPTENT3(0,   "nolzw",       OPT_FLAG,
             NULL,                       &cmdlineP->nolzw, 0);
-    OPTENT3(0,   "mapfile",     OPT_STRING, 
+    OPTENT3(0,   "mapfile",     OPT_STRING,
             &cmdlineP->mapfile,        NULL, 0);
-    OPTENT3(0,   "transparent", OPT_STRING, 
+    OPTENT3(0,   "transparent", OPT_STRING,
             &cmdlineP->transparent,    NULL, 0);
-    OPTENT3(0,   "comment",     OPT_STRING, 
+    OPTENT3(0,   "comment",     OPT_STRING,
             &cmdlineP->comment,        NULL, 0);
-    OPTENT3(0,   "alpha",       OPT_STRING, 
+    OPTENT3(0,   "alpha",       OPT_STRING,
             &cmdlineP->alpha_filespec, NULL, 0);
-    OPTENT3(0,   "alphacolor",  OPT_STRING, 
+    OPTENT3(0,   "alphacolor",  OPT_STRING,
             &cmdlineP->alphacolor,     NULL, 0);
-    OPTENT3(0,   "h",           OPT_FLAG, 
+    OPTENT3(0,   "h",           OPT_FLAG,
             NULL,                       &latex2htmlhack, 0);
-    OPTENT3(0,   "verbose",     OPT_FLAG, 
+    OPTENT3(0,   "verbose",     OPT_FLAG,
             NULL,                       &cmdlineP->verbose, 0);
-    
+
     /* Set the defaults */
     cmdlineP->mapfile = NULL;
     cmdlineP->transparent = NULL;  /* no transparency */
     cmdlineP->comment = NULL;      /* no comment */
     cmdlineP->alpha_filespec = NULL;      /* no alpha file */
-    cmdlineP->alphacolor = "rgb:0/0/0";      
+    cmdlineP->alphacolor = "rgb:0/0/0";
         /* We could say "black" here, but then we depend on the color names
            database existing.
         */
@@ -150,10 +150,10 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (latex2htmlhack) 
+    if (latex2htmlhack)
         handleLatex2htmlHack();
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -206,7 +206,7 @@ openPnmremapStream(const char * const inputFileName,
 
 static const char *
 pamtogifCommand(const char *       const arg0,
-                struct cmdlineInfo const cmdline) {
+                struct CmdlineInfo const cmdline) {
 
     const char * const pamtogifName = "pamtogif";
 
@@ -252,7 +252,7 @@ pamtogifCommand(const char *       const arg0,
                 commentOpt,
                 cmdline.nolzw ? "-nolzw" : "",
                 cmdline.verbose ? "-verbose" : "");
-    
+
     pm_strfree(transparentOpt);
     pm_strfree(commentOpt);
 
@@ -264,7 +264,7 @@ pamtogifCommand(const char *       const arg0,
 static void
 feedPamtogifNoAlpha(struct pam * const inPamP,
                     FILE *       const pipeToPamtogif) {
-    
+
     unsigned int row;
     struct pam outPam;
     tuple * tuplerow;
@@ -273,7 +273,7 @@ feedPamtogifNoAlpha(struct pam * const inPamP,
 
     outPam = *inPamP;
     outPam.file = pipeToPamtogif;
-    
+
     pnm_writepaminit(&outPam);
 
     for (row = 0; row < inPamP->height; ++row) {
@@ -303,7 +303,7 @@ copyRasterWithAlpha(struct pam * const inPamP,
 
     for (row = 0; row < inPamP->height; ++row) {
         unsigned int col;
-            
+
         pnm_readpamrow(inPamP, tuplerow);
         pnm_readpamrow(alphaPamP, alpharow);
 
@@ -360,7 +360,7 @@ static void
 feedPamtogif(struct pam * const inPamP,
              const char * const alphaFilespec,
              FILE *       const pipeToPamtogif) {
-    
+
     if (alphaFilespec) {
         FILE * afP;
         struct pam alphaPam;
@@ -378,7 +378,7 @@ int
 main(int           argc,
      const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam inPam;
     const char * command;
@@ -394,12 +394,12 @@ main(int           argc,
                            cmdline.verbose, &ifP);
     else
         ifP = pm_openr(cmdline.inputFileName);
-        
+
     command = pamtogifCommand(argv[0], cmdline);
 
     if (cmdline.verbose)
         pm_message("Executing shell command '%s'", command);
-    
+
     pipeToPamtogif = popen(command, "w");
 
     if (pipeToPamtogif == NULL)
@@ -421,3 +421,6 @@ main(int           argc,
 
     return 0;
 }
+
+
+

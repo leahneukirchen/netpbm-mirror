@@ -2,5 +2,47 @@
 # This script tests: ppmrough
 # Also requires:
 
-# Should print: 378403602 30015 (Glibc and MAC OS)
-ppmrough  -randomseed 1 | cksum
+defaultopts="-randomseed 1 -bg rgb:00/ff/ff -fg rgb:ff/ff/00 -w 100 -h 100"
+
+# No border
+
+echo "Test 1. Should print 378403602 30015"
+ppmrough -randomseed 1 | cksum
+
+echo "Test 2. Should print 378403602 30015"
+ppmrough -randomseed 1 -var 0 | cksum
+
+# Vertical border
+
+echo "Test 3. Should print 535171440 30015"
+ppmrough ${defaultopts} -left 20 | cksum
+
+echo "Test 4. Should print 937167683 30015"
+ppmrough ${defaultopts} -right 20 | cksum
+
+echo "Test 5. Should print 1927474861 30015"
+ppmrough ${defaultopts} -left 50 | cksum
+
+echo "Test 6. Should print 3596045345 30015"
+ppmrough ${defaultopts} -right 50 | cksum
+
+echo "Test 7. Should print 198510149 30015"
+ppmrough ${defaultopts} -right 20 -var 0 | cksum
+
+# Horizontal border
+
+echo "Test 8. Should print 1128371780 30015"
+ppmrough ${defaultopts} -top 30 | cksum
+
+echo "Test 9. Should print 2909877411 30015"
+ppmrough ${defaultopts} -bottom 25 | cksum
+
+echo "Test 10. Should print 2820370592 30015"
+ppmrough ${defaultopts} -top 50 | cksum
+
+echo "Test 11. Should print 2028409204 30015"
+ppmrough ${defaultopts} -bottom 50 | cksum
+
+echo "Test 12. Should print 4234304830 30015"
+ppmrough ${defaultopts} -bottom 10 -var 0 | cksum
+

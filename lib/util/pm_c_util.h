@@ -13,7 +13,7 @@
 #undef ABS
 #define ABS(a) ((a) >= 0 ? (a) : -(a))
 #undef SGN
-#define SGN(a)		(((a)<0) ? -1 : 1)
+#define SGN(a)          (((a)<0) ? -1 : 1)
 #undef ODD
 #define ODD(n) ((n) & 1)
 #undef ROUND
@@ -65,7 +65,7 @@
   */
   #if ( defined(__GNUC__) && (__GNUC__ >= 2) ) || \
       ( defined(__STDC__) && (__STDC__ == 1) && \
-        defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) ) 
+        defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) )
     #include <stdbool.h>
   #else
     /* We used to assume that if TRUE was defined, then bool was too.
@@ -76,7 +76,7 @@
        also another library that defines bool, he can either make the
        other library define/respect HAVE_BOOL or just define HAVE_BOOL in
        the file that includes pm_config.h or with a compiler option.  Note
-       that C++ always has bool.  
+       that C++ always has bool.
     */
     #ifndef HAVE_BOOL
       #define HAVE_BOOL 1

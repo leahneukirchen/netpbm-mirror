@@ -22,8 +22,8 @@ WriteBytes(int             const fd,
            unsigned int    const nbyte);
 
 void
-ConnectToSocket(const char *      const machineName, 
-                int               const portNum, 
+ConnectToSocket(const char *      const machineName,
+                int               const portNum,
                 struct hostent ** const hostEnt,
                 int *             const socketFdP,
                 const char **     const errorP);

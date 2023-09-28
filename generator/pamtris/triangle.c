@@ -190,8 +190,8 @@ draw_triangle(Xy                 const xy_input,
 
     for (i = 0; i < 3; i++) {
         int32_to_varying_array(attribs_input._[i], attribs[i], n);
-	attribs[i][z] = compute_varying_z(attribs_input._[i][z]);
-	attribs[i][w] = inverse_varying(attribs[i][w]);
+        attribs[i][z] = compute_varying_z(attribs_input._[i][z]);
+        attribs[i][w] = inverse_varying(attribs[i][w]);
         multiply_varying_array_by_varying(attribs[i], attribs[i][w], z);
     }
 

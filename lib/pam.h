@@ -210,7 +210,7 @@ typedef sample *tuple;
        of the image (see pam.depth above).
     */
 
-#define PAM_OVERALL_MAXVAL 65535
+#define PAM_OVERALL_MAXVAL 65535lu
 
 /* Note: xv uses the same "P7" signature for its thumbnail images (it
    started using it years before PAM and unbeknownst to the designer

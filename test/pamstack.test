@@ -1,0 +1,125 @@
+#! /bin/sh
+# This script tests: pamstack
+# Also requires: pamdepth pgmmake pamfile
+
+tmpdir=${tmpdir:-/tmp}
+i1_pgm=${tmpdir}/testimg_1.pnm
+i2_pgm=${tmpdir}/testimg_2.pgm
+i7_pgm=${tmpdir}/testimg_7.pgm
+i31_pgm=${tmpdir}/testimg_31.pgm
+std_pgm=${tmpdir}/testimg_255.pgm
+max_pgm=${tmpdir}/testimg_max.pgm
+
+maze2_pbm=${tmpdir}/testimg_maze2.pgm
+maze3_pbm=${tmpdir}/testimg_maze3.pgm
+
+pamdepth 1 testgrid.pbm > ${i1_pgm}
+pgmmake -maxval=2 0 14 16 > ${i2_pgm}
+pgmmake -maxval=7 0.5 14 16 > ${i7_pgm}
+pgmmake -maxval=31 0.5 14 16 > ${i31_pgm}
+pgmmake -maxval=255 0.5 14 16 > ${std_pgm}
+pgmmake -maxval=65535 0.5 14 16 > ${max_pgm}
+cat maze.pbm maze.pbm > ${maze2_pbm}
+cat maze.pbm maze.pbm maze.pbm > ${maze3_pbm}
+
+# test 0
+echo test 0: Should print 1652911383 4046
+
+# Test the integrity of the input files
+cat ${i1_pgm} ${i2_pgm} ${i7_pgm} ${i31_pgm} ${std_pgm} ${max_pgm} \
+    ${maze2_pbm} ${maze3_pbm}| cksum
+
+# test 1
+echo test 1: Should print 1398841785 13544 three times
+pamstack ${maze2_pbm} ${maze2_pbm} | cksum
+pamstack ${maze3_pbm} ${maze2_pbm} | cksum
+pamstack ${maze2_pbm} ${maze3_pbm} | cksum
+
+rm ${maze2_pbm} ${maze3_pbm}
+
+# test 2
+echo test 2: Should print 210239904 3186 five times
+pamstack -firstmaxval ${max_pgm} ${std_pgm} ${i31_pgm} \
+                      ${i7_pgm} ${i2_pgm} ${i1_pgm} ${i1_pgm} | cksum
+pamstack -firstmaxval ${max_pgm} ${std_pgm} ${i31_pgm} \
+	              ${i7_pgm} ${i2_pgm} ${i1_pgm} testgrid.pbm | cksum
+
+pamstack -lcmmaxval   ${max_pgm} ${std_pgm} ${i31_pgm} \
+	              ${i7_pgm} ${i2_pgm} ${i1_pgm} ${i1_pgm} | cksum
+pamstack ${i1_pgm} ${i1_pgm} |\
+  pamstack -firstmaxval ${max_pgm} ${std_pgm} ${i31_pgm} ${i7_pgm} ${i2_pgm} - | cksum
+pamstack -firstmaxval ${i2_pgm} testgrid.pbm ${i1_pgm} |\
+  pamstack -firstmaxval ${max_pgm} ${std_pgm} ${i31_pgm} ${i7_pgm} - | cksum
+
+
+# test 3
+echo test 3: maxval should be 65535
+pamstack -firstmaxval ${max_pgm} ${std_pgm} ${i31_pgm} \
+	              ${i7_pgm} ${i2_pgm} ${i1_pgm} | pamfile
+
+pamstack -lcmmaxval ${max_pgm} ${std_pgm} ${i31_pgm} \
+	            ${i7_pgm} ${i2_pgm} ${i1_pgm} | pamfile
+
+pamstack -lcmmaxval ${max_pgm} ${std_pgm} ${i31_pgm} ${i7_pgm} ${i1_pgm} | pamfile
+
+pamstack -firstmaxval ${max_pgm} ${i2_pgm} | pamfile
+
+
+# test 4
+echo test 4: maxval should be 255 then 767
+pamstack -firstmaxval ${std_pgm} ${i2_pgm} | pamfile
+pamstack -lcmmaxval ${std_pgm} ${i2_pgm} | pamfile
+
+# test 5
+echo test 5: Should print 2741208386 719 twice
+
+pamstack -lcmmaxval   ${i31_pgm} ${i1_pgm} ${i7_pgm} | cksum
+pamstack -firstmaxval ${i31_pgm} ${i1_pgm} ${i7_pgm}  | cksum
+
+# test 6
+echo test 6: Should print true four times
+
+s0=$(pamstack ${i1_pgm} | pamfile)
+s1=$(pamstack -lcmmaxval ${i1_pgm} | pamfile)
+s2=$(pamstack -firstmaxval ${i1_pgm} | pamfile)
+
+test "$s0" = "$s1" && echo "true" || echo "false"
+test "$s0" = "$s2" && echo "true" || echo "false"
+
+
+s0=$(pamstack ${std_pgm} | pamfile)
+s1=$(pamstack -lcmmaxval ${std_pgm} | pamfile)
+s2=$(pamstack -firstmaxval ${std_pgm} | pamfile)
+
+test "$s0" = "$s1" && echo "true" || echo "false"
+test "$s0" = "$s2" && echo "true" || echo "false"
+  
+
+# Test Invalid
+echo "Test Invalid"
+
+echo 1>&2
+echo "Invalid command-line argument combinations." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+test_out=${tmpdir}/test_out
+
+pamstack testgrid.pbm testimg.ppm > ${test_out} || \
+  printf "Expected failure 1 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamstack ${i1_pgm} ${std_pgm} > ${test_out} || \
+  printf "Expected failure 2 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+pamstack -lcmmaxval -firstmaxval testgrid.pbm testgrid.pbm > ${test_out} || \
+  printf "Expected failure 3 "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+
+  
+rm ${i1_pgm} ${i2_pgm} ${i7_pgm} ${i31_pgm} ${std_pgm} ${max_pgm}
+

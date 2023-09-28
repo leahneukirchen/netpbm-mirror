@@ -19,22 +19,22 @@
 #include "ppm.h"
 
 void
-ppm_writeppminit(FILE*  const fileP, 
-                 int    const cols, 
-                 int    const rows, 
-                 pixval const maxval, 
+ppm_writeppminit(FILE*  const fileP,
+                 int    const cols,
+                 int    const rows,
+                 pixval const maxval,
                  int    const forceplain) {
 
     bool const plainFormat = forceplain || pm_plain_output;
 
-    if (maxval > PPM_OVERALLMAXVAL && !plainFormat) 
+    if (maxval > PPM_OVERALLMAXVAL && !plainFormat)
         pm_error("too-large maxval passed to ppm_writeppminit(): %d."
                  "Maximum allowed by the PPM format is %d.",
                  maxval, PPM_OVERALLMAXVAL);
 
-    fprintf(fileP, "%c%c\n%d %d\n%d\n", 
-            PPM_MAGIC1, 
-            plainFormat || maxval >= 1<<16 ? PPM_MAGIC2 : RPPM_MAGIC2, 
+    fprintf(fileP, "%c%c\n%d %d\n%d\n",
+            PPM_MAGIC1,
+            plainFormat || maxval >= 1<<16 ? PPM_MAGIC2 : RPPM_MAGIC2,
             cols, rows, maxval );
 }
 
@@ -77,7 +77,7 @@ static void
 format2bpsRow(const pixel *   const pixelrow,
               unsigned int    const cols,
               unsigned char * const rowBuffer) {
-    
+
     /* two byte samples. */
 
     unsigned int col;
@@ -89,7 +89,7 @@ format2bpsRow(const pixel *   const pixelrow,
         pixval const r = PPM_GETR(pixelrow[col]);
         pixval const g = PPM_GETG(pixelrow[col]);
         pixval const b = PPM_GETB(pixelrow[col]);
-        
+
         rowBuffer[bufferCursor++] = r >> 8;
         rowBuffer[bufferCursor++] = (unsigned char)r;
         rowBuffer[bufferCursor++] = g >> 8;
@@ -176,31 +176,31 @@ ppm_writeppmrowplain(FILE *        const fileP,
 
 
 void
-ppm_writeppmrow(FILE *        const fileP, 
-                const pixel * const pixelrow, 
-                int           const cols, 
-                pixval        const maxval, 
+ppm_writeppmrow(FILE *        const fileP,
+                const pixel * const pixelrow,
+                int           const cols,
+                pixval        const maxval,
                 int           const forceplain) {
 
-    if (forceplain || pm_plain_output || maxval >= 1<<16) 
+    if (forceplain || pm_plain_output || maxval >= 1<<16)
         ppm_writeppmrowplain(fileP, pixelrow, cols, maxval);
-    else 
+    else
         ppm_writeppmrowraw(fileP, pixelrow, cols, maxval);
 }
 
 
 
 void
-ppm_writeppm(FILE *  const file, 
-             pixel** const pixels, 
-             int     const cols, 
-             int     const rows, 
-             pixval  const maxval, 
+ppm_writeppm(FILE *  const file,
+             pixel** const pixels,
+             int     const cols,
+             int     const rows,
+             pixval  const maxval,
              int     const forceplain)  {
     int row;
-    
+
     ppm_writeppminit(file, cols, rows, maxval, forceplain);
-    
+
     for (row = 0; row < rows; ++row)
         ppm_writeppmrow(file, pixels[row], cols, maxval, forceplain);
 }

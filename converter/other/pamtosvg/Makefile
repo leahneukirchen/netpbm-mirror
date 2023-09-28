@@ -18,8 +18,9 @@ ADDL_OBJECTS = \
 	fit.o \
 	spline.o \
 	curve.o \
+	point.o \
 	vector.o \
-	epsilon-equal.o \
+	epsilon.o \
 	autotrace.o \
 	pxl-outline.o \
 	bitmap.o \

@@ -90,13 +90,13 @@ First column should be 2^n - 1.  Last column should be 'pool'.
 1023 pgmnoise: method: pool
 65535 pgmnoise: method: pool
 Test Invalid
-Expected failure 1 1
-Expected failure 2 1
-Expected failure 3 1
-Expected failure 4 1
-Expected failure 5 1
-Expected failure 6 1
-Expected failure 7 1
-Expected failure 8 1
-Expected failure 9 1
-Expected failure 10 1
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
+Expected failure 9 (no output)
+Expected failure 10 (no output)

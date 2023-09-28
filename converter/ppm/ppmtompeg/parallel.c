@@ -12,6 +12,7 @@
  * HEADER FILES *
  *==============*/
 
+#define _C99_SOURCE  /* Make sure snprintf() is in stdio.h */
 #define _XOPEN_SOURCE 500 /* Make sure stdio.h contains pclose() */
 /* _ALL_SOURCE is needed on AIX to make the C library include the
    socket services (e.g. define struct sockaddr)
@@ -1341,12 +1342,12 @@ startCombineServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    pm_snprintf(command, sizeof(command),
-                "%s %s -max_machines %d -output_server %s %d %d %s",
-                encoderName,
-                debugMachines ? "-debug_machines" : "",
-                numMachines, masterHostName, masterPortNum,
-                numInputFiles, paramFileName);
+    snprintf(command, sizeof(command),
+             "%s %s -max_machines %d -output_server %s %d %d %s",
+             encoderName,
+             debugMachines ? "-debug_machines" : "",
+             numMachines, masterHostName, masterPortNum,
+             numInputFiles, paramFileName);
 
     machineDebug("MASTER: Starting combine server with shell command '%s'",
                  command);
@@ -1383,12 +1384,12 @@ startDecodeServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    pm_snprintf(command, sizeof(command),
-                "%s %s -max_machines %d -decode_server %s %d %d %s",
-                encoder_name,
-                debugMachines ? "-debug_machines" : "",
-                numMachines, masterHostName, masterPortNum,
-                numInputFiles, paramFileName);
+    snprintf(command, sizeof(command),
+             "%s %s -max_machines %d -decode_server %s %d %d %s",
+             encoder_name,
+             debugMachines ? "-debug_machines" : "",
+             numMachines, masterHostName, masterPortNum,
+             numInputFiles, paramFileName);
 
     machineDebug("MASTER: Starting decode server with shell command '%s'",
                  command);
@@ -1681,22 +1682,22 @@ startChildren(struct scheduler *   const schedulerP,
                 }
                 --childrenLeftCurrentIoServer;
             }
-            pm_snprintf(command, sizeof(command),
-                        "%s %s -l %s %s "
-                        "%s %s -child %s %d %d %d %d %d %d "
-                        "-frames %d %d %s",
-                        rsh,
-                        machineName[childNum], userName[childNum],
-                        beNice ? "nice" : "",
-                        executable[childNum],
-                        debugMachines ? "-debug_machines" : "",
-                        masterHostName, masterPortNum,
-                        remote[childNum] ? ioPortNum[numIoServers-1] : 0,
-                        combinePortNum, decodePortNum, childNum,
-                        remote[childNum] ? 1 : 0,
-                        startFrame, startFrame + nFrames - 1,
-                        remote[childNum] ?
-                          remoteParamFile[childNum] : paramFileName
+            snprintf(command, sizeof(command),
+                     "%s %s -l %s %s "
+                     "%s %s -child %s %d %d %d %d %d %d "
+                     "-frames %d %d %s",
+                     rsh,
+                     machineName[childNum], userName[childNum],
+                     beNice ? "nice" : "",
+                     executable[childNum],
+                     debugMachines ? "-debug_machines" : "",
+                     masterHostName, masterPortNum,
+                     remote[childNum] ? ioPortNum[numIoServers-1] : 0,
+                     combinePortNum, decodePortNum, childNum,
+                     remote[childNum] ? 1 : 0,
+                     startFrame, startFrame + nFrames - 1,
+                     remote[childNum] ?
+                     remoteParamFile[childNum] : paramFileName
                 );
 
             machineDebug("MASTER: Starting child server "

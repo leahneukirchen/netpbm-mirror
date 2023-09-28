@@ -40,7 +40,7 @@ if ( stepSize == 2 ) { \
     rightMY++;      \
     rightMX++;      \
     }
-    
+
 #define VALID_MOTION(m)   \
 (((m).y >= leftMY) && ((m).y < rightMY) &&   \
  ((m).x >= leftMX) && ((m).x < rightMX) )
@@ -50,9 +50,9 @@ if ( stepSize == 2 ) { \
  * EXTERNAL PROCEDURE prototypes *
  *===============================*/
 
-void 
+void
 SetPSearchAlg(const char * const alg);
-void 
+void
 SetBSearchAlg(const char * const alg);
 const char *
 BSearchName(void);
@@ -94,9 +94,9 @@ PTwoLevelSearch(const LumBlock * const currentBlockP,
                 int              const searchRange);
 void
 PMotionSearch(const LumBlock * const currentBlockP,
-              MpegFrame *      const prev, 
+              MpegFrame *      const prev,
               int              const by,
-              int              const bx, 
+              int              const bx,
               vector *         const motionP);
 
 void
@@ -129,7 +129,7 @@ extern int psearchAlg;
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/headers/RCS/search.h,v 1.6 1995/08/15 23:43:36 smoot Exp $
  *  $Log: search.h,v $
  *  Revision 1.6  1995/08/15 23:43:36  smoot

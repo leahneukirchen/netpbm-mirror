@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "pbm.h"
 #include "shhopt.h"
 
@@ -114,8 +115,10 @@ DIG             [0-9]
 <RASTERMODE>\033\*b{DIG}+W  {
                             int l;
                             if (rowCount >= rowCapacity) {
+                                if (rowCapacity > INT_MAX-100)
+                                    pm_error("Too many rows to count");
                                 rowCapacity += 100;
-                                rows = realloc (rows, rowCapacity * sizeof *rows);
+                                REALLOCARRAY(rows, rowCapacity);
                                 if (rows == NULL)
                                     pm_error ("Out of memory.");
                             }
@@ -223,6 +226,9 @@ yywrap (void)
 
     debug ("Got %d rows, %d columns\n", rowCount, maxRowLength);
 
+    if (maxRowLength > INT_MAX/8)
+        pm_error("A row has an uncomputably large number of columns: %d",
+                 maxRowLength);
     /*
      * Quite simple since ThinkJet bit arrangement matches PBM
      */

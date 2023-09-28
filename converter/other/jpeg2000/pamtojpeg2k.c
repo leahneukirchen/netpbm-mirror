@@ -314,7 +314,7 @@ static void
 createJasperImage(struct pam *   const inpamP,
                   jas_image_t ** const jasperPP) {
 
-	jas_image_cmptparm_t * cmptparms;
+        jas_image_cmptparm_t * cmptparms;
     unsigned int plane;
 
     MALLOCARRAY_NOFAIL(cmptparms, inpamP->depth);
@@ -489,7 +489,7 @@ writeJpc(jas_image_t *      const jasperP,
             pm_error("jas_image_encode() failed to encode the JPEG 2000 "
                      "image.  Rc=%d", rc);
     }
-	jas_stream_flush(outStreamP);
+        jas_stream_flush(outStreamP);
 
     {
         int rc;
@@ -501,7 +501,7 @@ writeJpc(jas_image_t *      const jasperP,
                      "jas_stream_close() rc = %d", rc);
     }
 
-	jas_image_clearfmts();
+        jas_image_clearfmts();
 
     pm_strfree(options);
 }
@@ -539,7 +539,7 @@ main(int argc, char **argv)
 
     writeJpc(jasperP, cmdline, fileno(stdout));
 
-	jas_image_destroy(jasperP);
+        jas_image_destroy(jasperP);
 
     pm_close(ifP);
 

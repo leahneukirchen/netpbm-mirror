@@ -82,7 +82,7 @@ out_splines(FILE *                 const fileP,
                     (shape.centerline || splineList.open) ? "fill" : "stroke");
         }
         fprintf(fileP, "M%g %g",
-                START_POINT(first).x, height - START_POINT(first).y);
+                BEG_POINT(first).x, height - BEG_POINT(first).y);
 
         outSplineList(fileP, splineList, height);
 

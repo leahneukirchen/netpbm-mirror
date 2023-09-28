@@ -20,24 +20,24 @@
 
 typedef struct model
 {
-   unsigned  symbols;			/* number of symbols in the alphabet */
-   unsigned  scale;			/* if totals > scale rescale totals */
-   unsigned  order;			/* order of the probability model */
-   unsigned *context;			/* context of the model */
-   unsigned *totals;			/* the totals */
+   unsigned  symbols;                   /* number of symbols in the alphabet */
+   unsigned  scale;                     /* if totals > scale rescale totals */
+   unsigned  order;                     /* order of the probability model */
+   unsigned *context;                   /* context of the model */
+   unsigned *totals;                    /* the totals */
 } model_t;
 
 typedef struct arith
 {
-   u_word_t   low;			/* start of the current code range */
-   u_word_t   high;			/* end of the current code range */
-   u_word_t   underflow;		/* number of underflow bits pending */
-   u_word_t   code;			/* the present input code value */
-   bitfile_t *file;			/* I/O stream */
+   u_word_t   low;                      /* start of the current code range */
+   u_word_t   high;                     /* end of the current code range */
+   u_word_t   underflow;                /* number of underflow bits pending */
+   u_word_t   code;                     /* the present input code value */
+   bitfile_t *file;                     /* I/O stream */
 } arith_t;
 
 enum interval {LOW = 0x0000, FIRST_QUARTER = 0x4000, HALF = 0x8000,
-	       THIRD_QUARTER = 0xc000, HIGH = 0xffff};
+               THIRD_QUARTER = 0xc000, HIGH = 0xffff};
 
 arith_t *
 alloc_encoder (bitfile_t *file);
@@ -47,8 +47,8 @@ real_t
 encode_symbol (unsigned symbol, arith_t *arith, model_t *model);
 void
 encode_array (bitfile_t *output, const unsigned *data, const unsigned *context,
-	      const unsigned *c_symbols, unsigned n_context, unsigned n_data,
-	      unsigned scaling);
+              const unsigned *c_symbols, unsigned n_context, unsigned n_data,
+              unsigned scaling);
 arith_t *
 alloc_decoder (bitfile_t *input);
 void
@@ -57,8 +57,8 @@ unsigned
 decode_symbol (arith_t *arith, model_t *model);
 unsigned *
 decode_array (bitfile_t *input, const unsigned *context,
-	      const unsigned *c_symbols, unsigned n_context,
-	      unsigned n_data, unsigned scaling);
+              const unsigned *c_symbols, unsigned n_context,
+              unsigned n_data, unsigned scaling);
 model_t *
 alloc_model (unsigned m, unsigned scale, unsigned n, unsigned *totals);
 void
@@ -67,7 +67,7 @@ free_model (model_t *model);
 #define RESCALE_INPUT_INTERVAL  for (;;)                                      \
                                    if ((high >= HALF) && (low < HALF) &&      \
                                       ((low & FIRST_QUARTER) != FIRST_QUARTER \
-				       || (high & FIRST_QUARTER) != 0))       \
+                                       || (high & FIRST_QUARTER) != 0))       \
                                    {                                          \
                                       break;                                  \
                                    }                                          \
@@ -88,8 +88,8 @@ free_model (model_t *model);
                                       high  |= HALF + 1;                      \
                                       code <<= 1;                             \
                                       code  += get_bit (input);               \
-                                   }                                          
-        								   
+                                   }
+
 #define RESCALE_OUTPUT_INTERVAL  for (;;)                                     \
                                  {                                            \
                                     if (high < HALF)                          \
@@ -116,7 +116,7 @@ free_model (model_t *model);
                                     high <<= 1;                               \
                                     high  |= 1;                               \
                                     low  <<= 1;                               \
-                                 }                                             
-					 
+                                 }
+
 #endif /* not _ARITH_H */
 

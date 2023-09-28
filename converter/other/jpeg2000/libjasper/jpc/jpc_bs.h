@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -137,20 +137,20 @@
  */
 
 /* Bit stream open for reading. */
-#define	JPC_BITSTREAM_READ	0x01
+#define JPC_BITSTREAM_READ      0x01
 /* Bit stream open for writing. */
-#define	JPC_BITSTREAM_WRITE	0x02
+#define JPC_BITSTREAM_WRITE     0x02
 
 /*
  * Bit stream flags.
  */
 
 /* Do not close underlying character stream. */
-#define	JPC_BITSTREAM_NOCLOSE	0x01
+#define JPC_BITSTREAM_NOCLOSE   0x01
 /* End of file has been reached while reading. */
-#define	JPC_BITSTREAM_EOF	0x02
+#define JPC_BITSTREAM_EOF       0x02
 /* An I/O error has occurred. */
-#define	JPC_BITSTREAM_ERR	0x04
+#define JPC_BITSTREAM_ERR       0x04
 
 /******************************************************************************\
 * Types.
@@ -160,20 +160,20 @@
 
 typedef struct {
 
-	/* Some miscellaneous flags. */
-	int flags_;
+        /* Some miscellaneous flags. */
+        int flags_;
 
-	/* The input/output buffer. */
-	uint_fast16_t buf_;
+        /* The input/output buffer. */
+        uint_fast16_t buf_;
 
-	/* The number of bits remaining in the byte being read/written. */
-	int cnt_;
+        /* The number of bits remaining in the byte being read/written. */
+        int cnt_;
 
-	/* The underlying stream associated with this bit stream. */
-	jas_stream_t *stream_;
+        /* The underlying stream associated with this bit stream. */
+        jas_stream_t *stream_;
 
-	/* The mode in which this bit stream was opened. */
-	int openmode_;
+        /* The mode in which this bit stream was opened. */
+        int openmode_;
 
 } jpc_bitstream_t;
 
@@ -193,20 +193,20 @@ int jpc_bitstream_close(jpc_bitstream_t *bitstream);
 
 /* Read a bit from a bit stream. */
 #if defined(DEBUG)
-#define	jpc_bitstream_getbit(bitstream) \
-	jpc_bitstream_getbit_func(bitstream)
+#define jpc_bitstream_getbit(bitstream) \
+        jpc_bitstream_getbit_func(bitstream)
 #else
 #define jpc_bitstream_getbit(bitstream) \
-	jpc_bitstream_getbit_macro(bitstream)
+        jpc_bitstream_getbit_macro(bitstream)
 #endif
 
 /* Write a bit to a bit stream. */
 #if defined(DEBUG)
-#define	jpc_bitstream_putbit(bitstream, v) \
-	jpc_bitstream_putbit_func(bitstream, v)
+#define jpc_bitstream_putbit(bitstream, v) \
+        jpc_bitstream_putbit_func(bitstream, v)
 #else
-#define	jpc_bitstream_putbit(bitstream, v) \
-	jpc_bitstream_putbit_macro(bitstream, v)
+#define jpc_bitstream_putbit(bitstream, v) \
+        jpc_bitstream_putbit_macro(bitstream, v)
 #endif
 
 /* Read one or more bits from a bit stream. */
@@ -245,7 +245,7 @@ int jpc_bitstream_pending(jpc_bitstream_t *bitstream);
 
 /* Has EOF been encountered on a bit stream? */
 #define jpc_bitstream_eof(bitstream) \
-	((bitstream)->flags_ & JPC_BITSTREAM_EOF)
+        ((bitstream)->flags_ & JPC_BITSTREAM_EOF)
 
 /******************************************************************************\
 * Internals.
@@ -260,21 +260,21 @@ int jpc_bitstream_putbit_func(jpc_bitstream_t *bitstream, int v);
 
 int jpc_bitstream_fillbuf(jpc_bitstream_t *bitstream);
 
-#define	jpc_bitstream_getbit_macro(bitstream) \
-	(assert((bitstream)->openmode_ & JPC_BITSTREAM_READ), \
-	  (--(bitstream)->cnt_ >= 0) ? \
-	  (((bitstream)->buf_ >> (bitstream)->cnt_) & 1) : \
-	  jpc_bitstream_fillbuf(bitstream))
+#define jpc_bitstream_getbit_macro(bitstream) \
+        (assert((bitstream)->openmode_ & JPC_BITSTREAM_READ), \
+          (--(bitstream)->cnt_ >= 0) ? \
+          (((bitstream)->buf_ >> (bitstream)->cnt_) & 1) : \
+          jpc_bitstream_fillbuf(bitstream))
 
 #define jpc_bitstream_putbit_macro(bitstream, bit) \
-	(assert((bitstream)->openmode_ & JPC_BITSTREAM_WRITE), \
-	  (--(bitstream)->cnt_ < 0) ? \
-	  ((bitstream)->buf_ = ((bitstream)->buf_ << 8) & 0xffff, \
-	  (bitstream)->cnt_ = ((bitstream)->buf_ == 0xff00) ? 6 : 7, \
-	  (bitstream)->buf_ |= ((bit) & 1) << (bitstream)->cnt_, \
-	  (jas_stream_putc((bitstream)->stream_, (bitstream)->buf_ >> 8) == EOF) \
-	  ? (EOF) : ((bit) & 1)) : \
-	  ((bitstream)->buf_ |= ((bit) & 1) << (bitstream)->cnt_, \
-	  (bit) & 1))
+        (assert((bitstream)->openmode_ & JPC_BITSTREAM_WRITE), \
+          (--(bitstream)->cnt_ < 0) ? \
+          ((bitstream)->buf_ = ((bitstream)->buf_ << 8) & 0xffff, \
+          (bitstream)->cnt_ = ((bitstream)->buf_ == 0xff00) ? 6 : 7, \
+          (bitstream)->buf_ |= ((bit) & 1) << (bitstream)->cnt_, \
+          (jas_stream_putc((bitstream)->stream_, (bitstream)->buf_ >> 8) == EOF) \
+          ? (EOF) : ((bit) & 1)) : \
+          ((bitstream)->buf_ |= ((bit) & 1) << (bitstream)->cnt_, \
+          (bit) & 1))
 
 #endif

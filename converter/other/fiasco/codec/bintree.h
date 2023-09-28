@@ -1,8 +1,8 @@
 /*
  *  bintree.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -28,8 +28,8 @@ typedef struct tree
  *  which indicate whether there exists a tree edge or not.
  */
 {
-   unsigned counts [MAXLEVEL];		/* # NO_RANGE symbols at given level */
-   unsigned total [MAXLEVEL];		/* total number of symbols at  ''   */
+   unsigned counts [MAXLEVEL];          /* # NO_RANGE symbols at given level */
+   unsigned total [MAXLEVEL];           /* total number of symbols at  ''   */
 } tree_t;
 
 real_t

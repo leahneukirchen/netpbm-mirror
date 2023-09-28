@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -117,7 +117,7 @@
  */
 
 #ifndef JPC_T2COD_H
-#define	JPC_T2COD_H
+#define JPC_T2COD_H
 
 /******************************************************************************\
 * Includes.
@@ -133,15 +133,15 @@
 
 typedef struct {
 
-	/* The number of progression changes. */
-	int numpchgs;
+        /* The number of progression changes. */
+        int numpchgs;
 
-	/* The maximum number of progression changes that can be accommodated
-	  without growing the progression change array. */
-	int maxpchgs;
+        /* The maximum number of progression changes that can be accommodated
+          without growing the progression change array. */
+        int maxpchgs;
 
-	/* The progression changes. */
-	jpc_pchg_t **pchgs;
+        /* The progression changes. */
+        jpc_pchg_t **pchgs;
 
 } jpc_pchglist_t;
 
@@ -149,21 +149,21 @@ typedef struct {
 
 typedef struct {
 
-	/* The number of precincts. */
-	int numprcs;
+        /* The number of precincts. */
+        int numprcs;
 
-	/* The last layer processed for each precinct. */
-	int *prclyrnos;
+        /* The last layer processed for each precinct. */
+        int *prclyrnos;
 
-	/* The precinct width exponent. */
-	int prcwidthexpn;
+        /* The precinct width exponent. */
+        int prcwidthexpn;
 
-	/* The precinct height exponent. */
-	int prcheightexpn;
+        /* The precinct height exponent. */
+        int prcheightexpn;
 
-	/* The number of precincts spanning the resolution level in the horizontal
-	  direction. */
-	int numhprcs;
+        /* The number of precincts spanning the resolution level in the horizontal
+          direction. */
+        int numhprcs;
 
 } jpc_pirlvl_t;
 
@@ -171,17 +171,17 @@ typedef struct {
 
 typedef struct {
 
-	/* The number of resolution levels. */
-	int numrlvls;
+        /* The number of resolution levels. */
+        int numrlvls;
 
-	/* The per-resolution-level information. */
-	jpc_pirlvl_t *pirlvls;
+        /* The per-resolution-level information. */
+        jpc_pirlvl_t *pirlvls;
 
-	/* The horizontal sampling period. */
-	int hsamp;
+        /* The horizontal sampling period. */
+        int hsamp;
 
-	/* The vertical sampling period. */
-	int vsamp;
+        /* The vertical sampling period. */
+        int vsamp;
 
 } jpc_picomp_t;
 
@@ -189,84 +189,84 @@ typedef struct {
 
 typedef struct {
 
-	/* The number of layers. */
-	int numlyrs;
+        /* The number of layers. */
+        int numlyrs;
 
-	/* The number of resolution levels. */
-	int maxrlvls;
+        /* The number of resolution levels. */
+        int maxrlvls;
 
-	/* The number of components. */
-	int numcomps;
+        /* The number of components. */
+        int numcomps;
 
-	/* The per-component information. */
-	jpc_picomp_t *picomps;
+        /* The per-component information. */
+        jpc_picomp_t *picomps;
 
-	/* The current component. */
-	jpc_picomp_t *picomp;
+        /* The current component. */
+        jpc_picomp_t *picomp;
 
-	/* The current resolution level. */
-	jpc_pirlvl_t *pirlvl;
+        /* The current resolution level. */
+        jpc_pirlvl_t *pirlvl;
 
-	/* The number of the current component. */
-	int compno;
+        /* The number of the current component. */
+        int compno;
 
-	/* The number of the current resolution level. */
-	int rlvlno;
+        /* The number of the current resolution level. */
+        int rlvlno;
 
-	/* The number of the current precinct. */
-	int prcno;
+        /* The number of the current precinct. */
+        int prcno;
 
-	/* The number of the current layer. */
-	int lyrno;
+        /* The number of the current layer. */
+        int lyrno;
 
-	/* The x-coordinate of the current position. */
-	int x;
+        /* The x-coordinate of the current position. */
+        int x;
 
-	/* The y-coordinate of the current position. */
-	int y;
+        /* The y-coordinate of the current position. */
+        int y;
 
-	/* The horizontal step size. */
-	int xstep;
+        /* The horizontal step size. */
+        int xstep;
 
-	/* The vertical step size. */
-	int ystep;
+        /* The vertical step size. */
+        int ystep;
 
-	/* The x-coordinate of the top-left corner of the tile on the reference
-	  grid. */
-	int xstart;
+        /* The x-coordinate of the top-left corner of the tile on the reference
+          grid. */
+        int xstart;
 
-	/* The y-coordinate of the top-left corner of the tile on the reference
-	  grid. */
-	int ystart;
+        /* The y-coordinate of the top-left corner of the tile on the reference
+          grid. */
+        int ystart;
 
-	/* The x-coordinate of the bottom-right corner of the tile on the
-	  reference grid (plus one). */
-	int xend;
+        /* The x-coordinate of the bottom-right corner of the tile on the
+          reference grid (plus one). */
+        int xend;
 
-	/* The y-coordinate of the bottom-right corner of the tile on the
-	  reference grid (plus one). */
-	int yend;
+        /* The y-coordinate of the bottom-right corner of the tile on the
+          reference grid (plus one). */
+        int yend;
 
-	/* The current progression change. */
-	jpc_pchg_t *pchg;
+        /* The current progression change. */
+        jpc_pchg_t *pchg;
 
-	/* The progression change list. */
-	jpc_pchglist_t *pchglist;
+        /* The progression change list. */
+        jpc_pchglist_t *pchglist;
 
-	/* The progression to use in the absence of explicit specification. */
-	jpc_pchg_t defaultpchg;
+        /* The progression to use in the absence of explicit specification. */
+        jpc_pchg_t defaultpchg;
 
-	/* The current progression change number. */
-	int pchgno;
+        /* The current progression change number. */
+        int pchgno;
 
-	/* Is this the first time in the current progression volume? */
-	bool prgvolfirst;
+        /* Is this the first time in the current progression volume? */
+        bool prgvolfirst;
 
-	/* Is the current iterator value valid? */
-	bool valid;
+        /* Is the current iterator value valid? */
+        bool valid;
 
-	/* The current packet number. */
-	int pktno;
+        /* The current packet number. */
+        int pktno;
 
 } jpc_pi_t;
 
@@ -293,22 +293,22 @@ int jpc_pi_begin(jpc_pi_t *pi);
 int jpc_pi_next(jpc_pi_t *pi);
 
 /* Get the index of the current packet. */
-#define	jpc_pi_getind(pi)	((pi)->pktno)
+#define jpc_pi_getind(pi)       ((pi)->pktno)
 
 /* Get the component number of the current packet. */
-#define jpc_pi_cmptno(pi)	(assert(pi->valid), (pi)->compno)
+#define jpc_pi_cmptno(pi)       (assert(pi->valid), (pi)->compno)
 
 /* Get the resolution level of the current packet. */
-#define jpc_pi_rlvlno(pi)	(assert(pi->valid), (pi)->rlvlno)
+#define jpc_pi_rlvlno(pi)       (assert(pi->valid), (pi)->rlvlno)
 
 /* Get the layer number of the current packet. */
-#define jpc_pi_lyrno(pi)	(assert(pi->valid), (pi)->lyrno)
+#define jpc_pi_lyrno(pi)        (assert(pi->valid), (pi)->lyrno)
 
 /* Get the precinct number of the current packet. */
-#define jpc_pi_prcno(pi)	(assert(pi->valid), (pi)->prcno)
+#define jpc_pi_prcno(pi)        (assert(pi->valid), (pi)->prcno)
 
 /* Get the progression order for the current packet. */
-#define jpc_pi_prg(pi)	(assert(pi->valid), (pi)->pchg->prgord)
+#define jpc_pi_prg(pi)  (assert(pi->valid), (pi)->pchg->prgord)
 
 /******************************************************************************\
 * Functions/macros for progression change lists.

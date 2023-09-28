@@ -23,7 +23,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-/*  
+/*
  *  $Header: /n/picasso/project/mpeg/mpeg_dist/mpeg_encode/headers/RCS/opts.h,v 1.3 1995/08/15 23:43:43 smoot Exp $
  *  $Log: opts.h,v $
  *  Revision 1.3  1995/08/15 23:43:43  smoot
@@ -109,10 +109,10 @@ extern int LaplaceNum, LaplaceCnum;
 extern boolean BSkipBlocks;
 
 /* Procedures Prototypes */
-int	GetIQScale (void);
-int	GetPQScale (void);
-int	GetBQScale (void);
-void	Tune_Init (void);
+int     GetIQScale (void);
+int     GetPQScale (void);
+int     GetBQScale (void);
+void    Tune_Init (void);
 int     CalcRLEHuffLength (FlatBlock in);
 void    ParseTuneParam(const char * const charPtr);
 int     mse (Block blk1, Block blk2);

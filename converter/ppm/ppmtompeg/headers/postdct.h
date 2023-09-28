@@ -1,8 +1,8 @@
 /*===========================================================================*
- * postdct.h								     *
- *									     *
- *	MPEG post-DCT processing					     *
- *									     *
+ * postdct.h                                                                 *
+ *                                                                           *
+ *      MPEG post-DCT processing                                             *
+ *                                                                           *
  *===========================================================================*/
 
 /*
@@ -30,10 +30,10 @@
 
 
 int     Mpost_QuantZigBlock (Block in, FlatBlock out, int qscale, int iblock);
-void	Mpost_UnQuantZigBlock (FlatBlock in, Block out,
+void    Mpost_UnQuantZigBlock (FlatBlock in, Block out,
                                int qscale, boolean iblock);
-void	Mpost_RLEHuffIBlock (FlatBlock in, BitBucket *out);
-void	Mpost_RLEHuffPBlock (FlatBlock in, BitBucket *out);
+void    Mpost_RLEHuffIBlock (FlatBlock in, BitBucket *out);
+void    Mpost_RLEHuffPBlock (FlatBlock in, BitBucket *out);
 
 #define MPOST_ZERO 0
 #define MPOST_NON_ZERO 1

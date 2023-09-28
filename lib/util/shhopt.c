@@ -252,10 +252,10 @@ static int
 optNeedsArgument(const optEntry opt)
 {
     return opt.type == OPT_STRING
-	|| opt.type == OPT_INT
-	|| opt.type == OPT_UINT
-	|| opt.type == OPT_LONG
-	|| opt.type == OPT_ULONG
+        || opt.type == OPT_INT
+        || opt.type == OPT_UINT
+        || opt.type == OPT_LONG
+        || opt.type == OPT_ULONG
     || opt.type == OPT_FLOAT
     || opt.type == OPT_NAMELIST
     || opt.type == OPT_STRINGLIST
@@ -717,28 +717,28 @@ parse_short_option_token(char *argv[], const int argc, const int ai,
     while (*o && !processed_arg) {
         bool found;
         int mi;   /* index into option table */
-		/* find matching option */
-		optMatch(opt_table, o, SL_SHORT, &found, &mi);
-		if (!found)
-		    optFatal("unrecognized option `-%c'", *o);
+                /* find matching option */
+                optMatch(opt_table, o, SL_SHORT, &found, &mi);
+                if (!found)
+                    optFatal("unrecognized option `-%c'", *o);
 
-		/* does this option take an argument? */
-		if (optNeedsArgument(opt_table[mi])) {
-		    /* option needs an argument. find it. */
-		    arg = o + 1;
-		    if (!*arg) {
+                /* does this option take an argument? */
+                if (optNeedsArgument(opt_table[mi])) {
+                    /* option needs an argument. find it. */
+                    arg = o + 1;
+                    if (!*arg) {
                 if (ai + 1 >= argc)
-			    optFatal("option `%s' requires an argument",
-				     optString(opt_table[mi], 0));
-			arg = argv[ai+1];
+                            optFatal("option `%s' requires an argument",
+                                     optString(opt_table[mi], 0));
+                        arg = argv[ai+1];
             (*tokens_consumed_p)++;
-		    }
-		    processed_arg = 1;
-		} else
+                    }
+                    processed_arg = 1;
+                } else
             arg = NULL;
-		/* perform the action of this option. */
-		optExecute(opt_table[mi], arg, 0);
-		++o;
+                /* perform the action of this option. */
+                optExecute(opt_table[mi], arg, 0);
+                ++o;
     }
 }
 

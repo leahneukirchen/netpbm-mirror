@@ -117,7 +117,7 @@ initializeDeshadowMarker(gray **      const inputPixels,
 -----------------------------------------------------------------------------*/
     { /* Make middle white */
         unsigned int row;
-        
+
         for (row = 1; row < rows-1; ++row) {
             unsigned int col;
             for (col = 1; col < cols-1; ++col)
@@ -154,7 +154,7 @@ min5(gray const a,
      gray const c,
      gray const d,
      gray const e) {
-    
+
     return MIN(a,MIN(b,MIN(c,MIN(d,e))));
 }
 
@@ -229,16 +229,16 @@ estimateBackground(gray **      const inputPixels,
                     stable = FALSE;
                 } else
                     markerPixels[row][col] = inputPixels[row][col];
-            }       
+            }
         }
         /* scan in anti-raster order */
-        
+
         for (row = rows-2; row >= 0; --row) {
             int col;
             for (col = cols-2; col > 0; --col) {
                 gray const minpixel =
                     minSouthwestPixel(markerPixels, col, row);
-                
+
                 if (minpixel > inputPixels[row][col]) {
                     markerPixels[row][col] = minpixel;
                     stable = FALSE;
@@ -285,7 +285,7 @@ divide(gray **      const dividendPixels,
                     quotient =
                         MIN(maxval,
                             maxval * (dividend + dividend/2) / divisor);
-            }        
+            }
             dividendPixels[row][col] = quotient;
         }
     }
@@ -307,9 +307,9 @@ deshadow(gray **      const inputPixels,
     markerPixels = pgm_allocarray(cols, rows);
 
     initializeDeshadowMarker(inputPixels, markerPixels, cols, rows, maxval);
-    
+
     estimateBackground(inputPixels, markerPixels, cols, rows, maxval);
-    
+
     divide(inputPixels, markerPixels, cols, rows, maxval);
 
     pgm_freearray(markerPixels, rows);
@@ -331,12 +331,12 @@ main(int argc, char* argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
-    
+
     pixels = pgm_readpgm(ifP, &cols, &rows, &maxval);
     pm_close(ifP);
-    
+
     deshadow(pixels, cols, rows, maxval);
-    
+
     pgm_writepgm(stdout, pixels, cols, rows, maxval, 0);
 
     pgm_freearray(pixels, rows);

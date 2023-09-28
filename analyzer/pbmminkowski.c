@@ -25,15 +25,15 @@ int main(int argc, const char ** argv) {
     bit * prevrow;
     bit * thisrow;
     bit * tmprow;
-  
+
     int row;
-    int col; 
+    int col;
 
     int countTile;
     int countEdgeX;
     int countEdgeY;
     int countVertex;
-  
+
     int rows;
     int cols;
     int format;
@@ -42,15 +42,15 @@ int main(int argc, const char ** argv) {
 
 
     pm_proginit(&argc, argv);
-  
+
     if (argc > 2)
         pm_usage("[pbmfile]");
-  
+
     if (argc == 2)
         ifP = pm_openr(argv[1]);
     else
         ifP = stdin;
-  
+
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
     prevrow = pbm_allocrow(cols);
@@ -68,10 +68,10 @@ int main(int argc, const char ** argv) {
 
     /* tiles */
 
-    for (col = 0; col < cols; ++col) 
+    for (col = 0; col < cols; ++col)
         if (ISWHITE(thisrow[col]))
             ++countTile;
-  
+
     /* shortcut: for the first row, edgeY == countTile */
     countEdgeY = countTile;
 
@@ -80,7 +80,7 @@ int main(int argc, const char ** argv) {
     if (ISWHITE(thisrow[0]))
         ++countEdgeX;
 
-    for (col = 0; col < cols-1; ++col) 
+    for (col = 0; col < cols-1; ++col)
         if (ISWHITE(thisrow[col]) || ISWHITE(thisrow[col+1]))
             ++countEdgeX;
 
@@ -88,56 +88,56 @@ int main(int argc, const char ** argv) {
         ++countEdgeX;
 
     /* shortcut: for the first row, countVertex == countEdgeX */
-  
-    countVertex = countEdgeX;
-  
 
-    for (row = 1; row < rows; ++row) {  
-    
-        tmprow  = prevrow; 
+    countVertex = countEdgeX;
+
+
+    for (row = 1; row < rows; ++row) {
+
+        tmprow  = prevrow;
         prevrow = thisrow;
         thisrow = tmprow;
- 
+
         pbm_readpbmrow(ifP, thisrow, cols, format);
-  
+
         /* tiles */
 
-        for (col = 0; col < cols; ++col) 
+        for (col = 0; col < cols; ++col)
             if (ISWHITE(thisrow[col]))
                 ++countTile;
-    
+
         /* y-edges */
 
-        for (col = 0; col < cols; ++col) 
+        for (col = 0; col < cols; ++col)
             if (ISWHITE(thisrow[col]) || ISWHITE(prevrow[col]))
                 ++countEdgeY;
-    
+
         /* x-edges */
 
         if (ISWHITE(thisrow[0]))
             ++countEdgeX;
 
-        for (col = 0; col < cols-1; ++col) 
+        for (col = 0; col < cols-1; ++col)
             if (ISWHITE(thisrow[col]) || ISWHITE(thisrow[col+1]))
                 ++countEdgeX;
-    
+
         if (ISWHITE(thisrow[cols-1]))
             ++countEdgeX;
-    
+
         /* vertices */
 
         if (ISWHITE(thisrow[0]) || ISWHITE(prevrow[0]))
             ++countVertex;
 
-        for (col = 0; col < cols-1; ++col) 
-            if (ISWHITE(thisrow[col]) || ISWHITE(thisrow[col+1]) 
+        for (col = 0; col < cols-1; ++col)
+            if (ISWHITE(thisrow[col]) || ISWHITE(thisrow[col+1])
                 || ISWHITE(prevrow[col]) || ISWHITE(prevrow[col+1]))
                 ++countVertex;
 
         if (ISWHITE(thisrow[cols-1]) || ISWHITE(prevrow[cols-1]))
             ++countVertex;
 
-	  
+
     } /* for row */
 
     /* now thisrow contains the top row*/
@@ -145,19 +145,19 @@ int main(int argc, const char ** argv) {
        vertices remain
     */
 
-  
+
     /* y-edges */
 
-    for (col = 0; col < cols; ++col) 
+    for (col = 0; col < cols; ++col)
         if (ISWHITE(thisrow[col]))
             ++countEdgeY;
 
     /* vertices */
-  
+
     if (ISWHITE(thisrow[0]))
         ++countVertex;
 
-    for (col = 0; col < cols-1; ++col) 
+    for (col = 0; col < cols-1; ++col)
         if (ISWHITE(thisrow[col]) || ISWHITE(thisrow[col+1]))
             ++countVertex;
 
@@ -179,7 +179,7 @@ int main(int argc, const char ** argv) {
 
     printf("    area:\t%d\nperimeter:\t%d\n eulerchi:\t%d\n",
            area, perimeter, eulerchi );
-  
+
     return 0;
 }
 

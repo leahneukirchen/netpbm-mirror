@@ -1,4 +1,4 @@
-/* pnmsmooth.c - smooth out an image by replacing each pixel with the 
+/* pnmsmooth.c - smooth out an image by replacing each pixel with the
 **               average of its width x height neighbors.
 **
 ** Version 2.0   December 5, 1994
@@ -51,7 +51,7 @@ parseCommandLine (int argc, const char ** argv,
                   struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -69,9 +69,9 @@ parseCommandLine (int argc, const char ** argv,
     unsigned int widthSpec, heightSpec, sizeSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "dump",          OPT_FLAG,   
+    OPTENT3(0,   "dump",          OPT_FLAG,
             NULL,                       &cmdlineP->dump, 0);
     OPTENT3(0,   "width",         OPT_UINT,
             &cmdlineP->width,           &widthSpec, 0);
@@ -117,7 +117,7 @@ parseCommandLine (int argc, const char ** argv,
         else {
             cmdlineP->width  = atoi(argv[1]);
             cmdlineP->height = atoi(argv[2]);
-            
+
             if (argc-1 < 3)
                 cmdlineP->inputFilespec = "-";
             else
@@ -179,7 +179,7 @@ makeConvolutionKernel(unsigned int const cols,
     else {
         unsigned int row;
         unsigned int cursor;
-     
+
         for (row = 0, cursor = 0; row < rows; ++row) {
             unsigned int col;
 

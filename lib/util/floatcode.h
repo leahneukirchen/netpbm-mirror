@@ -33,9 +33,9 @@ pm_floatFromBigendFloat(pm_bigendFloat const arg) {
             pm_bigendFloat bigend;
             float native;
         } converter;
-        
+
         converter.bigend = arg;
-        
+
         retval = converter.native;
     }; break;
     case LITTLE_ENDIAN: {
@@ -68,7 +68,7 @@ pm_bigendFloatFromFloat(float const arg) {
             pm_bigendFloat bigend;
             float native;
         } converter;
-        
+
         converter.native = arg;
 
         retval = converter.bigend;
@@ -117,9 +117,9 @@ pm_doubleFromBigendDouble(pm_bigendDouble const arg) {
             pm_bigendDouble bigend;
             double native;
         } converter;
-        
+
         converter.bigend = arg;
-        
+
         retval = converter.native;
     }; break;
     case LITTLE_ENDIAN: {
@@ -156,7 +156,7 @@ pm_bigendDoubleFromDouble(double const arg) {
             pm_bigendDouble bigend;
             double native;
         } converter;
-        
+
         converter.native = arg;
 
         retval = converter.bigend;

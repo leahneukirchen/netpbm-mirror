@@ -54,7 +54,7 @@ parse_command_line(int *         const argc_ptr,
     if (!width_spec || !height_spec || (!attribs_spec && !(rgb_spec || grayscale_spec))) {
         pm_errormsg(
             "you must at least specify -width, -height and "
-	    "either -num_attribs, -rgb or -grayscale.");
+            "either -num_attribs, -rgb or -grayscale.");
 
         return 0;
     }

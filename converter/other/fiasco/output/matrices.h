@@ -1,8 +1,8 @@
 /*
  *  matrices.h
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:         Ullrich Hafner
+ *              
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -22,7 +22,7 @@
 
 unsigned
 write_matrices (bool_t use_normal_domains, bool_t use_delta_domains,
-		const wfa_t *wfa, bitfile_t *output);
+                const wfa_t *wfa, bitfile_t *output);
 
 #endif /* _MATRICES_H */
 

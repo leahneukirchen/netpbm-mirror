@@ -2,7 +2,7 @@
  *  weights.c:          Input of weights
  *
  *  Written by:         Ullrich Hafner
- *              
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -32,7 +32,7 @@
 /*****************************************************************************
 
                                 public code
-  
+
 *****************************************************************************/
 
 void
@@ -55,7 +55,7 @@ read_weights (unsigned total, wfa_t *wfa, bitfile_t *input)
    unsigned         offset1, offset2;   /* prob. model offsets. */
    unsigned         offset3, offset4;   /* prob. model offsets. */
    bool_t           delta_approx = NO;  /* true if delta has been used */
-   
+
    /*
     *  Check whether delta approximation has been used
     */
@@ -65,7 +65,7 @@ read_weights (unsigned total, wfa_t *wfa, bitfile_t *input)
          delta_approx = YES;
          break;
       }
-  
+
    /*
     *  Generate array of corresponding levels (context of probability model)
     */
@@ -82,7 +82,7 @@ read_weights (unsigned total, wfa_t *wfa, bitfile_t *input)
       min_level = d_min_level = MAXLEVEL;
       max_level = d_max_level = 0;
       dc        = d_dc     = NO;
-   
+
       for (state = wfa->basis_states; state < wfa->states; state++)
           for (label = 0; label < MAXLABELS; label++)
               if (isrange (wfa->tree [state][label]))
@@ -156,7 +156,7 @@ read_weights (unsigned total, wfa_t *wfa, bitfile_t *input)
          c_symbols [i] = 1 << (wfa->wfainfo->rpf->mantissa_bits + 1);
       for (; i < offset4; i++)
          c_symbols [i] = 1 << (wfa->wfainfo->d_rpf->mantissa_bits + 1);
-      
+
       weights_array = decode_array (input, level_array, c_symbols,
                                     offset4, total, scale);
       Free (c_symbols);
@@ -198,7 +198,7 @@ read_weights (unsigned total, wfa_t *wfa, bitfile_t *input)
                      = wfa->weight [state][label][edge] * 512 + 0.5;
                }
    }
-   
+
    Free (weights_array);
 }
- 
+

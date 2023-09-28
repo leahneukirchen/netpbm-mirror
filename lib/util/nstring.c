@@ -1,26 +1,6 @@
 /*=============================================================================
                                nstring.c
 ===============================================================================
-
-  pm_snprintf (and pm_vsnprintf) in this file used to be derived from
-  'portable_snprintf' from
-  http://www.ijs.si/software/snprintf/snprintf-2.2.tar.gz, because not all
-  system C libraries had snprintf.  But in 2013, we extended that snprintf to
-  implement %f by calling 'snprintf' in the system C library, just to see if
-  it caused any build failures.  As of August 2022, there had been no
-  complaints of problems caused by this reliance on the system providing
-  snprintf, so we just made pm_snprintf a wrapper of snprintf for everything.
-
-  Eventually we will remove pm_snprintf and pm_vsnprintf altogether and their
-  callers will call 'snprintf' and 'vsnprintf' instead
-
-  Note that snprintf is required by the C99 standard.
-
-  The code from which pm_snprintf was formerly derived was protected by
-  copyright and licensed to the public under GPL.  A user in August 2022 noted
-  that GPL was insufficient for his use of it, making him unable to use
-  libnetpbm.
-
   Code in this file is contributed to the public domain by its authors.
 =============================================================================*/
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
@@ -55,46 +35,6 @@ pm_strnlen(const char * const s,
     for (i = 0; i < maxlen && s[i]; ++i) {}
 
     return i;
-}
-
-
-
-void
-pm_vsnprintf(char *       const str,
-             size_t       const maxSize,
-             const char * const fmt,
-             va_list            ap,
-             size_t *     const sizeP) {
-
-    int rc;
-
-    rc = vsnprintf(str, maxSize, fmt, ap);
-
-    assert((size_t)rc == rc);
-
-    *sizeP = (size_t)rc;
-}
-
-
-
-int
-pm_snprintf(char *       const dest,
-            size_t       const maxSize,
-            const char * const fmt,
-            ...) {
-
-    size_t size;
-    va_list ap;
-
-    va_start(ap, fmt);
-
-    pm_vsnprintf(dest, maxSize, fmt, ap, &size);
-
-    va_end(ap);
-
-    assert(size <= INT_MAX);
-
-    return size;
 }
 
 
@@ -144,7 +84,7 @@ pm_asprintf(const char ** const resultP,
 
     va_start(varargs, fmt);
 
-    pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
+    vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
 
     va_end(varargs);
 
@@ -161,7 +101,7 @@ pm_asprintf(const char ** const resultP,
 
             va_start(varargs, fmt);
 
-            pm_vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
+            vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
 
             assert(realLen == dryRunLen);
             va_end(varargs);

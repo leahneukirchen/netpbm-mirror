@@ -4,13 +4,43 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-23.09.24 BJH  Release 11.03.06
+23.09.27 BJH  Release 11.04.00
 
-              pbmtoxbm: Fix spurious output with really wide rows.
+              pamaddnoise: add -salt.
 
-23.09.06 BJH  Release 11.03.05
+              pamaddnoise: reject options that aren't meaningful for the type
+              of noise specified rather than just ignore them.
+
+              ppmtosixel: Add -7bit, so it works on more terminals, including
+              xterms.  Thanks Scott Pakin.
+
+              g3topbm: Add -correctlong
+
+              build: Add COMPILED_BY environment variable to control the
+              "compiled by" value from --version common option.  This helps
+              with creating reproducible builds.
+
+              pnmtojpeg: minor improvement to error messages about bad files.
+
+              pammixmulti: Remove disclaimer of patent license.
+
+              pamstack: Fix bug: acts like -firstmaxval specified when it
+              wasn't.  Introduced in Netpbm 11.03 (June 2023).
+
+              pamstack: Fix -lcmmaxval: chooses wrong maxval.  Always
+              broken (-lcmmaxval was new in Netpbm 11.03 (June 2023)).
+
+              pamstack: Fail gracefully when total number of planes is too
+              large for unsigned integer.  Always broken (Pamstack was new in
+              Netpbm 10.0 (June 2002).
 
               pamtosvg: fix hang.
+
+              ppmfade: fix "file not found" crash for most fade modes.
+              Introduced in Netpbm 10.98 (March 2022).
+
+              ppmfade: fix incorrect block mode fade.  Always broken
+              (ppmfade was new in Netpbm 8.4 (April 2000)).
 
               pamaddnoise: fix very incorrect noise added for all types.
               Introduced in Netpbm 10.94 (March 2021).
@@ -21,35 +51,32 @@ CHANGE HISTORY
               ppmrough: fix excessive roughness.  Introduced in Netpbm 10.94
               (March 2021).
 
-23.08.20 BJH  Release 11.03.04
-
               pgmtexture: Fix buffer overflow with maxval > 255.  Always
               broken.  Maxvals > 255 were possible starting in Netpbm 9.0
               (April 2000).
 
-23.08.18 BJH  Release 11.03.03
+              pgmtexture: Fix bug: ignores -d.  Introduced in Netpbm 10.56
+              (September 2011).
 
-              ppmfade: fix "file not found" crash for most fade modes.
-              Introduced in Netpbm 10.98 (March 2022).
+              xwdtopnm Fix spurious output with really wide/deep rows.
 
-              ppmfade: fix incorrect block mode fade.  Always broken
-              (ppmfade was new in Netpbm 8.4 (April 2000)).
+              imgtoppm: Fix spurious output with really wide/deep rows.
 
-              pamstack: Fail gracefully when total number of planes is too
-              large for unsigned integer.  Always broken (Pamstack was new in
-              Netpbm 10.0 (June 2002).
+              pbmtopgm: Fix error message for excessive -width.
 
-23.08.05 BJH  Release 11.03.02
+              pbmtoxbm: Fix spurious output with really wide rows.
 
-              Fix -lcmmaxval fix in 11.03.01.
+              tifftopnm: Fix incorrect output with insanely wide/deep rows.
 
-23.08.02 BJH  Release 11.03.01
+              thinkjettopbm: Fix incorrect output with insanely wide rows.
 
-              pamstack: fix bug: acts like -firstmaxval specified when it
-              wasn't.  Introduced in Netpbm 11.03 (June 2023).
+              ybmtopbm: Fix incorrect output with insanely wide rows.
 
-              pamstack: fix -lcmmaxval: chooses wrong maxval.  Always
-              broken (-lcmmaxval was new in Netpbm 11.03 (June 2023)).
+              pjtoppm: Fix incorrect output with insanely large number of rows.
+
+              library: add check of maxval for computable size.
+
+              Build: Include LDFLAGS in link of shared library.
 
 23.06.28 BJH  Release 11.03.00
 
@@ -387,7 +414,7 @@ CHANGE HISTORY
               ppmshift: Add -seed .
 
               pamaddnoise: Fix incorrect output for -type poisson.  Always
-              broken.  (pamaddnoise's precursor pnmaddnoies was new to Netpbm
+              broken.  (pamaddnoise's precursor pnmaddnoise was new to Netpbm
               in Netpbm 10.29 (August 2005)).
 
               pamaddnoise: fix bug: garbage output with -type impulse.  Always

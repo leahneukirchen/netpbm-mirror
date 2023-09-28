@@ -1,0 +1,20 @@
+success
+pnmtojpeg: Input file has format P6.
+It has 149 rows of 227 columns of pixels with max sample value of 255.
+pnmtojpeg: A scan script with 7 entries is being used:
+pnmtojpeg:     Scan  0: Ss= 0 Se= 0 Ah= 0 Al= 0  3 components
+pnmtojpeg:         Color component 0 index: 0
+pnmtojpeg:         Color component 1 index: 1
+pnmtojpeg:         Color component 2 index: 2
+pnmtojpeg:     Scan  1: Ss= 1 Se= 2 Ah= 0 Al= 0  1 components
+pnmtojpeg:         Color component 0 index: 0
+pnmtojpeg:     Scan  2: Ss= 3 Se= 5 Ah= 0 Al= 0  1 components
+pnmtojpeg:         Color component 0 index: 0
+pnmtojpeg:     Scan  3: Ss= 1 Se=63 Ah= 0 Al= 0  1 components
+pnmtojpeg:         Color component 0 index: 1
+pnmtojpeg:     Scan  4: Ss= 1 Se=63 Ah= 0 Al= 0  1 components
+pnmtojpeg:         Color component 0 index: 2
+pnmtojpeg:     Scan  5: Ss= 6 Se= 9 Ah= 0 Al= 0  1 components
+pnmtojpeg:         Color component 0 index: 0
+pnmtojpeg:     Scan  6: Ss=10 Se=63 Ah= 0 Al= 0  1 components
+pnmtojpeg:         Color component 0 index: 0

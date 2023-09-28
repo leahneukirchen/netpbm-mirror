@@ -44,27 +44,27 @@ Test 5: Should print 281226646 481 six times
 281226646 481
 281226646 481
 Test Invalid
-Expected failure 1 1
-Expected failure 2 1
-Expected failure 3 1
-Expected failure 4 1
-Expected failure 5 1
-Expected failure 6 1
-Expected failure 7 1
-Expected failure 8 1
-Expected failure 9 1
-Expected failure 10 1
-Expected failure 11 1
-Expected failure 12 1
-Expected failure 13 1
-Expected failure 14 1
-Expected failure 15 1
-Expected failure 16 1
-Expected failure 17 1
-Expected failure 18 1
-Expected failure 19 1
-Expected failure 20 1
-Expected failure 21 1
-Expected failure 22 1
-Expected failure 23 1
-Expected failure 24 1
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
+Expected failure 9 (no output)
+Expected failure 10 (no output)
+Expected failure 11 (no output)
+Expected failure 12 (no output)
+Expected failure 13 (no output)
+Expected failure 14 (no output)
+Expected failure 15 (no output)
+Expected failure 16 (no output)
+Expected failure 17 (no output)
+Expected failure 18 (no output)
+Expected failure 19 (no output)
+Expected failure 20 (no output)
+Expected failure 21 (no output)
+Expected failure 22 (no output)
+Expected failure 23 (no output)
+Expected failure 24 (no output)

@@ -26,8 +26,11 @@
   Introduced option to plot 1976 u' v' chromaticities.
 */
 
+#define _C99_SOURCE  /* Make sure snprintf() is in stdio.h */
+
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "pm_c_util.h"
 #include "ppm.h"
@@ -1114,15 +1117,15 @@ writeLabel(pixel **                   const pixels,
 
     PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
 
-    pm_snprintf(sysdesc, sizeof(sysdesc),
-                "System: %s\n"
-                "Primary illuminants (X, Y)\n"
-                "     Red:  %0.4f, %0.4f\n"
-                "     Green: %0.4f, %0.4f\n"
-                "     Blue:  %0.4f, %0.4f\n"
-                "White point (X, Y): %0.4f, %0.4f",
-                cs->name, cs->xRed, cs->yRed, cs->xGreen, cs->yGreen,
-                cs->xBlue, cs->yBlue, cs->xWhite, cs->yWhite);
+    snprintf(sysdesc, sizeof(sysdesc),
+             "System: %s\n"
+             "Primary illuminants (X, Y)\n"
+             "     Red:  %0.4f, %0.4f\n"
+             "     Green: %0.4f, %0.4f\n"
+             "     Blue:  %0.4f, %0.4f\n"
+             "White point (X, Y): %0.4f, %0.4f",
+             cs->name, cs->xRed, cs->yRed, cs->xGreen, cs->yGreen,
+             cs->xBlue, cs->yBlue, cs->xWhite, cs->yWhite);
     sysdesc[sizeof(sysdesc)-1] = '\0';  /* for robustness */
 
     ppmd_text(pixels, pixcols, pixrows, maxval,

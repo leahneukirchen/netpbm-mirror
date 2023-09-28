@@ -1,8 +1,8 @@
 /*
  *  error.h
- *  
- *  Written by:		Stefan Frank
- *			Ullrich Hafner
+ *
+ *  Written by:         Stefan Frank
+ *                      Ullrich Hafner
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
@@ -25,7 +25,7 @@
 #ifdef _ERROR_C
 #define _EXTERN_TYPE
 #else
-#define _EXTERN_TYPE	extern
+#define _EXTERN_TYPE    extern
 #endif
 
 _EXTERN_TYPE int   error_line;
@@ -41,9 +41,9 @@ void
 _file_error (const char *filename);
 
 #if HAVE_ASSERT_H
-#	include <assert.h>
+#       include <assert.h>
 #else /* not HAVE_ASSERT_H */
-#	define assert(exp)	{if (!(exp)) error ("Assertion `" #exp " != NULL' failed.");}
+#       define assert(exp)      {if (!(exp)) error ("Assertion `" #exp " != NULL' failed.");}
 #endif /* not HAVE_ASSERT_H */
 
 #endif /* not _ERROR_H */

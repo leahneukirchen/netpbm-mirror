@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -134,281 +134,281 @@ static uint_fast32_t jp2_gettypeasoc(int colorspace, int ctype);
 
 int jp2_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
 {
-	jp2_box_t *box;
-	jp2_ftyp_t *ftyp;
-	jp2_ihdr_t *ihdr;
-	jas_stream_t *tmpstream;
-	int allcmptssame;
-	jp2_bpcc_t *bpcc;
-	long len;
-	uint_fast16_t cmptno;
-	jp2_colr_t *colr;
-	char buf[4096];
-	uint_fast32_t overhead;
-	jp2_cdefchan_t *cdefchanent;
-	jp2_cdef_t *cdef;
-	int i;
-	uint_fast32_t typeasoc;
+        jp2_box_t *box;
+        jp2_ftyp_t *ftyp;
+        jp2_ihdr_t *ihdr;
+        jas_stream_t *tmpstream;
+        int allcmptssame;
+        jp2_bpcc_t *bpcc;
+        long len;
+        uint_fast16_t cmptno;
+        jp2_colr_t *colr;
+        char buf[4096];
+        uint_fast32_t overhead;
+        jp2_cdefchan_t *cdefchanent;
+        jp2_cdef_t *cdef;
+        int i;
+        uint_fast32_t typeasoc;
 
-	box = 0;
-	tmpstream = 0;
+        box = 0;
+        tmpstream = 0;
 
-	/* Output the signature box. */
+        /* Output the signature box. */
 
-	if (!(box = jp2_box_create(JP2_BOX_JP))) {
-		goto error;
-	}
-	box->data.jp.magic = JP2_JP_MAGIC;
-	if (jp2_box_put(box, out)) {
-		goto error;
-	}
-	jp2_box_destroy(box);
-	box = 0;
+        if (!(box = jp2_box_create(JP2_BOX_JP))) {
+                goto error;
+        }
+        box->data.jp.magic = JP2_JP_MAGIC;
+        if (jp2_box_put(box, out)) {
+                goto error;
+        }
+        jp2_box_destroy(box);
+        box = 0;
 
-	/* Output the file type box. */
+        /* Output the file type box. */
 
-	if (!(box = jp2_box_create(JP2_BOX_FTYP))) {
-		goto error;
-	}
-	ftyp = &box->data.ftyp;
-	ftyp->majver = JP2_FTYP_MAJVER;
-	ftyp->minver = JP2_FTYP_MINVER;
-	ftyp->numcompatcodes = 1;
-	ftyp->compatcodes[0] = JP2_FTYP_COMPATCODE;
-	if (jp2_box_put(box, out)) {
-		goto error;
-	}
-	jp2_box_destroy(box);
-	box = 0;
+        if (!(box = jp2_box_create(JP2_BOX_FTYP))) {
+                goto error;
+        }
+        ftyp = &box->data.ftyp;
+        ftyp->majver = JP2_FTYP_MAJVER;
+        ftyp->minver = JP2_FTYP_MINVER;
+        ftyp->numcompatcodes = 1;
+        ftyp->compatcodes[0] = JP2_FTYP_COMPATCODE;
+        if (jp2_box_put(box, out)) {
+                goto error;
+        }
+        jp2_box_destroy(box);
+        box = 0;
 
-	/*
-	 * Generate the data portion of the JP2 header box.
-	 * We cannot simply output the header for this box
-	 * since we do not yet know the correct value for the length
-	 * field.
-	 */
+        /*
+         * Generate the data portion of the JP2 header box.
+         * We cannot simply output the header for this box
+         * since we do not yet know the correct value for the length
+         * field.
+         */
 
-	if (!(tmpstream = jas_stream_memopen(0, 0))) {
-		goto error;
-	}
+        if (!(tmpstream = jas_stream_memopen(0, 0))) {
+                goto error;
+        }
 
-	/* Generate image header box. */
+        /* Generate image header box. */
 
-	if (!(box = jp2_box_create(JP2_BOX_IHDR))) {
-		goto error;
-	}
-	ihdr = &box->data.ihdr;
-	ihdr->width = jas_image_width(image);
-	ihdr->height = jas_image_height(image);
-	ihdr->numcmpts = jas_image_numcmpts(image);
-	allcmptssame = 0;
-	ihdr->bpc = allcmptssame ? JP2_SPTOBPC(jas_image_cmptsgnd(image, 0),
-	  jas_image_cmptprec(image, 0)) : JP2_IHDR_BPCNULL;
-	ihdr->comptype = JP2_IHDR_COMPTYPE;
-	ihdr->csunk = 0;
-	ihdr->ipr = 0;
-	if (jp2_box_put(box, tmpstream)) {
-		goto error;
-	}
-	jp2_box_destroy(box);
-	box = 0;
+        if (!(box = jp2_box_create(JP2_BOX_IHDR))) {
+                goto error;
+        }
+        ihdr = &box->data.ihdr;
+        ihdr->width = jas_image_width(image);
+        ihdr->height = jas_image_height(image);
+        ihdr->numcmpts = jas_image_numcmpts(image);
+        allcmptssame = 0;
+        ihdr->bpc = allcmptssame ? JP2_SPTOBPC(jas_image_cmptsgnd(image, 0),
+          jas_image_cmptprec(image, 0)) : JP2_IHDR_BPCNULL;
+        ihdr->comptype = JP2_IHDR_COMPTYPE;
+        ihdr->csunk = 0;
+        ihdr->ipr = 0;
+        if (jp2_box_put(box, tmpstream)) {
+                goto error;
+        }
+        jp2_box_destroy(box);
+        box = 0;
 
-	/* Generate bits per component box. */
+        /* Generate bits per component box. */
 
-	if (!allcmptssame) {
-		if (!(box = jp2_box_create(JP2_BOX_BPCC))) {
-			goto error;
-		}
-		bpcc = &box->data.bpcc;
-		bpcc->numcmpts = jas_image_numcmpts(image);
-		if (!(bpcc->bpcs = jas_malloc(bpcc->numcmpts *
-		  sizeof(uint_fast8_t)))) {
-			goto error;
-		}
-		for (cmptno = 0; cmptno < bpcc->numcmpts; ++cmptno) {
-			bpcc->bpcs[cmptno] = JP2_SPTOBPC(jas_image_cmptsgnd(image,
-			  cmptno), jas_image_cmptprec(image, cmptno));
-		}
-		if (jp2_box_put(box, tmpstream)) {
-			goto error;
-		}
-		jp2_box_destroy(box);
-		box = 0;
-	}
+        if (!allcmptssame) {
+                if (!(box = jp2_box_create(JP2_BOX_BPCC))) {
+                        goto error;
+                }
+                bpcc = &box->data.bpcc;
+                bpcc->numcmpts = jas_image_numcmpts(image);
+                if (!(bpcc->bpcs = jas_malloc(bpcc->numcmpts *
+                  sizeof(uint_fast8_t)))) {
+                        goto error;
+                }
+                for (cmptno = 0; cmptno < bpcc->numcmpts; ++cmptno) {
+                        bpcc->bpcs[cmptno] = JP2_SPTOBPC(jas_image_cmptsgnd(image,
+                          cmptno), jas_image_cmptprec(image, cmptno));
+                }
+                if (jp2_box_put(box, tmpstream)) {
+                        goto error;
+                }
+                jp2_box_destroy(box);
+                box = 0;
+        }
 
-	/* Generate color specification box. */
+        /* Generate color specification box. */
 
-	if (!(box = jp2_box_create(JP2_BOX_COLR))) {
-		goto error;
-	}
-	colr = &box->data.colr;
-	colr->method = JP2_COLR_ENUM;
-	colr->pri = JP2_COLR_PRI;
-	colr->approx = 0;
-	colr->csid = (jas_image_colorspace(image) == JAS_IMAGE_CS_RGB) ? JP2_COLR_SRGB :
-	  JP2_COLR_SGRAY;
-	if (jp2_box_put(box, tmpstream)) {
-		goto error;
-	}
-	jp2_box_destroy(box);
-	box = 0;
+        if (!(box = jp2_box_create(JP2_BOX_COLR))) {
+                goto error;
+        }
+        colr = &box->data.colr;
+        colr->method = JP2_COLR_ENUM;
+        colr->pri = JP2_COLR_PRI;
+        colr->approx = 0;
+        colr->csid = (jas_image_colorspace(image) == JAS_IMAGE_CS_RGB) ? JP2_COLR_SRGB :
+          JP2_COLR_SGRAY;
+        if (jp2_box_put(box, tmpstream)) {
+                goto error;
+        }
+        jp2_box_destroy(box);
+        box = 0;
 
-	if (!(jas_image_colorspace(image) == JAS_IMAGE_CS_RGB &&
-	  jas_image_numcmpts(image) == 3 &&
-	  jas_image_getcmptbytype(image, 0) ==
-	  JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_R) &&
-	  jas_image_getcmptbytype(image, 1) ==
-	  JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_G) &&
-	  jas_image_getcmptbytype(image, 2) ==
-	  JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B)) &&
-	  !(jas_image_colorspace(image) == JAS_IMAGE_CS_YCBCR &&
-	  jas_image_numcmpts(image) != 3 &&
-	  jas_image_getcmptbytype(image, 0) ==
-	  JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_YCBCR_Y) &&
-	  jas_image_getcmptbytype(image, 1) ==
-	  JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_YCBCR_CB) &&
-	  jas_image_getcmptbytype(image, 2) ==
-	  JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_YCBCR_CR)) &&
-	  !(jas_image_colorspace(image) == JAS_IMAGE_CS_GRAY &&
-	  jas_image_numcmpts(image) == 1 &&
-	  jas_image_getcmptbytype(image, 0) ==
-	  JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_GRAY_Y))) {
+        if (!(jas_image_colorspace(image) == JAS_IMAGE_CS_RGB &&
+          jas_image_numcmpts(image) == 3 &&
+          jas_image_getcmptbytype(image, 0) ==
+          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_R) &&
+          jas_image_getcmptbytype(image, 1) ==
+          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_G) &&
+          jas_image_getcmptbytype(image, 2) ==
+          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B)) &&
+          !(jas_image_colorspace(image) == JAS_IMAGE_CS_YCBCR &&
+          jas_image_numcmpts(image) != 3 &&
+          jas_image_getcmptbytype(image, 0) ==
+          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_YCBCR_Y) &&
+          jas_image_getcmptbytype(image, 1) ==
+          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_YCBCR_CB) &&
+          jas_image_getcmptbytype(image, 2) ==
+          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_YCBCR_CR)) &&
+          !(jas_image_colorspace(image) == JAS_IMAGE_CS_GRAY &&
+          jas_image_numcmpts(image) == 1 &&
+          jas_image_getcmptbytype(image, 0) ==
+          JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_GRAY_Y))) {
 
-		if (!(box = jp2_box_create(JP2_BOX_CDEF))) {
-			goto error;
-		}
-		cdef = &box->data.cdef;
-		cdef->numchans = jas_image_numcmpts(image);
-		cdef->ents = jas_malloc(cdef->numchans * sizeof(jp2_cdefchan_t));
-		for (i = 0; i < jas_image_numcmpts(image); ++i) {
-			cdefchanent = &cdef->ents[i];
-			cdefchanent->channo = i;
-			typeasoc = jp2_gettypeasoc(jas_image_colorspace(image), jas_image_cmpttype(image, i));
-			cdefchanent->type = typeasoc >> 16;
-			cdefchanent->assoc = typeasoc & 0x7fff;
-		}
-		jp2_box_destroy(box);
-		box = 0;
-	}
+                if (!(box = jp2_box_create(JP2_BOX_CDEF))) {
+                        goto error;
+                }
+                cdef = &box->data.cdef;
+                cdef->numchans = jas_image_numcmpts(image);
+                cdef->ents = jas_malloc(cdef->numchans * sizeof(jp2_cdefchan_t));
+                for (i = 0; i < jas_image_numcmpts(image); ++i) {
+                        cdefchanent = &cdef->ents[i];
+                        cdefchanent->channo = i;
+                        typeasoc = jp2_gettypeasoc(jas_image_colorspace(image), jas_image_cmpttype(image, i));
+                        cdefchanent->type = typeasoc >> 16;
+                        cdefchanent->assoc = typeasoc & 0x7fff;
+                }
+                jp2_box_destroy(box);
+                box = 0;
+        }
 
-	/* Determine the total length of the JP2 header box. */
+        /* Determine the total length of the JP2 header box. */
 
-	len = jas_stream_tell(tmpstream);
-	jas_stream_rewind(tmpstream);
+        len = jas_stream_tell(tmpstream);
+        jas_stream_rewind(tmpstream);
 
-	/*
-	 * Output the JP2 header box and all of the boxes which it contains.
-	 */
+        /*
+         * Output the JP2 header box and all of the boxes which it contains.
+         */
 
-	if (!(box = jp2_box_create(JP2_BOX_JP2H))) {
-		goto error;
-	}
-	box->len = len + JP2_BOX_HDRLEN;
-	if (jp2_box_put(box, out)) {
-		goto error;
-	}
-	jp2_box_destroy(box);
-	box = 0;
+        if (!(box = jp2_box_create(JP2_BOX_JP2H))) {
+                goto error;
+        }
+        box->len = len + JP2_BOX_HDRLEN;
+        if (jp2_box_put(box, out)) {
+                goto error;
+        }
+        jp2_box_destroy(box);
+        box = 0;
 
-	if (jas_stream_copy(out, tmpstream, len)) {
-		goto error;
-	}
+        if (jas_stream_copy(out, tmpstream, len)) {
+                goto error;
+        }
 
-	jas_stream_close(tmpstream);
-	tmpstream = 0;
+        jas_stream_close(tmpstream);
+        tmpstream = 0;
 
-	/*
-	 * Output the contiguous code stream box.
-	 */
+        /*
+         * Output the contiguous code stream box.
+         */
 
-	if (!(box = jp2_box_create(JP2_BOX_JP2C))) {
-		goto error;
-	}
-	box->len = 0;
-	if (jp2_box_put(box, out)) {
-		goto error;
-	}
-	jp2_box_destroy(box);
-	box = 0;
+        if (!(box = jp2_box_create(JP2_BOX_JP2C))) {
+                goto error;
+        }
+        box->len = 0;
+        if (jp2_box_put(box, out)) {
+                goto error;
+        }
+        jp2_box_destroy(box);
+        box = 0;
 
-	/* Output the JPEG-2000 code stream. */
+        /* Output the JPEG-2000 code stream. */
 
-	overhead = jas_stream_getrwcount(out);
-	sprintf(buf, "%s\n_jp2overhead=%lu\n", (optstr ? optstr : ""),
-	  (unsigned long) overhead);
+        overhead = jas_stream_getrwcount(out);
+        sprintf(buf, "%s\n_jp2overhead=%lu\n", (optstr ? optstr : ""),
+          (unsigned long) overhead);
 
-	if (jpc_encode(image, out, buf)) {
-		goto error;
-	}
+        if (jpc_encode(image, out, buf)) {
+                goto error;
+        }
 
-	return 0;
-	abort();
+        return 0;
+        abort();
 
 error:
 
-	if (box) {
-		jp2_box_destroy(box);
-	}
-	if (tmpstream) {
-		jas_stream_close(tmpstream);
-	}
-	return -1;
+        if (box) {
+                jp2_box_destroy(box);
+        }
+        if (tmpstream) {
+                jas_stream_close(tmpstream);
+        }
+        return -1;
 }
 
 
 static uint_fast32_t jp2_gettypeasoc(int colorspace, int ctype)
 {
-	int type;
-	int asoc;
+        int type;
+        int asoc;
 
-	if (ctype & JAS_IMAGE_CT_OPACITY) {
-		type = JP2_CDEF_TYPE_OPACITY;
-		asoc = JP2_CDEF_ASOC_ALL;
-		goto done;
-	}
+        if (ctype & JAS_IMAGE_CT_OPACITY) {
+                type = JP2_CDEF_TYPE_OPACITY;
+                asoc = JP2_CDEF_ASOC_ALL;
+                goto done;
+        }
 
-	type = JP2_CDEF_TYPE_UNSPEC;
-	asoc = JP2_CDEF_ASOC_NONE;
-	switch (colorspace) {
-	case JAS_IMAGE_CS_RGB:
-		switch (JAS_IMAGE_CT_COLOR(ctype)) {
-		case JAS_IMAGE_CT_RGB_R:
-			type = JP2_CDEF_TYPE_COLOR;
-			asoc = JP2_CDEF_RGB_R;
-			break;
-		case JAS_IMAGE_CT_RGB_G:
-			type = JP2_CDEF_TYPE_COLOR;
-			asoc = JP2_CDEF_RGB_G;
-			break;
-		case JAS_IMAGE_CT_RGB_B:
-			type = JP2_CDEF_TYPE_COLOR;
-			asoc = JP2_CDEF_RGB_B;
-			break;
-		}
-		break;
-	case JAS_IMAGE_CS_YCBCR:
-		switch (JAS_IMAGE_CT_COLOR(ctype)) {
-		case JAS_IMAGE_CT_YCBCR_Y:
-			type = JP2_CDEF_TYPE_COLOR;
-			asoc = JP2_CDEF_YCBCR_Y;
-			break;
-		case JAS_IMAGE_CT_YCBCR_CB:
-			type = JP2_CDEF_TYPE_COLOR;
-			asoc = JP2_CDEF_YCBCR_CB;
-			break;
-		case JAS_IMAGE_CT_YCBCR_CR:
-			type = JP2_CDEF_TYPE_COLOR;
-			asoc = JP2_CDEF_YCBCR_CR;
-			break;
-		}
-		break;
-	case JAS_IMAGE_CS_GRAY:
-		type = JP2_CDEF_TYPE_COLOR;
-		asoc = JP2_CDEF_GRAY_Y;
-		break;
-	}
+        type = JP2_CDEF_TYPE_UNSPEC;
+        asoc = JP2_CDEF_ASOC_NONE;
+        switch (colorspace) {
+        case JAS_IMAGE_CS_RGB:
+                switch (JAS_IMAGE_CT_COLOR(ctype)) {
+                case JAS_IMAGE_CT_RGB_R:
+                        type = JP2_CDEF_TYPE_COLOR;
+                        asoc = JP2_CDEF_RGB_R;
+                        break;
+                case JAS_IMAGE_CT_RGB_G:
+                        type = JP2_CDEF_TYPE_COLOR;
+                        asoc = JP2_CDEF_RGB_G;
+                        break;
+                case JAS_IMAGE_CT_RGB_B:
+                        type = JP2_CDEF_TYPE_COLOR;
+                        asoc = JP2_CDEF_RGB_B;
+                        break;
+                }
+                break;
+        case JAS_IMAGE_CS_YCBCR:
+                switch (JAS_IMAGE_CT_COLOR(ctype)) {
+                case JAS_IMAGE_CT_YCBCR_Y:
+                        type = JP2_CDEF_TYPE_COLOR;
+                        asoc = JP2_CDEF_YCBCR_Y;
+                        break;
+                case JAS_IMAGE_CT_YCBCR_CB:
+                        type = JP2_CDEF_TYPE_COLOR;
+                        asoc = JP2_CDEF_YCBCR_CB;
+                        break;
+                case JAS_IMAGE_CT_YCBCR_CR:
+                        type = JP2_CDEF_TYPE_COLOR;
+                        asoc = JP2_CDEF_YCBCR_CR;
+                        break;
+                }
+                break;
+        case JAS_IMAGE_CS_GRAY:
+                type = JP2_CDEF_TYPE_COLOR;
+                asoc = JP2_CDEF_GRAY_Y;
+                break;
+        }
 
 done:
-	return (type << 16) | asoc;
+        return (type << 16) | asoc;
 }
 

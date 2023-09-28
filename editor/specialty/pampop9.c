@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * (c) Robert Tinsley, 2003 (http://www.thepoacher.net/contact)
  *
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     ydelta = atoi(argv[5]);
 
     if (filename == NULL || *filename == '\0'
-        || xtiles <= 0 || ytiles <= 0 || xdelta < 0 || ydelta < 0) 
+        || xtiles <= 0 || ytiles <= 0 || xdelta < 0 || ydelta < 0)
         pm_error("invalid argument");
 
     /* read src pam */

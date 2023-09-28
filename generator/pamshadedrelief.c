@@ -8,7 +8,7 @@
 
   The input array is a one-channel PAM image.  The sample values are
   elevations of terrain.
-  
+
   This is derived from John Walker's 'pgmcrater' which not only does this
   shading, but first generates a terrain map of fractal craters on which to
   run it.
@@ -95,7 +95,7 @@ parseCommandLine(int argc, const char ** const argv,
     if (cmdlineP->gamma <= 0.0)
         pm_error("gamma correction must be greater than 0");
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -201,7 +201,7 @@ writeShadedRelief(struct pam * const terrainPamP,
         }
         {
             /* Wrap around to determine shade of pixel on right edge */
-            int const slope = 
+            int const slope =
                 terrain[row][0][0] - terrain[row][outpam.width-1][0];
             outrow[outpam.width - 1][0] =
                 brightnessOfSlope(slope, slopeGrayMap);
@@ -222,8 +222,8 @@ readTerrain(FILE *       const ifP,
 
     *tuplesP = pnm_readpam(ifP, pamP, PAM_STRUCT_SIZE(tuple_type));
 }
-            
-            
+
+
 
 int
 main(int argc, const char ** argv) {
@@ -243,7 +243,7 @@ main(int argc, const char ** argv) {
     readTerrain(ifP, &terrainPam, &terrain);
 
     writeShadedRelief(&terrainPam, terrain, cmdline.gamma, stdout);
-    
+
     return 0;
 }
 

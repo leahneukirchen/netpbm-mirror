@@ -6,14 +6,14 @@
  */
 
 /* __START_OF_JASPER_LICENSE__
- * 
+ *
  * JasPer Software License
- * 
+ *
  * IMAGE POWER JPEG-2000 PUBLIC LICENSE
  * ************************************
- * 
+ *
  * GRANT:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person (the "User")
  * obtaining a copy of this software and associated documentation, to deal
  * in the JasPer Software without restriction, including without limitation
@@ -21,22 +21,22 @@
  * and/or sell copies of the JasPer Software (in source and binary forms),
  * and to permit persons to whom the JasPer Software is furnished to do so,
  * provided further that the License Conditions below are met.
- * 
+ *
  * License Conditions
  * ******************
- * 
+ *
  * A.  Redistributions of source code must retain the above copyright notice,
  * and this list of conditions, and the following disclaimer.
- * 
+ *
  * B.  Redistributions in binary form must reproduce the above copyright
  * notice, and this list of conditions, and the following disclaimer in
  * the documentation and/or other materials provided with the distribution.
- * 
+ *
  * C.  Neither the name of Image Power, Inc. nor any other contributor
  * (including, but not limited to, the University of British Columbia and
  * Michael David Adams) may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
+ *
  * D.  User agrees that it shall not commence any action against Image Power,
  * Inc., the University of British Columbia, Michael David Adams, or any
  * other contributors (collectively "Licensors") for infringement of any
@@ -56,17 +56,17 @@
  * trade dress, or service mark rights); and (v) divisions, continuations,
  * renewals, reissues and extensions of the foregoing (as and to the extent
  * applicable) now existing, hereafter filed, issued or acquired.
- * 
+ *
  * E.  If User commences an infringement action against any Licensor(s) then
  * such Licensor(s) shall have the right to terminate User's license and
  * all sublicenses that have been granted hereunder by User to other parties.
- * 
+ *
  * F.  This software is for use only in hardware or software products that
  * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
  * or right to this Software is granted for products that do not comply
  * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
  * from the ISO.
- * 
+ *
  * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
  * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
  * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
@@ -106,7 +106,7 @@
  * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
  * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
  * NOTICE SPECIFIED IN THIS SECTION.
- * 
+ *
  * __END_OF_JASPER_LICENSE__
  */
 
@@ -141,7 +141,7 @@ extern "C" {
 
 /* On most UNIX systems, we probably need to define O_BINARY ourselves. */
 #ifndef O_BINARY
-#define O_BINARY	0
+#define O_BINARY        0
 #endif
 
 /*
@@ -149,64 +149,64 @@ extern "C" {
  */
 
 /* The stream was opened for reading. */
-#define JAS_STREAM_READ	0x0001
+#define JAS_STREAM_READ 0x0001
 /* The stream was opened for writing. */
-#define JAS_STREAM_WRITE	0x0002
+#define JAS_STREAM_WRITE        0x0002
 /* The stream was opened for appending. */
-#define JAS_STREAM_APPEND	0x0004
+#define JAS_STREAM_APPEND       0x0004
 /* The stream was opened in binary mode. */
-#define JAS_STREAM_BINARY	0x0008
+#define JAS_STREAM_BINARY       0x0008
 /* The stream should be created/truncated. */
-#define JAS_STREAM_CREATE	0x0010
+#define JAS_STREAM_CREATE       0x0010
 
-#define JAS_STREAM_NOCLOSE	0x0020
+#define JAS_STREAM_NOCLOSE      0x0020
 
 /*
  * Stream buffering flags.
  */
 
 /* The stream is unbuffered. */
-#define JAS_STREAM_UNBUF	0x0000
+#define JAS_STREAM_UNBUF        0x0000
 /* The stream is line buffered. */
-#define JAS_STREAM_LINEBUF	0x0001
+#define JAS_STREAM_LINEBUF      0x0001
 /* The stream is fully buffered. */
-#define JAS_STREAM_FULLBUF	0x0002
+#define JAS_STREAM_FULLBUF      0x0002
 /* The buffering mode mask. */
-#define	JAS_STREAM_BUFMODEMASK	0x000f
+#define JAS_STREAM_BUFMODEMASK  0x000f
 
 /* The memory associated with the buffer needs to be deallocated when the
   stream is destroyed. */
-#define JAS_STREAM_FREEBUF	0x0008
+#define JAS_STREAM_FREEBUF      0x0008
 /* The buffer is currently being used for reading. */
-#define JAS_STREAM_RDBUF	0x0010
+#define JAS_STREAM_RDBUF        0x0010
 /* The buffer is currently being used for writing. */
-#define JAS_STREAM_WRBUF	0x0020
+#define JAS_STREAM_WRBUF        0x0020
 
 /*
  * Stream error flags.
  */
 
 /* The end-of-file has been encountered (on reading). */
-#define JAS_STREAM_EOF	0x0001
+#define JAS_STREAM_EOF  0x0001
 /* An I/O error has been encountered on the stream. */
-#define JAS_STREAM_ERR	0x0002
+#define JAS_STREAM_ERR  0x0002
 /* The read/write limit has been exceeded. */
-#define	JAS_STREAM_RWLIMIT	0x0004
+#define JAS_STREAM_RWLIMIT      0x0004
 /* The error mask. */
 #define JAS_STREAM_ERRMASK \
-	(JAS_STREAM_EOF | JAS_STREAM_ERR | JAS_STREAM_RWLIMIT)
+        (JAS_STREAM_EOF | JAS_STREAM_ERR | JAS_STREAM_RWLIMIT)
 
 /*
  * Other miscellaneous constants.
  */
 
 /* The default buffer size (for fully-buffered operation). */
-#define JAS_STREAM_BUFSIZE	8192
+#define JAS_STREAM_BUFSIZE      8192
 /* The default permission mask for file creation. */
-#define JAS_STREAM_PERMS	0666
+#define JAS_STREAM_PERMS        0666
 
 /* The maximum number of characters that can always be put back on a stream. */
-#define	JAS_STREAM_MAXPUTBACK	16
+#define JAS_STREAM_MAXPUTBACK   16
 
 /******************************************************************************\
 * Types.
@@ -224,17 +224,17 @@ typedef void jas_stream_obj_t;
 
 typedef struct {
 
-	/* Read characters from a file object. */
-	int (*read_)(jas_stream_obj_t *obj, char *buf, int cnt);
+        /* Read characters from a file object. */
+        int (*read_)(jas_stream_obj_t *obj, char *buf, int cnt);
 
-	/* Write characters to a file object. */
-	int (*write_)(jas_stream_obj_t *obj, char *buf, int cnt);
+        /* Write characters to a file object. */
+        int (*write_)(jas_stream_obj_t *obj, char *buf, int cnt);
 
-	/* Set the position for a file object. */
-	long (*seek_)(jas_stream_obj_t *obj, long offset, int origin);
+        /* Set the position for a file object. */
+        long (*seek_)(jas_stream_obj_t *obj, long offset, int origin);
 
-	/* Close a file object. */
-	int (*close_)(jas_stream_obj_t *obj);
+        /* Close a file object. */
+        int (*close_)(jas_stream_obj_t *obj);
 
 } jas_stream_ops_t;
 
@@ -244,46 +244,46 @@ typedef struct {
 
 typedef struct {
 
-	/* The mode in which the stream was opened. */
-	int openmode_;
+        /* The mode in which the stream was opened. */
+        int openmode_;
 
-	/* The buffering mode. */
-	int bufmode_;
+        /* The buffering mode. */
+        int bufmode_;
 
-	/* The stream status. */
-	int flags_;
+        /* The stream status. */
+        int flags_;
 
-	/* The start of the buffer area to use for reading/writing. */
-	unsigned char *bufbase_;
+        /* The start of the buffer area to use for reading/writing. */
+        unsigned char *bufbase_;
 
-	/* The start of the buffer area excluding the extra initial space for
-	  character putback. */
-	unsigned char *bufstart_;
+        /* The start of the buffer area excluding the extra initial space for
+          character putback. */
+        unsigned char *bufstart_;
 
-	/* The buffer size. */
-	int bufsize_;
+        /* The buffer size. */
+        int bufsize_;
 
-	/* The current position in the buffer. */
-	unsigned char *ptr_;
+        /* The current position in the buffer. */
+        unsigned char *ptr_;
 
-	/* The number of characters that must be read/written before
-	the buffer needs to be filled/flushed. */
-	int cnt_;
+        /* The number of characters that must be read/written before
+        the buffer needs to be filled/flushed. */
+        int cnt_;
 
-	/* A trivial buffer to be used for unbuffered operation. */
-	unsigned char tinybuf_[JAS_STREAM_MAXPUTBACK + 1];
+        /* A trivial buffer to be used for unbuffered operation. */
+        unsigned char tinybuf_[JAS_STREAM_MAXPUTBACK + 1];
 
-	/* The operations for the underlying stream file object. */
-	jas_stream_ops_t *ops_;
+        /* The operations for the underlying stream file object. */
+        jas_stream_ops_t *ops_;
 
-	/* The underlying stream file object. */
-	jas_stream_obj_t *obj_;
+        /* The underlying stream file object. */
+        jas_stream_obj_t *obj_;
 
-	/* The number of characters read/written. */
-	long rwcnt_;
+        /* The number of characters read/written. */
+        long rwcnt_;
 
-	/* The maximum number of characters that may be read/written. */
-	long rwlimit_;
+        /* The maximum number of characters that may be read/written. */
+        long rwlimit_;
 
 } jas_stream_t;
 
@@ -300,23 +300,23 @@ typedef int jas_stream_fileobj_t;
 
 typedef struct {
 
-	/* The data associated with this file. */
-	unsigned char *buf_;
+        /* The data associated with this file. */
+        unsigned char *buf_;
 
-	/* The allocated size of the buffer for holding file data. */
-	int bufsize_;
+        /* The allocated size of the buffer for holding file data. */
+        int bufsize_;
 
-	/* The length of the file. */
-	int_fast32_t len_;
+        /* The length of the file. */
+        int_fast32_t len_;
 
-	/* The seek position. */
-	int_fast32_t pos_;
+        /* The seek position. */
+        int_fast32_t pos_;
 
-	/* Is the buffer growable? */
-	int growable_;
+        /* Is the buffer growable? */
+        int growable_;
 
-	/* Was the buffer allocated internally? */
-	int myalloc_;
+        /* Was the buffer allocated internally? */
+        int myalloc_;
 
 } jas_stream_memobj_t;
 
@@ -348,26 +348,26 @@ int jas_stream_close(jas_stream_t *stream);
 
 /* Get the EOF indicator for a stream. */
 #define jas_stream_eof(stream) \
-	(((stream)->flags_ & JAS_STREAM_EOF) != 0)
+        (((stream)->flags_ & JAS_STREAM_EOF) != 0)
 
 /* Get the error indicator for a stream. */
 #define jas_stream_error(stream) \
-	(((stream)->flags_ & JAS_STREAM_ERR) != 0)
+        (((stream)->flags_ & JAS_STREAM_ERR) != 0)
 
 /* Clear the error indicator for a stream. */
 #define jas_stream_clearerr(stream) \
-	((stream)->flags_ &= ~(JAS_STREAM_ERR | JAS_STREAM_EOF))
+        ((stream)->flags_ &= ~(JAS_STREAM_ERR | JAS_STREAM_EOF))
 
 /* Get the read/write limit for a stream. */
-#define	jas_stream_getrwlimit(stream) \
-	(((const jas_stream_t *)(stream))->rwlimit_)
+#define jas_stream_getrwlimit(stream) \
+        (((const jas_stream_t *)(stream))->rwlimit_)
 
 /* Set the read/write limit for a stream. */
 int jas_stream_setrwlimit(jas_stream_t *stream, long rwlimit);
 
 /* Get the read/write count for a stream. */
-#define	jas_stream_getrwcount(stream) \
-	(((const jas_stream_t *)(stream))->rwcnt_)
+#define jas_stream_getrwcount(stream) \
+        (((const jas_stream_t *)(stream))->rwcnt_)
 
 /* Set the read/write count for a stream. */
 long jas_stream_setrwcount(jas_stream_t *stream, long rwcnt);
@@ -378,16 +378,16 @@ long jas_stream_setrwcount(jas_stream_t *stream, long rwcnt);
 
 /* Read a character from a stream. */
 #if defined(DEBUG)
-#define	jas_stream_getc(stream)	jas_stream_getc_func(stream)
+#define jas_stream_getc(stream) jas_stream_getc_func(stream)
 #else
-#define jas_stream_getc(stream)	jas_stream_getc_macro(stream)
+#define jas_stream_getc(stream) jas_stream_getc_macro(stream)
 #endif
 
 /* Write a character to a stream. */
 #if defined(DEBUG)
-#define jas_stream_putc(stream, c)	jas_stream_putc_func(stream, c)
+#define jas_stream_putc(stream, c)      jas_stream_putc_func(stream, c)
 #else
-#define jas_stream_putc(stream, c)	jas_stream_putc_macro(stream, c)
+#define jas_stream_putc(stream, c)      jas_stream_putc_macro(stream, c)
 #endif
 
 /* Read characters from a stream into a buffer. */
@@ -407,9 +407,9 @@ char *jas_stream_gets(jas_stream_t *stream, char *buf, int bufsize);
 
 /* Look at the next character to be read from a stream without actually
   removing it from the stream. */
-#define	jas_stream_peekc(stream) \
-	(((stream)->cnt_ <= 0) ? jas_stream_fillbuf(stream, 0) : \
-	  ((int)(*(stream)->ptr_)))
+#define jas_stream_peekc(stream) \
+        (((stream)->cnt_ <= 0) ? jas_stream_fillbuf(stream, 0) : \
+          ((int)(*(stream)->ptr_)))
 
 /* Put a character back on a stream. */
 int jas_stream_ungetc(jas_stream_t *stream, int c);
@@ -463,26 +463,26 @@ directly, you will die a horrible, miserable, and painful death! */
 
 /* Read a character from a stream. */
 #define jas_stream_getc_macro(stream) \
-	((!((stream)->flags_ & (JAS_STREAM_ERR | JAS_STREAM_EOF | \
-	  JAS_STREAM_RWLIMIT))) ? \
-	  (((stream)->rwlimit_ >= 0 && (stream)->rwcnt_ >= (stream)->rwlimit_) ? \
-	  (stream->flags_ |= JAS_STREAM_RWLIMIT, EOF) : \
-	  jas_stream_getc2(stream)) : EOF)
+        ((!((stream)->flags_ & (JAS_STREAM_ERR | JAS_STREAM_EOF | \
+          JAS_STREAM_RWLIMIT))) ? \
+          (((stream)->rwlimit_ >= 0 && (stream)->rwcnt_ >= (stream)->rwlimit_) ? \
+          (stream->flags_ |= JAS_STREAM_RWLIMIT, EOF) : \
+          jas_stream_getc2(stream)) : EOF)
 #define jas_stream_getc2(stream) \
-	((--(stream)->cnt_ < 0) ? jas_stream_fillbuf(stream, 1) : \
-	  (++(stream)->rwcnt_, (int)(*(stream)->ptr_++)))
+        ((--(stream)->cnt_ < 0) ? jas_stream_fillbuf(stream, 1) : \
+          (++(stream)->rwcnt_, (int)(*(stream)->ptr_++)))
 
 /* Write a character to a stream. */
 #define jas_stream_putc_macro(stream, c) \
-	((!((stream)->flags_ & (JAS_STREAM_ERR | JAS_STREAM_EOF | \
-	  JAS_STREAM_RWLIMIT))) ? \
-	  (((stream)->rwlimit_ >= 0 && (stream)->rwcnt_ >= (stream)->rwlimit_) ? \
-	  (stream->flags_ |= JAS_STREAM_RWLIMIT, EOF) : \
-	  jas_stream_putc2(stream, c)) : EOF)
+        ((!((stream)->flags_ & (JAS_STREAM_ERR | JAS_STREAM_EOF | \
+          JAS_STREAM_RWLIMIT))) ? \
+          (((stream)->rwlimit_ >= 0 && (stream)->rwcnt_ >= (stream)->rwlimit_) ? \
+          (stream->flags_ |= JAS_STREAM_RWLIMIT, EOF) : \
+          jas_stream_putc2(stream, c)) : EOF)
 #define jas_stream_putc2(stream, c) \
-	(((stream)->bufmode_ |= JAS_STREAM_WRBUF, --(stream)->cnt_ < 0) ? \
-	  jas_stream_flushbuf((stream), (unsigned char)(c)) : \
-	  (++(stream)->rwcnt_, (int)(*(stream)->ptr_++ = (c))))
+        (((stream)->bufmode_ |= JAS_STREAM_WRBUF, --(stream)->cnt_ < 0) ? \
+          jas_stream_flushbuf((stream), (unsigned char)(c)) : \
+          (++(stream)->rwcnt_, (int)(*(stream)->ptr_++ = (c))))
 
 /* These prototypes need to be here for the sake of the stream_getc and
 stream_putc macros. */

@@ -1,5 +1,3 @@
-
-
 /*===========*
  * TYPES     *
  *===========*/
@@ -19,7 +17,7 @@ typedef struct detail_def {
 }  Slice_Specifics;
 
 typedef struct fsl_def {
-  int framenum; 
+  int framenum;
   int frametype;
   char qscale;
   Slice_Specifics *slc;
@@ -28,8 +26,8 @@ typedef struct fsl_def {
 } FrameSpecList;
 
 
-void	Specifics_Init (void);
+void    Specifics_Init (void);
 int     SpecLookup (int fn, int typ, int num,
-			    BlockMV **info, int start_qs);
+                            BlockMV **info, int start_qs);
 int SpecTypeLookup (int fn);
 

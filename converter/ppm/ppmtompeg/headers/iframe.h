@@ -19,7 +19,7 @@ int
 GetIQScale(void);
 
 void
-GenIFrame(BitBucket * const bb, 
+GenIFrame(BitBucket * const bb,
           MpegFrame * const current);
 
 void
@@ -30,8 +30,8 @@ IFrameTotalTime(void);
 
 
 void
-ShowIFrameSummary(unsigned int const inputFrameBits, 
-                  unsigned int const totalBits, 
+ShowIFrameSummary(unsigned int const inputFrameBits,
+                  unsigned int const totalBits,
                   FILE *       const fpointer);
 
 void
