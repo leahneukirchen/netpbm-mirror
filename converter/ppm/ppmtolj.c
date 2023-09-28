@@ -11,6 +11,7 @@
 */
 
 #include <stdbool.h>
+#include <limits.h>
 #include <string.h>
 
 #include "ppm.h"
@@ -205,6 +206,11 @@ printRaster(FILE *       const ifP,
     unsigned int row;
 
     pixelrow = ppm_allocrow(cols);
+
+    if (cols > UINT_MAX/6) {
+        /* We may need a row buffer of up to cols * 6 bytes for compression */
+        pm_error("Image is uncomputably wide (%u columns)", cols);
+    }
 
     obuf = (unsigned char *) pm_allocrow(cols * 3, sizeof(unsigned char));
     cbuf = (unsigned char *) pm_allocrow(cols * 6, sizeof(unsigned char));
