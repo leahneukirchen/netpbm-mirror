@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.09.28 BJH  Release 11.04.01
+
+              Fix compile error on systems without 'asprintf'.  Introduced
+              in Netpbm 11.04 (yesterday).
+
 23.09.27 BJH  Release 11.04.00
 
               pamaddnoise: add -salt.
