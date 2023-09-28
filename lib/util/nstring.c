@@ -84,7 +84,7 @@ pm_asprintf(const char ** const resultP,
 
     va_start(varargs, fmt);
 
-    vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
+    dryRunLen = vsnprintf(NULL, 0, fmt, varargs);
 
     va_end(varargs);
 
@@ -101,7 +101,7 @@ pm_asprintf(const char ** const resultP,
 
             va_start(varargs, fmt);
 
-            vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
+            realLen = vsnprintf(buffer, allocSize, fmt, varargs);
 
             assert(realLen == dryRunLen);
             va_end(varargs);
