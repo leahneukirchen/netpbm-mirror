@@ -42,6 +42,41 @@ typedef struct Hashinfo {
         struct Hashinfo * next;
 } Hashinfo;
 
+
+
+static struct Mediasize
+mediaSize(const char * const media,
+          bool         const dpi300) {
+
+    struct Mediasize medias;
+
+    if (TOUPPER(media[0]) == 'A') {
+        switch (TOUPPER(media[1])) {
+        case 'S':
+            medias = MSize_AS;
+            break;
+        case '4':
+            if (TOUPPER(media[2]) == 'S')
+                medias = MSize_A4S;
+            else
+                medias = MSize_A4;
+            break;
+        default:
+            medias = MSize_A;
+        }
+    } else
+        medias = MSize_User;
+
+    if (dpi300) {
+        medias.maxcols *= 2;
+        medias.maxrows *= 2;
+    }
+
+    return medias;
+}
+
+
+
 static void
 cmd(char const arg) {
 
@@ -71,12 +106,14 @@ static void
 checkAndRotate(int              const cols,
                int              const rows,
                int              const enlarge,
-               struct mediasize const medias) {
+               struct Mediasize const medias) {
 
     if (cols > rows) {
         ROTATEIMG(DOROTATE);                        /* rotate image */
         if (enlarge * rows > medias.maxcols || enlarge * cols > medias.maxrows)
-            pm_error("Image too large, MaxPixels = %u x %u",
+            pm_error("Image too large (%u x %u).  "
+                     "Size of output media: %u x %u",
+                     enlarge*rows, enlarge*cols,
                      medias.maxrows, medias.maxcols);
         HPIXELS(cols);
         VPIXELS(rows);
@@ -86,7 +123,9 @@ checkAndRotate(int              const cols,
     } else {
         ROTATEIMG(DONTROTATE);
         if (enlarge * rows > medias.maxrows || enlarge * cols > medias.maxcols)
-            pm_error("Image too large, MaxPixels = %u x %u",
+            pm_error("Image too large (%u x %u).  "
+                     "Size of output media: %u x %u",
+                     enlarge*rows, enlarge*cols,
                      medias.maxrows, medias.maxcols);
         HPIXELS(cols);
         VPIXELS(rows);
@@ -103,7 +142,7 @@ lineputinit(int              const cols,
             int              const sharpness,
             int              const enlarge,
             int              const copy,
-            struct mediasize const medias) {
+            struct Mediasize const medias) {
     ONLINE;
     CLRMEM;
     MEDIASIZE(medias);
@@ -162,7 +201,7 @@ static void
 lookuptableinit(int              const sharpness,
                 int              const enlarge,
                 int              const copy,
-                struct mediasize const medias) {
+                struct Mediasize const medias) {
 
     ONLINE;
     CLRMEM;
@@ -220,7 +259,7 @@ static void
 lookuptabledata(int              const cols,
                 int              const rows,
                 int              const enlarge,
-                struct mediasize const medias) {
+                struct Mediasize const medias) {
 
     DONELOOKUPTABLE;
     checkAndRotate(cols, rows, enlarge, medias);
@@ -235,7 +274,7 @@ frametransferinit(int              const cols,
                   int              const sharpness,
                   int              const enlarge,
                   int              const copy,
-                  struct mediasize const medias) {
+                  struct Mediasize const medias) {
 
     ONLINE;
     CLRMEM;
@@ -372,7 +411,7 @@ generateLookupTable(colorhist_vector const table,
                     int              const sharpness,
                     int              const enlarge,
                     int              const copy,
-                    struct mediasize const medias,
+                    struct Mediasize const medias,
                     Hashinfo **      const colorhashtableP) {
 /*----------------------------------------------------------------------------
    Write to the output file the palette (color lookup table) indicated by
@@ -449,7 +488,7 @@ useLookupTable(pixel **         const pixels,
                int              const sharpness,
                int              const enlarge,
                int              const copy,
-               struct mediasize const medias,
+               struct Mediasize const medias,
                unsigned int     const cols,
                unsigned int     const rows,
                int              const format,
@@ -543,7 +582,7 @@ useNoLookupTable(pixel **         const pixels,
                  int              const sharpness,
                  int              const enlarge,
                  int              const copy,
-                 struct mediasize const medias,
+                 struct Mediasize const medias,
                  unsigned int     const cols,
                  unsigned int     const rows,
                  int              const format) {
@@ -573,7 +612,7 @@ doTiny(FILE *           const ifP,
        int              const sharpness,
        int              const enlarge,
        int              const copy,
-       struct mediasize const medias) {
+       struct Mediasize const medias) {
 
     pixel * pixelrow;
     unsigned char * redrow;
@@ -625,7 +664,7 @@ main(int argc, const char ** argv) {
     int              cols, rows, format;
     pixval           maxval;
     int              sharpness, enlarge, copy;
-    struct mediasize medias;
+    struct Mediasize medias;
     char             media[16];
     const char * const usage = "[-sharpness <1-4>] [-enlarge <1-3>] [-media <a,a4,as,a4s>] [-copy <1-9>] [-tiny] [-dpi300] [ppmfile]";
 
@@ -688,28 +727,7 @@ main(int argc, const char ** argv) {
     if (argn != argc)
         pm_usage(usage);
 
-    if (TOUPPER(media[0]) == 'A')
-        switch (TOUPPER(media[1])) {
-        case 'S':
-            medias = MSize_AS;
-            break;
-        case '4':
-            if(TOUPPER(media[2]) == 'S')
-                medias = MSize_A4S;
-            else {
-                medias = MSize_A4;
-            }
-            break;
-        default:
-            medias = MSize_A;
-        }
-    else
-        medias = MSize_User;
-
-    if (dpi300) {
-        medias.maxcols *= 2;
-        medias.maxrows *= 2;
-    }
+    medias = mediaSize(media, dpi300);
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
 
