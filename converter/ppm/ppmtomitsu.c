@@ -20,6 +20,7 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -35,23 +36,42 @@
 #define HASHSIZE 2048
 #define myhash(x) ((PPM_GETR(x)*3 + PPM_GETG(x)*5 + PPM_GETB(x)*7) % HASHSIZE)
 
-typedef struct hashinfo {
+typedef struct Hashinfo {
         pixel     color;
         long      flag;
-        struct hashinfo * next;
-} hashinfo;
+        struct Hashinfo * next;
+} Hashinfo;
 
-#define cmd(arg)           fputc((arg), stdout)
-#define datum(arg)         fputc((char)(arg), stdout)
-#define data(arg,num)      fwrite((arg), sizeof(char), (num), stdout)
+static void
+cmd(char const arg) {
+
+    fputc(arg, stdout);
+}
 
 
 
 static void
-check_and_rotate(int              const cols,
-                 int              const rows,
-                 int              const enlarge,
-                 struct mediasize const medias) {
+datum(unsigned char const arg) {
+
+    fputc(arg, stdout);
+}
+
+
+
+static void
+data(unsigned char * const arg,
+     size_t          const len) {
+
+    fwrite((unsigned char *)arg, 1, len, stdout);
+}
+
+
+
+static void
+checkAndRotate(int              const cols,
+               int              const rows,
+               int              const enlarge,
+               struct mediasize const medias) {
 
     if (cols > rows) {
         ROTATEIMG(DOROTATE);                        /* rotate image */
@@ -132,7 +152,7 @@ lineputinit(int              const cols,
     default:
         SHARPNESS(SP_USER);
     }
-    check_and_rotate(cols, rows, enlarge, medias);
+    checkAndRotate(cols, rows, enlarge, medias);
     DATASTART;
 }
 
@@ -203,7 +223,7 @@ lookuptabledata(int              const cols,
                 struct mediasize const medias) {
 
     DONELOOKUPTABLE;
-    check_and_rotate(cols, rows, enlarge, medias);
+    checkAndRotate(cols, rows, enlarge, medias);
     DATASTART;
 }
 
@@ -265,7 +285,7 @@ frametransferinit(int              const cols,
     default:
         SHARPNESS(SP_USER);
     }
-    check_and_rotate(cols, rows, enlarge, medias);
+    checkAndRotate(cols, rows, enlarge, medias);
 }
 
 
@@ -273,14 +293,14 @@ frametransferinit(int              const cols,
 static void
 doLookupTableColors(colorhist_vector const table,
                     unsigned int     const nColor,
-                    hashinfo *       const colorhashtable) {
+                    Hashinfo *       const colorhashtable) {
 
     unsigned int colval;
     for (colval = 0; colval < nColor; ++colval) {
-        struct hashinfo * const hashchain =
+        struct Hashinfo * const hashchain =
             &colorhashtable[myhash((table[colval]).color)];
 
-        struct hashinfo * hashrun;
+        struct Hashinfo * hashrun;
 
         cmd('$');
         datum(colval);
@@ -310,13 +330,13 @@ doLookupTableColors(colorhist_vector const table,
 static void
 doLookupTableGrays(colorhist_vector const table,
                    unsigned int     const nColor,
-                   hashinfo *       const colorhashtable) {
+                   Hashinfo *       const colorhashtable) {
 
     unsigned int colval;
     for (colval = 0; colval < nColor; ++colval) {
-        struct hashinfo * const hashchain =
+        struct Hashinfo * const hashchain =
             &colorhashtable[myhash((table[colval]).color)];
-        struct hashinfo * hashrun;
+        struct Hashinfo * hashrun;
 
         cmd('$');
         datum(colval);
@@ -353,7 +373,7 @@ generateLookupTable(colorhist_vector const table,
                     int              const enlarge,
                     int              const copy,
                     struct mediasize const medias,
-                    hashinfo **      const colorhashtableP) {
+                    Hashinfo **      const colorhashtableP) {
 /*----------------------------------------------------------------------------
    Write to the output file the palette (color lookup table) indicated by
    'table' and generate a hash table to use with it: *colorhashtableP.
@@ -361,7 +381,7 @@ generateLookupTable(colorhist_vector const table,
    Also write the various properties 'sharpness', 'enlarge', 'copy', and
    'medias' to the output file.
 -----------------------------------------------------------------------------*/
-    hashinfo * colorhashtable;
+    Hashinfo * colorhashtable;
 
     lookuptableinit(sharpness, enlarge, copy, medias);
 
@@ -394,7 +414,7 @@ static void
 writeColormapRaster(pixel **         const pixels,
                     unsigned int     const cols,
                     unsigned int     const rows,
-                    hashinfo *       const colorhashtable) {
+                    Hashinfo *       const colorhashtable) {
 /*----------------------------------------------------------------------------
    Write a colormapped raster: write the pixels pixels[][] (dimensions cols x
    rows) as indices into the colormap (palette; lookup table) indicated by
@@ -407,9 +427,9 @@ writeColormapRaster(pixel **         const pixels,
 
         for (col = 0; col < cols; ++col) {
             pixel * const pixrow = pixels[row];
-            struct hashinfo * const hashchain =
+            struct Hashinfo * const hashchain =
                 &colorhashtable[myhash(pixrow[col])];
-            struct hashinfo * p;
+            struct Hashinfo * p;
 
             p = hashchain;
             while (!PPM_EQUAL((p->color), pixrow[col])) {
@@ -435,7 +455,7 @@ useLookupTable(pixel **         const pixels,
                int              const format,
                unsigned int     const nColor) {
 
-    hashinfo * colorhashtable;
+    Hashinfo * colorhashtable;
 
     pm_message("found %u colors - using the lookuptable-method", nColor);
 
@@ -596,26 +616,28 @@ doTiny(FILE *           const ifP,
 
 
 int
-main(int argc, char * argv[]) {
-    FILE * ifP;
+main(int argc, const char ** argv) {
+
+    FILE *           ifP;
     int              argn;
     bool             dpi300;
+    bool             tiny;
     int              cols, rows, format;
     pixval           maxval;
-    int              sharpness, enlarge, copy, tiny;
+    int              sharpness, enlarge, copy;
     struct mediasize medias;
     char             media[16];
     const char * const usage = "[-sharpness <1-4>] [-enlarge <1-3>] [-media <a,a4,as,a4s>] [-copy <1-9>] [-tiny] [-dpi300] [ppmfile]";
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-    dpi300 = FALSE;
+    dpi300 = false;
     argn = 1;
     sharpness = 32;
     enlarge   = 1;
     copy      = 1;
     memset(media, '\0', 16);
-    tiny      = FALSE;
+    tiny      = false;
 
     /* check for flags */
     while (argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0') {
@@ -648,9 +670,9 @@ main(int argc, char * argv[]) {
             pm_usage(usage);
         }
     else if (pm_keymatch(argv[argn], "-dpi300", 2))
-        dpi300 = TRUE;
+        dpi300 = true;
     else if (pm_keymatch(argv[argn], "-tiny", 2))
-        tiny = TRUE;
+        tiny = true;
     else
         pm_usage(usage);
     ++argn;
