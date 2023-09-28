@@ -92,6 +92,7 @@ procLeft(int          const r1,
          int          const r2,
          int          const c1,
          int          const c2, 
+         unsigned int const width,
          unsigned int const var) {
 
     int cm, rm, c;
@@ -101,11 +102,11 @@ procLeft(int          const r1,
     cm = (c1 + c2) >> 1;
     cm += (int)floor(((float)rand() / RAND_MAX - 0.5) * var + 0.5);
 
-    for (c = 0; c < cm; c++)
+    for (c = 0; c < MIN(width, MAX(0, cm)); c++)
         PPM_ASSIGN(PIX[rm][c], BG_RED, BG_GREEN, BG_BLUE);
 
-    procLeft(r1, rm, c1, cm, var);
-    procLeft(rm, r2, cm, c2, var);
+    procLeft(r1, rm, c1, cm, width, var);
+    procLeft(rm, r2, cm, c2, width, var);
 }
 
 
@@ -139,6 +140,7 @@ procTop(int          const c1,
         int          const c2,
         int          const r1,
         int          const r2,
+        unsigned int const height,
         unsigned int const var) {
 
     int rm, cm, r;
@@ -148,11 +150,11 @@ procTop(int          const c1,
     rm = (r1 + r2) >> 1;
     rm += (int)floor(((float)rand() / RAND_MAX - 0.5) * var + 0.5);
 
-    for (r = 0; r < rm; r++)
+    for (r = 0; r < MIN(height, MAX(0, rm)); r++)
         PPM_ASSIGN(PIX[r][cm], BG_RED, BG_GREEN, BG_BLUE);
 
-    procTop(c1, cm, r1, rm, var);
-    procTop(cm, c2, rm, r2, var);
+    procTop(c1, cm, r1, rm, height, var);
+    procTop(cm, c2, rm, r2, height, var);
 }
 
 
@@ -261,7 +263,7 @@ main(int argc, const char * argv[]) {
         for (col = 0; col < left_c2; ++col)
             PPM_ASSIGN(PIX[left_r2][col], BG_RED, BG_GREEN, BG_BLUE);
 
-        procLeft(left_r1, left_r2, left_c1, left_c2, cmdline.var);
+        procLeft(left_r1, left_r2, left_c1, left_c2, cmdline.width, cmdline.var);
     }
 
     /* Make a ragged right border */
@@ -296,7 +298,7 @@ main(int argc, const char * argv[]) {
         for (row = 0; row < top_r2; ++row)
             PPM_ASSIGN(PIX[row][top_c2], BG_RED, BG_GREEN, BG_BLUE);
 
-        procTop(top_c1, top_c2, top_r1, top_r2, cmdline.var);
+        procTop(top_c1, top_c2, top_r1, top_r2, cmdline.height, cmdline.var);
     }
 
     /* Make a ragged bottom border */

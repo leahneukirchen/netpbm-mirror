@@ -53,7 +53,7 @@ pbm_readpbminitrest( FILE * const file,
     if (*colsP < 0)
         pm_error("Number of columns in header is too large.");
     if (*rowsP < 0)
-        pm_error("Number of columns in header is too large.");
+        pm_error("Number of rows in header is too large.");
 }
 
 

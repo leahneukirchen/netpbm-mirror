@@ -4,6 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.09.27 BJH  Release 10.86.39
+
+              pamtosvg: fix hang.
+
+              pamstack: Fail gracefully when total number of planes is too
+              large for unsigned integer.  Always broken (Pamstack was new in
+              Netpbm 10.0 (June 2002).
+
+              pgmtexture: Fix buffer overflow with maxval > 255.  Always
+              broken.  Maxvals > 255 were possible starting in Netpbm 9.0
+              (April 2000).
+
+              ppmrough: fix buffer overrun.  Always broken (Ppmrough was new
+              in Netpbm 10.9 (September 2002).
+
+              pbmtoxbm: Fix spurious output with really wide rows.
+
 23.03.25 BJH  Release 10.86.38
 
               jpegtopnm: Many fixes to -dumpexif.  Always broken.
