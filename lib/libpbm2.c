@@ -58,28 +58,6 @@ pbm_readpbminitrest( FILE * const file,
 
 
 
-static void
-validateComputableSize(unsigned int const cols,
-                       unsigned int const rows) {
-/*----------------------------------------------------------------------------
-   Validate that the dimensions of the image are such that it can be
-   processed in typical ways on this machine without worrying about
-   overflows.  Note that in C, arithmetic is always modulus
-   arithmetic, so if your values are too big, the result is not what
-   you expect.  That failed expectation can be disastrous if you use
-   it to allocate memory.
-
-   See comments at 'validateComputableSize' in libpam.c for details on
-   the purpose of these validations.
------------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 10)
-        pm_error("image width (%u) too large to be processed", cols);
-    if (rows > INT_MAX - 10)
-        pm_error("image height (%u) too large to be processed", rows);
-}
-
-
-
 void
 pbm_readpbminit(FILE * const ifP,
                 int *  const colsP,
@@ -115,7 +93,7 @@ pbm_readpbminit(FILE * const ifP,
         pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
                  realFormat);
     }
-    validateComputableSize(*colsP, *rowsP);
+    pbm_validateComputableSize(*colsP, *rowsP);
 }
 
 

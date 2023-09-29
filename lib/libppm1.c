@@ -88,9 +88,9 @@ ppm_readppminitrest(FILE *   const fileP,
 
 
 
-static void
-validateComputableSize(unsigned int const cols,
-                       unsigned int const rows) {
+void
+ppm_validateComputableSize(unsigned int const cols,
+                           unsigned int const rows) {
 /*----------------------------------------------------------------------------
    Validate that the dimensions of the image are such that it can be
    processed in typical ways on this machine without worrying about
@@ -109,28 +109,6 @@ validateComputableSize(unsigned int const cols,
         pm_error("image width (%u) too large to be processed", cols);
     if (rows > INT_MAX - 2)
         pm_error("image height (%u) too large to be processed", rows);
-}
-
-
-
-static void
-validateComputableMaxval(pixval const maxval) {
-/*----------------------------------------------------------------------------
-  This is similar to validateComputableSize, but for the maxval.
------------------------------------------------------------------------------*/
-    /* Code sometimes allocates an array indexed by sample values and
-       represents the size of that array as an INT.  (UNSIGNED INT would be
-       more proper, but there's no need to be that permissive).
-
-       Code also sometimes iterates through sample values and quits when the
-       value is greater than the maxval.
-    */
-
-    if (maxval == 0)
-        pm_error("Maxval is zero.  Must be at least one.");
-
-    if (maxval > INT_MAX-1)
-        pm_error("Maxval (%u) is too large to be processed", maxval);
 }
 
 
@@ -172,9 +150,9 @@ ppm_readppminit(FILE *   const fileP,
         pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
                  realFormat);
     }
-    validateComputableSize(*colsP, *rowsP);
+    ppm_validateComputableSize(*colsP, *rowsP);
 
-    validateComputableMaxval(*maxvalP);
+    pgm_validateComputableMaxval(*maxvalP);
 }
 
 

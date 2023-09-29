@@ -90,9 +90,9 @@ pgm_readpgminitrest(FILE * const fileP,
 
 
 
-static void
-validateComputableSize(unsigned int const cols,
-                       unsigned int const rows) {
+void
+pgm_validateComputableSize(unsigned int const cols,
+                           unsigned int const rows) {
 /*----------------------------------------------------------------------------
    Validate that the dimensions of the image are such that it can be
    processed in typical ways on this machine without worrying about
@@ -115,8 +115,8 @@ validateComputableSize(unsigned int const cols,
 
 
 
-static void
-validateComputableMaxval(gray const maxval) {
+void
+pgm_validateComputableMaxval(gray const maxval) {
 /*----------------------------------------------------------------------------
   This is similar to validateComputableSize, but for the maxval.
 -----------------------------------------------------------------------------*/
@@ -193,9 +193,9 @@ pgm_readpgminit(FILE * const fileP,
         pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
                  realFormat);
     }
-    validateComputableSize(*colsP, *rowsP);
+    pgm_validateComputableSize(*colsP, *rowsP);
 
-    validateComputableMaxval(*maxvalP);
+    pgm_validateComputableMaxval(*maxvalP);
 }
 
 

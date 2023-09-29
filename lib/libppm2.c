@@ -16,7 +16,11 @@
 
 #include "netpbm/pm_c_util.h"
 #include "netpbm/mallocvar.h"
+#include "libpgm.h"
+#include "libppm.h"
 #include "ppm.h"
+
+
 
 void
 ppm_writeppminit(FILE*  const fileP,
@@ -26,6 +30,13 @@ ppm_writeppminit(FILE*  const fileP,
                  int    const forceplain) {
 
     bool const plainFormat = forceplain || pm_plain_output;
+
+    /* For Caller's convenience, we include validating computability of the
+       image parameters, since Caller may be using them in arithmetic after
+       our return.
+    */
+    ppm_validateComputableSize(cols, rows);
+    pgm_validateComputableMaxval(maxval);
 
     if (maxval > PPM_OVERALLMAXVAL && !plainFormat)
         pm_error("too-large maxval passed to ppm_writeppminit(): %d."

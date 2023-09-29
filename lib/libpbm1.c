@@ -22,6 +22,7 @@
 #include "netpbm/mallocvar.h"
 #include "netpbm/shhopt.h"
 
+#include "libpbm.h"
 #include "pbm.h"
 
 
@@ -81,6 +82,28 @@ pbm_check(FILE *               const fileP,
         pm_filepos const needRasterSize = rows * bytesPerRow;
         pm_check(fileP, checkType, needRasterSize, retvalP);
     }
+}
+
+
+
+void
+pbm_validateComputableSize(unsigned int const cols,
+                           unsigned int const rows) {
+/*----------------------------------------------------------------------------
+   Validate that the dimensions of the image are such that it can be
+   processed in typical ways on this machine without worrying about
+   overflows.  Note that in C, arithmetic is always modulus
+   arithmetic, so if your values are too big, the result is not what
+   you expect.  That failed expectation can be disastrous if you use
+   it to allocate memory.
+
+   See comments at 'validateComputableSize' in libpam.c for details on
+   the purpose of these validations.
+-----------------------------------------------------------------------------*/
+    if (cols > INT_MAX - 10)
+        pm_error("image width (%u) too large to be processed", cols);
+    if (rows > INT_MAX - 10)
+        pm_error("image height (%u) too large to be processed", rows);
 }
 
 
