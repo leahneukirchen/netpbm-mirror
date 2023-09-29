@@ -65,7 +65,7 @@ pgm_nextimage(FILE * const file,
 
 
 void
-pgm_readpgminitrest(FILE * const fileP,
+pgm_readpgminitrest(FILE * const ifP,
                     int *  const colsP,
                     int *  const rowsP,
                     gray * const maxvalP) {
@@ -73,14 +73,13 @@ pgm_readpgminitrest(FILE * const fileP,
     gray maxval;
 
     /* Read size. */
-    *colsP = (int)pm_getuint(fileP);
-    *rowsP = (int)pm_getuint(fileP);
+    pbm_readpbminitrest(ifP, colsP, rowsP);
 
     /* Read maxval. */
-    maxval = pm_getuint(fileP);
+    maxval = pm_getuint(ifP);
     if (maxval > PGM_OVERALLMAXVAL)
         pm_error("maxval of input image (%u) is too large.  "
-                 "The maximum allowed by PGM is %u.",
+                 "The maximum allowed by the format is %u.",
                  maxval, PGM_OVERALLMAXVAL);
     if (maxval == 0)
         pm_error("maxval of input image is zero.");

@@ -35,25 +35,36 @@ getbit (FILE * const file) {
 
 
 void
-pbm_readpbminitrest( FILE * const file,
-                     int  * const colsP,
-                     int  * const rowsP ) {
+pbm_readpbminitrest(FILE * const ifP,
+                    int  * const colsP,
+                    int  * const rowsP ) {
+
+    unsigned int cols;
+    unsigned int rows;
+
     /* Read size. */
-    *colsP = (int)pm_getuint( file );
-    *rowsP = (int)pm_getuint( file );
+    cols = pm_getuint(ifP);
+    rows = pm_getuint(ifP);
 
     /* *colsP and *rowsP really should be unsigned int, but they come
        from the time before unsigned ints (or at least from a person
-       trained in that tradition), so they are int.  We could simply
-       consider negative numbers to mean values > INT_MAX/2 and much
+       trained in that tradition), so they are int.  Caller could simply
+       consider negative numbers to mean values > INT_MAX and much
        code would just automatically work.  But some code would fail
        miserably.  So we consider values that won't fit in an int to
        be unprocessable.
     */
-    if (*colsP < 0)
-        pm_error("Number of columns in header is too large.");
-    if (*rowsP < 0)
-        pm_error("Number of rows in header is too large.");
+    if (cols > INT_MAX)
+        pm_error("Number of columns in header is too large (%u).  "
+                 "The maximum allowed by the format is %u",
+                 cols, INT_MAX);
+    if (rows > INT_MAX)
+        pm_error("Number of rows in header is too large (%u).  "
+                 "The maximum allowed by the format is %u",
+                 rows, INT_MAX);
+
+    *colsP = (int)cols;
+    *rowsP = (int)rows;
 }
 
 

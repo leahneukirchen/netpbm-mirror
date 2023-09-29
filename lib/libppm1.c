@@ -64,26 +64,12 @@ ppm_nextimage(FILE * const fileP,
 
 
 void
-ppm_readppminitrest(FILE *   const fileP,
+ppm_readppminitrest(FILE *   const ifP,
                     int *    const colsP,
                     int *    const rowsP,
                     pixval * const maxvalP) {
-    unsigned int maxval;
 
-    /* Read size. */
-    *colsP = (int)pm_getuint(fileP);
-    *rowsP = (int)pm_getuint(fileP);
-
-    /* Read maxval. */
-    maxval = pm_getuint(fileP);
-    if (maxval > PPM_OVERALLMAXVAL)
-        pm_error("maxval of input image (%u) is too large.  "
-                 "The maximum allowed by the PPM format is %u.",
-                 maxval, PPM_OVERALLMAXVAL);
-    if (maxval == 0)
-        pm_error("maxval of input image is zero.");
-
-    *maxvalP = maxval;
+    pgm_readpgminitrest(ifP, colsP, rowsP, maxvalP);
 }
 
 
