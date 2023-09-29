@@ -179,6 +179,7 @@ main(int argc, const char ** argv) {
     colsIsSet = false;  /* initial value */
     rowsX = 0;  /* initial value */
     image = NULL;  /* initial value */
+    imlen = NULL;  /* initial value */
     planes = 3;  /* initial value */
 
     while ((c = fgetc(ifP)) != -1) {
