@@ -4,10 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-notyet   BJH  Release 11.05.00
+not yet  BJH  Release 11.05.00
 
-              Fix compile error on systems without 'asprintf'.  Introduced
-              in Netpbm 11.04 (September 2023).
+              pjtoppm: fix crash based on uninitialized variable.
+              Introduced in Netpbm 11.04 (September 2023).
+
+              Build: Fix compile error on systems without 'asprintf'.
+              Introduced in Netpbm 11.04 (September 2023).
 
 23.09.27 BJH  Release 11.04.00
 
