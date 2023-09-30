@@ -387,6 +387,13 @@ writeRaster(FILE *          const ofP,
     unsigned int oc;
     unsigned int row;
 
+    if (cols > UINT_MAX - cols/MAX_COUNT - 1) {
+        /* We can't compute the size of buffer 'putRow' needs for worst-case
+           compaction.
+        */
+        pm_error("Image is too wide (%u columns) for computation", cols);
+    }
+
     MALLOCARRAY(outBuf, cols + cols/MAX_COUNT + 1);
     if (!outBuf)
         pm_error("Unable to allocate %u-byte row buffer",

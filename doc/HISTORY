@@ -9,6 +9,8 @@ not yet  BJH  Release 11.05.00
               pjtoppm: fix crash based on uninitialized variable.
               Introduced in Netpbm 11.04 (September 2023).
 
+              picttoppm: fix buffer overrun with insanely wide input.
+
               Build: Fix compile error on systems without 'asprintf'.
               Introduced in Netpbm 11.04 (September 2023).
 
