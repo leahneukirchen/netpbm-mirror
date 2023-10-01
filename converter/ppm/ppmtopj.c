@@ -199,6 +199,10 @@ main(int argc, const char ** argv) {
     pm_close(ifP);
 
     MALLOCARRAY_NOFAIL(obuf, cols);
+
+    if (cols > UINT_MAX / 2)
+        pm_error("Image too wide (%u columns) for computation", cols);
+
     MALLOCARRAY_NOFAIL(cbuf, cols * 2);
 
     if (cols > XPIX || rows > YPIX)
