@@ -62,11 +62,13 @@ static int compress_row ARGS((unsigned char *op, unsigned char *oe, unsigned cha
 #define C_MOVE_X			"\033*p+%dX"
 #define C_MOVE_Y			"\033*p+%dY"
 
-static const char * const rmode[] = { 
-    "none", "snap", "bw", "dither", "diffuse", 
-    "monodither", "monodiffuse", "clusterdither", 
-    "monoclusterdither", NULL 
+static const char * const rmode[] = {
+    "none", "snap", "bw", "dither", "diffuse",
+    "monodither", "monodiffuse", "clusterdither",
+    "monoclusterdither", NULL
 };
+
+
 
 /*
  * Run-length encoding for the PaintJet. We have pairs of <instances>
@@ -78,7 +80,7 @@ compress_row(op, oe, cp)
 unsigned char *op, *oe, *cp;
 {
     unsigned char *ce = cp;
-    while ( op < oe ) {	
+    while ( op < oe ) {
 	unsigned char px = *op++;
 	unsigned char *pr = op;
 	while ( op < oe && *op == px && op - pr < 255) op++;
@@ -87,6 +89,8 @@ unsigned char *op, *oe, *cp;
     }
     return ce - cp;
 }
+
+
 
 int main(argc, argv)
 int argc;
@@ -254,3 +258,6 @@ char *argv[];
 	(void) printf(C_END_RASTER, C_END_RASTER_UNUSED);
 	exit(0);
 }
+
+
+
