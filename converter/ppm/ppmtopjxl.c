@@ -87,7 +87,7 @@ putword(unsigned short const w) {
 
 
 static unsigned int
-bitsperpixel(unsigned int v) {
+bitwidth(unsigned int v) {
 
     unsigned int bpp;
 
@@ -108,78 +108,93 @@ static char *outrow;
    compiler, which defaulted to unsigned character.  2001.03.30 BJH */
 static signed char * runcnt;
 
+/* The following belong to the bit putter.  They really should be in a
+   struct passed to the methods of the bit putter instead.
+*/
+
+static int out = 0;
+static int cnt = 0;
+static int num = 0;
+static bool pack = false;
+
 static void
 putbits(int const bArg,
         int const nArg) {
 /*----------------------------------------------------------------------------
-  Put 'n' bits in 'b' out, packing into bytes; n=0 flushes bits.
+  Put 'n' bits in 'b' out, packing into bytes.
 
   n should never be > 8
 -----------------------------------------------------------------------------*/
-    static int out = 0;
-    static int cnt = 0;
-    static int num = 0;
-    static bool pack = false;
-
     int b;
     int n;
+    int xo;
+    int xc;
 
     b = bArg;
     n = nArg;
 
-    if (n) {
-        int xo = 0;
-        int xc = 0;
+    assert(n <= 8);
 
-        assert(n <= 8);
+    if (cnt + n > 8) {  /* overflowing current byte? */
+        xc = cnt + n - 8;
+        xo = (b & ~(-1 << xc)) << (8-xc);
+        n -= xc;
+        b >>= xc;
+    } else {
+        xo = 0;
+        xc = 0;
+    }
 
-        if (cnt + n > 8) {  /* overflowing current byte? */
-            xc = cnt + n - 8;
-            xo = (b & ~(-1 << xc)) << (8-xc);
-            n -= xc;
-            b >>= xc;
-        }
-        cnt += n;
-        out |= (b & ~(-1 << n)) << (8-cnt);
-        if (cnt >= 8) {
-            inrow[num++] = out;
-            out = xo;
-            cnt = xc;
-        }
-    } else { /* flush row */
-        if (cnt) {
-            inrow[num++] = out;
-            out = cnt = 0;
-        }
-        for (; num > 0 && inrow[num-1] == 0; --num);
-            /* remove trailing zeros */
-        printf("\033*b");
-        if (num && !nopack) {            /* TIFF 4.0 packbits encoding */
-            size_t outSize;
-            pm_rlenc_compressbyte(
-                (unsigned char *)inrow, (unsigned char *)outrow,
-                PM_RLE_PACKBITS, num, &outSize);
-            if (outSize < num) {
-                num = outSize;
-                if (!pack) {
-                    printf("2m");
-                    pack = true;
-                }
-            } else {
-                if (pack) {
-                    printf("0m");
-                    pack = false;
-                }
+    cnt += n;
+
+    out |= (b & ~(-1 << n)) << (8-cnt);
+
+    if (cnt >= 8) {
+        inrow[num++] = out;
+        out = xo;
+        cnt = xc;
+    }
+}
+
+
+
+static void
+flushbits() {
+/*----------------------------------------------------------------------------
+   flush a row of buffered bits.
+-----------------------------------------------------------------------------*/
+    if (cnt) {
+        inrow[num++] = out;
+        out = cnt = 0;
+    }
+    for (; num > 0 && inrow[num-1] == 0; --num);
+    /* remove trailing zeros */
+    printf("\033*b");
+    if (num && !nopack) {            /* TIFF 4.0 packbits encoding */
+        size_t outSize;
+        pm_rlenc_compressbyte(
+            (unsigned char *)inrow, (unsigned char *)outrow,
+            PM_RLE_PACKBITS, num, &outSize);
+        if (outSize < num) {
+            num = outSize;
+            if (!pack) {
+                printf("2m");
+                pack = true;
+            }
+        } else {
+            if (pack) {
+                printf("0m");
+                pack = false;
             }
         }
-        printf("%dW", num);
-        {
-            unsigned int i;
-            for (i = 0; i < num; ++i)
-                putchar(pack ? outrow[i] : inrow[i]);
-        }
-        num = 0; /* new row */
     }
+    printf("%dW", num);
+    {
+        unsigned int i;
+        for (i = 0; i < num; ++i)
+            putchar(pack ? outrow[i] : inrow[i]);
+    }
+    num = 0; /* new row */
 }
 
 
@@ -228,14 +243,14 @@ computeColorDownloadingMode(unsigned int   const colorCt,
 -----------------------------------------------------------------------------*/
     unsigned int pclIndex;
 
-    pclIndex = bitsperpixel(colorCt);  /* initial value */
+    pclIndex = bitwidth(colorCt);  /* initial value */
 
     if (pclIndex > 8) /* can't use indexed mode */
         *pclIndexP = 0;
     else {
         switch (pclIndex) { /* round up to 1,2,4,8 */
         case 0: {/* direct mode (no palette) */
-            unsigned int const bpp           = bitsperpixel(maxval);
+            unsigned int const bpp           = bitwidth(maxval);
             unsigned int const bytesPerPixel = (bpp * 3 + 7) / 8;
 
             *bpgP = bpp;
@@ -255,6 +270,11 @@ computeColorDownloadingMode(unsigned int   const colorCt,
         }
         *pclIndexP    = pclIndex;
     }
+    if (*pclIndexP)
+        pm_message("Writing %u bit color indices", *pclIndexP);
+    else
+        pm_message("Writing direct color, %u red bits, %u green, %u blue",
+                   *bprP, *bpgP, *bpbP);
 }
 
 
@@ -361,7 +381,7 @@ writeRaster(pixel **        const pixels,
 
     unsigned int row;
 
-    for (row = 0; row < rows; row++) {
+    for (row = 0; row < rows; ++row) {
         pixel * const pixrow = pixels[row];
 
         if (pclIndex) { /* indexed color mode */
@@ -369,7 +389,7 @@ writeRaster(pixel **        const pixels,
 
             for (col = 0; col < cols; ++col)
                 putbits(ppm_lookupcolor(cht, &pixrow[col]), pclIndex);
-            putbits(0, 0); /* flush row */
+            flushbits();
         } else { /* direct color mode */
             unsigned int col;
 
@@ -379,7 +399,7 @@ writeRaster(pixel **        const pixels,
                 putbits(PPM_GETB(pixrow[col]), bpb);
                 /* don't need to flush */
             }
-            putbits(0, 0); /* flush row */
+            flushbits();
         }
     }
 }
