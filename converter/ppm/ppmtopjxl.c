@@ -1,7 +1,7 @@
 /* ppmtopcl.c - convert PPM into PCL language for HP PaintJet and
  *              PaintJet XL color printers
  * AJCD 12/3/91
- * 
+ *
  * usage:
  *       ppmtopcl [-nopack] [-gamma <n>] [-presentation] [-dark]
  *          [-diffuse] [-cluster] [-dither]
@@ -91,7 +91,7 @@ bitsperpixel(unsigned int v) {
     unsigned int bpp;
 
     /* calculate # bits for value */
-    
+
     for (bpp = 0; v > 0; ) {
         ++bpp;
         v >>= 1;
@@ -103,17 +103,17 @@ bitsperpixel(unsigned int v) {
 
 static char *inrow = NULL;
 static char *outrow = NULL;
-/* "signed" was commented out below, but it caused warnings on an SGI 
+/* "signed" was commented out below, but it caused warnings on an SGI
    compiler, which defaulted to unsigned character.  2001.03.30 BJH */
 static signed char *runcnt = NULL;
 
-static void 
+static void
 putbits(int const bArg,
         int const nArg) {
 /*----------------------------------------------------------------------------
   Put 'n' bits in 'b' out, packing into bytes; n=0 flushes bits.
 
-  n should never be > 8 
+  n should never be > 8
 -----------------------------------------------------------------------------*/
     static int out = 0;
     static int cnt = 0;
@@ -152,12 +152,12 @@ putbits(int const bArg,
         }
         for (; num > 0 && inrow[num-1] == 0; --num);
             /* remove trailing zeros */
-        printf("\033*b"); 
+        printf("\033*b");
         if (num && !nopack) {            /* TIFF 4.0 packbits encoding */
             size_t outSize;
             pm_rlenc_compressbyte(
                 (unsigned char *)inrow, (unsigned char *)outrow,
-                PM_RLE_PACKBITS, num, &outSize); 
+                PM_RLE_PACKBITS, num, &outSize);
             if (outSize < num) {
                 num = outSize;
                 if (!pack) {
@@ -197,7 +197,7 @@ main(int argc, const char * argv[]) {
     int colors, pclindex;
     colorhist_vector chv;
     colorhash_table cht;
-   
+
     pm_proginit(&argc, argv);
 
     while (argc > 1 && argv[1][0] == '-') {
@@ -287,7 +287,7 @@ main(int argc, const char * argv[]) {
             bpp = bitsperpixel(maxval); /* bits per pixel */
             bpg = bpp; bpb = bpp;
             bpp = (bpp*3+7)>>3;     /* bytes per pixel now */
-            bpr = (bpp<<3)-bpg-bpb; 
+            bpr = (bpp<<3)-bpg-bpb;
             bpp *= cols;            /* bytes per row now */
             break;
         case 5:         pclindex++;
@@ -399,3 +399,6 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
+
+
+
