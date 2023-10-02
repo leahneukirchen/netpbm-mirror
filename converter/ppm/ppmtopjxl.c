@@ -102,20 +102,42 @@ bitwidth(unsigned int v) {
 
 
 
+/* The following belong to the bit putter.  They really should be in a
+   struct passed to the methods of the bit putter instead.
+*/
+
 static char *inrow;
 static char *outrow;
 /* "signed" was commented out below, but it caused warnings on an SGI
    compiler, which defaulted to unsigned character.  2001.03.30 BJH */
 static signed char * runcnt;
-
-/* The following belong to the bit putter.  They really should be in a
-   struct passed to the methods of the bit putter instead.
-*/
-
 static int out = 0;
 static int cnt = 0;
 static int num = 0;
 static bool pack = false;
+
+static void
+initbits(unsigned int const bytesPerRow) {
+
+    MALLOCARRAY(inrow,  bytesPerRow);
+    MALLOCARRAY(outrow, bytesPerRow * 2);
+    MALLOCARRAY(runcnt, bytesPerRow);
+
+    if (!inrow || !outrow || !runcnt)
+        pm_error("can't allocate space for row");
+}
+
+
+
+static void
+termbits() {
+
+    free(runcnt);
+    free(outrow);
+    free(inrow);
+}
+
+
 
 static void
 putbits(int const bArg,
@@ -495,11 +517,7 @@ main(int argc, const char * argv[]) {
     computeColorDownloadingMode(colorCt, cols, maxval,
                                 &bytesPerRow, &bpg, &bpb, &bpr, &pclIndex);
 
-    MALLOCARRAY(inrow,  bytesPerRow);
-    MALLOCARRAY(outrow, bytesPerRow * 2);
-    MALLOCARRAY(runcnt, bytesPerRow);
-    if (!inrow || !outrow || !runcnt)
-        pm_error("can't allocate space for row");
+    initbits(bytesPerRow);
 
     /* set up image details */
     if (xscale != 0.0)
@@ -523,9 +541,7 @@ main(int argc, const char * argv[]) {
     ppm_freecolorhash(cht);
     ppm_freecolorhist(chv);
 
-    free(runcnt);
-    free(outrow);
-    free(inrow);
+    termbits();
 
     return 0;
 }
