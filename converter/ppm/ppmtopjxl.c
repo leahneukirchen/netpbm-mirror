@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "nstring.h"
 #include "ppm.h"
 #include "runlength.h"
@@ -47,7 +48,7 @@ static int yshift = 0;
 static int quality = 0;
 static double xscale = 0.0;
 static double yscale = 0.0;
-static double gamma_val = 0.0;
+static double gammaVal = 0.0;
 
 /* argument types */
 #define DIM 0
@@ -58,7 +59,7 @@ static const struct options {
     int type;
     void *value;
 } options[] = {
-   {"-gamma",        REAL, &gamma_val },
+   {"-gamma",        REAL, &gammaVal },
    {"-presentation", BOOL, &quality },
    {"-width",        DIM,  &xsize },
    {"-xsize",        DIM,  &xsize },
@@ -101,11 +102,11 @@ bitsperpixel(unsigned int v) {
 
 
 
-static char *inrow = NULL;
-static char *outrow = NULL;
+static char *inrow;
+static char *outrow;
 /* "signed" was commented out below, but it caused warnings on an SGI
    compiler, which defaulted to unsigned character.  2001.03.30 BJH */
-static signed char *runcnt = NULL;
+static signed char * runcnt;
 
 static void
 putbits(int const bArg,
@@ -183,18 +184,220 @@ putbits(int const bArg,
 
 
 
+static void
+computeColormap(pixel **           const pixels,
+                unsigned int       const cols,
+                unsigned int       const rows,
+                unsigned int       const maxColors,
+                colorhist_vector * const chvP,
+                colorhash_table *  const chtP,
+                unsigned int *     const colorCtP) {
+
+    colorhist_vector chv;
+    colorhash_table cht;
+    int colorCt;
+
+    pm_message("Computing colormap...");
+
+    chv = ppm_computecolorhist(pixels, cols, rows, MAXCOLORS, &colorCt);
+    if (!chv)
+        pm_error("too many colors; reduce with pnmquant");
+
+    pm_message("... Done.  %u colors found.", colorCt);
+
+    /* And make a hash table for fast lookup. */
+    cht = ppm_colorhisttocolorhash(chv, colorCt);
+
+    *chvP     = chv;
+    *chtP     = cht;
+    *colorCtP = colorCt;
+}
+
+
+
+static void
+computeColorDownloadingMode(unsigned int   const colorCt,
+                            unsigned int   const cols,
+                            pixval         const maxval,
+                            unsigned int * const bytesPerRowP,
+                            unsigned int * const bpgP,
+                            unsigned int * const bpbP,
+                            unsigned int * const bprP,
+                            unsigned int * const pclIndexP) {
+/*----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+    unsigned int pclIndex;
+
+    pclIndex = bitsperpixel(colorCt);  /* initial value */
+
+    if (pclIndex > 8) /* can't use indexed mode */
+        *pclIndexP = 0;
+    else {
+        switch (pclIndex) { /* round up to 1,2,4,8 */
+        case 0: {/* direct mode (no palette) */
+            unsigned int const bpp           = bitsperpixel(maxval);
+            unsigned int const bytesPerPixel = (bpp * 3 + 7) / 8;
+
+            *bpgP = bpp;
+            *bpbP = bpp;
+            *bprP = (bytesPerPixel * 8) - *bpgP - *bpbP;
+
+            *bytesPerRowP = bpp * cols;
+        } break;
+        case 5:         ++pclIndex;
+        case 6:         ++pclIndex;
+        case 3: case 7: ++pclIndex;
+        default: {
+            unsigned int const bpp = 8/pclIndex;
+
+            *bytesPerRowP = (cols + bpp - 1) / bpp;
+        }
+        }
+        *pclIndexP    = pclIndex;
+    }
+}
+
+
+
+static void
+writePclHeader(unsigned int const cols,
+               unsigned int const rows,
+               int          const xshift,
+               int          const yshift,
+               unsigned int const quality,
+               unsigned int const xsize,
+               unsigned int const ysize,
+               double       const gammaVal,
+               unsigned int const dark,
+               unsigned int const render,
+               unsigned int const bpr,
+               unsigned int const bpg,
+               unsigned int const bpb,
+               unsigned int const pclIndex,
+               pixval       const maxval) {
+
+#if 0
+    printf("\033&l26A");                         /* paper size */
+#endif
+    printf("\033*r%us%uT", cols, rows);          /* source width, height */
+    if (xshift != 0 || yshift != 0)
+        printf("\033&a%+dh%+dV", xshift, yshift); /* xshift, yshift */
+    if (quality)
+        printf("\033*o%uQ", quality);             /* print quality */
+    printf("\033*t");
+    if (xsize == 0 && ysize == 0)
+        printf("180r");                   /* resolution */
+    else {                               /* destination width, height */
+        if (xsize != 0)
+            printf("%uh", xsize);
+        if (ysize != 0)
+            printf("%uv", ysize);
+    }
+    if (gammaVal != 0)
+        printf("%.3fi", gammaVal);                    /* gamma correction */
+    if (dark)
+        printf("%uk", dark);              /* scaling algorithms */
+    printf("%uJ", render);               /* rendering algorithm */
+    printf("\033*v18W");                           /* configure image data */
+    putchar(0); /* relative colors */
+    putchar(pclIndex ? 1 : 3); /* index/direct pixel mode */
+    putchar(pclIndex); /* ignored in direct pixel mode */
+    if (pclIndex) {
+        putchar(0);
+        putchar(0);
+        putchar(0);
+    } else {
+        putchar(bpr); /* bits per red */
+        putchar(bpg); /* bits per green */
+        putchar(bpb); /* bits per blue */
+    }
+    putword(maxval); /* max red reference */
+    putword(maxval); /* max green reference */
+    putword(maxval); /* max blue reference */
+    putword(0); /* min red reference */
+    putword(0); /* min green reference */
+    putword(0); /* min blue reference */
+}
+
+
+
+static void
+writePalette(colorhist_vector const chv,
+             unsigned int     const colorCt) {
+
+    unsigned int i;
+
+    for (i = 0; i < colorCt; ++i) {
+        unsigned int const r = PPM_GETR( chv[i].color);
+        unsigned int const g = PPM_GETG( chv[i].color);
+        unsigned int const b = PPM_GETB( chv[i].color);
+
+        if (i == 0)
+            printf("\033*v");
+        if (r)
+            printf("%ua", r);
+        if (g)
+            printf("%ub", g);
+        if (b)
+            printf("%uc", b);
+        if (i == colorCt - 1)
+            printf("%uI", i);    /* assign color index */
+        else
+            printf("%ui", i);    /* assign color index */
+    }
+}
+
+
+
+static void
+writeRaster(pixel **        const pixels,
+            unsigned int    const rows,
+            unsigned int    const cols,
+            colorhash_table const cht,
+            unsigned int    const pclIndex,
+            unsigned int    const bpr,
+            unsigned int    const bpg,
+            unsigned int    const bpb) {
+
+    unsigned int row;
+
+    for (row = 0; row < rows; row++) {
+        pixel * const pixrow = pixels[row];
+
+        if (pclIndex) { /* indexed color mode */
+            unsigned int col;
+
+            for (col = 0; col < cols; ++col)
+                putbits(ppm_lookupcolor(cht, &pixrow[col]), pclIndex);
+            putbits(0, 0); /* flush row */
+        } else { /* direct color mode */
+            unsigned int col;
+
+            for (col = 0; col < cols; ++col) {
+                putbits(PPM_GETR(pixrow[col]), bpr);
+                putbits(PPM_GETG(pixrow[col]), bpg);
+                putbits(PPM_GETB(pixrow[col]), bpb);
+                /* don't need to flush */
+            }
+            putbits(0, 0); /* flush row */
+        }
+    }
+}
+
+
+
 int
 main(int argc, const char * argv[]) {
 
     FILE * ifP;
     pixel ** pixels;
-    unsigned int row;
-    unsigned int bpp;
     int rows, cols;
     pixval maxval;
-    int bpr, bpg, bpb;
+    unsigned int bytesPerRow;
+    unsigned int bpr, bpg, bpb;
     int render;
-    int colors, pclindex;
+    unsigned int colorCt;
+    unsigned int pclIndex;
     colorhist_vector chv;
     colorhash_table cht;
 
@@ -267,41 +470,15 @@ main(int argc, const char * argv[]) {
     if (maxval > PCL_MAXVAL)
         pm_error("color range too large; reduce with ppmcscale");
 
-    /* Figure out the colormap. */
-    pm_message("Computing colormap...");
-    chv = ppm_computecolorhist(pixels, cols, rows, MAXCOLORS, &colors);
-    if (!chv)
-        pm_error("too many colors; reduce with pnmquant");
-    pm_message("... Done.  %u colors found.", colors);
+    computeColormap(pixels, cols, rows, MAXCOLORS, &chv, &cht, &colorCt);
 
-    /* And make a hash table for fast lookup. */
-    cht = ppm_colorhisttocolorhash(chv, colors);
+    computeColorDownloadingMode(colorCt, cols, maxval,
+                                &bytesPerRow, &bpg, &bpb, &bpr, &pclIndex);
 
-    /* work out color downloading mode */
-    pclindex = bitsperpixel(colors);
-    if (pclindex > 8) /* can't use indexed mode */
-        pclindex = 0;
-    else {
-        switch (pclindex) { /* round up to 1,2,4,8 */
-        case 0: /* direct mode (no palette) */
-            bpp = bitsperpixel(maxval); /* bits per pixel */
-            bpg = bpp; bpb = bpp;
-            bpp = (bpp*3+7)>>3;     /* bytes per pixel now */
-            bpr = (bpp<<3)-bpg-bpb;
-            bpp *= cols;            /* bytes per row now */
-            break;
-        case 5:         pclindex++;
-        case 6:         pclindex++;
-        case 3: case 7: pclindex++;
-        default:
-            bpp = 8/pclindex;
-            bpp = (cols+bpp-1)/bpp;      /* bytes per row */
-        }
-    }
-    inrow = (char *)malloc((unsigned)bpp);
-    outrow = (char *)malloc((unsigned)bpp*2);
-    runcnt = (signed char *)malloc((unsigned)bpp);
-    if (inrow == NULL || outrow == NULL || runcnt == NULL)
+    MALLOCARRAY(inrow,  bytesPerRow);
+    MALLOCARRAY(outrow, bytesPerRow * 2);
+    MALLOCARRAY(runcnt, bytesPerRow);
+    if (!inrow || !outrow || !runcnt)
         pm_error("can't allocate space for row");
 
     /* set up image details */
@@ -310,92 +487,25 @@ main(int argc, const char * argv[]) {
     if (yscale != 0.0)
         ysize = rows * yscale * 4;
 
-    /* write PCL header */
-#if 0
-    printf("\033&l26A");                         /* paper size */
-#endif
-    printf("\033*r%ds%dT", cols, rows);          /* source width, height */
-    if (xshift != 0 || yshift != 0)
-        printf("\033&a%+dh%+dV", xshift, yshift); /* xshift, yshift */
-    if (quality)
-        printf("\033*o%dQ", quality);             /* print quality */
-    printf("\033*t");
-    if (xsize == 0 && ysize == 0)
-        printf("180r");                   /* resolution */
-    else {                               /* destination width, height */
-        if (xsize != 0)
-            printf("%dh", xsize);
-        if (ysize != 0)
-            printf("%dv", ysize);
-    }
-    if (gamma_val != 0)
-        printf("%.3fi", gamma_val);                    /* gamma correction */
-    if (dark)
-        printf("%dk", dark);              /* scaling algorithms */
-    printf("%dJ", render);               /* rendering algorithm */
-    printf("\033*v18W");                           /* configure image data */
-    putchar(0); /* relative colors */
-    putchar(pclindex ? 1 : 3); /* index/direct pixel mode */
-    putchar(pclindex); /* ignored in direct pixel mode */
-    if (pclindex) {
-        putchar(0);
-        putchar(0);
-        putchar(0);
-    } else {
-        putchar(bpr); /* bits per red */
-        putchar(bpg); /* bits per green */
-        putchar(bpb); /* bits per blue */
-    }
-    putword(maxval); /* max red reference */
-    putword(maxval); /* max green reference */
-    putword(maxval); /* max blue reference */
-    putword(0); /* min red reference */
-    putword(0); /* min green reference */
-    putword(0); /* min blue reference */
-    if (pclindex) {                        /* set palette */
-        unsigned int i;
-        for (i = 0; i < colors; ++i) {
-            int const r = PPM_GETR( chv[i].color);
-            int const g = PPM_GETG( chv[i].color);
-            int const b = PPM_GETB( chv[i].color);
-            if (i == 0)
-                printf("\033*v");
-            if (r)
-                printf("%da", r);
-            if (g)
-                printf("%db", g);
-            if (b)
-                printf("%dc", b);
-            if (i == colors-1)
-                printf("%dI", i);    /* assign color index */
-            else
-                printf("%di", i);    /* assign color index */
-        }
-    }
-    ppm_freecolorhist(chv);
+    writePclHeader(cols, rows, xshift, yshift, quality, xsize, ysize,
+                   gammaVal, dark, render, bpr, bpg, bpb, pclIndex, maxval);
+
+    if (pclIndex)
+        writePalette(chv, colorCt);
 
     /* start raster graphics at CAP */
     printf("\033*r%dA", (xsize != 0 || ysize != 0) ? 3 : 1);
 
-    for (row = 0; row < rows; row++) {
-        pixel * const pixrow = pixels[row];
-        if (pclindex) { /* indexed color mode */
-            unsigned int col;
-            for (col = 0; col < cols; ++col)
-                putbits(ppm_lookupcolor(cht, &pixrow[col]), pclindex);
-            putbits(0, 0); /* flush row */
-        } else { /* direct color mode */
-            unsigned int col;
-            for (col = 0; col < cols; ++col) {
-                putbits(PPM_GETR(pixrow[col]), bpr);
-                putbits(PPM_GETG(pixrow[col]), bpg);
-                putbits(PPM_GETB(pixrow[col]), bpb);
-                /* don't need to flush */
-            }
-            putbits(0, 0); /* flush row */
-        }
-    }
+    writeRaster(pixels, rows, cols, cht, pclIndex, bpr, bpg, bpb);
+
     printf("\033*rC"); /* end raster graphics */
+
+    ppm_freecolorhash(cht);
+    ppm_freecolorhist(chv);
+
+    free(runcnt);
+    free(outrow);
+    free(inrow);
 
     return 0;
 }
