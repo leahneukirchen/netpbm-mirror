@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 
@@ -195,8 +196,9 @@ newAndBitmap(gray **      const ba,
   create andBitmap from PGM
 -----------------------------------------------------------------------------*/
     unsigned int const xByteCt = ROUNDUP(cols, 32)/8;
-       /* How wide the u1 string for each row should be  */
-
+       /* How wide the u1 string for each row should be -- Each byte is 8
+          pixels, but must be a multiple of 4 bytes.
+       */
     ICON_bmp * icBitmapP;
     unsigned int row;
     u1 ** rowData;
@@ -258,33 +260,15 @@ newAndBitmap(gray **      const ba,
 
 
 
-static ICON_bmp *
-new1Bitmap (pixel **        const pa,
-            unsigned int    const cols,
-            unsigned int    const rows,
-            colorhash_table const cht) {
+static void
+fillInRaster1(u1 **           const rowData,
+              unsigned int    const xByteCt,
+              pixel **        const pa,
+              unsigned int    const cols,
+              unsigned int    const rows,
+              colorhash_table const cht) {
 
-    /* How wide should the u1 string for each row be?  Each byte is 8 pixels,
-       but must be a multiple of 4 bytes.
-    */
-    ICON_bmp * icBitmapP;  /* malloc'ed */
-    unsigned int xByteCt;
     unsigned int row;
-    unsigned int wt;
-    u1 ** rowData;  /* malloc'ed */
-
-    MALLOCVAR_NOFAIL(icBitmapP);
-
-    wt = cols;  /* initial value */
-    wt >>= 3;
-    if (wt & 0x3) {
-        wt = (wt & ~0x3) + 4;
-    }
-    xByteCt = wt;
-    MALLOCARRAY_NOFAIL(rowData, rows);
-    icBitmapP->xBytes = xByteCt;
-    icBitmapP->data   = rowData;
-    icBitmapP->size   = xByteCt * rows;
 
     for (row = 0; row <rows; ++row) {
         u1 * thisRow;  /* malloc'ed */
@@ -323,40 +307,21 @@ new1Bitmap (pixel **        const pa,
             /* No pixel array -- we're just faking this */
         }
     }
-    return icBitmapP;
 }
 
 
 
-static ICON_bmp *
-new4Bitmap(pixel **        const pa,
-           unsigned int    const cols,
-           unsigned int    const rows,
-           colorhash_table const cht) {
+static void
+fillInRaster4(u1 **           const rowData,
+              unsigned int    const xByteCt,
+              pixel **        const pa,
+              unsigned int    const cols,
+              unsigned int    const rows,
+              colorhash_table const cht) {
 
-    /* How wide should the u1 string for each row be?  Each byte is 8 pixels,
-       but must be a multiple of 4 bytes.
-    */
-    ICON_bmp * icBitmapP;  /* malloc'ed */
     unsigned int row;
-    unsigned int wt;
-    unsigned int xByteCt;
-    u1 ** rowData;  /* malloc'ed */
 
-    MALLOCVAR_NOFAIL(icBitmapP);
-
-    wt = cols;  /* initial value */
-    wt >>= 1;
-    if (wt & 0x3) {
-        wt = (wt & ~0x3) + 4;
-    }
-    xByteCt = wt;
-    MALLOCARRAY_NOFAIL(rowData, rows);
-    icBitmapP->xBytes = xByteCt;
-    icBitmapP->data   = rowData;
-    icBitmapP->size   = xByteCt * rows;
-
-    for (row = 0; row <rows; ++row) {
+    for (row = 0; row < rows; ++row) {
         u1 * thisRow;
         unsigned int byteOn;
         unsigned int nibble;   /* high nibble = 1, low nibble = 0; */
@@ -390,37 +355,19 @@ new4Bitmap(pixel **        const pa,
             /* No pixel array -- we're just faking this */
         }
     }
-    return icBitmapP;
 }
 
 
 
-static ICON_bmp *
-new8Bitmap(pixel **        const pa,
-           unsigned int    const cols,
-           unsigned int    const rows,
-           colorhash_table const cht) {
+static void
+fillInRaster8(u1 **           const rowData,
+              unsigned int    const xByteCt,
+              pixel **        const pa,
+              unsigned int    const cols,
+              unsigned int    const rows,
+              colorhash_table const cht) {
 
-    /* How wide should the u1 string for each row be?  Each byte is 8 pixels,
-       but must be a multiple of 4 bytes.
-    */
-    ICON_bmp * icBitmapP;  /* malloc'ed */
-    unsigned int xByteCt;
     unsigned int row;
-    unsigned int wt;
-    u1 ** rowData;  /* malloc'ed */
-
-    MALLOCVAR_NOFAIL(icBitmapP);
-
-    wt = cols;  /* initial value */
-    if (wt & 0x3) {
-        wt = (wt & ~0x3) + 4;
-    }
-    xByteCt = wt;  /* initial value */
-    MALLOCARRAY_NOFAIL(rowData, rows);
-    icBitmapP->xBytes = xByteCt;
-    icBitmapP->data   = rowData;
-    icBitmapP->size   = xByteCt * rows;
 
     for (row = 0; row < rows; ++row) {
         u1 * thisRow;  /* malloc'ed */
@@ -436,6 +383,48 @@ new8Bitmap(pixel **        const pa,
         } else {
             /* No pixel array -- we're just faking this */
         }
+    }
+}
+
+
+
+static ICON_bmp *
+newBitmap(unsigned int    const bpp,
+          pixel **        const pa,
+          unsigned int    const cols,
+          unsigned int    const rows,
+          colorhash_table const cht) {
+
+    unsigned int const xByteCt = ROUNDUP(cols, 32)/8;
+       /* How wide the u1 string for each row should be -- Each byte is 8
+          pixels, but must be a multiple of 4 bytes.
+       */
+    ICON_bmp * icBitmapP;  /* malloc'ed */
+    u1 ** rowData;  /* malloc'ed */
+
+    assert(cols < 256); assert(rows < 256);  /* required for no overflow */
+
+    MALLOCVAR_NOFAIL(icBitmapP);
+
+    MALLOCARRAY_NOFAIL(rowData, rows);
+
+    icBitmapP->xBytes = xByteCt;
+    icBitmapP->data   = rowData;
+    icBitmapP->size   = xByteCt * rows;
+
+    unsigned int const assumedBpp = (pa == NULL) ? 1 : bpp;
+
+    switch (assumedBpp) {
+    case 1:
+        fillInRaster1(rowData, xByteCt, pa, cols, rows, cht);
+        break;
+    case 4:
+        fillInRaster4(rowData, xByteCt, pa, cols, rows, cht);
+        break;
+    case 8:
+    default:
+        fillInRaster8(rowData, xByteCt, pa, cols, rows, cht);
+        break;
     }
     return icBitmapP;
 }
@@ -498,34 +487,6 @@ addColorToPalette(IC_Palette * const paletteP,
     paletteP->colors[i]->green    = g;
     paletteP->colors[i]->blue     = b;
     paletteP->colors[i]->reserved = 0;
-}
-
-
-
-static ICON_bmp *
-newBitmap(unsigned int    const bpp,
-          pixel **        const pa,
-          unsigned int    const cols,
-          unsigned int    const rows,
-          colorhash_table const cht) {
-
-    ICON_bmp * retval;
-
-    int const assumedBpp = (pa == NULL) ? 1 : bpp;
-
-    switch (assumedBpp) {
-    case 1:
-        retval = new1Bitmap(pa, cols, rows, cht);
-        break;
-    case 4:
-        retval = new4Bitmap(pa, cols, rows, cht);
-        break;
-    case 8:
-    default:
-        retval = new8Bitmap(pa, cols, rows, cht);
-        break;
-    }
-    return retval;
 }
 
 
@@ -740,7 +701,7 @@ addEntryToIcon(MS_Ico *     const MSIconDataP,
     entryP->ih            = newInfoHeader(*entryP);
     entryP->colors        = paletteP->colors;
     entryP->size_in_bytes =
-        xorBitmapP->size + andBitmapP->size + 40 + (4 * entryP->color_count);
+        xorBitmapP->size + andBitmapP->size + 40 + (4 * entryCols);
     if (verbose)
         pm_message("entry->size_in_bytes = %u + %u + %u = %u",
                    xorBitmapP->size, andBitmapP->size,
