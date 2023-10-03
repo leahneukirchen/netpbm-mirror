@@ -216,17 +216,17 @@ readU4 (FILE * const ifP) {
 
 
 
-static IC_Entry
+static IC_Entry *
 readICEntry(FILE * const ifP) {
 
-    IC_Entry entryP;
+    IC_Entry * entryP;  /* malloc'ed */
     u1 widthFld;   /* 0 means 256 */
     u1 heightFld;  /* 0 means 256 */
     u1 colorCtFld; /* 0 means 256 */
 
     MALLOCVAR(entryP);
 
-    if (entryP == NULL)
+    if (!entryP)
         pm_error("Unable to allocate memory for IC entry");
 
     widthFld              = readU1(ifP);
@@ -255,15 +255,15 @@ readICEntry(FILE * const ifP) {
 
 
 
-static IC_InfoHeader
-readInfoHeader (FILE *   const ifP,
-                IC_Entry const entryP) {
+static IC_InfoHeader *
+readInfoHeader(FILE *           const ifP,
+               const IC_Entry * const entryP) {
 
-    IC_InfoHeader ihP;
+    IC_InfoHeader * ihP;  /* malloc'ed */
 
     MALLOCVAR(ihP);
 
-    if (ihP == NULL)
+    if (!ihP)
         pm_error("Unable to allocate memory for info header");
 
     ihP->size             = readU4(ifP);  /* never referenced */
@@ -315,14 +315,14 @@ readInfoHeader (FILE *   const ifP,
 
 
 
-static IC_Color
+static IC_Color *
 readICColor(FILE * const ifP)  {
 
-    IC_Color colorP;
+    IC_Color * colorP;  /* malloc'ed */
 
     MALLOCVAR(colorP);
 
-    if (colorP == NULL)
+    if (!colorP)
         pm_error("Unable to allocate memory for color");
 
     /* I don't know why this isn't the same as the spec, it just isn't.
@@ -514,40 +514,40 @@ readXBitmap (FILE *       const ifP,
 
 
 
-static MS_Ico
+static MS_Ico *
 readIconFile(FILE * const ifP,
              bool   const verbose) {
 
     unsigned int i;
 
-    MS_Ico MSIconData;
+    MS_Ico * MSIconDataP;  /* malloc'ed */
 
-    MALLOCVAR(MSIconData);
+    MALLOCVAR(MSIconDataP);
 
-    MSIconData->reserved = readU2(ifP);  /* should be 0 */
-    MSIconData->type     = readU2(ifP);  /* should be 1 (ICO) or 2 (CUR) */
-    MSIconData->count    = readU2(ifP);  /* # icons in file */
+    MSIconDataP->reserved = readU2(ifP);  /* should be 0 */
+    MSIconDataP->type     = readU2(ifP);  /* should be 1 (ICO) or 2 (CUR) */
+    MSIconDataP->count    = readU2(ifP);  /* # icons in file */
 
-    if (MSIconData->reserved != 0)
+    if (MSIconDataP->reserved != 0)
        pm_message("Signature 'reserved' field is %u (should be 0)",
-                  MSIconData->reserved);
+                  MSIconDataP->reserved);
 
-    if (MSIconData->type != 1 && MSIconData->type != 2)
+    if (MSIconDataP->type != 1 && MSIconDataP->type != 2)
         pm_error("Type %u file.  Can handle only type 1 or 2.",
-                 MSIconData->type);
+                 MSIconDataP->type);
 
-    if (MSIconData->count == 0)
+    if (MSIconDataP->count == 0)
         pm_error("Invalid image count: 0");
     else if (verbose)
-        pm_message("File contains %u images", MSIconData->count);
+        pm_message("File contains %u images", MSIconDataP->count);
 
-    MALLOCARRAY(MSIconData->entries, MSIconData->count);
-    if (MSIconData->entries == NULL)
+    MALLOCARRAY(MSIconDataP->entries, MSIconDataP->count);
+    if (MSIconDataP->entries == NULL)
         pm_error("out of memory");
 
     /* Read in each of the entries */
-    for (i = 0; i < MSIconData->count; ++i)
-        MSIconData->entries[i] = readICEntry(ifP);
+    for (i = 0; i < MSIconDataP->count; ++i)
+        MSIconDataP->entries[i] = readICEntry(ifP);
 
     /* Read in the infoheader, color map (if any) and the actual bit/pix maps
        for the icons.
@@ -555,12 +555,12 @@ readIconFile(FILE * const ifP,
     if (verbose)
         pm_message("#\tColors\tBPP\tWidth\tHeight\n");
 
-    for (i = 0; i < MSIconData->count; ++i) {
-        IC_Entry const entryP = MSIconData->entries[i];
+    for (i = 0; i < MSIconDataP->count; ++i) {
+        IC_Entry * const entryP = MSIconDataP->entries[i];
 
         unsigned int bpp;  /* bits per pixel */
 
-        entryP->ih = readInfoHeader(ifP, MSIconData->entries[i]);
+        entryP->ih = readInfoHeader(ifP, MSIconDataP->entries[i]);
 
         bpp  = entryP->bitcount ? entryP->bitcount : entryP->ih->bitcount;
 
@@ -633,7 +633,7 @@ readIconFile(FILE * const ifP,
         }
 
     }
-    return MSIconData;
+    return MSIconDataP;
 }
 
 
@@ -655,15 +655,15 @@ trimmedOutputName(const char inputName[]) {
 
 
 static int
-getBestQualityIcon(MS_Ico MSIconData)
-{
+getBestQualityIcon(MS_Ico * const MSIconDataP) {
+
     unsigned int i;
     unsigned int best;
     unsigned int bestSize;
     unsigned int bestBpp;
 
-    for (i = 0, bestSize = 0, bestBpp = 0; i < MSIconData->count; ++i) {
-        IC_Entry const entryP = MSIconData->entries[i];
+    for (i = 0, bestSize = 0, bestBpp = 0; i < MSIconDataP->count; ++i) {
+        IC_Entry * const entryP = MSIconDataP->entries[i];
         unsigned int const size = entryP->width * entryP->height;
         unsigned int const bpp  =
             entryP->bitcount ? entryP->bitcount : entryP->ih->bitcount;
@@ -682,12 +682,12 @@ getBestQualityIcon(MS_Ico MSIconData)
 
 
 static void
-writeXors(FILE *   const multiOutF,
-          char *   const outputFileBase,
-          IC_Entry const entryP,
-          int      const entryNum,
-          bool     const multiple,
-          bool     const xor) {
+writeXors(FILE *     const multiOutF,
+          char *     const outputFileBase,
+          IC_Entry * const entryP,
+          int        const entryNum,
+          bool       const multiple,
+          bool       const xor) {
 /*----------------------------------------------------------------------------
    Write an "xor" image (i.e. the main image) out.
 
@@ -751,7 +751,7 @@ writeXors(FILE *   const multiOutF,
                     pm_error("Invalid color index %u (max is %u)",
                               colorIndex, entryP->color_count - 1);
                 } else {
-                    IC_Color const colorP = entryP->colors[colorIndex];
+                    IC_Color * const colorP = entryP->colors[colorIndex];
                     PPM_ASSIGN(pixArray[row][col],
                                colorP->red, colorP->green, colorP->blue);
                 }
@@ -775,7 +775,7 @@ writeXors(FILE *   const multiOutF,
 static void
 writeAnds(FILE *       const multiOutF,
           char         const outputFileBase[],
-          IC_Entry     const entryP,
+          IC_Entry *   const entryP,
           unsigned int const entryNum,
           bool         const multiple) {
 /*----------------------------------------------------------------------------
@@ -866,7 +866,7 @@ openMultiAnd(char    const outputFileBase[],
 
 
 static void
-freeIconentry(IC_Entry const entryP) {
+freeIconentry(IC_Entry * const entryP) {
 
     if (entryP->colors && entryP->color_count) {
         unsigned int i;
@@ -883,7 +883,7 @@ freeIconentry(IC_Entry const entryP) {
 
 
 static void
-freeIcondata(MS_Ico const MSIconDataP) {
+freeIcondata(MS_Ico * const MSIconDataP) {
 
     unsigned int i;
     for (i = 0; i < MSIconDataP->count; ++i)
@@ -900,7 +900,7 @@ main(int argc, const char *argv[]) {
     struct cmdlineInfo cmdline;
     FILE * ifP;
     unsigned int startEntry, endEntry;
-    MS_Ico MSIconDataP;
+    MS_Ico * MSIconDataP;
     char * outputFileBase;
     FILE * multiOutF;
     FILE * multiAndOutF;
@@ -961,7 +961,7 @@ main(int argc, const char *argv[]) {
         unsigned int entryNum;
 
         for (entryNum = startEntry; entryNum < endEntry; ++entryNum) {
-            IC_Entry const entryP = MSIconDataP->entries[entryNum];
+            IC_Entry * const entryP = MSIconDataP->entries[entryNum];
 
             writeXors(multiOutF, outputFileBase, entryP, entryNum,
                       cmdline.allicons, cmdline.writeands);
