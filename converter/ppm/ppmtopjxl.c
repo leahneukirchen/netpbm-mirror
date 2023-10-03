@@ -140,10 +140,10 @@ termbits() {
 
 
 static void
-putbits(int const bArg,
-        int const nArg) {
+putbits(unsigned int const bArg,
+        unsigned int const nArg) {
 /*----------------------------------------------------------------------------
-  Put 'n' bits in 'b' out, packing into bytes.
+  Add 'bArg' to byte-packing output buffer as 'n' bits.
 
   n should never be > 8
 -----------------------------------------------------------------------------*/
@@ -238,7 +238,8 @@ computeColormap(pixel **           const pixels,
 
     chv = ppm_computecolorhist(pixels, cols, rows, MAXCOLORS, &colorCt);
     if (!chv)
-        pm_error("too many colors; reduce with pnmquant");
+        pm_error("too many colors; reduce to %u or fewer with 'pnmquant'",
+                 MAXCOLORS);
 
     pm_message("... Done.  %u colors found.", colorCt);
 
@@ -252,51 +253,77 @@ computeColormap(pixel **           const pixels,
 
 
 
+static unsigned int
+nextPowerOf2(unsigned int const arg) {
+/*----------------------------------------------------------------------------
+   Works only on 0-7
+-----------------------------------------------------------------------------*/
+        switch (arg) { /* round up to 1,2,4,8 */
+        case 0:                         return 0; break;
+        case 1:                         return 1; break;
+        case 2:                         return 2; break;
+        case 3: case 4:                 return 4; break;
+        case 5: case 6: case 7: case 8: return 8; break;
+        default:
+            assert(false);
+        }
+}
+
+
+
 static void
 computeColorDownloadingMode(unsigned int   const colorCt,
                             unsigned int   const cols,
                             pixval         const maxval,
                             unsigned int * const bytesPerRowP,
-                            unsigned int * const bpgP,
-                            unsigned int * const bpbP,
-                            unsigned int * const bprP,
-                            unsigned int * const pclIndexP) {
+                            bool *         const colorMappedP,
+                            unsigned int * const bitsPerPixelRedP,
+                            unsigned int * const bitsPerPixelGrnP,
+                            unsigned int * const bitsPerPixelBluP,
+                            unsigned int * const bitsPerIndexP) {
 /*----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-    unsigned int pclIndex;
+    unsigned int const indexBitCt = bitwidth(colorCt);
 
-    pclIndex = bitwidth(colorCt);  /* initial value */
+    assert(colorCt > 0);
+    assert(indexBitCt > 0);
 
-    if (pclIndex > 8) /* can't use indexed mode */
-        *pclIndexP = 0;
-    else {
-        switch (pclIndex) { /* round up to 1,2,4,8 */
-        case 0: {/* direct mode (no palette) */
-            unsigned int const bpp           = bitwidth(maxval);
-            unsigned int const bytesPerPixel = (bpp * 3 + 7) / 8;
+    if (indexBitCt > 8) {
+        /* Can't use indexed mode */
+        /* We will instead write 1-3 full bytes per pixel, with those
+           bytes divided into red bits, green bits, and blue bits.  We
+           pad the red bits as needed to fill out whole bytes.  We
+           stick to 1, 2, 4, or 8 bits per pixel only because this program's
+           bit writer can't handle more than 8, which would happen with those
+           padded red fields if we allowed e.g. 7 bits for green and blue
+           (ergo 10 bits for red).
+        */
+        unsigned int const bitsPerSample = nextPowerOf2(bitwidth(maxval));
+        unsigned int const bitsPerPixel  = ROUNDUP(3 * bitsPerSample, 8);
+        unsigned int const bytesPerPixel = bitsPerPixel / 8;
 
-            *bpgP = bpp;
-            *bpbP = bpp;
-            *bprP = (bytesPerPixel * 8) - *bpgP - *bpbP;
+        *colorMappedP     = false;
+        *bitsPerPixelGrnP = bitsPerSample;
+        *bitsPerPixelBluP = bitsPerSample;
+        *bitsPerPixelRedP =
+            bitsPerPixel - *bitsPerPixelGrnP - *bitsPerPixelBluP;
+        *bytesPerRowP = bytesPerPixel * cols;
+    } else {
+        unsigned int const bitsPerPixel = nextPowerOf2(indexBitCt);
 
-            *bytesPerRowP = bpp * cols;
-        } break;
-        case 5:         ++pclIndex;
-        case 6:         ++pclIndex;
-        case 3: case 7: ++pclIndex;
-        default: {
-            unsigned int const bpp = 8/pclIndex;
+        unsigned int pixelsPerByte;
 
-            *bytesPerRowP = (cols + bpp - 1) / bpp;
-        }
-        }
-        *pclIndexP    = pclIndex;
+        *colorMappedP = true;
+
+        *bitsPerIndexP = bitsPerPixel;
+        pixelsPerByte = 8 / bitsPerPixel;
+        *bytesPerRowP = (cols + pixelsPerByte - 1) / pixelsPerByte;
     }
-    if (*pclIndexP)
-        pm_message("Writing %u bit color indices", *pclIndexP);
+    if (*colorMappedP)
+        pm_message("Writing %u bit color indices", *bitsPerIndexP);
     else
         pm_message("Writing direct color, %u red bits, %u green, %u blue",
-                   *bprP, *bpgP, *bpbP);
+                   *bitsPerPixelRedP, *bitsPerPixelGrnP, *bitsPerPixelBluP);
 }
 
 
@@ -304,6 +331,7 @@ computeColorDownloadingMode(unsigned int   const colorCt,
 static void
 writePclHeader(unsigned int const cols,
                unsigned int const rows,
+               pixval       const maxval,
                int          const xshift,
                int          const yshift,
                unsigned int const quality,
@@ -312,11 +340,11 @@ writePclHeader(unsigned int const cols,
                double       const gammaVal,
                unsigned int const dark,
                unsigned int const render,
-               unsigned int const bpr,
-               unsigned int const bpg,
-               unsigned int const bpb,
-               unsigned int const pclIndex,
-               pixval       const maxval) {
+               bool         const colorMapped,
+               unsigned int const bitsPerPixelRed,
+               unsigned int const bitsPerPixelGrn,
+               unsigned int const bitsPerPixelBlu,
+               unsigned int const bitsPerIndex) {
 
 #if 0
     printf("\033&l26A");                         /* paper size */
@@ -342,17 +370,11 @@ writePclHeader(unsigned int const cols,
     printf("%uJ", render);               /* rendering algorithm */
     printf("\033*v18W");                           /* configure image data */
     putchar(0); /* relative colors */
-    putchar(pclIndex ? 1 : 3); /* index/direct pixel mode */
-    putchar(pclIndex); /* ignored in direct pixel mode */
-    if (pclIndex) {
-        putchar(0);
-        putchar(0);
-        putchar(0);
-    } else {
-        putchar(bpr); /* bits per red */
-        putchar(bpg); /* bits per green */
-        putchar(bpb); /* bits per blue */
-    }
+    putchar(colorMapped ? 1 : 3); /* index/direct pixel mode */
+    putchar(bitsPerIndex); /* ignored in direct pixel mode */
+    putchar(colorMapped ? 0 : bitsPerPixelRed);
+    putchar(colorMapped ? 0 : bitsPerPixelGrn);
+    putchar(colorMapped ? 0 : bitsPerPixelBlu);
     putword(maxval); /* max red reference */
     putword(maxval); /* max green reference */
     putword(maxval); /* max blue reference */
@@ -396,29 +418,30 @@ writeRaster(pixel **        const pixels,
             unsigned int    const rows,
             unsigned int    const cols,
             colorhash_table const cht,
-            unsigned int    const pclIndex,
-            unsigned int    const bpr,
-            unsigned int    const bpg,
-            unsigned int    const bpb) {
+            bool            const colorMapped,
+            unsigned int    const bitsPerIndex,
+            unsigned int    const bitsPerPixelRed,
+            unsigned int    const bitsPerPixelGrn,
+            unsigned int    const bitsPerPixelBlu) {
 
     unsigned int row;
 
     for (row = 0; row < rows; ++row) {
         pixel * const pixrow = pixels[row];
 
-        if (pclIndex) { /* indexed color mode */
+        if (colorMapped) {
             unsigned int col;
 
             for (col = 0; col < cols; ++col)
-                putbits(ppm_lookupcolor(cht, &pixrow[col]), pclIndex);
+                putbits(ppm_lookupcolor(cht, &pixrow[col]), bitsPerIndex);
             flushbits();
-        } else { /* direct color mode */
+        } else {
             unsigned int col;
 
             for (col = 0; col < cols; ++col) {
-                putbits(PPM_GETR(pixrow[col]), bpr);
-                putbits(PPM_GETG(pixrow[col]), bpg);
-                putbits(PPM_GETB(pixrow[col]), bpb);
+                putbits(PPM_GETR(pixrow[col]), bitsPerPixelRed);
+                putbits(PPM_GETG(pixrow[col]), bitsPerPixelGrn);
+                putbits(PPM_GETB(pixrow[col]), bitsPerPixelBlu);
                 /* don't need to flush */
             }
             flushbits();
@@ -435,11 +458,12 @@ main(int argc, const char * argv[]) {
     pixel ** pixels;
     int rows, cols;
     pixval maxval;
+    bool colorMapped;
     unsigned int bytesPerRow;
-    unsigned int bpr, bpg, bpb;
+    unsigned int bitsPerPixelRed, bitsPerPixelGrn, bitsPerPixelBlu;
+    unsigned int bitsPerIndex;
     int render;
     unsigned int colorCt;
-    unsigned int pclIndex;
     colorhist_vector chv;
     colorhash_table cht;
 
@@ -514,8 +538,10 @@ main(int argc, const char * argv[]) {
 
     computeColormap(pixels, cols, rows, MAXCOLORS, &chv, &cht, &colorCt);
 
-    computeColorDownloadingMode(colorCt, cols, maxval,
-                                &bytesPerRow, &bpg, &bpb, &bpr, &pclIndex);
+    computeColorDownloadingMode(
+        colorCt, cols, maxval,
+        &bytesPerRow, &colorMapped,
+        &bitsPerPixelRed, &bitsPerPixelGrn, &bitsPerPixelBlu, &bitsPerIndex);
 
     initbits(bytesPerRow);
 
@@ -525,16 +551,21 @@ main(int argc, const char * argv[]) {
     if (yscale != 0.0)
         ysize = rows * yscale * 4;
 
-    writePclHeader(cols, rows, xshift, yshift, quality, xsize, ysize,
-                   gammaVal, dark, render, bpr, bpg, bpb, pclIndex, maxval);
+    writePclHeader(cols, rows, maxval, xshift, yshift, quality, xsize, ysize,
+                   gammaVal, dark, render,
+                   colorMapped,
+                   bitsPerPixelRed, bitsPerPixelGrn, bitsPerPixelBlu,
+                   bitsPerIndex);
 
-    if (pclIndex)
+    if (colorMapped)
         writePalette(chv, colorCt);
 
     /* start raster graphics at CAP */
     printf("\033*r%dA", (xsize != 0 || ysize != 0) ? 3 : 1);
 
-    writeRaster(pixels, rows, cols, cht, pclIndex, bpr, bpg, bpb);
+    writeRaster(pixels, rows, cols, cht, colorMapped,
+                bitsPerIndex,
+                bitsPerPixelRed, bitsPerPixelGrn, bitsPerPixelBlu);
 
     printf("\033*rC"); /* end raster graphics */
 
@@ -545,6 +576,5 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
-
 
 

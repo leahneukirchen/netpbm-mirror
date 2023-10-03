@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.05.00
 
+              ppmtopcxl: fix incorrect output with > 256 colors.  Always
+              broken.  (Program was added in primordial Netpbm in 1990).
+
               pjtoppm: fix crash based on uninitialized variable.
               Introduced in Netpbm 11.04 (September 2023).
 
