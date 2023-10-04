@@ -1,4 +1,4 @@
-/* ppmtoxpm.c - read a portable pixmap and produce a (version 3) X11 pixmap
+/* ppmtoxpm.c - read a PPM image and produce a (version 3) X11 pixmap
 **
 ** Copyright (C) 1990 by Mark W. Snitily
 **
@@ -37,6 +37,7 @@
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -75,14 +76,14 @@ static const char * const printable =
 ASDFGHJKLPIUYTREWQ!~^/()_`'][{}|";
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilename;
-    const char *name;
-    const char *rgb;
-    const char *alpha_filename;
+    const char * inputFilename;
+    const char * name;
+    const char * rgb;
+    const char * alphaFilename;
     unsigned int hexonly;
     unsigned int verbose;
 };
@@ -90,8 +91,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -108,7 +109,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0,   "alphamask",   OPT_STRING, &cmdlineP->alpha_filename,
+    OPTENT3(0,   "alphamask",   OPT_STRING, &cmdlineP->alphaFilename,
             NULL, 0);
     OPTENT3(0,   "name",        OPT_STRING, &nameOpt,
             &nameSpec, 0);
@@ -120,14 +121,14 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->verbose, 0);
 
     /* Set the defaults */
-    cmdlineP->alpha_filename = NULL;  /* no transparency */
+    cmdlineP->alphaFilename = NULL;  /* no transparency */
     cmdlineP->rgb = NULL;      /* no rgb file specified */
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)
@@ -156,28 +157,23 @@ parseCommandLine(int argc, char ** argv,
 }
 
 
-typedef struct {            /* rgb values and ascii names (from
-                             * rgb text file) */
-    int r, g, b;            /* rgb values, range of 0 -> 65535 */
-    char *name;             /* color mnemonic of rgb value */
-} rgb_names;
-
 typedef struct {
     /* Information for an XPM color map entry */
     char *cixel;
        /* XPM color number, as might appear in the XPM raster */
     const char *rgbname;
        /* color name, e.g. "blue" or "#01FF23" */
-} cixel_map;
+} CixelMap;
 
 
 
 static char *
-genNumstr(unsigned int const input, int const digits) {
+numstr(unsigned int const input,
+       unsigned int const digitCt) {
 /*---------------------------------------------------------------------------
    Given a number and a base (MAXPRINTABLE), this routine prints the
    number into a malloc'ed string and returns it.  The length of the
-   string is specified by "digits".  It is not printed in decimal or
+   string is specified by 'digitCt'.  It is not printed in decimal or
    any other number system you're used to.  Rather, each digit is from
    the set printable[], which contains MAXPRINTABLE characters; the
    character printable[n] has value n.
@@ -189,31 +185,31 @@ genNumstr(unsigned int const input, int const digits) {
        printable[0] == 'q'
        printable[1] == '%'
        MAXPRINTABLE == 2
-       digits == 5
+       digitCt == 5
        input == 3
      Result is the malloc'ed string "qqq%%"
 ---------------------------------------------------------------------------*/
-    char *str, *p;
-    int d;
+    char * str;  /* malloc'ed */
+    char * p;
     unsigned int i;
 
     /* Allocate memory for printed number.  Abort if error. */
-    if (!(str = (char *) malloc(digits + 1)))
-        pm_error("out of memory");
+    MALLOCARRAY_NOFAIL(str, digitCt + 1);
 
-    i = input;
+    i = input; /* initial value */
     /* Generate characters starting with least significant digit. */
-    p = str + digits;
+    p = str + digitCt;  /* initial value */
     *p-- = '\0';            /* nul terminate string */
     while (p >= str) {
-        d = i % MAXPRINTABLE;
+        unsigned int const d = i % MAXPRINTABLE;
+
         i /= MAXPRINTABLE;
         *p-- = printable[d];
     }
 
     if (i != 0)
-        pm_error("Overflow converting %d to %d digits in base %d",
-                 input, digits, MAXPRINTABLE);
+        pm_error("Overflow converting %u to %u digits in base %u",
+                 input, digitCt, MAXPRINTABLE);
 
     return str;
 }
@@ -225,10 +221,9 @@ xpmMaxvalFromMaxval(pixval const maxval) {
 
     unsigned int retval;
 
-    /*
-     * Determine how many hex digits we'll be normalizing to if the rgb
-     * value doesn't match a color mnemonic.
-     */
+    /* Determine how many hex digits we'll be normalizing to if the rgb
+       value doesn't match a color mnemonic.
+    */
     if (maxval <= 0x000F)
         retval = 0x000F;
     else if (maxval <= 0x00FF)
@@ -248,16 +243,15 @@ xpmMaxvalFromMaxval(pixval const maxval) {
 static unsigned int
 charsPerPixelForSize(unsigned int const cmapSize) {
 /*----------------------------------------------------------------------------
-   Return the number of characters it will take to represent a pixel in
-   an XPM that has a colormap of size 'cmapSize'.  Each pixel in an XPM
-   represents an index into the colormap with a base-92 scheme where each
-   character is one of 92 printable characters.  Ergo, if the colormap
-   has at most 92 characters, each pixel will be represented by a single
-   character.  If it has more than 92, but at most 92*92, it will take 2,
-   etc.
+   The number of characters it will take to represent a pixel in an XPM that
+   has a colormap of size 'cmapSize'.  Each pixel in an XPM represents an
+   index into the colormap with a base-92 scheme where each character is one
+   of 92 printable characters.  Ergo, if the colormap has at most 92
+   characters, each pixel will be represented by a single character.  If it
+   has more than 92, but at most 92*92, it will take 2, etc.
 
-   If cmapSize is zero, there's no such thing as an XPM pixel, so we
-   return an undefined value.
+   If cmapSize is zero, there's no such thing as an XPM pixel, so we return an
+   undefined value.
 -----------------------------------------------------------------------------*/
     unsigned int charsPerPixel;
 
@@ -277,14 +271,14 @@ genCmap(colorhist_vector const chv,
         int              const ncolors,
         pixval           const maxval,
         colorhash_table  const colornameHash,
-        const char *     const colornames[],
+        const char **    const colornames,
         bool             const includeTransparent,
-        cixel_map **     const cmapP,
+        CixelMap **      const cmapP,
         unsigned int *   const transIndexP,
         unsigned int *   const cmapSizeP,
         unsigned int *   const charsPerPixelP) {
 /*----------------------------------------------------------------------------
-   Generate the XPM color map in cixel_map format (which is just a step
+   Generate the XPM color map in CixelMap format (which is just a step
    away from the actual text that needs to be written the XPM file).  The
    color map is defined by 'chv', which contains 'ncolors' colors which
    have maxval 'maxval'.
@@ -310,7 +304,7 @@ genCmap(colorhist_vector const chv,
 -----------------------------------------------------------------------------*/
     unsigned int const cmapSize = ncolors + (includeTransparent ? 1 : 0);
 
-    cixel_map * cmap;  /* malloc'ed */
+    CixelMap * cmap;  /* malloc'ed */
     unsigned int cmapIndex;
     unsigned int charsPerPixel;
     unsigned int xpmMaxval;
@@ -318,7 +312,7 @@ genCmap(colorhist_vector const chv,
     MALLOCARRAY(cmap, cmapSize);
     if (cmapP == NULL)
         pm_error("Out of memory allocating %u bytes for a color map.",
-                 (unsigned)sizeof(cixel_map) * (ncolors+1));
+                 (unsigned)sizeof(CixelMap) * (ncolors+1));
 
     xpmMaxval = xpmMaxvalFromMaxval(maxval);
 
@@ -340,7 +334,7 @@ genCmap(colorhist_vector const chv,
          * printable[0] .. printable[MAXPRINTABLE-1] and the printed length
          * of the number is 'charsPerPixel'.
          */
-        cmap[cmapIndex].cixel = genNumstr(cmapIndex, charsPerPixel);
+        cmap[cmapIndex].cixel = numstr(cmapIndex, charsPerPixel);
 
         PPM_DEPTH(color255, color, maxval, 255);
 
@@ -383,7 +377,7 @@ genCmap(colorhist_vector const chv,
         /* Add the special transparency entry to the colormap */
         unsigned int const transIndex = ncolors;
         cmap[transIndex].rgbname = strdup("None");
-        cmap[transIndex].cixel = genNumstr(transIndex, charsPerPixel);
+        cmap[transIndex].cixel = numstr(transIndex, charsPerPixel);
         *transIndexP = transIndex;
     }
     *cmapP          = cmap;
@@ -394,97 +388,101 @@ genCmap(colorhist_vector const chv,
 
 
 static void
-destroyCmap(cixel_map *  const cmap,
+destroyCmap(CixelMap *   const cmap,
             unsigned int const cmapSize) {
 
-    int i;
+    unsigned int i;
+
     /* Free the real color entries */
-    for (i = 0; i < cmapSize; i++) {
+    for (i = 0; i < cmapSize; ++i) {
         pm_strfree(cmap[i].rgbname);
         free(cmap[i].cixel);
     }
+
     free(cmap);
 }
 
 
 
 static void
-writeXpmFile(FILE *          const outfile,
-             pixel **        const pixels,
-             gray **         const alpha,
-             pixval          const alphamaxval,
-             char            const name[],
-             int             const cols,
-             int             const rows,
-             unsigned int    const cmapSize,
-             unsigned int    const charsPerPixel,
-             cixel_map       const cmap[],
-             colorhash_table const cht,
-             unsigned int    const transIndex) {
+writeXpmFile(FILE *           const ofP,
+             pixel **         const pixels,
+             gray **          const alpha,
+             pixval           const alphamaxval,
+             char             const name[],
+             unsigned int     const cols,
+             unsigned int     const rows,
+             unsigned int     const cmapSize,
+             unsigned int     const charsPerPixel,
+             const CixelMap * const cmap,
+             colorhash_table  const cht,
+             unsigned int     const transIndex) {
 /*----------------------------------------------------------------------------
-   Write the whole XPM file to the open stream 'outfile'.
+   Write the whole XPM file to the open stream 'ofP'.
 
-   'cmap' is the colormap to be placed in the XPM.  'cmapSize' is the
-   number of entries in it.  'cht' is a hash table that gives you an
-   index into 'cmap' given a color.  'transIndex' is the index into cmap
-   of the transparent color, and is valid only if 'alpha' is non-null
-   (otherwise, cmap might not contain a transparent color).
+   'cmap' is the colormap to be placed in the XPM.  'cmapSize' is the number
+   of entries in it.  'cht' is a hash table that gives you an index into
+   'cmap' given a color.  'transIndex' is the index into cmap of the
+   transparent color, and is valid only if 'alpha' is non-null (otherwise,
+   cmap might not contain a transparent color).
 -----------------------------------------------------------------------------*/
     /* First the header */
     printf("/* XPM */\n");
-    fprintf(outfile, "static char *%s[] = {\n", name);
-    fprintf(outfile, "/* width height ncolors chars_per_pixel */\n");
-    fprintf(outfile, "\"%d %d %d %d\",\n", cols, rows,
-            cmapSize, charsPerPixel);
+    fprintf(ofP, "static char *%s[] = {\n", name);
+    fprintf(ofP, "/* width height ncolors chars_per_pixel */\n");
+    fprintf(ofP, "\"%u %u %u %u\",\n", cols, rows, cmapSize, charsPerPixel);
 
     {
-        int i;
+        unsigned int i;
         /* Write out the colormap (part of header) */
-        fprintf(outfile, "/* colors */\n");
+        fprintf(ofP, "/* colors */\n");
         for (i = 0; i < cmapSize; i++) {
-            fprintf(outfile, "\"%s c %s\",\n", cmap[i].cixel, cmap[i].rgbname);
+            fprintf(ofP, "\"%s c %s\",\n", cmap[i].cixel, cmap[i].rgbname);
         }
     }
     {
-        int row;
+        unsigned int row;
 
         /* And now the raster */
-        fprintf(outfile, "/* pixels */\n");
-        for (row = 0; row < rows; row++) {
-            int col;
-            fprintf(outfile, "\"");
-            for (col = 0; col < cols; col++) {
+        fprintf(ofP, "/* pixels */\n");
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+            fprintf(ofP, "\"");
+            for (col = 0; col < cols; ++col) {
                 if (alpha && alpha[row][col] <= alphamaxval/2)
                     /* It's a transparent pixel */
-                    fprintf(outfile, "%s", cmap[transIndex].cixel);
+                    fprintf(ofP, "%s", cmap[transIndex].cixel);
                 else
-                    fprintf(outfile, "%s",
+                    fprintf(ofP, "%s",
                             cmap[ppm_lookupcolor(cht,
                                                  &pixels[row][col])].cixel);
             }
-            fprintf(outfile, "\"%s\n", (row == (rows - 1) ? "" : ","));
+            fprintf(ofP, "\"%s\n", (row == (rows - 1) ? "" : ","));
         }
     }
     /* And close up */
-    fprintf(outfile, "};\n");
+    fprintf(ofP, "};\n");
 }
 
 
 
 static void
-readAlpha(const char filespec[], gray *** const alphaP,
-          int const cols, int const rows, pixval * const alphamaxvalP) {
+readAlpha(const char * const fileNm,
+          gray ***     const alphaP,
+          unsigned int const cols,
+          unsigned int const rows,
+          pixval *     const alphamaxvalP) {
 
-    FILE * alpha_file;
+    FILE * alphaFileP;
     int alphacols, alpharows;
 
-    alpha_file = pm_openr(filespec);
-    *alphaP = pgm_readpgm(alpha_file, &alphacols, &alpharows, alphamaxvalP);
-    pm_close(alpha_file);
+    alphaFileP = pm_openr(fileNm);
+    *alphaP = pgm_readpgm(alphaFileP, &alphacols, &alpharows, alphamaxvalP);
+    pm_close(alphaFileP);
 
     if (cols != alphacols || rows != alpharows)
         pm_error("Alpha mask is not the same dimensions as the "
-                 "image.  Image is %d by %d, while mask is %d x %d.",
+                 "image.  Image is %u by %u, while mask is %d x %d.",
                  cols, rows, alphacols, alpharows);
 }
 
@@ -493,8 +491,8 @@ readAlpha(const char filespec[], gray *** const alphaP,
 static void
 computecolorhash(pixel **          const pixels,
                  gray **           const alpha,
-                 int               const cols,
-                 int               const rows,
+                 unsigned int      const cols,
+                 unsigned int      const rows,
                  gray              const alphaMaxval,
                  colorhash_table * const chtP,
                  unsigned int *    const ncolorsP,
@@ -507,19 +505,19 @@ computecolorhash(pixel **          const pixels,
    The value associated with the color in the hash we build is meaningless.
 
    Return the colorhash_table as *chtP, and the number of colors in it
-   as *ncolorsP.  Return *transparentSomewhereP == TRUE iff the image has
+   as *ncolorsP.  Return *transparentSomewhereP == true iff the image has
    at least one pixel that is mostly transparent.
 -----------------------------------------------------------------------------*/
     colorhash_table cht;
-    int row;
+    unsigned int row;
 
-    cht = ppm_alloccolorhash( );
+    cht = ppm_alloccolorhash();
     *ncolorsP = 0;   /* initial value */
-    *transparentSomewhereP = FALSE;  /* initial assumption */
+    *transparentSomewhereP = false;  /* initial assumption */
 
     /* Go through the entire image, building a hash table of colors. */
     for (row = 0; row < rows; ++row) {
-        int col;
+        unsigned int col;
 
         for (col = 0; col < cols; ++col) {
             if (!alpha || alpha[row][col] > alphaMaxval/2) {
@@ -546,8 +544,8 @@ computecolorhash(pixel **          const pixels,
 static void
 computeColormap(pixel **           const pixels,
                 gray **            const alpha,
-                int                const cols,
-                int                const rows,
+                unsigned int       const cols,
+                unsigned int       const rows,
                 gray               const alphaMaxval,
                 colorhist_vector * const chvP,
                 colorhash_table *  const chtP,
@@ -558,15 +556,13 @@ computeColormap(pixel **           const pixels,
    in Netpbm data structures (a colorhist_vector for index-to-color lookups
    and a colorhash_table for color-to-index lookups).
 
-   Exclude pixels that alpha mask 'alpha' (which has maxval
-   'alphaMaxval') says are mostly transparent.  alpha == NULL means all
-   pixels are opaque.
+   Exclude pixels that alpha mask 'alpha' (which has maxval 'alphaMaxval')
+   says are mostly transparent.  alpha == NULL means all pixels are opaque.
 
-   We return as *chvP an array of the colors present in 'pixels',
-   excluding those that are mostly transparent.  We return as
-   *ncolorsP the number of such colors.  We return
-   *transparentSomewhereP == TRUE iff the image has at least one
-   pixel that is mostly transparent.
+   We return as *chvP an array of the colors present in 'pixels', excluding
+   those that are mostly transparent.  We return as *ncolorsP the number of
+   such colors.  We return *transparentSomewhereP == true iff the image has at
+   least one pixel that is mostly transparent.
 -----------------------------------------------------------------------------*/
     colorhash_table histCht;
 
@@ -587,9 +583,9 @@ computeColormap(pixel **           const pixels,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char * *argv) {
 
-    FILE *ifp;
+    FILE * ifP;
     int rows, cols;
     unsigned int ncolors;
     bool transparentSomewhere;
@@ -604,11 +600,11 @@ main(int argc, char *argv[]) {
            array.
         */
 
-    pixel **pixels;
-    gray **alpha;
+    pixel ** pixels;
+    gray ** alpha;
 
     /* Used for rgb value -> character-pixel string mapping */
-    cixel_map *cmap;  /* malloc'ed */
+    CixelMap * cmap;  /* malloc'ed */
         /* The XPM colormap */
     unsigned int cmapSize;
         /* Number of entries in 'cmap' */
@@ -617,18 +613,18 @@ main(int argc, char *argv[]) {
 
     unsigned int charsPerPixel;
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifp = pm_openr(cmdline.inputFilename);
-    pixels = ppm_readppm(ifp, &cols, &rows, &maxval);
-    pm_close(ifp);
+    ifP = pm_openr(cmdline.inputFilename);
+    pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
+    pm_close(ifP);
 
-    if (cmdline.alpha_filename)
-        readAlpha(cmdline.alpha_filename, &alpha, cols, rows, &alphaMaxval);
+    if (cmdline.alphaFilename)
+        readAlpha(cmdline.alphaFilename, &alpha, cols, rows, &alphaMaxval);
     else
         alpha = NULL;
 
