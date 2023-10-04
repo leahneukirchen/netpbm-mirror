@@ -268,7 +268,7 @@ charsPerPixelForSize(unsigned int const cmapSize) {
 
 static void
 genCmap(colorhist_vector const chv,
-        int              const ncolors,
+        unsigned int     const ncolors,
         pixval           const maxval,
         colorhash_table  const colornameHash,
         const char **    const colornames,
@@ -311,8 +311,7 @@ genCmap(colorhist_vector const chv,
 
     MALLOCARRAY(cmap, cmapSize);
     if (cmapP == NULL)
-        pm_error("Out of memory allocating %u bytes for a color map.",
-                 (unsigned)sizeof(CixelMap) * (ncolors+1));
+        pm_error("Can't get memory for a %u-entry color map", cmapSize);
 
     xpmMaxval = xpmMaxvalFromMaxval(maxval);
 
@@ -510,13 +509,13 @@ computecolorhash(pixel **          const pixels,
 -----------------------------------------------------------------------------*/
     colorhash_table cht;
     unsigned int row;
+    bool foundTransparent;
+    unsigned int ncolors;
 
     cht = ppm_alloccolorhash();
-    *ncolorsP = 0;   /* initial value */
-    *transparentSomewhereP = false;  /* initial assumption */
 
     /* Go through the entire image, building a hash table of colors. */
-    for (row = 0; row < rows; ++row) {
+    for (row = 0, ncolors = 0, foundTransparent = false; row < rows; ++row) {
         unsigned int col;
 
         for (col = 0; col < cols; ++col) {
@@ -529,14 +528,20 @@ computecolorhash(pixel **          const pixels,
 
                 if (lookupRc < 0) {
                     /* It's not in the hash yet, so add it */
+                    if (ncolors > UINT_MAX - 10)
+                        pm_error("Number of colors (> %u) "
+                                 "is uncomputably large",
+                                 ncolors);
                     ppm_addtocolorhash(cht, &color, 0);
-                    ++(*ncolorsP);
+                    ++ncolors;
                 }
             } else
                 *transparentSomewhereP = TRUE;
         }
     }
-    *chtP = cht;
+    *chtP                  = cht;
+    *ncolorsP              = ncolors;
+    *transparentSomewhereP = foundTransparent;
 }
 
 
