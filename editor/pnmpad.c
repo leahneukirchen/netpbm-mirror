@@ -1,4 +1,4 @@
-/* pnmpad.c - add border to sides of a portable anymap
+/* pnmpad.c - add border to sides of a PNM
    ** AJCD 4/9/90
  */
 
@@ -16,11 +16,11 @@
        arithmetic overflow
     */
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * input_filespec;  /* Filespecs of input files */
+    const char * inputFileNm;  /* Names of input files */
     unsigned int xsize;
     unsigned int xsizeSpec;
     unsigned int ysize;
@@ -46,7 +46,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -101,8 +101,8 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->verbose,  0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof opt, 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -171,16 +171,16 @@ parseCommandLine(int argc, const char ** argv,
         pm_error("This program takes at most 1 parameter.  You specified %d",
                  argc-1);
     else if (argc-1 == 1)
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileNm = argv[1];
     else
-        cmdlineP->input_filespec = "-";
+        cmdlineP->inputFileNm = "-";
 }
 
 
 
 static void
 parseCommandLineOld(int argc, const char ** argv,
-                    struct cmdlineInfo * const cmdlineP) {
+                    struct CmdlineInfo * const cmdlineP) {
 
     /* This syntax was abandoned in February 2002. */
     pm_message("Warning: old style options are deprecated!");
@@ -239,15 +239,15 @@ parseCommandLineOld(int argc, const char ** argv,
         pm_usage("[-white|-black] [-l#] [-r#] [-t#] [-b#] [pnmfile]");
 
     if (argc == 2)
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileNm = argv[1];
     else
-        cmdlineP->input_filespec = "-";
+        cmdlineP->inputFileNm = "-";
 }
 
 
 
 static void
-validateHorizontalSize(struct cmdlineInfo const cmdline,
+validateHorizontalSize(struct CmdlineInfo const cmdline,
                        unsigned int       const cols) {
 /*----------------------------------------------------------------------------
    Abort the program if the padding parameters in 'cmdline', applied to
@@ -275,7 +275,7 @@ validateHorizontalSize(struct cmdlineInfo const cmdline,
                  "for this program to compute");
 
     if (cmdline.xsizeSpec &&
-        (double) cmdline.xsize + (double) mwidthMaxPad> MAX_WIDTHHEIGHT)
+        (double) cmdline.xsize + (double) mwidthMaxPad > MAX_WIDTHHEIGHT)
         pm_error("Given padding parameters make output width too large "
                  "for this program to compute");
 }
@@ -396,7 +396,7 @@ computePadSizesOneDim(unsigned int   const unpaddedSize,
 
 
 static void
-computeHorizontalPadSizes(struct cmdlineInfo const cmdline,
+computeHorizontalPadSizes(struct CmdlineInfo const cmdline,
                           unsigned int       const cols,
                           unsigned int *     const lpadP,
                           unsigned int *     const rpadP) {
@@ -415,7 +415,7 @@ computeHorizontalPadSizes(struct cmdlineInfo const cmdline,
 
 
 static void
-validateVerticalSize(struct cmdlineInfo const cmdline,
+validateVerticalSize(struct CmdlineInfo const cmdline,
                      unsigned int       const rows) {
 /*----------------------------------------------------------------------------
    Abort the program if the padding parameters in 'cmdline', applied to
@@ -453,7 +453,7 @@ validateVerticalSize(struct cmdlineInfo const cmdline,
 
 
 static void
-computeVerticalPadSizes(struct cmdlineInfo const cmdline,
+computeVerticalPadSizes(struct CmdlineInfo const cmdline,
                         int                const rows,
                         unsigned int *     const tpadP,
                         unsigned int *     const bpadP) {
@@ -472,7 +472,7 @@ computeVerticalPadSizes(struct cmdlineInfo const cmdline,
 
 
 static void
-computePadSizes(struct cmdlineInfo const cmdline,
+computePadSizes(struct CmdlineInfo const cmdline,
                 int                const cols,
                 int                const rows,
                 unsigned int *     const lpadP,
@@ -614,7 +614,7 @@ padGeneral(FILE *       const ifP,
 int
 main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
 
     xelval maxval;
@@ -646,7 +646,7 @@ main(int argc, const char ** argv) {
     else
         parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filespec);
+    ifP = pm_openr(cmdline.inputFileNm);
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
