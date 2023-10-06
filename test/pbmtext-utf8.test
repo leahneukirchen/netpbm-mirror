@@ -20,14 +20,14 @@ tmpdir=${tmpdir:-/tmp}
 utf_locale_list=${tmpdir}/utf_locale_list
 
 locale_to_test="en_US.utf8"  # Initial value; this
-# does not have to be present in  following list
-# Edit the above value if necessary
+# does not have to be actually available.
+# Edit the above value if you have a preferred locale.
 
-# Make a list of available locales which end in "utf8"
+# Make a list of available locales which end in "utf8" etc.
 # If none are found, abort test
 
-locale -a | grep "\.utf8$" > ${utf_locale_list} ||\
-    locale_to_test=""
+locale -a | grep -e "\.utf8$" -e "\.utf-8$" -e "\.UTF-8$" \
+    > ${utf_locale_list} || locale_to_test=""
 
 # Hunt for a valid utf8 locale
 # Submit each candidate to a trial pbmtext run until one that works is

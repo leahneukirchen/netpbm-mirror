@@ -3,8 +3,6 @@
 # Also requires: pnmpsnr
 
 echo "Test 1. Should print: 547829788 196623  (Mersenne Twister)" 
-#               3634219838 196623 (Glibc rand() )
-#               3262664440 196623 (MAC OS rand() )
 ppmforge -night -seed 1 | cksum
 
 tmpdir=${tmpdir:-/tmp}

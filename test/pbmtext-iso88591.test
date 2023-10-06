@@ -13,14 +13,15 @@ tmpdir=${tmpdir:-/tmp}
 iso88591_locale_list=${tmpdir}/iso88591_locale_list
 
 locale_to_test="en_US.iso88591"  # Initial value; this
-# does not have to be present in
-# Edit the above value if necessary
+# does not have to be actually available.
+# Edit the above value if you have a preferred locale.
 
-# Make a list of available locales which end in "iso88591"
+# Make a list of available locales which end in "iso88591" etc.
 # If none are found, abort test
 
-locale -a | grep "\.iso88591$" > ${iso88591_locale_list} ||\
-    locale_to_test=""
+locale -a |\
+    grep -e "\.iso88591$" -e "\.iso-8859-1$" -e "\.ISO-8859-1$" \
+	 > ${iso88591_locale_list} || locale_to_test=""
 
 # Hunt for a valid iso-8859-1 locale
 # Submit each candidate to a trial pbmtext run until one that works is
