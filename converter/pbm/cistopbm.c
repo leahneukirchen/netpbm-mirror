@@ -38,6 +38,8 @@ static void syntax(const char *prog)
                  );
 }
 
+
+
 int main(int argc, const char **argv)
 {
     FILE *ifP;
@@ -176,5 +178,8 @@ int main(int argc, const char **argv)
     }
     pbm_writepbm(stdout, bits, width, height, 0);
     pm_close(ifP);
-    return 0;       
+    return 0;
 }
+
+
+

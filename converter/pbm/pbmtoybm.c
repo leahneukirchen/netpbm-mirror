@@ -66,7 +66,7 @@ main(int argc, const char *argv[]) {
         pm_error("Input image is too large.");
 
     bitrow = pbm_allocrow_packed(cols + 8);
-    
+
     putinit(cols, rows);
 
     bitrow[pbm_packed_bytes(cols + 8) - 1] = 0x00;
@@ -93,5 +93,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
 
 

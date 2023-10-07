@@ -67,18 +67,18 @@ main(int argc,
         inputFileName = argv[1];
     else
         inputFileName = "-";
-    
+
     ifP = pm_openr(inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
     bitrow = pbm_allocrow_packed(cols);
 
     putinit(rows, cols);
-    
-    /* Convert PBM raster data to CMUWM and write */ 
+
+    /* Convert PBM raster data to CMUWM and write */
     for (row = 0; row < rows; ++row) {
         unsigned int const bytesPerRow = pbm_packed_bytes(cols);
-        unsigned char const padding = 
+        unsigned char const padding =
             (cols % 8 == 0) ? 0x00 : ((unsigned char) ~0 >> (cols % 8));
 
         unsigned int i;
@@ -95,7 +95,7 @@ main(int argc,
             bitrow[i] = ~bitrow[i];
 
         bitrow[bytesPerRow-1] |= padding;  /* Set row end pad bits */
-        
+
         bytesWritten = fwrite(bitrow, 1, bytesPerRow, stdout);
         if (bytesWritten != bytesPerRow)
             pm_error("fwrite() failed to write CMU window manager bitmap");
@@ -104,3 +104,6 @@ main(int argc,
     pm_close(ifP);
     return 0;
 }
+
+
+

@@ -133,7 +133,6 @@ scanMacBinaryHeader( const unsigned char * rBuff ) {
 
 
 
-
 static void
 skipHeader( FILE * const ifP ) {
 /*--------------------------------------------------------------------------
@@ -227,7 +226,6 @@ readChar( FILE * const ifP ) {
 
 
 
-
 static void
 ReadMacPaintFile( FILE *  const ifP,
                   int  * outOfSyncP,
@@ -289,6 +287,7 @@ ReadMacPaintFile( FILE *  const ifP,
     *outOfSyncP  = outOfSync;
     *pixelCntP   = pixelCnt;
 }
+
 
 
 int
@@ -354,3 +353,6 @@ main( int argc, char * argv[])  {
     pm_close( stdout );
     exit( 0 );
 }
+
+
+

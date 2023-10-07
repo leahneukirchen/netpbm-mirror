@@ -87,7 +87,7 @@ main(int           argc,
         inputFileName = argv[1];
     else
         inputFileName = "-";
-    
+
     ifP = pm_openr(inputFileName);
 
     readCmuwmHeader(ifP, &cols, &rows, &depth);
@@ -105,15 +105,15 @@ main(int           argc,
         bytesRead = fread(bitrow, 1, bytesPerRow, ifP);
         if (bytesRead != bytesPerRow)
             pm_error("CWU window manager bitmap EOF / read error");
-            
+
         /* Invert all bits in row - raster formats are similar.
            CMUWM Black:0 White:1  End of row padded with 1
            PBM   Black:1 White:0  End preferably padded with 0
         */
-   
+
         for (byteSeq = 0; byteSeq < bytesPerRow; ++byteSeq)
             bitrow[byteSeq] = ~bitrow[byteSeq];
-                
+
         pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
@@ -123,3 +123,6 @@ main(int           argc,
 
     return 0;
 }
+
+
+

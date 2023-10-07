@@ -22,7 +22,7 @@ typedef struct
 } pbm_stat;
 
 int make_pbm_stat(pbm_stat*,FILE*);
-int pbm_readline(pbm_stat*,unsigned char*); 
+int pbm_readline(pbm_stat*,unsigned char*);
   /* reads a single line into char* */
 void pbm_unreadline(pbm_stat*,void*); /* pushes a single line back */
 

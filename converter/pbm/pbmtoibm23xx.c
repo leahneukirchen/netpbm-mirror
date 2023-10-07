@@ -120,7 +120,7 @@ parseCommandLine(int argc, char ** const argv,
 
 
 /* Read all pbm images from a filehandle and print them */
-static void 
+static void
 process_handle(FILE *        const fh,
                unsigned char const graph_mode,
                unsigned int  const passes) {
@@ -155,7 +155,7 @@ process_handle(FILE *        const fh,
             for(bitline = 0; bitline < 8; ++bitline)
                 for(pass = 0; pass < passes; ++pass)
                     /* don't read beyond the end of the image if
-                       height is not a multiple of passes 
+                       height is not a multiple of passes
                     */
                     if(y + bitline * passes + pass < rows) {
                         pbm_readpbmrow(fh, row, cols, format);
@@ -188,7 +188,7 @@ process_handle(FILE *        const fh,
 
 
 
-int 
+int
 main(int argc,char **argv) {
 
   struct cmdlineInfo cmdline;
@@ -212,3 +212,6 @@ main(int argc,char **argv) {
 
   return 0;
 }
+
+
+

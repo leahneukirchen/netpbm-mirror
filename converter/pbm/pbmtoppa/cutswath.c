@@ -29,7 +29,7 @@ extern int Pwidth;
 /* Returns: 0 if unsuccessful
             1 if successful, but with non-printing result (end of page)
             2 if successful, with printing result */
-int 
+int
 cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_data)
 {
   unsigned char *data, *ppa, *place, *maxplace;
@@ -42,17 +42,17 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
   ppa = NULL;
 
   /* shift = 6 if DPI==300  */
-  /* shift = 12 if DPI==600 */ 
+  /* shift = 12 if DPI==600 */
   shift = ( prn->DPI == 300 ? 6:12 ) ;
-  
+
   /* safeguard against the user freeing these */
   sweep_data->image_data  = NULL;
   sweep_data->nozzle_data = NULL;
 
   /* read the data from the input file */
   width8 = (pbm->width + 7) / 8;
- 
-/* 
+
+/*
   fprintf(stderr,"cutswath(): width=%u\n",pbm->width);
   fprintf(stderr,"cutswath(): height=%u\n",pbm->height);
 */
@@ -78,9 +78,9 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     while(pbm->current_line < pbm->height)
       if(!pbm_readline(pbm,data))
       {
-	fprintf(stderr,"cutswath(): could not clear bottom margin\n");
-	free (data); data=NULL;
-	return 0;
+        fprintf(stderr,"cutswath(): could not clear bottom margin\n");
+        free (data); data=NULL;
+        return 0;
       }
     free (data); data=NULL;
     return 1;
@@ -92,7 +92,7 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
   /* eat all beginning blank lines and then up to maxlines or lower margin */
   got_nonblank=numlines=0;
   while( (pbm->current_line < Height-prn->bottom_margin) &&
-	 (numlines < maxlines) )
+         (numlines < maxlines) )
   {
     if(!pbm_readline(pbm,data+width8*numlines))
     {
@@ -102,71 +102,71 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     }
     if(!got_nonblank)
       for(j=prn->left_margin/8; j<left; j++)
-	if(data[j])
-	{
-	  left = j;
-	  got_nonblank=1;
-	  break;
-	}
+        if(data[j])
+        {
+          left = j;
+          got_nonblank=1;
+          break;
+        }
     if(got_nonblank)
       {
-	int newleft = left, newright = right;
+        int newleft = left, newright = right;
 
-	/* find left-most nonblank */
-	for (i = prn->left_margin/8; i < left; i++)
-	  if (data[width8*numlines+i])
-	    {
-	      newleft = i;
-	      break;
-	    }
-	/* find right-most nonblank */
-	for (i = Pwidth-prn->right_margin/8-1; i >= right; i--)
-	  if (data[width8*numlines+i])
-	    {
-	      newright = i;
-	      break;
-	    }
-	numlines++;
+        /* find left-most nonblank */
+        for (i = prn->left_margin/8; i < left; i++)
+          if (data[width8*numlines+i])
+            {
+              newleft = i;
+              break;
+            }
+        /* find right-most nonblank */
+        for (i = Pwidth-prn->right_margin/8-1; i >= right; i--)
+          if (data[width8*numlines+i])
+            {
+              newright = i;
+              break;
+            }
+        numlines++;
 
-	if (newright < newleft)
-	  {
-	    fprintf (stderr, "Ack! newleft=%d, newright=%d, left=%d, right=%d\n",
-		     newleft, newright, left, right);
-	    free (data); data=NULL;
-	    return 0;
-	  }
+        if (newright < newleft)
+          {
+            fprintf (stderr, "Ack! newleft=%d, newright=%d, left=%d, right=%d\n",
+                     newleft, newright, left, right);
+            free (data); data=NULL;
+            return 0;
+          }
 
-	/* if the next line might push us over the buffer size, stop here! */
-	/* ignore this test for the 720 right now.  Will add better */
-	/* size-guessing for compressed data in the near future! */
-	if (numlines % 2 == 1 && prn->version != HP720)
-	  {
-	    int l = newleft, r = newright, w;
-	    
-	    l--;
-	    r+=2;
-	    l*=8;
-	    r*=8;
-	    w = r-l;
-	    w = (w+7)/8;
-	    
-	    if ((w+2*shift)*numlines > prn->bufsize)
-	      {
-		numlines--;
-		pbm_unreadline (pbm, data+width8*numlines);
-		break;
-	      }
-	    else
-	      {
-		left = newleft;
-		right = newright;
-	      }
-	  }
-	else
-	  {
-	    left = newleft;
-	    right = newright;
-	  }
+        /* if the next line might push us over the buffer size, stop here! */
+        /* ignore this test for the 720 right now.  Will add better */
+        /* size-guessing for compressed data in the near future! */
+        if (numlines % 2 == 1 && prn->version != HP720)
+          {
+            int l = newleft, r = newright, w;
+
+            l--;
+            r+=2;
+            l*=8;
+            r*=8;
+            w = r-l;
+            w = (w+7)/8;
+
+            if ((w+2*shift)*numlines > prn->bufsize)
+              {
+                numlines--;
+                pbm_unreadline (pbm, data+width8*numlines);
+                break;
+              }
+            else
+              {
+                left = newleft;
+                right = newright;
+              }
+          }
+        else
+          {
+            left = newleft;
+            right = newright;
+          }
       }
   }
 
@@ -176,12 +176,12 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     if(pbm->current_line >= Height - prn->bottom_margin)
     {
       while(pbm->current_line < pbm->height)
-	if(!pbm_readline(pbm,data))
-	{
-	  fprintf(stderr,"cutswath(): could not clear bottom margin\n");
-	  free (data); data=NULL;
-	  return 0;
-	}
+        if(!pbm_readline(pbm,data))
+        {
+          fprintf(stderr,"cutswath(): could not clear bottom margin\n");
+          free (data); data=NULL;
+          return 0;
+        }
       free (data); data=NULL;
       return 1;
     }
@@ -189,19 +189,19 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     return 0; /* error, since didn't get to lower margin, yet blank */
   }
 
-  /* make sure numlines is even and >= 2 (b/c we have to pass the printer 
+  /* make sure numlines is even and >= 2 (b/c we have to pass the printer
      HALF of the number of pins used */
   if (numlines == 1)
     {
       /* there's no way that we only have 1 line and not enough memory, so
-	 we're safe to increase numlines here.  Also, the bottom margin should
-	 be > 0 so we have some lines to read */
+         we're safe to increase numlines here.  Also, the bottom margin should
+         be > 0 so we have some lines to read */
       if(!pbm_readline(pbm,data+width8*numlines))
-	{
-	  fprintf(stderr,"cutswath(): C-could not read next line\n");
-	  free (data); data=NULL;
-	  return 0;
-	}
+        {
+          fprintf(stderr,"cutswath(): C-could not read next line\n");
+          free (data); data=NULL;
+          return 0;
+        }
       numlines++;
     }
   if (numlines % 2 == 1)
@@ -244,24 +244,24 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     {
       if (i >= shift)
       {
-	for (j = 0; j < numlines/2; j++)
-	  *place++ = data[j*2*width8 + i + left/8-shift];
+        for (j = 0; j < numlines/2; j++)
+          *place++ = data[j*2*width8 + i + left/8-shift];
       }
       else
       {
-	memset (place, 0, numlines/2);
-	place += numlines/2;
+        memset (place, 0, numlines/2);
+        place += numlines/2;
       }
 
       if (i < p_width8)
       {
-	for (j = 0; j < numlines/2; j++)
-	  *place++ = data[(j*2+1)*width8 + i + left/8];
+        for (j = 0; j < numlines/2; j++)
+          *place++ = data[(j*2+1)*width8 + i + left/8];
       }
       else
       {
-	memset (place, 0, numlines/2);
-	place += numlines/2;
+        memset (place, 0, numlines/2);
+        place += numlines/2;
       }
     }
   }
@@ -271,24 +271,24 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     {
       if (i < p_width8)
       {
-	for (j = 0; j < numlines/2; j++)
-	  *place++ = data[(j*2+1)*width8 + i + left/8];
+        for (j = 0; j < numlines/2; j++)
+          *place++ = data[(j*2+1)*width8 + i + left/8];
       }
       else
       {
-	memset (place, 0, numlines/2);
-	place += numlines/2;
+        memset (place, 0, numlines/2);
+        place += numlines/2;
       }
 
       if (i >= shift)
       {
-	for (j = 0; j < numlines/2; j++)
-	  *place++ = data[j*2*width8 + i + left/8 - shift];
+        for (j = 0; j < numlines/2; j++)
+          *place++ = data[j*2*width8 + i + left/8 - shift];
       }
       else
       {
-	memset (place, 0, numlines/2);
-	place += numlines/2;
+        memset (place, 0, numlines/2);
+        place += numlines/2;
       }
     }
   }
@@ -312,16 +312,16 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
   horzpos = left * 600/prn->DPI;
 
   hp2 = horzpos + ( p_width8 + 2*shift )*8 * 600/prn->DPI;
-  
- 
+
+
   sweep_data->left_margin = horzpos;
   sweep_data->right_margin = hp2 + prn->marg_diff;
 
-  
+
   for (i = 0; i < 2; i++)
   {
     nozzles[i].DPI = prn->DPI;
-        
+
     nozzles[i].pins_used_d2 = numlines/2;
     nozzles[i].unused_pins_p1 = 301-numlines;
     nozzles[i].first_pin = 1;
@@ -331,10 +331,10 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
       nozzles[i].right_margin = hp2 + prn->marg_diff;
       if(sweep_data->direction == right_to_left)
        /* 0 */
-	nozzles[i].nozzle_delay=prn->right_to_left_delay[0];
+        nozzles[i].nozzle_delay=prn->right_to_left_delay[0];
       else
        /* 6 */
-	nozzles[i].nozzle_delay=prn->left_to_right_delay[0];
+        nozzles[i].nozzle_delay=prn->left_to_right_delay[0];
     }
     else
     {
@@ -342,10 +342,10 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
       nozzles[i].right_margin = hp2;
       if(sweep_data->direction == right_to_left)
        /* 2 */
-	nozzles[i].nozzle_delay=prn->right_to_left_delay[1];
+        nozzles[i].nozzle_delay=prn->right_to_left_delay[1];
       else
        /* 0 */
-	nozzles[i].nozzle_delay=prn->left_to_right_delay[1];
+        nozzles[i].nozzle_delay=prn->left_to_right_delay[1];
 
     }
   }
@@ -358,5 +358,6 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
 
   return 2;
 }
+
 
 

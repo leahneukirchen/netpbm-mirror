@@ -272,7 +272,7 @@ main(int argc, const char ** argv) {
     }
     else
         ifP = stdin;
-    
+
     if ( argn != argc )
         pm_usage( usage );
 
@@ -282,3 +282,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
+

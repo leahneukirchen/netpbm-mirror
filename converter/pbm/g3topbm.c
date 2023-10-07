@@ -249,6 +249,7 @@ readBitAndDetectEol(struct BitStream * const bitStreamP,
 }
 
 
+
 static void
 initBitStream(struct BitStream * const bitStreamP,
               FILE *             const fileP,

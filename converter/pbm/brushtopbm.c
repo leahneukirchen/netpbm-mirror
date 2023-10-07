@@ -26,7 +26,7 @@ getinit(FILE *         const ifP,
 
     bytesRead = fread(header, sizeof(header), 1, ifP);
     if (bytesRead !=1)
-        pm_error("Error reading header");   
+        pm_error("Error reading header");
 
     if (header[0] != 1)
         pm_error("bad magic number 1");
@@ -47,6 +47,7 @@ validateEof(FILE * const ifP) {
     if (rc != EOF)
         pm_message("Extraneous data at end of file");
 }
+
 
 
 /*
@@ -85,7 +86,7 @@ main(int argc, const char ** argv)  {
         unsigned int i;
         size_t bytesRead;
 
-        bytesRead = fread (bitrow, 1, inRowBytes, ifP); 
+        bytesRead = fread (bitrow, 1, inRowBytes, ifP);
         if (bytesRead != inRowBytes)
             pm_error("Error reading a row of data from brushfile");
 
@@ -102,6 +103,9 @@ main(int argc, const char ** argv)  {
 
     pm_close(ifP);
     pm_close(stdout);
-    
+
     return 0;
 }
+
+
+

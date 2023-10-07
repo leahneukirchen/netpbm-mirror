@@ -31,7 +31,7 @@
   (*): responses, autostatus, and pacing are communicated from the printer to
        the computer, and may be safely ignored.
 */
-static void 
+static void
 vlink_put(FILE *fptr, int channel, int length, void *data)
 {
   fputc ('$', fptr);
@@ -39,6 +39,8 @@ vlink_put(FILE *fptr, int channel, int length, void *data)
   fputc (length>>8, fptr);     fputc (length&0xFF, fptr);
   fwrite (data, length, 1, fptr);
 }
+
+
 
 /*
   SCP packet structure:
@@ -60,9 +62,9 @@ vlink_put(FILE *fptr, int channel, int length, void *data)
        19       1     Handle Media
        18       1     Print Sweep
 */
-static void 
+static void
 scp_put(FILE *fptr, int comspec, int comref, int priority,
-	     int length, void *data)
+             int length, void *data)
 {
   /* encapsulate the vlink_put call in here, to avoid a memcpy */
   fputc ('$', fptr);
@@ -77,6 +79,7 @@ scp_put(FILE *fptr, int comspec, int comref, int priority,
 
   fwrite (data, length, 1, fptr);
 }
+
 
 
 /*
@@ -101,10 +104,10 @@ scp_put(FILE *fptr, int comspec, int comref, int priority,
      0x181      1     Handle Media
      0x180      1     Print Sweep
 */
-static void 
+static void
 scp2_put(FILE *fptr,unsigned short comspec,unsigned short pkt_len_s16,
-	      unsigned char priority,unsigned short comref,unsigned data_len,
-	      void *data)
+              unsigned char priority,unsigned short comref,unsigned data_len,
+              void *data)
 {
   /* encapsulate the vlink_put call in here, to avoid a memcpy */
   fputc ('$', fptr);
@@ -126,6 +129,7 @@ scp2_put(FILE *fptr,unsigned short comspec,unsigned short pkt_len_s16,
 
   fwrite (data, pkt_len_s16, 1, fptr);
 }
+
 
 
 /*
@@ -152,10 +156,10 @@ scp2_put(FILE *fptr,unsigned short comspec,unsigned short pkt_len_s16,
      0x181      1     Handle Media
      0x180      1     Print Sweep
 */
-static void 
+static void
 scp3_put(FILE *fptr,unsigned short comspec,unsigned short pkt_len_s16,
-	      unsigned char priority,unsigned short comref,unsigned data_len,
-	      void *data)
+              unsigned char priority,unsigned short comref,unsigned data_len,
+              void *data)
 {
   /* encapsulate the vlink_put call in here, to avoid a memcpy */
   fputc ('$', fptr);
@@ -177,6 +181,7 @@ scp3_put(FILE *fptr,unsigned short comspec,unsigned short pkt_len_s16,
 
   fwrite (data, pkt_len_s16, 1, fptr);
 }
+
 
 
 void ppa_init_job(ppa_stat* prn)
@@ -211,6 +216,8 @@ void ppa_init_job(ppa_stat* prn)
   }
 }
 
+
+
 void ppa_end_print(ppa_stat* prn)
 {
   unsigned char pageA[4] = { 0x05, 0x01, 0x03, 0x84 };
@@ -219,12 +226,14 @@ void ppa_end_print(ppa_stat* prn)
     scp3_put (prn->fptr, 0x0181, sizeof(pageA), 7, 2, 0, pageA);
 }
 
+
+
 void ppa_init_page(ppa_stat* prn)
 {
   unsigned char pageA[16] = {0x28, 0x2d, 0x00, 0x41, 0x29, 0x2e, 0x00, 0x42,
-			     0x29, 0x2e, 0x00, 0x42, 0x29, 0x2e, 0x00, 0x42 };
+                             0x29, 0x2e, 0x00, 0x42, 0x29, 0x2e, 0x00, 0x42 };
   unsigned char pageB[16] = {0x28, 0x2d, 0x00, 0x41, 0x2d, 0x32, 0x00, 0x46,
-			     0x2d, 0x32, 0x00, 0x46, 0x2d, 0x32, 0x00, 0x46 };
+                             0x2d, 0x32, 0x00, 0x46, 0x2d, 0x32, 0x00, 0x46 };
 
   switch(prn->version)
   {
@@ -241,6 +250,8 @@ void ppa_init_page(ppa_stat* prn)
     fprintf(stderr,"ppa_init_page(): unknown printer version\n");
   }
 }
+
+
 
 void ppa_load_page(ppa_stat* prn)
 {
@@ -263,6 +274,8 @@ void ppa_load_page(ppa_stat* prn)
     fprintf(stderr,"ppa_load_page(): unknown printer version\n");
   }
 }
+
+
 
 void ppa_eject_page(ppa_stat* prn)
 {
@@ -288,8 +301,8 @@ void ppa_eject_page(ppa_stat* prn)
 
 
 
-static int 
-compress(unsigned char *in, int num_lines_d2, int final_len, 
+static int
+compress(unsigned char *in, int num_lines_d2, int final_len,
              unsigned char *iout)
 {
   unsigned char* out = iout;
@@ -301,88 +314,90 @@ compress(unsigned char *in, int num_lines_d2, int final_len,
       /* Find the size of duplicate values */
       int dup_len = 0;
       while ((i + dup_len < len)
-	     && (in[i + dup_len] == in[i])) {
-	dup_len++;
+             && (in[i + dup_len] == in[i])) {
+        dup_len++;
       }
       /* See if we have enough zeros to be worth compressing. */
       /* I figure one is enough. */
       if ((dup_len >= 1) && (in[i] == 0)) {
-	/* Output run of zeros. */
-	while (dup_len >= 128) {
-	  /* Max is 128 */
-	  *out++ = 0x00;
-	  i += 128;
-	  dup_len -= 128;
-	}
-	if (dup_len >= 1)
-	{
-	  *out++ = dup_len;
-	  i += dup_len;
-	}
-	/* See if we have enough non-zeros to be worth compressing. */
-	/* Here two should be enough. */
+        /* Output run of zeros. */
+        while (dup_len >= 128) {
+          /* Max is 128 */
+          *out++ = 0x00;
+          i += 128;
+          dup_len -= 128;
+        }
+        if (dup_len >= 1)
+        {
+          *out++ = dup_len;
+          i += dup_len;
+        }
+        /* See if we have enough non-zeros to be worth compressing. */
+        /* Here two should be enough. */
       }
       else if (dup_len >= 2)
       {
-	/* Output run of duplicates. */
-	while (dup_len >= 64) {
-	  /* Max is 64 */
-	  *out++ = 0x80;
-	  *out++ = in[i];
-	  i += 64;
-	  dup_len -= 64;
-	}
-	if (dup_len >= 2)
-	{
-	  *out++ = dup_len + 0x80;
-	  *out++ = in[i];
-	  i += dup_len;
-	}
+        /* Output run of duplicates. */
+        while (dup_len >= 64) {
+          /* Max is 64 */
+          *out++ = 0x80;
+          *out++ = in[i];
+          i += 64;
+          dup_len -= 64;
+        }
+        if (dup_len >= 2)
+        {
+          *out++ = dup_len + 0x80;
+          *out++ = in[i];
+          i += dup_len;
+        }
       }
       else
       {
-	/* Look for two zeros, or three duplicates to end literal run. */
-	/* Note this is one more than the number to start a run. */
-	int lit_len = -1;
-	int add_more = 1;
-	while (add_more) {
-	  lit_len++;
-	  if (i + lit_len == len) add_more = 0;
-	  /* Always add more if we are near the very end. */
-	  if (i + lit_len < len - 3) {
-	    char a = in[i + lit_len + 0];
-	    char b = in[i + lit_len + 1];
-	    char c = in[i + lit_len + 2];
-	    /* See if there are enough zeros */
-	    if ((a == b) && (b == 0)) add_more = 0;
-	    /* See if there are enough duplicates */
-	    if ((a == b) && (b == c)) add_more = 0;
-	  }
-	}
-	/* Output run of literals. */
-	while (lit_len >= 64) {
-	  /* Max is 64 */
-	  int j;
-	  *out++ = 0xc0;
-	  for (j = i; j < i + 64; j++) {
-	    *out++ = in[j];
-	  }
-	  i += 64;
-	  lit_len -= 64;
-	} 
-	if (lit_len) {
-	  int j;
-	  *out++ = lit_len + 0xc0;
-	  for (j = i; j < i + lit_len; j++) {
-	    *out++ = in[j];
-	  }
-	  i += lit_len;
-	}
+        /* Look for two zeros, or three duplicates to end literal run. */
+        /* Note this is one more than the number to start a run. */
+        int lit_len = -1;
+        int add_more = 1;
+        while (add_more) {
+          lit_len++;
+          if (i + lit_len == len) add_more = 0;
+          /* Always add more if we are near the very end. */
+          if (i + lit_len < len - 3) {
+            char a = in[i + lit_len + 0];
+            char b = in[i + lit_len + 1];
+            char c = in[i + lit_len + 2];
+            /* See if there are enough zeros */
+            if ((a == b) && (b == 0)) add_more = 0;
+            /* See if there are enough duplicates */
+            if ((a == b) && (b == c)) add_more = 0;
+          }
+        }
+        /* Output run of literals. */
+        while (lit_len >= 64) {
+          /* Max is 64 */
+          int j;
+          *out++ = 0xc0;
+          for (j = i; j < i + 64; j++) {
+            *out++ = in[j];
+          }
+          i += 64;
+          lit_len -= 64;
+        }
+        if (lit_len) {
+          int j;
+          *out++ = lit_len + 0xc0;
+          for (j = i; j < i + lit_len; j++) {
+            *out++ = in[j];
+          }
+          i += lit_len;
+        }
       }
     }
   }
   return out-iout;
 }
+
+
 
 static void __inline__ place_2bytes(int x,unsigned char* y)
 { y[0]=x>>8; y[1]=x; }
@@ -519,9 +534,13 @@ void ppa_print_sweep(ppa_stat* prn,ppa_sweep_data* data)
 }
 
 
+
 void ppa_print_sweeps(ppa_stat* prn,ppa_sweep_data* data)
 {
   ppa_sweep_data* current_sweep;
   for(current_sweep=data; current_sweep; current_sweep=current_sweep->next)
     ppa_print_sweep(prn,current_sweep);
 }
+
+
+

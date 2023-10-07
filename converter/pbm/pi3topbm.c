@@ -40,13 +40,13 @@ struct CmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, 
-                 const char ** argv, 
+static void
+parseCommandLine(int argc,
+                 const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -58,12 +58,12 @@ parseCommandLine(int argc,
     optStruct3 opt;
         /* Instructions to pm_optParseOptions3 on how to parse our options. */
     unsigned int option_def_index;
-  
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "debug",    OPT_FLAG,    NULL,       &cmdlineP->debug,       0);
-  
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
@@ -71,7 +71,7 @@ parseCommandLine(int argc,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 < 1) 
+    if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
@@ -166,3 +166,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
+

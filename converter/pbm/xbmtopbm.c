@@ -384,6 +384,8 @@ main(int    argc,
     return 0;
 }
 
+
+
 /*  CHANGE HISTORY:
 
   99.09.08 bryanh    Recognize "static unsigned char" declaration.

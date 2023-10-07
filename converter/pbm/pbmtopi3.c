@@ -67,7 +67,7 @@ main(int argc, const char ** argv) {
     inColByteCt = pbm_packed_bytes(inCols);
 
     bitrow = pbm_allocrow_packed(MAX(outCols, inCols));
-    
+
     /* Add padding to round cols up to 640 */
     for (i = inColByteCt; i < outColByteCt; ++i)
         bitrow[i] = 0x00;
@@ -96,3 +96,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
+

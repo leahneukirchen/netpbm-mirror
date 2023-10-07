@@ -20,15 +20,15 @@ static int bitbox;
 static int bitsleft;
 
 
-static void 
+static void
 bit_init(void) {
-    bitbox=0; 
+    bitbox=0;
     bitsleft=0;
 }
 
 
 
-static int 
+static int
 bit_input(FILE * const in) {
     if (bitsleft == 0)   {
         int rc;
@@ -45,7 +45,7 @@ bit_input(FILE * const in) {
 
 
 
-static void 
+static void
 doSquare(FILE *          const ifP,
          unsigned char * const image,
          unsigned int    const ulCol,
@@ -60,7 +60,7 @@ doSquare(FILE *          const ifP,
    image[], which is a concatenation of rows 'imageWidth' pixels wide, one
    byte per pixel.
 -----------------------------------------------------------------------------*/
-    if (size == 1 || bit_input(ifP)) { 
+    if (size == 1 || bit_input(ifP)) {
         /* It's all black or all white.  Next bit says which. */
 
         unsigned int const c = bit_input(ifP);
@@ -100,7 +100,7 @@ writeOutput(FILE *                const ofP,
             int                   const cols,
             int                   const rows,
             const unsigned char * const image) {
-            
+
     /* w64 is units-of-64-bits width */
     unsigned int const w64 = (cols+63)/64;
 
@@ -113,9 +113,9 @@ writeOutput(FILE *                const ofP,
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
-     
+
         for (col = 0; col < cols; ++col)
-            bitrow[col] = 
+            bitrow[col] =
                 (image[row * (w64*64) + col] == 1) ? PBM_WHITE : PBM_BLACK;
 
         pbm_writepbmrow(ofP, bitrow, cols, FALSE);
@@ -173,7 +173,7 @@ readMrfImage(FILE *           const ifP,
     image = calloc(w64*h64*64*64, 1);
     if (image == NULL)
         pm_error("Unable to get memory for raster");
-                 
+
     /* now recursively input squares. */
 
     bit_init();
@@ -191,7 +191,7 @@ readMrfImage(FILE *           const ifP,
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
 
     FILE *ifP;
@@ -213,7 +213,7 @@ main(int argc, char *argv[]) {
         pm_error("Too many arguments: %d.  Only argument is input file",
                  argc-1);
 
-    if (argc-1 == 1) 
+    if (argc-1 == 1)
         ifP = pm_openr(argv[1]);
     else
         ifP = stdin;
@@ -221,18 +221,15 @@ main(int argc, char *argv[]) {
     ofP = stdout;
 
     readMrfImage(ifP, expandAll, &image, &cols, &rows);
-    
+
     pm_close(ifP);
-    
+
     writeOutput(ofP, cols, rows, image);
 
     free(image);
 
     return 0;
 }
-
-
-
 
 
 

@@ -14,7 +14,7 @@
 
 
 static void
-generateMo(FILE *       const ofP, 
+generateMo(FILE *       const ofP,
            bit **       const bits,
            unsigned int const cols,
            unsigned int const rows) {
@@ -28,7 +28,7 @@ generateMo(FILE *       const ofP,
         unsigned int row;
         unsigned int outbitpos;
         unsigned char outchar;
-        
+
         outbitpos = 0;  /* Start at 1st bit of 1st output byte */
 
         for (row = 0; row < rows; ++row) {
@@ -38,7 +38,7 @@ generateMo(FILE *       const ofP,
 
             outchar |= bits[row][col] << outbitpos;
 
-            if (outbitpos == 7) 
+            if (outbitpos == 7)
                 /* We filled up a byte.  Output it. */
                 fputc(outchar, ofP);
 
@@ -65,13 +65,13 @@ main(int argc, const char ** argv) {
     if (argc-1 > 1)
         pm_error("Too many arguments (%u).  The only valid argument is an "
                  "input file name.", argc-1);
-    else if (argc-1 == 1) 
+    else if (argc-1 == 1)
         inputFilename = argv[1];
     else
         inputFilename = "-";
 
     ifP = pm_openr(inputFilename);
-    
+
     bits = pbm_readpbm(ifP, &cols, &rows);
 
     if (rows > 255)
@@ -80,7 +80,7 @@ main(int argc, const char ** argv) {
         pm_error("Image is too wide:  %u cols.  Max width: 255 cols", cols);
 
     generateMo(stdout, bits, cols, rows);
-    
+
     pm_close(ifP);
 
     pbm_freearray(bits, rows);

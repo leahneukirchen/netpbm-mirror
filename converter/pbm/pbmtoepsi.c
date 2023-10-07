@@ -45,7 +45,7 @@ struct cmdlineInfo {
 
 
 static void
-parseDpi(char *         const dpiOpt, 
+parseDpi(char *         const dpiOpt,
          unsigned int * const dpiXP,
          unsigned int * const dpiYP) {
 
@@ -53,7 +53,7 @@ parseDpi(char *         const dpiOpt,
     unsigned int dpiX, dpiY;
 
     dpiX = strtol(dpiOpt, &dpistr2, 10);
-    if (dpistr2 == dpiOpt) 
+    if (dpistr2 == dpiOpt)
         pm_error("Invalid value for -dpi: '%s'.  Must be either number "
                  "or NxN ", dpiOpt);
     else {
@@ -64,7 +64,7 @@ parseDpi(char *         const dpiOpt,
             char * dpistr3;
 
             dpistr2++;  /* Move past 'x' */
-            dpiY = strtol(dpistr2, &dpistr3, 10);        
+            dpiY = strtol(dpistr2, &dpistr3, 10);
             if (dpistr3 != dpistr2 && *dpistr3 == '\0') {
                 *dpiXP = dpiX;
                 *dpiYP = dpiY;
@@ -75,6 +75,7 @@ parseDpi(char *         const dpiOpt,
         }
     }
 }
+
 
 
 static void
@@ -105,17 +106,17 @@ parseCommandLine(int argc, const char ** const argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-    
+
 
     if (dpiOptSpec)
         parseDpi(dpiOpt, &cmdlineP->dpiX, &cmdlineP->dpiY);
     else
         cmdlineP->dpiX = cmdlineP->dpiY = 72;
-    
+
     if ((argc-1) > 1)
         pm_error("Too many arguments (%d).  Only argument is input file name",
                  argc-1);
-    
+
     if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else
@@ -125,7 +126,7 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 static void
-findPrincipalImage(bit **         const bits, 
+findPrincipalImage(bit **         const bits,
                    unsigned int   const rows,
                    unsigned int   const cols,
                    unsigned int * const topP,
@@ -151,25 +152,25 @@ findPrincipalImage(bit **         const bits,
     bottom = 0;
     left   = cols;
     right  = 0;
- 
+
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
             if (bits[row][col] == PBM_BLACK) {
-                if (row < top) 
+                if (row < top)
                     top = row;
-                if (row > bottom) 
+                if (row > bottom)
                     bottom = row;
-                if (col < left) 
+                if (col < left)
                     left = col;
-                if (col > right) 
+                if (col > right)
                     right = col;
             }
         }
     }
 
     if (top > bottom) {
-        /* No black pixels encountered */ 
+        /* No black pixels encountered */
         pm_message("Blank page");
         top    = 0;
         left   = 0;
@@ -194,8 +195,8 @@ outputBoundingBox(int const top, int const bottom,
     float const xScale = 72.0 / dpiX;
     float const yScale = 72.0 / dpiY;
 
-    printf("%%%%BoundingBox: %d %d %d %d\n", 
-           ROUND(left*xScale),  ROUND((rows - bottom)*yScale), 
+    printf("%%%%BoundingBox: %d %d %d %d\n",
+           ROUND(left*xScale),  ROUND((rows - bottom)*yScale),
            ROUND(right*xScale), ROUND((rows - top)*yScale));
 }
 
@@ -244,7 +245,7 @@ main(int argc, const char * argv[]) {
         */
 
     pm_proginit(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
@@ -255,12 +256,12 @@ main(int argc, const char * argv[]) {
 
     printf("%%!PS-Adobe-2.0 EPSF-1.2\n");
 
-    outputBoundingBox(top, bottom, left, right, rows, 
+    outputBoundingBox(top, bottom, left, right, rows,
                       cmdline.dpiX, cmdline.dpiY);
 
     if (!cmdline.bbonly) {
         int row;
-        printf("%%%%BeginPreview: %d %d 1 %d\n", 
+        printf("%%%%BeginPreview: %d %d 1 %d\n",
                right - left + 1, bottom - top + 1, bottom - top + 1);
 
         for (row = top; row <= bottom; row++) {
@@ -274,7 +275,7 @@ main(int argc, const char * argv[]) {
                 if (outChars == 72) {
                     printf("\n%% ");
                     outChars = 2;
-                }  
+                }
 
                 printf("%02x", eightPixels(bits, row, col, cols));
                 outChars += 2;
@@ -287,3 +288,6 @@ main(int argc, const char * argv[]) {
     }
     return 0;
 }
+
+
+
