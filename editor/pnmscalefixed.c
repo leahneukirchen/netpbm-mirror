@@ -19,6 +19,7 @@
 **
 */
 
+#include <limits.h>
 #include <math.h>
 
 #include "pm_c_util.h"
@@ -446,6 +447,10 @@ main(int argc, char **argv ) {
        unfilled.  We can address that by stretching, whereas the other
        case would require throwing away some of the input.
     */
+    if (newcols > INT_MAX / SCALE)
+        pm_error("New image width (%d) is uncomputably large", newcols);
+    if (newrows > INT_MAX / SCALE)
+        pm_error("New image height (%d) is uncomputably large", newrows);
     sxscale = SCALE * newcols / cols;
     syscale = SCALE * newrows / rows;
 
