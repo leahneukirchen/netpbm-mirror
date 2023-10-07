@@ -468,7 +468,7 @@ fserr_init(struct pam *   const pamP,
 -----------------------------------------------------------------------------*/
     unsigned int plane;
 
-    unsigned int const fserrSize = pamP->width + 2;
+    unsigned int const fserrSz = pamP->width + 2;
 
     fserrP->width = pamP->width;
 
@@ -482,20 +482,20 @@ fserr_init(struct pam *   const pamP,
                  "for depth %u", pamP->depth);
 
     for (plane = 0; plane < pamP->depth; ++plane) {
-        MALLOCARRAY(fserrP->thiserr[plane], fserrSize);
+        MALLOCARRAY(fserrP->thiserr[plane], fserrSz);
         if (fserrP->thiserr[plane] == NULL)
             pm_error("Out of memory allocating Floyd-Steinberg structures "
-                     "for Plane %u, size %u", plane, fserrSize);
-        MALLOCARRAY(fserrP->nexterr[plane], fserrSize);
+                     "for Plane %u, size %u", plane, fserrSz);
+        MALLOCARRAY(fserrP->nexterr[plane], fserrSz);
         if (fserrP->nexterr[plane] == NULL)
             pm_error("Out of memory allocating Floyd-Steinberg structures "
-                     "for Plane %u, size %u", plane, fserrSize);
+                     "for Plane %u, size %u", plane, fserrSz);
     }
 
     if (random.init != RANDOM_NONE)
-        randomizeError(fserrP->thiserr, fserrSize, pamP->depth, random);
+        randomizeError(fserrP->thiserr, fserrSz, pamP->depth, random);
     else
-        zeroError(fserrP->thiserr, fserrSize, pamP->depth);
+        zeroError(fserrP->thiserr, fserrSz, pamP->depth);
 
     fserr_setForward(fserrP);
 }
@@ -1014,7 +1014,7 @@ static void
 copyRaster(struct pam *   const inpamP,
            struct pam *   const outpamP,
            tupletable     const colormap,
-           unsigned int   const colormapSize,
+           unsigned int   const colormapSz,
            bool           const floyd,
            struct Random  const random,
            tuple          const defaultColor,
@@ -1049,7 +1049,7 @@ copyRaster(struct pam *   const inpamP,
 
     usehash = TRUE;
 
-    createColormapFinder(outpamP, colormap, colormapSize, &colorFinderP);
+    createColormapFinder(outpamP, colormap, colormapSz, &colorFinderP);
 
     if (floyd)
         fserr_init(inpamP, &fserr, random);
@@ -1082,13 +1082,13 @@ static void
 remap(FILE *             const ifP,
       const struct pam * const outpamCommonP,
       tupletable         const colormap,
-      unsigned int       const colormapSize,
+      unsigned int       const colormapSz,
       bool               const floyd,
       struct Random      const random,
       tuple              const defaultColor,
       bool               const verbose) {
 /*----------------------------------------------------------------------------
-   Remap the pixels from the raster on *ifP to the 'colormapSize' colors in
+   Remap the pixels from the raster on *ifP to the 'colormapSz' colors in
    'colormap'.
 
    Where the input pixel's color is in the map, just use that for the output.
@@ -1129,7 +1129,7 @@ remap(FILE *             const ifP,
         */
         pnm_setminallocationdepth(&inpam, outpam.depth);
 
-        copyRaster(&inpam, &outpam, colormap, colormapSize, floyd,
+        copyRaster(&inpam, &outpam, colormap, colormapSz, floyd,
                    random, defaultColor, &missingCount);
 
         if (verbose)
@@ -1142,15 +1142,15 @@ remap(FILE *             const ifP,
 
 
 static void
-processMapFile(const char *   const mapFileName,
+processMapFile(const char *   const mapFileNm,
                struct pam *   const outpamCommonP,
                tupletable *   const colormapP,
-               unsigned int * const colormapSizeP,
+               unsigned int * const colormapSzP,
                tuple *        const firstColorP) {
 /*----------------------------------------------------------------------------
-   Read a color map from the file named 'mapFileName'.  It's a map that
+   Read a color map from the file named 'mapFileNm'.  It's a map that
    associates each color in that file with a unique whole number.  Return the
-   map as *colormapP, with the number of entries in it as *colormapSizeP.
+   map as *colormapP, with the number of entries in it as *colormapSzP.
 
    Also determine the first color (top left) in the map file and return that
    as *firstColorP.
@@ -1160,11 +1160,11 @@ processMapFile(const char *   const mapFileName,
     tuple ** maptuples;
     tuple firstColor;
 
-    mapfile = pm_openr(mapFileName);
+    mapfile = pm_openr(mapFileNm);
     maptuples = pnm_readpam(mapfile, &mappam, PAM_STRUCT_SIZE(tuple_type));
     pm_close(mapfile);
 
-    computeColorMapFromMap(&mappam, maptuples, colormapP, colormapSizeP);
+    computeColorMapFromMap(&mappam, maptuples, colormapP, colormapSzP);
 
     firstColor = pnm_allocpamtuple(&mappam);
     pnm_assigntuple(&mappam, firstColor, maptuples[0][0]);
@@ -1180,15 +1180,15 @@ processMapFile(const char *   const mapFileName,
 
 static void
 getSpecifiedMissingColor(struct pam * const pamP,
-                         const char * const colorName,
+                         const char * const colorNm,
                          tuple *      const specColorP) {
 
     tuple specColor;
 
     specColor = pnm_allocpamtuple(pamP);
 
-    if (colorName) {
-        pixel const color = ppm_parsecolor(colorName, pamP->maxval);
+    if (colorNm) {
+        pixel const color = ppm_parsecolor(colorNm, pamP->maxval);
         if (pamP->depth == 3) {
             specColor[PAM_RED_PLANE] = PPM_GETR(color);
             specColor[PAM_GRN_PLANE] = PPM_GETG(color);
@@ -1218,7 +1218,7 @@ main(int argc, const char * argv[] ) {
            across all output images.
         */
     tupletable colormap;
-    unsigned int colormapSize;
+    unsigned int colormapSz;
     tuple specColor;
         /* A tuple of the color the user specified to use for input colors
            that are not in the colormap.  Arbitrary tuple if he didn't
@@ -1239,7 +1239,7 @@ main(int argc, const char * argv[] ) {
     ifP = pm_openr(cmdline.inputFilespec);
 
     processMapFile(cmdline.mapFilespec, &outpamCommon,
-                   &colormap, &colormapSize, &firstColor);
+                   &colormap, &colormapSz, &firstColor);
 
     getSpecifiedMissingColor(&outpamCommon, cmdline.missingcolor, &specColor);
 
@@ -1255,7 +1255,7 @@ main(int argc, const char * argv[] ) {
         break;
     }
 
-    remap(ifP, &outpamCommon, colormap, colormapSize,
+    remap(ifP, &outpamCommon, colormap, colormapSz,
           cmdline.floyd, cmdline.random, defaultColor,
           cmdline.verbose);
 
