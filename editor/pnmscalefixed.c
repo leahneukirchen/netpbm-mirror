@@ -215,7 +215,7 @@ compute_output_dimensions(const struct cmdline_info cmdline,
                           int * newrowsP, int * newcolsP) {
 
     if (cmdline.pixels) {
-        if (rows * cols <= cmdline.pixels) {
+        if (rows <= cmdline.pixels / cols) {
             *newrowsP = rows;
             *newcolsP = cols;
         } else {

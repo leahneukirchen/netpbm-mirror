@@ -17,6 +17,9 @@ not yet  BJH  Release 11.05.00
               ppmtoxpm: fix incorrect output with insanely large number of
               colors.
 
+              pnmscalefixed: fix incorrect output with really big image and
+              -pixels option.
+
               Build: Fix compile error on systems without 'asprintf'.
               Introduced in Netpbm 11.04 (September 2023).
 
