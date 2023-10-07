@@ -44,32 +44,32 @@ main( argc, argv )
 
     while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
     {
-	if ( ISDIGIT( argv[argn][1] ))
-	{
-	    image_num = atoi( (argv[argn]+1) );
-	}
-	else
-	    pm_usage( usage );
-	++argn;
+        if ( ISDIGIT( argv[argn][1] ))
+        {
+            image_num = atoi( (argv[argn]+1) );
+        }
+        else
+            pm_usage( usage );
+        ++argn;
     }
 
     if ( argn < argc )
-	{
-	ifp = pm_openr( argv[argn] );
-	++argn;
-	}
+        {
+        ifp = pm_openr( argv[argn] );
+        ++argn;
+        }
     else
-	ifp = stdin;
+        ifp = stdin;
 
     if ( argn != argc )
-	pm_usage( usage );
+        pm_usage( usage );
 
     for ( i = 0; i < BIORAD_HEADER_LENGTH; ++i )
     {
-	val = getc( ifp );
-	if ( val == EOF )
-	    pm_error( "EOF / read error" );
-	buf[ i ] = val;
+        val = getc( ifp );
+        if ( val == EOF )
+            pm_error( "EOF / read error" );
+        buf[ i ] = val;
     }
 
     cols = BYTE_TO_WORD(buf[0], buf[1]);
@@ -79,74 +79,77 @@ main( argc, argv )
     check_word = BYTE_TO_WORD(buf[54], buf[55]);
 
     if ( check_word != 12345 )
-	pm_error( "Not a Biorad file" );
+        pm_error( "Not a Biorad file" );
 
     if ( cols <= 0 )
-	pm_error( "Strange image size, cols = %d", cols);
+        pm_error( "Strange image size, cols = %d", cols);
 
     if ( rows <= 0 )
-	pm_error( "Strange image size, rows = %d", rows);
+        pm_error( "Strange image size, rows = %d", rows);
 
     if ( image_count <= 0 )
-	pm_error( "Number of images in file is %d", image_count);
+        pm_error( "Number of images in file is %d", image_count);
 
     if ( byte_word )
-	maxval = 255;
+        maxval = 255;
     else
     {
-	maxval = 65535;   /* Perhaps this should be something else */
+        maxval = 65535;   /* Perhaps this should be something else */
 
     }
 
     pm_message( "Image size: %d cols, %d rows", cols, rows);
     pm_message( "%s",
-	       (byte_word) ? "Byte image (8 bits)" : "Word image (16 bits)");
+               (byte_word) ? "Byte image (8 bits)" : "Word image (16 bits)");
 
     if ( image_num < 0 )
-	pm_message( "Input contains %d image%c",
-		   image_count, (image_count > 1) ? 's' : '\0');
+        pm_message( "Input contains %d image%c",
+                   image_count, (image_count > 1) ? 's' : '\0');
     else
     {
-	if ( image_num >= image_count )
-	    pm_error( "Cannot extract image %d, input contains only %d image%s",
-		     image_num, image_count, (image_count > 1) ? "s" : "" );
-	for ( i = (byte_word) ? image_num : image_num*2 ; i > 0 ; --i ) {
-	    for ( row = 0; row < rows; ++row)
-		for ( col = 0; col < cols; ++col )
-		{
-		    val = getc( ifp );
-		    if ( val == EOF ) {
-			pm_error( "EOF / read error" );
-		    }
-		}
-	}
+        if ( image_num >= image_count )
+            pm_error( "Cannot extract image %d, input contains only %d image%s",
+                     image_num, image_count, (image_count > 1) ? "s" : "" );
+        for ( i = (byte_word) ? image_num : image_num*2 ; i > 0 ; --i ) {
+            for ( row = 0; row < rows; ++row)
+                for ( col = 0; col < cols; ++col )
+                {
+                    val = getc( ifp );
+                    if ( val == EOF ) {
+                        pm_error( "EOF / read error" );
+                    }
+                }
+        }
 
-	pgm_writepgminit( stdout, cols, rows, (gray) maxval, 0 );
-	grayrow = pgm_allocrow( cols );
+        pgm_writepgminit( stdout, cols, rows, (gray) maxval, 0 );
+        grayrow = pgm_allocrow( cols );
 
-	for ( row = 0; row < rows; ++row)
-	{
-	    for ( col = 0, gP = grayrow; col < cols; ++col )
-	    {
-		val = getc( ifp );
-		if ( val == EOF )
-		    pm_error( "EOF / read error" );
-		if (byte_word)
-		    *gP++ = val;
-		else
-		{
-		    val2 = getc( ifp );
-		    if ( val2 == EOF )
-			pm_error( "EOF / read error" );
-		    *gP++ = BYTE_TO_WORD(val, val2);
-		}
-	    }
-	    pgm_writepgmrow( stdout, grayrow, cols, (gray) maxval, 0 );
-	}
+        for ( row = 0; row < rows; ++row)
+        {
+            for ( col = 0, gP = grayrow; col < cols; ++col )
+            {
+                val = getc( ifp );
+                if ( val == EOF )
+                    pm_error( "EOF / read error" );
+                if (byte_word)
+                    *gP++ = val;
+                else
+                {
+                    val2 = getc( ifp );
+                    if ( val2 == EOF )
+                        pm_error( "EOF / read error" );
+                    *gP++ = BYTE_TO_WORD(val, val2);
+                }
+            }
+            pgm_writepgmrow( stdout, grayrow, cols, (gray) maxval, 0 );
+        }
 
-	pm_close( ifp );
-	pm_close( stdout );
+        pm_close( ifp );
+        pm_close( stdout );
 
     }
     exit( 0 );
 }
+
+
+

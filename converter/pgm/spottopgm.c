@@ -37,7 +37,7 @@ static int Colbool = 0;        /* 1 if color */
  * requested by the user (i.e 1, 2 or 3). I could create a ppm file
  * but I couldn't be bothered with the rearranging of the data.
  */
-static int 
+static int
 get_image(long length)
 {
     int cnt;
@@ -72,7 +72,7 @@ get_image(long length)
             pm_error ("seek error");
         if (pm_readbiglong (spotfile, &numpixels) == -1)
             pm_error ("EOF / read error reading line ender");
-    
+
         /* Determine the picture size */
         Bufptr = &linebuf[Firstcol];
         if (Lastcol == 0 || Lastcol > numpixels)
@@ -95,7 +95,7 @@ get_image(long length)
     fprintf(stderr,
             "Line %4d, %3d, %3d, time %4d, l/r "
             "pixmar %4d %4d len %d pixnum %d\n",
-            linehdr.linenum, linehdr.recseq, 
+            linehdr.linenum, linehdr.recseq,
             linehdr.spectseq, linehdr.linetime,
             linehdr.leftpixmar, linehdr.rightpixmar, length, numpixels);
 #endif
@@ -116,7 +116,7 @@ get_image(long length)
  *  element 9 == S --> sequential (i.e only one color here)
  *  element 9 == I --> interleaved (1 or more colors)
  */
-static int 
+static int
 get_imghdr(int length)
 {
     struct Imghdr
@@ -145,12 +145,13 @@ get_imghdr(int length)
 
 #ifdef DEBUG
     fprintf(stderr, "Dummy str is >%s<\n", header.dummy1);
-    fprintf(stderr, "Imghdr str is >%s<, col %d\n", 
+    fprintf(stderr, "Imghdr str is >%s<, col %d\n",
             header.description, Colbool);
 #endif
     /* Return the amount to fseek */
     return (length - 56);
 }
+
 
 
 static void
@@ -161,6 +162,8 @@ usage()
             "input_file\n");
     exit(1);
 }
+
+
 
 int
 main(int argc, char *argv[])
@@ -176,7 +179,7 @@ main(int argc, char *argv[])
     } arecord;
 
     pgm_init( &argc, argv );
-   
+
     switch (argc)
     {
     case 7:
@@ -219,7 +222,7 @@ main(int argc, char *argv[])
             arecord.length = get_imghdr(arecord.length);
 #ifdef DEBUG
         else
-            fprintf(stderr, 
+            fprintf(stderr,
                     "Rcrd %3d, type %03o, stype %03o %03o %03o, length %d\n",
                     arecord.record, arecord.type, arecord.sub1, arecord.sub2,
                     (int) arecord.sub3 & 0xff, arecord.length);
@@ -229,3 +232,6 @@ main(int argc, char *argv[])
     }
     exit (0);
 }
+
+
+

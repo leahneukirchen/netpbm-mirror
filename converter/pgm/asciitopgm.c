@@ -124,7 +124,7 @@ convertAsciiToPgm(FILE *         const ifP,
         else {
             if (beginningOfLine) {
                 if (c == '+') {
-                    /* + at start of line means rest of line 
+                    /* + at start of line means rest of line
                        overstrikes previous
                     */
                     c = getc(ifP);
@@ -192,7 +192,7 @@ main(int argc, const char ** argv) {
     rows = 0;  /* initial value */
     cols = 0;  /* initial value */
     divisor = 1; /* initial value */
-    
+
     argn = 1;
 
     if ( argc < 3 || argc > 6 )
@@ -246,3 +246,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
+

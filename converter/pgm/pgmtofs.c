@@ -35,14 +35,14 @@ main( argc, argv )
     argn = 1;
 
     if ( argn < argc )
-	{
+        {
         ifp = pm_openr( argv[argn] );
         ++argn;
-	}
+        }
     else
-	{
+        {
         ifp = stdin;
-	}
+        }
 
     if ( argn != argc )
         pm_usage( usage );
@@ -60,19 +60,19 @@ main( argc, argv )
         pm_error(
             "maxval of %d is too large for FaceSaver(tm)", maxval );
     nmaxval = pm_bitstomaxval( bps );
-    
+
     /* Compute padding to round cols * bps up to the nearest multiple of 8. */
     padright = ( ( cols * bps + 7 ) / 8 ) * 8 - cols * bps;
 
     putinit( cols, rows, bps );
     for ( row = rows - 1; row >= 0; --row )
-	{
+        {
         for ( col = 0, gP = grays[row]; col < cols; ++col, ++gP )
-	    {
+            {
             if ( maxval != nmaxval )
                 *gP = (int) *gP * nmaxval / maxval;
             putgray( *gP );
-	    }
+            }
         for ( col = 0; col < padright; ++col )
             putgray( 0 );
     }
@@ -81,6 +81,7 @@ main( argc, argv )
 
     exit( 0 );
 }
+
 
 
 static int bitspersample, item, bitsperitem, bitshift, itemsperline, items;
@@ -109,16 +110,18 @@ putinit( cols, rows, bps )
     bitshift = 8 - bitspersample;
 }
 
+
+
 static void
 putitem( )
 {
     const char* const hexits = "0123456789abcdef";
 
     if ( itemsperline == 30 )
-	{
+        {
         putchar( '\n' );
         itemsperline = 0;
-	}
+        }
     putchar( hexits[item >> 4] );
     putchar( hexits[item & 15] );
     ++itemsperline;
@@ -127,6 +130,8 @@ putitem( )
     bitsperitem = 0;
     bitshift = 8 - bitspersample;
 }
+
+
 
 static void
 putgray( gray g )
@@ -138,6 +143,8 @@ putgray( gray g )
     bitshift -= bitspersample;
 }
 
+
+
 static void
 putrest( )
 {
@@ -145,3 +152,6 @@ putrest( )
         putitem( );
     printf( "\n" );
 }
+
+
+

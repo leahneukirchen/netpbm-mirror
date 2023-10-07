@@ -56,6 +56,7 @@ validateFileSize(FILE * const ifP) {
 }
 
 
+
 static void
 writeRaster(FILE *       const ifP,
             struct pam * const pamP) {
@@ -188,15 +189,15 @@ readFooter(FILE *             const ifP,
 static void
 reportFooter(struct St4Footer const footer) {
 
-	pm_message("Comment:                 %s", footer.comment);
+        pm_message("Comment:                 %s", footer.comment);
 
-	pm_message("Exposure time (1/100 s): %s", footer.exposureTime);
+        pm_message("Exposure time (1/100 s): %s", footer.exposureTime);
 
-	pm_message("Focal length (in):       %s", footer.focalLength);
+        pm_message("Focal length (in):       %s", footer.focalLength);
 
-	pm_message("Aperture area (sq in):   %s", footer.apertureArea);
+        pm_message("Aperture area (sq in):   %s", footer.apertureArea);
 
-	pm_message("Calibration factor:      %s", footer.calibrationFactor);
+        pm_message("Calibration factor:      %s", footer.calibrationFactor);
 }
 
 
@@ -219,7 +220,7 @@ main(int argc, const char **argv) {
             pm_error("Too many arguments: %u.  "
                      "The only possible argument is the "
                      "optional input file name", argc-1);
-    }        
+    }
 
     /* We check the file size to catch the common problem of the input not
        being valid ST-4 SBIG input.  Unlike most formats, this one does not
@@ -256,5 +257,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
 
 

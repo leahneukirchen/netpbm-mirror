@@ -47,7 +47,7 @@ warnNonsquarePixels(unsigned int const cols,
                     unsigned int const xcols,
                     unsigned int const rows,
                     unsigned int const xrows) {
-    
+
     const char * const baseMsg = "warning, non-square pixels";
 
     if (pm_have_float_format()) {
@@ -57,7 +57,7 @@ warnNonsquarePixels(unsigned int const cols,
         pm_message("%s; to fix do a 'pamscale -%cscale %g'",
                    baseMsg,
                    rowratio > colratio ? 'y' : 'x',
-                   rowratio > colratio ? 
+                   rowratio > colratio ?
                    rowratio / colratio : colratio / rowratio);
     } else
         pm_message("%s", baseMsg);
@@ -152,4 +152,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
 
