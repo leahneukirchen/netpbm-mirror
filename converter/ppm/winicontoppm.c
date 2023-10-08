@@ -115,7 +115,6 @@ parseCommandLine (int argc, const char ** argv,
 
 
 
-
 static int
 GetByte(FILE * const ifP) {
 
@@ -980,3 +979,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
+

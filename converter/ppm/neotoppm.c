@@ -57,7 +57,7 @@ main( int argc, char * argv[] ) {
         /* Read the palette. */
         for ( i = 0; i < 16; ++i ) {
             short j;
-            
+
             pm_readbigshort (ifp, &j);
             PPM_ASSIGN( pal[i],
                         ( j & 0x700 ) >> 8,
@@ -102,3 +102,6 @@ main( int argc, char * argv[] ) {
 
     exit( 0 );
 }
+
+
+

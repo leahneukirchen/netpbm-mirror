@@ -66,7 +66,7 @@
 #include "ppm.h"
 #include "mallocvar.h"
 
-typedef	unsigned char uint8;
+typedef unsigned char uint8;
 
 /* Multiplication tables */
 
@@ -92,6 +92,8 @@ luminance(pixel const p) {
         ;
 }
 
+
+
 static __inline__ float
 chrominanceRed(pixel const p) {
     return mult5[PPM_GETR(p)]
@@ -99,6 +101,8 @@ chrominanceRed(pixel const p) {
         + mult08131[PPM_GETB(p)]
         ;
 }
+
+
 
 static __inline__ float
 chrominanceBlue(pixel const p) {
@@ -171,10 +175,10 @@ freeMultiplicationTables(void) {
  *
  * PPMtoYUV
  *
- *	convert PPM data into YUV data
- *	assumes that ydivisor = 1
+ *      convert PPM data into YUV data
+ *      assumes that ydivisor = 1
  *
- * RETURNS:	nothing
+ * RETURNS:     nothing
  *
  * SIDE EFFECTS:    none
  *
@@ -362,8 +366,8 @@ main(int argc, const char **argv) {
 
     eof = false;  /* EOF not yet encountered */
     lastMaxval = 0;  /* No previous maxval */
-    lastWidth = 0;	/* No previous width */
-    lastHeight = 0;	/* No previous height */
+    lastWidth = 0;      /* No previous width */
+    lastHeight = 0;     /* No previous height */
     orig_y = orig_cr = orig_cb = 0;
 
     while (!eof) {

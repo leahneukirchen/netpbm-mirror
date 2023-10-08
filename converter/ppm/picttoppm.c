@@ -339,11 +339,13 @@ allocateRaster(struct Raster * const rasterP,
 }
 
 
+
 static void
 freeRaster(struct Raster const raster) {
 
     free(raster.bytes);
 }
+
 
 
 struct BlitInfo {
@@ -763,6 +765,7 @@ skipPolyOrRegion(FILE *          const ifP,
 }
 
 
+
 #define NA (0)
 
 #define FNT_BOLD    (1)
@@ -967,6 +970,7 @@ rectequal(const struct Rect * const comparand,
         comparand->left   == comparator->left &&
         comparand->right  == comparator->right;
 }
+
 
 
 static int
@@ -2719,6 +2723,7 @@ interpretCompressedLine(unsigned char * const linebuf,
 }
 
 
+
 /* There is some confusion about when, in PICT, a line length is one byte and
   when it is two.  An Apple document says it is two bytes when the number of
   pixels in the row, padded, is > 250.  Ppmtopict generated PICTs that way
@@ -3193,6 +3198,8 @@ drawPen(struct Canvas * const canvasP,
 
     drawPenRect(canvasP, &clippedPenrect);
 }
+
+
 
 /*
  * Digital Line Drawing

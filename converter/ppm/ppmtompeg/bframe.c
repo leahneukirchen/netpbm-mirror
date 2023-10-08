@@ -114,7 +114,6 @@ halfMotion(motion const motion) {
 
 
 
-
 /*===========================================================================*
  *
  *  compute the block resulting from motion compensation
@@ -436,7 +435,6 @@ MotionSufficient(MpegFrame *      const curr,
 
     return (colorErr < 256); /* lumErr checked above */
 }
-
 
 
 
@@ -1156,6 +1154,7 @@ SetBQScale(qB)
 }
 
 
+
 /*===========================================================================*
  *
  * GetBQScale
@@ -1172,6 +1171,7 @@ GetBQScale()
 {
     return qscaleB;
 }
+
 
 
 /*===========================================================================*
@@ -1326,6 +1326,7 @@ ComputeBMotionLumBlock(MpegFrame * const prev,
 }
 
 
+
 /*===========================================================================*
  *
  *  estimate the seconds to compute a B-frame
@@ -1342,5 +1343,6 @@ EstimateSecondsPerBFrame() {
     else
         return (float)totalTime/((float)TIME_RATE*(float)bframeStats.Frames);
 }
+
 
 

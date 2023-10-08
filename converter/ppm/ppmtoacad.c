@@ -108,33 +108,33 @@ static void outrun(color, ysize, y, xstart, xend)
                 stdout, (int) ((xend + 1) * aspect + 0.4999));
             (void) pm_writelittleshort(stdout, yb - yspan);
         } else {
-            (void) pm_writelittleshort(stdout, (short) 0xFD00); 
+            (void) pm_writelittleshort(stdout, (short) 0xFD00);
               /* Solid fill header */
-            (void) pm_writelittleshort(stdout, 4);      
+            (void) pm_writelittleshort(stdout, 4);
               /* Vertices to follow */
             (void) pm_writelittleshort(stdout, -2);     /* Fill type */
 
-            (void) pm_writelittleshort(stdout, (short)0xFD00); 
+            (void) pm_writelittleshort(stdout, (short)0xFD00);
               /* Solid fill vertex */
             (void) pm_writelittleshort(stdout, xstart);
             (void) pm_writelittleshort(stdout, yb);
 
-            (void) pm_writelittleshort(stdout, (short) 0xFD00); 
+            (void) pm_writelittleshort(stdout, (short) 0xFD00);
               /* Solid fill vertex */
             (void) pm_writelittleshort(stdout, xend + 1);
             (void) pm_writelittleshort(stdout, yb);
 
-            (void) pm_writelittleshort(stdout, (short) 0xFD00); 
+            (void) pm_writelittleshort(stdout, (short) 0xFD00);
               /* Solid fill vertex */
             (void) pm_writelittleshort(stdout, xend + 1);
             (void) pm_writelittleshort(stdout, yb - yspan);
 
-            (void) pm_writelittleshort(stdout, (short) 0xFD00); 
+            (void) pm_writelittleshort(stdout, (short) 0xFD00);
               /* Solid fill vertex */
             (void) pm_writelittleshort(stdout, xstart);
             (void) pm_writelittleshort(stdout, yb - yspan);
 
-            (void) pm_writelittleshort(stdout, (short) 0xFD00); 
+            (void) pm_writelittleshort(stdout, (short) 0xFD00);
               /* Solid fill trailer */
             (void) pm_writelittleshort(stdout, 4); /* Vertices that precede */
             (void) pm_writelittleshort(stdout, -2);     /* Fill type */
@@ -146,6 +146,8 @@ static void outrun(color, ysize, y, xstart, xend)
         (void) pm_writelittleshort(stdout, ysize - y);  /*          To   Y */
     }
 }
+
+
 
 /*  SLIDEOUT  --  Write an AutoCAD slide.  */
 
@@ -253,11 +255,13 @@ static void slideout(xdots, ydots, ncolors, red, green, blue)
     if (dxbmode) {
         putchar(0);                   /* DXB end sentinel */
     } else {
-        (void) pm_writelittleshort(stdout, (short) 0xFC00); 
+        (void) pm_writelittleshort(stdout, (short) 0xFC00);
           /* End of file marker */
     }
     pm_freerow((char *) acadmap);
 }
+
+
 
 /*  Main program.  */
 
@@ -391,3 +395,6 @@ int main(argc, argv)
     pm_freerow((char *) Blue);
     exit(0);
 }
+
+
+

@@ -285,7 +285,6 @@ SetBitRateFileName(const char * const fileName) {
 
 
 
-
 static void
 finishFrameOutput(MpegFrame * const frameP,
                   BitBucket * const bbP,
@@ -313,7 +312,6 @@ finishFrameOutput(MpegFrame * const frameP,
         }
     }
 }
-
 
 
 
@@ -1241,6 +1239,7 @@ SetStatFileName(const char * const fileName) {
 }
 
 
+
 /*===========================================================================*
  *
  * SetGOPSize
@@ -1258,6 +1257,7 @@ SetGOPSize(size)
 {
     gopSize = size;
 }
+
 
 
 /*===========================================================================*
@@ -1461,6 +1461,7 @@ SetFrameRate()
     }
     printf("frame rate(%d) set to %d\n", frameRate, frameRateRounded);
 }
+
 
 
 /*=====================*

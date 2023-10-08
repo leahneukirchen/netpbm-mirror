@@ -42,3 +42,6 @@ void mp_quant_block(Block in, Block out) {
         out[i][7] = in[i][7] / qtable[i][7];
     }
 }
+
+
+

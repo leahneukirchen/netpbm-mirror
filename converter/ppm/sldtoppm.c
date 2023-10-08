@@ -244,6 +244,8 @@ scanDirectory(FILE *       const slFileP,
     *foundP = found;
 }
 
+
+
 /*  SLIDEFIND  --  Find  a  slide  in  a  library  or,  if  DIRONLY is
            nonzero, print a directory listing of the  library.
            If  UCASEN  is nonzero, the requested slide name is
@@ -733,3 +735,6 @@ main(int          argc,
 
     return 0;
 }
+
+
+

@@ -52,6 +52,7 @@ JMovie2JPEG(const char * const infilename,
 }
 
 
+
 void
 ReadJPEG(MpegFrame * const mf,
          FILE *      const fp) {
@@ -59,3 +60,6 @@ ReadJPEG(MpegFrame * const mf,
     pm_error("This program has not been built with the "
              "ability to handle JPEG input files");
 }
+
+
+

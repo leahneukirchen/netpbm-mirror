@@ -2,7 +2,7 @@
 **
 ** by Marc Boucher
 ** Internet: marc@PostImage.COM
-** 
+**
 ** Based on Example Conversion Program, A60/A64 Digital Video Interface
 ** Manual, page 69.
 **
@@ -42,7 +42,7 @@ convertRow(const pixel *   const pixelrow,
             pixval const r = PPM_GETR(pixelrow[col]);
             pixval const g = PPM_GETG(pixelrow[col]);
             pixval const b = PPM_GETB(pixelrow[col]);
-            
+
             y1 = 16829 * r + 33039 * g +  6416 * b + (*y2CarryP & 0xffff);
             u1 = -4853 * r -  9530 * g + 14383 * b;
             v1 = 14386 * r - 12046 * g -  2340 * b;
@@ -110,7 +110,7 @@ main(int argc, const char **argv) {
         ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
 
         convertRow(pixelrow, cols, yuvBuf, &u, &v, &u0, &v0, &y2Carry);
-        
+
         fwrite(yuvBuf, cols*2, 1, stdout);
     }
 
@@ -118,3 +118,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
+
+

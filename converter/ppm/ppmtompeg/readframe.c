@@ -386,6 +386,7 @@ SetFileType(const char * const conversion)
 }
 
 
+
 /*===========================================================================*
  *
  * SetFileFormat
@@ -558,6 +559,8 @@ ReadEYUV(mf, fpointer, width, height)
     /* ignore leftover stuff on the bottom */
 }
 
+
+
 /*===========================================================================*
  *
  * ReadAYUV
@@ -615,6 +618,8 @@ ReadAYUV(mf, fpointer, width, height)
     }
 
 }
+
+
 
 /*===========================================================================*
  *
@@ -702,6 +707,7 @@ SeparateLine(fpointer, lineptr, width)
 }
 
 
+
 /*===========================================================================*
  *
  * ReadY
@@ -747,6 +753,7 @@ ReadY(mf, fpointer, width, height)
       memset(mf->orig_cr[y], 128, (Fsize_x>>1));
     }
 }
+
 
 
 /*===========================================================================*
@@ -808,6 +815,7 @@ ReadSub4(mf, fpointer, width, height)
 }
 
 
+
 /*=====================*
  * INTERNAL PROCEDURES *
  *=====================*/
@@ -843,7 +851,6 @@ int w,h;
       mf->orig_y[i][j] = GammaVal[mf->orig_y[i][j]];
     }}
 }
-
 
 
 
@@ -910,6 +917,7 @@ int w,h;
       mf->orig_y[i][j] = mapper[mf->orig_y[i][j]];
     }}
 }
+
 
 
 /*

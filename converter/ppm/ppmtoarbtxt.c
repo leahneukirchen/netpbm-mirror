@@ -69,11 +69,11 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int hdSpec, tlSpec;
 
     unsigned int option_def_index;
-    
+
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0,   "hd",   OPT_STRING, &cmdlineP->hd, 
+    OPTENT3(0,   "hd",   OPT_STRING, &cmdlineP->hd,
             &hdSpec,             0);
     OPTENT3(0,   "tl",   OPT_STRING, &cmdlineP->tl,
             &tlSpec,             0);
@@ -113,7 +113,6 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
-
 typedef enum {
 /* The types of object we handle */
     BDATA, IRED, IGREEN, IBLUE, ILUM, FRED, FGREEN, FBLUE, FLUM,
@@ -134,7 +133,7 @@ typedef union {
         char * bdat;   /* Binary data (text with newlines etc.) */
         unsigned int ndat;
     } binData;
-    
+
     struct Icdat {
         char icformat[MAXFORMAT+1];  /* Integer colors */
         unsigned int icolmin, icolmax;
@@ -144,7 +143,7 @@ typedef union {
         char fcformat[MAXFORMAT+1];  /* Float colors */
         double fcolmin, fcolmax;
     } fcolData;
-    
+
     struct Idat {
         char iformat[MAXFORMAT+1];   /* Integer data */
     } iData;
@@ -152,7 +151,7 @@ typedef union {
 
 
 /* Each object has a type and some data */
-typedef struct { 
+typedef struct {
     SkeletonObjectType objType;
     SkeletonObjectData odata;
 } SkeletonObject;
@@ -187,11 +186,11 @@ dumpSkeleton(SkeletonObject ** const skeletonPList,
 static void
 dumpAllSkeleton(SkeletonObject ** const bodySkeletonPList,
                 unsigned int      const bodyNskl,
-                SkeletonObject ** const headSkeletonPList, 
+                SkeletonObject ** const headSkeletonPList,
                 unsigned int      const headNskl,
                 SkeletonObject ** const tailSkeletonPList,
                 unsigned int      const tailNskl) {
-    
+
     pm_message("Body skeleton:");
     dumpSkeleton(bodySkeletonPList, bodyNskl);
 
@@ -240,7 +239,7 @@ writeFcol(FILE *           const ofP,
           double           const value) {
 
     struct Fcdat * const fcdataP = &objectP->odata.fcolData;
-    
+
     fprintf(ofP, fcdataP->fcformat,
             (double)
             (fcdataP->fcolmin
@@ -255,7 +254,7 @@ writeIdat(FILE *           const ofP,
           unsigned int     const value) {
 
     struct Idat * const idataP = &objectP->odata.iData;
-    
+
     fprintf(ofP, idataP->iformat, value);
 }
 
@@ -272,7 +271,7 @@ writeText(FILE *            const ofP,
           double            const red,
           double            const green,
           double            const blue) {
-    
+
     unsigned int i;
 
     for (i = 0; i < nObj; ++i) {
@@ -352,6 +351,7 @@ objClass(SkeletonObjectType const objType) {
 }
 
 
+
 /*----------------------------------------------------------------------------
   Format string validation
 
@@ -366,7 +366,7 @@ objClass(SkeletonObjectType const objType) {
 
   Documentation for parse_printf_format() is usually available in texinfo
   format on GNU/Linux systems.  As of Dec. 2014 there is no official man page.
-  
+
   Online documentation is available from:
   https://
   www.gnu.org/software/libc/manual/html_node/Parsing-a-Template-String.html
@@ -379,7 +379,7 @@ validateParsePrintfFlag(int                const printfConversion,
                         const char **      const errorP) {
 /*----------------------------------------------------------------------------
   Assuming 'printfConversion' is the value reported by parse_printf_format()
-  as the type of argument a format string requires, 
+  as the type of argument a format string requires,
   return an explanation of how it is incompatible with 'ctyp' as
   *errorP -- return null string if it is compatible.
 -----------------------------------------------------------------------------*/
@@ -403,7 +403,7 @@ validateParsePrintfFlag(int                const printfConversion,
     default:
         switch (printfConversion & ~PA_FLAG_MASK) {
         case PA_CHAR:
-            pm_message("Warning: char type conversion."); 
+            pm_message("Warning: char type conversion.");
         case PA_INT:
             if(objClass(ctyp) == OBJTYP_ICOLOR ||
                objClass(ctyp) == OBJTYP_INT )
@@ -496,7 +496,7 @@ validateFormatOne(char               const typeSpecifier,
     case '0': case '1': case '2': case '3': case '4': case '5':
     case '6': case '7': case '8': case '9':
         break;
-        
+
     case 'c': case 'C':
         pm_message("Warning: char type conversion: %%%c.", typeSpecifier);
     case 'i': case 'd': case 'u': case 'o': case 'x': case 'X':
@@ -599,12 +599,12 @@ validateFormat(const char *       const format,
 
     if (error)
         pm_error("Invalid format string '%s'.  %s", format, error);
-}              
-               
+}
+
 
 
 static SkeletonObject *
-newBinDataObj(unsigned int const nDat, 
+newBinDataObj(unsigned int const nDat,
               const char * const bdat) {
 /*----------------------------------------------------------------------------
   Create a binary data object.
@@ -787,7 +787,7 @@ newFcSkelFromReplString(const char *       const fcolorObjstr,
         retval = NULL;
 
     return retval;
-} 
+}
 
 
 
@@ -805,7 +805,7 @@ newISkelFromReplString(const char *       const intObjstr,
     int nOdata;
 
     nOdata = sscanf(intObjstr, "%s", formstr);
-    
+
     if (nOdata == 1)
         retval = newIdataObj(objType, formstr);
     else if (nOdata == EOF) {
@@ -815,7 +815,7 @@ newISkelFromReplString(const char *       const intObjstr,
         retval = NULL;
 
     return retval;
-} 
+}
 
 
 
@@ -842,7 +842,7 @@ newSkeletonFromReplString(const char * const objstr) {
     int conversionCt;
     char s1[MAX_OBJ_BUF];    /* Dry read. */
     char s2[MAX_OBJ_BUF];    /* Extra tailing characters. */
-    float f1, f2;            /* Dry read. */ 
+    float f1, f2;            /* Dry read. */
 
     typstr[0] = '\0';  /* initial value */
 
@@ -905,7 +905,7 @@ readThroughCloseParen(FILE * const ifP,
             if (chr == ')') {
                 gotEscSeq = true;
                 objstr[i] = '\0';
-	        } else
+                } else
                 objstr[i] = chr;
         }
     }
@@ -942,7 +942,7 @@ SkeletonBuffer_add(SkeletonBuffer * const bufferP,
         pm_error("Too many skeletons.  Max = %u", bufferP->capacity);
 
     bufferP->skeletonPList[bufferP->nSkeleton++] = skeletonP;
-}                   
+}
 
 
 
@@ -1050,7 +1050,7 @@ readSkeletonFile(const char *      const filename,
         /* A buffer for accumulating skeleton objects */
     Buffer buffer;
         /* A buffer for accumulating binary (literal; unsubstituted) data, on
-           its way to becoming a binary skeleton object. 
+           its way to becoming a binary skeleton object.
         */
     bool eof;
     const char * error;
@@ -1135,7 +1135,7 @@ convertIt(FILE *            const ifP,
           FILE *            const ofP,
           SkeletonObject ** const bodySkeletonPList,
           unsigned int      const bodyNskl,
-          SkeletonObject ** const headSkeletonPList, 
+          SkeletonObject ** const headSkeletonPList,
           unsigned int      const headNskl,
           SkeletonObject ** const tailSkeletonPList,
           unsigned int      const tailNskl) {
@@ -1154,7 +1154,7 @@ convertIt(FILE *            const ifP,
     dmaxval = (double)maxval;
 
     /* Write header */
-    writeText(ofP, headNskl, headSkeletonPList, 
+    writeText(ofP, headNskl, headSkeletonPList,
               cols, rows , 0, 0, 0.0, 0.0, 0.0);
 
     /* Write raster */
@@ -1175,7 +1175,7 @@ convertIt(FILE *            const ifP,
     }
 
     /* Write trailer */
-    writeText(ofP, tailNskl, tailSkeletonPList, 
+    writeText(ofP, tailNskl, tailSkeletonPList,
               cols, rows, 0, 0, 0.0, 0.0, 0.0);
 }
 
@@ -1184,7 +1184,7 @@ convertIt(FILE *            const ifP,
 int
 main(int           argc,
      const char ** argv) {
-    
+
     struct CmdlineInfo cmdline;
 
     unsigned int headNskl, bodyNskl, tailNskl;
@@ -1238,5 +1238,6 @@ main(int           argc,
 
     return 0;
 }
+
 
 

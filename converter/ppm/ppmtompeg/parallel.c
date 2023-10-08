@@ -324,6 +324,7 @@ static void
 }
 
 
+
 /*===========================================================================*
  *
  * NotifyDecodeServerReady
@@ -446,6 +447,7 @@ int id;
 }
 
 
+
 /*===========================================================================*
  *
  * SendDecodedFrame
@@ -482,6 +484,7 @@ SendDecodedFrame(MpegFrame * const frameP) {
 
     close(clientSocket);
 }
+
 
 
 /*===========================================================================*
@@ -524,6 +527,7 @@ GetRemoteDecodedRefFrame(MpegFrame * const frameP,
 }
 
 
+
 /*********
   routines handling forks, execs, PIDs and signals
   save, system-style forks
@@ -558,6 +562,8 @@ static void cleanup_fork( dummy )       /* try to kill all child processes */
     }
   }
 }
+
+
 
 /*===========================================================================*
  *
@@ -611,6 +617,7 @@ static int safe_fork(command)       /* fork child process and remember its PID *
 }
 
 
+
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
@@ -638,6 +645,7 @@ SetIOConvert(boolean const separate) {
 }
 
 
+
 /*===========================================================================*
  *
  * SetParallelPerfect
@@ -657,6 +665,7 @@ SetParallelPerfect(boolean val)
 }
 
 
+
 /*===========================================================================*
  *
  * SetRemoteShell
@@ -673,6 +682,7 @@ void
 SetRemoteShell(const char * const shell) {
     strcpy(rsh, shell);
 }
+
 
 
 static void
@@ -1146,6 +1156,7 @@ GetRemoteFrame(MpegFrame * const frameP,
 }
 
 
+
 struct combineControl {
     unsigned int numFrames;
 };
@@ -1321,6 +1332,7 @@ CombineServer(int          const numFrames,
 
   fclose(ofP);
 }
+
 
 
 /*=====================*

@@ -1,15 +1,15 @@
 /* Bryan got this from mm.ftp-cs.berkeley.edu from the package
-   mpeg-encode-1.5b-src under the name vidtoppm.c on March 30, 2000.  
-   The file was dated January 19, 1995.  
+   mpeg-encode-1.5b-src under the name vidtoppm.c on March 30, 2000.
+   The file was dated January 19, 1995.
 
    This program does not use the netpbm libraries, but generates its
    output via the program rawtoppm.  If any work is ever done on it
    (or, more to the point, any interest ever expressed in it), it
    should be converted just to call ppmwrite(), etc. directly.
 
-   There was no attached documentation, but the program appears to 
+   There was no attached documentation, but the program appears to
    convert from Parallax XVideo JPEG format to a sequence of PPM files.  It
-   does this conversion by putting each frame in a window and then 
+   does this conversion by putting each frame in a window and then
    reading it out of the window, using libXvid.
 
    Because it requires special libraries and there is no known
@@ -57,6 +57,8 @@ char *p;
     exit (1);
 }
 
+
+
 static char buffer[300000];
 
 Visual *
@@ -67,11 +69,11 @@ FindFullColorVisual (dpy, depth)
   XVisualInfo vinfo;
   XVisualInfo *vinfo_ret;
   int numitems, maxdepth;
-  
+
   vinfo.class = TrueColor;
-  
+
   vinfo_ret = XGetVisualInfo(dpy, VisualClassMask, &vinfo, &numitems);
-  
+
   if (numitems == 0) return NULL;
 
   maxdepth = 0;
@@ -85,14 +87,16 @@ FindFullColorVisual (dpy, depth)
 
   if (maxdepth < 24) return NULL;
 
-  if (XMatchVisualInfo(dpy, DefaultScreen(dpy), maxdepth, 
-		       TrueColor, &vinfo)) {
+  if (XMatchVisualInfo(dpy, DefaultScreen(dpy), maxdepth,
+                       TrueColor, &vinfo)) {
     *depth = maxdepth;
     return vinfo.visual;
   }
-  
+
   return NULL;
 }
+
+
 
 Window
 CreateFullColorWindow (dpy, x, y, w, h)
@@ -107,20 +111,22 @@ CreateFullColorWindow (dpy, x, y, w, h)
     int screen;
 
     screen = XDefaultScreen(dpy);
-    class = InputOutput;	/* Could be InputOnly */
+    class = InputOutput;        /* Could be InputOnly */
     visual = FindFullColorVisual (dpy, &depth);
     if (visual == NULL) {
-	return 0;
+        return 0;
     }
     mask = CWBackPixel | CWColormap | CWBorderPixel;
     xswa.colormap = XCreateColormap(dpy, XRootWindow(dpy, screen),
-		    visual, AllocNone);
+                    visual, AllocNone);
     xswa.background_pixel = BlackPixel(dpy, DefaultScreen(dpy));
     xswa.border_pixel = WhitePixel(dpy, DefaultScreen(dpy));
 
     return XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h,
-	1, depth, class, visual, mask, &xswa);
+        1, depth, class, visual, mask, &xswa);
 }
+
+
 
 main (argc, argv)
 int argc;
@@ -169,16 +175,16 @@ char **argv;
   obase = argv[6];
 
   quality = 100;
-  
+
   if (argc > 7)
     quality = atoi (argv[7]);
-  
+
   dpy = XOpenDisplay (NULL);
   screen = DefaultScreen(dpy);
   root = DefaultRootWindow(dpy);
 /*  gc = DefaultGC(dpy, screen); */
 /*  win = XCreateSimpleWindow (dpy, root, 0, 0, width, height,
-			     0, NULL, NULL);
+                             0, NULL, NULL);
 */
   win = CreateFullColorWindow(dpy, 0, 0, width+4, height+4);
   gc = XCreateGC(dpy, win, 0, NULL);
@@ -195,7 +201,7 @@ char **argv;
   XPlxPutTable(dpy, win, gc, qTable, size, 0);
   XPlxPutTable(dpy, win, gc, qTable, size, 1);
   XPlxVideoTag (dpy, win, gc, PLX_VIDEO);
-  
+
   inFile = fopen(filename, "rb");
   if (inFile == NULL) {
     perror (filename);
@@ -215,7 +221,7 @@ char **argv;
       exit();
     }
   }
-    
+
   for (i=start; i<=end; i++) {
     fprintf(stdout, "GRABBING FRAME %d\n", i);
 
@@ -228,15 +234,15 @@ char **argv;
       perror("End of file.");
       exit();
     }
-    
+
     XPlxPutCImage (dpy, win, gc, &image, 0, 0, image.width,
-		   image.height, 0, 0, width+2, height+2, 1);
+                   image.height, 0, 0, width+2, height+2, 1);
 
     XFlush(dpy);
 
     ximage = XGetImage(dpy, win, 0, 0, width, height, 0x00ffffff,
-		       ZPixmap);
-    
+                       ZPixmap);
+
     if (i == 0) {
       fprintf(stderr, "Depth %d\n", ximage->depth);
       fprintf(stderr, "Height: %d Width: %d\n", height, width );
@@ -252,10 +258,10 @@ char **argv;
 
     for (r=0; r<height; r++) {
       for (j=0; j<width; j++) {
-	fputc(*(tdata+3), outFile);
-	fputc(*(tdata+2), outFile);
-	fputc(*(tdata+1), outFile);
-	tdata += 4;
+        fputc(*(tdata+3), outFile);
+        fputc(*(tdata+2), outFile);
+        fputc(*(tdata+1), outFile);
+        tdata += 4;
       }
     }
 
@@ -264,7 +270,10 @@ char **argv;
     free(tdata);
 
     sprintf(command, "rawtoppm %d %d < /tmp/foobar > %s",
-	    width, height, ofname);
+            width, height, ofname);
     system(command);
   }
 }
+
+
+

@@ -59,13 +59,20 @@ char    *MemAlloc(size_t size)
     return malloc(size);
 }
 
+
+
 void    MemFree(char *ptr, long bytes)
 {
     totalMemory -= bytes;
     free(ptr);
 }
 
+
+
 void    PrintMaxMemory(void)
 {
     fprintf(stdout, "MMMMM-----MAX MEMORY-----MMMMM = %ld\n", maxMemory);
 }
+
+
+

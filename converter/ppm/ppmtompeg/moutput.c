@@ -167,6 +167,7 @@ void    UnQuantZig(FlatBlock in, Block out, int qscale, boolean iblock)
 }
 
 
+
 /*
  * --------------------------------------------------------------
  *
@@ -335,6 +336,7 @@ void    mp_rle_huff_block(FlatBlock in, BitBucket *out)
 }
 
 
+
 /*
  * --------------------------------------------------------------
  *
@@ -440,3 +442,6 @@ void    mp_rle_huff_pblock(FlatBlock in, BitBucket *out)
     DBG_PRINT(("End of block\n"));
     Bitio_Write(out, 0x2, 2);   /* end of block marker */
 }
+
+
+

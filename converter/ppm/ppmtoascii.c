@@ -164,7 +164,7 @@ ppmtoascii(pixel * const *    const pixels,
 
     for (row = 0; row < rows; row += cellHeight) {
         unsigned int col;
-        for (col = 0; col < cols; col += cellWidth)	{
+        for (col = 0; col < cols; col += cellWidth)     {
             unsigned int const sumthresh = cellWidth * cellHeight * 1.0 / 2;
 
             float sumr, sumg, sumb;
@@ -181,7 +181,7 @@ ppmtoascii(pixel * const *    const pixels,
                 for (subcol = 0; subcol < cellWidth; ++subcol) {
                     pixel color;
                     pixval value;
-                
+
                     if (row + subrow < rows && col + subcol < cols)
                         color = pixels[row + subrow][col + subcol];
                     else
@@ -225,7 +225,7 @@ main(int argc, const char ** argv) {
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
-    
+
     pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
 
     pm_close(ifP);
@@ -234,3 +234,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
+

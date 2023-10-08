@@ -41,19 +41,19 @@ main( argc, argv )
 
     /* Check args. */
     if ( argc > 2 )
-	pm_usage( "[spcfile]" );
+        pm_usage( "[spcfile]" );
 
     if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
+        ifp = pm_openr( argv[1] );
     else
-	ifp = stdin;
+        ifp = stdin;
 
     /* Check SPC file header. */
     c1 = getc( ifp );
     c2 = getc( ifp );
 
     if ( ( c1 != 'S' ) || ( c2 != 'P' ) )
-	pm_error( "not a Spectrum picture" );
+        pm_error( "not a Spectrum picture" );
 
     /* Skip reserved bytes. */
     getc( ifp );
@@ -78,35 +78,35 @@ main( argc, argv )
     pixelrow = ppm_allocrow( COLS );
 
     for ( row = 0; row < ROWS; ++row )
-	{
-	for ( col = 0, pP = pixelrow; col < COLS; ++col, ++pP )
-	    {
-	    int c, ind, b, plane, x1;
+        {
+        for ( col = 0, pP = pixelrow; col < COLS; ++col, ++pP )
+            {
+            int c, ind, b, plane, x1;
 
-	    /* Compute pixel value. */
-	    ind = ( 80 * row ) + ( ( col >> 4 ) << 2 );
-	    b = 0x8000 >> (col & 0xf);
-	    c = 0;
-	    for ( plane = 0; plane < 4; ++plane )
-		if ( b & sscreen[ind+plane] )
-		    c |= (1 << plane);
+            /* Compute pixel value. */
+            ind = ( 80 * row ) + ( ( col >> 4 ) << 2 );
+            b = 0x8000 >> (col & 0xf);
+            c = 0;
+            for ( plane = 0; plane < 4; ++plane )
+                if ( b & sscreen[ind+plane] )
+                    c |= (1 << plane);
 
-	    /* Compute palette index. */
-	    x1 = 10 * c;
-	    if ( c & 1 )
-		x1 -= 5;
-	    else
-		++x1;
-	    if ( ( col >= x1 ) && ( col < ( x1 + 160 ) ) )
-		c += 16;
-	    if ( col >= ( x1 + 160 ) )
-		c += 32;
+            /* Compute palette index. */
+            x1 = 10 * c;
+            if ( c & 1 )
+                x1 -= 5;
+            else
+                ++x1;
+            if ( ( col >= x1 ) && ( col < ( x1 + 160 ) ) )
+                c += 16;
+            if ( col >= ( x1 + 160 ) )
+                c += 32;
 
-	    /* Store the proper color. */
-	    *pP = pal[row][c];
-	    }
-	ppm_writeppmrow( stdout, pixelrow, COLS, (pixval) MAXVAL, 0 );
-	}
+            /* Store the proper color. */
+            *pP = pal[row][c];
+            }
+        ppm_writeppmrow( stdout, pixelrow, COLS, (pixval) MAXVAL, 0 );
+        }
 
     pm_close( stdout );
 
@@ -123,7 +123,7 @@ DoBitmap( ifp )
 
     /* Zero out first scan line. */
     for ( i = 0; i < 160; ++i )
-	screen[i] = 0;
+        screen[i] = 0;
 
     /* 'count' counts number of input bytes. */
     count = 0;
@@ -132,37 +132,37 @@ DoBitmap( ifp )
     data = 0;
 
     while ( count < bitmap_length )
-	{
-	/* Get next record header. */
-	h = getc( ifp );
-	++count;
+        {
+        /* Get next record header. */
+        h = getc( ifp );
+        ++count;
 
-	if ( ( h >= 0 ) && ( count < bitmap_length ) )
-	    {
-	    for ( i = 0; i <= h; ++i )
-		{
-		c = getc( ifp );
-		++count;
-		DoChar( data, c );
-		++data;
-		}
-	    }
-	else if ( ( h < 0 ) && ( count < bitmap_length ) )
-	    {
-	    c = getc( ifp );
-	    ++count;
+        if ( ( h >= 0 ) && ( count < bitmap_length ) )
+            {
+            for ( i = 0; i <= h; ++i )
+                {
+                c = getc( ifp );
+                ++count;
+                DoChar( data, c );
+                ++data;
+                }
+            }
+        else if ( ( h < 0 ) && ( count < bitmap_length ) )
+            {
+            c = getc( ifp );
+            ++count;
 
-	    for ( i = 0; i < ( 2 - h ); ++i )
-		{
-		DoChar( data, c );
-		++data;
-		}
-	    }
+            for ( i = 0; i < ( 2 - h ); ++i )
+                {
+                DoChar( data, c );
+                ++data;
+                }
+            }
     }
 
     /* Convert the char version of the screen to short. */
     for ( i = 0; i < ROWS*COLS/4; ++i )
-	sscreen[i] = ( screen[i<<1] << 8 ) + ( 0xff & screen[(i<<1)+1] );
+        sscreen[i] = ( screen[i<<1] << 8 ) + ( 0xff & screen[(i<<1)+1] );
     }
 
 static void
@@ -184,22 +184,25 @@ DoColormap( ifp )
 
     /* Clear first three palettes. */
     for ( j = 0; j < 48; ++j )
-	PPM_ASSIGN( pal[0][j], 0, 0, 0 );
+        PPM_ASSIGN( pal[0][j], 0, 0, 0 );
 
     /* Read the palettes. */
     for ( i = 1; i < ROWS; ++i )
-	for ( j = 0; j < 3; ++j )
-	    {
-	    (void) pm_readbigshort( ifp, &mask );
-	    for ( b = 0; b < 15; ++b )
-		if ( mask & ( 1 << b ) )
-		    {
-		    short k;
-		    (void) pm_readbigshort( ifp, &k );
-		    PPM_ASSIGN( pal[i][(j*16)+b],
-			( k & 0x700 ) >> 8,
-			( k & 0x070 ) >> 4,
-			( k & 0x007 ) );
-		    }
-	    }
+        for ( j = 0; j < 3; ++j )
+            {
+            (void) pm_readbigshort( ifp, &mask );
+            for ( b = 0; b < 15; ++b )
+                if ( mask & ( 1 << b ) )
+                    {
+                    short k;
+                    (void) pm_readbigshort( ifp, &k );
+                    PPM_ASSIGN( pal[i][(j*16)+b],
+                        ( k & 0x700 ) >> 8,
+                        ( k & 0x070 ) >> 4,
+                        ( k & 0x007 ) );
+                    }
+            }
     }
+
+
+

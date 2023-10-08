@@ -108,6 +108,7 @@ compute_mult_tables(const pixval maxval) {
 }
 
 
+
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
@@ -202,3 +203,6 @@ PNMtoYUV(MpegFrame *  const frameP,
         }
     }
 }
+
+
+

@@ -157,6 +157,7 @@ parseCommandLine(int argc, const char ** argv,
 }
 
 
+
 typedef struct {
     /* Information for an XPM color map entry */
     char *cixel;

@@ -149,7 +149,6 @@ validateComputableSize(unsigned int const cols,
 
 
 
-
 static void
 makeIcrColormap(colorhist_vector const chv,
                 unsigned int     const colorCt,
@@ -288,6 +287,7 @@ windowNameFmFileName(const char * const fileName) {
 
     return windowName;
 }
+
 
 
             int

@@ -247,6 +247,8 @@ FILE *fp;
 
 }
 
+
+
 /* Version 1 */
 void Parse_Specifics_File_v1(fp)
 FILE *fp;
@@ -442,7 +444,6 @@ Parse_Specifics_File_v2(FILE * const fP) {
 
 
 
-
 /*=================================================================
  *
  *     MakeFslEntry
@@ -464,8 +465,6 @@ FrameSpecList *MakeFslEntry()
   fslp->bs = (Block_Specifics *) NULL;
   return fslp;
 }
-
-
 
 
 
@@ -500,8 +499,6 @@ int snum,qs;
     last = new;
   }
 }
-
-
 
 
 
@@ -541,9 +538,6 @@ int bnum,qs;
   }
   return new;
 }
-
-
-
 
 
 
@@ -685,6 +679,7 @@ int start_qs;
 }
 
 
+
 /*================================================================
  *
  *  SpecTypeLookup
@@ -718,3 +713,6 @@ int fn;
 #endif
   return tmp->frametype;
 }
+
+
+

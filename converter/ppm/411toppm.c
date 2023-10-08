@@ -105,7 +105,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
-    
+
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
@@ -182,7 +182,7 @@ YUVtoPPM(FILE  * const ifP,
         r = CHOP((int)(tempR >> 16));
         g = CHOP((int)(tempG >> 16));
         b = CHOP((int)(tempB >> 16));
-        
+
         PPM_ASSIGN(pixrow[col], r, g, b);
     }
 }
@@ -224,6 +224,8 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
+
 
 /*
    By default a .411 file is width=64, height=48, 4608 bytes.

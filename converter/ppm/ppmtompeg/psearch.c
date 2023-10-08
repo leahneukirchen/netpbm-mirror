@@ -135,6 +135,7 @@ SetPixelSearch(const char * const searchType) {
 }
 
 
+
 /*===========================================================================*
  *
  * SetPSearchAlg
@@ -162,6 +163,7 @@ SetPSearchAlg(const char * const alg)
         exit(1);
     }
 }
+
 
 
 /*===========================================================================*
@@ -198,6 +200,7 @@ PSearchName(void)
 }
 
 
+
 /*===========================================================================*
  *
  * SetSearchRange
@@ -232,6 +235,7 @@ SetSearchRange(int const pixelsP, int const pixelsB) {
 }
 
 
+
 /*===========================================================================*
  *
  *              USER-MODIFIABLE
@@ -250,6 +254,7 @@ void
 MotionSearchPreComputation(MpegFrame * const frameP) {
     /* do nothing */
 }
+
 
 
 /*===========================================================================*
@@ -649,6 +654,7 @@ PLocalSearch(const LumBlock * const currentBlockP,
 }
 
 
+
 /*===========================================================================*
  *
  * PTwoLevelSearch
@@ -837,6 +843,7 @@ ShowPMVHistogram(fpointer)
 }
 
 
+
 void
 ShowBBMVHistogram(fpointer)
     FILE *fpointer;
@@ -884,6 +891,7 @@ ShowBBMVHistogram(fpointer)
 }
 
 
+
 void
 ShowBFMVHistogram(fpointer)
     FILE *fpointer;
@@ -929,6 +937,7 @@ ShowBFMVHistogram(fpointer)
 #endif
     fprintf(fpointer, "\n");
 }
+
 
 
 /*

@@ -48,11 +48,11 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "d0",       OPT_FLAG,   
+    OPTENT3(0,   "d0",       OPT_FLAG,
             NULL,                       &d0Spec, 0);
-    OPTENT3(0,   "d2",       OPT_FLAG,   
+    OPTENT3(0,   "d2",       OPT_FLAG,
             NULL,                       &d2Spec, 0);
-    OPTENT3(0,   "d4",       OPT_FLAG,   
+    OPTENT3(0,   "d4",       OPT_FLAG,
             NULL,                       &d4Spec, 0);
 
     opt.opt_table = option_def;
@@ -72,7 +72,7 @@ parseCommandLine(int argc, const char ** argv,
     else
         cmdlineP->dithflag = 2;
 
-    if (argc-1 < 1) 
+    if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
@@ -129,7 +129,7 @@ findIndex(unsigned int const col,
    Spectrum palette index.
 -----------------------------------------------------------------------------*/
     int r, x1;
-    
+
     x1 = 10 * index;  /* initial value */
     if (index & 0x1)
         x1 -= 5;
@@ -143,7 +143,7 @@ findIndex(unsigned int const col,
 
     if (col >= (x1+160))
         r += 32;
-    
+
     return r;
 }
 
@@ -183,7 +183,7 @@ dither(unsigned int       const row,
         { 0, 2 },
         { 3, 1 }
     };
-    
+
     unsigned int c[3];  /* An element for each plane */
     unsigned int col;
 
@@ -262,7 +262,7 @@ sort(struct PixelType * const pixelType,
             ++i;
         while (pixelType[j-1].popularity > pivot)
             --j;
-        
+
         if (i < j) {
             /* An element not less popular than pivot is to the left of a
                pixel not more popular than pivot, so swap them.  Note that we
@@ -274,7 +274,7 @@ sort(struct PixelType * const pixelType,
             --j;
         }
     }
-    
+
     if (j - left > 1)
         sort(pixelType, left, j);
     if (right - i > 1)
@@ -445,7 +445,7 @@ convertRow(unsigned int       const row,
     /* Mark palette entries as all free */
     for (i = 0; i < 48; ++i)
         palP->pal[row][i] = -1;
-    
+
     /* Mark reserved palette entries */
     palP->pal[row][0]  = palP->pal[row][15] = palP->pal[row][16] = 0;
     palP->pal[row][31] = palP->pal[row][32] = palP->pal[row][47] = 0;
@@ -494,7 +494,7 @@ writeScreen(const short * const screen) {
     /* Write the bitmap */
 
     unsigned int i;
-    
+
     for (i = 0; i < 16000; ++i) {
         char const c0 = 0xff & (screen[i] >> 8);
         char const c1 = 0xff & screen[i];

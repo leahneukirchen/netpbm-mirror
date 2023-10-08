@@ -92,6 +92,7 @@ SetParallelPerfect(boolean const val) {
 }
 
 
+
 void
 SetRemoteShell(const char * const shell) {
     /* do nothing -- this may be called during non-parallel execution */
@@ -228,3 +229,6 @@ GetRemoteDecodedRefFrame(MpegFrame * const frame,
     pm_error("This version of Ppmtompeg cannot run parallel mode because "
              "it does not have socket capability.");
 }
+
+
+

@@ -133,6 +133,7 @@ Dump(BitBucket * const bbPtr) {
 }
 
 
+
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
@@ -215,6 +216,7 @@ Bitio_Free(BitBucket * const bbPtr) {
     }
     free(bbPtr);
 }
+
 
 
 /*===========================================================================*
@@ -316,6 +318,7 @@ Bitio_Write(BitBucket * const bbPtr,
     if ( bbPtr->totalbits > MAX_BITS )  /* flush bits */
         Dump(bbPtr);
 }
+
 
 
 /*===========================================================================*
@@ -516,6 +519,7 @@ Bitio_WriteToSocket(BitBucket * const bbPtr,
 }
 
 
+
 /*===========================================================================*
  *
  * Bitio_BytePad
@@ -534,3 +538,6 @@ Bitio_BytePad(BitBucket * const bbPtr) {
         Bitio_Write(bbPtr, 0, lastPtrPtr->bitsleftcur % 8);
     }
 }
+
+
+

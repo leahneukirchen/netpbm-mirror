@@ -316,6 +316,8 @@ initRateControl(bool const wantUnderflowWarning,
     return result;
 }
 
+
+
 /*===========================================================================*
  *
  * initGOPRateControl
@@ -464,7 +466,6 @@ targetRateControl(MpegFrame * const frame) {
 
 
 
-
 static void
 updateVBVBuffer(int const frameBits) {
 /*----------------------------------------------------------------------------
@@ -580,6 +581,7 @@ updateRateControl(int const type) {
 }
 
 
+
 /*===========================================================================*
  *
  * MB_RateOut
@@ -647,6 +649,7 @@ void incNumBlocks(num)
 }
 
 
+
 /*===========================================================================*
  *
  * incMacroBlockBits()
@@ -668,6 +671,7 @@ void incMacroBlockBits(num)
   rc_totalMBBits += num;
   rc_totalFrameBits += num;
 }
+
 
 
 /*===========================================================================*
@@ -705,6 +709,7 @@ int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
   else
     return Qscale;
 }
+
 
 
 /*===========================================================================*
@@ -759,6 +764,7 @@ void checkBufferFullness (oldQScale)
   rc_Q = (currentVirtBuf * 31 / reactionParameter);
   return;
 }
+
 
 
 /*===========================================================================*
@@ -845,7 +851,6 @@ void checkSpatialActivity(blk0, blk1, blk2, blk3)
 
 
 
-
 /*============================================================================*
  *
  * getRateMode ()
@@ -862,6 +867,7 @@ int getRateMode()
 {
   return RateControlMode;
 }
+
 
 
 /*===========================================================================*
@@ -921,7 +927,6 @@ int getBitRate ()
 
 
 
-
 /*===========================================================================*
  *
  * setBufferSize ()
@@ -952,6 +957,7 @@ void setBufferSize (const char * const charPtr)
   }
   DBG_PRINT(("Buffer size is: %d\n", buffer_size));
 }
+
 
 
 /*===========================================================================*

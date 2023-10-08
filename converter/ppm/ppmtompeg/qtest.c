@@ -61,3 +61,6 @@ main()
 
     printf("Huffman output is %d bits\n", bb->totalbits);
 }
+
+
+

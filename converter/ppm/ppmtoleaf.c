@@ -11,7 +11,7 @@
  *
  * Known problems: pgms are not converted to leaf grayscales; they are
  * converted to 8-bit color images with all gray for colors.
- * 
+ *
  */
 
 #include <stdio.h>
@@ -31,7 +31,7 @@ static int
 colorstobpp(unsigned int const colors) {
 
     int bpp;
-    
+
     if (colors <= 2)
         bpp = 1;
     else if (colors <= 256)
@@ -49,12 +49,11 @@ GetPixel(int const x,
          int const y) {
 
     int color;
-    
+
     color = ppm_lookupcolor(cht, &pixels[y][x]);
-    
+
     return color;
 }
-
 
 
 
@@ -70,52 +69,52 @@ leaf_writeimg(unsigned int const width,
     */
 
     /* NOTE: byte order in ileaf img file fmt is big-endian, always! */
-    
+
     /* magic */
     fputc(0x89, stdout);
     fputc(0x4f, stdout);
     fputc(0x50, stdout);
     fputc(0x53, stdout);
-    
+
     /* version 4 */
     fputc(0x00, stdout);
     fputc(0x04, stdout);
-    
+
     /* h resolution: pixels/inch: say 75=screen resolution */
     fputc(0x00, stdout);
     fputc(75, stdout);
-    
+
     /* v resolution: pixels/inch: say 75=screen resolution */
     fputc(0x00, stdout);
     fputc(75, stdout);
-    
+
     /* unique id, could be anything */
     fputc(0x01, stdout);
     fputc(0x02, stdout);
     fputc(0x03, stdout);
     fputc(0x04, stdout);
-    
+
     /* x offset, always zero */
     fputc(0x00, stdout);
     fputc(0x00, stdout);
-    
+
     /* y offset, always zero */
     fputc(0x00, stdout);
     fputc(0x00, stdout);
-    
+
     /* dimensions 64k x 64k max */
     fputc((unsigned char)((width >> 8) & 0x00ff), stdout);
     fputc((unsigned char)(width  & 0x00ff), stdout);
     fputc((unsigned char)((height >> 8) & 0x00ff), stdout);
     fputc((unsigned char)(height  & 0x00ff), stdout);
-    
+
     /* depth */
     fputc(0x00, stdout);
     fputc((unsigned char)depth, stdout);
-    
+
     /* compressed, 0=uncompressed, 1=compressed */
     fputc(0x00, stdout);
-    
+
     /* format, mono/gray = 0x20000000, RGB=0x29000000 */
     if (depth == 1)
         fputc(0x20, stdout);
@@ -125,7 +124,7 @@ leaf_writeimg(unsigned int const width,
     fputc(0x00, stdout);
     fputc(0x00, stdout);
     fputc(0x00, stdout);
-    
+
     /* colormap size */
     if (depth == 8) {
         unsigned int i;
@@ -139,10 +138,10 @@ leaf_writeimg(unsigned int const width,
             fputc((unsigned char) Green[i]*255/maxval, stdout);
         for (i = 0; i < 256; ++i)
             fputc((unsigned char) Blue[i]*255/maxval, stdout);
-    
+
         for (row=0; row < height; ++row) {
             unsigned int col;
-            for (col = 0; col < width; ++col) 
+            for (col = 0; col < width; ++col)
                 fputc(GetPixel(col, row), stdout);
             if ((width % 2) != 0)
                 fputc(0x00, stdout); /* pad to 2-bytes */
@@ -180,18 +179,18 @@ leaf_writeimg(unsigned int const width,
 
         fputc(0x00, stdout);
         fputc(0x00, stdout);
-        
+
         for (row = 0; row < height; ++row) {
             unsigned int col;
-            for (col = 0; col < width; ++col) 
+            for (col = 0; col < width; ++col)
                 fputc(pixels[row][col].r * 255 / maxval, stdout);
             if (width % 2 != 0)
                 fputc(0x00, stdout); /* pad to 2-bytes */
-            for (col = 0; col < width; ++col) 
+            for (col = 0; col < width; ++col)
                 fputc(pixels[row][col].g * 255 / maxval, stdout);
             if (width % 2 != 0)
                 fputc(0x00, stdout); /* pad to 2-bytes */
-            for (col = 0; col < width; ++col) 
+            for (col = 0; col < width; ++col)
                 fputc(pixels[row][col].b * 255 / maxval, stdout);
             if (width % 2 != 0)
                 fputc(0x00, stdout); /* pad to 2-bytes */
@@ -212,24 +211,24 @@ main(int argc, const char * argv[]) {
     pixval maxval;
     colorhist_vector chv;
     const char * const usage = "[ppmfile]";
-    
+
     pm_proginit(&argc, argv);
-    
+
     argn = 1;
-    
+
     if (argn < argc) {
         ifP = pm_openr(argv[argn]);
         argn++;
     } else
         ifP = stdin;
-    
+
     if (argn != argc)
         pm_usage(usage);
-    
+
     pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
-    
+
     pm_close(ifP);
-    
+
     /* Figure out the colormap. */
     pm_message("Computing colormap...");
     chv = ppm_computecolorhist(pixels, cols, rows, MAXCOLORS, &colors);
@@ -237,14 +236,14 @@ main(int argc, const char * argv[]) {
         unsigned int i;
 
         pm_message("... Done.  %u colors found.", colors);
-    
+
         for (i = 0; i < colors; ++i) {
             Red[i]   = (int) PPM_GETR( chv[i].color);
             Green[i] = (int) PPM_GETG( chv[i].color);
             Blue[i]  = (int) PPM_GETB( chv[i].color);
         }
         BitsPerPixel = colorstobpp(colors);
-    
+
         /* And make a hash table for fast lookup. */
         cht = ppm_colorhisttocolorhash(chv, colors);
         ppm_freecolorhist(chv);
@@ -252,8 +251,11 @@ main(int argc, const char * argv[]) {
         BitsPerPixel = 24;
         pm_message("  ... Done.  24-bit true color %u color image.", colors);
     }
-    
+
     leaf_writeimg(cols, rows, BitsPerPixel, colors, maxval);
-    
+
     return 0;
 }
+
+
+
