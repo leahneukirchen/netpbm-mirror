@@ -24,14 +24,14 @@
 static uint32
 number(const char * const value,
        tagvalmap    const tagvallist[]) {
-    
+
     char * ep;
     long num;
 
     if (strlen(value) == 0)
         pm_error("null string where numeric tag value or enumerated tag "
                  "value name expected");
-    
+
     num = strtol(value, &ep, 10);
     if (*ep != '\0') {
         /* It's not a numeric string, so it must be an enumerated value name */
@@ -53,7 +53,7 @@ dnumber(const char * const value) {
 
     char * ep;
     double num;
-    
+
     num = strtod(value, &ep);
     if (ep == value || *ep != '\0')
         pm_error("Bad floating point number %s", value);
@@ -162,7 +162,7 @@ putCountBytes(TIFF *       const tifP,
 
 #define TV(p,a) { #a, p##a, }
 
-static tagvalmap const 
+static tagvalmap const
 tvm_compression[] = {
     TV(COMPRESSION_,NONE),
     TV(COMPRESSION_,CCITTRLE),
@@ -463,3 +463,6 @@ tagDefFind(const char * const name) {
 
     return NULL;
 }
+
+
+

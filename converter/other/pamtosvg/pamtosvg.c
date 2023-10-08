@@ -47,12 +47,12 @@ readImageToBitmap(FILE *            const ifP,
         unsigned int col;
 
         pnm_scaletuplerow(&pam, row255, tuples[row], 255);
-        
+
         for (col = 0; col < pam.width; ++col) {
             unsigned int plane;
 
             for (plane = 0; plane < pam.depth; ++plane) {
-                unsigned int const bitmapIndex = 
+                unsigned int const bitmapIndex =
                     (row * pam.width + col) * pam.depth + plane;
                 bitmapP->bitmap[bitmapIndex] = row255[col][plane];
             }
@@ -60,7 +60,7 @@ readImageToBitmap(FILE *            const ifP,
     }
     pnm_freepamrow(row255);
     pnm_freepamarray(tuples, &pam);
-    
+
     *bitmapPP = bitmapP;
 }
 
@@ -73,7 +73,7 @@ dotPrinter(float  const percentage,
     int * const currentP = (int *)clientData;
     float const unit     = (float)1.0 / (float)(dot_printer_max_column) ;
     int   const maximum  = (int)(percentage / unit);
-    
+
     while (*currentP < maximum) {
         fputc(dot_printer_char, stderr);
         (*currentP)++;
@@ -120,13 +120,13 @@ struct cmdlineInfo {
 };
 
 
-static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
+static void
+parseCommandLine(int argc,
+                 char ** argv,
                  struct cmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -139,7 +139,7 @@ parseCommandLine(int argc,
     optStruct3 opt;
 
     const char * background_colorOpt;
-  
+
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -151,7 +151,7 @@ parseCommandLine(int argc,
             &background_colorOpt,        &cmdlineP->backgroundSpec,         0);
     OPTENT3(0, "centerline",          OPT_FLAG,
             NULL,                        &cmdlineP->centerline,             0);
-    OPTENT3(0, "corner-always-threshold", OPT_FLOAT, 
+    OPTENT3(0, "corner-always-threshold", OPT_FLOAT,
             &cmdlineP->corner_always_threshold, NULL,                       0);
     OPTENT3(0, "corner-surround",     OPT_UINT,
             &cmdlineP->corner_surround,  NULL,                              0);
@@ -173,11 +173,11 @@ parseCommandLine(int argc,
             NULL,                         &cmdlineP->preserve_width,        0);
     OPTENT3(0, "remove-adjacent-corners", OPT_UINT,
             NULL,                       &cmdlineP->remove_adjacent_corners, 0);
-    OPTENT3(0, "tangent-surround",    OPT_UINT,    
+    OPTENT3(0, "tangent-surround",    OPT_UINT,
             &cmdlineP->tangent_surround, NULL,                              0);
     OPTENT3(0, "report-progress",     OPT_FLAG,
             NULL,                       &cmdlineP->report_progress,         0);
-    OPTENT3(0, "width-weight-factor", OPT_FLOAT,    
+    OPTENT3(0, "width-weight-factor", OPT_FLOAT,
             &cmdlineP->width_weight_factor, NULL,                           0);
 
 
@@ -207,7 +207,7 @@ parseCommandLine(int argc,
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
-        
+
         if (argc-1 > 1)
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
@@ -228,7 +228,7 @@ fitSplines(at_bitmap_type *             const bitmapP,
     at_fitting_opts_type * fittingOptsP;
 
     progressStat = 0;
-           
+
     fittingOptsP = at_fitting_opts_new();
 
     fittingOptsP->backgroundSpec           = cmdline.backgroundSpec;
@@ -253,7 +253,7 @@ fitSplines(at_bitmap_type *             const bitmapP,
 
     at_fitting_opts_free(fittingOptsP);
 }
-  
+
 
 
 static void
@@ -267,12 +267,12 @@ writeSplines(at_spline_list_array_type * const splinesP,
 
     outputOptsP = at_output_opts_new();
     outputOptsP->dpi = cmdline.dpi;
-    
+
     at_splines_write(outputWriter, ofP, outputOptsP,
                      splinesP, exceptionHandler, NULL);
 
     at_output_opts_free(outputOptsP);
-}  
+}
 
 
 
@@ -315,13 +315,13 @@ filenameRoot(const char * const filename) {
         rootEnd = strlen(filename);
 
     MALLOCARRAY(buffer, rootEnd - rootStart + 1);
-    
+
     j = 0;
     for (i = rootStart; i < rootEnd; ++i)
         buffer[j++] = filename[i];
 
     buffer[j] = '\0';
-    
+
     return buffer;
 }
 
@@ -342,7 +342,7 @@ openLogFile(FILE **      const logFileP,
         if (inputRootName == NULL)
             pm_error("Can't find the root portion of file name '%s'",
                      inputFileArg);
-    
+
         pm_asprintf(&logfileName, "%s.log", inputRootName);
 
         pm_strfree(inputRootName);
@@ -352,7 +352,7 @@ openLogFile(FILE **      const logFileP,
 
     pm_strfree(logfileName);
 }
-    
+
 
 
 int
@@ -374,7 +374,7 @@ main(int argc, char * argv[]) {
         openLogFile(&log_file, cmdline.inputFileName);
 
     readImageToBitmap(ifP, &bitmapP);
-    
+
     if (cmdline.report_progress) {
         progressReporter = dotPrinter;
         fprintf(stderr, "%-15s", cmdline.inputFileName);
@@ -397,6 +397,9 @@ main(int argc, char * argv[]) {
 
     if (cmdline.report_progress)
         fputs("\n", stderr);
-    
+
     return 0;
 }
+
+
+

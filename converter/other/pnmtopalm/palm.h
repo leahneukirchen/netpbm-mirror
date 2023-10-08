@@ -7,7 +7,7 @@
 #define PALM_INDIRECT_BITMAP        0x1000  /* Palm says internal use only */
 #define PALM_FOR_SCREEN             0x0800  /* Palm says internal use only */
 #define PALM_DIRECT_COLOR_FLAG      0x0400
-#define PALM_INDIRECT_COLORMAP      0x0200  /* Palm says internal use only */ 
+#define PALM_INDIRECT_COLORMAP      0x0200  /* Palm says internal use only */
 #define PALM_NO_DITHER_FLAG         0x0100  /* rather mysterious */
 
 #define PALM_COMPRESSION_SCANLINE   0x00

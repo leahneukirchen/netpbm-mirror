@@ -120,6 +120,7 @@ parseCommandLine(int argc, const char ** argv,
 }
 
 
+
 static void
 putPixel(struct pam *          const pamP,
          tuple                 const tuple,
@@ -271,7 +272,7 @@ computeOutName(struct CmdlineInfo const cmdline,
         workarea = strdup(cmdline.inputFileName);
         cp = strchr(workarea, '.');
         if (cp != NULL)
-        	*cp = '\0';	/* remove extension */
+                *cp = '\0';     /* remove extension */
     }
 
     if (workarea == NULL)
@@ -648,3 +649,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
+
+

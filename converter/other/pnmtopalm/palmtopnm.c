@@ -445,6 +445,7 @@ yesno(bool const arg) {
 }
 
 
+
 static void
 reportPalmHeader(struct PalmHeader      const palmHeader,
                  struct DirectColorInfo const directColorInfo) {
@@ -1250,3 +1251,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
+
+

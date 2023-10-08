@@ -87,6 +87,7 @@ intCoordFmReal(Point const realCoord) {
 }
 
 
+
 /* Lists of array indices (well, that is what we use it for).  */
 
 static IndexList

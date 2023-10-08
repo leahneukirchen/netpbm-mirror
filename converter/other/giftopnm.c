@@ -291,6 +291,7 @@ initGif89(struct Gif89 * const gif89P) {
 }
 
 
+
 static bool verbose;
 static bool showComment;
 
@@ -1237,7 +1238,6 @@ lzwReadByteFresh(struct GetCodeState * const getCodeStateP,
 
 
 
-
 static void
 lzwReadByte(Decompressor *  const decompP,
             unsigned char * const dataReadP,
@@ -1355,6 +1355,7 @@ bumpRowInterlace(unsigned int   const rows,
         }
     }
 }
+
 
 
 static void
@@ -2196,5 +2197,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
 
 

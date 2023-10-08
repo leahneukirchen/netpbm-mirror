@@ -88,6 +88,8 @@ static void CLASS merror (const void *ptr, const char *where)
         pm_error ("Out of memory in %s", where);
 }
 
+
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -136,37 +138,37 @@ parseCommandLine(int argc, char ** argv,
     opt.allowNegNum = FALSE;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "bright", 
+    OPTENT3(0, "bright",
             OPT_FLOAT,   &cmdlineP->bright,     &brightSpec, 0);
-    OPTENT3(0, "red_scale", 
+    OPTENT3(0, "red_scale",
             OPT_FLOAT,   &cmdlineP->red_scale,  &red_scaleSpec, 0);
-    OPTENT3(0, "blue_scale", 
+    OPTENT3(0, "blue_scale",
             OPT_FLOAT,   &cmdlineP->blue_scale, &blue_scaleSpec, 0);
-    OPTENT3(0, "profile", 
+    OPTENT3(0, "profile",
             OPT_STRING,  &cmdlineP->profile,    &profileSpec, 0);
-    OPTENT3(0,   "identify_only",   
+    OPTENT3(0,   "identify_only",
             OPT_FLAG,    NULL, &cmdlineP->identify_only, 0);
-    OPTENT3(0,   "verbose",   
+    OPTENT3(0,   "verbose",
             OPT_FLAG,    NULL, &cmdlineP->verbose, 0);
-    OPTENT3(0,   "half_size",   
+    OPTENT3(0,   "half_size",
             OPT_FLAG,    NULL, &cmdlineP->half_size, 0);
-    OPTENT3(0,   "four_color_rgb",   
+    OPTENT3(0,   "four_color_rgb",
             OPT_FLAG,    NULL, &cmdlineP->four_color_rgb, 0);
-    OPTENT3(0,   "document_mode",   
+    OPTENT3(0,   "document_mode",
             OPT_FLAG,    NULL, &cmdlineP->document_mode, 0);
-    OPTENT3(0,   "quick_interpolate",   
+    OPTENT3(0,   "quick_interpolate",
             OPT_FLAG,    NULL, &cmdlineP->quick_interpolate, 0);
-    OPTENT3(0,   "balance_auto",   
+    OPTENT3(0,   "balance_auto",
             OPT_FLAG,    NULL, &cmdlineP->use_auto_wb, 0);
-    OPTENT3(0,   "balance_camera",   
+    OPTENT3(0,   "balance_camera",
             OPT_FLAG,    NULL, &cmdlineP->use_camera_wb, 0);
-    OPTENT3(0,   "use_secondary",   
+    OPTENT3(0,   "use_secondary",
             OPT_FLAG,    NULL, &cmdlineP->use_secondary, 0);
-    OPTENT3(0,   "no_clip_color",   
+    OPTENT3(0,   "no_clip_color",
             OPT_FLAG,    NULL, &cmdlineP->no_clip_color, 0);
-    OPTENT3(0,   "rgb",   
+    OPTENT3(0,   "rgb",
             OPT_FLAG,    NULL, &cmdlineP->use_camera_rgb, 0);
-    OPTENT3(0,   "linear",   
+    OPTENT3(0,   "linear",
             OPT_FLAG,    NULL, &cmdlineP->linear, 0);
 
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
@@ -185,12 +187,12 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFileName = strdup("-");  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->inputFileName = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file name");
 }
 
-  
+
 
 static void CLASS
 fixBadPixels(Image const image) {
@@ -658,9 +660,9 @@ fujiRotate(Image * const imageP) {
                     newImage[row*wide+col][i] =
                         (pix[    0][i]*(1-fc) + pix[      1][i]*fc) * (1-fr) +
                         (pix[width][i]*(1-fc) + pix[width+1][i]*fc) * fr;
-                } 
+                }
             }
-        }        
+        }
         free(*imageP);
         width  = wide;
         height = high;
@@ -920,7 +922,7 @@ convertIt(FILE *       const ifP,
     if (flip) {
         if (cmdline.verbose)
             pm_message ("Flipping image %c:%c:%c...",
-                        flip & 1 ? 'H':'0', flip & 2 ? 'V':'0', 
+                        flip & 1 ? 'H':'0', flip & 2 ? 'V':'0',
                         flip & 4 ? 'T':'0');
         flipImage(image);
     }
@@ -931,7 +933,7 @@ convertIt(FILE *       const ifP,
 
 
 
-int 
+int
 main (int argc, char **argv) {
 
     FILE * const ofP = stdout;

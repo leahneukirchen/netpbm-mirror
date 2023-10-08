@@ -26,15 +26,15 @@ static void
 outSplineList(FILE *           const fileP,
               spline_list_type const splineList,
               unsigned int     const height) {
-              
+
     unsigned splineSeq;
-        
+
     for (splineSeq = 0;
          splineSeq < SPLINE_LIST_LENGTH(splineList);
          ++splineSeq) {
-        
+
         spline_type const spline = SPLINE_LIST_ELT(splineList, splineSeq);
-        
+
         if (SPLINE_DEGREE(spline) == LINEARTYPE) {
             fprintf(fileP, "L%g %g",
                     END_POINT(spline).x, height - END_POINT(spline).y);
@@ -55,13 +55,13 @@ out_splines(FILE *                 const fileP,
 
     unsigned listSeq;
     pixel lastColor;
-    
+
     PPM_ASSIGN(lastColor, 0, 0, 0);
-    
+
     for (listSeq = 0;
          listSeq < SPLINE_LIST_ARRAY_LENGTH(shape);
          ++listSeq) {
-        
+
         spline_list_type const splineList =
             SPLINE_LIST_ARRAY_ELT(shape, listSeq);
         spline_type const first = SPLINE_LIST_ELT(splineList, 0);
@@ -109,10 +109,10 @@ output_svg_writer(FILE *                    const fileP,
                   int                       const llx,
                   int                       const lly,
                   int                       const urx,
-                  int                       const ury, 
+                  int                       const ury,
                   at_output_opts_type *     const opts,
                   at_spline_list_array_type const shape,
-                  at_msg_func                     msg_func, 
+                  at_msg_func                     msg_func,
                   void *                    const msg_data) {
 
     int const width  = urx - llx;
@@ -125,6 +125,9 @@ output_svg_writer(FILE *                    const fileP,
     out_splines(fileP, shape, height);
 
     fputs("</svg>\n", fileP);
-    
+
     return 0;
 }
+
+
+

@@ -32,15 +32,15 @@ readToken(char           const textline[],
     unsigned int cursor;
 
     cursor = *cursorP;
-    
+
     MALLOCARRAY(tokenBuffer, lineLength + 1);
     /* leave room for terminating NUL */
-    if (tokenBuffer == NULL) 
+    if (tokenBuffer == NULL)
         pm_error("Unable to allocate memory for a %u-character "
                  "text string file line", lineLength);
 
     cp = &tokenBuffer[0];  /* initial value */
-    
+
     if (textline[0] == '"') {
         ++cursor;  /* skip past opening quotation mark */
         while (textline[cursor] != '"') {
@@ -56,9 +56,9 @@ readToken(char           const textline[],
         }
         ++cursor;  /* skip past closing quotation mark */
     } else {
-        while ((cursor < lineLength) && 
+        while ((cursor < lineLength) &&
                (textline[cursor] != ' ') && (textline[cursor] != '\t')) {
-            
+
             if (textline[cursor] == '\0')
                 pm_error("Invalid text string file format:  Token contains "
                          "a NUL character.  Text leading up to the NUL "
@@ -75,7 +75,6 @@ readToken(char           const textline[],
 
 
 
-
 static void
 skipWhiteSpace(char           const textline[],
                unsigned int   const lineLength,
@@ -88,7 +87,7 @@ skipWhiteSpace(char           const textline[],
 
     cursor = *cursorP;  /* initial value */
 
-    while (cursor < lineLength && 
+    while (cursor < lineLength &&
            (textline[cursor] == ' ' || textline[cursor] == '\t' ||
             textline[cursor] == '\0'))
         ++cursor;
@@ -113,7 +112,7 @@ readTextString(char          const textline[],
     char * cp;
 
     MALLOCARRAY(cp, lineLength + 1);  /* incl '\0' */
-    if (!cp) 
+    if (!cp)
         pm_error("Unable to allocate memory for text chunks");
 
     memcpy(cp, textline + startPos, lineLength - startPos);
@@ -125,7 +124,7 @@ readTextString(char          const textline[],
 
 
 static void
-startTextChunkEngl(png_text *   const textChunkP, 
+startTextChunkEngl(png_text *   const textChunkP,
                    char         const textline[],
                    unsigned int const lineLength,
                    bool         const isCompressed,
@@ -169,7 +168,7 @@ startTextChunkEngl(png_text *   const textChunkP,
 
 
 static void
-startTextChunkIntl(png_text *   const textChunkP, 
+startTextChunkIntl(png_text *   const textChunkP,
                    char         const textline[],
                    unsigned int const lineLength,
                    bool         const isCompressed,
@@ -219,7 +218,7 @@ startTextChunkIntl(png_text *   const textChunkP,
 
     {
         const char * langKey;
-    
+
         readToken(textline, lineLength, &cursor, &langKey);
 
         pngx_setTextLangKey(textChunkP, langKey);
@@ -233,14 +232,14 @@ startTextChunkIntl(png_text *   const textChunkP,
     readTextString(textline, lineLength, cursor, &textChunkP->text,
                    &textChunkP->text_length);
 
-    textChunkP->compression = 
+    textChunkP->compression =
         isCompressed ? PNG_ITXT_COMPRESSION_zTXt :PNG_ITXT_COMPRESSION_NONE;
 }
 
 
 
 static void
-continueTextString(png_text *   const textChunkP, 
+continueTextString(png_text *   const textChunkP,
                    char         const textline[],
                    unsigned int const lineLength) {
 /*----------------------------------------------------------------------------
@@ -264,7 +263,7 @@ continueTextString(png_text *   const textChunkP,
 
     textChunkP->text[textChunkP->text_length++] = '\n';
 
-    cursor = 0; 
+    cursor = 0;
 
     skipWhiteSpace(textline, lineLength, &cursor);
 
@@ -280,12 +279,12 @@ continueTextString(png_text *   const textChunkP,
 
 
 static void
-getFileLine(FILE *         const fileP, 
-            const char **  const textP, 
+getFileLine(FILE *         const fileP,
+            const char **  const textP,
             unsigned int * const lengthP) {
 /*----------------------------------------------------------------------------
    Read the next line (characters from current position through the first
-   newline character) and return it.  Put the text in newly malloc'ed 
+   newline character) and return it.  Put the text in newly malloc'ed
    storage.
 
    Do not include the newline.
@@ -300,7 +299,7 @@ getFileLine(FILE *         const fileP,
     unsigned int cursor;  /* cursor into textline[] */
     unsigned int allocatedSz;
         /* The number of characters of space that are allocated for
-           'textline' 
+           'textline'
         */
     bool eol;
     bool gotSomething;
@@ -310,14 +309,14 @@ getFileLine(FILE *         const fileP,
     MALLOCARRAY(textline, allocatedSz);
     if (textline == NULL)
         pm_error("Unable to allocate buffer to read a line of a file.");
-    
+
     cursor = 0;
     eol = FALSE;
     gotSomething = FALSE;
 
     while (!eol) {
         int const c = getc(fileP);
-        
+
         if (c != EOF)
             gotSomething = TRUE;
 
@@ -356,7 +355,7 @@ handleArrayAllocation(png_text **    const arrayP,
     if (chunkIdx >= *allocatedChunkCtP) {
         *allocatedChunkCtP *= 2;
         REALLOCARRAY(*arrayP, *allocatedChunkCtP);
-        if (*arrayP == NULL) 
+        if (*arrayP == NULL)
             pm_error("unable to allocate memory for %u text chunks",
                 *allocatedChunkCtP);
     }
@@ -404,9 +403,9 @@ reportChunkCt(bool         const ztxt,
 ******************************************************************************/
 
 
-void 
+void
 pngtxt_addChunk(struct pngx * const pngxP,
-                FILE *        const tfP, 
+                FILE *        const tfP,
                 bool          const ztxt,
                 bool          const itxt,
                 bool          const verbose) {
@@ -436,7 +435,7 @@ pngtxt_addChunk(struct pngx * const pngxP,
     allocatedChunkCt = 256;  /* initial value */
 
     MALLOCARRAY(text, allocatedChunkCt);
-    if (text == NULL) 
+    if (text == NULL)
         pm_error("unable to allocate memory for text chunk array");
 
     for (chunkCt = 0, noChunksYet = true, eof = false; !eof; ) {
@@ -460,15 +459,15 @@ pngtxt_addChunk(struct pngx * const pngxP,
                     } else
                         ++chunkCt;
                     noChunksYet = false;
-                    
+
                     textChunkP = &text[chunkCt];
-                
+
                     if (itxt)
-                        startTextChunkIntl(textChunkP, 
+                        startTextChunkIntl(textChunkP,
                                            textline, lineLength, ztxt,
                                            verbose);
                     else
-                        startTextChunkEngl(textChunkP, 
+                        startTextChunkEngl(textChunkP,
                                            textline, lineLength, ztxt,
                                            verbose);
                 } else {

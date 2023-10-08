@@ -61,6 +61,7 @@ curve_new(void) {
 }
 
 
+
 Curve *
 curve_copyMost(Curve * const oldCurveP) {
 /*----------------------------------------------------------------------------
@@ -76,6 +77,8 @@ curve_copyMost(Curve * const oldCurveP) {
 
     return curveP;
 }
+
+
 
 void
 curve_move(Curve * const dstP,
@@ -282,7 +285,6 @@ curve_logEntire(Curve * const curveP) {
 
     LOG(".\n");
 }
-
 
 
 

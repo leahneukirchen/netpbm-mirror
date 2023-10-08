@@ -31,7 +31,7 @@ allocPrColormap(void) {
     MALLOCARRAY(prColormapP->map[0], MAXCOLORS);
     MALLOCARRAY(prColormapP->map[1], MAXCOLORS);
     MALLOCARRAY(prColormapP->map[2], MAXCOLORS);
-    if (prColormapP->map[0] == NULL || 
+    if (prColormapP->map[0] == NULL ||
         prColormapP->map[1] == NULL ||
         prColormapP->map[2] == NULL)
         pm_error("out of memory");
@@ -92,7 +92,7 @@ doRowDepth1(const xel *     const xelrow,
             xelval          const maxval,
             colorhash_table const cht,
             unsigned int *  const lenP) {
-                
+
     unsigned int col;
     int bitcount;
     unsigned int cursor;
@@ -191,7 +191,6 @@ doRowDepth8(const xel *     const xelrow,
 
 
 
-
 static void
 doRowDepth24(const xel *     const xelrow,
              unsigned char * const rastRow,
@@ -232,7 +231,7 @@ computeRaster(unsigned char * const rastRaster,
               xelval          const maxval,
               xel **          const xels,
               colorhash_table const cht) {
-                  
+
     unsigned int row;
     unsigned char * rastRow;
 
@@ -375,7 +374,7 @@ main(int argc, const char ** argv) {
     if (maxval > 255 && depth != 1)
         pm_message(
             "maxval is not 255 - automatically rescaling colors");
-    
+
     /* Allocate space for the Sun-format image. */
     prP = mem_create(cols, rows, depth);
     if (!prP)
@@ -397,4 +396,6 @@ main(int argc, const char ** argv) {
     }
     return 0;
 }
+
+
 

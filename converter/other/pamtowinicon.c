@@ -177,6 +177,7 @@ get_rgbPixel(tuple **     const tuples,
 }
 
 
+
 static bool
 andMakesOpaque(const struct pam * const pamP,
                tuple **           const tuples,
@@ -698,7 +699,6 @@ blackenXor(const struct pam * const pamP,
         }
     }
 }
-
 
 
 

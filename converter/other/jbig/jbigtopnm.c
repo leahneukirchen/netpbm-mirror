@@ -198,6 +198,7 @@ diagnose_bie(FILE *f)
 }
 
 
+
 int main (int argc, const char **argv)
 {
     CmdlineInfo cmdline;

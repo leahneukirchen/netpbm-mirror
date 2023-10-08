@@ -75,34 +75,34 @@ main( argc, argv )
     argn = 1;
 
     while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-	{
-	if ( pm_keymatch( argv[argn], "-pgm", 3 ) )
-	    {
-	    if ( argn >= argc )
-		pm_usage( usage );
-	    format = PGM_TYPE;
-	    }
-	else if ( pm_keymatch( argv[argn], "-ppm", 3 ) )
-	    {
-	    if ( argn >= argc )
-		pm_usage( usage );
-	    format = PPM_TYPE;
-	    }
-	else
-	    pm_usage( usage );
-	++argn;
-	}
+        {
+        if ( pm_keymatch( argv[argn], "-pgm", 3 ) )
+            {
+            if ( argn >= argc )
+                pm_usage( usage );
+            format = PGM_TYPE;
+            }
+        else if ( pm_keymatch( argv[argn], "-ppm", 3 ) )
+            {
+            if ( argn >= argc )
+                pm_usage( usage );
+            format = PPM_TYPE;
+            }
+        else
+            pm_usage( usage );
+        ++argn;
+        }
 
     if ( argn < argc )
-	{
-	ifp = pm_openr( argv[argn] );
-	++argn;
-	}
+        {
+        ifp = pm_openr( argv[argn] );
+        ++argn;
+        }
     else
-	ifp = stdin;
+        ifp = stdin;
 
     if ( argn != argc )
-	pm_usage( usage );
+        pm_usage( usage );
 
     /* Read the image to a buffer */
 
@@ -111,35 +111,35 @@ main( argc, argv )
     /* Check the format of the file */
 
     if (nread <=1024)
-	pm_error( "Input file not in Zeiss format (too small)" );
+        pm_error( "Input file not in Zeiss format (too small)" );
 
     lutg = (unsigned char *)buf+(nread-1024+512);
     lutr = (unsigned char *)buf+(nread-1024+256);
     lutb = (unsigned char *)buf+(nread-1024);
 
     cols = ((unsigned char) buf[nread-1024+768+8]) +
-	(((unsigned char) buf[nread-1024+768+9]) << 8);
+        (((unsigned char) buf[nread-1024+768+9]) << 8);
     rows = ((unsigned char) buf[nread-1024+768+10]) +
-	(((unsigned char) buf[nread-1024+768+11]) << 8);
+        (((unsigned char) buf[nread-1024+768+11]) << 8);
 
     if ( cols <= 0 )
-	pm_error( "invalid cols: %d", cols );
+        pm_error( "invalid cols: %d", cols );
     if ( rows <= 0 )
-	pm_error( "invalid rows: %d", rows );
+        pm_error( "invalid rows: %d", rows );
 
     if (cols*rows != nread-1024)
-	pm_error( "Hmm, %d rows, %d cols, %ld total image size",
-		 rows, cols, nread-1024);
+        pm_error( "Hmm, %d rows, %d cols, %ld total image size",
+                 rows, cols, nread-1024);
 
     /* Choose pgm or ppm */
     /* If the LUTs all contain 0,1,2,3,4..255, it is a pgm file */
 
     for (i=0; i<256 && format==0; i++)
-	if (lutr[i] != i || lutg[i] != i || lutb[i] != i)
-	    format = PPM_TYPE;
+        if (lutr[i] != i || lutg[i] != i || lutb[i] != i)
+            format = PPM_TYPE;
 
     if (format == 0)
-	format = PGM_TYPE;
+        format = PGM_TYPE;
 
     pnm_writepnminit( stdout, cols, rows, 255, format, 0 );
     xelrow = pnm_allocrow( cols );
@@ -161,23 +161,23 @@ main( argc, argv )
 
     for ( row = 0; row < rows; ++row )
     {
-	switch ( PNM_FORMAT_TYPE(format) )
-	{
-	case PGM_TYPE:
-	    for ( col = 0, xP = xelrow; col < cols; ++col, ++xP, ++byteP )
-		PNM_ASSIGN1( *xP, *byteP );
-	    break;
+        switch ( PNM_FORMAT_TYPE(format) )
+        {
+        case PGM_TYPE:
+            for ( col = 0, xP = xelrow; col < cols; ++col, ++xP, ++byteP )
+                PNM_ASSIGN1( *xP, *byteP );
+            break;
 
-	case PPM_TYPE:
-	    for ( col = 0, xP = xelrow; col < cols; ++col, ++xP, ++byteP )
-		PPM_ASSIGN( *xP, lutr[*byteP], lutg[*byteP], lutb[*byteP] );
-	    break;
+        case PPM_TYPE:
+            for ( col = 0, xP = xelrow; col < cols; ++col, ++xP, ++byteP )
+                PPM_ASSIGN( *xP, lutr[*byteP], lutg[*byteP], lutb[*byteP] );
+            break;
 
         default:
-	    pm_error( "shouldn't happen" );
+            pm_error( "shouldn't happen" );
         }
 
-	pnm_writepnmrow( stdout, xelrow, cols, 255, format, 0 );
+        pnm_writepnmrow( stdout, xelrow, cols, 255, format, 0 );
     }
 
     free( buf );
@@ -185,3 +185,6 @@ main( argc, argv )
 
     exit( 0 );
 }
+
+
+

@@ -361,7 +361,6 @@ readCard(FILE * const ifP,
 
 
 
-
 static void
 processNaxisN(unsigned int   const n,
               int            const value,
@@ -397,7 +396,7 @@ readFitsHeader(FILE *               const ifP,
 
     bool gotEmpty, gotSimple, gotNaxis, gotN1, gotN2, gotN3, gotBitpix, gotEnd;
 
-    gotEmpty  = false;  /* initial value */    
+    gotEmpty  = false;  /* initial value */
     gotSimple = false;  /* initial value */
     gotNaxis  = false;  /* initial value */
     gotN1     = false;  /* initial value */
@@ -463,7 +462,7 @@ readFitsHeader(FILE *               const ifP,
                 gotEnd = true;
                 if (gotEmpty == true)
                     pm_message("Blank card(s) were encountered before "
-			       "END in header");
+                               "END in header");
             }
         }
     }

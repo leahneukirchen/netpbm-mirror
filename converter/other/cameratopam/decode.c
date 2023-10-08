@@ -44,15 +44,15 @@ void init_decoder() {
  */
 
 
-unsigned char * 
-make_decoder(const unsigned char * const source, 
+unsigned char *
+make_decoder(const unsigned char * const source,
              int                   const level) {
 
     struct decode *cur;
     static int leaf;
     int i, next;
 
-    if (level==0) 
+    if (level==0)
         leaf=0;
     cur = free_decode++;
     if (free_decode > first_decode+2048) {
@@ -74,7 +74,7 @@ make_decoder(const unsigned char * const source,
 
 
 
-const int * 
+const int *
 make_decoder_int(const int * const source,
                  int         const level) {
 
@@ -98,7 +98,7 @@ make_decoder_int(const int * const source,
 
 
 
-void 
+void
 crw_init_tables(unsigned int const table) {
 
   unsigned int const clippedTableNum = MIN(2, table);
@@ -169,4 +169,6 @@ crw_init_tables(unsigned int const table) {
   second_decode = free_decode;
   make_decoder (second_tree[clippedTableNum], 0);
 }
+
+
 

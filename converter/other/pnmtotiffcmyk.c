@@ -79,7 +79,7 @@ Software copyrights will soon need family trees... :-)
 
 /* only support 8 bit values */
 #define MAXTIFFBITS 8
-#define MAXTIFFVAL 255 
+#define MAXTIFFVAL 255
 
 
 /* definitions for error values */
@@ -111,9 +111,9 @@ typedef int Err ;
 #ifndef PI
 #define PI 3.1415926
 #endif
-#define ONETWENTY ( 2.0 * PI / 3.0 ) 
+#define ONETWENTY ( 2.0 * PI / 3.0 )
 #define TWOFORTY ( 4.0 * PI / 3.0 )
-#define THREESIXTY ( 2.0 * PI ) 
+#define THREESIXTY ( 2.0 * PI )
 /* expand from 0-90 to 0-120 degrees */
 #define EXPAND(x) ( 4.0 * ( x ) / 3.0 )
 /* contract from 0-120 to 0-90 degrees */
@@ -144,7 +144,7 @@ typedef struct {
 
 /* parse an arg with a float value.  name should be the full key name,
    preceded by '-' */
-static Err 
+static Err
 floatArg( float *arg, const char *name, int size, float lo, float hi,
           int *argn, int argc, char **argv ) {
 
@@ -165,7 +165,7 @@ floatArg( float *arg, const char *name, int size, float lo, float hi,
                extra, name ) ;
     }
     if ( *arg > hi || *arg < lo ) {
-      fprintf( stderr, "%s (%f) must be in range %f to %f\n", 
+      fprintf( stderr, "%s (%f) must be in range %f to %f\n",
                name, *arg, lo, hi ) ;
       return ERR_ARG ;
     }
@@ -176,9 +176,10 @@ floatArg( float *arg, const char *name, int size, float lo, float hi,
 }
 
 
+
 /* parse an arg with a long value.  name should be the full key name,
    preceded by '-' */
-static Err 
+static Err
 longArg( long *arg, const char *name, int size, long lo, long hi,
          int *argn, int argc, char **argv ) {
 
@@ -199,7 +200,7 @@ longArg( long *arg, const char *name, int size, long lo, long hi,
                extra, name ) ;
     }
     if ( *arg > hi || *arg < lo ) {
-      fprintf( stderr, "%s (%ld) must be in range %ld to %ld\n", 
+      fprintf( stderr, "%s (%ld) must be in range %ld to %ld\n",
                name, *arg, lo, hi ) ;
       return ERR_ARG ;
     }
@@ -210,13 +211,14 @@ longArg( long *arg, const char *name, int size, long lo, long hi,
 }
 
 
+
 /* print usage.  for simplicity this routine is *not* split amongst
    the various components - when you add a component (eg a new
    conversion algorithm, or maybe new input or output code), you must
    also change this routine.  by keeping all the options in one place
    it is also easier to calculate the minimum key name length (passed
    to pnm_keymatch) */
-static void 
+static void
 printUsage( ) {
   fprintf( stderr, "\nusage: pnmtocmyk [Compargs] [Tiffargs] [Convargs] [pnmfile]\n" ) ;
   fprintf( stderr, " Compargs: [-none|-packbits|-lzw [-predictor 1|-predictor 2]]\n" ) ;
@@ -232,6 +234,8 @@ printUsage( ) {
   fprintf( stderr, "(c) 1999 Andrew Cooke - Beta version, not for public use.\n" ) ;
   fprintf( stderr, "No warranty.\n\n" ) ;
 }
+
+
 
 /* list of key args and number of significant letters required
 -default      2
@@ -261,11 +265,11 @@ printUsage( ) {
 /* encapsulate the file reader - uses pnm library at the moment, but
    could be changed if we move to libtiff */
 
-typedef Err OptIn( struct tagIn *conv, Root *r, 
+typedef Err OptIn( struct tagIn *conv, Root *r,
                    int *argn, int argc, char **argv ) ;
 typedef int HasMore( struct tagIn *in ) ;
 typedef Err Next( struct tagIn *in, float *r, float *g, float *b ) ;
-typedef Err OpenIn( struct tagIn *in, Root *r ) ; 
+typedef Err OpenIn( struct tagIn *in, Root *r ) ;
 typedef void CloseIn( struct tagIn *in ) ;
 
 typedef struct tagIn {
@@ -294,7 +298,7 @@ typedef struct {
 
 /* the only output option is the filename, which will be the last
    argument, if it doesn't start with '-' */
-static Err 
+static Err
 pnmOpt( In *in, Root *r, int *argn, int argc, char **argv ) {
   PnmIn *p = (PnmIn*)in->private ;
   if ( *argn + 1 == argc && argv[*argn][0] != '\0' &&
@@ -306,8 +310,9 @@ pnmOpt( In *in, Root *r, int *argn, int argc, char **argv ) {
 }
 
 
+
 /* free the row buffer when closing the input */
-static void 
+static void
 pnmClose( In *in ) {
   if ( in ) {
     PnmIn *p = (PnmIn*)in->private ;
@@ -320,16 +325,17 @@ pnmClose( In *in ) {
 }
 
 
+
 /* open the file, storing dimensions both locally and in the global
    root structure */
-static Err 
+static Err
 pnmOpen( In *in, Root *r ) {
 
   PnmIn *p = (PnmIn*)in->private ;
 
   if ( ! p->in ) p->in = stdin ;
 
-  pnm_readpnminit( p->in, &(r->nCols), &(r->nRows), &(p->maxVal), 
+  pnm_readpnminit( p->in, &(r->nCols), &(r->nRows), &(p->maxVal),
                    &(p->type) ) ;
   p->maxPix = r->nCols * r->nRows ;
   p->iPix = 0 ;
@@ -341,16 +347,18 @@ pnmOpen( In *in, Root *r ) {
 }
 
 
+
 /* more data available? */
-static int 
+static int
 pnmHasMore( In *in ) {
   PnmIn *p = (PnmIn*)in->private ;
   return p->iPix < p->maxPix ;
 }
 
 
+
 /* read next pixel - buffered by row.  return values in range 0 to 1 */
-static Err 
+static Err
 pnmNext( In *in, float *r, float *g, float *b ) {
 
   PnmIn *p = (PnmIn*)in->private ;
@@ -374,8 +382,9 @@ pnmNext( In *in, float *r, float *g, float *b ) {
 }
 
 
+
 /* build the input struct */
-static Err 
+static Err
 newPnmInput( In **in ) {
   if ( ! (*in = (In*)calloc( 1, sizeof( In ) )) ) {
     fprintf( stderr, "cannot allocate memory\n" ) ;
@@ -433,7 +442,7 @@ typedef struct {
 
 /* these options come from either the tiff 6.0 spec or the pnmtotiff
    code */
-static Err 
+static Err
 tiffOpt( Out *out, Root* rt, int *argn, int argc, char **argv ) {
 
   Err err ;
@@ -478,14 +487,14 @@ tiffOpt( Out *out, Root* rt, int *argn, int argc, char **argv ) {
     if ( oldn != *argn ) {
       t->rowsperstrip = (uint32)lVal ;
     } else {
-      if ( (err = longArg( &lVal, "-lowdotrange", 3, 0, 
+      if ( (err = longArg( &lVal, "-lowdotrange", 3, 0,
                            (int)(t->highdotrange - 1),
                            argn, argc, argv )) ) return err ;
     }
     if ( oldn != *argn ) {
       t->lowdotrange = (uint16)lVal ;
     } else {
-      if ( (err = longArg( &lVal, "-highdotrange", 2, 
+      if ( (err = longArg( &lVal, "-highdotrange", 2,
                            (int)(t->lowdotrange + 1), MAXTIFFVAL,
                            argn, argc, argv )) ) return err ;
     }
@@ -498,8 +507,9 @@ tiffOpt( Out *out, Root* rt, int *argn, int argc, char **argv ) {
 }
 
 
+
 /* helper routine - writes individual bytes */
-static Err 
+static Err
 tiffWriteByte( TiffOut *t, int b ) {
   ((unsigned char*)(t->buffer))[t->iBuffer] = (unsigned char)b ;
   if ( ++(t->iBuffer) == t->maxBuffer ) {
@@ -513,8 +523,9 @@ tiffWriteByte( TiffOut *t, int b ) {
 }
 
 
+
 /* write the pixel to the tiff file */
-static Err 
+static Err
 tiffWrite( Out *out, int c, int m, int y, int k ) {
   Err err ;
   TiffOut *t = (TiffOut*)out->private ;
@@ -531,8 +542,9 @@ tiffWrite( Out *out, int c, int m, int y, int k ) {
 }
 
 
+
 /* open output to stdout - see warning below */
-static Err 
+static Err
 tiffOpen( Out* out, Root *r ) {
 
   TiffOut *t = (TiffOut*)out->private ;
@@ -554,7 +566,7 @@ tiffOpen( Out* out, Root *r ) {
   TIFFSetField( t->tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT ) ;
   TIFFSetField( t->tiff, TIFFTAG_COMPRESSION, t->compression ) ;
   if ( t->compression == COMPRESSION_LZW && t->predictor ) {
-	TIFFSetField( t->tiff, TIFFTAG_PREDICTOR, t->predictor ) ;
+        TIFFSetField( t->tiff, TIFFTAG_PREDICTOR, t->predictor ) ;
   }
   TIFFSetField( t->tiff, TIFFTAG_PHOTOMETRIC, photometric ) ;
   TIFFSetField( t->tiff, TIFFTAG_FILLORDER, t->fillorder ) ;
@@ -575,13 +587,14 @@ tiffOpen( Out* out, Root *r ) {
     fprintf( stderr, "cannot allocate memory\n" ) ;
     return ERR_MEMORY ;
   }
-  
+
   return ERR_OK ;
 }
 
 
+
 /* close file and tidy memory */
-static void 
+static void
 tiffClose( Out *out ) {
   if ( out ) {
     TiffOut *t = (TiffOut*)out->private ;
@@ -595,8 +608,9 @@ tiffClose( Out *out ) {
 }
 
 
+
 /* assemble the routines above into a single struct/object */
-static Err 
+static Err
 newTiffOutput( Out **out ) {
 
   TiffOut *t ;
@@ -635,7 +649,7 @@ newTiffOutput( Out **out ) {
 typedef Err Opt( struct tagConv *conv, Root *r,
                  int *argn, int argc, char **argv ) ;
 typedef Err Convert( struct tagConv *conv, Root *rt,
-                     float r, float g, float b, 
+                     float r, float g, float b,
                      int *c, int *m, int *y, int *k ) ;
 typedef void Close( struct tagConv *conv ) ;
 
@@ -649,7 +663,7 @@ typedef struct tagConv {
 
 /* include two conversion routines to show how the code can be
    extended.  first, the standard converter, as outlined in the
-   proposal, then a simple replacement that produces colour 
+   proposal, then a simple replacement that produces colour
    negatives */
 
 
@@ -667,8 +681,8 @@ typedef struct {
 
 /* represent an rgb colour as a hue (angle), white level and colour
    strength */
-static void 
-rgbToHueWhiteColour( float r, float g, float b, 
+static void
+rgbToHueWhiteColour( float r, float g, float b,
                      double *phi, float *white, float *colour ) {
   *white = MIN( r, MIN( g, b ) ) ;
   r -= *white ;
@@ -676,19 +690,20 @@ rgbToHueWhiteColour( float r, float g, float b,
   b -= *white ;
   *colour = sqrt( r * r + g * g + b * b ) ;
   if ( r > TINY || g > TINY || b > TINY ) {
-    if ( b < r && b <= g ) { 
+    if ( b < r && b <= g ) {
       *phi = EXPAND( atan2( g, r ) ) ;
     } else if ( r < g && r <= b ) {
       *phi = ONETWENTY + EXPAND( atan2( b, g ) ) ;
     } else {
       *phi = TWOFORTY + EXPAND( atan2( r, b ) ) ;
     }
-  } 
+  }
 }
 
 
+
 /* represent hue, white and colour values as rgb */
-static void 
+static void
 hueWhiteColourToRgb( double phi, float white, float colour,
                      float *r, float *g, float *b ) {
   while ( phi < 0 ) { phi += THREESIXTY ; }
@@ -715,10 +730,11 @@ hueWhiteColourToRgb( double phi, float white, float colour,
 }
 
 
+
 /* for details, see the proposal.  it's pretty simple - a rotation
    before conversion, with colour removal */
-static Err 
-standardConvert( Conv *conv, Root *rt, float r, float g, float b, 
+static Err
+standardConvert( Conv *conv, Root *rt, float r, float g, float b,
                  int *c, int *m, int *y, int *k ) {
 
   float c0, m0, y0, k0 ; /* CMYK before colour removal */
@@ -767,9 +783,10 @@ standardConvert( Conv *conv, Root *rt, float r, float g, float b,
 }
 
 
+
 /* parse options for this conversion - note the ugly use of -1 for
    gammap to indicate no removal of cmy under k */
-static Err 
+static Err
 standardOpt( Conv *conv, Root *r, int *argn, int argc, char **argv ) {
 
   Err err ;
@@ -790,7 +807,7 @@ standardOpt( Conv *conv, Root *r, int *argn, int argc, char **argv ) {
        *argn + 1 < argc && streq(argv[*argn + 1], "-1") ) {
     p->remove = 0 ;
     *argn = (*argn) + 2 ;
-  } 
+  }
   if ( oldn == *argn ) {
     if ( (err = floatArg( &(p->gammap), "-gammap", 7, 0.1, 10.0,
                                argn, argc, argv )) ) return err ;
@@ -801,18 +818,20 @@ standardOpt( Conv *conv, Root *r, int *argn, int argc, char **argv ) {
 }
 
 
+
 /* free conversion structure */
-static void 
+static void
 standardClose( Conv *conv ) {
   if ( conv ) {
     if ( conv->private ) { free( conv->private ) ; }
-    free( conv ) ; 
+    free( conv ) ;
   }
 }
 
 
+
 /* build new conversion structure */
-static Err 
+static Err
 newStandardMap( Conv **conv ) {
 
   Standard *s ;
@@ -842,7 +861,7 @@ newStandardMap( Conv **conv ) {
 
 
 /* the conversion routine must match the Convert typedef */
-static Err 
+static Err
 negativeConvert( Conv *conv, Root *rt, float r, float g, float b,
                  int *c, int *m, int *y, int *k ) {
 
@@ -858,24 +877,26 @@ negativeConvert( Conv *conv, Root *rt, float r, float g, float b,
 }
 
 
+
 /* since this simple conversion takes no parameters, we don't need to
    parse them - this routine must match the Opt typedef */
-static Err 
+static Err
 negativeOpt( Conv *conv, Root *r, int *argn, int argc, char **argv ) {
   return ERR_OK ;
 }
 
 
+
 /* with no parameters we haven't needed the private data structure, so
    closing is trivial - this routine must match the Close typedef */
-static void 
+static void
 negativeClose( Conv *conv ) { }
 
 
 /* and that's it, apart from assembling the routines above into a
    single struct/object (and adding code in parseOpts to select the
    algorithm and printUsage to help the user) */
-static Err 
+static Err
 newNegativeMap( Conv **conv ) {
 
   if ( ! (*conv = (Conv*)calloc( 1, sizeof( Conv ) )) ) goto error ;
@@ -896,7 +917,7 @@ newNegativeMap( Conv **conv ) {
 
 
 /* run through args, passing to sub components */
-static Err 
+static Err
 parseOpts( int argc, char **argv, Root *r ) {
 
   int argn = 1 ;
@@ -947,6 +968,7 @@ parseOpts( int argc, char **argv, Root *r ) {
 }
 
 
+
 /* drive the reading, conversion, and writing */
 int main( int argc, char **argv ) {
 
@@ -966,7 +988,7 @@ int main( int argc, char **argv ) {
   rt->maxOut = MAXTIFFVAL ;
 
   if ( (err = parseOpts( argc, argv, rt )) ) goto exit ;
-  
+
   if ( (err = rt->in->open( rt->in, rt )) ) goto exit ;
   if ( (err = rt->out->open( rt->out, rt )) ) goto exit ;
 

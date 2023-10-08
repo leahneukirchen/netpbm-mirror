@@ -119,6 +119,7 @@ void arith_encode_init(struct jbg_arenc_state *s, int reuse_st)
 }
 
 
+
 void arith_encode_flush(struct jbg_arenc_state *s)
 {
   unsigned long temp;
@@ -165,6 +166,7 @@ void arith_encode_flush(struct jbg_arenc_state *s)
 
   return;
 }
+
 
 
 void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
@@ -259,6 +261,7 @@ void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
 }
 
 
+
 void arith_decode_init(struct jbg_ardec_state *s, int reuse_st)
 {
   int i;
@@ -272,6 +275,8 @@ void arith_decode_init(struct jbg_ardec_state *s, int reuse_st)
   s->nopadding = 0;
   return;
 }
+
+
 
 /*
  * Decode and return one symbol from the provided PSCD byte stream
@@ -415,3 +420,6 @@ int arith_decode(struct jbg_ardec_state *s, int cx)
 
   return pix;
 }
+
+
+

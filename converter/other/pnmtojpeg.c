@@ -20,7 +20,7 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
-#include <ctype.h>		/* to declare isdigit(), etc. */
+#include <ctype.h>              /* to declare isdigit(), etc. */
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -144,7 +144,6 @@ interpretRestart(const char *       const restartOpt,
         }
     }
 }
-
 
 
 
@@ -506,7 +505,7 @@ readScanInteger(FILE * const fileP,
         while (ch != EOF && isspace(ch))
             ch = textGetc(fileP);
 
-        if (isdigit(ch)) {		/* oops, put it back */
+        if (isdigit(ch)) {              /* oops, put it back */
             if (ungetc(ch, fileP) == EOF)
                 pm_error("Unexpected failure of ungetc");
             ch = ' ';
@@ -820,10 +819,10 @@ setQuantSlots(j_compress_ptr const cinfo,
 
     for (ci = 0, i = 0; ci < MAX_COMPONENTS; ++ci) {
         if (arg[i]) {
-            ch = ',';			/* if not set by sscanf, will be ',' */
+            ch = ',';                   /* if not set by sscanf, will be ',' */
             if (sscanf(&arg[i], "%d%c", &val, &ch) < 1)
                 return false;
-            if (ch != ',')		/* syntax check */
+            if (ch != ',')              /* syntax check */
                 return false;
             if (val < 0 || val >= NUM_QUANT_TBLS) {
                 pm_message("Invalid quantization table number: %d.  "
@@ -845,6 +844,7 @@ setQuantSlots(j_compress_ptr const cinfo,
 }
 
 
+
 static bool
 setSampleFactors (j_compress_ptr const cinfo,
                   const char *   const arg) {
@@ -861,7 +861,7 @@ setSampleFactors (j_compress_ptr const cinfo,
 
     for (ci = 0, i = 0; ci < MAX_COMPONENTS; ++ci) {
         if (arg[i]) {
-            ch2 = ',';		/* if not set by sscanf, will be ',' */
+            ch2 = ',';          /* if not set by sscanf, will be ',' */
             if (sscanf(&arg[i], "%d%c%d%c", &val1, &ch1, &val2, &ch2) < 3)
                 return false;
             if ((ch1 != 'x' && ch1 != 'X') || ch2 != ',') /* syntax check */

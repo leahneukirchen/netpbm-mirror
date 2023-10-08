@@ -53,7 +53,7 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <stdbool.h>
-#include <ctype.h>		/* to declare isprint() */
+#include <ctype.h>              /* to declare isprint() */
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -140,6 +140,7 @@ interpretMaxmemory(bool         const maxmemorySpec,
         *maxMemoryToUseP = lval * 1000L;
     }
 }
+
 
 
 static void
@@ -265,6 +266,7 @@ parseCommandLine(int                  const argc,
 }
 
 
+
 /*
  * Marker processor for COM and interesting APPn markers.
  * This replaces the library's built-in processor, which just skips the marker.
@@ -286,6 +288,7 @@ jpegGetc (j_decompress_ptr const cinfoP) {
     datasrcP->bytes_in_buffer--;
     return GETJOCTET(*datasrcP->next_input_byte++);
 }
+
 
 
 static bool
@@ -320,12 +323,12 @@ printTextMarker(j_decompress_ptr const cinfoP) {
 
     length = jpeg_getc(cinfoP) << 8;
     length += jpeg_getc(cinfoP);
-    length -= 2;			/* discount the length word itself */
+    length -= 2;                        /* discount the length word itself */
 
     if (traceit) {
         if (cinfoP->unread_marker == JPEG_COM)
             fprintf(stderr, "Comment, length %ld:\n", (long) length);
-        else			/* assume it is an APPn otherwise */
+        else                    /* assume it is an APPn otherwise */
             fprintf(stderr, "APP%d, length %ld:\n",
                     cinfoP->unread_marker - JPEG_APP0, (long) length);
     }
@@ -407,6 +410,7 @@ printMarker(struct jpeg_marker_struct const marker) {
         fprintf(stderr, "\n");
     }
 }
+
 
 
 typedef struct rgb {unsigned int r; unsigned int g; unsigned int b;} rgb_type;
@@ -913,7 +917,6 @@ convertImage(FILE *                          const ofP,
     /* Finish decompression and release decompressor memory. */
     jpeg_finish_decompress(cinfoP);
 }
-
 
 
 

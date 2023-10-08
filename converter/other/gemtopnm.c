@@ -255,6 +255,7 @@ main(argc, argv)
 }
 
 
+
 static void
 getinit (file, colsP, rowsP, padrightP, patlenP, planesP)
      FILE *file;

@@ -82,16 +82,19 @@ srfRed(uint16_t const pixel) {
 }
 
 
+
 static unsigned int
 srfGrn(uint16_t const pixel) {
     return ((pixel >>  6) & 0x1f) << 3;
 }
 
 
+
 static unsigned int
 srfBlu(uint16_t const pixel) {
     return ((pixel >>  0) & 0x1f) << 3;
 }
+
 
 
 static uint8_t
@@ -130,7 +133,7 @@ writeRaster(struct pam *     const pamP,
             uint16_t const alpha = imgP->alpha.data[rowStart + col];
 
             assert(col < pamP->width);
-            
+
             tuplerow[col][PAM_RED_PLANE] = srfRed(data);
             tuplerow[col][PAM_GRN_PLANE] = srfGrn(data);
             tuplerow[col][PAM_BLU_PLANE] = srfBlu(data);
@@ -142,7 +145,7 @@ writeRaster(struct pam *     const pamP,
             tuplerow[col][PAM_GRN_PLANE] = 0;
             tuplerow[col][PAM_BLU_PLANE] = 0;
             tuplerow[col][PAM_TRN_PLANE] = 0;
-        }            
+        }
 
         pnm_writepamrow(pamP, tuplerow);
     }

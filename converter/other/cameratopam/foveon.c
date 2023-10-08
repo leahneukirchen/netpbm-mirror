@@ -339,6 +339,8 @@ foveon_fixed (void *       const ptr,
     return 1;
 }
 
+
+
 static float  foveon_avg (unsigned short *pix, int range[2], float cfilt)
 {
     int i;
@@ -352,6 +354,8 @@ static float  foveon_avg (unsigned short *pix, int range[2], float cfilt)
     }
     return (sum - min - max) / (range[1] - range[0] - 1);
 }
+
+
 
 static short *foveon_make_curve (double max, double mul, double filt)
 {
@@ -373,6 +377,8 @@ static short *foveon_make_curve (double max, double mul, double filt)
     return curve;
 }
 
+
+
 static void foveon_make_curves
 (short **curvep, float dq[3], float div[3], float filt)
 {
@@ -384,11 +390,15 @@ static void foveon_make_curves
     FORC3 curvep[c] = foveon_make_curve (max, mul[c], filt);
 }
 
+
+
 static int  foveon_apply_curve (short *curve, int i)
 {
     if (abs(i) >= (unsigned short)curve[0]) return 0;
     return i < 0 ? -(unsigned short)curve[1-i] : (unsigned short)curve[1+i];
 }
+
+
 
 void
 foveon_interpolate(Image const image,
@@ -797,3 +807,6 @@ foveon_interpolate(Image const image,
     width = i;
     height = row;
 }
+
+
+

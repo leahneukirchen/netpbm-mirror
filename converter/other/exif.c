@@ -613,6 +613,7 @@ commentValue(const unsigned char * const valuePtr,
 }
 
 
+
 /* Forward declaration for recursion */
 
 static void

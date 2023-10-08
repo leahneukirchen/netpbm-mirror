@@ -24,7 +24,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -44,7 +44,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "verbose",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "verbose",     OPT_FLAG,   NULL,
             &cmdlineP->verbose,       0 );
     OPTENT3(0, "transparent", OPT_STRING, &cmdlineP->transparent,
             &transparentSpec,  0 );
@@ -71,23 +71,22 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-
 static void
 pripix(struct pam * const pamP,
-       tuple        const color, 
-       unsigned int const rectWidth, 
-       unsigned int const rectHeight, 
+       tuple        const color,
+       unsigned int const rectWidth,
+       unsigned int const rectHeight,
        tuple        const transparentColor) {
 
     if (rectWidth > 0 && rectHeight > 0) {
         printf("<TD VALIGN=CENTER ALIGN=CENTER");
 
-        if (rectWidth != 1) 
+        if (rectWidth != 1)
             printf(" COLSPAN=%d", rectWidth);
-        if (rectHeight != 1) 
+        if (rectHeight != 1)
             printf(" ROWSPAN=%d", rectHeight);
 
-        if (transparentColor && 
+        if (transparentColor &&
             !pnm_tupleequal(pamP, color,transparentColor)) {
             /* No BGCOLOR attribute */
         } else {
@@ -123,7 +122,7 @@ findSameColorRectangle(struct pam *   const pamP,
                        unsigned int * const rectWidthP,
                        unsigned int * const rectHeightP) {
 /*----------------------------------------------------------------------------
-   Find the largest rectangle, in the image described by 'pam' and 
+   Find the largest rectangle, in the image described by 'pam' and
    'tuples', of uniform color, whose upper left corner is at (row, col).
 
    Return the width and height of that rectangle as *rectWidthP
@@ -142,23 +141,23 @@ findSameColorRectangle(struct pam *   const pamP,
         int j;
         for (j = 0; j <= i; ++j) {
             if (!my) {
-                if (i >= cny) 
+                if (i >= cny)
                     my = cny;
                 else {
                     if ((!mx || j < mx) && (j < cnx)) {
                         if (!pnm_tupleequal(pamP, tuples[row+i][col+j],
-                                            rectangleColor)) 
+                                            rectangleColor))
                             my = i;
                     }
                 }
             }
             if (!mx) {
-                if (i >= cnx) 
+                if (i >= cnx)
                     mx = cnx;
                 else {
                     if ((!my || (j < my)) && (j < cny)) {
                         if (!pnm_tupleequal(pamP, tuples[row+j][col+i],
-                                            rectangleColor)) 
+                                            rectangleColor))
                             mx = i;
                     }
                 }
@@ -204,7 +203,6 @@ freeOutputtedArray(bool **       const outputted,
 
 
 
-                       
 static void
 markNotOutputted(bool **      const outputted,
                  unsigned int const upperLeftCol,
@@ -218,10 +216,10 @@ markNotOutputted(bool **      const outputted,
     unsigned int const lowerRightCol = upperLeftCol + width;
     unsigned int const lowerRightRow = upperLeftRow + height;
     unsigned int row;
-    
+
     for (row = upperLeftRow; row < lowerRightRow; ++row) {
         unsigned int col;
-        for (col = upperLeftCol; col < lowerRightCol; ++col) 
+        for (col = upperLeftCol; col < lowerRightCol; ++col)
             outputted[row][col] = FALSE;
     }
 }
@@ -241,10 +239,10 @@ markOutputted(bool **      const outputted,
     unsigned int const lowerRightCol = upperLeftCol + width;
     unsigned int const lowerRightRow = upperLeftRow + height;
     unsigned int row;
-    
+
     for (row = upperLeftRow; row < lowerRightRow; ++row) {
         unsigned int col;
-        for (col = upperLeftCol; col < lowerRightCol; ++col) 
+        for (col = upperLeftCol; col < lowerRightCol; ++col)
             outputted[row][col] = TRUE;
     }
 }
@@ -294,17 +292,17 @@ main(int argc, char **argv) {
     for (row = 0; row < inpam.height; ++row) {
         unsigned int col;
         printf("<TR>\n");
-        pripix(&inpam, tuples[row][0], 1, 1, transparentColor); 
+        pripix(&inpam, tuples[row][0], 1, 1, transparentColor);
         markOutputted(outputted, 0, row, 1, 1);
 
         for (col = 1; col < inpam.width; ++col) {
             if (!outputted[row][col]) {
-                findSameColorRectangle(&inpam, tuples, row, col, 
+                findSameColorRectangle(&inpam, tuples, row, col,
                                        &rectWidth, &rectHeight);
                 if (cmdline.verbose)
                     pm_message("[%u/%u] [%u/%u]",
                                col, row, rectWidth, rectHeight);
-                pripix(&inpam, tuples[row][col], rectWidth, rectHeight, 
+                pripix(&inpam, tuples[row][col], rectWidth, rectHeight,
                        transparentColor);
                 markOutputted(outputted, col, row, rectWidth, rectHeight);
             }
@@ -320,3 +318,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
+
+
+

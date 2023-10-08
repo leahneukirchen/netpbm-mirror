@@ -23,7 +23,7 @@
    10.3.9 user reports in April 2007 that he has 2.6.16 installed and it
    doesn't have xmlReaderTypes.  Another MacOS user reported that in December
    2008.  Apparently that OS has a broken libxml2 installation.
-   
+
 ============================================================================*/
 
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
@@ -54,13 +54,13 @@ struct cmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
+static void
+parseCommandLine(int argc,
+                 char ** argv,
                  struct cmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -77,7 +77,7 @@ parseCommandLine(int argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "trace",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "trace",     OPT_FLAG,   NULL,
             &cmdlineP->trace,       0);
 
     opt.opt_table = option_def;
@@ -91,7 +91,7 @@ parseCommandLine(int argc,
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
-        
+
         if (argc-1 > 1)
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
@@ -177,7 +177,7 @@ createPath(const char * const pathText,
 -----------------------------------------------------------------------------*/
     bool error;
     Path * pathP;
-    
+
     MALLOCVAR(pathP);
     if (pathP == NULL)
         error = TRUE;
@@ -205,7 +205,7 @@ createPath(const char * const pathText,
 
 static void
 destroyPath(Path * const pathP) {
-    
+
     assert(pathP->pathTextLength == strlen(pathP->pathText));
 
     pm_strfree(pathP->pathText);
@@ -225,12 +225,14 @@ makePoint(unsigned int const x,
           unsigned int const y) {
 
     Point p;
-    
+
     p.x = x;
     p.y = y;
-    
+
     return p;
 }
+
+
 
 static ppmd_point
 makePpmdPoint(Point const arg) {
@@ -242,6 +244,8 @@ makePpmdPoint(Point const arg) {
 
     return p;
 }
+
+
 
 typedef enum {
     PATH_MOVETO,
@@ -309,6 +313,8 @@ pathReader_create(Path *        const pathP,
 
     *pathReaderPP = pathReaderP;
 }
+
+
 
 static void
 pathReader_destroy(PathReader * const pathReaderP) {
@@ -432,7 +438,7 @@ pathReader_getNextCommand(PathReader *  const pathReaderP,
             break;
         default: {
             const char * const context = pathReader_context(pathReaderP);
-            
+
             pm_errormsg("Unrecognized command in <path>: '%c'.  %s",
                         pathText[pathReaderP->cursor++], context);
 
@@ -544,7 +550,7 @@ drawPath(Canvas * const canvasP,
 
     ppmd_fill(canvasP->pixels, canvasP->width, canvasP->height,
               canvasP->maxval,
-              fillObjP, 
+              fillObjP,
               PPMD_NULLDRAWPROC, &pathP->style.fillColor);
 
     ppmd_fill_destroy(fillObjP);
@@ -574,7 +580,7 @@ interpretStyle(const char * const styleAttr) {
         char * buffer;
 
         for (p = &token[0]; isspace(*p); ++p);
-        
+
         strippedToken = p;
 
         buffer = strdup(strippedToken);
@@ -589,7 +595,7 @@ interpretStyle(const char * const styleAttr) {
             else {
                 const char * const value = colonPos + 1;
                 const char * const name  = &buffer[0];
-                
+
                 *colonPos = '\0';
 
                 if (streq(name, "fill")) {
@@ -612,6 +618,7 @@ interpretStyle(const char * const styleAttr) {
 
     return style;
 }
+
 
 
 static void
@@ -652,7 +659,7 @@ processSubPathNode(xmlTextReaderPtr const xmlReaderP,
         } break;
     default:
         /* Just ignore whatever this is.  Contents of <path> are
-           meaningless; all the information is in the attributes 
+           meaningless; all the information is in the attributes
         */
         break;
     }
@@ -687,7 +694,7 @@ processPathElement(xmlTextReaderPtr const xmlReaderP,
         int rc;
 
         rc = xmlTextReaderRead(xmlReaderP);
-        
+
         switch (rc) {
         case 1:
             processSubPathNode(xmlReaderP, &endOfPath);
@@ -736,7 +743,7 @@ processSubSvgElement(xmlTextReaderPtr const xmlReaderP,
     const char * const nodeName = currentNodeName(xmlReaderP);
 
     assert(xmlTextReaderNodeType(xmlReaderP) == XML_READER_TYPE_ELEMENT);
-    
+
     if (streq(nodeName, "path"))
         processPathElement(xmlReaderP, canvasP);
     else
@@ -822,7 +829,7 @@ writePam(FILE *   const ofP,
     pam.depth            = 3;
     pam.maxval           = OUTPUT_MAXVAL;
     strcpy(pam.tuple_type, PAM_PPM_TUPLETYPE);
-    
+
     pnm_writepaminit(&pam);
 
     tuplerow = pnm_allocpamrow(&pam);
@@ -867,7 +874,7 @@ processSvgElement(xmlTextReaderPtr const xmlReaderP,
         int rc;
 
         rc = xmlTextReaderRead(xmlReaderP);
-        
+
         switch (rc) {
         case 1:
             processSubSvgNode(xmlReaderP, canvasP, &endOfSvg);
@@ -938,7 +945,7 @@ processDocument(xmlTextReaderPtr const xmlReaderP,
         int rc;
 
         rc = xmlTextReaderRead(xmlReaderP);
-        
+
         switch (rc) {
         case 1:
             processTopLevelNode(xmlReaderP, ofP);
@@ -968,7 +975,7 @@ main(int argc, char **argv) {
     LIBXML_TEST_VERSION;
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     traceDraw = cmdline.trace;
 
     ifP = pm_openr(cmdline.inputFileName);
@@ -990,3 +997,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
+
+
+

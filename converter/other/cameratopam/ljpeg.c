@@ -161,3 +161,6 @@ lossless_jpeg_load_raw(Image  const image) {
     if (!strcasecmp(make,"KODAK"))
         black = min;
 }
+
+
+

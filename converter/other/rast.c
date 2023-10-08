@@ -61,6 +61,8 @@ mem_create( w, h, depth )
     return p;
 }
 
+
+
 void
 mem_free( p )
     struct pixrect* p;
@@ -69,6 +71,8 @@ mem_free( p )
     free( p->pr_data );
     free( p );
 }
+
+
 
 int
 pr_dump( p, out, colormap, type, copy_flag )
@@ -371,11 +375,11 @@ pr_load_colormap( in, hP, colormap )
                 free( colormap->map[1] );
                 return PIX_ERR;
             }
-            if ( fread( colormap->map[0], 1, colormap->length, in ) != 
+            if ( fread( colormap->map[0], 1, colormap->length, in ) !=
                  colormap->length ||
-                 fread( colormap->map[1], 1, colormap->length, in ) != 
+                 fread( colormap->map[1], 1, colormap->length, in ) !=
                  colormap->length ||
-                 fread( colormap->map[2], 1, colormap->length, in ) != 
+                 fread( colormap->map[2], 1, colormap->length, in ) !=
                  colormap->length )
             {
                 free( colormap->map[0] );
@@ -408,6 +412,8 @@ pr_load_colormap( in, hP, colormap )
     }
     return 0;
 }
+
+
 
 struct pixrect*
 pr_load_image( in, hP, colormap )
@@ -502,3 +508,6 @@ pr_load_image( in, hP, colormap )
 
     return p;
 }
+
+
+

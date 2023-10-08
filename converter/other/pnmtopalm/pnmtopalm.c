@@ -816,6 +816,7 @@ computeRawRowNonDirect(const xel *     const xelrow,
 }
 
 
+
 typedef struct {
 /*----------------------------------------------------------------------------
    A buffer to which one can write bytes sequentially.
@@ -1352,3 +1353,6 @@ main( int argc, const char **argv ) {
 
     return 0;
 }
+
+
+

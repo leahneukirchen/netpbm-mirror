@@ -28,7 +28,7 @@ palmcolor_mapEntryColorFmPixel(pixel  const color,
 
     return
         0
-        | (scaleSample(PPM_GETR(color), maxval, newMaxval) << 16) 
+        | (scaleSample(PPM_GETR(color), maxval, newMaxval) << 16)
         | (scaleSample(PPM_GETG(color), maxval, newMaxval) <<  8)
         | (scaleSample(PPM_GETB(color), maxval, newMaxval) <<  0);
 }
@@ -68,6 +68,8 @@ palmcolor_compare_colors(const void * const p1,
         return 0;
 }
 
+
+
 /***********************************************************************
  ***********************************************************************
  ***********************************************************************
@@ -81,7 +83,7 @@ palmcolor_compare_colors(const void * const p1,
 /*
  * The 1bit-2 color system palette for Palm Computing Devices.
  */
-static int PalmPalette1bpp[2][3] = 
+static int PalmPalette1bpp[2][3] =
 {
   { 255, 255, 255}, {   0,   0,   0 }
 };
@@ -89,7 +91,7 @@ static int PalmPalette1bpp[2][3] =
 /*
  * The 2bit-4 color system palette for Palm Computing Devices.
  */
-static int PalmPalette2bpp[4][3] = 
+static int PalmPalette2bpp[4][3] =
 {
   { 255, 255, 255}, { 192, 192, 192}, { 128, 128, 128 }, {   0,   0,   0 }
 };
@@ -97,7 +99,7 @@ static int PalmPalette2bpp[4][3] =
 /*
  * The 4bit-16 color system palette for Palm Computing Devices.
  */
-static int PalmPalette4bpp[16][3] = 
+static int PalmPalette4bpp[16][3] =
 {
   { 255, 255, 255}, { 238, 238, 238 }, { 221, 221, 221 }, { 204, 204, 204 },
   { 187, 187, 187}, { 170, 170, 170 }, { 153, 153, 153 }, { 136, 136, 136 },
@@ -108,7 +110,7 @@ static int PalmPalette4bpp[16][3] =
 /*
  * The 4bit-16 color system palette for Palm Computing Devices.
  */
-static int PalmPalette4bppColor[16][3] = 
+static int PalmPalette4bppColor[16][3] =
 {
   { 255, 255, 255}, { 128, 128, 128 }, { 128,   0,   0 }, { 128, 128,   0 },
   {   0, 128,   0}, {   0, 128, 128 }, {   0,   0, 128 }, { 128,   0, 128 },
@@ -123,12 +125,12 @@ static int PalmPalette4bppColor[16][3] =
  *
  * NOTE:  only the first 231, plus the last one, are valid.
  */
-static int PalmPalette8bpp[256][3] = 
+static int PalmPalette8bpp[256][3] =
 {
-  { 255, 255, 255 }, { 255, 204, 255 }, { 255, 153, 255 }, { 255, 102, 255 }, 
-  { 255,  51, 255 }, { 255,   0, 255 }, { 255, 255, 204 }, { 255, 204, 204 }, 
-  { 255, 153, 204 }, { 255, 102, 204 }, { 255,  51, 204 }, { 255,   0, 204 }, 
-  { 255, 255, 153 }, { 255, 204, 153 }, { 255, 153, 153 }, { 255, 102, 153 }, 
+  { 255, 255, 255 }, { 255, 204, 255 }, { 255, 153, 255 }, { 255, 102, 255 },
+  { 255,  51, 255 }, { 255,   0, 255 }, { 255, 255, 204 }, { 255, 204, 204 },
+  { 255, 153, 204 }, { 255, 102, 204 }, { 255,  51, 204 }, { 255,   0, 204 },
+  { 255, 255, 153 }, { 255, 204, 153 }, { 255, 153, 153 }, { 255, 102, 153 },
   { 255,  51, 153 }, { 255,   0, 153 }, { 204, 255, 255 }, { 204, 204, 255 },
   { 204, 153, 255 }, { 204, 102, 255 }, { 204,  51, 255 }, { 204,   0, 255 },
   { 204, 255, 204 }, { 204, 204, 204 }, { 204, 153, 204 }, { 204, 102, 204 },
@@ -215,7 +217,7 @@ palmcolor_build_default_8bit_colormap(void) {
     cmP->ncolors = 232;
 
     /* now sort the table */
-    qsort(cmP->color_entries, cmP->ncolors, sizeof(ColormapEntry), 
+    qsort(cmP->color_entries, cmP->ncolors, sizeof(ColormapEntry),
           palmcolor_compare_colors);
     return cmP;
 }
@@ -235,7 +237,7 @@ palmcolor_build_custom_8bit_colormap(pixel **     const pixels,
     colormapP->nentries = 256;
     MALLOCARRAY_NOFAIL(colormapP->color_entries, colormapP->nentries);
     colormapP->ncolors = 0;  /* initial value */
-    
+
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
@@ -259,7 +261,7 @@ palmcolor_build_custom_8bit_colormap(pixel **     const pixels,
                     ColormapEntry const newEntry =
                         searchTarget | (colorIndex << 24);
                     colormapP->color_entries[colorIndex] = newEntry;
-                    qsort(colormapP->color_entries, colormapP->ncolors, 
+                    qsort(colormapP->color_entries, colormapP->ncolors,
                           sizeof(ColormapEntry), palmcolor_compare_colors);
                 }
             }
@@ -276,7 +278,7 @@ palmcolor_read_colormap (FILE * const ifP) {
     unsigned short ncolors;
     Colormap * retval;
     int rc;
-    
+
     rc = pm_readbigshort(ifP, (short *) &ncolors);
     if (rc != 0)
         retval = NULL;
@@ -289,7 +291,7 @@ palmcolor_read_colormap (FILE * const ifP) {
         MALLOCVAR_NOFAIL(colormapP);
         colormapP->nentries = ncolors;
         MALLOCARRAY_NOFAIL(colormapP->color_entries, colormapP->nentries);
-        
+
         for (i = 0, error = FALSE;  i < ncolors && !error;  ++i) {
             int rc;
             rc = pm_readbiglong(ifP, &colorentry);
@@ -309,3 +311,6 @@ palmcolor_read_colormap (FILE * const ifP) {
     }
     return retval;
 }
+
+
+

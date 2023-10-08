@@ -406,7 +406,6 @@ rowReaderGotoNextInterlaceRow(RowReader * const rdrP) {
 
 
 
-
 static void
 rowReaderGotoNextStraightRow(RowReader * const rdrP) {
 /*----------------------------------------------------------------------------
@@ -1267,6 +1266,7 @@ writePixelUncompressed(LzwCompressor * const lzwP,
     lzwOutputCurrentString(lzwP);
 
 }
+
 
 
 static void

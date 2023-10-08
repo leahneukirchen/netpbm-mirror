@@ -55,7 +55,7 @@ typedef struct {
            instead.  That's how Pnmtoxwd sets ncolors, and is how Xwdtopnm
            interprets it.  Xwdtopnm doesn't even look at 'colormap_entries'.
 
-           This could be an old mistake; maybe colormap_entries was 
+           This could be an old mistake; maybe colormap_entries was
            originally the number of entries in the colormap, and ncolors
            was the number of distinct colors in the image (which might be
            less than colormap_entries or, for direct color, could be much
@@ -63,7 +63,7 @@ typedef struct {
         */
     xwdval ncolors;
         /* Number of entries in the color map (for direct color, it's the
-           number of entries in each of them).  See 'colormap_entries'. 
+           number of entries in each of them).  See 'colormap_entries'.
         */
     xwdval window_width;    /* Window width */
     xwdval window_height;   /* Window height */

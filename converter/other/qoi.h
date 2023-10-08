@@ -82,12 +82,16 @@ qoi_colorHash(qoi_Rgba const x) {
         (x.rgba.r*3 + x.rgba.g*5 + x.rgba.b*7 + x.rgba.a*11) % QOI_INDEX_SIZE;
 }
 
+
+
 static __inline__ void
 qoi_clearQoiIndex(qoi_Rgba * index) {
 
     memset(index, 0, QOI_INDEX_SIZE * sizeof(qoi_Rgba));
 
 }
+
+
 
 #define QOI_MAGIC_SIZE 4
 

@@ -18,7 +18,7 @@ typedef struct tagDefinition {
    This is the definition of a type of tag, e.g. ORIENTATION.
 -----------------------------------------------------------------------------*/
     const char * name;
-        /* The name by which our user knows the tag type, e.g. 
+        /* The name by which our user knows the tag type, e.g.
            "ORIENTATION"
         */
     unsigned int tagnum;

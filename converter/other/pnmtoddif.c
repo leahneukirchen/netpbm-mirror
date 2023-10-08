@@ -1,7 +1,7 @@
 /*
  * Author:      Burkhard Neidecker-Lutz
  *              Digital CEC Karlsruhe
- *      neideck@nestvx.enet.dec.com 
+ *      neideck@nestvx.enet.dec.com
 
  Copyright (c) Digital Equipment Corporation, 1992
 
@@ -75,7 +75,7 @@ static void tag(unsigned char ** buffer, int cl, int constructed,
         *p++ = tag_first | 31;
         sp = 0;
         while (t > 0) {
-            stack[sp++] = t & 0x7f; 
+            stack[sp++] = t & 0x7f;
             t >>= 7;
         }
         while (--sp > 0) {  /* Tag values with continuation bits */
@@ -89,7 +89,7 @@ static void tag(unsigned char ** buffer, int cl, int constructed,
 
 
 /* Emit indefinite length encoding */
-static void 
+static void
 ind(unsigned char **buffer)
 {
     unsigned char *p = *buffer;
@@ -101,7 +101,7 @@ ind(unsigned char **buffer)
 
 
 /* Emit ASN.1 NULL */
-static void 
+static void
 wr_null(unsigned char **buffer)
 {
     unsigned char *p = *buffer;
@@ -113,7 +113,7 @@ wr_null(unsigned char **buffer)
 
 
 /* Emit ASN.1 length only into buffer, no data */
-static void 
+static void
 wr_length(unsigned char ** buffer, int amount)
 {
     int length;
@@ -144,7 +144,7 @@ wr_length(unsigned char ** buffer, int amount)
 
 
 /* BER encode an integer and write it's length and value */
-static void 
+static void
 wr_int(unsigned char ** buffer, int val)
 {
     int length;
@@ -178,7 +178,7 @@ wr_int(unsigned char ** buffer, int val)
 
 
 /* Emit and End Of Coding sequence  */
-static void 
+static void
 eoc(unsigned char ** buffer)
 {
     unsigned char *p = *buffer;
@@ -191,13 +191,13 @@ eoc(unsigned char ** buffer)
 
 
 /* Emit a simple string */
-static 
+static
 void wr_string(unsigned char ** const buffer, const char * const val)
 {
     int length;
     unsigned char *p = *buffer;
 
-    length  = strlen(val);        
+    length  = strlen(val);
     if (length > 127) {
         fprintf(stderr,"Can't encode length > 127 yet (%d)\n",length);
         exit(1);
@@ -214,7 +214,7 @@ void wr_string(unsigned char ** const buffer, const char * const val)
 
 
 /* Emit a ISOLATIN-1 string */
-static void 
+static void
 emit_isolatin1(unsigned char ** const buffer, const char * const val)
 {
     int length;
@@ -242,7 +242,7 @@ emit_isolatin1(unsigned char ** const buffer, const char * const val)
 /* values. A lot of the values here are hardcoded to be just right for   */
 /* the bit grammars that the PBMPLUS formats want.           */
 
-static int 
+static int
 write_header(FILE *file, imageparams *ip)
 {
     unsigned char buffer[300];            /* Be careful with the size ! */
@@ -287,7 +287,7 @@ write_header(FILE *file, imageparams *ip)
     tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1); /* PP Pixel Dist */
     tag(&p,CONTEXT,PRIM, 1); wr_int(&p,1); /* LP Pixel Dist */
     eoc(&p);                /* Pixel Aspect Ratio */
-    tag(&p,CONTEXT,PRIM, 4); wr_int(&p,ip->polarity);  
+    tag(&p,CONTEXT,PRIM, 4); wr_int(&p,ip->polarity);
         /* Brightness Polarity */
     tag(&p,CONTEXT,PRIM, 5); wr_int(&p,1);  /* Grid Type    */
     tag(&p,CONTEXT,PRIM, 7); wr_int(&p,ip->spectral);  /* Spectral Mapping */
@@ -300,7 +300,7 @@ write_header(FILE *file, imageparams *ip)
     tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1);  /* Component Space Organization */
     tag(&p,CONTEXT,PRIM, 1); wr_int(&p,1);  /* Planes per Pixel */
     tag(&p,CONTEXT,PRIM, 2); wr_int(&p,1);  /* Plane Significance   */
-    tag(&p,CONTEXT,PRIM, 3); wr_int(&p,ip->components);  
+    tag(&p,CONTEXT,PRIM, 3); wr_int(&p,ip->components);
         /* Number of Components    */
     tag(&p,CONTEXT,CONS, 4); ind(&p);   /* Bits per Component   */
     for (i = 0; i < ip->components; i++) {
@@ -355,7 +355,7 @@ write_header(FILE *file, imageparams *ip)
     tag(&p,CONTEXT,PRIM, 7); wr_int(&p,ip->bytes_per_line * 8);
         /* Scanline Stride    */
     tag(&p,CONTEXT,PRIM, 8); wr_int(&p,1);   /* Bit Order        */
-    tag(&p,CONTEXT,PRIM, 9); wr_int(&p,ip->bits_per_pixel);  
+    tag(&p,CONTEXT,PRIM, 9); wr_int(&p,ip->bits_per_pixel);
         /* Planebits per Pixel */
     tag(&p,CONTEXT,CONS,10); ind(&p);    /* Byteorder Info   */
     tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1);  /* Byte Unit        */
@@ -363,7 +363,7 @@ write_header(FILE *file, imageparams *ip)
     eoc(&p);                 /* Byteorder Info   */
     tag(&p,CONTEXT,PRIM,11); wr_int(&p,3);   /* Data Type        */
     eoc(&p);                              /* Image Coding Attributes */
-    tag(&p,CONTEXT,PRIM, 1); wr_length(&p,ip->bytes_per_line*ip->height);  
+    tag(&p,CONTEXT,PRIM, 1); wr_length(&p,ip->bytes_per_line*ip->height);
         /* Component Plane Data */
     /* End of DDIF document Indentation */
     headersize = p - buffer;
@@ -380,7 +380,7 @@ write_header(FILE *file, imageparams *ip)
 /* Write all the closing brackets of the DDIF grammar that are missing */
 /* The strange indentation reflects exactly the same indentation that  */
 /* we left off in the write_header procedure.                  */
-static int 
+static int
 write_trailer(FILE * file)
 {
     unsigned char buffer[30];
@@ -406,7 +406,6 @@ write_trailer(FILE * file)
 
 
 
-
 static void
 convertPbmRaster(FILE *          const ifP,
                  int             const format,
@@ -415,7 +414,7 @@ convertPbmRaster(FILE *          const ifP,
                  FILE *          const ofP,
                  unsigned int    const bytesPerLine,
                  unsigned char * const data) {
-                 
+
     bit * const pixels = pbm_allocrow(cols);
 
     unsigned int row;
@@ -487,7 +486,6 @@ convertPgmRaster(FILE *          const ifP,
     }
     pgm_freerow(pixels);
 }
-
 
 
 
@@ -677,3 +675,6 @@ main(int argc, char *argv[]) {
 
     return(0);
 }
+
+
+

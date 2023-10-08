@@ -31,13 +31,13 @@ struct CmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
+static void
+parseCommandLine(int argc,
+                 char ** argv,
                  struct CmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -53,12 +53,12 @@ parseCommandLine(int argc,
     unsigned int depthSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-  
+
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "directcolor", OPT_FLAG,    NULL,   &cmdlineP->directcolor,  0);
-    OPTENT3(0, "pseudodepth",    OPT_UINT,  &cmdlineP->pseudodepth,    
+    OPTENT3(0, "pseudodepth",    OPT_UINT,  &cmdlineP->pseudodepth,
             &depthSpec,          0);
-  
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
@@ -77,7 +77,7 @@ parseCommandLine(int argc,
                      "You specified %u", cmdlineP->pseudodepth);
     }
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFilename = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -165,7 +165,6 @@ setupX11Header(X11WDFileHeader * const h11P,
 
 
 
-
 static void
 writeX11Header(X11WDFileHeader const h11,
                FILE *          const ofP) {
@@ -209,7 +208,7 @@ writePseudoColormap(FILE *           const ofP,
                     bool             const backwardMap,
                     xelval           const maxval) {
     /* Write out the colormap, big-endian order. */
-    
+
     X11XColor color;
     unsigned int i;
 
@@ -219,13 +218,13 @@ writePseudoColormap(FILE *           const ofP,
         color.num = i;
         if (grayscale) {
             /* Stupid hack because xloadimage and xwud disagree on
-               how to interpret bitmaps. 
+               how to interpret bitmaps.
             */
             if (backwardMap)
                 color.red = (long) (colors-1-i) * 65535L / (colors - 1);
             else
                 color.red = (long) i * 65535L / (colors - 1);
-            
+
             color.green = color.red;
             color.blue = color.red;
         } else {
@@ -269,7 +268,7 @@ writeDirectColormap(FILE * const ofP) {
         color.green = (short)(i << 8 | i);
         color.blue  = (short)(i << 8 | i);
         color.num   = i << 16 | i << 8 | i;
-        
+
         pm_writebiglong( ofP, color.num);
         pm_writebigshort(ofP, color.red);
         pm_writebigshort(ofP, color.green);
@@ -288,12 +287,12 @@ writeRowDirect(FILE *       const ofP,
                int          const format,
                long         const xmaxval,
                xelval       const maxval) {
-    
+
     switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE: {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
-            unsigned long const ul = 
+            unsigned long const ul =
                 ((PPM_GETR(xelrow[col]) * xmaxval / maxval) << 16) |
                 ((PPM_GETG(xelrow[col]) * xmaxval / maxval) << 8) |
                 (PPM_GETB(xelrow[col]) * xmaxval / maxval);
@@ -331,7 +330,7 @@ writeRowGrayscale(FILE *       const ofP,
     int bitshift;
     unsigned char byte;
     unsigned int col;
-    
+
     bigger_maxval = pm_bitstomaxval(bitsPerPixel);
     bitshift = 8 - bitsPerPixel;
     byte = 0;
@@ -340,7 +339,7 @@ writeRowGrayscale(FILE *       const ofP,
         s = PNM_GET1(xelrow[col]);
         if (backwardMap)
             s = 1 - s;
-        
+
         if (maxval != bigger_maxval)
             s = (long) s * bigger_maxval / maxval;
         byte |= s << bitshift;
@@ -362,7 +361,7 @@ writeRowPseudoColor(FILE *          const ofP,
                     xel *           const xelrow,
                     unsigned int    const cols,
                     colorhash_table const cht) {
-                       
+
     unsigned int col;
 
     for (col = 0; col < cols; ++col)
@@ -391,7 +390,7 @@ writeRaster(FILE *           const ofP,
 
     if (chv)
         cht = ppm_colorhisttocolorhash(chv, colors);
-            
+
     for (row = 0; row < rows; ++row) {
         if (direct)
             writeRowDirect(ofP, xels[row], cols, format, xmaxval, maxval);
@@ -431,7 +430,7 @@ main(int argc, char * argv[]) {
     xels = pnm_readpnm(ifP, &cols, &rows, &maxval, &format);
     xmaxval = (1 << cmdline.pseudodepth) - 1;
     pm_close(ifP);
-    
+
     if (cmdline.directcolor) {
         direct = TRUE;
         grayscale = FALSE;
@@ -482,7 +481,7 @@ main(int argc, char * argv[]) {
             dumpname = cmdline.inputFilename;
     }
 
-    setupX11Header(&h11, dumpname, cols, rows, format, 
+    setupX11Header(&h11, dumpname, cols, rows, format,
                    direct, grayscale, colors,
                    cmdline.pseudodepth);
 
@@ -496,12 +495,15 @@ main(int argc, char * argv[]) {
     if (direct)
         writeDirectColormap(stdout);
     else
-        writePseudoColormap(stdout, chv, colors, 
+        writePseudoColormap(stdout, chv, colors,
                             grayscale, backwardMap, maxval);
-    
-    writeRaster(stdout, xels, cols, rows, format, maxval, xmaxval, 
+
+    writeRaster(stdout, xels, cols, rows, format, maxval, xmaxval,
                 chv, colors, direct, grayscale,
                 backwardMap, h11.bits_per_pixel);
 
     return 0;
 }
+
+
+
