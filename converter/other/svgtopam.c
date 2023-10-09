@@ -981,6 +981,14 @@ main(int argc, char **argv) {
     ifP = pm_openr(cmdline.inputFileName);
 
     xmlReaderP = xmlReaderForFd(fileno(ifP), "SVG_IMAGE", NULL, 0);
+        /* 'xmlReaderForFd' issues an error message to Standard Error if it
+           cannot interpret the XML document on *ifP; that message identifies
+           the document as "SVG_IMAGE".  It issues the bogus message
+           "Extra content at the end of the document" if the document is
+           empty.  It issues the bogus message "Document is empty" if the
+           file starts with something other than an XML element.
+           libxml2 2.9.10 23.10.09
+        */
 
     if (xmlReaderP) {
         processDocument(xmlReaderP, stdout);
