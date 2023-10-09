@@ -111,13 +111,16 @@ extern int pm_plain_output;
 extern const char * pm_progname;
 
 void
-pm_init(const char * const progname, unsigned int const flags);
+pm_init(const char * const progname,
+        unsigned int const flags);
 
 void
-pm_proginit(int * const argcP, const char * argv[]);
+pm_proginit(int *         const argcP,
+            const char ** const argv);
 
 void
-pm_setMessage(int const newState, int * const oldStateP);
+pm_setMessage(int   const newState,
+              int * const oldStateP);
 
 int
 pm_getMessage(void);
@@ -137,19 +140,23 @@ pm_make_tmpfile_fd(int *         const fdP,
                    const char ** const filenameP);
 
 void
-pm_nextimage(FILE * const file, int * const eofP);
+pm_nextimage(FILE * const file,
+             int *  const eofP);
 
 /* Variable-sized arrays definitions. */
 
 char**
-pm_allocarray (int const cols, int const rows, int const size );
+pm_allocarray (int const cols,
+               int const rows,
+               int const size );
 
 void *
 pm_allocrow(unsigned int const cols,
             unsigned int const size);
 
 void
-pm_freearray (char** const its, int const rows);
+pm_freearray (char ** const its,
+              int     const rows);
 
 void
 pm_freerow(void * const row);
@@ -413,7 +420,8 @@ pm_seek2(FILE *             const fileP,
          unsigned int       const fileposSize);
 
 void
-pm_seek(FILE * const fileP, unsigned long filepos);
+pm_seek(FILE *        const fileP,
+        unsigned long const filepos);
 
 enum pm_check_code {
     PM_CHECK_OK,
