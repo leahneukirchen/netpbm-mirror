@@ -1,5 +1,4 @@
 /*
- *  error.h
  *
  *  Written by:         Stefan Frank
  *                      Ullrich Hafner
@@ -15,8 +14,8 @@
  *  $State: Exp $
  */
 
-#ifndef _ERROR_H
-#define _ERROR_H
+#ifndef BINERROR_H_INCLUDED
+#define BINERROR_H_INCLUDED
 
 #define error          error_line=__LINE__,error_file=__FILE__,_error
 #define warning        error_line=__LINE__,error_file=__FILE__,_warning
@@ -46,5 +45,4 @@ _file_error (const char *filename);
 #       define assert(exp)      {if (!(exp)) error ("Assertion `" #exp " != NULL' failed.");}
 #endif /* not HAVE_ASSERT_H */
 
-#endif /* not _ERROR_H */
-
+#endif

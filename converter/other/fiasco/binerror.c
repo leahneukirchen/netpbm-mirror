@@ -1,5 +1,5 @@
 /*
- *  error.c:            Error handling
+ *  Error handling
  *
  *  Written by:         Stefan Frank
  *                      Ullrich Hafner

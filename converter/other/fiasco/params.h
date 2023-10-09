@@ -53,9 +53,11 @@ parseargs (param_t *usr_params,
            const char *usr_file_name);
 void
 write_parameters (const param_t *params, FILE *output);
+
 void
 ask_and_set (param_t *params, const char *name, const char *msg);
-void *
+
+const void *
 parameter_value (const param_t *params, const char *name);
 
 #endif /* not PARAMS_H */
