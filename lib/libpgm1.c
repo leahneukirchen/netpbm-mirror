@@ -125,6 +125,13 @@ pgm_validateComputableMaxval(gray const maxval) {
 
        Code also sometimes iterates through sample values and quits when the
        value is greater than the maxval.
+
+       Code often divides by the maxval, but we don't have to check for maxval
+       == 0 as a computability problem because that is not a valid maxval.
+
+       Note that in the PNM Plain formats, there is no upper limit for a
+       maxval, though the 'gray' type does constrain what has been passed to
+       us.
     */
 
     if (maxval > INT_MAX-1)
