@@ -855,6 +855,11 @@ pm_parse_width(const char * const arg) {
 
    See comments at 'validateComputableSize' in libpam.c for details on
    the purpose of these validations.
+
+   This isn't just for Netpbm format images.
+
+   Typical places from which widths come: headers of non-Netpbm images;
+   command line options.
 -----------------------------------------------------------------------------*/
     unsigned int width;
     const char * error;
