@@ -25,7 +25,7 @@ FIASCOLIBS = codec/libfiasco_codec.a \
 	     output/libfiasco_output.a \
 	     lib/libfiasco_lib.a 
 
-ADDL_OBJECTS = binerror.o getopt.o getopt1.o params.o
+ADDL_OBJECTS = getopt.o getopt1.o params.o
 
 OBJECTS = $(BINARIES:%=%.o) $(ADDL_OBJECTS)
 

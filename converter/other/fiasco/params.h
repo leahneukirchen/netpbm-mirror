@@ -44,7 +44,7 @@ typedef struct param_t
 
 int
 parseargs (param_t *usr_params,
-           int argc, char **argv,
+           int argc, const char **argv,
            const char *synopsis,
            const char *comment,
            const char *non_opt_string,

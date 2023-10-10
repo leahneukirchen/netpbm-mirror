@@ -323,14 +323,15 @@ parameter_value(const param_t * const params,
 
 
 int
-parseargs(param_t *    const usr_params,
-          int argc, char **argv,
-          const char * const synopsis,
-          const char * const comment,
-          const char * const non_opt_string,
-          const char * const path,
-          const char * const sys_file_name,
-          const char * const usr_file_name) {
+parseargs(param_t *     const usr_params,
+          int argc,
+          const char ** const argv,
+          const char *  const synopsis,
+          const char *  const comment,
+          const char *  const non_opt_string,
+          const char *  const path,
+          const char *  const sys_file_name,
+          const char *  const usr_file_name) {
 /*----------------------------------------------------------------------------
   Perform the command line parsing.
   List of allowed parameters is given by 'usr_params'.
@@ -499,7 +500,8 @@ parseargs(param_t *    const usr_params,
 
         /* Parse command line */
 
-        while ((optchar = getopt_long(argc, argv, optstr, long_options,
+        while ((optchar = getopt_long(argc, (char **)argv, optstr,
+                                      long_options,
                                       &option_index)) != EOF) {
             int param_index = -1;
 
@@ -554,12 +556,12 @@ parseargs(param_t *    const usr_params,
                     fprintf(stderr, "%s " VERSION "\n", argv [0]);
                     {
                         /* Kludge for standard Netpbm version announcement */
-                        char * modified_argv[2];
+                        const char * modifiedArgv[2];
                         int argc;
-                        modified_argv[0] = argv[0];
-                        modified_argv[1] = (char *) "--version";
+                        modifiedArgv[0] = argv[0];
+                        modifiedArgv[1] = (char *) "--version";
                         argc = 2;
-                        pm_proginit(&argc, (const char **) modified_argv);
+                        pm_proginit(&argc, modifiedArgv);
                     }
                     exit (2);
                 } else if (streq(params[param_index].name, "verbose"))
