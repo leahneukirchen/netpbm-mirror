@@ -127,9 +127,6 @@ pgm_validateComputableMaxval(gray const maxval) {
        value is greater than the maxval.
     */
 
-    if (maxval == 0)
-        pm_error("Maxval is zero.  Must be at least one.");
-
     if (maxval > INT_MAX-1)
         pm_error("Maxval (%u) is too large to be processed", maxval);
 }
