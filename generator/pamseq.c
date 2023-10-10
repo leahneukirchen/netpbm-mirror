@@ -192,18 +192,29 @@ parseCommandLine(int argc, const char ** argv,
         pm_error("Only two argumeents allowed: depth and maxval.  "
                  "You specified %d", argc-1);
     else {
-        cmdlineP->depth = atoi(argv[1]);
-        cmdlineP->maxval = atoi(argv[2]);
-        if (cmdlineP->depth <= 0)
+        const char * error;
+        unsigned int depth, maxval;
+
+        pm_string_to_uint(argv[1], &depth, &error);
+        if (error) {
+            pm_error("'%s' is invalid as an image depth.  %s", argv[1], error);
+            pm_strfree(error);
+        }
+        else if (depth <= 0)
             pm_error("depth argument must be a positive number.  You "
                      "specified '%s'", argv[1]);
-        if (cmdlineP->maxval <= 0)
-            pm_error("maxval argument must be a positive number.  You "
-                     "specified '%s'", argv[2]);
-        if (cmdlineP->maxval > PNM_OVERALLMAXVAL)
+        else
+            cmdlineP->depth = depth;
+
+        maxval = pm_parse_maxval(argv[2]);
+
+        if (maxval > PAM_OVERALL_MAXVAL)
             pm_error("The maxval you specified (%u) is too big.  "
-                     "Maximum is %u", (unsigned int) cmdlineP->maxval,
-                     PNM_OVERALLMAXVAL);
+                     "Maximum is %lu", maxval, PAM_OVERALL_MAXVAL);
+        else
+            cmdlineP->maxval = maxval;
+
+
         if (pm_maxvaltobits(cmdlineP->maxval) +
             pm_maxvaltobits(cmdlineP->depth-1) > sizeof(unsigned int)*8)
             pm_error("The maxval (%u) and depth (%u) you specified result "
