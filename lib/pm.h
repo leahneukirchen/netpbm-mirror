@@ -458,6 +458,9 @@ pm_parse_width(const char * const arg);
 unsigned int
 pm_parse_height(const char * const arg);
 
+unsigned int
+pm_parse_maxval(const char * const arg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -906,3 +906,27 @@ pm_parse_height(const char * const arg) {
 
 
 
+unsigned int
+pm_parse_maxval(const char * const arg) {
+/*----------------------------------------------------------------------------
+  Same as pm_parse_width(), but for maxval.
+-----------------------------------------------------------------------------*/
+    unsigned int maxval;
+    const char * error;
+
+    pm_string_to_uint(arg, &maxval, &error);
+
+    if (error) {
+        pm_error("'%s' is invalid as a maxval.  %s", arg, error);
+        pm_strfree(error);
+    } else {
+        if (maxval > INT_MAX-1)
+            pm_error("Maxval %u is too large for computations.", maxval);
+        if (maxval == 0)
+            pm_error("Maxval argument must be a positive number.  You "
+                     "specified 0.");
+    }
+    return maxval;
+}
+
+
