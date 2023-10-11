@@ -37,6 +37,8 @@ vax_gshort(char *msgp)
         return(i);
 }
 
+
+
 /*
  *                      V A X _ P S H O R T
  */

@@ -259,6 +259,8 @@ RunSetup(rle_hdr * the_hdr)
     }
 }
 
+
+
 /*****************************************************************
  * TAG( RunSkipBlankLines )
  * Skip one or more blank lines in the RLE file.
@@ -269,6 +271,8 @@ RunSkipBlankLines(int nblank, rle_hdr * the_hdr)
     FILE * rle_fd = the_hdr->rle_file;
     RSkipLines(nblank);
 }
+
+
 
 /*****************************************************************
  * TAG( RunSetColor )
@@ -281,6 +285,8 @@ RunSetColor(int c, rle_hdr * the_hdr)
     FILE * rle_fd = the_hdr->rle_file;
     RSetColor(c);
 }
+
+
 
 /*****************************************************************
  * TAG( RunSkipPixels )
@@ -298,6 +304,8 @@ RunSkipPixels(int nskip, int last, int wasrun, rle_hdr * the_hdr)
     }
 }
 
+
+
 /*****************************************************************
  * TAG( RunNewScanLine )
  * Perform a newline action.  Since CR is implied by the Set Color
@@ -312,6 +320,8 @@ RunNewScanLine(int flag, rle_hdr * the_hdr)
         RNewLine;
     }
 }
+
+
 
 /*****************************************************************
  * TAG( Runputdata )
@@ -330,6 +340,8 @@ Runputdata(rle_pixel * buf, int n, rle_hdr * the_hdr)
         putc( 0, rle_fd );
 }
 
+
+
 /*****************************************************************
  * TAG( Runputrun )
  * Output a single color run.
@@ -344,6 +356,7 @@ Runputrun(int color, int n, int last, rle_hdr * the_hdr)
 }
 
 
+
 /*****************************************************************
  * TAG( RunputEof )
  * Output an EOF opcode
@@ -354,3 +367,6 @@ RunputEof(rle_hdr * the_hdr)
     FILE * rle_fd = the_hdr->rle_file;
     REOF;
 }
+
+
+

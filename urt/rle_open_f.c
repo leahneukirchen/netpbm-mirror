@@ -226,7 +226,6 @@ dealWithSubprocess(const char *  const file_name,
 
 
 
-
 /*
  *  Purpose : Open a file for input or output as controlled by the mode
  *  parameter.  If no file name is specified (ie. file_name is null) then
@@ -321,4 +320,6 @@ rle_open_f(const char * prog_name, const char * file_name, const char * mode)
 
     return fp;
 }
+
+
 
