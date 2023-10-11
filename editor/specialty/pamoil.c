@@ -1,4 +1,4 @@
-/* pgmoil.c - read a portable pixmap and turn into an oil painting
+/* pgmoil.c - read a PPM image and turn into an oil painting
 **
 ** Copyright (C) 1990 by Wilson Bent (whb@hoh-2.att.com)
 ** Shamelessly butchered into a color version by Chris Sheppard
@@ -12,60 +12,153 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "pam.h"
+
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
+
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileNm;
+    unsigned int n;
+};
+
+
 
 static void
-convertRow(struct pam const inpam, tuple ** const tuples,
-           tuple * const tuplerow, int const row, int const smearFactor,
-           int * const hist) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optStruct3 opt;  /* set by OPTENT3 */
+    optEntry * option_def;
+    unsigned int option_def_index;
 
-    int sample;
-    for (sample = 0; sample < inpam.depth; sample++) {
-        int col;
+    unsigned int nSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "n", OPT_UINT, &cmdlineP->n, &nSpec, 0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    free(option_def);
+
+    if (!nSpec)
+        cmdlineP->n = 3;
+
+    if (argc-1 < 1)
+        cmdlineP->inputFileNm = "-";
+    else if (argc-1 == 1)
+        cmdlineP->inputFileNm = argv[1];
+    else
+        pm_error("You specified too many arguments (%u).  The only "
+                 "possible argument is the optional input file specification.",
+                 argc-1);
+}
+
+
+
+static void
+computeRowHist(struct pam   const inpam,
+               tuple **     const tuples,
+               unsigned int const smearFactor,
+               unsigned int const plane,
+               unsigned int const row,
+               unsigned int const col,
+               sample *     const hist) {
+/*----------------------------------------------------------------------------
+  Compute hist[] - frequencies, in the neighborhood of row 'row', column
+  'col', in plane 'plane', of each sample value
+-----------------------------------------------------------------------------*/
+    sample i;
+    int drow;
+
+    for (i = 0; i <= inpam.maxval; ++i)
+        hist[i] = 0;
+
+    for (drow = row - smearFactor; drow <= row + smearFactor; ++drow) {
+        if (drow >= 0 && drow < inpam.height) {
+            int dcol;
+
+            for (dcol = col - smearFactor;
+                 dcol <= col + smearFactor;
+                 ++dcol) {
+                if (dcol >= 0 && dcol < inpam.width)
+                    ++hist[tuples[drow][dcol][plane]];
+            }
+        }
+    }
+}
+
+
+
+static sample
+modalValue(sample * const hist,
+           sample   const maxval) {
+/*----------------------------------------------------------------------------
+  The sample value that occurs most often according to histogram hist[].
+-----------------------------------------------------------------------------*/
+    sample modalval;
+    unsigned int maxfreq;
+    sample sampleval;
+
+    for (sampleval = 0, maxfreq = 0, modalval = 0;
+         sampleval <= maxval;
+         ++sampleval) {
+
+        if (hist[sampleval] > maxfreq) {
+            maxfreq = hist[sampleval];
+            modalval = sampleval;
+        }
+    }
+    return modalval;
+}
+
+
+
+static void
+convertRow(struct pam     const inpam,
+           tuple **       const tuples,
+           tuple *        const tuplerow,
+           unsigned int   const row,
+           unsigned int   const smearFactor,
+           sample *       const hist) {
+/*----------------------------------------------------------------------------
+   'hist' is a working buffer inpam.width wide.
+-----------------------------------------------------------------------------*/
+    unsigned int plane;
+
+    for (plane = 0; plane < inpam.depth; plane++) {
+        unsigned int col;
+
         for (col = 0; col < inpam.width; ++col)  {
-            int i;
-            int drow;
-            int modalval;
+            sample modalval;
                 /* The sample value that occurs most often in the neighborhood
-                   of the pixel being examined
+                   of column 'col' of row 'row', in plane 'plane'.
                 */
 
-            /* Compute hist[] - frequencies, in the neighborhood, of each
-               sample value
-            */
-            for (i = 0; i <= inpam.maxval; ++i) hist[i] = 0;
+            computeRowHist(inpam, tuples, smearFactor, plane, row, col, hist);
 
-            for (drow = row - smearFactor; drow <= row + smearFactor; ++drow) {
-                if (drow >= 0 && drow < inpam.height) {
-                    int dcol;
-                    for (dcol = col - smearFactor;
-                         dcol <= col + smearFactor;
-                         ++dcol) {
-                        if ( dcol >= 0 && dcol < inpam.width )
-                            ++hist[tuples[drow][dcol][sample]];
-                    }
-                }
-            }
-            {
-                /* Compute modalval */
-                int sampleval;
-                int maxfreq;
+            modalval = modalValue(hist, inpam.maxval);
 
-                maxfreq = 0;
-                modalval = 0;
-
-                for (sampleval = 0; sampleval <= inpam.maxval; ++sampleval) {
-                    if (hist[sampleval] > maxfreq) {
-                        maxfreq = hist[sampleval];
-                        modalval = sampleval;
-                    }
-                }
-            }
-            tuplerow[col][sample] = modalval;
+            tuplerow[col][plane] = modalval;
         }
     }
 }
@@ -73,44 +166,24 @@ convertRow(struct pam const inpam, tuple ** const tuples,
 
 
 int
-main(int argc, char *argv[] ) {
+main(int argc, const char ** argv) {
+
     struct pam inpam, outpam;
-    FILE* ifp;
-    tuple ** tuples;
-    tuple * tuplerow;
-    int * hist;
+    FILE * ifP;
+    tuple ** tuples;  /* malloc'ed */
+    tuple * tuplerow;  /* malloc'ed */
+    sample * hist;  /* malloc'ed */
         /* A buffer for the convertRow subroutine to use */
-    int argn;
     int row;
-    int smearFactor;
-    const char* const usage = "[-n <n>] [ppmfile]";
+    struct CmdlineInfo cmdline;
 
-    ppm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    argn = 1;
-    smearFactor = 3;       /* DEFAULT VALUE */
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* Check for options. */
-    if ( argn < argc && argv[argn][0] == '-' ) {
-        if ( argv[argn][1] == 'n' ) {
-            ++argn;
-            if ( argn == argc || sscanf(argv[argn], "%d", &smearFactor) != 1 )
-                pm_usage( usage );
-        } else
-            pm_usage( usage );
-        ++argn;
-    }
-    if ( argn < argc ) {
-        ifp = pm_openr( argv[argn] );
-        ++argn;
-    } else
-        ifp = stdin;
+    ifP = pm_openr(cmdline.inputFileNm);
 
-    if ( argn != argc )
-        pm_usage( usage );
-
-    tuples = pnm_readpam(ifp, &inpam, PAM_STRUCT_SIZE(tuple_type));
-    pm_close(ifp);
+    tuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     MALLOCARRAY(hist, inpam.maxval + 1);
     if (hist == NULL)
@@ -123,7 +196,7 @@ main(int argc, char *argv[] ) {
     tuplerow = pnm_allocpamrow(&inpam);
 
     for (row = 0; row < inpam.height; ++row) {
-        convertRow(inpam, tuples, tuplerow, row, smearFactor, hist);
+        convertRow(inpam, tuples, tuplerow, row, cmdline.n, hist);
         pnm_writepamrow(&outpam, tuplerow);
     }
 
@@ -131,7 +204,9 @@ main(int argc, char *argv[] ) {
     free(hist);
     pnm_freepamarray(tuples, &inpam);
 
+    pm_close(ifP);
     pm_close(stdout);
-    exit(0);
+    return 0;
 }
+
 
