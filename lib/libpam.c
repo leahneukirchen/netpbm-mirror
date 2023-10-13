@@ -142,7 +142,7 @@ pnm_allocpamtuple(const struct pam * const pamP) {
 
     tuple retval;
 
-    retval = malloc(allocationDepth(pamP) * sizeof(retval[0]));
+    MALLOCARRAY(retval, allocationDepth(pamP));
 
     if (retval == NULL)
         pm_error("Out of memory allocating %u-plane tuple",
@@ -322,7 +322,7 @@ pnm_allocrowimage(const struct pam * const pamP) {
 
     unsigned char * retval;
 
-    retval = malloc(size);
+    MALLOCARRAY(retval, size);
 
     if (retval == NULL)
         pm_error("Unable to allocate %u bytes for a row image buffer",
