@@ -26,6 +26,9 @@ not yet  BJH  Release 11.05.00
               Build: Fix compile error on systems without 'asprintf'.
               Introduced in Netpbm 11.04 (September 2023).
 
+              Build: Fix building of jpeg2ktopam and pamtojpeg2k with
+              assertion checking by default.
+
 23.09.27 BJH  Release 11.04.00
 
               pamaddnoise: add -salt.
