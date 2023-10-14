@@ -20,6 +20,7 @@
   documentation.  This software is provided "as is" without express or
   implied warranty.
 =============================================================================*/
+#include <stdbool.h>
 #include <assert.h>
 #include <math.h>
 
@@ -81,7 +82,7 @@ struct CmdlineInfo {
     */
     const char * inputFileNm;  /* Name of input file */
     unsigned int allcolors;  /* boolean: select all colors from the input */
-    unsigned int newcolors;
+    unsigned int newColorCt;
         /* Number of colors argument; meaningless if allcolors true */
     enum MethodForLargest methodForLargest;
         /* -spreadintensity/-spreadluminosity options */
@@ -150,8 +151,8 @@ parseCommandLine (int argc, const char ** argv,
             &cmdlineP->debug,                              0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
@@ -199,21 +200,18 @@ parseCommandLine (int argc, const char ** argv,
                      "output as an argument.");
         else {
             if (strcmp(argv[1], "all") == 0)
-                cmdlineP->allcolors = TRUE;
+                cmdlineP->allcolors = true;
             else {
-                char * tail;
-                long int const newcolors = strtol(argv[1], &tail, 10);
-                if (*tail != '\0')
+                const char * error;
+                cmdlineP->allcolors = false;
+                pm_string_to_uint(argv[1], &cmdlineP->newColorCt, &error);
+
+                if (error) {
                     pm_error("The number of colors argument '%s' is not "
-                             "a number or 'all'", argv[1]);
-                else if (newcolors < 1)
+                             "an unsigned number or 'all'.  %s",
+                             argv[1], error);
+                } else if (cmdlineP->newColorCt == 0)
                     pm_error("The number of colors must be positive");
-                else if (newcolors == 1)
-                    pm_error("The number of colors must be greater than 1.");
-                else {
-                    cmdlineP->newcolors = newcolors;
-                    cmdlineP->allcolors = FALSE;
-                }
             }
         }
     }
@@ -889,7 +887,7 @@ mediancut(tupletable2           const colorFreqTable,
             /* Find the first splittable box. */
 
         if (boxIdx >= boxVector.boxCt)
-            multicolorBoxesExist = FALSE;
+            multicolorBoxesExist = false;
         else
             splitBox(&boxVector, boxIdx, methodForLargest, methodForSplit);
                 /* Side effect: sorts the extent of 'colorfreqTable' that is
@@ -986,7 +984,7 @@ computeHistogram(FILE *         const ifP,
     tuplehash = pnm_createtuplehash();
     colorCount = 0;
 
-    eof = FALSE;
+    eof = false;
 
     for (imageSeq = 0; !eof; ++imageSeq) {
         struct pam inpam;
@@ -1029,7 +1027,7 @@ computeHistogram(FILE *         const ifP,
 static void
 computeColorMapFromInput(FILE *                const ifP,
                          bool                  const allColors,
-                         unsigned int          const reqColors,
+                         unsigned int          const reqColorCt,
                          enum MethodForLargest const methodForLargest,
                          enum MethodForRep     const methodForRep,
                          enum MethodForSplit   const methodForSplit,
@@ -1042,7 +1040,7 @@ computeColorMapFromInput(FILE *                const ifP,
    image stream in file 'ifP'.  Figure it out using the median cut
    technique.
 
-   The colormap will have 'reqcolors' or fewer colors in it, unless
+   The colormap will have 'reqcolorCt' or fewer colors in it, unless
    'allcolors' is true, in which case it will have all the colors that
    are in the input.
 
@@ -1066,14 +1064,14 @@ computeColorMapFromInput(FILE *                const ifP,
     if (allColors) {
         *colormapP = colorFreqTable;
     } else {
-        if (colorFreqTable.size <= reqColors) {
+        if (colorFreqTable.size <= reqColorCt) {
             pm_message("Image already has few enough colors (<=%u).  "
-                       "Keeping same colors.", reqColors);
+                       "Keeping same colors.", reqColorCt);
             *colormapP = colorFreqTable;
         } else {
-            pm_message("choosing %u colors...", reqColors);
+            pm_message("choosing %u colors...", reqColorCt);
             mediancut(colorFreqTable, freqPamP->depth,
-                      reqColors, methodForLargest, methodForRep,
+                      reqColorCt, methodForLargest, methodForRep,
                       methodForSplit, wantBvReport, colormapP);
             pnm_freetupletable2(freqPamP, colorFreqTable);
         }
@@ -1101,16 +1099,16 @@ sortColormap(tupletable2  const colormap,
             unsigned int plane;
             bool iIsGreater, iIsLess;
 
-            iIsGreater = FALSE; iIsLess = FALSE;
+            iIsGreater = false; iIsLess = false;
             for (plane = 0;
                  plane < depth && !iIsGreater && !iIsLess;
                  ++plane) {
                 if (colormap.table[i]->tuple[plane] >
                     colormap.table[j]->tuple[plane])
-                    iIsGreater = TRUE;
+                    iIsGreater = true;
                 else if (colormap.table[i]->tuple[plane] <
                          colormap.table[j]->tuple[plane])
-                    iIsLess = TRUE;
+                    iIsLess = true;
             }
             if (iIsGreater) {
                 for (plane = 0; plane < depth; ++plane) {
@@ -1211,7 +1209,7 @@ colormapToImage(int                const format,
     outpamP->size             = sizeof(*outpamP);
     outpamP->len              = PAM_STRUCT_SIZE(tuple_type);
     outpamP->format           = format,
-    outpamP->plainformat      = FALSE;
+    outpamP->plainformat      = false;
     outpamP->depth            = colormapPamP->depth;
     outpamP->maxval           = colormapPamP->maxval;
     outpamP->bytes_per_sample = pnm_bytespersample(outpamP->maxval);
@@ -1246,7 +1244,7 @@ main(int argc, const char * argv[] ) {
     ifP = pm_openr(cmdline.inputFileNm);
 
     computeColorMapFromInput(ifP,
-                             cmdline.allcolors, cmdline.newcolors,
+                             cmdline.allcolors, cmdline.newColorCt,
                              cmdline.methodForLargest,
                              cmdline.methodForRep,
                              cmdline.methodForSplit,
