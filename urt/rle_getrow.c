@@ -53,13 +53,13 @@
 static int     debug_f;     /* If non-zero, print debug info. */
 
 int
-rle_get_setup(rle_hdr * const the_hdr) {
+rle_get_setup(rle_hdr * const hdrP) {
 /*-----------------------------------------------------------------------------
   Read the initialization information from an RLE file.
   Inputs:
-    the_hdr:    Contains pointer to the input file.
+    hdrP:    Contains pointer to the input file.
   Outputs:
-    the_hdr:    Initialized with information from the input file.
+    hdrP:    Initialized with information from the input file.
   Returns
      0  on success,
      -1 if the file is not an RLE file,
@@ -70,19 +70,19 @@ rle_get_setup(rle_hdr * const the_hdr) {
     infile points to the "magic" number in an RLE file (usually  byte 0
     in the file).
   Algorithm:
-    Read in the setup info and fill in the_hdr.
+    Read in the setup info and fill in *hdrP.
 ---------------------------------------------------------------------------- */
     struct XtndRsetup setup;
     short magic;
-    FILE * infile = the_hdr->rle_file;
+    FILE * infile = hdrP->rle_file;
     int i;
     char * comment_buf;
 
     /* Clear old stuff out of the header. */
-    rle_hdr_clear(the_hdr);
-    if (the_hdr->is_init != RLE_INIT_MAGIC)
-        rle_names(the_hdr, "Urt", "some file", 0);
-    ++the_hdr->img_num;     /* Count images. */
+    rle_hdr_clear(hdrP);
+    if (hdrP->is_init != RLE_INIT_MAGIC)
+        rle_names(hdrP, "Urt", "some file", 0);
+    ++hdrP->img_num;     /* Count images. */
 
     VAXSHORT(magic, infile);
     if (feof(infile))
@@ -94,15 +94,15 @@ rle_get_setup(rle_hdr * const the_hdr) {
         return RLE_EOF;
 
     /* Extract information from setup */
-    the_hdr->ncolors = setup.h_ncolors;
-    for (i = 0; i < the_hdr->ncolors; ++i)
-        RLE_SET_BIT(*the_hdr, i);
+    hdrP->ncolors = setup.h_ncolors;
+    for (i = 0; i < hdrP->ncolors; ++i)
+        RLE_SET_BIT(*hdrP, i);
 
     if (!(setup.h_flags & H_NO_BACKGROUND) && setup.h_ncolors > 0) {
         rle_pixel * bg_color;
 
-        MALLOCARRAY(the_hdr->bg_color, setup.h_ncolors);
-        if (!the_hdr->bg_color)
+        MALLOCARRAY(hdrP->bg_color, setup.h_ncolors);
+        if (!hdrP->bg_color)
             pm_error("Failed to allocation array for %u background colors",
                      setup.h_ncolors);
         MALLOCARRAY(bg_color, 1 + (setup.h_ncolors / 2) * 2);
@@ -111,50 +111,51 @@ rle_get_setup(rle_hdr * const the_hdr) {
                      1+(setup.h_ncolors / 2) * 2);
         fread((char *)bg_color, 1, 1 + (setup.h_ncolors / 2) * 2, infile);
         for (i = 0; i < setup.h_ncolors; ++i)
-            the_hdr->bg_color[i] = bg_color[i];
+            hdrP->bg_color[i] = bg_color[i];
         free(bg_color);
     } else {
         getc(infile);   /* skip filler byte */
-        the_hdr->bg_color = NULL;
+        hdrP->bg_color = NULL;
     }
 
     if (setup.h_flags & H_NO_BACKGROUND)
-        the_hdr->background = 0;
+        hdrP->background = 0;
     else if (setup.h_flags & H_CLEARFIRST)
-        the_hdr->background = 2;
+        hdrP->background = 2;
     else
-        the_hdr->background = 1;
+        hdrP->background = 1;
     if (setup.h_flags & H_ALPHA) {
-        the_hdr->alpha = 1;
-        RLE_SET_BIT( *the_hdr, RLE_ALPHA );
+        hdrP->alpha = 1;
+        RLE_SET_BIT( *hdrP, RLE_ALPHA );
     } else
-        the_hdr->alpha = 0;
+        hdrP->alpha = 0;
 
-    the_hdr->xmin = vax_gshort(setup.hc_xpos);
-    the_hdr->ymin = vax_gshort(setup.hc_ypos);
-    the_hdr->xmax = the_hdr->xmin + vax_gshort(setup.hc_xlen) - 1;
-    the_hdr->ymax = the_hdr->ymin + vax_gshort(setup.hc_ylen) - 1;
+    hdrP->xmin = vax_gshort(setup.hc_xpos);
+    hdrP->ymin = vax_gshort(setup.hc_ypos);
+    hdrP->xmax = hdrP->xmin + vax_gshort(setup.hc_xlen) - 1;
+    hdrP->ymax = hdrP->ymin + vax_gshort(setup.hc_ylen) - 1;
 
-    the_hdr->ncmap = setup.h_ncmap;
-    the_hdr->cmaplen = setup.h_cmaplen;
-    if (the_hdr->ncmap > 0) {
-        int const maplen = the_hdr->ncmap * (1 << the_hdr->cmaplen);
+    hdrP->ncmap = setup.h_ncmap;
+    hdrP->cmaplen = setup.h_cmaplen;
 
-        int i;
-        char *maptemp;
+    if (hdrP->ncmap > 0) {
+        int const maplen = hdrP->ncmap * (1 << hdrP->cmaplen);
 
-        MALLOCARRAY(the_hdr->cmap, maplen);
+        unsigned int i;
+        unsigned char *maptemp;
+
+        MALLOCARRAY(hdrP->cmap, maplen);
         MALLOCARRAY(maptemp, 2 * maplen);
-        if (the_hdr->cmap == NULL || maptemp == NULL) {
+        if (hdrP->cmap == NULL || maptemp == NULL) {
             pm_error("Malloc failed for color map of size %d*%d "
                      "in rle_get_setup, reading '%s'",
-                     the_hdr->ncmap, (1 << the_hdr->cmaplen),
-                     the_hdr->file_name );
+                     hdrP->ncmap, (1 << hdrP->cmaplen),
+                     hdrP->file_name );
             return RLE_NO_SPACE;
         }
         fread(maptemp, 2, maplen, infile);
         for (i = 0; i < maplen; ++i)
-            the_hdr->cmap[i] = vax_gshort(&maptemp[i * 2]);
+            hdrP->cmap[i] = vax_gshort(&maptemp[i * 2]);
         free(maptemp);
     }
 
@@ -171,7 +172,7 @@ rle_get_setup(rle_hdr * const the_hdr) {
             if (comment_buf == NULL) {
                 pm_error("Malloc failed for comment buffer of size %d "
                          "in rle_get_setup, reading '%s'",
-                         comlen, the_hdr->file_name );
+                         comlen, hdrP->file_name );
                 return RLE_NO_SPACE;
             }
             fread(comment_buf, 1, evenlen, infile);
@@ -181,37 +182,37 @@ rle_get_setup(rle_hdr * const the_hdr) {
                     ++i;
             ++i;            /* extra for NULL pointer at end */
             /* Get space to put pointers to comments */
-            MALLOCARRAY(the_hdr->comments, i);
-            if (the_hdr->comments == NULL) {
+            MALLOCARRAY(hdrP->comments, i);
+            if (hdrP->comments == NULL) {
                 pm_error("Malloc failed for %d comment pointers "
                          "in rle_get_setup, reading '%s'",
-                         i, the_hdr->file_name );
+                         i, hdrP->file_name );
                 return RLE_NO_SPACE;
             }
             /* Get pointers to the comments */
-            *the_hdr->comments = comment_buf;
+            *hdrP->comments = comment_buf;
             for (i = 1, cp = comment_buf + 1;
                  cp < comment_buf + comlen;
                  ++cp)
                 if (*(cp - 1) == '\0')
-                    the_hdr->comments[i++] = cp;
-            the_hdr->comments[i] = NULL;
+                    hdrP->comments[i++] = cp;
+            hdrP->comments[i] = NULL;
         } else
-            the_hdr->comments = NULL;
+            hdrP->comments = NULL;
     } else
-        the_hdr->comments = NULL;
+        hdrP->comments = NULL;
 
     /* Initialize state for rle_getrow */
-    the_hdr->priv.get.scan_y = the_hdr->ymin;
-    the_hdr->priv.get.vert_skip = 0;
-    the_hdr->priv.get.is_eof = 0;
-    the_hdr->priv.get.is_seek = ftell(infile) > 0;
+    hdrP->priv.get.scan_y = hdrP->ymin;
+    hdrP->priv.get.vert_skip = 0;
+    hdrP->priv.get.is_eof = 0;
+    hdrP->priv.get.is_seek = ftell(infile) > 0;
     debug_f = 0;
 
     if (!feof(infile))
         return RLE_SUCCESS; /* success! */
     else {
-        the_hdr->priv.get.is_eof = 1;
+        hdrP->priv.get.is_eof = 1;
         return RLE_EOF;
     }
 }
@@ -219,24 +220,24 @@ rle_get_setup(rle_hdr * const the_hdr) {
 
 
 int
-rle_getrow(rle_hdr *    const the_hdr,
+rle_getrow(rle_hdr *    const hdrP,
            rle_pixel ** const scanline) {
 /*-----------------------------------------------------------------------------
   Get a scanline from the input file.
   Inputs:
-   the_hdr:    Header structure containing information about
+   hdrP:    Header structure containing information about
            the input file.
   Outputs:
    scanline:   an array of pointers to the individual color
            scanlines.  Scanline is assumed to have
-           the_hdr->ncolors pointers to arrays of rle_pixel,
-           each of which is at least the_hdr->xmax+1 long.
+           hdrP->ncolors pointers to arrays of rle_pixel,
+           each of which is at least hdrP->xmax+1 long.
    Returns the current scanline number.
   Assumptions:
    rle_get_setup has already been called.
   Algorithm:
    If a vertical skip is being executed, and clear-to-background is
-   specified (the_hdr->background is true), just set the
+   specified (hdrP->background is true), just set the
    scanlines to the background color.  If clear-to-background is
    not set, just increment the scanline number and return.
 
@@ -246,7 +247,7 @@ rle_getrow(rle_hdr *    const the_hdr,
    If ymax is reached (or, somehow, passed), continue reading and
    discarding input until end of image.
 ---------------------------------------------------------------------------- */
-    FILE * const infile = the_hdr->rle_file;
+    FILE * const infile = hdrP->rle_file;
 
     rle_pixel * scanc;
 
@@ -258,51 +259,51 @@ rle_getrow(rle_hdr *    const the_hdr,
     short word, long_data;
     char inst[2];
 
-    scan_x = the_hdr->xmin; /* initial value */
-    max_x = the_hdr->xmax;  /* initial value */
+    scan_x = hdrP->xmin; /* initial value */
+    max_x = hdrP->xmax;  /* initial value */
     channel = 0; /* initial value */
     /* Clear to background if specified */
-    if (the_hdr->background != 1) {
-        if (the_hdr->alpha && RLE_BIT( *the_hdr, -1))
-            memset((char *)scanline[-1] + the_hdr->xmin, 0,
-                   the_hdr->xmax - the_hdr->xmin + 1);
-        for (nc = 0; nc < the_hdr->ncolors; ++nc) {
-            if (RLE_BIT( *the_hdr, nc)) {
+    if (hdrP->background != 1) {
+        if (hdrP->alpha && RLE_BIT( *hdrP, -1))
+            memset((char *)scanline[-1] + hdrP->xmin, 0,
+                   hdrP->xmax - hdrP->xmin + 1);
+        for (nc = 0; nc < hdrP->ncolors; ++nc) {
+            if (RLE_BIT( *hdrP, nc)) {
                 /* Unless bg color given explicitly, use 0. */
-                if (the_hdr->background != 2 || the_hdr->bg_color[nc] == 0)
-                    memset((char *)scanline[nc] + the_hdr->xmin, 0,
-                           the_hdr->xmax - the_hdr->xmin + 1);
+                if (hdrP->background != 2 || hdrP->bg_color[nc] == 0)
+                    memset((char *)scanline[nc] + hdrP->xmin, 0,
+                           hdrP->xmax - hdrP->xmin + 1);
                 else
-                    memset((char *)scanline[nc] + the_hdr->xmin,
-                           the_hdr->bg_color[nc],
-                           the_hdr->xmax - the_hdr->xmin + 1);
+                    memset((char *)scanline[nc] + hdrP->xmin,
+                           hdrP->bg_color[nc],
+                           hdrP->xmax - hdrP->xmin + 1);
             }
         }
     }
 
     /* If skipping, then just return */
-    if (the_hdr->priv.get.vert_skip > 0) {
-        --the_hdr->priv.get.vert_skip;
-        ++the_hdr->priv.get.scan_y;
-        if (the_hdr->priv.get.vert_skip > 0) {
-            if (the_hdr->priv.get.scan_y >= the_hdr->ymax) {
-                int const y = the_hdr->priv.get.scan_y;
-                while (rle_getskip(the_hdr) != 32768)
+    if (hdrP->priv.get.vert_skip > 0) {
+        --hdrP->priv.get.vert_skip;
+        ++hdrP->priv.get.scan_y;
+        if (hdrP->priv.get.vert_skip > 0) {
+            if (hdrP->priv.get.scan_y >= hdrP->ymax) {
+                int const y = hdrP->priv.get.scan_y;
+                while (rle_getskip(hdrP) != 32768)
                     ;
                 return y;
             } else
-                return the_hdr->priv.get.scan_y;
+                return hdrP->priv.get.scan_y;
         }
     }
 
     /* If EOF has been encountered, return also */
-    if (the_hdr->priv.get.is_eof)
-        return ++the_hdr->priv.get.scan_y;
+    if (hdrP->priv.get.is_eof)
+        return ++hdrP->priv.get.scan_y;
 
     /* Otherwise, read and interpret instructions until a skipLines
        instruction is encountered.
     */
-    if (RLE_BIT(*the_hdr, channel))
+    if (RLE_BIT(*hdrP, channel))
         scanc = scanline[channel] + scan_x;
     else
         scanc = NULL;
@@ -310,21 +311,21 @@ rle_getrow(rle_hdr *    const the_hdr,
         inst[0] = getc(infile);
         inst[1] = getc(infile);
         if (feof(infile)) {
-            the_hdr->priv.get.is_eof = 1;
+            hdrP->priv.get.is_eof = 1;
             break;      /* <--- one of the exits */
         }
 
         switch(OPCODE(inst)) {
         case RSkipLinesOp:
             if (LONGP(inst)) {
-                VAXSHORT(the_hdr->priv.get.vert_skip, infile);
+                VAXSHORT(hdrP->priv.get.vert_skip, infile);
             } else
-                the_hdr->priv.get.vert_skip = DATUM(inst);
+                hdrP->priv.get.vert_skip = DATUM(inst);
             if (debug_f)
                 pm_message("Skip %d Lines (to %d)",
-                           the_hdr->priv.get.vert_skip,
-                           the_hdr->priv.get.scan_y +
-                           the_hdr->priv.get.vert_skip);
+                           hdrP->priv.get.vert_skip,
+                           hdrP->priv.get.scan_y +
+                           hdrP->priv.get.vert_skip);
 
             break;          /* need to break for() here, too */
 
@@ -332,8 +333,8 @@ rle_getrow(rle_hdr *    const the_hdr,
             channel = DATUM(inst);  /* select color channel */
             if (channel == 255)
                 channel = -1;
-            scan_x = the_hdr->xmin;
-            if (RLE_BIT(*the_hdr, channel))
+            scan_x = hdrP->xmin;
+            if (RLE_BIT(*hdrP, channel))
                 scanc = scanline[channel]+scan_x;
             if (debug_f)
                 pm_message("Set color to %d (reset x to %d)",
@@ -362,12 +363,12 @@ rle_getrow(rle_hdr *    const the_hdr,
                 nc = DATUM(inst);
             ++nc;
             if (debug_f) {
-                if (RLE_BIT(*the_hdr, channel))
+                if (RLE_BIT(*hdrP, channel))
                     pm_message("Pixel data %d (to %d):", nc, scan_x + nc);
                 else
                     pm_message("Pixel data %d (to %d)", nc, scan_x + nc);
             }
-            if (RLE_BIT(*the_hdr, channel)) {
+            if (RLE_BIT(*hdrP, channel)) {
                 /* Don't fill past end of scanline! */
                 if (scan_x + nc > max_x) {
                     ns = scan_x + nc - max_x - 1;
@@ -380,7 +381,7 @@ rle_getrow(rle_hdr *    const the_hdr,
                 if (nc & 0x1)
                     getc(infile);   /* throw away odd byte */
             } else {
-                if (the_hdr->priv.get.is_seek)
+                if (hdrP->priv.get.is_seek)
                     fseek(infile, ((nc + 1) / 2) * 2, 1);
                 else {
                     int ii;
@@ -390,7 +391,7 @@ rle_getrow(rle_hdr *    const the_hdr,
             }
             scanc += nc;
             scan_x += nc;
-            if (debug_f && RLE_BIT(*the_hdr, channel)) {
+            if (debug_f && RLE_BIT(*hdrP, channel)) {
                 rle_pixel * cp;
                 for (cp = scanc - nc; nc > 0; --nc)
                     fprintf(stderr, "%02x", *cp++);
@@ -410,7 +411,7 @@ rle_getrow(rle_hdr *    const the_hdr,
             if (debug_f)
                 pm_message("Run length %d (to %d), data %02x",
                            nc, scan_x, word);
-            if (RLE_BIT(*the_hdr, channel)) {
+            if (RLE_BIT(*hdrP, channel)) {
                 if (scan_x > max_x) {
                     ns = scan_x - max_x - 1;
                     nc -= ns;
@@ -427,28 +428,28 @@ rle_getrow(rle_hdr *    const the_hdr,
             break;
 
         case REOFOp:
-            the_hdr->priv.get.is_eof = 1;
+            hdrP->priv.get.is_eof = 1;
             if (debug_f)
                 pm_message("End of Image");
             break;
 
         default:
             pm_error("rle_getrow: Unrecognized opcode: %d, reading %s",
-                     inst[0], the_hdr->file_name);
+                     inst[0], hdrP->file_name);
         }
         if (OPCODE(inst) == RSkipLinesOp || OPCODE(inst) == REOFOp)
             break;          /* <--- the other loop exit */
     }
 
     /* If at end, skip the rest of a malformed image. */
-    if (the_hdr->priv.get.scan_y >= the_hdr->ymax) {
-        int const y = the_hdr->priv.get.scan_y;
-        while (rle_getskip(the_hdr) != 32768 )
+    if (hdrP->priv.get.scan_y >= hdrP->ymax) {
+        int const y = hdrP->priv.get.scan_y;
+        while (rle_getskip(hdrP) != 32768 )
             ;
         return y;
     }
 
-    return the_hdr->priv.get.scan_y;
+    return hdrP->priv.get.scan_y;
 }
 
 

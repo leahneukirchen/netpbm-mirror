@@ -27,14 +27,13 @@
  *  stored in VAX order, regardless of word alignment.
  */
 int
-vax_gshort(char *msgp)
-{
-        unsigned char *p = (unsigned char *) msgp;
-        int     i;
+vax_gshort(unsigned char * const msgp) {
 
-        if( (i = (p[1] << 8) | p[0]) & 0x8000 )
-                return(i | ~0xFFFF);    /* Sign extend */
-        return(i);
+    int     i;
+
+    if ((i = (msgp[1] << 8) | msgp[0]) & 0x8000)
+        return i | ~0xFFFF;    /* Sign extend */
+    return(i);
 }
 
 
@@ -42,13 +41,14 @@ vax_gshort(char *msgp)
 /*
  *                      V A X _ P S H O R T
  */
-char *
-vax_pshort(char *msgp, unsigned short s)
-{
+unsigned char *
+vax_pshort(unsigned char * const msgp,
+           unsigned short  const s) {
 
-        msgp[0] = s & 0xFF;
-        msgp[1] = s >> 8;
-        return(msgp+2);
+    msgp[0] = s & 0xFF;
+    msgp[1] = s >> 8;
+
+    return msgp + 2;
 }
 
 

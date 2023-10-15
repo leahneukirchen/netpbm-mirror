@@ -1,23 +1,39 @@
-void
-RunSetup(rle_hdr * the_hdr);
+#ifndef RUNPUT_H_INCLUDED
+#define RUNPUT_H_INCLUDED
 
 void
-RunSkipBlankLines(int nblank, rle_hdr * the_hdr);
+RunSetup(rle_hdr * const hdrP);
 
 void
-RunSetColor(int c, rle_hdr * the_hdr);
+RunSkipBlankLines(unsigned int const nblank,
+                  rle_hdr *    const hdrP);
 
 void
-RunSkipPixels(int nskip, int last, int wasrun, rle_hdr * the_hdr);
+RunSetColor(int       const c,
+            rle_hdr * const hdrP);
 
 void
-RunNewScanLine(int flag, rle_hdr * the_hdr);
+RunSkipPixels(unsigned int const nskip,
+              int          const last,
+              int          const wasrun,
+              rle_hdr *    const hdrP);
 
 void
-Runputdata(rle_pixel * buf, int n, rle_hdr * the_hdr);
+RunNewScanLine(int       const flag,
+               rle_hdr * const hdrP);
 
 void
-Runputrun(int color, int n, int last, rle_hdr * the_hdr);
+Runputdata(rle_pixel *  const buf,
+           unsigned int const n,
+           rle_hdr *    const hdrP);
 
 void
-RunputEof(rle_hdr * the_hdr);
+Runputrun(int          const color,
+          unsigned int const n,
+          int          const last,
+          rle_hdr *    const hdrP);
+
+void
+RunputEof(rle_hdr * const hdrP);
+
+#endif

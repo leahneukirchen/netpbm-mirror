@@ -46,17 +46,18 @@
 #define     H_ALPHA             0x4   /* if set, alpha channel (-1) present */
 #define     H_COMMENT           0x8   /* if set, comments present */
 
-struct XtndRsetup
-{
-    char    hc_xpos[2],
-            hc_ypos[2],
-            hc_xlen[2],
-            hc_ylen[2];
-    char    h_flags,
-            h_ncolors,
-            h_pixelbits,
-            h_ncmap,
-            h_cmaplen;
+struct XtndRsetup {
+    /* This maps the layout of the header text in the file */
+
+    unsigned char hc_xpos[2];
+    unsigned char hc_ypos[2];
+    unsigned char hc_xlen[2];
+    unsigned char hc_ylen[2];
+    unsigned char h_flags;
+    unsigned char h_ncolors;
+    unsigned char h_pixelbits;
+    unsigned char h_ncmap;
+    unsigned char h_cmaplen;   /* log2 of color map size */
 };
 #define     SETUPSIZE   ((4*2)+5)
 

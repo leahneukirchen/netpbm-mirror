@@ -80,7 +80,7 @@ typedef
 #endif
     struct rle_hdr {
         enum rle_dispatch dispatch;  /* Type of file to create. */
-        int       ncolors;    /* Number of color channels. */
+        unsigned int ncolors;    /* Number of color channels. */
         int *     bg_color;   /* Pointer to bg color vector. */
         int       alpha;      /* If !0, save alpha channel. */
         int       background; /* 0->just save all pixels, */

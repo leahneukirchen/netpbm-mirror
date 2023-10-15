@@ -90,14 +90,18 @@
  *                  follow the last byte in the run.
  */
 
-#include    <string.h>
-#include        <stdio.h>
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
 
-#include        "rle_put.h"
-#include        "rle.h"
-#include        "rle_code.h"
-#include    "vaxshort.h"
-#include    "Runput.h"
+#include "mallocvar.h"
+#include "pm.h"
+
+#include "rle_put.h"
+#include "rle.h"
+#include "rle_code.h"
+#include "vaxshort.h"
+#include "Runput.h"
 
 #define UPPER 255                       /* anything bigger ain't a byte */
 
@@ -105,7 +109,7 @@
  * Macros to make writing instructions with correct byte order easier.
  */
 /* Write a two-byte value in little_endian order. */
-#define put16(a)    (putc((a)&0xff,rle_fd),putc((char)(((a)>>8)&0xff),rle_fd))
+#define put16(a)   (putc((a)&0xff,rle_fd),putc((char)(((a)>>8)&0xff),rle_fd))
 
 /* short instructions */
 #define mk_short_1(oper,a1)             /* one argument short */ \
@@ -119,8 +123,8 @@
     putc((char)(LONG|oper),rle_fd), putc('\0', rle_fd), put16(a1)
 
 #define mk_long_2(oper,a1,a2)           /* two argument long */ \
-    putc((char)(LONG|oper),rle_fd), putc('\0', rle_fd), \
-    put16(a1), put16(a2)
+    putc((char)(LONG|oper),rle_fd), putc('\0', rle_fd),        \
+            put16(a1), put16(a2)
 
 /* choose between long and short format instructions */
 /* NOTE: these macros can only be used where a STATEMENT is legal */
@@ -159,214 +163,245 @@
 #define     REOF                    mk_inst_1(REOFOp,0)
                                         /* Really opcode only */
 
-/*****************************************************************
- * TAG( RunSetup )
- * Put out initial setup data for RLE files.
- */
+
 void
-RunSetup(rle_hdr * the_hdr)
-{
+RunSetup(rle_hdr * const hdrP) {
+/*----------------------------------------------------------------------------
+  Put out initial setup data for RLE files.
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
+
     struct XtndRsetup setup;
-    FILE * rle_fd = the_hdr->rle_file;
 
-    put16( RLE_MAGIC );
+    put16(RLE_MAGIC);
 
-    if ( the_hdr->background == 2 )
+    if (hdrP->background == 2)
         setup.h_flags = H_CLEARFIRST;
-    else if ( the_hdr->background == 0 )
+    else if (hdrP->background == 0)
         setup.h_flags = H_NO_BACKGROUND;
     else
         setup.h_flags = 0;
-    if ( the_hdr->alpha )
+
+    if (hdrP->alpha)
         setup.h_flags |= H_ALPHA;
-    if ( the_hdr->comments != NULL && *the_hdr->comments != NULL )
+
+    if (hdrP->comments != NULL && *hdrP->comments != NULL)
         setup.h_flags |= H_COMMENT;
 
-    setup.h_ncolors = the_hdr->ncolors;
-    setup.h_pixelbits = 8;              /* Grinnell dependent */
-    if ( the_hdr->ncmap > 0 && the_hdr->cmap == NULL )
-    {
-        fprintf( stderr,
-       "%s: Color map of size %d*%d specified, but not supplied, writing %s\n",
-                 the_hdr->cmd, the_hdr->ncmap, (1 << the_hdr->cmaplen),
-                 the_hdr->file_name );
-        the_hdr->ncmap = 0;
-    }
-    setup.h_cmaplen = the_hdr->cmaplen; /* log2 of color map size */
-    setup.h_ncmap = the_hdr->ncmap;     /* no of color channels */
-    vax_pshort(setup.hc_xpos,the_hdr->xmin);
-    vax_pshort(setup.hc_ypos,the_hdr->ymin);
-    vax_pshort(setup.hc_xlen,the_hdr->xmax - the_hdr->xmin + 1);
-    vax_pshort(setup.hc_ylen,the_hdr->ymax - the_hdr->ymin + 1);
-    fwrite((char *)&setup, SETUPSIZE, 1, rle_fd);
-    if ( the_hdr->background != 0 )
-    {
-        int i;
-        rle_pixel *background =
-            (rle_pixel *)malloc( (unsigned)(the_hdr->ncolors + 1) );
-        int *bg_color;
-        /*
-         * If even number of bg color bytes, put out one more to get to
-         * 16 bit boundary.
-         */
-        bg_color = the_hdr->bg_color;
-        for ( i = 0; i < the_hdr->ncolors; i++ )
-            background[i] =  *bg_color++;
-        /* Extra byte, if written, should be 0. */
-        background[i] = 0;
-        fwrite((char *)background, (the_hdr->ncolors / 2) * 2 + 1, 1, rle_fd);
-        free( background );
-    }
-    else
-        putc( '\0', rle_fd );
-    if (the_hdr->ncmap > 0)
-    {
-        /* Big-endian machines are harder */
-        int i, nmap = (1 << the_hdr->cmaplen) *
-                               the_hdr->ncmap;
-        char *h_cmap = (char *)malloc( nmap * 2 );
-        if ( h_cmap == NULL )
-        {
-            fprintf( stderr,
-             "%s: Malloc failed for color map of size %d, writing %s\n",
-                     the_hdr->cmd, nmap, the_hdr->file_name );
-            exit( 1 );
-        }
-        for ( i = 0; i < nmap; i++ )
-            vax_pshort( &h_cmap[i*2], the_hdr->cmap[i] );
+    if (hdrP->ncolors > 255)
+        pm_error("Too many colors (%u) for RLE format.  Maximum is 255",
+                 hdrP->ncolors);
 
-        fwrite( h_cmap, nmap, 2, rle_fd );
-        free( h_cmap );
+    setup.h_ncolors = (unsigned char)hdrP->ncolors;
+    setup.h_pixelbits = 8;              /* Grinnell dependent */
+
+    if ((hdrP->cmaplen) > sizeof(UINT_MAX) * 8 - 1) {
+        pm_error("Color map size logarithm (%u) "
+                 "is too large for computation.  Maximum is %lu",
+                 hdrP->cmaplen, sizeof(UINT_MAX) * 8 - 2);
+    }
+    /* We need to be able to count 2 bytes for each channel of each entry
+       in the color map:
+    */
+    if (1 << hdrP->cmaplen > UINT_MAX/2/hdrP->ncmap) {
+        pm_error("Color map length %u and number of color channels in the "
+                 "color map %u are too large for computation",
+                 1 << hdrP->cmaplen, hdrP->ncmap);
+    }
+
+    if (hdrP->ncmap > 255)
+        pm_error("Too many color channels in the color map (%u) "
+                 "for the RLE format.  Maximum is 255", hdrP->ncmap);
+    setup.h_ncmap = hdrP->ncmap;     /* no of color channels */
+
+    if (hdrP->ncmap > 0 && hdrP->cmap == NULL) {
+        pm_message("Warning: "
+                   "Color map of size %d*%d specified, but not supplied, "
+                   "writing '%s'",
+                   hdrP->ncmap, (1 << hdrP->cmaplen), hdrP->file_name);
+        hdrP->ncmap = 0;
+    }
+    setup.h_cmaplen = (unsigned char)hdrP->cmaplen;
+
+    vax_pshort(setup.hc_xpos,hdrP->xmin);
+    vax_pshort(setup.hc_ypos,hdrP->ymin);
+    vax_pshort(setup.hc_xlen,hdrP->xmax - hdrP->xmin + 1);
+    vax_pshort(setup.hc_ylen,hdrP->ymax - hdrP->ymin + 1);
+
+    fwrite((char *)&setup, SETUPSIZE, 1, rle_fd);
+
+    if (hdrP->background != 0) {
+        unsigned int i;
+        rle_pixel * background;
+        int * bg_color;
+
+        assert(hdrP->ncolors < UINT_MAX);
+
+        MALLOCARRAY_NOFAIL(background, hdrP->ncolors + 1);
+
+        /* If even number of bg color bytes, put out one more to get to
+           16 bit boundary.
+        */
+
+        for (i = 0, bg_color = hdrP->bg_color; i < hdrP->ncolors; ++i)
+            background[i] =  *bg_color++;
+
+        /* Extra byte; if written, should be 0. */
+        background[i] = 0;
+
+        fwrite(background, (hdrP->ncolors / 2) * 2 + 1, 1, rle_fd);
+
+        free(background);
+    } else
+        putc('\0', rle_fd);
+
+    if (hdrP->ncmap > 0) {
+        /* Big-endian machines are harder */
+        unsigned int const nmap = (1 << hdrP->cmaplen) * hdrP->ncmap;
+
+        unsigned char * h_cmap;
+        unsigned int i;
+
+        MALLOCARRAY(h_cmap, nmap * 2);
+
+        if (!h_cmap) {
+            pm_error("Failed to allocate memory for color map of size %u, "
+                     "writing '%s'",
+                     nmap, hdrP->file_name);
+        }
+        for (i = 0; i < nmap; ++i)
+            vax_pshort(&h_cmap[i*2], hdrP->cmap[i]);
+
+        fwrite(h_cmap, nmap, 2, rle_fd);
+
+        free(h_cmap);
     }
 
     /* Now write out comments if given */
-    if ( setup.h_flags & H_COMMENT )
-    {
-        int comlen;
-        CONST_DECL char ** com_p;
+    if (setup.h_flags & H_COMMENT) {
+        unsigned int comlen;
+        const char ** comP;
 
         /* Get the total length of comments */
-        comlen = 0;
-        for ( com_p = the_hdr->comments; *com_p != NULL; com_p++ )
-            comlen += 1 + strlen( *com_p );
+        for (comP = hdrP->comments, comlen = 0; *comP != NULL; ++comP)
+            comlen += 1 + strlen(*comP);
 
-        put16( comlen );
-        for ( com_p = the_hdr->comments; *com_p != NULL; com_p++ )
-            fwrite( *com_p, 1, strlen( *com_p ) + 1, rle_fd );
+        put16(comlen);
 
-        if ( comlen & 1 )       /* if odd length, round up */
-            putc( '\0', rle_fd );
+        for (comP = hdrP->comments; *comP != NULL; ++comP)
+            fwrite(*comP, 1, strlen(*comP) + 1, rle_fd);
+
+        if (comlen & 0x1)       /* if odd length, round up */
+            putc('\0', rle_fd);
     }
 }
 
 
 
-/*****************************************************************
- * TAG( RunSkipBlankLines )
- * Skip one or more blank lines in the RLE file.
- */
 void
-RunSkipBlankLines(int nblank, rle_hdr * the_hdr)
-{
-    FILE * rle_fd = the_hdr->rle_file;
+RunSkipBlankLines(unsigned int const nblank,
+                  rle_hdr *    const hdrP) {
+/*----------------------------------------------------------------------------
+  Skip one or more blank lines in the RLE file.
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
+
     RSkipLines(nblank);
 }
 
 
 
-/*****************************************************************
- * TAG( RunSetColor )
- * Select a color and do carriage return.
- * color: 0 = Red, 1 = Green, 2 = Blue.
- */
 void
-RunSetColor(int c, rle_hdr * the_hdr)
-{
-    FILE * rle_fd = the_hdr->rle_file;
+RunSetColor(int       const c,
+            rle_hdr * const hdrP) {
+/*----------------------------------------------------------------------------
+  Select a color and do carriage return.
+  color: 0 = Red, 1 = Green, 2 = Blue.
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
+
     RSetColor(c);
 }
 
 
 
-/*****************************************************************
- * TAG( RunSkipPixels )
- * Skip a run of background.
- */
-
-/* ARGSUSED */
 void
-RunSkipPixels(int nskip, int last, int wasrun, rle_hdr * the_hdr)
-{
-    FILE * rle_fd = the_hdr->rle_file;
-    if (! last && nskip > 0)
-    {
+RunSkipPixels(unsigned int const nskip,
+              int          const last,
+              int          const wasrun,
+              rle_hdr *    const hdrP) {
+/*----------------------------------------------------------------------------
+  Skip a run of background.
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
+
+    if (!last && nskip > 0) {
         RSkipPixels(nskip);
     }
 }
 
 
 
-/*****************************************************************
- * TAG( RunNewScanLine )
- * Perform a newline action.  Since CR is implied by the Set Color
- * operation, only generate code if the newline flag is true.
- */
 void
-RunNewScanLine(int flag, rle_hdr * the_hdr)
-{
-    FILE * rle_fd = the_hdr->rle_file;
-    if (flag)
-    {
+RunNewScanLine(int       const flag,
+               rle_hdr * const hdrP) {
+/*----------------------------------------------------------------------------
+  Perform a newline action.  Since CR is implied by the Set Color operation,
+  only generate code if the newline flag is true.
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
+
+    if (flag) {
         RNewLine;
     }
 }
 
 
 
-/*****************************************************************
- * TAG( Runputdata )
- * Put one or more pixels of byte data into the output file.
- */
 void
-Runputdata(rle_pixel * buf, int n, rle_hdr * the_hdr)
-{
-    FILE * rle_fd = the_hdr->rle_file;
-    if (n == 0)
-        return;
+Runputdata(rle_pixel *  const buf,
+           unsigned int const n,
+           rle_hdr *    const hdrP) {
+/*----------------------------------------------------------------------------
+  Put one or more pixels of byte data into the output file.
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
 
-    RByteData(n-1);
-    fwrite((char *)buf, n, 1, rle_fd);
-    if ( n & 1 )
-        putc( 0, rle_fd );
+    if (n != 0) {
+        RByteData(n - 1);
+
+        fwrite(buf, n, 1, rle_fd);
+
+        if (n & 0x1)
+            putc(0, rle_fd);
+    }
 }
 
 
 
-/*****************************************************************
- * TAG( Runputrun )
- * Output a single color run.
- */
-
-/* ARGSUSED */
 void
-Runputrun(int color, int n, int last, rle_hdr * the_hdr)
-{
-    FILE * rle_fd = the_hdr->rle_file;
-    RRunData(n-1,color);
+Runputrun(int          const color,
+          unsigned int const n,
+          int          const last,
+          rle_hdr *    const hdrP) {
+/*----------------------------------------------------------------------------
+  Output a single color run.
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
+
+    RRunData(n - 1, color);
 }
 
 
 
-/*****************************************************************
- * TAG( RunputEof )
- * Output an EOF opcode
- */
 void
-RunputEof(rle_hdr * the_hdr)
-{
-    FILE * rle_fd = the_hdr->rle_file;
+RunputEof(rle_hdr * const hdrP) {
+/*----------------------------------------------------------------------------
+  Output an EOF opcode
+-----------------------------------------------------------------------------*/
+    FILE * const rle_fd = hdrP->rle_file;
+
     REOF;
 }
-
 
 
