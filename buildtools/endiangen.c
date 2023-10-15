@@ -13,7 +13,7 @@
     #ifndef BIG_ENDIAN
     #define BIG_ENDIAN 4321
     #endif
-       
+
     #ifndef BYTE_ORDER
     #define BYTE_ORDER LITTLE_ENDIAN
     #endif
@@ -21,7 +21,7 @@
     #define BITS_PER_WORD 32
     #endif
 
-    
+
   Really good code usually is not sensitive to endianness.  But fast,
   not-so-good code often is.  The best way for code to determine
   endianness is for it to do a runtime cast of an integer to an array
@@ -38,7 +38,7 @@ enum endianness {ENDIAN_LITTLE, ENDIAN_BIG};
 
 static enum endianness
 byteOrder(void) {
-    
+
     enum endianness retval;
 
     union {
@@ -83,7 +83,7 @@ main(int argc, char **argv) {
     printf("#endif\n");
     printf("\n");
     printf("#ifndef BYTE_ORDER\n");
-    printf("#define BYTE_ORDER %s\n", 
+    printf("#define BYTE_ORDER %s\n",
            byteOrder() == ENDIAN_LITTLE ? "LITTLE_ENDIAN" : "BIG_ENDIAN");
     printf("#endif\n");
     printf("\n");
@@ -91,7 +91,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
-
 
 
 
