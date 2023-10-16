@@ -25,34 +25,35 @@
  * Copyright (c) 1987, University of Utah
  */
 
+#include <limits.h>
+#include <assert.h>
 #include <stdio.h>
 
 #include "netpbm/mallocvar.h"
 #include "netpbm/pm.h"
 #include "rle.h"
 
-/*****************************************************************
- * TAG( match )
- *
- * Match a name against a test string for "name=value" or "name".
- * If it matches name=value, return pointer to value part, if just
- * name, return pointer to NUL at end of string.  If no match, return NULL.
- *
- * Inputs:
- *  n:  Name to match.  May also be "name=value" to make it easier
- *      to replace comments.
- *  v:  Test string.
- * Outputs:
- *  Returns pointer as above.
- * Assumptions:
- *  [None]
- * Algorithm:
- *  [None]
- */
+
+
 static const char *
 match(const char * const nArg,
       const char * const vArg) {
+/*----------------------------------------------------------------------------
+  Match a name against a test string for "name=value" or "name".
+  If it matches name=value, return pointer to value part, if just
+  name, return pointer to NUL at end of string.  If no match, return NULL.
 
+  Inputs:
+   n:  Name to match.  May also be "name=value" to make it easier
+       to replace comments.
+   v:  Test string.
+  Outputs:
+   Returns pointer as above.
+  Assumptions:
+   [None]
+  Algorithm:
+   [None]
+-----------------------------------------------------------------------------*/
     const char * n;
     const char * v;
 
@@ -70,56 +71,59 @@ match(const char * const nArg,
 
 
 
-/*****************************************************************
- * TAG( rle_putcom )
- *
- * Put a comment into the header struct.
- * Inputs:
- *  value:      Value to add to comments.
- *  the_hdr:    Header struct to add to.
- * Outputs:
- *  the_hdr:    Modified header struct.
- *  Returns previous value;
- * Assumptions:
- *  value pointer can be used as is (data is NOT copied).
- * Algorithm:
- *  Find match if any, else add at end (realloc to make bigger).
- */
 const char *
 rle_putcom(const char * const value,
-           rle_hdr *    const the_hdr) {
-
-    if ( the_hdr->comments == NULL) {
-        MALLOCARRAY_NOFAIL(the_hdr->comments, 2);
-        the_hdr->comments[0] = value;
-        the_hdr->comments[1] = NULL;
+           rle_hdr *    const hdrP) {
+/*----------------------------------------------------------------------------
+  Put a comment into the header struct, replacing the existing one
+    that has the same key, if there is one.
+  Inputs:
+   value:      Value to add to comments.
+   *hdrP:    Header struct to add to.
+  Outputs:
+   *hdrP:    Modified header struct.
+   Returns previous comment having the same key; NULL if none
+  Assumptions:
+   value pointer can be used as is (data is NOT copied).
+  Algorithm:
+   Find match if any, else add at end (realloc to make bigger).
+-----------------------------------------------------------------------------*/
+    if ( hdrP->comments == NULL) {
+        MALLOCARRAY_NOFAIL(hdrP->comments, 2);
+        hdrP->comments[0] = value;
+        hdrP->comments[1] = NULL;
     } else {
         const char ** cp;
         const char * v;
-        const char ** old_comments;
-        int i;
-        for (i = 2, cp = the_hdr->comments; *cp != NULL; ++i, ++cp)
+        const char ** oldComments;
+        unsigned int i;
+
+        for (i = 2, cp = hdrP->comments;
+             *cp != NULL && i < UINT_MAX;
+             ++i, ++cp) {
             if (match(value, *cp) != NULL) {
                 v = *cp;
                 *cp = value;
                 return v;
             }
+        }
         /* Not found */
         /* Can't realloc because somebody else might be pointing to this
          * comments block.  Of course, if this were true, then the
          * assignment above would change the comments for two headers.
-         * But at least, that won't crash the program.  Realloc will.
+         * But at least that won't crash the program.  Realloc will.
          * This would work a lot better in C++, where hdr1 = hdr2
          * could copy the pointers, too.
          */
-        old_comments = the_hdr->comments;
-        MALLOCARRAY(the_hdr->comments, i);
-        if (the_hdr->comments == NULL)
+        oldComments = hdrP->comments;
+        MALLOCARRAY(hdrP->comments, i);
+        if (hdrP->comments == NULL)
             pm_error("Unable to allocate memory for comments");
-        the_hdr->comments[--i] = NULL;
-        the_hdr->comments[--i] = value;
-        for (--i; i >= 0; --i)
-            the_hdr->comments[i] = old_comments[i];
+        assert(i >= 2);
+        hdrP->comments[--i] = NULL;
+        hdrP->comments[--i] = value;
+        for (; i > 0; --i)
+            hdrP->comments[i-1] = oldComments[i-1];
     }
 
     return NULL;

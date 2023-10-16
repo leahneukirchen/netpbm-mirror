@@ -327,9 +327,9 @@ rle_open_f_noexit(const char * const prog_name,
 
 /* Append history information to the HISTORY comment. */
 void
-rle_addhist(char *          argv[],
-            rle_hdr * const in_hdr,
-            rle_hdr * const out_hdr);
+rle_addhist(const char ** const argv,
+            rle_hdr *     const in_hdr,
+            rle_hdr *     const out_hdr);
 
 /* From cmd_name.c. */
 /*****************************************************************

@@ -30,82 +30,118 @@
 #include <time.h>
 
 #include "netpbm/mallocvar.h"
+
 #include "rle.h"
 
 
-/*****************************************************************
- * TAG( rle_addhist )
- *
- * Put a history comment into the header struct.
- * Inputs:
- *  argv:       Command line history to add to comments.
- *  in_hdr:     Incoming header struct to use.
- * Outputs:
- *  out_hdr:    Outgoing header struct to add to.
- * Assumptions:
- *  If no incoming struct then value is NULL.
- * Algorithm:
- *  Calculate length of all comment strings, malloc and then set via
- *  rle_putcom.
- */
 
-void
-rle_addhist(char *          argv[],
-            rle_hdr * const in_hdr,
-            rle_hdr * const out_hdr) {
+static unsigned int
+newCommentLen(const char *  const histoire,
+              const char *  const old,
+              const char ** const argv,
+              const char *  const timedate,
+              const char *  const padding) {
 
-    const char * const histoire = "HISTORY";
-    const char * const padding = "\t";
+    unsigned int length;
+    unsigned int i;
 
-    int length;
-    int i;
-    time_t  temp;
-    /* padding must give number of characters in histoire   */
-    /*     plus one for "="                 */
-    char * timedate;
-    const char * old;
-    static char * newc;
+    length = 0;  /* initial value */
 
-    if (getenv("NO_ADD_RLE_HISTORY"))
-        return;
+    /* Add length of each arg plus space. */
 
-    length = 0;
-    for (i = 0; argv[i]; ++i)
-        length += strlen(argv[i]) +1;   /* length of each arg plus space. */
+    for (i = 0; argv[i]; ++i) {
+        size_t const thisArgLen = strlen(argv[i]);
+        if (thisArgLen < UINT_MAX - length - 100) {
+            length += thisArgLen;
+            length += 1;  /* For the space */
+        }
+    }
 
-    time(&temp);
-    timedate = ctime(&temp);
-    length += strlen(timedate);        /* length of date and time in ASCII. */
+    /* Add length of date and time in ASCII. */
+    length += strlen(timedate);
 
+    /* Add length of padding, "on ", and length of history name plus "="*/
     length += strlen(padding) + 3 + strlen(histoire) + 1;
-        /* length of padding, "on "  and length of history name plus "="*/
-    if (in_hdr) /* if we are interested in the old comments... */
-        old = rle_getcom(histoire, in_hdr);     /* get old comment. */
-    else
-        old = NULL;
 
     if (old && *old)
         length += strlen(old);       /* add length if there. */
 
-    ++length;                               /*Cater for the null. */
+    ++length;     /* Add size of terminating NUL. */
 
-    MALLOCARRAY(newc, length);
+    return length;
+}
 
-    if (newc == NULL)
-        return;
 
-    strcpy(newc,histoire);(void)strcat(newc,"=");
-    if (old && *old)
-        strcat(newc, old); /* add old string if there. */
-    for (i=0;argv[i];i++) {
-        strcat(newc, argv[i]);
-        strcat(newc, " ");
+
+void
+rle_addhist(const char ** const argv,
+            rle_hdr *     const inHdrP,
+            rle_hdr *     const outHdrP) {
+/*----------------------------------------------------------------------------
+  Put a history comment into the header struct.
+  Inputs:
+   argv:        Command line history to add to comments.
+   *inHdrP:     Incoming header struct to use.
+  Outputs:
+   *outHdrP:    Outgoing header struct to add to.
+  Assumptions:
+   If no incoming struct then value is NULL.
+  Algorithm:
+   Calculate length of all comment strings, malloc and then set via
+   rle_putcom.
+  If we run out of memory, don't put the history comment in.
+-----------------------------------------------------------------------------*/
+    if (!getenv("NO_ADD_RLE_HISTORY")) {
+        const char * const histoire = "HISTORY";
+        const char * const padding = "\t";
+
+        unsigned int length;
+            /* length of combined comment - the history comment we are adding
+               and any history comment that is already there (to which we
+               append)
+            */
+        time_t  nowTime;
+        /* padding must give number of characters in histoire   */
+        /*     plus one for "="                 */
+        const char * timedate;
+        const char * old;
+        char * newc;
+
+        if (inHdrP) /* if we are interested in the old comments... */
+            old = rle_getcom(histoire, inHdrP);     /* get old comment. */
+        else
+            old = NULL;
+
+        time(&nowTime);
+        timedate = ctime(&nowTime);
+
+        length = newCommentLen(histoire, old, argv, timedate, padding);
+
+        MALLOCARRAY(newc, length);
+
+        if (newc) {
+            unsigned int i;
+
+            strcpy(newc, histoire);
+            strcat(newc, "=");
+
+            if (old)
+                strcat(newc, old); /* add old string if there. */
+
+            for (i = 0; argv[i]; ++i) {
+                strcat(newc, argv[i]);
+                strcat(newc, " ");
+            }
+            strcat(newc, "on ");
+            strcat(newc, timedate);         /* \n supplied by 'ctime'. */
+            strcat(newc, padding);          /* to line up multiple histories.*/
+
+            rle_putcom(newc, outHdrP);
+                /* Creates reference to 'newc', may destroy reference to
+                   previous comment memory, which will thereby leak.
+                */
+        }
     }
-    strcat(newc,"on ");
-    strcat(newc,timedate);         /* \n supplied by time. */
-    strcat(newc,padding);          /* to line up multiple histories.*/
-
-    rle_putcom(newc, out_hdr);
 }
 
 

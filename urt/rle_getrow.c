@@ -52,6 +52,66 @@
 
 static int     debug_f;     /* If non-zero, print debug info. */
 
+
+
+static void
+readComments(rle_hdr * const hdrP) {
+
+    FILE * ifP = hdrP->rle_file;
+
+    /* There are comments */
+    short comlen;
+    char * cp;
+
+    VAXSHORT(comlen, ifP); /* get comment length */
+
+    if (comlen < 0)
+        pm_error("Negative comment length in RLE header");
+    else if (comlen > 0) {
+        unsigned int const evenlen = (comlen + 1) & ~1;    /* make it even */
+
+        char * commentHeap;
+        unsigned int i;
+
+        MALLOCARRAY(commentHeap, evenlen);
+
+        if (commentHeap == NULL) {
+            pm_error("Malloc failed for comment buffer of size %u "
+                     "in rle_get_setup, reading '%s'",
+                     evenlen, hdrP->file_name );
+        }
+        fread(commentHeap, 1, evenlen, ifP);
+        /* Count the comments */
+        for (i = 0, cp = commentHeap; cp < commentHeap + comlen; ++cp) {
+            if (*cp == '\0')
+                ++i;
+        }
+        ++i;            /* extra for NULL pointer at end */
+        /* Get space to put pointers to comments */
+        MALLOCARRAY(hdrP->comments, i);
+        if (hdrP->comments == NULL) {
+            pm_error("Malloc failed for %d comment pointers "
+                     "in rle_get_setup, reading '%s'",
+                     i, hdrP->file_name );
+        }
+        /* Set comment heap */
+        hdrP->comments[0] = commentHeap;
+
+        /* Set pointers to individual comments in the heap as
+          hdrP->comments[1], hdrP->comments[2], etc.
+        */
+        for (i = 1, cp = commentHeap + 1;
+             cp < commentHeap + comlen;
+             ++cp)
+            if (*(cp - 1) == '\0')
+                hdrP->comments[i++] = cp;
+        hdrP->comments[i] = NULL;
+    } else
+        hdrP->comments = NULL;
+}
+
+
+
 int
 rle_get_setup(rle_hdr * const hdrP) {
 /*-----------------------------------------------------------------------------
@@ -67,16 +127,15 @@ rle_get_setup(rle_hdr * const hdrP) {
      -3 if an immediate EOF is hit (empty input file)
      -4 if an EOF is encountered reading the setup information.
   Assumptions:
-    infile points to the "magic" number in an RLE file (usually  byte 0
-    in the file).
+    input file is positioned to the "magic" number in an RLE file (usually
+    first byte of the file).
   Algorithm:
     Read in the setup info and fill in *hdrP.
 ---------------------------------------------------------------------------- */
     struct XtndRsetup setup;
     short magic;
-    FILE * infile = hdrP->rle_file;
+    FILE * ifP = hdrP->rle_file;
     int i;
-    char * comment_buf;
 
     /* Clear old stuff out of the header. */
     rle_hdr_clear(hdrP);
@@ -84,13 +143,13 @@ rle_get_setup(rle_hdr * const hdrP) {
         rle_names(hdrP, "Urt", "some file", 0);
     ++hdrP->img_num;     /* Count images. */
 
-    VAXSHORT(magic, infile);
-    if (feof(infile))
+    VAXSHORT(magic, ifP);
+    if (feof(ifP))
         return RLE_EMPTY;
     if (magic != RLE_MAGIC)
         return RLE_NOT_RLE;
-    fread(&setup, 1, SETUPSIZE, infile);  /* assume VAX packing */
-    if (feof( infile))
+    fread(&setup, 1, SETUPSIZE, ifP);  /* assume VAX packing */
+    if (feof( ifP))
         return RLE_EOF;
 
     /* Extract information from setup */
@@ -109,12 +168,12 @@ rle_get_setup(rle_hdr * const hdrP) {
         if (!bg_color)
             pm_error("Failed to allocation array for %u background colors",
                      1+(setup.h_ncolors / 2) * 2);
-        fread((char *)bg_color, 1, 1 + (setup.h_ncolors / 2) * 2, infile);
+        fread((char *)bg_color, 1, 1 + (setup.h_ncolors / 2) * 2, ifP);
         for (i = 0; i < setup.h_ncolors; ++i)
             hdrP->bg_color[i] = bg_color[i];
         free(bg_color);
     } else {
-        getc(infile);   /* skip filler byte */
+        getc(ifP);   /* skip filler byte */
         hdrP->bg_color = NULL;
     }
 
@@ -153,63 +212,25 @@ rle_get_setup(rle_hdr * const hdrP) {
                      hdrP->file_name );
             return RLE_NO_SPACE;
         }
-        fread(maptemp, 2, maplen, infile);
+        fread(maptemp, 2, maplen, ifP);
         for (i = 0; i < maplen; ++i)
             hdrP->cmap[i] = vax_gshort(&maptemp[i * 2]);
         free(maptemp);
     }
 
-    /* Check for comments */
-    if (setup.h_flags & H_COMMENT) {
-        short comlen, evenlen;
-        char * cp;
-
-        VAXSHORT(comlen, infile); /* get comment length */
-        evenlen = (comlen + 1) & ~1;    /* make it even */
-        if (evenlen) {
-            MALLOCARRAY(comment_buf, evenlen);
-
-            if (comment_buf == NULL) {
-                pm_error("Malloc failed for comment buffer of size %d "
-                         "in rle_get_setup, reading '%s'",
-                         comlen, hdrP->file_name );
-                return RLE_NO_SPACE;
-            }
-            fread(comment_buf, 1, evenlen, infile);
-            /* Count the comments */
-            for (i = 0, cp = comment_buf; cp < comment_buf + comlen; ++cp)
-                if (*cp == '\0')
-                    ++i;
-            ++i;            /* extra for NULL pointer at end */
-            /* Get space to put pointers to comments */
-            MALLOCARRAY(hdrP->comments, i);
-            if (hdrP->comments == NULL) {
-                pm_error("Malloc failed for %d comment pointers "
-                         "in rle_get_setup, reading '%s'",
-                         i, hdrP->file_name );
-                return RLE_NO_SPACE;
-            }
-            /* Get pointers to the comments */
-            *hdrP->comments = comment_buf;
-            for (i = 1, cp = comment_buf + 1;
-                 cp < comment_buf + comlen;
-                 ++cp)
-                if (*(cp - 1) == '\0')
-                    hdrP->comments[i++] = cp;
-            hdrP->comments[i] = NULL;
-        } else
-            hdrP->comments = NULL;
-    } else
+    if (setup.h_flags & H_COMMENT)
+        readComments(hdrP);
+    else
         hdrP->comments = NULL;
 
     /* Initialize state for rle_getrow */
     hdrP->priv.get.scan_y = hdrP->ymin;
     hdrP->priv.get.vert_skip = 0;
     hdrP->priv.get.is_eof = 0;
-    hdrP->priv.get.is_seek = ftell(infile) > 0;
+    hdrP->priv.get.is_seek = ftell(ifP) > 0;
     debug_f = 0;
 
-    if (!feof(infile))
+    if (!feof(ifP))
         return RLE_SUCCESS; /* success! */
     else {
         hdrP->priv.get.is_eof = 1;
@@ -247,7 +268,7 @@ rle_getrow(rle_hdr *    const hdrP,
    If ymax is reached (or, somehow, passed), continue reading and
    discarding input until end of image.
 ---------------------------------------------------------------------------- */
-    FILE * const infile = hdrP->rle_file;
+    FILE * const ifP = hdrP->rle_file;
 
     rle_pixel * scanc;
 
@@ -308,9 +329,9 @@ rle_getrow(rle_hdr *    const hdrP,
     else
         scanc = NULL;
     for (;;) {
-        inst[0] = getc(infile);
-        inst[1] = getc(infile);
-        if (feof(infile)) {
+        inst[0] = getc(ifP);
+        inst[1] = getc(ifP);
+        if (feof(ifP)) {
             hdrP->priv.get.is_eof = 1;
             break;      /* <--- one of the exits */
         }
@@ -318,7 +339,7 @@ rle_getrow(rle_hdr *    const hdrP,
         switch(OPCODE(inst)) {
         case RSkipLinesOp:
             if (LONGP(inst)) {
-                VAXSHORT(hdrP->priv.get.vert_skip, infile);
+                VAXSHORT(hdrP->priv.get.vert_skip, ifP);
             } else
                 hdrP->priv.get.vert_skip = DATUM(inst);
             if (debug_f)
@@ -343,7 +364,7 @@ rle_getrow(rle_hdr *    const hdrP,
 
         case RSkipPixelsOp:
             if (LONGP(inst)) {
-                VAXSHORT(long_data, infile);
+                VAXSHORT(long_data, ifP);
                 scan_x += long_data;
                 scanc += long_data;
                 if (debug_f)
@@ -358,7 +379,7 @@ rle_getrow(rle_hdr *    const hdrP,
 
         case RByteDataOp:
             if (LONGP(inst)) {
-                VAXSHORT(nc, infile);
+                VAXSHORT(nc, ifP);
             } else
                 nc = DATUM(inst);
             ++nc;
@@ -375,18 +396,18 @@ rle_getrow(rle_hdr *    const hdrP,
                     nc -= ns;
                 } else
                     ns = 0;
-                fread((char *)scanc, 1, nc, infile);
+                fread((char *)scanc, 1, nc, ifP);
                 while (ns-- > 0)
-                    getc(infile);
+                    getc(ifP);
                 if (nc & 0x1)
-                    getc(infile);   /* throw away odd byte */
+                    getc(ifP);   /* throw away odd byte */
             } else {
                 if (hdrP->priv.get.is_seek)
-                    fseek(infile, ((nc + 1) / 2) * 2, 1);
+                    fseek(ifP, ((nc + 1) / 2) * 2, 1);
                 else {
                     int ii;
                     for (ii = ((nc + 1) / 2) * 2; ii > 0; --ii)
-                        getc(infile);  /* discard it */
+                        getc(ifP);  /* discard it */
                 }
             }
             scanc += nc;
@@ -401,13 +422,13 @@ rle_getrow(rle_hdr *    const hdrP,
 
         case RRunDataOp:
             if (LONGP(inst)) {
-                VAXSHORT(nc, infile);
+                VAXSHORT(nc, ifP);
             } else
                 nc = DATUM(inst);
             ++nc;
             scan_x += nc;
 
-            VAXSHORT(word, infile);
+            VAXSHORT(word, ifP);
             if (debug_f)
                 pm_message("Run length %d (to %d), data %02x",
                            nc, scan_x, word);
@@ -451,6 +472,5 @@ rle_getrow(rle_hdr *    const hdrP,
 
     return hdrP->priv.get.scan_y;
 }
-
 
 
