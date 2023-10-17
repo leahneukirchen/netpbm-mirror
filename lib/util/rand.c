@@ -67,22 +67,24 @@ https://wnww.gnu.org/software/gsl/doc/html/rng.html
                             Design note
 -------------------------------------------------------------------------------
 
-  Netpbm code contains multiple random number generators.  Stock Netpbm always
-  uses an internal pseudo-random number generator that implements the Mersenne
-  Twister method and does not rely on any randomness facility of the operating
-  system, but it is easy to compile an alternative version that uses others.
+  Netpbm code contains multiple instances where random numbers are used.
+  Stock Netpbm always uses an internal pseudo-random number generator
+  that implements the Mersenne Twister method and does not rely on any
+  randomness facility of the operating system, but it is easy to compile
+  an alternative version that uses the operating system function, or some
+  other generator.
 
   The Mersenne Twister method was new to Netpbm in Netpbm 10.94 (March 2021).
   Before that, Netpbm used standard OS-provided facilities.
 
   Programs that use random numbers have existed in Netpbm since PBMPlus days.
-  The system rand() function was used in instances randomness was required;
+  The system rand() function was used where randomness was required;
   exceptions were rare and all of them appear to be errors on the part of the
   original author.
 
   Although the rand() function is available in every system on which Netpbm
   runs, differences exist in the underlying algorithm, so that Netpbm programs
-  produce different output on different systems even when the user specifies
+  produced different output on different systems even when the user specified
   the same random number seed.
 
   This was not considered a problem in the early days.  Deterministic
@@ -127,7 +129,7 @@ pm_srand2(struct pm_randSt * const randStP,
           bool               const seedValid,
           unsigned int       const seed) {
 /*----------------------------------------------------------------------------
-  Seed the random number generator.  If 'seedValid' is true, use 'seed"..
+  Seed the random number generator.  If 'seedValid' is true, use 'seed'.
   Otherwise, use pm_randseed().
 
   For historical reasons pm_randseed() is defined in libpm.c rather than
@@ -152,13 +154,33 @@ pm_rand(struct pm_randSt * const randStP) {
 double
 pm_drand(struct pm_randSt * const randStP) {
 /*----------------------------------------------------------------------------
-  A floating point random number in the interval [0, 1).
+  A floating point random number in the interval [0, 1].
 
   Although the return value is declared as double, the actual value will have
   no more precision than a single call to pm_rand() provides.  This is 32 bits
   for Mersenne Twister.
 -----------------------------------------------------------------------------*/
     return (double) pm_rand(randStP) / randStP->max;
+}
+
+
+
+double
+pm_drand1(struct pm_randSt * const randStP) {
+/*----------------------------------------------------------------------------
+  A floating point random number in the interval [0, 1).
+-----------------------------------------------------------------------------*/
+    return (double) pm_rand(randStP) / ((double) randStP->max + 1.0);
+}
+
+
+
+double
+pm_drand2(struct pm_randSt * const randStP) {
+/*----------------------------------------------------------------------------
+  A floating point random number in the interval (0, 1).
+-----------------------------------------------------------------------------*/
+    return ((double) pm_rand(randStP) + 0.5) / ((double) randStP->max + 1.0);
 }
 
 
@@ -182,11 +204,8 @@ pm_gaussrand2(struct pm_randSt * const randStP,
 -----------------------------------------------------------------------------*/
     double u1, u2;
 
-    u1 = pm_drand(randStP);
-    u2 = pm_drand(randStP);
-
-    if (u1 < DBL_EPSILON)
-        u1 = DBL_EPSILON;
+    u1 = pm_drand2(randStP);
+    u2 = pm_drand1(randStP);
 
     *r1P = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
     *r2P = sqrt(-2.0 * log(u1)) * sin(2.0 * M_PI * u2);
@@ -223,16 +242,17 @@ uint32_t
 pm_rand32(struct pm_randSt * const randStP) {
 /*-----------------------------------------------------------------------------
   Generate a 32-bit random number.
-
-  This is a provision for users who select a non-default random number
-  generator which returns less than 32 bits per call.  Many system generators
-  are known to return 31 bits (max = 2147483647 or 0x7FFFFFFF).
-
-  This does not work with generators that return less than 11 bits per call.
-  The least we know of is the archaic RANDU, which generates 15 bits (max =
-  32767 or 0x7FFF).
 -----------------------------------------------------------------------------*/
     unsigned int const randMax = randStP->max;
+
+    /* 'randMax is a power of 2 minus 1.  Function pm_randinit() rejects
+       generators which do not satisfy this condition.  It is unlikely that
+       such odd generators actually exist.
+
+       Many system generators are known to return 31 bits (max = 2147483647 or
+       0x7FFFFFFF).  Historically, there were generators that returned only 15
+       bits.
+    */
 
     uint32_t retval;
 
@@ -244,10 +264,10 @@ pm_rand32(struct pm_randSt * const randStP) {
         retval = 0;  /* Initial value */
 
         for (scale = 0xFFFFFFFF; scale > 0; scale /= (randMax +1))
-            retval *= (randMax + 1) + pm_rand(randStP);
+            retval = retval * (randMax + 1) + pm_rand(randStP);
     }
 
-    return retval;;
+    return retval;
 }
 
 
@@ -275,6 +295,13 @@ pm_randinit(struct pm_randSt * const randStP) {
 
     randStP->vtable.init(randStP);
 
+    if (randStP->max == 0)
+        pm_error("Random number generator maximum value must be positive.");
+    else if (((long int) randStP->max & (long int) (randStP->max + 1)) != 0x0L)
+        pm_error("Non-standard random number generator with maximum value "
+                 "%u.  Cannot handle maximum values which are not powers "
+                 "of 2 minus 1", randStP->max);
+
     randStP->gaussCacheValid = false;
 }
 
@@ -288,7 +315,6 @@ pm_randterm(struct pm_randSt * const randStP) {
      if (randStP->stateP)
          free(randStP->stateP);
 }
-
 
 
 

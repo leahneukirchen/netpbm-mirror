@@ -97,6 +97,12 @@ pm_rand(struct pm_randSt * const randStP);
 extern double
 pm_drand(struct pm_randSt * const randStP);
 
+extern double
+pm_drand1(struct pm_randSt * const randStP);
+
+extern double
+pm_drand2(struct pm_randSt * const randStP);
+
 extern void
 pm_gaussrand2(struct pm_randSt * const randStP,
               double *           const r1P,
