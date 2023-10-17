@@ -334,7 +334,7 @@ skipData(FILE      *  const ifP,
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
     struct CmdlineInfo cmdline;
 
