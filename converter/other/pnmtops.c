@@ -58,6 +58,10 @@
 
 
 
+unsigned int const psScaleFactor = 72;
+
+
+
 static void
 setSignals() {
 /*----------------------------------------------------------------------------
@@ -291,21 +295,21 @@ parseCommandLine(int argc, const char ** argv,
     cmdlineP->canturn =  !noturn;
     cmdlineP->showpage = !noshowpage;
 
-    validateCompDimension(width, 72, "-width value");
-    validateCompDimension(height, 72, "-height value");
+    validateCompDimension(width,  psScaleFactor, "-width value");
+    validateCompDimension(height, psScaleFactor, "-height value");
 
-    cmdlineP->width  = width * 72;
-    cmdlineP->height = height * 72;
+    cmdlineP->width  = width  * psScaleFactor;
+    cmdlineP->height = height * psScaleFactor;
 
     if (imagewidthSpec) {
-        validateCompDimension(imagewidth, 72, "-imagewidth value");
-        cmdlineP->imagewidth = imagewidth * 72;
+        validateCompDimension(imagewidth, psScaleFactor, "-imagewidth value");
+        cmdlineP->imagewidth = imagewidth * psScaleFactor;
     }
     else
         cmdlineP->imagewidth = 0;
     if (imageheightSpec) {
-        validateCompDimension(imagewidth, 72, "-imageheight value");
-        cmdlineP->imageheight = imageheight * 72;
+        validateCompDimension(imagewidth, psScaleFactor, "-imageheight value");
+        cmdlineP->imageheight = imageheight * psScaleFactor;
     }
     else
         cmdlineP->imageheight = 0;
