@@ -203,7 +203,7 @@ RunSetup(rle_hdr * const hdrP) {
     /* We need to be able to count 2 bytes for each channel of each entry
        in the color map:
     */
-    if (1 << hdrP->cmaplen > UINT_MAX/2/hdrP->ncmap) {
+    if (hdrP->ncmap > 0 && 1 << hdrP->cmaplen > UINT_MAX/2/hdrP->ncmap) {
         pm_error("Color map length %u and number of color channels in the "
                  "color map %u are too large for computation",
                  1 << hdrP->cmaplen, hdrP->ncmap);
