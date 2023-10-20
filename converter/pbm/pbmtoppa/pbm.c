@@ -15,7 +15,10 @@
 
 #include "pm.h"
 #include "nstring.h"
+
 #include "ppapbm.h"
+
+
 
 int
 make_pbm_stat(pbm_stat * const pbmStatP,
