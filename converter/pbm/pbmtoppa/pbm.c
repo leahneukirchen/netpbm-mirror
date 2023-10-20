@@ -64,15 +64,15 @@ make_pbm_stat(pbm_stat * const pbmStatP,
                     if (pbmStatP->width < 0) {
                         pm_message("Image has negative width");
                         retval = 0;
-                    } else if (pbmStatP->width > INT_MAX/2) {
-                        pm_message("Uncomputeably large width: %d",
+                    } else if (pbmStatP->width > INT_MAX/2 - 10) {
+                        pm_message("Uncomputably large width: %d",
                                    pbmStatP->width);
                         retval = 0;
                     } else if (pbmStatP->height < 0) {
                         pm_message("Image has negative height");
                         retval = 0;
-                    } else if (pbmStatP->height > INT_MAX/2) {
-                        pm_message("Uncomputeably large height: %d",
+                    } else if (pbmStatP->height > INT_MAX/2 - 10) {
+                        pm_message("Uncomputably large height: %d",
                                    pbmStatP->height);
                         retval = 0;
                     } else
