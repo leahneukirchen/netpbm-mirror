@@ -23,6 +23,8 @@
 
 */
 
+#include <limits.h>
+#include <assert.h>
 #include <string.h>
 #include <math.h>
 
@@ -30,35 +32,38 @@
 #include "ppm.h"
 #include "ppmdraw.h"
 #include "nstring.h"
-#include <assert.h>
 
 #include "autocad.h"                  /* AutoCAD standard color assignments */
 
 
 /*  Define a variable type accepting numbers -127 <= n <= 127.  But note
-    that we still expect it to act UNSIGNED. */
+    that we still expect it to act UNSIGNED.
+*/
 
 #define smallint unsigned char        /* Small integers */
 
 #define EOS     '\0'
 
-/* Screen point */
-
 struct spoint {
+/*----------------------------------------------------------------------------
+   A screen point
+-----------------------------------------------------------------------------*/
     int x, y;
 };
 
-/* Screen polygon */
-
 struct spolygon {
-    int npoints,              /* Number of points in polygon */
-          fill;           /* Fill type */
-    struct spoint pt[11];         /* Actual points */
+/*----------------------------------------------------------------------------
+   A screen polygon
+-----------------------------------------------------------------------------*/
+    int npoints;           /* Number of points in polygon */
+    int fill;              /* Fill type */
+    struct spoint pt[11];  /* The points */
 };
 
-/* Screen vector */
-
 struct svector {
+/*----------------------------------------------------------------------------
+   A screen vector
+-----------------------------------------------------------------------------*/
     struct spoint f;          /* From point */
     struct spoint t;          /* To point */
 };
@@ -73,12 +78,8 @@ static int ixdots, iydots;        /* Screen size in dots */
 static FILE * slfile;             /* Slide file descriptor */
 static bool blither;              /* Dump slide file information ? */
 static bool info;                 /* Print header information */
-static pixel **pixels;            /* Pixel map */
+static pixel ** pixels;           /* Pixel map */
 static int pixcols, pixrows;      /* Pixel map size */
-static double uscale = -1;        /* Uniform scale factor */
-static int sxsize = -1, sysize = -1;  /* Scale to X, Y size ? */
-
-/*  Local variables  */
 
 struct slhead {
     char slh[17];             /* Primate-readable header */
@@ -90,7 +91,6 @@ struct slhead {
     char spad;                /* Pad to even byte length */
 };
 
-static bool adjust;           /* Adjust to correct aspect ratio ? */
 static struct slhead slfrof;  /* Slide file header */
 static long xfac, yfac;       /* Aspect ratio scale factors */
 
@@ -99,21 +99,22 @@ static bool sdrawkcab;
 
 
 
-/*  EXTEND  --  Turn a smallint into an int with sign extension, whether
-    or not that happens automatically.
-*/
-
 static int
 extend(unsigned char const ch) {
+/*----------------------------------------------------------------------------
+   Turn a smallint into an int with sign extension, whether
+   or not that happens automatically.
+-----------------------------------------------------------------------------*/
     return ((int) ((ch & 0x80) ? (ch | ~0xFF) : ch));
 }
 
 
 
-/*  SLI  --  Input word from slide file  */
-
 static int
 sli(void) {
+/*----------------------------------------------------------------------------
+   Read and return a word from the slide file.
+-----------------------------------------------------------------------------*/
     short wd;
 
     if (fread(&wd, sizeof wd, 1, slfile) != 1) {
@@ -128,10 +129,11 @@ sli(void) {
 
 
 
-/*  SLIB  --  Input byte from slide file  */
-
 static int
 slib(void) {
+/*----------------------------------------------------------------------------
+   Read and return a byte from the slide file.
+-----------------------------------------------------------------------------*/
     unsigned char ch;
 
     if (fread(&ch, sizeof(ch), 1, slfile) != 1) {
@@ -142,12 +144,12 @@ slib(void) {
 
 
 
-/*  VSCALE -- scale screen coordinates for mismatched display.  */
-
 static void
 vscale(int * const px,
        int * const py) {
-
+/*----------------------------------------------------------------------------
+    Scale screen coordinates for mismatched display.
+-----------------------------------------------------------------------------*/
     *px = (((unsigned) *px) * xfac) >> 16;
     *py = (((unsigned) *py) * yfac) >> 16;
 }
@@ -246,16 +248,15 @@ scanDirectory(FILE *       const slFileP,
 
 
 
-/*  SLIDEFIND  --  Find  a  slide  in  a  library  or,  if  DIRONLY is
-           nonzero, print a directory listing of the  library.
-           If  UCASEN  is nonzero, the requested slide name is
-           converted to upper case. */
-
 static void
 slidefind(const char * const slideName,
           bool         const dirOnly,
           bool         const ucasen) {
-
+/*----------------------------------------------------------------------------
+   Find a slide in a library or, if DIRONLY is nonzero, print a directory
+   listing of the library.  If UCASEN is nonzero, the requested slide name is
+   converted to upper case.
+-----------------------------------------------------------------------------*/
     char uname[32];  /* upper case translation of 'slideName' */
     char header[32]; /* (supposed) header read from file */
     bool found;
@@ -281,14 +282,14 @@ slidefind(const char * const slideName,
 
 
 
-/*  DRAW  --  Draw a vector in the given AutoCAD color.  */
-
 static slvecfn draw;
 
 static void
 draw(struct svector * vec,
      int              color) {
-
+/*----------------------------------------------------------------------------
+   Draw a vector in the given AutoCAD color.
+-----------------------------------------------------------------------------*/
     pixel rgbcolor;
 
     if (blither) {
@@ -309,14 +310,14 @@ draw(struct svector * vec,
 
 
 
-/*  FLOOD  --  Draw a filled polygon.  */
-
 static slfloodfn flood;
 
 static void
 flood(struct spolygon * const poly,
       int               const color) {
-
+/*----------------------------------------------------------------------------
+  Draw a filled polygon.
+-----------------------------------------------------------------------------*/
     unsigned int i;
     struct fillobj * handle;
     pixel rgbcolor;
@@ -352,16 +353,116 @@ flood(struct spolygon * const poly,
 
 
 
-/*  SLIDER  --  Read slide file.  This is called with the name of the
-        file to be read and function pointers to the routines
-        which process vectors and polygon fill requests
-        respectively.
-*/
+static void
+computeSize(struct slhead const slfrof,
+            bool          const wantAdjust,
+            double        const uscale,
+            int           const sxsize,
+            int           const sysize,
+            int *         const ixdotsP,
+            int *         const iydotsP,
+            double *      const dsarP) {
+/*----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+    double const originalDsar = ((double) slfrof.sxdots) / slfrof.sydots;
+
+    double ixdots, iydots;
+        /* Algorithmic variables -- value changes as algorithm progresses */
+    bool adjusted;
+
+    /*
+      If the display aspect ratio indicates that the pixels on the sending
+      screen were not square, adjust the size of the generated bitmap to
+      correct the aspect ratio to square the pixels.
+
+      We always correct the aspect ratio by adjusting the width of the image.
+      This guarantees that output from the SHADE command, which is essentially
+      scan-line data written in vector form, will not be corrupted.
+    */
+
+    if (fabs(slfrof.sdsar - originalDsar) > 0.0001) {
+        if (wantAdjust) {
+            ixdots   = slfrof.sxdots * (slfrof.sdsar / originalDsar);
+            iydots   = slfrof.sydots;
+            *dsarP   = ixdots / iydots;
+            adjusted = true;
+        } else {
+            pm_message("Warning - pixels on source screen were non-square.  "
+                       "Specifying -adjust will correct image width "
+                       "to compensate.");
+            ixdots   = slfrof.sxdots;
+            iydots   = slfrof.sydots;
+            *dsarP   = slfrof.sdsar;
+            adjusted = false;
+        }
+    } else {
+        /* Source pixels were square. */
+        ixdots   = slfrof.sxdots;
+        iydots   = slfrof.sydots;
+        *dsarP   = slfrof.sdsar;
+        adjusted = false;
+    }
+
+    if (uscale > 0) {
+        /* There is a uniform scale factor specified.  Apply it. */
+        ixdots *= uscale;
+        iydots *= uscale;
+    }
+
+    /* If the image is to be stretched  to  a  given  width,  set  the
+       output  image  sizes accordingly.  If only a height or width is
+       given, scale the other direction proportionally to preserve the
+       aspect ratio.
+    */
+
+    if (sxsize > 0) {
+        if (sysize > 0)
+            iydots = sysize - 1;
+        else {
+            double const stretchFactor = (sxsize - 1) / ixdots;
+            iydots = iydots * stretchFactor;
+        }
+        ixdots = sxsize - 1;
+    } else if (sysize > 0) {
+        if (sxsize > 0)
+            ixdots = sxsize - 1;
+        else {
+            double const stretchFactor = (sysize - 1) / iydots;
+            ixdots = ixdots * stretchFactor;
+        }
+        iydots = sysize - 1;
+    }
+
+    if (ixdots > INT_MAX-10)
+        pm_error("width is uncomputable large (%f dots)", ixdots);
+    else
+        *ixdotsP = ROUND(ixdots);
+    if (iydots > INT_MAX-10)
+        pm_error("height is uncomputable large (%f dots)", iydots);
+    else
+        *iydotsP = ROUND(iydots);
+
+    if (adjusted) {
+        pm_message(
+            "Resized from %dx%d to %dx%d to correct pixel aspect ratio.",
+            slfrof.sxdots + 1, slfrof.sydots + 1, *ixdotsP + 1, *iydotsP + 1);
+    }
+}
+
+
 
 static void
-slider(slvecfn   slvec,
-       slfloodfn slflood) {
-
+slider(slvecfn         slvec,
+       slfloodfn       slflood,
+       bool      const wantAdjust,
+       double    const uscale,
+       int       const sxsize,
+       int       const sysize) {
+/*----------------------------------------------------------------------------
+   Read slide file.  This is called with the name of the file to be read and
+   function pointers to the routines which process vectors and polygon fill
+   requests respectively.
+-----------------------------------------------------------------------------*/
     int i, rescale;
     unsigned char ubfr[4];        /* Utility character buffer */
     int lx, ly;               /* Last x and y point */
@@ -374,7 +475,7 @@ slider(slvecfn   slvec,
     short rtest;              /* Value to test byte reversal */
     short btest = 0x1234;         /* Value to test byte-reversal */
     static struct slhead slhi =       /* Master slide header sample */
-    {"AutoCAD Slide\r\n\32", 86,2, 0,0, 0.0, 0};
+        {"AutoCAD Slide\r\n\32", 86,2, 0,0, 0.0, 0};
     int curcolor = 7;             /* Current vector color */
     pixel rgbcolor;           /* Pixel used to clear pixmap */
 
@@ -436,79 +537,14 @@ slider(slvecfn   slvec,
                    sdrawkcab ? "being reversed" : "the same");
     }
 
-    /* If the display aspect ratio indicates that the  pixels  on  the
-       sending  screen  were  not  square,  adjust  the  size  of  the
-       generated bitmap to correct the  aspect  ratio  to  square  the
-       pixels.
-
-       We  always  correct  the aspect ratio by adjusting the width of
-       the image.  This guarantees that output from the SHADE command,
-       which  is  essentially  scan-line  data written in vector form,
-       will not be corrupted.
-    */
-
-    dsar = ((double) slfrof.sxdots) / slfrof.sydots;
-    if (fabs(slfrof.sdsar - dsar) > 0.0001) {
-        if (adjust) {
-            ixdots = slfrof.sxdots * (slfrof.sdsar / dsar) + 0.5;
-            iydots = slfrof.sydots;
-            dsar = ((double) ixdots) / iydots;
-        } else {
-            pm_message("Warning - pixels on source screen were non-square.  "
-                       "Specifying -adjust will correct image width "
-                       "to compensate.");
-            ixdots = slfrof.sxdots;
-            iydots = slfrof.sydots;
-            dsar = slfrof.sdsar;
-        }
-    } else {
-        /* Source pixels were square. */
-        ixdots = slfrof.sxdots;
-        iydots = slfrof.sydots;
-        dsar = slfrof.sdsar;
-        adjust = false;           /* Mark no adjustment needed */
-    }
-
-    /* If there's a uniform scale factor specified, apply it. */
-
-    if (uscale > 0) {
-        ixdots = (ixdots * uscale) + 0.5;
-        iydots = (iydots * uscale) + 0.5;
-    }
-
-    /* If the image is to be stretched  to  a  given  width,  set  the
-       output  image  sizes accordingly.  If only a height or width is
-       given, scale the other direction proportionally to preserve the
-       aspect ratio.
-    */
-
-    if (sxsize > 0) {
-        if (sysize > 0) {
-            iydots = sysize - 1;
-        } else {
-            iydots = ((((long) iydots) * (sxsize - 1)) +
-                      (iydots / 2)) / ixdots;
-        }
-        ixdots = sxsize - 1;
-    } else if (sysize > 0) {
-        if (sxsize > 0) {
-            ixdots = sxsize - 1;
-        } else {
-            ixdots = ((((long) ixdots) * (sysize - 1)) +
-                      (ixdots / 2)) / iydots;
-        }
-        iydots = sysize - 1;
-    }
-
-    if (adjust) {
-        pm_message(
-            "Resized from %dx%d to %dx%d to correct pixel aspect ratio.",
-            slfrof.sxdots + 1, slfrof.sydots + 1, ixdots + 1, iydots + 1);
-    }
+    computeSize(slfrof, wantAdjust, uscale, sxsize, sysize,
+                &ixdots, &iydots, &dsar);
 
     /* Allocate image buffer and clear it to black. */
 
-    pixels = ppm_allocarray(pixcols = ixdots + 1, pixrows = iydots + 1);
+    pixcols = ixdots + 1;
+    pixrows = iydots + 1;
+    pixels = ppm_allocarray(pixcols, pixrows);
     PPM_ASSIGN(rgbcolor, 0, 0, 0);
     ppmd_filledrectangle(pixels, pixcols, pixrows, pixmaxval, 0, 0,
                          pixcols, pixrows, PPMD_NULLDRAWPROC,
@@ -621,8 +657,6 @@ slider(slvecfn   slvec,
 
 
 
-/*  Main program. */
-
 int
 main(int          argc,
      const char * argv[]) {
@@ -636,7 +670,10 @@ main(int          argc,
     bool widspec;
     bool scalespec;
     bool ucasen;
-    const char * slobber;       /* Slide library item */
+    bool adjust;           /* Adjust to correct aspect ratio ? */
+    double uscale;         /* Uniform scale factor */
+    int sxsize, sysize;    /* Scale to X, Y size ? */
+    const char * slobber;  /* Slide library item */
 
     pm_proginit(&argc, argv);
     argn = 1;
@@ -650,6 +687,9 @@ main(int          argc,
     blither = false;
     info = false;
     adjust = false;
+    uscale = -1.0;
+    sxsize = -1;
+    sysize = -1;
 
     while (argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0') {
         if (pm_keymatch(argv[argn], "-verbose", 2)) {
@@ -727,7 +767,7 @@ main(int          argc,
         slidefind(slobber, dironly, ucasen);
 
     if (!dironly) {
-        slider(draw, flood);
+        slider(draw, flood, adjust, uscale, sxsize, sysize);
         ppm_writeppm(stdout, pixels, pixcols, pixrows, pixmaxval, 0);
     }
     pm_close(slfile);
