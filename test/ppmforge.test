@@ -1,4 +1,4 @@
-#! /bin/sh
+q#! /bin/sh
 # This script tests: ppmforge
 # Also requires: pnmpsnr
 
@@ -8,43 +8,43 @@ ppmforge -night -seed 1 | cksum
 tmpdir=${tmpdir:-/tmp}
 test_ppm=${tmpdir}/test.ppm
 
-
 # Target values for following tests were determined by running the
-# ppmforge command pairs 30 times with different seeds, finding
+# ppmforge command pairs 1000 times with different seeds, finding
 # the minimum (or "poorest match") for each component and 
 # subtracting 0.01 dB.   As such these are weak tests.
 
-
 echo "Test 2."
-ppmforge -cloud -seed 1 -power 0.75 > ${test_ppm}
-ppmforge -cloud -seed 1 -power 0.74 | \
-  pnmpsnr -rgb -target1=41.15 -target2=41.15 -target3=999 - ${test_ppm}
+ppmforge -cloud -seed 110 -power 0.75 > ${test_ppm}
+ppmforge -cloud -seed 110 -power 0.74 | \
+  pnmpsnr -rgb -target1=40.53 -target2=40.53 -target3=999 - ${test_ppm}
+
 
 rm ${test_ppm}
 
 echo "Test 3."
-ppmforge -cloud -seed 1 -dimension 2.15 > ${test_ppm}
-ppmforge -cloud -seed 1 -dimension 2.175 | \
-  pnmpsnr -rgb -target1=43.39 -target2=43.39 -target3=999 - ${test_ppm}
+ppmforge -cloud -seed 111 -dimension 2.15 > ${test_ppm}
+ppmforge -cloud -seed 111 -dimension 2.16 | \
+  pnmpsnr -rgb -target1=40.34 -target2=40.34 -target3=999 - ${test_ppm}        
 
   # Note that there should be no difference for the target3: blue.
-
 
 
 rm ${test_ppm}
 
 echo "Test 4."
-ppmforge -seed 1 -stars 0 -ice 0.01 -power 1.18 -hour 10 >  ${test_ppm}
-ppmforge -seed 1 -stars 0 -ice 0.01 -power 1.22 -hour 10 | \
-  pnmpsnr -target1=27.89 -target2=24.25 -target3=37.87 - ${test_ppm}
+ppmforge -seed 200 -stars 0 -ice 0.01 -power 1.180 -hour 10 >  ${test_ppm}
+ppmforge -seed 200 -stars 0 -ice 0.01 -power 1.181 -hour 10 | \
+  pnmpsnr -rgb -target1=45.9 -target2=45.81 -target3=32.11 - ${test_ppm}
 
 rm ${test_ppm}
 
+
 echo "Test 5."
-ppmforge -seed 1 -stars 0 -ice 0.01 \
-    -inclination 9  -hour 12 -power 200 > ${test_ppm} 
-ppmforge -seed 1 -stars 0 -ice 0.01 \
-    -inclination 10 -hour 12 -power 200 | \
-  pnmpsnr -target1=46.07 -target2=52.00 -target3=67.77 - ${test_ppm}
+ppmforge -seed 300 -stars 0 -ice 0.01 \
+    -inclination 9  -hour 12 -power 300 > ${test_ppm} 
+ppmforge -seed 300 -stars 0 -ice 0.01 \
+    -inclination 9.1 -hour 12 -power 300 | \
+  pnmpsnr -rgb -target1=44.86 -target2=44.86 -target3=42.43 - ${test_ppm}
+
 
 rm ${test_ppm}
