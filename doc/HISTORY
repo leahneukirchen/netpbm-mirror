@@ -23,6 +23,9 @@ not yet  BJH  Release 11.05.00
               ppmdither: fix buffer overrun with insanely large dithering
               matrix.
 
+              libnetpbm, programs that use color maps: fix buffer overrun
+              with insanely deep images.
+
               Build: Fix compile error on systems without 'asprintf'.
               Introduced in Netpbm 11.04 (September 2023).
 
