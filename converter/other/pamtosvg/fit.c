@@ -1283,7 +1283,7 @@ computeCX(Curve *                 const curveP,
 
     unsigned int pointSeq;
 
-    cP->beg.beg = 0.0; cP->beg.end = 0.0; cP->end.end = 0.0;/* initial value */
+    cP->beg.beg = 0.0; cP->beg.end = 0.0; cP->end.beg = 0.0; cP->end.end = 0.0;/* initial value */
 
     xP->beg = 0.0; xP->end = 0.0; /* initial value */
 
