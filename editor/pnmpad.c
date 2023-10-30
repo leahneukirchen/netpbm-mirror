@@ -38,6 +38,7 @@ struct CmdlineInfo {
     unsigned int mwidth;
     unsigned int mheight;
     unsigned int white;     /* >0: pad white; 0: pad black */
+    unsigned int extend_edge;
     unsigned int reportonly;
     unsigned int verbose;
 };
@@ -95,6 +96,8 @@ parseCommandLine(int argc, const char ** argv,
             &blackOpt,           0);
     OPTENT3(0,   "white",     OPT_FLAG,    NULL,
             &cmdlineP->white,    0);
+    OPTENT3(0,   "extend-edge", OPT_FLAG,  NULL,
+            &cmdlineP->extend_edge,  0);
     OPTENT3(0,   "reportonly", OPT_FLAG,   NULL,
             &cmdlineP->reportonly,   0);
     OPTENT3(0,   "verbose",   OPT_FLAG,    NULL,
@@ -106,6 +109,11 @@ parseCommandLine(int argc, const char ** argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof opt, 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (cmdlineP->extend_edge) {
+        if (blackOpt || cmdlineP->white)
+            pm_error("You cannot specify -extend-edge with -black or -white");
+    }
 
     if (blackOpt && cmdlineP->white)
         pm_error("You cannot specify both -black and -white");
@@ -508,6 +516,191 @@ reportPadSizes(int          const inCols,
 
 
 
+static unsigned char
+bitPeek(const unsigned char * const bitrow,
+        unsigned int          const position) {
+
+    bool retval;
+
+    unsigned int const charPosition = position / 8;
+    unsigned int const bitPosition  = position % 8;
+
+    retval =  (bitrow[charPosition] >> (7 - bitPosition)) & 0x01;
+
+    return retval;
+}
+
+
+
+static void
+extendLeftPbm(unsigned char * const bitrow,
+              unsigned int    const lpad) {
+
+    unsigned int const padCharCt  = lpad / 8;
+    unsigned int const fractBitCt = lpad % 8;
+    unsigned int const color      = bitPeek(bitrow, lpad);
+
+    unsigned int colChar;
+
+    for (colChar = 0; colChar < padCharCt; ++colChar)
+        bitrow[colChar] = 0xff * color;
+
+    if (fractBitCt > 0) {
+        bitrow[colChar] = (unsigned char)
+            (0xff * color) << (8-fractBitCt) |
+            (bitrow[colChar] & (0xff >> fractBitCt));
+    }
+}
+
+
+
+static void
+extendRightPbm(unsigned char * const bitrow,
+               unsigned int    const lcols,
+               unsigned int    const rpad) {
+
+    unsigned int const  rpad0 = (8 - lcols % 8) % 8;
+    unsigned int const  rpad1 = rpad - rpad0;
+    unsigned int const  rpad1CharCt =
+        rpad1 > 0 ? pbm_packed_bytes(rpad1) : 0;
+    unsigned int const  lastColChar = lcols / 8 - (rpad0 == 0 ? 1 : 0);
+    unsigned char const fillColor = bitPeek(bitrow, lcols - 1);
+
+    unsigned int colChar;
+
+    if (rpad0 > 0) {
+        if (fillColor == 0x1) {
+            bitrow[lastColChar] =
+                bitrow[lastColChar] | (bitrow[lastColChar] - 1);
+        } else {
+            pbm_cleanrowend_packed(bitrow, lcols);
+            /* Function pbm_cleanrowend_packed() is employed an atypical way
+               here.  It cleans bits beyond the active image content, but the
+               position is not the row end.
+            */
+        }
+    }
+
+    for (colChar = 0; colChar < rpad1CharCt; ++colChar)
+        bitrow[lastColChar + colChar +1] = 0xff * fillColor;
+
+    if (fillColor == 0x1)
+        pbm_cleanrowend_packed(bitrow, lcols + rpad);
+}
+
+
+
+static void
+extendEdgePbm(FILE *       const ifP,
+              unsigned int const cols,
+              unsigned int const rows,
+              int          const format,
+              unsigned int const newcols,
+              unsigned int const lpad,
+              unsigned int const rpad,
+              unsigned int const tpad,
+              unsigned int const bpad,
+              FILE *       const ofP) {
+/*----------------------------------------------------------------------------
+  Fast extend-edge routine for PBM
+-----------------------------------------------------------------------------*/
+    unsigned char * const newbitrow = pbm_allocrow_packed(newcols);
+
+    unsigned int row;
+
+    pbm_writepbminit(stdout, newcols, rows + tpad + bpad, 0);
+
+    /* Write top row tpad + 1 times */
+    if (rpad > 0)
+        newbitrow[(cols + lpad) / 8] = 0x00;
+
+    pbm_readpbmrow_bitoffset(ifP, newbitrow, cols, format, lpad);
+
+    if (lpad > 0)
+        extendLeftPbm(newbitrow, lpad);
+    if (rpad > 0)
+        extendRightPbm(newbitrow, lpad + cols, rpad);
+
+    pbm_cleanrowend_packed(newbitrow, newcols);
+
+    for (row = 0; row < tpad + 1; ++row)
+        pbm_writepbmrow_packed(ofP, newbitrow, newcols, 0);
+
+    /* Read rows, shift and write with left and right margins added */
+    for (row = 1;  row < rows; ++row) {
+        pbm_readpbmrow_bitoffset(ifP, newbitrow, cols, format, lpad);
+
+        if (lpad > 0 &&
+            (bitPeek(newbitrow, lpad - 1) != bitPeek(newbitrow, lpad)))
+            extendLeftPbm(newbitrow, lpad);
+        if (rpad > 0 &&
+            (bitPeek(newbitrow, lpad + cols -1) !=
+             bitPeek(newbitrow, lpad + cols)))
+            extendRightPbm(newbitrow, lpad + cols, rpad);
+        pbm_writepbmrow_packed(ofP, newbitrow, newcols, 0);
+    }
+
+    /* Write bottom margin */
+    for (row = 0; row < bpad; ++row)
+        pbm_writepbmrow_packed(ofP, newbitrow, newcols, 0);
+
+    pnm_freerow(newbitrow);
+}
+
+
+
+static void
+extendEdgeGeneral(FILE *       const ifP,
+                  unsigned int const cols,
+                  unsigned int const rows,
+                  xelval       const maxval,
+                  int          const format,
+                  unsigned int const newcols,
+                  unsigned int const lpad,
+                  unsigned int const rpad,
+                  unsigned int const tpad,
+                  unsigned int const bpad,
+                  FILE *       const ofP) {
+/*----------------------------------------------------------------------------
+  General extend-edge routine (logic works for PBM)
+-----------------------------------------------------------------------------*/
+    xel * const xelrow = pnm_allocrow(newcols);
+
+    unsigned int row, col;
+
+    pnm_writepnminit(ofP, newcols, rows + tpad + bpad, maxval, format, 0);
+
+    pnm_readpnmrow(ifP, &xelrow[lpad], cols, maxval, format);
+
+    for (col = 0; col < lpad; ++col)
+        xelrow[col] = xelrow[lpad];
+    for (col = lpad + cols; col < newcols; ++col)
+        xelrow[col] = xelrow[lpad + cols - 1];
+
+    for (row = 0; row < tpad + 1; ++row)
+        pnm_writepnmrow(ofP, xelrow, newcols, maxval, format, 0);
+
+    for (row = 1; row < rows; ++row) {
+        unsigned int col;
+
+        pnm_readpnmrow(ifP, &xelrow[lpad], cols, maxval, format);
+
+        for (col = 0; col < lpad; ++col)
+            xelrow[col] = xelrow[lpad];
+        for (col = lpad + cols; col < newcols; ++col)
+            xelrow[col] = xelrow[lpad + cols - 1];
+
+        pnm_writepnmrow(ofP, xelrow, newcols, maxval, format, 0);
+    }
+
+    for (row = 0; row < bpad; ++row)
+        pnm_writepnmrow(ofP, xelrow, newcols, maxval, format, 0);
+
+    pnm_freerow(xelrow);
+}
+
+
+
 static void
 padPbm(FILE *       const ifP,
        unsigned int const cols,
@@ -518,7 +711,8 @@ padPbm(FILE *       const ifP,
        unsigned int const rpad,
        unsigned int const tpad,
        unsigned int const bpad,
-       bool         const colorWhite) {
+       bool         const colorWhite,
+       FILE *       const ofP) {
 /*----------------------------------------------------------------------------
   Fast padding routine for PBM
 -----------------------------------------------------------------------------*/
@@ -542,26 +736,27 @@ padPbm(FILE *       const ifP,
         newrow[newColChars-1] <<= 8 - newcols % 8;
     }
 
-    pbm_writepbminit(stdout, newcols, rows + tpad + bpad, 0);
+    pbm_writepbminit(ofP, newcols, rows + tpad + bpad, 0);
 
     /* Write top margin */
     for (row = 0; row < tpad; ++row)
-        pbm_writepbmrow_packed(stdout, bgrow, newcols, 0);
+        pbm_writepbmrow_packed(ofP, bgrow, newcols, 0);
 
     /* Read rows, shift and write with left and right margins added */
     for (row = 0; row < rows; ++row) {
         pbm_readpbmrow_bitoffset(ifP, newrow, cols, format, lpad);
-        pbm_writepbmrow_packed(stdout, newrow, newcols, 0);
+        pbm_writepbmrow_packed(ofP, newrow, newcols, 0);
     }
 
     pnm_freerow(newrow);
 
     /* Write bottom margin */
     for (row = 0; row < bpad; ++row)
-        pbm_writepbmrow_packed(stdout, bgrow, newcols, 0);
+        pbm_writepbmrow_packed(ofP, bgrow, newcols, 0);
 
     pnm_freerow(bgrow);
 }
+
 
 
 static void
@@ -575,37 +770,46 @@ padGeneral(FILE *       const ifP,
            unsigned int const rpad,
            unsigned int const tpad,
            unsigned int const bpad,
-           bool         const colorWhite) {
+           bool         const colorWhite,
+           FILE *       const ofP) {
 /*----------------------------------------------------------------------------
   General padding routine (logic works for PBM)
 -----------------------------------------------------------------------------*/
-    xel * const bgrow  = pnm_allocrow(newcols);
-    xel * const xelrow = pnm_allocrow(newcols);
-    xel background;
+    xel * const bgrow      = pnm_allocrow(newcols);
+    xel const   background = colorWhite ?
+        pnm_whitexel(maxval, format) : pnm_blackxel(maxval, format);
+
     unsigned int row, col;
 
-    if (colorWhite)
-        background = pnm_whitexel(maxval, format);
-    else
-        background = pnm_blackxel(maxval, format);
-
     for (col = 0; col < newcols; ++col)
-        xelrow[col] = bgrow[col] = background;
+        bgrow[col] = background;
 
-    pnm_writepnminit(stdout, newcols, rows + tpad + bpad, maxval, format, 0);
+    pnm_writepnminit(ofP, newcols, rows + tpad + bpad, maxval, format, 0);
+
+    /* Write top padding */
 
     for (row = 0; row < tpad; ++row)
-        pnm_writepnmrow(stdout, bgrow, newcols, maxval, format, 0);
+        pnm_writepnmrow(ofP, bgrow, newcols, maxval, format, 0);
 
-    for (row = 0; row < rows; ++row) {
-        pnm_readpnmrow(ifP, &xelrow[lpad], cols, maxval, format);
-        pnm_writepnmrow(stdout, xelrow, newcols, maxval, format, 0);
+    /* Write body of image */
+    {
+        xel * const xelrow = pnm_allocrow(newcols);
+
+        /* initial value for 'xelrow': all background */
+        for (col = 0; col < newcols; ++col)
+            xelrow[col] = bgrow[col] = background;
+
+        for (row = 0; row < rows; ++row) {
+            pnm_readpnmrow(ifP, &xelrow[lpad], cols, maxval, format);
+            pnm_writepnmrow(ofP, xelrow, newcols, maxval, format, 0);
+        }
+        pnm_freerow(xelrow);
     }
 
+    /* Write bottom padding */
     for (row = 0; row < bpad; ++row)
-        pnm_writepnmrow(stdout, bgrow, newcols, maxval, format, 0);
+        pnm_writepnmrow(ofP, bgrow, newcols, maxval, format, 0);
 
-    pnm_freerow(xelrow);
     pnm_freerow(bgrow);
 }
 
@@ -658,16 +862,27 @@ main(int argc, const char ** argv) {
 
     if (cmdline.reportonly)
         reportPadSizes(cols, rows, lpad, rpad, tpad, bpad);
-    else {
+    else if (cmdline.extend_edge) {
         if (PNM_FORMAT_TYPE(format) == PBM_TYPE)
-            padPbm(ifP, cols, rows, format, newcols, lpad, rpad, tpad, bpad,
-                   !!cmdline.white);
+            extendEdgePbm(ifP, cols, rows, format,
+                          newcols, lpad, rpad, tpad, bpad, stdout);
+        else
+            extendEdgeGeneral(ifP, cols, rows, maxval, format,
+                              newcols, lpad, rpad, tpad, bpad, stdout);
+    } else {
+        if (PNM_FORMAT_TYPE(format) == PBM_TYPE)
+            padPbm(ifP, cols, rows, format,
+                   newcols, lpad, rpad, tpad, bpad, !!cmdline.white, stdout);
         else
             padGeneral(ifP, cols, rows, maxval, format,
-                       newcols, lpad, rpad, tpad, bpad, !!cmdline.white);
+                       newcols, lpad, rpad, tpad, bpad, !!cmdline.white,
+                       stdout);
     }
 
     pm_close(ifP);
 
     return 0;
 }
+
+
+
