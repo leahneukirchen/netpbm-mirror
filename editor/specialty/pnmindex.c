@@ -2,7 +2,7 @@
                                 pnmindex
 ==============================================================================
 
-  build a visual index of a bunch of PNM images
+  Build a visual index of a bunch of PNM images.
 
   This used to be a C shell program, and then a BASH program.  Neither
   were portable enough, and the program is too complex for either of
@@ -390,7 +390,7 @@ copyScaleQuantImage(const char * const inputFileName,
     case PBM_TYPE:
         pm_asprintf(&scaleCommand,
                     "pamscale -quiet -xysize %u %u %s "
-                    "| pgmtopbm > %s",
+                    "| pamditherbw > %s",
                     size, size, inputFileNmToken, outputFileName);
         break;
 
@@ -525,11 +525,12 @@ makeThumbnail(const char *  const inputFileName,
               unsigned int  const col,
               int *         const formatP) {
 
+    const char * const fileName = thumbnailFileName(tempDir, row, col);
+
     FILE * ifP;
     int imageCols, imageRows, format;
     xelval maxval;
     const char * tmpfile;
-    const char * fileName;
 
     ifP = pm_openr(inputFileName);
     pnm_readpnminit(ifP, &imageCols, &imageRows, &maxval, &format);
@@ -542,8 +543,6 @@ makeThumbnail(const char *  const inputFileName,
     else
         copyScaleQuantImage(inputFileName, tmpfile, format,
                             size, quant, colorCt);
-
-    fileName = thumbnailFileName(tempDir, row, col);
 
     makeImageFile(tmpfile, inputFileName, black, fileName);
 
