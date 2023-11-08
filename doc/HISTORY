@@ -33,6 +33,9 @@ not yet  BJH  Release 11.05.00
               libnetpbm, programs that use color maps: fix buffer overrun
               with insanely deep images.
 
+              merge build: Fix 'pnmcat'.  Introduced in Netpbm 11.00
+              (September 2023).
+
               Build: Fix compile error on systems without 'asprintf'.
               Introduced in Netpbm 11.04 (September 2023).
 
