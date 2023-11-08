@@ -170,7 +170,7 @@ shellQuote(const char * const arg) {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 
     unsigned int option_def_index;
@@ -206,7 +206,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (quant && cmdlineP->noquant)
@@ -380,7 +380,7 @@ copyScaleQuantImage(const char * const inputFileName,
                     int          const format,
                     unsigned int const size,
                     unsigned int const quant,
-                    unsigned int const colors) {
+                    unsigned int const colorCt) {
 
     const char * const inputFileNmToken = shellQuote(inputFileName);
 
@@ -405,7 +405,7 @@ copyScaleQuantImage(const char * const inputFileName,
             pm_asprintf(&scaleCommand,
                         "pamscale -quiet -xysize %u %u %s "
                         "| pnmquant -quiet %u > %s",
-                        size, size, inputFileNmToken, colors, outputFileName);
+                        size, size, inputFileNmToken, colorCt, outputFileName);
         else
             pm_asprintf(&scaleCommand,
                         "pamscale -quiet -xysize %u %u %s >%s",
@@ -501,7 +501,7 @@ makeImageFile(const char * const thumbnailFileName,
 -----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
     const char * const invertStage   = blackBackground ? "| pnminvert " : "";
-    const char * inputFileNmToken    = shellQuote(inputFileName);
+    const char * const inputFileNmToken = shellQuote(inputFileName);
 
     systemf("pbmtext %s %s"
             "| pamcat %s -topbottom %s - "
@@ -519,7 +519,7 @@ makeThumbnail(const char *  const inputFileName,
               unsigned int  const size,
               bool          const black,
               bool          const quant,
-              unsigned int  const colors,
+              unsigned int  const colorCt,
               const char *  const tempDir,
               unsigned int  const row,
               unsigned int  const col,
@@ -541,7 +541,7 @@ makeThumbnail(const char *  const inputFileName,
         copyImage(inputFileName, tmpfile);
     else
         copyScaleQuantImage(inputFileName, tmpfile, format,
-                            size, quant, colors);
+                            size, quant, colorCt);
 
     fileName = thumbnailFileName(tempDir, row, col);
 
@@ -598,7 +598,7 @@ combineIntoRowAndDelete(unsigned int const row,
                         int          const maxFormatType,
                         bool         const blackBackground,
                         bool         const quant,
-                        unsigned int const colors,
+                        unsigned int const colorCt,
                         const char * const tempDir) {
 
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
@@ -612,7 +612,7 @@ combineIntoRowAndDelete(unsigned int const row,
     unlink(fileName);
 
     if (maxFormatType == PPM_TYPE && quant)
-        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colors);
+        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colorCt);
     else
         quantStage = strdup("");
 
@@ -670,7 +670,7 @@ writeRowsAndDelete(unsigned int const rows,
                    int          const maxFormatType,
                    bool         const blackBackground,
                    bool         const quant,
-                   unsigned int const colors,
+                   unsigned int const colorCt,
                    const char * const tempDir) {
 
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
@@ -679,7 +679,7 @@ writeRowsAndDelete(unsigned int const rows,
     const char * fileList;
 
     if (maxFormatType == PPM_TYPE && quant)
-        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colors);
+        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colorCt);
     else
         quantStage = strdup("");
 
@@ -697,7 +697,8 @@ writeRowsAndDelete(unsigned int const rows,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
+
     struct CmdlineInfo cmdline;
     const char * tempDir;
     int maxFormatType;
@@ -705,7 +706,7 @@ main(int argc, char *argv[]) {
     unsigned int rowsDone;
     unsigned int i;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -753,6 +754,5 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
-
 
 
