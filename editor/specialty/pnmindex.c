@@ -602,12 +602,10 @@ combineIntoRowAndDelete(unsigned int const row,
                         const char * const tempDir) {
 
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
+    const char * const fileName = rowFileName(tempDir, row);
 
-    const char * fileName;
     const char * quantStage;
     const char * fileList;
-
-    fileName = rowFileName(tempDir, row);
 
     unlink(fileName);
 
@@ -714,14 +712,15 @@ main(int argc, const char ** argv) {
 
     makeTempDir(&tempDir);
 
-    maxFormatType = PBM_TYPE;
-    colsInRow = 0;
-    rowsDone = 0;
+    rowsDone = 0;  /* initial value */
 
     if (cmdline.title)
         makeTitle(cmdline.title, rowsDone++, cmdline.black, tempDir);
 
-    for (i = 0; i < cmdline.inputFileCount; ++i) {
+    for (i = 0, colsInRow = 0, maxFormatType = PBM_TYPE;
+         i < cmdline.inputFileCount;
+         ++i) {
+
         const char * const inputFileName = cmdline.inputFileName[i];
 
         int format;
