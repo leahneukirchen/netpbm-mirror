@@ -2,7 +2,7 @@
 <html><head><title>Pktopbm User Manual</title></head>
 <body>
 <h1>pktopbm</h1>
-Updated: 06 August 1990
+Updated: 15 September 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -12,7 +12,7 @@ pktopbm - convert packed (PK) format font into PBM
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
-pktopbm pkfile[.pk] [ -x width ] [ -y height ] [-c num] pbmfile ...
+pktopbm pkfile [ -x width ] [ -y height ] [-c num] pbmfile ...
 
 <h2 id="description">DESCRIPTION</h2>
 
@@ -36,19 +36,31 @@ Common Options</a>), <b>pktopbm</b> recognizes the following
 command line options:
 
 <dl compact>
-<dt><b>-c</b> <i>num</i>
-<dd>
-Sets the character number of the next bitmap written to <i>num</i>.
+<dt><b>-character</b> <i>num</i>
+  <dd>
+    This is the code point (character number) to which the first
+    specified output file pertains.  Ergo, there is no output for any
+    code point lower than this.
 
 <dt><b>-x</b> <i>width</i>
 <dd>
-Sets the width of the image in columns.
+  The width of the image in columns.
+
+  The default is what is specified in the font file.
 
 <dt><b>-y</b> <i>width</i>
 <dd>
-Sets the height of the image in rows.
+The height of the image in rows.  
 
+The default is what is specified in the font file.
 </dl>
+
+<h2 id="history">HISTORY</h2>
+
+<p>Before Netpbm 11.04 (September 2023), the program would sometimes add
+  the suffix &quot;.pk&quot; to the specified input file name.  It also
+  let you specify multiple <b>-c</b> options, with each applying to the
+  output file names that came after it.
 
 <h2 id="seealso">SEE ALSO</h2>
 
@@ -68,6 +80,7 @@ in March 1995.
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
 <li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#author">AUTHOR</a>
 </ul>

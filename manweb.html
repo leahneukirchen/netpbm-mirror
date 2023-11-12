@@ -239,4 +239,45 @@ Example:
 webdir=/usr/share/manweb
 browser=netscape
 </pre>
+
+<h3>How To Make HTML Documentation</h3>
+
+<p>Pages displayed by <b>manweb</b> don&apos;t have to have any particular
+  format.  You can write anything you want in HTML, using any web page
+  generation tools or just by typing HTML in a text editor.
+
+<p>Readers might appreciate something roughly in the format of classic Unix
+  man pages (Name, Synopsis, etc.).
+
+<p>You can convert legacy nroff/troff man pages to passable HTML with the
+  program <b>mandoc</b>.  You don&apos;t have to do this just to access the
+  information with <b>manweb</b>, because <b>manweb</b> falls back to
+  invoking <b>man</b> if it doesn&apos;t find HTML pages, but if you are
+  maintaining documentation, you might use this as a starting point for
+  maintaining it in HTML in the future.
+
+<p>Example:
+
+  <pre>
+    <code>
+      $ mandoc -T html foo.1 &gt;foo.html
+    </code>
+  </pre>
+
+<p>With a large number of pages, you could use <b>find</b> to do them all at
+  once and <b>parallel</b> to do them more quickly.
+
+<p>If you&apos;re converting a large collection of man pages, you&apos;ll have
+  to deal with linked header files and linked manuals (where the troff
+  man page refers to other pages) with something like this:
+
+<pre>
+  <code>
+      $ mandoc -T html -O includes='./%N.html'; -O man='%N.%S.html' ...
+  </code>
+</pre>
+
+This creates similar HTML links to HTML file names, and you then make symbolic
+links for those names.
+
 </body> </html>

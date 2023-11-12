@@ -2,7 +2,7 @@
 <html><head><title>Pnmindex User Manual</title></head>
 <body>
 <h1>pnmindex</h1>
-Updated: 14 November 2015
+Updated: 08 November 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -17,13 +17,13 @@ pnmindex - build a visual index of a bunch of PNM images
 
 [<b>-across=</b><i>N</i>]
 
-[<b>-colors=</b><i>N</i>]
-
 [<b>-black</b>]
 
 [<b>-title=</b><i>title</i>]
 
 [<b>-quant</b>|<b>-noquant</b>]
+
+[<b>-colors=</b><i>N</i>]
 
 <i>pnmfile</i> ...
 
@@ -36,8 +36,8 @@ with white space instead of an equals sign.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<b>pnmindex</b> creates an index image containing thumbnail (small)
-versions of a bunch of PNM files you supply.  (Akin to a photographic
+<p><b>pnmindex</b> creates an index image containing thumbnail (small)
+versions of a bunch of PNM files you supply (akin to a photographic
 "contact sheet").
 
 <p><b>pnmindex</b> labels each thumbnail and, optionally, contains a
@@ -64,44 +64,55 @@ command line options:
 <dl compact>
 <dt><b>-size=</b><i>N</i>
 
-<dd>The size of each thumbnail.  The image is scaled to fit maximally
-inside a <i>N</i> x <i>N</i> pixel box without changing its aspect
-ratio.  Default is 100.
+<dd>The size of each thumbnail.  The image is scaled down to fit maximally
+inside a <i>N</i> x <i>N</i> pixel box without changing its aspect ratio.
+
+<p>If the input image is already smaller than this, its size remains the same
+in the output.
+  
+<p>The default is 100.
 
 <dt><b>-across=</b><i>N</i>
 
 <dd>The number of thumbnails in each row.  Default is 6.
 
-<dt><b>-colors=</b><i>N</i>
-
-<dd>The maximum number of colors allowed in the overall image.  If it
-would otherwise have more colors than these, <b>pnmindex</b> quantizes
-the result.  The default is 256.
-
-<p>However, this value is meaningless if you specify the
-<b>-noquant</b> option.
-
 <dt><b>-black</b>
 
-<dd>This controls the color of the padding between the images;
-normally it's white and the labels are black lettering on white
-background, but the <b>-black</b> option reverses this.
+<dd>This controls the color of the padding between the images; by default it
+is white and the labels are black lettering on white background, but the
+<b>-black</b> option reverses this.
 
 <dt><b>-title=</b><i>title</i>
 
 <dd>
-Specifies a title top place at the top of the image.
-Default is no title.
+This specifies a title top place at the top of the image.
 
-<dt><b>-quant</b>
-
-<dd>Enables quantization (to the number of colors specified by
-<b>-colors</b>).  Quantization is on by default but you can disable
-it with <b>-noquant.</b>
+<p>Default is no title.
 
 <dt><b>-noquant</b>
 
-<dd>See <b>-quant</b>.
+<dd>Disables color quantization.  By default, if any input image is PPM, the
+program reduces the number of colors to the number of colors specified
+by <b>-colors</b>).
+
+<dt><b>-quant</b>
+
+<dd>This option has no effect; it explicitly selects the default behavior of
+quantizing colors.  See <b>-noquant</b>.
+
+<dt><b>-colors=</b><i>N</i>
+
+<dd>The maximum number of colors allowed in the overall image.  If it would
+otherwise have more colors than these, <b>pnmindex</b> quantizes the result.
+To reduce the effect of the colors in one thumbnail on the colors used for
+another, the program quantizes colors to this number in each thumbnail
+independently, then quantizes the colors in each row of thumbnails to this
+number, then quantizes the colors in the entire output image to this number.
+
+<p>This value is meaningless if you specify the <b>-noquant</b> option or if
+no input image is PPM.
+
+<p>The default is 256.
 
 </dl>
 
