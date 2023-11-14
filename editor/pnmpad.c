@@ -189,6 +189,10 @@ parseCommandLineOld(int argc, const char ** argv,
     cmdlineP->left = cmdlineP->right = cmdlineP->top = cmdlineP->bottom = 0;
     cmdlineP->xalign = cmdlineP->yalign = 0.5;
     cmdlineP->white = cmdlineP->verbose = FALSE;
+    cmdlineP->reportonly = FALSE;
+    cmdlineP->topSpec = cmdlineP->bottomSpec =
+        cmdlineP->leftSpec = cmdlineP->rightSpec = TRUE;
+    cmdlineP->mwidth = cmdlineP->mheight = 1;
 
     while (argc >= 2 && argv[1][0] == '-') {
         if (strcmp(argv[1]+1,"black") == 0) cmdlineP->white = FALSE;
