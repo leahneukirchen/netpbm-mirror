@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.11.24 BJH  Release 11.02.05
+
+              pnmpad: fix wrong results with old-style options (e.g. "-t50").
+
 23.09.24 BJH  Release 11.02.04
 
               pamtosvg: fix hang.
