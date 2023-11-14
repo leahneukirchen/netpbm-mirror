@@ -30,6 +30,8 @@ not yet  BJH  Release 11.05.00
               ppmdither: fix buffer overrun with insanely large dithering
               matrix.
 
+              pnmpad: no longer accept old-style options (e.g. -t50).
+
               libnetpbm, programs that use color maps: fix buffer overrun
               with insanely deep images.
 
@@ -5403,6 +5405,9 @@ not yet  BJH  Release 11.05.00
 
               pnmpad: Add -width, -height, -halign, -valign options.
               Thanks M. van Beilen <mvb@iradis.org>.
+
+              pnmpad: Issue warning about old-style options (e.g. "-t50"
+              instead of "-t 50").
 
               ppmhist: remove 100,000 color limit.
 

@@ -2,6 +2,7 @@
    ** AJCD 4/9/90
  */
 
+#include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -42,6 +43,43 @@ struct CmdlineInfo {
     unsigned int reportonly;
     unsigned int verbose;
 };
+
+
+
+static void
+validateNoOldOptionSyntax( int const argc, const char ** const argv) {
+/*----------------------------------------------------------------------------
+  Reject obsolete command line syntax, e.g. "pnmpad -l50".
+
+  Starting in Netpbm 9.25 (February 2002), this resulted in a warning message
+  and was no longer documented.  Starting in Netpbm 11.05 (December 2023),
+  it is no longer accepted.
+
+  It was too hard to maintain.
+-----------------------------------------------------------------------------*/
+    bool isOld;
+
+    isOld = false;  /* initial assumption */
+
+    if (argc > 1 && argv[1][0] == '-') {
+        if (argv[1][1] == 't' || argv[1][1] == 'b'
+            || argv[1][1] == 'l' || argv[1][1] == 'r') {
+            if (argv[1][2] >= '0' && argv[1][2] <= '9')
+                isOld = true;
+        }
+    }
+    if (argc > 2 && argv[2][0] == '-') {
+        if (argv[2][1] == 't' || argv[2][1] == 'b'
+            || argv[2][1] == 'l' || argv[2][1] == 'r') {
+            if (argv[2][2] >= '0' && argv[2][2] <= '9')
+                isOld = true;
+        }
+    }
+    if (isOld)
+        pm_error("Old-style Unix options (e.g. \"-l50\") "
+                 "not accepted by current 'pnmpad'.  "
+                 "Use e.g. \"-l 50\" instead");
+}
 
 
 
@@ -179,74 +217,6 @@ parseCommandLine(int argc, const char ** argv,
         pm_error("This program takes at most 1 parameter.  You specified %d",
                  argc-1);
     else if (argc-1 == 1)
-        cmdlineP->inputFileNm = argv[1];
-    else
-        cmdlineP->inputFileNm = "-";
-}
-
-
-
-static void
-parseCommandLineOld(int argc, const char ** argv,
-                    struct CmdlineInfo * const cmdlineP) {
-
-    /* This syntax was abandoned in February 2002. */
-    pm_message("Warning: old style options are deprecated!");
-
-    cmdlineP->xsize = cmdlineP->ysize = 0;
-    cmdlineP->left = cmdlineP->right = cmdlineP->top = cmdlineP->bottom = 0;
-    cmdlineP->xalign = cmdlineP->yalign = 0.5;
-    cmdlineP->white = cmdlineP->verbose = FALSE;
-
-    while (argc >= 2 && argv[1][0] == '-') {
-        if (strcmp(argv[1]+1,"black") == 0) cmdlineP->white = FALSE;
-        else if (strcmp(argv[1]+1,"white") == 0) cmdlineP->white = TRUE;
-        else switch (argv[1][1]) {
-        case 'l':
-            if (atoi(argv[1]+2) < 0)
-                pm_error("left border too small");
-            else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
-                pm_error("left border too large");
-            else
-                cmdlineP->left = atoi(argv[1]+2);
-            break;
-        case 'r':
-            if (atoi(argv[1]+2) < 0)
-                pm_error("right border too small");
-            else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
-                pm_error("right border too large");
-            else
-                cmdlineP->right = atoi(argv[1]+2);
-            break;
-        case 'b':
-            if (atoi(argv[1]+2) < 0)
-                pm_error("bottom border too small");
-            else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
-                pm_error("bottom border too large");
-            else
-                cmdlineP->bottom = atoi(argv[1]+2);
-            break;
-        case 't':
-            if (atoi(argv[1]+2) < 0)
-                pm_error("top border too small");
-            else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
-                pm_error("top border too large");
-            else
-                cmdlineP->top = atoi(argv[1]+2);
-            break;
-        default:
-            pm_usage("[-white|-black] [-l#] [-r#] [-t#] [-b#] [pnmfile]");
-        }
-        argc--, argv++;
-    }
-
-    cmdlineP->xsizeSpec = (cmdlineP->xsize > 0);
-    cmdlineP->ysizeSpec = (cmdlineP->ysize > 0);
-
-    if (argc > 2)
-        pm_usage("[-white|-black] [-l#] [-r#] [-t#] [-b#] [pnmfile]");
-
-    if (argc == 2)
         cmdlineP->inputFileNm = argv[1];
     else
         cmdlineP->inputFileNm = "-";
@@ -823,32 +793,13 @@ main(int argc, const char ** argv) {
 
     xelval maxval;
     int rows, cols, newcols, format;
-    bool depr_cmd; /* use deprecated commandline interface */
     unsigned int lpad, rpad, tpad, bpad;
 
     pm_proginit(&argc, argv);
 
-    /* detect deprecated options */
-    depr_cmd = FALSE;  /* initial assumption */
-    if (argc > 1 && argv[1][0] == '-') {
-        if (argv[1][1] == 't' || argv[1][1] == 'b'
-            || argv[1][1] == 'l' || argv[1][1] == 'r') {
-            if (argv[1][2] >= '0' && argv[1][2] <= '9')
-                depr_cmd = TRUE;
-        }
-    }
-    if (argc > 2 && argv[2][0] == '-') {
-        if (argv[2][1] == 't' || argv[2][1] == 'b'
-            || argv[2][1] == 'l' || argv[2][1] == 'r') {
-            if (argv[2][2] >= '0' && argv[2][2] <= '9')
-                depr_cmd = TRUE;
-        }
-    }
+    validateNoOldOptionSyntax(argc, argv);
 
-    if (depr_cmd)
-        parseCommandLineOld(argc, argv, &cmdline);
-    else
-        parseCommandLine(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileNm);
 
