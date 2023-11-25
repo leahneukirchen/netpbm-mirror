@@ -96,7 +96,10 @@ $(LIBOBJECTS): CFLAGS_TARGET=$(CFLAGS_SHLIB)
 
 libpbm3.o: CFLAGS_TARGET+=$(CFLAGS_SSE)
 
-$(LIBOBJECTS): %.o: %.c importinc
+# libsystem_dummy.o is in the following rule because we like to compile it
+# even when it's not part of the library, just for a test.
+
+$(LIBOBJECTS) libsystem_dummy.o: %.o: %.c importinc
 	$(CC) -c $(INCLUDES) $(CFLAGS_ALL) -o $@ $<
 
 # The major number increases when there is a non-backward-compatible change
