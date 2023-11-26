@@ -690,7 +690,7 @@ pm_feed_null(int    const pipeToFeedFd,
 
 
 void
-pm_accept_null(int    const pipetosuckFd,
+pm_accept_null(int    const pipeToSuckFd,
                void * const accepterParm ) {
 
     size_t const bufferSize = 4096;
@@ -705,7 +705,7 @@ pm_accept_null(int    const pipetosuckFd,
         for (eof = false; !eof; ) {
             ssize_t rc;
 
-            rc = read(pipetosuckFd, buffer, bufferSize);
+            rc = read(pipeToSuckFd, buffer, bufferSize);
 
             if (rc < 0) {
                 /* No way to report the problem; just say we're done */
@@ -716,7 +716,7 @@ pm_accept_null(int    const pipetosuckFd,
         }
         free(buffer);
     }
-    close(pipetosuckFd);
+    close(pipeToSuckFd);
 }
 
 
@@ -729,16 +729,16 @@ pm_feed_from_memory(int    const pipeToFeedFd,
 
     FILE * const outFileP = fdopen(pipeToFeedFd, "w");
 
-    size_t bytesTransferred;
+    size_t byteCtTransferred;
 
     /* The following signals (and normally kills) the process with
        SIGPIPE if the pipe does not take all 'size' bytes.
     */
-    bytesTransferred =
+    byteCtTransferred =
         fwrite(inputBufferP->buffer, 1, inputBufferP->size, outFileP);
 
     if (inputBufferP->bytesTransferredP)
-        *(inputBufferP->bytesTransferredP) = bytesTransferred;
+        *(inputBufferP->bytesTransferredP) = byteCtTransferred;
 
     fclose(outFileP);
 }
@@ -746,23 +746,112 @@ pm_feed_from_memory(int    const pipeToFeedFd,
 
 
 void
-pm_accept_to_memory(int             const pipetosuckFd,
+pm_accept_to_memory(int             const pipeToSuckFd,
                     void *          const accepterParm ) {
 
     pm_bufferDesc * const outputBufferP = accepterParm;
 
-    FILE * const inFileP = fdopen(pipetosuckFd, "r");
+    FILE * const inFileP = fdopen(pipeToSuckFd, "r");
 
-    size_t bytesTransferred;
+    size_t byteCtTransferred;
 
-    bytesTransferred =
+    byteCtTransferred =
         fread(outputBufferP->buffer, 1, outputBufferP->size, inFileP);
 
     fclose(inFileP);
 
     if (outputBufferP->bytesTransferredP)
-        *(outputBufferP->bytesTransferredP) = bytesTransferred;
+        *(outputBufferP->bytesTransferredP) = byteCtTransferred;
 }
 
+
+
+void
+pm_feed_from_filestream(int    const pipeToFeedFd,
+                        void * const feederParm) {
+
+    FILE * const inFileP  = feederParm;
+
+    size_t const bufferSz = 64*1024;
+
+    FILE * const outFileP = fdopen(pipeToFeedFd, "w");
+
+    unsigned char * buffer;
+    bool eof;
+
+    MALLOCARRAY(buffer, bufferSz);
+
+    if (!buffer)
+        pm_error("Failed to allocate %u bytes for I/O buffer",
+                 (unsigned) bufferSz);
+
+    for (eof = false; !eof; ) {
+        size_t byteCtRead;
+
+        byteCtRead = fread(buffer, 1, bufferSz, inFileP);
+
+        if (ferror(inFileP))
+            pm_error("Error reading file.  errno=%d (%s)",
+                     errno, strerror(errno));
+
+        if (byteCtRead > 0) {
+            /* The following signals (and normally kills) the process with
+               SIGPIPE if the pipe does not take all 'size' bytes.
+            */
+            fwrite(buffer, 1, byteCtRead, outFileP);
+        } else
+            eof = true;
+    }
+
+    fclose(outFileP);
+
+    free(buffer);
+}
+
+
+
+void
+pm_accept_to_filestream(int             const pipeToSuckFd,
+                        void *          const accepterParm ) {
+
+    FILE * const outFileP = accepterParm;
+
+    size_t const bufferSz = 64*1024;
+
+    FILE * const inFileP = fdopen(pipeToSuckFd, "r");
+
+    unsigned char * buffer;
+    bool eof;
+
+    MALLOCARRAY(buffer, bufferSz);
+
+    if (!buffer)
+        pm_error("Failed to allocate %u bytes for I/O buffer",
+                 (unsigned) bufferSz);
+
+    for (eof = false; !eof; ) {
+        size_t byteCtRead;
+
+        byteCtRead = fread(buffer, 1, bufferSz, inFileP);
+
+        if (ferror(inFileP))
+            pm_error("Error reading Standard Output accepter pipe.  "
+                     "errno=%d (%s)",
+                     errno, strerror(errno));
+
+        if (byteCtRead > 0) {
+            fwrite(buffer, 1, byteCtRead, outFileP);
+
+            if (ferror(outFileP))
+                pm_error("Error writing to file.  errno=%d (%s)",
+                         errno, strerror(errno));
+        } else
+            eof = true;
+    }
+
+    fclose(inFileP);
+
+    free(buffer);
+}
 
 
