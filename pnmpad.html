@@ -2,7 +2,7 @@
 <html><head><title>Pnmpad User Manual</title></head>
 <body>
 <h1>pnmpad</h1>
-Updated: 25 December 2021
+Updated: 14 November 2023
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -208,11 +208,21 @@ This causes verbose messages.
 
 <h2 id="history">HISTORY</h2>
 
-<p>Before February 2002, <b>pnmpad</b> had a different option syntax
-which was less expressive and not like conventional Netpbm programs.
-That syntax is still understood by <b>pnmpad</b> for backward
-compatibility, but not documented or supported for future use.
+<p>The command line syntax was originally more of a traditional Unix syntax,
+  with single-character margin size options <b>-l</b>, <b>-r</b>, <b>-t</b>,
+  and <b>-b</b> that took arguments concatenated to the option name, such
+  as <b>-l50</b>.  This is in contrast to the more modern syntax used by
+  essentially all Netpbm programs, in which an option such as <b>-left</b>
+  (which can still be abbreviated <b>-l</b>) must have its name and value as
+  separate command line arguments (e.g. <b>-l 50</b>).
 
+  The new syntax was accepted and the old syntax deprecated and removed from
+  documentation in Netpbm 9.25 (March 2002), and was no longer accepted in
+  Netpbm 11.05 (December 2023).
+
+  The code was broken for most of that time so that an attempt to use the old
+  syntax would fail anyway.  The bug was discovered only in testing; no user
+  ever reported encountering it.
 
 <h2 id="seealso">SEE ALSO</h2>
 

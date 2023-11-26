@@ -398,8 +398,8 @@ another address in your process' memory.
 <p>The Standard Input feeder for this is called <b>pm_feed_from_memory</b>.
 The Standard Output accepter is <b>pm_accept_to_memory</b>.
 
-<p>For both of these, the argument is the address of a <b>struct
-bufferDesc</b>, which is defined as follows:
+<p>For both of these, the argument is a pointer to a <b>struct bufferDesc</b>,
+which is defined as follows:
 
 <pre>
 struct bufferDesc {
@@ -423,6 +423,47 @@ able to write everything to a pipe that it wanted to,
 <i>bytesTransferredP</i> is not usually useful in the Standard Input feeder
 case.
 
+
+<h3>File Stream</h3>
+
+<p>These routines are for using an actual file as input or output.
+  I.e. Standard Input comes from a file and Standard Output goes to a file.
+  You open the file and create a libc file stream (type FILE) from it and pass
+  that stream object to the standard input feeder or standard output accepter.
+
+<p>When you do this (using output as an example), your process writes to
+  Standard Output, which is a pipe, the standard output accepter then reads
+  from that pipe into a buffer, and then the standard output accepter writes
+  from that buffer to your file.  You could alternatively just arrange for the
+  Standard Input or Output of your process to be the file and skip a copy, but
+  it might be more complex coding.
+
+<p>Note that if the calling program&apos;s Standard Output is already set up
+  as the file to which you want your process&apos; output to go, you
+  don&apos;t need this.  All you have to do is decline to specify a Standard
+  Output accepter (use NULL in place of the Standard Output accepter pointer)
+  and your process&apos; output will go there.
+
+<p>The Standard Input feeder for this is called <b>pm_feed_from_filestream</b>.
+The Standard Output accepter is <b>pm_accept_to_filestream</b>.
+
+<p>For both of these, the argument is a pointer to a Standard C library
+  FILE object.
+
+<p>Example:
+
+  <pre>
+    <code>
+      int termStatus;
+      FILE * myFileP;
+      myFileP = fopen(&quot;tmp/myfile&quot;, &quot;r&quot;);
+      pm_system2(pm_feed_from_filestream, myFileP,
+                 NULL, NULL,
+                 &quot;grep myword&quot;, &amp;termstatus);
+    </code>
+  </pre>
+  
+<p>These routines were new in Netpbm 11.05 (December 2023).
 
 <h3>Pamtuple</h3>
 
