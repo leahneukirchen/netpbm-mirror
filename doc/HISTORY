@@ -32,6 +32,9 @@ not yet  BJH  Release 11.05.00
 
               pnmpad: no longer accept old-style options (e.g. -t50).
 
+              libnetpbm: Add pm_feed_from_filestream, pm_accept_to_filestream
+              Standard Input feeder, Output accepter for pm_system.
+
               libnetpbm, programs that use color maps: fix buffer overrun
               with insanely deep images.
 
