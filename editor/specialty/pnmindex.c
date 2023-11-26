@@ -32,6 +32,7 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "pm_system.h"
 #include "pnm.h"
 
 struct CmdlineInfo {
@@ -340,23 +341,44 @@ static void
 makeTitle(const char * const title,
           unsigned int const rowNumber,
           bool         const blackBackground,
-          const char * const tempDir) {
+          const char * const dirNm) {
+/*----------------------------------------------------------------------------
+   Create a PBM file containing the text 'title'.
 
+   If 'blackBackground' is true, make it white on black; otherwise, black
+   on white.
+
+   Name the file like a thumbnail row file for row number 'rowNumber',
+   in directory named 'dirNm'.
+-----------------------------------------------------------------------------*/
     const char * const invertStage = blackBackground ? "| pnminvert " : "";
-    const char * const titleToken  = shellQuote(title);
 
     const char * fileName;
+    FILE * outFP;
+    struct bufferDesc titleBuf;
+    const char * shellCommand;
+    int termStatus;
 
-    fileName = rowFileName(tempDir, rowNumber);
+    titleBuf.size              = strlen(title);
+    titleBuf.buffer            = (unsigned char *)title;
+    titleBuf.bytesTransferredP = NULL;
 
-    /* This quoting is not adequate.  We really should do this without
-       a shell at all.
-    */
-    systemf("pbmtext %s %s > %s",
-            titleToken, invertStage, fileName);
-
+    fileName = rowFileName(dirNm, rowNumber);
+    outFP = pm_openw(fileName);
     pm_strfree(fileName);
-    pm_strfree(titleToken);
+
+    pm_asprintf(&shellCommand, "pbmtext %s", invertStage);
+
+    pm_system2(&pm_feed_from_memory, &titleBuf,
+               &pm_accept_to_filestream, outFP,
+               shellCommand, &termStatus);
+
+    pm_strfree(shellCommand);
+
+    if (termStatus != 0)
+        pm_error("Failed to generate title image");
+
+    pm_close(outFP);
 }
 
 
