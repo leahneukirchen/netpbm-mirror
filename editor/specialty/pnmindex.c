@@ -54,57 +54,6 @@ static bool verbose;
 
 
 
-static void PM_GNU_PRINTF_ATTR(1,2)
-systemf(const char * const fmt,
-        ...) {
-
-    va_list varargs;
-
-    size_t dryRunLen;
-
-    va_start(varargs, fmt);
-
-    dryRunLen = vsnprintf(NULL, 0, fmt, varargs);
-
-    va_end(varargs);
-
-    if (dryRunLen + 1 < dryRunLen)
-        /* arithmetic overflow */
-        pm_error("Command way too long");
-    else {
-        size_t const allocSize = dryRunLen + 1;
-        char * shellCommand;
-        shellCommand = malloc(allocSize);
-        if (shellCommand == NULL)
-            pm_error("Can't get storage for %u-character command",
-                     (unsigned)allocSize);
-        else {
-            va_list varargs;
-            size_t realLen;
-            int rc;
-
-            va_start(varargs, fmt);
-
-            realLen = vsnprintf(shellCommand, allocSize, fmt, varargs);
-
-            assert(realLen == dryRunLen);
-            va_end(varargs);
-
-            if (verbose)
-                pm_message("shell cmd: %s", shellCommand);
-
-            rc = system(shellCommand);
-            if (rc != 0)
-                pm_error("shell command '%s' failed.  rc %d",
-                         shellCommand, rc);
-
-            pm_strfree(shellCommand);
-        }
-    }
-}
-
-
-
 static const char *
 shellQuote(const char * const arg) {
 /*----------------------------------------------------------------------------
@@ -384,63 +333,74 @@ makeTitle(const char * const title,
 
 
 static void
-copyImage(const char * const inputFileName,
-          const char * const outputFileName) {
+copyImage(const char * const inputFileNm,
+          const char * const outputFileNm) {
 
-    const char * const inputFileNmToken = shellQuote(inputFileName);
+    int termStatus;
 
-    systemf("cat %s > %s", inputFileNmToken, outputFileName);
+    pm_system2_lp("cat",
+                  &pm_feed_from_file, (void*)inputFileNm,
+                  &pm_accept_to_file, (void*)outputFileNm,
+                  &termStatus);
 
-    pm_strfree(inputFileNmToken);
+    if (termStatus != 0)
+        pm_error("'cat' to copy image '%s' to '%s' failed, "
+                 "termination status = %d",
+                 inputFileNm, outputFileNm, termStatus);
 }
 
 
 
 static void
-copyScaleQuantImage(const char * const inputFileName,
-                    const char * const outputFileName,
+copyScaleQuantImage(const char * const inputFileNm,
+                    const char * const outputFileNm,
                     int          const format,
                     unsigned int const size,
                     unsigned int const quant,
                     unsigned int const colorCt) {
 
-    const char * const inputFileNmToken = shellQuote(inputFileName);
-
     const char * scaleCommand;
+    int termStatus;
 
     switch (PNM_FORMAT_TYPE(format)) {
     case PBM_TYPE:
         pm_asprintf(&scaleCommand,
-                    "pamscale -quiet -xysize %u %u %s "
-                    "| pamditherbw > %s",
-                    size, size, inputFileNmToken, outputFileName);
+                    "pamscale -quiet -xysize %u %u "
+                    "| pamditherbw",
+                    size, size);
         break;
 
     case PGM_TYPE:
         pm_asprintf(&scaleCommand,
-                    "pamscale -quiet -xysize %u %u %s >%s",
-                    size, size, inputFileNmToken, outputFileName);
+                    "pamscale -quiet -xysize %u %u",
+                    size, size);
         break;
 
     case PPM_TYPE:
         if (quant)
             pm_asprintf(&scaleCommand,
-                        "pamscale -quiet -xysize %u %u %s "
-                        "| pnmquant -quiet %u > %s",
-                        size, size, inputFileNmToken, colorCt, outputFileName);
+                        "pamscale -quiet -xysize %u %u "
+                        "| pnmquant -quiet %u ",
+                        size, size, colorCt);
         else
             pm_asprintf(&scaleCommand,
-                        "pamscale -quiet -xysize %u %u %s >%s",
-                        size, size, inputFileNmToken, outputFileName);
+                        "pamscale -quiet -xysize %u %u ",
+                        size, size);
         break;
     default:
         pm_error("Unrecognized Netpbm format: %d", format);
     }
 
-    systemf("%s", scaleCommand);
+    pm_system2(pm_feed_from_file, (void*)inputFileNm,
+               pm_accept_to_file, (void*)outputFileNm,
+               scaleCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_message("Shell command '%s' failed.  Termination status=%d",
+                   scaleCommand, termStatus);
 
     pm_strfree(scaleCommand);
-    pm_strfree(inputFileNmToken);
 }
 
 
@@ -507,10 +467,10 @@ thumbnailFileList(const char * const dirName,
 
 
 static void
-makeImageFile(const char * const thumbnailFileName,
-              const char * const inputFileName,
+makeImageFile(const char * const thumbnailFileNm,
+              const char * const inputFileNm,
               bool         const blackBackground,
-              const char * const outputFileName) {
+              const char * const outputFileNm) {
 /*----------------------------------------------------------------------------
    Create one thumbnail image.  It consists of the image in the file named
    'thumbnailFileName' with text of that name appended to the bottom.
@@ -523,15 +483,34 @@ makeImageFile(const char * const thumbnailFileName,
 -----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
     const char * const invertStage   = blackBackground ? "| pnminvert " : "";
-    const char * const inputFileNmToken = shellQuote(inputFileName);
+    const char * const thumbnailFileNmToken = shellQuote(thumbnailFileNm);
 
-    systemf("pbmtext %s %s"
-            "| pamcat %s -topbottom %s - "
-            "> %s",
-            inputFileNmToken, invertStage, blackWhiteOpt,
-            thumbnailFileName, outputFileName);
+    struct bufferDesc fileNmBuf;
+    const char * shellCommand;
+    int termStatus;
 
-    pm_strfree(inputFileNmToken);
+    fileNmBuf.size              = strlen(inputFileNm);
+    fileNmBuf.buffer            = (unsigned char *)inputFileNm;
+    fileNmBuf.bytesTransferredP = NULL;
+
+    pm_asprintf(&shellCommand,
+                "pbmtext "
+                "%s"
+                "| pamcat %s -topbottom %s - ",
+                invertStage, blackWhiteOpt, thumbnailFileNmToken);
+
+    pm_system2(&pm_feed_from_memory, &fileNmBuf,
+               &pm_accept_to_file, (void*)outputFileNm,
+               shellCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_error("Shell command '%s' to add file name to thumbnail image "
+                 "of file '%s' failed, termination Status = %d",
+                 shellCommand, inputFileNm, termStatus);
+
+    pm_strfree(thumbnailFileNmToken);
+    pm_strfree(shellCommand);
 }
 
 
@@ -623,12 +602,14 @@ combineIntoRowAndDelete(unsigned int const row,
                         const char * const tempDir) {
 
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
-    const char * const fileName = rowFileName(tempDir, row);
+    const char * const fileNm        = rowFileName(tempDir, row);
 
     const char * quantStage;
     const char * fileList;
+    const char * shellCommand;
+    int termStatus;
 
-    unlink(fileName);
+    unlink(fileNm);
 
     if (maxFormatType == PPM_TYPE && quant)
         pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colorCt);
@@ -637,14 +618,23 @@ combineIntoRowAndDelete(unsigned int const row,
 
     fileList = thumbnailFileList(tempDir, row, cols);
 
-    systemf("pamcat %s -leftright -jbottom %s "
-            "%s"
-            ">%s",
-            blackWhiteOpt, fileList, quantStage, fileName);
+    pm_asprintf(&shellCommand, "pamcat %s -leftright -jbottom %s "
+                "%s",
+                blackWhiteOpt, fileList, quantStage);
+
+    pm_system2(&pm_feed_null, NULL,
+               &pm_accept_to_file, (void*)fileNm,
+               shellCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_error("Shell command '%s' to create row of thumbnails failed.  "
+                 "Termination status = %d", shellCommand, termStatus);
 
     pm_strfree(fileList);
     pm_strfree(quantStage);
-    pm_strfree(fileName);
+    pm_strfree(fileNm);
+    pm_strfree(shellCommand);
 
     unlinkThumbnailFiles(tempDir, row, cols);
 }
@@ -696,6 +686,8 @@ writeRowsAndDelete(unsigned int const rows,
 
     const char * quantStage;
     const char * fileList;
+    const char * shellCommand;
+    int termStatus;
 
     if (maxFormatType == PPM_TYPE && quant)
         pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colorCt);
@@ -704,9 +696,23 @@ writeRowsAndDelete(unsigned int const rows,
 
     fileList = rowFileList(tempDir, rows);
 
-    systemf("pamcat %s -topbottom %s %s",
-            blackWhiteOpt, fileList, quantStage);
+    pm_asprintf(&shellCommand, "pamcat %s -topbottom %s %s",
+                blackWhiteOpt, fileList, quantStage);
 
+    /* Do pamcat/pnmquant command with no Standard Input and writing to
+       our Standard Output
+    */
+    pm_system2(&pm_feed_null, NULL,
+               NULL, NULL,
+               shellCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_error("Shell command '%s' to assemble %u rows of thumbnails and "
+                 "write them out failed; termination status = %d",
+                 shellCommand, rows, termStatus);
+
+    pm_strfree(shellCommand);
     pm_strfree(fileList);
     pm_strfree(quantStage);
 
