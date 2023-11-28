@@ -767,17 +767,20 @@ pm_accept_to_memory(int             const pipeToSuckFd,
 
 
 void
-pm_feed_from_filestream(int    const pipeToFeedFd,
-                        void * const feederParm) {
+pm_feed_from_file(int    const pipeToFeedFd,
+                  void * const feederParm) {
 
-    FILE * const inFileP  = feederParm;
+    const char * const inFileNm = feederParm;
 
     size_t const bufferSz = 64*1024;
 
     FILE * const outFileP = fdopen(pipeToFeedFd, "w");
 
+    FILE * inFileP;
     unsigned char * buffer;
     bool eof;
+
+    inFileP = pm_openr(inFileNm);
 
     MALLOCARRAY(buffer, bufferSz);
 
@@ -803,10 +806,68 @@ pm_feed_from_filestream(int    const pipeToFeedFd,
             eof = true;
     }
 
+    pm_close(inFileP);
     fclose(outFileP);
 
     free(buffer);
 }
+
+
+
+void
+pm_accept_to_file(int             const pipeToSuckFd,
+                  void *          const accepterParm ) {
+
+    const char * const outFileNm = accepterParm;
+
+    size_t const bufferSz = 64*1024;
+
+    FILE * const inFileP = fdopen(pipeToSuckFd, "r");
+
+    FILE * outFileP;
+    unsigned char * buffer;
+    bool eof;
+
+    outFileP = pm_openw(outFileNm);
+
+    MALLOCARRAY(buffer, bufferSz);
+
+    if (!buffer)
+        pm_error("Failed to allocate %u bytes for I/O buffer",
+                 (unsigned) bufferSz);
+
+    for (eof = false; !eof; ) {
+        size_t byteCtRead;
+
+        byteCtRead = fread(buffer, 1, bufferSz, inFileP);
+
+        if (ferror(inFileP))
+            pm_error("Error reading Standard Output accepter pipe.  "
+                     "errno=%d (%s)",
+                     errno, strerror(errno));
+
+        if (byteCtRead > 0) {
+            fwrite(buffer, 1, byteCtRead, outFileP);
+
+            if (ferror(outFileP))
+                pm_error("Error writing to file.  errno=%d (%s)",
+                         errno, strerror(errno));
+        } else
+            eof = true;
+    }
+
+    pm_close(outFileP);
+    fclose(inFileP);
+
+    free(buffer);
+}
+
+
+
+/* Note that pm_feed_from_filestream is not possible because Standard Input is
+   feed by a child process and we can't properly pass a FILE * to a child
+   process.
+*/
 
 
 
