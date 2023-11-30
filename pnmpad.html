@@ -13,7 +13,13 @@ pnmpad - add borders to a PNM image
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pnmpad </b>
-[<b>-white</b>|<b>-black</b>]
+[<b>-color=</b><i>color</i>
+[<b>-promote=</b>{<b>none</b>|<b>format</b>|<b>all</b>}]
+|<b>-detect-background</b>
+|<b>-extend-edge</b>
+|<b>-white</b>
+|<b>-black</b>
+]
 <br>
 [<b>-width=</b><i>pixels</i>]
 [<b>-halign=</b><i>ratio</i>]
@@ -71,11 +77,34 @@ use either white space or an equals sign between an option name and
 its value.
 
 <dl>
+<dt><b>-color=</b><i>color</i>
+<dt><b>-detect-background</b>
+<dt><b>-extend-edge</b>
 <dt><b>-white</b>
 <dt><b>-black</b>
 
-<dd>Set pad color.  Default is <b>-black</b>.
+<dd>This specifies the color of the padding.  <i>color</i> is like
+the <a href="libnetpbm_image.html#colorname">argument of
+the <b>pnm_parsecolor()</b> library routine</a>.
 
+<p><b>-detect-background</b> means the program uses the color of the
+top left pixel of the input as the pad color.  Note that this could cause
+odd results if you aren&apos;t padding the top or left of the image.
+  
+<p>You may specify only one of <b>-white</b>, <b>-black</b>, <b>-color</b>,
+and <b>-detect-background</b>.
+  
+<p><b>-extend-edge</b> says to pad by duplicating the adjacent edge of the
+image pixel by pixel.  E.g. if the top row of the image is 20 white pixels
+followed by 10 black pixels, every row of padding added to the top of the
+image is 20 white pixels followed by 20 black pixels.
+
+<p>By default, the padding is black.
+
+<p><b>-white</b> and <b>-black</b> are for backward compatibility.
+<b>-color</b>, <b>-detect-background</b>, and <b>-extend-edge</b> were new
+with Netpbm 11.05 (December 2023).
+  
 <dt><b>-left=</b><i>pixels</i>
 <dt><b>-right=</b><i>pixels</i>
 <dt><b>-width=</b><i>width</i>
@@ -145,6 +174,39 @@ when <b>-mwidth</b> is specified and the other options indicate no padding.
 <dd>
 These options determine the vertical padding.  They are analogous to the
 horizontal padding options above.
+
+<dt><b>-promote=</b>{<b>none</b>|<b>format</b>|<b>all</b>}
+
+<dd>This option tells what to do when the <b>-color</b> option specifies a
+color that cannot be represented in the input format, which ordinarily is also
+the output format.  For example, if the input is PGM (which can represent only
+shades of gray), and you specify <b>-color=red</b>, should <b>pnmpad</b> make
+the padding gray or make the output PPM?
+    
+<dl>
+  <dt><b>none</b>
+    <dd>Make the output have the same format and maxval as the input.
+      Adjust the pad color to the nearest color possible in that format
+      (black, white, or a shade of gray).
+  <dt><b>format</b>
+    <dd>Make the output have the same maxval as the input, but make
+      the output format PPM if the pad color is not black, white, or gray.
+  <dt><b>all</b>
+    <dd>Make the format and maxval of the output capable of representing the
+      pad color.  Make the format the least expressive format capable of
+      representing the pad color.  Make the maxval the larger of 255 and
+      the maxval of the input image.
+</dl>
+
+<p>The default is <b>-promote=all</b>.
+
+<p>Note that this promotion happens even if no actual padding happens, meaning
+it isn&apos;t really necessary.  The promotion is based on
+what <em>would</em> be required to represent padding of the specified color.
+
+<p>This option is valid only when you also specify <b>-color</b>.
+
+<p>This option was new in Netpbm 11.05 (December 2023).
 
 <dt><b>-reportonly</b>
 <dd>
