@@ -555,8 +555,7 @@ setColorSpaces(J_COLOR_SPACE   const jpegColorSpace,
         pm_error("INTERNAL ERROR: unknown color space code %d passed "
                  "to setColorSpaces().", jpegColorSpace);
     }
-    pm_message("WRITING %s FILE",
-               *outputTypeP == PPM_TYPE ? "PPM" : "PGM");
+    pm_message("WRITING %s FILE", pnm_formattypenm(*outputTypeP));
 }
 
 

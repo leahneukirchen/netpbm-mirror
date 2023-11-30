@@ -1449,20 +1449,14 @@ pnmFormat(bool const hasGray,
   by 'hasGray' and 'hasColor'.
 -----------------------------------------------------------------------------*/
     int format;
-    const char * formatName;
 
     if (hasColor) {
         format = PPM_FORMAT;
-        formatName = "PPM";
     } else if (hasGray) {
         format = PGM_FORMAT;
-        formatName = "PGM";
     } else {
         format = PBM_FORMAT;
-        formatName = "PBM";
     }
-    if (verbose)
-        pm_message("writing a %s file", formatName);
 
     return format;
 }
@@ -1554,6 +1548,9 @@ convertRaster(Decompressor * const decompP,
         */
 
     MALLOCARRAY2(cmapIndexArray, interlace ? rows : 1 , cols);
+
+    if (verbose)
+        pm_message("writing a %s file", pnm_formattypenm(format));
 
     if (imageOutFileP)
         pnm_writepnminit(imageOutFileP, cols, rows, GIFMAXVAL, format, false);
