@@ -6,7 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.05.00
 
-              pnmpad: Add -extend-edge.
+              pnmpad: Add -color, -promote, -extend-edge, -detect-background .
 
               pamtosvg: fix "zero determinant" failure.  Introduced in
               Netpbm 11.04 (September 2023).
