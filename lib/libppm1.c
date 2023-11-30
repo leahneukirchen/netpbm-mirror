@@ -490,3 +490,6 @@ ppm_check(FILE *               const fileP,
         pm_check(fileP, checkType, needRasterSize, retvalP);
     }
 }
+
+
+
