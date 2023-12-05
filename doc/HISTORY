@@ -8,6 +8,12 @@ not yet  BJH  Release 11.05.00
 
               pnmpad: Add -color, -promote, -extend-edge, -detect-background .
 
+              pnmconvol: Restore ability of convolution matrix to be a
+              pseudo-plain-PNM with samples that exceed the maxval.  Lost in
+              10.30 (October 2005) because maxval-checking code was added to
+              libnetpbm.  (Was fixed in 10.47.08 in November 2010, but only in
+              the 10.47 series).
+
               pamtosvg: fix "zero determinant" failure.  Introduced in
               Netpbm 11.04 (September 2023).
 
