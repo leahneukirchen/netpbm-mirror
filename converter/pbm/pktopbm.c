@@ -454,7 +454,7 @@ readCharacterHeader(int *          const carP,
     if (packetLength < 0)
         pm_error("Invalid character header - negative packet length");
     if (packetLength > UINT_MAX - pkLoc)
-        pm_error("Invalid character header - excessive packet lenght");
+        pm_error("Invalid character header - excessive packet length");
 
     *endOfPacketP = packetLength + pkLoc;
 
