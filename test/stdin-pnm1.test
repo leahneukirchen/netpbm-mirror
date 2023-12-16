@@ -4,7 +4,7 @@
 # This script tests: pnmmontage pnmnlfilt pnmnorm pnmpad pnmquant pnmrotate
 # This script tests: pnmscalefixed pnmshear pnmsmooth pnmtile pnmtoddif
 # This script tests: pnmtopclxl
-# Also requires: ppmpat pamflip
+# Also requires: ppmpat
 
 tmpdir=${tmpdir:-/tmp}
 small_ppm=${tmpdir}/test.ppm

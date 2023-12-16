@@ -125,5 +125,34 @@ for pad in "-t 4 -b 8 -h 112" \
   pnmpad -reportonly ${pad} ${test_ppm} || echo "failure"
   done
 
+echo "Test Invalid"
 
+test_out=${tmpdir}/test_out
+n=1
+
+# define function
+invcmd () { $1 > ${test_out} || \
+  printf "Expected failure $n "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+  n=$(($n +1)); }
+
+echo 1>&2
+echo "Invalid command-line arguments." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+invcmd "pnmpad -reportonly -l 1 -r 1 -w 100 testgrid.pbm"
+invcmd "pnmpad -reportonly -t 1 -b 1 -h 100 testgrid.pbm"
+invcmd "pnmpad -reportonly -black -white -l 1 testgrid.pbm"
+invcmd "pnmpad -reportonly -color -l 1 testgrid.pbm"
+invcmd "pnmpad -reportonly -color rgbi:0/0/0 -white -l 1 testgrid.pbm"
+invcmd "pnmpad -reportonly -color rgbi:0/0/0 -extend-edge -l 1 testgrid.pbm"
+invcmd "pnmpad -reportonly -color rgbi:0/0/0 -detect-background -l 1 testgrid.pbm"
+
+# echo "Test Invalid.  Should print failure twice"
+# 
+# pnmpad -reportonly -l 1 -r 1 -w 100 testgrid.pbm && echo "unexpected success" || echo "failure" 
+# pnmpad -reportonly -t 1 -b 1 -h 100 testgrid.pbm && echo "unexpected success" || echo "failure"
+# 
 rm ${test1_pbm} ${test2_pbm} ${test_pgm} ${test_ppm}

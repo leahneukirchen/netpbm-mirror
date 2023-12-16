@@ -65,3 +65,11 @@ Test 9.  Should print 0 0 4 8 19 112 seven times
 0 0 4 8 19 112
 0 0 4 8 19 112
 0 0 4 8 19 112
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)

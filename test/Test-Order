@@ -89,8 +89,13 @@ pnminvert.test
 pamchannel.test
 ppmchange.test
 pambackground.test
+
 pnmpad-reportonly.test
-pnmpaste-pbm.test
+pnmpad-flip.test
+pnmpad-extend-enlarge.test
+pnmpad-pnmmargin.test
+pnmpad-format.test
+pnmpad-color.test
 
 pamrestack.test
 pamshuffle.test
@@ -112,6 +117,8 @@ pamedge.test
 ppmdim.test
 pnmshear.test
 pgmbentley.test
+
+pnmindex.test
 
 pamfunc.test
 pamarith.test
@@ -275,3 +282,4 @@ jpeg-roundtrip.test
 lps-roundtrip.test
 tiffcmyk-roundtrip.test
 yuv-roundtrip.test
+

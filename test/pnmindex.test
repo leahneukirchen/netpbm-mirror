@@ -1,0 +1,39 @@
+#! /bin/sh
+# This script tests: pnmindex
+# Also requires:
+
+pnmindex maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm | cksum
+
+pnmindex -white -noquant maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm | cksum
+
+pnmindex -black maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm | cksum
+
+pnmindex -size 20 -accross=3 testgrid.pbm testgrid.pbm testgrid.pbm \
+                             testgrid.pbm testgrid.pbm testgrid.pbm | cksum
+
+echo "Test Invalid"
+
+test_out=${tmpdir}/test_out
+n=1
+
+# define function
+invcmd $1 > ${test_out} || \
+  printf "Expected failure $n "
+  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  rm -f ${test_out}
+  n=$(($n +1)); }
+
+echo 1>&2
+echo "Invalid command-line arguments." 1>&2
+echo "Error messages should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
+
+invcmd "pnmindex -size -1 testgrid.pbm"
+invcmd "pnmindex -size 0  testgrid.pbm"
+invcmd "pnmindex -size    testgrid.pbm"
+invcmd "pnmindex -across -1 testgrid.pbm"
+invcmd "pnmindex -across 0  testgrid.pbm"
+invcmd "pnmindex -across    testgrid.pbm"
+invcmd "pnmindex -quant -1 testgrid.pbm"
+invcmd "pnmindex -quant 0  testgrid.pbm"
+invcmd "pnmindex testgrid.pbm /dev/null"

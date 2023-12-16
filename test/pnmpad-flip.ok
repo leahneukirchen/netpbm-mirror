@@ -1,0 +1,64 @@
+Test 1.  Should print match sixteen (8x2) times
+(pbmnoise -randomseed=100 11 16)
+match
+match
+match
+match
+match
+match
+match
+match
+(pgmnoise -randomseed=100 31 41)
+match
+match
+match
+match
+match
+match
+match
+match
+Test 2.  Should print match forty (10x4) times
+(pbmmake -b 1 1)
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+(pbmmake -w 1 1)
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+(pbmmake -g 17 11)
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+(ppmpat -argyle1 -randomseed=100 7 8)
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
