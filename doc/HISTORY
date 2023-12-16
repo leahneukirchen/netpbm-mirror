@@ -14,6 +14,10 @@ not yet  BJH  Release 11.05.00
               libnetpbm.  (Was fixed in 10.47.08 in November 2010, but only in
               the 10.47 series).
 
+              pnmpad: fix behavior with -left, -right, and -width together or
+              -top, -bottom, -height together: ignores -width where it should
+              fail.  Broken in Netpbm 10.72 (September 2015).
+
               pamtosvg: fix "zero determinant" failure.  Introduced in
               Netpbm 11.04 (September 2023).
 

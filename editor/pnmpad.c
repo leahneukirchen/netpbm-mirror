@@ -381,8 +381,8 @@ computePadSizeBeforeMult(unsigned int   const unpaddedSize,
 -----------------------------------------------------------------------------*/
     if (sizeSpec) {
         if (begPadSpec && endPadSpec) {
-            if (begPadReq + unpaddedSize + endPadReq < unpaddedSize) {
-                pm_error("Beginning adding (%u), and end "
+            if (begPadReq + unpaddedSize + endPadReq < sizeReq) {
+                pm_error("Beginning padding (%u), and end "
                          "padding (%u) are insufficient to bring the "
                          "image size of %u up to %u.",
                          begPadReq, endPadReq, unpaddedSize, sizeReq);
