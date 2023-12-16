@@ -341,7 +341,8 @@ copyImage(const char * const inputFileNm,
     pm_system2_lp("cat",
                   &pm_feed_from_file, (void*)inputFileNm,
                   &pm_accept_to_file, (void*)outputFileNm,
-                  &termStatus);
+                  &termStatus,
+                  NULL);
 
     if (termStatus != 0)
         pm_error("'cat' to copy image '%s' to '%s' failed, "
