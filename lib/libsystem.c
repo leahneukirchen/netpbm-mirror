@@ -523,10 +523,7 @@ pm_system2_lp(const char *    const progName,
 
     va_start(args, termStatusP);
 
-    endOfArgs = FALSE;
-    argArray = NULL;
-
-    for (endOfArgs = FALSE, argArray = NULL, n = 0;
+    for (endOfArgs = false, argArray = NULL, n = 0;
          !endOfArgs;
         ) {
         const char * const arg = va_arg(args, const char *);
@@ -536,7 +533,7 @@ pm_system2_lp(const char *    const progName,
         argArray[n++] = arg;
 
         if (!arg)
-            endOfArgs = TRUE;
+            endOfArgs = true;
     }
 
     va_end(args);
@@ -628,9 +625,6 @@ pm_system_lp(const char *    const progName,
 
     va_start(args, accepterParm);
 
-    endOfArgs = FALSE;
-    argArray = NULL;
-
     for (endOfArgs = FALSE, argArray = NULL, n = 0;
          !endOfArgs;
         ) {
@@ -641,7 +635,7 @@ pm_system_lp(const char *    const progName,
         argArray[n++] = arg;
 
         if (!arg)
-            endOfArgs = TRUE;
+            endOfArgs = true;
     }
 
     va_end(args);
