@@ -855,14 +855,25 @@ regressColor(int  const format,
 
     xel retval;
 
-    if (format == PBM_TYPE) {
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PBM_TYPE:
+      {
         gray const threshold = maxval / 2;
 
         retval = grayval > threshold ?
             pnm_whitexel(maxval, format) : pnm_blackxel(maxval, format);
-    } else { /* PGM_TYPE */
+      }
+        break;
+    case PGM_TYPE:
         retval.b = grayval;
         retval.r = retval.g = 0;
+        break;
+    case PPM_TYPE:
+        retval = color;
+        break;
+    default:
+        pm_error("internal error -- impossible value of PNM format "
+                 "type in regressColor");
     }
     return retval;
 }
