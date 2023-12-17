@@ -684,6 +684,7 @@ writeRowsAndDelete(unsigned int const rows,
                    const char * const tempDir) {
 
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
+    const char * const plainOpt      = pm_plain_output ? "-plain" : "";
 
     const char * quantStage;
     const char * fileList;
@@ -697,8 +698,8 @@ writeRowsAndDelete(unsigned int const rows,
 
     fileList = rowFileList(tempDir, rows);
 
-    pm_asprintf(&shellCommand, "pamcat %s -topbottom %s %s",
-                blackWhiteOpt, fileList, quantStage);
+    pm_asprintf(&shellCommand, "pamcat %s %s -topbottom %s %s",
+                plainOpt, blackWhiteOpt, fileList, quantStage);
 
     /* Do pamcat/pnmquant command with no Standard Input and writing to
        our Standard Output
