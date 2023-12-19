@@ -685,13 +685,27 @@ rowFileList(const char * const dirName,
 
 
 static void
-writeRowsAndDelete(unsigned int const rows,
+writeRowsAndDelete(unsigned int const rowCt,
                    int          const maxFormatType,
                    bool         const blackBackground,
                    bool         const quant,
                    unsigned int const colorCt,
                    const char * const tempDir) {
+/*----------------------------------------------------------------------------
+   Write the PNM image containing the 'rowCt' rows of thumbnails to Standard
+   Output.  Take each row of thumbnails from a specially named PNM file in
+   directory 'tempDir', and unlink it from that directory.
 
+   Where the rows are different widths, pad with black if 'blackBackground'
+   is true; white otherwise.
+
+   If 'quant', color-quantize the result to have no more than 'colorCt'
+   colors, choosing the colors that best represent all the pixels in the
+   result.
+
+   'maxFormatType' is the most expressive format of all the row files; results
+   are undefined if it is not.
+-----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
     const char * const plainOpt      = pm_plain_output ? "-plain" : "";
 
@@ -705,7 +719,7 @@ writeRowsAndDelete(unsigned int const rows,
     else
         quantStage = strdup("");
 
-    fileList = rowFileList(tempDir, rows);
+    fileList = rowFileList(tempDir, rowCt);
 
     pm_asprintf(&shellCommand, "pamcat %s %s -topbottom %s %s",
                 plainOpt, blackWhiteOpt, fileList, quantStage);
@@ -721,13 +735,13 @@ writeRowsAndDelete(unsigned int const rows,
     if (termStatus != 0)
         pm_error("Shell command '%s' to assemble %u rows of thumbnails and "
                  "write them out failed; termination status = %d",
-                 shellCommand, rows, termStatus);
+                 shellCommand, rowCt, termStatus);
 
     pm_strfree(shellCommand);
     pm_strfree(fileList);
     pm_strfree(quantStage);
 
-    unlinkRowFiles(tempDir, rows);
+    unlinkRowFiles(tempDir, rowCt);
 }
 
 
