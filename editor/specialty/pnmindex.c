@@ -342,7 +342,7 @@ copyImage(const char * const inputFileNm,
                   &pm_feed_from_file, (void*)inputFileNm,
                   &pm_accept_to_file, (void*)outputFileNm,
                   &termStatus,
-                  NULL);
+                  "cat", NULL);
 
     if (termStatus != 0)
         pm_error("'cat' to copy image '%s' to '%s' failed, "
