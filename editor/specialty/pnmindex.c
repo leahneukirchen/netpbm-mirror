@@ -160,7 +160,7 @@ parseCommandLine(int argc, const char ** argv,
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (quant && cmdlineP->noquant)
-        pm_error("You can't specify both -quant and -noquat");
+        pm_error("You can't specify both -quant and -noquant");
 
     if (colorsSpec) {
         if (cmdlineP->colors == 0)
