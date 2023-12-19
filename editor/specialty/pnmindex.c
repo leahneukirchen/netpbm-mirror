@@ -604,13 +604,30 @@ unlinkRowFiles(const char * const dirName,
 
 static void
 combineIntoRowAndDelete(unsigned int const row,
-                        unsigned int const cols,
+                        unsigned int const colCt,
                         int          const maxFormatType,
                         bool         const blackBackground,
                         bool         const quant,
                         unsigned int const colorCt,
                         const char * const tempDir) {
+/*----------------------------------------------------------------------------
+   Combine the 'colCt' thumbnails for row 'row' into a PNM file in directory
+   'tempDir'.
 
+   Each thumbnail is from a specially named file in 'tempDir' whose name
+   indicates its position in the row, and the output is also specially named
+   with a name indicating it is row 'row'.
+
+   Where the thumnails are different heights, pad with black if
+   'blackBackground' is true; white otherwise.
+
+   If 'quant', color-quantize the result to have no more than 'colorCt'
+   colors, choosing the colors that best represent all the pixels in the
+   result.
+
+   'maxFormatType' is the most expressive format of all the thumbnail files;
+   results are undefined if it is not.
+-----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
     const char * const fileNm        = rowFileName(tempDir, row);
 
@@ -626,7 +643,7 @@ combineIntoRowAndDelete(unsigned int const row,
     else
         quantStage = strdup("");
 
-    fileList = thumbnailFileList(tempDir, row, cols);
+    fileList = thumbnailFileList(tempDir, row, colCt);
 
     pm_asprintf(&shellCommand, "pamcat %s -leftright -jbottom %s "
                 "%s",
@@ -646,7 +663,7 @@ combineIntoRowAndDelete(unsigned int const row,
     pm_strfree(fileNm);
     pm_strfree(shellCommand);
 
-    unlinkThumbnailFiles(tempDir, row, cols);
+    unlinkThumbnailFiles(tempDir, row, colCt);
 }
 
 
