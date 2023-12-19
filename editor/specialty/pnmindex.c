@@ -162,13 +162,22 @@ parseCommandLine(int argc, const char ** argv,
     if (quant && cmdlineP->noquant)
         pm_error("You can't specify both -quant and -noquat");
 
-    if (!colorsSpec)
+    if (colorsSpec) {
+        if (cmdlineP->colors == 0)
+            pm_error("-colors value must be positive");
+    } else
         cmdlineP->colors = 256;
 
-    if (!sizeSpec)
+    if (sizeSpec) {
+        if (cmdlineP->size == 0)
+            pm_error("-size value must be positive");
+    } else
         cmdlineP->size = 100;
 
-    if (!acrossSpec)
+    if (acrossSpec) {
+        if (cmdlineP->across == 0)
+            pm_error("-across value must be positive");
+    } else
         cmdlineP->across = 6;
 
     if (!titleSpec)
