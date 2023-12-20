@@ -1,15 +1,33 @@
 #! /bin/sh
 # This script tests: pnmindex
-# Also requires:
+# Also requires: pamcat pamscale pbmtext pnmcolormap pnmindex
+# Also requires: pnminvert pnmquant pnmremap 
 
+echo "Test 1. Should print 3391481002 889"
+pnmindex maze.pbm | cksum
+
+echo "Test 2. Should print 1998876959 5290 twice"
 pnmindex maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm | cksum
+pnmindex -noquant maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm | cksum
 
-pnmindex -white -noquant maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm | cksum
-
+echo "Test 3. Should print 3099638253 5290"
 pnmindex -black maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm maze.pbm | cksum
 
-pnmindex -size 20 -accross=3 testgrid.pbm testgrid.pbm testgrid.pbm \
-                             testgrid.pbm testgrid.pbm testgrid.pbm | cksum
+echo "Test 4. Should print 1397700642 3160"
+pnmindex -size 20 -across=3 testgrid.pbm testgrid.pbm testgrid.pbm \
+         testgrid.pbm testgrid.pbm testgrid.pbm | cksum
+
+echo "Test 5. Should print 2303488589 28514"
+pnmindex testimg.ppm | cksum
+
+echo "Test 6. Should print 1706277976 100455"
+pnmindex -size 50 -across=2 testimg.ppm testimg.ppm testimg.ppm \
+         testimg.ppm testimg.ppm testimg.ppm | cksum
+
+echo "Test 7. Should print 801388440 100455"
+pnmindex -size 50 -across=2 -noquant testimg.ppm testimg.ppm testimg.ppm \
+         testimg.ppm testimg.ppm testimg.ppm | cksum
+
 
 echo "Test Invalid"
 
@@ -17,23 +35,26 @@ test_out=${tmpdir}/test_out
 n=1
 
 # define function
-invcmd $1 > ${test_out} || \
+invalidCmd () { $1 > ${test_out} && printf "Unexpected success $n " || \
   printf "Expected failure $n "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
+  test -s ${test_out} && echo "(unexpected output)" || echo "(no output)"
   rm -f ${test_out}
-  n=$(($n +1)); }
+  n=$(($n + 1)); }
 
 echo 1>&2
 echo "Invalid command-line arguments." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-invcmd "pnmindex -size -1 testgrid.pbm"
-invcmd "pnmindex -size 0  testgrid.pbm"
-invcmd "pnmindex -size    testgrid.pbm"
-invcmd "pnmindex -across -1 testgrid.pbm"
-invcmd "pnmindex -across 0  testgrid.pbm"
-invcmd "pnmindex -across    testgrid.pbm"
-invcmd "pnmindex -quant -1 testgrid.pbm"
-invcmd "pnmindex -quant 0  testgrid.pbm"
-invcmd "pnmindex testgrid.pbm /dev/null"
+invalidCmd "pnmindex -size -1 testgrid.pbm"
+invalidCmd "pnmindex -size  0 testgrid.pbm"
+invalidCmd "pnmindex -size    testgrid.pbm"
+invalidCmd "pnmindex -across -1 testgrid.pbm"
+invalidCmd "pnmindex -across  0 testgrid.pbm"
+invalidCmd "pnmindex -across    testgrid.pbm"
+invalidCmd "pnmindex -colors -1 testgrid.pbm"
+invalidCmd "pnmindex -colors  0 testgrid.pbm"
+invalidCmd "pnmindex -colors    testgrid.pbm"
+invalidCmd "pnmindex -quant -noquant testgrid.pbm"
+invalidCmd "pnmindex -colors 100 -noquant testgrid.pbm"
+invalidCmd "pnmindex"
