@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.12.26 BJH  Release 11.02.07
+
+              pnmpad: fix behavior with -left, -right, and -width together or
+              -top, -bottom, -height together: ignores -width where it should
+              fail.  Broken in Netpbm 10.72 (September 2015).
+
 23.12.05 BJH  Release 11.02.06
 
               pnmconvol: Restore ability of convolution matrix to be a
