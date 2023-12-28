@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 11.05.00
+23.12.28 BJH  Release 11.05.00
 
               pnmpad: Add -color, -promote, -extend-edge, -detect-background .
 
