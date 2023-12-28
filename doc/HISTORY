@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+23.12.28 BJH  Release 10.86.40
+
+              pnmconvol: Restore ability of convolution matrix to be a
+              pseudo-plain-PNM with samples that exceed the maxval.  Lost in
+              10.30 (October 2005) because maxval-checking code was added to
+              libnetpbm.  (Was fixed in 10.47.08 in November 2010, but only in
+              the 10.47 series).
+
+              pnmpad: fix wrong results with old-style options (e.g. "-t50").
+
+              pnmpad: fix behavior with -left, -right, and -width together or
+              -top, -bottom, -height together: ignores -width where it should
+              fail.  Broken in Netpbm 10.72 (September 2015).
+
 23.09.27 BJH  Release 10.86.39
 
               pamtosvg: fix hang.

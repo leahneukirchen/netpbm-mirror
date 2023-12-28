@@ -617,6 +617,64 @@ normalizeKernel(struct ConvKernel * const convKernelP) {
 
 
 static void
+readPseudoPnmKernel(FILE *       const fileP,
+                    struct pam * const pamP,
+                    tuple ***    const tuplesP) {
+/*----------------------------------------------------------------------------
+   Read in the pseudo-PNM that is the convolution matrix.
+
+   This is essentially pnm_readpam(), except that it can take sample values
+   that exceed the maxval, which is not legal in PNM.  That's why it's
+   psuedo-PNM and not true PNM.
+-----------------------------------------------------------------------------*/
+
+    /* pm_getuint() is supposed to be internal to libnetpbm, but since we're
+       doing this backward compatibility hack here, we use it anyway.
+    */
+
+    unsigned int
+    pm_getuint(FILE * const file);
+
+    tuple ** tuples;
+    unsigned int row;
+
+    pnm_readpaminit(fileP, pamP, PAM_STRUCT_SIZE(tuple_type));
+
+    tuples = pnm_allocpamarray(pamP);
+
+    for (row = 0; row < pamP->height; ++row) {
+        if (pamP->format == PGM_FORMAT || pamP->format == PPM_FORMAT) {
+            /* Plain format -- can't use pnm_readpnmrow() because it will
+               reject a sample > maxval
+            */
+            unsigned int col;
+            for (col = 0; col < pamP->width; ++col) {
+                switch (pamP->format) {
+                case PGM_FORMAT:
+                    tuples[row][col][0] = pm_getuint(fileP);
+                    break;
+                case PPM_FORMAT:
+                    tuples[row][col][PAM_RED_PLANE] = pm_getuint(fileP);
+                    tuples[row][col][PAM_GRN_PLANE] = pm_getuint(fileP);
+                    tuples[row][col][PAM_BLU_PLANE] = pm_getuint(fileP);
+                    break;
+                default:
+                    assert(false);
+                }
+            }
+        } else {
+            /* Raw or PBM format -- pnm_readpnmrow() won't do any maxval
+               checking
+            */
+            pnm_readpamrow(pamP, tuples[row]);
+        }
+    }
+    *tuplesP = tuples;
+}
+
+
+
+static void
 getKernelPnm(const char *         const fileName,
              unsigned int         const depth,
              bool                 const offset,
@@ -639,12 +697,14 @@ getKernelPnm(const char *         const fileName,
     cifP = pm_openr(fileName);
 
     /* Read in the convolution matrix. */
-    ctuples = pnm_readpam(cifP, &cpam, PAM_STRUCT_SIZE(tuple_type));
+    readPseudoPnmKernel(cifP, &cpam, &ctuples);
     pm_close(cifP);
 
     validateKernelDimensions(cpam.width, cpam.height);
 
     convKernelCreatePnm(&cpam, ctuples, depth, offset, convKernelPP);
+
+    pnm_freepamarray(ctuples, &cpam);
 }
 
 
