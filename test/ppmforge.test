@@ -1,4 +1,4 @@
-q#! /bin/sh
+#! /bin/sh
 # This script tests: ppmforge
 # Also requires: pnmpsnr
 
