@@ -170,3 +170,6 @@ canon_compressed_load_raw(Image const image) {
     if (raw_width > width)
         black /= (raw_width - width) * height;
 }
+
+
+

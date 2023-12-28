@@ -80,7 +80,7 @@ typedef
 #endif
     struct rle_hdr {
         enum rle_dispatch dispatch;  /* Type of file to create. */
-        int       ncolors;    /* Number of color channels. */
+        unsigned int ncolors;    /* Number of color channels. */
         int *     bg_color;   /* Pointer to bg color vector. */
         int       alpha;      /* If !0, save alpha channel. */
         int       background; /* 0->just save all pixels, */
@@ -327,9 +327,9 @@ rle_open_f_noexit(const char * const prog_name,
 
 /* Append history information to the HISTORY comment. */
 void
-rle_addhist(char *          argv[],
-            rle_hdr * const in_hdr,
-            rle_hdr * const out_hdr);
+rle_addhist(const char ** const argv,
+            rle_hdr *     const in_hdr,
+            rle_hdr *     const out_hdr);
 
 /* From cmd_name.c. */
 /*****************************************************************

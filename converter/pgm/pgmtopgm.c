@@ -20,9 +20,9 @@ main(int argc, char *argv[]) {
     gray maxval;
     int row;
     gray * grayrow;
-    
+
     pgm_init(&argc, argv);
-    
+
     if (argc-1 != 0)
         pm_error("Program takes no arguments.  Input is from Standard Input");
 
@@ -42,3 +42,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

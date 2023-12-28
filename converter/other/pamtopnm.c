@@ -52,7 +52,7 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -66,7 +66,7 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-validateTupleType(struct pam const inpam, 
+validateTupleType(struct pam const inpam,
                   int        const assumeTupleType) {
 /*----------------------------------------------------------------------------
    Make sure the image has a tuple type we know how to convert to PNM.
@@ -83,18 +83,18 @@ validateTupleType(struct pam const inpam,
     if (assumeTupleType) {
         /* User says tuple type is appropriate regardless of tuple_type. */
     } else {
-        if (inpam.depth >= 1 && 
-            strncmp(inpam.tuple_type, "BLACKANDWHITE", 
+        if (inpam.depth >= 1 &&
+            strncmp(inpam.tuple_type, "BLACKANDWHITE",
                     sizeof("BLACKANDWHITE")-1) == 0) {
             /* It's a PBMable image */
-        } else if (inpam.depth >= 1 && 
+        } else if (inpam.depth >= 1 &&
                    strncmp(inpam.tuple_type, "GRAYSCALE",
                            sizeof("GRAYSCALE")-1) == 0) {
             /* It's a PGMable image */
         } else if (inpam.depth >= 3 &&
                    strncmp(inpam.tuple_type, "RGB", sizeof("RGB")-1) == 0) {
             /* It's a PPMable image */
-        } else 
+        } else
             pm_error("PAM image does not have a depth and tuple_type "
                      "consistent with a PNM image.  "
                      "According to its "
@@ -129,12 +129,12 @@ main(int argc, const char **argv) {
 
         outpam = inpam;
         outpam.file = stdout;
-        
+
         if (inpam.depth < 3) {
             outpam.depth = 1;
             if (inpam.maxval == 1)
                 outpam.format = PBM_FORMAT;
-            else 
+            else
                 outpam.format = PGM_FORMAT;
         } else {
             outpam.depth = 3;
@@ -145,17 +145,17 @@ main(int argc, const char **argv) {
 
         {
             tuple *tuplerow;
-            
-            tuplerow = pnm_allocpamrow(&inpam);      
-            { 
+
+            tuplerow = pnm_allocpamrow(&inpam);
+            {
                 int row;
-                
+
                 for (row = 0; row < inpam.height; row++) {
                     pnm_readpamrow(&inpam, tuplerow);
                     pnm_writepamrow(&outpam, tuplerow);
                 }
             }
-            pnm_freepamrow(tuplerow);        
+            pnm_freepamrow(tuplerow);
         }
 
         pnm_nextimage(ifP, &eof);
@@ -163,3 +163,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
+
+

@@ -714,23 +714,6 @@ analyzeImageType(TIFF *             const tiffP,
 
 
 
-static void
-reportOutputFormat(int const format) {
-
-    const char * formatDesc;
-
-    switch (format) {
-    case PBM_TYPE: formatDesc = "PBM"; break;
-    case PGM_TYPE: formatDesc = "PGM"; break;
-    case PPM_TYPE: formatDesc = "PPM"; break;
-    default: assert(false);
-    }
-
-    pm_message("writing %s file", formatDesc);
-}
-
-
-
 typedef struct {
     FILE *       imageoutFileP;
         /* The stream to which we write the PNM image.  Null for none. */
@@ -1687,7 +1670,7 @@ convertImage(TIFF *             const tifP,
     analyzeImageType(tifP, tiffDir.bps, tiffDir.spp, tiffDir.photomet,
                      &maxval, &format, colormap, cmdline.headerdump, cmdline);
 
-    reportOutputFormat(format);
+    pm_message("writing %s file", pnm_formattypenm(format));
 
     pnmOut_init(imageoutFileP, alphaFileP, tiffDir.width, tiffDir.height,
                 tiffDir.orientation, maxval, format, maxval,

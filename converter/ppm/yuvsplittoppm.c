@@ -43,12 +43,12 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int                 argc, 
+parseCommandLine(int                 argc,
                  char **             argv,
                  struct cmdlineInfo *cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -64,7 +64,7 @@ parseCommandLine(int                 argc,
     unsigned int option_def_index;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "ccir601",     OPT_FLAG,   NULL,                  
+    OPTENT3(0, "ccir601",     OPT_FLAG,   NULL,
             &cmdlineP->ccir601,       0);
 
     opt.opt_table = option_def;
@@ -103,13 +103,13 @@ computeTwoOutputRows(int             const cols,
                      unsigned char * const vbuf,
                      pixel *         const pixelrow1,
                      pixel *         const pixelrow2) {
-                     
+
     int col;
 
     for (col = 0; col < cols; col += 2) {
         long int r0,g0,b0,r1,g1,b1,r2,g2,b2,r3,g3,b3;
         long int  u,v,y0,y1,y2,y3,u0,u1,u2,u3,v0,v1,v2,v3;
-        
+
         y0 = y1buf[col];
         y1 = y1buf[col+1];
         y2 = y2buf[col];
@@ -117,7 +117,7 @@ computeTwoOutputRows(int             const cols,
 
         u = ubuf[col/2] - 128;
         v = vbuf[col/2] - 128;
-        
+
         if (ccir601) {
             y0 = ((y0-16)*255)/219;
             y1 = ((y1-16)*255)/219;
@@ -128,7 +128,7 @@ computeTwoOutputRows(int             const cols,
             v  = (v*255)/224 ;
         }
         /* mean the chroma for subsampling */
-        
+
         u0=u1=u2=u3=u;
         v0=v1=v2=v3=v;
 
@@ -138,25 +138,25 @@ computeTwoOutputRows(int             const cols,
            [Y]   [65496        0   91880] [R]
            [U] = [65533   -22580  -46799] [G]
            [V]   [65537   116128      -8] [B]
-           
+
         */
 
         r0 = 65536 * y0               + 91880 * v0;
         g0 = 65536 * y0 -  22580 * u0 - 46799 * v0;
         b0 = 65536 * y0 + 116128 * u0             ;
-        
+
         r1 = 65536 * y1               + 91880 * v1;
         g1 = 65536 * y1 -  22580 * u1 - 46799 * v1;
         b1 = 65536 * y1 + 116128 * u1             ;
-        
+
         r2 = 65536 * y2               + 91880 * v2;
         g2 = 65536 * y2 -  22580 * u2 - 46799 * v2;
         b2 = 65536 * y2 + 116128 * u2             ;
-        
+
         r3 = 65536 * y3               + 91880 * v3;
         g3 = 65536 * y3 -  22580 * u3 - 46799 * v3;
         b3 = 65536 * y3 + 116128 * u3             ;
-        
+
         r0 = limit(r0);
         r1 = limit(r1);
         r2 = limit(r2);
@@ -195,7 +195,7 @@ main(int argc, char **argv) {
     ppm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-        
+
     pm_asprintf(&ufname, "%s.U", cmdline.filenameBase);
     pm_asprintf(&vfname, "%s.V", cmdline.filenameBase);
     pm_asprintf(&yfname, "%s.Y", cmdline.filenameBase);
@@ -215,7 +215,7 @@ main(int argc, char **argv) {
     if (cmdline.height % 2 != 0) {
         pm_message("Warning: odd height; last row ignored");
         rows = cmdline.height - 1;
-    } else 
+    } else
         rows = cmdline.height;
 
     pixelrow1 = ppm_allocrow(cols);
@@ -251,3 +251,6 @@ main(int argc, char **argv) {
 
     exit(0);
 }
+
+
+

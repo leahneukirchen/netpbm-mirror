@@ -504,6 +504,7 @@ computeComponentMasks(X11WDFileHeader * const h11P,
 }
 
 
+
 /* About TrueColor maxval:
 
    The X11 spec says that in TrueColor, you use the bits in the raster for a

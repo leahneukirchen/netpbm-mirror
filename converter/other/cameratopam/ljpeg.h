@@ -8,11 +8,11 @@ struct jhead {
 
 LoadRawFn lossless_jpeg_load_raw;
 
-int  
+int
 ljpeg_start (FILE *         const ifP,
              struct jhead * const jhP);
 
-int 
+int
 ljpeg_diff (FILE *          const ifP,
             struct decode * const dindexP);
 

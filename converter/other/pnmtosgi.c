@@ -225,12 +225,12 @@ buildChannels(FILE *       const ifP,
 
 
 static void
-writeHeader(unsigned int const cols, 
-            unsigned int const rows, 
-            xelval       const maxval, 
-            unsigned int const bpc, 
-            unsigned int const dimensions, 
-            unsigned int const channels, 
+writeHeader(unsigned int const cols,
+            unsigned int const rows,
+            xelval       const maxval,
+            unsigned int const bpc,
+            unsigned int const dimensions,
+            unsigned int const channels,
             const char * const imagename) {
 
     unsigned int i;
@@ -314,7 +314,7 @@ main(int argc,char * argv[]) {
         pm_error ("Input image is too large.");
 
     pnmrow = pnm_allocrow(cols);
-    
+
     switch (PNM_FORMAT_TYPE(format)) {
         case PBM_TYPE:
             pm_message("promoting PBM to PGM");
@@ -357,5 +357,6 @@ main(int argc,char * argv[]) {
 
     return 0;
 }
+
 
 

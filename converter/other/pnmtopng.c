@@ -601,6 +601,7 @@ alloccoloralphahash(void)  {
 }
 
 
+
 static void
 freecoloralphahash(coloralphahash_table const caht) {
     int i;
@@ -2210,6 +2211,7 @@ computeRasterWidth(bool           const colorMapped,
 }
 
 
+
 static void
 createPngPalette(pixel              palette_pnm[],
                  unsigned int const paletteSize,
@@ -2554,6 +2556,7 @@ reportTrans(struct pngx * const pngxP) {
     } else
         pm_message("No transparent color");
 }
+
 
 
 static void

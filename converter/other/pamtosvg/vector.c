@@ -271,6 +271,7 @@ vector_horizontal(void) {
 }
 
 
+
 Vector
 vector_zero(void) {
 
@@ -282,6 +283,7 @@ vector_zero(void) {
 
     return retval;
 }
+
 
 
 bool

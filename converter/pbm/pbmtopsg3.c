@@ -1,20 +1,20 @@
 /* pbmtopsg3
 
    Reads a series of PBM images and writes a Postscript program
-   containing these images as individual pages with Fax-G3 
+   containing these images as individual pages with Fax-G3
    (CCITT-Fiter) compression. (Useful for combining scanned pages into
    a comfortably printable document.)
 
-   Copyright (C) 2001 Kristof Koehler 
+   Copyright (C) 2001 Kristof Koehler
        <kristof@fachschaft.physik.uni-karlsruhe.de>
 
    Netpbm adaptation by Bryan Henderson June 2001.
- 
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -55,7 +55,7 @@ parseCommandLine(int argc, char ** argv,
 
     OPTENT3(0, "dpi",      OPT_FLOAT,  &dpiOpt,   &dpiSpec,   0);
     OPTENT3(0, "title",    OPT_STRING, &titleOpt, &titleSpec, 0);
-    
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
@@ -75,66 +75,70 @@ parseCommandLine(int argc, char ** argv,
     cmdlineP->title = titleSpec ? titleOpt : NULL;
 }
 
-    
 
-static void 
+
+static void
 write85 ( unsigned int bits, int *col )
 {
-	char buf[5] ;
-	if ( bits == 0 ) {
-		fputc ( 'z', stdout ) ;
-		*col += 1 ;
-	} else {
-		buf[4] = bits % 85 + '!' ;
-		bits /= 85 ;
-		buf[3] = bits % 85 + '!' ;
-		bits /= 85 ;
-		buf[2] = bits % 85 + '!' ;
-		bits /= 85 ;
-		buf[1] = bits % 85 + '!' ;
-		bits /= 85 ;
-		buf[0] = bits % 85 + '!' ;
-		fwrite ( buf, 1, 5, stdout ) ;
-		*col += 5 ;
-	}
-	if ( *col > 70 ) {
-		printf ( "\n" ) ;
-		*col = 0 ;
-	}
+        char buf[5] ;
+        if ( bits == 0 ) {
+                fputc ( 'z', stdout ) ;
+                *col += 1 ;
+        } else {
+                buf[4] = bits % 85 + '!' ;
+                bits /= 85 ;
+                buf[3] = bits % 85 + '!' ;
+                bits /= 85 ;
+                buf[2] = bits % 85 + '!' ;
+                bits /= 85 ;
+                buf[1] = bits % 85 + '!' ;
+                bits /= 85 ;
+                buf[0] = bits % 85 + '!' ;
+                fwrite ( buf, 1, 5, stdout ) ;
+                *col += 5 ;
+        }
+        if ( *col > 70 ) {
+                printf ( "\n" ) ;
+                *col = 0 ;
+        }
 }
 
 
-static void 
+
+static void
 writebits ( unsigned int *outbits, int *outbitsidx, int *col,
             unsigned int bits, int n )
 {
-	int k, m ;
-	unsigned int usedbits ;
-	while ( n > 0 ) {
-		if ( *outbitsidx == 0 )
-			*outbits = 0 ;
-		k = 32 - *outbitsidx ;
-		m = n > k ? k : n ;
-		usedbits = (bits >> (n-m)) & ((1<<m)-1) ;
-		*outbits |= usedbits << (k-m) ;
-		*outbitsidx += m ;
-		n -= m ;
-		if ( *outbitsidx == 32 ) {
-			write85 ( *outbits, col ) ;
-			*outbitsidx = 0 ;
-		}
-	}
+        int k, m ;
+        unsigned int usedbits ;
+        while ( n > 0 ) {
+                if ( *outbitsidx == 0 )
+                        *outbits = 0 ;
+                k = 32 - *outbitsidx ;
+                m = n > k ? k : n ;
+                usedbits = (bits >> (n-m)) & ((1<<m)-1) ;
+                *outbits |= usedbits << (k-m) ;
+                *outbitsidx += m ;
+                n -= m ;
+                if ( *outbitsidx == 32 ) {
+                        write85 ( *outbits, col ) ;
+                        *outbitsidx = 0 ;
+                }
+        }
 }
 
 
-static void 
+
+static void
 flushbits ( unsigned int *outbits, int *outbitsidx, int *col )
 {
-	if ( *outbitsidx > 0 ) {
-		write85 ( *outbits, col ) ;
-		*outbitsidx = 0 ;
-	}
+        if ( *outbitsidx > 0 ) {
+                write85 ( *outbits, col ) ;
+                *outbitsidx = 0 ;
+        }
 }
+
+
 
 struct { unsigned int b, l ; } makeup[40][2] = {
     { { 0x001b, 5 } /*         11011 */ , { 0x000f,10 } /*    0000001111 */  },
@@ -243,7 +247,7 @@ struct { unsigned int b, l ; } term[64][2] = {
     { { 0x004b, 8 } /*      01001011 */ , { 0x002c,12 } /*  000000101100 */  },
     { { 0x0032, 8 } /*      00110010 */ , { 0x005a,12 } /*  000001011010 */  },
     { { 0x0033, 8 } /*      00110011 */ , { 0x0066,12 } /*  000001100110 */  },
-    { { 0x0034, 8 } /*      00110100 */ , { 0x0067,12 } /*  000001100111 */  } 
+    { { 0x0034, 8 } /*      00110100 */ , { 0x0067,12 } /*  000001100111 */  }
 } ;
 
 
@@ -251,16 +255,16 @@ static void
 writelength ( unsigned int *outbits, int *outbitsidx, int *col,
               int bit, int length )
 {
-	while ( length >= 64 ) {
-		int m = length / 64 ;
-		if ( m > 40 )
-			m = 40 ;
-		writebits ( outbits, outbitsidx, col,
-			    makeup[m-1][bit].b, makeup[m-1][bit].l ) ;
-		length -= 64*m ;
-	}
-	writebits ( outbits, outbitsidx, col,
-		    term[length][bit].b, term[length][bit].l ) ;
+        while ( length >= 64 ) {
+                int m = length / 64 ;
+                if ( m > 40 )
+                        m = 40 ;
+                writebits ( outbits, outbitsidx, col,
+                            makeup[m-1][bit].b, makeup[m-1][bit].l ) ;
+                length -= 64*m ;
+        }
+        writebits ( outbits, outbitsidx, col,
+                    term[length][bit].b, term[length][bit].l ) ;
 }
 
 
@@ -277,9 +281,9 @@ doPage(FILE *       const ifP,
     int outbitsidx, col ;
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
-        
+
     bitrow = pbm_allocrow(cols);
-        
+
     pm_message("[%u]\n", pageNum);
 
     printf ("%%%%Page: %u %u\n", pageNum, pageNum);
@@ -288,16 +292,16 @@ doPage(FILE *       const ifP,
             "  << /Columns %u /Rows %u /EndOfBlock false >> "
                 "/CCITTFaxDecode filter\n"
             "  image } exec\n",
-            cols, rows, dpi/72.0, -dpi/72.0, rows, 
+            cols, rows, dpi/72.0, -dpi/72.0, rows,
             cols, rows) ;
-        
+
     outbitsidx = col = 0 ;
     for (row = 0 ; row < rows; ++row) {
         int lastbit, cnt ;
         unsigned int j;
 
         pbm_readpbmrow(ifP, bitrow, cols, format);
-            
+
         lastbit = cnt = 0 ;
         for (j = 0; j < cols; ++j) {
             if (bitrow[j] != lastbit) {
@@ -309,7 +313,7 @@ doPage(FILE *       const ifP,
         }
         writelength(&outbits, &outbitsidx, &col, lastbit, cnt);
     }
-        
+
     flushbits(&outbits, &outbitsidx, &col) ;
     printf("~>\nshowpage\n") ;
 
@@ -318,7 +322,7 @@ doPage(FILE *       const ifP,
 
 
 
-static void 
+static void
 doPages(FILE *         const ifP,
         unsigned int * const pagesP,
         double         const dpi) {
@@ -345,7 +349,7 @@ main(int    argc,
 
     FILE *ifP;
     unsigned int pages;
-    
+
     struct cmdline_info cmdline;
 
     pbm_init(&argc, argv);
@@ -360,7 +364,7 @@ main(int    argc,
     printf ("%%%%Creator: pbmtopsg3, Copyright (C) 2001 Kristof Koehler\n"
             "%%%%Pages: (atend)\n"
             "%%%%EndComments\n") ;
-    
+
     doPages(ifP, &pages, cmdline.dpi);
 
     printf ("%%%%Trailer\n"
@@ -370,6 +374,9 @@ main(int    argc,
 
     pm_close(ifP);
     pm_close(stdout);
-    
+
     return 0;
 }
+
+
+

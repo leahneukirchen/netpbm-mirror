@@ -402,7 +402,6 @@ encodeSomeFrames(struct inputSource * const inputSourceP,
 
 
 
-
 static void
 encodeFrames(struct inputSource * const inputSourceP,
              boolean              const childProcess,
@@ -504,7 +503,6 @@ encodeFrames(struct inputSource * const inputSourceP,
                        hostname);
     }
 }
-
 
 
 
@@ -708,3 +706,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
+
+
+

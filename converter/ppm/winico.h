@@ -11,19 +11,19 @@ typedef unsigned char      u1;
 typedef unsigned short int u2;
 typedef unsigned int       u4;
 
-typedef struct MS_Ico_ *          MS_Ico;
-typedef struct IC_Entry_ *        IC_Entry;
-typedef struct IC_InfoHeader_ *   IC_InfoHeader;
-typedef struct IC_Color_ *        IC_Color;
+typedef struct MS_Ico_           MS_Ico;
+typedef struct IC_Entry_         IC_Entry;
+typedef struct IC_InfoHeader_    IC_InfoHeader;
+typedef struct IC_Color_         IC_Color;
 /* Not part of the spec, but useful in constructing the icon. */
-typedef struct IC_Palette_ *      IC_Palette;
-typedef struct ICON_bmp_ *        ICON_bmp;
+typedef struct IC_Palette_       IC_Palette;
+typedef struct ICON_bmp_         ICON_bmp;
 
 struct MS_Ico_ {
    u2 reserved;
    u2 type;
    u2 count;
-   IC_Entry * entries;
+   IC_Entry ** entries;
 };
 
 
@@ -40,8 +40,8 @@ struct IC_Entry_ {
    u2 bitcount;    /* 0, 1, 4, or 8 */
    u4 size_in_bytes;
    u4 file_offset;
-   IC_InfoHeader ih;
-   IC_Color * colors;
+   IC_InfoHeader * ih;
+   IC_Color ** colors;
    /*
     * Below here, I have useful fields which aren't in the spec, but
     * save having to keep stoopid amounts of global data.
@@ -77,7 +77,7 @@ struct IC_Color_ {
 
 struct IC_Palette_ {
    u4 col_amount;
-   IC_Color * colors;
+   IC_Color ** colors;
 };
 
 struct ICON_bmp_ {

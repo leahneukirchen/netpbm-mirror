@@ -64,7 +64,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
     FILE *ifP;
     struct cmdlineInfo cmdline;
@@ -106,7 +106,7 @@ main(int argc, char *argv[]) {
        knows the "20" can't be +20, because that would create the
        sample 90 + 20 = 110, and violate maxval.  So it must be -80.
        Modulus arithmetic by the interpreter effectively makes that
-       decision.  
+       decision.
     */
 
 
@@ -115,7 +115,7 @@ main(int argc, char *argv[]) {
        all +/- half of maxval, you can see positive transitions as bright
        spots and negative transitions as dark spots.
     */
-    
+
     {
         unsigned int const bias = outpam.maxval/2;
         for (row = 0; row < inpam.height; ++row) {
@@ -124,7 +124,7 @@ main(int argc, char *argv[]) {
             for (col = 0; col < inpam.width; ++col) {
             unsigned int plane;
             for (plane = 0; plane < inpam.depth; ++plane) {
-                
+
                 sample const sampleValue = inrow[col][plane];
                 int const difference = sampleValue - prevrow[col][plane];
                 outrow[col][plane] = (difference + bias) % (outpam.maxval+1);
@@ -140,4 +140,6 @@ main(int argc, char *argv[]) {
 
     exit(0);
 }
+
+
 

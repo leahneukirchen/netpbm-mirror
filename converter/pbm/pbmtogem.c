@@ -32,7 +32,7 @@
 *
 *  Deficiencies:
 *  Compression of repeated scanlines not added
-*  
+*
 *       Johann Haider (jh@fortec.tuwien.ac.at)
 *
 * 94/01/31 Andreas Schwab (schwab@ls5.informatik.uni-dortmund.de)
@@ -85,6 +85,8 @@ putinit (int const rows, int const cols)
   linerepeat = -1;
 }
 
+
+
 static void
 putitem( )
     {
@@ -117,6 +119,7 @@ putstring ( unsigned char *p, int n)
     (void) putc(n, stdout);     /* count */
     fwrite( p, n, 1, stdout );
 }
+
 
 
 static void
@@ -173,12 +176,13 @@ flushrow( )
                 p++;
                 col--;
             }
-    }           
+    }
     if (p > outp)
          putstring (outp, p-outp);
     if (ferror (stdout))
       pm_error ("write error");
 }
+
 
 
 static void
@@ -201,6 +205,7 @@ putrow( )
     /* Repeated line */
     linerepeat++;
 }
+
 
 
 int
@@ -246,3 +251,6 @@ main( int argc, char* argv[])
 
     exit( 0 );
     }
+
+
+

@@ -1,0 +1,135 @@
+Test 1. PBM infile
+Should print: PBM raw, 8 by 1 fourteen times
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+stdin:	PBM raw, 8 by 1
+Should print: PGM raw, 8 by 1  maxval 1 twice
+stdin:	PGM raw, 8 by 1  maxval 1
+stdin:	PGM raw, 8 by 1  maxval 1
+Should print: PGM raw, 8 by 1  maxval 255 twice
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+Should print: PPM raw, 8 by 1  maxval 1 once
+stdin:	PPM raw, 8 by 1  maxval 1
+Should print: PPM raw, 8 by 1  maxval 255 twice
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+
+Test 2. PGM maxval 127 infile
+Should print: PGM raw, 8 by 1  maxval 127 sixteen times
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+stdin:	PGM raw, 8 by 1  maxval 127
+Should print: PGM raw, 8 by 1  maxval 255 four times
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+Should print: PPM raw, 8 by 1  maxval 127 once
+stdin:	PPM raw, 8 by 1  maxval 127
+Should print: PPM raw, 8 by 1  maxval 255 twice
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+
+Test 3. PGM maxval 255 infile
+Should print: PGM raw, 8 by 1  maxval 255 eighteen times
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+stdin:	PGM raw, 8 by 1  maxval 255
+Should print: PPM raw, 8 by 1  maxval 255 three times
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+
+Test 4. PPM maxval 127 infile
+Should print: PPM raw, 8 by 1  maxval 127 seventeen times
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+stdin:	PPM raw, 8 by 1  maxval 127
+Should print: PPM raw, 8 by 1  maxval 255 five times
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+stdin:	PPM raw, 8 by 1  maxval 255
+
+Test 5. PPM maxval 511 infile
+Should print: PPM raw, 8 by 1  maxval 511 twenty-five times
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511
+stdin:	PPM raw, 8 by 1  maxval 511

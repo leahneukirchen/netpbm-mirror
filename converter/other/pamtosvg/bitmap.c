@@ -13,7 +13,7 @@ at_bitmap_new(unsigned short width,
 
     at_bitmap_type * bitmap;
 
-    MALLOCVAR_NOFAIL(bitmap); 
+    MALLOCVAR_NOFAIL(bitmap);
 
     *bitmap = at_bitmap_init(NULL, width, height, planes);
 
@@ -31,10 +31,10 @@ at_bitmap_copy(at_bitmap_type * src)
     width  = at_bitmap_get_width(src);
     height = at_bitmap_get_height(src);
     planes = at_bitmap_get_planes(src);
-    
+
     dist = at_bitmap_new(width, height, planes);
-    memcpy(dist->bitmap, 
-           src->bitmap, 
+    memcpy(dist->bitmap,
+           src->bitmap,
            width * height * planes * sizeof(unsigned char));
     return dist;
 }
@@ -48,7 +48,7 @@ at_bitmap_init(unsigned char * area,
                unsigned int planes) {
 
     at_bitmap_type bitmap;
-    
+
     if (area)
         bitmap.bitmap = area;
     else {
@@ -63,20 +63,24 @@ at_bitmap_init(unsigned char * area,
                    0, width * height * planes * sizeof(unsigned char));
         }
     }
-    
+
     bitmap.width  = width;
     bitmap.height = height;
     bitmap.np     =  planes;
 
-    return bitmap;  
+    return bitmap;
 }
 
-void 
+
+
+void
 at_bitmap_free (at_bitmap_type * bitmap)
 {
     free_bitmap (bitmap);
     free(bitmap);
 }
+
+
 
 unsigned short
 at_bitmap_get_width (at_bitmap_type * bitmap)
@@ -84,11 +88,15 @@ at_bitmap_get_width (at_bitmap_type * bitmap)
     return bitmap->width;
 }
 
+
+
 unsigned short
 at_bitmap_get_height (at_bitmap_type * bitmap)
 {
     return bitmap->height;
 }
+
+
 
 unsigned short
 at_bitmap_get_planes (at_bitmap_type * bitmap)
@@ -104,6 +112,8 @@ new_bitmap (unsigned short width, unsigned short height)
     return at_bitmap_init(NULL,width,height,1);
 }
 
+
+
 /* Free the storage that is allocated for a bitmap.  On the other hand,
    the bitmap might not have any storage allocated for it if it is zero
    in either dimension; in that case, don't free it.  */
@@ -114,3 +124,6 @@ free_bitmap (bitmap_type *b)
     if (b->bitmap != NULL)
         free (b->bitmap);
 }
+
+
+

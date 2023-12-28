@@ -94,7 +94,6 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-
 static unsigned char
 getbyte(FILE * const ifP) {
 

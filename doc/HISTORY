@@ -4,13 +4,9 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-23.12.26 BJH  Release 11.04.06
+23.12.28 BJH  Release 11.05.00
 
-              pnmpad: fix behavior with -left, -right, and -width together or
-              -top, -bottom, -height together: ignores -width where it should
-              fail.  Broken in Netpbm 10.72 (September 2015).
-
-23.12.05 BJH  Release 11.04.05
+              pnmpad: Add -color, -promote, -extend-edge, -detect-background .
 
               pnmconvol: Restore ability of convolution matrix to be a
               pseudo-plain-PNM with samples that exceed the maxval.  Lost in
@@ -18,24 +14,53 @@ CHANGE HISTORY
               libnetpbm.  (Was fixed in 10.47.08 in November 2010, but only in
               the 10.47 series).
 
-23.11.14 BJH  Release 11.04.04
+              pnmindex: Improve failure mode when -size or -across is zero.
 
-              pnmpad: fix wrong results with old-style options (e.g. "-t50").
+              pnmindex: Make -plain work.
 
-23.10.24 BJH  Release 11.04.03
+              pnmpad: fix behavior with -left, -right, and -width together or
+              -top, -bottom, -height together: ignores -width where it should
+              fail.  Broken in Netpbm 10.72 (September 2015).
 
               pamtosvg: fix "zero determinant" failure.  Introduced in
               Netpbm 11.04 (September 2023).
 
-23.09.29 BJH  Release 11.04.02
-
               pjtoppm: fix crash based on uninitialized variable.
-              Introduced in Netpbm 11.04 (two days ago).
+              Introduced in Netpbm 11.04 (September 2023).
 
-23.09.28 BJH  Release 11.04.01
+              ppmtopcxl: fix incorrect output with > 256 colors.  Always
+              broken.  (Program was added in primordial Netpbm in 1990).
+
+              pbmtext: fix buffer overrun with insanely large input.
+
+              picttoppm: fix buffer overrun with insanely wide input.
+
+              ppmtoxpm: fix incorrect output with insanely large number of
+              colors.
+
+              pnmscalefixed: fix incorrect output with really big image and
+              -pixels option.
+
+              ppmdither: fix buffer overrun with insanely large dithering
+              matrix.
+
+              pnmpad: no longer accept old-style options (e.g. -t50).
+
+              libnetpbm: Add pm_feed_from_file, pm_accept_to_files,
+              pm_accept_to_filestream Standard Input feeder, Output accepter
+              for pm_system.
+
+              libnetpbm, programs that use color maps: fix buffer overrun
+              with insanely deep images.
+
+              merge build: Fix 'pnmcat'.  Introduced in Netpbm 11.00
+              (September 2023).
 
               Build: Fix compile error on systems without 'asprintf'.
-              Introduced in Netpbm 11.04 (yesterday).
+              Introduced in Netpbm 11.04 (September 2023).
+
+              Build: Fix building of jpeg2ktopam and pamtojpeg2k with
+              assertion checking by default.
 
 23.09.27 BJH  Release 11.04.00
 
@@ -5398,6 +5423,9 @@ CHANGE HISTORY
 
               pnmpad: Add -width, -height, -halign, -valign options.
               Thanks M. van Beilen <mvb@iradis.org>.
+
+              pnmpad: Issue warning about old-style options (e.g. "-t50"
+              instead of "-t 50").
 
               ppmhist: remove 100,000 color limit.
 

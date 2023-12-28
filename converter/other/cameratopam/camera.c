@@ -56,7 +56,6 @@ merror (const void *ptr, const char *where)
 
 
 
-
 static void
 adobeCopyPixel(Image             const image,
                unsigned int      const row,
@@ -86,6 +85,8 @@ adobeCopyPixel(Image             const image,
     if (fuji_secondary && useSecondary)
         --(*rp);
 }
+
+
 
 void
 adobe_dng_load_raw_lj(Image const image) {
@@ -187,6 +188,8 @@ nikon_compressed_load_raw(Image const image) {
     free (curve);
 }
 
+
+
 void
 nikon_load_raw(Image const image) {
 
@@ -213,6 +216,8 @@ nikon_load_raw(Image const image) {
   }
 }
 
+
+
 /*
    Figure out if a NEF file is compressed.  These fancy heuristics
    are only needed for the D100, thanks to a bug in some cameras
@@ -235,6 +240,8 @@ nikon_is_compressed()
   return 0;
 }
 
+
+
 /*
    Returns 1 for a Coolpix 990, 0 for a Coolpix 995.
  */
@@ -253,6 +260,8 @@ nikon_e990()
       return 1;
   return 0;
 }
+
+
 
 /*
    Returns 1 for a Coolpix 2100, 0 for anything else.
@@ -273,6 +282,8 @@ nikon_e2100()
   return 1;
 }
 
+
+
 /*
    Separates a Pentax Optio 33WR from a Nikon E3700.
  */
@@ -289,6 +300,8 @@ pentax_optio33()
   return sum[0] < sum[1]*4;
 }
 
+
+
 /*
    Separates a Minolta DiMAGE Z2 from a Nikon E4300.
  */
@@ -304,6 +317,8 @@ minolta_z2()
     if (tail[i]) return 1;
   return 0;
 }
+
+
 
 void
 nikon_e2100_load_raw(Image const image) {
@@ -333,6 +348,8 @@ nikon_e2100_load_raw(Image const image) {
   }
 }
 
+
+
 void
 nikon_e950_load_raw(Image const image) {
 
@@ -348,6 +365,8 @@ nikon_e950_load_raw(Image const image) {
   }
   maximum = 0x3dd;
 }
+
+
 
 /*
    The Fuji Super CCD is just a Bayer grid rotated 45 degrees.
@@ -368,6 +387,8 @@ fuji_s2_load_raw(Image const image) {
   }
 }
 
+
+
 void
 fuji_s3_load_raw(Image const image) {
   unsigned short pixel[4352];
@@ -383,6 +404,8 @@ fuji_s3_load_raw(Image const image) {
     }
   }
 }
+
+
 
 static void
 fuji_common_load_raw(Image        const image,
@@ -444,6 +467,8 @@ fuji_f700_load_raw(Image const image) {
   }
 }
 
+
+
 void
 rollei_load_raw(Image const image) {
   unsigned char pixel[10];
@@ -469,6 +494,8 @@ rollei_load_raw(Image const image) {
   }
   maximum = 0x3ff;
 }
+
+
 
 void
 phase_one_load_raw(Image const image) {
@@ -496,6 +523,8 @@ phase_one_load_raw(Image const image) {
   free (pixel);
 }
 
+
+
 void
 ixpress_load_raw(Image const image) {
   unsigned short pixel[4090];
@@ -509,6 +538,8 @@ ixpress_load_raw(Image const image) {
       BAYER(row,col) = pixel[width-1-col];
   }
 }
+
+
 
 void
 leaf_load_raw(Image const image) {
@@ -526,6 +557,8 @@ leaf_load_raw(Image const image) {
   free (pixel);
 }
 
+
+
 /*
    For this function only, raw_width is in bytes, not pixels!
  */
@@ -542,6 +575,8 @@ packed_12_load_raw(Image const image) {
   }
 }
 
+
+
 void
 unpacked_load_raw(Image const image) {
   unsigned short *pixel;
@@ -556,6 +591,8 @@ unpacked_load_raw(Image const image) {
   }
   free (pixel);
 }
+
+
 
 void
 olympus_e300_load_raw(Image const image) {
@@ -580,6 +617,8 @@ olympus_e300_load_raw(Image const image) {
   free (data);
 }
 
+
+
 void
 olympus_cseries_load_raw(Image const image) {
   int irow, row, col;
@@ -594,6 +633,8 @@ olympus_cseries_load_raw(Image const image) {
       BAYER(row,col) = getbits(ifp, 12);
   }
 }
+
+
 
 void
 eight_bit_load_raw(Image const image) {
@@ -610,6 +651,8 @@ eight_bit_load_raw(Image const image) {
   free (pixel);
   maximum = 0xff;
 }
+
+
 
 void
 casio_qv5700_load_raw(Image const image) {
@@ -631,6 +674,8 @@ casio_qv5700_load_raw(Image const image) {
   maximum = 0x3fc;
 }
 
+
+
 void
 nucore_load_raw(Image const image) {
   unsigned short *pixel;
@@ -646,6 +691,8 @@ nucore_load_raw(Image const image) {
   }
   free (pixel);
 }
+
+
 
 static int  radc_token (int tree)
 {
@@ -687,6 +734,8 @@ static int  radc_token (int tree)
     dindex = dindex->branch[getbits(ifp, 1)];
   return dindex->leaf;
 }
+
+
 
 #define FORYX for (y=1; y < 3; y++) for (x=col+1; x >= col; x--)
 
@@ -770,6 +819,8 @@ kodak_radc_load_raw(Image const image) {
     maximum = 0x1fff;     /* wild guess */
 }
 
+
+
 #undef FORYX
 #undef PREDICTOR
 
@@ -790,6 +841,8 @@ fill_input_buffer (j_decompress_ptr cinfo)
   cinfo->src->bytes_in_buffer = nbytes;
   return TRUE;
 }
+
+
 
 void
 kodak_jpeg_load_raw(Image const image)
@@ -830,6 +883,8 @@ kodak_jpeg_load_raw(Image const image)
   maximum = 0xff << 1;
 }
 
+
+
 #endif
 
 void
@@ -849,6 +904,8 @@ kodak_dc120_load_raw(Image const image)
   maximum = 0xff;
 }
 
+
+
 void
 kodak_dc20_coeff (float const juice)
 {
@@ -867,6 +924,8 @@ kodak_dc20_coeff (float const juice)
       coeff[r][g] = my_coeff[r][g] * juice + flat[r][g] * (1-juice);
   use_coeff = 1;
 }
+
+
 
 void
 kodak_easy_load_raw(Image const image)
@@ -895,6 +954,8 @@ kodak_easy_load_raw(Image const image)
     black = 0;
   maximum = curve[0xff];
 }
+
+
 
 void
 kodak_compressed_load_raw(Image const image)
@@ -960,6 +1021,8 @@ kodak_compressed_load_raw(Image const image)
     }
 }
 
+
+
 void
 kodak_yuv_load_raw(Image const image)
 {
@@ -1019,6 +1082,8 @@ kodak_yuv_load_raw(Image const image)
   maximum = 0xe74;
 }
 
+
+
 static void  sony_decrypt (unsigned *data, int len, int start, int key)
 {
   static uint32_t pad[128];
@@ -1052,6 +1117,8 @@ static void  sony_decrypt (unsigned *data, int len, int start, int key)
     *data++ ^= pad[p & 0x7f] = pad[(p+1) & 0x7f] ^ pad[(p+65) & 0x7f];
   }
 }
+
+
 
 void
 sony_load_raw(Image const image)
@@ -1091,6 +1158,8 @@ sony_load_raw(Image const image)
   maximum = 0x3ff0;
 }
 
+
+
 void
 parse_minolta(FILE * const ifp)
 {
@@ -1124,6 +1193,8 @@ parse_minolta(FILE * const ifp)
   data_offset = offset;
 }
 
+
+
 /*
    CIFF block 0x1030 contains an 8x8 white sample.
    Load this into white[][] for use in scale_colors().
@@ -1150,6 +1221,8 @@ static void  ciff_block_1030()
       vbits -= bpp;
     }
 }
+
+
 
 /*
    Parse a CIFF file, better known as Canon CRW format.
@@ -1266,6 +1339,8 @@ common:
     camera_red = -1;            /* Use my auto WB for this photo */
 }
 
+
+
 void
 parse_rollei(FILE * const ifp)
 {
@@ -1332,6 +1407,8 @@ parse_mos(FILE * const ifp,
         fseek_nofail (ifp, skip+from, SEEK_SET);
     }
 }
+
+
 
 void
 nikon_e950_coeff()
@@ -1504,6 +1581,8 @@ get_timestamp(FILE * const ifp)
     timestamp = ts;
 }
 
+
+
 static void
 parse_exif(FILE * const ifp, int base)
 {
@@ -1528,6 +1607,8 @@ parse_exif(FILE * const ifp, int base)
     fseek_nofail (ifp, save, SEEK_SET);
   }
 }
+
+
 
 static int
 parse_tiff_ifd(FILE * const ifp, int base, int level)
@@ -1725,6 +1806,8 @@ guess_cfa_pc:
   return done;
 }
 
+
+
 void
 parse_tiff(FILE * const ifp, int base)
 {
@@ -1796,4 +1879,6 @@ parse_external_jpeg(const char * const ifname)
         pm_message ( "Failed to read metadata from %s", jname);
     free (jname);
 }
+
+
 

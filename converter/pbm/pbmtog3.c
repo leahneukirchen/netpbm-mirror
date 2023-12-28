@@ -145,12 +145,13 @@ flushBuffer(struct OutStream * const outP) {
         outbytes = pm_bigendFromUint32(
                    buffer.intBuffer << (fullBuffer - buffer.bitCount));
         if (outP->reverseBits)
-    	reversebuffer((unsigned char *)&outbytes, bytesToWrite);
+        reversebuffer((unsigned char *)&outbytes, bytesToWrite);
         rc = fwrite((unsigned char *)&outbytes, 1, bytesToWrite, outP->fp);
         if (rc != bytesToWrite)
             pm_error("Output error");
     }
 }
+
 
 
 #if 1==0

@@ -20,9 +20,9 @@ convertRaster(FILE *       const ifP,
               unsigned int const cols,
               unsigned int const rows,
               pixval       const maxval,
-              int          const format, 
+              int          const format,
               pixel *      const inputRow,
-              gray *       const outputRow, 
+              gray *       const outputRow,
               FILE *       const ofP) {
 
     unsigned int row;
@@ -37,7 +37,7 @@ convertRaster(FILE *       const ifP,
         } else {
             /* Can't use fast approximation, so fall back on floats. */
             unsigned int col;
-            for (col = 0; col < cols; ++col) 
+            for (col = 0; col < cols; ++col)
                 outputRow[col] = ppm_luminosity(inputRow[col]);
         }
         pgm_writepgmrow(ofP, outputRow, cols, maxval, 0);
@@ -52,7 +52,7 @@ main(int argc, char *argv[]) {
     FILE* ifP;
     const char * inputFilespec;
     int eof;
-    
+
     ppm_init( &argc, argv );
 
     if (argc-1 > 1)
@@ -62,7 +62,7 @@ main(int argc, char *argv[]) {
         inputFilespec = argv[1];
     else
         inputFilespec = "-";
-    
+
     ifP = pm_openr(inputFilespec);
 
     eof = FALSE;  /* initial assumption */
@@ -81,7 +81,7 @@ main(int argc, char *argv[]) {
             inputRow = ppm_allocrow(cols);
             outputRow = pgm_allocrow(cols);
 
-            convertRaster(ifP, cols, rows, maxval, format, 
+            convertRaster(ifP, cols, rows, maxval, format,
                           inputRow, outputRow, stdout);
 
             ppm_freerow(inputRow);
@@ -93,3 +93,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

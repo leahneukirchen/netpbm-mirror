@@ -1,5 +1,5 @@
 int
-vax_gshort(char *msgp);
+vax_gshort(unsigned char *msgp);
 
-char *
-vax_pshort(char *msgp, unsigned short s);
+unsigned char *
+vax_pshort(unsigned char *msgp, unsigned short s);

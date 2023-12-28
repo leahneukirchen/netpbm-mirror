@@ -42,7 +42,7 @@ putitem(uint16_t const item) {
     if (ip.itemCnt == 8 ) {
         /* Buffer is full.  Write out one line. */
         int rc;
-    
+
         rc = fprintf(ip.putFp,
                      "\t0x%04x,0x%04x,0x%04x,0x%04x,"
                      "0x%04x,0x%04x,0x%04x,0x%04x,\n",
@@ -50,9 +50,9 @@ putitem(uint16_t const item) {
                      ip.itemBuff[2], ip.itemBuff[3],
                      ip.itemBuff[4], ip.itemBuff[5],
                      ip.itemBuff[6], ip.itemBuff[7]);
-        if (rc < 0)        
+        if (rc < 0)
            pm_error("fprintf() failed to write Icon bitmap");
-           
+
         ip.itemCnt = 0;
     }
     ip.itemBuff[ip.itemCnt++] = item & 0xffff;
@@ -71,10 +71,10 @@ putterm(void) {
         rc = fprintf(ip.putFp, "%s0x%04x%c", i == 0  ? "\t" : "",
                      ip.itemBuff[i],
                      i == ip.itemCnt - 1 ? '\n' : ',');
-        if (rc < 0)        
+        if (rc < 0)
             pm_error("fprintf() failed to write Icon bitmap");
     }
-}     
+}
 
 
 
@@ -89,7 +89,7 @@ writeIconHeader(FILE *       const ofP,
                  "/* Format_version=1, Width=%u, Height=%u", width, height);
     if (rc < 0)
         pm_error("fprintf() failed to write Icon header");
-        
+
     rc = fprintf(ofP, ", Depth=1, Valid_bits_per_item=16\n */\n");
     if (rc < 0)
         pm_error("fprintf() failed to write Icon header");
@@ -123,7 +123,7 @@ writeIcon(FILE *       const ifP,
 
         for (itemSeq = 0; itemSeq < items; ++itemSeq) {
             /* Read bits from bitrow, send to format & print function. */
-            
+
             putitem((bitrow[itemSeq*2]<<8) + bitrow[itemSeq*2+1]);
         }
     }
@@ -151,7 +151,7 @@ main(int argc,
         inputFileName = argv[1];
     else
         inputFileName = "-";
-    
+
     ifP = pm_openr(inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
@@ -162,4 +162,6 @@ main(int argc,
 
     return 0;
 }
+
+
 

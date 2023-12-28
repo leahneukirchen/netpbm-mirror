@@ -30,6 +30,8 @@ pushString(push_string_t *p, const char *fmt, ...)
     va_end(args);
 }
 
+
+
 #if _WIN32_WINNT < 0x0600
 /*
  * Reference available here:
@@ -371,6 +373,8 @@ get_string_version(push_string_t *str)
     return TRUE;
 }
 
+
+
 const char *
 GetHostName(void)
 {
@@ -388,6 +392,8 @@ GetHostName(void)
     }
     return (const char *)_strdup(str.str);
 }
+
+
 
 #ifdef GETHOSTNAME_LOCAL_DEBUG
 int WINAPI WinMain(HINSTANCE hCurInst, HINSTANCE hPrevInst,

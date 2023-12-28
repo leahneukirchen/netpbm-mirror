@@ -1,0 +1,222 @@
+Test 1. PBM white infile
+Should print match seven times
+match
+match
+match
+match
+match
+match
+match
+Should print match seven times
+match
+match
+match
+match
+match
+match
+match
+Should print match once
+match
+Should print match once
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match once
+match
+Should print match twice
+match
+match
+
+Test 2. PBM black infile
+Should print match nine times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Should print match five times
+match
+match
+match
+match
+match
+
+Test 3. PGM maxval 127 infile
+Should print match five times
+match
+match
+match
+match
+match
+Should print match four times
+match
+match
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match once
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match once
+match
+Should print match twice
+match
+match
+
+Test 4. PGM maxval 255 infile
+Should print match five times
+match
+match
+match
+match
+match
+Should print match four times
+match
+match
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match once
+match
+Should print match four times
+match
+match
+match
+match
+Should print match four times
+match
+match
+match
+match
+Should print match three times
+match
+match
+match
+
+Test 5. PGM maxval 511 infile
+Should print match five times
+match
+match
+match
+match
+match
+Should print match four times
+match
+match
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match once
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match three times
+match
+match
+match
+
+Test 6. PPM maxval 127 infile
+Should print match five times
+match
+match
+match
+match
+match
+Should print match four times
+match
+match
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match once
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+
+Test 7. PPM maxval 511 infile
+Should print match five times
+match
+match
+match
+match
+match
+Should print match four times
+match
+match
+match
+match
+Should print match six times
+match
+match
+match
+match
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match
+Should print match twice
+match
+match

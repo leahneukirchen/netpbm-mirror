@@ -855,6 +855,11 @@ pm_parse_width(const char * const arg) {
 
    See comments at 'validateComputableSize' in libpam.c for details on
    the purpose of these validations.
+
+   This isn't just for Netpbm format images.
+
+   Typical places from which widths come: headers of non-Netpbm images;
+   command line options.
 -----------------------------------------------------------------------------*/
     unsigned int width;
     const char * error;
@@ -899,5 +904,29 @@ pm_parse_height(const char * const arg) {
     return height;
 }
 
+
+
+unsigned int
+pm_parse_maxval(const char * const arg) {
+/*----------------------------------------------------------------------------
+  Same as pm_parse_width(), but for maxval.
+-----------------------------------------------------------------------------*/
+    unsigned int maxval;
+    const char * error;
+
+    pm_string_to_uint(arg, &maxval, &error);
+
+    if (error) {
+        pm_error("'%s' is invalid as a maxval.  %s", arg, error);
+        pm_strfree(error);
+    } else {
+        if (maxval > INT_MAX-1)
+            pm_error("Maxval %u is too large for computations.", maxval);
+        if (maxval == 0)
+            pm_error("Maxval argument must be a positive number.  You "
+                     "specified 0.");
+    }
+    return maxval;
+}
 
 

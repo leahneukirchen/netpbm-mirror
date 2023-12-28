@@ -136,6 +136,9 @@ pnm_invertxel(xel *  const x,
               xelval const maxval,
               int    const format);
 
+const char *
+pnm_formattypenm(int const format);
+
 void
 pnm_promoteformat(xel** xels, int cols, int rows, xelval maxval, int format,
                   xelval newmaxval, int newformat);

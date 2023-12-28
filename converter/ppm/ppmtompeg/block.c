@@ -42,6 +42,8 @@ halfVector(vector const v) {
     return half;
 }
 
+
+
 /*===========================*
  * COMPUTE DCT OF DIFFERENCE *
  *===========================*/
@@ -359,6 +361,7 @@ ComputeMotionLumBlock(MpegFrame * const prevFrame,
      *
      */
 }
+
 
 
 /*=======================*
@@ -691,6 +694,7 @@ AddMotionBlock(Block          block,
 }
 
 
+
 /*===========================================================================*
  *
  *  adds the motion-compensated B-frame block to the given block
@@ -734,6 +738,7 @@ AddBMotionBlock(Block          block,
 }
 
 
+
 /*===========================================================================*
  *
  *  copies the given block into the appropriate data area
@@ -762,6 +767,7 @@ BlockToData(uint8 ** const data,
     }
     }
 }
+
 
 
 /*===========================================================================*
@@ -832,6 +838,7 @@ BlockifyFrame(MpegFrame * const frameP) {
     }
     }
 }
+
 
 
 /*===========================================================================*
@@ -923,6 +930,7 @@ ComputeSubSampledMotionLumBlock(MpegFrame * const prevFrame,
      *
      */
 }
+
 
 
 /*===========================================================================*
@@ -1019,6 +1027,7 @@ LumMotionErrorSubSampled(LumBlock    const currentBlock,
 
     return (int32)diff;
 }
+
 
 
 #endif /* UNUSED_PROCEDURES */

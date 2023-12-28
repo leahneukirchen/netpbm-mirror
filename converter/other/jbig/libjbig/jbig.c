@@ -150,6 +150,7 @@ static void *checked_malloc(size_t nmemb, size_t size)
 }
 
 
+
 static void *checked_realloc(void *ptr, size_t nmemb, size_t size)
 {
   void *p;
@@ -176,6 +177,7 @@ static void *checked_realloc(void *ptr, size_t nmemb, size_t size)
 }
 
 
+
 static void checked_free(void *ptr)
 {
   free(ptr);
@@ -185,7 +187,6 @@ static void checked_free(void *ptr)
 #endif
 
 }
-
 
 
 
@@ -229,6 +230,7 @@ static struct jbg_buf *jbg_buf_init(struct jbg_buf **free_list)
 }
 
 
+
 /*
  * Return an entire free_list to the memory management of stdlib.
  * This is only done by jbg_enc_free().
@@ -245,6 +247,7 @@ static void jbg_buf_free(struct jbg_buf **free_list)
 
   return;
 }
+
 
 
 /*
@@ -270,6 +273,7 @@ static void jbg_buf_write(int b, void *head)
 
   return;
 }
+
 
 
 /*
@@ -311,6 +315,7 @@ static void jbg_buf_remove_zeros(struct jbg_buf *head)
 }
 
 
+
 /*
  * The jbg_buf list which starts with block *new_prefix is concatenated
  * with the list which starts with block **start and *start will then point
@@ -325,6 +330,7 @@ static void jbg_buf_prefix(struct jbg_buf *new_prefix, struct jbg_buf **start)
 
   return;
 }
+
 
 
 /*
@@ -352,6 +358,7 @@ static void jbg_buf_output(struct jbg_buf **head,
 }
 
 
+
 /*
  * Calculate y = ceil(x/2) applied n times, which is equivalent to
  * y = ceil(x/(2^n)). This function is used to
@@ -369,6 +376,7 @@ unsigned long jbg_ceil_half(unsigned long x, int n)
 }
 
 
+
 /*
  * Set L0 (the number of lines in a stripe at lowest resolution)
  * to a default value, such that there are about 35 stripes, as
@@ -384,6 +392,7 @@ static void jbg_set_default_l0(struct jbg_enc_state *s)
 }
 
 
+
 /*
  * Calculate the number of stripes, as defined in clause 6.2.3 of T.82.
  */
@@ -394,6 +403,7 @@ static unsigned long jbg_stripes(unsigned long l0, unsigned long yd,
 
   return y0 / l0 + (y0 % l0 != 0);
 }
+
 
 
 /*
@@ -818,6 +828,7 @@ void jbg_enc_init(struct jbg_enc_state *s, unsigned long x, unsigned long y,
 }
 
 
+
 /*
  * This function selects the number of differential layers based on
  * the maximum size requested for the lowest resolution layer. If
@@ -843,6 +854,7 @@ int jbg_enc_lrlmax(struct jbg_enc_state *s, unsigned long x,
 }
 
 
+
 /*
  * As an alternative to jbg_enc_lrlmax(), the following function allows the
  * user to specify the number of layers directly. The stripe height and layer
@@ -858,6 +870,7 @@ void jbg_enc_layers(struct jbg_enc_state *s, int d)
   jbg_set_default_l0(s);
   return;
 }
+
 
 
 /*
@@ -876,6 +889,7 @@ int jbg_enc_lrange(struct jbg_enc_state *s, int dl, int dh)
 }
 
 
+
 /*
  * The following function allows the user to specify the bits describing the
  * options of the format as well as the maximum AT movement window and the
@@ -892,6 +906,7 @@ void jbg_enc_options(struct jbg_enc_state *s, int order, int options,
 
   return;
 }
+
 
 
 /*
@@ -1507,6 +1522,7 @@ static void encode_sde(struct jbg_enc_state *s,
 }
 
 
+
 /*
  * Create the next lower resolution version of an image
  */
@@ -1619,6 +1635,7 @@ static void resolution_reduction(struct jbg_enc_state *s, int plane,
 }
 
 
+
 /*
  * This function is called inside the three loops of jbg_enc_out() in
  * order to write the next SDE. It has first to generate the required
@@ -1697,6 +1714,7 @@ static void output_sde(struct jbg_enc_state *s,
 }
 
 
+
 /*
  * Convert the table which controls the deterministic prediction
  * process from the internal format into the representation required
@@ -1748,6 +1766,7 @@ void jbg_int2dppriv(unsigned char *dptable, const char *internal)
 }
 
 
+
 /*
  * Convert the table which controls the deterministic prediction
  * process from the 1728 byte long DPTABLE format into the 6912 byte long
@@ -1777,6 +1796,7 @@ void jbg_dppriv2int(char *internal, const unsigned char *dptable)
 
   return;
 }
+
 
 
 /*
@@ -1973,6 +1993,7 @@ void jbg_enc_out(struct jbg_enc_state *s)
 }
 
 
+
 void jbg_enc_free(struct jbg_enc_state *s)
 {
   unsigned long stripe;
@@ -2023,6 +2044,7 @@ void jbg_enc_free(struct jbg_enc_state *s)
 }
 
 
+
 /*
  * Convert the error codes used by jbg_dec_in() into an English ASCII string
  */
@@ -2034,6 +2056,7 @@ const char *jbg_strerror(int errnum)
 
   return errmsg[errnum];
 }
+
 
 
 /*
@@ -2055,6 +2078,7 @@ void jbg_dec_init(struct jbg_dec_state *s)
 }
 
 
+
 /*
  * Specify a maximum image size for the decoder. If the JBIG file has
  * the order bit ILEAVE, but not the bit SEQ set, then the decoder
@@ -2070,6 +2094,7 @@ void jbg_dec_maxsize(struct jbg_dec_state *s, unsigned long xmax,
 
   return;
 }
+
 
 
 /*
@@ -2528,6 +2553,7 @@ static size_t decode_pscd(struct jbg_dec_state *s, unsigned char *data,
 }
 
 
+
 /*
  * Provide to the decoder a new BIE fragment of len bytes starting at data.
  *
@@ -2893,6 +2919,7 @@ int jbg_dec_in(struct jbg_dec_state *s, unsigned char *data, size_t len,
 }
 
 
+
 /*
  * After jbg_dec_in() returned JBG_EOK or JBG_EOK_INTR, you can call this
  * function in order to find out the width of the image. Returns 0 if
@@ -2911,6 +2938,7 @@ unsigned long jbg_dec_getwidth(const struct jbg_dec_state *s)
 
   return s->xd;
 }
+
 
 
 /*
@@ -2933,6 +2961,7 @@ unsigned long jbg_dec_getheight(const struct jbg_dec_state *s)
 }
 
 
+
 /*
  * After jbg_dec_in() returned JBG_EOK or JBG_EOK_INTR, you can call this
  * function in order to get a pointer to the image. Returns NULL if
@@ -2951,6 +2980,7 @@ unsigned char *jbg_dec_getimage(const struct jbg_dec_state *s, int plane)
 
   return s->lhp[s->d & 1][plane];
 }
+
 
 
 /*
@@ -2975,6 +3005,7 @@ unsigned long jbg_dec_getsize(const struct jbg_dec_state *s)
 }
 
 
+
 /*
  * After jbg_dec_in() returned JBG_EOK or JBG_EOK_INTR, you can call
  * this function in order to find out the size of the image that you
@@ -2996,6 +3027,7 @@ unsigned long jbg_dec_getsize_merged(const struct jbg_dec_state *s)
 
   return s->xd * s->yd * ((s->planes + 7) / 8);
 }
+
 
 
 /*
@@ -3034,6 +3066,7 @@ void jbg_dec_free(struct jbg_dec_state *s)
 
   return;
 }
+
 
 
 /*
@@ -3100,6 +3133,8 @@ void jbg_split_planes(unsigned long x, unsigned long y, int has_planes,
   return;
 }
 
+
+
 /*
  * Merge the separate bit planes decoded by the JBIG decoder into an
  * integer pixel field. This is essentially the counterpart to
@@ -3161,6 +3196,7 @@ void jbg_dec_merge_planes(const struct jbg_dec_state *s, int use_graycode,
 
   return;
 }
+
 
 
 /*
@@ -3232,6 +3268,7 @@ static unsigned char *jbg_next_pscdms(unsigned char *p, size_t len)
 }
 
 
+
 /*
  * Scan a complete BIE for a NEWLEN marker segment, then read the new
  * YD value found in it and use it to overwrite the one in the BIE
@@ -3281,3 +3318,6 @@ int jbg_newlen(unsigned char *bie, size_t len)
   }
   return JBG_EINVAL | 0;
 }
+
+
+

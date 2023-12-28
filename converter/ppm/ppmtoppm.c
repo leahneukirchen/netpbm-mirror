@@ -20,7 +20,7 @@ main(int argc, char *argv[]) {
     pixval maxval;
     int row;
     pixel* pixelrow;
-    
+
     ppm_init(&argc, argv);
 
     if (argc-1 != 0)
@@ -42,3 +42,6 @@ main(int argc, char *argv[]) {
 
     exit(0);
 }
+
+
+

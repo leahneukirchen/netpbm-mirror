@@ -53,13 +53,13 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     OPTENTINIT;
 
     opt.opt_table     = option_def;
     opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
     opt.allowNegNum   = FALSE; /* We have no parms that are negative numbers */
-    
+
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others */
 
@@ -208,7 +208,7 @@ readSbigHeader(FILE *              const ifP,
                 *ep = ' ';
             }
         }
-        
+
         looseCanon(cursor);
             /* Convert from standard SBIG to an internal format */
 
@@ -270,7 +270,7 @@ writeRaster(FILE *            const ifP,
             unsigned short rowlen;        /* Compressed row length */
 
             pm_readlittleshortu(ifP, &rowlen);
-            
+
             /*  If compression results in a row length >= the uncompressed
                 row length, that row is output uncompressed.  We detect this
                 by observing that the compressed row length is equal to

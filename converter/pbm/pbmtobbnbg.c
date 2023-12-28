@@ -9,7 +9,7 @@
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
 */
-  
+
 /*
 ** Changed to take advantage of negative Packed Pixed Data values and
 ** supply ANSI-standard string terminator.  Paul Milazzo, 28 May 1990.
@@ -17,7 +17,7 @@
 
 #include "pbm.h"
 
-static void write16 ARGS(( unsigned int	));
+static void write16 ARGS(( unsigned int ));
 
 static int nco;
 
@@ -72,10 +72,10 @@ char **argv;
      { if (bitrow[i]==PBM_BLACK) sixteen |= mask;
        mask >>= 1;
        if (mask == 0)
-	{ mask = 0x8000;
-	  write16(sixteen);
-	  sixteen = 0;
-	}
+        { mask = 0x8000;
+          write16(sixteen);
+          sixteen = 0;
+        }
      }
     if (mask != 0x8000)
      { write16(sixteen);
@@ -84,6 +84,8 @@ char **argv;
  puts("\033\\");
  exit(0);
 }
+
+
 
 #ifdef POSITIVE_VALUES_ONLY
 static void
@@ -113,40 +115,40 @@ unsigned int sixteen;
  */
 static void
 write16 (word)
-unsigned int	word;
+unsigned int    word;
 {
-    int		high;
-    int		mid;
-    int		low;
-    int		signChar;
+    int         high;
+    int         mid;
+    int         low;
+    int         signChar;
 
     if (nco > 75) {
-	putchar ('\n');
-	nco = 0;
+        putchar ('\n');
+        nco = 0;
     }
 
     if (word > 0x7fff) {
-	word = (unsigned int) (0x10000L - (long) word);
-	signChar = ' ';
+        word = (unsigned int) (0x10000L - (long) word);
+        signChar = ' ';
     }
     else
-	signChar = '0';
+        signChar = '0';
 
     high = (word >> 10) + '@';
-    mid	= ((word & 0x3f0) >> 4) + '@';
-    low	= (word & 0xf) + signChar;
+    mid = ((word & 0x3f0) >> 4) + '@';
+    low = (word & 0xf) + signChar;
 
     if (high != '@') {
-	printf ("%c%c%c", high, mid, low);
-	nco += 3;
+        printf ("%c%c%c", high, mid, low);
+        nco += 3;
     }
     else if (mid != '@') {
-	printf ("%c%c", mid, low);
-	nco += 2;
+        printf ("%c%c", mid, low);
+        nco += 2;
     }
     else {
-	putchar (low);
-	nco++;
+        putchar (low);
+        nco++;
     }
 }
 #endif

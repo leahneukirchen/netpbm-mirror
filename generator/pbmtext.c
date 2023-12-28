@@ -1,4 +1,4 @@
-/* pbmtext.c - render text into a bitmap
+/* pbmtext.c - render text into a PBM
 **
 ** Copyright (C) 1991 by Jef Poskanzer.
 **
@@ -81,8 +81,13 @@ textFmCmdLine(int argc, const char ** argv) {
     text[0] = '\0';
 
     for (i = 1, totaltextsize = 0; i < argc; ++i) {
-        if (i > 1) {
+        if (i > 1)
             strcat(text, " ");
+
+        if (strlen(argv[i]) > MAXLINECHARS) { /* avoid arithmetic overflow */
+            pm_error("Command line argument %u is %u characters.  "
+                     "Cannot process longer than %u",
+                     i, (unsigned) strlen(argv[i]), (unsigned) MAXLINECHARS);
         }
         totaltextsize += strlen(argv[i]) + (i > 1 ? 1 : 0);
         if (totaltextsize > MAXLINECHARS)
@@ -1105,7 +1110,7 @@ getText(PM_WCHAR             const cmdlineText[],
 
         unsigned int const lineBufTerm = LINEBUFSIZE - 1;
 
-        unsigned int maxlines;
+        unsigned int textArraySz;
             /* Maximum number of lines for which we currently have space in
                the text array
             */
@@ -1122,12 +1127,12 @@ getText(PM_WCHAR             const cmdlineText[],
         buf[lineBufTerm] = L'\1';  /* Initialize to non-zero value */
                                    /* to detect input overrun */
 
-        maxlines = 50;  /* initial value */
-        MALLOCARRAY(textArray, maxlines);
+        textArraySz = 50;  /* initial value */
+        MALLOCARRAY(textArray, textArraySz);
 
         if (!textArray)
             pm_error("Unable to allocate memory for a buffer for up to %u "
-                     "lines of text", maxlines);
+                     "lines of text", textArraySz);
 
         for (lineCount = 0, eof = false; !eof; ) {
             const char * error;
@@ -1143,9 +1148,13 @@ getText(PM_WCHAR             const cmdlineText[],
                             "is longer than %u characters. "
                             "Cannot process",
                             lineCount, (unsigned int) MAXLINECHARS);
-                    if (lineCount >= maxlines) {
-                        maxlines *= 2;
-                        REALLOCARRAY(textArray, maxlines);
+                    if (lineCount >= textArraySz) {
+                        if (textArraySz > UINT_MAX/2)
+                            pm_error("Too many lines of input for "
+                                     "computation (more than %u)",
+                                     textArraySz);
+                        textArraySz *= 2;
+                        REALLOCARRAY(textArray, textArraySz);
                         if (textArray == NULL)
                             pm_error("out of memory");
                     }
@@ -1562,6 +1571,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
-
 
 

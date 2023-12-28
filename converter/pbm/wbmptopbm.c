@@ -1,9 +1,9 @@
 /* wbmptopbm.c - convert a wbmp file to a portable bitmap
 
-   This is derived for Netpbm from the pbmwbmp package from 
+   This is derived for Netpbm from the pbmwbmp package from
    <http://www.looplab.com/wap/tools> on 2000.06.06.
-   
-   The specifications for the wbmp format are part of the Wireless 
+
+   The specifications for the wbmp format are part of the Wireless
    Application Environment specification at
    <http://www.wapforum.org/what/technical.htm>.
 
@@ -19,7 +19,7 @@
 
 #include "pbm.h"
 
-static int 
+static int
 readc(FILE *f) {
   int c = fgetc(f);
   if(c == EOF) pm_error("EOF / read error");
@@ -28,7 +28,7 @@ readc(FILE *f) {
 
 
 
-static int 
+static int
 readint(FILE *f) {
   int c=0, pos=0, sum=0;
   do {
@@ -40,7 +40,7 @@ readint(FILE *f) {
 
 
 
-static void 
+static void
 readheader(int h, FILE *f) {
   int c,i;
   switch(h & 0x60) {
@@ -81,7 +81,7 @@ readwbmp(FILE *f, int *cols, int *rows) {
     for(j=0; j<row; j++) {
       c=readc(f);
       for(k=0; k<8 && j*8+k<*cols; k++) {
-	image[i][j*8+k] = c & (0x80 >> k) ? PBM_WHITE : PBM_BLACK;
+        image[i][j*8+k] = c & (0x80 >> k) ? PBM_WHITE : PBM_BLACK;
       }
     }
   }
@@ -90,7 +90,7 @@ readwbmp(FILE *f, int *cols, int *rows) {
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
   FILE *f;
   bit **image;
@@ -109,4 +109,6 @@ main(int argc, char *argv[]) {
   pm_close(stdout);
   return 0;
 }
+
+
 

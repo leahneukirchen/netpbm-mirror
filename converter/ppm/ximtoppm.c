@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "ppm.h"
 #include "xim.h"
 #include "shhopt.h"
@@ -28,9 +29,9 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filename;
-    const char *alpha_filename;
-    bool alpha_stdout;
+    const char * inputFilename;
+    const char * alphaFilename;
+    bool         alphaStdout;
 };
 
 
@@ -53,7 +54,7 @@ parseCommandLine(int argc, const char ** argv,
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "alphaout",   OPT_STRING,
-            &cmdlineP->alpha_filename, &alphaoutSpec, 0);
+            &cmdlineP->alphaFilename, &alphaoutSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -63,21 +64,21 @@ parseCommandLine(int argc, const char ** argv,
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 
     if (!alphaoutSpec)
-        cmdlineP->alpha_filename = NULL;
+        cmdlineP->alphaFilename = NULL;
 
     if (argc - 1 == 0)
-        cmdlineP->input_filename = "-";  /* he wants stdin */
+        cmdlineP->inputFilename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
-        cmdlineP->input_filename = strdup(argv[1]);
+        cmdlineP->inputFilename = pm_strdup(argv[1]);
     else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
-    if (cmdlineP->alpha_filename &&
-        streq(cmdlineP->alpha_filename, "-"))
-        cmdlineP->alpha_stdout = TRUE;
+    if (cmdlineP->alphaFilename &&
+        streq(cmdlineP->alphaFilename, "-"))
+        cmdlineP->alphaStdout = true;
     else
-        cmdlineP->alpha_stdout = FALSE;
+        cmdlineP->alphaStdout = false;
 }
 
 
@@ -87,191 +88,202 @@ parseCommandLine(int argc, const char ** argv,
 */
 
 static int
-ReadXimHeader(FILE *     const in_fp,
-              XimImage * const header) {
+readXimHeader(FILE *     const ifP,
+              XimImage * const headerP) {
 
-    int  i;
-    char *cp;
-    XimAsciiHeader  a_head;
+    unsigned int  i;
+    XimAsciiHeader  aHead;
 
-    cp = (char *) header;
-    for (i = 0; i < sizeof(XimImage); ++i )
-    *cp++ = 0;
+    {
+        unsigned char * cp;
+        cp = (unsigned char *)headerP;
+        for (i = 0; i < sizeof(XimImage); ++i)
+            *cp++ = 0;
+    }
     /* Read header and verify image file formats */
-    if (fread((char *)&a_head, sizeof(ImageHeader), 1, in_fp) != 1) {
+    if (fread((char *)&aHead, sizeof(ImageHeader), 1, ifP) != 1) {
         pm_message("ReadXimHeader: unable to read file header" );
-        return(0);
+        return 0;
     }
     /* Force broken ASCIIZ strings to at least be valid ASCIIZ */
-    a_head.author [sizeof(a_head.author)  - 1] = '\0';
-    a_head.date   [sizeof(a_head.date)    - 1] = '\0';
-    a_head.program[sizeof(a_head.program) - 1] = '\0';
+    aHead.author [sizeof(aHead.author)  - 1] = '\0';
+    aHead.date   [sizeof(aHead.date)    - 1] = '\0';
+    aHead.program[sizeof(aHead.program) - 1] = '\0';
 
-    if (atoi(a_head.header_size) != sizeof(ImageHeader)) {
+    if (atoi(aHead.header_size) != sizeof(ImageHeader)) {
         pm_message("ReadXimHeader: header size mismatch" );
         return(0);
     }
-    if (atoi(a_head.file_version) != IMAGE_VERSION) {
+    if (atoi(aHead.file_version) != IMAGE_VERSION) {
         pm_message("ReadXimHeader: incorrect Image_file version" );
         return(0);
     }
-    header->width = atoi(a_head.image_width);
-    header->height = atoi(a_head.image_height);
-    header->ncolors = atoi(a_head.num_colors);
-    header->nchannels = atoi(a_head.num_channels);
-    header->bytes_per_line = atoi(a_head.bytes_per_line);
+    headerP->width          = atoi(aHead.image_width);
+    headerP->height         = atoi(aHead.image_height);
+    headerP->ncolors        = atoi(aHead.num_colors);
+    headerP->nchannels      = atoi(aHead.num_channels);
+    headerP->bytes_per_line = atoi(aHead.bytes_per_line);
 #if 0
-    header->npics = atoi(a_head.num_pictures);
+    headerP->npics          = atoi(aHead.num_pictures);
 #endif
-    header->bits_channel = atoi(a_head.bits_per_channel);
-    header->alpha_flag = atoi(a_head.alpha_channel);
-    header->author = pm_strdup(a_head.author);
-    header->date = pm_strdup(a_head.date);
-    header->program = pm_strdup(a_head.program);
+    headerP->bits_channel   = atoi(aHead.bits_per_channel);
+    headerP->alpha_flag     = atoi(aHead.alpha_channel);
+    headerP->author         = pm_strdup(aHead.author);
+    headerP->date           = pm_strdup(aHead.date);
+    headerP->program        = pm_strdup(aHead.program);
 
     /* Do double checking for backwards compatibility */
-    if (header->npics == 0)
-        header->npics = 1;
-    if (header->bits_channel == 0)
-        header->bits_channel = 8;
-    else if (header->bits_channel == 24) {
-        header->nchannels = 3;
-        header->bits_channel = 8;
+    if (headerP->npics == 0)
+        headerP->npics = 1;
+    if (headerP->bits_channel == 0)
+        headerP->bits_channel = 8;
+    else if (headerP->bits_channel == 24) {
+        headerP->nchannels = 3;
+        headerP->bits_channel = 8;
     }
-    if ((int)header->bytes_per_line == 0)
-        header->bytes_per_line =
-            (header->bits_channel == 1 && header->nchannels == 1) ?
-                (header->width + 7) / 8 :
-                header->width;
-    header->datasize =(unsigned int)header->bytes_per_line * header->height;
-    if (header->nchannels == 3 && header->bits_channel == 8)
-        header->ncolors = 0;
-    else if (header->nchannels == 1 && header->bits_channel == 8) {
-        header->colors = (Color *)calloc((unsigned int)header->ncolors,
-                sizeof(Color));
-        if (header->colors == NULL) {
-            pm_message("ReadXimHeader: can't calloc colors" );
-            return(0);
-        }
-        for (i=0; i < header->ncolors; i++) {
-            header->colors[i].red = a_head.c_map[i][0];
-            header->colors[i].grn = a_head.c_map[i][1];
-            header->colors[i].blu = a_head.c_map[i][2];
+    if (headerP->bytes_per_line == 0)
+        headerP->bytes_per_line =
+            (headerP->bits_channel == 1 && headerP->nchannels == 1) ?
+                (headerP->width + 7) / 8 :
+                headerP->width;
+    headerP->datasize =
+        (unsigned int)headerP->bytes_per_line * headerP->height;
+    if (headerP->nchannels == 3 && headerP->bits_channel == 8)
+        headerP->ncolors = 0;
+    else if (headerP->nchannels == 1 && headerP->bits_channel == 8) {
+        unsigned int i;
+
+        MALLOCARRAY_NOFAIL(headerP->colors, headerP->ncolors);
+
+        for (i=0; i < headerP->ncolors; ++i) {
+            headerP->colors[i].red = aHead.c_map[i][0];
+            headerP->colors[i].grn = aHead.c_map[i][1];
+            headerP->colors[i].blu = aHead.c_map[i][2];
         }
     }
-    return(1);
+    return 1;
 }
 
 
 
 static int
-ReadImageChannel(FILE *         const infp,
+readImageChannel(FILE *         const ifP,
                  byte *         const buf,
-                 unsigned int * const bufsize,
-                 int            const encoded) {
+                 unsigned int * const bufsizeP,
+                 bool           const encoded) {
 
-    int  i, runlen, nbytes;
-    unsigned int  j;
-    byte *line;
+    unsigned int j;
     long  marker;
 
     if (!encoded)
-        j = fread((char *)buf, 1, (int)*bufsize, infp);
+        j = fread((char *)buf, 1, (int)*bufsizeP, ifP);
     else {
-        if ((line=(byte *)malloc((unsigned int)BUFSIZ)) == NULL) {
+        byte * line;
+
+        MALLOCARRAY(line, BUFSIZ);
+        if (!line) {
             pm_message("ReadImageChannel: can't malloc() fread string" );
-            return(0);
-        }
-        /* Unrunlength encode data */
-        marker = ftell(infp);
-        j = 0;
-        while (((nbytes=fread((char *)line, 1, BUFSIZ, infp)) > 0) &&
-            (j < *bufsize)) {
-            for (i=0; (i < nbytes) && (j < *bufsize); i++) {
-                runlen = (int)line[i]+1;
-                i++;
-                while (runlen--)
-                    buf[j++] = line[i];
+            return 0;
+        } else {
+            /* Unrunlength encode data */
+            unsigned int byteCt;
+
+            marker = ftell(ifP);
+            j = 0;
+            while (((byteCt = fread((char *)line, 1, BUFSIZ, ifP)) > 0) &&
+                   (j < *bufsizeP)) {
+                unsigned int i;
+                for (i=0; (i < byteCt) && (j < *bufsizeP); ++i) {
+                    unsigned int runlen;
+                    runlen = (unsigned int)line[i] + 1;
+                    ++i;
+                    while (runlen--)
+                        buf[j++] = line[i];
+                }
+                marker += i;
             }
-            marker += i;
+            /* return to the beginning of the next image's buffer */
+            if (fseek(ifP, marker, 0) == -1) {
+                pm_message("ReadImageChannel: can't fseek to location "
+                           "in image buffer");
+                return 0;
+            }
+            free(line);
         }
-        /* return to the beginning of the next image's buffer */
-        if (fseek(infp, marker, 0) == -1) {
-            pm_message("ReadImageChannel: can't fseek to location "
-                       "in image buffer");
-            return(0);
-        }
-        free((char *)line);
     }
-    if (j != *bufsize) {
-        pm_message("unable to complete channel: %u / %u (%d%%)",
-            j, *bufsize, (int)(j*100.0 / *bufsize) );
-        *bufsize = j;
+    if (j != *bufsizeP) {
+        pm_message("unable to complete channel: %u / %u (%f%%)",
+                   j, *bufsizeP, j * 100.0 / *bufsizeP);
+        *bufsizeP = j;
     }
-    return(1);
+    return 1;
 }
 
 
 
 static int
-ReadXimImage(FILE *     const in_fp,
-             XimImage * const xim) {
+readXimImage(FILE *     const ifP,
+             XimImage * const ximP) {
 
-    if (xim->data) {
-        free((char *)xim->data);
-        xim->data = (byte *)0;
+    if (ximP->data) {
+        free(ximP->data);
+        ximP->data = NULL;
     }
-    if (xim->grn_data) {
-        free((char *)xim->grn_data);
-        xim->grn_data = (byte *)0;
+    if (ximP->grn_data) {
+        free(ximP->grn_data);
+        ximP->grn_data = NULL;
     }
-    if (xim->blu_data) {
-        free((char *)xim->blu_data);
-        xim->blu_data = (byte *)0;
+    if (ximP->blu_data) {
+        free(ximP->blu_data);
+        ximP->blu_data = NULL;
     }
-    if (xim->other) {
-        free((char *)xim->other);
-        xim->other = (byte *)0;
+    if (ximP->other) {
+        free(ximP->other);
+        ximP->other = NULL;
     }
-    xim->npics = 0;
-    if (!(xim->data = (byte *)calloc(xim->datasize, 1))) {
-        pm_message("ReadXimImage: can't malloc pixmap data" );
-        return(0);
+    ximP->npics = 0;
+    MALLOCARRAY(ximP->data, ximP->datasize);
+    if (!ximP->data) {
+        pm_message("ReadXimImage: can't malloc pixmap data");
+        return 0;
     }
-    if (!ReadImageChannel(in_fp, xim->data, &xim->datasize, 0)) {
-        pm_message("ReadXimImage: end of the images" );
-        return(0);
+    if (!readImageChannel(ifP, ximP->data, &ximP->datasize, false)) {
+        pm_message("ReadXimImage: end of the images");
+        return 0;
     }
-    if (xim->nchannels == 3) {
-        xim->grn_data = (byte *)malloc(xim->datasize);
-        xim->blu_data = (byte *)malloc(xim->datasize);
-        if (xim->grn_data == NULL || xim->blu_data == NULL) {
-            pm_message("ReadXimImage: can't malloc rgb channel data" );
-            free((char *)xim->data);
-            if (xim->grn_data)  free((char *)xim->grn_data);
-            if (xim->blu_data)  free((char *)xim->blu_data);
-            xim->data = xim->grn_data = xim->blu_data = (byte*)0;
-            return(0);
+    if (ximP->nchannels == 3) {
+        MALLOCARRAY(ximP->grn_data, ximP->datasize);
+        MALLOCARRAY(ximP->blu_data, ximP->datasize);
+        if (!ximP->grn_data || !ximP->blu_data) {
+            pm_message("ReadXimImage: can't malloc rgb channel data");
+            free(ximP->data);
+            if (ximP->grn_data)
+                free(ximP->grn_data);
+            if (ximP->blu_data)
+                free(ximP->blu_data);
+            ximP->data = ximP->grn_data = ximP->blu_data = NULL;
+            return 0;
         }
-        if (!ReadImageChannel(in_fp, xim->grn_data, &xim->datasize, 0))
-            return(0);
-        if (!ReadImageChannel(in_fp, xim->blu_data, &xim->datasize, 0))
-            return(0);
-    }
-    if (xim->nchannels > 3) {
-        /* In theory, this can be any fourth channel, but the only one we
-           know about is an Alpha channel, so we'll call it that, even
-           though we process it generically.
-           */
-        if ((xim->other = (byte *)malloc(xim->datasize)) == NULL) {
-            pm_message("ReadXimImage: can't malloc alpha data" );
-            return(0);
+        if (!readImageChannel(ifP, ximP->grn_data, &ximP->datasize, false))
+            return 0;
+        if (!readImageChannel(ifP, ximP->blu_data, &ximP->datasize, false))
+            return 0;
+    } else if (ximP->nchannels > 3) {
+        /* In theory, this can be any fourth channel, but the only one we know
+           about is an Alpha channel, so we'll call it that, even though we
+           process it generically.
+        */
+        MALLOCARRAY(ximP->other, ximP->datasize);
+        if (!ximP->other) {
+            pm_message("ReadXimImage: can't malloc alpha data");
+            return 0;
         }
-        if (!ReadImageChannel(in_fp, xim->other, &xim->datasize, 0))
+        if (!readImageChannel(ifP, ximP->other, &ximP->datasize, false))
             return(0);
     }
-    xim->npics = 1;
-    return(1);
+    ximP->npics = 1;
+
+    return 1;
 }
 
 
@@ -307,17 +319,21 @@ ReadXimImage(FILE *     const in_fp,
 ***********************************************************************/
 
 static int
-ReadXim(FILE *     const in_fp,
-        XimImage * const xim) {
+readXim(FILE *     const ifP,
+        XimImage * const ximP) {
 
-    if (!ReadXimHeader(in_fp, xim)) {
-        pm_message("can't read xim header" );
-        return 0;
-    } else if (!ReadXimImage(in_fp, xim)) {
-        pm_message("can't read xim data" );
-        return 0;
+    int retval;
+
+    if (!readXimHeader(ifP, ximP)) {
+        pm_message("can't read xim header");
+        retval = 0;
+    } else if (!readXimImage(ifP, ximP)) {
+        pm_message("can't read xim data");
+        retval = 0;
     } else
-        return 1;
+        retval = 1;
+
+    return retval;
 }
 
 
@@ -327,44 +343,48 @@ main(int          argc,
      const char **argv) {
 
     struct CmdlineInfo cmdline;
-    FILE *ifP, *imageout_file, *alpha_file;
+    FILE * ifP;
+    FILE * imageoutFileP;
+    FILE * alphaFileP;
     XimImage xim;
-    pixel *pixelrow, colormap[256];
-    gray *alpharow;
-        /* The alpha channel of the row we're currently converting, in
-           pgm fmt
+    pixel * pixelrow;
+    pixel colormap[256];
+    gray * alpharow;
+        /* The alpha channel of the row we're currently converting, in PGM fmt
         */
-    int rows, cols, row, mapped;
+    unsigned int rows, cols;
+    unsigned int row;
+    bool mapped;
     pixval maxval;
-    bool success;
+    bool succeeded;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filename);
+    ifP = pm_openr(cmdline.inputFilename);
 
-    if (cmdline.alpha_stdout)
-        alpha_file = stdout;
-    else if (cmdline.alpha_filename == NULL)
-        alpha_file = NULL;
+    if (cmdline.alphaStdout)
+        alphaFileP = stdout;
+    else if (cmdline.alphaFilename == NULL)
+        alphaFileP = NULL;
     else
-        alpha_file = pm_openw(cmdline.alpha_filename);
+        alphaFileP = pm_openw(cmdline.alphaFilename);
 
-    if (cmdline.alpha_stdout)
-        imageout_file = NULL;
+    if (cmdline.alphaStdout)
+        imageoutFileP = NULL;
     else
-        imageout_file = stdout;
+        imageoutFileP = stdout;
 
-    success = ReadXim(ifP, &xim);
-    if (!success)
+    succeeded = readXim(ifP, &xim);
+    if (!succeeded)
         pm_error("can't read Xim file");
 
     rows = xim.height;
     cols = xim.width;
 
     if (xim.nchannels == 1 && xim.bits_channel == 8) {
-        int i;
+        unsigned int i;
 
         mapped = true;
         maxval = 255;
@@ -382,27 +402,29 @@ main(int          argc,
             "unknown Xim file type, nchannels == %d, bits_channel == %d",
             xim.nchannels, xim.bits_channel);
 
-    if (imageout_file)
-        ppm_writeppminit(imageout_file, cols, rows, maxval, 0);
-    if (alpha_file)
-        pgm_writepgminit(alpha_file, cols, rows, maxval, 0);
+    if (imageoutFileP)
+        ppm_writeppminit(imageoutFileP, cols, rows, maxval, 0);
+    if (alphaFileP)
+        pgm_writepgminit(alphaFileP, cols, rows, maxval, 0);
 
     pixelrow = ppm_allocrow(cols);
     alpharow = pgm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
         if (mapped) {
-            byte * const ximrow = xim.data + row * xim.bytes_per_line;
+            byte * const ximrow = &xim.data[row * xim.bytes_per_line];
+
             unsigned int col;
 
             for (col = 0; col < cols; ++col)
                 pixelrow[col] = colormap[ximrow[col]];
+
             alpharow[col] = 0;
         } else {
-            byte * const redrow = xim.data     + row * xim.bytes_per_line;
-            byte * const grnrow = xim.grn_data + row * xim.bytes_per_line;
-            byte * const blurow = xim.blu_data + row * xim.bytes_per_line;
-            byte * const othrow = xim.other    + row * xim.bytes_per_line;
+            byte * const redrow = &xim.data     [row * xim.bytes_per_line];
+            byte * const grnrow = &xim.grn_data [row * xim.bytes_per_line];
+            byte * const blurow = &xim.blu_data [row * xim.bytes_per_line];
+            byte * const othrow = &xim.other    [row * xim.bytes_per_line];
 
             unsigned int col;
 
@@ -415,16 +437,16 @@ main(int          argc,
                     alpharow[col] = 0;
             }
         }
-        if (imageout_file)
-            ppm_writeppmrow(imageout_file, pixelrow, cols, maxval, 0);
-        if (alpha_file)
-            pgm_writepgmrow(alpha_file, alpharow, cols, maxval, 0);
+        if (imageoutFileP)
+            ppm_writeppmrow(imageoutFileP, pixelrow, cols, maxval, 0);
+        if (alphaFileP)
+            pgm_writepgmrow(alphaFileP, alpharow, cols, maxval, 0);
     }
     pm_close(ifP);
-    if (imageout_file)
-        pm_close(imageout_file);
-    if (alpha_file)
-        pm_close(alpha_file);
+    if (imageoutFileP)
+        pm_close(imageoutFileP);
+    if (alphaFileP)
+        pm_close(alphaFileP);
 
     return 0;
 }

@@ -16,21 +16,21 @@
 #include "pgm.h"
 
 struct HIPS_Header {
-    char* orig_name;	/* An indication of the originator of this sequence. */
-    char* seq_name;	/* The sequence name. */
-    int num_frame;	/* The number of frames in this sequence. */
-    char* orig_date;	/* The date the sequence was originated. */
-    int rows;		/* The number of rows in each image, the height. */
-    int cols;		/* The number of columns in each image, the width. */
-    int bits_per_pixel;	/* The number of significant bits per pixel. */
-    int bit_packing;	/* Nonzero if the bits were packed such as to
+    char* orig_name;    /* An indication of the originator of this sequence. */
+    char* seq_name;     /* The sequence name. */
+    int num_frame;      /* The number of frames in this sequence. */
+    char* orig_date;    /* The date the sequence was originated. */
+    int rows;           /* The number of rows in each image, the height. */
+    int cols;           /* The number of columns in each image, the width. */
+    int bits_per_pixel; /* The number of significant bits per pixel. */
+    int bit_packing;    /* Nonzero if the bits were packed such as to
                            eliminate any unused bits resulting from a
                            bits_per_pixel value which was not an even
                            multiple of eight. */
-    int pixel_format;	/* An indication of the format of each pixel. */
-    char* seq_history;	/* A description of the sequence of transformations
+    int pixel_format;   /* An indication of the format of each pixel. */
+    char* seq_history;  /* A description of the sequence of transformations
                            leading up to the current image. */
-    char* seq_desc;	/* A free form description of the contents of the
+    char* seq_desc;     /* A free form description of the contents of the
                        sequence. */
 };
 #define HIPS_PFBYTE 0
@@ -49,7 +49,6 @@ read_line(FILE * const fd,
     if (fgets( buf, size, fd ) == NULL)
         pm_error("error reading header");
 }
-
 
 
 
@@ -95,9 +94,9 @@ read_hips_header( fd, hP )
 
     /* Now read and toss lines until we get one with just a period. */
     do
-	{
+        {
         read_line( fd, buf, 5000 );
-	}
+        }
     while ( !streq( buf, ".\n" ) );
 }
 
@@ -121,10 +120,10 @@ main(int argc, char * argv[]) {
     argn = 1;
 
     if ( argn < argc )
-	{
+        {
         ifp = pm_openr( argv[argn] );
         argn++;
-	}
+        }
     else
         ifp = stdin;
 
@@ -137,8 +136,8 @@ main(int argc, char * argv[]) {
     rows = h.rows * h.num_frame;
 
     switch ( h.pixel_format )
-	{
-	case HIPS_PFBYTE:
+        {
+        case HIPS_PFBYTE:
         if ( h.bits_per_pixel != 8 )
             pm_error(
                 "can't handle unusual bits_per_pixel %d", h.bits_per_pixel );
@@ -147,16 +146,16 @@ main(int argc, char * argv[]) {
         maxval = 255;
         break;
 
-	default:
+        default:
         pm_error( "unknown pixel format %d", h.pixel_format );
-	}
+        }
 
     pgm_writepgminit( stdout, cols, rows, (gray) maxval, 0 );
     grayrow = pgm_allocrow( cols );
     for ( row = 0; row < rows; row++)
-	{
+        {
         for ( col = 0, gP = grayrow; col < cols; col++, gP++ )
-	    {
+            {
             int ich;
 
             switch ( h.pixel_format )
@@ -171,11 +170,14 @@ main(int argc, char * argv[]) {
             default:
                 pm_error( "can't happen" );
             }
-	    }
+            }
         pgm_writepgmrow( stdout, grayrow, cols, (gray) maxval, 0 );
-	}
+        }
     pm_close( ifp );
     pm_close( stdout );
 
     return 0;
 }
+
+
+

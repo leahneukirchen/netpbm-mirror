@@ -23,18 +23,18 @@ typedef struct bitOut {
 
 
 
-static void 
+static void
 bit_init(struct bitOut * const bitOutP,
          FILE *          const ofP) {
 
-    bitOutP->bitbox = 0; 
+    bitOutP->bitbox = 0;
     bitOutP->bitsleft = 8;
     bitOutP->fileP = ofP;
 }
 
 
 
-static void 
+static void
 bit_output(struct bitOut * const bitOutP,
            int             const bit) {
 
@@ -49,7 +49,7 @@ bit_output(struct bitOut * const bitOutP,
 
 
 
-static void 
+static void
 bit_flush(struct bitOut * const bitOutP) {
     /* there are never 0 bits left outside of bit_output, but
      * if 8 bits are left here there's nothing to flush, so
@@ -86,7 +86,7 @@ determineBlackWhiteOrMix(const unsigned char * const image,
 
             t += image[rowOfImage * imageWidth + colOfImage];
         }
-    }        
+    }
     /* if the total's 0, it's black. if it's size*size, it's white. */
     if (t == 0) {
         *oneColorP = TRUE;
@@ -100,7 +100,7 @@ determineBlackWhiteOrMix(const unsigned char * const image,
 
 
 
-static void 
+static void
 doSquare(bitOut *              const bitOutP,
          const unsigned char * const image,
          unsigned int          const ulCol,
@@ -148,7 +148,7 @@ doSquare(bitOut *              const bitOutP,
         }
     }
 }
-    
+
 
 
 static void
@@ -186,7 +186,7 @@ fiddleBottomEdge(unsigned char * const image,
                  unsigned int    const pw,
                  unsigned int    const ph,
                  bool *          const flippedP) {
-    
+
     unsigned int col;
     unsigned int t;
 
@@ -207,7 +207,6 @@ fiddleBottomEdge(unsigned char * const image,
 
 
 
-
 static void
 fiddleBottomRightCorner(unsigned char * const image,
                         unsigned int    const w,
@@ -218,7 +217,7 @@ fiddleBottomRightCorner(unsigned char * const image,
 
     for (row = h; row < ph; ++row) {
         unsigned int col;
-        
+
         for (col = w; col < pw; ++col)
                     image[row*pw + col] = 1;
     }
@@ -226,7 +225,7 @@ fiddleBottomRightCorner(unsigned char * const image,
 
 
 
-static void 
+static void
 fiddleEdges(unsigned char * const image,
             int             const cols,
             int             const rows) {
@@ -247,9 +246,9 @@ fiddleEdges(unsigned char * const image,
          * So, all we do is flip the runoff area of an edge to white
          * if more than half of the pixels on that edge are
          * white. Then for the bottom-right runoff square (if there is
-         * one), we flip it if we flipped both edges.  
+         * one), we flip it if we flipped both edges.
          */
-        
+
     /* w64 is units-of-64-bits width, h64 same for height */
     unsigned int const w64 = (cols + 63) / 64;
     unsigned int const h64 = (rows + 63) / 64;
@@ -259,28 +258,28 @@ fiddleEdges(unsigned char * const image,
 
     bool flippedRight, flippedBottom;
 
-    if (cols % 64 != 0) 
+    if (cols % 64 != 0)
         fiddleRightEdge(image, cols, rows, pw, &flippedRight);
     else
         flippedRight = FALSE;
 
-    if (rows % 64 != 0) 
+    if (rows % 64 != 0)
         fiddleBottomEdge(image, cols, rows, pw, ph, &flippedBottom);
     else
         flippedBottom = FALSE;
 
-    if (flippedRight && flippedBottom) 
+    if (flippedRight && flippedBottom)
         fiddleBottomRightCorner(image, cols, rows, pw, ph);
 }
 
 
 
 static void
-readPbmImage(FILE *           const ifP, 
+readPbmImage(FILE *           const ifP,
              unsigned char ** const imageP,
              int *            const colsP,
              int *            const rowsP) {
-    
+
 
     /* w64 is units-of-64-bits width, h64 same for height */
     unsigned int w64, h64;
@@ -289,7 +288,7 @@ readPbmImage(FILE *           const ifP,
     int cols, rows, format;
     unsigned int row;
     bit * bitrow;
-    
+
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
     w64 = (cols + 63) / 64;
@@ -302,7 +301,7 @@ readPbmImage(FILE *           const ifP,
     image = calloc(w64*h64*64*64, 1);
     if (image == NULL)
         pm_error("Unable to get memory for raster");
-                 
+
     /* get bytemap image rounded up into mod 64x64 squares */
 
     bitrow = pbm_allocrow(cols);
@@ -324,7 +323,7 @@ readPbmImage(FILE *           const ifP,
 
 
 static void
-outputMrf(FILE *          const ofP, 
+outputMrf(FILE *          const ofP,
           unsigned char * const image,
           unsigned int    const cols,
           unsigned int    const rows) {
@@ -340,7 +339,7 @@ outputMrf(FILE *          const ofP,
     fprintf(ofP, "%c%c%c%c", cols >> 24, cols >> 16, cols >> 8, cols >> 0);
     fprintf(ofP, "%c%c%c%c", rows >> 24, rows >> 16, rows >> 8, rows >> 0);
     fputc(0, ofP);   /* option byte, unused for now */
-    
+
     /* now recursively check squares. */
 
     bit_init(&bitOut, ofP);
@@ -355,18 +354,18 @@ outputMrf(FILE *          const ofP,
 
 
 
-int 
+int
 main(int argc,char *argv[]) {
 
     FILE * ifP;
     FILE * ofP;
     unsigned char *image;
     int rows, cols;
-    
+
     pbm_init(&argc, argv);
 
     if (argc-1 > 1)
-        pm_error("Too many arguments: %d.  Only argument is input file", 
+        pm_error("Too many arguments: %d.  Only argument is input file",
                  argc-1);
 
     if (argc-1 == 1)
@@ -375,7 +374,7 @@ main(int argc,char *argv[]) {
         ifP = stdin;
 
     ofP = stdout;
- 
+
     readPbmImage(ifP, &image, &cols, &rows);
 
     pm_close(ifP);
@@ -392,7 +391,6 @@ main(int argc,char *argv[]) {
 
     return 0;
 }
-
 
 
 

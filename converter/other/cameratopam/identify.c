@@ -263,7 +263,6 @@ adobeCoeff(const char * const make,
 
 
 
-
 int
 identify(FILE *       const ifp,
          bool         const use_secondary,
@@ -1206,3 +1205,6 @@ dng_skip:
 
     return 0;
 }
+
+
+

@@ -4,8 +4,6 @@
 
 echo "Test 1."
 echo "Should print: 2132901423 10015" # (Mersenne Twister)
-#                   1663614689 10015 (Glibc rand())
-#                   3516404574 10015 (MAC OS rand())
 pgmnoise --randomseed=0 100 100 | cksum
 
 

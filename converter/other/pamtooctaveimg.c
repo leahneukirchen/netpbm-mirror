@@ -144,7 +144,7 @@ convertToOctave(FILE * const ifP,
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
 
     pnm_setminallocationdepth(&inpam, 3);
-    
+
     /* Output the image as a GNU Octave matrix.  For each row of the
      * input file we immediately output indexes into the colormap then,
      * when we're finished, we output the colormap as a second
@@ -191,14 +191,14 @@ main(int argc, char *argv[]) {
     inputName = argc-1 > 0 ? argv[1] : "-";
 
     ifP = pm_openr(inputName);
-    
+
     if (streq(inputName, "-"))
         fprintf(stdout, "# Created by pamtooctave\n");
     else
         fprintf(stdout, "# Created from '%s' by pamtooctave\n", inputName);
 
     convertToOctave(ifP, stdout);
-    
+
     pm_close(ifP);
 
     return 0;

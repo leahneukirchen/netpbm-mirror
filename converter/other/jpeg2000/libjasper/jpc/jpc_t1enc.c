@@ -126,7 +126,6 @@
 
 #include "netpbm/nstring.h"
 
-#include "jasper/jas_fix.h"
 #include "jasper/jas_malloc.h"
 #include "jasper/jas_math.h"
 
@@ -190,11 +189,8 @@ encodeBlocksOfPrecinct(jpc_enc_prc_t *   const prcP,
             cblkP->numbps = MAX(jpc_firstone(mx) + 1 - JPC_NUMEXTRABITS, 0);
         }
 
-        for (cblkno = 0; cblkno < prcP->numcblks; ++ cblkno) {
-            jpc_enc_cblk_t * const cblkP = &prcP->cblks[cblkno];
-
-            assert(cblkP->numbps <= bandP->numbps);
-        }
+        for (cblkno = 0; cblkno < prcP->numcblks; ++ cblkno)
+            assert(prcP->cblks[cblkno].numbps <= bandP->numbps);
 
         for (cblkno = 0, *errorP = NULL;
              cblkno < prcP->numcblks && !*errorP;

@@ -52,13 +52,13 @@ typedef int rle_fn( ARB_ARGS );
 struct rle_dispatch_tab {
     CONST_DECL char   *magic;   /* magic type flags */
     void (*setup)(rle_hdr * the_hdr);          /* startup function */
-    void (*skipBlankLines)(int nblank, rle_hdr * the_hdr);
+    void (*skipBlankLines)(unsigned int nblank, rle_hdr * the_hdr);
     void(*setColor)(int c, rle_hdr * the_hdr);
-    void(*skipPixels)(int nskip, int last, int wasrun, rle_hdr * the_hdr);
+    void(*skipPixels)(unsigned int nskip, int last, int wasrun, rle_hdr * the_hdr);
     void(*newScanLine)(int flag, rle_hdr * the_hdr);
-    void(*putdat)(rle_pixel * buf, int n, rle_hdr * the_hdr);
+    void(*putdat)(rle_pixel * buf, unsigned int n, rle_hdr * the_hdr);
         /* put a set of differing pixels */
-    void(*putrn)(int color, int n, int last, rle_hdr * the_hdr);
+    void(*putrn)(int color, unsigned int n, int last, rle_hdr * the_hdr);
         /* put a run all the same */
     void (*blockHook)(rle_hdr * the_hdr);
         /* hook called at start of new output block */

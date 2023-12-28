@@ -26,9 +26,6 @@ echo "1023"
 echo "720 296 192 858 101 57 298 629 804 1019 64 617"
 echo "Above output is for Mersenne Twister"
 
-# GNU libc rand(): 593 252 207 990 507 824 961 805 559 110 167 172
-# MAC OS rand():   9 782 60 418 364 654 670 172 1022 515 593 903 
-
 pgmnoise -maxval=1023 -randomseed=3791 -plain 12 1
 
 echo

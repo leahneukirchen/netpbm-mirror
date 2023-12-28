@@ -196,6 +196,8 @@ GetShort(FILE * const fp) {
     return v;
 }
 
+
+
 static short
 GetBigShort(FILE * const fp) {
 
@@ -936,6 +938,7 @@ convertRow32(unsigned char      const bmprow[],
         cursor += 4;
     }
 }
+
 
 
 static void
@@ -1716,5 +1719,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
 
 

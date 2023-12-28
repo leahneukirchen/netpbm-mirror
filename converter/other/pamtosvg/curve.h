@@ -64,12 +64,12 @@ typedef struct Curve {
 /* If the curve is cyclic, the next and previous points should wrap
    around; otherwise, if we get to the end, we return CURVE_LENGTH and
    -1, respectively.  */
-#define CURVE_NEXT(c, n)						\
-  ((n) + 1 >= CURVE_LENGTH (c)						\
-  ? CURVE_CYCLIC (c) ? ((n) + 1) % CURVE_LENGTH (c) : CURVE_LENGTH (c)	\
+#define CURVE_NEXT(c, n)                                                \
+  ((n) + 1 >= CURVE_LENGTH (c)                                          \
+  ? CURVE_CYCLIC (c) ? ((n) + 1) % CURVE_LENGTH (c) : CURVE_LENGTH (c)  \
   : (n) + 1)
-#define CURVE_PREV(c, n)						\
-  ((signed int) (n) - 1 < 0							\
+#define CURVE_PREV(c, n)                                                \
+  ((signed int) (n) - 1 < 0                                                     \
   ? CURVE_CYCLIC (c) ? (signed int) CURVE_LENGTH (c) + (signed int) (n) - 1 : -1\
   : (signed int) (n) - 1)
 

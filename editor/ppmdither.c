@@ -1,5 +1,5 @@
 /*=============================================================================
-                                 pamdither
+                                 ppmdither
 ===============================================================================
   By Bryan Henderson, July 2006.
 
@@ -23,7 +23,7 @@
 #define MAX_DITH_POWER (((unsigned)sizeof(unsigned int)*8 - 1) / 2)
 
 
-struct colorResolution {
+struct ColorResolution {
     unsigned int c[3];
         /* comp[PAM_RED_PLANE] is number of distinct red levels, etc. */
 };
@@ -38,7 +38,7 @@ struct CmdlineInfo {
     */
     const char * inputFileName;  /* File name of input file */
     unsigned int dim;
-    struct colorResolution colorRes;
+    struct ColorResolution colorRes;
     unsigned int verbose;
 };
 
@@ -139,7 +139,7 @@ typedef struct {
    0-3, and blue value of 0-1 to a tuple with maxval 255.  So you can
    ask it to scale (1,1,1) and it responds with (85, 85, 255).
 -----------------------------------------------------------------------------*/
-    struct colorResolution colorRes;
+    struct ColorResolution colorRes;
         /* Number of values of each color component possible, i.e. maxval
            plus 1
         */
@@ -148,7 +148,7 @@ typedef struct {
            certain function (see scaler_scale()) of the input red, green, and
            blue values.
         */
-} scaler;
+} Scaler;
 
 
 
@@ -186,10 +186,10 @@ allocScalerMap(unsigned int const size) {
 
 static void
 scaler_create(sample                 const outputMaxval,
-              struct colorResolution const colorRes,
-              scaler **              const scalerPP) {
+              struct ColorResolution const colorRes,
+              Scaler **              const scalerPP) {
 
-    scaler * scalerP;
+    Scaler * scalerP;
     unsigned int mapSize;
 
     if (UINT_MAX / colorRes.c[RED] / colorRes.c[GRN] / colorRes.c[BLU] < 1)
@@ -240,7 +240,7 @@ scaler_create(sample                 const outputMaxval,
 
 
 static void
-scaler_destroy(scaler * const scalerP) {
+scaler_destroy(Scaler * const scalerP) {
 
     free(scalerP->out);
 
@@ -250,7 +250,7 @@ scaler_destroy(scaler * const scalerP) {
 
 
 static tuple
-scaler_scale(const scaler * const scalerP,
+scaler_scale(const Scaler * const scalerP,
              unsigned int   const red,
              unsigned int   const grn,
              unsigned int   const blu) {
@@ -336,45 +336,37 @@ dithValue(unsigned int const yArg,
 
 
 static unsigned int **
-dithMatrix(unsigned int const dithPower) {
+newDithMatrix(unsigned int const dithPower) {
 /*----------------------------------------------------------------------------
    Create the dithering matrix for dimension 'dithDim'.
 
    Return it in newly malloc'ed storage.
 
-   Note that we assume 'dithPower' is small enough that the 'dithMatSize'
-   computed within fits in an int.  Otherwise, results are undefined.
+   Note that we assume 'dithPower' is not greater than the number of bits in
+   an unsigned int.
 -----------------------------------------------------------------------------*/
     unsigned int const dithDim = 1 << dithPower;
 
     unsigned int ** dithMat;
+    unsigned int y;
 
     assert(dithPower < sizeof(unsigned int) * 8);
 
-    {
-        unsigned int const dithMatSize =
-            (dithDim * sizeof(*dithMat)) + /* pointers */
-            (dithDim * dithDim * sizeof(**dithMat)); /* data */
-
-        dithMat = malloc(dithMatSize);
-
-        if (dithMat == NULL)
-            pm_error("Out of memory.  "
-                     "Cannot allocate %u bytes for dithering matrix.",
-                     dithMatSize);
-    }
-    {
-        unsigned int * const rowStorage = (unsigned int *)&dithMat[dithDim];
-        unsigned int y;
-        for (y = 0; y < dithDim; ++y)
-            dithMat[y] = &rowStorage[y * dithDim];
-    }
-    {
-        unsigned int y;
+    MALLOCARRAY(dithMat, dithDim);
+    if (!dithMat)
+        pm_error("Cannot allocate %u-row dithering matrix index", dithDim);
+    else {
         for (y = 0; y < dithDim; ++y) {
-            unsigned int x;
-            for (x = 0; x < dithDim; ++x)
-                dithMat[y][x] = dithValue(y, x, dithPower);
+            MALLOCARRAY(dithMat[y], dithDim);
+            if (!dithMat[y])
+                pm_error("Failed to allocate %uth row of "
+                         "%ux%u dithering matrix", y, dithDim, dithDim);
+            else {
+                unsigned int x;
+
+                for (x = 0; x < dithDim; ++x)
+                    dithMat[y][x] = dithValue(y, x, dithPower);
+            }
         }
     }
     return dithMat;
@@ -383,9 +375,25 @@ dithMatrix(unsigned int const dithPower) {
 
 
 static void
+freeDithMatrix(unsigned int ** const dithMat,
+               unsigned int    const dithPower) {
+
+    unsigned int const dithDim = 1 << dithPower;
+
+    unsigned int y;
+
+    for (y = 0; y < dithDim; ++y)
+        free(dithMat[y]);
+
+    free(dithMat);
+}
+
+
+
+static void
 validateNoDitherOverflow(unsigned int           const ditherMatrixArea,
                          struct pam *           const inpamP,
-                         struct colorResolution const colorRes) {
+                         struct ColorResolution const colorRes) {
 /*----------------------------------------------------------------------------
    Validate that we'll be able to do the dithering calculations based on
    the parameters above without busting out of an integer.
@@ -409,10 +417,10 @@ validateNoDitherOverflow(unsigned int           const ditherMatrixArea,
 static void
 ditherRow(struct pam *           const inpamP,
           const tuple *          const inrow,
-          const scaler *         const scalerP,
+          const Scaler *         const scalerP,
           unsigned int **        const ditherMatrix,
           unsigned int           const ditherMatrixArea,
-          struct colorResolution const colorRes,
+          struct ColorResolution const colorRes,
           unsigned int           const row,
           unsigned int           const modMask,
           struct pam *           const outpamP,
@@ -447,9 +455,9 @@ ditherRow(struct pam *           const inpamP,
 
 static void
 ditherImage(struct pam *           const inpamP,
-            const scaler *         const scalerP,
+            const Scaler *         const scalerP,
             unsigned int           const dithPower,
-            struct colorResolution const colorRes,
+            struct ColorResolution const colorRes,
             struct pam *           const outpamP,
             tuple ***              const outTuplesP) {
 
@@ -460,7 +468,7 @@ ditherImage(struct pam *           const inpamP,
        /* And this into N to compute N % dithDim cheaply, since we
           know (though the compiler doesn't) that dithDim is a power of 2
        */
-    unsigned int ** const ditherMatrix = dithMatrix(dithPower);
+    unsigned int ** const ditherMatrix = newDithMatrix(dithPower);
 
     tuple * inrow;
     tuple ** outTuples;
@@ -490,7 +498,7 @@ ditherImage(struct pam *           const inpamP,
                   colorRes, row, modMask,
                   outpamP, outTuples[row]);
     }
-    free(ditherMatrix);
+    freeDithMatrix(ditherMatrix, dithPower);
     pnm_freepamrow(inrow);
     *outTuplesP = outTuples;
 }
@@ -504,7 +512,7 @@ main(int           argc,
     struct CmdlineInfo cmdline;
     FILE * ifP;
     tuple ** outTuples;        /* Output image */
-    scaler * scalerP;
+    Scaler * scalerP;
     struct pam inpam;
     struct pam outpam;
 

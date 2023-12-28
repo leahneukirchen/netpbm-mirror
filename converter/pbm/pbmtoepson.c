@@ -1,7 +1,7 @@
 /* pbmtoeps.c - read a PBM image and produce Epson graphics
 **
 ** Copyright (C) 1990 by John Tiller (tiller@galois.msfc.nasa.gov)
-**			 and Jef Poskanzer.
+**                       and Jef Poskanzer.
 **
 ** Permission to use, copy, modify, and distribute this software and its
 ** documentation for any purpose and without fee is hereby granted, provided
@@ -42,12 +42,12 @@ struct CmdlineInfo {
 
 
 static void
-parseCommandLine(int                  argc, 
+parseCommandLine(int                  argc,
                  const char **        argv,
                  struct CmdlineInfo * cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -107,7 +107,7 @@ parseCommandLine(int                  argc,
                      "Only recognized values are 'escp9' and 'escp'",
                      protocol);
     }
-    
+
     if (adjacentSpec && nonadjacentSpec)
         pm_error("You can't specify both -adjacent and -nonadjacent");
     else if (adjacentSpec)
@@ -143,7 +143,7 @@ lineWidth(const bit ** const stripeBits,
 -----------------------------------------------------------------------------*/
     unsigned int col;
     unsigned int endSoFar;
-    
+
     endSoFar = 0;
 
     for (col = 0; col < cols; ++ col) {
@@ -177,14 +177,14 @@ printStripe(const bit ** const stripeBits,
 
     /* Print header of Select Bit Image command */
     printf("%c%c%c%c%c", esc, '*', m, cols % 256, cols / 256);
-    
+
     /* Print the data part of the Select Bit Image command */
     for (col = 0; col < cols; ++col) {
         unsigned int stripeRow;
         int val;
-        
+
         val = 0;
-        for (stripeRow = 0; stripeRow < stripeRows; ++stripeRow) 
+        for (stripeRow = 0; stripeRow < stripeRows; ++stripeRow)
             if (stripeBits[stripeRow][col] == PBM_BLACK)
                 val |= (1 << (8-1-stripeRow));
         putchar(val);
@@ -213,7 +213,7 @@ computeM(enum epsonProtocol const protocol,
             }
         }
         break;
-    case 60: 
+    case 60:
         if (adjacence == ADJACENT_NO)
             pm_error("You can't print at %u dpi "
                      "with adjacent dot printing", dpi);
@@ -236,7 +236,7 @@ computeM(enum epsonProtocol const protocol,
         break;
     case 72:
         if (protocol != ESCP9)
-            pm_error("%u dpi is possible only with the ESC/P 9-pin protocol", 
+            pm_error("%u dpi is possible only with the ESC/P 9-pin protocol",
                      dpi);
         if (adjacence == ADJACENT_NO)
             pm_error("You can't print at %u dpi "
@@ -251,7 +251,7 @@ computeM(enum epsonProtocol const protocol,
         break;
     case 144:
         if (protocol != ESCP9)
-            pm_error("%u dpi is possible only with the ESC/P 9-pin protocol", 
+            pm_error("%u dpi is possible only with the ESC/P 9-pin protocol",
                      dpi);
         if (adjacence == ADJACENT_NO)
             pm_error("You can't print at %u dpi "
@@ -273,13 +273,13 @@ convertToEpson(const bit **       const bits,
                enum epsonProtocol const protocol,
                unsigned int       const dpi,
                enum adjacence     const adjacence) {
-    
+
     unsigned int const rowsPerStripe = 8;
     unsigned int const stripeCt = (rows + rowsPerStripe-1) / rowsPerStripe;
 
     unsigned int stripe;
     char m;
-    
+
     computeM(protocol, dpi, adjacence, &m);
 
     /* Change line spacing to 8/72 inches. */
@@ -292,10 +292,10 @@ convertToEpson(const bit **       const bits,
 
     for (stripe = 0; stripe < stripeCt; ++stripe) {
         const bit ** const stripeBits = &bits[stripe*rowsPerStripe];
-        unsigned int const stripeRows = 
+        unsigned int const stripeRows =
             MIN(rowsPerStripe, rows - stripe * rowsPerStripe);
             /* Number of rows in this stripe (8 for all but bottom stripe) */
-        
+
         unsigned int const endcol = lineWidth(stripeBits, cols, stripeRows);
             /* Column where right margin (contiguous white area at right
                end of stripe) begins.  Zero if entire stripe is white.
@@ -332,10 +332,13 @@ main(int argc, const char ** argv) {
 
     pm_close(ifP);
 
-    convertToEpson(bits, cols, rows, 
+    convertToEpson(bits, cols, rows,
                    cmdline.protocol, cmdline.dpi, cmdline.adjacence);
 
     pbm_freearray(bits, rows);
 
     return 0;
 }
+
+
+

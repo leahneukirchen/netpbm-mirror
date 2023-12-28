@@ -9,10 +9,10 @@
    the particular formats.  */
 typedef struct
 {
-  unsigned short hres, vres;	/* In pixels per inch.  */
-  unsigned short width, height;	/* In bits.  */
-  unsigned short depth;		/* Perhaps the depth?  */
-  unsigned format;		/* (for pbm) Whether packed or not.  */
+  unsigned short hres, vres;    /* In pixels per inch.  */
+  unsigned short width, height; /* In bits.  */
+  unsigned short depth;         /* Perhaps the depth?  */
+  unsigned format;              /* (for pbm) Whether packed or not.  */
 } image_header_type;
 
 #endif /* not IMAGE_HEADER_H */

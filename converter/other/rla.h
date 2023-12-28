@@ -8,9 +8,9 @@ typedef struct
 
 typedef struct
 {
-    window_s	window;
-    window_s	active_window;
-    short	    frame;
+    window_s    window;
+    window_s    active_window;
+    short           frame;
     short       storage_type;
     short       num_chan;
     short       num_matte;

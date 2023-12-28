@@ -7,18 +7,18 @@
    This data source manager is the same as the Jpeg library's built in
    "stdio" one, except that it looks ahead and one can query it to see
    if there is any data in the stream that the Jpeg library hasn't seen
-   yet.  Thus, you can use it in a program that reads multiple JPEG 
+   yet.  Thus, you can use it in a program that reads multiple JPEG
    images and know when to stop.  You can also nicely handle completely
    empty input files more gracefully than just crying input error.
 
-   This data source manager does 4K fread() reads and passes 4K buffers 
+   This data source manager does 4K fread() reads and passes 4K buffers
    to the Jpeg library.  It reads one 4K block ahead, so there is up to
    8K of image buffered at any time.
 
    By Bryan Henderson, San Jose CA 2002.10.13
 *****************************************************************************/
 
-#include <ctype.h>	   
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -92,7 +92,7 @@ dsFillInputBuffer(j_decompress_ptr const cinfoP) {
            truncation and pad out the image with gray.
         */
         srcP->prematureEof = TRUE;
-        
+
         srcP->jpegSourceMgr.next_input_byte = jfifEoiMarker;
         srcP->jpegSourceMgr.bytes_in_buffer = sizeof(jfifEoiMarker);
     } else {
@@ -107,7 +107,7 @@ dsFillInputBuffer(j_decompress_ptr const cinfoP) {
         }
 
         /* Fill the new "next" buffer */
-        srcP->bytesInNextBuffer = 
+        srcP->bytesInNextBuffer =
             fread(srcP->nextBuffer, 1, BUFFER_SIZE, srcP->ifP);
     }
     return TRUE;
@@ -166,7 +166,7 @@ dsPrematureEof(struct sourceManager * const srcP) {
 
 
 
-struct sourceManager * 
+struct sourceManager *
 dsCreateSource(const char * const fileName) {
 
     struct sourceManager * srcP;
@@ -182,22 +182,24 @@ dsCreateSource(const char * const fileName) {
     srcP->jpegSourceMgr.skip_input_data = dsSkipInputData;
     srcP->jpegSourceMgr.resync_to_restart = jpeg_resync_to_restart;
     srcP->jpegSourceMgr.term_source = dsTermSource;
-    
+
     srcP->prematureEof = FALSE;
     srcP->currentBuffer = srcP->buffer1;
     srcP->nextBuffer = srcP->buffer2;
-    srcP->jpegSourceMgr.bytes_in_buffer = 
+    srcP->jpegSourceMgr.bytes_in_buffer =
         fread(srcP->currentBuffer, 1, BUFFER_SIZE, srcP->ifP);
     srcP->jpegSourceMgr.next_input_byte = srcP->currentBuffer;
-    srcP->bytesInNextBuffer = 
+    srcP->bytesInNextBuffer =
         fread(srcP->nextBuffer, 1, BUFFER_SIZE, srcP->ifP);
 
     return srcP;
 }
 
+
+
 void
 dsDestroySource(struct sourceManager * const srcP) {
-    
+
     pm_close(srcP->ifP);
     free(srcP);
 
@@ -209,3 +211,6 @@ struct jpeg_source_mgr *
 dsJpegSourceMgr(struct sourceManager * const srcP) {
     return &srcP->jpegSourceMgr;
 }
+
+
+

@@ -122,6 +122,7 @@ readAndValidateMagic(FILE * const ifP){
 }
 
 
+
 /* The following two functions are from lib/pmfileio.c */
 
 static void
@@ -319,5 +320,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
 
 

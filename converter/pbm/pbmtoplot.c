@@ -30,13 +30,13 @@ main( argc, argv )
     FILE* ifp;
     register bit** bits;
     register int row, col, scol;
-    int	rows, cols;
+    int rows, cols;
 
 
     pbm_init( &argc, argv );
 
     if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
+        pm_usage( "[pbmfile]" );
 
     ifp = (argc == 2) ? pm_openr( argv[1] ) : stdin;
 
@@ -50,27 +50,30 @@ main( argc, argv )
     puttwo( rows - 1 );
     puttwo( cols - 1 );
     for ( row = 0; row < rows; ++row )
-	{
-	for ( col = 0; col < cols; ++col )
-	    {
-	    if ( bits[row][col] == PBM_WHITE )
-		continue;
-	    scol = col;
-	    while ( ++col < cols && bits[row][col] == PBM_BLACK )
-		; /* nothing */
-	    --col;
-	    if ( col == scol )
-		(void) putchar( 'p' );
-	    else
-		{
-		(void) putchar( 'l' );
-		puttwo( scol );
-		puttwo( rows - 1 - row );
-		}
-	    puttwo( col );
-	    puttwo( rows - 1 - row );
-	    }
-	}
+        {
+        for ( col = 0; col < cols; ++col )
+            {
+            if ( bits[row][col] == PBM_WHITE )
+                continue;
+            scol = col;
+            while ( ++col < cols && bits[row][col] == PBM_BLACK )
+                ; /* nothing */
+            --col;
+            if ( col == scol )
+                (void) putchar( 'p' );
+            else
+                {
+                (void) putchar( 'l' );
+                puttwo( scol );
+                puttwo( rows - 1 - row );
+                }
+            puttwo( col );
+            puttwo( rows - 1 - row );
+            }
+        }
 
     exit( 0 );
     }
+
+
+

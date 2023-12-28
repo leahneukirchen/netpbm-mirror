@@ -35,47 +35,36 @@ getbit (FILE * const file) {
 
 
 void
-pbm_readpbminitrest( FILE * const file,
-                     int  * const colsP,
-                     int  * const rowsP ) {
+pbm_readpbminitrest(FILE * const ifP,
+                    int  * const colsP,
+                    int  * const rowsP ) {
+
+    unsigned int cols;
+    unsigned int rows;
+
     /* Read size. */
-    *colsP = (int)pm_getuint( file );
-    *rowsP = (int)pm_getuint( file );
+    cols = pm_getuint(ifP);
+    rows = pm_getuint(ifP);
 
     /* *colsP and *rowsP really should be unsigned int, but they come
        from the time before unsigned ints (or at least from a person
-       trained in that tradition), so they are int.  We could simply
-       consider negative numbers to mean values > INT_MAX/2 and much
+       trained in that tradition), so they are int.  Caller could simply
+       consider negative numbers to mean values > INT_MAX and much
        code would just automatically work.  But some code would fail
        miserably.  So we consider values that won't fit in an int to
        be unprocessable.
     */
-    if (*colsP < 0)
-        pm_error("Number of columns in header is too large.");
-    if (*rowsP < 0)
-        pm_error("Number of rows in header is too large.");
-}
+    if (cols > INT_MAX)
+        pm_error("Number of columns in header is too large (%u).  "
+                 "The maximum allowed by the format is %u",
+                 cols, INT_MAX);
+    if (rows > INT_MAX)
+        pm_error("Number of rows in header is too large (%u).  "
+                 "The maximum allowed by the format is %u",
+                 rows, INT_MAX);
 
-
-
-static void
-validateComputableSize(unsigned int const cols,
-                       unsigned int const rows) {
-/*----------------------------------------------------------------------------
-   Validate that the dimensions of the image are such that it can be
-   processed in typical ways on this machine without worrying about
-   overflows.  Note that in C, arithmetic is always modulus
-   arithmetic, so if your values are too big, the result is not what
-   you expect.  That failed expectation can be disastrous if you use
-   it to allocate memory.
-
-   See comments at 'validateComputableSize' in libpam.c for details on
-   the purpose of these validations.
------------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 10)
-        pm_error("image width (%u) too large to be processed", cols);
-    if (rows > INT_MAX - 10)
-        pm_error("image height (%u) too large to be processed", rows);
+    *colsP = (int)cols;
+    *rowsP = (int)rows;
 }
 
 
@@ -115,7 +104,7 @@ pbm_readpbminit(FILE * const ifP,
         pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
                  realFormat);
     }
-    validateComputableSize(*colsP, *rowsP);
+    pbm_validateComputableSize(*colsP, *rowsP);
 }
 
 

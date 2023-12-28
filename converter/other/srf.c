@@ -24,7 +24,7 @@ csumRaw(void * const p,
 
     for (i = 0, retval = 0, c = p; i < len; ++i)
         retval += *c++;
-    
+
     return retval;
 }
 
@@ -419,10 +419,10 @@ csum(struct srf * const srfP,
 
     for (i = 0; i < srfP->header.img_cnt; ++i)
         retval += csumImg(&srfP->imgs[i]);
-    
+
     for (i = 0; i < padLen; ++i)
         retval += 0xff;
-    
+
     return retval;
 }
 
@@ -540,7 +540,7 @@ void
 srf_term(struct srf * const srfP) {
 
     unsigned int i;
-    
+
     free(srfP->header.s578.val);
     free(srfP->header.ver.val);
     free(srfP->header.prod.val);
@@ -634,12 +634,12 @@ srf_create_img(struct srf * const srfP,
                uint16_t     const width,
                uint16_t     const height) {
 /*----------------------------------------------------------------------------
-   Add an "image" to the SRF.  An image is a horizontal series of 36 
+   Add an "image" to the SRF.  An image is a horizontal series of 36
    square frames, each showing a different angle view of an object, 10
    degrees about.  At least that's what it's supposed to be.  We don't
    really care -- it's just an arbitrary rectangular raster image to us.
 -----------------------------------------------------------------------------*/
-    
+
     ++srfP->header.img_cnt;
 
     REALLOCARRAY(srfP->imgs, srfP->header.img_cnt);
@@ -650,4 +650,6 @@ srf_create_img(struct srf * const srfP,
 
     srf_img_init(&srfP->imgs[srfP->header.img_cnt-1], width, height);
 }
-                 
+
+
+

@@ -13,8 +13,8 @@
   the same compile environment as what will actually get used to build
   Netpbm, and thus the one where our inttypes.h will be used.
 
-  Right now, it simply generates either 
-  
+  Right now, it simply generates either
+
     typedef int int32_t;
 
   or
@@ -111,3 +111,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
+
+
+

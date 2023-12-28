@@ -10,10 +10,10 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * font;    
-    const char * builtin; 
-    const char * header; 
-    const char * varname; 
+    const char * font;
+    const char * builtin;
+    const char * header;
+    const char * varname;
     unsigned int verbose;
 };
 
@@ -108,7 +108,6 @@ computeFont(const char *   const fontName,
 
 
 
-
 static void
 dumpfont(struct font * const fontP,
          const char *  const header,
@@ -126,7 +125,7 @@ dumpfont(struct font * const fontP,
     }
 
     if (header != NULL)
-        printf("#include \"%s\"\n\n", header);    
+        printf("#include \"%s\"\n\n", header);
 
     printf("static struct glyph _g[%d] = {\n", ng);
 
@@ -139,13 +138,13 @@ dumpfont(struct font * const fontP,
             printf(" { %d, %d, %d, %d, %d, \"",
                    glyphP->width, glyphP->height,
                    glyphP->x, glyphP->y, glyphP->xadd);
-            
+
             for (j = 0; j < glyphP->width * glyphP->height; ++j) {
                 if (glyphP->bmap[j])
                     printf("\\1");
                 else
                     printf("\\0");
-            }    
+            }
             --ng;
             printf("\" }%s\n", ng ? "," : "");
         }
@@ -164,7 +163,7 @@ dumpfont(struct font * const fontP,
                 printf(" _g + %d", ng++);
             else
                 printf(" NULL");
-        
+
             if (i != 255)
                 printf(",");
 
@@ -186,7 +185,7 @@ main(int argc, const char *argv[]) {
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     computeFont(cmdline.font, cmdline.builtin, &fontP);
 
     if (cmdline.verbose)

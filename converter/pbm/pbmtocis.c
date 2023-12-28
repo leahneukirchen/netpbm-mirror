@@ -42,6 +42,8 @@ static void syntax(const char *prog)
          );
 }
 
+
+
 int main(int argc, const char **argv)
 {
     FILE *ofP = stdout;
@@ -86,7 +88,7 @@ int main(int argc, const char **argv)
                 pm_keymatch(argv[n], "-W", 2) ||
                 pm_keymatch(argv[n], "--whitebg", 9))
             {
-                bg = PBM_WHITE; 
+                bg = PBM_WHITE;
                 continue;
             }
             if (argv[n][0] == '-' && argv[n][1] != 0)
@@ -126,7 +128,7 @@ int main(int argc, const char **argv)
     run = 0;
     while (y < outh)
     {
-        if (x < width && y < height)    
+        if (x < width && y < height)
         {
             cell = bits[y][x];
             if (inverse) cell ^= (PBM_BLACK ^ PBM_WHITE);
@@ -137,11 +139,11 @@ int main(int argc, const char **argv)
         {
             ++run;
             if (run > MAXRUNLENGTH)
-            {       
+            {
                 fputc(0x20 + MAXRUNLENGTH, ofP);
                 fputc(0x20, ofP);
                 run -= MAXRUNLENGTH;
-            }   
+            }
         }
         else    /* change */
         {
@@ -166,5 +168,8 @@ int main(int argc, const char **argv)
     fputc(0x47, ofP);
     fputc(0x4E, ofP);
     pm_close(ifP);
-    return 0;   
+    return 0;
 }
+
+
+

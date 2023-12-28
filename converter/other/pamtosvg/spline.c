@@ -30,6 +30,7 @@ print_spline (FILE *f, spline_type s)
 }
 
 
+
 /* Evaluate the spline S at a given T value.  This is an implementation
    of de Casteljau's algorithm.  See Schneider's thesis, p.37.
    The variable names are taken from there.  */
@@ -64,6 +65,7 @@ evaluate_spline (spline_type s, float t)
 }
 
 
+
 /* Return a new, empty, spline list.  */
 
 spline_list_type *
@@ -76,6 +78,8 @@ new_spline_list (void)
   return answer;
 }
 
+
+
 spline_list_type
 empty_spline_list (void)
 {
@@ -84,6 +88,8 @@ empty_spline_list (void)
   SPLINE_LIST_LENGTH (answer) = 0;
   return answer;
 }
+
+
 
 /* Return a new spline list with SPLINE as the first element.  */
 
@@ -101,6 +107,7 @@ new_spline_list_with_spline (spline_type spline)
 }
 
 
+
 /* Free the storage in a spline list.  We don't have to free the
    elements, since they are arrays in automatic storage.  And we don't
    want to free the list if it was empty.  */
@@ -115,6 +122,7 @@ free_spline_list(spline_list_type spline_list) {
 }
 
 
+
 /* Append the spline S to the list SPLINE_LIST.  */
 
 void
@@ -126,6 +134,7 @@ append_spline (spline_list_type *l, spline_type s)
   REALLOCARRAY(SPLINE_LIST_DATA(*l), SPLINE_LIST_LENGTH(*l));
   LAST_SPLINE_LIST_ELT (*l) = s;
 }
+
 
 
 /* Tack the elements in the list S2 onto the end of S1.
@@ -149,6 +158,7 @@ concat_spline_lists (spline_list_type *s1, spline_list_type s2)
 }
 
 
+
 /* Return a new, empty, spline list array.  */
 
 spline_list_array_type
@@ -161,6 +171,7 @@ new_spline_list_array (void)
 
   return answer;
 }
+
 
 
 /* Free the storage in a spline list array.  We don't
@@ -182,6 +193,7 @@ free_spline_list_array (spline_list_array_type *spline_list_array)
 }
 
 
+
 /* Append the spline S to the list SPLINE_LIST_ARRAY.  */
 
 void
@@ -192,3 +204,6 @@ append_spline_list (spline_list_array_type *l, spline_list_type s)
                       SPLINE_LIST_ARRAY_LENGTH(*l));
   LAST_SPLINE_LIST_ARRAY_ELT (*l) = s;
 }
+
+
+

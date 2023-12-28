@@ -1,4 +1,4 @@
-/* pamfile.c - describe a portable anymap
+/* pamfile.c - describe a Netpbm image
 **
 ** Copyright (C) 1991 by Jef Poskanzer.
 **
@@ -227,6 +227,7 @@ readToNextImage(const struct pam * const pamP,
 }
 
 
+
 static void
 doOneImage(const char *      const name,
            unsigned int      const imageDoneCt,
@@ -345,6 +346,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
-
 
 

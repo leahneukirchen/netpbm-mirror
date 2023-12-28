@@ -47,7 +47,7 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
- 
+
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = false;  /* We have no parms that are negative numbers */
@@ -62,7 +62,7 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -258,7 +258,7 @@ convertRowDepth8(const unsigned char * const lineStart,
 
         ++byteP;
     }
-} 
+}
 
 
 
@@ -299,7 +299,7 @@ convertRowRgb(const unsigned char * const lineStart,
         else
             PPM_ASSIGN(xelrow[col], r, g, b);
     }
-} 
+}
 
 
 
@@ -387,9 +387,9 @@ dumpHeader(struct rasterfile const header) {
 
 
 static void
-dumpHeaderAnalysis(bool         const grayscale, 
+dumpHeaderAnalysis(bool         const grayscale,
                    unsigned int const depth,
-                   xel          const zero, 
+                   xel          const zero,
                    xel          const one) {
 
     pm_message("grayscale: %s", grayscale ? "YES" : "NO");
@@ -464,9 +464,9 @@ main(int argc, const char ** const argv) {
 
     if (header.ras_maplength != 0) {
         int rc;
-        
+
         rc = pr_load_colormap(ifP, &header, &colorMap);
-        
+
         if (rc != 0 )
             pm_error("unable to read colormap from RAST file");
 
@@ -488,7 +488,7 @@ main(int argc, const char ** const argv) {
                  "but this is not a color mapped image");
 
     writePnm(stdout, pr, header.ras_width, header.ras_height, maxval, format,
-             header.ras_depth, header.ras_type, grayscale, 
+             header.ras_depth, header.ras_type, grayscale,
              header.ras_maplength > 0, colorMap, zero, one, cmdline.index);
 
     pm_close(ifP);
@@ -496,3 +496,6 @@ main(int argc, const char ** const argv) {
 
     return 0;
 }
+
+
+

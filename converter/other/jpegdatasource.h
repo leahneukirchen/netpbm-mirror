@@ -3,7 +3,7 @@
 
 #include "pm_c_util.h"
 
-struct sourceManager * 
+struct sourceManager *
 dsCreateSource(const char * const fileName);
 
 void

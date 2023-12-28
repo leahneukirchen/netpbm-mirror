@@ -339,7 +339,6 @@ JMovie2JPEG(const char * const infilename,
 
 
 
-
 /*===========================================================================*
  *
  * ReadJPEG  contributed by James Arthur Boucher of Boston University's

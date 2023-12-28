@@ -102,11 +102,14 @@ static struct tupleint_list_item *
 allocTupleIntListItem(struct pam * const pamP) {
 
 
-    /* This is complicated by the fact that the last element of a
-       tupleint_list_item is of variable length, because the last element
+    /* This is complicated by the fact that the last member of a
+       tupleint_list_item is of variable length, because the last member
        of _it_ is of variable length
     */
     struct tupleint_list_item * retval;
+
+    if (pamP->depth > (UINT_MAX - sizeof(*retval)) / sizeof(sample))
+        pm_error("Depth %u is too large for computation", pamP->depth);
 
     unsigned int const size =
         sizeof(*retval) - sizeof(retval->tupleint.tuple)

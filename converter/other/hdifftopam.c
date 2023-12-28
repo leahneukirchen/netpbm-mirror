@@ -1,7 +1,7 @@
 /******************************************************************************
                                 hdifftopam
 *******************************************************************************
-  This program recovers a PAM image from a horizontal difference images 
+  This program recovers a PAM image from a horizontal difference images
   such as created by Pamtohdiff.
 
   By Bryan Henderson, San Jose, CA 2002.04.15.
@@ -64,7 +64,7 @@ static void
 makePnm(struct pam * const pamP) {
 
     switch (pamP->depth) {
-    case 1: 
+    case 1:
         pamP->format = PGM_FORMAT;
         break;
     case 3:
@@ -87,7 +87,7 @@ static void
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
     FILE *ifP;
     struct cmdlineInfo cmdline;
@@ -105,9 +105,9 @@ main(int argc, char *argv[]) {
 
     pnm_readpaminit(ifP, &diffpam, PAM_STRUCT_SIZE(tuple_type));
 
-    if (diffpam.format != PAM_FORMAT) 
+    if (diffpam.format != PAM_FORMAT)
         pm_error("Input must be a PAM file, not PNM");
-    else if (!streq(diffpam.tuple_type, "hdiff")) 
+    else if (!streq(diffpam.tuple_type, "hdiff"))
         pm_error("Input tuple type is '%s'.  Must be 'hdiff'",
                  diffpam.tuple_type);
 
@@ -130,7 +130,7 @@ main(int argc, char *argv[]) {
 
     {
         unsigned int const bias = diffpam.maxval/2;
-        
+
         for (row = 0; row < diffpam.height; ++row) {
             unsigned int col;
             pnm_readpamrow(&diffpam, diffrow);
@@ -139,8 +139,8 @@ main(int argc, char *argv[]) {
                 for (plane = 0; plane < diffpam.depth; ++plane) {
                     sample const prevSample = prevrow[col][plane];
                     sample const diffSample = diffrow[col][plane];
-                    
-                    outrow[col][plane] = 
+
+                    outrow[col][plane] =
                         (-bias + prevSample + diffSample) % (outpam.maxval+1);
                     prevrow[col][plane] = outrow[col][plane];
                 }
@@ -154,4 +154,6 @@ main(int argc, char *argv[]) {
 
     exit(0);
 }
+
+
 

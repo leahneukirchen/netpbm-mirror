@@ -1,15 +1,14 @@
-/*
-                 pnmhisteq.c
-
-           Equalize histogram for a PNM image
+/*=============================================================================
+                              pnmhisteq
+===============================================================================
+  Equalize histogram for a PNM image
 
   By Bryan Henderson 2005.09.10, based on ideas from the program of
   the same name by John Walker (kelvin@fourmilab.ch) -- March MVM.
   WWW home page: http://www.fourmilab.ch/ in 1995.
 
   This program is contributed to the public domain by its author.
-*/
-
+=============================================================================*/
 #include <string.h>
 
 #include "pm_c_util.h"
@@ -18,7 +17,7 @@
 #include "mallocvar.h"
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -34,8 +33,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -68,7 +67,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -497,9 +496,9 @@ writeMap(const char * const wmapFileName,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     gray * lumamap;           /* Luminosity map */
     unsigned int * lumahist;  /* Histogram of luminosity values */
@@ -509,7 +508,7 @@ main(int argc, char * argv[]) {
     xel ** xels;              /* Pixel array */
     unsigned int pixelCount;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 

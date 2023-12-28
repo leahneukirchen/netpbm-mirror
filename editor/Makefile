@@ -121,5 +121,5 @@ mergecomptrylist:
 	echo "TRY(\"pnmcut\",     main_pamcut);"     >>$@
 	echo "TRY(\"pnmscale\",   main_pamscale);"   >>$@
 	echo "TRY(\"pnmcomp\",    main_pamcomp);"    >>$@
-	echo "TRY(\"pnmcat\",     main_pamcomp);"    >>$@
+	echo "TRY(\"pnmcat\",     main_pamcat);"     >>$@
 

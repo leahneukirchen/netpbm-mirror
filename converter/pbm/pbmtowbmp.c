@@ -1,9 +1,9 @@
 /* pbmtowbmp.c - convert a portable bitmap to a Wireless Bitmap file
 
-   This is derived for Netpbm from the pbmwbmp package from 
+   This is derived for Netpbm from the pbmwbmp package from
    <http://www.looplab.com/wap/tools> on 2000.06.06.
-   
-   The specifications for the wbmp format are part of the Wireless 
+
+   The specifications for the wbmp format are part of the Wireless
    Application Environment specification at
    <http://www.wapforum.org/what/technical.htm>.
 
@@ -19,7 +19,7 @@
 
 #include "pbm.h"
 
-static void 
+static void
 outputint(int i) {
   int c = 1;
   while(i & 0x7f << 7*c) c++;
@@ -29,7 +29,7 @@ outputint(int i) {
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
   FILE *f;
   bit **image;
@@ -58,13 +58,15 @@ main(int argc, char *argv[]) {
     for(col = 0; col < cols; col++) {
       if(image[row][col] == PBM_WHITE) c = c | (1 << (7-p));
       if(++p == 8) {
-	putchar(c);
-	p = c = 0;
+        putchar(c);
+        p = c = 0;
       }
     }
     if(p) putchar(c);
   }
-  
+
   return 0;
 }
+
+
 

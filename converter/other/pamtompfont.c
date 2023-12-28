@@ -62,7 +62,7 @@ parseCommandLine(int argc, char ** argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFilename = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -126,7 +126,7 @@ writeMpFontHeader(FILE *       const ofP,
 static void
 convertRaster(struct pam * const inpamP,
               FILE *       const ofP) {
-            
+
     tuple * tuplerow;
     unsigned char * outrow;
     unsigned int row;
@@ -150,7 +150,7 @@ convertRaster(struct pam * const inpamP,
             outrow[col] =
                 pnm_scalesample(tuplerow[col][0], inpamP->maxval, 255);
         }
-        
+
         fwrite(outrow, 1, inpamP->width, ofP);
     }
     free(outrow);
@@ -182,3 +182,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

@@ -75,6 +75,8 @@ halfVector(vector const vector) {
     return half;
 }
 
+
+
 /*===========================================================================*
  *
  *  decide if (0,0) motion is better than the given motion vector
@@ -118,6 +120,7 @@ ZeroMotionBetter(const LumBlock * const currentBlockP,
     }
     return FALSE;
 }
+
 
 
 /*===========================================================================*
@@ -851,6 +854,7 @@ GenPFrame(BitBucket * const bb,
 }
 
 
+
 /*===========================================================================*
  *
  * ResetPFrameStats
@@ -876,6 +880,7 @@ void
 }
 
 
+
 /*===========================================================================*
  *
  * SetPQScale
@@ -895,6 +900,7 @@ int qP;
 }
 
 
+
 /*===========================================================================*
  *
  * GetPQScale
@@ -911,6 +917,7 @@ int
 {
   return qscaleP;
 }
+
 
 
 float
@@ -992,6 +999,7 @@ float
 }
 
 
+
 /*===========================================================================*
  *
  * ComputeHalfPixelData
@@ -1046,6 +1054,7 @@ MpegFrame *frame;
 
   frame->halfComputed = TRUE;
 }
+
 
 
 /*

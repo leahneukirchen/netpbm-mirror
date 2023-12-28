@@ -1,0 +1,62 @@
+#! /bin/sh
+# This script tests: pnmpad
+# Also requires: pamflip pbmmake pbmnoise pgmnoise ppmpat
+
+# If any of the padding functions is altered, make sure to run this
+# test in a more thorough form.  Try more input images and more
+# values of d0, d1, d2, d3.
+
+tmpdir=${tmpdir:-/tmp}
+test_pnm=${tmpdir}/test.pnm
+padded_pnm=${tmpdir}/padded.pnm
+
+echo "Test 1.  Should print match sixteen (8x2) times"
+
+d0=1; d1=11; d2=10; d3=5;
+
+for generator in "pbmnoise -randomseed=100 11 16" \
+                 "pgmnoise -randomseed=100 31 41"
+    do
+    ${generator} > ${test_pnm}
+    echo "("${generator}")"
+    for method in "-black" "-white" "-color rgb:20/30/e0" "-extend-edge"
+    do
+      pnmpad ${method} -t ${d0} -r ${d1} -b ${d2} -l ${d3} ${test_pnm} > ${padded_pnm}
+
+      pamflip -lr ${test_pnm} |\
+        pnmpad ${method} -t ${d0} -l ${d1} -b ${d2} -r ${d3} | pamflip -lr |\
+        cmp -s ${padded_pnm} - && echo "match" || echo "no match"
+
+      pamflip -r90 ${test_pnm} |\
+         pnmpad ${method} -l ${d0} -t ${d1} -r ${d2} -b ${d3} | pamflip -r270 |\
+         cmp -s ${padded_pnm} - && echo "match" || echo "no match"
+
+    done
+done
+
+echo "Test 2.  Should print match forty (10x4) times"
+
+# Test images with all corners with the same colors
+
+for generator in "pbmmake -b 1 1" \
+                 "pbmmake -w 1 1" \
+                 "pbmmake -g 17 11" \
+                 "ppmpat -argyle1 -randomseed=100 7 8"
+    do
+    ${generator} > ${test_pnm}
+    echo "("${generator}")"
+    for method in "-black" "-white" "-color rgb:20/30/e0 -promote none" \
+                  "-detect-background" "-extend-edge"
+    do
+      pnmpad ${method} -t ${d0} -r ${d1} -b ${d2} -l ${d3} ${test_pnm} > ${padded_pnm}
+
+      pamflip -lr ${test_pnm} |\
+        pnmpad ${method} -t ${d0} -l ${d1} -b ${d2} -r ${d3} | pamflip -lr |\
+        cmp -s ${padded_pnm} - && echo "match" || echo "no match"
+
+      pamflip -r90 ${test_pnm} |\
+         pnmpad ${method} -l ${d0} -t ${d1} -r ${d2} -b ${d3} | pamflip -r270 |\
+         cmp -s ${padded_pnm} - && echo "match" || echo "no match"
+
+    done
+done

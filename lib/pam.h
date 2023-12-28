@@ -263,8 +263,6 @@ pnm_scalesample(sample const source,
         return (source * newmaxval + (oldmaxval/2)) / oldmaxval;
 }
 
-
-
 void
 pnm_scaletuple(const struct pam * const pamP,
                tuple              const dest,

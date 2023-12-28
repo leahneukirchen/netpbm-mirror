@@ -53,8 +53,8 @@ parseCommandLine(int argc, const char **argv,
     else {
         if (cmdlineP->maxval > PAM_OVERALL_MAXVAL)
             pm_error("The value you specified for -maxval (%u) is too big.  "
-                     "Max allowed is %u", cmdlineP->maxval,
-                     PAM_OVERALL_MAXVAL);
+                     "Max allowed is %lu", cmdlineP->maxval,
+                     (unsigned long int) PAM_OVERALL_MAXVAL);
 
         if (cmdlineP->maxval < 1)
             pm_error("You cannot specify 0 for -maxval");
@@ -68,8 +68,8 @@ parseCommandLine(int argc, const char **argv,
         cmdlineP->colorTopRight    = pnm_parsecolor(argv[2], cmdlineP->maxval);
         cmdlineP->colorBottomLeft  = pnm_parsecolor(argv[3], cmdlineP->maxval);
         cmdlineP->colorBottomRight = pnm_parsecolor(argv[4], cmdlineP->maxval);
-        cmdlineP->cols = atoi(argv[5]);
-        cmdlineP->rows = atoi(argv[6]);
+        cmdlineP->cols = pm_parse_width(argv[5]);
+        cmdlineP->rows = pm_parse_height(argv[6]);
         if (cmdlineP->cols <= 0)
             pm_error("width argument must be a positive number.  You "
                      "specified '%s'", argv[5]);
@@ -211,3 +211,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
+

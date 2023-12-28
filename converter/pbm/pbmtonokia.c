@@ -168,7 +168,6 @@ validateSize(unsigned int const cols,
 
 
 
-
 static void
 convertToHexNol(bit **       const image,
                 unsigned int const cols,
@@ -233,7 +232,6 @@ convertToHexNgg(bit **       const image,
             fprintf(ofP, "%02X", c);
     }
 }
-
 
 
 
@@ -334,7 +332,6 @@ convertToNol(bit **       const image,
     for (it = 0; it < 8 - cols * rows % 8; ++it)
         putc('0', ofP);
 }
-
 
 
 

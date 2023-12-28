@@ -9,6 +9,7 @@
   the facility is not available.
 =============================================================================*/
 
+#include <stdbool.h>
 #include <assert.h>
 
 #include "pm.h"
@@ -29,6 +30,8 @@ pm_system_vp(const char *    const progName,
              "requires.");
 }
 
+
+
 void
 pm_system_lp(const char *    const progName,
              void stdinFeeder(int, void *),
@@ -43,6 +46,8 @@ pm_system_lp(const char *    const progName,
              "doesn't have the process management facilities pm_system() "
              "requires.");
 }
+
+
 
 void
 pm_system(void                  stdinFeeder(int, void *),
@@ -59,11 +64,30 @@ pm_system(void                  stdinFeeder(int, void *),
 }
 
 
+
+void
+pm_feed_null(int    const pipeToFeedFd,
+             void * const feederParm) {
+
+    assert(false);  /* Can't ever run, since pm_system() is a dummy */
+}
+
+
+
+void
+pm_accept_null(int    const pipetosuckFd,
+               void * const accepterParm ) {
+
+    assert(false);  /* Can't ever run, since pm_system() is a dummy */
+}
+
+
+
 void
 pm_feed_from_memory(int    const pipeToFeedFd,
                     void * const feederParm) {
 
-    assert(FALSE);  /* Can't ever run, since pm_system() is a dummy */
+    assert(false);  /* Can't ever run, since pm_system() is a dummy */
 }
 
 
@@ -72,6 +96,8 @@ void
 pm_accept_to_memory(int    const pipetosuckFd,
                     void * const accepterParm) {
 
-    assert(FALSE);  /* Can't ever run, since pm_system() is a dummy */
+    assert(false);  /* Can't ever run, since pm_system() is a dummy */
 }
+
+
 

@@ -86,7 +86,7 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-generatePalette(unsigned char        rgb[NUM_COLORS][3], 
+generatePalette(unsigned char        rgb[NUM_COLORS][3],
                 char                 ansiCode[NUM_COLORS][MAX_ANSI_STR_LEN],
                 unsigned int * const paletteSizeP) {
 /*----------------------------------------------------------------------------
@@ -150,7 +150,7 @@ generatePalette(unsigned char        rgb[NUM_COLORS][3],
 static void
 lookupInPalette(pixel          const pixel,
                 pixval         const maxval,
-                unsigned char        rgb[NUM_COLORS][3], 
+                unsigned char        rgb[NUM_COLORS][3],
                 unsigned int   const palLen,
                 unsigned int * const paletteIdxP) {
 /*----------------------------------------------------------------------------
@@ -166,7 +166,7 @@ lookupInPalette(pixel          const pixel,
     unsigned int paletteIdxSoFar;
     unsigned int dist;
     unsigned int i;
-            
+
     /* The following loop calculates the index that corresponds to the
        minimum color distance between the given RGB values and the
        values available in the palette.
@@ -200,18 +200,18 @@ main(int argc, const char ** argv) {
     unsigned char   rgb[NUM_COLORS][3];
     char            ansiCode[NUM_COLORS][MAX_ANSI_STR_LEN];
 
-    pm_proginit(&argc, argv);    
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFileName);
-    
+
     pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
 
     pm_close(ifP);
-        
+
     generatePalette(rgb, ansiCode, &palLen);
-    
+
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
@@ -227,6 +227,9 @@ main(int argc, const char ** argv) {
     printf(ESC "\x30m");
 
     ppm_freearray(pixels, rows);
-    
+
     return 0;
 }
+
+
+

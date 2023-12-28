@@ -326,6 +326,7 @@ mp_fwd_dct_fast(data2d, dest2d)
 }
 
 
+
 extern boolean pureDCT;
 void
 mp_fwd_dct_block2(data, dest)
@@ -347,6 +348,8 @@ mp_fwd_dct_block2(data, dest)
   if (pureDCT) reference_fwd_dct(data, dest);
   else mp_fwd_dct_fast(data, dest);
 }
+
+
 
 /* Modifies from the MPEG2 verification coder */
 /* fdctref.c, forward discrete cosine transform, double precision           */

@@ -28,6 +28,8 @@ get2(FILE * const ifp)
         return a << 8 | b;
 }
 
+
+
 /*
    Same for a 4-byte integer.
  */
@@ -44,6 +46,8 @@ get4(FILE * const ifp)
     else
         return a << 24 | b << 16 | c << 8 | d;
 }
+
+
 
 /*
    Faster than calling get2() multiple times.
@@ -68,11 +72,13 @@ read_shorts (FILE * const ifp, unsigned short *pixel, int count)
     }
 }
 
+
+
 /*
    getbits(-1) initializes the buffer
    getbits(n) where 0 <= n <= 25 returns an n-bit integer
  */
-unsigned 
+unsigned
 getbits (FILE * const ifp, int nbits)
 {
     static unsigned long bitbuf=0;
@@ -95,3 +101,6 @@ getbits (FILE * const ifp, int nbits)
     }
     return ret;
 }
+
+
+

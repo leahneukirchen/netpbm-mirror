@@ -33,12 +33,12 @@ main( argc, argv )
     ppm_init( &argc, argv );
 
     if ( argc > 2 )
-	pm_usage( "[ppmfile]" );
+        pm_usage( "[ppmfile]" );
 
     if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
+        ifp = pm_openr( argv[1] );
     else
-	ifp = stdin;
+        ifp = stdin;
 
     pixels = ppm_readppm( ifp, &cols, &rows, &maxval );
     pm_close( ifp );
@@ -46,11 +46,11 @@ main( argc, argv )
     pm_message( "computing colormap..." );
     chv = ppm_computecolorhist( pixels, cols, rows, MAXCOLORS, &colors );
     if ( chv == (colorhist_vector) 0 )
-	{
-	pm_message(
-	    "too many colors - try doing a 'pnmquant %d'", MAXCOLORS );
-	exit( 1 );
-	}
+        {
+        pm_message(
+            "too many colors - try doing a 'pnmquant %d'", MAXCOLORS );
+        exit( 1 );
+        }
     pm_message( "%d colors found", colors );
 
     /* Write puzzle header. */
@@ -58,19 +58,19 @@ main( argc, argv )
     (void) pm_writebiglong( stdout, rows );
     (void) putchar( (unsigned char) colors );
     if ( maxval > MAXVAL )
-	pm_message(
-	    "maxval is not %d - automatically rescaling colors", MAXVAL );
+        pm_message(
+            "maxval is not %d - automatically rescaling colors", MAXVAL );
     for ( i = 0; i < colors; ++i )
-	{
-	pixel p;
+        {
+        pixel p;
 
-	p = chv[i].color;
-	if ( maxval != MAXVAL )
-	    PPM_DEPTH( p, p, maxval, MAXVAL );
-	(void) putchar( (unsigned char) PPM_GETR( p ) );
-	(void) putchar( (unsigned char) PPM_GETG( p ) );
-	(void) putchar( (unsigned char) PPM_GETB( p ) );
-	}
+        p = chv[i].color;
+        if ( maxval != MAXVAL )
+            PPM_DEPTH( p, p, maxval, MAXVAL );
+        (void) putchar( (unsigned char) PPM_GETR( p ) );
+        (void) putchar( (unsigned char) PPM_GETG( p ) );
+        (void) putchar( (unsigned char) PPM_GETB( p ) );
+        }
 
     /* Convert color vector to color hash table, for fast lookup. */
     cht = ppm_colorhisttocolorhash( chv, colors );
@@ -78,19 +78,22 @@ main( argc, argv )
 
     /* And write out the data. */
     for ( row = 0; row < rows; ++row )
-	{
-	for ( col = 0, pP = pixels[row]; col < cols; ++col, ++pP )
-	    {
-	    register int color;
+        {
+        for ( col = 0, pP = pixels[row]; col < cols; ++col, ++pP )
+            {
+            register int color;
 
-	    color = ppm_lookupcolor( cht, pP );
-	    if ( color == -1 )
-		pm_error(
-		    "color not found?!?  row=%d col=%d  r=%d g=%d b=%d",
-		    row, col, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP) );
-	    (void) putchar( (unsigned char) color );
-	    }
-	}
+            color = ppm_lookupcolor( cht, pP );
+            if ( color == -1 )
+                pm_error(
+                    "color not found?!?  row=%d col=%d  r=%d g=%d b=%d",
+                    row, col, PPM_GETR(*pP), PPM_GETG(*pP), PPM_GETB(*pP) );
+            (void) putchar( (unsigned char) color );
+            }
+        }
 
     exit( 0 );
     }
+
+
+

@@ -64,6 +64,7 @@ static void
 }
 
 
+
 /*
  * Callback procedure which is used by JBIG encoder to deliver the
  * encoded data. It simply sends the bytes to the output file.
@@ -461,3 +462,6 @@ main(int argc, char **argv) {
 
     return 0;
 }
+
+
+

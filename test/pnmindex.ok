@@ -1,0 +1,28 @@
+Test 1. Should print 3391481002 889
+3391481002 889
+Test 2. Should print 1998876959 5290 twice
+1998876959 5290
+1998876959 5290
+Test 3. Should print 3099638253 5290
+3099638253 5290
+Test 4. Should print 1397700642 3160
+1397700642 3160
+Test 5. Should print 2303488589 28514
+2303488589 28514
+Test 6. Should print 1706277976 100455
+1706277976 100455
+Test 7. Should print 801388440 100455
+801388440 100455
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
+Expected failure 9 (no output)
+Expected failure 10 (no output)
+Expected failure 11 (no output)
+Expected failure 12 (no output)

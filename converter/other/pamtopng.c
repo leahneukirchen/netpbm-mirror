@@ -527,7 +527,6 @@ doZtxtChunkSet(struct pngx * const pngxP,
 
 
 
-
 static void
 doItxtChunkSet(struct pngx * const pngxP,
                const char *  const textFileName) {

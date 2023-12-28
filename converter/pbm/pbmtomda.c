@@ -1,4 +1,3 @@
-
 /***************************************************************************
 
     PBMTOMDA: Convert PBM to Microdesign area
@@ -104,6 +103,7 @@ encode(bit ** const bits,
     }
     return b;
 }
+
 
 
 static void

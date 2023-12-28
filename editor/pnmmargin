@@ -11,15 +11,6 @@
 # documentation.  This software is provided "as is" without express or
 # implied warranty.
 
-tempdir=$(mktemp -d "${TMPDIR:-/tmp}/netpbm.XXXXXXXX") ||
-    { echo "Could not create temporary file. Exiting." 1>&2; exit 1; }
-trap 'rm -rf $tempdir' 0 1 3 15
-
-tmp1=$tempdir/pnmm1
-tmp2=$tempdir/pnmm2
-tmp3=$tempdir/pnmm3
-tmp4=$tempdir/pnmm4
-
 color="-gofigure"
 plainopt=""
 
@@ -79,37 +70,31 @@ if [ ${2-""} ] ; then
     exit 1
 fi
 
-# Capture input file in a tmp file, in case it's a pipe.
 # TODO: This code does not consider the case when the input file is specified
 # and there is also input coming in from a pipe.
 
-cat $@ > $tmp1
-
 if [ $size -eq 0 ] ; then
     # Zero margin; just copy input to output
-    pamtopnm $plainopt $tmp1;
+    pamtopnm $plainopt $@;
 else
     # If -white or -black, write output with pnmpad and exit.
     # Otherwise construct spacer files.
 
     case "$color" in
         -gofigure )
-        pamcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
+        pnmpad $plainopt -detect-background \
+            -left=$size -right=$size -top=$size -bottom=$size $@
+        exit
         ;;
         -white | -black )
         pnmpad $plainopt $color \
-            -left=$size -right=$size -top=$size -bottom=$size $tmp1
+            -left=$size -right=$size -top=$size -bottom=$size $@
         exit
         ;;
         * )
-        ppmmake $color $size 1 > $tmp2
+        pnmpad $plainopt -color $color \
+            -left=$size -right=$size -top=$size -bottom=$size $@
+        exit
         ;;
     esac
-    pamflip -rotate90 $tmp2 > $tmp3
-
-    # Cat things together.
-    pamcat -leftright $tmp2 $tmp1 $tmp2 > $tmp4
-    pamcat -topbottom $plainopt $tmp3 $tmp4 $tmp3
 fi
-
-

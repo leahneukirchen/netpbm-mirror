@@ -32,7 +32,7 @@ typedef struct
 } ppa_stat;
 
 typedef struct
-{ 
+{
   int DPI;
   int right;
   int left;

@@ -1,5 +1,5 @@
 /*
- *  cwfa.c:     FIASCO coder
+ *  FIASCO coder
  *
  *  Written by:     Ullrich Hafner
  *
@@ -15,32 +15,25 @@
  */
 
 #include "config.h"
-#include "pm_c_util.h"
-#include "pnm.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <string.h>
 
+#include "pm_c_util.h"
+#include "mallocvar.h"
+#include "pnm.h"
+
 #include "types.h"
 #include "macros.h"
 
-#include "binerror.h"
 #include "misc.h"
 #include "params.h"
 #include "fiasco.h"
 
-/*****************************************************************************
 
-                 local variables
 
-*****************************************************************************/
-
-static param_t params [] =
-{
-  /*
-   *  Options for standard user
-   */
+static param_t params[] = {
+  /* Options for standard user */
   {"image-name", "FILE", 'i', PSTR, {0}, NULL,
    "Compress raw PPM/PGM image(s) `%s'."},
   {"output-name", "FILE", 'o', PSTR, {0}, "-",
@@ -136,244 +129,202 @@ static param_t params [] =
   {NULL, NULL, 0, PSTR, {0}, NULL, NULL }
 };
 
-/*****************************************************************************
 
-                prototypes
-
-*****************************************************************************/
 
 static void
-checkargs (int argc, char **argv, char const ***image_template,
-       char **wfa_name, float *quality, fiasco_c_options_t **options);
+checkargs(int                         argc,
+          const char **               argv,
+          const char ***        const imageTemplateListP,
+          char **               const wfa_name,
+          float *               const quality,
+          fiasco_c_options_t ** const options) {
+/*----------------------------------------------------------------------------
+  Check validness of command line parameters and of the parameter files.
 
-/*****************************************************************************
+  Return value:
+    1 on success
+    0 otherwise
+-----------------------------------------------------------------------------*/
+    int    optind;            /* last processed commandline param */
+    char * image_name;            /* filename given by option '--input_name' */
+    const char ** imageTemplateList;
 
-                public code
+    optind = parseargs(params, argc, argv,
+                       "Compress raw PPM/PGM image FILEs to a FIASCO file.",
+                       "With no image FILE, or if FILE is -, "
+                       "read standard input.\n"
+                       "FILE must be either a filename"
+                       " or an image template of the form:\n"
+                       "`prefix[start-end{+,-}step]suffix'\n"
+                       "e.g., img0[12-01-1].pgm is substituted by"
+                       " img012.pgm ... img001.pgm\n\n"
+                       "Environment:\n"
+                       "FIASCO_DATA   Search and save path for FIASCO files. "
+                       "Default: ./\n"
+                       "FIASCO_IMAGES Search path for image files. "
+                       "Default: ./", " [FILE]...",
+                       FIASCO_SHARE, "system.fiascorc", ".fiascorc");
 
-*****************************************************************************/
-
-int
-main (int argc, char **argv)
-{
-   char const         **image_template; /* template for input image files */
-   char                *wfa_name;   /* filename of output WFA */
-   float            quality;    /* approximation quality */
-   fiasco_c_options_t  *options;    /* additional coder options */
-
-   pnm_init(&argc, argv);
-
-   init_error_handling (argv [0]);
-
-   checkargs (argc, argv, &image_template, &wfa_name, &quality, &options);
-
-   if (fiasco_coder (image_template, wfa_name, quality, options))
-      return 0;
-   else
-   {
-       fprintf (stderr, "%s", fiasco_get_error_message ());
-      fprintf (stderr, "\n");
-      return 1;
-   }
-}
-
-/*****************************************************************************
-
-                private code
-
-*****************************************************************************/
-
-static void
-checkargs (int argc, char **argv, char const ***image_template,
-           char **wfa_name, float *quality, fiasco_c_options_t **options)
-/*
- *  Check validness of command line parameters and of the parameter files.
- *
- *  Return value:
- *  1 on success
- *  0 otherwise
- *
- *
- *  Side effects:
- *  'image_template', 'wfa_name', 'quality' and 'options' are set.
- */
-{
-    int   optind;            /* last processed commandline param */
-    char *image_name;            /* filename given by option '--input_name' */
-    int   i;             /* counter */
-
-    optind = parseargs (params, argc, argv,
-                        "Compress raw PPM/PGM image FILEs to a FIASCO file.",
-                        "With no image FILE, or if FILE is -, "
-                        "read standard input.\n"
-                        "FILE must be either a filename"
-                        " or an image template of the form:\n"
-                        "`prefix[start-end{+,-}step]suffix'\n"
-                        "e.g., img0[12-01-1].pgm is substituted by"
-                        " img012.pgm ... img001.pgm\n\n"
-                        "Environment:\n"
-                        "FIASCO_DATA   Search and save path for FIASCO files. "
-                        "Default: ./\n"
-                        "FIASCO_IMAGES Search path for image files. "
-                        "Default: ./", " [FILE]...",
-                        FIASCO_SHARE, "system.fiascorc", ".fiascorc");
-
-    /*
-     *  Default options ...
-     */
-    image_name = (char *) parameter_value (params, "image-name");
-    *wfa_name  = (char *) parameter_value (params, "output-name");
-    for (;;)
-    {
-        *quality = * (float *) parameter_value (params, "quality");
+    /* Default options  */
+    image_name = (char *) parameter_value(params, "image-name");
+    *wfa_name  = (char *) parameter_value(params, "output-name");
+    for (;;) {
+        *quality = * (float *) parameter_value(params, "quality");
         if (*quality > 100)
-            fprintf (stderr, "Typical range of quality: (0,100].\n"
-                     "Expect some trouble on slow machines.\n");
+            pm_message("Typical range of quality: (0,100].  "
+                       "Expect some trouble on slow machines.");
         if (*quality > 0)
             break;
-        ask_and_set (params, "quality",
-                     "Please enter coding quality 'q' ('q' > 0): ");
+        ask_and_set(params, "quality",
+                    "Please enter coding quality 'q' ('q' > 0): ");
     }
 
-    if (optind < argc)           /* Additional command line param */
-    {
+    /* Non-option command line params */
+    if (optind < argc) {
+        unsigned int i;
         if (image_name)
-            error ("Multiple image_template arguments."
-                   "\nOption --input-name %s already specified!", image_name);
+            pm_error("Multiple image name template arguments.  "
+                     "Option --image-name already specified with '%s'",
+                     image_name);
 
-        *image_template = calloc (argc - optind + 1, sizeof (char *));
-        if (!*image_template)
-            error ("Out of memory.");
-        for (i = 0; optind < argc; i++, optind++)
-            (*image_template) [i] = argv [optind];
-        (*image_template) [i] = NULL;
+        MALLOCARRAY_NOFAIL(imageTemplateList, argc - optind + 1);
+
+        for (i = 0; optind < argc; ++i, ++optind)
+            imageTemplateList[i] = argv[optind];
+        imageTemplateList[i] = NULL;
+    } else {
+        /* option -i image_name */
+
+        MALLOCARRAY_NOFAIL(imageTemplateList, 2);
+
+        imageTemplateList[0] = image_name;
+        imageTemplateList[1] = NULL;
     }
-    else                 /* option -i image_name */
-    {
-        *image_template = calloc (2, sizeof (char *));
-        if (!*image_template)
-            error ("Out of memory.");
-        (*image_template) [0] = image_name;
-        (*image_template) [1] = NULL;
-    }
-    /*
-     *  Additional options ... (have to be set with the fiasco_set_... methods)
+    /* Additional options ... (have to be set with the fiasco_set_... methods)
      */
     {
-        *options = fiasco_c_options_new ();
+        *options = fiasco_c_options_new();
 
         {
-            char *pattern = (char *) parameter_value (params, "pattern");
+            const char * const pattern = parameter_value(params, "pattern");
 
             if (!fiasco_c_options_set_frame_pattern (*options, pattern))
-                error (fiasco_get_error_message ());
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            char *basis = (char *) parameter_value (params, "basis-name");
+            const char *const basis = parameter_value(params, "basis-name");
 
             if (!fiasco_c_options_set_basisfile (*options, basis))
-                error (fiasco_get_error_message ());
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            int   n = * (int *) parameter_value (params, "chroma-dictionary");
-            float q = * (float *) parameter_value (params, "chroma-qfactor");
+            int   const n =
+                *(int *)parameter_value(params, "chroma-dictionary");
+            float const q =
+                *(float *)parameter_value(params, "chroma-qfactor");
 
-            if (!fiasco_c_options_set_chroma_quality (*options, q, MAX(0, n)))
-                error (fiasco_get_error_message ());
+            if (!fiasco_c_options_set_chroma_quality(*options, q, MAX(0, n)))
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            int n = *((int *) parameter_value (params, "smooth"));
+            int const n = *((int *)parameter_value(params, "smooth"));
 
-            if (!fiasco_c_options_set_smoothing (*options, MAX(0, n)))
-                error (fiasco_get_error_message ());
+            if (!fiasco_c_options_set_smoothing(*options, MAX(0, n)))
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            int n = * (int *) parameter_value (params, "progress-meter");
+            int const n = *(int *)parameter_value(params, "progress-meter");
             fiasco_progress_e type = (n < 0) ?
                 FIASCO_PROGRESS_NONE : (fiasco_progress_e) n;
 
-            if (!fiasco_c_options_set_progress_meter (*options, type))
-                error (fiasco_get_error_message ());
+            if (!fiasco_c_options_set_progress_meter(*options, type))
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            char *t = (char *) parameter_value (params, "title");
+            const char * const t = parameter_value(params, "title");
 
-            if (strlen (t) > 0 && !fiasco_c_options_set_title (*options, t))
-                error (fiasco_get_error_message ());
+            if (strlen(t) > 0 && !fiasco_c_options_set_title(*options, t))
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            char *c = (char *) parameter_value (params, "comment");
+            const char * const c = parameter_value(params, "comment");
 
             if (strlen (c) > 0 && !fiasco_c_options_set_comment (*options, c))
-                error (fiasco_get_error_message ());
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
             fiasco_tiling_e method = FIASCO_TILING_VARIANCE_DSC;
-            int   e  = * (int *) parameter_value (params, "tiling-exponent");
-            char *m  = (char *) parameter_value (params, "tiling-method");
+            int    const e =
+                *(int *)parameter_value(params, "tiling-exponent");
+            const char * const m = parameter_value (params, "tiling-method");
 
-            if (strcaseeq (m, "desc-variance"))
+            if (strcaseeq(m, "desc-variance"))
                 method = FIASCO_TILING_VARIANCE_DSC;
-            else if (strcaseeq (m, "asc-variance"))
+            else if (strcaseeq(m, "asc-variance"))
                 method = FIASCO_TILING_VARIANCE_ASC;
-            else if (strcaseeq (m, "asc-spiral"))
+            else if (strcaseeq(m, "asc-spiral"))
                 method = FIASCO_TILING_SPIRAL_ASC;
-            else if (strcaseeq (m, "dsc-spiral"))
+            else if (strcaseeq(m, "dsc-spiral"))
                 method = FIASCO_TILING_SPIRAL_DSC;
             else
-                error (_("Invalid tiling method `%s' specified."), m);
+                pm_error("Invalid tiling method `%s' specified.", m);
 
-            if (!fiasco_c_options_set_tiling (*options, method, MAX(0, e)))
-                error (fiasco_get_error_message ());
+            if (!fiasco_c_options_set_tiling(*options, method, MAX(0, e)))
+                pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            int M/*  = * (int *) parameter_value (params, "max-level") */;
-            int m/*  = * (int *) parameter_value (params, "min-level") */;
-            int N/*  = * (int *) parameter_value (params, "max-elements") */;
-            int D = * (int *) parameter_value (params, "dictionary-size");
-            int o = * (int *) parameter_value (params, "optimize");
+            int M /*  = * (int *) parameter_value (params, "max-level") */;
+            int m /*  = * (int *) parameter_value (params, "min-level") */;
+            int N /*  = * (int *) parameter_value (params, "max-elements") */;
+            int o;
+            int D = * (int *) parameter_value(params, "dictionary-size");
+            int const optimizeOpt =
+                *(int *)parameter_value(params, "optimize");
 
-            if (o <= 0)
-            {
+            if (optimizeOpt <= 0) {
                 o = 0;
                 M = 10;
                 m = 6;
                 N = 3;
-            }
-            else
-            {
+            } else {
                 o -= 1;
                 M = 12;
                 m = 4;
                 N = 5;
             }
 
-            if (!fiasco_c_options_set_optimizations (*options, m, M, N,
-                                                     MAX(0, D), o))
-                error (fiasco_get_error_message ());
+            if (!fiasco_c_options_set_optimizations(*options, m, M, N,
+                                                    MAX(0, D), o))
+                pm_error("%s", fiasco_get_error_message ());
         }
         {
-            int M = * (int *) parameter_value (params, "max-level");
-            int m = * (int *) parameter_value (params, "min-level");
-            int p = * (int *) parameter_value (params, "prediction");
+            int const M = *(int *)parameter_value(params, "max-level");
+            int const m = *(int *)parameter_value(params, "min-level");
+            int const p = *(int *)parameter_value(params, "prediction");
 
             if (!fiasco_c_options_set_prediction (*options,
                                                   p, MAX(0, m), MAX(0, M)))
-                error (fiasco_get_error_message ());
+                pm_error("%s", fiasco_get_error_message ());
         }
         {
-            float r    = * (float *)parameter_value(params, "rpf-range");
-            float dc_r = * (float *)parameter_value(params, "dc-rpf-range");
-            int   m    = * (int *)  parameter_value(params, "rpf-mantissa");
-            int   dc_m = * (int *)  parameter_value(params, "dc-rpf-mantissa");
-            fiasco_rpf_range_e range, dc_range;
+            float const r    =
+                *(float *)parameter_value(params, "rpf-range");
+            float const dcR =
+                *(float *)parameter_value(params, "dc-rpf-range");
+            int   const m    =
+                *(int *)parameter_value(params, "rpf-mantissa");
+            int   const dcM =
+                *(int *)parameter_value(params, "dc-rpf-mantissa");
+
+            fiasco_rpf_range_e range, dcRange;
 
             if (r < 1)
                 range = FIASCO_RPF_RANGE_0_75;
@@ -384,24 +335,49 @@ checkargs (int argc, char **argv, char const ***image_template,
             else
                 range = FIASCO_RPF_RANGE_2_00;
 
-            if (dc_r < 1)
-                dc_range = FIASCO_RPF_RANGE_0_75;
-            else if (dc_r < 1.5)
-                dc_range = FIASCO_RPF_RANGE_1_00;
-            else if (dc_r < 2.0)
-                dc_range = FIASCO_RPF_RANGE_1_50;
+            if (dcR < 1)
+                dcRange = FIASCO_RPF_RANGE_0_75;
+            else if (dcR < 1.5)
+                dcRange = FIASCO_RPF_RANGE_1_00;
+            else if (dcR < 2.0)
+                dcRange = FIASCO_RPF_RANGE_1_50;
             else
-                dc_range = FIASCO_RPF_RANGE_2_00;
+                dcRange = FIASCO_RPF_RANGE_2_00;
 
-            if (!fiasco_c_options_set_quantization (*options,
-                                                    MAX(0, m), range,
-                                                    MAX(0, dc_m), dc_range))
-                error (fiasco_get_error_message ());
+            if (!fiasco_c_options_set_quantization(*options,
+                                                   MAX(0, m), range,
+                                                   MAX(0, dcM), dcRange))
+                pm_error("%s", fiasco_get_error_message ());
         }
 
-        if (fiasco_get_verbosity () == FIASCO_ULTIMATE_VERBOSITY)
-            write_parameters (params, stderr);
+        if (fiasco_get_verbosity() == FIASCO_ULTIMATE_VERBOSITY)
+            write_parameters(params, stderr);
     }
+    *imageTemplateListP = imageTemplateList;
+}
+
+
+
+int
+main(int argc, const char **argv) {
+
+    char const **        image_template; /* template for input image files */
+    char *               wfa_name;   /* filename of output WFA */
+    float                quality;    /* approximation quality */
+    fiasco_c_options_t * options;    /* additional coder options */
+    int                  retval;
+
+    pm_proginit(&argc, argv);
+
+    checkargs(argc, argv, &image_template, &wfa_name, &quality, &options);
+
+    if (fiasco_coder(image_template, wfa_name, quality, options))
+        retval = 0;
+    else {
+        pm_message("Encoding failed.  %s", fiasco_get_error_message());
+        retval = 1;
+    }
+    return retval;
 }
 
 

@@ -157,7 +157,6 @@ SetupCollectQuantStats(const char * const charPtr)
 
 
 
-
 /*===========================================================================*
  *
  * SetupKillDimAreas
@@ -223,6 +222,7 @@ SetupSquashSmall(const char * const charPtr)
 }
 
 
+
 /*===========================================================================*
  *
  * SetupLocalDCT
@@ -252,6 +252,7 @@ SetupLocalDCT(const char * const charPtr)
     LocalDCTDistortScale = 1.0;
   }
 }
+
 
 
 /*===========================================================================*
@@ -289,6 +290,8 @@ SetupLaplace()
     }
   }
 }
+
+
 
 static void
 SetupWriteDistortions(const char * const charPtr)
@@ -341,6 +344,8 @@ SetupWriteDistortions(const char * const charPtr)
     }}
 }
 
+
+
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
@@ -359,6 +364,7 @@ CalcLambdas(void) {
     }
   }
 }
+
 
 
 /*===========================================================================*
@@ -424,6 +430,8 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
     }
 }
 
+
+
 int
 mse(Block blk1, Block blk2)
 {
@@ -439,7 +447,6 @@ mse(Block blk1, Block blk2)
   }
   return error;
 }
-
 
 
 
@@ -488,6 +495,8 @@ void Tune_Init()
   }
 
 }
+
+
 
 /*===========================================================================*
  *
@@ -543,5 +552,6 @@ void ParseTuneParam(const char * const charPtr)
     break;
   }
 }
+
 
 

@@ -23,8 +23,8 @@
 
 
 static void
-outstripe(char * const stripe, 
-          char * const sP, 
+outstripe(char * const stripe,
+          char * const sP,
           int    const reschar) {
 
     char * p;
@@ -32,7 +32,7 @@ outstripe(char * const stripe,
     p = sP;  /* initial value */
 
     /* scan backwards, removing empty columns */
-    while (p != stripe) 
+    while (p != stripe)
         if (*--p != 0) {
             ++p;
             break;
@@ -199,7 +199,7 @@ main(int argc, const char ** argv) {
         fname = argv[1];
     else
         fname = "-";
-    
+
     ifP = pm_openr(fname);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);

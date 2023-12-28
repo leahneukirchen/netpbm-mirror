@@ -8,6 +8,8 @@
   Contributed to the public domain.
 ******************************************************************************/
 
+#include <stdbool.h>
+
 #include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
@@ -15,7 +17,7 @@
 
 enum evenodd {EVEN, ODD};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -24,9 +26,10 @@ struct cmdlineInfo {
 };
 
 
+
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -44,10 +47,10 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0,   "takeodd",  OPT_FLAG, NULL, &takeodd,  0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free(option_def);
@@ -65,26 +68,24 @@ parseCommandLine(int argc, char ** argv,
     else if (argc-1 == 1)
         cmdlineP->inputFilespec = argv[1];
     else
-        pm_error("You specified too many arguments (%d).  The only "
-                 "argument is the optional input file specification.",
+        pm_error("You specified too many arguments (%u).  The only "
+                 "possible argument is the optional input file specification.",
                  argc-1);
 }
 
 
 
-
-
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
 
     FILE * ifP;
     tuple * tuplerow;   /* Row from input image */
     unsigned int row;
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam inpam;
     struct pam outpam;
 
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 

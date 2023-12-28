@@ -199,6 +199,7 @@ LumMotionErrorB(const LumBlock * const currentBlockP,
 }
 
 
+
 /*===========================================================================*
  *
  * LumMotionErrorC
@@ -240,6 +241,7 @@ LumMotionErrorC(const LumBlock * const currentBlockP,
 }
 
 
+
 /*===========================================================================*
  *
  * LumMotionErrorD
@@ -279,3 +281,6 @@ LumMotionErrorD(const LumBlock * const currentBlockP,
     }
     return diff;
 }
+
+
+

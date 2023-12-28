@@ -2,7 +2,7 @@
                                pamtodjvurle
 ******************************************************************************
   This program converts a PAM image to DjVu Color RLE format.
-  
+
   By Bryan Henderson, San Jose, CA April 2004.
 
   Contributed to the public domain by its author.
@@ -30,13 +30,13 @@ struct cmdlineInfo {
 
 
 
-static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
+static void
+parseCommandLine(int argc,
+                 char ** argv,
                  struct cmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -47,16 +47,16 @@ parseCommandLine(int argc,
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
     /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
-  
+
     unsigned int option_def_index;
     unsigned int transparentSpec;
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "transparent",   OPT_STRING, &cmdlineP->transparent, 
+    OPTENT3(0, "transparent",   OPT_STRING, &cmdlineP->transparent,
             &transparentSpec,        0);
     OPTENT3(0, "showcolormap",  OPT_FLAG, NULL,
             &cmdlineP->showcolormap,        0);
-  
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
@@ -73,7 +73,7 @@ parseCommandLine(int argc,
         cmdlineP->inputFilespec = argv[1];
     else
         cmdlineP->inputFilespec = "-";
-    
+
     if (argc-1 > 1)
         pm_error("Program takes at most one argument:  the file name.  "
                  "You specified %d", argc-1);
@@ -96,7 +96,7 @@ computeColorMap(struct pam *   const pamP,
     if (numColors > 0xFF0)
         pm_error("too many colors; "
                  "use pnmquant to reduce to no more than %u colors", 0xFF0);
-    
+
     if (show) {
         unsigned int colorIndex;
         fprintf(stderr, "Color map:\n");
@@ -123,7 +123,7 @@ makeDjvurleHeader(FILE *       const ofP,
                   struct pam * const pamP,
                   unsigned int const numColors,
                   tupletable   const colormap) {
-    
+
     unsigned int colorIndex;
 
     fprintf(ofP, "R6\n");
@@ -138,7 +138,7 @@ makeDjvurleHeader(FILE *       const ofP,
             blu = colormap[colorIndex]->tuple[PAM_BLU_PLANE];
         } else
             red = grn = blu = colormap[colorIndex]->tuple[0];
-        
+
         fputc(pnm_scalesample(red, pamP->maxval, 255), ofP);
         fputc(pnm_scalesample(grn, pamP->maxval, 255), ofP);
         fputc(pnm_scalesample(blu, pamP->maxval, 255), ofP);
@@ -166,18 +166,18 @@ colorEqual(tuple        comparand,
 
 
 
-static void 
-writeRleRun(FILE *       const ofP, 
+static void
+writeRleRun(FILE *       const ofP,
             struct pam * const pamP,
-            tuple        const color, 
+            tuple        const color,
             int          const count,
             tuplehash    const colorhash,
             tuple        const transcolor) {
 /*----------------------------------------------------------------------------
-  Write one DjVu Color RLE run to the file 'ofP'.  The run is 
+  Write one DjVu Color RLE run to the file 'ofP'.  The run is
   'count' pixels of color 'color', using the color index given by
   'colorhash' and assuming 'transcolor' is the transparent color.
-  
+
   'transcolor' is a 3-deep tuple with the same maxval as the image.
 -----------------------------------------------------------------------------*/
     uint32_t rlevalue;         /* RLE-encoded color/valuex */
@@ -192,7 +192,7 @@ writeRleRun(FILE *       const ofP,
             assert(found);
         }
         rlevalue = (index << 20) | count;
-      
+
         pm_writebiglong(ofP, rlevalue);
     }
 }
@@ -212,10 +212,10 @@ writeDjvurleRow(FILE *       const ofP,
 
     prevpixel = tupleRow[0];
     runlength = 0;
-    
+
     for (col = 0; col < pamP->width; ++col) {
         tuple const newpixel = tupleRow[col];      /* Current pixel color */
-        
+
         if (pnm_tupleequal(pamP, newpixel, prevpixel))
             /* This is a continuation of the current run */
             ++runlength;
@@ -223,7 +223,7 @@ writeDjvurleRow(FILE *       const ofP,
               /* The run is over.  Write it out and start a run of the next
                  color.
               */
-              writeRleRun(ofP, pamP, prevpixel, runlength, 
+              writeRleRun(ofP, pamP, prevpixel, runlength,
                           colorhash, transcolor);
               runlength = 1;
               prevpixel = newpixel;
@@ -232,7 +232,7 @@ writeDjvurleRow(FILE *       const ofP,
             /* Can't make the run any longer.  Write it out and start a
                new run.
             */
-            writeRleRun(ofP, pamP, prevpixel, runlength, 
+            writeRleRun(ofP, pamP, prevpixel, runlength,
                         colorhash, transcolor);
             runlength = 1;
         }
@@ -243,7 +243,7 @@ writeDjvurleRow(FILE *       const ofP,
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
 
     FILE * const rlefile = stdout;
@@ -254,7 +254,7 @@ main(int argc, char *argv[]) {
     tuple ** tupleArray;       /* The image raster */
     tupletable colormap;       /* List of all of the colors used */
     unsigned int numColors;    /* Number of unique colors in the color map */
-    tuplehash colorhash; 
+    tuplehash colorhash;
         /* Mapping from color to index into colormap[] */
     tuple transcolor;
         /* Color that should be considered transparent */
@@ -268,10 +268,10 @@ main(int argc, char *argv[]) {
     tupleArray = pnm_readpam(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
 
     transcolor = pnm_parsecolor(cmdline.transparent, pam.maxval);
-    
+
     computeColorMap(&pam, tupleArray, &numColors, &colormap, &colorhash,
                     cmdline.showcolormap);
-    
+
     makeDjvurleHeader(rlefile, &pam, numColors, colormap);
 
     /* Write the raster */
@@ -279,11 +279,11 @@ main(int argc, char *argv[]) {
     {
         unsigned int row;
         for (row = 0; row < pam.height; ++row)
-            writeDjvurleRow(rlefile, &pam, tupleArray[row], colorhash, 
+            writeDjvurleRow(rlefile, &pam, tupleArray[row], colorhash,
                             transcolor);
     }
     /* Clean up */
-    
+
     pnm_freepamarray(tupleArray, &pam);
     pnm_freetupletable(&pam, colormap);
     pnm_destroytuplehash(colorhash);
@@ -292,3 +292,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

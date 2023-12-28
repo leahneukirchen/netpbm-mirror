@@ -14,6 +14,7 @@
 
 #include "netpbm/pm_c_util.h"
 
+#include "libpbm.h"
 #include "pbm.h"
 
 #ifndef PACKBITS_SSE
@@ -44,6 +45,12 @@ pbm_writepbminit(FILE * const fileP,
                  int    const cols,
                  int    const rows,
                  int    const forceplain) {
+
+    /* For Caller's convenience, we include validating computability of the
+       image dimensions, since Caller may be using them in arithmetic after
+       our return.
+    */
+    pbm_validateComputableSize(cols, rows);
 
     if (!forceplain && !pm_plain_output) {
         fprintf(fileP, "%c%c\n%d %d\n", PBM_MAGIC1, RPBM_MAGIC2, cols, rows);

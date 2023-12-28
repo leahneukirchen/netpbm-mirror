@@ -261,6 +261,7 @@ Mpost_UnQuantZigBlock(in, out, qscale, iblock)
 }
 
 
+
 /*===========================================================================*
  *
  * Mpost_QuantZigBlock
@@ -460,6 +461,7 @@ Mpost_RLEHuffIBlock(in, out)
 }
 
 
+
 /*===========================================================================*
  *
  * Mpost_RLEHuffPBlock
@@ -565,6 +567,7 @@ Mpost_RLEHuffPBlock(in, out)
 }
 
 
+
 /*===========================================================================*
  *
  * CalcRLEHuffLength
@@ -624,3 +627,6 @@ CalcRLEHuffLength(in)
   countbits += 2; /* end of block marker */
   return countbits;
 }
+
+
+

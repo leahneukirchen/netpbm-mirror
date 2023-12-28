@@ -40,6 +40,6 @@ EOF
 
 echo "Test 2.  Should print match"
 
-pamtosvg testgrid.pbm | tee /tmp/a2 |\
+pamtosvg testgrid.pbm |\
     cmp -s ${testgrid_svg} - && echo "match" || echo "no match"
 rm ${testgrid_svg}

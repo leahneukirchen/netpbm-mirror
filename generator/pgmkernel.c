@@ -20,7 +20,7 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "pgm.h"
-
+#include "nstring.h"
 
 
 struct CmdlineInfo {
@@ -89,20 +89,30 @@ parseCommandLine(int argc, const char ** argv,
     if (argc-1 < 1)
         pm_error("Need at least one argument: size of (square) kernel");
     else if (argc-1 == 1) {
-        if (atoi(argv[1]) <= 0)
+        unsigned int dimension;
+        const char * error;
+
+        pm_string_to_uint(argv[1], &dimension, &error);
+        if (error) {
+            pm_error("'%s' is invalid as an image width/height.  %s", argv[1], error);
+            pm_strfree(error);
+        }
+        if (dimension <= 0)
             pm_error("Dimension must be a positive number.  "
                      "You specified '%s'", argv[1]);
-        cmdlineP->cols = atoi(argv[1]);
-        cmdlineP->rows = atoi(argv[1]);
+        cmdlineP->cols = cmdlineP->rows = dimension;
+
     } else if (argc-1 == 2) {
-        if (atoi(argv[1]) <= 0)
+        unsigned int const width  = pm_parse_width(argv[1]);
+        unsigned int const height = pm_parse_height(argv[2]);
+        if (width <= 0)
             pm_error("Width must be a positive number.  "
                      "You specified '%s'", argv[1]);
-        if (atoi(argv[2]) <= 0)
+        if (height <= 0)
             pm_error("Height must be a positive number.  "
                      "You specified '%s'", argv[2]);
-        cmdlineP->cols = atoi(argv[1]);
-        cmdlineP->rows = atoi(argv[2]);
+        cmdlineP->cols = width;
+        cmdlineP->rows = height;
     } else
         pm_error("At most two arguments allowed.  "
                  "You specified %u", argc-1);
@@ -243,3 +253,6 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
+
+
+

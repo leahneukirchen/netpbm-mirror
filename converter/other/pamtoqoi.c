@@ -113,6 +113,8 @@ encodeQoiHeader(qoi_Desc const qoiDesc) {
 
 }
 
+
+
 enum Tupletype {BW, BWAlpha, GRAY, GRAYAlpha, RGB, RGBAlpha,
                 GRAY255, GRAY255Alpha, RGB255, RGB255Alpha};
 
@@ -435,5 +437,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
 
 

@@ -106,8 +106,8 @@ parseCommandLine(int argc, const char ** argv,
         pm_error("Only two arguments allowed: width and height.  "
                  "You specified %d", argc-1);
     else {
-        cmdlineP->width = atoi(argv[1]);
-        cmdlineP->height = atoi(argv[2]);
+        cmdlineP->width  = pm_parse_width(argv[1]);
+        cmdlineP->height = pm_parse_height(argv[2]);
         if (cmdlineP->width <= 0)
             pm_error("width argument must be a positive number.  You "
                      "specified '%s'", argv[1]);
@@ -347,3 +347,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
+
+

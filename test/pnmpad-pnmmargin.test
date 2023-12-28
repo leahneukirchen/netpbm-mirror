@@ -1,0 +1,79 @@
+#! /bin/sh
+# This script tests: pnmpad pnmmargin
+# Also requires: pamcat pamcut pamenlarge pbmmake pnmmargin ppmmake ppmpat
+
+tmpdir=${tmpdir:-/tmp}
+padded_pbm=${tmpdir}/padded.pbm
+argyle_ppm=${tmpdir}/argyle.ppm
+padded_ppm=${tmpdir}/padded.ppm
+
+spacer_pnm=${tmpdir}/spacer.pnm
+
+# define function
+addmargin () {
+
+# This function takes 3 positional parameters:
+#   $1: color black white or gofigure
+#   $2: color string (ignore if black white or gofigure)
+#   $3: margin
+#   $4: filename
+
+    case $1 in
+        -color) ppmmake $2 $3 $3 > ${spacer_pnm}; infile=$4 ;;
+        -black) pbmmake -black $2 $2 > ${spacer_pnm}; infile=$3 ;;
+        -white) pbmmake -white $2 $2 > ${spacer_pnm}; infile=$3 ;;
+        *) pamcut -t 0 -l 0 -w 1 -h 1 $2 | pamenlarge $1 > ${spacer_pnm}; infile=$2 ;;
+    esac
+    pamcat -lr ${spacer_pnm} ${infile} ${spacer_pnm} |\
+        pamcat -tb ${spacer_pnm} - ${spacer_pnm}
+    rm ${spacer_pnm}
+}
+
+echo "Test 1.  Should print match three times"
+
+pnmmargin -black 5 maze.pbm > ${padded_pbm} 
+pnmmargin -black 1 maze.pbm | pnmpad -black -t 4 -b 4 -l 4 -r 4 |\
+    cmp -s ${padded_pbm} - && echo "match" || echo "no match"
+pnmmargin 1 maze.pbm | pnmpad -black -t 4 -b 4 -l 4 -r 4 |\
+    cmp -s ${padded_pbm} - && echo "match" || echo "no match"
+pnmmargin -black 1 maze.pbm | pnmpad -extend-edge -t 4 -b 4 -l 4 -r 4 |\
+    cmp -s ${padded_pbm} - && echo "match" || echo "no match"
+
+
+echo "Test 2.  Should print match four times"
+
+addmargin -black 5 maze.pbm |\
+    cmp -s ${padded_pbm} - && echo "match" || echo "no match"
+addmargin -black 1 maze.pbm | pnmpad -black -t 4 -b 4 -l 4 -r 4 |\
+    cmp -s ${padded_pbm} - && echo "match" || echo "no match"
+addmargin 1 maze.pbm | pnmpad -black -t 4 -b 4 -l 4 -r 4 |\
+    cmp -s ${padded_pbm} - && echo "match" || echo "no match"
+addmargin -black 1 maze.pbm | pnmpad -extend-edge -t 4 -b 4 -l 4 -r 4 |\
+    cmp -s ${padded_pbm} - && echo "match" || echo "no match"
+
+rm ${padded_pbm}
+
+echo "Test 3.  Should print match five times"
+
+ppmpat -argyle1 -color=rgb:20/30/ff,rgb:70/80/ff 30 20 > ${argyle_ppm}
+
+addmargin 3 ${argyle_ppm} > ${padded_ppm}
+
+addmargin -color rgb:20/30/ff 1 ${argyle_ppm} |\
+  pnmpad -color=rgb:20/30/ff -t 2 -b 2 -r 2 -l 2 |\
+    cmp -s ${padded_ppm} - && echo "match" || echo "no match"
+addmargin -color rgb:20/30/ff 1 ${argyle_ppm} |\
+  pnmpad -color=rgb:20/30/ff -t 2 -b 2 -r 2 -l 2 |\
+    cmp -s ${padded_ppm} - && echo "match" || echo "no match"
+addmargin 1 ${argyle_ppm} |\
+  pnmpad -extend-edge -t 2 -b 2 -r 2 -l 2 |\
+    cmp -s ${padded_ppm} - && echo "match" || echo "no match"
+
+pnmpad -color rgb:20/30/ff -t 3 -b 3 -r 3 -l 3 ${argyle_ppm} |\
+    cmp -s ${padded_ppm} - && echo "match" || echo "no match"
+
+pnmpad -detect-background -t 3 -b 3 -r 3 -l 3 ${argyle_ppm} |\
+    cmp -s ${padded_ppm} - && echo "match" || echo "no match"
+
+
+rm ${argyle_ppm} ${padded_ppm}

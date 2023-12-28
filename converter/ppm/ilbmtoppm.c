@@ -112,6 +112,7 @@ ID2string(IFF_ID const id) {
 }
 
 
+
 /****************************************************************************
  Memory allocation
  ****************************************************************************/
@@ -152,6 +153,7 @@ alloc_rawrow(unsigned int const cols) {
 
     return r;
 }
+
 
 
 /****************************************************************************
@@ -206,6 +208,8 @@ get_byte(FILE *          const ifP,
 
     return (unsigned char) i;
 }
+
+
 
 static long
 get_big_long(FILE *          const ifP,
@@ -540,6 +544,7 @@ read_bmhd(FILE *        const ifP,
 }
 
 
+
 /****************************************************************************
  ILBM functions
  ****************************************************************************/
@@ -594,6 +599,7 @@ read_ilbm_plane(FILE *          const ifP,
 }
 
 
+
 static const unsigned char bit_mask[] = {1, 2, 4, 8, 16, 32, 64, 128};
 
 static void
@@ -635,6 +641,7 @@ decodeRow(FILE *          const ifP,
         }
     }
 }
+
 
 
 static void
@@ -697,6 +704,7 @@ decodeMask(FILE *          const ifP,
                  bmhdP->masking);
     }
 }
+
 
 
 /****************************************************************************
@@ -1609,6 +1617,8 @@ rgbn_to_ppm(FILE *         const ifP,
     chunk_end(ifP, ID_BODY, remainingChunksize);
 }
 
+
+
 /****************************************************************************
  Multipalette chunk reader
 
@@ -1780,6 +1790,7 @@ PCHG_Decompress(PCHGHeader *     const PCHG,
             pm_error("unknown PCHG compression type %d", PCHG->Compression);
     }
 }
+
 
 
 static void

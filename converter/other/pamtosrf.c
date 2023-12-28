@@ -206,7 +206,7 @@ main(int argc, const char * argv[]) {
   }
 
   srf_write(stdout, &srf);
-    
+
   srf_term(&srf);
   pm_closer(ifP);
 

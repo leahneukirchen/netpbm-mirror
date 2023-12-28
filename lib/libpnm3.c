@@ -240,6 +240,19 @@ pnm_invertxel(xel*   const xP,
 
 
 
+const char *
+pnm_formattypenm(int const format) {
+
+    switch (PPM_FORMAT_TYPE(format)) {
+    case PPM_TYPE: return "PPM"; break;
+    case PGM_TYPE: return "PGM"; break;
+    case PBM_TYPE: return "PBM"; break;
+    default: return "???";
+    }
+}
+
+
+
 void
 pnm_promoteformat(xel ** const xels,
                   int    const cols,

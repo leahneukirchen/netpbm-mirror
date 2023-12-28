@@ -344,6 +344,7 @@ writeTextChunks(void) {
 }
 
 
+
 static void
 writeCmap(pixel * const colormap,
           int     const colors,
@@ -2138,7 +2139,7 @@ main(int argc, char ** argv) {
         else
         if( pm_keymatch(argv[argn], "-nofloyd", 5) ||
             pm_keymatch(argv[argn], "-nofs", 5) )
-	    defunctArgs++;
+            defunctArgs++;
         else
         if( pm_keymatch(argv[argn], "-annotation", 3) ) {
             if( ++argn >= argc )

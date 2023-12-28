@@ -1,4 +1,4 @@
-/* pgmtolispm.c - read a pgm and write a file acceptable to the 
+/* pgmtolispm.c - read a pgm and write a file acceptable to the
 ** tv:read-bit-array-file function of TI Explorer and Symbolics Lisp Machines.
 **
 ** Written by Jamie Zawinski based on code (C) 1988 by Jef Poskanzer.
@@ -12,7 +12,7 @@
 **
 **   When one writes a multi-plane bitmap with tv:write-bit-array-file, it is
 **   usually a color image; but a color map is not written in the file, so we
-**   treat this as a graymap instead.  To convert a color image to Lispm 
+**   treat this as a graymap instead.  To convert a color image to Lispm
 **   format, you must convert it to a pgm, and hand-edit a color map...  Ick.
 **
 ** Feb 2010 afu
@@ -37,7 +37,7 @@ depth_to_word_size(unsigned int const depth) {
     /* out with a depth of 5, it really has a depth of 8, and  */
     /* is stored that way in the file.                         */
 
-    unsigned int const wordSize = 
+    unsigned int const wordSize =
         depth ==  1 ?  1 :
         depth ==  2 ?  2 :
         depth <=  4 ?  4 :
@@ -178,3 +178,6 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
+
+
+

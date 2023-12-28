@@ -12,4 +12,8 @@ ppm_readppminitrest(FILE *   const file,
                     int *    const rowsP,
                     pixval * const maxvalP);
 
+void
+ppm_validateComputableSize(unsigned int const cols,
+                           unsigned int const rows);
+
 #endif

@@ -5,7 +5,7 @@
 
 #include "cameratopam.h"
 
-void 
+void
 parse_ciff(FILE * const ifp,
            int    const offset,
            int    const length);

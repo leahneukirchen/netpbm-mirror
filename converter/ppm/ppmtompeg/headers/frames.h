@@ -125,6 +125,8 @@ MotionToFrameCoord(int   const by,
     *xP = bx * DCTSIZE + mx;
 }
 
+
+
 #define COORD_IN_FRAME(fy,fx, type)                 \
     ((type == LUM_BLOCK) ?                      \
      ((fy >= 0) && (fx >= 0) && (fy < Fsize_y) && (fx < Fsize_x)) : \
@@ -173,6 +175,7 @@ encodeMotionVector(int      const x,
         rP->y = f - 1 - tempY + qP->y*f;
     }
 }
+
 
 
 #define DoQuant(bit, src, dest)                                         \

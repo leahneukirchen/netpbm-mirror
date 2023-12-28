@@ -313,6 +313,7 @@ imageReadHeader(FILE *  const fileP,
 }
 
 
+
 static int
 imageReadData(FILE *   const fileP,
               IMAGE *  const imgP,

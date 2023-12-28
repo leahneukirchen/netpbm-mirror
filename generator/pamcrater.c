@@ -163,7 +163,6 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 
-static double const arand       = 32767.0;  /* Random number parameters */
 static double const CdepthPower = 1.5;      /* Crater depth power factor */
 static double const DepthBias2  = 0.5;      /* Square of depth bias */
 
@@ -175,7 +174,7 @@ cast(double             const high,
 /*----------------------------------------------------------------------------
    A random number in the range [0, 'high'].
 -----------------------------------------------------------------------------*/
-    return high * ((pm_rand(randStP) & 0x7FFF) / arand);
+  return high * ((double) pm_rand(randStP) / randStP->max);
 }
 
 
@@ -219,7 +218,6 @@ terrainModP(struct pam * const pamP,
 -----------------------------------------------------------------------------*/
     return &terrain[mod(y, pamP->height)][mod(x, pamP->width)][0];
 }
-
 
 
 
@@ -520,5 +518,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
 
 

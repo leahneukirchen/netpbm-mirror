@@ -37,7 +37,7 @@ main( argc, argv )
     ppm_init( &argc, argv );
 
     if ( argc != 4 )
-	pm_usage( "<red pgmfile> <green pgmfile> <blue pgmfile> " );
+        pm_usage( "<red pgmfile> <green pgmfile> <blue pgmfile> " );
 
     rfd = pm_openr( argv[1] );
     gfd = pm_openr( argv[2] );
@@ -46,10 +46,10 @@ main( argc, argv )
     pgm_readpgminit( rfd, &cols, &rows, &rmaxval, &rformat );
     pgm_readpgminit( gfd, &tcols, &trows, &gmaxval, &gformat );
     if ( tcols != cols || trows != rows )
-	pm_error( "all three graymaps must be the same size" );
+        pm_error( "all three graymaps must be the same size" );
     pgm_readpgminit( bfd, &tcols, &trows, &bmaxval, &bformat );
     if ( tcols != cols || trows != rows )
-	pm_error( "all three graymaps must be the same size" );
+        pm_error( "all three graymaps must be the same size" );
 
     pmaxval = rmaxval;
     if ( gmaxval > pmaxval ) pmaxval = gmaxval;
@@ -62,22 +62,22 @@ main( argc, argv )
     pixelrow = ppm_allocrow( cols );
 
     for ( row = 0; row < rows; row++ )
-	{
-	pgm_readpgmrow( rfd, rrow, cols, rmaxval, rformat );
-	pgm_readpgmrow( gfd, grow, cols, gmaxval, gformat );
-	pgm_readpgmrow( bfd, brow, cols, bmaxval, bformat );
+        {
+        pgm_readpgmrow( rfd, rrow, cols, rmaxval, rformat );
+        pgm_readpgmrow( gfd, grow, cols, gmaxval, gformat );
+        pgm_readpgmrow( bfd, brow, cols, bmaxval, bformat );
 
-	for ( col = 0, rP = rrow, gP = grow, bP = brow, pP = pixelrow;
-	      col < cols;
-	      ++col, ++rP, ++gP, ++bP, ++pP )
-	    {
-	    if ( rmaxval != pmaxval ) *rP = (int) *rP * pmaxval / rmaxval;
-	    if ( gmaxval != pmaxval ) *gP = (int) *gP * pmaxval / gmaxval;
-	    if ( bmaxval != pmaxval ) *bP = (int) *bP * pmaxval / bmaxval;
-	    PPM_ASSIGN( *pP, *rP, *gP, *bP );
-	    }
-	ppm_writeppmrow( stdout, pixelrow, cols, pmaxval, 0 );
-	}
+        for ( col = 0, rP = rrow, gP = grow, bP = brow, pP = pixelrow;
+              col < cols;
+              ++col, ++rP, ++gP, ++bP, ++pP )
+            {
+            if ( rmaxval != pmaxval ) *rP = (int) *rP * pmaxval / rmaxval;
+            if ( gmaxval != pmaxval ) *gP = (int) *gP * pmaxval / gmaxval;
+            if ( bmaxval != pmaxval ) *bP = (int) *bP * pmaxval / bmaxval;
+            PPM_ASSIGN( *pP, *rP, *gP, *bP );
+            }
+        ppm_writeppmrow( stdout, pixelrow, cols, pmaxval, 0 );
+        }
 
     pm_close( rfd );
     pm_close( gfd );
@@ -86,3 +86,6 @@ main( argc, argv )
 
     exit( 0 );
     }
+
+
+

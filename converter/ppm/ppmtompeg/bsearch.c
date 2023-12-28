@@ -116,6 +116,7 @@ SetBSearchAlg(const char * const alg) {
 }
 
 
+
 /*===========================================================================*
  *
  * BSearchName
@@ -254,6 +255,7 @@ FindBestMatchExhaust(const LumBlock * const blockP,
 
     return bestDiff;
 }
+
 
 
 /*===========================================================================*
@@ -587,6 +589,7 @@ FindBestMatchSubSample(const LumBlock * const blockP,
 }
 
 
+
 /*===========================================================================*
  *
  * FindBestMatch
@@ -775,6 +778,7 @@ BMotionSearchSimple(const LumBlock * const currentBlockP,
 }
 
 
+
 /*===========================================================================*
  *
  * BMotionSearchCross2
@@ -861,6 +865,7 @@ BMotionSearchCross2(const LumBlock * const currentBlockP,
 
     return retval;
 }
+
 
 
 /*===========================================================================*
@@ -1027,6 +1032,7 @@ BMotionSearch(const LumBlock * const currentBlockP,
 }
 
 
+
 /*===========================================================================*
  *                                       *
  * UNUSED PROCEDURES                                 *
@@ -1083,6 +1089,7 @@ ValidBMotion(by, bx, mode, fmy, fmx, bmy, bmx)
 
     return TRUE;
 }
+
 
 
 #endif /* UNUSED_PROCEDURES */

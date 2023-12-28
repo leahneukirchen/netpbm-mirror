@@ -12,4 +12,11 @@ pgm_readpgminitrest(FILE * const file,
                     int *  const rowsP,
                     gray * const maxvalP);
 
+void
+pgm_validateComputableSize(unsigned int const cols,
+                           unsigned int const rows);
+
+void
+pgm_validateComputableMaxval(gray const maxval);
+
 #endif

@@ -429,6 +429,7 @@ GenMBType(bbPtr, pict_code_type, mb_quant, motion_forw, motion_back,
 }
 
 
+
 /*===========================================================================*
  *
  * GenMotionCode
@@ -459,6 +460,7 @@ GenMotionCode(BitBucket * const bbPtr,
 }
 
 
+
 /*===========================================================================*
  *
  * GenBlockPattern
@@ -483,6 +485,7 @@ GenBlockPattern(bbPtr, mb_pattern)
 
     Bitio_Write(bbPtr, code, num);
 }
+
 
 
 /*===========================================================================*
@@ -510,6 +513,7 @@ GenMBAddrIncr(bbPtr, addr_incr)
 
     Bitio_Write(bbPtr, code, num);
 }
+
 
 
 /*===========================================================================*
@@ -624,6 +628,7 @@ GenPictHead(bbPtr, temp_ref, code_type, vbv_delay, full_pel_forw_flag,
 }
 
 
+
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
@@ -647,6 +652,7 @@ SetGOPStartTime(index)
     lastGOPStart = gopStartFrame;
     gopStartFrame = index;
 }
+
 
 
 /*===========================================================================*
@@ -686,6 +692,7 @@ Mhead_GenPictureHeader(bbPtr, frameType, pictCount, f_code)
                 f_code /* back_f_code */,
                 NULL, 0, NULL, 0, NULL, 0);
 }
+
 
 
 /*===========================================================================*
@@ -849,6 +856,7 @@ Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
 }
 
 
+
 /*===========================================================================*
  *
  * Mhead_GenSequenceEnder
@@ -867,6 +875,7 @@ Mhead_GenSequenceEnder(bbPtr)
 {
     Bitio_Write(bbPtr, SEQ_END_CODE, 32);
 }
+
 
 
 /*===========================================================================*
@@ -967,6 +976,7 @@ Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
 }
 
 
+
 /*===========================================================================*
  *
  * Mhead_GenSliceHeader
@@ -1010,6 +1020,7 @@ Mhead_GenSliceHeader(bbPtr, verticalPos, qscale, extra_info, extra_info_size)
 }
 
 
+
 /*===========================================================================*
  *
  * Mhead_GenSliceEnder
@@ -1028,6 +1039,7 @@ Mhead_GenSliceEnder(bbPtr)
 {
     Bitio_BytePad(bbPtr);
 }
+
 
 
 /*===========================================================================*
@@ -1158,6 +1170,7 @@ if ( addr_incr != 1 )
 }
 
 
+
 #ifdef UNUSED_PROCEDURES
 
 /* GenMBEnd only used for `D` pictures. Shouldn't really ever be called. */
@@ -1168,5 +1181,7 @@ GenMBEnd(bbPtr)
 {
     Bitio_Write(bbPtr, 0x01, 1);
 }
+
+
 
 #endif /* UNUSED_PROCEDURES */

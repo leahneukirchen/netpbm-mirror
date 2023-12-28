@@ -101,6 +101,18 @@ void
 pm_accept_to_memory(int    const pipetosuckFd,
                     void * const accepterParm);
 
+void
+pm_feed_from_file(int    const pipeToFeedFd,
+                  void * const feederParm);
+
+void
+pm_accept_to_file(int    const pipetosuckFd,
+                  void * const accepterParm);
+
+void
+pm_accept_to_filestream(int    const pipetosuckFd,
+                        void * const accepterParm);
+
 #ifdef __cplusplus
 }
 #endif

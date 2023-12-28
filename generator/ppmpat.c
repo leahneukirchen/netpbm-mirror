@@ -344,8 +344,8 @@ parseCommandLine(int argc, const char ** argv,
         pm_error("You must specify 2 non-option arguments: width and height "
                  "in pixels.  You specified %u", argc-1);
     else {
-        cmdlineP->width  = atoi(argv[1]);
-        cmdlineP->height = atoi(argv[2]);
+        cmdlineP->width  = pm_parse_width(argv[1]);
+        cmdlineP->height = pm_parse_height(argv[2]);
 
         if (cmdlineP->width < 1)
             pm_error("Width must be at least 1 pixel");
@@ -435,9 +435,6 @@ randomDarkColor(struct pm_randSt * const randStP,
 
     return p;
 }
-
-
-
 
 
 
@@ -1652,5 +1649,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
 
 

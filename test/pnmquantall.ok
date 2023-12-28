@@ -1,7 +1,14 @@
+Test 1.
 2373957371 33838
 3892560659 33838
 1383839923 33838
-1
+color count 20: success
+Test 2.
+452076937 33838
+452076937 33838
+452076937 33838
+color count 1: success
+Test Invalid
 Expected failure 1
 Expected failure 1.rm
 Expected failure 2

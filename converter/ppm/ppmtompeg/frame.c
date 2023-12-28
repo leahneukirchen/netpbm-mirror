@@ -395,6 +395,7 @@ Frame_Init(unsigned int const numOfFramesRequested) {
 }
 
 
+
 /*===========================================================================*
  *
  * FreeFrame
@@ -493,6 +494,7 @@ Frame_Exit(void) {
         FreeFrame(frameMemory[idx]);
     }
 }
+
 
 
 /*===========================================================================*
@@ -843,5 +845,6 @@ Frame_Resize(MpegFrame * const omf,
 
     free(frameAP);
 }
+
 
 

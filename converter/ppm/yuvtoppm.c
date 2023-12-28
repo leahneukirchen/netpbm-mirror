@@ -2,7 +2,7 @@
 **
 ** by Marc Boucher
 ** Internet: marc@PostImage.COM
-** 
+**
 ** Based on Example Conversion Program, A60/A64 Digital Video Interface
 ** Manual, page 69
 **
@@ -72,7 +72,7 @@ parseCommandLine(int argc, const char ** argv,
 
         cmdlineP->cols = widthArg;
         cmdlineP->rows = heightArg;
-                 
+
         if (cmdlineP->cols % 2 != 0)
             pm_error("Number of columns (%u) is odd.  "
                      "A YUV image must have an "
@@ -213,9 +213,12 @@ main (int argc, const char ** argv) {
     ifP = pm_openr(cmdline.inputFileName);
 
     yuvtoppm(ifP, cmdline.cols, cmdline.rows, stdout);
-    
+
     pm_close(ifP);
     pm_close(stdout);
 
     return 0;
 }
+
+
+

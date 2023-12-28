@@ -456,7 +456,6 @@ createPclGenerator(struct pam *        const pamP,
 
 
 
-
 struct tPrinter {
     const char *name;
     float topmargin;
@@ -1136,3 +1135,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

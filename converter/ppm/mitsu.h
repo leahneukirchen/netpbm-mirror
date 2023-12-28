@@ -10,19 +10,30 @@
 #define A_MAXROWS   1350
 #define AS_MAXROWS  1650
 
+/* To use the macros in this file that generate Mitsu output, define a
+   function named 'cmd' that outputs a character.  Like this:
+
+    static void
+    cmd(char const arg) {
+
+        fputc(arg, stdout);
+    }
+*/
+
 #define ONLINE         cmd('\021')
 #define CLRMEM         cmd('\033'), cmd('Z')
 
-struct mediasize {
-        char size;
-        int  maxcols, maxrows;
+struct Mediasize {
+    char         size;
+    unsigned int maxcols;
+    unsigned int maxrows;
 };
 
-const struct mediasize MSize_User={' ',1184,1350};
-const struct mediasize MSize_A4  ={'0',1184,1452};
-const struct mediasize MSize_A   ={'1',1216,1350};
-const struct mediasize MSize_A4S ={'2',1184,1754};
-const struct mediasize MSize_AS  ={'3',1216,1650};
+static struct Mediasize const MSize_User={' ',1184,1350};
+static struct Mediasize const MSize_A4  ={'0',1184,1452};
+static struct Mediasize const MSize_A   ={'1',1216,1350};
+static struct Mediasize const MSize_A4S ={'2',1184,1754};
+static struct Mediasize const MSize_AS  ={'3',1216,1650};
 #define MEDIASIZE(chr) cmd('\033'), cmd('#'), cmd('P'), cmd((chr).size)
 
 #define HENLARGE(enl)  cmd('\033'), cmd('&'), cmd('P'), cmd(enl), cmd('\001')

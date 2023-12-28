@@ -502,6 +502,7 @@ rle_hdr * the_hdr;
 }
 
 
+
 /*****************************************************************
  * TAG( rle_put_init )
  *
@@ -540,6 +541,8 @@ rle_hdr *the_hdr;
         RLE_CLR_BIT( *the_hdr, -1 );
 }
 
+
+
 /*****************************************************************
  * TAG( rle_put_setup )
  *
@@ -562,11 +565,15 @@ rle_hdr * the_hdr;
     Setup();
 }
 
+
+
 void
 DefaultBlockHook(rle_hdr * the_hdr)
 {
                                         /* Do nothing */
 }
+
+
 
 /*****************************************************************
  * TAG( rle_puteof )
@@ -590,6 +597,8 @@ rle_hdr * the_hdr;
     /* Signal that puteof has been called. */
     the_hdr->dispatch = NO_DISPATCH;
 }
+
+
 
 #ifndef FASTRUNS
 /*****************************************************************

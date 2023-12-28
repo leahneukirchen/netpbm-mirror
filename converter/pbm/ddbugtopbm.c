@@ -13,15 +13,15 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Adapted to Netpbm by Bryan Henderson 2003.08.09.  Bryan got his copy
  * from ftp:ibiblio.com/pub/linux/apps/graphics/convert, dated 2002.08.21.
@@ -37,7 +37,7 @@
 #include "mallocvar.h"
 
 /* this is basically UncompressSketch() from DiddleBug 2.50's diddlebug.c */
-static void 
+static void
 uncompress_sketch(unsigned char * const cPtr,
                   unsigned char * const uPtr,
                   int             const size) {
@@ -79,7 +79,7 @@ make_noname(void) {
 
     do {
         num++;
-        if (out != NULL) 
+        if (out != NULL)
             fclose(out);
         sprintf(name, "sketch-%04d.pbm", num);
     } while (num<10000 && (out = fopen(name, "rb")) != NULL);
@@ -92,7 +92,7 @@ make_noname(void) {
 
 
 
-int 
+int
 main(int argc, char ** argv) {
     FILE * const in=stdin;
 
@@ -147,7 +147,7 @@ main(int argc, char ** argv) {
         for (ptr = nameptr; *ptr; ++ptr) {
             if (!isalnum(*ptr) && strchr("()-_+=[]:;,.<>?",*ptr) == NULL)
                 *ptr='_';
-            if (isupper(*ptr)) 
+            if (isupper(*ptr))
                 *ptr = tolower(*ptr);
         }
 
@@ -161,7 +161,7 @@ main(int argc, char ** argv) {
 
         pm_message("extracting sketch %2d as `%s'", f, outfilename);
         if((out=fopen(outfilename,"wb"))==NULL)
-            pm_message("WARNING: couldn't open file '%s'.  Carrying on...", 
+            pm_message("WARNING: couldn't open file '%s'.  Carrying on...",
                        outfilename);
         else {
             pbm_writepbminit(out, 160, 160, FALSE);
@@ -171,3 +171,6 @@ main(int argc, char ** argv) {
     }
     return 0;
 }
+
+
+

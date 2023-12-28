@@ -65,7 +65,7 @@ pgm_nextimage(FILE * const file,
 
 
 void
-pgm_readpgminitrest(FILE * const fileP,
+pgm_readpgminitrest(FILE * const ifP,
                     int *  const colsP,
                     int *  const rowsP,
                     gray * const maxvalP) {
@@ -73,14 +73,13 @@ pgm_readpgminitrest(FILE * const fileP,
     gray maxval;
 
     /* Read size. */
-    *colsP = (int)pm_getuint(fileP);
-    *rowsP = (int)pm_getuint(fileP);
+    pbm_readpbminitrest(ifP, colsP, rowsP);
 
     /* Read maxval. */
-    maxval = pm_getuint(fileP);
+    maxval = pm_getuint(ifP);
     if (maxval > PGM_OVERALLMAXVAL)
         pm_error("maxval of input image (%u) is too large.  "
-                 "The maximum allowed by PGM is %u.",
+                 "The maximum allowed by the format is %u.",
                  maxval, PGM_OVERALLMAXVAL);
     if (maxval == 0)
         pm_error("maxval of input image is zero.");
@@ -90,9 +89,9 @@ pgm_readpgminitrest(FILE * const fileP,
 
 
 
-static void
-validateComputableSize(unsigned int const cols,
-                       unsigned int const rows) {
+void
+pgm_validateComputableSize(unsigned int const cols,
+                           unsigned int const rows) {
 /*----------------------------------------------------------------------------
    Validate that the dimensions of the image are such that it can be
    processed in typical ways on this machine without worrying about
@@ -115,8 +114,8 @@ validateComputableSize(unsigned int const cols,
 
 
 
-static void
-validateComputableMaxval(gray const maxval) {
+void
+pgm_validateComputableMaxval(gray const maxval) {
 /*----------------------------------------------------------------------------
   This is similar to validateComputableSize, but for the maxval.
 -----------------------------------------------------------------------------*/
@@ -126,10 +125,14 @@ validateComputableMaxval(gray const maxval) {
 
        Code also sometimes iterates through sample values and quits when the
        value is greater than the maxval.
-    */
 
-    if (maxval == 0)
-        pm_error("Maxval is zero.  Must be at least one.");
+       Code often divides by the maxval, but we don't have to check for maxval
+       == 0 as a computability problem because that is not a valid maxval.
+
+       Note that in the PNM Plain formats, there is no upper limit for a
+       maxval, though the 'gray' type does constrain what has been passed to
+       us.
+    */
 
     if (maxval > INT_MAX-1)
         pm_error("Maxval (%u) is too large to be processed", maxval);
@@ -193,9 +196,9 @@ pgm_readpgminit(FILE * const fileP,
         pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
                  realFormat);
     }
-    validateComputableSize(*colsP, *rowsP);
+    pgm_validateComputableSize(*colsP, *rowsP);
 
-    validateComputableMaxval(*maxvalP);
+    pgm_validateComputableMaxval(*maxvalP);
 }
 
 

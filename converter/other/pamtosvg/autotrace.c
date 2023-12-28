@@ -42,6 +42,8 @@ at_fitting_opts_new(void)
   return opts;
 }
 
+
+
 at_fitting_opts_type *
 at_fitting_opts_copy (at_fitting_opts_type * original)
 {
@@ -56,11 +58,15 @@ at_fitting_opts_copy (at_fitting_opts_type * original)
   return new_opts;
 }
 
+
+
 void
 at_fitting_opts_free(at_fitting_opts_type * opts)
 {
   free(opts);
 }
+
+
 
 at_output_opts_type *
 at_output_opts_new(void)
@@ -71,6 +77,8 @@ at_output_opts_new(void)
   return opts;
 }
 
+
+
 at_output_opts_type *
 at_output_opts_copy(at_output_opts_type * original)
 {
@@ -79,11 +87,15 @@ at_output_opts_copy(at_output_opts_type * original)
   return opts;
 }
 
+
+
 void
 at_output_opts_free(at_output_opts_type * opts)
 {
   free(opts);
 }
+
+
 
 /* at_splines_new_full modifies its 'bitmap' argument
    when it does the thin_image thing.

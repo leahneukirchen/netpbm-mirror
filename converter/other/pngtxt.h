@@ -7,9 +7,9 @@
 
 struct pngx;
 
-void 
+void
 pngtxt_addChunk(struct pngx * const pngxP,
-                FILE *        const tfp, 
+                FILE *        const tfp,
                 bool          const ztxt,
                 bool          const itxt,
                 bool          const verbose);

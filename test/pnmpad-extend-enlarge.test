@@ -1,0 +1,177 @@
+#! /bin/sh
+# This script tests: pnmpad pamenlarge
+# Also requires: pamcat pamcut pamenlarge pbmmake pbmnoise pgmmake pgmnoise
+# Also requires: ppmmake ppmpat
+
+# If the padding function for -extend-edge is altered, make sure to run this
+# test in a more thorough form.  Replace "for leftpad in 0 1 7 9 16"
+# with "for leftpad in `seq 0 16`".
+
+tmpdir=${tmpdir:-/tmp}
+test_pnm=${tmpdir}/test.pnm
+
+padded_pnm=${tmpdir}/padded.pnm
+#middle_pnm=${tmpdir}/middle.pnm
+left_pnm=${tmpdir}/left.pnm
+right_pnm=${tmpdir}/right.pnm
+top_pnm=${tmpdir}/top.pnm
+bottom_pnm=${tmpdir}/bottom.pnm
+
+echo "Test 1.  Should print match forty-eight (24x2) times"
+
+for generator in "pbmnoise -randomseed=100 17 17" \
+                 "ppmpat -tartan -randomseed=100 11 11"          
+    do
+    ${generator} > ${test_pnm}
+    for leftpad in 0 1 7 9 16
+    do
+        for rightpad in  0 1 8
+        do
+            pnmpad -extend-edge -l=${leftpad} -r=${rightpad} ${test_pnm} > ${padded_pnm}
+            pamcut -left=0 -width=1 ${test_pnm} |\
+                pamenlarge -xscale=$(( ${leftpad} + 1 )) > ${left_pnm}
+            pamcut -right=-1 -width=1  ${test_pnm} |\
+                pamenlarge -xscale=$(( ${rightpad} + 1 )) > ${right_pnm}
+            pamcut -cropleft=1 -cropright=1 ${test_pnm} |\
+                pamcat -lr ${left_pnm} - ${right_pnm} |\
+                cmp -s - ${padded_pnm} && echo "match" ||\
+                    echo "no match: lr ${generator} ${leftpad} ${rightpad}";
+            rm ${left_pnm} ${right_pnm} ${padded_pnm}
+        done
+    done
+    
+    for toppad in 0 2 5
+    do
+        for bottompad in  0 1 10
+        do
+            pnmpad -extend-edge -t=${toppad} -b=${bottompad} ${test_pnm} > ${padded_pnm}
+            pamcut -top=0 -height=1 ${test_pnm} |\
+                pamenlarge -yscale=$(( ${toppad} + 1 )) > ${top_pnm}
+            pamcut -bottom=-1 -height=1  ${test_pnm} |\
+                pamenlarge -yscale=$(( ${bottompad} + 1 )) > ${bottom_pnm}
+            pamcut -croptop=1 -cropbottom=1 ${test_pnm} |\
+            pamcat -tb ${top_pnm} - ${bottom_pnm} |\
+                cmp -s - ${padded_pnm} && echo "match" ||\
+                    echo "no match: tb ${generator} ${toppad} ${bottompad}";
+            rm ${top_pnm} ${bottom_pnm} ${padded_pnm}
+        done
+    done
+    rm ${test_pnm}
+done
+
+
+echo "Test 2.  Should print match thirty-six (18x2) times"
+
+for generator in "pbmnoise -randomseed=100 17 17" \
+                 "ppmpat -tartan -randomseed=100 11 11"
+    do
+    ${generator} > ${test_pnm}
+    for leftpad in 0 1 2
+    do
+        for rightpad in  0 1 3
+        do
+            pnmpad -extend-edge -l=${leftpad} -r=${rightpad} ${test_pnm} > ${padded_pnm}
+            pamcut -left=0 -width=1 ${test_pnm} |\
+                pamenlarge -xscale=$(( ${leftpad} + 1 )) > ${left_pnm}
+            pamcut -right=-1 -width=1  ${test_pnm} |\
+                pamenlarge -xscale=$(( ${rightpad} + 1 )) > ${right_pnm}
+            pamcut -cropleft=1 -cropright=1 ${test_pnm} |\
+                pamcat -lr ${left_pnm} - ${right_pnm} |\
+                cmp -s - ${padded_pnm} && echo "match" ||\
+                    echo "no match: lr ${generator} ${leftpad} ${rightpad}";
+            rm ${left_pnm} ${right_pnm} ${padded_pnm}
+        done
+    done
+    
+    for toppad in 0 1 12
+    do
+        for bottompad in 0 1 5
+        do
+            pnmpad -extend-edge -t=${toppad} -b=${bottompad} ${test_pnm} > ${padded_pnm}
+            pamcut -top=0 -height=1 ${test_pnm} |\
+                pamenlarge -yscale=$(( ${toppad} + 1 )) > ${top_pnm}
+            pamcut -bottom=-1 -height=1  ${test_pnm} |\
+                pamenlarge -yscale=$(( ${bottompad} + 1 )) > ${bottom_pnm}
+            pamcut -croptop=1 -cropbottom=1 ${test_pnm} |\
+                pamcat -tb ${top_pnm} - ${bottom_pnm} |\
+                cmp -s - ${padded_pnm} && echo "match" ||\
+                    echo "no match: tb ${generator} ${toppad} ${bottompad}";
+            rm ${top_pnm} ${bottom_pnm} ${padded_pnm}
+        done
+    done
+    rm ${test_pnm}
+done
+
+
+echo "Test 3.  Should print match twenty-four (4x6) times"
+
+stretch_pnm=${tmpdir}/stretch.pnm
+
+for generator in "pbmmake -b 1 1" \
+                 "pbmmake -b 1 11" \
+                 "pbmmake -w 1 1" \
+                 "pbmmake -w 1 8" \
+                 "pbmnoise -randomseed=100 1 17" \
+                 "pgmnoise -randomseed=100 1 12"                 
+    do
+        ${generator} > ${test_pnm}
+     pamenlarge -xscale=17 ${test_pnm} > ${stretch_pnm} 
+        
+    for leftpad in 0 1 7 16
+    do
+        pnmpad -extend-edge -l=${leftpad} -r=$((16 - ${leftpad})) ${test_pnm} |\
+                cmp -s - ${stretch_pnm} && echo "match" ||\
+                    echo "no match: ${generator} ${leftpad}";
+    done
+    rm ${stretch_pnm} ${test_pnm}
+done
+
+
+echo "Test 4.  Should print match eighteen (3x6) times"
+
+stretch_pnm=${tmpdir}/stretch.pnm
+
+for generator in "pbmmake -b 1 1" \
+                 "pbmmake -b 8 1" \
+                 "pbmmake -w 1 1" \
+                 "pbmmake -w 3 1" \
+                 "pbmnoise -randomseed=100 17 1" \
+                 "pgmnoise -randomseed=100 8 1"          
+    do
+        ${generator} > ${test_pnm}
+     pamenlarge -yscale=15 ${test_pnm} > ${stretch_pnm} 
+        
+    for toppad in  0 1 14
+    do
+        pnmpad -extend-edge -t=${toppad} -b=$((14 - ${toppad})) ${test_pnm} |\
+                cmp -s - ${stretch_pnm} && echo "match" ||\
+                    echo "no match: ${generator} ${toppad}";
+    done
+    rm ${stretch_pnm} ${test_pnm}
+done
+
+
+echo "Test 5.  Should print match thirty-two (8x4) times"
+
+stretch_pnm=${tmpdir}/stretch.pnm
+
+for generator in "pbmmake -b 1 1" \
+                 "pbmmake -w 1 1" \
+                 "pgmmake 0.3 1 1" \
+                 "ppmmake rgbi:0.5/0.3/0.8 1 1"
+    do
+        ${generator} > ${test_pnm}
+        pamenlarge -xscale=66 -yscale=10 ${test_pnm} > ${stretch_pnm}
+        
+    for toppad in  0 8
+    do
+    for leftpad in  0 1 15 64
+    do
+        pnmpad -extend-edge -t=${toppad} -b=$((9 - ${toppad})) \
+         -l=${leftpad} -r=$((65 - ${leftpad})) ${test_pnm} |\
+                cmp -s - ${stretch_pnm} && echo "match" ||\
+                echo "no match: ${generator} ${toppad} ${leftpad}"
+    done
+    done
+    rm ${stretch_pnm} ${test_pnm}
+done

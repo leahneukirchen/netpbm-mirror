@@ -10,7 +10,7 @@
  * implied warranty.
  *
  * known problems: doesn't do compressed ileaf images.
- * 
+ *
  */
 
 #include <stdio.h>
@@ -20,11 +20,11 @@
 #define LEAF_MAXVAL 255
 
 static void
-leaf_init(FILE *  const fp, 
+leaf_init(FILE *  const fp,
           int *   const colsP,
-          int *   const rowsP, 
-          int *   const depthP, 
-          int *   const ncolorsP, 
+          int *   const rowsP,
+          int *   const depthP,
+          int *   const ncolorsP,
           pixel * const colors) {
 
     unsigned char buf[256];
@@ -34,41 +34,41 @@ leaf_init(FILE *  const fp,
     short rows;
     short depth;
     long magic;
-    
+
     pm_readbiglong(fp, &magic);
     if ((uint32_t)magic != 0x894f5053)
         pm_error("Bad magic number.  First 4 bytes should be "
                  "0x894f5053 but are instead 0x%08x", (unsigned)magic);
-    
+
     /* version =   2 bytes
-       hres =      2 
+       hres =      2
        vres =      2
        unique id = 4
        offset x =  2
        offset y =  2
-       TOTAL    =  14 bytes 
+       TOTAL    =  14 bytes
     */
-    
+
     pm_readbigshort(fp, &version);
 
     if (fread(buf, 1, 12, fp) != 12)
         pm_error("bad header, short file?");
-    
+
     pm_readbigshort(fp, &cols);
     *colsP = cols;
     pm_readbigshort(fp, &rows);
     *rowsP = rows;
     pm_readbigshort(fp, &depth);
     *depthP = depth;
-    
+
     if ((compressed = fgetc(fp)) != 0)
         pm_error("Can't do compressed images.");
 
     if ((*depthP == 1) && (version < 4)) {
-        fgetc(fp); 
+        fgetc(fp);
         *ncolorsP = 0;
     } else if ((*depthP == 8) && (version < 4)) {
-        fgetc(fp); 
+        fgetc(fp);
         *ncolorsP = 0;
     } else {
         long format;
@@ -121,19 +121,19 @@ main(int argc, char * argv[]) {
     pixel colormap[MAXCOLORS];
     int rows, cols, row, col, depth, ncolors;
 
-    
+
     ppm_init(&argc, argv);
-    
+
     if (argc-1 > 1)
         pm_error("Too many arguments.  Only argument is ileaf file name");
-    
+
     if (argc-1 == 1)
         ifd = pm_openr(argv[1]);
     else
         ifd = stdin;
-    
+
     leaf_init(ifd, &cols, &rows, &depth, &ncolors, colormap);
-    
+
     if ((depth == 8) && (ncolors == 0)) {
         /* gray image */
         gray * grayrow;
@@ -177,7 +177,7 @@ main(int argc, char * argv[]) {
 
         ppm_writeppminit(stdout, cols, rows, (pixval) maxval, 0);
         pixrow = ppm_allocrow( cols );
-    
+
         for (row = 0; row < rows; ++row) {
             for (col = 0; col < cols; ++col)
                 pixrow[col] = colormap[fgetc(ifd)];
@@ -190,18 +190,18 @@ main(int argc, char * argv[]) {
         /* mono image */
         bit *bitrow;
         unsigned int row;
-        
+
         pbm_writepbminit(stdout, cols, rows, 0);
         bitrow = pbm_allocrow(cols);
-    
+
         for (row = 0; row < rows; ++row) {
             unsigned char bits;
             bits = 0x00;  /* initial value */
             for (col = 0; col < cols; ++col) {
                 int const shift = col % 8;
-                if (shift == 0) 
+                if (shift == 0)
                     bits = (unsigned char) fgetc(ifd);
-                bitrow[col] = (bits & (unsigned char)(0x01 << (7 - shift))) ? 
+                bitrow[col] = (bits & (unsigned char)(0x01 << (7 - shift))) ?
                     PBM_WHITE : PBM_BLACK;
             }
             if ((cols % 16) && (cols % 16) <= 8)
@@ -211,6 +211,9 @@ main(int argc, char * argv[]) {
         pbm_freerow(bitrow);
     }
     pm_close(ifd);
-    
+
     return 0;
 }
+
+
+

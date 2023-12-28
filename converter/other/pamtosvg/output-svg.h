@@ -26,10 +26,10 @@ output_svg_writer(FILE *                    const file,
                   int                       const llx,
                   int                       const lly,
                   int                       const urx,
-                  int                       const ury, 
+                  int                       const ury,
                   at_output_opts_type *     const opts,
                   at_spline_list_array_type const shape,
-                  at_msg_func                     msg_func, 
+                  at_msg_func                     msg_func,
                   void *                    const msg_data);
 
 

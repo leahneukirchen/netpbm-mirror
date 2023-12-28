@@ -11,7 +11,6 @@
 #include "jasper/jas_string.h"
 #include "jasper/jas_malloc.h"
 #include "jasper/jas_image.h"
-#include "jasper/jas_fix.h"
 #include "jasper/jas_tvp.h"
 #include "jasper/jas_version.h"
 #include "jasper/jas_math.h"

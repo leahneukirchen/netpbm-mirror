@@ -34,8 +34,8 @@ typedef struct
    after the last is the first, and the previous coordinate before the
    first is the last.  */
 #define O_NEXT(p_o, n) (((n) + 1) % O_LENGTH (p_o))
-#define O_PREV(p_o, n) ((n) == 0				\
-                         ? O_LENGTH (p_o) - 1			\
+#define O_PREV(p_o, n) ((n) == 0                                \
+                         ? O_LENGTH (p_o) - 1                   \
                          : (n) - 1)
 
 /* And the character turns into a list of such lists.  */
@@ -55,7 +55,7 @@ typedef struct
 pixel_outline_list_type
 find_outline_pixels (bitmap_type         const type,
                      bool                const bg_spec,
-                     pixel               const bg_color, 
+                     pixel               const bg_color,
                      at_progress_func          notify_progress,
                      void *              const progress_data,
                      at_testcancel_func        test_cancel,
@@ -65,7 +65,7 @@ find_outline_pixels (bitmap_type         const type,
 /* Find all pixels on the center line of the character C.  */
 pixel_outline_list_type
 find_centerline_pixels (bitmap_type         const type,
-                        pixel               const bg_color, 
+                        pixel               const bg_color,
                         at_progress_func          notify_progress,
                         void *              const progress_data,
                         at_testcancel_func        test_cancel,

@@ -13,7 +13,7 @@
  documentation.  This software is provided "as is" without express or
  implied warranty.
 
- Algorithm for PC1 compression from "gimp-degas" GIMP plugin 
+ Algorithm for PC1 compression from "gimp-degas" GIMP plugin
  by Markus F.X.J. Oberhumer
 
 */
@@ -39,7 +39,7 @@ unsigned int const colsPerBlock = 16;
 
 
 static void
-readPalette(FILE *   const ifP, 
+readPalette(FILE *   const ifP,
             pixel (* const palP)[]) {
 
     /* Read the palette. */
@@ -78,7 +78,7 @@ processStretch(unsigned int     const countbyte,
         }
     } else {
         /* next byte repeated 257-countbyte times */
-                
+
         unsigned char const duplicated_color = getc(ifP);
         unsigned int  const count = 257 - countbyte;
         unsigned int i;
@@ -121,8 +121,8 @@ readPc1(FILE * const ifP,
             unsigned int const countbyte = getc(ifP);
 
             processStretch(countbyte, ifP, &col, &bufferCursor);
-	    }
-	}
+            }
+        }
 }
 
 
@@ -130,7 +130,7 @@ readPc1(FILE * const ifP,
 static void
 reInterleave(unsigned char     const buffer[],
              unsigned short (* const screenP)[]) {
-    
+
     /* The buffer is in one plane for each line, to optimize packing */
     /* Re-interleave to match the Atari screen layout                */
 
@@ -142,10 +142,10 @@ reInterleave(unsigned char     const buffer[],
         for (block = 0; block < BLOCKS; ++block) {
             unsigned int plane;
             for (plane = 0; plane < planes; ++plane) {
-                unsigned int const blockIndex = 
+                unsigned int const blockIndex =
                     row*ROWBYTES + plane*PLANEBYTES + block*BLOCKBYTES;
 
-                screen[row*ROWSHORTS + block*BLOCKSHORTS + plane] = 
+                screen[row*ROWSHORTS + block*BLOCKSHORTS + plane] =
                     (buffer[blockIndex+0] << 8) + (buffer[blockIndex+1]);
             }
         }
@@ -202,9 +202,9 @@ main(int argc, char ** argv) {
     const char * inputFilename;
     FILE* ifP;
     pixel palette[16];  /* Degas palette */
-    static unsigned short screen[32000/2];   
+    static unsigned short screen[32000/2];
         /* simulates the Atari's video RAM */
-    static unsigned char buffer[32000];   
+    static unsigned char buffer[32000];
         /* simulates the Atari's video RAM */
 
     ppm_init(&argc, argv);
@@ -231,3 +231,6 @@ main(int argc, char ** argv) {
 
     return 0;
 }
+
+
+

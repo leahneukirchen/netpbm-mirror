@@ -2,7 +2,7 @@
                                   pamtopfm
 ******************************************************************************
   This program converts a PAM image to PFM (Portable Float Map).
-  
+
   By Bryan Henderson, San Jose, CA April 2004.
 
   Contributed to the public domain by its author.
@@ -37,13 +37,13 @@ static enum endian machineEndianness;
 
 
 
-static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
+static void
+parseCommandLine(int argc,
+                 char ** argv,
                  struct cmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -54,7 +54,7 @@ parseCommandLine(int argc,
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
     /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
-  
+
     unsigned int option_def_index;
     char * endianOpt;
     unsigned int endianSpec, scaleSpec;
@@ -62,7 +62,7 @@ parseCommandLine(int argc,
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "endian",   OPT_STRING, &endianOpt, &endianSpec,        0);
     OPTENT3(0, "scale",    OPT_FLOAT,  &cmdlineP->scale, &scaleSpec,   0);
-  
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
@@ -93,7 +93,7 @@ parseCommandLine(int argc,
         cmdlineP->inputFilespec = argv[1];
     else
         cmdlineP->inputFilespec = "-";
-    
+
     if (argc-1 > 1)
         pm_error("Program takes at most one argument:  the file name.  "
                  "You specified %d", argc-1);
@@ -109,7 +109,7 @@ thisMachineEndianness(void) {
    that varies among typical machines.
 
    Big endianness is the natural format.  In this format, if an integer is
-   4 bytes, to be stored at memory address 100-103, the most significant 
+   4 bytes, to be stored at memory address 100-103, the most significant
    byte goes at 100, the next most significant at 101, and the least
    significant byte at 103.  This is natural because it matches the way
    humans read and write numbers.  I.e. 258 is stored as 0x00000102.
@@ -125,7 +125,7 @@ thisMachineEndianness(void) {
 
     unsigned char * const storedNumber = (unsigned char *)&testNumber;
     enum endian endianness;
-    
+
     if (storedNumber[0] == 0x01)
         endianness = ENDIAN_LITTLE;
     else
@@ -156,11 +156,11 @@ floatToPfmSample(float       const input,
         unsigned int i, j;
 
         MEMSCPY(&reversed, &input);
-        
-        for (i = 0, j = sizeof(pfmSample)-1; 
-             i < sizeof(pfmSample); 
+
+        for (i = 0, j = sizeof(pfmSample)-1;
+             i < sizeof(pfmSample);
              ++i, --j)
-            
+
             outputP->bytes[i] = reversed[j];
     }
 }
@@ -181,8 +181,8 @@ writePfmHeader(FILE *           const ofP,
                struct pfmHeader const pfmHeader) {
 
     const char * const magic = pfmHeader.color ? "PF" : "Pf";
-    float const scaleFactorEndian = 
-        pfmHeader.endian == ENDIAN_BIG ? 
+    float const scaleFactorEndian =
+        pfmHeader.endian == ENDIAN_BIG ?
             pfmHeader.scaleFactor :
             - pfmHeader.scaleFactor;
 
@@ -217,7 +217,7 @@ writePfmRow(struct pam * const pamP,
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
             pfmSample val;
-            floatToPfmSample(tuplenRow[col][plane] * scaleFactor, 
+            floatToPfmSample(tuplenRow[col][plane] * scaleFactor,
                              &val, endian);
             pfmRowBuffer[pfmCursor++] = val;
         }
@@ -226,7 +226,7 @@ writePfmRow(struct pam * const pamP,
 
     rc = fwrite(pfmRowBuffer, sizeof(pfmSample), pfmSamplesPerRow, ofP);
     if (rc != pfmSamplesPerRow)
-        pm_error("Unable to write to output file in the middle of row %d", 
+        pm_error("Unable to write to output file in the middle of row %d",
                  pfmRow);
 
 
@@ -238,9 +238,9 @@ static struct pfmHeader
 makePfmHeader(const struct pam * const pamP,
               float              const scaleFactor,
               enum endian        const endian) {
-    
+
     struct pfmHeader pfmHeader;
-    
+
     pfmHeader.width  = pamP->width;
     pfmHeader.height = pamP->height;
 
@@ -256,9 +256,10 @@ makePfmHeader(const struct pam * const pamP,
 
     pfmHeader.scaleFactor = scaleFactor;
     pfmHeader.endian = endian;
-        
+
     return pfmHeader;
 }
+
 
 
 int
@@ -282,11 +283,11 @@ main(int argc, char **argv ) {
 
     tuplenArray = pnm_readpamn(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
 
-    writePfmHeader(stdout, 
+    writePfmHeader(stdout,
                    makePfmHeader(&pam, cmdline.scale, cmdline.endian));
 
     pfmSamplesPerRow = pam.width * pam.depth;
-    
+
     MALLOCARRAY_NOFAIL(pfmRowBuffer, pfmSamplesPerRow);
 
     /* PFMs are upside down like BMPs */
@@ -297,9 +298,12 @@ main(int argc, char **argv ) {
 
     pnm_freepamarrayn(tuplenArray, &pam);
     free(pfmRowBuffer);
-    
+
     pm_close(stdout);
     pm_close(pam.file);
 
     return 0;
 }
+
+
+

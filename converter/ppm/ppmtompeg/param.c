@@ -241,6 +241,7 @@ ReadMachineNames(FILE * const fpointer)
 }
 
 
+
 /*===========================================================================*
  *
  * GetFrameRate
@@ -1042,6 +1043,7 @@ ReadParamFile(const char *         const fileName,
           SetPixelSearch("HALF");
   }
 }
+
 
 
 /*

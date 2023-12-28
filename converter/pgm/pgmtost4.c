@@ -76,7 +76,7 @@ main(int argc, const char * argv[]) {
     if (inpam.width != st4Width)
         pm_error("Image is wrong width for ST-4 SBIG: %u pixels.  "
                  "Must be %u", inpam.width, st4Width);
-    
+
     /* Really, we should just scale to maxval 255.  There are library routines
        for that, but we're too lazy even for that, since nobody is really
        going to use this program.
@@ -102,3 +102,6 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
+
+
+

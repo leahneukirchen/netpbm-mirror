@@ -71,9 +71,9 @@ parseCommandLine(int argc, char ** argv,
     const char *outnameOpt;
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "name",       OPT_STRING, &outnameOpt, 
+    OPTENT3(0, "name",       OPT_STRING, &outnameOpt,
             &outnameSpec,       0);
-    OPTENT3(0, "verbose",    OPT_FLAG,   NULL, 
+    OPTENT3(0, "verbose",    OPT_FLAG,   NULL,
             &cmdlineP->verbose, 0);
 
     opt.opt_table = option_def;
@@ -87,7 +87,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->inputFilespec = "-";  /* stdin */
     else if (argc-1 == 1)
         cmdlineP->inputFilespec = argv[1];
-    else 
+    else
         pm_error("Too many arguments (%d).  "
                  "Only need one: the input filespec", argc-1);
 
@@ -98,7 +98,7 @@ parseCommandLine(int argc, char ** argv,
 
         /* Remove trailing "_icon" */
         barPos = strrchr(cmdlineP->outname, '_');
-        if (barPos && streq(barPos, "_icon")) 
+        if (barPos && streq(barPos, "_icon"))
             *barPos = '\0';
     } else {
         if (streq(cmdlineP->inputFilespec, "-"))
@@ -118,11 +118,10 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-
 static char*
-genNumstr(int  const number, 
-          int  const base, 
-          char const low_char, 
+genNumstr(int  const number,
+          int  const base,
+          char const low_char,
           int  const digits ) {
 /*----------------------------------------------------------------------------
   Generate a string 'digits' characters long in newly malloc'ed
@@ -130,7 +129,7 @@ genNumstr(int  const number,
   the left with zero digits and truncate on the left if it doesn't fit.
 
   Use the characters 'low_char' to 'low_char' + 'base' to represent the
-  digits 0 to 'base'. 
+  digits 0 to 'base'.
 -----------------------------------------------------------------------------*/
     char* str;
     char* p;
@@ -156,11 +155,11 @@ genNumstr(int  const number,
 
 
 
-static const char * 
+static const char *
 uilName(const char * const rgbname,
         bool         const transparent) {
 /*----------------------------------------------------------------------------
-   Return a string in newly malloc'ed storage which is an appropriate 
+   Return a string in newly malloc'ed storage which is an appropriate
    color name for the UIL palette.  It is the same as the rgb name,
    except that blanks are replaced by underscores, and if 'transparent'
    is true, it is "background color".  The latter is a strange name of
@@ -176,7 +175,7 @@ uilName(const char * const rgbname,
         output = malloc(strlen(rgbname) + 5 + 1);
         if (output == NULL)
             pm_error( "out of memory allocating color name" );
-        
+
         for (i = 0; i < strlen(rgbname); ++i) {
             if (rgbname[i] == ' ')
                 output[i] = '_';
@@ -193,9 +192,9 @@ uilName(const char * const rgbname,
 
 static void
 genCmap(struct pam *   const pamP,
-        tupletable     const chv, 
-        unsigned int   const ncolors, 
-        cixel_map            cmap[MAXCOLORS], 
+        tupletable     const chv,
+        unsigned int   const ncolors,
+        cixel_map            cmap[MAXCOLORS],
         unsigned int * const charsppP,
         bool           const verbose) {
 
@@ -205,7 +204,7 @@ genCmap(struct pam *   const pamP,
     {
         /* Figure out how many characters per pixel we'll be using.
            Don't want to be forced to link with libm.a, so using a
-           division loop rather than a log function.  
+           division loop rather than a log function.
         */
         unsigned int i;
         for (*charsppP = 0, i = ncolors; i > 0; ++(*charsppP))
@@ -220,15 +219,15 @@ genCmap(struct pam *   const pamP,
         unsigned int indexOfName;
         bool transparent;
         int j;
-        
+
         if (pamP->depth-1 < PAM_TRN_PLANE)
             transparent = FALSE;
-        else 
-            transparent = 
+        else
+            transparent =
                 chv[colorIndex]->tuple[PAM_TRN_PLANE] < pamP->maxval/2;
 
         /* Generate color name string. */
-        colorname = pam_colorname(pamP, chv[colorIndex]->tuple, 
+        colorname = pam_colorname(pamP, chv[colorIndex]->tuple,
                                   PAM_COLORNAME_ENGLISH);
 
         /* We may have already assigned a character code to this color
@@ -236,11 +235,11 @@ genCmap(struct pam *   const pamP,
            two different colors because we said we wanted the closest
            matching color that has an English name, and we recognize
            only one transparent color.  If that's the case, we just
-           make a cross-reference.  
+           make a cross-reference.
         */
         nameAlreadyInCmap = FALSE;   /* initial assumption */
         for (j = 0; j < colorIndex; ++j) {
-            if (cmap[j].rgbname != NULL && 
+            if (cmap[j].rgbname != NULL &&
                 streq(colorname, cmap[j].rgbname) &&
                 cmap[j].transparent == transparent) {
                 nameAlreadyInCmap = TRUE;
@@ -257,15 +256,15 @@ genCmap(struct pam *   const pamP,
             cmap[colorIndex].rgbname = strdup(colorname);
             if (cmap[colorIndex].rgbname == NULL)
                 pm_error("out of memory allocating color name");
-            
+
             cmap[colorIndex].transparent = transparent;
-            
+
             /* Generate color value characters. */
-            cmap[colorIndex].cixel = 
+            cmap[colorIndex].cixel =
                 genNumstr(colorIndex, base, LOW_CHAR, *charsppP);
             if (verbose)
                 pm_message("Adding color '%s' %s = '%s' to UIL colormap",
-                           cmap[colorIndex].rgbname, 
+                           cmap[colorIndex].rgbname,
                            cmap[colorIndex].transparent ? "TRANS" : "OPAQUE",
                            cmap[colorIndex].cixel);
         }
@@ -286,8 +285,8 @@ writeUilHeader(const char * const outname) {
 
 
 static void
-writeColormap(const char * const outname, 
-              cixel_map          cmap[MAXCOLORS], 
+writeColormap(const char * const outname,
+              cixel_map          cmap[MAXCOLORS],
               unsigned int const ncolors) {
 
     {
@@ -297,8 +296,8 @@ writeColormap(const char * const outname,
         printf("\n");
         printf("value\n");
         for (i = 0; i < ncolors; ++i)
-            if (cmap[i].uilname != NULL && !cmap[i].transparent) 
-                printf("    %s : color( '%s' );\n", 
+            if (cmap[i].uilname != NULL && !cmap[i].transparent)
+                printf("    %s : color( '%s' );\n",
                        cmap[i].uilname, cmap[i].rgbname );
     }
     {
@@ -310,14 +309,14 @@ writeColormap(const char * const outname,
         printf("\n");
         printf("value\n");
         printf("  %s_rgb : color_table (\n", outname);
-        printedOne = FALSE; 
+        printedOne = FALSE;
         for (i = 0; i < ncolors; ++i)
             if (cmap[i].uilname != NULL) {
                 if (printedOne)
                     printf(",\n");
                 printf("    %s = '%s'", cmap[i].uilname, cmap[i].cixel);
                 printedOne = TRUE;
-            }     
+            }
         printf("\n");
         printf("    );\n");
     }
@@ -326,12 +325,12 @@ writeColormap(const char * const outname,
 
 
 static void
-writeRaster(struct pam *  const pamP, 
+writeRaster(struct pam *  const pamP,
             tuple **      const tuples,
             const char *  const outname,
-            cixel_map           cmap[MAXCOLORS], 
+            cixel_map           cmap[MAXCOLORS],
             unsigned int  const ncolors,
-            tuplehash     const cht, 
+            tuplehash     const cht,
             unsigned int  const charspp) {
 /*----------------------------------------------------------------------------
    Write out the ascii character-pixel image.
@@ -358,7 +357,7 @@ writeRaster(struct pam *  const pamP,
         if (row != pamP->height - 1)
             printf("',\n");
         else
-            printf("'\n"); 
+            printf("'\n");
     }
     printf(");\n");
     printf("\n");
@@ -433,3 +432,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

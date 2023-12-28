@@ -1152,7 +1152,8 @@ pm_seek2(FILE *             const fileP,
 
 
 void
-pm_seek(FILE * const fileP, unsigned long filepos) {
+pm_seek(FILE *        const fileP,
+        unsigned long const filepos) {
 /*----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 
@@ -1166,7 +1167,8 @@ pm_seek(FILE * const fileP, unsigned long filepos) {
 
 
 void
-pm_nextimage(FILE * const file, int * const eofP) {
+pm_nextimage(FILE * const file,
+             int *  const eofP) {
 /*----------------------------------------------------------------------------
    Position the file 'file' to the next image in the stream, assuming it is
    now positioned just after the current image.  I.e. read off any white

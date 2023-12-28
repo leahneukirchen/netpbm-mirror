@@ -653,6 +653,7 @@ pngx_setTextLangKey(png_text *   const textP,
 }
 
 
+
 void
 pngx_termText(png_text * const textP) {
 

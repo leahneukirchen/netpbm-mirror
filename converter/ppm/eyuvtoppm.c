@@ -1,6 +1,6 @@
 /* Bryan got this from mm.ftp-cs.berkeley.edu from the package
-   mpeg-encode-1.5b-src under the name eyuvtoppm.c on March 30, 2000.  
-   The file was dated April 14, 1995.  
+   mpeg-encode-1.5b-src under the name eyuvtoppm.c on March 30, 2000.
+   The file was dated April 14, 1995.
 
    Bryan rewrote the program entirely to match Netpbm coding style,
    use the Netpbm libraries and also to output to stdout and ignore
@@ -70,7 +70,7 @@ parseCommandLine(int argc, char ** argv,
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3('w', "width",     OPT_UINT,  &cmdlineP->width,   NULL,         0);
     OPTENT3('h', "height",    OPT_UINT,  &cmdlineP->height,  NULL,         0);
-    
+
     /* DEFAULTS */
     cmdlineP->width = 352;
     cmdlineP->height = 240;
@@ -93,7 +93,7 @@ parseCommandLine(int argc, char ** argv,
                  "You specified %u.", cmdlineP->height);
 
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -106,7 +106,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-static uint8 ** 
+static uint8 **
 allocUint8Array(unsigned int const cols,
                 unsigned int const rows) {
 
@@ -129,7 +129,7 @@ allocUint8Array(unsigned int const cols,
 
 
 
-static void 
+static void
 freeUint8Array(uint8 **     const array,
                unsigned int const rows) {
 
@@ -162,28 +162,28 @@ freeStorage(unsigned int const rows,
             uint8 **     const orig_y,
             uint8 **     const orig_cb,
             uint8 **     const orig_cr) {
-    
-    freeUint8Array(orig_y,  rows); 
-    freeUint8Array(orig_cb, rows); 
+
+    freeUint8Array(orig_y,  rows);
+    freeUint8Array(orig_cb, rows);
     freeUint8Array(orig_cr, rows);
 
 }
 
 
 
-static void 
+static void
 YUVtoPPM(FILE *       const ofP,
          unsigned int const cols,
          unsigned int const rows,
          uint8 **     const orig_y,
          uint8 **     const orig_cb,
-         uint8 **     const orig_cr) { 
+         uint8 **     const orig_cr) {
 /*----------------------------------------------------------------------------
    Convert the YUV image in arrays orig_y[][], orig_cb[][], and orig_cr[][]
    to a PPM image and write it to file *ofP.
 -----------------------------------------------------------------------------*/
     pixel * const pixrow = ppm_allocrow(cols);
-    
+
     unsigned int row;
 
     ppm_writeppminit(ofP, cols, rows, 255, FALSE);
@@ -202,11 +202,11 @@ YUVtoPPM(FILE *       const ofP,
             tempR = 104635*v + 76310*y;
             tempG = -25690*u + -53294*v + 76310*y;
             tempB = 132278*u + 76310*y;
-            
+
             r = CHOP((int)(tempR >> 16));
             g = CHOP((int)(tempG >> 16));
             b = CHOP((int)(tempB >> 16));
-            
+
             PPM_ASSIGN(pixrow[col], r, g, b);
         }
         ppm_writeppmrow(stdout, pixrow, cols, 255, FALSE);
@@ -216,12 +216,12 @@ YUVtoPPM(FILE *       const ofP,
 
 
 
-static void 
+static void
 ReadYUV(FILE *       const ifP,
         unsigned int const cols,
         unsigned int const rows,
-        uint8 **     const orig_y, 
-        uint8 **     const orig_cb, 
+        uint8 **     const orig_y,
+        uint8 **     const orig_cb,
         uint8 **     const orig_cr,
         bool *       const eofP) {
 
@@ -240,7 +240,7 @@ ReadYUV(FILE *       const ifP,
         if (bytesRead != cols)
             eof = true;
     }
-        
+
     for (row = 0; row < rows / 2 && !eof; ++row) {  /* U */
         size_t bytesRead;
 
@@ -249,7 +249,7 @@ ReadYUV(FILE *       const ifP,
         if (bytesRead != cols / 2)
             eof = true;
     }
-        
+
     for (row = 0; row < rows / 2 && !eof; ++row) { /* V */
         size_t bytesRead;
 
@@ -297,7 +297,7 @@ main(int argc, const char **argv) {
 
     for (frameSeq = 0, eof = false; !eof; ++frameSeq) {
 
-        ReadYUV(ifP, cmdline.width, cmdline.height, 
+        ReadYUV(ifP, cmdline.width, cmdline.height,
                 orig_y, orig_cb, orig_cr, &eof);
 
         if (!eof) {
@@ -315,5 +315,6 @@ main(int argc, const char **argv) {
 
     return 0;
 }
+
 
 

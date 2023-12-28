@@ -15,7 +15,7 @@ main(int     argc,
     Colormap defaultMap;
     unsigned int i;
     pixel pix;
-    
+
     defaultMap = palmcolor_build_default_8bit_colormap();
     qsort (defaultMap->color_entries, defaultMap->ncolors,
            sizeof(Color_s), palmcolor_compare_indices);
@@ -43,4 +43,6 @@ main(int     argc,
 
     return 0;
 }
+
+
 

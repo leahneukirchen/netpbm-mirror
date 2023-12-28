@@ -179,6 +179,8 @@ mpeg_jrevdct(data)
   else mpeg_jrevdct_quick(data);
 }
 
+
+
 /*
  * Perform the inverse DCT on one block of coefficients.
  */
@@ -1179,6 +1181,7 @@ mpeg_jrevdct_quick(data)
 }
 
 
+
 /* here is the reference one, in case of problems with the normal one */
 
 /* idctref.c, Inverse Discrete Fourier Transform, double precision          */
@@ -1273,3 +1276,6 @@ int16 *block;
       block[8*i+j] = (v<-256) ? -256 : ((v>255) ? 255 : v);
     }
 }
+
+
+

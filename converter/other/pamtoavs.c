@@ -39,6 +39,7 @@ sample2char(sample const s,
 }
 
 
+
 #define THIS_SAMPLE_CHAR(PLANE) \
   sample2char(tuplerow[col][PLANE], pamP->maxval)
 
@@ -147,4 +148,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
 

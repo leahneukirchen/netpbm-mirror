@@ -2,7 +2,7 @@
                                 pnmindex
 ==============================================================================
 
-  build a visual index of a bunch of PNM images
+  Build a visual index of a bunch of PNM images.
 
   This used to be a C shell program, and then a BASH program.  Neither
   were portable enough, and the program is too complex for either of
@@ -32,6 +32,7 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "pm_system.h"
 #include "pnm.h"
 
 struct CmdlineInfo {
@@ -50,57 +51,6 @@ struct CmdlineInfo {
 };
 
 static bool verbose;
-
-
-
-static void PM_GNU_PRINTF_ATTR(1,2)
-systemf(const char * const fmt,
-        ...) {
-
-    va_list varargs;
-
-    size_t dryRunLen;
-
-    va_start(varargs, fmt);
-
-    dryRunLen = vsnprintf(NULL, 0, fmt, varargs);
-
-    va_end(varargs);
-
-    if (dryRunLen + 1 < dryRunLen)
-        /* arithmetic overflow */
-        pm_error("Command way too long");
-    else {
-        size_t const allocSize = dryRunLen + 1;
-        char * shellCommand;
-        shellCommand = malloc(allocSize);
-        if (shellCommand == NULL)
-            pm_error("Can't get storage for %u-character command",
-                     (unsigned)allocSize);
-        else {
-            va_list varargs;
-            size_t realLen;
-            int rc;
-
-            va_start(varargs, fmt);
-
-            realLen = vsnprintf(shellCommand, allocSize, fmt, varargs);
-
-            assert(realLen == dryRunLen);
-            va_end(varargs);
-
-            if (verbose)
-                pm_message("shell cmd: %s", shellCommand);
-
-            rc = system(shellCommand);
-            if (rc != 0)
-                pm_error("shell command '%s' failed.  rc %d",
-                         shellCommand, rc);
-
-            pm_strfree(shellCommand);
-        }
-    }
-}
 
 
 
@@ -170,7 +120,7 @@ shellQuote(const char * const arg) {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 
     unsigned int option_def_index;
@@ -206,19 +156,28 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (quant && cmdlineP->noquant)
-        pm_error("You can't specify both -quant and -noquat");
+        pm_error("You can't specify both -quant and -noquant");
 
-    if (!colorsSpec)
+    if (colorsSpec) {
+        if (cmdlineP->colors == 0)
+            pm_error("-colors value must be positive");
+    } else
         cmdlineP->colors = 256;
 
-    if (!sizeSpec)
+    if (sizeSpec) {
+        if (cmdlineP->size == 0)
+            pm_error("-size value must be positive");
+    } else
         cmdlineP->size = 100;
 
-    if (!acrossSpec)
+    if (acrossSpec) {
+        if (cmdlineP->across == 0)
+            pm_error("-across value must be positive");
+    } else
         cmdlineP->across = 6;
 
     if (!titleSpec)
@@ -340,85 +299,118 @@ static void
 makeTitle(const char * const title,
           unsigned int const rowNumber,
           bool         const blackBackground,
-          const char * const tempDir) {
+          const char * const dirNm) {
+/*----------------------------------------------------------------------------
+   Create a PBM file containing the text 'title'.
 
+   If 'blackBackground' is true, make it white on black; otherwise, black
+   on white.
+
+   Name the file like a thumbnail row file for row number 'rowNumber',
+   in directory named 'dirNm'.
+-----------------------------------------------------------------------------*/
     const char * const invertStage = blackBackground ? "| pnminvert " : "";
-    const char * const titleToken  = shellQuote(title);
 
     const char * fileName;
+    FILE * outFP;
+    struct bufferDesc titleBuf;
+    const char * shellCommand;
+    int termStatus;
 
-    fileName = rowFileName(tempDir, rowNumber);
+    titleBuf.size              = strlen(title);
+    titleBuf.buffer            = (unsigned char *)title;
+    titleBuf.bytesTransferredP = NULL;
 
-    /* This quoting is not adequate.  We really should do this without
-       a shell at all.
-    */
-    systemf("pbmtext %s %s > %s",
-            titleToken, invertStage, fileName);
-
+    fileName = rowFileName(dirNm, rowNumber);
+    outFP = pm_openw(fileName);
     pm_strfree(fileName);
-    pm_strfree(titleToken);
+
+    pm_asprintf(&shellCommand, "pbmtext %s", invertStage);
+
+    pm_system2(&pm_feed_from_memory, &titleBuf,
+               &pm_accept_to_filestream, outFP,
+               shellCommand, &termStatus);
+
+    pm_strfree(shellCommand);
+
+    if (termStatus != 0)
+        pm_error("Failed to generate title image");
+
+    pm_close(outFP);
 }
 
 
 
 static void
-copyImage(const char * const inputFileName,
-          const char * const outputFileName) {
+copyImage(const char * const inputFileNm,
+          const char * const outputFileNm) {
 
-    const char * const inputFileNmToken = shellQuote(inputFileName);
+    int termStatus;
 
-    systemf("cat %s > %s", inputFileNmToken, outputFileName);
+    pm_system2_lp("cat",
+                  &pm_feed_from_file, (void*)inputFileNm,
+                  &pm_accept_to_file, (void*)outputFileNm,
+                  &termStatus,
+                  "cat", NULL);
 
-    pm_strfree(inputFileNmToken);
+    if (termStatus != 0)
+        pm_error("'cat' to copy image '%s' to '%s' failed, "
+                 "termination status = %d",
+                 inputFileNm, outputFileNm, termStatus);
 }
 
 
 
 static void
-copyScaleQuantImage(const char * const inputFileName,
-                    const char * const outputFileName,
+copyScaleQuantImage(const char * const inputFileNm,
+                    const char * const outputFileNm,
                     int          const format,
                     unsigned int const size,
                     unsigned int const quant,
-                    unsigned int const colors) {
-
-    const char * const inputFileNmToken = shellQuote(inputFileName);
+                    unsigned int const colorCt) {
 
     const char * scaleCommand;
+    int termStatus;
 
     switch (PNM_FORMAT_TYPE(format)) {
     case PBM_TYPE:
         pm_asprintf(&scaleCommand,
-                    "pamscale -quiet -xysize %u %u %s "
-                    "| pgmtopbm > %s",
-                    size, size, inputFileNmToken, outputFileName);
+                    "pamscale -quiet -xysize %u %u "
+                    "| pamditherbw",
+                    size, size);
         break;
 
     case PGM_TYPE:
         pm_asprintf(&scaleCommand,
-                    "pamscale -quiet -xysize %u %u %s >%s",
-                    size, size, inputFileNmToken, outputFileName);
+                    "pamscale -quiet -xysize %u %u",
+                    size, size);
         break;
 
     case PPM_TYPE:
         if (quant)
             pm_asprintf(&scaleCommand,
-                        "pamscale -quiet -xysize %u %u %s "
-                        "| pnmquant -quiet %u > %s",
-                        size, size, inputFileNmToken, colors, outputFileName);
+                        "pamscale -quiet -xysize %u %u "
+                        "| pnmquant -quiet %u ",
+                        size, size, colorCt);
         else
             pm_asprintf(&scaleCommand,
-                        "pamscale -quiet -xysize %u %u %s >%s",
-                        size, size, inputFileNmToken, outputFileName);
+                        "pamscale -quiet -xysize %u %u ",
+                        size, size);
         break;
     default:
         pm_error("Unrecognized Netpbm format: %d", format);
     }
 
-    systemf("%s", scaleCommand);
+    pm_system2(pm_feed_from_file, (void*)inputFileNm,
+               pm_accept_to_file, (void*)outputFileNm,
+               scaleCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_message("Shell command '%s' failed.  Termination status=%d",
+                   scaleCommand, termStatus);
 
     pm_strfree(scaleCommand);
-    pm_strfree(inputFileNmToken);
 }
 
 
@@ -485,10 +477,10 @@ thumbnailFileList(const char * const dirName,
 
 
 static void
-makeImageFile(const char * const thumbnailFileName,
-              const char * const inputFileName,
+makeImageFile(const char * const thumbnailFileNm,
+              const char * const inputFileNm,
               bool         const blackBackground,
-              const char * const outputFileName) {
+              const char * const outputFileNm) {
 /*----------------------------------------------------------------------------
    Create one thumbnail image.  It consists of the image in the file named
    'thumbnailFileName' with text of that name appended to the bottom.
@@ -501,15 +493,34 @@ makeImageFile(const char * const thumbnailFileName,
 -----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
     const char * const invertStage   = blackBackground ? "| pnminvert " : "";
-    const char * inputFileNmToken    = shellQuote(inputFileName);
+    const char * const thumbnailFileNmToken = shellQuote(thumbnailFileNm);
 
-    systemf("pbmtext %s %s"
-            "| pamcat %s -topbottom %s - "
-            "> %s",
-            inputFileNmToken, invertStage, blackWhiteOpt,
-            thumbnailFileName, outputFileName);
+    struct bufferDesc fileNmBuf;
+    const char * shellCommand;
+    int termStatus;
 
-    pm_strfree(inputFileNmToken);
+    fileNmBuf.size              = strlen(inputFileNm);
+    fileNmBuf.buffer            = (unsigned char *)inputFileNm;
+    fileNmBuf.bytesTransferredP = NULL;
+
+    pm_asprintf(&shellCommand,
+                "pbmtext "
+                "%s"
+                "| pamcat %s -topbottom %s - ",
+                invertStage, blackWhiteOpt, thumbnailFileNmToken);
+
+    pm_system2(&pm_feed_from_memory, &fileNmBuf,
+               &pm_accept_to_file, (void*)outputFileNm,
+               shellCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_error("Shell command '%s' to add file name to thumbnail image "
+                 "of file '%s' failed, termination Status = %d",
+                 shellCommand, inputFileNm, termStatus);
+
+    pm_strfree(thumbnailFileNmToken);
+    pm_strfree(shellCommand);
 }
 
 
@@ -519,17 +530,18 @@ makeThumbnail(const char *  const inputFileName,
               unsigned int  const size,
               bool          const black,
               bool          const quant,
-              unsigned int  const colors,
+              unsigned int  const colorCt,
               const char *  const tempDir,
               unsigned int  const row,
               unsigned int  const col,
               int *         const formatP) {
 
+    const char * const fileName = thumbnailFileName(tempDir, row, col);
+
     FILE * ifP;
     int imageCols, imageRows, format;
     xelval maxval;
     const char * tmpfile;
-    const char * fileName;
 
     ifP = pm_openr(inputFileName);
     pnm_readpnminit(ifP, &imageCols, &imageRows, &maxval, &format);
@@ -541,9 +553,7 @@ makeThumbnail(const char *  const inputFileName,
         copyImage(inputFileName, tmpfile);
     else
         copyScaleQuantImage(inputFileName, tmpfile, format,
-                            size, quant, colors);
-
-    fileName = thumbnailFileName(tempDir, row, col);
+                            size, quant, colorCt);
 
     makeImageFile(tmpfile, inputFileName, black, fileName);
 
@@ -594,40 +604,66 @@ unlinkRowFiles(const char * const dirName,
 
 static void
 combineIntoRowAndDelete(unsigned int const row,
-                        unsigned int const cols,
+                        unsigned int const colCt,
                         int          const maxFormatType,
                         bool         const blackBackground,
                         bool         const quant,
-                        unsigned int const colors,
+                        unsigned int const colorCt,
                         const char * const tempDir) {
+/*----------------------------------------------------------------------------
+   Combine the 'colCt' thumbnails for row 'row' into a PNM file in directory
+   'tempDir'.
 
+   Each thumbnail is from a specially named file in 'tempDir' whose name
+   indicates its position in the row, and the output is also specially named
+   with a name indicating it is row 'row'.
+
+   Where the thumnails are different heights, pad with black if
+   'blackBackground' is true; white otherwise.
+
+   If 'quant', color-quantize the result to have no more than 'colorCt'
+   colors, choosing the colors that best represent all the pixels in the
+   result.
+
+   'maxFormatType' is the most expressive format of all the thumbnail files;
+   results are undefined if it is not.
+-----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
+    const char * const fileNm        = rowFileName(tempDir, row);
 
-    const char * fileName;
     const char * quantStage;
     const char * fileList;
+    const char * shellCommand;
+    int termStatus;
 
-    fileName = rowFileName(tempDir, row);
-
-    unlink(fileName);
+    unlink(fileNm);
 
     if (maxFormatType == PPM_TYPE && quant)
-        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colors);
+        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colorCt);
     else
         quantStage = strdup("");
 
-    fileList = thumbnailFileList(tempDir, row, cols);
+    fileList = thumbnailFileList(tempDir, row, colCt);
 
-    systemf("pamcat %s -leftright -jbottom %s "
-            "%s"
-            ">%s",
-            blackWhiteOpt, fileList, quantStage, fileName);
+    pm_asprintf(&shellCommand, "pamcat %s -leftright -jbottom %s "
+                "%s",
+                blackWhiteOpt, fileList, quantStage);
+
+    pm_system2(&pm_feed_null, NULL,
+               &pm_accept_to_file, (void*)fileNm,
+               shellCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_error("Shell command '%s' to create row of thumbnails failed.  "
+                 "Termination status = %d", shellCommand, termStatus);
 
     pm_strfree(fileList);
     pm_strfree(quantStage);
-    pm_strfree(fileName);
+    pm_strfree(fileNm);
+    pm_strfree(shellCommand);
 
-    unlinkThumbnailFiles(tempDir, row, cols);
+    unlinkThumbnailFiles(tempDir, row, colCt);
 }
 
 
@@ -666,38 +702,70 @@ rowFileList(const char * const dirName,
 
 
 static void
-writeRowsAndDelete(unsigned int const rows,
+writeRowsAndDelete(unsigned int const rowCt,
                    int          const maxFormatType,
                    bool         const blackBackground,
                    bool         const quant,
-                   unsigned int const colors,
+                   unsigned int const colorCt,
                    const char * const tempDir) {
+/*----------------------------------------------------------------------------
+   Write the PNM image containing the 'rowCt' rows of thumbnails to Standard
+   Output.  Take each row of thumbnails from a specially named PNM file in
+   directory 'tempDir', and unlink it from that directory.
 
+   Where the rows are different widths, pad with black if 'blackBackground'
+   is true; white otherwise.
+
+   If 'quant', color-quantize the result to have no more than 'colorCt'
+   colors, choosing the colors that best represent all the pixels in the
+   result.
+
+   'maxFormatType' is the most expressive format of all the row files; results
+   are undefined if it is not.
+-----------------------------------------------------------------------------*/
     const char * const blackWhiteOpt = blackBackground ? "-black" : "-white";
+    const char * const plainOpt      = pm_plain_output ? "-plain" : "";
 
     const char * quantStage;
     const char * fileList;
+    const char * shellCommand;
+    int termStatus;
 
     if (maxFormatType == PPM_TYPE && quant)
-        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colors);
+        pm_asprintf(&quantStage, "| pnmquant -quiet %u ", colorCt);
     else
         quantStage = strdup("");
 
-    fileList = rowFileList(tempDir, rows);
+    fileList = rowFileList(tempDir, rowCt);
 
-    systemf("pamcat %s -topbottom %s %s",
-            blackWhiteOpt, fileList, quantStage);
+    pm_asprintf(&shellCommand, "pamcat %s %s -topbottom %s %s",
+                plainOpt, blackWhiteOpt, fileList, quantStage);
 
+    /* Do pamcat/pnmquant command with no Standard Input and writing to
+       our Standard Output
+    */
+    pm_system2(&pm_feed_null, NULL,
+               NULL, NULL,
+               shellCommand,
+               &termStatus);
+
+    if (termStatus != 0)
+        pm_error("Shell command '%s' to assemble %u rows of thumbnails and "
+                 "write them out failed; termination status = %d",
+                 shellCommand, rowCt, termStatus);
+
+    pm_strfree(shellCommand);
     pm_strfree(fileList);
     pm_strfree(quantStage);
 
-    unlinkRowFiles(tempDir, rows);
+    unlinkRowFiles(tempDir, rowCt);
 }
 
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
+
     struct CmdlineInfo cmdline;
     const char * tempDir;
     int maxFormatType;
@@ -705,7 +773,7 @@ main(int argc, char *argv[]) {
     unsigned int rowsDone;
     unsigned int i;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -713,14 +781,15 @@ main(int argc, char *argv[]) {
 
     makeTempDir(&tempDir);
 
-    maxFormatType = PBM_TYPE;
-    colsInRow = 0;
-    rowsDone = 0;
+    rowsDone = 0;  /* initial value */
 
     if (cmdline.title)
         makeTitle(cmdline.title, rowsDone++, cmdline.black, tempDir);
 
-    for (i = 0; i < cmdline.inputFileCount; ++i) {
+    for (i = 0, colsInRow = 0, maxFormatType = PBM_TYPE;
+         i < cmdline.inputFileCount;
+         ++i) {
+
         const char * const inputFileName = cmdline.inputFileName[i];
 
         int format;
@@ -753,6 +822,5 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
-
 
 
