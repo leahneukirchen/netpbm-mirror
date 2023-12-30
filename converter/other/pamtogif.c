@@ -118,7 +118,7 @@ pamAlphaPlane(struct pam * const pamP) {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Parse the program arguments (given by argc and argv) into a form
@@ -172,7 +172,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)
@@ -316,7 +316,7 @@ rowReader_destroy(RowReader * const rdrP) {
 
 
 static void
-rowReaderSkipRows(RowReader *  const rdrP,
+rowReader_skipRows(RowReader *  const rdrP,
                   unsigned int const rowCount,
                   bool *       const eofP) {
 /*----------------------------------------------------------------------------
@@ -347,7 +347,7 @@ rowReaderSkipRows(RowReader *  const rdrP,
 
 
 static void
-rowReaderGotoNextInterlaceRow(RowReader * const rdrP) {
+rowReader_gotoNextInterlaceRow(RowReader * const rdrP) {
 /*----------------------------------------------------------------------------
   Position reader to the next row in the interlace pattern, assuming it
   is now positioned immediately after the current row.
@@ -363,16 +363,16 @@ rowReaderGotoNextInterlaceRow(RowReader * const rdrP) {
 
     switch (rdrP->pass) {
     case MULT8PLUS0:
-        rowReaderSkipRows(rdrP, 7, &endOfPass);
+        rowReader_skipRows(rdrP, 7, &endOfPass);
         break;
     case MULT8PLUS4:
-        rowReaderSkipRows(rdrP, 7, &endOfPass);
+        rowReader_skipRows(rdrP, 7, &endOfPass);
         break;
     case MULT4PLUS2:
-        rowReaderSkipRows(rdrP, 3, &endOfPass);
+        rowReader_skipRows(rdrP, 3, &endOfPass);
         break;
     case MULT2PLUS1:
-        rowReaderSkipRows(rdrP, 1, &endOfPass);
+        rowReader_skipRows(rdrP, 1, &endOfPass);
         break;
     }
 
@@ -387,15 +387,15 @@ rowReaderGotoNextInterlaceRow(RowReader * const rdrP) {
         switch (rdrP->pass) {
         case MULT8PLUS0:
             rdrP->pass = MULT8PLUS4;
-            rowReaderSkipRows(rdrP, 4, &endOfPass);
+            rowReader_skipRows(rdrP, 4, &endOfPass);
             break;
         case MULT8PLUS4:
             rdrP->pass = MULT4PLUS2;
-            rowReaderSkipRows(rdrP, 2, &endOfPass);
+            rowReader_skipRows(rdrP, 2, &endOfPass);
             break;
         case MULT4PLUS2:
             rdrP->pass = MULT2PLUS1;
-            rowReaderSkipRows(rdrP, 1, &endOfPass);
+            rowReader_skipRows(rdrP, 1, &endOfPass);
             break;
         case MULT2PLUS1:
             rdrP->eof = TRUE;
@@ -407,7 +407,7 @@ rowReaderGotoNextInterlaceRow(RowReader * const rdrP) {
 
 
 static void
-rowReaderGotoNextStraightRow(RowReader * const rdrP) {
+rowReader_gotoNextStraightRow(RowReader * const rdrP) {
 /*----------------------------------------------------------------------------
   Position reader to the next row in a straight, non-interlace
   pattern, assuming the file is now positioned immediately after the
@@ -434,9 +434,9 @@ rowReader_read(RowReader * const rdrP,
     ++rdrP->nextRow;
 
     if (rdrP->interlace)
-        rowReaderGotoNextInterlaceRow(rdrP);
+        rowReader_gotoNextInterlaceRow(rdrP);
     else
-        rowReaderGotoNextStraightRow(rdrP);
+        rowReader_gotoNextStraightRow(rdrP);
 }
 
 
@@ -1270,6 +1270,165 @@ writePixelUncompressed(LzwCompressor * const lzwP,
 
 
 static void
+writeGlobalColorMap(FILE *              const ofP,
+                    const struct Cmap * const cmapP,
+                    unsigned int        const bitsPerPixel) {
+/*----------------------------------------------------------------------------
+  Write out the Global Color Map
+
+  Note that the Global Color Map is always a power of two colors
+  in size, but *cmapP could be smaller than that.  So we pad with
+  black.
+-----------------------------------------------------------------------------*/
+    unsigned int const colorMapSize = 1 << bitsPerPixel;
+
+    struct pam pam;
+    unsigned int i;
+    tuple tupleRgb255;
+
+    if (verbose)
+        pm_message("Writing %u-entry global colormap for %u colors",
+                   colorMapSize, cmapP->cmapSize);
+
+    pam = cmapP->pam;
+    pam.size = PAM_STRUCT_SIZE(allocation_depth);
+    pam.len = pam.size;
+    pnm_setminallocationdepth(&pam, 3);
+
+    tupleRgb255 = pnm_allocpamtuple(&pam);
+
+    for (i = 0; i < colorMapSize; ++i) {
+        if (i < cmapP->cmapSize) {
+            tuple const color = cmapP->color[i];
+
+            assert(i < cmapP->cmapSize);
+
+            pnm_scaletuple(&pam, tupleRgb255, color, 255);
+            pnm_maketuplergb(&pam, tupleRgb255);
+
+            fputc(tupleRgb255[PAM_RED_PLANE], ofP);
+            fputc(tupleRgb255[PAM_GRN_PLANE], ofP);
+            fputc(tupleRgb255[PAM_BLU_PLANE], ofP);
+        } else {
+            fputc(0, ofP);
+            fputc(0, ofP);
+            fputc(0, ofP);
+        }
+    }
+    pnm_freepamtuple(tupleRgb255);
+}
+
+
+
+static void
+reportImageInfo(bool         const interlace,
+                unsigned int const background,
+                unsigned int const bitsPerPixel) {
+
+    if (verbose) {
+        if (interlace)
+            pm_message("interlaced");
+        else
+            pm_message("not interlaced");
+        pm_message("Background color index = %u", background);
+        pm_message("%u bits per pixel", bitsPerPixel);
+    }
+}
+
+
+
+static void
+writeGifHeader(FILE *              const ofP,
+               unsigned int        const width,
+               unsigned int        const height,
+               unsigned int        const background,
+               unsigned int        const bitsPerPixel,
+               const struct Cmap * const cmapP,
+               char                const comment[],
+               float               const aspect) {
+
+    unsigned int const resolution = bitsPerPixel;
+
+    unsigned char b;
+
+    /* Write the Magic header */
+    if (cmapP->haveTransparent || comment || aspect != 1.0 )
+        fwrite("GIF89a", 1, 6, ofP);
+    else
+        fwrite("GIF87a", 1, 6, ofP);
+
+    /* Write out the screen width and height */
+    Putword(width,  ofP);
+    Putword(height, ofP);
+
+    /* Indicate that there is a global color map */
+    b = 0x80;       /* Yes, there is a color map */
+
+    /* OR in the resolution */
+    b |= (resolution - 1) << 4;
+
+    /* OR in the Bits per Pixel */
+    b |= (bitsPerPixel - 1);
+
+    /* Write it out */
+    fputc(b, ofP);
+
+    /* Write out the Background color */
+    assert((unsigned char)background == background);
+    fputc(background, ofP);
+
+    {
+        int const aspectValue = aspect == 1.0 ? 0 : ROUND(aspect * 64) - 15;
+        assert(0 <= aspectValue && aspectValue <= 255);
+        fputc(aspectValue, ofP);
+    }
+    writeGlobalColorMap(ofP, cmapP, bitsPerPixel);
+
+    if (cmapP->haveTransparent)
+        writeTransparentColorIndexExtension(ofP, cmapP->transparent);
+
+    if (comment)
+        writeCommentExtension(ofP, comment);
+}
+
+
+
+static void
+writeImageSeparator(FILE * const ofP) {
+
+    fputc(',', ofP);
+
+}
+
+
+
+static void
+writeImageHeader(FILE *       const ofP,
+                 unsigned int const leftOffset,
+                 unsigned int const topOffset,
+                 unsigned int const gWidth,
+                 unsigned int const gHeight,
+                 bool         const gInterlace,
+                 unsigned int const initCodeSize) {
+
+    Putword(leftOffset, ofP);
+    Putword(topOffset,  ofP);
+    Putword(gWidth,     ofP);
+    Putword(gHeight,    ofP);
+
+    /* Write out whether or not the image is interlaced */
+    if (gInterlace)
+        fputc(0x40, ofP);
+    else
+        fputc(0x00, ofP);
+
+    /* Write out the initial code size */
+    fputc(initCodeSize, ofP);
+}
+
+
+
+static void
 writeRaster(struct pam *  const pamP,
             RowReader *   const rowReaderP,
             unsigned int  const alphaPlane,
@@ -1353,168 +1512,36 @@ writeRaster(struct pam *  const pamP,
 
 
 static void
-writeGlobalColorMap(FILE *              const ofP,
-                    const struct Cmap * const cmapP,
-                    unsigned int        const bitsPerPixel) {
-/*----------------------------------------------------------------------------
-  Write out the Global Color Map
+writeEndOfImage(FILE * const ofP) {
 
-  Note that the Global Color Map is always a power of two colors
-  in size, but *cmapP could be smaller than that.  So we pad with
-  black.
------------------------------------------------------------------------------*/
-    unsigned int const colorMapSize = 1 << bitsPerPixel;
+    /* An empty block marks the end of a series of blocks */
 
-    struct pam pam;
-    unsigned int i;
-    tuple tupleRgb255;
-
-    if (verbose)
-        pm_message("Writing %u-entry global colormap for %u colors",
-                   colorMapSize, cmapP->cmapSize);
-
-    pam = cmapP->pam;
-    pam.size = PAM_STRUCT_SIZE(allocation_depth);
-    pam.len = pam.size;
-    pnm_setminallocationdepth(&pam, 3);
-
-    tupleRgb255 = pnm_allocpamtuple(&pam);
-
-    for (i = 0; i < colorMapSize; ++i) {
-        if (i < cmapP->cmapSize) {
-            tuple const color = cmapP->color[i];
-
-            assert(i < cmapP->cmapSize);
-
-            pnm_scaletuple(&pam, tupleRgb255, color, 255);
-            pnm_maketuplergb(&pam, tupleRgb255);
-
-            fputc(tupleRgb255[PAM_RED_PLANE], ofP);
-            fputc(tupleRgb255[PAM_GRN_PLANE], ofP);
-            fputc(tupleRgb255[PAM_BLU_PLANE], ofP);
-        } else {
-            fputc(0, ofP);
-            fputc(0, ofP);
-            fputc(0, ofP);
-        }
-    }
-    pnm_freepamtuple(tupleRgb255);
+    fputc(0, ofP);
 }
 
 
 
 static void
-writeGifHeader(FILE *              const ofP,
-               unsigned int        const width,
-               unsigned int        const height,
-               unsigned int        const background,
-               unsigned int        const bitsPerPixel,
-               const struct Cmap * const cmapP,
-               char                const comment[],
-               float               const aspect) {
+writeGifStreamTerminator(FILE * const ofP) {
 
-    unsigned int const resolution = bitsPerPixel;
-
-    unsigned char b;
-
-    /* Write the Magic header */
-    if (cmapP->haveTransparent || comment || aspect != 1.0 )
-        fwrite("GIF89a", 1, 6, ofP);
-    else
-        fwrite("GIF87a", 1, 6, ofP);
-
-    /* Write out the screen width and height */
-    Putword(width,  ofP);
-    Putword(height, ofP);
-
-    /* Indicate that there is a global color map */
-    b = 0x80;       /* Yes, there is a color map */
-
-    /* OR in the resolution */
-    b |= (resolution - 1) << 4;
-
-    /* OR in the Bits per Pixel */
-    b |= (bitsPerPixel - 1);
-
-    /* Write it out */
-    fputc(b, ofP);
-
-    /* Write out the Background color */
-    assert((unsigned char)background == background);
-    fputc(background, ofP);
-
-    {
-        int const aspectValue = aspect == 1.0 ? 0 : ROUND(aspect * 64) - 15;
-        assert(0 <= aspectValue && aspectValue <= 255);
-        fputc(aspectValue, ofP);
-    }
-    writeGlobalColorMap(ofP, cmapP, bitsPerPixel);
-
-    if (cmapP->haveTransparent)
-        writeTransparentColorIndexExtension(ofP, cmapP->transparent);
-
-    if (comment)
-        writeCommentExtension(ofP, comment);
+    fputc(';', ofP);
 }
 
 
 
 static void
-writeImageHeader(FILE *       const ofP,
-                 unsigned int const leftOffset,
-                 unsigned int const topOffset,
-                 unsigned int const gWidth,
-                 unsigned int const gHeight,
-                 bool         const gInterlace,
-                 unsigned int const initCodeSize) {
-
-    Putword(leftOffset, ofP);
-    Putword(topOffset,  ofP);
-    Putword(gWidth,     ofP);
-    Putword(gHeight,    ofP);
-
-    /* Write out whether or not the image is interlaced */
-    if (gInterlace)
-        fputc(0x40, ofP);
-    else
-        fputc(0x00, ofP);
-
-    /* Write out the initial code size */
-    fputc(initCodeSize, ofP);
-}
-
-
-
-static void
-reportImageInfo(bool         const interlace,
-                unsigned int const background,
-                unsigned int const bitsPerPixel) {
-
-    if (verbose) {
-        if (interlace)
-            pm_message("interlaced");
-        else
-            pm_message("not interlaced");
-        pm_message("Background color index = %u", background);
-        pm_message("%u bits per pixel", bitsPerPixel);
-    }
-}
-
-
-
-static void
-gifEncode(struct pam *  const pamP,
-          FILE *        const ofP,
-          pm_filepos    const rasterPos,
-          bool          const gInterlace,
-          int           const background,
-          unsigned int  const bitsPerPixel,
-          struct Cmap * const cmapP,
-          char          const comment[],
-          float         const aspect,
-          bool          const lzw,
-          bool          const noclear,
-          bool          const usingAlpha) {
+writeGifImage(struct pam *  const pamP,
+              FILE *        const ofP,
+              pm_filepos    const rasterPos,
+              bool          const gInterlace,
+              int           const background,
+              unsigned int  const bitsPerPixel,
+              struct Cmap * const cmapP,
+              char          const comment[],
+              float         const aspect,
+              bool          const lzw,
+              bool          const noclear,
+              bool          const usingAlpha) {
 /*----------------------------------------------------------------------------
    'usingAlpha' means use the alpha (transparency) plane, if there is one, to
    determine which GIF pixels are transparent.  When this is true, the
@@ -1548,26 +1575,19 @@ gifEncode(struct pam *  const pamP,
     writeGifHeader(ofP, pamP->width, pamP->height, background,
                    bitsPerPixel, cmapP, comment, aspect);
 
-    /* Write an Image separator */
-    fputc(',', ofP);
+    writeImageSeparator(ofP);
 
     writeImageHeader(ofP, leftOffset, topOffset, pamP->width, pamP->height,
                      gInterlace, initCodeSize);
 
     rowReaderP = rowReader_create(pamP, rasterPos, gInterlace);
 
-    /* Write the actual raster */
-
     writeRaster(pamP, rowReaderP, alphaPlane, alphaThreshold,
                 cmapP, initCodeSize + 1, ofP, lzw, noclear);
 
     rowReader_destroy(rowReaderP);
 
-    /* Write out a zero length data block (to end the series) */
-    fputc(0, ofP);
-
-    /* Write the GIF file terminator */
-    fputc(';', ofP);
+    writeEndOfImage(ofP);
 }
 
 
@@ -1985,7 +2005,8 @@ destroyCmap(struct Cmap * const cmapP) {
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
+
     struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam pam;
@@ -2000,7 +2021,7 @@ main(int argc, char *argv[]) {
            TRANS_ALPHA.
         */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -2033,13 +2054,14 @@ main(int argc, char *argv[]) {
 
     computeTransparent(transType, cmdline.transparent, fakeTransparent, &cmap);
 
-    /* All set, let's do it. */
-    gifEncode(&pam, stdout, rasterPos,
-              cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-              cmdline.aspect, !cmdline.nolzw, cmdline.noclear,
-              transType==TRANS_ALPHA);
+    writeGifImage(&pam, stdout, rasterPos,
+                  cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
+                  cmdline.aspect, !cmdline.nolzw, cmdline.noclear,
+                  transType==TRANS_ALPHA);
 
     destroyCmap(&cmap);
+
+    writeGifStreamTerminator(stdout);
 
     pm_close(ifP);
     pm_close(stdout);
