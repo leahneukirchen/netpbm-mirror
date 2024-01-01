@@ -1530,18 +1530,18 @@ writeGifStreamTerminator(FILE * const ofP) {
 
 
 static void
-writeGifImage(struct pam *  const pamP,
-              FILE *        const ofP,
-              pm_filepos    const rasterPos,
-              bool          const gInterlace,
-              int           const background,
-              unsigned int  const bitsPerPixel,
-              struct Cmap * const cmapP,
-              char          const comment[],
-              float         const aspect,
-              bool          const lzw,
-              bool          const noclear,
-              bool          const usingAlpha) {
+writeGif(struct pam *  const pamP,
+         FILE *        const ofP,
+         pm_filepos    const rasterPos,
+         bool          const gInterlace,
+         int           const background,
+         unsigned int  const bitsPerPixel,
+         struct Cmap * const cmapP,
+         char          const comment[],
+         float         const aspect,
+         bool          const lzw,
+         bool          const noclear,
+         bool          const usingAlpha) {
 /*----------------------------------------------------------------------------
    'usingAlpha' means use the alpha (transparency) plane, if there is one, to
    determine which GIF pixels are transparent.  When this is true, the
@@ -1588,6 +1588,8 @@ writeGifImage(struct pam *  const pamP,
     rowReader_destroy(rowReaderP);
 
     writeEndOfImage(ofP);
+
+    writeGifStreamTerminator(ofP);
 }
 
 
@@ -2054,14 +2056,12 @@ main(int argc, const char ** argv) {
 
     computeTransparent(transType, cmdline.transparent, fakeTransparent, &cmap);
 
-    writeGifImage(&pam, stdout, rasterPos,
-                  cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-                  cmdline.aspect, !cmdline.nolzw, cmdline.noclear,
-                  transType==TRANS_ALPHA);
+    writeGif(&pam, stdout, rasterPos,
+             cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
+             cmdline.aspect, !cmdline.nolzw, cmdline.noclear,
+             transType==TRANS_ALPHA);
 
     destroyCmap(&cmap);
-
-    writeGifStreamTerminator(stdout);
 
     pm_close(ifP);
     pm_close(stdout);
