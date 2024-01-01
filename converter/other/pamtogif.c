@@ -212,9 +212,9 @@ Putword(int const w, FILE * const fp) {
 
 
 static int
-closestColor(tuple         const color,
-             struct pam *  const pamP,
-             struct Cmap * const cmapP) {
+closestColor(tuple               const color,
+             struct pam *        const pamP,
+             const struct Cmap * const cmapP) {
 /*----------------------------------------------------------------------------
    Return the colormap index of the color in the colormap *cmapP
    that is closest to the color 'color', whose format is specified by
@@ -442,11 +442,11 @@ rowReader_read(RowReader * const rdrP,
 
 
 static unsigned int
-gifPixel(struct pam *   const pamP,
-         tuple          const tuple,
-         unsigned int   const alphaPlane,
-         sample         const alphaThreshold,
-         struct Cmap *  const cmapP) {
+gifPixel(struct pam *        const pamP,
+         tuple               const tuple,
+         unsigned int        const alphaPlane,
+         sample              const alphaThreshold,
+         const struct Cmap * const cmapP) {
 /*----------------------------------------------------------------------------
    Return the colormap index of the tuple 'tuple', whose format is described
    by *pamP, using colormap *cmapP.
@@ -1429,15 +1429,15 @@ writeImageHeader(FILE *       const ofP,
 
 
 static void
-writeRaster(struct pam *  const pamP,
-            RowReader *   const rowReaderP,
-            unsigned int  const alphaPlane,
-            unsigned int  const alphaThreshold,
-            struct Cmap * const cmapP,
-            unsigned int  const initBits,
-            FILE *        const ofP,
-            bool          const lzw,
-            bool          const noclear) {
+writeRaster(struct pam *        const pamP,
+            RowReader *         const rowReaderP,
+            unsigned int        const alphaPlane,
+            unsigned int        const alphaThreshold,
+            const struct Cmap * const cmapP,
+            unsigned int        const initBits,
+            FILE *              const ofP,
+            bool                const lzw,
+            bool                const noclear) {
 /*----------------------------------------------------------------------------
    Write the raster to file 'ofP'.
 
@@ -1522,33 +1522,17 @@ writeEndOfImage(FILE * const ofP) {
 
 
 static void
-writeGifStreamTerminator(FILE * const ofP) {
-
-    fputc(';', ofP);
-}
-
-
-
-static void
-writeGif(struct pam *  const pamP,
-         FILE *        const ofP,
-         pm_filepos    const rasterPos,
-         bool          const gInterlace,
-         int           const background,
-         unsigned int  const bitsPerPixel,
-         struct Cmap * const cmapP,
-         char          const comment[],
-         float         const aspect,
-         bool          const lzw,
-         bool          const noclear,
-         bool          const usingAlpha) {
-/*----------------------------------------------------------------------------
-   'usingAlpha' means use the alpha (transparency) plane, if there is one, to
-   determine which GIF pixels are transparent.  When this is true, the
-   colormap *cmapP must contain a transparent entry.
------------------------------------------------------------------------------*/
-    unsigned int const leftOffset = 0;
-    unsigned int const topOffset  = 0;
+writeGifImage(FILE *              const ofP,
+              unsigned int        const leftOffset,
+              unsigned int        const topOffset,
+              struct pam *        const pamP,
+              pm_filepos          const rasterPos,
+              bool                const gInterlace,
+              unsigned int        const bitsPerPixel,
+              bool                const lzw,
+              bool                const noclear,
+              bool                const usingAlpha,
+              const struct Cmap * const cmapP) {
 
     unsigned int const initCodeSize = bitsPerPixel <= 1 ? 2 : bitsPerPixel;
         /* The initial code size */
@@ -1561,19 +1545,6 @@ writeGif(struct pam *  const pamP,
     unsigned int const alphaPlane = usingAlpha ? pamAlphaPlane(pamP) : 0;
 
     RowReader * rowReaderP;
-
-    reportImageInfo(gInterlace, background, bitsPerPixel);
-
-    if (pamP->width > 65535)
-        pm_error("Image width %u too large for GIF format.  (Max 65535)",
-                 pamP->width);
-
-    if (pamP->height > 65535)
-        pm_error("Image height %u too large for GIF format.  (Max 65535)",
-                 pamP->height);
-
-    writeGifHeader(ofP, pamP->width, pamP->height, background,
-                   bitsPerPixel, cmapP, comment, aspect);
 
     writeImageSeparator(ofP);
 
@@ -1588,6 +1559,55 @@ writeGif(struct pam *  const pamP,
     rowReader_destroy(rowReaderP);
 
     writeEndOfImage(ofP);
+}
+
+
+
+static void
+writeGifStreamTerminator(FILE * const ofP) {
+
+    fputc(';', ofP);
+}
+
+
+
+static void
+writeGif(struct pam *        const pamP,
+         FILE *              const ofP,
+         pm_filepos          const rasterPos,
+         bool                const gInterlace,
+         int                 const background,
+         unsigned int        const bitsPerPixel,
+         const struct Cmap * const cmapP,
+         char                const comment[],
+         float               const aspect,
+         bool                const lzw,
+         bool                const noclear,
+         bool                const usingAlpha) {
+/*----------------------------------------------------------------------------
+   'usingAlpha' means use the alpha (transparency) plane, if there is one, to
+   determine which GIF pixels are transparent.  When this is true, the
+   colormap *cmapP must contain a transparent entry.
+-----------------------------------------------------------------------------*/
+    unsigned int const leftOffset = 0;
+    unsigned int const topOffset  = 0;
+
+    reportImageInfo(gInterlace, background, bitsPerPixel);
+
+    if (pamP->width > 65535)
+        pm_error("Image width %u too large for GIF format.  (Max 65535)",
+                 pamP->width);
+
+    if (pamP->height > 65535)
+        pm_error("Image height %u too large for GIF format.  (Max 65535)",
+                 pamP->height);
+
+    writeGifHeader(ofP, pamP->width, pamP->height, background,
+                   bitsPerPixel, cmapP, comment, aspect);
+
+    writeGifImage(ofP, leftOffset, topOffset, pamP, rasterPos,
+                  gInterlace, bitsPerPixel, lzw, noclear, usingAlpha,
+                  cmapP);
 
     writeGifStreamTerminator(ofP);
 }
@@ -1596,7 +1616,7 @@ writeGif(struct pam *  const pamP,
 
 static void
 reportTransparent(enum TransparencyType const transType,
-                  struct Cmap *         const cmapP) {
+                  const struct Cmap *   const cmapP) {
 
     if (verbose) {
         switch (transType) {
