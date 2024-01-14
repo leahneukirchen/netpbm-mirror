@@ -27,25 +27,8 @@ ppmpat -madras --color=rgb:00/00/00,rgb:31/58/a3,rgb:ff/ff/ff 25 25 | \
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+. ${srcdir}/test-invalid.inc
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-ppmhist -hexcolor -float testimg.ppm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmhist -hexcolor -map   testimg.ppm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmhist -float    -map   testimg.ppm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "ppmhist -hexcolor -float testimg.ppm"
+invCmd "ppmhist -hexcolor -map   testimg.ppm"
+invCmd "ppmhist -float    -map   testimg.ppm"

@@ -21,27 +21,16 @@ pgmramp -diagonal -maxval=510 256 256 | cksum
 
 echo "Test Invalid"
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
 
 for combination in "-lr -tb" "-lr -rectangle" "-rectangle -ellipse"
-do pgmramp $combination 10 10 > ${test_out} || \
-  printf "Expected failure: $combination "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-done
+  do
+    invCmd "pgmramp ${combination} 10 10"
+  done
 
-pgmramp -lr     1 > ${test_out} || \
-  printf "Expected failure: insufficient parameters "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pgmramp -lr 10 0"
+invCmd "pgmramp -lr 0 10"
+invCmd "pgmramp -lr 1"
+invCmd "pgmramp -tb 1 1 1"
 
-pgmramp -tb 1 1 1 > ${test_out} || \
-  printf "Expected failure: excessive parameters "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}

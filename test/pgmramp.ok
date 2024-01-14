@@ -42,8 +42,10 @@ Test 2
 Test 3
 886972785 131087
 Test Invalid
-Expected failure: -lr -tb (no output)
-Expected failure: -lr -rectangle (no output)
-Expected failure: -rectangle -ellipse (no output)
-Expected failure: insufficient parameters (no output)
-Expected failure: excessive parameters (no output)
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)

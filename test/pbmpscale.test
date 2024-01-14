@@ -25,27 +25,10 @@ pbmtext -nomargin "9" | pbmpscale 9 | cksum
 echo "Test 10. Should print 3327221668 2111"
 pbmtext -nomargin "10" | pbmpscale 10 | cksum
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
-
 echo "Test Invalid"
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
-pbmpscale testgrid.pbm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pbmpscale 0 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pbmpscale 2 3 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pbmpscale testgrid.pbm"
+invCmd "pbmpscale 0 testgrid.pbm"
+invCmd "pbmpscale 2 3 testgrid.pbm"

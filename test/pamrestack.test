@@ -58,34 +58,10 @@ pamrestack \
 test_out=${tmpdir}/test_out
 echo "Test Invalid."
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
-pamrestack testgrid.pbm maze.pbm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamrestack -abort \
-  -width=$((pixels * 2 + 1 )) maze.pbm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamrestack -crop \
-  -width=$((pixels * 2 + 1)) maze.pbm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamrestack -width=0 maze.pbm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamrestack -width maze.pbm > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamrestack testgrid.pbm maze.pbm"
+invCmd "pamrestack -abort -width=$((pixels * 2 + 1 )) maze.pbm"
+invCmd "pamrestack -crop -width=$((pixels * 2 + 1)) maze.pbm"
+invCmd "pamrestack -width=0 maze.pbm"
+invCmd "pamrestack -width maze.pbm"

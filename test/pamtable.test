@@ -46,17 +46,10 @@ for maxval in 9 10 9999 10000 65535
 
 echo "Test Invalid"
 
-test_out=${tmpdir}/test.out
+. ${srcdir}/test-invalid.inc
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+input1_pam=${tmpdir}/input1.pam
 
-echo "Should print: Expected failure (no output)"
-
-pamseq -tupletype="void" 1 1 | pamtable -tuple -hex > \
-  ${test_out} || \
-  printf "Expected failure "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+pamseq -tupletype="void" 1 1 > ${input1_pam}
+invCmd "pamtable -tuple -hex ${input1_pam}"
+rm ${input1_pam}

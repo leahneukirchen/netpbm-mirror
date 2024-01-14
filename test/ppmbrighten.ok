@@ -4,8 +4,6 @@ Test 2: Should print 295150171 101484
 295150171 101484
 Test 3: Should print 1
 1
-Test Error: Should print 1 four times
-1
-1
-1
-1
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)

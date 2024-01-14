@@ -1,7 +1,7 @@
 #! /bin/sh
 # This script tests: pnmindex
 # Also requires: pamcat pamscale pbmtext pnmcolormap pnmindex
-# Also requires: pnminvert pnmquant pnmremap 
+# Also requires: pnminvert pnmquant pnmremap
 
 echo "Test 1. Should print 3391481002 889"
 pnmindex maze.pbm | cksum
@@ -31,30 +31,17 @@ pnmindex -size 50 -across=2 -noquant testimg.ppm testimg.ppm testimg.ppm \
 
 echo "Test Invalid"
 
-test_out=${tmpdir}/test_out
-n=1
+. ${srcdir}/test-invalid.inc
 
-# define function
-invalidCmd () { $1 > ${test_out} && printf "Unexpected success $n " || \
-  printf "Expected failure $n "
-  test -s ${test_out} && echo "(unexpected output)" || echo "(no output)"
-  rm -f ${test_out}
-  n=$(($n + 1)); }
-
-echo 1>&2
-echo "Invalid command-line arguments." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-invalidCmd "pnmindex -size -1 testgrid.pbm"
-invalidCmd "pnmindex -size  0 testgrid.pbm"
-invalidCmd "pnmindex -size    testgrid.pbm"
-invalidCmd "pnmindex -across -1 testgrid.pbm"
-invalidCmd "pnmindex -across  0 testgrid.pbm"
-invalidCmd "pnmindex -across    testgrid.pbm"
-invalidCmd "pnmindex -colors -1 testgrid.pbm"
-invalidCmd "pnmindex -colors  0 testgrid.pbm"
-invalidCmd "pnmindex -colors    testgrid.pbm"
-invalidCmd "pnmindex -quant -noquant testgrid.pbm"
-invalidCmd "pnmindex -colors 100 -noquant testgrid.pbm"
-invalidCmd "pnmindex"
+invCmd "pnmindex -size -1 testgrid.pbm"
+invCmd "pnmindex -size  0 testgrid.pbm"
+invCmd "pnmindex -size    testgrid.pbm"
+invCmd "pnmindex -across -1 testgrid.pbm"
+invCmd "pnmindex -across  0 testgrid.pbm"
+invCmd "pnmindex -across    testgrid.pbm"
+invCmd "pnmindex -colors -1 testgrid.pbm"
+invCmd "pnmindex -colors  0 testgrid.pbm"
+invCmd "pnmindex -colors    testgrid.pbm"
+invCmd "pnmindex -quant -noquant testgrid.pbm"
+invCmd "pnmindex -colors 100 -noquant testgrid.pbm"
+invCmd "pnmindex"

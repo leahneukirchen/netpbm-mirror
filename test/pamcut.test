@@ -30,7 +30,7 @@ echo "Test 5. Should print 281226646 481 five times"
 mazesize=$(pamfile -size maze.pbm)
 width=$(echo ${mazesize} | cut -d " " -f 1)
 height=$(echo ${mazesize} | cut -d " " -f 2)
- 
+
 pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 maze.pbm | \
   cksum
 pamcut -top 0 -left 0 -bottom $((${height} -1)) -right $((${width} -1)) \
@@ -38,7 +38,7 @@ pamcut -top 0 -left 0 -bottom $((${height} -1)) -right $((${width} -1)) \
 pamcut -top 0 -left 0 -bottom -1 -right -1 maze.pbm | cksum
 pamcut -top 0 -left 0 -width ${width} -height ${height} maze.pbm | cksum
 pamcut maze.pbm | cksum
- 
+
 echo "Test 6.  Should print 3412257956 129"
 
 pbmmake -g 50 50 | pamcut 5 5 30 30 | cksum
@@ -46,89 +46,25 @@ pbmmake -g 50 50 | pamcut 5 5 30 30 | cksum
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
-
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
 # overspecification
-pamcut -left=1 -right=1 -width=14 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -top=1 -bottom=1 -height=16 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -right=1 -cropright=1 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -top=1 -croptop=1 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -bottom=1 -cropbottom=1 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -left=1 -cropleft=1 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-# excessive cropping
-pamcut -cropleft=7 -cropright=8 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -left=7 -right=6 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -croptop=8 -cropbottom=8 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 9 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -top=10 -bottom=9 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamcut -left=1 -right=1 -width=14 testgrid.pbm"
+invCmd "pamcut -top=1 -bottom=1 -height=16 testgrid.pbm"
+invCmd "pamcut -right=1 -cropright=1 testgrid.pbm"
+invCmd "pamcut -top=1 -croptop=1 testgrid.pbm"
+invCmd "pamcut -bottom=1 -cropbottom=1 testgrid.pbm"
+invCmd "pamcut -left=1 -cropleft=1 testgrid.pbm"
+invCmd "pamcut -cropleft=7 -cropright=8 testgrid.pbm"
+invCmd "pamcut -left=7 -right=6 testgrid.pbm"
+invCmd "pamcut -croptop=8 -cropbottom=8 testgrid.pbm"
+invCmd "pamcut -top=10 -bottom=9 testgrid.pbm"
 
 # pad absent
-pamcut -cropleft=1 -width=14 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 10 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut -croptop=1  -height=16 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 11 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamcut -cropleft=1 -width=14 testgrid.pbm"
+invCmd "pamcut -croptop=1  -height=16 testgrid.pbm"
 
 # legacy style: insufficient number of positional parameters
-pamcut 5 testimg.ppm > ${test_out} || \
-  printf "Expected failure 12 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut 5 4 testimg.ppm > ${test_out} || \
-  printf "Expected failure 13 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamcut 5 5 30 testimg.ppm > ${test_out} || \
-  printf "Expected failure 14 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamcut 5 testimg.ppm"
+invCmd "pamcut 5 4 testimg.ppm"
+invCmd "pamcut 5 5 30 testimg.ppm"

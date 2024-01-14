@@ -50,7 +50,7 @@ esac
 # invoke, the list of tests to run ('Test-Order'), and *.ok files that
 # indicate the expected results of tests.
 
-srcdir=$(dirname $0)
+export srcdir=$(dirname $0)
 
 # Set tmpdir, which is used in some of the test scripts.  By default
 # this is created by mktemp.  The user can override and specify tmpdir,

@@ -1,4 +1,16 @@
 Test 1
+P2
+1 1
+255
+0
+P2
+1 1
+255
+255
+P2
+1 1
+2
+1
 3662611538 2513
 3109612402 5012
 Test Invalid
@@ -10,3 +22,4 @@ Expected failure 5 (no output)
 Expected failure 6 (no output)
 Expected failure 7 (no output)
 Expected failure 8 (no output)
+Expected failure 9 (no output)

@@ -34,15 +34,6 @@ pamhue -huechange=360 testimg.ppm | cmp -s - testimg.ppm
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+. ${srcdir}/test-invalid.inc
 
-echo 1>&2
-echo "Omission of mandatory argument." 1>&2
-echo "An error message should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-pamhue testimg.ppm  > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamhue testimg.ppm "

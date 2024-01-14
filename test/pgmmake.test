@@ -4,56 +4,22 @@
 
 echo "Test 1"
 
+pgmmake -plain 0 1 1
+pgmmake -plain 1 1 1
+pgmmake -plain -maxval=2 0.5 1 1
 pgmmake 1 50 50 | cksum
 pgmmake .2 50 100 -maxval=5 | cksum
 
-
 echo "Test Invalid"
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
-
-pgmmake 100  5 5 > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pgmmake 1.01 5 5 > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pgmmake .5   5   > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pgmmake .5       > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pgmmake -maxval=5        5 5 > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pgmmake -maxval=0     .5 5 5 > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pgmmake -maxval=-1    .5 5 5 > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pgmmake -maxval=65536 .5 5 5 > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pgmmake"
+invCmd "pgmmake 100  5 5"
+invCmd "pgmmake 1.01 5 5"
+invCmd "pgmmake .5   5"
+invCmd "pgmmake .5"
+invCmd "pgmmake -maxval=5        5 5"
+invCmd "pgmmake -maxval=0     .5 5 5"
+invCmd "pgmmake -maxval=-1    .5 5 5"
+invCmd "pgmmake -maxval=65536 .5 5 5"
