@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+24.01.28 BJH  Release 11.05.02
+
+              ppmtowinicon: fix array overrun with 4 and 8 bits per pixel.
+              Broken in Netpbm 11.05 (December 2023).
+
 23.12.28 BJH  Release 11.05.01
 
               Fix typo in ppmforge test case.
