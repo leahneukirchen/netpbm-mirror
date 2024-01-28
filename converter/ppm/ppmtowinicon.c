@@ -402,9 +402,9 @@ newBitmap(unsigned int    const bpp,
           unsigned int    const rows,
           colorhash_table const cht) {
 
-    unsigned int const xByteCt = ROUNDUP(cols, 32)/8;
-       /* How wide the u1 string for each row should be -- Each byte is 8
-          pixels, but must be a multiple of 4 bytes.
+    unsigned int const xByteCt = ROUNDUP(cols * bpp, 32)/8;
+       /* How wide the u1 string for each row should be.  Pixels are packed
+          into bytes, padded to a multiple of 4 bytes.
        */
     ICON_bmp * icBitmapP;  /* malloc'ed */
     u1 ** rowData;  /* malloc'ed */
