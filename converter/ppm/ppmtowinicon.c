@@ -272,14 +272,14 @@ fillInRaster1(u1 **           const rowData,
 
     for (row = 0; row <rows; ++row) {
         u1 * thisRow;  /* malloc'ed */
-        unsigned int byteOn;
-        unsigned int bitOn;
+        unsigned int byteSeq;
+        unsigned int bitOnMask;
 
         MALLOCARRAY_NOFAIL(thisRow, xByteCt);
-        memset (thisRow, 0, xByteCt);
+        memset(thisRow, 0, xByteCt);  /* initial value */
         rowData[rows - row - 1] = thisRow;
-        byteOn =   0;  /* initial value */
-        bitOn  = 128;  /* initial value */
+        byteSeq   = 0;    /* initial value */
+        bitOnMask = 0x80; /* initial value */
 
         if (pa) {
             unsigned int col;
@@ -291,16 +291,19 @@ fillInRaster1(u1 **           const rowData,
                    Unless the hashing function changes, 0's black.
                 */
                 int const value = ppm_lookupcolor(cht, &pa[row][col]);
+
+                assert(byteSeq < xByteCt);
+
                 if (!value) {
                     /* leave black. */
                 } else {
-                    thisRow[byteOn] |= bitOn;
+                    thisRow[byteSeq] |= bitOnMask;
                 }
-                if (bitOn == 1) {
-                    ++byteOn;
-                    bitOn = 128;
+                if (bitOnMask == 0x1) {
+                    ++byteSeq;
+                    bitOnMask = 0x80;
                 } else {
-                    bitOn >>= 1;
+                    bitOnMask >>= 1;
                 }
             }
         } else {
@@ -323,15 +326,15 @@ fillInRaster4(u1 **           const rowData,
 
     for (row = 0; row < rows; ++row) {
         u1 * thisRow;
-        unsigned int byteOn;
-        unsigned int nibble;   /* high nibble = 1, low nibble = 0; */
+        unsigned int byteSeq;
+        unsigned int nibbleSig;   /* high nibble = 1, low nibble = 0; */
 
         MALLOCARRAY_NOFAIL(thisRow, xByteCt);
 
         memset(thisRow, 0, xByteCt);
         rowData[rows - row - 1] = thisRow;
-        byteOn = 0;  /* initial value */
-        nibble = 1;  /* initial value */
+        byteSeq   = 0;  /* initial value */
+        nibbleSig = 1;  /* initial value */
 
         if (pa) {
             unsigned int col;
@@ -339,16 +342,18 @@ fillInRaster4(u1 **           const rowData,
             for (col = 0; col < cols; ++col) {
                 int value;
 
+                assert(byteSeq < xByteCt);
+
                 value = ppm_lookupcolor(cht, &pa[row][col]);  /* init value */
                 /* Shift it, if we're putting it in the high nibble. */
-                if (nibble)
+                if (nibbleSig == 1)
                     value <<= 4;
-                thisRow[byteOn] |= value;
-                if (nibble == 1)
-                    nibble = 0;
+                thisRow[byteSeq] |= value;
+                if (nibbleSig == 1)
+                    nibbleSig = 0;
                 else {
-                    nibble = 1;
-                    ++byteOn;
+                    nibbleSig = 1;
+                    ++byteSeq;
                 }
             }
         } else {
@@ -372,8 +377,10 @@ fillInRaster8(u1 **           const rowData,
     for (row = 0; row < rows; ++row) {
         u1 * thisRow;  /* malloc'ed */
 
+        assert(cols <= xByteCt);
+
         MALLOCARRAY_NOFAIL(thisRow, xByteCt);
-        memset (thisRow, 0, xByteCt);
+        memset(thisRow, 0, xByteCt);
         rowData[rows - row - 1] = thisRow;
         if (pa) {
             unsigned int col;
