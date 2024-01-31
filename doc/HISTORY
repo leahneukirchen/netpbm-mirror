@@ -9,6 +9,8 @@ not yet  BJH  Release 11.06.00
               ppmtowinicon: fix array overrun with 4 and 8 bits per pixel.
               Broken in Netpbm 11.05 (December 2023).
 
+              pamseq: fix typo in error message.
+
               build: makeman: fix warning about backslashes in strings.
 
 23.12.28 BJH  Release 11.05.00
