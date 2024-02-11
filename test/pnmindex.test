@@ -3,6 +3,9 @@
 # Also requires: pamcat pamscale pbmtext pnmcolormap pnmindex
 # Also requires: pnminvert pnmquant pnmremap
 
+tmpdir=${tmpdir:-/tmp}
+pnmindex256_ppm=${tmpdir}/pnmindex256.ppm
+
 echo "Test 1. Should print 3391481002 889"
 pnmindex maze.pbm | cksum
 
@@ -17,16 +20,26 @@ echo "Test 4. Should print 1397700642 3160"
 pnmindex -size 20 -across=3 testgrid.pbm testgrid.pbm testgrid.pbm \
          testgrid.pbm testgrid.pbm testgrid.pbm | cksum
 
-echo "Test 5. Should print 2303488589 28514"
-pnmindex testimg.ppm | cksum
+echo "Test 5. Should print 243472565 28514"
+pnmindex -noquant testimg.ppm | cksum
 
-echo "Test 6. Should print 1706277976 100455"
-pnmindex -size 50 -across=2 testimg.ppm testimg.ppm testimg.ppm \
-         testimg.ppm testimg.ppm testimg.ppm | cksum
-
-echo "Test 7. Should print 801388440 100455"
+echo "Test 6. Should print 801388440 100455"
 pnmindex -size 50 -across=2 -noquant testimg.ppm testimg.ppm testimg.ppm \
-         testimg.ppm testimg.ppm testimg.ppm | cksum
+         testimg.ppm testimg.ppm testimg.ppm | tee ${pnmindex256_ppm} | cksum
+
+echo "Test 7. Should print 256 twice"
+pnmindex testimg.ppm | ppmhist -nomap -noheader | wc -l
+pnmindex -colors 256 testimg.ppm | ppmhist -nomap -noheader | wc -l
+
+echo "Test 8. Should print 100 twice"
+pnmindex -colors 100 testimg.ppm | ppmhist -nomap -noheader | wc -l
+pnmindex -colors 100 testimg.ppm testimg.ppm | ppmhist -nomap -noheader | wc -l
+
+
+echo "Test 9. Should print match"
+pnmindex -size 50 -across=2 -quant -colors=256 testimg.ppm testimg.ppm testimg.ppm \
+         testimg.ppm testimg.ppm testimg.ppm |\
+    pnmpsnr -rgb -target1=41.31 -target2=40.76 -target3=40.71 ${pnmindex256_ppm} -
 
 
 echo "Test Invalid"
