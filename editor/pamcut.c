@@ -533,7 +533,7 @@ writeBlackRows(const struct pam * const outpamP,
 
 
 
-struct rowCutter {
+typedef struct {
 /*----------------------------------------------------------------------------
    This is an object that gives you pointers you can use to effect the
    horizontal cutting and padding of a row just by doing one
@@ -575,7 +575,7 @@ struct rowCutter {
     tuple * copyTuples;
     tuple blackTuple;
     tuple discardTuple;
-};
+} RowCutter;
 
 
 
@@ -592,13 +592,13 @@ struct rowCutter {
 
 
 static void
-createRowCutter(const struct pam *  const inpamP,
-                const struct pam *  const outpamP,
-                int                 const leftcol,
-                int                 const rightcol,
-                struct rowCutter ** const rowCutterPP) {
+createRowCutter(const struct pam * const inpamP,
+                const struct pam * const outpamP,
+                int                const leftcol,
+                int                const rightcol,
+                RowCutter **       const rowCutterPP) {
 
-    struct rowCutter * rowCutterP;
+    RowCutter * rowCutterP;
     tuple * inputPointers;
     tuple * outputPointers;
     tuple * copyTuples;
@@ -662,7 +662,7 @@ createRowCutter(const struct pam *  const inpamP,
 
 
 static void
-destroyRowCutter(struct rowCutter * const rowCutterP) {
+destroyRowCutter(RowCutter * const rowCutterP) {
 
     pnm_freepamrow(rowCutterP->copyTuples);
     pnm_freepamtuple(rowCutterP->blackTuple);
@@ -683,7 +683,7 @@ extractRowsGen(const struct pam * const inpamP,
                int                const toprow,
                int                const bottomrow) {
 
-    struct rowCutter * rowCutterP;
+    RowCutter * rowCutterP;
     int row;
 
     /* Write out top padding */
