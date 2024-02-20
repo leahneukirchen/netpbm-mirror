@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.06.00
 
+              pamcut: add -reportonly.
+
               ppmtowinicon: fix array overrun with 4 and 8 bits per pixel.
               Broken in Netpbm 11.05 (December 2023).
 

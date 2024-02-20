@@ -74,6 +74,7 @@ struct CmdlineInfo {
     unsigned int heightSpec;
     unsigned int height;
     unsigned int pad;
+    unsigned int reportonly;
     unsigned int verbose;
 };
 
@@ -185,6 +186,8 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0,   "height",     OPT_UINT,   &cmdlineP->height,
             &cmdlineP->heightSpec,      0);
     OPTENT3(0,   "pad",        OPT_FLAG,   NULL, &cmdlineP->pad,           0);
+    OPTENT3(0,   "reportonly", OPT_FLAG,   NULL,
+            &cmdlineP->reportonly, 0);
     OPTENT3(0,   "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,       0);
 
     opt.opt_table = option_def;
@@ -461,6 +464,41 @@ rejectOutOfBounds(unsigned int const cols,
         pm_error("You have specified a top edge (%d) that is below "
                  "the bottom edge you specified (%d)",
                  toprow, bottomrow);
+}
+
+
+
+static void
+reportCuts(int const leftCol,
+           int const rghtCol,
+           int const topRow,
+           int const botRow) {
+
+    /* N.B. negative column/row number means pad */
+
+    unsigned int const newWidth  = rghtCol - leftCol + 1;
+    unsigned int const newHeight = botRow  - topRow  + 1;
+
+    assert (rghtCol >= leftCol);
+    assert (botRow  >= topRow );
+
+    printf("%d %d %d %d %u %u\n",
+           leftCol, rghtCol, topRow, botRow, newWidth, newHeight);
+}
+
+
+
+static void
+drainRaster(const struct pam * const inpamP) {
+/*----------------------------------------------------------------------------
+   Read through the input image described by *inpamP, which is positioned
+   to the raster, so the input stream is properly positioned for whatever
+   is next.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
+
+    for (row = 0; row < inpamP->height; ++row)
+        pnm_readpamrow(inpamP, NULL);
 }
 
 
@@ -797,17 +835,24 @@ cutOneImage(FILE *             const ifP,
                    toprow, leftcol, bottomrow, rightcol);
     }
 
-    outpam = inpam;    /* Initial value -- most fields should be same */
-    outpam.file   = ofP;
-    outpam.width  = rightcol - leftcol + 1;
-    outpam.height = bottomrow - toprow + 1;
+    if (cmdline.reportonly) {
+        reportCuts(leftcol, rightcol, toprow, bottomrow);
+        drainRaster(&inpam);
+    } else {
+        outpam = inpam;    /* Initial value -- most fields should be same */
+        outpam.file   = ofP;
+        outpam.width  = rightcol - leftcol + 1;
+        outpam.height = bottomrow - toprow + 1;
 
-    pnm_writepaminit(&outpam);
+        pnm_writepaminit(&outpam);
 
-    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
-        extractRowsPBM(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
-    else
-        extractRowsGen(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
+        if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
+            extractRowsPBM(&inpam, &outpam,
+                           leftcol, rightcol, toprow, bottomrow);
+        else
+            extractRowsGen(&inpam, &outpam,
+                           leftcol, rightcol, toprow, bottomrow);
+    }
 }
 
 
@@ -838,3 +883,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
