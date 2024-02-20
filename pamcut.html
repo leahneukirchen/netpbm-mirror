@@ -35,6 +35,8 @@ pamcut - cut a rectangle out of a PAM, PBM, PGM, or PPM image
 
 [<b>-cropbottom </b><i>numrows</i>]
 
+[<b>-reportonly</b>]
+
 [<b>-verbose</b>]
 
 [<i>left</i> <i>top</i> <i>width</i> <i>height</i>]
@@ -188,6 +190,41 @@ background image of the frame dimensions and overlay the subject image
 on it.  You can use options to have the subject image in the center of
 the frame or against any edge and make the padding any color (the padding
 color is the color of the background image).
+
+<dt><b>-reportonly</b>
+<dd>
+  This causes <b>pamcut</b> to write to Standard Output a description of the
+  cutting it would have done instead of producing an output image.  See
+  <a href="#reportonly">below</a> for a description of this output and ways
+  to use it.
+
+<p>That description is one line of text, containing 6 decimal numbers of
+  pixels, separated by spaces:
+
+<ol>
+  <li>column number of left cut
+  <li>column number of right cut
+  <li>row number of top cut
+  <li>row number of bottom cut
+  <li>output width
+  <li>output height
+</ol>
+
+<p>The column number of the left cut is the column number in the input image
+of the leftmost column of the output image.  for the right cut, it is for
+the rightmost column of the output.  Top and bottom are analogous.
+
+<p><em>The column and row numbers can be negative.</em>  This means you
+specified <b>-pad</b> and <b>pamcut</b> would have added padding there.
+
+<p>Example:
+  <pre>
+    <span style="font-family: monospace">
+      4 3 -1 2 100 100
+    </span>
+  </pre>
+  
+<p>This option was new in Netpbm 11.06 (March 2024).
 
 <dt><b>-verbose</b>
 
