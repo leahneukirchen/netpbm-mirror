@@ -2,7 +2,7 @@
 <html><head><title>Pstopnm User Manual</title></head>
 <body>
 <h1>pstopnm</h1>
-Updated: 06 December 2013
+Updated: 21 February 2024
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -63,7 +63,7 @@ from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pstopnm</b> reads a PostScript file as input and produces PBM,
+<p><b>pstopnm</b> reads a PostScript or PDF file as input and produces PBM,
 PGM, or PPM images as output.  This program simply uses GhostScript to
 render a PostScript file with its PNM device drivers.  If you don't
 have GhostScript installed or the version you have installed was not
@@ -293,6 +293,15 @@ wouldn't use those in a program).
 <p>Note that Ghostscript bugs can keep this from doing a perfect
 reversible conversion.
 
+<p>PDF is a subset of Postscript, so <b>pstopnm</b> can convert from PDF to
+Netpbm format, but often produces the wrong size image because of
+<b>pstopnm</b>&apos;s reliance on a BoundingBox DSC statement, which PDF does
+not have.  With pure text PDFs, it works fine.  In other cases, you can get
+better results by converting to general Postscript with the <b>pdf2ps</b>
+program that comes with Ghostscript.  For more information about converting to
+and from PDF, see
+<a href="index.html#document">Document/Graphics Software</a>.
+  
 
 <h2 id="options">OPTIONS</h2>
 
