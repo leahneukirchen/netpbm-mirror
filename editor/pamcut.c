@@ -321,6 +321,55 @@ near(Location     const loc,
 
 
 static void
+computeCutBoundsOneDim(unsigned int const origSz,
+                       Location     const nearArg,
+                       Location     const farArg,
+                       bool         const dimSpec,
+                       unsigned int const dimArg,
+                       int *        const nearLocP,
+                       int *        const farLocP) {
+/*----------------------------------------------------------------------------
+   Do one dimension (vertical or horizontal) of the function of
+   'computeCutBounds'.
+-----------------------------------------------------------------------------*/
+    if (dimSpec)
+        assert(dimArg > 0);
+
+    if (nearArg.locType == LOCTYPE_NONE) {
+        if (farArg.locType == LOCTYPE_NONE) {
+            *nearLocP = 0;
+            if (dimSpec)
+                *farLocP = 0 + (int)dimArg - 1;
+            else
+                *farLocP = (int)origSz - 1;
+        } else {
+            *farLocP = near(farArg, origSz);
+            if (dimSpec)
+                *nearLocP = near(farArg, origSz) - (int)dimArg + 1;
+            else
+                *nearLocP = 0;
+        }
+    } else {
+        *nearLocP = near(nearArg, origSz);
+        if (farArg.locType == LOCTYPE_NONE) {
+            if (dimSpec)
+                *farLocP = near(nearArg, origSz) + (int)dimArg - 1;
+            else
+                *farLocP = (int)origSz - 1;
+        } else {
+            if (dimSpec) {
+                pm_error("You may not specify left, right, and width "
+                         "or top, bottom, and height.  "
+                         "Choose at most two of each of these sets.");
+            } else
+                *farLocP = near(farArg, origSz);
+        }
+    }
+}
+
+
+
+static void
 computeCutBounds(unsigned int const cols,
                  unsigned int const rows,
                  Location     const leftArg,
@@ -344,75 +393,11 @@ computeCutBounds(unsigned int const cols,
    *botrowP.  Any of these can be outside the image, including by being
    negative.
 -----------------------------------------------------------------------------*/
-    /* Find left and right bounds */
+    computeCutBoundsOneDim(cols, leftArg, rghtArg, widthSpec,  widthArg,
+                           leftColP, rghtColP);
 
-    if (widthSpec)
-        assert(widthArg > 0);
-
-    if (leftArg.locType == LOCTYPE_NONE) {
-        if (rghtArg.locType == LOCTYPE_NONE) {
-            *leftColP = 0;
-            if (widthSpec)
-                *rghtColP = 0 + (int)widthArg - 1;
-            else
-                *rghtColP = (int)cols - 1;
-        } else {
-            *rghtColP = near(rghtArg, cols);
-            if (widthSpec)
-                *leftColP = near(rghtArg, cols) - (int)widthArg + 1;
-            else
-                *leftColP = 0;
-        }
-    } else {
-        *leftColP = near(leftArg, cols);
-        if (rghtArg.locType == LOCTYPE_NONE) {
-            if (widthSpec)
-                *rghtColP = near(leftArg, cols) + (int)widthArg - 1;
-            else
-                *rghtColP = (int)cols - 1;
-        } else {
-            if (widthSpec) {
-                pm_error("You may not specify left, right, and width.  "
-                         "Choose at most two of these.");
-            } else
-                *rghtColP = near(rghtArg, cols);
-        }
-    }
-
-    /* Find top and bottom bounds */
-
-    if (heightSpec)
-        assert(heightArg > 0);
-
-    if (topArg.locType == LOCTYPE_NONE) {
-        if (botArg.locType == LOCTYPE_NONE) {
-            *topRowP = 0;
-            if (heightSpec)
-                *botRowP = 0 + (int)heightArg - 1;
-            else
-                *botRowP = (int)rows - 1;
-        } else {
-            *botRowP = near(botArg, rows);
-            if (heightSpec)
-                *topRowP = near(botArg, rows) - (int)heightArg + 1;
-            else
-                *topRowP = 0;
-        }
-    } else {
-        *topRowP = near(topArg, rows);
-        if (botArg.locType == LOCTYPE_NONE) {
-            if (heightSpec)
-                *botRowP = near(topArg, rows) + (int)heightArg - 1;
-            else
-                *botRowP = (int)rows - 1;
-        } else {
-            if (heightSpec) {
-                pm_error("You may not specify top, bottom, and height.  "
-                         "Choose at most two of these.");
-            } else
-                *botRowP = near(botArg, rows);
-        }
-    }
+    computeCutBoundsOneDim(rows, topArg,  botArg,  heightSpec, heightArg,
+                           topRowP,  botRowP);
 }
 
 
@@ -474,7 +459,9 @@ reportCuts(int const leftCol,
            int const topRow,
            int const botRow) {
 
-    /* N.B. negative column/row number means pad */
+    /* N.B. column and row numbers can be outside the input image, even
+       negative, which implies padding is required.
+    */
 
     unsigned int const newWidth  = rghtCol - leftCol + 1;
     unsigned int const newHeight = botRow  - topRow  + 1;
