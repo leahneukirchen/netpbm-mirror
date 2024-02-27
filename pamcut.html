@@ -2,12 +2,12 @@
 <html><head><title>Pamcut User Manual</title></head>
 <body>
 <h1>pamcut</h1>
-Updated: 04 October 2019
+Updated: 26 February 2024
 <br>
 <a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
-pamcut - cut a rectangle out of a PAM, PBM, PGM, or PPM image
+pamcut - select a rectangular region of a PAM, PBM, PGM, or PPM image
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
@@ -70,13 +70,14 @@ leftmost 50 and rightmost 200 columns.
 <b>-top</b>, <b>-bottom</b>, <b>-width</b>, <b>-height</b>, and <b>-pad</b>
 options.
 
-<p>For example, <b>-left=50 -right=200</b> means to keep the 150 columns
+<p>For example, <b>-left=50 -right=200</b> means to keep the 151 columns
 between Columns 50 and 200 inclusive.
 
 <p>You can code any mixture of the options.  What you don't specify defaults.
 Those defaults are in favor of minimal cutting and in favor of cutting the
-right and bottom edges off.  It is an error to overspecify, i.e. to specify
-all three of <b>-left</b>, <b>-right</b>, and <b>-width</b> or <b>-top</b>,
+right and bottom edges off and (with <b>-pad</b>) minimal padding and padding
+on the right and bottom.  It is an error to overspecify, i.e. to specify all
+three of <b>-left</b>, <b>-right</b>, and <b>-width</b> or <b>-top</b>,
 <b>-bottom</b>, and <b>-height</b> or <b>right</b> as well as
 <b>-cropright</b>.
 
@@ -85,8 +86,8 @@ arguments.  Arguments were the only way available before July 2000, but you
 should not use them in new applications.  Options are easier to remember and
 read, more expressive, and allow you to use defaults.
 
-<p>If you use both options and arguments, the two specifications get
-mixed in an unspecified way.
+<p>If you use both options and arguments, the two specifications get mixed in
+an unspecified way.
 
 <p>To use arguments, specify all four of the <i>left</i>, <i>top</i>,
 <i>width</i>, and <i>height</i> arguments.  <i>left</i> and <i>top</i> have

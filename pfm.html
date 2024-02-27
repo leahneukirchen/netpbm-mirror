@@ -5,7 +5,7 @@
 </head>
 <body>
 <h1>pfm</h1>
-Updated: 19 April 2012
+Updated: 27 February 2024
 <h2>NAME</h2>
 
 PFM - PFM graphic image file format
@@ -17,14 +17,20 @@ This document describes the PFM graphic image file format as understood by
 the Netpbm converters <a href="pamtopfm.html"><b>pamtopfm</b></a> and
 <a href="pfmtopam.html"><b>pfmtopam</b></a>.
 
-<p>There are multiple similar formats known as PFM in the world, none
-of them authoritatively documented.  The format described here is one
-that Bryan Henderson deduced from a program he found somewhere that
-dealt with a "PFM" format.
+<p>There are multiple similar formats known as PFM in the world, none of them
+authoritatively documented.  The format described here is one that Bryan
+Henderson deduced from a program he found somewhere that dealt with a "PFM"
+format.  This format appears to be the one Gimp calls PFM.
 
-<p>The PFM format is inspired by the Netpbm formats, and you will see
-lots of similarity.  It is not, however, an official Netpbm format.
-Its goal is not consistent with those of Netpbm formats.
+Another important PFM is used by Adobe Photoshop and appears to be identical
+to this except that rows are ordered from top to bottom in the Adobe version.
+If you interchange images between systems that use these two formats, it will
+work except that your image gets flipped upside down.  You can compensate for
+that with <kbd>pamflip -topbottom</kbd>.
+
+<p>The PFM format is inspired by the Netpbm formats, and you will see lots of
+similarity.  It is not, however, an official Netpbm format.  Its goal is not
+consistent with those of Netpbm formats.
 
 <h2>The format</h2>
 
@@ -75,6 +81,10 @@ square meter.
 delimiters of any kind.  They are grouped by row, with the pixels in each
 row ordered left to right and the rows ordered bottom to top.
 
+<em>Note:</em> This is the opposite of Netpbm formats, which order rows
+top to bottom.  It is also the opposite of the format Adobe Photoshop calls
+PFM.  See the introduction for more information on this disparity.
+  
 <p>Each pixel consists of 1 or 3 samples, packed one after another,
 with no delimiters of any kind.  1 sample for a grayscale PFM and 3 for a
 color PFM (see the Identifier Line of the PFM header).
