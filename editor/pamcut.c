@@ -454,10 +454,12 @@ rejectOutOfBounds(unsigned int const cols,
 
 
 static void
-reportCuts(int const leftCol,
-           int const rghtCol,
-           int const topRow,
-           int const botRow) {
+reportCuts(int          const leftCol,
+           int          const rghtCol,
+           int          const topRow,
+           int          const botRow,
+           unsigned int const oldWidth,
+           unsigned int const oldHeight) {
 
     /* N.B. column and row numbers can be outside the input image, even
        negative, which implies padding is required.
@@ -469,8 +471,9 @@ reportCuts(int const leftCol,
     assert (rghtCol >= leftCol);
     assert (botRow  >= topRow );
 
-    printf("%d %d %d %d %u %u\n",
-           leftCol, rghtCol, topRow, botRow, newWidth, newHeight);
+    printf("%d %d %d %d %u %u %u %u\n",
+           leftCol, rghtCol, topRow, botRow,
+           oldWidth, oldHeight, newWidth, newHeight);
 }
 
 
@@ -822,7 +825,8 @@ cutOneImage(FILE *             const ifP,
     }
 
     if (cmdline.reportonly) {
-        reportCuts(leftcol, rightcol, toprow, bottomrow);
+        reportCuts(leftcol, rightcol, toprow, bottomrow,
+                   inpam.width, inpam.height);
         drainRaster(&inpam);
     } else {
         outpam = inpam;    /* Initial value -- most fields should be same */
