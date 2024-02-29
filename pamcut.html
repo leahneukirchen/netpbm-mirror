@@ -199,7 +199,7 @@ color is the color of the background image).
   <a href="#reportonly">below</a> for a description of this output and ways
   to use it.
 
-<p>That description is one line of text, containing 6 decimal numbers of
+<p>That description is one line of text, containing 8 decimal numbers of
   pixels, separated by spaces:
 
 <ol>
@@ -207,21 +207,24 @@ color is the color of the background image).
   <li>column number of right cut
   <li>row number of top cut
   <li>row number of bottom cut
-  <li>output width
-  <li>output height
+  <li>width of input image
+  <li>height of input image
+  <li>width of output image
+  <li>height of output image
 </ol>
 
 <p>The column number of the left cut is the column number in the input image
 of the leftmost column of the output image.  for the right cut, it is for
 the rightmost column of the output.  Top and bottom are analogous.
 
-<p><em>The column and row numbers can be negative.</em>  This means you
-specified <b>-pad</b> and <b>pamcut</b> would have added padding there.
+<p><em>The column and row numbers can be negative</em> if you
+specified <b>-pad</b> and <b>pamcut</b> would have added padding.  Likewise,
+they can be beyond the right and bottom edge of the input image.
 
 <p>Example:
   <pre>
     <span style="font-family: monospace">
-      4 3 -1 2 100 100
+      10 109 -1 98 150 80 100 100
     </span>
   </pre>
   
