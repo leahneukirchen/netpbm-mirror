@@ -848,7 +848,7 @@ cutOneImage(FILE *             const ifP,
 
 
 int
-main(int argc, const char *argv[]) {
+main(int argc, const char ** const argv) {
 
     FILE * const ofP = stdout;
 
