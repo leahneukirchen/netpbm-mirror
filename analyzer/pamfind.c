@@ -23,7 +23,7 @@ parsedCommandLine(int                 argc,
                   const char ** const argv) {
 
     optEntry * option_def;
-        /* Instructions to OptParseOptions3 on how to parse our options.
+        /* Instructions to OptParseOptions4 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -46,7 +46,7 @@ parsedCommandLine(int                 argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     if (targetSpec + colorSpec > 1)
         pm_error("You cannot specify both -target and -color");

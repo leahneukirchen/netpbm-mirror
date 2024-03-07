@@ -32,7 +32,7 @@ parseCommandLine(int argc, const char ** const argv,
                  struct CmdlineInfo * const cmdlineP) {
 
     optEntry * option_def;
-        /* Instructions to OptParseOptions3 on how to parse our options.
+        /* Instructions to OptParseOptions4 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -55,7 +55,7 @@ parseCommandLine(int argc, const char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (sumSpec + minSpec + maxSpec + meanSpec > 1)

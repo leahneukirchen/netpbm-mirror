@@ -69,7 +69,7 @@ parseCommandLine(int argc, const char ** argv,
     /* Set defaults */
     sort_type = "frequency";
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
     free(option_def);
 

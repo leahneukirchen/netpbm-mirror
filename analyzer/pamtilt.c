@@ -76,7 +76,7 @@ parseCommandLine(int argc, const char ** const argv,
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;          /* no short options used */
     opt.allowNegNum = FALSE;            /* don't allow negative values */
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->hstep < 1)
         pm_error("-hstep must be at least 1 column.");
