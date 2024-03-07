@@ -21,7 +21,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
+    const char * inputFilespec;  /* Filespec of input file */
     enum function function;
     unsigned int verbose;
 };

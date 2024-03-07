@@ -20,6 +20,7 @@
 #include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
+#include "mallocvar.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -45,14 +46,14 @@ parseCommandLine (int argc, char ** argv,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to pm_optParseOptions3 on how to parse our options.
-         */
+    optEntry * option_def;
     optStruct3 opt;
 
     unsigned int option_def_index;
 
     unsigned int modeSpec;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "mode",         OPT_UINT,
