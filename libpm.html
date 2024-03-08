@@ -6,7 +6,7 @@
 <body>
 <h1>Libnetpbm Utility Functions</h1>
 
-<p>Updated: 27 August 2006
+<p>Updated: 08 March 2024
 
 <p><a href="#toc">Table Of Contents</a>
 
@@ -63,11 +63,25 @@ list.  Ergo, if you want your program to have the same common options
 as those in the Netpbm package, you might use <b>pm_proginit()</b>,
 and if you don't, you must not.
 
+<p><strong>Note:</strong> The <i>argv</i> argument is supposed to be the POSIX
+program arguments.  The conventional way for a program to declare its
+arguments is with <b>char **</b>, as opposed to <b>pm_proginit</b>&apos;s
+<b>const char **</b> and other functions the program calls (for example,
+<b>getopt</b>) may expect them to be declared that way.  Because of
+limitations of type compatibility in C, you may get a compiler warning if
+you pass a value declared as <b>char **</b> as <b>pm_proginit</b>&apos;s
+<i>argv</i> argument.  To avoid that, either declare the &quot;argv&quot;
+argument of your program&apos;s main function as <b>const char **</b> (as
+Netpbm programs do) or cast it to that (e.g. <kbd>(const char **)argv</kbd>)
+before passing it to <b>pm_proginit</b>.
+  
 <p><b>pm_proginit()</b> is primarily intended for Netpbm developers,
 so you should not expect it to have stable function across releases,
 and you must go to the comments in the source code to see exactly what
 it does.
 
+
+  
 <p>Any program that uses <b>libnetpbm</b> but does not call
 <b>pm_proginit</b> (i.e. is not a Netpbm program) must call
 <b>pm_init()</b>.  The conventional place to do this is at the very
