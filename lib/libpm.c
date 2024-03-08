@@ -706,7 +706,16 @@ pm_proginit(int *         const argcP,
    find.  We remove the common options from argv[], updating *argcP
    accordingly.
 
-   This includes calling pm_init() to initialize the Netpbm libraries.
+   This includes calling 'pm_init' to initialize the Netpbm libraries.
+
+   argv[] is intended to be the program's POSIX arguments (as passed to the
+   program's main function).  But note that POSIX arguments are modifiable and
+   as such, the conventional way to declare them in a program is with "char
+   **", as opposed to pm_proginit's "const char **".  To avoid a compiler
+   warning, the program has to use the unconventional "const char **" type in
+   the declaration of its main function.  (Alternatively, it can just cast it
+   to const char ** later).  'pm_proginit' does not modify any argument
+   strings.
 -----------------------------------------------------------------------------*/
     const char * const progname = pm_arg0toprogname(argv[0]);
         /* points to static memory in this library */
