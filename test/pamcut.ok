@@ -1,23 +1,47 @@
-Test 1.  Should print 2958909756 124815
+Test 1a.  Should print 0 259 0 159 227 149 260 160 twice
+0 259 0 159 227 149 260 160
+0 259 0 159 227 149 260 160
+Test 1b.  Should print 2958909756 124815
 2958909756 124815
-Test 2.  Should print 1550940962 10933
-1550940962 10933
-Test 3.  Should print 708474423 14 twice
+Test 2a.  Should print 120 159 120 159 227 149 40 40 three times
+120 159 120 159 227 149 40 40
+120 159 120 159 227 149 40 40
+120 159 120 159 227 149 40 40
+Test 2b.  Should print 3876978825 4813 twice
+3876978825 4813
+3876978825 4813
+Test 3a.  Should print 5 5 5 5 227 149 1 1 three times
+5 5 5 5 227 149 1 1
+5 5 5 5 227 149 1 1
+5 5 5 5 227 149 1 1
+Test 3b.  Should print 708474423 14
 708474423 14
-708474423 14
-Test 4.  Should print 659346598 80124 four times
+Test 4a.  Should print 10 216 10 138 227 149 207 129 five times
+10 216 10 138 227 149 207 129
+10 216 10 138 227 149 207 129
+10 216 10 138 227 149 207 129
+10 216 10 138 227 149 207 129
+10 216 10 138 227 149 207 129
+Test 4b.  Should print 659346598 80124
 659346598 80124
-659346598 80124
-659346598 80124
-659346598 80124
-Test 5. Should print 281226646 481 five times
+Test 5a. Should print 0 56 0 58 57 59 57 59 five times
+0 56 0 58 57 59 57 59
+0 56 0 58 57 59 57 59
+0 56 0 58 57 59 57 59
+0 56 0 58 57 59 57 59
+0 56 0 58 57 59 57 59
+Test 5b. Should print 281226646 481 twice
 281226646 481
 281226646 481
-281226646 481
-281226646 481
-281226646 481
-Test 6.  Should print 3412257956 129
+Test 6a.  Should print 5 34 5 34 50 50 30 30
+5 34 5 34 50 50 30 30
+Test 6b.  Should print 3412257956 129
 3412257956 129
+Test 7.  Should print 1576602925 8 four times
+1576602925 8
+1576602925 8
+1576602925 8
+1576602925 8
 Test Invalid
 Expected failure 1 (no output)
 Expected failure 2 (no output)
@@ -34,3 +58,5 @@ Expected failure 12 (no output)
 Expected failure 13 (no output)
 Expected failure 14 (no output)
 Expected failure 15 (no output)
+Expected failure 16 (no output)
+Expected failure 17 (no output)

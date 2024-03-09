@@ -1,48 +1,96 @@
 #! /bin/sh
 # This script tests: pamcut pbmmake
-# Also requires: pamfile
+# Also requires: pamfile pnmpad
 
-echo "Test 1.  Should print 2958909756 124815"
+echo "Test 1a.  Should print 0 259 0 159 227 149 260 160 twice"
 
-pamcut -top 0 -left 0 -width 260 -height 160 \
+pamcut -left 0 -right 259 -top 0 -bottom 159 \
+       -pad -reportonly testimg.ppm
+pamcut  -left 0 -top 0 -width 260 -height 160 \
+       -pad -reportonly testimg.ppm
+
+echo "Test 1b.  Should print 2958909756 124815"
+
+pamcut -left 0 -top 0 -width 260 -height 160 \
   -pad testimg.ppm | cksum
 
-echo "Test 2.  Should print 1550940962 10933"
+echo "Test 2a.  Should print 120 159 120 159 227 149 40 40 three times"
 
-pamcut -top 200 -left 120 -width 40 -height 40 \
+pamcut -left 120 -right 159 -top 120 -bottom 159 \
+  -pad -reportonly testimg.ppm
+pamcut -right 159 -bottom 159 -width 40 -height 40 \
+  -pad -reportonly testimg.ppm
+pamcut -left 120 -top 120 -width 40 -height 40 \
+  -pad -reportonly testimg.ppm
+
+echo "Test 2b.  Should print 3876978825 4813 twice"
+
+pamcut -left 120 -right 159 -top 120 -bottom 159 \
   -pad testimg.ppm | cksum
+pamcut -left 120 -top 120 -width 40  \
+  -pad testimg.ppm | pnmpad -black -bottom 11 | cksum
 
-echo "Test 3.  Should print 708474423 14 twice"
+echo "Test 3a.  Should print 5 5 5 5 227 149 1 1 three times"
+
+pamcut -top 5 -left 5 -bottom 5 -right 5 -reportonly testimg.ppm
+pamcut -width 1 -height 1 -bottom 5 -right 5 -reportonly testimg.ppm
+pamcut -cropleft 5 -croptop 5 -width 1 -height 1 -reportonly testimg.ppm
+
+echo "Test 3b.  Should print 708474423 14"
 
 pamcut -top 5 -left 5 -bottom 5 -right 5 testimg.ppm | cksum
-pamcut -width 1 -height 1 -bottom 5 -right 5 testimg.ppm | cksum
 
-echo "Test 4.  Should print 659346598 80124 four times"
+echo "Test 4a.  Should print 10 216 10 138 227 149 207 129 five times"
 
-pamcut -croptop 10 -cropleft 10 -cropbottom 10 -cropright 10 testimg.ppm | \
-  cksum
-pamcut -top 10 -left 10 -bottom 138 -right 216 testimg.ppm | cksum
-pamcut -top 10 -left 10 -bottom -11 -right -11 testimg.ppm | cksum
+pamcut -croptop 10 -cropleft 10 -cropbottom 10 -cropright 10 \
+       -reportonly testimg.ppm 
+pamcut -cropbottom 10 -cropright 10 -width 207 -height 129  \
+       -reportonly testimg.ppm 
+pamcut -top 10 -left 10 -bottom 138 -right 216 -reportonly testimg.ppm
+pamcut -top 10 -left 10 -bottom -11 -right -11 -reportonly testimg.ppm 
+pamcut -top 10 -left 10 -width 207 -height 129 -reportonly testimg.ppm 
+
+echo "Test 4b.  Should print 659346598 80124"
+
 pamcut -top 10 -left 10 -width 207 -height 129 testimg.ppm | cksum
 
-echo "Test 5. Should print 281226646 481 five times"
+echo "Test 5a. Should print 0 56 0 58 57 59 57 59 five times"
 
 mazesize=$(pamfile -size maze.pbm)
 width=$(echo ${mazesize} | cut -d " " -f 1)
 height=$(echo ${mazesize} | cut -d " " -f 2)
 
+pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 \
+       -reportonly maze.pbm
+pamcut -top 0 -left 0 \
+       -bottom $((${height} -1)) -right $((${width} -1)) \
+        -reportonly maze.pbm
+pamcut -top 0 -left 0 -bottom -1 -right -1 -reportonly maze.pbm 
+pamcut -top 0 -left 0 -width ${width} -height ${height} \
+       -reportonly maze.pbm
+pamcut -reportonly maze.pbm 
+
+echo "Test 5b. Should print 281226646 481 twice"
+
 pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 maze.pbm | \
   cksum
-pamcut -top 0 -left 0 -bottom $((${height} -1)) -right $((${width} -1)) \
-  maze.pbm | cksum
-pamcut -top 0 -left 0 -bottom -1 -right -1 maze.pbm | cksum
-pamcut -top 0 -left 0 -width ${width} -height ${height} maze.pbm | cksum
 pamcut maze.pbm | cksum
 
-echo "Test 6.  Should print 3412257956 129"
+
+echo "Test 6a.  Should print 5 34 5 34 50 50 30 30"
+
+pbmmake -g 50 50 | pamcut -reportonly 5 5 30 30
+
+echo "Test 6b.  Should print 3412257956 129"
 
 pbmmake -g 50 50 | pamcut 5 5 30 30 | cksum
 
+echo "Test 7.  Should print 1576602925 8 four times"
+
+pbmmake -b 1 1 | cksum
+pbmmake -g 5 5 | pamcut -pad -left=6 -right=6 -top=6 -bottom 6 | cksum
+pbmmake -g 5 5 | pamcut -pad -left=-6 -right=-6 -top=-6 -bottom -6 | cksum
+pbmmake -g 5 5 | pamcut -pad -left=101 -right=101 -top=1001 -bottom 1001 | cksum
 
 echo "Test Invalid"
 
@@ -55,8 +103,12 @@ invCmd "pamcut -right=1 -cropright=1 testgrid.pbm"
 invCmd "pamcut -top=1 -croptop=1 testgrid.pbm"
 invCmd "pamcut -bottom=1 -cropbottom=1 testgrid.pbm"
 invCmd "pamcut -left=1 -cropleft=1 testgrid.pbm"
+
+# excessive amounts
+invCmd "pamcut -cropleft=14 testgrid.pbm"
 invCmd "pamcut -cropleft=7 -cropright=8 testgrid.pbm"
 invCmd "pamcut -left=7 -right=6 testgrid.pbm"
+invCmd "pamcut -croptop=16 testgrid.pbm"
 invCmd "pamcut -croptop=8 -cropbottom=8 testgrid.pbm"
 invCmd "pamcut -top=10 -bottom=9 testgrid.pbm"
 
