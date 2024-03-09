@@ -784,7 +784,7 @@ extractRowsPbm(const struct pam * const inpamP,
 
     /* Write out bottom padding */
     makeBlackPbmRow(bitrow, outpamP->width);
-    for (; row < bottomrow+1; ++row)
+    for (row = MAX(inpamP->height, toprow); row < bottomrow+1; ++row)
         pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
 
     pbm_freerow_packed(bitrow);

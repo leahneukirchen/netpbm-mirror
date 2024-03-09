@@ -8,6 +8,15 @@ not yet  BJH  Release 11.06.00
 
               pamcut: add -reportonly.
 
+              pamcut: fix incorrect output when rectangle to cut is entirely
+              above the input image.  Invisible junk after image.  Always
+              broken.  (The ability to cut outside the input image was new in
+              pamcut's predecessor pnmcut in Netpbm 9.7 (August 2000).
+
+              pamcut: fix incorrect output with PBM input when rectangle to
+              cut is entirely below the input image.  Invisible junk after
+              image.  Broken in Netpbm 10.44 (September 2008).
+
               ppmtowinicon: fix array overrun with 4 and 8 bits per pixel.
               Broken in Netpbm 11.05 (December 2023).
 
