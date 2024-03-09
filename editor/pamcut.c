@@ -677,8 +677,8 @@ extractRowsGen(const struct pam * const inpamP,
     int row;
 
     /* Write out top padding */
-    if (0 - toprow > 0)
-        writeBlackRows(outpamP, 0 - toprow);
+    if (toprow < 0)
+        writeBlackRows(outpamP, MIN(0, bottomrow+1) - toprow);
 
     createRowCutter(inpamP, outpamP, leftcol, rightcol, &rowCutterP);
 
@@ -762,12 +762,9 @@ extractRowsPbm(const struct pam * const inpamP,
     makeBlackPbmRow(bitrow, totalWidth);
       /* Initialize row buffer to all black for top and side padding */
 
-    if (toprow < 0) {
-        int row;
-        for (row = 0; row < 0 - toprow; ++row)
-            pbm_writepbmrow_packed(outpamP->file, bitrow,
-                                   outpamP->width, 0);
-    }
+    /* Write out top padding */
+    for (row = toprow; row < MIN(0, bottomrow+1); ++row)
+        pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
 
     for (row = 0; row < inpamP->height; ++row){
         if (row >= toprow && row <= bottomrow) {
