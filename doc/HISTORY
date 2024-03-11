@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+24.03.11 BJH  Release 11.02.08
+
+              infotopam: fix incorrect output -- columns always in wrong
+              place.  Always broken.  (infotopam was new in Netpbm 10.22 (May
+              2004)).
+
 23.12.26 BJH  Release 11.02.07
 
               pnmpad: fix behavior with -left, -right, and -width together or

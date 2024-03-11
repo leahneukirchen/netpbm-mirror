@@ -301,14 +301,14 @@ addBitplane(unsigned char * const icon,
     unsigned int j;
 
     for (i = j = 0; i < bpsize; ++i, j += 8) {
-        icon[j+0] = (icon[j+0] << 1) | ((buff[i] >> 0) & 0x01);
-        icon[j+1] = (icon[j+1] << 1) | ((buff[i] >> 1) & 0x01);
-        icon[j+2] = (icon[j+2] << 1) | ((buff[i] >> 2) & 0x01);
-        icon[j+3] = (icon[j+3] << 1) | ((buff[i] >> 3) & 0x01);
-        icon[j+4] = (icon[j+4] << 1) | ((buff[i] >> 4) & 0x01);
-        icon[j+5] = (icon[j+5] << 1) | ((buff[i] >> 5) & 0x01);
-        icon[j+6] = (icon[j+6] << 1) | ((buff[i] >> 6) & 0x01);
-        icon[j+7] = (icon[j+7] << 1) | ((buff[i] >> 7) & 0x01);
+        icon[j+0] = (icon[j+0] << 1) | ((buff[i] >> 7) & 0x01);
+        icon[j+1] = (icon[j+1] << 1) | ((buff[i] >> 6) & 0x01);
+        icon[j+2] = (icon[j+2] << 1) | ((buff[i] >> 5) & 0x01);
+        icon[j+3] = (icon[j+3] << 1) | ((buff[i] >> 4) & 0x01);
+        icon[j+4] = (icon[j+4] << 1) | ((buff[i] >> 3) & 0x01);
+        icon[j+5] = (icon[j+5] << 1) | ((buff[i] >> 2) & 0x01);
+        icon[j+6] = (icon[j+6] << 1) | ((buff[i] >> 1) & 0x01);
+        icon[j+7] = (icon[j+7] << 1) | ((buff[i] >> 0) & 0x01);
     }
 }
 
