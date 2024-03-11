@@ -127,14 +127,14 @@ typedef struct DiskObject_ { /* 78 bytes (including Gadget struct) */
 
 
 static void
-parseCommandLine( int              argc,
-                  char *           argv[],
-                  IconInfo * const infoP ) {
+parseCommandLine(int              argc,
+                 const char **    argv,
+                 IconInfo * const infoP) {
 
     unsigned int numColorArgs,  /* Number of arguments for overriding colors */
         colorIdx,      /* Color index */
         i;             /* Argument index */
-    const char  * const colors[4] = {
+    const char * const colors[4] = {
         /* Pixel colors based on original Amiga colors */
         "#0055AA",    /*   Blue      0,  85, 170 */
         "#FFFFFF",    /*   White   255, 255, 255 */
@@ -165,17 +165,14 @@ parseCommandLine( int              argc,
     infoP->height = 0;
     infoP->depth = 0;
     infoP->icon = NULL;
-    for ( colorIdx = 0; colorIdx < 4; colorIdx++ )
-        infoP->colors[colorIdx] =
-            ppm_parsecolor( (char*) colors[colorIdx], 0xFF );
+    for (colorIdx = 0; colorIdx < 4; ++colorIdx)
+        infoP->colors[colorIdx] = ppm_parsecolor(colors[colorIdx], 0xFF);
 
-    /* Initialize option structure */
     opt.opt_table     = option_def;
     opt.short_allowed = FALSE;  /* No short (old-fashioned) options */
     opt.allowNegNum   = FALSE;  /* No negative number parameters */
 
-    /* Parse the command line */
-    pm_optParseOptions3( &argc, argv, opt, sizeof( opt ), 0 );
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     infoP->forceColor = forceColorSpec;
     infoP->selected = selectedSpec;
@@ -184,37 +181,34 @@ parseCommandLine( int              argc,
 
     /* Get colors and file name */
     numColorArgs = infoP->numColors * 2;
-    if ( ( argc - 1 != numColorArgs ) && ( argc - 1 != numColorArgs + 1 ) ) {
-        pm_error( "Wrong number of arguments for number of colors.  "
-                  "For %u colors, you need %u color arguments, "
-                  "with possibly one more argument for the input file name.",
-                  infoP->numColors, numColorArgs );
+    if ((argc - 1 != numColorArgs) && (argc - 1 != numColorArgs + 1)) {
+        pm_error("Wrong number of arguments for number of colors.  "
+                 "For %u colors, you need %u color arguments, "
+                 "with possibly one more argument for the input file name.",
+                 infoP->numColors, numColorArgs);
     }
 
     /* Convert color arguments */
-    for ( i = 1; i < numColorArgs; i += 2 ) {
+    for (i = 1; i < numColorArgs; i += 2) {
         char *       endptr;        /* End pointer for strtol() */
         unsigned int colorIdx;
 
         /* Get color index from argument */
-        colorIdx = strtoul( argv[i], &endptr, 0 );
+        colorIdx = strtoul(argv[i], &endptr, 0);
 
-        if ( *endptr != '\0' ) {
-            pm_error( "'%s' is not a valid color index", argv[i] );
+        if (*endptr != '\0') {
+            pm_error("'%s' is not a valid color index", argv[i]);
         }
 
-        /* Check color index range (current 0 to 3) */
-        if ( ( colorIdx < 0 ) || ( colorIdx > 3 ) ) {
-            pm_error( "%u is not a valid color index (minimum 0, maximum 3)",
-                      colorIdx );
+        if ((colorIdx < 0) || (colorIdx > 3)) {
+            pm_error("%u is not a valid color index (minimum 0, maximum 3)",
+                     colorIdx);
         }
 
-        /* Convert the color for this color index */
-        infoP->colors[colorIdx] = ppm_parsecolor( argv[i+1], 0xFF );
+        infoP->colors[colorIdx] = ppm_parsecolor(argv[i+1], 0xFF);
     }
 
-    /* Set file name */
-    if ( i > argc-1 )
+    if (i > argc-1)
         infoP->name = "-";  /* Read from standard input */
     else
         infoP->name = argv[i];
@@ -223,7 +217,7 @@ parseCommandLine( int              argc,
 
 
 static void
-getDiskObject( IconInfo * const infoP ) {
+getDiskObject(IconInfo * const infoP) {
 /*-------------------------------------------------------------------------
  * Get fields from disk object portion of info file
  *-------------------------------------------------------------------------*/
@@ -392,8 +386,8 @@ readIconData(FILE *           const fileP,
 
 
 static void
-writeIconData( IconInfo *   const infoP,
-               struct pam * const pamP ) {
+writeRaster(IconInfo *   const infoP,
+            struct pam * const pamP) {
 /*-------------------------------------------------------------------------
  * Write icon data to file
  *-------------------------------------------------------------------------*/
@@ -460,85 +454,85 @@ writeIconData( IconInfo *   const infoP,
 
 
 int
-main( int argc,
-      char *argv[] ) {
+main(int argc, const char **argv) {
 
     IconInfo    info;    /* Miscellaneous icon information */
     struct pam  pam;     /* PAM header */
     int         skip;    /* Bytes to skip to read next icon header */
 
     /* Init PNM library */
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     /* Parse command line arguments */
-    parseCommandLine( argc, argv, &info );
+    parseCommandLine(argc, argv, &info);
 
     /* Open input file */
-    info.fp = pm_openr( info.name );
+    info.fp = pm_openr(info.name);
 
     /* Read disk object header */
-    getDiskObject( &info );
+    getDiskObject(&info);
 
     /* Skip drawer data, if any */
-    if ( info.drawerData ) {
+    if (info.drawerData) {
+        int rc;
         skip = 56;   /* Draw data size */
-        if ( fseek( info.fp, skip, SEEK_CUR ) < 0 )
-            pm_error( "Cannot skip header information in file '%s'.  "
-                      "fseek() errno = %d (%s)",
-                      info.name, errno, strerror( errno ) );
+        rc = fseek(info.fp, skip, SEEK_CUR);
+        if (rc < 0) {
+            pm_error("Cannot skip header information in file '%s'.  "
+                     "fseek() errno = %d (%s)",
+                     info.name, errno, strerror(errno));
+        }
     }
 
     /* Get dimensions for first icon */
-    getIconHeader( &info );
+    getIconHeader(&info);
 
     /* Skip ahead to next header if converting second icon */
-    if ( info.selected ) {
-        skip = info.height * ( ( ( info.width + 15 ) / 16 ) * 2 ) * info.depth;
+    if (info.selected) {
+        int rc;
+        skip = info.height * (((info.width + 15) / 16) * 2) * info.depth;
 
-        if ( fseek( info.fp, skip, SEEK_CUR ) < 0 )
-            pm_error( "Cannot skip to next icon in file '%s'.  "
-                      "fseek() errno = %d (%s)",
-                      info.name, errno, strerror( errno ) );
-
+        rc = fseek(info.fp, skip, SEEK_CUR);
+        if (rc < 0) {
+            pm_error("Cannot skip to next icon in file '%s'.  "
+                     "fseek() errno = %d (%s)",
+                     info.name, errno, strerror(errno));
+        }
         /* Get dimensions for second icon */
-        getIconHeader( &info );
+        getIconHeader(&info);
     }
 
     /* Read icon data */
-    readIconData( info.fp, info.width, info.height, info.depth, &info.icon );
+    readIconData(info.fp, info.width, info.height, info.depth, &info.icon);
 
     /* Print icon info */
-    pm_message( "converting %s, version %d, %s icon: %d X %d X %d",
-                info.name, info.version, info.selected ? "second" : "first",
-                info.width, info.height, info.depth );
+    pm_message("converting %s, version %d, %s icon: %d X %d X %d",
+               info.name, info.version, info.selected ? "second" : "first",
+               info.width, info.height, info.depth);
 
-    /* Write PAM header */
-    pam.size   = sizeof( pam );
-    pam.len    = PAM_STRUCT_SIZE( tuple_type );
+    pam.size   = sizeof(pam);
+    pam.len    = PAM_STRUCT_SIZE(tuple_type);
     pam.file   = stdout;
     pam.height = info.height;
     pam.width  = info.width;
     pam.format = PAM_FORMAT;
 
-    if ( ( info.depth == 1 ) && ( info.forceColor == FALSE ) ) {
+    if ((info.depth == 1) && !info.forceColor) {
         pam.depth  = 1;
         pam.maxval = 1;
-        strcpy( pam.tuple_type, "BLACKANDWHITE" );
+        strcpy(pam.tuple_type, "BLACKANDWHITE");
     } else {
         pam.depth  = 3;
         pam.maxval = 0xFF;
-        strcpy( pam.tuple_type, "RGB" );
+        strcpy(pam.tuple_type, "RGB");
     }
-    pnm_writepaminit( &pam );
+    pnm_writepaminit(&pam);
 
-    /* Write icon data */
-    writeIconData( &info, &pam );
+    writeRaster(&info, &pam);
 
-    free( info.icon );
-
-    /* Close input file and return */
-    pm_close( pam.file );
-    pm_close( info.fp );
+    free(info.icon);
+    pm_close(pam.file);
+    pm_close(info.fp);
 
     return 0;
 }
