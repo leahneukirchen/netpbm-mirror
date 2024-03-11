@@ -20,6 +20,10 @@ not yet  BJH  Release 11.06.00
               ppmtowinicon: fix array overrun with 4 and 8 bits per pixel.
               Broken in Netpbm 11.05 (December 2023).
 
+              infotopam: fix incorrect output -- columns always in wrong
+              place.  Always broken.  (infotopam was new in Netpbm 10.22 (May
+              2004)).
+
               pamseq: fix typo in error message.
 
               build: makeman: fix warning about backslashes in strings.
