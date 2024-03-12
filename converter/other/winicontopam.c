@@ -86,7 +86,7 @@ parseCommandLine(int argc, const char **argv,
     opt3.short_allowed = false;
     opt3.allowNegNum   = false;
 
-    pm_optParseOptions3(&argc, (char **)argv, opt3, sizeof(opt3), 0);
+    pm_optParseOptions4(&argc, argv, opt3, sizeof(opt3), 0);
 
     if (cmdlineP->allimages && cmdlineP->imageSpec)
         pm_error("You cannot specify both -allimages and -image");

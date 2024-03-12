@@ -218,7 +218,7 @@ parseCommandLine (int                  argc,
     opt.allowNegNum = false;  /* we have no parms that are negative numbers */
 
     /* uses and sets argc, argv, and some of *cmdlineP and others */
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->chromaSpec)
         parseChromaOpt(chroma, &cmdlineP->chroma);

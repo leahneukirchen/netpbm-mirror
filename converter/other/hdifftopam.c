@@ -10,15 +10,16 @@
 #include <stdio.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
+#include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "pam.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input files */
+    const char * inputFileNm;  /* Names of input files */
     unsigned int pnm;
     unsigned int verbose;
 };
@@ -26,18 +27,18 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to pm_optParseOptions3 on how to parse our options.
-         */
+    optEntry * option_def;   /* Used by OPTENT3 */
     optStruct3 opt;
 
     unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "pnm",       OPT_FLAG,    NULL, &cmdlineP->pnm,      0);
@@ -47,13 +48,13 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileNm = "-";
     else if (argc-1 == 1)
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileNm = argv[1];
     else
         pm_error("Too many arguments.");
 }
@@ -88,20 +89,21 @@ static void
 
 
 int
-main(int argc, char *argv[]) {
-    FILE *ifP;
-    struct cmdlineInfo cmdline;
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    struct CmdlineInfo cmdline;
     struct pam diffpam, outpam;
     unsigned int row;
     tuple * diffrow;
     tuple * outrow;
     tuple * prevrow;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileNm);
 
     pnm_readpaminit(ifP, &diffpam, PAM_STRUCT_SIZE(tuple_type));
 

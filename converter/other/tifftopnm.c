@@ -105,8 +105,8 @@ parseCommandLine(int argc, const char ** const argv,
    sometimes, one of these strings is actually just a suffix of an entry
    in argv!
 -----------------------------------------------------------------------------*/
+    optEntry * option_def;
     optStruct3 opt;
-    optEntry *option_def;
     unsigned int option_def_index;
     unsigned int alphaSpec;
 
@@ -130,7 +130,7 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0,   "alphaout",
             OPT_STRING, &cmdlineP->alphaFilename, &alphaSpec,  0);
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     if (argc - 1 == 0)
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
