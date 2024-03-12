@@ -324,7 +324,15 @@ pbm_writepbmrow_packed(FILE *                const fileP,
                        const unsigned char * const packedBits,
                        int                   const cols,
                        int                   const forceplain) {
+/*----------------------------------------------------------------------------
+   Write to file *fileP the PBM row 'cols' columns wide in packed bit buffer
+   'packedBits'.
 
+   Write it in PBM plain format iff 'forceplain' is nonzero.
+
+   In raw format, the don't-care bits at the end of the row are the same as
+   in the input buffer.
+-----------------------------------------------------------------------------*/
     if (!forceplain && !pm_plain_output)
         writePackedRawRow(fileP, packedBits, cols);
     else {
@@ -385,10 +393,14 @@ pbm_writepbmrow_bitoffset(FILE *          const fileP,
                           int             const format,
                           unsigned int    const offset) {
 /*----------------------------------------------------------------------------
-   Write PBM row from a packed bit buffer 'packedBits, starting at the
-   specified offset 'offset' in the buffer.
+   Write to file *fileP the tail of the PBM row 'cols' columns wide in packed
+   bit buffer 'packedBits'.  Start at column 'offset' of the row.
 
-   We destroy the buffer.
+   Write it in PBM raw format.
+
+   Make any don't-care bits at the end of the row written zero.
+
+   We destroy the contents of the buffer.
 -----------------------------------------------------------------------------*/
     unsigned int const rsh = offset % 8;
     unsigned int const lsh = (8 - rsh) % 8;
