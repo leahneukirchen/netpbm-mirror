@@ -29,10 +29,10 @@
  *
  * The icon data has the following format:
  *
- *   BIT-PLANE planes, each with HEIGHT rows of (WIDTH +15) / 16 * 2 bytes
- *   length.
+ *   BIT-PLANE planes, each with HEIGHT rows WIDTH bits long, rounded up to
+ *   a multiple of 2 bytes.
  *
- * So if you have a 9x3x2 icon, the icon data will look like this:
+ * So if you have a 9x3x2 icon, the icon data looks like this:
  *
  *   aaaa aaaa a000 0000
  *   aaaa aaaa a000 0000
@@ -82,6 +82,7 @@ typedef struct CmdlineInfo_ {
     unsigned int  forcecolor;
     pixel         colors[4];   /* Colors to use for converted icons */
     unsigned int  selected;
+    unsigned int  verbose;
 } CmdlineInfo;
 
 typedef struct IconInfo_ {
@@ -146,11 +147,13 @@ parseCommandLine(int                 argc,
 
     /* Set command line options */
     option_def_index = 0;   /* Incremented by OPTENT3 */
-    OPTENT3(0, "forcecolor", OPT_FLAG, NULL, &cmdlineP->forcecolor,
+    OPTENT3(0, "forcecolor", OPT_FLAG, NULL,       &cmdlineP->forcecolor,
             0);
     OPTENT3(0, "numcolors",  OPT_UINT, &numcolors, &numcolorsSpec,
             0);
-    OPTENT3(0, "selected",   OPT_FLAG, NULL, &cmdlineP->selected,
+    OPTENT3(0, "selected",   OPT_FLAG, NULL,       &cmdlineP->selected,
+            0);
+    OPTENT3(0, "verbose",    OPT_FLAG, NULL,       &cmdlineP->verbose,
             0);
 
     opt.opt_table     = option_def;
@@ -470,9 +473,9 @@ main(int argc, const char **argv) {
 
         rc = fseek(info.ifP, skipCt, SEEK_CUR);
         if (rc < 0) {
-            pm_error("Cannot skip header information in file '%s'.  "
+            pm_error("Failed to skip header information in input file.  "
                      "fseek() errno = %d (%s)",
-                     cmdline.inputFileNm, errno, strerror(errno));
+                     errno, strerror(errno));
         }
     }
 
@@ -488,9 +491,9 @@ main(int argc, const char **argv) {
 
         rc = fseek(info.ifP, skipCt, SEEK_CUR);
         if (rc < 0) {
-            pm_error("Cannot skip to next icon in file '%s'.  "
+            pm_error("Failed to skip to next icon input file.  "
                      "fseek() errno = %d (%s)",
-                     cmdline.inputFileNm, errno, strerror(errno));
+                     errno, strerror(errno));
         }
         /* Get dimensions for second icon */
         getIconHeader(&info);
@@ -498,11 +501,11 @@ main(int argc, const char **argv) {
 
     readIconData(info.ifP, info.width, info.height, info.depth, &info.icon);
 
-    pm_message("converting %s, version %d, %s icon: %d X %d X %d",
-               cmdline.inputFileNm, info.version,
-               cmdline.selected ? "second" : "first",
-               info.width, info.height, info.depth);
-
+    if (cmdline.verbose) {
+        pm_message("Version %u .info file, %s icon: %uW x %uH x %u deep",
+                   info.version, cmdline.selected ? "second" : "first",
+                   info.width, info.height, info.depth);
+    }
     pam.size   = sizeof(pam);
     pam.len    = PAM_STRUCT_SIZE(tuple_type);
     pam.file   = stdout;
@@ -529,6 +532,5 @@ main(int argc, const char **argv) {
 
     return 0;
 }
-
 
 

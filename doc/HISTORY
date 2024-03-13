@@ -8,6 +8,9 @@ not yet  BJH  Release 11.06.00
 
               pamcut: add -reportonly.
 
+              infotopam: Remove input file name from messages.  Add -verbose
+              and issue informational message only if it is specified.
+
               pamcut: fix incorrect output when rectangle to cut is entirely
               above the input image.  Invisible junk after image.  Always
               broken.  (The ability to cut outside the input image was new in
