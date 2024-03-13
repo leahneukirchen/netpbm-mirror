@@ -65,16 +65,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
-#include "mallocvar.h"
-
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+
+#include "pm_c_util.h"
+#include "pam.h"
+#include "shhopt.h"
+#include "mallocvar.h"
 
 
 typedef struct CmdlineInfo_ {
@@ -87,15 +87,15 @@ typedef struct CmdlineInfo_ {
 
 typedef struct IconInfo_ {
     /* Miscellaneous icon information */
-    FILE *          ifP;         /* Input file */
-    bool            drawerData;  /* Icon has drawer data */
-    unsigned int    version;     /* Icon version */
-    unsigned int    width;       /* Width in pixels */
-    unsigned int    height;      /* Height in pixels */
-    unsigned int    depth;       /* Bits of color per pixel */
+    FILE *          ifP;            /* Input file */
+    bool            hasDrawerData;  /* Icon has drawer data */
+    unsigned int    version;        /* Icon version */
+    unsigned int    width;          /* Width in pixels */
+    unsigned int    height;         /* Height in pixels */
+    unsigned int    depth;          /* Bits of color per pixel */
     unsigned int    bpwidth;
         /* Bitplane width; Width of each row in icon, including padding */
-    unsigned char * icon;        /* Completed icon */
+    unsigned char * icon;           /* Completed icon */
 
 } IconInfo;
 
@@ -222,33 +222,35 @@ parseCommandLine(int                 argc,
 
 
 static void
-getDiskObject(IconInfo * const infoP) {
-/*-------------------------------------------------------------------------
- * Get fields from disk object portion of info file
- *-------------------------------------------------------------------------*/
+readDiskObjectHeader(FILE *         const ifP,
+                     unsigned int * const versionP,
+                     bool *         const hasDrawerDataP) {
+/*---------------------------------------------------------------------------
+  Read disk object header from file *ifP; validate it and return its contents.
+----------------------------------------------------------------------------*/
     DiskObject  dobj;      /* Disk object structure */
-    size_t      bytesRead;
+    size_t      bytesReadCt;
 
     /* Read the disk object header */
-    bytesRead = fread(&dobj, 1, sizeof(dobj), infoP->ifP);
-    if (ferror(infoP->ifP))
+    bytesReadCt = fread(&dobj, 1, sizeof(dobj), ifP);
+    if (ferror(ifP))
         pm_error("Cannot read disk object header.  "
                  "fread() errno = %d (%s)",
                  errno, strerror(errno));
-    else if (bytesRead != sizeof(dobj))
+    else if (bytesReadCt != sizeof(dobj))
         pm_error("Cannot read entire disk object header.  "
                  "Only read 0x%X of 0x%X bytes",
-                 (unsigned)bytesRead, (unsigned)sizeof(dobj));
+                 (unsigned)bytesReadCt, (unsigned)sizeof(dobj));
 
-    /* Check magic number */
+    /* Validate magic number */
     if ((dobj.magic[0] != 0xE3) && (dobj.magic[1] != 0x10))
         pm_error("Wrong magic number in icon file.  "
                  "Expected 0xE310, but got 0x%X%X",
                  dobj.magic[0], dobj.magic[1]);
 
-    /* Set version info and have drawer data flag */
-    infoP->version = (dobj.version[0] <<  8) + (dobj.version[1]);
-    infoP->drawerData =
+    *versionP = (dobj.version[0] <<  8) + (dobj.version[1]);
+
+    *hasDrawerDataP =
         (dobj.pDrawerData[0] << 24) +
         (dobj.pDrawerData[1] << 16) +
         (dobj.pDrawerData[2] <<  8) +
@@ -259,7 +261,11 @@ getDiskObject(IconInfo * const infoP) {
 
 
 static void
-getIconHeader(IconInfo * const infoP) {
+readIconHeader(FILE *         const ifP,
+               unsigned int * const widthP,
+               unsigned int * const heightP,
+               unsigned int * const depthP,
+               unsigned int * const bpwidthP) {
 /*-------------------------------------------------------------------------
  * Get fields from icon header portion of info file
  *-------------------------------------------------------------------------*/
@@ -267,27 +273,25 @@ getIconHeader(IconInfo * const infoP) {
     size_t      bytesRead;
 
     /* Read icon header */
-    bytesRead = fread(&ihead, 1, sizeof(ihead), infoP->ifP);
-    if (ferror(infoP->ifP))
-        pm_error("Cannot read icon header.  "
-                 "fread() errno = %d (%s)",
+    bytesRead = fread(&ihead, 1, sizeof(ihead), ifP);
+    if (ferror(ifP))
+        pm_error("Failed to read icon header.  fread() errno = %d (%s)",
                  errno, strerror(errno));
     else if (bytesRead != sizeof(ihead))
-        pm_error("Cannot read the entire icon header.  "
-                 "Only read 0x%X of 0x%X bytes",
+        pm_error("Failed to read the entire icon header.  "
+                 "Read only %u of %u bytes",
                  (unsigned)bytesRead, (unsigned)sizeof(ihead));
 
-    /* Get icon width, height, and bitplanes */
-    infoP->width  = (ihead.iconWidth[0]  << 8) + ihead.iconWidth[1];
-    infoP->height = (ihead.iconHeight[0] << 8) + ihead.iconHeight[1];
-    infoP->depth  = (ihead.bpp[0]        << 8) + ihead.bpp[1];
+    *widthP  = (ihead.iconWidth[0]  << 8) + ihead.iconWidth[1];
+    *heightP = (ihead.iconHeight[0] << 8) + ihead.iconHeight[1];
+    *depthP  = (ihead.bpp[0]        << 8) + ihead.bpp[1];
 
-    infoP->bpwidth = ((infoP->width + 15) / 16) * 16;
+    *bpwidthP = ROUNDUP(*widthP, 16);
 
-    /* Check number of bit planes */
-    if ((infoP->depth > 2) || (infoP->depth < 1))
+    /* Validate number of bit planes */
+    if (*depthP > 2 || *depthP < 1)
         pm_error("We don't know how to interpret file with %u bitplanes.  ",
-                 infoP->depth);
+                 *depthP);
 }
 
 
@@ -452,20 +456,16 @@ main(int argc, const char **argv) {
     IconInfo     info;      /* Miscellaneous icon information */
     struct pam   pam;       /* PAM header */
 
-    /* Init PNM library */
     pm_proginit(&argc, argv);
 
-    /* Parse command line arguments */
     parseCommandLine(argc, argv, &cmdline);
 
-    /* Open input file */
     info.ifP = pm_openr(cmdline.inputFileNm);
 
-    /* Read disk object header */
-    getDiskObject(&info);
+    readDiskObjectHeader(info.ifP, &info.version, &info.hasDrawerData);
 
     /* Skip drawer data, if any */
-    if (info.drawerData) {
+    if (info.hasDrawerData) {
         unsigned int const skipCt = 56;   /* Draw data size */
 
         int rc;
@@ -478,8 +478,9 @@ main(int argc, const char **argv) {
         }
     }
 
-    /* Get dimensions for first icon */
-    getIconHeader(&info);
+    /* Read header of first icon */
+    readIconHeader(info.ifP, &info.width, &info.height, &info.depth,
+                   &info.bpwidth);
 
     /* Skip ahead to next header if converting second icon */
     if (cmdline.selected) {
@@ -494,8 +495,9 @@ main(int argc, const char **argv) {
                      "fseek() errno = %d (%s)",
                      errno, strerror(errno));
         }
-        /* Get dimensions for second icon */
-        getIconHeader(&info);
+        /* Read header of second icon */
+        readIconHeader(info.ifP, &info.width, &info.height, &info.depth,
+                       &info.bpwidth);
     }
 
     readIconData(info.ifP, info.width, info.height, info.depth, &info.icon);
