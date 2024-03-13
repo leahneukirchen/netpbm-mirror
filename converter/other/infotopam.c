@@ -482,25 +482,18 @@ main(int argc, const char **argv) {
     readIconHeader(info.ifP, &info.width, &info.height, &info.depth,
                    &info.bpwidth);
 
-    /* Skip ahead to next header if converting second icon */
+    readIconData(info.ifP, info.width, info.height, info.depth, &info.icon);
+
     if (cmdline.selected) {
-        unsigned int const skipCt =
-            info.height * (((info.width + 15) / 16) * 2) * info.depth;
-
-        int rc;
-
-        rc = fseek(info.ifP, skipCt, SEEK_CUR);
-        if (rc < 0) {
-            pm_error("Failed to skip to next icon input file.  "
-                     "fseek() errno = %d (%s)",
-                     errno, strerror(errno));
-        }
-        /* Read header of second icon */
+        /* He wants the second icon, so update info.width, etc.  to be for the
+           second icon.
+        */
         readIconHeader(info.ifP, &info.width, &info.height, &info.depth,
                        &info.bpwidth);
-    }
 
-    readIconData(info.ifP, info.width, info.height, info.depth, &info.icon);
+        readIconData(info.ifP, info.width, info.height, info.depth,
+                     &info.icon);
+    }
 
     if (cmdline.verbose) {
         pm_message("Version %u .info file, %s icon: %uW x %uH x %u deep",
