@@ -8,6 +8,8 @@ not yet  BJH  Release 11.06.00
 
               pamcut: add -reportonly.
 
+              infotopam: Add input validation.
+
               infotopam: Remove input file name from messages.  Add -verbose
               and issue informational message only if it is specified.
 

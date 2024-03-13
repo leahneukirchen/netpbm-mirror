@@ -72,9 +72,10 @@
 #include <stdio.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "nstring.h"
+#include "shhopt.h"
+#include "pam.h"
 
 
 typedef struct CmdlineInfo_ {
@@ -101,7 +102,11 @@ typedef struct IconInfo_ {
 
 typedef struct IconHeader_ { /* 20 bytes */
     /* Text of header for one icon image */
-    unsigned char pad0[4];        /* Padding (always seems to be zero) */
+    unsigned char type[4];
+        /* Reverse engineered.  This always seems to be 0x00000000 in
+           icon headers, but we've seen 0x00000010 in some 51-byte object
+           we don't understand.
+        */
     unsigned char iconWidth[2];   /* Width (usually equal to Gadget width) */
     unsigned char iconHeight[2];
         /* Height (usually equal to Gadget height -1) */
@@ -282,16 +287,28 @@ readIconHeader(FILE *         const ifP,
                  "Read only %u of %u bytes",
                  (unsigned)bytesRead, (unsigned)sizeof(ihead));
 
+    if (!memeq(ihead.type, "\0\0\0\0", 4)) {
+        pm_message("Unrecognized object where icon header expected.  "
+                   "First 4 bytes are 0x%02x%02x%02x%02x.  We expect "
+                   "0x00000000",
+                   ihead.type[0], ihead.type[1], ihead.type[2], ihead.type[3]);
+    }
+
     *widthP  = (ihead.iconWidth[0]  << 8) + ihead.iconWidth[1];
     *heightP = (ihead.iconHeight[0] << 8) + ihead.iconHeight[1];
     *depthP  = (ihead.bpp[0]        << 8) + ihead.bpp[1];
 
-    *bpwidthP = ROUNDUP(*widthP, 16);
+    if (*widthP < 1)
+        pm_error("Invalid width value in icon header: %u", *widthP);
 
-    /* Validate number of bit planes */
+    if (*heightP < 1)
+        pm_error("Invalid height value in icon header: %u", *heightP);
+
     if (*depthP > 2 || *depthP < 1)
         pm_error("We don't know how to interpret file with %u bitplanes.  ",
                  *depthP);
+
+    *bpwidthP = ROUNDUP(*widthP, 16);
 }
 
 
