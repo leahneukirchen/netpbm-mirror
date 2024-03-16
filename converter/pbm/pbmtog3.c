@@ -57,10 +57,10 @@ parseCommandLine(int argc, const char ** const argv,
     optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.  */
     optStruct3 opt;
+    unsigned int option_def_index;
+
     unsigned int nofixedwidth;
     unsigned int align8, align16;
-
-    unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -84,7 +84,7 @@ parseCommandLine(int argc, const char ** const argv,
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = true;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free(option_def);

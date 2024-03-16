@@ -26,14 +26,15 @@
 */
 
 #include "pm_c_util.h"
-#include "pbm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
+#include "pbm.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFileName;
+    const char * inputFileName;
 
     unsigned int dpiX;     /* horiz component of DPI option */
     unsigned int dpiY;     /* vert component of DPI option */
@@ -80,20 +81,19 @@ parseDpi(char *         const dpiOpt,
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
-        /* Instructions to OptParseOptions2 on how to parse our options.
-         */
+    optEntry * option_def;
     optStruct3 opt;
-
     unsigned int option_def_index;
 
     char * dpiOpt;
     unsigned int dpiOptSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "bbonly",     OPT_FLAG,   NULL, &cmdlineP->bbonly,        0);
@@ -104,7 +104,7 @@ parseCommandLine(int argc, const char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -235,7 +235,7 @@ eightPixels(bit ** const bits,
 int
 main(int argc, const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     bit ** bits;
     int rows, cols;

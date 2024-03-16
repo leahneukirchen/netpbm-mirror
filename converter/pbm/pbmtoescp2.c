@@ -49,12 +49,15 @@ parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo *cmdlineP) {
 
     optStruct3 opt;
-    unsigned int option_def_index = 0;
-    optEntry * option_def = malloc(100*sizeof(optEntry));
+    unsigned int option_def_index;
+    optEntry * option_def;
 
     unsigned int compressSpec, resolutionSpec, stripeHeightSpec,
                  rawSpec, formfeedSpec;
 
+    MALLOCARRAY(option_def, 100);
+
+    option_def_index = 0;
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
@@ -69,7 +72,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "formfeed",     OPT_FLAG,    NULL,
             &formfeedSpec,    0);
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     if (argc-1 > 1)
         pm_error("Too many arguments: %d.  "
