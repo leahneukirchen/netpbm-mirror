@@ -1,34 +1,36 @@
 #! /bin/sh
-# This script tests: pamcut pbmmake
-# Also requires: pamfile pnmpad
+# This script tests: pamcut
+# Also requires:  pbmmake pgmmake pamfile pnmpad pamflip
+
+tmpdir=${tmpdir:-/tmp}
 
 echo "Test 1a.  Should print 0 259 0 159 227 149 260 160 twice"
 
 pamcut -left 0 -right 259 -top 0 -bottom 159 \
-       -pad -reportonly testimg.ppm
+      -pad -reportonly testimg.ppm
 pamcut  -left 0 -top 0 -width 260 -height 160 \
-       -pad -reportonly testimg.ppm
+      -pad -reportonly testimg.ppm
 
 echo "Test 1b.  Should print 2958909756 124815"
 
 pamcut -left 0 -top 0 -width 260 -height 160 \
-  -pad testimg.ppm | cksum
+ -pad testimg.ppm | cksum
 
 echo "Test 2a.  Should print 120 159 120 159 227 149 40 40 three times"
 
 pamcut -left 120 -right 159 -top 120 -bottom 159 \
-  -pad -reportonly testimg.ppm
+ -pad -reportonly testimg.ppm
 pamcut -right 159 -bottom 159 -width 40 -height 40 \
-  -pad -reportonly testimg.ppm
+ -pad -reportonly testimg.ppm
 pamcut -left 120 -top 120 -width 40 -height 40 \
-  -pad -reportonly testimg.ppm
+ -pad -reportonly testimg.ppm
 
 echo "Test 2b.  Should print 3876978825 4813 twice"
 
 pamcut -left 120 -right 159 -top 120 -bottom 159 \
-  -pad testimg.ppm | cksum
+ -pad testimg.ppm | cksum
 pamcut -left 120 -top 120 -width 40  \
-  -pad testimg.ppm | pnmpad -black -bottom 11 | cksum
+ -pad testimg.ppm | pnmpad -black -bottom 11 | cksum
 
 echo "Test 3a.  Should print 5 5 5 5 227 149 1 1 three times"
 
@@ -43,9 +45,9 @@ pamcut -top 5 -left 5 -bottom 5 -right 5 testimg.ppm | cksum
 echo "Test 4a.  Should print 10 216 10 138 227 149 207 129 five times"
 
 pamcut -croptop 10 -cropleft 10 -cropbottom 10 -cropright 10 \
-       -reportonly testimg.ppm 
+      -reportonly testimg.ppm 
 pamcut -cropbottom 10 -cropright 10 -width 207 -height 129  \
-       -reportonly testimg.ppm 
+      -reportonly testimg.ppm 
 pamcut -top 10 -left 10 -bottom 138 -right 216 -reportonly testimg.ppm
 pamcut -top 10 -left 10 -bottom -11 -right -11 -reportonly testimg.ppm 
 pamcut -top 10 -left 10 -width 207 -height 129 -reportonly testimg.ppm 
@@ -61,36 +63,138 @@ width=$(echo ${mazesize} | cut -d " " -f 1)
 height=$(echo ${mazesize} | cut -d " " -f 2)
 
 pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 \
-       -reportonly maze.pbm
+      -reportonly maze.pbm
 pamcut -top 0 -left 0 \
-       -bottom $((${height} -1)) -right $((${width} -1)) \
-        -reportonly maze.pbm
+      -bottom $((${height} -1)) -right $((${width} -1)) \
+       -reportonly maze.pbm
 pamcut -top 0 -left 0 -bottom -1 -right -1 -reportonly maze.pbm 
 pamcut -top 0 -left 0 -width ${width} -height ${height} \
-       -reportonly maze.pbm
+      -reportonly maze.pbm
 pamcut -reportonly maze.pbm 
 
 echo "Test 5b. Should print 281226646 481 twice"
 
 pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 maze.pbm | \
-  cksum
+ cksum
 pamcut maze.pbm | cksum
 
+test50_pbm=${tmpdir}/test50.pbm
 
 echo "Test 6a.  Should print 5 34 5 34 50 50 30 30"
 
-pbmmake -g 50 50 | pamcut -reportonly 5 5 30 30
+pbmmake -g 50 50 | tee ${test50_pbm} | pamcut -reportonly 5 5 30 30
 
 echo "Test 6b.  Should print 3412257956 129"
 
-pbmmake -g 50 50 | pamcut 5 5 30 30 | cksum
+pamcut 5 5 30 30 ${test50_pbm} | cksum
 
-echo "Test 7.  Should print 1576602925 8 four times"
+rm  ${test50_pbm}
 
-pbmmake -b 1 1 | cksum
-pbmmake -g 5 5 | pamcut -pad -left=6 -right=6 -top=6 -bottom 6 | cksum
-pbmmake -g 5 5 | pamcut -pad -left=-6 -right=-6 -top=-6 -bottom -6 | cksum
-pbmmake -g 5 5 | pamcut -pad -left=101 -right=101 -top=1001 -bottom 1001 | cksum
+echo "Test 7.  Should print 284857390 12 sixteen times"
+
+test1_pbm=${tmpdir}/test1.pbm
+
+pbmmake -b 1 1 > ${test1_pbm}
+
+# pbmmake -b 5 5 | cksum
+
+pamcut  -pad -cropleft=6 -croptop=6 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropright=6 -croptop=6 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropleft=6 -cropbottom=6 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropright=6 -cropbottom=6 -width=5 -height=5 ${test1_pbm} | cksum
+
+pamcut  -pad -cropleft=6 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -croptop=6 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropbottom=6 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropright=6 -width=5 -height=5 ${test1_pbm} | cksum
+
+pamcut  -pad -cropleft=7 -croptop=7 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropright=7 -croptop=7 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropleft=7 -cropbottom=7 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropright=7 -cropbottom=7 -width=5 -height=5 ${test1_pbm} | cksum
+
+pamcut  -pad -cropleft=17 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -croptop=17 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropbottom=17 -width=5 -height=5 ${test1_pbm} | cksum
+pamcut  -pad -cropright=17 -width=5 -height=5 ${test1_pbm} | cksum
+
+
+echo "Test 8.  Should print 3125257619 29 four times"
+
+test3_pbm=${tmpdir}/test3.pbm
+
+pbmmake -g 3 3 > ${test3_pbm}
+
+pamcut -pad -cropleft=10  -croptop=10    -width=10 -height=10 ${test3_pbm} | cksum
+pamcut  -pad -cropright=10 -croptop=10 -width=10 -height=10    ${test3_pbm} |\
+   pamflip -lr | cksum
+pamcut  -pad -cropleft=10  -cropbottom=10 -width=10 -height=10 ${test3_pbm} |\
+   pamflip -tb | cksum
+pamcut  -pad -cropright=10 -cropbottom=10 -width=10 -height=10 ${test3_pbm} |\
+   pamflip -r180 | cksum
+
+rm ${test3_pbm}
+
+echo "Test 9.  Should print 3338453023 36 sixteen times"
+
+testb_pgm=${tmpdir}/testb.pgm
+
+pgmmake 0.0 1 1 > ${testb_pgm}
+
+# pgmmake 0.0 5 5 | cksum
+
+pamcut  -pad -cropleft=6 -croptop=6 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropright=6 -croptop=6 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropleft=6 -cropbottom=6 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropright=6 -cropbottom=6 -width=5 -height=5 ${testb_pgm} | cksum
+
+pamcut  -pad -cropleft=6 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -croptop=6 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropbottom=6 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropright=6 -width=5 -height=5 ${testb_pgm} | cksum
+
+pamcut  -pad -cropleft=7 -croptop=7 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropright=7 -croptop=7 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropleft=7 -cropbottom=7 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropright=7 -cropbottom=7 -width=5 -height=5 ${testb_pgm} | cksum
+
+pamcut  -pad -cropleft=17 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -croptop=17 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropbottom=17 -width=5 -height=5 ${testb_pgm} | cksum
+pamcut  -pad -cropright=17 -width=5 -height=5 ${testb_pgm} | cksum
+
+rm  ${testb_pgm}
+
+echo "Test 10.  Should print 3957742883 302 four times"
+
+testg_pgm=${tmpdir}/testg.pgm
+
+pgmmake 0.5 2 2 > ${testg_pgm}
+
+# pgmmake 0.0 17 17 | cksum
+
+pamcut -pad -cropleft=17  -croptop=17    -width=17 -height=17 ${testg_pgm} |  cksum
+pamcut -pad -cropright=17 -croptop=17    -width=17 -height=17 ${testg_pgm} | \
+    pamflip -lr | cksum
+pamcut -pad -cropleft=17  -cropbottom=17 -width=17 -height=17 ${testg_pgm} | \
+    pamflip -tb | cksum
+pamcut -pad -cropright=17 -cropbottom=17 -width=17 -height=17 ${testg_pgm} |\
+    pamflip -r180 | cksum
+
+rm  ${testg_pgm}
+
+echo "Test 11.  Should print 1576602925 8 four times"
+
+test5_pbm=${tmpdir}/test5.pbm
+
+pbmmake -g 5 5 > ${test5_pbm}
+
+cat ${test1_pbm} | cksum
+pamcut -pad -left=6 -right=6 -top=6 -bottom 6 ${test5_pbm} | cksum
+pamcut -pad -left=-6 -right=-6 -top=-6 -bottom -6 ${test5_pbm} | cksum
+pamcut -pad -left=101 -right=101 -top=1001 -bottom 1001 ${test5_pbm} | cksum
+
+rm ${test1_pbm} ${test5_pbm}
 
 echo "Test Invalid"
 
