@@ -699,8 +699,9 @@ extractRowsGen(const struct pam * const inpamP,
     destroyRowCutter(rowCutterP);
 
     /* Write out bottom padding */
-    if (bottomrow > inpamP->height-1)
-        writeBlackRows(outpamP, bottomrow - (inpamP->height-1));
+    if (bottomrow >= inpamP->height)
+        writeBlackRows(outpamP, bottomrow - MAX(inpamP->height, toprow) + 1);
+
 }
 
 
@@ -758,14 +759,16 @@ extractRowsPbm(const struct pam * const inpamP,
     }
 
     bitrow = pbm_allocrow_packed(totalWidth);
-
-    makeBlackPbmRow(bitrow, totalWidth);
       /* Initialize row buffer to all black for top and side padding */
 
     /* Write out top padding */
-    for (row = toprow; row < MIN(0, bottomrow+1); ++row)
-        pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
+    if (toprow < 0) {
+        makeBlackPbmRow(bitrow, outpamP->width);
+        for (row = toprow; row < MIN(0, bottomrow+1); ++row)
+            pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
+    }
 
+    makeBlackPbmRow(bitrow, totalWidth);
     for (row = 0; row < inpamP->height; ++row){
         if (row >= toprow && row <= bottomrow) {
             pbm_readpbmrow_bitoffset(inpamP->file, bitrow, inpamP->width,
@@ -783,9 +786,11 @@ extractRowsPbm(const struct pam * const inpamP,
     }
 
     /* Write out bottom padding */
-    makeBlackPbmRow(bitrow, outpamP->width);
-    for (row = MAX(inpamP->height, toprow); row < bottomrow+1; ++row)
-        pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
+    if (bottomrow >= inpamP->height) {
+        makeBlackPbmRow(bitrow, outpamP->width);
+        for (row = MAX(inpamP->height, toprow); row < bottomrow+1; ++row)
+             pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
+    }
 
     pbm_freerow_packed(bitrow);
 }
