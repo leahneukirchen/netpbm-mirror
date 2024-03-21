@@ -17,6 +17,7 @@
 #define _BSD_SOURCE 1    /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 
@@ -87,8 +88,6 @@ parseCommandLine(int argc, const char ** argv,
    in argv!
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to OptParseOptions3 on how to parse our options.
-         */
     optStruct3 opt;
 
     unsigned int windowsSpec, os2Spec, mapfileSpec;
@@ -106,10 +105,10 @@ parseCommandLine(int argc, const char ** argv,
             &mapfileSpec,             0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     if (windowsSpec && os2Spec)
         pm_error("Can't specify both -windows and -os2 options.");

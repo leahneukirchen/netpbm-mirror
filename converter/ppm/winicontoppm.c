@@ -18,6 +18,7 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <stdbool.h>
 #include <math.h>
 #include <string.h>
 #include <assert.h>
@@ -66,8 +67,6 @@ parseCommandLine (int argc, const char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to pm_optParseOptions3 on how to parse our options.
-         */
     optStruct3 opt;
 
     unsigned int option_def_index;
@@ -87,10 +86,10 @@ parseCommandLine (int argc, const char ** argv,
             &cmdlineP->verbose,        0 );
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 < 1)

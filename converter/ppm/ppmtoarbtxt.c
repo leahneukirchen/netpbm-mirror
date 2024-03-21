@@ -62,8 +62,6 @@ parseCommandLine(int argc, const char ** argv,
    in argv!
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to OptParseOptions3 on how to parse our options.
-         */
     optStruct3 opt;
 
     unsigned int hdSpec, tlSpec;
@@ -84,7 +82,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
     free(option_def);
 
     if (!hdSpec)
