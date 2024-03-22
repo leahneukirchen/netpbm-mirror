@@ -2,7 +2,7 @@
 <html><head><title>Infotopam User Manual</title></head>
 <body>
 <h1>infotopam</h1>
-Updated: 07 April 2004
+Updated: 22 March 2024
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -16,7 +16,8 @@ infotopam - convert Amiga .info icons to PAM
 [<b>-forcecolor</b>]
 [<b>-numcolors</b> <i>numcolors</i>]
 [<b>-selected</b>]
-[<i>index color</i> ...]
+[<b>-verbose</b>]
+[<i>index</i> <i>color</i> ...]
 [<i>filename</i>]
 
 
@@ -26,98 +27,111 @@ place of the equals sign to separate an option name from its value.
 
 <h2 id="examples">EXAMPLES</h2>
 
-<p>By default, <b>infotopam</b> converts the first icon in a .info file:
-
   <pre>
-    infotopam amiga.info &gt; amiga.first.pam
+  <code>
+    $ infotopam amiga.info &gt; amiga.first.pam
+  </code>
   </pre>
 
-<p>Use the <i>-selected</i> option to convert the second icon in a .info
-file.  Here <b>infotopam</b> reads from Standard Input:
+<p>Use the <i>-selected</i> option to convert the &quot;selected&quot; version
+of the icon rather than the regular version.  Here <b>infotopam</b> reads from
+Standard Input:
 
   <pre>
+  <code>
     infotopam -selected &lt; amiga.info &gt; amiga.second.pam
+  </code>
   </pre>
 
-<p>Use the <i>-forcecolor</i> option to force color conversion for a 1
-bit-plane .info file:
+<p>Use <i>-numcolors</i> to change the colors.
 
   <pre>
-    infotopam -forcecolor bw.info &gt; bw.pam
-  </pre>
-
-<p>Use <i>-numcolors</i> to override colors for indexes 0 and 3.  Notice the
-two ways to specify the color:
-
-  <pre>
-    infotopam -numcolors 2 0 green 3 #FF0000 icon.info &gt; icon.pam
+  <code>
+    infotopam -numcolors 2 0 green 3 rgb:FF/00/00 icon.info &gt; icon.pam
+  </code>
   </pre>
 
 <p>Since Amiga monitors do not use square pixels, some icons may appear
 squished.  Filtering the output through <b>pamscale</b> can fix this:
 
   <pre>
-     infotopam squish.info | pamtopnm | pamscale -yscale 1.7 &gt; normal.pnm
+  <code>
+    $ infotopam squish.info | pamtopnm | pamscale -yscale 1.7 &gt; normal.pnm
+  </code>
   </pre>
+
 
 <h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>infotopam</b> converts an Amiga .info (icon) file to a PAM image.
+<p><b>infotopam</b> converts an Amiga .info (icon) image to a PAM image.
 <b>infotopam</b> reads a .info file from <i>filename</i>, or from Standard
 Input if you do not specify a file name, and writes the converted PAM image to
 Standard Output.
 
-<p><b>infotopam</b> currently handles 1 and 2 bit-plane icons.  If the .info
-icon only has 1 bit-plane, <b>infotopam</b> generates a bitmap
-(black&amp;white) PAM image; otherwise it generates a color PAM image.  You
-can force <b>infotopam</b> to convert 1 bit-plane images to color PAM images by
-using the <i>-forcecolor</i> option.
+<p><b>infotopam</b> handles 1- and 2 bit-plane icons.  If the .info icon has
+only 1 bit-plane, <b>infotopam</b> generates a black and white PAM image;
+otherwise it generates a color PAM image.  In the latter case, you can choose
+the colors or keep the original Amiga standard colors.  You can
+force <b>infotopam</b> to produce a color PAM with 1 bit-plane input with
+a <b>-forcecolor</b> option.
+  
 
 <h2 id="options">OPTIONS</h2>
 
-<p>In addition to the options common to all programs based on libnetpbm
-(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
-Common Options</a>), <b>infotopam</b> recognizes the following
-command line options:
+<p>In addition to the options common to all programs based on libnetpbm (most
+notably <b>-quiet</b>, see <a href="index.html#commonoptions"> Common
+Options</a>), <b>infotopam</b> recognizes the following command line options:
 
 <dl>
-  <dt><b>-forcecolor</b></dt>
+<dt><b>-numcolors</b> <i>numcolors</i></dt>
 
-  <dd><p>Forces <b>infotopam</b> to convert 1 bit-plane icons to color PAM
-  images instead of bitmap PAM images.  <b>infotopam</b> uses the index 2
-  color for black and the index 1 color for white (more on this
-  below).</dd>
+<dd>This causes the program to change the colors in the conversion.  A
+  2-bit-plane Amiga .icon image has four colors, numbered 0 through 3.
+  Those colors are as follows.
 
-  <dt><b>-numcolors</b> <i>numcolors</i></dt>
+  <dl>
+    <dt>0
+      <dd>Blue   (00, 55, AA)
+    <dt>1
+      <dd>White  (FF, FF, FF)
+    <dt>2
+      <dd>Black  (00, 00, 20)
+    <dt>3
+      <dd>Orange (FF, 8A, 00)
+  </dl>
 
-  <dd><p>Tells <b>infotopam</b> how many colors to override.  Pixels in the
-  Amiga .info files are assigned an index value rather than a specific color.
-  The standard colors for a 2 bit-plane icon are:
+  <p>To specify the changes, specify the number of colors you are changing
+    as the argument of <b>-numcolors</b> and for each color, specify a pair
+    of command line arguments, the first being the color index 0 through 3
+    and the second being the color to substitute.  Specify the color
+    (<i>color</i>) as described for the
+    <a href="libnetpbm_image.html#colorname">argument of the
+    <b>pnm_parsecolor()</b> library routine</a>.
 
-  <pre>
-    Index 0:  Blue   (00, 55, AA)
-    Index 1:  White  (FF, FF, FF)
-    Index 2:  Black  (00, 00, 20)
-    Index 3:  Orange (FF, 8A, 00)
-  </pre>
+  <p><strong>These arguments go before the input file name argument,
+    if any</strong>.  This is an unusual syntax for a Netpbm program.
 
-  <p>To override the colors, first specify how many colors to override using
-  <i>-numcolors</i>, then specify an (<i>index color</i>) pair for each color
-  you want to override, where <i>index</i> is a value from 0 to 3 and
-  <i>color</i> the new color for that index.  Specify <i>color</i> as
-  described for the <a href= "libnetpbm_image.html#colorname"><b>pnm_parsecolor()</b>
-  argument</a>.</dd>
+<dt><b>-selected</b></dt>
 
-  <dt><b>-selected</b></dt>
+    <dd>An Amiga .info image contains two versions of the icon: one for
+      regular display and one to display when the thing represented by
+      the icon is selected.  By default, <b>infotopam</b> converts the
+      regular icon, but this option causes it to convert the selected icon
+      instead.
 
-  <dd>Tells <b>infotopam</b> to convert the selected (second) icon instead of
-  the normal (first) icon.  Each Amiga .info icon file contains two icon
-  images.  The first image is the normal, unselected icon, and the second
-  image is the selected icon.  By default <b>infotopam</b> converts the first
-  icon.  You can tell <b>infotopam</b> to convert the second icon by using the
-  <i>-selected</i> option.</dd>
+<dt><b>-forcecolor</b></dt>
+
+<dd><p>This causes <b>infotopam</b> to convert 1 bit-plane icons to color
+    PAM images instead of black and white.  The colors are the index 2
+    color for black and the index 1 color for white.
+
+<dt><b>-verbose</b></dt>
+<dd><p>This causes <b>infotopam</b> to issue informational messages about
+    the conversion process.
+    
+<p>This option was new in Netpbm 11.06 (March 2024).
 
 </dl>
 
