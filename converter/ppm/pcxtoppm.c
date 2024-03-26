@@ -92,13 +92,13 @@ parseCommandLine(int argc, const char ** argv,
 
     unsigned int option_def_index;
 
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "stdpalette",     OPT_FLAG,   NULL,
             &cmdlineP->stdpalette,    0 );
     OPTENT3(0, "verbose",        OPT_FLAG,   NULL,
             &cmdlineP->verbose,       0 );
-
-    MALLOCARRAY_NOFAIL(option_def, 100);
 
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
