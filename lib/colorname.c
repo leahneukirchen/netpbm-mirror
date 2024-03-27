@@ -16,13 +16,14 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
-#include "netpbm/pm_c_util.h"
+#include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <math.h>
 
+#include "netpbm/pm_c_util.h"
 #include "netpbm/nstring.h"
 #include "netpbm/mallocvar.h"
 
@@ -68,7 +69,7 @@ openColornameFileSearch(const char * const searchPath,
         bool eol;
 
         cursor = &buffer[0];
-        eol = FALSE;    /* initial value */
+        eol = false;    /* initial value */
         *filePP = NULL;  /* initial value */
         while (!eol && !*filePP) {
             const char * token;
@@ -76,7 +77,7 @@ openColornameFileSearch(const char * const searchPath,
             if (token) {
                 *filePP = fopen(token, "r");
             } else
-                eol = TRUE;
+                eol = true;
         }
         free(buffer);
     } else
@@ -86,7 +87,8 @@ openColornameFileSearch(const char * const searchPath,
 
 
 FILE *
-pm_openColornameFile(const char * const fileName, const int must_open) {
+pm_openColornameFile(const char * const fileName,
+                     int          const mustOpen) {
 /*----------------------------------------------------------------------------
    Open the colorname dictionary file.  Its file name is 'fileName', unless
    'fileName' is NULL.  In that case, its file name is the value of the
@@ -94,19 +96,19 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
    if that environment variable is not set, it is the first file found,
    if any, in the search path RGB_DB_PATH.
 
-   'must_open' is a logical: we must get the file open or die.  If
-   'must_open' is true and we can't open the file (e.g. it doesn't
-   exist), exit the program with an error message.  If 'must_open' is
+   'mustOpen' is a logical: we must get the file open or die.  If
+   'mustOpen' is true and we can't open the file (e.g. it doesn't
+   exist), exit the program with an error message.  If 'mustOpen' is
    false and we can't open the file, just return a null pointer.
 -----------------------------------------------------------------------------*/
-    FILE *f;
+    FILE * fileP;
 
     if (fileName == NULL) {
         const char * rgbdef = getenv(RGBENV);
         if (rgbdef) {
             /* The environment variable is set */
-            f = fopen(rgbdef, "r");
-            if (f == NULL && must_open)
+            fileP = fopen(rgbdef, "r");
+            if (fileP == NULL && mustOpen)
                 pm_error("Can't open the color names dictionary file "
                          "named %s, per the %s environment variable.  "
                          "errno = %d (%s)",
@@ -115,9 +117,9 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
             /* The environment variable isn't set, so try the hardcoded
                default color name dictionary locations.
             */
-            openColornameFileSearch(RGB_DB_PATH, &f);
+            openColornameFileSearch(RGB_DB_PATH, &fileP);
 
-            if (f == NULL && must_open) {
+            if (fileP == NULL && mustOpen) {
                 pm_error("can't open color names dictionary file from the "
                          "path '%s' "
                          "and Environment variable %s not set.  Set %s to "
@@ -127,20 +129,20 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
             }
         }
     } else {
-        f = fopen(fileName, "r");
-        if (f == NULL && must_open)
+        fileP = fopen(fileName, "r");
+        if (fileP == NULL && mustOpen)
             pm_error("Can't open the color names dictionary file '%s'.  "
                      "errno = %d (%s)", fileName, errno, strerror(errno));
 
     }
     lineNo = 0;
-    return(f);
+    return fileP;
 }
 
 
 
 struct colorfile_entry
-pm_colorget(FILE * const f) {
+pm_colorget(FILE * const fileP) {
 /*----------------------------------------------------------------------------
    Get next color entry from the color name dictionary file 'f'.
 
@@ -155,20 +157,18 @@ pm_colorget(FILE * const f) {
     struct colorfile_entry retval;
     char * rc;
 
-    gotOne = FALSE;  /* initial value */
-    eof = FALSE;
-    while (!gotOne && !eof) {
+    for (gotOne = false, eof = false; !gotOne && !eof; ) {
         lineNo++;
-        rc = fgets(buf, sizeof(buf), f);
+        rc = fgets(buf, sizeof(buf), fileP);
         if (rc == NULL)
-            eof = TRUE;
+            eof = true;
         else {
             if (buf[0] != '#' && buf[0] != '\n' && buf[0] != '!' &&
                 buf[0] != '\0') {
                 if (sscanf(buf, "%ld %ld %ld %[^\n]",
                            &retval.r, &retval.g, &retval.b, colorname)
                     == 4 )
-                    gotOne = TRUE;
+                    gotOne = true;
                 else {
                     if (buf[strlen(buf)-1] == '\n')
                         buf[strlen(buf)-1] = '\0';
@@ -191,14 +191,27 @@ pm_colorget(FILE * const f) {
 void
 pm_parse_dictionary_namen(char   const colorname[],
                           tuplen const color) {
+/*----------------------------------------------------------------------------
+   Return as *tuplen a tuple of type RGB that represents the color named
+   'colorname'.  This is an actual name, like "pink", not just a color
+   specification, like "rgb:0/0/0".
 
-    FILE * fP;
+   If the color name is unknown, abort the program.  If there are two entries
+   in the dictionary for the same color name, use the first one.
+
+   We use the Netpbm color dictionary used by 'pm_openColornamefile'.
+
+   Caller must ensure there is enough memory at 'tuplen' for at least 3
+   samples.  We set the first 3 samples of the tuple value and ignore any
+   others.
+-----------------------------------------------------------------------------*/
+    FILE * fileP;
     bool gotit;
     bool colorfileExhausted;
     struct colorfile_entry colorfileEntry;
     char * canoncolor;
 
-    fP = pm_openColornameFile(NULL, TRUE);  /* exits if error */
+    fileP = pm_openColornameFile(NULL, true);  /* exits if error */
     canoncolor = strdup(colorname);
 
     if (!canoncolor)
@@ -207,18 +220,18 @@ pm_parse_dictionary_namen(char   const colorname[],
 
     pm_canonstr(canoncolor);
 
-    for(gotit = FALSE, colorfileExhausted = FALSE;
+    for (gotit = false, colorfileExhausted = false;
         !gotit && !colorfileExhausted; ) {
 
-        colorfileEntry = pm_colorget(fP);
+        colorfileEntry = pm_colorget(fileP);
         if (colorfileEntry.colorname) {
             pm_canonstr(colorfileEntry.colorname);
             if (streq(canoncolor, colorfileEntry.colorname))
-                gotit = TRUE;
+                gotit = true;
         } else
-            colorfileExhausted = TRUE;
+            colorfileExhausted = true;
     }
-    fclose(fP);
+    fclose(fileP);
 
     if (!gotit)
         pm_error("unknown color '%s'", colorname);
@@ -237,7 +250,15 @@ pm_parse_dictionary_name(char    const colorname[],
                          pixval  const maxval,
                          int     const closeOk,
                          pixel * const colorP) {
+/*----------------------------------------------------------------------------
+   Same as 'pm_parse_dictionary_name' except return the color as a
+   pixel value of type 'pixel', with a maxval of 'maxval'.
 
+   We round the color to the nearest one that can be represented with the
+   resolution indicated by 'maxval' (rounding each component independently).
+   Iff rounding is necessary and 'closeOK' is false, we issue an informational
+   message about the rounding.
+-----------------------------------------------------------------------------*/
     double const epsilon = 1.0/65536.0;
 
     tuplen color;
@@ -269,6 +290,5 @@ pm_parse_dictionary_name(char    const colorname[],
 
     PPM_ASSIGN(*colorP, r, g, b);
 }
-
 
 
