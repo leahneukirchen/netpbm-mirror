@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>libppm</h1>
-Updated: 08 May 2009
+Updated: 27 March 2024
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -489,6 +489,12 @@ href="http://www.swiss.ai.mit.edu/~jaffer/Color/x11.pdf">here</a>.  <a
 href="http://www.swiss.ai.mit.edu/~jaffer/Color/Dictionaries.html">This
 website</a> shows a bunch of other versions you could use.
 
+<p>Netpbm accepts color dictionaries that have multiple colors for a given
+name and multiple names for a given color.  Entries in a color dictionary are
+ordered, and when Netpbm looks up a color name, it ignores all but the first
+entry for that name, and when it looks up a color, it ignores all but the
+first entry for that color.
+  
 <p>Netpbm is packaged with a color dictionary.  A standard Netpbm
 installation installs this file as "misc/rgb.txt" in the Netpbm
 directory.  This color dictionary has colors from everywhere the
