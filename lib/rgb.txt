@@ -2,6 +2,10 @@
 # order.  Some color names are defined multiple times, and sometimes
 # with different colors.  Many colors have multiple names.
 
+# When Netpbm interprets this dictionary, it recognizes the first definition
+# of a particular color name and the first definition of a particular color
+# definition.  (That means the function is not reversible).
+
 # - Netpbm originals
 # - Crayola crayons, as determined by John Thomas at Tektronix
 # - Hollasch at Microsoft Research
