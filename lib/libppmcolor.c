@@ -247,11 +247,8 @@ readOpenColorFile(FILE *          const colorFileP,
     unsigned int nColorsDone;
     bool done;
 
-    nColorsDone = 0;
-    done = false;
-    *errorP = NULL;
+    for (nColorsDone = 0, done = false, *errorP = NULL; !done && !*errorP; ) {
 
-    while (!done && !*errorP) {
         struct colorfile_entry const ce = pm_colorget(colorFileP);
 
         if (!ce.colorname)
