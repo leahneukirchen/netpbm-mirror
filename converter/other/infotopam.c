@@ -29,10 +29,10 @@
  *
  * The icon data has the following format:
  *
- *   BIT-PLANE planes, each with HEIGHT rows of (WIDTH +15) / 16 * 2 bytes
- *   length.
+ *   BIT-PLANE planes, each with HEIGHT rows WIDTH bits long, rounded up to
+ *   a multiple of 2 bytes.
  *
- * So if you have a 9x3x2 icon, the icon data will look like this:
+ * So if you have a 9x3x2 icon, the icon data looks like this:
  *
  *   aaaa aaaa a000 0000
  *   aaaa aaaa a000 0000
@@ -45,9 +45,128 @@
  * bit-plane, and '0' is padding.  Thanks again to Ben Hutchings for his
  * very helpful post!
  *
- * This program uses code from "sidplay" and an older "infotoxpm" program I
- * wrote, both of which are released under GPL.
+ *-----------------------------------------------------------------------------
+ * The following specification for the DiskObject header is from
+ * http://amigadev.elowar.com/read/ADCD_2.1/Libraries_Manual_guide/node0241.html
+ * on 2024.03.14.
  *
+ * The DiskObject C structure is defined in the include file
+ * <workbench/workbench.h>.  For a complete listing, see the Amiga ROM Kernel
+ * Reference Manual: Includes and Autodocs.  The DiskObject structure contains
+ * the following elements:
+ *
+ *     struct DiskObject {
+ *         UWORD              do_Magic;    magic number at start of file
+ *         UWORD              do_Version;  so we can change structure
+ *         struct Gadget      do_Gadget;   a copy of in core gadget
+ *         UBYTE              do_Type;
+ *         char              *do_DefaultTool;
+ *         char             **do_ToolTypes;
+ *         LONG               do_CurrentX;
+ *         LONG               do_CurrentY;
+ *         struct DrawerData *do_DrawerData;
+ *         char              *do_ToolWindow;  applies only to tools
+ *         LONG               do_StackSize;   applies only to tools
+ *     };
+ *
+ * do_Magic
+ *
+ *     A magic number that the icon library looks for to make sure that the
+ *     file it is reading really contains an icon.  It should be the manifest
+ *     constant WB_DISKMAGIC.  PutDiskObject() will put this value in the
+ *     structure, and GetDiskObject() will not believe that a file is really
+ *     an icon unless this value is correct.
+ *
+ * do_Version
+ *
+ *     This provides a way to enhance the .info file in an upwardly-compatible
+ *     way.  It should be WB_DISKVERSION.  The icon library will set this value
+ *     for you and will not believe weird values.
+ *
+ * do_Gadget
+ *
+ *     This contains all the imagery for the icon. See the "Gadget Structure"
+ *     section below for more details.
+ *
+ * do_Type
+ *
+ *     The type of the icon; can be set to any of the following values.
+ *
+ *         WBDISK     The root of a disk
+ *         WBDRAWER   A directory on the disk
+ *         WBTOOL     An executable program
+ *         WBPROJECT  A data file
+ *         WBGARBAGE  The Trashcan directory
+ *         WBKICK     A Kickstart disk
+ *         WBAPPICON  Any object not directly associated with a filing system
+ *                    object, such as a print spooler (new in Release 2).
+ *
+ * do_DefaultTool
+ *
+ *     Default tools are used for project and disk icons.  For projects (data
+ *     files), the default tool is the program Workbench runs when the project
+ *     is activated.  Any valid AmigaDOS path may be entered in this field
+ *     such as "SYS:myprogram", "df0:mypaint", "myeditor" or ":work/mytool".
+ *
+ *     For disk icons, the default tool is the diskcopy program
+ *     ("SYS:System/DiskCopy") that will be used when this disk is the source
+ *     of a copy.
+ *
+ * do_ToolTypes
+ *
+ *     This is an array of free-format strings.  Workbench does not enforce
+ *     any rules on these strings, but they are useful for passing
+ *     environment information.  See the section on "The Tool Types Array"
+ *     below for more information.
+ *
+ * do_CurrentX, do_CurrentY
+ *
+ *     Drawers have a virtual coordinate system.  The user can scroll around
+ *     in this system using the scroll gadgets on the window that opens when
+ *     the drawer is activated.  Each icon in the drawer has a position in
+ *     the coordinate system.  CurrentX and CurrentY contain the icon's
+ *     current position in the drawer.  Picking a position for a newly
+ *     created icon can be tricky.  NO_ICON_POSITION is a system constant
+ *     for do_CurrentX and do_CurrentY that instructs Workbench to pick a
+ *     reasonable place for the icon.  Workbench will place the icon in an
+ *     unused region of the drawer.  If there is no space in the drawers
+ *     window, the icon will be placed just to the right of the visible
+ *     region.
+ *
+ * do_DrawerData
+ *
+ *     If the icon is associated with a directory (WBDISK, WBDRAWER,
+ *     WBGARBAGE), it needs a DrawerData structure to go with it.  This
+ *     structure contains an Intuition NewWindow structure (see the
+ *     "Intuition Windows" chapter for more information):
+ *
+ *         struct DrawerData {
+ *              struct NewWindow dd_NewWindow; structure to open window
+ *              LONG             dd_CurrentX;  current x coordinate of origin
+ *              LONG             dd_CurrentY;  current y coordinate of origin
+ *         };
+ *
+ *     Workbench uses this to hold the current window position and size of
+ *     the window so it will reopen in the same place.
+ *
+ * do_ToolWindow
+ *
+ *     This field is reserved for future use.
+ *
+ * do_StackSize
+ *
+ *     This is the size of the stack (in bytes) used for running the tool.
+ *     If this is NULL, then Workbench will use a reasonable default stack
+ *     size (currently 4K bytes).
+ *
+ *     When a tool is run via the default tool mechanism (i.e., a project
+ *     was activated, not the tool itself), Workbench uses the stack size
+ *     specified in the project's .info file and the tool's .info file is
+ *     ignored.
+ *
+ *-------------------------------------------------------------------------
+ * This program uses code from "sidplay" and an older "infotoxpm" program
+ * Richard Griswold wrote, both of which are offered under GPL.
  *-------------------------------------------------------------------------
  *
  * This program is free software; you can redistribute it and/or
@@ -65,42 +184,51 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
-#include "mallocvar.h"
-
-#include <errno.h>
-#include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <stdio.h>
+
+#include "pm_c_util.h"
+#include "mallocvar.h"
+#include "nstring.h"
+#include "shhopt.h"
+#include "pam.h"
 
 
-/* Struct to hold miscellaneous icon information */
+typedef struct CmdlineInfo_ {
+    const char  * inputFileNm;
+    unsigned int  forcecolor;
+    pixel         colors[4];   /* Colors to use for converted icons */
+    unsigned int  selected;
+    unsigned int  verbose;
+} CmdlineInfo;
+
 typedef struct IconInfo_ {
-    const char  *name;        /* Icon file name */
-    FILE        *fp;          /* Input file pointer */
-
-    bool         forceColor;  /* Convert 1 bitplane icon to color icon */
-    unsigned int numColors;   /* Number of colors to override */
-    bool         selected;    /* Converting selected (second) icon */
-
-    bool         drawerData;  /* Icon has drawer data */
-    unsigned int version;     /* Icon version */
-    unsigned int width;       /* Width in pixels */
-    unsigned int height;      /* Height in pixels */
-    unsigned int depth;       /* Bits of color per pixel */
-    pixel        colors[4];   /* Colors to use for converted icons */
-    unsigned char *icon;      /* Completed icon */
+    /* Miscellaneous icon information */
+    FILE *          ifP;            /* Input file */
+    bool            hasDrawerData;  /* Icon has drawer data */
+    unsigned int    version;        /* Icon version */
+    unsigned int    width;          /* Width in pixels */
+    unsigned int    height;         /* Height in pixels */
+    unsigned int    depth;          /* Bits of color per pixel */
+    unsigned int    bpwidth;
+        /* Bitplane width; Width of each row in icon, including padding */
+    unsigned char * icon;           /* Completed icon */
 
 } IconInfo;
 
-/* Header for each icon image */
 typedef struct IconHeader_ { /* 20 bytes */
-    unsigned char pad0[4];        /* Padding (always seems to be zero) */
+    /* Text of header for one icon image */
+    unsigned char type[4];
+        /* Reverse engineered.  This always seems to be 0x00000000 in
+           icon headers, but we've seen 0x00000010 in some 51-byte object
+           we don't understand.
+        */
     unsigned char iconWidth[2];   /* Width (usually equal to Gadget width) */
     unsigned char iconHeight[2];
-    /* Height (usually equal to Gadget height -1) */
+        /* Height (usually equal to Gadget height -1) */
     unsigned char bpp[2];         /* Bits per pixel */
     unsigned char pad1[10];       /* ??? */
 } IconHeader;
@@ -110,6 +238,7 @@ typedef struct IconHeader_ { /* 20 bytes */
  * http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/linux.html
  */
 typedef struct DiskObject_ { /* 78 bytes (including Gadget struct) */
+    /* Text of Info Disk Object header */
     unsigned char magic[2];         /* Magic number at the start of the file */
     unsigned char version[2];       /* Object version number */
     unsigned char gadget[44];       /* Copy of in memory gadget (44 by */
@@ -127,139 +256,140 @@ typedef struct DiskObject_ { /* 78 bytes (including Gadget struct) */
 
 
 static void
-parseCommandLine( int              argc,
-                  char *           argv[],
-                  IconInfo * const infoP ) {
+parseCommandLine(int                 argc,
+                 const char **       argv,
+                 CmdlineInfo * const cmdlineP) {
 
-    unsigned int numColorArgs,  /* Number of arguments for overriding colors */
-        colorIdx,      /* Color index */
-        i;             /* Argument index */
-    const char  * const colors[4] = {
-        /* Pixel colors based on original Amiga colors */
-        "#0055AA",    /*   Blue      0,  85, 170 */
-        "#FFFFFF",    /*   White   255, 255, 255 */
-        "#000020",    /*   Black     0,   0,  32 */
-        "#FF8A00"     /*   Orange  255, 138,   0 */
-    };
-
-    /* Option entry variables */
-    optEntry     *option_def;
-    optStruct3    opt;
-    unsigned int  option_def_index;
-    unsigned int numColorsSpec, forceColorSpec, selectedSpec;
+    unsigned int   argIdx;
+    optEntry     * option_def;
+    optStruct3     opt;
+    unsigned int   option_def_index;
+    unsigned int   numcolorsSpec;
+    unsigned int   numcolors;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     /* Set command line options */
     option_def_index = 0;   /* Incremented by OPTENT3 */
-    OPTENT3(0, "forcecolor", OPT_FLAG, NULL, &forceColorSpec, 0);
-    OPTENT3(0, "numcolors",  OPT_UINT, &infoP->numColors, &numColorsSpec, 0);
-    OPTENT3(0, "selected",   OPT_FLAG, NULL, &selectedSpec,   0);
+    OPTENT3(0, "forcecolor", OPT_FLAG, NULL,       &cmdlineP->forcecolor,
+            0);
+    OPTENT3(0, "numcolors",  OPT_UINT, &numcolors, &numcolorsSpec,
+            0);
+    OPTENT3(0, "selected",   OPT_FLAG, NULL,       &cmdlineP->selected,
+            0);
+    OPTENT3(0, "verbose",    OPT_FLAG, NULL,       &cmdlineP->verbose,
+            0);
 
-    /* Initialize the iconInfo struct */
-    infoP->name = NULL;
-    infoP->fp = NULL;
-    infoP->drawerData = FALSE;
-    infoP->version = 0;
-    infoP->width = 0;
-    infoP->height = 0;
-    infoP->depth = 0;
-    infoP->icon = NULL;
-    for ( colorIdx = 0; colorIdx < 4; colorIdx++ )
-        infoP->colors[colorIdx] =
-            ppm_parsecolor( (char*) colors[colorIdx], 0xFF );
-
-    /* Initialize option structure */
     opt.opt_table     = option_def;
-    opt.short_allowed = FALSE;  /* No short (old-fashioned) options */
-    opt.allowNegNum   = FALSE;  /* No negative number parameters */
+    opt.short_allowed = false;  /* No short (old-fashioned) options */
+    opt.allowNegNum   = false;  /* No negative number parameters */
 
-    /* Parse the command line */
-    pm_optParseOptions3( &argc, argv, opt, sizeof( opt ), 0 );
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
-    infoP->forceColor = forceColorSpec;
-    infoP->selected = selectedSpec;
-    if (!numColorsSpec)
-        infoP->numColors = 0;
+    {
+        const char * const colors[4] = {
+            /* Pixel colors based on original Amiga colors */
+            "#0055AA",    /*   Blue      0,  85, 170 */
+            "#FFFFFF",    /*   White   255, 255, 255 */
+            "#000020",    /*   Black     0,   0,  32 */
+            "#FF8A00"     /*   Orange  255, 138,   0 */
+        };
 
-    /* Get colors and file name */
-    numColorArgs = infoP->numColors * 2;
-    if ( ( argc - 1 != numColorArgs ) && ( argc - 1 != numColorArgs + 1 ) ) {
-        pm_error( "Wrong number of arguments for number of colors.  "
-                  "For %u colors, you need %u color arguments, "
-                  "with possibly one more argument for the input file name.",
-                  infoP->numColors, numColorArgs );
-    }
+        unsigned int colorArgCt;
+            /* Number of arguments for overriding colors */
 
-    /* Convert color arguments */
-    for ( i = 1; i < numColorArgs; i += 2 ) {
-        char *       endptr;        /* End pointer for strtol() */
         unsigned int colorIdx;
 
-        /* Get color index from argument */
-        colorIdx = strtoul( argv[i], &endptr, 0 );
+        if (numcolorsSpec) {
+            colorArgCt = numcolors * 2;
+            if (argc-1 < colorArgCt) {
+                pm_error("Insufficient arguments for %u color "
+                         "specifications.  Need at least %u arguments",
+                         numcolors, colorArgCt);
+            }
+        } else
+            colorArgCt = 0;
 
-        if ( *endptr != '\0' ) {
-            pm_error( "'%s' is not a valid color index", argv[i] );
+        /* Initialize palette to defaults */
+        for (colorIdx = 0; colorIdx < 4; ++colorIdx)
+            cmdlineP->colors[colorIdx] =
+                ppm_parsecolor(colors[colorIdx], 0xFF);
+
+        /* Convert color arguments */
+        for (argIdx = 1; argIdx < colorArgCt; argIdx += 2) {
+            char *       endptr;        /* End pointer for strtol() */
+            unsigned int colorIdx;
+
+            /* Get color index from argument */
+            colorIdx = strtoul(argv[argIdx], &endptr, 0);
+
+            if (*endptr != '\0') {
+                pm_error("'%s' is not a valid color index", argv[argIdx]);
+            }
+
+            if ((colorIdx < 0) || (colorIdx > 3)) {
+                pm_error(
+                    "%u is not a valid color index (minimum 0, maximum 3)",
+                    colorIdx);
+            }
+
+            cmdlineP->colors[colorIdx] = ppm_parsecolor(argv[argIdx+1], 0xFF);
         }
-
-        /* Check color index range (current 0 to 3) */
-        if ( ( colorIdx < 0 ) || ( colorIdx > 3 ) ) {
-            pm_error( "%u is not a valid color index (minimum 0, maximum 3)",
-                      colorIdx );
-        }
-
-        /* Convert the color for this color index */
-        infoP->colors[colorIdx] = ppm_parsecolor( argv[i+1], 0xFF );
     }
 
-    /* Set file name */
-    if ( i > argc-1 )
-        infoP->name = "-";  /* Read from standard input */
+    if (argIdx > argc-1)
+        cmdlineP->inputFileNm = "-";  /* Read from standard input */
     else
-        infoP->name = argv[i];
+        cmdlineP->inputFileNm = argv[argIdx];
 }
 
 
 
 static void
-getDiskObject( IconInfo * const infoP ) {
-/*-------------------------------------------------------------------------
- * Get fields from disk object portion of info file
- *-------------------------------------------------------------------------*/
+readDiskObjectHeader(FILE *         const ifP,
+                     unsigned int * const versionP,
+                     bool *         const hasDrawerDataP) {
+/*---------------------------------------------------------------------------
+  Read disk object header from file *ifP; validate it and return its contents.
+----------------------------------------------------------------------------*/
     DiskObject  dobj;      /* Disk object structure */
-    size_t      bytesRead;
+    size_t      bytesReadCt;
 
     /* Read the disk object header */
-    bytesRead = fread( &dobj, 1, sizeof(dobj), infoP->fp );
-    if (ferror(infoP->fp))
-        pm_error("Cannot read disk object header for file '%s'.  "
+    bytesReadCt = fread(&dobj, 1, sizeof(dobj), ifP);
+    if (ferror(ifP))
+        pm_error("Cannot read disk object header.  "
                  "fread() errno = %d (%s)",
-                 infoP->name, errno, strerror(errno));
-    else if (bytesRead != sizeof(dobj))
-        pm_error("Cannot read entire disk object header for file '%s'.  "
+                 errno, strerror(errno));
+    else if (bytesReadCt != sizeof(dobj))
+        pm_error("Cannot read entire disk object header.  "
                  "Only read 0x%X of 0x%X bytes",
-                 infoP->name, (unsigned)bytesRead, (unsigned)sizeof(dobj));
+                 (unsigned)bytesReadCt, (unsigned)sizeof(dobj));
 
-    /* Check magic number */
+    /* Validate magic number */
     if ((dobj.magic[0] != 0xE3) && (dobj.magic[1] != 0x10))
-        pm_error("Wrong magic number for file '%s'.  "
+        pm_error("Wrong magic number in icon file.  "
                  "Expected 0xE310, but got 0x%X%X",
-                 infoP->name, dobj.magic[0], dobj.magic[1]);
+                 dobj.magic[0], dobj.magic[1]);
 
-    /* Set version info and have drawer data flag */
-    infoP->version     = (dobj.version[0]     <<  8) +
-        (dobj.version[1]           );
-    infoP->drawerData  = (dobj.pDrawerData[0] << 24) +
+    *versionP = (dobj.version[0] <<  8) + (dobj.version[1]);
+
+    *hasDrawerDataP =
+        (dobj.pDrawerData[0] << 24) +
         (dobj.pDrawerData[1] << 16) +
         (dobj.pDrawerData[2] <<  8) +
-        (dobj.pDrawerData[3]      ) ? TRUE : FALSE;
+        (dobj.pDrawerData[3]      )
+        > 0;
 }
 
 
 
 static void
-getIconHeader(IconInfo * const infoP) {
+readIconHeader(FILE *         const ifP,
+               unsigned int * const widthP,
+               unsigned int * const heightP,
+               unsigned int * const depthP,
+               unsigned int * const bpwidthP) {
 /*-------------------------------------------------------------------------
  * Get fields from icon header portion of info file
  *-------------------------------------------------------------------------*/
@@ -267,25 +397,37 @@ getIconHeader(IconInfo * const infoP) {
     size_t      bytesRead;
 
     /* Read icon header */
-    bytesRead = fread(&ihead, 1, sizeof(ihead), infoP->fp);
-    if (ferror(infoP->fp))
-        pm_error("Cannot read icon header for file '%s'.  "
-                 "fread() errno = %d (%s)",
-                 infoP->name, errno, strerror(errno));
+    bytesRead = fread(&ihead, 1, sizeof(ihead), ifP);
+    if (ferror(ifP))
+        pm_error("Failed to read icon header.  fread() errno = %d (%s)",
+                 errno, strerror(errno));
     else if (bytesRead != sizeof(ihead))
-        pm_error("Cannot read the entire icon header for file '%s'.  "
-                 "Only read 0x%X of 0x%X bytes",
-                 infoP->name, (unsigned)bytesRead, (unsigned)sizeof(ihead));
+        pm_error("Failed to read the entire icon header.  "
+                 "Read only %u of %u bytes",
+                 (unsigned)bytesRead, (unsigned)sizeof(ihead));
 
-    /* Get icon width, height, and bitplanes */
-    infoP->width  = (ihead.iconWidth[0]  << 8) + ihead.iconWidth[1];
-    infoP->height = (ihead.iconHeight[0] << 8) + ihead.iconHeight[1];
-    infoP->depth  = (ihead.bpp[0]        << 8) + ihead.bpp[1];
+    if (!memeq(ihead.type, "\0\0\0\0", 4)) {
+        pm_message("Unrecognized object where icon header expected.  "
+                   "First 4 bytes are 0x%02x%02x%02x%02x.  We expect "
+                   "0x00000000",
+                   ihead.type[0], ihead.type[1], ihead.type[2], ihead.type[3]);
+    }
 
-    /* Check number of bit planes */
-    if ((infoP->depth > 2) || (infoP->depth < 1))
-        pm_error("We don't know how to interpret %u bitplanes file '%s'.  ",
-                 infoP->depth, infoP->name);
+    *widthP  = (ihead.iconWidth[0]  << 8) + ihead.iconWidth[1];
+    *heightP = (ihead.iconHeight[0] << 8) + ihead.iconHeight[1];
+    *depthP  = (ihead.bpp[0]        << 8) + ihead.bpp[1];
+
+    if (*widthP < 1)
+        pm_error("Invalid width value in icon header: %u", *widthP);
+
+    if (*heightP < 1)
+        pm_error("Invalid height value in icon header: %u", *heightP);
+
+    if (*depthP > 2 || *depthP < 1)
+        pm_error("We don't know how to interpret file with %u bitplanes.  ",
+                 *depthP);
+
+    *bpwidthP = ROUNDUP(*widthP, 16);
 }
 
 
@@ -298,17 +440,16 @@ addBitplane(unsigned char * const icon,
    Add bitplane to existing icon image
 -----------------------------------------------------------------------------*/
     unsigned int i;
-    unsigned int j;
 
-    for (i = j = 0; i < bpsize; ++i, j += 8) {
-        icon[j+0] = (icon[j+0] << 1) | ((buff[i] >> 7) & 0x01);
-        icon[j+1] = (icon[j+1] << 1) | ((buff[i] >> 6) & 0x01);
-        icon[j+2] = (icon[j+2] << 1) | ((buff[i] >> 5) & 0x01);
-        icon[j+3] = (icon[j+3] << 1) | ((buff[i] >> 4) & 0x01);
-        icon[j+4] = (icon[j+4] << 1) | ((buff[i] >> 3) & 0x01);
-        icon[j+5] = (icon[j+5] << 1) | ((buff[i] >> 2) & 0x01);
-        icon[j+6] = (icon[j+6] << 1) | ((buff[i] >> 1) & 0x01);
-        icon[j+7] = (icon[j+7] << 1) | ((buff[i] >> 0) & 0x01);
+    for (i = 0; i < bpsize; ++i) {
+        icon[(i*8)+0] = (icon[(i*8)+0] << 1) | ((buff[i] >> 7) & 0x01);
+        icon[(i*8)+1] = (icon[(i*8)+1] << 1) | ((buff[i] >> 6) & 0x01);
+        icon[(i*8)+2] = (icon[(i*8)+2] << 1) | ((buff[i] >> 5) & 0x01);
+        icon[(i*8)+3] = (icon[(i*8)+3] << 1) | ((buff[i] >> 4) & 0x01);
+        icon[(i*8)+4] = (icon[(i*8)+4] << 1) | ((buff[i] >> 3) & 0x01);
+        icon[(i*8)+5] = (icon[(i*8)+5] << 1) | ((buff[i] >> 2) & 0x01);
+        icon[(i*8)+6] = (icon[(i*8)+6] << 1) | ((buff[i] >> 1) & 0x01);
+        icon[(i*8)+7] = (icon[(i*8)+7] << 1) | ((buff[i] >> 0) & 0x01);
     }
 }
 
@@ -392,156 +533,134 @@ readIconData(FILE *           const fileP,
 
 
 static void
-writeIconData( IconInfo *   const infoP,
-               struct pam * const pamP ) {
+writeRaster(IconInfo *    const infoP,
+            struct pam *  const pamP,
+            bool          const wantColor,
+            const pixel * const colors) {
 /*-------------------------------------------------------------------------
- * Write icon data to file
- *-------------------------------------------------------------------------*/
-    unsigned int const bpwidth = ( ( infoP->width + 15 ) / 16 ) * 16;
-        /* Bitplane width; Width of each row in icon, including padding */
+  Write out raster of PAM image described by *pamP.
 
-    tuple * row;      /* Output row */
+  'wantColor' means the user wants the PAM to be tuple type RGB, regardless
+  of the input image type.
 
-    /* Allocate row */
-    row = pnm_allocpamrow( pamP );
+  'colors' is the palette.  It has 4 entries, one for each of the possible
+  color indices in the input icon raster.
+--------------------------------------------------------------------------*/
+    unsigned int row;
+    tuple * tuplerow;      /* Output row */
 
-    /* Write icon image to output file */
-    /* Put if check outside for loop to reduce number of times check is made */
-    if ( infoP->depth == 1 ) {
-        if ( infoP->forceColor ) {
-            /* Convert 1 bitplane icon into color PAM */
-            unsigned int i;
-            for ( i = 0; i < infoP->height; ++i ) {
-                unsigned int j;
-                for ( j = 0; j < infoP->width; ++j ) {
+    tuplerow = pnm_allocpamrow(pamP);
+
+    for (row = 0; row < infoP->height; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < infoP->width; ++col) {
+            if (infoP->depth == 1) {
+                if (wantColor) {
                     /* 1 is black and 0 is white */
                     unsigned int colorIdx =
-                        infoP->icon[ i * bpwidth + j ] ? 2 : 1;
-                    row[j][PAM_RED_PLANE] =
-                        PPM_GETR( infoP->colors[colorIdx] );
-                    row[j][PAM_GRN_PLANE] =
-                        PPM_GETG( infoP->colors[colorIdx] );
-                    row[j][PAM_BLU_PLANE] =
-                        PPM_GETB( infoP->colors[colorIdx] );
-                }
-                pnm_writepamrow( pamP, row );
-            }
-        } else {
-            /* Convert 1 bitplane icon into bitmap PAM */
-            unsigned int i;
-            for ( i = 0; i < infoP->height; ++i ) {
-                unsigned int j;
-                for ( j = 0; j < infoP->width; j++ ) {
+                        infoP->icon[row * infoP->bpwidth + col] ? 2 : 1;
+
+                    tuplerow[col][PAM_RED_PLANE] = PPM_GETR(colors[colorIdx]);
+                    tuplerow[col][PAM_GRN_PLANE] = PPM_GETG(colors[colorIdx]);
+                    tuplerow[col][PAM_BLU_PLANE] = PPM_GETB(colors[colorIdx]);
+                } else {
                     /* 1 is black and 0 is white */
-                    row[j][0] = infoP->icon[ i * bpwidth + j ] ? 0 : 1;
+                    tuplerow[col][0] =
+                        infoP->icon[row * infoP->bpwidth + col] ? 0 : 1;
                 }
-                pnm_writepamrow( pamP, row );
+            } else {
+                unsigned int const colorIdx =
+                    infoP->icon[row * infoP->bpwidth + col];
+                tuplerow[col][PAM_RED_PLANE] = PPM_GETR(colors[colorIdx]);
+                tuplerow[col][PAM_GRN_PLANE] = PPM_GETG(colors[colorIdx]);
+                tuplerow[col][PAM_BLU_PLANE] = PPM_GETB(colors[colorIdx]);
             }
         }
-    } else {
-        /* Convert color icon into color PAM */
-        unsigned int i;
-        for ( i = 0; i < infoP->height; ++i ) {
-            unsigned int j;
-            for ( j = 0; j < infoP->width; ++j ) {
-                unsigned int const colorIdx = infoP->icon[ i * bpwidth + j ];
-                row[j][PAM_RED_PLANE] = PPM_GETR( infoP->colors[colorIdx] );
-                row[j][PAM_GRN_PLANE] = PPM_GETG( infoP->colors[colorIdx] );
-                row[j][PAM_BLU_PLANE] = PPM_GETB( infoP->colors[colorIdx] );
-            }
-            pnm_writepamrow( pamP, row );
-        }
+        pnm_writepamrow(pamP, tuplerow);
     }
 
-    /* Clean up allocated memory */
-    pnm_freepamrow( row );
+    pnm_freepamrow(tuplerow);
 }
 
 
 
 int
-main( int argc,
-      char *argv[] ) {
+main(int argc, const char **argv) {
 
-    IconInfo    info;    /* Miscellaneous icon information */
-    struct pam  pam;     /* PAM header */
-    int         skip;    /* Bytes to skip to read next icon header */
+    CmdlineInfo  cmdline;
+    IconInfo     info;      /* Miscellaneous icon information */
+    struct pam   pam;       /* PAM header */
 
-    /* Init PNM library */
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    /* Parse command line arguments */
-    parseCommandLine( argc, argv, &info );
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* Open input file */
-    info.fp = pm_openr( info.name );
+    info.ifP = pm_openr(cmdline.inputFileNm);
 
-    /* Read disk object header */
-    getDiskObject( &info );
+    readDiskObjectHeader(info.ifP, &info.version, &info.hasDrawerData);
 
     /* Skip drawer data, if any */
-    if ( info.drawerData ) {
-        skip = 56;   /* Draw data size */
-        if ( fseek( info.fp, skip, SEEK_CUR ) < 0 )
-            pm_error( "Cannot skip header information in file '%s'.  "
-                      "fseek() errno = %d (%s)",
-                      info.name, errno, strerror( errno ) );
+    if (info.hasDrawerData) {
+        unsigned int const skipCt = 56;   /* Draw data size */
+
+        int rc;
+
+        rc = fseek(info.ifP, skipCt, SEEK_CUR);
+        if (rc < 0) {
+            pm_error("Failed to skip header information in input file.  "
+                     "fseek() errno = %d (%s)",
+                     errno, strerror(errno));
+        }
     }
 
-    /* Get dimensions for first icon */
-    getIconHeader( &info );
+    /* Read header of first icon */
+    readIconHeader(info.ifP, &info.width, &info.height, &info.depth,
+                   &info.bpwidth);
 
-    /* Skip ahead to next header if converting second icon */
-    if ( info.selected ) {
-        skip = info.height * ( ( ( info.width + 15 ) / 16 ) * 2 ) * info.depth;
+    readIconData(info.ifP, info.width, info.height, info.depth, &info.icon);
 
-        if ( fseek( info.fp, skip, SEEK_CUR ) < 0 )
-            pm_error( "Cannot skip to next icon in file '%s'.  "
-                      "fseek() errno = %d (%s)",
-                      info.name, errno, strerror( errno ) );
+    if (cmdline.selected) {
+        /* He wants the second icon, so update info.width, etc.  to be for the
+           second icon.
+        */
+        readIconHeader(info.ifP, &info.width, &info.height, &info.depth,
+                       &info.bpwidth);
 
-        /* Get dimensions for second icon */
-        getIconHeader( &info );
+        readIconData(info.ifP, info.width, info.height, info.depth,
+                     &info.icon);
     }
 
-    /* Read icon data */
-    readIconData( info.fp, info.width, info.height, info.depth, &info.icon );
-
-    /* Print icon info */
-    pm_message( "converting %s, version %d, %s icon: %d X %d X %d",
-                info.name, info.version, info.selected ? "second" : "first",
-                info.width, info.height, info.depth );
-
-    /* Write PAM header */
-    pam.size   = sizeof( pam );
-    pam.len    = PAM_STRUCT_SIZE( tuple_type );
+    if (cmdline.verbose) {
+        pm_message("Version %u .info file, %s icon: %uW x %uH x %u deep",
+                   info.version, cmdline.selected ? "second" : "first",
+                   info.width, info.height, info.depth);
+    }
+    pam.size   = sizeof(pam);
+    pam.len    = PAM_STRUCT_SIZE(tuple_type);
     pam.file   = stdout;
     pam.height = info.height;
     pam.width  = info.width;
     pam.format = PAM_FORMAT;
 
-    if ( ( info.depth == 1 ) && ( info.forceColor == FALSE ) ) {
+    if ((info.depth == 1) && !cmdline.forcecolor) {
         pam.depth  = 1;
         pam.maxval = 1;
-        strcpy( pam.tuple_type, "BLACKANDWHITE" );
+        strcpy(pam.tuple_type, "BLACKANDWHITE");
     } else {
         pam.depth  = 3;
         pam.maxval = 0xFF;
-        strcpy( pam.tuple_type, "RGB" );
+        strcpy(pam.tuple_type, "RGB");
     }
-    pnm_writepaminit( &pam );
+    pnm_writepaminit(&pam);
 
-    /* Write icon data */
-    writeIconData( &info, &pam );
+    writeRaster(&info, &pam, cmdline.forcecolor, cmdline.colors);
 
-    free( info.icon );
-
-    /* Close input file and return */
-    pm_close( pam.file );
-    pm_close( info.fp );
+    free(info.icon);
+    pm_close(pam.file);
+    pm_close(info.ifP);
 
     return 0;
 }
-
 
 

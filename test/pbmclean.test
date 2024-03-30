@@ -37,17 +37,8 @@ rm ${sheet_pbm}
 
 echo "Test Invalid"
 
-test_out=${tmpdir}/test_out
-
-echo 1>&2
-echo "Invalid command-line argument combination." 1>&2
-echo "An error message should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
 # overspecification
-pbmclean -black -white -min=1 -extended testgrid.pbm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
+invCmd "pbmclean -black -white -min=1 -extended testgrid.pbm"
 # note that without -extended the above is valid.

@@ -264,7 +264,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->mustturn && noturn)
         pm_error("You cannot specify both -turn and -noturn");

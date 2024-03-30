@@ -281,7 +281,7 @@ imageWidth(unsigned int   const depth,
    given that the minimum and maximum sample values in Plane P are min[P] and
    max[P] and the samples step by step[P].
 
-   E.g. in the sample case of min 0, max 4, and step 1 everywhere, with
+   E.g. in the example case of min 0, max 4, and step 1 everywhere, with
    depth 2,  We return 5*5 = 25.
 -----------------------------------------------------------------------------*/
     unsigned int product;
@@ -294,7 +294,7 @@ imageWidth(unsigned int   const depth,
             ROUNDUP((max[plane] - min[plane] + 1), step[plane])/step[plane];
 
         if (INT_MAX / valueCtThisPlane < product)
-            pm_error("Uncomputably large number of pixels (greater than %u",
+            pm_error("Uncomputably large number of pixels (greater than %u)",
                      INT_MAX);
 
         product *= valueCtThisPlane;

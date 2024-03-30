@@ -10,7 +10,7 @@ cat > ${input_ppm} << EOF
 P3
 8 1
 255
-0 0 0 0 0 100 0 100 0 0 100 100 100 0 0 100 0 100 100 100 0 100 100 100 
+0 0 0 0 0 100 0 100 0 0 100 100 100 0 0 100 0 100 100 100 0 100 100 100
 EOF
 
 # Test 1
@@ -50,50 +50,14 @@ pambrighten -s +200 ${input_pgm} | cksum
 
 rm ${input_pgm}
 
+echo "Test Invalid"
 
-# Test 2
-# These should all fail.
+. ${srcdir}/test-invalid.inc
 
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-echo "Test Error: Should print 1 six times"
-
-output_ppm=${tmpdir}/output.ppm
-
-pambrighten -v -120 testimg.ppm > ${output_ppm}
-echo $?
-test -s ${output_ppm}
-echo $?
-pambrighten -s -120 testimg.ppm > ${output_ppm}
-echo $?
-test -s ${output_ppm}
-echo $?
-pambrighten 10 testimg.ppm > ${output_ppm}
-echo $?
-test -s ${output_ppm}
-echo $?
-
-
-echo "Test Error: Should print 99 followed by 1, four times"
-
-pambrighten -s 1.20 testimg.ppm > ${output_ppm}
-echo $?
-test -s ${output_ppm}
-echo $?
-pambrighten -v 10.5 testimg.ppm > ${output_ppm}
-echo $?
-test -s ${output_ppm}
-echo $?
-pambrighten -v testimg.ppm > ${output_ppm}
-echo $?
-test -s ${output_ppm}
-echo $?
-pambrighten -s testimg.ppm > ${output_ppm}
-echo $?
-test -s ${output_ppm}
-echo $?
-
-
-rm -f ${output_ppm}
+invCmd "pambrighten -v -120 testimg.ppm"
+invCmd "pambrighten -s -120 testimg.ppm"
+invCmd "pambrighten 10 testimg.ppm"
+invCmd "pambrighten -s 1.20 testimg.ppm"
+invCmd "pambrighten -v 10.5 testimg.ppm"
+invCmd "pambrighten -v testimg.ppm"
+invCmd "pambrighten -s testimg.ppm"

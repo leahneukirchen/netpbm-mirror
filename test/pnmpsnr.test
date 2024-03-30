@@ -27,32 +27,11 @@ pnmpsnr  testimg.ppm  testimg.ppm -target1=1000 -target2=1000 -target3=1000
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+. ${srcdir}/test-invalid.inc
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-pnmpsnr ${b_pbm} ${w_pbm} ${b_pbm}     > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmpsnr ${b_pbm}                       > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmpsnr ${b_pbm} ${w_pbm} -target1=100 > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmpsnr                   -machine     > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pnmpsnr ${b_pbm} ${w_pbm} ${b_pbm}    "
+invCmd "pnmpsnr ${b_pbm}                      "
+invCmd "pnmpsnr ${b_pbm} ${w_pbm} -target1=100"
+invCmd "pnmpsnr                   -machine    "
 
 rm ${b_pbm} ${w_pbm}

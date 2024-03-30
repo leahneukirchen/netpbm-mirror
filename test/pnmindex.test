@@ -1,7 +1,10 @@
 #! /bin/sh
 # This script tests: pnmindex
 # Also requires: pamcat pamscale pbmtext pnmcolormap pnmindex
-# Also requires: pnminvert pnmquant pnmremap 
+# Also requires: pnminvert pnmquant pnmremap
+
+tmpdir=${tmpdir:-/tmp}
+pnmindex256_ppm=${tmpdir}/pnmindex256.ppm
 
 echo "Test 1. Should print 3391481002 889"
 pnmindex maze.pbm | cksum
@@ -17,44 +20,41 @@ echo "Test 4. Should print 1397700642 3160"
 pnmindex -size 20 -across=3 testgrid.pbm testgrid.pbm testgrid.pbm \
          testgrid.pbm testgrid.pbm testgrid.pbm | cksum
 
-echo "Test 5. Should print 2303488589 28514"
-pnmindex testimg.ppm | cksum
+echo "Test 5. Should print 243472565 28514"
+pnmindex -noquant testimg.ppm | cksum
 
-echo "Test 6. Should print 1706277976 100455"
-pnmindex -size 50 -across=2 testimg.ppm testimg.ppm testimg.ppm \
-         testimg.ppm testimg.ppm testimg.ppm | cksum
-
-echo "Test 7. Should print 801388440 100455"
+echo "Test 6. Should print 801388440 100455"
 pnmindex -size 50 -across=2 -noquant testimg.ppm testimg.ppm testimg.ppm \
-         testimg.ppm testimg.ppm testimg.ppm | cksum
+         testimg.ppm testimg.ppm testimg.ppm | tee ${pnmindex256_ppm} | cksum
+
+echo "Test 7. Should print 256 twice"
+pnmindex testimg.ppm | ppmhist -nomap -noheader | wc -l
+pnmindex -colors 256 testimg.ppm | ppmhist -nomap -noheader | wc -l
+
+echo "Test 8. Should print 100 twice"
+pnmindex -colors 100 testimg.ppm | ppmhist -nomap -noheader | wc -l
+pnmindex -colors 100 testimg.ppm testimg.ppm | ppmhist -nomap -noheader | wc -l
+
+
+echo "Test 9. Should print match"
+pnmindex -size 50 -across=2 -quant -colors=256 testimg.ppm testimg.ppm testimg.ppm \
+         testimg.ppm testimg.ppm testimg.ppm |\
+    pnmpsnr -rgb -target1=41.31 -target2=40.76 -target3=40.71 ${pnmindex256_ppm} -
 
 
 echo "Test Invalid"
 
-test_out=${tmpdir}/test_out
-n=1
+. ${srcdir}/test-invalid.inc
 
-# define function
-invalidCmd () { $1 > ${test_out} && printf "Unexpected success $n " || \
-  printf "Expected failure $n "
-  test -s ${test_out} && echo "(unexpected output)" || echo "(no output)"
-  rm -f ${test_out}
-  n=$(($n + 1)); }
-
-echo 1>&2
-echo "Invalid command-line arguments." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-invalidCmd "pnmindex -size -1 testgrid.pbm"
-invalidCmd "pnmindex -size  0 testgrid.pbm"
-invalidCmd "pnmindex -size    testgrid.pbm"
-invalidCmd "pnmindex -across -1 testgrid.pbm"
-invalidCmd "pnmindex -across  0 testgrid.pbm"
-invalidCmd "pnmindex -across    testgrid.pbm"
-invalidCmd "pnmindex -colors -1 testgrid.pbm"
-invalidCmd "pnmindex -colors  0 testgrid.pbm"
-invalidCmd "pnmindex -colors    testgrid.pbm"
-invalidCmd "pnmindex -quant -noquant testgrid.pbm"
-invalidCmd "pnmindex -colors 100 -noquant testgrid.pbm"
-invalidCmd "pnmindex"
+invCmd "pnmindex -size -1 testgrid.pbm"
+invCmd "pnmindex -size  0 testgrid.pbm"
+invCmd "pnmindex -size    testgrid.pbm"
+invCmd "pnmindex -across -1 testgrid.pbm"
+invCmd "pnmindex -across  0 testgrid.pbm"
+invCmd "pnmindex -across    testgrid.pbm"
+invCmd "pnmindex -colors -1 testgrid.pbm"
+invCmd "pnmindex -colors  0 testgrid.pbm"
+invCmd "pnmindex -colors    testgrid.pbm"
+invCmd "pnmindex -quant -noquant testgrid.pbm"
+invCmd "pnmindex -colors 100 -noquant testgrid.pbm"
+invCmd "pnmindex"

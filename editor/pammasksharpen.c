@@ -24,7 +24,7 @@ parseCommandLine(int argc, const char ** const argv,
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to OptParseOptions2 on how to parse our options.
+        /* Instructions to OptParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 

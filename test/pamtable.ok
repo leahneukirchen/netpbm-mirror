@@ -122,5 +122,4 @@ Test 8
 65535     0     0|    0     0 65535|    0     0 65535|    0 65535     0
 
 Test Invalid
-Should print: Expected failure (no output)
-Expected failure (no output)
+Expected failure 1 (no output)

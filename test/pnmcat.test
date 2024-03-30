@@ -59,7 +59,7 @@ cat ${diag_pgm} | pnmcat -tb -plain | sed 's/ *$//'
 
 rm ${diag_pgm}
 
-pgmramp -diag 8 8 -maxval 7 | ppmtoppm > ${diag_ppm} 
+pgmramp -diag 8 8 -maxval 7 | ppmtoppm > ${diag_ppm}
 
 echo "Test 7.  Should print 2097565808 394 twice"
 pnmcat -lr -black ${diag_ppm} ${diag_ppm} | tee ${diag2lr_ppm} | cksum
@@ -70,7 +70,7 @@ pnmcat -tb ${diag_ppm} ${diag_ppm} | tee ${diag2tb_ppm} | cksum
 
 echo "Test 9.  Should print 4288335051 586 three times"
 pnmcat -lr ${diag_ppm} ${diag_ppm} ${diag_ppm} | cksum
-pnmcat -lr ${diag_ppm}  ${diag2lr_ppm} | cksum 
+pnmcat -lr ${diag_ppm}  ${diag2lr_ppm} | cksum
 cat ${diag2lr_ppm} | pnmcat -lr - ${diag_ppm} | cksum
 
 echo "Test 10.  Should print 642720605 586 three times"
@@ -100,82 +100,30 @@ rm ${diag_ppm}
 
 echo "Test Invalid"
 
-test_out=${tmpdir}/test_out
-
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
 # direction not specified
-pnmcat testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pnmcat testgrid.pbm testimg.ppm"
 
 # both directions specified
-pnmcat -topbottom -leftright testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pnmcat -topbottom -leftright testgrid.pbm testimg.ppm"
 
 # both pad colors specified
-pnmcat -topbottom -white -black testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pnmcat -topbottom -white -black testgrid.pbm testimg.ppm"
 
 # justification parameters overspecified
-pnmcat -lr -jtop -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -lr -jtop -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -lr -jcenter -jbottom testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -tb -jleft -jright testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -tb -jleft -jcenter testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -tb -jcenter -jright testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 9 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pnmcat -lr -jtop -jbottom testgrid.pbm testimg.ppm"
+invCmd "pnmcat -lr -jtop -jcenter testgrid.pbm testimg.ppm"
+invCmd "pnmcat -lr -jcenter -jbottom testgrid.pbm testimg.ppm"
+invCmd "pnmcat -tb -jleft -jright testgrid.pbm testimg.ppm"
+invCmd "pnmcat -tb -jleft -jcenter testgrid.pbm testimg.ppm"
+invCmd "pnmcat -tb -jcenter -jright testgrid.pbm testimg.ppm"
 
 # justification parameter in the wrong direction
-pnmcat -lr -jleft    testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 10 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -lr -jright   testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 11 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -tb -jtop     testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 12 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmcat -tb -jbottom  testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 13 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pnmcat -lr -jleft    testgrid.pbm testimg.ppm"
+invCmd "pnmcat -lr -jright   testgrid.pbm testimg.ppm"
+invCmd "pnmcat -tb -jtop     testgrid.pbm testimg.ppm"
+invCmd "pnmcat -tb -jbottom  testgrid.pbm testimg.ppm"
 
 # more than one input image from standard input
 cat testgrid.pbm | pnmcat -lr - - testimg.ppm > ${test_out} || \

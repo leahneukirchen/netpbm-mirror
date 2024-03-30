@@ -87,12 +87,12 @@ parseCommandLine(int argc, const char ** argv,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to pm_optParseOptions3 on how to parse our options.
-         */
+    optEntry * option_def;
     optStruct3 opt;
 
     unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "stdpalette",     OPT_FLAG,   NULL,
@@ -101,10 +101,10 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->verbose,       0 );
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (argc-1 < 1)

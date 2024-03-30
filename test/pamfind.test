@@ -31,34 +31,11 @@ comm -12 ${sorted0_res}  ${sorted1_res} |
 
 rm ${sorted0_res} ${sorted1_res}
 
-# Test 4
-
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
-
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
 echo "Test Invalid"
 
-pamfind -color=black -target=1,1,1 testimg.ppm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+. ${srcdir}/test-invalid.inc
 
-pamfind -target=0,0 testimg.ppm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamfind -target=0,0,0,0 testimg.ppm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamfind testimg.ppm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamfind -color=black -target=1,1,1 testimg.ppm"
+invCmd "pamfind -target=0,0 testimg.ppm"
+invCmd "pamfind -target=0,0,0,0 testimg.ppm"
+invCmd "pamfind testimg.ppm"

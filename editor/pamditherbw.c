@@ -22,26 +22,26 @@
 #include "pm_gamma.h"
 
 
-enum halftone {QT_FS,
+enum Halftone {QT_FS,
                QT_ATKINSON,
                QT_THRESH,
                QT_DITHER8,
                QT_CLUSTER,
                QT_HILBERT};
 
-enum ditherType {DT_REGULAR, DT_CLUSTER};
+enum DitherType {DT_REGULAR, DT_CLUSTER};
 
 static sample blackSample = (sample) PAM_BLACK;
 static sample whiteSample = (sample) PAM_BW_WHITE;
 static tuple  const blackTuple = &blackSample;
 static tuple  const whiteTuple = &whiteSample;
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *  inputFilespec;
-    enum halftone halftone;
+    const char *  inputFileNm;
+    enum Halftone halftone;
     unsigned int  clumpSize;
         /* Defined only for halftone == QT_HILBERT */
     unsigned int  clusterRadius;
@@ -55,13 +55,13 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
         /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -98,7 +98,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free(option_def);
@@ -160,9 +160,9 @@ parseCommandLine(int argc, char ** argv,
                  "non-option argument:  the file name",
                  argc-1);
     else if (argc-1 == 1)
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileNm = argv[1];
     else
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileNm = "-";
 }
 
 
@@ -173,15 +173,15 @@ makeOutputPam(unsigned int const width,
 
     struct pam outpam;
 
-    outpam.size = sizeof(outpam);
-    outpam.len = PAM_STRUCT_SIZE(tuple_type);
-    outpam.file = stdout;
-    outpam.format = PAM_FORMAT;
-    outpam.plainformat = 0;
-    outpam.height = height;
-    outpam.width = width;
-    outpam.depth = 1;
-    outpam.maxval = 1;
+    outpam.size             = sizeof(outpam);
+    outpam.len              = PAM_STRUCT_SIZE(tuple_type);
+    outpam.file             = stdout;
+    outpam.format           = PAM_FORMAT;
+    outpam.plainformat      = 0;
+    outpam.height           = height;
+    outpam.width            = width;
+    outpam.depth            = 1;
+    outpam.maxval           = 1;
     outpam.bytes_per_sample = 1;
     strcpy(outpam.tuple_type, "BLACKANDWHITE");
 
@@ -471,12 +471,12 @@ doHilbert(FILE *       const ifP,
 
 
 
-struct converter {
-    void (*convertRow)(struct converter * const converterP,
+struct Converter {
+    void (*convertRow)(struct Converter * const converterP,
                        unsigned int       const row,
                        tuplen                   grayrow[],
                        tuple                    bitrow[]);
-    void (*destroy)(struct converter * const converterP);
+    void (*destroy)(struct Converter * const converterP);
     unsigned int cols;
     void * stateP;
 };
@@ -505,7 +505,7 @@ struct fsState {
 
 
 static void
-fsConvertRow(struct converter * const converterP,
+fsConvertRow(struct Converter * const converterP,
              unsigned int       const row,
              tuplen                   grayrow[],
              tuple                    bitrow[]) {
@@ -576,7 +576,7 @@ fsConvertRow(struct converter * const converterP,
 
 
 static void
-fsDestroy(struct converter * const converterP) {
+fsDestroy(struct Converter * const converterP) {
 
     struct fsState * const stateP = converterP->stateP;
 
@@ -588,14 +588,14 @@ fsDestroy(struct converter * const converterP) {
 
 
 
-static struct converter
+static struct Converter
 createFsConverter(struct pam * const graypamP,
                   float        const threshFraction,
                   bool         const randomseedSpec,
                   unsigned int const randomseed) {
 
     struct fsState * stateP;
-    struct converter converter;
+    struct Converter converter;
 
     converter.cols       = graypamP->width;
     converter.convertRow = &fsConvertRow;
@@ -655,7 +655,7 @@ struct atkinsonState {
 
 
 static void
-moveAtkinsonErrorWindowDown(struct converter * const converterP) {
+moveAtkinsonErrorWindowDown(struct Converter * const converterP) {
 
     struct atkinsonState * const stateP = converterP->stateP;
 
@@ -676,7 +676,7 @@ moveAtkinsonErrorWindowDown(struct converter * const converterP) {
 
 
 static void
-atkinsonConvertRow(struct converter * const converterP,
+atkinsonConvertRow(struct Converter * const converterP,
                    unsigned int       const row,
                    tuplen                   grayrow[],
                    tuple                    bitrow[]) {
@@ -721,7 +721,7 @@ atkinsonConvertRow(struct converter * const converterP,
 
 
 static void
-atkinsonDestroy(struct converter * const converterP) {
+atkinsonDestroy(struct Converter * const converterP) {
 
     struct atkinsonState * const stateP = converterP->stateP;
 
@@ -735,14 +735,14 @@ atkinsonDestroy(struct converter * const converterP) {
 
 
 
-static struct converter
+static struct Converter
 createAtkinsonConverter(struct pam * const graypamP,
                         float        const threshFraction,
                         bool         const randomseedSpec,
                         unsigned int const randomseed) {
 
     struct atkinsonState * stateP;
-    struct converter converter;
+    struct Converter converter;
     unsigned int relRow;
 
     converter.cols       = graypamP->width;
@@ -787,7 +787,7 @@ struct threshState {
 
 
 static void
-threshConvertRow(struct converter * const converterP,
+threshConvertRow(struct Converter * const converterP,
                  unsigned int       const row,
                  tuplen                   grayrow[],
                  tuple                    bitrow[]) {
@@ -803,18 +803,18 @@ threshConvertRow(struct converter * const converterP,
 
 
 static void
-threshDestroy(struct converter * const converterP) {
+threshDestroy(struct Converter * const converterP) {
     free(converterP->stateP);
 }
 
 
 
-static struct converter
+static struct Converter
 createThreshConverter(struct pam * const graypamP,
                       float        const threshFraction) {
 
     struct threshState * stateP;
-    struct converter converter;
+    struct Converter converter;
 
     MALLOCVAR_NOFAIL(stateP);
 
@@ -838,7 +838,7 @@ struct clusterState {
 
 
 static void
-clusterConvertRow(struct converter * const converterP,
+clusterConvertRow(struct Converter * const converterP,
                   unsigned int       const row,
                   tuplen                   grayrow[],
                   tuple                    bitrow[]) {
@@ -859,7 +859,7 @@ clusterConvertRow(struct converter * const converterP,
 
 
 static void
-clusterDestroy(struct converter * const converterP) {
+clusterDestroy(struct Converter * const converterP) {
 
     struct clusterState * const stateP = converterP->stateP;
     unsigned int const diameter = 2 * stateP->radius;
@@ -876,9 +876,9 @@ clusterDestroy(struct converter * const converterP) {
 
 
 
-static struct converter
+static struct Converter
 createClusterConverter(struct pam *    const graypamP,
-                       enum ditherType const ditherType,
+                       enum DitherType const ditherType,
                        unsigned int    const radius) {
 
     /* TODO: We create a floating point normalized, gamma-adjusted
@@ -891,7 +891,7 @@ createClusterConverter(struct pam *    const graypamP,
     int const clusterNormalizer = radius * radius * 2;
     unsigned int const diameter = 2 * radius;
 
-    struct converter converter;
+    struct Converter converter;
     struct clusterState * stateP;
     unsigned int row;
 
@@ -946,21 +946,21 @@ createClusterConverter(struct pam *    const graypamP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
-    FILE* ifP;
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
 
-    pgm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileNm);
 
     if (cmdline.halftone == QT_HILBERT)
         doHilbert(ifP, cmdline.clumpSize);
     else {
-        struct converter converter;
+        struct Converter converter;
         struct pam graypam;
         struct pam bitpam;
         tuplen * grayrow;
@@ -1022,3 +1022,6 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+

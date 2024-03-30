@@ -784,17 +784,23 @@ int
 ppm_findclosestcolor(const pixel * const colormap,
                      int           const ncolors,
                      const pixel * const pP) {
+/*----------------------------------------------------------------------------
+  The index in colormap[] (which has 'ncolors' entries) of the color that is
+  closest to color *pP.
 
-    /* Search colormap for closest match.       */
+  Where two entries in colormap[] are identical, return the lesser of their
+  two indices.
 
-    int i;
+  Iff there are no colors in the amp ('ncolors' is zero), return -1.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
     int ind;
     unsigned int bestDist;
 
     bestDist = UINT_MAX;
     ind = -1;
 
-    for(i = 0; i < ncolors && bestDist > 0; ++i) {
+    for (i = 0; i < ncolors && bestDist > 0; ++i) {
         unsigned int const dist = PPM_DISTANCE(*pP, colormap[i]);
 
         if (dist < bestDist ) {
@@ -804,6 +810,7 @@ ppm_findclosestcolor(const pixel * const colormap,
     }
     return ind;
 }
+
 
 
 void

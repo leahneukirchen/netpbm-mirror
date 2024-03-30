@@ -130,21 +130,29 @@ isNormal(samplen const arg) {
 static void
 parseNewDecX11(const char * const colorname,
                tuplen       const color) {
-
+/*----------------------------------------------------------------------------
+   Return as *colorP the color specified by the new-style decimal specifier
+   colorname[] (e.g. "rgbi:0/.5/1").
+-----------------------------------------------------------------------------*/
+    char invalidExtra;
     int rc;
 
-    rc = sscanf(colorname, "rgbi:%f/%f/%f",
+    rc = sscanf(colorname, "rgbi:%f/%f/%f%c",
                 &color[PAM_RED_PLANE],
                 &color[PAM_GRN_PLANE],
-                &color[PAM_BLU_PLANE]);
+                &color[PAM_BLU_PLANE],
+                &invalidExtra);
 
     if (rc != 3)
-        pm_error("invalid color specifier '%s'", colorname);
+        pm_error("invalid rgbi: color specifier '%s' - "
+                 "does not have form rgbi:n/n/n "
+                 "(where n is floating point number)",
+                 colorname);
 
     if (!(isNormal(color[PAM_RED_PLANE]) &&
           isNormal(color[PAM_GRN_PLANE]) &&
           isNormal(color[PAM_BLU_PLANE]))) {
-        pm_error("invalid color specifier '%s' - "
+        pm_error("invalid rgbi: color specifier '%s' - "
                  "values must be between 0.0 and 1.0", colorname);
     }
 }
@@ -154,16 +162,21 @@ parseNewDecX11(const char * const colorname,
 static void
 parseInteger(const char * const colorname,
              tuplen       const color) {
-
+/*----------------------------------------------------------------------------
+   Return as *colorP the color specified by the integer specifier
+   colorname[] (e.g. "rgb-255/10/20/30").
+-----------------------------------------------------------------------------*/
     unsigned int maxval;
     unsigned int r, g, b;
+    char invalidExtra;
     int rc;
 
-    rc = sscanf(colorname, "rgb-%u:%u/%u/%u", &maxval, &r, &g, &b);
+    rc = sscanf(colorname, "rgb-%u:%u/%u/%u%c",
+                &maxval, &r, &g, &b, &invalidExtra);
 
     if (rc != 4)
-        pm_error("invalid color specifier '%s'.  "
-                 "If it starts with \"rgb-\", then it must have the format "
+        pm_error("invalid rgb- color specifier '%s' - "
+                 "Does not have form "
                  "rgb-<MAXVAL>:<RED>:<GRN>:<BLU>, "
                  "where <MAXVAL>, <RED>, <GRN>, and <BLU> are "
                  "unsigned integers",
@@ -200,7 +213,7 @@ parseOldX11(const char * const colorname,
             tuplen       const color) {
 /*----------------------------------------------------------------------------
    Return as *colorP the color specified by the old X11 style color
-   specififier colorname[] (e.g. #554055).
+   specifier colorname[] (e.g. #554055).
 -----------------------------------------------------------------------------*/
     if (!pm_strishex(&colorname[1]))
         pm_error("Non-hexadecimal characters in #-type color specification");
@@ -276,21 +289,29 @@ parseOldX11(const char * const colorname,
 static void
 parseOldX11Dec(const char* const colorname,
                tuplen      const color) {
-
+/*----------------------------------------------------------------------------
+   Return as *colorP the color specified by the old X11 style decimal color
+   specifier colorname[] (e.g. 0,.5,1).
+-----------------------------------------------------------------------------*/
+    char invalidExtra;
     int rc;
 
-    rc = sscanf(colorname, "%f,%f,%f",
+    rc = sscanf(colorname, "%f,%f,%f%c",
                 &color[PAM_RED_PLANE],
                 &color[PAM_GRN_PLANE],
-                &color[PAM_BLU_PLANE]);
+                &color[PAM_BLU_PLANE],
+                &invalidExtra);
 
     if (rc != 3)
-        pm_error("invalid color specifier '%s'", colorname);
+        pm_error("invalid old-style X11 decimal color specifier '%s' - "
+                 "does not have form n,n,n (where n is a floating point "
+                 "decimal number",
+                 colorname);
 
     if (!(isNormal(color[PAM_RED_PLANE]) &&
           isNormal(color[PAM_GRN_PLANE]) &&
           isNormal(color[PAM_BLU_PLANE]))) {
-        pm_error("invalid color specifier '%s' - "
+        pm_error("invalid old-style X11 decimal color specifier '%s' - "
                  "values must be between 0.0 and 1.0", colorname);
     }
 }

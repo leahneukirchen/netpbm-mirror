@@ -8,35 +8,14 @@ pamseq 1 255 | cksum
 
 echo "Test Invalid"
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+invCmd "pamseq 1"
+invCmd "pamseq 0 255"
+invCmd "pamseq 3 0"
 
-pamseq 1 > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamseq 0 255 > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamseq 3 0   > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
+# Tupletype string length=256
 c64="0123456789012345678901234567890123456789012345678901234567890123"
 c256=${c64}${c64}${c64}${c64}
 
-# Tupletype string length=256
-
-pamseq -tupletype="${c256}" 3 15 > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamseq -tupletype=${c256} 3 15"

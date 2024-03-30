@@ -4,20 +4,41 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-24.03.11 BJH  Release 11.05.03
+24.03.30 BJH  Release 11.06.00
+
+              pamcut: add -reportonly.
+
+              infotopam: Add input validation.
+
+              infotopam: Remove input file name from messages.  Add -verbose
+              and issue informational message only if it is specified.
+
+              libnetpbm: Don't ignore garbage at the end of a color specifier
+              (e.g. rgbi:0/.5/1xyz).
+
+              color database: change names of "Spring Green", "Lamp Black",
+              and "light grey" to "SpringGreen", "LampBlack", and "LightGrey"
+              to be consistent with other color names.
+
+              pamcut: fix incorrect output when rectangle to cut is entirely
+              above the input image.  Invisible junk after image.  Always
+              broken.  (The ability to cut outside the input image was new in
+              pamcut's predecessor pnmcut in Netpbm 9.7 (August 2000).
+
+              pamcut: fix incorrect output with PBM input when rectangle to
+              cut is entirely below the input image.  Invisible junk after
+              image.  Broken in Netpbm 10.44 (September 2008).
+
+              ppmtowinicon: fix array overrun with 4 and 8 bits per pixel.
+              Broken in Netpbm 11.05 (December 2023).
 
               infotopam: fix incorrect output -- columns always in wrong
               place.  Always broken.  (infotopam was new in Netpbm 10.22 (May
               2004)).
 
-24.01.28 BJH  Release 11.05.02
+              pamseq: fix typo in error message.
 
-              ppmtowinicon: fix array overrun with 4 and 8 bits per pixel.
-              Broken in Netpbm 11.05 (December 2023).
-
-23.12.28 BJH  Release 11.05.01
-
-              Fix typo in ppmforge test case.
+              build: makeman: fix warning about backslashes in strings.
 
 23.12.28 BJH  Release 11.05.00
 

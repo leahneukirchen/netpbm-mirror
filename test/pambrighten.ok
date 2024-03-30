@@ -78,19 +78,11 @@ Test 4: Should print 3990234518 268 six times
 3990234518 268
 3990234518 268
 3990234518 268
-Test Error: Should print 1 six times
-1
-1
-1
-1
-1
-1
-Test Error: Should print 99 followed by 1, four times
-99
-1
-99
-1
-99
-1
-99
-1
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)

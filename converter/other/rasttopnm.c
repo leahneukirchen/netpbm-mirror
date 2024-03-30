@@ -37,9 +37,7 @@ parseCommandLine(int argc, const char ** argv,
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry * option_def;
-        /* Instructions to OptParseOptions2 on how to parse our options.
-         */
+    optEntry * option_def;   /* Used by OPTENT3 */
     optStruct3 opt;
 
     unsigned int option_def_index;
@@ -59,7 +57,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0,   "dumpcolormap", OPT_FLAG,   NULL,
             &cmdlineP->dumpcolormap,   0);
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)

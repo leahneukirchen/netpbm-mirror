@@ -9,30 +9,9 @@ pbmtopgm -plain 1 1 testgrid.pbm
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+. ${srcdir}/test-invalid.inc
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-pbmtopgm 5 0 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pbmtopgm 0 9 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pbmtopgm 15 5 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pbmtopgm 5 17 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pbmtopgm 5 0 testgrid.pbm"
+invCmd "pbmtopgm 0 9 testgrid.pbm"
+invCmd "pbmtopgm 15 5 testgrid.pbm"
+invCmd "pbmtopgm 5 17 testgrid.pbm"

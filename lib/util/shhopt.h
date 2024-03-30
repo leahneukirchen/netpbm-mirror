@@ -261,6 +261,13 @@ pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
                  const unsigned int optStructSize, const unsigned long flags);
 
 void
+pm_optParseOptions4(int *         const argcP,
+                    const char ** const argv,
+                    optStruct3    const opt,
+                    unsigned int  const optStructSize,
+                    unsigned long const flags);
+
+void
 pm_optDestroyNameValueList(struct optNameValue * const list);
 
 #ifdef __cplusplus

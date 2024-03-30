@@ -41,58 +41,17 @@ ppmpat -argyle2 --color=rgb:00/00/00,rgb:ff/80/80,rgb:e0/e0/e0 12 18 | cksum
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+. ${srcdir}/test-invalid.inc
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-ppmpat -g2 -g3 10 10 > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -madras -tartan 10 10 > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -poles -squig 10 10 > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -camo -anticamo 10 10 > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -argyle1 -argyle2 10 10 > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat 10 10 > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -g2 10 > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -g2 10 10 10 > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -g2 10 > ${test_out} || \
-  printf "Expected failure 9 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "ppmpat -g2 -g3 10 10"
+invCmd "ppmpat -madras -tartan 10 10"
+invCmd "ppmpat -poles -squig 10 10"
+invCmd "ppmpat -camo -anticamo 10 10"
+invCmd "ppmpat -argyle1 -argyle2 10 10"
+invCmd "ppmpat 10 10"
+invCmd "ppmpat -g2 10"
+invCmd "ppmpat -g2 10 10 10"
+invCmd "ppmpat -g2 10"
 
 clist1="-color=rgb:00/00/00"
 clist2="-color=rgb:00/00/00,rgb:00/00/ff"
@@ -100,90 +59,24 @@ clist3="-color=rgb:00/00/00,rgb:00/00/ff,rgb:00/ff/ff"
 clist4="-color=rgb:00/00/00,rgb:00/00/ff,rgb:00/ff/ff,rgb:ff/ff/ff"
 
 # These patterns require exactly 2 colors
-ppmpat -gingham2 ${clist1} 10 10 > ${test_out} || \
-  printf "Expected failure 10 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -argyle1  ${clist1} 10 10 > ${test_out} || \
-  printf "Expected failure 11 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -gingham2 ${clist3} 10 10 > ${test_out} || \
-  printf "Expected failure 12 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -argyle1  ${clist3} 10 10 > ${test_out} || \
-  printf "Expected failure 13 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "ppmpat -gingham2 ${clist1} 10 10"
+invCmd "ppmpat -argyle1  ${clist1} 10 10"
+invCmd "ppmpat -gingham2 ${clist3} 10 10"
+invCmd "ppmpat -argyle1  ${clist3} 10 10"
 
 # These require exactly 3 colors
-ppmpat -gingham3 ${clist2} 10 10 > ${test_out} || \
-  printf "Expected failure 14 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -argyle2  ${clist2} 10 10 > ${test_out} || \
-  printf "Expected failure 15 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -madras   ${clist2} 10 10 > ${test_out} || \
-  printf "Expected failure 16 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -tartan   ${clist2} 10 10 > ${test_out} || \
-  printf "Expected failure 17 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -gingham3 ${clist4} 10 10 > ${test_out} || \
-  printf "Expected failure 18 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -argyle2  ${clist4} 10 10 > ${test_out} || \
-  printf "Expected failure 19 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -madras   ${clist4} 10 10 > ${test_out} || \
-  printf "Expected failure 20 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -tartan   ${clist4} 10 10 > ${test_out} || \
-  printf "Expected failure 21 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-# These require at least 3 colors
-ppmpat -squig    ${clist2} 10 10 > ${test_out} || \
-  printf "Expected failure 22 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -camo     ${clist2} 10 10 > ${test_out} || \
-  printf "Expected failure 23 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -anticamo ${clist2} 10 10 > ${test_out} || \
-  printf "Expected failure 24 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "ppmpat -gingham3 ${clist2} 10 10"
+invCmd "ppmpat -argyle2  ${clist2} 10 10"
+invCmd "ppmpat -madras   ${clist2} 10 10"
+invCmd "ppmpat -tartan   ${clist2} 10 10"
+invCmd "ppmpat -gingham3 ${clist4} 10 10"
+invCmd "ppmpat -argyle2  ${clist4} 10 10"
+invCmd "ppmpat -madras   ${clist4} 10 10"
+invCmd "ppmpat -tartan   ${clist4} 10 10"
+invCmd "ppmpat -squig    ${clist2} 10 10"
+invCmd "ppmpat -camo     ${clist2} 10 10"
+invCmd "ppmpat -anticamo ${clist2} 10 10"
 
 # The squig pattern has an aspect ratio restriction
-ppmpat -squig ${clist3} 10 250  > ${test_out} || \
-  printf "Expected failure 25 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmpat -squig ${clist3} 500 20  > ${test_out} || \
-  printf "Expected failure 26 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "ppmpat -squig ${clist3} 10 250"
+invCmd "ppmpat -squig ${clist3} 500 20"

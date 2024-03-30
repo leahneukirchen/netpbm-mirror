@@ -4,66 +4,24 @@
 
 echo "Test 1"
 
-ppmmake rgb:ff/80/80 50 100 -maxval=5 | cksum
-ppmmake rgbi:0.5/1.0/0 2   | cksum
+ppmmake -maxval=5 -plain rgb:00/00/00 1 1
+ppmmake -maxval=65535 -plain rgb:ff/ff/ff 1 1
+ppmmake -maxval=5 rgb:ff/80/80 50 100 | cksum
+ppmmake rgbi:0.5/1.0/0 2 2 | cksum
 ppmmake red 50 50  | cksum
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+. ${srcdir}/test-invalid.inc
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-ppmmake rgb:gg/00/00  2 2  > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake rgb:ff/ff/00  2    > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake rgbi:1.1/0/0  2 2  > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake rgbi:1.0/.5   2 2  > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake rainbow       2 2  > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake               2 2  > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake blue -maxval=0 2 2  > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake blue -maxval=-1 2 2  > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-ppmmake blue -maxval=65536 2 2  > ${test_out} || \
-  printf "Expected failure 9 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-RGBDEF=/dev/null ppmmake red 2 2 > ${test_out} || \
-  printf "Expected failure 10 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "ppmmake rgb:gg/00/00  2 2"
+invCmd "ppmmake rgb:ff/ff/00  2"
+invCmd "ppmmake rgbi:1.1/0/0  2 2"
+invCmd "ppmmake rgbi:1.0/.5   2 2"
+invCmd "ppmmake rainbow       2 2"
+invCmd "ppmmake               2 2"
+invCmd "ppmmake blue -maxval=0 2 2"
+invCmd "ppmmake blue -maxval=-1 2 2"
+invCmd "ppmmake blue -maxval=65536 2 2"
+export  RGBDEF=/dev/null
+invCmd "ppmmake red 2 2"

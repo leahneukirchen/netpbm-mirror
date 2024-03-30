@@ -93,33 +93,16 @@ s2=$(pamstack -firstmaxval ${std_pgm} | pamfile)
 
 test "$s0" = "$s1" && echo "true" || echo "false"
 test "$s0" = "$s2" && echo "true" || echo "false"
-  
+
 
 # Test Invalid
 echo "Test Invalid"
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
-test_out=${tmpdir}/test_out
+invCmd "pamstack testgrid.pbm testimg.ppm"
+invCmd "pamstack ${i1_pgm} ${std_pgm}"
+invCmd "pamstack -lcmmaxval -firstmaxval testgrid.pbm testgrid.pbm"
 
-pamstack testgrid.pbm testimg.ppm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamstack ${i1_pgm} ${std_pgm} > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamstack -lcmmaxval -firstmaxval testgrid.pbm testgrid.pbm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-  
 rm ${i1_pgm} ${i2_pgm} ${i7_pgm} ${i31_pgm} ${std_pgm} ${max_pgm}
 

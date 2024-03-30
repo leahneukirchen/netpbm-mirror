@@ -74,6 +74,7 @@ struct CmdlineInfo {
     unsigned int heightSpec;
     unsigned int height;
     unsigned int pad;
+    unsigned int reportonly;
     unsigned int verbose;
 };
 
@@ -185,6 +186,8 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0,   "height",     OPT_UINT,   &cmdlineP->height,
             &cmdlineP->heightSpec,      0);
     OPTENT3(0,   "pad",        OPT_FLAG,   NULL, &cmdlineP->pad,           0);
+    OPTENT3(0,   "reportonly", OPT_FLAG,   NULL,
+            &cmdlineP->reportonly, 0);
     OPTENT3(0,   "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,       0);
 
     opt.opt_table = option_def;
@@ -318,6 +321,55 @@ near(Location     const loc,
 
 
 static void
+computeCutBoundsOneDim(unsigned int const origSz,
+                       Location     const nearArg,
+                       Location     const farArg,
+                       bool         const dimSpec,
+                       unsigned int const dimArg,
+                       int *        const nearLocP,
+                       int *        const farLocP) {
+/*----------------------------------------------------------------------------
+   Do one dimension (vertical or horizontal) of the function of
+   'computeCutBounds'.
+-----------------------------------------------------------------------------*/
+    if (dimSpec)
+        assert(dimArg > 0);
+
+    if (nearArg.locType == LOCTYPE_NONE) {
+        if (farArg.locType == LOCTYPE_NONE) {
+            *nearLocP = 0;
+            if (dimSpec)
+                *farLocP = 0 + (int)dimArg - 1;
+            else
+                *farLocP = (int)origSz - 1;
+        } else {
+            *farLocP = near(farArg, origSz);
+            if (dimSpec)
+                *nearLocP = near(farArg, origSz) - (int)dimArg + 1;
+            else
+                *nearLocP = 0;
+        }
+    } else {
+        *nearLocP = near(nearArg, origSz);
+        if (farArg.locType == LOCTYPE_NONE) {
+            if (dimSpec)
+                *farLocP = near(nearArg, origSz) + (int)dimArg - 1;
+            else
+                *farLocP = (int)origSz - 1;
+        } else {
+            if (dimSpec) {
+                pm_error("You may not specify left, right, and width "
+                         "or top, bottom, and height.  "
+                         "Choose at most two of each of these sets.");
+            } else
+                *farLocP = near(farArg, origSz);
+        }
+    }
+}
+
+
+
+static void
 computeCutBounds(unsigned int const cols,
                  unsigned int const rows,
                  Location     const leftArg,
@@ -341,75 +393,11 @@ computeCutBounds(unsigned int const cols,
    *botrowP.  Any of these can be outside the image, including by being
    negative.
 -----------------------------------------------------------------------------*/
-    /* Find left and right bounds */
+    computeCutBoundsOneDim(cols, leftArg, rghtArg, widthSpec,  widthArg,
+                           leftColP, rghtColP);
 
-    if (widthSpec)
-        assert(widthArg > 0);
-
-    if (leftArg.locType == LOCTYPE_NONE) {
-        if (rghtArg.locType == LOCTYPE_NONE) {
-            *leftColP = 0;
-            if (widthSpec)
-                *rghtColP = 0 + (int)widthArg - 1;
-            else
-                *rghtColP = (int)cols - 1;
-        } else {
-            *rghtColP = near(rghtArg, cols);
-            if (widthSpec)
-                *leftColP = near(rghtArg, cols) - (int)widthArg + 1;
-            else
-                *leftColP = 0;
-        }
-    } else {
-        *leftColP = near(leftArg, cols);
-        if (rghtArg.locType == LOCTYPE_NONE) {
-            if (widthSpec)
-                *rghtColP = near(leftArg, cols) + (int)widthArg - 1;
-            else
-                *rghtColP = (int)cols - 1;
-        } else {
-            if (widthSpec) {
-                pm_error("You may not specify left, right, and width.  "
-                         "Choose at most two of these.");
-            } else
-                *rghtColP = near(rghtArg, cols);
-        }
-    }
-
-    /* Find top and bottom bounds */
-
-    if (heightSpec)
-        assert(heightArg > 0);
-
-    if (topArg.locType == LOCTYPE_NONE) {
-        if (botArg.locType == LOCTYPE_NONE) {
-            *topRowP = 0;
-            if (heightSpec)
-                *botRowP = 0 + (int)heightArg - 1;
-            else
-                *botRowP = (int)rows - 1;
-        } else {
-            *botRowP = near(botArg, rows);
-            if (heightSpec)
-                *topRowP = near(botArg, rows) - (int)heightArg + 1;
-            else
-                *topRowP = 0;
-        }
-    } else {
-        *topRowP = near(topArg, rows);
-        if (botArg.locType == LOCTYPE_NONE) {
-            if (heightSpec)
-                *botRowP = near(topArg, rows) + (int)heightArg - 1;
-            else
-                *botRowP = (int)rows - 1;
-        } else {
-            if (heightSpec) {
-                pm_error("You may not specify top, bottom, and height.  "
-                         "Choose at most two of these.");
-            } else
-                *botRowP = near(botArg, rows);
-        }
-    }
+    computeCutBoundsOneDim(rows, topArg,  botArg,  heightSpec, heightArg,
+                           topRowP,  botRowP);
 }
 
 
@@ -466,6 +454,46 @@ rejectOutOfBounds(unsigned int const cols,
 
 
 static void
+reportCuts(int          const leftCol,
+           int          const rghtCol,
+           int          const topRow,
+           int          const botRow,
+           unsigned int const oldWidth,
+           unsigned int const oldHeight) {
+
+    /* N.B. column and row numbers can be outside the input image, even
+       negative, which implies padding is required.
+    */
+
+    unsigned int const newWidth  = rghtCol - leftCol + 1;
+    unsigned int const newHeight = botRow  - topRow  + 1;
+
+    assert (rghtCol >= leftCol);
+    assert (botRow  >= topRow );
+
+    printf("%d %d %d %d %u %u %u %u\n",
+           leftCol, rghtCol, topRow, botRow,
+           oldWidth, oldHeight, newWidth, newHeight);
+}
+
+
+
+static void
+drainRaster(const struct pam * const inpamP) {
+/*----------------------------------------------------------------------------
+   Read through the input image described by *inpamP, which is positioned
+   to the raster, so the input stream is properly positioned for whatever
+   is next.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
+
+    for (row = 0; row < inpamP->height; ++row)
+        pnm_readpamrow(inpamP, NULL);
+}
+
+
+
+static void
 writeBlackRows(const struct pam * const outpamP,
                int                const rows) {
 /*----------------------------------------------------------------------------
@@ -495,7 +523,7 @@ writeBlackRows(const struct pam * const outpamP,
 
 
 
-struct rowCutter {
+typedef struct {
 /*----------------------------------------------------------------------------
    This is an object that gives you pointers you can use to effect the
    horizontal cutting and padding of a row just by doing one
@@ -537,7 +565,7 @@ struct rowCutter {
     tuple * copyTuples;
     tuple blackTuple;
     tuple discardTuple;
-};
+} RowCutter;
 
 
 
@@ -554,13 +582,13 @@ struct rowCutter {
 
 
 static void
-createRowCutter(const struct pam *  const inpamP,
-                const struct pam *  const outpamP,
-                int                 const leftcol,
-                int                 const rightcol,
-                struct rowCutter ** const rowCutterPP) {
+createRowCutter(const struct pam * const inpamP,
+                const struct pam * const outpamP,
+                int                const leftcol,
+                int                const rightcol,
+                RowCutter **       const rowCutterPP) {
 
-    struct rowCutter * rowCutterP;
+    RowCutter * rowCutterP;
     tuple * inputPointers;
     tuple * outputPointers;
     tuple * copyTuples;
@@ -624,7 +652,7 @@ createRowCutter(const struct pam *  const inpamP,
 
 
 static void
-destroyRowCutter(struct rowCutter * const rowCutterP) {
+destroyRowCutter(RowCutter * const rowCutterP) {
 
     pnm_freepamrow(rowCutterP->copyTuples);
     pnm_freepamtuple(rowCutterP->blackTuple);
@@ -645,12 +673,12 @@ extractRowsGen(const struct pam * const inpamP,
                int                const toprow,
                int                const bottomrow) {
 
-    struct rowCutter * rowCutterP;
+    RowCutter * rowCutterP;
     int row;
 
     /* Write out top padding */
-    if (0 - toprow > 0)
-        writeBlackRows(outpamP, 0 - toprow);
+    if (toprow < 0)
+        writeBlackRows(outpamP, MIN(0, bottomrow+1) - toprow);
 
     createRowCutter(inpamP, outpamP, leftcol, rightcol, &rowCutterP);
 
@@ -671,14 +699,15 @@ extractRowsGen(const struct pam * const inpamP,
     destroyRowCutter(rowCutterP);
 
     /* Write out bottom padding */
-    if ((bottomrow - (inpamP->height-1)) > 0)
-        writeBlackRows(outpamP, bottomrow - (inpamP->height-1));
+    if (bottomrow >= inpamP->height)
+        writeBlackRows(outpamP, bottomrow - MAX(inpamP->height, toprow) + 1);
+
 }
 
 
 
 static void
-makeBlackPBMRow(unsigned char * const bitrow,
+makeBlackPbmRow(unsigned char * const bitrow,
                 unsigned int    const cols) {
 
     unsigned int const colByteCnt = pbm_packed_bytes(cols);
@@ -695,14 +724,14 @@ makeBlackPBMRow(unsigned char * const bitrow,
 
 
 static void
-extractRowsPBM(const struct pam * const inpamP,
+extractRowsPbm(const struct pam * const inpamP,
                const struct pam * const outpamP,
                int                const leftcol,
                int                const rightcol,
                int                const toprow,
                int                const bottomrow) {
 
-    unsigned char * bitrow;
+    unsigned char * bitrow;   /* read/write buffer */
     int             readOffset, writeOffset;
     int             row;
     unsigned int    totalWidth;
@@ -730,17 +759,16 @@ extractRowsPBM(const struct pam * const inpamP,
     }
 
     bitrow = pbm_allocrow_packed(totalWidth);
+      /* Initialize row buffer to all black for top and side padding */
 
-    if (toprow < 0 || leftcol < 0 || rightcol >= inpamP->width){
-        makeBlackPBMRow(bitrow, totalWidth);
-        if (toprow < 0) {
-            int row;
-            for (row=0; row < 0 - toprow; ++row)
-                pbm_writepbmrow_packed(outpamP->file, bitrow,
-                                       outpamP->width, 0);
-        }
+    /* Write out top padding */
+    if (toprow < 0) {
+        makeBlackPbmRow(bitrow, outpamP->width);
+        for (row = toprow; row < MIN(0, bottomrow+1); ++row)
+            pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
     }
 
+    makeBlackPbmRow(bitrow, totalWidth);
     for (row = 0; row < inpamP->height; ++row){
         if (row >= toprow && row <= bottomrow) {
             pbm_readpbmrow_bitoffset(inpamP->file, bitrow, inpamP->width,
@@ -757,12 +785,13 @@ extractRowsPBM(const struct pam * const inpamP,
             pnm_readpamrow(inpamP, NULL);    /* read and discard */
     }
 
-    if (bottomrow - (inpamP->height-1) > 0) {
-        int row;
-        makeBlackPBMRow(bitrow, outpamP->width);
-        for (row = 0; row < bottomrow - (inpamP->height-1); ++row)
-            pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
+    /* Write out bottom padding */
+    if (bottomrow >= inpamP->height) {
+        makeBlackPbmRow(bitrow, outpamP->width);
+        for (row = MAX(inpamP->height, toprow); row < bottomrow+1; ++row)
+             pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
     }
+
     pbm_freerow_packed(bitrow);
 }
 
@@ -797,23 +826,31 @@ cutOneImage(FILE *             const ifP,
                    toprow, leftcol, bottomrow, rightcol);
     }
 
-    outpam = inpam;    /* Initial value -- most fields should be same */
-    outpam.file   = ofP;
-    outpam.width  = rightcol - leftcol + 1;
-    outpam.height = bottomrow - toprow + 1;
+    if (cmdline.reportonly) {
+        reportCuts(leftcol, rightcol, toprow, bottomrow,
+                   inpam.width, inpam.height);
+        drainRaster(&inpam);
+    } else {
+        outpam = inpam;    /* Initial value -- most fields should be same */
+        outpam.file   = ofP;
+        outpam.width  = rightcol - leftcol + 1;
+        outpam.height = bottomrow - toprow + 1;
 
-    pnm_writepaminit(&outpam);
+        pnm_writepaminit(&outpam);
 
-    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
-        extractRowsPBM(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
-    else
-        extractRowsGen(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
+        if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
+            extractRowsPbm(&inpam, &outpam,
+                           leftcol, rightcol, toprow, bottomrow);
+        else
+            extractRowsGen(&inpam, &outpam,
+                           leftcol, rightcol, toprow, bottomrow);
+    }
 }
 
 
 
 int
-main(int argc, const char *argv[]) {
+main(int argc, const char ** const argv) {
 
     FILE * const ofP = stdout;
 
@@ -838,3 +875,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+

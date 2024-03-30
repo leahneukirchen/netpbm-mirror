@@ -46,22 +46,8 @@ rm ${out1_pam}
 test_out=${tmpdir}/test_out
 echo "Test Invalid."
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ${srcdir}/test-invalid.inc
 
-pamshuffle testimg.ppm testgrid.pbm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamshuffle -randomseed -column testgrid.pbm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamshuffle -randomseed=null testgrid.pbm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamshuffle testimg.ppm testgrid.pbm"
+invCmd "pamshuffle -randomseed -column testgrid.pbm"
+invCmd "pamshuffle -randomseed=null testgrid.pbm"

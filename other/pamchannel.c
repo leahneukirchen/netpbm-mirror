@@ -43,8 +43,6 @@ parseCommandLine(int argc, const char ** argv,
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to pm_optParseOptions3 on how to parse our options.
-         */
     optStruct3 opt;
     extern struct pam pam;  /* Just so we can look at field sizes */
 
@@ -63,7 +61,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!infileSpec)

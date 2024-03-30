@@ -116,142 +116,68 @@ for image in maze.pbm ${input1_ppm}
 
 rm ${input1_ppm}
 
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
 echo "Test Invalid"
 
-test_out=${tmpdir}/test_out
+. ${srcdir}/test-invalid.inc
 
 # multiple functions
 
-pamarith -add -subtract testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -multiply -divide testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -difference -minimum testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -maximum -mean testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -compare -and testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -compare -equal testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -or -nand testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -nor -xor testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -shiftleft -shiftright testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 9 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -add -subtract testimg.ppm testimg.ppm"
+invCmd "pamarith -multiply -divide testimg.ppm testimg.ppm"
+invCmd "pamarith -difference -minimum testimg.ppm testimg.ppm"
+invCmd "pamarith -maximum -mean testimg.ppm testimg.ppm"
+invCmd "pamarith -compare -and testimg.ppm testimg.ppm"
+invCmd "pamarith -compare -equal testimg.ppm testimg.ppm"
+invCmd "pamarith -or -nand testimg.ppm testimg.ppm"
+invCmd "pamarith -nor -xor testimg.ppm testimg.ppm"
+invCmd "pamarith -shiftleft -shiftright testimg.ppm testimg.ppm"
 
 # -add does not take a value
 
-pamarith -add=1 testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 10 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -add=1 testimg.ppm testimg.ppm"
 
 # No function
 
-pamarith -plain testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 11 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 12 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -plain testimg.ppm testimg.ppm"
+invCmd "pamarith testimg.ppm testimg.ppm"
 
 # Just one input image file
 
-pamarith -add testimg.ppm > ${test_out} || \
-  printf "Expected failure 13 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -add testimg.ppm"
 
 # No input image file
 
-pamarith -add > ${test_out} || \
-  printf "Expected failure 14 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -add"
 
 # Input images with different depth (number of planes)
 
-pamchannel -infile testimg.ppm 0 1 | \
-  pamarith -add testimg.ppm - > ${test_out} || \
-  printf "Expected failure 15 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+input1_pam=${tmpdir}/input1.pam
+
+pamchannel -infile testimg.ppm 0 1 > ${input1_pam}
+invCmd "pamarith -add testimg.ppm ${input1_pam}"
+rm ${input1_pam}
 
 # Input images with different x/y dimensions
 
-pamarith -add testimg.ppm testgrid.pbm > ${test_out} || \
-  printf "Expected failure 16 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -add testimg.ppm testgrid.pbm"
 
-pamenlarge -xscale=2 testgrid.pbm | \
-  pamarith -add testgrid.pbm - > ${test_out} || \
-  printf "Expected failure 17 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+input1_pbm=${tmpdir}/input1.pbm
+input2_pbm=${tmpdir}/input2.pbm
 
-pamenlarge -yscale=3 testgrid.pbm | \
-  pamarith -add testgrid.pbm - > ${test_out} || \
-  printf "Expected failure 18 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+pamenlarge -xscale=2 testgrid.pbm > ${input1_pbm}
+invCmd "pamarith -add testgrid.pbm ${input1_pbm}"
+rm ${input1_pbm}
+
+pamenlarge -yscale=3 testgrid.pbm > ${input2_pbm}
+invCmd "pamarith -add testgrid.pbm ${input2_pbm}"
+rm ${input2_pbm}
 
 # Invalid usage of -closeness
 
-pamarith -equal -closeness=100.1 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 19 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -equal -closeness=-10 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 20 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -closeness -equal testgrid.pbm > ${test_out} || \
-  printf "Expected failure 21 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -compare -closeness=10 testgrid.pbm > ${test_out} || \
-  printf "Expected failure 22 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -equal -closeness=100.1 testgrid.pbm"
+invCmd "pamarith -equal -closeness=-10 testgrid.pbm"
+invCmd "pamarith -closeness -equal testgrid.pbm"
+invCmd "pamarith -compare -closeness=10 testgrid.pbm"
 
 # Bit string functions
 # Create PGM test input
@@ -266,67 +192,21 @@ pgmmake -maxval=8191 1.0 3 1 > ${input5_pgm}
 
 # Bit string functions - Maxval must match
 
-pamarith -and ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  printf "Expected failure 23 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -or ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  printf "Expected failure 24 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -nand ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  printf "Expected failure 25 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -nor ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  printf "Expected failure 26 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -xor ${input3_pgm} ${input5_pgm} > ${test_out} || \
-  printf "Expected failure 27 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -and ${input3_pgm} ${input5_pgm}"
+invCmd "pamarith -or ${input3_pgm} ${input5_pgm}"
+invCmd "pamarith -nand ${input3_pgm} ${input5_pgm}"
+invCmd "pamarith -nor ${input3_pgm} ${input5_pgm}"
+invCmd "pamarith -xor ${input3_pgm} ${input5_pgm}"
 
 # Bit string functions - Maxval must be 2^n -1
 
-pamarith -and ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  printf "Expected failure 28 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -or ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  printf "Expected failure 29 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -nand ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  printf "Expected failure 30 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -nor ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  printf "Expected failure 31 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -xor ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  printf "Expected failure 32 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -shiftleft ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  printf "Expected failure 33 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -shiftright ${input4_pgm} ${input4_pgm} > ${test_out} || \
-  printf "Expected failure 34 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -and ${input4_pgm} ${input4_pgm}"
+invCmd "pamarith -or ${input4_pgm} ${input4_pgm}"
+invCmd "pamarith -nand ${input4_pgm} ${input4_pgm}"
+invCmd "pamarith -nor ${input4_pgm} ${input4_pgm}"
+invCmd "pamarith -xor ${input4_pgm} ${input4_pgm}"
+invCmd "pamarith -shiftleft ${input4_pgm} ${input4_pgm}"
+invCmd "pamarith -shiftright ${input4_pgm} ${input4_pgm}"
 
 rm ${input3_pgm} ${input4_pgm} ${input5_pgm}
 
@@ -334,45 +214,15 @@ rm ${input3_pgm} ${input4_pgm} ${input5_pgm}
 # Only the functions that are commutative and associative allow
 # three or more inputs.
 
-pamarith -subtract testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 35 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -divide testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 36 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -compare testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 37 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -difference testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 38 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -shiftleft testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 39 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -shiftright testimg.ppm testimg.ppm testimg.ppm > ${test_out} || \
-  printf "Expected failure 40 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -subtract testimg.ppm testimg.ppm testimg.ppm"
+invCmd "pamarith -divide testimg.ppm testimg.ppm testimg.ppm"
+invCmd "pamarith -compare testimg.ppm testimg.ppm testimg.ppm"
+invCmd "pamarith -difference testimg.ppm testimg.ppm testimg.ppm"
+invCmd "pamarith -shiftleft testimg.ppm testimg.ppm testimg.ppm"
+invCmd "pamarith -shiftright testimg.ppm testimg.ppm testimg.ppm"
 
 # Currently -equal and -mean do not allow more than two input images.
 # These two cases should be removed once improvements are made.
 
-pamarith -equal testgrid.pbm testgrid.pbm testgrid.pbm > ${test_out} || \
-  printf "Expected failure 41 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pamarith -mean testgrid.pbm  testgrid.pbm testgrid.pbm > ${test_out} || \
-  printf "Expected failure 42 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamarith -equal testgrid.pbm testgrid.pbm testgrid.pbm"
+invCmd "pamarith -mean testgrid.pbm  testgrid.pbm testgrid.pbm"
