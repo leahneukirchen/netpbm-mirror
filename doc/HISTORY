@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.86.41
+
+              infotopam: fix incorrect output -- columns always in wrong
+              place.  Always broken.  (infotopam was new in Netpbm 10.22 (May
+              2004)).
+
 23.12.28 BJH  Release 10.86.40
 
               pnmconvol: Restore ability of convolution matrix to be a
