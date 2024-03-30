@@ -16,6 +16,10 @@ not yet  BJH  Release 11.06.00
               libnetpbm: Don't ignore garbage at the end of a color specifier
               (e.g. rgbi:0/.5/1xyz).
 
+              color database: change names of "Spring Green", "Lamp Black",
+              and "light grey" to "SpringGreen", "LampBlack", and "LightGrey"
+              to be consistent with other color names.
+
               pamcut: fix incorrect output when rectangle to cut is entirely
               above the input image.  Invisible junk after image.  Always
               broken.  (The ability to cut outside the input image was new in
