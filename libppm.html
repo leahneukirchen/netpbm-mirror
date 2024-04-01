@@ -500,6 +500,12 @@ name and multiple names for a given color.  Entries in a color dictionary are
 ordered, and when Netpbm looks up a color name, it ignores all but the first
 entry for that name, and when it looks up a color, it ignores all but the
 first entry for that color.
+
+<p>Before Netpbm 11.07 (June 2024), <b>ppm_readcolornamefile()</b> fails if
+your color dictionary has more than 1000 entries in it.  So does
+<b>ppm_readcolordict</b> if you request the color name array.  This means
+programs <b>ppmhist</b> with a <b>-colorname</b> option and <b>ppmtoxpm</b>
+without a <b>-hexonly</b> option fail.
   
 <p>Netpbm is packaged with a color dictionary.  A standard Netpbm
 installation installs this file as "misc/rgb.txt" in the Netpbm
