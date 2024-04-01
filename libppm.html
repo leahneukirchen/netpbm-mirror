@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>libppm</h1>
-Updated: 27 March 2024
+Updated: 31 March 2024
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -477,16 +477,22 @@ the value of the <b>RGBDEF</b> environment variable.  If <b>RGBDEF</b>
 is not set, Netpbm defaults to the first existing file from this list:
 
 <ol>
+<li><b>/usr/local/netpbm/rgb.txt</b>
+<li><b>/usr/share/netpbm/rgb.txt</b>
+<li><b>/etc/X11/rgb.txt</b>
 <li><b>/usr/lib/X11/rgb.txt</b>
 <li><b>/usr/openwinlib/rgb.txt</b>
 <li><b>/usr/X11R6/lib/X11/rgb.txt</b>
 </ol>
 
+This is the default list; it can vary based on options used when Netbpm is
+built.
+
 <p>You can see the color names from a typical X11 color dictionary,
 which is probably very close to what is on your system, along with the
 colors, <a
-href="http://www.swiss.ai.mit.edu/~jaffer/Color/x11.pdf">here</a>.  <a
-href="http://www.swiss.ai.mit.edu/~jaffer/Color/Dictionaries.html">This
+href="http://people.csail.mit.edu/~jaffer/Color/x11.pdf">here</a>.  <a
+href="http://people.csail.edu/~jaffer/Color/Dictionaries.html">This
 website</a> shows a bunch of other versions you could use.
 
 <p>Netpbm accepts color dictionaries that have multiple colors for a given
