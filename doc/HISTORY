@@ -6,6 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.07.00
 
+              libnetpbm: Allow color dictionary with more than 1000 entries.
+
+              ppmhist, ppmtoxpm: Work with color dictionary with more than
+              1000 color entries.
+
+              rgb.txt: Add Resene paint colors, 2010.
+
 24.03.30 BJH  Release 11.06.00
 
               pamcut: add -reportonly.

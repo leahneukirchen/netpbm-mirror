@@ -6,12 +6,13 @@
 # of a particular color name and the first definition of a particular color
 # definition.  (That means the function is not reversible).
 
-# - Netpbm originals
 # - Crayola crayons, as determined by John Thomas at Tektronix
 # - Hollasch at Microsoft Research
 # - HTML 4.0
 # - Some HTML extension that Internet Explorer understands
 # - XFree86 rgb.txt ca. 2001, derived from MIT X11
+# - Netpbm originals
+# - Resene paint colors, 2010
 
 # More details on the sources are above each group.
 
@@ -893,3 +894,1412 @@
 
 # These were more or less invented for use with Netpbm:
 255 255 255  D65
+
+# The following is from
+# http://people.csail.mit.edu/jaffer/Color/Resene-2010-rgb.txt
+# on 24.03.31
+
+# Resene RGB Values List
+# For further information refer to http://www.resene.co.nz
+# Copyright Resene Paints Ltd 2001
+#
+# Permission to copy this dictionary, to modify it, to redistribute it,
+# to distribute modified versions, and to use it for any purpose is
+# granted, subject to the following restrictions and understandings.
+#
+# 1. Any text copy made of this dictionary must include this copyright
+# notice in full.
+#
+# 2. Any redistribution in binary form must reproduce this copyright
+# notice in the documentation or other materials provided with the
+# distribution.
+#
+# 3. Resene Paints Ltd makes no warranty or representation that this
+# dictionary is error-free, and is under no obligation to provide any
+# services, by way of maintenance, update, or otherwise.
+#
+# 4. There shall be no use of the name of Resene or Resene Paints Ltd
+# in any advertising, promotional, or sales literature without prior
+# written consent in each case.
+#
+# 5. These RGB colour formulations may not be used to the detriment of
+# Resene Paints Ltd.
+#
+ 36  83  54		kaitokegreen
+ 27  75  53		countygreen
+ 23  70  46		zuccini
+ 29  57  60		nordic
+  0  73  78		sherpablue
+ 37  72  85		tealblue
+ 53  81  79		bluedianne
+ 49  70  67		firefly
+ 44  70  65		gablegreen
+ 39  63  65		daintree
+ 24  67  67		tiber
+ 15  70  69		cyprus
+ 25  68  60		deepteal
+ 32  72  63		zydeco
+ 27  70  54		sherwoodgreen
+ 39  66  52		englishholly
+ 38  67  52		everglade
+ 37  70  54		bottlegreen
+ 37  70  54		bush
+ 35  69  55		burnham
+ 43  63  54		celtic
+ 50  67  54		timbergreen
+ 51  66  49		forestgreen
+ 43  75  64		tepapagreen
+ 52  83  61		goblin
+ 58  69  49		mallard
+ 54  72  47		palmleaf
+ 55  65  42		seaweed
+ 53  63  42		olivegreen
+ 25  57  37		deepfir
+ 27  52  39		cardingreen
+ 32  57  44		palmgreen
+ 37  52  43		holly
+ 35  46  38		blackbean
+ 41  51  43		gordonsgreen
+ 44  50  39		blackforest
+ 42  47  35		pinetree
+ 47  49  37		huntergreen
+ 45  47  40		eternity
+ 43  46  37		rangoongreen
+ 43  46  38		marshland
+ 44  45  36		greenwaterloo
+ 45  45  36		karaka
+ 52  50  45		banjul
+ 53  49  44		acadia
+ 55  49  43		darkebony
+ 57  50  39		creole
+ 56  52  40		graphite
+ 51  44  34		blackmagic
+ 51  44  34		cannonblack
+ 53  40  30		cocoabrown
+ 60  47  35		cola
+ 59  46  37		sambuca
+ 60  52  46		treehouse
+ 61  50  44		deepoak
+ 58  47  45		sepia
+ 54  45  38		coffeebean
+ 54  45  38		cubantan
+ 54  45  38		marlin
+ 48  38  33		woodbark
+ 42  41  34		asphalt
+ 42  41  34		maire
+ 41  41  36		junglegreen
+ 70  54  35		clinker
+ 70  54  41		woodburn
+ 65  54  40		jackobean
+ 63  55  38		birch
+ 63  54  35		mikado
+ 73  63  47		ashbrown
+ 72  65  43		onion
+ 71  62  35		madras
+ 57  61  42		greenkelp
+ 69  64  43		woodrush
+ 76  78  49		waiouru
+ 79  77  50		camouflage
+ 84  78  49		thatchgreen
+ 83  73  49		punga
+ 81  65  45		deepbronze
+ 75  65  42		tumbleweed
+ 85  74  60		metallicbronze
+ 79  64  55		paco
+ 75  67  59		spaceshuttle
+ 74  75  70		gravel
+ 70  71  62		heavymetal
+ 57  62  46		logcabin
+ 61  64  49		scrub
+ 58  65  51		rangitoto
+ 57  57  44		elpaso
+ 58  55  46		touchwood
+ 60  55  49		blackpepper
+ 63  55  46		blackwood
+ 68  54  45		tobago
+ 66  52  43		slugger
+ 69  54  43		darkrum
+ 73  59  47		bronze
+ 71  59  47		englishwalnut
+ 63  57  57		eclipse
+ 70  61  62		jon
+ 52  54  58		shark
+ 54  56  60		vulcan
+ 60  61  62		balticsea
+ 57  59  60		montana
+ 60  59  60		fuscousgrey
+ 58  53  50		kilamanjaro
+ 55  63  67		mirage
+ 55  62  65		mineshaft
+ 57  64  67		charade
+ 59  60  56		zeus
+ 69  70  66		tuatara
+ 64  77  73		corduroy
+ 72  74  70		armadillo
+ 77  77  75		thunder
+ 82  75  75		matterhorn
+ 80  73  74		emperor
+ 69  70  71		bleachedcedar
+ 67  70  75		steelgrey
+ 70  73  78		tuna
+ 72  71  83		gunpowder
+ 61  70  83		rhino
+ 60  67  84		bluezodiac
+ 58  78  95		cello
+ 61  75  82		atomic
+ 58  78  88		deepcove
+ 51  64  70		bigstone
+ 37  63  78		nileblue
+ 35  65  78		greenvogue
+ 37  60  72		tarawera
+ 46  55  73		licorice
+ 53  62  79		cloudburst
+ 56  55  64		blackmarlin
+ 55  54  63		revolver
+ 65  61  75		grape
+ 44  45  60		blackrock
+ 44  42  53		haiti
+ 49  42  41		lividbrown
+ 50  44  43		diesel
+ 51  46  46		nightrider
+ 55  51  50		gondola
+ 50  49  46		crowshead
+ 45  48  50		codgrey
+ 41  44  47		bunker
+ 38  43  47		bluecharcoal
+ 44  44  50		bastille
+ 51  52  58		woodybay
+ 49  51  55		ebony
+ 50  52  56		ebonyclay
+ 44  53  57		gunmetal
+ 40  53  58		oxfordblue
+ 37  47  47		swamp
+ 49  51  48		oil
+ 43  50  48		woodsmoke
+ 41  52  50		aztec
+ 36  46  40		midnightmoss
+ 35  47  44		racinggreen
+ 30  52  66		bluewhale
+ 41  55  65		mosaic
+ 36  54  64		elephant
+ 33  48  62		midnight
+ 30  47  60		tangaroa
+ 36  42  46		cinder
+ 30  39  44		blackpearl
+ 30  39  44		bluebark
+ 36  37  43		blackrussian
+ 41  41  47		jaguar
+ 37  37  37		nero
+ 42  39  37		bokaragrey
+ 31  38  59		outerspace
+ 33  38  58		midnightexpress
+ 33  38  58		stratos
+ 25  47  65		prussianblue
+ 43  52  73		bunting
+ 42  52  74		downriver
+ 48  67 106		capri
+ 38  65 107		bondiblue
+ 39  60  90		catalinablue
+ 39  60  90		cobalt
+ 52  63  92		covegrey
+ 52  63  92		gulfblue
+ 47  60  83		biscay
+ 45  60  84		madison
+ 33  69  89		astronautblue
+ 32  63  88		regalblue
+ 39  74  93		arapawa
+ 71  88 119		chambray
+ 68  81 114		astronaut
+ 71  82 110		eastbay
+ 37  89 127		bahamablue
+ 54  92 125		matisse
+ 44  87 120		veniceblue
+ 50  84 130		sttropaz
+ 41  89 139		endeavour
+  0  98 111		bluelagoon
+ 48  92 113		blumine
+ 44  89 113		chathamsblue
+ 37  91 119		orient
+ 31 106 125		allports
+ 61 113 136		calypso
+ 68 121 142		jellybean
+ 55 111 137		astral
+ 73 136 154		hippieblue
+ 61 133 184		curiousblue
+ 49 110 160		lochmara
+ 78 108 157		sanmarino
+ 78 105 154		azure
+ 87 132 193		havelockblue
+ 91 110 145		waikawagrey
+ 87 109 142		kashmirblue
+ 76 107 136		wedgewood
+129 124 135		topaz
+122 118 121		monsoon
+119 118 114		dovegrey
+116 120 128		stormgrey
+121 132 136		regentgrey
+124 129 124		boulder
+109 120 118		rollingstone
+119 132 142		pigeonpost
+105 125 137		lynch
+100 125 134		hoki
+ 98 119 126		bluebayoux
+104 118 110		sirocco
+102 111 111		nevada
+ 99 109 112		palesky
+102 106 109		midgrey
+111 116 123		raven
+118 115 111		aluminium
+107 106 108		scarpaflow
+124 113 115		empress
+106 104 115		dolphin
+114 114 130		waterloo
+ 96  93 107		smoky
+ 99  99 115		comet
+ 75  90  98		fiord
+ 68  87  97		sanjuan
+ 63  84  90		casal
+ 87  89  93		brightgrey
+ 88  84  82		tundora
+ 86  80  81		mortar
+ 90  79  81		donjuan
+ 78  78  76		shipgrey
+ 78  85  82		capecod
+ 80  85  85		mako
+ 76  83  86		trout
+ 70  83  82		darkslate
+ 79  90  95		pickledbluewood
+ 85  96  97		riverbed
+ 78  96  94		limedspruce
+ 97 102 107		shuttlegrey
+105  98 104		saltbox
+106 100 102		scorpion
+108  94  83		kabul
+110  95  86		dorado
+105  95  80		makara
+101 100  95		stormdust
+ 91 100  82		pickledaspen
+ 91  93  86		chicago
+ 81  87  79		battleshipgrey
+ 89  86  72		millbrook
+ 76  85  68		cabbagepont
+ 79  78  72		merlin
+ 81  79  74		dune
+ 87  83  75		masala
+ 93  89  82		smokeyash
+ 93  83  70		judgegrey
+ 93  78  70		saddle
+ 90  76  66		cork
+ 90  76  66		mash
+ 90  77  65		rock
+ 91  82  68		iroko
+ 85  77  66		mondo
+ 84  79  58		lisbonbrown
+ 84  79  58		panda
+ 77  80  60		kelp
+ 78  85  65		lunargreen
+105 104  75		hemlock
+111  99  75		soyabean
+108  91  76		domino
+117 101  86		pinecone
+114 103  81		coffee
+118 109  82		peat
+122 113  92		pablo
+129 110  92		donkeybrown
+133 113  88		cement
+143 125 107		squirrel
+130 122 103		arrowtown
+128 118  97		stonewall
+134 118 101		sanddune
+138 125 114		americano
+139 126 119		hurricane
+130 127 121		concord
+120 109  95		sandstone
+112 110 102		ironsidegrey
+113 110  97		flint
+103 109  99		limedash
+122 124 118		gunsmoke
+124 124 114		tapa
+120 133 122		bluesmoke
+136 128 100		olivehaze
+139 130 101		granitegreen
+123 120  90		kokoda
+117 120  90		finch
+112 105  80		crocodile
+104 107  80		siam
+ 91 111  85		cactus
+ 99 119  90		axolotl
+ 97 117  91		finlandia
+105 117  92		willowgrove
+117 135 110		xanadu
+ 92 129 115		cuttysark
+ 98 103  70		woodland
+ 79  99  72		tomthumb
+ 82  86  54		greygreen
+ 55  93  79		spectra
+ 62  89  76		plantation
+ 78  93  78		nandor
+ 80  99  85		mineralgreen
+ 64  99  86		stromboli
+ 75  95  86		viridiangreen
+ 57  85  85		oracle
+ 73 101 105		taxbreak
+ 73  98 103		smaltblue
+ 72 108 122		bismark
+ 64 117 119		ming
+ 64 114 109		jade
+ 81 123 120		breakerbay
+ 83 115 111		william
+ 72 128 132		paradiso
+  0 123 119		surfiegreen
+ 41 123 118		elm
+ 49 121 109		genoa
+ 43 121 122		atoll
+ 31  99  97		seagreen
+ 22 100  97		bluestone
+  0  95  91		mosque
+ 38  98  85		eden
+ 32  89  72		aquamarine
+ 38  96  79		eveningsea
+ 48  93  53		parsley
+ 22  91  49		crusoe
+ 38  98  66		greenpea
+ 36 108  70		greenstone
+ 73 118  79		killarney
+ 76 120  92		como
+ 92 138 100		springgreen
+ 56 123  84		amazon
+ 27 138 107		elfgreen
+ 22 126 101		deepsea
+  0 143 112		observatory
+ 23 123  77		salem
+ 19 104  67		jewel
+ 21  99  61		fungreen
+  0 110  78		watercourse
+  0 135 159		easternblue
+ 37 153 178		pelorous
+ 48 142 160		scooter
+ 77 177 200		viking
+ 91 160 208		pictonblue
+ 67 142 172		bostonblue
+ 96 154 184		shakespeare
+111 140 159		bermudagrey
+121 136 171		shipcove
+ 91 137 192		danube
+122 170 224		jordyblue
+147 162 186		rockblue
+164 175 205		echoblue
+138 167 204		poloblue
+102 183 225		malibu
+119 183 208		seagull
+120 177 191		glacier
+140 206 234		anakiwa
+165 206 236		sail
+174 201 235		tropicalblue
+126 205 221		spray
+182 236 222		waterleaf
+111 210 190		downy
+137 217 200		riptide
+146 211 202		aqua
+134 210 193		bermuda
+151 213 179		vistablue
+180 225 187		fringyflower
+157 211 168		chinook
+214 240 205		snowymint
+239 245 209		riceflower
+223 241 214		hintofgreen
+216 240 210		blueromance
+197 231 205		grannyapple
+192 232 213		aeroblue
+215 231 208		peppermint
+222 241 221		tara
+223 240 226		offgreen
+226 242 228		frostedmint
+198 234 221		minttulip
+194 230 236		onahau
+209 234 234		oysterbay
+208 234 232		foam
+203 232 232		mabel
+202 225 217		iceberg
+202 231 226		jaggedice
+206 239 228		hummingbird
+215 238 228		whiteice
+233 238 235		lilywhite
+221 237 233		tranquil
+223 239 234		clearday
+230 242 234		bubbles
+222 227 227		zircon
+216 221 218		mystic
+211 229 239		pattensblue
+210 218 237		hawkesblue
+230 223 231		selago
+231 229 232		whitelilac
+221 220 219		porcelain
+220 221 221		athensgrey
+227 225 224		seashell
+239 230 230		whisper
+238 223 222		softpeach
+238 232 235		magnolia
+233 236 241		solitude
+245 239 235		hintofred
+251 238 232		rosewhite
+242 240 230		alabaster
+244 240 230		romance
+244 234 228		sauvignon
+249 232 226		wisppink
+242 230 221		fantasy
+248 234 223		chardon
+248 235 221		bridalheath
+241 234 215		halfpearllusta
+241 235 218		butterywhite
+241 235 217		orchidwhite
+244 239 224		bianca
+242 237 221		quarterpearllusta
+248 237 219		islandspice
+252 233 215		serenade
+253 239 211		varden
+248 234 202		ginfizz
+247 240 219		apricotwhite
+251 242 219		earlydawn
+251 240 214		halfdutchwhite
+253 239 219		forgetmenot
+249 247 222		chileanheath
+248 246 223		promenade
+250 243 220		offyellow
+241 237 212		rumswizzle
+251 243 211		chinaivory
+245 243 206		moonglow
+248 246 216		whitenectar
+246 245 215		hintofyellow
+235 247 228		panache
+232 243 232		aquaspring
+238 243 229		saltpan
+244 246 236		twilightblue
+238 239 223		sugarcane
+239 236 222		ricecake
+231 242 233		dew
+229 242 231		polar
+223 230 207		willowbrook
+219 229 210		frostee
+222 234 220		applegreen
+218 230 221		swansdown
+219 228 220		aquasqueeze
+224 228 220		catskillwhite
+229 230 223		blacksqueeze
+227 227 220		snowdrift
+229 228 219		blackwhite
+222 221 203		greenwhite
+217 221 213		aquahaze
+217 223 205		gin
+219 224 208		feta
+225 228 197		frost
+225 218 187		coconutcream
+238 231 200		scotchmist
+237 231 200		halfandhalf
+234 227 205		orangewhite
+226 221 199		travertine
+234 218 194		solitaire
+230 219 199		halfspanishwhite
+234 224 200		pearllusta
+245 230 196		pipi
+233 220 190		doublepearllusta
+249 228 197		eggsour
+249 228 198		derby
+245 222 196		sazerac
+225 218 203		albescentwhite
+235 226 210		quarterspanishwhite
+235 225 206		bleachwhite
+235 229 213		cararra
+243 229 220		fairpink
+234 228 220		pampas
+237 231 224		desertstorm
+238 231 220		whitelinen
+236 229 218		soapstone
+233 230 220		narvik
+231 228 222		wildsand
+228 226 220		wanwhite
+233 225 217		springwood
+227 223 217		vistawhite
+224 222 215		blackhaze
+223 221 214		ceramic
+223 221 214		hintofgrey
+223 221 214		seafog
+220 217 205		milkwhite
+225 219 208		merino
+230 214 205		dawnpink
+230 216 212		ebb
+219 208 202		swisscoffee
+223 215 210		bonjour
+220 215 209		gallery
+218 214 204		whitepointer
+215 206 197		swirl
+212 207 197		westar
+217 208 193		blanc
+222 209 198		pearlbush
+230 214 184		rocksalt
+213 203 178		athsspecial
+222 209 183		janna
+222 209 183		spanishwhite
+223 215 189		wheatfield
+219 217 194		loafer
+212 207 180		whiterock
+210 211 179		orinoco
+211 219 203		ottoman
+209 211 204		greynurse
+214 209 192		ecruwhite
+214 209 192		joanna
+210 210 192		celeste
+206 205 184		moonmist
+203 206 192		harp
+191 205 192		pariswhite
+202 199 183		chromewhite
+197 195 176		kangaroo
+191 192 171		kidnapper
+186 192 180		pumice
+186 192 179		tasman
+188 191 168		berylgreen
+208 200 176		parchment
+210 195 163		doublespanishwhite
+207 190 165		softamber
+210 198 182		starkwhite
+203 201 192		quillgrey
+190 189 182		silversand
+194 188 177		cloud
+191 189 193		frenchgrey
+192 191 199		ghost
+195 190 187		paleslate
+205 198 197		alto
+203 205 205		iron
+210 209 205		concrete
+213 210 209		mercury
+221 214 225		titanwhite
+199 205 216		linkwater
+189 186 206		bluehaze
+179 196 216		spindle
+205 213 213		zumthor
+203 208 207		geyser
+184 198 190		nebula
+176 196 196		junglemist
+185 195 190		tiara
+168 195 188		opal
+187 208 201		jetstream
+164 210 224		frenchpass
+160 205 217		regentstblue
+158 209 211		morningglory
+164 220 230		charlotte
+166 213 208		sinbad
+175 227 214		icecold
+180 226 213		cruise
+173 217 209		scandal
+172 201 178		gumleaf
+178 198 177		zanah
+179 193 177		rainee
+195 214 189		surfcrest
+194 213 196		seamist
+193 216 197		edgewater
+184 212 187		surf
+187 205 165		pixiegreen
+189 202 168		paleleaf
+163 189 156		springrain
+139 165 143		envy
+150 167 147		mantle
+143 182 156		summergreen
+154 192 182		shadowgreen
+138 174 164		seanymph
+119 168 171		neptune
+129 166 170		ziggurat
+140 168 160		cascade
+157 180 170		skeptic
+174 187 193		heather
+179 187 183		loblolly
+172 182 178		periglacialblue
+172 174 169		silverchalice
+170 181 184		casper
+160 177 174		conch
+156 172 165		towergrey
+161 169 168		hitgrey
+164 173 176		gullgrey
+146 172 180		botticelli
+147 170 185		nepal
+162 161 172		spunpearl
+165 169 178		mischka
+159 163 167		greychateau
+169 157 157		nobel
+160 159 156		mountainmist
+179 171 182		chatelle
+174 174 173		bombay
+191 179 178		pinkswan
+190 180 171		tide
+191 186 175		cottonseed
+189 186 174		greynickel
+187 173 161		silk
+202 184 162		grainbrown
+204 182 155		vanilla
+201 181 154		sourdough
+197 186 160		sisal
+192 176 147		coral
+190 178 154		akaroa
+191 181 162		tea
+186 183 162		linen
+186 185 169		mistgrey
+190 186 167		ash
+184 181 161		tana
+169 175 153		greenspring
+158 170 158		robinseggblue
+167 166 157		foggygrey
+160 161 151		stardust
+151 164 154		edward
+165 168 143		bud
+170 165 131		neutralgreen
+176 172 148		eagle
+181 172 148		bisonhide
+183 168 163		martini
+176 169 159		cloudy
+162 149 137		zorba
+165 151 132		malta
+167 151 129		bronco
+161 153 134		nomad
+163 152 129		raincloud
+163 154 135		napa
+152 145 113		gurkha
+161 154 127		greyolive
+153 155 149		delta
+159 157 145		dawn
+153 154 134		lemongrass
+135 135 111		schist
+136 137 108		bitter
+135 132 102		bandicoot
+156 141 114		paleoyster
+141 132 120		schooner
+137 132 120		taupegrey
+148 140 126		heatheredgrey
+134 131 122		friargrey
+139 134 133		suvagrey
+135 135 133		jumbo
+159 155 157		shadylady
+147 145 160		greysuit
+153 152 167		santasgrey
+132 156 169		balihai
+146 159 162		powderblue
+140 156 156		submarine
+133 136 133		stack
+129 137 136		oslogrey
+113 143 138		gumbo
+123 148 140		grannysmith
+116 145 142		juniper
+100 136 148		horizon
+105 136 144		gothic
+ 85 143 147		halfbaked
+ 99 146 131		patina
+123 137 118		spanishgreen
+145 160 146		pewter
+110 141 113		laurel
+109 154 120		oxley
+123 177 141		bayleaf
+126 179 148		padua
+117 170 148		acapulco
+116 178 168		gulfstream
+109 175 167		tradewind
+122 197 180		montecarlo
+101 173 178		fountainblue
+ 64 143 144		bluechill
+ 72 144 132		lochinvar
+ 37 151 151		java
+ 95 182 156		keppel
+ 89 186 163		puertorico
+103 190 144		silvertree
+ 41 169 139		niagara
+ 57 159 134		gossamer
+ 50 151  96		eucalyptus
+ 65 159  89		chateaugreen
+ 76 169 115		oceangreen
+133 202 135		deyork
+127 193  92		mantis
+102 179  72		apple
+ 75 163  81		fruitsalad
+ 95 146  40		vidaloca
+136 169  91		chelseacucumber
+122 148  97		highland
+149 152 107		avocado
+152 159 122		sage
+125 157 114		amulet
+132 145  55		wasabi
+146 140  60		highball
+146 140  60		sycamore
+150 132  40		lemonginger
+169 141  54		reefgold
+173 138  59		alpine
+182 150  66		roti
+178 153  75		husk
+174 144  65		turmeric
+171 141  63		luxorgold
+151 151 111		malachitegreen
+163 153 119		canvas
+163 153 119		tallow
+186 171 135		pavlova
+167 160 126		hillary
+199 184 130		yuma
+187 181 141		coriander
+184 173 138		chino
+205 174 112		putty
+198 169  94		laser
+210 185  96		tacha
+185 173  97		gimblet
+175 193 130		caper
+185 184 128		peasoup
+156 166 100		greensmoke
+162 165 128		locust
+164 184 143		norway
+184 202 157		sprout
+191 194 152		greenmist
+189 192 126		pineglade
+227 212 116		wildrice
+204 207 130		deco
+222 203 129		sandwisp
+222 195 113		chenin
+245 205 130		cherokee
+235 200 129		marzipan
+228 195 133		neworleans
+223 194 129		chalky
+221 194 131		zombie
+218 190 130		straw
+220 198 160		raffia
+199 189 149		thistle
+208 195 131		winterhazel
+224 216 167		mintjulep
+216 204 155		tahunasands
+225 213 166		sapling
+233 215 171		beeswax
+233 215 171		colonialwhite
+237 213 166		astra
+235 212 174		givry
+237 210 164		dairycream
+232 212 162		hampton
+228 207 153		doublecolonialwhite
+230 204 154		chamois
+224 200 141		eggwhite
+241 215 158		splash
+246 224 164		buttermilk
+254 224 165		capehoney
+251 229 194		peach
+243 215 182		pinklady
+238 217 182		champagne
+240 223 187		bajawhite
+240 223 187		dutchwhite
+243 229 192		milkpunch
+247 229 183		barleywhite
+233 217 169		sidecar
+242 229 191		halfcolonialwhite
+248 243 196		cornfield
+241 241 198		springsun
+245 245 204		mimosa
+252 237 197		oasis
+255 227 155		creambrulee
+255 214 123		salomie
+249 215 126		goldenglow
+249 228 150		visvis
+248 234 151		picasso
+251 235 155		drover
+249 245 159		paleprim
+248 246 168		shalimar
+244 240 155		portafino
+228 222 142		primrose
+246 244 147		milan
+240 245 144		tidal
+238 242 147		jonquil
+239 248 170		australianmint
+240 245 187		chiffon
+227 229 177		tusk
+245 249 203		carla
+245 244 193		cumulus
+234 247 201		snowflurry
+183 227 168		madang
+159 211 133		gossip
+165 215 133		feijoa
+198 234 128		sulu
+209 239 159		reef
+218 234 111		mindaro
+177 221  82		conifer
+156 208  59		atlantis
+183 197  44		lime
+183 198  26		riogrande
+198 218  54		laspalmas
+194 214  46		fuego
+210 219  50		bitterlemon
+253 227  54		gorse
+235 222  49		goldenfizz
+226 230  77		canary
+251 235  80		parisdaisy
+245 241 113		dolly
+232 237 105		honeysuckle
+236 230 126		texas
+251 240 115		witchhaze
+249 225 118		sweetcorn
+245 204  35		turbo
+241 204  43		goldendream
+238 204  36		broom
+245 215  82		energyyellow
+234 204  74		festival
+218 192  26		sunflower
+240 196  32		moonyellow
+236 189  44		brightsun
+238 192  81		creamcan
+249 208  84		kournikova
+224 193  97		cremedebanane
+234 206 106		goldensand
+240 213  85		portica
+221 203  70		confetti
+228 219  85		manz
+190 202  96		wildwillow
+214 202  61		wattle
+227 221  57		starship
+208 193  23		birdflower
+210 198  31		barberry
+184 167  34		earlsgreen
+196 170  77		sundance
+217 178  32		lemon
+188 155  27		buddhagold
+183 152  38		sahara
+158 128  34		hacienda
+171 154  28		lucky
+142 154  33		citron
+186 192  14		larioja
+169 192  28		bahia
+159 183  10		citrus
+137 172  39		limerick
+180 192  76		celery
+124 159  47		sushi
+ 95 151  39		limeade
+122 172  33		lima
+113 169  29		christi
+ 32 105  55		camarone
+ 44 110  49		sanfelix
+ 47 117  50		japaneselaurel
+ 62 128  39		bilbao
+ 66 137  41		lapalma
+ 95 129  81		gladegreen
+ 96 138  90		hippiegreen
+ 96 124  71		dingley
+ 72 101  49		dell
+ 82 107  45		greenleaf
+ 62  99  52		greenhouse
+ 54  92  52		fern
+ 72  83  26		verdungreen
+ 87  94  46		fernfrond
+ 71  86  47		clover
+ 85  91  44		saratoga
+ 90 110  65		chaletgreen
+ 99 111  34		fijigreen
+102 112  40		pacifika
+102 112  40		rainforest
+116 112  40		olivetone
+126 132  36		trendygreen
+103 105  39		pistachio
+130 106  33		yukongold
+122 114  41		grasshopper
+122 114  41		pesto
+119 113  43		crete
+124 103  32		mustard
+141 112  42		cornharvest
+141 112  42		stinger
+137 126  89		claycreek
+130 133  98		flax
+120 110  76		goben
+107  91  61		limedgum
+115  99  62		yellowmetal
+117  91  39		kumera
+115  99  48		acorn
+115  99  48		himalaya
+ 98  93  42		costadelsol
+ 98  93  42		planter
+ 98  96  62		verdigris
+109  86  44		horsesneck
+ 92  81  47		westcoast
+ 88  76  37		bronzeolive
+ 67  76  40		bronzetone
+ 54  62  29		turtlegreen
+110  51  38		pueblo
+115  61  31		perutan
+112  65  40		darkrimu
+109  59  36		newamber
+ 91  58  36		carnabytan
+ 83  51  30		brownbramble
+ 80  56  30		saddlebrown
+ 91  61  39		bracken
+ 98  66  43		irishcoffee
+102  74  45		dallas
+109  77  44		ironbark
+106  73  40		caferoyale
+108  70  31		antiquebrass
+117  72  47		capepalliser
+125  78  56		cigar
+121  77  46		walnut
+132  92  64		pottersclay
+136  89  49		natural
+116  89  55		shinglefawn
+140 114  84		limedoak
+140  99  56		mckenzie
+143 111  72		driftwood
+141  95  44		rustynail
+144  94  38		afghantan
+157 112  46		butteredrum
+167 117  44		hottoddy
+129  91  40		brazil
+129  91  40		hotcurry
+153  82  43		hawaiiantan
+178 110  51		renosand
+186 111  63		bamboo
+175 108  62		bourbon
+177 108  57		oregon
+171 107  53		pumpkin
+165 101  49		maitai
+161  82  38		richgold
+157  84  50		piper
+156  91  52		indochine
+161  95  59		desert
+161  98  59		redbeech
+173  98  66		tuscany
+169 106  80		santefe
+149  78  44		alerttan
+149  83  47		chelseagem
+142  89  60		rope
+134  75  54		paarl
+136  79  64		mulefawn
+134  80  64		ironstone
+119  66  44		coppercanyon
+122  68  52		peanut
+120  68  48		cumin
+117  68  43		bullshot
+123  72  43		cinnamon
+128  78  44		korma
+136  60  50		prairiesand
+135  56  47		crabapple
+136  53  49		totempole
+142  58  54		tabasco
+140  63  48		embers
+143  63  42		fire
+142  53  55		wellread
+146  56  48		thunderbird
+155  61  61		mexicanred
+161  71  67		roofterracotta
+151  66  45		tiamaria
+157  68  45		rockspray
+154  70  61		cognac
+151  70  60		mojo
+166  86  72		crail
+169  82  73		appleblossom
+199  97  85		sunglo
+190  92  72		flamepea
+168  83  53		orangeroughy
+168  85  51		vesuvius
+177  89  47		fieryorange
+173  82  46		redstage
+172  81  45		roseofsharon
+201  97  56		ecstasy
+187  95  52		smoketree
+191 101  46		christine
+205  93  52		tangerine
+208  94  52		chileanfire
+193  77  54		grenadier
+197  79  51		trinidad
+193  79  59		clementine
+192  81  74		sunset
+212  87  78		valencia
+205  82  91		mandy
+168  50  57		punch
+158  51  50		milanored
+146  42  49		brightred
+149  46  49		guardsmanred
+134  40  46		flamered
+134  40  46		monza
+213 108  48		golddrop
+220 114  42		tahitigold
+212 111  49		tango
+229 127  61		pizazz
+229 130  58		westside
+226 129  59		treepoppy
+234 134  69		flamenco
+239 142  56		sun
+186 120  42		pirategold
+197 131  46		geebung
+202 129  54		goldenbell
+205 132  49		dixie
+209 144  51		fuelyellow
+187 142  52		hokeypokey
+188 146  41		nugget
+226 178  39		goldtips
+216 167  35		galliano
+223 170  40		corn
+227 172  61		tuliptree
+221 173  86		robroy
+220 159  69		saffron
+224 157  55		candlelight
+244 159  53		yellowsea
+218 148  41		buttercup
+224 152  66		firebush
+250 157  73		sunshade
+239 149  72		seabuckthorn
+233 140  58		california
+247 162  51		lightningyellow
+252 174  96		rajah
+252 176  87		texasrose
+253 174  69		mysin
+254 181  82		koromiko
+255 193  82		goldentainoi
+240 178  83		casablanca
+234 184  82		ronchi
+255 205 115		grandis
+255 180  55		supernova
+255 213 154		caramel
+254 219 183		sandybeach
+255 215 160		frangipani
+244 208 164		tequila
+238 199 162		negroni
+255 198 158		romantic
+223 185 146		pancho
+220 182 138		brandy
+227 185 130		maize
+233 186 129		corvette
+255 200 120		chardonnay
+234 183 106		harvestgold
+246 174 120		tacao
+245 183 153		mandyspink
+238 179 158		waxflower
+254 171 154		rosebud
+231 158 136		tonyspink
+253 164 112		hitpink
+228 143 103		apricot
+223 157  91		porsche
+212 145  93		diserria
+212 145  93		whiskeysour
+210 144  98		whiskey
+211 169  92		apache
+218 177  96		equator
+213 177 133		calico
+226 175 128		manhattan
+204 164 131		cameo
+199 163 132		rodeodust
+182 147  92		barleycorn
+157 127  97		sorrellbrown
+163 135 106		sandal
+165 139 111		mongoose
+158 126  83		muesli
+169 132  79		muddywaters
+171 137  83		teak
+191 145  75		tussock
+191 141  60		pizza
+184 138  61		marigold
+181 123  46		mandalay
+198 142  63		anzac
+193 145  86		twine
+192 124  64		brandypunch
+187 116  49		meteor
+198 114  59		zest
+198 128  89		peachschnapps
+208 131  99		burningsand
+206 114  89		japonica
+231 123 117		geraldine
+221 131 116		newyorkpink
+255 152 137		monalisa
+243 134  83		crusta
+203 111  74		reddamask
+221 107  56		sorbus
+226 121  69		jaffa
+225  99  79		flamingo
+239 115  94		persimmon
+216  98  91		roman
+229 109 117		froly
+227 111 138		deepblush
+205 109 147		hopbush
+232 153 190		shocking
+239 149 174		illusion
+224 147 171		kobi
+230 128 149		carissma
+241 145 154		wewak
+238 145 141		sweetpink
+219 129 126		seapink
+208 116 139		charm
+193 111 104		contessa
+194 142 136		orientalpink
+179 112 132		tapestry
+208 138 155		cancan
+167 129 153		bouquet
+197 143 157		viola
+164 135 139		wisteria
+174 148 171		londonhue
+149 135 156		amethystsmoke
+157 156 180		logan
+152 126 126		opium
+154 134 120		almondfrost
+152 125 115		hemp
+182 133 122		brandyrose
+175 147 125		sandrift
+177 148 143		thatch
+181 153 142		delrio
+195 152 139		quicksand
+211 161 148		rose
+205 165 156		eunry
+209 179 153		cashmere
+210 179 169		clamshell
+202 181 178		coldturkey
+200 177 192		maverick
+172 155 155		dustygrey
+185 172 187		lola
+193 159 179		lily
+201 154 160		careyspink
+218 151 144		petiteorchid
+214 139 128		mypink
+255 171 160		cornflower
+248 175 169		sundown
+255 197 187		yourpink
+249 192 196		azalea
+223 177 182		blossom
+245 178 197		cupid
+222 183 217		frenchlilac
+244 200 219		classicrose
+237 184 199		chantilly
+224 183 194		melanie
+218 192 205		twilight
+246 204 215		pinklace
+226 205 213		prim
+212 181 176		oysterpink
+212 187 177		wafer
+220 191 172		justright
+219 194 171		bone
+230 178 166		shilo
+216 180 182		pinkflare
+224 184 177		cavernpink
+235 185 179		beautybush
+245 208 201		coralcandy
+242 205 187		watusi
+231 210 200		bizarre
+229 202 192		duststorm
+235 210 209		vanillaice
+239 220 212		potpourri
+246 222 218		remy
+246 227 218		provincialpink
+252 219 210		pippin
+251 215 204		cinderella
+254 220 193		karry
+249 211 190		tuftbush
+253 215 216		wepeep
+252 213 207		cosmos
+253 233 224		chablis
+250 230 223		bridesmaid
+248 228 227		tutu
+245 230 234		amour
+248 219 224		carouselpink
+239 214 218		palerose
+228 215 229		snuff
+227 214 233		bluechalk
+245 215 220		cherub
+213 199 232		fog
+195 185 221		melrose
+202 180 212		prelude
+174 153 210		bilobaflower
+194 169 219		perfume
+162 158 205		wistful
+192 178 215		moonraker
+172 185 232		perano
+139 152 216		portage
+157 138 191		coldpurple
+170 140 188		eastside
+159 144 208		lavender
+148 112 196		lilacbush
+123  92 183		fuchsia
+114  74 161		studio
+ 91  62 144		daisybush
+181  75 115		royalheath
+138  45  82		rosebudcherry
+137  45  79		disco
+150  44  84		lipstick
+169  64 100		rouge
+180  56 100		cranberry
+162  61  84		nightshadz
+179  54  84		hibiscus
+205  82 108		cabaret
+181  80 103		blush
+171  73  92		hippiepink
+138  51  53		oldbrick
+133  53  52		tallpoppy
+143  62  63		rosewood
+131  61  62		stiletto
+128  58  75		camelot
+149  82 100		vinrouge
+152  73  97		cadillac
+148 106 129		strikemaster
+105  69  84		finn
+121  77  96		cosmic
+142  81 100		cannonpink
+116  64  66		tosca
+133  73  76		solidpink
+125  65  56		redrobin
+126  74  59		nutmeg
+143  78  69		elsalva
+142  77  69		matrix
+139  80  75		lotus
+149  82  76		copperrust
+165 110 117		turkishrose
+171 110 103		coraltree
+158 103  89		auchico
+139  95  77		spicymix
+144 106  84		leather
+159 113  95		toast
+135 106 104		ferra
+130 102  99		pharlap
+125 101  92		russett
+143 119 119		bazaar
+125 103  87		romancoffee
+109  88  67		tobaccobrown
+115  85  62		pickledbean
+115  80  59		oldcopper
+103  72  52		jambalaya
+108  79  63		spice
+106  84  69		quincy
+101  77  73		congobrown
+110  81  80		buccaneer
+107  90  90		zambezi
+110  90  91		falcon
+ 82  77  91		mulledwine
+ 98  86 101		fedora
+ 96  90 103		mobster
+118 109 124		mamba
+113 102 117		rum
+137 117 120		spicypink
+139 125 130		venus
+130 114 164		deluge
+102 111 180		chetwodeblue
+111  99 160		scampi
+131 120 199		moodyblue
+142 114 199		truev
+106  91 177		bluemarguerite
+146 113 167		cesoir
+128  93 128		trendypink
+116  80 133		affair
+104  87 140		butterflybush
+ 81  85 155		governorbay
+ 86  71 134		gigas
+ 86  73 133		victoria
+ 66  99 159		mariner
+ 55  78 136		toryblue
+ 51  80 131		funblue
+ 63  82 129		sapphire
+105  93 135		kimberly
+ 53  62 100		bayofmany
+ 61  50  93		jacarta
+ 59  67 108		portgore
+ 52  52 103		deepkoamaru
+ 53  61 117		toreabay
+ 50  63 117		resolutionblue
+ 61  63 125		jacksonspurple
+ 62  50 103		minsk
+ 75  60 142		bluegem
+ 57  45 115		bluebell
+ 75  45 114		bluediamond
+ 92  60 109		honeyflower
+ 74  59 106		meteorite
+ 78  46  83		hotpurple
+ 74  45  87		scarletgum
+ 46  24  59		blackcurrant
+ 56  26  56		plum
+ 56  33  97		christalle
+ 49  39  96		parism
+ 46  34  73		violentviolet
+ 42  37  81		paua
+ 55  45  82		cherrypie
+ 41  45  79		luckypoint
+ 42  43  65		valhalla
+ 63  46  76		jagger
+ 45  37  65		tolopea
+ 55  37  40		aubergine
+ 60  33  38		temptress
+ 53  34  53		mardigras
+ 61  35  39		chocolate
+ 62  38  49		toledo
+ 69  46  57		barossa
+ 59  43  44		havana
+ 59  43  44		jarrah
+ 52  41  49		melanzane
+ 54  45  56		jacaranda
+ 56  44  56		valentino
+ 47  38  60		violet
+ 60  55  72		martinique
+ 68  50  64		voodoo
+ 76  51  71		loulou
+ 76  61  78		bossanova
+ 85  69  69		woodybrown
+ 69  52  48		rebel
+ 70  52  48		cedar
+ 68  55  54		cowboy
+ 77  62  60		craterbrown
+ 79  56  53		cocoabean
+ 82  57  54		vancleef
+ 74  53  49		bean
+ 72  50  48		mahogany
+ 74  46  50		cabsav
+ 78  49  45		espresso
+ 78  49  46		cherrywood
+ 89  69  55		brownderby
+ 93  59  46		cioccolato
+ 85  52  43		darkoak
+ 91  52  46		redwood
+ 79  48  31		indiantan
+ 68  45  33		moroccobrown
+ 60  36  27		brownpod
+ 62  47  46		tamarind
+ 64  35  39		maroon
+ 58  24  26		rusticred
+ 72  36  39		bulgarianrose
+ 79  42  44		heath
+ 78  39  40		volcano
+ 82  36  38		lonestar
+ 79  33  42		persianred
+ 76  28  36		bordeaux
+ 88  33  36		burntcrimson
+ 91  31  34		venetianred
+ 93  31  30		redoxide
+101  37  37		burgundy
+102  42  44		reddevil
+ 97  45  45		darktan
+103  47  48		japanesemaple
+ 88  47  43		moccaccino
+ 99  53  40		hairyheath
+107  52  42		meranti
+108  55  54		sanguinebrown
+102  54  45		oiledcedar
+110  61  52		metalliccopper
+118  60  51		crownofthorns
+111  55  45		mocha
+108  50  46		kenyancopper
+104  51  50		persianplum
+115  52  58		merlot
+113  51  60		ribbon
+ 95  44  47		jazz
+ 94  42  64		mulberry
+ 83  41  52		blackrose
+ 82  44  53		wineberry
+100  58  72		tawnyport
+ 68  35  47		castro
+ 67  24  47		blackberry
+122  46  77		flirt
+106  31  68		nightclub
+106  31  68		pompadour
+105  41  59		siren
+110  34  51		claret
+124  45  55		paprika
+117  43  47		tamarillo
+120  46  44		lusty
+130  42  50		sangria
+132  40  51		shiraz
+126  37  48		scarlett
+112  31  40		redberry
+101  28  38		pohutukawa
+107  37  44		hotchile
+107  37  44		monarch
+107  37  44		westernred
+138  36  78		cardinal
+105  50 110		seance
+110  57 116		eminence
+104  59 125		clairvoyant
+ 88  53 128		kingfisherdaisy
+ 70  44 119		windsor

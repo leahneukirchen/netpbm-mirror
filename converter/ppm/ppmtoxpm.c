@@ -269,8 +269,7 @@ static void
 genCmap(colorhist_vector const chv,
         unsigned int     const ncolors,
         pixval           const maxval,
-        colorhash_table  const colornameHash,
-        const char **    const colornames,
+        ppm_ColorDict *  const colorDictP,
         bool             const includeTransparent,
         CixelMap **      const cmapP,
         unsigned int *   const transIndexP,
@@ -288,14 +287,10 @@ genCmap(colorhist_vector const chv,
    This map includes an entry for transparency, whether the raster uses
    it or not.  We return its index as *transIndexP.
 
-   In the map, identify colors by the names given by 'colornameHash' and
-   colornames[].  'colornameHash' maps a color in 'pixel' form to an
-   index into colornames[]; colornames[] contains the text to identify the
-   color in the XPM format.  The colors in 'colornameHash' have maxval 255.
-   If a color is not in 'colornameHash', use hexadecimal notation in the
-   output colormap.
+   In the map, identify colors by the names given by *colorDictP.  If a color
+   is not in *colorDictP, use hexadecimal notation in the output colormap.
 
-   But if 'colornameHash' is null, don't use color names at all.  Just use
+   But if *colorDictP is null, don't use color names at all.  Just use
    hexadecimal notation.
 
    Return as *charsPerPixel the number of characters, or digits, that
@@ -336,13 +331,13 @@ genCmap(colorhist_vector const chv,
 
         PPM_DEPTH(color255, color, maxval, 255);
 
-        if (colornameHash == NULL)
+        if (!colorDictP)
             colorname = NULL;
         else {
             int colornameIndex;
-            colornameIndex = ppm_lookupcolor(colornameHash, &color255);
+            colornameIndex = ppm_lookupcolor(colorDictP->cht, &color255);
             if (colornameIndex >= 0)
-                colorname = strdup(colornames[colornameIndex]);
+                colorname = strdup(colorDictP->name[colornameIndex]);
             else
                 colorname = NULL;
         }
@@ -597,12 +592,7 @@ main(int argc, const char * *argv) {
     colorhash_table cht;
     colorhist_vector chv;
 
-    colorhash_table colornameHash;
-        /* Hash table to map colors to their names */
-    const char ** colornames;
-        /* Table of color names; 'colornameHash' yields an index into this
-           array.
-        */
+    ppm_ColorDict * colorDictP;  /* The color name dictionary we use */
 
     pixel ** pixels;
     gray ** alpha;
@@ -636,28 +626,26 @@ main(int argc, const char * *argv) {
                     &chv, &cht, &ncolors, &transparentSomewhere);
 
     if (cmdline.hexonly)
-        colornameHash = NULL;
+        colorDictP = NULL;
     else if (cmdline.rgb)
-        ppm_readcolornamefile(cmdline.rgb, true, &colornameHash, &colornames);
+        colorDictP = ppm_colorDict_new(cmdline.rgb, true);
     else
-        ppm_readcolornamefile(NULL, false, &colornameHash, &colornames);
+        colorDictP = ppm_colorDict_new(NULL, false);
 
     /* Now generate the character-pixel colormap table. */
-    genCmap(chv, ncolors, maxval,
-            colornameHash, colornames, transparentSomewhere,
+    genCmap(chv, ncolors, maxval, colorDictP, transparentSomewhere,
             &cmap, &transIndex, &cmapSize, &charsPerPixel);
 
     writeXpmFile(stdout, pixels, alpha, alphaMaxval,
                  cmdline.name, cols, rows, cmapSize,
                  charsPerPixel, cmap, cht, transIndex);
 
-    if (colornameHash) {
-        ppm_freecolorhash(colornameHash);
-        ppm_freecolornames(colornames);
-    }
+    if (colorDictP)
+        ppm_colorDict_destroy(colorDictP);
     destroyCmap(cmap, cmapSize);
     ppm_freearray(pixels, rows);
-    if (alpha) pgm_freearray(alpha, rows);
+    if (alpha)
+        pgm_freearray(alpha, rows);
 
     return 0;
 }
