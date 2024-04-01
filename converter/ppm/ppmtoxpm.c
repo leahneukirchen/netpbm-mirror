@@ -535,7 +535,7 @@ computecolorhash(pixel **          const pixels,
                     ++ncolors;
                 }
             } else
-                *transparentSomewhereP = TRUE;
+                *transparentSomewhereP = true;
         }
     }
     *chtP                  = cht;
@@ -638,9 +638,9 @@ main(int argc, const char * *argv) {
     if (cmdline.hexonly)
         colornameHash = NULL;
     else if (cmdline.rgb)
-        ppm_readcolornamefile(cmdline.rgb, TRUE, &colornameHash, &colornames);
+        ppm_readcolornamefile(cmdline.rgb, true, &colornameHash, &colornames);
     else
-        ppm_readcolornamefile(NULL, FALSE, &colornameHash, &colornames);
+        ppm_readcolornamefile(NULL, false, &colornameHash, &colornames);
 
     /* Now generate the character-pixel colormap table. */
     genCmap(chv, ncolors, maxval,
