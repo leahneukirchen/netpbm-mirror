@@ -6,7 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.07.00
 
-              libnetpbm: Fix double free crash when memory allocation fails.
+              libnetpbm: Fix double free crash when memory allocation via
+              REALLOCARRAY fails.  Introduced in Netpbm 10.40 (September
+              2007).
 
               libnetpbm: Allow color dictionary with more than 1000 entries.
 
