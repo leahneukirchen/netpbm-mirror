@@ -4,33 +4,31 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-white_pbm=${tmpdir}/white.pbm
-black_pbm=${tmpdir}/black.pbm
-test127_pgm=${tmpdir}/testimg1.pgm
-test255_pgm=${tmpdir}/testimg2.pgm
-test511_pgm=${tmpdir}/testimg3.pgm
-test127_ppm=${tmpdir}/testimg1.ppm
-test255_ppm=${tmpdir}/testimg2.ppm
-test511_ppm=${tmpdir}/testimg3.ppm
-target_pnm=${tmpdir}/target.pnm
+white_pbm="${tmpdir}"/white.pbm
+black_pbm="${tmpdir}"/black.pbm
+test127_pgm="${tmpdir}"/testimg1.pgm
+test255_pgm="${tmpdir}"/testimg2.pgm
+test511_pgm="${tmpdir}"/testimg3.pgm
+test127_ppm="${tmpdir}"/testimg1.ppm
+test255_ppm="${tmpdir}"/testimg2.ppm
+test511_ppm="${tmpdir}"/testimg3.ppm
+target_pnm="${tmpdir}"/target.pnm
 
-BLACK="rgbi:0.0/0.0/0.0"
-WHITE="rgbi:1.0/1.0/1.0"
+RGBDEF=./rgbt.txt
+
 LIGHTGRAY="rgbi:0.6/0.6/0.6"
 LIGHTGRAYv=0.6
 DARKGRAY="rgbi:0.01/0.01/0.01"
 DARKGRAYv=0.01
-PURPLE="rgb:A0/20/F0"
-YELLOW="rgb:F0/F0/00"
 
 pbmmake -w 1 1 > ${white_pbm}
 pbmmake -b 1 1 > ${black_pbm}
 pgmmake 0.25 1 1 -maxval 127 > ${test127_pgm}
 pgmmake 0.25 1 1 -maxval 255 > ${test255_pgm}
 pgmmake 0.25 1 1 -maxval 511 > ${test511_pgm}
-ppmmake ${YELLOW} 1 1 -maxval 127 > ${test127_ppm}
-ppmmake ${YELLOW} 1 1 -maxval 255 > ${test255_ppm}
-ppmmake ${YELLOW} 1 1 -maxval 511 > ${test511_ppm}
+ppmmake yellow 1 1 -maxval 127 > ${test127_ppm}
+ppmmake yellow 1 1 -maxval 255 > ${test255_ppm}
+ppmmake yellow 1 1 -maxval 511 > ${test511_ppm}
 
 ptop="-top 1"
 
@@ -48,9 +46,9 @@ pbmmake -w 1 1 > ${target_pnm}
 pnmpad ${ptop} -white ${infile} | cmptarget
 pnmpad ${ptop} -extend-edge ${infile} | cmptarget
 pnmpad ${ptop} -detect-background ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color white ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote format ${infile} | cmptarget
 pnmpad ${ptop} -color ${LIGHTGRAY}  -promote none   ${infile} | cmptarget
 
 echo "Should print match seven times"
@@ -58,11 +56,11 @@ echo "Should print match seven times"
 pbmmake -b 1 1 > ${target_pnm}
 pnmpad ${ptop} ${infile} | cmptarget
 pnmpad ${ptop} -black ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color black ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote format ${infile} | cmptarget
 pnmpad ${ptop} -color ${DARKGRAY} -promote none ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE}   -promote none ${infile} | cmptarget
+pnmpad ${ptop} -color purple   -promote none ${infile} | cmptarget
 
 echo "Should print match once"
 
@@ -88,14 +86,14 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote all ${infile} | cmptarget
 
 echo "Should print match once"
 
-ppmmake -maxval 1 ${PURPLE} 1 1 > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} -promote format ${infile} | cmptarget
+ppmmake -maxval 1 purple 1 1 > ${target_pnm}
+pnmpad ${ptop} -color purple -promote format ${infile} | cmptarget
 
 echo "Should print match twice"
 
-ppmmake -maxval 255 ${PURPLE} 1 1 > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote all ${infile} | cmptarget
+ppmmake -maxval 255 purple 1 1 > ${target_pnm}
+pnmpad ${ptop} -color purple ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote all ${infile} | cmptarget
 
 echo
 echo "Test 2. PBM black infile"
@@ -107,11 +105,11 @@ echo "Should print match nine times"
 pbmmake -b 1 1 > ${target_pnm}
 pnmpad ${ptop} ${infile} | cmptarget
 pnmpad ${ptop} -black ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color black ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote format ${infile} | cmptarget
 pnmpad ${ptop} -color ${DARKGRAY} -promote none ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE}   -promote none ${infile} | cmptarget
+pnmpad ${ptop} -color purple   -promote none ${infile} | cmptarget
 pnmpad ${ptop} -extend-edge ${infile} | cmptarget
 pnmpad ${ptop} -detect-background ${infile} | cmptarget
 
@@ -119,9 +117,9 @@ echo "Should print match five times"
 
 pbmmake -w 1 1 > ${target_pnm}
 pnmpad ${ptop} -white ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color white ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote format ${infile} | cmptarget
 pnmpad ${ptop} -color ${LIGHTGRAY} -promote none ${infile} | cmptarget
 
 echo
@@ -134,17 +132,17 @@ echo "Should print match five times"
 pgmmake -maxval 127 0.0 1 1 > ${target_pnm}
 pnmpad ${ptop} ${infile} | cmptarget
 pnmpad ${ptop} -black ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color black ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote format ${infile} | cmptarget
 
 echo "Should print match four times"
 
 pgmmake -maxval 127 1.0 1 1 > ${target_pnm}
 pnmpad ${ptop} -white ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color white ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote format ${infile} | cmptarget
 
 echo "Should print match twice"
 
@@ -166,8 +164,8 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote format ${infile} | cmptarget
 
 echo "Should print match once"
 
-ppmmake -maxval 127 ${PURPLE} 1 1 | ppmtopgm > ${target_pnm} 
-pnmpad ${ptop} -color ${PURPLE}   -promote none ${infile} | cmptarget
+ppmmake -maxval 127 purple 1 1 | ppmtopgm > ${target_pnm} 
+pnmpad ${ptop} -color purple   -promote none ${infile} | cmptarget
 
 echo "Should print match twice"
 
@@ -183,14 +181,14 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote all ${infile} | cmptarget
 
 echo "Should print match once"
 
-ppmmake -maxval 127 ${PURPLE} 1 1 > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} -promote format ${infile} | cmptarget
+ppmmake -maxval 127 purple 1 1 > ${target_pnm}
+pnmpad ${ptop} -color purple -promote format ${infile} | cmptarget
 
 echo "Should print match twice"
 
-ppmmake -maxval 255 ${PURPLE} 1 1 > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote all    ${infile} | cmptarget
+ppmmake -maxval 255 purple 1 1 > ${target_pnm}
+pnmpad ${ptop} -color purple ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote all    ${infile} | cmptarget
 
 
 echo
@@ -203,17 +201,17 @@ echo "Should print match five times"
 pgmmake -maxval 255 0.0 1 1 > ${target_pnm}
 pnmpad ${ptop} ${infile} | cmptarget
 pnmpad ${ptop} -black ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color black ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote format ${infile} | cmptarget
 
 echo "Should print match four times"
 
 pgmmake -maxval 255 1.0 1 1 > ${target_pnm}
 pnmpad ${ptop} -white ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color white ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote format ${infile} | cmptarget
 
 echo "Should print match twice"
 
@@ -235,8 +233,8 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote format ${infile} | cmptarget
 
 echo "Should print match once"
 
-ppmmake -maxval 255  ${PURPLE} 1 1 | ppmtopgm > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE}   -promote none ${infile} | cmptarget
+ppmmake -maxval 255  purple 1 1 | ppmtopgm > ${target_pnm}
+pnmpad ${ptop} -color purple   -promote none ${infile} | cmptarget
 
 echo "Should print match four times"
 
@@ -256,10 +254,10 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote all    ${infile} | cmptarget
 
 echo "Should print match three times"
 
-ppmmake -maxval 255 ${PURPLE} 1 1 > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote format ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote all    ${infile} | cmptarget
+ppmmake -maxval 255 purple 1 1 > ${target_pnm}
+pnmpad ${ptop} -color purple ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote all    ${infile} | cmptarget
 
 echo
 echo "Test 5. PGM maxval 511 infile"
@@ -271,17 +269,17 @@ echo "Should print match five times"
 pgmmake -maxval 511 0.0 1 1 > ${target_pnm}
 pnmpad ${ptop} ${infile} | cmptarget
 pnmpad ${ptop} -black ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color black ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote format ${infile} | cmptarget
 
 echo "Should print match four times"
 
 pgmmake -maxval 511 1.0 1 1 > ${target_pnm}
 pnmpad ${ptop} -white ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color white ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote format ${infile} | cmptarget
 
 echo "Should print match twice"
 
@@ -303,8 +301,8 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote format ${infile} | cmptarget
 
 echo "Should print match once"
 
-ppmmake -maxval 511 ${PURPLE} 1 1 | ppmtopgm > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} -promote none ${infile} | cmptarget
+ppmmake -maxval 511 purple 1 1 | ppmtopgm > ${target_pnm}
+pnmpad ${ptop} -color purple -promote none ${infile} | cmptarget
 
 echo "Should print match twice"
 
@@ -320,10 +318,10 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote all ${infile} | cmptarget
 
 echo "Should print match three times"
 
-ppmmake -maxval 511 ${PURPLE} 1 1 > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote format ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote all    ${infile} | cmptarget
+ppmmake -maxval 511 purple 1 1 > ${target_pnm}
+pnmpad ${ptop} -color purple ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote all    ${infile} | cmptarget
 
 
 echo
@@ -333,26 +331,26 @@ infile=${test127_ppm}
 
 echo "Should print match five times"
 
-ppmmake -maxval 127 ${BLACK} 1 1 > ${target_pnm}
+ppmmake -maxval 127 black 1 1 > ${target_pnm}
 pnmpad ${ptop} ${infile} | cmptarget
 pnmpad ${ptop} -black ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color black ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote format ${infile} | cmptarget
 
 echo "Should print match four times"
 
-ppmmake -maxval 127 ${WHITE} 1 1 > ${target_pnm}
+ppmmake -maxval 127 white 1 1 > ${target_pnm}
 pnmpad ${ptop} -white ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color white ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote format ${infile} | cmptarget
 
 echo "Should print match twice"
 
-ppmmake -maxval 127 ${PURPLE} 1 1 > ${target_pnm}
-ppmmake -maxval 127 ${PURPLE} 1 2 | pnmpad ${ptop} -extend-edge | cmptarget
-ppmmake -maxval 127 ${PURPLE} 1 2 | pnmpad ${ptop} -detect-background | cmptarget
+ppmmake -maxval 127 purple 1 1 > ${target_pnm}
+ppmmake -maxval 127 purple 1 2 | pnmpad ${ptop} -extend-edge | cmptarget
+ppmmake -maxval 127 purple 1 2 | pnmpad ${ptop} -detect-background | cmptarget
 
 echo "Should print match twice"
 
@@ -368,8 +366,8 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote format ${infile} | cmptarget
 
 echo "Should print match once"
 
-ppmmake -maxval 127 ${PURPLE} 1 1 > ${target_pnm} 
-pnmpad ${ptop} -color ${PURPLE} -promote none ${infile} | cmptarget
+ppmmake -maxval 127 purple 1 1 > ${target_pnm} 
+pnmpad ${ptop} -color purple -promote none ${infile} | cmptarget
 
 echo "Should print match twice"
 
@@ -385,9 +383,9 @@ pnmpad ${ptop} -color ${DARKGRAY} -promote all ${infile} | cmptarget
 
 echo "Should print match twice"
 
-ppmmake -maxval 255 ${PURPLE} 1 1 > ${target_pnm}
-pnmpad ${ptop} -color ${PURPLE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote all ${infile} | cmptarget
+ppmmake -maxval 255 purple 1 1 > ${target_pnm}
+pnmpad ${ptop} -color purple ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote all ${infile} | cmptarget
 
 echo
 echo "Test 7. PPM maxval 511 infile"
@@ -396,30 +394,30 @@ infile=${test511_ppm}
 
 echo "Should print match five times"
 
-ppmmake -maxval 511 ${BLACK} 1 1 > ${target_pnm}
+ppmmake -maxval 511 black 1 1 > ${target_pnm}
 pnmpad ${ptop} ${infile} | cmptarget
 pnmpad ${ptop} -black ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${BLACK} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color black ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color black -promote format ${infile} | cmptarget
 
 echo "Should print match four times"
 
-ppmmake -maxval 511 ${WHITE} 1 1 > ${target_pnm}
+ppmmake -maxval 511 white 1 1 > ${target_pnm}
 pnmpad ${ptop} -white ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote none   ${infile} | cmptarget
-pnmpad ${ptop} -color ${WHITE} -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color white ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote none   ${infile} | cmptarget
+pnmpad ${ptop} -color white -promote format ${infile} | cmptarget
 
 echo "Should print match six times"
 
-ppmmake -maxval 511 ${PURPLE} 1 1 > ${target_pnm}
-ppmmake -maxval 511 ${PURPLE} 1 5 | pnmpad ${ptop} -extend-edge | cmptarget
-ppmmake -maxval 511 ${PURPLE} 1 5 | pnmpad ${ptop} -detect-background | cmptarget
-pnmpad ${ptop} -color ${PURPLE} ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote none ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote format ${infile} | cmptarget
-pnmpad ${ptop} -color ${PURPLE} -promote all    ${infile} | cmptarget
+ppmmake -maxval 511 purple 1 1 > ${target_pnm}
+ppmmake -maxval 511 purple 1 5 | pnmpad ${ptop} -extend-edge | cmptarget
+ppmmake -maxval 511 purple 1 5 | pnmpad ${ptop} -detect-background | cmptarget
+pnmpad ${ptop} -color purple ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote none ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote format ${infile} | cmptarget
+pnmpad ${ptop} -color purple -promote all    ${infile} | cmptarget
 
 echo "Should print match twice"
 

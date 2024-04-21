@@ -178,6 +178,7 @@ ppmtoapplevol.test
 ppmtomitsu.test
 411toppm.test
 eyuvtoppm.test
+infotopam.test
 rawtoppm.test
 
 gif-transparent1.test

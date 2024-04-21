@@ -66,7 +66,7 @@ pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 \
       -reportonly maze.pbm
 pamcut -top 0 -left 0 \
       -bottom $((${height} -1)) -right $((${width} -1)) \
-       -reportonly maze.pbm
+      -reportonly maze.pbm
 pamcut -top 0 -left 0 -bottom -1 -right -1 -reportonly maze.pbm 
 pamcut -top 0 -left 0 -width ${width} -height ${height} \
       -reportonly maze.pbm
@@ -75,10 +75,10 @@ pamcut -reportonly maze.pbm
 echo "Test 5b. Should print 281226646 481 twice"
 
 pamcut -croptop 0 -cropleft 0 -cropbottom 0 -cropright 0 maze.pbm | \
- cksum
+  cksum
 pamcut maze.pbm | cksum
 
-test50_pbm=${tmpdir}/test50.pbm
+test50_pbm="${tmpdir}"/test50.pbm
 
 echo "Test 6a.  Should print 5 34 5 34 50 50 30 30"
 
@@ -92,7 +92,7 @@ rm  ${test50_pbm}
 
 echo "Test 7.  Should print 284857390 12 sixteen times"
 
-test1_pbm=${tmpdir}/test1.pbm
+test1_pbm="${tmpdir}"/test1.pbm
 
 pbmmake -b 1 1 > ${test1_pbm}
 
@@ -121,12 +121,12 @@ pamcut  -pad -cropright=17 -width=5 -height=5 ${test1_pbm} | cksum
 
 echo "Test 8.  Should print 3125257619 29 four times"
 
-test3_pbm=${tmpdir}/test3.pbm
+test3_pbm="${tmpdir}"/test3.pbm
 
 pbmmake -g 3 3 > ${test3_pbm}
 
-pamcut -pad -cropleft=10  -croptop=10    -width=10 -height=10 ${test3_pbm} | cksum
-pamcut  -pad -cropright=10 -croptop=10 -width=10 -height=10    ${test3_pbm} |\
+pamcut  -pad -cropleft=10  -croptop=10    -width=10 -height=10 ${test3_pbm} | cksum
+pamcut  -pad -cropright=10 -croptop=10    -width=10 -height=10 ${test3_pbm} |\
    pamflip -lr | cksum
 pamcut  -pad -cropleft=10  -cropbottom=10 -width=10 -height=10 ${test3_pbm} |\
    pamflip -tb | cksum
@@ -137,7 +137,7 @@ rm ${test3_pbm}
 
 echo "Test 9.  Should print 3338453023 36 sixteen times"
 
-testb_pgm=${tmpdir}/testb.pgm
+testb_pgm="${tmpdir}"/testb.pgm
 
 pgmmake 0.0 1 1 > ${testb_pgm}
 
@@ -167,7 +167,7 @@ rm  ${testb_pgm}
 
 echo "Test 10.  Should print 3957742883 302 four times"
 
-testg_pgm=${tmpdir}/testg.pgm
+testg_pgm="${tmpdir}"/testg.pgm
 
 pgmmake 0.5 2 2 > ${testg_pgm}
 
@@ -185,7 +185,7 @@ rm  ${testg_pgm}
 
 echo "Test 11.  Should print 1576602925 8 four times"
 
-test5_pbm=${tmpdir}/test5.pbm
+test5_pbm="${tmpdir}"/test5.pbm
 
 pbmmake -g 5 5 > ${test5_pbm}
 
@@ -198,29 +198,29 @@ rm ${test1_pbm} ${test5_pbm}
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # overspecification
-invCmd "pamcut -left=1 -right=1 -width=14 testgrid.pbm"
-invCmd "pamcut -top=1 -bottom=1 -height=16 testgrid.pbm"
-invCmd "pamcut -right=1 -cropright=1 testgrid.pbm"
-invCmd "pamcut -top=1 -croptop=1 testgrid.pbm"
-invCmd "pamcut -bottom=1 -cropbottom=1 testgrid.pbm"
-invCmd "pamcut -left=1 -cropleft=1 testgrid.pbm"
+invCmd 'pamcut -left=1 -right=1 -width=14 testgrid.pbm"
+invCmd 'pamcut -top=1 -bottom=1 -height=16 testgrid.pbm"
+invCmd 'pamcut -right=1 -cropright=1 testgrid.pbm"
+invCmd 'pamcut -top=1 -croptop=1 testgrid.pbm"
+invCmd 'pamcut -bottom=1 -cropbottom=1 testgrid.pbm"
+invCmd 'pamcut -left=1 -cropleft=1 testgrid.pbm"
 
 # excessive amounts
-invCmd "pamcut -cropleft=14 testgrid.pbm"
-invCmd "pamcut -cropleft=7 -cropright=8 testgrid.pbm"
-invCmd "pamcut -left=7 -right=6 testgrid.pbm"
-invCmd "pamcut -croptop=16 testgrid.pbm"
-invCmd "pamcut -croptop=8 -cropbottom=8 testgrid.pbm"
-invCmd "pamcut -top=10 -bottom=9 testgrid.pbm"
+invCmd 'pamcut -cropleft=14 testgrid.pbm'
+invCmd 'pamcut -cropleft=7 -cropright=8 testgrid.pbm'
+invCmd 'pamcut -left=7 -right=6 testgrid.pbm'
+invCmd 'pamcut -croptop=16 testgrid.pbm'
+invCmd 'pamcut -croptop=8 -cropbottom=8 testgrid.pbm'
+invCmd 'pamcut -top=10 -bottom=9 testgrid.pbm'
 
 # pad absent
-invCmd "pamcut -cropleft=1 -width=14 testgrid.pbm"
-invCmd "pamcut -croptop=1  -height=16 testgrid.pbm"
+invCmd 'pamcut -cropleft=1 -width=14 testgrid.pbm'
+invCmd 'pamcut -croptop=1  -height=16 testgrid.pbm'
 
 # legacy style: insufficient number of positional parameters
-invCmd "pamcut 5 testimg.ppm"
-invCmd "pamcut 5 4 testimg.ppm"
-invCmd "pamcut 5 5 30 testimg.ppm"
+invCmd 'pamcut 5 testimg.ppm'
+invCmd 'pamcut 5 4 testimg.ppm'
+invCmd 'pamcut 5 5 30 testimg.ppm'

@@ -53,32 +53,30 @@ esac
 export srcdir=$(dirname $0)
 
 # Set tmpdir, which is used in some of the test scripts.  By default
-# this is created by mktemp.  The user can override and specify tmpdir,
-# but in this case it must be an existing directory and must not be
-# either $srcdir or current work.
+# this is created by mktemp.  To override edit the following lines.
 
-if [ -z $tmpdir ]
-  then
-    tmpdir_created=$(mktemp -d "${TMPDIR:-/tmp}/netpbm.XXXXXXXX") || exit 1;
-  export tmpdir=${tmpdir_created}
-  else
-  tmpdir_created="";
-  if [ ! -d ${tmpdir} ]
-     then echo "Specified temporary directory $tmpdir does not exist."
-     exit 1;
-  elif [ ${tmpdir} -ef ${srcdir} ]
-     then echo "Temporary directory must not be $srcdir."
-     exit 1;
-  elif [ ${tmpdir} -ef $PWD ]
-     then echo "Temporary directory must not be current directory."
-     exit 1;
-  fi
-fi
+# When tmpdir is specified it must be an existing directory and must
+# not be either $srcdir or current work.  tmpdir should not contain
+# whitespace, non-printable characters, etc.
 
-# If necessary set the RGBDEF environment variable.
-#export RGBDEF=/etc/rgb.txt
-#export RGBDEF=/usr/local/netpbm/lib/rgb.txt
-#export RGBDEF=/usr/share/emacs/*/etc/rgb.txt
+tmpdir_created=$(mktemp -d "${TMPDIR:-/tmp}/netpbm.XXXXXXXX") || exit 1;
+export tmpdir=${tmpdir_created}
+
+
+# tmpdir_created=""
+# export tmpdir=/tmp/netpbm-test-tempdir
+
+#  if [ ! -d "${tmpdir}" ]
+#     then echo "Specified temporary directory $tmpdir does not exist."
+#     exit 1;
+#  elif [ "${tmpdir}" -ef "${srcdir}" ]
+#     then echo "Temporary directory must not be $srcdir."
+#     exit 1;
+#  elif [ "${tmpdir}" -ef "$PWD" ]
+#     then echo "Temporary directory must not be current directory."
+#     exit 1;
+#  fi
+#fi
 
 
 # Declare arrays used to count and report test results.
@@ -100,17 +98,29 @@ status[4]="NOT TESTABLE"
 # Copy test image files to the current work directory
 
 if [ ! -f ./testgrid.pbm ]
-  then cp -v ${srcdir}/testgrid.pbm ./testgrid.pbm
+  then cp -v "${srcdir}"/testgrid.pbm ./testgrid.pbm
 fi
 
 if [ ! -f ./maze.pbm ]
-  then cp -v ${srcdir}/maze.pbm ./maze.pbm
+  then cp -v "${srcdir}"/maze.pbm ./maze.pbm
 fi
 
 if [ ! -f ./testimg.ppm ]
-  then cp -v ${srcdir}/testimg.ppm  ./testimg.ppm 
+  then cp -v "${srcdir}"/testimg.ppm  ./testimg.ppm 
 fi
 
+if [ ! -f ./rgbt.txt ]
+  then cp -v "${srcdir}"/rgbt.txt  ./rgbt.txt
+  # Color name dictionary file rgbt.txt is a short digest. 
+  # If desired use the proper file:
+  # cp -v /etc/rgb.txt ./rgbt.txt
+  # cp -v $RGBDEF ./rgbt.txt
+fi
+
+if [ ! -f ./test-invalid.inc ]
+  then cp -v "${srcdir}"/test-invalid.inc  ./test-invalid.inc
+fi
+   
 # The block-bin directory
 #
 # This directory contains dummy executables with the names of the
@@ -130,14 +140,14 @@ if [ ! -z $PBM_TEST_PATH ]
     then rm -rf $blockbin
   fi
   mkdir $blockbin
-  cp ${srcdir}/BLOCK $blockbin/BLOCK
+  cp "${srcdir}"/BLOCK $blockbin/BLOCK
   chmod +x $blockbin/BLOCK
 
 # Populate the block-bin directory using all-in-place.ok and
 # legacy-names.ok which together make a complete list of programs.
 
   sed 's/: ok$//' \
-       ${srcdir}/all-in-place.ok ${srcdir}/legacy-names.ok | \
+       "${srcdir}"/all-in-place.ok "${srcdir}"/legacy-names.ok | \
      tr ' ' '\n' | while read prog
     do
     ln -s $blockbin/BLOCK $blockbin/$prog
@@ -216,17 +226,17 @@ if [ ! -z $target ]
   echo $target | sed 's/,/\n/g' | \
                  sed -e 's/^/# This script tests: .*\\</' -e 's/$/\\>/' \
                      -e '/^$/q' | \
-                 grep -f - ${srcdir}/*.test -l | \
+                 grep -f - "${srcdir}"/*.test -l | \
                    while read i ; do echo ${i##*/} ; done | \
-                 grep -f - ${srcdir}/Test-Order > ./Test-Order ;
+                 grep -f - "${srcdir}"/Test-Order > ./Test-Order ;
   if [ ! -s ./Test-Order ]
     then echo;
          echo "Error: No testable program names in target: "$target;
          echo; exit 1
   fi
 else 
-       cp ${srcdir}/Test-Order ./Test-Order ;
-       #cp --no-clobber ${srcdir}/Test-Order ./Test-Order ;
+       cp "${srcdir}"/Test-Order ./Test-Order ;
+       #cp --no-clobber "${srcdir}"/Test-Order ./Test-Order ;
 fi
 
 echo
@@ -250,25 +260,25 @@ fi
 # either of these conditions are not met, do not execute the test and
 # report "Not Testable".
 
-if [ ! -s ${srcdir}/${tname%.test}.ok ]
+if [ ! -s "${srcdir}"/${tname%.test}.ok ]
 then
   echo "${tname%.test}.ok does not exist"
   let result=4;
 else
-  ${srcdir}/Available-Testprog \
+  "${srcdir}"/Available-Testprog \
     `sed -n -e '/^# This script tests: /s/# This script tests: //p' \
             -e '/^# Also requires: /s/^# Also requires: //p' \
-            -e '/^$/q' ${srcdir}/$tname | tr '\n' ' '`
+            -e '/^$/q' "${srcdir}"/$tname | tr '\n' ' '`
   case $? in
   0)
-    PATH=${testpath} $vg_command ${srcdir}/$tname > ${tname%.test}.out;
+    PATH=${testpath} $vg_command "${srcdir}"/$tname > ${tname%.test}.out;
     let retval=$?
     case $retval in
-    0)   cmp -s ${tname%.test}.out ${srcdir}/${tname%.test}.ok ;
+    0)   cmp -s ${tname%.test}.out "${srcdir}"/${tname%.test}.ok ;
          if [ $? -eq 0 ]
             then let result=0;  rm  ${tname%.test}.out ;
             else let result=1;
-                 grep "^##" ${srcdir}/$tname  # Print failure message.
+                 grep "^##" "${srcdir}"/$tname  # Print failure message.
          fi ;;
     80) let result=4 ;;
     *)  let result=1 ;;
@@ -290,7 +300,7 @@ done
 
 # Erase temporary bin directory and its contents.
 
-rm -rf ${srcdir}/bin
+rm -rf "${srcdir}"/bin
 
 
 # Erase temporary directory and its contents, if it was created.
@@ -303,8 +313,9 @@ fi
 # Erase test image files in the current (work) directory.
 # (Do not erase them if we are working from the source directory.)
 
-if [ ! $PWD -ef ${srcdir} ]
-    then rm ./testimg.ppm ./testgrid.pbm ./maze.pbm
+if [ ! $PWD -ef "${srcdir}" ]
+  then rm ./testimg.ppm ./testgrid.pbm ./maze.pbm \
+          ./rgbt.txt ./test-invalid.inc
 fi
 
 
