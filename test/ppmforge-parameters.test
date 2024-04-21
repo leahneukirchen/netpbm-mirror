@@ -24,7 +24,7 @@ echo "Test Invalid"
 tmpdir=${tmpdir:-/tmp}
 test_out=${tmpdir}/test_out
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "ppmforge -seed=0 -night -dimension=0"
 invCmd "ppmforge -seed=0 -dimension=10"

@@ -4,7 +4,7 @@
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # Invalid -ratio arguments
 

@@ -9,7 +9,7 @@ pbmtopgm -plain 1 1 testgrid.pbm
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pbmtopgm 5 0 testgrid.pbm"
 invCmd "pbmtopgm 0 9 testgrid.pbm"

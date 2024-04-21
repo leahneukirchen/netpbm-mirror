@@ -19,7 +19,7 @@ pamscale -reportonly -pixels=45000 testimg.ppm
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # Expected failure cases
 

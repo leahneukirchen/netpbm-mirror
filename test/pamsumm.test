@@ -26,7 +26,7 @@ for type in -sum -min -max -mean
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamsumm -sum -min  testimg.ppm"
 invCmd "pamsumm -sum -max  testimg.ppm"

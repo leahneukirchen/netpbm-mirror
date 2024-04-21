@@ -58,7 +58,7 @@ echo "Test Invalid."
 
 test_out=${tmpdir}/test_out
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamcrater -width 0"
 invCmd "pamcrater -height 0"

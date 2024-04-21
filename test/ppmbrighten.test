@@ -23,7 +23,7 @@ ppmbrighten -v 100 -normalize testimg.ppm | pamsumm --mean | \
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pambrighten -v -120 testimg.ppm"
 invCmd "pambrighten -s -120 testimg.ppm"

@@ -22,7 +22,7 @@ cat testgrid.pbm testimg.ppm testgrid.pbm | pamfile -machine
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamfile -size -machine  testimg.ppm"
 invCmd "pamfile -count -machine testimg.ppm"

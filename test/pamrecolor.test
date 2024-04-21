@@ -16,7 +16,7 @@ echo "Test 2. Should produce 3500040755 101532 twice"
 pamrecolor --targetcolor=rgb:80/80/80 testimg.ppm | cksum
 pamrecolor --colorspace=ntsc --targetcolor=rgb:80/80/80 testimg.ppm | cksum
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 truncated_file=${tmpdir}/truncated.txt
 echo P6 > ${truncated_file}

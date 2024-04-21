@@ -187,7 +187,7 @@ rm ${seq2_4h_pam} ${seq2_4v_pam} ${seq2_4v3_pam} ${seq2_4h4_pam}
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # direction not specified
 invCmd "pamcat testgrid.pbm testimg.ppm"

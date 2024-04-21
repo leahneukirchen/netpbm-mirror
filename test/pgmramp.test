@@ -21,7 +21,7 @@ pgmramp -diagonal -maxval=510 256 256 | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 
 for combination in "-lr -tb" "-lr -rectangle" "-rectangle -ellipse"

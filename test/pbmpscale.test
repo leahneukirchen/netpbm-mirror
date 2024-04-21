@@ -27,7 +27,7 @@ pbmtext -nomargin "10" | pbmpscale 10 | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pbmpscale testgrid.pbm"
 invCmd "pbmpscale 0 testgrid.pbm"

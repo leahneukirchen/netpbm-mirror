@@ -21,7 +21,7 @@ echo ${PIPESTATUS[@]} ":" $?
 
 rm ${testimg2_ppm} ${testimg4_ppm}
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pnmtile 100 testgrid.pbm"
 invCmd "pnmtile 100 0 testgrid.pbm"

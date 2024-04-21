@@ -100,7 +100,7 @@ rm ${diag_ppm}
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # direction not specified
 invCmd "pnmcat testgrid.pbm testimg.ppm"

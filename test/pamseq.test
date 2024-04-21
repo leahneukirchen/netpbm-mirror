@@ -8,7 +8,7 @@ pamseq 1 255 | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamseq 1"
 invCmd "pamseq 0 255"
