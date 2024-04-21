@@ -1,0 +1,16 @@
+# This is a small color name dictionary file for test purposes.
+# Values extracted from lib/rgb.txt .
+  0   0   0 Black
+255 255 255 White
+255   0   0 Red
+  0 255   0 Green
+  0   0 255 Blue
+  0 255 255 Cyan
+255   0 255 Magenta  
+255 255   0 Yellow
+255 138   0 Orange
+160  32 240 Purple
+103  67   0 Brown
+128 128 128 Gray
+
+

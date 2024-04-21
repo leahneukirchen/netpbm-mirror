@@ -1,0 +1,27 @@
+Test 0.1  Should print 341768228 989
+341768228 989
+Test 0.2  Should print 3992125899 16230
+3992125899 16230
+Test 1.1  Should print 3375570914 10141
+3375570914 10141
+Test 1.2  Should print 1428271393 94509
+1428271393 94509
+Test 2.   Should print 352521340 94509
+352521340 94509
+Test 3.1  Should print 3375570914 10141
+3375570914 10141
+Test 3.2  Should print 1428271393 94509
+1428271393 94509
+Test 4.   Should print match twice
+match
+match
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
+Expected failure 9 (no output)
