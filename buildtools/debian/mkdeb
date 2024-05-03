@@ -6,9 +6,9 @@
 #  This generates a Debian package file (.deb) to install Sourceforge
 #  Netpbm on a Debian system.
 #
-#  This is especially useful because Debian does not have a good Debian
-#  package (what Debian contains is derived from Sourceforge Netpbm ca.
-#  2002).
+#  This used to be especially useful because Debian did not have a good Debian
+#  package (what Debian contained was derived from a 20-year-old Sourceforge
+#  Netpbm version).
 #
 #  The dependencies this package declares are those that can be satisfied by
 #  Debian 8 (Jessie) and Debian 9 (Stretch).  Netpbm works fine on other
