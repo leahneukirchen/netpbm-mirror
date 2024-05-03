@@ -46,7 +46,7 @@ sub parseCommandLine(@) {
               "You specified ",
               scalar(@ARGV), "\n");
         exit(1);
-    } 
+    }
 
     return(\%cmdline);
 }
@@ -129,10 +129,10 @@ sub control($$) {
     # to run a Netpbm program built for Debian N on Debian N-1.
 
     # The following is for Debian 9.
-    
+
     my %control;
 
-    my $debianNativeNetpbm = 
+    my $debianNativeNetpbm =
         'netpbm, ' .
         'libnetpbm10, ' .
         'libnetpbm10-dev, ' .
@@ -164,7 +164,7 @@ sub control($$) {
     # has libjpeg-turbo8.
     $control{'Conflicts'} = $debianNativeNetpbm;
     $control{'Replaces'} = $debianNativeNetpbm;
-    $control{'Provides'} = 
+    $control{'Provides'} =
         'netpbm, ' .
         'pbmwbmp, ' .
         'pnmtopng, ' .
@@ -195,7 +195,7 @@ sub writeControlFile($$) {
     while (my ($key, $value) = each %{$controlR}) {
         print CTL ("$key: $value\n");
     }
-    
+
     close(CTL);
 }
 
@@ -229,7 +229,7 @@ sub createDirOrDie($) {
 
 
 
-sub 
+sub
 processTemplate($$$) {
     my ($templateR, $infoR, $outputR) = @_;
 
@@ -546,7 +546,7 @@ my $arch = arch($cmdlineR);
 my $release = netpbmVersion($netpbmPkgDir);
 
 my $dpkgDirName = "/tmp/netpbm-sf-$release";
- 
+
 buildDpkgBuildTree($dpkgDirName, $release, $netpbmPkgDir, $arch,
                    $buildTools);
 
