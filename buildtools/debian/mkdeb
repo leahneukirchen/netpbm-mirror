@@ -543,6 +543,12 @@ my $netpbmPkgDir = netpbmPkgDir($cmdlineR);
 
 my $arch = arch($cmdlineR);
 
+if (!-d($netpbmPkgDir)) {
+    die("Netpbm package directory '$netpbmPkgDir': " .
+        "No directory by that name exists.");
+}
+
+
 my $release = netpbmVersion($netpbmPkgDir);
 
 my $dpkgDirName = "/tmp/netpbm-sf-$release";
