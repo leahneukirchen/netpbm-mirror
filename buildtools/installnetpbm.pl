@@ -22,7 +22,7 @@ my $cpCommand;
 #*****************************************************************************
 
 sub autoFlushStdout() {
-    my $oldFh = select(STDOUT); 
+    my $oldFh = select(STDOUT);
     $OUTPUT_AUTOFLUSH = $TRUE;
     select($oldFh);
 }
@@ -97,11 +97,11 @@ sub getPkgdir() {
     # any existing files, glob() returns an empty list.
 
     while (!$pkgdir) {
-    
+
         print("Where is the install package you created with " .
               "'make package'?\n");
         my $default = "/tmp/netpbm";
-        
+
         my $response = prompt("package directory", $default);
 
         my @matchList = glob($response);
@@ -112,7 +112,7 @@ sub getPkgdir() {
             print("Multiple filesystem objects match that pattern\n");
         } else {
             my $fsObjNm = $matchList[0];
-            
+
             if (!-e($fsObjNm)) {
                 print("No filesystem object named '$fsObjNm' exists.\n");
             } else {
@@ -157,7 +157,7 @@ sub makePrefixDirectory($) {
                 $done = $TRUE;
             } elsif (uc($response) eq "N") {
                 $done = $TRUE;
-            } 
+            }
         }
         print("\n");
     }
@@ -249,12 +249,12 @@ sub getBinDir($) {
         my $default = "$prefix/bin";
 
         my $response = fsObjPrompt("program directory", $default);
-        
+
         if (-d($response)) {
             $binDir = $response;
         } else {
             my $succeeded = mkdir($response, 0777);
-            
+
             if (!$succeeded) {
                 print("Unable to create directory '$response'.  " .
                       "Error=$ERRNO\n");
@@ -307,12 +307,12 @@ sub getLibDir($) {
         my $default = "$prefix/lib";
 
         my $response = fsObjPrompt("shared library directory", $default);
-        
+
         if (-d($response)) {
             $libDir = $response;
         } else {
             my $succeeded = mkdir($response, 0777);
-            
+
             if (!$succeeded) {
                 print("Unable to create directory '$response'.  " .
                       "Error=$ERRNO\n");
@@ -403,7 +403,7 @@ sub warnNonstandardShlibDirLdconfig($) {
     # The list of system shared library directories is in /etc/ld.so.conf.
     # The program Ldconfig searches the directories in that list and
     # remembers all the shared libraries it found (and some informtaion
-    # about them) in its cache /etc/ld.so.cache, which is what the 
+    # about them) in its cache /etc/ld.so.cache, which is what the
     # dynamic linker uses at run time to find the shared libraries.
 
     if (!ldConfigKnowsDir($shlibDir)) {
@@ -453,7 +453,7 @@ sub warnNonstandardShlibDirCrle($) {
               "\n");
     }
 }
-        
+
 
 
 sub warnNonstandardShlibDirGeneric($) {
@@ -502,7 +502,7 @@ sub execLdconfig() {
 #
 #  -X means "don't create any symlinks."  Any symlinks required should be
 #  created as part of installing the library, so we don't need that function
-#  from Ldconfig.  And we want to tread as lightly as possible on the 
+#  from Ldconfig.  And we want to tread as lightly as possible on the
 #  system -- we don't want creating symlinks that have nothing to do with
 #  Netpbm to be a hidden side effect of installing Netpbm.
 #
@@ -515,7 +515,7 @@ sub execLdconfig() {
 #  causes the cache file to be rebuilt from ONLY that directory.  On OpenBSD,
 #  you can add the -m option to cause it to ADD the contents of DIR to the
 #  existing cache file.
-#  
+#
 #-----------------------------------------------------------------------------
 # Implementation note:  We've seen varying completion codes and varying
 # error messages from different versions of Ldconfig when it fails.
@@ -533,13 +533,13 @@ sub execLdconfig() {
         print("Trying Ldconfig again without the -X option...\n");
 
         my $rc = system("ldconfig");
-        
+
         $ldconfigSucceeded = ($rc == 0);
     } else {
         print($ldconfigXResp);
         $ldconfigSucceeded = $FALSE;
     }
-    
+
     if ($ldconfigSucceeded) {
         print("Ldconfig completed successfully.\n");
     } else {
@@ -568,7 +568,7 @@ sub doLdconfig() {
               "you have\n");
         print("installed the library in a directory Ldconfig knows about.\n");
         print("\n");
-        
+
         my $done;
 
         $done = $FALSE;
@@ -639,12 +639,12 @@ sub getSharedLinkDir($) {
         my $default = "$prefix/lib";
 
         my $response = fsObjPrompt("shared library stub directory", $default);
-        
+
         if (-d($response)) {
             $linkDir = $response;
         } else {
             my $succeeded = mkdir($response, 0777);
-            
+
             if (!$succeeded) {
                 print("Unable to create directory '$response'.  " .
                       "Error=$ERRNO\n");
@@ -767,7 +767,7 @@ sub fixSharedStubSymlink($$) {
                     symlink("$shlibDir/$shlibNm", $fsObjNm) or
                         die("Failed to create symlink as shared library stub");
                 }
-                    
+
                 print("Linked $shlibDir/$shlibNm from $linkDir/$fsObjNm");
             }
         }
@@ -823,12 +823,12 @@ sub getStaticLinkDir($) {
         my $default = "$prefix/lib";
 
         my $response = fsObjPrompt("static library directory", $default);
-        
+
         if (-d($response)) {
             $linkDir = $response;
         } else {
             my $succeeded = mkdir($response, 0777);
-            
+
             if (!$succeeded) {
                 print("Unable to create directory '$response'.  " .
                       "Error=$ERRNO\n");
@@ -888,12 +888,12 @@ sub getDataDir($) {
         my $default = "$prefix/lib";
 
         my $response = fsObjPrompt("data file directory", $default);
-        
+
         if (-d($response)) {
             $dataDir = $response;
         } else {
             my $succeeded = mkdir($response, 0777);
-            
+
             if (!$succeeded) {
                 print("Unable to create directory '$response'.  " .
                       "Error=$ERRNO\n");
@@ -925,12 +925,12 @@ sub getHdrDir($) {
         my $default = "$prefix/include";
 
         my $response = fsObjPrompt("header directory", $default);
-        
+
         if (-d($response)) {
             $hdrDir = $response;
         } else {
             my $succeeded = mkdir($response, 0777);
-            
+
             if (!$succeeded) {
                 print("Unable to create directory '$response'.  " .
                       "Error=$ERRNO\n");
@@ -1030,7 +1030,7 @@ sub netpbmVersion($) {
 
 
 
-sub 
+sub
 processTemplate($$$) {
     my ($templateR, $infoR, $outputR) = @_;
 
@@ -1090,9 +1090,9 @@ sub installConfig($$) {
         # because you might want to have the Netpbm executables in
         # some place not in the PATH and use this program, via the
         # PATH, to find them.
-        
+
         my $filename = "$installdir/netpbm-config";
-        
+
         my $success = open(NETPBM_CONFIG, ">$filename");
         if ($success) {
             chmod(0755, $filename);
@@ -1128,12 +1128,12 @@ sub getPkgconfigDir($) {
         my $default = "$prefix/lib/pkgconfig";
 
         my $response = fsObjPrompt("Pkg-config directory", $default);
-        
+
         if (-d($response)) {
             $pkgconfigDir = $response;
         } else {
             my $succeeded = mkdir($response, 0777);
-            
+
             if (!$succeeded) {
                 print("Unable to create directory '$response'.  " .
                       "Error=$ERRNO\n");
@@ -1173,7 +1173,7 @@ sub installPkgConfig($$) {
                         \my $fileContentsR);
 
         my $filename = "$pkgconfigDir/netpbm.pc";
-        
+
         my $success = open(NETPBM_PC, ">$filename");
         if ($success) {
             chmod(0755, $filename);
