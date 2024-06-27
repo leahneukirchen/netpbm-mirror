@@ -27,6 +27,12 @@ pm_getc(FILE * const fileP) {
     ch = (char) ich;
 
     if (ch == '#') {
+        /* This is a comment.  Read through the next newline or carriage return
+           and return just that newline or carriage return.
+
+           The effect is that Caller sees the whole comment as just white
+           space.
+        */
         do {
             ich = getc(fileP);
             if (ich == EOF)
