@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>pbm</h1>
-Updated: 27 November 2013
+Updated: 27 June 2024
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -69,13 +69,13 @@ the file toward the end of the file.
 in the image are square and contiguous.
 
 <li>Before the whitespace character that delimits the raster, any
-characters from a "#" through the next carriage return or
-newline character, is a comment and is ignored.  Note that this is
-rather unconventional, because a comment can actually be in the middle
-of what you might consider a token.  Note also that this means if you
-have a comment right before the raster, the newline at the end of the
-comment is not sufficient to delimit the raster.
+characters from a "#" to but not including the next carriage return or
+newline character, or end of file, is a comment and is ignored.
 
+<p>(Before June 2024, the carriage return or line feed was specified to be
+  part of the comment and ignored, but in the 22 years that comments had
+  existed in the specification, Netpbm never implemented that).
+  
 </ul>
 
 <p>All characters referred to herein are encoded in ASCII.
