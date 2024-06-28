@@ -4,6 +4,8 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 11.08.00
+
 24.06.28 BJH  Release 11.07.00
 
               libnetpbm: Fix double free crash when memory allocation via
