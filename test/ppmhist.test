@@ -27,7 +27,7 @@ ppmpat -madras --color=rgb:00/00/00,rgb:31/58/a3,rgb:ff/ff/ff 25 25 | \
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "ppmhist -hexcolor -float testimg.ppm"
 invCmd "ppmhist -hexcolor -map   testimg.ppm"

@@ -4,30 +4,28 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-white_pbm=${tmpdir}/white.pbm
-#black_pbm=${tmpdir}/black.pbm
-test127_pgm=${tmpdir}/testimg1.pgm
-test255_pgm=${tmpdir}/testimg2.pgm
-test511_pgm=${tmpdir}/testimg3.pgm
-test127_ppm=${tmpdir}/testimg1.ppm
-test255_ppm=${tmpdir}/testimg2.ppm
-test511_ppm=${tmpdir}/testimg3.ppm
+white_pbm="${tmpdir}"/white.pbm
+#black_pbm="${tmpdir}"/black.pbm
+test127_pgm="${tmpdir}"/testimg1.pgm
+test255_pgm="${tmpdir}"/testimg2.pgm
+test511_pgm="${tmpdir}"/testimg3.pgm
+test127_ppm="${tmpdir}"/testimg1.ppm
+test255_ppm="${tmpdir}"/testimg2.ppm
+test511_ppm="${tmpdir}"/testimg3.ppm
 
-BLACK="rgbi:0.0/0.0/0.0"
-WHITE="rgbi:1.0/1.0/1.0"
+RGBDEF=./rgbt.txt
+
 LIGHTGRAY="rgbi:0.6/0.6/0.6"
 LIGHTGRAYv=0.6
 DARKGRAY="rgbi:0.01/0.01/0.01"
 DARKGRAYv=0.01
-PURPLE="rgb:A0/20/F0"
-YELLOW="rgb:FF/FF/00"
 
 pbmmake -w 3 1 > ${white_pbm}
 #pbmmake -b 3 1 > ${black_pbm}
 pgmmake 0.2 3 1 -maxval 127 > ${test127_pgm}
 pgmmake 0.2 3 1 -maxval 255 > ${test255_pgm}
-ppmmake ${YELLOW} 3 1 -maxval 127 > ${test127_ppm}
-ppmmake ${YELLOW} 3 1 -maxval 511 > ${test511_ppm}
+ppmmake yellow 3 1 -maxval 127 > ${test127_ppm}
+ppmmake yellow 3 1 -maxval 511 > ${test511_ppm}
 
 # define function
 ckfmt() { pamfile || echo "failure"; }
@@ -46,17 +44,17 @@ pnmpad ${size} -white ${infile} | ckfmt
 pnmpad ${size} -extend-edge ${infile} | ckfmt
 pnmpad ${size} -detect-background ${infile} | ckfmt
 
-pnmpad ${size} -color ${BLACK} ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote format ${infile} | ckfmt
+pnmpad ${size} -color black ${infile} | ckfmt
+pnmpad ${size} -color black -promote none   ${infile} | ckfmt
+pnmpad ${size} -color black -promote format ${infile} | ckfmt
 
-pnmpad ${size} -color ${WHITE} ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote format ${infile} | ckfmt
+pnmpad ${size} -color white ${infile} | ckfmt
+pnmpad ${size} -color white -promote none   ${infile} | ckfmt
+pnmpad ${size} -color white -promote format ${infile} | ckfmt
 
 pnmpad ${size} -color ${LIGHTGRAY} -promote none ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote none ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE}   -promote none ${infile} | ckfmt
+pnmpad ${size} -color purple   -promote none ${infile} | ckfmt
 
 echo "Should print: PGM raw, 8 by 1  maxval 1 twice"
 
@@ -70,12 +68,12 @@ pnmpad ${size} -color ${DARKGRAY} ${infile} | ckfmt
 
 echo "Should print: PPM raw, 8 by 1  maxval 1 once"
 
-pnmpad ${size} -color ${PURPLE} -promote format ${infile} | ckfmt
+pnmpad ${size} -color purple -promote format ${infile} | ckfmt
 
 echo "Should print: PPM raw, 8 by 1  maxval 255 twice"
 
-pnmpad ${size} -color ${PURPLE} ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE} -promote all ${infile} | ckfmt
+pnmpad ${size} -color purple ${infile} | ckfmt
+pnmpad ${size} -color purple -promote all ${infile} | ckfmt
 
 rm ${infile}
 
@@ -92,13 +90,13 @@ pnmpad ${size} -white ${infile} | ckfmt
 pnmpad ${size} -extend-edge ${infile} | ckfmt
 pnmpad ${size} -detect-background ${infile} | ckfmt
 
-pnmpad ${size} -color ${BLACK} ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote format ${infile} | ckfmt
+pnmpad ${size} -color black ${infile} | ckfmt
+pnmpad ${size} -color black -promote none   ${infile} | ckfmt
+pnmpad ${size} -color black -promote format ${infile} | ckfmt
 
-pnmpad ${size} -color ${WHITE} ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote format ${infile} | ckfmt
+pnmpad ${size} -color white ${infile} | ckfmt
+pnmpad ${size} -color white -promote none   ${infile} | ckfmt
+pnmpad ${size} -color white -promote format ${infile} | ckfmt
 
 pnmpad ${size} -color ${LIGHTGRAY} -promote none ${infile} | ckfmt
 pnmpad ${size} -color ${LIGHTGRAY} -promote format ${infile} | ckfmt
@@ -106,7 +104,7 @@ pnmpad ${size} -color ${LIGHTGRAY} -promote format ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote none ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote format ${infile} | ckfmt
 
-pnmpad ${size} -color ${PURPLE}   -promote none ${infile} | ckfmt
+pnmpad ${size} -color purple   -promote none ${infile} | ckfmt
 
 echo "Should print: PGM raw, 8 by 1  maxval 255 four times"
 
@@ -117,12 +115,12 @@ pnmpad ${size} -color ${DARKGRAY}  -promote all ${infile} | ckfmt
 
 echo "Should print: PPM raw, 8 by 1  maxval 127 once"
 
-pnmpad ${size} -color ${PURPLE} -promote format ${infile} | ckfmt
+pnmpad ${size} -color purple -promote format ${infile} | ckfmt
 
 echo "Should print: PPM raw, 8 by 1  maxval 255 twice"
 
-pnmpad ${size} -color ${PURPLE} ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE} -promote all ${infile} | ckfmt
+pnmpad ${size} -color purple ${infile} | ckfmt
+pnmpad ${size} -color purple -promote all ${infile} | ckfmt
 
 rm ${infile}
 
@@ -139,10 +137,10 @@ pnmpad ${size} -white ${infile} | ckfmt
 pnmpad ${size} -extend-edge ${infile} | ckfmt
 pnmpad ${size} -detect-background ${infile} | ckfmt
 
-pnmpad ${size} -color ${BLACK} ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote format ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote all    ${infile} | ckfmt
+pnmpad ${size} -color black ${infile} | ckfmt
+pnmpad ${size} -color black -promote none   ${infile} | ckfmt
+pnmpad ${size} -color black -promote format ${infile} | ckfmt
+pnmpad ${size} -color black -promote all    ${infile} | ckfmt
 
 pnmpad ${size} -color ${LIGHTGRAY} ${infile} | ckfmt
 pnmpad ${size} -color ${LIGHTGRAY} -promote none   ${infile} | ckfmt
@@ -155,14 +153,14 @@ pnmpad ${size} -color ${DARKGRAY} -promote none   ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote format ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote all    ${infile} | ckfmt
 
-pnmpad ${size} -color ${PURPLE}   -promote none   ${infile} | ckfmt
+pnmpad ${size} -color purple   -promote none   ${infile} | ckfmt
 
 echo "Should print: PPM raw, 8 by 1  maxval 255 three times"
 
-pnmpad ${size} -color ${PURPLE} ${infile} | ckfmt
+pnmpad ${size} -color purple ${infile} | ckfmt
 
-pnmpad ${size} -color ${PURPLE} -promote format ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE} -promote all    ${infile} | ckfmt
+pnmpad ${size} -color purple -promote format ${infile} | ckfmt
+pnmpad ${size} -color purple -promote all    ${infile} | ckfmt
 
 rm ${infile}
 
@@ -179,28 +177,28 @@ pnmpad ${size} -white ${infile} | ckfmt
 pnmpad ${size} -extend-edge ${infile} | ckfmt
 pnmpad ${size} -detect-background ${infile} | ckfmt
 
-pnmpad ${size} -color ${BLACK} ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote format ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote format ${infile} | ckfmt
+pnmpad ${size} -color black ${infile} | ckfmt
+pnmpad ${size} -color black -promote none   ${infile} | ckfmt
+pnmpad ${size} -color black -promote format ${infile} | ckfmt
+pnmpad ${size} -color white ${infile} | ckfmt
+pnmpad ${size} -color white -promote none   ${infile} | ckfmt
+pnmpad ${size} -color white -promote format ${infile} | ckfmt
 
 pnmpad ${size} -color ${LIGHTGRAY} -promote none   ${infile} | ckfmt
 pnmpad ${size} -color ${LIGHTGRAY} -promote format ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote none   ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote format ${infile} | ckfmt
 
-pnmpad ${size} -color ${PURPLE} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE} -promote format ${infile} | ckfmt
+pnmpad ${size} -color purple -promote none   ${infile} | ckfmt
+pnmpad ${size} -color purple -promote format ${infile} | ckfmt
 
 echo "Should print: PPM raw, 8 by 1  maxval 255 five times"
 
 pnmpad ${size} -color ${LIGHTGRAY} ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY}  ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE}    ${infile} | ckfmt
+pnmpad ${size} -color purple    ${infile} | ckfmt
 pnmpad ${size} -color ${LIGHTGRAY} -promote all ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE}    -promote all ${infile} | ckfmt
+pnmpad ${size} -color purple    -promote all ${infile} | ckfmt
 
 rm ${infile}
 
@@ -217,15 +215,15 @@ pnmpad ${size} -white ${infile} | ckfmt
 pnmpad ${size} -extend-edge ${infile} | ckfmt
 pnmpad ${size} -detect-background ${infile} | ckfmt
 
-pnmpad ${size} -color ${BLACK} ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote format ${infile} | ckfmt
-pnmpad ${size} -color ${BLACK} -promote all    ${infile} | ckfmt
+pnmpad ${size} -color black ${infile} | ckfmt
+pnmpad ${size} -color black -promote none   ${infile} | ckfmt
+pnmpad ${size} -color black -promote format ${infile} | ckfmt
+pnmpad ${size} -color black -promote all    ${infile} | ckfmt
 
-pnmpad ${size} -color ${WHITE} ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote format ${infile} | ckfmt
-pnmpad ${size} -color ${WHITE} -promote all    ${infile} | ckfmt
+pnmpad ${size} -color white ${infile} | ckfmt
+pnmpad ${size} -color white -promote none   ${infile} | ckfmt
+pnmpad ${size} -color white -promote format ${infile} | ckfmt
+pnmpad ${size} -color white -promote all    ${infile} | ckfmt
 
 pnmpad ${size} -color ${LIGHTGRAY} ${infile} | ckfmt
 pnmpad ${size} -color ${LIGHTGRAY} -promote none   ${infile} | ckfmt
@@ -237,9 +235,9 @@ pnmpad ${size} -color ${DARKGRAY} -promote none   ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote format ${infile} | ckfmt
 pnmpad ${size} -color ${DARKGRAY} -promote all    ${infile} | ckfmt
 
-pnmpad ${size} -color ${PURPLE} ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE} -promote none   ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE} -promote format ${infile} | ckfmt
-pnmpad ${size} -color ${PURPLE} -promote all    ${infile} | ckfmt
+pnmpad ${size} -color purple ${infile} | ckfmt
+pnmpad ${size} -color purple -promote none   ${infile} | ckfmt
+pnmpad ${size} -color purple -promote format ${infile} | ckfmt
+pnmpad ${size} -color purple -promote all    ${infile} | ckfmt
 
 rm ${infile}

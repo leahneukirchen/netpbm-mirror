@@ -67,7 +67,18 @@ static __inline__ void
 reallocProduct(void **      const blockP,
                size_t       const factor1,
                unsigned int const factor2) {
+/*----------------------------------------------------------------------------
+   Reallocate the block at *blockPP to size 'factor1' * 'factor2'.
+   (Reallocate means make *blockPP point to a block of that size that
+   contains the same data as the block to which *blockP points now, with
+   additional space as needed at the end).
 
+   If *blockPP is null, make *blockPP point to a new block of memory of
+   the desired size with no contents.
+
+   If the reallocation fails, release any memory pointed by *blockP and
+   make *blockP null.
+-----------------------------------------------------------------------------*/
     size_t const sizeMax =
 #if defined(SIZE_MAX)
         SIZE_MAX

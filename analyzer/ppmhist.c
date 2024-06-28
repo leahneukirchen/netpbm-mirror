@@ -374,31 +374,16 @@ printColorSummary(ColorSummary const colorSummary,
 
 
 
-typedef struct {
-/*----------------------------------------------------------------------------
-   A map of color name to color.
-
-   The actual information is outside of this structure; we just point to it.
------------------------------------------------------------------------------*/
-    unsigned int  n;
-
-    pixel *       color;
-
-    const char ** name;
-} ColorDict;
-
-
-
 static const char *
-colornameLabel(pixel     const color,
-               pixval    const maxval,
-               ColorDict const colorDict) {
+colornameLabel(pixel                 const color,
+               pixval                const maxval,
+               const ppm_ColorDict * const colorDictP) {
 /*----------------------------------------------------------------------------
    Return the name of the color 'color' or the closest color in the
    dictionary to it.  If the name returned is not the exact color,
    prefix it with "*".  Otherwise, prefix it with " ".
 
-   'colorDict' is the color dictionary.
+   *colorDictP is the color dictionary.
 
    Return the name in static storage within this subroutine.
 -----------------------------------------------------------------------------*/
@@ -412,16 +397,17 @@ colornameLabel(pixel     const color,
 
     PPM_DEPTH(color255, color, maxval, 255);
 
-    colorIndex = ppm_findclosestcolor(colorDict.color, colorDict.n, &color255);
+    colorIndex = ppm_findclosestcolor(colorDictP->color, colorDictP->count,
+                                      &color255);
 
-    assert(colorIndex >= 0 && colorIndex < colorDict.n);
+    assert(colorIndex >= 0 && colorIndex < colorDictP->count);
 
-    if (PPM_EQUAL(colorDict.color[colorIndex], color))
+    if (PPM_EQUAL(colorDictP->color[colorIndex], color))
         STRSCPY(retval, " ");
     else
         STRSCPY(retval, "*");
 
-    STRSCAT(retval, colorDict.name[colorIndex]);
+    STRSCAT(retval, colorDictP->name[colorIndex]);
 
     return retval;
 }
@@ -429,12 +415,12 @@ colornameLabel(pixel     const color,
 
 
 static void
-printColors(colorhist_vector const chv,
-            int              const colorCt,
-            pixval           const maxval,
-            enum ColorFmt    const colorFmt,
-            bool             const withColorName,
-            ColorDict        const colorDict) {
+printColors(colorhist_vector      const chv,
+            int                   const colorCt,
+            pixval                const maxval,
+            enum ColorFmt         const colorFmt,
+            bool                  const withColorName,
+            const ppm_ColorDict * const colorDictP) {
 /*----------------------------------------------------------------------------
    Print to Standard Output the list of colors, one per line in 'chv',
    of which there are 'colorCt'.
@@ -460,7 +446,7 @@ printColors(colorhist_vector const chv,
         const char * colornameValue;
 
         if (withColorName)
-            colornameValue = colornameLabel(chv[i].color, maxval, colorDict);
+            colornameValue = colornameLabel(chv[i].color, maxval, colorDictP);
         else
             colornameValue = "";
 
@@ -498,7 +484,7 @@ printHistogram(colorhist_vector const chv,
                bool             const wantHeader,
                bool             const wantColorName) {
 
-    ColorDict colorDict;
+    ppm_ColorDict * colorDictP;
 
     if (colorFmt == FMT_PPMPLAIN)
         printf("P3\n# color map\n%d 1\n%d\n", colorCt, maxval);
@@ -515,18 +501,16 @@ printHistogram(colorhist_vector const chv,
     }
     if (wantColorName) {
         bool const mustOpenTrue = TRUE;
-        ppm_readcolordict(NULL, mustOpenTrue,
-                          &colorDict.n, &colorDict.name, &colorDict.color,
-                          NULL);
-    }
+
+        colorDictP = ppm_colorDict_new(NULL, mustOpenTrue);
+    } else
+        colorDictP = NULL;
 
     printColors(chv, colorCt, maxval,
-                colorFmt, wantColorName, colorDict);
+                colorFmt, wantColorName, colorDictP);
 
-    if (wantColorName) {
-        free(colorDict.color);
-        free(colorDict.name);
-    }
+    if (colorDictP)
+        ppm_colorDict_destroy(colorDictP);
 }
 
 

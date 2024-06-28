@@ -6,9 +6,9 @@
 #  This generates a Debian package file (.deb) to install Sourceforge
 #  Netpbm on a Debian system.
 #
-#  This is especially useful because Debian does not have a good Debian
-#  package (what Debian contains is derived from Sourceforge Netpbm ca.
-#  2002).
+#  This used to be especially useful because Debian did not have a good Debian
+#  package (what Debian contained was derived from a 20-year-old Sourceforge
+#  Netpbm version).
 #
 #  The dependencies this package declares are those that can be satisfied by
 #  Debian 8 (Jessie) and Debian 9 (Stretch).  Netpbm works fine on other
@@ -46,7 +46,7 @@ sub parseCommandLine(@) {
               "You specified ",
               scalar(@ARGV), "\n");
         exit(1);
-    } 
+    }
 
     return(\%cmdline);
 }
@@ -129,10 +129,10 @@ sub control($$) {
     # to run a Netpbm program built for Debian N on Debian N-1.
 
     # The following is for Debian 9.
-    
+
     my %control;
 
-    my $debianNativeNetpbm = 
+    my $debianNativeNetpbm =
         'netpbm, ' .
         'libnetpbm10, ' .
         'libnetpbm10-dev, ' .
@@ -164,7 +164,7 @@ sub control($$) {
     # has libjpeg-turbo8.
     $control{'Conflicts'} = $debianNativeNetpbm;
     $control{'Replaces'} = $debianNativeNetpbm;
-    $control{'Provides'} = 
+    $control{'Provides'} =
         'netpbm, ' .
         'pbmwbmp, ' .
         'pnmtopng, ' .
@@ -195,7 +195,7 @@ sub writeControlFile($$) {
     while (my ($key, $value) = each %{$controlR}) {
         print CTL ("$key: $value\n");
     }
-    
+
     close(CTL);
 }
 
@@ -229,7 +229,7 @@ sub createDirOrDie($) {
 
 
 
-sub 
+sub
 processTemplate($$$) {
     my ($templateR, $infoR, $outputR) = @_;
 
@@ -543,10 +543,16 @@ my $netpbmPkgDir = netpbmPkgDir($cmdlineR);
 
 my $arch = arch($cmdlineR);
 
+if (!-d($netpbmPkgDir)) {
+    die("Netpbm package directory '$netpbmPkgDir': " .
+        "No directory by that name exists.");
+}
+
+
 my $release = netpbmVersion($netpbmPkgDir);
 
 my $dpkgDirName = "/tmp/netpbm-sf-$release";
- 
+
 buildDpkgBuildTree($dpkgDirName, $release, $netpbmPkgDir, $arch,
                    $buildTools);
 

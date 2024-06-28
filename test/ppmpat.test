@@ -41,7 +41,7 @@ ppmpat -argyle2 --color=rgb:00/00/00,rgb:ff/80/80,rgb:e0/e0/e0 12 18 | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "ppmpat -g2 -g3 10 10"
 invCmd "ppmpat -madras -tartan 10 10"

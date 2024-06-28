@@ -24,7 +24,7 @@ done
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pbmmake -b -w -plain 1 1"
 invCmd "pbmmake -b -g -plain 1 1"

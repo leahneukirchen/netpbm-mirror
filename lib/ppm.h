@@ -161,6 +161,36 @@ ppm_colorname(const pixel* const colorP,
               pixval       const maxval,
               int          const hexok);
 
+typedef struct {
+    unsigned int version;
+    const char ** name;
+        /* malloced, and each entry malloced.  Has space for at least 'size'
+           entries.  May be null if size == 0
+        */
+    pixel * color;       /* malloced */
+        /* malloced.  Has space for at least 'size' entries.  May be null if
+           size == 0
+        */
+    unsigned int size;
+        /* allocated size of 'name' and 'color'.  At least 'count' */
+    unsigned int count;
+        /* number of entries used.*/
+    colorhash_table cht;
+        /* Hash table mapping name[] to color[] */
+} ppm_ColorDict;
+
+ppm_ColorDict *
+ppm_colorDict_new(const char * const fileName,
+                  int          const mustOpen);
+
+void
+ppm_colorDict_destroy(ppm_ColorDict * colorDictP);
+
+void
+ppm_readcolordict2(const char *     const fileName,
+                   int              const mustOpen,
+                   ppm_ColorDict ** const colorDictP);
+
 void
 ppm_readcolordict(const char *      const fileName,
                   int               const mustOpen,

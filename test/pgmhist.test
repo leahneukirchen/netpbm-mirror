@@ -26,7 +26,7 @@ pgmramp -lr 256 1 | pgmhist -machine -decile   | \
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pgmhist -median   -quartile testgrid.pbm"
 invCmd "pgmhist -median   -decile   testgrid.pbm"

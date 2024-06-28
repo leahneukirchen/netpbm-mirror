@@ -24,7 +24,7 @@ pamdepth 255 testimg.ppm | cmp -s - testimg.ppm
 # Test Invalid
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamdepth 0 testgrid.pbm"
 invCmd "pamdepth 65536 testimg.ppm"

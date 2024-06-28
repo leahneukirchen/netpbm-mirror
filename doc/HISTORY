@@ -4,11 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-24.04.11 BJH  Release 11.06.01
+24.06.28 BJH  Release 11.07.00
 
               libnetpbm: Fix double free crash when memory allocation via
               REALLOCARRAY fails.  Introduced in Netpbm 10.40 (September
               2007).
+
+              libnetpbm: Allow color dictionary with more than 1000 entries.
+
+              ppmhist, ppmtoxpm: Work with color dictionary with more than
+              1000 color entries.
+
+              rgb.txt: Add Resene paint colors, 2010.
 
 24.03.30 BJH  Release 11.06.00
 

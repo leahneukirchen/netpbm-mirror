@@ -33,7 +33,7 @@ rm ${sorted0_res} ${sorted1_res}
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamfind -color=black -target=1,1,1 testimg.ppm"
 invCmd "pamfind -target=0,0 testimg.ppm"

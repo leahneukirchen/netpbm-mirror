@@ -39,7 +39,7 @@ pamditherbw -cluster8 ${test_red} | cksum
 
 echo "Test: Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamditherbw -fs -atkinson       ${test_red}"
 invCmd "pamditherbw -floyd -atkinson    ${test_red}"

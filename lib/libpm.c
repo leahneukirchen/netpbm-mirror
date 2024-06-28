@@ -329,7 +329,7 @@ pm_freerow(void * const itrow) {
 char **
 pm_allocarray(int const cols,
               int const rows,
-              int const elementSize ) {
+              int const elementSize) {
 /*----------------------------------------------------------------------------
    This is for backward compatibility.  MALLOCARRAY2 is usually better.
 
@@ -378,22 +378,22 @@ pm_keymatch(const char * const strarg,
     str = strarg;
     keyword = keywordarg;
 
-    len = strlen( str );
-    if ( len < minchars )
+    len = strlen(str);
+    if (len < minchars)
         return 0;
-    while ( --len >= 0 )
+    while (--len >= 0)
         {
         register char c1, c2;
 
         c1 = *str++;
         c2 = *keyword++;
-        if ( c2 == '\0' )
+        if (c2 == '\0')
             return 0;
-        if ( ISUPPER( c1 ) )
-            c1 = tolower( c1 );
-        if ( ISUPPER( c2 ) )
-            c2 = tolower( c2 );
-        if ( c1 != c2 )
+        if (ISUPPER(c1))
+            c1 = tolower(c1);
+        if (ISUPPER(c2))
+            c2 = tolower(c2);
+        if (c1 != c2)
             return 0;
         }
     return 1;
@@ -404,40 +404,40 @@ pm_keymatch(const char * const strarg,
 
 int
 pm_maxvaltobits(int const maxval) {
-    if ( maxval <= 1 )
+    if (maxval <= 1)
         return 1;
-    else if ( maxval <= 3 )
+    else if (maxval <= 3)
         return 2;
-    else if ( maxval <= 7 )
+    else if (maxval <= 7)
         return 3;
-    else if ( maxval <= 15 )
+    else if (maxval <= 15)
         return 4;
-    else if ( maxval <= 31 )
+    else if (maxval <= 31)
         return 5;
-    else if ( maxval <= 63 )
+    else if (maxval <= 63)
         return 6;
-    else if ( maxval <= 127 )
+    else if (maxval <= 127)
         return 7;
-    else if ( maxval <= 255 )
+    else if (maxval <= 255)
         return 8;
-    else if ( maxval <= 511 )
+    else if (maxval <= 511)
         return 9;
-    else if ( maxval <= 1023 )
+    else if (maxval <= 1023)
         return 10;
-    else if ( maxval <= 2047 )
+    else if (maxval <= 2047)
         return 11;
-    else if ( maxval <= 4095 )
+    else if (maxval <= 4095)
         return 12;
-    else if ( maxval <= 8191 )
+    else if (maxval <= 8191)
         return 13;
-    else if ( maxval <= 16383 )
+    else if (maxval <= 16383)
         return 14;
-    else if ( maxval <= 32767 )
+    else if (maxval <= 32767)
         return 15;
-    else if ( (long) maxval <= 65535L )
+    else if ((long) maxval <= 65535L)
         return 16;
     else
-        pm_error( "maxval of %d is too large!", maxval );
+        pm_error("maxval of %d is too large!", maxval);
 
     assert(false);
 }
@@ -476,7 +476,7 @@ pm_lcm(unsigned int const x,
     candidate = biggest;
     while (((candidate % x) != 0 ||       /* not a multiple of x */
             (candidate % y) != 0 ||       /* not a multiple of y */
-            (candidate % z) != 0 ) &&     /* not a multiple of z */
+            (candidate % z) != 0) &&     /* not a multiple of z */
            candidate <= limit)
         candidate += biggest;
 
@@ -571,26 +571,26 @@ showVersion(void) {
 #endif
 
 #ifdef BSD
-    pm_message( "BSD defined" );
+    pm_message("BSD defined");
 #endif /*BSD*/
 #ifdef SYSV
-    pm_message( "SYSV defined" );
+    pm_message("SYSV defined");
 #endif /*SYSV*/
 #ifdef MSDOS
-    pm_message( "MSDOS defined" );
+    pm_message("MSDOS defined");
 #endif /*MSDOS*/
 #ifdef AMIGA
-    pm_message( "AMIGA defined" );
+    pm_message("AMIGA defined");
 #endif /* AMIGA */
     {
         const char * rgbdef;
-        pm_message( "RGB_ENV='%s'", RGBENV );
+        pm_message("RGB_ENV='%s'", RGBENV);
         rgbdef = getenv(RGBENV);
-        if( rgbdef )
-            pm_message( "RGBENV= '%s' (env vbl set to '%s')",
-                        RGBENV, rgbdef );
+        if(rgbdef)
+            pm_message("RGBENV= '%s' (env vbl set to '%s')",
+                        RGBENV, rgbdef);
         else
-            pm_message( "RGBENV= '%s' (env vbl is unset)", RGBENV);
+            pm_message("RGBENV= '%s' (env vbl is unset)", RGBENV);
     }
 }
 

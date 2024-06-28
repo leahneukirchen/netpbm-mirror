@@ -46,7 +46,7 @@ for maxval in 9 10 9999 10000 65535
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 input1_pam=${tmpdir}/input1.pam
 

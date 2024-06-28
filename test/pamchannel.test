@@ -41,7 +41,7 @@ test_out=${tmpdir}/test_out
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamchannel  -infile testgrid.pbm 1"
 invCmd "pamchannel  -infile testimg.ppm 3"

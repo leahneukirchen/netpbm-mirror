@@ -87,7 +87,7 @@ pamfunc -shiftright 0 maze.pbm | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamfunc -multiplier testimg.ppm"
 invCmd "pamfunc -multiplier=-1 testimg.ppm"

@@ -58,7 +58,7 @@ pamrestack \
 test_out=${tmpdir}/test_out
 echo "Test Invalid."
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamrestack testgrid.pbm maze.pbm"
 invCmd "pamrestack -abort -width=$((pixels * 2 + 1 )) maze.pbm"

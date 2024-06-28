@@ -46,7 +46,7 @@ rm ${out1_pam}
 test_out=${tmpdir}/test_out
 echo "Test Invalid."
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamshuffle testimg.ppm testgrid.pbm"
 invCmd "pamshuffle -randomseed -column testgrid.pbm"

@@ -23,6 +23,231 @@
 #include "pam.h"
 
 
+
+#define MAXCOLORNAMES 1000u
+    /* The maximum size of a colornames array, in the old interface */
+
+static colorhash_table
+allocColorHash(void) {
+
+    colorhash_table cht;
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+
+    if (setjmp(jmpbuf) != 0)
+        cht = NULL;
+    else {
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+        cht = ppm_alloccolorhash();
+    }
+    pm_setjmpbuf(origJmpbufP);
+
+    return cht;
+}
+
+
+
+static ppm_ColorDict *
+colorDict_newEmpty() {
+
+    ppm_ColorDict * colorDictP;
+
+    MALLOCVAR_NOFAIL(colorDictP);
+
+    colorDictP->version = 0;
+    colorDictP->size    = 0;
+    colorDictP->name    = NULL;
+    colorDictP->color   = NULL;
+    colorDictP->cht     = allocColorHash();
+    colorDictP->count   = 0;
+
+    if (!colorDictP->cht)
+        pm_error("Unable to allocate space for color hash");
+
+    return colorDictP;
+}
+
+
+
+void
+ppm_colorDict_destroy(ppm_ColorDict * const colorDictP) {
+
+    unsigned int i;
+
+    for (i = 0; i < colorDictP->size; ++i)
+        pm_strfree(colorDictP->name[i]);
+
+    if (colorDictP->name)
+        free(colorDictP->name);
+    if (colorDictP->color)
+        free(colorDictP->color);
+
+    ppm_freecolorhash(colorDictP->cht);
+
+    free(colorDictP);
+}
+
+
+
+static void
+colorDict_resize(ppm_ColorDict * const colorDictP,
+                 unsigned int    const newSz,
+                 const char **   const errorP) {
+
+    const char ** newName;
+
+    newName = realloc(colorDictP->name, newSz * sizeof(colorDictP->name[0]));
+    if (!newName)
+        pm_asprintf(errorP, "Failed to extend allocation for color "
+                    "dictionary to %u entries", newSz);
+    else {
+        pixel * newColor;
+
+        colorDictP->name = newName;
+
+        newColor =
+            realloc(colorDictP->color, newSz * sizeof(colorDictP->color[0]));
+
+        if (!newColor)
+            pm_asprintf(errorP, "Failed to extend allocation for color "
+                        "dictionary to %u entries", newSz);
+        else {
+            *errorP = NULL;
+            colorDictP->color = newColor;
+            colorDictP->size  = newSz;
+        }
+    }
+}
+
+
+
+static void
+openColornameFile(const char *  const fileName,
+                  bool          const mustOpen,
+                  FILE **       const filePP,
+                  const char ** const errorP) {
+
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+
+    if (setjmp(jmpbuf) != 0) {
+        pm_asprintf(errorP, "Failed to open color name file");
+    } else {
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        *filePP = pm_openColornameFile(fileName, mustOpen);
+
+        *errorP = NULL;  /* Would have longjmped if there were a problem */
+    }
+    pm_setjmpbuf(origJmpbufP);
+}
+
+
+
+static void
+processColorfileEntry(struct colorfile_entry const ce,
+                      ppm_ColorDict *        const colorDictP,
+                      const char **          const errorP) {
+/*----------------------------------------------------------------------------
+   Add the color file entry 'ce' to *colorDictP as required.
+-----------------------------------------------------------------------------*/
+    pixel color;
+
+    PPM_ASSIGN(color, ce.r, ce.g, ce.b);
+
+    if (ppm_lookupcolor(colorDictP->cht, &color) >= 0) {
+        /* The color is already in the hash, which means we saw it earlier in
+           the file.  We prefer the first name that the file gives for each
+           color, so we just ignore the current entry.
+        */
+        *errorP = NULL;
+    } else {
+        ppm_addtocolorhash(colorDictP->cht, &color, colorDictP->count);
+        if (colorDictP->count >= colorDictP->size) {
+            colorDict_resize(colorDictP,
+                             MAX(1024, colorDictP->size * 2),
+                             errorP);
+        } else
+            *errorP = NULL;
+
+        assert(colorDictP->size >= colorDictP->count);
+
+        if (!*errorP) {
+            colorDictP->name[colorDictP->count]  = pm_strdup(ce.colorname);
+            colorDictP->color[colorDictP->count] = color;
+            if (colorDictP->name[colorDictP->count] == pm_strsol)
+                pm_asprintf(errorP, "Unable to allocate space for color name");
+            else
+                ++colorDictP->count;
+        }
+    }
+}
+
+
+
+static void
+readColorFile(const char *    const fileName,
+              bool            const mustOpen,
+              ppm_ColorDict * const colorDictP,
+              const char **   const errorP) {
+/*----------------------------------------------------------------------------
+   Read the color dictionary file named 'fileName' and add the colors in it
+   to *colorDictP.
+
+   If the file is not openable (e.g. no file by that name exists), abort the
+   program if 'mustOpen' is true; otherwise, return values indicating a
+   dictionary with no colors.
+
+   We may add colors to *colorDictP even if we fail.
+-----------------------------------------------------------------------------*/
+    FILE * colorFileP;
+
+    openColornameFile(fileName, mustOpen, &colorFileP, errorP);
+    if (!*errorP) {
+        if (!colorFileP) {
+            /* Couldn't open it, but Caller says treat same as empty file */
+            *errorP = NULL;
+        } else {
+            bool done;
+
+            for (done = false, *errorP = NULL; !done && !*errorP; ) {
+
+                struct colorfile_entry const ce = pm_colorget(colorFileP);
+
+                if (!ce.colorname)
+                    done = true;
+                else
+                    processColorfileEntry(ce, colorDictP, errorP);
+            }
+
+            fclose(colorFileP);
+        }
+    }
+}
+
+
+
+ppm_ColorDict *
+ppm_colorDict_new(const char * const fileName,
+                  int          const mustOpen) {
+
+    ppm_ColorDict * colorDictP;
+    const char * error;
+
+    colorDictP = colorDict_newEmpty();
+
+    readColorFile(fileName, mustOpen, colorDictP, &error);
+
+    if (error) {
+        pm_errormsg("%s", error);
+        pm_strfree(error);
+        pm_longjmp();
+    }
+    return colorDictP;
+}
+
+
+
 pixel
 ppm_parsecolor2(const char * const colorname,
                 pixval       const maxval,
@@ -127,251 +352,6 @@ ppm_colorname(const pixel * const colorP,
 
 
 
-#define MAXCOLORNAMES 1000u
-
-static const char **
-allocColorNames() {
-
-    const char ** colornames;
-
-    MALLOCARRAY(colornames, MAXCOLORNAMES);
-
-    if (colornames) {
-        unsigned int i;
-        for (i = 0; i < MAXCOLORNAMES; ++i)
-            colornames[i] = NULL;
-    }
-    return colornames;
-}
-
-
-
-static colorhash_table
-allocColorHash(void) {
-
-    colorhash_table cht;
-    jmp_buf jmpbuf;
-    jmp_buf * origJmpbufP;
-
-    if (setjmp(jmpbuf) != 0)
-        cht = NULL;
-    else {
-        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
-        cht = ppm_alloccolorhash();
-    }
-    pm_setjmpbuf(origJmpbufP);
-
-    return cht;
-}
-
-
-
-static void
-processColorfileEntry(struct colorfile_entry const ce,
-                      colorhash_table        const cht,
-                      const char **          const colornames,
-                      pixel *                const colors,
-                      unsigned int *         const colornameIndexP,
-                      const char **          const errorP) {
-
-    if (*colornameIndexP >= MAXCOLORNAMES)
-        pm_asprintf(errorP, "Too many colors in colorname dictionary.  "
-                    "Max allowed is %u", MAXCOLORNAMES);
-    else {
-        pixel color;
-
-        PPM_ASSIGN(color, ce.r, ce.g, ce.b);
-
-        if (ppm_lookupcolor(cht, &color) >= 0) {
-            /* The color is already in the hash, which means we saw it
-               earlier in the file.  We prefer the first name that the
-               file gives for each color, so we just ignore the
-               current entry.
-            */
-            *errorP = NULL;
-        } else {
-            ppm_addtocolorhash(cht, &color, *colornameIndexP);
-            colornames[*colornameIndexP] = pm_strdup(ce.colorname);
-            colors[*colornameIndexP] = color;
-            if (colornames[*colornameIndexP] == pm_strsol)
-                pm_asprintf(errorP, "Unable to allocate space for color name");
-            else {
-                *errorP = NULL;
-                ++(*colornameIndexP);
-            }
-        }
-    }
-}
-
-
-
-static void
-openColornameFile(const char *  const fileName,
-                  bool          const mustOpen,
-                  FILE **       const filePP,
-                  const char ** const errorP) {
-
-    jmp_buf jmpbuf;
-    jmp_buf * origJmpbufP;
-
-    if (setjmp(jmpbuf) != 0) {
-        pm_asprintf(errorP, "Failed to open color name file");
-    } else {
-        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
-
-        *filePP = pm_openColornameFile(fileName, mustOpen);
-
-        *errorP = NULL;  /* Would have longjmped if there were a problem */
-    }
-    pm_setjmpbuf(origJmpbufP);
-}
-
-
-
-static void
-readOpenColorFile(FILE *          const colorFileP,
-                  unsigned int *  const nColorsP,
-                  const char **   const colornames,
-                  pixel *         const colors,
-                  colorhash_table const cht,
-                  const char **   const errorP) {
-/*----------------------------------------------------------------------------
-   Read the color dictionary file *colorFileP and add the colors in it
-   to colornames[], colors[], and 'cht'.
-
-   colornames[] and colors[] must be allocated with MAXCOLORNAMES entries
-   at entry.
-
-   We may add colors to 'cht' even if we fail.
------------------------------------------------------------------------------*/
-    unsigned int nColorsDone;
-    bool done;
-
-    for (nColorsDone = 0, done = false, *errorP = NULL; !done && !*errorP; ) {
-
-        struct colorfile_entry const ce = pm_colorget(colorFileP);
-
-        if (!ce.colorname)
-            done = true;
-        else
-            processColorfileEntry(ce, cht, colornames, colors,
-                                  &nColorsDone, errorP);
-    }
-    *nColorsP = nColorsDone;
-
-    if (*errorP) {
-        unsigned int colorIndex;
-
-        for (colorIndex = 0; colorIndex < nColorsDone; ++colorIndex)
-            pm_strfree(colornames[colorIndex]);
-    }
-}
-
-
-
-static void
-readColorFile(const char *    const fileName,
-              bool            const mustOpen,
-              unsigned int *  const nColorsP,
-              const char **   const colornames,
-              pixel *         const colors,
-              colorhash_table const cht,
-              const char **   const errorP) {
-/*----------------------------------------------------------------------------
-   Read the color dictionary file named 'fileName' and add the colors in it
-   to colornames[], colors[], and 'cht'.  Return as *nColorsP the number
-   of colors in it.
-
-   If the file is not openable (e.g. no file by that name exists), abort the
-   program if 'mustOpen' is true; otherwise, return values indicating a
-   dictionary with no colors.
-
-   colornames[] and colors[] must be allocated with MAXCOLORNAMES entries
-   at entry.
-
-   We may add colors to 'cht' even if we fail.
------------------------------------------------------------------------------*/
-    FILE * colorFileP;
-
-    openColornameFile(fileName, mustOpen, &colorFileP, errorP);
-    if (!*errorP) {
-        if (colorFileP == NULL) {
-            /* Couldn't open it, but Caller says treat same as
-               empty file
-            */
-            *nColorsP = 0;
-            *errorP = NULL;
-        } else {
-            readOpenColorFile(colorFileP, nColorsP, colornames, colors, cht,
-                              errorP);
-
-            fclose(colorFileP);
-        }
-    }
-}
-
-
-
-static void
-readcolordict(const char *      const fileName,
-              bool              const mustOpen,
-              unsigned int *    const nColorsP,
-              const char ***    const colorNamesP,
-              pixel **          const colorsP,
-              colorhash_table * const chtP,
-              const char **     const errorP) {
-/*----------------------------------------------------------------------------
-  Same as 'ppm_readcolordict' except that a) if we fail, we return a message
-  as *errorP instead of issuing a message; and b) we always return all three
-  return values.
------------------------------------------------------------------------------*/
-    const char ** colorNames;
-        /* List of all the color names in the dictionary */
-
-    colorNames = allocColorNames();
-
-    if (colorNames == NULL)
-        pm_asprintf(errorP, "Unable to allocate space for colorname table.");
-    else {
-        pixel * colors;
-            /* colors[i] is the color that goes with name colorNames[i] */
-
-        MALLOCARRAY(colors, MAXCOLORNAMES);
-
-        if (colors == NULL)
-            pm_asprintf(errorP, "Unable to allocate space for color table.");
-        else {
-            colorhash_table cht;
-                /* Hash table mapping colorNames[] to colors[] */
-
-            cht = allocColorHash();
-
-            if (cht == NULL)
-                pm_asprintf(errorP, "Unable to allocate space for color hash");
-            else {
-                readColorFile(fileName, mustOpen,
-                              nColorsP, colorNames, colors, cht,
-                              errorP);
-
-                if (*errorP)
-                    ppm_freecolorhash(cht);
-                else
-                    *chtP = cht;
-            }
-            if (*errorP)
-                free(colors);
-            else
-                *colorsP = colors;
-        }
-        if (*errorP)
-            free(colorNames);
-        else
-            *colorNamesP = colorNames;
-    }
-}
-
-
-
 void
 ppm_readcolordict(const char *      const fileName,
                   int               const mustOpen,
@@ -380,10 +360,11 @@ ppm_readcolordict(const char *      const fileName,
                   pixel **          const colorsP,
                   colorhash_table * const chtP) {
 /*----------------------------------------------------------------------------
-   Read the color dictionary from the file named 'fileName'.  If we can't open
-   the file (e.g. because it does not exist), and 'mustOpen' is false, return
-   an empty dictionary (it contains no colors).  But if 'mustOpen' is true,
-   abort the program instead of returning an empty dictionary.
+   Read the color dictionary from the file named 'fileName' (NULL means
+   default).  If we can't open the file (e.g. because it does not exist), and
+   'mustOpen' is false, return an empty dictionary (it contains no colors).
+   But if 'mustOpen' is true, abort the program instead of returning an empty
+   dictionary.
 
    Return as *nColorsP the number of colors in the dictionary.
 
@@ -392,8 +373,8 @@ ppm_readcolordict(const char *      const fileName,
    The first *nColorsP entries are valid; *chtP contains indices into this
    array.
 
-   Return as *colorsP the colors.  *colorsP is a malloced array of size
-   MAXCOLORS with the first elements filled in and the rest undefined.
+   Return as *colorsP a malloced array of the colors.  (*colorsP)[i] is
+   the color that goes with (*colorNamesP)[i].
 
    Return as *chtP a color hash table mapping each color in the dictionary
    to the index into *colorNamesP for the name of the color.
@@ -401,35 +382,54 @@ ppm_readcolordict(const char *      const fileName,
    Each of 'nColorsP, 'colorNamesP', and 'colorsP' may be null, in which case
    we do not return the corresponding information (or allocate memory for it).
 -----------------------------------------------------------------------------*/
-    colorhash_table cht;
-    const char ** colorNames;
-    pixel * colors;
-    unsigned int nColors;
-    const char * error;
+    ppm_ColorDict * colorDictP;
 
-    readcolordict(fileName, mustOpen, &nColors, &colorNames, &colors, &cht,
-                  &error);
+    colorDictP = ppm_colorDict_new(fileName, mustOpen);
 
-    if (error) {
-        pm_errormsg("%s", error);
-        pm_strfree(error);
-        pm_longjmp();
+    if (chtP)
+        *chtP = colorDictP->cht;
+    else
+        ppm_freecolorhash(colorDictP->cht);
+
+    if (colorNamesP) {
+        /* We have a simplistic, primitive interface where the array must
+           be exactly MAXCOLORNAMES entries in size with unused entries
+           set to NULL so that caller can free it with a call to
+           'ppm_freecolornames' (which has no size argument).
+
+           So we fail now (as the old interface would) if there are more
+           than MAXCOLORNAMES colors and expand the array if there are
+           fewer.
+        */
+        if (colorDictP->count > MAXCOLORNAMES)
+            pm_error("Too many color names (%u) in color dictionary.  "
+                     "Max allowed is %u",
+                     colorDictP->count, MAXCOLORNAMES);
+        else {
+            unsigned int i;
+
+            REALLOCARRAY(colorDictP->name, MAXCOLORNAMES);
+            if (!colorDictP->name)
+                pm_error("Failed to allocate color name array for "
+                         "maximum colors %u", MAXCOLORNAMES);
+            for (i = colorDictP->count; i < MAXCOLORNAMES; ++i)
+                colorDictP->name[i] = NULL;
+        }
+        *colorNamesP = colorDictP->name;
     } else {
-        if (chtP)
-            *chtP = cht;
-        else
-            ppm_freecolorhash(cht);
-        if (colorNamesP)
-            *colorNamesP = colorNames;
-        else
-            ppm_freecolornames(colorNames);
-        if (colorsP)
-            *colorsP = colors;
-        else
-            ppm_freerow(colors);
-        if (nColorsP)
-            *nColorsP = nColors;
+        unsigned int i;
+        for (i = 0; i < colorDictP->count; ++i)
+            pm_strfree(colorDictP->name[i]);
+        free(colorDictP->name);
     }
+
+    if (colorsP)
+        *colorsP = colorDictP->color;
+    else
+        free(colorDictP->color);
+
+    if (nColorsP)
+        *nColorsP = colorDictP->count;
 }
 
 

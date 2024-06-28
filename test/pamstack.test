@@ -98,7 +98,7 @@ test "$s0" = "$s2" && echo "true" || echo "false"
 # Test Invalid
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamstack testgrid.pbm testimg.ppm"
 invCmd "pamstack ${i1_pgm} ${std_pgm}"

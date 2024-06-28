@@ -27,7 +27,7 @@ pnmpsnr  testimg.ppm  testimg.ppm -target1=1000 -target2=1000 -target3=1000
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pnmpsnr ${b_pbm} ${w_pbm} ${b_pbm}    "
 invCmd "pnmpsnr ${b_pbm}                      "

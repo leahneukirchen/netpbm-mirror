@@ -1,0 +1,65 @@
+#! /bin/sh
+# This script tests: infotopam
+# Also requires: ppmchange pamtopnm
+
+tmpdir=${tmpdir:-/tmp}
+test1_pam=${tmpdir}/test1.pam
+test1ch_ppm=${tmpdir}/test1ch.ppm
+RGBDEF=./rgb.test
+
+cp "$srcdir/test1.info" "$tmpdir"
+cp "$srcdir/test2.info" "$tmpdir"
+
+test1_info="$tmpdir/test1.info"
+test2_info="$tmpdir/test2.info"
+
+echo "Test 0.1  Should print 341768228 989"
+cksum < ${test1_info}
+
+echo "Test 0.2  Should print 3992125899 16230"
+cksum < ${test2_info}
+
+echo "Test 1.1  Should print 3375570914 10141"
+infotopam ${test1_info} | tee ${test1_pam} | cksum
+
+echo "Test 1.2  Should print 1428271393 94509"
+infotopam ${test2_info} | cksum
+
+echo "Test 2.   Should print 352521340 94509"
+infotopam -selected ${test2_info} | cksum
+
+echo "Test 3.1  Should print 3375570914 10141"
+infotopam -forcecolor ${test1_info} | cksum
+
+echo "Test 3.2  Should print 1428271393 94509"
+infotopam -forcecolor ${test2_info} | cksum
+
+echo "Test 4.   Should print match twice"
+
+ppmchange rgb:00/55/AA rgb:0/0/f rgb:00/00/20 rgb:0/0/0 ${test1_pam} > ${test1ch_ppm}
+infotopam -numcolors 2 0 rgb:0/0/f 2 rgb:0/0/0 ${test1_info} | pamtopnm | \
+cmp -s  ${test1ch_ppm} - && echo "match" || echo "no match"
+
+infotopam -numcolors 4 0 rgb:00/55/AA  1 rgb:f/f/f  2 rgb:00/00/20  3 rgb:FF/8A/00 \
+    ${test1_info} | \
+cmp -s ${test1_pam} - && echo "match" || echo "no match"
+
+rm ${test1_pam} ${test1ch_ppm}
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "infotopam -selected ${test1_info}"
+invCmd "infotopam -selected -forcecolor ${test1_info}"
+invCmd "infotopam -numcolors 0 0 rgb:0/0/f ${test1_info}"
+invCmd "infotopam -numcolors 1 4 rgb:0/0/f ${test1_info}"
+invCmd "infotopam -numcolors 1 -1 rgb:0/0/f ${test1_info}"
+invCmd "infotopam -numcolors 1 rgb:00/00/00 ${test1_info}"
+invCmd "infotopam -numcolors 2 0 rgb:00/00/00 1 ${test1_info}"
+invCmd "infotopam -numcolors 4 \
+  rgb:0/0/f 1 rgb:0/f/0 2 rgb:/f/f/f 3 rgb:f/0/0 4 yellow ${test1_info}"
+invCmd "infotopam -numcolors 5 0 \
+  rgb:0/0/f 1 rgb:0/f/0 2 rgb:/f/f/f 3 rgb:f/0/0 4 rgb:f/f/0 ${test1_info}"
+
+rm ${test1_info} ${test2_info}

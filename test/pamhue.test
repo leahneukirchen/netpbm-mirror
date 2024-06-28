@@ -34,6 +34,6 @@ pamhue -huechange=360 testimg.ppm | cmp -s - testimg.ppm
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamhue testimg.ppm "

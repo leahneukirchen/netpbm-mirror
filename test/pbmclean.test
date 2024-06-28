@@ -37,7 +37,7 @@ rm ${sheet_pbm}
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # overspecification
 invCmd "pbmclean -black -white -min=1 -extended testgrid.pbm"

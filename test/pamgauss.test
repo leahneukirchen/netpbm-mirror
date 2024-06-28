@@ -19,7 +19,7 @@ pamgauss 3 3 -sigma=0.5 -tupletype="GRAYSCALE" | pamfile
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pamgauss       -sigma=0.5 "
 invCmd "pamgauss 0 5   -sigma=0.5 "

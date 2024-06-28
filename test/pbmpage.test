@@ -11,7 +11,7 @@ pbmpage -a4 2 | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pbmpage -a3 1"
 invCmd "pbmpage 0"

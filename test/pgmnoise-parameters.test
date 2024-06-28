@@ -4,7 +4,7 @@
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 invCmd "pgmnoise"
 invCmd "pgmnoise -maxval=255  -randomseed=1"
