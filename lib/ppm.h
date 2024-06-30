@@ -187,11 +187,6 @@ void
 ppm_colorDict_destroy(ppm_ColorDict * colorDictP);
 
 void
-ppm_readcolordict2(const char *     const fileName,
-                   int              const mustOpen,
-                   ppm_ColorDict ** const colorDictP);
-
-void
 ppm_readcolordict(const char *      const fileName,
                   int               const mustOpen,
                   unsigned int *    const nColorsP,
