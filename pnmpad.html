@@ -2,7 +2,7 @@
 <html><head><title>Pnmpad User Manual</title></head>
 <body>
 <h1>pnmpad</h1>
-Updated: 09 December 2023
+Updated: 10 August 2024
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -45,31 +45,21 @@ pnmpad - add borders to a PNM image
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmpad</b> reads a PNM image as input and outputs a PNM image
-that is the input image plus black or white borders of the sizes
-specified.
-
-<p>If you just need to convert an image to a certain size regardless
-of the original dimensions, <b>pamcut</b> with the <b>-pad</b> option
-may be a better choice.
-
-<p><b>pnmmargin</b> does essentially the same thing, but allows you to
-add borders of any color and requires all four borders to be the same
-size.
+<p><b>pnmpad</b> reads a Netpbm image as input and outputs a PNM image that is
+the input image plus borders of the color and sizes specified.
 
 <p>You can use <b>pamcomp</b> to add borders of any content - solid color,
-  pattern, or whatever.  For example, if you wanted to add 10 pixels of red
-  borders to the top and bottom of a 100x100 image, you could create a
-  100x120 red image (e.g. with <b>ppmmake</b>) and then use <b>pamcomp</b>
-  to insert your 100x100 image into the center of it.
+  pattern, or whatever.  For example, if you wanted to add 10 pixels of
+  rainbow borders to the top and bottom of a 100x100 image, you could create a
+  100x120 rainbow image (e.g. with <b>ppmrainbow</b>) and then
+  use <b>pamcomp</b> to insert your 100x100 image into the center of it.
   
 
 <h2 id="options">OPTIONS</h2>
 
-<p>In addition to the options common to all programs based on libnetpbm
-(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
-Common Options</a>), <b>pnmpad</b> recognizes the following
-command line options:
+<p>In addition to the options common to all programs based on libnetpbm (most
+notably <b>-quiet</b>, see <a href="index.html#commonoptions"> Common
+Options</a>), <b>pnmpad</b> recognizes the following command line options:
 
 <p>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
