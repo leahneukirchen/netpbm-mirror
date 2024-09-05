@@ -11,6 +11,9 @@ not yet  BJH  Release 11.08.00
               instead of generating an invalid or wrong color.  Broken in
               primordial Netpbm.
 
+              libnetpbm color name parsing: Fix error message for invalid
+              rgb-<MAXVAL> color name.
+
 24.06.28 BJH  Release 11.07.00
 
               libnetpbm: Fix double free crash when memory allocation via

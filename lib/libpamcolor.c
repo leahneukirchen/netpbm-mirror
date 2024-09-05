@@ -202,7 +202,7 @@ parseInteger(const char * const colorname,
     if (rc != 4)
         pm_error("invalid rgb- color specifier '%s' - "
                  "Does not have form "
-                 "rgb-<MAXVAL>:<RED>:<GRN>:<BLU>, "
+                 "rgb-<MAXVAL>/<RED>/<GRN>/<BLU>, "
                  "where <MAXVAL>, <RED>, <GRN>, and <BLU> are "
                  "unsigned integers",
                  colorname);
