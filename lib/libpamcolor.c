@@ -61,25 +61,50 @@ parseHexDigits(const char *   const string,
                char           const delim,
                samplen *      const nP,
                unsigned int * const digitCtP) {
+/*----------------------------------------------------------------------------
+   Parse the hexadecimal sample value (e.g. "3fff") which is the first
+   character of ASCIIZ string 'string' up to the first instance of 'delim'.
 
+   Return its value as a normalized sample value as *nP and the number of
+   hexadecimal digits given as *digitCtP.
+
+   E.g. if 'string' is "10/abc" and 'delim' is '/', we return *nP == 16/255
+   and *digitCtP == 2.
+
+   Abort program if the delimeter does not appear in 'string' or there are no
+   digits before the delimiter or there are more than 4 (it's supposed to be a
+   sample value, so
+-----------------------------------------------------------------------------*/
     unsigned int digitCt;
+        /* Number of digits of 'string' we've processed so far */
     unsigned long n;
+        /* Numerical value of 'string' if it were to stop after 'digitCt'
+           digits
+        */
     unsigned long range;
         /* 16 for one hex digit, 256 for two hex digits, etc. */
 
-    for (digitCt = 0, n = 0, range = 1; string[digitCt] != delim; ) {
+    const char * error;
+
+    for (digitCt = 0, n = 0, range = 1, error = NULL;
+         !error && string[digitCt] != delim; ) {
         char const digit = string[digitCt];
         if (digit == '\0')
-            pm_error("rgb: color spec '%s' ends prematurely", string);
+            error = "Ends prematurely";
         else {
+            if (digitCt >= 4)
+                error = "Too many digits.  "
+                    "Max allowed for a Netpbm sample value is 4.  ";
             n = n * 16 + hexDigitValue(digit);
             range *= 16;
             ++digitCt;
         }
     }
-    if (range <= 1)
-        pm_error("No digits where hexadecimal number expected in rgb: "
-                 "color spec '%s'", string);
+    if (!error && range <= 1)
+        error = "No digits where hexadecimal number expected";
+
+    if (error)
+        pm_error("Invalid rgb: color spec '%s'.  %s", string, error);
 
     *nP = (samplen) n / (range-1);
     *digitCtP = digitCt;

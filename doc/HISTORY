@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.08.00
 
+              libnetpbm color name parsing: Fix handling of rgb: color names
+              with more than 4 hex digits per plane, so it throws an error
+              instead of generating an invalid or wrong color.  Broken in
+              primordial Netpbm.
+
 24.06.28 BJH  Release 11.07.00
 
               libnetpbm: Fix double free crash when memory allocation via
