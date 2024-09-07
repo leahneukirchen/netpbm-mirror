@@ -19,16 +19,14 @@
 static short screen[ROWS*COLS/4];          /* simulates the Atari's video RAM */
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
+main(int argc, char* argv[]) {
+
     FILE* ifp;
     pixel pal[16];                      /* Degas palette */
     short i;
     short j;
     pixel* pixelrow;
-    register pixel* pP;
+    pixel* pP;
     int row, col;
 
 
@@ -73,7 +71,7 @@ main( argc, argv )
         {
         for ( col = 0, pP = pixelrow; col < COLS; ++col, ++pP )
             {
-            register int c, ind, b, plane;
+            int c, ind, b, plane;
 
             ind = 80 * row + ( ( col >> 4 ) << 2 );
             b = 0x8000 >> ( col & 0xf );
@@ -89,7 +87,7 @@ main( argc, argv )
     pm_close( stdout );
 
     exit( 0 );
-    }
+}
 
 
 

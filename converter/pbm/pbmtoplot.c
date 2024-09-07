@@ -13,25 +13,22 @@
 #include <stdio.h>
 #include "pbm.h"
 
-static void puttwo ARGS((int i));
 static void
-puttwo( i )
-    int i;
+puttwo(int const i)
     {
     (void) putchar(i);
     (void) putchar(i >> 8);
     }
 
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    register bit** bits;
-    register int row, col, scol;
-    int rows, cols;
 
+
+int
+main(int argc, char * argv[]) {
+
+    FILE* ifp;
+    bit** bits;
+    int row, col, scol;
+    int rows, cols;
 
     pbm_init( &argc, argv );
 
@@ -73,7 +70,7 @@ main( argc, argv )
         }
 
     exit( 0 );
-    }
+}
 
 
 

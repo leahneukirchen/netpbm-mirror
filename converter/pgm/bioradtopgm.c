@@ -23,15 +23,12 @@
 #define BYTE_TO_WORD(lsb,msb) (((BYTE) lsb) + (((BYTE) msb) << 8))
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
+main(int argc, char * argv[]) {
     FILE* ifp;
     gray* grayrow;
-    register gray* gP;
+    gray* gP;
     int argn, row, i;
-    register int col, val, val2;
+    int col, val, val2;
     int rows=0, cols=0, image_num= -1, image_count, byte_word, check_word;
     int maxval;
     BYTE buf[BIORAD_HEADER_LENGTH];
@@ -47,6 +44,18 @@ main( argc, argv )
         if ( ISDIGIT( argv[argn][1] ))
         {
             image_num = atoi( (argv[argn]+1) );
+
+            /* TODO atoi() ignores errors.  Should be:
+
+            const char * error;
+
+            pm_string_to_int( argv[argn]+1, &image_num, error);
+
+            if (error)
+                pm_error("Invalid image number.  %s", error);
+            else if (image_num < 0)
+                pm_error("Internal error: negative image number");
+            */
         }
         else
             pm_usage( usage );

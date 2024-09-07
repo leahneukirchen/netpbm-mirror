@@ -12,25 +12,22 @@
 
 #include "pgm.h"
 
-static void putinit ARGS(( int cols, int rows, int bps ));
-static void putitem ARGS(( void ));
-static void putgray ARGS(( gray g ));
-static void putrest ARGS(( void ));
+static void putinit ( int const cols, int const rows, int const bps );
+static void putitem ( void );
+static void putgray ( gray const g );
+static void putrest ( void );
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-{
+main(int argc, const char * argv[]) {
     FILE* ifp;
     gray** grays;
-    register gray* gP;
+    gray* gP;
     int argn, rows, cols, bps, padright, row, col;
     gray maxval, nmaxval;
     const char* const usage = "[pgmfile]";
 
 
-    pgm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     argn = 1;
 
@@ -87,8 +84,9 @@ main( argc, argv )
 static int bitspersample, item, bitsperitem, bitshift, itemsperline, items;
 
 static void
-putinit( cols, rows, bps )
-    int cols, rows, bps;
+putinit(int const cols,
+        int const rows,
+        int const bps)
 {
     printf( "FirstName: \n" );
     printf( "LastName: \n" );
@@ -134,7 +132,7 @@ putitem( )
 
 
 static void
-putgray( gray g )
+putgray( gray const g )
 {
     if ( bitsperitem == 8 )
         putitem( );

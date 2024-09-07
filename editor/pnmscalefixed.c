@@ -271,9 +271,13 @@ compute_output_dimensions(const struct cmdline_info cmdline,
 
 
 static void
-horizontal_scale(const xel inputxelrow[], xel newxelrow[],
-                 const int cols, const int newcols, const long sxscale,
-                 const int format, const xelval maxval,
+horizontal_scale(const xel inputxelrow[],
+                 xel newxelrow[],
+                 const int cols,
+                 const int newcols,
+                 const long int sxscale,
+                 const int format,
+                 const xelval maxval,
                  int * stretchP) {
 /*----------------------------------------------------------------------------
    Take the input row inputxelrow[], which is 'cols' columns wide, and
@@ -286,8 +290,8 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
    *stretchP is the number of columns (could be fractional) on the right
    that we had to fill by stretching because of rounding problems.
 -----------------------------------------------------------------------------*/
-    long r, g, b;
-    long fraccoltofill, fraccolleft;
+    long int r, g, b;
+    long int fraccoltofill, fraccolleft;
     unsigned int col;
     unsigned int newcol;
 
@@ -411,11 +415,11 @@ main(int argc, char **argv ) {
     int rows, cols, format, newformat, rowsread, newrows, newcols;
     int row, col, needtoreadrow;
     xelval maxval, newmaxval;
-    long sxscale, syscale;
-    long fracrowtofill, fracrowleft;
-    long* rs;
-    long* gs;
-    long* bs;
+    long int sxscale, syscale;
+    long int fracrowtofill, fracrowleft;
+    long int * rs;
+    long int * gs;
+    long int * bs;
     int vertical_stretch;
         /* The number of rows we had to fill by stretching because of
            rounding error, which made us run out of input rows before we
@@ -466,9 +470,9 @@ main(int argc, char **argv ) {
         tempxelrow = xelrow;
     else
         tempxelrow = pnm_allocrow( cols );
-    rs = (long*) pm_allocrow( cols, sizeof(long) );
-    gs = (long*) pm_allocrow( cols, sizeof(long) );
-    bs = (long*) pm_allocrow( cols, sizeof(long) );
+    rs = (long int *) pm_allocrow( cols, sizeof(long) );
+    gs = (long int *) pm_allocrow( cols, sizeof(long) );
+    bs = (long int *) pm_allocrow( cols, sizeof(long) );
     rowsread = 0;
     fracrowleft = syscale;
     needtoreadrow = 1;
@@ -529,7 +533,7 @@ main(int argc, char **argv ) {
             case PPM_TYPE:
                 for ( col = 0, xP = xelrow, nxP = tempxelrow;
                       col < cols; ++col, ++xP, ++nxP ) {
-                    register long r, g, b;
+                    long int r, g, b;
 
                     r = rs[col] + fracrowtofill * PPM_GETR( *xP );
                     g = gs[col] + fracrowtofill * PPM_GETG( *xP );
@@ -548,7 +552,7 @@ main(int argc, char **argv ) {
             default:
                 for ( col = 0, xP = xelrow, nxP = tempxelrow;
                       col < cols; ++col, ++xP, ++nxP ) {
-                    register long g;
+                    long int g;
 
                     g = gs[col] + fracrowtofill * PNM_GET1( *xP );
                     g /= SCALE;
@@ -598,3 +602,6 @@ main(int argc, char **argv ) {
 
     exit( 0 );
 }
+
+
+

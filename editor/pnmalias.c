@@ -19,10 +19,10 @@ main(int argc, char * argv[] ) {
     xel* xelrow[3];
     xel* newxelrow;
     pixel bgcolorppm, fgcolorppm;
-    register xel* xpP;
-    register xel* xP;
-    register xel* xnP;
-    register xel* nxP;
+    xel* xpP;
+    xel* xP;
+    xel* xnP;
+    xel* nxP;
     xel bgcolor, fgcolor;
     int argn, rows, cols, format, newformat, bgonly, fgonly;
     int bgalias, fgalias;
