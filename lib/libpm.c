@@ -365,24 +365,25 @@ pm_freearray(char ** const rowIndex,
 
 
 
-/* Case-insensitive keyword matcher. */
-
 int
 pm_keymatch(const char * const strarg,
             const char * const keywordarg,
             int          const minchars) {
+/*----------------------------------------------------------------------------
+   Return 1 if the string 'strarg' matches the first 'minchars' characters
+   of 'keywordarg', ignoring case; 0 if it does not.
+-----------------------------------------------------------------------------*/
     int len;
     const char * keyword;
     const char * str;
 
-    str = strarg;
+    str     = strarg;
     keyword = keywordarg;
 
     len = strlen(str);
     if (len < minchars)
         return 0;
-    while (--len >= 0)
-        {
+    while (--len >= 0) {
         register char c1, c2;
 
         c1 = *str++;
@@ -395,7 +396,7 @@ pm_keymatch(const char * const strarg,
             c2 = tolower(c2);
         if (c1 != c2)
             return 0;
-        }
+    }
     return 1;
 }
 
