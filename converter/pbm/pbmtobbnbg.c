@@ -17,15 +17,12 @@
 
 #include "pbm.h"
 
-static void write16 ARGS(( unsigned int ));
+static void write16 ( unsigned int word );
 
 static int nco;
 
 int
-main(argc,argv)
-int argc;
-char **argv;
-{
+main(int argc, char ** argv) {
  int rows;
  int cols;
  int format;
@@ -89,9 +86,7 @@ char **argv;
 
 #ifdef POSITIVE_VALUES_ONLY
 static void
-write16(sixteen)
-unsigned int sixteen;
-{
+write16(unsigned int sixteen) {
  if (nco > 75)
   { putchar('\n');
     nco = 0;
@@ -107,6 +102,9 @@ unsigned int sixteen;
  putchar(060+(sixteen&0xf));
  nco ++;
 }
+
+
+
 #else
 /*
  *  This version of "write16" uses negative Packed Pixel Data values to
@@ -114,9 +112,8 @@ unsigned int sixteen;
  *  require fewer characters as they approach the upper end of that range.
  */
 static void
-write16 (word)
-unsigned int    word;
-{
+write16 (unsigned int word) {
+
     int         high;
     int         mid;
     int         low;
@@ -128,7 +125,7 @@ unsigned int    word;
     }
 
     if (word > 0x7fff) {
-        word = (unsigned int) (0x10000L - (long) word);
+        word = (unsigned int) (0x10000L - (long int) word);
         signChar = ' ';
     }
     else
@@ -152,3 +149,6 @@ unsigned int    word;
     }
 }
 #endif
+
+
+

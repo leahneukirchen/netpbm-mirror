@@ -26,6 +26,8 @@
     if (strcmp(cp, s) == 0) exit(m(argc, argv)); \
 }
 
+
+
 int
 main(int argc, char *argv[]) {
 
@@ -34,15 +36,15 @@ main(int argc, char *argv[]) {
     if (strcmp(pm_arg0toprogname(argv[0]), "netpbm") == 0) {
         ++argv;
         --argc;
-        if (argc < 1 || !*argv)	{
+        if (argc < 1 || !*argv) {
             fprintf(stderr,
                     "When you invoke this program by the name 'netpbm', "
                     "You must supply at least one argument: the name of "
                     "the Netpbm program to run, e.g. "
                     "'netpbm pamfile /tmp/myfile.ppm'\n");
             exit(1);
-		}
-	}
+                }
+        }
 
     cp = pm_arg0toprogname(argv[0]);
 

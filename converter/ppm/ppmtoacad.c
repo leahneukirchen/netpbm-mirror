@@ -40,16 +40,29 @@ static int gamut = 256;               /* Output color gamut */
 #include "autocad.h"                  /* AutoCAD standard color assignments */
 
 /* prototypes */
-static void outrun ARGS((int color, int ysize, int y, int xstart, int xend));
-static void slideout ARGS((int xdots, int ydots, int ncolors,
-        unsigned char *red, unsigned char *green, unsigned char *blue));
+static void outrun (int const color,
+                    int const ysize,
+                    int const y,
+                    int const xstart,
+                    int const xend);
+
+static void slideout (int const xdots,
+                      int const ydots,
+                      int const ncolors,
+                      unsigned char *red,
+                      unsigned char *green,
+                      unsigned char *blue);
 
 
 /*  OUTRUN  --  Output a run of pixels. */
 
-static void outrun(color, ysize, y, xstart, xend)
-  int color, ysize, y, xstart, xend;
-{
+static void
+outrun (int const color,
+        int const ysize,
+        int const y,
+        int const xstart,
+        int const xend) {
+
     if (color == 0) {
         return;                       /* Let screen background handle this */
     }
@@ -151,10 +164,14 @@ static void outrun(color, ysize, y, xstart, xend)
 
 /*  SLIDEOUT  --  Write an AutoCAD slide.  */
 
-static void slideout(xdots, ydots, ncolors, red, green, blue)
-  int xdots, ydots, ncolors;
-  unsigned char *red, *green, *blue;
-{
+static void
+slideout (int const xdots,
+          int const ydots,
+          int const ncolors,
+          unsigned char *red,
+          unsigned char *green,
+          unsigned char *blue) {
+
     static char sldhead[18] = "AutoCAD Slide\r\n\32";
     static char dxbhead[20] = "AutoCAD DXB 1.0\r\n\32";
     unsigned char *acadmap;
@@ -187,7 +204,7 @@ static void slideout(xdots, ydots, ncolors, red, green, blue)
         (void) pm_writelittleshort(stdout, ysize); /* Max Y co-ordinate value */
                                       /* Aspect ratio indicator */
         (void) pm_writelittlelong(
-            stdout, (long) ((((double) xsize) / ysize) * aspect * 1E7));
+            stdout, (long int) ((((double) xsize) / ysize) * aspect * 1E7));
         (void) pm_writelittleshort(stdout, 2);        /* Polygon fill type */
         (void) pm_writelittleshort(stdout, 0x1234);   /* Byte order indicator */
     }
@@ -198,13 +215,13 @@ static void slideout(xdots, ydots, ncolors, red, green, blue)
 
     for (i = 0; i < ncolors; i++) {
         int best, j;
-        long dist = 3 * 256 * 256;
+        long int dist = 3 * 256 * 256;
 
         for (j = 0; j < gamut; j++) {
-            long dr = red[i] - acadcol[j][0],
-                 dg = green[i] - acadcol[j][1],
-                 db = blue[i] - acadcol[j][2];
-            long tdist = dr * dr + dg * dg + db * db;
+            long int const dr = red[i] - acadcol[j][0],
+                     dg = green[i] - acadcol[j][1],
+                     db = blue[i] - acadcol[j][2];
+            long int const tdist = dr * dr + dg * dg + db * db;
 
             if (tdist < dist) {
                 dist = tdist;
@@ -265,10 +282,8 @@ static void slideout(xdots, ydots, ncolors, red, green, blue)
 
 /*  Main program.  */
 
-int main(argc, argv)
-  int argc;
-  char* argv[];
-{
+int main(int argc, char* argv[]) {
+
     FILE *ifp;
     int argn, rows, cols, ncolors, i;
     int aspectspec = FALSE;
@@ -278,7 +293,6 @@ int main(argc, argv)
     const char * const usage =
         "[-poly] [-dxb] [-white] [-background <col>]\n\
                   [-aspect <f>] [-8] [ppmfile]";
-
 
     ppm_init(&argc, argv);
 

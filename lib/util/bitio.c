@@ -1,4 +1,4 @@
-/*\
+/*                                                      \
  * $Id: bitio.c,v 1.5 1992/11/24 19:36:46 dws Exp dws $
  *
  * bitio.c - bitstream I/O
@@ -36,16 +36,11 @@
 
 #include "bitio.h"
 
-struct bitstream
-{
-    FILE *
-        f;      /* bytestream */
-    unsigned long
-        bitbuf;     /* bit buffer */
-    int
-        nbitbuf;    /* number of bits in 'bitbuf' */
-    char
-        mode;
+struct bitstream {
+    FILE * f;                     /* bytestream */
+    unsigned long int bitbuf;     /* bit buffer */
+    int nbitbuf;                  /* number of bits in 'bitbuf' */
+    char mode;                    /* read or write */
 };
 
 #define Mask(n)     ((1<<(n))-1)
@@ -67,7 +62,8 @@ struct bitstream
  */
 
 struct bitstream *
-pm_bitinit(FILE * const f, const char * const mode) {
+pm_bitinit(FILE       * const f,
+           const char * const mode) {
 
     struct bitstream * ans;
 
@@ -85,6 +81,8 @@ pm_bitinit(FILE * const f, const char * const mode) {
     return ans;
 }
 
+
+
 /*
  * pm_bitfini() - deallocate the given struct bitstream *.
  *
@@ -96,9 +94,8 @@ pm_bitinit(FILE * const f, const char * const mode) {
  */
 
 int
-pm_bitfini(b)
-    struct bitstream *b;
-{
+pm_bitfini(struct bitstream * const b) {
+
     int     nbyte = 0;
 
     if(!b)
@@ -121,8 +118,8 @@ pm_bitfini(b)
         {
             char    c;
 
-            BitPut(b, 0, (long)8-(b->nbitbuf));
-            c = (char) BitGet(b, (long)8);
+            BitPut(b, 0, (long int)8-(b->nbitbuf));
+            c = (char) BitGet(b, (long int)8);
             if(putc(c, b->f) == EOF)
             {
                 return -1;
@@ -135,6 +132,8 @@ pm_bitfini(b)
     return nbyte;
 }
 
+
+
 /*
  * pm_bitread() - read the next nbits into *val from the given file.
  *
@@ -144,11 +143,10 @@ pm_bitfini(b)
  */
 
 int
-pm_bitread(b, nbits, val)
-    struct bitstream *b;
-    unsigned long   nbits;
-    unsigned long  *val;
-{
+pm_bitread(struct bitstream  * const b,
+           unsigned long int   const nbits,
+           unsigned long int * const val) {
+
     int     nbyte = 0;
     int     c;
 
@@ -163,12 +161,14 @@ pm_bitread(b, nbits, val)
         }
         nbyte++;
 
-        BitPut(b, c, (long) 8);
+        BitPut(b, c, (long int) 8);
     }
 
     *val = BitGet(b, nbits);
     return nbyte;
 }
+
+
 
 /*
  * pm_bitwrite() - write the low nbits of val to the given file.
@@ -179,11 +179,10 @@ pm_bitread(b, nbits, val)
  */
 
 int
-pm_bitwrite(b, nbits, val)
-    struct bitstream *b;
-    unsigned long   nbits;
-    unsigned long   val;
-{
+pm_bitwrite(struct bitstream * const b,
+            unsigned long int  const nbits,
+            unsigned long int  const val) {
+
     int     nbyte = 0;
     char        c;
 
@@ -192,12 +191,10 @@ pm_bitwrite(b, nbits, val)
 
     BitPut(b, val, nbits);
 
-    while (b->nbitbuf >= 8)
-    {
-        c = (char) BitGet(b, (long)8);
+    while (b->nbitbuf >= 8) {
+        c = (char) BitGet(b, (long int)8);
 
-        if(putc(c, b->f) == EOF)
-        {
+        if(putc(c, b->f) == EOF) {
             return -1;
         }
         nbyte++;
@@ -205,3 +202,6 @@ pm_bitwrite(b, nbits, val)
 
     return nbyte;
 }
+
+
+
