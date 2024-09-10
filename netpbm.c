@@ -14,16 +14,17 @@
 */
 
 /* Note: be careful using any Netpbm library functions in here, since
-   we don't call pnm_init()
+   we don't call pm_proginit()
 */
 
 #include <stdio.h>
 #include <string.h>
 #include "pam.h"
+#include "nstring.h"
 
 #define TRY(s,m) { \
     extern int m(int argc, char *argv[]); \
-    if (strcmp(cp, s) == 0) exit(m(argc, argv)); \
+    if (streq(cp, s)) exit(m(argc, argv)); \
 }
 
 
@@ -33,7 +34,7 @@ main(int argc, char *argv[]) {
 
     const char * cp;
 
-    if (strcmp(pm_arg0toprogname(argv[0]), "netpbm") == 0) {
+    if (streq(pm_arg0toprogname(argv[0]), "netpbm")) {
         ++argv;
         --argc;
         if (argc < 1 || !*argv) {
