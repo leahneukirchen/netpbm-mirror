@@ -92,18 +92,6 @@ void mp_ycc_calc (MpegFrame *mf);
 void mp_dct_blocks (MpegFrame *mf);
 void    AllocDecoded (MpegFrame *frame);
 
-/*
- *  from moutput.c:
- */
-boolean mp_quant_zig_block (Block in, FlatBlock out, int qscale, int iblock);
-void    UnQuantZig (FlatBlock in, Block out, int qscale, boolean iblock);
-void mp_rle_huff_block (FlatBlock in, BitBucket *out);
-void mp_rle_huff_pblock (FlatBlock in, BitBucket *out);
-void mp_create_blocks (MpegFrame *mf);
-
-
-
-
 void    ReadEYUV (MpegFrame * mf, FILE *fpointer, int width,
                             int height);
 boolean ReadPPM (MpegFrame *mf, FILE *fpointer);
