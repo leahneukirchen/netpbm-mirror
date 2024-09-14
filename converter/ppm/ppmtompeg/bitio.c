@@ -238,8 +238,8 @@ Bitio_Write(BitBucket * const bbPtr,
             uint32      const bits_arg,
             int         const nbits) {
 
-    register struct bitBucket *lastPtr, *newPtr;
-    register int delta;
+    struct bitBucket *lastPtr, *newPtr;
+    int delta;
     uint32 bits;
 
     bits=bits_arg;

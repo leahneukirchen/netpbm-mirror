@@ -209,7 +209,7 @@ mp_fwd_dct_fast(data2d, dest2d)
                                          * a 1-d array */
     int16 *dest = (int16 *) dest2d;
     int pass, rowctr;
-    register int16 *inptr, *outptr;
+    int16 *inptr, *outptr;
     int16 workspace[DCTSIZE_SQ];
     SHIFT_TEMPS
 

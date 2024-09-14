@@ -1671,7 +1671,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
     FILE    *fpointer;
     const char * fileName;
     int width, height;
-    register int y;
+    int y;
 
     width = Fsize_x;
     height = Fsize_y;

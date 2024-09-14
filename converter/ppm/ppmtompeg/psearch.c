@@ -802,7 +802,7 @@ void
 ShowPMVHistogram(fpointer)
     FILE *fpointer;
 {
-    register int x, y;
+    int x, y;
     int *columnTotals;
     int rowTotal;
 
@@ -848,7 +848,7 @@ void
 ShowBBMVHistogram(fpointer)
     FILE *fpointer;
 {
-    register int x, y;
+    int x, y;
     int *columnTotals;
     int rowTotal;
 
@@ -896,7 +896,7 @@ void
 ShowBFMVHistogram(fpointer)
     FILE *fpointer;
 {
-    register int x, y;
+    int x, y;
     int *columnTotals;
     int rowTotal;
 

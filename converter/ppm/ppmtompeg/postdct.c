@@ -196,10 +196,10 @@ Mpost_UnQuantZigBlock(in, out, qscale, iblock)
     int qscale;
     boolean iblock;
 {
-    register int index;
+    int index;
     int     start;
     int     position;
-    register int            qentry;
+    int            qentry;
     int     level, coeff;
 
     if ( iblock ) {
@@ -279,13 +279,13 @@ int
 Mpost_QuantZigBlock(in, out, qscale, iblock)
     Block in;
     FlatBlock out;
-    register int qscale;
+    int qscale;
     int iblock;
 {
-  register int i;
-  register int16 temp;
-  register int qentry;
-  register int position;
+  int i;
+  int16 temp;
+  int qentry;
+  int position;
   boolean nonZero = FALSE;
   boolean overflow = FALSE;
 
@@ -392,12 +392,12 @@ Mpost_RLEHuffIBlock(in, out)
     FlatBlock in;
     BitBucket *out;
 {
-    register int i;
-    register int nzeros = 0;
-    register int16 cur;
-    register int16 acur;
-    register uint32 code;
-    register int nbits;
+    int i;
+    int nzeros = 0;
+    int16 cur;
+    int16 acur;
+    uint32 code;
+    int nbits;
 
     /*
      * yes, Virginia, we start at 1.  The DC coefficient is handled
@@ -478,12 +478,12 @@ Mpost_RLEHuffPBlock(in, out)
     FlatBlock in;
     BitBucket *out;
 {
-    register int i;
-    register int nzeros = 0;
-    register int16 cur;
-    register int16 acur;
-    register uint32 code;
-    register int nbits;
+    int i;
+    int nzeros = 0;
+    int16 cur;
+    int16 acur;
+    uint32 code;
+    int nbits;
     boolean first_dct = TRUE;
 
     /*
@@ -583,12 +583,12 @@ int
 CalcRLEHuffLength(in)
     FlatBlock in;
 {
-  register int i;
-  register int nzeros = 0;
-  register int16 cur;
-  register int16 acur;
-  register int nbits;
-  register int countbits=0;
+  int i;
+  int nzeros = 0;
+  int16 cur;
+  int16 acur;
+  int nbits;
+  int countbits=0;
   boolean first_dct = TRUE;
 
   for (i = 0; i < DCTSIZE_SQ; i++) {

@@ -386,9 +386,9 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
     int qscale;
     boolean iblock;
 {
-    register int index;
+    int index;
     int     position;
-    register int            qentry;
+    int            qentry;
     int     level, coeff;
     double low, high;
     double mid,lam;
@@ -435,7 +435,7 @@ Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
 int
 mse(Block blk1, Block blk2)
 {
-  register int index, error, tmp;
+  int index, error, tmp;
   int16 *bp1, *bp2;
 
   bp1 = (int16 *)blk1;

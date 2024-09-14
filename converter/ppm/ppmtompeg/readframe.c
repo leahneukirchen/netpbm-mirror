@@ -511,7 +511,7 @@ ReadEYUV(mf, fpointer, width, height)
     int width;
     int height;
 {
-    register int y;
+    int y;
     uint8   junk[4096];
     int     safe_read_count;
 
@@ -579,7 +579,7 @@ ReadAYUV(mf, fpointer, width, height)
     int width;
     int height;
 {
-    register int x, y;
+    int x, y;
     struct  YuvLine line1, line2;
     uint8   junk[4096];
     uint8    *cbptr, *crptr;
@@ -726,7 +726,7 @@ ReadY(mf, fpointer, width, height)
     int width;
     int height;
 {
-    register int y;
+    int y;
     uint8   junk[4096];
     int     safe_read_count;
 
@@ -774,8 +774,8 @@ ReadSub4(mf, fpointer, width, height)
     int width;
     int height;
 {
-    register int y;
-    register int x;
+    int y;
+    int x;
     uint8   buffer[1024];
     int     safe_read_count;
 
@@ -892,7 +892,7 @@ int w,h;
 {
   static bool init_done=FALSE;
   static unsigned char mapper[256];
-  register int i,j;
+  int i,j;
   double slope, intercept;
 
   slope = (kill_dim_end - kill_dim_break*kill_dim_slope)*1.0 /
