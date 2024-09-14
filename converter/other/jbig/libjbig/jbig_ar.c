@@ -35,7 +35,7 @@
  *  given by ITU T.82 Table 24.
  */
 
-static short lsztab[113] = {
+static short int lsztab[113] = {
   0x5a1d, 0x2586, 0x1114, 0x080b, 0x03d8, 0x01da, 0x00e5, 0x006f,
   0x0036, 0x001a, 0x000d, 0x0006, 0x0003, 0x0001, 0x5a7f, 0x3f25,
   0x2cf2, 0x207c, 0x17b9, 0x1182, 0x0cef, 0x09a1, 0x072f, 0x055c,
@@ -103,8 +103,10 @@ static unsigned char nlpstab[113] = {
 #define MARKER_STUFF    0x00
 #define MARKER_ESC      0xff
 
-void arith_encode_init(struct jbg_arenc_state *s, int reuse_st)
-{
+void
+arith_encode_init(struct jbg_arenc_state *s,
+                  int reuse_st) {
+
   int i;
 
   if (!reuse_st)
@@ -120,9 +122,10 @@ void arith_encode_init(struct jbg_arenc_state *s, int reuse_st)
 
 
 
-void arith_encode_flush(struct jbg_arenc_state *s)
-{
-  unsigned long temp;
+void
+arith_encode_flush(struct jbg_arenc_state *s) {
+
+  unsigned long int temp;
 
   /* find the s->c in the coding interval with the largest
    * number of trailing zero bits */
@@ -169,11 +172,14 @@ void arith_encode_flush(struct jbg_arenc_state *s)
 
 
 
-void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
-{
-  register unsigned lsz, ss;
-  register unsigned char *st;
-  long temp;
+void
+arith_encode(struct jbg_arenc_state *s,
+             int cx,
+             int pix) {
+
+  unsigned int lsz, ss;
+  unsigned char *st;
+  long int temp;
 
   assert(cx >= 0 && cx < 4096);
   st = s->st + cx;
@@ -262,8 +268,10 @@ void arith_encode(struct jbg_arenc_state *s, int cx, int pix)
 
 
 
-void arith_decode_init(struct jbg_ardec_state *s, int reuse_st)
-{
+void
+arith_decode_init(struct jbg_ardec_state *s,
+                  int reuse_st) {
+
   int i;
 
   if (!reuse_st)
@@ -330,10 +338,12 @@ void arith_decode_init(struct jbg_ardec_state *s, int reuse_st)
  * arithmetic decoding process) are needed to determine that.]
  */
 
-int arith_decode(struct jbg_ardec_state *s, int cx)
-{
-  register unsigned lsz, ss;
-  register unsigned char *st;
+int
+arith_decode(struct jbg_ardec_state *s,
+             int cx) {
+
+  unsigned lsz, ss;
+  unsigned char *st;
   int pix;
 
   /* renormalization */
@@ -360,7 +370,7 @@ int arith_decode(struct jbg_ardec_state *s, int cx)
           }
         }
       else {
-        s->c |= (long)*(s->pscd_ptr++) << (8 - s->ct);
+        s->c |= (long int)*(s->pscd_ptr++) << (8 - s->ct);
         s->ct += 8;
       }
     }
