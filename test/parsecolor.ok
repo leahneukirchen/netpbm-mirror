@@ -1,0 +1,106 @@
+Sanity check: valid cases
+P3
+5 1
+255
+255 255 0  255 255 0  255 255 0  255 255 0  255 255 0
+P3
+1 2
+255
+0 0 255
+0 0 255
+P3
+3 1
+255
+255 0 0  255 0 0  255 0 0
+P3
+1 1
+255
+255 255 255
+P3
+1 1
+255
+128 128 128
+Test Invalid: general
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Test Invalid: rgb:r/g/b
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
+Expected failure 9 (no output)
+Expected failure 10 (no output)
+Expected failure 11 (no output)
+Expected failure 12 (no output)
+Expected failure 13 (no output)
+Expected failure 14 (no output)
+Expected failure 15 (no output)
+Expected failure 16 (no output)
+Expected failure 17 (no output)
+Expected failure 18 (no output)
+Expected failure 19 (no output)
+Expected failure 20 (no output)
+Test Invalid: rgbi:r/g/b
+Expected failure 21 (no output)
+Expected failure 22 (no output)
+Expected failure 23 (no output)
+Expected failure 24 (no output)
+Expected failure 25 (no output)
+Expected failure 26 (no output)
+Expected failure 27 (no output)
+Expected failure 28 (no output)
+Expected failure 29 (no output)
+Expected failure 30 (no output)
+Expected failure 31 (no output)
+Expected failure 32 (no output)
+Expected failure 33 (no output)
+Test Invalid: rgb-int:r/g/b
+Expected failure 34 (no output)
+Expected failure 35 (no output)
+Expected failure 36 (no output)
+Expected failure 37 (no output)
+Expected failure 38 (no output)
+Expected failure 39 (no output)
+Expected failure 40 (no output)
+Expected failure 41 (no output)
+Expected failure 42 (no output)
+Expected failure 43 (no output)
+Expected failure 44 (no output)
+Expected failure 45 (no output)
+Expected failure 46 (no output)
+Expected failure 47 (no output)
+Expected failure 48 (no output)
+Expected failure 49 (no output)
+Expected failure 50 (no output)
+Expected failure 51 (no output)
+Test Invalid: #rrggbb (Old X11 style)
+Expected failure 52 (no output)
+Expected failure 53 (no output)
+Expected failure 54 (no output)
+Expected failure 55 (no output)
+Expected failure 56 (no output)
+Expected failure 57 (no output)
+Expected failure 58 (no output)
+Expected failure 59 (no output)
+Expected failure 60 (no output)
+Expected failure 61 (no output)
+Test Invalid: r,g,b (raw floating point numbers)
+Expected failure 62 (no output)
+Expected failure 63 (no output)
+Expected failure 64 (no output)
+Expected failure 65 (no output)
+Expected failure 66 (no output)
+Expected failure 67 (no output)
+Expected failure 68 (no output)
+Expected failure 69 (no output)
+Expected failure 70 (no output)
+Expected failure 71 (no output)
+Expected failure 72 (no output)
+Test Invalid: invalid colorspec file
+Expected failure 73 (no output)
+Expected failure 74 (no output)
+Should print match, then no match
+match
+no match

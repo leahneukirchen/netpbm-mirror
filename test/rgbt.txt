@@ -6,11 +6,18 @@
   0 255   0 Green
   0   0 255 Blue
   0 255 255 Cyan
-255   0 255 Magenta  
+255   0 255 Magenta
 255 255   0 Yellow
 255 138   0 Orange
 160  32 240 Purple
 103  67   0 Brown
 128 128 128 Gray
-
+#
+# There are two "Brown" colors defined in lib/rgb.txt .  Whenever
+# there are multiple entries by the same color name, the first one
+# in the file is effective and is the one given above.
+#
+# Any string which does not appear in the 4th field above may be
+# used to induce failure.  The following values are recommended:
+# "NoColor" "Rainbow"
 

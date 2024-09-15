@@ -4,12 +4,33 @@ P3
 5
 0 0 0
 P3
-1 1
+1 2
 65535
 65535 65535 65535
+65535 65535 65535
+P3
+1 3
+5
+5 3 3
+5 3 3
+5 3 3
+Test 2.1 Should print 2477651508 15012
 2477651508 15012
+Test 2.2 Should print 2135932096 23
 135932096 23
+Test 3 Should print 2378991101 7513 three times
 2378991101 7513
+2378991101 7513
+2378991101 7513
+Test 4.1
+Test 4.1 Should print 2424932605 23
+2424932605 23
+Test 4.2 Should print 925463542 22
+925463542 22
+Test 4.3 Should print 3822292470 23
+3822292470 23
+Test 4.4 Should print 630041256 21
+630041256 21
 Test Invalid
 Expected failure 1 (no output)
 Expected failure 2 (no output)
@@ -21,3 +42,20 @@ Expected failure 7 (no output)
 Expected failure 8 (no output)
 Expected failure 9 (no output)
 Expected failure 10 (no output)
+Expected failure 11 (no output)
+Expected failure 12 (no output)
+Expected failure 13 (no output)
+Expected failure 14 (no output)
+Expected failure 15 (no output)
+Expected failure 16 (no output)
+Expected failure 17 (no output)
+Expected failure 18 (no output)
+Expected failure 19 (no output)
+Expected failure 20 (no output)
+Expected failure 21 (no output)
+Expected failure 22 (no output)
+Expected failure 23 (no output)
+Expected failure 24 (no output)
+Expected failure 25 (no output)
+Expected failure 26 (no output)
+Expected failure 27 (no output)

@@ -1,0 +1,146 @@
+#! /bin/sh
+# This script tests: ppmmake
+# Also requires:
+
+echo "Sanity check: valid cases"
+
+yellow="rgb:f/f/0"
+blue="rgbi:0/0/1.0"
+red="rgb-255:255/000/000"
+white="#FFFFFF"
+grey=".5,.5,.5"
+
+ppmmake -plain ${yellow} 5  1
+ppmmake -plain ${blue}   1  2
+ppmmake -plain ${red}    3  1
+ppmmake -plain ${white}  1  1
+ppmmake -plain ${grey}   1  1
+
+. ${srcdir}/test-invalid.inc
+
+echo "Test Invalid: general"
+
+invCmd "ppmmake RGB:ff/00/00 2 2"
+invCmd "ppmmake rgb/ff/80/90 2 2"
+invCmd "ppmmake kgb:ff/80/90 2 2"
+invCmd "ppmmake rgb:ff:80:90 2 2"
+
+echo "Test Invalid: rgb:r/g/b"
+
+invCmd "ppmmake rgb 1 1"
+invCmd "ppmmake rgb:/ 1 2"
+invCmd "ppmmake rgb: 1 3"
+invCmd "ppmmake rgb:g/0/0 1 4"
+invCmd "ppmmake rgb:ff        1 5"
+invCmd "ppmmake rgb:ff/00     1 6"
+invCmd "ppmmake rgb:ff/00/0.0 1 7"
+invCmd "ppmmake rgb:ff/00/0.0 1 8"
+invCmd "ppmmake rgb:ff/00/00/ 1 9"
+invCmd "ppmmake rgb:/ff/00/00 2 1"
+invCmd "ppmmake rgb:ff//00/00 2 2"
+invCmd "ppmmake rgb:ff/00//00 2 3"
+invCmd "ppmmake rgb:ff/00/00/00 2 4"
+
+invCmd "ppmmake rgb:10000/0000/0000 2 5"
+invCmd "ppmmake rgb:ffff/10000/0000 2 6"
+invCmd "ppmmake rgb:ffff/ffff/10000 2 7"
+
+echo "Test Invalid: rgbi:r/g/b"
+
+invCmd "ppmmake rgbi 3 1"
+invCmd "ppmmake rgbi: 3 2"
+invCmd "ppmmake rgbi:/ 3 3"
+invCmd "ppmmake rgbi:1.0     3 4"
+invCmd "ppmmake rgbi:1.0/0.0 3 5"
+invCmd "ppmmake rgbi:1.2/0/0 3 6"
+invCmd "ppmmake rgbi:1.0/0.0/-0.1 3 7"
+invCmd "ppmmake rgbi:1.0/0.0/0.0/ 3 8"
+invCmd "ppmmake rgbi:/1.0/0.0/0.0 3 9"
+invCmd "ppmmake rgbi:1.0//0.0/0.0 4 1"
+invCmd "ppmmake rgbi:1.0/0.0//0.0 4 2"
+invCmd "ppmmake rgbi:1.0/0.0/0.0/0.0 4 3"
+invCmd "ppmmake rgbi:aa/ff/aa 4 4"
+
+# This is valid
+# invCmd "ppmmake rgbi:1.0/0.0/-0.0 8 8"
+
+echo "Test Invalid: rgb-int:r/g/b"
+
+invCmd "ppmmake rgb-15 5 1"
+invCmd "ppmmake rgb-15: 5 2"
+invCmd "ppmmake rgb-15:/ 5 3"
+invCmd "ppmmake rgb-15:0 5 4"
+invCmd "ppmmake rgb-15:0/15 5 5"
+invCmd "ppmmake rgb-255:256/00/00 5 6"
+invCmd "ppmmake rgb-255:255/00/0.0 5 7"
+invCmd "ppmmake rgb-255:255/00/00/ 5 8"
+invCmd "ppmmake rgb-255:/255/00/00 5 9"
+invCmd "ppmmake rgb-255:255//00/00 6 1"
+invCmd "ppmmake rgb-255:255/00//00 6 2"
+invCmd "ppmmake rgb-255:-2/00/00 6 3"
+invCmd "ppmmake rgb-255:255/00/00/00 6 4"
+invCmd "ppmmake rgb-65536:255/00/00 6 5"
+invCmd "ppmmake rgb-0:0/0/0 6 6"
+invCmd "ppmmake rgb-:0/0/0 6 7"
+invCmd "ppmmake rgb-ff:0/0/0 6 8"
+invCmd "ppmmake rgb-255:aa/ff/aa 6 9"
+
+echo "Test Invalid: #rrggbb (Old X11 style)"
+
+invCmd "ppmmake #F 7 1"
+invCmd "ppmmake #FF 7 2"
+
+invCmd "ppmmake #AA00 7 4"
+invCmd "ppmmake #FF00F 7 5"
+
+invCmd "ppmmake #FF00FFF 7 7"
+invCmd "ppmmake #FF00FFFF 7 8"
+
+invCmd "ppmmake #FF00FFFF00 7 10"
+invCmd "ppmmake #FF00FFFF000 7 11"
+
+invCmd "ppmmake #FF00FFFF00001 7 13"
+invCmd "ppmmake #FF00FG 7 16"
+
+echo "Test Invalid: r,g,b (raw floating point numbers)"
+# This color-specification format is provided for backward compability.
+# Use rgbi:r/g/b instead.
+
+invCmd "ppmmake 0.0 8 1"
+invCmd "ppmmake ,0.0 8 2"
+invCmd "ppmmake 0.0, 8 3"
+invCmd "ppmmake 0.0,1.0 8 4"
+invCmd "ppmmake 0.0,1.0, 8 5"
+invCmd "ppmmake 0.0,1.0,1.0, 8 6"
+invCmd "ppmmake ,0.0,1.0,1.0 8 7"
+invCmd "ppmmake 0.0,,1.0,1.0 8 8"
+
+invCmd "ppmmake 2.0,0.0,1.0 8 9"
+invCmd "ppmmake -1.0,0.0,1.0 8 10"
+invCmd "ppmmake 1.0,0.0,ff 8 11"
+
+tmpdir=${tmpdir:-/tmp}
+
+rgb_garbled=${tmpdir}/rgb_garbled.txt
+rgb_dupentry1=${tmpdir}/rgb_dupentry1.txt
+rgb_dupentry2=${tmpdir}/rgb_dupentry2.txt
+brown_ppm=${tmpdir}/brown.ppm
+
+echo "Test Invalid: invalid colorspec file"
+RGBDEF=${tmpdir}/null invCmd "ppmmake red 9 1"
+
+awk '!/#/ && NF==4 {$(NR%4+1) =""; print}' ./rgbt.txt > ${rgb_garbled}
+RGBDEF=${rgb_garbled} invCmd "ppmmake red 9 2"
+
+(cat ./rgbt.txt ; echo "128  42  42 Brown" ) >  ${rgb_dupentry1}
+(echo "128  42  42 Brown"; cat ./rgbt.txt  ) >  ${rgb_dupentry2}
+
+echo "Should print match, then no match"
+RGBDEF=./rgbt.txt ppmmake Brown 9 3 > ${brown_ppm}
+RGBDEF=${rgb_dupentry1}  ppmmake Brown 9 3 | cmp -s - ${brown_ppm} \
+  && echo "match" || echo "no match"
+
+RGBDEF=${rgb_dupentry2}  ppmmake Brown 9 3 | cmp -s - ${brown_ppm} \
+  && echo "match" || echo "no match"
+
+rm ${rgb_garbled} ${rgb_dupentry1} ${rgb_dupentry2} ${brown_ppm}

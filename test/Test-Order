@@ -4,12 +4,18 @@ all-in-place.test
 legacy-names.test
 random-generator.test
 
-# Generator tests
+# Generator tests (1)
 
 pbmmake.test
 pgmmake.test
 ppmmake.test
 pamseq.test
+
+# Library test
+
+parsecolor.test
+
+# Generator tests (2)
 
 pbmpage.test
 pbmtext.test
