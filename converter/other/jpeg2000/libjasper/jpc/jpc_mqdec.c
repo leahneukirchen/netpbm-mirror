@@ -269,7 +269,7 @@ void jpc_mqdec_setctx(jpc_mqdec_t *mqdec, int ctxno, jpc_mqctx_t *ctx)
 
 /* Decode a bit. */
 
-int jpc_mqdec_getbit_func(register jpc_mqdec_t *mqdec)
+int jpc_mqdec_getbit_func(jpc_mqdec_t *mqdec)
 {
         int bit;
         JAS_DBGLOG(100, ("jpc_mqdec_getbit_func(%p)\n", mqdec));
@@ -282,10 +282,10 @@ int jpc_mqdec_getbit_func(register jpc_mqdec_t *mqdec)
 }
 
 /* Apply MPS_EXCHANGE algorithm (with RENORMD). */
-int jpc_mqdec_mpsexchrenormd(register jpc_mqdec_t *mqdec)
+int jpc_mqdec_mpsexchrenormd(jpc_mqdec_t *mqdec)
 {
         int ret;
-        register jpc_mqstate_t *state = *mqdec->curctx;
+        jpc_mqstate_t *state = *mqdec->curctx;
         jpc_mqdec_mpsexchange(mqdec->areg, state->qeval, mqdec->curctx, ret);
         jpc_mqdec_renormd(mqdec->areg, mqdec->creg, mqdec->ctreg, mqdec->in,
           mqdec->eof, mqdec->inbuffer);
@@ -293,10 +293,10 @@ int jpc_mqdec_mpsexchrenormd(register jpc_mqdec_t *mqdec)
 }
 
 /* Apply LPS_EXCHANGE algorithm (with RENORMD). */
-int jpc_mqdec_lpsexchrenormd(register jpc_mqdec_t *mqdec)
+int jpc_mqdec_lpsexchrenormd(jpc_mqdec_t *mqdec)
 {
         int ret;
-        register jpc_mqstate_t *state = *mqdec->curctx;
+        jpc_mqstate_t *state = *mqdec->curctx;
         jpc_mqdec_lpsexchange(mqdec->areg, state->qeval, mqdec->curctx, ret);
         jpc_mqdec_renormd(mqdec->areg, mqdec->creg, mqdec->ctreg, mqdec->in,
           mqdec->eof, mqdec->inbuffer);
