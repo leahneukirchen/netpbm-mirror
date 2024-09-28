@@ -14,6 +14,9 @@ not yet  BJH  Release 11.08.00
               libnetpbm color name parsing: Fix error message for invalid
               rgb-<MAXVAL> color name.
 
+              build: fix typo in check of DARWIN_C_SOURCE so strdup, etc.
+              are properly defined on OS X.
+
 24.06.28 BJH  Release 11.07.00
 
               libnetpbm: Fix double free crash when memory allocation via
