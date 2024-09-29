@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 11.08.00
+24.09.29 BJH  Release 11.08.00
 
               libnetpbm color name parsing: Fix handling of rgb: color names
               with more than 4 hex digits per plane, so it throws an error
