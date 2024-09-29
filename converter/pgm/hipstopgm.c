@@ -53,11 +53,10 @@ read_line(FILE * const fd,
 
 
 static void
-read_hips_header( fd, hP )
-    FILE* fd;
-    struct HIPS_Header* hP;
-{
-    char buf[5000];
+read_hips_header(FILE*               const fd,
+                 struct HIPS_Header* const hP) {
+
+    char buf[5000];    /* TODO Check if 5000 is sufficient */
 
     /* Read and toss orig_name. */
     read_line( fd, buf, 5000 );
@@ -74,7 +73,7 @@ read_hips_header( fd, hP )
 
     /* Read rows. */
     read_line( fd, buf, 5000 );
-    hP->rows = atoi( buf );
+    hP->rows = atoi( buf );    /* TODO Use pm_string_to_int() instead of atoi() */
 
     /* Read cols. */
     read_line( fd, buf, 5000 );
@@ -107,9 +106,9 @@ main(int argc, char * argv[]) {
 
     FILE* ifp;
     gray* grayrow;
-    register gray* gP;
+    gray* gP;
     int argn, row;
-    register int col;
+    int col;
     int maxval;
     int rows, cols;
     struct HIPS_Header h;

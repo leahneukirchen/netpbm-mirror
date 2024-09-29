@@ -13,10 +13,8 @@
 #include "ppm.h"
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
+main(int argc, char* argv[]) {
+
     FILE* rfd;
     FILE* gfd;
     FILE* bfd;
@@ -27,7 +25,7 @@ main( argc, argv )
     gray* brow;
     gray* bP;
     pixel* pixelrow;
-    register pixel* pP;
+    pixel* pP;
     int rows, cols, trows, tcols, row, col;
     gray rmaxval, gmaxval, bmaxval;
     int rformat, gformat, bformat;
@@ -85,7 +83,7 @@ main( argc, argv )
     pm_close( stdout );
 
     exit( 0 );
-    }
+}
 
 
 

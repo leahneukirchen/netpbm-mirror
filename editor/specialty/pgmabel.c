@@ -60,7 +60,10 @@ static double *aldl, *ardl;                /* pointer for weighting factors */
 **      adl   <-  pre-calculated surface coefficient for each segment
 */
 static double
-Sum ( int n, double *xr, int N, double *adl)
+Sum ( int    const n,
+      double const *xr,
+      int    const N,
+      double const *adl)
 {
     int k;
     double result=0.0;
@@ -80,7 +83,9 @@ Sum ( int n, double *xr, int N, double *adl)
 **      r     <-  radial position of the center of the surface
 */
 static double
-dr ( int R, double r,  int N)
+dr ( int    const R,
+     double const r,
+     int    const N)
 {
     double a;
     double b;
@@ -96,9 +101,11 @@ dr ( int R, double r,  int N)
 **        adl  <-  array with pre-calculated weighting factors
 */
 static void
-abel ( float *y, int N, double *adl)
+abel ( float  * y,
+       int      const N,
+       double * const adl)
 {
-    register int n;
+    int n;
     double *rho, *rhop;       /* results and new index                       */
 
     MALLOCARRAY(rho, N);
@@ -155,10 +162,8 @@ help()
 /* ----------------------------------------------------------------------------
 ** main program
 */
-int main( argc, argv )
-    int    argc;
-    char*  argv[];
-{
+int main(int argc, char * argv[] ) {
+
     FILE*  ifp;
     gray maxval;                            /* maximum gray-level            */
     gray* grayorig;

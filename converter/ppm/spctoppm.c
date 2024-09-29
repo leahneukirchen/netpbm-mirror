@@ -16,24 +16,22 @@
 #define COLS 320
 #define MAXVAL 7
 
-static void DoBitmap ARGS(( FILE* ifp ));
-static void DoChar ARGS(( int n, char c ));
-static void DoColormap ARGS(( FILE* ifp ));
+static void DoBitmap ( FILE* const ifp );
+static void DoChar (int const n, char const c);
+static void DoColormap ( FILE* const ifp );
 
 static char screen[ROWS*COLS/2];
 static short sscreen[ROWS*COLS/4];
 static pixel pal[ROWS][48];
-static long colormap_length, bitmap_length;
+static long int colormap_length, bitmap_length;
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
+main(int argc, char* argv[]) {
+
     FILE* ifp;
     char c1, c2;
     pixel* pixelrow;
-    register pixel* pP;
+    pixel* pP;
     int row, col;
 
 
@@ -114,11 +112,10 @@ main( argc, argv )
     }
 
 static void
-DoBitmap( ifp )
-    FILE* ifp;
-    {
+DoBitmap( FILE* ifp ) {
+
     int i;
-    long count, data;
+    long int count, data;
     signed char h, c;
 
     /* Zero out first scan line. */
@@ -166,7 +163,7 @@ DoBitmap( ifp )
     }
 
 static void
-DoChar( int n, char c )
+DoChar( const int n, const char c )
     {
     int i;
 
@@ -176,9 +173,8 @@ DoChar( int n, char c )
     }
 
 static void
-DoColormap( ifp )
-    FILE* ifp;
-    {
+DoColormap( FILE* ifp) {
+
     int i, j, b;
     short mask;
 

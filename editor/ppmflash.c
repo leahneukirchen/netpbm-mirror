@@ -24,17 +24,16 @@ static char *version = "$VER: ppmflash 1.4 (16.11.93)";
 /**************************/
 /* start of main function */
 /**************************/
-int main(argc, argv)
-    int argc;
-    char *argv[];
-{
+int
+main(int argc, char *argv[]) {
+
     FILE* ifp;
     int argn, rows, cols, i, j, format;
     pixel *srcrow, *destrow;
     pixel *pP, *pP2;
     pixval maxval;
     double flashfactor;
-    long longfactor;
+    long int longfactor;
     const char* const usage = "flashfactor [ppmfile]\n        flashfactor: 0.0 = original picture, 1.0 = total whiteout\n";
 
     /* parse in 'default' parameters */
@@ -52,8 +51,7 @@ int main(argc, argv)
     ++argn;
 
     /* parse in filename (if present, stdin otherwise) */
-    if (argn != argc)
-    {
+    if (argn != argc) {
         ifp = pm_openr(argv[argn]);
         ++argn;
     }
@@ -69,7 +67,7 @@ int main(argc, argv)
     /* no error checking required here, ppmlib does it all for us */
     srcrow = ppm_allocrow(cols);
 
-    longfactor = (long)(flashfactor * 65536);
+    longfactor = (long int)(flashfactor * 65536);
 
     /* allocate a row of pixel data for the new pixels */
     destrow = ppm_allocrow(cols);
@@ -110,4 +108,6 @@ int main(argc, argv)
 
     exit(0);
 }
+
+
 

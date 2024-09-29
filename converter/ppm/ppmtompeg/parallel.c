@@ -549,7 +549,7 @@ GetRemoteDecodedRefFrame(MpegFrame * const frameP,
 static void cleanup_fork( dummy )       /* try to kill all child processes */
      int dummy;
 {
-  register int i;
+  int i;
   for (i = 0;  i < current_max_forked_pid;  ++i ) {
 
 #ifdef DEBUG_FORK
@@ -581,14 +581,14 @@ static int safe_fork(command)       /* fork child process and remember its PID *
 {
   static int init=0;
   char *argis[MAXARGS];
-  register int i=1;
+  int i=1;
 
   if (!(argis[0] = strtok(command, " \t"))) return(0); /* tokenize */
   while ((argis[i] = strtok(NULL, " \t")) && i < MAXARGS) ++i;
   argis[i] = NULL;
 
 #ifdef DEBUG_FORK
-  {register int i=0;
+  {int i=0;
    fprintf(stderr, "Command %s becomes:\n", command);
    while(argis[i]) {fprintf(stderr, "--%s--\n", argis[i]); ++i;} }
 #endif

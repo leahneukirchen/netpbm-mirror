@@ -5,7 +5,7 @@
 tmpdir=${tmpdir:-/tmp}
 test1_pam=${tmpdir}/test1.pam
 test1ch_ppm=${tmpdir}/test1ch.ppm
-RGBDEF=./rgb.test
+RGBDEF=./rgbt.txt
 
 cp "$srcdir/test1.info" "$tmpdir"
 cp "$srcdir/test2.info" "$tmpdir"

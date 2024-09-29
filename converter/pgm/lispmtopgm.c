@@ -138,7 +138,7 @@ getval(FILE * const ifP) {
 
 
 int
-main(int argc, const char ** argv) {
+main(int argc, const char * argv[]) {
 
     FILE * ifP;
     gray * grayrow;

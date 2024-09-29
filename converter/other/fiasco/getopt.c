@@ -219,6 +219,8 @@ my_index (str, chr)
   return 0;
 }
 
+
+
 /* If using GCC, we can safely declare strlen this way.
    If not using GCC, it is ok not to declare it.  */
 #ifdef __GNUC__
@@ -300,7 +302,7 @@ exchange (argv)
         {
           /* Bottom segment is the short one.  */
           int len = middle - bottom;
-          register int i;
+          int i;
 
           /* Swap it with the top part of the top segment.  */
           for (i = 0; i < len; i++)
@@ -316,7 +318,7 @@ exchange (argv)
         {
           /* Top segment is the short one.  */
           int len = top - middle;
-          register int i;
+          int i;
 
           /* Swap it with the bottom part of the bottom segment.  */
           for (i = 0; i < len; i++)
@@ -335,6 +337,8 @@ exchange (argv)
   first_nonopt += (optind - last_nonopt);
   last_nonopt = optind;
 }
+
+
 
 /* Initialize the internal data when the first call is made.  */
 
@@ -907,6 +911,8 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
   }
 }
 
+
+
 int
 getopt (argc, argv, optstring)
      int argc;
@@ -918,6 +924,8 @@ getopt (argc, argv, optstring)
                            (int *) 0,
                            0);
 }
+
+
 
 #endif  /* Not ELIDE_CODE.  */
 
@@ -990,5 +998,7 @@ main (argc, argv)
 
   exit (0);
 }
+
+
 
 #endif /* TEST */

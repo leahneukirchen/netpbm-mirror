@@ -122,7 +122,7 @@ static pixel *pixrow;
        for row-by-row operation)
     */
 
-static long viewportmodes = 0;
+static long int viewportmodes = 0;
 static int slicesize = 1;
     /* rows per slice for multipalette images - NOT USED */
 
@@ -472,7 +472,7 @@ static const unsigned char bitmask[] = {1, 2, 4, 8, 16, 32, 64, 128};
 
 
 
-static long
+static long int
 encodeRow(FILE *    const outfile,
               /* if non-NULL, write uncompressed row to this file */
           rawtype * const rawrow,
@@ -482,15 +482,15 @@ encodeRow(FILE *    const outfile,
     /* encode algorithm by Johan Widen (jw@jwdata.se) */
 
     int plane, bytes;
-    long retbytes = 0;
+    long int retbytes = 0;
 
     bytes = ilbm_rowByteCt(cols);
 
     /* Encode and write raw bytes in plane-interleaved form. */
     for( plane = 0; plane < nPlanes; plane++ ) {
-        register int col, cbit;
-        register rawtype *rp;
-        register unsigned char *cp;
+        int col, cbit;
+        rawtype *rp;
+        unsigned char *cp;
         int mask;
 
         mask = 1 << plane;
@@ -517,7 +517,7 @@ encodeRow(FILE *    const outfile,
 
 
 
-static long
+static long int
 encodeMaskrow(FILE *    const ofP,
               rawtype * const rawrow,
               int       const cols) {
@@ -706,7 +706,7 @@ ppmToCmap(pixel * const colorrow,
 
 
 typedef struct {
-    long count;
+    long int count;
     pixval r, g, b;
 } hentry;
 
@@ -743,7 +743,7 @@ computeHamCmap(int   const cols,
     pixel *cmap;
     pixval hmaxval;
     int i, r, g, b, col, row, *htable;
-    unsigned long dist, maxdist;
+    unsigned long int dist, maxdist;
 
     pm_message("initializing HAM colormap...");
 
@@ -791,7 +791,7 @@ computeHamCmap(int   const cols,
             for( col = colors-1; col > 0; col-- ) {
                 r = hmap[col].r; g = hmap[col].g; b = hmap[col].b;
                 for( i = 0; i < col; i++ ) {
-                    register int tmp;
+                    int tmp;
 
                     tmp = hmap[i].r - r; dist = tmp * tmp;
                     tmp = hmap[i].g - g; dist += tmp * tmp;
@@ -850,7 +850,7 @@ writeBodyRows(void) {
 
     bodyblock *b;
     int i;
-    long total = 0;
+    long int total = 0;
 
     for( b = &firstblock; b != NULL; b = b->next ) {
         for( i = 0; i < b->used; i++ ) {
@@ -864,7 +864,7 @@ writeBodyRows(void) {
 
 
 
-static long
+static long int
 doHamBody(FILE *  const ifP,
           FILE *  const ofP,
           int     const cols,
@@ -878,7 +878,7 @@ doHamBody(FILE *  const ifP,
     int col, row, i;
     rawtype *raw_rowbuf;
     colorhash_table cht, cht2;
-    long bodysize = 0;
+    long int bodysize = 0;
     int *itoh;      /* table image -> ham */
     int usehash = 1;
     int colbits;
@@ -959,7 +959,7 @@ doHamBody(FILE *  const ifP,
                     spr = itoh[upr];    spg = itoh[upg];    spb = itoh[upb];
                     noprev = 0;
                 } else {
-                    register long di, dr, dg, db;
+                    long int di, dr, dg, db;
                     int scr, scg, scb;   /* scaled values of colormap entry */
 
                     scr = itoh[ucr]; scg = itoh[ucg]; scb = itoh[ucb];
@@ -1041,7 +1041,7 @@ ppmToHam(FILE *  const ifP,
          int     const hamplanes) {
 
     int hamcolors, nPlanes, i, hammaxval;
-    long oldsize, bodysize, formsize, cmapsize;
+    long int oldsize, bodysize, formsize, cmapsize;
     int * table;
     int colors;
     pixel * colormap;
@@ -1195,7 +1195,7 @@ ppmToHam(FILE *  const ifP,
 
 
 
-static long
+static long int
 doDeepBody(FILE * const ifP,
            FILE * const ofP,
            int    const cols,
@@ -1206,7 +1206,7 @@ doDeepBody(FILE * const ifP,
     int row, col;
     pixel *pP;
     int *table = NULL;
-    long bodysize = 0;
+    long int bodysize = 0;
     rawtype *redbuf, *greenbuf, *bluebuf;
     int newmaxval;
 
@@ -1266,7 +1266,7 @@ ppmToDeep(FILE * const ifP,
           int    const bitspercolor) {
 
     int nPlanes;
-    long bodysize, oldsize, formsize;
+    long int bodysize, oldsize, formsize;
 
     if( maskmethod == mskHasTransparentColor ) {
         pm_message("masking method '%s' not usable with deep ILBM - "
@@ -1320,7 +1320,7 @@ ppmToDeep(FILE * const ifP,
 
 
 
-static long
+static long int
 doDcolBody(FILE *        const ifP,
            FILE *        const ofP,
            int           const cols,
@@ -1330,7 +1330,7 @@ doDcolBody(FILE *        const ifP,
 
     int row, col;
     pixel *pP;
-    long bodysize = 0;
+    long int bodysize = 0;
     rawtype *redbuf, *greenbuf, *bluebuf;
     int *redtable, *greentable, *bluetable;
 
@@ -1379,7 +1379,7 @@ ppmToDcol(FILE *        const ifP,
           DirectColor * const dcol) {
 
     int nPlanes;
-    long bodysize, oldsize, formsize;
+    long int bodysize, oldsize, formsize;
 
     if( maskmethod == mskHasTransparentColor ) {
         pm_message("masking method '%s' not usable with deep ILBM - "
@@ -1444,7 +1444,7 @@ ppmToDcol(FILE *        const ifP,
 
 
 
-static long
+static long int
 doStdBody(FILE *  const ifP,
           FILE *  const ofP,
           int     const cols,
@@ -1457,7 +1457,7 @@ doStdBody(FILE *  const ifP,
     int row, col, i;
     pixel *pP;
     rawtype *raw_rowbuf;
-    long bodysize = 0;
+    long int bodysize = 0;
     int usehash = 1;
     colorhash_table cht;
 
@@ -1520,7 +1520,7 @@ ppmToStd(FILE *  const ifP,
          int     const maxcolors,
          int     const nPlanes) {
 
-    long formsize, cmapsize, bodysize, oldsize;
+    long int formsize, cmapsize, bodysize, oldsize;
 
     int colors;
     pixel * colormap;
@@ -1618,7 +1618,7 @@ ppmToRgb8(FILE * const ifP,
           int    const rows,
           int    const maxval) {
 
-    long bodysize, oldsize, formsize;
+    long int bodysize, oldsize, formsize;
     pixel *pP;
     int *table = NULL;
     int row, col1, col2, compr_len, len;
@@ -1709,7 +1709,7 @@ ppmToRgbn(FILE * const ifP,
           int    const rows,
           int    const maxval) {
 
-    long bodysize, oldsize, formsize;
+    long int bodysize, oldsize, formsize;
     pixel *pP;
     int *table = NULL;
     int row, col1, col2, compr_len, len;
@@ -1967,7 +1967,7 @@ main(int argc, char ** argv) {
         else
         if( pm_keymatch(argv[argn], "-camg", 5) ) {
             char *tail;
-            long value = 0L;
+            long int value = 0L;
 
             if( ++argn >= argc )
                 pm_error("-camg requires a value");

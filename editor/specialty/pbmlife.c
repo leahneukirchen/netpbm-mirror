@@ -13,18 +13,16 @@
 #include "pbm.h"
 
 int
-main( argc, argv )
-int argc;
-char* argv[];
-    {
+main(int argc, char * argv []) {
+
     FILE* ifp;
     bit* prevrow;
     bit* thisrow;
     bit* nextrow;
     bit* temprow;
-    register bit* newrow;
+    bit* newrow;
     int rows, cols, row;
-    register int col, count;
+    int col, count;
     int format;
 
 
@@ -111,4 +109,7 @@ char* argv[];
     pm_close( stdout );
 
     exit( 0 );
-    }
+}
+
+
+

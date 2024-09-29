@@ -184,7 +184,7 @@ static void jpc_qmfb1d_setup(jpc_fix_t *startptr, int startind, int endind,
 }
 
 static void jpc_qmfb1d_split(jpc_fix_t *startptr, int startind, int endind,
-  register int step, jpc_fix_t *lstartptr, int lstartind, int lendind,
+  int step, jpc_fix_t *lstartptr, int lstartind, int lendind,
   jpc_fix_t *hstartptr, int hstartind, int hendind)
 {
 #define QMFB_SPLITBUFSIZE 4096
@@ -194,10 +194,10 @@ static void jpc_qmfb1d_split(jpc_fix_t *startptr, int startind, int endind,
         int hlen;
         int twostep;
         jpc_fix_t *tmpptr;
-        register jpc_fix_t *ptr;
-        register jpc_fix_t *hptr;
-        register jpc_fix_t *lptr;
-        register int n;
+        jpc_fix_t *ptr;
+        jpc_fix_t *hptr;
+        jpc_fix_t *lptr;
+        int n;
         int state;
 
         twostep = step << 1;
@@ -286,7 +286,7 @@ static void jpc_qmfb1d_split(jpc_fix_t *startptr, int startind, int endind,
 }
 
 static void jpc_qmfb1d_join(jpc_fix_t *startptr, int startind, int endind,
-  register int step, jpc_fix_t *lstartptr, int lstartind, int lendind,
+  int step, jpc_fix_t *lstartptr, int lstartind, int lendind,
   jpc_fix_t *hstartptr, int hstartind, int hendind)
 {
 #define QMFB_JOINBUFSIZE        4096
@@ -296,10 +296,10 @@ static void jpc_qmfb1d_join(jpc_fix_t *startptr, int startind, int endind,
         int hlen;
         int twostep;
         jpc_fix_t *tmpptr;
-        register jpc_fix_t *ptr;
-        register jpc_fix_t *hptr;
-        register jpc_fix_t *lptr;
-        register int n;
+        jpc_fix_t *ptr;
+        jpc_fix_t *hptr;
+        jpc_fix_t *lptr;
+        int n;
         int state;
 
         twostep = step << 1;
@@ -456,9 +456,9 @@ error:
 
 #define NFT_LIFT0(lstartptr, lstartind, lendind, hstartptr, hstartind, hendind, step, pluseq) \
 { \
-        register jpc_fix_t *lptr = (lstartptr); \
-        register jpc_fix_t *hptr = (hstartptr); \
-        register int n = (hendind) - (hstartind); \
+        jpc_fix_t *lptr = (lstartptr); \
+        jpc_fix_t *hptr = (hstartptr); \
+        int n = (hendind) - (hstartind); \
         if ((hstartind) < (lstartind)) { \
                 pluseq(*hptr, *lptr); \
                 hptr += (step); \
@@ -479,9 +479,9 @@ error:
 
 #define NFT_LIFT1(lstartptr, lstartind, lendind, hstartptr, hstartind, hendind, step, pluseq) \
 { \
-        register jpc_fix_t *lptr = (lstartptr); \
-        register jpc_fix_t *hptr = (hstartptr); \
-        register int n = (lendind) - (lstartind); \
+        jpc_fix_t *lptr = (lstartptr); \
+        jpc_fix_t *hptr = (hstartptr); \
+        int n = (lendind) - (lstartind); \
         if ((hstartind) >= (lstartind)) { \
                 pluseq(*lptr, *hptr); \
                 lptr += (step); \
@@ -502,9 +502,9 @@ error:
 
 #define RFT_LIFT0(lstartptr, lstartind, lendind, hstartptr, hstartind, hendind, step, pmeqop) \
 { \
-        register jpc_fix_t *lptr = (lstartptr); \
-        register jpc_fix_t *hptr = (hstartptr); \
-        register int n = (hendind) - (hstartind); \
+        jpc_fix_t *lptr = (lstartptr); \
+        jpc_fix_t *hptr = (hstartptr); \
+        int n = (hendind) - (hstartind); \
         if ((hstartind) < (lstartind)) { \
                 *hptr pmeqop *lptr; \
                 hptr += (step); \
@@ -525,9 +525,9 @@ error:
 
 #define RFT_LIFT1(lstartptr, lstartind, lendind, hstartptr, hstartind, hendind, step, pmeqop) \
 { \
-        register jpc_fix_t *lptr = (lstartptr); \
-        register jpc_fix_t *hptr = (hstartptr); \
-        register int n = (lendind) - (lstartind); \
+        jpc_fix_t *lptr = (lstartptr); \
+        jpc_fix_t *hptr = (hstartptr); \
+        int n = (lendind) - (lstartind); \
         if ((hstartind) >= (lstartind)) { \
                 *lptr pmeqop ((*hptr << 1) + 2) >> 2; \
                 lptr += (step); \
@@ -776,9 +776,9 @@ error:
 
 #define NNS_LIFT0(lstartptr, lstartind, lendind, hstartptr, hstartind, hendind, step, alpha) \
 { \
-        register jpc_fix_t *lptr = (lstartptr); \
-        register jpc_fix_t *hptr = (hstartptr); \
-        register int n = (hendind) - (hstartind); \
+        jpc_fix_t *lptr = (lstartptr); \
+        jpc_fix_t *hptr = (hstartptr); \
+        int n = (hendind) - (hstartind); \
         jpc_fix_t twoalpha = jpc_fix_mulbyint(alpha, 2); \
         if ((hstartind) < (lstartind)) { \
                 jpc_fix_pluseq(*hptr, jpc_fix_mul(*lptr, (twoalpha))); \
@@ -800,9 +800,9 @@ error:
 
 #define NNS_LIFT1(lstartptr, lstartind, lendind, hstartptr, hstartind, hendind, step, alpha) \
 { \
-        register jpc_fix_t *lptr = (lstartptr); \
-        register jpc_fix_t *hptr = (hstartptr); \
-        register int n = (lendind) - (lstartind); \
+        jpc_fix_t *lptr = (lstartptr); \
+        jpc_fix_t *hptr = (hstartptr); \
+        int n = (lendind) - (lstartind); \
         int twoalpha = jpc_fix_mulbyint(alpha, 2); \
         if ((hstartind) >= (lstartind)) { \
                 jpc_fix_pluseq(*lptr, jpc_fix_mul(*hptr, (twoalpha))); \
@@ -824,8 +824,8 @@ error:
 
 #define NNS_SCALE(startptr, startind, endind, step, alpha) \
 { \
-        register jpc_fix_t *ptr = (startptr); \
-        register int n = (endind) - (startind); \
+        jpc_fix_t *ptr = (startptr); \
+        int n = (endind) - (startind); \
         while (n-- > 0) { \
                 jpc_fix_muleq(*ptr, alpha); \
                 ptr += (step); \

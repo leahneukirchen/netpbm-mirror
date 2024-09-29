@@ -446,7 +446,7 @@ GenPFrame(BitBucket * const bb,
     int lastX, lastY;
     int mbAddress;
     int slicePos;
-    register int index;
+    int index;
     float   snr[3], psnr[3];
     int QScale;
     BlockMV *info;
@@ -1016,7 +1016,7 @@ void
   ComputeHalfPixelData(frame)
 MpegFrame *frame;
 {
-  register int x, y;
+  int x, y;
 
   /* we add 1 before dividing by 2 because .5 is supposed to be rounded up
    * (see MPEG-1, page D-31)

@@ -52,20 +52,18 @@
 #include "pnm.h"
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
+main(int argc, char* argv[]) {
+
     FILE* ifp;
     int argn, row, i;
-    register int col;
+    int col;
     int rows=0, cols=0;
     int format = 0;
     xel* xelrow;
-    register xel* xP;
+    xel* xP;
     char* buf = NULL;
     unsigned char *lutr, *lutg, *lutb;
-    long nread = 0;
+    long int nread = 0;
     unsigned char* byteP;
     const char* const usage = "[-pgm|-ppm] [Zeissfile]";
 

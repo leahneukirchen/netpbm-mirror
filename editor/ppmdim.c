@@ -24,17 +24,16 @@ static char *version = "$VER: ppmdim 1.4 (16.11.93)"; /* Amiga version identific
 /**************************/
 /* start of main function */
 /**************************/
-int main(argc, argv)
-int argc;
-char *argv[];
-{
+int
+main(int argc, char * argv[]) {
+
         FILE* ifp;
         int argn, rows, cols, format, i = 0, j = 0;
         pixel *srcrow, *destrow;
         pixel *pP = NULL, *pP2 = NULL;
         pixval maxval;
         double dimfactor;
-        long longfactor;
+        long int longfactor;
         const char * const usage = "dimfactor [ppmfile]\n        dimfactor: 0.0 = total blackness, 1.0 = original picture\n";
 
         /* parse in 'default' parameters */
@@ -108,4 +107,6 @@ char *argv[];
 
         exit(0);
 }
+
+
 

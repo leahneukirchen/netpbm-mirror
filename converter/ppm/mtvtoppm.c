@@ -12,17 +12,16 @@
 
 #include "ppm.h"
 
+#define MAXLINE 500    /* TODO Check if this is sufficient */
+
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
+main(int argc , char* argv[]) {
+
     FILE* ifp;
     pixel* pixelrow;
-    register pixel* pP;
+    pixel* pP;
     int rows, cols, row, col;
     pixval maxval;
-#define MAXLINE 500
     char line[MAXLINE];
     unsigned char buf[3];
 
@@ -65,7 +64,7 @@ main( argc, argv )
     pm_close( stdout );
 
     exit( 0 );
-    }
+}
 
 
 

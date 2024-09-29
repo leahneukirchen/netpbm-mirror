@@ -5,23 +5,84 @@
 echo "Test 1"
 
 ppmmake -maxval=5 -plain rgb:00/00/00 1 1
-ppmmake -maxval=65535 -plain rgb:ff/ff/ff 1 1
+ppmmake -maxval=65535 -plain rgb:ff/ff/ff 1 2
+ppmmake -maxval=5 -plain rgb:ff/80/80 1 3
+
+echo "Test 2.1 Should print 2477651508 15012"
 ppmmake -maxval=5 rgb:ff/80/80 50 100 | cksum
+
+echo "Test 2.2 Should print 2135932096 23"
 ppmmake rgbi:0.5/1.0/0 2 2 | cksum
-ppmmake red 50 50  | cksum
+
+echo "Test 3 Should print 2378991101 7513 three times"
+
+ppmmake "#FFFF00000000" 50 50 | cksum
+ppmmake 1.0,0.0,0.0 50 50 | cksum
+RGBDEF=./rgbt.txt ppmmake red 50 50 | cksum
+
+echo "Test 4.1"
+
+yellow="rgb:f/f/0"
+blue="rgbi:0/0/1.0"
+
+echo "Test 4.1 Should print 2424932605 23"
+ppmmake ${yellow} 2 2 | cksum
+
+echo "Test 4.2 Should print 925463542 22"
+ppmmake -maxval=15 ${yellow} 2 2 | cksum
+
+echo "Test 4.3 Should print 3822292470 23"
+ppmmake ${blue}   2 2 | cksum
+
+echo "Test 4.4 Should print 630041256 21"
+ppmmake -maxval=1  ${blue}   2 2 | cksum 
 
 echo "Test Invalid"
 
-. ./test-invalid.inc
+. ${srcdir}/test-invalid.inc
 
-invCmd "ppmmake rgb:gg/00/00  2 2"
-invCmd "ppmmake rgb:ff/ff/00  2"
-invCmd "ppmmake rgbi:1.1/0/0  2 2"
-invCmd "ppmmake rgbi:1.0/.5   2 2"
-invCmd "ppmmake rainbow       2 2"
-invCmd "ppmmake               2 2"
-invCmd "ppmmake blue -maxval=0 2 2"
-invCmd "ppmmake blue -maxval=-1 2 2"
-invCmd "ppmmake blue -maxval=65536 2 2"
-export  RGBDEF=/dev/null
-invCmd "ppmmake red 2 2"
+# No color specified
+
+invCmd "ppmmake 199 199"
+
+# Invalid or missing width height
+
+invCmd "ppmmake ${yellow}"
+invCmd "ppmmake ${yellow} 200"
+invCmd "ppmmake ${yellow} 0 200"
+invCmd "ppmmake ${yellow} 120 0"
+invCmd "ppmmake ${yellow} -2 1"
+invCmd "ppmmake ${yellow} 1 -1"
+invCmd "ppmmake ${yellow} 100 99.9"
+invCmd "ppmmake ${yellow} 99.9 100"
+
+# Invalid maxval
+
+invCmd "ppmmake ${blue} -maxval=0     ${blue} 20 1"
+invCmd "ppmmake ${blue} -maxval=-1    ${blue} 20 2"
+invCmd "ppmmake ${blue} -maxval=65536 ${blue} 20 3"
+invCmd "ppmmake ${blue} -maxval=max ${blue} 20 4"
+invCmd "ppmmake ${blue} -maxval=0.9 ${blue} 20 5"
+
+# Invalid colorname file
+
+RGBDEF=/dev/null  invCmd "ppmmake red 32 12"
+
+# Invalid color
+
+RGBDEF=./rgbt.txt invCmd "ppmmake rainbow 43 2"
+
+# Multiple colors
+
+invCmd "ppmmake ${blue} ${yellow} 50 1"
+invCmd "ppmmake #FFFFFF ${yellow} 50 2"
+invCmd "ppmmake #ffffff #FFFFFF 50 3"
+invCmd "ppmmake #ffffff rgb:00/00/0F 50 4"
+invCmd "ppmmake rgb:00/00/0F rgb:FF/00/0F 50 5"
+invCmd "ppmmake rgbi:0.0/0.0/0.0 rgbi:1.0/0.0/0.0 50 6"
+invCmd "ppmmake rgb:0/0/0  rgbi:1.0/0.0/0.0 50 7"
+invCmd "ppmmake rgb-255:255/00/00 rgb-65535:0/1024/0 50 8"
+invCmd "ppmmake rgb-ff:00/00/00 rgb-f:0/0/0 50 9"
+
+RGBDEF=./rgbt.txt invCmd "ppmmake red ${blue} 50 10"
+RGBDEF=./rgbt.txt invCmd "ppmmake black white 50 11"

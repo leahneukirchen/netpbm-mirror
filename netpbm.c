@@ -14,35 +14,38 @@
 */
 
 /* Note: be careful using any Netpbm library functions in here, since
-   we don't call pnm_init()
+   we don't call pm_proginit()
 */
 
 #include <stdio.h>
 #include <string.h>
 #include "pam.h"
+#include "nstring.h"
 
 #define TRY(s,m) { \
     extern int m(int argc, char *argv[]); \
-    if (strcmp(cp, s) == 0) exit(m(argc, argv)); \
+    if (streq(cp, s)) exit(m(argc, argv)); \
 }
+
+
 
 int
 main(int argc, char *argv[]) {
 
     const char * cp;
 
-    if (strcmp(pm_arg0toprogname(argv[0]), "netpbm") == 0) {
+    if (streq(pm_arg0toprogname(argv[0]), "netpbm")) {
         ++argv;
         --argc;
-        if (argc < 1 || !*argv)	{
+        if (argc < 1 || !*argv) {
             fprintf(stderr,
                     "When you invoke this program by the name 'netpbm', "
                     "You must supply at least one argument: the name of "
                     "the Netpbm program to run, e.g. "
                     "'netpbm pamfile /tmp/myfile.ppm'\n");
             exit(1);
-		}
-	}
+                }
+        }
 
     cp = pm_arg0toprogname(argv[0]);
 

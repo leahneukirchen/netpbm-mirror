@@ -4,12 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-24.09.28 BJH  Release 11.07.02
-
-              build: fix typo in check of DARWIN_C_SOURCE so strdup, etc.
-              are properly defined on OS X.
-
-24.09.05 BJH  Release 11.07.01
+24.09.29 BJH  Release 11.08.00
 
               libnetpbm color name parsing: Fix handling of rgb: color names
               with more than 4 hex digits per plane, so it throws an error
@@ -18,6 +13,9 @@ CHANGE HISTORY
 
               libnetpbm color name parsing: Fix error message for invalid
               rgb-<MAXVAL> color name.
+
+              build: fix typo in check of DARWIN_C_SOURCE so strdup, etc.
+              are properly defined on OS X.
 
 24.06.28 BJH  Release 11.07.00
 

@@ -1,1 +1,20 @@
+Test 1.  Should produce 1571496937 33838
 1571496937 33838
+Test 2.  Should produce 2582999797 3376
+2582999797 3376
+Test 3.  Should produce 493599905 16
+493599905 16
+Test 4.1.  Should produce 3735757243 10
+3735757243 10
+Test 4.2.  Should produce 1655769442 10
+1655769442 10
+Test 4.3.  Should produce 3428680891 10
+3428680891 10
+Test 4.4.  Should produce 1663150238 11
+1663150238 11
+Test invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)

@@ -16,17 +16,15 @@
 #define MAXCOLORS 256
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
+main(int argc, char* argv[]) {
+
     FILE* ifp;
     pixel** pixels;
-    register pixel* pP;
+    pixel* pP;
     colorhist_vector chv;
     colorhash_table cht;
     int rows, cols, row, colors, i;
-    register int col;
+    int col;
     pixval maxval;
 
 
@@ -81,7 +79,7 @@ main( argc, argv )
         {
         for ( col = 0, pP = pixels[row]; col < cols; ++col, ++pP )
             {
-            register int color;
+            int color;
 
             color = ppm_lookupcolor( cht, pP );
             if ( color == -1 )
@@ -93,7 +91,7 @@ main( argc, argv )
         }
 
     exit( 0 );
-    }
+ }
 
 
 

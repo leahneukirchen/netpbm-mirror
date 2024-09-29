@@ -121,8 +121,8 @@ $(LIBOBJECTS) libsystem_dummy.o: %.o: %.c importinc
 # of Netpbm, but when we changed the Netpbm major version number from 10 to 11
 # just to keep the minor version number 2 digits, we had to continue
 # increasing the library minor number, so we went to 100 + minor version
-# number.  If we ever increase the major number to 12, we can go back to using
-# the minor version number for the library minor number.
+# number.  If we ever increase the library major number to 12, we can go back
+# to using the minor version number for the library minor number.
 
 MAJ := 11
 $(eval MIN:=$(shell echo $$((100+$(NETPBM_MINOR_RELEASE)))))

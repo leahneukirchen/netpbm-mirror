@@ -1,4 +1,5 @@
-/* libpnm4.c - pnm utility library part 4
+/* rast.c
+** (Formerly named libpnm4.c - pnm utility library part 4)
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
 **
@@ -20,9 +21,10 @@
 */
 
 struct pixrect*
-mem_create( w, h, depth )
-    int w, h, depth;
-{
+mem_create(int const w,
+	   int const h,
+	   int const depth) {
+
     struct pixrect* p;
     struct mpr_data* m;
 
@@ -64,9 +66,7 @@ mem_create( w, h, depth )
 
 
 void
-mem_free( p )
-    struct pixrect* p;
-{
+mem_free(struct pixrect* const p) {
     free( p->pr_data->md_image );
     free( p->pr_data );
     free( p );
@@ -75,12 +75,12 @@ mem_free( p )
 
 
 int
-pr_dump( p, out, colormap, type, copy_flag )
-    struct pixrect* p;
-    FILE* out;
-    colormap_t* colormap;
-    int type, copy_flag;
-{
+pr_dump(struct pixrect* const p,
+        FILE*           const out,
+        colormap_t*     const colormap,
+        int             const type,
+	int             const copy_flag) {
+
     struct rasterfile h;
     int size, besize, count;
     unsigned char* beimage;
@@ -276,17 +276,18 @@ pr_dump( p, out, colormap, type, copy_flag )
 
 
 int
-pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
+pr_load_header(FILE *              const ifP,
+	       struct rasterfile * const headerP) {
 
     {
-        long magic;
+        long int magic;
 
         pm_readbiglong(ifP, &magic);
         if (magic != RAS_MAGIC)
             pm_error("Wrong magic number for a RAST file");
     }
     {
-        long width;
+        long int width;
         pm_readbiglong(ifP, &width);
 
         if (width < 0)
@@ -295,7 +296,7 @@ pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
             headerP->ras_width = width;
     }
     {
-        long height;
+        long int height;
         pm_readbiglong(ifP, &height);
 
         if (height < 0)
@@ -304,7 +305,7 @@ pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
             headerP->ras_height = height;
     }
     {
-        long depth;
+        long int depth;
         pm_readbiglong(ifP, &depth);
 
         if (depth < 0)
@@ -313,7 +314,7 @@ pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
             headerP->ras_depth = depth;
     }
     {
-        long length;
+        long int length;
         pm_readbiglong(ifP, &length);
 
         if (length < 0)
@@ -325,7 +326,7 @@ pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
 
     pm_readbiglong(ifP, &headerP->ras_maptype);
     {
-        long mapLength;
+        long int mapLength;
         pm_readbiglong(ifP, &mapLength);
 
         if (mapLength < 0)
@@ -339,11 +340,10 @@ pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
 
 
 int
-pr_load_colormap( in, hP, colormap )
-    FILE* in;
-    struct rasterfile* hP;
-    colormap_t* colormap;
-{
+pr_load_colormap(FILE*              const in,
+                 struct rasterfile* const hP,
+                 colormap_t*        const colormap) {
+
     if ( colormap == NULL || hP->ras_maptype == RMT_NONE )
     {
         int i;
@@ -416,18 +416,17 @@ pr_load_colormap( in, hP, colormap )
 
 
 struct pixrect*
-pr_load_image( in, hP, colormap )
-    FILE* in;
-    struct rasterfile* hP;
-    colormap_t* colormap;
-{
+pr_load_image(FILE*              const in,
+              struct rasterfile* const hP,
+              colormap_t*        const colormap) {
+
     struct pixrect* p;
     unsigned char* beimage;
-    register unsigned char* bep;
-    register unsigned char* bp;
-    register unsigned char c;
+    unsigned char* bep;
+    unsigned char* bp;
+    unsigned char c;
     int i;
-    register int j, count;
+    int j, count;
 
     p = mem_create( hP->ras_width, hP->ras_height, hP->ras_depth );
     if ( p == NULL )

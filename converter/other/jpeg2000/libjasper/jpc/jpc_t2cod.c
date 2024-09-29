@@ -186,7 +186,7 @@ int jpc_pi_next(jpc_pi_t *pi)
         }
 }
 
-static int jpc_pi_nextlrcp(register jpc_pi_t *pi)
+static int jpc_pi_nextlrcp(jpc_pi_t *pi)
 {
         jpc_pchg_t *pchg;
         int *prclyrno;
@@ -229,7 +229,7 @@ skip:
         return 1;
 }
 
-static int jpc_pi_nextrlcp(register jpc_pi_t *pi)
+static int jpc_pi_nextrlcp(jpc_pi_t *pi)
 {
         jpc_pchg_t *pchg;
         int *prclyrno;
@@ -270,7 +270,7 @@ skip:
         return 1;
 }
 
-static int jpc_pi_nextrpcl(register jpc_pi_t *pi)
+static int jpc_pi_nextrpcl(jpc_pi_t *pi)
 {
         int rlvlno;
         jpc_pirlvl_t *pirlvl;
@@ -362,7 +362,7 @@ skip:
         return 1;
 }
 
-static int jpc_pi_nextpcrl(register jpc_pi_t *pi)
+static int jpc_pi_nextpcrl(jpc_pi_t *pi)
 {
         int rlvlno;
         jpc_pirlvl_t *pirlvl;
@@ -456,7 +456,7 @@ skip:
         return 1;
 }
 
-static int jpc_pi_nextcprl(register jpc_pi_t *pi)
+static int jpc_pi_nextcprl(jpc_pi_t *pi)
 {
         int rlvlno;
         jpc_pirlvl_t *pirlvl;

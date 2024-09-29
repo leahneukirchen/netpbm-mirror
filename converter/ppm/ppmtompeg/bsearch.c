@@ -168,7 +168,7 @@ FindBestMatchExhaust(const LumBlock * const blockP,
                      int32            const bestSoFar,
                      int              const searchRange) {
 
-    register int mx, my;
+    int mx, my;
     int32 bestDiff;
     int   stepSize;
     int   leftMY, leftMX;

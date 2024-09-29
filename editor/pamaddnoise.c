@@ -83,7 +83,9 @@ struct CmdlineInfo {
 
 static enum NoiseType
 typeFmName(const char * const name) {
-
+/*----------------------------------------------------------------------------
+   E.g. NOISETYPE_GAUSSIAN when 'name' is "gaussian" or "GAUSSIAN" or "g".
+-----------------------------------------------------------------------------*/
     enum NoiseType retval;
 
     if (false)

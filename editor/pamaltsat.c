@@ -66,7 +66,7 @@ methodFmNm(const char * const methodNm) {
 
         if (!methodList)
             pm_error("Failed to allocate memory for %lu saturation "
-                     "method names", (unsigned long)ARRAY_SIZE(methodTable));
+                     "method names", (unsigned long int)ARRAY_SIZE(methodTable));
 
         /* Fill the list of methods: */
         for (i = 0, methodList[0] = '\0'; i < ARRAY_SIZE(methodTable); ++i) {
