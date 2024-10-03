@@ -619,7 +619,7 @@ in PAM visual images and normalizes or unnormalizes the sample values.
 <b>pnm_freegammatransform()</b> and <b>pnm_freeungammatransform()</b>
 destroy the objects.
 
-<h3 id="colorname">Color specification</h3>
+<h3 id="colorspec">Color specification</h3>
 
 <p>These are functions you use that deal with names or identifiers for colors.
 
@@ -680,6 +680,12 @@ destroy the objects.
 
 <h4>Description</h4>
 
+<p>These functions deal with color names, either interpreting a given color
+name as a color or determining a color name for a given color.  Examples of
+color names are &quot;pink&quot; and &quot;rgbi:1.0/0.5/0.25&quot;.  See
+<a href="#colorname">Color name</a> for a description of the various
+ways Netpbm names colors.
+  
 <p><b>pnm_parsecolor</b>, <b>pnm_parsecolor2</b>, and <b>pnm_parsecolorn</b>
 return a color in the conventional form used by <b>libnetpbm</b> to
 represent a color, given a human-intelligible name for the color such
@@ -726,7 +732,7 @@ function cannot find a color dictionary file or the file it finds does not
 contain even a single color definition, the function returns a null string.
 
 
-<h5>Color name</h5>
+<h5 id="colorname">Color Name</h5>
 
 <p>Color names in Netpbm are ASCII text in one of the formats described
 below.  This is what you use for the <i>colorname</i> argument of functions
@@ -818,7 +824,7 @@ its header).
     <li><a href="#reading">Reading Netpbm Files</a>
     <li><a href="#writing">Writing Netpbm Files</a>
     <li><a href="#transform">Transforming Pixels</a>
-    <li><a href="#colorname">Color Specification</a>
+    <li><a href="#colorspec">Color Specification</a>
     <li><a href="#misc">Miscellaneous</a>
     </ul>
   </ul>
