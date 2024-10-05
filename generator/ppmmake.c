@@ -15,7 +15,7 @@
 #include "shhopt.h"
 #include "ppm.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -28,11 +28,11 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
   Convert program invocation arguments (argc,argv) into a format the
-  program can use easily, struct cmdlineInfo.  Validate arguments along
+  program can use easily, struct CmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
   Note that some string information we return as *cmdlineP is in the storage
@@ -55,7 +55,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free (option_def);
@@ -86,13 +86,13 @@ parseCommandLine(int argc, char ** argv,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     pixel * pixrow;
     unsigned int row, col;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
