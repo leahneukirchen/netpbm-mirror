@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.09.00
 
+              pbmtoascii: fix bug: allows both -1x2 and -2x4.  Always present
+              (pbmtoascii existed in primordial Netpbm).
+
 24.09.29 BJH  Release 11.08.00
 
               libnetpbm color name parsing: Fix handling of rgb: color names
@@ -6471,7 +6474,7 @@ pbmtext         Ability to use BDF fonts added.
 
 pbmto4425       Display on an AT&T 4425 Ascii terminal.
 
-pbmtoascii      A new improved version.
+pbmtoascii      A new improved version.  1x2 and 2x4 modes.
 
 pbmtoln03       Convert to DEC LN03+.
 

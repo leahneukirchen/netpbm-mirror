@@ -10,9 +10,78 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
 #include <assert.h>
+
 #include "mallocvar.h"
+#include "shhopt.h"
 #include "pbm.h"
+
+enum Resolution {RESOLUTION_1X2, RESOLUTION_2X4};
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;  /* Filespec of input file */
+    enum Resolution resolution;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+  Convert program invocation arguments (argc,argv) into a format the
+  program can use easily, struct CmdlineInfo.  Validate arguments along
+  the way and exit program with message if invalid.
+
+  Note that some string information we return as *cmdlineP is in the storage
+  argv[] points to.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int opt1x2Spec, opt2x4Spec;
+    unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0,   "1x2",    OPT_FLAG, NULL, &opt1x2Spec,    0);
+    OPTENT3(0,   "2x4",    OPT_FLAG, NULL, &opt2x4Spec,    0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    free(option_def);
+
+    if (opt1x2Spec && opt2x4Spec)
+        pm_error("You cannot specify both -1x2 and -2x4");
+    else if (opt1x2Spec)
+        cmdlineP->resolution = RESOLUTION_1X2;
+    else
+        cmdlineP->resolution = RESOLUTION_2X4;
+
+
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else
+        cmdlineP->inputFileName = argv[1];
+
+    if (argc-1 > 1)
+        pm_error("Too many arguments (%u).  Only possible argument is "
+                 "input file name", argc-1);
+}
+
+
 
 /*
   The algorithm is based on describing the 2 or 8 pixels in a cell with a
@@ -232,49 +301,29 @@ pbmtoascii(FILE *       const ifP,
 int
 main(int argc, const char ** argv) {
 
+    struct CmdlineInfo cmdline;
     FILE * ifP;
-    int argn, gridx, gridy;
+    unsigned int gridx, gridy;
     const char * carr;
-    const char* usage = "[-1x2|-2x4] [pbmfile]";
 
     pm_proginit(&argc, argv);
 
-    /* Set up default parameters. */
-    argn = 1;
-    gridx = 1;
-    gridy = 2;
-    carr = carr1x2;
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* Check for flags. */
-    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-    {
-        if ( pm_keymatch( argv[argn], "-1x2", 2 ) )
-        {
-            gridx = 1;
-            gridy = 2;
-            carr = carr1x2;
-        }
-        else if ( pm_keymatch( argv[argn], "-2x4", 2 ) )
-        {
-            gridx = 2;
-            gridy = 4;
-            carr = carr2x4;
-        }
-        else
-            pm_usage( usage );
-        ++argn;
+    ifP = pm_openr(cmdline.inputFileName);
+
+    switch (cmdline.resolution) {
+    case RESOLUTION_1X2:
+        gridx = 1;
+        gridy = 2;
+        carr = carr1x2;
+        break;
+    case RESOLUTION_2X4:
+        gridx = 2;
+        gridy = 4;
+        carr = carr2x4;
+        break;
     }
-
-    if ( argn < argc )
-    {
-        ifP = pm_openr( argv[argn] );
-        ++argn;
-    }
-    else
-        ifP = stdin;
-
-    if ( argn != argc )
-        pm_usage( usage );
 
     pbmtoascii(ifP, gridx, gridy, carr);
 
