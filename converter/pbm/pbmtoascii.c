@@ -65,11 +65,10 @@ parseCommandLine(int argc, const char ** argv,
 
     if (opt1x2Spec && opt2x4Spec)
         pm_error("You cannot specify both -1x2 and -2x4");
-    else if (opt1x2Spec)
-        cmdlineP->resolution = RESOLUTION_1X2;
-    else
+    else if (opt2x4Spec)
         cmdlineP->resolution = RESOLUTION_2X4;
-
+    else
+        cmdlineP->resolution = RESOLUTION_1X2;
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
