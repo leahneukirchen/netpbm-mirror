@@ -1,0 +1,69 @@
+#! /bin/sh
+# This script tests: pbmtoascii
+# Also requires: pbmmake pamenlarge pbmtoascii asciitopgm
+
+echo "Test 1."
+
+pbmmake -g 31 6 | pbmtoascii
+pbmmake -g 32 6 | pbmtoascii
+
+echo "Test 2.1"
+
+pbmmake -b 2 2  | pbmtoascii
+pbmmake -w 2 2  | pbmtoascii
+pbmmake -g 2 2  | pbmtoascii
+
+echo "Test 2.2"
+
+pbmmake -b 4 4  | pbmtoascii
+pbmmake -w 4 4  | pbmtoascii
+pbmmake -g 4 4  | pbmtoascii
+
+echo "Test 2.3"
+
+pbmmake -b 4 4  | pbmtoascii -2x4
+pbmmake -w 4 4  | pbmtoascii -2x4
+pbmmake -g 4 4  | pbmtoascii -2x4
+
+echo "Test 3."
+
+pbmmake -b 40 7 | pbmtoascii
+echo
+pbmmake -b 41 8 | pbmtoascii
+echo
+pbmmake -b 42 9 | pbmtoascii
+
+echo "Test 4.  Should print 2361485126 1740 twice"
+
+pbmtoascii      maze.pbm | cksum
+pbmtoascii -1x2 maze.pbm | cksum
+
+echo "Test 5.  Should print 4017331268 450 twice"
+
+pbmtoascii -2x4 < maze.pbm | cksum
+pbmtoascii -2x4   maze.pbm | cksum
+
+echo "Test 6.  Should print 3978896638 232 twice"
+# Use Pamenlarge 1 to convert to plain format without additional requirements
+
+pamenlarge -plain 1 testgrid.pbm | sed -e 1,2d -e 'y/01/ M/' -e 's/ *$//' | cksum
+pamenlarge -xscale 1 -yscale 2 testgrid.pbm | pbmtoascii | cksum
+
+echo "Test 7.  Should print 3334512471 3343 twice"
+
+pamenlarge -plain 1 maze.pbm | sed -e 1,2d -e 'y/01/ M/' -e 's/ *$//' | cksum
+pamenlarge -xscale 1 -yscale 2 maze.pbm | pbmtoascii | cksum
+
+echo "Test 8.  Should print match twice"
+
+pamenlarge -xscale 1 -yscale 2 maze.pbm | pbmtoascii | asciitopgm 59 57 | pgmtopbm |\
+    cmp maze.pbm -  && echo "match" || echo "no match"
+pamenlarge -xscale 1 -yscale 2 testgrid.pbm | pbmtoascii | asciitopgm 16 14 | pgmtopbm |\
+    cmp testgrid.pbm -  && echo "match" || echo "no match"
+
+echo "Test Invalid"
+
+. ${srcdir}/test-invalid.inc
+
+invCmd "pbmtoascii -1x2 -2x4 testgrid.pbm"
+invCmd "pbmtoascii testimg.ppm"

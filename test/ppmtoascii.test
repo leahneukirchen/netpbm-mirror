@@ -1,0 +1,17 @@
+#! /bin/sh
+# This script tests: ppmtoascii
+# Also requires: pamseq pamenlarge
+
+echo "Test 1.  Should print 242428674 57 three times"
+
+pamseq 3 1 | pamenlarge -xscale 1 -yscale 2 | ppmtoascii | cksum
+pamseq 3 1 | pamenlarge -xscale 1 -yscale 2 | ppmtoascii -1x2 | cksum
+pamseq 3 1 | pamenlarge -xscale 2 -yscale 4 | ppmtoascii -2x4 | cksum
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "ppmtoascii -1x2 -2x4 testimg.ppm"
+

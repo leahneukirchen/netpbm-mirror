@@ -179,7 +179,9 @@ pbm-misc-converters.test
 
 pamtopdbimg.test
 pamtosvg.test
+pbmtoascii.test
 pbmtog3.test
+ppmtoascii.test
 ppmtoapplevol.test
 ppmtomitsu.test
 411toppm.test
