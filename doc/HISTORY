@@ -9,6 +9,9 @@ not yet  BJH  Release 11.09.00
               pbmtoascii: fix bug: allows both -1x2 and -2x4.  Always present
               (pbmtoascii existed in primordial Netpbm).
 
+              build: fix type mismatch warning linking ppmtompeg.
+              Always broken (ppmtompeg was new to Netpbm in April 2004).
+
 24.09.29 BJH  Release 11.08.00
 
               libnetpbm color name parsing: Fix handling of rgb: color names
