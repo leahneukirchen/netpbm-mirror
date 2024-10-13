@@ -97,7 +97,7 @@ static boolean  frameCountsUnknown;
 /* important -- don't initialize anything here */
 /* must be re-initted anyway in GenMPEGStream */
 
-extern int  IOtime;
+extern time_t  IOtime;
 extern boolean  resizeFrame;
 extern int outputWidth, outputHeight;
 int     gopSize = 100;  /* default */
@@ -431,7 +431,7 @@ getBFrame(int                  const frameNum,
           boolean              const childProcess,
           boolean              const remoteIO,
           MpegFrame **         const bFramePP,
-          int *                const IOtimeP,
+          time_t *             const IOtimeP,
           unsigned int *       const framesReadP) {
 /*----------------------------------------------------------------------------
    Get Frame 'frameNum', which is a B frame related to previous reference
@@ -480,7 +480,7 @@ processBFrames(MpegFrame *          const pastRefFrameP,
                struct inputSource * const inputSourceP,
                boolean              const remoteIo,
                boolean              const childProcess,
-               int *                const IOtimeP,
+               time_t *             const IOtimeP,
                BitBucket *          const wholeStreamBbP,
                const char *         const outputFileName,
                unsigned int *       const framesReadP,
@@ -653,7 +653,7 @@ readAndSaveFrame(struct inputSource * const inputSourceP,
                  const char *         const inputConversion,
                  MpegFrame *          const pastRefFrameP,
                  unsigned int *       const framesReadP,
-                 int *                const ioTimeP,
+                 time_t *             const ioTimeP,
                  bool *               const endOfStreamP) {
 /*----------------------------------------------------------------------------
    Read the next frame from Standard Input and add it to the linked list
@@ -804,7 +804,7 @@ getPreviousFrame(unsigned int         const frameStart,
                  const char *         const inputConversion,
                  MpegFrame **         const framePP,
                  unsigned int *       const framesReadP,
-                 int *                const ioTimeP) {
+                 time_t *             const ioTimeP) {
 
     /* This needs to be modularized.  It shouldn't issue messages about
        encoding GOPs and B frames, since it knows nothing about those.
@@ -913,7 +913,7 @@ getFrame(MpegFrame **         const framePP,
          const char *         const slaveConversion,
          const char *         const inputConversion,
          unsigned int *       const framesReadP,
-         int *                const ioTimeP) {
+         time_t *             const ioTimeP) {
 /*----------------------------------------------------------------------------
    Get frame with number 'frameNumber' as *frameP.
 
