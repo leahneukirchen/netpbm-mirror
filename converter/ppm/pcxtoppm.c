@@ -363,9 +363,25 @@ pcxPlanesToPixels(unsigned char * const pixels,
                   unsigned int    const planes,
                   unsigned int    const bitsPerPixel) {
 /*----------------------------------------------------------------------------
-   Convert multi-plane format into 1 pixel per byte.
+   Unpack sub-byte sample values to yield one byte per pixel.
+
+   As input, 'bitPlanes' is a row of the image.  Each byte contains 8 samples,
+   one per bit.  They are arranged in plane major, column minor order, e.g.
+   in a 100-column image, the Plane 1 samples of the Columns 0-8 are in
+   bitPlanes[100].
+
+   As output, each byte of 'pixels' is one pixel, in major order by column and
+   minor order by plane, e.g. in a 4-plane image, pixels[5] is the Plane 1 of
+   Column 1.
+
+   'bitsPerPixel' is the number of bits per sample, and must be 1.  It's easy
+   to conceive how this subroutine should work with other numbers of bits per
+   sample, but it doesn't.
 -----------------------------------------------------------------------------*/
-    unsigned int const npixels = (bytesPerLine * 8) / bitsPerPixel;
+    unsigned int const pixelCt = bytesPerLine * 8;
+
+    unsigned int bitPlanesIdx;
+        /* Index into 'bitPlanes' of next byte to unpack */
 
     unsigned int  i;
 
@@ -375,23 +391,29 @@ pcxPlanesToPixels(unsigned char * const pixels,
         pm_error("can't handle more than 1 bit per pixel");
 
     /* Clear the pixel buffer - initial value */
-    for (i = 0; i < npixels; ++i)
+    for (i = 0; i < pixelCt; ++i)
         pixels[i] = 0;
+
+    bitPlanesIdx = 0;  /* initial value */
 
     for (i = 0; i < planes; ++i) {
         unsigned int const pixbit = (1 << i);
 
+        unsigned int pixelIdx;
+            /* Index into 'pixels' of next pixel to output */
+
         unsigned int j;
 
-        for (j = 0; j < bytesPerLine; ++j) {
-            unsigned int const bits = bitPlanes[j];
+        for (j = 0, pixelIdx = 0; j < bytesPerLine; ++j) {
+            unsigned int const bits = bitPlanes[bitPlanesIdx++];
 
             unsigned int mask;
-            unsigned int k;
 
-            for (mask = 0x80, k = 0; mask != 0; mask >>= 1, ++k)
+            for (mask = 0x80; mask != 0; mask >>= 1) {
                 if (bits & mask)
-                    pixels[k] |= pixbit;
+                    pixels[pixelIdx] |= pixbit;
+                ++pixelIdx;
+            }
         }
     }
 }
