@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.09.00
 
+              pcxtoppm: Fix wildly incorrect output for all multiplane
+              images.  Broken in Netpbm 11.04 (September 2023).
+
               pbmtoascii: fix bug: allows both -1x2 and -2x4.  Always present
               (pbmtoascii existed in primordial Netpbm).
 
