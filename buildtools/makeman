@@ -218,7 +218,7 @@ def makeman(name, file, indoc):
     indoc = re.sub("(?i) *</DD>", "", indoc)
     # Process unordered lists -- just turn them into .TPs
     indoc = re.sub("(?i)</?[UO]L *(COMPACT)?>", "", indoc)
-    indoc = re.sub("(?i) *<LI>", r".IP \(bu\n", indoc)
+    indoc = re.sub("(?i) *<LI>\n*", r".IP \(bu\n", indoc)
     indoc = re.sub("(?i) *</LI>", "", indoc)
     # No-print tags
     indoc = re.sub("<!--no_print-->.*", "", indoc)
