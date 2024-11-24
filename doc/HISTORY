@@ -15,6 +15,9 @@ not yet  BJH  Release 11.09.00
               build: fix type mismatch warning linking ppmtompeg.
               Always broken (ppmtompeg was new to Netpbm in April 2004).
 
+              build: make it work with -std=gnu23, which is the default in
+              recent GCC.  To wit, remove local declaration of "bool".
+
               makeman: fix for HTML lists that have blank lines between items.
 
 24.09.29 BJH  Release 11.08.00
