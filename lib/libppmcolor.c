@@ -74,7 +74,7 @@ ppm_colorDict_destroy(ppm_ColorDict * const colorDictP) {
 
     unsigned int i;
 
-    for (i = 0; i < colorDictP->size; ++i)
+    for (i = 0; i < colorDictP->count; ++i)
         pm_strfree(colorDictP->name[i]);
 
     if (colorDictP->name)

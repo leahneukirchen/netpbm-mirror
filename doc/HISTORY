@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+24.11.25 BJH  Release 11.08.02
+
+              libnetpbm: Fix crash in ppm_colorDict_destroy; affects all
+              programs that use color names.  Introduced in Netpbm 11.07 (June
+              2024).
+
 24.10.23 BJH  Release 11.08.01
 
               pcxtoppm: Fix wildly incorrect output for all multiplane
