@@ -194,8 +194,8 @@ initTCTime(unsigned int const firstFrameNumber) {
  * SIDE EFFECTS:    totalFramesSent, tc_pict, tc_sec, tc_min, tc_hrs, tc_extra
  *
  *===========================================================================*/
-void
-IncrementTCTime() {
+void 
+IncrementTCTime (void) {
     /* if fps = an integer, then tc_extra = 0 and is ignored
 
        otherwise, it is the number of extra 1/1001 frames we've passed by
@@ -1251,9 +1251,8 @@ SetStatFileName(const char * const fileName) {
  * SIDE EFFECTS:    gopSize
  *
  *===========================================================================*/
-void
-SetGOPSize(size)
-    int size;
+void 
+SetGOPSize (int size)
 {
     gopSize = size;
 }
@@ -1422,8 +1421,8 @@ NonLocalRefFrame(int const id) {
  * SIDE EFFECTS:    frameRateRounded, frameRateInteger
  *
  *===========================================================================*/
-void
-SetFrameRate()
+void 
+SetFrameRate (void)
 {
     switch(frameRate) {
     case 1:
@@ -1482,9 +1481,7 @@ SetFrameRate()
  *
  *===========================================================================*/
 static void
-ComputeDHMSTime(someTime, timeText)
-    int32 someTime;
-    char *timeText;
+ComputeDHMSTime(int32 someTime, char *timeText)
 {
     int     days, hours, mins, secs;
 
@@ -1721,8 +1718,8 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
 
 
 
-static void
-OpenBitRateFile() {
+static void 
+OpenBitRateFile (void) {
     bitRateFile = fopen(bitRateFileName, "w");
     if ( bitRateFile == NULL ) {
         pm_message("ERROR:  Could not open bit rate file:  '%s'",
@@ -1733,8 +1730,8 @@ OpenBitRateFile() {
 
 
 
-static void
-CloseBitRateFile() {
+static void 
+CloseBitRateFile (void) {
     fclose(bitRateFile);
 }
 

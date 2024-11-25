@@ -150,8 +150,8 @@ static char version = -1;
  *
  *================================================================
  */
-void
-Specifics_Init() {
+void 
+Specifics_Init (void) {
 
     /* 'specificsFile' is a global variable whose value is the name of the
        specifics file, given by the parameter file.
@@ -200,8 +200,8 @@ Specifics_Init() {
  *
  *================================================================
  */
-void Parse_Specifics_File(fp)
-FILE *fp;
+void 
+Parse_Specifics_File (FILE *fp)
 {
   char line[1024], *lp;
   int vers;
@@ -250,8 +250,8 @@ FILE *fp;
 
 
 /* Version 1 */
-void Parse_Specifics_File_v1(fp)
-FILE *fp;
+void 
+Parse_Specifics_File_v1 (FILE *fp)
 {
   char line[1024],*lp;
   FrameSpecList *current, *new;
@@ -480,9 +480,7 @@ FrameSpecList *MakeFslEntry()
  *
  *================================================================
  */
-void AddSlc(c, snum, qs)
-FrameSpecList *c;
-int snum,qs;
+void AddSlc(FrameSpecList *c, int snum, int qs)
 {
   Slice_Specifics *new;
   static Slice_Specifics *last;
@@ -514,10 +512,7 @@ int snum,qs;
  *
  *================================================================
  */
-Block_Specifics *AddBs(c,bnum,rel,qs)
-FrameSpecList *c;
-boolean rel;
-int bnum,qs;
+Block_Specifics *AddBs(FrameSpecList *c, int bnum, boolean rel, int qs)
 {
   Block_Specifics *new;
   static Block_Specifics *last;
@@ -556,10 +551,7 @@ int bnum,qs;
  *================================================================
  */
 
-int SpecLookup(fn,typ,num,info,start_qs)
-int fn,typ,num;
-BlockMV **info;
-int start_qs;
+int SpecLookup(int fn, int typ, int num, BlockMV **info, int start_qs)
 {
   static FrameSpecList *last = (FrameSpecList *) NULL;
   Slice_Specifics *sptr=(Slice_Specifics *) NULL;
@@ -691,8 +683,8 @@ int start_qs;
  *
  *================================================================
  */
-int SpecTypeLookup(fn)
-int fn;
+int 
+SpecTypeLookup (int fn)
 {
   FrameSpecList *tmp;
 

@@ -295,15 +295,14 @@ const double VidRateNum[9]={1.0, 23.976, 24.0, 25.0, 29.97, 30.0,
  *
  *===========================================================================*/
 static void
-GenMBType(bbPtr, pict_code_type, mb_quant, motion_forw, motion_back,
-          mb_pattern, mb_intra)
-    BitBucket *bbPtr;
-    uint32 pict_code_type;
-    uint32 mb_quant;
-    uint32 motion_forw;
-    uint32 motion_back;
-    uint32 mb_pattern;
-    uint32 mb_intra;
+GenMBType(
+    BitBucket *bbPtr,
+    uint32 pict_code_type,
+    uint32 mb_quant,
+    uint32 motion_forw,
+    uint32 motion_back,
+    uint32 mb_pattern,
+    uint32 mb_intra)
 {
     int code;
 
@@ -474,9 +473,9 @@ GenMotionCode(BitBucket * const bbPtr,
  *
  *===========================================================================*/
 static void
-GenBlockPattern(bbPtr, mb_pattern)
-    BitBucket *bbPtr;
-    uint32 mb_pattern;
+GenBlockPattern(
+    BitBucket *bbPtr,
+    uint32 mb_pattern)
 {
     uint32 code, num;
 
@@ -501,9 +500,9 @@ GenBlockPattern(bbPtr, mb_pattern)
  *
  *===========================================================================*/
 static void
-GenMBAddrIncr(bbPtr, addr_incr)
-    BitBucket *bbPtr;
-    uint32 addr_incr;
+GenMBAddrIncr(
+    BitBucket *bbPtr,
+    uint32 addr_incr)
 {
     uint32 code;
     uint32 num;
@@ -529,24 +528,21 @@ GenMBAddrIncr(bbPtr, addr_incr)
  *
  *===========================================================================*/
 static void
-GenPictHead(bbPtr, temp_ref, code_type, vbv_delay, full_pel_forw_flag,
-            forw_f_code, full_pel_back_flag, back_f_code, extra_info,
-            extra_info_size, ext_data, ext_data_size, user_data,
-            user_data_size)
-    BitBucket *bbPtr;
-    uint32 temp_ref;
-    uint32 code_type;
-    uint32 vbv_delay;
-    int32 full_pel_forw_flag;
-    uint32 forw_f_code;
-    int32 full_pel_back_flag;
-    uint32 back_f_code;
-    uint8 *extra_info;
-    uint32 extra_info_size;
-    uint8 *ext_data;
-    uint32 ext_data_size;
-    uint8 *user_data;
-    uint32 user_data_size;
+GenPictHead(
+    BitBucket *bbPtr,
+    uint32 temp_ref,
+    uint32 code_type,
+    uint32 vbv_delay,
+    int32 full_pel_forw_flag,
+    uint32 forw_f_code,
+    int32 full_pel_back_flag,
+    uint32 back_f_code,
+    uint8 *extra_info,
+    uint32 extra_info_size,
+    uint8 *ext_data,
+    uint32 ext_data_size,
+    uint8 *user_data,
+    uint32 user_data_size)
 {
     /* Write picture start code. */
     Bitio_Write(bbPtr, PICT_START_CODE, 32);
@@ -645,9 +641,8 @@ GenPictHead(bbPtr, temp_ref, code_type, vbv_delay, full_pel_forw_flag,
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
-void
-SetGOPStartTime(index)
-    int index;
+void 
+SetGOPStartTime (int index)
 {
     lastGOPStart = gopStartFrame;
     gopStartFrame = index;
@@ -668,11 +663,11 @@ SetGOPStartTime(index)
  *
  *===========================================================================*/
 void
-Mhead_GenPictureHeader(bbPtr, frameType, pictCount, f_code)
-    BitBucket *bbPtr;
-    int frameType;
-    int pictCount;
-    int f_code;
+Mhead_GenPictureHeader(
+    BitBucket *bbPtr,
+    int frameType,
+    int pictCount,
+    int f_code)
 {
     int     temporalRef;
 
@@ -870,8 +865,7 @@ Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
  *
  *===========================================================================*/
 void
-Mhead_GenSequenceEnder(bbPtr)
-    BitBucket *bbPtr;
+Mhead_GenSequenceEnder(BitBucket *bbPtr)
 {
     Bitio_Write(bbPtr, SEQ_END_CODE, 32);
 }
@@ -891,21 +885,19 @@ Mhead_GenSequenceEnder(bbPtr)
  *
  *===========================================================================*/
 void
-Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
-                   closed_gop, broken_link, ext_data, ext_data_size,
-                   user_data, user_data_size)
-    BitBucket *bbPtr;
-    int32 drop_frame_flag;
-    int32 tc_hrs;
-    int32 tc_min;
-    int32 tc_sec;
-    int32 tc_pict;
-    int32 closed_gop;
-    int32 broken_link;
-    uint8 *ext_data;
-    int32 ext_data_size;
-    uint8 *user_data;
-    int32 user_data_size;
+Mhead_GenGOPHeader(
+    BitBucket *bbPtr,
+    int32 drop_frame_flag,
+    int32 tc_hrs,
+    int32 tc_min,
+    int32 tc_sec,
+    int32 tc_pict,
+    int32 closed_gop,
+    int32 broken_link,
+    uint8 *ext_data,
+    int32 ext_data_size,
+    uint8 *user_data,
+    int32 user_data_size)
 {
     int i;
 
@@ -990,12 +982,12 @@ Mhead_GenGOPHeader(bbPtr, drop_frame_flag, tc_hrs, tc_min, tc_sec, tc_pict,
  *
  *===========================================================================*/
 void
-Mhead_GenSliceHeader(bbPtr, verticalPos, qscale, extra_info, extra_info_size)
-    BitBucket *bbPtr;
-    uint32 verticalPos;
-    uint32 qscale;
-    uint8 *extra_info;
-    uint32 extra_info_size;
+Mhead_GenSliceHeader(
+    BitBucket *bbPtr,
+    uint32 verticalPos,
+    uint32 qscale,
+    uint8 *extra_info,
+    uint32 extra_info_size)
 {
     int i;
 
@@ -1034,8 +1026,7 @@ Mhead_GenSliceHeader(bbPtr, verticalPos, qscale, extra_info, extra_info_size)
  *
  *===========================================================================*/
 void
-Mhead_GenSliceEnder(bbPtr)
-    BitBucket *bbPtr;
+Mhead_GenSliceEnder(BitBucket *bbPtr)
 {
     Bitio_BytePad(bbPtr);
 }
@@ -1055,29 +1046,25 @@ Mhead_GenSliceEnder(bbPtr)
  *
  *===========================================================================*/
 void
-Mhead_GenMBHeader(bbPtr, pict_code_type, addr_incr, q_scale,
-                  forw_f_code, back_f_code, horiz_forw_r, vert_forw_r,
-                  horiz_back_r, vert_back_r, motion_forw, m_horiz_forw,
-                  m_vert_forw, motion_back, m_horiz_back, m_vert_back,
-                  mb_pattern, mb_intra)
-    BitBucket *bbPtr;
-    uint32 pict_code_type;
-    uint32 addr_incr;
-    uint32 q_scale;
-    uint32 forw_f_code;
-    uint32 back_f_code;
-    uint32 horiz_forw_r;
-    uint32 vert_forw_r;
-    uint32 horiz_back_r;
-    uint32 vert_back_r;
-    int32 motion_forw;
-    int32 m_horiz_forw;
-    int32 m_vert_forw;
-    int32 motion_back;
-    int32 m_horiz_back;
-    int32 m_vert_back;
-    uint32 mb_pattern;
-    uint32 mb_intra;
+Mhead_GenMBHeader(
+    BitBucket *bbPtr,
+    uint32 pict_code_type,
+    uint32 addr_incr,
+    uint32 q_scale,
+    uint32 forw_f_code,
+    uint32 back_f_code,
+    uint32 horiz_forw_r,
+    uint32 vert_forw_r,
+    uint32 horiz_back_r,
+    uint32 vert_back_r,
+    int32 motion_forw,
+    int32 m_horiz_forw,
+    int32 m_vert_forw,
+    int32 motion_back,
+    int32 m_horiz_back,
+    int32 m_vert_back,
+    uint32 mb_pattern,
+    uint32 mb_intra)
 {
     uint32 mb_quant;
 
@@ -1176,8 +1163,7 @@ if ( addr_incr != 1 )
 /* GenMBEnd only used for `D` pictures. Shouldn't really ever be called. */
 /* - dwallach */
 void
-GenMBEnd(bbPtr)
-    BitBucket *bbPtr;
+GenMBEnd(BitBucket *bbPtr)
 {
     Bitio_Write(bbPtr, 0x01, 1);
 }

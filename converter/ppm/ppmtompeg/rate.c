@@ -330,8 +330,8 @@ initRateControl(bool const wantUnderflowWarning,
  * SIDE EFFECTS:   many global variables
  *
  *===========================================================================*/
-int
-initGOPRateControl()
+int 
+initGOPRateControl (void)
 {
     DBG_PRINT(("Initializing new GOP\n"));
 
@@ -598,9 +598,8 @@ updateRateControl(int const type) {
  * NOTES:
  *
  *===========================================================================*/
-void
-  MB_RateOut(type)
-int type;
+void 
+MB_RateOut (int type)
 {
   int totalBits;
   int pctUsed, pctDone;
@@ -642,8 +641,8 @@ int type;
  * NOTES:
  *
  *===========================================================================*/
-void incNumBlocks(num)
-     int num;
+void 
+incNumBlocks (int num)
 {
   rc_numBlocks += num;
 }
@@ -664,8 +663,8 @@ void incNumBlocks(num)
  * NOTES:
  *
  *===========================================================================*/
-void incMacroBlockBits(num)
-     int num;
+void 
+incMacroBlockBits (int num)
 {
   rc_bitsThisMB = num;
   rc_totalMBBits += num;
@@ -684,12 +683,7 @@ void incMacroBlockBits(num)
  * SIDE EFFECTS:
  *
  *===========================================================================*/
-int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
-     int oldQScale;
-     Block blk0;
-     Block blk1;
-     Block blk2;
-     Block blk3;
+int needQScaleChange(int oldQScale, Block blk0, Block blk1, Block blk2, Block blk3)
 {
 
   /*   One more MacroBlock seen */
@@ -724,8 +718,8 @@ int needQScaleChange(oldQScale, blk0, blk1, blk2, blk3)
  * SIDE EFFECTS:   sets the count passed
  *
  *===========================================================================*/
-int
-  determineMBCount ()
+int 
+determineMBCount (void)
 {
   int y,x;
 
@@ -752,8 +746,8 @@ int
  * NOTES:
  *
  *===========================================================================*/
-void checkBufferFullness (oldQScale)
-     int oldQScale;
+void 
+checkBufferFullness (int oldQScale)
 {
   int temp;
 
@@ -782,11 +776,7 @@ void checkBufferFullness (oldQScale)
  * NOTES:
  *
  *===========================================================================*/
-void checkSpatialActivity(blk0, blk1, blk2, blk3)
-     Block blk0;
-     Block blk1;
-     Block blk2;
-     Block blk3;
+void checkSpatialActivity(Block blk0, Block blk1, Block blk2, Block blk3)
 {
   int temp;
   int16 *blkArray[4];
@@ -863,7 +853,8 @@ void checkSpatialActivity(blk0, blk1, blk2, blk3)
  *
  *
  *==========================================================================*/
-int getRateMode()
+int 
+getRateMode (void)
 {
   return RateControlMode;
 }
@@ -920,7 +911,8 @@ void setBitRate (const char * const charPtr)
  * SIDE EFFECTS:   none
  *
  *===========================================================================*/
-int getBitRate ()
+int 
+getBitRate (void)
 {
   return bit_rate;
 }
@@ -972,7 +964,8 @@ void setBufferSize (const char * const charPtr)
  * SIDE EFFECTS:   none
  *
  *===========================================================================*/
-int getBufferSize ()
+int 
+getBufferSize (void)
 {
   return buffer_size;
 }

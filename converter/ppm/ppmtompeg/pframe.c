@@ -893,8 +893,7 @@ void
  *
  *===========================================================================*/
 void
-  SetPQScale(qP)
-int qP;
+  SetPQScale(int qP)
 {
   qscaleP = qP;
 }
@@ -1013,8 +1012,7 @@ float
  *
  *===========================================================================*/
 void
-  ComputeHalfPixelData(frame)
-MpegFrame *frame;
+  ComputeHalfPixelData(MpegFrame *frame)
 {
   int x, y;
 

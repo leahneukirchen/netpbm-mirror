@@ -130,8 +130,7 @@ static double trans_coef[8][8]; /* transform coefficients */
 
 
 
-static void reference_fwd_dct(block, dest)
-Block block, dest;
+static void reference_fwd_dct(Block block, Block dest)
 {
   int i, j, k;
   double s;
@@ -185,8 +184,7 @@ Block block, dest;
 
 
 static void
-mp_fwd_dct_fast(data2d, dest2d)
-    Block data2d, dest2d;
+mp_fwd_dct_fast(Block data2d, Block dest2d)
 /*
  * --------------------------------------------------------------
  *
@@ -329,8 +327,7 @@ mp_fwd_dct_fast(data2d, dest2d)
 
 extern boolean pureDCT;
 void
-mp_fwd_dct_block2(data, dest)
-    DCTBLOCK_2D data, dest;
+mp_fwd_dct_block2(DCTBLOCK_2D data, DCTBLOCK_2D dest)
 /*
  * --------------------------------------------------------------
  *
@@ -382,7 +379,7 @@ mp_fwd_dct_block2(data, dest)
  */
 
 
-void init_fdct() {
+void init_fdct(void) {
 
     unsigned int i;
 

@@ -266,8 +266,8 @@ SetupLocalDCT(const char * const charPtr)
  * SIDE EFFECTS:    sets DoLaplace, L1, L2, and Lambdas
  *
  *===========================================================================*/
-static void
-SetupLaplace()
+static void 
+SetupLaplace (void)
 {
   int i;
 
@@ -380,11 +380,7 @@ CalcLambdas(void) {
  *
  *===========================================================================*/
 void
-Mpost_UnQuantZigBlockLaplace(in, out, qscale, iblock)
-    FlatBlock in;
-    Block out;
-    int qscale;
-    boolean iblock;
+Mpost_UnQuantZigBlockLaplace(FlatBlock in, Block out, int qscale, boolean iblock)
 {
     int index;
     int     position;
@@ -461,7 +457,8 @@ mse(Block blk1, Block blk2)
  * SIDE EFFECTS:  varies
  *
  *===========================================================================*/
-void Tune_Init()
+void 
+Tune_Init (void)
 {
   int i;
 

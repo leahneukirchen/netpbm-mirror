@@ -190,11 +190,7 @@ extern boolean realQuiet;
  *
  *===========================================================================*/
 void
-Mpost_UnQuantZigBlock(in, out, qscale, iblock)
-    FlatBlock in;
-    Block out;
-    int qscale;
-    boolean iblock;
+Mpost_UnQuantZigBlock(FlatBlock in, Block out, int qscale, boolean iblock)
 {
     int index;
     int     start;
@@ -276,11 +272,7 @@ Mpost_UnQuantZigBlock(in, out, qscale, iblock)
  *
  *===========================================================================*/
 int
-Mpost_QuantZigBlock(in, out, qscale, iblock)
-    Block in;
-    FlatBlock out;
-    int qscale;
-    int iblock;
+Mpost_QuantZigBlock(Block in, FlatBlock out, int qscale, int iblock)
 {
   int i;
   int16 temp;
@@ -388,9 +380,7 @@ Mpost_QuantZigBlock(in, out, qscale, iblock)
  *
  *===========================================================================*/
 void
-Mpost_RLEHuffIBlock(in, out)
-    FlatBlock in;
-    BitBucket *out;
+Mpost_RLEHuffIBlock(FlatBlock in, BitBucket *out)
 {
     int i;
     int nzeros = 0;
@@ -474,9 +464,7 @@ Mpost_RLEHuffIBlock(in, out)
  *
  *===========================================================================*/
 void
-Mpost_RLEHuffPBlock(in, out)
-    FlatBlock in;
-    BitBucket *out;
+Mpost_RLEHuffPBlock(FlatBlock in, BitBucket *out)
 {
     int i;
     int nzeros = 0;
@@ -580,8 +568,7 @@ Mpost_RLEHuffPBlock(in, out)
  *
  *===========================================================================*/
 int
-CalcRLEHuffLength(in)
-    FlatBlock in;
+CalcRLEHuffLength(FlatBlock in)
 {
   int i;
   int nzeros = 0;

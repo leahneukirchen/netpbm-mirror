@@ -505,11 +505,7 @@ ReadIOConvert(struct inputSource * const inputSourceP,
  *
  *===========================================================================*/
 static void
-ReadEYUV(mf, fpointer, width, height)
-    MpegFrame *mf;
-    FILE *fpointer;
-    int width;
-    int height;
+ReadEYUV(MpegFrame *mf, FILE *fpointer, int width, int height)
 {
     int y;
     uint8   junk[4096];
@@ -573,11 +569,7 @@ ReadEYUV(mf, fpointer, width, height)
  *
  *===========================================================================*/
 static void
-ReadAYUV(mf, fpointer, width, height)
-    MpegFrame *mf;
-    FILE *fpointer;
-    int width;
-    int height;
+ReadAYUV(MpegFrame *mf, FILE *fpointer, int width, int height)
 {
     int x, y;
     struct  YuvLine line1, line2;
@@ -632,11 +624,8 @@ ReadAYUV(mf, fpointer, width, height)
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
-static void
-SeparateLine(fpointer, lineptr, width)
-    FILE *fpointer;
-    struct YuvLine *lineptr;
-    int width;
+static void 
+SeparateLine (FILE *fpointer, struct YuvLine *lineptr, int width)
 {
     uint8   junk[4096];
     int8    *crptr, *cbptr;
@@ -720,11 +709,7 @@ SeparateLine(fpointer, lineptr, width)
  *
  *===========================================================================*/
 static void
-ReadY(mf, fpointer, width, height)
-    MpegFrame *mf;
-    FILE *fpointer;
-    int width;
-    int height;
+ReadY(MpegFrame *mf, FILE *fpointer, int width, int height)
 {
     int y;
     uint8   junk[4096];
@@ -768,11 +753,7 @@ ReadY(mf, fpointer, width, height)
  *
  *===========================================================================*/
 static void
-ReadSub4(mf, fpointer, width, height)
-    MpegFrame *mf;
-    FILE *fpointer;
-    int width;
-    int height;
+ReadSub4(MpegFrame *mf, FILE *fpointer, int width, int height)
 {
     int y;
     int x;
@@ -832,9 +813,7 @@ ReadSub4(mf, fpointer, width, height)
  *
  *===========================================================================*/
 static void
-DoGamma(mf, w, h)
-MpegFrame *mf;
-int w,h;
+DoGamma(MpegFrame *mf, int w, int h)
 {
   static int GammaVal[256];
   static bool init_done=FALSE;
@@ -886,9 +865,7 @@ int w,h;
  *===========================================================================*/
 
 static void
-DoKillDim(mf, w, h)
-MpegFrame *mf;
-int w,h;
+DoKillDim(MpegFrame *mf, int w, int h)
 {
   static bool init_done=FALSE;
   static unsigned char mapper[256];

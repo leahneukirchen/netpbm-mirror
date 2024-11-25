@@ -316,8 +316,8 @@ readYUVOrig(int          const socketFd,
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
-static void
-  EndIOServer()
+static void 
+EndIOServer (void)
 {
   /* send signal to IO server:  -1 as frame number */
   GetRemoteFrame(NULL, -1);
@@ -374,9 +374,8 @@ NotifyDecodeServerReady(int const id) {
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
-void
-  WaitForDecodedFrame(id)
-int id;
+void 
+WaitForDecodedFrame (int id)
 {
   int const negativeTwo = -2;
   int   clientSocket;
@@ -546,8 +545,10 @@ GetRemoteDecodedRefFrame(MpegFrame * const frameP,
  * SIDE EFFECTS:   kills other processes
  *
  *===========================================================================*/
-static void cleanup_fork( dummy )       /* try to kill all child processes */
-     int dummy;
+static void 
+cleanup_fork (       /* try to kill all child processes */
+    int dummy
+)
 {
   int i;
   for (i = 0;  i < current_max_forked_pid;  ++i ) {
@@ -576,8 +577,10 @@ static void cleanup_fork( dummy )       /* try to kill all child processes */
  * SIDE EFFECTS:   Fork the command, and save to PID so you can kil it later!
  *
  *===========================================================================*/
-static int safe_fork(command)       /* fork child process and remember its PID */
-     char *command;
+static int 
+safe_fork (       /* fork child process and remember its PID */
+    char *command
+)
 {
   static int init=0;
   char *argis[MAXARGS];
