@@ -19,12 +19,12 @@
 # it looks like this thing is losing.
 #
 # Limitations:
-#  * Ordered lists are smashed into unordered lists
-#  * IMG tags are issued as .IMG preceded by a bolded caption containing
-#    the alt content.  This will only work if the page is formatted with
+#  * Smashes ordered lists into unordered lists
+#  * Issues IMG tags as .IMG preceded by a bolded caption containing
+#    the alt content.  This will work only if the page is formatted with
 #    mwww macros.
 #  * Loses summary information from tables.
-#  * Only permits one <HR> in the HTML, right before the index.
+#  * Permits only one <HR> in the HTML, right before the index.
 #
 # You can use the <?makeman ?> PI to pass text directly through to the
 # generated manual page,  A major use is to insert format lines for tables.
