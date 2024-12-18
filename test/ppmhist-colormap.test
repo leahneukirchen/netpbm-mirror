@@ -1,0 +1,96 @@
+#! /bin/sh
+# This script tests: ppmhist
+# Also requires: pnmpad pnminvert pamshuffle
+
+echo "Test 1"
+
+RGBDEF=./rgbt.txt
+
+ppmhist -noheader -colorname -sort=rgb testgrid.pbm
+echo
+ppmhist -noheader -colorname -sort=frequency testgrid.pbm
+echo
+pnminvert testgrid.pbm | ppmhist -noheader -colorname -sort=frequency
+echo
+ppmhist -noheader -colorname -sort=rgb maze.pbm
+echo
+ppmhist -noheader -colorname -sort=frequency maze.pbm
+
+
+echo "Test 2"
+
+tmpdir=${tmpdir:-/tmp}
+colorname_ppm=${tmpdir}/colorname.ppm
+outmap=${tmpdir}/outmap
+outmap2=${tmpdir}/outmap2
+colorlist=${tmpdir}/colorlist
+
+# Kludge to create PPM test image from colorname file
+awk 'BEGIN { a = 255; n = 1 ; c=0 }
+     !/^#/ && NF==4 {for(i = 1; i <= n; i++) {a = a"\n"$1" "$2" "$3; c++}; n++ };
+     END {print "P3"; print c,1; print a}' rgbt.txt > ${colorname_ppm}
+
+awk '!/^#/ && NF==4 {print $NF}' rgbt.txt | sort | tr '\n' ' ' > ${colorlist}
+echo
+
+ppmhist -noheader -colorname ${colorname_ppm} | \
+    tee ${outmap} | awk '{print $NF}' | sort | tr '\n' ' ' | \
+    cmp -s ${colorlist} - && echo "match" || echo "no match"
+echo
+cat ${outmap}
+rm  ${outmap}
+
+
+echo
+ppmhist -noheader -colorname -sort=frequency ${colorname_ppm} | \
+    tee ${outmap} | awk '{print $NF}' | sort | tr '\n' ' ' | \
+    cmp -s ${colorlist} - && echo "match" || echo "no match"
+echo
+cat ${outmap}
+rm  ${outmap}
+
+echo
+pamshuffle -randomseed 10000 ${colorname_ppm} | \
+    ppmhist -noheader -colorname -sort=frequency | \
+    tee ${outmap} | awk '{print $NF}' | sort | tr '\n' ' ' | \
+    cmp -s ${colorlist} - && echo "match" || echo "no match"
+echo
+cat ${outmap}
+rm  ${outmap}
+
+echo
+pamshuffle -randomseed 10001 ${colorname_ppm} | \
+    ppmhist -noheader -colorname -sort=frequency -map | \
+    tee ${outmap} | awk '$3~/#$/ {print $NF}' | sort | tr '\n' ' ' | \
+    cmp -s ${colorlist} - && echo "match" || echo "no match"
+echo
+cat ${outmap}
+
+echo
+pamshuffle -randomseed 10002 ${outmap} | \
+    ppmhist -noheader -colorname -sort=frequency -map | \
+    tee ${outmap2} | awk '$3~/#$/ {print $NF}' | sort | tr '\n' ' ' | \
+    cmp -s ${colorlist} - && echo "match" || echo "no match"
+echo
+cat ${outmap2}
+rm  ${outmap} ${outmap2}
+
+echo
+ppmhist -noheader -colorname -sort=rgb ${colorname_ppm} | \
+    tee ${outmap} | awk '{print $NF}' | sort | tr '\n' ' ' | \
+    cmp -s ${colorlist} - && echo "match" || echo "no match" 
+echo
+cat ${outmap}
+rm  ${outmap}
+
+echo
+pamshuffle -randomseed 100 ${colorname_ppm} | \
+    ppmhist -noheader -colorname -sort=rgb | \
+    tee ${outmap} | awk '{print $NF}' | sort | tr '\n' ' ' | \
+    cmp -s ${colorlist} - && echo "match" || echo "no match"
+echo
+cat ${outmap}
+rm  ${outmap}
+
+
+rm ${colorname_ppm} ${colorlist}

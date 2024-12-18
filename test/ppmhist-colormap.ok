@@ -1,0 +1,129 @@
+Test 1
+     0     0     0	    0	    168  Black
+   255   255   255	  255	     56  White
+
+     0     0     0	    0	    168  Black
+   255   255   255	  255	     56  White
+
+   255   255   255	  255	    168  White
+     0     0     0	    0	     56  Black
+
+     0     0     0	    0	   1736  Black
+   255   255   255	  255	   1627  White
+
+     0     0     0	    0	   1736  Black
+   255   255   255	  255	   1627  White
+Test 2
+
+match
+
+   128   128   128	  128	     12  Gray
+   103    67     0	   70	     11  Brown
+   160    32   240	   94	     10  Purple
+   255   138     0	  157	      9  Orange
+   255   255     0	  226	      8  Yellow
+   255     0   255	  105	      7  Magenta
+     0   255   255	  179	      6  Cyan
+     0     0   255	   29	      5  Blue
+     0   255     0	  150	      4  Green
+   255     0     0	   76	      3  Red
+   255   255   255	  255	      2  White
+     0     0     0	    0	      1  Black
+
+match
+
+   128   128   128	  128	     12  Gray
+   103    67     0	   70	     11  Brown
+   160    32   240	   94	     10  Purple
+   255   138     0	  157	      9  Orange
+   255   255     0	  226	      8  Yellow
+   255     0   255	  105	      7  Magenta
+     0   255   255	  179	      6  Cyan
+     0     0   255	   29	      5  Blue
+     0   255     0	  150	      4  Green
+   255     0     0	   76	      3  Red
+   255   255   255	  255	      2  White
+     0     0     0	    0	      1  Black
+
+match
+
+   128   128   128	  128	     12  Gray
+   103    67     0	   70	     11  Brown
+   160    32   240	   94	     10  Purple
+   255   138     0	  157	      9  Orange
+   255   255     0	  226	      8  Yellow
+   255     0   255	  105	      7  Magenta
+     0   255   255	  179	      6  Cyan
+     0     0   255	   29	      5  Blue
+     0   255     0	  150	      4  Green
+   255     0     0	   76	      3  Red
+   255   255   255	  255	      2  White
+     0     0     0	    0	      1  Black
+
+match
+
+P3
+# color map
+12 1
+255
+   128   128   128#	  128	     12  Gray
+   103    67     0#	   70	     11  Brown
+   160    32   240#	   94	     10  Purple
+   255   138     0#	  157	      9  Orange
+   255   255     0#	  226	      8  Yellow
+   255     0   255#	  105	      7  Magenta
+     0   255   255#	  179	      6  Cyan
+     0     0   255#	   29	      5  Blue
+     0   255     0#	  150	      4  Green
+   255     0     0#	   76	      3  Red
+   255   255   255#	  255	      2  White
+     0     0     0#	    0	      1  Black
+
+match
+
+P3
+# color map
+12 1
+255
+     0     0     0#	    0	      1  Black
+     0     0   255#	   29	      1  Blue
+     0   255     0#	  150	      1  Green
+     0   255   255#	  179	      1  Cyan
+   103    67     0#	   70	      1  Brown
+   128   128   128#	  128	      1  Gray
+   160    32   240#	   94	      1  Purple
+   255     0     0#	   76	      1  Red
+   255     0   255#	  105	      1  Magenta
+   255   138     0#	  157	      1  Orange
+   255   255     0#	  226	      1  Yellow
+   255   255   255#	  255	      1  White
+
+match
+
+     0     0     0	    0	      1  Black
+     0     0   255	   29	      5  Blue
+     0   255     0	  150	      4  Green
+     0   255   255	  179	      6  Cyan
+   103    67     0	   70	     11  Brown
+   128   128   128	  128	     12  Gray
+   160    32   240	   94	     10  Purple
+   255     0     0	   76	      3  Red
+   255     0   255	  105	      7  Magenta
+   255   138     0	  157	      9  Orange
+   255   255     0	  226	      8  Yellow
+   255   255   255	  255	      2  White
+
+match
+
+     0     0     0	    0	      1  Black
+     0     0   255	   29	      5  Blue
+     0   255     0	  150	      4  Green
+     0   255   255	  179	      6  Cyan
+   103    67     0	   70	     11  Brown
+   128   128   128	  128	     12  Gray
+   160    32   240	   94	     10  Purple
+   255     0     0	   76	      3  Red
+   255     0   255	  105	      7  Magenta
+   255   138     0	  157	      9  Orange
+   255   255     0	  226	      8  Yellow
+   255   255   255	  255	      2  White

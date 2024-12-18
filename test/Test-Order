@@ -54,6 +54,7 @@ pamfind.test
 pamtable.test
 pgmhist.test
 ppmhist.test
+ppmhist-colormap.test
 pamsumm.test
 pnmpsnr.test
 pbmminkowski.test
