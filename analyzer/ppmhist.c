@@ -81,16 +81,25 @@ parseCommandLine(int argc, const char ** argv,
     else
         cmdlineP->inputFileName = argv[1];
 
-    if (hexcolorOpt + floatOpt + mapOpt > 1)
-        pm_error("You can specify only one of -hexcolor, -float, and -map");
+    if (mapOpt && nomapOpt)
+            pm_error("You cannot specify -map and -nomap together");
+    if (mapOpt) {
+        if (hexcolorOpt)
+            pm_error("You cannot specify -hexcolor with -map");
+        if (floatOpt)
+            pm_error("You cannot specify -float with -map");
+        if (cmdlineP->colorname)
+            pm_error("You cannot specify -colorname with -map");
+        if (cmdlineP->forensic)
+            pm_error("You cannot specify -forensic with -map");
+    }
+    if (hexcolorOpt + floatOpt > 1)
+        pm_error("You cannot specify -hexcolor and -float together");
     if (hexcolorOpt)
         cmdlineP->colorFmt = FMT_HEX;
     else if (floatOpt)
         cmdlineP->colorFmt = FMT_FLOAT;
     else if (mapOpt) {
-        if (cmdlineP->forensic)
-            pm_error("You cannot specify -map and -forensic together");
-
         cmdlineP->colorFmt = FMT_PPMPLAIN;
     } else
         cmdlineP->colorFmt = FMT_DECIMAL;

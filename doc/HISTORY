@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.09.00
 
+              ppmhist: Don't accept -nomap and -map together, or
+              -colorname with -map.  (Before, -nomap and -colorname were
+              ignored with -map).
+
               libnetpbm: Fix crash in ppm_colorDict_destroy; affects all
               programs that use color names.  Introduced in Netpbm 11.07 (June
               2024).
@@ -13,13 +17,13 @@ not yet  BJH  Release 11.09.00
               pcxtoppm: Fix wildly incorrect output for all multiplane
               images.  Broken in Netpbm 11.04 (September 2023).
 
-              pbmtoascii: fix bug: allows both -1x2 and -2x4.  Always present
+              pbmtoascii: Fix bug: allows both -1x2 and -2x4.  Always present
               (pbmtoascii existed in primordial Netpbm).
 
               build: fix type mismatch warning linking ppmtompeg.
               Always broken (ppmtompeg was new to Netpbm in April 2004).
 
-              build: make it work with -std=gnu23, which is the default in
+              build: Make it work with -std=gnu23, which is the default in
               recent GCC.  To wit, remove local declaration of "bool".
 
               makeman: fix for HTML lists that have blank lines between items.
