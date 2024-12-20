@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.09.00
 
+              pammixmulti: Add -blend=alpha-weighted
+
               ppmhist: Don't accept -nomap and -map together, or
               -colorname with -map.  (Before, -nomap and -colorname were
               ignored with -map).

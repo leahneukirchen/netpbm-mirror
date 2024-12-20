@@ -17,6 +17,7 @@
 
 typedef enum {
     BLEND_AVERAGE,   /* Take the average color of all pixels */
+    BLEND_ALPHA_WEIGHTED,  /* Take the average color of all pixels weighted by alpha */
     BLEND_RANDOM,    /* Take each pixel color from a randomly selected image */
     BLEND_MASK   /* Take each pixel color from the image indicated by a mask */
 } BlendType;
@@ -95,13 +96,16 @@ parseCommandLine(int argc, const char ** argv,
     if (blendSpec) {
         if (streq(blendOpt, "average"))
             cmdlineP->blend = BLEND_AVERAGE;
+        else if (streq(blendOpt, "alpha-weighted"))
+            cmdlineP->blend = BLEND_ALPHA_WEIGHTED;
         else if (streq(blendOpt, "random"))
             cmdlineP->blend = BLEND_RANDOM;
         else if (streq(blendOpt, "mask"))
             cmdlineP->blend = BLEND_MASK;
         else
             pm_error("Unrecognized -blend value '%s'.  "
-                     "We recognize 'average', 'random', and 'mask'", blendOpt);
+                     "We recognize 'average', 'alpha-weighted', 'random', "
+                     "and 'mask'", blendOpt);
     } else
         cmdlineP->blend = BLEND_AVERAGE;
 
@@ -159,7 +163,7 @@ initInput(unsigned int          const inFileCt,
 
     for (i = 0; i < inFileCt; ++i) {
         FILE * const ifP = pm_openr(inFileName[i]);
-        pnm_readpaminit(ifP, &inPam[i], PAM_STRUCT_SIZE(tuple_type));
+        pnm_readpaminit(ifP, &inPam[i], PAM_STRUCT_SIZE(opacity_plane));
         if (inPam[i].width != inPam[0].width ||
             inPam[i].height != inPam[0].height)
             pm_error("Input image %u has different dimensions from "
@@ -210,7 +214,7 @@ initMask(const char *          const maskFileName,
 
     FILE * const mfP = pm_openr(maskFileName);
 
-    pnm_readpaminit(mfP, maskPamP, PAM_STRUCT_SIZE(tuple_type));
+    pnm_readpaminit(mfP, maskPamP, PAM_STRUCT_SIZE(opacity_plane));
 
     if (maskPamP->width != stateP->inPam[0].width ||
         maskPamP->height != stateP->inPam[0].height) {
@@ -302,6 +306,49 @@ blendTuplesAverage(struct ProgramState * const stateP,
         for (img = 0, outSamps[samp] = 0; img < stateP->inFileCt; ++img)
             outSamps[samp] += ((sample *)stateP->inTupleRows[img][col])[samp];
         outSamps[samp] /= stateP->inFileCt;
+    }
+}
+
+
+
+static void
+blendTuplesAlphaWeighted(struct ProgramState * const stateP,
+                         unsigned int          const col,
+                         sample *              const outSamps) {
+/*----------------------------------------------------------------------------
+  Blend one tuple of the input images into a new tuple by averaging all input
+  tuples, weighted by each alpha value.
+-----------------------------------------------------------------------------*/
+    unsigned int const depth = stateP->inPam[0].depth;
+    unsigned int const alpha_chan = stateP->inPam[0].opacity_plane;
+
+    unsigned int samp;
+    unsigned int img;
+    unsigned int alpha_sum = 0;
+    unsigned int alpha_max = 0;
+
+    for (img = 0; img < stateP->inFileCt; ++img) {
+        sample alpha = ((sample *)stateP->inTupleRows[img][col])[alpha_chan];
+        alpha_sum += alpha;
+        if (alpha > alpha_max)
+            alpha_max = alpha;
+    }
+    if (alpha_sum == 0) {
+        for (samp = 0; samp < depth; ++samp)
+            outSamps[samp] = 0;
+        return;
+    }
+
+    for (samp = 0; samp < depth; ++samp) {
+        if (samp == alpha_chan) {
+            outSamps[samp] = alpha_max;
+            continue;
+        }
+        for (img = 0, outSamps[samp] = 0; img < stateP->inFileCt; ++img) {
+            sample * sampleP = (sample *)stateP->inTupleRows[img][col];
+            outSamps[samp] += sampleP[samp] * sampleP[alpha_chan];
+        }
+        outSamps[samp] /= alpha_sum;
     }
 }
 
@@ -411,6 +458,7 @@ blendImageRow(BlendType             const blend,
   Blend one row of input images into a new row.
 -----------------------------------------------------------------------------*/
     unsigned int const width = stateP->inPam[0].width;
+    int have_alpha = stateP->inPam[0].visual && stateP->inPam[0].have_opacity;
 
     unsigned int col;
 
@@ -426,6 +474,16 @@ blendImageRow(BlendType             const blend,
         case BLEND_AVERAGE:
             /* Average each sample across all the images. */
             blendTuplesAverage(stateP, col, outSamps);
+            break;
+
+        case BLEND_ALPHA_WEIGHTED:
+            /* Average each sample across all the images, weighted by alpha. */
+            if (have_alpha)
+                blendTuplesAlphaWeighted(stateP, col, outSamps);
+            else
+                /* Fall back on BLEND_AVERAGE if the images lack an
+                   alpha channel. */
+                blendTuplesAverage(stateP, col, outSamps);
             break;
 
         case BLEND_MASK:
@@ -507,7 +565,7 @@ main(int argc, const char * argv[]) {
 
 /*  COPYRIGHT LICENSE and WARRANTY DISCLAIMER
 
-Copyright (c) 2018-2023 Scott Pakin
+Copyright (c) 2018-2024 Scott Pakin
 All rights reserved
 
 Redistribution and use in source and binary forms, with or without
