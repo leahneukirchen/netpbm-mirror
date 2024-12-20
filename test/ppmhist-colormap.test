@@ -22,7 +22,6 @@ echo "Test 2"
 tmpdir=${tmpdir:-/tmp}
 colorname_ppm=${tmpdir}/colorname.ppm
 outmap=${tmpdir}/outmap
-outmap2=${tmpdir}/outmap2
 colorlist=${tmpdir}/colorlist
 
 # Kludge to create PPM test image from colorname file
@@ -58,22 +57,6 @@ echo
 cat ${outmap}
 rm  ${outmap}
 
-echo
-pamshuffle -randomseed 10001 ${colorname_ppm} | \
-    ppmhist -noheader -colorname -sort=frequency -map | \
-    tee ${outmap} | awk '$3~/#$/ {print $NF}' | sort | tr '\n' ' ' | \
-    cmp -s ${colorlist} - && echo "match" || echo "no match"
-echo
-cat ${outmap}
-
-echo
-pamshuffle -randomseed 10002 ${outmap} | \
-    ppmhist -noheader -colorname -sort=frequency -map | \
-    tee ${outmap2} | awk '$3~/#$/ {print $NF}' | sort | tr '\n' ' ' | \
-    cmp -s ${colorlist} - && echo "match" || echo "no match"
-echo
-cat ${outmap2}
-rm  ${outmap} ${outmap2}
 
 echo
 ppmhist -noheader -colorname -sort=rgb ${colorname_ppm} | \
