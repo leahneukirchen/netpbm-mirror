@@ -2,7 +2,7 @@
 <html><head><title>Pammixmulti User Manual</title></head>
 <body>
 <h1>pammixmulti</h1>
-Updated: 18 November 2018
+Updated: 18 December 2024
 <br>
 <a href="#index">Table Of Contents</a>
   
@@ -13,14 +13,14 @@ Updated: 18 November 2018
 
 <h2 id="synopsis">SYNOPSIS</h2>
 <p><b>pammixmulti</b>
-  [<b>--blend</b>=average|random|mask]
-  [<b>--maskfile</b>=<i>filename</i>]
-  [<b>--stdev</b>=<i>number</i>]
-  [<b>--randomseed</b> <i>integer</i>]
+  [<b>-blend</b>=average|alpha-weighted|random|mask]
+  [<b>-maskfile</b>=<i>filename</i>]
+  [<b>-stdev</b>=<i>number</i>]
+  [<b>-randomseed</b> <i>integer</i>]
   <i>filename</i> ...
 
-<p>Minimum unique abbreviation of an option is acceptable. You can use a
-single hyphen instead of double hyphens to denote options. You can use white
+<p>Minimum unique abbreviation of an option is acceptable. You can use double
+hyphen instead of a single hyphen to denote options. You can use white
 space in place of the equals sign to separate an option name from its
 value.
 
@@ -40,22 +40,28 @@ Common Options</a>), <b>pammixmulti</b> recognizes the following
 command line options:
 
 <dl compact>
-<dt><b>--blend</b>=average|random|mask</dt>
+<dt><b>-blend</b>=average|alpha-weighted|random|mask</dt>
 <dd>
-<p>This option specifies how the input images should be mixed to produce the
-output image.  With <b>--blend</b>=<code>average</code> (the default), each
-pixel in the output is produced by averaging the corresponding pixels from all
-the input images.  With <b>--blend</b>=<code>random</code>, each pixel in the
-output is produced by selecting the corresponding pixel from one of the input
-images, chosen at random on a per-pixel basis.  With
-<b>--blend</b>=<code>mask</code>, each pixel in the output is produced by a
-weighted average of the corresponding pixels from all the input images based
-on the grayscale level of an additional mask image.
+<p>This option specifies how the input images should be mixed to
+produce the output image.  With <b>-blend</b>=<code>average</code>
+(the default), each pixel in the output is produced by averaging the
+corresponding pixels from all the input images.  With
+<b>-blend</b>=<code>alpha-weighted</code>, each pixel in the output
+is produced by taking a weighted average of the corresponding pixels
+from all the input images, using each pixel's alpha (opaqueness) level
+as its weight.  With <b>-blend</b>=<code>random</code>, each pixel in
+the output is produced by selecting the corresponding pixel from one
+of the input images, chosen at random on a per-pixel basis.
+With <b>-blend</b>=<code>mask</code>, each pixel in the output is
+produced by a weighted average of the corresponding pixels from all
+the input images based on the grayscale level of an additional mask
+image.
+<p><b>-alpha-weighted</b> was new in Netpbm 11.09 (December 2024).
 </dd>
 
-<dt><b>--maskfile</b>=<i>filename</i></dt>
+<dt><b>-maskfile</b>=<i>filename</i></dt>
 <dd>
-<p>In conjunction with <b>--blend</b>=<code>mask</code>, this option names a
+<p>In conjunction with <b>-blend</b>=<code>mask</code>, this option names a
 grayscale mask file to control the blending of each pixel.  (If the file is
 not grayscale, the first channel is treated as gray).  Where the mask file is
 black, the first image is selected. Where the mask file is white, the last
@@ -63,27 +69,27 @@ image is selected.  Intermediate levels of gray select intermediate
 images.
 </dd>
 
-<dt><b>--stdev</b>=<i>number</i></dt>
+<dt><b>-stdev</b>=<i>number</i></dt>
 <dd>
-<p>When used with <b>--blend</b>=<code>mask</code>, this option controls how
+<p>When used with <b>-blend</b>=<code>mask</code>, this option controls how
 smoothly the various input images are mixed to produce each output pixel.  For
 example, consider running <b>pammixmulti</b> with three input images and a
-mask image that uses gray levels from 0 to 255. Given <b>--stdev</b>=0.0, gray
+mask image that uses gray levels from 0 to 255. Given <b>-stdev</b>=0.0, gray
 levels 0-84 produce exclusively image 1; gray levels 85-170 produce
 exclusively image 2; and gray levels 171-255 produce exclusively image 3.  If
-the argument to <b>--stdev</b> is positive, images are blended according to a
+the argument to <b>-stdev</b> is positive, images are blended according to a
 normal distribution.  Hence, gray levels around 85 produce an output pixel
 that includes roughly equal amounts of the corresponding pixel from images 1
 and 2 but less of the corresponding pixel from image 3.  As <i>number</i>
 tends towards the number of input images (going beyond that has diminishing
 impact), the output tends to look more
-like <b>--blend</b>=average. <i>number</i> defaults to 0.25.
+like <b>-blend</b>=average. <i>number</i> defaults to 0.25.
 </dd>
 
-<dt><b>--randomseed</b> <i>integer</i>
+<dt><b>-randomseed</b> <i>integer</i>
 
 <dd>This is the seed for the random number generator used with
-<b>--blend=random</b>
+<b>-blend=random</b>
 
 <p>Use this to ensure you get the same image on separate invocations.
 
@@ -105,28 +111,28 @@ like <b>--blend</b>=average. <i>number</i> defaults to 0.25.
 image:
 
 <pre><code>
-    pammixmulti --blend=random input*.ppm &gt;output.ppm
+    pammixmulti -blend=random input*.ppm &gt;output.ppm
 </code></pre>
 
 <p>Use a mask image to control the fading among input images on a
 pixel-by-pixel basis:
 
 <pre><code>
-    pammixmulti --blend=mask --maskfile=mask.pgm &gt;output.pam \
+    pammixmulti -blend=mask -maskfile=mask.pgm &gt;output.pam \
        one.pam two.pam three.pam four.pam
 </code></pre>
 
 <p>Do the same but with more abrupt transitions:
 
 <pre><code>
-    pammixmulti --blend=mask --maskfile=mask.pgm --stdev=0.0 &gt;output.pam \
+    pammixmulti -blend=mask -maskfile=mask.pgm -stdev=0.0 &gt;output.pam \
        one.pam two.pam three.pam four.pam
 </code></pre>
 
 <p>and now with more gradual transitions:
 
 <pre><code>
-    pammixmulti --blend=mask --maskfile=mask.pgm --stdev=1.0 &gt;output.pam \
+    pammixmulti -blend=mask -maskfile=mask.pgm -stdev=1.0 &gt;output.pam \
        one.pam two.pam three.pam four.pam
 </code></pre>
 
@@ -138,7 +144,7 @@ pixel-by-pixel basis:
 
 <h2 id="author">AUTHOR</h2>
 
-<p>Copyright 2018 Scott Pakin, scott+pbm@pakin.org.
+<p>Copyright 2018&ndash;2024 Scott Pakin, scott+pbm@pakin.org.
 
 <h2 id="seealso">SEE ALSO</h2>
 
