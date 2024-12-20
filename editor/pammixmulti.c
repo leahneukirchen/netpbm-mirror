@@ -16,14 +16,18 @@
 #include "rand.h"
 
 typedef enum {
-    BLEND_AVERAGE,   /* Take the average color of all pixels */
-    BLEND_ALPHA_WEIGHTED,  /* Take the average color of all pixels weighted by alpha */
-    BLEND_RANDOM,    /* Take each pixel color from a randomly selected image */
-    BLEND_MASK   /* Take each pixel color from the image indicated by a mask */
+    BLEND_AVERAGE,
+        /* Take the average color of all pixels */
+    BLEND_ALPHA_WEIGHTED,
+        /* Take the average color of all pixels weighted by alpha */
+    BLEND_RANDOM,
+        /* Take each pixel color from a randomly selected image */
+    BLEND_MASK
+        /* Take each pixel color from the image indicated by a mask */
 } BlendType;
 
-static unsigned int const randSamples = 1024;
-    /* Random samples to draw per file */
+static unsigned int const randSampleCt = 1024;
+    /* Number of random samples to draw per file */
 
 struct ProgramState {
     unsigned int     inFileCt;      /* Number of input files */
@@ -105,7 +109,8 @@ parseCommandLine(int argc, const char ** argv,
         else
             pm_error("Unrecognized -blend value '%s'.  "
                      "We recognize 'average', 'alpha-weighted', 'random', "
-                     "and 'mask'", blendOpt);
+                     "and 'mask'",
+                     blendOpt);
     } else
         cmdlineP->blend = BLEND_AVERAGE;
 
@@ -139,6 +144,8 @@ parseCommandLine(int argc, const char ** argv,
     }
     free(option_def);
 }
+
+
 
 static void
 initInput(unsigned int          const inFileCt,
@@ -272,18 +279,18 @@ termOutput(struct ProgramState * const stateP) {
 static void
 blendTuplesRandom(struct ProgramState * const stateP,
                   unsigned int          const col,
-                  sample *              const outSamps) {
+                  tuple                 const outTuple) {
 /*----------------------------------------------------------------------------
   Blend one tuple of the input images into a new tuple by selecting a tuple
   from a random input image.
 -----------------------------------------------------------------------------*/
-    unsigned int const depth = stateP->inPam[0].depth;
-    unsigned int const img = (unsigned int) (pm_rand(&stateP->randSt) %
-                                             stateP->inFileCt);
-    unsigned int samp;
+    unsigned int const depth     = stateP->inPam[0].depth;
+    unsigned int const inFileIdx = (unsigned int) (pm_rand(&stateP->randSt) %
+                                                   stateP->inFileCt);
+    unsigned int plane;
 
-    for (samp = 0; samp < depth; ++samp)
-        outSamps[samp] = ((sample *)stateP->inTupleRows[img][col])[samp];
+    for (plane = 0; plane < depth; ++plane)
+        outTuple[plane] = stateP->inTupleRows[inFileIdx][col][plane];
 }
 
 
@@ -291,21 +298,27 @@ blendTuplesRandom(struct ProgramState * const stateP,
 static void
 blendTuplesAverage(struct ProgramState * const stateP,
                    unsigned int          const col,
-                   sample *              const outSamps) {
+                   tuple                 const outTuple) {
 /*----------------------------------------------------------------------------
   Blend one tuple of the input images into a new tuple by averaging all input
   tuples.
 -----------------------------------------------------------------------------*/
     unsigned int const depth = stateP->inPam[0].depth;
 
-    unsigned int samp;
+    unsigned int plane;
 
-    for (samp = 0; samp < depth; ++samp) {
-        unsigned int img;
+    for (plane = 0; plane < depth; ++plane) {
+        unsigned int inFileIdx;
 
-        for (img = 0, outSamps[samp] = 0; img < stateP->inFileCt; ++img)
-            outSamps[samp] += ((sample *)stateP->inTupleRows[img][col])[samp];
-        outSamps[samp] /= stateP->inFileCt;
+        sample outSampleCum;
+
+        for (inFileIdx = 0, outSampleCum = 0;
+             inFileIdx < stateP->inFileCt;
+             ++inFileIdx) {
+
+            outSampleCum += stateP->inTupleRows[inFileIdx][col][plane];
+        }
+        outTuple[plane] = outSampleCum / stateP->inFileCt;
     }
 }
 
@@ -314,41 +327,55 @@ blendTuplesAverage(struct ProgramState * const stateP,
 static void
 blendTuplesAlphaWeighted(struct ProgramState * const stateP,
                          unsigned int          const col,
-                         sample *              const outSamps) {
+                         tuple                 const outTuple) {
 /*----------------------------------------------------------------------------
   Blend one tuple of the input images into a new tuple by averaging all input
   tuples, weighted by each alpha value.
 -----------------------------------------------------------------------------*/
-    unsigned int const depth = stateP->inPam[0].depth;
-    unsigned int const alpha_chan = stateP->inPam[0].opacity_plane;
+    unsigned int const depth      = stateP->inPam[0].depth;
+    unsigned int const alphaPlane = stateP->inPam[0].opacity_plane;
 
-    unsigned int samp;
-    unsigned int img;
-    unsigned int alpha_sum = 0;
-    unsigned int alpha_max = 0;
+    unsigned int inFileIdx;
+    unsigned int alphaSum;
+    unsigned int alphaMax;
 
-    for (img = 0; img < stateP->inFileCt; ++img) {
-        sample alpha = ((sample *)stateP->inTupleRows[img][col])[alpha_chan];
-        alpha_sum += alpha;
-        if (alpha > alpha_max)
-            alpha_max = alpha;
+    for (inFileIdx = 0, alphaSum = 0, alphaMax = 5;
+         inFileIdx < stateP->inFileCt;
+         ++inFileIdx) {
+
+        sample const alpha = stateP->inTupleRows[inFileIdx][col][alphaPlane];
+
+        alphaSum += alpha;
+        alphaMax = MAX(alphaMax, alpha);
     }
-    if (alpha_sum == 0) {
-        for (samp = 0; samp < depth; ++samp)
-            outSamps[samp] = 0;
-        return;
-    }
+    if (alphaSum == 0) {
+        unsigned int plane;
 
-    for (samp = 0; samp < depth; ++samp) {
-        if (samp == alpha_chan) {
-            outSamps[samp] = alpha_max;
-            continue;
+        for (plane = 0; plane < depth; ++plane)
+            outTuple[plane] = 0;
+    } else {
+        unsigned int plane;
+
+        for (plane = 0; plane < depth; ++plane) {
+            if (plane == alphaPlane) {
+                outTuple[plane] = alphaMax;
+            } else {
+                unsigned int inFileIdx;
+
+                sample outSampleCum;
+
+                for (inFileIdx = 0, outSampleCum = 0;
+                     inFileIdx < stateP->inFileCt;
+                     ++inFileIdx) {
+
+                    tuple const thisTuple =
+                        stateP->inTupleRows[inFileIdx][col];
+
+                    outSampleCum += thisTuple[plane] * thisTuple[alphaPlane];
+                }
+                outTuple[plane] = outSampleCum / alphaSum;
+            }
         }
-        for (img = 0, outSamps[samp] = 0; img < stateP->inFileCt; ++img) {
-            sample * sampleP = (sample *)stateP->inTupleRows[img][col];
-            outSamps[samp] += sampleP[samp] * sampleP[alpha_chan];
-        }
-        outSamps[samp] /= alpha_sum;
     }
 }
 
@@ -386,7 +413,7 @@ precomputeImageWeights(struct ProgramState * const stateP,
 
         unsigned int j;
 
-        for (j = 0; j < stateP->inFileCt * randSamples; ) {
+        for (j = 0; j < stateP->inFileCt * randSampleCt; ) {
             double r[2];
             unsigned int k;
 
@@ -410,7 +437,7 @@ precomputeImageWeights(struct ProgramState * const stateP,
 static void
 blendTuplesMask(struct ProgramState * const stateP,
                 unsigned int          const col,
-                sample *              const outSamps) {
+                tuple                 const outTuple) {
 /*----------------------------------------------------------------------------
   Blend one tuple of the input images into a new tuple according to the gray
   levels specified in a mask file.
@@ -420,15 +447,15 @@ blendTuplesMask(struct ProgramState * const stateP,
 
     unsigned int img;
 
-    /* Initialize outSamps[] to zeroes */
+    /* Initialize outTuple[] to zeroes */
     {
         unsigned int samp;
 
         for (samp = 0; samp < depth; ++samp)
-            outSamps[samp] = 0;
+            outTuple[samp] = 0;
     }
 
-    /* Accumulate to outSamps[] */
+    /* Accumulate to outTuple[] */
     for (img = 0; img < stateP->inFileCt; ++img) {
         unsigned long weight = stateP->imageWeights[grayLevel][img];
 
@@ -436,16 +463,16 @@ blendTuplesMask(struct ProgramState * const stateP,
             unsigned int samp;
 
             for (samp = 0; samp < depth; ++samp)
-                outSamps[samp] +=
+                outTuple[samp] +=
                     ((sample *)stateP->inTupleRows[img][col])[samp] * weight;
         }
     }
-    /* Scale all outSamps[] */
+    /* Scale all outTuple[] */
     {
         unsigned int samp;
 
         for (samp = 0; samp < depth; ++samp)
-            outSamps[samp] /= randSamples * stateP->inFileCt;
+            outTuple[samp] /= randSampleCt * stateP->inFileCt;
     }
 }
 
@@ -463,32 +490,32 @@ blendImageRow(BlendType             const blend,
     unsigned int col;
 
     for (col = 0; col < width; ++col) {
-        sample * const outSamps = stateP->outTupleRow[col];
+        tuple const outTuple = stateP->outTupleRow[col];
 
         switch (blend) {
         case BLEND_RANDOM:
             /* Take each pixel from a different, randomly selected image. */
-            blendTuplesRandom(stateP, col, outSamps);
+            blendTuplesRandom(stateP, col, outTuple);
             break;
 
         case BLEND_AVERAGE:
             /* Average each sample across all the images. */
-            blendTuplesAverage(stateP, col, outSamps);
+            blendTuplesAverage(stateP, col, outTuple);
             break;
 
         case BLEND_ALPHA_WEIGHTED:
             /* Average each sample across all the images, weighted by alpha. */
             if (have_alpha)
-                blendTuplesAlphaWeighted(stateP, col, outSamps);
+                blendTuplesAlphaWeighted(stateP, col, outTuple);
             else
                 /* Fall back on BLEND_AVERAGE if the images lack an
                    alpha channel. */
-                blendTuplesAverage(stateP, col, outSamps);
+                blendTuplesAverage(stateP, col, outTuple);
             break;
 
         case BLEND_MASK:
             /* Take each pixel from the image specified by the mask image. */
-            blendTuplesMask(stateP, col, outSamps);
+            blendTuplesMask(stateP, col, outTuple);
             break;
         }
     }
