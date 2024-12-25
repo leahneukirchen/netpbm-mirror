@@ -13,6 +13,7 @@
 #include <assert.h>
 #include "mallocvar.h"
 #include "pbm.h"
+#include "pm_c_util.h"
 
 /*
   The algorithm is based on describing the 2 or 8 pixels in a cell with a
@@ -236,6 +237,8 @@ main(int argc, const char ** argv) {
     int argn, gridx, gridy;
     const char * carr;
     const char* usage = "[-1x2|-2x4] [pbmfile]";
+    bool carr1x2Spec = false; /* Initial value */
+    bool carr2x4Spec = false; /* Initial value */
 
     pm_proginit(&argc, argv);
 
@@ -243,25 +246,18 @@ main(int argc, const char ** argv) {
     argn = 1;
     gridx = 1;
     gridy = 2;
-    carr = carr1x2;
 
     /* Check for flags. */
-    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-    {
+    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' ) {
         if ( pm_keymatch( argv[argn], "-1x2", 2 ) )
-        {
-            gridx = 1;
-            gridy = 2;
-            carr = carr1x2;
-        }
+            carr1x2Spec = true;
+
         else if ( pm_keymatch( argv[argn], "-2x4", 2 ) )
-        {
-            gridx = 2;
-            gridy = 4;
-            carr = carr2x4;
-        }
+            carr2x4Spec = true;
+
         else
             pm_usage( usage );
+
         ++argn;
     }
 
@@ -275,6 +271,20 @@ main(int argc, const char ** argv) {
     
     if ( argn != argc )
         pm_usage( usage );
+
+    if ( carr1x2Spec == true && carr2x4Spec == true) {
+            pm_error("You cannot specify both -1x2 and -2x4");
+    }
+    else if (carr2x4Spec == true) {
+            gridx = 2;
+            gridy = 4;
+            carr = carr2x4;
+    }
+    else {
+            gridx = 1;
+            gridy = 2;
+            carr = carr1x2;
+    }
 
     pbmtoascii(ifP, gridx, gridy, carr);
 
