@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+24.12.25 BJH  Release 11.02.12
+
+              pbmtoascii: fix bug: allows both -1x2 and -2x4.  Always present
+              (pbmtoascii existed in primordial Netpbm).
+
 24.09.28 BJH  Release 11.02.11
 
               build: fix typo in check of DARWIN_C_SOURCE so strdup, etc.
