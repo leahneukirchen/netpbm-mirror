@@ -799,8 +799,7 @@ PTwoLevelSearch(const LumBlock * const currentBlockP,
 
 
 void
-ShowPMVHistogram(fpointer)
-    FILE *fpointer;
+ShowPMVHistogram(FILE *fpointer)
 {
     int x, y;
     int *columnTotals;
@@ -845,8 +844,7 @@ ShowPMVHistogram(fpointer)
 
 
 void
-ShowBBMVHistogram(fpointer)
-    FILE *fpointer;
+ShowBBMVHistogram(FILE *fpointer)
 {
     int x, y;
     int *columnTotals;
@@ -893,8 +891,7 @@ ShowBBMVHistogram(fpointer)
 
 
 void
-ShowBFMVHistogram(fpointer)
-    FILE *fpointer;
+ShowBFMVHistogram(FILE *fpointer)
 {
     int x, y;
     int *columnTotals;

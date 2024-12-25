@@ -54,6 +54,7 @@ pamfind.test
 pamtable.test
 pgmhist.test
 ppmhist.test
+ppmhist-colormap.test
 pamsumm.test
 pnmpsnr.test
 pbmminkowski.test
@@ -179,7 +180,9 @@ pbm-misc-converters.test
 
 pamtopdbimg.test
 pamtosvg.test
+pbmtoascii.test
 pbmtog3.test
+ppmtoascii.test
 ppmtoapplevol.test
 ppmtomitsu.test
 411toppm.test

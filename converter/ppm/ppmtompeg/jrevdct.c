@@ -172,8 +172,7 @@ void init_idctref (void);
 extern boolean pureDCT;
 
 void
-mpeg_jrevdct(data)
-    DCTBLOCK data;
+mpeg_jrevdct(DCTBLOCK data)
 {
   if (pureDCT) reference_rev_dct(data);
   else mpeg_jrevdct_quick(data);
@@ -186,8 +185,7 @@ mpeg_jrevdct(data)
  */
 
 void
-mpeg_jrevdct_quick(data)
-    DCTBLOCK data;
+mpeg_jrevdct_quick(DCTBLOCK data)
 {
   int32 tmp0, tmp1, tmp2, tmp3;
   int32 tmp10, tmp11, tmp12, tmp13;
@@ -1223,7 +1221,8 @@ static double itrans_coef[8][8];
 
 
 
-void init_idctref() {
+void 
+init_idctref (void) {
 /*----------------------------------------------------------------------------
    initialize DCT coefficient matrix
 -----------------------------------------------------------------------------*/
@@ -1243,8 +1242,7 @@ void init_idctref() {
 
 /* perform IDCT matrix multiply for 8x8 coefficient block */
 
-void reference_rev_dct(block)
-int16 *block;
+void reference_rev_dct(int16 *block)
 {
   int i, j, k, v;
   double partial_product;

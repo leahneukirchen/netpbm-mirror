@@ -97,7 +97,7 @@ static boolean  frameCountsUnknown;
 /* important -- don't initialize anything here */
 /* must be re-initted anyway in GenMPEGStream */
 
-extern int  IOtime;
+extern time_t  IOtime;
 extern boolean  resizeFrame;
 extern int outputWidth, outputHeight;
 int     gopSize = 100;  /* default */
@@ -194,8 +194,8 @@ initTCTime(unsigned int const firstFrameNumber) {
  * SIDE EFFECTS:    totalFramesSent, tc_pict, tc_sec, tc_min, tc_hrs, tc_extra
  *
  *===========================================================================*/
-void
-IncrementTCTime() {
+void 
+IncrementTCTime (void) {
     /* if fps = an integer, then tc_extra = 0 and is ignored
 
        otherwise, it is the number of extra 1/1001 frames we've passed by
@@ -431,7 +431,7 @@ getBFrame(int                  const frameNum,
           boolean              const childProcess,
           boolean              const remoteIO,
           MpegFrame **         const bFramePP,
-          int *                const IOtimeP,
+          time_t *             const IOtimeP,
           unsigned int *       const framesReadP) {
 /*----------------------------------------------------------------------------
    Get Frame 'frameNum', which is a B frame related to previous reference
@@ -480,7 +480,7 @@ processBFrames(MpegFrame *          const pastRefFrameP,
                struct inputSource * const inputSourceP,
                boolean              const remoteIo,
                boolean              const childProcess,
-               int *                const IOtimeP,
+               time_t *             const IOtimeP,
                BitBucket *          const wholeStreamBbP,
                const char *         const outputFileName,
                unsigned int *       const framesReadP,
@@ -653,7 +653,7 @@ readAndSaveFrame(struct inputSource * const inputSourceP,
                  const char *         const inputConversion,
                  MpegFrame *          const pastRefFrameP,
                  unsigned int *       const framesReadP,
-                 int *                const ioTimeP,
+                 time_t *             const ioTimeP,
                  bool *               const endOfStreamP) {
 /*----------------------------------------------------------------------------
    Read the next frame from Standard Input and add it to the linked list
@@ -804,7 +804,7 @@ getPreviousFrame(unsigned int         const frameStart,
                  const char *         const inputConversion,
                  MpegFrame **         const framePP,
                  unsigned int *       const framesReadP,
-                 int *                const ioTimeP) {
+                 time_t *             const ioTimeP) {
 
     /* This needs to be modularized.  It shouldn't issue messages about
        encoding GOPs and B frames, since it knows nothing about those.
@@ -913,7 +913,7 @@ getFrame(MpegFrame **         const framePP,
          const char *         const slaveConversion,
          const char *         const inputConversion,
          unsigned int *       const framesReadP,
-         int *                const ioTimeP) {
+         time_t *             const ioTimeP) {
 /*----------------------------------------------------------------------------
    Get frame with number 'frameNumber' as *frameP.
 
@@ -1251,9 +1251,8 @@ SetStatFileName(const char * const fileName) {
  * SIDE EFFECTS:    gopSize
  *
  *===========================================================================*/
-void
-SetGOPSize(size)
-    int size;
+void 
+SetGOPSize (int size)
 {
     gopSize = size;
 }
@@ -1422,8 +1421,8 @@ NonLocalRefFrame(int const id) {
  * SIDE EFFECTS:    frameRateRounded, frameRateInteger
  *
  *===========================================================================*/
-void
-SetFrameRate()
+void 
+SetFrameRate (void)
 {
     switch(frameRate) {
     case 1:
@@ -1482,9 +1481,7 @@ SetFrameRate()
  *
  *===========================================================================*/
 static void
-ComputeDHMSTime(someTime, timeText)
-    int32 someTime;
-    char *timeText;
+ComputeDHMSTime(int32 someTime, char *timeText)
 {
     int     days, hours, mins, secs;
 
@@ -1721,8 +1718,8 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
 
 
 
-static void
-OpenBitRateFile() {
+static void 
+OpenBitRateFile (void) {
     bitRateFile = fopen(bitRateFileName, "w");
     if ( bitRateFile == NULL ) {
         pm_message("ERROR:  Could not open bit rate file:  '%s'",
@@ -1733,8 +1730,8 @@ OpenBitRateFile() {
 
 
 
-static void
-CloseBitRateFile() {
+static void 
+CloseBitRateFile (void) {
     fclose(bitRateFile);
 }
 

@@ -168,9 +168,8 @@ FType_FutureRef(unsigned int const currFrameNum) {
  * SIDE EFFECTS:    none
  *
  *===========================================================================*/
-int
-FType_PastRef(currFrameNum)
-    int currFrameNum;
+int 
+FType_PastRef (int currFrameNum)
 {
     int     index;
     int     pastIndex;

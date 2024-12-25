@@ -1147,8 +1147,7 @@ GenBFrame(BitBucket * const bb,
  *
  *===========================================================================*/
 void
-SetBQScale(qB)
-    int qB;
+SetBQScale(int qB)
 {
     qscaleB = qB;
 }

@@ -1,7 +1,7 @@
 #! /bin/sh
-# This script tests: pbmto10x pbmto4425 pbmtoascii pbmtobbnbg
-# This script tests: pbmtodjvurle pbmtoepson pbmtogo pbmtoibm23xx
-# This script tests: pbmtolj pbmtoln03 pbmtomatrixorbital pbmtonokia
+# This script tests: pbmto10x pbmto4425 pbmtobbnbg pbmtodjvurle
+# This script tests: pbmtoepson pbmtogo pbmtoibm23xx pbmtolj
+# This script tests: pbmtoln03 pbmtomatrixorbital pbmtonokia
 # This script tests: pbmtoplot pbmtoppa pbmtoptx pbmtozinc
 # Also requires: pbmpage
 
@@ -17,13 +17,6 @@ pbmto10x             < maze.pbm | cksum
 echo "pbmto4425"
 pbmto4425              maze.pbm | cksum
 pbmto4425            < maze.pbm | cksum
-
-# Asciitopgm works in the opposite direction, but the round-trip is not accurate
-
-echo "pbmtoascii"
-pbmtoascii             maze.pbm | cksum
-pbmtoascii           < maze.pbm | cksum
-pbmtoascii -2x4        maze.pbm | cksum
 
 echo "pbmtodjvurle"
 pbmtodjvurle           maze.pbm | cksum
