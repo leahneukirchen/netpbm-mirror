@@ -58,7 +58,7 @@ command line options:
 <dl>
 <dt><b>-verbose</b>
 <dd>This option causes <b>xwdtopnm</b> to display handy information about the
-input image and the conversion process
+input image and the conversion process.
 
 <dt><b>-headerdump</b>
 
@@ -96,7 +96,8 @@ different resolution, for example 5 bits for blue (maxval 31), 5 bits for red
 (maxval 31), and 6 bits for green (maxval 63), for a total of 16 bits per
 pixel.  In order to reproduce the colors as closely as possible,
 <b>xwdtopnm</b> has to use a large maxval.  In this example, it would use
-31 * 63 = 1953, and use 48 bits per pixel.
+maxval 31 * 63 = 1953, which requires two bytes per sample, totalling 48 bits
+per pixel.
 
 <p>Because this is a common and frustrating problem when using <b>xwdtopnm</b>,
 the program issues a warning whenever it generates output with two byte

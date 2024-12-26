@@ -35,13 +35,14 @@ command line options:
 <dl compact>
 <dt><b>--alphaout=</b><i>alpha-filename</i>
 
-<dd><b>xpmtoppm</b> creates a PBM file containing the transparency
-mask for the image.  If the input image doesn't contain transparency
-information, the <i>alpha-filename</i> file contains all white
-(opaque) transparency values.  If you don't specify <b>--alphaout</b>,
-<b>xpmtoppm</b> does not generate a transparency file, and if the input
-image has transparency information, <b>xpmtoppm</b> simply discards
-it.
+<dd>This option causes <b>xpmtoppm</b> to create a PBM file containing the
+transparency mask for the image.  If the input image doesn't contain
+transparency information, the <i>alpha-filename</i> file contains all white
+(opaque) transparency values.
+
+<p>If you don't specify <b>--alphaout</b>, <b>xpmtoppm</b> does not generate a
+transparency file, and <b>xpmtoppm</b> discards any transparency information
+the input image contains.
 
 <p>If you specify <b>-</b> as the filename, <b>xpmtoppm</b> writes the
 transparency output to Standard Output and discards the image.
@@ -64,7 +65,7 @@ Netpbm 10.30 (October 2005), the limit was 2K.
 <h2 id="limitations">LIMITATIONS</h2>
 
 <p><b>xpmtoppm</b> recognizes only a limited set of the features of XPM
-Version 3; i.e. it rejects as invalid many valid XPM images.
+Version 3; i.e. it rejects many valid XPM images as invalid.
 
 <p>The only place a comment block is valid is starting in Column 1 of the
 line immediately after "static char ...".

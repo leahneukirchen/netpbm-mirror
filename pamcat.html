@@ -130,22 +130,22 @@ command line options:
 <dl compact>
   <dt><b>-jleft</b>
   <dd>Left-justify images in a top-bottom concatenation.
-    <p>You cannot specify this with <b>-jright</b>
+    <p>You cannot specify this with <b>-jright</b>.
     <p>This option is invalid in a left-right concatenation.
 
   <dt><b>-jright</b>
   <dd>Right-justify images in a top-bottom concatenation.
-    <p>You cannot specify this with <b>-jleft</b>
+    <p>You cannot specify this with <b>-jleft</b>.
     <p>This option is invalid in a left-right concatenation.
 
   <dt><b>-jtop</b>
   <dd>Top-justify images in a left-right concatenation.
-    <p>You cannot specify this with <b>-jbottom</b>
+    <p>You cannot specify this with <b>-jbottom</b>.
     <p>This option is invalid in a top-bottom concatenation.
 
   <dt><b>-jbottom</b>
   <dd>Bottom-justify images in a left-right concatenation.
-    <p>You cannot specify this with <b>-jtop</b>
+    <p>You cannot specify this with <b>-jtop</b>.
     <p>This option is invalid in a top-bottom concatenation.
 
   <dt><b>-jcenter</b>
@@ -154,7 +154,8 @@ command line options:
     
 </dl>
 
-<p>By default, <b>pamcat</b> centers the smaller images.
+<p>By default, <b>pamcat</b> centers the smaller images.  Use
+  <b>-jleft</b> and <b>-jbottom</b> to override this.
   <b>-topbottom -jleft</b> would stack the images on top of each other, flush
   with the left edge.  <b>-leftright -jbottom</b> would line up the images
   left to right with their bottom edges aligned as if sitting on a table.
