@@ -147,6 +147,30 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
+static struct pam *
+newInPamArray(unsigned int  const inFileCt) {
+/*----------------------------------------------------------------------------
+   Allocate an array of 'inFileCt' input pam structures, valid through the
+   'opacity_plane' member.
+-----------------------------------------------------------------------------*/
+    struct pam * inPam;   /* array */
+    unsigned int i;
+
+    MALLOCARRAY(inPam, inFileCt);
+
+    if (!inPam)
+        pm_error("Failed to allocated memory for PAM structures for %u "
+                 "input files", inFileCt);
+
+    for (i = 0; i < inFileCt; ++i) {
+        inPam[i].comment_p = NULL;       /* don't want comments */
+        inPam[i].allocation_depth = 0;   /* alloc depth same as image depth */
+    }
+    return inPam;
+}
+
+
+
 static void
 initInput(unsigned int          const inFileCt,
           const char **         const inFileName,
@@ -156,13 +180,10 @@ initInput(unsigned int          const inFileCt,
 
   Abort if the input files don't all have the same size and format.
 -----------------------------------------------------------------------------*/
-    struct pam * inPam;
+    struct pam * const inPam = newInPamArray(inFileCt);
+
     unsigned int i;
 
-    MALLOCARRAY(inPam, inFileCt);
-    if (!inPam)
-        pm_error("Failed to allocated memory for PAM structures for %u "
-                 "input files", inFileCt);
     MALLOCARRAY(stateP->inTupleRows, inFileCt);
     if (!stateP->inTupleRows)
         pm_error("Failed to allocated memory for PAM structures for %u "

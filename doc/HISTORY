@@ -6,26 +6,29 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.10.00
 
+              pammixmulti: Fix crash from uninitialized memory.  Introduced in
+              Netpbm 11.09 (December 2024).
+
 24.12.25 BJH  Release 11.09.00
 
-              pammixmulti: Add -blend=alpha-weighted
+              pammixmulti: Add -blend=alpha-weighted.  Thanks Scott Pakin.
 
-              ppmhist: Don't accept -nomap and -map together, or
-              -colorname with -map.  (Before, -nomap and -colorname were
-              ignored with -map).
+              ppmhist: Don't accept -nomap and -map together, or -colorname
+              with -map.  (Before, -nomap and -colorname were ignored with
+              -map).
 
               libnetpbm: Fix crash in ppm_colorDict_destroy; affects all
               programs that use color names.  Introduced in Netpbm 11.07 (June
               2024).
 
-              pcxtoppm: Fix wildly incorrect output for all multiplane
-              images.  Broken in Netpbm 11.04 (September 2023).
+              pcxtoppm: Fix wildly incorrect output for all multiplane images.
+              Broken in Netpbm 11.04 (September 2023).
 
               pbmtoascii: Fix bug: allows both -1x2 and -2x4.  Always present
               (pbmtoascii existed in primordial Netpbm).
 
-              build: fix type mismatch warning linking ppmtompeg.
-              Always broken (ppmtompeg was new to Netpbm in April 2004).
+              build: fix type mismatch warning linking ppmtompeg.  Always
+              broken (ppmtompeg was new to Netpbm in April 2004).
 
               build: Make it work with -std=gnu23, which is the default in
               recent GCC.  To wit, remove local declaration of "bool".
