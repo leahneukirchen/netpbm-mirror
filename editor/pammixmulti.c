@@ -242,6 +242,9 @@ initMask(const char *          const maskFileName,
 
     FILE * const mfP = pm_openr(maskFileName);
 
+    stateP->maskPam.comment_p = NULL;     /* don't want comments */
+    stateP->maskPam.allocation_depth = 0; /* alloc depth same as image depth */
+
     pnm_readpaminit(mfP, maskPamP, PAM_STRUCT_SIZE(opacity_plane));
 
     if (maskPamP->width != stateP->inPam[0].width ||

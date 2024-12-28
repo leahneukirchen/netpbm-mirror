@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+24.12.28 BJH  Release 11.09.02
+
+              pammixmulti: Fix crash similar to that fixed in 11.09.01.
+              Introduced in Netpbm 11.09.00 (December 2024).
+
 24.12.27 BJH  Release 11.09.01
 
               pammixmulti: Fix crash from uninitialized memory.  Introduced in
