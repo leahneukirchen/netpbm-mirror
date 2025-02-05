@@ -10,6 +10,7 @@
 ******************************************************************************/
 
 #include <string.h>
+#include <assert.h>
 
 #include "pm_c_util.h"
 #include "pam.h"
@@ -17,7 +18,7 @@
 #include "nstring.h"
 #include "mallocvar.h"
 
-struct CmdlineInfo {
+    struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -31,6 +32,13 @@ struct CmdlineInfo {
         /* Meaningless if !sliceVertically.  Guaranteed < width */
     unsigned int voverlap;
         /* Meaningless if !sliceHorizontally.  Guaranteed < height */
+    unsigned int numWidth;
+    unsigned int numWidthSpec;
+    const char * indexFileName;
+    unsigned int indexFileSpec;
+    const char * listFileName;
+    unsigned int listFileSpec;
+    unsigned int dryRunSpec;
     unsigned int verbose;
 };
 
@@ -69,6 +77,14 @@ parseCommandLine(int argc, const char ** argv,
             &voverlapSpec,                    0);
     OPTENT3(0, "outstem",     OPT_STRING,  &cmdlineP->outstem,
             &outstemSpec,                     0);
+    OPTENT3(0, "numberwidth", OPT_UINT,    &cmdlineP->numWidth,
+            &cmdlineP->numWidthSpec,         0);
+    OPTENT3(0, "indexfile",   OPT_STRING,  &cmdlineP->indexFileName,
+            &cmdlineP->indexFileSpec,         0);
+    OPTENT3(0, "listfile",    OPT_STRING,  &cmdlineP->listFileName,
+            &cmdlineP->listFileSpec,          0);
+    OPTENT3(0, "dry-run",     OPT_FLAG,    NULL,
+            &cmdlineP->dryRunSpec,            0);
     OPTENT3(0, "verbose",     OPT_FLAG,    NULL,
             &cmdlineP->verbose,               0);
 
@@ -101,6 +117,19 @@ parseCommandLine(int argc, const char ** argv,
         } else
             cmdlineP->voverlap = 0;
     }
+
+    if (cmdlineP->numWidthSpec) {
+        if (cmdlineP->numWidth == 0)
+            pm_error("-numberwidth value must be positive");
+        else if (cmdlineP->numWidth > 10)
+            pm_error("-numberwidth value too large");
+        /* Max maxval of the index file is 65535 (5 decimal digits)
+           32 bit ULONG_MAX is 4294967295 (10 decimal digits)       */
+    }
+
+    if (cmdlineP->indexFileSpec && cmdlineP->listFileSpec &&
+        strcmp(cmdlineP->indexFileName,cmdlineP->listFileName) == 0)
+            pm_error("-indexfile name and -listfile name must be different");
 
     if (!outstemSpec)
         pm_error("You must specify the -outstem option to indicate where to "
@@ -223,9 +252,14 @@ static void
 computeOutputFilenameFormat(int           const format,
                             unsigned int  const nHorizSlice,
                             unsigned int  const nVertSlice,
+                            bool          const numWidthSpec,
+                            unsigned int  const numWidth,
                             const char ** const filenameFormatP) {
 
     const char * filenameSuffix;
+
+    const unsigned int nDigitsVert  = numWidthSpec ? numWidth : ndigits(nHorizSlice);
+    const unsigned int nDigitsHoriz = numWidthSpec ? numWidth : ndigits(nVertSlice);
 
     switch(PAM_FORMAT_TYPE(format)) {
     case PPM_TYPE: filenameSuffix = "ppm"; break;
@@ -238,7 +272,7 @@ computeOutputFilenameFormat(int           const format,
     }
 
     pm_asprintf(filenameFormatP, "%%s_%%0%uu_%%0%uu.%s",
-                ndigits(nHorizSlice), ndigits(nVertSlice), filenameSuffix);
+                nDigitsVert, nDigitsHoriz, filenameSuffix);
 
     if (*filenameFormatP == NULL)
         pm_error("Unable to allocate memory for filename format string");
@@ -247,7 +281,7 @@ computeOutputFilenameFormat(int           const format,
 
 
 static void
-openOutStreams(struct pam   const inpam,
+openOutStreams(struct pam * const inpamP,
                struct pam * const outpam,
                unsigned int const horizSlice,
                unsigned int const nHorizSlice,
@@ -256,6 +290,8 @@ openOutStreams(struct pam   const inpam,
                unsigned int const sliceWidth,
                unsigned int const rightSliceWidth,
                unsigned int const hOverlap,
+               bool         const numWidthSpec,
+               unsigned int const numWidth,
                const char * const outstem) {
 /*----------------------------------------------------------------------------
    Open the output files for a single horizontal slice (there's one file
@@ -265,8 +301,8 @@ openOutStreams(struct pam   const inpam,
     const char * filenameFormat;
     unsigned int vertSlice;
 
-    computeOutputFilenameFormat(inpam.format, nHorizSlice, nVertSlice,
-                                &filenameFormat);
+    computeOutputFilenameFormat(inpamP->format, nHorizSlice, nVertSlice,
+                                numWidthSpec, numWidth, &filenameFormat);
 
     for (vertSlice = 0; vertSlice < nVertSlice; ++vertSlice) {
         const char * filename;
@@ -276,7 +312,7 @@ openOutStreams(struct pam   const inpam,
         if (filename == NULL)
             pm_error("Unable to allocate memory for output filename");
         else {
-            outpam[vertSlice] = inpam;
+            outpam[vertSlice] = *inpamP;
             outpam[vertSlice].file = pm_openw(filename);
 
             outpam[vertSlice].width =
@@ -433,16 +469,199 @@ allocOutpam(unsigned int  const nVertSlice,
 
 
 
+static void
+writeTiles(const char * const outstem,
+           unsigned int const hoverlap,
+           unsigned int const voverlap,
+           FILE       * const ifP,
+           struct pam * const inpamP,
+           unsigned int const sliceWidth,
+           unsigned int const rightSliceWidth,
+           unsigned int const sliceHeight,
+           unsigned int const bottomSliceHeight,
+           unsigned int const nHorizSlice,
+           unsigned int const nVertSlice,
+           bool         const numWidthSpec,
+           unsigned int const numWidth) {
+
+    unsigned int horizSlice;
+        /* Number of the current horizontal slice.  Slices are numbered
+           sequentially starting at 0.
+        */
+
+    struct inputWindow inputWindow;
+    struct pam * outpam;
+        /* malloc'ed array.  outpam[x] is the pam structure that controls
+           the current horizontal slice of vertical slice x.
+        */
+    /*
+    allocOutpam(nVertSlice, &outpam);
+    */
+
+    allocOutpam(nVertSlice, &outpam);
+
+    initInput(&inputWindow, inpamP, nHorizSlice > 1 ? voverlap + 1 : 1);
+
+    for (horizSlice = 0; horizSlice < nHorizSlice; ++horizSlice) {
+        unsigned int const thisSliceFirstRow =
+            horizSlice > 0 ? horizSlice * (sliceHeight - voverlap) : 0;
+            /* Note that 'voverlap' is not defined when there is only
+               one horizontal slice
+            */
+        unsigned int const thisSliceHeight =
+            horizSlice < nHorizSlice-1 ? sliceHeight : bottomSliceHeight;
+
+        unsigned int row;
+
+        openOutStreams(inpamP, outpam, horizSlice, nHorizSlice, nVertSlice,
+                       thisSliceHeight, sliceWidth, rightSliceWidth,
+                       hoverlap, numWidthSpec, numWidth, outstem);
+
+        for (row = 0; row < thisSliceHeight; ++row) {
+            tuple * const inputRow =
+                getInputRow(&inputWindow, thisSliceFirstRow + row);
+
+            sliceRow(inputRow, outpam, nVertSlice, hoverlap);
+        }
+        closeOutFiles(outpam, nVertSlice);
+    }
+
+    termInputWindow(&inputWindow);
+
+    free(outpam);
+
+}
+
+
+static unsigned int
+exp_10(unsigned int const digits) {
+
+  assert (0 < digits && digits < 10);
+
+  unsigned int retval;
+  switch( digits ) {
+  case 1: retval =     10; break;
+  case 2: retval =    100; break;
+  case 3: retval =   1000; break;
+  case 4: retval =  10000; break;
+  case 5: retval = 100000; break;
+  default: retval = 100000; break;
+  }
+
+  return (retval);
+}
+
+
+static sample
+indexFileMaxval(unsigned int const nHorizSlice,
+                unsigned int const nVertSlice,
+                bool         const numWidthSpec,
+                unsigned int const numWidth) {
+
+  unsigned int maxval;
+
+  if (nHorizSlice > PAM_OVERALL_MAXVAL + 1)
+      pm_error ( "Too many ranks for index file.  Max is %lu", PAM_OVERALL_MAXVAL + 1);
+  else if (nVertSlice > 65536)
+      pm_error ( "Too many files for index file.  Max is %lu", PAM_OVERALL_MAXVAL + 1);
+  else if (numWidthSpec)
+      maxval = (unsigned int) MIN (exp_10(numWidth) - 1, PAM_OVERALL_MAXVAL);
+  else
+      maxval = MAX (nHorizSlice, nVertSlice) <= 256 ? 255 : PAM_OVERALL_MAXVAL;
+
+  return(maxval);
+
+}
+
+
+
+static void
+writeIndexFile(const char * const indexFileName,
+               unsigned int const nHorizSlice,
+               unsigned int const nVertSlice,
+               bool         const numWidthSpec,
+               unsigned int const numWidth) {
+
+    struct pam indexpam;
+    FILE * ofP;
+    tuple * indexRow;
+    unsigned int horizSlice, vertSlice;
+    /*
+    static const char * const tupleType ="pamdice index";
+    */
+
+    ofP = pm_openw(indexFileName);
+
+    indexpam.size   = sizeof(indexpam);
+    indexpam.len    = PAM_STRUCT_SIZE(tuple_type);
+    indexpam.file   = ofP;
+    indexpam.format = PAM_FORMAT;
+    indexpam.plainformat = 0;
+
+    indexpam.width  = nVertSlice;
+    indexpam.height = nHorizSlice;
+    indexpam.depth  = 2;
+
+    indexpam.maxval = indexFileMaxval(nHorizSlice, nVertSlice, numWidthSpec, numWidth);
+    indexpam.bytes_per_sample = pnm_bytespersample(indexpam.maxval);
+    /*    indexpam.tuple_type = NULL; */
+    strcpy(indexpam.tuple_type, "pamdice index");
+    pnm_writepaminit(&indexpam);
+
+    indexRow = pnm_allocpamrow(&indexpam);
+
+    for (horizSlice = 0; horizSlice < nHorizSlice; ++horizSlice) {
+        for (vertSlice = 0; vertSlice < nVertSlice; ++vertSlice) {
+             indexRow[vertSlice][0] = horizSlice;
+             indexRow[vertSlice][1] = vertSlice;
+        }
+        pnm_writepamrow(&indexpam, indexRow);
+    }
+
+    pnm_freepamrow(indexRow);
+
+    pm_close(ofP);
+}
+
+
+
+static void
+writeListFile(const char * const listFileName,
+              unsigned int const nHorizSlice,
+              unsigned int const nVertSlice,
+              int          const format,
+              const char * const outstem,
+              bool         const numWidthSpec,
+              unsigned int const numWidth) {
+
+    FILE * ofP;
+    unsigned int horizSlice, vertSlice;
+    const char * filenameFormat;
+
+    ofP = pm_openw(listFileName);
+    computeOutputFilenameFormat(format, nHorizSlice, nVertSlice,
+                                numWidthSpec, numWidth, &filenameFormat);
+
+    for(horizSlice = 0; horizSlice < nHorizSlice; horizSlice++)
+        for(vertSlice = 0; vertSlice < nVertSlice; vertSlice++) {
+            const char * filename;
+
+            pm_asprintf(&filename, filenameFormat, outstem, horizSlice, vertSlice);
+
+            fprintf(ofP, "%s\n", filename);
+        }
+
+    pm_close(ofP);
+}
+
+
+
 int
 main(int argc, const char ** argv) {
 
     struct CmdlineInfo cmdline;
     FILE    * ifP;
     struct pam inpam;
-    unsigned int horizSlice;
-        /* Number of the current horizontal slice.  Slices are numbered
-           sequentially starting at 0.
-        */
     unsigned int sliceWidth;
         /* Width in pam columns of each vertical slice, except
            the rightmost slice, which may be narrower.  If we aren't slicing
@@ -461,12 +680,6 @@ main(int argc, const char ** argv) {
         /* Height in pam rows of the bottom horizontal slice. */
     unsigned int nHorizSlice;
     unsigned int nVertSlice;
-    struct inputWindow inputWindow;
-
-    struct pam * outpam;
-        /* malloc'ed array.  outpam[x] is the pam structure that controls
-           the current horizontal slice of vertical slice x.
-        */
 
     pm_proginit(&argc, argv);
 
@@ -480,38 +693,20 @@ main(int argc, const char ** argv) {
                          &nHorizSlice, &sliceHeight, &bottomSliceHeight,
                          &nVertSlice, &sliceWidth, &rightSliceWidth);
 
-    allocOutpam(nVertSlice, &outpam);
+    if (cmdline.indexFileSpec)
+        writeIndexFile(cmdline.indexFileName, nHorizSlice, nVertSlice,
+                       cmdline.numWidthSpec, cmdline.numWidth);
 
-    initInput(&inputWindow, &inpam,
-              nHorizSlice > 1 ? cmdline.voverlap + 1 : 1);
+    if (cmdline.listFileSpec)
+        writeListFile(cmdline.listFileName, nHorizSlice, nVertSlice,
+                      inpam.format, cmdline.outstem,
+                      cmdline.numWidthSpec, cmdline.numWidth);
 
-    for (horizSlice = 0; horizSlice < nHorizSlice; ++horizSlice) {
-        unsigned int const thisSliceFirstRow =
-            horizSlice > 0 ? horizSlice * (sliceHeight - cmdline.voverlap) : 0;
-            /* Note that 'cmdline.voverlap' is not defined when there is only
-               one horizontal slice
-            */
-        unsigned int const thisSliceHeight =
-            horizSlice < nHorizSlice-1 ? sliceHeight : bottomSliceHeight;
-
-        unsigned int row;
-
-        openOutStreams(inpam, outpam, horizSlice, nHorizSlice, nVertSlice,
-                       thisSliceHeight, sliceWidth, rightSliceWidth,
-                       cmdline.hoverlap, cmdline.outstem);
-
-        for (row = 0; row < thisSliceHeight; ++row) {
-            tuple * const inputRow =
-                getInputRow(&inputWindow, thisSliceFirstRow + row);
-
-            sliceRow(inputRow, outpam, nVertSlice, cmdline.hoverlap);
-        }
-        closeOutFiles(outpam, nVertSlice);
-    }
-
-    termInputWindow(&inputWindow);
-
-    free(outpam);
+    if (!cmdline.dryRunSpec)
+        writeTiles(cmdline.outstem, cmdline.hoverlap, cmdline.voverlap, ifP,
+                   &inpam, sliceWidth, rightSliceWidth,
+                   sliceHeight, bottomSliceHeight, nHorizSlice, nVertSlice,
+                   cmdline.numWidthSpec, cmdline.numWidth);
 
     pm_close(ifP);
 
