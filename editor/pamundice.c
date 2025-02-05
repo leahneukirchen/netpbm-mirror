@@ -29,6 +29,8 @@ struct CmdlineInfo {
     unsigned int voverlap;
     const char * listfile;
     unsigned int listfileSpec;
+    const char * indexfile;
+    unsigned int indexfileSpec;
     unsigned int verbose;
 };
 
@@ -69,6 +71,8 @@ parseCommandLine(int argc, const char ** argv,
             &voverlapSpec,                    0);
     OPTENT3(0, "listfile",    OPT_STRING,  &cmdlineP->listfile,
             &cmdlineP->listfileSpec,          0);
+    OPTENT3(0, "indexfile",   OPT_STRING,  &cmdlineP->indexfile,
+            &cmdlineP->indexfileSpec,         0);
     OPTENT3(0, "verbose",     OPT_FLAG,    NULL,
             &cmdlineP->verbose,               0);
 
@@ -97,12 +101,22 @@ parseCommandLine(int argc, const char ** argv,
     if (!voverlapSpec)
         cmdlineP->voverlap = 0;
 
+
+    if (cmdlineP->indexfileSpec) {
+        if (acrossSpec || downSpec)
+            pm_error ("You cannot specify -indexfile with -down or -across");
+        else if (cmdlineP->listfileSpec)
+            pm_error("You cannot specify both -listfile and -indexfile");
+
+    }
+
     if (cmdlineP->listfileSpec) {
         if (argc-1 > 0)
             pm_error("Program takes no parameters when -listfile is "
                      "specified.  You specified %u", argc-1);
         else
             cmdlineP->inputFilePattern = NULL;
+
     } else {
         if (argc-1 < 1)
             pm_error("You must specify one argument, the input file name "
@@ -373,6 +387,77 @@ createInFileListFmFile(const char  *  const listFile,
 
     *inputFileListP = inputFileList;
 
+}
+
+
+
+static void
+createInFileListFmIdxFIle(const char   * const indexFile,
+                          const char   * const pattern,
+                          unsigned int * const nRankP,
+                          unsigned int * const nFileP,
+                          const char *** const inputFileListP) {
+
+    const char ** inputFileList;
+    unsigned int nRank, nFile;
+    unsigned int rank, file;
+    bool warnedSingleFile;
+
+    FILE * ifP;
+    struct pam indexPam;
+    tuple * indexRow;   /* Index row buffer */
+
+    ifP = pm_openr(indexFile);
+    pnm_readpaminit(ifP, &indexPam, PAM_STRUCT_SIZE(tuple_type));
+    indexRow = pnm_allocpamrow(&indexPam);
+
+    nRank = indexPam.height;
+    nFile = indexPam.width;
+
+    /*
+    if(nRank > indexPam.height)
+        pm_error("Insufficient number of ranks (%u) in index file.  "
+                 "Need %u.", indexPam.height, nRank);
+
+    if(nFile > indexPam.width)
+        pm_error("Insufficient number of files (%u) in index file.  "
+                 "Need %u.", indexPam.width, nFile);
+    */
+    if(2 > indexPam.depth)
+        pm_error("Insufficient number of planes (%u) in index file.  "
+                 "Need %u.", indexPam.depth, 2);
+
+    MALLOCARRAY_NOFAIL(inputFileList, nRank * nFile);
+
+    for (rank = 0, warnedSingleFile = false; rank < nRank ; ++rank) {
+         pnm_readpamrow(&indexPam, indexRow);
+         for (file = 0; file < nFile ; ++file) {
+             const unsigned int idx = rank * nFile + file;
+
+             bool fileNmIsRankFileIndependent;
+
+             computeInputFileName(pattern,
+                                  indexRow[file][0],
+                                  indexRow[file][1],
+                                  &inputFileList[idx],
+                                  &fileNmIsRankFileIndependent);
+
+             if (fileNmIsRankFileIndependent && !warnedSingleFile) {
+                 pm_message("Warning: No grid location (%%a/%%d) specified "
+                            "in input file pattern '%s'.  "
+                            "Input is single file.  ",
+                            pattern);
+                 warnedSingleFile = true;
+             }
+         }
+    }
+
+    pnm_freepamrow(indexRow);
+    pm_close(ifP);
+
+    *inputFileListP = inputFileList;
+    *nRankP = nRank;
+    *nFileP = nFile;
 }
 
 
@@ -815,33 +900,45 @@ main(int argc, const char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    allocInpam(cmdline.across, &inpam);
-
-    if (cmdline.listfileSpec)
-        createInFileListFmFile(cmdline.listfile,
-                               cmdline.down, cmdline.across,
-                               &inputFiles.list);
-    else
-        createInFileListFmPattern(cmdline.inputFilePattern,
-                                  cmdline.down, cmdline.across,
+    if (cmdline.indexfileSpec) {
+        createInFileListFmIdxFIle(cmdline.indexfile,
+                                  cmdline.inputFilePattern,
+                                  &inputFiles.nRank,
+                                  &inputFiles.nFile,
                                   &inputFiles.list);
 
-    inputFiles.nFile    = cmdline.across;
-    inputFiles.nRank    = cmdline.down;
+
+    } else {
+
+        inputFiles.nFile    = cmdline.across;
+        inputFiles.nRank    = cmdline.down;
+
+        if (cmdline.listfileSpec)
+            createInFileListFmFile(cmdline.listfile,
+                                   inputFiles.nRank, inputFiles.nFile,
+                                   &inputFiles.list);
+        else
+            createInFileListFmPattern(cmdline.inputFilePattern,
+                                      inputFiles.nRank, inputFiles.nFile,
+                                      &inputFiles.list);
+    }
+    allocInpam(inputFiles.nFile, &inpam);
+
     inputFiles.hoverlap = cmdline.hoverlap;
     inputFiles.voverlap = cmdline.voverlap;
 
     initOutpam(inputFiles, stdout, cmdline.verbose, &outpam);
-
     tuplerow = pnm_allocpamrow(&outpam);
 
     pnm_writepaminit(&outpam);
 
     assembleTiles(&outpam, inputFiles, inpam, tuplerow);
-
     pnm_freepamrow(tuplerow);
     destroyInFileList(inputFiles.list, inputFiles.nRank, inputFiles.nFile);
     free(inpam);
 
     return 0;
 }
+
+
+
