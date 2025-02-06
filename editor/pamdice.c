@@ -536,32 +536,9 @@ writeTiles(const char * const outstem,
 
 
 
-static unsigned int
-exp10uint(unsigned int const exponent) {
-/*----------------------------------------------------------------------------
-   10 raised to the power of 'exponent'.
-
-   Abort program if result would not fit in an unsigned int.
------------------------------------------------------------------------------*/
-    unsigned int i;
-    unsigned int retval;
-
-    for (i = 0, retval = 1; i < exponent; ++i) {
-        if (UINT_MAX / retval < 10)
-            abort();
-        retval *= 10;
-    }
-
-    return retval;
-}
-
-
-
 static sample
 indexFileMaxval(unsigned int const horizSliceCt,
-                unsigned int const vertSliceCt,
-                bool         const numberwidthSpec,
-                unsigned int const numberwidth) {
+                unsigned int const vertSliceCt) {
 /*----------------------------------------------------------------------------
    The maxval for an index file that contains coordinates for a grid that is
    'horizSliceCt' by 'vertSliceCt'.
@@ -577,9 +554,6 @@ indexFileMaxval(unsigned int const horizSliceCt,
     else if (vertSliceCt > PAM_OVERALL_MAXVAL + 1)
         pm_error("Too many files for index file.  Max is %lu",
                  PAM_OVERALL_MAXVAL + 1);
-    else if (numberwidthSpec)
-        maxval = (unsigned int) MIN(exp10uint(numberwidth) - 1,
-                                    PAM_OVERALL_MAXVAL);
     else
         maxval = MAX(horizSliceCt, vertSliceCt) <= 256 ?
             255 : PAM_OVERALL_MAXVAL;
@@ -593,8 +567,6 @@ static void
 setIndexPam(FILE *       const ofP,
             unsigned int const horizSliceCt,
             unsigned int const vertSliceCt,
-            bool         const numberwidthSpec,
-            unsigned int const numberwidth,
             struct pam * const indexpamP) {
 
     indexpamP->size        = sizeof(*indexpamP);
@@ -607,8 +579,7 @@ setIndexPam(FILE *       const ofP,
     indexpamP->height      = horizSliceCt;
     indexpamP->depth       = 2;
 
-    indexpamP->maxval = indexFileMaxval(horizSliceCt, vertSliceCt,
-                                        numberwidthSpec, numberwidth);
+    indexpamP->maxval      = indexFileMaxval(horizSliceCt, vertSliceCt);
     indexpamP->bytes_per_sample = pnm_bytespersample(indexpamP->maxval);
     strcpy(indexpamP->tuple_type, "grid_coord");
 }
@@ -618,9 +589,7 @@ setIndexPam(FILE *       const ofP,
 static void
 writeIndexFile(const char * const indexFileNm,
                unsigned int const horizSliceCt,
-               unsigned int const vertSliceCt,
-               bool         const numberwidthSpec,
-               unsigned int const numberwidth) {
+               unsigned int const vertSliceCt) {
 
     struct pam indexpam;
     FILE * ofP;
@@ -629,8 +598,7 @@ writeIndexFile(const char * const indexFileNm,
 
     ofP = pm_openw(indexFileNm);
 
-    setIndexPam(ofP, horizSliceCt, vertSliceCt, numberwidthSpec, numberwidth,
-                &indexpam);
+    setIndexPam(ofP, horizSliceCt, vertSliceCt, &indexpam);
 
     pnm_writepaminit(&indexpam);
 
@@ -725,8 +693,7 @@ main(int argc, const char ** argv) {
                          &vertSliceCt, &sliceWidth, &rightSliceWidth);
 
     if (cmdline.indexfileSpec)
-        writeIndexFile(cmdline.indexfile, horizSliceCt, vertSliceCt,
-                       cmdline.numberwidthSpec, cmdline.numberwidth);
+        writeIndexFile(cmdline.indexfile, horizSliceCt, vertSliceCt);
 
     if (cmdline.listfileSpec)
         writeListFile(cmdline.listfile, horizSliceCt, vertSliceCt,
