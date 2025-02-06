@@ -294,7 +294,9 @@ openOutStreams(struct pam   const inpam,
                unsigned int const hOverlap,
                bool         const numberwidthSpec,
                unsigned int const numberwidth,
-               const char * const outstem) {
+               const char * const outstem,
+               FILE *       const listFP,
+               bool         const dryRun) {
 /*----------------------------------------------------------------------------
    Open the output files for a single horizontal slice (there's one file
    for each vertical slice) and write the Netpbm headers to them.  Also
@@ -314,15 +316,23 @@ openOutStreams(struct pam   const inpam,
         if (filename == NULL)
             pm_error("Unable to allocate memory for output filename");
         else {
-            outpam[vertSlice] = inpam;  /* initial value */
-            outpam[vertSlice].file = pm_openw(filename);
+            if (!dryRun) {
+                struct pam * const outpamP = &outpam[vertSlice];
 
-            outpam[vertSlice].width =
-                vertSlice < nVertSlice-1 ? sliceWidth : rightSliceWidth;
+                *outpamP = inpam;  /* initial value */
 
-            outpam[vertSlice].height = sliceHeight;
+                outpamP->file = dryRun ? NULL : pm_openw(filename);
 
-            pnm_writepaminit(&outpam[vertSlice]);
+                outpamP->width =
+                    vertSlice < nVertSlice-1 ? sliceWidth : rightSliceWidth;
+
+                outpamP->height = sliceHeight;
+
+                if (!dryRun)
+                    pnm_writepaminit(outpamP);
+            }
+            if (listFP)
+                fprintf(listFP, "%s\n", filename);
 
             pm_strfree(filename);
         }
@@ -488,7 +498,9 @@ writeTiles(const char * const outstem,
            unsigned int const horizSliceCt,
            unsigned int const vertSliceCt,
            bool         const numberwidthSpec,
-           unsigned int const numberwidth) {
+           unsigned int const numberwidth,
+           FILE *       const listFP,
+           bool         const dryRun) {
 
     unsigned int horizSlice;
         /* Number of the current horizontal slice.  Slices are numbered
@@ -514,19 +526,22 @@ writeTiles(const char * const outstem,
         unsigned int const thisSliceHeight =
             horizSlice < horizSliceCt-1 ? sliceHeight : bottomSliceHeight;
 
-        unsigned int row;
-
         openOutStreams(inpam, outpam, horizSlice, horizSliceCt, vertSliceCt,
-                       thisSliceHeight, sliceWidth, rightSliceWidth,
-                       hoverlap, numberwidthSpec, numberwidth, outstem);
+                       thisSliceHeight, sliceWidth, rightSliceWidth, hoverlap,
+                       numberwidthSpec, numberwidth, outstem, listFP,
+                       dryRun);
 
-        for (row = 0; row < thisSliceHeight; ++row) {
-            tuple * const inputRow =
-                getInputRow(&inputWindow, thisSliceFirstRow + row);
+        if (!dryRun) {
+            unsigned int row;
 
-            sliceRow(inputRow, outpam, vertSliceCt, hoverlap);
+            for (row = 0; row < thisSliceHeight; ++row) {
+                tuple * const inputRow =
+                    getInputRow(&inputWindow, thisSliceFirstRow + row);
+
+                sliceRow(inputRow, outpam, vertSliceCt, hoverlap);
+            }
+            closeOutFiles(outpam, vertSliceCt);
         }
-        closeOutFiles(outpam, vertSliceCt);
     }
 
     termInputWindow(&inputWindow);
@@ -619,47 +634,12 @@ writeIndexFile(const char * const indexFileNm,
 
 
 
-static void
-writeListFile(const char * const listFileNm,
-              unsigned int const horizSliceCt,
-              unsigned int const vertSliceCt,
-              int          const format,
-              const char * const outstem,
-              bool         const numberwidthSpec,
-              unsigned int const numberwidth) {
-
-    FILE * ofP;
-    unsigned int horizSlice;
-    const char * filenameFormat;
-
-    ofP = pm_openw(listFileNm);
-
-    computeOutputFilenameFormat(format, horizSliceCt, vertSliceCt,
-                                numberwidthSpec, numberwidth, &filenameFormat);
-
-    for (horizSlice = 0; horizSlice < horizSliceCt; ++horizSlice) {
-        unsigned int vertSlice;
-        for (vertSlice = 0; vertSlice < vertSliceCt; ++vertSlice) {
-            const char * filename;
-
-            pm_asprintf(&filename, filenameFormat,
-                        outstem, horizSlice, vertSlice);
-
-            fprintf(ofP, "%s\n", filename);
-
-            pm_strfree(filename);
-        }
-    }
-    pm_close(ofP);
-}
-
-
-
 int
 main(int argc, const char ** argv) {
 
     struct CmdlineInfo cmdline;
-    FILE    * ifP;
+    FILE * ifP;     /* Input image */
+    FILE * listFP;  /* Output file name list file; null for none */
     struct pam inpam;
     unsigned int sliceWidth;
         /* Width in pam columns of each vertical slice, except
@@ -695,16 +675,16 @@ main(int argc, const char ** argv) {
     if (cmdline.indexfileSpec)
         writeIndexFile(cmdline.indexfile, horizSliceCt, vertSliceCt);
 
-    if (cmdline.listfileSpec)
-        writeListFile(cmdline.listfile, horizSliceCt, vertSliceCt,
-                      inpam.format, cmdline.outstem,
-                      cmdline.numberwidthSpec, cmdline.numberwidth);
+    listFP = cmdline.listfileSpec ? pm_openw(cmdline.listfile) : NULL;
 
-    if (!cmdline.dry_run)
-        writeTiles(cmdline.outstem, cmdline.hoverlap, cmdline.voverlap, ifP,
-                   inpam, sliceWidth, rightSliceWidth,
-                   sliceHeight, bottomSliceHeight, horizSliceCt, vertSliceCt,
-                   cmdline.numberwidthSpec, cmdline.numberwidth);
+    writeTiles(cmdline.outstem, cmdline.hoverlap, cmdline.voverlap, ifP,
+               inpam, sliceWidth, rightSliceWidth,
+               sliceHeight, bottomSliceHeight, horizSliceCt, vertSliceCt,
+               cmdline.numberwidthSpec, cmdline.numberwidth, listFP,
+               !!cmdline.dry_run);
+
+    if (listFP)
+        pm_close(listFP);
 
     pm_close(ifP);
 
