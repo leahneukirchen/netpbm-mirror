@@ -1,16 +1,16 @@
-/*****************************************************************************
+/*============================================================================
                                   pamundice
-******************************************************************************
+==============================================================================
   Assemble a grid of images into one.
 
   By Bryan Henderson, San Jose CA 2001.01.31
 
   Contributed to the public domain.
-
-******************************************************************************/
+===========================================================================*/
 
 #include <assert.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "pm_c_util.h"
 #include "pam.h"
@@ -77,8 +77,8 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->verbose,               0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
@@ -116,7 +116,6 @@ parseCommandLine(int argc, const char ** argv,
                      "specified.  You specified %u", argc-1);
         else
             cmdlineP->inputFilePattern = NULL;
-
     } else {
         if (argc-1 < 1)
             pm_error("You must specify one argument, the input file name "
@@ -355,19 +354,19 @@ computeInputFileName(const char *  const pattern,
 
 static void
 createInFileListFmFile(const char  *  const listFile,
-                       unsigned int   const nRank,
-                       unsigned int   const nFile,
+                       unsigned int   const rankCt,
+                       unsigned int   const fileCt,
                        const char *** const inputFileListP) {
 
+    unsigned int const inFileCt = rankCt * fileCt;
     FILE * const lfP = pm_openr(listFile);
-    unsigned int const fileCt = nRank * nFile;
 
     const char ** inputFileList;
     unsigned int fileSeq;
 
-    MALLOCARRAY_NOFAIL(inputFileList, nRank * nFile);
+    MALLOCARRAY_NOFAIL(inputFileList, rankCt * fileCt);
 
-    for (fileSeq = 0; fileSeq < fileCt; ) {
+    for (fileSeq = 0; fileSeq < inFileCt; ) {
         int eof;
         size_t lineLen;
         char * buf = NULL;   /* initial value */
@@ -377,11 +376,9 @@ createInFileListFmFile(const char  *  const listFile,
 
         if (eof)
             pm_error("Premature EOF reading list file.  "
-                     "Read %u files.  Should be %u.", fileSeq, fileCt);
-        else if (lineLen > 0) {
-            inputFileList[fileSeq] = buf;
-            ++fileSeq;
-        }
+                     "Read %u files.  Should be %u.", fileSeq, inFileCt);
+        else if (lineLen > 0)
+            inputFileList[fileSeq++] = buf;
     }
     pm_close(lfP);
 
@@ -392,47 +389,43 @@ createInFileListFmFile(const char  *  const listFile,
 
 
 static void
-createInFileListFmIdxFIle(const char   * const indexFile,
+createInFileListFmIdxFile(const char *   const indexFileNm,
                           const char   * const pattern,
-                          unsigned int * const nRankP,
-                          unsigned int * const nFileP,
+                          unsigned int * const rankCtP,
+                          unsigned int * const fileCtP,
                           const char *** const inputFileListP) {
 
     const char ** inputFileList;
-    unsigned int nRank, nFile;
-    unsigned int rank, file;
+    unsigned int rankCt, fileCt;
+    unsigned int rank;
     bool warnedSingleFile;
 
     FILE * ifP;
     struct pam indexPam;
     tuple * indexRow;   /* Index row buffer */
 
-    ifP = pm_openr(indexFile);
+    ifP = pm_openr(indexFileNm);
+
     pnm_readpaminit(ifP, &indexPam, PAM_STRUCT_SIZE(tuple_type));
+
+    rankCt = indexPam.height;
+    fileCt = indexPam.width;
+
     indexRow = pnm_allocpamrow(&indexPam);
 
-    nRank = indexPam.height;
-    nFile = indexPam.width;
-
-    /*
-    if(nRank > indexPam.height)
-        pm_error("Insufficient number of ranks (%u) in index file.  "
-                 "Need %u.", indexPam.height, nRank);
-
-    if(nFile > indexPam.width)
-        pm_error("Insufficient number of files (%u) in index file.  "
-                 "Need %u.", indexPam.width, nFile);
-    */
-    if(2 > indexPam.depth)
+    if (indexPam.depth < 2)
         pm_error("Insufficient number of planes (%u) in index file.  "
                  "Need %u.", indexPam.depth, 2);
 
-    MALLOCARRAY_NOFAIL(inputFileList, nRank * nFile);
+    MALLOCARRAY_NOFAIL(inputFileList, rankCt * fileCt);
 
-    for (rank = 0, warnedSingleFile = false; rank < nRank ; ++rank) {
+    for (rank = 0, warnedSingleFile = false; rank < rankCt; ++rank) {
+        unsigned int file;
+
          pnm_readpamrow(&indexPam, indexRow);
-         for (file = 0; file < nFile ; ++file) {
-             const unsigned int idx = rank * nFile + file;
+
+         for (file = 0; file < fileCt; ++file) {
+             unsigned int const idx = rank * fileCt + file;
 
              bool fileNmIsRankFileIndependent;
 
@@ -456,27 +449,27 @@ createInFileListFmIdxFIle(const char   * const indexFile,
     pm_close(ifP);
 
     *inputFileListP = inputFileList;
-    *nRankP = nRank;
-    *nFileP = nFile;
+    *rankCtP        = rankCt;
+    *fileCtP        = fileCt;
 }
 
 
 
 static void
 createInFileListFmPattern(const char  *  const pattern,
-                          unsigned int   const nRank,
-                          unsigned int   const nFile,
+                          unsigned int   const rankCt,
+                          unsigned int   const fileCt,
                           const char *** const inputFileListP) {
 
     const char ** inputFileList;
     unsigned int rank, file;
     bool warnedSingleFile;
 
-    MALLOCARRAY_NOFAIL(inputFileList, nRank * nFile);
+    MALLOCARRAY_NOFAIL(inputFileList, rankCt * fileCt);
 
-    for (rank = 0, warnedSingleFile = false; rank < nRank ; ++rank) {
-         for (file = 0; file < nFile ; ++file) {
-             const unsigned int idx = rank * nFile + file;
+    for (rank = 0, warnedSingleFile = false; rank < rankCt ; ++rank) {
+         for (file = 0; file < fileCt ; ++file) {
+             const unsigned int idx = rank * fileCt + file;
 
              bool fileNmIsRankFileIndependent;
 
@@ -498,14 +491,14 @@ createInFileListFmPattern(const char  *  const pattern,
 
 static void
 destroyInFileList(const char ** const inputFileList,
-                  unsigned int  const nRank,
-                  unsigned int  const nFile) {
+                  unsigned int  const rankCt,
+                  unsigned int  const fileCt) {
 
-    unsigned int const fileCt = nRank * nFile;
+    unsigned int const inFileCt = rankCt * fileCt;
 
     unsigned int fileSeq;
 
-    for (fileSeq = 0; fileSeq < fileCt; ++fileSeq)
+    for (fileSeq = 0; fileSeq < inFileCt; ++fileSeq)
         pm_strfree(inputFileList[fileSeq]);
 
     free(inputFileList);
@@ -514,30 +507,32 @@ destroyInFileList(const char ** const inputFileList,
 
 
 typedef struct {
-    unsigned int nRank;  /* Number of images in the vertical direction */
-    unsigned int nFile;  /* Number of images in the horizontal direction */
-    unsigned int hoverlap;    /* horizontal overlap */
-    unsigned int voverlap;    /* vertical overlap */
-    const char ** list;  /* List (1-dimensional array) of filenames */
-                         /* Row-major, top to bottom, left to right */
+    unsigned int  rankCt;    /* Number of images in the vertical direction */
+    unsigned int  fileCt;    /* Number of images in the horizontal direction */
+    unsigned int  hoverlap;  /* horizontal overlap */
+    unsigned int  voverlap;  /* vertical overlap */
+    const char ** list;
+        /* List (1-dimensional array) of filenames
+           Row-major, top to bottom, left to right
+        */
 } InputFiles;
 
 
 
 static const char *
-inputFileName(InputFiles     const inputFiles,
-              unsigned int   const rank,
-              unsigned int   const file) {
+inputFileName(InputFiles   const inputFiles,
+              unsigned int const rank,
+              unsigned int const file) {
 /*----------------------------------------------------------------------------
     A selected entry from "inputFiles.list" based on "rank" and "file".
 
     Currently we assume that the list is a one-dimensional represetation
     of an array, row-major, top to bottom and left to right in each row.
 ----------------------------------------------------------------------------*/
-    assert(rank < inputFiles.nRank);
-    assert(file < inputFiles.nFile);
+    assert(rank < inputFiles.rankCt);
+    assert(file < inputFiles.fileCt);
 
-    return inputFiles.list[rank * inputFiles.nFile + file];
+    return inputFiles.list[rank * inputFiles.fileCt + file];
 }
 
 
@@ -594,14 +589,14 @@ static void
 getOutputWidth(InputFiles const inputFiles,
                int *      const widthP) {
 /*----------------------------------------------------------------------------
-   Get the output width by adding up the widths of all 'inputFiles.nFile'
+   Get the output width by adding up the widths of all 'inputFiles.fileCt'
    images of the top rank, and allowing for overlap of 'inputFiles.hoverlap'
    pixels.
 -----------------------------------------------------------------------------*/
     double       totalWidth;
     unsigned int file;
 
-    for (file = 0, totalWidth = 0; file < inputFiles.nFile; ++file) {
+    for (file = 0, totalWidth = 0; file < inputFiles.fileCt; ++file) {
         struct pam inpam;
 
         getImageInfo(inputFiles, 0, file, &inpam);
@@ -613,7 +608,7 @@ getOutputWidth(InputFiles const inputFiles,
         else {
             totalWidth += inpam.width;
 
-            if (file < inputFiles.nFile-1)
+            if (file < inputFiles.fileCt-1)
                 totalWidth -= inputFiles.hoverlap;
         }
     }
@@ -626,14 +621,14 @@ static void
 getOutputHeight(InputFiles const inputFiles,
                 int *      const heightP) {
 /*----------------------------------------------------------------------------
-   Get the output height by adding up the widths of all 'inputFiles.nRank'
+   Get the output height by adding up the widths of all 'inputFiles.rankCt'
    images of the left file, and allowing for overlap of 'inputFiles.voverlap'
    pixels.
 -----------------------------------------------------------------------------*/
     double       totalHeight;
     unsigned int rank;
 
-    for (rank = 0, totalHeight = 0; rank < inputFiles.nRank; ++rank) {
+    for (rank = 0, totalHeight = 0; rank < inputFiles.rankCt; ++rank) {
         struct pam inpam;
 
         getImageInfo(inputFiles, rank, 0, &inpam);
@@ -645,10 +640,46 @@ getOutputHeight(InputFiles const inputFiles,
 
         totalHeight += inpam.height;
 
-        if (rank < inputFiles.nRank-1)
+        if (rank < inputFiles.rankCt-1)
             totalHeight -= inputFiles.voverlap;
     }
     *heightP = (int) totalHeight;
+}
+
+
+
+static InputFiles
+inputFileList(const char * const indexFileNm,
+              const char * const listFileNm,
+              const char * const inputFilePattern,
+              unsigned int const across,
+              unsigned int const down,
+              unsigned int const hoverlap,
+              unsigned int const voverlap) {
+
+    InputFiles inputFiles;
+
+    if (indexFileNm) {
+        createInFileListFmIdxFile(indexFileNm, inputFilePattern,
+                                  &inputFiles.rankCt,
+                                  &inputFiles.fileCt,
+                                  &inputFiles.list);
+    } else {
+        inputFiles.fileCt = across;
+        inputFiles.rankCt = down;
+
+        if (listFileNm)
+            createInFileListFmFile(listFileNm, down, across,
+                                   &inputFiles.list);
+        else
+            createInFileListFmPattern(inputFilePattern, down, across,
+                                      &inputFiles.list);
+    }
+
+    inputFiles.hoverlap = hoverlap;
+    inputFiles.voverlap = voverlap;
+
+    return inputFiles;
 }
 
 
@@ -675,8 +706,8 @@ initOutpam(InputFiles   const inputFiles,
    Therefore, Caller must check all the input images to make sure they are
    consistent with the information we return.
 -----------------------------------------------------------------------------*/
-    assert(inputFiles.nFile >= 1);
-    assert(inputFiles.nRank >= 1);
+    assert(inputFiles.fileCt >= 1);
+    assert(inputFiles.rankCt >= 1);
 
     outpamP->size        = sizeof(*outpamP);
     outpamP->len         = PAM_STRUCT_SIZE(tuple_type);
@@ -712,7 +743,7 @@ openInStreams(struct pam         inpam[],
 -----------------------------------------------------------------------------*/
     unsigned int file;
 
-    for (file = 0; file < inputFiles.nFile; ++file) {
+    for (file = 0; file < inputFiles.fileCt; ++file) {
         FILE * const ifP = pm_openr(inputFileName(inputFiles, rank, file));
 
         pnm_readpaminit(ifP, &inpam[file], PAM_STRUCT_SIZE(tuple_type));
@@ -722,8 +753,8 @@ openInStreams(struct pam         inpam[],
 
 
 static void
-closeInFiles(struct pam         pam[],
-             unsigned int const fileCt) {
+closeInFileCts(struct pam         pam[],
+               unsigned int const fileCt) {
 /*----------------------------------------------------------------------------
    Close the 'fileCt' input file streams represented by pam[].
 -----------------------------------------------------------------------------*/
@@ -788,12 +819,12 @@ allocInpam(unsigned int  const rankCount,
 
 static void
 verifyRankFileAttributes(struct pam *       const inpam,
-                         unsigned int       const nFile,
+                         unsigned int       const fileCt,
                          const struct pam * const outpamP,
                          unsigned int       const hoverlap,
                          unsigned int       const rank) {
 /*----------------------------------------------------------------------------
-   Verify that the 'nFile' images that make up a rank, which are described
+   Verify that the 'fileCt' images that make up a rank, which are described
    by inpam[], are consistent with the properties of the assembled image
    *outpamP.
 
@@ -808,7 +839,7 @@ verifyRankFileAttributes(struct pam *       const inpam,
     unsigned int file;
     unsigned int totalWidth;
 
-    for (file = 0, totalWidth = 0; file < nFile; ++file) {
+    for (file = 0, totalWidth = 0; file < fileCt; ++file) {
         struct pam * const inpamP = &inpam[file];
 
         if (inpamP->depth != outpamP->depth)
@@ -835,7 +866,7 @@ verifyRankFileAttributes(struct pam *       const inpam,
         else {
             totalWidth += inpamP->width;
 
-            if (file < nFile-1)
+            if (file < fileCt-1)
                 totalWidth -= hoverlap;
         }
     }
@@ -858,27 +889,27 @@ assembleTiles(struct pam * const outpamP,
            sequentially starting at 0.
         */
 
-    unsigned int const nRank    = inputFiles.nRank;
-    unsigned int const nFile    = inputFiles.nFile;
+    unsigned int const rankCt    = inputFiles.rankCt;
+    unsigned int const fileCt    = inputFiles.fileCt;
     unsigned int const hoverlap = inputFiles.hoverlap;
     unsigned int const voverlap = inputFiles.voverlap;
 
-    for (rank = 0; rank < nRank; ++rank) {
+    for (rank = 0; rank < rankCt; ++rank) {
         unsigned int row;
         unsigned int rankHeight;
 
         openInStreams(inpam, rank, inputFiles);
 
-        verifyRankFileAttributes(inpam, nFile, outpamP, hoverlap, rank);
+        verifyRankFileAttributes(inpam, fileCt, outpamP, hoverlap, rank);
 
-        rankHeight = inpam[0].height - (rank == nRank-1 ? 0 : voverlap);
+        rankHeight = inpam[0].height - (rank == rankCt-1 ? 0 : voverlap);
 
         for (row = 0; row < rankHeight; ++row) {
-            assembleRow(tuplerow, inpam, nFile, hoverlap);
+            assembleRow(tuplerow, inpam, fileCt, hoverlap);
 
             pnm_writepamrow(outpamP, tuplerow);
         }
-        closeInFiles(inpam, nFile);
+        closeInFileCts(inpam, fileCt);
     }
 }
 
@@ -900,41 +931,25 @@ main(int argc, const char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (cmdline.indexfileSpec) {
-        createInFileListFmIdxFIle(cmdline.indexfile,
-                                  cmdline.inputFilePattern,
-                                  &inputFiles.nRank,
-                                  &inputFiles.nFile,
-                                  &inputFiles.list);
+    inputFiles =
+        inputFileList(cmdline.indexfileSpec ? cmdline.indexfile : NULL,
+                      cmdline.listfileSpec ? cmdline.listfile : NULL,
+                      cmdline.inputFilePattern,
+                      cmdline.across, cmdline.down,
+                      cmdline.hoverlap, cmdline.voverlap);
 
-
-    } else {
-
-        inputFiles.nFile    = cmdline.across;
-        inputFiles.nRank    = cmdline.down;
-
-        if (cmdline.listfileSpec)
-            createInFileListFmFile(cmdline.listfile,
-                                   inputFiles.nRank, inputFiles.nFile,
-                                   &inputFiles.list);
-        else
-            createInFileListFmPattern(cmdline.inputFilePattern,
-                                      inputFiles.nRank, inputFiles.nFile,
-                                      &inputFiles.list);
-    }
-    allocInpam(inputFiles.nFile, &inpam);
-
-    inputFiles.hoverlap = cmdline.hoverlap;
-    inputFiles.voverlap = cmdline.voverlap;
+    allocInpam(cmdline.across, &inpam);
 
     initOutpam(inputFiles, stdout, cmdline.verbose, &outpam);
+
     tuplerow = pnm_allocpamrow(&outpam);
 
     pnm_writepaminit(&outpam);
 
     assembleTiles(&outpam, inputFiles, inpam, tuplerow);
+
     pnm_freepamrow(tuplerow);
-    destroyInFileList(inputFiles.list, inputFiles.nRank, inputFiles.nFile);
+    destroyInFileList(inputFiles.list, inputFiles.rankCt, inputFiles.fileCt);
     free(inpam);
 
     return 0;
