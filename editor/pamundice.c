@@ -753,8 +753,8 @@ openInStreams(struct pam         inpam[],
 
 
 static void
-closeInFileCts(struct pam         pam[],
-               unsigned int const fileCt) {
+closeInFiles(struct pam         pam[],
+             unsigned int const fileCt) {
 /*----------------------------------------------------------------------------
    Close the 'fileCt' input file streams represented by pam[].
 -----------------------------------------------------------------------------*/
@@ -767,49 +767,16 @@ closeInFileCts(struct pam         pam[],
 
 
 static void
-assembleRow(tuple              outputRow[],
-            struct pam         inpam[],
-            unsigned int const fileCt,
-            unsigned int const hOverlap) {
-/*----------------------------------------------------------------------------
-   Assemble the row outputRow[] from the 'fileCt' input files
-   described out inpam[].
-
-   'hOverlap', which is meaningful only when 'fileCt' is greater than 1,
-   is the amount by which files overlap each other.  We assume every
-   input image is at least that wide.
-
-   We assume that outputRow[] is allocated wide enough to contain the
-   entire assembly.
------------------------------------------------------------------------------*/
-    tuple * inputRow;
-    unsigned int fileSeq;
-
-    for (fileSeq = 0, inputRow = &outputRow[0]; fileSeq < fileCt; ++fileSeq) {
-
-        unsigned int const overlap = fileSeq == fileCt - 1 ? 0 : hOverlap;
-
-        assert(hOverlap <= inpam[fileSeq].width);
-
-        pnm_readpamrow(&inpam[fileSeq], inputRow);
-
-        inputRow += inpam[fileSeq].width - overlap;
-    }
-}
-
-
-
-static void
-allocInpam(unsigned int  const rankCount,
+allocInpam(InputFiles    const inputFiles,
            struct pam ** const inpamArrayP) {
 
     struct pam * inpamArray;
 
-    MALLOCARRAY(inpamArray, rankCount);
+    MALLOCARRAY(inpamArray, inputFiles.fileCt);
 
     if (inpamArray == NULL)
         pm_error("Unable to allocate array for %u input pam structures.",
-                 rankCount);
+                 inputFiles.fileCt);
 
     *inpamArrayP = inpamArray;
 }
@@ -879,6 +846,39 @@ verifyRankFileAttributes(struct pam *       const inpam,
 
 
 static void
+assembleRow(tuple              outputRow[],
+            struct pam         inpam[],
+            unsigned int const fileCt,
+            unsigned int const hOverlap) {
+/*----------------------------------------------------------------------------
+   Assemble the row outputRow[] from the 'fileCt' input files described out
+   inpam[].
+
+   'hOverlap', which is meaningful only when 'fileCt' is greater than 1, is
+   the amount by which files overlap each other.  We assume every input image
+   is at least that wide.
+
+   We assume that outputRow[] is allocated wide enough to contain the entire
+   assembly.
+-----------------------------------------------------------------------------*/
+    tuple * inputRow;
+    unsigned int fileSeq;
+
+    for (fileSeq = 0, inputRow = &outputRow[0]; fileSeq < fileCt; ++fileSeq) {
+
+        unsigned int const overlap = fileSeq == fileCt - 1 ? 0 : hOverlap;
+
+        assert(hOverlap <= inpam[fileSeq].width);
+
+        pnm_readpamrow(&inpam[fileSeq], inputRow);
+
+        inputRow += inpam[fileSeq].width - overlap;
+    }
+}
+
+
+
+static void
 assembleTiles(struct pam * const outpamP,
               InputFiles   const inputFiles,
               struct pam         inpam[],
@@ -889,8 +889,8 @@ assembleTiles(struct pam * const outpamP,
            sequentially starting at 0.
         */
 
-    unsigned int const rankCt    = inputFiles.rankCt;
-    unsigned int const fileCt    = inputFiles.fileCt;
+    unsigned int const rankCt   = inputFiles.rankCt;
+    unsigned int const fileCt   = inputFiles.fileCt;
     unsigned int const hoverlap = inputFiles.hoverlap;
     unsigned int const voverlap = inputFiles.voverlap;
 
@@ -909,7 +909,7 @@ assembleTiles(struct pam * const outpamP,
 
             pnm_writepamrow(outpamP, tuplerow);
         }
-        closeInFileCts(inpam, fileCt);
+        closeInFiles(inpam, fileCt);
     }
 }
 
@@ -938,13 +938,13 @@ main(int argc, const char ** argv) {
                       cmdline.across, cmdline.down,
                       cmdline.hoverlap, cmdline.voverlap);
 
-    allocInpam(cmdline.across, &inpam);
+    allocInpam(inputFiles, &inpam);
 
     initOutpam(inputFiles, stdout, cmdline.verbose, &outpam);
 
-    tuplerow = pnm_allocpamrow(&outpam);
-
     pnm_writepaminit(&outpam);
+
+    tuplerow = pnm_allocpamrow(&outpam);
 
     assembleTiles(&outpam, inputFiles, inpam, tuplerow);
 
