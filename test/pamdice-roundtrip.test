@@ -4,38 +4,54 @@
 
 tmpdir=${tmpdir:-/tmp}
 fname_stem=${tmpdir}/pamdice_part
+listfile=${tmpdir}/listfile
+indexfile=${tmpdir}/pamdice.index.pam
 
 mazesize=$(pamfile -size maze.pbm)
 mw=$(echo ${mazesize} | cut -d " " -f 1)
 mh=$(echo ${mazesize} | cut -d " " -f 2)
 
-echo "Test 1.  Should print 281226646 481"
+echo "Test 1.  Should print 281226646 481 twice"
+
+cat maze.pbm | cksum
 
 pamdice maze.pbm -outstem=${fname_stem}
 pamundice ${fname_stem}_%1d_%1a.pbm -down=1 -across=1 | cksum
 rm ${fname_stem}_0_0.pbm
 
-echo "Test 2.  Should print 281226646 481"
+echo "Test 2.  Should print 281226646 481 twice"
 
 width=10
 tiles=$(( (${mw}+${width}-1) / ${width} ))
 
-
-pamdice maze.pbm -outstem=${fname_stem} -width=${width}
+pamdice -outstem=${fname_stem} -width=${width} -listfile=${listfile} maze.pbm
 pamundice ${fname_stem}_%1d_%1a.pbm -across=${tiles} | cksum
-rm ${fname_stem}_*_*.pbm
 
-echo "Test 3.  Should print 281226646 481"
+pamundice -listfile=${listfile} -across=${tiles} | cksum
+rm ${fname_stem}_?_?.pbm ${listfile}
+
+echo "Test 3.  Should print 281226646 481 twice"
 
 width=5
 tiles=$(( (${mw}+${width}-1) / ${width} ))
 
-pamdice maze.pbm -outstem=${fname_stem} -width=${width}
-pamundice ${fname_stem}_%1d_%2a.pbm -across=${tiles} | cksum
-rm ${fname_stem}_*_*.pbm
+pamdice -outstem=${fname_stem} -width=${width} -listfile=${listfile} \
+  -numberwidth=2 maze.pbm
+pamundice ${fname_stem}_%2d_%2a.pbm -across=${tiles} | cksum
 
+pamundice -listfile=${listfile} -across=${tiles} | cksum
+rm ${fname_stem}_??_??.pbm ${listfile}
 
 echo "Test 4.  Should print 281226646 481"
+
+pamdice -outstem=${fname_stem} -width=10 -height=10 -indexfile=${indexfile} \
+        -numberwidth=4 maze.pbm
+pamundice ${fname_stem}_%4d_%4a.pbm  -indexfile=${indexfile} | cksum
+rm ${fname_stem}_????_????.pbm ${indexfile}
+
+
+
+echo "Test 5.  Should print 281226646 481"
 
 height=10
 tiles=$(( (${mh}+${height}-1) / ${height} ))
@@ -44,7 +60,9 @@ pamdice maze.pbm -outstem=${fname_stem} -height=${height}
 pamundice ${fname_stem}_%1d_%1a.pbm -down=${tiles} | cksum
 rm ${fname_stem}_*_*.pbm
 
-echo "Test 5.  Should print 1926073387 101484 five times"
+echo "Test 6.  Should print 1926073387 101484 six times"
+
+cat testimg.ppm | cksum
 
 for option in "" "-hoverlap=0" "-hoverlap=2" "-voverlap=0" "-voverlap=2"
   do
@@ -53,7 +71,7 @@ for option in "" "-hoverlap=0" "-hoverlap=2" "-voverlap=0" "-voverlap=2"
   rm ${fname_stem}_?_?.ppm
   done
 
-echo "Test 6.  Should print 1926073387 101484"
+echo "Test 7.  Should print 1926073387 101484"
 
 pamdice testimg.ppm -outstem=${fname_stem} -width=20 -height=10
 ls ${fname_stem}*.ppm | pamundice -listfile=- -across=12 -down=15 | cksum
