@@ -2,7 +2,7 @@
 <html><head><title>Pamdice User Manual</title></head>
 <body>
 <h1>pamdice</h1>
-Updated: 01 April 2007
+Updated: 07 February 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -17,6 +17,14 @@ pamdice - slice a Netpbm image into many horizontally and/or vertically
     $ pamundice myimage_part_%1d_%1a.ppm -across=10 -down=8 &gt;myimage.ppm
 
     $ pamdice myimage.ppm -outstem=myimage_part -height=12 -voverlap=9
+
+    $ pamdice myimage.ppm -width=10 -height=8 -listfile=tiles.txt myimage.ppm
+    $ pamundice -across=10 -down=4 -listfile=tiles.txt &gt;myimage.ppm
+
+    $ pamdice myimage.ppm -width=10 -height=8 -outstem=myimage_part \
+        -indexfile=tiles.pam myimage.ppm
+    $ pamundice myimage_part_%1d_%1a.ppm  -across=10 -down=8 \
+        -indexfile=tiles.pam &gt;myimage.ppm
 </kbd>
 </pre>
 
@@ -34,6 +42,14 @@ pamdice - slice a Netpbm image into many horizontally and/or vertically
 [<b>-hoverlap=</b><i>hoverlap</i>]
 
 [<b>-voverlap=</b><i>voverlap</i>]
+
+[<b>-numberwidth=</b><i>N</i>]
+
+[<b>-listfile=</b><i>textfilename</i>]
+
+[<b>-indexfile=</b><i>pamfilename</i>
+
+[<b>-dry-run</b>]
 
 [<b>-verbose</b>]
 
@@ -94,34 +110,119 @@ respectively, in the input image of the output image, zero being the
 leftmost and top, and <i>type</i> is <b>.pbm</b>, <b>.pgm</b>,
 <b>.ppm</b>, or <b>.pam</b>, depending on the type of image.
 
+<p><i>x</i> and <i>y</i> are filled with leading zeroes so are the same width
+in every file.  Use <b>-numberwidth</b> to specify that width; otherwise, it
+defaults to the minimum width that works for all the files.  For example, if
+you have 25 slices across and no <b>-numberwidth</b>, <i>x</i> is 2 digits for
+all the output files.  The leftmost slice is numbered &quot;00&quot;; the next
+one is &quot;01&quot;, etc.  With <b>-numberwidth=3</b>, <i>x</i> is
+&quot;000&quot;, &quot;001&quot;, etc.
+
+<dt><b>-numberwidth=</b><i>N</i>
+
+<dd>This option determines the width of the numbers in the output file
+names.  See the <b>-outstem</b> option for details.
+
+<p>It is not valid to specify a width less than is necessary to represent all
+the slices.
+
+<p>This option was new in Netpbm 11.10 (March 2025).
+  
 <dt><b>-width=</b><i>width</i>
 
-<dd>gives the width in pixels of the output images.  The rightmost
+<dd>This gives the width in pixels of the output images.  The rightmost
 pieces are smaller than this if the input image is not a multiple of
 <i>width</i> pixels wide.
 
 <dt><b>-height=</b><i>height</i>
 
-<dd>gives the height in pixels of the output images.  The bottom
+<dd>This gives the height in pixels of the output images.  The bottom
 pieces are smaller than this if the input image is not a multiple of
 <i>height</i> pixels high.
 
 <dt><b>-hoverlap=</b><i>hoverlap</i>
 
-<dd>gives the horizontal overlap in pixels between output images.
-Each image in a row will overlap the previous one by <i>hoverlap</i>
-pixels.  By default, there is no overlap.
+<dd>This gives the horizontal overlap in pixels between output images.  Each
+image in a row will overlap the previous one by <i>hoverlap</i> pixels.  By
+default, there is no overlap.
 
 <p>This option was new in Netpbm 10.23 (July 2004).
 
 <dt><b>-voverlap=</b><i>voverlap</i>
 
-<dd>gives the vertical overlap in pixels between output images.
-Each row of images will overlap the previous row by <i>voverlap</i>
-pixels.  By default, there is no overlap.
+<dd>This gives the vertical overlap in pixels between output images.  Each row
+of images will overlap the previous row by <i>voverlap</i> pixels.  By
+default, there is no overlap.
 
 <p>This option was new in Netpbm 10.23 (July 2004).
 
+
+<dt><b>-listfile=</b><i>textfilename</i>
+
+<dd>This causes the program to generate a file listing the names of all the
+tile files it creates.  It is in row-major order. For example,
+
+<code>
+  $ pamdice -width=100 -height=100 -outstem=myimage_part -listfile=mylist.txt \
+      -numberwidth=3 myimage.ppm
+</code>
+
+on a 200x200 image generates the file <b>mylist.txt</b> containing this:
+
+<pre>
+<lines>
+    myimage_part_000_000.ppm
+    myimage_part_000_001.ppm
+    myimage_part_001_000.ppm
+    myimage_part_001_001.ppm
+</lines>
+</pre>
+
+<p>You can use this list file with <b>pamundice -listfile</b> in lieu of an
+input file name pattern argument, which may save you the trouble of
+coordinating the patterns used in your invocations of <b>pamdice</b> and
+<b>pamundice</b>.
+
+<p>This option was new in Netpbm 11.10 (March 2025).
+
+<dt><b>-indexfile=</b><i>pamfilename</i>
+
+<dd>This causes the program to generate a file containing a PAM image that
+contains rank and file numbers for the tiles.  It is simply an image whose
+width and height are the number of horizontal and vertical slices,
+respectively, in which each tuple is just the row and column number of that
+tuple.  For example, if <b>pamdice</b> produces 3 slices across and 2 down,
+the image looks like this:
+
+    <pre>
+      <lines>
+        (0,0) (0,1) (0,2)
+        (1,0) (1,1) (1,2)
+    </lines>
+    </pre>
+    
+<p>The depth of the image is 2, the tuple type is &quot;grid_coord&quot; (a
+tuple type invented for use with <b>pamdice</b> and <b>pamundice</b>), and the
+maxval is 255 unless the height or width is greater than 256, in which case it
+is 65535.
+
+<p>This image can be useful as input to <b>pamundice</b>, particularly after
+doing transformations on it.  The prime example of such usage is in flipping a
+large image.  You can dice the image with <b>pamdice</b>, then flip each of
+the tiles produced, then flip the index image, then use <b>pamundice</b> with
+the flipped tiles and the flipped index image to generate a flipped version of
+the original large image.
+
+<p>This option was new in Netpbm 11.10 (March 2025).
+
+<dt><b>-dry-run</b>
+
+<dd>This makes <b>pamdice</b> skip creating the output tile images.  It still
+creates the list file (with <b>-listfile</b>) and the index file (with
+<b>-indexfile</b>) and checks for most errors.
+
+<p>This option was new in Netpbm 11.10 (March 2025).
+  
 <dt><b>-verbose</b>
 
 <dd>Print information about the processing to Standard Error.
@@ -132,8 +233,8 @@ pixels.  By default, there is no overlap.
 
 <p><b>pamdice</b> was new in Netpbm 9.25 (March 2002).
 
-<p>Before Netpbm 10.29 (August 2005), there was a limit of 100 slices
-in each direction.
+<p>Before Netpbm 10.29 (August 2005), there was a limit of 100 slices in each
+direction.
 
 <h2 id="seealso">SEE ALSO</h2>
 

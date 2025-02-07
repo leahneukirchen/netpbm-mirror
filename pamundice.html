@@ -83,15 +83,14 @@ checkerboard images, for example, you could write a program to render a
 chessboard by computing an image of each square, then using <b>pamundice</b>
 to assemble them into a board.
   
-<p>An alternative to join images in a single direction (i.e. a single
-rank or a single file) is <b>pamcat</b>.  <b>pamcat</b> gives you more
-flexibility than <b>pamundice</b> in identifying the input images: you
-can supply them on Standard Input or as a list of arbitrarily named
-files.
+<p>An alternative to join images in a single direction (i.e. a single rank or
+a single file) is <b>pamcat</b>.  <b>pamcat</b> provides alternative ways to
+identify the input images: you can supply them serially on Standard Input or
+list them by name as command line arguments.
 
-<p>To join piecewise photographs, use <b>pnmstitch</b> instead of
-<b>pamundice</b>, because it figures out where the pieces overlap,
-even if they don't overlap exactly vertically or horizontally.
+<p>To join piecewise photographs, use <b>pnmstitch</b> instead of 
+<b>pamundice</b>, because it figures out where the pieces overlap, even if
+they don't overlap exactly vertically or horizontally.
 
 <p>To create an image of the same tile repeated in a grid, that's
 <b>pnmtile</b>.
@@ -205,14 +204,14 @@ clips the bottom edge of each image before joining it to the one below.
 <dd>This option names a file that contains the names of all the input files.
 This is an alternative to specifying a file name pattern as an argument.
 
-<p>The named file contains file name, one per line.  Each file contains the
+<p>The named file contains file names, one per line.  Each file contains the
   image for one tile, in row-major order, top to bottom, left to right.  So
   the first file is the upper left tile, the second is the one to right of
   that, etc.  The number of lines in the file must be equal to the number of
   tiles in the output, the product of the <b>-across</b> and <b>-down</b>
   values.
   
-<p>The file names have no meaning to <b>pamundice</b>.  You can use the same
+<p>The file names have no meaning to <b>pamundice</b>.  You can list the same
   file multiple times to have identical tiles in the output.
 
 <p>This option was new in Netpbm 10.90 (March 2020).
