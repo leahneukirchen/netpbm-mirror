@@ -254,6 +254,11 @@ pattern (given as a program argument).
 <p>The maxval of the index image is irrelevant, except that no sample in the
 index image can be greater than it.
 
+<p>The depth of the index file must be at least two (rank and file), but the
+program ignores any additional planes.
+  
+<p>The program ignores the tuple type.
+
 <p>If you don&apos;t specify this option, the position of a tile in the ouput
 is given directly by the rank and file portions of the tile file name, or if
 you specify <b>-listfile</b>, by order in which the tile files are listed in
@@ -270,6 +275,62 @@ the list file.
 
 </dl>
 
+
+<h2 id="usage">Usage</h2>
+
+<p>Here is an example of using a list file:
+
+  <pre>
+    <code>
+    Example usage of -listfile:
+
+    pamdice -width=100 -height=100 -outstem=img_part \
+    	  -numberwidth=3 -listfile=listfile img.ppm
+    pamundice -listfile=listfile -across=6 -down=4 > img_copy.ppm
+    </code>
+  </pre>
+
+<p>Note that in the above example, you have to know somehow that you got
+6 files and 4 ranks from <b>pamdice</b> and then specify the correct
+<b>-across</b> and <b>-down</b> options on <b>pamundice</b>.  A slight error
+ruins the process.  A better way is to use <b>-indexfile</b>:
+
+<pre>
+  <code>
+    pamdice -width=100 -height=100 -outstem=img_part \
+    	  -numberwidth=3 -indexfile=index.pam img.pam
+    pamundice -indexfile=index.pam stem_%3d_%3a.pam > img_copy.pam
+  </code>
+</pre>
+
+  
+<P>Here is an example of flipping a large image.  <b>pamflip</b> often
+requires the entire image to be in real memory at once, which can be
+impossible or impractical with a very large image.  This method does it in
+smaller pieces so as to require less memory:
+
+<pre>
+  <code>
+    Example of -indexfile with pamflip operation:
+    
+    pamdice -width=100 -height=100 -outstem=tile \
+    	  -numberwidth=3 -indexfile=index.pam hugeImage.ppm
+    
+    # flip every tile
+    for tile in tile_???_???.ppm
+    do
+        pamflip -r180 $tile > ${tile%.ppm}.flipped.ppm
+    done
+    
+    # flip indexfile  - Simply apply the same flip operation
+    pamflip -r180 index.pam > index_flipped.pam
+    
+    pamundice -indexfile=index_flipped.pam tile_%3d_%3a.flipped.ppm \
+        > hugeImage_flipped.ppm
+  </code>
+</pre>
+
+  
 
 <h2 id="history">HISTORY</h2>
 
@@ -295,6 +356,7 @@ the list file.
 <li><a href="#description">DESCRIPTION</a>
 <li><a href="#arguments">ARGUMENTS</a>
 <li><a href="#options">OPTIONS</a>
+<li><a href="#usage">USAGE</a>
 <li><a href="#history">HISTORY</a>
 <li><a href="#seealso">SEE ALSO</a>
 </ul>
