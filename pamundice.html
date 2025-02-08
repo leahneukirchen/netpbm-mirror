@@ -2,7 +2,7 @@
 <html><head><title>Pamundice User Manual</title></head>
 <body>
 <h1>pamundice</h1>
-Updated: 26 April 2020
+Updated: 08 February 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -20,14 +20,20 @@ pamundice - combine grid of images (tiles) into one
 </kbd>
 </pre>
 
+<p>See <a href="pamdice.html#example">pamdice</a> for more examples.
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pamundice</b>
 
+{
 [<b>-across=</b><i>n</i>]
 
 [<b>-down=</b><i>n</i>]
+,
+<b>-indexfile=pamfilename</b>
+}
+
 
 [<b>-hoverlap=</b><i>pixels</i>]
 
@@ -36,7 +42,7 @@ pamundice - combine grid of images (tiles) into one
 [<b>-verbose</b>]
 
 {<i>input_filename_pattern</i>,
-<b>-listfile=</b><i>filename</i>}
+<b>-listfile=</b><i>textfilename</i>}
 
 
 <p>You can use the minimum unique abbreviation of the options.  You can use
@@ -54,9 +60,9 @@ Output.
 <p>You can optionally make the pieces overlap.
 
 <p>The images can either be in files whose names indicate where they go in the
-  output (e.g. &quot;myimage_part_03_04&quot; could be the image for Row 3,
-  Column 4 - see the <i>input_filename_pattern</i> argument) or listed in a
-  file, with a <b>-listfile</b> option.
+output (e.g. &quot;myimage_part_03_04&quot; could be the image for Row 3,
+Column 4 - see the <i>input_filename_pattern</i> argument) or listed in a
+file, with a <b>-listfile</b> option.
 
 <p>The input images must all have the same format (PAM, PPM, etc.)
 and maxval and for PAM must have the same depth and tuple type.
@@ -112,6 +118,11 @@ with a pattern that indicates their positions in the combined image.
 For example, <b>tile_00_05.ppm</b> could be the 6th tile over in the
 1st rank, while <b>tile_04_01</b> is the 2nd tile over in the 5th rank.
 
+<p>(But see <b>-indexfile</b>, which can cause the tiles to be rearranged so
+that the file whose name indicates it is the 6th tile over in the 1st rank
+could actually be placed by <b>pamundice</b> in any arbitrary position in its
+output).
+  
 <p>You cannot supply any of the data on Standard Input, and the files
 must be the kind that <b>pamundice</b> can close and reopen and read
 the same image a second time (e.g. a regular file is fine; a named
@@ -152,10 +163,9 @@ decimal number: "00"
 decimal number: "05"
 </ul>
 
-<p>Note that this pattern describes file names that <b>pamdice</b>
-produces, except that the precision may be more or less.
-(<b>pamdice</b> uses however many digits are required for the highest
-numbered image).
+<p>Note that this pattern describes file names that <b>pamdice</b> produces,
+except that the precision may be more or less.  (See the <b>-numberwidth</b>
+option of <b>pamdice</b>).
 
 
 <h2 id="options">OPTIONS</h2>
@@ -171,13 +181,16 @@ command line options:
 <dd>This is the number of tiles across in the grid, i.e. the number of
 tiles in each rank, or the number of files.
 
-<p>Default is 1.
+<p>You cannot specify this together with <b>-indexfile</b>.
 
+<p>Default is 1.
 
 <dt><b>-down=</b><i>N</i>
 
 <dd>This is the number of tiles up and down in the grid, i.e. the
 number of tiles in each file, or the number of ranks.
+
+<p>You cannot specify this together with <b>-indexfile</b>.
 
 <p>Default is 1.
 
@@ -200,7 +213,7 @@ option of <b>pamdice</b>.
 <dd>This is analogous to <b>-hoverlap</b>, but <b>pamundice</b>
 clips the bottom edge of each image before joining it to the one below.
 
-<dt><b>-listfile=</b><i>filename</i>
+<dt><b>-listfile=</b><i>textfilename</i>
 <dd>This option names a file that contains the names of all the input files.
 This is an alternative to specifying a file name pattern as an argument.
 
@@ -214,13 +227,49 @@ This is an alternative to specifying a file name pattern as an argument.
 <p>The file names have no meaning to <b>pamundice</b>.  You can list the same
   file multiple times to have identical tiles in the output.
 
+<p>If you create the tile files with <b>pamdice</b>, you can use the
+<b>-listfile</b> option of <b>pamdice</b> to produce a suitable list file
+for reassembling the tiles into the same positions they had in the original
+large image.
+  
+<p>You cannot specify this together with <b>-indexfile</b>.
+  
 <p>This option was new in Netpbm 10.90 (March 2020).
+
+<dt><b>-indexfile=</b><i>pamfilename</i>
+<dd>This option names a file that contains a PAM image that tells which
+tile files to put where in the assembled output.  See the
+<b>pamfile</b> <b>-indexfile</b> option for details on its format.
+
+<p>A typical way to generate an index image to use with <b>pamundice</b> is to
+use the <b>-indexfile</b> option of <b>pamdice</b>, and then possibly
+manipulate the resulting index image with other Netpbm tools.
+
+<p>While the sample values in the index image are defined to be rank and file
+positions in some original large image, and so are documented in those terms,
+in practice, <b>pamundice</b> doesn&apos;t assign any meaning to the numbers
+-- they are just substitutions for two variables in the input file name
+pattern (given as a program argument).
+    
+<p>The maxval of the index image is irrelevant, except that no sample in the
+index image can be greater than it.
+
+<p>If you don&apos;t specify this option, the position of a tile in the ouput
+is given directly by the rank and file portions of the tile file name, or if
+you specify <b>-listfile</b>, by order in which the tile files are listed in
+the list file.
+  
+<p>You cannot specify this together with <b>listfile</b>, <b>-down</b>, or
+<b>-across</b>.
+  
+<p>This option was new in Netpbm 11.10 (March 2025).
 
 <dt><b>-verbose</b>
 
-<dd>Print information about the processing to Standard Error.
+<dd>This says to print information about the processing to Standard Error.
 
 </dl>
+
 
 <h2 id="history">HISTORY</h2>
 
