@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.10.00
 
+              pamdice: Add -listfile, -indexfile, -numberwidth, -dry-run .
+
+              pamundice: Add -listfile, -indexfile .
+
               pammixmulti: Fix crash from uninitialized memory.  Introduced in
               Netpbm 11.09 (December 2024).
 
