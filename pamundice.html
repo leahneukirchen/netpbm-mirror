@@ -264,7 +264,7 @@ is given directly by the rank and file portions of the tile file name, or if
 you specify <b>-listfile</b>, by order in which the tile files are listed in
 the list file.
   
-<p>You cannot specify this together with <b>listfile</b>, <b>-down</b>, or
+<p>You cannot specify this together with <b>-listfile</b>, <b>-down</b>, or
 <b>-across</b>.
   
 <p>This option was new in Netpbm 11.10 (March 2025).
@@ -284,8 +284,8 @@ the list file.
     <code>
     Example usage of -listfile:
 
-    pamdice -width=100 -height=100 -outstem=img_part \
-    	  -numberwidth=3 -listfile=listfile img.ppm
+    pamdice -width=100 -height=100 -outstem=img_part -listfile=listfile \
+        img.ppm
     pamundice -listfile=listfile -across=6 -down=4 > img_copy.ppm
     </code>
   </pre>
@@ -299,7 +299,7 @@ ruins the process.  A better way is to use <b>-indexfile</b>:
   <code>
     pamdice -width=100 -height=100 -outstem=img_part \
     	  -numberwidth=3 -indexfile=index.pam img.pam
-    pamundice -indexfile=index.pam stem_%3d_%3a.pam > img_copy.pam
+    pamundice -indexfile=index.pam img_part_%3d_%3a.pam > img_copy.pam
   </code>
 </pre>
 
@@ -313,7 +313,7 @@ smaller pieces so as to require less memory:
   <code>
     Example of -indexfile with pamflip operation:
     
-    pamdice -width=100 -height=100 -outstem=tile \
+    pamdice -width=2500 -height=2500 -outstem=tile \
     	  -numberwidth=3 -indexfile=index.pam hugeImage.ppm
     
     # flip every tile
