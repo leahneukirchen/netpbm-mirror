@@ -50,7 +50,7 @@ void init_fdct (void);
 extern void mp_fwd_dct_block2 (DCTBLOCK_2D src, DCTBLOCK_2D dest);
 
 /* jrevdct.c */
-extern void init_pre_idct (void );
+extern void init_idctref(void);
 extern void mpeg_jrevdct (DCTBLOCK data );
 
 

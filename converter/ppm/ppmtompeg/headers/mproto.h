@@ -103,7 +103,6 @@ void AllocYCC (MpegFrame * mf);
 
 
 /* jrevdct.c */
-void init_pre_idct (void );
 void j_rev_dct_sparse (DCTBLOCK data , int pos );
 void j_rev_dct (DCTBLOCK data );
 void j_rev_dct_sparse (DCTBLOCK data , int pos );
