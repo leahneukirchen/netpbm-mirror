@@ -549,31 +549,30 @@ doExtension(FILE *         const ifP,
 
     switch (label) {
     case 0x01:              /* Plain Text Extension */
-        str = "Plain Text";
+        str = pm_strdup("Plain Text");
         doPlainTextExtension(ifP);
         break;
     case 0xff:              /* Application Extension */
-        str = "Application";
+        str = pm_strdup("Application");
         readThroughEod(ifP);
         break;
     case 0xfe:              /* Comment Extension */
-        str = "Comment";
+        str = pm_strdup("Comment");
         doCommentExtension(ifP);
         break;
     case 0xf9:              /* Graphic Control Extension */
-        str = "Graphic Control";
+        str = pm_strdup("Graphic Control");
         doGraphicControlExtension(ifP, gif89P);
         break;
     default: {
-        char buf[256];
-        sprintf(buf, "UNKNOWN (0x%02x)", label);
-        str = buf;
+        pm_asprintf(&str, "UNKNOWN (0x%02x)", label);
         pm_message("Ignoring unrecognized extension (type 0x%02x)", label);
         readThroughEod(ifP);
     } break;
     }
     if (verbose)
         pm_message(" got a '%s' extension", str);
+    pm_strfree(str);
 }
 
 
