@@ -21,7 +21,7 @@
 
 
 
-static uint32
+static uint32_t
 number(const char * const value,
        tagvalmap    const tagvallist[]) {
 
@@ -95,7 +95,7 @@ putShort(TIFF *       const tifP,
          const char * const value,
          tagvalmap    const tagvallist[]) {
 
-    uint16 const num = number(value, tagvallist);
+    uint16_t const num = number(value, tagvallist);
 
     TIFFSetField(tifP, tagnum, num);
 }
@@ -108,7 +108,7 @@ putLong(TIFF *       const tifP,
         const char * const value,
         tagvalmap    const tagvallist[]) {
 
-    uint32 const num = number(value, tagvallist);
+    uint32_t const num = number(value, tagvallist);
 
     TIFFSetField(tifP, tagnum, num);
 }
@@ -134,10 +134,10 @@ putCountBytes(TIFF *       const tifP,
               const char * const value,
               tagvalmap    const tagvallist[]) {
 
-    uint32 const len = strlen(value)/2;
+    uint32_t const len = strlen(value)/2;
 
     char * data;
-    uint32 i;
+    uint32_t i;
     bool   error;
 
     MALLOCARRAY_NOFAIL(data, len);

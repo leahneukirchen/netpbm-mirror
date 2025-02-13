@@ -425,19 +425,19 @@ typedef struct tagOut {
 /* implementation for tiff files */
 
 typedef struct {
-  tdata_t buffer ;
-  tsize_t maxBuffer ;
-  tsize_t iBuffer ;
-  uint32 iRow ;
-  TIFF *tiff ;
-  uint32 rowsperstrip ;
-  uint16 compression ;
-  uint16 fillorder ;
-  uint16 predictor ;
-  uint16 lowdotrange ;
-  uint16 highdotrange ;
-  int kFlag ;
-} TiffOut ;
+    tdata_t  buffer;
+    tsize_t  maxBuffer;
+    tsize_t  iBuffer;
+    uint32_t iRow;
+    TIFF *   tiff;
+    uint32_t rowsperstrip;
+    uint16_t compression;
+    uint16_t fillorder;
+    uint16_t predictor;
+    uint16_t lowdotrange;
+    uint16_t highdotrange;
+    int      kFlag;
+} TiffOut;
 
 
 /* these options come from either the tiff 6.0 spec or the pnmtotiff
@@ -479,27 +479,27 @@ tiffOpt( Out *out, Root* rt, int *argn, int argc, char **argv ) {
     if ( (err = longArg( &lVal, "-predictor", 3, 1, 2,
                          argn, argc, argv )) ) return err ;
     if ( oldn != *argn ) {
-      t->predictor = (uint16)lVal ;
+      t->predictor = (uint16_t)lVal ;
     } else {
       if ( (err = longArg( &lVal, "-rowsperstrip", 2, 1, INT_MAX,
                            argn, argc, argv )) ) return err ;
     }
     if ( oldn != *argn ) {
-      t->rowsperstrip = (uint32)lVal ;
+      t->rowsperstrip = (uint32_t)lVal ;
     } else {
       if ( (err = longArg( &lVal, "-lowdotrange", 3, 0,
                            (int)(t->highdotrange - 1),
                            argn, argc, argv )) ) return err ;
     }
     if ( oldn != *argn ) {
-      t->lowdotrange = (uint16)lVal ;
+      t->lowdotrange = (uint16_t)lVal ;
     } else {
       if ( (err = longArg( &lVal, "-highdotrange", 2,
                            (int)(t->lowdotrange + 1), MAXTIFFVAL,
                            argn, argc, argv )) ) return err ;
     }
     if ( oldn != *argn ) {
-      t->highdotrange = (uint16)lVal ;
+      t->highdotrange = (uint16_t)lVal ;
     }
   }
 
@@ -550,7 +550,7 @@ tiffOpen( Out* out, Root *r ) {
   TiffOut *t = (TiffOut*)out->private ;
 
   short samplesperpixel = 4 ; /* cmyk has four values */
-  uint16 bitspersample = MAXTIFFBITS ;
+  uint16_t bitspersample = MAXTIFFBITS ;
   short photometric = PHOTOMETRIC_SEPARATED ; /* ie cmyk */
 
   t->tiff = TIFFFdOpen( 1, "Standard Output", "w" ) ;
@@ -560,8 +560,8 @@ tiffOpen( Out* out, Root *r ) {
   }
 
   TIFFSetField( t->tiff, TIFFTAG_DOTRANGE, t->lowdotrange, t->highdotrange ) ;
-  TIFFSetField( t->tiff, TIFFTAG_IMAGEWIDTH, (uint32)r->nCols ) ;
-  TIFFSetField( t->tiff, TIFFTAG_IMAGELENGTH, (uint32)r->nRows ) ;
+  TIFFSetField( t->tiff, TIFFTAG_IMAGEWIDTH, (uint32_t)r->nCols ) ;
+  TIFFSetField( t->tiff, TIFFTAG_IMAGELENGTH, (uint32_t)r->nRows ) ;
   TIFFSetField( t->tiff, TIFFTAG_BITSPERSAMPLE, bitspersample ) ;
   TIFFSetField( t->tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT ) ;
   TIFFSetField( t->tiff, TIFFTAG_COMPRESSION, t->compression ) ;
