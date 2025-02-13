@@ -25,6 +25,9 @@ struct Cmdline {
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
+
 static const char *
 strippedOfExtension(const char * const arg) {
 
@@ -41,6 +44,7 @@ strippedOfExtension(const char * const arg) {
     }
     return buffer;
 }
+#pragma GCC diagnostic pop
 
 
 
