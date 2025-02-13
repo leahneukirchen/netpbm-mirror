@@ -43,6 +43,9 @@ parseCommandLine(int           const argc,
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
+
 static const char *
 imageName(const char * const inputFileName) {
 /*----------------------------------------------------------------------------
@@ -57,20 +60,22 @@ imageName(const char * const inputFileName) {
         pm_asprintf(&retval, "noname");
     else {
         char * nameBuf;
-        char * cp;
 
         MALLOCARRAY_NOFAIL(nameBuf, strlen(inputFileName) + 1);
 
         strcpy(nameBuf, inputFileName);
 
-        cp = strchr(nameBuf, '.' );
-        if (cp)
-            *cp = '\0';
-
+        {
+            /* Cut off the file name at the first period */
+            char * const periodP = strchr(nameBuf, '.' );
+            if (periodP)
+                *periodP = '\0';
+        }
         retval = nameBuf;
     }
     return retval;
 }
+#pragma GCC diagnostic pop
 
 
 
