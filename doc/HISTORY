@@ -16,6 +16,9 @@ not yet  BJH  Release 11.10.00
               giftopnm: Fix wild pointer reference with -verbose and
               invalid extension type.  Broken in Netpbm 10.59 (December 2012).
 
+              pdbimgtopam, pamtopdbimg: Fix crash when out of memory.  Always
+              broken (programs were new in Netpbm 10.52 (September 2010)).
+
 24.12.25 BJH  Release 11.09.00
 
               pammixmulti: Add -blend=alpha-weighted.  Thanks Scott Pakin.
