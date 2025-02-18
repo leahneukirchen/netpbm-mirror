@@ -125,7 +125,7 @@ parseXformOpt(const char *     const xformOpt,
 
 
 /* See transformPoint() for an explanation of the transform matrix types.  The
-   difference between XformCore and XformMatrix is that 'XformCore' is
+   difference between XformCore and XformMatrix is that 'XformMatrix' is
    particular to the source image dimensions and can be used to do the
    transformation, while 'XformCore' is independent of the source image and
    just tells what kind of transformation.
@@ -232,17 +232,17 @@ static void
 computeXformMatrix(struct XformMatrix * const xformP,
                    unsigned int         const sourceCols,
                    unsigned int         const sourceRows,
-                   struct XformCore     const XformCore) {
+                   struct XformCore     const xformCore) {
 
-    int colMax = XformCore.a * (sourceCols-1) + XformCore.c * (sourceRows-1);
-    int rowMax = XformCore.b * (sourceCols-1) + XformCore.d * (sourceRows-1);
+    int const x = xformCore.a * (sourceCols-1) + xformCore.c * (sourceRows-1);
+    int const y = xformCore.b * (sourceCols-1) + xformCore.d * (sourceRows-1);
 
-    xformP->a = XformCore.a;
-    xformP->b = XformCore.b;
-    xformP->c = XformCore.c;
-    xformP->d = XformCore.d;
-    xformP->e = colMax < 0 ? -colMax : 0;
-    xformP->f = rowMax < 0 ? -rowMax : 0;
+    xformP->a = xformCore.a;
+    xformP->b = xformCore.b;
+    xformP->c = xformCore.c;
+    xformP->d = xformCore.d;
+    xformP->e = x < 0 ? -x : 0;
+    xformP->f = y < 0 ? -y : 0;
 }
 
 
@@ -653,7 +653,7 @@ writeRaster(struct pam *    const pamP,
 static void
 transformPbmGen(struct pam *     const inpamP,
                 struct pam *     const outpamP,
-                struct XformCore const XformCore) {
+                struct XformCore const xformCore) {
 /*----------------------------------------------------------------------------
    This is the same as transformGen, except that it uses less
    memory, since the PBM buffer format uses one bit per pixel instead
@@ -668,7 +668,7 @@ transformPbmGen(struct pam *     const inpamP,
     struct XformMatrix xform;
     unsigned int row;
 
-    computeXformMatrix(&xform, inpamP->width, inpamP->height, XformCore);
+    computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
 
     bitrow = pbm_allocrow_packed(inpamP->width);
     newbits = pbm_allocarray_packed( outpamP->width, outpamP->height );
@@ -720,7 +720,7 @@ transformPbmGen(struct pam *     const inpamP,
 static void
 transformNonPbmWhole(struct pam *     const inpamP,
                      struct pam *     const outpamP,
-                     struct XformCore const XformCore,
+                     struct XformCore const xformCore,
                      bool             const verbose) {
 /*----------------------------------------------------------------------------
   Do the transform using "pam" library functions, as opposed to "pbm"
@@ -741,7 +741,7 @@ transformNonPbmWhole(struct pam *     const inpamP,
     struct XformMatrix xform;
     unsigned int row;
 
-    computeXformMatrix(&xform, inpamP->width, inpamP->height, XformCore);
+    computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
 
     tuplerow = pnm_allocpamrow(inpamP);
     newtuples = pnm_allocpamarray(outpamP);
@@ -798,7 +798,7 @@ initOutCell(struct pam *     const outCellPamP,
             unsigned int     const inCellWidth,
             unsigned int     const inCellHeight,
             struct pam *     const inpamP,
-            struct XformCore const XformCore) {
+            struct XformCore const xformCore) {
 /*----------------------------------------------------------------------------
    Set up an output cell.  Create and open a temporary file to hold its
    raster.  Figure out the dimensions of the cell.  Return a PAM structure
@@ -812,7 +812,7 @@ initOutCell(struct pam *     const outCellPamP,
 
     outCellPamP->file = pm_tmpfile();
 
-    xformDimensions(XformCore, inCellWidth, inCellHeight,
+    xformDimensions(xformCore, inCellWidth, inCellHeight,
                     &outCellFileCt, &outCellRankCt);
 
     outCellPamP->width = outCellFileCt;
@@ -825,7 +825,7 @@ static outputMap *
 createOutputMap(struct pam *       const inpamP,
                 unsigned int       const maxRows,
                 struct XformMatrix const cellXform,
-                struct XformCore   const XformCore) {
+                struct XformCore   const xformCore) {
 /*----------------------------------------------------------------------------
    Create and return the output map.  That's a map of all the output cells
    (from which the output image can be assembled, once those cells are filled
@@ -853,7 +853,7 @@ createOutputMap(struct pam *       const inpamP,
 
     MALLOCVAR_NOFAIL(mapP);
 
-    xformDimensions(XformCore, inCellFileCt, inCellRankCt,
+    xformDimensions(xformCore, inCellFileCt, inCellRankCt,
                     &mapP->fileCt, &mapP->rankCt);
 
     MALLOCARRAY(mapP->pam, mapP->rankCt);
@@ -882,7 +882,7 @@ createOutputMap(struct pam *       const inpamP,
 
         initOutCell(&mapP->pam[outCellRank][outCellFile],
                     inpamP->width, inCellRowCt,
-                    inpamP, XformCore);
+                    inpamP, xformCore);
     }
     return mapP;
 }
@@ -935,14 +935,14 @@ closeCellFiles(outputMap * const outputMapP) {
 static void
 transformCell(struct pam *     const inpamP,
               struct pam *     const outpamP,
-              struct XformCore const XformCore) {
+              struct XformCore const xformCore) {
 
     struct XformMatrix xform;
     tuple * inTupleRow;
     tuple ** outTuples;
     unsigned int inRow;
 
-    computeXformMatrix(&xform, inpamP->width, inpamP->height, XformCore);
+    computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
 
     inTupleRow = pnm_allocpamrow(inpamP);
 
@@ -1020,7 +1020,7 @@ stitchCellsToOutput(outputMap *  const outputMapP,
 static void
 transformNonPbmChunk(struct pam *     const inpamP,
                      struct pam *     const outpamP,
-                     struct XformCore const XformCore,
+                     struct XformCore const xformCore,
                      unsigned int     const maxRows,
                      bool             const verbose) {
 /*----------------------------------------------------------------------------
@@ -1032,11 +1032,11 @@ transformNonPbmChunk(struct pam *     const inpamP,
   header).
 
   We call the strip of 'maxRows' rows that we read a source cell.  We
-  transform that cell according to 'XformCore' to create a
+  transform that cell according to 'xformCore' to create a
   target cell.  We store all the target cells in temporary files.
   We consider the target cells to be arranged in a column matrix the
   same as the source cells within the source image; we transform that
-  matrix according to 'XformCore'.  The resulting cell matrix is the
+  matrix according to 'xformCore'.  The resulting cell matrix is the
   target image.
 -----------------------------------------------------------------------------*/
     /* The cells of the source image ("inCell") are in a 1-column matrix.
@@ -1054,9 +1054,9 @@ transformNonPbmChunk(struct pam *     const inpamP,
         pm_message("Transforming in %u chunks, using temp files",
                    inCellRankCt);
 
-    computeXformMatrix(&cellXform, inCellFileCt, inCellRankCt, XformCore);
+    computeXformMatrix(&cellXform, inCellFileCt, inCellRankCt, xformCore);
 
-    outputMapP = createOutputMap(inpamP, maxRows, cellXform, XformCore);
+    outputMapP = createOutputMap(inpamP, maxRows, cellXform, xformCore);
 
     for (inCellRank = 0; inCellRank < inCellRankCt; ++inCellRank) {
         unsigned int const inCellFile = 0;
@@ -1077,7 +1077,7 @@ transformNonPbmChunk(struct pam *     const inpamP,
         inCellPam = *inpamP;
         inCellPam.height = inCellRows;
 
-        transformCell(&inCellPam, outCellPamP, XformCore);
+        transformCell(&inCellPam, outCellPamP, xformCore);
     }
 
     rewindCellFiles(outputMapP);
