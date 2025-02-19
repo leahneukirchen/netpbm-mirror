@@ -736,19 +736,26 @@ transformNonPbmWhole(struct pam *     const inpamP,
   cases.  But we do require a certain amount of virtual and real memory;
   transformNonPbmChunk() is even more general in that it doesn't.
 -----------------------------------------------------------------------------*/
-    tuple * tuplerow;
     tuple ** newtuples;
+        /* output buffer */
+    tuple * tuplerow;
+        /* malloc'ed array of pointers to tuples in the output buffer,
+           'newtuples'
+        */
     struct XformMatrix xform;
     unsigned int row;
 
     computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
 
-    tuplerow = pnm_allocpamrow(inpamP);
+    MALLOCARRAY(tuplerow, inpamP->width);
+    if (!tuplerow)
+        pm_error("Unable to allocate memory for %u-column input buffer",
+                 inpamP->width);
+
     newtuples = pnm_allocpamarray(outpamP);
 
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
-        pnm_readpamrow(inpamP, tuplerow);
 
         for (col = 0; col < inpamP->width; ++col) {
             unsigned int newcol, newrow;
@@ -758,15 +765,18 @@ transformNonPbmWhole(struct pam *     const inpamP,
             assert(newcol < outpamP->width);
             assert(newrow < outpamP->height);
 
-            pnm_assigntuple(inpamP, newtuples[newrow][newcol],
-                            tuplerow[col]);
+            tuplerow[col] = newtuples[newrow][newcol];
         }
+        pnm_readpamrow(inpamP, tuplerow);
+            /* Note that this reads directly into the output buffer,
+               'newtuples'.
+            */
     }
 
     writeRaster(outpamP, newtuples);
 
     pnm_freepamarray(newtuples, outpamP);
-    pnm_freepamrow(tuplerow);
+    free(tuplerow);
 }
 
 
