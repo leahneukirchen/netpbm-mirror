@@ -173,7 +173,7 @@ adjustTrimMode(double          const inPixels,
             adjustedMode = originalMode;
     }
 
-    validateHeight(outHeight + (adjustedMode == TRIMMODE_FILL) ? 1 : 0);
+    validateHeight(outHeight + (adjustedMode == TRIMMODE_FILL ? 1 : 0));
 
     switch (adjustedMode) {
     case TRIMMODE_NOP:

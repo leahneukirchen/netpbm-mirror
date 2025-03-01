@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.03.01 BJH  Release 11.02.13
+
+              giftopnm: Fix wild pointer reference with -verbose and
+              invalid extension type.  Broken in Netpbm 10.59 (December 2012).
+
+              pdbimgtopam, pamtopdbimg: Fix crash when out of memory.  Always
+              broken (programs were new in Netpbm 10.52 (September 2010)).
+
+              pamrestack: fix failure when height too large for computations.
+              Broken in Netpbm 10.99 (June 2022).
+              
 24.12.25 BJH  Release 11.02.12
 
               pbmtoascii: fix bug: allows both -1x2 and -2x4.  Always present

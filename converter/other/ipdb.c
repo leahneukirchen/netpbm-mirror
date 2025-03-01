@@ -267,7 +267,7 @@ ipdb_imageCreate(const char * const name,
             failed = true;
 
         if (failed)
-            ipdb_imageFree(imgP);
+            free(imgP);
     } else
         failed = true;
 
