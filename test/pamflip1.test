@@ -1,19 +1,76 @@
-#! /bin/sh
+
 # This script tests: pamflip
-# Also requires: pamseq
+# Also requires: pamseq pamrestack
 
-echo "Test 1.  Should print 1350702313 12336"
-pamseq 3 15 | pamflip -lr | cksum
+tmpdir=${tmpdir:-/tmp}
+test_pam=${tmpdir}/testimg.pam
 
-echo "Test 2.  Should print 1035759697 40048"
-pamseq 4 9 | pamflip -tb | cksum
+pamseq 3 7 | pamrestack -width 91 -trim fill > ${test_pam}
 
-echo "Test 3.  Should print 217037000 101484"
-pamflip -cw testimg.ppm | cksum
+echo "Test 1 Should print 3736077292 1683 twice"
+cat ${test_pam} | cksum
+pamflip -null ${test_pam} | cksum
 
-echo "Test 4.  Should print 1178735266 481"
-pamflip -lr maze.pbm | cksum
+echo "Test 2 Should print 2913170429 1683"
+pamflip -leftright ${test_pam} | cksum
 
-echo "Test 5.  Should print 2339906255 481"
-pamflip -tb maze.pbm | cksum
+echo "Test 3 Should print 1308245970 1683"
+pamflip -topbottom ${test_pam} | cksum
 
+echo "Test 4 Should print 1178735266 481 twice"
+pamflip -leftright maze.pbm | cksum
+pamflip -xform=leftright maze.pbm | cksum
+
+echo "Test 5 Should print 2339906255 481 twice"
+pamflip -topbottom maze.pbm | cksum
+pamflip -xform=topbottom maze.pbm | cksum
+
+echo "Test 6 Should print 754913146 1683"
+pamflip -rotate90  ${test_pam} | cksum
+
+echo "Test 7 Should print 1068062431 1683"
+pamflip -rotate180 ${test_pam} | cksum
+
+echo "Test 8 Should print 3022929723 1683"
+pamflip -rotate270 ${test_pam} | cksum
+
+echo "Test 9 Should print 2304281277 1683 twice"
+pamflip -transpose ${test_pam} | cksum
+pamflip -xform=transpose ${test_pam} | cksum
+
+echo "Test 10 Should print 3173217425 481 twice"
+pamflip -tb maze.pbm | pamflip -lr | cksum
+pamflip -xform=topbottom,leftright maze.pbm | cksum
+
+echo "Test 11 Should print 748061765 465 twice"
+pamflip -tb maze.pbm | pamflip -xy | cksum
+pamflip -xform=topbottom,transpose maze.pbm | cksum
+
+
+rm ${test_pam}
+
+echo "Test Invalid"
+
+. ${srcdir}/test-invalid.inc
+
+# No flip operation specified
+invCmd "pamflip testgrid.pbm"
+invCmd "pamflip -xform testgrid.pbm"
+
+# Multiple operations
+invCmd "pamflip -lr -tb testgrid.pbm"
+invCmd "pamflip -cw -ccw testgrid.pbm"
+invCmd "pamflip -null -xy testgrid.pbm"
+invCmd "pamflip -xform=leftright -leftright testgrid.pbm"
+
+# Invalid memsize value
+invCmd "pamflip -memsize      -xy testgrid.pbm"
+invCmd "pamflip -memsize=0    -xy testgrid.pbm"
+invCmd "pamflip -memsize=0.1  -xy testgrid.pbm"
+invCmd "pamflip -memsize -20  -xy testgrid.pbm"
+invCmd "pamflip -memsize 0xff -xy testgrid.pbm"
+
+# Invalid pagesize value
+invCmd "pamflip -pagesize     -xy testgrid.pbm"
+invCmd "pamflip -pagesize=0.1 -xy testgrid.pbm"
+invCmd "pamflip -pagesize -20 -xy testgrid.pbm"

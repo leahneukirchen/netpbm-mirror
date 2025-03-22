@@ -1,122 +1,127 @@
-Test 1.  Should print 281226646 481 seven times
-281226646 481
-281226646 481
-281226646 481
-281226646 481
-281226646 481
-281226646 481
-281226646 481
-Test 2.  Should print 1576602925 8 fourteen times
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-1576602925 8
-Test 3.  Should print N : 0 thirty-two times
-1 : 0
-2 : 0
-3 : 0
-4 : 0
-5 : 0
-6 : 0
-7 : 0
-8 : 0
-9 : 0
-10 : 0
-11 : 0
-12 : 0
-13 : 0
-14 : 0
-15 : 0
-16 : 0
-17 : 0
-18 : 0
-19 : 0
-20 : 0
-21 : 0
-22 : 0
-23 : 0
-24 : 0
-25 : 0
-26 : 0
-27 : 0
-28 : 0
-29 : 0
-30 : 0
-31 : 0
-32 : 0
-Test 4.  Should print N : 0 thirty-two times
-1 : 0
-2 : 0
-3 : 0
-4 : 0
-5 : 0
-6 : 0
-7 : 0
-8 : 0
-9 : 0
-10 : 0
-11 : 0
-12 : 0
-13 : 0
-14 : 0
-15 : 0
-16 : 0
-17 : 0
-18 : 0
-19 : 0
-20 : 0
-21 : 0
-22 : 0
-23 : 0
-24 : 0
-25 : 0
-26 : 0
-27 : 0
-28 : 0
-29 : 0
-30 : 0
-31 : 0
-32 : 0
-Test 5.  Should print N : 0 thirty-two times
-1 : 0
-2 : 0
-3 : 0
-4 : 0
-5 : 0
-6 : 0
-7 : 0
-8 : 0
-9 : 0
-10 : 0
-11 : 0
-12 : 0
-13 : 0
-14 : 0
-15 : 0
-16 : 0
-17 : 0
-18 : 0
-19 : 0
-20 : 0
-21 : 0
-22 : 0
-23 : 0
-24 : 0
-25 : 0
-26 : 0
-27 : 0
-28 : 0
-29 : 0
-30 : 0
-31 : 0
-32 : 0
+Test 1.  Should print match twelve times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Test 2.  Should print match fourteeen times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Test 3.  Should print N : match thirty-two times
+1 : match
+2 : match
+3 : match
+4 : match
+5 : match
+6 : match
+7 : match
+8 : match
+9 : match
+10 : match
+11 : match
+12 : match
+13 : match
+14 : match
+15 : match
+16 : match
+17 : match
+18 : match
+19 : match
+20 : match
+21 : match
+22 : match
+23 : match
+24 : match
+25 : match
+26 : match
+27 : match
+28 : match
+29 : match
+30 : match
+31 : match
+32 : match
+Test 4.  Should print N : match thirty-two times
+1 : match
+2 : match
+3 : match
+4 : match
+5 : match
+6 : match
+7 : match
+8 : match
+9 : match
+10 : match
+11 : match
+12 : match
+13 : match
+14 : match
+15 : match
+16 : match
+17 : match
+18 : match
+19 : match
+20 : match
+21 : match
+22 : match
+23 : match
+24 : match
+25 : match
+26 : match
+27 : match
+28 : match
+29 : match
+30 : match
+31 : match
+32 : match
+Test 5.  Should print N : match thirty-two times
+1 : match
+2 : match
+3 : match
+4 : match
+5 : match
+6 : match
+7 : match
+8 : match
+9 : match
+10 : match
+11 : match
+12 : match
+13 : match
+14 : match
+15 : match
+16 : match
+17 : match
+18 : match
+19 : match
+20 : match
+21 : match
+22 : match
+23 : match
+24 : match
+25 : match
+26 : match
+27 : match
+28 : match
+29 : match
+30 : match
+31 : match
+32 : match

@@ -6,69 +6,84 @@ tmpdir=${tmpdir:-/tmp}
 dot_pbm=${tmpdir}/dot.pbm
 noise_pbm=${tmpdir}/noise.pbm
 
-echo "Test 1.  Should print 281226646 481 seven times"
+# define functions
+cmptarget () { cmp -s - $1 && echo "match" || echo "no match";  }
+cmptargetN () { cmp -s - $2 && echo $1 ": match" || echo $1 ": no match";  }
 
-pamflip -null maze.pbm | cksum
-pamflip -lr maze.pbm | pamflip -lr | cksum
-pamflip -tb maze.pbm | pamflip -tb | cksum
-pamflip -r180 maze.pbm | pamflip -r180 | cksum
-pamflip -xy maze.pbm | pamflip -xy | cksum
-pamflip -r90 maze.pbm | pamflip -r90 | pamflip -r90 | pamflip -r90 | cksum
-pamflip -r270 maze.pbm | pamflip -r270 | pamflip -r270 | pamflip -r270 | cksum
+echo "Test 1.  Should print match twelve times"
 
-echo "Test 2.  Should print 1576602925 8 fourteen times"
+pamflip -null maze.pbm | cmptarget maze.pbm
+pamflip -lr maze.pbm | pamflip -lr | cmptarget maze.pbm
+pamflip -tb maze.pbm | pamflip -tb | cmptarget maze.pbm
+pamflip -r180 maze.pbm | pamflip -r180 | cmptarget maze.pbm
+pamflip -xy maze.pbm | pamflip -xy | cmptarget maze.pbm
+pamflip -r90 maze.pbm | pamflip -r90 | pamflip -r90 | pamflip -r90 | \
+    cmptarget maze.pbm
+pamflip -r270 maze.pbm | pamflip -r270 | pamflip -r270 | pamflip -r270 | \
+    cmptarget maze.pbm
 
-pbmmake -b 1 1 | tee ${dot_pbm} | cksum
-pamflip -null ${dot_pbm} | cksum
+
+# the next five take complicated paths
+pamflip -cw maze.pbm | pamflip -tb | pamflip -ccw | pamflip -lr | cmptarget maze.pbm
+pamflip -lr maze.pbm | pamflip -cw | pamflip -tb | pamflip -ccw | cmptarget maze.pbm
+pamflip -tb maze.pbm | pamflip -xy | pamflip -lr | pamflip -xy | cmptarget maze.pbm
+pamflip -xy maze.pbm | pamflip -lr | pamflip -xy | pamflip -tb | cmptarget maze.pbm
+pamflip -tb maze.pbm | pamflip -lr | pamflip -r180 | cmptarget maze.pbm
+
+
+echo "Test 2.  Should print match fourteeen times"
+
+pbmmake -b 1 1 > ${dot_pbm}
+pamflip -null ${dot_pbm} | cmp -s - ${dot_pbm} && echo "match" || echo "no match"
 
 # the next six aren't round-trip
-pamflip -lr ${dot_pbm} | cksum
-pamflip -tb ${dot_pbm} | cksum
-pamflip -r180 ${dot_pbm} | cksum
-pamflip -xy ${dot_pbm} | cksum
-pamflip -r90 ${dot_pbm} | cksum
-pamflip -r270 ${dot_pbm} | cksum
+pamflip -lr ${dot_pbm}   | cmptarget ${dot_pbm}
+pamflip -tb ${dot_pbm}   | cmptarget ${dot_pbm}
+pamflip -r90 ${dot_pbm}  | cmptarget ${dot_pbm}
+pamflip -r180 ${dot_pbm} | cmptarget ${dot_pbm}
+pamflip -r270 ${dot_pbm} | cmptarget ${dot_pbm}
+pamflip -xy ${dot_pbm}   | cmptarget ${dot_pbm}
 
-pamflip -lr ${dot_pbm} | pamflip -lr | cksum
-pamflip -tb ${dot_pbm} | pamflip -tb | cksum
-pamflip -r180 ${dot_pbm} | pamflip -r180 | cksum
-pamflip -xy ${dot_pbm} | pamflip -xy | cksum
-pamflip -r90 ${dot_pbm} | pamflip -r90 | pamflip -r90 | pamflip -r90 | cksum
-pamflip -r270 ${dot_pbm} | pamflip -r270 | \
-    pamflip -r270 | pamflip -r270 | cksum
+pamflip -lr ${dot_pbm} | pamflip -lr | cmptarget ${dot_pbm}
+pamflip -tb ${dot_pbm} | pamflip -tb | cmptarget ${dot_pbm}
+pamflip -r180 ${dot_pbm} | pamflip -r180 | cmptarget ${dot_pbm}
+pamflip -ccw ${dot_pbm} | pamflip -cw | cmptarget ${dot_pbm}
+pamflip -xy ${dot_pbm} | pamflip -xy | cmptarget ${dot_pbm}
 
+pamflip -r90 ${dot_pbm} | pamflip -r90 | pamflip -r90 | pamflip -r90 | \
+    cmptarget ${dot_pbm}
+pamflip -r270 ${dot_pbm} | pamflip -r270 | pamflip -r270 | pamflip -r270 | \
+    cmptarget ${dot_pbm}
+     
 rm ${dot_pbm}
 
-echo "Test 3.  Should print N : 0 thirty-two times"
+echo "Test 3.  Should print N : match thirty-two times"
 
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
          20 21 22 23 24 25 26 27 28 29 30 31 32 
   do
   pbmnoise -randomseed=${i} -pack ${i} 3 > ${noise_pbm} && \
-    pamflip -lr ${noise_pbm} | pamflip -lr | cmp -s - ${noise_pbm}
-  echo $i : $?
+    pamflip -lr ${noise_pbm} | pamflip -lr | cmptargetN $i ${noise_pbm}
   rm ${noise_pbm}
   done
 
-echo "Test 4.  Should print N : 0 thirty-two times"
+echo "Test 4.  Should print N : match thirty-two times"
 
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
          20 21 22 23 24 25 26 27 28 29 30 31 32 
   do
   pbmnoise -randomseed=${i} -pack 7 ${i} > ${noise_pbm} && \
-    pamflip -tb ${noise_pbm} | pamflip -tb | cmp -s - ${noise_pbm}
-  echo $i : $?
+    pamflip -tb ${noise_pbm} | pamflip -tb | cmptargetN $i ${noise_pbm}
   rm ${noise_pbm}
   done
 
 
-echo "Test 5.  Should print N : 0 thirty-two times"
+echo "Test 5.  Should print N : match thirty-two times"
 
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
          20 21 22 23 24 25 26 27 28 29 30 31 32 
   do
   pbmnoise -randomseed=${i} -pack ${i} ${i} > ${noise_pbm} && \
-    pamflip -xy ${noise_pbm} | pamflip -xy | cmp -s - ${noise_pbm}
-  echo $i : $?
+    pamflip -xy ${noise_pbm} | pamflip -xy | cmptargetN $i ${noise_pbm}
   rm ${noise_pbm}
   done
