@@ -270,7 +270,9 @@ interpretMemorySize(unsigned int const memsizeSpec,
     unsigned int const Meg = 1024 * 1024;
 
     if (memsizeSpec) {
-        if (memsizeOpt > sizeMax / Meg)
+        if (memsizeOpt == 0)
+            pm_error("-memsize value must be positive");
+        else if (memsizeOpt > sizeMax / Meg)
             pm_error("-memsize value too large: %u MiB.  Maximum this program "
                      "can handle is %u MiB",
                      memsizeOpt, (unsigned)sizeMax / Meg);
@@ -337,7 +339,7 @@ parseCommandLine(int argc, char ** const argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (lr + tb + xy + r90 + r180 + r270 + null > 1)
+    if (lr + tb + xy + r90 + r180 + r270 + null + xformSpec > 1)
         pm_error("You may specify only one type of flip.");
     if (lr + tb + xy + r90 + r180 + r270 + null == 1) {
         if (lr) {
@@ -376,6 +378,9 @@ parseCommandLine(int argc, char ** const argv,
 
     if (!pagesizeSpec)
         cmdlineP->pageSize = 4*1024;
+
+    if (pagesizeSpec && cmdlineP->verbose)
+        pm_message("-pagesize value has no effect.");
 
     if (argc-1 == 0)
         cmdlineP->inputFilespec = "-";
