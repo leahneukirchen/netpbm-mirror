@@ -13,6 +13,10 @@ not yet  BJH  Release 11.10.00
               pamflip: improve efficiency - less copying of tuples in basic
               whole-image non-PBM case.
 
+              pamflip: more direct error message for -memsize=0.
+
+              pamflip: warn if redundant -pagesize specified with -verbose.
+
               pammixmulti: Fix crash from uninitialized memory.  Introduced in
               Netpbm 11.09 (December 2024).
 
@@ -24,7 +28,11 @@ not yet  BJH  Release 11.10.00
 
               pamrestack: fix failure when height too large for computations.
               Broken in Netpbm 10.99 (June 2022).
-              
+
+              pamflip: fix: Don't allow -xform with older transform options
+              (-leftright, etc.).  Before, -xform would be ignored in that
+              case.
+
 24.12.25 BJH  Release 11.09.00
 
               pammixmulti: Add -blend=alpha-weighted.  Thanks Scott Pakin.
