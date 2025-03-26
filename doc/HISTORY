@@ -17,6 +17,8 @@ not yet  BJH  Release 11.10.00
 
               pamflip: warn if redundant -pagesize specified with -verbose.
 
+              pcdovtoppm: improve syntax error messages.
+
               pammixmulti: Fix crash from uninitialized memory.  Introduced in
               Netpbm 11.09 (December 2024).
 
