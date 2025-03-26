@@ -2,7 +2,7 @@
 <html><head><title>Pcdovtoppm User Manual</title></head>
 <body>
 <h1>pcdovtoppm</h1>
-Updated: 02 August 2020
+Updated: 26 March 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -13,12 +13,12 @@ pcdovtoppm - create index image for a photo CD
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>pcdovtoppm</b>
-[<b>-m </b><i>width</i>]
-[<b>-s </b><i>size</i>]
-[<b>-a </b><i>across</i>]
-[<b>-c </b><i>colors</i>]
-[<b>-f </b><i>font</i>]
-[<b>-b</b>|<b>-w</b>]
+[<b>-maxwidth </b><i>width</i>]
+[<b>-size </b><i>size</i>]
+[<b>-across </b><i>across</i>]
+[<b>-colors </b><i>colors</i>]
+[<b>-font </b><i>font</i>]
+[<b>-black </b>|<b>-white</b>]
 [<i>pcdfile</i>]
 
 
@@ -39,36 +39,37 @@ followed by <b>pnmindex -black</b> on the generated PPM images.
 Common Options</a>), <b>pcdovtoppm</b> recognizes the following
 command line options:
 
+<p>Where options conflict, the rightmost one takes precedence.
+  
 <dl compact>
-<dt><b>-w</b><i>width</i>
-
+<dt><b>-maxwidth</b> <i>width</i>
 <dd>
 Maximum width of the result image (default: 1152).
-<dt><b>-s</b><i>size</i>
+
+<dt><b>-size</b> <i>size</i>
 
 <dd>
 Maximum size of each of the images (default: 192).
-<dt><b>-a</b><i>across</i>
 
+<dt><b>-across</b> <i>across</i>
 <dd>
 Maximum number of images across (default: 6).
-<dt><b>-c</b><i>colors</i>
 
+<dt><b>-colors</b> <i>colors</i>
 <dd>
-Maximum number of colors, or 
-<b>n</b>
-
-to mean no quantization
-<dt><b>-f</b><i>font</i>
-
+Maximum number of colors, or <b>noquant</b> to mean no quantization
+  
+<dt><b>-font</b> <i>font</i>
 <dd>
 Font to be used for annotation (default: internal font).
-<dt><b>-b</b>
 
+<dt><b>-black</b>
 <dd>
 Black background color (default).
-<dt><b>-w</b>
 
+This is the default.
+
+<dt><b>-white</b>
 <dd>
 White background color.
 

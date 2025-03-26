@@ -170,12 +170,12 @@ tile files it creates.  It is in row-major order. For example,
 on a 200x200 image generates the file <b>mylist.txt</b> containing this:
 
 <pre>
-<lines>
+  <code>
     myimage_part_000_000.ppm
     myimage_part_000_001.ppm
     myimage_part_001_000.ppm
     myimage_part_001_001.ppm
-</lines>
+    </code>
 </pre>
 
 <p>You can use this list file with <b>pamundice -listfile</b> in lieu of an
@@ -195,10 +195,8 @@ tuple.  For example, if <b>pamdice</b> produces 3 slices across and 2 down,
 the image looks like this:
 
     <pre>
-      <lines>
         (0,0) (0,1) (0,2)
         (1,0) (1,1) (1,2)
-    </lines>
     </pre>
     
 <p>The depth of the image is 2, the tuple type is &quot;grid_coord&quot; (a
