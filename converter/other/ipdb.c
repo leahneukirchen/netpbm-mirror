@@ -294,8 +294,8 @@ ipdb_image_alloc(const char * const name,
             failed = true;
         
         if (failed)
-            ipdb_image_free(imgP);
-    } else 
+            free(imgP);
+    } else
         failed = true;
 
     return failed ? NULL : imgP;
@@ -335,7 +335,7 @@ ipdb_text_alloc(const char * const content) {
             failed = true;
 
         if (failed)
-            ipdb_text_free(textP);
+            free(textP);
     } else
         failed = true;
 
