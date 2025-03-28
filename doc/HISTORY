@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 11.10.00
+25.03.28 BJH  Release 11.10.00
 
               pamdice: Add -listfile, -indexfile, -numberwidth, -dry-run .
 
