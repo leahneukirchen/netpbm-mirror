@@ -148,7 +148,7 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static struct pam *
-newInPamArray(unsigned int  const inFileCt) {
+newInPamArray(unsigned int const inFileCt) {
 /*----------------------------------------------------------------------------
    Allocate an array of 'inFileCt' input pam structures, valid through the
    'opacity_plane' member.
@@ -180,7 +180,7 @@ initInput(unsigned int          const inFileCt,
 
   Abort if the input files don't all have the same size and format.
 -----------------------------------------------------------------------------*/
-    struct pam * const inPam = newInPamArray(inFileCt);
+    struct pam * const inPam = newInPamArray(inFileCt);  /* array */
 
     unsigned int i;
 

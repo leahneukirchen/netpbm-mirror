@@ -1,22 +1,22 @@
 #! /bin/sh
 # This script tests: pamdice
-# Also requires: pbmmake
+# Also requires: pbmmake pamfile
 
 tmpdir=${tmpdir:-/tmp}
 fname_stem=${tmpdir}/pamdice_part
 
 # Test 1.
-echo "Test 1."
+echo "Test 1.  Should print P1@1 1@0@ 10 times"
 
 pbmmake -w 2 5 | pamdice -height=1 -width=1 -outstem=${fname_stem} -plain
 ls ${fname_stem}*.pbm | while read file
   do
   cat ${file} | tr '\n'  '@' ; echo
-  done | sort | uniq -c | sed 's/^ *//'
+  done
 
 rm ${fname_stem}*.pbm
 
-# Test 1.
+# Test 2.
 echo "Test 2."
 
 pbmmake -g 2 5 | pamdice -height=1 -width=1 -outstem=${fname_stem} -plain
@@ -27,53 +27,134 @@ ls ${fname_stem}*.pbm | while read file
 
 rm ${fname_stem}*.pbm
 
+# Test 3.
+echo "Test 3.  Should print 344787840 178 twice"
+pbmmake -g 7 8 | \
+    pamdice -height=1 -width=1 -outstem=${fname_stem} -indexfile=- -dry-run | \
+    cksum
+
+pamdice -height=2 -width=2 -outstem=${fname_stem} -indexfile=- -dry-run testgrid.pbm | \
+    cksum
+
+# Test 4.
+echo "Test 4."
+pbmmake -g 2 2 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run
+echo
+pamdice -height=8 -width=7 -outstem=stem -listfile=- -dry-run testgrid.pbm
+
+# Test 5.
+echo "Test 5."
+
+pbmmake -g 99 100 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | head -n 1
+pbmmake -g 100 99 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | head -n 1 
+pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem \
+  -listfile=- -dry-run | head -n 1
+pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem -numberwidth=3 \
+  -listfile=- -dry-run | head -n 1
+pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem -numberwidth=4 \
+  -listfile=- -dry-run | head -n 1
+pbmmake -g   1   1 | pamdice -height=1 -width=1 -outstem=stem -numberwidth=4 \
+  -listfile=- -dry-run | head -n 1
+
+# Test 6.
+echo "Test 6."
+
+pamdice -height=1 -width=1 -outstem=/tmp/stem -indexfile=- -dry-run testgrid.pbm | \
+    pamfile -machine
+
+pamdice -height=2 -width=2 -outstem=/tmp/stem -indexfile=- -dry-run testgrid.pbm | \
+    pamfile -machine
+
+pamdice -height=1000 -width=10000 -outstem=/tmp/stem -indexfile=- -dry-run testgrid.pbm | \
+    pamfile -machine
+
+pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem -indexfile=- -dry-run | \
+    pamfile -machine	
+
+pbmmake -g 257 256 | pamdice -height=1 -width=1 -outstem=stem -indexfile=- -dry-run | \
+    pamfile -machine	
+
+pbmmake -g 257 256 | pamdice -height=1 -width=1 -outstem=stem -indexfile=- -dry-run | \
+    pamfile -machine	
 
 # Test Invalid.
 echo "Test Invalid"
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ./test-invalid.inc
 
 # No output files should be producd.  With nothing to remove,
 # the rm commands should always fail.
 
+common_opt="-width=10 -height=10 -outstem=${fname_stem}"
+
 # No input file
-pamdice -width=10 -height=10  -outstem=${fname_stem} /dev/null || \
-echo "Expected failure 1"
-rm ${fname_stem}* ||
-echo "Expected failure 1.rm"
+invCmd "pamdice ${common_opt} /dev/null"
+invCmd "rm ${fname_stem}*"
 
 # No -outstem
-pamdice -width=10 -height=10 testgrid.pbm || \
-echo "Expected failure 2"
-rm ${fname_stem}* ||
-echo "Expected failure 2.rm"
+invCmd "pamdice -width=10 -height=10 testgrid.pbm"
+invCmd "rm ${fname_stem}*"
 
 # -width=0
-pamdice -width=0 -height=10 -outstem=${fname_stem} testgrid.pbm || \
-echo "Expected failure 3"
-rm ${fname_stem}* ||
-echo "Expected failure 3.rm"
+invCmd "pamdice -width=0 -height=10 -outstem=${fname_stem} testgrid.pbm"
+invCmd "rm ${fname_stem}*"
 
 # -height=0
-pamdice -width=10 -height=0 -outstem=${fname_stem} testgrid.pbm || \
-echo "Expected failure 4"
-rm ${fname_stem}* ||
-echo "Expected failure 4.rm"
+invCmd "pamdice -width=10 -height=0 -outstem=${fname_stem} testgrid.pbm"
+invCmd "rm ${fname_stem}*"
 
 # -hoverlap larger than width
-pamdice -width=10 -height=10 -hoverlap=11 \
-  -outstem=${fname_stem} testgrid.pbm || \
-echo "Expected failure 5"
-rm ${fname_stem}* ||
-echo "Expected failure 5.rm"
-
+invCmd "pamdice -width=10 -height=10 -hoverlap=11 -outstem=${fname_stem} testgrid.pbm"
+invCmd "rm ${fname_stem}*"
 
 # -voverlap larger than height
-pamdice -width=10 -height=10 -voverlap=11 \
-  -outstem=${fname_stem} testgrid.pbm || \
-echo "Expected failure 6"
-rm ${fname_stem}* ||
-echo "Expected failure 6.rm"
+invCmd "pamdice -width=10 -height=10 -voverlap=11 -outstem=${fname_stem} testgrid.pbm"
+invCmd "rm ${fname_stem}*"
+
+# Invalid listfile
+invCmd "pamdice ${common_opt} -listfile=${tmp} testgrid.pbm"
+invCmd "rm ${fname_stem}*"
+
+# No listfile
+invCmd "pamdice ${common_opt} testgrid.pbm -listfile"
+invCmd "rm ${fname_stem}*"
+
+# Invalid indexfile
+invCmd "pamdice ${common_opt} -indexfile=${tmp} testgrid.pbm"
+invCmd "rm ${fname_stem}*"
+
+# No indexfile
+invCmd "pamdice ${common_opt} testgrid.pbm -indexfile"
+invCmd "rm ${fname_stem}*"
+
+# -numberwidth=0
+invCmd "pamdice ${common_opt} -indexfile=${tmp}  -numberwidth=0 testgrid.pbm"
+invCmd "rm ${fname_stem}*"
+
+# -numberwidth too large
+invCmd "pamdice ${common_opt} -indexfile=${tmp} -numberwidth=10 testgrid.pbm"
+invCmd "rm ${fname_stem}*"
+
+test_pbm=${tmpdir}/test.pbm
+
+# -numberwidth insufficient for input file width
+pbmmake -g 100 99 > ${test_pbm}
+invCmd "pamdice ${common_opt} -indexfile=${tmp} -numberwidth=2 ${test_pbm}"
+invCmd "rm ${fname_stem}*"
+rm ${test_pbm}
+
+# -numberwidth insufficient for input file height
+pbmmake -g 10 100 > ${test_pbm}
+invCmd "pamdice ${common_opt} -indexfile=${tmp} -numberwidth=2 ${test_pbm}"
+invCmd "rm ${fname_stem}*"
+rm ${test_pbm}
+
+invfile=${tmpdir}/invalid_file
+
+# Same name for listfile indexfile
+invCmd "pamdice ${common_opt} -listfile=${invfile} -indexfile=${invfile} testgrid.pbm"
+invCmd "rm ${fname_stem}* ${invfile} "
+
+# listfile indexfile both stdout
+invCmd "pamdice ${common_opt} -listfile=- -indexfile=- testgrid.pbm"
+invCmd "rm ${fname_stem}*"

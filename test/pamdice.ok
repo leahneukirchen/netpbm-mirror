@@ -1,5 +1,14 @@
-Test 1.
-10 P1@1 1@0@
+Test 1.  Should print P1@1 1@0@ 10 times
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
+P1@1 1@0@
 Test 2.
 P1@1 1@0@
 P1@1 1@1@
@@ -11,16 +20,63 @@ P1@1 1@1@
 P1@1 1@0@
 P1@1 1@0@
 P1@1 1@1@
+Test 3.  Should print 344787840 178 twice
+344787840 178
+344787840 178
+Test 4.
+stem_0_0.pbm
+stem_0_1.pbm
+stem_1_0.pbm
+stem_1_1.pbm
+
+stem_0_0.pbm
+stem_0_1.pbm
+stem_1_0.pbm
+stem_1_1.pbm
+Test 5.
+stem_000_00.pbm
+stem_00_000.pbm
+stem_000_000.pbm
+stem_000_000.pbm
+stem_0000_0000.pbm
+stem_0000_0000.pbm
+Test 6.
+stdin: PAM RAW 14 16 2 255 grid_coord
+stdin: PAM RAW 7 8 2 255 grid_coord
+stdin: PAM RAW 1 1 2 255 grid_coord
+stdin: PAM RAW 256 256 2 255 grid_coord
+stdin: PAM RAW 257 256 2 65535 grid_coord
+stdin: PAM RAW 257 256 2 65535 grid_coord
 Test Invalid
-Expected failure 1
-Expected failure 1.rm
-Expected failure 2
-Expected failure 2.rm
-Expected failure 3
-Expected failure 3.rm
-Expected failure 4
-Expected failure 4.rm
-Expected failure 5
-Expected failure 5.rm
-Expected failure 6
-Expected failure 6.rm
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
+Expected failure 9 (no output)
+Expected failure 10 (no output)
+Expected failure 11 (no output)
+Expected failure 12 (no output)
+Expected failure 13 (no output)
+Expected failure 14 (no output)
+Expected failure 15 (no output)
+Expected failure 16 (no output)
+Expected failure 17 (no output)
+Expected failure 18 (no output)
+Expected failure 19 (no output)
+Expected failure 20 (no output)
+Expected failure 21 (no output)
+Expected failure 22 (no output)
+Expected failure 23 (no output)
+Expected failure 24 (no output)
+Expected failure 25 (no output)
+Expected failure 26 (no output)
+Expected failure 27 (no output)
+Expected failure 28 (no output)
+Expected failure 29 (no output)
+Expected failure 30 (no output)
+Expected failure 31 (no output)
+Expected failure 32 (no output)

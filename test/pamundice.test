@@ -110,93 +110,56 @@ echo "-----------------------------------------------------------" 1>&2
 
 pamundice -down=5 -across=2 maze.pbm | cksum
 
-
 # Test Invalid.
 echo "Test Invalid"
 
-test_out=${tmpdir}/test_out
-
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ./test-invalid.inc
 
 # No input file pattern specified
-pamundice -down=5 -across=2 > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=5 -across=2"
 
 # -down=0
-pamundice -down=0 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=0 -across=2 ${fname_stem}_%1d_%1a.pbm"
 
 # -across=0
-pamundice -down=5 -across=0 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=5 -across=0 ${fname_stem}_%1d_%1a.pbm"
 
 # -down too large
-pamundice -down=6 -across=2 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=6 -across=2 ${fname_stem}_%1d_%1a.pbm"
 
 # -across too large
-pamundice -down=5 -across=3 ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=5 -across=3 ${fname_stem}_%1d_%1a.pbm"
 
 # precision does not match
-pamundice -down=5 -across=2 ${fname_stem}_"%2d"_"%2a".pbm > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=5 -across=2 ${fname_stem}_%2d_%2a.pbm"
 
 # precision set to zero
-pamundice -down=5 -across=2 ${fname_stem}_"%0d"_"%0a".pbm > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=5 -across=2 ${fname_stem}_%0d_%0a.pbm"
 
 # no precision
-pamundice -down=5 -across=2 ${fname_stem}_"%d"_"%a".pbm > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -down=5 -across=2 ${fname_stem}_%d_%a.pbm"
 
 # -hoverlap too large
-pamundice -down=5 -across=2 -hoverlap=$((${mw}+1)) \
-  ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  printf "Expected failure 9 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -d=5 -ac=2 -hoverlap=$((${mw}+1)) ${fname_stem}_%1d_%1a.pbm"
 
 # -voverlap too large
-pamundice -down=5 -across=2 -voverlap=$((${mh}+1)) \
-  ${fname_stem}_"%1d"_"%1a".pbm > ${test_out} || \
-  printf "Expected failure 10 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pamundice -d=5 -ac=2 -voverlap=$((${mh}+1)) ${fname_stem}_%1d_%1a.pbm"
+
+
+listfile=${tmpdir}/listfile
+
+# listfile with insufficient lines (insufficient file entries)
+ls ${fname_stem}_*_*.pbm | tail -n +2  > ${listfile}
+invCmd "pamundice -down=5 -across=2 -listfile=${listfile}"
+rm -f ${listfile}
 
 # corrupt listfile : file names do not exist
 for i in 0 1 2 3 4 5 6 7 8 9
   do
-  mktemp -u XXXXXXXXXX.${i} || echo ":::::::::::"${i}":::::::::::"
-  done | pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
-  printf "Expected failure 11 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+  mktemp -u XXXXXXXXXX.${i} || echo :::::::::::${i}:::::::::::
+  done > ${listfile}
+invCmd "pamundice -down=5 -across=2 -listfile=$listfile"
+rm -f ${listfile}
 
-# listfile with insufficient lines (insufficient file entries)
-ls ${fname_stem}_*_*.pbm | head -n 9 | \
-  pamundice -down=5 -across=2 -listfile=- > ${test_out} || \
-  printf "Expected failure 12 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
+rm -f ${test_out}
 rm ${fname_stem}*.pbm

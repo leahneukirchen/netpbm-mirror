@@ -1,65 +1,66 @@
-Test 1.  Should print 1988581932 2989 fifteen times
+Test 1.  Should print match fifteen times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Should print 1988581932 2989
 1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-1988581932 2989
-Test 2.  Should print 2729474106 27 nine times
+Test 2.  Should print match nine times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Should print 2729474106 27
 2729474106 27
-2729474106 27
-2729474106 27
-2729474106 27
-2729474106 27
-2729474106 27
-2729474106 27
-2729474106 27
-2729474106 27
-Test 3.  Should print 1849343241 27 nine times
+Test 3.
+Should print match nine times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Should print 1849343241 27
 1849343241 27
-1849343241 27
-1849343241 27
-1849343241 27
-1849343241 27
-1849343241 27
-1849343241 27
-1849343241 27
-1849343241 27
-Test 4.  Should print a single pixel PPM image maxval 65535 in 
-plain (ascii) format; then print 2434897823 19 fifteen times
+Test 4. Should print a single pixel PPM image maxval 65535 in
+plain (ascii) format; then match fifteen times
 P3
 1 1
 65535
 1 10000 65535 
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Should print 2434897823 19
 2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-2434897823 19
-Test 5.  Should print 281226646 481 seven times
-281226646 481
-281226646 481
-281226646 481
-281226646 481
-281226646 481
-281226646 481
-281226646 481

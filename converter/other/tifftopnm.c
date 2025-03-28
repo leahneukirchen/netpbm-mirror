@@ -492,13 +492,13 @@ readscanline(TIFF *          const tif,
            bytes of each sample appear in a TIFF file, which is
            contrary to the TIFF spec.
         */
-        const uint16 * const scanbuf16 = (const uint16 *) scanbuf;
+        const uint16_t * const scanbuf16 = (const uint16_t *) scanbuf;
         unsigned int sample;
 
         for (sample = 0; sample < cols*spp; ++sample)
             samplebuf[sample] = scanbuf16[sample];
     } else if (bps == 32) {
-        const uint32 * const scanbuf32 = (const uint32 *) scanbuf;
+        const uint32_t * const scanbuf32 = (const uint32_t *) scanbuf;
         unsigned int sample;
 
         for (sample = 0; sample < cols * spp; ++sample)
@@ -1439,7 +1439,7 @@ warnBrokenTiffLibrary(TIFF * const tiffP) {
 
 
 static void
-convertTiffRaster(uint32 *        const raster,
+convertTiffRaster(uint32_t *      const raster,
                   unsigned int    const cols,
                   unsigned int    const rows,
                   xelval          const maxval,
@@ -1463,7 +1463,7 @@ convertTiffRaster(uint32 *        const raster,
     alpharow = pgm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        uint32 * rp;
+        uint32_t * rp;
             /* Address of pixel in 'raster' we are currently converting */
         unsigned int col;
 
@@ -1471,7 +1471,7 @@ convertTiffRaster(uint32 *        const raster,
         rp = raster + (rows - row - 1) * cols;
 
         for (col = 0; col < cols; ++col) {
-            uint32 const tiffPixel = *rp++;
+            uint32_t const tiffPixel = *rp++;
 
             PPM_ASSIGN(xelrow[col],
                        TIFFGetR(tiffPixel) * maxval / 255,
@@ -1502,7 +1502,7 @@ convertRasterIntoProvidedMemory(pnmOut *           const pnmOutP,
                                 xelval             const maxval,
                                 TIFF *             const tif,
                                 bool               const verbose,
-                                uint32 *           const raster,
+                                uint32_t *         const raster,
                                 enum convertDisp * const statusP) {
 
     int const stopOnErrorFalse = false;
@@ -1580,7 +1580,7 @@ convertRasterInMemory(pnmOut *           const pnmOutP,
             } else {
                 unsigned int const pixelCt = rows * cols;
 
-                uint32 * raster;
+                uint32_t * raster;
 
                 /* Note that TIFFRGBAImageGet() converts any bits per sample
                    to 8.  Maxval of the raster it returns is always 255.
