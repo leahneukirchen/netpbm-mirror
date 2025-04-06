@@ -55,9 +55,9 @@ __BEGIN_DECLS
  *  FIASCO_SOME_VERBOSITY:     Show progress meter during coding
  *  FIASCO_ULTIMATE_VERBOSITY: Show debugging output
  */
-typedef enum {FIASCO_NO_VERBOSITY,
-              FIASCO_SOME_VERBOSITY,
-              FIASCO_ULTIMATE_VERBOSITY} fiasco_verbosity_e;
+typedef enum {FIASCO_NO_VERBOSITY=0,
+              FIASCO_SOME_VERBOSITY=1,
+              FIASCO_ULTIMATE_VERBOSITY=2} fiasco_verbosity_e;
 
 /*
  *  Image tiling methods:
