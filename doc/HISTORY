@@ -7,9 +7,12 @@ CHANGE HISTORY
 not yet  BJH  Release 11.11.00
 
               pnmquantall: fix arbitrary shell command execution with input
-              file names that contain shell metacharacters.  Always present
-              ('pnmquantall' has existed, aka 'ppmquantall', since primordial
-              Netpbm).
+              file names or color count that contain shell metacharacters.
+              Always present ('pnmquantall' has existed, aka 'ppmquantall',
+              since primordial Netpbm).
+
+              ppmtogif: fix arbitrary shell commands when arguments contain
+              shell metacharacters.  Broken in Netpbm 10.37 (June 2006).
 
 25.03.28 BJH  Release 11.10.00
 
