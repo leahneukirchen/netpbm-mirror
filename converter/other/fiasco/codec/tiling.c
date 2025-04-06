@@ -31,24 +31,23 @@
 
 
 
-typedef struct var_list
-{
-   int    address;                      /* bintree address */
-   real_t variance;                     /* variance of tile */
-} var_list_t;
+typedef struct VarList {
+    int    address;                      /* bintree address */
+    real_t variance;                     /* variance of tile */
+} VarList;
 
 #ifndef LITERAL_FN_DEF_MATCH
 static qsort_comparison_fn cmpincvar;
 #endif
 
 static int
-cmpincvar(const void * const value1,
-          const void * const value2) {
+cmpincvar(const void * const value1P,
+          const void * const value2P) {
 /*----------------------------------------------------------------------------
-  Sorts by increasing variances (quicksort sorting function)
+  Sort by increasing variances (quicksort sorting function)
 -----------------------------------------------------------------------------*/
     return
-        ((var_list_t *) value1)->variance - ((var_list_t *) value2)->variance;
+        ((VarList *)value1P)->variance - ((VarList *)value2P)->variance;
 }
 
 
@@ -58,176 +57,166 @@ static qsort_comparison_fn cmpdecvar;
 #endif
 
 static int
-cmpdecvar(const void * const value1,
-          const void * const value2) {
+cmpdecvar(const void * const value1P,
+          const void * const value2P) {
 /*----------------------------------------------------------------------------
-  Sorts by decreasing variances (quicksort sorting function).
+  Sort by decreasing variances (quicksort sorting function).
 -----------------------------------------------------------------------------*/
     return
-        ((var_list_t *) value2)->variance - ((var_list_t *) value1)->variance;
+        ((VarList *)value2P)->variance - ((VarList *)value1P)->variance;
 }
 
 
 
 tiling_t *
-alloc_tiling (fiasco_tiling_e method, unsigned tiling_exponent,
-              unsigned image_level)
-/*
- *  Image tiling constructor.
- *  Allocate memory for the tiling_t structure.
- *  `method' defines the tiling method (spiral or variance,
- *  ascending or descending).
- *  In case of invalid parameters, a structure with tiling.exponent == 0 is
- *  returned.
- *
- *  Return value
- *      pointer to the new tiling structure on success
- */
-{
-   tiling_t *tiling = Calloc (1, sizeof (tiling_t));
+alloc_tiling(fiasco_tiling_e const method,
+             unsigned int    const tilingExponent,
+             unsigned int    const imageLevel) {
+/*----------------------------------------------------------------------------
+   Construct an image tiling object.
 
-   if ((int) image_level - (int) tiling_exponent < 6)
-   {
-      tiling_exponent = 6;
-      warning (_("Image tiles must be at least 8x8 pixels large.\n"
-                 "Setting tiling size to 8x8 pixels."));
-   }
+  'method' defines the tiling method (spiral or variance; ascending or
+  descending).
 
-   switch (method)
-   {
-      case FIASCO_TILING_SPIRAL_ASC:
-      case FIASCO_TILING_SPIRAL_DSC:
-      case FIASCO_TILING_VARIANCE_ASC:
-      case FIASCO_TILING_VARIANCE_DSC:
-         tiling_exponent = tiling_exponent;
-         break;
-      default:
-         warning (_("Invalid tiling method specified. Disabling tiling."));
-         tiling_exponent = 0;
-         break;
-   }
+  'tilingExponent' is the requested tiling exponent, though if it is too large
+  for the 'imageLevel', we issue a warning and make the object say tiling
+  exponent 6.
 
-   return tiling;
+  Return value is pointer to newly malloced object.
+-----------------------------------------------------------------------------*/
+    tiling_t * const tilingP = Calloc(1, sizeof(tiling_t));
+
+    if ((int)imageLevel - (int)tilingExponent < 6) {
+        tilingP->exponent = 6;
+        warning(_("Image tiles must be at least 8x8 pixels large.\n"
+                  "Setting tiling size to 8x8 pixels."));
+    } else
+        tilingP->exponent = tilingExponent;
+
+    tilingP->exponent=0;  /* BRYANDEBUG */
+
+    return tilingP;
 }
 
+
+
 void
-free_tiling (tiling_t *tiling)
-/*
- *  Tiling struct destructor:
- *  Free memory of 'tiling' struct.
- *
- *  No return value.
- *
- *  Side effects:
- *      structure 'tiling' is discarded.
- */
-{
-   if (tiling->vorder)
-      Free (tiling->vorder);
-   Free (tiling);
+free_tiling (tiling_t * const tilingP) {
+/*----------------------------------------------------------------------------
+   Destroy tiling object *tilingP.
+-----------------------------------------------------------------------------*/
+    if (tilingP->vorder)
+        Free(tilingP->vorder);
+
+    Free(tilingP);
 }
 
+
+
+static void
+performTilingVariance(const image_t * const imageP,
+                      tiling_t *      const tilingP) {
+
+    bool_t * tileIsValid;  /* malloced array */
+        /* tileIsValid[i] means i is in valid range */
+
+    unsigned int const tileCt = 1 << tilingP->exponent;
+        /* number of image tiles */
+
+    tileIsValid = Calloc(tileCt, sizeof(bool_t));
+
+    unsigned int const lx      = log2 (imageP->width - 1) + 1; /* x level */
+    unsigned int const ly      = log2 (imageP->height - 1) + 1; /* y level */
+    unsigned int const level   = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+    VarList *    const varList = Calloc(tileCt, sizeof(VarList));  /* array */
+
+    unsigned int address;           /* bintree address of tile */
+    unsigned int number;            /* number of image tiles */
+
+    /* Compute variances of image tiles */
+
+    for (number = 0, address = 0; address < tileCt; ++address) {
+        unsigned width, height;     /* size of image tile */
+        unsigned x0, y0;            /* NW corner of image tile */
+
+        locate_subimage (level, level - tilingP->exponent, address,
+                         &x0, &y0, &width, &height);
+        if (x0 < imageP->width && y0 < imageP->height) {
+            /* valid range */
+            if (x0 + width > imageP->width)   /* outside image area */
+                width = imageP->width - x0;
+            if (y0 + height > imageP->height) /* outside image area */
+                height = imageP->height - y0;
+
+            varList[number].variance =
+                variance(imageP->pixels [GRAY], x0, y0,
+                         width, height, imageP->width);
+            varList[number].address  = address;
+            ++number;
+            tileIsValid[address] = YES;
+        } else
+            tileIsValid[address] = NO;
+    }
+
+    /* Sort image tiles according to sign of 'tilingP->exp' */
+    if (tilingP->method == FIASCO_TILING_VARIANCE_DSC)
+        qsort(varList, number, sizeof(VarList), cmpdecvar);
+    else
+        qsort(varList, number, sizeof(VarList), cmpincvar);
+
+    for (number = 0, address = 0; address < tileCt; ++address)
+        if (tileIsValid[address]) {
+            tilingP->vorder[address] = varList[number].address;
+            ++number;
+            debug_message("tile number %d has original address %d",
+                          number, tilingP->vorder[address]);
+        } else
+            tilingP->vorder[address] = -1;
+
+    Free(varList);
+}
+
+
+
 void
-perform_tiling (const image_t *image, tiling_t *tiling)
-/*
- *  Compute image tiling permutation.
- *  The image is split into 2**'tiling->exponent' tiles.
- *  Depending on 'tiling->method', the following algorithms are used:
- *  "VARIANCE_ASC" :  Tiles are sorted by variance.
- *                    The first tile has the lowest variance
- *  "VARIANCE_DSC" :  Tiles are sorted by variance.
- *                    The first tile has the largest variance
- *  "SPIRAL_ASC" :    Tiles are sorted like a spiral starting
- *                    in the middle of the image.
- *  "SPIRAL_DSC" :    Tiles are sorted like a spiral starting
- *                    in the upper left corner.
- *
- *  No return value.
- *
- *  Side effects:
- *      The tiling permutation is stored in 'tiling->vorder'.
- */
-{
-   if (tiling->exponent)
-   {
-      unsigned  tiles = 1 << tiling->exponent; /* number of image tiles */
-      bool_t   *tile_valid;             /* tile i is in valid range ? */
+perform_tiling(const image_t * const imageP,
+               tiling_t *      const tilingP) {
+/*----------------------------------------------------------------------------
+  Compute image tiling permutation, updating it in *tilingP.
 
-      tiling->vorder = Calloc (tiles, sizeof (int));
-      tile_valid     = Calloc (tiles, sizeof (bool_t));
+  The image is split into 2**'tilingP->exponent' tiles.
 
-      if (tiling->method == FIASCO_TILING_VARIANCE_ASC
-          || tiling->method == FIASCO_TILING_VARIANCE_DSC)
-      {
-         unsigned    address;           /* bintree address of tile */
-         unsigned    number;            /* number of image tiles */
-         unsigned    lx       = log2 (image->width - 1) + 1; /* x level */
-         unsigned    ly       = log2 (image->height - 1) + 1; /* y level */
-         unsigned    level    = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
-         var_list_t *var_list = Calloc (tiles, sizeof (var_list_t));
+  Depending on 'tilingP->method', we use one of the following algorithms:
 
-         /*
-          *  Compute variances of image tiles
-          */
-         for (number = 0, address = 0; address < tiles; address++)
-         {
-            unsigned width, height;     /* size of image tile */
-            unsigned x0, y0;            /* NW corner of image tile */
+     "VARIANCE_ASC" :  Tiles are sorted by variance.
+                       The first tile has the lowest variance
+     "VARIANCE_DSC" :  Tiles are sorted by variance.
+                       The first tile has the largest variance
+     "SPIRAL_ASC" :    Tiles are sorted like a spiral starting
+                       in the middle of the image.
+     "SPIRAL_DSC" :    Tiles are sorted like a spiral starting
+                       in the upper left corner.
+-----------------------------------------------------------------------------*/
+    if (tilingP->exponent) {
+        unsigned int const tileCt = 1 << tilingP->exponent;
+            /* number of image tiles */
 
-            locate_subimage (level, level - tiling->exponent, address,
-                             &x0, &y0, &width, &height);
-            if (x0 < image->width && y0 < image->height) /* valid range */
-            {
-               if (x0 + width > image->width)   /* outside image area */
-                  width = image->width - x0;
-               if (y0 + height > image->height) /* outside image area */
-                  height = image->height - y0;
+        tilingP->vorder = Calloc(tileCt, sizeof(int));
 
-               var_list [number].variance
-                  = variance (image->pixels [GRAY], x0, y0,
-                              width, height, image->width);
-               var_list [number].address  = address;
-               number++;
-               tile_valid [address] = YES;
-            }
-            else
-               tile_valid [address] = NO;
-         }
+        if (tilingP->method == FIASCO_TILING_VARIANCE_ASC
+            || tilingP->method == FIASCO_TILING_VARIANCE_DSC) {
 
-         /*
-          *  Sort image tiles according to sign of 'tiling->exp'
-          */
-         if (tiling->method == FIASCO_TILING_VARIANCE_DSC)
-            qsort (var_list, number, sizeof (var_list_t), cmpdecvar);
-         else
-            qsort (var_list, number, sizeof (var_list_t), cmpincvar);
-
-         for (number = 0, address = 0; address < tiles; address++)
-            if (tile_valid [address])
-            {
-               tiling->vorder [address] = var_list [number].address;
-               number++;
-               debug_message ("tile number %d has original address %d",
-                              number, tiling->vorder [address]);
-            }
-            else
-               tiling->vorder [address] = -1;
-
-         Free (var_list);
-      }
-      else if (tiling->method == FIASCO_TILING_SPIRAL_DSC
-               || tiling->method == FIASCO_TILING_SPIRAL_ASC)
-      {
-         compute_spiral (tiling->vorder, image->width, image->height,
-                         tiling->exponent,
-                         tiling->method == FIASCO_TILING_SPIRAL_ASC);
-      }
-      else
-      {
-         warning ("We do not know the tiling method.\n"
-                  "Skipping image tiling step.");
-         tiling->exponent = 0;
-      }
-   }
+            performTilingVariance(imageP, tilingP);
+        } else if (tilingP->method == FIASCO_TILING_SPIRAL_DSC
+                   || tilingP->method == FIASCO_TILING_SPIRAL_ASC) {
+            compute_spiral(tilingP->vorder, imageP->width, imageP->height,
+                           tilingP->exponent,
+                           tilingP->method == FIASCO_TILING_SPIRAL_ASC);
+        } else {
+            warning("We do not know the tiling method.\n"
+                    "Skipping image tiling step.");
+            tilingP->exponent = 0;
+        }
+    }
 }
 
