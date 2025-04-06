@@ -273,10 +273,14 @@ setLevelStuff(const c_options_t *  const optionsP,
     }
 
     if (cP->options.lc_max_level >= wiP->level - cP->tiling->exponent) {
-        message ("'max_level' changed from %d to %d "
-                 "because of image tiling level.",
-                 cP->options.lc_max_level, wiP->level - cP->tiling->exponent - 1);
-        cP->options.lc_max_level = wiP->level - cP->tiling->exponent - 1;
+        int const newMaxLevel =
+            wiP->level - cP->tiling->exponent > 0 ?
+            wiP->level - cP->tiling->exponent : 0;
+
+        message("'max_level' changed from %d to %d "
+                "because of image tiling level.",
+                cP->options.lc_max_level, newMaxLevel);
+        cP->options.lc_max_level = newMaxLevel;
     }
 
     if (cP->options.lc_min_level > cP->options.lc_max_level)
