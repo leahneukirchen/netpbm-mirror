@@ -18,15 +18,15 @@
 #define _BSD_SOURCE 1   /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
-#include "config.h"
-#include "pm_c_util.h"
-#include "pnm.h"
-
+#include <stdbool.h>
 #include <math.h>
 #include <ctype.h>
 
 #include <string.h>
 
+#include "config.h"
+#include "pm_c_util.h"
+#include "pnm.h"
 #include "nstring.h"
 
 #include "types.h"
@@ -67,8 +67,9 @@ const real_t MAXCOSTS = 1e20;
 
 *****************************************************************************/
 
-static char *
-get_input_image_name (char const * const *templptr, unsigned ith_image)
+static const char *
+getInputImageName(char const * const * templateP,
+                  unsigned int const   ithImage) {
 /*
  *  Construct the i-th image-name using templates.
  *  If the template contains a '[' it must be of the form
@@ -80,20 +81,24 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
  *   "image0[12-01-1].pgm" yields image012.pgm, image011.pgm, ..., image001.pgm
  *
  *  Return value:
- *      ptr to name of image 'ith_image' or NULL if ith_image is out of range.
+ *      name of image 'ith_image' or NULL if ith_image is out of range.
  */
-{
-    while (*templptr)
+
+    unsigned int ithImageModified;
+
+    ithImageModified = ithImage;
+
+    while (*templateP)
     {
-        const char *template = *templptr++;
+        const char *template = *templateP++;
         char       *s;
 
         if (!(s = strchr (template, '['))) /* no template, just a filename */
         {
-            if (ith_image == 0)
-                return strdup (template);
+            if (ithImageModified == 0)
+                return pm_strdup(template);
             else
-                ith_image--;
+                --ithImageModified;
         }
         else              /* template parser */
         {
@@ -141,7 +146,7 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
                        "Check spelling of template.");
             suffix = s2 + 1;
 
-            image_num = first + increment * ith_image;
+            image_num = first + increment * ithImageModified;
             if (image_num < 0)
                 error ("Input name template conversion failure.\n"
                        "Check spelling of template.");
@@ -150,7 +155,7 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
                 (increment <= 0 && (unsigned) image_num < last))
             {
                 /* TODO: check this */
-                ith_image -= (last - first) / increment + 1;
+                ithImageModified -= (last - first) / increment + 1;
             }
             else
             {
@@ -162,7 +167,7 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
                 strcpy (formatstr, "%s%0?d%s");
                 formatstr [4] = '0' + (char) n_digits;
                 sprintf (image_name, formatstr, prefix, image_num, suffix);
-                return strdup (image_name);
+                return pm_strdup(image_name);
             }
         }
     }
@@ -171,112 +176,148 @@ get_input_image_name (char const * const *templptr, unsigned ith_image)
 
 
 
+static void
+setInputImageInfo(const char * const * const inputName,
+                  unsigned int         const stdinWidth,
+                  unsigned int         const stdinHeight,
+                  xelval               const stdinMaxval,
+                  int                  const stdinFormat,
+                  wfa_info_t *         const wiP,
+                  const char **        const errorP) {
+/*----------------------------------------------------------------------------
+   Construct the parts of *wiP that describe the input images.
+
+   'inputName' is an array listing the input file names, or "-" for
+   Standard Input.
+
+     'stdinWidth' etc. are the values from the input image on Standard Input,
+  _if_ one of the input images is from Standard Input.  If all input images
+  are in named files, 'stdinWidth' etc. are meaningless.
+
+   As a side effect, we read all input files through the header except
+   for Standard Input, which we leave alone.  We may do this even if we
+   fail.
+-----------------------------------------------------------------------------*/
+    const char * fileName;
+    int     width, w = 0, height, h = 0;
+    bool_t  color, c = NO;
+    unsigned    i;
+
+    for (i = 0, *errorP = NULL;
+         (fileName = getInputImageName(inputName, i)) && !*errorP;
+         ++i) {
+
+        xelval maxval;
+        int format;
+
+        if (streq(fileName, "-")) {
+            width  = stdinWidth;
+            height = stdinHeight;
+            maxval = stdinMaxval;
+            format = stdinFormat;
+        } else {
+            FILE * ifP;
+
+            ifP = pm_openr(fileName);
+
+            pnm_readpnminit(ifP, &width, &height, &maxval, &format);
+
+            pm_close(ifP);
+        }
+        color = (PNM_FORMAT_TYPE(format) == PPM_FORMAT);
+
+        if (i > 0) {
+            if (w != width || h != height || c != color) {
+                pm_asprintf(errorP,
+                            "Dimensions and format of image frame '%s' "
+                            "does not match the others",
+                            streq(fileName, "-") ? "<stdin>" : fileName);
+            }
+        } else {
+            w = width;
+            h = height;
+            c = color;
+        }
+        pm_strfree(fileName);
+    }
+    wiP->frames = i;
+    wiP->width  = w;
+    wiP->height = h;
+    wiP->color  = c;
+}
+
+
+
 static coding_t *
-alloc_coder (char const * const * const inputname,
-             const c_options_t *  const options,
-             wfa_info_t *         const wi,
-             unsigned int         const stdinwidth,
-             unsigned int         const stdinheight,
-             xelval               const stdinmaxval,
-             int                  const stdinformat)
-/*
- *  Coder structure constructor.
- *  Allocate memory for the FIASCO coder structure and
- *  fill in default values specified by 'options'.
- *
- *  Return value:
- *  pointer to the new coder structure or NULL on error
- */
-{
+allocCoder(const char * const * const inputName,
+           const c_options_t *  const options,
+           wfa_info_t *         const wiP,
+           unsigned int         const stdinWidth,
+           unsigned int         const stdinHeight,
+           xelval               const stdinMaxval,
+           int                  const stdinFormat) {
+/*----------------------------------------------------------------------------
+  Construct FIASCO coder object: Allocate memory for the object and set
+  default values specified by 'options'.
+
+  Return pointer to newly malloc'ed object.
+
+  'inputName' is an array of names of input files, or "-" for Standard Input.
+
+  'stdinWidth' etc. are the values from the input image on Standard Input,
+  _if_ one of the input images is from Standard Input.  If all input images
+  are in named files, 'stdinWidth' etc. are meaningless.
+
+   As a side effect, we read all input files through the header except
+   for Standard Input, which we leave alone.
+-----------------------------------------------------------------------------*/
     coding_t * c;
+    const char * error;
 
     c = NULL;  /* initial value */
 
-   /*
-    *  Check whether all specified image frames are readable and of same type
-    */
-    {
-        char     *filename;
-        int     width, w = 0, height, h = 0;
-        bool_t  color, c = NO;
-        unsigned    n;
+    setInputImageInfo(inputName,
+                      stdinWidth, stdinHeight, stdinMaxval, stdinFormat,
+                      wiP, &error);
 
-        for (n = 0; (filename = get_input_image_name (inputname, n)); n++)
-        {
-            xelval maxval;
-            int format;
-            if (streq(filename, "-")) {
-                width  = stdinwidth;
-                height = stdinheight;
-                maxval = stdinmaxval;
-                format = stdinformat;
-            } else {
-                FILE *file;
-
-                file = pm_openr(filename);
-
-                pnm_readpnminit(file, &width, &height, &maxval, &format);
-
-                pm_close(file);
-            }
-            color = (PNM_FORMAT_TYPE(format) == PPM_FORMAT) ? TRUE: FALSE;
-
-            if (n > 0)
-            {
-                if (w != width || h != height || c != color)
-                {
-                    set_error (_("Format of image frame `%s' doesn't match."),
-                               filename ? filename : "<stdin>");
-                    return NULL;
-                }
-            }
-            else
-            {
-                w = width;
-                h = height;
-                c = color;
-            }
-            Free (filename);
-        }
-        wi->frames = n;
-        wi->width  = w;
-        wi->height = h;
-        wi->color  = c;
+    if (error) {
+        set_error(_("Problem with input images: %s\n"), error);
+        pm_strfree(error);
+        return 0;
     }
-
     /*
     *  Levels ...
     */
     {
         unsigned lx, ly;
 
-        lx = (unsigned) (log2 (wi->width - 1) + 1);
-        ly = (unsigned) (log2 (wi->height - 1) + 1);
+        lx = (unsigned) (log2 (wiP->width - 1) + 1);
+        ly = (unsigned) (log2 (wiP->height - 1) + 1);
 
-        wi->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+        wiP->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
     }
 
     c = Calloc (1, sizeof (coding_t));
 
     c->options             = *options;
     c->options.lc_min_level = MAX(options->lc_min_level, 3);
-    c->options.lc_max_level = MIN(options->lc_max_level, wi->level - 1);
+    c->options.lc_max_level = MIN(options->lc_max_level, wiP->level - 1);
 
     c->tiling = alloc_tiling (options->tiling_method,
-                              options->tiling_exponent, wi->level);
+                              options->tiling_exponent, wiP->level);
 
-    if (wi->frames > 1 && c->tiling->exponent > 0)
+    if (wiP->frames > 1 && c->tiling->exponent > 0)
     {
         c->tiling->exponent = 0;
         warning (_("Image tiling valid only with still image compression."));
     }
 
-    if (c->options.lc_max_level >= wi->level - c->tiling->exponent)
+    if (c->options.lc_max_level >= wiP->level - c->tiling->exponent)
     {
         message ("'max_level' changed from %d to %d "
                  "because of image tiling level.",
-                 c->options.lc_max_level, wi->level - c->tiling->exponent - 1);
-        c->options.lc_max_level = wi->level - c->tiling->exponent - 1;
+                 c->options.lc_max_level, wiP->level - c->tiling->exponent - 1);
+        c->options.lc_max_level = wiP->level - c->tiling->exponent - 1;
     }
 
     if (c->options.lc_min_level > c->options.lc_max_level)
@@ -286,10 +327,10 @@ alloc_coder (char const * const * const inputname,
      *  p_min_level, p_max_level min and max level for ND/MC prediction
      *  [p_min_level, p_max_level] must be a subset of [min_level, max_level] !
      */
-    wi->p_min_level = MAX(options->p_min_level, c->options.lc_min_level);
-    wi->p_max_level = MIN(options->p_max_level, c->options.lc_max_level);
-    if (wi->p_min_level > wi->p_max_level)
-        wi->p_min_level = wi->p_max_level;
+    wiP->p_min_level = MAX(options->p_min_level, c->options.lc_min_level);
+    wiP->p_max_level = MIN(options->p_max_level, c->options.lc_max_level);
+    if (wiP->p_min_level > wiP->p_max_level)
+        wiP->p_min_level = wiP->p_max_level;
 
     c->options.images_level = MIN(c->options.images_level,
                                   c->options.lc_max_level - 1);
@@ -325,44 +366,44 @@ alloc_coder (char const * const * const inputname,
     /*
      *  Max. number of states and edges
      */
-    wi->max_states          = MAX(MIN(options->max_states, MAXSTATES), 1);
+    wiP->max_states          = MAX(MIN(options->max_states, MAXSTATES), 1);
     c->options.max_elements = MAX(MIN(options->max_elements, MAXEDGES), 1);
 
     /*
      *  Title and comment strings
      */
-    wi->title   = strdup (options->title);
-    wi->comment = strdup (options->comment);
+    wiP->title   = strdup (options->title);
+    wiP->comment = strdup (options->comment);
 
     /*
      *  Reduced precision format
      */
-    wi->rpf
+    wiP->rpf
         = alloc_rpf (options->rpf_mantissa, options->rpf_range);
-    wi->dc_rpf
+    wiP->dc_rpf
         = alloc_rpf (options->dc_rpf_mantissa, options->dc_rpf_range);
-    wi->d_rpf
+    wiP->d_rpf
         = alloc_rpf (options->d_rpf_mantissa, options->d_rpf_range);
-    wi->d_dc_rpf
+    wiP->d_dc_rpf
         = alloc_rpf (options->d_dc_rpf_mantissa, options->d_dc_rpf_range);
 
     /*
      *  Color image options ...
      */
-    wi->chroma_max_states = MAX(1, options->chroma_max_states);
+    wiP->chroma_max_states = MAX(1, options->chroma_max_states);
 
     /*
     *  Set up motion compensation struct.
     *  p_min_level, p_max_level are also used for ND prediction
     */
-    wi->search_range   = options->search_range;
-    wi->fps            = options->fps;
-    wi->half_pixel     = options->half_pixel_prediction;
-    wi->cross_B_search = options->half_pixel_prediction;
-    wi->B_as_past_ref  = options->B_as_past_ref;
-    wi->smoothing      = options->smoothing;
+    wiP->search_range   = options->search_range;
+    wiP->fps            = options->fps;
+    wiP->half_pixel     = options->half_pixel_prediction;
+    wiP->cross_B_search = options->half_pixel_prediction;
+    wiP->B_as_past_ref  = options->B_as_past_ref;
+    wiP->smoothing      = options->smoothing;
 
-    c->mt = alloc_motion (wi);
+    c->mt = alloc_motion (wiP);
 
     return c;
 }
@@ -370,7 +411,7 @@ alloc_coder (char const * const * const inputname,
 
 
 static void
-free_coder (coding_t *c)
+freeCoder(coding_t *c) {
 /*
  *  Coder struct destructor:
  *  Free memory of 'coder' struct.
@@ -380,7 +421,6 @@ free_coder (coding_t *c)
  *  Side effects:
  *  structure 'coder' is discarded.
  */
-{
    free_tiling (c->tiling);
    free_motion (c->mt);
 
@@ -395,8 +435,9 @@ free_coder (coding_t *c)
 
 
 static frame_type_e
-pattern2type (unsigned frame, const char *pattern)
-{
+typeFmPattern(unsigned int const frame,
+              const char * const pattern) {
+
     int tmp = TOUPPER (pattern [frame % strlen (pattern)]);
     frame_type_e retval;
 
@@ -420,9 +461,12 @@ pattern2type (unsigned frame, const char *pattern)
 
 
 static void
-print_statistics (char c, real_t costs, const wfa_t *wfa, const image_t *image,
-          const range_t *range)
-{
+printStatistics(char            const c,
+                real_t          const costs,
+                const wfa_t *   const wfa,
+                const image_t * const image,
+                const range_t * const range) {
+
    unsigned max_level, min_level, state, label, lincomb;
 
    for (max_level = 0, min_level = MAXLEVEL, state = wfa->basis_states;
@@ -484,7 +528,9 @@ print_statistics (char c, real_t costs, const wfa_t *wfa, const image_t *image,
 
 
 static void
-frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
+frameCoder(wfa_t *     const wfa,
+           coding_t *  const c,
+           bitfile_t * const output) {
 /*
  *
  *  WFA Coding of next frame.  All important coding parameters are
@@ -493,7 +539,6 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
  *
  *  No return value.
  */
-{
    unsigned state;
    range_t  range;          /* first range == the entire image */
    real_t   costs;          /* total costs (minimized quantity) */
@@ -545,7 +590,7 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
       else
      wfa->root_state = range.tree;
 
-      print_statistics ('\0', costs, wfa, c->mt->original, &range);
+      printStatistics('\0', costs, wfa, c->mt->original, &range);
    }
    else
    {
@@ -604,8 +649,8 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
            {
                char colors [] = {'Y', 'B', 'R'};
 
-               print_statistics (colors [band], costs, wfa,
-                                 c->mt->original, &range);
+               printStatistics(colors [band], costs, wfa,
+                               c->mt->original, &range);
            }
 
            if (isrange (range.tree))  /* whole image is approx. by a l.c. */
@@ -689,14 +734,14 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
 
 
 static void
-video_coder(char const * const * const image_template,
-            bitfile_t *          const output,
-            wfa_t *              const wfa,
-            coding_t *           const c,
-            unsigned int         const stdinwidth,
-            unsigned int         const stdinheight,
-            unsigned int         const stdinmaxval,
-            unsigned int         const stdinformat)
+videoCoder(char const * const * const image_template,
+           bitfile_t *          const output,
+           wfa_t *              const wfa,
+           coding_t *           const c,
+           unsigned int         const stdinwidth,
+           unsigned int         const stdinheight,
+           unsigned int         const stdinmaxval,
+           unsigned int         const stdinformat) {
 /*
  *  Toplevel function to encode a sequence of video frames specified
  *  by 'image_template'. The output is written to stream 'output'.
@@ -704,11 +749,10 @@ video_coder(char const * const * const image_template,
  *
  *  No return value.
  */
-{
     unsigned  display;           /* picture number in display order */
     int       future_display;        /* number of future reference */
     int       frame;         /* current frame number */
-    char     *image_name;
+    const char *image_name;
         /* image name of current frame.  File name or "-" for Standard Input */
     image_t  *reconst      = NULL;   /* decoded reference image */
     bool_t    future_frame = NO;     /* YES if last frame was in future */
@@ -719,7 +763,7 @@ video_coder(char const * const * const image_template,
     frame          = -1;
     display        = 0;
 
-    while ((image_name = get_input_image_name (image_template, display)))
+    while ((image_name = getInputImageName(image_template, display)))
     {
         frame_type_e type;        /* current frame type: I, B, P */
 
@@ -730,7 +774,7 @@ video_coder(char const * const * const image_template,
         if (display == 0 && !c->options.reference_filename)
             type = I_FRAME;        /* Force first frame to be intra */
         else
-            type = pattern2type (display, c->options.pattern);
+            type = typeFmPattern(display, c->options.pattern);
 
         if (type != I_FRAME && c->options.reference_filename)
             /* Load reference from disk */
@@ -754,10 +798,10 @@ video_coder(char const * const * const image_template,
              */
             while (type == B_FRAME)
             {
-                char *name;         /* image name of future frame */
+                const char *name;         /* image name of future frame */
 
                 i++;
-                name = get_input_image_name (image_template, i);
+                name = getInputImageName(image_template, i);
 
                 if (!name)          /* Force last valid frame to be 'P' */
                 {
@@ -768,7 +812,7 @@ video_coder(char const * const * const image_template,
                 {
                     future_display = i;
                     image_name     = name;
-                    type           = pattern2type (i, c->options.pattern);
+                    type           = typeFmPattern(i, c->options.pattern);
                 }
                 frame = future_display;
             }
@@ -852,7 +896,7 @@ video_coder(char const * const * const image_template,
         if (c->tiling->exponent && type == I_FRAME)
             perform_tiling (c->mt->original, c->tiling);
 
-        frame_coder (wfa, c, output);
+        frameCoder(wfa, c, output);
 
         /*
          *  Regenerate image:
@@ -886,29 +930,29 @@ video_coder(char const * const * const image_template,
 
 
 static void
-read_stdin_header(const char * const * const template,
-                  unsigned int * const widthP,
-                  unsigned int * const heightP,
-                  xelval *       const maxvalP,
-                  int *          const formatP)
-/* Read the PNM header from the Standard Input stream, if 'template' says
+readStdinHeader(const char * const * const template,
+                unsigned int *       const widthP,
+                unsigned int *       const heightP,
+                xelval *             const maxvalP,
+                int *                const formatP) {
+/*----------------------------------------------------------------------------
+   Read the PNM header from the Standard Input stream, if 'template' says
    one of the images is to come from Standard Input.
 
    Return the contents of that stream as *widthP, etc.
-*/
-{
+-----------------------------------------------------------------------------*/
     unsigned int i;
     bool endOfList;
     bool stdinFound;
 
-    for (i = 0, stdinFound = FALSE, endOfList = FALSE; !endOfList; ++i) {
-        const char * const name = get_input_image_name(template, i);
+    for (i = 0, stdinFound = false, endOfList = false; !endOfList; ++i) {
+        const char * const name = getInputImageName(template, i);
 
         if (!name)
-            endOfList = TRUE;
+            endOfList = true;
         else {
             if (streq(name, "-"))
-                stdinFound = TRUE;
+                stdinFound = true;
         }
     }
 
@@ -931,8 +975,10 @@ read_stdin_header(const char * const * const template,
 *****************************************************************************/
 
 int
-fiasco_coder (char const * const *inputname, const char *outputname,
-          float quality, const fiasco_c_options_t *options)
+fiasco_coder(char const * const *       const inputname,
+             const char *               const outputname,
+             float                      const quality,
+             const fiasco_c_options_t * const options) {
 /*
  *  FIASCO coder.
  *  Encode image or video frames given by the array of filenames `inputname'
@@ -947,7 +993,6 @@ fiasco_coder (char const * const *inputname, const char *outputname,
  *  1 on success
  *  0 otherwise
  */
-{
     try
         {
             char const * const default_input [] = {"-", NULL};
@@ -989,8 +1034,8 @@ fiasco_coder (char const * const *inputname, const char *outputname,
                 cop         = cast_c_options (default_options);
             }
 
-            read_stdin_header(template, &stdinwidth, &stdinheight,
-                              &stdinmaxval, &stdinformat);
+            readStdinHeader(template, &stdinwidth, &stdinheight,
+                            &stdinmaxval, &stdinformat);
 
             /*
              *  Open output stream and initialize WFA
@@ -1010,22 +1055,22 @@ fiasco_coder (char const * const *inputname, const char *outputname,
                 else
                 {
                     wfa_t    *wfa = alloc_wfa (YES);
-                    coding_t *c   = alloc_coder(template, cop, wfa->wfainfo,
-                                                stdinwidth, stdinheight,
-                                                stdinmaxval, stdinformat);
+                    coding_t *c   = allocCoder(template, cop, wfa->wfainfo,
+                                               stdinwidth, stdinheight,
+                                               stdinmaxval, stdinformat);
 
                     read_basis (cop->basis_name, wfa);
                     append_basis_states (wfa->basis_states, wfa, c);
 
                     c->price = 128 * 64 / quality;
 
-                    video_coder (template, output, wfa, c,
-                                 stdinwidth, stdinheight, stdinmaxval,
-                                 stdinformat);
+                    videoCoder(template, output, wfa, c,
+                               stdinwidth, stdinheight, stdinmaxval,
+                               stdinformat);
 
                     close_bitfile (output);
                     free_wfa (wfa);
-                    free_coder (c);
+                    freeCoder(c);
 
                     if (default_options)
                         fiasco_c_options_delete (default_options);
