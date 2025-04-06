@@ -25,8 +25,8 @@ PORTBINARIES =	411toppm eyuvtoppm gouldtoppm ilbmtoppm imgtoppm \
 
 MATHBINARIES = sldtoppm 
 
-# We don't build vidtoppm by default, because it requires special libraries
-# and there is no known requirement for vidtoppm.
+# We don't build vidtoppm, because it requires special libraries and there is
+# no known requirement for vidtoppm.
 
 
 MERGEBINARIES = $(PORTBINARIES) $(MATHBINARIES)
