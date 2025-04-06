@@ -248,9 +248,75 @@ setInputImageInfo(const char * const * const inputName,
 
 
 
+static void
+setLevelStuff(const c_options_t *  const optionsP,
+              coding_t *           const cP,
+              wfa_info_t *         const wiP) {
+
+    {
+        unsigned int const lx = (unsigned) (log2 (wiP->width - 1) + 1);
+        unsigned int const ly = (unsigned) (log2 (wiP->height - 1) + 1);
+
+        wiP->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+    }
+
+    cP->options             = *optionsP;
+    cP->options.lc_min_level = MAX(optionsP->lc_min_level, 3);
+    cP->options.lc_max_level = MIN(optionsP->lc_max_level, wiP->level - 1);
+
+    cP->tiling = alloc_tiling (optionsP->tiling_method,
+                              optionsP->tiling_exponent, wiP->level);
+
+    if (wiP->frames > 1 && cP->tiling->exponent > 0) {
+        cP->tiling->exponent = 0;
+        warning (_("Image tiling valid only with still image compression."));
+    }
+
+    if (cP->options.lc_max_level >= wiP->level - cP->tiling->exponent) {
+        message ("'max_level' changed from %d to %d "
+                 "because of image tiling level.",
+                 cP->options.lc_max_level, wiP->level - cP->tiling->exponent - 1);
+        cP->options.lc_max_level = wiP->level - cP->tiling->exponent - 1;
+    }
+
+    if (cP->options.lc_min_level > cP->options.lc_max_level)
+        cP->options.lc_min_level = cP->options.lc_max_level;
+
+    /*
+     *  p_min_level, p_max_level min and max level for ND/MC prediction
+     *  [p_min_level, p_max_level] must be a subset of [min_level, max_level] !
+     */
+    wiP->p_min_level = MAX(optionsP->p_min_level, cP->options.lc_min_level);
+    wiP->p_max_level = MIN(optionsP->p_max_level, cP->options.lc_max_level);
+    if (wiP->p_min_level > wiP->p_max_level)
+        wiP->p_min_level = wiP->p_max_level;
+
+    cP->options.images_level = MIN(cP->options.images_level,
+                                   cP->options.lc_max_level - 1);
+
+    cP->products_level  =
+        MAX(0, ((signed int) cP->options.lc_max_level
+                - (signed int) cP->options.images_level - 1));
+    cP->pixels          = Calloc(size_of_level (cP->options.lc_max_level),
+                                 sizeof (real_t));
+    cP->images_of_state = Calloc(MAXSTATES, sizeof (real_t *));
+    cP->ip_images_state = Calloc(MAXSTATES, sizeof (real_t *));
+    cP->ip_states_state = Calloc(MAXSTATES * MAXLEVEL, sizeof (real_t *));
+
+    debug_message("Imageslevel :%d, Productslevel :%d",
+                  cP->options.images_level, cP->products_level);
+    debug_message("Memory : (%d + %d + %d * 'states') * 'states' + %d",
+                  size_of_tree (cP->options.images_level) * 4,
+                  size_of_tree (cP->products_level) * 4,
+                  (cP->options.lc_max_level - cP->options.images_level),
+                  size_of_level (cP->options.lc_max_level));
+}
+
+
+
 static coding_t *
 allocCoder(const char * const * const inputName,
-           const c_options_t *  const options,
+           const c_options_t *  const optionsP,
            wfa_info_t *         const wiP,
            unsigned int         const stdinWidth,
            unsigned int         const stdinHeight,
@@ -271,10 +337,9 @@ allocCoder(const char * const * const inputName,
    As a side effect, we read all input files through the header except
    for Standard Input, which we leave alone.
 -----------------------------------------------------------------------------*/
-    coding_t * c;
-    const char * error;
+    coding_t * const cP = Calloc (1, sizeof (coding_t));;
 
-    c = NULL;  /* initial value */
+    const char * error;
 
     setInputImageInfo(inputName,
                       stdinWidth, stdinHeight, stdinMaxval, stdinFormat,
@@ -285,127 +350,64 @@ allocCoder(const char * const * const inputName,
         pm_strfree(error);
         return 0;
     }
-    /*
-    *  Levels ...
-    */
-    {
-        unsigned lx, ly;
 
-        lx = (unsigned) (log2 (wiP->width - 1) + 1);
-        ly = (unsigned) (log2 (wiP->height - 1) + 1);
-
-        wiP->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
-    }
-
-    c = Calloc (1, sizeof (coding_t));
-
-    c->options             = *options;
-    c->options.lc_min_level = MAX(options->lc_min_level, 3);
-    c->options.lc_max_level = MIN(options->lc_max_level, wiP->level - 1);
-
-    c->tiling = alloc_tiling (options->tiling_method,
-                              options->tiling_exponent, wiP->level);
-
-    if (wiP->frames > 1 && c->tiling->exponent > 0)
-    {
-        c->tiling->exponent = 0;
-        warning (_("Image tiling valid only with still image compression."));
-    }
-
-    if (c->options.lc_max_level >= wiP->level - c->tiling->exponent)
-    {
-        message ("'max_level' changed from %d to %d "
-                 "because of image tiling level.",
-                 c->options.lc_max_level, wiP->level - c->tiling->exponent - 1);
-        c->options.lc_max_level = wiP->level - c->tiling->exponent - 1;
-    }
-
-    if (c->options.lc_min_level > c->options.lc_max_level)
-        c->options.lc_min_level = c->options.lc_max_level;
-
-    /*
-     *  p_min_level, p_max_level min and max level for ND/MC prediction
-     *  [p_min_level, p_max_level] must be a subset of [min_level, max_level] !
-     */
-    wiP->p_min_level = MAX(options->p_min_level, c->options.lc_min_level);
-    wiP->p_max_level = MIN(options->p_max_level, c->options.lc_max_level);
-    if (wiP->p_min_level > wiP->p_max_level)
-        wiP->p_min_level = wiP->p_max_level;
-
-    c->options.images_level = MIN(c->options.images_level,
-                                  c->options.lc_max_level - 1);
-
-    c->products_level  = MAX(0, ((signed int) c->options.lc_max_level
-                                 - (signed int) c->options.images_level - 1));
-    c->pixels         = Calloc (size_of_level (c->options.lc_max_level),
-                                sizeof (real_t));
-    c->images_of_state = Calloc (MAXSTATES, sizeof (real_t *));
-    c->ip_images_state = Calloc (MAXSTATES, sizeof (real_t *));
-    c->ip_states_state = Calloc (MAXSTATES * MAXLEVEL, sizeof (real_t *));
-
-    debug_message ("Imageslevel :%d, Productslevel :%d",
-                   c->options.images_level, c->products_level);
-    debug_message ("Memory : (%d + %d + %d * 'states') * 'states' + %d",
-                   size_of_tree (c->options.images_level) * 4,
-                   size_of_tree (c->products_level) * 4,
-                   (c->options.lc_max_level - c->options.images_level),
-                   size_of_level (c->options.lc_max_level));
+    setLevelStuff(optionsP, cP, wiP);
 
     /*
     *  Domain pools ...
     */
-    c->domain_pool   = NULL;
-    c->d_domain_pool = NULL;
+    cP->domain_pool   = NULL;
+    cP->d_domain_pool = NULL;
 
     /*
      *  Coefficients model ...
      */
-    c->coeff   = NULL;
-    c->d_coeff = NULL;
+    cP->coeff   = NULL;
+    cP->d_coeff = NULL;
 
     /*
      *  Max. number of states and edges
      */
-    wiP->max_states          = MAX(MIN(options->max_states, MAXSTATES), 1);
-    c->options.max_elements = MAX(MIN(options->max_elements, MAXEDGES), 1);
+    wiP->max_states          = MAX(MIN(optionsP->max_states, MAXSTATES), 1);
+    cP->options.max_elements = MAX(MIN(optionsP->max_elements, MAXEDGES), 1);
 
     /*
      *  Title and comment strings
      */
-    wiP->title   = strdup (options->title);
-    wiP->comment = strdup (options->comment);
+    wiP->title   = strdup (optionsP->title);
+    wiP->comment = strdup (optionsP->comment);
 
     /*
      *  Reduced precision format
      */
     wiP->rpf
-        = alloc_rpf (options->rpf_mantissa, options->rpf_range);
+        = alloc_rpf (optionsP->rpf_mantissa, optionsP->rpf_range);
     wiP->dc_rpf
-        = alloc_rpf (options->dc_rpf_mantissa, options->dc_rpf_range);
+        = alloc_rpf (optionsP->dc_rpf_mantissa, optionsP->dc_rpf_range);
     wiP->d_rpf
-        = alloc_rpf (options->d_rpf_mantissa, options->d_rpf_range);
+        = alloc_rpf (optionsP->d_rpf_mantissa, optionsP->d_rpf_range);
     wiP->d_dc_rpf
-        = alloc_rpf (options->d_dc_rpf_mantissa, options->d_dc_rpf_range);
+        = alloc_rpf (optionsP->d_dc_rpf_mantissa, optionsP->d_dc_rpf_range);
 
     /*
      *  Color image options ...
      */
-    wiP->chroma_max_states = MAX(1, options->chroma_max_states);
+    wiP->chroma_max_states = MAX(1, optionsP->chroma_max_states);
 
     /*
     *  Set up motion compensation struct.
     *  p_min_level, p_max_level are also used for ND prediction
     */
-    wiP->search_range   = options->search_range;
-    wiP->fps            = options->fps;
-    wiP->half_pixel     = options->half_pixel_prediction;
-    wiP->cross_B_search = options->half_pixel_prediction;
-    wiP->B_as_past_ref  = options->B_as_past_ref;
-    wiP->smoothing      = options->smoothing;
+    wiP->search_range   = optionsP->search_range;
+    wiP->fps            = optionsP->fps;
+    wiP->half_pixel     = optionsP->half_pixel_prediction;
+    wiP->cross_B_search = optionsP->half_pixel_prediction;
+    wiP->B_as_past_ref  = optionsP->B_as_past_ref;
+    wiP->smoothing      = optionsP->smoothing;
 
-    c->mt = alloc_motion (wiP);
+    cP->mt = alloc_motion (wiP);
 
-    return c;
+    return cP;
 }
 
 
