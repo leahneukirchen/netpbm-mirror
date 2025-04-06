@@ -68,18 +68,24 @@ pm_getuint(FILE * const ifP) {
    Read an unsigned integer in ASCII decimal from the file stream
    represented by 'ifP' and return its value.
 
-   If there is nothing at the current position in the file stream that
-   can be interpreted as an unsigned integer, issue an error message
-   to stderr and abort the program.
+   Read the largest possible string at the current file position that could be
+   interpreted as an unsigned integer, ignoring leading white space.  If there
+   is nothing at the current position in the file stream that can be
+   interpreted as an unsigned integer, issue an error message to stderr and
+   abort the program.
 
    If the number at the current position in the file stream is too
    great to be represented by an 'int' (Yes, I said 'int', not
    'unsigned int'), issue an error message to stderr and abort the
    program.
+
+   Read one character beyond the unsigned integer (normally, that would be
+   whitespace).
 -----------------------------------------------------------------------------*/
     char ch;
     unsigned int i;
 
+    /* Read over leading white space, through first non-whitespace char */
     do {
         ch = pm_getc(ifP);
     } while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r');
