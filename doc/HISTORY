@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.11.00
 
+              pnmquantall: fix arbitrary shell command execution with input
+              file names that contain shell metacharacters.  Always present
+              ('pnmquantall' has existed, aka 'ppmquantall', since primordial
+              Netpbm).
+
 25.03.28 BJH  Release 11.10.00
 
               pamdice: Add -listfile, -indexfile, -numberwidth, -dry-run .
