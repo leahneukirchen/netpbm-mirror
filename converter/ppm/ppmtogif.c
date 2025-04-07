@@ -47,6 +47,56 @@ dirname(const char * const fileName) {
 
 
 
+static const char *
+squote(const char * const arg) {
+/*----------------------------------------------------------------------------
+   'arg' escaped so that it forms a single safe token in a shell command.
+
+   E.g.
+
+      arg      return value
+      ---      ------------
+      foo      'foo'
+      don't    'don'\\''t'
+
+   Value is in newly malloc'ed storage.
+
+   Abort the program if we can't allocate storage.
+-----------------------------------------------------------------------------*/
+    size_t const maxEscapedLen = strlen(arg)*4 + 3;
+        /* 4 characters for every apostrophe, plus opening and closing
+           apostrophes, plus NUL terminator
+        */
+
+    char * buffer;
+    unsigned int inCursor;
+    unsigned int outCursor;
+
+    MALLOCARRAY_NOFAIL(buffer, maxEscapedLen);
+
+    outCursor = 0; /* initial value */
+
+    buffer[outCursor++] = '\'';  /* opening quote */
+
+    for (inCursor = 0; arg[inCursor]; ++inCursor) {
+        if (arg[inCursor] == '\'') {
+            buffer[outCursor++] = '\'';
+            buffer[outCursor++] = '\\';
+            buffer[outCursor++] = '\'';
+            buffer[outCursor++] = '\'';
+        } else {
+            buffer[outCursor++] = arg[inCursor];
+        }
+    }
+    buffer[outCursor++] = '\'';  /* closing quote */
+
+    buffer[outCursor++] = '\0';   /* terminating NUL */
+
+    return buffer;
+}
+
+
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -185,8 +235,8 @@ openPnmremapStream(const char * const inputFileName,
     assert(inputFileName != NULL);
     assert(mapFileName != NULL);
 
-    pm_asprintf(&pnmremapCommand, "pnmremap -mapfile='%s' %s",
-                mapFileName, inputFileName);
+    pm_asprintf(&pnmremapCommand, "pnmremap -mapfile=%s %s",
+                squote(mapFileName), squote(inputFileName));
 
     if (verbose)
         pm_message("Preprocessing Pamtogif input with shell command '%s'",
@@ -235,18 +285,19 @@ pamtogifCommand(const char *       const arg0,
         commandVerb = strdup(pamtogifName);
 
     if (cmdline.transparent)
-        pm_asprintf(&transparentOpt, "-transparent=%s", cmdline.transparent);
+        pm_asprintf(&transparentOpt, "-transparent=%s",
+                    squote(cmdline.transparent));
     else
         transparentOpt = strdup("");
 
     if (cmdline.comment)
-        pm_asprintf(&commentOpt, "-comment=%s", cmdline.comment);
+        pm_asprintf(&commentOpt, "-comment=%s", squote(cmdline.comment));
     else
         commentOpt = strdup("");
 
     pm_asprintf(&retval, "%s - -alphacolor=%s %s %s %s %s %s %s",
                 commandVerb,
-                cmdline.alphacolor,
+                squote(cmdline.alphacolor),
                 cmdline.interlace ? "-interlace" : "",
                 cmdline.sort ? "-sort" : "",
                 transparentOpt,
