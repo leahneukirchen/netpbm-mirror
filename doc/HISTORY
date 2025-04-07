@@ -15,7 +15,7 @@ not yet  BJH  Release 11.11.00
               shell metacharacters.  Broken in Netpbm 10.37 (June 2006).
 
               pnmtofiasco: fix crash when image is really small.  Always
-               broken (programs were new in Netpbm 9.6, July 2000).
+              broken (programs were new in Netpbm 9.6, July 2000).
               
               pnmtofiasco: fix bug: uses one tile regardless of
               --tiling-exponent.  Always broken (programs were new in Netpbm
