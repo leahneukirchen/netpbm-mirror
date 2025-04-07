@@ -88,7 +88,7 @@ alloc_tiling (fiasco_tiling_e method, unsigned tiling_exponent,
 
    if ((int) image_level - (int) tiling_exponent < 6)
    {
-      tiling_exponent = 6;
+      tiling->exponent = 6;
       warning (_("Image tiles must be at least 8x8 pixels large.\n"
 		 "Setting tiling size to 8x8 pixels."));
    }
@@ -99,11 +99,11 @@ alloc_tiling (fiasco_tiling_e method, unsigned tiling_exponent,
       case FIASCO_TILING_SPIRAL_DSC:
       case FIASCO_TILING_VARIANCE_ASC:
       case FIASCO_TILING_VARIANCE_DSC:
-	 tiling_exponent = tiling_exponent;
+	 tiling->exponent = tiling_exponent;
 	 break;
       default:
 	 warning (_("Invalid tiling method specified. Disabling tiling."));
-	 tiling_exponent = 0;
+	 tiling->exponent = 0;
 	 break;
    }
 

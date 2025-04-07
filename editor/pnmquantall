@@ -142,29 +142,79 @@ sub tempFile($) {
 
 
 
-sub makeColorMap($$$$) {
-    my ($fileNamesR, $newColorCt, $colorMapFileName, $errorR) = @_;
-
-    my $pamcatCmd = "pamcat -topbottom -white -jleft @{$fileNamesR}";
-
-    my $pnmcolormapCmd = "pnmcolormap $newColorCt";
-
-    my $makeMapCmd = "$pamcatCmd | $pnmcolormapCmd >$colorMapFileName";
-
-    my $termStatus = system($makeMapCmd);
-
-    if ($termStatus != 0) {
-        $$errorR =
-            "Shell command to create the color map failed:  '$makeMapCmd'.";
+sub copyFile($$) {
+    my ($fromFd, $toFd) = @_;
+#-----------------------------------------------------------------------------
+# Copy everything from open file $from Fd to open file $toFd.
+#
+# (File::Copy does the same thing, but I don't know if we can rely
+# on it being available).
+#-----------------------------------------------------------------------------
+    for (my $eof = $FALSE; !$eof; ) {
+        my $bytesReadCt = sysread($fromFd, my $fileContent, 4096);
+        if ($bytesReadCt == 0) {
+            $eof = $TRUE;
+        } else {
+            for (my $totalWrittenCt = 0; $totalWrittenCt < $bytesReadCt; ) {
+                my $bytesWrittenCt = syswrite($toFd, $fileContent);
+                if ($bytesWrittenCt == 0) {
+                    die("Write to file descriptor failed");
+                }
+                $totalWrittenCt += $bytesWrittenCt;
+            }
+        }
     }
 }
 
 
- 
+
+sub makeColorMap($$$$) {
+    my ($fileNamesR, $newColorCt, $colorMapFileName, $errorR) = @_;
+
+    my $pamcatPid = open(my $pamcatOut, '-|', "pamcat",
+                         "-topbottom", "-white", "-jleft",
+                         @{$fileNamesR}) or
+        die("Failed to start 'pamcat' process");
+
+    # Set Standard Output to the colormap file because the 'pnmcolormap'
+    # process will write to Standard Output.  But save and later restore the
+    # current Standard Output.
+
+    open(OLDOUT, ">&STDOUT");
+    select(OLDOUT);  # avoids Perl bug where it says we never use OLDOUT
+    open(STDOUT, '>', $colorMapFileName) or
+        die("Failed to open output file $colorMapFileName");
+
+    my $pnmcolormapPid = open(my $pnmcolormapIn, '|-',
+                              'pnmcolormap', $newColorCt) or
+        die("Failed to start 'pnmcolormap' process");
+
+    copyFile($pamcatOut, $pnmcolormapIn);
+
+    close($pnmcolormapIn);
+
+    my $pamcatWaitRc = waitpid($pamcatPid, 0);
+    my $pamcatTermStat = $?;
+
+    if ($pamcatTermStat != 0) {
+        my $fileCt = scalar(@{$fileNamesR});
+        $$errorR = "'pamcat' of $fileCt files failed.";
+    }
+
+    # For some reason that appears to defy Perl documentation, someone reaps
+    # the 'pnmcolormap' process so we cannot wait for it and get its
+    # termination status now.
+
+    close(STDOUT);
+    open(STDOUT, ">&OLDOUT");
+}
+
+
+
 sub remapFiles($$$$) {
     my ($fileNamesR, $colorMapFileName, $ext, $errorR) = @_;
 
-    my ($outputFh, $outputFileName) = tempFile("pnm");
+    my ($outputFh, $outputFileName) = tempFile(".pnm");
     if (!defined($outputFh)) {
         $$errorR = "Unable to create temporary file.  Errno=$ERRNO";
     } else {
@@ -205,7 +255,7 @@ doVersionHack(\@ARGV);
 
 parseArgs(\@ARGV, \my $ext, \my $newColorCt, \my @fileNames);
 
-my ($colorMapFh, $colorMapFileName) = tempFile("pnm");
+my ($colorMapFh, $colorMapFileName) = tempFile(".pnm");
 if (!defined($colorMapFh)) {
     $progError = "Unable to create temporary file.  Errno=$ERRNO";
 }
