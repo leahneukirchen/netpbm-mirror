@@ -3,7 +3,7 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
-not yet BJH   Release 11.10.01
+25.04.07 BJH  Release 11.10.01
 
               pnmquantall: fix arbitrary shell command execution with input
               file names or color count that contain shell metacharacters.
