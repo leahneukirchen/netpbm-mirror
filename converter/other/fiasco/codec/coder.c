@@ -273,10 +273,14 @@ alloc_coder (char const * const * const inputname,
 
     if (c->options.lc_max_level >= wi->level - c->tiling->exponent)
     {
+        int const newMaxLevel =
+            wi->level - c->tiling->exponent > 0 ?
+            wi->level - c->tiling->exponent : 0;
+
         message ("'max_level' changed from %d to %d "
                  "because of image tiling level.",
-                 c->options.lc_max_level, wi->level - c->tiling->exponent - 1);
-        c->options.lc_max_level = wi->level - c->tiling->exponent - 1;
+                 c->options.lc_max_level, newMaxLevel);
+        c->options.lc_max_level = newMaxLevel;
     }
    
     if (c->options.lc_min_level > c->options.lc_max_level)
