@@ -21,6 +21,10 @@ not yet  BJH  Release 11.11.00
               --tiling-exponent.  Always broken (programs were new in Netpbm
               9.6, July 2000).
 
+              pnmtofiasco: fix bug: does wrong level of optimization
+              Introduced in Netpbm 11.05 (December 2023).
+              
+
 25.03.28 BJH  Release 11.10.00
 
               pamdice: Add -listfile, -indexfile, -numberwidth, -dry-run .

@@ -298,7 +298,7 @@ checkargs(int                         argc,
                 minBlockLevel     =  6;
                 maxElements       =  3;
             } else {
-                optimizationLevel -= 1;
+                optimizationLevel = optimizeOpt - 1;
                 maxBlockLevel     = 12;
                 minBlockLevel     =  4;
                 maxElements       =  5;
