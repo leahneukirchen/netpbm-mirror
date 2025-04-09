@@ -19,7 +19,7 @@
 enum ramptype {RT_LR, RT_TB, RT_DIAG, RT_RECT, RT_ELLIP};
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -32,8 +32,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
   Convert program invocation arguments (argc,argv) into a format the
   program can use easily, struct cmdlineInfo.  Validate arguments along
@@ -42,7 +42,7 @@ parseCommandLine(int argc, char ** argv,
   Note that some string information we return as *cmdlineP is in the storage
   argv[] points to.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * const option_def = malloc(100*sizeof(optEntry));
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
     optStruct3 opt;
@@ -63,7 +63,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free (option_def);
@@ -123,14 +123,14 @@ diffu(unsigned int const subtrahend,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
-    gray *grayrow;
+    struct CmdlineInfo cmdline;
+    gray * grayrow;
     unsigned int rowso2, colso2;
     unsigned int row;
 
-    pgm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -138,10 +138,12 @@ main(int argc, char *argv[]) {
     rowso2 = MAX(1, cmdline.rows / 2);
 
     pgm_writepgminit(stdout, cmdline.cols, cmdline.rows, cmdline.maxval, 0);
+
     grayrow = pgm_allocrow(cmdline.cols);
 
     for (row = 0; row < cmdline.rows; ++row) {
         unsigned int col;
+
         for (col = 0; col < cmdline.cols; ++col) {
             switch (cmdline.ramptype) {
             case RT_LR:
@@ -180,6 +182,7 @@ main(int argc, char *argv[]) {
 
     pgm_freerow(grayrow);
     pm_close(stdout);
+
     return 0;
 }
 
