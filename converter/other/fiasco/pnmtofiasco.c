@@ -281,28 +281,33 @@ checkargs(int                         argc,
         }
 
         {
-            int M /*  = * (int *) parameter_value (params, "max-level") */;
-            int m /*  = * (int *) parameter_value (params, "min-level") */;
-            int N /*  = * (int *) parameter_value (params, "max-elements") */;
-            int o;
-            int D = * (int *) parameter_value(params, "dictionary-size");
+            int const dictionarySize =
+                *(int *)parameter_value(params, "dictionary-size");
             int const optimizeOpt =
                 *(int *)parameter_value(params, "optimize");
 
+            int maxBlockLevel;
+            int minBlockLevel;
+            int maxElements;
+            int optimizationLevel;
+            bool succeeded;
+
             if (optimizeOpt <= 0) {
-                o = 0;
-                M = 10;
-                m = 6;
-                N = 3;
+                optimizationLevel =  0;
+                maxBlockLevel     = 10;
+                minBlockLevel     =  6;
+                maxElements       =  3;
             } else {
-                o -= 1;
-                M = 12;
-                m = 4;
-                N = 5;
+                optimizationLevel -= 1;
+                maxBlockLevel     = 12;
+                minBlockLevel     =  4;
+                maxElements       =  5;
             }
 
-            if (!fiasco_c_options_set_optimizations(*options, m, M, N,
-                                                    MAX(0, D), o))
+            fiasco_c_options_set_optimizations(
+                *options, minBlockLevel, maxBlockLevel, maxElements,
+                MAX(0, dictionarySize), optimizationLevel, &succeeded);
+            if (!succeeded)
                 pm_error("%s", fiasco_get_error_message ());
         }
         {

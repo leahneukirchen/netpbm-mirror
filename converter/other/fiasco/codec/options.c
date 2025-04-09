@@ -20,6 +20,7 @@
 
 #include "config.h"
 
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -61,7 +62,6 @@ fiasco_c_options_new (void)
    public->set_frame_pattern  = fiasco_c_options_set_frame_pattern;
    public->set_basisfile      = fiasco_c_options_set_basisfile;
    public->set_chroma_quality = fiasco_c_options_set_chroma_quality;
-   public->set_optimizations  = fiasco_c_options_set_optimizations;
    public->set_video_param    = fiasco_c_options_set_video_param;
    public->set_quantization   = fiasco_c_options_set_quantization;
    public->set_progress_meter = fiasco_c_options_set_progress_meter;
@@ -347,83 +347,75 @@ fiasco_c_options_set_chroma_quality (fiasco_c_options_t *options,
    }
 }
 
-int
-fiasco_c_options_set_optimizations (fiasco_c_options_t *options,
-                                    unsigned min_block_level,
-                                    unsigned max_block_level,
-                                    unsigned max_elements,
-                                    unsigned dictionary_size,
-                                    unsigned optimization_level)
-/*
- *  Set various optimization parameters.
- *  - During compression only image blocks of size
- *    {`min_block_level', ... ,`max_block_level'} are considered.
- *    The smaller this set of blocks is the faster the coder runs
- *    and the worse the image quality will be.
- *  - An individual approximation may use at most `max_elements'
- *    elements of the dictionary which itself contains at most
- *    `dictionary_size' elements. The smaller these values are
- *    the faster the coder runs and the worse the image quality will be.
- *  - `optimization_level' enables some additional low level optimizations.
- *    0: standard approximation method
- *    1: significantly increases the approximation quality,
- *       running time is twice as high as with the standard method
- *    2: hardly increases the approximation quality of method 1,
- *       running time is twice as high as with method 1
- *       (this method just remains for completeness)
- *
- *  Return value:
- *      1 on success
- *      0 otherwise
- */
-{
-   c_options_t *this = (c_options_t *) cast_c_options (options);
 
-   if (!this)
-   {
-      return 0;
-   }
-   else if (!dictionary_size)
-   {
+
+void
+fiasco_c_options_set_optimizations(
+   fiasco_c_options_t * const optionsP,
+   unsigned int         const minBlockLevel,
+   unsigned int         const maxBlockLevel,
+   unsigned int         const maxElements,
+   unsigned int         const dictionarySize,
+   unsigned int         const optimizationLevel,
+   bool *               const succeededP) {
+/*----------------------------------------------------------------------------
+  Set various optimization parameters.
+  - During compression only image blocks of size
+    {'minBlockLevel', ... ,'maxBlockLevel'} are considered.
+    The smaller this set of blocks is the faster the coder runs
+    and the worse the image quality will be.
+  - An individual approximation may use at most `max_elements'
+    elements of the dictionary which itself contains at most
+    'dictionarySize' elements. The smaller these values are
+    the faster the coder runs and the worse the image quality will be.
+  - 'optimizationLevel' enables some additional low level optimizations.
+    0: standard approximation method
+    1: significantly increases the approximation quality,
+       running time is twice as high as with the standard method
+    2: hardly increases the approximation quality of method 1,
+       running time is twice as high as with method 1
+       (this method just remains for completeness)
+
+  Return value:
+      1 on success
+      0 otherwise
+-----------------------------------------------------------------------------*/
+   c_options_t * const this = (c_options_t *) cast_c_options(optionsP);
+
+   if (!this) {
+      *succeededP = false;
+   } else if (!dictionarySize) {
       set_error (_("Size of dictionary has to be a positive number."));
-      return 0;
-   }
-   else if (!max_elements)
-   {
+      *succeededP = false;
+   } else if (!maxElements) {
       set_error (_("At least one dictionary element has to be used "
                    "in an approximation."));
-      return 0;
-   }
-   else if (max_block_level < 4)
-   {
+      *succeededP = false;
+   } else if (maxBlockLevel < 4) {
       set_error (_("Maximum image block size has to be at least level 4."));
-      return 0;
-   }
-   else if (min_block_level < 4)
-   {
+      *succeededP = false;
+   } else if (minBlockLevel < 4) {
       set_error (_("Minimum image block size has to be at least level 4."));
-      return 0;
-   }
-   else if (max_block_level < min_block_level)
-   {
+      *succeededP = false;
+   } else if (maxBlockLevel < minBlockLevel) {
       set_error (_("Maximum block size has to be larger or "
                    "equal minimum block size."));
-      return 0;
-   }
-   else
-   {
-      this->lc_min_level        = min_block_level;
-      this->lc_max_level        = max_block_level;
-      this->max_states          = dictionary_size;
-      this->max_elements        = max_elements;
-      this->second_domain_block = optimization_level > 0 ? YES : NO;
-      this->check_for_overflow  = optimization_level > 1 ? YES : NO;
-      this->check_for_underflow = optimization_level > 1 ? YES : NO;
-      this->full_search         = optimization_level > 1 ? YES : NO;
+      *succeededP = false;
+   } else {
+      this->lc_min_level        = minBlockLevel;
+      this->lc_max_level        = maxBlockLevel;
+      this->max_states          = dictionarySize;
+      this->max_elements        = maxElements;
+      this->second_domain_block = optimizationLevel > 0 ? YES : NO;
+      this->check_for_overflow  = optimizationLevel > 1 ? YES : NO;
+      this->check_for_underflow = optimizationLevel > 1 ? YES : NO;
+      this->full_search         = optimizationLevel > 1 ? YES : NO;
 
-      return 1;
+      *succeededP = true;
    }
 }
+
+
 
 int
 fiasco_c_options_set_prediction (fiasco_c_options_t *options,

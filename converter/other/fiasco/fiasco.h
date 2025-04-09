@@ -28,6 +28,8 @@
  *  $State: Exp $
  */
 
+#include <stdbool.h>
+
 #include "pnm.h"
 
 #undef __BEGIN_DECLS
@@ -144,12 +146,6 @@ typedef struct fiasco_c_options
    int (*set_chroma_quality) (struct fiasco_c_options *options,
                               float quality_factor,
                               unsigned dictionary_size);
-   int (*set_optimizations)  (struct fiasco_c_options *options,
-                              unsigned min_block_level,
-                              unsigned max_block_level,
-                              unsigned max_elements,
-                              unsigned dictionary_size,
-                              unsigned optimization_level);
    int (*set_prediction)     (struct fiasco_c_options *options,
                               int intra_prediction,
                               unsigned min_block_level,
@@ -368,13 +364,15 @@ int fiasco_c_options_set_chroma_quality (fiasco_c_options_t *options,
  *
  */
 
-/* Set various optimization parameters. */
-int fiasco_c_options_set_optimizations (fiasco_c_options_t *options,
-                                        unsigned min_block_level,
-                                        unsigned max_block_level,
-                                        unsigned max_elements,
-                                        unsigned dictionary_size,
-                                        unsigned optimization_level);
+void
+fiasco_c_options_set_optimizations(
+   fiasco_c_options_t * const optionsP,
+   unsigned int         const minBlockLevel,
+   unsigned int         const maxBlockLevel,
+   unsigned int         const maxElements,
+   unsigned int         const dictionarySize,
+   unsigned int         const optimizationLevel,
+   bool *               const succeededP);
 
 /* Set minimum and maximum size of image block prediction */
 int fiasco_c_options_set_prediction (fiasco_c_options_t *options,
