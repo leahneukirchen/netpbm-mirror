@@ -461,49 +461,82 @@ locate_subimage (unsigned orig_level, unsigned level, unsigned bintree,
    }
 }
 
+static void
+findUncontainedTiles(unsigned int const tileCt,
+                     unsigned int const level,
+                     unsigned int const tilingExp,
+                     unsigned int const imageWidth,
+                     unsigned int const imageHeight,
+                     int *        const vorder /* array */) {
+/*----------------------------------------------------------------------------
+   Set every element of 'vorder' (size 'tilingExp') to -1 to indicate the
+   tile is not contained within the image or 0 to indicate that it is.
+-----------------------------------------------------------------------------*/
+    unsigned int address;
+
+    for (address = 0; address < tileCt; ++address) {
+        unsigned int x0, y0, width, height;
+
+        locate_subimage(level, level - tilingExp, address,
+                        &x0, &y0, &width, &height);
+
+        vorder[address] = (x0 < imageWidth && y0 < imageHeight) ? 0 : -1;
+    }
+}
+
+
+
+static void
+debugPrintTiling(const int *  const vorder,  /* array */
+                 unsigned int const tileCt) {
+
+    unsigned int seq;
+    unsigned int address;
+
+    for (seq = 0, address = 0; address < tileCt; ++address) {
+        if (vorder[address] != -1) {
+            debug_message("number %u: address %u",
+                          seq++, (unsigned int)vorder[address]);
+        }
+    }
+}
+
+
+
 void
-compute_spiral (int *vorder, unsigned image_width, unsigned image_height,
-                unsigned tiling_exp, bool_t inc_spiral)
-/*
- *  Compute image tiling with spiral order.
- *  'inc_spiral' specifies whether the spiral starts in the middle
- *  of the image (TRUE) or at the border (FALSE).
- *  'image_width'x'image_height' define the size of the image.
- *  The image is split into 'tiling->exp' tiles.
- *
- *  No return value.
- *
- *  Side effects:
- *      vorder[] is filled with tiling permutation
- */
-{
-   unsigned x, y;                       /* current position */
-   unsigned xmin, xmax, ymin, ymax;     /* boundaries for current line */
-   unsigned width, height;              /* offset for each tile */
-   unsigned lx, ly, level;              /* level x and y */
-   unsigned tiles;                      /* total number of tiles */
-   unsigned address;                    /* bintree address */
+compute_spiral(int *        const vorder,  /* array */
+               unsigned int const imageWidth,
+               unsigned int const imageHeight,
+               unsigned int const tilingExp,
+               bool_t       const incSpiral) {
+/*----------------------------------------------------------------------------
+  Compute image tiling with spiral order.  Put the tiling permutation in
+  vorder[], which must be allocated large enough for one element per tile.
 
-   lx     = log2 (image_width - 1) + 1;
-   ly     = log2 (image_height - 1) + 1;
-   level  = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
-   tiles  = 1 << tiling_exp;            /* Number of image tiles */
-   width  = width_of_level (level - tiling_exp);
-   height = height_of_level (level - tiling_exp);
-   for (address = 0; address < tiles; address++)
-   {
-      unsigned x0, y0, width, height;
+  Split the image into 2^tilingExp tiles.
 
-      locate_subimage (level, level - tiling_exp, address,
-                       &x0, &y0, &width, &height);
-      vorder [address] = (x0 < image_width && y0 < image_height) ? 0 : -1;
-   }
+  'incSpiral' specifies whether the spiral starts in the middle of the image
+  (TRUE) or at the border (FALSE).
 
-   xmin    = 0;
-   xmax    = width_of_level (level);
-   ymin    = 0;
-   ymax    = height_of_level (level);
-   address = 0;
+  'imageWidth' x 'imageHeight' define the size of the image.
+
+  'imageWidth' and 'imageHeight' must be at least 2.
+-----------------------------------------------------------------------------*/
+    unsigned int const lx = log2(imageWidth  - 1) + 1;
+    unsigned int const ly = log2(imageHeight - 1) + 1;
+    unsigned int const level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+    unsigned int const tileCt = 1 << tilingExp;
+        /* Total number of image tiles */
+    unsigned int const width  = width_of_level (level - tilingExp);
+    unsigned int const height = height_of_level(level - tilingExp);
+
+    unsigned xmin, xmax, ymin, ymax;     /* boundaries for current line */
+    unsigned address;                    /* bintree address */
+
+    assert(imageWidth >= 2); assert(imageHeight >= 2);
+
+    findUncontainedTiles(tileCt, level, tilingExp, imageWidth, imageHeight,
+                         vorder);
 
    /*
     *  1234
@@ -511,97 +544,93 @@ compute_spiral (int *vorder, unsigned image_width, unsigned image_height,
     *  BGF6  starting at the top left corner
     *  A987
     */
-   while (TRUE)
-   {
-      for (x = xmin, y = ymin; x < xmax; x += width) /* W>E */
-      {
-         while (vorder [address] == -1)
-            address++;
-         if (x < image_width && y < image_height) /* valid range */
-            vorder [address++] = xy_to_address (x, y, level, tiling_exp);
-         while (address < tiles && vorder [address] == -1)
-            address++;
-      }
-      ymin += height;
+    for (address = 0,
+             xmin = 0, xmax = width_of_level(level),
+             ymin = 0, ymax = height_of_level(level); address < tileCt;) {
 
-      if (address >= tiles)
-         break;
+        unsigned int x, y;
 
-      for (x = xmax - width, y = ymin; y < ymax; y += height) /* N>S  */
-      {
-         while (vorder [address] == -1)
-            address++;
-         if (x <= image_width && y <= image_height) /* valid range */
-            vorder [address++] = xy_to_address (x, y, level, tiling_exp);
-         while (address < tiles && vorder [address] == -1)
-            address++;
-      }
-      xmax -= width;
+        if (address < tileCt) {
+            /* W>E */
+            for (x = xmin, y = ymin; x < xmax; x += width) {
+                while (vorder[address] == -1)
+                    ++address;
+                if (x < imageWidth && y < imageHeight) /* valid range */
+                    vorder[address++] = xy_to_address(x, y, level, tilingExp);
+                while (address < tileCt && vorder[address] == -1)
+                    ++address;
+            }
+            ymin += height;
+        }
 
-      if (address >= tiles)
-         break;
+        if (address < tileCt) {
+            /* N>S  */
+            assert(xmax >= width);
+            for (x = xmax - width, y = ymin; y < ymax; y += height) {
+                while (vorder[address] == -1)
+                    ++address;
+                if (x <= imageWidth && y <= imageHeight) /* valid range */
+                    vorder[address++] = xy_to_address(x, y, level, tilingExp);
+                while (address < tileCt && vorder[address] == -1)
+                    ++address;
+            }
+            assert(xmax >= width);
+            xmax -= width;
+        }
 
-      for (x = xmax - width, y = ymax - width; x >= xmin; x -= width) /* E<W */
-      {
-         while (vorder [address] == -1)
-            address++;
-         if (x <= image_width && y <= image_height) /* valid range */
-            vorder [address++] = xy_to_address (x, y, level, tiling_exp);
-         while (address < tiles && vorder [address] == -1)
-            address++;
-      }
-      ymax -= height;
+        if (address < tileCt) {
+            /* E<W */
+            assert(xmax >= width);
+            for (x = xmax - width, y = ymax - width;
+                 x >= xmin; x -= width) {
+                while (vorder[address] == -1)
+                    ++address;
+                if (x <= imageWidth && y <= imageHeight) /* valid range */
+                    vorder[address++] = xy_to_address(x, y, level, tilingExp);
+                while (address < tileCt && vorder[address] == -1)
+                    ++address;
+            }
+            assert(ymax >= height);
+            ymax -= height;
+        }
 
-      if (address >= tiles)
-         break;
+        if (address < tileCt) {
+            /* S>N */
+            assert(ymax >= height);
+            for (x = xmin, y = ymax - height; y >= ymin; y -= height) {
+                while (vorder[address] == -1)
+                    ++address;
+                if (x <= imageWidth && y <= imageHeight) /* valid range */
+                    vorder[address++] = xy_to_address(x, y, level, tilingExp);
+                while (address < tileCt && vorder[address] == -1)
+                    ++address;
+            }
+            xmin += width;
+        }
+    }
 
-      for (x = xmin, y = ymax - height; y >= ymin; y -= height) /* S>N */
-      {
-         while (vorder [address] == -1)
-            address++;
-         if (x <= image_width && y <= image_height) /* valid range */
-            vorder [address++] = xy_to_address (x, y, level, tiling_exp);
-         while (address < tiles && vorder [address] == -1)
-            address++;
-      }
-      xmin += width;
+    if (incSpiral) {
+        unsigned int i, j;
 
-      if (address >= tiles)
-         break;
-   }
+        for (i = 0, j = tileCt - 1; i < j;) {
+            while (vorder[i] == -1)
+                ++i;
+            while (vorder[j] == -1)
+                --j;
 
-   if (inc_spiral)
-   {
-      int i = 0, j = tiles - 1;
-
-      while (i < j)
-      {
-         int tmp;
-
-         while (vorder [i] == -1)
-            i++;
-         while (vorder [j] == -1)
-            j--;
-
-         tmp           = vorder [i];
-         vorder [i] = vorder [j];
-         vorder [j] = tmp;
-         i++;
-         j--;
-      }
-   }
-   /*
-    *  Print tiling info
-    */
-   {
-      unsigned number;
-
-      for (number = 0, address = 0; address < tiles; address++)
-         if (vorder [address] != -1)
-            debug_message ("number %d: address %d",
-                           number++, vorder [address]);
-   }
+            {
+                int const previousVorderI = vorder[i];
+                vorder[i] = vorder[j];
+                vorder[j] = previousVorderI;
+            }
+            ++i;
+            --j;
+        }
+    }
+    debugPrintTiling(vorder, tileCt);
 }
+
+
 
 bool_t
 find_range (unsigned x, unsigned y, unsigned band,
