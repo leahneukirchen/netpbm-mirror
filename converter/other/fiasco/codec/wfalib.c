@@ -548,7 +548,7 @@ compute_spiral(int *        const vorder,  /* array */
              xmin = 0, xmax = width_of_level(level),
              ymin = 0, ymax = height_of_level(level); address < tileCt;) {
 
-        unsigned int x, y;
+        int x, y;   /* current position; could be negative */
 
         if (address < tileCt) {
             /* W>E */
@@ -582,7 +582,7 @@ compute_spiral(int *        const vorder,  /* array */
             /* E<W */
             assert(xmax >= width);
             for (x = xmax - width, y = ymax - width;
-                 x >= xmin; x -= width) {
+                 x >= (int)xmin; x -= width) {
                 while (vorder[address] == -1)
                     ++address;
                 if (x <= imageWidth && y <= imageHeight) /* valid range */
@@ -597,7 +597,7 @@ compute_spiral(int *        const vorder,  /* array */
         if (address < tileCt) {
             /* S>N */
             assert(ymax >= height);
-            for (x = xmin, y = ymax - height; y >= ymin; y -= height) {
+            for (x = xmin, y = ymax - height; y >= (int)ymin; y -= height) {
                 while (vorder[address] == -1)
                     ++address;
                 if (x <= imageWidth && y <= imageHeight) /* valid range */
