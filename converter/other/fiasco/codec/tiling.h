@@ -2,7 +2,7 @@
  *  tiling.h
  *
  *  Written by:         Ullrich Hafner
- *              
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
@@ -17,6 +17,8 @@
 #ifndef _TILING_H
 #define _TILING_H
 
+#include <stdbool.h>
+
 #include "image.h"
 #include "fiasco.h"
 
@@ -30,9 +32,13 @@ typedef struct tiling
 
 void
 perform_tiling (const image_t *image, tiling_t *tiling);
+
 tiling_t *
-alloc_tiling (fiasco_tiling_e method, unsigned tiling_exponent,
-              unsigned image_level);
+new_tiling(fiasco_tiling_e const method,
+           unsigned int    const reqTilingExponent,
+           unsigned int    const imageLevel,
+           bool            const isVideo);
+
 void
 free_tiling (tiling_t *tiling);
 

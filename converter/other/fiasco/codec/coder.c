@@ -249,42 +249,97 @@ setInputImageInfo(const char * const * const inputName,
 
 
 static void
+setMinMaxLevel(unsigned int   const reqMinLevel,
+               unsigned int   const reqMaxLevel,
+               unsigned int   const level,
+               unsigned int   const tilingExponent,
+               unsigned int * const lcMinLevelP,
+               unsigned int * const lcMaxLevelP) {
+
+    unsigned int const clippedReqMin = MAX(reqMinLevel, 3);
+    unsigned int const clippedReqMax = MIN(reqMaxLevel, level - 1);
+
+    unsigned int tilingLimitedMax;
+
+
+    assert(level > 0);
+
+    if (tilingExponent > level)
+        tilingLimitedMax = 0;
+    else {
+        tilingLimitedMax = MIN(level - tilingExponent, clippedReqMax);
+        if (tilingLimitedMax < clippedReqMax)
+            message("'max_level' reduced from %u to %u "
+                    "because of image tiling level.",
+                    clippedReqMax, tilingLimitedMax);
+        else
+            tilingLimitedMax = clippedReqMax;
+    }
+
+    *lcMaxLevelP = tilingLimitedMax;
+    *lcMinLevelP = MIN(*lcMaxLevelP, clippedReqMin);
+
+    assert(*lcMaxLevelP >= *lcMinLevelP);
+    assert(*lcMaxLevelP <= level - tilingExponent);
+    assert(*lcMaxLevelP < level);
+}
+
+
+
+static void
+setOptions(c_options_t   const reqOptions,
+           unsigned int  const level,
+           unsigned int  const tilingExponent,
+           c_options_t * const optionsP) {
+
+    /* Most options are just what caller requested ('reqOptions'), so we just
+       use that as an initial value, then re-set the members that are more
+       complex.
+    */
+
+    *optionsP = reqOptions;  /* initial value */
+
+    setMinMaxLevel(reqOptions.lc_min_level,
+                   reqOptions.lc_max_level,
+                   level,
+                   tilingExponent,
+                   &optionsP->lc_min_level,
+                   &optionsP->lc_max_level);
+
+    optionsP->images_level =
+        optionsP->lc_max_level > 1 ?
+            MIN(reqOptions.images_level,
+                optionsP->lc_max_level - 1) :
+            0;
+
+    /* On 25.04.09, the code here set optionsP->image_level to one less than
+       optionsP->lc_max_level even if the latter was zero.  I don't know if
+       level zero makes any sense, but it definitely makes more sense than
+       minus 1, so I changed it to make optionsP->image_level zero in that
+       case.  BJH
+    */
+}
+
+
+
+static void
 setLevelStuff(const c_options_t *  const optionsP,
               coding_t *           const cP,
               wfa_info_t *         const wiP) {
 
     {
-        unsigned int const lx = (unsigned) (log2 (wiP->width - 1) + 1);
-        unsigned int const ly = (unsigned) (log2 (wiP->height - 1) + 1);
+        unsigned int const lx = (unsigned) (log2(wiP->width  - 1) + 1);
+        unsigned int const ly = (unsigned) (log2(wiP->height - 1) + 1);
 
         wiP->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+        assert(wiP->level > 0);
     }
 
-    cP->options             = *optionsP;
-    cP->options.lc_min_level = MAX(optionsP->lc_min_level, 3);
-    cP->options.lc_max_level = MIN(optionsP->lc_max_level, wiP->level - 1);
+    cP->tiling = new_tiling(optionsP->tiling_method,
+                            optionsP->tiling_exponent, wiP->level,
+                            wiP->frames > 1);
 
-    cP->tiling = alloc_tiling (optionsP->tiling_method,
-                              optionsP->tiling_exponent, wiP->level);
-
-    if (wiP->frames > 1 && cP->tiling->exponent > 0) {
-        cP->tiling->exponent = 0;
-        warning (_("Image tiling valid only with still image compression."));
-    }
-
-    if (cP->options.lc_max_level >= wiP->level - cP->tiling->exponent) {
-        int const newMaxLevel =
-            wiP->level - cP->tiling->exponent > 0 ?
-            wiP->level - cP->tiling->exponent : 0;
-
-        message("'max_level' changed from %d to %d "
-                "because of image tiling level.",
-                cP->options.lc_max_level, newMaxLevel);
-        cP->options.lc_max_level = newMaxLevel;
-    }
-
-    if (cP->options.lc_min_level > cP->options.lc_max_level)
-        cP->options.lc_min_level = cP->options.lc_max_level;
+    setOptions(*optionsP, wiP->level, cP->tiling->exponent, &cP->options);
 
     /*
      *  p_min_level, p_max_level min and max level for ND/MC prediction
@@ -294,9 +349,6 @@ setLevelStuff(const c_options_t *  const optionsP,
     wiP->p_max_level = MIN(optionsP->p_max_level, cP->options.lc_max_level);
     if (wiP->p_min_level > wiP->p_max_level)
         wiP->p_min_level = wiP->p_max_level;
-
-    cP->options.images_level = MIN(cP->options.images_level,
-                                   cP->options.lc_max_level - 1);
 
     cP->products_level  =
         MAX(0, ((signed int) cP->options.lc_max_level

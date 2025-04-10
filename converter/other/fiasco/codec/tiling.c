@@ -16,6 +16,7 @@
 
 #include "config.h"
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "pm_c_util.h"
@@ -69,31 +70,38 @@ cmpdecvar(const void * const value1P,
 
 
 tiling_t *
-alloc_tiling(fiasco_tiling_e const method,
-             unsigned int    const tilingExponent,
-             unsigned int    const imageLevel) {
+new_tiling(fiasco_tiling_e const method,
+           unsigned int    const reqTilingExponent,
+           unsigned int    const imageLevel,
+           bool            const isVideo) {
 /*----------------------------------------------------------------------------
    Construct an image tiling object.
 
-  'method' defines the tiling method (spiral or variance; ascending or
-  descending).
+   'method' defines the tiling method (spiral or variance; ascending or
+   descending).
 
-  'tilingExponent' is the requested tiling exponent, though if it is too large
-  for the 'imageLevel', we issue a warning and make the object say tiling
-  exponent 6.
+   'reqTilingExponent' is the requested tiling exponent, though if it is too
+   large for the 'imageLevel', we issue a warning and make the object say
+   tiling exponent 6.  Also, if we're doing video ('isVideo'), make it
+   zero and issue a warning.
 
-  Return value is pointer to newly malloced object.
+   Return value is pointer to newly malloced object.
 -----------------------------------------------------------------------------*/
     tiling_t * const tilingP = Calloc(1, sizeof(tiling_t));
 
-    if ((int)imageLevel - (int)tilingExponent < 6) {
-        tilingP->exponent = 6;
-        warning(_("Image tiles must be at least 8x8 pixels large.\n"
-                  "Setting tiling size to 8x8 pixels."));
-    } else
-        tilingP->exponent = tilingExponent;
+    if (isVideo && reqTilingExponent > 0)
+        warning(_("Image tiling valid only with still image compression."));
 
-    tilingP->exponent=0;  /* BRYANDEBUG */
+    if (isVideo)
+        tilingP->exponent = 0;
+    else {
+        if ((int)imageLevel - (int)reqTilingExponent < 6) {
+            tilingP->exponent = 6;
+            warning(_("Image tiles must be at least 8x8 pixels large.\n"
+                      "Setting tiling size to 8x8 pixels."));
+        } else
+            tilingP->exponent = reqTilingExponent;
+    }
 
     return tilingP;
 }

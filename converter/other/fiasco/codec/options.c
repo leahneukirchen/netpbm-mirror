@@ -150,42 +150,46 @@ fiasco_c_options_delete (fiasco_c_options_t *options)
    return;
 }
 
+
+
 int
-fiasco_c_options_set_tiling (fiasco_c_options_t *options,
-                             fiasco_tiling_e method, unsigned exponent)
-/*
- *  Set tiling `method' and `exponent'.
- *  See type `fiasco_tiling_e' for a list of valid  tiling `methods'.
- *  The image is subdivied into 2^`exponent' tiles
- *
- *  Return value:
- *      1 on success
- *      0 otherwise
- */
-{
-   c_options_t *this = (c_options_t *) cast_c_options (options);
+fiasco_c_options_set_tiling(fiasco_c_options_t * const optionsP,
+                            fiasco_tiling_e      const method,
+                            unsigned int         const exponent) {
+/*----------------------------------------------------------------------------
+  Set tiling 'method' and 'exponent'.
 
-   if (!this)
-   {
-      return 0;
-   }
-   switch (method)
-   {
-      case FIASCO_TILING_SPIRAL_ASC:
-      case FIASCO_TILING_SPIRAL_DSC:
-      case FIASCO_TILING_VARIANCE_ASC:
-      case FIASCO_TILING_VARIANCE_DSC:
-         this->tiling_method = method;
-         break;
-      default:
-         set_error (_("Invalid tiling method `%d' specified "
-                      "(valid methods are 0, 1, 2, or 3)."), method);
-         return 0;
-   }
-   this->tiling_exponent = exponent;
+  See type 'fiasco_tiling_e' for a list of valid tiling methods.
 
-   return 1;
+  The image is subdivided into 2^`exponent' tiles.
+
+  Return value:
+     1 on success
+     0 otherwise
+-----------------------------------------------------------------------------*/
+    c_options_t * const this = (c_options_t *) cast_c_options(optionsP);
+
+    int retval;
+
+    if (!this) {
+        retval = 0;
+    } else {
+        switch (method) {
+        case FIASCO_TILING_SPIRAL_ASC:
+        case FIASCO_TILING_SPIRAL_DSC:
+        case FIASCO_TILING_VARIANCE_ASC:
+        case FIASCO_TILING_VARIANCE_DSC:
+            this->tiling_method = method;
+            break;
+        }
+        this->tiling_exponent = exponent;
+
+        retval = 1;
+    }
+    return retval;
 }
+
+
 
 int
 fiasco_c_options_set_frame_pattern (fiasco_c_options_t *options,
