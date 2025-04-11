@@ -3,6 +3,16 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
+
+not yet  BJH  Release 11.10.02
+
+              pnmtofiasco: fix bug: does wrong level of optimization
+              Introduced in Netpbm 11.05 (December 2023).
+
+              pnmtofiasco: fix bug: infinite loop with multiple tiles.
+              Always broken (program was new in Netpbm 9.6, July 2000),
+              but made functional by bug fix in 11.10.01 (April 2025).
+
 25.04.07 BJH  Release 11.10.01
 
               pnmquantall: fix arbitrary shell command execution with input

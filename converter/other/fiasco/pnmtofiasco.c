@@ -295,7 +295,7 @@ checkargs(int                         argc,
                 m = 6;
                 N = 3;
             } else {
-                o -= 1;
+                o = optimizeOpt - 1;
                 M = 12;
                 m = 4;
                 N = 5;
