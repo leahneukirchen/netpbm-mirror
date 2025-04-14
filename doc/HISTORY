@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.04.14 BJH  Release 11.02.15
+
+              pnmtofiasco: fix bug: infinite loop with multiple tiles.
+              Always broken (program was new in Netpbm 9.6, July 2000),
+              but made functional by bug fix in 11.02.14 (April 2025).
+
 25.04.07 BJH  Release 11.02.14
 
               pnmquantall: fix arbitrary shell command execution with input

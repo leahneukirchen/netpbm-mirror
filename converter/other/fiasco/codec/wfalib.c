@@ -477,7 +477,7 @@ compute_spiral (int *vorder, unsigned image_width, unsigned image_height,
  *	vorder[] is filled with tiling permutation
  */
 {
-   unsigned x, y;			/* current position */
+   int x, y;                            /* current position, can be negative */
    unsigned xmin, xmax, ymin, ymax;	/* boundaries for current line */
    unsigned width, height;		/* offset for each tile */
    unsigned lx, ly, level;		/* level x and y */
@@ -541,7 +541,7 @@ compute_spiral (int *vorder, unsigned image_width, unsigned image_height,
       if (address >= tiles)
 	 break;
 
-      for (x = xmax - width, y = ymax - width; x >= xmin; x -= width) /* E<W */
+      for (x = xmax - width, y = ymax - width; x >= (int)xmin; x -= width) /* E<W */
       {
 	 while (vorder [address] == -1)
 	    address++;
@@ -555,7 +555,7 @@ compute_spiral (int *vorder, unsigned image_width, unsigned image_height,
       if (address >= tiles)
 	 break;
 
-      for (x = xmin, y = ymax - height; y >= ymin; y -= height)	/* S>N */
+      for (x = xmin, y = ymax - height; y >= (int)ymin; y -= height)	/* S>N */
       {
 	 while (vorder [address] == -1)
 	    address++;
