@@ -2,7 +2,7 @@
 <html><head><title>Pamdice User Manual</title></head>
 <body>
 <h1>pamdice</h1>
-Updated: 07 February 2025
+Updated: 29 April 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -11,20 +11,23 @@ pamdice - slice a Netpbm image into many horizontally and/or vertically
 
 <h2 id="example">EXAMPLE</h2>
 
+<p>In these examples, <b>myimage.ppm</b> is an image that is 10,000 pixels wide
+and 8,000 pixels high.
+
 <pre>
 <kbd>
-    $ pamdice myimage.ppm -outstem=myimage_part -width=10 -height=8
+    $ pamdice myimage.ppm -width=1000 -height=1000 -outstem=myimage_part 
     $ pamundice myimage_part_%1d_%1a.ppm -across=10 -down=8 &gt;myimage.ppm
 
-    $ pamdice myimage.ppm -outstem=myimage_part -height=12 -voverlap=9
+    $ pamdice myimage.ppm -height=1000 -voverlap=90 -outstem=myimage_part 
 
-    $ pamdice myimage.ppm -width=10 -height=8 -listfile=tiles.txt myimage.ppm
-    $ pamundice -across=10 -down=4 -listfile=tiles.txt &gt;myimage.ppm
+    $ pamdice myimage.ppm -width=1000 -height=1000 -outstem=myimage_part \
+        -listfile=tiles.txt
+    $ pamundice -across=10 -down=8 -listfile=tiles.txt &gt;myimage.ppm
 
-    $ pamdice myimage.ppm -width=10 -height=8 -outstem=myimage_part \
-        -indexfile=tiles.pam myimage.ppm
-    $ pamundice myimage_part_%1d_%1a.ppm  -across=10 -down=8 \
-        -indexfile=tiles.pam &gt;myimage.ppm
+    $ pamdice myimage.ppm -width=1000 -height=1000 -outstem=myimage_part \
+        -indexfile=tiles.pam
+    $ pamundice myimage_part_%1d_%1a.ppm -indexfile=tiles.pam &gt;myimage.ppm
 </kbd>
 </pre>
 
@@ -68,11 +71,11 @@ splits it horizontally and/or vertically into equal size pieces and
 writes them into separate files as the same kind of image.  You can
 optionally make the pieces overlap.
 
-<p>See the <b>-outstem</b> option for information on naming of the
-output files.
+<p>See the <b>-outstem</b> option for information on naming of the output
+files.
 
-<p>The <b>-width</b> and <b>-height</b> options determine the size of
-the output pieces.
+<p>The <b>-width</b> and <b>-height</b> options determine the size of the
+output pieces.
 
 <p><b>pamundice</b> can rejoin the images.  For finer control, you can
 also use <b>pamcat</b>.
@@ -134,11 +137,19 @@ the slices.
 pieces are smaller than this if the input image is not a multiple of
 <i>width</i> pixels wide.
 
+<p>If you don&apos;t specify this, the default is the entire width of the
+image; i.e. <b>pamdice</b> does not split vertically.
+
 <dt><b>-height=</b><i>height</i>
 
 <dd>This gives the height in pixels of the output images.  The bottom
 pieces are smaller than this if the input image is not a multiple of
 <i>height</i> pixels high.
+
+<p>If you don&apos;t specify this, the default is the entire height of the
+image; i.e. <b>pamdice</b> does not split horizontally.
+
+
 
 <dt><b>-hoverlap=</b><i>hoverlap</i>
 
@@ -233,7 +244,8 @@ creates the list file (with <b>-listfile</b>) and the index file (with
 <p><b>pamdice</b> was new in Netpbm 9.25 (March 2002).
 
 <p>Before Netpbm 10.29 (August 2005), there was a limit of 100 slices in each
-direction.
+  direction, and the output file names always used two digits for the slice
+  number.
 
 <h2 id="seealso">SEE ALSO</h2>
 

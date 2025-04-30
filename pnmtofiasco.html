@@ -2,7 +2,7 @@
 <html><head><title>Pnmtofiasco User Manual</title></head>
 <body>
 <h1>pnmtofiasco</h1>
-Updated: 12 July 2000
+Updated: 09 April 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -40,7 +40,7 @@ options are case sensitive.
 <h3 id="basicopts">Basic Options</h3>
 
 <dl compact>
-<dt><b>-i</b> <i>name</i>, <b>--image-name=</b><i>name</i>
+<dt><b>--image-name=</b><i>name</i>, <b>-i</b> <i>name</i>
 
 <dd>Compress the named images, not Standard Input.  If <i>name</i> is
 <b>-</b>, read Standard Input.  <i>name</i> has to be either an image
@@ -59,7 +59,7 @@ the image files in the current directory and in the (colon-separated)
 list of directories given by the environment variable
 <b>FIASCO_IMAGES</b>.
 
-<dt><b>-o</b> <i>output-file</i>, <b>--output-name=</b><i>name</i>
+<dt><b>--output-name=</b><i>name</i>, <b>-o</b> <i>output-file</i>
 
 <dd>Write FIASCO output to the named file, not to Standard Output.
 
@@ -69,22 +69,22 @@ list of directories given by the environment variable
 directory of this list. Otherwise, <b>pnmtofiasco</b> write it to the
 current directory.
 
-<dt><b>-q</b> <i>N</i>, <b>--quality=</b><i>N</i>
+<dt><b>--quality=</b><i>N</i>, <b>-q</b> <i>N</i>
 
 <dd>Set quality of compression to <i>N</i>.  Quality is 1 (worst) to
 100 (best); default is 20.
 
-<dt><b>-v</b>, <b>--version</b>
+<dt><b>--version</b>, <b>-v</b>
 
 <dd>Print <b>pnmtofiasco</b> version number, then exit.
 
-<dt><b>-V</b> <i>N</i>, <b>--verbose </b><i>N</i>
+<dt><b>--verbose </b><i>N</i>, <b>-V</b> <i>N</i>
 
 <dd>Set level of verbosity to <i>N</i>.  Level is 0 (no output at
 all), 1 (show progress meter), or 2 (show detailed compression
 statistics); default is 1.
 
-<dt><b>-B</b> <i>N</i>, <b>--progress-meter </b><i>N</i>
+<dt><b>--progress-meter </b><i>N</i>, <b>-B</b> <i>N</i>
 
 <dd>Set type of progress-meter to <i>N</i>.  The following types are
 available; default is 1:
@@ -102,7 +102,7 @@ available; default is 1:
 
 </dl>
 
-<dt><b>-f</b> <i>name</i>, <b>--config=</b><i>name</i>
+<dt><b>--config=</b><i>name</i>, <b>-f</b> <i>name</i>
 
 <dd>Load parameter file <i>name </i> to initialize the options of
 <b>pnmtofiasco</b>.  See file <b>system.fiascorc</b> for an example of
@@ -116,11 +116,11 @@ following methods (in the specified order):
 <li>--config=<i>name</i>
 </ol>
 
-<dt><b>-h</b>, <b>--info</b>
+<dt><b>--info</b>, <b>-h</b>
 
 <dd>Print brief help, then exit.
 
-<dt><b>-H</b>, <b>--help</b>
+<dt><b>--help</b>, <b>-H</b>
 
 <dd>Print detailed help, then exit.
 
@@ -129,7 +129,7 @@ following methods (in the specified order):
 <h3 id="advancedopts">Options for Advanced Users</h3>
 
 <dl>
-<dt><b>-b</b> <i>name</i>, <b>--basis-name=</b><i>name</i>
+<dt><b>--basis-name=</b><i>name</i>, <b>-b</b> <i>name</i>
 
 <dd>Preload compression basis <i>name</i> into FIASCO.  The basis
 <i>name</i> provides the initial compression dictionary.  Either use
@@ -137,14 +137,17 @@ one of the files "small.fco", "medium.fco", or
 "large.fco" that come with <b>pnmtofiasco </b> or create a
 new ASCII basis file.
 
-<dt><b>-z</b> <i>N</i>, <b>--optimize=</b><i>N</i> 
+<dt><b>--optimize=</b><i>N</i>, <b>-z</b> <i>N</i>
 
 <dd>Set optimization level to <i>N</i>.  Level is 0 (fastest) to 3
-(slowest); default is 1.  Be warned, the encoding time dramatically
-increased when <i>N</i>=<b>2</b> or <i>N</i>=<b>3</b> while the
-compression performance only slightly improves.
+(slowest).
 
-<dt><b>-P</b>, <b>--prediction</b>
+Be warned: The encoding time dramatically increases when <i>N</i>=<b>2</b>
+or <i>N</i>=<b>3</b> while the compression performance improves only slightly.
+
+<p>The default is 0.
+  
+<dt><b>--prediction</b>, <b>-P</b>
 
 <dd>Use additional predictive coding.  If this optimization is enabled
 then the image is compressed in two steps.  In the first step, a coarse
@@ -152,30 +155,29 @@ approximation of the image is computed using large unichrome
 blocks.  Finally, the delta image is computed and the prediction error
 is approximated using the standard FIASCO algorithm.
 
-<dt><b>-D</b> <i>N</i>, <b>--dictionary-size=</b><i>N</i>
+<dt><b>--dictionary-size=</b><i>N</i>, <b>-D</b> <i>N</i>
 
 <dd>Set size of dictionary that is used when coding the luminance band
 to <i>N</i>; default is 10000, i.e., the dictionary is not restricted.
 
-<dt><b>-C</b> <i>N</i>, <b>--chroma-dictionary=</b><i>N</i>
+<dt><b>--chroma-dictionary=</b><i>N</i>, <b>-C</b> <i>N</i>
 
 <dd>Set size of dictionary that is used when coding chroma bands to
 <i>N</i>; default is 40.
 
-<dt><b>-Q</b> <i>N</i>, <b>--chroma-qfactor=</b><i>N</i>
+<dt><b>--chroma-qfactor=</b><i>N</i>, <b>-Q</b> <i>N</i>
 
 <dd>Reduce the quality of chroma band compression <i>N</i>-times with
 respect to the user defined quality <i>q</i> of the luminance band
 compression (<b>--quality</b>=<i>q</i>); default is 2.
 
-<dt><b>-t</b> <i>N</i>, <b>--tiling-exponent=</b><i>N</i>
+<dt><b>--tiling-exponent=</b><i>N</i>, <b>-t</b> <i>N</i>
 
 <dd>Subdivide the image into 2^<i>N</i> tiles prior coding; default is
 4, i.e. the image is subdivided into 16 tiles. The processing order of
 the individual tiles is defined by the option
-<b>--tiling-method=</b><i>name</i>.
 
-<dt><b>-T</b> <i>name</i>, <b>--tiling-method=</b><i>name</i>
+<dt><b>--tiling-method=</b><i>name</i>, <b>-T</b> <i>name</i>
 
 <dd>Order the individual image tiles (the image is subdivided into;
 see option <b>--tiling-exponent=</b><i>N</i>) by method <i>name</i>;
@@ -215,16 +217,17 @@ default is <b>desc-variance</b>.
 
 </dl>
 
+
 <h3 id="videoopts">Additional Options for Video Compression</h3>
 
 <dl>
-<dt><b>-s</b> <i>N</i>, <b>--smooth=</b><i>N</i>
+<dt><b>--smooth=</b><i>N</i>, <b>-s</b> <i>N</i>
 
 <dd>Smooth decompressed reference frames along the partitioning
 borders by the given amount <i>N</i>.  <i>N</i> is 0 (no smoothing) to
 100; default is 70.  This factor is stored in the FIASCO file.
 
-<dt><b>-m</b> <i>N</i>, <b>--min-level=</b><i>N</i>
+<dt><b>--min-level=</b><i>N</i>, <b>-m</b> <i>N</i>
 
 <dd>Start prediction (motion compensated prediction or additional
 prediction) on block level <i>N</i>; default is level 6.  I.e., motion
@@ -232,24 +235,24 @@ compensation is applied to all image blocks of at least 8x8 pixels
 (binary tree level <i>N</i>=6), 16x8 (<i>N</i>=7), 16x16 (<i>N</i>=8),
 etc.
 
-<dt><b>-M</b> <i>N</i>, <b>--max-level=</b><i>N</i>
+<dt><b>--max-level=</b><i>N</i>, <b>-M</b> <i>N</i>
 
 <dd>Stop prediction (motion compensated prediction or additional
 prediction) on block level <i>N</i>; default is level 10.  I.e.,
 motion compensation is applied to all image blocks of at most 16x16
 pixels (<i>N</i>=8), 32x16 (<i>N</i>=9), 32x32 (<i>N</i>=10), etc.
 
-<dt><b>-2</b>, <b>--half-pixel</b>
+<dt><b>--half-pixel</b>, <b>-2</b>
 
 <dd>Use half pixel precise motion compensation.
 
-<dt><b>-F</b> <i>N</i>, <b>--fps=</b><i>N</i>
+<dt><b>--fps=</b><i>N</i>, <b>-F</b> <i>N</i>
 
 <dd>Set number of frames per second to <i>N</i>.  This value is stored
 in the FIASCO output file and is used in the decoder <a
 href="fiascotopnm.html">fiascotopnm</a> to control the framerate.
 
-<dt><b>-p</b> <i>type</i>, <b>--pattern=</b><i>type</i>
+<dt><b>--pattern=</b><i>type</i>, <b>-p</b> <i>type</i>
 
 <dd>Defines the type of inter frame compression which should be
 applied to individual frames of a video stream.  <i>type</i> is a

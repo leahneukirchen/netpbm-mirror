@@ -23,21 +23,31 @@ supply the transparency as a separate pseudo-PGM image and use the
 image that has the transparency integrated into it, and there is no
 <b>-alpha</b> option.
 
-<p><b>ppmtogif</b> still exists as a separate program for backward 
-compatibility, but it runs <b>pamtogif</b> to do the essential work.
-The compatibility <b>ppmtogif</b> interprets an <b>-alpha</b> option
-by reading the transparency image and combining it with the input
-image, then feeding <b>pamtogif</b> the combined image it expects.
-Other than that, the compatibility <b>ppmtogif</b> just passes input and
-options directly to <b>pamtogif</b>.
+<p>Another more obscure way <b>pamtogif</b> is not backward compatible is
+  the <b>-map</b> option.  You use this option to specify what colors you want
+  in the GIF image, because a GIF image can have at most 256 colors and your
+  input image might have more than that.  In <b>pamtogif</b>, the map image
+  must be the same depth as the input image, but in <b>ppmtogif</b> it need
+  not.
+
+<p><b>ppmtogif</b> still exists as a separate program for backward
+compatibility, but it runs <b>pamtogif</b> to do the essential work.  The
+compatibility <b>ppmtogif</b> interprets an <b>-alpha</b> option by reading
+the transparency image and combining it with the input image, then feeding
+<b>pamtogif</b> the combined image it expects.  If you use the <b>-map</b>
+option, the compatibility <b>ppmtogif</b> also uses <b>pnmremap</b> on your
+input to make it the same depth as your map file.  Other than that, the
+compatibility <b>ppmtogif</b> just passes input and options directly to
+<b>pamtogif</b>.
 
 <p>You should not make any new use of <b>ppmtogif</b> and if you modify an
 existing use, you should upgrade to <b>pamtogif</b>.  But note that if you
 write a program that might have to be used with old Netpbm, <b>ppmtogif</b> is
 the only way to do that.
 
-<p>Unless you use the <b>-alpha</b> option, you can simply change the name
-of the program.  If you use <b>-alpha</b>, here is how to upgrade:
+<p>Unless you use the <b>-alpha</b> or <b>-map</b> option, you can simply
+  change the name of the program.  If you use <b>-alpha</b>, here is how to
+  upgrade:
 
 <pre>
 <kbd>
