@@ -257,9 +257,9 @@ computeOutputFilenameFormat(int           const format,
                             const char ** const filenameFormatP) {
 
     unsigned int const digitCtVert  =
-        numberwidthSpec ? numberwidth : digitCt(nHorizSlice);
+        numberwidthSpec ? numberwidth : digitCt(nHorizSlice-1);
     unsigned int const digitCtHoriz =
-        numberwidthSpec ? numberwidth : digitCt(nVertSlice);
+        numberwidthSpec ? numberwidth : digitCt(nVertSlice-1);
 
     const char * filenameSuffix;
 
