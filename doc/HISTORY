@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.04.30 BJH  Release 11.02.16
+
+              pamdice: fix using more digits than necessary in output file
+              names -- width was based on one more slice than was actually
+              generated.  Broken since Netpbm 10.29 (August 2005).
+
 25.04.14 BJH  Release 11.02.15
 
               pnmtofiasco: fix bug: infinite loop with multiple tiles.
