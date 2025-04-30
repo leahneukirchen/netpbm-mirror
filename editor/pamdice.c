@@ -257,11 +257,13 @@ computeOutputFilenameFormat(int           const format,
                             const char ** const filenameFormatP) {
 
     unsigned int const digitCtVert  =
-        numberwidthSpec ? numberwidth : digitCt(nHorizSlice);
+        numberwidthSpec ? numberwidth : digitCt(nHorizSlice-1);
     unsigned int const digitCtHoriz =
-        numberwidthSpec ? numberwidth : digitCt(nVertSlice);
+        numberwidthSpec ? numberwidth : digitCt(nVertSlice-1);
 
     const char * filenameSuffix;
+
+    assert(nHorizSlice > 0); assert(nVertSlice > 0);
 
     switch(PAM_FORMAT_TYPE(format)) {
     case PPM_TYPE: filenameSuffix = "ppm"; break;
@@ -671,6 +673,8 @@ main(int argc, const char ** argv) {
     computeSliceGeometry(cmdline, inpam, !!cmdline.verbose,
                          &horizSliceCt, &sliceHeight, &bottomSliceHeight,
                          &vertSliceCt, &sliceWidth, &rightSliceWidth);
+
+    assert(horizSliceCt > 0); assert(vertSliceCt > 0);
 
     if (cmdline.indexfileSpec)
         writeIndexFile(cmdline.indexfile, horizSliceCt, vertSliceCt);

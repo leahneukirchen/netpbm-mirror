@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.11.00
 
+              pamdice: fix using more digits than necessary in output file
+              names -- width was based on one more slice than was actually
+              generated.  Broken since Netpbm 10.29 (August 2005).
+
               pnmquantall: fix arbitrary shell command execution with input
               file names or color count that contain shell metacharacters.
               Always present ('pnmquantall' has existed, aka 'ppmquantall',
@@ -22,7 +26,8 @@ not yet  BJH  Release 11.11.00
               9.6, July 2000).
 
               pnmtofiasco: fix bug: infinite loop with multiple tiles.
-              Always broken (program was new in Netpbm 96., July 2000).
+              Always broken (program was new in Netpbm 96., July 2000),
+              but made functional by bug fix in 11.10 (March 2025).
 
               pnmtofiasco: fix bug: does wrong level of optimization
 
