@@ -45,8 +45,14 @@ pamdice -height=8 -width=7 -outstem=stem -listfile=- -dry-run testgrid.pbm
 # Test 5.
 echo "Test 5."
 
-pbmmake -g 99 100 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | head -n 1
-pbmmake -g 100 99 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | head -n 1 
+pbmmake -g 10 10 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+    head -n 1
+pbmmake -g 11 11 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+    head -n 1 
+pbmmake -g 100 101 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+    head -n 1
+pbmmake -g 101 100 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+    head -n 1 
 pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem \
   -listfile=- -dry-run | head -n 1
 pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem -numberwidth=3 \
