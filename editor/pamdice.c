@@ -43,6 +43,7 @@ struct CmdlineInfo {
 };
 
 
+
 static void
 parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
@@ -384,6 +385,7 @@ sliceRow(tuple *      const inputRow,
 }
 
 
+
 /*----------------------------------------------------------------------------
    The input reader.  This just reads the input image row by row, except
    that it lets us back up up to a predefined amount (the window size).
@@ -393,10 +395,11 @@ sliceRow(tuple *      const inputRow,
 -----------------------------------------------------------------------------*/
 
 struct inputWindow {
-    unsigned int windowSize;
-    unsigned int firstRowInWindow;
-    struct pam   pam;
-    tuple **     rows;
+    unsigned int     windowSize;
+    unsigned int     firstRowInWindow;
+    struct pam       pam;
+    tuple **         rows;
+    unsigned char ** bitrows;
 };
 
 
@@ -553,6 +556,298 @@ writeTiles(const char * const outstem,
 
 
 
+static void
+writeVoverlap(const struct pam * const outpam,  /* array */
+              unsigned int       const vertSliceCt,
+              unsigned int       const voverlap,
+              unsigned char ***  const overlapRowBuff) {
+
+    unsigned int vertSlice;
+
+    for (vertSlice=0; vertSlice < vertSliceCt; ++vertSlice) {
+        unsigned int row;
+
+        for (row=0; row < voverlap; ++row)
+            pbm_writepbmrow_packed(outpam[vertSlice].file,
+                                   overlapRowBuff[vertSlice][row],
+                                   outpam[vertSlice].width, 0);
+    }
+}
+
+
+
+static void
+writepbmrowBitoffset(FILE *          const fileP,
+                     unsigned char * const packedBits,
+                     unsigned int    const cols,
+                     int             const format,
+                     unsigned int    const offset,
+                     unsigned char * const outbuf) {
+/*----------------------------------------------------------------------------
+   Like libnetpbm function pbm_writepbmrow_bitoffset() with two differences:
+
+   1. The contents of packedBits stays intact after the operation
+   2. Caller provides outbuf
+
+   Write to file *fileP the tail of the PBM row 'cols' columns wide in packed
+   bit buffer 'packedBits'.  Start at column 'offset' of the row.
+
+   Write it in PBM raw format.
+
+   Make any don't-care bits at the end of the row written zero.
+
+   Use 'outbuf' as a scratch buffer.  It is at least large enough to hold
+   the row, packed.
+-----------------------------------------------------------------------------*/
+    unsigned int    const rsh    = offset % 8;
+    unsigned int    const lsh    = (8 - rsh) % 8;
+    unsigned int    const csh    = cols % 8;
+    unsigned char * const window = &packedBits[offset/8];
+        /* Area of packed row buffer from which we take the image data.
+           Aligned to nearest byte boundary to the left, so the first few bits
+           might be irrelevant.
+
+           Also our work buffer, in which we shift bits and from which we
+           ultimately write the bits to the file.
+        */
+    unsigned int const colByteCnt = pbm_packed_bytes(cols);
+    unsigned int const last       = colByteCnt - 1;
+        /* Position within window of rightmost byte after shift */
+
+    bool         const carryover = (csh == 0 || rsh + csh > 8);
+        /* TRUE:  Input comes from colByteCnt bytes and one extra byte.
+           FALSE: Input comes from colByteCnt bytes.  For example:
+           TRUE:  xxxxxxii iiiiiiii iiiiiiii iiixxxxx  cols=21, offset=6
+           FALSE: xiiiiiii iiiiiiii iiiiiixx ________  cols=21, offset=1
+
+           We treat these differently for in the FALSE case the byte after
+           last (indicated by ________) may not exist.
+        */
+
+    if (rsh > 0) {
+        unsigned int const shiftBytes =  carryover ? colByteCnt : colByteCnt-1;
+
+        unsigned int i;
+
+        for (i = 0; i < shiftBytes; ++i)
+            outbuf[i] = window[i] << rsh | window[i+1] >> lsh;
+
+        if (!carryover)
+            outbuf[last] = window[last] << rsh;
+    }
+    else {
+        /* Copy region to outbuf */
+        unsigned int i;
+
+        for (i = 0; i < colByteCnt; ++i)
+            outbuf[i] = window[i];
+    }
+
+    if (csh > 0)
+        pbm_cleanrowend_packed(outbuf, cols);
+
+    pbm_writepbmrow_packed(fileP, outbuf, cols, 0);
+}
+
+
+
+static void
+sliceRowPbm(unsigned char *    const bitrow,
+            const struct pam * const outpam, /* array */
+            unsigned int       const nVertSlice,
+            unsigned int       const hOverlap,
+            unsigned char *    const outbuf) {
+/*----------------------------------------------------------------------------
+   Distribute the row bitrow[] across the 'nVertSlice' output files described
+   by outpam[].  Each outpam[x] tells how many columns of inputRow[] to take
+   and what their composition is.
+
+   'hOverlap', which is meaningful only when nVertSlice is greater than 1,
+   is the amount by which slices overlap each other.
+
+   Use 'outbuf' as a scratch buffer.  It is at least large enough to hold
+   the row, packed.
+-----------------------------------------------------------------------------*/
+    unsigned int const format = outpam[0].format;
+    unsigned int const sliceWidth = outpam[0].width;
+    unsigned int const stride =
+        nVertSlice > 1 ? sliceWidth - hOverlap : sliceWidth;
+    unsigned int vertSlice;
+    unsigned int offset;
+
+    for (vertSlice = 0, offset = 0;
+         vertSlice < nVertSlice;
+         offset += stride, ++vertSlice) {
+             writepbmrowBitoffset(outpam[vertSlice].file, bitrow,
+                                  outpam[vertSlice].width,
+                                  format, offset, outbuf);
+    }
+}
+
+
+
+static void
+sliceRowPbmSaveOverlap(unsigned char *    const bitrow,
+                       const struct pam * const outpam, /* array */
+                       unsigned int       const nVertSlice,
+                       unsigned int       const hOverlap,
+                       unsigned char ***  const outbuf,
+                       unsigned int       const vOverlapCt) {
+/*----------------------------------------------------------------------------
+   Distribute the row bitrow[] across the 'nVertSlice' output files described
+   by outpam[].  outpam[x] tells how many columns of bitrow[] to take for
+   vertical slice 'x' and what its composition is.
+
+   'hOverlap', which is meaningful only when nVertSlice is greater than 1,
+   is the amount by which slices overlap each other.
+
+   'outbuf' is a two-dimensional array of scratch buffers.
+-----------------------------------------------------------------------------*/
+    unsigned int const format = outpam[0].format;
+    unsigned int const sliceWidth = outpam[0].width;
+    unsigned int const stride =
+        nVertSlice > 1 ? sliceWidth - hOverlap : sliceWidth;
+    unsigned int vertSlice;
+    unsigned int offset;
+
+    for (vertSlice = 0, offset = 0;
+         vertSlice < nVertSlice;
+         offset += stride, ++vertSlice) {
+             writepbmrowBitoffset(outpam[vertSlice].file, bitrow,
+                                  outpam[vertSlice].width, format, offset,
+                                  outbuf[vertSlice][vOverlapCt]);
+    }
+}
+
+
+
+static unsigned char ***
+newOverlapRowBuffArray(unsigned int const vertSliceCt,
+                       unsigned int const sliceWidth,
+                       unsigned int const voverlap) {
+
+    unsigned char *** retval;
+
+    MALLOCARRAY(retval, vertSliceCt);
+
+    if (!retval)
+        pm_error("Failed to allocate member for %u vertical slices",
+                 vertSliceCt);
+    else {
+        unsigned int vertSlice;
+
+        for (vertSlice = 0; vertSlice < vertSliceCt; ++vertSlice) {
+            retval[vertSlice] = pbm_allocarray_packed(sliceWidth, voverlap);
+        }
+    }
+
+    return retval;
+}
+
+
+
+static void
+writeTilesPbm(const char * const outstem,
+              unsigned int const hoverlap,
+              unsigned int const voverlap,
+              FILE       * const ifP,
+              struct pam   const inpam,
+              unsigned int const sliceWidth,
+              unsigned int const rightSliceWidth,
+              unsigned int const sliceHeight,
+              unsigned int const bottomSliceHeight,
+              unsigned int const horizSliceCt,
+              unsigned int const vertSliceCt,
+              bool         const numberwidthSpec,
+              unsigned int const numberwidth,
+              FILE *       const listFP,
+              bool         const dryRun) {
+/*----------------------------------------------------------------------------
+  Same as 'writeTiles', but optimized for a PBM image (uses packed row
+  structures -- 8 columns per byte).
+
+  'sliceWidth' is the width of every vertical slide except the rightmost,
+   which is 'rightSliceWidth' (which is less than or equal to 'sliceWidth').
+-----------------------------------------------------------------------------*/
+    struct pam * outpam;
+        /* malloc'ed array.  outpam[x] is the pam structure that controls
+           the current horizontal slice of vertical slice x.
+        */
+
+    allocOutpam(vertSliceCt, &outpam);
+
+    if (!dryRun) {
+        unsigned int inrow, outrow;
+        unsigned int horizSlice;
+            /* Number of the current horizontal slice.  Slices are numbered
+               sequentially starting at 0.
+            */
+        unsigned char * inbitrow;
+        unsigned char * buffrow; /* output row buffer for single slice */
+        unsigned char *** overlapRowBuff;
+            /* array of output row buffers for overlapped slicing;
+               NULL if not overlapping.
+            */
+
+        inbitrow = pbm_allocrow_packed(inpam.width);
+        buffrow  = pbm_allocrow_packed(sliceWidth);
+
+        overlapRowBuff = voverlap > 0 ?
+            newOverlapRowBuffArray(vertSliceCt, sliceWidth, voverlap) :
+            NULL;
+
+        for (inrow = outrow = 0, horizSlice = 0;
+             inrow < inpam.height;
+             ++inrow) {
+
+            unsigned int const thisSliceHeight =
+                horizSlice < horizSliceCt-1 ? sliceHeight : bottomSliceHeight;
+            unsigned int const overlapTop = horizSlice < horizSliceCt-1 ?
+                sliceHeight - voverlap : sliceHeight;
+
+            if (outrow == 0) {
+                openOutStreams(inpam, outpam, horizSlice,
+                               horizSliceCt, vertSliceCt,
+                               thisSliceHeight, sliceWidth, rightSliceWidth,
+                               hoverlap, numberwidthSpec, numberwidth,
+                               outstem, listFP, dryRun);
+                if (voverlap > 0 && inrow > 0) {
+                    writeVoverlap(outpam, vertSliceCt, voverlap,
+                                  overlapRowBuff);
+                    outrow = 0 + voverlap;
+                }
+            }
+
+            pbm_readpbmrow_packed(inpam.file, inbitrow,
+                                  inpam.width, inpam.format);
+
+            if (voverlap == 0) {
+                sliceRowPbm(inbitrow, outpam, vertSliceCt, hoverlap, buffrow);
+            } else if (voverlap > 0 && outrow < overlapTop) {
+                sliceRowPbm(inbitrow, outpam, vertSliceCt, hoverlap, buffrow);
+            } else {
+                sliceRowPbmSaveOverlap(inbitrow, outpam, vertSliceCt, hoverlap,
+                                       overlapRowBuff, outrow - overlapTop);
+            }
+
+            ++outrow;
+
+            if (outrow == thisSliceHeight) {
+                closeOutFiles(outpam, vertSliceCt);
+                outrow = 0;
+                ++horizSlice;
+            }
+        }
+        free(inbitrow);
+        free(buffrow);
+        if (overlapRowBuff)
+            free(overlapRowBuff);
+    }
+    free(outpam);
+}
+
+
+
 static sample
 indexFileMaxval(unsigned int const horizSliceCt,
                 unsigned int const vertSliceCt) {
@@ -681,12 +976,25 @@ main(int argc, const char ** argv) {
 
     listFP = cmdline.listfileSpec ? pm_openw(cmdline.listfile) : NULL;
 
-    writeTiles(cmdline.outstem, cmdline.hoverlap, cmdline.voverlap, ifP,
-               inpam, sliceWidth, rightSliceWidth,
-               sliceHeight, bottomSliceHeight, horizSliceCt, vertSliceCt,
-               cmdline.numberwidthSpec, cmdline.numberwidth, listFP,
-               !!cmdline.dry_run);
-
+    if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE && !cmdline.dry_run) {
+        writeTilesPbm(cmdline.outstem,
+                      cmdline.sliceVertically ? cmdline.hoverlap : 0,
+                      cmdline.sliceHorizontally ? cmdline.voverlap : 0, ifP,
+                      inpam,
+                      sliceWidth, rightSliceWidth,
+                      sliceHeight, bottomSliceHeight,
+                      horizSliceCt, vertSliceCt,
+                      cmdline.numberwidthSpec, cmdline.numberwidth, listFP,
+                      !!cmdline.dry_run);
+    } else {
+        writeTiles(cmdline.outstem, cmdline.hoverlap, cmdline.voverlap, ifP,
+                   inpam,
+                   sliceWidth, rightSliceWidth,
+                   sliceHeight, bottomSliceHeight,
+                   horizSliceCt, vertSliceCt,
+                   cmdline.numberwidthSpec, cmdline.numberwidth, listFP,
+                   !!cmdline.dry_run);
+    }
     if (listFP)
         pm_close(listFP);
 

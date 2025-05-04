@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.11.00
 
+              pamdice, pamundice: Add PBM fast path.
+
               pamdice: fix using more digits than necessary in output file
               names -- width was based on one more slice than was actually
               generated.  Broken since Netpbm 10.29 (August 2005).
