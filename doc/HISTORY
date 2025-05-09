@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.05.09 BJH  Release 11.10.04
+
+              pnmquantall: Fix vestigial temp file when program fails.
+              Introduced in Netpbm 11.10.01 (April 2025).
+
 25.04.30 BJH  Relaase 11.10.03
 
               pamdice: fix using more digits than necessary in output file
