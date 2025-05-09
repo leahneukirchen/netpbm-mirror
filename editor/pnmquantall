@@ -68,6 +68,13 @@ sub pm_message($) {
 }
 
 
+sub pm_error($) {
+
+    pm_message($_[0]);
+
+    exit(1);
+}
+
 
 sub doVersionHack($) {
     my ($argvR) = @_;
@@ -152,13 +159,18 @@ sub copyFile($$) {
 #-----------------------------------------------------------------------------
     for (my $eof = $FALSE; !$eof; ) {
         my $bytesReadCt = sysread($fromFd, my $fileContent, 4096);
-        if ($bytesReadCt == 0) {
+        if (!defined($bytesReadCt)) {
+            pm_error("Failed to read from file descriptor, errno = $ERRNO");
+        } elsif ($bytesReadCt == 0) {
             $eof = $TRUE;
         } else {
             for (my $totalWrittenCt = 0; $totalWrittenCt < $bytesReadCt; ) {
                 my $bytesWrittenCt = syswrite($toFd, $fileContent);
-                if ($bytesWrittenCt == 0) {
-                    die("Write to file descriptor failed");
+                if (!defined($bytesWrittenCt)) {
+                    pm_error("Failed to write to file descriptor, " .
+                             "errno=$ERRNO");
+                } elsif ($bytesWrittenCt == 0) {
+                    pm_error("Failed to Write to file descriptor");
                 }
                 $totalWrittenCt += $bytesWrittenCt;
             }
@@ -174,7 +186,7 @@ sub makeColorMap($$$$) {
     my $pamcatPid = open(my $pamcatOut, '-|', "pamcat",
                          "-topbottom", "-white", "-jleft",
                          @{$fileNamesR}) or
-        die("Failed to start 'pamcat' process");
+        pm_error("Failed to start 'pamcat' process");
 
     # Set Standard Output to the colormap file because the 'pnmcolormap'
     # process will write to Standard Output.  But save and later restore the
@@ -183,11 +195,11 @@ sub makeColorMap($$$$) {
     open(OLDOUT, ">&STDOUT");
     select(OLDOUT);  # avoids Perl bug where it says we never use OLDOUT
     open(STDOUT, '>', $colorMapFileName) or
-        die("Failed to open output file $colorMapFileName");
+        pm_error("Failed to open output file $colorMapFileName");
 
     my $pnmcolormapPid = open(my $pnmcolormapIn, '|-',
                               'pnmcolormap', $newColorCt) or
-        die("Failed to start 'pnmcolormap' process");
+        pm_error("Failed to start 'pnmcolormap' process");
 
     copyFile($pamcatOut, $pnmcolormapIn);
 
@@ -254,6 +266,10 @@ my $progError;
 doVersionHack(\@ARGV);
 
 parseArgs(\@ARGV, \my $ext, \my $newColorCt, \my @fileNames);
+
+# We write to pipes to child processes and don't want to die just because
+# the child process terminates early:
+$SIG{PIPE} = 'IGNORE';
 
 my ($colorMapFh, $colorMapFileName) = tempFile(".pnm");
 if (!defined($colorMapFh)) {
