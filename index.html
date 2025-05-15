@@ -153,10 +153,10 @@ As a rule, Netpbm programs take one input file and produce one output file,
 usually on Standard Output.  This is for flexibility, since you so often 
 have to pipeline many tools together.
 <p>
-Here is an example of a shell command to convert all your of PNG files
-(named *.png) to JPEG files named *.jpg:
+Here is an example of a shell command to convert all your PNG files (named
+*.png) to JPEG files named *.jpg:
 <pre>
-for i in *.png; do pngtopam $i | ppmtojpeg &gt;`basename $i .png`.jpg; done
+for i in *.png; do pngtopam $i | pnmtojpeg &gt;`basename $i .png`.jpg; done
 </pre>
 
 <p>
