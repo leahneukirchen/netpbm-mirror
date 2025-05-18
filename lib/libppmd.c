@@ -15,6 +15,7 @@
 ** Copyright (C) 1994 by John Walker, kelvin@fourmilab.ch
 */
 
+#include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -27,19 +28,19 @@
 
 
 
-struct penpos {
+struct Penpos {
     int x;
     int y;
 };
 
-struct rectangle {
+struct Rectangle {
     /* ((0,0),(0,0)) means empty. */
     /* 'lr' is guaranteed not to be left of or above 'ul' */
-    struct penpos ul;
-    struct penpos lr;
+    struct Penpos ul;
+    struct Penpos lr;
 };
 
-static struct rectangle const emptyRectangle = {
+static struct Rectangle const emptyRectangle = {
     {0, 0},
     {0, 0},
 };
@@ -97,13 +98,20 @@ vectorSum(ppmd_point const a,
 
 
 static long int const DDA_SCALE = 8192;
+    /* The precision with which we do drawing position calculations.  Each
+       pixel is divided into this many units, with the drawing position of a
+       pixel being the center of the pixel.  All our calculations are integer
+       calculations, using these subpixel units (we probably do this instead
+       of floating point for historical reasons -- floating point used to be
+       expensive).
+    */
 
 #define PPMD_MAXCOORD 32767
 /*
   Several factors govern the limit of x, y coordination values.
 
-  The limit must be representable as (signed) int for coordinates to
-  be carried in struct penpos (immediately above).
+  The limit must be representable as (signed) int for coordinates to be
+  represented by struct Penpos.
 
   The following calculation, done with long ints, must not overflow:
   cy0 = cy0 + (y1 - cy0) * (cols - 1 - cx0) / (x1 - cx0);
@@ -163,16 +171,16 @@ drawPoint(ppmd_drawprocp       drawproc,
 
 
 
-struct drawProcXY {
+struct DrawProcXY {
     ppmd_drawproc * drawProc;
     const void *    clientData;
 };
 
-static struct drawProcXY
+static struct DrawProcXY
 makeDrawProcXY(ppmd_drawproc * const drawProc,
                const void *    const clientData) {
 
-    struct drawProcXY retval;
+    struct DrawProcXY retval;
 
     retval.drawProc   = drawProc;
     retval.clientData = clientData;
@@ -192,7 +200,7 @@ drawProcPointXY(pixel **     const pixels,
                 ppmd_point   const p,
                 const void * const clientdata) {
 
-    const struct drawProcXY * const xyP = clientdata;
+    const struct DrawProcXY * const xyP = clientdata;
 
     if (xyP->drawProc == PPMD_NULLDRAWPROC)
         drawPoint(PPMD_NULLDRAWPROC, xyP->clientData,
@@ -237,14 +245,14 @@ ppmd_point_drawproc(pixel**     const pixels,
 
 
 static void
-findRectangleIntersection(struct rectangle   const rect1,
-                          struct rectangle   const rect2,
-                          struct rectangle * const intersectionP) {
+findRectangleIntersection(struct Rectangle   const rect1,
+                          struct Rectangle   const rect2,
+                          struct Rectangle * const intersectionP) {
 /*----------------------------------------------------------------------------
    Find the intersection between rectangles 'rect1' and 'rect2'.
    Return it as *intersectionP.
 -----------------------------------------------------------------------------*/
-    struct penpos tentativeUl, tentativeLr;
+    struct Penpos tentativeUl, tentativeLr;
 
     tentativeUl.x = MAX(rect1.ul.x, rect2.ul.x);
     tentativeUl.y = MAX(rect1.ul.y, rect2.ul.y);
@@ -275,9 +283,9 @@ ppmd_filledrectangle(pixel **      const pixels,
                      ppmd_drawproc       drawProc,
                      const void *  const clientdata) {
 
-    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
+    struct DrawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
 
-    struct rectangle image, request, intersection;
+    struct Rectangle image, request, intersection;
     unsigned int row;
 
     if (width < 0)
@@ -329,7 +337,7 @@ ppmd_setlinetype(int const type) {
 
 
 
-static bool lineclip = TRUE;
+static bool inLineClipMode = true;
 
 
 
@@ -338,9 +346,9 @@ ppmd_setlineclip(int const newSetting) {
 
     bool previousSetting;
 
-    previousSetting = lineclip;
+    previousSetting = inLineClipMode;
 
-    lineclip = newSetting;
+    inLineClipMode = newSetting;
 
     return previousSetting;
 }
@@ -369,19 +377,19 @@ clipEnd0(ppmd_point   const p0,
     bool noLine;
 
     c0 = p0;         /* initial value */
-    noLine = FALSE;  /* initial value */
+    noLine = false;  /* initial value */
 
     /* Clip End 0 of the line horizontally */
     if (c0.x < 0) {
         if (p1.x < 0)
-            noLine = TRUE;
+            noLine = true;
         else {
             c0.y = c0.y + (p1.y - c0.y) * (-c0.x) / (p1.x - c0.x);
             c0.x = 0;
         }
     } else if (c0.x >= cols) {
         if (p1.x >= cols)
-            noLine = TRUE;
+            noLine = true;
         else {
             c0.y = c0.y + (p1.y - c0.y) * (cols - 1 - c0.x) / (p1.x - c0.x);
             c0.x = cols - 1;
@@ -391,14 +399,14 @@ clipEnd0(ppmd_point   const p0,
     /* Clip End 0 of the line vertically */
     if (c0.y < 0) {
         if (p1.y < 0)
-            noLine = TRUE;
+            noLine = true;
         else {
             c0.x = c0.x + (p1.x - c0.x) * (-c0.y) / (p1.y - c0.y);
             c0.y = 0;
         }
     } else if (c0.y >= rows) {
         if (p1.y >= rows)
-            noLine = TRUE;
+            noLine = true;
         else {
             c0.x = c0.x + (p1.x - c0.x) * (rows - 1 - c0.y) / (p1.y - c0.y);
             c0.y = rows - 1;
@@ -411,7 +419,7 @@ clipEnd0(ppmd_point   const p0,
     */
     if (c0.x < 0 || c0.x >= cols) {
         assert(p1.x < 0 || p1.x >= cols);
-        noLine = TRUE;
+        noLine = true;
     }
     *c0P = c0;
     *noLineP = noLine;
@@ -578,7 +586,7 @@ drawSteepLine(ppmd_drawprocp       drawProc,
               ppmd_point     const p0,
               ppmd_point     const p1) {
 /*----------------------------------------------------------------------------
-   Draw a line that is more vertical than horizontal.
+   Draw a line from 'p0' to 'p1' that is more vertical than horizontal.
 
    Don't clip.
 
@@ -634,12 +642,12 @@ ppmd_linep(pixel **       const pixels,
     ppmd_validatePoint(p0);
     ppmd_validatePoint(p1);
 
-    if (lineclip) {
+    if (inLineClipMode) {
         clipLine(p0, p1, cols, rows, &c0, &c1, &noLine);
     } else {
         c0 = p0;
         c1 = p1;
-        noLine = FALSE;
+        noLine = false;
     }
 
     if (noLine) {
@@ -673,7 +681,7 @@ ppmd_line(pixel **      const pixels,
           ppmd_drawproc       drawProc,
           const void *  const clientData) {
 
-    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
+    struct DrawProcXY const xy = makeDrawProcXY(drawProc, clientData);
 
     ppmd_linep(pixels, cols, rows, maxval,
                makePoint(x0, y0), makePoint(x1, y1), drawProcPointXY, &xy);
@@ -753,7 +761,7 @@ ppmd_spline3(pixel **      const pixels,
              ppmd_drawproc       drawProc,
              const void *  const clientdata) {
 
-    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
+    struct DrawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
 
     ppmd_spline3p(pixels, cols, rows, maxval,
                   makePoint(x0, y0),
@@ -812,7 +820,7 @@ ppmd_polyspline(pixel **      const pixels,
 
     ppmd_point const p1 = makePoint(x1, y1);
     ppmd_point const p0 = makePoint(x0, y0);
-    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
+    struct DrawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
 
     ppmd_point p;
     unsigned int i;
@@ -880,7 +888,7 @@ ppmd_circlep(pixel **       const pixels,
   Initial point is 3 o'clock.
 -----------------------------------------------------------------------------*/
     if (radius >= DDA_SCALE)
-        pm_error("Error drawing circle.  Radius %d is too large.", radius);
+        pm_error("Error drawing circle.  Radius %u is too large.", radius);
 
     ppmd_validateCoord(center.x + radius);
     ppmd_validateCoord(center.y + radius);
@@ -898,15 +906,19 @@ ppmd_circlep(pixel **       const pixels,
         bool prevPointExists;
         ppmd_point prevPoint;
             /* Previous drawing position, assuming (0, 0) center*/
-        long sx, sy;  /* 'p', scaled by DDA_SCALE */
+        long sx, sy;
+            /* 'p', scaled by DDA_SCALE and translated so center is actual
+               upper left corner of image, rather than the center of the upper
+               left pixel
+            */
 
         p = p0;
 
         sx = p.x * DDA_SCALE + DDA_SCALE / 2;
         sy = p.y * DDA_SCALE + DDA_SCALE / 2;
 
-        onFirstPoint = TRUE;
-        prevPointExists = FALSE;
+        onFirstPoint    = true;
+        prevPointExists = false;
 
         while (onFirstPoint || !pointsEqual(p, p0)) {
             if (prevPointExists && pointsEqual(p, prevPoint)) {
@@ -914,17 +926,18 @@ ppmd_circlep(pixel **       const pixels,
                    than a point's worth).  Just keep moving.
                 */
             } else {
-                ppmd_point const imagePoint = vectorSum(center,p);
-                if (!lineclip || pointIsWithinBounds(imagePoint, cols, rows))
+                ppmd_point const imagePoint = vectorSum(center, p);
+                if (!inLineClipMode ||
+                    pointIsWithinBounds(imagePoint, cols, rows)) {
                     drawPoint(drawProc, clientData,
                               pixels, cols, rows, maxval, imagePoint);
-
+                }
                 prevPoint = p;
-                prevPointExists = TRUE;
+                prevPointExists = true;
             }
 
             if (!pointsEqual(p, p0))
-                onFirstPoint = FALSE;
+                onFirstPoint = false;
 
             sx += e * sy / DDA_SCALE;
             sy -= e * sx / DDA_SCALE;
@@ -949,7 +962,7 @@ ppmd_circle(pixel **      const pixels,
     if (radius < 0)
         pm_error("Error drawing circle.  Radius %d is negative.", radius);
     else {
-        struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
+        struct DrawProcXY const xy = makeDrawProcXY(drawProc, clientData);
 
         ppmd_circlep(pixels, cols, rows, maxval, makePoint(cx, cy), radius,
                      drawProcPointXY, &xy);
@@ -1273,7 +1286,7 @@ ppmd_fill(pixel **         const pixels,
         }
         if (i > 0) {
             if (cp->point.x == lx && cp->point.y == py) {
-                eq = TRUE;
+                eq = true;
                 if (cp->edge != edge && cp->edge == pedge) {
                     /* Swap . and .-1. */
                     coord t;
@@ -1283,7 +1296,7 @@ ppmd_fill(pixel **         const pixels,
                     fh->coords[i-1] = t;
                 }
             } else
-                eq = FALSE;
+                eq = false;
         }
         lx    = cp->point.x;
         py    = cp->point.y;
@@ -1298,7 +1311,7 @@ ppmd_fill(pixel **         const pixels,
             lx       = rx = cp->point.x;
             py       = cp->point.y;
             edge     = cp->edge;
-            leftside = TRUE;
+            leftside = true;
         } else {
             if (cp->point.y != py) {
                 /* Row changed.  Emit old span and start a new one. */
@@ -1308,7 +1321,7 @@ ppmd_fill(pixel **         const pixels,
                 lx       = rx = cp->point.x;
                 py       = cp->point.y;
                 edge     = cp->edge;
-                leftside = TRUE;
+                leftside = true;
             } else {
                 if (cp->edge == edge) {
                     /* Continuation of side. */
@@ -1317,14 +1330,14 @@ ppmd_fill(pixel **         const pixels,
                     /* Edge changed.  Is it a span? */
                     if (leftside) {
                         rx       = cp->point.x;
-                        leftside = FALSE;
+                        leftside = false;
                     } else {
                         /* Got a span to fill. */
                         ppmd_filledrectangle(
                             pixels, cols, rows, maxval, lx, py, rx - lx + 1,
                             1, drawProc, clientdata);
                         lx       = rx = cp->point.x;
-                        leftside = TRUE;
+                        leftside = true;
                     }
                     edge = cp->edge;
                 }
@@ -1637,7 +1650,7 @@ ppmd_text(pixel**       const pixels,
           ppmd_drawproc       drawProc,
           const void *  const clientData) {
 
-    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
+    struct DrawProcXY const xy = makeDrawProcXY(drawProc, clientData);
 
     ppmd_textp(pixels, cols, rows, maxval, makePoint(xpos, ypos),
                height, angle, sArg, drawProcPointXY, &xy);
