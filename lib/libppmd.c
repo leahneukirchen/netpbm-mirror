@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "netpbm/pm_config.h"
 #include "netpbm/pm_c_util.h"
@@ -887,61 +888,47 @@ ppmd_circlep(pixel **       const pixels,
 
   Initial point is 3 o'clock.
 -----------------------------------------------------------------------------*/
-    if (radius >= DDA_SCALE)
-        pm_error("Error drawing circle.  Radius %u is too large.", radius);
-
     ppmd_validateCoord(center.x + radius);
     ppmd_validateCoord(center.y + radius);
     ppmd_validateCoord(center.x - radius);
     ppmd_validateCoord(center.y - radius);
 
     if (radius > 0) {
-        long const e = DDA_SCALE / radius;
+        /* Trace the circle from 3 o'clock counterclockwise one full
+           rotation, 1/5 a pixel's width at a time (1/radius/5 radians).
 
-        ppmd_point const p0 = makePoint(radius, 0);  /* 3 o'clock */
-            /* The starting point around the circle, assuming (0, 0) center */
-        ppmd_point p;
-            /* Current drawing position in the circle, assuming (0,0) center */
-        bool onFirstPoint;
-        bool prevPointExists;
+           I don't know why it is 1/5; seems to me 1/2 ought to be enough, but
+           empirically, we find that anything greater than 1/5 makes an
+           asymmetrical circle, but 1/5 makes a nice symmetrical circle.
+        */
+        double theta;
+        bool onFirstPoint;  /* We're drawing the first point of the circle */
         ppmd_point prevPoint;
-            /* Previous drawing position, assuming (0, 0) center*/
-        long sx, sy;
-            /* 'p', scaled by DDA_SCALE and translated so center is actual
-               upper left corner of image, rather than the center of the upper
-               left pixel
+            /* Previous drawing position - defined only if 'onFirstPoint'
+               is false.
             */
 
-        p = p0;
+        for (theta = 0, onFirstPoint = true;
+             theta < 2*M_PI;
+             theta += 1.0/radius/5) {
 
-        sx = p.x * DDA_SCALE + DDA_SCALE / 2;
-        sy = p.y * DDA_SCALE + DDA_SCALE / 2;
+            ppmd_point const thisPoint =
+                makePoint(center.x + ROUND(radius * cos(theta)),
+                          center.y + ROUND(radius * sin(theta)));
 
-        onFirstPoint    = true;
-        prevPointExists = false;
-
-        while (onFirstPoint || !pointsEqual(p, p0)) {
-            if (prevPointExists && pointsEqual(p, prevPoint)) {
+            if (!onFirstPoint && pointsEqual(thisPoint, prevPoint)) {
                 /* We're on the same point we were on last time (we moved less
                    than a point's worth).  Just keep moving.
                 */
             } else {
-                ppmd_point const imagePoint = vectorSum(center, p);
                 if (!inLineClipMode ||
-                    pointIsWithinBounds(imagePoint, cols, rows)) {
+                    pointIsWithinBounds(thisPoint, cols, rows)) {
                     drawPoint(drawProc, clientData,
-                              pixels, cols, rows, maxval, imagePoint);
+                              pixels, cols, rows, maxval, thisPoint);
                 }
-                prevPoint = p;
-                prevPointExists = true;
-            }
-
-            if (!pointsEqual(p, p0))
+                prevPoint = thisPoint;
                 onFirstPoint = false;
-
-            sx += e * sy / DDA_SCALE;
-            sy -= e * sx / DDA_SCALE;
-            p = makePoint(sx / DDA_SCALE, sy / DDA_SCALE);
+            }
         }
     }
 }
