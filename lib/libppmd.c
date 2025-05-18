@@ -1333,6 +1333,10 @@ ppmd_fill(pixel **         const pixels,
             }
         }
     }
+    /* Emit final span */
+    ppmd_filledrectangle(
+        pixels, cols, rows, maxval, lx, py, rx - lx + 1, 1,
+        drawProc, clientdata);
 }
 
 

@@ -9,6 +9,10 @@ not yet  BJH  Release 11.11.00
               libnetpbm and 'ppmdraw' circle drawing functions: use floating
               point arithmetic to make smoother circle.
 
+              libnetpbm ppmd_fill and ppmdraw filled shapes: fix bug: final
+              span of filling omitted from output.  Always broken (ppmd_fill
+              was in primordial Netpbm).
+
               pamdice, pamundice: Add PBM fast path.
 
               pamdice: fix using more digits than necessary in output file
