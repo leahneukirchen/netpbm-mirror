@@ -156,8 +156,7 @@ drawPoint(ppmd_drawprocp       drawproc,
           pixval         const maxval,
           ppmd_point     const p) {
 /*----------------------------------------------------------------------------
-   Draw a single point, assuming that it is within the bounds of the
-   image.
+   Draw a single point, assuming that it is within the bounds of the image.
 -----------------------------------------------------------------------------*/
     if (drawproc == PPMD_NULLDRAWPROC) {
         const pixel * const pixelP = clientdata;
@@ -894,12 +893,15 @@ ppmd_circlep(pixel **       const pixels,
     ppmd_validateCoord(center.y - radius);
 
     if (radius > 0) {
-        /* Trace the circle from 3 o'clock counterclockwise one full
-           rotation, 1/5 a pixel's width at a time (1/radius/5 radians).
+        /* Trace the circle from 3 o'clock clockwise one full rotation, 1/5 a
+           pixel's width at a time (1/radius/5 radians).
 
            I don't know why it is 1/5; seems to me 1/2 ought to be enough, but
            empirically, we find that anything greater than 1/5 makes an
            asymmetrical circle, but 1/5 makes a nice symmetrical circle.
+
+           Note that Netpbm row numbers increase going down, unlike cartesian
+           coordinates, so the angle increases going clockwise.
         */
         double theta;
         bool onFirstPoint;  /* We're drawing the first point of the circle */
@@ -964,9 +966,9 @@ typedef struct
 {
     ppmd_point point;
     int edge;
-} coord;
+} Coord;
 
-typedef struct fillState {
+typedef struct FillState {
     int n;
         /* Number of elements in 'coords' */
     int size;
@@ -974,18 +976,18 @@ typedef struct fillState {
     int segstart;
     int ydir;
     int startydir;
-    coord * coords;
-} fillState;
+    Coord * coords;
+} FillState;
 
 typedef struct fillobj {
 
-    /* The only reason we have a struct fillState separate from
+    /* The only reason we have a struct FillState separate from
        struct fillobj is that the drawproc interface is defined to
-       have drawing not modify the fillobj, i.e. it passes
-       const fillobj * to the drawing program.
+       have drawing not modify the Fillobj, i.e. it passes
+       const Fillobj * to the drawing program.
     */
-    struct fillState * stateP;
-} fillobj;
+    struct FillState * stateP;
+} Fillobj;
 
 #define SOME 1000
 
@@ -994,8 +996,8 @@ static int oldclip;
 struct fillobj *
 ppmd_fill_create(void) {
 
-    fillobj * fillObjP;
-    struct fillState * stateP;
+    struct fillobj * fillObjP;
+    struct FillState * stateP;
 
     MALLOCVAR(fillObjP);
     if (fillObjP == NULL)
@@ -1050,8 +1052,8 @@ ppmd_fill_destroy(struct fillobj * const fillObjP) {
 
 
 static void
-addCoord(struct fillState *  const stateP,
-         ppmd_point const point) {
+addCoord(struct FillState *  const stateP,
+         ppmd_point          const point) {
 
     stateP->coords[stateP->n].point = point;
     stateP->coords[stateP->n].edge = stateP->curedge;
@@ -1062,7 +1064,7 @@ addCoord(struct fillState *  const stateP,
 
 
 static void
-startNewSegment(struct fillState * const stateP) {
+startNewSegment(struct FillState * const stateP) {
 /*----------------------------------------------------------------------------
    Close off the segment we're currently building and start a new one.
 -----------------------------------------------------------------------------*/
@@ -1074,10 +1076,10 @@ startNewSegment(struct fillState * const stateP) {
             */
             int const firstEdge = stateP->coords[stateP->segstart].edge;
             int const lastEdge  = stateP->coords[stateP->n - 1].edge;
-            coord * const segStartCoordP = &stateP->coords[stateP->segstart];
-            coord * const segEndCoordP   = &stateP->coords[stateP->n];
+            Coord * const segStartCoordP = &stateP->coords[stateP->segstart];
+            Coord * const segEndCoordP   = &stateP->coords[stateP->n];
 
-            coord * fcP;
+            Coord * fcP;
 
             for (fcP = segStartCoordP;
                  fcP < segEndCoordP && fcP->edge == firstEdge;
@@ -1095,7 +1097,7 @@ startNewSegment(struct fillState * const stateP) {
 
 
 static void
-continueSegment(struct fillState * const stateP,
+continueSegment(struct FillState * const stateP,
                 int                const dy) {
 /*----------------------------------------------------------------------------
    'dy' is how much the current point is above the previous one.
@@ -1136,8 +1138,8 @@ ppmd_fill_drawprocp(pixel **     const pixels,
                     ppmd_point   const p,
                     const void * const clientdata) {
 
-    const fillobj *    const fillObjP = clientdata;
-    struct fillState * const stateP   = fillObjP->stateP;
+    const Fillobj *    const fillObjP = clientdata;
+    struct FillState * const stateP   = fillObjP->stateP;
 
     /* Make room for two more coords, the max we might add. */
     if (stateP->n + 2 > stateP->size) {
@@ -1197,8 +1199,8 @@ static int
 yxCompare(const void * const c1Arg,
           const void * const c2Arg) {
 
-    const coord * const c1P = c1Arg;
-    const coord * const c2P = c2Arg;
+    const Coord * const c1P = c1Arg;
+    const Coord * const c2P = c2Arg;
 
     ppmd_point const p1 = c1P->point;
     ppmd_point const p2 = c2P->point;
@@ -1230,103 +1232,103 @@ ppmd_fill(pixel **         const pixels,
           ppmd_drawproc          drawProc,
           const void *     const clientdata) {
 
-    struct fillState * const fh = fillObjP->stateP;
+    struct FillState * const fhP = fillObjP->stateP;
 
     int pedge;
     int i, edge, lx, rx, py;
-    coord * cp;
     bool eq;
     bool leftside;
 
     /* Close off final segment. */
-    if (fh->n > 0 && fh->startydir != 0 && fh->ydir != 0) {
-        if (fh->startydir == fh->ydir) {
+    if (fhP->n > 0 && fhP->startydir != 0 && fhP->ydir != 0) {
+        if (fhP->startydir == fhP->ydir) {
             /* Oops, first edge and last edge are the same. */
-            coord * fcp;
-            const coord * const fcpLast = & (fh->coords[fh->n - 1]);
+            const Coord * const fcpLast = & (fhP->coords[fhP->n - 1]);
+
+            Coord * fcP;
             int lastedge, oldedge;
 
-            lastedge = fh->coords[fh->n - 1].edge;
-            fcp = &(fh->coords[fh->segstart]);
-            oldedge = fcp->edge;
-            for ( ; fcp<=fcpLast && fcp->edge == oldedge; ++fcp )
-                fcp->edge = lastedge;
+            lastedge = fhP->coords[fhP->n - 1].edge;
+            fcP = &(fhP->coords[fhP->segstart]);
+            oldedge = fcP->edge;
+            for ( ; fcP<=fcpLast && fcP->edge == oldedge; ++fcP)
+                fcP->edge = lastedge;
         }
     }
     /* Restore clipping now. */
     ppmd_setlineclip(oldclip);
 
     /* Sort the coords by Y, secondarily by X. */
-    qsort((char*) fh->coords, fh->n, sizeof(coord), yxCompare);
+    qsort((char*) fhP->coords, fhP->n, sizeof(Coord), yxCompare);
 
     /* Find equal coords with different edge numbers, and swap if necessary. */
     edge = -1;
-    for (i = 0; i < fh->n; ++i) {
-        cp = &fh->coords[i];
-        if (i > 1 && eq && cp->edge != edge && cp->edge == pedge) {
+    for (i = 0; i < fhP->n; ++i) {
+        Coord * const cP = &fhP->coords[i];
+        if (i > 1 && eq && cP->edge != edge && cP->edge == pedge) {
             /* Swap .-1 and .-2. */
-            coord t;
+            Coord t;
 
-            t = fh->coords[i-1];
-            fh->coords[i-1] = fh->coords[i-2];
-            fh->coords[i-2] = t;
+            t = fhP->coords[i-1];
+            fhP->coords[i-1] = fhP->coords[i-2];
+            fhP->coords[i-2] = t;
         }
         if (i > 0) {
-            if (cp->point.x == lx && cp->point.y == py) {
+            if (cP->point.x == lx && cP->point.y == py) {
                 eq = true;
-                if (cp->edge != edge && cp->edge == pedge) {
+                if (cP->edge != edge && cP->edge == pedge) {
                     /* Swap . and .-1. */
-                    coord t;
+                    Coord t;
 
-                    t = *cp;
-                    *cp = fh->coords[i-1];
-                    fh->coords[i-1] = t;
+                    t = *cP;
+                    *cP = fhP->coords[i-1];
+                    fhP->coords[i-1] = t;
                 }
             } else
                 eq = false;
         }
-        lx    = cp->point.x;
-        py    = cp->point.y;
+        lx    = cP->point.x;
+        py    = cP->point.y;
         pedge = edge;
-        edge  = cp->edge;
+        edge  = cP->edge;
     }
 
     /* Ok, now run through the coords filling spans. */
-    for (i = 0; i < fh->n; ++i) {
-        cp = &fh->coords[i];
+    for (i = 0; i < fhP->n; ++i) {
+        const Coord * const cP = &fhP->coords[i];
         if (i == 0) {
-            lx       = rx = cp->point.x;
-            py       = cp->point.y;
-            edge     = cp->edge;
+            lx       = rx = cP->point.x;
+            py       = cP->point.y;
+            edge     = cP->edge;
             leftside = true;
         } else {
-            if (cp->point.y != py) {
-                /* Row changed.  Emit old span and start a new one. */
+            if (cP->point.y != py) {
+                /* Different row.  Emit old span and start a new one. */
                 ppmd_filledrectangle(
                     pixels, cols, rows, maxval, lx, py, rx - lx + 1, 1,
                     drawProc, clientdata);
-                lx       = rx = cp->point.x;
-                py       = cp->point.y;
-                edge     = cp->edge;
+                lx       = rx = cP->point.x;
+                py       = cP->point.y;
+                edge     = cP->edge;
                 leftside = true;
             } else {
-                if (cp->edge == edge) {
+                if (cP->edge == edge) {
                     /* Continuation of side. */
-                    rx = cp->point.x;
+                    rx = cP->point.x;
                 } else {
-                    /* Edge changed.  Is it a span? */
+                    /* Different edge.  Is it a span? */
                     if (leftside) {
-                        rx       = cp->point.x;
+                        rx       = cP->point.x;
                         leftside = false;
                     } else {
                         /* Got a span to fill. */
                         ppmd_filledrectangle(
                             pixels, cols, rows, maxval, lx, py, rx - lx + 1,
                             1, drawProc, clientdata);
-                        lx       = rx = cp->point.x;
+                        lx       = rx = cP->point.x;
                         leftside = true;
                     }
-                    edge = cp->edge;
+                    edge = cP->edge;
                 }
             }
         }
