@@ -24,6 +24,7 @@ struct CmdlineInfo {
     */
     const char * inputFileName;  /* '-' if stdin */
     const char * outstem;
+    const char * outsuffix;    /* null means unspecified */
     unsigned int sliceVertically;    /* boolean */
     unsigned int sliceHorizontally;  /* boolean */
     unsigned int width;    /* Meaningless if !sliceVertically */
@@ -62,7 +63,7 @@ parseCommandLine(int argc, const char ** argv,
          */
     optStruct3 opt;
 
-    unsigned int outstemSpec, hoverlapSpec, voverlapSpec;
+    unsigned int outstemSpec, outsuffixSpec, hoverlapSpec, voverlapSpec;
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -78,6 +79,8 @@ parseCommandLine(int argc, const char ** argv,
             &voverlapSpec,                    0);
     OPTENT3(0, "outstem",     OPT_STRING,  &cmdlineP->outstem,
             &outstemSpec,                     0);
+    OPTENT3(0, "outsuffix",   OPT_STRING,  &cmdlineP->outsuffix,
+            &outsuffixSpec,                   0);
     OPTENT3(0, "numberwidth", OPT_UINT,    &cmdlineP->numberwidth,
             &cmdlineP->numberwidthSpec,         0);
     OPTENT3(0, "indexfile",   OPT_STRING,  &cmdlineP->indexfile,
@@ -135,6 +138,9 @@ parseCommandLine(int argc, const char ** argv,
     if (!outstemSpec)
         pm_error("You must specify the -outstem option to indicate where to "
                  "put the output images");
+
+    if (!outsuffixSpec)
+        cmdlineP->outsuffix = NULL;
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
@@ -249,9 +255,32 @@ digitCt(unsigned int const arg) {
 
 
 
+static const char *
+outputFilenameSuffix(const char *  const outsuffix,
+                     int           const format) {
+
+    const char * retval;
+
+    if (outsuffix)
+        retval = outsuffix;
+    else {
+        switch(PAM_FORMAT_TYPE(format)) {
+        case PPM_TYPE: retval = ".ppm"; break;
+        case PGM_TYPE: retval = ".pgm"; break;
+        case PBM_TYPE: retval = ".pbm"; break;
+        case PAM_TYPE: retval = ".pam"; break;
+        default:
+            pm_error("INTERNAL ERROR: impossible value for libnetpbm image "
+                     "fomat code: %d", format);
+        }
+    }
+    return retval;
+}
+
+
+
 static void
-computeOutputFilenameFormat(int           const format,
-                            unsigned int  const nHorizSlice,
+computeOutputFilenameFormat(unsigned int  const nHorizSlice,
                             unsigned int  const nVertSlice,
                             bool          const numberwidthSpec,
                             unsigned int  const numberwidth,
@@ -262,22 +291,10 @@ computeOutputFilenameFormat(int           const format,
     unsigned int const digitCtHoriz =
         numberwidthSpec ? numberwidth : digitCt(nVertSlice-1);
 
-    const char * filenameSuffix;
-
     assert(nHorizSlice > 0); assert(nVertSlice > 0);
 
-    switch(PAM_FORMAT_TYPE(format)) {
-    case PPM_TYPE: filenameSuffix = "ppm"; break;
-    case PGM_TYPE: filenameSuffix = "pgm"; break;
-    case PBM_TYPE: filenameSuffix = "pbm"; break;
-    case PAM_TYPE: filenameSuffix = "pam"; break;
-    default:
-        pm_error("INTERNAL ERROR: impossible value for libnetpbm image "
-                 "fomat code: %d", format);
-    }
-
-    pm_asprintf(filenameFormatP, "%%s_%%0%uu_%%0%uu.%s",
-                digitCtVert, digitCtHoriz, filenameSuffix);
+    pm_asprintf(filenameFormatP, "%%s_%%0%uu_%%0%uu%%s",
+                digitCtVert, digitCtHoriz);
 
     if (*filenameFormatP == NULL)
         pm_error("Unable to allocate memory for filename format string");
@@ -298,23 +315,34 @@ openOutStreams(struct pam   const inpam,
                bool         const numberwidthSpec,
                unsigned int const numberwidth,
                const char * const outstem,
+               const char * const outsuffix,
                FILE *       const listFP,
                bool         const dryRun) {
 /*----------------------------------------------------------------------------
    Open the output files for a single horizontal slice (there's one file
    for each vertical slice) and write the Netpbm headers to them.  Also
    compute the pam structures to control each.
+
+   'outstem' is the stem (prefix) for the output file names.
+
+   'outsuffix' is the suffix of the output file names (e.g. ".pnm"), or null
+   to mean the appropriate suffix for the output file format.
+
+   if 'numbserwidthSpec' is true, 'numberwidth' is how many characters to use
+   for the rank and file numbers in the output file name.  Otherwise, we
+   use the minimum number of characters that works for all the files.
 -----------------------------------------------------------------------------*/
     const char * filenameFormat;
     unsigned int vertSlice;
 
-    computeOutputFilenameFormat(inpam.format, nHorizSlice, nVertSlice,
+    computeOutputFilenameFormat(nHorizSlice, nVertSlice,
                                 numberwidthSpec, numberwidth, &filenameFormat);
 
     for (vertSlice = 0; vertSlice < nVertSlice; ++vertSlice) {
         const char * filename;
 
-        pm_asprintf(&filename, filenameFormat, outstem, horizSlice, vertSlice);
+        pm_asprintf(&filename, filenameFormat, outstem, horizSlice, vertSlice,
+                    outputFilenameSuffix(outsuffix, inpam.format));
 
         if (filename == NULL)
             pm_error("Unable to allocate memory for output filename");
@@ -492,6 +520,7 @@ allocOutpam(unsigned int  const nVertSlice,
 
 static void
 writeTiles(const char * const outstem,
+           const char * const outsuffix,
            unsigned int const hoverlap,
            unsigned int const voverlap,
            FILE       * const ifP,
@@ -533,8 +562,8 @@ writeTiles(const char * const outstem,
 
         openOutStreams(inpam, outpam, horizSlice, horizSliceCt, vertSliceCt,
                        thisSliceHeight, sliceWidth, rightSliceWidth, hoverlap,
-                       numberwidthSpec, numberwidth, outstem, listFP,
-                       dryRun);
+                       numberwidthSpec, numberwidth, outstem, outsuffix,
+                       listFP, dryRun);
 
         if (!dryRun) {
             unsigned int row;
@@ -748,6 +777,7 @@ newOverlapRowBuffArray(unsigned int const vertSliceCt,
 
 static void
 writeTilesPbm(const char * const outstem,
+              const char * const outsuffix,
               unsigned int const hoverlap,
               unsigned int const voverlap,
               FILE       * const ifP,
@@ -810,7 +840,7 @@ writeTilesPbm(const char * const outstem,
                                horizSliceCt, vertSliceCt,
                                thisSliceHeight, sliceWidth, rightSliceWidth,
                                hoverlap, numberwidthSpec, numberwidth,
-                               outstem, listFP, dryRun);
+                               outstem, outsuffix, listFP, dryRun);
                 if (voverlap > 0 && inrow > 0) {
                     writeVoverlap(outpam, vertSliceCt, voverlap,
                                   overlapRowBuff);
@@ -977,7 +1007,7 @@ main(int argc, const char ** argv) {
     listFP = cmdline.listfileSpec ? pm_openw(cmdline.listfile) : NULL;
 
     if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE && !cmdline.dry_run) {
-        writeTilesPbm(cmdline.outstem,
+        writeTilesPbm(cmdline.outstem, cmdline.outsuffix,
                       cmdline.sliceVertically ? cmdline.hoverlap : 0,
                       cmdline.sliceHorizontally ? cmdline.voverlap : 0, ifP,
                       inpam,
@@ -987,7 +1017,8 @@ main(int argc, const char ** argv) {
                       cmdline.numberwidthSpec, cmdline.numberwidth, listFP,
                       !!cmdline.dry_run);
     } else {
-        writeTiles(cmdline.outstem, cmdline.hoverlap, cmdline.voverlap, ifP,
+        writeTiles(cmdline.outstem, cmdline.outsuffix,
+                   cmdline.hoverlap, cmdline.voverlap, ifP,
                    inpam,
                    sliceWidth, rightSliceWidth,
                    sliceHeight, bottomSliceHeight,
