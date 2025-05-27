@@ -182,10 +182,29 @@ transpose(struct XformCore * const xformP) {
 
 
 static void
+invert(struct XformCore * const xformP) {
+/*----------------------------------------------------------------------------
+   Invert the current transformation (e.g. turn a clockwise rotation into a
+   counterclockwise rotation).
+-----------------------------------------------------------------------------*/
+    swap(&xformP->b, &xformP->c);
+}
+
+
+
+static void
 computeXformCore(unsigned int       const xformCount,
                  enum XformType     const XformType[],
+                 bool               const wantInverse,
                  struct XformCore * const xformP) {
+/*----------------------------------------------------------------------------
+   Determine the aggregate transformation that results from applying the list
+   of serial transformations xformType[] (of size 'xformCount').  Return that
+   in the form of an XformCore (a 2x2 matrix of -1, 0, and 1) as *xformP.
 
+   Iff 'wantinverse', return the inverse of the transformation described
+   above (the transformation that would undo that transformation).
+-----------------------------------------------------------------------------*/
     struct XformCore const nullTransform = {1, 0, 0, 1};
 
     unsigned int i;
@@ -205,6 +224,8 @@ computeXformCore(unsigned int       const xformCount,
             break;
         }
     }
+    if (wantInverse)
+        invert(xformP);
 }
 
 
@@ -297,7 +318,7 @@ parseCommandLine(int argc, char ** const argv,
 
     unsigned int option_def_index;
 
-    unsigned int lr, tb, xy, r90, r270, r180, null;
+    unsigned int lr, tb, xy, r90, r270, r180, null, inverse;
     unsigned int memsizeSpec, pagesizeSpec, xformSpec;
     unsigned int memsizeOpt;
     const char * xformOpt;
@@ -324,6 +345,7 @@ parseCommandLine(int argc, char ** const argv,
     OPTENT3(0, "rotate270", OPT_FLAG,    NULL, &r270,    0);
     OPTENT3(0, "cw",        OPT_FLAG,    NULL, &r270,    0);
     OPTENT3(0, "null",      OPT_FLAG,    NULL, &null,    0);
+    OPTENT3(0, "inverse",   OPT_FLAG,    NULL, &inverse, 0);
     OPTENT3(0, "verbose",   OPT_FLAG,    NULL, &cmdlineP->verbose,       0);
     OPTENT3(0, "memsize",   OPT_UINT,    &memsizeOpt,
             &memsizeSpec,       0);
@@ -372,7 +394,7 @@ parseCommandLine(int argc, char ** const argv,
         pm_error("You must specify an option such as -topbottom to indicate "
                  "what kind of flip you want.");
 
-    computeXformCore(xformCount, xformList, &cmdlineP->xform);
+    computeXformCore(xformCount, xformList, inverse, &cmdlineP->xform);
 
     interpretMemorySize(memsizeSpec, memsizeOpt, &cmdlineP->availableMemory);
 
