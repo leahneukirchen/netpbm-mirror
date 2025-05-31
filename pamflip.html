@@ -2,7 +2,7 @@
 <html><head><title>Pamflip User Manual</title></head>
 <body>
 <h1>pamflip</h1>
-Updated: 20 January 2008
+Updated: 27 May 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -23,6 +23,7 @@ pamflip - flip or rotate a PAM or PNM image
 <b>-null</b> |
 <b>-xform=</b><i>xform1</i><b>,</b><i>xform2</i>...
 }
+[<b>-inverse</b>]
 [<b>-memsize=</b><i>mebibytes</i>]
 [<b>-pagesize=</b><i>bytes</i>]
 [<i>pamfile</i>]
@@ -125,6 +126,15 @@ identically named options above.
 
 <p>This option was new in Netpbm 10.13 (December 2002).
 
+<dt><b>-inverse=</b>
+
+<dd>This causes the transform to be the inverse of whatever is specified by
+the other options.  This means if you run <b>pamflip</b> on an image, then run
+it again on the output using the same options plus <b>-inverse</b>, you get
+back the original image.
+
+<p>This option was new in Netpbm 11.11 (June 2025).
+  
 </dl>
 
 <h3 id="memory">Memory Management</h3>

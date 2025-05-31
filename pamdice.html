@@ -2,7 +2,7 @@
 <html><head><title>Pamdice User Manual</title></head>
 <body>
 <h1>pamdice</h1>
-Updated: 29 April 2025
+Updated: 27 May 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -37,6 +37,8 @@ and 8,000 pixels high.
 <b>pamdice</b>
 
 <b>-outstem=</b><i>filenamestem</i>
+
+[<b>-outsuffix=</b><i>filenamesuffix</i>]
 
 [<b>-width=</b><i>width</i>]
 
@@ -102,7 +104,7 @@ Common Options</a>), <b>pamdice</b> recognizes the following
 command line options:
 
 <dl compact>
-<dt><b>-outstem=</b>filenamestem
+  <dt><b>-outstem=</b><i>filenamestem</i>
 
 <dd>This option determines the names of the output files.  Each output
 file is named
@@ -121,6 +123,18 @@ all the output files.  The leftmost slice is numbered &quot;00&quot;; the next
 one is &quot;01&quot;, etc.  With <b>-numberwidth=3</b>, <i>x</i> is
 &quot;000&quot;, &quot;001&quot;, etc.
 
+<p>You can override the file type suffix with an <b>-outsuffix</b> option.
+  
+<dt><b>-outsuffix=</b><i>filenamesuffix</i>
+
+<dd>This specifies the suffix for the output file names.  <b>pamdice</b> does
+not add a period.  <p>Example: <kbd>-outsuffix=.pnm</kbd>
+
+<p>The default is an appropriate suffix for the image type,
+e.g. &quot;.ppm&quot;.
+
+<p>This option was new in Netpbm 11.11 (June 2025).
+  
 <dt><b>-numberwidth=</b><i>N</i>
 
 <dd>This option determines the width of the numbers in the output file
