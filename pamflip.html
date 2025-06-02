@@ -2,7 +2,7 @@
 <html><head><title>Pamflip User Manual</title></head>
 <body>
 <h1>pamflip</h1>
-Updated: 27 May 2025
+Updated: 01 June May 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -19,7 +19,7 @@ pamflip - flip or rotate a PAM or PNM image
 <b>-transpose</b> | <b>-xy</b> |
 <b>-rotate90</b> | <b>-r90</b> | <b>-cw</b> |
 <b>-rotate270</b> | <b>-r270</b> | <b>-ccw</b> |
-<b>-rotate180</b> | <b>-r180</b>
+<b>-rotate180</b> | <b>-r180</b> |
 <b>-null</b> |
 <b>-xform=</b><i>xform1</i><b>,</b><i>xform2</i>...
 }
@@ -56,6 +56,14 @@ back to JFIF.  But since JPEG compression is lossy, the resulting image
 would have less quality than the original.  <b>jpegtran</b>, on the other
 hand, can do this particular transformation directly on the compressed
 data without loss.
+
+<p>You can flip an image in chunks, by using <b>pamdice</b> and
+<b>pamundice</b> with <b>pamflip</b>.  This might be useful for
+improved parallelism or resource usage.  The index image feature of
+<b>pamdice</b> and <b>pamundice</b> is especially useful in this task, because
+you can use <b>pamflip</b> on the index image.  There is an example of
+flipping an image in chunks, using an index image, in the <b>pamundice</b>
+manual.
 
 
 <h2 id="options">OPTIONS</h2>
@@ -243,6 +251,8 @@ about its progress.
 <h2 id="seealso">SEE ALSO</h2>
 
 <a href="pnmrotate.html">pnmrotate</a>, 
+<a href="pamdice.html">pamdice</a>, 
+<a href="pamundice.html">pamundice</a>, 
 <a href="pnm.html">pnm</a>,
 <a href="pam.html">pam</a>,
 <b>jpegtran</b> manual
