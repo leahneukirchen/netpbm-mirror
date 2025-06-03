@@ -8,6 +8,8 @@ not yet  BJH  Release 11.11.00
 
               pamflip: add -inverse.
 
+              pamflip: add -reflect.
+
               pamdice: add -outsuffix.
 
               libnetpbm and 'ppmdraw' circle drawing functions: use floating

@@ -112,7 +112,9 @@ parseXformOpt(const char *     const xformOpt,
             else if (streq(token, ""))
             { /* ignore it */}
             else
-                pm_error("Invalid transform type in -xform option: '%s'",
+                pm_error("Invalid transform type in -xform option: '%s'.  "
+                         "We recognize only 'leftright', 'topbottom', and "
+                         "transpose",
                          token );
         } else
             eol = TRUE;
@@ -318,7 +320,7 @@ parseCommandLine(int argc, char ** const argv,
 
     unsigned int option_def_index;
 
-    unsigned int lr, tb, xy, r90, r270, r180, null, inverse;
+    unsigned int lr, tb, xy, reflect, r90, r270, r180, null, inverse;
     unsigned int memsizeSpec, pagesizeSpec, xformSpec;
     unsigned int memsizeOpt;
     const char * xformOpt;
@@ -336,6 +338,7 @@ parseCommandLine(int argc, char ** const argv,
     OPTENT3(0, "topbottom", OPT_FLAG,    NULL, &tb,      0);
     OPTENT3(0, "xy",        OPT_FLAG,    NULL, &xy,      0);
     OPTENT3(0, "transpose", OPT_FLAG,    NULL, &xy,      0);
+    OPTENT3(0, "reflect",   OPT_FLAG,    NULL, &reflect, 0);
     OPTENT3(0, "r90",       OPT_FLAG,    NULL, &r90,     0);
     OPTENT3(0, "rotate90",  OPT_FLAG,    NULL, &r90,     0);
     OPTENT3(0, "ccw",       OPT_FLAG,    NULL, &r90,     0);
@@ -361,9 +364,9 @@ parseCommandLine(int argc, char ** const argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (lr + tb + xy + r90 + r180 + r270 + null + xformSpec > 1)
+    if (lr + tb + xy + reflect + r90 + r180 + r270 + null + xformSpec > 1)
         pm_error("You may specify only one type of flip.");
-    if (lr + tb + xy + r90 + r180 + r270 + null == 1) {
+    if (lr + tb + xy + reflect + r90 + r180 + r270 + null == 1) {
         if (lr) {
             xformCount = 1;
             xformList[0] = LEFTRIGHT;
@@ -373,6 +376,11 @@ parseCommandLine(int argc, char ** const argv,
         } else if (xy) {
             xformCount = 1;
             xformList[0] = TRANSPOSE;
+        } else if (reflect) {
+            xformCount = 3;
+            xformList[0] = TRANSPOSE;
+            xformList[1] = LEFTRIGHT;
+            xformList[2] = TOPBOTTOM;
         } else if (r90) {
             xformCount = 2;
             xformList[0] = TRANSPOSE;
@@ -670,10 +678,6 @@ writeRaster(struct pam *    const pamP,
     for (outRow = 0; outRow < pamP->height; ++ outRow)
         pnm_writepamrow(pamP, tuples[outRow]);
 }
-
-
-
-
 
 
 
