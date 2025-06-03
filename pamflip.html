@@ -2,7 +2,7 @@
 <html><head><title>Pamflip User Manual</title></head>
 <body>
 <h1>pamflip</h1>
-Updated: 01 June May 2025
+Updated: 02 June 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -17,6 +17,7 @@ pamflip - flip or rotate a PAM or PNM image
 <b>-leftright</b> | <b>-lr</b> |
 <b>-topbottom</b> | <b>-tb</b> |
 <b>-transpose</b> | <b>-xy</b> |
+<b>-reflect</b> |
 <b>-rotate90</b> | <b>-r90</b> | <b>-cw</b> |
 <b>-rotate270</b> | <b>-r270</b> | <b>-ccw</b> |
 <b>-rotate180</b> | <b>-r180</b> |
@@ -97,9 +98,18 @@ understand and to implement).
 
 <dt><b>-transpose</b>
 <dt><b>-xy</b>
-<dd>Transpose horizontal for vertical.  I.e. make the pixel at (x,y) be
-at (y,x).
+<dd>Transpose rows for columns.  I.e. make the pixel at row X column Y be at
+row Y, column X.  (Note that these are not Cartesian coordinate X and Y;
+the Cartesian Y coordinate increases going up, whereas row numbers increase
+going down).
 
+<dt><b>-reflect</b>
+<dd>Reflect the image in (rotate it about) a diagonal line that slopes up and
+to the right.  This is complementary to <b>-transpose</b>, which effectively
+reflects the image in a line that slopes down and to the right.
+This option was new in Netpbm 11.11 (June 2025).  Before that, you can use
+<b>-xform</b> to achieve this flip.
+  
 <dt><b>-rotate90</b>
 <dt><b>-r90</b>
 <dt><b>-ccw</b>
@@ -161,17 +171,16 @@ a complete explanation in comments in the source code.
 <dl>
 <dt><b>-memsize=</b><i>mebibytes</i>
 
-<dd><i>mebibytes</i> is the size in mebibytes (aka megabytes) of
-memory available for <b>pamflip</b>.  It is the lesser of the amount
-of real or virtual memory available.
+<dd><i>mebibytes</i> is the size in mebibytes (aka megabytes) of memory
+available for <b>pamflip</b>.  It is the lesser of the amount of real or
+virtual memory available.
 
-<b>pamflip</b> does nothing special to allocate real memory or control
-its allocation -- it gets whatever it gets just by referencing
-virtual memory normally.  The real memory figure in question is the
-maximum amount that <b>pamflip</b> can be expected to end up with by
-doing that.  This is just about impossible for you to know, of course,
-but you can estimate.  The total real memory in your system should be
-a major factor in your estimate.
+<b>pamflip</b> does nothing special to allocate real memory or control its
+allocation -- it gets whatever it gets just by referencing virtual memory
+normally.  The real memory figure in question is the maximum amount
+that <b>pamflip</b> can be expected to end up with by doing that.  This is
+just about impossible for you to know, of course, but you can estimate.  The
+total real memory in your system should be a major factor in your estimate.
 
 <p>If <b>pamflip</b> cannot fit the entire image in the amount of
 memory you specify, it does the transformation in chunks, using temporary
