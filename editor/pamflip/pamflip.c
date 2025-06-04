@@ -649,16 +649,38 @@ transformPoint(int                const col,
 -----------------------------------------------------------------------------*/
     /* The transformation is:
 
-                 [ a b 0 ]
-       [ x y 1 ] [ c d 0 ] = [ x2 y2 1 ]
-                 [ e f 1 ]
+                   [ a b 0 ]
+         [ x y 1 ] [ c d 0 ] = [ x2 y2 1 ]
+                   [ e f 1 ]
 
-       Where (x, y) is the source pixel location and (x2, y2) is the
-       target pixel location.
+       where (x, y) is the source pixel location and (x2, y2) is the target
+       pixel location.  The 3x3 matrix is the transform matrix 'xform'.
 
-       Note that this is more of a logical computation than an arithmetic
-       one: a, b, c, and d are -1, 0, or 1.  e is the maximum column number
-       in the target image or 0; f is the maximum row number or 0.
+       'a', 'b', 'c', and 'd' are 0, 1, or -1.  'e' and 'f' are the height and
+       width of the image or 0.  The target row number is, depending on the
+       flip, the source row number, the source column number, the image height
+       minus the source row number, or the image width minus the source column
+       number.  The target column number is similar.
+
+       An easy way to break down the operation of the transform matrix is as
+       follows: The upper left square of the transform matrix is the transform
+       core matrix (type XformCore).  The simpler computation
+
+         [ x y ] [ a b ] = [ x2 y2 ]
+                 [ c d ]
+
+       effects the desired flip, but in a larger 4-quadrant space with
+       negative column and row numbers.  Flipping a 10-row image top-bottom,
+       for example, gives you a properly upside down image, but the row
+       numbers are 0 through -9 (imagine an image in the first Cartesian
+       quadrant flipping about the x axis).  To get this back into the
+       positive row number space, you have to translate it up 10 rows.
+
+       The additional 'e' and 'f' elements therefore add the height or
+       width to negative row and column numbers.
+
+       This is an affine transformation.  See
+       http://leptonica.org/affine.html .
     */
     *newcolP = xform.a * col + xform.c * row + xform.e * 1;
     *newrowP = xform.b * col + xform.d * row + xform.f * 1;
