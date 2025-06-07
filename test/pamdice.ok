@@ -34,13 +34,14 @@ stem_0_1.pbm
 stem_1_0.pbm
 stem_1_1.pbm
 Test 5.
-stem_0_0.pbm
-stem_00_00.pbm
+stem_0000_0000.pam
+stem_0000_0000.pnm
+stem_0_0.ppm
+stem_00_00.pgm
 stem_000_00.pbm
 stem_00_000.pbm
 stem_000_000.pbm
 stem_000_000.pbm
-stem_0000_0000.pbm
 stem_0000_0000.pbm
 Test 6.
 stdin: PAM RAW 14 16 2 255 grid_coord
@@ -82,3 +83,5 @@ Expected failure 29 (no output)
 Expected failure 30 (no output)
 Expected failure 31 (no output)
 Expected failure 32 (no output)
+Expected failure 33 (no output)
+Expected failure 34 (no output)

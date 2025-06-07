@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamdice
-# Also requires: pbmmake pamfile
+# Also requires: pbmmake pgmmake ppmmake pamfile pamtopam
 
 tmpdir=${tmpdir:-/tmp}
 fname_stem=${tmpdir}/pamdice_part
@@ -45,43 +45,69 @@ pamdice -height=8 -width=7 -outstem=stem -listfile=- -dry-run testgrid.pbm
 # Test 5.
 echo "Test 5."
 
-pbmmake -g 10 10 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+pbmmake -b   1   1 | pamtopam | \
+    pamdice -height=1 -width=1 -outstem=stem -numberwidth=4 \
+            -listfile=- -dry-run | \
     head -n 1
-pbmmake -g 11 11 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
-    head -n 1 
-pbmmake -g 100 101 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+pbmmake -b   1   1 | \
+    pamdice -height=1 -width=1 -outstem=stem -numberwidth=4 \
+            -outsuffix=".pnm" \
+            -listfile=- -dry-run | \
     head -n 1
-pbmmake -g 101 100 | pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+ppmmake rgb:00/77/AA 10 10 | \
+    pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+    head -n 1
+pgmmake 0.5 11 11 | \
+    pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+    head -n 1
+pbmmake -g 100 101 | \
+    pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
+    head -n 1
+pbmmake -g 101 100 | \
+    pamdice -height=1 -width=1 -outstem=stem -listfile=- -dry-run | \
     head -n 1 
-pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem \
-  -listfile=- -dry-run | head -n 1
-pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem -numberwidth=3 \
-  -listfile=- -dry-run | head -n 1
-pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem -numberwidth=4 \
-  -listfile=- -dry-run | head -n 1
-pbmmake -g   1   1 | pamdice -height=1 -width=1 -outstem=stem -numberwidth=4 \
-  -listfile=- -dry-run | head -n 1
+pbmmake -g 256 256 | \
+    pamdice -height=1 -width=1 -outstem=stem   -listfile=- -dry-run | \
+    head -n 1
+pbmmake -g 256 256 | \
+    pamdice -height=1 -width=1 -outstem=stem -numberwidth=3 \
+            -listfile=- -dry-run | \
+    head -n 1
+pbmmake -g 256 256 | \
+    pamdice -height=1 -width=1 -outstem=stem -numberwidth=4 \
+            -outsuffix=".pbm" \
+            -listfile=- -dry-run | \
+    head -n 1
 
 # Test 6.
 echo "Test 6."
 
-pamdice -height=1 -width=1 -outstem=/tmp/stem -indexfile=- -dry-run testgrid.pbm | \
+pamdice -height=1 -width=1 -outstem=/tmp/stem \
+        -indexfile=- -dry-run testgrid.pbm | \
     pamfile -machine
 
-pamdice -height=2 -width=2 -outstem=/tmp/stem -indexfile=- -dry-run testgrid.pbm | \
+pamdice -height=2 -width=2 -outstem=/tmp/stem \
+        -indexfile=- -dry-run testgrid.pbm | \
     pamfile -machine
 
-pamdice -height=1000 -width=10000 -outstem=/tmp/stem -indexfile=- -dry-run testgrid.pbm | \
+pamdice -height=1000 -width=10000 -outstem=/tmp/stem \
+        -indexfile=- -dry-run testgrid.pbm | \
     pamfile -machine
 
-pbmmake -g 256 256 | pamdice -height=1 -width=1 -outstem=stem -indexfile=- -dry-run | \
-    pamfile -machine	
+pbmmake -g 256 256 | \
+    pamdice -height=1 -width=1 -outstem=stem \
+            -indexfile=- -dry-run | \
+    pamfile -machine    
 
-pbmmake -g 257 256 | pamdice -height=1 -width=1 -outstem=stem -indexfile=- -dry-run | \
-    pamfile -machine	
+pbmmake -g 257 256 | \
+    pamdice -height=1 -width=1 -outstem=stem \
+            -indexfile=- -dry-run | \
+    pamfile -machine
 
-pbmmake -g 257 256 | pamdice -height=1 -width=1 -outstem=stem -indexfile=- -dry-run | \
-    pamfile -machine	
+pbmmake -g 257 256 | \
+    pamdice -height=1 -width=1 \
+            -outstem=stem -indexfile=- -dry-run | \
+    pamfile -machine    
 
 # Test Invalid.
 echo "Test Invalid"
@@ -132,6 +158,16 @@ invCmd "rm ${fname_stem}*"
 # No indexfile
 invCmd "pamdice ${common_opt} testgrid.pbm -indexfile"
 invCmd "rm ${fname_stem}*"
+
+# No outsuffix
+invCmd "pamdice ${common_opt} testgrid.pbm -outsuffix"
+invCmd "rm ${fname_stem}*"
+
+# The following specifies outsuffix as "testgrid.pbm"
+# pamdice will wait for input from stdin
+
+# pamdice ${common_opt} -outsuffix testgrid.pbm
+
 
 # -numberwidth=0
 invCmd "pamdice ${common_opt} -indexfile=${tmp}  -numberwidth=0 testgrid.pbm"

@@ -1,4 +1,4 @@
-Test 1.  Should print match twelve times
+Test 1.  Should print match twenty-five times
 match
 match
 match
@@ -11,7 +11,23 @@ match
 match
 match
 match
-Test 2.  Should print match fourteeen times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Test 2.  Should print match seventeen times
+match
+match
+match
 match
 match
 match

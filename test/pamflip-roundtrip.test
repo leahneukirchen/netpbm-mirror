@@ -13,33 +13,32 @@ dot_plain_ppm=${tmpdir}/dot.plain.ppm
 # define function
 cmptarget () { cmp -s - $1 && echo "match" || echo "no match";  }
 
-echo "Test 1.  Should print match fifteen times"
+echo "Test 1.  Should print match twenty-five times"
 
 ppmpat -tartan -mesh \
        -color=rgb:0/0/0,rgb:ff/00/ff,rgb:80/90/20 31 32 > ${tartan_ppm}
 
 pamflip -null ${tartan_ppm} | \
-  cmptarget ${tartan_ppm}
+    cmptarget ${tartan_ppm}
 
-pamflip -lr ${tartan_ppm} | pamflip -lr | \
-  cmptarget ${tartan_ppm}
+for flip in -null -lr -tb -rotate180 -xy -reflect
+  do
+  pamflip ${flip} ${tartan_ppm} | pamflip ${flip} | \
+      cmptarget ${tartan_ppm}    
+  pamflip ${flip} ${tartan_ppm} | pamflip ${flip} -inverse | \
+      cmptarget ${tartan_ppm}    
+  done
 
-pamflip -tb ${tartan_ppm} | pamflip -tb | \
-  cmptarget ${tartan_ppm}
+for flip in -rotate90 -rotate270 
+  do
+  pamflip ${flip} ${tartan_ppm} | pamflip ${flip} -inverse | \
+      cmptarget ${tartan_ppm}
+  done
 
-pamflip -r180 ${tartan_ppm} | pamflip -r180 | \
-  cmptarget ${tartan_ppm}
-
-pamflip -xy ${tartan_ppm} | pamflip -xy | \
-  cmptarget ${tartan_ppm}
-
-pamflip -r90 ${tartan_ppm} | pamflip -r90 | \
-  pamflip -r90 | pamflip -r90 | \
-  cmptarget ${tartan_ppm}
-
-pamflip -r270 ${tartan_ppm} | pamflip -r270 | \
-  pamflip -r270 | pamflip -r270 | \
-  cmptarget ${tartan_ppm}
+pamflip -cw  ${tartan_ppm} | pamflip -ccw | \
+  cmptarget ${tartan_ppm}    
+pamflip -ccw ${tartan_ppm} | pamflip -cw | \
+  cmptarget ${tartan_ppm}    
 
 pamflip -xform=leftright ${tartan_ppm} | pamflip -leftright | \
   cmptarget ${tartan_ppm}
@@ -74,21 +73,15 @@ rm ${tartan_ppm}
 
 pamseq 1 15 | pamtopnm -assume > ${test1_pgm}
 
-echo "Test 2.  Should print match nine times"
+echo "Test 2.  Should print match eleven times"
 pamflip -null ${test1_pgm} | \
-  cmptarget ${test1_pgm}
+    cmptarget ${test1_pgm}
 
-pamflip -lr ${test1_pgm} | pamflip -lr | \
-  cmptarget ${test1_pgm}
-
-pamflip -tb ${test1_pgm} | pamflip -tb | \
-  cmptarget ${test1_pgm}
-
-pamflip -r180 ${test1_pgm} | pamflip -r180 | \
-  cmptarget ${test1_pgm}
-
-pamflip -xy ${test1_pgm} | pamflip -xy | \
-  cmptarget ${test1_pgm}
+for flip in -null -lr -tb -rotate180 -xy -reflect
+  do
+  pamflip ${flip} ${test1_pgm} | pamflip ${flip} | \
+    cmptarget ${test1_pgm}    
+  done
 
 pamflip -r90 ${test1_pgm} | pamflip -r270 | \
   cmptarget ${test1_pgm}
@@ -107,26 +100,24 @@ pamflip -r270 ${test1_pgm} | pamflip -r270 | \
 echo "Should print 2729474106 27"
 cat ${test1_pgm} | cksum
 
+
 pamflip -r180 ${test1_pgm} > ${test2_pgm}
+
 rm ${test1_pgm}
+
 
 echo "Test 3."
 
-echo "Should print match nine times"
+echo "Should print match eleven times"
+
 pamflip -null ${test2_pgm} | \
   cmptarget ${test2_pgm}
 
-pamflip -lr ${test2_pgm} | pamflip -lr | \
-  cmptarget ${test2_pgm}
-
-pamflip -tb ${test2_pgm} | pamflip -tb | \
-  cmptarget ${test2_pgm}
-
-pamflip -r180 ${test2_pgm} | pamflip -r180 | \
-  cmptarget ${test2_pgm}
-
-pamflip -xy ${test2_pgm} | pamflip -xy | \
-  cmptarget ${test2_pgm}
+for flip in -null -lr -tb -rotate180 -xy -reflect
+  do
+  pamflip ${flip} ${test2_pgm} | pamflip ${flip} | \
+    cmptarget ${test2_pgm}    
+  done
 
 pamflip -r90 ${test2_pgm} | pamflip -r270 | \
   cmptarget ${test2_pgm}
@@ -142,6 +133,25 @@ pamflip -r270 ${test2_pgm} | pamflip -r270 | \
     pamflip -r270 | pamflip -r270 | \
   cmptarget ${test2_pgm}
 
+
+echo "Should print no match five times"
+
+pamflip -cw ${test2_pgm}  | pamflip -cw | \
+  cmptarget ${test2_pgm}
+
+pamflip -ccw ${test2_pgm} | pamflip -ccw | \
+  cmptarget ${test2_pgm}
+
+pamflip -xy ${test2_pgm} | pamflip -reflect | \
+  cmptarget ${test2_pgm}
+
+pamflip -r90 ${test2_pgm} | pamflip -r90 | pamflip -r90 | \
+  cmptarget ${test2_pgm}
+
+pamflip -r270 ${test2_pgm} | pamflip -r270 | pamflip -r270 | \
+  cmptarget ${test2_pgm}
+
+
 echo "Should print 1849343241 27"
 cat ${test2_pgm} | cksum
 
@@ -149,7 +159,7 @@ rm ${test2_pgm}
 
 
 echo "Test 4. Should print a single pixel PPM image maxval 65535 in"
-echo "plain (ascii) format; then match fifteen times"
+echo "plain (ascii) format; then match seventeen times"
 
 cat > ${dot_plain_ppm} <<EOF
 P3
@@ -174,6 +184,9 @@ pamflip -tb ${dot_ppm} | \
 pamflip -xy ${dot_ppm} | \
   cmptarget ${dot_ppm}
 
+pamflip -reflect ${dot_ppm} | \
+  cmptarget ${dot_ppm}
+
 pamflip -r90 ${dot_ppm} | \
   cmptarget ${dot_ppm}
 
@@ -196,6 +209,9 @@ pamflip -r180 ${dot_ppm} | pamflip -r180 | \
 pamflip -xy ${dot_ppm} | pamflip -xy | \
   cmptarget ${dot_ppm}
 
+pamflip -reflect ${dot_ppm} | pamflip -reflect | \
+  cmptarget ${dot_ppm}
+
 pamflip -r90 ${dot_ppm} | pamflip -r270 | \
   cmptarget ${dot_ppm}
 
@@ -215,28 +231,4 @@ cat ${dot_ppm} | cksum
 
 rm ${dot_ppm}
 
-exit
-
-echo "Test 5.  Should print 281226646 481 seven times"
-
-pamflip -null maze.pbm | \
-  cmptarget maze.pbm
-
-pamflip -lr maze.pbm | pamflip -lr | \
-  cmptarget maze.pbm
-
-pamflip -tb maze.pbm | pamflip -tb | \
-  cmptarget maze.pbm
-
-pamflip -r180 maze.pbm | pamflip -r180 | \
-  cmptarget maze.pbm
-
-pamflip -xy maze.pbm | pamflip -xy | \
-  cmptarget maze.pbm
-
-pamflip -r90 maze.pbm | pamflip -r90 | pamflip -r90 | pamflip -r90 | \
-  cmptarget maze.pbm
-
-pamflip -r270 maze.pbm | pamflip -r270 | pamflip -r270 | pamflip -r270 | \
-  cmptarget maze.pbm
 

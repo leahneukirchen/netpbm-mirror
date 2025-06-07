@@ -15,5 +15,10 @@ pamflip -cw maze.pbm | cksum
 echo "Test 2.  Should print 3217647947 465"
 pamflip -ccw maze.pbm | cksum
 
-echo "Test 2.  Should print 1086015439 465"
+echo "Test 3.  Should print 1086015439 465"
 pamflip -xy maze.pbm | cksum
+
+echo "Test 4.  Should print 1428891626 465"
+pamflip -reflect maze.pbm | cksum
+
+

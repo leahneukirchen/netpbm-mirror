@@ -1,4 +1,4 @@
-
+#! /bin/sh
 # This script tests: pamflip
 # Also requires: pamseq pamrestack
 
@@ -11,11 +11,13 @@ echo "Test 1 Should print 3736077292 1683 twice"
 cat ${test_pam} | cksum
 pamflip -null ${test_pam} | cksum
 
-echo "Test 2 Should print 2913170429 1683"
+echo "Test 2 Should print 2913170429 1683 twice"
 pamflip -leftright ${test_pam} | cksum
+pamflip -leftright -inverse ${test_pam} | cksum
 
-echo "Test 3 Should print 1308245970 1683"
+echo "Test 3 Should print 1308245970 1683 twice"
 pamflip -topbottom ${test_pam} | cksum
+pamflip -inverse -topbottom ${test_pam} | cksum
 
 echo "Test 4 Should print 1178735266 481 twice"
 pamflip -leftright maze.pbm | cksum
@@ -25,27 +27,34 @@ echo "Test 5 Should print 2339906255 481 twice"
 pamflip -topbottom maze.pbm | cksum
 pamflip -xform=topbottom maze.pbm | cksum
 
-echo "Test 6 Should print 754913146 1683"
+echo "Test 6 Should print 754913146 1683 twice"
 pamflip -rotate90  ${test_pam} | cksum
+pamflip -rotate270 -inverse  ${test_pam} | cksum
 
-echo "Test 7 Should print 1068062431 1683"
+echo "Test 7 Should print 1068062431 1683 twice"
 pamflip -rotate180 ${test_pam} | cksum
+pamflip -rotate180 -inverse ${test_pam} | cksum
 
-echo "Test 8 Should print 3022929723 1683"
+echo "Test 8 Should print 3022929723 1683 twice"
 pamflip -rotate270 ${test_pam} | cksum
+pamflip -rotate90 -inverse ${test_pam} | cksum
 
 echo "Test 9 Should print 2304281277 1683 twice"
 pamflip -transpose ${test_pam} | cksum
 pamflip -xform=transpose ${test_pam} | cksum
 
-echo "Test 10 Should print 3173217425 481 twice"
+echo "Test 10 Should print 1022887022 1683 twice"
+pamflip -reflect ${test_pam} | cksum
+pamflip -xform=leftright,transpose,leftright ${test_pam} | cksum
+
+echo "Test 11 Should print 3173217425 481 twice"
 pamflip -tb maze.pbm | pamflip -lr | cksum
 pamflip -xform=topbottom,leftright maze.pbm | cksum
 
-echo "Test 11 Should print 748061765 465 twice"
+echo "Test 12 Should print 748061765 465 three times"
 pamflip -tb maze.pbm | pamflip -xy | cksum
 pamflip -xform=topbottom,transpose maze.pbm | cksum
-
+pamflip -lr maze.pbm | pamflip -reflect | cksum
 
 rm ${test_pam}
 
@@ -56,6 +65,7 @@ echo "Test Invalid"
 # No flip operation specified
 invCmd "pamflip testgrid.pbm"
 invCmd "pamflip -xform testgrid.pbm"
+invCmd "pamflip -inverse testgrid.pbm"
 
 # Multiple operations
 invCmd "pamflip -lr -tb testgrid.pbm"

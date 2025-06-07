@@ -1,4 +1,14 @@
-Test 1.  Should print match fifteen times
+Test 1.  Should print match twenty-five times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
 match
 match
 match
@@ -16,7 +26,9 @@ match
 match
 Should print 1988581932 2989
 1988581932 2989
-Test 2.  Should print match nine times
+Test 2.  Should print match eleven times
+match
+match
 match
 match
 match
@@ -29,7 +41,7 @@ match
 Should print 2729474106 27
 2729474106 27
 Test 3.
-Should print match nine times
+Should print match eleven times
 match
 match
 match
@@ -39,14 +51,24 @@ match
 match
 match
 match
+match
+match
+Should print no match five times
+no match
+no match
+no match
+no match
+no match
 Should print 1849343241 27
 1849343241 27
 Test 4. Should print a single pixel PPM image maxval 65535 in
-plain (ascii) format; then match fifteen times
+plain (ascii) format; then match seventeen times
 P3
 1 1
 65535
 1 10000 65535 
+match
+match
 match
 match
 match

@@ -10,46 +10,56 @@ noise_pbm=${tmpdir}/noise.pbm
 cmptarget () { cmp -s - $1 && echo "match" || echo "no match";  }
 cmptargetN () { cmp -s - $2 && echo $1 ": match" || echo $1 ": no match";  }
 
-echo "Test 1.  Should print match twelve times"
+echo "Test 1.  Should print match twenty-five times"
 
 pamflip -null maze.pbm | cmptarget maze.pbm
-pamflip -lr maze.pbm | pamflip -lr | cmptarget maze.pbm
-pamflip -tb maze.pbm | pamflip -tb | cmptarget maze.pbm
-pamflip -r180 maze.pbm | pamflip -r180 | cmptarget maze.pbm
-pamflip -xy maze.pbm | pamflip -xy | cmptarget maze.pbm
+
+for flip in -null -lr -tb -r180 -xy -reflect
+  do
+  pamflip ${flip} maze.pbm | pamflip ${flip} | cmptarget maze.pbm    
+  pamflip ${flip} maze.pbm | pamflip ${flip} -inverse | cmptarget maze.pbm    
+  done
+
+for flip in -r90 -r270
+  do
+  pamflip ${flip} maze.pbm | pamflip ${flip} -inverse | cmptarget maze.pbm
+  done
+
+pamflip -cw  maze.pbm | pamflip -ccw | cmptarget maze.pbm
+pamflip -ccw maze.pbm | pamflip -cw  | cmptarget maze.pbm
+
 pamflip -r90 maze.pbm | pamflip -r90 | pamflip -r90 | pamflip -r90 | \
     cmptarget maze.pbm
 pamflip -r270 maze.pbm | pamflip -r270 | pamflip -r270 | pamflip -r270 | \
     cmptarget maze.pbm
 
-
-# the next five take complicated paths
+# the next six take complicated paths
 pamflip -cw maze.pbm | pamflip -tb | pamflip -ccw | pamflip -lr | cmptarget maze.pbm
 pamflip -lr maze.pbm | pamflip -cw | pamflip -tb | pamflip -ccw | cmptarget maze.pbm
 pamflip -tb maze.pbm | pamflip -xy | pamflip -lr | pamflip -xy | cmptarget maze.pbm
 pamflip -xy maze.pbm | pamflip -lr | pamflip -xy | pamflip -tb | cmptarget maze.pbm
+pamflip -tb maze.pbm | pamflip -reflect | \
+  pamflip -lr | pamflip -reflect | cmptarget maze.pbm
 pamflip -tb maze.pbm | pamflip -lr | pamflip -r180 | cmptarget maze.pbm
 
 
-echo "Test 2.  Should print match fourteeen times"
+echo "Test 2.  Should print match seventeen times"
 
 pbmmake -b 1 1 > ${dot_pbm}
 pamflip -null ${dot_pbm} | cmp -s - ${dot_pbm} && echo "match" || echo "no match"
 
-# the next six aren't round-trip
-pamflip -lr ${dot_pbm}   | cmptarget ${dot_pbm}
-pamflip -tb ${dot_pbm}   | cmptarget ${dot_pbm}
-pamflip -r90 ${dot_pbm}  | cmptarget ${dot_pbm}
-pamflip -r180 ${dot_pbm} | cmptarget ${dot_pbm}
-pamflip -r270 ${dot_pbm} | cmptarget ${dot_pbm}
-pamflip -xy ${dot_pbm}   | cmptarget ${dot_pbm}
+# the next seven aren't round-trip
+for flip in -lr -tb -r90 -r180 -r270 -xy -reflect
+  do
+  pamflip ${flip} ${dot_pbm} | cmptarget ${dot_pbm}    
+  done
 
-pamflip -lr ${dot_pbm} | pamflip -lr | cmptarget ${dot_pbm}
-pamflip -tb ${dot_pbm} | pamflip -tb | cmptarget ${dot_pbm}
-pamflip -r180 ${dot_pbm} | pamflip -r180 | cmptarget ${dot_pbm}
+for flip in -null -lr -tb -r180 -xy -reflect
+  do
+  pamflip ${flip} ${dot_pbm} | pamflip ${flip} | cmptarget ${dot_pbm}    
+  done
+
 pamflip -ccw ${dot_pbm} | pamflip -cw | cmptarget ${dot_pbm}
-pamflip -xy ${dot_pbm} | pamflip -xy | cmptarget ${dot_pbm}
-
 pamflip -r90 ${dot_pbm} | pamflip -r90 | pamflip -r90 | pamflip -r90 | \
     cmptarget ${dot_pbm}
 pamflip -r270 ${dot_pbm} | pamflip -r270 | pamflip -r270 | pamflip -r270 | \
