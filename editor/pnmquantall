@@ -61,6 +61,13 @@ use File::Copy;
 my $TRUE=1; my $FALSE = 0;
 
 
+sub pm_error($) {
+
+    pm_message($_[0]);
+
+    exit(1);
+}
+
 
 sub doVersionHack($) {
     my ($argvR) = @_;
@@ -144,13 +151,18 @@ sub copyFile($$) {
 #-----------------------------------------------------------------------------
     for (my $eof = $FALSE; !$eof; ) {
         my $bytesReadCt = sysread($fromFd, my $fileContent, 4096);
-        if ($bytesReadCt == 0) {
+        if (!defined($bytesReadCt)) {
+            pm_error("Failed to read from file descriptor, errno = $ERRNO");
+        } elsif ($bytesReadCt == 0) {
             $eof = $TRUE;
         } else {
             for (my $totalWrittenCt = 0; $totalWrittenCt < $bytesReadCt; ) {
                 my $bytesWrittenCt = syswrite($toFd, $fileContent);
-                if ($bytesWrittenCt == 0) {
-                    die("Write to file descriptor failed");
+                if (!defined($bytesWrittenCt)) {
+                    pm_error("Failed to write to file descriptor, " .
+                             "errno=$ERRNO");
+                } elsif ($bytesWrittenCt == 0) {
+                    pm_error("Failed to Write to file descriptor");
                 }
                 $totalWrittenCt += $bytesWrittenCt;
             }
@@ -246,6 +258,10 @@ my $progError;
 doVersionHack(\@ARGV);
 
 parseArgs(\@ARGV, \my $ext, \my $newColorCt, \my @fileNames);
+
+# We write to pipes to child processes and don't want to die just because
+# the child process terminates early:
+$SIG{PIPE} = 'IGNORE';
 
 my ($colorMapFh, $colorMapFileName) = tempFile(".pnm");
 if (!defined($colorMapFh)) {

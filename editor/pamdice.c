@@ -230,7 +230,7 @@ computeOutputFilenameFormat(int           const format,
     }
     
     pm_asprintf(filenameFormatP, "%%s_%%0%uu_%%0%uu.%s",
-                ndigits(nHorizSlice), ndigits(nVertSlice), filenameSuffix);
+                ndigits(nHorizSlice-1), ndigits(nVertSlice-1), filenameSuffix);
 
     if (*filenameFormatP == NULL)
         pm_error("Unable to allocate memory for filename format string");
