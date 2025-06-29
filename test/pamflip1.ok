@@ -1,9 +1,11 @@
 Test 1 Should print 3736077292 1683 twice
 3736077292 1683
 3736077292 1683
-Test 2 Should print 2913170429 1683
+Test 2 Should print 2913170429 1683 twice
 2913170429 1683
-Test 3 Should print 1308245970 1683
+2913170429 1683
+Test 3 Should print 1308245970 1683 twice
+1308245970 1683
 1308245970 1683
 Test 4 Should print 1178735266 481 twice
 1178735266 481
@@ -11,19 +13,26 @@ Test 4 Should print 1178735266 481 twice
 Test 5 Should print 2339906255 481 twice
 2339906255 481
 2339906255 481
-Test 6 Should print 754913146 1683
+Test 6 Should print 754913146 1683 twice
 754913146 1683
-Test 7 Should print 1068062431 1683
+754913146 1683
+Test 7 Should print 1068062431 1683 twice
 1068062431 1683
-Test 8 Should print 3022929723 1683
+1068062431 1683
+Test 8 Should print 3022929723 1683 twice
+3022929723 1683
 3022929723 1683
 Test 9 Should print 2304281277 1683 twice
 2304281277 1683
 2304281277 1683
-Test 10 Should print 3173217425 481 twice
+Test 10 Should print 1022887022 1683 twice
+1022887022 1683
+1022887022 1683
+Test 11 Should print 3173217425 481 twice
 3173217425 481
 3173217425 481
-Test 11 Should print 748061765 465 twice
+Test 12 Should print 748061765 465 three times
+748061765 465
 748061765 465
 748061765 465
 Test Invalid
@@ -41,3 +50,4 @@ Expected failure 11 (no output)
 Expected failure 12 (no output)
 Expected failure 13 (no output)
 Expected failure 14 (no output)
+Expected failure 15 (no output)

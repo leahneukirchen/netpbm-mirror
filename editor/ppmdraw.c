@@ -663,7 +663,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
             drawCommandP->verb = VERB_FILLEDRECTANGLE;
             if (commandTokens.count < 5)
                 pm_error("Not enough tokens for a 'filledrectangle' command.  "
-                         "Need %u.  Got %u", 4, commandTokens.count);
+                         "Need %u.  Got %u", 5, commandTokens.count);
             else {
                 struct filledrectangleArg * const argP =
                     &drawCommandP->u.filledrectangleArg;

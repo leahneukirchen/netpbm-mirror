@@ -2,13 +2,13 @@
 
    Pamtogif replaced Ppmtogif in Netpbm 10.37 (December 2006).
 
-   The only significant ways Pamtogif are not backward compatible with
-   old Ppmtogif are:
+   The only significant ways Pamtogif is not backward compatible with old
+   Ppmtogif are:
 
      - Pamtogif does not have a -alpha option.
 
-     - Pamtogif requires a user-specififed map file (-mapfile) to
-       match the input in depth.
+     - Pamtogif requires a user-specified map file (-mapfile) to match the
+       input in depth.
 */
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */

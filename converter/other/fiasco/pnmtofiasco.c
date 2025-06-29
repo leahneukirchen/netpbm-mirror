@@ -260,49 +260,59 @@ checkargs(int                         argc,
         }
 
         {
-            fiasco_tiling_e method = FIASCO_TILING_VARIANCE_DSC;
-            int    const e =
+            int const exponentOpt =
                 *(int *)parameter_value(params, "tiling-exponent");
-            const char * const m = parameter_value (params, "tiling-method");
+            const char * const opt = parameter_value (params, "tiling-method");
 
-            if (strcaseeq(m, "desc-variance"))
+            int succeeded;
+            fiasco_tiling_e method;
+
+            if (strcaseeq(opt, "desc-variance"))
                 method = FIASCO_TILING_VARIANCE_DSC;
-            else if (strcaseeq(m, "asc-variance"))
+            else if (strcaseeq(opt, "asc-variance"))
                 method = FIASCO_TILING_VARIANCE_ASC;
-            else if (strcaseeq(m, "asc-spiral"))
+            else if (strcaseeq(opt, "asc-spiral"))
                 method = FIASCO_TILING_SPIRAL_ASC;
-            else if (strcaseeq(m, "dsc-spiral"))
+            else if (strcaseeq(opt, "dsc-spiral"))
                 method = FIASCO_TILING_SPIRAL_DSC;
             else
-                pm_error("Invalid tiling method `%s' specified.", m);
+                pm_error("Invalid tiling method '%s' specified.", opt);
 
-            if (!fiasco_c_options_set_tiling(*options, method, MAX(0, e)))
+            succeeded =
+                fiasco_c_options_set_tiling(*options,
+                                            method, MAX(0, exponentOpt));
+            if (!succeeded)
                 pm_error("%s", fiasco_get_error_message ());
         }
 
         {
-            int M /*  = * (int *) parameter_value (params, "max-level") */;
-            int m /*  = * (int *) parameter_value (params, "min-level") */;
-            int N /*  = * (int *) parameter_value (params, "max-elements") */;
-            int o;
-            int D = * (int *) parameter_value(params, "dictionary-size");
+            int const dictionarySize =
+                *(int *)parameter_value(params, "dictionary-size");
             int const optimizeOpt =
                 *(int *)parameter_value(params, "optimize");
 
+            int maxBlockLevel;
+            int minBlockLevel;
+            int maxElements;
+            int optimizationLevel;
+            bool succeeded;
+
             if (optimizeOpt <= 0) {
-                o = 0;
-                M = 10;
-                m = 6;
-                N = 3;
+                optimizationLevel =  0;
+                maxBlockLevel     = 10;
+                minBlockLevel     =  6;
+                maxElements       =  3;
             } else {
-                o = optimizeOpt - 1;
-                M = 12;
-                m = 4;
-                N = 5;
+                optimizationLevel = optimizeOpt - 1;
+                maxBlockLevel     = 12;
+                minBlockLevel     =  4;
+                maxElements       =  5;
             }
 
-            if (!fiasco_c_options_set_optimizations(*options, m, M, N,
-                                                    MAX(0, D), o))
+            fiasco_c_options_set_optimizations(
+                *options, minBlockLevel, maxBlockLevel, maxElements,
+                MAX(0, dictionarySize), optimizationLevel, &succeeded);
+            if (!succeeded)
                 pm_error("%s", fiasco_get_error_message ());
         }
         {

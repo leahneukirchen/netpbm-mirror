@@ -17,6 +17,11 @@
    standard netpbm build.  But the source code is here in case someone
    is interested in it later.
 
+   Bryan added the 'squote' function and its use to generate the shell command
+   because without it, the shell command can do arbitrary things if the output
+   filename base argument contains shell metacharacters.  This is for form
+   only, since the program is not being built.  This bug was noticed by
+   someone scanning the entire source tree for bugs.  25.04.06.
 */
 
 /*
@@ -48,6 +53,7 @@
 #include <XPlxExt.h>
 
 #include "ppm.h"
+#include "mallocvar.h"
 
 usage (p)
 char *p;
@@ -60,6 +66,56 @@ char *p;
 
 
 static char buffer[300000];
+
+static const char *
+squote(const char * const arg) {
+/*----------------------------------------------------------------------------
+   'arg' escaped so that it forms a single safe token in a shell command.
+
+   E.g.
+
+      arg      return value
+      ---      ------------
+      foo      'foo'
+      don't    'don'\\''t'
+
+   Value is in newly malloc'ed storage.
+
+   Abort the program if we can't allocate storage.
+-----------------------------------------------------------------------------*/
+    size_t const maxEscapedLen = strlen(arg)*4 + 3;
+        /* 4 characters for every apostrophe, plus opening and closing
+           apostrophes, plus NUL terminator
+        */
+
+    char * buffer;
+    unsigned int inCursor;
+    unsigned int outCursor;
+
+    MALLOCARRAY_NOFAIL(buffer, maxEscapedLen);
+
+    outCursor = 0; /* initial value */
+
+    buffer[outCursor++] = '\'';  /* opening quote */
+
+    for (inCursor = 0; arg[inCursor]; ++inCursor) {
+        if (arg[inCursor] == '\'') {
+            buffer[outCursor++] = '\'';
+            buffer[outCursor++] = '\\';
+            buffer[outCursor++] = '\'';
+            buffer[outCursor++] = '\'';
+        } else {
+            buffer[outCursor++] = arg[inCursor];
+        }
+    }
+    buffer[outCursor++] = '\'';  /* closing quote */
+
+    buffer[outCursor++] = '\0';   /* terminating NUL */
+
+    return buffer;
+}
+
+
 
 Visual *
 FindFullColorVisual (dpy, depth)
@@ -270,7 +326,7 @@ char **argv;
     free(tdata);
 
     sprintf(command, "rawtoppm %d %d < /tmp/foobar > %s",
-            width, height, ofname);
+            width, height, squote(ofname));
     system(command);
   }
 }

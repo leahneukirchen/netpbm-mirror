@@ -24,7 +24,7 @@ exec perl -w -x -S -- "$0" "$@"
 
 #!/usr/bin/perl
 ##############################################################################
-#                                  pnmquantall  
+#                                  pnmquantall
 ##############################################################################
 #
 # HISTORY:
@@ -114,7 +114,7 @@ sub parseArgs($$$$) {
                       "of colors and one file name");
         exit(100);
     }
-    
+
     $$newColorCtR = $argv[$firstArgPos];
 
     @{$fileNamesR} = @argv[$firstArgPos + 1 .. @argv-1];
@@ -130,8 +130,8 @@ sub tempFile($) {
     # file, but it doesn't exist before Perl 5.6.1.
 
     if (eval { require File::Temp; 1 }) {
-        return File::Temp::tempfile("pnmquant_XXXX", 
-                                    SUFFIX=>$suffix, 
+        return File::Temp::tempfile("pnmquant_XXXX",
+                                    SUFFIX=>$suffix,
                                     DIR=>File::Spec->tmpdir(),
                                     UNLINK=>$TRUE);
     } else {
@@ -295,3 +295,6 @@ if ($progError) {
 unlink($colorMapFileName);
 
 exit($exitStatus);
+
+
+

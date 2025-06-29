@@ -730,7 +730,7 @@ initOutpam(InputFiles   const inputFiles,
 
 
 static void
-openInStreams(struct pam         inpam[],
+openInStreams(struct pam * const inpam,  /* array */
               unsigned int const rank,
               InputFiles   const inputFiles) {
 /*----------------------------------------------------------------------------
@@ -846,6 +846,79 @@ verifyRankFileAttributes(struct pam *       const inpam,
 
 
 static void
+assembleRowPbm(unsigned char *    const bitrow,
+               const struct pam * const inpam,  /* array */
+               unsigned int       const fileCt,
+               unsigned int       const hOverlap) {
+/*----------------------------------------------------------------------------
+   Assemble the row outputRow[] from the 'fileCt' input files described out
+   inpam[].
+
+   'hOverlap', which is meaningful only when 'fileCt' is greater than 1, is
+   the amount by which files overlap each other.  We assume every input image
+   is at least that wide.
+
+   Use 'bitrow' as a scratch buffer to assemble the row.  It is large enough
+   to contain the entire assembly.
+-----------------------------------------------------------------------------*/
+    unsigned int fileSeq;
+    unsigned int offset;
+
+    for (fileSeq = offset = 0; fileSeq < fileCt; ++fileSeq) {
+
+        assert(fileCt > 0);
+
+        unsigned int const overlap = fileSeq == fileCt - 1 ? 0 : hOverlap;
+
+        assert(hOverlap <= inpam[fileSeq].width);
+
+        pbm_readpbmrow_bitoffset(inpam[fileSeq].file, bitrow,
+                                 inpam[fileSeq].width,
+                                 inpam[fileSeq].format, offset);
+
+        offset += inpam[fileSeq].width - overlap;
+    }
+}
+
+
+
+static void
+assembleTilesPbm(const struct pam * const outpamP,
+                 InputFiles         const inputFiles,
+                 struct pam *       const inpam,  /* array */
+                 unsigned char *    const bitrow) {
+
+    unsigned int rank;
+        /* Number of the current rank (horizontal slice).  Ranks are numbered
+           sequentially starting at 0.
+        */
+
+    unsigned int const rankCt   = inputFiles.rankCt;
+    unsigned int const fileCt   = inputFiles.fileCt;
+    unsigned int const hoverlap = inputFiles.hoverlap;
+    unsigned int const voverlap = inputFiles.voverlap;
+
+    for (rank = 0; rank < rankCt; ++rank) {
+        unsigned int row;
+        unsigned int rankHeight;
+
+        openInStreams(inpam, rank, inputFiles);
+
+        verifyRankFileAttributes(inpam, fileCt, outpamP, hoverlap, rank);
+
+        rankHeight = inpam[0].height - (rank == rankCt-1 ? 0 : voverlap);
+
+        for (row = 0; row < rankHeight; ++row) {
+            assembleRowPbm(bitrow, inpam, fileCt, hoverlap);
+            pbm_writepbmrow_packed(stdout, bitrow, outpamP->width, 0);
+        }
+        closeInFiles(inpam, fileCt);
+    }
+}
+
+
+
+static void
 assembleRow(tuple              outputRow[],
             struct pam         inpam[],
             unsigned int const fileCt,
@@ -881,7 +954,7 @@ assembleRow(tuple              outputRow[],
 static void
 assembleTiles(struct pam * const outpamP,
               InputFiles   const inputFiles,
-              struct pam         inpam[],
+              struct pam * const inpam,  /* array */
               tuple *      const tuplerow) {
 
     unsigned int rank;
@@ -925,7 +998,6 @@ main(int argc, const char ** argv) {
         /* malloc'ed.  inpam[x] is the pam structure that controls the
            current rank of file x.
         */
-    tuple * tuplerow;
 
     pm_proginit(&argc, argv);
 
@@ -944,11 +1016,19 @@ main(int argc, const char ** argv) {
 
     pnm_writepaminit(&outpam);
 
-    tuplerow = pnm_allocpamrow(&outpam);
+    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE) {
+        unsigned char * const bitrow = pbm_allocrow_packed(outpam.width);
+        bitrow[pbm_packed_bytes(outpam.width) - 1] = 0x00;
 
-    assembleTiles(&outpam, inputFiles, inpam, tuplerow);
+        assembleTilesPbm(&outpam, inputFiles, inpam, bitrow);
+        pnm_freerow(bitrow);
 
-    pnm_freepamrow(tuplerow);
+      } else {
+        tuple * const tuplerow = pnm_allocpamrow(&outpam);
+        assembleTiles(&outpam, inputFiles, inpam, tuplerow);
+        pnm_freepamrow(tuplerow);
+      }
+
     destroyInFileList(inputFiles.list, inputFiles.rankCt, inputFiles.fileCt);
     free(inpam);
 

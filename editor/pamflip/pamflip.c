@@ -112,7 +112,9 @@ parseXformOpt(const char *     const xformOpt,
             else if (streq(token, ""))
             { /* ignore it */}
             else
-                pm_error("Invalid transform type in -xform option: '%s'",
+                pm_error("Invalid transform type in -xform option: '%s'.  "
+                         "We recognize only 'leftright', 'topbottom', and "
+                         "transpose",
                          token );
         } else
             eol = TRUE;
@@ -182,10 +184,29 @@ transpose(struct XformCore * const xformP) {
 
 
 static void
+invert(struct XformCore * const xformP) {
+/*----------------------------------------------------------------------------
+   Invert the current transformation (e.g. turn a clockwise rotation into a
+   counterclockwise rotation).
+-----------------------------------------------------------------------------*/
+    swap(&xformP->b, &xformP->c);
+}
+
+
+
+static void
 computeXformCore(unsigned int       const xformCount,
                  enum XformType     const XformType[],
+                 bool               const wantInverse,
                  struct XformCore * const xformP) {
+/*----------------------------------------------------------------------------
+   Determine the aggregate transformation that results from applying the list
+   of serial transformations xformType[] (of size 'xformCount').  Return that
+   in the form of an XformCore (a 2x2 matrix of -1, 0, and 1) as *xformP.
 
+   Iff 'wantinverse', return the inverse of the transformation described
+   above (the transformation that would undo that transformation).
+-----------------------------------------------------------------------------*/
     struct XformCore const nullTransform = {1, 0, 0, 1};
 
     unsigned int i;
@@ -205,6 +226,8 @@ computeXformCore(unsigned int       const xformCount,
             break;
         }
     }
+    if (wantInverse)
+        invert(xformP);
 }
 
 
@@ -297,7 +320,7 @@ parseCommandLine(int argc, char ** const argv,
 
     unsigned int option_def_index;
 
-    unsigned int lr, tb, xy, r90, r270, r180, null;
+    unsigned int lr, tb, xy, reflect, r90, r270, r180, null, inverse;
     unsigned int memsizeSpec, pagesizeSpec, xformSpec;
     unsigned int memsizeOpt;
     const char * xformOpt;
@@ -315,6 +338,7 @@ parseCommandLine(int argc, char ** const argv,
     OPTENT3(0, "topbottom", OPT_FLAG,    NULL, &tb,      0);
     OPTENT3(0, "xy",        OPT_FLAG,    NULL, &xy,      0);
     OPTENT3(0, "transpose", OPT_FLAG,    NULL, &xy,      0);
+    OPTENT3(0, "reflect",   OPT_FLAG,    NULL, &reflect, 0);
     OPTENT3(0, "r90",       OPT_FLAG,    NULL, &r90,     0);
     OPTENT3(0, "rotate90",  OPT_FLAG,    NULL, &r90,     0);
     OPTENT3(0, "ccw",       OPT_FLAG,    NULL, &r90,     0);
@@ -324,6 +348,7 @@ parseCommandLine(int argc, char ** const argv,
     OPTENT3(0, "rotate270", OPT_FLAG,    NULL, &r270,    0);
     OPTENT3(0, "cw",        OPT_FLAG,    NULL, &r270,    0);
     OPTENT3(0, "null",      OPT_FLAG,    NULL, &null,    0);
+    OPTENT3(0, "inverse",   OPT_FLAG,    NULL, &inverse, 0);
     OPTENT3(0, "verbose",   OPT_FLAG,    NULL, &cmdlineP->verbose,       0);
     OPTENT3(0, "memsize",   OPT_UINT,    &memsizeOpt,
             &memsizeSpec,       0);
@@ -339,9 +364,9 @@ parseCommandLine(int argc, char ** const argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (lr + tb + xy + r90 + r180 + r270 + null + xformSpec > 1)
+    if (lr + tb + xy + reflect + r90 + r180 + r270 + null + xformSpec > 1)
         pm_error("You may specify only one type of flip.");
-    if (lr + tb + xy + r90 + r180 + r270 + null == 1) {
+    if (lr + tb + xy + reflect + r90 + r180 + r270 + null == 1) {
         if (lr) {
             xformCount = 1;
             xformList[0] = LEFTRIGHT;
@@ -351,6 +376,11 @@ parseCommandLine(int argc, char ** const argv,
         } else if (xy) {
             xformCount = 1;
             xformList[0] = TRANSPOSE;
+        } else if (reflect) {
+            xformCount = 3;
+            xformList[0] = TRANSPOSE;
+            xformList[1] = LEFTRIGHT;
+            xformList[2] = TOPBOTTOM;
         } else if (r90) {
             xformCount = 2;
             xformList[0] = TRANSPOSE;
@@ -372,7 +402,7 @@ parseCommandLine(int argc, char ** const argv,
         pm_error("You must specify an option such as -topbottom to indicate "
                  "what kind of flip you want.");
 
-    computeXformCore(xformCount, xformList, &cmdlineP->xform);
+    computeXformCore(xformCount, xformList, inverse, &cmdlineP->xform);
 
     interpretMemorySize(memsizeSpec, memsizeOpt, &cmdlineP->availableMemory);
 
@@ -619,16 +649,38 @@ transformPoint(int                const col,
 -----------------------------------------------------------------------------*/
     /* The transformation is:
 
-                 [ a b 0 ]
-       [ x y 1 ] [ c d 0 ] = [ x2 y2 1 ]
-                 [ e f 1 ]
+                   [ a b 0 ]
+         [ x y 1 ] [ c d 0 ] = [ x2 y2 1 ]
+                   [ e f 1 ]
 
-       Where (x, y) is the source pixel location and (x2, y2) is the
-       target pixel location.
+       where (x, y) is the source pixel location and (x2, y2) is the target
+       pixel location.  The 3x3 matrix is the transform matrix 'xform'.
 
-       Note that this is more of a logical computation than an arithmetic
-       one: a, b, c, and d are -1, 0, or 1.  e is the maximum column number
-       in the target image or 0; f is the maximum row number or 0.
+       'a', 'b', 'c', and 'd' are 0, 1, or -1.  'e' and 'f' are the height and
+       width of the image or 0.  The target row number is, depending on the
+       flip, the source row number, the source column number, the image height
+       minus the source row number, or the image width minus the source column
+       number.  The target column number is similar.
+
+       An easy way to break down the operation of the transform matrix is as
+       follows: The upper left square of the transform matrix is the transform
+       core matrix (type XformCore).  The simpler computation
+
+         [ x y ] [ a b ] = [ x2 y2 ]
+                 [ c d ]
+
+       effects the desired flip, but in a larger 4-quadrant space with
+       negative column and row numbers.  Flipping a 10-row image top-bottom,
+       for example, gives you a properly upside down image, but the row
+       numbers are 0 through -9 (imagine an image in the first Cartesian
+       quadrant flipping about the x axis).  To get this back into the
+       positive row number space, you have to translate it up 10 rows.
+
+       The additional 'e' and 'f' elements therefore add the height or
+       width to negative row and column numbers.
+
+       This is an affine transformation.  See
+       http://leptonica.org/affine.html .
     */
     *newcolP = xform.a * col + xform.c * row + xform.e * 1;
     *newrowP = xform.b * col + xform.d * row + xform.f * 1;
@@ -648,10 +700,6 @@ writeRaster(struct pam *    const pamP,
     for (outRow = 0; outRow < pamP->height; ++ outRow)
         pnm_writepamrow(pamP, tuples[outRow]);
 }
-
-
-
-
 
 
 

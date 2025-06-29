@@ -4,33 +4,24 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-25.05.18 BJH  Release 11.10.05
+25.06.29 BJH  Release 11.11.00
 
-              libnetpbm ppmd_fill and ppmdraw filled shapes: fix bug: final
-              span of filling omitted from output.  Always broken (ppmd_fill
-              was in primordial Netpbm).
+              pamflip: add -inverse.
 
-25.05.09 BJH  Release 11.10.04
+              pamflip: add -reflect.
 
-              pnmquantall: Fix vestigial temp file when program fails.
-              Introduced in Netpbm 11.10.01 (April 2025).
+              pamdice: add -outsuffix.
 
-25.04.30 BJH  Relaase 11.10.03
+              libnetpbm and 'ppmdraw' circle drawing functions: use floating
+              point arithmetic to make smoother circle.
+
+              pamdice, pamundice: Add PBM fast path.
+
+              ppmdraw: fix error message about 'filledrectangle' syntax.
 
               pamdice: fix using more digits than necessary in output file
               names -- width was based on one more slice than was actually
               generated.  Broken since Netpbm 10.29 (August 2005).
-
-25.04.11 BJH  Release 11.10.02
-
-              pnmtofiasco: fix bug: does wrong level of optimization
-              Introduced in Netpbm 11.05 (December 2023).
-
-              pnmtofiasco: fix bug: infinite loop with multiple tiles.
-              Always broken (program was new in Netpbm 9.6, July 2000),
-              but made functional by bug fix in 11.10.01 (April 2025).
-
-25.04.07 BJH  Release 11.10.01
 
               pnmquantall: fix arbitrary shell command execution with input
               file names or color count that contain shell metacharacters.
@@ -41,11 +32,22 @@ CHANGE HISTORY
               shell metacharacters.  Broken in Netpbm 10.37 (June 2006).
 
               pnmtofiasco: fix crash when image is really small.  Always
-              broken (programs were new in Netpbm 9.6, July 2000).
+              broken (program was new in Netpbm 9.6, July 2000).
               
               pnmtofiasco: fix bug: uses one tile regardless of
               --tiling-exponent.  Always broken (programs were new in Netpbm
               9.6, July 2000).
+
+              pnmtofiasco: fix bug: infinite loop with multiple tiles.
+              Always broken (program was new in Netpbm 96., July 2000),
+              but made functional by bug fix in 11.10 (March 2025).
+
+              pnmtofiasco: fix bug: does wrong level of optimization
+              Introduced in Netpbm 11.05 (December 2023).
+
+              libnetpbm ppmd_fill and ppmdraw filled shapes: fix bug: final
+              span of filling omitted from output.  Always broken (ppmd_fill
+              was in primordial Netpbm).
 
 25.03.28 BJH  Release 11.10.00
 

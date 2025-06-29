@@ -645,39 +645,43 @@ ask_and_set(param_t *    const params,
 
 void
 write_parameters(const param_t * const params,
-                 FILE *          const output) {
+                 FILE *          const ofP) {
 /*----------------------------------------------------------------------------
-  Write all parameter settings to 'output'.
+  Report all parameter settings to file *ofP.
 
   No return value.
 -----------------------------------------------------------------------------*/
     unsigned int pind;
 
-    if (!params || !output)
-        pm_error("Parameters must be not NULL.");
+    assert(params);
+    assert(ofP);
 
-    for (pind = 0; params[pind].name != NULL; pind++) {
-        fprintf(output, "# %s = ", params[pind].name);
+    fprintf(ofP, "Command line options/defaults:\n");
+
+    for (pind = 0; params[pind].name != NULL; ++pind) {
+
+        fprintf(ofP, "# %s = ", params[pind].name);
+
         switch(params[pind].type) {
         case PFLAG:
-            fprintf(output, "%s\n", params[pind].value.b ? "TRUE" : "FALSE");
+            fprintf(ofP, "%s\n", params[pind].value.b ? "TRUE" : "FALSE");
             break;
         case PINT:
-            fprintf(output, "%d\n", params[pind].value.i);
+            fprintf(ofP, "%d\n", params[pind].value.i);
             break;
         case PFLOAT:
-            fprintf(output, "%.4f\n", (double) params[pind].value.f);
+            fprintf(ofP, "%.4f\n", (double) params[pind].value.f);
             break;
         case PSTR:
         case POSTR:
-            fprintf(output, "%s\n", params[pind].value.s);
+            fprintf(ofP, "%s\n", params[pind].value.s);
             break;
         default:
             pm_error("Invalid type %d for parameter %s",
                      params[pind].type, params[pind].name);
         }
     }
-    fputc ('\n', output);
+    fputc ('\n', ofP);
 }
 
 

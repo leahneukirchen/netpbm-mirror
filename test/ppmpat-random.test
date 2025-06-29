@@ -7,15 +7,15 @@
 
 # These tests require random numbers.
 
-echo "Test 1. Should print: 1366170000 36015" # Mersenne Twister
+echo "Test 1. Should print: 3464062679 36015" # Mersenne Twister
 
 ppmpat --randomseed=0 -camo 100 120 | cksum
 
-echo "Test 2. Should print: 4073196212 16813" # Mersenne Twister
+echo "Test 2. Should print: 3913479820 16813" # Mersenne Twister
 
 ppmpat --randomseed=0 -anticamo 80 70 | cksum
 
-echo "Test 3. Should print: 2292015301 16813" # Mersenne Twister 
+echo "Test 3. Should print: 2605960125 16813" # Mersenne Twister 
 
 ppmpat --randomseed=0 --color \
   rgb:55/c0/34,rgb:0/ff/0,rgb:0/ee/0,rgb:0/cd/0,rgb:0/8b/0,rgb:4f/4f/2f \
