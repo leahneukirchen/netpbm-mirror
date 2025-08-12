@@ -49,12 +49,12 @@ files before April 2000.
 <p>The output format (PBM, etc.) and, in the case of PAM, tuple type, of the
 output is usually the same as the input.
 
-<p>However, changing the depth of a black and white image does not make
-sense, except to turn it into a grayscale image, so if the input is a black
-and white image, <b>pamdepth</b> makes the output grayscale.  To be more
-precise, if the input is a PBM image, the output is PGM, and if the input
-is a PAM with tuple type BLACK_AND_WHITE or BLACK_AND_WHITE_ALPHA, the
-output is a PAM with tuple type GRAYSCALE or GRAYSCALE_ALPHA, respectively.
+<p>However, changing the depth of a black and white image does not make sense,
+except to turn it into a grayscale image, so if the input is a black and white
+image, <b>pamdepth</b> makes the output grayscale.  To be more precise, if the
+input is a PBM image, the output is PGM, and if the input is a PAM with tuple
+type BLACKANDWHITE or BLACKANDWHITE_ALPHA, the output is a PAM with tuple type
+GRAYSCALE or GRAYSCALE_ALPHA, respectively.
 
 <p>This conversion happens even if the new maxval is 1.
 
