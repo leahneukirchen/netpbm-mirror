@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "netpbm/mallocvar.h"
 #include "netpbm/pm.h"
@@ -98,52 +99,82 @@ input_term(Input * const inputP) {
 
 typedef struct {
 /*----------------------------------------------------------------------------
-  Indicates a whitespace-delimited input symbol. "begin" points to its first
-  character, and "end" points to one position past its last character.
+  Value of a whitespace-delimited input symbol.
 -----------------------------------------------------------------------------*/
+    bool null;
+        /* This is a null token.  'begin' and 'end' are meaningless */
     char * begin;
+        /* pointer to first character of token, in some unowned storage */
     char * end;
+        /* pointer to one position past last character of token */
 } Token;
 
 
 
 static Token
 nextToken(char * const startPos) {
+/*----------------------------------------------------------------------------
+   The token after the one that starts at 'startPos'.
 
+   Tokens are separated by any amount of whitespace.
+
+   Iff there is no next token, return a null token.
+-----------------------------------------------------------------------------*/
     Token retval;
     char * p;
 
     for (p = startPos; *p && isspace(*p); ++p);
 
-    retval.begin = p;
+    if (*p) {
+        retval.null = false;
+        retval.begin = p;
 
-    for (; *p && !isspace(*p); ++p);
+        for (; *p && !isspace(*p); ++p);
 
-    retval.end = p;
+        retval.end = p;
+    } else
+        retval.null = true;
 
     return retval;
 }
 
 
 
+static Token
+tokenAfter(Token const currentToken) {
+
+    if (currentToken.null)
+        return currentToken;
+    else
+        return nextToken(currentToken.end);
+}
+
+
+
 static bool
-stringIsValid(const char * const target,
-              const char * const srcBegin,
-              const char * const srcEnd) {
+tokenIsPrefix(Token        const token,
+              const char * const target) {
+/*----------------------------------------------------------------------------
+   The value of token 'token' is a prefix of the NUL-terminated string
+   'target'.
+-----------------------------------------------------------------------------*/
+    if (token.null)
+        return false;
+    else {
+        unsigned int charsMatchedCt;
+        const char * p;
 
-    unsigned int charsMatched;
-    const char * p;
+        for (p = token.begin, charsMatchedCt = 0;
+             p != token.end && target[charsMatchedCt] != '\0'; ++p) {
 
-    for (p = srcBegin, charsMatched = 0;
-         p != srcEnd && target[charsMatched] != '\0'; ++p) {
+            if (*p == target[charsMatchedCt])
+                ++charsMatchedCt;
+            else
+                break;
+        }
 
-        if (*p == target[charsMatched])
-            ++charsMatched;
-        else
-            break;
+        return (*p == '\0' || isspace(*p));
     }
-
-    return (*p == '\0' || isspace(*p));
 }
 
 
@@ -186,252 +217,241 @@ removeComments(char * const str) {
 
 
 static void
-processM(Token *       const ntP,
-         state_info *  const stateP,
-         bool *        const unrecognizedCmdP,
-         const char ** const errorP) {
+processMode(Token         const firstArgToken,
+            state_info *  const stateP,
+            bool *        const excessArgumentsP,
+            const char ** const errorP) {
 
-    if (!stringIsValid(CMD_SET_MODE, ntP->begin, ntP->end)) {
-        *unrecognizedCmdP = true;
-    } else {
-        *ntP = nextToken(ntP->end);
+    if (firstArgToken.null)
+        pm_asprintf(errorP, "syntax error: no drawing mode argument");
+    else {
+        makeLowercase(firstArgToken);
 
-        *unrecognizedCmdP = false;
-
-        if (*ntP->begin == '\0')
-            pm_asprintf(errorP, "syntax error");
-        else {
-            makeLowercase(*ntP);
-
-            switch (*ntP->begin) {
-            case 't':
-                if (!stringIsValid(ARG_TRIANGLES, ntP->begin, ntP->end))
-                    pm_asprintf(errorP, "unrecognized drawing mode");
-                else {
-                    stateP->mode = DRAW_MODE_TRIANGLES;
-                    stateP->draw = false;
-                    stateP->next = 0;
-
-                    *errorP = NULL;
-                }
-                break;
-            case 's':
-                if (!stringIsValid(ARG_STRIP, ntP->begin, ntP->end))
-                    pm_asprintf(errorP, "unrecognized drawing mode");
-                else {
-                    stateP->mode = DRAW_MODE_STRIP;
-                    stateP->draw = false;
-                    stateP->next = 0;
-
-                    *errorP = NULL;
-                }
-                break;
-            case 'f':
-                if (!stringIsValid(ARG_FAN, ntP->begin, ntP->end))
-                    pm_asprintf(errorP, "unrecognized drawing mode");
-                else {
-                    stateP->mode = DRAW_MODE_FAN;
-                    stateP->draw = false;
-                    stateP->next = 0;
-
-                    *errorP = NULL;
-                }
-                break;
-            default:
+        switch (*firstArgToken.begin) {
+        case 't':
+            if (!tokenIsPrefix(firstArgToken, ARG_TRIANGLES))
                 pm_asprintf(errorP, "unrecognized drawing mode");
+            else {
+                stateP->mode = DRAW_MODE_TRIANGLES;
+                stateP->draw = false;
+                stateP->next = 0;
+
+                *errorP = NULL;
             }
+            break;
+        case 's':
+            if (!tokenIsPrefix(firstArgToken, ARG_STRIP))
+                pm_asprintf(errorP, "unrecognized drawing mode");
+            else {
+                stateP->mode = DRAW_MODE_STRIP;
+                stateP->draw = false;
+                stateP->next = 0;
+
+                *errorP = NULL;
+            }
+            break;
+        case 'f':
+            if (!tokenIsPrefix(firstArgToken, ARG_FAN))
+                pm_asprintf(errorP, "unrecognized drawing mode");
+            else {
+                stateP->mode = DRAW_MODE_FAN;
+                stateP->draw = false;
+                stateP->next = 0;
+
+                *errorP = NULL;
+            }
+            break;
+        default:
+            pm_asprintf(errorP, "unrecognized drawing mode");
         }
+        if (!*errorP)
+            *excessArgumentsP =  !tokenAfter(firstArgToken).null;
     }
 }
 
 
 
 static void
-processA(Token *            const ntP,
-         state_info *       const stateP,
-         framebuffer_info * const fbiP,
-         bool *             const unrecognizedCmdP,
-         long int *         const iArgs,
-         const char **      const errorP) {
+processAttrib(Token              const firstArgToken,
+              state_info *       const stateP,
+              framebuffer_info * const fbiP,
+              bool *             const excessArgumentsP,
+              long int *         const iArgs,
+              const char **      const errorP) {
 
-    if (!stringIsValid(CMD_SET_ATTRIBS, ntP->begin, ntP->end)) {
-        *unrecognizedCmdP = true;
-    } else {
-        unsigned int i;
+    Token nt;
+    unsigned int i;
 
-        *unrecognizedCmdP = false;
+    for (i = 0, *errorP = NULL, nt = firstArgToken;
+         i < fbiP->num_attribs && !*errorP;
+         ++i, nt = tokenAfter(nt)) {
 
-        for (i = 0, *errorP = NULL; i < fbiP->num_attribs && !*errorP; ++i) {
-            char * strtolEnd;
+        char * strtolEnd;
 
-            *ntP = nextToken(ntP->end);
+        if (nt.null)
+            pm_asprintf(errorP, "syntax error: only %u arguments", i);
+        else {
+            iArgs[i] = strtol(nt.begin, &strtolEnd, 10);
 
-            iArgs[i] = strtol(ntP->begin, &strtolEnd, 10);
-
-            if (*ntP->begin == '\0' || strtolEnd != ntP->end)
-                pm_asprintf(errorP, "syntax error");
+            if (strtolEnd != nt.end)
+                pm_asprintf(errorP, "syntax error: argument not numeric");
             else {
                 if (iArgs[i] < 0 || iArgs[i] > fbiP->maxval)
                     pm_asprintf(errorP, "argument(s) out of bounds");
             }
         }
-
-        if (!*errorP) {
-            unsigned int i;
-
-            for (i = 0; i < fbiP->num_attribs; ++i)
-                stateP->curr_attribs[i] = iArgs[i];
-        }
     }
-}
 
-
-
-static void
-processV(Token *                const ntP,
-         state_info *           const stateP,
-         struct boundary_info * const biP,
-         framebuffer_info *     const fbiP,
-         bool *                 const unrecognizedCmdP,
-         long int *             const iArgs,
-         const char **          const errorP) {
-
-    if (!stringIsValid(CMD_VERTEX, ntP->begin, ntP->end))
-        *unrecognizedCmdP = true;
-    else {
+    if (!*errorP) {
         unsigned int i;
 
-        *unrecognizedCmdP = false;
+        for (i = 0; i < fbiP->num_attribs; ++i)
+            stateP->curr_attribs[i] = iArgs[i];
 
-        for (i = 0, *errorP = NULL; i < 4 && !*errorP; ++i) {
+        *excessArgumentsP =  !tokenAfter(nt).null;
+    }
+}
+
+
+
+static void
+processVertex(Token                  const firstArgToken,
+              state_info *           const stateP,
+              struct boundary_info * const biP,
+              framebuffer_info *     const fbiP,
+              bool *                 const excessArgumentsP,
+              long int *             const iArgs,
+              const char **          const errorP) {
+
+    Token nt;
+    unsigned int i;
+
+    for (i = 0, *errorP = NULL, nt = firstArgToken;
+         i < 4 && !*errorP;
+         ++i, nt = tokenAfter(nt)) {
+
+        if (nt.null) {
+            if (i != 3)
+                pm_asprintf(errorP, "syntax error");
+            else
+                iArgs[i] = 1;
+        } else {
             char * strtolEnd;
 
-            *ntP = nextToken(ntP->end);
+            iArgs[i] = strtol(nt.begin, &strtolEnd, 10);
 
-            iArgs[i] = strtol(ntP->begin, &strtolEnd, 10);
-
-            if (*ntP->begin == '\0') {
-                if (i != 3)
-                    pm_asprintf(errorP, "syntax error");
-                else
-                    iArgs[i] = 1;
-            } else {
-                if (strtolEnd != ntP->end)
-                    pm_asprintf(errorP, "syntax error");
-            }
-
-            if (!*errorP) {
-                if (i < 3) {
-                    if (iArgs[i] < MIN_COORD || iArgs[i] > MAX_COORD)
-                        pm_asprintf(errorP, "coordinates out of bounds");
-                } else {
-                    if (iArgs[i] < MIN_INPUT_W || iArgs[i] > MAX_INPUT_W)
-                        pm_asprintf(errorP,
-                                    "perspective correction factor (w) "
-                                    "out of bounds");
-                }
-            }
+            if (strtolEnd != nt.end)
+                pm_asprintf(errorP, "syntax error");
         }
 
         if (!*errorP) {
-            unsigned int i;
-
-            for (i = 0; i < fbiP->num_attribs; ++i) {
-                stateP->v_attribs._[stateP->next][i] = stateP->curr_attribs[i];
-            }
-
-            stateP->v_attribs._[stateP->next][fbiP->num_attribs + 0] =
-                iArgs[2];
-            stateP->v_attribs._[stateP->next][fbiP->num_attribs + 1] =
-                iArgs[3];
-
-            stateP->v_xy._[stateP->next][0] = iArgs[0];
-            stateP->v_xy._[stateP->next][1] = iArgs[1];
-
-            ++stateP->next;
-
-            if (!stateP->draw) {
-                if (stateP->next == 3)
-                    stateP->draw = true;
-            }
-
-            if (stateP->draw)
-                draw_triangle(stateP->v_xy, stateP->v_attribs, biP, fbiP);
-
-            if (stateP->next == 3) {
-                switch(stateP->mode) {
-                case DRAW_MODE_FAN:
-                    stateP->next = 1;
-                    break;
-                case DRAW_MODE_TRIANGLES:
-                    stateP->draw = false;
-                    stateP->next = 0;
-                    break;
-                case DRAW_MODE_STRIP:
-                    stateP->next = 0;
-                    break;
-                default:
-                    stateP->next = 0;
-                }
+            if (i < 3) {
+                if (iArgs[i] < MIN_COORD || iArgs[i] > MAX_COORD)
+                    pm_asprintf(errorP, "coordinates out of bounds");
+            } else {
+                if (iArgs[i] < MIN_INPUT_W || iArgs[i] > MAX_INPUT_W)
+                    pm_asprintf(errorP,
+                                "perspective correction factor (w) "
+                                "out of bounds");
             }
         }
     }
-}
 
+    if (!*errorP) {
+        unsigned int i;
 
+        for (i = 0; i < fbiP->num_attribs; ++i) {
+            stateP->v_attribs._[stateP->next][i] = stateP->curr_attribs[i];
+        }
 
-static void
-processP(Token *            const ntP,
-         framebuffer_info * const fbiP,
-         bool *             const unrecognizedCmdP,
-         const char **      const errorP) {
+        stateP->v_attribs._[stateP->next][fbiP->num_attribs + 0] =
+            iArgs[2];
+        stateP->v_attribs._[stateP->next][fbiP->num_attribs + 1] =
+            iArgs[3];
 
-    if (!stringIsValid(CMD_PRINT, ntP->begin, ntP->end))
-        *unrecognizedCmdP = true;
-    else {
-        *unrecognizedCmdP = false;
+        stateP->v_xy._[stateP->next][0] = iArgs[0];
+        stateP->v_xy._[stateP->next][1] = iArgs[1];
 
-        print_framebuffer(fbiP);
+        ++stateP->next;
 
-        *errorP = NULL;
+        if (!stateP->draw) {
+            if (stateP->next == 3)
+                stateP->draw = true;
+        }
+
+        if (stateP->draw)
+            draw_triangle(stateP->v_xy, stateP->v_attribs, biP, fbiP);
+
+        if (stateP->next == 3) {
+            switch(stateP->mode) {
+            case DRAW_MODE_FAN:
+                stateP->next = 1;
+                break;
+            case DRAW_MODE_TRIANGLES:
+                stateP->draw = false;
+                stateP->next = 0;
+                break;
+            case DRAW_MODE_STRIP:
+                stateP->next = 0;
+                break;
+            default:
+                stateP->next = 0;
+            }
+        }
+        *excessArgumentsP =  !nt.null;
     }
 }
 
 
 
+static void
+processPrint(Token              const firstArgToken,
+             framebuffer_info * const fbiP,
+             bool *             const excessArgumentsP,
+             const char **      const errorP) {
+
+    print_framebuffer(fbiP);
+
+    *excessArgumentsP =  !firstArgToken.null;
+
+    *errorP = NULL;
+}
+
+
+
 
 static void
-processExcl(Token *            const ntP,
+processExcl(Token              const firstArgToken,
             framebuffer_info * const fbiP,
-            bool *             const unrecognizedCmdP,
+            bool *             const excessArgumentsP,
             const char **      const errorP) {
 
-    if (ntP->end - ntP->begin > 1)
-        *unrecognizedCmdP = true;
-    else {
-        *unrecognizedCmdP = false;
 
-        print_framebuffer(fbiP);
+    print_framebuffer(fbiP);
 
-        *errorP = NULL;
-    }
+    *excessArgumentsP =  !firstArgToken.null;
+
+    *errorP = NULL;
 }
 
 
 
 static void
-clear(Token *            const ntP,
-      framebuffer_info * const fbiP,
-      const char **      const errorP) {
+processClear(Token              const firstArgToken,
+             framebuffer_info * const fbiP,
+             bool *             const excessArgumentsP,
+             const char **      const errorP) {
 
-    *ntP = nextToken(ntP->end);
+    if (firstArgToken.null) {
+        clear_framebuffer(true, true, fbiP);
+        *excessArgumentsP = false;
+        *errorP = NULL;
+    } else {
+        makeLowercase(firstArgToken);
 
-    if (*ntP->begin != '\0') {
-        makeLowercase(*ntP);
-
-        switch(*ntP->begin) {
+        switch(*firstArgToken.begin) {
         case 'i':
-            if (!stringIsValid("image", ntP->begin, ntP->end))
+            if (!tokenIsPrefix(firstArgToken, "image"))
                 pm_asprintf(errorP, "unrecognized argument");
             else {
                 clear_framebuffer(true, false, fbiP);
@@ -439,7 +459,7 @@ clear(Token *            const ntP,
             }
             break;
         case 'd':
-            if (!stringIsValid("depth", ntP->begin, ntP->end))
+            if (!tokenIsPrefix(firstArgToken, "depth"))
                 pm_asprintf(errorP, "unrecognized argument");
             else {
                 clear_framebuffer(false, true, fbiP);
@@ -447,7 +467,7 @@ clear(Token *            const ntP,
             }
             break;
         case 'z':
-            if (ntP->end - ntP->begin > 1)
+            if (firstArgToken.end - firstArgToken.begin > 1)
                 pm_asprintf(errorP, "unrecognized argument");
             else {
                 clear_framebuffer(false, true, fbiP);
@@ -457,127 +477,161 @@ clear(Token *            const ntP,
         default:
             pm_asprintf(errorP, "unrecognized argument");
         }
-    } else {
-        clear_framebuffer(true, true, fbiP);
-        *errorP = NULL;
+        *excessArgumentsP =  !tokenAfter(firstArgToken).null;
     }
 }
 
 
 
 static void
-processC(Token *            const ntP,
-         framebuffer_info * const fbiP,
-         bool *             const unrecognizedCmdP,
-         const char **      const errorP) {
+processReset(Token              const firstArgToken,
+             state_info *       const stateP,
+             framebuffer_info * const fbiP,
+             bool *             const excessArgumentsP,
+             long int *         const iArgs,
+             const char **      const errorP) {
 
-    if (!stringIsValid(CMD_CLEAR, ntP->begin, ntP->end))
-        *unrecognizedCmdP = true;
-    else {
-        *unrecognizedCmdP = false;
+    Token nt;
+    unsigned int i;
 
-        clear(ntP, fbiP, errorP);
-    }
-}
+    for (i = 0, *errorP = NULL, nt = firstArgToken;
+         i < 2 && !*errorP;
+         ++i, nt = tokenAfter(nt)) {
 
-
-
-static void
-processAsterisk(Token *            const ntP,
-                framebuffer_info * const fbiP,
-                bool *             const unrecognizedCmdP,
-                const char **      const errorP) {
-
-    if (ntP->end - ntP->begin > 1)
-        *unrecognizedCmdP = true;
-    else {
-        *unrecognizedCmdP = false;
-
-        clear(ntP, fbiP, errorP);
-    }
-}
-
-
-
-static void
-processR(Token *                const ntP,
-         state_info *           const stateP,
-         framebuffer_info *     const fbiP,
-         bool *                 const unrecognizedCmdP,
-         long int *             const iArgs,
-         const char **          const errorP) {
-
-    if (!stringIsValid(CMD_RESET, ntP->begin, ntP->end))
-        *unrecognizedCmdP = true;
-    else {
-        unsigned int i;
-
-        *unrecognizedCmdP = false;
-
-        for (i = 0, *errorP = NULL; i < 2 && !*errorP; ++i) {
+        if (nt.null)
+            pm_asprintf(errorP, "syntax error: only %u arguments", i);
+        else {
             char * strtolEnd;
 
-            *ntP = nextToken(ntP->end);
+            iArgs[i] = strtol(nt.begin, &strtolEnd, 10);
 
-            iArgs[i] = strtol(ntP->begin, &strtolEnd, 10);
-
-            if (*ntP->begin == '\0' || ntP->end != strtolEnd)
-                pm_asprintf(errorP, "syntax error");
-        }
-
-        if (!*errorP) {
-            if (iArgs[0] < 1 || iArgs[0] > PAM_OVERALL_MAXVAL)
-                pm_asprintf(errorP, "invalid new maxval");
-            else {
-                if (iArgs[1] < 1 || iArgs[1] > MAX_NUM_ATTRIBS)
-                    pm_asprintf(errorP, "invalid new number of generic vertex "
-                                "attributes");
-                else {
-                    *ntP = nextToken(ntP->end);
-
-                    if (*ntP->begin != '\0') {
-                        if (!set_tupletype(ntP->begin,
-                                           fbiP->outpam.tuple_type)) {
-                            pm_message(
-                                "warning: could not set new tuple type; "
-                                "using a null string");
-                            set_tupletype(NULL, fbiP->outpam.tuple_type);
-                        }
-                    } else
-                        set_tupletype(NULL, fbiP->outpam.tuple_type);
-
-                    if (!realloc_image_buffer(iArgs[0], iArgs[1], fbiP)) {
-                        pm_error("Unable to allocate memory for "
-                                 "image buffer");
-                    }
-
-                    stateP->next = 0;
-                    stateP->draw = false;
-
-                    clearAttribs(stateP, fbiP->maxval, fbiP->num_attribs);
-                }
+            if (nt.end != strtolEnd) {
+                pm_asprintf(errorP, "syntax error: non-numeric junk "
+                            "in argument %u", i);
             }
         }
     }
+
+    if (!*errorP) {
+        if (iArgs[0] < 1 || iArgs[0] > PAM_OVERALL_MAXVAL)
+            pm_asprintf(errorP, "invalid new maxval");
+        else {
+            if (iArgs[1] < 1 || iArgs[1] > MAX_NUM_ATTRIBS)
+                pm_asprintf(errorP, "invalid new number of generic vertex "
+                            "attributes");
+            else {
+                if (!nt.null) {
+                    if (!set_tupletype(nt.begin,
+                                       fbiP->outpam.tuple_type)) {
+                        pm_message(
+                            "warning: could not set new tuple type; "
+                            "using a null string");
+                        set_tupletype(NULL, fbiP->outpam.tuple_type);
+                    }
+                    nt = tokenAfter(nt);
+                } else
+                    set_tupletype(NULL, fbiP->outpam.tuple_type);
+
+                if (!realloc_image_buffer(iArgs[0], iArgs[1], fbiP)) {
+                    pm_error("Unable to allocate memory for "
+                             "image buffer");
+                }
+
+                stateP->next = 0;
+                stateP->draw = false;
+
+                clearAttribs(stateP, fbiP->maxval, fbiP->num_attribs);
+            }
+            *excessArgumentsP =  !nt.null;
+        }
+    }
 }
 
 
 
 static void
-processQ(Token *                const ntP,
-         bool *                 const unrecognizedCmdP,
-         bool *                 const noMoreCommandsP,
-         const char **          const errorP) {
+processQuit(Token         const firstArgToken,
+            bool *        const excessArgumentsP,
+            const char ** const errorP) {
 
-    if (!stringIsValid(CMD_QUIT, ntP->begin, ntP->end))
-        *unrecognizedCmdP = true;
-    else {
-        *unrecognizedCmdP = false;
+    *excessArgumentsP =  !firstArgToken.null;
 
-        *noMoreCommandsP = true;
+    *errorP = NULL;
+}
 
-        *errorP = NULL;
+
+
+static void
+processCommandToken(Token                  const cmdToken,
+                    state_info *           const stateP,
+                    struct boundary_info * const biP,
+                    framebuffer_info *     const fbiP,
+                    bool *                 const noMoreCommandsP,
+                    bool *                 const excessArgumentsP,
+                    const char **          const errorP) {
+/*----------------------------------------------------------------------------
+   Process command whose command token is 'commandToken'.
+
+   We may modify the storage pointed to by 'cmdToken', converting upper case
+   to lower case.
+-----------------------------------------------------------------------------*/
+    long int iArgs[MAX_NUM_ATTRIBS];
+        /* For storing potential integer arguments. */
+    bool noMoreCommands;
+    const char * error;
+        /* Description of problem with the command; NULL if no problem.
+        */
+    bool excessArguments;
+        /* The command line has extra tokens beyond the end of a valid
+           command.
+
+           This is meaningful only when 'error' is null.
+        */
+
+    makeLowercase(cmdToken);
+
+    noMoreCommands = false;  /* initial assumption */
+
+    if (tokenIsPrefix(cmdToken, CMD_SET_MODE)) {
+        processMode(tokenAfter(cmdToken), stateP,
+                    &excessArguments, &error);
+    } else if (tokenIsPrefix(cmdToken, CMD_SET_ATTRIBS)) {
+        processAttrib(tokenAfter(cmdToken), stateP, fbiP,
+                      &excessArguments, iArgs, &error);
+    } else if (tokenIsPrefix(cmdToken, CMD_VERTEX)) {
+        processVertex(tokenAfter(cmdToken), stateP, biP, fbiP,
+                      &excessArguments, iArgs, &error);
+    } else if (tokenIsPrefix(cmdToken, CMD_PRINT)) {
+        processPrint(tokenAfter(cmdToken), fbiP,
+                     &excessArguments, &error);
+    } else if (*cmdToken.begin == '!' && cmdToken.end == cmdToken.begin + 1) {
+        processExcl(tokenAfter(cmdToken), fbiP,
+                    &excessArguments, &error);
+    } else if (tokenIsPrefix(cmdToken, CMD_CLEAR) ||
+               (*cmdToken.begin == '*' &&
+                cmdToken.end == cmdToken.begin + 1)) {
+        processClear(tokenAfter(cmdToken), fbiP,
+                     &excessArguments, &error);
+    } else if (tokenIsPrefix(cmdToken, CMD_RESET)) {
+        processReset(tokenAfter(cmdToken), stateP, fbiP,
+                 &excessArguments, iArgs, &error);
+    } else if (tokenIsPrefix(cmdToken, CMD_QUIT)) {
+        processQuit(tokenAfter(cmdToken),
+                    &excessArguments, &error);
+        noMoreCommands = true;
+    } else
+        pm_asprintf(&error, "unrecognized command");
+
+    if (!noMoreCommands) {
+        if (error) {
+            *errorP = error;
+        } else {
+            *errorP = NULL;
+            *excessArgumentsP = excessArguments;
+        }
     }
+
+    *noMoreCommandsP = noMoreCommands;
 }
 
 
@@ -591,22 +645,14 @@ input_process_next_command(Input *                const inputP,
   Doesn't necessarily process a command, just the next line of input, which
   may be empty.
 
-  Return *noMoreCommandsP true iff the next command is a quit command of
+  Return *noMoreCommandsP true iff the next command is a quit command or
   there is no next command.
+
+  We may modify the input buffer, converting upper case to lower.
 -----------------------------------------------------------------------------*/
     static state_info state;
 
-    Token nt;
-
-    long int iArgs[MAX_NUM_ATTRIBS];
-        /* For storing potential integer arguments. */
-    bool unrecognizedCmd;
-        /* Unrecognized command detected */
-    bool noMoreCommands;
-    const char * error;
-        /* Description of problem with the command; NULL if no problem.
-           Meaningful only when 'unrecognizedCmd' is false.
-        */
+    Token cmdToken;
 
     if (!state.initialized) {
         initState(&state);
@@ -629,67 +675,29 @@ input_process_next_command(Input *                const inputP,
 
     removeComments(inputP->buffer);
 
-    nt = nextToken(inputP->buffer);
+    cmdToken = nextToken(inputP->buffer);
 
-    makeLowercase(nt);
+    if (cmdToken.null)
+        *noMoreCommandsP = false;
+    else {
+        const char * error;
+        bool excessArguments;
 
-    noMoreCommands = false;  /* initial assumption */
+        processCommandToken(cmdToken, &state, biP, fbiP,
+                            noMoreCommandsP, &excessArguments, &error);
 
-    switch (nt.begin[0]) {
-    case 'm':
-        processM(&nt, &state, &unrecognizedCmd, &error);
-        break;
-    case 'a':
-        processA(&nt, &state, fbiP, &unrecognizedCmd, iArgs, &error);
-        break;
-    case 'v':
-        processV(&nt, &state, biP, fbiP, &unrecognizedCmd, iArgs, &error);
-        break;
-    case 'p':
-        processP(&nt, fbiP, &unrecognizedCmd, &error);
-        break;
-    case '!':
-        processExcl(&nt, fbiP, &unrecognizedCmd, &error);
-        break;
-    case 'c':
-        processC(&nt, fbiP, &unrecognizedCmd, &error);
-        break;
-    case '*':
-        processAsterisk(&nt, fbiP, &unrecognizedCmd, &error);
-        break;
-    case 'r':
-        processR(&nt, &state, fbiP, &unrecognizedCmd, iArgs, &error);
-        break;
-    case 'q':
-        processQ(&nt, &unrecognizedCmd, &noMoreCommands, &error);
-        break;
-    case '\0':
-        break;
-    default:
-        unrecognizedCmd = true;
-    }
-
-    if (!noMoreCommands) {
-        char const next = *nextToken(nt.end).begin;
-
-        if (unrecognizedCmd) {
-            pm_errormsg("error: unrecognized command: line %u.",
-                        (unsigned)inputP->number);
-        } else {
+        if (!*noMoreCommandsP) {
             if (error) {
                 pm_errormsg("Error in line %u: %s",
                             (unsigned)inputP->number, error);
                 pm_strfree(error);
-            } else {
-                if (next != '\0')
-                    pm_message("warning: ignoring excess arguments: line %u",
-                               (unsigned)inputP->number);
+            } else if (excessArguments) {
+                pm_message("warning: ignoring excess arguments: line %u",
+                           (unsigned)inputP->number);
             }
         }
     }
     ++inputP->number;
-
-    *noMoreCommandsP = noMoreCommands;
 }
 
 
