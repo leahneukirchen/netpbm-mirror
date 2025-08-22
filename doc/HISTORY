@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.08.22 BJH  Release 11.02.18
+
+              pamtris: fix unrecognized command or crash on line with no
+              command.  Broken in Netpbm 10.85 (December 2018).
+
 25.05.18 BJH  Release 11.02.17
 
               pnmquantall: Fix vestigial temp file when program fails.
