@@ -142,8 +142,9 @@ ppm_findclosestcolor(const pixel * const colormap,
 
 /* standard sort function for ppm_sortcolorrow() */
 #define PPM_STDSORT     (int (*)(pixel *, pixel *))0
-#endif
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* PPMCMAP_INCLUDED */

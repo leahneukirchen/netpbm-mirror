@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.09.15 BJH  Release 11.11.02
+
+              ppmcmap.h: fix C++ compilation.  Broken at least since Netpbm
+              10.35 (August 2006).
+
 25.08,22 BJH  Release 11.11.01
 
               pamtris: fix unrecognized command or crash on line with no
