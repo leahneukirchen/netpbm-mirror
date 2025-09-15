@@ -1,6 +1,13 @@
 #ifndef PPMDFONT_INCLUDED
 #define PPMDFONT_INCLUDED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#if 0
+} /* to fake out automatic code indenters */
+#endif
+
 #include <stdio.h>
 
 /* A font file has the following format, with proper packing:
@@ -70,5 +77,8 @@ ppmd_read_font(FILE *                    const ifP,
 void
 ppmd_free_font(const struct ppmd_font * const fontP);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

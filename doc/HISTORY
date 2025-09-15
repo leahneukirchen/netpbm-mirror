@@ -12,6 +12,9 @@ not yet  BJH  Release 11.12.00
               ppmcmap.h: fix C++ compilation.  Broken at least since Netpbm
               10.35 (August 2006).
 
+              Make ppmdfont.h work in C++ compile.  Always broken (ppmdfont.h)
+              was new some time before Netpbm 10.35 (August 2006).
+
 25.06.29 BJH  Release 11.11.00
 
               pamflip: add -inverse.
