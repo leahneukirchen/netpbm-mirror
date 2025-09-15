@@ -9,6 +9,9 @@ not yet  BJH  Release 11.12.00
               pamtris: fix unrecognized command or crash on line with no
               command.  Broken in Netpbm 10.85 (December 2018).
 
+              ppmcmap.h: fix C++ compilation.  Broken at least since Netpbm
+              10.35 (August 2006).
+
 25.06.29 BJH  Release 11.11.00
 
               pamflip: add -inverse.
