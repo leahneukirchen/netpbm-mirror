@@ -28,6 +28,8 @@
 
 #include "camera.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-const-variable"
 #if HAVE_INT64
      typedef int64_t INT64;
      static bool const have64BitArithmetic = true;
@@ -39,6 +41,7 @@
      typedef int INT64;
      static bool const have64BitArithmetic = false;
 #endif
+#pragma GCC diagnostic pop
 
 #ifndef LONG_BIT
 #define LONG_BIT (8 * sizeof (long))
