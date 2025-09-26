@@ -216,9 +216,8 @@ foveon_load_camf() {
 void
 foveon_load_raw(Image const image) {
 /*----------------------------------------------------------------------------
-   This code depends upon the system having 64 bit arithmetic (inasmuch
-   as the compile environment has type 'int64_t').  Results are undefined
-   if it does not.
+   Caller must ensure that the system has 64 bit arithmetic (inasmuch as the
+   compile environment has type 'int64_t').
 -----------------------------------------------------------------------------*/
     struct decode *dindex;
     short diff[1024], pred[3];

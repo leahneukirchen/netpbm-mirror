@@ -963,9 +963,8 @@ kodak_easy_load_raw(Image const image)
 void
 kodak_compressed_load_raw(Image const image) {
 /*----------------------------------------------------------------------------
-   This code depends upon the system having 64 bit arithmetic (inasmuch
-   as the compile environment has type 'int64_t').  Results are undefined
-   if it does not.
+   Caller must ensure that the system has 64 bit arithmetic (inasmuch as the
+   compile environment has type 'int64_t').
 -----------------------------------------------------------------------------*/
     unsigned char c, blen[256];
     unsigned short raw[6];
@@ -1033,9 +1032,8 @@ kodak_compressed_load_raw(Image const image) {
 void
 kodak_yuv_load_raw(Image const image) {
 /*----------------------------------------------------------------------------
-   This code depends upon the system having 64 bit arithmetic (inasmuch
-   as the compile environment has type 'int64_t').  Results are undefined
-   if it does not.
+   Caller must ensure that the system has 64 bit arithmetic (inasmuch as the
+   compile environment has type 'int64_t').
 -----------------------------------------------------------------------------*/
     unsigned char c, blen[384];
     unsigned row, col, len, bits=0;
