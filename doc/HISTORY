@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.09.27 BJH  Release 10.86.48
+
+              pamtris: fix unrecognized command or crash on line with no
+              command.  Broken in Netpbm 10.85 (December 2018).
+
+              ppmcmap.h: fix C++ compilation.  Broken at least since Netpbm
+              10.35 (August 2006).
+
 25.06.28 BJH  Release 10.86.47
 
               pnmquantall: Fix vestigial temp file when program fails.

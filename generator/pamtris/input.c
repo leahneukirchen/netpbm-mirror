@@ -664,6 +664,8 @@ input_process_next_command(Input *                const inputP,
         processQ(&nt, &unrecognizedCmd, &noMoreCommands, &error);
         break;
     case '\0':
+        unrecognizedCmd = false;
+        error = NULL;
         break;
     default:
         unrecognizedCmd = true;
