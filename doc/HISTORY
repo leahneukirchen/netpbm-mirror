@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 11.12.00
+25.09.27 BJH  Release 11.12.00
 
               pamtris: fix unrecognized command or crash on line with no
               command.  Broken in Netpbm 10.85 (December 2018).
