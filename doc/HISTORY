@@ -12,8 +12,8 @@ not yet  BJH  Release 11.12.00
               ppmcmap.h: fix C++ compilation.  Broken at least since Netpbm
               10.35 (August 2006).
 
-              Make ppmdfont.h work in C++ compile.  Always broken (ppmdfont.h)
-              was new some time before Netpbm 10.35 (August 2006).
+              Make ppmdfont.h work in C++ compile.  Always broken (ppmdfont.h
+              was new some time before Netpbm 10.35 (August 2006)).
 
 25.06.29 BJH  Release 11.11.00
 
@@ -50,7 +50,7 @@ not yet  BJH  Release 11.12.00
               9.6, July 2000).
 
               pnmtofiasco: fix bug: infinite loop with multiple tiles.
-              Always broken (program was new in Netpbm 96., July 2000),
+              Always broken (program was new in Netpbm 9.6, July 2000),
               but made functional by bug fix in 11.10 (March 2025).
 
               pnmtofiasco: fix bug: does wrong level of optimization
