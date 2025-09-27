@@ -916,12 +916,9 @@ static void
 processTopLevelNode(xmlTextReaderPtr const xmlReaderP,
                     FILE *           const ofP) {
 
-    unsigned int   const depth    = xmlTextReaderDepth(xmlReaderP);
-    xmlReaderTypes const nodeType = xmlTextReaderNodeType(xmlReaderP);
+    assert(xmlTextReaderDepth(xmlReaderP) == 0);
 
-    assert(depth == 0);
-
-    switch (nodeType) {
+    switch (xmlTextReaderNodeType(xmlReaderP)) {
     case XML_READER_TYPE_ELEMENT:
         processTopLevelElement(xmlReaderP, ofP);
         break;
