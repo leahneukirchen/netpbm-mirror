@@ -14,6 +14,8 @@
 #include "foveon.h"
 #include "stdio_nofail.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-const-variable"
 #if HAVE_INT64
    typedef int64_t INT64;
    static bool const have64BitArithmetic = true;
@@ -25,6 +27,7 @@
    typedef int INT64;
    static bool const have64BitArithmetic = false;
 #endif
+#pragma GCC diagnostic pop
 
 
 #define FORC3 for (c=0; c < 3; c++)
@@ -212,7 +215,10 @@ foveon_load_camf() {
 
 void
 foveon_load_raw(Image const image) {
-
+/*----------------------------------------------------------------------------
+   Caller must ensure that the system has 64 bit arithmetic (inasmuch as the
+   compile environment has type 'int64_t').
+-----------------------------------------------------------------------------*/
     struct decode *dindex;
     short diff[1024], pred[3];
     unsigned int huff[1024], bitbuf=0;

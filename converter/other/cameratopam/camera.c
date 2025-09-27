@@ -28,6 +28,8 @@
 
 #include "camera.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-const-variable"
 #if HAVE_INT64
      typedef int64_t INT64;
      static bool const have64BitArithmetic = true;
@@ -39,6 +41,7 @@
      typedef int INT64;
      static bool const have64BitArithmetic = false;
 #endif
+#pragma GCC diagnostic pop
 
 #ifndef LONG_BIT
 #define LONG_BIT (8 * sizeof (long))
@@ -958,8 +961,11 @@ kodak_easy_load_raw(Image const image)
 
 
 void
-kodak_compressed_load_raw(Image const image)
-{
+kodak_compressed_load_raw(Image const image) {
+/*----------------------------------------------------------------------------
+   Caller must ensure that the system has 64 bit arithmetic (inasmuch as the
+   compile environment has type 'int64_t').
+-----------------------------------------------------------------------------*/
     unsigned char c, blen[256];
     unsigned short raw[6];
     unsigned row, col, len, save, i, israw=0, bits=0, pred[2];
@@ -1024,8 +1030,11 @@ kodak_compressed_load_raw(Image const image)
 
 
 void
-kodak_yuv_load_raw(Image const image)
-{
+kodak_yuv_load_raw(Image const image) {
+/*----------------------------------------------------------------------------
+   Caller must ensure that the system has 64 bit arithmetic (inasmuch as the
+   compile environment has type 'int64_t').
+-----------------------------------------------------------------------------*/
     unsigned char c, blen[384];
     unsigned row, col, len, bits=0;
     INT64 bitbuf=0;

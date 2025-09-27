@@ -242,6 +242,12 @@ horzDisp(ppmd_point const begPoint,
 
 
 
+/* Following is used only in assertion checking; we don't want a warning if
+   we're compiling without assertion checking.
+*/
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 static bool
 isOnLineSeg(ppmd_point const here,
             ppmd_point const begPoint,
@@ -253,6 +259,7 @@ isOnLineSeg(ppmd_point const here,
         here.x >= MIN(begPoint.x, endPoint.x) &&
         here.x <= MAX(begPoint.x, endPoint.x);
 }
+#pragma GCC diagnostic pop
 
 
 
@@ -378,6 +385,11 @@ againstStackDirection(fillStack * const stackP,
 }
 
 
+/* Following is used only in assertion checking; we don't want a warning if
+   we're compiling without assertion checking.
+*/
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 
 static bool
 isLateralFromTopOfStack(fillStack * const stackP,
@@ -391,6 +403,7 @@ isLateralFromTopOfStack(fillStack * const stackP,
     else
         return point.y == topOfStack(stackP).y;
 }
+#pragma GCC diagnostic pop
 
 
 
