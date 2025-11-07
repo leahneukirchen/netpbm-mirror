@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>pbm</h1>
-Updated: 27 June 2024
+Updated: 07 November 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -78,13 +78,34 @@ newline character, or end of file, is a comment and is ignored.
   
 </ul>
 
-<p>All characters referred to herein are encoded in ASCII.
-"newline" refers to the character known in ASCII as Line
-Feed or LF.  A "white space" character is space, CR, LF,
-TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
-calls white space).
+<p>All characters referred to herein are encoded in ASCII.  "newline" refers
+to the character known in ASCII as Line Feed or LF.  A "white space" character
+is space, CR, LF, TAB, VT, or FF (I.e. what the ANSI standard C isspace()
+function calls white space).
 
+<h3 id="minimal">Minimal Subset</h3>
 
+<p>The PBM format is so simple that many programmers write programs to process
+  it directly, without using a library such as <b>libnetpbm</b>, reverse
+  engineering a subset of the format from examples rather than using the
+  specification.  Therefore, if you want to produce an image that as many
+  programs as possible can read, you should stick to the following subset.
+
+<p>The image consists of the following bytes:
+<ol>
+  <li>&quot;P4&quot; followed by newline
+  <LI>width and height separated by a space (e.g. &quot;50 100&quot;),
+    followed by newline
+    <LI>The raster
+</ol>
+
+<p>There is only one image in the file.
+
+<p>The program <b>pnmtopnm</b> produces this minimal subset, so if you have a
+  more complex PBM image, you can pass it to to a less tolerant program
+  through <b>pnmtopnm</b>.
+  
+  
 <h3 id="plainpbm">Plain PBM</h3>
 <p>
 There is actually another version of the PBM format, even more
@@ -184,6 +205,7 @@ data after the first image.
 <li><a href="#description">DESCRIPTION</a>
 <li><a href="#layout">THE LAYOUT</a>
 <ul>
+  <li><a href="#minimal">Minimal Subset</a>
   <li><a href="#plainpbm">Plain PBM</a>
     </ul>
 <li><a href="#internetmediatype">INTERNET MEDIA TYPE</a>

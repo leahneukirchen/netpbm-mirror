@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>pgm</h1>
-Updated: 09 October 2016
+Updated: 07 November 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -120,6 +120,29 @@ Feed or LF.  A "white space" character is space, CR, LF,
 TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
 calls white space).
 
+<h3 id="minimal">Minimal Subset</h3>
+
+<p>The PGM format is so simple that many programmers write programs to process
+  it directly, without using a library such as <b>libnetpbm</b>, reverse
+  engineering a subset of the format from examples rather than using the
+  specification.  Therefore, if you want to produce an image that as many
+  programs as possible can read, you should stick to the following subset.
+
+<p>The image consists of the following bytes:
+<ol>
+  <li>&quot;P5&quot; followed by newline
+  <LI>width, height, and maxval, separated by single spaces (e.g. &quot;50 100 255&quot;),
+    followed by newline
+    <LI>The raster
+</ol>
+
+<p>There is only one image in the file.
+
+<p>The program <b>pnmtopnm</b> produces this minimal subset, so if you have a
+  more complex PGM image, you can pass it to to a less tolerant program
+  through <b>pnmtopnm</b>.
+  
+  
 <h3 id="plainpgm">Plain PGM</h3>
 
 <p>There is actually another version of the PGM format that is fairly
@@ -216,6 +239,7 @@ Copyright (C) 1989, 1991 by Jef Poskanzer.
 <li><a href="#description">DESCRIPTION</a>
 <li><a href="#format">THE FORMAT</a>
 <ul>
+  <li><a href="#minimal">Minimal Subset</a>
   <li><a href="#plainpgm">Plain PGM</a>
     </ul>
 <li><a href="#internetmediatype">INTERNET MEDIA TYPE</a>
