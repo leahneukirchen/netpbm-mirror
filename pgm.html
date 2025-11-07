@@ -136,11 +136,13 @@ calls white space).
     <LI>The raster
 </ol>
 
+<p>The maxval is at most 255 and even more minimally 255 exactly.
+
 <p>There is only one image in the file.
 
 <p>The program <b>pnmtopnm</b> produces this minimal subset, so if you have a
   more complex PGM image, you can pass it to to a less tolerant program
-  through <b>pnmtopnm</b>.
+  through <b>pnmtopnm</b>.  <b>pamdepth</b> can make the maxval 255.
   
   
 <h3 id="plainpgm">Plain PGM</h3>
