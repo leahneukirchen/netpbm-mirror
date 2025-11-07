@@ -131,12 +131,12 @@ calls white space).
 <p>The image consists of the following bytes:
 <ol>
   <li>&quot;P5&quot; followed by newline
-  <LI>width, height, and maxval, separated by single spaces (e.g. &quot;50 100 255&quot;),
+  <li>width and height separated by a space (e.g. &quot;50 100&quot;),
     followed by newline
-    <LI>The raster
+  <li>maxval, followed by newline.  At most 255; even more minimally, 255
+    exactly.
+  <li>The raster
 </ol>
-
-<p>The maxval is at most 255 and even more minimally 255 exactly.
 
 <p>There is only one image in the file.
 
