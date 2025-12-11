@@ -11,9 +11,10 @@ pgmmake.test
 ppmmake.test
 pamseq.test
 
-# Library test
+# Library tests
 
 parsecolor.test
+plainformat-read.test
 
 # Generator tests (2)
 
