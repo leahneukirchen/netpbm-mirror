@@ -4,7 +4,7 @@
 # 'pambrighten'.
 
 # We don't try very hard to respond well to invalid syntax, because backward
-# compatibility is mostly like existing, working applications.
+# compatibility is mostly for existing, working applications.
 
 pambrightenOpts=''
 normalize='no'
