@@ -1,25 +1,74 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pnmtile
-# Also requires: pamcat
+# Also requires: pbmmake pgmmake pamundice pamfile
 
-
-# Test 1.  Should print 4228632379 259
-pnmtile 40 50 testgrid.pbm | cksum
 
 tmpdir=${tmpdir:-/tmp}
 
-# Test 2.  Compare 2x2 tile images produced by pnmtile and pamcat
-# Should print 0
-testimg2_ppm=${tmpdir}/testimg2.ppm
+echo "Test 1a.  Should print match four times"
+
+check_pbm=${tmpdir}/check.pbm
+
+pbmmake -g 65 20 > ${check_pbm}
+cat ${check_pbm} | pnmtile 65 20 - | \
+  cmp -s - ${check_pbm} && echo "match" || echo "no match"
+pbmmake -g 10 12 | pnmtile 65 20 | \
+  cmp -s - ${check_pbm} && echo "match" || echo "no match"
+pbmmake -g 100 4 | pnmtile 65 20 | \
+  cmp -s - ${check_pbm} && echo "match" || echo "no match"
+pbmmake -g 2 2 |  pnmtile 4 4 | \
+    pnmtile 16 16 | pnmtile 65 20 | \
+    cmp -s - ${check_pbm} && echo "match" || echo "no match"
+
+echo "Test 1b.  Should print no match three times"
+
+pbmmake -g 5 5 | pnmtile 65 20 | \
+  cmp -s - ${check_pbm} && echo "match" || echo "no match"
+pbmmake -g 5 4 | pnmtile 65 20 | \
+  cmp -s - ${check_pbm} && echo "match" || echo "no match"
+pbmmake -g 4 5 | pnmtile 65 20 | \
+  cmp -s - ${check_pbm} && echo "match" || echo "no match"
+
+rm ${check_pbm}
+
+
+echo "Test 2.  Should print match"
+
+gray_pgm=${tmpdir}/gray_pgm
+
+pgmmake 0.25 100 100 > ${gray_pgm}
+pgmmake 0.25 1 1 | pnmtile 100 100 | \
+  cmp -s - ${gray_pgm} && echo "match" || echo "no match"
+
+rm ${gray_pgm}
+
+
+echo "Test 3.  Should print match"
+maze9_pbm=${tmpdir}/maze9_pbm
+
+echo maze.pbm maze.pbm maze.pbm \
+     maze.pbm maze.pbm maze.pbm \
+     maze.pbm maze.pbm maze.pbm | tr ' ' '\n' | \
+  pamundice -across=3 -down=3 -listfile=- > ${maze9_pbm} && \
+  pnmtile $(pamfile -size ${maze9_pbm}) maze.pbm | \
+    cmp -s - ${maze9_pbm} && echo "match" || echo "no match"
+
+rm ${maze9_pbm}
+
+
+echo "Test 4.  Should print match"
 testimg4_ppm=${tmpdir}/testimg4.ppm
 
-pnmtile 454 298 testimg.ppm > ${testimg4_ppm} &&
-pamcat -lr testimg.ppm testimg.ppm > ${testimg2_ppm} &&
-pamcat -tb ${testimg2_ppm} ${testimg2_ppm} | pamtopnm --assume |\
-cmp -s - ${testimg4_ppm}
-echo ${PIPESTATUS[@]} ":" $?
+echo testimg.ppm testimg.ppm \
+     testimg.ppm testimg.ppm | tr ' ' '\n' | \
+  pamundice -across=2 -down=2 -listfile=- > ${testimg4_ppm} && \
+  pnmtile $(pamfile -size ${testimg4_ppm}) testimg.ppm | \
+      cmp -s - ${testimg4_ppm} && echo "match" || echo "no match"
 
-rm ${testimg2_ppm} ${testimg4_ppm}
+rm ${testimg4_ppm}
+
+
+echo "Test invalid"
 
 . ./test-invalid.inc
 

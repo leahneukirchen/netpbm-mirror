@@ -11,10 +11,9 @@ pgmmake.test
 ppmmake.test
 pamseq.test
 
-# Library tests
+# Library test
 
 parsecolor.test
-plainformat-read.test
 
 # Generator tests (2)
 
@@ -84,10 +83,10 @@ pamhue.test
 
 pbmclean.test
 pamcut.test
+pamcat0.test
 pamcat1.test
 pamcat2.test
 pamcat3.test
-pnmcat.test
 pamdice.test
 pamundice.test
 
