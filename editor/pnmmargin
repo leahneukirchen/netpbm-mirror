@@ -35,14 +35,14 @@ while true ; do
         -c|-co|-col|-colo|-color )
         shift
         if [ ! ${1-""} ] ; then
-            echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+            echo "-color requires a value" 1>&2
             exit 1
         fi
         color="$1"
         shift
         ;;
         -* )
-        echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+        echo "unrecognized option '$1'.  Valid options are -color, -white, and -black" 1>&2
         exit 1
         ;;
         * )
@@ -52,7 +52,7 @@ while true ; do
 done
 
 if [ ! ${1-""} ] ; then
-    echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+    echo "missing size argument" 1>&2
     exit 1
 fi
 size="$1"
