@@ -11,7 +11,7 @@
 # documentation.  This software is provided "as is" without express or
 # implied warranty.
 
-color="-gofigure"
+color=""
 plainopt=""
 
 # Parse args.
@@ -25,11 +25,11 @@ while true ; do
         shift
         ;;
         -w|-wh|-whi|-whit|-white )
-        color="-white"
+        color="white"
         shift
         ;;
         -b|-bl|-bla|-blac|-black )
-        color="-black"
+        color="black"
         shift
         ;;
         -c|-co|-col|-colo|-color )
@@ -77,24 +77,11 @@ if [ $size -eq 0 ] ; then
     # Zero margin; just copy input to output
     pamtopnm $plainopt $@;
 else
-    # If -white or -black, write output with pnmpad and exit.
-    # Otherwise construct spacer files.
-
-    case "$color" in
-        -gofigure )
+    if test "$color" = ''; then
         pnmpad $plainopt -detect-background \
             -left=$size -right=$size -top=$size -bottom=$size $@
-        exit
-        ;;
-        -white | -black )
-        pnmpad $plainopt $color \
-            -left=$size -right=$size -top=$size -bottom=$size $@
-        exit
-        ;;
-        * )
+    else
         pnmpad $plainopt -color $color \
             -left=$size -right=$size -top=$size -bottom=$size $@
-        exit
-        ;;
-    esac
+    fi
 fi
