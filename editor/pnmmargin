@@ -60,7 +60,7 @@ shift
 
 case $size in
     ''|*[!0-9]*)
-        echo "Size argument '$size' is not a whole number"
+        echo "Size argument '$size' is not a whole number" 1>&2
         exit 1
         ;;
 esac
