@@ -9,58 +9,79 @@ seq2_4h4_pam=${tmpdir}/seq2_4h4.pam
 seq2_4v_pam=${tmpdir}/seq2_4v.pam
 seq2_4v3_pam=${tmpdir}/seq2_4v3.pam
 
+options_h=${tmpdir}/options_h
+options_v=${tmpdir}/options_v
 
 
-echo "Test 1.  Should print 2700536985 95, then 0 twelve times"
+cat > ${options_h} <<EOF
+-lr
+-lr -jtop
+--leftright -jcenter
+--leftright -jbottom
+-lr -white
+-lr -black
+--topbottom
+EOF
+
+cat > ${options_v} <<EOF
+-topbottom
+-tb -jleft
+--topbottom -jcenter
+--topbottom -jright
+-tb -white
+-tb -black
+-lr
+EOF
+
+
+echo "Test 1.  Should print 2700536985 95, then match fourteen times"
 pamseq 2 4 | tee ${seq2_4h_pam} | cksum
-for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-    "-lr -white" "-lr -black" \
-    "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
-    "-tb -white" "-tb -black"
+cat ${options_h} ${options_v} | \
+while read opt
   do
   pamcat ${opt} ${seq2_4h_pam}  |\
-  cmp -s ${seq2_4h_pam} - ; echo $?
+  cmp -s ${seq2_4h_pam} - && echo "match" || echo "no match"
   done
 
 
-echo "Test 2.  Should print 2193235886 195, 0 eight times, 1 once"
+echo "Test 2.  Should print 2193235886 195, then match eight times, no match once"
 pamrestack -width=1 ${seq2_4h_pam} | tee ${seq2_4v_pam} |\
   pamenlarge -xscale=3 |\
   tee ${seq2_4v3_pam} | cksum
 pamcat -lr ${seq2_4v_pam} ${seq2_4v_pam} | pamcat -lr - ${seq2_4v_pam} |\
-  cmp -s ${seq2_4v3_pam} - ; echo $?
+  cmp -s ${seq2_4v3_pam} - && echo "match" || echo "no match"
 pamcat -lr ${seq2_4v_pam} | pamcat -lr - ${seq2_4v_pam}  ${seq2_4v_pam} |\
-  cmp -s ${seq2_4v3_pam} - ; echo $?
-for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-    "-lr -white" "-lr -black" \
-    "-topbottom"
+  cmp -s ${seq2_4v3_pam} - && echo "match" || echo "no match"
+
+cat ${options_h} | \
+while read opt    
   do
   pamcat ${opt} ${seq2_4v_pam} ${seq2_4v_pam} ${seq2_4v_pam} |\
-  cmp -s ${seq2_4v3_pam} - ; echo $?
+  cmp -s ${seq2_4v3_pam} - && echo "match" || echo "no match"
   done
 
 
-echo "Test 3.  Should print 2773166369 245, 0 nine times, 1 once"
+echo "Test 3.  Should print 2773166369 245, then match nine times, no match once"
 pamenlarge -yscale 4 ${seq2_4h_pam} | tee ${seq2_4h4_pam} | cksum
 pamcat -tb ${seq2_4h_pam} |\
     pamcat -tb - ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam} |\
-    cmp -s ${seq2_4h4_pam} - ; echo $?
+    cmp -s ${seq2_4h4_pam} - && echo "match" || echo "no match"
 pamcat -tb ${seq2_4h_pam} ${seq2_4h_pam} |\
     pamcat -tb - ${seq2_4h_pam} ${seq2_4h_pam} |\
-    cmp -s ${seq2_4h4_pam} - ; echo $?
+    cmp -s ${seq2_4h4_pam} - && echo "match" || echo "no match"
 pamcat -tb ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam}|\
     pamcat -tb - ${seq2_4h_pam} |\
-    cmp -s ${seq2_4h4_pam} - ; echo $?
-for opt in "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
-    "-tb -white" "-tb -black" \
-    "-leftright"
+    cmp -s ${seq2_4h4_pam} - && echo "match" || echo "no match"
+
+cat ${options_v} | \
+while read opt
   do
   pamcat ${opt} ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam} ${seq2_4h_pam} |\
-  cmp -s ${seq2_4h4_pam} - ; echo $?
+  cmp -s ${seq2_4h4_pam} - && echo "match" || echo "no match"
   done
 
 rm ${seq2_4h_pam} ${seq2_4v_pam} ${seq2_4v3_pam} ${seq2_4h4_pam}
-
+rm ${options_h} ${options_v}
 
 
 echo "Test Invalid"

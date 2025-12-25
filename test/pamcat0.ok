@@ -19,60 +19,58 @@ P1
 2 2
 01
 10
-Test 2.  Should print 3141425598 9 fourteen times
+Test 2.  Should print 3141425598 9, then match twelve times
 3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-3141425598 9
-Test 3.  Should print 2197356643 895 eight times
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Test 3.  Should print 2197356643 895, then match seven times
 2197356643 895
-2197356643 895
-2197356643 895
-2197356643 895
-2197356643 895
-2197356643 895
-2197356643 895
-2197356643 895
-Test 4.  Should print 3313353797 954 seven times
+match
+match
+match
+match
+match
+match
+match
+Test 4.  Should print 3313353797 954, then match six times
 3313353797 954
-3313353797 954
-3313353797 954
-3313353797 954
-3313353797 954
-3313353797 954
-3313353797 954
-Test 5.  Should print 1731660895 1308 ten times
+match
+match
+match
+match
+match
+match
+Test 5.  Should print 1731660895 1308, then match eight times
 1731660895 1308
-1731660895 1308
-1731660895 1308
-1731660895 1308
-1731660895 1308
-1731660895 1308
-1731660895 1308
-1731660895 1308
-1731660895 1308
-1731660895 1308
-Test 6.  Should print 2985957591 1426 ten times
+match
+match
+match
+match
+match
+match
+match
+match
+Test 6.  Should print 2985957591 1426, then match nine times
 2985957591 1426
-2985957591 1426
-2985957591 1426
-2985957591 1426
-2985957591 1426
-2985957591 1426
-2985957591 1426
-2985957591 1426
-2985957591 1426
-2985957591 1426
+match
+match
+match
+match
+match
+match
+match
+match
+match
 Test 7.  Should print a simple PGM image three times
 P2
 4 4
@@ -95,7 +93,8 @@ P2
 0 1 1 2
 1 1 2 2
 1 2 2 3
-Test 8.  Should print match fourteen times
+Test 8.  Should print 1102493995 27, then match twelve times
+1102493995 27
 match
 match
 match
@@ -108,19 +107,8 @@ match
 match
 match
 match
-match
-match
-Test 9.  Should print match nine times
-match
-match
-match
-match
-match
-match
-match
-match
-match
-Test 10.  Should print match nine times
+Test 9.  Should print 3418874152 108, then match eight times
+3418874152 108
 match
 match
 match
@@ -129,32 +117,41 @@ match
 match
 match
 match
+Test 10.  Should print 481335892 92, then match eight times
+481335892 92
 match
-Test 11.  Should print 2097565808 394 eight times
+match
+match
+match
+match
+match
+match
+match
+Test 11.  Should print 2097565808 394, then match seven times
 2097565808 394
-2097565808 394
-2097565808 394
-2097565808 394
-2097565808 394
-2097565808 394
-2097565808 394
-2097565808 394
+match
+match
+match
+match
+match
+match
+match
 Test 12.  Should print 3086569577 394
 3086569577 394
-Test 13.  Should print 4288335051 586 three times
+Test 13.  Should print 4288335051 586, then match twice
 4288335051 586
-4288335051 586
-4288335051 586
-Test 14.  Should print 642720605 586 nine times
+match
+match
+Test 14.  Should print 642720605 586, then match eight times
 642720605 586
-642720605 586
-642720605 586
-642720605 586
-642720605 586
-642720605 586
-642720605 586
-642720605 586
-642720605 586
+match
+match
+match
+match
+match
+match
+match
+match
 Test 15.  Should print 3622741282 1019 twice
 3622741282 1019
 3622741282 1019

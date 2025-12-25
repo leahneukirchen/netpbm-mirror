@@ -4,8 +4,10 @@
 
 tmpdir=${tmpdir:-/tmp}
 check2x2_pbm=${tmpdir}/check2x2.pbm
-maze2lr_pbm=${tmpdir}/maze2lr.pbm
-maze2tb_pbm=${tmpdir}/maze2tb.pbm
+maze2h_pbm=${tmpdir}/maze2h.pbm
+maze2v_pbm=${tmpdir}/maze2v.pbm
+maze3h_pbm=${tmpdir}/maze3h.pbm
+maze23_pbm=${tmpdir}/maze3v.pbm
 diag4_pgm=${tmpdir}/diag4.pgm
 noise_pgm=${tmpdir}/noise.pgm
 noiseh6_pgm=${tmpdir}/noiseh6.pgm
@@ -13,6 +15,9 @@ noisev5_pgm=${tmpdir}/noisev5.pgm
 diag8_ppm=${tmpdir}/diag8.ppm
 diag2h_ppm=${tmpdir}/diag2h.ppm
 diag2v_ppm=${tmpdir}/diag2v.ppm
+
+options_h=${tmpdir}/options_h
+options_v=${tmpdir}/options_v
 
 echo "Test 1.  Should print a simple PBM image five times"
 # Check input from stdin and from designated input file
@@ -24,61 +29,96 @@ pamcat -tb -plain < ${check2x2_pbm}
 pamcat -lr -black -plain ${check2x2_pbm}
 cat ${check2x2_pbm} | pamcat -tb -white -plain
 
+cat > ${options_h} <<EOF
+-leftright
+-lr -jtop
+--leftright --jcenter
+-lr --jbottom
+--leftright --white
+-lr -black
+EOF
 
-echo "Test 2.  Should print 3141425598 9 fourteen times"
-for opt in "-leftright" "-lr" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-    "-lr -white" "-lr -black" \
-    "-topbottom" "-tb" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
-    "-tb -white" "-tb -black"
+cat > ${options_v} <<EOF
+-topbottom
+--topbottom --jleft
+--tb -jcenter
+--topbottom --jright
+-tb -white
+--topbottom --black
+EOF
+
+echo "Test 2.  Should print 3141425598 9, then match twelve times"
+cat ${check2x2_pbm} | cksum
+
+cat ${options_h} ${options_v} | \
+while read opt
   do
-  pamcat ${opt} ${check2x2_pbm} | cksum
+  pamcat ${opt} ${check2x2_pbm} | \
+    cmp -s - ${check2x2_pbm} && echo "match" || echo "no match"	  
   done
 
 rm ${check2x2_pbm}
 
+echo "Test 3.  Should print 2197356643 895, then match seven times"
+(echo maze.pbm ; echo maze.pbm) | pamundice -across 2 -listfile=- | \
+    tee ${maze2h_pbm} | cksum
 
-echo "Test 3.  Should print 2197356643 895 eight times"
-pamcat -lr -white maze.pbm maze.pbm | tee ${maze2lr_pbm} | cksum
-for opt in "-leftright" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-    "-lr -white" "-lr -black"
+cat ${options_h} | \
+while read opt
   do
-  pamcat ${opt} maze.pbm maze.pbm | cksum
+  pamcat ${opt} maze.pbm maze.pbm | \
+    cmp -s - ${maze2h_pbm} && echo "match" || echo "no match"	  
+  done
+cat maze.pbm | pamcat -lr -black maze.pbm - | \
+    cmp -s - ${maze2h_pbm} && echo "match" || echo "no match"
+
+
+echo "Test 4.  Should print 3313353797 954, then match six times"
+(echo maze.pbm ; echo maze.pbm) | pamundice -down 2 -listfile=- | \
+    tee ${maze2v_pbm} | cksum
+cat ${options_v} | \
+while read opt
+  do
+  pamcat ${opt} maze.pbm maze.pbm | \
+    cmp -s - ${maze2v_pbm} && echo "match" || echo "no match"
   done
 
 
-cat maze.pbm | pamcat -lr -black maze.pbm - | cksum
+echo "Test 5.  Should print 1731660895 1308, then match eight times"
+(echo maze.pbm ; echo maze.pbm; echo maze.pbm) | \
+    pamundice -across 3 -listfile=- | tee ${maze3h_pbm} | cksum
 
-echo "Test 4.  Should print 3313353797 954 seven times"
-pamcat -tb maze.pbm maze.pbm | tee ${maze2tb_pbm} | cksum
-for opt in "-topbottom" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
-    "-tb -white" "-tb -black"
+cat ${options_h} | \
+while read opt
   do
-  pamcat ${opt} maze.pbm maze.pbm | cksum
+  pamcat ${opt} ${maze2h_pbm} maze.pbm | \
+    cmp -s - ${maze3h_pbm} && echo "match" || echo "no match"
   done
+pamcat -lr maze.pbm ${maze2h_pbm} |  \
+    cmp -s - ${maze3h_pbm} && echo "match" || echo "no match"
+
+cat ${maze2h_pbm} | pamcat -lr - maze.pbm | \
+    cmp -s - ${maze3h_pbm} && echo "match" || echo "no match"
 
 
-echo "Test 5.  Should print 1731660895 1308 ten times"
-pamcat -lr maze.pbm maze.pbm maze.pbm | cksum
-for opt in "-leftright" "-lr" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-    "-lr -white" "-lr -black"
+echo "Test 6.  Should print 2985957591 1426, then match nine times"
+(echo maze.pbm ; echo maze.pbm; echo maze.pbm) | \
+    pamundice -down 3 -listfile=- | tee ${maze3v_pbm} | cksum
+
+cat ${options_v} | \
+while read opt
   do
-  pamcat ${opt} ${maze2lr_pbm} maze.pbm | cksum
+  pamcat ${opt} ${maze3v_pbm} maze.pbm | \
+    cmp -s - ${maze3v_pbm} && echo "match" || echo "no match"	  
   done
-pamcat -lr maze.pbm ${maze2lr_pbm} | cksum
-cat ${maze2lr_pbm} | pamcat -lr - maze.pbm | cksum
+pamcat -tb maze.pbm maze.pbm maze.pbm | \
+    cmp -s - ${maze3v_pbm} && echo "match" || echo "no match"
+pamcat -tb maze.pbm ${maze2v_pbm} | \
+    cmp -s - ${maze3v_pbm} && echo "match" || echo "no match"
+cat maze.pbm | pamcat -tb - ${maze2v_pbm} | \
+    cmp -s - ${maze3v_pbm} && echo "match" || echo "no match"
 
-
-echo "Test 6.  Should print 2985957591 1426 ten times"
-for opt in  "-topbottom" "-tb" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
-    "-tb -white" "-tb -black"
-  do
-  pamcat ${opt} ${maze2tb_pbm} maze.pbm | cksum
-  done
-pamcat -tb maze.pbm maze.pbm maze.pbm | cksum
-pamcat -tb maze.pbm ${maze2tb_pbm} | cksum
-cat maze.pbm | pamcat -tb - ${maze2tb_pbm} | cksum
-
-rm ${maze2lr_pbm} ${maze2tb_pbm}
+rm ${maze2h_pbm} ${maze2v_pbm} ${maze3h_pbm} ${maze3v_pbm}
 
 
 echo "Test 7.  Should print a simple PGM image three times"
@@ -90,35 +130,37 @@ pgmramp -diag 4 4 -maxval=3 | tee ${diag4_pgm} | pamcat -lr -plain |\
 pamcat -tb -plain ${diag4_pgm} | sed 's/ *$//'
 cat ${diag4_pgm} | pamcat -tb -plain | sed 's/ *$//'
 
+rm ${diag4_pgm}
+
 
 pgmnoise -randomseed=100 4 4 > ${noise_pgm}
 
-echo "Test 8.  Should print match fourteen times"
+echo "Test 8.  Should print 1102493995 27, then match twelve times"
+pgmnoise -randomseed=100 4 4 | tee ${noise_pgm} | cksum
 
-for opt in "-leftright" "-lr" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-			"-lr -white" "-lr -black" \
-			"-topbottom" "-tb" "-tb -jleft" "-tb -jcenter" "-tb --jright" \
-	                "-tb -white" "-tb -black"
-do
-    pamcat ${opt} ${noise_pgm} | cmp -s ${noise_pgm} - && echo "match" || echo "no match"
-done
+cat ${options_h} ${options_v} | \
+while read opt
+  do
+  pamcat ${opt} ${noise_pgm} | cmp -s ${noise_pgm} - && echo "match" || echo "no match"
+  done
 
 
+echo "Test 9.  Should print 3418874152 108, then match eight times"
 echo ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    tr ' ' '\n' | pamundice -across 6 -listfile=- > ${noiseh6_pgm}
+    tr ' ' '\n' | pamundice -across 6 -listfile=- | \
+    tee ${noiseh6_pgm} | cksum
 
-echo "Test 9.  Should print match nine times"
-for opt in "-leftright" "-lr" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-			"-lr -white" "-lr -black"
-do
-    pamcat ${opt} ${noise_pgm} ${noise_pgm} ${noise_pgm} \
-	  ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    cmp -s ${noiseh6_pgm} - && echo "match" || echo "no match"
+cat ${options_h} | \
+while read opt
+  do
+  pamcat ${opt} ${noise_pgm} ${noise_pgm} ${noise_pgm} \
+         ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
+  cmp -s ${noiseh6_pgm} - && echo "match" || echo "no match"
 
-done
+  done
 pamcat -lr ${noise_pgm} ${noise_pgm} | \
     pamcat -lr - ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-        cmp -s ${noiseh6_pgm} - && echo "match" || echo "no match"
+    cmp -s ${noiseh6_pgm} - && echo "match" || echo "no match"
 
 pamcat -lr ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
     pamcat -lr ${noise_pgm} - ${noise_pgm} ${noise_pgm} | \
@@ -127,16 +169,17 @@ pamcat -lr ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
 rm ${noiseh6_pgm}
 
 
+echo "Test 10.  Should print 481335892 92, then match eight times"
 echo ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    tr ' ' '\n' | pamundice -down 5 -listfile=- > ${noisev5_pgm}
+    tr ' ' '\n' | pamundice -down 5 -listfile=- | \
+    tee ${noisev5_pgm} | cksum
 
-echo "Test 10.  Should print match nine times"
-for opt in "-topbottom" "-tb" "-tb -jleft" "-tb -jcenter" "-tb --jright" \
-	                "-tb -white" "-tb -black"
-do
-    pamcat ${opt} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-	cmp -s ${noisev5_pgm} - && echo "match" || echo "no match"
-done
+cat ${options_v} | \
+while read opt
+  do
+  pamcat ${opt} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
+    cmp -s ${noisev5_pgm} - && echo "match" || echo "no match"
+  done
 pamcat -tb ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
     pamcat -tb ${noise_pgm} ${noise_pgm} - | \
     cmp -s ${noisev5_pgm} - && echo "match" || echo "no match"    
@@ -148,37 +191,51 @@ rm ${noise_pgm} ${noisev5_pgm}
 
 pgmramp -diag 8 8 -maxval 7 | ppmtoppm > ${diag8_ppm}
 
-echo "Test 11.  Should print 2097565808 394 eight times"
-for opt in "-leftright" "-lr" "-lr -jtop" "-lr -jcenter" "-lr -jbottom" \
-    "-lr -white" "-lr -black"
+echo "Test 11.  Should print 2097565808 394, then match seven times"
+(echo ${diag8_ppm} ; echo ${diag8_ppm}) | \
+    pamundice -across 2 -listfile=- | tee ${diag2h_ppm} | cksum
+
+cat ${options_h} | \
+while read opt
   do
-  pamcat ${opt} ${diag8_ppm} ${diag8_ppm} | cksum
+  pamcat ${opt} ${diag8_ppm} ${diag8_ppm} | \
+    cmp -s ${diag2h_ppm} - && echo "match" || echo "no match"     
   done
-cat ${diag8_ppm} | pamcat -lr -white ${diag8_ppm} - | tee ${diag2h_ppm} | cksum
+cat ${diag8_ppm} | pamcat -lr -white ${diag8_ppm} - | \
+    cmp -s ${diag2h_ppm} - && echo "match" || echo "no match"     
 
 
 echo "Test 12.  Should print 3086569577 394"
 pamcat -tb ${diag8_ppm} ${diag8_ppm} | tee ${diag2v_ppm} | cksum
 
 
-echo "Test 13.  Should print 4288335051 586 three times"
-pamcat -lr ${diag8_ppm} ${diag8_ppm} ${diag8_ppm} | cksum
-pamcat -lr ${diag8_ppm}  ${diag2h_ppm} | cksum
-cat ${diag2h_ppm} | pamcat -lr - ${diag8_ppm} | cksum
+echo "Test 13.  Should print 4288335051 586, then match twice"
+(echo ${diag8_ppm}; echo ${diag8_ppm}; echo ${diag8_ppm}) | \
+    pamundice -across 3 -listfile=- | tee ${diag3h_ppm} | cksum
+
+pamcat -lr ${diag8_ppm}  ${diag2h_ppm} | \
+    cmp -s ${diag3h_ppm} - && echo "match" || echo "no match"     
+cat ${diag2h_ppm} | pamcat -lr - ${diag8_ppm} | \
+    cmp -s ${diag3h_ppm} - && echo "match" || echo "no match"     	
 
 
-echo "Test 14.  Should print 642720605 586 nine times"
+echo "Test 14.  Should print 642720605 586, then match eight times"
+(echo ${diag8_ppm}; echo ${diag8_ppm}; echo ${diag8_ppm}) | \
+    pamundice -down 3 -listfile=- | tee ${diag3v_ppm} | cksum 
 
-for opt in "-topbottom" "-tb" "-tb -jleft"  "-tb -jcenter" "-tb --jright" \
-    "-tb -white" "-tb -black"
+cat ${options_v} | \
+while read opt
   do
-  pamcat ${opt} ${diag8_ppm} ${diag8_ppm} ${diag8_ppm} | cksum
+  pamcat ${opt} ${diag8_ppm} ${diag8_ppm} ${diag8_ppm} | \
+    cmp -s ${diag3h_ppm} - && echo "match" || echo "no match"
   done
-pamcat -tb ${diag2v_ppm} ${diag8_ppm} | cksum
-cat ${diag8_ppm} | pamcat -tb ${diag2v_ppm} - | cksum
+pamcat -tb ${diag2v_ppm} ${diag8_ppm} | \
+    cmp -s ${diag3h_ppm} - && echo "match" || echo "no match"
+cat ${diag8_ppm} | pamcat -tb ${diag32v_ppm} - | \
+    cmp -s ${diag3h_ppm} - && echo "match" || echo "no match"
 
-rm ${diag2h_ppm} ${diag2v_ppm}
-
+rm ${diag2h_ppm} ${diag2v_ppm} ${diag3h_ppm} ${diag3v_ppm}
+rm ${options_h} ${options_v}
 
 echo "Test 15.  Should print 3622741282 1019 twice"
 pamcat -tb -white testgrid.pbm ${diag8_ppm} | cksum
@@ -190,6 +247,9 @@ pamcat -tb -jleft -white testgrid.pbm ${diag8_ppm}  | cksum
 echo "Test 17.  Should print 2756501917 1019"
 pamcat -tb -jright -white testgrid.pbm ${diag8_ppm} | cksum
 
+rm ${diag8_ppm}
+
+
 echo "Test 18. Should print 587933655 107742 twice"
 pamcat -lr -black testgrid.pbm testimg.ppm | cksum
 pamcat -lr -jcenter -black testgrid.pbm testimg.ppm | cksum
@@ -199,5 +259,3 @@ pamcat -lr -jtop -black testgrid.pbm testimg.ppm | cksum
 
 echo "Test 20.  Should print 3910239002 107742"
 pamcat -lr -jbottom -black testgrid.pbm testimg.ppm | cksum
-
-rm ${diag8_ppm}

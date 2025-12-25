@@ -1,40 +1,42 @@
-Test 1.  Should print 2700536985 95, then 0 twelve times
+Test 1.  Should print 2700536985 95, then match fourteen times
 2700536985 95
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-Test 2.  Should print 2193235886 195, 0 eight times, 1 once
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+match
+Test 2.  Should print 2193235886 195, then match eight times, no match once
 2193235886 195
-0
-0
-0
-0
-0
-0
-0
-0
-1
-Test 3.  Should print 2773166369 245, 0 nine times, 1 once
+match
+match
+match
+match
+match
+match
+match
+match
+no match
+Test 3.  Should print 2773166369 245, then match nine times, no match once
 2773166369 245
-0
-0
-0
-0
-0
-0
-0
-0
-0
-1
+match
+match
+match
+match
+match
+match
+match
+match
+match
+no match
 Test Invalid
 Expected failure 1 (no output)
 Expected failure 2 (no output)
