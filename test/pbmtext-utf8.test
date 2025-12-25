@@ -40,7 +40,9 @@ until [ -z ${locale_to_test} ] || \
       locale_to_test=`head -n 1 ${utf_locale_list}`;
       # then erase the line
       sed -i 1d ${utf_locale_list};
-    done;
+done;
+
+rm ${utf_locale_list};
 
 if [ -z  ${locale_to_test} ]
   then echo "No utf-8 locale available." 1>&2

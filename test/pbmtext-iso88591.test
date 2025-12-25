@@ -36,6 +36,8 @@ until [ -z ${locale_to_test} ] || \
       sed -i 1d ${iso88591_locale_list};
   done;
 
+rm  ${iso88591_locale_list}
+
 if [ -z  ${locale_to_test} ]
   then echo "No iso-8859-1 locale available." 1>&2
        echo "Skipping." 1>&2

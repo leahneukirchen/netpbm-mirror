@@ -60,3 +60,5 @@ for generator in "pbmmake -b 1 1" \
 
     done
 done
+
+rm ${test_pnm} ${padded_pnm}
