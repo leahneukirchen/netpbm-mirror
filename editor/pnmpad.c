@@ -256,13 +256,8 @@ parseCommandLine(int argc, const char ** argv,
         if (cmdlineP->padType == PAD_COLOR ||
             cmdlineP->padType == PAD_GRAY) {
             cmdlineP->promote = PROMOTE_ALL;
-        } else {
+        } else
             cmdlineP->promote = PROMOTE_NONE;
-            /* Note that for PAD_BLACK and PAD_WHITE, PROMOTE_NONE is
-               identical to PROMOTE_ALL because black and white can be
-               represented in any format and any maxval
-            */
-        }
     }
     if (cmdlineP->topSpec > 1)
        pm_error("You can specify -top only once");
