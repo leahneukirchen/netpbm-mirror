@@ -25,11 +25,11 @@ while true ; do
         shift
         ;;
         -w|-wh|-whi|-whit|-white )
-        color="white"
+        color="rgbi:1/1/1"
         shift
         ;;
         -b|-bl|-bla|-blac|-black )
-        color="black"
+        color="rgbi:0/0/0"
         shift
         ;;
         -c|-co|-col|-colo|-color )
@@ -85,3 +85,6 @@ else
             -left=$size -right=$size -top=$size -bottom=$size $@
     fi
 fi
+
+
+
