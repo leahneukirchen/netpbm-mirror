@@ -65,7 +65,7 @@ install.bin install.merge: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 
-# In December 2001, pamstretch replaced pnminterp and pamstretch-getn
+# In December 2001, pamstretch replaced pnminterp and pamstretch-gen
 # replaced pnminterp-gen
 	cd $(PKGDIR)/bin ; \
 	rm -f pnminterp$(EXE); \

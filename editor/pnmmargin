@@ -11,7 +11,7 @@
 # documentation.  This software is provided "as is" without express or
 # implied warranty.
 
-color="-gofigure"
+color=""
 plainopt=""
 
 # Parse args.
@@ -25,24 +25,24 @@ while true ; do
         shift
         ;;
         -w|-wh|-whi|-whit|-white )
-        color="-white"
+        color="rgbi:1/1/1"
         shift
         ;;
         -b|-bl|-bla|-blac|-black )
-        color="-black"
+        color="rgbi:0/0/0"
         shift
         ;;
         -c|-co|-col|-colo|-color )
         shift
         if [ ! ${1-""} ] ; then
-            echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+            echo "-color requires a value" 1>&2
             exit 1
         fi
         color="$1"
         shift
         ;;
         -* )
-        echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+        echo "unrecognized option '$1'.  Valid options are -color, -white, and -black" 1>&2
         exit 1
         ;;
         * )
@@ -52,7 +52,7 @@ while true ; do
 done
 
 if [ ! ${1-""} ] ; then
-    echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+    echo "missing size argument" 1>&2
     exit 1
 fi
 size="$1"
@@ -60,13 +60,13 @@ shift
 
 case $size in
     ''|*[!0-9]*)
-        echo "Size argument '$size' is not a whole number"
+        echo "Size argument '$size' is not a whole number" 1>&2
         exit 1
         ;;
 esac
 
 if [ ${2-""} ] ; then
-    echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+    echo "too many arguments" 1>&2
     exit 1
 fi
 
@@ -77,24 +77,14 @@ if [ $size -eq 0 ] ; then
     # Zero margin; just copy input to output
     pamtopnm $plainopt $@;
 else
-    # If -white or -black, write output with pnmpad and exit.
-    # Otherwise construct spacer files.
-
-    case "$color" in
-        -gofigure )
+    if test "$color" = ''; then
         pnmpad $plainopt -detect-background \
             -left=$size -right=$size -top=$size -bottom=$size $@
-        exit
-        ;;
-        -white | -black )
-        pnmpad $plainopt $color \
-            -left=$size -right=$size -top=$size -bottom=$size $@
-        exit
-        ;;
-        * )
+    else
         pnmpad $plainopt -color $color \
             -left=$size -right=$size -top=$size -bottom=$size $@
-        exit
-        ;;
-    esac
+    fi
 fi
+
+
+

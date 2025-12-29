@@ -18,6 +18,10 @@ function testExitStatus () {
 #   $2: expected exit status   (In some cases we expect error.)
 #   $3: actual exit status
 
+# NO SUCH FILE should not happen with an ordinary build.
+# NO SUCH FILE typically appears when "make --keep-going" is issued to ignore
+# compilation failures.
+
     case $3 in
       126) if [ ! -x $1 ]
              then echo $1": NOT EXECUTABLE";
@@ -396,7 +400,9 @@ grepOption[1]=""    # Output --version message
 
 for i in $ordinary_testprogs
   do
-    # Stub out programs that aren't built.
+    # Programs that aren't built because of a configuration choice are
+    # reported as "ok" in all-in-place.out .
+
     Available-Testprog "$i"
       if [ $? = 1 ]; then
       echo "$i: program was not built" 1>&2

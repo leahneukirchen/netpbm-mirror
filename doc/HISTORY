@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+25.12.29 BJH  Release 11.13.00
+
+              pnmmargin: improve error messages
+
 25.09.27 BJH  Release 11.12.00
 
               pamtris: fix unrecognized command or crash on line with no

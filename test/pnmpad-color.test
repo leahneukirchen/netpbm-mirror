@@ -442,3 +442,6 @@ echo "Should print match twice"
 ppmmake -maxval 511 ${DARKGRAY} 1 1 > ${target_pnm}
 pnmpad ${ptop} -color ${DARKGRAY}              ${infile} | cmptarget
 pnmpad ${ptop} -color ${DARKGRAY} -promote all ${infile} | cmptarget
+
+rm ${white_pbm} ${black_pbm} ${test127_pgm} ${test255_pgm} \
+   ${test511_pgm} ${test127_ppm} ${test255_ppm} ${test511_ppm} ${target_pnm}

@@ -1,0 +1,166 @@
+#! /bin/sh
+# This script tests: pamtopnm pbmpscale pgmtopgm pamdepth ppmtoppm
+# Also requires:
+
+# Test plain format variants
+# Sample image files from Wikipedia article of Netpbm
+# Retrieved December 2025
+
+tmpdir=${tmpdir:-/tmp}
+j1_pbm=${tmpdir}/j1.pbm
+j1_nc_pbm=${tmpdir}/j1_nc.pbm
+j2_pbm=${tmpdir}/j2.pbm
+j3_pbm=${tmpdir}/j3.pbm
+feep_pgm=${tmpdir}/feep.pgm
+feep_nc_pgm=${tmpdir}/feep_nc.pgm
+rgb1_ppm=${tmpdir}/rgb1.ppm
+rgb2_ppm=${tmpdir}/rgb2.ppm
+rgb3_ppm=${tmpdir}/rgb3.ppm
+rgb3_nc_ppm=${tmpdir}/rgb3_nc.ppm
+
+
+cat > ${j1_pbm} <<EOF
+P1
+# This is an example bitmap of the letter "J"
+6 10
+0 0 0 0 1 0
+0 0 0 0 1 0
+0 0 0 0 1 0
+0 0 0 0 1 0
+0 0 0 0 1 0
+0 0 0 0 1 0
+1 0 0 0 1 0
+0 1 1 1 0 0
+0 0 0 0 0 0
+0 0 0 0 0 0
+EOF
+
+
+cat > ${j2_pbm} <<EOF
+P1
+# This is an example bitmap of the letter "J"
+6 10
+000010000010000010000010000010000010100010011100000000000000
+EOF
+
+
+awk 'NR <=3 {print $0; next};
+     NR==4 {for(i=1; i<=NF; i++) printf("%c", $i); }' > ${j3_pbm} <<EOF
+P4
+# This is an example binary format of the letter "J" with each byte in decimal notation
+6 10
+8 8 8 8 8 8 136 112 0 0
+EOF
+
+
+echo "Test 1.  Should print 1875131472 78 four times"
+
+# pamtopnm uses pnm_readpamrow() for read, pnm_writepamrow() for write
+
+pamtopnm -plain ${j1_pbm} | cksum
+pamtopnm -plain ${j2_pbm} | cksum
+pamtopnm -plain ${j3_pbm} | cksum
+grep -v "^#" ${j1_pbm} | tee ${j1_nc_pbm} |  tr ' ' '\n' | pamtopnm -plain | cksum
+
+# We don't have pbmtopbm so we use "pbmpscale 1" instead,
+# pbmpscale uses pbm_readpbmrow_packed() for read.
+
+echo "Test 2.  Should print 3320550998 18 four times"
+
+pbmpscale 1 ${j1_pbm} | cksum
+pbmpscale 1 ${j1_nc_pbm} | cksum
+pbmpscale 1 ${j2_pbm} | cksum
+pbmpscale 1 ${j3_pbm} | cksum
+
+rm ${j1_pbm} ${j1_nc_pbm} ${j2_pbm} ${j3_pbm}
+
+
+
+cat > ${feep_pgm} <<EOF
+P2
+# Shows the word "FEEP"
+24 7
+15
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  3  3  3  3  0  0  7  7  7  7  0  0 11 11 11 11  0  0 15 15 15 15  0
+0  3  0  0  0  0  0  7  0  0  0  0  0 11  0  0  0  0  0 15  0  0 15  0
+0  3  3  3  0  0  0  7  7  7  0  0  0 11 11 11  0  0  0 15 15 15 15  0
+0  3  0  0  0  0  0  7  0  0  0  0  0 11  0  0  0  0  0 15  0  0  0  0
+0  3  0  0  0  0  0  7  7  7  7  0  0 11 11 11 11  0  0 15  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+EOF
+
+
+
+echo "Test 3.  Should print 2549343274 372 two times"
+
+# pgmtopgm uses pgm_readpgmrow()
+
+pgmtopgm -plain < ${feep_pgm} | cksum
+grep -v "^#"  ${feep_pgm} | tee ${feep_nc_pgm} | pgmtopgm -plain | cksum
+
+echo "Test 4.  Should print 3499783928 179 five times"
+
+pgmtopgm < ${feep_pgm} | cksum
+tr ' ' '  ' < ${feep_pgm} | pgmtopgm | cksum
+tr ' ' '\t' < ${feep_pgm} | pgmtopgm | cksum
+tr ' ' '\n\n' < ${feep_nc_pgm} | pgmtopgm | cksum
+tr ' ' '\n\v'   < ${feep_nc_pgm} | pgmtopgm | cksum
+
+rm ${feep_pgm} ${feep_nc_pgm}
+
+
+cat > ${rgb1_ppm} <<EOF
+P3
+# "P3" means this is a RGB color image in ASCII
+# "3 2" is the width and height of the image in pixels
+# "255" is the maximum value for each color
+# This, up through the "255" line below are the header.
+# Everything after that is the image data: RGB triplets.
+# In order: red, green, blue, yellow, white, and black.
+3 2
+255
+255   0   0
+  0 255   0
+  0   0 255
+255 255   0
+255 255 255
+  0   0   0
+EOF
+
+
+cat > ${rgb2_ppm} <<EOF
+P3
+# The same image with width 3 and height 2,
+# using 0 or 1 per color (red, green, blue)
+3 2 1
+1 0 0   0 1 0   0 0 1
+1 1 0   1 1 1   0 0 0
+EOF
+
+
+cat > ${rgb3_ppm} <<EOF
+P3 3 2 1  1 0 0   0 1 0   0 0 1  1 1 0   1 1 1   0 0 0
+EOF
+
+
+echo "Test 5.  Should print three times"
+
+ppmtoppm < ${rgb1_ppm} | cksum
+pamdepth 255 ${rgb2_ppm} | cksum
+pamdepth 255 ${rgb3_ppm} | cksum
+
+
+echo "Test 6.  Should print 3499783928 179 eight times"
+
+pamdepth 1 ${rgb1_ppm} | cksum
+ppmtoppm < ${rgb2_ppm} | cksum
+ppmtoppm < ${rgb3_ppm} | cksum
+
+tr ' ' '  '  < ${rgb3_ppm} | ppmtoppm | cksum
+tr ' ' '\t'  < ${rgb3_ppm} | ppmtoppm | cksum
+tr ' ' '\n'  < ${rgb3_ppm} | ppmtoppm | cksum
+grep -v "^#"   ${rgb3_ppm} | tee ${rgb3_nc_ppm} | ppmtoppm | cksum
+tr ' ' '\n\v'  < ${rgb3_nc_ppm} | ppmtoppm | cksum
+
+rm ${rgb1_ppm} ${rgb2_ppm} ${rgb3_ppm} ${rgb3_nc_ppm}

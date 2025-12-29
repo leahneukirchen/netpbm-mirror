@@ -20,6 +20,7 @@ pnmenlarge: ok
 pnmfile: ok
 pnmflip: ok
 pnminterp: ok
+pnminterp-gen: ok
 pnmnoraw: ok
 pnmscale: ok
 pnmsplit: ok

@@ -41,6 +41,8 @@ pnmindex -size 50 -across=2 -quant -colors=256 testimg.ppm testimg.ppm testimg.p
          testimg.ppm testimg.ppm testimg.ppm |\
     pnmpsnr -rgb -target1=41.31 -target2=40.76 -target3=40.71 ${pnmindex256_ppm} -
 
+rm ${pnmindex256_ppm}
+
 
 echo "Test Invalid"
 

@@ -11,13 +11,18 @@
 ## Important: This test checks obsoleted names.
 ## Programs here do not appear in other tests.
 ##
-## Programs here are wrapper scripts provided for backward compatibility.
-## The newer replacement program may be the cause of any failure reported.
+## Programs here are either symlinks or wrapper scripts provided for
+## backward compatibility.  The newer replacement program may be the cause
+## of any failure reported.
 ##
 ## If you run the "make test-install" on an older version, some executables
 ## may be reported as missing because of missing features.
 
+# Some of the programs listed here are tested in dedicated scripts.
+# They are not used in supportive roles, (announced in the "# Also requires"
+# line) for a newer program with the necessary function is always available.
 
+# Symlinks are created in the "make package" phase.
 # Skip this test if CHECK_TYPE = tree
 
 if [ ${CHECK_TYPE} = tree ]
@@ -77,6 +82,7 @@ ordinary_testprogs="\
   pnmfile \
   pnmflip \
   pnminterp \
+  pnminterp-gen \
   pnmnoraw \
   pnmscale \
   pnmsplit \
