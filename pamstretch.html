@@ -46,14 +46,14 @@ better looking output.
 <p>To scale up to non-integer pixel sizes, e.g. 2.5, try <b><a
 href="pamstretch-gen.html">pamstretch-gen</a></b> instead.
 
-<p>Options let you select alternative methods of dealing with the
-right/bottom edges of the picture.  Since the interpolation is done
-between the top-left corners of the scaled-up pixels, it's not obvious
-what to do with the right/bottom edges.  The default behaviour is to
-scale those up without interpolation (more precisely, the right edge
-is only interpolated vertically, and the bottom edge is only
-interpolated horizontally), but there are two other possibilities,
-selected by the <b>-blackedge</b> and <b>-dropedge</b> options.
+<p>Options let you select alternative methods of dealing with the right/bottom
+edges of the picture.  Since the interpolation is done between the top-left
+corners of the scaled-up pixels, it's not obvious what to do with the
+right/bottom edges.  The default behavior is to scale those up without
+interpolation (more precisely, the right edge is interpolated only vertically,
+and the bottom edge is interpolated only horizontally), but there are two
+other possibilities, selected by the <b>-blackedge</b> and <b>-dropedge</b>
+options.
 
 <p>In the special case that the stretch factor is 1, there is no issue with
 the right and bottom edges, the edges of the output are identical to the edges
@@ -101,7 +101,7 @@ do specify a horizontal scale factor, the vertical scale factor is 1.
 <dt><b>-dropedge</b>
 
 <dd>drop one (source) pixel at right/bottom edges. This is arguably
-more logical than the default behaviour, but it means producing output
+more logical than the default behavior, but it means producing output
 which is a slightly odd size.
 
 </dl>

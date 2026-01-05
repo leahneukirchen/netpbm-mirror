@@ -2,7 +2,7 @@
 <html><head><title>Pnmmargin User Manual</title></head>
 <body>
 <h1>pnmmargin</h1>
-Updated: 10 August 2024
+Updated: 26 December 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -39,6 +39,12 @@ command line options:
 <p>You can specify the border color with the <b>-white</b>,
 <b>-black</b>, and <b>-color</b> options.  If you don't specify a color, the
 program makes a guess.
+
+<b>-white</b> and <b>-black</b> are the same as <b>-color=white</b>
+and <b>-color=black</b> respectively (except that the latter fail if you
+don&apos;t have a color dictionary set up in your environment, so they are
+really more like <b>-color=rgbi:0/0/0</b> and
+<b>-color=rgbi:1/1/1</b>.
 
 <p>The value of <b>-color</b> is like the
 <a href="libnetpbm_image.html#colorname">argument of the

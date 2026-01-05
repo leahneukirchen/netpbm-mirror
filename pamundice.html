@@ -2,7 +2,7 @@
 <html><head><title>Pamundice User Manual</title></head>
 <body>
 <h1>pamundice</h1>
-Updated: 08 February 2025
+Updated: 02 January 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -59,6 +59,9 @@ Output.
 
 <p>You can optionally make the pieces overlap.
 
+<p>The pieces don&apos;t have to be distinct; you can make a single input
+image appear multiple places in the output grid.
+  
 <p>The images can either be in files whose names indicate where they go in the
 output (e.g. &quot;myimage_part_03_04&quot; could be the image for Row 3,
 Column 4 - see the <i>input_filename_pattern</i> argument) or listed in a
@@ -163,11 +166,13 @@ decimal number: "00"
 decimal number: "05"
 </ul>
 
-<p>Note that this pattern describes file names that <b>pamdice</b> produces,
-except that the precision may be more or less.  (See the <b>-numberwidth</b>
-option of <b>pamdice</b>).
+<p>Note that this particular pattern describes file names that <b>pamdice</b>
+produces, except that the precision may be more or less.  (See
+the <b>-numberwidth</b> option of <b>pamdice</b>).
 
+<p>Note that a pattern with no %d or no %a effects a replication.
 
+  
 <h2 id="options">OPTIONS</h2>
 
 <p>In addition to the options common to all programs based on libnetpbm
@@ -239,7 +244,7 @@ large image.
 <dt><b>-indexfile=</b><i>pamfilename</i>
 <dd>This option names a file that contains a PAM image that tells which
 tile files to put where in the assembled output.  See the
-<b>pamfile</b> <b>-indexfile</b> option for details on its format.
+<b>pamdice</b> <b>-indexfile</b> option for details on its format.
 
 <p>A typical way to generate an index image to use with <b>pamundice</b> is to
 use the <b>-indexfile</b> option of <b>pamdice</b>, and then possibly

@@ -2,7 +2,7 @@
 <html><head><title>Pnmpad User Manual</title></head>
 <body>
 <h1>pnmpad</h1>
-Updated: 10 August 2024
+Updated: 26 December 2025
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -91,9 +91,12 @@ image is 20 white pixels followed by 20 black pixels.
 
 <p>By default, the padding is black.
 
-<p><b>-white</b> and <b>-black</b> are for backward compatibility.
-<b>-color</b>, <b>-detect-background</b>, and <b>-extend-edge</b> were new
-with Netpbm 11.05 (December 2023).
+<p><b>-white</b> and <b>-black</b> are for backward compatibility; they do the
+same thing as <b>-color=white</b> and <b>-color=black</b> respectively (except
+that the latter fail if you don&apos;t have a color dictionary set up in your
+environment, so they are really more like <b>-color=rgbi:0/0/0</b> and
+<b>-color=rgbi:1/1/1</b>.  <b>-color</b>, <b>-detect-background</b>, and
+<b>-extend-edge</b> were new with Netpbm 11.05 (December 2023).
   
 <dt><b>-left=</b><i>pixels</i>
 <dt><b>-right=</b><i>pixels</i>
