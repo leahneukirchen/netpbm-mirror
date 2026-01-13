@@ -18,7 +18,102 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
 #include "pgm.h"
+
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileNm;  /* File name of input file */
+    unsigned int divisor;
+    unsigned int rows;    /* height of output image in pixels */
+    unsigned int cols;    /* width of output image in pixels */
+};
+
+
+
+static void
+parseSizeParm(const char *   const sizeString,
+              const char *   const description,
+              unsigned int * const sizeP) {
+
+    char * endptr;
+    long int sizeLong;
+
+    sizeLong = strtol(sizeString, &endptr, 10);
+    if (strlen(sizeString) > 0 && *endptr != '\0')
+        pm_error("%s argument not an integer: '%s'",
+                 description, sizeString);
+    else if (sizeLong > INT_MAX - 2)
+        pm_error("%s argument is too large "
+                 "for computations: %ld",
+                 description, sizeLong);
+    else if (sizeLong <= 0)
+        pm_error("%s argument is not positive: %ld",
+                 description, sizeLong);
+    else
+        *sizeP = (unsigned int) sizeLong;
+}
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+    unsigned int divisorSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0, "divisor",    OPT_UINT,   &cmdlineP->divisor,  &divisorSpec, 0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;   /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!divisorSpec)
+        cmdlineP->divisor = 1;
+
+    if (argc-1 < 2)
+        pm_error("Not enough arguments.  Need at least height and width "
+                 "of output image, in pixels");
+    else {
+        parseSizeParm(argv[1], "height", &cmdlineP->rows);
+        parseSizeParm(argv[2], "width", &cmdlineP->cols);
+
+        if (argc-1 < 3)
+            cmdlineP->inputFileNm = "-";
+        else {
+            cmdlineP->inputFileNm = argv[3];
+
+            if (argc-1 > 3) {
+                pm_error("Too many arguments: %u.  Only possible "
+                         "non-option arguments are "
+                         "height, width, and input file name", argc-1);
+            }
+        }
+    }
+
+    free(option_def);
+}
+
+
 
 static unsigned int const gmap [128] = {
 /*00 nul-bel*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -59,7 +154,12 @@ convertRowToPgm(const unsigned int * const obuf,
                 unsigned int         const cols,
                 gray                 const maxval,
                 gray *               const grayrow) {
+/*----------------------------------------------------------------------------
+   Convert the row in obuf[], which is 'cols' columns wide, to PGM
+   in grayrow[] with maxval 'maxval'.
 
+   The values in 'obuf' are _darkness_ values; 0 is white; 'maxval' is black.
+-----------------------------------------------------------------------------*/
     unsigned int col;
 
     for (col = 0; col < cols; ++col)
@@ -95,9 +195,12 @@ convertAsciiToPgm(FILE *         const ifP,
                   unsigned int   const rows,
                   unsigned int   const divisor,
                   gray           const maxval,
-                  gray **        const grays,
-                  unsigned int * const obuf) {
+                  gray **        const grays) {
 
+    unsigned int * obuf;
+        /* The current row, in darkness values (0 is white; 127 is maximum
+           black)
+        */
     unsigned int outRow;
     unsigned int outCursor;
     bool beginningOfImage;
@@ -105,16 +208,18 @@ convertAsciiToPgm(FILE *         const ifP,
     bool warnedTrunc;
     bool eof;
 
+    MALLOCARRAY(obuf, cols);
+    if (obuf == NULL)
+        pm_error("Unable to allocate memory for %u columns", cols);
+
     zeroObuf(obuf, cols);
 
     warnedNonAscii = false;
     warnedTrunc = false;
-    outRow = 0;
     outCursor = 0;
     beginningOfImage = true;
     beginningOfLine = true;
-    eof = false;
-    while (outRow < rows && !eof) {
+    for (eof = false, outRow = 0; outRow < rows && !eof; ) {
         int c;
 
         c = getc(ifP);
@@ -124,7 +229,7 @@ convertAsciiToPgm(FILE *         const ifP,
         else {
             if (beginningOfLine) {
                 if (c == '+') {
-                    /* + at start of line means rest of line 
+                    /* + at start of line means rest of line
                        overstrikes previous
                     */
                     c = getc(ifP);
@@ -172,6 +277,7 @@ convertAsciiToPgm(FILE *         const ifP,
 
         ++outRow;
     }
+    free(obuf);
 }
 
 
@@ -179,70 +285,28 @@ convertAsciiToPgm(FILE *         const ifP,
 int
 main(int argc, const char ** argv) {
 
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     gray ** grays;
-    int argn;
-    unsigned int rows, cols;
-    unsigned int divisor;
-    unsigned int * obuf;  /* malloced */
-    const char * const usage = "[-d <val>] height width [asciifile]";
 
     pm_proginit(&argc, argv);
 
-    rows = 0;  /* initial value */
-    cols = 0;  /* initial value */
-    divisor = 1; /* initial value */
-    
-    argn = 1;
+    parseCommandLine(argc, argv, &cmdline);
 
-    if ( argc < 3 || argc > 6 )
-        pm_usage( usage );
+    ifP = pm_openr(cmdline.inputFileNm);
 
-    if ( argv[argn][0] == '-' )
-    {
-        if ( streq( argv[argn], "-d" ) )
-        {
-            if ( argc == argn + 1 )
-                pm_usage( usage );
-            if ( sscanf( argv[argn+1], "%u", &divisor ) != 1 )
-                pm_usage( usage );
-            argn += 2;
-        }
-        else
-            pm_usage( usage );
-    }
+    grays = pgm_allocarray(cmdline.cols, cmdline.rows);
 
-    if ( sscanf( argv[argn++], "%u", &rows ) != 1 )
-        pm_usage( usage );
-    if ( sscanf( argv[argn++], "%u", &cols ) != 1 )
-        pm_usage( usage );
-    if ( rows < 1 )
-        pm_error( "height is less than 1" );
-    if ( cols < 1 )
-        pm_error( "width is less than 1" );
-
-    if ( argc > argn + 1 )
-        pm_usage( usage );
-
-    if ( argc == argn + 1 )
-        ifP = pm_openr(argv[argn]);
-    else
-        ifP = stdin;
-
-    MALLOCARRAY(obuf, cols);
-    if (obuf == NULL)
-        pm_error("Unable to allocate memory for %u columns", cols);
-
-    grays = pgm_allocarray(cols, rows);
-
-    convertAsciiToPgm(ifP, cols, rows, divisor, maxval, grays, obuf);
+    convertAsciiToPgm(ifP, cmdline.cols, cmdline.rows, cmdline.divisor,
+                      maxval, grays);
 
     pm_close(ifP);
 
-    pgm_writepgm(stdout, grays, cols, rows, maxval, 0);
+    pgm_writepgm(stdout, grays, cmdline.cols, cmdline.rows, maxval, 0);
 
-    free(obuf);
-    pgm_freearray(grays, rows);
+    pgm_freearray(grays, cmdline.rows);
 
     return 0;
 }
+
+
