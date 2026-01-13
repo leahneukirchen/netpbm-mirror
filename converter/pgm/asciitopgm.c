@@ -59,7 +59,12 @@ convertRowToPgm(const unsigned int * const obuf,
                 unsigned int         const cols,
                 gray                 const maxval,
                 gray *               const grayrow) {
+/*----------------------------------------------------------------------------
+   Convert the row in obuf[], which is 'cols' columns wide, to PGM
+   in grayrow[] with maxval 'maxval'.
 
+   The values in 'obuf' are _darkness_ values; 0 is white; 'maxval' is black.
+-----------------------------------------------------------------------------*/
     unsigned int col;
 
     for (col = 0; col < cols; ++col)
@@ -95,9 +100,12 @@ convertAsciiToPgm(FILE *         const ifP,
                   unsigned int   const rows,
                   unsigned int   const divisor,
                   gray           const maxval,
-                  gray **        const grays,
-                  unsigned int * const obuf) {
+                  gray **        const grays) {
 
+    unsigned int * obuf;
+        /* The current row, in darkness values (0 is white; 127 is maximum
+           black)
+        */
     unsigned int outRow;
     unsigned int outCursor;
     bool beginningOfImage;
@@ -105,16 +113,18 @@ convertAsciiToPgm(FILE *         const ifP,
     bool warnedTrunc;
     bool eof;
 
+    MALLOCARRAY(obuf, cols);
+    if (obuf == NULL)
+        pm_error("Unable to allocate memory for %u columns", cols);
+
     zeroObuf(obuf, cols);
 
     warnedNonAscii = false;
     warnedTrunc = false;
-    outRow = 0;
     outCursor = 0;
     beginningOfImage = true;
     beginningOfLine = true;
-    eof = false;
-    while (outRow < rows && !eof) {
+    for (eof = false, outRow = 0; outRow < rows && !eof; ) {
         int c;
 
         c = getc(ifP);
@@ -172,6 +182,7 @@ convertAsciiToPgm(FILE *         const ifP,
 
         ++outRow;
     }
+    free(obuf);
 }
 
 
@@ -184,7 +195,6 @@ main(int argc, const char ** argv) {
     int argn;
     unsigned int rows, cols;
     unsigned int divisor;
-    unsigned int * obuf;  /* malloced */
     const char * const usage = "[-d <val>] height width [asciifile]";
 
     pm_proginit(&argc, argv);
@@ -229,19 +239,14 @@ main(int argc, const char ** argv) {
     else
         ifP = stdin;
 
-    MALLOCARRAY(obuf, cols);
-    if (obuf == NULL)
-        pm_error("Unable to allocate memory for %u columns", cols);
-
     grays = pgm_allocarray(cols, rows);
 
-    convertAsciiToPgm(ifP, cols, rows, divisor, maxval, grays, obuf);
+    convertAsciiToPgm(ifP, cols, rows, divisor, maxval, grays);
 
     pm_close(ifP);
 
     pgm_writepgm(stdout, grays, cols, rows, maxval, 0);
 
-    free(obuf);
     pgm_freearray(grays, rows);
 
     return 0;
