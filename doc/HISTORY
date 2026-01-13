@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.01.13 BJH  Release 11.13.01
+
+              asciitopgm: fix crash with missing height or width argument.
+              Always broken (asciitopgm was new in the 1994 Netpbm release).
+
 25.12.29 BJH  Release 11.13.00
 
               pnmmargin: improve error messages
