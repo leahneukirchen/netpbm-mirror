@@ -62,8 +62,6 @@ typedef unsigned int gray;
 #define PGM_FORMAT_TYPE(f) ((f) == PGM_FORMAT || (f) == RPGM_FORMAT ? PGM_TYPE : PBM_FORMAT_TYPE(f))
 
 
-/* Declarations of routines. */
-
 void
 pgm_init(int *   const argcP,
          char ** const argv);
@@ -73,9 +71,9 @@ pgm_allocrow(unsigned int const cols);
 
 #define pgm_freerow(grayrow) pm_freerow(grayrow)
 
-#define pgm_allocarray( cols, rows ) \
-  ((gray**) pm_allocarray( cols, rows, sizeof(gray) ))
-#define pgm_freearray( grays, rows ) pm_freearray( (char**) grays, rows )
+#define pgm_allocarray(cols, rows) \
+  ((gray**) pm_allocarray(cols, rows, sizeof(gray)))
+#define pgm_freearray(grays, rows) pm_freearray((char**) grays, rows)
 
 gray **
 pgm_readpgm(FILE * const file,
