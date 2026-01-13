@@ -221,6 +221,7 @@ lookup-roundtrip.test
 enlarge-reduce-roundtrip.test
 cut-cat-roundtrip.test
 pamhue-roundtrip.test
+pampick-roundtrip.test
 
 # Round-trip tests: miscellaneous utilities
 
