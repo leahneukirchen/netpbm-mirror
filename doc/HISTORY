@@ -12,6 +12,11 @@ not yet  BJH  Release 11.14.00
               asciitopgm: fix crash with zero divisor.
               Always broken (asciitopgm was new in the 1994 Netpbm release).
 
+              libnetpbm: fix crash when caller of pm_selector_mark attempts to
+              mark or test mark of out-of-bounds code point.  Abort program
+              with error message instead.  Broken since Netpbm 10.91 (June
+              2020).
+
 25.12.29 BJH  Release 11.13.00
 
               pnmmargin: improve error messages.
