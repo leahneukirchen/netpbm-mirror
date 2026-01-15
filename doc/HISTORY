@@ -9,6 +9,9 @@ not yet  BJH  Release 11.14.00
               asciitopgm: fix crash with missing height or width argument.
               Always broken (asciitopgm was new in the 1994 Netpbm release).
 
+              asciitopgm: fix crash with zero divisor.
+              Always broken (asciitopgm was new in the 1994 Netpbm release).
+
 25.12.29 BJH  Release 11.13.00
 
               pnmmargin: improve error messages.

@@ -89,6 +89,10 @@ parseCommandLine(int argc, const char ** argv,
 
     if (!divisorSpec)
         cmdlineP->divisor = 1;
+    else {
+        if (cmdlineP->divisor == 0)
+            pm_error("Divisor cannot be zero");
+    }
 
     if (argc-1 < 2)
         pm_error("Not enough arguments.  Need at least height and width "
