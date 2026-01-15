@@ -43,14 +43,13 @@ there is no "%d" in the pattern, <b>pamsplit</b> fails.
 
 <p>The default output file pattern is "image%d".
 
-<p>The <b>-padname</b> option specifies how many characters you
-want the image sequence number in the output file name padded with
-zeroes.  <b>pamsplit</b> adds leading zeroes to the image sequence
-number to get up to at least that number of characters.  This is just
-the number of characters in the sequence number part of the name.  For
-example, <kbd>pamsplit - outputfile%d.ppm -padname=3</kbd> would yield
-output filenames <b>outputfile000.ppm</b>, <b>outputfile001.ppm</b>,
-etc.
+<p>The <b>-padname</b> option specifies how many characters you want the image
+sequence number in the output file name padded with zeroes.  <b>pamsplit</b>
+adds leading zeroes to the image sequence number as needed to get up to at
+least that number of characters.  This is just the number of characters in the
+sequence number part of the name.  For example, <kbd>pamsplit -
+outputfile%d.ppm -padname=3</kbd> would yield output
+filenames <b>outputfile000.ppm</b>, <b>outputfile001.ppm</b>, etc.
 
 
 <p>Note that to do the reverse operation (combining multiple
@@ -89,6 +88,12 @@ Before that, there was never any padding.
 
 </dl>
 
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamsplit</b> was new in Netpbm 9.5 (July 2000), as <b>pnmsplit</b>.  In
+Netpbm 10.31 (December 2005), it gained the ability to split PAM files and was
+renamed.
+                 
 <h2 id="seealso">SEE ALSO</h2>
 
 <b><a href="pamfile.html">pamfile</a></b>,
@@ -104,6 +109,7 @@ Before that, there was never any padding.
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
 <li><a href="#options">OPTIONS</a>
+<li><a href="#history">HISTORY</a>
 <li><a href="#seealso">SEE ALSO</a>
 </ul>
 </body>

@@ -2,7 +2,7 @@
 <html><head><title>Asciitopgm User Manual</title></head>
 <body>
 <h1>asciitopgm</h1>
-Updated: 20 January 2011
+Updated: 15 January 2026
 <br>
 
 <a href="#index">Table Of Contents</a>
@@ -12,36 +12,45 @@ asciitopgm - convert ASCII graphics into a PGM
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
+<pre>
 <b>asciitopgm</b>
-[<b>-d</b> <i>divisor</i>] <i>height</i> <i>width</i> [<i>asciifile</i>]
+[<b>-divisor=</b><i>integer</i>]
+<i>height</i> <i>width</i> [<i>asciifile</i>]
+
+</pre>
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
 
 <h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>asciitopgm</b> reads ASCII data as input and produces a PGM image
-with pixel values which are an approximation of the
-"brightness" of the ASCII characters, assuming
-black-on-white printing.  In other words, a capital M is very dark, a
-period is very light, and a space is white.
+<p><b>asciitopgm</b> converts a text grayscale image to PGM.  A text grayscale
+image is a way that people generated a grayscale graphical image with a black
+on white text printer in the early days.  Each character printed is one
+pixel.  A large character such as a capital M is a dark pixel, while a
+small character such as a period is a light pixel.  A space is a fully white
+pixel.  The viewer stands far back from the printed page so as to blur the
+text and sees a grayscale image.  A common novelty use of the technique was to
+print out a photograph of a person&apos;s face in text.
 
-<p>Obviously, <b>asciitopgm</b> assumes a certain font in assigning
-a brightness value to a character.
+<p>Obviously, <b>asciitopgm</b> assumes a certain font in assigning a
+brightness value to a character.
 
-<p><b>asciitopgm</b> considers ASCII control characters to be all white.  For
-a lower case character, It assigns a special brightnesses which has nothing to
-do with what it looks like printed.
-<b>asciitopgm</b> takes the ASCII character code from the lower 7 bits
-of each input byte.  But it warns you if the most significant bit of
-any input byte is not zero.
+<p><b>asciitopgm</b> considers ASCII control characters to be all white
+(except for newline, which is never a pixel but rather indicates the end of a
+raster row as you would expect).  For a lower case character, It assigns a
+special brightnesses which has nothing to do with what it looks like printed.
+
+<p><b>asciitopgm</b> takes the ASCII character code from the lower 7 bits of
+each input byte.  But it warns you if the most significant bit of any input
+byte is not zero.
 
 <p>The output image is <i>height</i> pixels high by <i>width</i> pixels wide,
 truncating and padding with white on the right and bottom as necessary.
-
-<p>The <i>divisor</i> value is an integer (decimal) by which the
-blackness of an input character is divided.  You can use this to
-adjust the brightness of the output: for example, if the image is too
-bright, increase the divisor.
 
 <p>In a sort of reminiscence of Fortran line printer carriage control,
 where a line starts with <b>+</b> (plus), <b>asciitopgm</b> combines it
@@ -52,12 +61,13 @@ the paper, with <b>+</b> meaning not at all, so that the rest of the
 characters on the line overstrike the ones already on the paper.  What
 <b>asciitopgm</b> does is rather different in that <b>asciitopgm</b> does not
 reserve the first character of every line that way.  If the first character is
-anything but <b>+</b>, <b>asciitopgm</b> considers it just to be first
+anything but <b>+</b>, <b>asciitopgm</b> considers it just to be the first
 character of the image.
 
 <p>If you're looking for something that creates an image of text,
 with that text specified in ASCII, that is something quite different.
 Use <b>pbmtext</b> for that.
+
 
 <h2 id="options">OPTIONS</h2>
 
@@ -67,12 +77,22 @@ Common Options</a>), <b>asciitopgm</b> recognizes the following
 command line option:
 
 <dl compact>
-<dt><b>-d</b> <i>divisor</i>
+<dt><b>-divisor=</b><i>integer</i>
 
-<dd>Specify the value by which the blackness of an input character is
-divided.  This is an integer value.  Default value is 1.  Larger
-values produce darker output images.
+<dd>Specify the value by which the blackness of an input character is divided.
+This is an integer value.  Larger values produce brighter output images.
 
+<p>The value must be positive.
+
+<p>The default value is 1.
+  
+<p>You can use this to adjust the brightness of the output: for example, if
+the image is too dark, increase the divisor.
+
+<p>Before Netpbm 11.14 (March 2006), this must be abbreviated <b>-d</b>,
+separated from its value by a space and not an equals sign, and appear before
+the non-option arguments.
+  
 </dl>
 
 <h2 id="seealso">SEE ALSO</h2>
