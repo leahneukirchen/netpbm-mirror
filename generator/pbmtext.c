@@ -14,6 +14,7 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 #include <limits.h>
@@ -78,9 +79,7 @@ textFmCmdLine(int argc, const char ** argv) {
         pm_error("Unable to allocate memory for a buffer of up to %u "
                  "characters of text", MAXLINECHARS);
 
-    text[0] = '\0';
-
-    for (i = 1, totaltextsize = 0; i < argc; ++i) {
+    for (i = 1, totaltextsize = 0, text[0] = '\0'; i < argc; ++i) {
         if (i > 1)
             strcat(text, " ");
 
@@ -150,15 +149,15 @@ parseCommandLine(int argc, const char ** argv,
     cmdlineP->lspace  = 0;
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (cmdlineP->width > 0 && cmdlineP->nomargins) {
         pm_message("-nomargins has no effect when -width is specified");
-        cmdlineP->nomargins = FALSE;
+        cmdlineP->nomargins = false;
     } else if (cmdlineP->width > INT_MAX-10)
         pm_error("-width value too large");
 
@@ -473,8 +472,10 @@ setupSelector(const PM_WCHAR *     const input,
               const PM_WCHAR **    const outputP,
               struct pm_selector * const selectorP) {
 /*----------------------------------------------------------------------------
-   Read through input[] and record the codepoints encountered.  Return it as
-   newly malloced *outputP.
+   Edit text 'input' as follows, returning the edited result as newly malloced
+   *outputP.
+
+   Record in *selectorP the set of code points present in the edited text.
 
    Expand tabs to spaces.
 
@@ -1077,7 +1078,7 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
 
 
 static void
-getText(PM_WCHAR             const cmdlineText[],
+getText(const PM_WCHAR *     const cmdlineText,
         struct Text *        const inputTextP,
         struct pm_selector * const selectorP) {
 /*----------------------------------------------------------------------------
@@ -1104,7 +1105,6 @@ getText(PM_WCHAR             const cmdlineText[],
         inputText.lineCount = 1;
         setupSelector(cmdlineText, (const PM_WCHAR**) &inputText.textArray[0],
                       selectorP);
-        free((void *) cmdlineText);
     } else {
         /* Read text from stdin. */
 
@@ -1412,7 +1412,7 @@ renderSheet(struct CmdlineInfo const cmdline,
         unsigned int const rows  = fontP->maxheight * 12;
 
         renderText(cols, rows, fontP, 0, 0, sheetText, MAX(-(fontP->x),0),
-                   0.0, 0, TRUE, ofP);
+                   0.0, 0, true, ofP);
     }
     pm_selector_destroy(selectorP);
 }
@@ -1530,7 +1530,7 @@ pbmtext(struct CmdlineInfo const cmdline,
         textDumpOutput(formattedText, ofP);
     else
         renderText(cols, rows, fontP, hmargin, vmargin, formattedText,
-                   maxleftb, cmdline.space, cmdline.lspace, FALSE, ofP);
+                   maxleftb, cmdline.space, cmdline.lspace, false, ofP);
 
     freeTextArray(formattedText);
 
@@ -1566,6 +1566,9 @@ main(int argc, const char *argv[]) {
         renderSheet(cmdline, stdout);
     else
         pbmtext(cmdline, stdout, cmdline.wchar);
+
+    if (cmdline.text)
+        free((void *)cmdline.text);
 
     pm_close(stdout);
 
