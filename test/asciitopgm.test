@@ -1,0 +1,90 @@
+#! /bin/sh
+# This script tests: asciitopgm
+# Also requires:
+
+echo "Test 1."
+
+tmpdir=${tmpdir:-/tmp}
+printable_txt=${tmpdir}/printable.txt
+printable2_txt=${tmpdir}/printable2.txt
+
+cat > ${printable_txt} <<EOF
+ !"#$%&'()*+,-./
+0123456789:;<=>?
+@ABCDEFGHIJKLMNO
+PQRSTUVWXYZ[\\]^_
+\`abcdefghijklmno
+pqrstuvwxyz{|}~
+EOF
+
+tail -2 ${printable_txt} > ${printable2_txt} 
+
+asciitopgm 6 16 ${printable_txt} | cksum
+asciitopgm -plain 6 16 ${printable_txt}
+asciitopgm -plain 4 18 ${printable2_txt}
+
+echo "Test 2."
+
+asciitopgm -plain -d 1   2 17 ${printable2_txt}
+asciitopgm -plain -d 2   2 17 ${printable2_txt}
+asciitopgm -plain -d 128 2 17 ${printable2_txt}
+
+rm ${printable_txt} ${printable2_txt} 
+
+echo "Test 3."
+# test row-start "+" feature
+
+asciitext=${tmpdir}/asciitext
+
+cat > ${asciitext} <<EOF
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
++==========================
+==========================
++ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+zyxwvutsrqponmlkjihgfedcba
+zyxwvutsrqponmlkjihgfedcba
++
+
++zyxwvutsrqponmlkjihgfedcba
+zyxwvutsrqponmlkjihgfedcba
++..........................
+zyxwvutsrqponmlkjihgfedcba
++abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz
++zyxwvutsrqponmlkjihgfedcba
+EOF
+
+asciitopgm -plain 10 26 ${asciitext}
+
+rm ${asciitext}
+
+
+echo "Test Invalid"
+
+. ${srcdir}/test-invalid.inc
+
+
+test_in=${tmpdir}/test_in
+
+echo ABC > ${test_in}
+
+invCmd "asciitopgm ${test_in}"
+invCmd "asciitopgm 3  ${test_in}"
+invCmd "asciitopgm 1 10 1  ${test_in}"
+
+invCmd "asciitopgm 0 3 ${test_in}"
+invCmd "asciitopgm 3 0 ${test_in}"
+
+invCmd "asciitopgm -1 3 ${test_in}"
+invCmd "asciitopgm 3 -1 ${test_in}"
+
+invCmd "asciitopgm 3.5 1 ${test_in}"
+invCmd "asciitopgm 1 3.1 ${test_in}"
+
+invCmd "asciitopgm -d 0 10 1 ${test_in}"
+invCmd "asciitopgm -d -1 10 1 ${test_in}"
+invCmd "asciitopgm -d 1.1 10 1 ${test_in}"
+
+rm ${test_in}

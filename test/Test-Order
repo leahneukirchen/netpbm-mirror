@@ -186,6 +186,7 @@ ppmtoascii.test
 ppmtoapplevol.test
 ppmtomitsu.test
 411toppm.test
+asciitopgm.test
 eyuvtoppm.test
 infotopam.test
 rawtoppm.test
@@ -222,6 +223,7 @@ enlarge-reduce-roundtrip.test
 cut-cat-roundtrip.test
 pamhue-roundtrip.test
 pampick-roundtrip.test
+pamsplit-roundtrip.test
 
 # Round-trip tests: miscellaneous utilities
 

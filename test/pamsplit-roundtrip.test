@@ -1,0 +1,80 @@
+#! /bin/sh
+# This script tests: pamsplit
+# Also requires: ppmmake
+
+tmpdir=${tmpdir:-/tmp}
+image0_ppm=${tmpdir}/image0.ppm
+image1_ppm=${tmpdir}/image1.ppm
+image2_ppm=${tmpdir}/image2.ppm
+
+mult_ppm=${tmpdir}/mult.ppm
+corrupt_ppm=${tmpdir}/corrupt.ppm
+
+ppmmake rgb:0/0/1 1 1 > ${image0_ppm}
+ppmmake rgb:0/0/2 2 2 > ${image1_ppm}
+ppmmake rgb:0/0/3 3 3 > ${image2_ppm}
+
+cat ${image0_ppm} ${image1_ppm} ${image2_ppm} > ${mult_ppm}
+
+echo "Test 1.  Should print match four times"
+
+pamsplit  ${mult_ppm} ${tmpdir}"/image.%d"
+
+cmp -s  ${tmpdir}"/image.0" ${image0_ppm} && echo "match" || echo "no match"
+cmp -s  ${tmpdir}"/image.1" ${image1_ppm} && echo "match" || echo "no match"
+cmp -s  ${tmpdir}"/image.2" ${image2_ppm} && echo "match" || echo "no match"
+
+cat  ${tmpdir}"/image.0"  ${tmpdir}"/image.1"  ${tmpdir}"/image.2" | \
+  cmp -s - ${mult_ppm} && echo "match" || echo "no match"
+
+
+echo "Test 2.  Should print no match three times"
+
+cmp -s  ${tmpdir}"/image.0" ${image2_ppm} && echo "match" || echo "no match"
+cmp -s  ${tmpdir}"/image.1" ${image0_ppm} && echo "match" || echo "no match"
+cmp -s  ${tmpdir}"/image.2" ${image1_ppm} && echo "match" || echo "no match"
+
+
+echo "Test 3.  Should print match three times"
+
+pamsplit -padname=0 ${mult_ppm}  ${tmpdir}"/image.%d"
+cat  ${tmpdir}"/image.0"  ${tmpdir}"/image.1"  ${tmpdir}"/image.2" | \
+  cmp -s - ${mult_ppm} && echo "match" || echo "no match"
+
+cat ${mult_ppm} | pamsplit  -padname=0 - ${tmpdir}"/image.%d"
+cat  ${tmpdir}"/image.0"  ${tmpdir}"/image.1"  ${tmpdir}"/image.2" | \
+  cmp -s - ${mult_ppm} && echo "match" || echo "no match"
+
+cat ${mult_ppm} | pamsplit -padname=0 - ${tmpdir}"/image.%d"
+cat  ${tmpdir}"/image.0"  ${tmpdir}"/image.1"  ${tmpdir}"/image.2" | \
+  cmp -s - ${mult_ppm} && echo "match" || echo "no match"
+
+
+echo "Test 4.  Should print file names with padded digits"
+for n in 1 2 3 5 8
+  do
+  echo "padding=$n"
+  pamsplit ${mult_ppm} ${tmpdir}"/image.%d" -padname=$n
+  ls ${tmpdir}/image*0 | while read file
+    do basename ${file}; rm ${file}
+    done
+done
+
+rm ${image0_ppm} ${image1_ppm} ${image2_ppm}
+
+
+echo "Test Invalid"
+
+. ${srcdir}/test-invalid.inc
+
+invCmd "pamsplit ${mult_ppm} ${tmpdir}"/image
+invCmd "pamsplit ${mult_ppm} -padname"
+invCmd "pamsplit ${mult_ppm} -padname=-1"
+invCmd "pamsplit ${mult_ppm} -padname=1.5"
+# duplicate first line of file
+sed '1p' ${mult_ppm} > ${corrupt_ppm}
+invCmd "pamsplit ${corrupt_ppm}"
+
+# TODO: Confirm that output image.* files are not produced. 
+
+rm ${mult_ppm} ${corrupt_ppm}

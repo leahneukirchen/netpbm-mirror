@@ -1,0 +1,30 @@
+Test 1.  Should print match four times
+match
+match
+match
+match
+Test 2.  Should print no match three times
+no match
+no match
+no match
+Test 3.  Should print match three times
+match
+match
+match
+Test 4.  Should print file names with padded digits
+padding=1
+image.0
+padding=2
+image.00
+padding=3
+image.000
+padding=5
+image.00000
+padding=8
+image.00000000
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
