@@ -98,7 +98,7 @@ textFmCmdLine(int argc, const char ** argv) {
                  "wide characters of text", totaltextsize);
 
     for (i = 0; i < totaltextsize + 1; ++i)
-        wtext[i] = (PM_WCHAR) text[i];
+        wtext[i] = (PM_WCHAR) (unsigned char)text[i];
 
     free(text);
 

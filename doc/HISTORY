@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.01.28 BJH  Release 11.02.21
+
+              pbmtext: fix crash when input text contains a character with
+              code >127.  Broken in Netpbm 10.82 (March 2018).
+
+              asciitopgm: fix crash with zero divisor.
+              Always broken (asciitopgm was new in the 1994 Netpbm release).
+
 26.01.13 BJH  Release 11.02.20
 
               asciitopgm: fix crash with missing height or width argument.
