@@ -101,8 +101,12 @@ textFmCmdLine(int argc, const char ** argv) {
         pm_error("Unable to allocate memory for a buffer of up to %u "
                  "wide characters of text", totaltextsize);
 
-    for (i = 0; i < totaltextsize + 1; ++i)
-        wtext[i] = (PM_WCHAR) text[i];
+    for (i = 0; i < totaltextsize + 1; ++i) {
+        /* Take care to unsign text[i] first, because code point 255 as a
+           'char' type is numerically -1.
+        */
+        wtext[i] = (PM_WCHAR) (unsigned char)text[i];
+    }
 
     free(text);
 

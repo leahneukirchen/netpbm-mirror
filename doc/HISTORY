@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.14.00
 
+              pbmtext: fix crash when input text contains a character with
+              code >127.  Broken in Netpbm 10.82 (March 2018).
+
               asciitopgm: fix crash with missing height or width argument.
               Always broken (asciitopgm was new in the 1994 Netpbm release).
 
