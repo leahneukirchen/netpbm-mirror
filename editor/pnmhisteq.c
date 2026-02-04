@@ -452,7 +452,7 @@ remap(xel **       const xels,
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 xel const thisXel = xels[row][col];
-                if (monoOnly && PPM_ISGRAY(thisXel)) {
+                if (monoOnly && !PPM_ISGRAY(thisXel)) {
                     /* Leave this pixel alone */
                 } else {
                     xels[row][col] = remapRgbValue(xels[row][col],
