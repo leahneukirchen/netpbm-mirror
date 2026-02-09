@@ -1,6 +1,10 @@
-Test 1
+Test 1  Should print 2066913605 5110
+2066913605 5110
+Test 2  Should print 2799749746 2388
+2799749746 2388
+Test 3  Should print 386826492 35
 386826492 35
-Test 2
+Test 4  Should print 1 eighteen times
 1
 1
 1
@@ -19,6 +23,6 @@ Test 2
 1
 1
 1
-Test 3
+Test 5  Should print 0 twice
 0
 0

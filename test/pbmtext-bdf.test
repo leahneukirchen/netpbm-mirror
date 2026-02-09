@@ -4,6 +4,21 @@
 
 tmpdir=${tmpdir:-/tmp}
 
+# Test 1
+echo "Test 1  Should print 2066913605 5110"
+
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
+             for (i=161;i<=255;++i) printf("%c",i); }' | \
+    pbmtext -builtin bdf | cksum
+
+# Test 2
+echo "Test 2  Should print 2799749746 2388"
+
+pbmtext -builtin bdf \
+    $(awk 'BEGIN { for (i=161;i<=255;++i) printf("%c",i); }') | cksum
+
+
+
 font_bdf=${tmpdir}/font.bdf
 font_corrupt=${tmpdir}/fontcorrupt
 
@@ -63,21 +78,21 @@ ENDCHAR
 ENDFONT
 EOF
 
-# Test 1
-# This should succeed and produce 386826492 35
+# Test 3
+# This should succeed
 
-echo "Test 1"
+echo "Test 3  Should print 386826492 35"
 
 pbmtext -font ${font_bdf} ABC | cksum
 
-# Test 2
-# These should all fail.  Writes 1 eightteen times.
+# Test 4
+# These should all fail
 
 echo "Test whether corrupted BDF font files are properly handled." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
-echo "Test 2"
+echo "Test 4  Should print 1 eighteen times"
 
 pbmtext -font ${font_bdf} BCD
 echo $?
@@ -158,11 +173,10 @@ for delete_line in 14 16 18 20
   done
 
 
-# Test 3
+# Test 5
 # These should succeed.  Warning messages will be displayed.
-# Writes 1 two times.
 
-echo "Test 3"
+echo "Test 5  Should print 0 twice"
 
 for token in "CHARSET_ENCODING" "CHARSET_REGISTRY"
 do

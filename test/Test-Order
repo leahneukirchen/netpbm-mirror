@@ -118,6 +118,8 @@ pnmquantall.test
 pnmtile.test
 pambrighten.test
 ppmbrighten.test
+pnmhisteq.test
+pnmnorm.test
 ppmdither.test
 ppmrelief.test
 pamedge.test

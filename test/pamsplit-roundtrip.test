@@ -67,14 +67,18 @@ echo "Test Invalid"
 
 . ${srcdir}/test-invalid.inc
 
+# TODO: Confirm that output image* files are not produced
+
 invCmd "pamsplit ${mult_ppm} ${tmpdir}"/image
 invCmd "pamsplit ${mult_ppm} -padname"
 invCmd "pamsplit ${mult_ppm} -padname=-1"
 invCmd "pamsplit ${mult_ppm} -padname=1.5"
-# duplicate first line of file
-sed '1p' ${mult_ppm} > ${corrupt_ppm}
-invCmd "pamsplit ${corrupt_ppm}"
 
-# TODO: Confirm that output image.* files are not produced. 
+# Duplicate first line of file
+
+sed '1p' ${mult_ppm} > ${corrupt_ppm}
+invCmd "pamsplit ${corrupt_ppm} ${tmpdir}"/image.%d
+
+rm ${tmpdir}/image.0
 
 rm ${mult_ppm} ${corrupt_ppm}

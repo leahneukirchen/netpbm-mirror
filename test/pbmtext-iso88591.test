@@ -49,22 +49,34 @@ fi;
 locale_for_test=${locale_to_test};
 
 # Two rows
-# Should print 2066913605 5110 twice
-echo "Test 1"
-
-awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
-             for (i=161;i<=255;++i) printf("%c",i); }' | \
-    pbmtext -builtin bdf | cksum
+echo "Test 1  Should print 2066913605 5110"
 
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); }' | \
     LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
 
+# One row
+echo "Test 2  Should print 2920616515 2301 twice"
+
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i) }' | \
+    LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
+
+pbmtext -builtin bdf \
+    "$(awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i) }')" | cksum
+
+
+# One row
+echo "Test 3  Should print 2799749746 2388 twice"
+
+awk 'BEGIN { for (i=161;i<=255;++i) printf("%c",i) }' | \
+    LC_ALL=${locale_for_test} pbmtext -builtin bdf -wchar | cksum
+
+pbmtext -builtin bdf \
+    "$(awk 'BEGIN { for (i=161; i<=255;++i) printf("%c",i) }')" | cksum
+
 
 # Two rows
-# Should print 2858870527 192 twice
-
-echo "Test 2"
+echo "Test 4  Should print 2858870527 192 twice"
 
 awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); print "" }' | cksum

@@ -1,0 +1,40 @@
+#! /bin/sh
+# This script tests: pnmnorm
+# Also requires: asciitopgm
+
+echo "Test 1"
+pnmnorm maze.pbm | cmp -s - maze.pbm && echo "match" || echo "no match"
+
+
+# abcde_pgm=${tmpdir}/abcde.pgm
+
+echo "Test 2"
+# echo abcde | asciitopgm 1 5 | tee ${abcde_pgm} | pnmnorm -plain | tr '\n' ' '
+echo abcde | asciitopgm 1 5 | pnmnorm -plain
+echo vwxyz | asciitopgm 1 5 | pnmnorm -plain
+echo bjlqv | asciitopgm 1 5 | pnmnorm -plain
+
+# pnmnorm ${abcde_pgm} -noblack -plain | tr '\n' ' '
+# pnmnorm ${abcde_pgm} -nowhite -plain | tr '\n' ' '
+# pnmnorm ${abcde_pgm} -noblack -nowhite -plain | tr '\n' ' '
+# pnmnorm ${abcde_pgm} -gray    -plain | tr '\n' ' '
+# 
+# pnmnorm ${abcde_pgm} -wmap=${wmap} -plain | tr '\n' ' '
+# pnmnorm ${abcde_pgm} -rmap=${wmap} -plain | tr '\n' ' '
+# 
+# rm ${abcde_pgm}
+# rm ${wmap}
+# 
+# 
+# echo "Test 3"
+# ppmpat -tartan -color rgb:11/11/11,rgb:f1/f1/f1,rgb:f1/00/f1 5 5 | \
+#   asciitopgm 1 5 | pnmnorm -gray
+# 
+# 
+# echo "Test Invalid"
+# 
+# . ./test-invalid.inc
+# 
+# invCmd "pnmnorm -wmap < testgrid.pbm"
+# invCmd "pnmnorm -rmap < testgrid.pbm"
+# 
