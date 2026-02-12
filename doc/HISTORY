@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.02.12 BJH  Release 11.13.03
+
+              pnmhisteq: fix incorrect output with -gray: color pixels
+              changed, gray pixels left alone.  Broken in Netpbm 10.30
+              (October 2005).
+
 26.01.28 BJH  Release 11.13.02
 
               pbmtext: fix crash when input text contains a character with
