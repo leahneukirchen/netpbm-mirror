@@ -3,7 +3,7 @@
 # Also requires:
 
 # Failure message
-## If this test fails and pnm-roundtrip2.test succeeds, it indicates
+## If this test fails and png-roundtrip2.test succeeds, it indicates
 ## some problem with pnmtopng.
 
 # Test 1.  Should print 1926073387 101484 18 times
