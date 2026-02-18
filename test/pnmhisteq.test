@@ -1,0 +1,81 @@
+#! /bin/sh
+# This script tests: pnmhisteq
+# Also requires: asciitopgm pgmramp
+
+tmpdir=${tmpdir:-/tmp}
+wmap=${tmpdir}/wmap
+
+echo "Test 1"
+pnmhisteq maze.pbm | cmp -s - maze.pbm && echo "match" || echo "no match"
+pnmhisteq -wmap=${wmap} maze.pbm | cmp -s - maze.pbm && echo "match" || echo "no match"
+pnmhisteq -rmap=${wmap} maze.pbm | cmp -s - maze.pbm && echo "match" || echo "no match"
+
+rm ${wmap}
+
+abcde_pgm=${tmpdir}/abcde.pgm
+
+echo "Test 2"
+echo abcde | asciitopgm 1 5 | tee ${abcde_pgm} | pnmhisteq -plain 
+echo vwxyz | asciitopgm 1 5 | pnmhisteq -plain 
+echo bjlqv | asciitopgm 1 5 | pnmhisteq -plain 
+
+pnmhisteq ${abcde_pgm} -gray    -plain 
+
+pnmhisteq ${abcde_pgm} -wmap=${wmap} -plain 
+pnmhisteq ${abcde_pgm} -rmap=${wmap} -plain 
+
+rm ${wmap}
+
+
+echo "Test 3"
+pnmhisteq ${abcde_pgm} -noblack -plain 
+pnmhisteq ${abcde_pgm} -nowhite -plain 
+pnmhisteq ${abcde_pgm} -noblack -nowhite -plain 
+
+rm ${abcde_pgm}
+
+ramp_pgm=${tmpdir}/ramp.pgm
+
+echo "Test 4"
+pgmramp -lr -maxval=31 32 1 | tee ${ramp_pgm} | \
+    pnmhisteq | cmps -s - ${ramp_pgm} | \
+    echo "match" || echo "no match"
+pnmhisteq ${ramp_pgm} -gray | \
+    echo "match" || echo "no match"
+pnmhisteq ${ramp_pgm} -noblack | \
+    echo "match" || echo "no match"
+pnmhisteq ${ramp_pgm} -nowhite | \
+    echo "match" || echo "no match"
+pnmhisteq ${ramp_pgm} -noblack -nowhite | \
+    echo "match" || echo "no match"
+
+rm ${ramp_pgm}
+
+
+redgray_ppm=${tmpdir}/redgray.ppm
+
+cat > ${redgray_ppm} <<EOF
+P3
+6 2
+255
+255   0   0 189   0   0 128   0   0  63   0   0  32   0   0   1   0   0
+255 255 255 189 189 189 128 128 128  63  63  63  32  32  32   2   2   2
+EOF
+
+
+echo "Test 5"
+pnmhisteq ${redgray_ppm} -plain 
+echo $?
+
+
+echo "Test 6"
+pnmhisteq ${redgray_ppm} -gray -plain
+
+rm ${redgray_ppm}
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pnmhisteq -rmap rgbt.txt testgrid.pbm"
