@@ -44,6 +44,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Comment out all this code if we are using the GNU C Library, and are not
    actually compiling the library itself.  This code is part of the GNU C
@@ -202,8 +203,6 @@ static char *posixly_correct;
 
 /* Avoid depending on library functions or files
    whose names are inconsistent.  */
-
-char *getenv ();
 
 static char *
 my_index (str, chr)
