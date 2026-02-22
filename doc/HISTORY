@@ -24,6 +24,9 @@ not yet  BJH  Release 11.14.00
               with error message instead.  Broken since Netpbm 10.91 (June
               2020).
 
+              build: remove ancient non-prototype function declarations; C23
+              doesn't have them, so compilation fails with modern compilers.
+
 25.12.29 BJH  Release 11.13.00
 
               pnmmargin: improve error messages.
