@@ -222,13 +222,6 @@ void jpc_mqdec_setctxs(jpc_mqdec_t *dec, int numctxs, jpc_mqctx_t *ctxs);
 #endif
 
 /******************************************************************************\
-* Functions/macros for debugging.
-\******************************************************************************/
-
-/* Dump the MQ decoder state for debugging. */
-void mqdec_dump(jpc_mqdec_t *dec, FILE *out);
-
-/******************************************************************************\
 * EVERYTHING BELOW THIS POINT IS IMPLEMENTATION SPECIFIC AND NOT PART OF THE
 * APPLICATION INTERFACE.  DO NOT RELY ON ANY OF THE INTERNAL FUNCTIONS/MACROS
 * GIVEN BELOW.

@@ -27,6 +27,10 @@ not yet  BJH  Release 11.14.00
               build: remove ancient non-prototype function declarations; C23
               doesn't have them, so compilation fails with modern compilers.
 
+              build: fix compile failure of libjasper with -DDEBUG .  Broken
+              some time in Netpbm 10.27 (March 2005) through 10.35 (August
+              2006)).
+
 25.12.29 BJH  Release 11.13.00
 
               pnmmargin: improve error messages.

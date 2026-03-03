@@ -148,6 +148,10 @@
 
 static void jpc_mqdec_bytein(jpc_mqdec_t *mqdec);
 
+#if defined(DEBUG)
+static void mqdec_dump(jpc_mqdec_t *mqdec, FILE *out);
+#endif
+
 /******************************************************************************\
 * Code for creation and destruction of a MQ decoder.
 \******************************************************************************/
@@ -273,9 +277,9 @@ int jpc_mqdec_getbit_func(jpc_mqdec_t *mqdec)
 {
         int bit;
         JAS_DBGLOG(100, ("jpc_mqdec_getbit_func(%p)\n", mqdec));
-        MQDEC_CALL(100, jpc_mqdec_dump(mqdec, stderr));
+        MQDEC_CALL(100, mqdec_dump(mqdec, stderr));
         bit = jpc_mqdec_getbit_macro(mqdec);
-        MQDEC_CALL(100, jpc_mqdec_dump(mqdec, stderr));
+        MQDEC_CALL(100, mqdec_dump(mqdec, stderr));
         JAS_DBGLOG(100, ("ctx = %d, decoded %d\n", mqdec->curctx -
           mqdec->ctxs, bit));
         return bit;
@@ -337,3 +341,21 @@ static void jpc_mqdec_bytein(jpc_mqdec_t *mqdec)
                 mqdec->ctreg = 8;
         }
 }
+
+/******************************************************************************\
+* Code for debugging.
+\******************************************************************************/
+
+/* Dump a MQ decoder to a stream for debugging. */
+
+#if defined(DEBUG)
+static void mqdec_dump(jpc_mqdec_t *mqdec, FILE *out)
+{
+	fprintf(out, "MQDEC A = %08lx, C = %08lx, CT=%08lx, ",
+	  (unsigned long) mqdec->areg, (unsigned long) mqdec->creg,
+	  (unsigned long) mqdec->ctreg);
+	fprintf(out, "CTX = %ld, ", mqdec->curctx - mqdec->ctxs);
+	fprintf(out, "IND %ld, MPS %ld, QEVAL %lx\n", *mqdec->curctx -
+	  jpc_mqstates, (*mqdec->curctx)->mps, (*mqdec->curctx)->qeval);
+}
+#endif
