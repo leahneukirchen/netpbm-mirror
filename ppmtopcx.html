@@ -2,7 +2,7 @@
 <html><head><title>Ppmtopcx User Manual</title></head>
 <body>
 <h1>ppmtopcx</h1>
-Updated: 26 September 2020
+Updated: 28 March 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -43,20 +43,20 @@ in the input image:
 <dl compact>
 <dt>16 colors or fewer:
 
-<dd>1 bit/pixel, 1-4 planes, colormap in header
+<dd>8-bit PCX (1 bit/sample, 1-4 planes)
 
 <dt>more than 16 colors, but no more than 256:
 
-<dd>8 bits/pixel, 1 plane, colormap at the end of the file.
+<dd>256 color PCX (8 bits/sample, 1 plane)
 
 <dt>More than 256 colors:
 
-<dd>24bit truecolor file (8 bits/pixel, 3 planes).
+<dd>truecolor (24-bit) PCX (8 bits/sample, 3 planes)
 
 </dl>
 
-<p>You can override some of that and explicitly choose the format with
-the options below.
+<p>You can override some of that and explicitly choose the format with the
+options below.
 
 <h2 id="options">OPTIONS</h2>
 
