@@ -449,7 +449,7 @@ pcx16ColToPpm(FILE *       const ifP,
               unsigned int const planes,
               pixel *      const cmap) {
 
-    unsigned int const colors = (1 << bitsPerPixel) * (1 << planes);
+    unsigned int const colors = (1 << (bitsPerPixel * planes));
     bool const paletteOk = paletteIsOk(cmap, colors);
 
     unsigned int cols;
