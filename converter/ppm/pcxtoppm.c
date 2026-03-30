@@ -454,7 +454,7 @@ pcx_16col_to_ppm(FILE *       const ifP,
     paletteOk = FALSE;
 
     /* check if palette is ok  */
-    colors = (1 << BitsPerPixel) * (1 << Planes);
+    colors = (1 << (BitsPerPixel * Planes));
     for (col = 0; col < colors - 1; ++col) {
         if (!PPM_EQUAL(cmap[col], cmap[col+1])) {
             paletteOk = TRUE;

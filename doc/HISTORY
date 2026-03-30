@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.03.30 BJH  Release 11.02.23
+
+              pcxtoppm: fix determination that palette in image is all one
+              color (so probably in error) based on random memory access.
+              Always broken (all-one-color feature was added in July 1995).
+
 26.02.12 BJH  Release 11.02.22
 
               pnmhisteq: fix incorrect output with -gray: color pixels
