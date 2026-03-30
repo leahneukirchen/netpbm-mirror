@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.14.00
 
+              pcxtoppm: fix determination that palette in image is all one
+              color (so probably in error) based on random memory access.
+              Always broken (all-one-color feature was added in July 1995).
+
               pbmtext: fix crash when input text contains a character with
               code >127.  Broken in Netpbm 10.82 (March 2018).
 
